@@ -16,10 +16,11 @@ public:
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
 public:
-	std::string			mName;
-	std::string			mVertFilename;
-	std::string			mFragFilename;
-	Opengl::GlProgram	mShader;
+	SoyEvent<TFilterStage&>	mOnChanged;
+	std::string				mName;
+	std::string				mVertFilename;
+	std::string				mFragFilename;
+	Opengl::GlProgram		mShader;
 	Opengl::TGeometryVertex	mBlitVertexDescription;
 };
 

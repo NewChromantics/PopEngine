@@ -7,5 +7,6 @@ loadframe input01 time=1001 input01_undistorted.png
 setpitchmarkers input01 0x0,1x0,1x1,0x1
 
 # add shader called crop to filter
-addstage input01 crop crop.vert crop.frag
-addstage input01 rgbtohsl rgbtohsl.vert rgbtohsl.frag
+addstage input01 debuguv debuguv.vert debuguv.frag
+#addstage input01 crop crop.vert crop.frag
+#addstage input01 rgbtohsl rgbtohsl.vert rgbtohsl.frag

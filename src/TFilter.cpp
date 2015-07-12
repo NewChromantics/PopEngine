@@ -52,6 +52,7 @@ void TFilterStage::Reload(Opengl::TContext& Context)
 {
 	auto BuildShader = [this]
 	{
+		std::Debug << "Loading shader files for " << this->mName << std::endl;
 		//	load files
 		std::string VertSrc;
 		if ( !Soy::FileToString( mVertFilename, VertSrc ) )
@@ -61,13 +62,15 @@ void TFilterStage::Reload(Opengl::TContext& Context)
 			return true;
 		
 		//	don't override the shader until it succeeds
-		auto NewShader = Opengl::BuildProgram( FragSrc, VertSrc, mBlitVertexDescription, mName );
+		auto NewShader = Opengl::BuildProgram( VertSrc, FragSrc, mBlitVertexDescription, mName );
 
 		if ( !NewShader.IsValid() )
 			return true;
 		
 		//	gr; may need std::move here
 		mShader = NewShader;
+		std::Debug << "Loaded shader (" << mShader.program.mName << ") okay for " << this->mName << std::endl;
+		this->mOnChanged.OnTriggered(*this);
 		return true;
 	};
 	
@@ -95,10 +98,14 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 
 bool TFilterJobRun::Run(std::ostream& Error)
 {
+	std::Debug << __func__ << std::endl;
+	
 	auto& Frame = *mFrame;
 	auto& FrameTexture = Frame.mFrame;
 	auto& Filter = *mFilter;
 	
+	static int DebugColourOffset = 0;
+	DebugColourOffset++;
 	Soy::TRgb DebugClearColours[] =
 	{
 		Soy::TRgb(1,0,0),
@@ -137,11 +144,12 @@ bool TFilterJobRun::Run(std::ostream& Error)
 		RenderTarget.Bind();
 		{
 			auto& StageShader = pStage->mShader;
-			Opengl::ClearColour( DebugClearColours[s%sizeofarray(DebugClearColours)] );
+			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)] );
 
 			auto Shader = StageShader.Bind();
 			if ( Shader.IsValid() )
 			{
+				std::Debug << "drawing stage " << StageName << std::endl;
 				//	gr: go through uniforms, find any named same as a shader and bind that shaders output
 				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 				{
@@ -154,6 +162,10 @@ bool TFilterJobRun::Run(std::ostream& Error)
 					Shader.SetUniform( Uniform.mName.c_str(), UniformTexture->second );
 				}
 				Filter.mBlitQuad.Draw();
+			}
+			else
+			{
+				std::Debug << __func__ << " stage has no valid shader" << std::endl;
 			}
 		}
 		RenderTarget.Unbind();
@@ -230,8 +242,9 @@ void TFilter::AddStage(const std::string& Name,const std::string& VertShader,con
 
 	std::shared_ptr<TFilterStage> Stage( new TFilterStage(Name,VertShader,FragShader,mBlitQuad.mVertexDescription) );
 	mStages.PushBack( Stage );
-	Stage->Reload( GetContext() );
 	OnStagesChanged();
+	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
+	Stage->Reload( GetContext() );
 }
 
 void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
