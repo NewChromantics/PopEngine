@@ -37,6 +37,45 @@ public:
 
 
 
+
+
+TFilterStage::TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription) :
+	mName			( Name ),
+	mVertFilename	( VertFilename ),
+	mFragFilename	( FragFilename ),
+	mBlitVertexDescription	( BlitVertexDescription )
+{
+	
+}
+
+void TFilterStage::Reload(Opengl::TContext& Context)
+{
+	auto BuildShader = [this]
+	{
+		//	load files
+		std::string VertSrc;
+		if ( !Soy::FileToString( mVertFilename, VertSrc ) )
+			return true;
+		std::string FragSrc;
+		if ( !Soy::FileToString( mFragFilename, FragSrc ) )
+			return true;
+		
+		//	don't override the shader until it succeeds
+		auto NewShader = Opengl::BuildProgram( FragSrc, VertSrc, mBlitVertexDescription, mName );
+
+		if ( !NewShader.IsValid() )
+			return true;
+		
+		//	gr; may need std::move here
+		mShader = NewShader;
+		return true;
+	};
+	
+	Context.PushJob( BuildShader );
+}
+
+
+
 bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 {
 	auto& Frame = *mFrame;
@@ -71,23 +110,18 @@ bool TFilterJobRun::Run(std::ostream& Error)
 	};
 	
 	//	run through the shader chain
-	for ( int s=0;	s<Filter.mShaders.GetSize();	s++ )
+	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
 	{
-		auto pShader = Filter.mShaders[s];
-		if ( !pShader )
+		auto pStage = Filter.mStages[s];
+		auto& StageName = pStage->mName;
+		if ( !pStage )
 		{
-			std::Debug << "Warning: Filter " << Filter.mName << " shader #" << s << " is null" << std::endl;
-			continue;
-		}
-		
-		if ( !pShader->mShader.IsValid() )
-		{
-			std::Debug << "Warning: Filter " << Filter.mName << " shader #" << s << " is invalid" << std::endl;
+			std::Debug << "Warning: Filter " << Filter.mName << " stage #" << s << " is null" << std::endl;
 			continue;
 		}
 		
 		//	get texture for this stage
-		auto& StageTarget = Frame.mShaderTextures[pShader->mName];
+		auto& StageTarget = Frame.mShaderTextures[StageName];
 		if ( !StageTarget.IsValid() )
 		{
 			SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), FrameTexture.GetFormat() );
@@ -95,29 +129,32 @@ bool TFilterJobRun::Run(std::ostream& Error)
 		}
 		
 		//	gr: cache/pool these rendertargets?
-		Opengl::TFboMeta FboMeta( pShader->mName, StageTarget.GetWidth(), StageTarget.GetHeight() );
+		Opengl::TFboMeta FboMeta( StageName, StageTarget.GetWidth(), StageTarget.GetHeight() );
 		std::shared_ptr<Opengl::TRenderTarget> pRenderTarget( new Opengl::TRenderTargetFbo( FboMeta, StageTarget ) );
 		auto& RenderTarget = *pRenderTarget;
 		
 		//	render this stage to the stage target fbo
 		RenderTarget.Bind();
 		{
-			auto& StageShader = pShader->mShader;
+			auto& StageShader = pStage->mShader;
 			Opengl::ClearColour( DebugClearColours[s%sizeofarray(DebugClearColours)] );
 
 			auto Shader = StageShader.Bind();
-			//	gr: go through uniforms, find any named same as a shader and bind that shaders output
-			for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
+			if ( Shader.IsValid() )
 			{
-				auto& Uniform = StageShader.mUniforms[u];
-				//	gr: todo: check type
-				auto UniformTexture = Frame.mShaderTextures.find(Uniform.mName);
-				if ( UniformTexture == Frame.mShaderTextures.end() )
-					continue;
-				
-				Shader.SetUniform( Uniform.mName.c_str(), UniformTexture->second );
+				//	gr: go through uniforms, find any named same as a shader and bind that shaders output
+				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
+				{
+					auto& Uniform = StageShader.mUniforms[u];
+					//	gr: todo: check type
+					auto UniformTexture = Frame.mShaderTextures.find(Uniform.mName);
+					if ( UniformTexture == Frame.mShaderTextures.end() )
+						continue;
+					
+					Shader.SetUniform( Uniform.mName.c_str(), UniformTexture->second );
+				}
+				Filter.mBlitQuad.Draw();
 			}
-			Filter.mBlitQuad.Draw();
 		}
 		RenderTarget.Unbind();
 	}
@@ -132,7 +169,7 @@ TFilter::TFilter(const std::string& Name) :
 {
 	//	create window
 	vec2f WindowPosition( 0, 0 );
-	vec2f WindowSize( 400, 400 );
+	vec2f WindowSize( 600, 200 );
 	
 	mWindow.reset( new TFilterWindow( Name, WindowPosition, WindowSize, *this ) );
 	
@@ -182,6 +219,20 @@ TFilter::TFilter(const std::string& Name) :
 	mWindow->GetContext()->PushJob( CreateBlitGeo );
 }
 
+void TFilter::AddStage(const std::string& Name,const std::string& VertShader,const std::string& FragShader)
+{
+	//	make sure stage doesn't exist
+	for ( int s=0;	s<mStages.GetSize();	s++ )
+	{
+		auto& Stage = *mStages[s];
+		Soy::Assert( !(Stage == Name), "Stage already exists" );
+	}
+
+	std::shared_ptr<TFilterStage> Stage( new TFilterStage(Name,VertShader,FragShader,mBlitQuad.mVertexDescription) );
+	mStages.PushBack( Stage );
+	Stage->Reload( GetContext() );
+	OnStagesChanged();
+}
 
 void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
 {
@@ -223,6 +274,17 @@ void TFilter::Run(SoyTime Time)
 	std::shared_ptr<Opengl::TJob> Job( new TFilterJobRun( *this, Frame ) );
 	Context.PushJob( Job );
 }
+
+void TFilter::OnStagesChanged()
+{
+	//	re-run each
+	for ( auto it=mFrames.begin();	it!=mFrames.end();	it++ )
+	{
+		auto& FrameTime = it->first;
+		OnFrameChanged( FrameTime );
+	}
+}
+
 
 Opengl::TContext& TFilter::GetContext()
 {

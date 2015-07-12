@@ -21,10 +21,18 @@ TPopTrack::TPopTrack() :
 	AddJobHandler("exit", TParameterTraits(), *this, &TPopTrack::OnExit );
 
 	TParameterTraits LoadFrameTraits;
-	LoadFrameTraits.mAssumedKeys.PushBack("name");
+	LoadFrameTraits.mAssumedKeys.PushBack("filter");
 	LoadFrameTraits.mAssumedKeys.PushBack("time");
 	LoadFrameTraits.mAssumedKeys.PushBack("filename");
 	AddJobHandler("LoadFrame", LoadFrameTraits, *this, &TPopTrack::OnLoadFrame );
+	
+	TParameterTraits AddStageTraits;
+	AddStageTraits.mAssumedKeys.PushBack("filter");
+	AddStageTraits.mAssumedKeys.PushBack("name");
+	AddStageTraits.mAssumedKeys.PushBack("vertfilename");
+	AddStageTraits.mAssumedKeys.PushBack("fragfilename");
+	AddJobHandler("AddStage", AddStageTraits, *this, &TPopTrack::OnAddStage );
+
 }
 
 bool TPopTrack::AddChannel(std::shared_ptr<TChannel> Channel)
@@ -53,8 +61,10 @@ void TPopTrack::OnExit(TJobAndChannel& JobAndChannel)
 void TPopTrack::OnLoadFrame(TJobAndChannel &JobAndChannel)
 {
 	auto& Job = JobAndChannel.GetJob();
-	auto Name = Job.mParams.GetParamAs<std::string>("name");
+	auto Name = Job.mParams.GetParamAs<std::string>("filter");
 	auto TimeStr = Job.mParams.GetParamAs<std::string>("time");
+	
+	std::Debug << Job.mParams << std::endl;
 	
 	//	decode filename to pixels
 	auto FilenameParam = Job.mParams.GetParam("filename");
@@ -86,6 +96,26 @@ void TPopTrack::OnLoadFrame(TJobAndChannel &JobAndChannel)
 	auto& Channel = JobAndChannel.GetChannel();
 	Channel.SendJobReply( Reply );
 }
+
+
+void TPopTrack::OnAddStage(TJobAndChannel &JobAndChannel)
+{
+	auto& Job = JobAndChannel.GetJob();
+	auto FilterName = Job.mParams.GetParamAs<std::string>("filter");
+	auto Name = Job.mParams.GetParamAs<std::string>("name");
+	auto VertFilename = Job.mParams.GetParamAs<std::string>("vertfilename");
+	auto FragFilename = Job.mParams.GetParamAs<std::string>("fragfilename");
+	
+	auto Filter = GetFilter( FilterName );
+	Filter->AddStage( Name, VertFilename, FragFilename );
+	
+	TJobReply Reply(Job);
+	Reply.mParams.AddDefaultParam("added stage");
+	
+	auto& Channel = JobAndChannel.GetChannel();
+	Channel.SendJobReply( Reply );
+}
+
 
 std::shared_ptr<TFilter> TPopTrack::GetFilter(const std::string& Name)
 {

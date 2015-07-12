@@ -7,17 +7,20 @@ class TFilterWindow;
 
 
 
-class TFilterShader
+class TFilterStage
 {
 public:
-	TFilterShader(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename);
+	TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription);
 	void				Reload(Opengl::TContext& Context);
 	
+	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
+
 public:
 	std::string			mName;
 	std::string			mVertFilename;
 	std::string			mFragFilename;
 	Opengl::GlProgram	mShader;
+	Opengl::TGeometryVertex	mBlitVertexDescription;
 };
 
 
@@ -52,14 +55,16 @@ public:
 	TFilter(const std::string& Name);
 	
 	void					LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time);	//	load pixels into [new] frame
+	void					AddStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename);
 	void					Run(SoyTime Frame);
 
-	Opengl::TContext&		GetContext();			//	in the window
-	std::shared_ptr<TFilterShader>			GetShader(const std::string& Name);
+	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
+	void					OnStagesChanged();
+	Opengl::TContext&				GetContext();			//	in the window
 	
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
-	Array<std::shared_ptr<TFilterShader>>			mShaders;
+	Array<std::shared_ptr<TFilterStage>>			mStages;
 	Opengl::TGeometry		mBlitQuad;
 };
 

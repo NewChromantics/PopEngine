@@ -15,6 +15,7 @@ public:
 
 	void			OnExit(TJobAndChannel& JobAndChannel);
 	void			OnLoadFrame(TJobAndChannel& JobAndChannel);
+	void			OnAddStage(TJobAndChannel& JobAndChannel);
 	
 private:
 	std::shared_ptr<TFilter>	GetFilter(const std::string& Name);
