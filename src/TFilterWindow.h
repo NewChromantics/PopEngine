@@ -33,5 +33,6 @@ private:
 	TFilter&			mParent;
 	
 	Opengl::TGeometry	mBlitQuad;
+	Opengl::GlProgram	mBlitShader;
 	std::shared_ptr<TOpenglWindow>		mWindow;
 };

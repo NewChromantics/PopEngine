@@ -38,51 +38,61 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	Opengl::ClearDepth();
 	glDisable(GL_DEPTH_TEST);
 	
-/*
-	if ( !mTestTexture )
+	//	collect frames
+	Array<std::shared_ptr<TFilterFrame>> Frames;
+	for ( auto fit=mParent.mFrames.begin();	fit!=mParent.mFrames.end();	fit++ )
 	{
-		SoyPixels mPendingTexture;
-		mPendingTexture.Init( 256, 256, SoyPixelsFormat::RGB );
-		BufferArray<char,3> Rgb;
-		Rgb.PushBack( 255 );
-		Rgb.PushBack( 255 );
-		Rgb.PushBack( 0 );
-		mPendingTexture.SetColour( GetArrayBridge(Rgb) );
-		SoyPixelsMetaFull Meta( mPendingTexture.GetWidth(), mPendingTexture.GetHeight(), mPendingTexture.GetFormat() );
-		
-		mTestTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
-		mTestTexture->Copy( mPendingTexture, false, true );
-	}
-
-	
-	Array<Opengl::TTexture> Textures;
-	if ( mTestTexture )
-		Textures.PushBack( *mTestTexture );
-	for ( int rt=0;	rt<mParent.mRenderTargets.GetSize();	rt++ )
-	{
-		auto& RenderTarget = *mParent.mRenderTargets[rt];
-		auto Texture = RenderTarget.GetTexture();
-		if ( !Texture.IsValid() )
+		auto pFrame = fit->second;
+		if ( !pFrame )
 			continue;
-		Textures.PushBack(Texture);
+		Frames.PushBack( pFrame );
 	}
-
-	//	render all render target textures
-	if ( !Textures.IsEmpty() )
+	
+	auto FrameCount = Frames.GetSize();
+	if ( FrameCount == 0 )
+		return;
+	size_t ShaderCount = 0;
+	for ( int f=0;	f<Frames.GetSize();	f++ )
+		ShaderCount = std::max( ShaderCount, Frames[f]->mShaderTextures.size() );
+	//	+1 for source texture
+	ShaderCount++;
+	
+	//	make rendering tile rect
+	Soy::Rectf TileRect( 0, 0, 1.f/static_cast<float>(ShaderCount), 1.f/static_cast<float>(FrameCount) );
+	
+	for ( int f=0;	f<Frames.GetSize();	f++ )
 	{
-		Soy::Rectf Rect( 0,0,1.0,1/static_cast<float>(Textures.GetSize()) );
+		auto& Frame = *Frames[f];
+		auto& Stages = Frame.mShaderTextures;
 		
-		for ( int rt=0;	rt<Textures.GetSize();	rt++ )
+		//	render source texture
 		{
-			auto Texture = Textures[rt];
-			if ( !Texture.IsValid() )
-				continue;
-
-			DrawQuad( Texture, Rect );
-			Rect.y += Rect.h;
+			if ( Frame.mFrame.IsValid() )
+			{
+				DrawQuad( Frame.mFrame, TileRect );
+			}
+			//	next col
+			TileRect.x += TileRect.w;
 		}
+		
+		for ( auto s=Stages.begin();	s!=Stages.end();	s++ )
+		{
+			//auto& StageName = s->first;
+			auto& StageTexture = s->second;
+			std::map<std::string,Opengl::TTexture>	mShaderTextures;	//	output cache
+			
+			if ( StageTexture.IsValid() )
+			{
+				DrawQuad( StageTexture, TileRect );
+			}
+			
+			//	next col
+			TileRect.x += TileRect.w;
+		}
+		
+		//	next row
+		TileRect.y += TileRect.h;
 	}
-	*/
 	Opengl_IsOkay();
 }
 
@@ -137,7 +147,7 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 		MeshData.PushBackReinterpret( Mesh );
 		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex );
 	}
-/*
+
 	//	allocate objects we need!
 	if ( !mBlitShader.IsValid() )
 	{
@@ -153,15 +163,15 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 		//	move to view space 0..1 to -1..1
 		"	gl_Position.xy *= vec2(2,2);\n"
 		"	gl_Position.xy -= vec2(1,1);\n"
-		"	oTexCoord = TexCoord;\n"
+		"	oTexCoord = vec2(TexCoord.x,1-TexCoord.y);\n"
 		"}\n";
 		auto FragShader =
 		"varying vec2 oTexCoord;\n"
 		"uniform sampler2D Texture0;\n"
 		"void main()\n"
 		"{\n"
-		"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
-		//"	gl_FragColor = texture2D(Texture0,oTexCoord);\n"
+		//"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
+		"	gl_FragColor = texture2D(Texture0,oTexCoord);\n"
 		"}\n";
 
 		mBlitShader = Opengl::BuildProgram( VertShader, FragShader, mBlitQuad.mVertexDescription, "Blit shader" );
@@ -169,10 +179,10 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 	
 	//	do bindings
 	auto Shader = mBlitShader.Bind();
-	//Shader.SetUniform("Texture0", Texture );
+	Shader.SetUniform("Texture0", Texture );
 	Shader.SetUniform("Rect", Soy::RectToVector(Rect) );
 	mBlitQuad.Draw();
-	*/
+
 }
 
 
