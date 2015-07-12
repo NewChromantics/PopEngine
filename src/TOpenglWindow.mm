@@ -84,7 +84,11 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 	id Sender = NSApp;
 	[mWindow setBackgroundColor:[NSColor blueColor]];
 	[mWindow makeKeyAndOrderFront:Sender];
-	
+
+	auto Title = Soy::StringToNSString( Name );
+	[mWindow setTitle:Title];
+	//[mWindow setMiniwindowTitle:Title];
+	//[mWindow setTitleWithRepresentedFilename:Title];
 	
 	SoyWorkerThread::Start();
 }
