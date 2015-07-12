@@ -4,19 +4,22 @@
 //	re-using unity opengl device interface
 #include "SoyOpenglContext.h"
 
+
+class TFilter;
 class TOpenglWindow;
-class TPopOpengl;
+
+
 
 namespace Opengl
 {
 	class TContext;
 };
 
-class TTextureWindow
+class TFilterWindow
 {
 public:
-	TTextureWindow(std::string Name,vec2f Position,vec2f Size,TPopOpengl& Parent);
-	~TTextureWindow();
+	TFilterWindow(std::string Name,vec2f Position,vec2f Size,TFilter& Parent);
+	~TFilterWindow();
 	
 	bool				IsValid()			{	return mWindow!=nullptr;	}
 	
@@ -27,10 +30,8 @@ protected:
 	void				DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect);
 	
 private:
-	TPopOpengl&			mParent;
+	TFilter&			mParent;
 	
-	Opengl::GlProgram	mBlitShader;
 	Opengl::TGeometry	mBlitQuad;
 	std::shared_ptr<TOpenglWindow>		mWindow;
-	std::shared_ptr<Opengl::TTexture>	mTestTexture;
 };

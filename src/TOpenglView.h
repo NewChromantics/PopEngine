@@ -1,6 +1,5 @@
-#include "PopOpengl.h"
 #import <Cocoa/Cocoa.h>
-#include "SoyOpengl.h"
+#include "SoyOpenglContext.h"
 
 
 class TOpenglView;

@@ -1,4 +1,4 @@
-#include "PopOpengl.h"
+#include "SoyOpengl.h"
 #include <Cocoa/Cocoa.h>
 #include "TOpenglWindow.h"
 #include "TOpenglView.h"

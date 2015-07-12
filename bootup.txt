@@ -1,9 +1,11 @@
-makewindow name=hello
+# setup filter 01
 
-makerendertarget name=rt1 width=200 height=100
-makerendertarget name=rt2 width=200 height=100
-makerendertarget name=rt3 width=200 height=100
+# push some test input
+loadframe input01 time=1001 input01_undistorted.png
 
-clearrendertarget name=rt1 rgb=1,0,0
-clearrendertarget name=rt2 rgb=0,1,0
-clearrendertarget name=rt3 rgb=0,0,1
+# set meta data
+setpitchmarkers input01 0x0,1x0,1x1,0x1
+
+# add shader called crop to filter
+addshader input01 crop crop.vert crop.frag
+addshader input01 rgbtohsl rgbtohsl.vert rgbtohsl.frag
