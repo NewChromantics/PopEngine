@@ -1,5 +1,5 @@
-attribute vec2 TexCoord;
-varying vec2 oTexCoord;
+in vec2 TexCoord;
+out vec2 fTexCoord;
 
 void main()
 {
@@ -8,5 +8,6 @@ void main()
     gl_Position.xy *= vec2(2,2);
     gl_Position.xy -= vec2(1,1);
 
-    oTexCoord = vec2(TexCoord.x,1-TexCoord.y);
+    fTexCoord = TexCoord;
 }
+x

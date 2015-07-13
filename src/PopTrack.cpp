@@ -117,7 +117,7 @@ void TPopTrack::OnAddStage(TJobAndChannel &JobAndChannel)
 }
 
 
-std::shared_ptr<TFilter> TPopTrack::GetFilter(const std::string& Name)
+std::shared_ptr<TPlayerFilter> TPopTrack::GetFilter(const std::string& Name)
 {
 	for ( int i=0;	i<mFilters.GetSize();	i++ )
 	{
@@ -126,7 +126,7 @@ std::shared_ptr<TFilter> TPopTrack::GetFilter(const std::string& Name)
 	}
 	
 	//	make new
-	std::shared_ptr<TFilter> Filter( new TFilter(Name) );
+	std::shared_ptr<TPlayerFilter> Filter( new TPlayerFilter(Name) );
 	mFilters.PushBack( Filter );
 	
 	return Filter;

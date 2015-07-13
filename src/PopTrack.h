@@ -18,12 +18,12 @@ public:
 	void			OnAddStage(TJobAndChannel& JobAndChannel);
 	
 private:
-	std::shared_ptr<TFilter>	GetFilter(const std::string& Name);
+	std::shared_ptr<TPlayerFilter>	GetFilter(const std::string& Name);
 	
 public:
 	Soy::Platform::TConsoleApp	mConsoleApp;
 	
-	Array<std::shared_ptr<TFilter>>	mFilters;
+	Array<std::shared_ptr<TPlayerFilter>>	mFilters;
 };
 
 

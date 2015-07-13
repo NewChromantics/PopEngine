@@ -1,6 +1,8 @@
 #include "TFilter.h"
 #include "TFilterWindow.h"
 
+const char* TFilter::FrameSourceName = "Frame";
+
 
 
 class TOpenglJob_UploadPixels : public Opengl::TJob
@@ -61,14 +63,22 @@ void TFilterStage::Reload(Opengl::TContext& Context)
 		if ( !Soy::FileToString( mFragFilename, FragSrc ) )
 			return true;
 		
-		//	don't override the shader until it succeeds
-		auto NewShader = Opengl::BuildProgram( VertSrc, FragSrc, mBlitVertexDescription, mName );
+		try
+		{
+			//	don't override the shader until it succeeds
+			auto NewShader = Opengl::BuildProgram( VertSrc, FragSrc, mBlitVertexDescription, mName );
 
-		if ( !NewShader.IsValid() )
-			return true;
+			if ( !NewShader.IsValid() )
+				return true;
 		
-		//	gr; may need std::move here
-		mShader = NewShader;
+			//	gr; may need std::move here
+			mShader = NewShader;
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Failed to compile shader: " << e.what() << std::endl;
+			return true;
+		}
 		std::Debug << "Loaded shader (" << mShader.program.mName << ") okay for " << this->mName << std::endl;
 		this->mOnChanged.OnTriggered(*this);
 		return true;
@@ -154,6 +164,13 @@ bool TFilterJobRun::Run(std::ostream& Error)
 				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 				{
 					auto& Uniform = StageShader.mUniforms[u];
+					
+					if ( Uniform.mName == TFilter::FrameSourceName )
+					{
+						Shader.SetUniform( Uniform.mName.c_str(), FrameTexture );
+						continue;
+					}
+					
 					//	gr: todo: check type
 					auto UniformTexture = Frame.mShaderTextures.find(Uniform.mName);
 					if ( UniformTexture == Frame.mShaderTextures.end() )
@@ -305,4 +322,29 @@ Opengl::TContext& TFilter::GetContext()
 	Soy::Assert( Context != nullptr, "Expected opengl window to have a context");
 	return *Context;
 }
+
+
+
+TPlayerFilter::TPlayerFilter(const std::string& Name) :
+	TFilter		( Name )
+{
+	mPitchCorners.PushBack( vec2f(0,0) );
+	mPitchCorners.PushBack( vec2f(0.5f,0) );
+	mPitchCorners.PushBack( vec2f(0.5f,1) );
+	mPitchCorners.PushBack( vec2f(0,1) );
+}
 	
+void TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
+{
+	if ( Uniform.mName == "MaskTopLeft" )
+		Shader.SetUniform( Uniform.mName, mPitchCorners[0] );
+	
+	if ( Uniform.mName == "MaskTopRight" )
+		Shader.SetUniform( Uniform.mName, mPitchCorners[1] );
+	
+	if ( Uniform.mName == "MaskBottomRight" )
+		Shader.SetUniform( Uniform.mName, mPitchCorners[2] );
+	
+	if ( Uniform.mName == "MaskBottomLeft" )
+		Shader.SetUniform( Uniform.mName, mPitchCorners[3] );
+}
