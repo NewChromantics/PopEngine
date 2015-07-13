@@ -1,17 +1,19 @@
 #pragma once
 
-
 #include <SoyOpenglContext.h>
+#include <SoyFilesystem.h>
 
 class TFilterWindow;
+class TFilter;
+
 
 
 
 class TFilterStage
 {
 public:
-	TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription);
-	void				Reload(Opengl::TContext& Context);
+	TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter);
+	void				Reload();
 	
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
@@ -20,8 +22,11 @@ public:
 	std::string				mName;
 	std::string				mVertFilename;
 	std::string				mFragFilename;
+	Soy::TFileWatch			mVertFileWatch;
+	Soy::TFileWatch			mFragFileWatch;
 	Opengl::GlProgram		mShader;
 	Opengl::TGeometryVertex	mBlitVertexDescription;
+	TFilter&				mFilter;
 };
 
 
@@ -50,7 +55,7 @@ public:
 
 
 
-//	generic
+
 class TFilter : public TFilterMeta
 {
 public:

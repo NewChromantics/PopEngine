@@ -4,7 +4,6 @@
 const char* TFilter::FrameSourceName = "Frame";
 
 
-
 class TOpenglJob_UploadPixels : public Opengl::TJob
 {
 public:
@@ -41,17 +40,28 @@ public:
 
 
 
-TFilterStage::TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription) :
+TFilterStage::TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter) :
 	mName			( Name ),
 	mVertFilename	( VertFilename ),
 	mFragFilename	( FragFilename ),
-	mBlitVertexDescription	( BlitVertexDescription )
+	mBlitVertexDescription	( BlitVertexDescription ),
+	mFilter			( Filter ),
+	mVertFileWatch	( VertFilename ),
+	mFragFileWatch	( FragFilename )
 {
+	auto OnFileChanged = [this](const std::string& Filename)
+	{
+		Reload();
+	};
 	
+	mVertFileWatch.mOnChanged.AddListener( OnFileChanged );
+	mFragFileWatch.mOnChanged.AddListener( OnFileChanged );
 }
 
-void TFilterStage::Reload(Opengl::TContext& Context)
+void TFilterStage::Reload()
 {
+	Opengl::TContext& Context = mFilter.GetContext();
+	
 	auto BuildShader = [this]
 	{
 		std::Debug << "Loading shader files for " << this->mName << std::endl;
@@ -257,11 +267,11 @@ void TFilter::AddStage(const std::string& Name,const std::string& VertShader,con
 		Soy::Assert( !(Stage == Name), "Stage already exists" );
 	}
 
-	std::shared_ptr<TFilterStage> Stage( new TFilterStage(Name,VertShader,FragShader,mBlitQuad.mVertexDescription) );
+	std::shared_ptr<TFilterStage> Stage( new TFilterStage(Name,VertShader,FragShader,mBlitQuad.mVertexDescription,*this) );
 	mStages.PushBack( Stage );
 	OnStagesChanged();
 	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
-	Stage->Reload( GetContext() );
+	Stage->Reload();
 }
 
 void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
