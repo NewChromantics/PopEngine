@@ -162,6 +162,7 @@ bool TFilterJobRun::Run(std::ostream& Error)
 		
 		//	render this stage to the stage target fbo
 		RenderTarget.Bind();
+		glEnable( GL_BLEND );
 		{
 			auto& StageShader = pStage->mShader;
 			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)] );
@@ -181,12 +182,16 @@ bool TFilterJobRun::Run(std::ostream& Error)
 						continue;
 					}
 					
-					//	gr: todo: check type
+					//	gr: todo: check type to make sure it's a texture to allow overloads
 					auto UniformTexture = Frame.mShaderTextures.find(Uniform.mName);
-					if ( UniformTexture == Frame.mShaderTextures.end() )
+					if ( UniformTexture != Frame.mShaderTextures.end() )
+					{
+						Shader.SetUniform( Uniform.mName.c_str(), UniformTexture->second );
 						continue;
+					}
 					
-					Shader.SetUniform( Uniform.mName.c_str(), UniformTexture->second );
+					//	look for other variables
+					Filter.SetUniform( Shader, Uniform );
 				}
 				Filter.mBlitQuad.Draw();
 			}
@@ -338,10 +343,10 @@ Opengl::TContext& TFilter::GetContext()
 TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	TFilter		( Name )
 {
-	mPitchCorners.PushBack( vec2f(0,0) );
-	mPitchCorners.PushBack( vec2f(0.5f,0) );
-	mPitchCorners.PushBack( vec2f(0.5f,1) );
-	mPitchCorners.PushBack( vec2f(0,1) );
+	mPitchCorners.PushBack( vec2f(0.0f,0.0f) );
+	mPitchCorners.PushBack( vec2f(0.5f,0.0f) );
+	mPitchCorners.PushBack( vec2f(0.5f,0.8f) );
+	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
 }
 	
 void TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
