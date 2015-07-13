@@ -2,6 +2,8 @@
 
 #include <SoyOpenglContext.h>
 #include <SoyFilesystem.h>
+#include <TJob.h>
+
 
 class TFilterWindow;
 class TFilter;
@@ -76,7 +78,11 @@ public:
 	virtual void			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
 	{
 	}
-	
+	virtual void			SetUniform(TJobParam& Param)
+	{
+		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );
+	}
+
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
@@ -90,6 +96,7 @@ public:
 	TPlayerFilter(const std::string& Name);
 	
 	virtual void			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
+	virtual void			SetUniform(TJobParam& Param) override;
 	
 	BufferArray<vec2f,4>	mPitchCorners;
 };

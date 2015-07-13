@@ -32,7 +32,12 @@ TPopTrack::TPopTrack() :
 	AddStageTraits.mAssumedKeys.PushBack("vertfilename");
 	AddStageTraits.mAssumedKeys.PushBack("fragfilename");
 	AddJobHandler("AddStage", AddStageTraits, *this, &TPopTrack::OnAddStage );
-
+	
+	//	all non-default keys are then passed to filter as params to set
+	TParameterTraits SetUniformTraits;
+	SetUniformTraits.mAssumedKeys.PushBack("filter");
+	SetUniformTraits.mRequiredKeys.PushBack("filter");
+	AddJobHandler("SetUniform", SetUniformTraits, *this, &TPopTrack::OnSetFilterUniform );
 }
 
 bool TPopTrack::AddChannel(std::shared_ptr<TChannel> Channel)
@@ -63,8 +68,6 @@ void TPopTrack::OnLoadFrame(TJobAndChannel &JobAndChannel)
 	auto& Job = JobAndChannel.GetJob();
 	auto Name = Job.mParams.GetParamAs<std::string>("filter");
 	auto TimeStr = Job.mParams.GetParamAs<std::string>("time");
-	
-	std::Debug << Job.mParams << std::endl;
 	
 	//	decode filename to pixels
 	auto FilenameParam = Job.mParams.GetParam("filename");
@@ -115,6 +118,42 @@ void TPopTrack::OnAddStage(TJobAndChannel &JobAndChannel)
 	auto& Channel = JobAndChannel.GetChannel();
 	Channel.SendJobReply( Reply );
 }
+
+void TPopTrack::OnSetFilterUniform(TJobAndChannel &JobAndChannel)
+{
+	auto& Job = JobAndChannel.GetJob();
+	auto FilterName = Job.mParams.GetParamAs<std::string>("filter");
+
+	auto Filter = GetFilter( FilterName );
+	
+	//	set uniform from all other params
+	std::stringstream Error;
+	for ( int p=0;	p<Job.mParams.mParams.GetSize();	p++ )
+	{
+		auto Param = Job.mParams.mParams[p];
+		if ( Param.GetKey() == "filter" )
+			continue;
+
+		try
+		{
+			Filter->SetUniform( Param );
+		}
+		catch( std::exception& e )
+		{
+			Error << "Error setting uniform " << Param.GetKey() << ": " << e.what() << std::endl;
+		}
+	}
+
+	TJobReply Reply(Job);
+	if ( Error.str().empty() )
+		Reply.mParams.AddDefaultParam("set uniforms");
+	else
+		Reply.mParams.AddErrorParam( Error.str() );
+	
+	auto& Channel = JobAndChannel.GetChannel();
+	Channel.SendJobReply( Reply );
+}
+
 
 
 std::shared_ptr<TPlayerFilter> TPopTrack::GetFilter(const std::string& Name)

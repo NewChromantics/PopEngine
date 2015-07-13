@@ -363,3 +363,33 @@ void TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Un
 	if ( Uniform.mName == "MaskBottomLeft" )
 		Shader.SetUniform( Uniform.mName, mPitchCorners[3] );
 }
+
+
+void TPlayerFilter::SetUniform(TJobParam& Param)
+{
+	if ( Param.GetKey() == "MaskTopLeft" )
+	{
+		Soy::Assert( Param.Decode( mPitchCorners[0] ), "Failed to decode" );
+		return;
+	}
+	
+	if ( Param.GetKey() == "MaskTopRight" )
+	{
+		Soy::Assert( Param.Decode( mPitchCorners[1] ), "Failed to decode" );
+		return;
+	}
+	
+	if ( Param.GetKey() == "MaskBottomRight" )
+	{
+		Soy::Assert( Param.Decode( mPitchCorners[2] ), "Failed to decode" );
+		return;
+	}
+	
+	if ( Param.GetKey() == "MaskBottomLeft" )
+	{
+		Soy::Assert( Param.Decode( mPitchCorners[3] ), "Failed to decode" );
+		return;
+	}
+
+	TFilter::SetUniform( Param );
+}

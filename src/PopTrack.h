@@ -16,6 +16,7 @@ public:
 	void			OnExit(TJobAndChannel& JobAndChannel);
 	void			OnLoadFrame(TJobAndChannel& JobAndChannel);
 	void			OnAddStage(TJobAndChannel& JobAndChannel);
+	void			OnSetFilterUniform(TJobAndChannel& JobAndChannel);
 	
 private:
 	std::shared_ptr<TPlayerFilter>	GetFilter(const std::string& Name);

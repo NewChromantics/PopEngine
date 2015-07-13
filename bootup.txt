@@ -4,7 +4,11 @@
 loadframe input01 time=1001 input01_undistorted.png
 
 # set meta data
-setmeta input01 pitchcorners 0x0,1x0,1x1,0x1
+setuniform input01 MaskTopLeft=0.279179305x0.43300119
+setuniform input01 MaskTopRight=0.684121192x0.435912013
+setuniform input01 MaskBottomRight=0.930296421x0.617896974
+setuniform input01 MaskBottomLeft=0.0111219604x0.624482691
+
 
 # add shader called crop to filter
 addstage input01 debuguv debuguv.vert debuguv.frag
