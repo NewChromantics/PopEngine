@@ -254,7 +254,7 @@ TFilter::TFilter(const std::string& Name) :
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
-		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex );
+		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, GetContext() );
 		
 		return true;
 	};

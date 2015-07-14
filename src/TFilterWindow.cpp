@@ -145,7 +145,7 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
-		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex );
+		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, *GetContext() );
 	}
 
 	//	allocate objects we need!
