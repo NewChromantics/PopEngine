@@ -27,6 +27,14 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	mView = [[MacOpenglView alloc] initFrameWithParent:this viewRect:viewRect pixelFormat:pixelFormat];
 	[mView retain];
 	Soy::Assert( mView, "Failed to create view" );
+	
+	//	do init on first thread run
+	auto DefferedInit = [this]
+	{
+		this->mContext.Init();
+		return true;
+	};
+	mContext.PushJob( DefferedInit );
 }
 
 TOpenglView::~TOpenglView()
