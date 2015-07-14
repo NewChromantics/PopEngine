@@ -31,11 +31,11 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 {
 	//	gr; check we have an NSApplication initalised here and fail if running as command line app
 #if !defined(TARGET_OSX_BUNDLE)
-	throw new Soy::AssertException("Cannot create windows in non-bundle apps, I don't think.");
+	throw Soy::AssertException("Cannot create windows in non-bundle apps, I don't think.");
 #endif
 
 	if ( !Soy::Platform::BundleInitialised )
-		throw new Soy::AssertException("NSApplication hasn't been started. Cannot create window");
+		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
 	
 	mMacWindow.reset( new MacWindow );
 	auto& Wrapper = *mMacWindow;
