@@ -37,6 +37,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	Opengl::ClearColour( Soy::TRgb(0,0,0) );
 	Opengl::ClearDepth();
 	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
 	
 	//	collect frames
 	Array<std::shared_ptr<TFilterFrame>> Frames;

@@ -110,11 +110,6 @@ float GetHslDiff(vec3 a,vec3 b)
 void main()
 {
 	vec4 Sample = texture2D(hsl,fTexCoord);
-	if ( Sample.w < 0.5f )
-	{
-		gl_FragColor = vec4(0,0,1,1);
-		return;
-	}
 	vec3 MatchHsl = RgbToHsl( MatchColour.xyz );
 	float Diff = GetHslDiff( Sample.xyz, MatchColour.xyz );
 

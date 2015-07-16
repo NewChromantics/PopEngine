@@ -151,7 +151,8 @@ bool TFilterJobRun::Run(std::ostream& Error)
 		auto& StageTarget = Frame.mShaderTextures[StageName];
 		if ( !StageTarget.IsValid() )
 		{
-			SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), FrameTexture.GetFormat() );
+			//	SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), FrameTexture.GetFormat() );
+			SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), SoyPixelsFormat::RGBA );
 			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 		}
 		
@@ -164,16 +165,20 @@ bool TFilterJobRun::Run(std::ostream& Error)
 		RenderTarget.Bind();
 		{
 			auto& StageShader = pStage->mShader;
-			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)], 0 );
+			glDisable(GL_BLEND);
+			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)], 1 );
 			Opengl::ClearDepth();
 
-			//glEnable(GL_ALPHA_TEST);
+			//	write blend RGB but write alpha directly
 			glEnable(GL_BLEND);
-			//glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 			
-			//	blend colour, but force alpha
-			//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
-			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+			//	no rgb, all alpha
+			//glBlendFuncSeparate( GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
+
+			glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+			Opengl_IsOkay();
 
 			auto Shader = StageShader.Bind();
 			if ( Shader.IsValid() )

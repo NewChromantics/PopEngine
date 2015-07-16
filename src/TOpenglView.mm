@@ -12,8 +12,18 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	//	make "pixelformat" (context params)
 	NSOpenGLPixelFormatAttribute attrs[] =
 	{
-		NSOpenGLPFAAccelerated,		//	hardware only
+		//	hardware ONLY
+		NSOpenGLPFAAccelerated,
+		//NSOpenGLPFANoRecovery,
+
+		//	gr: lets get rid of double buffering
 		NSOpenGLPFADoubleBuffer,
+		
+		//	enable alpha for FBO's
+		//NSOpenGLPFASampleAlpha,
+		//NSOpenGLPFAColorFloat,
+		NSOpenGLPFAAlphaSize, 8,
+		NSOpenGLPFAColorSize, 32,
 		
 		//	require 3.2 to enable some features without using extensions (eg. glGenVertexArrays)
 		NSOpenGLPFAOpenGLProfile,
