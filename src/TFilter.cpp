@@ -162,10 +162,18 @@ bool TFilterJobRun::Run(std::ostream& Error)
 		
 		//	render this stage to the stage target fbo
 		RenderTarget.Bind();
-		glEnable( GL_BLEND );
 		{
 			auto& StageShader = pStage->mShader;
-			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)] );
+			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)], 0 );
+			Opengl::ClearDepth();
+
+			//glEnable(GL_ALPHA_TEST);
+			glEnable(GL_BLEND);
+			//glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+			
+			//	blend colour, but force alpha
+			//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
 			auto Shader = StageShader.Bind();
 			if ( Shader.IsValid() )
