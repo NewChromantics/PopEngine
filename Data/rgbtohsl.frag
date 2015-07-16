@@ -58,6 +58,6 @@ vec3 RgbToHsl(vec3 rgb)
 void main()
 {
     vec4 rgba = texture2D(crop,fTexCoord);
-    gl_FragColor.xyz = RgbToHsl( rgba.xyz );
-    gl_FragColor.w = rgba.w;
+	gl_FragColor.w = rgba.w;
+	gl_FragColor.xyz = RgbToHsl( rgba.xyz );
 }

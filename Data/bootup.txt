@@ -11,7 +11,8 @@ setuniform input01 MaskBottomLeft=0.0111219604x0.624482691
 
 
 # add shader called crop to filter
-#addstage input01 debuguv screenquad.vert debuguv.frag
+addstage input01 debuguv screenquad.vert debuguv.frag
+addstage input01 showalpha screenquad.vert showalpha.frag
 addstage input01 crop screenquad.vert crop.frag
 addstage input01 hsl screenquad.vert rgbtohsl.frag
-#addstage input01 grassfilter screenquad.vert grassfilter.frag
+addstage input01 grassfilter screenquad.vert grassfilter.frag

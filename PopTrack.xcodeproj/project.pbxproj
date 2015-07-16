@@ -82,6 +82,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BF30550A1B56F553002B0892 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C01B4BD82C0015614A /* SoyTypes_Ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Ios.h; path = src/SoyTypes_Ios.h; sourceTree = "<group>"; };
 		BF41F9C11B4BD82C0015614A /* SoyTypes_Osx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Osx.h; path = src/SoyTypes_Osx.h; sourceTree = "<group>"; };
@@ -290,6 +291,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF30550A1B56F553002B0892 /* Data */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				FB8A07181A2E6C3E0099596C /* PopTrack.cpp */,
 				FB8A07191A2E6C3E0099596C /* PopTrack.h */,
