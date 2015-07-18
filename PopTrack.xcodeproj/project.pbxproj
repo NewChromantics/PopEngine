@@ -78,7 +78,6 @@
 		FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB9C89991A82DFBA00931EFB /* OpenGL.framework */; };
 		FB2534FA1A97758D00A61590 /* TFilterWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB2534F71A97758D00A61590 /* TFilterWindow.cpp */; };
 		FBF67B361A974AAF00F74C38 /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = FBF67B341A974AAF00F74C38 /* PopMain.mm */; };
-		FBFFDB631A9D43E800330A83 /* PopAppBundle.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = FBFFDB621A9D43E800330A83 /* PopAppBundle.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -511,7 +510,7 @@
 		FB8A058B1A2E54730099596C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0640;
 				ORGANIZATIONNAME = NewChromantics;
 				TargetAttributes = {
 					FBF67B0C1A974A0900F74C38 = {
@@ -542,7 +541,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FBFFDB631A9D43E800330A83 /* PopAppBundle.xcconfig in Resources */,
 				FB2534BA1A974D0700A61590 /* PopTrack.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -659,6 +657,7 @@
 					"$(OPENCV_DIR)/include",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
