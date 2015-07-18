@@ -111,7 +111,7 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 		Frame.mFrame = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 	}
 	
-	Frame.mFrame.Copy( Pixels, true, true );
+	Frame.mFrame.Copy( Pixels, true, true, true );
 	return true;
 }
 
