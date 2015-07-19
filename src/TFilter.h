@@ -37,6 +37,13 @@ class TFilterFrame
 public:
 	Opengl::TTexture						mFrame;				//	first input
 	std::map<std::string,Opengl::TTexture>	mShaderTextures;	//	output cache
+
+	bool		Run(std::ostream& Error,TFilter& Filter);
+	
+	bool		SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter);
+	
+private:
+	bool		SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
 };
 
 
@@ -75,10 +82,11 @@ public:
 	void					AddStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename);
 	void					OnStagesChanged();
 
-	virtual void			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
+	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
 	{
+		return false;
 	}
-	virtual void			SetUniform(TJobParam& Param)
+	virtual bool			SetUniform(TJobParam& Param)
 	{
 		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );
 	}
@@ -95,8 +103,8 @@ class TPlayerFilter : public TFilter
 public:
 	TPlayerFilter(const std::string& Name);
 	
-	virtual void			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
-	virtual void			SetUniform(TJobParam& Param) override;
+	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
+	virtual bool			SetUniform(TJobParam& Param) override;
 	
 	BufferArray<vec2f,4>	mPitchCorners;
 };

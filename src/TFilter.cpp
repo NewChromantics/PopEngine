@@ -118,11 +118,16 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 
 bool TFilterJobRun::Run(std::ostream& Error)
 {
+	return mFrame->Run( Error, *mFilter );
+}
+	
+
+bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
+{
 	std::Debug << __func__ << std::endl;
 	
-	auto& Frame = *mFrame;
+	auto& Frame = *this;
 	auto& FrameTexture = Frame.mFrame;
-	auto& Filter = *mFilter;
 	
 	static int DebugColourOffset = 0;
 	DebugColourOffset++;
@@ -168,7 +173,7 @@ bool TFilterJobRun::Run(std::ostream& Error)
 			glDisable(GL_BLEND);
 			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)], 1 );
 			Opengl::ClearDepth();
-
+			
 			//	write blend RGB but write alpha directly
 			glEnable(GL_BLEND);
 			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -176,10 +181,10 @@ bool TFilterJobRun::Run(std::ostream& Error)
 			
 			//	no rgb, all alpha
 			//glBlendFuncSeparate( GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
-
+			
 			glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 			Opengl_IsOkay();
-
+			
 			auto Shader = StageShader.Bind();
 			if ( Shader.IsValid() )
 			{
@@ -189,22 +194,13 @@ bool TFilterJobRun::Run(std::ostream& Error)
 				{
 					auto& Uniform = StageShader.mUniforms[u];
 					
-					if ( Uniform.mName == TFilter::FrameSourceName )
-					{
-						Shader.SetUniform( Uniform.mName.c_str(), FrameTexture );
+					if ( SetUniform( Shader, Uniform, Filter ) )
 						continue;
-					}
-					
-					//	gr: todo: check type to make sure it's a texture to allow overloads
-					auto UniformTexture = Frame.mShaderTextures.find(Uniform.mName);
-					if ( UniformTexture != Frame.mShaderTextures.end() )
-					{
-						Shader.SetUniform( Uniform.mName.c_str(), UniformTexture->second );
-						continue;
-					}
-					
-					//	look for other variables
-					Filter.SetUniform( Shader, Uniform );
+
+					//	maybe surpress this until we need it... or only warn once
+					static bool DebugUnsetUniforms = false;
+					if ( DebugUnsetUniforms )
+						std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 				}
 				Filter.mBlitQuad.Draw();
 			}
@@ -219,6 +215,59 @@ bool TFilterJobRun::Run(std::ostream& Error)
 	return true;
 }
 
+
+bool TFilterFrame::SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName)
+{
+	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
+		return false;
+	
+	//	is there a suffix?
+	std::string Suffix;
+	Suffix = Uniform.mName.substr( TextureName.length(), std::string::npos );
+	
+	if ( Suffix.empty() )
+	{
+		Shader.SetUniform( Uniform.mName, Texture );
+		return true;
+	}
+	
+	if ( Suffix == "_TexelWidthHeight" )
+	{
+		vec2f Size( 1.0f / static_cast<float>(Texture.GetWidth()), 1.0f / static_cast<float>(Texture.GetHeight()) );
+		Shader.SetUniform( Uniform.mName, Size );
+		return true;
+	}
+	
+	if ( Suffix == "_PixelWidthHeight" )
+	{
+		vec2f Size( Texture.GetWidth(), Texture.GetHeight() );
+		Shader.SetUniform( Uniform.mName, Size );
+		return true;
+	}
+	
+	return false;
+}
+
+bool TFilterFrame::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
+{
+	//	do texture bindings
+	if ( SetTextureUniform( Shader, Uniform, mFrame, TFilter::FrameSourceName ) )
+		return true;
+	
+	for ( auto it=mShaderTextures.begin();	it!=mShaderTextures.end();	it++ )
+	{
+		auto& Texture = it->second;
+		auto& TextureName = it->first;
+		
+		if ( SetTextureUniform( Shader, Uniform, Texture, TextureName ) )
+			return true;
+	}
+	
+	if ( Filter.SetUniform( Shader, Uniform ) )
+		return true;
+	
+	return false;
+}
 
 
 TFilter::TFilter(const std::string& Name) :
@@ -362,47 +411,61 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
 }
 	
-void TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
+bool TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
 {
 	if ( Uniform.mName == "MaskTopLeft" )
+	{
 		Shader.SetUniform( Uniform.mName, mPitchCorners[0] );
+		return true;
+	}
 	
 	if ( Uniform.mName == "MaskTopRight" )
+	{
 		Shader.SetUniform( Uniform.mName, mPitchCorners[1] );
+		return true;
+	}
 	
 	if ( Uniform.mName == "MaskBottomRight" )
+	{
 		Shader.SetUniform( Uniform.mName, mPitchCorners[2] );
+		return true;
+	}
 	
 	if ( Uniform.mName == "MaskBottomLeft" )
+	{
 		Shader.SetUniform( Uniform.mName, mPitchCorners[3] );
+		return true;
+	}
+	
+	return false;
 }
 
 
-void TPlayerFilter::SetUniform(TJobParam& Param)
+bool TPlayerFilter::SetUniform(TJobParam& Param)
 {
 	if ( Param.GetKey() == "MaskTopLeft" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[0] ), "Failed to decode" );
-		return;
+		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskTopRight" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[1] ), "Failed to decode" );
-		return;
+		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskBottomRight" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[2] ), "Failed to decode" );
-		return;
+		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskBottomLeft" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[3] ), "Failed to decode" );
-		return;
+		return true;
 	}
 
-	TFilter::SetUniform( Param );
+	return TFilter::SetUniform( Param );
 }
