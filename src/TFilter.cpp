@@ -392,6 +392,10 @@ void TFilter::OnStagesChanged()
 	}
 }
 
+void TFilter::OnUniformChanged(const std::string &Name)
+{
+	OnStagesChanged();
+}
 
 Opengl::TContext& TFilter::GetContext()
 {
@@ -446,24 +450,28 @@ bool TPlayerFilter::SetUniform(TJobParam& Param)
 	if ( Param.GetKey() == "MaskTopLeft" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[0] ), "Failed to decode" );
+		OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskTopRight" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[1] ), "Failed to decode" );
+		OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskBottomRight" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[2] ), "Failed to decode" );
+		OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskBottomLeft" )
 	{
 		Soy::Assert( Param.Decode( mPitchCorners[3] ), "Failed to decode" );
+		OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 

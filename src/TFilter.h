@@ -81,6 +81,7 @@ public:
 
 	void					AddStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename);
 	void					OnStagesChanged();
+	void					OnUniformChanged(const std::string& Name);
 
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
 	{
