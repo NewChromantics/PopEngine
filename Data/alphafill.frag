@@ -3,7 +3,7 @@ uniform sampler2D grassfilter;
 uniform vec2 grassfilter_TexelWidthHeight;
 uniform vec2 grassfilter_PixelWidthHeight;
 
-uniform int SampleRadius = 4;	//	range 0,9
+uniform int SampleRadius = 2;	//	range 0,9
 uniform int HitCountMin = 4;
 uniform bool IncludeSelf = true;
 

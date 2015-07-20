@@ -206,7 +206,7 @@ bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
 			}
 			else
 			{
-				std::Debug << __func__ << " stage has no valid shader" << std::endl;
+				std::Debug << __func__ << " stage " << StageName << " has no valid shader" << std::endl;
 			}
 		}
 		RenderTarget.Unbind();
