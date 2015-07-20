@@ -1,5 +1,6 @@
 #include "TFilter.h"
 #include "TFilterWindow.h"
+#include <SoyMath.h>
 
 const char* TFilter::FrameSourceName = "Frame";
 
@@ -23,9 +24,10 @@ public:
 class TFilterJobRun : public Opengl::TJob
 {
 public:
-	TFilterJobRun(TFilter& Filter,std::shared_ptr<TFilterFrame>& Frame) :
+	TFilterJobRun(TFilter& Filter,std::shared_ptr<TFilterFrame>& Frame,SoyTime FrameTime) :
 		mFrame		( Frame ),
-		mFilter		( &Filter )
+		mFilter		( &Filter ),
+		mFrameTime	( FrameTime )
 	{
 	}
 
@@ -34,6 +36,7 @@ public:
 	//	eek, no safe pointer here!
 	TFilter*						mFilter;
 	std::shared_ptr<TFilterFrame>	mFrame;
+	SoyTime							mFrameTime;
 };
 
 
@@ -177,7 +180,15 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 
 bool TFilterJobRun::Run(std::ostream& Error)
 {
-	return mFrame->Run( Error, *mFilter );
+	bool AllCompleted = mFrame->Run( Error, *mFilter );
+	std::tuple<SoyTime,TFilterFrame&> TimeAndFrame( mFrameTime, *mFrame );
+	
+	if ( AllCompleted )
+		mFilter->mOnRunCompleted.OnTriggered( TimeAndFrame );
+	else
+		mFilter->mOnRunIncomplete.OnTriggered( TimeAndFrame );
+	
+	return true;
 }
 
 bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
@@ -274,6 +285,7 @@ bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
 	std::Debug << __func__ << std::endl;
 	
 	auto& Frame = *this;
+	bool AllSuccess = true;
 
 	//	run through the shader chain
 	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
@@ -291,9 +303,10 @@ bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
 		auto& pData = Frame.mStageData[StageName];
 		bool Success = pStage->Execute( *this, pData );
 		
+		AllSuccess = AllSuccess && Success;
 	}
 	
-	return true;
+	return AllSuccess;
 }
 
 
@@ -356,6 +369,15 @@ bool TFilterFrame::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uni
 		return true;
 	
 	return false;
+}
+
+std::shared_ptr<TFilterStageRuntimeData> TFilterFrame::GetData(const std::string& StageName)
+{
+	auto it = mStageData.find( StageName );
+	if ( it == mStageData.end() )
+		return nullptr;
+	
+	return it->second;
 }
 
 
@@ -468,12 +490,11 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
 	auto& Context = GetContext();
 	std::shared_ptr<Opengl::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
 	Context.PushJob( Job );
-	
-	//	trigger a run (maybe this will be automatic in future after success?)
-	Run( Time );
+
+	OnFrameChanged( Time );
 }
 
-void TFilter::Run(SoyTime Time)
+void TFilter::QueueRun(SoyTime Time)
 {
 	//	grab the frame
 	auto FrameIt = mFrames.find( Time );
@@ -482,7 +503,7 @@ void TFilter::Run(SoyTime Time)
 	
 	//	make up a job that holds the pixels to put it into a texture, then run to refresh everything
 	auto& Context = GetContext();
-	std::shared_ptr<Opengl::TJob> Job( new TFilterJobRun( *this, Frame ) );
+	std::shared_ptr<Opengl::TJob> Job( new TFilterJobRun( *this, Frame, Time ) );
 	Context.PushJob( Job );
 }
 
@@ -519,6 +540,14 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mPitchCorners.PushBack( vec2f(0.5f,0.0f) );
 	mPitchCorners.PushBack( vec2f(0.5f,0.8f) );
 	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
+	
+	mOnRunCompleted.AddListener( *this, &TPlayerFilter::ExtractPlayers );
+
+	auto DebugExtractedPlayers = [](TExtractedFrame& ExtractedFrame)
+	{
+		std::Debug << "extracted " << ExtractedFrame.mPlayers.GetSize() << " players on frame " << ExtractedFrame.mTime << std::endl;
+	};
+	mOnExtractedPlayers.AddListener( DebugExtractedPlayers );
 }
 	
 bool TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
@@ -582,5 +611,60 @@ bool TPlayerFilter::SetUniform(TJobParam& Param)
 	}
 
 	return TFilter::SetUniform( Param );
+}
+
+
+void TPlayerFilter::ExtractPlayers(std::tuple<SoyTime,TFilterFrame&>& Frame)
+{
+	auto& FilterFrame = std::get<1>( Frame );
+	auto& FrameTime = std::get<0>( Frame );
+	
+	//	grab pixel data
+	std::string PlayerDataStage = "foundplayers";
+	auto PlayerStageData = FilterFrame.GetData(PlayerDataStage);
+	if ( !PlayerStageData )
+	{
+		std::Debug << "Missing stage data for " << PlayerDataStage << std::endl;
+		return;
+	}
+
+	auto& FoundPlayerData = *dynamic_cast<TFilterStageRuntimeData_ReadPixels*>( PlayerStageData.get() );
+	auto& FoundPlayerPixels = FoundPlayerData.mPixels;
+	auto& FoundPlayerPixelsArray = FoundPlayerPixels.GetPixelsArray();
+	
+	//	get all valid entries
+	TExtractedFrame ExtractedFrame;
+	ExtractedFrame.mTime = FrameTime;
+	
+	static int MaxPlayerExtractions = 100;
+	
+	auto PixelChannelCount = SoyPixelsFormat::GetChannelCount( FoundPlayerPixels.GetFormat() );
+	for ( int i=0;	i<FoundPlayerPixelsArray.GetSize();	i+=PixelChannelCount )
+	{
+		int ValidityIndex = size_cast<int>( PixelChannelCount-1 );
+		auto RedIndex = std::clamped( 0, 0, ValidityIndex-1 );
+		int GreenIndex = std::clamped( 0, 1, ValidityIndex-1 );
+		int BlueIndex = std::clamped( 0, 2, ValidityIndex-1 );
+		
+		auto Validity = FoundPlayerPixelsArray[i+ValidityIndex];
+		if ( Validity <= 0 )
+			continue;
+		
+		TExtractedPlayer Player;
+		Player.mRgb = vec3f( FoundPlayerPixelsArray[i+RedIndex], FoundPlayerPixelsArray[i+GreenIndex], FoundPlayerPixelsArray[i+BlueIndex] );
+		Player.mRgb *= vec3f( 1.0f/255.f, 1.0f/255.f, 1.0f/255.f );
+		
+		Player.mUv = FoundPlayerPixels.GetUv( i/PixelChannelCount );
+
+		ExtractedFrame.mPlayers.PushBack( Player );
+		
+		if ( ExtractedFrame.mPlayers.GetSize() > MaxPlayerExtractions )
+		{
+			std::Debug << "Stopped player extraction at " << ExtractedFrame.mPlayers.GetSize() << std::endl;
+		}
+	}
+	
+	mOnExtractedPlayers.OnTriggered( ExtractedFrame );
+	
 }
 

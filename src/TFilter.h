@@ -97,7 +97,8 @@ public:
 	bool		Run(std::ostream& Error,TFilter& Filter);
 	
 	bool		SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter);
-	
+	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
+
 public:
 	static bool	SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
 };
@@ -129,11 +130,11 @@ public:
 public:
 	TFilter(const std::string& Name);
 	
-	void					Run(SoyTime Frame);
+	void					QueueRun(SoyTime Frame);
 	Opengl::TContext&		GetContext();			//	in the window
 	
 	void					LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time);	//	load pixels into [new] frame
-	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
+	void					OnFrameChanged(SoyTime Frame)	{	QueueRun(Frame);	}
 
 	void					AddStage(const std::string& Name,const TJobParams& Params);
 	void					OnStagesChanged();
@@ -149,13 +150,28 @@ public:
 	}
 
 public:
-	SoyEvent<const SoyTime>							mOnRunFinished;
+	SoyEvent<std::tuple<SoyTime,TFilterFrame&>>		mOnRunCompleted;
+	SoyEvent<std::tuple<SoyTime,TFilterFrame&>>		mOnRunIncomplete;
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
 	Opengl::TGeometry		mBlitQuad;
 };
 
+
+class TExtractedPlayer
+{
+public:
+	vec2f	mUv;
+	vec3f	mRgb;	//	convert this to actual data based on other uniforms
+};
+
+class TExtractedFrame
+{
+public:
+	Array<TExtractedPlayer>	mPlayers;
+	SoyTime					mTime;
+};
 
 class TPlayerFilter : public TFilter
 {
@@ -165,9 +181,9 @@ public:
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
 	virtual bool			SetUniform(TJobParam& Param) override;
 	
-	void					ExtractPlayers(const SoyTime& FrameTime,const TFilterFrame& Frame);
-	void					ExtractPlayers(const SoyTime& FrameTime,const SoyPixels& OutputPixels);
+	void					ExtractPlayers(std::tuple<SoyTime,TFilterFrame&>& Frame);
 	
-	BufferArray<vec2f,4>	mPitchCorners;
-	std::map<SoyTime,Array<vec2f>>	mPlayerPositions;
+public:
+	SoyEvent<TExtractedFrame>	mOnExtractedPlayers;
+	BufferArray<vec2f,4>		mPitchCorners;
 };
