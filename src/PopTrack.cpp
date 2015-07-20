@@ -29,8 +29,6 @@ TPopTrack::TPopTrack() :
 	TParameterTraits AddStageTraits;
 	AddStageTraits.mAssumedKeys.PushBack("filter");
 	AddStageTraits.mAssumedKeys.PushBack("name");
-	AddStageTraits.mAssumedKeys.PushBack("vertfilename");
-	AddStageTraits.mAssumedKeys.PushBack("fragfilename");
 	AddJobHandler("AddStage", AddStageTraits, *this, &TPopTrack::OnAddStage );
 	
 	//	all non-default keys are then passed to filter as params to set
@@ -106,11 +104,9 @@ void TPopTrack::OnAddStage(TJobAndChannel &JobAndChannel)
 	auto& Job = JobAndChannel.GetJob();
 	auto FilterName = Job.mParams.GetParamAs<std::string>("filter");
 	auto Name = Job.mParams.GetParamAs<std::string>("name");
-	auto VertFilename = Job.mParams.GetParamAs<std::string>("vertfilename");
-	auto FragFilename = Job.mParams.GetParamAs<std::string>("fragfilename");
 	
 	auto Filter = GetFilter( FilterName );
-	Filter->AddStage( Name, VertFilename, FragFilename );
+	Filter->AddStage( Name, Job.mParams );
 	
 	TJobReply Reply(Job);
 	Reply.mParams.AddDefaultParam("added stage");

@@ -17,7 +17,6 @@ class TFilterStage
 public:
 	TFilterStage(const std::string& Name,TFilter& Filter);
 	
-	virtual void		OnAdded() 		{}
 	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)=0;
 
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
@@ -41,7 +40,6 @@ class TFilterStage_ShaderBlit : public TFilterStage
 public:
 	TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter);
 	
-	virtual void		OnAdded() override	{	Reload();	}
 	void				Reload();
 	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
 	
@@ -72,6 +70,8 @@ class TFilterStage_ReadPixels : public TFilterStage
 {
 public:
 	TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter);
+
+	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data);
 	
 public:
 	std::string			mSourceStage;
@@ -135,7 +135,7 @@ public:
 	void					LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time);	//	load pixels into [new] frame
 	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
 
-	void					AddStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename);
+	void					AddStage(const std::string& Name,const TJobParams& Params);
 	void					OnStagesChanged();
 	void					OnUniformChanged(const std::string& Name);
 

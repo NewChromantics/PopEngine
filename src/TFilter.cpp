@@ -112,6 +112,52 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 }
 
 
+TFilterStage_ReadPixels::TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter) :
+	TFilterStage	( Name, Filter ),
+	mSourceStage	( SourceStage )
+{
+	
+}
+	
+bool TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& pData)
+{
+	std::Debug << "reading pixels stage " << mName << std::endl;
+
+	//	get source texture
+	auto SourceDatait = Frame.mStageData.find( mSourceStage );
+	if ( SourceDatait == Frame.mStageData.end() )
+		return false;
+	auto& SourceData = SourceDatait->second;
+	if ( !SourceData )
+		return false;
+	
+	auto SourceTexture = SourceData->GetTexture();
+	if ( !SourceTexture.IsValid() )
+		return false;
+	
+	//	alloc pixels if we need to
+	if ( !pData )
+		pData.reset( new TFilterStageRuntimeData_ReadPixels );
+	auto& Data = *dynamic_cast<TFilterStageRuntimeData_ReadPixels*>( pData.get() );
+
+	try
+	{
+		SourceTexture.Read( Data.mPixels );
+		return true;
+	}
+	catch (std::exception& e)
+	{
+		std::Debug << "Exception reading texture: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
+{
+	return false;
+}
+
+
 bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 {
 	auto& Frame = *mFrame;
@@ -368,7 +414,7 @@ TFilter::TFilter(const std::string& Name) :
 	mWindow->GetContext()->PushJob( CreateBlitGeo );
 }
 
-void TFilter::AddStage(const std::string& Name,const std::string& VertShader,const std::string& FragShader)
+void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 {
 	//	make sure stage doesn't exist
 	for ( int s=0;	s<mStages.GetSize();	s++ )
@@ -377,11 +423,26 @@ void TFilter::AddStage(const std::string& Name,const std::string& VertShader,con
 		Soy::Assert( !(Stage == Name), "Stage already exists" );
 	}
 
-	std::shared_ptr<TFilterStage> Stage( new TFilterStage_ShaderBlit(Name,VertShader,FragShader,mBlitQuad.mVertexDescription,*this) );
+	//	work out which type it is
+	std::shared_ptr<TFilterStage> Stage;
+	if ( Params.HasParam("vert") && Params.HasParam("frag") )
+	{
+		auto VertFilename = Params.GetParamAs<std::string>("vert");
+		auto FragFilename = Params.GetParamAs<std::string>("frag");
+		Stage.reset( new TFilterStage_ShaderBlit(Name,VertFilename,FragFilename,mBlitQuad.mVertexDescription,*this) );
+	}
+	else if ( Params.HasParam("readtexture") )
+	{
+		auto SourceTexture = Params.GetParamAs<std::string>("readtexture");
+		Stage.reset( new TFilterStage_ReadPixels(Name,SourceTexture,*this) );
+	}
+	
+	if ( !Stage )
+		throw Soy::AssertException("Could not deduce type of stage");
+
 	mStages.PushBack( Stage );
 	OnStagesChanged();
 	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
-	//Stage->OnAdded();
 }
 
 void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
