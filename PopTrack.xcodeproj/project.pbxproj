@@ -87,6 +87,7 @@
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
+		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
 		BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_CoreFoundation.h; path = src/SoyTypes_CoreFoundation.h; sourceTree = "<group>"; };
 		BF7C5F181B52B1B9006D1DC0 /* TFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilter.cpp; path = src/TFilter.cpp; sourceTree = "<group>"; };
 		BF7C5F191B52B1B9006D1DC0 /* TFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilter.h; path = src/TFilter.h; sourceTree = "<group>"; };
@@ -347,6 +348,7 @@
 				FBC3A0E01A308648009DA49E /* SoyScope.h */,
 				FB8A06431A2E5A7C0099596C /* SoyState.h */,
 				BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */,
+				BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */,
 				BF89F6BD1B4B14CD00F58561 /* SoyVector.h */,
 				FB8A064A1A2E5A7C0099596C /* SoyString.h */,
 				FB8A064D1A2E5A7C0099596C /* SoyThread.h */,
