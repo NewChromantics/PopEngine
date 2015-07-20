@@ -1,6 +1,6 @@
 in vec2 fTexCoord;
 uniform sampler2D hsl;
-vec4 MatchColour = vec4( 100/255, 140/255, 72/255, 0 );
+vec4 MatchColour = vec4( 100/255.f, 140/255.f, 72/255.f, 0 );
 float MaxColourDiff = 1;
 float MinColourDiff = 0.263f;
 float SaturationFloor = 0.17f;
@@ -109,6 +109,13 @@ float GetHslDiff(vec3 a,vec3 b)
 
 void main()
 {
+	if ( fTexCoord.x < 0.10f && fTexCoord.y < 0.10f )
+	{
+		gl_FragColor.xyz = MatchColour.xyz;
+		gl_FragColor.w = 1;
+		return;
+	}
+	
 	vec4 Sample = texture2D(hsl,fTexCoord);
 	vec3 MatchHsl = RgbToHsl( MatchColour.xyz );
 	float Diff = GetHslDiff( Sample.xyz, MatchColour.xyz );

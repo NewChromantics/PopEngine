@@ -1,9 +1,9 @@
 in vec2 fTexCoord;
 uniform sampler2D Frame;
-uniform vec2 MaskTopLeft;
-uniform vec2 MaskTopRight;
-uniform vec2 MaskBottomRight;
-uniform vec2 MaskBottomLeft;
+uniform vec2 MaskTopLeft = vec2(0,0);
+uniform vec2 MaskTopRight = vec2(0,1);
+uniform vec2 MaskBottomRight = vec2(1,1);
+uniform vec2 MaskBottomLeft = vec2(0,1);
 
 
 float sign (vec2 p1, vec2 p2, vec2 p3)

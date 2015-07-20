@@ -18,4 +18,4 @@ addstage input01 hsl screenquad.vert rgbtohsl.frag
 addstage input01 grassfilter screenquad.vert grassfilter.frag
 
 # gr: not sure this is the right shader atm
-#addstage input01 grassfilled screenquad.vert alphafill.frag
+addstage input01 grassfilled screenquad.vert alphafill.frag
