@@ -38,14 +38,20 @@ public:
 
 
 
-
-
-TFilterStage::TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter) :
+TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 	mName			( Name ),
+	mFilter			( Filter )
+{
+}
+
+
+
+
+TFilterStage_ShaderBlit::TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter) :
+	TFilterStage	( Name, Filter ),
 	mVertFilename	( VertFilename ),
 	mFragFilename	( FragFilename ),
 	mBlitVertexDescription	( BlitVertexDescription ),
-	mFilter			( Filter ),
 	mVertFileWatch	( VertFilename ),
 	mFragFileWatch	( FragFilename )
 {
@@ -56,9 +62,12 @@ TFilterStage::TFilterStage(const std::string& Name,const std::string& VertFilena
 	
 	mVertFileWatch.mOnChanged.AddListener( OnFileChanged );
 	mFragFileWatch.mOnChanged.AddListener( OnFileChanged );
+	
+	Reload();
 }
 
-void TFilterStage::Reload()
+
+void TFilterStage_ShaderBlit::Reload()
 {
 	Opengl::TContext& Context = mFilter.GetContext();
 	
@@ -77,10 +86,10 @@ void TFilterStage::Reload()
 		{
 			//	don't override the shader until it succeeds
 			auto NewShader = Opengl::BuildProgram( VertSrc, FragSrc, mBlitVertexDescription, mName );
-
+			
 			if ( !NewShader.IsValid() )
 				return true;
-		
+			
 			//	gr; may need std::move here
 			mShader = NewShader;
 		}
@@ -97,6 +106,10 @@ void TFilterStage::Reload()
 	Context.PushJob( BuildShader );
 }
 
+bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
+{
+	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName );
+}
 
 
 bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
@@ -120,15 +133,9 @@ bool TFilterJobRun::Run(std::ostream& Error)
 {
 	return mFrame->Run( Error, *mFilter );
 }
-	
 
-bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
+bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
-	std::Debug << __func__ << std::endl;
-	
-	auto& Frame = *this;
-	auto& FrameTexture = Frame.mFrame;
-	
 	static int DebugColourOffset = 0;
 	DebugColourOffset++;
 	Soy::TRgb DebugClearColours[] =
@@ -141,6 +148,87 @@ bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
 		Soy::TRgb(1,0,1),
 	};
 	
+	bool Success = false;
+	
+	
+	if ( !Data )
+	{
+		auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+		Data.reset( pData );
+		auto& StageTarget = pData->mTexture;
+		auto& FrameTexture = Frame.mFrame;
+
+		if ( !StageTarget.IsValid() )
+		{
+			auto Format = SoyPixelsFormat::RGBA;
+			SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), Format );
+			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		}
+	}
+	auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
+	auto& StageName = mName;
+	
+	//	gr: cache/pool these rendertargets?
+	Opengl::TFboMeta FboMeta( StageName, StageTarget.GetWidth(), StageTarget.GetHeight() );
+	std::shared_ptr<Opengl::TRenderTarget> pRenderTarget( new Opengl::TRenderTargetFbo( FboMeta, StageTarget ) );
+	auto& RenderTarget = *pRenderTarget;
+	
+	//	render this stage to the stage target fbo
+	RenderTarget.Bind();
+	{
+		auto& StageShader = mShader;
+		glDisable(GL_BLEND);
+		Opengl::ClearColour( DebugClearColours[(DebugColourOffset)%sizeofarray(DebugClearColours)], 1 );
+		Opengl::ClearDepth();
+		
+		//	write blend RGB but write alpha directly
+		glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+		
+		//	no rgb, all alpha
+		//glBlendFuncSeparate( GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
+		
+		glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+		Opengl_IsOkay();
+		
+		auto Shader = StageShader.Bind();
+		if ( Shader.IsValid() )
+		{
+			std::Debug << "drawing stage " << StageName << std::endl;
+			//	gr: go through uniforms, find any named same as a shader and bind that shaders output
+			for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
+			{
+				auto& Uniform = StageShader.mUniforms[u];
+				
+				if ( Frame.SetUniform( Shader, Uniform, mFilter ) )
+					continue;
+				
+				//	maybe surpress this until we need it... or only warn once
+				static bool DebugUnsetUniforms = false;
+				if ( DebugUnsetUniforms )
+					std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
+			}
+			mFilter.mBlitQuad.Draw();
+			Success = true;
+		}
+		else
+		{
+			std::Debug << __func__ << " stage " << StageName << " has no valid shader" << std::endl;
+		}
+	}
+	RenderTarget.Unbind();
+	
+	return Success;
+}
+
+
+bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
+{
+	std::Debug << __func__ << std::endl;
+	
+	auto& Frame = *this;
+
 	//	run through the shader chain
 	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
 	{
@@ -152,64 +240,11 @@ bool TFilterFrame::Run(std::ostream& Error,TFilter& Filter)
 			continue;
 		}
 		
-		//	get texture for this stage
-		auto& StageTarget = Frame.mShaderTextures[StageName];
-		if ( !StageTarget.IsValid() )
-		{
-			//	SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), FrameTexture.GetFormat() );
-			SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), SoyPixelsFormat::RGBA );
-			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
-		}
+		//	get data pointer for this stage, if it's null the stage should allocate what it needs
+		//	gr: is this reference thread safe?
+		auto& pData = Frame.mStageData[StageName];
+		bool Success = pStage->Execute( *this, pData );
 		
-		//	gr: cache/pool these rendertargets?
-		Opengl::TFboMeta FboMeta( StageName, StageTarget.GetWidth(), StageTarget.GetHeight() );
-		std::shared_ptr<Opengl::TRenderTarget> pRenderTarget( new Opengl::TRenderTargetFbo( FboMeta, StageTarget ) );
-		auto& RenderTarget = *pRenderTarget;
-		
-		//	render this stage to the stage target fbo
-		RenderTarget.Bind();
-		{
-			auto& StageShader = pStage->mShader;
-			glDisable(GL_BLEND);
-			Opengl::ClearColour( DebugClearColours[(s+DebugColourOffset)%sizeofarray(DebugClearColours)], 1 );
-			Opengl::ClearDepth();
-			
-			//	write blend RGB but write alpha directly
-			glEnable(GL_BLEND);
-			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
-			
-			//	no rgb, all alpha
-			//glBlendFuncSeparate( GL_ZERO, GL_ONE, GL_ONE, GL_ZERO);
-			
-			glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
-			Opengl_IsOkay();
-			
-			auto Shader = StageShader.Bind();
-			if ( Shader.IsValid() )
-			{
-				std::Debug << "drawing stage " << StageName << std::endl;
-				//	gr: go through uniforms, find any named same as a shader and bind that shaders output
-				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
-				{
-					auto& Uniform = StageShader.mUniforms[u];
-					
-					if ( SetUniform( Shader, Uniform, Filter ) )
-						continue;
-
-					//	maybe surpress this until we need it... or only warn once
-					static bool DebugUnsetUniforms = false;
-					if ( DebugUnsetUniforms )
-						std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
-				}
-				Filter.mBlitQuad.Draw();
-			}
-			else
-			{
-				std::Debug << __func__ << " stage " << StageName << " has no valid shader" << std::endl;
-			}
-		}
-		RenderTarget.Unbind();
 	}
 	
 	return true;
@@ -250,18 +285,26 @@ bool TFilterFrame::SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUnifo
 
 bool TFilterFrame::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
 {
+	//	have a priority/overload order;
+	//		stage-frame data
+	//		frame data
+	//		stage data	[done by filter]
+	//		filter data
+	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
+	{
+		auto& StageData = it->second;
+		auto& StageName = it->first;
+		
+		if ( !StageData )
+			continue;
+		
+		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter ) )
+			return true;
+	}
+
 	//	do texture bindings
 	if ( SetTextureUniform( Shader, Uniform, mFrame, TFilter::FrameSourceName ) )
 		return true;
-	
-	for ( auto it=mShaderTextures.begin();	it!=mShaderTextures.end();	it++ )
-	{
-		auto& Texture = it->second;
-		auto& TextureName = it->first;
-		
-		if ( SetTextureUniform( Shader, Uniform, Texture, TextureName ) )
-			return true;
-	}
 	
 	if ( Filter.SetUniform( Shader, Uniform ) )
 		return true;
@@ -334,11 +377,11 @@ void TFilter::AddStage(const std::string& Name,const std::string& VertShader,con
 		Soy::Assert( !(Stage == Name), "Stage already exists" );
 	}
 
-	std::shared_ptr<TFilterStage> Stage( new TFilterStage(Name,VertShader,FragShader,mBlitQuad.mVertexDescription,*this) );
+	std::shared_ptr<TFilterStage> Stage( new TFilterStage_ShaderBlit(Name,VertShader,FragShader,mBlitQuad.mVertexDescription,*this) );
 	mStages.PushBack( Stage );
 	OnStagesChanged();
 	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
-	Stage->Reload();
+	//Stage->OnAdded();
 }
 
 void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
@@ -399,6 +442,8 @@ void TFilter::OnUniformChanged(const std::string &Name)
 
 Opengl::TContext& TFilter::GetContext()
 {
+	Soy::Assert( mWindow!=nullptr, "window not yet allocated" );
+		
 	auto* Context = mWindow->GetContext();
 	Soy::Assert( Context != nullptr, "Expected opengl window to have a context");
 	return *Context;
@@ -477,3 +522,4 @@ bool TPlayerFilter::SetUniform(TJobParam& Param)
 
 	return TFilter::SetUniform( Param );
 }
+

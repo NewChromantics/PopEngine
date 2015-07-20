@@ -7,28 +7,84 @@
 
 class TFilterWindow;
 class TFilter;
-
+class TFilterFrame;
+class TFilterStageRuntimeData;
 
 
 
 class TFilterStage
 {
 public:
-	TFilterStage(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter);
-	void				Reload();
+	TFilterStage(const std::string& Name,TFilter& Filter);
 	
+	virtual void		OnAdded() 		{}
+	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)=0;
+
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
 public:
 	SoyEvent<TFilterStage&>	mOnChanged;
 	std::string				mName;
+	TFilter&				mFilter;
+};
+
+class TFilterStageRuntimeData
+{
+public:
+	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)=0;
+	virtual Opengl::TTexture	GetTexture()=0;
+};
+
+
+class TFilterStage_ShaderBlit : public TFilterStage
+{
+public:
+	TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter);
+	
+	virtual void		OnAdded() override	{	Reload();	}
+	void				Reload();
+	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	
+	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
+	
+public:
 	std::string				mVertFilename;
 	std::string				mFragFilename;
 	Soy::TFileWatch			mVertFileWatch;
 	Soy::TFileWatch			mFragFileWatch;
 	Opengl::GlProgram		mShader;
 	Opengl::TGeometryVertex	mBlitVertexDescription;
-	TFilter&				mFilter;
+};
+
+class TFilterStageRuntimeData_ShaderBlit : public TFilterStageRuntimeData
+{
+public:
+	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter) override;
+	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
+
+public:
+	Opengl::TTexture		mTexture;
+};
+
+
+
+class TFilterStage_ReadPixels : public TFilterStage
+{
+public:
+	TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter);
+	
+public:
+	std::string			mSourceStage;
+};
+
+class TFilterStageRuntimeData_ReadPixels : public TFilterStageRuntimeData
+{
+public:
+	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter) override;
+	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
+	
+public:
+	SoyPixels			mPixels;
 };
 
 
@@ -36,14 +92,14 @@ class TFilterFrame
 {
 public:
 	Opengl::TTexture						mFrame;				//	first input
-	std::map<std::string,Opengl::TTexture>	mShaderTextures;	//	output cache
-
+	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
+	
 	bool		Run(std::ostream& Error,TFilter& Filter);
 	
 	bool		SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter);
 	
-private:
-	bool		SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
+public:
+	static bool	SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
 };
 
 
@@ -92,6 +148,8 @@ public:
 		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );
 	}
 
+public:
+	SoyEvent<const SoyTime>							mOnRunFinished;
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
@@ -107,5 +165,9 @@ public:
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
 	virtual bool			SetUniform(TJobParam& Param) override;
 	
+	void					ExtractPlayers(const SoyTime& FrameTime,const TFilterFrame& Frame);
+	void					ExtractPlayers(const SoyTime& FrameTime,const SoyPixels& OutputPixels);
+	
 	BufferArray<vec2f,4>	mPitchCorners;
+	std::map<SoyTime,Array<vec2f>>	mPlayerPositions;
 };

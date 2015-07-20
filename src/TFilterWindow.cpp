@@ -52,19 +52,19 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	auto FrameCount = Frames.GetSize();
 	if ( FrameCount == 0 )
 		return;
-	size_t ShaderCount = 0;
+	size_t StageCount = 0;
 	for ( int f=0;	f<Frames.GetSize();	f++ )
-		ShaderCount = std::max( ShaderCount, Frames[f]->mShaderTextures.size() );
+		StageCount = std::max( StageCount, Frames[f]->mStageData.size() );
 	//	+1 for source texture
-	ShaderCount++;
+	StageCount++;
 	
 	//	make rendering tile rect
-	Soy::Rectf TileRect( 0, 0, 1.f/static_cast<float>(ShaderCount), 1.f/static_cast<float>(FrameCount) );
+	Soy::Rectf TileRect( 0, 0, 1.f/static_cast<float>(StageCount), 1.f/static_cast<float>(FrameCount) );
 	
 	for ( int f=0;	f<Frames.GetSize();	f++ )
 	{
 		auto& Frame = *Frames[f];
-		auto& Stages = Frame.mShaderTextures;
+		auto& StageDatas = Frame.mStageData;
 		
 		//	render source texture
 		{
@@ -76,11 +76,10 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 			TileRect.x += TileRect.w;
 		}
 		
-		for ( auto s=Stages.begin();	s!=Stages.end();	s++ )
+		for ( auto s=StageDatas.begin();	s!=StageDatas.end();	s++ )
 		{
 			//auto& StageName = s->first;
-			auto& StageTexture = s->second;
-			std::map<std::string,Opengl::TTexture>	mShaderTextures;	//	output cache
+			auto StageTexture = s->second->GetTexture();
 			
 			if ( StageTexture.IsValid() )
 			{
