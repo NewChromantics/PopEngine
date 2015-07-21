@@ -94,7 +94,7 @@ public:
 	Opengl::TTexture						mFrame;				//	first input
 	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
 	
-	bool		Run(std::ostream& Error,TFilter& Filter);
+	bool		Run(TFilter& Filter);
 	
 	bool		SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter);
 	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
@@ -129,17 +129,19 @@ public:
 	
 public:
 	TFilter(const std::string& Name);
+	virtual ~TFilter()		{}
 	
-	void					QueueRun(SoyTime Frame);
+	bool					Run(SoyTime Frame);		//	returns true if all stages succeeded
 	Opengl::TContext&		GetContext();			//	in the window
 	
 	void					LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time);	//	load pixels into [new] frame
-	void					OnFrameChanged(SoyTime Frame)	{	QueueRun(Frame);	}
+	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
 
 	void					AddStage(const std::string& Name,const TJobParams& Params);
 	void					OnStagesChanged();
 	void					OnUniformChanged(const std::string& Name);
 
+	//	gr: figure these out
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
 	{
 		return false;
@@ -148,10 +150,9 @@ public:
 	{
 		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );
 	}
+	virtual TJobParam		GetUniform(const std::string& Name);
 
 public:
-	SoyEvent<std::tuple<SoyTime,TFilterFrame&>>		mOnRunCompleted;
-	SoyEvent<std::tuple<SoyTime,TFilterFrame&>>		mOnRunIncomplete;
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
@@ -162,9 +163,10 @@ public:
 class TExtractedPlayer
 {
 public:
-	vec2f	mUv;
-	vec3f	mRgb;	//	convert this to actual data based on other uniforms
+	Soy::Rectf	mRect;
+	vec3f		mRgb;	//	convert this to actual data based on other uniforms
 };
+std::ostream& operator<<(std::ostream &out,const TExtractedPlayer& in);
 
 class TExtractedFrame
 {
@@ -178,12 +180,17 @@ class TPlayerFilter : public TFilter
 public:
 	TPlayerFilter(const std::string& Name);
 	
+	void					Run(SoyTime FrameTime,TJobParams& ResultParams);
+
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
 	virtual bool			SetUniform(TJobParam& Param) override;
+	virtual TJobParam		GetUniform(const std::string& Name) override;
 	
-	void					ExtractPlayers(std::tuple<SoyTime,TFilterFrame&>& Frame);
+	void					ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame);
 	
 public:
-	SoyEvent<TExtractedFrame>	mOnExtractedPlayers;
-	BufferArray<vec2f,4>		mPitchCorners;
+	//	uniforms
+	int						mCylinderPixelWidth;
+	int						mCylinderPixelHeight;
+	BufferArray<vec2f,4>	mPitchCorners;
 };

@@ -79,7 +79,11 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		for ( auto s=StageDatas.begin();	s!=StageDatas.end();	s++ )
 		{
 			//auto& StageName = s->first;
-			auto StageTexture = s->second->GetTexture();
+			auto& StageData = s->second;
+			if ( !StageData )
+				continue;
+			
+			auto StageTexture = StageData->GetTexture();
 			
 			if ( StageTexture.IsValid() )
 			{

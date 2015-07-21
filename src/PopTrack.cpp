@@ -36,6 +36,13 @@ TPopTrack::TPopTrack() :
 	SetUniformTraits.mAssumedKeys.PushBack("filter");
 	SetUniformTraits.mRequiredKeys.PushBack("filter");
 	AddJobHandler("SetUniform", SetUniformTraits, *this, &TPopTrack::OnSetFilterUniform );
+	
+	TParameterTraits RunFilterTraits;
+	RunFilterTraits.mAssumedKeys.PushBack("filter");
+	RunFilterTraits.mRequiredKeys.PushBack("filter");
+	RunFilterTraits.mAssumedKeys.PushBack("time");
+	RunFilterTraits.mRequiredKeys.PushBack("time");
+	AddJobHandler("Run", RunFilterTraits, *this, &TPopTrack::OnRunFilter );
 }
 
 bool TPopTrack::AddChannel(std::shared_ptr<TChannel> Channel)
@@ -145,6 +152,31 @@ void TPopTrack::OnSetFilterUniform(TJobAndChannel &JobAndChannel)
 		Reply.mParams.AddDefaultParam("set uniforms");
 	else
 		Reply.mParams.AddErrorParam( Error.str() );
+	
+	auto& Channel = JobAndChannel.GetChannel();
+	Channel.SendJobReply( Reply );
+}
+
+
+void TPopTrack::OnRunFilter(TJobAndChannel &JobAndChannel)
+{
+	auto& Job = JobAndChannel.GetJob();
+	auto FilterName = Job.mParams.GetParamAs<std::string>("filter");
+	
+	auto Filter = GetFilter( FilterName );
+	auto Frame = Job.mParams.GetParamAs<SoyTime>("time");
+	
+	TJobReply Reply(Job);
+	try
+	{
+		Filter->Run( Frame, Reply.mParams );
+	}
+	catch ( std::exception& e )
+	{
+		std::stringstream Error;
+		Error << "Error running filter: " << e.what();
+		Reply.mParams.AddErrorParam( Error.str() );
+	}
 	
 	auto& Channel = JobAndChannel.GetChannel();
 	Channel.SendJobReply( Reply );
