@@ -636,7 +636,7 @@ void TPlayerFilter::ExtractPlayers(std::tuple<SoyTime,TFilterFrame&>& Frame)
 	TExtractedFrame ExtractedFrame;
 	ExtractedFrame.mTime = FrameTime;
 	
-	static int MaxPlayerExtractions = 100;
+	static int MaxPlayerExtractions = 1000;
 	
 	auto PixelChannelCount = SoyPixelsFormat::GetChannelCount( FoundPlayerPixels.GetFormat() );
 	for ( int i=0;	i<FoundPlayerPixelsArray.GetSize();	i+=PixelChannelCount )
@@ -656,11 +656,15 @@ void TPlayerFilter::ExtractPlayers(std::tuple<SoyTime,TFilterFrame&>& Frame)
 		
 		Player.mUv = FoundPlayerPixels.GetUv( i/PixelChannelCount );
 
+		auto xy = FoundPlayerPixels.GetXy( i/PixelChannelCount );
+		std::Debug << "extracted player at " << xy << std::endl;
+		
 		ExtractedFrame.mPlayers.PushBack( Player );
 		
 		if ( ExtractedFrame.mPlayers.GetSize() > MaxPlayerExtractions )
 		{
 			std::Debug << "Stopped player extraction at " << ExtractedFrame.mPlayers.GetSize() << std::endl;
+			break;
 		}
 	}
 	
