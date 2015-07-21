@@ -152,7 +152,10 @@ public:
 	}
 	virtual TJobParam		GetUniform(const std::string& Name);
 
+	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
+	
 public:
+	SoyEvent<const SoyTime>							mOnRunCompleted;	//	use for debugging or caching
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;

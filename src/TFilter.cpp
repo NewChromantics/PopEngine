@@ -56,17 +56,19 @@ void TFilterStage_ShaderBlit::Reload()
 {
 	Opengl::TContext& Context = mFilter.GetContext();
 	
-	auto BuildShader = [this]
+	std::Debug << "Loading shader files for " << this->mName << std::endl;
+
+	//	load files
+	std::string VertSrc;
+	if ( !Soy::FileToString( mVertFilename, VertSrc ) )
+		return;
+	
+	std::string FragSrc;
+	if ( !Soy::FileToString( mFragFilename, FragSrc ) )
+		return;
+
+	auto BuildShader = [this,&VertSrc,&FragSrc]
 	{
-		std::Debug << "Loading shader files for " << this->mName << std::endl;
-		//	load files
-		std::string VertSrc;
-		if ( !Soy::FileToString( mVertFilename, VertSrc ) )
-			return true;
-		std::string FragSrc;
-		if ( !Soy::FileToString( mFragFilename, FragSrc ) )
-			return true;
-		
 		try
 		{
 			//	don't override the shader until it succeeds
@@ -81,14 +83,19 @@ void TFilterStage_ShaderBlit::Reload()
 		catch (std::exception& e)
 		{
 			std::Debug << "Failed to compile shader: " << e.what() << std::endl;
-			return true;
 		}
-		std::Debug << "Loaded shader (" << mShader.program.mName << ") okay for " << this->mName << std::endl;
-		this->mOnChanged.OnTriggered(*this);
 		return true;
 	};
 	
-	Context.PushJob( BuildShader );
+	Opengl::TJobSempahore Semaphore;
+	Context.PushJob( BuildShader, Semaphore );
+	Semaphore.Wait();
+
+	if ( !mShader.IsValid() )
+		return;
+
+	std::Debug << "Loaded shader (" << mShader.program.mName << ") okay for " << this->mName << std::endl;
+	this->mOnChanged.OnTriggered(*this);
 }
 
 bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
@@ -285,8 +292,9 @@ bool TFilterFrame::Run(TFilter& Filter)
 		
 		//	get data pointer for this stage, if it's null the stage should allocate what it needs
 		//	gr: is this reference thread safe?
-		auto& pData = Frame.mStageData[StageName];
+		auto pData = Frame.mStageData[StageName];
 		bool Success = pStage->Execute( *this, pData );
+		Frame.mStageData[StageName] = pData;
 		
 		AllSuccess = AllSuccess && Success;
 	}
@@ -479,14 +487,30 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
 	OnFrameChanged( Time );
 }
 
-bool TFilter::Run(SoyTime Time)
+std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 {
 	//	grab the frame
 	auto FrameIt = mFrames.find( Time );
-	Soy::Assert( FrameIt != mFrames.end(), "Frame does not exist" );
+	if ( FrameIt == mFrames.end() )
+		return nullptr;
+
 	std::shared_ptr<TFilterFrame> Frame = FrameIt->second;
+	return Frame;
+}
+
+bool TFilter::Run(SoyTime Time)
+{
+	//	grab the frame
+	auto Frame = GetFrame(Time);
+	if ( !Frame )
+		return false;
 	
-	return Frame->Run( *this );
+	bool Completed = Frame->Run( *this );
+	
+	if ( Completed )
+		mOnRunCompleted.OnTriggered( Time );
+	
+	return Completed;
 }
 
 void TFilter::OnStagesChanged()
@@ -529,6 +553,20 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mPitchCorners.PushBack( vec2f(0.5f,0.0f) );
 	mPitchCorners.PushBack( vec2f(0.5f,0.8f) );
 	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
+	
+	//	debug extraction
+	auto DebugExtractedPlayers = [this](const SoyTime& Time)
+	{
+		auto Frame = GetFrame( Time );
+		if ( !Frame )
+			return;
+		
+		TExtractedFrame ExtractedFrame;
+		ExtractPlayers( Time, *Frame, ExtractedFrame );
+
+		std::Debug << "Run extracted " << ExtractedFrame.mPlayers.GetSize() << " players" << std::endl;
+	};
+	mOnRunCompleted.AddListener( DebugExtractedPlayers );
 }
 
 TJobParam TPlayerFilter::GetUniform(const std::string& Name)
@@ -665,10 +703,12 @@ void TPlayerFilter::ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,T
 void TPlayerFilter::Run(SoyTime FrameTime,TJobParams& ResultParams)
 {
 	bool AllCompleted = TFilter::Run( FrameTime );
-	Soy::Assert( AllCompleted, "Filter run failed");
+	if ( !Soy::Assert( AllCompleted, "Filter run failed") )
+		throw Soy::AssertException("Filter run failed");
 
-	auto FilterFrame = mFrames[FrameTime];
-	Soy::Assert( FilterFrame!=nullptr, "Missing filter frame");
+	auto FilterFrame = GetFrame(FrameTime);
+	if ( !Soy::Assert( FilterFrame!=nullptr, "Missing filter frame") )
+		throw Soy::AssertException("Missing filter frame");
 
 	TExtractedFrame ExtractedFrame;
 	ExtractPlayers( FrameTime, *FilterFrame, ExtractedFrame );
