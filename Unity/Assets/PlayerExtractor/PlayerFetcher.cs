@@ -9,12 +9,14 @@ public class PlayerFetcher : MonoBehaviour {
 	private int			mPendingDataTime = -1;
 	private int			mCurrentPointDataTime = 0;
 	public PointViewer	mPointViewer;
+	public PlayerTracker	mPlayerTracker;
 	public string		mServerAddress = "http://localhost:8080/run/?";
 	public string		mFilterName = "input01";
 
 	void Update()
 	{
-		if (!mPointViewer)
+		//	nowhere to put the data
+		if (!mPointViewer && !mPlayerTracker )
 			return;
 
 		if (mTime != mCurrentPointDataTime && mPendingDataTime == -1 ) {
@@ -33,7 +35,11 @@ public class PlayerFetcher : MonoBehaviour {
 
 		Debug.Log (Lines [0]);
 
+		if (Lines.Length < 2)
+			return;
+
 		List<Vector2> NewPoints = new List<Vector2> ();
+		List<Player> NewPlayers = new List<Player> ();
 
 		//	parse coords
 		var RectStrings = Lines [1].Split (',');
@@ -41,9 +47,17 @@ public class PlayerFetcher : MonoBehaviour {
 			var Coords = RectString.Split ('x');
 			Rect rect = new Rect (float.Parse (Coords [0]), float.Parse (Coords [1]), float.Parse (Coords [2]), float.Parse (Coords [3]));
 			NewPoints.Add( new Vector2( rect.center.x, rect.max.y ) );
+
+			Player player = new Player( rect );
+			NewPlayers.Add( player );
 		}
 
-		mPointViewer.mPoints = NewPoints.ToArray();
+		if ( mPointViewer )
+			mPointViewer.mPoints = NewPoints.ToArray();
+		if (mPlayerTracker) {
+			mPlayerTracker.mPlayers = NewPlayers;
+			mPlayerTracker.OnPlayersChanged ();
+		}
 	}
 
 	IEnumerator FetchPlayers()
@@ -68,6 +82,7 @@ public class PlayerFetcher : MonoBehaviour {
 			try
 			{
 				ParsePlayerRects (www.text);
+				mCurrentPointDataTime = mPendingDataTime; 
 			}
 			catch(System.Exception e)
 			{
@@ -76,9 +91,7 @@ public class PlayerFetcher : MonoBehaviour {
 
 		}
 
-		mCurrentPointDataTime = mPendingDataTime; 
 		mPendingDataTime = -1;
-		
 
 		www = null;
 		yield break;
