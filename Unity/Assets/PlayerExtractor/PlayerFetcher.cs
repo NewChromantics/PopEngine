@@ -13,14 +13,28 @@ public class PlayerFetcher : MonoBehaviour {
 	public string		mServerAddress = "http://localhost:8080/run/?";
 	public string		mFilterName = "input01";
 
+	[Range(0,10)]
+	public float		mRefreshRate = 0;
+	private float		mRefreshCountdown = -1;
+
 	void Update()
 	{
+		Application.runInBackground = (mRefreshRate > 0);
+
 		//	nowhere to put the data
 		if (!mPointViewer && !mPlayerTracker )
 			return;
 
 		if (mTime != mCurrentPointDataTime && mPendingDataTime == -1 ) {
 			StartCoroutine ("FetchPlayers");
+		}
+
+		if (mRefreshRate > 0) {
+			mRefreshCountdown -= Time.deltaTime;
+			if (mRefreshCountdown < 0) {
+				StartCoroutine ("FetchPlayers");
+				mRefreshCountdown = mRefreshRate;
+			}
 		}
 	}
 
