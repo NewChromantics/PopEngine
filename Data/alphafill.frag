@@ -3,8 +3,8 @@ uniform sampler2D grassfilter;
 uniform vec2 grassfilter_TexelWidthHeight;
 uniform vec2 grassfilter_PixelWidthHeight;
 
-uniform int SampleRadius = 5;	//	range 0,9
-uniform int HitCountMin = 1;
+uniform int SampleRadius = 8;	//	range 0,9
+uniform int HitCountMin = 2;
 uniform bool IncludeSelf = true;
 
 
@@ -31,6 +31,7 @@ void main()
 		}
 	}
 
+	ThisSample.xyz = float3(1,1,1);
 	ThisSample.w = (HitCount > HitCountMin) ? 1 : 0;
 	gl_FragColor = ThisSample;
 }

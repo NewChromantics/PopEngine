@@ -18,5 +18,6 @@ addstage input01 hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
 addstage input01 grassfilter vert=ScreenQuad.vert frag=GrassFilter.frag
 addstage input01 grassfilled vert=ScreenQuad.vert frag=AlphaFill.frag
 addstage input01 cylinderfiltered vert=ScreenQuad.vert frag=CylinderFilter.frag
-addstage input01 cylinderbiggest vert=ScreenQuad.vert frag=BiggestGreen.frag
+addstage input01 cylindervertfilter vert=ScreenQuad.vert frag=BiggestGreen.frag
+addstage input01 cylinderbiggest vert=ScreenQuad.vert frag=BiggestGreenHorz.frag
 addstage input01 foundplayers readtexture=cylinderbiggest

@@ -2,8 +2,8 @@ in vec2 fTexCoord;
 uniform sampler2D cylinderfiltered;
 uniform float2 cylinderfiltered_TexelWidthHeight;
 
-uniform int SampleRadiusHorz = 6;	//	range 0,9
-uniform int SampleRadiusVert = 10;	//	range 0,9
+uniform int SampleRadiusHorz = 2;	//	range 0,9
+uniform int SampleRadiusVert = 8;	//	range 0,9
 uniform bool IncludeSelf = false;
 
 //#define MATCH_FIRST_X
@@ -85,6 +85,6 @@ void main()
 	}
 	
 	ThisSample.w = (BiggerNeighbourCount == 0) ? ThisSample.w : 0;
-	ThisSample.xyz = float3(1,0,0);
+	ThisSample.xyz = float3(0,0,0);
 	gl_FragColor = ThisSample;
 }

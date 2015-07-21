@@ -40,6 +40,10 @@ uniform float2 SampleUvs[SampleUvCount] = float2[](
 //	todo: match colour of base sample
 int GetHit(float2 BaseUv,float2 ViewSize,int Index)
 {
+	/*
+	BaseUv.y -= 6 * grassfilled_TexelWidthHeight.y;
+	BaseUv.x += 0 * grassfilled_TexelWidthHeight.x;
+	*/
 	//	calc uv
 	//	gr: -1 y as textures are upside down
 	float2 SampleOffset = ViewSize*float2(1,-1)*SampleUvs[Index];
