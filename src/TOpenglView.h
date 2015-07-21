@@ -43,6 +43,12 @@ public:
 	virtual bool	Lock() override;
 	virtual void	Unlock() override;
 	
+	void			WakeThread();
+	
+protected:
+	virtual void	InternalPushJob(std::shared_ptr<Opengl::TJob>& Job,Opengl::TJobSempahore* Semaphore) override;
+	
+public:
 	TOpenglView&	mParent;
 };
 

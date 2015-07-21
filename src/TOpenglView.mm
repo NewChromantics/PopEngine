@@ -38,6 +38,19 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	[mView retain];
 	Soy::Assert( mView, "Failed to create view" );
 	
+	//	enable multi-threading
+	//	this places the render callback on the calling thread rather than main
+	static bool EnableMultithreading = true;
+	if ( EnableMultithreading )
+	{
+		CGLContextObj Context = [mView.openGLContext CGLContextObj];
+		auto Error = CGLEnable( Context, kCGLCEMPEngine);
+		if ( Error == kCGLNoError )
+			std::Debug << "Opengl multithreading enabled" << std::endl;
+		else
+			std::Debug << "Opengl multithreading not enabled" << std::endl;
+	}
+	
 	//	do init on first thread run
 	auto DefferedInit = [this]
 	{
@@ -78,19 +91,6 @@ TOpenglView::~TOpenglView()
 		return;
 	}
 	
-	//	lock the context
-	auto& Context = mParent->mContext;
-	
-	//	gr: assuming here it's already switched??
-	Context.Lock();
-	/*
-	GLint RenderBufferName = -1;
-	glGetIntegerv( GL_RENDERBUFFER_BINDING, &RenderBufferName );
-	Opengl::IsOkay("glget GL_RENDERBUFFER_BINDING");
-	std::Debug <<"Render buffer name is " << RenderBufferName << std::endl;
-	 */
-	Context.Unlock();
-	
 	//	do parent's minimal render
 	auto ParentRender = [self,bounds]()
 	{
@@ -104,25 +104,23 @@ TOpenglView::~TOpenglView()
 		//Opengl::ClearColour( Soy::TRgb(0,1,0) );
 		mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
 		mParent->mRenderTarget.Unbind();
-		return true;
-	};
-	
-	auto BufferFlip = [self]()
-	{
+		
+		glFlush();
+
 		//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
 		[[self openGLContext] flushBuffer];
 		return true;
 	};
 
-	
-	//	Run through our contexts jobs, then do a render and a flip, by queueing correctly.
-	
-	Context.PushJob( ParentRender );
-	//	flush all commands before another thread uses this context.... maybe put this in context unlock()
-	Context.PushJob( []{glFlush();return true;} );
-	Context.PushJob( BufferFlip );
+	//	queue render so when we iterate previous commands are flushed first
+	auto& Context = mParent->mContext;
+	//Context.PushJob( ParentRender );
+	//	gr: need to render immediately whilst render target is bound... which is currently out of our control
+	ParentRender();
+
+	//	run other jobs
+	//	gr: shouln't need this, it should be queued in the runloop from PushJob() now
 	Context.Iteration();
-	
 }
 
 @end
@@ -146,6 +144,8 @@ bool GlViewContext::Lock()
 	
 	auto ContextObj = [mParent.mView.openGLContext CGLContextObj];
 	CGLLockContext( ContextObj );
+	
+	//	should already been on this thread...
 	[mParent.mView.openGLContext makeCurrentContext];
 	return true;
 }
@@ -158,3 +158,16 @@ void GlViewContext::Unlock()
 	//[mParent.mView.openGLContext flushBuffer];
 }
 
+void GlViewContext::InternalPushJob(std::shared_ptr<Opengl::TJob>& Job,Opengl::TJobSempahore* Semaphore)
+{
+	Opengl::TContext::InternalPushJob( Job, Semaphore );
+	
+	//	wake up the runloop to make sure an iteration is done ratehr than waiting for OS to redraw
+	WakeThread();
+}
+
+
+void GlViewContext::WakeThread()
+{
+	
+}
