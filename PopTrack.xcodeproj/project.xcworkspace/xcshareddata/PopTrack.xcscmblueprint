@@ -1,0 +1,49 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB" : 0,
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++9914289" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++D619461" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "13612335-CC7F-4957-9869-5175583C4D28",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB" : "PopTrack",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB" : "NewChromantics\/PopTrack",
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++9914289" : "SoyLib",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++D619461" : "PopLib\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "PopTrack",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 203,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "PopTrack.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopLib.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++D619461"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/PopTrack.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/PopTrack.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/SoyLib.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++9914289"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopTrack.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB"
+    }
+  ]
+}
