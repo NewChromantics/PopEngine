@@ -40,6 +40,8 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	
 	//	enable multi-threading
 	//	this places the render callback on the calling thread rather than main
+	//	gr: errrr what callback did I mean?? the context switching is manual...
+	//		maybe it disables the need for context switching
 	static bool EnableMultithreading = false;
 	if ( EnableMultithreading )
 	{
@@ -84,6 +86,9 @@ TOpenglView::~TOpenglView()
 
 -(void) drawRect: (NSRect) bounds
 {
+	//	if this is slow, the OS is slow.
+	ofScopeTimerWarning DrawRect(__func__,10);
+	
 	//	lock the context as we do iteration from the main thread
 	//	gr: maybe have a specific thread for this, as this view-redraw is called from our own thread anyway
 	auto& Context = mParent->mContext;
