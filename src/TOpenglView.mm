@@ -84,6 +84,22 @@ TOpenglView::~TOpenglView()
 
 -(void) drawRect: (NSRect) bounds
 {
+	//	lock the context as we do iteration from the main thread
+	//	gr: maybe have a specific thread for this, as this view-redraw is called from our own thread anyway
+	auto& Context = mParent->mContext;
+	auto LockContext = [&Context]
+	{
+		Opengl::IsOkay("pre drawRect flush",false);
+		Context.Lock();
+	};
+	auto UnlockContext = [&Context]
+	{
+		Opengl::IsOkay("Post drawRect flush",false);
+		Context.Unlock();
+	};
+	auto ContextLock = SoyScope( LockContext, UnlockContext );
+	
+	
 	//	render callback from OS, always on main thread?
 	if ( !mParent )
 	{
@@ -92,35 +108,22 @@ TOpenglView::~TOpenglView()
 	}
 	
 	//	do parent's minimal render
-	auto ParentRender = [self,bounds]()
-	{
-		mParent->mRenderTarget.mRect.x = bounds.origin.x;
-		mParent->mRenderTarget.mRect.y = bounds.origin.y;
-		mParent->mRenderTarget.mRect.w = bounds.size.width;
-		mParent->mRenderTarget.mRect.h = bounds.size.height;
-		if ( !mParent->mRenderTarget.Bind() )
-			return false;
-		//	gr: don't really wanna send the context here I don't think.... probably wanna send render target
-		//Opengl::ClearColour( Soy::TRgb(0,1,0) );
-		mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
-		mParent->mRenderTarget.Unbind();
-		
-		glFlush();
+	mParent->mRenderTarget.mRect.x = bounds.origin.x;
+	mParent->mRenderTarget.mRect.y = bounds.origin.y;
+	mParent->mRenderTarget.mRect.w = bounds.size.width;
+	mParent->mRenderTarget.mRect.h = bounds.size.height;
+	if ( !mParent->mRenderTarget.Bind() )
+		return;
 
-		//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
-		[[self openGLContext] flushBuffer];
-		return true;
-	};
+	//	gr: don't really wanna send the context here I don't think.... probably wanna send render target
+	//Opengl::ClearColour( Soy::TRgb(0,1,0) );
+	mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
+	mParent->mRenderTarget.Unbind();
+	
+	glFlush();
 
-	//	queue render so when we iterate previous commands are flushed first
-	auto& Context = mParent->mContext;
-	//Context.PushJob( ParentRender );
-	//	gr: need to render immediately whilst render target is bound... which is currently out of our control
-	ParentRender();
-
-	//	run other jobs
-	//	gr: shouln't need this, it should be queued in the runloop from PushJob() now
-	Context.Iteration();
+	//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
+	[[self openGLContext] flushBuffer];
 }
 
 @end
@@ -169,5 +172,7 @@ void GlViewContext::PushJobImpl(std::shared_ptr<Opengl::TJob>& Job,Soy::TSemapho
 
 void GlViewContext::WakeThread()
 {
-	
+	dispatch_async( dispatch_get_main_queue(), ^(void){
+		Iteration();
+	});
 }
