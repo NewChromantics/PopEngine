@@ -80,14 +80,14 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		{
 			//auto& StageName = s->first;
 			auto& StageData = s->second;
-			if ( !StageData )
-				continue;
-			
-			auto StageTexture = StageData->GetTexture();
-			
-			if ( StageTexture.IsValid() )
+			if ( StageData )
 			{
-				DrawQuad( StageTexture, TileRect );
+				auto StageTexture = StageData->GetTexture();
+			
+				if ( StageTexture.IsValid() )
+				{
+					DrawQuad( StageTexture, TileRect );
+				}
 			}
 			
 			//	next col
