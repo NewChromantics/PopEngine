@@ -34,19 +34,22 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	auto FrameBufferSize = RenderTarget.GetSize();
 	
 	Opengl::SetViewport( Soy::Rectf( FrameBufferSize ) );
-	Opengl::ClearColour( Soy::TRgb(0,0,0) );
+	Opengl::ClearColour( Soy::TRgb(0.05f,0.05f,0) );
 	Opengl::ClearDepth();
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	
-	//	collect frames
+	//	collect N frames
+	static int ShowMaxFrames = 3;
 	Array<std::shared_ptr<TFilterFrame>> Frames;
-	for ( auto fit=mParent.mFrames.begin();	fit!=mParent.mFrames.end();	fit++ )
+	for ( auto fit=mParent.mFrames.rbegin();	fit!=mParent.mFrames.rend();	fit++ )
 	{
 		auto pFrame = fit->second;
 		if ( !pFrame )
 			continue;
 		Frames.PushBack( pFrame );
+		if ( Frames.GetSize() >= ShowMaxFrames )
+			break;
 	}
 	
 	auto FrameCount = Frames.GetSize();
@@ -96,6 +99,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		
 		//	next row
 		TileRect.y += TileRect.h;
+		TileRect.x = 0;
 	}
 	Opengl_IsOkay();
 }
