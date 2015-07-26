@@ -36,6 +36,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 
 	if ( !Soy::Platform::BundleInitialised )
 		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
+
+	std::this_thread::sleep_for( std::chrono::milliseconds(2500) );
+
 	
 	mMacWindow.reset( new MacWindow );
 	auto& Wrapper = *mMacWindow;
@@ -53,25 +56,25 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 //	NSRect WindowRect = [[NSScreen mainScreen] frame];
 
 	//	create a view
-	try
-	{
-		mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height) ) );
-		Soy::Assert( mView->IsValid(), "view isn't valid?" );
-	}
-	catch (...)
-	{
-		throw;
-	}
-	
+	mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height) ) );
+	Soy::Assert( mView->IsValid(), "view isn't valid?" );
+
 	mOnRenderListener = mView->mOnRender.AddListener( *this, &TOpenglWindow::OnViewRender );
 
+	//[[NSAutoreleasePool alloc] init];
 	
 	bool Defer = NO;
 	mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
-	[mWindow retain];
-
 	Soy::Assert(mWindow,"failed to create window");
 
+	[mWindow retain];
+
+	//[mWindow setDelegate:[NSApp delegate]];
+	//[mWindow setAcceptsMouseMovedEvents:TRUE];
+	//[mWindow setIsVisible:TRUE];
+	//[mWindow makeKeyAndOrderFront:nil];
+	//[mWindow setStyleMask:NSTitledWindowMask|NSClosableWindowMask];
+	
 	//	setup window
 //	[Window setLevel:NSMainMenuWindowLevel+1];
 //	[Window setOpaque:YES];

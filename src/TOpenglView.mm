@@ -40,7 +40,7 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	
 	//	enable multi-threading
 	//	this places the render callback on the calling thread rather than main
-	static bool EnableMultithreading = true;
+	static bool EnableMultithreading = false;
 	if ( EnableMultithreading )
 	{
 		CGLContextObj Context = [mView.openGLContext CGLContextObj];
