@@ -2,8 +2,11 @@
 #include <SoyApp.h>
 #include <TJob.h>
 #include <TChannel.h>
+#include <TJobEventSubscriber.h>
 
 #include "TFilter.h"
+#include "SoyMovieDecoder.h"
+
 
 
 class TPopTrack : public TJobHandler, public TPopJobHandler, public TChannelManager
@@ -19,8 +22,19 @@ public:
 	void			OnSetFilterUniform(TJobAndChannel& JobAndChannel);
 	void			OnRunFilter(TJobAndChannel& JobAndChannel);
 	
+	void			OnStartDecode(TJobAndChannel& JobAndChannel);
+	void			OnList(TJobAndChannel& JobAndChannel);
+	void			OnGetFrame(TJobAndChannel& JobAndChannel);
+	void			SubscribeNewFrame(TJobAndChannel& JobAndChannel);
+	bool			OnNewFrameCallback(TEventSubscriptionManager& SubscriptionManager,TJobChannelMeta Client,TVideoDevice& Device);
+
+	
 private:
 	std::shared_ptr<TPlayerFilter>	GetFilter(const std::string& Name);
+
+	std::shared_ptr<TMovieDecoderContainer>	mMovies;
+	SoyVideoCapture		mVideoCapture;
+	TSubscriberManager	mSubcriberManager;
 	
 public:
 	Soy::Platform::TConsoleApp	mConsoleApp;

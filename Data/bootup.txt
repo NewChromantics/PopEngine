@@ -1,7 +1,8 @@
 # setup filter 01
 
 # push some test input
-loadframe input01 time=1001 input01_undistorted.png
+#loadframe input01 time=1001 input01_undistorted.png
+decode input01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
 
 # set meta data
 setuniform input01 MaskTopLeft=0.279179305x0.43300119
@@ -11,13 +12,13 @@ setuniform input01 MaskBottomLeft=0.0111219604x0.624482691
 
 
 # add shader called crop to filter
-#addstage input01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
+addstage input01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
 #addstage input01 showalpha vert=ScreenQuad.vert frag=ShowAlpha.frag
-addstage input01 crop vert=ScreenQuad.vert frag=Crop.frag
-addstage input01 hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
-addstage input01 grassfilter vert=ScreenQuad.vert frag=GrassFilter.frag
-addstage input01 grassfilled vert=ScreenQuad.vert frag=AlphaFill.frag
-addstage input01 cylinderfiltered vert=ScreenQuad.vert frag=CylinderFilter.frag
-addstage input01 cylindervertfilter vert=ScreenQuad.vert frag=BiggestGreen.frag
-addstage input01 cylinderbiggest vert=ScreenQuad.vert frag=BiggestGreenHorz.frag
-addstage input01 foundplayers readtexture=cylinderbiggest
+#addstage input01 crop vert=ScreenQuad.vert frag=Crop.frag
+#addstage input01 hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
+#addstage input01 grassfilter vert=ScreenQuad.vert frag=GrassFilter.frag
+#addstage input01 grassfilled vert=ScreenQuad.vert frag=AlphaFill.frag
+#addstage input01 cylinderfiltered vert=ScreenQuad.vert frag=CylinderFilter.frag
+#addstage input01 cylindervertfilter vert=ScreenQuad.vert frag=BiggestGreen.frag
+#addstage input01 cylinderbiggest vert=ScreenQuad.vert frag=BiggestGreenHorz.frag
+#addstage input01 foundplayers readtexture=cylinderbiggest

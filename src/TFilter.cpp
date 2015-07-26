@@ -8,7 +8,7 @@ const char* TFilter::FrameSourceName = "Frame";
 class TOpenglJob_UploadPixels : public Opengl::TJob
 {
 public:
-	TOpenglJob_UploadPixels(std::shared_ptr<SoyPixels>& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
+	TOpenglJob_UploadPixels(const SoyPixelsImpl& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
 		mPixels	( Pixels ),
 		mFrame	( Frame )
 	{
@@ -16,7 +16,7 @@ public:
 	
 	virtual bool		Run(std::ostream& Error);
 
-	std::shared_ptr<SoyPixels>		mPixels;
+	const SoyPixelsImpl&			mPixels;
 	std::shared_ptr<TFilterFrame>	mFrame;
 };
 
@@ -168,7 +168,7 @@ bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName
 bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 {
 	auto& Frame = *mFrame;
-	auto& Pixels = *mPixels;
+	auto& Pixels = mPixels;
 	
 	//	make texture if it doesn't exist
 	if ( !Frame.mFrame.IsValid() )
@@ -461,7 +461,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
 }
 
-void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
+void TFilter::LoadFrame(const SoyPixelsImpl& Pixels,SoyTime Time)
 {
 	Soy::Assert( Time.IsValid(), "invalid frame time" );
 	
@@ -483,9 +483,11 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixels>& Pixels,SoyTime Time)
 	//	make up a job that holds the pixels to put it into a texture, then run to refresh everything
 	auto& Context = GetContext();
 	std::shared_ptr<Opengl::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
-	Context.PushJob( Job );
-
-	OnFrameChanged( Time );
+	
+	Opengl::TJobSempahore Semaphore;
+	Context.PushJob( Job, Semaphore );
+	Semaphore.Wait();
+	//OnFrameChanged( Time );
 }
 
 std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
