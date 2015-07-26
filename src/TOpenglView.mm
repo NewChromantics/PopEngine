@@ -158,9 +158,9 @@ void GlViewContext::Unlock()
 	//[mParent.mView.openGLContext flushBuffer];
 }
 
-void GlViewContext::InternalPushJob(std::shared_ptr<Opengl::TJob>& Job,Opengl::TJobSempahore* Semaphore)
+void GlViewContext::PushJobImpl(std::shared_ptr<Opengl::TJob>& Job,Soy::TSemaphore* Semaphore)
 {
-	Opengl::TContext::InternalPushJob( Job, Semaphore );
+	Opengl::TContext::PushJobImpl( Job, Semaphore );
 	
 	//	wake up the runloop to make sure an iteration is done ratehr than waiting for OS to redraw
 	WakeThread();

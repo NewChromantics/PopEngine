@@ -87,7 +87,7 @@ void TFilterStage_ShaderBlit::Reload()
 		return true;
 	};
 	
-	Opengl::TJobSempahore Semaphore;
+	Soy::TSemaphore Semaphore;
 	Context.PushJob( BuildShader, Semaphore );
 	Semaphore.Wait();
 
@@ -152,7 +152,7 @@ bool TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		return true;
 	};
 	
-	Opengl::TJobSempahore Semaphore;
+	Soy::TSemaphore Semaphore;
 	mFilter.GetContext().PushJob(ReadPixels,Semaphore);
 	Semaphore.Wait();
 	
@@ -267,7 +267,7 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		return true;
 	};
 	
-	Opengl::TJobSempahore Semaphore;
+	Soy::TSemaphore Semaphore;
 	mFilter.GetContext().PushJob( BlitToTexture, Semaphore );
 	Semaphore.Wait();
 	
@@ -484,10 +484,10 @@ void TFilter::LoadFrame(const SoyPixelsImpl& Pixels,SoyTime Time)
 	auto& Context = GetContext();
 	std::shared_ptr<Opengl::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
 	
-	Opengl::TJobSempahore Semaphore;
+	Soy::TSemaphore Semaphore;
 	Context.PushJob( Job, Semaphore );
 	Semaphore.Wait();
-	//OnFrameChanged( Time );
+	OnFrameChanged( Time );
 }
 
 std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
