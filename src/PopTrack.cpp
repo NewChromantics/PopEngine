@@ -142,7 +142,6 @@ void TPopTrack::OnAddStage(TJobAndChannel &JobAndChannel)
 	auto FilterName = Job.mParams.GetParamAs<std::string>("filter");
 	auto Name = Job.mParams.GetParamAs<std::string>("name");
 	
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	auto Filter = GetFilter( FilterName );
 	Filter->AddStage( Name, Job.mParams );
 	
@@ -258,7 +257,7 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 				static bool DoLoadFrame = true;
 				if ( DoLoadFrame )
 					Filter->LoadFrame( Pixels, Time );
-				DoLoadFrame = false;
+				//DoLoadFrame = false;
 			}
 			else
 			{
@@ -503,7 +502,7 @@ TPopAppError::Type PopMain(TJobParams& Params)
 	
 	
 	//	bootup commands via a channel
-	std::shared_ptr<TChannel> BootupChannel( new TChan<TChannelFileRead,TProtocolCli>( SoyRef("Bootup"), "bootup.txt" ) );
+	std::shared_ptr<TChannel> BootupChannel( new TChan<TChannelFileRead,TProtocolCli>( SoyRef("Bootup"), "bootup.txt", true ) );
 	/*
 	//	display reply to stdout
 	//	when the commandline SENDs a command (a reply), send it to stdout
