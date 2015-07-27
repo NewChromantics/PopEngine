@@ -1,5 +1,6 @@
 in vec2 fTexCoord;
-uniform sampler2D Frame;
+uniform sampler2D undistort;
+#define Frame undistort
 uniform vec2 MaskTopLeft = vec2(0,0);
 uniform vec2 MaskTopRight = vec2(0,1);
 uniform vec2 MaskBottomRight = vec2(1,1);
