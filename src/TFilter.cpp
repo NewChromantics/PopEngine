@@ -309,15 +309,20 @@ bool TFilterFrame::Run(TFilter& Filter)
 	
 	//	do a flush so the flush doesn't occur in the OS redraw
 	//	gr: doesn't seem to make a difference...
-	auto& Context = Filter.GetContext();
-	Soy::TSemaphore Semaphore;
-	auto Flush = []
+	//	gr: now not double-buffered... this flush is needed!?
+	static bool DoFlush = true;
+	if ( DoFlush )
 	{
-		glFlush();
-		return true;
-	};
-	Context.PushJob( Flush, Semaphore );
-	Semaphore.Wait();
+		auto& Context = Filter.GetContext();
+		Soy::TSemaphore Semaphore;
+		auto Flush = []
+		{
+			glFlush();
+			return true;
+		};
+		Context.PushJob( Flush, Semaphore );
+		Semaphore.Wait();
+	}
 	
 	return AllSuccess;
 }
