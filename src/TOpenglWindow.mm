@@ -37,62 +37,67 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 	if ( !Soy::Platform::BundleInitialised )
 		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
 
-	std::this_thread::sleep_for( std::chrono::milliseconds(2500) );
+	auto Allocate = [&Name,this,&Pos,&Size]
+	{
+		mMacWindow.reset( new MacWindow );
+		auto& Wrapper = *mMacWindow;
+		auto*& mWindow = Wrapper.mWindow;
 
-	
-	mMacWindow.reset( new MacWindow );
-	auto& Wrapper = *mMacWindow;
-	auto*& mWindow = Wrapper.mWindow;
+		
+		
+		
+		//NSUInteger styleMask =    NSBorderlessWindowMask;
+		NSUInteger Style = NSTitledWindowMask|NSClosableWindowMask|NSResizableWindowMask;
+		//NSUInteger Style = NSBorderlessWindowMask;
+		NSRect FrameRect = NSMakeRect( Pos.x, Pos.y, Size.x, Size.y );
+		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
+	//	NSRect WindowRect = NSMakeRect( Pos.x, Pos.y, Size.x, Size.y );
+	//	NSRect WindowRect = [[NSScreen mainScreen] frame];
 
-	
-	
-	
-	//NSUInteger styleMask =    NSBorderlessWindowMask;
-	NSUInteger Style = NSTitledWindowMask|NSClosableWindowMask|NSResizableWindowMask;
-	//NSUInteger Style = NSBorderlessWindowMask;
-	NSRect FrameRect = NSMakeRect( Pos.x, Pos.y, Size.x, Size.y );
-	NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-//	NSRect WindowRect = NSMakeRect( Pos.x, Pos.y, Size.x, Size.y );
-//	NSRect WindowRect = [[NSScreen mainScreen] frame];
+		//	create a view
+		mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height) ) );
+		Soy::Assert( mView->IsValid(), "view isn't valid?" );
 
-	//	create a view
-	mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height) ) );
-	Soy::Assert( mView->IsValid(), "view isn't valid?" );
+		mOnRenderListener = mView->mOnRender.AddListener( *this, &TOpenglWindow::OnViewRender );
 
-	mOnRenderListener = mView->mOnRender.AddListener( *this, &TOpenglWindow::OnViewRender );
+		//[[NSAutoreleasePool alloc] init];
+		
+		bool Defer = NO;
+		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
+		Soy::Assert(mWindow,"failed to create window");
 
-	//[[NSAutoreleasePool alloc] init];
-	
-	bool Defer = NO;
-	mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
-	Soy::Assert(mWindow,"failed to create window");
+		[mWindow retain];
 
-	[mWindow retain];
+		//[mWindow setDelegate:[NSApp delegate]];
+		//[mWindow setAcceptsMouseMovedEvents:TRUE];
+		//[mWindow setIsVisible:TRUE];
+		//[mWindow makeKeyAndOrderFront:nil];
+		//[mWindow setStyleMask:NSTitledWindowMask|NSClosableWindowMask];
+		
+		//	setup window
+	//	[Window setLevel:NSMainMenuWindowLevel+1];
+	//	[Window setOpaque:YES];
+	//	[Window setHidesOnDeactivate:YES];
 
-	//[mWindow setDelegate:[NSApp delegate]];
-	//[mWindow setAcceptsMouseMovedEvents:TRUE];
-	//[mWindow setIsVisible:TRUE];
-	//[mWindow makeKeyAndOrderFront:nil];
-	//[mWindow setStyleMask:NSTitledWindowMask|NSClosableWindowMask];
-	
-	//	setup window
-//	[Window setLevel:NSMainMenuWindowLevel+1];
-//	[Window setOpaque:YES];
-//	[Window setHidesOnDeactivate:YES];
+		
+		//	assign view to window
+		[mWindow setContentView: mView->mView];
 
-	
-	//	assign view to window
-	[mWindow setContentView: mView->mView];
+		id Sender = NSApp;
+		[mWindow setBackgroundColor:[NSColor blueColor]];
+		[mWindow makeKeyAndOrderFront:Sender];
 
-	id Sender = NSApp;
-	[mWindow setBackgroundColor:[NSColor blueColor]];
-	[mWindow makeKeyAndOrderFront:Sender];
+		auto Title = Soy::StringToNSString( Name );
+		[mWindow setTitle:Title];
+		//[mWindow setMiniwindowTitle:Title];
+		//[mWindow setTitleWithRepresentedFilename:Title];
+		
+		return true;
+	};
+	Soy::TSemaphore Semaphore;
+	Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+	Semaphore.Wait();
 
-	auto Title = Soy::StringToNSString( Name );
-	[mWindow setTitle:Title];
-	//[mWindow setMiniwindowTitle:Title];
-	//[mWindow setTitleWithRepresentedFilename:Title];
-	
 	SoyWorkerThread::Start();
 }
 
