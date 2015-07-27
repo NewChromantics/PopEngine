@@ -96,7 +96,7 @@ void TFilterStage_ShaderBlit::Reload()
 	
 	Soy::TSemaphore Semaphore;
 	Context.PushJob( BuildShader, Semaphore );
-	Semaphore.Wait();
+	Semaphore.Wait("build shader");
 
 	if ( !mShader.IsValid() )
 		return;
@@ -209,6 +209,12 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			Soy::TRgb(1,0,1),
 		};
 		
+		if ( !mFilter.mBlitQuad.IsValid() )
+		{
+			std::Debug << "Filter blit quad invalid " << std::endl;
+			Success = false;
+			return true;
+		}
 		
 		if ( !Data )
 		{
@@ -276,17 +282,18 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	Soy::TSemaphore Semaphore;
 	mFilter.GetContext().PushJob( BlitToTexture, Semaphore );
-	Semaphore.Wait();
+	Semaphore.Wait( mName.c_str() );
 	
 	return Success;
 }
-
 
 bool TFilterFrame::Run(TFilter& Filter)
 {
 	auto& Frame = *this;
 	bool AllSuccess = true;
 
+	
+	
 	//	run through the shader chain
 	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
 	{
@@ -309,21 +316,12 @@ bool TFilterFrame::Run(TFilter& Filter)
 		AllSuccess = AllSuccess && Success;
 	}
 	
-	//	do a flush so the flush doesn't occur in the OS redraw
-	//	gr: doesn't seem to make a difference...
-	//	gr: now not double-buffered... this flush is needed!?
-	static bool DoFlush = true;
-	if ( DoFlush )
+	//	opengl specific "semaphore"
+	static bool DoSync = true;
+	if ( DoSync )
 	{
-		auto& Context = Filter.GetContext();
-		Soy::TSemaphore Semaphore;
-		auto Flush = []
-		{
-			glFlush();
-			return true;
-		};
-		Context.PushJob( Flush, Semaphore );
-		Semaphore.Wait();
+		Opengl::TSync Sync( Filter.GetContext() );
+		Sync.Wait();
 	}
 	
 	return AllSuccess;
@@ -411,6 +409,8 @@ TFilter::TFilter(const std::string& Name) :
 	
 	mWindow.reset( new TFilterWindow( Name, WindowPosition, WindowSize, *this ) );
 	
+	mContext = mWindow->GetContext()->CreateSharedContext();
+	
 	auto CreateBlitGeo = [this]
 	{
 		//	make mesh
@@ -454,7 +454,7 @@ TFilter::TFilter(const std::string& Name) :
 	};
 	
 	//	create blit geometry
-	mWindow->GetContext()->PushJob( CreateBlitGeo );
+	GetContext().PushJob( CreateBlitGeo );
 	
 	//	start odd job thread
 	mJobThread.Start();
@@ -516,7 +516,7 @@ void TFilter::LoadFrame(const SoyPixelsImpl& Pixels,SoyTime Time)
 	
 	Soy::TSemaphore Semaphore;
 	Context.PushJob( Job, Semaphore );
-	Semaphore.Wait();
+	Semaphore.Wait("filter load frame");
 	OnFrameChanged( Time );
 }
 
@@ -589,6 +589,10 @@ TJobParam TFilter::GetUniform(const std::string& Name)
 
 Opengl::TContext& TFilter::GetContext()
 {
+	//	use shared context
+	if ( mContext )
+		return *mContext;
+	
 	Soy::Assert( mWindow!=nullptr, "window not yet allocated" );
 		
 	auto* Context = mWindow->GetContext();

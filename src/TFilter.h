@@ -164,6 +164,7 @@ public:
 	Array<std::shared_ptr<TFilterStage>>			mStages;
 	Opengl::TGeometry								mBlitQuad;		//	commonly used
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
+	std::shared_ptr<Opengl::TContext>				mContext;
 };
 
 

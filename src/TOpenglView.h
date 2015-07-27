@@ -44,11 +44,27 @@ public:
 	virtual void	Unlock() override;
 	
 	void			WakeThread();
+	
+	virtual std::shared_ptr<Opengl::TContext>	CreateSharedContext() override;
 
 public:
 	TOpenglView&	mParent;
 };
 
+class GlViewSharedContext : public Opengl::TContext, public SoyWorkerThread
+{
+public:
+	GlViewSharedContext(CGLContextObj NewContextHandle);
+	~GlViewSharedContext();
+	
+	virtual bool		Lock() override;
+	virtual void		Unlock() override;
+	virtual bool		Iteration() override	{	PopWorker::TJobQueue::Flush(*this);	return true;	}
+	virtual bool		CanSleep() override		{	return !PopWorker::TJobQueue::HasJobs();	}	//	break out of conditional with this
+
+public:
+	CGLContextObj		mContext;
+};
 
 class TOpenglView
 {

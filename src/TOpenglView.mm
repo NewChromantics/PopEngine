@@ -42,7 +42,7 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	//	this places the render callback on the calling thread rather than main
 	//	gr: errrr what callback did I mean?? the context switching is manual...
 	//		maybe it disables the need for context switching
-	static bool EnableMultithreading = false;
+	static bool EnableMultithreading = true;
 	if ( EnableMultithreading )
 	{
 		CGLContextObj Context = [mView.openGLContext CGLContextObj];
@@ -68,13 +68,13 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 		return true;
 	};
 	mContext.PushJob( DefferedInit );
+
 }
 
 TOpenglView::~TOpenglView()
 {
 	[mView release];
 }
-
 
 
 
@@ -134,7 +134,10 @@ TOpenglView::~TOpenglView()
 	mParent->mRenderTarget.Unbind();
 
 	//	gr: without this flush, and no double buffering... the window often stays grey
-	glFlush();
+	//	gr: or stalls tons of operations until they're all done at once in the os
+	static bool DoFlush = true;
+	if ( DoFlush )
+		glFlush();
 	
 	//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
 	[[self openGLContext] flushBuffer];
@@ -182,3 +185,72 @@ void GlViewContext::WakeThread()
 		Iteration();
 	});
 }
+
+
+std::shared_ptr<Opengl::TContext> GlViewContext::CreateSharedContext()
+{
+	std::shared_ptr<Opengl::TContext> SharedContext;
+	
+	auto* NSContext = mParent.mView.openGLContext;
+	
+	//	create another context
+	CGLContextObj Context1 = [NSContext CGLContextObj];
+	CGLContextObj Context2;
+	auto PixelFormat = NSContext.pixelFormat.CGLPixelFormatObj;
+	auto Error = CGLCreateContext( PixelFormat, Context1, &Context2 );
+	
+	if ( Error != kCGLNoError )
+	{
+		std::stringstream ErrorString;
+		ErrorString << "Failed to create shared context: " << Error;
+		throw Soy::AssertException( ErrorString.str() );
+		return nullptr;
+	}
+	
+	SharedContext.reset( new GlViewSharedContext(Context2) );
+	return SharedContext;
+}
+
+GlViewSharedContext::GlViewSharedContext(CGLContextObj NewContextHandle) :
+	SoyWorkerThread	( "Shared opengl context", SoyWorkerWaitMode::Wake ),
+	mContext		( NewContextHandle )
+{
+	//	do init on first thread run
+	auto DefferedInit = [this]
+	{
+		Init();
+		return true;
+	};
+	PushJob( DefferedInit );
+
+	WakeOnEvent( mOnJobPushed );
+
+	Start();
+}
+
+GlViewSharedContext::~GlViewSharedContext()
+{
+	
+}
+
+bool GlViewSharedContext::Lock()
+{
+	CGLLockContext( mContext );
+
+	//	make current thread
+	auto CurrentContext = CGLGetCurrentContext();
+	if ( CurrentContext != mContext )
+	{
+		auto Error = CGLSetCurrentContext( mContext );
+		if ( !Soy::Assert( Error == kCGLNoError, "Error setting current context" ) )
+			return false;
+	}
+	return true;
+}
+
+void GlViewSharedContext::Unlock()
+{
+	CGLUnlockContext( mContext );
+}
+
+
