@@ -241,7 +241,7 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			auto Shader = StageShader.Bind();
 			if ( Shader.IsValid() )
 			{
-				std::Debug << "drawing stage " << StageName << std::endl;
+				//std::Debug << "drawing stage " << StageName << std::endl;
 				//	gr: go through uniforms, find any named same as a shader and bind that shaders output
 				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 				{
@@ -299,6 +299,18 @@ bool TFilterFrame::Run(TFilter& Filter)
 		
 		AllSuccess = AllSuccess && Success;
 	}
+	
+	//	do a flush so the flush doesn't occur in the OS redraw
+	//	gr: doesn't seem to make a difference...
+	auto& Context = Filter.GetContext();
+	Soy::TSemaphore Semaphore;
+	auto Flush = []
+	{
+		glFlush();
+		return true;
+	};
+	Context.PushJob( Flush, Semaphore );
+	Semaphore.Wait();
 	
 	return AllSuccess;
 }
