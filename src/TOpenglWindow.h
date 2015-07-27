@@ -18,14 +18,9 @@ public:
 	TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size);
 	~TOpenglWindow();
 	
-	bool			Redraw();	//	trigger a redraw
 	bool			IsValid();
 	
-	virtual bool	Iteration()
-	{
-		Redraw();
-		return true;
-	}
+	virtual bool	Iteration();
 	
 	Opengl::TContext*	GetContext();
 	

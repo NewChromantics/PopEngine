@@ -113,12 +113,38 @@ bool TOpenglWindow::IsValid()
 	return mMacWindow && mMacWindow->IsValid() && mView && mView->IsValid();
 }
 
-bool TOpenglWindow::Redraw()
+bool TOpenglWindow::Iteration()
 {
 	if ( !IsValid() )
-		return false;
+	{
+		std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+		return true;
+	}
 	
-	[mView->mView display];
+	static bool RedrawOnMainThread = true;
+	
+	auto RedrawImpl = [this]
+	{
+		[mView->mView display];
+		return true;
+	};
+	
+	if ( RedrawOnMainThread )
+	{
+		//	if we're drawing on the main thread, wait for it to finish before triggering again
+		//	we can easily trigger a redraw before the draw has finished (wait 16ms, render takes 17ms),
+		//	main thread never gets out of job queue
+		//	waiting on a semaphore means we just draw every N ms and don't repeat ourselves
+		//	change this to a "dirty" system
+		Soy::TSemaphore Semaphore;
+		Soy::Platform::gMainThread->PushJob( RedrawImpl, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		RedrawImpl();
+	}
+	
 	return true;
 }
 
