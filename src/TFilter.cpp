@@ -299,8 +299,10 @@ bool TFilterFrame::Run(TFilter& Filter)
 		}
 		
 		//	get data pointer for this stage, if it's null the stage should allocate what it needs
-		//	gr: is this reference thread safe?
-		auto pData = Frame.mStageData[StageName];
+		//	gr: need a better lock...
+		mStageDataLock.lock();
+		auto& pData = Frame.mStageData[StageName];
+		mStageDataLock.unlock();
 		bool Success = pStage->Execute( *this, pData );
 		Frame.mStageData[StageName] = pData;
 		
@@ -536,7 +538,14 @@ bool TFilter::Run(SoyTime Time)
 	if ( !Frame )
 		return false;
 	
-	bool Completed = Frame->Run( *this );
+	bool Completed = false;
+	
+	{
+		std::stringstream TimerName;
+		TimerName << "filter run " << Time;
+		ofScopeTimerWarning Timer(TimerName.str().c_str(),1);
+		Completed = Frame->Run( *this );
+	}
 	
 	if ( Completed )
 		mOnRunCompleted.OnTriggered( Time );
@@ -553,11 +562,18 @@ void TFilter::QueueJob(std::function<bool(void)> Function)
 
 void TFilter::OnStagesChanged()
 {
+	static int ApplyToFrameCount = 2;
+	
+	int Applications = 0;
+	
 	//	re-run each
-	for ( auto it=mFrames.begin();	it!=mFrames.end();	it++ )
+	for ( auto it=mFrames.rbegin();	it!=mFrames.rend();	it++ )
 	{
 		auto& FrameTime = it->first;
 		OnFrameChanged( FrameTime );
+
+		if ( ++Applications > ApplyToFrameCount )
+			break;
 	}
 }
 

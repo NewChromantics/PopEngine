@@ -93,6 +93,7 @@ class TFilterFrame
 public:
 	Opengl::TTexture						mFrame;				//	first input
 	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
+	std::mutex								mStageDataLock;
 	
 	bool		Run(TFilter& Filter);
 	
