@@ -17,7 +17,7 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 		//NSOpenGLPFANoRecovery,
 
 		//	gr: lets get rid of double buffering
-		NSOpenGLPFADoubleBuffer,
+		//NSOpenGLPFADoubleBuffer,
 		
 		//	enable alpha for FBO's
 		//NSOpenGLPFASampleAlpha,
