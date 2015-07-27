@@ -121,6 +121,7 @@ bool TOpenglWindow::Iteration()
 		return true;
 	}
 	
+
 	static bool RedrawOnMainThread = true;
 	
 	auto RedrawImpl = [this]
@@ -131,6 +132,13 @@ bool TOpenglWindow::Iteration()
 	
 	if ( RedrawOnMainThread )
 	{
+		/*
+		if ( mView )
+		{
+			Opengl::TSync Sync( mView->mContext );
+			Sync.Wait();
+		}*/
+
 		//	if we're drawing on the main thread, wait for it to finish before triggering again
 		//	we can easily trigger a redraw before the draw has finished (wait 16ms, render takes 17ms),
 		//	main thread never gets out of job queue
