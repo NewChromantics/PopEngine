@@ -133,6 +133,9 @@ TOpenglView::~TOpenglView()
 	mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
 	mParent->mRenderTarget.Unbind();
 
+	//	gr: without this flush, and no double buffering... the window often stays grey
+	glFlush();
+	
 	//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
 	[[self openGLContext] flushBuffer];
 }
