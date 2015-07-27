@@ -141,6 +141,8 @@ public:
 	void					OnStagesChanged();
 	void					OnUniformChanged(const std::string& Name);
 
+	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
+	
 	//	gr: figure these out
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
 	{
@@ -159,7 +161,8 @@ public:
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
-	Opengl::TGeometry		mBlitQuad;
+	Opengl::TGeometry								mBlitQuad;		//	commonly used
+	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
 };
 
 

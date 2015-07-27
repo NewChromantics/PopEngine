@@ -40,9 +40,16 @@ TFilterStage_ShaderBlit::TFilterStage_ShaderBlit(const std::string& Name,const s
 	mVertFileWatch	( VertFilename ),
 	mFragFileWatch	( FragFilename )
 {
-	auto OnFileChanged = [this](const std::string& Filename)
+	auto OnFileChanged = [this,&Filter](const std::string& Filename)
 	{
-		Reload();
+		//	this is triggered from the main thread. But Reload() waits on opengl (also main thread...) so we deadlock...
+		//	to fix this, we put it on a todo list on the filter
+		auto DoReload = [this]
+		{
+			Reload();
+			return true;
+		};
+		Filter.QueueJob( DoReload );
 	};
 	
 	mVertFileWatch.mOnChanged.AddListener( OnFileChanged );
@@ -388,7 +395,8 @@ std::shared_ptr<TFilterStageRuntimeData> TFilterFrame::GetData(const std::string
 
 
 TFilter::TFilter(const std::string& Name) :
-	TFilterMeta		( Name )
+	TFilterMeta		( Name ),
+	mJobThread		( Name + " odd job thread" )
 {
 	//	create window
 	vec2f WindowPosition( 0, 0 );
@@ -440,6 +448,9 @@ TFilter::TFilter(const std::string& Name) :
 	
 	//	create blit geometry
 	mWindow->GetContext()->PushJob( CreateBlitGeo );
+	
+	//	start odd job thread
+	mJobThread.Start();
 }
 
 void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
@@ -527,6 +538,13 @@ bool TFilter::Run(SoyTime Time)
 	
 	return Completed;
 }
+
+
+void TFilter::QueueJob(std::function<bool(void)> Function)
+{
+	mJobThread.PushJob( Function );
+}
+
 
 void TFilter::OnStagesChanged()
 {
