@@ -47,6 +47,9 @@ float2 DistortPixel(float2 point)
 //	0..1 to -1..1
 float2 CenterUv(float2 uv)
 {
+	//	gr: distort maths is for 0=bottom... so flip here for now
+	uv.y = 1 - uv.y;
+
 	uv = uv*float2(2,2) - float2(1,1);
 	return uv;
 }
@@ -54,6 +57,9 @@ float2 CenterUv(float2 uv)
 float2 UncenterUv(float2 uv)
 {
 	uv = (uv+float2(1,1)) / float2(2,2);
+
+	//	gr: distort maths is for 0=bottom... so flip here for now
+	uv.y = 1 - uv.y;
 	return uv;
 }
 
@@ -96,6 +102,6 @@ void main()
 	
 	
 	float4 Sample = texture2D( Frame, uv );
-	Sample.g =1;
+
 	gl_FragColor = Sample;
 }
