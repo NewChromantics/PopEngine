@@ -5,7 +5,7 @@
 const char* TFilter::FrameSourceName = "Frame";
 
 
-class TOpenglJob_UploadPixels : public Opengl::TJob
+class TOpenglJob_UploadPixels : public PopWorker::TJob
 {
 public:
 	TOpenglJob_UploadPixels(const SoyPixelsImpl& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
@@ -482,7 +482,7 @@ void TFilter::LoadFrame(const SoyPixelsImpl& Pixels,SoyTime Time)
 	
 	//	make up a job that holds the pixels to put it into a texture, then run to refresh everything
 	auto& Context = GetContext();
-	std::shared_ptr<Opengl::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
 	
 	Soy::TSemaphore Semaphore;
 	Context.PushJob( Job, Semaphore );

@@ -44,10 +44,7 @@ public:
 	virtual void	Unlock() override;
 	
 	void			WakeThread();
-	
-protected:
-	virtual void	PushJobImpl(std::shared_ptr<Opengl::TJob>& Job,Soy::TSemaphore* Semaphore) override;
-	
+
 public:
 	TOpenglView&	mParent;
 };

@@ -53,6 +53,14 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 			std::Debug << "Opengl multithreading not enabled" << std::endl;
 	}
 	
+	//	wake thread when there are new jobs
+	auto OnJobPushed = [this](std::shared_ptr<PopWorker::TJob>&)
+	{
+		mContext.WakeThread();
+		return true;
+	};
+	mContext.mOnJobPushed.AddListener( OnJobPushed );
+	
 	//	do init on first thread run
 	auto DefferedInit = [this]
 	{
@@ -124,8 +132,6 @@ TOpenglView::~TOpenglView()
 	//Opengl::ClearColour( Soy::TRgb(0,1,0) );
 	mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
 	mParent->mRenderTarget.Unbind();
-	
-	glFlush();
 
 	//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
 	[[self openGLContext] flushBuffer];
@@ -164,14 +170,6 @@ void GlViewContext::Unlock()
 	CGLUnlockContext( ContextObj );
 //	leaves artifacts everywhere
 	//[mParent.mView.openGLContext flushBuffer];
-}
-
-void GlViewContext::PushJobImpl(std::shared_ptr<Opengl::TJob>& Job,Soy::TSemaphore* Semaphore)
-{
-	Opengl::TContext::PushJobImpl( Job, Semaphore );
-	
-	//	wake up the runloop to make sure an iteration is done ratehr than waiting for OS to redraw
-	WakeThread();
 }
 
 
