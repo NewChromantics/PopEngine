@@ -162,11 +162,17 @@ bool GlViewContext::Lock()
 	if ( !mParent.mView )
 		return false;
 	
-	auto ContextObj = [mParent.mView.openGLContext CGLContextObj];
-	CGLLockContext( ContextObj );
+	auto mContext = [mParent.mView.openGLContext CGLContextObj];
+	CGLLockContext( mContext );
 	
-	//	should already been on this thread...
-	[mParent.mView.openGLContext makeCurrentContext];
+	//	make current thread
+	auto CurrentContext = CGLGetCurrentContext();
+	if ( CurrentContext != mContext )
+	{
+		auto Error = CGLSetCurrentContext( mContext );
+		if ( !Soy::Assert( Error == kCGLNoError, "Error setting current context" ) )
+			return false;
+	}
 	return true;
 }
 
