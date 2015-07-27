@@ -324,6 +324,19 @@ bool TFilterFrame::Run(TFilter& Filter)
 		Sync.Wait();
 	}
 	
+	static bool DoFinish = false;
+	if ( DoFinish )
+	{
+		Soy::TSemaphore Semaphore;
+		auto Finish = []
+		{
+			glFinish();
+			return true;
+		};
+		Filter.GetContext().PushJob( Finish, Semaphore );
+		Semaphore.Wait("glfinish");
+	}
+	
 	return AllSuccess;
 }
 
