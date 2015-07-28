@@ -1,6 +1,9 @@
 #import "TOpenGLView.h"
 #include <SoyMath.h>
 
+static bool DoCGLLock = true;
+
+
 
 TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	mView			( nullptr ),
@@ -52,6 +55,11 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 		else
 			std::Debug << "Opengl multithreading not enabled" << std::endl;
 	}
+	
+	//	sync with vsync
+	static bool Vsync = false;
+	GLint swapInt = Vsync ? 1 : 0;
+	[mView.openGLContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
 	
 	//	wake thread when there are new jobs
 	auto OnJobPushed = [this](std::shared_ptr<PopWorker::TJob>&)
@@ -113,7 +121,6 @@ TOpenglView::~TOpenglView()
 	auto ContextLock = SoyScope( LockContext, UnlockContext );
 	
 	
-	//	render callback from OS, always on main thread?
 	if ( !mParent )
 	{
 		Opengl::ClearColour( Soy::TRgb(1,0,0) );
@@ -128,7 +135,6 @@ TOpenglView::~TOpenglView()
 	if ( !mParent->mRenderTarget.Bind() )
 		return;
 
-	//	gr: don't really wanna send the context here I don't think.... probably wanna send render target
 	//Opengl::ClearColour( Soy::TRgb(0,1,0) );
 	mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
 	mParent->mRenderTarget.Unbind();
@@ -138,6 +144,15 @@ TOpenglView::~TOpenglView()
 	static bool DoFlush = true;
 	if ( DoFlush )
 		glFlush();
+	
+	static bool DoSync = false;
+	if ( DoSync )
+	{
+		GLsync Sync = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 );
+		glWaitSync( Sync, 0, GL_TIMEOUT_IGNORED );
+		glDeleteSync( Sync );
+		Opengl::IsOkay("sync");
+	}
 	
 	//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
 	[[self openGLContext] flushBuffer];
@@ -157,13 +172,15 @@ void GlViewRenderTarget::Unbind()
 {
 }
 
+
 bool GlViewContext::Lock()
 {
 	if ( !mParent.mView )
 		return false;
 	
 	auto mContext = [mParent.mView.openGLContext CGLContextObj];
-	CGLLockContext( mContext );
+	if ( DoCGLLock )
+		CGLLockContext( mContext );
 	
 	//	make current thread
 	auto CurrentContext = CGLGetCurrentContext();
@@ -179,7 +196,8 @@ bool GlViewContext::Lock()
 void GlViewContext::Unlock()
 {
 	auto ContextObj = [mParent.mView.openGLContext CGLContextObj];
-	CGLUnlockContext( ContextObj );
+	if ( DoCGLLock )
+		CGLUnlockContext( ContextObj );
 //	leaves artifacts everywhere
 	//[mParent.mView.openGLContext flushBuffer];
 }
@@ -241,7 +259,8 @@ GlViewSharedContext::~GlViewSharedContext()
 
 bool GlViewSharedContext::Lock()
 {
-	CGLLockContext( mContext );
+	if ( DoCGLLock )
+		CGLLockContext( mContext );
 
 	//	make current thread
 	auto CurrentContext = CGLGetCurrentContext();
@@ -256,7 +275,8 @@ bool GlViewSharedContext::Lock()
 
 void GlViewSharedContext::Unlock()
 {
-	CGLUnlockContext( mContext );
+	if ( DoCGLLock )
+		CGLUnlockContext( mContext );
 }
 
 
