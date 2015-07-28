@@ -285,7 +285,8 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	Soy::TSemaphore Semaphore;
 	mFilter.GetContext().PushJob( BlitToTexture, Semaphore );
-	Semaphore.Wait( mName.c_str() );
+	static bool ShowBlitTime = false;
+	Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
 	
 	return Success;
 }
@@ -323,8 +324,15 @@ bool TFilterFrame::Run(TFilter& Filter)
 	static bool DoSync = true;
 	if ( DoSync )
 	{
-		Opengl::TSync Sync( Filter.GetContext() );
-		Sync.Wait();
+		auto WaitForSync = []
+		{
+			Opengl::TSync SyncCommand;
+			SyncCommand.Wait();
+			return true;
+		};
+		Soy::TSemaphore Semaphore;
+		Filter.GetContext().PushJob( WaitForSync, Semaphore );
+		Semaphore.Wait();
 	}
 	
 	//	finish is superceeded by sync
@@ -562,7 +570,7 @@ bool TFilter::Run(SoyTime Time)
 	{
 		std::stringstream TimerName;
 		TimerName << "filter run " << Time;
-		ofScopeTimerWarning Timer(TimerName.str().c_str(),1);
+		ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
 		Completed = Frame->Run( *this );
 	}
 	
