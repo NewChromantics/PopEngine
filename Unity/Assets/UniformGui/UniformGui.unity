@@ -130,7 +130,7 @@ MonoBehaviour:
   mPointSize: .00999999978
   mMinGrabDistancePx: 10
   mServerAddress: http://localhost:8080/setuniform/?
-  mFilterName: input01
+  mFilterName: mancity01
 --- !u!4 &144783822
 Transform:
   m_ObjectHideFlags: 0

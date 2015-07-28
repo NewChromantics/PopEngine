@@ -261,7 +261,7 @@ MonoBehaviour:
   mPointViewer: {fileID: 144783821}
   mPlayerTracker: {fileID: 144783823}
   mServerAddress: http://localhost:8080/run/?
-  mFilterName: input01
+  mFilterName: mancity01
   mRefreshRate: 1.46000004
 --- !u!4 &374109559
 Transform:
