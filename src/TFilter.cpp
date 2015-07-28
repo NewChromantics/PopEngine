@@ -185,6 +185,9 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 	}
 	
 	Opengl::TTextureUploadParams Params;
+//	Params.mAllowClientStorage = true;
+//	Params.mAllowOpenglConversion = false;
+//	Params.mAllowCpuConversion = false;
 	Frame.mFrame.Copy( Pixels, Params );
 	return true;
 }
@@ -315,8 +318,8 @@ bool TFilterFrame::Run(TFilter& Filter)
 		
 		AllSuccess = AllSuccess && Success;
 	}
-	
-	//	opengl specific "semaphore"
+
+	//	gr: this sync seems to be good to keep work OUT of the render window's flush
 	static bool DoSync = true;
 	if ( DoSync )
 	{
@@ -324,6 +327,7 @@ bool TFilterFrame::Run(TFilter& Filter)
 		Sync.Wait();
 	}
 	
+	//	finish is superceeded by sync
 	static bool DoFinish = false;
 	if ( DoFinish )
 	{
@@ -422,7 +426,9 @@ TFilter::TFilter(const std::string& Name) :
 	
 	mWindow.reset( new TFilterWindow( Name, WindowPosition, WindowSize, *this ) );
 	
-	mContext = mWindow->GetContext()->CreateSharedContext();
+	static bool CreateSharedContext = true;
+	if ( CreateSharedContext )
+		mContext = mWindow->GetContext()->CreateSharedContext();
 	
 	auto CreateBlitGeo = [this]
 	{
