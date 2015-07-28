@@ -148,10 +148,8 @@ TOpenglView::~TOpenglView()
 	static bool DoSync = false;
 	if ( DoSync )
 	{
-		GLsync Sync = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 );
-		glWaitSync( Sync, 0, GL_TIMEOUT_IGNORED );
-		glDeleteSync( Sync );
-		Opengl::IsOkay("sync");
+		Opengl::TSync Sync;
+		Sync.Wait();
 	}
 	
 	//	swap OSX buffers - required with os double buffering (NSOpenGLPFADoubleBuffer)
