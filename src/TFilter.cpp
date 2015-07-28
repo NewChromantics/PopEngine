@@ -8,7 +8,7 @@ const char* TFilter::FrameSourceName = "Frame";
 class TOpenglJob_UploadPixels : public PopWorker::TJob
 {
 public:
-	TOpenglJob_UploadPixels(const SoyPixelsImpl& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
+	TOpenglJob_UploadPixels(std::shared_ptr<SoyPixelsImpl>& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
 		mPixels	( Pixels ),
 		mFrame	( Frame )
 	{
@@ -16,7 +16,7 @@ public:
 	
 	virtual bool		Run(std::ostream& Error);
 
-	const SoyPixelsImpl&			mPixels;
+	std::shared_ptr<SoyPixelsImpl>	mPixels;
 	std::shared_ptr<TFilterFrame>	mFrame;
 };
 
@@ -175,7 +175,7 @@ bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName
 bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 {
 	auto& Frame = *mFrame;
-	auto& Pixels = mPixels;
+	auto& Pixels = *mPixels;
 	
 	//	make texture if it doesn't exist
 	if ( !Frame.mFrame.IsValid() )
@@ -185,9 +185,16 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 	}
 	
 	Opengl::TTextureUploadParams Params;
-//	Params.mAllowClientStorage = true;
+	
+	//	gr: this works, and is fast... but we exhaust memory quickly (apple storage seems to need huge amounts of memory)
+	Params.mAllowClientStorage = false;
 //	Params.mAllowOpenglConversion = false;
 //	Params.mAllowCpuConversion = false;
+	
+	//	grab already-allocated pixels data to skip a copy
+	if ( Params.mAllowClientStorage )
+		Frame.mFrame.mClientBuffer = mPixels;
+	
 	Frame.mFrame.Copy( Pixels, Params );
 	return true;
 }
@@ -518,7 +525,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
 }
 
-void TFilter::LoadFrame(const SoyPixelsImpl& Pixels,SoyTime Time)
+void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 {
 	Soy::Assert( Time.IsValid(), "invalid frame time" );
 	

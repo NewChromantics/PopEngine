@@ -135,7 +135,7 @@ public:
 	bool					Run(SoyTime Frame);		//	returns true if all stages succeeded
 	Opengl::TContext&		GetContext();			//	in the window
 	
-	void					LoadFrame(const SoyPixelsImpl& Pixels,SoyTime Time);	//	load pixels into [new] frame
+	void					LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time);	//	load pixels into [new] frame
 	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
 
 	void					AddStage(const std::string& Name,const TJobParams& Params);

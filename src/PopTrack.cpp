@@ -111,8 +111,8 @@ void TPopTrack::OnLoadFrame(TJobAndChannel &JobAndChannel)
 	CastFormat.PushFirstContainer<TYPE_File>();
 	CastFormat.PushFirstContainer<std::string>();
 	FilenameParam.Cast(CastFormat);
-	SoyPixels Pixels;
-	SoyData_Stack<SoyPixels> PixelsData( Pixels );
+	std::shared_ptr<SoyPixels> Pixels( new SoyPixels );
+	SoyData_Stack<SoyPixels> PixelsData( *Pixels );
 	
 	if ( !FilenameParam.Decode(PixelsData) )
 	{
@@ -126,7 +126,8 @@ void TPopTrack::OnLoadFrame(TJobAndChannel &JobAndChannel)
 	SoyTime Time( TimeStr );
 
 	auto Filter = GetFilter( Name );
-	Filter->LoadFrame( Pixels, Time );
+	std::shared_ptr<SoyPixelsImpl> PixelsImpl( Pixels );
+	Filter->LoadFrame( PixelsImpl, Time );
 
 	TJobReply Reply(Job);
 	Reply.mParams.AddDefaultParam("loaded frame");
@@ -251,12 +252,12 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 			auto& LastFrame = Video.GetLastFrame(LastError);
 			if ( LastError.str().empty() )
 			{
-				auto& Pixels = LastFrame.GetPixelsConst();
+				auto pPixels = LastFrame.GetPixelsShared();
 				auto& Time = LastFrame.GetTime();
 				
 				static bool DoLoadFrame = true;
 				if ( DoLoadFrame )
-					Filter->LoadFrame( Pixels, Time );
+					Filter->LoadFrame( pPixels, Time );
 				//DoLoadFrame = false;
 			}
 			else
@@ -285,7 +286,7 @@ bool TPopTrack::OnNewFrameCallback(TEventSubscriptionManager& SubscriptionManage
 	auto& LastFrame = Device.GetLastFrame(Error);
 	if ( LastFrame.IsValid() )
 	{
-		auto& MemFile = LastFrame.mPixels.mMemFileArray;
+		auto& MemFile = LastFrame.mPixels->mMemFileArray;
 		TYPE_MemFile MemFileData( MemFile );
 		Reply.mParams.AddDefaultParam( MemFileData );
 	}
@@ -333,7 +334,7 @@ void TPopTrack::OnGetFrame(TJobAndChannel& JobAndChannel)
 	{
 		if ( AsMemFile )
 		{
-			TYPE_MemFile MemFile( LastFrame.mPixels.mMemFileArray );
+			TYPE_MemFile MemFile( LastFrame.mPixels->mMemFileArray );
 			TJobFormat Format;
 			Format.PushFirstContainer<SoyPixels>();
 			Format.PushFirstContainer<TYPE_MemFile>();
@@ -342,7 +343,7 @@ void TPopTrack::OnGetFrame(TJobAndChannel& JobAndChannel)
 		else
 		{
 			SoyPixels Pixels;
-			Pixels.Copy( LastFrame.mPixels );
+			Pixels.Copy( *LastFrame.mPixels );
 			Reply.mParams.AddDefaultParam( Pixels );
 		}
 	}
