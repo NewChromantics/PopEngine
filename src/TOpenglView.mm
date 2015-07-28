@@ -57,7 +57,7 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size) :
 	}
 	
 	//	sync with vsync
-	static bool Vsync = false;
+	static bool Vsync = true;
 	GLint swapInt = Vsync ? 1 : 0;
 	[mView.openGLContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
 	
@@ -110,8 +110,8 @@ TOpenglView::~TOpenglView()
 	auto& Context = mParent->mContext;
 	auto LockContext = [&Context]
 	{
-		Opengl::IsOkay("pre drawRect flush",false);
 		Context.Lock();
+		Opengl::IsOkay("pre drawRect flush",false);
 	};
 	auto UnlockContext = [&Context]
 	{

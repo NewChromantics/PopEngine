@@ -21,9 +21,41 @@ public:
 
 public:
 	NSWindow*		mWindow;
+	CVDisplayLinkRef				mDisplayLink;
 };
 
 
+CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
+													const CVTimeStamp *inNow,
+													const CVTimeStamp *inOutputTime,
+													CVOptionFlags flagsIn,
+													CVOptionFlags *flagsOut,
+													void *displayLinkContext)
+{
+	auto* Window = reinterpret_cast<TOpenglWindow*>(displayLinkContext);
+	
+	NSRect Bounds = NSMakeRect( 0, 0, 100, 100 );
+	[Window->mView->mView drawRect:Bounds];
+	/*
+	auto* pContext = Window->GetContext();
+	if ( !pContext )
+		return kCVReturnError;
+	auto& Context = *pContext;
+	
+	Context.Lock();
+	
+	// Add your drawing codes here
+		
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	drawAnObject();
+	glFlush();
+	
+	//[currentContext flushBuffer];
+	Context.Unlock();
+	 */
+	return kCVReturnSuccess;
+}
 
 TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 	SoyWorkerThread		( Soy::GetTypeName(*this), SoyWorkerWaitMode::Sleep ),
@@ -98,7 +130,35 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,vec2f Pos,vec2f Size) :
 	Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
 	Semaphore.Wait();
 
-	SoyWorkerThread::Start();
+	
+	static bool UseDisplayLink = false;
+
+	if ( UseDisplayLink )
+	{
+		//	Synchronize buffer swaps with vertical refresh rate
+		GLint swapInt = 1;
+		auto NSContext = mView->mView.openGLContext;
+		[NSContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
+		
+		auto& mDisplayLink = mMacWindow->mDisplayLink;
+		// Create a display link capable of being used with all active displays
+		CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
+		
+		// Set the renderer output callback function
+		CVDisplayLinkSetOutputCallback(mDisplayLink, &DisplayLinkCallback, this );
+		
+		// Set the display link for the current renderer
+		CGLContextObj cglContext = [NSContext CGLContextObj];
+		CGLPixelFormatObj cglPixelFormat = NSContext.pixelFormat.CGLPixelFormatObj;
+		CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext( mDisplayLink, cglContext, cglPixelFormat);
+		
+		// Activate the display link
+		CVDisplayLinkStart( mDisplayLink );
+	}
+	else
+	{
+		SoyWorkerThread::Start();
+	}
 }
 
 TOpenglWindow::~TOpenglWindow()
@@ -121,12 +181,12 @@ bool TOpenglWindow::Iteration()
 		return true;
 	}
 	
-
 	static bool RedrawOnMainThread = true;
 	
 	auto RedrawImpl = [this]
 	{
-		[mView->mView display];
+		[mView->mView setNeedsDisplay:YES];
+		//[mView->mView display];
 		return true;
 	};
 	
