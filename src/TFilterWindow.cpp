@@ -41,9 +41,14 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	
 	//	collect N frames
 	static int ShowMaxFrames = 3;
+	static int SkipFirstNFrames = 0;
+
+	int SkipCount = SkipFirstNFrames;
 	Array<std::shared_ptr<TFilterFrame>> Frames;
 	for ( auto fit=mParent.mFrames.rbegin();	fit!=mParent.mFrames.rend();	fit++ )
 	{
+		if ( SkipCount-- > 0 )
+			continue;
 		auto pFrame = fit->second;
 		if ( !pFrame )
 			continue;
