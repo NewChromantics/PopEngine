@@ -149,7 +149,7 @@ public:
 	{
 		return false;
 	}
-	virtual bool			SetUniform(TJobParam& Param)
+	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun)
 	{
 		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );
 	}
@@ -191,7 +191,7 @@ public:
 	void					Run(SoyTime FrameTime,TJobParams& ResultParams);
 
 	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
-	virtual bool			SetUniform(TJobParam& Param) override;
+	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun) override;
 	virtual TJobParam		GetUniform(const std::string& Name) override;
 	
 	void					ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame);
@@ -201,4 +201,6 @@ public:
 	int						mCylinderPixelWidth;
 	int						mCylinderPixelHeight;
 	BufferArray<vec2f,4>	mPitchCorners;
+	BufferArray<float,5>	mDistortionParams;
+	vec2f					mLensOffset;
 };

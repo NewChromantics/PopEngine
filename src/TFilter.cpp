@@ -441,7 +441,7 @@ TFilter::TFilter(const std::string& Name) :
 	
 	mWindow.reset( new TFilterWindow( Name, WindowPosition, WindowSize, *this ) );
 	
-	static bool CreateSharedContext = true;
+	static bool CreateSharedContext = false;
 	if ( CreateSharedContext )
 		mContext = mWindow->GetContext()->CreateSharedContext();
 	
@@ -645,6 +645,12 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mPitchCorners.PushBack( vec2f(0.5f,0.0f) );
 	mPitchCorners.PushBack( vec2f(0.5f,0.8f) );
 	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
+	mDistortionParams.PushBack(0);
+	mDistortionParams.PushBack(0);
+	mDistortionParams.PushBack(0);
+	mDistortionParams.PushBack(0);
+	mDistortionParams.PushBack(0);
+	mLensOffset = vec2f(0,0);
 	
 	//	debug extraction
 	auto DebugExtractedPlayers = [this](const SoyTime& Time)
@@ -698,41 +704,142 @@ bool TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Un
 		return true;
 	}
 	
+	if ( Uniform.mName == "RadialDistortionX" )
+	{
+		Shader.SetUniform( Uniform.mName, mDistortionParams[0] );
+		return true;
+	}
+	if ( Uniform.mName == "RadialDistortionY" )
+	{
+		Shader.SetUniform( Uniform.mName, mDistortionParams[1] );
+		return true;
+	}
+	if ( Uniform.mName == "TangentialDistortionX" )
+	{
+		Shader.SetUniform( Uniform.mName, mDistortionParams[2] );
+		return true;
+	}
+	if ( Uniform.mName == "TangentialDistortionY" )
+	{
+		Shader.SetUniform( Uniform.mName, mDistortionParams[3] );
+		return true;
+	}
+	if ( Uniform.mName == "K5Distortion" )
+	{
+		Shader.SetUniform( Uniform.mName, mDistortionParams[4] );
+		return true;
+	}
+	if ( Uniform.mName == "LensOffsetX" )
+	{
+		Shader.SetUniform( Uniform.mName, mLensOffset.x );
+		return true;
+	}
+	if ( Uniform.mName == "LensOffsetY" )
+	{
+		Shader.SetUniform( Uniform.mName, mLensOffset.y );
+		return true;
+	}
 	return false;
 }
 
 
-bool TPlayerFilter::SetUniform(TJobParam& Param)
+bool TPlayerFilter::SetUniform(TJobParam& Param,bool TriggerRerun)
 {
 	if ( Param.GetKey() == "MaskTopLeft" )
 	{
-		Soy::Assert( Param.Decode( mPitchCorners[0] ), "Failed to decode" );
-		OnUniformChanged( Param.GetKey() );
+		auto& Var = mPitchCorners[0];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskTopRight" )
 	{
-		Soy::Assert( Param.Decode( mPitchCorners[1] ), "Failed to decode" );
-		OnUniformChanged( Param.GetKey() );
+		auto& Var = mPitchCorners[1];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskBottomRight" )
 	{
-		Soy::Assert( Param.Decode( mPitchCorners[2] ), "Failed to decode" );
-		OnUniformChanged( Param.GetKey() );
+		auto& Var = mPitchCorners[2];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 	
 	if ( Param.GetKey() == "MaskBottomLeft" )
 	{
-		Soy::Assert( Param.Decode( mPitchCorners[3] ), "Failed to decode" );
-		OnUniformChanged( Param.GetKey() );
+		auto& Var = mPitchCorners[3];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
 		return true;
 	}
 
-	return TFilter::SetUniform( Param );
+	if ( Param.GetKey() == "RadialDistortionX" )
+	{
+		auto& Var = mDistortionParams[0];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "RadialDistortionY" )
+	{
+		auto& Var = mDistortionParams[1];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "TangentialDistortionX" )
+	{
+		auto& Var = mDistortionParams[2];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "TangentialDistortionY" )
+	{
+		auto& Var = mDistortionParams[3];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "K5Distortion" )
+	{
+		auto& Var = mDistortionParams[4];
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "LensOffsetX" )
+	{
+		auto& Var = mLensOffset.x;
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "LensOffsetY" )
+	{
+		auto& Var = mLensOffset.y;
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+
+	
+	return TFilter::SetUniform( Param, TriggerRerun );
 }
 
 

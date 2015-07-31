@@ -162,6 +162,7 @@ void TPopTrack::OnSetFilterUniform(TJobAndChannel &JobAndChannel)
 	
 	//	set uniform from all other params
 	std::stringstream Error;
+	bool Changed = false;
 	for ( int p=0;	p<Job.mParams.mParams.GetSize();	p++ )
 	{
 		auto Param = Job.mParams.mParams[p];
@@ -170,13 +171,15 @@ void TPopTrack::OnSetFilterUniform(TJobAndChannel &JobAndChannel)
 
 		try
 		{
-			Filter->SetUniform( Param );
+			Changed |= Filter->SetUniform( Param, false );
 		}
 		catch( std::exception& e )
 		{
 			Error << "Error setting uniform " << Param.GetKey() << ": " << e.what() << std::endl;
 		}
 	}
+	if ( Changed )
+		Filter->OnStagesChanged();
 
 	TJobReply Reply(Job);
 	if ( Error.str().empty() )
