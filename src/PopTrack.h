@@ -4,7 +4,7 @@
 #include <TChannel.h>
 #include <TJobEventSubscriber.h>
 
-#include "TFilter.h"
+#include "TPlayerFilter.h"
 #include "SoyMovieDecoder.h"
 
 

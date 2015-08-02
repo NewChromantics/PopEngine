@@ -2,174 +2,31 @@
 #include "TFilterWindow.h"
 #include <SoyMath.h>
 
+#include "TFilterStageOpencl.h"
+#include "TFilterStageOpengl.h"
+
+
 const char* TFilter::FrameSourceName = "Frame";
+
+
+
 
 
 class TOpenglJob_UploadPixels : public PopWorker::TJob
 {
 public:
 	TOpenglJob_UploadPixels(std::shared_ptr<SoyPixelsImpl>& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
-		mPixels	( Pixels ),
-		mFrame	( Frame )
+	mPixels	( Pixels ),
+	mFrame	( Frame )
 	{
 	}
 	
 	virtual bool		Run(std::ostream& Error);
-
+	
 	std::shared_ptr<SoyPixelsImpl>	mPixels;
 	std::shared_ptr<TFilterFrame>	mFrame;
 };
 
-
-
-
-TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
-	mName			( Name ),
-	mFilter			( Filter )
-{
-}
-
-
-
-
-TFilterStage_ShaderBlit::TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter) :
-	TFilterStage	( Name, Filter ),
-	mVertFilename	( VertFilename ),
-	mFragFilename	( FragFilename ),
-	mBlitVertexDescription	( BlitVertexDescription ),
-	mVertFileWatch	( VertFilename ),
-	mFragFileWatch	( FragFilename )
-{
-	auto OnFileChanged = [this,&Filter](const std::string& Filename)
-	{
-		//	this is triggered from the main thread. But Reload() waits on opengl (also main thread...) so we deadlock...
-		//	to fix this, we put it on a todo list on the filter
-		auto DoReload = [this]
-		{
-			Reload();
-			return true;
-		};
-		Filter.QueueJob( DoReload );
-	};
-	
-	mVertFileWatch.mOnChanged.AddListener( OnFileChanged );
-	mFragFileWatch.mOnChanged.AddListener( OnFileChanged );
-	
-	Reload();
-}
-
-
-void TFilterStage_ShaderBlit::Reload()
-{
-	Opengl::TContext& Context = mFilter.GetContext();
-	
-	std::Debug << "Loading shader files for " << this->mName << std::endl;
-
-	//	load files
-	std::string VertSrc;
-	if ( !Soy::FileToString( mVertFilename, VertSrc ) )
-		return;
-	
-	std::string FragSrc;
-	if ( !Soy::FileToString( mFragFilename, FragSrc ) )
-		return;
-
-	auto BuildShader = [this,&VertSrc,&FragSrc]
-	{
-		try
-		{
-			//	don't override the shader until it succeeds
-			auto NewShader = Opengl::BuildProgram( VertSrc, FragSrc, mBlitVertexDescription, mName );
-			
-			if ( !NewShader.IsValid() )
-				return true;
-			
-			//	gr; may need std::move here
-			mShader = NewShader;
-		}
-		catch (std::exception& e)
-		{
-			std::Debug << "Failed to compile shader: " << e.what() << std::endl;
-		}
-		return true;
-	};
-	
-	Soy::TSemaphore Semaphore;
-	Context.PushJob( BuildShader, Semaphore );
-	Semaphore.Wait("build shader");
-
-	if ( !mShader.IsValid() )
-		return;
-
-	std::Debug << "Loaded shader (" << mShader.program.mName << ") okay for " << this->mName << std::endl;
-	this->mOnChanged.OnTriggered(*this);
-}
-
-bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
-{
-	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName );
-}
-
-
-TFilterStage_ReadPixels::TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter) :
-	TFilterStage	( Name, Filter ),
-	mSourceStage	( SourceStage )
-{
-	
-}
-	
-bool TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& pData)
-{
-	std::Debug << "reading pixels stage " << mName << std::endl;
-
-	//	get source texture
-	auto SourceDatait = Frame.mStageData.find( mSourceStage );
-	if ( SourceDatait == Frame.mStageData.end() )
-		return false;
-	auto& SourceData = SourceDatait->second;
-	if ( !SourceData )
-		return false;
-	
-	auto SourceTexture = SourceData->GetTexture();
-	bool ReadSuccess = false;
-
-	auto ReadPixels = [&SourceTexture,&pData,&ReadSuccess]
-	{
-		if ( !SourceTexture.IsValid() )
-		{
-			ReadSuccess = false;
-			return true;
-		}
-
-		//	alloc pixels if we need to
-		if ( !pData )
-			pData.reset( new TFilterStageRuntimeData_ReadPixels );
-		auto& Data = *dynamic_cast<TFilterStageRuntimeData_ReadPixels*>( pData.get() );
-
-		try
-		{
-			SourceTexture.Read( Data.mPixels );
-			ReadSuccess = true;
-		}
-		catch (std::exception& e)
-		{
-			std::Debug << "Exception reading texture: " << e.what() << std::endl;
-			ReadSuccess = false;
-		}
-		return true;
-	};
-	
-	Soy::TSemaphore Semaphore;
-	mFilter.GetContext().PushJob(ReadPixels,Semaphore);
-	Semaphore.Wait();
-	
-	return ReadSuccess;
-}
-
-bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
-{
-	return false;
-}
 
 
 bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
@@ -188,8 +45,8 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 	
 	//	gr: this works, and is fast... but we exhaust memory quickly (apple storage seems to need huge amounts of memory)
 	Params.mAllowClientStorage = false;
-//	Params.mAllowOpenglConversion = false;
-//	Params.mAllowCpuConversion = false;
+	//	Params.mAllowOpenglConversion = false;
+	//	Params.mAllowCpuConversion = false;
 	
 	//	grab already-allocated pixels data to skip a copy
 	if ( Params.mAllowClientStorage )
@@ -200,103 +57,13 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 }
 
 
-bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
+	mName			( Name ),
+	mFilter			( Filter )
 {
-	static int DebugColourOffset = 0;
-	DebugColourOffset++;
-	bool Success = false;
-	
-	
-	auto BlitToTexture = [&Data,&Success,&Frame,this]
-	{
-		Soy::TRgb DebugClearColours[] =
-		{
-			Soy::TRgb(1,0,0),
-			Soy::TRgb(1,1,0),
-			Soy::TRgb(0,1,0),
-			Soy::TRgb(0,1,1),
-			Soy::TRgb(0,0,1),
-			Soy::TRgb(1,0,1),
-		};
-		
-		if ( !mFilter.mBlitQuad.IsValid() )
-		{
-			std::Debug << "Filter blit quad invalid " << std::endl;
-			Success = false;
-			return true;
-		}
-		
-		if ( !Data )
-		{
-			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
-			Data.reset( pData );
-			auto& StageTarget = pData->mTexture;
-			auto& FrameTexture = Frame.mFrame;
-
-			if ( !StageTarget.IsValid() )
-			{
-				auto Format = SoyPixelsFormat::RGBA;
-				SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), Format );
-				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
-			}
-		}
-		auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
-		auto& StageName = mName;
-		
-		//	gr: cache/pool these rendertargets?
-		Opengl::TFboMeta FboMeta( StageName, StageTarget.GetWidth(), StageTarget.GetHeight() );
-		std::shared_ptr<Opengl::TRenderTarget> pRenderTarget( new Opengl::TRenderTargetFbo( FboMeta, StageTarget ) );
-		auto& RenderTarget = *pRenderTarget;
-		
-		//	render this stage to the stage target fbo
-		RenderTarget.Bind();
-		{
-			auto& StageShader = mShader;
-			glDisable(GL_BLEND);
-			Opengl::ClearColour( DebugClearColours[(DebugColourOffset)%sizeofarray(DebugClearColours)], 1 );
-			Opengl::ClearDepth();
-			
-			//	write blend RGB but write alpha directly
-			glEnable(GL_BLEND);
-			glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
-			Opengl_IsOkay();
-			
-			auto Shader = StageShader.Bind();
-			if ( Shader.IsValid() )
-			{
-				//std::Debug << "drawing stage " << StageName << std::endl;
-				//	gr: go through uniforms, find any named same as a shader and bind that shaders output
-				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
-				{
-					auto& Uniform = StageShader.mUniforms[u];
-					
-					if ( Frame.SetUniform( Shader, Uniform, mFilter ) )
-						continue;
-					
-					//	maybe surpress this until we need it... or only warn once
-					static bool DebugUnsetUniforms = false;
-					if ( DebugUnsetUniforms )
-						std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
-				}
-				mFilter.mBlitQuad.Draw();
-				Success = true;
-			}
-			else
-			{
-				std::Debug << __func__ << " stage " << StageName << " has no valid shader" << std::endl;
-			}
-		}
-		RenderTarget.Unbind();
-		return true;
-	};
-	
-	Soy::TSemaphore Semaphore;
-	mFilter.GetContext().PushJob( BlitToTexture, Semaphore );
-	static bool ShowBlitTime = false;
-	Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
-	
-	return Success;
 }
+
+
 
 bool TFilterFrame::Run(TFilter& Filter)
 {
@@ -338,7 +105,7 @@ bool TFilterFrame::Run(TFilter& Filter)
 			return true;
 		};
 		Soy::TSemaphore Semaphore;
-		Filter.GetContext().PushJob( WaitForSync, Semaphore );
+		Filter.GetOpenglContext().PushJob( WaitForSync, Semaphore );
 		Semaphore.Wait();
 	}
 	
@@ -352,7 +119,7 @@ bool TFilterFrame::Run(TFilter& Filter)
 			glFinish();
 			return true;
 		};
-		Filter.GetContext().PushJob( Finish, Semaphore );
+		Filter.GetOpenglContext().PushJob( Finish, Semaphore );
 		Semaphore.Wait("glfinish");
 	}
 	
@@ -443,7 +210,7 @@ TFilter::TFilter(const std::string& Name) :
 	
 	static bool CreateSharedContext = false;
 	if ( CreateSharedContext )
-		mContext = mWindow->GetContext()->CreateSharedContext();
+		mOpenglContext = mWindow->GetContext()->CreateSharedContext();
 	
 	auto CreateBlitGeo = [this]
 	{
@@ -482,13 +249,13 @@ TFilter::TFilter(const std::string& Name) :
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
-		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, GetContext() );
+		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, GetOpenglContext() );
 		
 		return true;
 	};
 	
 	//	create blit geometry
-	GetContext().PushJob( CreateBlitGeo );
+	GetOpenglContext().PushJob( CreateBlitGeo );
 	
 	//	start odd job thread
 	mJobThread.Start();
@@ -545,7 +312,7 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	}
 	
 	//	make up a job that holds the pixels to put it into a texture, then run to refresh everything
-	auto& Context = GetContext();
+	auto& Context = GetOpenglContext();
 	std::shared_ptr<PopWorker::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
 	
 	Soy::TSemaphore Semaphore;
@@ -621,306 +388,23 @@ TJobParam TFilter::GetUniform(const std::string& Name)
 	return TJobParam();
 }
 
-Opengl::TContext& TFilter::GetContext()
+Opengl::TContext& TFilter::GetOpenglContext()
 {
 	//	use shared context
-	if ( mContext )
-		return *mContext;
+	if ( mOpenglContext )
+		return *mOpenglContext;
 	
 	Soy::Assert( mWindow!=nullptr, "window not yet allocated" );
-		
+	
 	auto* Context = mWindow->GetContext();
 	Soy::Assert( Context != nullptr, "Expected opengl window to have a context");
 	return *Context;
 }
 
 
-
-TPlayerFilter::TPlayerFilter(const std::string& Name) :
-	TFilter		( Name )
+Opencl::TContext& TFilter::GetOpenclContext()
 {
-	mCylinderPixelWidth = 10;
-	mCylinderPixelHeight = 19;
-	mPitchCorners.PushBack( vec2f(0.0f,0.0f) );
-	mPitchCorners.PushBack( vec2f(0.5f,0.0f) );
-	mPitchCorners.PushBack( vec2f(0.5f,0.8f) );
-	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
-	mDistortionParams.PushBack(0);
-	mDistortionParams.PushBack(0);
-	mDistortionParams.PushBack(0);
-	mDistortionParams.PushBack(0);
-	mDistortionParams.PushBack(0);
-	mLensOffset = vec2f(0,0);
-	
-	//	debug extraction
-	auto DebugExtractedPlayers = [this](const SoyTime& Time)
-	{
-		auto Frame = GetFrame( Time );
-		if ( !Frame )
-			return;
-		
-		TExtractedFrame ExtractedFrame;
-		ExtractPlayers( Time, *Frame, ExtractedFrame );
-
-		std::Debug << "Run extracted " << ExtractedFrame.mPlayers.GetSize() << " players" << std::endl;
-	};
-	mOnRunCompleted.AddListener( DebugExtractedPlayers );
-}
-
-TJobParam TPlayerFilter::GetUniform(const std::string& Name)
-{
-	if ( Name == "CylinderPixelWidth" )
-		return TJobParam( Name, mCylinderPixelWidth );
-	
-	if ( Name == "CylinderPixelHeight" )
-		return TJobParam( Name, mCylinderPixelHeight );
-	
-	return TFilter::GetUniform(Name);
-}
-
-bool TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
-{
-	if ( Uniform.mName == "MaskTopLeft" )
-	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[0] );
-		return true;
-	}
-	
-	if ( Uniform.mName == "MaskTopRight" )
-	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[1] );
-		return true;
-	}
-	
-	if ( Uniform.mName == "MaskBottomRight" )
-	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[2] );
-		return true;
-	}
-	
-	if ( Uniform.mName == "MaskBottomLeft" )
-	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[3] );
-		return true;
-	}
-	
-	if ( Uniform.mName == "RadialDistortionX" )
-	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[0] );
-		return true;
-	}
-	if ( Uniform.mName == "RadialDistortionY" )
-	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[1] );
-		return true;
-	}
-	if ( Uniform.mName == "TangentialDistortionX" )
-	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[2] );
-		return true;
-	}
-	if ( Uniform.mName == "TangentialDistortionY" )
-	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[3] );
-		return true;
-	}
-	if ( Uniform.mName == "K5Distortion" )
-	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[4] );
-		return true;
-	}
-	if ( Uniform.mName == "LensOffsetX" )
-	{
-		Shader.SetUniform( Uniform.mName, mLensOffset.x );
-		return true;
-	}
-	if ( Uniform.mName == "LensOffsetY" )
-	{
-		Shader.SetUniform( Uniform.mName, mLensOffset.y );
-		return true;
-	}
-	return false;
+	return *mOpenclContext;
 }
 
 
-bool TPlayerFilter::SetUniform(TJobParam& Param,bool TriggerRerun)
-{
-	if ( Param.GetKey() == "MaskTopLeft" )
-	{
-		auto& Var = mPitchCorners[0];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	
-	if ( Param.GetKey() == "MaskTopRight" )
-	{
-		auto& Var = mPitchCorners[1];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	
-	if ( Param.GetKey() == "MaskBottomRight" )
-	{
-		auto& Var = mPitchCorners[2];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	
-	if ( Param.GetKey() == "MaskBottomLeft" )
-	{
-		auto& Var = mPitchCorners[3];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-
-	if ( Param.GetKey() == "RadialDistortionX" )
-	{
-		auto& Var = mDistortionParams[0];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	if ( Param.GetKey() == "RadialDistortionY" )
-	{
-		auto& Var = mDistortionParams[1];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	if ( Param.GetKey() == "TangentialDistortionX" )
-	{
-		auto& Var = mDistortionParams[2];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	if ( Param.GetKey() == "TangentialDistortionY" )
-	{
-		auto& Var = mDistortionParams[3];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	if ( Param.GetKey() == "K5Distortion" )
-	{
-		auto& Var = mDistortionParams[4];
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	if ( Param.GetKey() == "LensOffsetX" )
-	{
-		auto& Var = mLensOffset.x;
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-	if ( Param.GetKey() == "LensOffsetY" )
-	{
-		auto& Var = mLensOffset.y;
-		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
-		if ( TriggerRerun )
-			OnUniformChanged( Param.GetKey() );
-		return true;
-	}
-
-	
-	return TFilter::SetUniform( Param, TriggerRerun );
-}
-
-
-void TPlayerFilter::ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame)
-{
-	//	grab pixel data
-	std::string PlayerDataStage = "foundplayers";
-	auto PlayerStageData = FilterFrame.GetData(PlayerDataStage);
-	if ( !PlayerStageData )
-	{
-		std::Debug << "Missing stage data for " << PlayerDataStage << std::endl;
-		return;
-	}
-
-	auto& FoundPlayerData = *dynamic_cast<TFilterStageRuntimeData_ReadPixels*>( PlayerStageData.get() );
-	auto& FoundPlayerPixels = FoundPlayerData.mPixels;
-	auto& FoundPlayerPixelsArray = FoundPlayerPixels.GetPixelsArray();
-	
-	float PlayerWidthNorm = GetUniform("CylinderPixelWidth").Decode<float>();
-	float PlayerHeightNorm = GetUniform("CylinderPixelHeight").Decode<float>();
-	PlayerWidthNorm /= static_cast<float>(FoundPlayerPixels.GetWidth());
-	PlayerHeightNorm /= static_cast<float>(FoundPlayerPixels.GetHeight());
-	
-	//	get all valid entries
-	ExtractedFrame.mTime = FrameTime;
-	
-	static int MaxPlayerExtractions = 1000;
-	auto PixelChannelCount = SoyPixelsFormat::GetChannelCount( FoundPlayerPixels.GetFormat() );
-	for ( int i=0;	i<FoundPlayerPixelsArray.GetSize();	i+=PixelChannelCount )
-	{
-		int ValidityIndex = size_cast<int>( PixelChannelCount-1 );
-		auto RedIndex = std::clamped( 0, 0, ValidityIndex-1 );
-		int GreenIndex = std::clamped( 0, 1, ValidityIndex-1 );
-		int BlueIndex = std::clamped( 0, 2, ValidityIndex-1 );
-		
-		auto Validity = FoundPlayerPixelsArray[i+ValidityIndex];
-		if ( Validity <= 0 )
-			continue;
-		
-		TExtractedPlayer Player;
-		Player.mRgb = vec3f( FoundPlayerPixelsArray[i+RedIndex], FoundPlayerPixelsArray[i+GreenIndex], FoundPlayerPixelsArray[i+BlueIndex] );
-		Player.mRgb *= vec3f( 1.0f/255.f, 1.0f/255.f, 1.0f/255.f );
-		
-		vec2f BottomMiddle = FoundPlayerPixels.GetUv( i/PixelChannelCount );
-		float x = BottomMiddle.x - PlayerWidthNorm / 2.0f;
-		float y = BottomMiddle.y - PlayerHeightNorm;
-		Player.mRect = Soy::Rectf( x, y, PlayerWidthNorm, PlayerHeightNorm );
-
-		ExtractedFrame.mPlayers.PushBack( Player );
-		
-		if ( ExtractedFrame.mPlayers.GetSize() > MaxPlayerExtractions )
-		{
-			std::Debug << "Stopped player extraction at " << ExtractedFrame.mPlayers.GetSize() << std::endl;
-			break;
-		}
-	}
-	
-}
-
-void TPlayerFilter::Run(SoyTime FrameTime,TJobParams& ResultParams)
-{
-	bool AllCompleted = TFilter::Run( FrameTime );
-	if ( !Soy::Assert( AllCompleted, "Filter run failed") )
-		throw Soy::AssertException("Filter run failed");
-
-	auto FilterFrame = GetFrame(FrameTime);
-	if ( !Soy::Assert( FilterFrame!=nullptr, "Missing filter frame") )
-		throw Soy::AssertException("Missing filter frame");
-
-	TExtractedFrame ExtractedFrame;
-	ExtractPlayers( FrameTime, *FilterFrame, ExtractedFrame );
-	
-	std::stringstream Output;
-	Output << "Extracted " << ExtractedFrame.mPlayers.GetSize() << " players\n";
-	Output << Soy::StringJoin( GetArrayBridge(ExtractedFrame.mPlayers), "," );
-	ResultParams.AddDefaultParam( Output.str() );
-}
-
-
-std::ostream& operator<<(std::ostream &out,const TExtractedPlayer& in)
-{
-	out << in.mRect.x << 'x' << in.mRect.y << 'x' << in.mRect.w << 'x' << in.mRect.h;
-	return out;
-}

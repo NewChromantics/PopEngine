@@ -3,7 +3,7 @@
 #include <SoyOpenglContext.h>
 #include <SoyFilesystem.h>
 #include <TJob.h>
-
+#include <SoyOpencl.h>
 
 class TFilterWindow;
 class TFilter;
@@ -32,59 +32,6 @@ class TFilterStageRuntimeData
 public:
 	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)=0;
 	virtual Opengl::TTexture	GetTexture()=0;
-};
-
-
-class TFilterStage_ShaderBlit : public TFilterStage
-{
-public:
-	TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter);
-	
-	void				Reload();
-	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
-	
-	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
-	
-public:
-	std::string				mVertFilename;
-	std::string				mFragFilename;
-	Soy::TFileWatch			mVertFileWatch;
-	Soy::TFileWatch			mFragFileWatch;
-	Opengl::GlProgram		mShader;
-	Opengl::TGeometryVertex	mBlitVertexDescription;
-};
-
-class TFilterStageRuntimeData_ShaderBlit : public TFilterStageRuntimeData
-{
-public:
-	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
-
-public:
-	Opengl::TTexture		mTexture;
-};
-
-
-
-class TFilterStage_ReadPixels : public TFilterStage
-{
-public:
-	TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter);
-
-	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data);
-	
-public:
-	std::string			mSourceStage;
-};
-
-class TFilterStageRuntimeData_ReadPixels : public TFilterStageRuntimeData
-{
-public:
-	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
-	
-public:
-	SoyPixels			mPixels;
 };
 
 
@@ -133,7 +80,8 @@ public:
 	virtual ~TFilter()		{}
 	
 	bool					Run(SoyTime Frame);		//	returns true if all stages succeeded
-	Opengl::TContext&		GetContext();			//	in the window
+	Opengl::TContext&		GetOpenglContext();			//	in the window
+	Opencl::TContext&		GetOpenclContext();			//	in the window
 	
 	void					LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time);	//	load pixels into [new] frame
 	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
@@ -164,43 +112,7 @@ public:
 	Array<std::shared_ptr<TFilterStage>>			mStages;
 	Opengl::TGeometry								mBlitQuad;		//	commonly used
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
-	std::shared_ptr<Opengl::TContext>				mContext;
+	std::shared_ptr<Opengl::TContext>				mOpenglContext;
+	std::shared_ptr<Opencl::TContext>				mOpenclContext;
 };
 
-
-class TExtractedPlayer
-{
-public:
-	Soy::Rectf	mRect;
-	vec3f		mRgb;	//	convert this to actual data based on other uniforms
-};
-std::ostream& operator<<(std::ostream &out,const TExtractedPlayer& in);
-
-class TExtractedFrame
-{
-public:
-	Array<TExtractedPlayer>	mPlayers;
-	SoyTime					mTime;
-};
-
-class TPlayerFilter : public TFilter
-{
-public:
-	TPlayerFilter(const std::string& Name);
-	
-	void					Run(SoyTime FrameTime,TJobParams& ResultParams);
-
-	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform) override;
-	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun) override;
-	virtual TJobParam		GetUniform(const std::string& Name) override;
-	
-	void					ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame);
-	
-public:
-	//	uniforms
-	int						mCylinderPixelWidth;
-	int						mCylinderPixelHeight;
-	BufferArray<vec2f,4>	mPitchCorners;
-	BufferArray<float,5>	mDistortionParams;
-	vec2f					mLensOffset;
-};

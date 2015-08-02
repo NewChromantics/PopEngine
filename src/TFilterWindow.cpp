@@ -164,6 +164,8 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 	//	allocate objects we need!
 	if ( !mBlitShader.IsValid() )
 	{
+		auto& Context = *GetContext();
+		
 		auto VertShader =
 		"uniform vec4 Rect;\n"
 		"attribute vec2 TexCoord;\n"
@@ -187,7 +189,7 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 		"	gl_FragColor = texture2D(Texture0,oTexCoord);\n"
 		"}\n";
 
-		mBlitShader = Opengl::BuildProgram( VertShader, FragShader, mBlitQuad.mVertexDescription, "Blit shader" );
+		mBlitShader = Opengl::BuildProgram( VertShader, FragShader, mBlitQuad.mVertexDescription, "Blit shader", Context );
 	}
 	
 	//	do bindings
