@@ -427,7 +427,7 @@ Opencl::TContext& TFilter::GetOpenclContext()
 		mOpenclDevice.reset( new Opencl::TDevice( GetArrayBridge(Devices) ) );
 		
 		//	now make a context
-		mOpenclContext = mOpenclDevice->CreateContext();
+		mOpenclContext = mOpenclDevice->CreateContextThread("Filter opencl thread");
 	}
 		
 	return *mOpenclContext;
