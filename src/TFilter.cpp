@@ -272,7 +272,15 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 
 	//	work out which type it is
 	std::shared_ptr<TFilterStage> Stage;
-	if ( Params.HasParam("vert") && Params.HasParam("frag") )
+	
+	if ( Params.HasParam("kernel") && Params.HasParam("cl") )
+	{
+		auto& Context = GetOpenclContext();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		Stage.reset( new TFilterStage_OpenclKernel( Name, ProgramFilename, KernelName, *this ) );
+	}
+	else if ( Params.HasParam("vert") && Params.HasParam("frag") )
 	{
 		auto VertFilename = Params.GetParamAs<std::string>("vert");
 		auto FragFilename = Params.GetParamAs<std::string>("frag");
@@ -404,6 +412,24 @@ Opengl::TContext& TFilter::GetOpenglContext()
 
 Opencl::TContext& TFilter::GetOpenclContext()
 {
+	//	make a device
+	if ( !mOpenclDevice )
+	{
+		OpenclDevice::Type Filter = OpenclDevice::GPU;
+		
+		//	get a list of all the devices
+		Array<Opencl::TDeviceMeta> Devices;
+		Opencl::GetDevices( GetArrayBridge(Devices), Filter );
+		
+		for ( int i=0;	i<Devices.GetSize();	i++ )
+			std::Debug << "Opencl device #" << i << " " << Devices[i] << std::endl;
+		
+		mOpenclDevice.reset( new Opencl::TDevice( GetArrayBridge(Devices) ) );
+		
+		//	now make a context
+		mOpenclContext = mOpenclDevice->CreateContext();
+	}
+		
 	return *mOpenclContext;
 }
 

@@ -114,5 +114,6 @@ public:
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
 	std::shared_ptr<Opengl::TContext>				mOpenglContext;
 	std::shared_ptr<Opencl::TContext>				mOpenclContext;
+	std::shared_ptr<Opencl::TDevice>				mOpenclDevice;
 };
 

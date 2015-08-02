@@ -18,7 +18,8 @@ public:
 	std::string				mKernelFilename;
 	std::string				mKernelName;
 	Soy::TFileWatch			mKernelFileWatch;
-	std::shared_ptr<Opencl::TKernel>	mShader;
+	std::shared_ptr<Opencl::TKernel>	mKernel;
+	std::shared_ptr<Opencl::TProgram>	mProgram;
 };
 
 class TFilterStageRuntimeData_OpenclKernel : public TFilterStageRuntimeData

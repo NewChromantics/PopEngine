@@ -1,8 +1,8 @@
 # setup filter 01
 
 # push some test input
-#loadframe input01 time=1001 input01_undistorted.png
-decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
+loadframe mancity01 time=1001 input01_undistorted.png
+#decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
 
 # set meta data
 #setuniform input01 MaskTopLeft=0.279179305x0.43300119

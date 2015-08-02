@@ -261,7 +261,7 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 				static bool DoLoadFrame = true;
 				if ( DoLoadFrame )
 					Filter->LoadFrame( pPixels, Time );
-				//DoLoadFrame = false;
+				DoLoadFrame = false;
 			}
 			else
 			{
