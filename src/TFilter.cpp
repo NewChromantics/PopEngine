@@ -35,10 +35,10 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 	auto& Pixels = *mPixels;
 	
 	//	make texture if it doesn't exist
-	if ( !Frame.mFrame.IsValid() )
+	if ( !Frame.mFrameTexture.IsValid() )
 	{
 		SoyPixelsMetaFull Meta( Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetFormat() );
-		Frame.mFrame = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		Frame.mFrameTexture = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 	}
 	
 	Opengl::TTextureUploadParams Params;
@@ -50,9 +50,9 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 	
 	//	grab already-allocated pixels data to skip a copy
 	if ( Params.mAllowClientStorage )
-		Frame.mFrame.mClientBuffer = mPixels;
+		Frame.mFrameTexture.mClientBuffer = mPixels;
 	
-	Frame.mFrame.Copy( Pixels, Params );
+	Frame.mFrameTexture.Copy( Pixels, Params );
 	return true;
 }
 
@@ -179,7 +179,7 @@ bool TFilterFrame::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uni
 	}
 
 	//	do texture bindings
-	if ( SetTextureUniform( Shader, Uniform, mFrame, TFilter::FrameSourceName ) )
+	if ( SetTextureUniform( Shader, Uniform, mFrameTexture, TFilter::FrameSourceName ) )
 		return true;
 	
 	if ( Filter.SetUniform( Shader, Uniform ) )
@@ -318,6 +318,10 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 			Frame = FrameIt->second;
 		}
 	}
+	
+	//	store pixels
+	//	gr: here we may have a problem where the original pixel buffer is getting overriden by the movie reader?
+	Frame->mFramePixels = Pixels;
 	
 	//	make up a job that holds the pixels to put it into a texture, then run to refresh everything
 	auto& Context = GetOpenglContext();

@@ -76,9 +76,9 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		
 		//	render source texture
 		{
-			if ( Frame.mFrame.IsValid() )
+			if ( Frame.mFrameTexture.IsValid() )
 			{
-				DrawQuad( Frame.mFrame, TileRect );
+				DrawQuad( Frame.mFrameTexture, TileRect );
 			}
 			//	next col
 			TileRect.x += TileRect.w;

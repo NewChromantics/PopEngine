@@ -38,10 +38,6 @@ public:
 class TFilterFrame
 {
 public:
-	Opengl::TTexture						mFrame;				//	first input
-	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
-	std::mutex								mStageDataLock;
-	
 	bool		Run(TFilter& Filter);
 	
 	bool		SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter);
@@ -49,6 +45,14 @@ public:
 
 public:
 	static bool	SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
+
+public:
+	std::shared_ptr<SoyPixelsImpl>			mFramePixels;
+	Opengl::TTexture						mFrameTexture;	//	first input
+	
+	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
+	std::mutex								mStageDataLock;
+	
 };
 
 

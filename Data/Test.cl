@@ -1,5 +1,5 @@
 
-__kernel void DebugUv(__read_only image2d_t Source,__write_only image2d_t Destination)
+__kernel void DebugUv(__read_only image2d_t Frame,__write_only image2d_t Destination)
 {
 	//const sampler_t Sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 	

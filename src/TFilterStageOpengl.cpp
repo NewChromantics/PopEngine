@@ -177,7 +177,7 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
 			Data.reset( pData );
 			auto& StageTarget = pData->mTexture;
-			auto& FrameTexture = Frame.mFrame;
+			auto& FrameTexture = Frame.mFrameTexture;
 
 			if ( !StageTarget.IsValid() )
 			{

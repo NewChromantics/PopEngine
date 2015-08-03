@@ -51,8 +51,130 @@ void TFilterStage_OpenclKernel::Reload()
 	}
 }
 
+
+class TOpenclRunner : public PopWorker::TJob
+{
+public:
+	TOpenclRunner(Opencl::TContext& Context,Opencl::TKernel& Kernel) :
+		mContext	( Context ),
+		mKernel		( Kernel )
+	{
+	}
+	
+	virtual bool		Run(std::ostream& Error);
+
+protected:
+	//	get iterations and can setup first set of kernel args
+	//	number of elements in the array dictates dimensions
+	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<size_t>&& Iterations)=0;
+	
+	//	set any iteration-specific args
+	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)=0;
+
+
+public:
+	Opencl::TKernel&	mKernel;
+	Opencl::TContext&	mContext;
+};
+
+
+class TOpenclRunnerLambda : public TOpenclRunner
+{
+public:
+	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda) :
+		TOpenclRunner		( Context, Kernel ),
+		mIterationLambda	( IterationLambda ),
+		mInitLambda			( InitLambda )
+	{
+	}
+	
+	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<size_t>&& Iterations)
+	{
+		mInitLambda( Kernel, Iterations );
+	}
+
+	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)
+	{
+		mIterationLambda( Kernel, WorkGroups, Block );
+	}
+	
+public:
+	std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)>	mInitLambda;
+	std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)>	mIterationLambda;
+};
+
+
+
+bool TOpenclRunner::Run(std::ostream& Error)
+{
+	auto Kernel = mKernel.Lock(mContext);
+
+	//	get iterations we want
+	Array<size_t> Iterations;
+	Init( Kernel, GetArrayBridge( Iterations ) );
+	
+	//	divide up the iterations
+	Array<Opencl::TKernelIteration> IterationSplits;
+	Kernel.GetIterations( GetArrayBridge(IterationSplits), GetArrayBridge(Iterations) );
+
+	for ( int i=0;	i<IterationSplits.GetSize();	i++ )
+	{
+		auto& Iteration = IterationSplits[i];
+		
+		//	setup the iteration
+		bool Block = false;
+		RunIteration( Kernel, Iteration, Block );
+		
+		//	execute it
+		Opencl::TSync Semaphore;
+		Kernel.QueueIteration( Iteration, Semaphore );
+		if ( Block )
+			Semaphore.Wait();
+	}
+	
+	return true;
+}
+	
+
+
 bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
+	if ( !mKernel )
+		return false;
+
+	if ( !Frame.mFramePixels )
+		return false;
+
+	//	get the opencl context
+	auto& Context = mFilter.GetOpenclContext();
+
+	SoyPixels OutputPixels;
+	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+	//Opencl::DataBuffer OutputPixelsBuffer( OutputPixels, Context );
+	
+	auto Init = [&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	{
+		//	setup params
+		auto& FramePixels = *Frame.mFramePixels;
+		Kernel.SetUniform("Frame", FramePixels );
+		Kernel.SetUniform("Destination", OutputPixels );
+		
+		Iterations.PushBack( FramePixels.GetWidth() );
+		Iterations.PushBack( FramePixels.GetHeight() );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("OffsetX", size_cast<cl_int>(Iteration.mFirst[0]) );
+		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
+	};
+	
+	
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( Context, *	mKernel, Init, Iteration ) );
+	Context.PushJob( Job, Semaphore );
+	Semaphore.Wait();
+	
 	return false;
 }
 	
