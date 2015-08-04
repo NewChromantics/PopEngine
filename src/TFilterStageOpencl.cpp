@@ -1,4 +1,5 @@
 #include "TFilterStageOpencl.h"
+#include "TFilterStageOpengl.h"
 
 
 
@@ -153,12 +154,8 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	if ( !Frame.mFramePixels )
 		return false;
 
-	//	get the opencl context
-	auto& Context = mFilter.GetOpenclContext();
-
 	SoyPixels OutputPixels;
 	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
-	//Opencl::DataBuffer OutputPixelsBuffer( OutputPixels, Context );
 	
 	auto Init = [&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
@@ -178,12 +175,43 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		Kernel.SetUniform("OffsetX", size_cast<cl_int>(Iteration.mFirst[0]) );
 		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
+
+	//	run opencl
+	{
+		auto& ContextCl = mFilter.GetOpenclContext();
+		Soy::TSemaphore Semaphore;
+		std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration ) );
+		ContextCl.PushJob( Job, Semaphore );
+		Semaphore.Wait();
+	}
 	
-	
-	Soy::TSemaphore Semaphore;
-	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( Context, *	mKernel, Init, Iteration ) );
-	Context.PushJob( Job, Semaphore );
-	Semaphore.Wait();
+	//	copy output to texture
+	{
+		auto& ContextGl = mFilter.GetOpenglContext();
+		
+		auto CopyJob = [&Data,&OutputPixels]()
+		{
+			if ( !Data )
+			{
+				auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+				Data.reset( pData );
+				auto& StageTarget = pData->mTexture;
+				
+				if ( !StageTarget.IsValid() )
+				{
+					auto Format = SoyPixelsFormat::RGBA;
+					SoyPixelsMetaFull Meta( OutputPixels.GetWidth(), OutputPixels.GetHeight(), Format );
+					StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+				}
+			}
+			auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
+			StageTarget.Copy( OutputPixels );
+			return true;
+		};
+		Soy::TSemaphore Semaphore;
+		ContextGl.PushJob( CopyJob, Semaphore );
+		Semaphore.Wait();
+	}
 	
 	return false;
 }
