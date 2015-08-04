@@ -275,7 +275,8 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	
 	if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
-		auto& Context = GetOpenclContext();
+		//	construct an opencl context [early for debugging]
+		GetOpenclContext();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		Stage.reset( new TFilterStage_OpenclKernel( Name, ProgramFilename, KernelName, *this ) );

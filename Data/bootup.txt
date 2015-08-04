@@ -17,7 +17,7 @@ setuniform mancity01 MaskBottomLeft=0.0x0.835
 
 
 # add shader called crop to filter
-addstage mancity01 testcl cl=Test.cl kernel=RunTest
+addstage mancity01 testcl cl=Test.cl kernel=DebugUv
 #addstage mancity01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
 #addstage mancity01 showalpha vert=ScreenQuad.vert frag=ShowAlpha.frag
 #addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag

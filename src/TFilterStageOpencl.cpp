@@ -107,6 +107,7 @@ public:
 
 bool TOpenclRunner::Run(std::ostream& Error)
 {
+	ofScopeTimerWarning Timer( (std::string("Opencl ") + this->mKernel.mKernelName).c_str(), 0 );
 	auto Kernel = mKernel.Lock(mContext);
 
 	//	get iterations we want
@@ -117,6 +118,10 @@ bool TOpenclRunner::Run(std::ostream& Error)
 	Array<Opencl::TKernelIteration> IterationSplits;
 	Kernel.GetIterations( GetArrayBridge(IterationSplits), GetArrayBridge(Iterations) );
 
+	//	for now, because buffers get realeased etc when the kernelstate is destructed,
+	//	lets just block on the last execution to make sure nothing is in use. Optimise later.
+	Opencl::TSync LastSemaphore;
+	
 	for ( int i=0;	i<IterationSplits.GetSize();	i++ )
 	{
 		auto& Iteration = IterationSplits[i];
@@ -126,11 +131,14 @@ bool TOpenclRunner::Run(std::ostream& Error)
 		RunIteration( Kernel, Iteration, Block );
 		
 		//	execute it
-		Opencl::TSync Semaphore;
+		Opencl::TSync ItSemaphore;
+		auto& Semaphore = (i==IterationSplits.GetSize()-1) ? LastSemaphore : ItSemaphore;
 		Kernel.QueueIteration( Iteration, Semaphore );
 		if ( Block )
 			Semaphore.Wait();
 	}
+	
+	LastSemaphore.Wait();
 	
 	return true;
 }
@@ -155,12 +163,14 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	auto Init = [&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
 		//	setup params
-		auto& FramePixels = *Frame.mFramePixels;
-		Kernel.SetUniform("Frame", FramePixels );
-		Kernel.SetUniform("Destination", OutputPixels );
+		Kernel.SetUniform("Frag", OutputPixels );
+
+		//	todo: auto set this when setting textures/pixels
+		vec2f PixelWidthHeight( OutputPixels.GetWidth(), OutputPixels.GetHeight() );
+		Kernel.SetUniform("Frag_PixelWidthHeight", PixelWidthHeight );
 		
-		Iterations.PushBack( FramePixels.GetWidth() );
-		Iterations.PushBack( FramePixels.GetHeight() );
+		Iterations.PushBack( OutputPixels.GetWidth() );
+		Iterations.PushBack( OutputPixels.GetHeight() );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
