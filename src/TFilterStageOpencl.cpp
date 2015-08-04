@@ -49,7 +49,11 @@ void TFilterStage_OpenclKernel::Reload()
 		std::Debug << "Failed to load opencl stage " << mName << ": " << e.what() << std::endl;
 		mProgram.reset();
 		mKernel.reset();
+		return;
 	}
+
+	std::Debug << "Loaded kernel (" << mKernelName << ") okay for " << this->mName << std::endl;
+	this->mOnChanged.OnTriggered(*this);
 }
 
 
@@ -72,6 +76,8 @@ protected:
 	//	set any iteration-specific args
 	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)=0;
 
+	//	after last iteration - read back data etc
+	virtual void		OnFinished(Opencl::TKernelState& Kernel)=0;
 
 public:
 	Opencl::TKernel&	mKernel;
@@ -82,10 +88,11 @@ public:
 class TOpenclRunnerLambda : public TOpenclRunner
 {
 public:
-	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda) :
+	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda) :
 		TOpenclRunner		( Context, Kernel ),
 		mIterationLambda	( IterationLambda ),
-		mInitLambda			( InitLambda )
+		mInitLambda			( InitLambda ),
+		mFinishedLambda		( FinishedLambda )
 	{
 	}
 	
@@ -99,9 +106,16 @@ public:
 		mIterationLambda( Kernel, WorkGroups, Block );
 	}
 	
+	//	after last iteration - read back data etc
+	virtual void		OnFinished(Opencl::TKernelState& Kernel)
+	{
+		mFinishedLambda( Kernel );
+	}
+
 public:
 	std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)>	mInitLambda;
 	std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)>	mIterationLambda;
+	std::function<void(Opencl::TKernelState&)>						mFinishedLambda;
 };
 
 
@@ -141,6 +155,8 @@ bool TOpenclRunner::Run(std::ostream& Error)
 	
 	LastSemaphore.Wait();
 	
+	OnFinished( Kernel );
+	
 	return true;
 }
 	
@@ -155,7 +171,8 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		return false;
 
 	SoyPixels OutputPixels;
-	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+	//OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+	OutputPixels.Init( 10, 10, SoyPixelsFormat::RGBA );
 	
 	auto Init = [&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
@@ -175,15 +192,29 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		Kernel.SetUniform("OffsetX", size_cast<cl_int>(Iteration.mFirst[0]) );
 		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
-
+	
+	auto Finished = [&OutputPixels](Opencl::TKernelState& Kernel)
+	{
+		BufferArray<UInt8,4> rgba;
+		rgba.PushBack( 10 );
+		rgba.PushBack( 128 );
+		rgba.PushBack( 0 );
+		rgba.PushBack( 255 );
+		OutputPixels.SetColour( GetArrayBridge(rgba) );
+		OutputPixels.PrintPixels( "pre read", std::Debug );
+		Kernel.ReadUniform("Frag", OutputPixels );
+		OutputPixels.PrintPixels( "post read", std::Debug );
+	};
+	
 	//	run opencl
 	{
 		auto& ContextCl = mFilter.GetOpenclContext();
 		Soy::TSemaphore Semaphore;
-		std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration ) );
+		std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration, Finished ) );
 		ContextCl.PushJob( Job, Semaphore );
 		Semaphore.Wait();
 	}
+	OutputPixels.PrintPixels( "post opencl", std::Debug );
 	
 	//	copy output to texture
 	{
@@ -205,6 +236,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 				}
 			}
 			auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
+			OutputPixels.PrintPixels( "pre texture copy", std::Debug );
 			StageTarget.Copy( OutputPixels );
 			return true;
 		};
