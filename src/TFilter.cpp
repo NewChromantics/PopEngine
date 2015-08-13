@@ -21,7 +21,7 @@ public:
 	{
 	}
 	
-	virtual bool		Run(std::ostream& Error);
+	virtual void		Run() override;
 	
 	std::shared_ptr<SoyPixelsImpl>	mPixels;
 	std::shared_ptr<TFilterFrame>	mFrame;
@@ -29,7 +29,7 @@ public:
 
 
 
-bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
+void TOpenglJob_UploadPixels::Run()
 {
 	auto& Frame = *mFrame;
 	auto& Pixels = *mPixels;
@@ -37,7 +37,7 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 	//	make texture if it doesn't exist
 	if ( !Frame.mFrameTexture.IsValid() )
 	{
-		SoyPixelsMetaFull Meta( Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetFormat() );
+		SoyPixelsMeta Meta( Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetFormat() );
 		Frame.mFrameTexture = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 	}
 	
@@ -53,7 +53,6 @@ bool TOpenglJob_UploadPixels::Run(std::ostream& Error)
 		Frame.mFrameTexture.mClientBuffer = mPixels;
 	
 	Frame.mFrameTexture.Copy( Pixels, Params );
-	return true;
 }
 
 
@@ -211,8 +210,17 @@ TFilter::TFilter(const std::string& Name) :
 	static bool CreateSharedContext = false;
 	if ( CreateSharedContext )
 		mOpenglContext = mWindow->GetContext()->CreateSharedContext();
+
+	CreateBlitGeo(false);
 	
-	auto CreateBlitGeo = [this]
+	//	start odd job thread
+	mJobThread.Start();
+}
+
+void TFilter::CreateBlitGeo(bool Blocking)
+{
+	
+	auto DoCreateBlitGeo = [this]
 	{
 		//	make mesh
 		struct TVertex
@@ -249,16 +257,22 @@ TFilter::TFilter(const std::string& Name) :
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
-		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, GetOpenglContext() );
+		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, GetOpenglContext() ) );
 		
 		return true;
 	};
 	
 	//	create blit geometry
-	GetOpenglContext().PushJob( CreateBlitGeo );
-	
-	//	start odd job thread
-	mJobThread.Start();
+	if ( Blocking )
+	{
+		Soy::TSemaphore Semaphore;
+		GetOpenglContext().PushJob( DoCreateBlitGeo, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		GetOpenglContext().PushJob( DoCreateBlitGeo );
+	}
 }
 
 void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
@@ -283,9 +297,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( Params.HasParam("vert") && Params.HasParam("frag") )
 	{
+		CreateBlitGeo(true);
 		auto VertFilename = Params.GetParamAs<std::string>("vert");
 		auto FragFilename = Params.GetParamAs<std::string>("frag");
-		Stage.reset( new TFilterStage_ShaderBlit(Name,VertFilename,FragFilename,mBlitQuad.mVertexDescription,*this) );
+		Stage.reset( new TFilterStage_ShaderBlit(Name,VertFilename,FragFilename,mBlitQuad->mVertexDescription,*this) );
 	}
 	else if ( Params.HasParam("readtexture") )
 	{

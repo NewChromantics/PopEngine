@@ -109,12 +109,14 @@ public:
 
 	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
 	
+	void					CreateBlitGeo(bool Blocking);	//	throws if failed to create (blocking only)
+	
 public:
 	SoyEvent<const SoyTime>							mOnRunCompleted;	//	use for debugging or caching
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
-	Opengl::TGeometry								mBlitQuad;		//	commonly used
+	std::shared_ptr<Opengl::TGeometry>				mBlitQuad;		//	commonly used
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
 	std::shared_ptr<Opengl::TContext>				mOpenglContext;
 	std::shared_ptr<Opencl::TContext>				mOpenclContext;

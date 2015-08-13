@@ -66,7 +66,7 @@ public:
 	{
 	}
 	
-	virtual bool		Run(std::ostream& Error);
+	virtual void		Run() override;
 
 protected:
 	//	get iterations and can setup first set of kernel args
@@ -120,7 +120,7 @@ public:
 
 
 
-bool TOpenclRunner::Run(std::ostream& Error)
+void TOpenclRunner::Run()
 {
 	ofScopeTimerWarning Timer( (std::string("Opencl ") + this->mKernel.mKernelName).c_str(), 0 );
 	auto Kernel = mKernel.Lock(mContext);
@@ -156,8 +156,6 @@ bool TOpenclRunner::Run(std::ostream& Error)
 	LastSemaphore.Wait();
 	
 	OnFinished( Kernel );
-	
-	return true;
 }
 	
 
@@ -231,7 +229,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 				if ( !StageTarget.IsValid() )
 				{
 					auto Format = SoyPixelsFormat::RGBA;
-					SoyPixelsMetaFull Meta( OutputPixels.GetWidth(), OutputPixels.GetHeight(), Format );
+					SoyPixelsMeta Meta( OutputPixels.GetWidth(), OutputPixels.GetHeight(), Format );
 					StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 				}
 			}

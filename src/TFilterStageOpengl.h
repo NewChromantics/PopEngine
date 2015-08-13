@@ -19,7 +19,7 @@ public:
 	std::string				mFragFilename;
 	Soy::TFileWatch			mVertFileWatch;
 	Soy::TFileWatch			mFragFileWatch;
-	Opengl::GlProgram		mShader;
+	std::shared_ptr<Opengl::TShader>	mShader;
 	Opengl::TGeometryVertex	mBlitVertexDescription;
 };
 

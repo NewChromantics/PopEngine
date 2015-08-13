@@ -32,7 +32,7 @@ protected:
 private:
 	TFilter&			mParent;
 	
-	Opengl::TGeometry	mBlitQuad;
-	Opengl::GlProgram	mBlitShader;
+	std::shared_ptr<Opengl::TGeometry>	mBlitQuad;
+	std::shared_ptr<Opengl::TShader>	mBlitShader;
 	std::shared_ptr<TOpenglWindow>		mWindow;
 };

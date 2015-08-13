@@ -52,11 +52,8 @@ void TFilterStage_ShaderBlit::Reload()
 		try
 		{
 			//	don't override the shader until it succeeds
-			auto NewShader = Opengl::BuildProgram( VertSrc, FragSrc, mBlitVertexDescription, mName, Context );
-			
-			if ( !NewShader.IsValid() )
-				return true;
-			
+			std::shared_ptr<Opengl::TShader> NewShader( new Opengl::TShader( VertSrc, FragSrc, mBlitVertexDescription, mName, Context ) );
+
 			//	gr; may need std::move here
 			mShader = NewShader;
 		}
@@ -71,10 +68,10 @@ void TFilterStage_ShaderBlit::Reload()
 	Context.PushJob( BuildShader, Semaphore );
 	Semaphore.Wait("build shader");
 
-	if ( !mShader.IsValid() )
+	if ( !mShader )
 		return;
 
-	std::Debug << "Loaded shader (" << mShader.program.mName << ") okay for " << this->mName << std::endl;
+	std::Debug << "Loaded shader (" << mShader->mProgram.mName << ") okay for " << this->mName << std::endl;
 	this->mOnChanged.OnTriggered(*this);
 }
 
@@ -150,10 +147,9 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 {
 	static int DebugColourOffset = 0;
 	DebugColourOffset++;
-	bool Success = false;
+
 	
-	
-	auto BlitToTexture = [&Data,&Success,&Frame,this]
+	auto BlitToTexture = [&Data,&Frame,this]
 	{
 		Soy::TRgb DebugClearColours[] =
 		{
@@ -165,12 +161,11 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			Soy::TRgb(1,0,1),
 		};
 		
-		if ( !mFilter.mBlitQuad.IsValid() )
-		{
-			std::Debug << "Filter blit quad invalid " << std::endl;
-			Success = false;
-			return true;
-		}
+		if ( !mFilter.mBlitQuad )
+			throw Soy::AssertException("Filter blit quad missing");
+		
+		if ( !mShader )
+			throw Soy::AssertException("Filter blit shader missing");
 		
 		if ( !Data )
 		{
@@ -182,7 +177,7 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			if ( !StageTarget.IsValid() )
 			{
 				auto Format = SoyPixelsFormat::RGBA;
-				SoyPixelsMetaFull Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), Format );
+				SoyPixelsMeta Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), Format );
 				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 			}
 		}
@@ -196,8 +191,11 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		
 		//	render this stage to the stage target fbo
 		RenderTarget.Bind();
+		try
 		{
-			auto& StageShader = mShader;
+			auto& StageShader = *mShader;
+			auto& BlitQuad = *mFilter.mBlitQuad;
+			
 			glDisable(GL_BLEND);
 			Opengl::ClearColour( DebugClearColours[(DebugColourOffset)%sizeofarray(DebugClearColours)], 1 );
 			Opengl::ClearDepth();
@@ -208,40 +206,44 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			Opengl_IsOkay();
 			
 			auto Shader = StageShader.Bind();
-			if ( Shader.IsValid() )
+
+			//std::Debug << "drawing stage " << StageName << std::endl;
+			//	gr: go through uniforms, find any named same as a shader and bind that shaders output
+			for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 			{
-				//std::Debug << "drawing stage " << StageName << std::endl;
-				//	gr: go through uniforms, find any named same as a shader and bind that shaders output
-				for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
-				{
-					auto& Uniform = StageShader.mUniforms[u];
+				auto& Uniform = StageShader.mUniforms[u];
+				
+				if ( Frame.SetUniform( Shader, Uniform, mFilter ) )
+					continue;
 					
-					if ( Frame.SetUniform( Shader, Uniform, mFilter ) )
-						continue;
-					
-					//	maybe surpress this until we need it... or only warn once
-					static bool DebugUnsetUniforms = false;
-					if ( DebugUnsetUniforms )
-						std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
-				}
-				mFilter.mBlitQuad.Draw();
-				Success = true;
+				//	maybe surpress this until we need it... or only warn once
+				static bool DebugUnsetUniforms = false;
+				if ( DebugUnsetUniforms )
+					std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 			}
-			else
-			{
-				std::Debug << __func__ << " stage " << StageName << " has no valid shader" << std::endl;
-			}
+			BlitQuad.Draw();
+		}
+		catch(...)
+		{
+			RenderTarget.Unbind();
+			throw;
 		}
 		RenderTarget.Unbind();
-		return true;
 	};
 	
 	Soy::TSemaphore Semaphore;
 	mFilter.GetOpenglContext().PushJob( BlitToTexture, Semaphore );
 	static bool ShowBlitTime = false;
-	Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
-	
-	return Success;
+	try
+	{
+		Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
+		return true;
+	}
+	catch ( std::exception& e)
+	{
+		std::Debug << "Filter stage failed: " << e.what() << std::endl;
+		return false;
+	}
 }
 
 

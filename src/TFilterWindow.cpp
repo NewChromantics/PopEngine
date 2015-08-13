@@ -121,7 +121,7 @@ Opengl::TContext* TFilterWindow::GetContext()
 
 void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 {
-	if ( !mBlitQuad.IsValid() )
+	if ( !mBlitQuad )
 	{
 		//	make mesh
 		struct TVertex
@@ -158,11 +158,11 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
-		mBlitQuad = Opengl::CreateGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, *GetContext() );
+		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, *GetContext() ) );
 	}
 
 	//	allocate objects we need!
-	if ( !mBlitShader.IsValid() )
+	if ( !mBlitShader )
 	{
 		auto& Context = *GetContext();
 		
@@ -189,14 +189,14 @@ void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 		"	gl_FragColor = texture2D(Texture0,oTexCoord);\n"
 		"}\n";
 
-		mBlitShader = Opengl::BuildProgram( VertShader, FragShader, mBlitQuad.mVertexDescription, "Blit shader", Context );
+		mBlitShader.reset( new Opengl::TShader( VertShader, FragShader, mBlitQuad->mVertexDescription, "Blit shader", Context ) );
 	}
 	
 	//	do bindings
-	auto Shader = mBlitShader.Bind();
+	auto Shader = mBlitShader->Bind();
 	Shader.SetUniform("Texture0", Texture );
 	Shader.SetUniform("Rect", Soy::RectToVector(Rect) );
-	mBlitQuad.Draw();
+	mBlitQuad->Draw();
 
 }
 
