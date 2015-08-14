@@ -119,21 +119,37 @@ static float4 texture2D(__read_only image2d_t Image,int2 uv)
 	return read_imagef( Image, Sampler, uv );
 }
 
-__kernel void GrassFilter(int OffsetX,int OffsetY,float2 fTexCoord,__read_only image2d_t hsl,__write_only image2d_t Frag)
+__kernel void GrassFilter(int OffsetX,int OffsetY,__read_only image2d_t hsl,__write_only image2d_t Frag)
 {
 	float x = get_global_id(0) + OffsetX;
 	float y = get_global_id(1) + OffsetY;
 	int2 uv = (int2)( x, y );
 
 	vec4 Sample = texture2D( hsl, uv );
+	float Origw = Sample.w;
+	
 	vec3 MatchHsl = RgbToHsl( MatchColour.xyz );
 	float Diff = GetHslDiff( Sample.xyz, MatchHsl.xyz );
 
 	if ( Diff < MinColourDiff )
+	{
 		Sample.w = 0;
-	if ( Diff > MaxColourDiff )
+		Sample = (float4)(0,0,0,1);
+	}
+	else if ( Diff > MaxColourDiff )
+	{
 		Sample.w = 0;
-
+		Sample = (float4)(0,0,0,1);
+	}
+	else if ( Origw == 0 )
+	{
+		Sample = (float4)(0,0,0,0);
+	}
+	else
+	{
+		Sample = (float4)(1,1,1,1);
+	}
+	
 	write_imagef( Frag, uv, Sample );
 }
 

@@ -213,7 +213,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		ContextCl.PushJob( Job, Semaphore );
 		try
 		{
-			Semaphore.Wait();
+			Semaphore.Wait("opencl runner");
 		}
 		catch (std::exception& e)
 		{
@@ -224,6 +224,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	
 	//	copy output to texture
 	{
+		ofScopeTimerWarning Timer("Copy kernel output to texture", 4);
 		auto& ContextGl = mFilter.GetOpenglContext();
 		
 		auto CopyJob = [&Data,&OutputPixels]()
