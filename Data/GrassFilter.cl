@@ -1,36 +1,38 @@
-in vec2 fTexCoord;
-uniform sampler2D hsl;
-vec4 MatchColour = vec4( 100/255.f, 140/255.f, 72/255.f, 0 );
-float MaxColourDiff = 1;
-float MinColourDiff = 0.263f;
-float SaturationFloor = 0.17f;
-float LuminanceFloor = 0.156f;
-float LuminanceCeiling = 0.75f;
-float HueWeight = 1;
-float SatWeight = 0;
-float LumWeight = 0.85f;
+#define const	__constant
+#define vec3	float3
+#define vec4	float4
+//#define override	__attribute__((overloadable))	//	gr: doesn't seem to actually work
+
+const float MaxColourDiff = 1;
+const float MinColourDiff = 0.263f;
+const float SaturationFloor = 0.17f;
+const float LuminanceFloor = 0.156f;
+const float LuminanceCeiling = 0.75f;
+const float gHueWeight = 1;
+const float gSatWeight = 0;
+const float gLumWeight = 0.85f;
+const float4 MatchColour = (float4)( 100/255.f, 140/255.f, 72/255.f, 0 );
 
 
-
-float max(float a,float b,float c)
+static float max3(float a,float b,float c)
 {
 	return max( a, max( b,c ) );
 }
 
-float min(float a,float b,float c)
+static float min3(float a,float b,float c)
 {
 	return min( a, min( b,c ) );
 }
 
 
-vec3 RgbToHsl(vec3 rgb)
+static float3 RgbToHsl(vec3 rgb)
 {
 	float r = rgb.x;
 	float g = rgb.y;
 	float b = rgb.z;
 
-	float Max = max( r, g, b );
-	float Min = min( r, g, b );
+	float Max = max3( r, g, b );
+	float Min = min3( r, g, b );
 
 	float h = 0;
 	float s = 0;
@@ -66,16 +68,20 @@ vec3 RgbToHsl(vec3 rgb)
 
 
 //	gr: change this to HSL and check diff of each component
-float GetRgbDiff(vec3 a,vec3 b)
+static float GetRgbDiff(vec3 a,vec3 b)
 {
-	vec3 Diff4 = abs( a - b );
+	vec3 Diff4 = fabs( a - b );
 	//	average diff?
 	float Diff = (Diff4.x + Diff4.y + Diff4.z) / 3.0f;
 	return Diff;
 }
 
-float GetHslDiff(vec3 a,vec3 b)
+static float GetHslDiff(vec3 a,vec3 b)
 {
+	float HueWeight = gHueWeight;
+	float SatWeight = gSatWeight;
+	float LumWeight = gLumWeight;
+
 	//	if saturation is low, hue doesn't matter
 	if ( a.y < SaturationFloor )
 		HueWeight = 0.0f;
@@ -97,7 +103,7 @@ float GetHslDiff(vec3 a,vec3 b)
 	SatWeight /= TotalWeight;
 	LumWeight /= TotalWeight;
 
-	vec3 DiffHsl = abs( a - b );
+	vec3 DiffHsl = fabs( a - b );
 	DiffHsl.x *= HueWeight;
 	DiffHsl.y *= SatWeight;
 	DiffHsl.z *= LumWeight;
@@ -106,19 +112,20 @@ float GetHslDiff(vec3 a,vec3 b)
 	return Diff;
 }
 
-
-void main()
+static float4 texture2D(__read_only image2d_t Image,int2 uv)
 {
-	/*
-	if ( fTexCoord.x < 0.10f && fTexCoord.y < 0.10f )
-	{
-		gl_FragColor.xyz = MatchColour.xyz;
-		gl_FragColor.w = 1;
-		return;
-	}
-	 */
-	
-	vec4 Sample = texture2D(hsl,fTexCoord);
+	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+
+	return read_imagef( Image, Sampler, uv );
+}
+
+__kernel void GrassFilter(int OffsetX,int OffsetY,float2 fTexCoord,__read_only image2d_t hsl,__write_only image2d_t Frag)
+{
+	float x = get_global_id(0) + OffsetX;
+	float y = get_global_id(1) + OffsetY;
+	int2 uv = (int2)( x, y );
+
+	vec4 Sample = texture2D( hsl, uv );
 	vec3 MatchHsl = RgbToHsl( MatchColour.xyz );
 	float Diff = GetHslDiff( Sample.xyz, MatchHsl.xyz );
 
@@ -127,7 +134,7 @@ void main()
 	if ( Diff > MaxColourDiff )
 		Sample.w = 0;
 
-	//Sample.xyz = 1.f - (Diff / MaxColourDiff);
-	gl_FragColor = Sample;
-
+	write_imagef( Frag, uv, Sample );
 }
+
+
