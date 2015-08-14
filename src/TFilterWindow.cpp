@@ -1,6 +1,6 @@
 #include "TFilterWindow.h"
-#include "TOpenglWindow.h"
-#include "SoyOpengl.h"
+#include <SoyOpenglWindow.h>
+#include <SoyOpengl.h>
 #include "TFilter.h"
 
 
