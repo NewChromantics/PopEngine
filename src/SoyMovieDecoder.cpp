@@ -16,6 +16,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	//	todo: look for existing
 	
 	TVideoDecoderParams DecoderParams( Meta.mName, SoyPixelsFormat::RGBA );
+	DecoderParams.mPushBlockSleepMs = 30000;
 	try
 	{
 		std::shared_ptr<TMovieDecoder> Movie( new TMovieDecoder( DecoderParams, Meta.mSerial ) );
