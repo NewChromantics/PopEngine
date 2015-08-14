@@ -169,8 +169,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		return false;
 
 	SoyPixels OutputPixels;
-	//OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
-	OutputPixels.Init( 30, 30, SoyPixelsFormat::RGBA );
+	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 	
 	auto Init = [&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
@@ -189,15 +188,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	
 	auto Finished = [&OutputPixels](Opencl::TKernelState& Kernel)
 	{
-		BufferArray<UInt8,4> rgba;
-		rgba.PushBack( 11 );
-		rgba.PushBack( 22 );
-		rgba.PushBack( 33 );
-		rgba.PushBack( 255 );
-		OutputPixels.SetColour( GetArrayBridge(rgba) );
-		OutputPixels.PrintPixels( "pre read", std::Debug, false, " " );
 		Kernel.ReadUniform("Frag", OutputPixels );
-		OutputPixels.PrintPixels( "post read", std::Debug, false, " "  );
 	};
 	
 	//	run opencl
@@ -208,7 +199,6 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		ContextCl.PushJob( Job, Semaphore );
 		Semaphore.Wait();
 	}
-	OutputPixels.PrintPixels( "post opencl", std::Debug, false, " "  );
 	
 	//	copy output to texture
 	{
@@ -230,7 +220,6 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 				}
 			}
 			auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
-			OutputPixels.PrintPixels( "pre texture copy", std::Debug, false, " "  );
 			StageTarget.Copy( OutputPixels );
 			return true;
 		};
