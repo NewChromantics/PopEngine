@@ -8,7 +8,7 @@ __kernel void DebugUv(__write_only image2d_t Frag,int OffsetX,int OffsetY)
 	int2 wh = get_image_dim(Frag);
 	float w = wh.x;
 	float h = wh.y;
-	float4 rgba = (float4)( x/w, y/h, 1, 1 );
+	float4 rgba = (float4)( x/w, y/h, 0, 1 );
 	
 	int2 uv = (int2)( x, y );
 	
