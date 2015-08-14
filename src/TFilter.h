@@ -44,7 +44,7 @@ public:
 	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
 
 public:
-	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
+	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
 
 public:
 	std::shared_ptr<SoyPixelsImpl>			mFramePixels;

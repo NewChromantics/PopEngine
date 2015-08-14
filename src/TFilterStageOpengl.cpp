@@ -77,7 +77,7 @@ void TFilterStage_ShaderBlit::Reload()
 
 bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
 {
-	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName );
+	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName, Filter );
 }
 
 

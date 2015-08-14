@@ -126,7 +126,7 @@ bool TFilterFrame::Run(TFilter& Filter)
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName)
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter)
 {
 	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
 		return false;
@@ -137,7 +137,7 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUnifor
 	
 	if ( Suffix.empty() )
 	{
-		Shader.SetUniform_s( Uniform.mName, Texture );
+		Shader.SetUniform_s( Uniform.mName, Opengl::TTextureAndContext( Texture, Filter.GetOpenglContext() ) );
 		return true;
 	}
 	
@@ -178,7 +178,7 @@ bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Unif
 	}
 
 	//	do texture bindings
-	if ( SetTextureUniform( Shader, Uniform, mFrameTexture, TFilter::FrameSourceName ) )
+	if ( SetTextureUniform( Shader, Uniform, mFrameTexture, TFilter::FrameSourceName, Filter ) )
 		return true;
 	
 	if ( Filter.SetUniform( Shader, Uniform ) )
