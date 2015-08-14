@@ -171,9 +171,23 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	SoyPixels OutputPixels;
 	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 	
-	auto Init = [&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	auto Init = [this,&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
 		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+				
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+				continue;
+
+			//	maybe surpress this until we need it... or only warn once
+			static bool DebugUnsetUniforms = false;
+			if ( DebugUnsetUniforms )
+				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
+		}
+		
+		//	"frag" is output. todo; non pixel output!
 		Kernel.SetUniform("Frag", OutputPixels );
 		
 		Iterations.PushBack( OutputPixels.GetWidth() );
@@ -197,7 +211,15 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		Soy::TSemaphore Semaphore;
 		std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration, Finished ) );
 		ContextCl.PushJob( Job, Semaphore );
-		Semaphore.Wait();
+		try
+		{
+			Semaphore.Wait();
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Opencl stage failed: " << e.what() << std::endl;
+			return false;
+		}
 	}
 	
 	//	copy output to texture

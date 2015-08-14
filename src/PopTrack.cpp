@@ -258,10 +258,12 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 				auto pPixels = LastFrame.GetPixelsShared();
 				auto& Time = LastFrame.GetTime();
 				
-				static bool DoLoadFrame = true;
-				if ( DoLoadFrame )
+				static int DoLoadFrame = 10;
+				if ( DoLoadFrame > 0 )
+				{
 					Filter->LoadFrame( pPixels, Time );
-				DoLoadFrame = false;
+					DoLoadFrame--;
+				}
 			}
 			else
 			{

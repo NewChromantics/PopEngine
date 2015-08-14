@@ -30,7 +30,7 @@ public:
 class TFilterStageRuntimeData
 {
 public:
-	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)=0;
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)=0;
 	virtual Opengl::TTexture	GetTexture()=0;
 };
 
@@ -40,11 +40,11 @@ class TFilterFrame
 public:
 	bool		Run(TFilter& Filter);
 	
-	bool		SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter);
+	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
 	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
 
 public:
-	static bool	SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
+	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName);
 
 public:
 	std::shared_ptr<SoyPixelsImpl>			mFramePixels;
@@ -96,11 +96,12 @@ public:
 
 	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
 	
-	//	gr: figure these out
-	virtual bool			SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
+	//	apply uniform to shader
+	virtual bool			SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform)
 	{
 		return false;
 	}
+	//	store uniform value
 	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun)
 	{
 		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );

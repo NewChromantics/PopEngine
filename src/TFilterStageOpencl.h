@@ -25,7 +25,7 @@ public:
 class TFilterStageRuntimeData_OpenclKernel : public TFilterStageRuntimeData
 {
 public:
-	virtual bool				SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter) override;
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
 	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 	
 public:

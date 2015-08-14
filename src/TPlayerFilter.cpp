@@ -44,40 +44,40 @@ TJobParam TPlayerFilter::GetUniform(const std::string& Name)
 	return TFilter::GetUniform(Name);
 }
 
-bool TPlayerFilter::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform)
+bool TPlayerFilter::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform)
 {
 	if ( Uniform.mName == "MaskTopLeft" )
 	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[0] );
+		Shader.SetUniform( Uniform, mPitchCorners[0] );
 		return true;
 	}
 	
 	if ( Uniform.mName == "MaskTopRight" )
 	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[1] );
+		Shader.SetUniform_s( Uniform.mName, mPitchCorners[1] );
 		return true;
 	}
 	
 	if ( Uniform.mName == "MaskBottomRight" )
 	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[2] );
+		Shader.SetUniform_s( Uniform.mName, mPitchCorners[2] );
 		return true;
 	}
 	
 	if ( Uniform.mName == "MaskBottomLeft" )
 	{
-		Shader.SetUniform( Uniform.mName, mPitchCorners[3] );
+		Shader.SetUniform_s( Uniform.mName, mPitchCorners[3] );
 		return true;
 	}
 	
 	if ( Uniform.mName == "RadialDistortionX" )
 	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[0] );
+		Shader.SetUniform_s( Uniform.mName, mDistortionParams[0] );
 		return true;
 	}
 	if ( Uniform.mName == "RadialDistortionY" )
 	{
-		Shader.SetUniform( Uniform.mName, mDistortionParams[1] );
+		Shader.SetUniform_s( Uniform.mName, mDistortionParams[1] );
 		return true;
 	}
 	if ( Uniform.mName == "TangentialDistortionX" )

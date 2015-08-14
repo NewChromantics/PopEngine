@@ -126,7 +126,7 @@ bool TFilterFrame::Run(TFilter& Filter)
 }
 
 
-bool TFilterFrame::SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName)
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName)
 {
 	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
 		return false;
@@ -137,28 +137,28 @@ bool TFilterFrame::SetTextureUniform(Opengl::TShaderState& Shader,Opengl::TUnifo
 	
 	if ( Suffix.empty() )
 	{
-		Shader.SetUniform( Uniform.mName, Texture );
+		Shader.SetUniform_s( Uniform.mName, Texture );
 		return true;
 	}
 	
 	if ( Suffix == "_TexelWidthHeight" )
 	{
 		vec2f Size( 1.0f / static_cast<float>(Texture.GetWidth()), 1.0f / static_cast<float>(Texture.GetHeight()) );
-		Shader.SetUniform( Uniform.mName, Size );
+		Shader.SetUniform_s( Uniform.mName, Size );
 		return true;
 	}
 	
 	if ( Suffix == "_PixelWidthHeight" )
 	{
 		vec2f Size( Texture.GetWidth(), Texture.GetHeight() );
-		Shader.SetUniform( Uniform.mName, Size );
+		Shader.SetUniform_s( Uniform.mName, Size );
 		return true;
 	}
 	
 	return false;
 }
 
-bool TFilterFrame::SetUniform(Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
+bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
 {
 	//	have a priority/overload order;
 	//		stage-frame data

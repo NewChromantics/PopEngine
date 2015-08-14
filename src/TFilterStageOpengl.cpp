@@ -75,7 +75,7 @@ void TFilterStage_ShaderBlit::Reload()
 	this->mOnChanged.OnTriggered(*this);
 }
 
-bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
+bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
 {
 	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName );
 }
@@ -136,7 +136,7 @@ bool TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	return ReadSuccess;
 }
 
-bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName,Opengl::TShaderState& Shader,Opengl::TUniform& Uniform,TFilter& Filter)
+bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
 {
 	return false;
 }
@@ -207,8 +207,7 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			
 			auto Shader = StageShader.Bind();
 
-			//std::Debug << "drawing stage " << StageName << std::endl;
-			//	gr: go through uniforms, find any named same as a shader and bind that shaders output
+			//	set uniforms
 			for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 			{
 				auto& Uniform = StageShader.mUniforms[u];
