@@ -5,7 +5,9 @@
 
 
 TFilterWindow::TFilterWindow(std::string Name,vec2f Position,vec2f Size,TFilter& Parent) :
-	mParent		( Parent )
+	mParent		( Parent ),
+	mZoom		( false ),
+	mZoomPosPx	( 0,0 )
 {
 	mWindow.reset( new TOpenglWindow( Name, Position, Size ) );
 	if ( !mWindow->IsValid() )
@@ -15,6 +17,9 @@ TFilterWindow::TFilterWindow(std::string Name,vec2f Position,vec2f Size,TFilter&
 	}
 	
 	mWindow->mOnRender.AddListener(*this,&TFilterWindow::OnOpenglRender);
+	mWindow->mOnMouseDown.AddListener( *this, &TFilterWindow::OnMouseDown );
+	mWindow->mOnMouseMove.AddListener( *this, &TFilterWindow::OnMouseMove );
+	mWindow->mOnMouseUp.AddListener( *this, &TFilterWindow::OnMouseUp );
 }
 
 TFilterWindow::~TFilterWindow()
@@ -33,7 +38,18 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 {
 	auto FrameBufferSize = RenderTarget.GetSize();
 	
-	Opengl::SetViewport( Soy::Rectf( FrameBufferSize ) );
+	//	zoom viewport
+	auto Rect = Soy::Rectf( FrameBufferSize );
+	if ( mZoom )
+	{
+		float ZoomScale = 4.f;
+		Rect.x *= ZoomScale;
+		Rect.y *= ZoomScale;
+		Rect.w *= ZoomScale;
+		Rect.h *= ZoomScale;
+	}
+	
+	Opengl::SetViewport( Rect );
 	Opengl::ClearColour( Soy::TRgb(0.05f,0.05f,0) );
 	Opengl::ClearDepth();
 	glDisable(GL_DEPTH_TEST);
