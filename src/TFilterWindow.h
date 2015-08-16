@@ -18,7 +18,7 @@ namespace Opengl
 class TFilterWindow
 {
 public:
-	TFilterWindow(std::string Name,vec2f Position,vec2f Size,TFilter& Parent);
+	TFilterWindow(std::string Name,TFilter& Parent);
 	~TFilterWindow();
 	
 	bool				IsValid()			{	return mWindow!=nullptr;	}

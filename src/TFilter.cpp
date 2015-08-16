@@ -201,11 +201,7 @@ TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
 	mJobThread		( Name + " odd job thread" )
 {
-	//	create window
-	vec2f WindowPosition( 0, 0 );
-	vec2f WindowSize( 600, 200 );
-	
-	mWindow.reset( new TFilterWindow( Name, WindowPosition, WindowSize, *this ) );
+	mWindow.reset( new TFilterWindow( Name, *this ) );
 	
 	static bool CreateSharedContext = false;
 	if ( CreateSharedContext )

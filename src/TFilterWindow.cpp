@@ -4,12 +4,13 @@
 #include "TFilter.h"
 
 
-TFilterWindow::TFilterWindow(std::string Name,vec2f Position,vec2f Size,TFilter& Parent) :
+TFilterWindow::TFilterWindow(std::string Name,TFilter& Parent) :
 	mParent		( Parent ),
 	mZoom		( 0.f ),
 	mZoomPosPx	( 0,0 )
 {
-	mWindow.reset( new TOpenglWindow( Name, Position, Size ) );
+	Soy::Rectf Rect( 0, 0, 300, 300 );
+	mWindow.reset( new TOpenglWindow( Name, Rect ) );
 	if ( !mWindow->IsValid() )
 	{
 		mWindow.reset();
@@ -48,7 +49,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	
 	{
 		auto FrameRect = Soy::Rectf( FrameBufferSize );
-		static float MaxZoomScale = 8.f;
+		static float MaxZoomScale = 12.f;
 		float ZoomScale = 1.f + (MaxZoomScale);
 
 		vec2f Center = mZoomPosPx;
