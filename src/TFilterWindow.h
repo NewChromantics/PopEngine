@@ -26,9 +26,9 @@ public:
 	void				OnOpenglRender(Opengl::TRenderTarget& RenderTarget);
 	Opengl::TContext*	GetContext();
 	
-	void				OnMouseDown(const TMousePos& Pos)	{	mZoomPosPx = Pos;	mZoom = true;	}
-	void				OnMouseMove(const TMousePos& Pos)	{	mZoomPosPx = Pos;	}
-	void				OnMouseUp(const TMousePos& Pos)		{	mZoom = false;	}
+	void				OnMouseDown(const TMousePos& Pos);
+	void				OnMouseMove(const TMousePos& Pos);
+	void				OnMouseUp(const TMousePos& Pos);
 	
 protected:
 	void				DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect);
@@ -40,6 +40,7 @@ private:
 	std::shared_ptr<Opengl::TShader>	mBlitShader;
 	std::shared_ptr<TOpenglWindow>		mWindow;
 	
-	bool				mZoom;
+	std::function<void()>	mZoomFunc;
+	float				mZoom;
 	vec2f				mZoomPosPx;
 };

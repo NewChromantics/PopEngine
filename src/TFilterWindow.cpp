@@ -6,7 +6,7 @@
 
 TFilterWindow::TFilterWindow(std::string Name,vec2f Position,vec2f Size,TFilter& Parent) :
 	mParent		( Parent ),
-	mZoom		( false ),
+	mZoom		( 0.f ),
 	mZoomPosPx	( 0,0 )
 {
 	mWindow.reset( new TOpenglWindow( Name, Position, Size ) );
@@ -39,18 +39,37 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	auto FrameBufferSize = RenderTarget.GetSize();
 	
 	//	zoom viewport
-	auto Rect = Soy::Rectf( FrameBufferSize );
-	if ( mZoom )
-	{
-		float ZoomScale = 4.f;
-		Rect.x *= ZoomScale;
-		Rect.y *= ZoomScale;
-		Rect.w *= ZoomScale;
-		Rect.h *= ZoomScale;
-	}
+	if ( mZoomFunc )
+		mZoomFunc();
 	
-	Opengl::SetViewport( Rect );
-	Opengl::ClearColour( Soy::TRgb(0.05f,0.05f,0) );
+	
+	Soy::Rectf ZoomOutViewport(0,0,1,1);
+	Soy::Rectf ZoomInViewport(0,0,1,1);
+	
+	{
+		auto FrameRect = Soy::Rectf( FrameBufferSize );
+		static float MaxZoomScale = 8.f;
+		float ZoomScale = 1.f + (MaxZoomScale);
+
+		vec2f Center = mZoomPosPx;
+		//Center.x = FrameRect.w - Center.x;
+		Center.y = FrameRect.h - Center.y;
+		Center.x /= FrameBufferSize.w;
+		Center.y /= FrameBufferSize.h;
+		
+		ZoomInViewport.w /= ZoomScale;
+		ZoomInViewport.h /= ZoomScale;
+		ZoomInViewport.x = Center.x - (ZoomInViewport.w/2.f);
+		ZoomInViewport.y = Center.y - (ZoomInViewport.h/2.f);
+	}
+	Soy::Rectf Viewport;
+	Viewport.x = Soy::Lerp( ZoomOutViewport.x, ZoomInViewport.x, mZoom );
+	Viewport.y = Soy::Lerp( ZoomOutViewport.y, ZoomInViewport.y, mZoom );
+	Viewport.w = Soy::Lerp( ZoomOutViewport.w, ZoomInViewport.w, mZoom );
+	Viewport.h = Soy::Lerp( ZoomOutViewport.h, ZoomInViewport.h, mZoom );
+	RenderTarget.SetViewportNormalised( Viewport );
+
+	Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
 	Opengl::ClearDepth();
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -133,6 +152,31 @@ Opengl::TContext* TFilterWindow::GetContext()
 	return mWindow->GetContext();
 }
 
+void TFilterWindow::OnMouseDown(const TMousePos& Pos)
+{
+	mZoomPosPx = Pos;
+	mZoomFunc = [this]()
+	{
+		static float ZoomSpeed = 0.1f;
+		if ( mZoom < 1.f )
+			mZoom = std::min( 1.f, mZoom + ZoomSpeed );
+	};
+}
+
+void TFilterWindow::OnMouseMove(const TMousePos& Pos)
+{
+	mZoomPosPx = Pos;
+}
+
+void TFilterWindow::OnMouseUp(const TMousePos& Pos)
+{
+	mZoomFunc = [this]()
+	{
+		static float ZoomSpeed = 0.1f;
+		if ( mZoom > 0.f )
+			mZoom = std::max( 0.f, mZoom - ZoomSpeed );
+	};
+}
 
 
 void TFilterWindow::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
