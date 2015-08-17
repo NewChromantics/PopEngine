@@ -32,8 +32,9 @@ addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag
 addstage mancity01 crop vert=ScreenQuad.vert frag=Crop.frag
 addstage mancity01 hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
 #addstage mancity01 grassfilter vert=ScreenQuad.vert frag=GrassFilter.frag
-addstage mancity01 grassfiltercl cl=GrassFilter.cl kernel=GrassFilter
+addstage mancity01 grassfilter cl=GrassFilter.cl kernel=GrassFilter
 #addstage mancity01 grassfilled vert=ScreenQuad.vert frag=AlphaFill.frag
+addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill
 #addstage mancity01 cylinderfiltered vert=ScreenQuad.vert frag=CylinderFilter.frag
 #addstage mancity01 cylindervertfilter vert=ScreenQuad.vert frag=BiggestGreen.frag
 #addstage mancity01 cylinderbiggest vert=ScreenQuad.vert frag=BiggestGreenHorz.frag

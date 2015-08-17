@@ -299,7 +299,7 @@ std::ostream& operator<<(std::ostream &out,const TExtractedPlayer& in)
 bool TPlayerFilter::Iteration()
 {
 	//	check to see if we should delete some frames
-	static int MaxFrames = 10;
+	static int MaxFrames = 5;
 	while ( mFrames.size() > MaxFrames )
 	{
 		//	todo: make sure we get oldest

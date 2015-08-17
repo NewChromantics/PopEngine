@@ -134,12 +134,10 @@ __kernel void GrassFilter(int OffsetX,int OffsetY,__read_only image2d_t hsl,__wr
 	if ( Diff < MinColourDiff )
 	{
 		Sample.w = 0;
-		Sample = (float4)(0,0,0,1);
 	}
 	else if ( Diff > MaxColourDiff )
 	{
 		Sample.w = 0;
-		Sample = (float4)(0,0,0,1);
 	}
 	else if ( Origw == 0 )
 	{
