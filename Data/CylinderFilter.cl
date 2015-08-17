@@ -34,42 +34,44 @@ __kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grass
 	float h = wh.y;
 	float2 TexCoord = (float2)( tx, ty );
 
-	int2 SamplesUp = (int2)(4,4);
+	int2 SamplesUp = (int2)(6,10);
 	int2 SamplesDown = (int2)(4,4);
-	float2 RectUpMin = (float2)(-2,-4);
-	float2 RectUpMax = (float2)( 2, 0);
+	float2 RectUpMin = (float2)( -6,-30);
+	float2 RectUpMax = (float2)(  6, 0);
+	float2 RectDownMin = (float2)( -3,1);
+	float2 RectDownMax = (float2)( 3,4);
 	
 	int PositiveTestCount = 0;
 	int PositiveCount = 0;
 	
-	for ( int y=0;	y<SamplesUp.y;	y++ )
+	for ( int y=0;	y<=SamplesUp.y;	y++ )
 	{
-		float2 xyNorm = (float2)( 1, y / SamplesUp.y );
-		float2 Offset = (float2)( 0, -4 * xyNorm.y );
-		PositiveCount += GetHit( grassfilled, TexCoord + Offset );
-		PositiveTestCount++;
-	}
-	/*
-	int PositiveCount = 0;
-	int PositiveTestCount = 0;
-	float2 RectUpMin = (float2)(-2,-4);
-	float2 RectUpMax = (float2)( 2, 0);
-	for ( int y=0;	y<SamplesUp.y;	y++ )
-	{
-		for ( int x=0;	x<SamplesUp.x;	x++ )
+		for ( int x=0;	x<=SamplesUp.x;	x++ )
 		{
-			float2 xyNorm = (float2)( x / SamplesUp.x, y / SamplesUp.y );
-			float2 SampleOffset;
-			SampleOffset.x = Lerp( xyNorm.x, RectUpMin.x, RectUpMax.x );
-			SampleOffset.y = Lerp( xyNorm.y, RectUpMin.y, RectUpMax.y );
-			PositiveCount += GetHit( grassfilled, TexCoord + SampleOffset );
+			float2 xyNorm = (float2)( Range( x, 0, SamplesUp.x ), Range( y, 0, SamplesUp.y ) );
+			float2 Offset = (float2)( Lerp( xyNorm.x, RectUpMin.x, RectUpMax.x ), Lerp( xyNorm.y, RectUpMin.y, RectUpMax.y ) );
+			PositiveCount += GetHit( grassfilled, TexCoord + Offset );
 			PositiveTestCount++;
 		}
 	}
-	*/
+
 	
-	int NegativeTestCount = 1;
-	int NegativeCount = GetHit( grassfilled, TexCoord + (float2)(0,1) );
+//	int NegativeTestCount = 1;
+//	int NegativeCount = GetHit( grassfilled, TexCoord + (float2)(0,1) );
+	
+	int NegativeTestCount = 0;
+	int NegativeCount = 0;
+	for ( int y=0;	y<=SamplesDown.y;	y++ )
+	{
+		for ( int x=0;	x<=SamplesDown.x;	x++ )
+		{
+			float2 xyNorm = (float2)( Range( x, 0, SamplesDown.x ), Range( y, 0, SamplesDown.y ) );
+			float2 Offset = (float2)( Lerp( xyNorm.x, RectDownMin.x, RectDownMax.x ), Lerp( xyNorm.y, RectDownMin.y, RectDownMax.y ) );
+			NegativeCount += GetHit( grassfilled, TexCoord + Offset ) ? 0 : 1;
+			NegativeTestCount++;
+		}
+	}
+
 	
 	float NegativeScore = (float)NegativeCount / (float)NegativeTestCount;
 	float PositiveScore = (float)PositiveCount / (float)PositiveTestCount;
@@ -80,7 +82,7 @@ __kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grass
 	float4 Output;
 	bool HitUp = (PositiveScore >= PositiveMin);
 	bool HitDown = (NegativeScore >= NegativeMin);
-	if ( HitUp && !HitDown )
+	if ( HitUp && HitDown )
 	{
 		Output = (float4)(1,1,1,1);
 	}
