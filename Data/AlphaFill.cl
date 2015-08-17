@@ -1,7 +1,7 @@
 #define const	__constant
 
-const int SampleRadius = 8;	//	range 0,9
-const int HitCountMin = 1;
+const int SampleRadius = 6;	//	range 0,9
+const int HitCountMin = 2;
 const bool IncludeSelf = true;
 
 
