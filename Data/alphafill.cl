@@ -40,13 +40,12 @@ __kernel void AlphaFill(int OffsetX,int OffsetY,__read_only image2d_t grassfilte
 	if ( HitCount > HitCountMin )
 	{
 		ThisSample.xyz = (float3)(0,1,0);
+		ThisSample.w = 1;
 	}
 	else
 	{
 		ThisSample.xyz = (float3)(1,0,0);
+		ThisSample.w = 0;
 	}
-//	ThisSample.xyz = (float3)(1,0,0);
-	//	ThisSample.w = (HitCount > HitCountMin) ? 1 : 0;
-	ThisSample.w = 1;
 	write_imagef( Frag, uv, ThisSample );
 }

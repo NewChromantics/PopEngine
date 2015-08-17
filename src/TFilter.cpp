@@ -365,7 +365,8 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	
 	Soy::TSemaphore Semaphore;
 	Context.PushJob( Job, Semaphore );
-	Semaphore.Wait("filter load frame");
+	//Semaphore.Wait("filter load frame");
+	Semaphore.Wait();
 	OnFrameChanged( Time );
 
 	if ( IsNewFrame )
@@ -412,7 +413,7 @@ bool TFilter::Run(SoyTime Time)
 	{
 		std::stringstream TimerName;
 		TimerName << "filter run " << Time;
-		ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
+		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
 		Completed = Frame->Run( *this );
 	}
 	

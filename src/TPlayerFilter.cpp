@@ -308,7 +308,7 @@ bool TPlayerFilter::Iteration()
 			break;
 		
 		auto FrameTime = FirstFrame->first;
-		std::Debug << "Deleting frame " << FrameTime << std::endl;
+		//std::Debug << "Deleting frame " << FrameTime << std::endl;
 		DeleteFrame( FrameTime );
 	}
 	

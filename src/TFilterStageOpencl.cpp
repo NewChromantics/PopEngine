@@ -122,7 +122,7 @@ public:
 
 void TOpenclRunner::Run()
 {
-	ofScopeTimerWarning Timer( (std::string("Opencl ") + this->mKernel.mKernelName).c_str(), 0 );
+	//ofScopeTimerWarning Timer( (std::string("Opencl ") + this->mKernel.mKernelName).c_str(), 0 );
 	auto Kernel = mKernel.Lock(mContext);
 
 	//	get iterations we want
@@ -213,7 +213,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		ContextCl.PushJob( Job, Semaphore );
 		try
 		{
-			Semaphore.Wait("opencl runner");
+			Semaphore.Wait(/*"opencl runner"*/);
 		}
 		catch (std::exception& e)
 		{
@@ -224,7 +224,7 @@ bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	
 	//	copy output to texture
 	{
-		ofScopeTimerWarning Timer("Copy kernel output to texture", 4);
+		//ofScopeTimerWarning Timer("Copy kernel output to texture", 4);
 		auto& ContextGl = mFilter.GetOpenglContext();
 		
 		auto CopyJob = [&Data,&OutputPixels]()
