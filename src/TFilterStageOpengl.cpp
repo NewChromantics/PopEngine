@@ -162,14 +162,20 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	auto BlitToTexture = [&Data,&Frame,this]
 	{
+		static float Sat = 0.7f;
+		static float Lum = 0.5f;
 		Soy::TRgb DebugClearColours[] =
 		{
-			Soy::TRgb(1,0,0),
-			Soy::TRgb(1,1,0),
-			Soy::TRgb(0,1,0),
-			Soy::TRgb(0,1,1),
-			Soy::TRgb(0,0,1),
-			Soy::TRgb(1,0,1),
+			Soy::THsl(0.00f,Sat,Lum),
+			Soy::THsl(0.10f,Sat,Lum),
+			Soy::THsl(0.20f,Sat,Lum),
+			Soy::THsl(0.30f,Sat,Lum),
+			Soy::THsl(0.40f,Sat,Lum),
+			Soy::THsl(0.50f,Sat,Lum),
+			Soy::THsl(0.60f,Sat,Lum),
+			Soy::THsl(0.70f,Sat,Lum),
+			Soy::THsl(0.80f,Sat,Lum),
+			Soy::THsl(0.90f,Sat,Lum),
 		};
 		
 		if ( !mFilter.mBlitQuad )
