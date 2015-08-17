@@ -26,6 +26,7 @@ public:
 class TFilterStageRuntimeData_ShaderBlit : public TFilterStageRuntimeData
 {
 public:
+	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
 	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 

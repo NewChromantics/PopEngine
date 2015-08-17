@@ -19,7 +19,7 @@ public:
 	SoyTime					mTime;
 };
 
-class TPlayerFilter : public TFilter
+class TPlayerFilter : public TFilter, public SoyWorkerThread
 {
 public:
 	TPlayerFilter(const std::string& Name);
@@ -31,6 +31,9 @@ public:
 	virtual TJobParam		GetUniform(const std::string& Name) override;
 	
 	void					ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame);
+	
+	virtual bool			Iteration() override;
+	void					DeleteOldFrames();
 	
 public:
 	//	uniforms

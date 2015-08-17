@@ -141,6 +141,17 @@ bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName
 	return false;
 }
 
+void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	auto DefferedDelete = [this]
+	{
+		mTexture.Delete();
+	};
+	
+	Soy::TSemaphore Semaphore;
+	ContextGl.PushJob( DefferedDelete, Semaphore );
+	Semaphore.Wait();
+}
 
 
 bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)

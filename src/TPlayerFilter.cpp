@@ -3,7 +3,8 @@
 
 
 TPlayerFilter::TPlayerFilter(const std::string& Name) :
-	TFilter		( Name )
+	SoyWorkerThread	( std::string("Player Filter ")+Name, SoyWorkerWaitMode::Wake ),
+	TFilter			( Name )
 {
 	mCylinderPixelWidth = 10;
 	mCylinderPixelHeight = 19;
@@ -31,6 +32,10 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 		std::Debug << "Run extracted " << ExtractedFrame.mPlayers.GetSize() << " players" << std::endl;
 	};
 	mOnRunCompleted.AddListener( DebugExtractedPlayers );
+	
+	WakeOnEvent( mOnRunCompleted );
+	WakeOnEvent( mOnFrameAdded );
+	Start();
 }
 
 TJobParam TPlayerFilter::GetUniform(const std::string& Name)
@@ -289,4 +294,23 @@ std::ostream& operator<<(std::ostream &out,const TExtractedPlayer& in)
 {
 	out << in.mRect.x << 'x' << in.mRect.y << 'x' << in.mRect.w << 'x' << in.mRect.h;
 	return out;
+}
+
+bool TPlayerFilter::Iteration()
+{
+	//	check to see if we should delete some frames
+	static int MaxFrames = 10;
+	while ( mFrames.size() > MaxFrames )
+	{
+		//	todo: make sure we get oldest
+		auto FirstFrame = mFrames.begin();
+		if ( FirstFrame == mFrames.end() )
+			break;
+		
+		auto FrameTime = FirstFrame->first;
+		std::Debug << "Deleting frame " << FrameTime << std::endl;
+		DeleteFrame( FrameTime );
+	}
+	
+	return true;
 }

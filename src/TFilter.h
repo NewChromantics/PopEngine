@@ -30,6 +30,7 @@ public:
 class TFilterStageRuntimeData
 {
 public:
+	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)	{}
 	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)=0;
 	virtual Opengl::TTexture	GetTexture()=0;
 };
@@ -39,6 +40,7 @@ class TFilterFrame
 {
 public:
 	bool		Run(TFilter& Filter);
+	void		Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl);
 	
 	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
 	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
@@ -84,8 +86,8 @@ public:
 	virtual ~TFilter()		{}
 	
 	bool					Run(SoyTime Frame);		//	returns true if all stages succeeded
-	Opengl::TContext&		GetOpenglContext();			//	in the window
-	Opencl::TContext&		GetOpenclContext();			//	in the window
+	Opengl::TContext&		GetOpenglContext();		//	in the window
+	Opencl::TContext&		GetOpenclContext();
 	
 	void					LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time);	//	load pixels into [new] frame
 	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
@@ -109,10 +111,12 @@ public:
 	virtual TJobParam		GetUniform(const std::string& Name);
 
 	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
+	void					DeleteFrame(SoyTime Frame);
 	
 	void					CreateBlitGeo(bool Blocking);	//	throws if failed to create (blocking only)
 	
 public:
+	SoyEvent<const SoyTime>							mOnFrameAdded;
 	SoyEvent<const SoyTime>							mOnRunCompleted;	//	use for debugging or caching
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;

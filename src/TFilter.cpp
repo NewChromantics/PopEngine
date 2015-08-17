@@ -62,6 +62,28 @@ TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 {
 }
 
+void TFilterFrame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	shutdown all the datas
+	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
+	{
+		auto pData = it->second;
+		if ( !pData )
+			continue;
+		
+		pData->Shutdown( ContextGl, ContextCl );
+		pData.reset();
+	}
+	
+	//	shutdown our data
+	auto DefferedDelete = [this]
+	{
+		this->mFrameTexture.Delete();
+	};
+	Soy::TSemaphore Semaphore;
+	ContextGl.PushJob( DefferedDelete, Semaphore );
+	Semaphore.Wait();
+}
 
 
 bool TFilterFrame::Run(TFilter& Filter)
@@ -315,6 +337,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 {
 	Soy::Assert( Time.IsValid(), "invalid frame time" );
+	bool IsNewFrame = false;
 	
 	//	grab the frame (create if nececssary)
 	std::shared_ptr<TFilterFrame> Frame;
@@ -324,6 +347,7 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 		{
 			Frame.reset( new TFilterFrame() );
 			mFrames[Time] = Frame;
+			IsNewFrame = true;
 		}
 		else
 		{
@@ -343,6 +367,9 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	Context.PushJob( Job, Semaphore );
 	Semaphore.Wait("filter load frame");
 	OnFrameChanged( Time );
+
+	if ( IsNewFrame )
+		mOnFrameAdded.OnTriggered( Time );
 }
 
 std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
@@ -354,6 +381,23 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 
 	std::shared_ptr<TFilterFrame> Frame = FrameIt->second;
 	return Frame;
+}
+
+void TFilter::DeleteFrame(SoyTime FrameTime)
+{
+	//	pop from list
+	auto FrameIt = mFrames.find( FrameTime );
+	if ( FrameIt == mFrames.end() )
+	{
+		std::stringstream Error;
+		Error << "Frame " << FrameTime << " doesn't exist";
+		throw Soy::AssertException( Error.str() );
+	}
+
+	auto pFrame = FrameIt->second;
+	mFrames.erase( FrameIt );
+	pFrame->Shutdown( GetOpenglContext(), GetOpenclContext() );
+	pFrame.reset();
 }
 
 bool TFilter::Run(SoyTime Time)
