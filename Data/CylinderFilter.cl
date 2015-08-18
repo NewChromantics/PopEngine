@@ -183,7 +183,7 @@ __kernel void CircleFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfi
 }
 
 
-__kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfilled,__write_only image2d_t Frag)
+__kernel void RectFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfilled,__write_only image2d_t Frag)
 {
 	float tx = get_global_id(0) + OffsetX;
 	float ty = get_global_id(1) + OffsetY;
@@ -214,9 +214,9 @@ __kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grass
 	}
 
 	
-//	int NegativeTestCount = 1;
-//	int NegativeCount = GetHit( grassfilled, TexCoord + (float2)(0,1) );
-	
+	int NegativeTestCount = 1;
+	int NegativeCount = GetHit( grassfilled, TexCoord + (float2)(0,1) );
+/*
 	int NegativeTestCount = 0;
 	int NegativeCount = 0;
 	for ( int y=0;	y<=SamplesDown.y;	y++ )
@@ -229,7 +229,7 @@ __kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grass
 			NegativeTestCount++;
 		}
 	}
-
+*/
 	
 	float NegativeScore = (float)NegativeCount / (float)NegativeTestCount;
 	float PositiveScore = (float)PositiveCount / (float)PositiveTestCount;
@@ -240,7 +240,7 @@ __kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grass
 	float4 Output;
 	bool HitUp = (PositiveScore >= PositiveMin);
 	bool HitDown = (NegativeScore >= NegativeMin);
-	if ( HitUp && HitDown )
+	if ( HitUp && !HitDown )
 	{
 		Output = (float4)(1,1,1,1);
 	}
@@ -300,5 +300,71 @@ __kernel void CylinderFilter(int OffsetX,int OffsetY,__read_only image2d_t grass
 	//if ( PositiveScore < PositiveMin )
 	//	Output.w = 0;
 	*/
+	write_imagef( Frag, (int2)(TexCoord.x,TexCoord.y), Output );
+}
+
+
+
+
+const float2 MaxRectSize = (float2)(40,80);
+#define MaxWalkSteps 30
+const float2 MinRectSize = (float2)(10,30);
+
+
+static float Walk(__read_only image2d_t Image,float2 TexCoord,float2 Step)
+{
+	float2 Offset = (float2)(0,0);
+	for ( int s=0;	s<MaxWalkSteps;	s++ )
+	{
+		float4 Sample = texture2D( Image, TexCoord + Offset );
+		if ( Sample.w < 1 )
+			break;
+		
+		Offset += Step;
+	}
+	return length(Offset);
+}
+
+
+__kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grassfilled,__write_only image2d_t Frag)
+{
+	float tx = get_global_id(0) + OffsetX;
+	float ty = get_global_id(1) + OffsetY;
+	int2 wh = get_image_dim(Frag);
+	float w = wh.x;
+	float h = wh.y;
+	float2 TexCoord = (float2)( tx, ty );
+	__read_only image2d_t Image = grassfilled;
+	
+	float2 WalkScale = (float2)( MaxRectSize.x/2.f / MaxWalkSteps, MaxRectSize.y/2.f / MaxWalkSteps );
+	float2 StepUp = (float2)(0,-1) * WalkScale;
+	float2 StepDown = (float2)(0,1) * WalkScale;
+	float2 StepLeft = (float2)(-1,0) * WalkScale;
+	float2 StepRight = (float2)(1,0) * WalkScale;
+
+	//	find rect edges
+	float ExtentUp = Walk( Image, TexCoord, StepUp );
+	float ExtentDown = Walk( Image, TexCoord, StepDown );
+	float ExtentLeft = Walk( Image, TexCoord, StepLeft );
+	float ExtentRight = Walk( Image, TexCoord, StepRight );
+
+	//	gr: find density from middle out when we start using noisier images or to get rid of overlaps for tighest
+	float4 Output = (float4)(0,0,0,0);
+	float2 RectSize = (float2)( ExtentRight-ExtentLeft, ExtentDown-ExtentUp );
+	if ( RectSize.x < MinRectSize.x || RectSize.y < MinRectSize.y )
+	{
+		Output = (float4)(0,0,0,1);
+	}
+	else if ( RectSize.x > MaxRectSize.x || RectSize.y > MaxRectSize.y )
+	{
+		Output = (float4)(0,0,1,1);
+	}
+	else
+	{
+		float WidthScore = RectSize.x / MaxRectSize.x;
+		float HeightScore = RectSize.y / MaxRectSize.y;
+		Output = (float4)(WidthScore,HeightScore,0,1);
+	}
+	
 	write_imagef( Frag, (int2)(TexCoord.x,TexCoord.y), Output );
 }
