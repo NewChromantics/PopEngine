@@ -306,10 +306,11 @@ __kernel void RectFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfill
 
 
 
-const float2 MaxRectSize = (float2)(40,80);
-#define MaxWalkSteps 30
-const float2 MinRectSize = (float2)(10,30);
-
+const float2 MaxRectSize = (float2)(80,100);
+#define MaxWalkSteps 20
+const float2 MinRectSize = (float2)(6,20);
+const float2 MinAlignment = (float2)( 0.45f, 0.9f );
+const float2 MaxAlignment = (float2)( 0.55f, 1.0f );
 
 static float Walk(__read_only image2d_t Image,float2 TexCoord,float2 Step)
 {
@@ -343,14 +344,22 @@ __kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grass
 	float2 StepRight = (float2)(1,0) * WalkScale;
 
 	//	find rect edges
-	float ExtentUp = Walk( Image, TexCoord, StepUp );
+	float ExtentUp = -Walk( Image, TexCoord, StepUp );
 	float ExtentDown = Walk( Image, TexCoord, StepDown );
-	float ExtentLeft = Walk( Image, TexCoord, StepLeft );
+	float ExtentLeft = -Walk( Image, TexCoord, StepLeft );
 	float ExtentRight = Walk( Image, TexCoord, StepRight );
 
 	//	gr: find density from middle out when we start using noisier images or to get rid of overlaps for tighest
+	float2 RectSize = max( (float2)(0.0001,0.001) , (float2)( ExtentRight-ExtentLeft, ExtentDown-ExtentUp ) );
+	float WidthScore = RectSize.x / MaxRectSize.x;
+	float HeightScore = RectSize.y / MaxRectSize.y;
+
+	//	check alignment, this should reduce results
+	//	if alignment is <x or >1-x our pixel is too far one way in the rect
+	float2 Alignment = (float2)( -ExtentLeft / RectSize.x, -ExtentUp / RectSize.y );
+
 	float4 Output = (float4)(0,0,0,0);
-	float2 RectSize = (float2)( ExtentRight-ExtentLeft, ExtentDown-ExtentUp );
+	
 	if ( RectSize.x < MinRectSize.x || RectSize.y < MinRectSize.y )
 	{
 		Output = (float4)(0,0,0,1);
@@ -359,10 +368,12 @@ __kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grass
 	{
 		Output = (float4)(0,0,1,1);
 	}
+	else if ( Alignment.x < MinAlignment.x || Alignment.x > MaxAlignment.x || Alignment.y < MinAlignment.y || Alignment.y > MaxAlignment.y )
+	{
+		Output = (float4)(0,0,0,1);
+	}
 	else
 	{
-		float WidthScore = RectSize.x / MaxRectSize.x;
-		float HeightScore = RectSize.y / MaxRectSize.y;
 		Output = (float4)(WidthScore,HeightScore,0,1);
 	}
 	
