@@ -309,8 +309,8 @@ __kernel void RectFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfill
 const float2 MaxRectSize = (float2)(80,100);
 #define MaxWalkSteps 20
 const float2 MinRectSize = (float2)(6,20);
-const float2 MinAlignment = (float2)( 0.45f, 0.9f );
-const float2 MaxAlignment = (float2)( 0.55f, 1.0f );
+const float2 MinAlignment = (float2)( 0.4f, 0.8f );
+const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
 
 static float Walk(__read_only image2d_t Image,float2 TexCoord,float2 Step)
 {
@@ -374,7 +374,7 @@ __kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grass
 	}
 	else
 	{
-		Output = (float4)(WidthScore,HeightScore,0,1);
+		Output = (float4)(WidthScore,HeightScore,Alignment.x,Alignment.y);
 	}
 	
 	write_imagef( Frag, (int2)(TexCoord.x,TexCoord.y), Output );

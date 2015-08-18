@@ -4,7 +4,7 @@
 
 #include "TFilterStageOpencl.h"
 #include "TFilterStageOpengl.h"
-
+#include "TFilterStageGatherRects.h"
 
 const char* TFilter::FrameSourceName = "Frame";
 
@@ -303,6 +303,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 
 	//	work out which type it is
+	//	gr: needs a better factory system
 	std::shared_ptr<TFilterStage> Stage;
 	
 	if ( Params.HasParam("kernel") && Params.HasParam("cl") )
@@ -311,7 +312,11 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		GetOpenclContext();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
-		Stage.reset( new TFilterStage_OpenclKernel( Name, ProgramFilename, KernelName, *this ) );
+		
+		if ( Name == "GatherRects" )
+			Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this ) );
+		else
+			Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this ) );
 	}
 	else if ( Params.HasParam("vert") && Params.HasParam("frag") )
 	{

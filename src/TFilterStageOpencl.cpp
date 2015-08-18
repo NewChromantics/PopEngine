@@ -57,68 +57,6 @@ void TFilterStage_OpenclKernel::Reload()
 }
 
 
-class TOpenclRunner : public PopWorker::TJob
-{
-public:
-	TOpenclRunner(Opencl::TContext& Context,Opencl::TKernel& Kernel) :
-		mContext	( Context ),
-		mKernel		( Kernel )
-	{
-	}
-	
-	virtual void		Run() override;
-
-protected:
-	//	get iterations and can setup first set of kernel args
-	//	number of elements in the array dictates dimensions
-	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<size_t>&& Iterations)=0;
-	
-	//	set any iteration-specific args
-	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)=0;
-
-	//	after last iteration - read back data etc
-	virtual void		OnFinished(Opencl::TKernelState& Kernel)=0;
-
-public:
-	Opencl::TKernel&	mKernel;
-	Opencl::TContext&	mContext;
-};
-
-
-class TOpenclRunnerLambda : public TOpenclRunner
-{
-public:
-	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda) :
-		TOpenclRunner		( Context, Kernel ),
-		mIterationLambda	( IterationLambda ),
-		mInitLambda			( InitLambda ),
-		mFinishedLambda		( FinishedLambda )
-	{
-	}
-	
-	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<size_t>&& Iterations)
-	{
-		mInitLambda( Kernel, Iterations );
-	}
-
-	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)
-	{
-		mIterationLambda( Kernel, WorkGroups, Block );
-	}
-	
-	//	after last iteration - read back data etc
-	virtual void		OnFinished(Opencl::TKernelState& Kernel)
-	{
-		mFinishedLambda( Kernel );
-	}
-
-public:
-	std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)>	mInitLambda;
-	std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)>	mIterationLambda;
-	std::function<void(Opencl::TKernelState&)>						mFinishedLambda;
-};
-
-
 
 void TOpenclRunner::Run()
 {
@@ -147,10 +85,19 @@ void TOpenclRunner::Run()
 		
 		//	execute it
 		Opencl::TSync ItSemaphore;
-		auto& Semaphore = (i==IterationSplits.GetSize()-1) ? LastSemaphore : ItSemaphore;
-		Kernel.QueueIteration( Iteration, Semaphore );
-		if ( Block )
-			Semaphore.Wait();
+		auto* Semaphore = Block ? &ItSemaphore : nullptr;
+		if ( i == IterationSplits.GetSize()-1 )
+			Semaphore = &LastSemaphore;
+	
+		if ( Semaphore )
+		{
+			Kernel.QueueIteration( Iteration, *Semaphore );
+			Semaphore->Wait();
+		}
+		else
+		{
+			Kernel.QueueIteration( Iteration );
+		}
 	}
 	
 	LastSemaphore.Wait();
@@ -160,7 +107,7 @@ void TOpenclRunner::Run()
 	
 
 
-bool TFilterStage_OpenclKernel::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	if ( !mKernel )
 		return false;
