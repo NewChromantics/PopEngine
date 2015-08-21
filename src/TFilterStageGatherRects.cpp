@@ -38,8 +38,8 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		
 		Kernel.SetUniform("Matches", RectBuffer );
 		Kernel.SetUniform("MatchesCount", RectBufferCounter );
-		Kernel.SetUniform("MatchesMax", size_cast<cl_int>(RectBuffer.GetMaxSize()) );
-
+		Kernel.SetUniform("MatchesMax", size_cast<cl_int>(RectBuffer.GetSize()) );
+	
 		Iterations.PushBack( FrameWidth );
 		Iterations.PushBack( FrameHeight );
 	};
@@ -56,10 +56,12 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		Opencl::TSync Semaphore;
 		RectBufferCounter.Read( RectCount, Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
+		std::Debug << "Rect count: " << RectCount << std::endl;
 		
-		StageData.mRects.SetSize( RectCount );
+		StageData.mRects.SetSize( std::min( RectCount, size_cast<cl_int>(RectBuffer.GetSize()) ) );
 		RectBuffer.Read( GetArrayBridge(StageData.mRects), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
+
 	};
 	
 	//	run opencl
@@ -78,5 +80,12 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		}
 	}
 	
-	return false;
+	std::Debug << "Read " << StageData.mRects.GetSize() << " rects; ";
+	for ( int i=0;	i<StageData.mRects.GetSize();	i++ )
+	{
+		std::Debug << StageData.mRects[i] << " ";
+	}
+	std::Debug << std::endl;
+	
+	return true;
 }

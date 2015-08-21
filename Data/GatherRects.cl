@@ -1,4 +1,5 @@
 #define const	__constant
+#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
 
 #define DECLARE_DYNAMIC_ARRAY(TYPE)		\
 typedef struct							\
@@ -16,7 +17,7 @@ static bool PushArrayGetIndex_ ## TYPE(TArray_ ## TYPE Array,const TYPE* Value,i
 	*pNewIndex = NewIndex;				\
 	return Success;		\
 }						\
-static bool PushArray_ ## TYPE(TArray_ ## TYPE Array,const TYPE* Value)	{	\
+static bool PushArray_ ## TYPE(TArray_ ## TYPE Array,TYPE* Value)	{	\
 	int NewIndex = atomic_inc( Array.mOffset );	/*get next unused index*/	\
 	bool Success = (NewIndex < Array.mMax);		/*out of space*/			\
 	NewIndex = min( NewIndex, Array.mMax-1 );	/* dont go out of bounds */	\
@@ -69,13 +70,14 @@ __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilt
 	float w = wh.x;
 	float h = wh.y;
 	float2 TexCoord = (float2)( tx, ty );
-
+	
 	float4 Sample = texture2D( rectfilter, TexCoord );
-	float4 Match;
-	if ( !MakeRectMatch( &Match, TexCoord, wh, Sample ) )
-		return;
+	float4 Match = (float4)(tx,ty,get_global_id(0),get_global_id(1));
+//	if ( !MakeRectMatch( &Match, TexCoord, wh, Sample ) )
+//		return;
 
-	//TArray_float4 MatchArray = { Matches, MatchesCount, MatchesMax };
-	//PushArray_float4( MatchArray, &Match );
+	TArray_float4 MatchArray = { Matches, MatchesCount, 5 };
+	PushArray_float4( MatchArray, &Match );
+
 }
 

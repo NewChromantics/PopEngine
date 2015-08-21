@@ -52,7 +52,7 @@ void TOpenglJob_UploadPixels::Run()
 	if ( Params.mAllowClientStorage )
 		Frame.mFrameTexture.mClientBuffer = mPixels;
 	
-	Frame.mFrameTexture.Copy( Pixels, Params );
+	Frame.mFrameTexture.Write( Pixels, Params );
 }
 
 
@@ -481,7 +481,8 @@ Opencl::TContext& TFilter::GetOpenclContext()
 	//	make a device
 	if ( !mOpenclDevice )
 	{
-		OpenclDevice::Type Filter = OpenclDevice::GPU;
+		static OpenclDevice::Type Filter = OpenclDevice::GPU;
+		//OpenclDevice::Type Filter = OpenclDevice::CPU;
 		
 		//	get a list of all the devices
 		Array<Opencl::TDeviceMeta> Devices;
