@@ -190,7 +190,7 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				}
 			}
 			auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
-			StageTarget.Copy( OutputPixels );
+			StageTarget.Write( OutputPixels );
 			return true;
 		};
 		Soy::TSemaphore Semaphore;
