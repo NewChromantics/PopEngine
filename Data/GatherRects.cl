@@ -31,13 +31,13 @@ const float2 MaxRectSize = (float2)(80,100);
 
 static bool MakeRectMatch(float4* Match,float2 TexCoord,float2 TexSize,float4 Sample)
 {
-	//	if width or height zero then not a match
-	if ( Sample.z == 0 || Sample.w == 0 )
-		return false;
-
 	float2 RectSize = Sample.xy * MaxRectSize;
 	float2 Alignment = Sample.zw * MaxRectSize;
 	
+	//	if width or height zero then not a match
+	if ( RectSize.x == 0 || RectSize.y == 0 )
+		return false;
+
 	float2 Min = TexCoord - Alignment;
 	float2 Max = Min + RectSize;
 	
@@ -72,11 +72,13 @@ __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilt
 	float2 TexCoord = (float2)( tx, ty );
 	
 	float4 Sample = texture2D( rectfilter, TexCoord );
-	float4 Match = (float4)(tx,ty,get_global_id(0),get_global_id(1));
-//	if ( !MakeRectMatch( &Match, TexCoord, wh, Sample ) )
-//		return;
+	//float4 Match = (float4)(tx,ty,get_global_id(0),get_global_id(1));
+	float4 Match;
+	//float4 Match = (float4)(1,2,3,4);
+	if ( !MakeRectMatch( &Match, TexCoord, wh, Sample ) )
+		return;
 
-	TArray_float4 MatchArray = { Matches, MatchesCount, 5 };
+	TArray_float4 MatchArray = { Matches, MatchesCount, MatchesMax };
 	PushArray_float4( MatchArray, &Match );
 
 }
