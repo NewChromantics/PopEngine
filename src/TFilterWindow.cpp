@@ -96,41 +96,47 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	auto FrameCount = Frames.GetSize();
 	if ( FrameCount == 0 )
 		return;
-	size_t StageCount = 0;
-	for ( int f=0;	f<Frames.GetSize();	f++ )
-		StageCount = std::max( StageCount, Frames[f]->mStageData.size() );
+	std::string SourceStageName = "Frame";
+	Array<std::string> StageNames;
 	//	+1 for source texture
-	StageCount++;
+	StageNames.PushBack(SourceStageName);
+	for ( int s=0;	s<mParent.mStages.GetSize();	s++ )
+	{
+		auto Stage = mParent.mStages[s];
+		if ( !Stage )
+			continue;
+		StageNames.PushBack( Stage->mName );
+	}
 	
 	//	make rendering tile rect
-	Soy::Rectf TileRect( 0, 0, 1.f/static_cast<float>(StageCount), 1.f/static_cast<float>(FrameCount) );
+	Soy::Rectf TileRect( 0, 0, 1.f/static_cast<float>(StageNames.GetSize()), 1.f/static_cast<float>(FrameCount) );
 	
 	for ( int f=0;	f<Frames.GetSize();	f++ )
 	{
 		auto& Frame = *Frames[f];
 		auto& StageDatas = Frame.mStageData;
 		
-		//	render source texture
+		for ( int s=0;	s<StageNames.GetSize();	s++ )
 		{
-			if ( Frame.mFrameTexture.IsValid() )
+			auto& StageName = StageNames[s];
+			if ( StageName == SourceStageName )
 			{
-				DrawQuad( Frame.mFrameTexture, TileRect );
-			}
-			//	next col
-			TileRect.x += TileRect.w;
-		}
-		
-		for ( auto s=StageDatas.begin();	s!=StageDatas.end();	s++ )
-		{
-			//auto& StageName = s->first;
-			auto& StageData = s->second;
-			if ( StageData )
-			{
-				auto StageTexture = StageData->GetTexture();
-			
-				if ( StageTexture.IsValid() )
+				if ( Frame.mFrameTexture.IsValid() )
 				{
-					DrawQuad( StageTexture, TileRect );
+					DrawQuad( Frame.mFrameTexture, TileRect );
+				}
+			}
+			else
+			{
+				auto& StageData = StageDatas[StageName];
+				if ( StageData )
+				{
+					auto StageTexture = StageData->GetTexture();
+				
+					if ( StageTexture.IsValid() )
+					{
+						DrawQuad( StageTexture, TileRect );
+					}
 				}
 			}
 			
