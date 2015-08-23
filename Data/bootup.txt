@@ -42,5 +42,6 @@ addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill
 #addstage mancity01 circlefilter cl=CylinderFilter.cl kernel=CircleFilter
 #addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=RectFilter
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseRects
+addstage mancity01 DrawRects cl=DrawRects.cl kernel=DrawRects
 
 addstage mancity01 GatherRects cl=GatherRects.cl kernel=GatherRects

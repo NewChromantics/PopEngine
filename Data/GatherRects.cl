@@ -32,7 +32,7 @@ const float2 MaxRectSize = (float2)(80,100);
 static bool MakeRectMatch(float4* Match,float2 TexCoord,float2 TexSize,float4 Sample)
 {
 	float2 RectSize = Sample.xy * MaxRectSize;
-	float2 Alignment = Sample.zw * MaxRectSize;
+	float2 Alignment = (Sample.zw - (float2)(0.5f,0.5f)) * RectSize;
 	
 	//	if width or height zero then not a match
 	if ( RectSize.x == 0 || RectSize.y == 0 )

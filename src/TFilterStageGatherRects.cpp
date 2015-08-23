@@ -71,7 +71,7 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		ContextCl.PushJob( Job, Semaphore );
 		try
 		{
-			Semaphore.Wait(/*"opencl runner"*/);
+			Semaphore.Wait();
 		}
 		catch (std::exception& e)
 		{
@@ -80,12 +80,16 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		}
 	}
 	
-	std::Debug << "Read " << StageData.mRects.GetSize() << " rects; ";
-	for ( int i=0;	i<StageData.mRects.GetSize();	i++ )
+	static bool DebugAllRects = false;
+	if ( DebugAllRects )
 	{
-		std::Debug << StageData.mRects[i] << " ";
+		std::Debug << "Read " << StageData.mRects.GetSize() << " rects; ";
+		for ( int i=0;	i<StageData.mRects.GetSize();	i++ )
+		{
+			std::Debug << StageData.mRects[i] << " ";
+		}
+		std::Debug << std::endl;
 	}
-	std::Debug << std::endl;
 	
 	return true;
 }

@@ -117,6 +117,24 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 
 	SoyPixels OutputPixels;
 	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+
+	//	clear for drawing on
+	static bool CopyFrameBeforeDraw = false;
+	if ( CopyFrameBeforeDraw )
+	{
+		OutputPixels.Copy( *Frame.mFramePixels );
+	}
+	
+	static bool ClearBeforeDraw = false;
+	if ( ClearBeforeDraw )
+	{
+		BufferArray<uint8,4> rgba;
+		rgba.PushBack( 255 );
+		rgba.PushBack( 0 );
+		rgba.PushBack( 0 );
+		rgba.PushBack( 255 );
+		OutputPixels.SetColour( GetArrayBridge(rgba) );
+	}
 	
 	auto Init = [this,&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
