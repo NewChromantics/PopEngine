@@ -27,8 +27,11 @@ static bool PushArray_ ## TYPE(TArray_ ## TYPE Array,TYPE* Value)	{	\
 
 DECLARE_DYNAMIC_ARRAY(float4);
 
+//	max from writing
 const float2 MaxRectSize = (float2)(80,100);
-const float2 MinRectSize = (float2)(6,20);
+
+//	filters
+const float2 MinRectSize = (float2)(5,5);
 const float2 MinAlignment = (float2)( 0.4f, 0.8f );
 const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
 
@@ -53,11 +56,18 @@ static float2 GetRectSize(float4 Rect)
 	return (float2)( Rect.z - Rect.x, Rect.w - Rect.y );
 }
 
-//	center of rect in uv
-static float2 GetRectAlignment(float4 Rect)
+float Range(float Value,float Start,float End)
 {
-	//float2 Alignment = (Sample.zw - (float2)(0.5f,0.5f)) * RectSize;
-	return float2(0.5f,0.5f);
+	return (Value-Start) / (End-Start);
+}
+
+
+//	center of rect in uv
+static float2 GetRectAlignment(float4 Rect,int2 Center)
+{
+	float Alignmentx = Range( Center.x, Rect.x, Rect.z );
+	float Alignmenty = Range( Center.y, Rect.y, Rect.w );
+	return (float2)(Alignmentx,Alignmenty);
 }
 
 static bool GetRectMatch(float4* Rect,int2 SampleCoord,float4 Sample)
@@ -71,6 +81,16 @@ static bool GetRectMatch(float4* Rect,int2 SampleCoord,float4 Sample)
 	if ( RectSize.x < MinRectSize.x )
 		return false;
 	if ( RectSize.y < MinRectSize.y )
+		return false;
+	
+	float2 RectAlignment = GetRectAlignment(*Rect,SampleCoord);
+	if ( RectAlignment.x < MinAlignment.x )
+		return false;
+	if ( RectAlignment.x > MaxAlignment.x )
+		return false;
+	if ( RectAlignment.y < MinAlignment.y )
+		return false;
+	if ( RectAlignment.y > MaxAlignment.y )
 		return false;
 	
 	return true;
@@ -130,8 +150,6 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 	float4 Sample = read_imagef( rectfilter, Sampler, xy );
 
-//	write_imagef( Frag, xy, rgba );
-
 	float4 Rect;
 	GetRectMatch( &Rect, xy, Sample );
 	if ( !GetRectMatch( &Rect, xy, Sample ) )
@@ -153,28 +171,43 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 	DrawLineVert( TopRight, BottomRight, Frag, rgba );
 }
 
+static bool RectMatch(float4 a,float4 b)
+{
+	float4 Diff = a-b;
+	bool x1 = ( fabs(Diff.x) < 40 );
+	bool y1 = ( fabs(Diff.y) < 40 );
+	bool x2 = ( fabs(Diff.z) < 40 );
+	bool y2 = ( fabs(Diff.w) < 40 );
+
+	return x1 && y1 && x2 && y2;
+}
+
 __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,
 							global float4*			Matches,
 							global volatile int*	MatchesCount,
 							int						MatchesMax)
 {
-	/*
-	float tx = get_global_id(0) + OffsetX;
-	float ty = get_global_id(1) + OffsetY;
-	float2 wh = (float2)get_image_dim(rectfilter);
-	float w = wh.x;
-	float h = wh.y;
-	float2 TexCoord = (float2)( tx, ty );
+	int tx = get_global_id(0) + OffsetX;
+	int ty = get_global_id(1) + OffsetY;
+	int2 xy = (int2)( tx, ty );
+	int2 wh = get_image_dim(rectfilter);
+		
+	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+	float4 Sample = read_imagef( rectfilter, Sampler, xy );
 	
-	float4 Sample = texture2D( rectfilter, TexCoord );
-	//float4 Match = (float4)(tx,ty,get_global_id(0),get_global_id(1));
-	float4 Match;
-	//float4 Match = (float4)(1,2,3,4);
-	if ( !MakeRectMatch( &Match, TexCoord, wh, Sample ) )
+	float4 Rect;
+	GetRectMatch( &Rect, xy, Sample );
+	if ( !GetRectMatch( &Rect, xy, Sample ) )
 		return;
-
+	
+	//	crude merge
+	for ( int i=0;	i<min(*MatchesCount,MatchesMax);	i++ )
+	{
+		if ( RectMatch( Rect, Matches[i] ) )
+			return;
+	}
+	
 	TArray_float4 MatchArray = { Matches, MatchesCount, MatchesMax };
-	PushArray_float4( MatchArray, &Match );
-*/
+	PushArray_float4( MatchArray, &Rect );
 }
 
