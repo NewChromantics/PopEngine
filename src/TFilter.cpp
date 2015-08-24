@@ -522,7 +522,7 @@ Opencl::TContext& TFilter::GetOpenclContext()
 		for ( int i=0;	i<Devices.GetSize();	i++ )
 			std::Debug << "Opencl device #" << i << " " << Devices[i] << std::endl;
 		
-		static bool InterpolateWithOpengl = false;
+		static bool InterpolateWithOpengl = true;
 		mOpenclDevice.reset( new Opencl::TDevice( GetArrayBridge(Devices), InterpolateWithOpengl ? &OpenglContext : nullptr ) );
 		
 		//	now make a context

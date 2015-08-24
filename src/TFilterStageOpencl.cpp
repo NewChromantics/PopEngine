@@ -125,17 +125,6 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		OutputPixels.Copy( *Frame.mFramePixels );
 	}
 	
-	static bool ClearBeforeDraw = false;
-	if ( ClearBeforeDraw )
-	{
-		BufferArray<uint8,4> rgba;
-		rgba.PushBack( 255 );
-		rgba.PushBack( 0 );
-		rgba.PushBack( 0 );
-		rgba.PushBack( 255 );
-		OutputPixels.SetColour( GetArrayBridge(rgba) );
-	}
-	
 	auto Init = [this,&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
 		ofScopeTimerWarning Timer("opencl blit init",10);
@@ -155,7 +144,7 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		}
 		
 		//	"frag" is output. todo; non pixel output!
-		Kernel.SetUniform("Frag", OutputPixels );
+		Kernel.SetUniform("Frag", OutputPixels, OpenclBufferReadWrite::ReadWrite );
 		
 		Iterations.PushBack( OutputPixels.GetWidth() );
 		Iterations.PushBack( OutputPixels.GetHeight() );
@@ -192,7 +181,7 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	//	copy output to texture
 	{
-		//ofScopeTimerWarning Timer("Copy kernel output to texture", 4);
+		ofScopeTimerWarning Timer("Copy kernel output to texture", 4);
 		auto& ContextGl = mFilter.GetOpenglContext();
 		
 		auto CopyJob = [&Data,&OutputPixels]()
