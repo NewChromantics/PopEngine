@@ -115,19 +115,34 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	if ( !Frame.mFramePixels )
 		return false;
 
-	SoyPixels OutputPixels;
-	OutputPixels.Init( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 
-	//	clear for drawing on
-	static bool CopyFrameBeforeDraw = false;
-	if ( CopyFrameBeforeDraw )
+	//	write straight to a texture
+	if ( !Data )
 	{
-		OutputPixels.Copy( *Frame.mFramePixels );
+		Soy::TSemaphore Semaphore;
+		auto CreateTexture = [&Frame,&Data]
+		{
+			SoyPixelsMeta OutputPixelsMeta( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+			auto& StageTarget = pData->mTexture;
+				
+			if ( !StageTarget.IsValid() )
+			{
+				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+			}
+		};
+		auto& ContextGl = mFilter.GetOpenglContext();
+		ContextGl.PushJob( CreateTexture, Semaphore );
+		Semaphore.Wait();
 	}
+	auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
 	
-	auto Init = [this,&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	
+	auto Init = [this,&Frame,&StageTarget](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
-		ofScopeTimerWarning Timer("opencl blit init",10);
+		ofScopeTimerWarning Timer("opencl blit init",100);
 
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -144,10 +159,11 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		}
 		
 		//	"frag" is output. todo; non pixel output!
-		Kernel.SetUniform("Frag", OutputPixels, OpenclBufferReadWrite::ReadWrite );
+		auto& ContextGl = mFilter.GetOpenglContext();
+		Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageTarget, ContextGl ), OpenclBufferReadWrite::ReadWrite );
 		
-		Iterations.PushBack( OutputPixels.GetWidth() );
-		Iterations.PushBack( OutputPixels.GetHeight() );
+		Iterations.PushBack( StageTarget.GetWidth() );
+		Iterations.PushBack( StageTarget.GetHeight() );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
@@ -156,10 +172,12 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
 	
-	auto Finished = [&OutputPixels](Opencl::TKernelState& Kernel)
+	auto Finished = [&StageTarget,this](Opencl::TKernelState& Kernel)
 	{
+		auto& ContextGl = mFilter.GetOpenglContext();
 		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
-		Kernel.ReadUniform("Frag", OutputPixels );
+		Opengl::TTextureAndContext Texture( StageTarget, ContextGl );
+		Kernel.ReadUniform("Frag", Texture );
 	};
 	
 	//	run opencl
@@ -177,35 +195,6 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			std::Debug << "Opencl stage failed: " << e.what() << std::endl;
 			return false;
 		}
-	}
-	
-	//	copy output to texture
-	{
-		ofScopeTimerWarning Timer("Copy kernel output to texture", 4);
-		auto& ContextGl = mFilter.GetOpenglContext();
-		
-		auto CopyJob = [&Data,&OutputPixels]()
-		{
-			if ( !Data )
-			{
-				auto* pData = new TFilterStageRuntimeData_ShaderBlit;
-				Data.reset( pData );
-				auto& StageTarget = pData->mTexture;
-				
-				if ( !StageTarget.IsValid() )
-				{
-					auto Format = SoyPixelsFormat::RGBA;
-					SoyPixelsMeta Meta( OutputPixels.GetWidth(), OutputPixels.GetHeight(), Format );
-					StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
-				}
-			}
-			auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
-			StageTarget.Write( OutputPixels );
-			return true;
-		};
-		Soy::TSemaphore Semaphore;
-		ContextGl.PushJob( CopyJob, Semaphore );
-		Semaphore.Wait();
 	}
 	
 	return false;
