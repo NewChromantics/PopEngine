@@ -308,9 +308,6 @@ __kernel void RectFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfill
 
 const float2 MaxRectSize = (float2)(80,100);
 #define MaxWalkSteps 20
-const float2 MinRectSize = (float2)(6,20);
-const float2 MinAlignment = (float2)( 0.4f, 0.8f );
-const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
 
 static float Walk(__read_only image2d_t Image,float2 TexCoord,float2 Step)
 {
@@ -337,7 +334,8 @@ __kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grass
 	float2 TexCoord = (float2)( tx, ty );
 	__read_only image2d_t Image = grassfilled;
 	
-	float2 WalkScale = (float2)( MaxRectSize.x/2.f / MaxWalkSteps, MaxRectSize.y/2.f / MaxWalkSteps );
+	float2 HalfMaxRectSize = MaxRectSize / 2.f;
+	float2 WalkScale = (float2)( HalfMaxRectSize.x / MaxWalkSteps, HalfMaxRectSize.y / MaxWalkSteps );
 	float2 StepUp = (float2)(0,-1) * WalkScale;
 	float2 StepDown = (float2)(0,1) * WalkScale;
 	float2 StepLeft = (float2)(-1,0) * WalkScale;
@@ -349,6 +347,16 @@ __kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grass
 	float ExtentLeft = -Walk( Image, TexCoord, StepLeft );
 	float ExtentRight = Walk( Image, TexCoord, StepRight );
 
+	//	write as a relative, normalised set of coords
+	float2 MinOffset = (float2)(-ExtentLeft,-ExtentUp) / HalfMaxRectSize;
+	float2 MaxOffset = (float2)(ExtentRight,ExtentDown) / HalfMaxRectSize;
+	
+	float4 Output = (float4)(MinOffset.x,MinOffset.y,MaxOffset.x,MaxOffset.y);
+	write_imagef( Frag, (int2)(TexCoord.x,TexCoord.y), Output );
+
+	
+	/*
+	
 	//	gr: find density from middle out when we start using noisier images or to get rid of overlaps for tighest
 	float2 RectSize = max( (float2)(0.0001,0.001) , (float2)( ExtentRight-ExtentLeft, ExtentDown-ExtentUp ) );
 	float WidthScore = RectSize.x / MaxRectSize.x;
@@ -378,4 +386,5 @@ __kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grass
 	}
 	
 	write_imagef( Frag, (int2)(TexCoord.x,TexCoord.y), Output );
+	 */
 }
