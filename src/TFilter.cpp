@@ -507,6 +507,8 @@ Opengl::TContext& TFilter::GetOpenglContext()
 
 Opencl::TContext& TFilter::GetOpenclContext()
 {
+	auto& OpenglContext = GetOpenglContext();
+	
 	//	make a device
 	if ( !mOpenclDevice )
 	{
@@ -520,7 +522,8 @@ Opencl::TContext& TFilter::GetOpenclContext()
 		for ( int i=0;	i<Devices.GetSize();	i++ )
 			std::Debug << "Opencl device #" << i << " " << Devices[i] << std::endl;
 		
-		mOpenclDevice.reset( new Opencl::TDevice( GetArrayBridge(Devices) ) );
+		static bool InterpolateWithOpengl = false;
+		mOpenclDevice.reset( new Opencl::TDevice( GetArrayBridge(Devices), InterpolateWithOpengl ? &OpenglContext : nullptr ) );
 		
 		//	now make a context
 		mOpenclContext = mOpenclDevice->CreateContextThread("Filter opencl thread");
