@@ -1,7 +1,8 @@
 #define const	__constant
 
-const int SampleRadius = 8;	//	range 0,9
-const int HitCountMin = 3;
+//const int SampleRadius = 8;	//	range 0,9
+#define SampleRadius	4	//	range 0,9
+const int HitCountMin = 2;
 const bool IncludeSelf = true;
 
 
@@ -28,12 +29,11 @@ __kernel void AlphaFill(int OffsetX,int OffsetY,__read_only image2d_t grassfilte
 	{
 		for ( int x=-SampleRadius;	x<=SampleRadius;	x++ )
 		{
-			if ( !IncludeSelf && y==0 && x==0 )
-				continue;
+			bool Ignore = ( !IncludeSelf && y==0 && x==0 );
 
 			float4 NeighbourSample = texture2D( grassfilter, uv, (int2)(x,y) );
 			bool NeighbourHit = (NeighbourSample.w > 0.5f);
-			HitCount += NeighbourHit ? 1 : 0;
+			HitCount += ((!Ignore) && NeighbourHit) ? 1 : 0;
 		}
 	}
 

@@ -32,7 +32,7 @@ const float2 MaxRectSize = (float2)(80,100);
 
 //	filters
 const float2 MinRectSize = (float2)(5,5);
-const float2 MinAlignment = (float2)( 0.4f, 0.8f );
+const float2 MinAlignment = (float2)( 0.4f, 0.85f );
 const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
 
 
@@ -173,11 +173,13 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 
 static bool RectMatch(float4 a,float4 b)
 {
+	float NearEdgeDist = 50;
+	
 	float4 Diff = a-b;
-	bool x1 = ( fabs(Diff.x) < 40 );
-	bool y1 = ( fabs(Diff.y) < 40 );
-	bool x2 = ( fabs(Diff.z) < 40 );
-	bool y2 = ( fabs(Diff.w) < 40 );
+	bool x1 = ( fabs(Diff.x) < NearEdgeDist );
+	bool y1 = ( fabs(Diff.y) < NearEdgeDist );
+	bool x2 = ( fabs(Diff.z) < NearEdgeDist );
+	bool y2 = ( fabs(Diff.w) < NearEdgeDist );
 
 	return x1 && y1 && x2 && y2;
 }

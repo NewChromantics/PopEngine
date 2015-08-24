@@ -307,7 +307,7 @@ __kernel void RectFilter(int OffsetX,int OffsetY,__read_only image2d_t grassfill
 
 
 const float2 MaxRectSize = (float2)(80,100);
-#define MaxWalkSteps 20
+#define MaxWalkSteps 10
 
 static float Walk(__read_only image2d_t Image,float2 TexCoord,float2 Step)
 {

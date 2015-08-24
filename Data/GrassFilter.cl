@@ -4,7 +4,7 @@
 //#define override	__attribute__((overloadable))	//	gr: doesn't seem to actually work
 
 const float MaxColourDiff = 1;
-const float MinColourDiff = 0.263f;
+const float MinColourDiff = 0.213f;
 const float SaturationFloor = 0.17f;
 const float LuminanceFloor = 0.156f;
 const float LuminanceCeiling = 0.75f;
