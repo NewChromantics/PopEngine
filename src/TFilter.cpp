@@ -86,37 +86,66 @@ void TFilterFrame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& Contex
 }
 
 
-bool TFilterFrame::Run(TFilter& Filter)
+bool TFilterFrame::Run(TFilter& Filter,const std::string& Description)
 {
 	auto& Frame = *this;
 	bool AllSuccess = true;
 
 	
+	Array<SoyTime> StageTimings;
 	
 	//	run through the shader chain
 	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
 	{
 		auto pStage = Filter.mStages[s];
-		auto& StageName = pStage->mName;
+		std::stringstream StageDesc;
+		if ( pStage )
+			StageDesc << pStage->mName;
+		else
+			StageDesc << "#" << s;
+
+		auto& TimerTime = StageTimings.PushBack(SoyTime());
+		std::stringstream TimerName;
+		TimerName << Description << " stage " << StageDesc.str();
+		Soy::TScopeTimer Timer( TimerName.str().c_str(), 0, nullptr, true );
+	
 		if ( !pStage )
 		{
-			std::Debug << "Warning: Filter " << Filter.mName << " stage #" << s << " is null" << std::endl;
+			std::Debug << "Warning: Filter " << Filter.mName << " " << StageDesc.str() << " is null" << std::endl;
 			continue;
 		}
 		
 		//	get data pointer for this stage, if it's null the stage should allocate what it needs
 		//	gr: need a better lock...
+		auto& StageName = pStage->mName;
 		mStageDataLock.lock();
 		auto& pData = Frame.mStageData[StageName];
 		mStageDataLock.unlock();
 		bool Success = pStage->Execute( *this, pData );
 		Frame.mStageData[StageName] = pData;
 		
+		TimerTime = Timer.Stop(false);
 		AllSuccess = AllSuccess && Success;
 	}
-
+	
+	//	report timing
+	auto& TimingDebug = std::Debug;
+	TimingDebug << Description << " ";
+	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
+	{
+		auto pStage = Filter.mStages[s];
+		std::stringstream StageDesc;
+		if ( pStage )
+			StageDesc << pStage->mName;
+		else
+			StageDesc << "#" << s;
+		TimingDebug << StageDesc.str() << " " << StageTimings[s].mTime << "ms ";
+	}
+	TimingDebug << std::endl;
+	
+	
 	//	gr: this sync seems to be good to keep work OUT of the render window's flush
-	static bool DoSync = true;
+	static bool DoSync = false;
 	if ( DoSync )
 	{
 		auto WaitForSync = []
@@ -419,7 +448,7 @@ bool TFilter::Run(SoyTime Time)
 		std::stringstream TimerName;
 		TimerName << "filter run " << Time;
 		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
-		Completed = Frame->Run( *this );
+		Completed = Frame->Run( *this, TimerName.str() );
 	}
 	
 	if ( Completed )

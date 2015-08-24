@@ -138,6 +138,8 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	auto Init = [this,&Frame,&OutputPixels](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
+		ofScopeTimerWarning Timer("opencl blit init",10);
+
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
 		{
@@ -167,6 +169,7 @@ bool TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	auto Finished = [&OutputPixels](Opencl::TKernelState& Kernel)
 	{
+		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
 		Kernel.ReadUniform("Frag", OutputPixels );
 	};
 	

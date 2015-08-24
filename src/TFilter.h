@@ -39,7 +39,7 @@ public:
 class TFilterFrame
 {
 public:
-	bool		Run(TFilter& Filter);
+	bool		Run(TFilter& Filter,const std::string& Description);	//	gr: description to avoid passing meta data, like frame.
 	void		Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl);
 	
 	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
