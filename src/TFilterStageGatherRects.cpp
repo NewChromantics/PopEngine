@@ -320,11 +320,13 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto& StageTexture = StageData.mTexture;
 	
 	//	gr: todo: calc layout first to get optimimum texture... or employ a sprite packer for efficient use
-	auto Allocate = [&StageTexture]
+	auto Allocate = [&StageTexture,this]
 	{
 		if ( StageTexture.IsValid() )
 			return;
-		static SoyPixelsMeta Meta( 256, 1024, SoyPixelsFormat::RGBA );
+		auto AtlasWidth = mFilter.GetUniform("AtlasWidth").Decode<int>();
+		auto AtlasHeight = mFilter.GetUniform("AtlasHeight").Decode<int>();
+		SoyPixelsMeta Meta( AtlasWidth, AtlasHeight, SoyPixelsFormat::RGBA );
 		StageTexture = std::move( Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
 	};
 	
@@ -362,10 +364,11 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	for ( int i=0;	i<Rects.GetSize();	i++ )
 	{
 		auto SourceRect4 = Soy::ClToVector( Rects[i] );
-		Soy::Rectf SourceRect( SourceRect4.x, SourceRect4.y, SourceRect4.z-SourceRect4.x, SourceRect4.w-SourceRect4.y );
+		Soy::Rectf SourceRect( ceil(SourceRect4.x), ceil(SourceRect4.y), ceil(SourceRect4.z-SourceRect4.x), ceil(SourceRect4.w-SourceRect4.y) );
 		
 		//	work out rect where this will go
-		Soy::Rectf DestRect( RectLeft, RectTop, SourceRect.w, SourceRect.h );
+		Soy::Rectf DestRect( RectLeft, RectTop, ceil(SourceRect.w), ceil(SourceRect.h) );
+		
 		if ( DestRect.Right() > TargetWidth )
 		{
 			//	move to next line
@@ -418,7 +421,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 
 	//	wait for all blits to finish
 	{
-		Soy::TScopeTimerPrint BlitWaitTimer("MakeRectAtlas blit wait",10);
+		Soy::TScopeTimerPrint BlitWaitTimer("MakeRectAtlas blit wait",5);
 		for ( int i=0;	i<Waits.GetSize();	i++ )
 		{
 			auto& Wait = Waits[i];

@@ -48,4 +48,5 @@ public:
 	BufferArray<float,5>	mDistortionParams;
 	vec2f					mLensOffset;
 	float					mRectMergeMax;
+	vec2x<int>				mAtlasSize;
 };

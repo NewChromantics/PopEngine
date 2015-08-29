@@ -19,6 +19,7 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mDistortionParams.PushBack(0);
 	mLensOffset = vec2f(0,0);
 	mRectMergeMax = 1;
+	mAtlasSize = vec2x<int>( 512, 512 );
 	
 	//	debug extraction
 	auto DebugExtractedPlayers = [this](const SoyTime& Time)
@@ -49,6 +50,12 @@ TJobParam TPlayerFilter::GetUniform(const std::string& Name)
 	
 	if ( Name == "RectMergeMax" )
 		return TJobParam( Name, mRectMergeMax );
+	
+	if ( Name == "AtlasWidth" )
+		return TJobParam( Name, mAtlasSize.x );
+	
+	if ( Name == "AtlasHeight" )
+		return TJobParam( Name, mAtlasSize.y );
 	
 	return TFilter::GetUniform(Name);
 }
@@ -117,6 +124,16 @@ bool TPlayerFilter::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uni
 	if ( Uniform.mName == "RectMergeMax" )
 	{
 		Shader.SetUniform( Uniform.mName, mRectMergeMax );
+		return true;
+	}
+	if ( Uniform.mName == "AtlasWidth" )
+	{
+		Shader.SetUniform( Uniform.mName, mAtlasSize.x );
+		return true;
+	}
+	if ( Uniform.mName == "AtlasHeight" )
+	{
+		Shader.SetUniform( Uniform.mName, mAtlasSize.y );
 		return true;
 	}
 	return false;
@@ -220,6 +237,22 @@ bool TPlayerFilter::SetUniform(TJobParam& Param,bool TriggerRerun)
 	if ( Param.GetKey() == "RectMergeMax" )
 	{
 		auto& Var = mRectMergeMax;
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "AtlasWidth" )
+	{
+		auto& Var = mAtlasSize.x;
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
+	if ( Param.GetKey() == "AtlasHeight" )
+	{
+		auto& Var = mAtlasSize.y;
 		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
 		if ( TriggerRerun )
 			OnUniformChanged( Param.GetKey() );
