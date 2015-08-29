@@ -1,6 +1,48 @@
 #include "TFilterStageGatherRects.h"
 
 
+
+/*
+static bool RectMatch(float4 a,float4 b)
+{
+	float NearEdgeDist = 50;
+	
+	float4 Diff = a-b;
+	bool x1 = ( fabs(Diff.x) < NearEdgeDist );
+	bool y1 = ( fabs(Diff.y) < NearEdgeDist );
+	bool x2 = ( fabs(Diff.z) < NearEdgeDist );
+	bool y2 = ( fabs(Diff.w) < NearEdgeDist );
+	
+	return x1 && y1 && x2 && y2;
+}
+*/
+bool MergeRects(cl_float4& a_cl,cl_float4& b_cl,float NearEdgeDist)
+{
+	auto a = Soy::ClToVector( a_cl );
+	auto b = Soy::ClToVector( b_cl );
+	
+	vec4f Diff( a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w );
+	bool x1 = ( fabs(Diff.x) < NearEdgeDist );
+	bool y1 = ( fabs(Diff.y) < NearEdgeDist );
+	bool x2 = ( fabs(Diff.z) < NearEdgeDist );
+	bool y2 = ( fabs(Diff.w) < NearEdgeDist );
+	
+	if ( x1 && y1 && x2 && y2 )
+	{
+		//	expand
+		a.x = std::min( a.x, b.x );
+		a.y = std::min( a.y, b.y );
+		a.z = std::min( a.z, b.z );
+		a.w = std::min( a.w, b.w );
+		a_cl = Soy::VectorToCl( a );
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	if ( !mKernel )
@@ -79,6 +121,40 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 			return false;
 		}
 	}
+	
+	//	the kernel does some merging, but due to parrallism... it doesn't get them all
+	//	the remainder should be smallish, so do it ourselves
+	static bool PostMerge = true;
+	if ( PostMerge )
+	{
+		float RectMergeMax = mFilter.GetUniform("RectMergeMax").Decode<float>();
+												  
+		Soy::TScopeTimer Timer("Gather rects post merge",0,nullptr,true);
+		auto& Rects = StageData.mRects;
+		auto PreMergeCount = Rects.GetSize();
+		for ( ssize_t r=Rects.GetSize()-1;	r>=0;	r-- )
+		{
+			bool Delete = false;
+			for ( int m=0;	m<r;	m++ )
+			{
+				auto& Rect = Rects[r];
+				auto& MatchRect = Rects[m];
+				if ( MergeRects( MatchRect, Rect, RectMergeMax ) )
+				{
+					Delete = true;
+					break;
+				}
+			}
+			if ( !Delete )
+				continue;
+			Rects.RemoveBlock( r, 1 );
+		}
+		
+		auto Time = Timer.Stop(false);
+		auto RemoveCount = PreMergeCount - Rects.GetSize();
+		std::Debug << mName << " post merge removed " << RemoveCount << "/" << PreMergeCount << " rects in " << Time << "ms" << std::endl;
+	}
+	
 	
 	static bool DebugAllRects = false;
 	if ( DebugAllRects )
@@ -273,7 +349,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	Array<std::shared_ptr<Soy::TSemaphore>> Waits;
 	
 	//	walk through each rect, generate a rect-position in the target, make a blit job, and move on!
-	vec2x<size_t> Border( 2, 2 );
+	vec2x<size_t> Border( 1, 1 );
 	size_t RowHeight = 0;
 	size_t RectLeft = Border.x;
 	size_t RectTop = Border.y;

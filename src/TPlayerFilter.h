@@ -47,4 +47,5 @@ public:
 	BufferArray<vec2f,4>	mPitchCorners;
 	BufferArray<float,5>	mDistortionParams;
 	vec2f					mLensOffset;
+	float					mRectMergeMax;
 };

@@ -23,6 +23,8 @@ setuniform mancity01 K5Distortion=0
 setuniform mancity01 LensOffsetX=.0299999993
 setuniform mancity01 LensOffsetY=.0500000007
 
+setuniform mancity01 RectMergeMax=50
+
 
 # add shader called crop to filter
 #addstage mancity01 testcl cl=Test.cl kernel=DebugUv

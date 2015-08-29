@@ -171,10 +171,8 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 	DrawLineVert( TopRight, BottomRight, Frag, rgba );
 }
 
-static bool RectMatch(float4 a,float4 b)
+static bool RectMatch(float4 a,float4 b,float NearEdgeDist)
 {
-	float NearEdgeDist = 50;
-	
 	float4 Diff = a-b;
 	bool x1 = ( fabs(Diff.x) < NearEdgeDist );
 	bool y1 = ( fabs(Diff.y) < NearEdgeDist );
@@ -195,7 +193,9 @@ static float4 NormaliseRect(float4 Rect,int2 Size)
 __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,
 							global float4*			Matches,
 							global volatile int*	MatchesCount,
-							int						MatchesMax)
+							int						MatchesMax,
+							float					RectMergeMax
+						  )
 {
 	int tx = get_global_id(0) + OffsetX;
 	int ty = get_global_id(1) + OffsetY;
@@ -213,7 +213,7 @@ __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilt
 	//	crude merge
 	for ( int i=0;	i<min(*MatchesCount,MatchesMax);	i++ )
 	{
-		if ( RectMatch( Rect, Matches[i] ) )
+		if ( RectMatch( Rect, Matches[i], RectMergeMax ) )
 			return;
 	}
 	

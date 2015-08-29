@@ -18,6 +18,7 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mDistortionParams.PushBack(0);
 	mDistortionParams.PushBack(0);
 	mLensOffset = vec2f(0,0);
+	mRectMergeMax = 1;
 	
 	//	debug extraction
 	auto DebugExtractedPlayers = [this](const SoyTime& Time)
@@ -45,6 +46,9 @@ TJobParam TPlayerFilter::GetUniform(const std::string& Name)
 	
 	if ( Name == "CylinderPixelHeight" )
 		return TJobParam( Name, mCylinderPixelHeight );
+	
+	if ( Name == "RectMergeMax" )
+		return TJobParam( Name, mRectMergeMax );
 	
 	return TFilter::GetUniform(Name);
 }
@@ -108,6 +112,11 @@ bool TPlayerFilter::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uni
 	if ( Uniform.mName == "LensOffsetY" )
 	{
 		Shader.SetUniform( Uniform.mName, mLensOffset.y );
+		return true;
+	}
+	if ( Uniform.mName == "RectMergeMax" )
+	{
+		Shader.SetUniform( Uniform.mName, mRectMergeMax );
 		return true;
 	}
 	return false;
@@ -208,7 +217,14 @@ bool TPlayerFilter::SetUniform(TJobParam& Param,bool TriggerRerun)
 			OnUniformChanged( Param.GetKey() );
 		return true;
 	}
-
+	if ( Param.GetKey() == "RectMergeMax" )
+	{
+		auto& Var = mRectMergeMax;
+		Soy::Assert( Param.Decode( Var ), "Failed to decode" );
+		if ( TriggerRerun )
+			OnUniformChanged( Param.GetKey() );
+		return true;
+	}
 	
 	return TFilter::SetUniform( Param, TriggerRerun );
 }
