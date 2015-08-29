@@ -250,7 +250,7 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		"	float Mask = texture2D( MaskImage, uv ).y;\n"
 		"	vec4 Sample = texture2D( SrcImage, uv );\n"
 		"	Sample.w = Mask;\n"
-		"	if ( Mask < 0.5f )	Sample = vec4(0,1,0,1);\n"
+		"	if ( Mask < 0.5f )	Sample = vec4(0,1,0,0);\n"
 		//"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
 		"	gl_FragColor = Sample;\n"
 		"}\n";
