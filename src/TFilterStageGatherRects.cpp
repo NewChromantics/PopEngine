@@ -164,14 +164,19 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		auto FragShader =
 		"varying vec2 oTexCoord;\n"
 		"uniform sampler2D SrcImage;\n"
+		"uniform sampler2D MaskImage;\n"
 		"uniform vec4 SrcRect;\n"	//	normalised
 		"void main()\n"
 		"{\n"
-		"	vec2 uv = oTexCoord;\n"
+		"	vec2 uv = vec2( oTexCoord.x, 1-oTexCoord.y );\n"
 		"   uv *= SrcRect.zw;\n"
 		"   uv += SrcRect.xy;\n"
+		"	float Mask = texture2D( MaskImage, uv ).y;\n"
+		"	vec4 Sample = texture2D( SrcImage, uv );\n"
+		"	Sample.w = Mask;\n"
+		"	if ( Mask < 0.5f )	Sample = vec4(0,1,0,1);\n"
 		//"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
-		"	gl_FragColor = texture2D(SrcImage,uv);\n"
+		"	gl_FragColor = Sample;\n"
 		"}\n";
 		
 		auto& OpenglContext = mFilter.GetOpenglContext();
@@ -218,9 +223,15 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto& Rects = RectData.mRects;
 
 	auto ImageData = Frame.GetData( mImageStage );
-	Soy::Assert( ImageData != nullptr, "Missing image stage");
+	if ( !Soy::Assert( ImageData != nullptr, "Missing image stage") )
+		return false;
 	auto ImageTexture = ImageData->GetTexture();
-
+	
+	auto MaskData = Frame.GetData( mMaskStage );
+	if ( !Soy::Assert( MaskData != nullptr, "Missing mask stage") )
+		return false;
+	auto MaskTexture = MaskData->GetTexture();
+	
 	//	make sure geo & shader are allocated
 	CreateBlitResources();
 
@@ -237,7 +248,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	{
 		if ( StageTexture.IsValid() )
 			return;
-		static SoyPixelsMeta Meta( 1024, 1024, SoyPixelsFormat::RGBA );
+		static SoyPixelsMeta Meta( 256, 1024, SoyPixelsFormat::RGBA );
 		StageTexture = std::move( Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
 	};
 	
@@ -296,7 +307,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		}
 		
 		//	do blit
-		auto Blit = [this,&Fbo,&StageData,SourceRect,DestRect,&ImageTexture]
+		auto Blit = [this,&Fbo,&StageData,SourceRect,DestRect,&ImageTexture,&MaskTexture]
 		{
 			Fbo->Bind();
 			auto Shader = mBlitShader->Bind();
@@ -315,6 +326,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 			DestRectv.w /= Fbo->GetHeight();
 			
 			Shader.SetUniform("SrcImage",ImageTexture);
+			Shader.SetUniform("MaskImage",MaskTexture);
 			Shader.SetUniform("SrcRect",SourceRectv);
 			Shader.SetUniform("DstRect",DestRectv);
 			mBlitGeo->Draw();

@@ -339,8 +339,9 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	{
 		auto RectsSource = Params.GetParamAs<std::string>("Rects");
 		auto ImageSource = Params.GetParamAs<std::string>("Image");
+		auto MaskStage = Params.GetParamAs<std::string>("Mask");
 		
-		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, *this ) );
+		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, MaskStage, *this ) );
 	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{

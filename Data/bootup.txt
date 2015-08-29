@@ -44,4 +44,4 @@ addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseRects
 addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 addstage mancity01 GatherRects cl=GatherRects.cl kernel=GatherRects
-addstage mancity01 MakeRectAtlas Rects=GatherRects Image=undistort
+addstage mancity01 MakeRectAtlas Rects=GatherRects Image=undistort Mask=grassfilled

@@ -40,10 +40,11 @@ public:
 class TFilterStage_MakeRectAtlas : public TFilterStage
 {
 public:
-	TFilterStage_MakeRectAtlas(const std::string& Name,const std::string& RectsStage,const std::string& ImageStage,TFilter& Filter) :
+	TFilterStage_MakeRectAtlas(const std::string& Name,const std::string& RectsStage,const std::string& ImageStage,const std::string& MaskStage,TFilter& Filter) :
 		TFilterStage	( Name, Filter ),
 		mRectsStage		( RectsStage ),
-		mImageStage		( ImageStage )
+		mImageStage		( ImageStage ),
+		mMaskStage		( MaskStage )
 	{
 	}
 	
@@ -53,6 +54,7 @@ public:
 public:
 	std::string	mRectsStage;
 	std::string	mImageStage;
+	std::string	mMaskStage;
 
 	std::mutex							mBlitResourcesLock;
 	std::shared_ptr<Opengl::TShader>	mBlitShader;
