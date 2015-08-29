@@ -184,6 +184,14 @@ static bool RectMatch(float4 a,float4 b)
 	return x1 && y1 && x2 && y2;
 }
 
+static float4 NormaliseRect(float4 Rect,int2 Size)
+{
+	float2 Sizef = (float2)(Size.x,Size.y);
+	Rect.xy /= Sizef;
+	Rect.zw /= Sizef;
+	return Rect;
+}
+
 __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,
 							global float4*			Matches,
 							global volatile int*	MatchesCount,
@@ -208,6 +216,9 @@ __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilt
 		if ( RectMatch( Rect, Matches[i] ) )
 			return;
 	}
+	
+	//	normalise
+	//Rect = NormaliseRect( Rect, wh );
 	
 	TArray_float4 MatchArray = { Matches, MatchesCount, MatchesMax };
 	PushArray_float4( MatchArray, &Rect );

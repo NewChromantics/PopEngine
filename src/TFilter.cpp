@@ -304,7 +304,7 @@ void TFilter::CreateBlitGeo(bool Blocking)
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
-		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex, GetOpenglContext() ) );
+		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex ) );
 		
 		return true;
 	};
@@ -335,7 +335,14 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	//	gr: needs a better factory system
 	std::shared_ptr<TFilterStage> Stage;
 	
-	if ( Params.HasParam("kernel") && Params.HasParam("cl") )
+	if ( Name == "MakeRectAtlas" )
+	{
+		auto RectsSource = Params.GetParamAs<std::string>("Rects");
+		auto ImageSource = Params.GetParamAs<std::string>("Image");
+		
+		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, *this ) );
+	}
+	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
 		//	construct an opencl context [early for debugging]
 		GetOpenclContext();
