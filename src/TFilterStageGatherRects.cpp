@@ -1,5 +1,5 @@
 #include "TFilterStageGatherRects.h"
-
+#include <fstream>
 
 
 /*
@@ -250,7 +250,7 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		"	float Mask = texture2D( MaskImage, uv ).y;\n"
 		"	vec4 Sample = texture2D( SrcImage, uv );\n"
 		"	Sample.w = Mask;\n"
-		"	if ( Mask < 0.5f )	Sample = vec4(0,1,0,0);\n"
+		"	if ( Mask < 0.5f )	Sample = vec4(0,0,0,0);\n"
 		//"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
 		"	gl_FragColor = Sample;\n"
 		"}\n";
@@ -337,7 +337,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	{
 		Fbo.reset( new Opengl::TFbo( StageTexture ) );
 		Fbo->Bind();
-		Opengl::ClearColour( Soy::TRgb(0,1,0) );
+		Opengl::ClearColour( Soy::TRgb(0,0,0), 0 );
 		Fbo->Unbind();
 	};
 	Soy::TSemaphore AllocSemaphore;
@@ -358,6 +358,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto TargetWidth = StageTexture.GetWidth();
 	auto TargetHeight = StageTexture.GetHeight();
 
+	auto& NewNormalisedDestRects = StageData.mRects;
 	Array<Soy::Rectf> RectNewRects;
 	
 	bool FilledTexture = false;
@@ -386,7 +387,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		}
 		
 		//	do blit
-		auto Blit = [this,&Fbo,&StageData,SourceRect,DestRect,&ImageTexture,&MaskTexture]
+		auto Blit = [this,&Fbo,&StageData,SourceRect,DestRect,&ImageTexture,&MaskTexture,&NewNormalisedDestRects]
 		{
 			Fbo->Bind();
 			auto Shader = mBlitShader->Bind();
@@ -403,6 +404,8 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 			DestRectv.y /= Fbo->GetHeight();
 			DestRectv.z /= Fbo->GetWidth();
 			DestRectv.w /= Fbo->GetHeight();
+			
+			NewNormalisedDestRects.PushBack( Soy::Rectf(DestRectv.x,DestRectv.y,DestRectv.z,DestRectv.w) );
 			
 			Shader.SetUniform("SrcImage",ImageTexture);
 			Shader.SetUniform("MaskImage",MaskTexture);
@@ -446,5 +449,165 @@ void TFilterStageRuntimeData_MakeRectAtlas::Shutdown(Opengl::TContext& ContextGl
 	Soy::TSemaphore Semaphore;
 	ContextGl.PushJob( DefferedDelete, Semaphore );
 	Semaphore.Wait();
+}
+
+
+TWriteFileStream::TWriteFileStream(const std::string& Filename) :
+	SoyWorkerThread		( Soy::GetTypeName(*this) + Filename, SoyWorkerWaitMode::Wake )
+{
+	//	open file
+	mStream.reset( new std::ofstream( Filename, std::ios::binary|std::ios::out ) );
+	if ( !mStream->is_open() )
+	{
+		std::stringstream Error;
+		Error << "Failed to open " << Filename << " for writing to";
+		throw Soy::AssertException( Error.str() );
+	}
+
+	Start();
+}
+
+TWriteFileStream::~TWriteFileStream()
+{
+	//	wait for writes
+	mPendingDataLock.lock();
+	if ( mStream )
+	{
+		mStream->close();
+		mStream.reset();
+	}
+	mPendingDataLock.unlock();
+}
+
+bool TWriteFileStream::CanSleep()
+{
+	std::lock_guard<std::mutex> Lock( mPendingDataLock );
+	return mPendingData.IsEmpty();
+}
+
+bool TWriteFileStream::Iteration()
+{
+	BufferArray<uint8,1024*10> Buffer;
+
+	//	write any pending data
+	mPendingDataLock.lock();
+	try
+	{
+		//	pop a chunk of data and continue
+		auto PopSize = std::min( Buffer.MaxSize(), mPendingData.GetDataSize() );
+		GetArrayBridge(Buffer).PushBackReinterpret( mPendingData.GetArray(), PopSize );
+		mPendingData.RemoveBlock( 0, PopSize );
+		mPendingDataLock.unlock();
+		
+	}
+	catch (...)
+	{
+		mPendingDataLock.unlock();
+		throw;
+	}
+
+	//	wasn't anything to write
+	if ( Buffer.IsEmpty() )
+		return true;
+	
+	auto Stream = mStream;
+	
+	//	file has been closed
+	if ( !Stream )
+		return false;
+
+	auto* Data = reinterpret_cast<const char*>( Buffer.GetArray() );
+	Stream->write( Data, Buffer.GetDataSize() );
+	
+	//	check for errors
+	if ( Stream->bad() )
+	{
+		std::Debug << "Failed to write to stream";
+		return false;
+	}
+	
+	return true;
+}
+
+void TWriteFileStream::PushData(const ArrayBridge<uint8>& Data)
+{
+	//	closed stream, this write just comes after
+	if ( !mStream )
+		return;
+	
+	mPendingDataLock.lock();
+	try
+	{
+		mPendingData.PushBackArray( Data );
+		mPendingDataLock.unlock();
+	}
+	catch (...)
+	{
+		mPendingDataLock.unlock();
+		throw;
+	}
+	
+	Wake();
+}
+
+
+
+TFilterStage_WriteRectAtlasStream::~TFilterStage_WriteRectAtlasStream()
+{
+	if ( mWriteThread )
+	{
+		mWriteThread->WaitToFinish();
+		mWriteThread.reset();
+	}
+}
+	
+void TFilterStage_WriteRectAtlasStream::PushFrameData(const ArrayBridge<uint8>&& FrameData)
+{
+	if ( !mWriteThread )
+		mWriteThread.reset( new TWriteFileStream( mOutputFilename ) );
+
+	mWriteThread->PushData( FrameData );
+}
+
+bool TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+{
+	//	get source data
+	auto pAtlasData = Frame.GetData( mAtlasStage );
+	if ( !pAtlasData )
+		return false;
+	
+	auto& AtlasData = dynamic_cast<TFilterStageRuntimeData_MakeRectAtlas&>( *pAtlasData );
+
+	//	extract the texture data
+	SoyPixels AtlasPixels;
+	auto ReadPixels = [&AtlasPixels,&AtlasData]
+	{
+		AtlasData.mTexture.Read( AtlasPixels );
+	};
+	auto& OpenglContext = mFilter.GetOpenglContext();
+	Soy::TSemaphore Sempahore;
+	OpenglContext.PushJob( ReadPixels, Sempahore );
+	Sempahore.Wait();
+
+	auto& PixelData = AtlasPixels.GetPixelsArray();
+	auto& Rects = AtlasData.mRects;
+	
+	//	make a header string
+	std::stringstream Header;
+
+	Header << "PopTrack=" << SoyTime(true) << ";";
+	Header << "Frame=" << Frame.mFrameTime << ";";
+	Header << "Rects=" << Soy::StringJoin( GetArrayBridge(Rects), "#" ) << ";";
+	Header << "PixelsSize=" << PixelData.GetDataSize() << ";";
+	
+	Array<uint8> OutputData;
+	Soy::StringToArray( Header.str(), GetArrayBridge( OutputData ) );
+	
+	OutputData.PushBackArray( PixelData );
+	
+	//	write the data
+	PushFrameData( GetArrayBridge(OutputData) );
+	
+	return true;
 }
 

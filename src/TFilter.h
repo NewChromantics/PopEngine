@@ -39,7 +39,11 @@ public:
 class TFilterFrame
 {
 public:
-	bool		Run(TFilter& Filter,const std::string& Description);	//	gr: description to avoid passing meta data, like frame.
+	TFilterFrame(SoyTime Time) :
+		mFrameTime	( Time )
+	{
+	}
+	bool		Run(TFilter& Filter,const std::string& Description);	//	gr: description to avoid passing meta data, like frame timestamp
 	void		Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl);
 	
 	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
@@ -49,6 +53,7 @@ public:
 	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
 
 public:
+	SoyTime									mFrameTime;
 	std::shared_ptr<SoyPixelsImpl>			mFramePixels;
 	Opengl::TTexture						mFrameTexture;	//	first input
 	

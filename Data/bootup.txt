@@ -47,3 +47,4 @@ addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseRects
 addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 addstage mancity01 GatherRects cl=GatherRects.cl kernel=GatherRects
 addstage mancity01 MakeRectAtlas Rects=GatherRects Image=undistort Mask=grassfilled
+addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=mancity01.rectatlasstream

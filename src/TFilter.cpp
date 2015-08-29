@@ -343,6 +343,16 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, MaskStage, *this ) );
 	}
+	else if ( Name == "WriteRectAtlasStream" )
+	{
+		auto AtlasStage = Params.GetParamAs<std::string>("AtlasStage");
+		auto FilenameParam = Params.GetParam("Filename");
+		if ( !FilenameParam.IsValid() )
+			throw Soy::AssertException("No filename specified for atlas output");
+		auto Filename = FilenameParam.Decode<std::string>();
+		
+		Stage.reset( new TFilterStage_WriteRectAtlasStream( Name, AtlasStage, Filename, *this ) );
+	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
 		//	construct an opencl context [early for debugging]
@@ -387,7 +397,7 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 		auto FrameIt = mFrames.find( Time );
 		if ( FrameIt == mFrames.end() )
 		{
-			Frame.reset( new TFilterFrame() );
+			Frame.reset( new TFilterFrame(Time) );
 			mFrames[Time] = Frame;
 			IsNewFrame = true;
 		}

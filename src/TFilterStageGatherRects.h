@@ -72,5 +72,58 @@ public:
 	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 	
 public:
+	Array<Soy::Rectf>		mRects;		//	rects on the texture
 	Opengl::TTexture		mTexture;
 };
+
+
+
+
+
+class TWriteFileStream : public SoyWorkerThread
+{
+public:
+	TWriteFileStream(const std::string& Filename);
+	~TWriteFileStream();
+	
+	virtual bool	Iteration() override;
+	virtual bool	CanSleep() override;
+
+	void			PushData(const ArrayBridge<uint8>& Data);
+	
+public:
+	std::shared_ptr<std::ofstream>	mStream;
+	std::mutex		mPendingDataLock;
+	Array<uint8>	mPendingData;
+};
+
+class TFilterStage_WriteRectAtlasStream : public TFilterStage
+{
+public:
+	TFilterStage_WriteRectAtlasStream(const std::string& Name,const std::string& AtlasStage,const std::string& OutputFilename,TFilter& Filter) :
+		TFilterStage	( Name, Filter ),
+		mAtlasStage		( AtlasStage ),
+		mOutputFilename	( OutputFilename )
+	{
+	}
+	~TFilterStage_WriteRectAtlasStream();
+	
+	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	
+	void				PushFrameData(const ArrayBridge<uint8>&& FrameData);
+	
+public:
+	std::shared_ptr<TWriteFileStream>	mWriteThread;
+	std::string							mAtlasStage;
+	std::string							mOutputFilename;
+};
+
+class TFilterStageRuntimeData_WriteRectAtlasStream : public TFilterStageRuntimeData
+{
+public:
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override
+	{
+		return false;
+	}
+};
+
