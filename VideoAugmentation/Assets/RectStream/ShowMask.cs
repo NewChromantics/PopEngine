@@ -61,6 +61,8 @@ public class ShowMask : MonoBehaviour {
 					Rect DestRect = Rects.First;
 					Vector4 SourceMinMax = new Vector4( SourceRect.xMin, SourceRect.yMin, SourceRect.xMax, SourceRect.yMax );
 					Vector4 DestMinMax = new Vector4( DestRect.xMin, DestRect.yMin, DestRect.xMax, DestRect.yMax );
+					//Vector4 SourceMinMax = new Vector4( SourceRect.xMax, SourceRect.yMin, SourceRect.xMin, SourceRect.yMax );
+					//Vector4 DestMinMax = new Vector4( DestRect.xMax, DestRect.yMin, DestRect.xMin, DestRect.yMax );
 					BlitMat.SetTexture("RectTexture", mMaskTexture );
 					BlitMat.SetVector("DestMinMax", DestMinMax );
 					BlitMat.SetVector("SourceMinMax", SourceMinMax );
