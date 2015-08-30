@@ -72,7 +72,8 @@ public:
 	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 	
 public:
-	Array<Soy::Rectf>		mRects;		//	rects on the texture
+	Array<Soy::Rectf>		mSourceRects;
+	Array<Soy::Rectf>		mDestRects;
 	Opengl::TTexture		mTexture;
 };
 

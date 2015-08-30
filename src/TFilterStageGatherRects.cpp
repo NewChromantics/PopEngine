@@ -98,7 +98,6 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		Opencl::TSync Semaphore;
 		RectBufferCounter.Read( RectCount, Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
-		std::Debug << "Rect count: " << RectCount << std::endl;
 		
 		StageData.mRects.SetSize( std::min( RectCount, size_cast<cl_int>(RectBuffer.GetSize()) ) );
 		RectBuffer.Read( GetArrayBridge(StageData.mRects), Kernel.GetContext(), &Semaphore );
@@ -358,7 +357,8 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto TargetWidth = StageTexture.GetWidth();
 	auto TargetHeight = StageTexture.GetHeight();
 
-	auto& NewNormalisedDestRects = StageData.mRects;
+	auto& NewNormalisedSourceRects = StageData.mSourceRects;
+	auto& NewNormalisedDestRects = StageData.mDestRects;
 	Array<Soy::Rectf> RectNewRects;
 	
 	bool FilledTexture = false;
@@ -387,7 +387,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		}
 		
 		//	do blit
-		auto Blit = [this,&Fbo,&StageData,SourceRect,DestRect,&ImageTexture,&MaskTexture,&NewNormalisedDestRects]
+		auto Blit = [this,&Fbo,&StageData,SourceRect,DestRect,&ImageTexture,&MaskTexture,&NewNormalisedDestRects,&NewNormalisedSourceRects]
 		{
 			Fbo->Bind();
 			auto Shader = mBlitShader->Bind();
@@ -406,6 +406,7 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 			DestRectv.w /= Fbo->GetHeight();
 			
 			NewNormalisedDestRects.PushBack( Soy::Rectf(DestRectv.x,DestRectv.y,DestRectv.z,DestRectv.w) );
+			NewNormalisedSourceRects.PushBack( Soy::Rectf(SourceRectv.x,SourceRectv.y,SourceRectv.z,SourceRectv.w) );
 			
 			Shader.SetUniform("SrcImage",ImageTexture);
 			Shader.SetUniform("MaskImage",MaskTexture);
@@ -487,7 +488,7 @@ bool TWriteFileStream::CanSleep()
 
 bool TWriteFileStream::Iteration()
 {
-	BufferArray<uint8,1024*10> Buffer;
+	BufferArray<uint8,1024*1024> Buffer;
 
 	//	write any pending data
 	mPendingDataLock.lock();
@@ -590,14 +591,22 @@ bool TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_
 	Sempahore.Wait();
 
 	auto& PixelData = AtlasPixels.GetPixelsArray();
-	auto& Rects = AtlasData.mRects;
+	auto& SourceRects = AtlasData.mSourceRects;
+	auto& DestRects = AtlasData.mDestRects;
+	if ( !Soy::Assert( SourceRects.GetSize() == DestRects.GetSize(), "Source&dest rects size mismatch" ) )
+		return false;
 	
 	//	make a header string
 	std::stringstream Header;
 
 	Header << "PopTrack=" << SoyTime(true) << ";";
 	Header << "Frame=" << Frame.mFrameTime << ";";
-	Header << "Rects=" << Soy::StringJoin( GetArrayBridge(Rects), "#" ) << ";";
+	Header << "Rects=";
+	for ( int r=0;	r<SourceRects.GetSize();	r++ )
+	{
+		Header << SourceRects[r] << ">" << DestRects[r] << "#";
+	}
+	Header << ";";
 	Header << "PixelsSize=" << PixelData.GetDataSize() << ";";
 	
 	Array<uint8> OutputData;

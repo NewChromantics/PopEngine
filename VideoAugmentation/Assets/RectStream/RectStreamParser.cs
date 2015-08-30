@@ -6,23 +6,23 @@ using System.IO;
 
 public class Tuple<T1, T2>
 {
-	public T1 Key { get; set; }
-	public T2 Value { get; set; }
+	public T1 First { get; set; }
+	public T2 Second { get; set; }
 
-	public Tuple(T1 Key, T2 Value)
+	public Tuple(T1 First,T2 Second)
 	{
-		this.Key = Key;
-		this.Value = Value;
+		this.First = First;
+		this.Second = Second;
 	}
 }
 
 public class TRectAtlasFrame
 {
-	public long			mGenerationTime;
-	public long			mTimecode;
-	public List<Rect>	mRects;
-	public int			mTextureDataStart;
-	public int			mTextureDataLength;
+	public long			mGenerationTime = 0;
+	public long			mTimecode = 0;
+	public List<Tuple<Rect,Rect>>	mRects;
+	public int			mTextureDataStart = 0;
+	public int			mTextureDataLength = 0;
 };
 
 public class RectStreamParser : MonoBehaviour {
@@ -148,9 +148,47 @@ public class RectStreamParser : MonoBehaviour {
 		return mFrames.Count - 1;
 	}
 
-	List<Rect> ParseRects(string RectsString)
+	Rect ParseRect(string RectStr)
 	{
-		List<Rect> Rects = new List<Rect> ();
+		char[] Delin = new char[]{','};
+		string[] Floats = RectStr.Split (Delin);
+		
+		if (Floats.Length != 4)
+			throw new System.Exception ("Rect-string \"" + RectStr + "\" didn't split into 4");
+
+		float x = float.Parse (Floats [0]);
+		float y = float.Parse (Floats [1]);
+		float w = float.Parse (Floats [2]);
+		float h = float.Parse (Floats [3]);
+		return new Rect (x, y, w, h);
+	}
+
+	Tuple<Rect,Rect> ParseRectPair(string RectPairStr)
+	{
+		char[] Delin = new char[]{'>'};
+		string[] Rects = RectPairStr.Split (Delin);
+
+		if ( Rects.Length != 2 )
+			throw new System.Exception("Rect-pair \"" + RectPairStr + "\" didn't split");
+
+		Rect SourceRect = ParseRect(Rects [0]);
+		Rect DestRect = ParseRect(Rects [1]);
+		return new Tuple<Rect,Rect> (SourceRect, DestRect);
+	}
+
+	List<Tuple<Rect,Rect>> ParseRects(string RectsString)
+	{
+		List<Tuple<Rect,Rect>> Rects = new List<Tuple<Rect,Rect>> ();
+
+		char[] Delin = new char[]{'#'};
+		string[] RectPairs = RectsString.Split (Delin);
+		foreach (string RectPairStr in RectPairs) {
+			if ( RectPairStr.Length == 0 )
+				continue;
+			var RectPair = ParseRectPair (RectPairStr);
+			Rects.Add (RectPair);
+		}
+
 		return Rects;
 	}
 
@@ -170,25 +208,25 @@ public class RectStreamParser : MonoBehaviour {
 				return null;
 			}
 
-			if (Variable.Key == "PopTrack") {
-				Frame.mGenerationTime = ParseTimecode(Variable.Value);
+			if (Variable.First == "PopTrack") {
+				Frame.mGenerationTime = ParseTimecode(Variable.Second);
 				continue;
 			}
-			if (Variable.Key == "Rects") {
-				Frame.mRects = ParseRects(Variable.Value);
+			if (Variable.First == "Rects") {
+				Frame.mRects = ParseRects(Variable.Second);
 				continue;
 			}
-			if (Variable.Key == "Frame") {
-				Frame.mTimecode = ParseTimecode(Variable.Value);
+			if (Variable.First == "Frame") {
+				Frame.mTimecode = ParseTimecode(Variable.Second);
 				continue;
 			}
-			if (Variable.Key == "PixelsSize") {
-				Frame.mTextureDataLength = int.Parse (Variable.Value);
+			if (Variable.First == "PixelsSize") {
+				Frame.mTextureDataLength = int.Parse (Variable.Second);
 				Frame.mTextureDataStart = (int)Reader.BaseStream.Position;
 				//continue;
 				break;
 			}
-			throw new System.Exception("Unknown variable " + Variable.Key);
+			throw new System.Exception("Unknown variable " + Variable.First);
 		}
 
 		//	walk over texture data
@@ -197,13 +235,27 @@ public class RectStreamParser : MonoBehaviour {
 		return Frame;
 	}
 
-	public bool LoadMaskTexture(Texture2D Tex,float TimeSecs)
+
+	public TRectAtlasFrame GetFrame(float TimeSecs)
 	{
 		int FrameIndex = FindNearestFrameIndex (TimeSecs);
 		if (FrameIndex == -1)
+			return null;
+		
+		TRectAtlasFrame Frame = mFrames [FrameIndex];
+		return Frame;
+	}
+
+	public bool LoadMaskTexture(Texture2D Tex,float TimeSecs)
+	{
+		return LoadMaskTexture ( Tex, GetFrame (TimeSecs));
+	}
+
+	public bool LoadMaskTexture(Texture2D Tex,TRectAtlasFrame Frame)
+	{
+		if (Frame == null)
 			return false;
 
-		TRectAtlasFrame Frame = mFrames [FrameIndex];
 		if ( mLoadTextureStream == null )
 		{
 			string StreamingFileanme = System.IO.Path.Combine (Application.streamingAssetsPath, mRectAtlasFilename);
