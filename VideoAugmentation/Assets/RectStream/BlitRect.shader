@@ -48,17 +48,28 @@
 			{
 				float MaxDistance = 0;
 				float NearDistance = 9999;
-				float SampleScale = 3;
+				float SampleScale = 2.5;
 				
 				//	sample coords
-				const float2 Samples[9] = 
+				const int SampleCount = 25;
+				/*
+				const float2 Samples[SampleCount] = 
 				{
 					float2(-1,-1),	float2(0,-1),	float2(1,-1),
 					float2(-1,0),	float2(0,0),	float2(1,0),
 					float2(-1,1),	float2(0,1),	float2(1,1),
 				};
+				*/
+				const float2 Samples[SampleCount] = 
+				{
+					float2(-2,-2),	float2(-1,-2),	float2(0,-2),	float2(1,-2),	float2(2,-2),
+					float2(-2,-1),	float2(-1,-1),	float2(0,-1),	float2(1,-1),	float2(2,-1),
+					float2(-2,0),	float2(-1,0),	float2(0,0),	float2(1,0),	float2(2,0),
+					float2(-2,1),	float2(-1,1),	float2(0,1),	float2(1,1),	float2(2,1),
+					float2(-2,2),	float2(-1,2),	float2(0,2),	float2(1,2),	float2(2,2),
+				};
 				
-				for ( int i=0;	i<9;	i++ )
+				for ( int i=0;	i<SampleCount;	i++ )
 				{
 					float2 SampleOffset = Samples[i];
 					MaxDistance = max( MaxDistance, length(SampleOffset) );

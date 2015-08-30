@@ -177,7 +177,7 @@ MonoBehaviour:
   mMaskTexture: {fileID: 2800000, guid: 2adba144a1692464fb67bb52e38dd525, type: 3}
   mRectStreamParser: {fileID: 2093295881}
   mBlitRectShader: {fileID: 4800000, guid: 49da720a1c6bb47ce8a2e10eec6d01ff, type: 3}
-  mDeltaMultiplier: .143999994
+  mDeltaMultiplier: 1
   mTime: 0
 --- !u!1 &1167657453
 GameObject:
