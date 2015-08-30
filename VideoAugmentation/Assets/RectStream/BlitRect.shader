@@ -2,7 +2,7 @@
 	Properties {
 		_MainTex ("_MainTex", 2D) = "white" {}
 		RectTexture("RectTexture", 2D) = "black" {}
-		SourceMinMax("SourceMinMax", VECTOR) = (0,0,1,1)
+		SourceMinMax("SourceMinMax", VECTOR) = (0,0,0.1,0.1)
 		DestMinMax("DestMinMax", VECTOR) = (0,0,1,1)
 	}
 	SubShader {
@@ -48,23 +48,23 @@
 				float2 uv = In.uv_MainTex;
 				float4 Base = tex2D( _MainTex, In.uv_MainTex );
 				
-				float2 LocalUv = float2( range(uv.x,DestMinMax.x,DestMinMax.z), range(uv.y,DestMinMax.y,DestMinMax.w) );
-				
 				//	gr: for some reason this is backwards
-				LocalUv.x = 1 - LocalUv.x;
+				//float Localu = range(uv.x,DestMinMax.x,DestMinMax.z);
+				float Localu = range(uv.x,DestMinMax.z,DestMinMax.x);
+				float Localv = range(uv.y,DestMinMax.y,DestMinMax.w);
+				float2 LocalUv = float2( Localu, Localv );
 				
 				if ( LocalUv.x >= 0 && LocalUv.y >= 0 && LocalUv.x <= 1 && LocalUv.y <= 1 )
 				{
-					float2 RectUv = float2( lerp(LocalUv.x, SourceMinMax.x, SourceMinMax.z), lerp(LocalUv.y, SourceMinMax.y, SourceMinMax.w ) );
-					float4 Mask = tex2D( RectTexture, RectUv );
+					//	gr: also mirrored...
+					//float Rectu = lerp(SourceMinMax.x, SourceMinMax.z,LocalUv.x);
+					float Rectu = lerp(SourceMinMax.z, SourceMinMax.x,LocalUv.x);
+					float Rectv = lerp(SourceMinMax.y, SourceMinMax.w,LocalUv.y);
+					
+					float4 Mask = tex2D( RectTexture, float2(Rectu,Rectv) );
 					if ( Mask.w > 0 )
 					{
 						Base.xyz = Mask.xyz;
-						Base.yz = 0;
-					}
-					else
-					{
-						Base.xz = 0;
 					}
 				}
 
