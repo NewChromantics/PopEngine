@@ -57,8 +57,9 @@ public class ShowMask : MonoBehaviour {
 					RenderTexture Swap = TempIn;
 					TempIn = TempOut;
 					TempOut = Swap;
-					Rect SourceRect = Rects.First;
-					Rect DestRect = Rects.Second;
+					Rect SourceRect = Rects.Second;
+					Rect DestRect = Rects.First;
+					Debug.Log("SourceRect: " + SourceRect);
 					Vector4 SourceMinMax = new Vector4( SourceRect.xMin, SourceRect.yMin, SourceRect.xMax, SourceRect.yMax );
 					Vector4 DestMinMax = new Vector4( DestRect.xMin, DestRect.yMin, DestRect.xMax, DestRect.yMax );
 					BlitMat.SetTexture("RectTexture", mMaskTexture );
@@ -69,6 +70,8 @@ public class ShowMask : MonoBehaviour {
 			}
 
 			Graphics.Blit( TempOut, mMovieTexture );
+			RenderTexture.ReleaseTemporary( TempIn );
+			RenderTexture.ReleaseTemporary( TempOut );
 		}
 	}
 }
