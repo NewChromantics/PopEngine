@@ -36,7 +36,7 @@ const float2 MinAlignment = (float2)( 0.4f, 0.85f );
 const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
 
 
-static float4 GetRect(int2 SampleCoord,float4 Sample)
+static float4 GetMinMax(int2 SampleCoord,float4 Sample)
 {
 	float2 SampleCoordf = (float2)(SampleCoord.x,SampleCoord.y);
 	float2 HalfMaxRectSize = MaxRectSize / 2.f;
@@ -51,39 +51,38 @@ static float4 GetRect(int2 SampleCoord,float4 Sample)
 	return (float4)(Min.x,Min.y,Max.x,Max.y);
 }
 
-static float2 GetRectSize(float4 Rect)
+static float2 GetMinMaxSize(float4 MinMax)
 {
-	return (float2)( Rect.z - Rect.x, Rect.w - Rect.y );
+	return (float2)( MinMax.z - MinMax.x, MinMax.w - MinMax.y );
 }
 
-float Range(float Value,float Start,float End)
+static float Range(float Value,float Start,float End)
 {
 	return (Value-Start) / (End-Start);
 }
 
 
 //	center of rect in uv
-static float2 GetRectAlignment(float4 Rect,int2 Center)
+static float2 GetMinMaxAlignment(float4 MinMax,int2 Center)
 {
-	float Alignmentx = Range( Center.x, Rect.x, Rect.z );
-	float Alignmenty = Range( Center.y, Rect.y, Rect.w );
+	float Alignmentx = Range( Center.x, MinMax.x, MinMax.z );
+	float Alignmenty = Range( Center.y, MinMax.y, MinMax.w );
 	return (float2)(Alignmentx,Alignmenty);
 }
 
-static bool GetRectMatch(float4* Rect,int2 SampleCoord,float4 Sample)
+static bool GetValidMinMax(float4* MinMax,int2 SampleCoord,float4 Sample)
 {
-	float4 r = GetRect( SampleCoord, Sample );
-	Rect[0] = r;
+	*MinMax = GetMinMax( SampleCoord, Sample );
 	
 	//	filter
-	float2 RectSize = GetRectSize(*Rect);
+	float2 RectSize = GetMinMaxSize(*MinMax);
 	
 	if ( RectSize.x < MinRectSize.x )
 		return false;
 	if ( RectSize.y < MinRectSize.y )
 		return false;
 	
-	float2 RectAlignment = GetRectAlignment(*Rect,SampleCoord);
+	float2 RectAlignment = GetMinMaxAlignment(*MinMax,SampleCoord);
 	if ( RectAlignment.x < MinAlignment.x )
 		return false;
 	if ( RectAlignment.x > MaxAlignment.x )
@@ -150,16 +149,15 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 	float4 Sample = read_imagef( rectfilter, Sampler, xy );
 
-	float4 Rect;
-	GetRectMatch( &Rect, xy, Sample );
-	if ( !GetRectMatch( &Rect, xy, Sample ) )
+	float4 MinMax;
+	if ( !GetValidMinMax( &MinMax, xy, Sample ) )
 		return;
 	
 	
-	int Minx = clamp( (int)Rect.x, 0, wh.x-1 );
-	int Miny = clamp( (int)Rect.y, 0, wh.y-1 );
-	int Maxx = clamp( (int)Rect.z, 0, wh.x-1 );
-	int Maxy = clamp( (int)Rect.w, 0, wh.y-1 );
+	int Minx = clamp( (int)MinMax.x, 0, wh.x-1 );
+	int Miny = clamp( (int)MinMax.y, 0, wh.y-1 );
+	int Maxx = clamp( (int)MinMax.z, 0, wh.x-1 );
+	int Maxy = clamp( (int)MinMax.w, 0, wh.y-1 );
 	int2 TopLeft = (int2)(Minx,Miny);
 	int2 TopRight = (int2)(Maxx,Miny);
 	int2 BottomLeft = (int2)(Minx,Maxy);
@@ -171,26 +169,38 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 	DrawLineVert( TopRight, BottomRight, Frag, rgba );
 }
 
-static bool RectMatch(float4 a,float4 b,float NearEdgeDist)
+static bool MinMaxMerge(__global float4* a,float4 b,float NearEdgeDist,bool Merge)
 {
-	float4 Diff = a-b;
+	float4 Diff = (*a)-b;
 	bool x1 = ( fabs(Diff.x) < NearEdgeDist );
 	bool y1 = ( fabs(Diff.y) < NearEdgeDist );
 	bool x2 = ( fabs(Diff.z) < NearEdgeDist );
 	bool y2 = ( fabs(Diff.w) < NearEdgeDist );
 
-	return x1 && y1 && x2 && y2;
+	if ( x1 && y1 && x2 && y2 )
+	{
+		//	gr: i'm concerned this might corrupt with multithread access..
+		if ( Merge )
+		{
+			a->x = min( a->x, b.x );
+			a->y = min( a->y, b.y );
+			a->z = max( a->z, b.z );
+			a->w = max( a->w, b.w );
+		}
+		return true;
+	}
+	return false;
 }
 
-static float4 NormaliseRect(float4 Rect,int2 Size)
+static float4 NormaliseMinMax(float4 MinMax,int2 Size)
 {
 	float2 Sizef = (float2)(Size.x,Size.y);
-	Rect.xy /= Sizef;
-	Rect.zw /= Sizef;
-	return Rect;
+	MinMax.xy /= Sizef;
+	MinMax.zw /= Sizef;
+	return MinMax;
 }
 
-__kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,
+__kernel void GatherMinMaxs(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,
 							global float4*			Matches,
 							global volatile int*	MatchesCount,
 							int						MatchesMax,
@@ -205,22 +215,38 @@ __kernel void GatherRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilt
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 	float4 Sample = read_imagef( rectfilter, Sampler, xy );
 	
-	float4 Rect;
-	GetRectMatch( &Rect, xy, Sample );
-	if ( !GetRectMatch( &Rect, xy, Sample ) )
+	float4 MinMax;
+	if ( !GetValidMinMax( &MinMax, xy, Sample ) )
 		return;
 	
 	//	crude merge
 	for ( int i=0;	i<min(*MatchesCount,MatchesMax);	i++ )
 	{
-		if ( RectMatch( Rect, Matches[i], RectMergeMax ) )
+		if ( MinMaxMerge( &Matches[i], MinMax, RectMergeMax, true ) )
 			return;
 	}
 	
 	//	normalise
-	//Rect = NormaliseRect( Rect, wh );
+	//MinMax = NormaliseMinMax( MinMax, wh );
 	
 	TArray_float4 MatchArray = { Matches, MatchesCount, MatchesMax };
-	PushArray_float4( MatchArray, &Rect );
+	PushArray_float4( MatchArray, &MinMax );
+}
+
+
+
+
+__kernel void DistortMinMax(int IndexOffset,global float4* Rects)
+{
+	int RectIndex = get_global_id(0) + IndexOffset;
+	float4 Rect = Rects[RectIndex];
+	
+	//	redistort rect corners
+	float2 TopLeft = Rect.xy;
+	float2 TopRight = Rect.zy;
+	float2 BottomLeft = Rect.xw;
+	float2 BottomRight = Rect.zw;
+	
+	//	make it square agian
 }
 

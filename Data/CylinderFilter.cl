@@ -324,7 +324,7 @@ static float Walk(__read_only image2d_t Image,float2 TexCoord,float2 Step)
 }
 
 
-__kernel void FindLooseRects(int OffsetX,int OffsetY,__read_only image2d_t grassfilled,__write_only image2d_t Frag)
+__kernel void FindLooseMinMaxs(int OffsetX,int OffsetY,__read_only image2d_t grassfilled,__write_only image2d_t Frag)
 {
 	float tx = get_global_id(0) + OffsetX;
 	float ty = get_global_id(1) + OffsetY;
