@@ -17,7 +17,7 @@ class TFilterStage
 public:
 	TFilterStage(const std::string& Name,TFilter& Filter);
 	
-	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)=0;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)=0;
 
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 

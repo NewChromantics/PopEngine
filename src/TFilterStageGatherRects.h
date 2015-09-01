@@ -15,7 +15,7 @@ public:
 	{
 	}
 	
-	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
 	
 public:
 };
@@ -48,7 +48,7 @@ public:
 	{
 	}
 	
-	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
 	void				CreateBlitResources();
 	
 public:
@@ -109,7 +109,7 @@ public:
 	}
 	~TFilterStage_WriteRectAtlasStream();
 	
-	virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
 	
 	void				PushFrameData(const ArrayBridge<uint8>&& FrameData);
 	

@@ -121,7 +121,17 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description)
 		mStageDataLock.lock();
 		auto& pData = Frame.mStageData[StageName];
 		mStageDataLock.unlock();
-		bool Success = pStage->Execute( *this, pData );
+		
+		bool Success = true;
+		try
+		{
+			pStage->Execute( *this, pData );
+		}
+		catch (std::exception& e)
+		{
+			Success = false;
+			std::Debug << "Stage " << pStage->mName << " failed: " << e.what() << std::endl;
+		}
 		Frame.mStageData[StageName] = pData;
 		
 		TimerTime = Timer.Stop(false);
@@ -360,7 +370,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
-		if ( Name == "GatherRects" )
+		if ( Name == "GatherMinMaxs" )
 			Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this ) );
 		else
 			Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this ) );

@@ -88,17 +88,12 @@ TFilterStage_ReadPixels::TFilterStage_ReadPixels(const std::string& Name,const s
 	
 }
 	
-bool TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& pData)
+void TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& pData)
 {
-	std::Debug << "reading pixels stage " << mName << std::endl;
-
 	//	get source texture
-	auto SourceDatait = Frame.mStageData.find( mSourceStage );
-	if ( SourceDatait == Frame.mStageData.end() )
-		return false;
-	auto& SourceData = SourceDatait->second;
+	auto SourceData = Frame.GetData( mSourceStage );
 	if ( !SourceData )
-		return false;
+		throw Soy::AssertException( std::string("Read pixels missing source data ") + mSourceStage );
 	
 	auto SourceTexture = SourceData->GetTexture();
 	bool ReadSuccess = false;
@@ -133,7 +128,8 @@ bool TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	mFilter.GetOpenglContext().PushJob(ReadPixels,Semaphore);
 	Semaphore.Wait();
 	
-	return ReadSuccess;
+	if ( !ReadSuccess )
+		throw Soy::AssertException("Failed to read texture");
 }
 
 bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
@@ -154,7 +150,7 @@ void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Op
 }
 
 
-bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	static int DebugColourOffset = 0;
 	DebugColourOffset++;
@@ -250,16 +246,8 @@ bool TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	Soy::TSemaphore Semaphore;
 	mFilter.GetOpenglContext().PushJob( BlitToTexture, Semaphore );
 	static bool ShowBlitTime = false;
-	try
-	{
-		Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
-		return true;
-	}
-	catch ( std::exception& e)
-	{
-		std::Debug << "Filter stage failed: " << e.what() << std::endl;
-		return false;
-	}
+
+	Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
 }
 
 

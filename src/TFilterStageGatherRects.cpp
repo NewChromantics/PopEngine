@@ -43,14 +43,11 @@ bool MergeRects(cl_float4& a_cl,cl_float4& b_cl,float NearEdgeDist)
 	}
 }
 
-bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
-	if ( !mKernel )
-		return false;
+	Soy::Assert( mKernel != nullptr, "OpenclBlut missing kernel" );
+	Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" );
 
-	//	gr: get proper input source for kernel
-	if ( !Frame.mFramePixels )
-		return false;
 	auto FrameWidth = Frame.mFramePixels->GetWidth();
 	auto FrameHeight = Frame.mFramePixels->GetHeight();
 
@@ -106,20 +103,10 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 	};
 	
 	//	run opencl
-	{
-		Soy::TSemaphore Semaphore;
-		std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration, Finished ) );
-		ContextCl.PushJob( Job, Semaphore );
-		try
-		{
-			Semaphore.Wait();
-		}
-		catch (std::exception& e)
-		{
-			std::Debug << "Opencl stage failed: " << e.what() << std::endl;
-			return false;
-		}
-	}
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait();
 	
 	//	the kernel does some merging, but due to parrallism... it doesn't get them all
 	//	the remainder should be smallish, so do it ourselves
@@ -165,8 +152,6 @@ bool TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		}
 		std::Debug << std::endl;
 	}
-	
-	return true;
 }
 
 
@@ -288,23 +273,23 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 }
 
 
-bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	//	get data
 	auto pRectData = Frame.GetData( mRectsStage );
-	if ( !Soy::Assert( pRectData != nullptr, "Missing image stage") )
-		return false;
-	auto& RectData = *dynamic_cast<TFilterStageRuntimeData_GatherRects*>( pRectData.get() );
+	if ( !Soy::Assert( pRectData != nullptr, "Missing image stage data for MakeRectAtlas") )
+		return;
+	auto& RectData = dynamic_cast<TFilterStageRuntimeData_GatherRects&>( *pRectData.get() );
 	auto& Rects = RectData.mRects;
 
 	auto ImageData = Frame.GetData( mImageStage );
 	if ( !Soy::Assert( ImageData != nullptr, "Missing image stage") )
-		return false;
+		return;
 	auto ImageTexture = ImageData->GetTexture();
 	
 	auto MaskData = Frame.GetData( mMaskStage );
 	if ( !Soy::Assert( MaskData != nullptr, "Missing mask stage") )
-		return false;
+		return;
 	auto MaskTexture = MaskData->GetTexture();
 	
 	//	make sure geo & shader are allocated
@@ -435,8 +420,6 @@ bool TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	
 	//	deffered delete of FBO
 	Fbo->Delete( OpenglContext );
-	
-	return true;
 }
 
 
@@ -527,6 +510,9 @@ bool TWriteFileStream::Iteration()
 		return false;
 	}
 	
+	//	gr: make this flush occur every so often
+	Stream->flush();
+	
 	return true;
 }
 
@@ -570,12 +556,12 @@ void TFilterStage_WriteRectAtlasStream::PushFrameData(const ArrayBridge<uint8>&&
 	mWriteThread->PushData( FrameData );
 }
 
-bool TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	//	get source data
 	auto pAtlasData = Frame.GetData( mAtlasStage );
-	if ( !pAtlasData )
-		return false;
+	if ( !Soy::Assert( pAtlasData!=nullptr, "Atlas stage missing data" ) )
+		return;
 	
 	auto& AtlasData = dynamic_cast<TFilterStageRuntimeData_MakeRectAtlas&>( *pAtlasData );
 
@@ -594,7 +580,7 @@ bool TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_
 	auto& SourceRects = AtlasData.mSourceRects;
 	auto& DestRects = AtlasData.mDestRects;
 	if ( !Soy::Assert( SourceRects.GetSize() == DestRects.GetSize(), "Source&dest rects size mismatch" ) )
-		return false;
+		return;
 	
 	//	make a header string
 	std::stringstream Header;
@@ -616,7 +602,5 @@ bool TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_
 	
 	//	write the data
 	PushFrameData( GetArrayBridge(OutputData) );
-	
-	return true;
 }
 
