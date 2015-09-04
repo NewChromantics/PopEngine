@@ -13,7 +13,7 @@ const bool Invert = false;
 const float ZoomUv = 1;
 
 //	http://stackoverflow.com/questions/21615298/opencv-distort-back
-float2 DistortPixel(float2 point)
+float2 DistortPixel(float2 point,bool Invert)
 {
 	float Inverse = Invert?-1:1;
 	float cx = LensOffsetX;
@@ -72,7 +72,7 @@ void main()
 	
 	uv = CenterUv(uv);
 	//uv *= 1.0f / ZoomUv;
-	uv = DistortPixel( uv );
+	uv = DistortPixel( uv, Invert );
 	uv = UncenterUv(uv);
 	
 	if ( uv.x > 1 )
