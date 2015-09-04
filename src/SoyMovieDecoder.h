@@ -28,7 +28,7 @@ public:
 class TMovieDecoder : public TVideoDevice, public SoyWorkerThread
 {
 public:
-	TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial);
+	TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial,std::shared_ptr<Opengl::TContext> OpenglContext);
 	
 	virtual TVideoDeviceMeta	GetMeta() const override;
 	
@@ -38,7 +38,6 @@ public:
 	
 public:
 	std::string						mSerial;
-	Opengl::TContext				mDummyContext;
 	std::shared_ptr<TVideoDecoder>	mDecoder;
 };
 

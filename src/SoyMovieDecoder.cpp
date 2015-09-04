@@ -15,11 +15,14 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 {
 	//	todo: look for existing
 	
-	TVideoDecoderParams DecoderParams( Meta.mName, SoyPixelsFormat::RGBA );
+	TVideoDecoderParams DecoderParams;
+	DecoderParams.mFilename = Meta.mName;
+	DecoderParams.mDecodeAsFormat = SoyPixelsFormat::RGBA;
 	//DecoderParams.mPushBlockSleepMs = 30000;
+	
 	try
 	{
-		std::shared_ptr<TMovieDecoder> Movie( new TMovieDecoder( DecoderParams, Meta.mSerial ) );
+		std::shared_ptr<TMovieDecoder> Movie( new TMovieDecoder( DecoderParams, Meta.mSerial, nullptr ) );
 		mMovies.PushBack( Movie );
 		return Movie;
 	}
@@ -39,13 +42,13 @@ TVideoDeviceMeta GetDecoderMeta(const TVideoDecoderParams& Params,const std::str
 	return Meta;
 }
 
-TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial) :
+TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial,std::shared_ptr<Opengl::TContext> OpenglContext) :
 TVideoDevice	( GetDecoderMeta(Params,Serial) ),
 SoyWorkerThread	( Params.mFilename, SoyWorkerWaitMode::Wake ),
 mSerial			( Serial )
 {
-	mDecoder = Platform::AllocDecoder( Params );
-	mDecoder->StartMovie( mDummyContext );
+	mDecoder = Platform::AllocDecoder( Params, nullptr );
+	mDecoder->StartMovie();
 	WakeOnEvent( mDecoder->mOnFrameDecoded );
 	
 	Start();
