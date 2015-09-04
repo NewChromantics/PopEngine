@@ -35,8 +35,8 @@ addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
 addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 addstage mancity01 GatherMinMaxs cl=GatherRects.cl kernel=GatherMinMaxs
-#addstage mancity01 DistortRects cl=DistortRects.cl kernel=DistortRects
-addstage mancity01 MakeRectAtlas Rects=GatherMinMaxs Image=undistort Mask=grassfilled
+addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
+addstage mancity01 MakeRectAtlas Rects=DistortRects Image=undistort Mask=grassfilled
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=mancity01.rectatlasstream
 
 

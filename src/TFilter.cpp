@@ -363,6 +363,16 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_WriteRectAtlasStream( Name, AtlasStage, Filename, *this ) );
 	}
+	else if ( Params.HasParam("MinMaxDataStage" ) )
+	{
+		//	construct an opencl context [early for debugging]
+		GetOpenclContext();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto MinMaxDataStage = Params.GetParamAs<std::string>("MinMaxDataStage");
+		
+		Stage.reset( new TFilterStage_DistortRects( Name, ProgramFilename, KernelName, MinMaxDataStage, *this ) );
+	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
 		//	construct an opencl context [early for debugging]

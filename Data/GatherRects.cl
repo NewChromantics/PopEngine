@@ -36,6 +36,32 @@ const float2 MinAlignment = (float2)( 0.4f, 0.85f );
 const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
 
 
+
+struct TDistortionParams
+{
+	bool	Invert;
+	float RadialDistortionX;
+	float RadialDistortionY;
+	float TangentialDistortionX;
+	float TangentialDistortionY;
+	float K5Distortion;
+	float LensOffsetX;
+	float LensOffsetY;
+};
+
+
+
+static float max4(float a,float b,float c,float d)
+{
+	return max( a, max( b, max(c,d) ) );
+}
+
+static float min4(float a,float b,float c,float d)
+{
+	return min( a, min( b, min(c,d) ) );
+}
+
+
 static float4 GetMinMax(int2 SampleCoord,float4 Sample)
 {
 	float2 SampleCoordf = (float2)(SampleCoord.x,SampleCoord.y);
@@ -236,17 +262,110 @@ __kernel void GatherMinMaxs(int OffsetX,int OffsetY,__read_only image2d_t rectfi
 
 
 
-__kernel void DistortMinMax(int IndexOffset,global float4* Rects)
+
+//	http://stackoverflow.com/questions/21615298/opencv-distort-back
+float2 DistortPixel(float2 point,struct TDistortionParams Params)
+{
+	float Inverse = Params.Invert?-1:1;
+	float cx = Params.LensOffsetX;
+	float cy = Params.LensOffsetY;
+	float k1 = Params.RadialDistortionX * Inverse;
+	float k2 = Params.RadialDistortionY * Inverse;
+	float p1 = Params.TangentialDistortionX * Inverse;
+	float p2 = Params.TangentialDistortionY * Inverse;
+	float k3 = Params.K5Distortion * Inverse;
+	
+	
+	float x = point.x - cx;
+	float y = point.y - cy;
+	float r2 = x*x + y*y;
+	
+	// Radial distorsion
+	float xDistort = x * (1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2);
+	float yDistort = y * (1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2);
+	
+	// Tangential distorsion
+	xDistort = xDistort + (2 * p1 * x * y + p2 * (r2 + 2 * x * x));
+	yDistort = yDistort + (p1 * (r2 + 2 * y * y) + 2 * p2 * x * y);
+	
+	// Back to absolute coordinates.
+	xDistort = xDistort + cx;
+	yDistort = yDistort + cy;
+	
+	return float2( xDistort, yDistort);
+}
+
+//	0..1 to -1..1
+float2 CenterUv(float2 uv)
+{
+	//	gr: distort maths is for 0=bottom... so flip here for now
+	uv.y = 1 - uv.y;
+	
+	uv = uv*float2(2,2) - float2(1,1);
+	return uv;
+}
+
+float2 UncenterUv(float2 uv)
+{
+	uv = (uv+float2(1,1)) / float2(2,2);
+	
+	//	gr: distort maths is for 0=bottom... so flip here for now
+	uv.y = 1 - uv.y;
+	return uv;
+}
+
+
+float2 Undistort(float2 uv,struct TDistortionParams Params)
+{
+	uv = CenterUv(uv);
+	//uv *= 1.0f / ZoomUv;
+	uv = DistortPixel( uv, Params );
+	uv = UncenterUv(uv);
+	return uv;
+}
+
+
+__kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,
+							 float RadialDistortionX,
+							 float RadialDistortionY,
+							 float TangentialDistortionX,
+							 float TangentialDistortionY,
+							 float K5Distortion,
+							 float LensOffsetX,
+							 float LensOffsetY
+							 )
 {
 	int RectIndex = get_global_id(0) + IndexOffset;
-	float4 Rect = Rects[RectIndex];
+	float4 MinMax = MinMaxs[RectIndex];
+	
+	struct TDistortionParams Params;
+	Params.Invert = true;
+	Params.RadialDistortionX = RadialDistortionX;
+	Params.RadialDistortionY = RadialDistortionY;
+	Params.TangentialDistortionX = TangentialDistortionX;
+	Params.TangentialDistortionY = TangentialDistortionY;
+	Params.K5Distortion = K5Distortion;
+	Params.LensOffsetX = LensOffsetX;
+	Params.LensOffsetY = LensOffsetY;
 	
 	//	redistort rect corners
-	float2 TopLeft = Rect.xy;
-	float2 TopRight = Rect.zy;
-	float2 BottomLeft = Rect.xw;
-	float2 BottomRight = Rect.zw;
+	float2 TopLeft = MinMax.xy;
+	float2 TopRight = MinMax.zy;
+	float2 BottomLeft = MinMax.xw;
+	float2 BottomRight = MinMax.zw;
+
+	TopLeft = Undistort( TopLeft, Params );
+	TopRight = Undistort( TopRight, Params );
+	BottomLeft = Undistort( BottomLeft, Params );
+	BottomRight = Undistort( BottomRight, Params );
 	
-	//	make it square agian
+	
+	//	make it square again
+	MinMax.x = min4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
+	MinMax.y = min4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
+	MinMax.z = max4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
+	MinMax.w = max4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
+	
+	MinMaxs[RectIndex] = MinMax;
 }
 

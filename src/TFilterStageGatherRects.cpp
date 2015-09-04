@@ -45,8 +45,11 @@ bool MergeRects(cl_float4& a_cl,cl_float4& b_cl,float NearEdgeDist)
 
 void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
-	Soy::Assert( mKernel != nullptr, "OpenclBlut missing kernel" );
-	Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" );
+	auto Kernel = mKernel;
+	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
+		return;
+	if ( !Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" ) )
+		return;
 
 	auto FrameWidth = Frame.mFramePixels->GetWidth();
 	auto FrameHeight = Frame.mFramePixels->GetHeight();
@@ -55,7 +58,7 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 	if ( !Data )
 		Data.reset( new TFilterStageRuntimeData_GatherRects() );
 
-	auto& StageData = *dynamic_cast<TFilterStageRuntimeData_GatherRects*>( Data.get() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GatherRects&>( *Data.get() );
 	auto& ContextCl = mFilter.GetOpenclContext();
 
 	StageData.mRects.SetSize( 1000 );
@@ -104,7 +107,7 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 	
 	//	run opencl
 	Soy::TSemaphore Semaphore;
-	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration, Finished ) );
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait();
 	
@@ -153,6 +156,66 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		std::Debug << std::endl;
 	}
 }
+
+
+void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+{
+	auto Kernel = mKernel;
+	if ( !Soy::Assert( Kernel != nullptr, "TFilterStage_DistortRects missing kernel" ) )
+		return;
+	
+	//	grab rect data
+	auto pRectData = Frame.GetData( mMinMaxDataStage );
+	if ( !pRectData )
+		throw Soy::AssertException("Missing MinMax stage data");
+	auto& RectData = dynamic_cast<TFilterStageRuntimeData_GatherRects&>( *pRectData.get() );
+
+	//	allocate data
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_DistortRects() );
+	
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_DistortRects&>( *Data.get() );
+	auto& ContextCl = mFilter.GetOpenclContext();
+
+	auto& Rects = StageData.mRects;
+	Rects.Copy( RectData.mRects );
+	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(Rects), ContextCl );
+	
+
+	auto Init = [this,&Frame,&RectBuffer,&Rects](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	{
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+				continue;
+		}
+
+		Kernel.SetUniform("MinMaxs", RectBuffer );
+		Iterations.PushBack( Rects.GetSize() );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("IndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
+	};
+	
+	auto Finished = [&StageData,&Rects](Opencl::TKernelState& Kernel)
+	{
+		Soy::TSemaphore Semaphore;
+		Kernel.ReadUniform("MinMaxs", GetArrayBridge(Rects), Rects.GetSize() );
+		Semaphore.Wait();
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait();
+}
+
 
 
 

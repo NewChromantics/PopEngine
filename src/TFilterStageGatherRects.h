@@ -35,6 +35,35 @@ public:
 
 
 
+class TFilterStage_DistortRects : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_DistortRects(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& MinMaxDataStage,TFilter& Filter) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter ),
+		mMinMaxDataStage			( MinMaxDataStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	
+public:
+	std::string		mMinMaxDataStage;
+};
+
+class TFilterStageRuntimeData_DistortRects : public TFilterStageRuntimeData
+{
+public:
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override
+	{
+		return false;
+	}
+	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
+	
+public:
+	Array<cl_float4>		mRects;
+};
+
+
 
 
 class TFilterStage_MakeRectAtlas : public TFilterStage
