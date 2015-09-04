@@ -109,8 +109,12 @@ void TOpenclRunner::Run()
 
 void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
-	Soy::Assert( mKernel != nullptr, "OpenclBlut missing kernel" );
-	Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" );
+	//	copy kernel in case it's replaced during run
+	auto Kernel = mKernel;
+	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
+		return;
+	if ( !Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" ) )
+		return;
 
 
 	//	write straight to a texture
@@ -180,7 +184,7 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	//	run opencl
 	auto& ContextCl = mFilter.GetOpenclContext();
 	Soy::TSemaphore Semaphore;
-	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *mKernel, Init, Iteration, Finished ) );
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait(/*"opencl runner"*/);
 }
