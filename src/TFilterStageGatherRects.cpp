@@ -202,10 +202,11 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		Kernel.SetUniform("IndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
 	};
 	
-	auto Finished = [&StageData,&Rects](Opencl::TKernelState& Kernel)
+	auto Finished = [&StageData,&Rects,&RectBuffer](Opencl::TKernelState& Kernel)
 	{
-		Soy::TSemaphore Semaphore;
-		Kernel.ReadUniform("MinMaxs", GetArrayBridge(Rects), Rects.GetSize() );
+		Opencl::TSync Semaphore;
+		//Kernel.ReadUniform("MinMaxs", GetArrayBridge(Rects), Rects.GetSize() );
+		RectBuffer.Read( GetArrayBridge(Rects), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
 	};
 	

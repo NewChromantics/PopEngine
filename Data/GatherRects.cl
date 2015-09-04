@@ -226,6 +226,7 @@ static float4 NormaliseMinMax(float4 MinMax,int2 Size)
 	return MinMax;
 }
 
+
 __kernel void GatherMinMaxs(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,
 							global float4*			Matches,
 							global volatile int*	MatchesCount,
@@ -315,17 +316,19 @@ float2 UncenterUv(float2 uv)
 }
 
 
-float2 Undistort(float2 uv,struct TDistortionParams Params)
+float2 Undistort(float2 uv,struct TDistortionParams Params,int2 WidthHeight)
 {
+	uv /= (float2)(WidthHeight.x,WidthHeight.y);
 	uv = CenterUv(uv);
 	//uv *= 1.0f / ZoomUv;
 	uv = DistortPixel( uv, Params );
 	uv = UncenterUv(uv);
+	uv *= (float2)(WidthHeight.x,WidthHeight.y);
 	return uv;
 }
 
 
-__kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,
+__kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only image2d_t rectfilter,
 							 float RadialDistortionX,
 							 float RadialDistortionY,
 							 float TangentialDistortionX,
@@ -337,9 +340,10 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,
 {
 	int RectIndex = get_global_id(0) + IndexOffset;
 	float4 MinMax = MinMaxs[RectIndex];
+	int2 wh = get_image_dim(rectfilter);
 	
 	struct TDistortionParams Params;
-	Params.Invert = true;
+	Params.Invert = false;
 	Params.RadialDistortionX = RadialDistortionX;
 	Params.RadialDistortionY = RadialDistortionY;
 	Params.TangentialDistortionX = TangentialDistortionX;
@@ -354,10 +358,10 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,
 	float2 BottomLeft = MinMax.xw;
 	float2 BottomRight = MinMax.zw;
 
-	TopLeft = Undistort( TopLeft, Params );
-	TopRight = Undistort( TopRight, Params );
-	BottomLeft = Undistort( BottomLeft, Params );
-	BottomRight = Undistort( BottomRight, Params );
+	TopLeft = Undistort( TopLeft, Params, wh );
+	TopRight = Undistort( TopRight, Params, wh );
+	BottomLeft = Undistort( BottomLeft, Params, wh );
+	BottomRight = Undistort( BottomRight, Params, wh );
 	
 	
 	//	make it square again

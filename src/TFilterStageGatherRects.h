@@ -50,17 +50,8 @@ public:
 	std::string		mMinMaxDataStage;
 };
 
-class TFilterStageRuntimeData_DistortRects : public TFilterStageRuntimeData
+class TFilterStageRuntimeData_DistortRects : public TFilterStageRuntimeData_GatherRects
 {
-public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override
-	{
-		return false;
-	}
-	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
-	
-public:
-	Array<cl_float4>		mRects;
 };
 
 
