@@ -342,10 +342,10 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto& Rects = RectData.mRects;
 
 	auto& ImageData = Frame.GetData<TFilterStageRuntimeData>( mImageStage );
-	auto ImageTexture = ImageData.GetTexture();
+	auto ImageTexture = ImageData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext() );
 	
 	auto& MaskData = Frame.GetData<TFilterStageRuntimeData>( mMaskStage );
-	auto MaskTexture = MaskData.GetTexture();
+	auto MaskTexture = MaskData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext()  );
 	
 	//	make sure geo & shader are allocated
 	CreateBlitResources();
@@ -526,6 +526,10 @@ bool TWriteFileStream::CanSleep()
 
 bool TWriteFileStream::Iteration()
 {
+	//	gr: wtf is this
+	if ( this == nullptr )
+		return false;
+	
 	BufferArray<uint8,1024*1024> Buffer;
 
 	//	write any pending data

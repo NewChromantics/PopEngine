@@ -260,6 +260,33 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description)
 }
 
 
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter)
+{
+	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
+		return false;
+	
+	//	is there a suffix?
+	std::string Suffix;
+	Suffix = Uniform.mName.substr( TextureName.length(), std::string::npos );
+	
+	if ( Suffix == "_TexelWidthHeight" )
+	{
+		vec2f Size( 1.0f / static_cast<float>( Meta.GetWidth()), 1.0f / static_cast<float>(Meta.GetHeight()) );
+		Shader.SetUniform_s( Uniform.mName, Size );
+		return true;
+	}
+	
+	if ( Suffix == "_PixelWidthHeight" )
+	{
+		vec2f Size( Meta.GetWidth(), Meta.GetHeight() );
+		Shader.SetUniform_s( Uniform.mName, Size );
+		return true;
+	}
+	
+	return false;
+}
+
+
 bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter)
 {
 	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
@@ -275,21 +302,7 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUnifor
 		return true;
 	}
 	
-	if ( Suffix == "_TexelWidthHeight" )
-	{
-		vec2f Size( 1.0f / static_cast<float>(Texture.GetWidth()), 1.0f / static_cast<float>(Texture.GetHeight()) );
-		Shader.SetUniform_s( Uniform.mName, Size );
-		return true;
-	}
-	
-	if ( Suffix == "_PixelWidthHeight" )
-	{
-		vec2f Size( Texture.GetWidth(), Texture.GetHeight() );
-		Shader.SetUniform_s( Uniform.mName, Size );
-		return true;
-	}
-	
-	return false;
+	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter );
 }
 
 bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)

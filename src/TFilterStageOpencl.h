@@ -105,15 +105,3 @@ public:
 public:
 };
 
-class TFilterStageRuntimeData_OpenclBlit : public TFilterStageRuntimeData
-{
-public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
-	
-public:
-	//	opencl output
-	Opengl::TTexture		mTexture;
-};
-
-

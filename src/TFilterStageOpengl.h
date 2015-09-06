@@ -28,10 +28,12 @@ class TFilterStageRuntimeData_ShaderBlit : public TFilterStageRuntimeData
 public:
 	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
-
+	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
 public:
+	std::mutex				mConversionLock;		//	rarely need this but 
 	Opengl::TTexture		mTexture;
+	std::shared_ptr<Opencl::TBufferImage>	mImageBuffer;
 };
 
 

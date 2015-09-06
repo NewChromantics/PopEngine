@@ -119,30 +119,62 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 
 
 	//	write straight to a texture
+	//	gr: changed to write to a buffer image, if anything wants a texture, it'll convert on request
 	if ( !Data )
 	{
-		Soy::TSemaphore Semaphore;
 		auto CreateTexture = [&Frame,&Data,&FramePixels]
 		{
 			SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
 			Data.reset( pData );
+			
 			auto& StageTarget = pData->mTexture;
-				
 			if ( !StageTarget.IsValid() )
 			{
 				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
 				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 			}
 		};
-		auto& ContextGl = mFilter.GetOpenglContext();
-		ContextGl.PushJob( CreateTexture, Semaphore );
-		Semaphore.Wait();
+		
+		auto CreateImageBuffer = [this,&Frame,&Data,&FramePixels]
+		{
+			SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+			
+			auto& StageTarget = pData->mImageBuffer;
+			if ( !StageTarget )
+			{
+				auto& ContextCl = mFilter.GetOpenclContext();
+				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+				Opencl::TSync Semaphore;
+				std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::WriteOnly, &Semaphore ) );
+				Semaphore.Wait();
+				//	only assign on success
+				StageTarget = ImageBuffer;
+			}
+		};
+		
+		static bool MakeTargetAsTexture = true;
+		if ( MakeTargetAsTexture )
+		{
+			Soy::TSemaphore Semaphore;
+			auto& ContextGl = mFilter.GetOpenglContext();
+			ContextGl.PushJob( CreateTexture, Semaphore );
+			Semaphore.Wait();
+		}
+		else
+		{
+			Soy::TSemaphore Semaphore;
+			auto& ContextCl = mFilter.GetOpenclContext();
+			ContextCl.PushJob( CreateImageBuffer, Semaphore );
+			Semaphore.Wait();
+		}
 	}
-	auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data ).mTexture;
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
 	
-	auto Init = [this,&Frame,&StageTarget](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	auto Init = [this,&Frame,&StageData](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
 		ofScopeTimerWarning Timer("opencl blit init",40);
 
@@ -160,12 +192,26 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 		}
 		
-		//	"frag" is output. todo; non pixel output!
-		auto& ContextGl = mFilter.GetOpenglContext();
-		Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageTarget, ContextGl ), OpenclBufferReadWrite::ReadWrite );
-		
-		Iterations.PushBack( StageTarget.GetWidth() );
-		Iterations.PushBack( StageTarget.GetHeight() );
+		//	set output depending on what we made
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			//	"frag" is output
+			auto& ContextGl = mFilter.GetOpenglContext();
+			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
+			Iterations.PushBack( StageData.mTexture.GetWidth() );
+			Iterations.PushBack( StageData.mTexture.GetHeight() );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", *StageData.mImageBuffer );
+			Iterations.PushBack( StageData.mImageBuffer->GetMeta().GetWidth() );
+			Iterations.PushBack( StageData.mImageBuffer->GetMeta().GetHeight() );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
@@ -174,12 +220,24 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
 	
-	auto Finished = [&StageTarget,this](Opencl::TKernelState& Kernel)
+	auto Finished = [&StageData,this](Opencl::TKernelState& Kernel)
 	{
 		auto& ContextGl = mFilter.GetOpenglContext();
 		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
-		Opengl::TTextureAndContext Texture( StageTarget, ContextGl );
-		Kernel.ReadUniform("Frag", Texture );
+		
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			Opengl::TTextureAndContext Texture( StageData.mTexture, ContextGl );
+			Kernel.ReadUniform("Frag", Texture );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			Kernel.ReadUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
 	};
 	
 	//	run opencl

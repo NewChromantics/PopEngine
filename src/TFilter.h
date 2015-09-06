@@ -32,7 +32,7 @@ class TFilterStageRuntimeData
 public:
 	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)	{}
 	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)=0;
-	virtual Opengl::TTexture	GetTexture()=0;
+	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)=0;
 };
 
 
@@ -79,6 +79,7 @@ private:
 	
 public:
 	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
+	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter);
 
 	//	deprecate the use of these
 	Opengl::TTexture				GetFrameTexture(TFilter& Filter,bool Blocking=true);
@@ -97,7 +98,7 @@ class TFilterStageRuntimeData_Frame : public TFilterStageRuntimeData
 public:
 	virtual void					Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture		GetTexture() override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
+	virtual Opengl::TTexture		GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
 	
 	std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& Context,bool Blocking);
 	Opengl::TTexture				GetTexture(Opengl::TContext& Context,bool Blocking);

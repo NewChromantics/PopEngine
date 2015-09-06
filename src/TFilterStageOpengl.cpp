@@ -77,7 +77,23 @@ void TFilterStage_ShaderBlit::Reload()
 
 bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
 {
-	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName, Filter );
+	//	pre-emptive for debugging
+	auto& TextureName = StageName;
+	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
+		return false;
+
+	//	use opencl buffer directly if it exists
+	if ( Uniform.mType == "image2d_t" && mImageBuffer )
+	{
+		if ( TFilterFrame::SetTextureUniform( Shader, Uniform, mImageBuffer->GetMeta(), StageName, Filter ) )
+			return true;
+		
+		auto& Kernel = dynamic_cast<Opencl::TKernelState&>( Shader );
+		return Kernel.SetUniform( Uniform.mName.c_str(), *mImageBuffer );
+	}
+	
+	auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext() );
+	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter );
 }
 
 void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
@@ -91,6 +107,33 @@ void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Op
 	ContextGl.PushJob( DefferedDelete, Semaphore );
 	Semaphore.Wait();
 }
+
+
+Opengl::TTexture TFilterStageRuntimeData_ShaderBlit::GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	if ( mTexture.IsValid(false) )
+		return mTexture;
+/*
+	//	convert image buffer if it's there
+	if ( mImageBuffer )
+	{
+		Opengl::TTextureAndContext TextureAndContext( mTexture, ContextGl );
+		auto Read = [this,&TextureAndContext]
+		{
+			Opencl::TSync Semaphore;
+			mImageBuffer->Read( TextureAndContext, &Semaphore );
+			Semaphore.Wait();
+		};
+		
+		Soy::TSemaphore Semaphore;
+		ContextCl.PushJob( Read, Semaphore );
+		Semaphore.Wait();
+	}
+*/
+	return mTexture;
+}
+
+
 
 
 void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
@@ -200,5 +243,4 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 
 	Semaphore.Wait( ShowBlitTime ? (mName + " blit").c_str() : nullptr );
 }
-
 
