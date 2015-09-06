@@ -276,7 +276,6 @@ float2 DistortPixel(float2 point,struct TDistortionParams Params)
 	float p2 = Params.TangentialDistortionY * Inverse;
 	float k3 = Params.K5Distortion * Inverse;
 	
-	
 	float x = point.x - cx;
 	float y = point.y - cy;
 	float r2 = x*x + y*y;
@@ -293,7 +292,7 @@ float2 DistortPixel(float2 point,struct TDistortionParams Params)
 	xDistort = xDistort + cx;
 	yDistort = yDistort + cy;
 	
-	return float2( xDistort, yDistort);
+	return (float2)( xDistort, yDistort);
 }
 
 //	0..1 to -1..1
@@ -302,13 +301,13 @@ float2 CenterUv(float2 uv)
 	//	gr: distort maths is for 0=bottom... so flip here for now
 	uv.y = 1 - uv.y;
 	
-	uv = uv*float2(2,2) - float2(1,1);
+	uv = uv*(float2)(2,2) - (float2)(1,1);
 	return uv;
 }
 
 float2 UncenterUv(float2 uv)
 {
-	uv = (uv+float2(1,1)) / float2(2,2);
+	uv = (uv+(float2)(1,1)) / (float2)(2,2);
 	
 	//	gr: distort maths is for 0=bottom... so flip here for now
 	uv.y = 1 - uv.y;
@@ -321,14 +320,14 @@ float2 Undistort(float2 uv,struct TDistortionParams Params,int2 WidthHeight)
 	uv /= (float2)(WidthHeight.x,WidthHeight.y);
 	uv = CenterUv(uv);
 	//uv *= 1.0f / ZoomUv;
-	//uv = DistortPixel( uv, Params );
+	uv = DistortPixel( uv, Params );
 	uv = UncenterUv(uv);
 	uv *= (float2)(WidthHeight.x,WidthHeight.y);
 	return uv;
 }
 
 
-__kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only image2d_t rectfilter,
+__kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only image2d_t Frame,
 							 float RadialDistortionX,
 							 float RadialDistortionY,
 							 float TangentialDistortionX,
@@ -340,7 +339,7 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only 
 {
 	int RectIndex = get_global_id(0) + IndexOffset;
 	float4 MinMax = MinMaxs[RectIndex];
-	int2 wh = get_image_dim(rectfilter);
+	int2 wh = get_image_dim(Frame);
 	
 	struct TDistortionParams Params;
 	Params.Invert = false;
@@ -365,11 +364,14 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only 
 	
 	
 	//	make it square again
+	MinMax.xy = TopLeft;
+	MinMax.zw = BottomRight;
+	/*
 	MinMax.x = min4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
 	MinMax.y = min4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
 	MinMax.z = max4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
 	MinMax.w = max4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
-	
+	*/
 	MinMaxs[RectIndex] = MinMax;
 }
 
