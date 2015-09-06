@@ -566,7 +566,7 @@ bool TWriteFileStream::Iteration()
 	}
 	
 	//	gr: make this flush occur every so often
-	Stream->flush();
+	//Stream->flush();
 	
 	return true;
 }
