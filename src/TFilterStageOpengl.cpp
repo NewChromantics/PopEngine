@@ -80,63 +80,6 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 	return TFilterFrame::SetTextureUniform( Shader, Uniform, mTexture, StageName, Filter );
 }
 
-
-TFilterStage_ReadPixels::TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter) :
-	TFilterStage	( Name, Filter ),
-	mSourceStage	( SourceStage )
-{
-	
-}
-	
-void TFilterStage_ReadPixels::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& pData)
-{
-	//	get source texture
-	auto SourceData = Frame.GetData( mSourceStage );
-	if ( !SourceData )
-		throw Soy::AssertException( std::string("Read pixels missing source data ") + mSourceStage );
-	
-	auto SourceTexture = SourceData->GetTexture();
-	bool ReadSuccess = false;
-
-	auto ReadPixels = [&SourceTexture,&pData,&ReadSuccess]
-	{
-		if ( !SourceTexture.IsValid() )
-		{
-			ReadSuccess = false;
-			return true;
-		}
-
-		//	alloc pixels if we need to
-		if ( !pData )
-			pData.reset( new TFilterStageRuntimeData_ReadPixels );
-		auto& Data = *dynamic_cast<TFilterStageRuntimeData_ReadPixels*>( pData.get() );
-
-		try
-		{
-			SourceTexture.Read( Data.mPixels );
-			ReadSuccess = true;
-		}
-		catch (std::exception& e)
-		{
-			std::Debug << "Exception reading texture: " << e.what() << std::endl;
-			ReadSuccess = false;
-		}
-		return true;
-	};
-	
-	Soy::TSemaphore Semaphore;
-	mFilter.GetOpenglContext().PushJob(ReadPixels,Semaphore);
-	Semaphore.Wait();
-	
-	if ( !ReadSuccess )
-		throw Soy::AssertException("Failed to read texture");
-}
-
-bool TFilterStageRuntimeData_ReadPixels::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
-{
-	return false;
-}
-
 void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	auto DefferedDelete = [this]
@@ -184,17 +127,18 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		{
 			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
 			Data.reset( pData );
-			auto& StageTarget = pData->mTexture;
-			auto& FrameTexture = Frame.mFrameTexture;
-
-			if ( !StageTarget.IsValid() )
-			{
-				auto Format = SoyPixelsFormat::RGBA;
-				SoyPixelsMeta Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), Format );
-				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
-			}
 		}
-		auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
+		
+		auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data.get() ).mTexture;
+
+		//	gr: warning, can get stuck when this waits in opengl, as this is already opengl...
+		auto FrameTexture = Frame.GetFrameTexture( mFilter, false );
+		if ( !StageTarget.IsValid() )
+		{
+			auto Format = SoyPixelsFormat::RGBA;
+			SoyPixelsMeta Meta( FrameTexture.GetWidth(), FrameTexture.GetHeight(), Format );
+			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		}
 		auto& StageName = mName;
 		
 		//	gr: cache/pool these rendertargets?
@@ -242,6 +186,10 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		}
 		RenderTarget.Unbind();
 	};
+
+	
+	//	prefetch frame texture
+	auto FrameTexture = Frame.GetFrameTexture( mFilter, true );
 	
 	Soy::TSemaphore Semaphore;
 	mFilter.GetOpenglContext().PushJob( BlitToTexture, Semaphore );

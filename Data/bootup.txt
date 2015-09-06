@@ -37,6 +37,7 @@ addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 addstage mancity01 GatherMinMaxs cl=GatherRects.cl kernel=GatherMinMaxs
 addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
 addstage mancity01 MakeRectAtlas Rects=DistortRects Image=undistort Mask=grassfilled
+#addstage mancity01 MakeRectAtlas Rects=DistortRects Image=Frame Mask=grassfilled
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=mancity01.rectatlasstream
 
 

@@ -19,6 +19,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	DecoderParams.mFilename = Meta.mName;
 	DecoderParams.mDecodeAsFormat = SoyPixelsFormat::RGBA;
 	//DecoderParams.mPushBlockSleepMs = 30000;
+	DecoderParams.mDebugFrameSkipping = false;
 	
 	try
 	{

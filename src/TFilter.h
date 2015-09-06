@@ -47,21 +47,65 @@ public:
 	void		Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl);
 	
 	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
+
+	template<class RUNTIMEDATATYPE>
+	RUNTIMEDATATYPE&	GetData(const std::string& StageName)
+	{
+		auto pData = GetData(StageName);
+		if ( !pData )
+		{
+			std::stringstream Error;
+			Error << "Stage data " << StageName << " not found";
+			throw Soy::AssertException( Error.str() );
+		}
+		return dynamic_cast<RUNTIMEDATATYPE&>( *pData );
+	}
+	
+	template<class RUNTIMEDATATYPE>
+	std::shared_ptr<RUNTIMEDATATYPE>	AllocData(const std::string& StageName)
+	{
+		auto it = mStageData.find( StageName );
+		if ( it == mStageData.end() )
+		{
+			mStageData[StageName].reset( new RUNTIMEDATATYPE() );
+			it = mStageData.find( StageName );
+		}
+		return std::dynamic_pointer_cast<RUNTIMEDATATYPE>( it->second );
+	}
+
+private:
 	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
 
+	
 public:
 	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
 
+	//	deprecate the use of these
+	Opengl::TTexture				GetFrameTexture(TFilter& Filter,bool Blocking=true);
+	std::shared_ptr<SoyPixelsImpl>	GetFramePixels(TFilter& Filter,bool Blocking=true);
+	
 public:
 	SoyTime									mFrameTime;
-	std::shared_ptr<SoyPixelsImpl>			mFramePixels;
-	Opengl::TTexture						mFrameTexture;	//	first input
 	
 	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
 	std::mutex								mStageDataLock;
 	
 };
 
+class TFilterStageRuntimeData_Frame : public TFilterStageRuntimeData
+{
+public:
+	virtual void					Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
+	virtual Opengl::TTexture		GetTexture() override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
+	
+	std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& Context,bool Blocking);
+	Opengl::TTexture				GetTexture(Opengl::TContext& Context,bool Blocking);
+	
+public:
+	std::shared_ptr<SoyPixelsImpl>		mPixels;
+	std::shared_ptr<Opengl::TTexture>	mTexture;
+};
 
 
 class TFilterMeta

@@ -4,6 +4,8 @@
 #include "TFilter.h"
 
 
+
+
 TFilterWindow::TFilterWindow(std::string Name,TFilter& Parent) :
 	mParent		( Parent ),
 	mZoom		( 0.f ),
@@ -49,7 +51,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	
 	{
 		auto FrameRect = Soy::Rectf( FrameBufferSize );
-		static float MaxZoomScale = 12.f;
+		static float MaxZoomScale = 6.f;
 		float ZoomScale = 1.f + (MaxZoomScale);
 
 		vec2f Center = mZoomPosPx;
@@ -96,10 +98,9 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	auto FrameCount = Frames.GetSize();
 	if ( FrameCount == 0 )
 		return;
-	std::string SourceStageName = "Frame";
 	Array<std::string> StageNames;
 	//	+1 for source texture
-	StageNames.PushBack(SourceStageName);
+	StageNames.PushBack( TFilter::FrameSourceName );
 	for ( int s=0;	s<mParent.mStages.GetSize();	s++ )
 	{
 		auto Stage = mParent.mStages[s];
@@ -119,27 +120,17 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		for ( int s=0;	s<StageNames.GetSize();	s++ )
 		{
 			auto& StageName = StageNames[s];
-			if ( StageName == SourceStageName )
+			auto& StageData = StageDatas[StageName];
+			if ( StageData )
 			{
-				if ( Frame.mFrameTexture.IsValid() )
-				{
-					DrawQuad( Frame.mFrameTexture, TileRect );
-				}
-			}
-			else
-			{
-				auto& StageData = StageDatas[StageName];
-				if ( StageData )
-				{
-					auto StageTexture = StageData->GetTexture();
-				
-					if ( StageTexture.IsValid() )
-					{
-						DrawQuad( StageTexture, TileRect );
-					}
-				}
-			}
+				auto StageTexture = StageData->GetTexture();
 			
+				if ( StageTexture.IsValid() )
+				{
+					DrawQuad( StageTexture, TileRect );
+				}
+			}
+						
 			//	next col
 			TileRect.x += TileRect.w;
 		}

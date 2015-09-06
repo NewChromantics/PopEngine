@@ -113,7 +113,8 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	auto Kernel = mKernel;
 	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
 		return;
-	if ( !Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" ) )
+	auto FramePixels = Frame.GetFramePixels(mFilter,true);
+	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
 		return;
 
 
@@ -121,9 +122,9 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	if ( !Data )
 	{
 		Soy::TSemaphore Semaphore;
-		auto CreateTexture = [&Frame,&Data]
+		auto CreateTexture = [&Frame,&Data,&FramePixels]
 		{
-			SoyPixelsMeta OutputPixelsMeta( Frame.mFramePixels->GetWidth(), Frame.mFramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+			SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
 			Data.reset( pData );
 			auto& StageTarget = pData->mTexture;

@@ -321,7 +321,7 @@ float2 Undistort(float2 uv,struct TDistortionParams Params,int2 WidthHeight)
 	uv /= (float2)(WidthHeight.x,WidthHeight.y);
 	uv = CenterUv(uv);
 	//uv *= 1.0f / ZoomUv;
-	uv = DistortPixel( uv, Params );
+	//uv = DistortPixel( uv, Params );
 	uv = UncenterUv(uv);
 	uv *= (float2)(WidthHeight.x,WidthHeight.y);
 	return uv;

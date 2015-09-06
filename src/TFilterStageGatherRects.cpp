@@ -48,11 +48,12 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 	auto Kernel = mKernel;
 	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
 		return;
-	if ( !Soy::Assert( Frame.mFramePixels != nullptr, "Frame missing frame pixels" ) )
+	auto FramePixels = Frame.GetFramePixels(mFilter);
+	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
 		return;
 
-	auto FrameWidth = Frame.mFramePixels->GetWidth();
-	auto FrameHeight = Frame.mFramePixels->GetHeight();
+	auto FrameWidth = FramePixels->GetWidth();
+	auto FrameHeight = FramePixels->GetHeight();
 
 	//	allocate data
 	if ( !Data )
@@ -165,10 +166,7 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		return;
 	
 	//	grab rect data
-	auto pRectData = Frame.GetData( mMinMaxDataStage );
-	if ( !pRectData )
-		throw Soy::AssertException("Missing MinMax stage data");
-	auto& RectData = dynamic_cast<TFilterStageRuntimeData_GatherRects&>( *pRectData.get() );
+	auto& RectData = Frame.GetData<TFilterStageRuntimeData_GatherRects>( mMinMaxDataStage );
 
 	//	allocate data
 	if ( !Data )
@@ -340,21 +338,14 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	//	get data
-	auto pRectData = Frame.GetData( mRectsStage );
-	if ( !Soy::Assert( pRectData != nullptr, "Missing image stage data for MakeRectAtlas") )
-		return;
-	auto& RectData = dynamic_cast<TFilterStageRuntimeData_GatherRects&>( *pRectData.get() );
+	auto& RectData = Frame.GetData<TFilterStageRuntimeData_GatherRects>( mRectsStage );
 	auto& Rects = RectData.mRects;
 
-	auto ImageData = Frame.GetData( mImageStage );
-	if ( !Soy::Assert( ImageData != nullptr, "Missing image stage") )
-		return;
-	auto ImageTexture = ImageData->GetTexture();
+	auto& ImageData = Frame.GetData<TFilterStageRuntimeData>( mImageStage );
+	auto ImageTexture = ImageData.GetTexture();
 	
-	auto MaskData = Frame.GetData( mMaskStage );
-	if ( !Soy::Assert( MaskData != nullptr, "Missing mask stage") )
-		return;
-	auto MaskTexture = MaskData->GetTexture();
+	auto& MaskData = Frame.GetData<TFilterStageRuntimeData>( mMaskStage );
+	auto MaskTexture = MaskData.GetTexture();
 	
 	//	make sure geo & shader are allocated
 	CreateBlitResources();
@@ -623,12 +614,8 @@ void TFilterStage_WriteRectAtlasStream::PushFrameData(const ArrayBridge<uint8>&&
 void TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
 {
 	//	get source data
-	auto pAtlasData = Frame.GetData( mAtlasStage );
-	if ( !Soy::Assert( pAtlasData!=nullptr, "Atlas stage missing data" ) )
-		return;
+	auto& AtlasData = Frame.GetData<TFilterStageRuntimeData_MakeRectAtlas>( mAtlasStage );
 	
-	auto& AtlasData = dynamic_cast<TFilterStageRuntimeData_MakeRectAtlas&>( *pAtlasData );
-
 	//	extract the texture data
 	SoyPixels AtlasPixels;
 	auto ReadPixels = [&AtlasPixels,&AtlasData]

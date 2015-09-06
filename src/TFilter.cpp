@@ -11,51 +11,114 @@ const char* TFilter::FrameSourceName = "Frame";
 
 
 
-
-class TOpenglJob_UploadPixels : public PopWorker::TJob
+std::shared_ptr<SoyPixelsImpl> TFilterStageRuntimeData_Frame::GetPixels(Opengl::TContext& Context,bool Blocking)
 {
-public:
-	TOpenglJob_UploadPixels(std::shared_ptr<SoyPixelsImpl>& Pixels,std::shared_ptr<TFilterFrame>& Frame) :
-	mPixels	( Pixels ),
-	mFrame	( Frame )
+	if ( mPixels )
+		return mPixels;
+	
+	//	read from texture
+	if ( mTexture )
 	{
+		auto ReadPixels = [this]
+		{
+			mPixels.reset( new SoyPixels() );
+			mTexture->Read( *mPixels );
+		};
+		
+		if ( Blocking )
+		{
+			Soy::TSemaphore Semaphore;
+			Context.PushJob( ReadPixels, Semaphore );
+			
+			//	gr: as we may well be inside an opengl job, this will block.
+			//		need some auto-dependancy system, without tieing jobs, contexts and semaphores so tightly together
+			//		instead, for now caller can fail
+			//	if ( !Context inside job right now )
+			Semaphore.Wait();
+		}
+		else
+		{
+			Context.PushJob( ReadPixels );
+		}
 	}
 	
-	virtual void		Run() override;
-	
-	std::shared_ptr<SoyPixelsImpl>	mPixels;
-	std::shared_ptr<TFilterFrame>	mFrame;
-};
+	return mPixels;
+}
 
-
-
-void TOpenglJob_UploadPixels::Run()
+Opengl::TTexture TFilterStageRuntimeData_Frame::GetTexture(Opengl::TContext& Context,bool Blocking)
 {
-	auto& Frame = *mFrame;
-	auto& Pixels = *mPixels;
+	if ( mTexture )
+		return *mTexture;
 	
-	//	make texture if it doesn't exist
-	if ( !Frame.mFrameTexture.IsValid() )
+	//	make texture from pixels
+	if ( mPixels )
 	{
-		SoyPixelsMeta Meta( Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetFormat() );
-		Frame.mFrameTexture = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		auto WritePixels = [this]
+		{
+			if ( !mTexture )
+				mTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
+		
+			Opengl::TTextureUploadParams Params;
+			
+			//	gr: this works, and is fast... but we exhaust memory quickly (apple storage seems to need huge amounts of memory)
+			Params.mAllowClientStorage = false;
+			//	Params.mAllowOpenglConversion = false;
+			//	Params.mAllowCpuConversion = false;
+			
+			//	grab already-allocated pixels data to skip a copy
+			if ( Params.mAllowClientStorage )
+				mTexture->mClientBuffer = mPixels;
+			
+			mTexture->Write( *mPixels, Params );
+		};
+		
+		if ( Blocking )
+		{
+			Soy::TSemaphore Semaphore;
+			Context.PushJob( WritePixels, Semaphore );
+		
+			//	gr: as we may well be inside an opengl job, this will block.
+			//		need some auto-dependancy system, without tieing jobs, contexts and semaphores so tightly together
+			//		instead, for now caller can fail
+			//	if ( !Context inside job right now )
+			Semaphore.Wait();
+		}
+		else
+		{
+			Context.PushJob( WritePixels );
+		}
 	}
 	
-	Opengl::TTextureUploadParams Params;
+	if ( !mTexture )
+		return Opengl::TTexture();
 	
-	//	gr: this works, and is fast... but we exhaust memory quickly (apple storage seems to need huge amounts of memory)
-	Params.mAllowClientStorage = false;
-	//	Params.mAllowOpenglConversion = false;
-	//	Params.mAllowCpuConversion = false;
-	
-	//	grab already-allocated pixels data to skip a copy
-	if ( Params.mAllowClientStorage )
-		Frame.mFrameTexture.mClientBuffer = mPixels;
-	
-	Frame.mFrameTexture.Write( Pixels, Params );
+	return *mTexture;
 }
 
 
+bool TFilterStageRuntimeData_Frame::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
+{
+	if ( mTexture )
+	{
+		return TFilterFrame::SetTextureUniform( Shader, Uniform, *mTexture, StageName, Filter );
+	}
+	return false;
+}
+
+
+void TFilterStageRuntimeData_Frame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	shutdown our data
+	auto DefferedDelete = [this]
+	{
+		this->mTexture.reset();
+	};
+	Soy::TSemaphore Semaphore;
+	ContextGl.PushJob( DefferedDelete, Semaphore );
+	Semaphore.Wait();
+}
+
+	
 TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 	mName			( Name ),
 	mFilter			( Filter )
@@ -75,14 +138,22 @@ void TFilterFrame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& Contex
 		pData.reset();
 	}
 	
-	//	shutdown our data
-	auto DefferedDelete = [this]
-	{
-		this->mFrameTexture.Delete();
-	};
-	Soy::TSemaphore Semaphore;
-	ContextGl.PushJob( DefferedDelete, Semaphore );
-	Semaphore.Wait();
+}
+
+Opengl::TTexture TFilterFrame::GetFrameTexture(TFilter& Filter,bool Blocking)
+{
+	//	this should have been allocated before run
+	auto& Data = GetData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
+	auto& Context = Filter.GetOpenglContext();
+	return Data.GetTexture( Context, Blocking );
+}
+
+std::shared_ptr<SoyPixelsImpl> TFilterFrame::GetFramePixels(TFilter& Filter,bool Blocking)
+{
+	//	this should have been allocated before run
+	auto& Data = GetData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
+	auto& Context = Filter.GetOpenglContext();
+	return Data.GetPixels( Context, Blocking );
 }
 
 
@@ -237,10 +308,6 @@ bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Unif
 		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter ) )
 			return true;
 	}
-
-	//	do texture bindings
-	if ( SetTextureUniform( Shader, Uniform, mFrameTexture, TFilter::FrameSourceName, Filter ) )
-		return true;
 	
 	if ( Filter.SetUniform( Shader, Uniform ) )
 		return true;
@@ -256,7 +323,6 @@ std::shared_ptr<TFilterStageRuntimeData> TFilterFrame::GetData(const std::string
 	
 	return it->second;
 }
-
 
 TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
@@ -392,12 +458,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto FragFilename = Params.GetParamAs<std::string>("frag");
 		Stage.reset( new TFilterStage_ShaderBlit(Name,VertFilename,FragFilename,mBlitQuad->mVertexDescription,*this) );
 	}
-	else if ( Params.HasParam("readtexture") )
-	{
-		auto SourceTexture = Params.GetParamAs<std::string>("readtexture");
-		Stage.reset( new TFilterStage_ReadPixels(Name,SourceTexture,*this) );
-	}
-	
+		
 	if ( !Stage )
 		throw Soy::AssertException("Could not deduce type of stage");
 
@@ -427,18 +488,11 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 		}
 	}
 	
-	//	store pixels
 	//	gr: here we may have a problem where the original pixel buffer is getting overriden by the movie reader?
-	Frame->mFramePixels = Pixels;
+	//	make source stage data and assign pixels. texture will be generated when first requested
+	std::shared_ptr<TFilterStageRuntimeData_Frame> SourceData = Frame->AllocData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
+	SourceData->mPixels = Pixels;
 	
-	//	make up a job that holds the pixels to put it into a texture, then run to refresh everything
-	auto& Context = GetOpenglContext();
-	std::shared_ptr<PopWorker::TJob> Job( new TOpenglJob_UploadPixels( Pixels, Frame ) );
-	
-	Soy::TSemaphore Semaphore;
-	Context.PushJob( Job, Semaphore );
-	//Semaphore.Wait("filter load frame");
-	Semaphore.Wait();
 	OnFrameChanged( Time );
 
 	if ( IsNewFrame )

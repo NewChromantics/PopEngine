@@ -36,26 +36,3 @@ public:
 
 
 
-
-
-
-class TFilterStage_ReadPixels : public TFilterStage
-{
-public:
-	TFilterStage_ReadPixels(const std::string& Name,const std::string& SourceStage,TFilter& Filter);
-
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data);
-	
-public:
-	std::string			mSourceStage;
-};
-
-class TFilterStageRuntimeData_ReadPixels : public TFilterStageRuntimeData
-{
-public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
-	
-public:
-	SoyPixels			mPixels;
-};
