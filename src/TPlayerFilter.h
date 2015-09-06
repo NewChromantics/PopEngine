@@ -35,8 +35,6 @@ public:
 	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun) override;
 	virtual TJobParam		GetUniform(const std::string& Name) override;
 	
-	void					ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame);
-	
 	virtual bool			Iteration() override;
 	void					DeleteOldFrames();
 	

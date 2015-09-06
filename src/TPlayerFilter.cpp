@@ -21,19 +21,6 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	mRectMergeMax = 1;
 	mAtlasSize = vec2x<int>( 512, 512 );
 	
-	//	debug extraction
-	auto DebugExtractedPlayers = [this](const SoyTime& Time)
-	{
-		auto Frame = GetFrame( Time );
-		if ( !Frame )
-			return;
-		
-		TExtractedFrame ExtractedFrame;
-		ExtractPlayers( Time, *Frame, ExtractedFrame );
-
-		std::Debug << "Run extracted " << ExtractedFrame.mPlayers.GetSize() << " players" << std::endl;
-	};
-	mOnRunCompleted.AddListener( DebugExtractedPlayers );
 	
 	WakeOnEvent( mOnRunCompleted );
 	WakeOnEvent( mOnFrameAdded );
@@ -263,62 +250,6 @@ bool TPlayerFilter::SetUniform(TJobParam& Param,bool TriggerRerun)
 }
 
 
-void TPlayerFilter::ExtractPlayers(SoyTime FrameTime,TFilterFrame& FilterFrame,TExtractedFrame& ExtractedFrame)
-{
-	//	grab pixel data
-	std::string PlayerDataStage = "foundplayers";
-	auto PlayerStageData = FilterFrame.GetData(PlayerDataStage);
-	if ( !PlayerStageData )
-	{
-		std::Debug << "Missing stage data for " << PlayerDataStage << std::endl;
-		return;
-	}
-
-	auto& FoundPlayerData = *dynamic_cast<TFilterStageRuntimeData_ReadPixels*>( PlayerStageData.get() );
-	auto& FoundPlayerPixels = FoundPlayerData.mPixels;
-	auto& FoundPlayerPixelsArray = FoundPlayerPixels.GetPixelsArray();
-	
-	float PlayerWidthNorm = GetUniform("CylinderPixelWidth").Decode<float>();
-	float PlayerHeightNorm = GetUniform("CylinderPixelHeight").Decode<float>();
-	PlayerWidthNorm /= static_cast<float>(FoundPlayerPixels.GetWidth());
-	PlayerHeightNorm /= static_cast<float>(FoundPlayerPixels.GetHeight());
-	
-	//	get all valid entries
-	ExtractedFrame.mTime = FrameTime;
-	
-	static int MaxPlayerExtractions = 1000;
-	auto PixelChannelCount = SoyPixelsFormat::GetChannelCount( FoundPlayerPixels.GetFormat() );
-	for ( int i=0;	i<FoundPlayerPixelsArray.GetSize();	i+=PixelChannelCount )
-	{
-		int ValidityIndex = size_cast<int>( PixelChannelCount-1 );
-		auto RedIndex = std::clamped( 0, 0, ValidityIndex-1 );
-		int GreenIndex = std::clamped( 0, 1, ValidityIndex-1 );
-		int BlueIndex = std::clamped( 0, 2, ValidityIndex-1 );
-		
-		auto Validity = FoundPlayerPixelsArray[i+ValidityIndex];
-		if ( Validity <= 0 )
-			continue;
-		
-		TExtractedPlayer Player;
-		Player.mRgb = vec3f( FoundPlayerPixelsArray[i+RedIndex], FoundPlayerPixelsArray[i+GreenIndex], FoundPlayerPixelsArray[i+BlueIndex] );
-		Player.mRgb *= vec3f( 1.0f/255.f, 1.0f/255.f, 1.0f/255.f );
-		
-		vec2f BottomMiddle = FoundPlayerPixels.GetUv( i/PixelChannelCount );
-		float x = BottomMiddle.x - PlayerWidthNorm / 2.0f;
-		float y = BottomMiddle.y - PlayerHeightNorm;
-		Player.mRect = Soy::Rectf( x, y, PlayerWidthNorm, PlayerHeightNorm );
-
-		ExtractedFrame.mPlayers.PushBack( Player );
-		
-		if ( ExtractedFrame.mPlayers.GetSize() > MaxPlayerExtractions )
-		{
-			std::Debug << "Stopped player extraction at " << ExtractedFrame.mPlayers.GetSize() << std::endl;
-			break;
-		}
-	}
-	
-}
-
 void TPlayerFilter::Run(SoyTime FrameTime,TJobParams& ResultParams)
 {
 	bool AllCompleted = TFilter::Run( FrameTime );
@@ -329,13 +260,7 @@ void TPlayerFilter::Run(SoyTime FrameTime,TJobParams& ResultParams)
 	if ( !Soy::Assert( FilterFrame!=nullptr, "Missing filter frame") )
 		throw Soy::AssertException("Missing filter frame");
 
-	TExtractedFrame ExtractedFrame;
-	ExtractPlayers( FrameTime, *FilterFrame, ExtractedFrame );
-	
-	std::stringstream Output;
-	Output << "Extracted " << ExtractedFrame.mPlayers.GetSize() << " players\n";
-	Output << Soy::StringJoin( GetArrayBridge(ExtractedFrame.mPlayers), "," );
-	ResultParams.AddDefaultParam( Output.str() );
+	throw Soy::AssertException("todo; extract players from appropriate stage");
 }
 
 
