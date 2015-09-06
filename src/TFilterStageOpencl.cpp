@@ -139,12 +139,12 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		ContextGl.PushJob( CreateTexture, Semaphore );
 		Semaphore.Wait();
 	}
-	auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit*>( Data.get() )->mTexture;
+	auto& StageTarget = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data ).mTexture;
 	
 	
 	auto Init = [this,&Frame,&StageTarget](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
-		ofScopeTimerWarning Timer("opencl blit init",100);
+		ofScopeTimerWarning Timer("opencl blit init",40);
 
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )

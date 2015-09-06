@@ -366,12 +366,14 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only 
 	//	make it square again
 	MinMax.xy = TopLeft;
 	MinMax.zw = BottomRight;
-	/*
+	
+	//	this is throwing things off. not sure where, but atlas's appear wrong
+/*
 	MinMax.x = min4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
 	MinMax.y = min4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
 	MinMax.z = max4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
 	MinMax.w = max4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
-	*/
+*/
 	MinMaxs[RectIndex] = MinMax;
 }
 
