@@ -143,11 +143,12 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		
 		//	gr: cache/pool these rendertargets?
 		Opengl::TFboMeta FboMeta( StageName, StageTarget.GetWidth(), StageTarget.GetHeight() );
-		std::shared_ptr<Opengl::TRenderTarget> pRenderTarget( new Opengl::TRenderTargetFbo( FboMeta, StageTarget ) );
-		auto& RenderTarget = *pRenderTarget;
+		Opengl::TRenderTargetFbo RenderTarget( FboMeta, StageTarget );
+		RenderTarget.mGenerateMipMaps = false;
 		
 		//	render this stage to the stage target fbo
 		RenderTarget.Bind();
+		
 		try
 		{
 			auto& StageShader = *mShader;
@@ -168,7 +169,6 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 			{
 				auto& Uniform = StageShader.mUniforms[u];
-				
 				if ( Frame.SetUniform( Shader, Uniform, mFilter ) )
 					continue;
 					
@@ -189,7 +189,10 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 
 	
 	//	prefetch frame texture
-	auto FrameTexture = Frame.GetFrameTexture( mFilter, true );
+	{
+		Soy::TScopeTimerPrint Timer("Frame.GetFrameTexture",50);
+		auto FrameTexture = Frame.GetFrameTexture( mFilter, true );
+	}
 	
 	Soy::TSemaphore Semaphore;
 	mFilter.GetOpenglContext().PushJob( BlitToTexture, Semaphore );
