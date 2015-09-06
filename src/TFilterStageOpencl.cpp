@@ -148,14 +148,18 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				auto& ContextCl = mFilter.GetOpenclContext();
 				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
 				Opencl::TSync Semaphore;
-				std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::WriteOnly, &Semaphore ) );
-				Semaphore.Wait();
+
+				std::stringstream BufferName;
+				BufferName << this->mName << " stage output";
+				std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::ReadWrite, BufferName.str(), &Semaphore ) );
+				
+				Semaphore.Wait("Create cl blit output");
 				//	only assign on success
 				StageTarget = ImageBuffer;
 			}
 		};
 		
-		static bool MakeTargetAsTexture = true;
+		static bool MakeTargetAsTexture = false;
 		if ( MakeTargetAsTexture )
 		{
 			Soy::TSemaphore Semaphore;

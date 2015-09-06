@@ -65,8 +65,8 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 	StageData.mRects.SetSize( 1000 );
 	int RectBufferCount[] = {0};
 	auto RectBufferCountArray = GetRemoteArray( RectBufferCount );
-	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(StageData.mRects), ContextCl );
-	Opencl::TBufferArray<cl_int> RectBufferCounter( GetArrayBridge(RectBufferCountArray), ContextCl );
+	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(StageData.mRects), ContextCl, "RectBuffer" );
+	Opencl::TBufferArray<cl_int> RectBufferCounter( GetArrayBridge(RectBufferCountArray), ContextCl, "RectBufferCounter" );
 	
 	auto Init = [this,&Frame,&RectBuffer,&RectBufferCounter,&FrameWidth,&FrameHeight](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
@@ -177,7 +177,7 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 
 	auto& Rects = StageData.mRects;
 	Rects.Copy( RectData.mRects );
-	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(Rects), ContextCl );
+	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(Rects), ContextCl, "Distort rects rect buffer" );
 	
 
 	auto Init = [this,&Frame,&RectBuffer,&Rects](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
