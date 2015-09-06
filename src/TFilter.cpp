@@ -203,7 +203,9 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description)
 			Success = false;
 			std::Debug << "Stage " << pStage->mName << " failed: " << e.what() << std::endl;
 		}
+		mStageDataLock.lock();
 		Frame.mStageData[StageName] = pData;
+		mStageDataLock.unlock();
 		
 		TimerTime = Timer.Stop(false);
 		AllSuccess = AllSuccess && Success;
@@ -537,6 +539,7 @@ bool TFilter::Run(SoyTime Time)
 	bool Completed = false;
 	
 	{
+		std::Debug << "Started run: " << Time << std::endl;
 		std::stringstream TimerName;
 		TimerName << "filter run " << Time;
 		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
