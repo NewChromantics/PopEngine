@@ -113,23 +113,23 @@ Opengl::TTexture TFilterStageRuntimeData_ShaderBlit::GetTexture(Opengl::TContext
 {
 	if ( mTexture.IsValid(false) )
 		return mTexture;
-/*
+
 	//	convert image buffer if it's there
 	if ( mImageBuffer )
 	{
-		Opengl::TTextureAndContext TextureAndContext( mTexture, ContextGl );
-		auto Read = [this,&TextureAndContext]
+		auto Read = [this,&ContextGl]
 		{
-			Opencl::TSync Semaphore;
-			mImageBuffer->Read( TextureAndContext, &Semaphore );
-			Semaphore.Wait();
+			Opengl::TTextureAndContext TextureAndContext( mTexture, ContextGl );
+			//Opencl::TSync Semaphore;
+			mImageBuffer->Read( TextureAndContext, nullptr );// &Semaphore );
+		//	Semaphore.Wait();
 		};
 		
-		Soy::TSemaphore Semaphore;
-		ContextCl.PushJob( Read, Semaphore );
-		Semaphore.Wait();
+		//Soy::TSemaphore Semaphore;
+		ContextCl.PushJob( Read );//, Semaphore );
+	//	Semaphore.Wait();
 	}
-*/
+
 	return mTexture;
 }
 
