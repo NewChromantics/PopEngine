@@ -293,7 +293,7 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		"	vec2 uv = vec2( oTexCoord.x, 1-oTexCoord.y );\n"
 		"   uv *= SrcRect.zw;\n"
 		"   uv += SrcRect.xy;\n"
-		"	float Mask = texture2D( MaskImage, uv ).y;\n"
+		"	float Mask = texture2D( MaskImage, uv ).w;\n"
 		"	vec4 Sample = texture2D( SrcImage, uv );\n"
 		"	Sample.w = Mask;\n"
 		"	if ( Mask < 0.5f )	Sample = vec4(0,0,0,0);\n"
