@@ -296,6 +296,8 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		"	float Mask = texture2D( MaskImage, uv ).w;\n"
 		"	vec4 Sample = texture2D( SrcImage, uv );\n"
 		"	Sample.w = Mask;\n"
+		//	for greyscale we write red
+		"	Sample.r = Mask;\n"
 		"	if ( Mask < 0.5f )	Sample = vec4(0,0,0,0);\n"
 		//"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
 		"	gl_FragColor = Sample;\n"
@@ -365,7 +367,7 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 			return;
 		auto AtlasWidth = mFilter.GetUniform("AtlasWidth").Decode<int>();
 		auto AtlasHeight = mFilter.GetUniform("AtlasHeight").Decode<int>();
-		SoyPixelsMeta Meta( AtlasWidth, AtlasHeight, SoyPixelsFormat::RGBA );
+		SoyPixelsMeta Meta( AtlasWidth, AtlasHeight, SoyPixelsFormat::Greyscale );
 		StageTexture = std::move( Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
 	};
 	
@@ -538,6 +540,7 @@ bool TWriteFileStream::Iteration()
 	{
 		//	pop a chunk of data and continue
 		auto PopSize = std::min( Buffer.MaxSize(), mPendingData.GetDataSize() );
+		std::Debug << "Popped " << PopSize << "/" << mPendingData.GetDataSize() << std::endl;
 		GetArrayBridge(Buffer).PushBackReinterpret( mPendingData.GetArray(), PopSize );
 		mPendingData.RemoveBlock( 0, PopSize );
 		mPendingDataLock.unlock();
@@ -610,7 +613,9 @@ TFilterStage_WriteRectAtlasStream::~TFilterStage_WriteRectAtlasStream()
 void TFilterStage_WriteRectAtlasStream::PushFrameData(const ArrayBridge<uint8>&& FrameData)
 {
 	if ( !mWriteThread )
+	{
 		mWriteThread.reset( new TWriteFileStream( mOutputFilename ) );
+	}
 
 	mWriteThread->PushData( FrameData );
 }
@@ -648,6 +653,7 @@ void TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_
 		Header << SourceRects[r] << ">" << DestRects[r] << "#";
 	}
 	Header << ";";
+	Header << "PixelMeta=" << AtlasPixels.GetMeta() << ";";
 	Header << "PixelsSize=" << PixelData.GetDataSize() << ";";
 	
 	Array<uint8> OutputData;

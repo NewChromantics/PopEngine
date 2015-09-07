@@ -153,13 +153,13 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				BufferName << this->mName << " stage output";
 				std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::ReadWrite, BufferName.str(), &Semaphore ) );
 				
-				Semaphore.Wait("Create cl blit output");
+				Semaphore.Wait();
 				//	only assign on success
 				StageTarget = ImageBuffer;
 			}
 		};
 		
-		static bool MakeTargetAsTexture = false;
+		static bool MakeTargetAsTexture = true;
 		if ( MakeTargetAsTexture )
 		{
 			Soy::TSemaphore Semaphore;

@@ -18,11 +18,14 @@ public class Tuple<T1, T2>
 
 public class TRectAtlasFrame
 {
-	public long			mGenerationTime = 0;
-	public long			mTimecode = 0;
+	public long				mGenerationTime = 0;
+	public long				mTimecode = 0;
 	public List<Tuple<Rect,Rect>>	mRects;
-	public int			mTextureDataStart = 0;
-	public int			mTextureDataLength = 0;
+	public int				mTextureDataStart = 0;
+	public int				mTextureDataLength = 0;
+	public int				mTextureWidth = 0;
+	public int				mTextureHeight = 0;
+	public TextureFormat	mTextureFormat;
 };
 
 public class RectStreamParser : MonoBehaviour {
@@ -33,6 +36,7 @@ public class RectStreamParser : MonoBehaviour {
 	private FileStream				mParseStream;
 	private BinaryReader			mReader;
 	private FileStream				mLoadTextureStream;
+	public int						mParsesPerFrame = 10;	//	rather than do ALL frames in one go
 
 	bool FinishedParsing()
 	{
@@ -58,7 +62,8 @@ public class RectStreamParser : MonoBehaviour {
 			mReader = new BinaryReader (mParseStream);
 		}
 
-		ParseNextFrame ();
+		for ( int i=0;	i<Mathf.Max (1,mParsesPerFrame);	i++ )
+			ParseNextFrame ();
 	}
 
 	void ParseNextFrame()
@@ -192,6 +197,27 @@ public class RectStreamParser : MonoBehaviour {
 		return Rects;
 	}
 
+	void ParseTextureMeta(ref int Width,ref int Height,ref TextureFormat Format,string MetaString)
+	{
+		//	640x480^RGBA
+		char[] Delin = new char[]{'x','^'};
+		string[] MetaParts = MetaString.Split (Delin);
+
+		Width = int.Parse (MetaParts [0]);
+		Height = int.Parse (MetaParts [1]);
+
+		string FormatStr = MetaParts [2];
+		if (FormatStr == "RGBA")
+			Format = TextureFormat.RGBA32;
+		else if (FormatStr == "RGB")
+			Format = TextureFormat.RGB24;
+		else if (FormatStr == "Greyscale")
+			Format = TextureFormat.Alpha8;
+		else
+			throw new System.Exception ("Don't know format " + FormatStr);
+	}
+
+
 	TRectAtlasFrame ParseFrame(BinaryReader Reader)
 	{
 		TRectAtlasFrame Frame = new TRectAtlasFrame ();
@@ -226,7 +252,12 @@ public class RectStreamParser : MonoBehaviour {
 				//continue;
 				break;
 			}
-			throw new System.Exception("Unknown variable " + Variable.First);
+			if ( Variable.First == "PixelMeta" )
+			{
+				ParseTextureMeta( ref Frame.mTextureWidth, ref Frame.mTextureHeight, ref Frame.mTextureFormat, Variable.Second );
+				continue;
+			}
+		    throw new System.Exception("Unknown variable " + Variable.First);
 		}
 
 		//	walk over texture data
@@ -260,6 +291,11 @@ public class RectStreamParser : MonoBehaviour {
 		{
 			string StreamingFileanme = System.IO.Path.Combine (Application.streamingAssetsPath, mRectAtlasFilename);
 			mLoadTextureStream = new FileStream (StreamingFileanme, FileMode.Open, FileAccess.Read, FileShare.Read );
+		}
+
+		//	gr: find a better way,like re-creating the texture?
+		if (Tex.width != Frame.mTextureWidth || Tex.height != Frame.mTextureHeight || Tex.format != Frame.mTextureFormat) {
+			throw new System.Exception ("Texture format doesn't match stream source: " + Tex.width + "x" + Tex.height + "(" + Tex.format + ") vs " + Frame.mTextureWidth + "x" + Frame.mTextureHeight + "(" + Frame.mTextureFormat + ")");
 		}
 
 		//	gr: for some reason... unity wants ONE extra byte...

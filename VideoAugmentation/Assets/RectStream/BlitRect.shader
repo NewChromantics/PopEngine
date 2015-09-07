@@ -109,7 +109,8 @@
 					
 					if ( MaskDistance <= 0.0f )
 					{
-						Base.xyz = tex2D( RectTexture, float2(Rectu,Rectv) ).xyz;
+						//	copy pixels from mask. only applies when we have RGBA masks
+						//Base.xyz = tex2D( RectTexture, float2(Rectu,Rectv) ).xyz;
 					}
 					else
 					{
