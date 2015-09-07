@@ -540,7 +540,6 @@ bool TWriteFileStream::Iteration()
 	{
 		//	pop a chunk of data and continue
 		auto PopSize = std::min( Buffer.MaxSize(), mPendingData.GetDataSize() );
-		std::Debug << "Popped " << PopSize << "/" << mPendingData.GetDataSize() << std::endl;
 		BufferBridge.PushBackReinterpret( mPendingData.GetArray(), PopSize );
 		mPendingData.RemoveBlock( 0, PopSize );
 		mPendingDataLock.unlock();

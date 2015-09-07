@@ -8,6 +8,8 @@
 #include "SoyMovieDecoder.h"
 
 
+class TChannelLiteral;
+
 
 class TPopTrack : public TJobHandler, public TPopJobHandler, public TChannelManager
 {
@@ -40,6 +42,7 @@ public:
 	Soy::Platform::TConsoleApp	mConsoleApp;
 	
 	Array<std::shared_ptr<TPlayerFilter>>	mFilters;
+	std::shared_ptr<TChannelLiteral>		mLiteralChannel;
 };
 
 

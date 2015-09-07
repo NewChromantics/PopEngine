@@ -14,11 +14,10 @@
 #include <TChannelFile.h>
 
 
-
-
+#define JOB_THREAD_COUNT	1
 
 TPopTrack::TPopTrack() :
-	TJobHandler			( static_cast<TChannelManager&>(*this) ),
+	TJobHandler			( static_cast<TChannelManager&>(*this), JOB_THREAD_COUNT ),
 	TPopJobHandler		( static_cast<TJobHandler&>(*this) ),
 	mSubcriberManager	( static_cast<TChannelManager&>(*this) )
 {
@@ -104,29 +103,51 @@ void TPopTrack::OnLoadFrame(TJobAndChannel &JobAndChannel)
 	auto Name = Job.mParams.GetParamAs<std::string>("filter");
 	auto TimeStr = Job.mParams.GetParamAs<std::string>("time");
 	
-	//	decode filename to pixels
-	auto FilenameParam = Job.mParams.GetParam("filename");
-	TJobFormat CastFormat;
-	CastFormat.PushFirstContainer<TYPE_Png>();
-	CastFormat.PushFirstContainer<TYPE_File>();
-	CastFormat.PushFirstContainer<std::string>();
-	FilenameParam.Cast(CastFormat);
-	std::shared_ptr<SoyPixels> Pixels( new SoyPixels );
-	SoyData_Stack<SoyPixels> PixelsData( *Pixels );
-	
-	if ( !FilenameParam.Decode(PixelsData) )
-	{
-		TJobReply Reply( JobAndChannel );
-		Reply.mParams.AddErrorParam("Failed to cast filename to pixels");
-		TChannel& Channel = JobAndChannel;
-		Channel.OnJobCompleted( Reply );
-		return;
-	}
-	
-	SoyTime Time( TimeStr );
+	auto PixelsParam = Job.mParams.GetParam("pixels");
 
+	std::shared_ptr<SoyPixelsImpl> PixelsImpl;
+	if ( PixelsParam.IsValid() )
+	{
+		std::shared_ptr<SoyPixels> Pixels( new SoyPixels );
+		SoyData_Stack<SoyPixels> PixelsData( *Pixels );
+		
+		if ( !PixelsParam.Decode(PixelsData) )
+		{
+			TJobReply Reply( JobAndChannel );
+			Reply.mParams.AddErrorParam("Failed to get pixels");
+			TChannel& Channel = JobAndChannel;
+			Channel.OnJobCompleted( Reply );
+			return;
+		}
+		PixelsImpl = Pixels;
+	}
+	else
+	{
+		//	decode filename to pixels
+		auto FilenameParam = Job.mParams.GetParam("filename");
+		TJobFormat CastFormat;
+		CastFormat.PushFirstContainer<TYPE_Png>();
+		CastFormat.PushFirstContainer<TYPE_File>();
+		CastFormat.PushFirstContainer<std::string>();
+		FilenameParam.Cast(CastFormat);
+		std::shared_ptr<SoyPixels> Pixels( new SoyPixels );
+		SoyData_Stack<SoyPixels> PixelsData( *Pixels );
+		
+		if ( !FilenameParam.Decode(PixelsData) )
+		{
+			TJobReply Reply( JobAndChannel );
+			Reply.mParams.AddErrorParam("Failed to cast filename to pixels");
+			TChannel& Channel = JobAndChannel;
+			Channel.OnJobCompleted( Reply );
+			return;
+		}
+		
+		PixelsImpl = Pixels;
+	}
+
+	SoyTime Time( TimeStr );
 	auto Filter = GetFilter( Name );
-	std::shared_ptr<SoyPixelsImpl> PixelsImpl( Pixels );
+
 	Filter->LoadFrame( PixelsImpl, Time );
 
 	TJobReply Reply(Job);
@@ -249,7 +270,7 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 		Reply.mParams.AddDefaultParam( FilterName );
 	
 		//	subscribe to the video's new frame loading
-		auto OnNewFrameRelay = [Filter](TVideoDevice& Video)
+		auto OnNewFrameRelay = [Filter,this](TVideoDevice& Video)
 		{
 			std::stringstream LastError;
 			auto& LastFrame = Video.GetLastFrame(LastError);
@@ -257,8 +278,29 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 			{
 				auto pPixels = LastFrame.GetPixelsShared();
 				auto& Time = LastFrame.GetTime();
+
+				//	allow async frame processing
+				static bool PushAsJob = true;
 				
-				Filter->LoadFrame( pPixels, Time );
+				if ( PushAsJob )
+				{
+					TJobParams Params;
+					std::shared_ptr<SoyData_Stack<SoyPixels>> PixelsData( new SoyData_Stack<SoyPixels>() );
+					PixelsData->mValue.Copy( *pPixels );
+					
+					std::stringstream TimeStr;
+					TimeStr << Time;
+					
+					Params.AddParam( "pixels", std::dynamic_pointer_cast<SoyData>( PixelsData ) );
+					Params.AddParam( "time", TimeStr.str() );
+					Params.AddParam( "filter", Filter->mName );
+					
+					mLiteralChannel->Execute("loadframe", Params );
+				}
+				else
+				{
+					Filter->LoadFrame( pPixels, Time );
+				}
 			}
 			else
 			{
@@ -492,11 +534,13 @@ TPopAppError::Type PopMain(TJobParams& Params)
 	//	create stdio channel for commandline output
 	auto StdioChannel = CreateChannelFromInputString("std:", SoyRef("stdio") );
 	auto HttpChannel = CreateChannelFromInputString("http:8080-8090", SoyRef("http") );
-	
+	App.mLiteralChannel.reset( new TChan<TChannelLiteral,TProtocolCli>( SoyRef("literal") ) );
+
 	
 	App.AddChannel( CommandLineChannel );
 	App.AddChannel( StdioChannel );
 	App.AddChannel( HttpChannel );
+	App.AddChannel( App.mLiteralChannel );
 
 	
 	
