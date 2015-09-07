@@ -92,7 +92,9 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 		return Kernel.SetUniform( Uniform.mName.c_str(), *mImageBuffer );
 	}
 	
-	auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext(), true );
+	//auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext(), true );
+	auto Texture = GetTexture();
+	
 	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter );
 }
 
@@ -162,7 +164,7 @@ Opengl::TTexture TFilterStageRuntimeData_ShaderBlit::GetTexture(Opengl::TContext
 
 
 
-void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	static int DebugColourOffset = 0;
 	DebugColourOffset++;

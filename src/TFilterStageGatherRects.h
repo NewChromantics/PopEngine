@@ -15,7 +15,7 @@ public:
 	{
 	}
 	
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
 public:
 };
@@ -27,7 +27,7 @@ public:
 	{
 		return false;
 	}
-	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking) override	{	return Opengl::TTexture();	}
+	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
 	
 public:
 	Array<cl_float4>		mRects;
@@ -44,7 +44,7 @@ public:
 	{
 	}
 	
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
 public:
 	std::string		mMinMaxDataStage;
@@ -68,7 +68,7 @@ public:
 	{
 	}
 	
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	void				CreateBlitResources();
 	
 public:
@@ -89,7 +89,7 @@ public:
 	{
 		return false;
 	}
-	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking) override	{	return mTexture;	}
+	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 	
 public:
 	Array<Soy::Rectf>		mSourceRects;
@@ -134,7 +134,7 @@ public:
 	}
 	~TFilterStage_WriteRectAtlasStream();
 	
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
 	void				PushFrameData(const ArrayBridge<uint8>&& FrameData);
 	

@@ -10,6 +10,14 @@ class TFilter;
 class TFilterFrame;
 class TFilterStageRuntimeData;
 
+namespace Opengl
+{
+	class TContext;
+}
+namespace Opencl
+{
+	class TContext;
+}
 
 
 class TFilterStage
@@ -17,7 +25,7 @@ class TFilterStage
 public:
 	TFilterStage(const std::string& Name,TFilter& Filter);
 	
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)=0;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)=0;
 
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
@@ -32,7 +40,12 @@ class TFilterStageRuntimeData
 public:
 	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)	{}
 	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)=0;
-	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking)=0;
+	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking)
+	{
+		//	fallback is simple version
+		return GetTexture();
+	}
+	virtual Opengl::TTexture	GetTexture()=0;
 };
 
 
@@ -45,8 +58,7 @@ public:
 	}
 	~TFilterFrame();
 	
-	bool		Run(TFilter& Filter,const std::string& Description);	//	gr: description to avoid passing meta data, like frame timestamp
-	void		Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl);
+	bool		Run(TFilter& Filter,const std::string& Description,std::shared_ptr<Opengl::TContext>& ContextGl,std::shared_ptr<Opencl::TContext>& ContextCl);	//	gr: description to avoid passing meta data, like frame timestamp
 	
 	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
 
@@ -80,7 +92,8 @@ public:
 
 private:
 	std::shared_ptr<TFilterStageRuntimeData>	GetData(const std::string& StageName);
-
+	std::shared_ptr<Opengl::TContext>		mContextGl;
+	std::shared_ptr<Opencl::TContext>		mContextCl;
 	
 public:
 	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
@@ -104,7 +117,7 @@ class TFilterStageRuntimeData_Frame : public TFilterStageRuntimeData
 public:
 	virtual void					Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
-	virtual Opengl::TTexture		GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking) override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
+	virtual Opengl::TTexture		GetTexture() override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
 	
 	std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& Context,bool Blocking);
 	Opengl::TTexture				GetTexture(Opengl::TContext& Context,bool Blocking);
@@ -143,7 +156,10 @@ public:
 	
 	bool					Run(SoyTime Frame);		//	returns true if all stages succeeded
 	Opengl::TContext&		GetOpenglContext();		//	in the window
-	Opencl::TContext&		GetOpenclContext();
+	//Opencl::TContext&		GetOpenclContext();
+	void					GetOpenclContexts(ArrayBridge<std::shared_ptr<Opencl::TContext>>&& Contexts);
+	void					CreateOpenclContexts();
+	std::shared_ptr<Opencl::TContext>	PickNextOpenclContext();
 	
 	void					LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time);	//	load pixels into [new] frame
 	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
@@ -168,7 +184,6 @@ public:
 
 	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
 	bool					DeleteFrame(SoyTime Frame);		//	returns false if it was still in use. throws if it doesnt exist
-	bool					CleanupIfLastFrame(std::shared_ptr<TFilterFrame>& Frame);	//	in case this is the last instance of a frame, cleanup. returns false if not last (in case we're expecting it to be)
 	
 	void					CreateBlitGeo(bool Blocking);	//	throws if failed to create (blocking only)
 	
@@ -182,8 +197,10 @@ public:
 	std::shared_ptr<Opengl::TGeometry>				mBlitQuad;		//	commonly used
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
 	std::shared_ptr<Opengl::TContext>				mOpenglContext;
-	std::shared_ptr<Opencl::TContext>				mOpenclContext;
-	std::shared_ptr<Opencl::TDevice>				mOpenclDevice;
+	Array<std::shared_ptr<Opencl::TContext>>		mOpenclContexts;
+	Array<std::shared_ptr<Opencl::TDevice>>			mOpenclDevices;
+	std::mutex										mOpenclContextLock;
+	size_t											mCurrentOpenclContext;
 };
 
 

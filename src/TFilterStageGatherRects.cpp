@@ -43,9 +43,9 @@ bool MergeRects(cl_float4& a_cl,cl_float4& b_cl,float NearEdgeDist)
 	}
 }
 
-void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
-	auto Kernel = mKernel;
+	auto Kernel = GetKernel(ContextCl);
 	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
 		return;
 	auto FramePixels = Frame.GetFramePixels(mFilter);
@@ -60,8 +60,7 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		Data.reset( new TFilterStageRuntimeData_GatherRects() );
 
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GatherRects&>( *Data.get() );
-	auto& ContextCl = mFilter.GetOpenclContext();
-
+	
 	StageData.mRects.SetSize( 1000 );
 	int RectBufferCount[] = {0};
 	auto RectBufferCountArray = GetRemoteArray( RectBufferCount );
@@ -163,9 +162,9 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 }
 
 
-void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
-	auto Kernel = mKernel;
+	auto Kernel = GetKernel(ContextCl);
 	if ( !Soy::Assert( Kernel != nullptr, "TFilterStage_DistortRects missing kernel" ) )
 		return;
 	
@@ -177,7 +176,6 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		Data.reset( new TFilterStageRuntimeData_DistortRects() );
 	
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_DistortRects&>( *Data.get() );
-	auto& ContextCl = mFilter.GetOpenclContext();
 
 	auto& Rects = StageData.mRects;
 	Rects.Copy( RectData.mRects );
@@ -341,17 +339,17 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 }
 
 
-void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	//	get data
 	auto& RectData = Frame.GetData<TFilterStageRuntimeData_GatherRects>( mRectsStage );
 	auto& Rects = RectData.mRects;
 
 	auto& ImageData = Frame.GetData<TFilterStageRuntimeData>( mImageStage );
-	auto ImageTexture = ImageData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext(), true );
+	auto ImageTexture = ImageData.GetTexture( ContextGl, ContextCl, true );
 	
 	auto& MaskData = Frame.GetData<TFilterStageRuntimeData>( mMaskStage );
-	auto MaskTexture = MaskData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext(), true  );
+	auto MaskTexture = MaskData.GetTexture( ContextGl, ContextCl, true  );
 	
 	//	make sure geo & shader are allocated
 	CreateBlitResources();
@@ -655,7 +653,7 @@ void TFilterStage_WriteRectAtlasStream::PushFrameData(const ArrayBridge<uint8>&&
 	mWriteThread->PushData( FrameData );
 }
 
-void TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_WriteRectAtlasStream::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	//	get source data
 	auto& AtlasData = Frame.GetData<TFilterStageRuntimeData_MakeRectAtlas>( mAtlasStage );

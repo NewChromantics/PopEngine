@@ -78,16 +78,24 @@ public:
 	TFilterStage_OpenclKernel(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter);
 	
 	void				Reload();
-	//virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	//virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
+	
+	std::shared_ptr<Opencl::TKernel>	GetKernel(Opencl::TContext& Context)
+	{
+		std::lock_guard<std::mutex> Lock( mKernelLock );
+		return mKernel[Context.GetContext()];
+	}
 	
 public:
 	std::string				mKernelFilename;
 	std::string				mKernelName;
 	Soy::TFileWatch			mKernelFileWatch;
-	std::shared_ptr<Opencl::TKernel>	mKernel;
-	std::shared_ptr<Opencl::TProgram>	mProgram;
+	
+	std::mutex				mKernelLock;
+	std::map<cl_context,std::shared_ptr<Opencl::TKernel>>	mKernel;
+	std::map<cl_context,std::shared_ptr<Opencl::TProgram>>	mProgram;
 };
 
 
@@ -100,7 +108,7 @@ public:
 	{
 	}
 	
-	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data) override;
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
 public:
 };

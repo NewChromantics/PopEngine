@@ -128,11 +128,7 @@ TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 TFilterFrame::~TFilterFrame()
 {
 	std::Debug << "Frame destruction " << this->mFrameTime << std::endl;
-}
 
-
-void TFilterFrame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
-{
 	//	shutdown all the datas
 	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
 	{
@@ -140,7 +136,7 @@ void TFilterFrame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& Contex
 		if ( !pData )
 			continue;
 		
-		pData->Shutdown( ContextGl, ContextCl );
+		pData->Shutdown( *mContextGl, *mContextCl );
 		pData.reset();
 	}
 	
@@ -163,8 +159,11 @@ std::shared_ptr<SoyPixelsImpl> TFilterFrame::GetFramePixels(TFilter& Filter,bool
 }
 
 
-bool TFilterFrame::Run(TFilter& Filter,const std::string& Description)
+bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::shared_ptr<Opengl::TContext>& ContextGl,std::shared_ptr<Opencl::TContext>& ContextCl)
 {
+	mContextCl = ContextCl;
+	mContextGl = ContextGl;
+	
 	auto& Frame = *this;
 	bool AllSuccess = true;
 
@@ -202,7 +201,7 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description)
 		bool Success = true;
 		try
 		{
-			pStage->Execute( *this, pData );
+			pStage->Execute( *this, pData, *mContextGl, *mContextCl );
 		}
 		catch (std::exception& e)
 		{
@@ -347,7 +346,8 @@ std::shared_ptr<TFilterStageRuntimeData> TFilterFrame::GetData(const std::string
 
 TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
-	mJobThread		( Name + " odd job thread" )
+	mJobThread		( Name + " odd job thread" ),
+	mCurrentOpenclContext	( 0 )
 {
 	mWindow.reset( new TFilterWindow( Name, *this ) );
 	
@@ -453,7 +453,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	else if ( Params.HasParam("MinMaxDataStage" ) )
 	{
 		//	construct an opencl context [early for debugging]
-		GetOpenclContext();
+		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto MinMaxDataStage = Params.GetParamAs<std::string>("MinMaxDataStage");
@@ -463,7 +463,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
 		//	construct an opencl context [early for debugging]
-		GetOpenclContext();
+		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
@@ -526,14 +526,11 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 		if ( IsNewFrame )
 			mOnFrameAdded.OnTriggered( Time );
 		
-		//	possible that this frame has been deleted, WHILST running?
 		Frame->mRunLock.unlock();
-		CleanupIfLastFrame( Frame );
 	}
 	catch (...)
 	{
 		Frame->mRunLock.unlock();
-		CleanupIfLastFrame( Frame );
 		throw;
 	}
 }
@@ -580,44 +577,10 @@ bool TFilter::DeleteFrame(SoyTime FrameTime)
 	mFrames.erase( FrameIt );
 	mFramesLock.unlock();
 	
-	if ( !CleanupIfLastFrame( pFrame ) )
-	{
-		std::Debug << "Was expecting this to be last instance of frame " << FrameTime << std::endl;
-	}
 	pFrame.reset();
 	std::Debug << "Deleted frame " << FrameTime << std::endl;
 	return true;
 }
-
-bool TFilter::CleanupIfLastFrame(std::shared_ptr<TFilterFrame>& Frame)
-{
-	Soy::Assert( Frame != nullptr, "CleanupIfLastFrame(null frame). Not sure what I might want to do here" );
-	
-	if ( !Frame.unique() )
-	{
-		//	gr: see if this helps catch the occasional mis-aligned delete
-		Frame.reset();
-		return false;
-	}
-	
-	//	gr: check in case the lock is active... don't think we should be unique if that's the case
-	if ( !Frame->mRunLock.try_lock() )
-	{
-		std::Debug << "During frame safe cleanup, run lock was active." << std::endl;
-	}
-	else
-	{
-		Frame->mRunLock.unlock();
-	}
-	
-	Frame->Shutdown( GetOpenglContext(), GetOpenclContext() );
-	
-	//	clear reference
-	Frame.reset();
-	
-	return true;
-}
-
 
 
 bool TFilter::Run(SoyTime Time)
@@ -630,19 +593,20 @@ bool TFilter::Run(SoyTime Time)
 	bool Completed = false;
 
 	{
-		std::Debug << "Started run: " << Time << std::endl;
+		auto ContextCl = PickNextOpenclContext();
+		GetOpenglContext();
+		auto ContextGl = mOpenglContext;
+
+		std::Debug << "Started run: " << Time << " on " << ContextCl->GetDevice().mName << std::endl;
 		std::stringstream TimerName;
-		TimerName << "filter run " << Time;
+		TimerName << "filter run " << Time << " on " << ContextCl->GetDevice().mName;
 		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
-			
-		Completed = Frame->Run( *this, TimerName.str() );
+		
+		Completed = Frame->Run( *this, TimerName.str(), ContextGl, ContextCl );
 	}
 		
 	if ( Completed )
 		mOnRunCompleted.OnTriggered( Time );
-	
-	//	just in case it was deleted during/post run
-	CleanupIfLastFrame( Frame );
 	
 	return Completed;
 }
@@ -688,19 +652,21 @@ Opengl::TContext& TFilter::GetOpenglContext()
 		return *mOpenglContext;
 	
 	Soy::Assert( mWindow!=nullptr, "window not yet allocated" );
-	
-	auto* Context = mWindow->GetContext();
+	auto Context = mWindow->GetContext();
 	Soy::Assert( Context != nullptr, "Expected opengl window to have a context");
-	return *Context;
+	mOpenglContext = Context;
+	return *mOpenglContext;
 }
 
 
-Opencl::TContext& TFilter::GetOpenclContext()
+void TFilter::CreateOpenclContexts()
 {
 	auto& OpenglContext = GetOpenglContext();
 	
+	std::lock_guard<std::mutex> Lock(mOpenclContextLock);
+	
 	//	make a device
-	if ( !mOpenclDevice )
+	if ( mOpenclDevices.IsEmpty() )
 	{
 		static OpenclDevice::Type Filter = OpenclDevice::GPU;
 		//OpenclDevice::Type Filter = OpenclDevice::CPU;
@@ -710,16 +676,46 @@ Opencl::TContext& TFilter::GetOpenclContext()
 		Opencl::GetDevices( GetArrayBridge(Devices), Filter );
 		
 		for ( int i=0;	i<Devices.GetSize();	i++ )
-			std::Debug << "Opencl device #" << i << " " << Devices[i] << std::endl;
-		
-		static bool InterpolateWithOpengl = true;
-		mOpenclDevice.reset( new Opencl::TDevice( GetArrayBridge(Devices), InterpolateWithOpengl ? &OpenglContext : nullptr ) );
-		
-		//	now make a context
-		mOpenclContext = mOpenclDevice->CreateContextThread("Filter opencl thread");
+		{
+			static bool InterpolateWithOpengl = true;
+			auto& Device = Devices[i];
+			
+			try
+			{
+				BufferArray<Opencl::TDeviceMeta,1> ThisContextDevices;
+				ThisContextDevices.PushBack( Device );
+				std::shared_ptr<Opencl::TDevice> pDevice( new Opencl::TDevice( GetArrayBridge(ThisContextDevices), InterpolateWithOpengl ? &OpenglContext : nullptr ) );
+			
+				//	now make a context
+				auto Context = pDevice->CreateContextThread("Filter opencl thread");
+				if ( !Context )
+					continue;
+
+				std::Debug << "Created Opencl context for device #" << i << " " << Device << std::endl;
+				
+				mOpenclDevices.PushBack( pDevice );
+				mOpenclContexts.PushBack( Context );
+			}
+			catch ( std::exception& e)
+			{
+				std::Debug << "Failed to create opencl context context for device #" << i << " " << Device << ": " << e.what() << std::endl;
+				continue;
+			}
+		}
 	}
-		
-	return *mOpenclContext;
 }
 
+
+void TFilter::GetOpenclContexts(ArrayBridge<std::shared_ptr<Opencl::TContext>>&& Contexts)
+{
+	CreateOpenclContexts();
+	Contexts.Copy( mOpenclContexts );
+}
+
+std::shared_ptr<Opencl::TContext> TFilter::PickNextOpenclContext()
+{
+	mCurrentOpenclContext++;
+	CreateOpenclContexts();
+	return mOpenclContexts[ mCurrentOpenclContext % mOpenclContexts.GetSize() ];
+}
 

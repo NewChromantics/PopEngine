@@ -24,7 +24,7 @@ public:
 	bool				IsValid()			{	return mWindow!=nullptr;	}
 	
 	void				OnOpenglRender(Opengl::TRenderTarget& RenderTarget);
-	Opengl::TContext*	GetContext();
+	std::shared_ptr<Opengl::TContext>	GetContext();
 	
 	void				OnMouseDown(const TMousePos& Pos);
 	void				OnMouseMove(const TMousePos& Pos);

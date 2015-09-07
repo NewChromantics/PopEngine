@@ -123,7 +123,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 			auto& StageData = StageDatas[StageName];
 			if ( StageData )
 			{
-				auto StageTexture = StageData->GetTexture( mParent.GetOpenglContext(), mParent.GetOpenclContext(), false );
+				auto StageTexture = StageData->GetTexture();
 			
 				if ( StageTexture.IsValid() )
 				{
@@ -142,7 +142,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	Opengl_IsOkay();
 }
 
-Opengl::TContext* TFilterWindow::GetContext()
+std::shared_ptr<Opengl::TContext> TFilterWindow::GetContext()
 {
 	if ( !mWindow )
 		return nullptr;

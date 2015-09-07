@@ -28,32 +28,46 @@ TFilterStage_OpenclKernel::TFilterStage_OpenclKernel(const std::string& Name,con
 	
 void TFilterStage_OpenclKernel::Reload()
 {
-	//	delete the old ones
-	mKernel.reset();
-	mProgram.reset();
-	
-	//	load shader
-	auto& Context = mFilter.GetOpenclContext();
-	
-	try
-	{
-		std::string Source;
-		Soy::FileToString( mKernelFilename, Source );
-		mProgram.reset( new Opencl::TProgram( Source, Context ) );
-		
-		//	now load kernel
-		mKernel.reset( new Opencl::TKernel( mKernelName, *mProgram ) );
-	}
-	catch (std::exception& e)
-	{
-		std::Debug << "Failed to load opencl stage " << mName << ": " << e.what() << std::endl;
-		mProgram.reset();
-		mKernel.reset();
-		return;
-	}
+	std::lock_guard<std::mutex> Lock( mKernelLock );
 
-	std::Debug << "Loaded kernel (" << mKernelName << ") okay for " << this->mName << std::endl;
-	this->mOnChanged.OnTriggered(*this);
+	//	delete the old ones
+	mKernel.empty();
+	mProgram.empty();
+	
+	//	load shader to each context
+	Array<std::shared_ptr<Opencl::TContext>> SuccessfullBuiltContexts;
+	
+	Array<std::shared_ptr<Opencl::TContext>> Contexts;
+	mFilter.GetOpenclContexts( GetArrayBridge(Contexts) );
+	for ( int i=0;	i<Contexts.GetSize();	i++ )
+	{
+		auto& Context = *Contexts[i];
+		auto& pProgram = mProgram[Context.GetContext()];
+		auto& pKernel = mKernel[Context.GetContext()];
+		try
+		{
+			std::string Source;
+			Soy::FileToString( mKernelFilename, Source );
+			pProgram.reset( new Opencl::TProgram( Source, Context ) );
+			
+			//	now load kernel
+			pKernel.reset( new Opencl::TKernel( mKernelName, *pProgram ) );
+			
+			SuccessfullBuiltContexts.PushBack( Contexts[i] );
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Failed to load opencl stage " << mName << ": " << e.what() << std::endl;
+			pProgram.reset();
+			pKernel.reset();
+		}
+	}
+	
+	if ( !SuccessfullBuiltContexts.IsEmpty() )
+	{
+		std::Debug << "Loaded kernel (" << mKernelName << ") okay for " << this->mName << " on " << SuccessfullBuiltContexts.GetSize() << " contexts" << std::endl;
+		this->mOnChanged.OnTriggered(*this);
+	}
 }
 
 
@@ -107,10 +121,10 @@ void TOpenclRunner::Run()
 	
 
 
-void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data)
+void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	//	copy kernel in case it's replaced during run
-	auto Kernel = mKernel;
+	auto Kernel = GetKernel(ContextCl);
 	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
 		return;
 	auto FramePixels = Frame.GetFramePixels(mFilter,true);
@@ -136,7 +150,7 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			}
 		};
 		
-		auto CreateImageBuffer = [this,&Frame,&Data,&FramePixels]
+		auto CreateImageBuffer = [this,&Frame,&Data,&FramePixels,&ContextCl]
 		{
 			SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
@@ -145,7 +159,6 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			auto& StageTarget = pData->mImageBuffer;
 			if ( !StageTarget )
 			{
-				auto& ContextCl = mFilter.GetOpenclContext();
 				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
 				Opencl::TSync Semaphore;
 
@@ -170,7 +183,6 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		else
 		{
 			Soy::TSemaphore Semaphore;
-			auto& ContextCl = mFilter.GetOpenclContext();
 			ContextCl.PushJob( CreateImageBuffer, Semaphore );
 			Semaphore.Wait();
 		}
@@ -178,7 +190,7 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
 	
-	auto Init = [this,&Frame,&StageData](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	auto Init = [this,&Frame,&StageData,&ContextGl](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
 
@@ -200,7 +212,6 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		if ( StageData.mTexture.IsValid(false) )
 		{
 			//	"frag" is output
-			auto& ContextGl = mFilter.GetOpenglContext();
 			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
 			Iterations.PushBack( StageData.mTexture.GetWidth() );
 			Iterations.PushBack( StageData.mTexture.GetHeight() );
@@ -224,9 +235,8 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
 	
-	auto Finished = [&StageData,this](Opencl::TKernelState& Kernel)
+	auto Finished = [&StageData,this,&ContextGl](Opencl::TKernelState& Kernel)
 	{
-		auto& ContextGl = mFilter.GetOpenglContext();
 		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
 		
 		if ( StageData.mTexture.IsValid(false) )
@@ -245,7 +255,6 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	};
 	
 	//	run opencl
-	auto& ContextCl = mFilter.GetOpenclContext();
 	Soy::TSemaphore Semaphore;
 	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
 	ContextCl.PushJob( Job, Semaphore );
