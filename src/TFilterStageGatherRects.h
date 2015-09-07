@@ -134,6 +134,7 @@ public:
 	void				PushFrameData(const ArrayBridge<uint8>&& FrameData);
 	
 public:
+	std::mutex							mWriteThreadLock;
 	std::shared_ptr<TWriteFileStream>	mWriteThread;
 	std::string							mAtlasStage;
 	std::string							mOutputFilename;

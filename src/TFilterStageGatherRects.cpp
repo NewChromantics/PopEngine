@@ -605,19 +605,23 @@ void TWriteFileStream::PushData(const ArrayBridge<uint8>& Data)
 
 TFilterStage_WriteRectAtlasStream::~TFilterStage_WriteRectAtlasStream()
 {
+	mWriteThreadLock.lock();
 	if ( mWriteThread )
 	{
 		mWriteThread->WaitToFinish();
 		mWriteThread.reset();
 	}
+	mWriteThreadLock.unlock();
 }
 	
 void TFilterStage_WriteRectAtlasStream::PushFrameData(const ArrayBridge<uint8>&& FrameData)
 {
+	mWriteThreadLock.lock();
 	if ( !mWriteThread )
 	{
 		mWriteThread.reset( new TWriteFileStream( mOutputFilename ) );
 	}
+	mWriteThreadLock.unlock();
 
 	mWriteThread->PushData( FrameData );
 }
