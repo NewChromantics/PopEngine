@@ -332,7 +332,10 @@ bool TPlayerFilter::Iteration()
 		
 		auto FrameTime = FirstFrame->first;
 		//std::Debug << "Deleting frame " << FrameTime << std::endl;
-		DeleteFrame( FrameTime );
+
+		//	this frame was still in use, skip over it and wait for next wake
+		if ( !DeleteFrame( FrameTime ) )
+			break;
 	}
 	
 	return true;

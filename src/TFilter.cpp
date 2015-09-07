@@ -125,6 +125,12 @@ TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 {
 }
 
+TFilterFrame::~TFilterFrame()
+{
+	std::Debug << "Frame destruction " << this->mFrameTime << std::endl;
+}
+
+
 void TFilterFrame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	//	shutdown all the datas
@@ -545,7 +551,7 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 	return Frame;
 }
 
-void TFilter::DeleteFrame(SoyTime FrameTime)
+bool TFilter::DeleteFrame(SoyTime FrameTime)
 {
 	Soy::TScopeTimerPrint Timer1("Waiting for frame lock before pop",10);
 	mFramesLock.lock();
@@ -555,24 +561,52 @@ void TFilter::DeleteFrame(SoyTime FrameTime)
 	auto FrameIt = mFrames.find( FrameTime );
 	if ( FrameIt == mFrames.end() )
 	{
+		mFramesLock.unlock();
 		std::stringstream Error;
 		Error << "Frame " << FrameTime << " doesn't exist";
 		throw Soy::AssertException( Error.str() );
 	}
 	auto pFrame = FrameIt->second;
+
+	//	still being run!
+	if ( !pFrame->mRunLock.try_lock() )
+	{
+		std::Debug << "Tried to delete frame " << FrameTime << " which was still running" << std::endl;
+		mFramesLock.unlock();
+		return false;
+	}
+	//	unlock the successfull try
+	pFrame->mRunLock.unlock();
+
+	//	delete
 	mFrames.erase( FrameIt );
 	mFramesLock.unlock();
 	
-	//	wait for run to finish
-	Soy::TScopeTimerPrint Timer2("Waiting for frame to finish running before delete",10);
-	pFrame->mRunLock.lock();
-	Timer2.Stop();
-	
-	pFrame->Shutdown( GetOpenglContext(), GetOpenclContext() );
-	
-	pFrame->mRunLock.unlock();
+	if ( !CleanupIfLastFrame( pFrame ) )
+	{
+		std::Debug << "Was expecting this to be last instance of frame " << FrameTime << std::endl;
+	}
 	pFrame.reset();
+	std::Debug << "Deleted frame " << FrameTime << std::endl;
+	return true;
 }
+
+bool TFilter::CleanupIfLastFrame(std::shared_ptr<TFilterFrame>& Frame)
+{
+	Soy::Assert( Frame != nullptr, "CleanupIfLastFrame(null frame). Not sure what I might want to do here" );
+	
+	if ( Frame.use_count() > 1 )
+		return false;
+	
+	Frame->Shutdown( GetOpenglContext(), GetOpenclContext() );
+	
+	//	clear reference
+	Frame.reset();
+	
+	return true;
+}
+
+
 
 bool TFilter::Run(SoyTime Time)
 {
@@ -594,6 +628,9 @@ bool TFilter::Run(SoyTime Time)
 		
 	if ( Completed )
 		mOnRunCompleted.OnTriggered( Time );
+	
+	//	just in case it was deleted during/post run
+	CleanupIfLastFrame( Frame );
 	
 	return Completed;
 }

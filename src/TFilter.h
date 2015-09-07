@@ -43,6 +43,8 @@ public:
 		mFrameTime	( Time )
 	{
 	}
+	~TFilterFrame();
+	
 	bool		Run(TFilter& Filter,const std::string& Description);	//	gr: description to avoid passing meta data, like frame timestamp
 	void		Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl);
 	
@@ -165,7 +167,8 @@ public:
 	virtual TJobParam		GetUniform(const std::string& Name);
 
 	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
-	void					DeleteFrame(SoyTime Frame);
+	bool					DeleteFrame(SoyTime Frame);		//	returns false if it was still in use. throws if it doesnt exist
+	bool					CleanupIfLastFrame(std::shared_ptr<TFilterFrame>& Frame);	//	in case this is the last instance of a frame, cleanup. returns false if not last (in case we're expecting it to be)
 	
 	void					CreateBlitGeo(bool Blocking);	//	throws if failed to create (blocking only)
 	
