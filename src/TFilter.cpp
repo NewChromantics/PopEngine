@@ -489,6 +489,7 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	
 	//	grab the frame (create if nececssary)
 	std::shared_ptr<TFilterFrame> Frame;
+	mFramesLock.lock();
 	{
 		auto FrameIt = mFrames.find( Time );
 		if ( FrameIt == mFrames.end() )
@@ -502,16 +503,34 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 			Frame = FrameIt->second;
 		}
 	}
+	mFramesLock.unlock();
 	
 	//	gr: here we may have a problem where the original pixel buffer is getting overriden by the movie reader?
 	//	make source stage data and assign pixels. texture will be generated when first requested
-	std::shared_ptr<TFilterStageRuntimeData_Frame> SourceData = Frame->AllocData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
-	SourceData->mPixels = Pixels;
 	
-	OnFrameChanged( Time );
+	Frame->mRunLock.lock();
+	try
+	{
 
-	if ( IsNewFrame )
-		mOnFrameAdded.OnTriggered( Time );
+		std::shared_ptr<TFilterStageRuntimeData_Frame> SourceData = Frame->AllocData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
+		SourceData->mPixels = Pixels;
+		
+		OnFrameChanged( Time );
+
+		if ( IsNewFrame )
+			mOnFrameAdded.OnTriggered( Time );
+		
+		//	possible that this frame has been deleted, WHILST running?
+		if ( Frame.use_count() == 1 )
+		{
+			Frame->Shutdown( GetOpenglContext(), GetOpenclContext() );
+		}
+	}
+	catch (...)
+	{
+		Frame->mRunLock.unlock();
+		throw;
+	}
 }
 
 std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
@@ -527,6 +546,7 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 
 void TFilter::DeleteFrame(SoyTime FrameTime)
 {
+	mFramesLock.lock();
 	//	pop from list
 	auto FrameIt = mFrames.find( FrameTime );
 	if ( FrameIt == mFrames.end() )
@@ -535,10 +555,17 @@ void TFilter::DeleteFrame(SoyTime FrameTime)
 		Error << "Frame " << FrameTime << " doesn't exist";
 		throw Soy::AssertException( Error.str() );
 	}
-
 	auto pFrame = FrameIt->second;
 	mFrames.erase( FrameIt );
+	mFramesLock.unlock();
+	
+	//	wait for run to finish
+	pFrame->mRunLock.lock();
+	
 	pFrame->Shutdown( GetOpenglContext(), GetOpenclContext() );
+	std::Debug << "deleted frame " << FrameTime << std::endl;
+	
+	pFrame->mRunLock.unlock();
 	pFrame.reset();
 }
 
@@ -550,15 +577,16 @@ bool TFilter::Run(SoyTime Time)
 		return false;
 	
 	bool Completed = false;
-	
+
 	{
 		std::Debug << "Started run: " << Time << std::endl;
 		std::stringstream TimerName;
 		TimerName << "filter run " << Time;
 		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
+			
 		Completed = Frame->Run( *this, TimerName.str() );
 	}
-	
+		
 	if ( Completed )
 		mOnRunCompleted.OnTriggered( Time );
 	
@@ -574,7 +602,7 @@ void TFilter::QueueJob(std::function<bool(void)> Function)
 
 void TFilter::OnStagesChanged()
 {
-	static int ApplyToFrameCount = 2;
+	static int ApplyToFrameCount = 0;
 	
 	int Applications = 0;
 	

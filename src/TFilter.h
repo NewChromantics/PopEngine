@@ -64,13 +64,16 @@ public:
 	template<class RUNTIMEDATATYPE>
 	std::shared_ptr<RUNTIMEDATATYPE>	AllocData(const std::string& StageName)
 	{
+		mStageDataLock.lock();
 		auto it = mStageData.find( StageName );
 		if ( it == mStageData.end() )
 		{
 			mStageData[StageName].reset( new RUNTIMEDATATYPE() );
 			it = mStageData.find( StageName );
 		}
-		return std::dynamic_pointer_cast<RUNTIMEDATATYPE>( it->second );
+		std::shared_ptr<RUNTIMEDATATYPE> Data = std::dynamic_pointer_cast<RUNTIMEDATATYPE>( it->second );
+		mStageDataLock.unlock();
+		return Data;
 	}
 
 private:
@@ -86,6 +89,7 @@ public:
 	std::shared_ptr<SoyPixelsImpl>	GetFramePixels(TFilter& Filter,bool Blocking=true);
 	
 public:
+	std::mutex						mRunLock;		//	lock whilst running to avoid being deleted until it's finished
 	SoyTime									mFrameTime;
 	
 	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
@@ -170,6 +174,7 @@ public:
 	SoyEvent<const SoyTime>							mOnRunCompleted;	//	use for debugging or caching
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
+	std::mutex										mFramesLock;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
 	std::shared_ptr<Opengl::TGeometry>				mBlitQuad;		//	commonly used
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
@@ -177,4 +182,5 @@ public:
 	std::shared_ptr<Opencl::TContext>				mOpenclContext;
 	std::shared_ptr<Opencl::TDevice>				mOpenclDevice;
 };
+
 
