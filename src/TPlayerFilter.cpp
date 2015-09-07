@@ -1,10 +1,13 @@
 #include "TPlayerFilter.h"
 #include "TFilterStageOpengl.h"
+#include "SoyMovieDecoder.h"
 
 
-TPlayerFilter::TPlayerFilter(const std::string& Name) :
+TPlayerFilter::TPlayerFilter(const std::string& Name,size_t MaxFrames,size_t MaxRunThreads) :
 	SoyWorkerThread	( std::string("Player Filter ")+Name, SoyWorkerWaitMode::Wake ),
-	TFilter			( Name )
+	TFilter			( Name ),
+	mRunThreads		( MaxRunThreads ),
+	mMaxFrames		( MaxFrames )
 {
 	mCylinderPixelWidth = 10;
 	mCylinderPixelHeight = 19;
@@ -26,6 +29,52 @@ TPlayerFilter::TPlayerFilter(const std::string& Name) :
 	WakeOnEvent( mOnFrameAdded );
 	Start();
 }
+
+void TPlayerFilter::SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event)
+{
+	auto BlockAndRun = [this](TVideoDevice& Video)
+	{
+		std::stringstream LastError;
+		auto& LastFrame = Video.GetLastFrame(LastError);
+		if ( !LastError.str().empty() )
+			return;
+
+		auto FramePixels = LastFrame.GetPixelsShared();
+		auto Time = LastFrame.GetTime();
+		
+		//	copy pixels
+		std::shared_ptr<SoyPixelsImpl> Pixels( new SoyPixels );
+		Pixels->Copy( *FramePixels );
+		
+		class TRunPixelsJob : public PopWorker::TJob
+		{
+		public:
+			TRunPixelsJob(TFilter& Filter,std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time) :
+				mFilter		( Filter ),
+				mTime		( Time ),
+				mPixels		( Pixels )
+			{
+			}
+			
+			virtual void	Run()
+			{
+				//std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+				mFilter.LoadFrame( mPixels, mTime );
+			}
+
+			TFilter&						mFilter;
+			SoyTime							mTime;
+			std::shared_ptr<SoyPixelsImpl>	mPixels;
+		};
+		
+		std::shared_ptr<PopWorker::TJob> Job( new TRunPixelsJob( *this, Pixels, Time ) );
+		std::Debug << "Queueing load of " << Time << std::endl;
+		mRunThreads.Run( Job );
+	};
+	
+	Event.AddListener( BlockAndRun );
+}
+
 
 TJobParam TPlayerFilter::GetUniform(const std::string& Name)
 {
@@ -273,8 +322,7 @@ std::ostream& operator<<(std::ostream &out,const TExtractedPlayer& in)
 bool TPlayerFilter::Iteration()
 {
 	//	check to see if we should delete some frames
-	static int MaxFrames = 5;
-	while ( mFrames.size() > MaxFrames )
+	while ( mFrames.size() > mMaxFrames )
 	{
 		//	todo: make sure we get oldest
 		auto FirstFrame = mFrames.begin();
@@ -288,3 +336,56 @@ bool TPlayerFilter::Iteration()
 	
 	return true;
 }
+
+
+
+
+TThreadPool::TThreadPool(size_t MaxThreads) :
+	mMaxRunThreads	( MaxThreads )
+{
+	
+}
+	
+void TThreadPool::Run(std::shared_ptr<PopWorker::TJob>& Function)
+{
+	//	gr: add a conditional and a wake when a thread frees to avoid the giant loop
+	while ( true )
+	{
+		//	look for free thread
+		for ( int t=0;	t<mRunThreads.GetSize();	t++ )
+		{
+			//	gr: though shared_ptr is atomic, I think we might still need the lock as something can jump in. maybe there's a swap if null thing
+			mArrayLock.lock();
+			if ( mRunThreads[t] )
+			{
+				if ( mRunThreads[t]->IsRunning() )
+				{
+					mArrayLock.unlock();
+					continue;
+				}
+				
+				//	finished, free it so we can use it
+				mRunThreads[t].reset();
+			}
+			
+			mRunThreads[t].reset( new TWorkThread(Function) );
+			mArrayLock.unlock();
+			
+			//	wait for it to finish then release again
+			//mRunThreads[t]->join();
+			//mRunThreads[t].reset();
+			return;
+		}
+		
+		//	no idle threads, make some if we have space, and try on next iteration (for cleaner code)
+		if ( mRunThreads.GetSize() < mMaxRunThreads )
+		{
+			mArrayLock.lock();
+			mRunThreads.PushBack();
+			mArrayLock.unlock();
+		}
+		
+		std::this_thread::sleep_for( std::chrono::milliseconds(100) );
+	}
+}
+

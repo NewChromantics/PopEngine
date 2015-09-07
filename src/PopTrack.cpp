@@ -14,7 +14,9 @@
 #include <TChannelFile.h>
 
 
-#define JOB_THREAD_COUNT	1
+#define FILTER_MAX_FRAMES	5
+#define FILTER_MAX_THREADS	1
+#define JOB_THREAD_COUNT	0
 
 TPopTrack::TPopTrack() :
 	TJobHandler			( static_cast<TChannelManager&>(*this), JOB_THREAD_COUNT ),
@@ -269,6 +271,7 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 	{
 		Reply.mParams.AddDefaultParam( FilterName );
 	
+		/*
 		//	subscribe to the video's new frame loading
 		auto OnNewFrameRelay = [Filter,this](TVideoDevice& Video)
 		{
@@ -308,6 +311,8 @@ void TPopTrack::OnStartDecode(TJobAndChannel& JobAndChannel)
 			}
 		};
 		Device->mOnNewFrame.AddListener( OnNewFrameRelay );
+		 */
+		Filter->SetOnNewVideoEvent( Device->mOnNewFrame );
 	}
 	 
 	Reply.mParams.AddDefaultParam( FilterName );
@@ -510,7 +515,7 @@ std::shared_ptr<TPlayerFilter> TPopTrack::GetFilter(const std::string& Name)
 	}
 	
 	//	make new
-	std::shared_ptr<TPlayerFilter> Filter( new TPlayerFilter(Name) );
+	std::shared_ptr<TPlayerFilter> Filter( new TPlayerFilter(Name, FILTER_MAX_FRAMES, FILTER_MAX_THREADS ) );
 	mFilters.PushBack( Filter );
 	
 	return Filter;
