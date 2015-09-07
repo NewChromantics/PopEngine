@@ -2,7 +2,8 @@
 
 # push some test input
 #loadframe mancity01 time=1001 input01_undistorted.png
-decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
+#decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
+decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
 
 # set meta data
 #setuniform input01 MaskTopLeft=0.279179305x0.43300119
@@ -39,7 +40,7 @@ setuniform mancity01 LensOffsetY=.0500000007
 
 
 setuniform mancity01 RectMergeMax=50
-setuniform mancity01 AtlasWidth=128 AtlasHeight=256
+setuniform mancity01 AtlasWidth=128 AtlasHeight=512
 
 # add shader called crop to filter
 addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag
@@ -54,6 +55,6 @@ addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 addstage mancity01 GatherMinMaxs cl=GatherRects.cl kernel=GatherMinMaxs
 addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
 addstage mancity01 MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
-addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=mancity01.rectatlasstream
+addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
 
 

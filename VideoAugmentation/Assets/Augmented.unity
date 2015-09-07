@@ -173,8 +173,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mMovieTexture: {fileID: 8400000, guid: abe4466ad47604bc8b9c3f2106c3cf98, type: 2}
-  mMovieFilename: ManCity_Camera1.mp4
-  mMaskTexture: {fileID: 2800000, guid: 2adba144a1692464fb67bb52e38dd525, type: 3}
+  mMovieFilename: ManCity_Camera1_126.mp4
+  mMaskTexture: {fileID: 2800000, guid: b6a1910282da245eaa6276d06daf43d6, type: 3}
   mRectStreamParser: {fileID: 2093295881}
   mBlitRectShader: {fileID: 4800000, guid: 49da720a1c6bb47ce8a2e10eec6d01ff, type: 3}
   mDeltaMultiplier: 1
@@ -207,7 +207,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_Materials:
-  - {fileID: 2100000, guid: 96217bcd608fd47c1ad3697849c0af60, type: 2}
+  - {fileID: 2100000, guid: 92eee7e3ff59745c5a18fd8022d91e47, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 1
@@ -320,6 +320,7 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
+  m_TargetEye: 3
   m_HDR: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -364,7 +365,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a260a7ce13e884469bb708369e833290, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mRectAtlasFilename: mancity01.rectatlasstream
+  mRectAtlasFilename: ManCity_Camera1_126.rectatlasstream
+  mParsesPerFrame: 5
 --- !u!4 &2093295882
 Transform:
   m_ObjectHideFlags: 0
