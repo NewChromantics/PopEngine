@@ -531,6 +531,7 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 		Frame->mRunLock.unlock();
 		throw;
 	}
+	Frame->mRunLock.unlock();
 }
 
 std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
@@ -546,7 +547,10 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 
 void TFilter::DeleteFrame(SoyTime FrameTime)
 {
+	Soy::TScopeTimerPrint Timer1("Waiting for frame lock before pop",10);
 	mFramesLock.lock();
+	Timer1.Stop();
+
 	//	pop from list
 	auto FrameIt = mFrames.find( FrameTime );
 	if ( FrameIt == mFrames.end() )
@@ -560,10 +564,11 @@ void TFilter::DeleteFrame(SoyTime FrameTime)
 	mFramesLock.unlock();
 	
 	//	wait for run to finish
+	Soy::TScopeTimerPrint Timer2("Waiting for frame to finish running before delete",10);
 	pFrame->mRunLock.lock();
+	Timer2.Stop();
 	
 	pFrame->Shutdown( GetOpenglContext(), GetOpenclContext() );
-	std::Debug << "deleted frame " << FrameTime << std::endl;
 	
 	pFrame->mRunLock.unlock();
 	pFrame.reset();
