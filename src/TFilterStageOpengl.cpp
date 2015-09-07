@@ -92,7 +92,7 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 		return Kernel.SetUniform( Uniform.mName.c_str(), *mImageBuffer );
 	}
 	
-	auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext() );
+	auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext(), true );
 	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter );
 }
 
@@ -109,7 +109,7 @@ void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Op
 }
 
 
-Opengl::TTexture TFilterStageRuntimeData_ShaderBlit::GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+Opengl::TTexture TFilterStageRuntimeData_ShaderBlit::GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking)
 {
 	if ( mTexture.IsValid(false) )
 		return mTexture;
@@ -117,17 +117,43 @@ Opengl::TTexture TFilterStageRuntimeData_ShaderBlit::GetTexture(Opengl::TContext
 	//	convert image buffer if it's there
 	if ( mImageBuffer )
 	{
-		auto Read = [this,&ContextGl]
+		auto Read = [this,&ContextGl,Blocking]
 		{
 			Opengl::TTextureAndContext TextureAndContext( mTexture, ContextGl );
-			//Opencl::TSync Semaphore;
-			mImageBuffer->Read( TextureAndContext, nullptr );// &Semaphore );
-		//	Semaphore.Wait();
+
+			if ( Blocking )
+			{
+				Opencl::TSync Semaphore;
+				mImageBuffer->Read( TextureAndContext, &Semaphore );
+				Semaphore.Wait();
+			}
+			else
+			{
+				mImageBuffer->Read( TextureAndContext, nullptr );
+			}
 		};
 		
-		//Soy::TSemaphore Semaphore;
-		ContextCl.PushJob( Read );//, Semaphore );
-	//	Semaphore.Wait();
+		//	make a texture
+		auto MakeTexture = [this]
+		{
+			mTexture = std::move( Opengl::TTexture( mImageBuffer->GetMeta(), GL_TEXTURE_2D ) );
+		};
+		
+		if ( Blocking )
+		{
+			Soy::TSemaphore SemaphoreGl;
+			ContextGl.PushJob( MakeTexture, SemaphoreGl );
+			SemaphoreGl.Wait();
+
+			Soy::TSemaphore SemaphoreCl;
+			ContextCl.PushJob( Read, SemaphoreCl );
+			SemaphoreCl.Wait();
+		}
+		else
+		{
+			ContextGl.PushJob( MakeTexture );
+			ContextCl.PushJob( Read );
+		}
 	}
 
 	return mTexture;

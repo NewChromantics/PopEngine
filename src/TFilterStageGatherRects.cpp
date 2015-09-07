@@ -344,10 +344,10 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto& Rects = RectData.mRects;
 
 	auto& ImageData = Frame.GetData<TFilterStageRuntimeData>( mImageStage );
-	auto ImageTexture = ImageData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext() );
+	auto ImageTexture = ImageData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext(), true );
 	
 	auto& MaskData = Frame.GetData<TFilterStageRuntimeData>( mMaskStage );
-	auto MaskTexture = MaskData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext()  );
+	auto MaskTexture = MaskData.GetTexture( mFilter.GetOpenglContext(), mFilter.GetOpenclContext(), true  );
 	
 	//	make sure geo & shader are allocated
 	CreateBlitResources();
@@ -464,6 +464,9 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		RectLeft = DestRect.Right() + Border.x;
 		RowHeight = std::max( RowHeight, size_cast<size_t>(DestRect.h) );
 	}
+	
+	if ( FilledTexture )
+		std::Debug << "Warning: MakeRectAtlas overflowed the texture, lost some rects" << std::endl;
 
 	//	wait for all blits to finish
 	{
@@ -528,29 +531,28 @@ bool TWriteFileStream::CanSleep()
 
 bool TWriteFileStream::Iteration()
 {
-	//	gr: wtf is this
-	if ( this == nullptr )
-		return false;
-	
 	BufferArray<uint8,1024*1024> Buffer;
+	auto BufferBridge = GetArrayBridge(Buffer);
 
 	//	write any pending data
 	mPendingDataLock.lock();
-	try
+	//try
 	{
 		//	pop a chunk of data and continue
 		auto PopSize = std::min( Buffer.MaxSize(), mPendingData.GetDataSize() );
 		std::Debug << "Popped " << PopSize << "/" << mPendingData.GetDataSize() << std::endl;
-		GetArrayBridge(Buffer).PushBackReinterpret( mPendingData.GetArray(), PopSize );
+		BufferBridge.PushBackReinterpret( mPendingData.GetArray(), PopSize );
 		mPendingData.RemoveBlock( 0, PopSize );
 		mPendingDataLock.unlock();
 		
 	}
+	/*
 	catch (...)
 	{
 		mPendingDataLock.unlock();
 		throw;
 	}
+	 */
 
 	//	wasn't anything to write
 	if ( Buffer.IsEmpty() )

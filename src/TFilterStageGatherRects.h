@@ -27,7 +27,7 @@ public:
 	{
 		return false;
 	}
-	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override	{	return Opengl::TTexture();	}
+	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking) override	{	return Opengl::TTexture();	}
 	
 public:
 	Array<cl_float4>		mRects;
@@ -89,7 +89,7 @@ public:
 	{
 		return false;
 	}
-	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override	{	return mTexture;	}
+	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking) override	{	return mTexture;	}
 	
 public:
 	Array<Soy::Rectf>		mSourceRects;
