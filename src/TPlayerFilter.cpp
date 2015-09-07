@@ -68,7 +68,8 @@ void TPlayerFilter::SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event)
 		};
 		
 		std::shared_ptr<PopWorker::TJob> Job( new TRunPixelsJob( *this, Pixels, Time ) );
-		std::Debug << "Queueing load of " << Time << std::endl;
+		Pixels.reset();
+		//std::Debug << "Queueing load of " << Time << std::endl;
 		mRunThreads.Run( Job );
 	};
 	
@@ -338,7 +339,28 @@ bool TPlayerFilter::Iteration()
 }
 
 
+TWorkThread::TWorkThread(std::shared_ptr<PopWorker::TJob>& Job) :
+	mJob		( Job ),
+	mThread		( [this]{	this->Run();	} )
+{
+}
 
+TWorkThread::~TWorkThread()
+{
+	mThread.join();
+	Soy::Assert( mJob == nullptr, "Job should have been cleared" );
+}
+
+void TWorkThread::Run()
+{
+	mJob->Run();
+	mJob.reset();
+}
+
+bool TWorkThread::IsRunning()
+{
+	return mJob != nullptr;
+}
 
 TThreadPool::TThreadPool(size_t MaxThreads) :
 	mMaxRunThreads	( MaxThreads )

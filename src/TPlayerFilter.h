@@ -23,17 +23,11 @@ public:
 class TWorkThread
 {
 public:
-	TWorkThread(std::shared_ptr<PopWorker::TJob>& Job) :
-		mJob		( Job ),
-		mThread		( [this]{	mJob->Run();	mJob.reset();	} )
-	{
-	}
-	~TWorkThread()
-	{
-		mThread.join();
-	}
+	TWorkThread(std::shared_ptr<PopWorker::TJob>& Job);
+	~TWorkThread();
 	
-	bool								IsRunning()	{	return mJob != nullptr;	}
+	void				Run();
+	bool				IsRunning();
 	
 private:
 	std::shared_ptr<PopWorker::TJob>	mJob;
