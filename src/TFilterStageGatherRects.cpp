@@ -613,7 +613,9 @@ void TWriteFileStream::PushData(const ArrayBridge<uint8>& Data)
 		return;
 #endif
 	
+	Soy::TScopeTimerPrint LockTimer("Waiting for pending data lock",2);
 	mPendingDataLock.lock();
+	LockTimer.Stop();
 	try
 	{
 		mPendingData.PushBackArray( Data );

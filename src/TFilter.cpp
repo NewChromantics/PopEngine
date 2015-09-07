@@ -527,17 +527,15 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 			mOnFrameAdded.OnTriggered( Time );
 		
 		//	possible that this frame has been deleted, WHILST running?
-		if ( Frame.use_count() == 1 )
-		{
-			Frame->Shutdown( GetOpenglContext(), GetOpenclContext() );
-		}
+		Frame->mRunLock.unlock();
+		CleanupIfLastFrame( Frame );
 	}
 	catch (...)
 	{
 		Frame->mRunLock.unlock();
+		CleanupIfLastFrame( Frame );
 		throw;
 	}
-	Frame->mRunLock.unlock();
 }
 
 std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
@@ -595,8 +593,22 @@ bool TFilter::CleanupIfLastFrame(std::shared_ptr<TFilterFrame>& Frame)
 {
 	Soy::Assert( Frame != nullptr, "CleanupIfLastFrame(null frame). Not sure what I might want to do here" );
 	
-	if ( Frame.use_count() > 1 )
+	if ( !Frame.unique() )
+	{
+		//	gr: see if this helps catch the occasional mis-aligned delete
+		Frame.reset();
 		return false;
+	}
+	
+	//	gr: check in case the lock is active... don't think we should be unique if that's the case
+	if ( !Frame->mRunLock.try_lock() )
+	{
+		std::Debug << "During frame safe cleanup, run lock was active." << std::endl;
+	}
+	else
+	{
+		Frame->mRunLock.unlock();
+	}
 	
 	Frame->Shutdown( GetOpenglContext(), GetOpenclContext() );
 	
