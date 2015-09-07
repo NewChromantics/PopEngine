@@ -259,7 +259,7 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	//	prefetch frame texture
 	{
-		Soy::TScopeTimerPrint Timer("Frame.GetFrameTexture",50);
+		//Soy::TScopeTimerPrint Timer("Frame.GetFrameTexture",50);
 		auto FrameTexture = Frame.GetFrameTexture( mFilter, true );
 	}
 	

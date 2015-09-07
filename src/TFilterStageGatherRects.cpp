@@ -140,9 +140,13 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 			Rects.RemoveBlock( r, 1 );
 		}
 		
-		auto Time = Timer.Stop(false);
-		auto RemoveCount = PreMergeCount - Rects.GetSize();
-		std::Debug << mName << " post merge removed " << RemoveCount << "/" << PreMergeCount << " rects in " << Time << "ms" << std::endl;
+		static bool DebugMerge = false;
+		if ( DebugMerge )
+		{
+			auto Time = Timer.Stop(false);
+			auto RemoveCount = PreMergeCount - Rects.GetSize();
+			std::Debug << mName << " post merge removed " << RemoveCount << "/" << PreMergeCount << " rects in " << Time << "ms" << std::endl;
+		}
 	}
 	
 	
@@ -470,7 +474,7 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 
 	//	wait for all blits to finish
 	{
-		Soy::TScopeTimerPrint BlitWaitTimer("MakeRectAtlas blit wait",5);
+		//Soy::TScopeTimerPrint BlitWaitTimer("MakeRectAtlas blit wait",5);
 		for ( int i=0;	i<Waits.GetSize();	i++ )
 		{
 			auto& Wait = Waits[i];

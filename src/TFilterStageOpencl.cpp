@@ -180,7 +180,7 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	
 	auto Init = [this,&Frame,&StageData](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
 	{
-		ofScopeTimerWarning Timer("opencl blit init",40);
+		//ofScopeTimerWarning Timer("opencl blit init",40);
 
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
