@@ -120,6 +120,7 @@ public:
 #endif
 	std::mutex		mPendingDataLock;
 	Array<uint8>	mPendingData;
+	Array<uint8>	mStaticWriteBuffer;
 };
 
 class TFilterStage_WriteRectAtlasStream : public TFilterStage

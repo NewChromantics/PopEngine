@@ -544,7 +544,9 @@ bool TWriteFileStream::CanSleep()
 
 bool TWriteFileStream::Iteration()
 {
-	BufferArray<uint8,1024*20> Buffer;
+	static size_t BufferSize = 1024 * 1024 * 5;
+	mStaticWriteBuffer.Reserve( BufferSize, true );
+	auto& Buffer = mStaticWriteBuffer;
 	auto BufferBridge = GetArrayBridge(Buffer);
 
 	//	write any pending data
@@ -552,7 +554,8 @@ bool TWriteFileStream::Iteration()
 	//try
 	{
 		//	pop a chunk of data and continue
-		auto PopSize = std::min( Buffer.MaxSize(), mPendingData.GetDataSize() );
+		//auto PopSize = std::min( Buffer.MaxSize(), mPendingData.GetDataSize() );
+		auto PopSize = std::min( BufferSize, mPendingData.GetDataSize() );
 		BufferBridge.PushBackReinterpret( mPendingData.GetArray(), PopSize );
 		mPendingData.RemoveBlock( 0, PopSize );
 		mPendingDataLock.unlock();
