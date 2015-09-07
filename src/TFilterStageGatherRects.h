@@ -99,7 +99,7 @@ public:
 
 
 
-
+//#define USE_STREAM
 
 class TWriteFileStream : public SoyWorkerThread
 {
@@ -113,7 +113,11 @@ public:
 	void			PushData(const ArrayBridge<uint8>& Data);
 	
 public:
+#if defined(USE_STREAM)
 	std::shared_ptr<std::ofstream>	mStream;
+#else
+	FILE*			mFile;
+#endif
 	std::mutex		mPendingDataLock;
 	Array<uint8>	mPendingData;
 };

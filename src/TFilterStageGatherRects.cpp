@@ -501,11 +501,16 @@ void TFilterStageRuntimeData_MakeRectAtlas::Shutdown(Opengl::TContext& ContextGl
 
 
 TWriteFileStream::TWriteFileStream(const std::string& Filename) :
-	SoyWorkerThread		( Soy::GetTypeName(*this) + Filename, SoyWorkerWaitMode::Wake )
+	SoyWorkerThread		( Soy::GetTypeName(*this) /*+ Filename*/, SoyWorkerWaitMode::Wake )
 {
 	//	open file
+#if defined(USE_STREAM)
 	mStream.reset( new std::ofstream( Filename, std::ios::binary|std::ios::out ) );
 	if ( !mStream->is_open() )
+#else
+	mFile = fopen( Filename.c_str(), "wb" );
+	if ( !mFile )
+#endif
 	{
 		std::stringstream Error;
 		Error << "Failed to open " << Filename << " for writing to";
@@ -519,11 +524,15 @@ TWriteFileStream::~TWriteFileStream()
 {
 	//	wait for writes
 	mPendingDataLock.lock();
+#if defined(USE_STREAM)
 	if ( mStream )
 	{
 		mStream->close();
 		mStream.reset();
 	}
+#else
+	fclose( mFile );
+#endif
 	mPendingDataLock.unlock();
 }
 
@@ -535,7 +544,7 @@ bool TWriteFileStream::CanSleep()
 
 bool TWriteFileStream::Iteration()
 {
-	BufferArray<uint8,1024*1024> Buffer;
+	BufferArray<uint8,1024*20> Buffer;
 	auto BufferBridge = GetArrayBridge(Buffer);
 
 	//	write any pending data
@@ -561,6 +570,7 @@ bool TWriteFileStream::Iteration()
 	if ( Buffer.IsEmpty() )
 		return true;
 	
+#if defined(USE_STREAM)
 	auto Stream = mStream;
 	
 	//	file has been closed
@@ -578,16 +588,27 @@ bool TWriteFileStream::Iteration()
 	}
 	
 	//	gr: make this flush occur every so often
-	//Stream->flush();
-	
+	Stream->flush();
+#else
+	size_t Written = 0;
+	while ( Written < Buffer.GetDataSize() )
+	{
+		Written += fwrite( Buffer.GetArray()+Written, 1, Buffer.GetDataSize()-Written, mFile );
+	}
+#endif
 	return true;
 }
 
 void TWriteFileStream::PushData(const ArrayBridge<uint8>& Data)
 {
 	//	closed stream, this write just comes after
+#if defined(USE_STREAM)
 	if ( !mStream )
 		return;
+#else 
+	if ( !mFile )
+		return;
+#endif
 	
 	mPendingDataLock.lock();
 	try
