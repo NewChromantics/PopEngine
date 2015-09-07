@@ -44,8 +44,8 @@ TVideoDeviceMeta GetDecoderMeta(const TVideoDecoderParams& Params,const std::str
 }
 
 TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial,std::shared_ptr<Opengl::TContext> OpenglContext) :
-TVideoDevice	( GetDecoderMeta(Params,Serial) ),
-SoyWorkerThread	( Params.mFilename, SoyWorkerWaitMode::Wake ),
+	TVideoDevice	( GetDecoderMeta(Params,Serial) ),
+	SoyWorkerThread	( Params.mFilename, SoyWorkerWaitMode::Wake ),
 mSerial			( Serial )
 {
 	mDecoder = Platform::AllocDecoder( Params, nullptr );
@@ -91,7 +91,10 @@ bool TMovieDecoder::Iteration()
 	Array<SoyPixelsImpl*> Pixels;
 	PixelBuffer->Lock( GetArrayBridge(Pixels) );
 	if ( Pixels.IsEmpty() )
+	{
+		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
 		return true;
+	}
 	
 	static bool DoNewFrameLock = true;
 	if ( DoNewFrameLock )
