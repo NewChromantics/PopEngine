@@ -78,7 +78,7 @@ void TOpenclRunner::Run()
 	auto Kernel = mKernel.Lock(mContext);
 
 	//	get iterations we want
-	Array<size_t> Iterations;
+	Array<vec2x<size_t>> Iterations;
 	Init( Kernel, GetArrayBridge( Iterations ) );
 	
 	//	divide up the iterations
@@ -190,7 +190,7 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
 	
-	auto Init = [this,&Frame,&StageData,&ContextGl](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	auto Init = [this,&Frame,&StageData,&ContextGl](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
 
@@ -208,20 +208,23 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 		}
 		
+		static size_t ImageCropX = 0;
+		static size_t ImageCropY = 0;
+		
 		//	set output depending on what we made
 		if ( StageData.mTexture.IsValid(false) )
 		{
 			//	"frag" is output
 			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
-			Iterations.PushBack( StageData.mTexture.GetWidth() );
-			Iterations.PushBack( StageData.mTexture.GetHeight() );
+			Iterations.PushBack( vec2x<size_t>(ImageCropX,StageData.mTexture.GetWidth()-ImageCropX) );
+			Iterations.PushBack( vec2x<size_t>(ImageCropY,StageData.mTexture.GetHeight()-ImageCropY) );
 		}
 		else if ( StageData.mImageBuffer )
 		{
 			//	"frag" is output
 			Kernel.SetUniform("Frag", *StageData.mImageBuffer );
-			Iterations.PushBack( StageData.mImageBuffer->GetMeta().GetWidth() );
-			Iterations.PushBack( StageData.mImageBuffer->GetMeta().GetHeight() );
+			Iterations.PushBack( vec2x<size_t>(ImageCropX,StageData.mImageBuffer->GetMeta().GetWidth()-ImageCropX) );
+			Iterations.PushBack( vec2x<size_t>(ImageCropY,StageData.mImageBuffer->GetMeta().GetHeight()-ImageCropY) );
 		}
 		else
 		{

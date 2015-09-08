@@ -67,7 +67,7 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(StageData.mRects), ContextCl, "RectBuffer" );
 	Opencl::TBufferArray<cl_int> RectBufferCounter( GetArrayBridge(RectBufferCountArray), ContextCl, "RectBufferCounter" );
 	
-	auto Init = [this,&Frame,&RectBuffer,&RectBufferCounter,&FrameWidth,&FrameHeight](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	auto Init = [this,&Frame,&RectBuffer,&RectBufferCounter,&FrameWidth,&FrameHeight](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -77,13 +77,16 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
 				continue;
 		}
-		
+	
+		static size_t ImageCropX = 0;
+		static size_t ImageCropY = 0;
+	
 		Kernel.SetUniform("Matches", RectBuffer );
 		Kernel.SetUniform("MatchesCount", RectBufferCounter );
 		Kernel.SetUniform("MatchesMax", size_cast<cl_int>(RectBuffer.GetSize()) );
 	
-		Iterations.PushBack( FrameWidth );
-		Iterations.PushBack( FrameHeight );
+		Iterations.PushBack( vec2x<size_t>(ImageCropX,FrameWidth-ImageCropX) );
+		Iterations.PushBack( vec2x<size_t>(ImageCropY,FrameHeight-ImageCropY) );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
@@ -182,7 +185,7 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	Opencl::TBufferArray<cl_float4> RectBuffer( GetArrayBridge(Rects), ContextCl, "Distort rects rect buffer" );
 	
 
-	auto Init = [this,&Frame,&RectBuffer,&Rects](Opencl::TKernelState& Kernel,ArrayBridge<size_t>& Iterations)
+	auto Init = [this,&Frame,&RectBuffer,&Rects](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -194,7 +197,7 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		}
 
 		Kernel.SetUniform("MinMaxs", RectBuffer );
-		Iterations.PushBack( Rects.GetSize() );
+		Iterations.PushBack( vec2x<size_t>(0,Rects.GetSize()) );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)

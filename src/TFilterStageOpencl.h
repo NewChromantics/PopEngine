@@ -21,7 +21,7 @@ public:
 protected:
 	//	get iterations and can setup first set of kernel args
 	//	number of elements in the array dictates dimensions
-	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<size_t>&& Iterations)=0;
+	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>&& Iterations)=0;
 	
 	//	set any iteration-specific args
 	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)=0;
@@ -38,7 +38,7 @@ public:
 class TOpenclRunnerLambda : public TOpenclRunner
 {
 public:
-	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda) :
+	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda) :
 	TOpenclRunner		( Context, Kernel ),
 	mIterationLambda	( IterationLambda ),
 	mInitLambda			( InitLambda ),
@@ -46,24 +46,24 @@ public:
 	{
 	}
 	
-	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<size_t>&& Iterations)
+	virtual void		Init(Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>&& Iterations) override
 	{
 		mInitLambda( Kernel, Iterations );
 	}
 	
-	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block)
+	virtual void		RunIteration(Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& WorkGroups,bool& Block) override
 	{
 		mIterationLambda( Kernel, WorkGroups, Block );
 	}
 	
 	//	after last iteration - read back data etc
-	virtual void		OnFinished(Opencl::TKernelState& Kernel)
+	virtual void		OnFinished(Opencl::TKernelState& Kernel) override
 	{
 		mFinishedLambda( Kernel );
 	}
 	
 public:
-	std::function<void(Opencl::TKernelState&,ArrayBridge<size_t>&)>	mInitLambda;
+	std::function<void(Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)>	mInitLambda;
 	std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)>	mIterationLambda;
 	std::function<void(Opencl::TKernelState&)>						mFinishedLambda;
 };
