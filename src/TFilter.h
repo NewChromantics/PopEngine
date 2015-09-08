@@ -10,6 +10,20 @@ class TFilter;
 class TFilterFrame;
 class TFilterStageRuntimeData;
 
+/*
+static size_t ImageCropLeft = 0;
+static size_t ImageCropRight = 0;
+static size_t ImageCropTop = 0;
+static size_t ImageCropBottom = 0;
+*/
+
+static size_t ImageCropLeft = 0;
+static size_t ImageCropRight = 100;
+static size_t ImageCropTop = 1170;
+static size_t ImageCropBottom = 400;
+
+
+
 namespace Opengl
 {
 	class TContext;

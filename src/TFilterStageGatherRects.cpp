@@ -78,17 +78,6 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 				continue;
 		}
 	
-		/*
-		static size_t ImageCropLeft = 300;
-		static size_t ImageCropRight = 1400;
-		static size_t ImageCropTop = 1000;
-		static size_t ImageCropBottom = 800;
-		*/
-		static size_t ImageCropLeft = 0;
-		static size_t ImageCropRight = 0;
-		static size_t ImageCropTop = 0;
-		static size_t ImageCropBottom = 0;
-	
 		Kernel.SetUniform("Matches", RectBuffer );
 		Kernel.SetUniform("MatchesCount", RectBufferCounter );
 		Kernel.SetUniform("MatchesMax", size_cast<cl_int>(RectBuffer.GetSize()) );
