@@ -194,7 +194,7 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 		//	get data pointer for this stage, if it's null the stage should allocate what it needs
 		//	gr: need a better lock...
 		auto& StageName = pStage->mName;
-		mStageDataLock.lock();
+		mStageDataLock.lock( std::string("pre-Run get Stage Data ") + StageName );
 		auto& pData = Frame.mStageData[StageName];
 		mStageDataLock.unlock();
 		
@@ -208,7 +208,7 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 			Success = false;
 			std::Debug << "Stage " << pStage->mName << " failed: " << e.what() << std::endl;
 		}
-		mStageDataLock.lock();
+		mStageDataLock.lock( std::string("post-Run place stageData ") + StageName );
 		Frame.mStageData[StageName] = pData;
 		mStageDataLock.unlock();
 		
@@ -495,7 +495,9 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	
 	//	grab the frame (create if nececssary)
 	std::shared_ptr<TFilterFrame> Frame;
-	mFramesLock.lock();
+	std::stringstream LoadLockName;
+	LoadLockName << "Load lock " << Time;
+	mFramesLock.lock( LoadLockName.str() );
 	{
 		auto FrameIt = mFrames.find( Time );
 		if ( FrameIt == mFrames.end() )
@@ -514,7 +516,9 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	//	gr: here we may have a problem where the original pixel buffer is getting overriden by the movie reader?
 	//	make source stage data and assign pixels. texture will be generated when first requested
 	
-	Frame->mRunLock.lock();
+	std::stringstream RunLockName;
+	RunLockName << "Run lock " << Time;
+	Frame->mRunLock.lock(RunLockName.str());
 	try
 	{
 
@@ -548,9 +552,7 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 
 bool TFilter::DeleteFrame(SoyTime FrameTime)
 {
-	Soy::TScopeTimerPrint Timer1("Waiting for frame lock before pop",10);
-	mFramesLock.lock();
-	Timer1.Stop();
+	mFramesLock.lock("Waiting for frame lock before pop");
 
 	//	pop from list
 	auto FrameIt = mFrames.find( FrameTime );

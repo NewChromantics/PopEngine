@@ -32,7 +32,7 @@ public:
 	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 	
 public:
-	std::mutex				mConversionLock;		//	rarely need this but 
+	Soy::Mutex_Profiled				mConversionLock;		//	rarely need this but
 	Opengl::TTexture		mTexture;
 	std::shared_ptr<Opencl::TBufferImage>	mImageBuffer;
 };

@@ -92,7 +92,7 @@ public:
 	template<class RUNTIMEDATATYPE>
 	std::shared_ptr<RUNTIMEDATATYPE>	AllocData(const std::string& StageName)
 	{
-		mStageDataLock.lock();
+		mStageDataLock.lock(std::string("AllocStageData for ") + StageName );
 		auto it = mStageData.find( StageName );
 		if ( it == mStageData.end() )
 		{
@@ -118,11 +118,11 @@ public:
 	std::shared_ptr<SoyPixelsImpl>	GetFramePixels(TFilter& Filter,bool Blocking=true);
 	
 public:
-	std::mutex						mRunLock;		//	lock whilst running to avoid being deleted until it's finished
-	SoyTime									mFrameTime;
+	Soy::Mutex_Profiled				mRunLock;		//	lock whilst running to avoid being deleted until it's finished
+	SoyTime							mFrameTime;
 	
 	std::map<std::string,std::shared_ptr<TFilterStageRuntimeData>>	mStageData;
-	std::mutex								mStageDataLock;
+	Soy::Mutex_Profiled				mStageDataLock;
 	
 };
 
@@ -206,7 +206,7 @@ public:
 	SoyEvent<const SoyTime>							mOnRunCompleted;	//	use for debugging or caching
 	std::shared_ptr<TFilterWindow>					mWindow;		//	this also contains our context
 	std::map<SoyTime,std::shared_ptr<TFilterFrame>>	mFrames;
-	std::mutex										mFramesLock;
+	Soy::Mutex_Profiled								mFramesLock;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
 	std::shared_ptr<Opengl::TGeometry>				mBlitQuad;		//	commonly used
 	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs

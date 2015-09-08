@@ -521,7 +521,7 @@ TWriteFileStream::TWriteFileStream(const std::string& Filename) :
 TWriteFileStream::~TWriteFileStream()
 {
 	//	wait for writes
-	mPendingDataLock.lock();
+	mPendingDataLock.lock("~TWriteFileStream");
 #if defined(USE_STREAM)
 	if ( mStream )
 	{
@@ -536,7 +536,7 @@ TWriteFileStream::~TWriteFileStream()
 
 bool TWriteFileStream::CanSleep()
 {
-	std::lock_guard<std::mutex> Lock( mPendingDataLock );
+	//std::lock_guard<std::mutex> Lock( mPendingDataLock );
 	return mPendingData.IsEmpty();
 }
 
@@ -548,7 +548,7 @@ bool TWriteFileStream::Iteration()
 	auto BufferBridge = GetArrayBridge(Buffer);
 
 	//	write any pending data
-	mPendingDataLock.lock();
+	mPendingDataLock.lock("TWriteFileStream pop");
 	//try
 	{
 		//	pop a chunk of data and continue
@@ -611,9 +611,7 @@ void TWriteFileStream::PushData(const ArrayBridge<uint8>& Data)
 		return;
 #endif
 	
-	Soy::TScopeTimerPrint LockTimer("Waiting for pending data lock",2);
-	mPendingDataLock.lock();
-	LockTimer.Stop();
+	mPendingDataLock.lock("Waiting for pending data lock");
 	try
 	{
 		mPendingData.PushBackArray( Data );

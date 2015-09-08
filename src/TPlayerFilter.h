@@ -47,7 +47,7 @@ public:
 public:
 	Array<std::shared_ptr<TWorkThread>>	mRunThreads;
 	size_t					mMaxRunThreads;
-	std::mutex				mArrayLock;
+	Soy::Mutex_Profiled		mArrayLock;
 };
 
 

@@ -118,7 +118,7 @@ public:
 #else
 	FILE*			mFile;
 #endif
-	std::mutex		mPendingDataLock;
+	Soy::Mutex_Profiled		mPendingDataLock;
 	Array<uint8>	mPendingData;
 	Array<uint8>	mStaticWriteBuffer;
 };

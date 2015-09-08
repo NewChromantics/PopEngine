@@ -380,7 +380,7 @@ void TThreadPool::Run(std::shared_ptr<PopWorker::TJob>& Function)
 		for ( int t=0;	t<mRunThreads.GetSize();	t++ )
 		{
 			//	gr: though shared_ptr is atomic, I think we might still need the lock as something can jump in. maybe there's a swap if null thing
-			mArrayLock.lock();
+			mArrayLock.lock("thread pool find thread");
 			if ( mRunThreads[t] )
 			{
 				if ( mRunThreads[t]->IsRunning() )
@@ -405,7 +405,7 @@ void TThreadPool::Run(std::shared_ptr<PopWorker::TJob>& Function)
 		//	no idle threads, make some if we have space, and try on next iteration (for cleaner code)
 		if ( mRunThreads.GetSize() < mMaxRunThreads )
 		{
-			mArrayLock.lock();
+			mArrayLock.lock("Threadpool add thread");
 			mRunThreads.PushBack();
 			mArrayLock.unlock();
 		}
