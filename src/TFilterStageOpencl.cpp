@@ -220,17 +220,17 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 		}
 	
-		
+		/*
 		static size_t ImageCropLeft = 300;
 		static size_t ImageCropRight = 1400;
 		static size_t ImageCropTop = 1000;
 		static size_t ImageCropBottom = 800;
-		/*
+		*/
 		static size_t ImageCropLeft = 0;
 		static size_t ImageCropRight = 0;
 		static size_t ImageCropTop = 0;
 		static size_t ImageCropBottom = 0;
-		*/
+		
 		//	set output depending on what we made
 		if ( StageData.mTexture.IsValid(false) )
 		{

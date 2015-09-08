@@ -78,15 +78,23 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 				continue;
 		}
 	
-		static size_t ImageCropX = 0;
-		static size_t ImageCropY = 0;
+		/*
+		static size_t ImageCropLeft = 300;
+		static size_t ImageCropRight = 1400;
+		static size_t ImageCropTop = 1000;
+		static size_t ImageCropBottom = 800;
+		*/
+		static size_t ImageCropLeft = 0;
+		static size_t ImageCropRight = 0;
+		static size_t ImageCropTop = 0;
+		static size_t ImageCropBottom = 0;
 	
 		Kernel.SetUniform("Matches", RectBuffer );
 		Kernel.SetUniform("MatchesCount", RectBufferCounter );
 		Kernel.SetUniform("MatchesMax", size_cast<cl_int>(RectBuffer.GetSize()) );
 	
-		Iterations.PushBack( vec2x<size_t>(ImageCropX,FrameWidth-ImageCropX) );
-		Iterations.PushBack( vec2x<size_t>(ImageCropY,FrameHeight-ImageCropY) );
+		Iterations.PushBack( vec2x<size_t>(ImageCropLeft,FrameWidth-ImageCropRight) );
+		Iterations.PushBack( vec2x<size_t>(ImageCropTop,FrameHeight-ImageCropBottom) );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
