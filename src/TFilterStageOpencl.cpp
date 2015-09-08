@@ -147,6 +147,18 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			{
 				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
 				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+				
+				
+				//	clear it
+				static bool ClearTarget = true;
+				if ( ClearTarget )
+				{
+					Opengl::TRenderTargetFbo Fbo(StageTarget);
+					Fbo.Bind();
+					Opengl::ClearColour( Soy::TRgb(0,1,0) );
+					Fbo.Unbind();
+				}
+				//StageTarget.OnWrite();
 			}
 		};
 		
