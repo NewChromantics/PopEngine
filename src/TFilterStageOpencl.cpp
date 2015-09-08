@@ -147,18 +147,18 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			{
 				SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
 				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
-				
-				
+			
 				//	clear it
-				static bool ClearTarget = true;
+				static bool ClearTarget = false;
 				if ( ClearTarget )
 				{
 					Opengl::TRenderTargetFbo Fbo(StageTarget);
+					Fbo.mGenerateMipMaps = false;
 					Fbo.Bind();
-					Opengl::ClearColour( Soy::TRgb(0,1,0) );
+					Opengl::ClearColour( Soy::TRgb(0,0,0), 0 );
 					Fbo.Unbind();
+					StageTarget.OnWrite();
 				}
-				//StageTarget.OnWrite();
 			}
 		};
 		
@@ -219,24 +219,32 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			if ( DebugUnsetUniforms )
 				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 		}
+	
 		
-		static size_t ImageCropX = 0;
-		static size_t ImageCropY = 0;
-		
+		static size_t ImageCropLeft = 300;
+		static size_t ImageCropRight = 1400;
+		static size_t ImageCropTop = 1000;
+		static size_t ImageCropBottom = 800;
+		/*
+		static size_t ImageCropLeft = 0;
+		static size_t ImageCropRight = 0;
+		static size_t ImageCropTop = 0;
+		static size_t ImageCropBottom = 0;
+		*/
 		//	set output depending on what we made
 		if ( StageData.mTexture.IsValid(false) )
 		{
 			//	"frag" is output
 			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
-			Iterations.PushBack( vec2x<size_t>(ImageCropX,StageData.mTexture.GetWidth()-ImageCropX) );
-			Iterations.PushBack( vec2x<size_t>(ImageCropY,StageData.mTexture.GetHeight()-ImageCropY) );
+			Iterations.PushBack( vec2x<size_t>(ImageCropLeft,StageData.mTexture.GetWidth()-ImageCropRight) );
+			Iterations.PushBack( vec2x<size_t>(ImageCropTop,StageData.mTexture.GetHeight()-ImageCropBottom) );
 		}
 		else if ( StageData.mImageBuffer )
 		{
 			//	"frag" is output
 			Kernel.SetUniform("Frag", *StageData.mImageBuffer );
-			Iterations.PushBack( vec2x<size_t>(ImageCropX,StageData.mImageBuffer->GetMeta().GetWidth()-ImageCropX) );
-			Iterations.PushBack( vec2x<size_t>(ImageCropY,StageData.mImageBuffer->GetMeta().GetHeight()-ImageCropY) );
+			Iterations.PushBack( vec2x<size_t>(ImageCropLeft,StageData.mImageBuffer->GetMeta().GetWidth()-ImageCropRight) );
+			Iterations.PushBack( vec2x<size_t>(ImageCropTop,StageData.mImageBuffer->GetMeta().GetHeight()-ImageCropBottom) );
 		}
 		else
 		{
