@@ -127,7 +127,7 @@ TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 
 TFilterFrame::~TFilterFrame()
 {
-	std::Debug << "Frame destruction " << this->mFrameTime << std::endl;
+	//std::Debug << "Frame destruction " << this->mFrameTime << std::endl;
 
 	//	shutdown all the datas
 	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
@@ -578,7 +578,7 @@ bool TFilter::DeleteFrame(SoyTime FrameTime)
 	mFramesLock.unlock();
 	
 	pFrame.reset();
-	std::Debug << "Deleted frame " << FrameTime << std::endl;
+	//std::Debug << "Deleted frame " << FrameTime << std::endl;
 	return true;
 }
 
@@ -597,7 +597,7 @@ bool TFilter::Run(SoyTime Time)
 		GetOpenglContext();
 		auto ContextGl = mOpenglContext;
 
-		std::Debug << "Started run: " << Time << " on " << ContextCl->GetDevice().mName << std::endl;
+		//std::Debug << "Started run: " << Time << " on " << ContextCl->GetDevice().mName << std::endl;
 		std::stringstream TimerName;
 		TimerName << "filter run " << Time << " on " << ContextCl->GetDevice().mName;
 		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
