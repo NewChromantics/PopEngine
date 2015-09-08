@@ -256,6 +256,7 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			throw;
 		}
 		RenderTarget.Unbind();
+		StageTarget.OnWrite();
 	};
 
 	
