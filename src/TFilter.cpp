@@ -1,6 +1,7 @@
 #include "TFilter.h"
 #include "TFilterWindow.h"
 #include <SoyMath.h>
+#include <SoyOpencl.h>
 
 #include "TFilterStageOpencl.h"
 #include "TFilterStageOpengl.h"
@@ -9,7 +10,15 @@
 const char* TFilter::FrameSourceName = "Frame";
 
 
-
+namespace Opencl
+{
+	std::ostream& operator<<(std::ostream &out,const Opencl::TDeviceMeta& in);
+}
+std::ostream& Opencl::operator<<(std::ostream &out,const Opencl::TDeviceMeta& in)
+{
+	//(out << in);
+	return out;
+}
 
 std::shared_ptr<SoyPixelsImpl> TFilterStageRuntimeData_Frame::GetPixels(Opengl::TContext& Context,bool Blocking)
 {
@@ -516,12 +525,7 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	//	gr: here we may have a problem where the original pixel buffer is getting overriden by the movie reader?
 	//	make source stage data and assign pixels. texture will be generated when first requested
 	
-	std::stringstream RunLockName;
-	RunLockName << "Run lock " << Time;
-	Frame->mRunLock.lock(RunLockName.str());
-	try
 	{
-
 		std::shared_ptr<TFilterStageRuntimeData_Frame> SourceData = Frame->AllocData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
 		SourceData->mPixels = Pixels;
 		
@@ -529,13 +533,6 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 
 		if ( IsNewFrame )
 			mOnFrameAdded.OnTriggered( Time );
-		
-		Frame->mRunLock.unlock();
-	}
-	catch (...)
-	{
-		Frame->mRunLock.unlock();
-		throw;
 	}
 }
 
@@ -594,6 +591,10 @@ bool TFilter::Run(SoyTime Time)
 	
 	bool Completed = false;
 
+	std::stringstream RunLockName;
+	RunLockName << "Run lock " << Time;
+	Frame->mRunLock.lock(RunLockName.str());
+	try
 	{
 		auto ContextCl = PickNextOpenclContext();
 		GetOpenglContext();
@@ -605,6 +606,12 @@ bool TFilter::Run(SoyTime Time)
 		//ofScopeTimerWarning Timer(TimerName.str().c_str(),10);
 		
 		Completed = Frame->Run( *this, TimerName.str(), ContextGl, ContextCl );
+		Frame->mRunLock.unlock();
+	}
+	catch(...)
+	{
+		Frame->mRunLock.unlock();
+		throw;
 	}
 		
 	if ( Completed )
