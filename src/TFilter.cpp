@@ -136,6 +136,8 @@ TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
 
 TFilterFrame::~TFilterFrame()
 {
+	mRunLock.lock("~TFilterFrame");
+	mStageDataLock.lock("~TFilterFrame");
 	//std::Debug << "Frame destruction " << this->mFrameTime << std::endl;
 
 	//	shutdown all the datas
@@ -632,15 +634,25 @@ void TFilter::OnStagesChanged()
 	static int ApplyToFrameCount = 5;
 	
 	int Applications = 0;
+
+	//	grab frames to re-run
+	Array<SoyTime> ReRunFrames;
 	
-	//	re-run each
+	mFramesLock.lock("OnStagesChanged gather frames");
 	for ( auto it=mFrames.rbegin();	it!=mFrames.rend();	it++ )
 	{
 		auto& FrameTime = it->first;
-		OnFrameChanged( FrameTime );
-
+		ReRunFrames.PushBack( FrameTime );
 		if ( ++Applications > ApplyToFrameCount )
 			break;
+	}
+	mFramesLock.unlock();
+
+	//	re-run each
+	for ( int f=0;	f<ReRunFrames.GetSize();	f++ )
+	{
+		auto& FrameTime = ReRunFrames[f];
+		OnFrameChanged( FrameTime );
 	}
 }
 
