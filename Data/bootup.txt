@@ -56,5 +56,18 @@ addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDa
 addstage mancity01 MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
 addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
 
+#decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
 
-decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
+
+
+
+
+
+# line detector
+addstage LineDetector DebugUv vert=ScreenQuad.vert frag=DebugUv.frag
+addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag
+addstage LineDetector CornerFilter cl=CornerFilter.cl kernel=CornerFilter
+loadframe LineDetector time=1001 input01_undistorted.png
+#decode LineDetector /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
+
+

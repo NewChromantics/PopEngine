@@ -622,7 +622,7 @@ void TFilter::QueueJob(std::function<bool(void)> Function)
 
 void TFilter::OnStagesChanged()
 {
-	static int ApplyToFrameCount = 0;
+	static int ApplyToFrameCount = 5;
 	
 	int Applications = 0;
 	
