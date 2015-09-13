@@ -31,9 +31,9 @@ DECLARE_DYNAMIC_ARRAY(float4);
 const float2 MaxRectSize = (float2)(80,100);
 
 //	filters
-const float2 MinRectSize = (float2)(5,5);
-const float2 MinAlignment = (float2)( 0.4f, 0.85f );
-const float2 MaxAlignment = (float2)( 0.5f, 1.0f );
+const float2 MinRectSize = (float2)(2,5);
+const float2 MinAlignment = (float2)( 0.3f, 0.85f );
+const float2 MaxAlignment = (float2)( 0.6f, 1.0f );
 
 
 

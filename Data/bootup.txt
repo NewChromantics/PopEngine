@@ -45,8 +45,9 @@ setuniform mancity01 AtlasWidth=128 AtlasHeight=512
 addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag
 #addstage mancity01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
 addstage mancity01 crop vert=ScreenQuad.vert frag=Crop.frag
-addstage mancity01 hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
-addstage mancity01 grassfilter cl=GrassFilter.cl kernel=GrassFilter
+addstage mancity01 Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
+#addstage mancity01 grassfilter cl=GrassFilter.cl kernel=GrassFilter
+addstage mancity01 grassfilter cl=PatchFilter.cl kernel=FilterColourPatch
 addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill
 addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
@@ -56,7 +57,7 @@ addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDa
 addstage mancity01 MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
 addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
 
-#decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
+decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
 
 
 
