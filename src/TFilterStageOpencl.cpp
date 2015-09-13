@@ -28,7 +28,7 @@ TFilterStage_OpenclKernel::TFilterStage_OpenclKernel(const std::string& Name,con
 	
 void TFilterStage_OpenclKernel::Reload()
 {
-	std::lock_guard<std::mutex> Lock( mKernelLock );
+	mKernelLock.lock();
 
 	//	delete the old ones
 	mKernel.empty();
@@ -63,6 +63,8 @@ void TFilterStage_OpenclKernel::Reload()
 		}
 	}
 	
+	mKernelLock.unlock();
+
 	if ( !SuccessfullBuiltContexts.IsEmpty() )
 	{
 		std::Debug << "Loaded kernel (" << mKernelName << ") okay for " << this->mName << " on " << SuccessfullBuiltContexts.GetSize() << " contexts" << std::endl;
