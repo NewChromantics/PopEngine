@@ -19,6 +19,35 @@ static float4 texture2D(__read_only image2d_t Image,int2 uv)
 }
 
 
+
+float hue2rgb(float p,float q,float t)
+{
+	if(t < 0) t += 1.f;
+	if(t > 1) t -= 1.f;
+	if(t < 1.f/6.f) return p + (q - p) * 6.f * t;
+	if(t < 1.f/2.f) return q;
+	if(t < 2.f/3.f) return p + (q - p) * (2.f/3.f - t) * 6.f;
+	return p;
+}
+
+float3 HslToRgb(float3 Hsl)
+{
+	float h = Hsl.x;
+	float s = Hsl.y;
+	float l = Hsl.z;
+	
+	if(s == 0){
+		return (float3)(l,l,l);
+	}else{
+		float q = l < 0.5f ? l * (1 + s) : l + s - l * s;
+		float p = 2.f * l - q;
+		float r = hue2rgb(p, q, h + 1.f/3.f);
+		float g = hue2rgb(p, q, h);
+		float b = hue2rgb(p, q, h - 1.f/3.f);
+		return (float3)(r,g,b);
+	}
+}
+
 float GetHslHslDifference(float3 a,float3 b)
 {
 	float ha = a.x;
@@ -142,10 +171,54 @@ __kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t Hs
 	
 	//float4 Rgba = (float4)( 0, Score, 0, 1 );
 	float4 Rgba = texture2D( undistort, uv );
+
+	//	write score in blue and green
+	float ScoreLeft = (float)Left / (float)(MaxDistance+MaxDistance);
+	float ScoreRight = (float)Right / (float)(MaxDistance+MaxDistance);
+	Rgba.y = ScoreLeft;
+	Rgba.z = ScoreRight;
+
+	//	write hue in red
+	float3 BaseHsl = texture2D( Hsl, uv ).xyz;
+	Rgba.x = BaseHsl.x;
+ 
 	
 	//	erase if "this colour" has a width more than N
 	if ( ScorePx > 10 )
-		Rgba = (float4)(0,0,0,0);
+	{
+		Rgba.w = 0;
+	}
 	
+	write_imagef( Frag, uv, Rgba );
+}
+
+
+
+
+__kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t grassfilter,__write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	
+	int MaxDistance = 10;
+
+	float LeftScore = texture2D( grassfilter, uv ).y;
+	float RightScore = texture2D( grassfilter, uv ).z;
+	bool Valid = texture2D( grassfilter, uv ).w > 0.5f;
+	float4 Rgba = (float4)(0,0,0,0);
+
+	if ( Valid )
+	{
+		float LeftPx = LeftScore * (MaxDistance+MaxDistance);
+		float RightPx = RightScore * (MaxDistance+MaxDistance);
+		
+		if ( fabs(LeftPx - RightPx) <= 0 )
+		{
+			float Hue = texture2D( grassfilter, uv ).x;
+			float3 Hsl = (float3)(Hue,1,0.3f);
+			Rgba = (float4)(1,1,1,1);
+			Rgba.xyz = HslToRgb( Hsl );
+		}
+	}
+
 	write_imagef( Frag, uv, Rgba );
 }
