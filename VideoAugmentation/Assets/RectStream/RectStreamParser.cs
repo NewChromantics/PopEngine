@@ -79,8 +79,18 @@ public class RectStreamParser : MonoBehaviour {
 
 		if (mFrames == null)
 			mFrames = new List<TRectAtlasFrame> ();
-		mFrames.Add (Frame);
-		Debug.Log ("Read frame: " + Frame.mTimecode);
+
+		//	frames can be out of order because of parallel writing, insert in order
+		int InsertAt = mFrames.Count;
+		while (InsertAt > 0) {
+			if (mFrames [InsertAt - 1].mTimecode < Frame.mTimecode)
+				break;
+			InsertAt--;
+		}
+		bool OutOfOrder = InsertAt != mFrames.Count;
+		mFrames.Insert(InsertAt,Frame);
+
+		Debug.Log ("Read frame: " + Frame.mTimecode + (OutOfOrder?" (Out of order)":"") );
 	}
 
 	string PopString (BinaryReader Reader, char Delin)
