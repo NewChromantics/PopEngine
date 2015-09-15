@@ -141,14 +141,14 @@ TFilterFrame::~TFilterFrame()
 	//std::Debug << "Frame destruction " << this->mFrameTime << std::endl;
 
 	//	shutdown all the datas
-	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
+	for ( auto it=mStageData.begin();	it!=mStageData.end();	)
 	{
 		auto& pData = it->second;
-		if ( !pData )
-			continue;
-		
-		pData->Shutdown( *mContextGl, *mContextCl );
+		if ( pData )
+			pData->Shutdown( *mContextGl, *mContextCl );
+
 		pData.reset();
+		it = mStageData.erase( it );
 	}
 	
 	mContextCl.reset();
