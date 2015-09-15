@@ -143,7 +143,7 @@ TFilterFrame::~TFilterFrame()
 	//	shutdown all the datas
 	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
 	{
-		auto pData = it->second;
+		auto& pData = it->second;
 		if ( !pData )
 			continue;
 		
@@ -151,6 +151,8 @@ TFilterFrame::~TFilterFrame()
 		pData.reset();
 	}
 	
+	mContextCl.reset();
+	mContextGl.reset();
 }
 
 Opengl::TTexture TFilterFrame::GetFrameTexture(TFilter& Filter,bool Blocking)
