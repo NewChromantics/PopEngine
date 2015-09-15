@@ -14,11 +14,15 @@ public class ShowMask : MonoBehaviour {
 	public float			mDeltaMultiplier = 0.1f;
 	[Range(0,20)]
 	public float			mTime = 0;
+	[Range(-1,1)]
+	public float			mTimeOffset = 0;
 
 	void Start()
 	{
 		PopMovieParams Params = new PopMovieParams ();
-		mMovie = new PopMovie (mMovieFilename, Params);
+		mMovie = new PopMovie (mMovieFilename, Params,false);
+
+		mMovie.AddDebugCallback (Debug.Log);
 	}
 
 	void Update () {
@@ -26,7 +30,7 @@ public class ShowMask : MonoBehaviour {
 		mTime += Time.deltaTime * mDeltaMultiplier;
 
 		//	update textures
-		var Frame = mRectStreamParser.GetFrame (mTime);
+		var Frame = mRectStreamParser.GetFrame (mTime+mTimeOffset);
 
 		if (mMaskTexture != null && mRectStreamParser != null && Frame != null ) {
 			mRectStreamParser.LoadMaskTexture (mMaskTexture, Frame);
@@ -36,8 +40,7 @@ public class ShowMask : MonoBehaviour {
 		{
 			mMovie.SetTime( mTime );
 			mMovie.Update();
-			string Error = "";
-			mMovie.UpdateTexture( mMovieTexture, ref Error );
+			mMovie.UpdateTexture( mMovieTexture );
 		}
 
 		if (mBlitRectShader) {
@@ -60,9 +63,7 @@ public class ShowMask : MonoBehaviour {
 					Rect SourceRect = Rects.Second;
 					Rect DestRect = Rects.First;
 					Vector4 SourceMinMax = new Vector4( SourceRect.xMin, SourceRect.yMin, SourceRect.xMax, SourceRect.yMax );
-					Vector4 DestMinMax = new Vector4( DestRect.xMin, DestRect.yMin, DestRect.xMax, DestRect.yMax );
-					//Vector4 SourceMinMax = new Vector4( SourceRect.xMax, SourceRect.yMin, SourceRect.xMin, SourceRect.yMax );
-					//Vector4 DestMinMax = new Vector4( DestRect.xMax, DestRect.yMin, DestRect.xMin, DestRect.yMax );
+					Vector4 DestMinMax = new Vector4( DestRect.xMin, 1-DestRect.yMin, DestRect.xMax, 1-DestRect.yMax );
 					BlitMat.SetTexture("RectTexture", mMaskTexture );
 					BlitMat.SetVector("DestMinMax", DestMinMax );
 					BlitMat.SetVector("SourceMinMax", SourceMinMax );
@@ -73,6 +74,7 @@ public class ShowMask : MonoBehaviour {
 			Graphics.Blit( TempOut, mMovieTexture );
 			RenderTexture.ReleaseTemporary( TempIn );
 			RenderTexture.ReleaseTemporary( TempOut );
+
 		}
 	}
 }

@@ -44,53 +44,27 @@ public class TexturePtrCache
 };
 
 
-
-[StructLayout(LayoutKind.Explicit, Pack=1, Size=228)]
 public class  PopMovieParams
 {
-[FieldOffset(0)]
-[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 200)]
-public string			mFilename;
-
-[FieldOffset(200)]
-public ulong			mPreSeekMs = 0;						//	start decoding at a particular point in video. Can be used to pre-buffer to aid synchronisation
-
-//	enum appears to be 32 bit in c++. Check for overwriting params
-[FieldOffset(208)]
-public TextureFormat	mDecodeAsFormat = TextureFormat.RGBA32;	//	what format to decode as (some platforms limit this). Best to try and match format of target texture and source video to reduce colour conversion
-
-[FieldOffset(212)]
-public bool				mSkipPushFrames = false;			//	skip queuing old frames after decoding if in the past
-[FieldOffset(213)]
-public bool				mSkipPopFrames = true;				//	skip old frames when possible when presenting latest (synchronisation)
-[FieldOffset(214)]
-public bool				mAllowGpuColourConversion = true;	//	allow colour conversion on graphics driver - often done in CPU (depends on platform/driver)
-[FieldOffset(215)]
-public bool				mAllowCpuColourConversion = false;	//	allow internal colour conversion on CPU. Slow!
-[FieldOffset(216)]
-public bool				mAllowSlowCopy = true;				//	allow CPU->GPU pixel copying
-[FieldOffset(217)]
-public bool				mAllowFastCopy = true;				//	allow GPU->GPU copying where availible
-[FieldOffset(218)]
-public bool				mPixelClientStorage = false;		//	on OSX allow storing pixels on host/cpu rather than uploading to GPU (faster CPU copy)
-[FieldOffset(219)]
-public bool				mDebugFrameSkipping = true;			//	print out messages when we drop/skip frames for various reasons
-[FieldOffset(220)]
-public bool				mPeekBeforeDefferedCopy = true;		//	don't queue a copy (for when we do copies on the graphics thread) if RIGHT NOW there is no new frame. Can reduce wasted time on graphics thread
-[FieldOffset(221)]
-public bool				mDecodeAsYuvFullRange = false;		//	decode as YUV (full range in luma channel)
-[FieldOffset(222)]
-public bool				mDecodeAsYuvVideo = false;			//	decode as YUV (SDTV range in luma channel)
-[FieldOffset(223)]
-public bool				mDebugNoNewPixelBuffer = false;		//	print out when there is no frame to pop. Useful if frames aren't appearing with no error
-[FieldOffset(224)]
-public bool				mDebugRenderThreadCallback = false;	//	turn on to show that unity is calling the plugin's graphics thread callback (essential for multithreaded rendering, and often is a problem with staticcly linked plugins - like ios)
-[FieldOffset(225)]
-public bool				mResetInternalTimestamp = true;		//	if your source video's timestamps don't start at 0, this resets them so the first frame becomes 0
-[FieldOffset(226)]
-public bool				mDebugBlit = false;					//	use the test shader for blitting
-[FieldOffset(227)]
-public bool				mApplyVideoTransform = true;		//	apply the transform found inside the video
+	public ulong			mPreSeekMs = 0;						//	start decoding at a particular point in video. Can be used to pre-buffer to aid synchronisation
+	public bool				mSkipPushFrames = false;			//	skip queuing old frames after decoding if in the past
+	public bool				mSkipPopFrames = true;				//	skip old frames when possible when presenting latest (synchronisation)
+	public bool				mAllowGpuColourConversion = true;	//	allow colour conversion on graphics driver - often done in CPU (depends on platform/driver)
+	public bool				mAllowCpuColourConversion = false;	//	allow internal colour conversion on CPU. Slow!
+	public bool				mAllowSlowCopy = true;				//	allow CPU->GPU pixel copying
+	public bool				mAllowFastCopy = true;				//	allow GPU->GPU copying where availible
+	public bool				mPixelClientStorage = false;		//	on OSX allow storing pixels on host/cpu rather than uploading to GPU (faster CPU copy)
+	public bool				mDebugFrameSkipping = true;			//	print out messages when we drop/skip frames for various reasons
+	public bool				mPeekBeforeDefferedCopy = true;		//	don't queue a copy (for when we do copies on the graphics thread) if RIGHT NOW there is no new frame. Can reduce wasted time on graphics thread
+	public bool				mDecodeAsYuvFullRange = false;		//	decode as YUV (full range in luma channel)
+	public bool				mDecodeAsYuvVideo = false;			//	decode as YUV (SDTV range in luma channel)
+	public bool				mDebugNoNewPixelBuffer = false;		//	print out when there is no frame to pop. Useful if frames aren't appearing with no error
+	public bool				mDebugRenderThreadCallback = false;	//	turn on to show that unity is calling the plugin's graphics thread callback (essential for multithreaded rendering, and often is a problem with staticcly linked plugins - like ios)
+	public bool				mResetInternalTimestamp = true;		//	if your source video's timestamps don't start at 0, this resets them so the first frame becomes 0
+	public bool				mDebugBlit = false;					//	use the test shader for blitting
+	public bool				mApplyVideoTransform = true;		//	apply the transform found inside the video
+	public uint				mVideoTrackIndex = 0;				//	in case your video has multiple tracks, and you don't want 0
+	public bool				mGenerateMipMaps = true;			//	generate mip maps onto textures. Mostly for dev debugging, but some platforms don't require this and can be an optimisation when targetting limited devices/platforms
 }
 
 
@@ -107,18 +81,32 @@ public class PopMovie
 	private const string PluginName = "PopMovieTexture";
 #endif
 
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-	static TextureFormat		mInternalFormat = TextureFormat.RGBA32;
-#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-	static TextureFormat		mInternalFormat = TextureFormat.RGB24;
-#elif UNITY_IOS
-	static TextureFormat		mInternalFormat = TextureFormat.BGRA32;
-#elif UNITY_ANDROID
-	static TextureFormat		mInternalFormat = TextureFormat.RGBA32;
-#endif
+	//	gr: after a huge amount of headaches... we're passing a bitfield for params. NOT a struct
+	private enum PopMovieFlags
+	{
+		None						= 0,
+		SkipPushFrames				= 1<<0,
+		SkipPopFrames				= 1<<1,
+		AllowGpuColourConversion	= 1<<2,
+		AllowCpuColourConversion	= 1<<3,
+		AllowSlowCopy				= 1<<4,
+		AllowFastCopy				= 1<<5,
+		PixelClientStorage			= 1<<6,
+		DebugFrameSkipping			= 1<<7,
+		PeekBeforeDefferedCopy		= 1<<8,
+		DecodeAsYuvFullRange		= 1<<9,
+		DecodeAsYuvVideo			= 1<<10,
+		DebugNoNewPixelBuffer		= 1<<11,
+		DebugRenderThreadCallback	= 1<<12,
+		ResetInternalTimestamp		= 1<<13,
+		DebugBlit					= 1<<14,
+		ApplyVideoTransform			= 1<<15,
+		GenerateMipMaps				= 1<<16,
+	};
 
     private ulong							mInstance = 0;
 	private static int						mPluginEventId = PopMovie_GetPluginEventId();
+	private float							mStartTime = -1;	//	auto play (auto-set time on UpdateTexture) if this is not <0
 
 	//	cache the texture ptr's. Unity docs say accessing them causes a GPU sync, I don't believe they do, BUT we want to avoid setting the active render texture anyway
 	private TTexturePtrCache<Texture2D>		mTexture2DPtrCache = new TTexturePtrCache<Texture2D>();
@@ -128,9 +116,9 @@ public class PopMovie
 	public delegate void DebugLogDelegate(string str);
 	private DebugLogDelegate	mDebugLogDelegate = null;
 	
-	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate void OpenglCallbackDelegate();
-
+	public delegate void OnFinishedDelegate();
+	private OnFinishedDelegate	mOnFinishedDelegate = null;
+	
 	public void AddDebugCallback(DebugLogDelegate Function)
 	{
 		if ( mDebugLogDelegate == null ) {
@@ -146,7 +134,23 @@ public class PopMovie
 			mDebugLogDelegate -= Function;
 		}
 	}
+
+	public void AddOnFinishedCallback(OnFinishedDelegate Function)
+	{
+		if ( mOnFinishedDelegate == null ) {
+			mOnFinishedDelegate = new OnFinishedDelegate (Function);
+		} else {
+			mOnFinishedDelegate += Function;
+		}
+	}
 	
+	public void RemoveOnFinishedCallback(OnFinishedDelegate Function)
+	{
+		if ( mOnFinishedDelegate != null ) {
+			mOnFinishedDelegate -= Function;
+		}
+	}
+
 	void DebugLog(string Message)
 	{
 		if ( mDebugLogDelegate != null )
@@ -159,7 +163,7 @@ public class PopMovie
 	}
 	
 	[DllImport (PluginName, CallingConvention=CallingConvention.Cdecl)]
-	private static extern ulong		PopMovie_Alloc(PopMovieParams Params);
+	private static extern ulong		PopMovie_Alloc(string Filename,uint Params,ulong PreSeekMs,uint VideoTrackIndex);
 
 	[DllImport (PluginName)]
 	private static extern bool		PopMovie_Free(ulong Instance);
@@ -189,7 +193,7 @@ public class PopMovie
 	private static extern void		QueueTextureBlit(System.IntPtr SourceTexture,System.IntPtr DestinationTexture,int DestinationWidth,int DestinationHeight);
 
 
-	public PopMovie(string Filename,PopMovieParams Params)
+	public PopMovie(string Filename,PopMovieParams Params,bool AutoPlay)
 	{
 #if UNITY_EDITOR && UNITY_IOS
 		UnityEditor.ScriptingImplementation backend = (UnityEditor.ScriptingImplementation)UnityEditor.PlayerSettings.GetPropertyInt("ScriptingBackend", UnityEditor.BuildTargetGroup.iOS);
@@ -197,12 +201,29 @@ public class PopMovie
 			Debug.LogWarning ("Warning: If the scripting backend is not IL2CPP on IOS there may be problems at runtime passing parameters to the plugin.");
 		}
 #endif
+
+		PopMovieFlags ParamFlags = 0;
+		ParamFlags |= Params.mAllowCpuColourConversion	? PopMovieFlags.AllowCpuColourConversion : PopMovieFlags.None;
+		ParamFlags |= Params.mAllowFastCopy				? PopMovieFlags.AllowFastCopy : PopMovieFlags.None;
+		ParamFlags |= Params.mAllowGpuColourConversion	? PopMovieFlags.AllowGpuColourConversion : PopMovieFlags.None;
+		ParamFlags |= Params.mAllowSlowCopy				? PopMovieFlags.AllowSlowCopy : PopMovieFlags.None;
+		ParamFlags |= Params.mApplyVideoTransform		? PopMovieFlags.ApplyVideoTransform : PopMovieFlags.None;
+		ParamFlags |= Params.mDebugBlit					? PopMovieFlags.DebugBlit : PopMovieFlags.None;
+		ParamFlags |= Params.mDebugFrameSkipping		? PopMovieFlags.DebugFrameSkipping : PopMovieFlags.None;
+		ParamFlags |= Params.mDebugNoNewPixelBuffer 	? PopMovieFlags.DebugNoNewPixelBuffer : PopMovieFlags.None;
+		ParamFlags |= Params.mDebugRenderThreadCallback	? PopMovieFlags.DebugRenderThreadCallback : PopMovieFlags.None;
+		ParamFlags |= Params.mDecodeAsYuvFullRange		? PopMovieFlags.DecodeAsYuvFullRange : PopMovieFlags.None;
+		ParamFlags |= Params.mDecodeAsYuvVideo			? PopMovieFlags.DecodeAsYuvVideo : PopMovieFlags.None;
+		ParamFlags |= Params.mPeekBeforeDefferedCopy	? PopMovieFlags.PeekBeforeDefferedCopy : PopMovieFlags.None;
+		ParamFlags |= Params.mPixelClientStorage		? PopMovieFlags.PixelClientStorage : PopMovieFlags.None;
+		ParamFlags |= Params.mResetInternalTimestamp	? PopMovieFlags.ResetInternalTimestamp : PopMovieFlags.None;
+		ParamFlags |= Params.mSkipPopFrames				? PopMovieFlags.SkipPopFrames : PopMovieFlags.None;
+		ParamFlags |= Params.mSkipPushFrames 			? PopMovieFlags.SkipPushFrames : PopMovieFlags.None;
+		ParamFlags |= Params.mGenerateMipMaps 			? PopMovieFlags.GenerateMipMaps : PopMovieFlags.None;
+
+		uint ParamFlags32 = Convert.ToUInt32 (ParamFlags);
 		string FinalFilename = GetVideoFilename (Filename);
-
-		Params.mDecodeAsFormat = mInternalFormat;
-		Params.mFilename = FinalFilename;
-
-		mInstance = PopMovie_Alloc ( Params );
+		mInstance = PopMovie_Alloc ( FinalFilename, ParamFlags32, Params.mPreSeekMs, Params.mVideoTrackIndex );
 
 		//	if this fails, capture the flush and throw an exception
 		if (mInstance == 0) {
@@ -215,6 +236,9 @@ public class PopMovie
 				AllocError = "No error detected";
 			throw new System.Exception("Failed to allocate PopMovieTexture: " + AllocError);
 		}
+
+		if (AutoPlay)
+			mStartTime = Time.time;
 	}
 	
 	~PopMovie()
@@ -223,42 +247,23 @@ public class PopMovie
 		//	Assuming external delegate has been deleted, and this garbage collection (despite being explicitly called) 
 		//	is still deffered until after parent object[monobehaviour] has been destroyed (and external function no longer exists)
 		mDebugLogDelegate = null;
+		mOnFinishedDelegate = null;
 		PopMovie_Free (mInstance);
 		FlushDebug ();
 	}
 	
-	public bool UpdateTexture(RenderTexture Target,ref String Error)
+	public void UpdateTexture(RenderTexture Target)
 	{
-		bool Success = false;
-		try
-		{
-			Success = PopMovie_UpdateRenderTexture (mInstance, TexturePtrCache.GetCache( ref mRenderTexturePtrCache, Target ), Target.width, Target.height, Target.format );
-			if ( !Success )
-				Error = "Plugin error";
-		}
-		catch ( System.Exception e )
-		{
-			Error =  e.ToString() + " " + e.Message ;
-		}
+		Update ();
+		PopMovie_UpdateRenderTexture (mInstance, TexturePtrCache.GetCache( ref mRenderTexturePtrCache, Target ), Target.width, Target.height, Target.format );
 		FlushDebug ();
-		return Success;
 	}
 	
-	public bool UpdateTexture(Texture2D Target,ref String Error)
+	public void UpdateTexture(Texture2D Target)
 	{
-		bool Success = false;
-		try
-		{
-			Success = PopMovie_UpdateTexture2D (mInstance, TexturePtrCache.GetCache( ref mTexture2DPtrCache, Target ), Target.width, Target.height, Target.format );
-			if ( !Success )
-				Error = "Plugin error";
-		}
-		catch ( System.Exception e )
-		{
-			Error =  e.ToString() + " " + e.Message ;
-		}
+		Update ();
+		PopMovie_UpdateTexture2D (mInstance, TexturePtrCache.GetCache( ref mTexture2DPtrCache, Target ), Target.width, Target.height, Target.format );
 		FlushDebug ();
-		return Success;
 	}
 	
 	public void SetTime(float TimeSecs)
@@ -268,27 +273,41 @@ public class PopMovie
 	
 	public void SetTime(ulong TimeMs)
 	{
-		Update ();
 		//	update time
 		try {
 			if ( IsAllocated () )
 			{
 				PopMovie_SetTime ( mInstance, TimeMs);
+
+				//	check if we've finished to trigger the callback
+				if ( mOnFinishedDelegate != null )
+				{
+					ulong DurationMs = GetDurationMs();
+					//	duration of 0 = unknown
+					if ( TimeMs >= DurationMs && DurationMs > 0 )
+						mOnFinishedDelegate();
+				}
 			}
 		} catch {
 		}
-		Update ();
 	}
 	
-	public float GetDuration()
+	public ulong GetDurationMs()
 	{
 		ulong DurationMs = 0;
 		try {
 			DurationMs = PopMovie_GetDurationMs (mInstance);
 		} catch {
-			Debug.LogWarning ("Exception thrown getting duration (old plugin?)");
+			Debug.LogWarning ("Exception thrown getting duration (old/missing plugin?)");
 		}
-		
+	
+		return DurationMs;
+	}
+
+	public float GetDuration()
+	{
+		ulong DurationMs = GetDurationMs ();
+
 		//	convert to float
 		float DurationSec = (float)DurationMs / 1000.0f;
 		return DurationSec;
@@ -318,6 +337,10 @@ public class PopMovie
 	
 	public void Update()
 	{
+		//	if auto playing... update time
+		if ( mStartTime >= 0 )
+			SetTime( Time.time - mStartTime );
+
 		GL.IssuePluginEvent (mPluginEventId);
 		FlushDebug();
 	}

@@ -173,12 +173,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mMovieTexture: {fileID: 8400000, guid: abe4466ad47604bc8b9c3f2106c3cf98, type: 2}
-  mMovieFilename: ManCity_Camera1_126.mp4
+  mMovieFilename: ManCity_Camera1_126_1080.mov
   mMaskTexture: {fileID: 2800000, guid: b6a1910282da245eaa6276d06daf43d6, type: 3}
   mRectStreamParser: {fileID: 2093295881}
   mBlitRectShader: {fileID: 4800000, guid: 49da720a1c6bb47ce8a2e10eec6d01ff, type: 3}
   mDeltaMultiplier: 1
   mTime: 0
+  mTimeOffset: 0
 --- !u!1 &1167657453
 GameObject:
   m_ObjectHideFlags: 0
@@ -248,7 +249,7 @@ Transform:
   m_GameObject: {fileID: 1167657453}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.9000001, y: -.0199999996, z: .50131321}
-  m_LocalScale: {x: 19.8429222, y: 19.8429222, z: 19.8429222}
+  m_LocalScale: {x: 19.8429222, y: 19.8429222, z: 24.9893932}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -320,7 +321,6 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
-  m_TargetEye: 3
   m_HDR: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -332,8 +332,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1886816583}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0, y: .70710659, z: 0, w: -.707106948}
+  m_LocalPosition: {x: 27.8799992, y: -.720000029, z: .709999979}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
