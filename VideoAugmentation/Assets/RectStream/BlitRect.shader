@@ -51,15 +51,16 @@
 				float SampleScale = 2.5;
 				
 				//	sample coords
-				const int SampleCount = 25;
-				/*
+				#if UNITY_IOS
+				const int SampleCount = 9;
 				const float2 Samples[SampleCount] = 
 				{
 					float2(-1,-1),	float2(0,-1),	float2(1,-1),
 					float2(-1,0),	float2(0,0),	float2(1,0),
 					float2(-1,1),	float2(0,1),	float2(1,1),
 				};
-				*/
+				#else
+				const int SampleCount = 25;
 				const float2 Samples[SampleCount] = 
 				{
 					float2(-2,-2),	float2(-1,-2),	float2(0,-2),	float2(1,-2),	float2(2,-2),
@@ -68,6 +69,7 @@
 					float2(-2,1),	float2(-1,1),	float2(0,1),	float2(1,1),	float2(2,1),
 					float2(-2,2),	float2(-1,2),	float2(0,2),	float2(1,2),	float2(2,2),
 				};
+				#endif
 				
 				for ( int i=0;	i<SampleCount;	i++ )
 				{
