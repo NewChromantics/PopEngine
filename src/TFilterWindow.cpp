@@ -12,7 +12,9 @@ TFilterWindow::TFilterWindow(std::string Name,TFilter& Parent) :
 	mZoomPosPx	( 0,0 )
 {
 	Soy::Rectf Rect( 0, 0, 300, 300 );
-	mWindow.reset( new TOpenglWindow( Name, Rect ) );
+	TOpenglParams Params;
+
+	mWindow.reset( new TOpenglWindow( Name, Rect, Params ) );
 	if ( !mWindow->IsValid() )
 	{
 		mWindow.reset();
@@ -80,6 +82,9 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	//	collect N frames
 	static int ShowMaxFrames = 3;
 	static int SkipFirstNFrames = 0;
+	
+	if ( ShowMaxFrames == 0 )
+		return;
 
 	int SkipCount = SkipFirstNFrames;
 	Array<std::shared_ptr<TFilterFrame>> Frames;
