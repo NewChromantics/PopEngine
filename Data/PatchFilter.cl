@@ -48,6 +48,22 @@ float3 HslToRgb(float3 Hsl)
 	}
 }
 
+
+float PosterizeFloat(float f,int Levels)
+{
+	return round(f*Levels) / (float)Levels;
+}
+
+float3 PosterizeFloat3(float3 f,int Levels)
+{
+	f.x = PosterizeFloat( f.x, Levels );
+	f.y = PosterizeFloat( f.y, Levels );
+	f.z = PosterizeFloat( f.z, Levels );
+
+	return f;
+}
+
+
 float GetHslHslDifference(float3 a,float3 b)
 {
 	float ha = a.x;
@@ -141,8 +157,10 @@ int GetWalk(int2 xy,int2 WalkStep,__read_only image2d_t Image,int MaxSteps,float
 	return Step;
 }
 
-__kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__read_only image2d_t undistort,__write_only image2d_t Frag)
+__kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t SegmentedHsl,__read_only image2d_t undistort,__write_only image2d_t Frag)
 {
+	__read_only image2d_t Hsl = SegmentedHsl;
+
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	int2 wh = get_image_dim(Hsl);
 	
@@ -195,7 +213,7 @@ __kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t Hs
 
 
 
-__kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t grassfilter,__write_only image2d_t Frag)
+__kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t grassfilter,__read_only image2d_t Hsl,__write_only image2d_t Frag)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
@@ -204,10 +222,11 @@ __kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t grassf
 	float LeftScore = texture2D( grassfilter, uv ).y;
 	float RightScore = texture2D( grassfilter, uv ).z;
 	bool Valid = texture2D( grassfilter, uv ).w > 0.5f;
-	float4 Rgba = (float4)(0,0,0,0);
+	float4 Rgba = (float4)(1,0,1,1);
 
 	if ( Valid )
 	{
+		/*
 		float LeftPx = LeftScore * (MaxDistance+MaxDistance);
 		float RightPx = RightScore * (MaxDistance+MaxDistance);
 		
@@ -218,7 +237,241 @@ __kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t grassf
 			Rgba = (float4)(1,1,1,1);
 			Rgba.xyz = HslToRgb( Hsl );
 		}
+		 */
+		
+		//float Hue = texture2D( grassfilter, uv ).x;
+		float3 SourceHsl = texture2D( Hsl, uv ).xyz;
+		//float3 SourceHsl = (float3)(Hue,1,0.3f);
+		Rgba = (float4)(1,1,1,1);
+		Rgba.xyz = HslToRgb( SourceHsl );
+
 	}
 
 	write_imagef( Frag, uv, Rgba );
 }
+
+float3 NormaliseHsl(float3 Hsl)
+{
+	//	block hue a bit
+	//Hsl.x = PosterizeFloat( Hsl.x, 5 );
+	//Hsl.z = PosterizeFloat( Hsl.z, 5 );
+	//Hsl.y = PosterizeFloat( Hsl.y, 5 );
+	
+	return Hsl;
+	
+	float NearWhite = 0.9f;
+	float NearBlack = 0.2f;
+	
+	float h = Hsl.x;
+	float s = Hsl.y;
+	float l = Hsl.z;
+	
+	//	if saturation is low, let it fall to white/black more easily
+	if ( s < 0.1f )
+	{
+		NearWhite = 0.6f;
+		NearBlack = 0.4f;
+	}
+	
+	//	look for extremes so we filter black and white
+	if ( l  >= NearWhite )
+	{
+		s = 0;
+		l = 1;
+	}
+	else if ( l <= NearBlack )
+	{
+		s = 0;
+		l = 0;
+	}
+	else if ( s <= 0.1f )
+	{
+		s = 0;
+		l = 0.5f;
+	}
+	else
+	{
+		s = 1;
+		l = 0.5f;
+	}
+	
+	return (float3)(h,s,l);
+}
+
+
+__kernel void GroupHsl(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	
+	float3 SourceHsl = texture2D( Hsl, uv ).xyz;
+
+	
+	float MatchSat = 0.4f;
+	float MatchSatHigh = 0.5f;
+	float MatchSatLow = 0.2f;
+	float MatchLum = 0.7f;
+	float MatchLumHigh = 0.8f;
+#define MatchHslsCount 11
+	float3 MatchHsls[MatchHslsCount] =
+	{
+		(float3)( 0, 0, 0.1f ),	//	black
+		(float3)( 0, 0, 0.9f ),	//	white
+		(float3)( 0/360.f, MatchLum, MatchSat ),
+		(float3)( 20/360.f, MatchLum, MatchSat ),
+		(float3)( 50/360.f, MatchLum, MatchSat ),
+		(float3)( 90/360.f, MatchLum, MatchSat ),
+		(float3)( 150/360.f, MatchLumHigh, MatchSat ),
+		(float3)( 180/360.f, MatchLumHigh, MatchSatHigh ),
+		(float3)( 190/360.f, MatchLumHigh, MatchSat ),
+		(float3)( 205/360.f, MatchLum, MatchSat ),
+		(float3)( 290/360.f, MatchLum, MatchSat ),
+	};
+	
+	int Best = 0;
+	float BestDiff = 1;
+	for ( int i=0;	i<MatchHslsCount;	i++ )
+	{
+		float Diff = GetHslHslDifference( SourceHsl, MatchHsls[i] );
+		if ( Diff < BestDiff )
+		{
+			BestDiff = Diff;
+			Best = i;
+		}
+	}
+	
+	float3 FragHsl = MatchHsls[Best];
+	float4 Rgba = (float4)(1,1,1,1);
+	Rgba.xyz = HslToRgb( FragHsl );
+	//Rgba.xyz = FragHsl;
+	
+	//bool SourceValid = texture2D( grassfilter, uv ).w > 0;
+	//if ( !SourceValid )
+	//	Rgba.xyz = (float3)(0,0,0);
+		
+//	Rgba.xyz = (HitCount < MinHitCount) ? (float3)(0,0,0) : (float3)(1,1,1);
+	
+	//	debug show what we're matching
+	if ( uv.y < 100 )
+	{
+		int Index = uv.x / 100;
+		if ( Index < MatchHslsCount )
+		{
+			Rgba.xyz = HslToRgb( MatchHsls[Index] );
+		}
+	}
+	
+	write_imagef( Frag, uv, Rgba );
+}
+
+
+__kernel void BlurColourHsl(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	
+	float3 SourceHsl = NormaliseHsl( texture2D( Hsl, uv ).xyz );
+	float3 MeanHsl = (float3)(0,0,0);
+	
+#define SampleRadius 4
+	int HitCount = 0;
+	int MinHitCount = 4;
+	float HslDiffMax = 0.05f;
+	for ( int y=-SampleRadius;	y<=SampleRadius;	y++ )
+	{
+		for ( int x=-SampleRadius;	x<=SampleRadius;	x++ )
+		{
+			//	ignore self
+			if ( y==0 && x==0 )
+				continue;
+			
+			//bool NeighbourValid = texture2D( grassfilter, uv + (int2)(x,y) ).w > 0;
+			//if ( !NeighbourValid )
+			//	continue;
+			
+			float3 NeighbourHsl = NormaliseHsl( texture2D( Hsl, uv + (int2)(x,y) ).xyz );
+			
+			float NeighbourDiff = GetHslHslDifference( SourceHsl, NeighbourHsl );
+			if ( NeighbourDiff > HslDiffMax )
+				continue;
+			HitCount++;
+			MeanHsl += NeighbourHsl;
+		}
+	}
+	
+	MeanHsl /= (float)max(1,HitCount);
+	//	MeanHsl.x = PosterizeFloat( MeanHsl.x, 5 );
+	//	MeanHsl.z = PosterizeFloat( MeanHsl.z, 5 );
+	//	MeanHsl.y = PosterizeFloat( MeanHsl.y+0.1f, 5 );
+	
+	float3 FragHsl = MeanHsl;
+	float4 Rgba = (float4)(1,1,1,1);
+	//Rgba.xyz = HslToRgb( FragHsl );
+	Rgba.xyz = FragHsl;
+	
+	//bool SourceValid = texture2D( grassfilter, uv ).w > 0;
+	//if ( !SourceValid )
+	//	Rgba.xyz = (float3)(0,0,0);
+	
+	//	Rgba.xyz = (HitCount < MinHitCount) ? (float3)(0,0,0) : (float3)(1,1,1);
+	
+	write_imagef( Frag, uv, Rgba );
+}
+
+
+
+__kernel void HslSegmentation(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+
+	float4 Rgba = (float4)(0,0,0,0);
+	
+	float3 SourceHsl = texture2D( Hsl, uv ).xyz;
+	//float3 FragHsl = (float3)(Hue,1,0.3f);
+	float3 FragHsl = SourceHsl;
+	
+	
+#define SEG_NEAR_WHITE	0.9f
+#define SEG_NEAR_BLACK	0.2f
+#define SEG_NEAR_GREY	0.1f
+	
+	float NearWhite = 0.9f;
+	float NearBlack = 0.2f;
+	
+	float h = FragHsl.x;
+	float s = FragHsl.y;
+	float l = FragHsl.z;
+	
+	//	if saturation is low, let it fall to white/black more easily
+	if ( s < 0.2f )
+	{
+		NearWhite = 0.5f;
+		NearBlack = 0.4f;
+	}
+	
+	//	look for extremes so we filter black and white
+	if ( l  >= NearWhite )
+	{
+		FragHsl.y = 0;
+		FragHsl.z = 1;
+	}
+	else if ( l <= NearBlack )
+	{
+		FragHsl.y = 0;
+		FragHsl.z = 0;
+	}
+	else if ( s <= SEG_NEAR_GREY )
+	{
+		FragHsl.y = 0;
+		FragHsl.z = 0.5f;
+	}
+	else
+	{
+		FragHsl.y = 1;
+		FragHsl.z = 0.5f;
+	}
+	
+	Rgba = (float4)(1,1,1,1);
+	Rgba.xyz = HslToRgb( FragHsl );
+	
+	write_imagef( Frag, uv, Rgba );
+}
+
