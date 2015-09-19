@@ -1,56 +1,58 @@
 {
-  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB",
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
-    "869C8B911CF328D50CA81E17EFFE779905E187BC+++BE4D4F8" : 0,
-    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB" : 0,
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB" : 0,
-    "87907EAD08F9AC05484849759EAC4E8AE0659685+++9914289" : 0,
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++D619461" : 0
+    "869C8B911CF328D50CA81E17EFFE779905E187BC+++B9F3075" : 0,
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++4B7788E" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1AC2544" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++282CE8A" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++83D234B" : 0,
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "13612335-CC7F-4957-9869-5175583C4D28",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "869C8B911CF328D50CA81E17EFFE779905E187BC+++BE4D4F8" : "RwdMovieTexture\/",
-    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB" : "PopTrack",
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB" : "NewChromantics\/PopTrack",
-    "87907EAD08F9AC05484849759EAC4E8AE0659685+++9914289" : "SoyLib",
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++D619461" : "PopLib\/"
+    "869C8B911CF328D50CA81E17EFFE779905E187BC+++B9F3075" : "RwdMovieTexture\/",
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++4B7788E" : "SoyLib",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1AC2544" : "PopLib\/",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++282CE8A" : "NewChromantics\/PopTrack",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++83D234B" : "NewChromantics\/PopTrack",
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B" : "PopTrack"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "PopTrack",
-  "DVTSourceControlWorkspaceBlueprintVersion" : 203,
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "PopTrack.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopLib.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++D619461"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1AC2544"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++282CE8A"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++DFFB4DB"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++83D234B"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/RwdMovieTexture.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "869C8B911CF328D50CA81E17EFFE779905E187BC+++BE4D4F8"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "869C8B911CF328D50CA81E17EFFE779905E187BC+++B9F3075"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/SoyLib.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++9914289"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++4B7788E"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++DFFB4DB"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B"
     }
   ]
 }
