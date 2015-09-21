@@ -47,16 +47,17 @@ addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag
 addstage mancity01 crop vert=ScreenQuad.vert frag=Crop.frag
 addstage mancity01 Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
 addstage mancity01 SegmentedHsl cl=PatchFilter.cl kernel=GroupHsl
-#addstage mancity01 grassfilter cl=PatchFilter.cl kernel=FilterColourPatch
-#addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill
-#addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
-#addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
-#addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
+addstage mancity01 grassfilter cl=PatchFilter.cl kernel=FilterColourPatch
+addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill_GreenRed
+addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
+addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
+addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 #addstage mancity01 GatherMinMaxs cl=GatherRects.cl kernel=GatherMinMaxs
 #addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
 #addstage mancity01 MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
 #addstage mancity01 Segmentation cl=PatchFilter.cl kernel=BlurColour
 #addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
+#addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids
 
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
 #decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
