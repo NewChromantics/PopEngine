@@ -4,6 +4,20 @@
 #define SampleRadius	5	//	range 0,9
 const int HitCountMin = 2;
 const bool IncludeSelf = true;
+#define MIN_PATCH_WIDTH	20
+
+
+//	for normalising, we can't have the actual array as a global, so pick a max
+#define HistogramHslsMax	20
+float HistogramIndexToFloat(int Index)
+{
+	return Index / (float)HistogramHslsMax;
+}
+
+int HistogramFloatToIndex(float Normal)
+{
+	return (int)(Normal * (float)HistogramHslsMax);
+}
 
 
 const float MinLum = 0.5f;
@@ -48,6 +62,34 @@ float3 HslToRgb(float3 Hsl)
 	}
 }
 
+
+float3 FloatToDebugColour(float Normal)
+{
+	//	1- just to randomis it a bit
+	float3 Hsl = (float3)(1-Normal,1,0.5f);
+	/*
+	 return
+	 float a = 1.0f;
+	 float b = 0.5f;
+	 float3 DebugColour[6] =
+	 {
+		(float3)(a,0,0),
+		(float3)(a,a,0),
+		(float3)(0,a,0),
+		(float3)(0,a,a),
+		(float3)(0,0,a),
+		(float3)(a,0,a),
+		
+		(float3)(b,0,0),
+		(float3)(b,b,0),
+		(float3)(0,b,0),
+		(float3)(0,b,b),
+		(float3)(0,0,b),
+		(float3)(b,0,b),
+	 };
+	 */
+	return HslToRgb( Hsl );
+}
 
 float PosterizeFloat(float f,int Levels)
 {
@@ -131,7 +173,7 @@ float GetHslHslDifference(float3 a,float3 b)
 	return Diff;
 }
 
-int GetWalk(int2 xy,int2 WalkStep,__read_only image2d_t Image,int MaxSteps,float MaxDiff,bool* HitEdge)
+int GetWalkHsl(int2 xy,int2 WalkStep,__read_only image2d_t Image,int MaxSteps,float MaxDiff,bool* HitEdge)
 {
 	float3 BaseHsl = texture2D( Image, xy ).xyz;
 	int2 wh = get_image_dim(Image);
@@ -157,6 +199,40 @@ int GetWalk(int2 xy,int2 WalkStep,__read_only image2d_t Image,int MaxSteps,float
 	return Step;
 }
 
+float GetHistogramIndexDifference(float3 IndexaNorm,float3 IndexbNorm)
+{
+	int Indexa = HistogramFloatToIndex(IndexaNorm.x);
+	int Indexb = HistogramFloatToIndex(IndexbNorm.x);
+	
+	return (Indexa == Indexb) ? 0 : 1;
+}
+
+int GetWalkHistogramIndex(int2 xy,int2 WalkStep,__read_only image2d_t Image,int MaxSteps,float MaxDiff,bool* HitEdge)
+{
+	float3 BaseHsl = texture2D( Image, xy ).xyz;
+	int2 wh = get_image_dim(Image);
+	int2 Min = (int2)(0,0);
+	int2 Max = (int2)(wh.x-1,wh.y-1);
+	
+	int Step = 0;
+	for ( Step=0;	Step<=MaxSteps;	Step++ )
+	{
+		int2 Offset = WalkStep * (Step+1);
+		int2 Matchxy = xy + Offset;
+		if ( Matchxy.x < Min.x || Matchxy.y < Min.y || Matchxy.x > Max.x || Matchxy.y > Max.y )
+		{
+			*HitEdge = true;
+			break;
+		}
+		
+		float3 MatchHsl = texture2D( Image, Matchxy ).xyz;
+		float Diff = GetHistogramIndexDifference( BaseHsl, MatchHsl );
+		if ( Diff > MaxDiff )
+			break;
+	}
+	return Step;
+}
+
 __kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t SegmentedHsl,__read_only image2d_t undistort,__write_only image2d_t Frag)
 {
 	__read_only image2d_t Hsl = SegmentedHsl;
@@ -168,44 +244,52 @@ __kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t Se
 	int MaxDistance = 10;
 	float MaxHslDiff = 0.045f;
 	
+	bool ReAlign = true;
+	
 	bool HitRightEdge = false;
 	bool HitLeftEdge = false;
-	int Right = GetWalk( uv, (int2)(1,0), Hsl, MaxDistance, MaxHslDiff, &HitRightEdge );
+	int Right = GetWalkHistogramIndex( uv, (int2)(1,0), Hsl, MaxDistance, MaxHslDiff, &HitRightEdge );
 
-	HitRightEdge = (Right < MaxDistance);
+	if ( ReAlign )
+		HitRightEdge = (Right < MaxDistance);
 	
 	//	if we hit an image edge going left or right, then let the other direction go further
-	int Left = GetWalk( uv, (int2)(-1,0), Hsl, MaxDistance + (HitRightEdge?MaxDistance-Right:0), MaxHslDiff, &HitLeftEdge );
-	HitLeftEdge = (Left < MaxDistance);
+	int Left = GetWalkHistogramIndex( uv, (int2)(-1,0), Hsl, MaxDistance + (HitRightEdge?MaxDistance-Right:0), MaxHslDiff, &HitLeftEdge );
+	
+	if ( ReAlign )
+		HitLeftEdge = (Left < MaxDistance);
 
 	if ( HitLeftEdge )
 	{
 		//	re-calc right if we hit the left edge
-		Right = GetWalk( uv, (int2)(1,0), Hsl, MaxDistance + (HitLeftEdge?MaxDistance-Left:0), MaxHslDiff, &HitRightEdge );
+		Right = GetWalkHistogramIndex( uv, (int2)(1,0), Hsl, MaxDistance + (HitLeftEdge?MaxDistance-Left:0), MaxHslDiff, &HitRightEdge );
 	}
 	
 	float Score = (float)(Left+Right) / (float)(MaxDistance+MaxDistance);
 	int ScorePx = Left+Right;
 	
 	//float4 Rgba = (float4)( 0, Score, 0, 1 );
-	float4 Rgba = texture2D( undistort, uv );
-
+	//float4 Rgba = texture2D( undistort, uv );
+	float4 Rgba = (float4)(0,0,0,1);
+	
 	//	write score in blue and green
 	float ScoreLeft = (float)Left / (float)(MaxDistance+MaxDistance);
 	float ScoreRight = (float)Right / (float)(MaxDistance+MaxDistance);
 	Rgba.y = ScoreLeft;
 	Rgba.z = ScoreRight;
 
-	//	write hue in red
+	//	write index in red
 	float3 BaseHsl = texture2D( Hsl, uv ).xyz;
 	Rgba.x = BaseHsl.x;
  
 	
 	//	erase if "this colour" has a width more than N
-	if ( ScorePx > 10 )
+	if ( ScorePx >= MIN_PATCH_WIDTH )
 	{
+		//Rgba = (float4)(0,0,0,0);
 		Rgba.w = 0;
 	}
+
 	
 	write_imagef( Frag, uv, Rgba );
 }
@@ -213,37 +297,65 @@ __kernel void FilterColourPatch(int OffsetX,int OffsetY,__read_only image2d_t Se
 
 
 
-__kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t grassfilter,__read_only image2d_t Hsl,__write_only image2d_t Frag)
+__kernel void FindCentroids(int OffsetX,int OffsetY,__read_only image2d_t SegmentedHsl,__read_only image2d_t grassfilter,__write_only image2d_t Frag)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	__read_only image2d_t Hsl = SegmentedHsl;
 	
 	int MaxDistance = 10;
 
-	float LeftScore = texture2D( grassfilter, uv ).y;
-	float RightScore = texture2D( grassfilter, uv ).z;
 	bool Valid = texture2D( grassfilter, uv ).w > 0.5f;
-	float4 Rgba = (float4)(1,0,1,1);
+	float4 Rgba = (float4)(0,0,0,0);
 
 	if ( Valid )
 	{
-		/*
-		float LeftPx = LeftScore * (MaxDistance+MaxDistance);
-		float RightPx = RightScore * (MaxDistance+MaxDistance);
+		//	find up and down edges
+		//	walk left & right until we hit a HSL edge
+		int MaxDistance = 10;
+		float MaxHslDiff = 0.045f;
 		
-		if ( fabs(LeftPx - RightPx) <= 0 )
+		bool Realign = false;
+		bool HitUpEdge = false;
+		bool HitDownEdge = false;
+		int Down = GetWalkHistogramIndex( uv, (int2)(0,1), Hsl, MaxDistance, MaxHslDiff, &HitDownEdge );
+		
+		if ( Realign )
+			HitDownEdge = (Down < MaxDistance);
+		
+		//	if we hit an image edge going left or right, then let the other direction go further
+		int Up = GetWalkHistogramIndex( uv, (int2)(0,-1), Hsl, MaxDistance + (HitDownEdge?MaxDistance-Up:0), MaxHslDiff, &HitUpEdge );
+		
+		if ( Realign )
+			HitUpEdge = (Up < MaxDistance);
+		
+		if ( HitUpEdge )
 		{
-			float Hue = texture2D( grassfilter, uv ).x;
-			float3 Hsl = (float3)(Hue,1,0.3f);
-			Rgba = (float4)(1,1,1,1);
-			Rgba.xyz = HslToRgb( Hsl );
+			//	re-calc right if we hit the left edge
+			Down = GetWalkHistogramIndex( uv, (int2)(0,1), Hsl, MaxDistance + (HitUpEdge?MaxDistance-Up:0), MaxHslDiff, &HitDownEdge );
 		}
-		 */
 		
-		//float Hue = texture2D( grassfilter, uv ).x;
-		float3 SourceHsl = texture2D( Hsl, uv ).xyz;
-		//float3 SourceHsl = (float3)(Hue,1,0.3f);
-		Rgba = (float4)(1,1,1,1);
-		Rgba.xyz = HslToRgb( SourceHsl );
+		float ScoreUp = (float)Up / (float)(MaxDistance+MaxDistance);
+		float ScoreDown = (float)Down / (float)(MaxDistance+MaxDistance);
+		
+		
+		
+		float ScoreLeft = texture2D( grassfilter, uv ).y;
+		float ScoreRight = texture2D( grassfilter, uv ).z;
+		float LeftPx = ScoreLeft * (MaxDistance+MaxDistance);
+		float RightPx = ScoreRight * (MaxDistance+MaxDistance);
+		float UpPx = ScoreUp * (MaxDistance+MaxDistance);
+		float DownPx = ScoreDown * (MaxDistance+MaxDistance);
+		
+		int CentroidRadius = 2;
+		if ( fabs(LeftPx - RightPx) <= CentroidRadius && fabs(UpPx - DownPx) <= CentroidRadius )
+		{
+			//float Hue = texture2D( grassfilter, uv ).x;
+			//float3 FragHsl = (float3)(Hue,1,0.3f);
+			float3 FragHsl = texture2D( Hsl, uv ).xyz;
+			//Rgba = (float4)(1,1,1,1);
+			Rgba.xyz = HslToRgb( FragHsl );
+			Rgba.w = 1;
+		}
 
 	}
 
@@ -311,8 +423,8 @@ __kernel void GroupHsl(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write
 	float MatchSatLow = 0.2f;
 	float MatchLum = 0.7f;
 	float MatchLumHigh = 0.8f;
-#define MatchHslsCount 11
-	float3 MatchHsls[MatchHslsCount] =
+#define HistogramHslsCount	11
+	float3 HistogramHsls[11] =
 	{
 		(float3)( 0, 0, 0.1f ),	//	black
 		(float3)( 0, 0, 0.9f ),	//	white
@@ -329,9 +441,9 @@ __kernel void GroupHsl(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write
 	
 	int Best = 0;
 	float BestDiff = 1;
-	for ( int i=0;	i<MatchHslsCount;	i++ )
+	for ( int i=0;	i<HistogramHslsCount;	i++ )
 	{
-		float Diff = GetHslHslDifference( SourceHsl, MatchHsls[i] );
+		float Diff = GetHslHslDifference( SourceHsl, HistogramHsls[i] );
 		if ( Diff < BestDiff )
 		{
 			BestDiff = Diff;
@@ -339,10 +451,13 @@ __kernel void GroupHsl(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write
 		}
 	}
 	
-	float3 FragHsl = MatchHsls[Best];
+	float3 FragHsl = HistogramHsls[Best];
 	float4 Rgba = (float4)(1,1,1,1);
 	Rgba.xyz = HslToRgb( FragHsl );
 	//Rgba.xyz = FragHsl;
+	//Rgba.xyz = FloatToDebugColour( HistogramIndexToFloat(Best) );
+	//Rgba.r = HistogramIndexToFloat(Best);
+
 	
 	//bool SourceValid = texture2D( grassfilter, uv ).w > 0;
 	//if ( !SourceValid )
@@ -354,9 +469,9 @@ __kernel void GroupHsl(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write
 	if ( uv.y < 100 )
 	{
 		int Index = uv.x / 100;
-		if ( Index < MatchHslsCount )
+		if ( Index < HistogramHslsCount )
 		{
-			Rgba.xyz = HslToRgb( MatchHsls[Index] );
+			Rgba.xyz = HslToRgb( HistogramHsls[Index] );
 		}
 	}
 	
