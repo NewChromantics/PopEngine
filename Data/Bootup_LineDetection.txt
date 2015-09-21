@@ -1,0 +1,30 @@
+
+# set meta data
+
+setuniform LineDetector MaskTopLeft=0.285x0.544
+setuniform LineDetector MaskTopRight=0.768x0.552
+setuniform LineDetector MaskBottomRight=0.982x0.840
+setuniform LineDetector MaskBottomLeft=0.0x0.835
+
+setuniform LineDetector RadialDistortionX=-.0900000036
+setuniform LineDetector RadialDistortionY=.00999999978
+setuniform LineDetector TangentialDistortionX=.0599999987
+setuniform LineDetector TangentialDistortionY=0
+setuniform LineDetector K5Distortion=0
+setuniform LineDetector LensOffsetX=.0299999993
+setuniform LineDetector LensOffsetY=.0500000007
+
+setuniform LineDetector RectMergeMax=50
+setuniform LineDetector AtlasWidth=128 AtlasHeight=512
+
+
+
+
+
+# line detector
+addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag
+addstage LineDetector LineFilter cl=LineFilter.cl kernel=LineFilter
+#loadframe LineDetector time=1001 input01_undistorted.png
+decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
+
+

@@ -556,7 +556,9 @@ TPopAppError::Type PopMain(TJobParams& Params)
 	
 	
 	//	bootup commands via a channel
-	std::shared_ptr<TChannel> BootupChannel( new TChan<TChannelFileRead,TProtocolCli>( SoyRef("Bootup"), "bootup.txt", true ) );
+//	auto BootupFilename = "bootup.txt";
+	auto BootupFilename = "Bootup_LineDetection.txt";
+	std::shared_ptr<TChannel> BootupChannel( new TChan<TChannelFileRead,TProtocolCli>( SoyRef("Bootup"), BootupFilename, true ) );
 	/*
 	//	display reply to stdout
 	//	when the commandline SENDs a command (a reply), send it to stdout
