@@ -19,7 +19,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	DecoderParams.mFilename = Meta.mName;
 	DecoderParams.mDecodeAsFormat = SoyPixelsFormat::RGBA;
 	//DecoderParams.mPushBlockSleepMs = 30000;
-	DecoderParams.mDebugFrameSkipping = false;
+	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
 	
 	try
 	{
@@ -46,9 +46,9 @@ TVideoDeviceMeta GetDecoderMeta(const TVideoDecoderParams& Params,const std::str
 TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial,std::shared_ptr<Opengl::TContext> OpenglContext) :
 	TVideoDevice	( GetDecoderMeta(Params,Serial) ),
 	SoyWorkerThread	( Params.mFilename, SoyWorkerWaitMode::Wake ),
-mSerial			( Serial )
+	mSerial			( Serial )
 {
-	mDecoder = Platform::AllocDecoder( Params, nullptr );
+	mDecoder = PopMovieDecoder::AllocDecoder( Params );
 	mDecoder->StartMovie();
 	WakeOnEvent( mDecoder->mOnFrameDecoded );
 	

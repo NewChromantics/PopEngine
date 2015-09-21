@@ -34,13 +34,19 @@ void TPlayerFilter::SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event)
 {
 	auto BlockAndRun = [this](TVideoDevice& Video)
 	{
-		std::stringstream LastError;
-		auto& LastFrame = Video.GetLastFrame(LastError);
-		if ( !LastError.str().empty() )
+		std::shared_ptr<SoyPixelsImpl> FramePixels;
+		SoyTime FrameTime;
+		try
+		{
+			auto& LastFrame = Video.GetLastFrame();
+			FramePixels = LastFrame.GetPixelsShared();
+			FrameTime = LastFrame.GetTime();
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Error with last frame; " << e.what() << std::endl;
 			return;
-
-		auto FramePixels = LastFrame.GetPixelsShared();
-		auto Time = LastFrame.GetTime();
+		}
 		
 		//	copy pixels
 		std::shared_ptr<SoyPixelsImpl> Pixels( new SoyPixels );
@@ -67,7 +73,7 @@ void TPlayerFilter::SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event)
 			std::shared_ptr<SoyPixelsImpl>	mPixels;
 		};
 		
-		std::shared_ptr<PopWorker::TJob> Job( new TRunPixelsJob( *this, Pixels, Time ) );
+		std::shared_ptr<PopWorker::TJob> Job( new TRunPixelsJob( *this, Pixels, FrameTime ) );
 		Pixels.reset();
 		//std::Debug << "Queueing load of " << Time << std::endl;
 		mRunThreads.Run( Job );

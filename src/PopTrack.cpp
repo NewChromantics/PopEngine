@@ -328,19 +328,21 @@ bool TPopTrack::OnNewFrameCallback(TEventSubscriptionManager& SubscriptionManage
 	TJob OutputJob;
 	auto& Reply = OutputJob;
 	
-	std::stringstream Error;
 	//	grab pixels
-	auto& LastFrame = Device.GetLastFrame(Error);
-	if ( LastFrame.IsValid() )
+	try
 	{
+		auto& LastFrame = Device.GetLastFrame();
+		/*
 		auto& MemFile = LastFrame.mPixels->mMemFileArray;
 		TYPE_MemFile MemFileData( MemFile );
 		Reply.mParams.AddDefaultParam( MemFileData );
+		 */
 	}
-	
-	//	add error if present (last frame could be out of date)
-	if ( !Error.str().empty() )
-		Reply.mParams.AddErrorParam( Error.str() );
+	catch(std::exception& e)
+	{
+		//	add error if present (last frame could be out of date)
+		Reply.mParams.AddErrorParam( std::string(e.what()) );
+	}
 	
 	//	find channel, send to Client
 	//	std::Debug << "Got event callback to send to " << Client << std::endl;
@@ -376,9 +378,10 @@ void TPopTrack::OnGetFrame(TJobAndChannel& JobAndChannel)
 	}
 	
 	//	grab pixels
-	auto& LastFrame = Device->GetLastFrame( Error );
-	if ( LastFrame.IsValid() )
+	try
 	{
+		auto& LastFrame = Device->GetLastFrame();
+		/*
 		if ( AsMemFile )
 		{
 			TYPE_MemFile MemFile( LastFrame.mPixels->mMemFileArray );
@@ -387,17 +390,18 @@ void TPopTrack::OnGetFrame(TJobAndChannel& JobAndChannel)
 			Format.PushFirstContainer<TYPE_MemFile>();
 			Reply.mParams.AddDefaultParam( MemFile, Format );
 		}
-		else
+		else */
 		{
 			SoyPixels Pixels;
 			Pixels.Copy( *LastFrame.mPixels );
 			Reply.mParams.AddDefaultParam( Pixels );
 		}
 	}
-	
-	//	add error if present (last frame could be out of date)
-	if ( !Error.str().empty() )
-		Reply.mParams.AddErrorParam( Error.str() );
+	catch(std::exception& e)
+	{
+		//	add error if present (last frame could be out of date)
+		Reply.mParams.AddErrorParam( std::string(e.what()) );
+	}
 	
 	//	add other stats
 	auto FrameRate = Device->GetFps();
