@@ -346,6 +346,9 @@ __kernel void LineFilter(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__rea
 	}
 	
 	write_imagef( Frag, uv, Rgba );
+
+#undef AngleCount
+#undef ScaleCount
 }
 
 
@@ -555,6 +558,8 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 	}
 	
 	write_imagef( Frag, uv, Rgba );
+#undef AngleCount
+#undef ScaleCount
 }
 
 
@@ -656,4 +661,169 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	
 	write_imagef( Frag, uv, Rgba );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+float4 MakeLine(float2 Pos,float2 Dir)
+{
+	return (float4)( Pos.x, Pos.y, Pos.x + Dir.x, Pos.y + Dir.y );
+}
+
+
+//  public domain function by Darel Rex Finley, 2006
+
+
+
+//  Determines the intersection point of the line defined by points A and B with the
+//  line defined by points C and D.
+//
+//  Returns YES if the intersection point was found, and stores that point in X,Y.
+//  Returns NO if there is no determinable intersection point, in which case X,Y will
+//  be unmodified.
+
+
+float2 GetRayRayIntersection(float4 RayA,float4 RayB)
+{
+	float2 closestPointLine1;
+	float2 closestPointLine2;
+	float2 linePoint1 = RayA.xy;
+	float2 lineVec1 = RayA.zw;
+	float2 linePoint2 = RayB.xy;
+	float2 lineVec2 = RayB.zw;
+
+	float Ax = RayA.x;
+	float Ay = RayA.y;
+	float Bx = RayA.x + RayA.z;
+	float By = RayA.y + RayA.w;
+	float Cx = RayB.x;
+	float Cy = RayB.y;
+	float Dx = RayB.x + RayB.z;
+	float Dy = RayB.y + RayB.w;
+
+	float2 Intersection;
+	
+	float  distAB, theCos, theSin, newX, ABpos ;
+	
+	//  Fail if either line is undefined.
+	//if (Ax==Bx && Ay==By || Cx==Dx && Cy==Dy) return NO;
+	
+	//  (1) Translate the system so that point A is on the origin.
+	Bx-=Ax; By-=Ay;
+	Cx-=Ax; Cy-=Ay;
+	Dx-=Ax; Dy-=Ay;
+	
+	//  Discover the length of segment A-B.
+	distAB=sqrt(Bx*Bx+By*By);
+	
+	//  (2) Rotate the system so that point B is on the positive X axis.
+	theCos=Bx/distAB;
+	theSin=By/distAB;
+	newX=Cx*theCos+Cy*theSin;
+	Cy  =Cy*theCos-Cx*theSin; Cx=newX;
+	newX=Dx*theCos+Dy*theSin;
+	Dy  =Dy*theCos-Dx*theSin; Dx=newX;
+	
+	//  Fail if the lines are parallel.
+	//if (Cy==Dy) return NO;
+	
+	//  (3) Discover the position of the intersection point along line A-B.
+	ABpos=Dx+(Cx-Dx)*Dy/(Dy-Cy);
+	
+	//  (4) Apply the discovered position to line A-B in the original coordinate system.
+	Intersection.x = Ax+ABpos*theCos;
+	Intersection.y = Ay+ABpos*theSin;
+	return Intersection;
+}
+/*
+float2 GetRayRayIntersection(float4 RayA,float4 RayB)
+{
+	float2 closestPointLine1;
+	float2 closestPointLine2;
+	float2 linePoint1 = RayA.xy;
+	float2 lineVec1 = RayA.zw;
+	float2 linePoint2 = RayB.xy;
+	float2 lineVec2 = RayB.zw;
+		
+	float a = dot(lineVec1, lineVec1);
+	float b = dot(lineVec1, lineVec2);
+	float e = dot(lineVec2, lineVec2);
+		
+	float d = a*e - b*b;
+
+	//	gr; assuming not parrallel, need to handle this
+	//lines are not parallel
+	if ( d == 0 )
+	{
+		return (float2)(0,0);
+	}
+
+	float2 r = linePoint1 - linePoint2;
+	float c = Vector3.Dot(lineVec1, r);
+	float f = Vector3.Dot(lineVec2, r);
+			
+	float s = (b*f - c*e) / d;
+	float t = (a*f - c*b) / d;
+			
+	closestPointLine1 = linePoint1 + lineVec1 * s;
+	closestPointLine2 = linePoint2 + lineVec2 * t;
+}
+*/
+
+float GetHoughDistance(float2 Position,float2 Origin,float Angle)
+{
+	//	https://en.wikipedia.org/wiki/Hough_transform
+	//	http://docs.opencv.org/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html
+	//	make Ray going through Position at angle Angle
+	float4 Line = MakeLine( Position, GetVectorAngle( Angle, 1 ) );
+	//	make perpendicular RayP from origin to Ray
+	float4 LineP = MakeLine( Origin, GetVectorAngle( Angle + 90, 1 ) );
+	//	find Intersection of rays to get Distance
+	float2 Intersection = GetRayRayIntersection( Line, LineP );
+	float Distance = distance( Origin, Intersection );
+	return Distance;
+}
+
+__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,int AngleCount,int DistanceCount)
+{
+	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
+	int2 uv = uva.xy;
+	int2 wh = get_image_dim(WhiteFilter);
+	int2 Origin = wh / 2;
+	
+	//	abort early
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	if ( !BaseWhite )
+		return;
+	int PixelSkip = 0;
+	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
+		return;
+
+	int AngleIndex = uva.z;
+	float Angle = AngleDegs[AngleIndex];
+	
+	//	for every pixel, & angle find it's hough-distance
+	//	increment the count for that [angle][distance] to generate a histogram of RAYS (not storing start/ends)
+	//	later; store most common rays, and find intersections
+	//	later; match pitch to intersections
+	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), (float2)(Origin.x,Origin.y), Angle );
+	
+	//	turn distance to something on the range
+	float DistanceMax = sqrtf( wh.x*wh.x + wh.y*wh.y );
+	float DistanceNorm = min( 1.f, Distancef/DistanceMax );
+	int DistanceIndex = min( (int)round( DistanceNorm * DistanceCount ), DistanceCount-1 );
+	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
+	
+	atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
+}
+
+
 

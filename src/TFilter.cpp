@@ -6,6 +6,7 @@
 #include "TFilterStageOpencl.h"
 #include "TFilterStageOpengl.h"
 #include "TFilterStageGatherRects.h"
+#include "TFilterStageHoughTransform.h"
 
 const char* TFilter::FrameSourceName = "Frame";
 
@@ -480,7 +481,9 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
-		if ( Name == "GatherMinMaxs" )
+		if ( Name == "HoughFilter" )
+			Stage.reset( new TFilterStage_GatherHoughTransforms( Name, ProgramFilename, KernelName, *this ) );
+		else if ( Name == "GatherMinMaxs" )
 			Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this ) );
 		else
 			Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this ) );

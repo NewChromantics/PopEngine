@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
+		BF7146931BB34B370002E23E /* TFilterStageHoughTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF7A8DED1B65263800A6C403 /* PopMovieTextureOsxFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFAD33CC1B61740E00D3E7A6 /* PopMovieTextureOsxFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -121,6 +122,8 @@
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
 		BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_CoreFoundation.h; path = src/SoyTypes_CoreFoundation.h; sourceTree = "<group>"; };
+		BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageHoughTransform.cpp; path = src/TFilterStageHoughTransform.cpp; sourceTree = "<group>"; };
+		BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStageHoughTransform.h; path = src/TFilterStageHoughTransform.h; sourceTree = "<group>"; };
 		BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyStream.cpp; path = src/SoyStream.cpp; sourceTree = "<group>"; };
 		BF7225A91BADCB3B00550AD8 /* SoyStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyStream.h; path = src/SoyStream.h; sourceTree = "<group>"; };
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
@@ -385,6 +388,8 @@
 				FB2534F81A97758D00A61590 /* TFilterWindow.h */,
 				BF9CCAB51B6E56BC000B19EA /* TFilterStageOpencl.cpp */,
 				BFA297261B83654C003B91F6 /* TFilterStageGatherRects.cpp */,
+				BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */,
+				BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */,
 				BFA297271B83654C003B91F6 /* TFilterStageGatherRects.h */,
 				BF9CCAB61B6E56BC000B19EA /* TFilterStageOpencl.h */,
 				BF9CCAB71B6E56BC000B19EA /* TFilterStageOpengl.cpp */,
@@ -759,6 +764,7 @@
 				FB2534EC1A974EFB00A61590 /* TestReporter.cpp in Sources */,
 				BFA297171B7E5E66003B91F6 /* SoyOpenglView.mm in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
+				BF7146931BB34B370002E23E /* TFilterStageHoughTransform.cpp in Sources */,
 				FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */,
 				FB2534E81A974EFB00A61590 /* ReportAssert.cpp in Sources */,
 				FB2534F11A974EFB00A61590 /* XmlTestReporter.cpp in Sources */,
