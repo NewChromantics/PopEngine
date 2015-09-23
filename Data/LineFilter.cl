@@ -350,6 +350,11 @@ __kernel void LineFilter(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__rea
 
 
 
+bool RgbaToWhite(float4 Rgba)
+{
+	return (Rgba.x+Rgba.y+Rgba.z) == 0;
+}
+
 
 void GetWhiteSample(float* SampleScores,int2 PatternSize,float2 SampleScale,float AngleDeg,__read_only image2d_t WhiteFilter,float2 BaseUv)
 {
@@ -371,7 +376,8 @@ void GetWhiteSample(float* SampleScores,int2 PatternSize,float2 SampleScale,floa
 			//	rotate sample
 			uv += BaseUv;
 			
-			float Score = read_imagef( WhiteFilter, Sampler, uv ).x;
+			bool IsWhite = RgbaToWhite( read_imagef( WhiteFilter, Sampler, uv ) );
+			float Score = IsWhite;
 			SampleScores[x+(y*PatternSize.x)] = Score;
 		}
 	}
@@ -384,16 +390,16 @@ float2 GetWhitePatternScore(float2 SampleSizePx,float AngleDeg,__read_only image
 {
 	//	this is the image we're trying to match
 	
-	 #define PatternWidth	6
+	 #define PatternWidth	5
 	 #define PatternHeight	6
 	 float PatternScores[PatternWidth*PatternHeight] =
 	 {
-		0,0,1,1,0,0,
-		0,0,1,1,0,0,
-		0,0,1,1,0,0,
-		0,0,1,1,0,0,
-		0,0,1,1,0,0,
-		0,0,1,1,0,0,
+		0,0,1,0,0,
+		0,0,1,0,0,
+		0,0,1,0,0,
+		0,0,1,0,0,
+		0,0,1,0,0,
+		0,0,1,0,0,
 	 };
 	/*
 #define PatternWidth	3
@@ -443,16 +449,18 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 
 	//	abort early
-	float BaseWhite = texture2D( WhiteFilter, uv ).x;
-	if ( BaseWhite == 0 )
+	//float4 InvalidColour = texture2D( Frame, uv );
+	float4 InvalidColour = (float4)(0,0,0,1);
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	if ( !BaseWhite )
 	{
-		write_imagef( Frag, uv, (float4)(0,0,0,1) );
+		write_imagef( Frag, uv, InvalidColour );
 		return;
 	}
-	if ( false )
-	if ( uv.x % 4 != 0 || uv.y % 4 != 0)
+	int PixelSkip = 0;
+	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
 	{
-		write_imagef( Frag, uv, (float4)(0,0,0,1) );
+		write_imagef( Frag, uv, InvalidColour );
 		return;
 	}
 	
@@ -462,16 +470,17 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 		//-85, 5, 10, 15, 20, 25, 30,
 		-90, -70, -50, -30, -15, 0, 15, 30, 50, 70
 	};
-#define WindowSizeCount 2
+#define WindowSizeCount 3
 	float WindowSize[WindowSizeCount] =
 	{
-		6, 15
+		6, 15, 30
 	};
 	
 	//float2 SampleSizePx = (float2)(20,20);
 	//float2 SampleSizePx = (float2)(20,20);
 	//	minimum positive/negative scores
-	float2 MinScore = (float2)(0.7f,0.7f);
+	//	float2 MinScore = (float2)(0.7f,0.7f);
+	float2 MinScore = (float2)(0.8f,0.8f);
 	int BestAngleIndex = -1;
 	int BestScaleIndex = -1;
 	float2 BestScore = 0;
@@ -504,7 +513,7 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 	float ScoreNorm = Score / (1.f-MinScoref);
 	
 	float4 Rgba = (float4)(ScoreNorm,ScoreNorm,ScoreNorm,1);
-	bool ColourByAngle = false;
+	bool ColourByAngle = true;
 	bool ColourByRainbowScore = true;
 	if ( BestAngleIndex < 0 )
 	{
@@ -548,6 +557,19 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 	write_imagef( Frag, uv, Rgba );
 }
 
+
+float3 IndexToRgb(int Index,int IndexCount)
+{
+	if ( Index == 0 )
+		return (float3)(0,0,0);
+	
+	float Hue = Index / (float)IndexCount;
+	float3 Hsl = (float3)( Hue, 1.0f, 0.5f );
+
+	return HslToRgb( Hsl );
+}
+
+
 __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
@@ -555,24 +577,34 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	float3 SourceHsl = texture2D( Hsl, uv ).xyz;
 	
 	
-	float MatchSat = 0.4f;
-	float MatchSatHigh = 0.5f;
-	float MatchSatLow = 0.2f;
-	float MatchLum = 0.4f;
-#define HistogramHslsCount	(11)
+	float MatchSat = 0.5f;
+	float MatchSatHigh = 0.6f;
+	float MatchSatLow = 0.5f;
+	float MatchLum = 0.3f;
+#define HistogramHslsCount	(15)
+#define LastWhiteIndex		4
 	float3 HistogramHsls[HistogramHslsCount] =
 	{
+		(float3)( 0, 0, 0.9f ),	//	white
+		(float3)( 0, 0, 0.8f ),	//	white
+		(float3)( 0, 0, 0.7f ),	//	white
 		(float3)( 0, 0, 0.6f ),	//	white
+		(float3)( 0, 0, 0.5f ),	//	white
+		
+//		(float3)( 90/360.f, 0.2f, 0.5f ),	//	white
+//		(float3)( 90/360.f, 0.2f, 0.6f ),	//	white
+//		(float3)( 90/360.f, 0.2f, 0.7f ),	//	white
+
 		(float3)( 0, 0, 0.1f ),	//	black
-		(float3)( 0/360.f, MatchLum, MatchSat ),
-		(float3)( 20/360.f, MatchLum, MatchSat ),
-		(float3)( 50/360.f, MatchLum, MatchSat ),
-		(float3)( 90/360.f, MatchLum, MatchSat ),
-		(float3)( 150/360.f, MatchLum, MatchSat ),
-		(float3)( 180/360.f, MatchLum, MatchSatHigh ),
-		(float3)( 190/360.f, MatchLum, MatchSat ),
-		(float3)( 205/360.f, MatchLum, MatchSat ),
-		(float3)( 290/360.f, MatchLum, MatchSat ),
+		(float3)( 0/360.f, MatchSat, MatchLum ),
+		(float3)( 20/360.f, MatchSat, MatchLum ),
+		(float3)( 50/360.f, MatchSat, MatchLum ),
+		(float3)( 90/360.f, MatchSat, MatchLum ),
+		(float3)( 150/360.f, MatchSat, MatchLum ),
+		//(float3)( 180/360.f, MatchSat, MatchSatHigh ),
+		(float3)( 190/360.f, MatchSat, MatchLum ),
+		(float3)( 205/360.f, MatchSat, MatchLum ),
+		(float3)( 290/360.f, MatchSat, MatchLum ),
 		
 	};
 	
@@ -589,14 +621,27 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	}
 	
 	float3 FragHsl = HistogramHsls[Best];
-	float4 Rgba = (float4)(1,1,1,1);
+	float4 Rgba = (float4)(0,0,0,1);
 	
+	bool ColourToReal = false;
+	bool ColourToMask = false;
+	bool ColourToIndex = true;
 	
-	if ( Best != 0 )
+	if ( ColourToReal )
 	{
-		Rgba.xyz = 0;
+		Rgba.xyz = HslToRgb( FragHsl );
 	}
-
+	else if ( ColourToMask )
+	{
+		if ( Best <= LastWhiteIndex )
+			Rgba.xyz = 1;
+	}
+	else
+	{
+		if ( Best <= LastWhiteIndex )
+			Best = 0;
+		Rgba.xyz = IndexToRgb( Best, HistogramHslsCount );
+	}
 	
 	
 	//	debug show what we're matching
