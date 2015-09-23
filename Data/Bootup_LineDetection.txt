@@ -23,7 +23,10 @@ setuniform LineDetector AtlasWidth=128 AtlasHeight=512
 
 # line detector
 addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag
-addstage LineDetector LineFilter cl=LineFilter.cl kernel=LineFilter
+addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=FilterWhite
+addstage LineDetector LineFilter cl=LineFilter.cl kernel=WhiteLineFilter
+
+
 #loadframe LineDetector time=1001 input01_undistorted.png
 decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
 
