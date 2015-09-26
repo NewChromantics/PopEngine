@@ -28,9 +28,9 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		
 		static float AngFrom = 0;
 		static float AngTo = 180;
-		static float AngStep = 20;
+		static float AngStep = 10;
 		static float DistFrom = -700;
-		static float DistTo = 700;
+		static float DistTo = -DistFrom;
 		static float DistStep = 10;
 		for ( float a=AngFrom;	a<=AngTo;	a+=AngStep )
 			Angles.PushBack( a );
@@ -98,7 +98,7 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 	
 	
 	//	find the biggest number (needed for rendering later, but just testing here
-	static bool DebugHistogramCount = true;
+	static bool DebugHistogramCount = false;
 	if ( DebugHistogramCount )
 	{
 		int TotalDistanceCount = 0;

@@ -567,15 +567,34 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 }
 
 
-float3 IndexToRgb(int Index,int IndexCount)
+static float3 NormalToRgb(float Normal)
+{
+	//return (float3)(Normal,Normal,Normal);
+	float Hue = Normal;
+	float3 Hsl = (float3)( Hue, 1.0f, 0.5f );
+	
+	return HslToRgb( Hsl );
+}
+
+static float4 NormalToRgba(float Normal)
+{
+	float4 Rgba = 1;
+	Rgba.xyz = NormalToRgb(Normal);
+	return Rgba;
+}
+
+static float3 IndexToRgb(int Index,int IndexCount)
 {
 	if ( Index == 0 )
 		return (float3)(0,0,0);
 	
-	float Hue = Index / (float)IndexCount;
-	float3 Hsl = (float3)( Hue, 1.0f, 0.5f );
-
-	return HslToRgb( Hsl );
+	return NormalToRgb( Index / (float)IndexCount );
+}
+static float4 IndexToRgba(int Index,int IndexCount)
+{
+	float4 Rgba = 1;
+	Rgba.xyz = IndexToRgb( Index, IndexCount );
+	return Rgba;
 }
 
 
@@ -814,6 +833,7 @@ void DrawLine(float4 Line,__write_only image2d_t Frag,float Score)
 
 void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Score)
 {
+	float4 Rgba = NormalToRgba( Score );
 	int2 wh = get_image_dim(Frag);
 
 	int Steps = 700;
@@ -822,7 +842,6 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 		float2 Point = Lerp2( i/(float)Steps, From, To );
 		if ( Point.x < 0 || Point.y < 0 || Point.x >= wh.x || Point.y >= wh.y )
 			continue;
-		float4 Rgba = (float4)(Score,Score,1,1);
 		write_imagef( Frag, (int2)(Point.x,Point.y), Rgba );
 	}
 }
@@ -844,6 +863,8 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
 	Score /= 1300.f;
+	if ( Score < 0.3f || Score > 0.7f )
+		Score = 0.f;
 	Score = min( Score, 1.f );
 
 	//if ( DistanceIndex == 0 )	return;
@@ -878,6 +899,30 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	DrawLine( LineSouth, Frag, Score );
 	*/
 }
+
+
+__kernel void DrawHoughGraph(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
+{
+	int AngleIndex = get_global_id(0) + OffsetAngle;
+	int DistanceIndex = get_global_id(1) + OffsetDistance;
+	int2 wh = get_image_dim(Frag);
+
+	float u = (AngleIndex/(float)AngleCount);
+	float v = (DistanceIndex/(float)DistanceCount);
+	int2 uv = (int2)(u*wh.x,v*wh.y);
+	
+	int Scorei = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
+	float Score = Scorei;
+	Score /= 1300.f;
+	//if ( Score < 0.3f || Score > 0.7f )
+	//	Score = 0.f;
+	Score = min( Score, 1.f );
+
+	float4 Rgba = NormalToRgba(Score);
+	
+	write_imagef( Frag, uv, Rgba );
+}
+
 
 bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
 {
@@ -943,16 +988,30 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 __kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
-
+	
 	//	abort early
 	if ( !HoughIncludePixel( WhiteFilter, uv ) )
 	{
 		write_imagef( Frag, uv, (float4)(0,0,0,1) );
 		return;
 	}
-
+	
 	write_imagef( Frag, uv, (float4)(1,1,1,1) );
 }
+
+
+__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	
+	float4 Rgba = BaseWhite ? (float4)(0,1,0,1) : (float4)(0,0,0,1);
+	
+	write_imagef( Frag, uv, Rgba );
+}
+
+
 
 
 
