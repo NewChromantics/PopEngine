@@ -570,8 +570,9 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 static float3 NormalToRgb(float Normal)
 {
 	//return (float3)(Normal,Normal,Normal);
-	float Hue = Normal;
-	float3 Hsl = (float3)( Hue, 1.0f, 0.5f );
+	//	red to green
+	float Hue = Lerp( Normal, -0.3f, 0.4f );
+	float3 Hsl = (float3)( Hue, 1.0f, 0.6f );
 	
 	return HslToRgb( Hsl );
 }
@@ -916,7 +917,7 @@ __kernel void DrawHoughGraph(int OffsetAngle,int OffsetDistance,__write_only ima
 	Score /= 1300.f;
 	//if ( Score < 0.3f || Score > 0.7f )
 	//	Score = 0.f;
-	Score = min( Score, 1.f );
+	Score = max( 0.f, min( Score, 1.f ) );
 
 	float4 Rgba = NormalToRgba(Score);
 	
