@@ -5,8 +5,8 @@
 
 
 
-TFilterStage_ShaderBlit::TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter) :
-	TFilterStage	( Name, Filter ),
+TFilterStage_ShaderBlit::TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter,const TJobParams& StageParams) :
+	TFilterStage	( Name, Filter, StageParams ),
 	mVertFilename	( VertFilename ),
 	mFragFilename	( FragFilename ),
 	mBlitVertexDescription	( BlitVertexDescription ),
@@ -240,7 +240,7 @@ void TFilterStage_ShaderBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 			for ( int u=0;	u<StageShader.mUniforms.GetSize();	u++ )
 			{
 				auto& Uniform = StageShader.mUniforms[u];
-				if ( Frame.SetUniform( Shader, Uniform, mFilter ) )
+				if ( Frame.SetUniform( Shader, Uniform, mFilter, *this ) )
 					continue;
 					
 				//	maybe surpress this until we need it... or only warn once

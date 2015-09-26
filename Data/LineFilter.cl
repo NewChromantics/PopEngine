@@ -601,7 +601,7 @@ static float4 IndexToRgba(int Index,int IndexCount)
 }
 
 
-__kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag)
+__kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag,int RenderAsRgb)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
@@ -654,11 +654,11 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	float3 FragHsl = HistogramHsls[Best];
 	float4 Rgba = (float4)(0,0,0,1);
 	
-	bool ColourToReal = false;
+	bool ColourToRgb = RenderAsRgb!=0;
 	bool ColourToMask = false;
 	bool ColourToIndex = true;
 	
-	if ( ColourToReal )
+	if ( ColourToRgb )
 	{
 		Rgba.xyz = HslToRgb( FragHsl );
 	}
@@ -687,11 +687,6 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	
 	write_imagef( Frag, uv, Rgba );
 }
-
-
-
-
-
 
 
 

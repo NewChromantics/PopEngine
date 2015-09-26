@@ -75,7 +75,7 @@ public:
 class TFilterStage_OpenclKernel : public TFilterStage
 {
 public:
-	TFilterStage_OpenclKernel(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter);
+	TFilterStage_OpenclKernel(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter,const TJobParams& StageParams);
 	
 	void				Reload();
 	//virtual bool		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
@@ -103,8 +103,8 @@ public:
 class TFilterStage_OpenclBlit : public TFilterStage_OpenclKernel
 {
 public:
-	TFilterStage_OpenclBlit(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter) :
-		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter )
+	TFilterStage_OpenclBlit(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams)
 	{
 	}
 	

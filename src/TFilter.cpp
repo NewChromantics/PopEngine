@@ -129,10 +129,29 @@ void TFilterStageRuntimeData_Frame::Shutdown(Opengl::TContext& ContextGl,Opencl:
 }
 
 	
-TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter) :
+TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter,const TJobParams& StageParams) :
 	mName			( Name ),
-	mFilter			( Filter )
+	mFilter			( Filter ),
+	mStageParams	( StageParams )
 {
+}
+
+
+bool TFilterStage::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform)
+{
+	auto Param = mStageParams.GetParam( Uniform.mName );
+	if ( !Param.IsValid() )
+		return false;
+	
+	if ( Uniform.mType == Soy::GetTypeName<int>() )
+	{
+		int v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+
+	return false;
 }
 
 TFilterFrame::~TFilterFrame()
@@ -155,6 +174,7 @@ TFilterFrame::~TFilterFrame()
 	mContextCl.reset();
 	mContextGl.reset();
 }
+
 
 Opengl::TTexture TFilterFrame::GetFrameTexture(TFilter& Filter,bool Blocking)
 {
@@ -324,12 +344,12 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUnifor
 	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter );
 }
 
-bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
+bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage)
 {
 	//	have a priority/overload order;
 	//		stage-frame data
 	//		frame data
-	//		stage data	[done by filter]
+	//		stage data
 	//		filter data
 	for ( auto it=mStageData.begin();	it!=mStageData.end();	it++ )
 	{
@@ -342,6 +362,9 @@ bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Unif
 		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter ) )
 			return true;
 	}
+	
+	if ( Stage.SetUniform( Shader, Uniform ) )
+		return true;
 	
 	if ( Filter.SetUniform( Shader, Uniform ) )
 		return true;
@@ -452,7 +475,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto ImageSource = Params.GetParamAs<std::string>("Image");
 		auto MaskStage = Params.GetParamAs<std::string>("Mask");
 		
-		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, MaskStage, *this ) );
+		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, MaskStage, *this, Params ) );
 	}
 	else if ( Name == "WriteRectAtlasStream" )
 	{
@@ -462,7 +485,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 			throw Soy::AssertException("No filename specified for atlas output");
 		auto Filename = FilenameParam.Decode<std::string>();
 		
-		Stage.reset( new TFilterStage_WriteRectAtlasStream( Name, AtlasStage, Filename, *this ) );
+		Stage.reset( new TFilterStage_WriteRectAtlasStream( Name, AtlasStage, Filename, *this, Params ) );
 	}
 	else if ( Params.HasParam("MinMaxDataStage" ) )
 	{
@@ -472,7 +495,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto MinMaxDataStage = Params.GetParamAs<std::string>("MinMaxDataStage");
 		
-		Stage.reset( new TFilterStage_DistortRects( Name, ProgramFilename, KernelName, MinMaxDataStage, *this ) );
+		Stage.reset( new TFilterStage_DistortRects( Name, ProgramFilename, KernelName, MinMaxDataStage, *this, Params ) );
 	}
 	else if ( Params.HasParam("HoughData") )
 	{
@@ -482,7 +505,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughDataStageName = Params.GetParamAs<std::string>("HoughData");
 		
-		Stage.reset( new TFilterStage_DrawHoughLines( Name, ProgramFilename, KernelName, HoughDataStageName, *this ) );
+		Stage.reset( new TFilterStage_DrawHoughLines( Name, ProgramFilename, KernelName, HoughDataStageName, *this, Params ) );
 	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
@@ -492,18 +515,18 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
 		if ( Name == "HoughFilter" )
-			Stage.reset( new TFilterStage_GatherHoughTransforms( Name, ProgramFilename, KernelName, *this ) );
+			Stage.reset( new TFilterStage_GatherHoughTransforms( Name, ProgramFilename, KernelName, *this, Params ) );
 		else if ( Name == "GatherMinMaxs" )
-			Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this ) );
+			Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this, Params ) );
 		else
-			Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this ) );
+			Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this, Params ) );
 	}
 	else if ( Params.HasParam("vert") && Params.HasParam("frag") )
 	{
 		CreateBlitGeo(true);
 		auto VertFilename = Params.GetParamAs<std::string>("vert");
 		auto FragFilename = Params.GetParamAs<std::string>("frag");
-		Stage.reset( new TFilterStage_ShaderBlit(Name,VertFilename,FragFilename,mBlitQuad->mVertexDescription,*this) );
+		Stage.reset( new TFilterStage_ShaderBlit( Name, VertFilename, FragFilename, mBlitQuad->mVertexDescription, *this, Params ) );
 	}
 		
 	if ( !Stage )

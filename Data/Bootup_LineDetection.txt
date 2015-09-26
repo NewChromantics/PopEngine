@@ -23,7 +23,8 @@ setuniform LineDetector AtlasWidth=128 AtlasHeight=512
 
 # line detector
 addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag
-addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite
+addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=0
+addstage LineDetector WhiteFilterGroup_rgb cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=1
 addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges
 #addstage LineDetector LineFilter cl=LineFilter.cl kernel=WhiteLineFilter
 addstage LineDetector HoughFilterPixels cl=LineFilter.cl kernel=HoughFilterPixels

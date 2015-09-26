@@ -36,9 +36,10 @@ namespace Opencl
 class TFilterStage
 {
 public:
-	TFilterStage(const std::string& Name,TFilter& Filter);
+	TFilterStage(const std::string& Name,TFilter& Filter,const TJobParams& StageParams);
 	
 	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)=0;
+	virtual bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform);
 
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
@@ -46,6 +47,7 @@ public:
 	SoyEvent<TFilterStage&>	mOnChanged;
 	std::string				mName;
 	TFilter&				mFilter;
+	TJobParams				mStageParams;	//	params specified in config per-stage, which we can relay onto uniforms so we can specify kernel params in the config!
 };
 
 class TFilterStageRuntimeData
@@ -73,7 +75,7 @@ public:
 	
 	bool		Run(TFilter& Filter,const std::string& Description,std::shared_ptr<Opengl::TContext>& ContextGl,std::shared_ptr<Opencl::TContext>& ContextCl);	//	gr: description to avoid passing meta data, like frame timestamp
 	
-	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter);
+	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage);
 
 	template<class RUNTIMEDATATYPE>
 	RUNTIMEDATATYPE&	GetData(const std::string& StageName)

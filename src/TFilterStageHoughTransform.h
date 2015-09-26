@@ -10,8 +10,8 @@
 class TFilterStage_GatherHoughTransforms : public TFilterStage_OpenclKernel
 {
 public:
-	TFilterStage_GatherHoughTransforms(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter) :
-		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter )
+	TFilterStage_GatherHoughTransforms(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams )
 	{
 	}
 	
@@ -42,8 +42,8 @@ public:
 class TFilterStage_DrawHoughLines : public TFilterStage_OpenclKernel
 {
 public:
-	TFilterStage_DrawHoughLines(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughDataStage,TFilter& Filter) :
-		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter ),
+	TFilterStage_DrawHoughLines(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughDataStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
 		mHoughDataStage				( HoughDataStage )
 	{
 	}

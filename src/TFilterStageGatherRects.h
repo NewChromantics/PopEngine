@@ -10,8 +10,8 @@
 class TFilterStage_GatherRects : public TFilterStage_OpenclKernel
 {
 public:
-	TFilterStage_GatherRects(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter) :
-		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter )
+	TFilterStage_GatherRects(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams )
 	{
 	}
 	
@@ -38,8 +38,8 @@ public:
 class TFilterStage_DistortRects : public TFilterStage_OpenclKernel
 {
 public:
-	TFilterStage_DistortRects(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& MinMaxDataStage,TFilter& Filter) :
-		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter ),
+	TFilterStage_DistortRects(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& MinMaxDataStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
 		mMinMaxDataStage			( MinMaxDataStage )
 	{
 	}
@@ -60,8 +60,8 @@ class TFilterStageRuntimeData_DistortRects : public TFilterStageRuntimeData_Gath
 class TFilterStage_MakeRectAtlas : public TFilterStage
 {
 public:
-	TFilterStage_MakeRectAtlas(const std::string& Name,const std::string& RectsStage,const std::string& ImageStage,const std::string& MaskStage,TFilter& Filter) :
-		TFilterStage	( Name, Filter ),
+	TFilterStage_MakeRectAtlas(const std::string& Name,const std::string& RectsStage,const std::string& ImageStage,const std::string& MaskStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage	( Name, Filter, StageParams ),
 		mRectsStage		( RectsStage ),
 		mImageStage		( ImageStage ),
 		mMaskStage		( MaskStage )
@@ -126,8 +126,8 @@ public:
 class TFilterStage_WriteRectAtlasStream : public TFilterStage
 {
 public:
-	TFilterStage_WriteRectAtlasStream(const std::string& Name,const std::string& AtlasStage,const std::string& OutputFilename,TFilter& Filter) :
-		TFilterStage	( Name, Filter ),
+	TFilterStage_WriteRectAtlasStream(const std::string& Name,const std::string& AtlasStage,const std::string& OutputFilename,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage	( Name, Filter, StageParams ),
 		mAtlasStage		( AtlasStage ),
 		mOutputFilename	( OutputFilename )
 	{

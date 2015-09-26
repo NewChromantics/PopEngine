@@ -3,8 +3,8 @@
 
 
 
-TFilterStage_OpenclKernel::TFilterStage_OpenclKernel(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter) :
-	TFilterStage		( Name, Filter ),
+TFilterStage_OpenclKernel::TFilterStage_OpenclKernel(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter,const TJobParams& StageParams) :
+	TFilterStage		( Name, Filter, StageParams ),
 	mKernelFilename		( KernelFilename ),
 	mKernelName			( KernelName ),
 	mKernelFileWatch	( KernelFilename )
@@ -213,7 +213,7 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 		{
 			auto& Uniform = Kernel.mKernel.mUniforms[u];
 				
-			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
 				continue;
 
 			//	maybe surpress this until we need it... or only warn once

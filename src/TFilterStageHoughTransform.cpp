@@ -28,8 +28,8 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		
 		static float AngFrom = 0;
 		static float AngTo = 180;
-		static float AngStep = 10;
-		static float DistFrom = -700;
+		static float AngStep = 1;
+		static float DistFrom = -1200;
 		static float DistTo = -DistFrom;
 		static float DistStep = 10;
 		for ( float a=AngFrom;	a<=AngTo;	a+=AngStep )
@@ -60,7 +60,7 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		{
 			auto& Uniform = Kernel.mKernel.mUniforms[u];
 			
-			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
 				continue;
 		}
 	
@@ -157,7 +157,7 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 				}
 				
 				//	clear it
-				static bool ClearTarget = true;
+				static bool ClearTarget = false;
 				if ( ClearTarget )
 				{
 					Opengl::TRenderTargetFbo Fbo(StageTarget);
@@ -219,7 +219,7 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		{
 			auto& Uniform = Kernel.mKernel.mUniforms[u];
 			
-			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
 				continue;
 			
 			//	maybe surpress this until we need it... or only warn once

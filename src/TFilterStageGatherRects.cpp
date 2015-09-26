@@ -74,7 +74,7 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 		{
 			auto& Uniform = Kernel.mKernel.mUniforms[u];
 			
-			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
 				continue;
 		}
 	
@@ -189,7 +189,7 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 		{
 			auto& Uniform = Kernel.mKernel.mUniforms[u];
 			
-			if ( Frame.SetUniform( Kernel, Uniform, mFilter ) )
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
 				continue;
 		}
 
