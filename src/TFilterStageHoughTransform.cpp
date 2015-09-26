@@ -6,6 +6,7 @@
 
 
 
+
 void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	auto Kernel = GetKernel(ContextCl);
@@ -26,19 +27,24 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		auto& Angles = StageData.mAngles;
 		auto& Distances = StageData.mDistances;
 		
-		static float AngFrom = 0;
-		static float AngTo = 180;
-		static float AngStep = 0.333333f;
-		static float DistFrom = -900;
-		static float DistTo = -DistFrom;
-		static float DistStep = 1;
-		for ( float a=AngFrom;	a<=AngTo;	a+=AngStep )
-			Angles.PushBack( a );
+		TUniformWrapper<float> AngleFrom("HoughAngleFrom",0);
+		TUniformWrapper<float> AngleTo("HoughAngleTo",180);
+		TUniformWrapper<float> AngleStep("HoughAngleStep",0.33333f);
+		TUniformWrapper<float> DistanceStep("HoughDistanceStep",2);
+		
+		Frame.SetUniform( AngleFrom, AngleFrom, mFilter, *this );
+		Frame.SetUniform( AngleTo, AngleTo, mFilter, *this );
+		Frame.SetUniform( AngleStep, AngleFrom, mFilter, *this );
+		Frame.SetUniform( DistanceStep, DistanceStep, mFilter, *this );
 
-		for ( float Dist=DistFrom;	Dist<=DistTo;	Dist+=DistStep )
-		{
+		//	gr: remove this and generate max from the image
+		static float DistanceFrom = -900;
+		float DistanceTo = -DistanceFrom;
+		
+		for ( float a=AngleFrom;	a<=AngleTo;	a+=AngleStep )
+			Angles.PushBack( a );
+		for ( float Dist=DistanceFrom;	Dist<=DistanceTo;	Dist+=DistanceStep )
 			Distances.PushBack( Dist );
-		}
 	}
 
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GatherHoughTransforms&>( *Data.get() );
