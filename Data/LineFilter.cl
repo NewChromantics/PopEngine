@@ -9,8 +9,21 @@ const float MinLum = 0.5f;
 const float Tolerance = 0.01f;
 const float AngleRange = 360.0f;
 
-#define MIN_HOUGH_SCORE	700
+
+//	gr: this score needs to vary for the MAX pixels that could even be on a line (a line clipped in a corner will have less pixels, but could be perfect)
+//#define EDGE_FILTER_WHITE_PIXELS
+#if defined(EDGE_FILTER_WHITE_PIXELS)
+#define MIN_HOUGH_SCORE	800
 #define MAX_HOUGH_SCORE	1000
+#else
+#define MIN_HOUGH_SCORE	600
+#define MAX_HOUGH_SCORE	5000
+#endif
+
+
+//	filter out lines if a neighbour is better
+#define CHECK_MAXIMA_ANGLES		4
+#define CHECK_MAXIMA_DISTANCES	3
 
 
 static float Range(float Time,float Start,float End)
@@ -98,6 +111,48 @@ static float3 HslToRgb(float3 Hsl)
 		float b = hue2rgb(p, q, h - 1.f/3.f);
 		return (float3)(r,g,b);
 	}
+}
+
+
+
+static float3 NormalToRgb(float Normal)
+{
+	//return (float3)(Normal,Normal,Normal);
+	//	red to green
+	//float Hue = Lerp( Normal, -0.3f, 0.4f );	//	blue to green
+	float Hue = Lerp( Normal, 0, 0.4f );	//	red to green
+	float3 Hsl = (float3)( Hue, 1.0f, 0.6f );
+	
+	return HslToRgb( Hsl );
+}
+
+static float4 NormalToRgba(float Normal)
+{
+	float4 Rgba = 1;
+	Rgba.xyz = NormalToRgb(Normal);
+	return Rgba;
+}
+
+static int RgbToIndex(float3 Rgb,int IndexCount)
+{
+	float Index = Rgb.x * IndexCount;
+	return Index;
+}
+
+static float3 IndexToRgb(int Index,int IndexCount)
+{
+	if ( Index == 0 )
+		return (float3)(0,0,0);
+	
+	float Norm = Index / (float)IndexCount;
+	//return NormalToRgb( Index / (float)IndexCount );
+	return (float3)( Norm, Norm, Norm );
+}
+static float4 IndexToRgba(int Index,int IndexCount)
+{
+	float4 Rgba = 1;
+	Rgba.xyz = IndexToRgb( Index, IndexCount );
+	return Rgba;
 }
 
 
@@ -361,7 +416,16 @@ __kernel void LineFilter(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__rea
 
 bool RgbaToWhite(float4 Rgba)
 {
-	return (Rgba.x+Rgba.y+Rgba.z) == 0;
+//#define HistogramHslsCount	(15)
+	int Index = RgbToIndex( Rgba.xyz, 15 );
+	return Index == 0;
+}
+
+bool RgbaToGreen(float4 Rgba)
+{
+	//#define HistogramHslsCount	(15)
+	int Index = RgbToIndex( Rgba.xyz, 15 );
+	return Index==9;
 }
 
 
@@ -568,37 +632,6 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 #undef ScaleCount
 }
 
-
-static float3 NormalToRgb(float Normal)
-{
-	//return (float3)(Normal,Normal,Normal);
-	//	red to green
-	float Hue = Lerp( Normal, -0.3f, 0.4f );
-	float3 Hsl = (float3)( Hue, 1.0f, 0.6f );
-	
-	return HslToRgb( Hsl );
-}
-
-static float4 NormalToRgba(float Normal)
-{
-	float4 Rgba = 1;
-	Rgba.xyz = NormalToRgb(Normal);
-	return Rgba;
-}
-
-static float3 IndexToRgb(int Index,int IndexCount)
-{
-	if ( Index == 0 )
-		return (float3)(0,0,0);
-	
-	return NormalToRgb( Index / (float)IndexCount );
-}
-static float4 IndexToRgba(int Index,int IndexCount)
-{
-	float4 Rgba = 1;
-	Rgba.xyz = IndexToRgb( Index, IndexCount );
-	return Rgba;
-}
 
 
 __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag,int RenderAsRgb)
@@ -861,6 +894,21 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
 
+	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
+#if defined(CHECK_MAXIMA_ANGLES)||defined(CHECK_MAXIMA_DISTANCES)	//	OR so errors if a define is missing
+	for ( int x=-CHECK_MAXIMA_ANGLES;	x<=CHECK_MAXIMA_ANGLES;	x++ )
+	{
+		for ( int y=-CHECK_MAXIMA_DISTANCES;	y<=CHECK_MAXIMA_DISTANCES;	y++ )
+		{
+			int NeighbourAngleIndex = clamp( AngleIndex+x, 0, AngleCount-1 );
+			int NeighbourDistanceIndex = clamp( DistanceIndex+y, 0, DistanceCount-1 );
+			float NeighbourScore = AngleXDistances[ (NeighbourAngleIndex * DistanceCount ) + NeighbourDistanceIndex ];
+			if ( NeighbourScore > Score )
+				return;
+		}
+	}
+#endif
+	
 	if ( Score < MIN_HOUGH_SCORE )
 	{
 		Score = 0;
@@ -869,9 +917,6 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	if ( Score > MAX_HOUGH_SCORE )
 		Score = MAX_HOUGH_SCORE;
 	Score = Range( Score, MIN_HOUGH_SCORE, MAX_HOUGH_SCORE );
-
-	//if ( DistanceIndex == 0 )	return;
-	
 	
 	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
 	float rho = Distance;
@@ -936,10 +981,7 @@ bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
 	int PixelSkip = 0;
 	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
 		return false;
-	
-	if ( uv.y < 500 )
-		return false;
-	
+		
 	return true;
 }
 
@@ -977,13 +1019,16 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 			BestDistanceDiff = DistanceDiff;
 			BestDistanceIndex = d;
 		}
+		else
+			break;
 	}
 	
 	int DistanceIndex = BestDistanceIndex;
 	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
 	
-	if( DistanceIndex != 0)
-	atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
+	//	stop convergence at the ends of the distance spectrum (allows smaller distances for testing)
+	if( DistanceIndex != 0 && DistanceIndex != DistanceCount-1)
+		atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
 
 }
 
@@ -1010,7 +1055,29 @@ float WhiteSample(int x,int y,__read_only image2d_t Image,int2 uv)
 	return RgbaToWhite( texture2D( Image, uv+(int2)(x,y) ) ) ? 1:0;
 }
 
+bool GreenSample(int x,int y,__read_only image2d_t Image,int2 uv)
+{
+	return RgbaToGreen( texture2D( Image, uv+(int2)(x,y) ) );
+}
 
+float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv)
+{
+	int GreenCount = 0;
+
+	GreenCount += GreenSample( -5, -5, Image, uv );
+	GreenCount += GreenSample(  0, -5, Image, uv );
+	GreenCount += GreenSample(  5, -5, Image, uv );
+	
+	GreenCount += GreenSample( -5,  0, Image, uv );
+//	GreenCount += GreenSample(  0,  0, Image, uv );
+	GreenCount += GreenSample(  5,  0, Image, uv );
+	
+	GreenCount += GreenSample( -5,  5, Image, uv );
+	GreenCount += GreenSample(  0,  5, Image, uv );
+	GreenCount += GreenSample(  5,  5, Image, uv );
+	
+	return GreenCount >= 2;
+}
 
 float WhiteFilterSobel(__read_only image2d_t Image,int2 uv)
 {
@@ -1034,8 +1101,20 @@ __kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t Whi
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
 	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilterGroup, uv ) );
-
-	BaseWhite = WhiteFilterSobel( WhiteFilterGroup, uv ) > 0;
+	
+	//	if it's white, only keep if there's green nearby
+	if ( BaseWhite )
+	{
+		BaseWhite = WhiteFilterGreenNearBy( WhiteFilterGroup, uv );
+	}
+	
+	//	if it's a white pixel, only keep if it's an edge
+#if defined(EDGE_FILTER_WHITE_PIXELS)
+	if ( BaseWhite )
+	{
+		BaseWhite = WhiteFilterSobel( WhiteFilterGroup, uv ) > 0;
+	}
+#endif
 	
 	float4 Rgba = BaseWhite ? (float4)(0,0,0,1) : (float4)(1,0,0,1);
 	write_imagef( Frag, uv, Rgba );
