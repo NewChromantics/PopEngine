@@ -5,10 +5,12 @@
 const int HitCountMin = 2;
 const bool IncludeSelf = true;
 
-
 const float MinLum = 0.5f;
 const float Tolerance = 0.01f;
 const float AngleRange = 360.0f;
+
+#define MIN_HOUGH_SCORE	700
+#define MAX_HOUGH_SCORE	1000
 
 
 static float Range(float Time,float Start,float End)
@@ -863,10 +865,15 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	float Angle = AngleDegs[AngleIndex];
 
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
-	Score /= 1300.f;
-	if ( Score < 0.3f || Score > 0.7f )
-		Score = 0.f;
-	Score = min( Score, 1.f );
+
+	if ( Score < MIN_HOUGH_SCORE )
+	{
+		Score = 0;
+		return;
+	}
+	if ( Score > MAX_HOUGH_SCORE )
+		Score = MAX_HOUGH_SCORE;
+	Score = Range( Score, MIN_HOUGH_SCORE, MAX_HOUGH_SCORE );
 
 	//if ( DistanceIndex == 0 )	return;
 	
@@ -1001,14 +1008,41 @@ __kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t Wh
 }
 
 
-__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag)
+
+
+float WhiteSample(int x,int y,__read_only image2d_t Image,int2 uv)
+{
+	return RgbaToWhite( texture2D( Image, uv+(int2)(x,y) ) ) ? 1:0;
+}
+
+
+
+float WhiteFilterSobel(__read_only image2d_t Image,int2 uv)
+{
+	float hc =
+	WhiteSample(-1,-1, Image,uv) *  1. + WhiteSample( 0,-1, Image,uv) *  2.
+	+WhiteSample( 1,-1, Image,uv) *  1. + WhiteSample(-1, 1, Image,uv) * -1.
+	+WhiteSample( 0, 1, Image,uv) * -2. + WhiteSample( 1, 1, Image,uv) * -1.;
+	
+	float vc =
+	WhiteSample(-1,-1, Image,uv) *  1. + WhiteSample(-1, 0, Image,uv) *  2.
+	+WhiteSample(-1, 1, Image,uv) *  1. + WhiteSample( 1,-1, Image,uv) * -1.
+	+WhiteSample( 1, 0, Image,uv) * -2. + WhiteSample( 1, 1, Image,uv) * -1.;
+	
+	return WhiteSample(0, 0, Image,uv) * pow( (vc*vc + hc*hc), .6f);
+}
+
+
+
+__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilterGroup,__write_only image2d_t Frag)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
-	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilterGroup, uv ) );
+
+	BaseWhite = WhiteFilterSobel( WhiteFilterGroup, uv ) > 0;
 	
-	float4 Rgba = BaseWhite ? (float4)(0,1,0,1) : (float4)(0,0,0,1);
-	
+	float4 Rgba = BaseWhite ? (float4)(0,0,0,1) : (float4)(1,0,0,1);
 	write_imagef( Frag, uv, Rgba );
 }
 
