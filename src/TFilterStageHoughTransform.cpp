@@ -28,10 +28,10 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		
 		static float AngFrom = 0;
 		static float AngTo = 180;
-		static float AngStep = 0.5f;
-		static float DistFrom = -600;
+		static float AngStep = 0.333333f;
+		static float DistFrom = -900;
 		static float DistTo = -DistFrom;
-		static float DistStep = 5;
+		static float DistStep = 1;
 		for ( float a=AngFrom;	a<=AngTo;	a+=AngStep )
 			Angles.PushBack( a );
 

@@ -16,14 +16,14 @@ const float AngleRange = 360.0f;
 #define MIN_HOUGH_SCORE	800
 #define MAX_HOUGH_SCORE	1000
 #else
-#define MIN_HOUGH_SCORE	1000
-#define MAX_HOUGH_SCORE	5000
+#define MIN_HOUGH_SCORE	300
+#define MAX_HOUGH_SCORE	1500
 #endif
 
 
 //	filter out lines if a neighbour is better
-#define CHECK_MAXIMA_ANGLES		3
-#define CHECK_MAXIMA_DISTANCES	3
+#define CHECK_MAXIMA_ANGLES		20
+#define CHECK_MAXIMA_DISTANCES	20
 
 
 static float Range(float Time,float Start,float End)
@@ -828,6 +828,7 @@ float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 	//	http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
 	float r = x*cosf( DegToRad(Angle) ) + y*sinf( DegToRad(Angle) );
 	return r;
+	/*grahams silly OTT method
 	
 	//	https://en.wikipedia.org/wiki/Hough_transform
 	//	http://docs.opencv.org/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html
@@ -839,6 +840,7 @@ float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 	float2 Intersection = GetRayRayIntersection( Line, LineP );
 	float Distance = distance( Origin, Intersection );
 	return Distance;
+	 */
 }
 
 
@@ -1008,19 +1010,43 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), Originf, Angle );
 
 	//	find index
-	float BestDistanceDiff = 9999.f;
+	//	gr: so slow! make this a binary chop
 	int BestDistanceIndex = -1;
-	
-	for ( int d=0;	d<DistanceCount;	d++)
+	int Left = 0;
+	int Right = DistanceCount-1;
+	while ( true )
 	{
-		float DistanceDiff = fabsf( Distancef - Distances[d] );
-		if ( DistanceDiff < BestDistanceDiff || BestDistanceIndex == -1 )
+		if ( Left >= Right )
 		{
-			BestDistanceDiff = DistanceDiff;
-			BestDistanceIndex = d;
+			BestDistanceIndex = Left;
+			break;
+		}
+		
+		if ( Distancef <= Distances[Left] )
+		{
+			BestDistanceIndex = Left;
+			break;
+		}
+		if ( Distancef >= Distances[Right] )
+		{
+			BestDistanceIndex = Right;
+			break;
+		}
+		
+		//	chop
+		int Mid = Left + ((Right-Left)/2);
+		if ( Distancef < Distances[Mid] )
+		{
+			Right = Mid;
+			Left++;
+			continue;
 		}
 		else
-			break;
+		{
+			Left = Mid;
+			Right--;
+			continue;
+		}
 	}
 	
 	int DistanceIndex = BestDistanceIndex;
