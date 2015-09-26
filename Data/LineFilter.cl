@@ -22,6 +22,11 @@ static float Lerp(float Time,float Start,float End)
 	return Start + (Time * (End-Start));
 }
 
+static float2 Lerp2(float Time,float2 Start,float2 End)
+{
+	return (float2)( Lerp(Time,Start.x,End.x), Lerp(Time,Start.y,End.y) );
+}
+
 static float3 Lerp3(float Time,float3 Start,float3 End)
 {
 	return (float3)( Lerp(Time,Start.x,End.x), Lerp(Time,Start.y,End.y), Lerp(Time,Start.z,End.z) );
@@ -679,17 +684,6 @@ float4 MakeLine(float2 Pos,float2 Dir)
 }
 
 
-//  public domain function by Darel Rex Finley, 2006
-
-
-
-//  Determines the intersection point of the line defined by points A and B with the
-//  line defined by points C and D.
-//
-//  Returns YES if the intersection point was found, and stores that point in X,Y.
-//  Returns NO if there is no determinable intersection point, in which case X,Y will
-//  be unmodified.
-
 
 float2 GetRayRayIntersection(float4 RayA,float4 RayB)
 {
@@ -792,19 +786,112 @@ float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 	return Distance;
 }
 
+
+void DrawLine(float4 Line,__write_only image2d_t Frag,float Score)
+{
+	int2 wh = get_image_dim(Frag);
+
+	float2 LineDelta = Line.zw - Line.xy;
+	
+	//	walk until we hit the edge of the image
+	for ( int i=0;	i<400;	i++ )
+	{
+		if ( Line.x < 0 || Line.y < 0 || Line.x >= wh.x || Line.y >= wh.y )
+			continue;
+		float4 Rgba = (float4)(Score,Score,1,1);
+		write_imagef( Frag, (int2)(Line.x,Line.y), Rgba );
+
+		Line.xy += LineDelta;
+	}
+}
+
+
+
+void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Score)
+{
+	int2 wh = get_image_dim(Frag);
+
+	int Steps = 400;
+	for ( int i=0;	i<Steps;	i++ )
+	{
+		float2 Point = Lerp2( i/(float)Steps, From, To );
+		if ( Point.x < 0 || Point.y < 0 || Point.x >= wh.x || Point.y >= wh.y )
+			continue;
+		float4 Rgba = (float4)(Score,Score,1,1);
+		write_imagef( Frag, (int2)(Point.x,Point.y), Rgba );
+	}
+}
+
+__kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,int AngleCount,int DistanceCount)
+{
+	int AngleIndex = get_global_id(0) + OffsetAngle;
+	int DistanceIndex = get_global_id(1) + OffsetDistance;
+	int2 wh = get_image_dim(Frag);
+	int2 Origin = (int2)(0,0);
+
+	float Distance = DistanceIndex / (float)DistanceCount;
+	float DistanceMax = max( wh.x,wh.y );
+	Distance *= DistanceMax;
+
+	float Angle = AngleDegs[AngleIndex];
+
+	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
+	Score /= 3000.f;
+	Score = min( Score, 1.f );
+	
+	
+	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
+	float rho = Distance;
+	float theta = Angle;
+	float2 pt1;
+	float2 pt2;
+	float a = cosf( DegToRad(theta) );
+	float b = sinf( DegToRad(theta) );
+	float x0 = a*rho;
+	float y0 = b*rho;
+	pt1.x = x0 + 1000*(-b);
+	pt1.y = y0 + 1000*(a);
+	pt2.x = x0 - 1000*(-b);
+	pt2.y = y0 - 1000*(a);
+	DrawLineDirect( pt1, pt2, Frag, Score );
+	
+	/*
+	
+	//	"middle" of the line for angle
+	float2 LineOrigin = (float2)(Origin.x,Origin.y) + GetVectorAngle( Angle + 90, Distance );
+	
+	float AngleStep = 3;
+	float4 LineNorth = MakeLine( LineOrigin, GetVectorAngle( Angle, AngleStep ) );
+	float4 LineSouth = MakeLine( LineOrigin, GetVectorAngle( Angle, -AngleStep ) );
+
+	//	draw line until we hit edge of image
+	DrawLine( LineNorth, Frag, Score );
+	DrawLine( LineSouth, Frag, Score );
+	*/
+}
+
+bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
+{
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	if ( !BaseWhite )
+		return false;
+	
+	int PixelSkip = 0;
+	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
+		return false;
+	
+	return true;
+}
+
 __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,int AngleCount,int DistanceCount)
 {
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
 	int2 wh = get_image_dim(WhiteFilter);
-	int2 Origin = wh / 2;
+	int2 Origin = (int2)(0,0);
 	
 	//	abort early
-	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
-	if ( !BaseWhite )
-		return;
-	int PixelSkip = 0;
-	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
+	if ( !HoughIncludePixel( WhiteFilter, uv ) )
 		return;
 
 	int AngleIndex = uva.z;
@@ -817,12 +904,28 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), (float2)(Origin.x,Origin.y), Angle );
 	
 	//	turn distance to something on the range
-	float DistanceMax = sqrtf( wh.x*wh.x + wh.y*wh.y );
+	float DistanceMax = max( wh.x,wh.y );
 	float DistanceNorm = min( 1.f, Distancef/DistanceMax );
 	int DistanceIndex = min( (int)round( DistanceNorm * DistanceCount ), DistanceCount-1 );
 	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
 	
+	if( DistanceIndex != 0)
 	atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
+}
+
+
+__kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+
+	//	abort early
+	if ( !HoughIncludePixel( WhiteFilter, uv ) )
+	{
+		write_imagef( Frag, uv, (float4)(0,0,0,1) );
+		return;
+	}
+
+	write_imagef( Frag, uv, (float4)(1,1,1,1) );
 }
 
 

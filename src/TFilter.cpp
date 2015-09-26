@@ -474,6 +474,16 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_DistortRects( Name, ProgramFilename, KernelName, MinMaxDataStage, *this ) );
 	}
+	else if ( Params.HasParam("HoughData") )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto HoughDataStageName = Params.GetParamAs<std::string>("HoughData");
+		
+		Stage.reset( new TFilterStage_DrawHoughLines( Name, ProgramFilename, KernelName, HoughDataStageName, *this ) );
+	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
 		//	construct an opencl context [early for debugging]

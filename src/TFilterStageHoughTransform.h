@@ -37,3 +37,22 @@ public:
 
 
 
+
+
+class TFilterStage_DrawHoughLines : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_DrawHoughLines(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughDataStage,TFilter& Filter) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter ),
+		mHoughDataStage				( HoughDataStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string			mHoughDataStage;
+};
+
+
+
