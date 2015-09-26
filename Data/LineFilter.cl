@@ -869,13 +869,34 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 	float4 Rgba = NormalToRgba( Score );
 	int2 wh = get_image_dim(Frag);
 
+	
 	int Steps = 700;
+#define ThickLines	true
+#define Rad  1
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );
-		if ( Point.x < 0 || Point.y < 0 || Point.x >= wh.x || Point.y >= wh.y )
+		
+		if ( Point.x < Rad || Point.y < Rad || Point.x >= wh.x-Rad || Point.y >= wh.y-Rad )
 			continue;
-		write_imagef( Frag, (int2)(Point.x,Point.y), Rgba );
+		
+		if ( ThickLines )
+		{
+			//	thicken line
+			write_imagef( Frag, (int2)(Point.x-Rad,	Point.y-Rad), Rgba );
+			write_imagef( Frag, (int2)(Point.x-0,	Point.y-Rad), Rgba );
+			write_imagef( Frag, (int2)(Point.x+Rad,	Point.y-Rad), Rgba );
+			write_imagef( Frag, (int2)(Point.x-Rad,	Point.y-0), Rgba );
+			write_imagef( Frag, (int2)(Point.x-0,	Point.y-0), Rgba );
+			write_imagef( Frag, (int2)(Point.x+Rad,	Point.y-0), Rgba );
+			write_imagef( Frag, (int2)(Point.x-Rad,	Point.y+Rad), Rgba );
+			write_imagef( Frag, (int2)(Point.x-0,	Point.y+Rad), Rgba );
+			write_imagef( Frag, (int2)(Point.x+Rad,	Point.y+Rad), Rgba );
+		}
+		else
+		{
+			write_imagef( Frag, (int2)(Point.x,Point.y), Rgba );
+		}
 	}
 }
 
