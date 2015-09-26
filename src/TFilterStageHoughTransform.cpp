@@ -26,13 +26,16 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		auto& Angles = StageData.mAngles;
 		auto& Distances = StageData.mDistances;
 		
-		static float AngFrom = -90;
-		static float AngTo = 260;
-		static float AngStep = 10;
+		static float AngFrom = 0;
+		static float AngTo = 180;
+		static float AngStep = 20;
+		static float DistFrom = -700;
+		static float DistTo = 700;
+		static float DistStep = 10;
 		for ( float a=AngFrom;	a<=AngTo;	a+=AngStep )
 			Angles.PushBack( a );
 
-		for ( float Dist=5;	Dist<1000;	Dist+=20 )
+		for ( float Dist=DistFrom;	Dist<=DistTo;	Dist+=DistStep )
 		{
 			Distances.PushBack( Dist );
 		}
@@ -63,6 +66,7 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 	
 		Kernel.SetUniform("AngleXDistances", AngleXDistancesBuffer );
 		Kernel.SetUniform("AngleDegs", AnglesBuffer );
+		Kernel.SetUniform("Distances", DistancesBuffer );
 		Kernel.SetUniform("AngleCount", size_cast<cl_int>(AnglesBuffer.GetSize()) );
 		Kernel.SetUniform("DistanceCount", size_cast<cl_int>(DistancesBuffer.GetSize()) );
 	
@@ -246,6 +250,7 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		Kernel.SetUniform("AngleXDistances", AngleXDistancesBuffer );
 		Kernel.SetUniform("AngleDegs", AnglesBuffer );
 		Kernel.SetUniform("AngleCount", size_cast<cl_int>(AnglesBuffer.GetSize()) );
+		Kernel.SetUniform("Distances", DistancesBuffer );
 		Kernel.SetUniform("DistanceCount", size_cast<cl_int>(DistancesBuffer.GetSize()) );
 	};
 	

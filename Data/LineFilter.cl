@@ -40,7 +40,7 @@ static float4 texture2D(__read_only image2d_t Image,int2 uv)
 	return read_imagef( Image, Sampler, uv );
 }
 
-float DegToRad(float Degrees)
+static float DegToRad(float Degrees)
 {
 //	if ( Degrees < 0 )		Degrees += 360;
 //	if ( Degrees > 360 )	Degrees -= 360;
@@ -48,14 +48,14 @@ float DegToRad(float Degrees)
 	return Degrees * (PIf / 180.f);
 }
 
-float2 GetVectorAngle(float AngleDeg,float Radius)
+static float2 GetVectorAngle(float AngleDeg,float Radius)
 {
 	float UvOffsetx = cosf( DegToRad( AngleDeg ) ) * Radius;
 	float UvOffsety = sinf( DegToRad( AngleDeg ) ) * Radius;
 	return (float2)(UvOffsetx,UvOffsety);
 }
 
-bool GetRingMatch(float3 BaseHsl,int2 BaseUv,float Radius,float AngleDeg,__read_only image2d_t Hsl)
+static bool GetRingMatch(float3 BaseHsl,int2 BaseUv,float Radius,float AngleDeg,__read_only image2d_t Hsl)
 {
 	float2 UvOffset = GetVectorAngle( AngleDeg, Radius );
 	float2 Uv = (float2)(BaseUv.x + UvOffset.x, BaseUv.y + UvOffset.y);
@@ -70,7 +70,7 @@ bool GetRingMatch(float3 BaseHsl,int2 BaseUv,float Radius,float AngleDeg,__read_
 
 
 
-float hue2rgb(float p,float q,float t)
+static float hue2rgb(float p,float q,float t)
 {
 	if(t < 0) t += 1.f;
 	if(t > 1) t -= 1.f;
@@ -80,7 +80,7 @@ float hue2rgb(float p,float q,float t)
 	return p;
 }
 
-float3 HslToRgb(float3 Hsl)
+static float3 HslToRgb(float3 Hsl)
 {
 	float h = Hsl.x;
 	float s = Hsl.y;
@@ -99,8 +99,7 @@ float3 HslToRgb(float3 Hsl)
 }
 
 
-
-float GetHslHslDifference(float3 a,float3 b)
+static float GetHslHslDifference(float3 a,float3 b)
 {
 	float ha = a.x;
 	float hb = b.x;
@@ -169,7 +168,7 @@ float GetHslHslDifference(float3 a,float3 b)
 
 
 
-void GetSample(float* SampleScores,int2 PatternSize,float2 SampleScale,float AngleDeg,__read_only image2d_t Hsl,float3 BaseHsl,float HslDiffMax,float2 BaseUv)
+static void GetSample(float* SampleScores,int2 PatternSize,float2 SampleScale,float AngleDeg,__read_only image2d_t Hsl,float3 BaseHsl,float HslDiffMax,float2 BaseUv)
 {
 	
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
@@ -201,7 +200,7 @@ void GetSample(float* SampleScores,int2 PatternSize,float2 SampleScale,float Ang
 
 
 //	x is positive score, y is negative score
-float2 GetPatternScore(float2 SampleSizePx,float AngleDeg,__read_only image2d_t Hsl,float HslDiffMax,float2 BaseUv)
+static float2 GetPatternScore(float2 SampleSizePx,float AngleDeg,__read_only image2d_t Hsl,float HslDiffMax,float2 BaseUv)
 {
 	//	this is the image we're trying to match
 	/*
@@ -811,7 +810,7 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 {
 	int2 wh = get_image_dim(Frag);
 
-	int Steps = 400;
+	int Steps = 700;
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );
@@ -822,22 +821,24 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 	}
 }
 
-__kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,int AngleCount,int DistanceCount)
+__kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
 	int DistanceIndex = get_global_id(1) + OffsetDistance;
 	int2 wh = get_image_dim(Frag);
-	int2 Origin = (int2)(0,0);
+	int2 Origin = wh/2;
+	float2 Originf = (float2)(Origin.x,Origin.y);
 
-	float Distance = DistanceIndex / (float)DistanceCount;
-	float DistanceMax = max( wh.x,wh.y );
-	Distance *= DistanceMax;
+	float DistanceNorm = DistanceIndex / (float)DistanceCount;
+	float Distance = Lerp( DistanceNorm, Distances[0], Distances[DistanceCount-1] );
 
 	float Angle = AngleDegs[AngleIndex];
 
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
-	Score /= 3000.f;
+	Score /= 300.f;
 	Score = min( Score, 1.f );
+
+	//if ( DistanceIndex == 0 )	return;
 	
 	
 	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
@@ -853,7 +854,7 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	pt1.y = y0 + 1000*(a);
 	pt2.x = x0 - 1000*(-b);
 	pt2.y = y0 - 1000*(a);
-	DrawLineDirect( pt1, pt2, Frag, Score );
+	DrawLineDirect( pt1+Originf, pt2+Originf, Frag, Score );
 	
 	/*
 	
@@ -880,10 +881,13 @@ bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
 	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
 		return false;
 	
+	if ( uv.y < 500 )
+		return false;
+	
 	return true;
 }
 
-__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,int AngleCount,int DistanceCount)
+__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
 {
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
@@ -902,15 +906,27 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	//	later; store most common rays, and find intersections
 	//	later; match pitch to intersections
 	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), (float2)(Origin.x,Origin.y), Angle );
+
+	//	find index
+	float BestDistanceDiff = 9999.f;
+	int BestDistanceIndex = -1;
 	
-	//	turn distance to something on the range
-	float DistanceMax = max( wh.x,wh.y );
-	float DistanceNorm = min( 1.f, Distancef/DistanceMax );
-	int DistanceIndex = min( (int)round( DistanceNorm * DistanceCount ), DistanceCount-1 );
+	for ( int d=0;	d<DistanceCount;	d++)
+	{
+		float DistanceDiff = fabsf( Distancef - Distances[d] );
+		if ( DistanceDiff < BestDistanceDiff || BestDistanceIndex == -1 )
+		{
+			BestDistanceDiff = DistanceDiff;
+			BestDistanceIndex = d;
+		}
+	}
+	
+	int DistanceIndex = BestDistanceIndex;
 	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
 	
 	if( DistanceIndex != 0)
 	atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
+
 }
 
 
