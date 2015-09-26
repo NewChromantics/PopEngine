@@ -16,13 +16,13 @@ const float AngleRange = 360.0f;
 #define MIN_HOUGH_SCORE	800
 #define MAX_HOUGH_SCORE	1000
 #else
-#define MIN_HOUGH_SCORE	600
+#define MIN_HOUGH_SCORE	1000
 #define MAX_HOUGH_SCORE	5000
 #endif
 
 
 //	filter out lines if a neighbour is better
-#define CHECK_MAXIMA_ANGLES		4
+#define CHECK_MAXIMA_ANGLES		3
 #define CHECK_MAXIMA_DISTANCES	3
 
 
