@@ -75,7 +75,7 @@ void TFilterStage_ShaderBlit::Reload()
 	this->mOnChanged.OnTriggered(*this);
 }
 
-bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
+bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)
 {
 	//	pre-emptive for debugging
 	auto& TextureName = StageName;

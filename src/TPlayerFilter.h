@@ -60,7 +60,7 @@ public:
 	
 	void					Run(SoyTime FrameTime,TJobParams& ResultParams);
 
-	virtual bool			SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform) override;
+	virtual bool			SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform) override;
 	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun) override;
 	virtual TJobParam		GetUniform(const std::string& Name) override;
 	

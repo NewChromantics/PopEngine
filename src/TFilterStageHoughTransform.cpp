@@ -28,13 +28,13 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		auto& Distances = StageData.mDistances;
 		
 		TUniformWrapper<float> AngleFrom("HoughAngleFrom",0);
-		TUniformWrapper<float> AngleTo("HoughAngleTo",180);
-		TUniformWrapper<float> AngleStep("HoughAngleStep",0.33333f);
+		TUniformWrapper<float> AngleTo("HoughAngleTo",179);
+		TUniformWrapper<float> AngleStep("HoughAngleStep",0.3333f);
 		TUniformWrapper<float> DistanceStep("HoughDistanceStep",2);
 		
 		Frame.SetUniform( AngleFrom, AngleFrom, mFilter, *this );
 		Frame.SetUniform( AngleTo, AngleTo, mFilter, *this );
-		Frame.SetUniform( AngleStep, AngleFrom, mFilter, *this );
+		Frame.SetUniform( AngleStep, AngleStep, mFilter, *this );
 		Frame.SetUniform( DistanceStep, DistanceStep, mFilter, *this );
 
 		//	gr: remove this and generate max from the image

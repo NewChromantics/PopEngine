@@ -103,7 +103,7 @@ TJobParam TPlayerFilter::GetUniform(const std::string& Name)
 	return TFilter::GetUniform(Name);
 }
 
-bool TPlayerFilter::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform)
+bool TPlayerFilter::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform)
 {
 	if ( Uniform.mName == "MaskTopLeft" )
 	{

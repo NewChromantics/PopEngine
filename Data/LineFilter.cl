@@ -10,21 +10,16 @@ const float Tolerance = 0.01f;
 const float AngleRange = 360.0f;
 
 
-//	gr: this score needs to vary for the MAX pixels that could even be on a line (a line clipped in a corner will have less pixels, but could be perfect)
-//#define EDGE_FILTER_WHITE_PIXELS
-#if defined(EDGE_FILTER_WHITE_PIXELS)
-#define MIN_HOUGH_SCORE	800
-#define MAX_HOUGH_SCORE	1000
-#else
-#define MIN_HOUGH_SCORE	300
-#define MAX_HOUGH_SCORE	1500
-#endif
+//	gr: this score needs to vary for the MAX pixels that could even be on a line (a line clipped in a corner will have less pixels, but could be perfect, and smaller resolution = less pixels)
+#define MIN_HOUGH_SCORE	100
+#define MAX_HOUGH_SCORE	500
 
 //#define CLIP_LINES
 
 //	filter out lines if a neighbour is better
-#define CHECK_MAXIMA_ANGLES		20
-#define CHECK_MAXIMA_DISTANCES	20
+#define CHECK_MAXIMA_ANGLES		10
+#define CHECK_MAXIMA_DISTANCES	10
+#define DRAW_LINE_WIDTH			1
 
 
 static float Range(float Time,float Start,float End)
@@ -872,17 +867,17 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 	int2 wh = get_image_dim(Frag);
 
 	
-#define Rad  1
 	int Steps = 700;
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );
 		
+		int Rad = DRAW_LINE_WIDTH-1;
 #if !defined(CLIP_LINES)
 		if ( Point.x < Rad || Point.y < Rad || Point.x >= wh.x-Rad || Point.y >= wh.y-Rad )
 			continue;
 #endif
-		if ( Rad>0 )
+		if ( DRAW_LINE_WIDTH>1 )
 		{
 			//	thicken line
 			write_imagef( Frag, (int2)(Point.x-Rad,	Point.y-Rad), Rgba );
@@ -1203,7 +1198,7 @@ float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv)
 	return GreenCount >= 2;
 }
 
-float WhiteFilterSobel(__read_only image2d_t Image,int2 uv)
+static float WhiteFilterSobel(__read_only image2d_t Image,int2 uv)
 {
 	float hc =
 	WhiteSample(-1,-1, Image,uv) *  1. + WhiteSample( 0,-1, Image,uv) *  2.

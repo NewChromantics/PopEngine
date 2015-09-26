@@ -23,7 +23,7 @@ public:
 class TFilterStageRuntimeData_GatherHoughTransforms : public TFilterStageRuntimeData
 {
 public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override
 	{
 		return false;
 	}

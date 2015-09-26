@@ -106,7 +106,7 @@ Opengl::TTexture TFilterStageRuntimeData_Frame::GetTexture(Opengl::TContext& Con
 }
 
 
-bool TFilterStageRuntimeData_Frame::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)
+bool TFilterStageRuntimeData_Frame::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)
 {
 	if ( mTexture )
 	{
@@ -137,7 +137,7 @@ TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter,const TJobPar
 }
 
 
-bool TFilterStage::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform)
+bool TFilterStage::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform)
 {
 	auto Param = mStageParams.GetParam( Uniform.mName );
 	if ( !Param.IsValid() )
@@ -150,7 +150,15 @@ bool TFilterStage::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Unif
 			if ( Shader.SetUniform( Uniform.mName, v ) )
 				return true;
 	}
-
+	
+	if ( Uniform.mType == Soy::GetTypeName<float>() )
+	{
+		float v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+	
 	return false;
 }
 
@@ -299,7 +307,7 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter)
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter)
 {
 	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
 		return false;
@@ -326,7 +334,7 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUnifor
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter)
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter)
 {
 	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
 		return false;
@@ -344,7 +352,7 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUnifor
 	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter );
 }
 
-bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage)
+bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage)
 {
 	//	have a priority/overload order;
 	//		stage-frame data

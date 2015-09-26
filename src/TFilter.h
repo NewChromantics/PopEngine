@@ -39,7 +39,7 @@ public:
 	TFilterStage(const std::string& Name,TFilter& Filter,const TJobParams& StageParams);
 	
 	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)=0;
-	virtual bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform);
+	virtual bool		SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform);
 
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
@@ -54,7 +54,7 @@ class TFilterStageRuntimeData
 {
 public:
 	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)	{}
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter)=0;
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)=0;
 	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking)
 	{
 		//	fallback is simple version
@@ -75,7 +75,7 @@ public:
 	
 	bool		Run(TFilter& Filter,const std::string& Description,std::shared_ptr<Opengl::TContext>& ContextGl,std::shared_ptr<Opencl::TContext>& ContextCl);	//	gr: description to avoid passing meta data, like frame timestamp
 	
-	bool		SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage);
+	bool		SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage);
 
 	template<class RUNTIMEDATATYPE>
 	RUNTIMEDATATYPE&	GetData(const std::string& StageName)
@@ -111,8 +111,8 @@ private:
 	std::shared_ptr<Opencl::TContext>		mContextCl;
 	
 public:
-	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
-	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter);
+	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter);
+	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter);
 
 	//	deprecate the use of these
 	Opengl::TTexture				GetFrameTexture(TFilter& Filter,bool Blocking=true);
@@ -131,7 +131,7 @@ class TFilterStageRuntimeData_Frame : public TFilterStageRuntimeData
 {
 public:
 	virtual void					Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
-	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,Soy::TUniform& Uniform,TFilter& Filter) override;
+	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override;
 	virtual Opengl::TTexture		GetTexture() override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
 	
 	std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& Context,bool Blocking);
@@ -186,7 +186,7 @@ public:
 	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
 	
 	//	apply uniform to shader
-	virtual bool			SetUniform(Soy::TUniformContainer& Shader,Soy::TUniform& Uniform)
+	virtual bool			SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform)
 	{
 		return false;
 	}
