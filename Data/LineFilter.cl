@@ -20,6 +20,7 @@ const float AngleRange = 360.0f;
 #define MAX_HOUGH_SCORE	1500
 #endif
 
+//#define CLIP_LINES
 
 //	filter out lines if a neighbour is better
 #define CHECK_MAXIMA_ANGLES		20
@@ -823,10 +824,11 @@ float2 GetRayRayIntersection(float4 RayA,float4 RayB)
 
 float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 {
-	float x = Position.x - Origin.x;
-	float y = Position.y - Origin.y;
 	//	http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
-	float r = x*cosf( DegToRad(Angle) ) + y*sinf( DegToRad(Angle) );
+	float2 xy = Position - Origin;
+	float Cos;
+	float Sin = sincos( DegToRad(Angle), &Cos );
+	float r = Cos*xy.x + Sin*xy.y;
 	return r;
 	/*grahams silly OTT method
 	
@@ -870,17 +872,17 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 	int2 wh = get_image_dim(Frag);
 
 	
-	int Steps = 700;
-#define ThickLines	true
 #define Rad  1
+	int Steps = 700;
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );
 		
+#if !defined(CLIP_LINES)
 		if ( Point.x < Rad || Point.y < Rad || Point.x >= wh.x-Rad || Point.y >= wh.y-Rad )
 			continue;
-		
-		if ( ThickLines )
+#endif
+		if ( Rad>0 )
 		{
 			//	thicken line
 			write_imagef( Frag, (int2)(Point.x-Rad,	Point.y-Rad), Rgba );
@@ -898,6 +900,91 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 			write_imagef( Frag, (int2)(Point.x,Point.y), Rgba );
 		}
 	}
+}
+
+
+static float4 ClipLine(float4 Line,float4 Rect)
+{
+#if defined(CLIP_LINES)
+	//	LiangBarsky
+	float edgeLeft = Rect.x;
+	float edgeRight = Rect.z;
+	float edgeBottom = Rect.w;
+	float edgeTop = Rect.y;
+	
+	float x0src = Line.x;
+	float y0src = Line.y;
+	float x1src = Line.z;
+	float y1src = Line.w;
+	float t0 = 0.0;
+	float t1 = 1.0;
+	float xdelta = x1src-x0src;
+	float ydelta = y1src-y0src;
+	float p,q;
+	
+	for(int edge=0; edge<4; edge++)
+	{
+		// Traverse through left, right, bottom, top edges.
+		if (edge==0) {  p = -xdelta;    q = -(edgeLeft-x0src);  }
+		if (edge==1) {  p = xdelta;     q =  (edgeRight-x0src); }
+		if (edge==2) {  p = -ydelta;    q = -(edgeBottom-y0src);}
+		if (edge==3) {  p = ydelta;     q =  (edgeTop-y0src);   }
+		float r = q/p;
+		
+		//	parallel line outside
+		if(p==0 && q<0)
+		{
+			return 0;
+		}
+		
+		if(p<0)
+		{
+			if(r>t1)
+				return 100;         // Don't draw line at all.
+			else if(r>t0)
+				t0=r;            // Line is clipped!
+		}
+		else if(p>0)
+		{
+			if(r<t0)
+				return 0;      // Don't draw line at all.
+			else if(r<t1)
+				t1=r;         // Line is clipped!
+		}
+	}
+	
+	float4 ClippedLine;
+	
+	ClippedLine.x = x0src + t0*xdelta;
+	ClippedLine.y = y0src + t0*ydelta;
+	ClippedLine.z = x0src + t1*xdelta;
+	ClippedLine.w = y0src + t1*ydelta;
+	
+	return ClippedLine;
+#else
+	return Line;
+#endif
+}
+
+static float4 GetHoughLine(float Distance,float Angle,float2 Originf,float4 ClipRect)
+{
+	float rho = Distance;
+	float theta = Angle;
+	float Cos;
+	float Sin = sincos( DegToRad(theta), &Cos );
+	
+	//	center of the line
+	float x0 = Cos*rho + Originf.x;
+	float y0 = Sin*rho + Originf.y;
+	
+	//	scale by an arbirtry number, but still want to be resolution-independent
+	float Length = 2000;
+	
+	float4 Line;
+	Line.xy = (float2)( x0 + Length*(-Sin), y0 + Length*(Cos) );
+	Line.zw = (float2)( x0 - Length*(-Sin), y0 - Length*(Cos) );
+	Line = ClipLine( Line, ClipRect );
+	return Line;
 }
 
 __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
@@ -942,19 +1029,8 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	Score = Range( Score, MIN_HOUGH_SCORE, MAX_HOUGH_SCORE );
 	
 	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
-	float rho = Distance;
-	float theta = Angle;
-	float2 pt1;
-	float2 pt2;
-	float a = cosf( DegToRad(theta) );
-	float b = sinf( DegToRad(theta) );
-	float x0 = a*rho;
-	float y0 = b*rho;
-	pt1.x = x0 + 1000*(-b);
-	pt1.y = y0 + 1000*(a);
-	pt2.x = x0 - 1000*(-b);
-	pt2.y = y0 - 1000*(a);
-	DrawLineDirect( pt1+Originf, pt2+Originf, Frag, Score );
+	float4 Line = GetHoughLine(Distance,Angle,Originf, (float4)(0,0,wh.x,wh.y));
+	DrawLineDirect( Line.xy, Line.zw, Frag, Score );
 	
 	/*
 	
@@ -1110,18 +1186,19 @@ bool GreenSample(int x,int y,__read_only image2d_t Image,int2 uv)
 float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv)
 {
 	int GreenCount = 0;
+	int GreenRadius = 5;
 
-	GreenCount += GreenSample( -5, -5, Image, uv );
-	GreenCount += GreenSample(  0, -5, Image, uv );
-	GreenCount += GreenSample(  5, -5, Image, uv );
+	GreenCount += GreenSample( -GreenRadius, -GreenRadius, Image, uv );
+	GreenCount += GreenSample(  0, -GreenRadius, Image, uv );
+	GreenCount += GreenSample(  GreenRadius, -GreenRadius, Image, uv );
 	
-	GreenCount += GreenSample( -5,  0, Image, uv );
+	GreenCount += GreenSample( -GreenRadius,  0, Image, uv );
 //	GreenCount += GreenSample(  0,  0, Image, uv );
-	GreenCount += GreenSample(  5,  0, Image, uv );
+	GreenCount += GreenSample(  GreenRadius,  0, Image, uv );
 	
-	GreenCount += GreenSample( -5,  5, Image, uv );
-	GreenCount += GreenSample(  0,  5, Image, uv );
-	GreenCount += GreenSample(  5,  5, Image, uv );
+	GreenCount += GreenSample( -GreenRadius,  GreenRadius, Image, uv );
+	GreenCount += GreenSample(  0,  GreenRadius, Image, uv );
+	GreenCount += GreenSample(  GreenRadius,  GreenRadius, Image, uv );
 	
 	return GreenCount >= 2;
 }
