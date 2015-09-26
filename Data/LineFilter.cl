@@ -773,6 +773,12 @@ float2 GetRayRayIntersection(float4 RayA,float4 RayB)
 
 float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 {
+	float x = Position.x - Origin.x;
+	float y = Position.y - Origin.y;
+	//	http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	float r = x*cosf( DegToRad(Angle) ) + y*sinf( DegToRad(Angle) );
+	return r;
+	
 	//	https://en.wikipedia.org/wiki/Hough_transform
 	//	http://docs.opencv.org/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html
 	//	make Ray going through Position at angle Angle
@@ -826,6 +832,8 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	int AngleIndex = get_global_id(0) + OffsetAngle;
 	int DistanceIndex = get_global_id(1) + OffsetDistance;
 	int2 wh = get_image_dim(Frag);
+	
+	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
 	int2 Origin = wh/2;
 	float2 Originf = (float2)(Origin.x,Origin.y);
 
@@ -835,7 +843,7 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	float Angle = AngleDegs[AngleIndex];
 
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
-	Score /= 300.f;
+	Score /= 1300.f;
 	Score = min( Score, 1.f );
 
 	//if ( DistanceIndex == 0 )	return;
@@ -892,7 +900,9 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
 	int2 wh = get_image_dim(WhiteFilter);
-	int2 Origin = (int2)(0,0);
+	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	int2 Origin = wh/2;
+	float2 Originf = (float2)(Origin.x,Origin.y);
 	
 	//	abort early
 	if ( !HoughIncludePixel( WhiteFilter, uv ) )
@@ -905,7 +915,7 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	//	increment the count for that [angle][distance] to generate a histogram of RAYS (not storing start/ends)
 	//	later; store most common rays, and find intersections
 	//	later; match pitch to intersections
-	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), (float2)(Origin.x,Origin.y), Angle );
+	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), Originf, Angle );
 
 	//	find index
 	float BestDistanceDiff = 9999.f;
