@@ -477,7 +477,12 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	//	gr: needs a better factory system
 	std::shared_ptr<TFilterStage> Stage;
 	
-	if ( Name == "MakeRectAtlas" )
+
+	//	gr: start of "factory"
+	auto StageType = Params.GetParamAs<std::string>("StageType");
+	
+	
+	if ( StageType == "MakeRectAtlas" )
 	{
 		auto RectsSource = Params.GetParamAs<std::string>("Rects");
 		auto ImageSource = Params.GetParamAs<std::string>("Image");
@@ -485,7 +490,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_MakeRectAtlas( Name, RectsSource, ImageSource, MaskStage, *this, Params ) );
 	}
-	else if ( Name == "WriteRectAtlasStream" )
+	else if ( StageType == "WriteRectAtlasStream" )
 	{
 		auto AtlasStage = Params.GetParamAs<std::string>("AtlasStage");
 		auto FilenameParam = Params.GetParam("Filename");
@@ -495,7 +500,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_WriteRectAtlasStream( Name, AtlasStage, Filename, *this, Params ) );
 	}
-	else if ( Params.HasParam("MinMaxDataStage" ) )
+	else if ( StageType == "DistortRects" )
 	{
 		//	construct an opencl context [early for debugging]
 		CreateOpenclContexts();
@@ -505,7 +510,17 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_DistortRects( Name, ProgramFilename, KernelName, MinMaxDataStage, *this, Params ) );
 	}
-	else if ( Params.HasParam("HoughData") )
+	else if ( StageType == "DrawHoughLines" )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto HoughLineDataStageName = Params.GetParamAs<std::string>("HoughLineData");
+		
+		Stage.reset( new TFilterStage_DrawHoughLines( Name, ProgramFilename, KernelName, HoughLineDataStageName, *this, Params ) );
+	}
+	else if ( StageType == "DrawHoughLinesDynamic" )
 	{
 		//	construct an opencl context [early for debugging]
 		CreateOpenclContexts();
@@ -513,7 +528,35 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughDataStageName = Params.GetParamAs<std::string>("HoughData");
 		
-		Stage.reset( new TFilterStage_DrawHoughLines( Name, ProgramFilename, KernelName, HoughDataStageName, *this, Params ) );
+		Stage.reset( new TFilterStage_DrawHoughLinesDynamic( Name, ProgramFilename, KernelName, HoughDataStageName, *this, Params ) );
+	}
+	else if ( StageType == "ExtractHoughLines" )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto HoughDataStageName = Params.GetParamAs<std::string>("HoughData");
+		
+		Stage.reset( new TFilterStage_ExtractHoughLines( Name, ProgramFilename, KernelName, HoughDataStageName, *this, Params ) );
+	}
+	else if ( StageType == "GatherHoughLines" )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		
+		Stage.reset( new TFilterStage_GatherHoughTransforms( Name, ProgramFilename, KernelName, *this, Params ) );
+	}
+	else if ( StageType == "GatherRects" )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		
+		Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this, Params ) );
 	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
@@ -522,12 +565,7 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
-		if ( Name == "HoughFilter" )
-			Stage.reset( new TFilterStage_GatherHoughTransforms( Name, ProgramFilename, KernelName, *this, Params ) );
-		else if ( Name == "GatherMinMaxs" )
-			Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this, Params ) );
-		else
-			Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this, Params ) );
+		Stage.reset( new TFilterStage_OpenclBlit( Name, ProgramFilename, KernelName, *this, Params ) );
 	}
 	else if ( Params.HasParam("vert") && Params.HasParam("frag") )
 	{

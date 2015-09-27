@@ -1,5 +1,34 @@
 #define const	__constant
 
+#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
+
+#define DECLARE_DYNAMIC_ARRAY(TYPE)		\
+typedef struct							\
+{										\
+__global TYPE*			mData;		\
+volatile __global int*	mOffset;	\
+int				mMax;		\
+} TArray_ ## TYPE;						\
+\
+static bool PushArrayGetIndex_ ## TYPE(TArray_ ## TYPE Array,const TYPE* Value,int* pNewIndex)	{		\
+int NewIndex = atomic_inc( Array.mOffset );	/*get next unused index*/	\
+bool Success = (NewIndex < Array.mMax);		/*out of space*/			\
+NewIndex = min( NewIndex, Array.mMax-1 );	/* dont go out of bounds */	\
+Array.mData[NewIndex] = *Value;			\
+*pNewIndex = NewIndex;				\
+return Success;		\
+}						\
+static bool PushArray_ ## TYPE(TArray_ ## TYPE Array,TYPE* Value)	{	\
+int NewIndex = atomic_inc( Array.mOffset );	/*get next unused index*/	\
+bool Success = (NewIndex < Array.mMax);		/*out of space*/			\
+NewIndex = min( NewIndex, Array.mMax-1 );	/* dont go out of bounds */	\
+Array.mData[NewIndex] = *Value;			\
+return Success;		\
+}						\
+
+DECLARE_DYNAMIC_ARRAY(float8);
+
+
 //const int SampleRadius = 8;	//	range 0,9
 #define SampleRadius	5	//	range 0,9
 const int HitCountMin = 2;
@@ -19,7 +48,7 @@ const float AngleRange = 360.0f;
 //	filter out lines if a neighbour is better
 #define CHECK_MAXIMA_ANGLES		10
 #define CHECK_MAXIMA_DISTANCES	10
-#define DRAW_LINE_WIDTH			1
+#define DRAW_LINE_WIDTH			2
 
 
 static float Range(float Time,float Start,float End)
@@ -867,7 +896,7 @@ void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Scor
 	int2 wh = get_image_dim(Frag);
 
 	
-	int Steps = 700;
+	int Steps = 900;
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );
@@ -982,7 +1011,7 @@ static float4 GetHoughLine(float Distance,float Angle,float2 Originf,float4 Clip
 	return Line;
 }
 
-__kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
+__kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
 	int DistanceIndex = get_global_id(1) + OffsetDistance;
@@ -1041,6 +1070,90 @@ __kernel void DrawHoughLines(int OffsetAngle,int OffsetDistance,__write_only ima
 	DrawLine( LineSouth, Frag, Score );
 	*/
 }
+
+
+__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global float8* HoughLines)
+{
+	int LineIndex = get_global_id(0) + OffsetIndex;
+	float8 HoughLine = HoughLines[LineIndex];
+	
+	float2 LineStart = HoughLine.xy;
+	float2 LineEnd = HoughLine.zw;
+	float Angle = HoughLine[4];
+	float Distance = HoughLine[5];
+	float Score = HoughLine[6];
+	
+	DrawLineDirect( LineStart, LineEnd, Frag, Score );
+}
+
+__kernel void ExtractHoughLines(int OffsetAngle,
+								int OffsetDistance,
+								global int* AngleXDistances,
+								global float* AngleDegs,
+								global float* Distances,
+								int AngleCount,
+								int DistanceCount,
+								global float8* Matches,
+								global volatile int*	MatchesCount,
+								int						MatchesMax,
+								__read_only image2d_t WhiteFilter
+								)
+{
+	int AngleIndex = get_global_id(0) + OffsetAngle;
+	int DistanceIndex = get_global_id(1) + OffsetDistance;
+	int2 wh = get_image_dim(WhiteFilter);
+	
+	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	int2 Origin = wh/2;
+	float2 Originf = (float2)(Origin.x,Origin.y);
+	
+	float DistanceNorm = DistanceIndex / (float)DistanceCount;
+	float Distance = Lerp( DistanceNorm, Distances[0], Distances[DistanceCount-1] );
+	
+	float Angle = AngleDegs[AngleIndex];
+	
+	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
+	
+	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
+#if defined(CHECK_MAXIMA_ANGLES)||defined(CHECK_MAXIMA_DISTANCES)	//	OR so errors if a define is missing
+	for ( int x=-CHECK_MAXIMA_ANGLES;	x<=CHECK_MAXIMA_ANGLES;	x++ )
+	{
+		for ( int y=-CHECK_MAXIMA_DISTANCES;	y<=CHECK_MAXIMA_DISTANCES;	y++ )
+		{
+			int NeighbourAngleIndex = clamp( AngleIndex+x, 0, AngleCount-1 );
+			int NeighbourDistanceIndex = clamp( DistanceIndex+y, 0, DistanceCount-1 );
+			float NeighbourScore = AngleXDistances[ (NeighbourAngleIndex * DistanceCount ) + NeighbourDistanceIndex ];
+			if ( NeighbourScore > Score )
+				return;
+		}
+	}
+#endif
+	
+	if ( Score < MIN_HOUGH_SCORE )
+	{
+		Score = 0;
+		return;
+	}
+	if ( Score > MAX_HOUGH_SCORE )
+		Score = MAX_HOUGH_SCORE;
+	Score = Range( Score, MIN_HOUGH_SCORE, MAX_HOUGH_SCORE );
+	
+	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
+	float4 Line = GetHoughLine(Distance,Angle,Originf, (float4)(0,0,wh.x,wh.y));
+
+	//	make output
+	float8 LineAndMeta;
+	LineAndMeta.xyzw = Line;
+	LineAndMeta[4] = AngleIndex;
+	LineAndMeta[5] = DistanceIndex;
+	LineAndMeta[6] = Score;
+	LineAndMeta[7] = 0;
+	
+	TArray_float8 MatchArray = { Matches, MatchesCount, MatchesMax };
+	PushArray_float8( MatchArray, &LineAndMeta );
+}
+
+
 
 
 __kernel void DrawHoughGraph(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)

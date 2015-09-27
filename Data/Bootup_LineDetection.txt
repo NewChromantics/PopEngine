@@ -30,11 +30,13 @@ addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges
 #addstage LineDetector HoughFilterPixels cl=LineFilter.cl kernel=HoughFilterPixels
 
 #todo: make this loose, then do a refined filter on all matches
-addstage LineDetector HoughFilter cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=5 HoughDistanceStep=0.25
+addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=5 HoughDistanceStep=0.25
 
-addstage LineDetector DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughData=HoughFilter
+addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter
+
+#addstage LineDetector DrawHoughLinesDynamic StageType=DrawHoughLinesDynamic cl=LineFilter.cl kernel=DrawHoughLinesDynamic HoughData=HoughFilter ClearFrag=Frame
+addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=Frame
 #addstage LineDetector DrawHoughGraph cl=LineFilter.cl kernel=DrawHoughGraph HoughData=HoughFilter
-
 
 #loadframe LineDetector time=1001 input01_undistorted.png
 #decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4

@@ -52,9 +52,9 @@ addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill_GreenRed
 addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
 addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
-#addstage mancity01 GatherMinMaxs cl=GatherRects.cl kernel=GatherMinMaxs
+#addstage mancity01 GatherMinMaxs StageType=GatherRects cl=GatherRects.cl kernel=GatherMinMaxs
 #addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
-#addstage mancity01 MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
+#addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
 #addstage mancity01 Segmentation cl=PatchFilter.cl kernel=BlurColour
 #addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
 #addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids

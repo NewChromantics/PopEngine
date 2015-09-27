@@ -90,6 +90,7 @@ void TOpenclRunner::Run()
 	//	for now, because buffers get realeased etc when the kernelstate is destructed,
 	//	lets just block on the last execution to make sure nothing is in use. Optimise later.
 	Opencl::TSync LastSemaphore;
+	static bool BlockLast = true;
 	
 	for ( int i=0;	i<IterationSplits.GetSize();	i++ )
 	{
@@ -102,7 +103,7 @@ void TOpenclRunner::Run()
 		//	execute it
 		Opencl::TSync ItSemaphore;
 		auto* Semaphore = Block ? &ItSemaphore : nullptr;
-		if ( i == IterationSplits.GetSize()-1 )
+		if ( BlockLast && i == IterationSplits.GetSize()-1 )
 			Semaphore = &LastSemaphore;
 	
 		if ( Semaphore )
