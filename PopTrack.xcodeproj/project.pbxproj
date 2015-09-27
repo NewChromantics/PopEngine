@@ -10,6 +10,7 @@
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF7146931BB34B370002E23E /* TFilterStageHoughTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */; };
+		BF71469B1BB7404E0002E23E /* SoyProfiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146991BB7404E0002E23E /* SoyProfiler.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF7A8DED1B65263800A6C403 /* PopMovieTextureOsxFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFAD33CC1B61740E00D3E7A6 /* PopMovieTextureOsxFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -124,6 +125,8 @@
 		BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_CoreFoundation.h; path = src/SoyTypes_CoreFoundation.h; sourceTree = "<group>"; };
 		BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageHoughTransform.cpp; path = src/TFilterStageHoughTransform.cpp; sourceTree = "<group>"; };
 		BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStageHoughTransform.h; path = src/TFilterStageHoughTransform.h; sourceTree = "<group>"; };
+		BF7146991BB7404E0002E23E /* SoyProfiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProfiler.cpp; path = src/SoyProfiler.cpp; sourceTree = "<group>"; };
+		BF71469A1BB7404E0002E23E /* SoyProfiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProfiler.h; path = src/SoyProfiler.h; sourceTree = "<group>"; };
 		BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyStream.cpp; path = src/SoyStream.cpp; sourceTree = "<group>"; };
 		BF7225A91BADCB3B00550AD8 /* SoyStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyStream.h; path = src/SoyStream.h; sourceTree = "<group>"; };
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
@@ -144,18 +147,6 @@
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
-		BF9CCAA01B6E3382000B19EA /* MSAOpenCL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MSAOpenCL.cpp; path = src/MSAOpenCL.cpp; sourceTree = "<group>"; };
-		BF9CCAA11B6E3382000B19EA /* MSAOpenCL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSAOpenCL.h; path = src/MSAOpenCL.h; sourceTree = "<group>"; };
-		BF9CCAA21B6E3382000B19EA /* MSAOpenCLBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MSAOpenCLBuffer.cpp; path = src/MSAOpenCLBuffer.cpp; sourceTree = "<group>"; };
-		BF9CCAA31B6E3382000B19EA /* MSAOpenCLBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSAOpenCLBuffer.h; path = src/MSAOpenCLBuffer.h; sourceTree = "<group>"; };
-		BF9CCAA41B6E3382000B19EA /* MSAOpenCLImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MSAOpenCLImage.cpp; path = src/MSAOpenCLImage.cpp; sourceTree = "<group>"; };
-		BF9CCAA51B6E3382000B19EA /* MSAOpenCLImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSAOpenCLImage.h; path = src/MSAOpenCLImage.h; sourceTree = "<group>"; };
-		BF9CCAA61B6E3382000B19EA /* MSAOpenCLKernel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MSAOpenCLKernel.cpp; path = src/MSAOpenCLKernel.cpp; sourceTree = "<group>"; };
-		BF9CCAA71B6E3382000B19EA /* MSAOpenCLKernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSAOpenCLKernel.h; path = src/MSAOpenCLKernel.h; sourceTree = "<group>"; };
-		BF9CCAA81B6E3382000B19EA /* MSAOpenCLMemoryObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MSAOpenCLMemoryObject.cpp; path = src/MSAOpenCLMemoryObject.cpp; sourceTree = "<group>"; };
-		BF9CCAA91B6E3382000B19EA /* MSAOpenCLMemoryObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSAOpenCLMemoryObject.h; path = src/MSAOpenCLMemoryObject.h; sourceTree = "<group>"; };
-		BF9CCAAA1B6E3382000B19EA /* MSAOpenCLProgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MSAOpenCLProgram.cpp; path = src/MSAOpenCLProgram.cpp; sourceTree = "<group>"; };
-		BF9CCAAB1B6E3382000B19EA /* MSAOpenCLProgram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSAOpenCLProgram.h; path = src/MSAOpenCLProgram.h; sourceTree = "<group>"; };
 		BF9CCAB21B6E5310000B19EA /* TProtocolRtsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TProtocolRtsp.cpp; path = src/TProtocolRtsp.cpp; sourceTree = "<group>"; };
 		BF9CCAB31B6E5310000B19EA /* TProtocolRtsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TProtocolRtsp.h; path = src/TProtocolRtsp.h; sourceTree = "<group>"; };
 		BF9CCAB51B6E56BC000B19EA /* TFilterStageOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageOpencl.cpp; path = src/TFilterStageOpencl.cpp; sourceTree = "<group>"; };
@@ -388,9 +379,9 @@
 				FB2534F81A97758D00A61590 /* TFilterWindow.h */,
 				BF9CCAB51B6E56BC000B19EA /* TFilterStageOpencl.cpp */,
 				BFA297261B83654C003B91F6 /* TFilterStageGatherRects.cpp */,
+				BFA297271B83654C003B91F6 /* TFilterStageGatherRects.h */,
 				BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */,
 				BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */,
-				BFA297271B83654C003B91F6 /* TFilterStageGatherRects.h */,
 				BF9CCAB61B6E56BC000B19EA /* TFilterStageOpencl.h */,
 				BF9CCAB71B6E56BC000B19EA /* TFilterStageOpengl.cpp */,
 				BF9CCAB81B6E56BC000B19EA /* TFilterStageOpengl.h */,
@@ -410,22 +401,10 @@
 				FB50C04C1A6ABD480011A9D9 /* HeapArray.hpp */,
 				FB50C04D1A6ABD480011A9D9 /* memheap.cpp */,
 				FB50C04E1A6ABD480011A9D9 /* MemHeap.hpp */,
-				BF9CCAA01B6E3382000B19EA /* MSAOpenCL.cpp */,
 				BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */,
 				BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */,
 				BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */,
 				BF7225A91BADCB3B00550AD8 /* SoyStream.h */,
-				BF9CCAA11B6E3382000B19EA /* MSAOpenCL.h */,
-				BF9CCAA21B6E3382000B19EA /* MSAOpenCLBuffer.cpp */,
-				BF9CCAA31B6E3382000B19EA /* MSAOpenCLBuffer.h */,
-				BF9CCAA41B6E3382000B19EA /* MSAOpenCLImage.cpp */,
-				BF9CCAA51B6E3382000B19EA /* MSAOpenCLImage.h */,
-				BF9CCAA61B6E3382000B19EA /* MSAOpenCLKernel.cpp */,
-				BF9CCAA71B6E3382000B19EA /* MSAOpenCLKernel.h */,
-				BF9CCAA81B6E3382000B19EA /* MSAOpenCLMemoryObject.cpp */,
-				BF9CCAA91B6E3382000B19EA /* MSAOpenCLMemoryObject.h */,
-				BF9CCAAA1B6E3382000B19EA /* MSAOpenCLProgram.cpp */,
-				BF9CCAAB1B6E3382000B19EA /* MSAOpenCLProgram.h */,
 				FB9C89981A82D2A700931EFB /* RemoteArray.h */,
 				BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */,
 				FB8A07141A2E6B990099596C /* sha1 */,
@@ -435,6 +414,8 @@
 				FB8A06261A2E5A7C0099596C /* SoyArray.cpp */,
 				BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */,
 				BF89F6B51B4AB9DC00F58561 /* SoyAssert.h */,
+				BF7146991BB7404E0002E23E /* SoyProfiler.cpp */,
+				BF71469A1BB7404E0002E23E /* SoyProfiler.h */,
 				FB8A06271A2E5A7C0099596C /* SoyDebug.cpp */,
 				FB8A06281A2E5A7C0099596C /* SoyDebug.h */,
 				FB6650CC1A56FD8600DF0A12 /* SoyDebug.mm */,
@@ -696,6 +677,7 @@
 				FB2534C41A974E7400A61590 /* TJobFormat.cpp in Sources */,
 				FB2534F31A974F1400A61590 /* SignalTranslator.cpp in Sources */,
 				FB2534CB1A974E7400A61590 /* TProtocolWebSocket.cpp in Sources */,
+				BF71469B1BB7404E0002E23E /* SoyProfiler.cpp in Sources */,
 				FB2534DE1A974E8200A61590 /* PopTrack.cpp in Sources */,
 				FB2534E61A974EFB00A61590 /* DeferredTestResult.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
