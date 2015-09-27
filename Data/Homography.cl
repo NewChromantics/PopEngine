@@ -40,9 +40,8 @@ const float AngleRange = 360.0f;
 
 
 //	gr: this score needs to vary for the MAX pixels that could even be on a line (a line clipped in a corner will have less pixels, but could be perfect, and smaller resolution = less pixels)
-//	gr: now in config as varies on params so much
-//#define MIN_HOUGH_SCORE	100
-//#define MAX_HOUGH_SCORE	500
+#define MIN_HOUGH_SCORE	100
+#define MAX_HOUGH_SCORE	500
 
 //#define CLIP_LINES
 
@@ -1012,7 +1011,7 @@ static float4 GetHoughLine(float Distance,float Angle,float2 Originf,float4 Clip
 	return Line;
 }
 
-__kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int HoughScoreMin,int HoughScoreMax)
+__kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
 	int DistanceIndex = get_global_id(1) + OffsetDistance;
@@ -1044,14 +1043,14 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 	}
 #endif
 	
-	if ( Score < HoughScoreMin )
+	if ( Score < MIN_HOUGH_SCORE )
 	{
 		Score = 0;
 		return;
 	}
-	if ( Score > HoughScoreMax )
-		Score = HoughScoreMax;
-	Score = Range( Score, HoughScoreMin, HoughScoreMax );
+	if ( Score > MAX_HOUGH_SCORE )
+		Score = MAX_HOUGH_SCORE;
+	Score = Range( Score, MIN_HOUGH_SCORE, MAX_HOUGH_SCORE );
 	
 	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
 	float4 Line = GetHoughLine(Distance,Angle,Originf, (float4)(0,0,wh.x,wh.y));
@@ -1097,9 +1096,7 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 								global float8* Matches,
 								global volatile int* MatchesCount,
 								int MatchesMax,
-								__read_only image2d_t WhiteFilter,
-								int HoughScoreMin,
-								int HoughScoreMax
+								__read_only image2d_t WhiteFilter
 								)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
@@ -1131,15 +1128,15 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 		}
 	}
 #endif
-
-	if ( Score < HoughScoreMin )
+	
+	if ( Score < MIN_HOUGH_SCORE )
 	{
 		Score = 0;
 		return;
 	}
-	if ( Score > HoughScoreMax )
-		Score = HoughScoreMax;
-	Score = Range( Score, HoughScoreMin, HoughScoreMax );
+	if ( Score > MAX_HOUGH_SCORE )
+		Score = MAX_HOUGH_SCORE;
+	Score = Range( Score, MIN_HOUGH_SCORE, MAX_HOUGH_SCORE );
 	
 	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
 	float4 Line = GetHoughLine(Distance,Angle,Originf, (float4)(0,0,wh.x,wh.y));
