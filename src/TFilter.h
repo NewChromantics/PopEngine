@@ -134,6 +134,12 @@ public:
 	virtual void					Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override;
 	virtual Opengl::TTexture		GetTexture() override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
+	virtual std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& ContextGl) override
+	{
+		if ( mPixels )
+			return mPixels;
+		return TFilterStageRuntimeData::GetPixels( ContextGl );
+	}
 	
 	std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& Context,bool Blocking);
 	Opengl::TTexture				GetTexture(Opengl::TContext& Context,bool Blocking);
