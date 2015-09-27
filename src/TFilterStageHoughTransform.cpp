@@ -314,26 +314,13 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
 		return;
 	
-	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughLineDataStage );
-	auto& HoughLines = HoughStageData.mHoughLines;
-	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
-	
 	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
-	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
 	std::shared_ptr<SoyPixelsImpl> ClearPixels;
+	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
 	try
 	{
 		auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mValue);
-		auto ClearTexture = ClearFragStageData.GetTexture();
-		auto Read = [&ClearTexture,&ClearPixels]
-		{
-			ClearPixels.reset( new SoyPixels );
-			ClearTexture.Read( *ClearPixels );
-		};
-		Soy::TSemaphore Semaphore;
-		auto& ContextGl = mFilter.GetOpenglContext();
-		ContextGl.PushJob( Read, Semaphore );
-		Semaphore.Wait();
+		ClearPixels = ClearFragStageData.GetPixels( ContextGl );
 	}
 	catch(std::exception& e)
 	{
@@ -362,7 +349,7 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 		}
 		
-		static bool ClearToBlack = true;
+		static bool ClearToBlack = true;	//	get this as a colour, or FALSE from ClearFlag
 		if ( ClearPixels )
 		{
 			StageTarget.Write( *ClearPixels );
@@ -420,6 +407,9 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	}
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughLineDataStage );
+	auto& HoughLines = HoughStageData.mHoughLines;
+	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
 	
 	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughLinesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{

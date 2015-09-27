@@ -834,3 +834,25 @@ std::shared_ptr<Opencl::TContext> TFilter::PickNextOpenclContext()
 	return mOpenclContexts[ mCurrentOpenclContext % mOpenclContexts.GetSize() ];
 }
 
+
+std::shared_ptr<SoyPixelsImpl> TFilterStageRuntimeData::GetPixels(Opengl::TContext& ContextGl)
+{
+	auto Texture = GetTexture();
+	if ( !Texture.IsValid(false) )
+		return nullptr;
+	
+	std::shared_ptr<SoyPixelsImpl> Pixels;
+	auto ReadTexture = [&Pixels,&Texture]
+	{
+		Pixels.reset( new SoyPixels );
+		Texture.Read( *Pixels );
+	};
+	Soy::TSemaphore Semaphore;
+	ContextGl.PushJob( ReadTexture, Semaphore );
+	Semaphore.Wait();
+
+	return Pixels;
+}
+
+
+

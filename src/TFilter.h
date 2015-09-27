@@ -60,7 +60,8 @@ public:
 		//	fallback is simple version
 		return GetTexture();
 	}
-	virtual Opengl::TTexture	GetTexture()=0;
+	virtual Opengl::TTexture				GetTexture()=0;
+	virtual std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& ContextGl);		//	default grabs opengl texture and reads pixels
 };
 
 
