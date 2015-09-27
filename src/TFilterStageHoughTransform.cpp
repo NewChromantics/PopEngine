@@ -319,20 +319,33 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
 	
 	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
+	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
+	std::shared_ptr<SoyPixelsImpl> ClearPixels;
 	try
 	{
-		//auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mName);
+		auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mValue);
+		auto ClearTexture = ClearFragStageData.GetTexture();
+		auto Read = [&ClearTexture,&ClearPixels]
+		{
+			ClearPixels.reset( new SoyPixels );
+			ClearTexture.Read( *ClearPixels );
+		};
+		Soy::TSemaphore Semaphore;
+		auto& ContextGl = mFilter.GetOpenglContext();
+		ContextGl.PushJob( Read, Semaphore );
+		Semaphore.Wait();
 	}
 	catch(std::exception& e)
 	{
 		//	no frag clearing
+		ClearPixels.reset();
 	}
 	
 	
 	//	write straight to a texture
 	//	gr: changed to write to a buffer image, if anything wants a texture, it'll convert on request
 	//	gr: for re-iterating over the same image we wnat to re-clear
-	auto CreateTexture = [&Frame,&Data,&FramePixels]
+	auto CreateTexture = [&Frame,&Data,&FramePixels,&ClearPixels]
 	{
 		SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 		if ( !Data )
@@ -349,11 +362,10 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 		}
 		
-		static bool ClearWithSource = true;
 		static bool ClearToBlack = true;
-		if ( ClearWithSource )
+		if ( ClearPixels )
 		{
-			StageTarget.Write( *FramePixels );
+			StageTarget.Write( *ClearPixels );
 		}
 		else if ( ClearToBlack )
 		{

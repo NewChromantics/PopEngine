@@ -159,6 +159,16 @@ bool TFilterStage::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform
 				return true;
 	}
 	
+	if ( Uniform.mType == Soy::GetTypeName<std::string>() )
+	{
+		std::string v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+	
+	std::Debug << "Warning: Found uniform " << Uniform.mName << "(" << Uniform.mType << ") in stage params, but type not handled. (Param is " << Param.GetFormat() << ")" << std::endl;
+	
 	return false;
 }
 
