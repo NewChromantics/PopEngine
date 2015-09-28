@@ -106,3 +106,47 @@ public:
 
 
 
+class TFilterStage_DrawHoughCorners : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_DrawHoughCorners(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughCornerDataStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
+		mHoughCornerDataStage		( HoughCornerDataStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string			mHoughCornerDataStage;
+};
+
+
+
+
+
+class TFilterStage_ExtractHoughCorners : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_ExtractHoughCorners(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughLineStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
+		mHoughLineStage				( HoughLineStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string			mHoughLineStage;
+};
+
+
+class TFilterStageRuntimeData_ExtractHoughCorners : public TFilterStageRuntimeData
+{
+public:
+	
+public:
+	Array<cl_float4>			mCorners;	//	x,y,score,0
+};
+
+

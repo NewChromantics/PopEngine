@@ -53,14 +53,27 @@ public:
 class TFilterStageRuntimeData
 {
 public:
-	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)	{}
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)=0;
+	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+	{
+	}
+	
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)
+	{
+		return false;
+	}
+
+	//	gr: rework all of this to extract the system-based image we want (opengl, opencl, cpu) and move all conversions out of stages
 	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking)
 	{
 		//	fallback is simple version
 		return GetTexture();
 	}
-	virtual Opengl::TTexture				GetTexture()=0;
+	
+	virtual Opengl::TTexture				GetTexture()
+	{
+		return Opengl::TTexture();
+	}
+	
 	virtual std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& ContextGl);		//	default grabs opengl texture and reads pixels
 };
 

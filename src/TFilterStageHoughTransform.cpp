@@ -563,3 +563,296 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Semaphore.Wait(/*"opencl runner"*/);
 }
 
+
+
+
+
+
+void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
+		return;
+	
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughLineStage );
+	auto& Lines = HoughStageData.mHoughLines;
+	Opencl::TBufferArray<cl_float8> LinesBuffer( GetArrayBridge(Lines), ContextCl, "mHoughLines" );
+	
+	//	allocate data
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_ExtractHoughCorners() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ExtractHoughCorners&>( *Data.get() );
+	
+	Array<cl_float4> Corners;
+	Corners.SetSize( Lines.GetSize() * Lines.GetSize() );
+	Opencl::TBufferArray<cl_float4> CornersBuffer( GetArrayBridge(Corners), ContextCl, "mCorners" );
+	
+	
+	auto Init = [this,&Frame,&LinesBuffer,&CornersBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	{
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
+				continue;
+		}
+		
+		int LineCount = size_cast<int>(LinesBuffer.GetSize());
+		Kernel.SetUniform("HoughLines", LinesBuffer );
+		Kernel.SetUniform("HoughLineCount", LineCount );
+		Kernel.SetUniform("HoughCorners", CornersBuffer );
+		
+		Iterations.PushBack( vec2x<size_t>(0, LineCount ) );
+		Iterations.PushBack( vec2x<size_t>(0, LineCount ) );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("OffsetHoughLineAIndex", size_cast<cl_int>(Iteration.mFirst[0]) );
+		Kernel.SetUniform("OffsetHoughLineBIndex", size_cast<cl_int>(Iteration.mFirst[1]) );
+	};
+	
+	auto Finished = [&StageData,&CornersBuffer,&Corners](Opencl::TKernelState& Kernel)
+	{
+		Opencl::TSync Semaphore;
+		CornersBuffer.Read( GetArrayBridge(Corners), Kernel.GetContext(), &Semaphore );
+		Semaphore.Wait();
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait(/*"opencl runner"*/);
+	
+	
+	//	get all the valid corners, and merge duplicates
+	TUniformWrapper<float> CornerMergeDistanceUniform("CornerMergeDistance", 2.f );
+	Frame.SetUniform( CornerMergeDistanceUniform, CornerMergeDistanceUniform, mFilter, *this );
+	auto& CornerMergeDistance = CornerMergeDistanceUniform.mValue;
+	
+	static bool DebugSkippedCorners = false;
+	int SkippedCount = 0;
+	auto& FinalCorners = StageData.mCorners;
+	for ( int i=0;	i<Corners.GetSize();	i++ )
+	{
+		auto Corner4 = Corners[i];
+		auto Corner = Soy::VectorToMatrix( Soy::ClToVector( Corner4 ) );
+		auto Score = Corner.z();
+		if ( Score <= 0 )
+			continue;
+		
+		//	look for merge
+		bool Skip = false;
+		for ( int e=0;	!Skip && e<FinalCorners.GetSize();	e++ )
+		{
+			auto OldCorner = Soy::VectorToMatrix( Soy::ClToVector( FinalCorners[e] ) );
+			auto Distance = (OldCorner - Corner).Length();
+			if ( Distance < CornerMergeDistance )
+			{
+				if ( DebugSkippedCorners )
+					std::Debug << "skipped corner " << Corner4 << " against old " << Soy::ClToVector( FinalCorners[e] ) << " (" << Distance << "px)" << std::endl;
+				Skip = true;
+				SkippedCount++;
+			}
+		}
+		if ( Skip )
+			continue;
+		
+		FinalCorners.PushBack( Corner4 );
+	}
+	
+	std::Debug << "Extracted x" << FinalCorners.GetSize() << " hough corners: ";
+	for ( int i=0;	i<FinalCorners.GetSize();	i++ )
+	{
+		auto Corner4 = Soy::ClToVector( FinalCorners[i] );
+		static int Precision = 0;
+		std::Debug << std::fixed << std::setprecision( Precision ) << Corner4.x << "x" << Corner4.y << ",";// << Corner4.z << std::endl;
+	}
+	std::Debug << std::endl;
+}
+
+
+
+
+void TFilterStage_DrawHoughCorners::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, "TFilterStage_DrawHoughLines missing kernel" ) )
+		return;
+	auto FramePixels = Frame.GetFramePixels(mFilter,true);
+	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
+		return;
+	
+	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
+	std::shared_ptr<SoyPixelsImpl> ClearPixels;
+	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
+	try
+	{
+		auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mValue);
+		ClearPixels = ClearFragStageData.GetPixels( ContextGl );
+	}
+	catch(std::exception& e)
+	{
+		//	no frag clearing
+		ClearPixels.reset();
+	}
+	
+	
+	//	write straight to a texture
+	//	gr: changed to write to a buffer image, if anything wants a texture, it'll convert on request
+	//	gr: for re-iterating over the same image we wnat to re-clear
+	auto CreateTexture = [&Frame,&Data,&FramePixels,&ClearPixels]
+	{
+		SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+		if ( !Data )
+		{
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+		}
+		auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+		
+		auto& StageTarget = StageData.mTexture;
+		if ( !StageTarget.IsValid() )
+		{
+			SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		}
+		
+		static bool ClearToBlack = true;	//	get this as a colour, or FALSE from ClearFlag
+		if ( ClearPixels )
+		{
+			StageTarget.Write( *ClearPixels );
+		}
+		else if ( ClearToBlack )
+		{
+			Opengl::TRenderTargetFbo Fbo(StageTarget);
+			Fbo.mGenerateMipMaps = false;
+			Fbo.Bind();
+			Opengl::ClearColour( Soy::TRgb(0,0,0), 0 );
+			Fbo.Unbind();
+			StageTarget.OnWrite();
+		}
+	};
+	
+	auto CreateImageBuffer = [this,&Frame,&Data,&FramePixels,&ContextCl]
+	{
+		SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+		if ( !Data )
+		{
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+		}
+		auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+		
+		auto& StageTarget = StageData.mImageBuffer;
+		if ( !StageTarget )
+		{
+			SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+			Opencl::TSync Semaphore;
+			
+			std::stringstream BufferName;
+			BufferName << this->mName << " stage output";
+			std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::ReadWrite, BufferName.str(), &Semaphore ) );
+			
+			Semaphore.Wait();
+			//	only assign on success
+			StageTarget = ImageBuffer;
+		}
+	};
+	
+	static bool MakeTargetAsTexture = true;
+	if ( MakeTargetAsTexture )
+	{
+		Soy::TSemaphore Semaphore;
+		auto& ContextGl = mFilter.GetOpenglContext();
+		ContextGl.PushJob( CreateTexture, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Soy::TSemaphore Semaphore;
+		ContextCl.PushJob( CreateImageBuffer, Semaphore );
+		Semaphore.Wait();
+	}
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+	
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughCornerDataStage );
+	auto& HoughLines = HoughStageData.mHoughLines;
+	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
+	
+	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughLinesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	{
+		//ofScopeTimerWarning Timer("opencl blit init",40);
+		
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
+				continue;
+			
+			//	maybe surpress this until we need it... or only warn once
+			static bool DebugUnsetUniforms = false;
+			if ( DebugUnsetUniforms )
+				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
+		}
+		
+		//	set output depending on what we made
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
+		
+		Kernel.SetUniform("HoughLines", HoughLinesBuffer );
+		
+		Iterations.PushBack( vec2x<size_t>(0, HoughLinesBuffer.GetSize() ) );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("OffsetIndex", size_cast<cl_int>(Iteration.mFirst[0]) );
+	};
+	
+	auto Finished = [&StageData,this,&ContextGl](Opencl::TKernelState& Kernel)
+	{
+		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
+		
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			Opengl::TTextureAndContext Texture( StageData.mTexture, ContextGl );
+			Kernel.ReadUniform("Frag", Texture );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			Kernel.ReadUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait(/*"opencl runner"*/);
+}
+
+
