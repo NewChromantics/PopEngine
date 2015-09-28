@@ -55,16 +55,22 @@ __kernel void DrawHoughCorners(int OffsetIndex,__write_only image2d_t Frag,globa
 	
 	float2 Corner = HoughCorner.xy;
 	float Score = HoughCorner.z;
-/*
-	float4 Rgba = (float4)(Score,Score,1,1);
 	
-	float4 Rgba = (float4)(Score,Score,1,1);
-	write_imagef( Frag, (int2)(Line.x,Line.y), Rgba );
-
-	write_imagef( Frag, (int2)(Line.x,Line.y), Rgba );
-	write_only
-	DrawLineDirect( LineStart, LineEnd, Frag, Score );
- */
+	float4 Rgba = 1;
+	Rgba.xyz = NormalToRgb( Score );
+	
+	int2 wh = get_image_dim(Frag);
+	
+	for ( int y=-2;	y<=2;	y++ )
+	{
+		for ( int x=-2;	x<=2;	x++ )
+		{
+			int2 xy = (int2)( Corner.x+x, Corner.y+y );
+			xy.x = clamp( xy.x, 0, wh.x );
+			xy.y = clamp( xy.y, 0, wh.y );
+			write_imagef( Frag, xy, Rgba );
+		}
+	}
 }
 
 

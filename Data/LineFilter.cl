@@ -541,18 +541,14 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 
 
 
-
-
-
-
-float4 MakeLine(float2 Pos,float2 Dir)
+static float4 MakeLine(float2 Pos,float2 Dir)
 {
 	return (float4)( Pos.x, Pos.y, Pos.x + Dir.x, Pos.y + Dir.y );
 }
 
 
 
-float GetHoughDistance(float2 Position,float2 Origin,float Angle)
+static float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 {
 	//	http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
 	float2 xy = Position - Origin;
@@ -744,7 +740,7 @@ __kernel void DrawHoughGraph(int OffsetAngle,int OffsetDistance,__write_only ima
 }
 
 
-bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
+static bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
 {
 	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
 	if ( !BaseWhite )

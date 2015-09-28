@@ -781,11 +781,11 @@ void TFilterStage_DrawHoughCorners::Execute(TFilterFrame& Frame,std::shared_ptr<
 	}
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
-	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughCornerDataStage );
-	auto& HoughLines = HoughStageData.mHoughLines;
-	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
+	auto& HoughCornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mHoughCornerDataStage );
+	auto& HoughCorners = HoughCornerStageData.mCorners;
+	Opencl::TBufferArray<cl_float4> HoughCornersBuffer( GetArrayBridge(HoughCorners), ContextCl, "HoughCorners" );
 	
-	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughLinesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughCornersBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
 		
@@ -796,11 +796,6 @@ void TFilterStage_DrawHoughCorners::Execute(TFilterFrame& Frame,std::shared_ptr<
 			
 			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
 				continue;
-			
-			//	maybe surpress this until we need it... or only warn once
-			static bool DebugUnsetUniforms = false;
-			if ( DebugUnsetUniforms )
-				std::Debug << "Warning; unset uniform " << Uniform.mName << std::endl;
 		}
 		
 		//	set output depending on what we made
@@ -819,9 +814,9 @@ void TFilterStage_DrawHoughCorners::Execute(TFilterFrame& Frame,std::shared_ptr<
 			throw Soy::AssertException("No pixel output created");
 		}
 		
-		Kernel.SetUniform("HoughLines", HoughLinesBuffer );
+		Kernel.SetUniform("HoughCorners", HoughCornersBuffer );
 		
-		Iterations.PushBack( vec2x<size_t>(0, HoughLinesBuffer.GetSize() ) );
+		Iterations.PushBack( vec2x<size_t>(0, HoughCornersBuffer.GetSize() ) );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
