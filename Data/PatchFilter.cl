@@ -34,7 +34,7 @@ static float4 texture2D(__read_only image2d_t Image,int2 uv)
 
 
 
-float hue2rgb(float p,float q,float t)
+static float hue2rgb(float p,float q,float t)
 {
 	if(t < 0) t += 1.f;
 	if(t > 1) t -= 1.f;

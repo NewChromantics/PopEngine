@@ -36,7 +36,7 @@ addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl k
 #addstage LineDetector DrawHoughGraph cl=LineFilter.cl kernel=DrawHoughGraph HoughData=HoughFilter
 
 addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines
-addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=LineFilter.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=true
+addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=true
 
 #loadframe LineDetector time=1001 input01_undistorted.png
 #decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
