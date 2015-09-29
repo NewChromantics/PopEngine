@@ -21,6 +21,44 @@ std::ostream& Opencl::operator<<(std::ostream &out,const Opencl::TDeviceMeta& in
 	return out;
 }
 
+
+
+bool SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const TJobParams& Params)
+{
+	auto Param = Params.GetParam( Uniform.mName );
+	if ( !Param.IsValid() )
+		return false;
+	
+	if ( Uniform.mType == Soy::GetTypeName<int>() )
+	{
+		int v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+	
+	if ( Uniform.mType == Soy::GetTypeName<float>() )
+	{
+		float v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+	
+	if ( Uniform.mType == Soy::GetTypeName<std::string>() )
+	{
+		std::string v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+	
+	std::Debug << "Warning: Found uniform " << Uniform.mName << "(" << Uniform.mType << ") in stage params, but type not handled. (Param is " << Param.GetFormat() << ")" << std::endl;
+	
+	return false;
+}
+
+
 std::shared_ptr<SoyPixelsImpl> TFilterStageRuntimeData_Frame::GetPixels(Opengl::TContext& Context,bool Blocking)
 {
 	if ( mPixels )
@@ -132,44 +170,14 @@ void TFilterStageRuntimeData_Frame::Shutdown(Opengl::TContext& ContextGl,Opencl:
 TFilterStage::TFilterStage(const std::string& Name,TFilter& Filter,const TJobParams& StageParams) :
 	mName			( Name ),
 	mFilter			( Filter ),
-	mStageParams	( StageParams )
+	mUniforms		( StageParams )
 {
 }
 
 
 bool TFilterStage::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform)
 {
-	auto Param = mStageParams.GetParam( Uniform.mName );
-	if ( !Param.IsValid() )
-		return false;
-	
-	if ( Uniform.mType == Soy::GetTypeName<int>() )
-	{
-		int v;
-		if ( Param.Decode(v) )
-			if ( Shader.SetUniform( Uniform.mName, v ) )
-				return true;
-	}
-	
-	if ( Uniform.mType == Soy::GetTypeName<float>() )
-	{
-		float v;
-		if ( Param.Decode(v) )
-			if ( Shader.SetUniform( Uniform.mName, v ) )
-				return true;
-	}
-	
-	if ( Uniform.mType == Soy::GetTypeName<std::string>() )
-	{
-		std::string v;
-		if ( Param.Decode(v) )
-			if ( Shader.SetUniform( Uniform.mName, v ) )
-				return true;
-	}
-	
-	std::Debug << "Warning: Found uniform " << Uniform.mName << "(" << Uniform.mType << ") in stage params, but type not handled. (Param is " << Param.GetFormat() << ")" << std::endl;
-	
-	return false;
+	return ::SetUniform( Shader, Uniform, mUniforms );
 }
 
 TFilterFrame::~TFilterFrame()
@@ -570,6 +578,16 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_ExtractHoughCorners( Name, ProgramFilename, KernelName, HoughLinesStageName, *this, Params ) );
 	}
+	else if ( StageType == "GetHoughCornerHomographys" )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto HoughCornerData = Params.GetParamAs<std::string>("HoughCornerData");
+		
+		Stage.reset( new TFilterStage_GetHoughCornerHomographys( Name, ProgramFilename, KernelName, HoughCornerData, *this, Params ) );
+	}
 	else if ( StageType == "GatherHoughLines" )
 	{
 		//	construct an opencl context [early for debugging]
@@ -775,9 +793,20 @@ void TFilter::OnUniformChanged(const std::string &Name)
 	OnStagesChanged();
 }
 
+bool TFilter::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform)
+{
+	return ::SetUniform( Shader, Uniform, mUniforms );
+}
+
+bool TFilter::SetUniform(TJobParam& Param,bool TriggerRerun)
+{
+	mUniforms.AddParam( Param );
+	return true;
+}
+
 TJobParam TFilter::GetUniform(const std::string& Name)
 {
-	return TJobParam();
+	return mUniforms.GetParam( Name );
 }
 
 Opengl::TContext& TFilter::GetOpenglContext()

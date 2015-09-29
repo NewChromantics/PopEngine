@@ -869,3 +869,146 @@ void TFilterStage_DrawHoughCorners::Execute(TFilterFrame& Frame,std::shared_ptr<
 }
 
 
+
+
+
+
+void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
+		return;
+	
+	//	get truth corners if we haven't set them up
+	if ( mTruthCorners.IsEmpty() )
+	{
+		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
+		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
+			throw Soy::AssertException("Missing TruthCorners uniform");
+		
+		auto PushVec = [this](const std::string& Part,const char& Delin)
+		{
+			vec2f Coord;
+			Soy::StringToType( Coord, Part );
+			mTruthCorners.PushBack( Soy::VectorToCl(Coord) );
+			return true;
+		};
+		Soy::StringSplitByMatches( PushVec, TruthCornersUniform.mValue, "," );
+		Soy::Assert( !mTruthCorners.IsEmpty(), "Failed to extract any truth corners");
+	}
+	
+	auto& HoughCornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mHoughCornerStage );
+	auto& Corners = HoughCornerStageData.mCorners;
+	Opencl::TBufferArray<cl_float4> CornersBuffer( GetArrayBridge(Corners), ContextCl, "Corners" );
+	Opencl::TBufferArray<cl_float2> TruthCornersBuffer( GetArrayBridge(mTruthCorners), ContextCl, "mTruthCorners" );
+	
+	//	make ransac random indexes
+	Array<cl_int4> CornerIndexes;
+	Array<cl_int4> TruthIndexes;
+	static int RansacSize = 1000;
+	for ( int r=0;	r<RansacSize;	r++ )
+	{
+		auto& SampleCornerIndexs = CornerIndexes.PushBack();
+		auto& SampleTruthIndexs = TruthIndexes.PushBack();
+		for ( int n=0;	n<4;	n++ )
+		{
+			int CornerIndex = rand() % CornersBuffer.GetSize();
+			int TruthIndex = rand() % TruthCornersBuffer.GetSize();
+			SampleCornerIndexs.s[n] = CornerIndex;
+			SampleTruthIndexs.s[n] = TruthIndex;
+		}
+	}
+	
+	Opencl::TBufferArray<cl_int4> CornerIndexesBuffer( GetArrayBridge(CornerIndexes), ContextCl, "CornerIndexesBuffer" );
+	Opencl::TBufferArray<cl_int4> TruthIndexesBuffer( GetArrayBridge(TruthIndexes), ContextCl, "TruthIndexesBuffer" );
+
+	//	allocate data
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_GetHoughCornerHomographys() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GetHoughCornerHomographys&>( *Data.get() );
+	
+	Array<cl_float16> Homographys;
+	Homographys.SetSize( Corners.GetSize() * TruthCornersBuffer.GetSize() );
+	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
+	
+	
+	auto Init = [this,&Frame,&CornersBuffer,&TruthCornersBuffer,&HomographysBuffer,&CornerIndexesBuffer,&TruthIndexesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	{
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
+				continue;
+		}
+		
+		int MatchIndexesCount = size_cast<int>(CornerIndexesBuffer.GetSize());
+		Kernel.SetUniform("MatchIndexes", CornerIndexesBuffer );
+		Kernel.SetUniform("TruthIndexes", TruthIndexesBuffer );
+		Kernel.SetUniform("MatchIndexOffset", MatchIndexesCount );
+		Kernel.SetUniform("MatchCorners", CornersBuffer );
+		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
+		Kernel.SetUniform("Homographies", HomographysBuffer );
+		
+		Iterations.PushBack( vec2x<size_t>(0, CornerIndexesBuffer.GetSize() ) );
+		Iterations.PushBack( vec2x<size_t>(0, TruthIndexesBuffer.GetSize() ) );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("MatchIndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
+		Kernel.SetUniform("TruthIndexOffset", size_cast<cl_int>(Iteration.mFirst[1]) );
+	};
+	
+	auto Finished = [&StageData,&HomographysBuffer,&Homographys](Opencl::TKernelState& Kernel)
+	{
+		Opencl::TSync Semaphore;
+		HomographysBuffer.Read( GetArrayBridge(Homographys), Kernel.GetContext(), &Semaphore );
+		Semaphore.Wait();
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait(/*"opencl runner"*/);
+	
+	
+	//	get all the valid homographys
+	auto& FinalHomographys = StageData.mHomographys;
+	for ( int i=0;	i<Homographys.GetSize();	i++ )
+	{
+		//	if it's all zero's its invalid
+		auto& Homography = Homographys[i];
+		
+		float Sum = 0;
+		for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
+			Sum += Homography.s[s];
+
+		if ( Sum == 0 )
+			continue;
+		
+		FinalHomographys.PushBack( Homography );
+	}
+	
+	std::Debug << "Extracted x" << FinalHomographys.GetSize() << " homographys: ";
+	for ( int i=0;	i<FinalHomographys.GetSize();	i++ )
+	{
+		auto& Homography = FinalHomographys[i];
+		static int Precision = 0;
+		std::Debug << std::endl;
+		for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
+			std::Debug << std::fixed << std::setprecision( Precision ) << Homography.s[s] << "x";
+	}
+	std::Debug << std::endl;
+}
+
+
+
+
+
+
+
+

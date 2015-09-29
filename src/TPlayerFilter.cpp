@@ -179,7 +179,8 @@ bool TPlayerFilter::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUnifor
 		Shader.SetUniform( Uniform.mName, mAtlasSize.y );
 		return true;
 	}
-	return false;
+	
+	return TFilter::SetUniform( Shader, Uniform );
 }
 
 

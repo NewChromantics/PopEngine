@@ -47,7 +47,7 @@ public:
 	SoyEvent<TFilterStage&>	mOnChanged;
 	std::string				mName;
 	TFilter&				mFilter;
-	TJobParams				mStageParams;	//	params specified in config per-stage, which we can relay onto uniforms so we can specify kernel params in the config!
+	TJobParams				mUniforms;	//	params specified in config per-stage, which we can relay onto uniforms so we can specify kernel params in the config!
 };
 
 class TFilterStageRuntimeData
@@ -206,15 +206,9 @@ public:
 	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
 	
 	//	apply uniform to shader
-	virtual bool			SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform)
-	{
-		return false;
-	}
+	virtual bool			SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform);
 	//	store uniform value
-	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun)
-	{
-		throw Soy::AssertException( std::string("No known uniform ")+Param.GetKey() );
-	}
+	virtual bool			SetUniform(TJobParam& Param,bool TriggerRerun);
 	virtual TJobParam		GetUniform(const std::string& Name);
 
 	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
@@ -236,6 +230,7 @@ public:
 	Array<std::shared_ptr<Opencl::TDevice>>			mOpenclDevices;
 	std::mutex										mOpenclContextLock;
 	size_t											mCurrentOpenclContext;
+	TJobParams										mUniforms;
 };
 
 
