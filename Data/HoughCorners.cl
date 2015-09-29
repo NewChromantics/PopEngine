@@ -8,7 +8,8 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 								  int OffsetHoughLineBIndex,
 								  global float8* HoughLines,
 								  int HoughLineCount,
-								  global float4* HoughCorners
+								  global float4* HoughCorners,
+								  float MinScore
 								  )
 {
 	int HoughLineAIndex = get_global_id(0) + OffsetHoughLineAIndex;
@@ -40,6 +41,9 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 		float FarCoord = 10000;
 		if ( fabsf(Intersection.x) > FarCoord || fabsf(Intersection.y) > FarCoord )
 			Score = -1;
+
+		if ( Score < MinScore )
+			Score = 0;
 	}
 	
 	HoughCorners[CornerIndex] = (float4)( Intersection, Score, w );
@@ -48,30 +52,35 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 
 
 
-__kernel void DrawHoughCorners(int OffsetIndex,__write_only image2d_t Frag,global float4* HoughCorners)
+__kernel void DrawHoughCorners(int OffsetIndex,__write_only image2d_t Frag,global float4* HoughCorners,float Zoom)
 {
 	int LineIndex = get_global_id(0) + OffsetIndex;
 	float4 HoughCorner = HoughCorners[LineIndex];
-	
+	int2 wh = get_image_dim(Frag);
 	float2 Corner = HoughCorner.xy;
+	
+	//	zoom coord from center
+	float2 whf = (float2)(wh.x,wh.y);
+	Corner -= whf/2.f;
+	Corner *= Zoom;
+	Corner += whf/2.f;
+	
 	float Score = HoughCorner.z;
 	
 	float4 Rgba = 1;
 	Rgba.xyz = NormalToRgb( Score );
 	
-	int2 wh = get_image_dim(Frag);
 	
 	int Radius = 10;
 	for ( int y=-Radius;	y<=Radius;	y++ )
 	{
 		for ( int x=-Radius;	x<=Radius;	x++ )
 		{
-			int2 xy = (int2)( Corner.x+x, Corner.y+y );
+			int2 xy = (int2)(Corner.x+x,Corner.y+y);
 			xy.x = clamp( xy.x, 0, wh.x-1 );
 			xy.y = clamp( xy.y, 0, wh.y-1 );
 			write_imagef( Frag, xy, Rgba );
 		}
 	}
 }
-
 

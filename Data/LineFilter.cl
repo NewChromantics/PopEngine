@@ -452,7 +452,7 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 
 
 
-__kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag,int RenderAsRgb)
+__kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag,int RenderAsRgb,int DrawPalette)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
@@ -527,7 +527,7 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	
 	
 	//	debug show what we're matching
-	if ( uv.y < 100 )
+	if ( DrawPalette && uv.y < 100 )
 	{
 		int Index = uv.x / 100;
 		if ( Index < HistogramHslsCount )
