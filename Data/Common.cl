@@ -1,20 +1,75 @@
 #define const	__constant
 
-//#define CLIP_LINES
 #define DRAW_LINE_WIDTH			2
+
+
+
+
+static float4 ClipLine(float4 Line,float4 Rect)
+{
+	//	LiangBarsky
+	float edgeLeft = Rect.x;
+	float edgeRight = Rect.z;
+	float edgeBottom = Rect.w;
+	float edgeTop = Rect.y;
+	
+	float x0src = Line.x;
+	float y0src = Line.y;
+	float x1src = Line.z;
+	float y1src = Line.w;
+	float t0 = 0.0;
+	float t1 = 1.0;
+	float xdelta = x1src-x0src;
+	float ydelta = y1src-y0src;
+	float p,q;
+	
+	float2 pq[4] =
+	{
+		(float2)(	-xdelta,	-(edgeLeft-x0src)	),
+		(float2)(	xdelta,		(edgeRight-x0src)	),
+		(float2)(	ydelta,		q = (edgeBottom-y0src)	),
+		(float2)(	-ydelta,	q = - (edgeTop-y0src)	)
+	 };
+	
+	for(int edge=0; edge<4; edge++)
+	{
+		float p = pq[edge].x;
+		float q = pq[edge].y;
+		float r = q/p;
+		
+		//	parallel line outside
+		if ( p==0 && q<0 )
+			return 0;
+
+		if(p<0)
+		{
+			if(r>t1)
+				return 0;
+
+			t0 = max(t0,r);
+		}
+		else
+		{
+			if(r<t0)
+				return 0;
+			
+			t1 = min( t1,r );
+		}
+	}
+	
+	float4 ClippedLine;
+	
+	ClippedLine.xy = Line.xy + t0 * (float2)(xdelta,ydelta);
+	ClippedLine.zw = Line.xy + t1 * (float2)(xdelta,ydelta);
+	
+	return ClippedLine;
+}
 
 
 
 //	z is 0 if bad lines
 static float3 GetRayRayIntersection(float4 RayA,float4 RayB)
 {
-	float2 closestPointLine1;
-	float2 closestPointLine2;
-	float2 linePoint1 = RayA.xy;
-	float2 lineVec1 = RayA.zw;
-	float2 linePoint2 = RayB.xy;
-	float2 lineVec2 = RayB.zw;
-	
 	float Ax = RayA.x;
 	float Ay = RayA.y;
 	float Bx = RayA.x + RayA.z;
@@ -303,6 +358,13 @@ static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,flo
 	float4 Rgba = NormalToRgba( Score );
 	int2 wh = get_image_dim(Frag);
 	
+	float4 Line4;
+	Line4.xy = From;
+	Line4.zw = To;
+	float Border = 0;
+	Line4 = ClipLine( Line4, (float4)(Border,Border,wh.x-Border,wh.y-Border) );
+	From = Line4.xy;
+	To = Line4.zw;
 	
 	int Steps = 900;
 	for ( int i=0;	i<Steps;	i++ )
@@ -310,10 +372,11 @@ static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,flo
 		float2 Point = Lerp2( i/(float)Steps, From, To );
 		
 		int Rad = DRAW_LINE_WIDTH-1;
-#if !defined(CLIP_LINES)
+
+		//	gr: not needed with clipping, but doesnt seem to impact performance (whilst sync is > 30ms)
 		if ( Point.x < Rad || Point.y < Rad || Point.x >= wh.x-Rad || Point.y >= wh.y-Rad )
 			continue;
-#endif
+
 		if ( DRAW_LINE_WIDTH>1 )
 		{
 			//	thicken line
@@ -333,68 +396,3 @@ static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,flo
 		}
 	}
 }
-
-
-static float4 ClipLine(float4 Line,float4 Rect)
-{
-#if defined(CLIP_LINES)
-	//	LiangBarsky
-	float edgeLeft = Rect.x;
-	float edgeRight = Rect.z;
-	float edgeBottom = Rect.w;
-	float edgeTop = Rect.y;
-	
-	float x0src = Line.x;
-	float y0src = Line.y;
-	float x1src = Line.z;
-	float y1src = Line.w;
-	float t0 = 0.0;
-	float t1 = 1.0;
-	float xdelta = x1src-x0src;
-	float ydelta = y1src-y0src;
-	float p,q;
-	
-	for(int edge=0; edge<4; edge++)
-	{
-		// Traverse through left, right, bottom, top edges.
-		if (edge==0) {  p = -xdelta;    q = -(edgeLeft-x0src);  }
-		if (edge==1) {  p = xdelta;     q =  (edgeRight-x0src); }
-		if (edge==2) {  p = -ydelta;    q = -(edgeBottom-y0src);}
-		if (edge==3) {  p = ydelta;     q =  (edgeTop-y0src);   }
-		float r = q/p;
-		
-		//	parallel line outside
-		if(p==0 && q<0)
-		{
-			return 0;
-		}
-		
-		if(p<0)
-		{
-			if(r>t1)
-				return 100;         // Don't draw line at all.
-			else if(r>t0)
-				t0=r;            // Line is clipped!
-		}
-		else if(p>0)
-		{
-			if(r<t0)
-				return 0;      // Don't draw line at all.
-			else if(r<t1)
-				t1=r;         // Line is clipped!
-		}
-	}
-	
-	float4 ClippedLine;
-	
-	ClippedLine.x = x0src + t0*xdelta;
-	ClippedLine.y = y0src + t0*ydelta;
-	ClippedLine.z = x0src + t1*xdelta;
-	ClippedLine.w = y0src + t1*ydelta;
-	
-	return ClippedLine;
-#else
-	return Line;
-#endif
-}
-
