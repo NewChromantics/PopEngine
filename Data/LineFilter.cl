@@ -22,7 +22,7 @@ const float AngleRange = 360.0f;
 
 
 //	filter out lines if a neighbour is better
-#define CHECK_MAXIMA_ANGLES		10
+#define CHECK_MAXIMA_ANGLES		20
 #define CHECK_MAXIMA_DISTANCES	30
 
 
@@ -560,7 +560,7 @@ static float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 
 
 
-static float4 GetHoughLine(float Distance,float Angle,float2 Originf,float4 ClipRect)
+static float4 GetHoughLine(float Distance,float Angle,float2 Originf)
 {
 	float rho = Distance;
 	float theta = Angle;
@@ -577,7 +577,6 @@ static float4 GetHoughLine(float Distance,float Angle,float2 Originf,float4 Clip
 	float4 Line;
 	Line.xy = (float2)( x0 + Length*(-Sin), y0 + Length*(Cos) );
 	Line.zw = (float2)( x0 - Length*(-Sin), y0 - Length*(Cos) );
-	Line = ClipLine( Line, ClipRect );
 	return Line;
 }
 
@@ -612,6 +611,7 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 		}
 	}
 #endif
+
 	
 	if ( Score < HoughScoreMin )
 	{
@@ -623,7 +623,7 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 	Score = Range( Score, HoughScoreMin, HoughScoreMax );
 	
 	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
-	float4 Line = GetHoughLine(Distance,Angle,Originf, (float4)(0,0,wh.x,wh.y));
+	float4 Line = GetHoughLine(Distance,Angle,Originf );
 	DrawLineDirect( Line.xy, Line.zw, Frag, Score );
 }
 
@@ -656,8 +656,8 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 								global volatile int* MatchesCount,
 								int MatchesMax,
 								__read_only image2d_t WhiteFilter,
-								int HoughScoreMin,
-								int HoughScoreMax
+								float HoughScoreMin,
+								float HoughScoreMax
 								)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
@@ -675,6 +675,8 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
 	
+	//	gr: altohugh this score hasn't been corrected, because they're neighbours, we assume the score entropy won't vary massively.
+	//		if we wanted to check with corrected scores we'd have to do this as a seperate stage or calc neighbour corrected scores here which might be a bit expensive
 	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
 #if defined(CHECK_MAXIMA_ANGLES)||defined(CHECK_MAXIMA_DISTANCES)	//	OR so errors if a define is missing
 	for ( int x=-CHECK_MAXIMA_ANGLES;	x<=CHECK_MAXIMA_ANGLES;	x++ )
@@ -690,17 +692,29 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	}
 #endif
 
+	//	correct the score to be related to maximum possible length (this lets us handle mulitple resolutions)
+	float4 Line = GetHoughLine( Distance, Angle, Originf );
+	int Border = 0;	//	testing clip
+	Line = ClipLine( Line, (float4)(Border,Border,wh.x-Border,wh.y-Border) );
+	float LineLength = length( Line.xy - Line.zw );
+	
+	//	entirely clipped lines... should we have any at all? maybe when distance is too far out
+	if ( LineLength <= 0 )
+		return;
+
+	//	gr: note: we can have more-pixels for a line depending on distance grouping
+	float HoughDistanceStep = 0.5f;
+	float LineMaxPixels = LineLength * HoughDistanceStep;
+
+	Score /= LineMaxPixels;
 	if ( Score < HoughScoreMin )
 	{
-		Score = 0;
 		return;
 	}
-	if ( Score > HoughScoreMax )
-		Score = HoughScoreMax;
+
+	Score = clamp( Score, (float)HoughScoreMin, (float)HoughScoreMax );
 	Score = Range( Score, HoughScoreMin, HoughScoreMax );
 	
-	//	render hough line; http://docs.opencv.org/master/d9/db0/tutorial_hough_lines.html#gsc.tab=0
-	float4 Line = GetHoughLine(Distance,Angle,Originf, (float4)(0,0,wh.x,wh.y));
 
 	//	make output
 	float8 LineAndMeta;
@@ -708,7 +722,7 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	LineAndMeta[4] = AngleIndex;
 	LineAndMeta[5] = DistanceIndex;
 	LineAndMeta[6] = Score;
-	LineAndMeta[7] = 0;
+	LineAndMeta[7] = LineMaxPixels;
 	
 	TArray_float8 MatchArray = { Matches, MatchesCount, MatchesMax };
 	PushArray_float8( MatchArray, &LineAndMeta );
