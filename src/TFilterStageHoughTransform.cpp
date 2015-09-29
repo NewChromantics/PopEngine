@@ -551,6 +551,11 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		LineBufferCounter.Read( LineCount, Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
 		
+		if ( LineCount > LineBuffer.GetSize() )
+		{
+			std::Debug << "Extracted " << LineCount << "/" << LineBuffer.GetSize() << std::endl;
+		}
+		
 		StageData.mHoughLines.SetSize( std::min( LineCount, size_cast<cl_int>(LineBuffer.GetSize()) ) );
 		LineBuffer.Read( GetArrayBridge(StageData.mHoughLines), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
@@ -561,6 +566,19 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait(/*"opencl runner"*/);
+	
+	static bool DebugExtractedHoughLines = false;
+	if ( DebugExtractedHoughLines )
+	{
+		auto& Lines = StageData.mHoughLines;
+		std::Debug << "Extracted x" << Lines.GetSize() << " lines" << std::endl;
+		for ( int i=0;	i<Lines.GetSize();	i++ )
+		{
+			auto Line = Lines[i];
+			auto Length = Line.s[7];
+			std::Debug << "#" << i << " length: " << Length << std::endl;
+		}
+	}
 }
 
 
