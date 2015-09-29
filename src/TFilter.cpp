@@ -588,6 +588,17 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_GetHoughCornerHomographys( Name, ProgramFilename, KernelName, HoughCornerData, *this, Params ) );
 	}
+	else if ( StageType == "DrawHomographyCorners" )
+	{
+		//	construct an opencl context [early for debugging]
+		CreateOpenclContexts();
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto CornerData = Params.GetParamAs<std::string>("CornerData");
+		auto HomographyData = Params.GetParamAs<std::string>("HomographyData");
+		
+		Stage.reset( new TFilterStage_DrawHomographyCorners( Name, ProgramFilename, KernelName, CornerData, HomographyData, *this, Params ) );
+	}
 	else if ( StageType == "GatherHoughLines" )
 	{
 		//	construct an opencl context [early for debugging]

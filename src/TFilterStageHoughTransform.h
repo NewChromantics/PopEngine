@@ -177,3 +177,27 @@ public:
 public:
 	Array<cl_float16>	mHomographys;	//	3x3. last 7 ignored
 };
+
+
+
+
+class TFilterStage_DrawHomographyCorners : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_DrawHomographyCorners(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& CornerDataStage,const std::string& HomographyDataStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
+		mCornerDataStage			( CornerDataStage ),
+		mHomographyDataStage		( HomographyDataStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string			mCornerDataStage;
+	std::string			mHomographyDataStage;
+};
+
+
+
+

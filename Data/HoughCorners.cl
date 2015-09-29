@@ -511,3 +511,99 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 	Homographies[(TruthIndex*MatchIndexesCount)+MatchIndex] = Homography;
 }
 
+
+
+
+
+
+static float2 TransformCorner(float2 Position,float16 Homography3x3)
+{
+	float16 H = Homography3x3;
+	float2 src = Position;
+	float x = H[0]*src.x + H[1]*src.y + H[2];
+	float y = H[3]*src.x + H[4]*src.y + H[5];
+	float z = H[6]*src.x + H[7]*src.y + H[8];
+	
+	x /= z;
+	y /= z;
+	
+	return (float2)(x,y);
+}
+
+
+__kernel void DrawHomographyCorners(int CornerIndexOffset,
+									int HomographyIndexOffset,
+									__write_only image2d_t Frag,
+									global float4* HoughCorners,
+									global float2* TruthCorners,
+									int TruthCornerCount,
+									float Zoom,
+									global float16* Homographys
+									)
+{
+	int CornerIndex = get_global_id(0) + CornerIndexOffset;
+	int HomographyIndex = get_global_id(1) + HomographyIndexOffset;
+
+	float4 HoughCorner = HoughCorners[CornerIndex];
+	float2 Corner = HoughCorner.xy;
+	float16 Homography = Homographys[HomographyIndex];
+	
+	//	transform corner
+	float2 TransformedCorner = TransformCorner( Corner, Homography );
+	
+	//	find nearest truth corner
+	float BestDistance = 99999;
+	for ( int t=0;	t<TruthCornerCount;	t++ )
+	{
+		float2 TruthCorner = TruthCorners[t];
+		float Dist = distance( TruthCorner, TransformedCorner );
+		BestDistance = min( BestDistance, Dist );
+	}
+
+	
+	float Score = BestDistance / 100.f;
+	Score = 1.f - clamp( Score, 0.f, 1.f );
+	Corner = TransformedCorner;
+	
+	
+	int Radius = 1;
+	float4 Rgba = 1;
+	Rgba.xyz = NormalToRgb( Score );
+
+	
+	if ( HomographyIndex == 0 )
+	{
+		Radius = 5;
+		Corner = TruthCorners[ CornerIndex % TruthCornerCount];
+		Rgba = 1;
+	}
+	else if ( Score < 0.5f )
+	{
+		return;
+	}
+	
+	
+	//	zoom coord from center
+	int2 wh = get_image_dim(Frag);
+	float2 whf = (float2)(wh.x,wh.y);
+	Corner -= whf/2.f;
+	Corner *= Zoom;
+	Corner += whf/2.f;
+	
+	
+	
+
+	
+	for ( int y=-Radius;	y<=Radius;	y++ )
+	{
+		for ( int x=-Radius;	x<=Radius;	x++ )
+		{
+			int2 xy = (int2)(Corner.x+x,Corner.y+y);
+			xy.x = clamp( xy.x, 0, wh.x-1 );
+			xy.y = clamp( xy.y, 0, wh.y-1 );
+			write_imagef( Frag, xy, Rgba );
+		}
+	}
+	
+}
+
