@@ -906,7 +906,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	//	make ransac random indexes
 	Array<cl_int4> CornerIndexes;
 	Array<cl_int4> TruthIndexes;
-	static int RansacSize = 1000;
+	static int RansacSize = 100;
 	for ( int r=0;	r<RansacSize;	r++ )
 	{
 		auto& SampleCornerIndexs = CornerIndexes.PushBack();
@@ -929,7 +929,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GetHoughCornerHomographys&>( *Data.get() );
 	
 	Array<cl_float16> Homographys;
-	Homographys.SetSize( Corners.GetSize() * TruthCornersBuffer.GetSize() );
+	Homographys.SetSize( CornerIndexesBuffer.GetSize() * TruthIndexesBuffer.GetSize() );
 	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
 	
 	
@@ -947,7 +947,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 		int MatchIndexesCount = size_cast<int>(CornerIndexesBuffer.GetSize());
 		Kernel.SetUniform("MatchIndexes", CornerIndexesBuffer );
 		Kernel.SetUniform("TruthIndexes", TruthIndexesBuffer );
-		Kernel.SetUniform("MatchIndexOffset", MatchIndexesCount );
+		Kernel.SetUniform("MatchIndexesCount", MatchIndexesCount );
 		Kernel.SetUniform("MatchCorners", CornersBuffer );
 		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
 		Kernel.SetUniform("Homographies", HomographysBuffer );
@@ -994,13 +994,17 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	}
 	
 	std::Debug << "Extracted x" << FinalHomographys.GetSize() << " homographys: ";
-	for ( int i=0;	i<FinalHomographys.GetSize();	i++ )
+	static bool DebugExtractedHomographys = false;
+	if ( DebugExtractedHomographys )
 	{
-		auto& Homography = FinalHomographys[i];
-		static int Precision = 0;
-		std::Debug << std::endl;
-		for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
-			std::Debug << std::fixed << std::setprecision( Precision ) << Homography.s[s] << "x";
+		for ( int i=0;	i<FinalHomographys.GetSize();	i++ )
+		{
+			auto& Homography = FinalHomographys[i];
+			static int Precision = 5;
+			std::Debug << std::endl;
+			for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
+				std::Debug << std::fixed << std::setprecision( Precision ) << Homography.s[s] << " x ";
+		}
 	}
 	std::Debug << std::endl;
 }

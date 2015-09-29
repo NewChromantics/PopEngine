@@ -476,7 +476,7 @@ static float16 CalcHomography(float2 src[4],float2 dst[4])
 		ret_H[8] = v[8*N + col];
 	}
 	
-	return ret;
+	return ret_H;
 }
 
 
@@ -508,6 +508,6 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 	};
 	
 	float16 Homography = CalcHomography( MatchSampleCorners, TruthSampleCorners );
-	Homographies[(MatchIndexesCount*MatchIndex)+TruthIndex] = Homography;
+	Homographies[(TruthIndex*MatchIndexesCount)+MatchIndex] = Homography;
 }
 
