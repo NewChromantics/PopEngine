@@ -61,13 +61,14 @@ __kernel void DrawHoughCorners(int OffsetIndex,__write_only image2d_t Frag,globa
 	
 	int2 wh = get_image_dim(Frag);
 	
-	for ( int y=-2;	y<=2;	y++ )
+	int Radius = 10;
+	for ( int y=-Radius;	y<=Radius;	y++ )
 	{
-		for ( int x=-2;	x<=2;	x++ )
+		for ( int x=-Radius;	x<=Radius;	x++ )
 		{
 			int2 xy = (int2)( Corner.x+x, Corner.y+y );
-			xy.x = clamp( xy.x, 0, wh.x );
-			xy.y = clamp( xy.y, 0, wh.y );
+			xy.x = clamp( xy.x, 0, wh.x-1 );
+			xy.y = clamp( xy.y, 0, wh.y-1 );
 			write_imagef( Frag, xy, Rgba );
 		}
 	}
