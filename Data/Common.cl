@@ -21,14 +21,13 @@ static float4 ClipLine(float4 Line,float4 Rect)
 	float t1 = 1.0;
 	float xdelta = x1src-x0src;
 	float ydelta = y1src-y0src;
-	float p,q;
 	
 	float2 pq[4] =
 	{
 		(float2)(	-xdelta,	-(edgeLeft-x0src)	),
 		(float2)(	xdelta,		(edgeRight-x0src)	),
-		(float2)(	ydelta,		q = (edgeBottom-y0src)	),
-		(float2)(	-ydelta,	q = - (edgeTop-y0src)	)
+		(float2)(	ydelta,		(edgeBottom-y0src)	),
+		(float2)(	-ydelta,	- (edgeTop-y0src)	)
 	 };
 	
 	for(int edge=0; edge<4; edge++)
