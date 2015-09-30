@@ -665,33 +665,45 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 
 
 __kernel void DrawMaskOnFrame(int OffsetX,
-							 int OffsetY,
-							 int HomographyIndexOffset,
+							  int OffsetY,
+							int HomographyIndexOffset,
 							 global float16* Homographys,
 							 global float16* HomographyInvs,
+							   __read_only image2d_t Frame,
 							 __read_only image2d_t Mask,
-							 __write_only image2d_t Frag)
+							 __write_only image2d_t Frag,
+							  int DrawFrameOnMask
+							  )
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	int2 wh = get_image_dim( Frag );
 	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
 	
 	//	read pixel
-	int MaskIndex = RgbToIndex( texture2D(Mask,uv).xyz, 1 );
-	if ( MaskIndex > 0 )
-		return;
+	float4 Rgba = 1;
+	if ( DrawFrameOnMask )
+	{
+		Rgba = texture2D( Frame, uv );
+	}
+	else
+	{
+		int MaskIndex = RgbToIndex( texture2D( Mask, uv ).xyz, 1 );
+		if ( MaskIndex > 0 )
+			return;
+	}
 	
 	//	transform uv from mask to frame
-	float16 Homography = HomographyInvs[HomographyIndex];
+	bool UseInverse = DrawFrameOnMask ? false : true;
+	float16 Homography = UseInverse ? HomographyInvs[HomographyIndex] : Homographys[HomographyIndex];
 	float2 FrameUvf = Transform2ByMatrix3x3( (float2)(uv.x,uv.y), Homography );
+	//float2 FrameUvf = (float2)(uv.x,uv.y);
 	int2 FrameUv = (int2)(FrameUvf.x,FrameUvf.y);
 	
 	//	off screen
 	int Border = 10;
 	if ( FrameUv.x < Border || FrameUv.y < Border || FrameUv.x >= wh.x-Border || FrameUv.y >= wh.y-Border )
 		return;
-	
-	float4 Rgba = 1;
+
 	write_imagef( Frag, FrameUv, Rgba );
 }
 

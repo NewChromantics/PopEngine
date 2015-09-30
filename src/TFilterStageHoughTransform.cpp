@@ -1361,6 +1361,12 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
 	Opencl::TBufferArray<cl_float16> HomographyInvsBuffer( GetArrayBridge(HomographyInvs), ContextCl, "HomographyInvs" );
 	
+	
+	//	option to draw frame on mask instead of mask on frame
+	TUniformWrapper<int> DrawFrameOnMaskUniform("DrawFrameOnMask",0);
+	Frame.SetUniform( DrawFrameOnMaskUniform, DrawFrameOnMaskUniform, mFilter, *this );
+	bool DrawFrameOnMask = DrawFrameOnMaskUniform.mValue == 1;
+	
 	auto Init = [this,&Frame,&StageData,&ContextGl,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
@@ -1394,8 +1400,9 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 		Kernel.SetUniform("Homographys", HomographysBuffer );
 		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
 		
-		static size_t HomographysToTest = 5000;
+		static size_t HomographysToTest = 1;
 		auto HomographyCount = std::min(HomographysBuffer.GetSize(),HomographysToTest);
+		
 		Iterations.PushBack( vec2x<size_t>(0, StageData.mTexture.GetWidth() ) );
 		Iterations.PushBack( vec2x<size_t>(0, StageData.mTexture.GetHeight() ) );
 		Iterations.PushBack( vec2x<size_t>(0, HomographyCount ) );
