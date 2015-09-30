@@ -929,11 +929,14 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GetHoughCornerHomographys&>( *Data.get() );
 	
 	Array<cl_float16> Homographys;
+	Array<cl_float16> HomographyInvs;
 	Homographys.SetSize( CornerIndexesBuffer.GetSize() * TruthIndexesBuffer.GetSize() );
+	HomographyInvs.SetSize( CornerIndexesBuffer.GetSize() * TruthIndexesBuffer.GetSize() );
 	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
+	Opencl::TBufferArray<cl_float16> HomographyInvsBuffer( GetArrayBridge(HomographyInvs), ContextCl, "HomographyInvs" );
 	
 	
-	auto Init = [this,&Frame,&CornersBuffer,&TruthCornersBuffer,&HomographysBuffer,&CornerIndexesBuffer,&TruthIndexesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&Frame,&CornersBuffer,&TruthCornersBuffer,&HomographysBuffer,&HomographyInvsBuffer,&CornerIndexesBuffer,&TruthIndexesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -950,7 +953,8 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 		Kernel.SetUniform("MatchIndexesCount", MatchIndexesCount );
 		Kernel.SetUniform("MatchCorners", CornersBuffer );
 		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
-		Kernel.SetUniform("Homographies", HomographysBuffer );
+		Kernel.SetUniform("Homographys", HomographysBuffer );
+		Kernel.SetUniform("HomographysInv", HomographyInvsBuffer );
 		
 		Iterations.PushBack( vec2x<size_t>(0, CornerIndexesBuffer.GetSize() ) );
 		Iterations.PushBack( vec2x<size_t>(0, TruthIndexesBuffer.GetSize() ) );
@@ -962,11 +966,14 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 		Kernel.SetUniform("TruthIndexOffset", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
 	
-	auto Finished = [&StageData,&HomographysBuffer,&Homographys](Opencl::TKernelState& Kernel)
+	auto Finished = [&StageData,&HomographysBuffer,&Homographys,&HomographyInvsBuffer,&HomographyInvs](Opencl::TKernelState& Kernel)
 	{
 		Opencl::TSync Semaphore;
 		HomographysBuffer.Read( GetArrayBridge(Homographys), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
+		Opencl::TSync Semaphore2;
+		HomographyInvsBuffer.Read( GetArrayBridge(HomographyInvs), Kernel.GetContext(), &Semaphore2 );
+		Semaphore2.Wait();
 	};
 	
 	//	run opencl
@@ -978,10 +985,12 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	
 	//	get all the valid homographys
 	auto& FinalHomographys = StageData.mHomographys;
+	auto& FinalHomographyInvs = StageData.mHomographyInvs;
 	for ( int i=0;	i<Homographys.GetSize();	i++ )
 	{
 		//	if it's all zero's its invalid
 		auto& Homography = Homographys[i];
+		auto& HomographyInv = HomographyInvs[i];
 		
 		float Sum = 0;
 		for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
@@ -991,6 +1000,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 			continue;
 		
 		FinalHomographys.PushBack( Homography );
+		FinalHomographyInvs.PushBack( HomographyInv );
 	}
 	
 	std::Debug << "Extracted x" << FinalHomographys.GetSize() << " homographys: ";
@@ -1185,7 +1195,7 @@ void TFilterStage_DrawHomographyCorners::Execute(TFilterFrame& Frame,std::shared
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
 	{
 		Kernel.SetUniform("CornerIndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
-		Kernel.SetUniform("HomographyIndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
+		Kernel.SetUniform("HomographyIndexOffset", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
 	
 	auto Finished = [&StageData,this,&ContextGl](Opencl::TKernelState& Kernel)
@@ -1216,6 +1226,213 @@ void TFilterStage_DrawHomographyCorners::Execute(TFilterFrame& Frame,std::shared
 
 
 
+
+
+
+
+void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, "TFilterStage_DrawHoughLines missing kernel" ) )
+		return;
+	auto FramePixels = Frame.GetFramePixels(mFilter,true);
+	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
+		return;
+	
+	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
+	std::shared_ptr<SoyPixelsImpl> ClearPixels;
+	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
+	try
+	{
+		auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mValue);
+		ClearPixels = ClearFragStageData.GetPixels( ContextGl );
+	}
+	catch(std::exception& e)
+	{
+		//	no frag clearing
+		ClearPixels.reset();
+	}
+	
+	
+	//	write straight to a texture
+	//	gr: changed to write to a buffer image, if anything wants a texture, it'll convert on request
+	//	gr: for re-iterating over the same image we wnat to re-clear
+	auto CreateTexture = [&Frame,&Data,&FramePixels,&ClearPixels]
+	{
+		SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+		if ( !Data )
+		{
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+		}
+		auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+		
+		auto& StageTarget = StageData.mTexture;
+		if ( !StageTarget.IsValid() )
+		{
+			SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		}
+		
+		static bool ClearToBlack = true;	//	get this as a colour, or FALSE from ClearFlag
+		if ( ClearPixels )
+		{
+			StageTarget.Write( *ClearPixels );
+		}
+		else if ( ClearToBlack )
+		{
+			Opengl::TRenderTargetFbo Fbo(StageTarget);
+			Fbo.mGenerateMipMaps = false;
+			Fbo.Bind();
+			Opengl::ClearColour( Soy::TRgb(0,0,0), 0 );
+			Fbo.Unbind();
+			StageTarget.OnWrite();
+		}
+	};
+	
+	auto CreateImageBuffer = [this,&Frame,&Data,&FramePixels,&ContextCl]
+	{
+		SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
+		if ( !Data )
+		{
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+		}
+		auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+		
+		auto& StageTarget = StageData.mImageBuffer;
+		if ( !StageTarget )
+		{
+			SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+			Opencl::TSync Semaphore;
+			
+			std::stringstream BufferName;
+			BufferName << this->mName << " stage output";
+			std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::ReadWrite, BufferName.str(), &Semaphore ) );
+			
+			Semaphore.Wait();
+			//	only assign on success
+			StageTarget = ImageBuffer;
+		}
+	};
+	
+	static bool MakeTargetAsTexture = true;
+	if ( MakeTargetAsTexture )
+	{
+		Soy::TSemaphore Semaphore;
+		auto& ContextGl = mFilter.GetOpenglContext();
+		ContextGl.PushJob( CreateTexture, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Soy::TSemaphore Semaphore;
+		ContextCl.PushJob( CreateImageBuffer, Semaphore );
+		Semaphore.Wait();
+	}
+	
+	//	load mask
+	if ( !mMaskTexture )
+	{
+		Array<char> PngData;
+		Soy::FileToArray( GetArrayBridge(PngData), mMaskFilename );
+		SoyPixels MaskPixels;
+		MaskPixels.SetPng( GetArrayBridge(PngData) );
+		auto MakeTexture = [&MaskPixels,this]
+		{
+			mMaskTexture.reset( new Opengl::TTexture( MaskPixels.GetMeta(), GL_TEXTURE_2D ) );
+			mMaskTexture->Write( MaskPixels );
+		};
+		Soy::TSemaphore Semaphore;
+		auto& ContextGl = mFilter.GetOpenglContext();
+		ContextGl.PushJob( MakeTexture, Semaphore );
+		Semaphore.Wait();
+	}
+	
+	
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+	
+	
+	
+	auto& HomographyStageData = Frame.GetData<TFilterStageRuntimeData_GetHoughCornerHomographys>( mHomographyDataStage );
+	auto& Homographys = HomographyStageData.mHomographys;
+	auto& HomographyInvs = HomographyStageData.mHomographyInvs;
+	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
+	Opencl::TBufferArray<cl_float16> HomographyInvsBuffer( GetArrayBridge(HomographyInvs), ContextCl, "HomographyInvs" );
+	
+	auto Init = [this,&Frame,&StageData,&ContextGl,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	{
+		//ofScopeTimerWarning Timer("opencl blit init",40);
+		
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
+				continue;
+		}
+		
+		//	set output depending on what we made
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
+	
+		Kernel.SetUniform("Mask", Opengl::TTextureAndContext( *this->mMaskTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
+		Kernel.SetUniform("Homographys", HomographysBuffer );
+		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
+		
+		static size_t HomographysToTest = 5000;
+		auto HomographyCount = std::min(HomographysBuffer.GetSize(),HomographysToTest);
+		Iterations.PushBack( vec2x<size_t>(0, StageData.mTexture.GetWidth() ) );
+		Iterations.PushBack( vec2x<size_t>(0, StageData.mTexture.GetHeight() ) );
+		Iterations.PushBack( vec2x<size_t>(0, HomographyCount ) );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("OffsetX", size_cast<cl_int>(Iteration.mFirst[0]) );
+		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
+		Kernel.SetUniform("HomographyIndexOffset", size_cast<cl_int>(Iteration.mFirst[1]) );
+	};
+	
+	auto Finished = [&StageData,this,&ContextGl](Opencl::TKernelState& Kernel)
+	{
+		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
+		
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			Opengl::TTextureAndContext Texture( StageData.mTexture, ContextGl );
+			Kernel.ReadUniform("Frag", Texture );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			Kernel.ReadUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait(/*"opencl runner"*/);
+}
 
 
 

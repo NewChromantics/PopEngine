@@ -479,6 +479,57 @@ static float16 CalcHomography(float2 src[4],float2 dst[4])
 	return ret_H;
 }
 
+#define Index3x3(r,c)	((r*3)+c)
+
+static float16 GetMatrix3x3Inverse(float16 m)
+{
+	float det =
+	m[Index3x3(0,0)]*
+	m[Index3x3(1,1)]*
+	m[Index3x3(2,2)]+
+	m[Index3x3(1,0)]*
+	m[Index3x3(2,1)]*
+	m[Index3x3(0,2)]+
+	m[Index3x3(2,0)]*
+	m[Index3x3(0,1)]*
+	m[Index3x3(1,2)]-
+	m[Index3x3(0,0)]*
+	m[Index3x3(2,1)]*
+	m[Index3x3(1,2)]-
+	m[Index3x3(2,0)]*
+	m[Index3x3(1,1)]*
+	m[Index3x3(0,2)]-
+	m[Index3x3(1,0)]*
+	m[Index3x3(0,1)]*
+	m[Index3x3(2,2)];
+	
+	float16 inv = 0;
+	inv[Index3x3(0,0)] = m[Index3x3(1,1)]*m[Index3x3(2,2)] - m[Index3x3(1,2)]*m[Index3x3(2,1)];
+	inv[Index3x3(0,1)] = m[Index3x3(0,2)]*m[Index3x3(2,1)] - m[Index3x3(0,1)]*m[Index3x3(2,2)];
+	inv[Index3x3(0,2)] = m[Index3x3(0,1)]*m[Index3x3(1,2)] - m[Index3x3(0,2)]*m[Index3x3(1,1)];
+//	inv[Index3x3(0,3].w = 0.f;
+	
+	inv[Index3x3(1,0)] = m[Index3x3(1,2)]*m[Index3x3(2,0)] - m[Index3x3(1,0)]*m[Index3x3(2,2)];
+	inv[Index3x3(1,1)] = m[Index3x3(0,0)]*m[Index3x3(2,2)] - m[Index3x3(0,2)]*m[Index3x3(2,0)];
+	inv[Index3x3(1,2)] = m[Index3x3(0,2)]*m[Index3x3(1,0)] - m[Index3x3(0,0)]*m[Index3x3(1,2)];
+//	inv[Index3x3(1,3)].w = 0.f;
+	
+	inv[Index3x3(2,0)] = m[Index3x3(1,0)]*m[Index3x3(2,1)] - m[Index3x3(1,1)]*m[Index3x3(2,0)];
+	inv[Index3x3(2,1)] = m[Index3x3(0,1)]*m[Index3x3(2,0)] - m[Index3x3(0,0)]*m[Index3x3(2,1)];
+	inv[Index3x3(2,2)] = m[Index3x3(0,0)]*m[Index3x3(1,1)] - m[Index3x3(0,1)]*m[Index3x3(1,0)];
+//	inv[Index3x3(2,3)].w = 0.f;
+	
+	inv[0] *= 1.0f / det;
+	inv[1] *= 1.0f / det;
+	inv[2] *= 1.0f / det;
+	inv[3] *= 1.0f / det;
+	inv[4] *= 1.0f / det;
+	inv[5] *= 1.0f / det;
+	inv[6] *= 1.0f / det;
+	inv[7] *= 1.0f / det;
+	inv[8] *= 1.0f / det;
+	return inv;
+}
 
 __kernel void HoughCornerHomography(int MatchIndexOffset,
 									int TruthIndexOffset,
@@ -487,7 +538,9 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 									int MatchIndexesCount,
 									global float4* MatchCorners,
 									global float2* TruthCorners,
-									global float16* Homographies)
+									global float16* Homographys,
+									global float16* HomographysInv
+									)
 {
 	int MatchIndex = get_global_id(0) + MatchIndexOffset;
 	int TruthIndex = get_global_id(1) + TruthIndexOffset;
@@ -508,7 +561,9 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 	};
 	
 	float16 Homography = CalcHomography( MatchSampleCorners, TruthSampleCorners );
-	Homographies[(TruthIndex*MatchIndexesCount)+MatchIndex] = Homography;
+	Homographys[(TruthIndex*MatchIndexesCount)+MatchIndex] = Homography;
+	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
+	HomographysInv[(TruthIndex*MatchIndexesCount)+MatchIndex] = HomographyInv;
 }
 
 
@@ -516,7 +571,7 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 
 
 
-static float2 TransformCorner(float2 Position,float16 Homography3x3)
+static float2 Transform2ByMatrix3x3(float2 Position,float16 Homography3x3)
 {
 	float16 H = Homography3x3;
 	float2 src = Position;
@@ -549,7 +604,7 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	float16 Homography = Homographys[HomographyIndex];
 	
 	//	transform corner
-	float2 TransformedCorner = TransformCorner( Corner, Homography );
+	float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
 	
 	//	find nearest truth corner
 	float BestDistance = 99999;
@@ -606,4 +661,40 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	}
 	
 }
+
+
+
+__kernel void DrawMaskOnFrame(int OffsetX,
+							 int OffsetY,
+							 int HomographyIndexOffset,
+							 global float16* Homographys,
+							 global float16* HomographyInvs,
+							 __read_only image2d_t Mask,
+							 __write_only image2d_t Frag)
+{
+	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	int2 wh = get_image_dim( Frag );
+	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
+	
+	//	read pixel
+	int MaskIndex = RgbToIndex( texture2D(Mask,uv).xyz, 1 );
+	if ( MaskIndex > 0 )
+		return;
+	
+	//	transform uv from mask to frame
+	float16 Homography = HomographyInvs[HomographyIndex];
+	float2 FrameUvf = Transform2ByMatrix3x3( (float2)(uv.x,uv.y), Homography );
+	int2 FrameUv = (int2)(FrameUvf.x,FrameUvf.y);
+	
+	//	off screen
+	int Border = 10;
+	if ( FrameUv.x < Border || FrameUv.y < Border || FrameUv.x >= wh.x-Border || FrameUv.y >= wh.y-Border )
+		return;
+	
+	float4 Rgba = 1;
+	write_imagef( Frag, FrameUv, Rgba );
+}
+
+
+
 

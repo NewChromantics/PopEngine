@@ -500,6 +500,9 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	//	gr: start of "factory"
 	auto StageType = Params.GetParamAs<std::string>("StageType");
 	
+	//	construct an opencl context [early for debugging]
+	CreateOpenclContexts();
+
 	if ( StageType == "WritePng" )
 	{
 		auto Filename = Params.GetParamAs<std::string>("Filename");
@@ -526,8 +529,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "DistortRects" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto MinMaxDataStage = Params.GetParamAs<std::string>("MinMaxDataStage");
@@ -536,8 +537,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "DrawHoughLines" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughLineDataStageName = Params.GetParamAs<std::string>("HoughLineData");
@@ -546,8 +545,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "DrawHoughCorners" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughCornerDataStageName = Params.GetParamAs<std::string>("HoughCornerData");
@@ -556,8 +553,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "DrawHoughLinesDynamic" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughDataStageName = Params.GetParamAs<std::string>("HoughData");
@@ -566,8 +561,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "ExtractHoughLines" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughDataStageName = Params.GetParamAs<std::string>("HoughData");
@@ -576,8 +569,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "ExtractHoughCorners" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughLinesStageName = Params.GetParamAs<std::string>("HoughLineData");
@@ -586,8 +577,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "GetHoughCornerHomographys" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HoughCornerData = Params.GetParamAs<std::string>("HoughCornerData");
@@ -596,8 +585,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "DrawHomographyCorners" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto CornerData = Params.GetParamAs<std::string>("CornerData");
@@ -605,10 +592,17 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_DrawHomographyCorners( Name, ProgramFilename, KernelName, CornerData, HomographyData, *this, Params ) );
 	}
+	else if ( StageType == "DrawMaskOnFrame" )
+	{
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto MaskFilename = Params.GetParamAs<std::string>("MaskFilename");
+		auto HomographyData = Params.GetParamAs<std::string>("HomographyData");
+		
+		Stage.reset( new TFilterStage_DrawMaskOnFrame( Name, ProgramFilename, KernelName, MaskFilename, HomographyData, *this, Params ) );
+	}
 	else if ( StageType == "GatherHoughLines" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
@@ -616,8 +610,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( StageType == "GatherRects" )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
@@ -625,8 +617,6 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
-		//	construct an opencl context [early for debugging]
-		CreateOpenclContexts();
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		
