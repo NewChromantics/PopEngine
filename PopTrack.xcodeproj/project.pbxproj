@@ -3,11 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
+		BF406D431BBC3E8B00CECF4E /* TFilterStageWritePng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF7146931BB34B370002E23E /* TFilterStageHoughTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */; };
 		BF71469B1BB7404E0002E23E /* SoyProfiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146991BB7404E0002E23E /* SoyProfiler.cpp */; };
@@ -117,6 +118,8 @@
 /* Begin PBXFileReference section */
 		BF30550A1B56F553002B0892 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageWritePng.cpp; path = src/TFilterStageWritePng.cpp; sourceTree = "<group>"; };
+		BF406D421BBC3E8B00CECF4E /* TFilterStageWritePng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStageWritePng.h; path = src/TFilterStageWritePng.h; sourceTree = "<group>"; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
@@ -384,6 +387,8 @@
 				BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */,
 				BF9CCAB61B6E56BC000B19EA /* TFilterStageOpencl.h */,
 				BF9CCAB71B6E56BC000B19EA /* TFilterStageOpengl.cpp */,
+				BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */,
+				BF406D421BBC3E8B00CECF4E /* TFilterStageWritePng.h */,
 				BF9CCAB81B6E56BC000B19EA /* TFilterStageOpengl.h */,
 				BF9CCABB1B6E5705000B19EA /* TPlayerFilter.cpp */,
 				BF9CCABC1B6E5705000B19EA /* TPlayerFilter.h */,
@@ -634,7 +639,7 @@
 				};
 			};
 			buildConfigurationList = FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopTrack" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -730,6 +735,7 @@
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
 				FB2534BE1A974E7400A61590 /* TChannelFile.cpp in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
+				BF406D431BBC3E8B00CECF4E /* TFilterStageWritePng.cpp in Sources */,
 				BF9CCAB41B6E5310000B19EA /* TProtocolRtsp.cpp in Sources */,
 				BF9CCABA1B6E56BC000B19EA /* TFilterStageOpengl.cpp in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,

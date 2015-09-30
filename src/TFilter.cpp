@@ -7,6 +7,7 @@
 #include "TFilterStageOpengl.h"
 #include "TFilterStageGatherRects.h"
 #include "TFilterStageHoughTransform.h"
+#include "TFilterStageWritePng.h"
 
 const char* TFilter::FrameSourceName = "Frame";
 
@@ -499,8 +500,13 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	//	gr: start of "factory"
 	auto StageType = Params.GetParamAs<std::string>("StageType");
 	
-	
-	if ( StageType == "MakeRectAtlas" )
+	if ( StageType == "WritePng" )
+	{
+		auto Filename = Params.GetParamAs<std::string>("Filename");
+		auto ImageStage = Params.GetParamAs<std::string>("ExportStage");
+		Stage.reset( new TFilterStage_WritePng( Name, Filename, ImageStage, *this, Params ) );
+	}
+	else if ( StageType == "MakeRectAtlas" )
 	{
 		auto RectsSource = Params.GetParamAs<std::string>("Rects");
 		auto ImageSource = Params.GetParamAs<std::string>("Image");
