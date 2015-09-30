@@ -170,6 +170,26 @@ public:
 };
 
 
+class TFilterStage_ScoreHoughCornerHomographys : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_ScoreHoughCornerHomographys(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HomographyDataStage,const std::string& CornerDataStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
+		mHomographyDataStage		( HomographyDataStage ),
+		mCornerDataStage			( CornerDataStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	Array<cl_float2>	mTruthCorners;
+	std::string			mHomographyDataStage;
+	std::string			mCornerDataStage;
+};
+
+
+
 class TFilterStageRuntimeData_GetHoughCornerHomographys : public TFilterStageRuntimeData
 {
 public:

@@ -607,21 +607,25 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
 	
 	//	find nearest truth corner
-	float BestDistance = 99999;
+	float MaxDistance = 50;
+	float BestDistance = MaxDistance;
 	for ( int t=0;	t<TruthCornerCount;	t++ )
 	{
 		float2 TruthCorner = TruthCorners[t];
 		float Dist = distance( TruthCorner, TransformedCorner );
+		if ( Dist <= 0 || Dist >= MaxDistance )
+			continue;
 		BestDistance = min( BestDistance, Dist );
 	}
 
 	
-	float Score = BestDistance / 100.f;
+	float Score = BestDistance / MaxDistance;
 	Score = 1.f - clamp( Score, 0.f, 1.f );
+	//float Score = Homography[15];
 	Corner = TransformedCorner;
 	
 	
-	int Radius = 1;
+	int Radius = 10;
 	float4 Rgba = 1;
 	Rgba.xyz = NormalToRgb( Score );
 
@@ -632,7 +636,8 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 		Corner = TruthCorners[ CornerIndex % TruthCornerCount];
 		Rgba = 1;
 	}
-	else if ( Score < 0.5f )
+	else
+	if ( Score < 0.01f )
 	{
 		return;
 	}
@@ -660,6 +665,56 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 		}
 	}
 	
+}
+
+
+
+
+__kernel void ScoreCornerHomographys(int HomographyIndexOffset,
+									global float4* HoughCorners,
+									 int HoughCornerCount,
+									global float2* TruthCorners,
+									int TruthCornerCount,
+									global float16* Homographys
+									)
+{
+	int HomographyIndex = get_global_id(0) + HomographyIndexOffset;
+	float16 Homography = Homographys[HomographyIndex];
+
+	float MaxDistance = 20;
+	float TotalScore = 0;
+	for ( int CornerIndex=0;	CornerIndex<HoughCornerCount;	CornerIndex++ )
+	{
+		float4 HoughCorner = HoughCorners[CornerIndex];
+		float2 Corner = HoughCorner.xy;
+	
+		//	transform corner
+		float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
+		
+		//	find nearest truth corner
+		float BestDistance = MaxDistance;
+		for ( int t=0;	t<TruthCornerCount;	t++ )
+		{
+			float2 TruthCorner = TruthCorners[t];
+			float Dist = distance( TruthCorner, TransformedCorner );
+			if ( Dist <= 0 || Dist >= MaxDistance )
+				continue;
+			BestDistance = min( BestDistance, Dist );
+		}
+		
+		float Score = BestDistance / MaxDistance;
+		Score = 1.f - clamp( Score, 0.f, 1.f );
+		TotalScore += Score;
+	}
+	
+	if ( HoughCornerCount > 0 )
+		TotalScore /= (float)HoughCornerCount;
+	
+	if ( TotalScore < 0.8f )
+		TotalScore = 0;
+	
+	//	write score in element 15
+	Homographys[HomographyIndex][15] = TotalScore;
 }
 
 

@@ -684,12 +684,14 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 	}
 	
 	std::Debug << "Extracted x" << FinalCorners.GetSize() << " hough corners: ";
+	std::Debug.PushStreamSettings();
 	for ( int i=0;	i<FinalCorners.GetSize();	i++ )
 	{
 		auto Corner4 = Soy::ClToVector( FinalCorners[i] );
 		static int Precision = 0;
 		std::Debug << std::fixed << std::setprecision( Precision ) << Corner4.x << "x" << Corner4.y << ",";// << Corner4.z << std::endl;
 	}
+	std::Debug.PopStreamSettings();
 	std::Debug << std::endl;
 }
 
@@ -906,7 +908,8 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	//	make ransac random indexes
 	Array<cl_int4> CornerIndexes;
 	Array<cl_int4> TruthIndexes;
-	static int RansacSize = 20;
+	//	gr: ransac that favours good corners?
+	static int RansacSize = 50;
 	for ( int r=0;	r<RansacSize;	r++ )
 	{
 		auto& SampleCornerIndexs = CornerIndexes.PushBack();
@@ -1007,6 +1010,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	static bool DebugExtractedHomographys = false;
 	if ( DebugExtractedHomographys )
 	{
+		std::Debug.PushStreamSettings();
 		for ( int i=0;	i<FinalHomographys.GetSize();	i++ )
 		{
 			auto& Homography = FinalHomographys[i];
@@ -1015,12 +1019,141 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 			for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
 				std::Debug << std::fixed << std::setprecision( Precision ) << Homography.s[s] << " x ";
 		}
+		std::Debug.PopStreamSettings();
 	}
 	std::Debug << std::endl;
 }
 
 
 
+
+
+void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
+		return;
+	
+	//	get truth corners if we haven't set them up
+	if ( mTruthCorners.IsEmpty() )
+	{
+		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
+		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
+			throw Soy::AssertException("Missing TruthCorners uniform");
+		
+		auto PushVec = [this](const std::string& Part,const char& Delin)
+		{
+			vec2f Coord;
+			Soy::StringToType( Coord, Part );
+			mTruthCorners.PushBack( Soy::VectorToCl(Coord) );
+			return true;
+		};
+		Soy::StringSplitByMatches( PushVec, TruthCornersUniform.mValue, "," );
+		Soy::Assert( !mTruthCorners.IsEmpty(), "Failed to extract any truth corners");
+	}
+	
+	auto& CornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mCornerDataStage );
+	auto& HomographyStageData = Frame.GetData<TFilterStageRuntimeData_GetHoughCornerHomographys>( mHomographyDataStage );
+	auto& Corners = CornerStageData.mCorners;
+	//	dont modify original!
+	auto Homographys = HomographyStageData.mHomographys;
+	auto HomographyInvs = HomographyStageData.mHomographyInvs;
+	Opencl::TBufferArray<cl_float4> CornersBuffer( GetArrayBridge(Corners), ContextCl, "Corners" );
+	Opencl::TBufferArray<cl_float2> TruthCornersBuffer( GetArrayBridge(mTruthCorners), ContextCl, "mTruthCorners" );
+	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
+	Opencl::TBufferArray<cl_float16> HomographyInvsBuffer( GetArrayBridge(HomographyInvs), ContextCl, "HomographyInvs" );
+
+	
+	auto Init = [this,&Frame,&CornersBuffer,&TruthCornersBuffer,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	{
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
+				continue;
+		}
+		
+		Kernel.SetUniform("HoughCorners", CornersBuffer );
+		Kernel.SetUniform("HoughCornerCount", size_cast<int>(CornersBuffer.GetSize()) );
+		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
+		Kernel.SetUniform("TruthCornerCount", size_cast<int>(TruthCornersBuffer.GetSize()) );
+		Kernel.SetUniform("Homographys", HomographysBuffer );
+		Kernel.SetUniform("HomographysInv", HomographyInvsBuffer );
+		
+		Iterations.PushBack( vec2x<size_t>(0, HomographysBuffer.GetSize() ) );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("HomographyIndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
+	};
+	
+	auto Finished = [&HomographysBuffer,&Homographys,&HomographyInvsBuffer,&HomographyInvs](Opencl::TKernelState& Kernel)
+	{
+		Opencl::TSync Semaphore;
+		HomographysBuffer.Read( GetArrayBridge(Homographys), Kernel.GetContext(), &Semaphore );
+		Semaphore.Wait();
+		//Opencl::TSync Semaphore2;
+		//HomographyInvsBuffer.Read( GetArrayBridge(HomographyInvs), Kernel.GetContext(), &Semaphore2 );
+		//Semaphore2.Wait();
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait(/*"opencl runner"*/);
+
+	//	allocate output data
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_GetHoughCornerHomographys() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GetHoughCornerHomographys&>( *Data.get() );
+	
+	//	here we should sort, and keep the best based on a histogram
+	//	get all the valid homographys
+	
+	auto& FinalHomographys = StageData.mHomographys;
+	auto& FinalHomographyInvs = StageData.mHomographyInvs;
+	for ( int i=0;	i<Homographys.GetSize();	i++ )
+	{
+		//	if it's all zero's its invalid
+		auto& Homography = Homographys[i];
+		auto& HomographyInv = HomographyInvs[i];
+		float Score = Homography.s[15];
+
+		if ( Score == 0 )
+			continue;
+		std::Debug << "Homography #" << i << " score: " << Score << std::endl;
+		
+		if ( Score > 0.01f )
+		{
+			FinalHomographys.PushBack( Homography );
+			FinalHomographyInvs.PushBack( HomographyInv );
+		}
+	}
+	
+	std::Debug << "Extracted x" << FinalHomographys.GetSize() << " SCORED homographys: ";
+	static bool DebugExtractedHomographys = true;
+	if ( DebugExtractedHomographys )
+	{
+		std::Debug.PushStreamSettings();
+		
+		for ( int i=0;	i<FinalHomographys.GetSize();	i++ )
+		{
+			auto& Homography = FinalHomographys[i];
+			static int Precision = 5;
+			std::Debug << std::endl;
+			for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
+				std::Debug << std::fixed << std::setprecision( Precision ) << Homography.s[s] << " x ";
+		}
+
+		std::Debug.PopStreamSettings();
+	}
+	std::Debug << std::endl;
+}
 
 
 
@@ -1400,7 +1533,7 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 		Kernel.SetUniform("Homographys", HomographysBuffer );
 		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
 		
-		static size_t HomographysToTest = 1;
+		static size_t HomographysToTest = 5000;
 		auto HomographyCount = std::min(HomographysBuffer.GetSize(),HomographysToTest);
 		
 		Iterations.PushBack( vec2x<size_t>(0, StageData.mTexture.GetWidth() ) );
