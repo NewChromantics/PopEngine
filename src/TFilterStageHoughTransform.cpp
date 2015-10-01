@@ -6,7 +6,6 @@
 
 
 
-
 void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	auto Kernel = GetKernel(ContextCl);
@@ -501,15 +500,12 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Opencl::TBufferArray<cl_float> AnglesBuffer( GetArrayBridge(Angles), ContextCl, "mAngles" );
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
-	//	allocate data
-	if ( !Data )
-		Data.reset( new TFilterStageRuntimeData_ExtractHoughLines() );
-	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ExtractHoughLines&>( *Data.get() );
-
-	StageData.mHoughLines.SetSize( 100 );
+	
+	Array<cl_float8> AllLines;
+	AllLines.SetSize(400);
 	int LineBufferCount[] = {0};
 	auto LineBufferCountArray = GetRemoteArray( LineBufferCount );
-	Opencl::TBufferArray<cl_float8> LineBuffer( GetArrayBridge(StageData.mHoughLines), ContextCl, "LineBuffer" );
+	Opencl::TBufferArray<cl_float8> LineBuffer( GetArrayBridge(AllLines), ContextCl, "LineBuffer" );
 	Opencl::TBufferArray<cl_int> LineBufferCounter( GetArrayBridge(LineBufferCountArray), ContextCl, "LineBufferCounter" );
 
 	
@@ -544,7 +540,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		Kernel.SetUniform("OffsetDistance", size_cast<cl_int>(Iteration.mFirst[1]) );
 	};
 	
-	auto Finished = [&StageData,&LineBuffer,&LineBufferCounter](Opencl::TKernelState& Kernel)
+	auto Finished = [&AllLines,&LineBuffer,&LineBufferCounter](Opencl::TKernelState& Kernel)
 	{
 		cl_int LineCount = 0;
 		Opencl::TSync Semaphore;
@@ -556,8 +552,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 			std::Debug << "Extracted " << LineCount << "/" << LineBuffer.GetSize() << std::endl;
 		}
 		
-		StageData.mHoughLines.SetSize( std::min( LineCount, size_cast<cl_int>(LineBuffer.GetSize()) ) );
-		LineBuffer.Read( GetArrayBridge(StageData.mHoughLines), Kernel.GetContext(), &Semaphore );
+		AllLines.SetSize( std::min( LineCount, size_cast<cl_int>(LineBuffer.GetSize()) ) );
+		LineBuffer.Read( GetArrayBridge(AllLines), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
 	};
 	
@@ -567,7 +563,68 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait(/*"opencl runner"*/);
 	
-	static bool DebugExtractedHoughLines = false;
+	
+	//	evaluate if lines are vertical or horizontal
+	//	todo: auto gen this by histogramming, find median (vertical) opposite (horizontal)
+	float VerticalAngle = 0;
+	int BestAngleXDistance = 0;
+	for ( int axd=0;	axd<AnglesXDistances.GetSize();	axd++ )
+	{
+		if ( AnglesXDistances[axd] <= AnglesXDistances[BestAngleXDistance] )
+			continue;
+		BestAngleXDistance = axd;
+	}
+	VerticalAngle = Angles[BestAngleXDistance / Distances.GetSize()];
+
+	//	allocate final data
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_ExtractHoughLines() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ExtractHoughLines&>( *Data.get() );
+
+	auto CompareLineScores = [](const cl_float8& a,const cl_float8& b)
+	{
+		auto& aScore = a.s[6];
+		auto& bScore = b.s[6];
+		if ( aScore > bScore )	return -1;
+		if ( aScore < bScore )	return 1;
+		return 0;
+	};
+	
+	//	gr: the threshold is LESS than 45 (90 degrees) because viewing angles are skewed, lines are rarely ACTUALLY perpendicualr
+	TUniformWrapper<float> VerticalThresholdUniform("VerticalThreshold", 10.f );
+	Frame.SetUniform( VerticalThresholdUniform, VerticalThresholdUniform, mFilter, *this );
+
+	//	copy lines whilst sorting & modify flag to say vertical or horizontal
+	SortArrayLambda<cl_float8> FinalLines( GetArrayBridge(StageData.mHoughLines), CompareLineScores );
+	for ( int i=0;	i<AllLines.GetSize();	i++ )
+	{
+		auto& Line = AllLines[i];
+		auto& Angle = Angles[Line.s[4]];
+		auto& IsVertical = Line.s[7];
+		
+		float Threshold = VerticalThresholdUniform.mValue;
+		
+		float Diff = Angle - VerticalAngle;
+		while ( Diff < -90.f )
+			Diff += 180.f;
+		while ( Diff > 90.f )
+			Diff -= 180.f;
+		Diff = fabsf(Diff);
+		
+		if ( Diff <= Threshold )
+			IsVertical = 1;
+		else
+			IsVertical = 0;
+		
+		static bool DebugVerticalTest = true;
+		if ( DebugVerticalTest )
+			std::Debug << Angle << " -> " << VerticalAngle << " diff= " << Diff << " vertical: " << IsVertical << " (threshold: " << Threshold << ")" << std::endl;
+		
+		//	add to sorted list
+		FinalLines.Push( Line );
+	}
+	
+	static bool DebugExtractedHoughLines = true;
 	if ( DebugExtractedHoughLines )
 	{
 		auto& Lines = StageData.mHoughLines;
@@ -575,8 +632,9 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		for ( int i=0;	i<Lines.GetSize();	i++ )
 		{
 			auto Line = Lines[i];
-			auto Length = Line.s[7];
-			std::Debug << "#" << i << " length: " << Length << std::endl;
+			float Score = Line.s[6];
+			float Vertical = Line.s[7];
+			std::Debug << "#" << i << " Score: " << Score << ", Vertical: " << Vertical << std::endl;
 		}
 	}
 }

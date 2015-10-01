@@ -64,7 +64,7 @@ public:
 	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
 	
 public:
-	Array<cl_float8>			mHoughLines;	//	x0,y0,x1,y1,angle,distance,score,0
+	Array<cl_float8>			mHoughLines;	//	x0,y0,x1,y1,angle,distance,score,Vertical!=0
 };
 
 

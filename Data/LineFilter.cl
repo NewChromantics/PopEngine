@@ -628,7 +628,7 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 }
 
 
-__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global float8* HoughLines)
+__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global float8* HoughLines,int ColourToVertical)
 {
 	int LineIndex = get_global_id(0) + OffsetIndex;
 	float8 HoughLine = HoughLines[LineIndex];
@@ -637,7 +637,9 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 	float2 LineEnd = HoughLine.zw;
 	float Angle = HoughLine[4];
 	float Distance = HoughLine[5];
-	float Score = HoughLine[6];
+	
+	//	draw vertical/non vertical
+	float Score = ColourToVertical ? HoughLine[7] : HoughLine[6];
 	
 	DrawLineDirect( LineStart, LineEnd, Frag, Score );
 }
