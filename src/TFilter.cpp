@@ -583,6 +583,14 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_GetHoughCornerHomographys( Name, ProgramFilename, KernelName, HoughCornerData, *this, Params ) );
 	}
+	else if ( StageType == "GetHoughLineHomographys" )
+	{
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		auto HoughData = Params.GetParamAs<std::string>("HoughLineData");
+		
+		Stage.reset( new TFilterStage_GetHoughLineHomographys( Name, ProgramFilename, KernelName, HoughData, *this, Params ) );
+	}
 	else if ( StageType == "ScoreHomographys" )
 	{
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");

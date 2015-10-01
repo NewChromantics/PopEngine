@@ -170,6 +170,24 @@ public:
 };
 
 
+class TFilterStage_GetHoughLineHomographys : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_GetHoughLineHomographys(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughLineStage,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
+		mHoughLineStage				( HoughLineStage )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	Array<cl_float8>	mTruthVerticalLines;
+	Array<cl_float8>	mTruthHorizontalLines;
+	std::string			mHoughLineStage;
+};
+
+
 class TFilterStage_ScoreHoughCornerHomographys : public TFilterStage_OpenclKernel
 {
 public:

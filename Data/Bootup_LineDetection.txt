@@ -17,8 +17,8 @@ setuniform LineDetector LensOffsetY=.0500000007
 setuniform LineDetector RectMergeMax=50
 setuniform LineDetector AtlasWidth=128 AtlasHeight=512
 
-
-setuniform LineDetector TruthCorners=13x104,21x104,153x104,223x104,411x104,478x104,614x104,13x178,21x178,153x178,223x178,411x178,478x178,614x178,13x494,13x824,13x900,13x977,21x494,21x824,21x900,21x977,153x494,153x824,153x900,153x977,223x494,223x824,223x900,223x977,411x494,478x494,614x494,411x824,411x900,411x977,478x824,478x900,478x977,614x824,614x900,614x977,
+setuniform LineDetector TruthVerticalHoughLines=601.653,0.000,619.108,1000.000,358.000,605.000,1.000,1.000x7.893,0.000,25.348,1000.000,358.000,1199.000,1.000,1.000x606.983,1000.000,615.710,0.000,1.000,1197.000,1.000,1.000x15.289,1000.000,24.016,0.000,1.000,605.000,1.000,1.000x468.055,1000.000,476.782,0.000,1.000,1058.000,0.370,1.000x452.375,1000.000,478.561,0.000,3.000,1051.000,0.369,1.000x151.219,1000.000,159.946,0.000,1.000,741.000,0.315,1.000x456.374,0.000,482.560,1000.000,357.000,746.000,0.309,1.000x150.835,0.000,168.290,1000.000,358.000,1056.000,0.305,1.000x218.808,0.000,236.263,1000.000,358.000,988.000,0.215,1.000x393.737,1000.000,411.192,0.000,2.000,988.000,0.100,1.000x381.044,0.000,415.965,1000.000,356.000,817.000,0.074,1.000x
+setuniform LineDetector TruthHorizontalHoughLines=0.000,495.502,630.000,495.502,180.000,896.000,1.000,0.000x0.000,18.999,630.000,24.496,181.000,422.000,1.000,0.000x0.000,175.917,630.000,181.415,181.000,579.000,1.000,0.000x0.000,896.544,630.000,902.042,181.000,1300.000,1.000,0.000x0.000,821.583,630.000,827.081,181.000,1225.000,1.000,0.000x0.000,991.802,630.000,980.806,178.000,1387.000,1.000,0.000x541.261,0.000,630.000,87.203,269.000,385.000,0.911,0.000x0.000,115.095,630.000,87.589,175.000,502.000,0.387,0.000x0.000,518.396,630.000,289.095,140.000,810.000,0.051,0.000x0.000,871.585,630.000,714.508,152.000,1185.000,0.048,0.000x0.000,289.095,630.000,518.396,220.000,810.000,0.036,0.000x0.000,529.715,630.000,275.179,136.000,810.000,0.031,0.000x0.000,716.797,630.000,868.047,207.000,1185.000,0.028,0.000x
 
 # line detector
 addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag
@@ -49,15 +49,19 @@ addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl k
 #addstage LineDetector HoughCornerHomographys StageType=GetHoughCornerHomographys cl=HoughCorners.cl kernel=HoughCornerHomography HoughCornerData=ExtractHoughCorners
 #addstage LineDetector ScoredHoughCornerHomographys StageType=ScoreHomographys cl=HoughCorners.cl kernel=ScoreCornerHomographys CornerData=ExtractHoughCorners HomographyData=HoughCornerHomographys
 
+addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines
+
+
 #addstage LineDetector DrawHomographyCorners StageType=DrawHomographyCorners cl=HoughCorners.cl kernel=DrawHomographyCorners CornerData=ExtractHoughCorners Zoom=0.5 HomographyData=ScoredHoughCornerHomographys
-#addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughCornerHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=0
-#addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughCornerHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=1
+addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=0
+addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=1
+
 
 
 #loadframe LineDetector time=1001 input01_undistorted.png
 #decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
-decode LineDetector /Volumes/Assets/5goals.mp4
-#loadframe LineDetector FootballPitch.png time=1001
+#decode LineDetector /Volumes/Assets/5goals.mp4
+loadframe LineDetector FootballPitch.png time=1001
 
 
 

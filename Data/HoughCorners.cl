@@ -568,6 +568,63 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 
 
 
+__kernel void HoughLineHomography(int TruthPairIndexOffset,
+									int HoughPairIndexOffset,
+									global int4* TruthPairIndexes,
+									global int4* HoughPairIndexes,
+								  int TruthPairIndexCount,
+								  int HoughPairIndexCount,
+									global float8* HoughLines,
+									global float8* TruthLines,
+									global float16* Homographys,
+									global float16* HomographysInv
+									)
+{
+	int TruthPairIndex = get_global_id(0) + TruthPairIndexOffset;
+	int HoughPairIndex = get_global_id(1) + HoughPairIndexOffset;
+
+	//	indexes are vvhh
+	int4 TruthIndexes = TruthPairIndexes[TruthPairIndex];
+	int4 HoughIndexes = HoughPairIndexes[HoughPairIndex];
+	
+	//	grab the lines and find their intersections to get our four corners
+	float8 SampleTruthLines[4] =
+	{
+		TruthLines[TruthIndexes[0]],
+		TruthLines[TruthIndexes[1]],
+		TruthLines[TruthIndexes[2]],
+		TruthLines[TruthIndexes[3]],
+	};
+	float8 SampleHoughLines[4] =
+	{
+		HoughLines[HoughIndexes[0]],
+		HoughLines[HoughIndexes[1]],
+		HoughLines[HoughIndexes[2]],
+		HoughLines[HoughIndexes[3]],
+	};
+	//	find v/h intersections
+	float2 TruthCorners[4] =
+	{
+		GetRayRayIntersection( SampleTruthLines[0].xyzw, SampleTruthLines[2].xyzw ).xy,
+		GetRayRayIntersection( SampleTruthLines[0].xyzw, SampleTruthLines[3].xyzw ).xy,
+		GetRayRayIntersection( SampleTruthLines[1].xyzw, SampleTruthLines[2].xyzw ).xy,
+		GetRayRayIntersection( SampleTruthLines[1].xyzw, SampleTruthLines[3].xyzw ).xy,
+	};
+	float2 HoughCorners[4] =
+	{
+		GetRayRayIntersection( SampleHoughLines[0].xyzw, SampleHoughLines[2].xyzw ).xy,
+		GetRayRayIntersection( SampleHoughLines[0].xyzw, SampleHoughLines[3].xyzw ).xy,
+		GetRayRayIntersection( SampleHoughLines[1].xyzw, SampleHoughLines[2].xyzw ).xy,
+		GetRayRayIntersection( SampleHoughLines[1].xyzw, SampleHoughLines[3].xyzw ).xy,
+	};
+	
+	float16 Homography = CalcHomography( HoughCorners, TruthCorners );
+	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
+	Homographys[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = Homography;
+	HomographysInv[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
+}
+
+
 
 
 
@@ -733,6 +790,9 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	int2 wh = get_image_dim( Frag );
 	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
+	
+	if( uv.x % 2 != 0 ||uv.y % 2 != 0 )
+		return;
 	
 	//	read pixel
 	float4 Rgba = 1;
