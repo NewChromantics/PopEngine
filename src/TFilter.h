@@ -204,7 +204,8 @@ public:
 	void					OnUniformChanged(const std::string& Name);
 
 	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
-	
+	void					PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const std::string& StageName);
+
 	//	apply uniform to shader
 	virtual bool			SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform);
 	//	store uniform value
@@ -224,7 +225,7 @@ public:
 	Soy::Mutex_Profiled								mFramesLock;
 	Array<std::shared_ptr<TFilterStage>>			mStages;
 	std::shared_ptr<Opengl::TGeometry>				mBlitQuad;		//	commonly used
-	SoyWorkerJobThread								mJobThread;		//	for misc off-main-thread jobs
+	SoyWorkerJobThread								mOddJobThread;		//	for misc off-main-thread jobs
 	std::shared_ptr<Opengl::TContext>				mOpenglContext;
 	Array<std::shared_ptr<Opencl::TContext>>		mOpenclContexts;
 	Array<std::shared_ptr<Opencl::TDevice>>			mOpenclDevices;
@@ -232,6 +233,7 @@ public:
 	size_t											mCurrentOpenclContext;
 	TJobParams										mUniforms;
 	
+	SoyWorkerJobThread								mDevSnapshotThread;		//	snapshot writing thread as to not hold up normal processing
 	std::string										mDevSnapshotsDir;
 };
 

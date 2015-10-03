@@ -267,29 +267,11 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 		catch (std::exception& e)
 		{
 			Success = false;
-			std::Debug << "Stage " << pStage->mName << " failed: " << e.what() << std::endl;
+			std::Debug << "Stage " << StageName << " failed: " << e.what() << std::endl;
 		}
 
-		//	dev snapshots :)
-		if ( !Filter.mDevSnapshotsDir.empty() )
-		{
-			try
-			{
-				auto Pixels = pData->GetPixels( *mContextGl );
-				if ( Pixels )
-				{
-					std::stringstream Filename;
-					Filename << Filter.mDevSnapshotsDir << "/" << SoyTime(true) << "_" << StageName << ".png";
-					Array<char> PngData;
-					Pixels->GetPng( GetArrayBridge(PngData) );
-					Soy::ArrayToFile( GetArrayBridge(PngData), Filename.str() );
-				}
-			}
-			catch(std::exception& e)
-			{
-				std::Debug << "dev snapshot failed: " << e.what() << std::endl;
-			}
-		}
+		//	make dev snapshots :)
+		Filter.PushDevSnapshot(pData,StageName);
 
 		mStageDataLock.lock( std::string("post-Run place stageData ") + StageName );
 		Frame.mStageData[StageName] = pData;
@@ -432,7 +414,8 @@ std::shared_ptr<TFilterStageRuntimeData> TFilterFrame::GetData(const std::string
 
 TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
-	mJobThread		( Name + " odd job thread" ),
+	mOddJobThread		( Name + " odd job thread" ),
+	mDevSnapshotThread		( Name + " dev snapshots" ),
 	mCurrentOpenclContext	( 0 ),
 	mDevSnapshotsDir	( "../DevSnapshots" )
 {
@@ -444,8 +427,8 @@ TFilter::TFilter(const std::string& Name) :
 
 	CreateBlitGeo(false);
 	
-	//	start odd job thread
-	mJobThread.Start();
+	mOddJobThread.Start();
+	mDevSnapshotThread.Start();
 }
 
 void TFilter::CreateBlitGeo(bool Blocking)
@@ -804,7 +787,38 @@ bool TFilter::Run(SoyTime Time)
 
 void TFilter::QueueJob(std::function<bool(void)> Function)
 {
-	mJobThread.PushJob( Function );
+	mOddJobThread.PushJob( Function );
+}
+
+void TFilter::PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const std::string& StageName)
+{
+	if ( mDevSnapshotsDir.empty() )
+		return;
+	if ( !StageData )
+		return;
+
+	//	copy var
+	auto SavePixels = [this,StageData,StageName]
+	{
+		auto& ContextGl = GetOpenglContext();
+		//	dev snapshots :)
+		auto Pixels = StageData->GetPixels( ContextGl );
+		if ( !Pixels )
+			return;
+
+		std::stringstream Filename;
+		Filename << mDevSnapshotsDir << "/" << SoyTime(true) << "_" << StageName << ".png";
+		Array<char> PngData;
+		Pixels->GetPng( GetArrayBridge(PngData) );
+		Soy::ArrayToFile( GetArrayBridge(PngData), Filename.str() );
+
+	};
+	
+	//	to reduce load, just save shots when we're idle
+	if ( mDevSnapshotThread.GetJobCount() > 10 )
+		return;
+	
+	mDevSnapshotThread.PushJob( SavePixels );
 }
 
 
