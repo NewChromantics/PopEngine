@@ -1928,7 +1928,7 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 	{
 		Kernel.SetUniform("OffsetX", size_cast<cl_int>(Iteration.mFirst[0]) );
 		Kernel.SetUniform("OffsetY", size_cast<cl_int>(Iteration.mFirst[1]) );
-		Kernel.SetUniform("HomographyIndexOffset", size_cast<cl_int>(Iteration.mFirst[1]) );
+		Kernel.SetUniform("HomographyIndexOffset", size_cast<cl_int>(Iteration.mFirst[2]) );
 	};
 	
 	auto Finished = [&StageData,this,&ContextGl](Opencl::TKernelState& Kernel)
