@@ -53,8 +53,8 @@ addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys 
 
 
 #addstage LineDetector DrawHomographyCorners StageType=DrawHomographyCorners cl=HoughCorners.cl kernel=DrawHomographyCorners CornerData=ExtractHoughCorners Zoom=0.5 HomographyData=ScoredHoughCornerHomographys
-addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=0
-addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=1
+addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0
+addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=1
 
 
 

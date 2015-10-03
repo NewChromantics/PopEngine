@@ -784,14 +784,15 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 							   __read_only image2d_t Frame,
 							 __read_only image2d_t Mask,
 							 __write_only image2d_t Frag,
-							  int DrawFrameOnMask
+							  int DrawFrameOnMask,
+							  int PixelSkip
 							  )
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	int2 wh = get_image_dim( Frag );
 	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
 	
-	if( uv.x % 2 != 0 ||uv.y % 2 != 0 )
+	if( PixelSkip>0 && (uv.x % (PixelSkip+1) == 0 ||uv.y % (PixelSkip+1) == 0) )
 		return;
 	
 	//	read pixel
@@ -802,6 +803,8 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 	}
 	else
 	{
+		float HomographyScore = Homographys[HomographyIndex][15];
+		Rgba.xyz = NormalToRgb(HomographyScore);
 		int MaskIndex = RgbToIndex( texture2D( Mask, uv ).xyz, 1 );
 		if ( MaskIndex > 0 )
 			return;
