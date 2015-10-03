@@ -269,6 +269,28 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 			Success = false;
 			std::Debug << "Stage " << pStage->mName << " failed: " << e.what() << std::endl;
 		}
+
+		//	dev snapshots :)
+		if ( !Filter.mDevSnapshotsDir.empty() )
+		{
+			try
+			{
+				auto Pixels = pData->GetPixels( *mContextGl );
+				if ( Pixels )
+				{
+					std::stringstream Filename;
+					Filename << Filter.mDevSnapshotsDir << "/" << SoyTime(true) << "_" << StageName << ".png";
+					Array<char> PngData;
+					Pixels->GetPng( GetArrayBridge(PngData) );
+					Soy::ArrayToFile( GetArrayBridge(PngData), Filename.str() );
+				}
+			}
+			catch(std::exception& e)
+			{
+				std::Debug << "dev snapshot failed: " << e.what() << std::endl;
+			}
+		}
+
 		mStageDataLock.lock( std::string("post-Run place stageData ") + StageName );
 		Frame.mStageData[StageName] = pData;
 		mStageDataLock.unlock();
@@ -411,7 +433,8 @@ std::shared_ptr<TFilterStageRuntimeData> TFilterFrame::GetData(const std::string
 TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
 	mJobThread		( Name + " odd job thread" ),
-	mCurrentOpenclContext	( 0 )
+	mCurrentOpenclContext	( 0 ),
+	mDevSnapshotsDir	( "../DevSnapshots" )
 {
 	mWindow.reset( new TFilterWindow( Name, *this ) );
 	

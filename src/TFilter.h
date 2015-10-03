@@ -231,6 +231,8 @@ public:
 	std::mutex										mOpenclContextLock;
 	size_t											mCurrentOpenclContext;
 	TJobParams										mUniforms;
+	
+	std::string										mDevSnapshotsDir;
 };
 
 
