@@ -509,7 +509,13 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	//	construct an opencl context [early for debugging]
 	CreateOpenclContexts();
 
-	if ( StageType == "WritePng" )
+	if ( StageType == "GetTruthLines" )
+	{
+		auto VertUniform = Params.GetParamAs<std::string>("VertLinesUniform");
+		auto HorzUniform = Params.GetParamAs<std::string>("HorzLinesUniform");
+		Stage.reset( new TFilterStage_GetTruthLines( Name, VertUniform, HorzUniform, *this, Params ) );
+	}
+	else if ( StageType == "WritePng" )
 	{
 		auto Filename = Params.GetParamAs<std::string>("Filename");
 		auto ImageStage = Params.GetParamAs<std::string>("ExportStage");
@@ -593,9 +599,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	{
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
-		auto HoughData = Params.GetParamAs<std::string>("HoughLineData");
+		auto HoughLineData = Params.GetParamAs<std::string>("HoughLineData");
+		auto TruthLineData = Params.GetParamAs<std::string>("TruthLineData");
 		
-		Stage.reset( new TFilterStage_GetHoughLineHomographys( Name, ProgramFilename, KernelName, HoughData, *this, Params ) );
+		Stage.reset( new TFilterStage_GetHoughLineHomographys( Name, ProgramFilename, KernelName, HoughLineData, TruthLineData, *this, Params ) );
 	}
 	else if ( StageType == "ScoreHomographys" )
 	{

@@ -721,8 +721,8 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	//	make output
 	float8 LineAndMeta;
 	LineAndMeta.xyzw = Line;
-	LineAndMeta[4] = AngleIndex;
-	LineAndMeta[5] = DistanceIndex;
+	LineAndMeta[4] = Angle;
+	LineAndMeta[5] = Distance;
 	LineAndMeta[6] = Score;
 	LineAndMeta[7] = LineMaxPixels;
 	

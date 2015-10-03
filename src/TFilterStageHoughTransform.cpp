@@ -422,8 +422,10 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	}
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
-	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughLineDataStage );
-	auto& HoughLines = HoughStageData.mHoughLines;
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineDataStage );
+	Array<cl_float8> HoughLines;
+	HoughLines.PushBackArray( HoughStageData.mVertLines );
+	HoughLines.PushBackArray( HoughStageData.mHorzLines );
 	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
 	
 	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughLinesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
@@ -594,8 +596,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 
 	//	allocate final data
 	if ( !Data )
-		Data.reset( new TFilterStageRuntimeData_ExtractHoughLines() );
-	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ExtractHoughLines&>( *Data.get() );
+		Data.reset( new TFilterStageRuntimeData_HoughLines() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_HoughLines&>( *Data.get() );
 
 	auto CompareLineScores = [](const cl_float8& a,const cl_float8& b)
 	{
@@ -611,11 +613,12 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Frame.SetUniform( VerticalThresholdUniform, VerticalThresholdUniform, mFilter, *this );
 
 	//	copy lines whilst sorting & modify flag to say vertical or horizontal
-	SortArrayLambda<cl_float8> FinalLines( GetArrayBridge(StageData.mHoughLines), CompareLineScores );
+	SortArrayLambda<cl_float8> FinalVertLines( GetArrayBridge(StageData.mVertLines), CompareLineScores );
+	SortArrayLambda<cl_float8> FinalHorzLines( GetArrayBridge(StageData.mHorzLines), CompareLineScores );
 	for ( int i=0;	i<AllLines.GetSize();	i++ )
 	{
 		auto& Line = AllLines[i];
-		auto& Angle = Angles[Line.s[4]];
+		auto& Angle = Line.s[4];
 		
 		float Threshold = VerticalThresholdUniform.mValue;
 		
@@ -629,18 +632,23 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		bool IsVertical = ( Diff <= Threshold );
 		HoughLine_SetVertical( Line, IsVertical );
 		
-		static bool DebugVerticalTest = true;
+		static bool DebugVerticalTest = false;
 		if ( DebugVerticalTest )
 			std::Debug << Angle << " -> " << VerticalAngle << " diff= " << Diff << " vertical: " << IsVertical << " (threshold: " << Threshold << ")" << std::endl;
 		
 		//	add to sorted list
-		FinalLines.Push( Line );
+		if ( IsVertical )
+			FinalVertLines.Push( Line );
+		else
+			FinalHorzLines.Push( Line );
 	}
 	
 	static bool OutputLinesForConfig = true;
 	if ( OutputLinesForConfig )
 	{
-		auto& Lines = StageData.mHoughLines;
+		Array<cl_float8> Lines;
+		Lines.PushBackArray( StageData.mVertLines );
+		Lines.PushBackArray( StageData.mHorzLines );
 		std::Debug.PushStreamSettings();
 		std::Debug << std::fixed << std::setprecision(3);
 		
@@ -679,7 +687,9 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	static bool DebugExtractedHoughLines = true;
 	if ( DebugExtractedHoughLines )
 	{
-		auto& Lines = StageData.mHoughLines;
+		Array<cl_float8> Lines;
+		Lines.PushBackArray( StageData.mVertLines );
+		Lines.PushBackArray( StageData.mHorzLines );
 		std::Debug << "Extracted x" << Lines.GetSize() << " lines" << std::endl;
 		for ( int i=0;	i<Lines.GetSize();	i++ )
 		{
@@ -702,9 +712,13 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 	auto Kernel = GetKernel(ContextCl);
 	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
 		return;
-	
-	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughLineStage );
-	auto& Lines = HoughStageData.mHoughLines;
+
+	//	special "stage name" which reads truths from uniforms
+	//	todo: truths will later be "calculated" in a previous stage (calculated once in filter lifetime)
+	Array<cl_float8> Lines;
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineStage );
+	Lines.PushBackArray( HoughStageData.mVertLines );
+	Lines.PushBackArray( HoughStageData.mHorzLines );
 	Opencl::TBufferArray<cl_float8> LinesBuffer( GetArrayBridge(Lines), ContextCl, "mHoughLines" );
 	
 	//	allocate data
@@ -794,14 +808,18 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 	}
 	
 	std::Debug << "Extracted x" << FinalCorners.GetSize() << " hough corners: ";
-	std::Debug.PushStreamSettings();
-	for ( int i=0;	i<FinalCorners.GetSize();	i++ )
+	static bool DebugExtractedHoughCorners = false;
+	if ( DebugExtractedHoughCorners )
 	{
-		auto Corner4 = Soy::ClToVector( FinalCorners[i] );
-		static int Precision = 0;
-		std::Debug << std::fixed << std::setprecision( Precision ) << Corner4.x << "x" << Corner4.y << ",";// << Corner4.z << std::endl;
+		std::Debug.PushStreamSettings();
+		for ( int i=0;	i<FinalCorners.GetSize();	i++ )
+		{
+			auto Corner4 = Soy::ClToVector( FinalCorners[i] );
+			static int Precision = 0;
+			std::Debug << std::fixed << std::setprecision( Precision ) << Corner4.x << "x" << Corner4.y << ",";// << Corner4.z << std::endl;
+		}
+		std::Debug.PopStreamSettings();
 	}
-	std::Debug.PopStreamSettings();
 	std::Debug << std::endl;
 }
 
@@ -997,7 +1015,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 	{
 		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
 		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
-			throw Soy::AssertException("Missing TruthCorners uniform");
+			throw Soy::AssertException( std::string("Missing uniform ")+TruthCornersUniform.mName);
 		
 		auto PushVec = [this](const std::string& Part,const char& Delin)
 		{
@@ -1146,13 +1164,10 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 
 
 
-void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+
+
+void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
-	//	copy kernel in case it's replaced during run
-	auto Kernel = GetKernel(ContextCl);
-	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
-		return;
-	
 	auto ReadUniform_ArrayFloat8 = [&Frame,this](Array<cl_float8>& Float8s,std::string UniformName)
 	{
 		TUniformWrapper<std::string> TruthCornersUniform(UniformName,std::string());
@@ -1176,20 +1191,64 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 		
 	};
 	
-	//	get truth corners if we haven't set them up
-	if ( mTruthVerticalLines.IsEmpty() )
-		ReadUniform_ArrayFloat8( mTruthVerticalLines, "TruthVerticalHoughLines" );
-	if ( mTruthHorizontalLines.IsEmpty() )
-		ReadUniform_ArrayFloat8( mTruthHorizontalLines, "TruthHorizontalHoughLines" );
+	//	allocate data
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_HoughLines() );
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_HoughLines&>( *Data.get() );
+	
+	ReadUniform_ArrayFloat8( StageData.mVertLines, mVerticalLinesUniform );
+	ReadUniform_ArrayFloat8( StageData.mHorzLines, mHorzLinesUniform );
+	
+	//	remove non vertical/horizontal lines
+	TUniformWrapper<int> SquareAnglesOnlyUniform("SquareAnglesOnly",false);
+	Frame.SetUniform( SquareAnglesOnlyUniform, SquareAnglesOnlyUniform, mFilter, *this );
+	bool SquareAnglesOnly = SquareAnglesOnlyUniform.mValue!=0;
+	if ( SquareAnglesOnly )
+	{
+		for ( int i=StageData.mHorzLines.GetSize()-1;	i>=0;	i-- )
+		{
+			auto LineAngle = StageData.mHorzLines[i].s[4];
+			static float Tolerance=10;
+			bool AngleIs0 = fabsf( Soy::AngleDegDiff( LineAngle, 0 ) ) < Tolerance;
+			bool AngleIs90 = fabsf( Soy::AngleDegDiff( LineAngle, 90 ) ) < Tolerance;
+			bool AngleIs180 = fabsf( Soy::AngleDegDiff( LineAngle, 180 ) ) < Tolerance;
+			bool AngleIs270 = fabsf( Soy::AngleDegDiff( LineAngle, 270 ) ) < Tolerance;
+			if ( AngleIs0 || AngleIs90 || AngleIs180 || AngleIs270 )
+				continue;
+			StageData.mHorzLines.RemoveBlock( i,1 );
+			std::Debug << "Removed horz truth line at " << LineAngle << " degrees" << std::endl;
+		}
+	}
+}
+
+													
+
+
+
+
+
+void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
+		return;
 	
 	//	merge truth lines into one big set for kernel
+	auto& TruthLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mTruthLineStage );
+	auto& VertTruthLines = TruthLinesStageData.mVertLines;
+	auto& HorzTruthLines = TruthLinesStageData.mHorzLines;
 	Array<cl_float8> AllTruthLines;
-	AllTruthLines.PushBackArray( mTruthVerticalLines );
-	AllTruthLines.PushBackArray( mTruthHorizontalLines );
+	AllTruthLines.PushBackArray( VertTruthLines );
+	AllTruthLines.PushBackArray( HorzTruthLines );
 	
-	auto& HoughLinesStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughLines>( mHoughLineStage );
-	auto& HoughLines = HoughLinesStageData.mHoughLines;
-	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
+	auto& HoughLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineStage );
+	auto& VertHoughLines = HoughLinesStageData.mVertLines;
+	auto& HorzHoughLines = HoughLinesStageData.mHorzLines;
+	Array<cl_float8> AllHoughLines;
+	AllHoughLines.PushBackArray( VertHoughLines );
+	AllHoughLines.PushBackArray( HorzHoughLines );
+	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(AllHoughLines), ContextCl, "AllHoughLines" );
 	Opencl::TBufferArray<cl_float8> TruthLinesBuffer( GetArrayBridge(AllTruthLines), ContextCl, "AllTruthLines" );
 	
 	//	make a list of truth indexes sorted by score
@@ -1201,27 +1260,29 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 
 	for ( int i=0;	i<AllTruthLines.GetSize();	i++ )
 	{
-		if ( i < mTruthVerticalLines.GetSize() )
+		if ( i < VertTruthLines.GetSize() )
 			TruthVertLineIndexes.PushBack(i);
 		else
 			TruthHorzLineIndexes.PushBack(i);
 	}
 	
-	for ( int i=0;	i<HoughLines.GetSize();	i++ )
+	for ( int i=0;	i<AllHoughLines.GetSize();	i++ )
 	{
-		auto LineVertical = HoughLine_IsVertical(HoughLines[i]);
-		if ( LineVertical )
+		if ( i < VertHoughLines.GetSize() )
 			HoughVertLineIndexes.PushBack(i);
 		else
 			HoughHorzLineIndexes.PushBack(i);
 	}
-	
+
 	//	cap sizes
-	static size_t LineIndexCap = 3;
-	TruthVertLineIndexes.SetSize( std::min(LineIndexCap,TruthVertLineIndexes.GetSize()) );
-	TruthHorzLineIndexes.SetSize( std::min(LineIndexCap,TruthHorzLineIndexes.GetSize()) );
-	HoughVertLineIndexes.SetSize( std::min(LineIndexCap,HoughVertLineIndexes.GetSize()) );
-	HoughHorzLineIndexes.SetSize( std::min(LineIndexCap,HoughHorzLineIndexes.GetSize()) );
+	TUniformWrapper<int> MaxLinesInSetsUniform("MaxLinesInSets",10);
+	Frame.SetUniform( MaxLinesInSetsUniform, MaxLinesInSetsUniform, mFilter, *this );
+	size_t MaxLinesInSets = MaxLinesInSetsUniform.mValue;
+	Soy::Assert( MaxLinesInSets>=2, "MaxLinesInSets must be at least 2");
+	TruthVertLineIndexes.SetSize( std::min(MaxLinesInSets,TruthVertLineIndexes.GetSize()) );
+	TruthHorzLineIndexes.SetSize( std::min(MaxLinesInSets,TruthHorzLineIndexes.GetSize()) );
+	HoughVertLineIndexes.SetSize( std::min(MaxLinesInSets,HoughVertLineIndexes.GetSize()) );
+	HoughHorzLineIndexes.SetSize( std::min(MaxLinesInSets,HoughHorzLineIndexes.GetSize()) );
 	
 	//	get pairs of 2 vertical lines and 2 horizontal lines
 	Soy::Assert( TruthVertLineIndexes.GetSize()>=2, "Not enough vertical truth lines");
@@ -1244,7 +1305,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 			for ( int ha=0;	ha<TruthVertLineIndexes.GetSize();	ha++ )
 				for ( int hb=ha+1;	hb<TruthVertLineIndexes.GetSize();	hb++ )
 					HoughLinePairs.PushBack( Soy::VectorToCl( vec4x<int>( HoughVertLineIndexes[va], HoughVertLineIndexes[vb], HoughHorzLineIndexes[ha], HoughHorzLineIndexes[hb] ) ) );
-	
+	 
 	Opencl::TBufferArray<cl_int4> TruthLinePairsBuffer( GetArrayBridge(TruthLinePairs), ContextCl, "TruthLinePairs" );
 	Opencl::TBufferArray<cl_int4> HoughLinePairsBuffer( GetArrayBridge(HoughLinePairs), ContextCl, "HoughLinePairs" );
 	
@@ -1329,7 +1390,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	}
 	
 	std::Debug << "Extracted x" << FinalHomographys.GetSize() << " homographys: ";
-	static bool DebugExtractedHomographys = true;
+	static bool DebugExtractedHomographys = false;
 	if ( DebugExtractedHomographys )
 	{
 		std::Debug.PushStreamSettings();
@@ -1362,7 +1423,7 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 	{
 		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
 		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
-			throw Soy::AssertException("Missing TruthCorners uniform");
+			throw Soy::AssertException(std::string("Missing uniform ")+TruthCornersUniform.mName);
 		
 		auto PushVec = [this](const std::string& Part,const char& Delin)
 		{
@@ -1587,7 +1648,7 @@ void TFilterStage_DrawHomographyCorners::Execute(TFilterFrame& Frame,std::shared
 	{
 		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
 		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
-			throw Soy::AssertException("Missing TruthCorners uniform");
+			throw Soy::AssertException(std::string("Missing uniform ")+TruthCornersUniform.mName);
 		
 		auto PushVec = [&TruthCorners](const std::string& Part,const char& Delin)
 		{

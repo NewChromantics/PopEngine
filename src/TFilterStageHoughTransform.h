@@ -54,20 +54,34 @@ public:
 };
 
 
-class TFilterStageRuntimeData_ExtractHoughLines : public TFilterStageRuntimeData
+class TFilterStageRuntimeData_HoughLines : public TFilterStageRuntimeData
 {
 public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override
-	{
-		return false;
-	}
-	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
-	
-public:
-	Array<cl_float8>			mHoughLines;	//	x0,y0,x1,y1,angle,distance,score,Vertical!=0
+	//	x0,y0,x1,y1,angle,distance,score,Vertical!=0
+	//	gr: store as 2 arrays or one?
+	//Array<cl_float8>			mHoughLines;
+	Array<cl_float8>			mVertLines;
+	Array<cl_float8>			mHorzLines;
 };
 
 
+
+class TFilterStage_GetTruthLines : public TFilterStage
+{
+public:
+	TFilterStage_GetTruthLines(const std::string& Name,const std::string& VerticalLinesUniform,const std::string& HorzLinesUniform,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage				( Name, Filter, StageParams ),
+		mVerticalLinesUniform		( VerticalLinesUniform ),
+		mHorzLinesUniform			( HorzLinesUniform )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string			mVerticalLinesUniform;
+	std::string			mHorzLinesUniform;
+};
 
 
 class TFilterStage_DrawHoughLinesDynamic : public TFilterStage_OpenclKernel
@@ -173,8 +187,9 @@ public:
 class TFilterStage_GetHoughLineHomographys : public TFilterStage_OpenclKernel
 {
 public:
-	TFilterStage_GetHoughLineHomographys(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughLineStage,TFilter& Filter,const TJobParams& StageParams) :
+	TFilterStage_GetHoughLineHomographys(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,const std::string& HoughLineStage,const std::string& TruthLineStage,TFilter& Filter,const TJobParams& StageParams) :
 		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams ),
+		mTruthLineStage				( TruthLineStage ),
 		mHoughLineStage				( HoughLineStage )
 	{
 	}
@@ -182,8 +197,7 @@ public:
 	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
 public:
-	Array<cl_float8>	mTruthVerticalLines;
-	Array<cl_float8>	mTruthHorizontalLines;
+	std::string			mTruthLineStage;
 	std::string			mHoughLineStage;
 };
 
