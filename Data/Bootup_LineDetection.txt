@@ -46,17 +46,18 @@ addstage LineDetector TruthLines StageType=GetTruthLines VertLinesUniform=TruthV
 #addstage LineDetector DrawHoughLinesDynamic StageType=DrawHoughLinesDynamic cl=LineFilter.cl kernel=DrawHoughLinesDynamic HoughData=HoughFilter ClearFrag=Frame HoughScoreMin=100 HoughScoreMax=5000
 addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=Frame ColourToVertical=1
 addstage LineDetector DrawTruthLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=TruthLines ClearFrag=false ColourToVertical=1
+
 #addstage LineDetector DrawHoughGraph cl=LineFilter.cl kernel=DrawHoughGraph HoughData=HoughFilter
 
 addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01
 addstage LineDetector ExtractTruthCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=TruthLines MinScore=0.01
 
 addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=Frame Zoom=1.0
-addstage LineDetector DrawHoughCornersZoom StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners Zoom=0.5
+#addstage LineDetector DrawHoughCornersZoom StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners Zoom=0.5
 
 #addstage LineDetector HoughCornerHomographys StageType=GetHoughCornerHomographys cl=HoughCorners.cl kernel=HoughCornerHomography HoughCornerData=ExtractHoughCorners
 
-addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines TruthLineData=TruthLines MaxLinesInSets=2
+addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines TruthLineData=TruthLines MaxLinesInHoughSets=8 MaxLinesInTruthSets=2
 #addstage LineDetector ScoredHoughLineHomographys StageType=ScoreHomographys cl=HoughCorners.cl kernel=ScoreCornerHomographys CornerData=ExtractHoughCorners HomographyData=HoughCornerHomographys
 
 
@@ -68,8 +69,8 @@ addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.
 
 #loadframe LineDetector time=1001 input01_undistorted.png
 #decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
-#decode LineDetector /Volumes/Assets/5goals.mp4
-loadframe LineDetector FootballPitch.png time=1001
+decode LineDetector /Volumes/Assets/5goals.mp4
+#loadframe LineDetector FootballPitch.png time=1001
 
 
 

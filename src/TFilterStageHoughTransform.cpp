@@ -1223,6 +1223,580 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 
 													
 
+#define float2 cl_float2
+#define float3 cl_float3
+#define float4 cl_float4
+#define float8 cl_float8
+#define float16 cl_float16
+#define int4 cl_int4
+#define __kernel
+#define global 
+
+
+//	z is 0 if bad lines
+static float2 GetRayRayIntersection(float8 RayA,float8 RayB)
+{
+#define x s[0]
+#define y s[1]
+#define z s[2]
+#define w s[3]
+	float Ax = RayA.x;
+	float Ay = RayA.y;
+	float Bx = RayA.x + RayA.z;
+	float By = RayA.y + RayA.w;
+	float Cx = RayB.x;
+	float Cy = RayB.y;
+	float Dx = RayB.x + RayB.z;
+	float Dy = RayB.y + RayB.w;
+	
+	
+	float  distAB, theCos, theSin, newX, ABpos ;
+	
+	//  Fail if either line is undefined.
+	//if (Ax==Bx && Ay==By || Cx==Dx && Cy==Dy) return NO;
+	
+	//  (1) Translate the system so that point A is on the origin.
+	Bx-=Ax; By-=Ay;
+	Cx-=Ax; Cy-=Ay;
+	Dx-=Ax; Dy-=Ay;
+	
+	//  Discover the length of segment A-B.
+	distAB=sqrt(Bx*Bx+By*By);
+	
+	//  (2) Rotate the system so that point B is on the positive X axis.
+	theCos=Bx/distAB;
+	theSin=By/distAB;
+	newX=Cx*theCos+Cy*theSin;
+	Cy  =Cy*theCos-Cx*theSin; Cx=newX;
+	newX=Dx*theCos+Dy*theSin;
+	Dy  =Dy*theCos-Dx*theSin; Dx=newX;
+	
+	//  Fail if the lines are parallel.
+	//if (Cy==Dy) return NO;
+	float Score = (Cy==Dy) ? 0 : 1;
+	
+	//  (3) Discover the position of the intersection point along line A-B.
+	ABpos=Dx+(Cx-Dx)*Dy/(Dy-Cy);
+	
+	//  (4) Apply the discovered position to line A-B in the original coordinate system.
+	float2 Intersection;
+	Intersection.x = Ax + ABpos * theCos;
+	Intersection.y = Ay + ABpos * theSin;
+	return (float2){.s={Intersection.x,Intersection.y}};
+}
+#undef x
+#undef y
+#undef z
+#undef w
+
+
+
+// Thos SVD code requires rows >= columns.
+#define M 9 // rows
+#define N 9 // cols
+
+static double SIGN(double a, double b)
+{
+	if(b > 0) {
+		return fabs(a);
+	}
+	
+	return -fabs(a);
+}
+
+static double PYTHAG(double a, double b)
+{
+	double at = fabs(a), bt = fabs(b), ct, result;
+	
+	if (at > bt)       { ct = bt / at; result = at * sqrt(1.0 + ct * ct); }
+	else if (bt > 0.0) { ct = at / bt; result = bt * sqrt(1.0 + ct * ct); }
+	else result = 0.0;
+	return(result);
+}
+
+// Returns 1 on success, fail otherwise
+static int dsvd(float *a, int m, int n, float *w, float *v)
+{
+	//	float w[N];
+	//	float v[N*N];
+	
+	int flag, i, its, j, jj, k, l, nm;
+	double c, f, h, s, x, y, z;
+	double anorm = 0.0, g = 0.0, scale = 0.0;
+	double rv1[N];
+	
+	if (m < n)
+	{
+		//fprintf(stderr, "#rows must be > #cols \n");
+		return(-1);
+	}
+	
+	
+	//	Householder reduction to bidiagonal form
+	for (i = 0; i < n; i++)
+	{
+		//left-hand reduction
+		l = i + 1;
+		rv1[i] = scale * g;
+		g = s = scale = 0.0;
+		if (i < m)
+		{
+			for (k = i; k < m; k++)
+				scale += fabsf(a[k*n+i]);
+			
+			if (scale )
+			{
+				for (k = i; k < m; k++)
+				{
+					a[k*n+i] /= scale;
+					s += a[k*n+i] * a[k*n+i];
+				}
+				
+				 f = (double)a[i*n+i];
+				 g = -SIGN(sqrt(s), f);
+				 h = f * g - s;
+				 a[i*n+i] = (float)(f - g);
+				 if (i != n - 1)
+				 {
+					for (j = l; j < n; j++)
+					{
+				 for (s = 0.0, k = i; k < m; k++)
+				 s += ((double)a[k*n+i] * (double)a[k*n+j]);
+				 f = s / h;
+				 for (k = i; k < m; k++)
+				 a[k*n+j] += (float)(f * (double)a[k*n+i]);
+					}
+				 }
+				 for (k = i; k < m; k++)
+					a[k*n+i] = (float)((double)a[k*n+i]*scale);
+				
+			}
+			
+		}
+		w[i] = (float)(scale * g);
+		
+		 /// right-hand reduction
+		 g = s = scale = 0.0;
+		 if (i < m && i != n - 1)
+		 {
+			for (k = l; k < n; k++)
+		 scale += fabs((double)a[i*n+k]);
+			if (scale)
+			{
+		 for (k = l; k < n; k++)
+		 {
+		 a[i*n+k] = (float)((double)a[i*n+k]/scale);
+		 s += ((double)a[i*n+k] * (double)a[i*n+k]);
+		 }
+		 f = (double)a[i*n+l];
+		 g = -SIGN(sqrt(s), f);
+		 h = f * g - s;
+		 a[i*n+l] = (float)(f - g);
+		 for (k = l; k < n; k++)
+		 rv1[k] = (double)a[i*n+k] / h;
+		 if (i != m - 1)
+		 {
+		 for (j = l; j < m; j++)
+		 {
+		 for (s = 0.0, k = l; k < n; k++)
+		 s += ((double)a[j*n+k] * (double)a[i*n+k]);
+		 for (k = l; k < n; k++)
+		 a[j*n+k] += (float)(s * rv1[k]);
+		 }
+		 }
+		 for (k = l; k < n; k++)
+		 a[i*n+k] = (float)((double)a[i*n+k]*scale);
+			}
+		 }
+		anorm = std::max(anorm, (fabs((double)w[i]) + fabs(rv1[i])));
+		 
+	}
+	
+	 // accumulate the right-hand transformation
+	 for (i = n - 1; i >= 0; i--)
+	 {
+		if (i < n - 1)
+		{
+	 if (g)
+	 {
+	 for (j = l; j < n; j++)
+	 v[j*n+i] = (float)(((double)a[i*n+j] / (double)a[i*n+l]) / g);
+	 // double division to avoid underflow
+	 for (j = l; j < n; j++)
+	 {
+	 for (s = 0.0, k = l; k < n; k++)
+	 s += ((double)a[i*n+k] * (double)v[k*n+j]);
+	 for (k = l; k < n; k++)
+	 v[k*n+j] += (float)(s * (double)v[k*n+i]);
+	 }
+	 }
+	 for (j = l; j < n; j++)
+	 v[i*n+j] = v[j*n+i] = 0.0;
+		}
+		v[i*n+i] = 1.0;
+		g = rv1[i];
+		l = i;
+	 }
+	 
+	 //accumulate the left-hand transformation
+	 for (i = n - 1; i >= 0; i--)
+	 {
+		l = i + 1;
+		g = (double)w[i];
+		if (i < n - 1)
+	 for (j = l; j < n; j++)
+	 a[i*n+j] = 0.0;
+		if (g)
+		{
+	 g = 1.0 / g;
+	 if (i != n - 1)
+	 {
+	 for (j = l; j < n; j++)
+	 {
+	 for (s = 0.0, k = l; k < m; k++)
+	 s += ((double)a[k*n+i] * (double)a[k*n+j]);
+	 f = (s / (double)a[i*n+i]) * g;
+	 for (k = i; k < m; k++)
+	 a[k*n+j] += (float)(f * (double)a[k*n+i]);
+	 }
+	 }
+	 for (j = i; j < m; j++)
+	 a[j*n+i] = (float)((double)a[j*n+i]*g);
+		}
+		else
+		{
+	 for (j = i; j < m; j++)
+	 a[j*n+i] = 0.0;
+		}
+		++a[i*n+i];
+	 }
+	 
+	 // diagonalize the bidiagonal form
+	 for (k = n - 1; k >= 0; k--)
+	 {                           // loop over singular values
+		for (its = 0; its < 30; its++)
+		{                       // loop over allowed iterations
+	 flag = 1;
+	 for (l = k; l >= 0; l--)
+	 {                     // test for splitting
+	 nm = l - 1;
+	 if (fabs(rv1[l]) + anorm == anorm)
+	 {
+	 flag = 0;
+	 break;
+	 }
+	 if (fabs((double)w[nm]) + anorm == anorm)
+	 break;
+	 }
+	 if (flag)
+	 {
+	 c = 0.0;
+	 s = 1.0;
+	 for (i = l; i <= k; i++)
+	 {
+	 f = s * rv1[i];
+	 if (fabs(f) + anorm != anorm)
+	 {
+	 g = (double)w[i];
+	 h = PYTHAG(f, g);
+	 w[i] = (float)h;
+	 h = 1.0 / h;
+	 c = g * h;
+	 s = (- f * h);
+	 for (j = 0; j < m; j++)
+	 {
+	 y = (double)a[j*n+nm];
+	 z = (double)a[j*n+i];
+	 a[j*n+nm] = (float)(y * c + z * s);
+	 a[j*n+i] = (float)(z * c - y * s);
+	 }
+	 }
+	 }
+	 }
+	 z = (double)w[k];
+	 if (l == k)
+	 {                  //convergence
+	 if (z < 0.0)
+	 {              // make singular value nonnegative
+	 w[k] = (float)(-z);
+	 for (j = 0; j < n; j++)
+	 v[j*n+k] = (-v[j*n+k]);
+	 }
+	 break;
+	 }
+	 if (its >= 30) {
+	 //free((void*) rv1);
+	 //fprintf(stderr, "No convergence after 30,000! iterations \n");
+	 return(0);
+	 }
+	 
+	 ///shift from bottom 2 x 2 minor
+	 x = (double)w[l];
+	 nm = k - 1;
+	 y = (double)w[nm];
+	 g = rv1[nm];
+	 h = rv1[k];
+	 f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
+	 g = PYTHAG(f, 1.0);
+	 f = ((x - z) * (x + z) + h * ((y / (f + SIGN(g, f))) - h)) / x;
+	 
+	 // next QR transformation
+	 c = s = 1.0;
+	 for (j = l; j <= nm; j++)
+	 {
+	 i = j + 1;
+	 g = rv1[i];
+	 y = (double)w[i];
+	 h = s * g;
+	 g = c * g;
+	 z = PYTHAG(f, h);
+	 rv1[j] = z;
+	 c = f / z;
+	 s = h / z;
+	 f = x * c + g * s;
+	 g = g * c - x * s;
+	 h = y * s;
+	 y = y * c;
+	 for (jj = 0; jj < n; jj++)
+	 {
+	 x = (double)v[jj*n+j];
+	 z = (double)v[jj*n+i];
+	 v[jj*n+j] = (float)(x * c + z * s);
+	 v[jj*n+i] = (float)(z * c - x * s);
+	 }
+	 z = PYTHAG(f, h);
+	 w[j] = (float)z;
+	 if (z)
+	 {
+	 z = 1.0 / z;
+	 c = f * z;
+	 s = h * z;
+	 }
+	 f = (c * g) + (s * y);
+	 x = (c * y) - (s * g);
+	 for (jj = 0; jj < m; jj++)
+	 {
+	 y = (double)a[jj*n+j];
+	 z = (double)a[jj*n+i];
+	 a[jj*n+j] = (float)(y * c + z * s);
+	 a[jj*n+i] = (float)(z * c - y * s);
+	 }
+	 }
+	 rv1[l] = 0.0;
+	 rv1[k] = f;
+	 w[k] = (float)x;
+		}
+	 }
+	 
+	
+	return(1);
+}
+
+
+static float16 CalcHomography(float2 src[4],float2 dst[4])
+{
+	// This version does not normalised the input data, which is contrary to what Multiple View Geometry says.
+	// I included it to see what happens when you don't do this step.
+	
+	float X[M*N]; // M,N #define inCUDA_SVD.cu
+	
+	for(int i=0; i < 4; i++)
+	{
+		float srcx = src[i].s[0];
+		float srcy = src[i].s[1];
+		float dstx = dst[i].s[0];
+		float dsty = dst[i].s[1];
+		
+		int y1 = (i*2 + 0)*N;
+		int y2 = (i*2 + 1)*N;
+		
+		// First row
+		X[y1+0] = 0.f;
+		X[y1+1] = 0.f;
+		X[y1+2] = 0.f;
+		
+		X[y1+3] = -srcx;
+		X[y1+4] = -srcy;
+		X[y1+5] = -1.f;
+		
+		X[y1+6] = dsty*srcx;
+		X[y1+7] = dsty*srcy;
+		X[y1+8] = dsty;
+		
+		// Second row
+		X[y2+0] = srcx;
+		X[y2+1] = srcy;
+		X[y2+2] = 1.f;
+		
+		X[y2+3] = 0.f;
+		X[y2+4] = 0.f;
+		X[y2+5] = 0.f;
+		
+		X[y2+6] = -dstx*srcx;
+		X[y2+7] = -dstx*srcy;
+		X[y2+8] = -dstx;
+	}
+	
+	// Fill the last row
+	float srcx = src[3].s[0];
+	float srcy = src[3].s[1];
+	float dstx = dst[3].s[0];
+	float dsty = dst[3].s[1];
+	
+	int y = 8*N;
+	X[y+0] = -dsty*srcx;
+	X[y+1] = -dsty*srcy;
+	X[y+2] = -dsty;
+	
+	X[y+3] = dstx*srcx;
+	X[y+4] = dstx*srcy;
+	X[y+5] = dstx;
+	
+	X[y+6] = 0;
+	X[y+7] = 0;
+	X[y+8] = 0;
+	
+	float w[N];
+	float v[N*N];
+	
+	float16 ret_H;
+	int ret = dsvd(X, M, N, w, v);
+	
+	 if(ret == 1)
+	 {
+		// Sort
+		float smallest = w[0];
+		int col = 0;
+		
+		for(int i=1; i < N; i++) {
+	 if(w[i] < smallest) {
+	 smallest = w[i];
+	 col = i;
+	 }
+		}
+		
+		ret_H.s[0] = v[0*N + col];
+		ret_H.s[1] = v[1*N + col];
+		ret_H.s[2] = v[2*N + col];
+		ret_H.s[3] = v[3*N + col];
+		ret_H.s[4] = v[4*N + col];
+		ret_H.s[5] = v[5*N + col];
+		ret_H.s[6] = v[6*N + col];
+		ret_H.s[7] = v[7*N + col];
+		ret_H.s[8] = v[8*N + col];
+	 }
+	
+	return ret_H;
+}
+
+
+#define Index3x3(r,c)	((r*3)+c)
+
+static float16 GetMatrix3x3Inverse(float16 m)
+{
+	float det =
+	m.s[Index3x3(0,0)]*
+	m.s[Index3x3(1,1)]*
+	m.s[Index3x3(2,2)]+
+	m.s[Index3x3(1,0)]*
+	m.s[Index3x3(2,1)]*
+	m.s[Index3x3(0,2)]+
+	m.s[Index3x3(2,0)]*
+	m.s[Index3x3(0,1)]*
+	m.s[Index3x3(1,2)]-
+	m.s[Index3x3(0,0)]*
+	m.s[Index3x3(2,1)]*
+	m.s[Index3x3(1,2)]-
+	m.s[Index3x3(2,0)]*
+	m.s[Index3x3(1,1)]*
+	m.s[Index3x3(0,2)]-
+	m.s[Index3x3(1,0)]*
+	m.s[Index3x3(0,1)]*
+	m.s[Index3x3(2,2)];
+	
+	float16 inv;// = 0;
+	inv.s[Index3x3(0,0)] = m.s[Index3x3(1,1)]*m.s[Index3x3(2,2)] - m.s[Index3x3(1,2)]*m.s[Index3x3(2,1)];
+	inv.s[Index3x3(0,1)] = m.s[Index3x3(0,2)]*m.s[Index3x3(2,1)] - m.s[Index3x3(0,1)]*m.s[Index3x3(2,2)];
+	inv.s[Index3x3(0,2)] = m.s[Index3x3(0,1)]*m.s[Index3x3(1,2)] - m.s[Index3x3(0,2)]*m.s[Index3x3(1,1)];
+	//	inv[Index3x3(0,3].w = 0.f;
+	
+	inv.s[Index3x3(1,0)] = m.s[Index3x3(1,2)]*m.s[Index3x3(2,0)] - m.s[Index3x3(1,0)]*m.s[Index3x3(2,2)];
+	inv.s[Index3x3(1,1)] = m.s[Index3x3(0,0)]*m.s[Index3x3(2,2)] - m.s[Index3x3(0,2)]*m.s[Index3x3(2,0)];
+	inv.s[Index3x3(1,2)] = m.s[Index3x3(0,2)]*m.s[Index3x3(1,0)] - m.s[Index3x3(0,0)]*m.s[Index3x3(1,2)];
+	//	inv[Index3x3(1,3)].w = 0.f;
+	
+	inv.s[Index3x3(2,0)] = m.s[Index3x3(1,0)]*m.s[Index3x3(2,1)] - m.s[Index3x3(1,1)]*m.s[Index3x3(2,0)];
+	inv.s[Index3x3(2,1)] = m.s[Index3x3(0,1)]*m.s[Index3x3(2,0)] - m.s[Index3x3(0,0)]*m.s[Index3x3(2,1)];
+	inv.s[Index3x3(2,2)] = m.s[Index3x3(0,0)]*m.s[Index3x3(1,1)] - m.s[Index3x3(0,1)]*m.s[Index3x3(1,0)];
+	//	inv[Index3x3(2,3)].w = 0.f;
+	
+	inv.s[0] *= 1.0f / det;
+	inv.s[1] *= 1.0f / det;
+	inv.s[2] *= 1.0f / det;
+	inv.s[3] *= 1.0f / det;
+	inv.s[4] *= 1.0f / det;
+	inv.s[5] *= 1.0f / det;
+	inv.s[6] *= 1.0f / det;
+	inv.s[7] *= 1.0f / det;
+	inv.s[8] *= 1.0f / det;
+	return inv;
+}
+
+__kernel void HoughLineHomography(int TruthPairIndexOffset,
+								  int HoughPairIndexOffset,
+								  global int4* TruthPairIndexes,
+								  global int4* HoughPairIndexes,
+								  int TruthPairIndexCount,
+								  int HoughPairIndexCount,
+								  global float8* HoughLines,
+								  global float8* TruthLines,
+								  global float16* Homographys,
+								  global float16* HomographysInv
+								  )
+{
+	int TruthPairIndex = TruthPairIndexOffset;
+	int HoughPairIndex = HoughPairIndexOffset;
+	
+	//	indexes are vvhh
+	int4 TruthIndexes = TruthPairIndexes[TruthPairIndex];
+	int4 HoughIndexes = HoughPairIndexes[HoughPairIndex];
+	
+	//	grab the lines and find their intersections to get our four corners
+	float8 SampleTruthLines[4] =
+	{
+		TruthLines[TruthIndexes.s[0]],
+		TruthLines[TruthIndexes.s[1]],
+		TruthLines[TruthIndexes.s[2]],
+		TruthLines[TruthIndexes.s[3]],
+	};
+	float8 SampleHoughLines[4] =
+	{
+		HoughLines[HoughIndexes.s[0]],
+		HoughLines[HoughIndexes.s[1]],
+		HoughLines[HoughIndexes.s[2]],
+		HoughLines[HoughIndexes.s[3]],
+	};
+	//	find v/h intersections
+	float2 TruthCorners[4] =
+	{
+		GetRayRayIntersection( SampleTruthLines[0], SampleTruthLines[2] ),
+		GetRayRayIntersection( SampleTruthLines[0], SampleTruthLines[3] ),
+		GetRayRayIntersection( SampleTruthLines[1], SampleTruthLines[2] ),
+		GetRayRayIntersection( SampleTruthLines[1], SampleTruthLines[3] ),
+	};
+	float2 HoughCorners[4] =
+	{
+		GetRayRayIntersection( SampleHoughLines[0], SampleHoughLines[2] ),
+		GetRayRayIntersection( SampleHoughLines[0], SampleHoughLines[3] ),
+		GetRayRayIntersection( SampleHoughLines[1], SampleHoughLines[2] ),
+		GetRayRayIntersection( SampleHoughLines[1], SampleHoughLines[3] ),
+	};
+	
+	float16 Homography = CalcHomography( HoughCorners, TruthCorners );
+	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
+	Homographys[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = Homography;
+	HomographysInv[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
+}
 
 
 
@@ -1275,14 +1849,18 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	}
 
 	//	cap sizes
-	TUniformWrapper<int> MaxLinesInSetsUniform("MaxLinesInSets",10);
-	Frame.SetUniform( MaxLinesInSetsUniform, MaxLinesInSetsUniform, mFilter, *this );
-	size_t MaxLinesInSets = MaxLinesInSetsUniform.mValue;
-	Soy::Assert( MaxLinesInSets>=2, "MaxLinesInSets must be at least 2");
-	TruthVertLineIndexes.SetSize( std::min(MaxLinesInSets,TruthVertLineIndexes.GetSize()) );
-	TruthHorzLineIndexes.SetSize( std::min(MaxLinesInSets,TruthHorzLineIndexes.GetSize()) );
-	HoughVertLineIndexes.SetSize( std::min(MaxLinesInSets,HoughVertLineIndexes.GetSize()) );
-	HoughHorzLineIndexes.SetSize( std::min(MaxLinesInSets,HoughHorzLineIndexes.GetSize()) );
+	TUniformWrapper<int> MaxLinesInTruthSetsUniform("MaxLinesInTruthSets",10);
+	TUniformWrapper<int> MaxLinesInHoughSetsUniform("MaxLinesInHoughSets",10);
+	Frame.SetUniform( MaxLinesInTruthSetsUniform, MaxLinesInTruthSetsUniform, mFilter, *this );
+	Frame.SetUniform( MaxLinesInHoughSetsUniform, MaxLinesInHoughSetsUniform, mFilter, *this );
+	size_t MaxLinesInTruthSets = MaxLinesInTruthSetsUniform.mValue;
+	size_t MaxLinesInHoughSets = MaxLinesInHoughSetsUniform.mValue;
+	Soy::Assert( MaxLinesInTruthSets>=2, "MaxLinesInSets must be at least 2");
+	Soy::Assert( MaxLinesInHoughSets>=2, "MaxLinesInHoughSets must be at least 2");
+	TruthVertLineIndexes.SetSize( std::min(MaxLinesInTruthSets,TruthVertLineIndexes.GetSize()) );
+	TruthHorzLineIndexes.SetSize( std::min(MaxLinesInTruthSets,TruthHorzLineIndexes.GetSize()) );
+	HoughVertLineIndexes.SetSize( std::min(MaxLinesInHoughSets,HoughVertLineIndexes.GetSize()) );
+	HoughHorzLineIndexes.SetSize( std::min(MaxLinesInHoughSets,HoughHorzLineIndexes.GetSize()) );
 	
 	//	get pairs of 2 vertical lines and 2 horizontal lines
 	Soy::Assert( TruthVertLineIndexes.GetSize()>=2, "Not enough vertical truth lines");
@@ -1296,14 +1874,14 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	
 	for ( int va=0;	va<TruthVertLineIndexes.GetSize();	va++ )
 		for ( int vb=va+1;	vb<TruthVertLineIndexes.GetSize();	vb++ )
-			for ( int ha=0;	ha<TruthVertLineIndexes.GetSize();	ha++ )
-				for ( int hb=ha+1;	hb<TruthVertLineIndexes.GetSize();	hb++ )
+			for ( int ha=0;	ha<TruthHorzLineIndexes.GetSize();	ha++ )
+				for ( int hb=ha+1;	hb<TruthHorzLineIndexes.GetSize();	hb++ )
 					TruthLinePairs.PushBack( Soy::VectorToCl( vec4x<int>( TruthVertLineIndexes[va], TruthVertLineIndexes[vb], TruthHorzLineIndexes[ha], TruthHorzLineIndexes[hb] ) ) );
 	
-	for ( int va=0;	va<TruthVertLineIndexes.GetSize();	va++ )
-		for ( int vb=va+1;	vb<TruthVertLineIndexes.GetSize();	vb++ )
-			for ( int ha=0;	ha<TruthVertLineIndexes.GetSize();	ha++ )
-				for ( int hb=ha+1;	hb<TruthVertLineIndexes.GetSize();	hb++ )
+	for ( int va=0;	va<HoughVertLineIndexes.GetSize();	va++ )
+		for ( int vb=va+1;	vb<HoughVertLineIndexes.GetSize();	vb++ )
+			for ( int ha=0;	ha<HoughHorzLineIndexes.GetSize();	ha++ )
+				for ( int hb=ha+1;	hb<HoughHorzLineIndexes.GetSize();	hb++ )
 					HoughLinePairs.PushBack( Soy::VectorToCl( vec4x<int>( HoughVertLineIndexes[va], HoughVertLineIndexes[vb], HoughHorzLineIndexes[ha], HoughHorzLineIndexes[hb] ) ) );
 	 
 	Opencl::TBufferArray<cl_int4> TruthLinePairsBuffer( GetArrayBridge(TruthLinePairs), ContextCl, "TruthLinePairs" );
@@ -1357,12 +1935,52 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 		Semaphore2.Wait();
 	};
 	
-	//	run opencl
-	Soy::TSemaphore Semaphore;
-	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
-	ContextCl.PushJob( Job, Semaphore );
-	Semaphore.Wait(/*"opencl runner"*/);
 	
+	
+	
+	
+	static bool CpuVersion = true;
+	
+	if ( CpuVersion )
+	{
+		cl_int4* TruthPairIndexes = TruthLinePairs.GetArray();//TruthLinePairsBuffer;
+		cl_int4* HoughPairIndexes = HoughLinePairs.GetArray();//HoughLinePairsBuffer
+		int TruthPairIndexCount = size_cast<int>(TruthLinePairsBuffer.GetSize());
+		int HoughPairIndexCount = size_cast<int>(HoughLinePairsBuffer.GetSize());
+		cl_float8* HoughLines = AllHoughLines.GetArray();	//	HoughLinesBuffer;
+		cl_float8* TruthLines = AllTruthLines.GetArray();	//	TruthLinesBuffer;
+		cl_float16* Homographys_ = Homographys.GetArray();	//	HomographysBuffer
+		cl_float16* HomographysInv = HomographyInvs.GetArray();	//	HomographyInvsBuffer
+
+		
+		for ( int x=0;	x<TruthLinePairsBuffer.GetSize();	x++ )
+		{
+			for ( int y=0;	y<HoughLinePairsBuffer.GetSize();	y++ )
+			{
+				int TruthPairIndexOffset = x;
+				int HoughPairIndexOffset = y;
+				HoughLineHomography( TruthPairIndexOffset,
+									HoughPairIndexOffset,
+									TruthPairIndexes,
+									HoughPairIndexes,
+									TruthPairIndexCount,
+									HoughPairIndexCount,
+									HoughLines,
+									TruthLines,
+									Homographys_,
+									HomographysInv
+									);
+			}
+		}
+	}
+	else
+	{
+		//	run opencl
+		Soy::TSemaphore Semaphore;
+		std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+		ContextCl.PushJob( Job, Semaphore );
+		Semaphore.Wait(/*"opencl runner"*/);
+	}
 	
 	//	allocate data
 	if ( !Data )
