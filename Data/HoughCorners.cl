@@ -115,6 +115,9 @@ static double PYTHAG(double a, double b)
 // Returns 1 on success, fail otherwise
 static int dsvd(float *a, int m, int n, float *w, float *v)
 {
+	//	float w[N];
+	//	float v[N*N];
+
 	int flag, i, its, j, jj, k, l, nm;
 	double c, f, h, s, x, y, z;
 	double anorm = 0.0, g = 0.0, scale = 0.0;
@@ -126,26 +129,27 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 		return(-1);
 	}
 	
-	//rv1 = (double *)malloc((unsigned int) n*sizeof(double));
 	
-	/* Householder reduction to bidiagonal form */
+	//	Householder reduction to bidiagonal form
 	for (i = 0; i < n; i++)
 	{
-		/* left-hand reduction */
+		//left-hand reduction
 		l = i + 1;
 		rv1[i] = scale * g;
 		g = s = scale = 0.0;
 		if (i < m)
 		{
 			for (k = i; k < m; k++)
-				scale += fabs((double)a[k*n+i]);
-			if (scale)
+				scale += fabsf(a[k*n+i]);
+			
+			if (scale )
 			{
 				for (k = i; k < m; k++)
 				{
-					a[k*n+i] = (float)((double)a[k*n+i]/scale);
-					s += ((double)a[k*n+i] * (double)a[k*n+i]);
+					a[k*n+i] /= scale;
+					s += a[k*n+i] * a[k*n+i];
 				}
+				
 				f = (double)a[i*n+i];
 				g = -SIGN(sqrt(s), f);
 				h = f * g - s;
@@ -163,11 +167,13 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 				}
 				for (k = i; k < m; k++)
 					a[k*n+i] = (float)((double)a[k*n+i]*scale);
+				
 			}
+			
 		}
 		w[i] = (float)(scale * g);
-		
-		/* right-hand reduction */
+	
+		/// right-hand reduction
 		g = s = scale = 0.0;
 		if (i < m && i != n - 1)
 		{
@@ -201,9 +207,10 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 			}
 		}
 		anorm = max(anorm, (fabs((double)w[i]) + fabs(rv1[i])));
+	 
 	}
-	
-	/* accumulate the right-hand transformation */
+
+	// accumulate the right-hand transformation
 	for (i = n - 1; i >= 0; i--)
 	{
 		if (i < n - 1)
@@ -212,7 +219,7 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 			{
 				for (j = l; j < n; j++)
 					v[j*n+i] = (float)(((double)a[i*n+j] / (double)a[i*n+l]) / g);
-				/* double division to avoid underflow */
+				// double division to avoid underflow
 				for (j = l; j < n; j++)
 				{
 					for (s = 0.0, k = l; k < n; k++)
@@ -229,7 +236,7 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 		l = i;
 	}
 	
-	/* accumulate the left-hand transformation */
+	//accumulate the left-hand transformation
 	for (i = n - 1; i >= 0; i--)
 	{
 		l = i + 1;
@@ -262,14 +269,14 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 		++a[i*n+i];
 	}
 	
-	/* diagonalize the bidiagonal form */
+	// diagonalize the bidiagonal form
 	for (k = n - 1; k >= 0; k--)
-	{                             /* loop over singular values */
+	{                           // loop over singular values
 		for (its = 0; its < 30; its++)
-		{                         /* loop over allowed iterations */
+		{                       // loop over allowed iterations
 			flag = 1;
 			for (l = k; l >= 0; l--)
-			{                     /* test for splitting */
+			{                     // test for splitting
 				nm = l - 1;
 				if (fabs(rv1[l]) + anorm == anorm)
 				{
@@ -306,9 +313,9 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 			}
 			z = (double)w[k];
 			if (l == k)
-			{                  /* convergence */
+			{                  //convergence
 				if (z < 0.0)
-				{              /* make singular value nonnegative */
+				{              // make singular value nonnegative
 					w[k] = (float)(-z);
 					for (j = 0; j < n; j++)
 						v[j*n+k] = (-v[j*n+k]);
@@ -321,7 +328,7 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 				return(0);
 			}
 			
-			/* shift from bottom 2 x 2 minor */
+			///shift from bottom 2 x 2 minor
 			x = (double)w[l];
 			nm = k - 1;
 			y = (double)w[nm];
@@ -331,7 +338,7 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 			g = PYTHAG(f, 1.0);
 			f = ((x - z) * (x + z) + h * ((y / (f + SIGN(g, f))) - h)) / x;
 			
-			/* next QR transformation */
+			// next QR transformation
 			c = s = 1.0;
 			for (j = l; j <= nm; j++)
 			{
@@ -378,7 +385,8 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 			w[k] = (float)x;
 		}
 	}
-	//free((void*) rv1);
+ 
+	
 	return(1);
 }
 
@@ -391,7 +399,8 @@ static float16 CalcHomography(float2 src[4],float2 dst[4])
 	
 	float X[M*N]; // M,N #define inCUDA_SVD.cu
 	
-	for(int i=0; i < 4; i++) {
+	for(int i=0; i < 4; i++)
+	{
 		float srcx = src[i].x;
 		float srcy = src[i].y;
 		float dstx = dst[i].x;
@@ -732,7 +741,7 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 									 int HoughCornerCount,
 									global float2* TruthCorners,
 									int TruthCornerCount,
-									global float16* Homographys
+									 global float16* Homographys
 									)
 {
 	int HomographyIndex = get_global_id(0) + HomographyIndexOffset;
@@ -791,20 +800,27 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	int2 wh = get_image_dim( Frag );
 	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
-	
+
 	if( PixelSkip>0 && (uv.x % (PixelSkip+1) == 0 ||uv.y % (PixelSkip+1) == 0) )
 		return;
 	
 	//	read pixel
 	float4 Rgba = 1;
+
 	if ( DrawFrameOnMask )
 	{
 		Rgba = texture2D( Frame, uv );
 	}
 	else
 	{
+		//	dont read out of mask bounds
+		int2 mask_wh = get_image_dim( Mask );
+		if ( uv.x >= mask_wh.x || uv.y >= mask_wh.y )
+			return;
+		
 		float HomographyScore = Homographys[HomographyIndex][15];
 		Rgba.xyz = NormalToRgb(HomographyScore);
+		//Rgba.xyz = IndexToRgb((HomographyIndex+1)%20,20);
 		int MaskIndex = RgbToIndex( texture2D( Mask, uv ).xyz, 1 );
 		if ( MaskIndex > 0 )
 			return;
@@ -823,6 +839,7 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 		return;
 
 	write_imagef( Frag, FrameUv, Rgba );
+	
 }
 
 
