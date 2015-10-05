@@ -547,7 +547,7 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 									global float4* MatchCorners,
 									global float2* TruthCorners,
 									global float16* Homographys,
-									global float16* HomographysInv
+									global float16* HomographyInvs
 									)
 {
 	int MatchIndex = get_global_id(0) + MatchIndexOffset;
@@ -571,7 +571,7 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 	float16 Homography = CalcHomography( MatchSampleCorners, TruthSampleCorners );
 	Homographys[(TruthIndex*MatchIndexesCount)+MatchIndex] = Homography;
 	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
-	HomographysInv[(TruthIndex*MatchIndexesCount)+MatchIndex] = HomographyInv;
+	HomographyInvs[(TruthIndex*MatchIndexesCount)+MatchIndex] = HomographyInv;
 }
 
 
@@ -585,7 +585,7 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 									global float8* HoughLines,
 									global float8* TruthLines,
 									global float16* Homographys,
-									global float16* HomographysInv
+									global float16* HomographyInvs
 									)
 {
 	int TruthPairIndex = get_global_id(0) + TruthPairIndexOffset;
@@ -629,7 +629,7 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 	float16 Homography = CalcHomography( HoughCorners, TruthCorners );
 	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
 	Homographys[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = Homography;
-	HomographysInv[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
+	HomographyInvs[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
 }
 
 
@@ -658,7 +658,8 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 									global float4* TruthCorners,
 									int TruthCornerCount,
 									float Zoom,
-									global float16* Homographys
+									global float16* Homographys,
+									float MaxDistance
 									)
 {
 	int CornerIndex = get_global_id(0) + CornerIndexOffset;
@@ -672,7 +673,6 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
 	
 	//	find nearest truth corner
-	float MaxDistance = 5;
 	float BestDistance = MaxDistance;
 	for ( int t=0;	t<TruthCornerCount;	t++ )
 	{
@@ -739,15 +739,17 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 									global float4* HoughCorners,
 									 int HoughCornerCount,
-									global float2* TruthCorners,
+									global float4* TruthCorners,
 									int TruthCornerCount,
-									 global float16* Homographys
+									 global float16* Homographys,
+									 global float16* HomographyInvs,
+									 float MaxDistance,
+									 float MinScore
 									)
 {
 	int HomographyIndex = get_global_id(0) + HomographyIndexOffset;
 	float16 Homography = Homographys[HomographyIndex];
 
-	float MaxDistance = 20;
 	float TotalScore = 0;
 	for ( int CornerIndex=0;	CornerIndex<HoughCornerCount;	CornerIndex++ )
 	{
@@ -761,7 +763,7 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 		float BestDistance = MaxDistance;
 		for ( int t=0;	t<TruthCornerCount;	t++ )
 		{
-			float2 TruthCorner = TruthCorners[t];
+			float2 TruthCorner = TruthCorners[t].xy;
 			float Dist = distance( TruthCorner, TransformedCorner );
 			if ( Dist <= 0 || Dist >= MaxDistance )
 				continue;
@@ -776,11 +778,12 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	if ( HoughCornerCount > 0 )
 		TotalScore /= (float)HoughCornerCount;
 	
-	if ( TotalScore < 0.8f )
+	if ( TotalScore < MinScore )
 		TotalScore = 0;
 	
 	//	write score in element 15
 	Homographys[HomographyIndex][15] = TotalScore;
+	HomographyInvs[HomographyIndex][15] = TotalScore;
 }
 
 

@@ -609,9 +609,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto HomographyData = Params.GetParamAs<std::string>("HomographyData");
-		auto CornerData = Params.GetParamAs<std::string>("CornerData");
+		auto HoughCornerData = Params.GetParamAs<std::string>("CornerData");
+		auto TruthCornerData = Params.GetParamAs<std::string>("TruthCornerData");
 		
-		Stage.reset( new TFilterStage_ScoreHoughCornerHomographys( Name, ProgramFilename, KernelName, HomographyData, CornerData, *this, Params ) );
+		Stage.reset( new TFilterStage_ScoreHoughCornerHomographys( Name, ProgramFilename, KernelName, HomographyData, HoughCornerData, TruthCornerData, *this, Params ) );
 	}
 	else if ( StageType == "DrawHomographyCorners" )
 	{

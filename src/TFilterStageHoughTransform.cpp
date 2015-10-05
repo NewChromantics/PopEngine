@@ -1095,7 +1095,7 @@ void TFilterStage_GetHoughCornerHomographys::Execute(TFilterFrame& Frame,std::sh
 		Kernel.SetUniform("MatchCorners", CornersBuffer );
 		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
 		Kernel.SetUniform("Homographys", HomographysBuffer );
-		Kernel.SetUniform("HomographysInv", HomographyInvsBuffer );
+		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
 		
 		Iterations.PushBack( vec2x<size_t>(0, CornerIndexesBuffer.GetSize() ) );
 		Iterations.PushBack( vec2x<size_t>(0, TruthIndexesBuffer.GetSize() ) );
@@ -1751,7 +1751,7 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 								  global float8* HoughLines,
 								  global float8* TruthLines,
 								  global float16* Homographys,
-								  global float16* HomographysInv
+								  global float16* HomographyInvs
 								  )
 {
 	int TruthPairIndex = TruthPairIndexOffset;
@@ -1795,7 +1795,7 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 	float16 Homography = CalcHomography( HoughCorners, TruthCorners );
 	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
 	Homographys[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = Homography;
-	HomographysInv[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
+	HomographyInvs[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
 }
 
 
@@ -1914,7 +1914,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 		Kernel.SetUniform("TruthLines", TruthLinesBuffer );
 		
 		Kernel.SetUniform("Homographys", HomographysBuffer );
-		Kernel.SetUniform("HomographysInv", HomographyInvsBuffer );
+		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
 		
 		Iterations.PushBack( vec2x<size_t>(0, TruthLinePairsBuffer.GetSize() ) );
 		Iterations.PushBack( vec2x<size_t>(0, HoughLinePairsBuffer.GetSize() ) );
@@ -1951,7 +1951,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 		cl_float8* HoughLines = AllHoughLines.GetArray();	//	HoughLinesBuffer;
 		cl_float8* TruthLines = AllTruthLines.GetArray();	//	TruthLinesBuffer;
 		cl_float16* Homographys_ = Homographys.GetArray();	//	HomographysBuffer
-		cl_float16* HomographysInv = HomographyInvs.GetArray();	//	HomographyInvsBuffer
+		cl_float16* HomographyInvs_ = HomographyInvs.GetArray();	//	HomographyInvsBuffer
 
 		
 		for ( int x=0;	x<TruthLinePairsBuffer.GetSize();	x++ )
@@ -1969,7 +1969,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 									HoughLines,
 									TruthLines,
 									Homographys_,
-									HomographysInv
+									HomographyInvs_
 									);
 			}
 		}
@@ -2037,37 +2037,22 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
 		return;
 	
-	//	get truth corners if we haven't set them up
-	if ( mTruthCorners.IsEmpty() )
-	{
-		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
-		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
-			throw Soy::AssertException(std::string("Missing uniform ")+TruthCornersUniform.mName);
-		
-		auto PushVec = [this](const std::string& Part,const char& Delin)
-		{
-			vec2f Coord;
-			Soy::StringToType( Coord, Part );
-			mTruthCorners.PushBack( Soy::VectorToCl(Coord) );
-			return true;
-		};
-		Soy::StringSplitByMatches( PushVec, TruthCornersUniform.mValue, "," );
-		Soy::Assert( !mTruthCorners.IsEmpty(), "Failed to extract any truth corners");
-	}
-	
-	auto& CornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mCornerDataStage );
+
+
+	auto& CornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mHoughCornerDataStage );
+	auto& TruthStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mTruthCornerDataStage );
 	auto& HomographyStageData = Frame.GetData<TFilterStageRuntimeData_GetHoughCornerHomographys>( mHomographyDataStage );
-	auto& Corners = CornerStageData.mCorners;
+	auto& HoughCorners = CornerStageData.mCorners;
+	auto& TruthCorners = TruthStageData.mCorners;
 	//	dont modify original!
 	auto Homographys = HomographyStageData.mHomographys;
 	auto HomographyInvs = HomographyStageData.mHomographyInvs;
-	Opencl::TBufferArray<cl_float4> CornersBuffer( GetArrayBridge(Corners), ContextCl, "Corners" );
-	Opencl::TBufferArray<cl_float2> TruthCornersBuffer( GetArrayBridge(mTruthCorners), ContextCl, "mTruthCorners" );
+	Opencl::TBufferArray<cl_float4> HoughCornersBuffer( GetArrayBridge(HoughCorners), ContextCl, "Corners" );
+	Opencl::TBufferArray<cl_float4> TruthCornersBuffer( GetArrayBridge(TruthCorners), ContextCl, "TruthCorners" );
 	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
 	Opencl::TBufferArray<cl_float16> HomographyInvsBuffer( GetArrayBridge(HomographyInvs), ContextCl, "HomographyInvs" );
 
-	
-	auto Init = [this,&Frame,&CornersBuffer,&TruthCornersBuffer,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&Frame,&HoughCornersBuffer,&TruthCornersBuffer,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -2078,12 +2063,12 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 				continue;
 		}
 		
-		Kernel.SetUniform("HoughCorners", CornersBuffer );
-		Kernel.SetUniform("HoughCornerCount", size_cast<int>(CornersBuffer.GetSize()) );
+		Kernel.SetUniform("HoughCorners", HoughCornersBuffer );
+		Kernel.SetUniform("HoughCornerCount", size_cast<int>(HoughCornersBuffer.GetSize()) );
 		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
 		Kernel.SetUniform("TruthCornerCount", size_cast<int>(TruthCornersBuffer.GetSize()) );
 		Kernel.SetUniform("Homographys", HomographysBuffer );
-		Kernel.SetUniform("HomographysInv", HomographyInvsBuffer );
+		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
 		
 		Iterations.PushBack( vec2x<size_t>(0, HomographysBuffer.GetSize() ) );
 	};
@@ -2098,9 +2083,9 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 		Opencl::TSync Semaphore;
 		HomographysBuffer.Read( GetArrayBridge(Homographys), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
-		//Opencl::TSync Semaphore2;
-		//HomographyInvsBuffer.Read( GetArrayBridge(HomographyInvs), Kernel.GetContext(), &Semaphore2 );
-		//Semaphore2.Wait();
+		Opencl::TSync Semaphore2;
+		HomographyInvsBuffer.Read( GetArrayBridge(HomographyInvs), Kernel.GetContext(), &Semaphore2 );
+		Semaphore2.Wait();
 	};
 	
 	//	run opencl
