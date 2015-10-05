@@ -278,8 +278,8 @@ static float3 IndexToRgb(int Index,int IndexCount)
 
 static float3 IndexToRgbRainbow(int Index,int IndexCount)
 {
-	if ( Index == 0 )
-		return (float3)(0,0,0);
+	//if ( Index == 0 )
+	//	return (float3)(0,0,0);
 	
 	float Norm = Index / (float)IndexCount;
 	return NormalToRgb( Norm );

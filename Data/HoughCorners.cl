@@ -70,7 +70,6 @@ __kernel void DrawHoughCorners(int OffsetIndex,__write_only image2d_t Frag,globa
 	float4 Rgba = 1;
 	Rgba.xyz = NormalToRgb( Score );
 	
-	
 	int Radius = 10;
 	for ( int y=-Radius;	y<=Radius;	y++ )
 	{
@@ -656,7 +655,7 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 									int HomographyIndexOffset,
 									__write_only image2d_t Frag,
 									global float4* HoughCorners,
-									global float2* TruthCorners,
+									global float4* TruthCorners,
 									int TruthCornerCount,
 									float Zoom,
 									global float16* Homographys
@@ -673,11 +672,11 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
 	
 	//	find nearest truth corner
-	float MaxDistance = 50;
+	float MaxDistance = 5;
 	float BestDistance = MaxDistance;
 	for ( int t=0;	t<TruthCornerCount;	t++ )
 	{
-		float2 TruthCorner = TruthCorners[t];
+		float2 TruthCorner = TruthCorners[t].xy;
 		float Dist = distance( TruthCorner, TransformedCorner );
 		if ( Dist <= 0 || Dist >= MaxDistance )
 			continue;
@@ -691,15 +690,16 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	Corner = TransformedCorner;
 	
 	
-	int Radius = 10;
+	int Radius = 5;
 	float4 Rgba = 1;
-	Rgba.xyz = NormalToRgb( Score );
-
+	//Rgba.xyz = NormalToRgb( Score );
+	Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
 	
-	if ( HomographyIndex == 0 )
+	bool DrawTruthAt0 = true;
+	if ( DrawTruthAt0 && HomographyIndex == 0 )
 	{
 		Radius = 5;
-		Corner = TruthCorners[ CornerIndex % TruthCornerCount];
+		Corner = TruthCorners[ CornerIndex % TruthCornerCount].xy;
 		Rgba = 1;
 	}
 	else
@@ -794,7 +794,8 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 							 __read_only image2d_t Mask,
 							 __write_only image2d_t Frag,
 							  int DrawFrameOnMask,
-							  int PixelSkip
+							  int PixelSkip,
+							  float Zoom
 							  )
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
@@ -831,13 +832,21 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 	float16 Homography = UseInverse ? HomographyInvs[HomographyIndex] : Homographys[HomographyIndex];
 	float2 FrameUvf = Transform2ByMatrix3x3( (float2)(uv.x,uv.y), Homography );
 	//float2 FrameUvf = (float2)(uv.x,uv.y);
-	int2 FrameUv = (int2)(FrameUvf.x,FrameUvf.y);
 	
+	//	zoom coord from center
+	float2 whf = (float2)(wh.x,wh.y);
+	FrameUvf -= whf/2.f;
+	FrameUvf *= Zoom;
+	FrameUvf += whf/2.f;
+
+	int2 FrameUv = (int2)(FrameUvf.x,FrameUvf.y);
+
+	//	gr: need this otherwise we get write exceptions!!?
 	//	off screen
-	int Border = 10;
+	int Border = 1;
 	if ( FrameUv.x < Border || FrameUv.y < Border || FrameUv.x >= wh.x-Border || FrameUv.y >= wh.y-Border )
 		return;
-
+	
 	write_imagef( Frag, FrameUv, Rgba );
 	
 }

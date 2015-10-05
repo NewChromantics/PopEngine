@@ -618,9 +618,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
 		auto CornerData = Params.GetParamAs<std::string>("CornerData");
+		auto TruthCornerData = Params.GetParamAs<std::string>("TruthCornerData");
 		auto HomographyData = Params.GetParamAs<std::string>("HomographyData");
 		
-		Stage.reset( new TFilterStage_DrawHomographyCorners( Name, ProgramFilename, KernelName, CornerData, HomographyData, *this, Params ) );
+		Stage.reset( new TFilterStage_DrawHomographyCorners( Name, ProgramFilename, KernelName, CornerData, TruthCornerData, HomographyData, *this, Params ) );
 	}
 	else if ( StageType == "DrawMaskOnFrame" )
 	{

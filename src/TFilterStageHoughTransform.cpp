@@ -1810,8 +1810,9 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	
 	//	merge truth lines into one big set for kernel
 	auto& TruthLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mTruthLineStage );
-	auto& VertTruthLines = TruthLinesStageData.mVertLines;
-	auto& HorzTruthLines = TruthLinesStageData.mHorzLines;
+	static bool SwapHorzAndVert = false;
+	auto& HorzTruthLines = SwapHorzAndVert ? TruthLinesStageData.mVertLines : TruthLinesStageData.mHorzLines;
+	auto& VertTruthLines = SwapHorzAndVert ? TruthLinesStageData.mHorzLines : TruthLinesStageData.mVertLines;
 	Array<cl_float8> AllTruthLines;
 	AllTruthLines.PushBackArray( VertTruthLines );
 	AllTruthLines.PushBackArray( HorzTruthLines );
@@ -2261,34 +2262,19 @@ void TFilterStage_DrawHomographyCorners::Execute(TFilterFrame& Frame,std::shared
 	}
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
-	//	get truth corners if we haven't set them up
-	Array<cl_float2> TruthCorners;
-	{
-		TUniformWrapper<std::string> TruthCornersUniform("TruthCorners",std::string());
-		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
-			throw Soy::AssertException(std::string("Missing uniform ")+TruthCornersUniform.mName);
-		
-		auto PushVec = [&TruthCorners](const std::string& Part,const char& Delin)
-		{
-			vec2f Coord;
-			Soy::StringToType( Coord, Part );
-			TruthCorners.PushBack( Soy::VectorToCl(Coord) );
-			return true;
-		};
-		Soy::StringSplitByMatches( PushVec, TruthCornersUniform.mValue, "," );
-		Soy::Assert( !TruthCorners.IsEmpty(), "Failed to extract any truth corners");
-	}
 	
 	
-	auto& CornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mCornerDataStage );
+	auto& CornerStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mHoughCornerDataStage );
+	auto& TruthStageData = Frame.GetData<TFilterStageRuntimeData_ExtractHoughCorners>( mTruthCornerDataStage );
 	auto& HomographyStageData = Frame.GetData<TFilterStageRuntimeData_GetHoughCornerHomographys>( mHomographyDataStage );
-	auto& Corners = CornerStageData.mCorners;
+	auto& HoughCorners = CornerStageData.mCorners;
+	auto& TruthCorners = TruthStageData.mCorners;
 	auto& Homographys = HomographyStageData.mHomographys;
-	Opencl::TBufferArray<cl_float4> CornersBuffer( GetArrayBridge(Corners), ContextCl, "Corners" );
+	Opencl::TBufferArray<cl_float4> HoughCornersBuffer( GetArrayBridge(HoughCorners), ContextCl, "Corners" );
+	Opencl::TBufferArray<cl_float4> TruthCornersBuffer( GetArrayBridge(TruthCorners), ContextCl, "TruthCorners" );
 	Opencl::TBufferArray<cl_float16> HomographysBuffer( GetArrayBridge(Homographys), ContextCl, "Homographys" );
-	Opencl::TBufferArray<cl_float2> TruthCornersBuffer( GetArrayBridge(TruthCorners), ContextCl, "mTruthCorners" );
 	
-	auto Init = [this,&Frame,&StageData,&ContextGl,&CornersBuffer,&HomographysBuffer,&TruthCornersBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughCornersBuffer,&TruthCornersBuffer,&HomographysBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
 		
@@ -2317,12 +2303,13 @@ void TFilterStage_DrawHomographyCorners::Execute(TFilterFrame& Frame,std::shared
 			throw Soy::AssertException("No pixel output created");
 		}
 		
-		Kernel.SetUniform("HoughCorners", CornersBuffer );
+		Kernel.SetUniform("HoughCorners", HoughCornersBuffer );
 		Kernel.SetUniform("TruthCorners", TruthCornersBuffer );
-		Kernel.SetUniform("Homographys", HomographysBuffer );
 		Kernel.SetUniform("TruthCornerCount", size_cast<int>(TruthCornersBuffer.GetSize()) );
+		Kernel.SetUniform("HoughCorners", HoughCornersBuffer );
+		Kernel.SetUniform("Homographys", HomographysBuffer );
 		
-		Iterations.PushBack( vec2x<size_t>(0, CornersBuffer.GetSize() ) );
+		Iterations.PushBack( vec2x<size_t>(0, HoughCornersBuffer.GetSize() ) );
 		Iterations.PushBack( vec2x<size_t>(0, HomographysBuffer.GetSize() ) );
 	};
 	
