@@ -1939,7 +1939,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	
 	
 	
-	static bool CpuVersion = true;
+	static bool CpuVersion = false;
 	
 	if ( CpuVersion )
 	{
