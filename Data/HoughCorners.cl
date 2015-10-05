@@ -818,9 +818,9 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 		if ( uv.x >= mask_wh.x || uv.y >= mask_wh.y )
 			return;
 		
-		float HomographyScore = Homographys[HomographyIndex][15];
-		Rgba.xyz = NormalToRgb(HomographyScore);
-		//Rgba.xyz = IndexToRgb((HomographyIndex+1)%20,20);
+		//float HomographyScore = Homographys[HomographyIndex][15];
+		//Rgba.xyz = NormalToRgb(HomographyScore);
+		Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
 		int MaskIndex = RgbToIndex( texture2D( Mask, uv ).xyz, 1 );
 		if ( MaskIndex > 0 )
 			return;

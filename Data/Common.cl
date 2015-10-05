@@ -275,6 +275,16 @@ static float3 IndexToRgb(int Index,int IndexCount)
 	//return NormalToRgb( Index / (float)IndexCount );
 	return (float3)( Norm, Norm, Norm );
 }
+
+static float3 IndexToRgbRainbow(int Index,int IndexCount)
+{
+	if ( Index == 0 )
+		return (float3)(0,0,0);
+	
+	float Norm = Index / (float)IndexCount;
+	return NormalToRgb( Norm );
+}
+
 static float4 IndexToRgba(int Index,int IndexCount)
 {
 	float4 Rgba = 1;
