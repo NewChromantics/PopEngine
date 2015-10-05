@@ -40,6 +40,13 @@ public:
 	
 	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)=0;
 	virtual bool		SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform);
+	virtual bool		AllowRender() const
+	{
+		//	skip rendering frames with no visual output
+		if ( mUniforms.HasParam("SkipRender") )
+			return false;
+		return true;
+	}
 
 	bool				operator==(const std::string& Name) const	{	return mName == Name;	}
 
@@ -204,7 +211,7 @@ public:
 	void					OnUniformChanged(const std::string& Name);
 
 	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
-	void					PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const std::string& StageName);
+	void					PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const TFilterStage& Stage);
 
 	//	apply uniform to shader
 	virtual bool			SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform);

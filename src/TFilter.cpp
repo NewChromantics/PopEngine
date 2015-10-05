@@ -271,7 +271,7 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 		}
 
 		//	make dev snapshots :)
-		Filter.PushDevSnapshot(pData,StageName);
+		Filter.PushDevSnapshot(pData,*pStage);
 
 		mStageDataLock.lock( std::string("post-Run place stageData ") + StageName );
 		Frame.mStageData[StageName] = pData;
@@ -416,8 +416,8 @@ TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
 	mOddJobThread		( Name + " odd job thread" ),
 	mDevSnapshotThread		( Name + " dev snapshots" ),
-	mCurrentOpenclContext	( 0 ),
-	mDevSnapshotsDir	( "../DevSnapshots" )
+	mDevSnapshotsDir	( "../DevSnapshots" ),
+	mCurrentOpenclContext	( 0 )
 {
 	mWindow.reset( new TFilterWindow( Name, *this ) );
 	
@@ -797,13 +797,17 @@ void TFilter::QueueJob(std::function<bool(void)> Function)
 	mOddJobThread.PushJob( Function );
 }
 
-void TFilter::PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const std::string& StageName)
+void TFilter::PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const TFilterStage& Stage)
 {
 	if ( mDevSnapshotsDir.empty() )
 		return;
 	if ( !StageData )
 		return;
 
+	std::string StageName = Stage.mName;
+	if ( Stage.mUniforms.HasParam("NoSnapshot" ) )
+		return;
+	
 	//	copy var
 	auto SavePixels = [this,StageData,StageName]
 	{
@@ -822,7 +826,8 @@ void TFilter::PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData
 	};
 	
 	//	to reduce load, just save shots when we're idle
-	if ( mDevSnapshotThread.GetJobCount() > 10 )
+	static int MaxSnapShotQueue = 1;
+	if ( mDevSnapshotThread.GetJobCount() > MaxSnapShotQueue )
 		return;
 	
 	mDevSnapshotThread.PushJob( SavePixels );

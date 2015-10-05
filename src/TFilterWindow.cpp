@@ -111,6 +111,8 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		auto Stage = mParent.mStages[s];
 		if ( !Stage )
 			continue;
+		if ( !Stage->AllowRender() )
+			continue;
 		StageNames.PushBack( Stage->mName );
 	}
 	

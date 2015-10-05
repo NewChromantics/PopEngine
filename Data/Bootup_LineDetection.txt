@@ -25,10 +25,10 @@ setuniform LineDetector TruthHorizontalHoughLines=0.000,175.917,630.000,181.415,
 
 
 # line detector
-addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag
-addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=0 DrawPalette=0
-#addstage LineDetector WhiteFilterGroup_rgb cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=1 DrawPalette=1
-addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges
+addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag NoSnapshot=true SkipRender=true
+addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=0 DrawPalette=0 SkipRender=true
+#addstage LineDetector WhiteFilterGroup_rgb cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=1 DrawPalette=1 SkipRender=true
+addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges SkipRender=true
 #addstage LineDetector LineFilter cl=LineFilter.cl kernel=WhiteLineFilter
 #addstage LineDetector HoughFilterPixels cl=LineFilter.cl kernel=HoughFilterPixels
 
@@ -37,11 +37,11 @@ addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges
 
 
 #todo: make this loose, then do a refined filter on all matches
-#addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=5 HoughDistanceStep=0.25
-addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=0.5 HoughDistanceStep=1
+#addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=5 HoughDistanceStep=0.25 SkipRender=true
+addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=0.5 HoughDistanceStep=1 SkipRender=true
 
-addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.6 HoughScoreMax=1
-addstage LineDetector TruthLines StageType=GetTruthLines VertLinesUniform=TruthVerticalHoughLines HorzLinesUniform=TruthHorizontalHoughLines SquareAnglesOnly=1
+addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.6 HoughScoreMax=1 SkipRender=true
+addstage LineDetector TruthLines StageType=GetTruthLines VertLinesUniform=TruthVerticalHoughLines HorzLinesUniform=TruthHorizontalHoughLines SquareAnglesOnly=1 SkipRender=true
 
 #addstage LineDetector DrawHoughLinesDynamic StageType=DrawHoughLinesDynamic cl=LineFilter.cl kernel=DrawHoughLinesDynamic HoughData=HoughFilter ClearFrag=Frame HoughScoreMin=100 HoughScoreMax=5000
 addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=Frame ColourToVertical=1
@@ -49,28 +49,29 @@ addstage LineDetector DrawTruthLines StageType=DrawHoughLines cl=LineFilter.cl k
 
 #addstage LineDetector DrawHoughGraph cl=LineFilter.cl kernel=DrawHoughGraph HoughData=HoughFilter
 
-addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01
-addstage LineDetector ExtractTruthCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=TruthLines MinScore=0.01
+addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01 SkipRender=true
+addstage LineDetector ExtractTruthCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=TruthLines MinScore=0.01 SkipRender=true
 
 addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=Frame Zoom=1.0
 #addstage LineDetector DrawHoughCornersZoom StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners Zoom=0.5
 
 #addstage LineDetector HoughCornerHomographys StageType=GetHoughCornerHomographys cl=HoughCorners.cl kernel=HoughCornerHomography HoughCornerData=ExtractHoughCorners
 
-addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines TruthLineData=TruthLines MaxLinesInHoughSets=8 MaxLinesInTruthSets=2
+addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines TruthLineData=TruthLines MaxLinesInHoughSets=5 MaxLinesInTruthSets=2  SkipRender=true
 #addstage LineDetector ScoredHoughLineHomographys StageType=ScoreHomographys cl=HoughCorners.cl kernel=ScoreCornerHomographys CornerData=ExtractHoughCorners HomographyData=HoughCornerHomographys
 
 
 #addstage LineDetector DrawHomographyCorners StageType=DrawHomographyCorners cl=HoughCorners.cl kernel=DrawHomographyCorners CornerData=ExtractHoughCorners Zoom=0.5 HomographyData=ScoredHoughCornerHomographys
-addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0
-addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=1
+addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0 Zoom=0.5
+#addstage LineDetector DrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=GetHoughLineHomographys MaskFilename=PitchMask.png ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=1 Zoom=1
 
 
 
 #loadframe LineDetector time=1001 input01_undistorted.png
 #decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
-decode LineDetector /Volumes/Assets/5goals.mp4
+#decode LineDetector /Volumes/Assets/5goals.mp4
 #loadframe LineDetector FootballPitch.png time=1001
+loadframe LineDetector FootballPitch_Rotated.png time=1001
 
 
 
