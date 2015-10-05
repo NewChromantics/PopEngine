@@ -69,6 +69,7 @@ __kernel void DrawHoughCorners(int OffsetIndex,__write_only image2d_t Frag,globa
 	
 	float4 Rgba = 1;
 	Rgba.xyz = NormalToRgb( Score );
+	Rgba.xyz = IndexToRgb( LineIndex+1, 5 );
 	
 	int Radius = 10;
 	for ( int y=-Radius;	y<=Radius;	y++ )
@@ -663,11 +664,12 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 									)
 {
 	int CornerIndex = get_global_id(0) + CornerIndexOffset;
-	int HomographyIndex = get_global_id(1) + HomographyIndexOffset;
+	int HomographyIndex = get_global_id(1) + HomographyIndexOffset - 1;
+	bool DrawTruthCorner = HomographyIndex < 0;
 
 	float4 HoughCorner = HoughCorners[CornerIndex];
 	float2 Corner = HoughCorner.xy;
-	float16 Homography = Homographys[HomographyIndex];
+	float16 Homography = DrawTruthCorner ? 0 : Homographys[HomographyIndex];
 	
 	//	transform corner
 	float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
@@ -693,10 +695,10 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	int Radius = 5;
 	float4 Rgba = 1;
 	//Rgba.xyz = NormalToRgb( Score );
-	Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
+	//Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
+	Rgba.xyz = IndexToRgbRainbow((CornerIndex+1)%20,20);
 	
-	bool DrawTruthAt0 = true;
-	if ( DrawTruthAt0 && HomographyIndex == 0 )
+	if ( DrawTruthCorner )
 	{
 		Radius = 5;
 		Corner = TruthCorners[ CornerIndex % TruthCornerCount].xy;
@@ -716,7 +718,9 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	Corner *= Zoom;
 	Corner += whf/2.f;
 	
-	
+	//	space out so we can see ones that overlap
+	Corner.x += CornerIndex*2;
+	Corner.y += CornerIndex*2;
 	
 
 	

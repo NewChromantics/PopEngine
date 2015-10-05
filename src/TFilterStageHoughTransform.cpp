@@ -643,6 +643,9 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 			FinalHorzLines.Push( Line );
 	}
 	
+	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
+	FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
+	
 	static bool OutputLinesForConfig = true;
 	if ( OutputLinesForConfig )
 	{
@@ -1196,8 +1199,14 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		Data.reset( new TFilterStageRuntimeData_HoughLines() );
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_HoughLines&>( *Data.get() );
 	
+	auto& FinalVertLines = StageData.mVertLines;
+	auto& FinalHorzLines = StageData.mHorzLines;
+	
 	ReadUniform_ArrayFloat8( StageData.mVertLines, mVerticalLinesUniform );
 	ReadUniform_ArrayFloat8( StageData.mHorzLines, mHorzLinesUniform );
+	
+	FinalVertLines.RemoveBlock(0,1);
+	FinalHorzLines.RemoveBlock(0,1);
 	
 	//	remove non vertical/horizontal lines
 	TUniformWrapper<int> SquareAnglesOnlyUniform("SquareAnglesOnly",false);
@@ -1219,6 +1228,10 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 			std::Debug << "Removed horz truth line at " << LineAngle << " degrees" << std::endl;
 		}
 	}
+	
+	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
+	FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
+
 }
 
 													
@@ -1291,9 +1304,186 @@ static float2 GetRayRayIntersection(float8 RayA,float8 RayB)
 
 
 
-// Thos SVD code requires rows >= columns.
-#define M 9 // rows
-#define N 9 // cols
+void gaussian_elimination(float *input, int n)
+{
+	// ported to c from pseudocode in
+	// http://en.wikipedia.org/wiki/Gaussian_elimination
+	
+	float * A = input;
+	int i = 0;
+	int j = 0;
+	int m = n-1;
+	while (i < m && j < n){
+		// Find pivot in column j, starting in row i:
+		int maxi = i;
+		for(int k = i+1; k<m; k++){
+			if(fabs(A[k*n+j]) > fabs(A[maxi*n+j])){
+				maxi = k;
+			}
+		}
+		if (A[maxi*n+j] != 0){
+			//swap rows i and maxi, but do not change the value of i
+			if(i!=maxi)
+				for(int k=0;k<n;k++){
+					float aux = A[i*n+k];
+					A[i*n+k]=A[maxi*n+k];
+					A[maxi*n+k]=aux;
+				}
+			//Now A[i,j] will contain the old value of A[maxi,j].
+			//divide each entry in row i by A[i,j]
+			float A_ij=A[i*n+j];
+			for(int k=0;k<n;k++){
+				A[i*n+k]/=A_ij;
+			}
+			//Now A[i,j] will have the value 1.
+			for(int u = i+1; u< m; u++){
+				//subtract A[u,j] * row i from row u
+				float A_uj = A[u*n+j];
+				for(int k=0;k<n;k++){
+					A[u*n+k]-=A_uj*A[i*n+k];
+				}
+				//Now A[u,j] will be 0, since A[u,j] - A[i,j] * A[u,j] = A[u,j] - 1 * A[u,j] = 0.
+			}
+			
+			i++;
+		}
+		j++;
+	}
+	
+	//back substitution
+	for(int i=m-2;i>=0;i--){
+		for(int j=i+1;j<n-1;j++){
+			A[i*n+m]-=A[i*n+j]*A[j*n+m];
+			//A[i*n+j]=0;
+		}
+	}
+}
+
+//	http://forum.openframeworks.cc/t/quad-warping-homography-without-opencv/3121/21
+cl_float16 of_findHomography(cl_float2 srccl[4], cl_float2 dstcl[4])
+{
+	float src[4][2];
+	float dst[4][2];
+	
+	for ( int i=0;	i<4;	i++ )
+	{
+		for ( int xy=0;	xy<2;	xy++ )
+		{
+			src[i][xy] = srccl[i].s[xy];
+			dst[i][xy] = dstcl[i].s[xy];
+			//src[i][xy] = dstcl[i].s[xy];
+			//dst[i][xy] = srccl[i].s[xy];
+		}
+	}
+	
+	// create the equation system to be solved
+	//
+	// from: Multiple View Geometry in Computer Vision 2ed
+	//       Hartley R. and Zisserman A.
+	//
+	// x' = xH
+	// where H is the homography: a 3 by 3 matrix
+	// that transformed to inhomogeneous coordinates for each point
+	// gives the following equations for each point:
+	//
+	// x' * (h31*x + h32*y + h33) = h11*x + h12*y + h13
+	// y' * (h31*x + h32*y + h33) = h21*x + h22*y + h23
+	//
+	// as the homography is scale independent we can let h33 be 1 (indeed any of the terms)
+	// so for 4 points we have 8 equations for 8 terms to solve: h11 - h32
+	// after ordering the terms it gives the following matrix
+	// that can be solved with gaussian elimination:
+	
+	float P[8][9]={
+		{-src[0][0], -src[0][1], -1,   0,   0,  0, src[0][0]*dst[0][0], src[0][1]*dst[0][0], -dst[0][0] }, // h11
+		{  0,   0,  0, -src[0][0], -src[0][1], -1, src[0][0]*dst[0][1], src[0][1]*dst[0][1], -dst[0][1] }, // h12
+		
+		{-src[1][0], -src[1][1], -1,   0,   0,  0, src[1][0]*dst[1][0], src[1][1]*dst[1][0], -dst[1][0] }, // h13
+		{  0,   0,  0, -src[1][0], -src[1][1], -1, src[1][0]*dst[1][1], src[1][1]*dst[1][1], -dst[1][1] }, // h21
+		
+		{-src[2][0], -src[2][1], -1,   0,   0,  0, src[2][0]*dst[2][0], src[2][1]*dst[2][0], -dst[2][0] }, // h22
+		{  0,   0,  0, -src[2][0], -src[2][1], -1, src[2][0]*dst[2][1], src[2][1]*dst[2][1], -dst[2][1] }, // h23
+		
+		{-src[3][0], -src[3][1], -1,   0,   0,  0, src[3][0]*dst[3][0], src[3][1]*dst[3][0], -dst[3][0] }, // h31
+		{  0,   0,  0, -src[3][0], -src[3][1], -1, src[3][0]*dst[3][1], src[3][1]*dst[3][1], -dst[3][1] }, // h32
+	};
+	
+	gaussian_elimination(&P[0][0],9);
+/*
+	// gaussian elimination gives the results of the equation system
+	// in the last column of the original matrix.
+	// opengl needs the transposed 4x4 matrix:
+	float aux_H[]=
+	{
+		P[0][8],P[3][8],0,P[6][8], // h11  h21 0 h31
+		P[1][8],P[4][8],0,P[7][8], // h12  h22 0 h32
+		0      ,      0,0,0,       // 0    0   0 0
+		P[2][8],P[5][8],0,1 // h13  h23 0 h33
+	};
+
+	//	4x4 to 3x3
+	cl_float16 Result;
+	Result.s[0] = aux_H[0];
+	Result.s[1] = aux_H[1];
+	Result.s[2] = aux_H[3];
+	
+	Result.s[3] = aux_H[4];
+	Result.s[4] = aux_H[5];
+	Result.s[5] = aux_H[7];
+
+	Result.s[6] = aux_H[12];
+	Result.s[7] = aux_H[13];
+	Result.s[8] = aux_H[15];
+*/
+	//	non transposed 3x3
+	cl_float16 Result;
+	Result.s[0] = P[0][8];
+	Result.s[1] = P[1][8];
+	Result.s[2] = P[2][8];
+	
+	Result.s[3] = P[3][8];
+	Result.s[4] = P[4][8];
+	Result.s[5] = P[5][8];
+	
+	Result.s[6] = P[6][8];
+	Result.s[7] = P[7][8];
+	Result.s[8] = 1;
+	//Result.s[8] = P[8][8];
+
+	
+	//	test
+	for ( int i=0;	i<4;	i++ )
+	{
+		auto H = Result.s;
+		float x = H[0]*src[i][0] + H[1]*src[i][1] + H[2];
+		float y = H[3]*src[i][0] + H[4]*src[i][1] + H[5];
+		float z = H[6]*src[i][0] + H[7]*src[i][1] + H[8];
+		
+		x /= z;
+		y /= z;
+		
+		float diffx = dst[i][0] - x;
+		float diffy = dst[i][1] - y;
+		std::Debug << "err src->dst #" << i << ": " << diffx << "," << diffy << std::endl;
+	}
+	for ( int i=0;	i<4;	i++ )
+	{
+		auto H = Result.s;
+		float x = H[0]*dst[i][0] + H[1]*dst[i][1] + H[2];
+		float y = H[3]*dst[i][0] + H[4]*dst[i][1] + H[5];
+		float z = H[6]*dst[i][0] + H[7]*dst[i][1] + H[8];
+		
+		x /= z;
+		y /= z;
+		
+		float diffx = src[i][0] - x;
+		float diffy = src[i][1] - y;
+		std::Debug << "err dst->src #" << i << ": " << diffx << "," << diffy << std::endl;
+	}
+
+	
+	return Result;
+}
 
 static double SIGN(double a, double b)
 {
@@ -1317,6 +1507,9 @@ static double PYTHAG(double a, double b)
 // Returns 1 on success, fail otherwise
 static int dsvd(float *a, int m, int n, float *w, float *v)
 {
+	// Thos SVD code requires rows >= columns.
+#define M 9 // rows
+#define N 9 // cols
 	//	float w[N];
 	//	float v[N*N];
 	
@@ -1588,16 +1781,266 @@ static int dsvd(float *a, int m, int n, float *w, float *v)
 		}
 	 }
 	 
-	
+#undef M
+#undef N
+
 	return(1);
 }
 
 
+
+/*****************************************************************
+ 
+ Solve least squares Problem C*x+d = r, |r| = min!, by Given rotations
+ (QR-decomposition). Direct implementation of the algorithm
+ presented in H.R.Schwarz: Numerische Mathematik, 'equation'
+ number (7.33)
+ 
+ If 'd == NULL', d is not accesed: the routine just computes the QR
+ decomposition of C and exits.
+ 
+ If 'want_r == 0', r is not rotated back (\hat{r} is returned
+ instead).
+ 
+ *****************************************************************/
+inline int fsign(double x)
+{
+	return (x > 0 ? 1 : (x < 0) ? -1 : 0);
+}
+
+bool Givens(double** C, double* d, double* x, double* r, int N, int n, int want_r)
+{
+	int i, j, k;
+	double w, gamma, sigma, rho, temp;
+	double epsilon = DBL_EPSILON;	/* FIXME (?) */
+	
+	/*
+	 * First, construct QR decomposition of C, by 'rotating away'
+	 * all elements of C below the diagonal. The rotations are
+	 * stored in place as Givens coefficients rho.
+	 * Vector d is also rotated in this same turn, if it exists
+	 */
+	for (j = 0; j < n; j++)
+	{
+		for (i = j + 1; i < N; i++)
+		{
+			if (C[i][j])
+			{
+				if (fabs(C[j][j]) < epsilon * fabs(C[i][j]))
+				{
+					/* find the rotation parameters */
+					w = -C[i][j];
+					gamma = 0;
+					sigma = 1;
+					rho = 1;
+				}
+				else
+				{
+					w = fsign(C[j][j]) * sqrt(C[j][j] * C[j][j] + C[i][j] * C[i][j]);
+					if (w == 0)
+					{
+						return false;
+					}
+					gamma = C[j][j] / w;
+					sigma = -C[i][j] / w;
+					rho = (fabs(sigma) < gamma) ? sigma : fsign(sigma) / gamma;
+				}
+				C[j][j] = w;
+				C[i][j] = rho;	/* store rho in place, for later use */
+				for (k = j + 1; k < n; k++)
+				{
+					/* rotation on index pair (i,j) */
+					temp = gamma * C[j][k] - sigma * C[i][k];
+					C[i][k] = sigma * C[j][k] + gamma * C[i][k];
+					C[j][k] = temp;
+					
+				}
+				if (d)  	/* if no d vector given, don't use it */
+				{
+					temp = gamma * d[j] - sigma * d[i];		/* rotate d */
+					d[i] = sigma * d[j] + gamma * d[i];
+					d[j] = temp;
+				}
+			}
+		}
+	}
+	
+	if (!d)			/* stop here if no d was specified */
+	{
+		return true;
+	}
+	
+	/* solve R*x+d = 0, by backsubstitution */
+	for (i = n - 1; i >= 0; i--)
+	{
+		double s = d[i];
+		
+		r[i] = 0;		/* ... and also set r[i] = 0 for i<n */
+		for (k = i + 1; k < n; k++)
+		{
+			s += C[i][k] * x[k];
+		}
+		if (C[i][i] == 0)
+		{
+			return false;
+		}
+		x[i] = -s / C[i][i];
+	}
+	
+	for (i = n; i < N; i++)
+	{
+		r[i] = d[i];    /* set the other r[i] to d[i] */
+	}
+	
+	if (!want_r)		/* if r isn't needed, stop here */
+	{
+		return true;
+	}
+	
+	/* rotate back the r vector */
+	for (j = n - 1; j >= 0; j--)
+	{
+		for (i = N - 1; i >= 0; i--)
+		{
+			if ((rho = C[i][j]) == 1)  		/* reconstruct gamma, sigma from stored rho */
+			{
+				gamma = 0;
+				sigma = 1;
+			}
+			else if (fabs(rho) < 1)
+			{
+				sigma = rho;
+				gamma = sqrt(1 - sigma * sigma);
+			}
+			else
+			{
+				gamma = 1 / fabs(rho);
+				sigma = fsign(rho) * sqrt(1 - gamma * gamma);
+			}
+			temp = gamma * r[j] + sigma * r[i];		/* rotate back indices (i,j) */
+			r[i] = -sigma * r[j] + gamma * r[i];
+			r[j] = temp;
+		}
+	}
+	return true;
+}
+
+static float16 CalcHomographyHugin(float2 src[4],float2 dst[4])
+{
+	int iNMatches = 4;
+
+	
+	// for each set of points (img1, img2), find the vector
+	// to apply to all points to have coordinates centered
+	// on the barycenter.
+	float _v1x = 0;
+	float _v2x = 0;
+	float _v1y = 0;
+	float _v2y = 0;
+	
+	static bool NormaliseMatches = false;
+	
+	if (NormaliseMatches )
+	{
+			//estimate the center of gravity
+		for (size_t i = 0; i < iNMatches; ++i)
+		{
+			float2 img1 = src[i];
+			float2 img2 = dst[i];
+			_v1x += img1.s[0];
+			_v1y += img1.s[1];
+			_v2x += img2.s[0];
+			_v2y += img2.s[1];
+		}
+		_v1x /= (double)iNMatches;
+		_v1y /= (double)iNMatches;
+		_v2x /= (double)iNMatches;
+		_v2y /= (double)iNMatches;
+	}
+	
+	int kNCols = 8;
+	int aNRows = iNMatches * 2;
+	auto _Amat = new double*[aNRows];
+	for(int aRowIter = 0; aRowIter < aNRows; ++aRowIter)
+	{
+		_Amat[aRowIter] = new double[kNCols];
+	}
+	auto _Bvec = new double[aNRows];
+	auto _Rvec = new double[aNRows];
+	auto _Xvec = new double[kNCols];
+	int _nMatches = iNMatches;
+	
+	// fill the matrices and vectors with points
+	for (size_t iIndex = 0; iIndex < iNMatches; ++iIndex)
+	{
+		float2 img1 = src[iIndex];
+		float2 img2 = dst[iIndex];
+
+		size_t aRow = iIndex * 2;
+		double aI1x = img1.s[0] - _v1x;
+		double aI1y = img1.s[1] - _v1y;
+		double aI2x = img2.s[0] - _v2x;
+		double aI2y = img1.s[1] - _v2y;
+
+		_Amat[aRow][0] = 0;
+		_Amat[aRow][1] = 0;
+		_Amat[aRow][2] = 0;
+		_Amat[aRow][3] = - aI1x;
+		_Amat[aRow][4] = - aI1y;
+		_Amat[aRow][5] = -1;
+		_Amat[aRow][6] = aI1x * aI2y;
+		_Amat[aRow][7] = aI1y * aI2y;
+
+		_Bvec[aRow] = aI2y;
+
+		aRow++;
+
+		_Amat[aRow][0] = aI1x;
+		_Amat[aRow][1] = aI1y;
+		_Amat[aRow][2] = 1;
+		_Amat[aRow][3] = 0;
+		_Amat[aRow][4] = 0;
+		_Amat[aRow][5] = 0;
+		_Amat[aRow][6] = - aI1x * aI2x;
+		_Amat[aRow][7] = - aI1y * aI2x;
+
+		_Bvec[aRow] = - aI2x;
+	}
+	
+	
+	bool Result = Givens(_Amat, _Bvec, _Xvec, _Rvec, _nMatches*2, kNCols, 0);
+
+#define ROW_COL(r,c)	s[r*3+c]
+	float16 _H;
+	_H.ROW_COL(0,0) = _Xvec[0];
+	_H.ROW_COL(0,1) = _Xvec[1];
+	_H.ROW_COL(0,2) = _Xvec[2];
+	_H.ROW_COL(1,0) = _Xvec[3];
+	_H.ROW_COL(1,1) = _Xvec[4];
+	_H.ROW_COL(1,2) = _Xvec[5];
+	_H.ROW_COL(2,0) = _Xvec[6];
+	_H.ROW_COL(2,1) = _Xvec[7];
+	_H.ROW_COL(2,2) = 1.0;
+/*
+	ret_H.s[0] = v[0*N + col];
+	ret_H.s[1] = v[1*N + col];
+	ret_H.s[2] = v[2*N + col];
+	ret_H.s[3] = v[3*N + col];
+	ret_H.s[4] = v[4*N + col];
+	ret_H.s[5] = v[5*N + col];
+	ret_H.s[6] = v[6*N + col];
+	ret_H.s[7] = v[7*N + col];
+	ret_H.s[8] = v[8*N + col];
+*/
+	return _H;
+}
+
 static float16 CalcHomography(float2 src[4],float2 dst[4])
 {
+#define M 9 // rows
+#define N 9 // cols
 	// This version does not normalised the input data, which is contrary to what Multiple View Geometry says.
 	// I included it to see what happens when you don't do this step.
-	
 	float X[M*N]; // M,N #define inCUDA_SVD.cu
 	
 	for(int i=0; i < 4; i++)
@@ -1662,19 +2105,21 @@ static float16 CalcHomography(float2 src[4],float2 dst[4])
 	float16 ret_H;
 	int ret = dsvd(X, M, N, w, v);
 	
-	 if(ret == 1)
-	 {
+	if(ret == 1)
+	{
 		// Sort
 		float smallest = w[0];
 		int col = 0;
-		
-		for(int i=1; i < N; i++) {
-	 if(w[i] < smallest) {
-	 smallest = w[i];
-	 col = i;
-	 }
+
+		for(int i=1; i < N; i++)
+		{
+			if(w[i] < smallest)
+			{
+				smallest = w[i];
+				col = i;
+			}
 		}
-		
+
 		ret_H.s[0] = v[0*N + col];
 		ret_H.s[1] = v[1*N + col];
 		ret_H.s[2] = v[2*N + col];
@@ -1684,9 +2129,54 @@ static float16 CalcHomography(float2 src[4],float2 dst[4])
 		ret_H.s[6] = v[6*N + col];
 		ret_H.s[7] = v[7*N + col];
 		ret_H.s[8] = v[8*N + col];
+
+
+		static bool NoTransform = false;
+		static bool NoRotation = false;
+
+		//	remove transform
+		if ( NoTransform )
+		{
+			ret_H.s[2] = 0;
+			ret_H.s[5] = 0;
+			ret_H.s[8] = 1;
+		}
+		 
+		 if ( NoRotation )
+		 {
+			ret_H.s[0] = 1;
+			ret_H.s[1] = 0;
+			//ret_H.s[2] = 0;
+
+			ret_H.s[3] = 0;
+			ret_H.s[4] = 1;
+			//ret_H.s[5] = 0;
+
+			ret_H.s[6] = 0;
+			ret_H.s[7] = 0;
+			//ret_H.s[8] = 1;
+		 }
 	 }
+	else
+	{
+		//	identity
+		ret_H.s[0] = 1;
+		ret_H.s[1] = 0;
+		ret_H.s[2] = 0;
+		
+		ret_H.s[3] = 0;
+		ret_H.s[4] = 1;
+		ret_H.s[5] = 0;
+		
+		ret_H.s[6] = 0;
+		ret_H.s[7] = 0;
+		ret_H.s[8] = 1;
+	}
 	
 	return ret_H;
+	
+#undef M
+#undef N
 }
 
 
@@ -1792,7 +2282,9 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 		GetRayRayIntersection( SampleHoughLines[1], SampleHoughLines[3] ),
 	};
 	
-	float16 Homography = CalcHomography( HoughCorners, TruthCorners );
+	//float16 Homography = CalcHomography( HoughCorners, TruthCorners );
+	//float16 Homography = CalcHomographyHugin( HoughCorners, TruthCorners );
+	float16 Homography = of_findHomography( HoughCorners, TruthCorners );
 	float16 HomographyInv = GetMatrix3x3Inverse( Homography );
 	Homographys[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = Homography;
 	HomographyInvs[(TruthPairIndex*HoughPairIndexCount)+HoughPairIndex] = HomographyInv;
@@ -1940,7 +2432,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	
 	
 	
-	static bool CpuVersion = false;
+	static bool CpuVersion = true;
 	
 	if ( CpuVersion )
 	{
@@ -2295,7 +2787,9 @@ void TFilterStage_DrawHomographyCorners::Execute(TFilterFrame& Frame,std::shared
 		Kernel.SetUniform("Homographys", HomographysBuffer );
 		
 		Iterations.PushBack( vec2x<size_t>(0, HoughCornersBuffer.GetSize() ) );
-		Iterations.PushBack( vec2x<size_t>(0, HomographysBuffer.GetSize() ) );
+
+		//	+1 to draw truth (no-homography)
+		Iterations.PushBack( vec2x<size_t>(0, HomographysBuffer.GetSize()+1 ) );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
