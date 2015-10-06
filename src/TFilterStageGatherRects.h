@@ -23,13 +23,6 @@ public:
 class TFilterStageRuntimeData_GatherRects : public TFilterStageRuntimeData
 {
 public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override
-	{
-		return false;
-	}
-	virtual Opengl::TTexture	GetTexture() override	{	return Opengl::TTexture();	}
-	
-public:
 	Array<cl_float4>		mRects;
 };
 
@@ -85,11 +78,6 @@ class TFilterStageRuntimeData_MakeRectAtlas : public TFilterStageRuntimeData
 {
 public:
 	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override
-	{
-		return false;
-	}
-	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
 	
 public:
 	Array<Soy::Rectf>		mSourceRects;
@@ -148,9 +136,5 @@ public:
 class TFilterStageRuntimeData_WriteRectAtlasStream : public TFilterStageRuntimeData
 {
 public:
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter) override
-	{
-		return false;
-	}
 };
 

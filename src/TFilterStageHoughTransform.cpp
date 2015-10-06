@@ -770,6 +770,7 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 	//	run opencl
 	Soy::TSemaphore Semaphore;
 	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	//Job->mCatchExceptions = false;
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait(/*"opencl runner"*/);
 	
@@ -2965,27 +2966,11 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 	}
 	
 	//	load mask
-	if ( !mMaskTexture )
-	{
-		Array<char> PngData;
-		Soy::FileToArray( GetArrayBridge(PngData), mMaskFilename );
-		SoyPixels MaskPixels;
-		MaskPixels.SetPng( GetArrayBridge(PngData) );
-		auto MakeTexture = [&MaskPixels,this]
-		{
-			mMaskTexture.reset( new Opengl::TTexture( MaskPixels.GetMeta(), GL_TEXTURE_2D ) );
-			mMaskTexture->Write( MaskPixels );
-		};
-		Soy::TSemaphore Semaphore;
-		auto& ContextGl = mFilter.GetOpenglContext();
-		ContextGl.PushJob( MakeTexture, Semaphore );
-		Semaphore.Wait();
-	}
-	
-	
+	auto& MaskStageData = Frame.GetData<TFilterStageRuntimeData&>(mMaskStage);
+	auto MaskPixels = MaskStageData.GetPixels( mFilter.GetOpenglContext() );
+	Soy::Assert( MaskPixels != nullptr, "Missing mask pixels" );
+
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
-	
-	
 	
 	auto& HomographyStageData = Frame.GetData<TFilterStageRuntimeData_GetHoughCornerHomographys>( mHomographyDataStage );
 	auto& Homographys = HomographyStageData.mHomographys;
@@ -2999,7 +2984,7 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 	Frame.SetUniform( DrawFrameOnMaskUniform, DrawFrameOnMaskUniform, mFilter, *this );
 	bool DrawFrameOnMask = DrawFrameOnMaskUniform.mValue == 1;
 	
-	auto Init = [this,&Frame,&StageData,&ContextGl,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&Frame,&MaskPixels,&StageData,&ContextGl,&HomographysBuffer,&HomographyInvsBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
 		
@@ -3028,7 +3013,7 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 			throw Soy::AssertException("No pixel output created");
 		}
 	
-		Kernel.SetUniform("Mask", Opengl::TTextureAndContext( *this->mMaskTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
+		Kernel.SetUniform("Mask", *MaskPixels, OpenclBufferReadWrite::ReadWrite );
 		Kernel.SetUniform("Homographys", HomographysBuffer );
 		Kernel.SetUniform("HomographyInvs", HomographyInvsBuffer );
 		

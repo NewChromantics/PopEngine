@@ -10,7 +10,9 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 								  global float8* HoughLines,
 								  int HoughLineCount,
 								  global float4* HoughCorners,
-								  float MinScore
+								  float MinScore,
+								  read_only image2d_t Bounds,
+								  int InBoundsCornersOnly
 								  )
 {
 	int HoughLineAIndex = get_global_id(0) + OffsetHoughLineAIndex;
@@ -42,6 +44,13 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 		float FarCoord = 10000;
 		if ( fabsf(Intersection.x) > FarCoord || fabsf(Intersection.y) > FarCoord )
 			Score = -1;
+		
+		if ( InBoundsCornersOnly )
+		{
+			int2 wh = get_image_dim(Bounds);
+			if ( Intersection.x < 0 || Intersection.y < 0 || Intersection.x > wh.x || Intersection.y > wh.y )
+				Score = -1;
+		}
 		
 		if ( Score < MinScore )
 			Score = 0;
@@ -798,13 +807,13 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 									 global float16* Homographys,
 									 global float16* HomographyInvs,
 									 float MaxDistance,
-									 float MinScore
+									 float MinScore,
+									 int MinInliers
 									)
 {
 	int HomographyIndex = get_global_id(0) + HomographyIndexOffset;
 	float16 Homography = Homographys[HomographyIndex];
 
-	int MinInliers = 4;
 	int Inliers = 0;
 	float TotalScore = 0;	//	only inliers
 	for ( int CornerIndex=0;	CornerIndex<HoughCornerCount;	CornerIndex++ )
@@ -836,9 +845,19 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 		TotalScore += Score;
 	}
 	
-	if ( Inliers > MinInliers )
+	if ( Inliers >= MinInliers )
 	{
 		TotalScore /= (float)Inliers;
+		
+		if ( Inliers == MinInliers )
+			TotalScore = 0.3f;
+		else
+			TotalScore = 1.f;
+		/*
+		TotalScore = clamp( Inliers / 10.f, 0.f, 1.f );
+		if ( Inliers > MinInliers )
+			printf("inliers: %d\n", Inliers );
+		 */
 	}
 	else
 	{
@@ -847,6 +866,7 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	
 	if ( TotalScore < MinScore )
 		TotalScore = 0;
+	
 	
 	//	write score in element 15
 	Homographys[HomographyIndex][15] = TotalScore;

@@ -75,7 +75,7 @@ void TFilterStage_ShaderBlit::Reload()
 	this->mOnChanged.OnTriggered(*this);
 }
 
-bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)
+bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms)
 {
 	//	pre-emptive for debugging
 	auto& TextureName = StageName;
@@ -85,7 +85,7 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 	//	use opencl buffer directly if it exists
 	if ( Uniform.mType == "image2d_t" && mImageBuffer )
 	{
-		if ( TFilterFrame::SetTextureUniform( Shader, Uniform, mImageBuffer->GetMeta(), StageName, Filter ) )
+		if ( TFilterFrame::SetTextureUniform( Shader, Uniform, mImageBuffer->GetMeta(), StageName, Filter, StageUniforms ) )
 			return true;
 		
 		auto& Kernel = dynamic_cast<Opencl::TKernelState&>( Shader );
@@ -95,7 +95,7 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 	//auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext(), true );
 	auto Texture = GetTexture();
 	
-	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter );
+	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter, StageUniforms );
 }
 
 void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)

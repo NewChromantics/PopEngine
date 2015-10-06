@@ -145,11 +145,15 @@ Opengl::TTexture TFilterStageRuntimeData_Frame::GetTexture(Opengl::TContext& Con
 }
 
 
-bool TFilterStageRuntimeData_Frame::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter)
+bool TFilterStageRuntimeData_Frame::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms)
 {
 	if ( mTexture )
 	{
-		return TFilterFrame::SetTextureUniform( Shader, Uniform, *mTexture, StageName, Filter );
+		return TFilterFrame::SetTextureUniform( Shader, Uniform, *mTexture, StageName, Filter, StageUniforms );
+	}
+	if ( mPixels )
+	{
+		return TFilterFrame::SetTextureUniform( Shader, Uniform, *mPixels, StageName, Filter, StageUniforms );
 	}
 	return false;
 }
@@ -263,6 +267,14 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 		try
 		{
 			pStage->Execute( *this, pData, *mContextGl, *mContextCl );
+
+			//	make dev snapshots :)
+			Filter.PushDevSnapshot(pData,*pStage);
+			
+			mStageDataLock.lock( std::string("post-Run place stageData ") + StageName );
+			Frame.mStageData[StageName] = pData;
+			mStageDataLock.unlock();
+			
 		}
 		catch (std::exception& e)
 		{
@@ -270,13 +282,6 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 			std::Debug << "Stage " << StageName << " failed: " << e.what() << std::endl;
 		}
 
-		//	make dev snapshots :)
-		Filter.PushDevSnapshot(pData,*pStage);
-
-		mStageDataLock.lock( std::string("post-Run place stageData ") + StageName );
-		Frame.mStageData[StageName] = pData;
-		mStageDataLock.unlock();
-		
 		TimerTime = Timer.Stop(false);
 		AllSuccess = AllSuccess && Success;
 	}
@@ -330,9 +335,12 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter)
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms)
 {
-	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
+	bool TextureIsThis = false;
+	TextureIsThis |= Soy::StringBeginsWith( Uniform.mName, TextureName, true );
+	
+	if ( !TextureIsThis )
 		return false;
 	
 	//	is there a suffix?
@@ -357,14 +365,32 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::T
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter)
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms)
 {
-	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
-		return false;
+	std::string TargetName = Uniform.mName;
+	bool SetFromStageUniformValue = false;
 	
+	//	special case, uniform is an image, and value is us!
+	if ( Uniform.mType == "image2d_t" )
+	{
+		auto StageParam = StageUniforms.GetParam( Uniform.mName );
+		if ( StageParam.IsValid() )
+		{
+			auto StageParamValue = StageParam.Decode<std::string>();
+			if ( Soy::StringBeginsWith( StageParamValue, TextureName, true ) )
+			{
+				TargetName = StageParamValue;
+				SetFromStageUniformValue = true;
+			}
+		}
+	}
+	
+	if ( !Soy::StringBeginsWith( TargetName, TextureName, true ) )
+		return false;
+
 	//	is there a suffix?
 	std::string Suffix;
-	Suffix = Uniform.mName.substr( TextureName.length(), std::string::npos );
+	Suffix = TargetName.substr( TextureName.length(), std::string::npos );
 	
 	if ( Suffix.empty() )
 	{
@@ -372,8 +398,48 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::T
 		return true;
 	}
 	
-	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter );
+	Soy::Assert( !SetFromStageUniformValue, "Untested code");
+	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter, StageUniforms );
 }
+
+
+bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsImpl& Texture,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms)
+{
+	std::string TargetName = Uniform.mName;
+	bool SetFromStageUniformValue = false;
+	
+	//	special case, uniform is an image, and value is us!
+	if ( Uniform.mType == "image2d_t" )
+	{
+		auto StageParam = StageUniforms.GetParam( Uniform.mName );
+		if ( StageParam.IsValid() )
+		{
+			auto StageParamValue = StageParam.Decode<std::string>();
+			if ( Soy::StringBeginsWith( StageParamValue, TextureName, true ) )
+			{
+				TargetName = StageParamValue;
+				SetFromStageUniformValue = true;
+			}
+		}
+	}
+	
+	if ( !Soy::StringBeginsWith( TargetName, TextureName, true ) )
+		return false;
+	
+	//	is there a suffix?
+	std::string Suffix;
+	Suffix = TargetName.substr( TextureName.length(), std::string::npos );
+	
+	if ( Suffix.empty() )
+	{
+		Shader.SetUniform_s( Uniform.mName, Texture );
+		return true;
+	}
+	
+	Soy::Assert( !SetFromStageUniformValue, "Untested code");
+	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter, StageUniforms );
+}
+
 
 bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage)
 {
@@ -390,7 +456,7 @@ bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform
 		if ( !StageData )
 			continue;
 		
-		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter ) )
+		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter, Stage.mUniforms ) )
 			return true;
 	}
 	
@@ -416,7 +482,7 @@ TFilter::TFilter(const std::string& Name) :
 	TFilterMeta		( Name ),
 	mOddJobThread		( Name + " odd job thread" ),
 	mDevSnapshotThread		( Name + " dev snapshots" ),
-	mDevSnapshotsDir	( "../DevSnapshots" ),
+	//mDevSnapshotsDir	( "../DevSnapshots" ),
 	mCurrentOpenclContext	( 0 )
 {
 	mWindow.reset( new TFilterWindow( Name, *this ) );
@@ -628,10 +694,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	{
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
 		auto KernelName = Params.GetParamAs<std::string>("kernel");
-		auto MaskFilename = Params.GetParamAs<std::string>("MaskFilename");
+		auto MaskStage = Params.GetParamAs<std::string>("MaskStage");
 		auto HomographyData = Params.GetParamAs<std::string>("HomographyData");
 		
-		Stage.reset( new TFilterStage_DrawMaskOnFrame( Name, ProgramFilename, KernelName, MaskFilename, HomographyData, *this, Params ) );
+		Stage.reset( new TFilterStage_DrawMaskOnFrame( Name, ProgramFilename, KernelName, MaskStage, HomographyData, *this, Params ) );
 	}
 	else if ( StageType == "GatherHoughLines" )
 	{
@@ -661,7 +727,12 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		auto FragFilename = Params.GetParamAs<std::string>("frag");
 		Stage.reset( new TFilterStage_ShaderBlit( Name, VertFilename, FragFilename, mBlitQuad->mVertexDescription, *this, Params ) );
 	}
-		
+	else if ( Params.HasParam("Filename") )
+	{
+		auto Filename = Params.GetParamAs<std::string>("Filename");
+		Stage.reset( new TFilterStage_ReadPng( Name, Filename, *this, Params ) );
+	}
+
 	if ( !Stage )
 		throw Soy::AssertException("Could not deduce type of stage");
 
@@ -786,7 +857,6 @@ bool TFilter::Run(SoyTime Time)
 		Frame->mRunLock.unlock();
 		throw;
 	}
-		
 	if ( Completed )
 		mOnRunCompleted.OnTriggered( Time );
 	
