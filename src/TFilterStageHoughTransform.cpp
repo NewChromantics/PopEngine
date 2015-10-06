@@ -810,8 +810,8 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 		FinalCorners.PushBack( Corner4 );
 	}
 	
-	std::Debug << "Extracted x" << FinalCorners.GetSize() << " hough corners: ";
-	static bool DebugExtractedHoughCorners = false;
+	std::Debug << mName << " extracted x" << FinalCorners.GetSize() << " hough corners: ";
+	static bool DebugExtractedHoughCorners = true;
 	if ( DebugExtractedHoughCorners )
 	{
 		std::Debug.PushStreamSettings();
@@ -1297,6 +1297,20 @@ static float2 GetRayRayIntersection(float8 RayA,float8 RayB)
 	Intersection.y = Ay + ABpos * theSin;
 	return (float2){.s={Intersection.x,Intersection.y}};
 }
+
+static float8 LineToRay(float8 Line)
+{
+	return (cl_float8){ .s={ Line.x, Line.y, Line.z-Line.x, Line.w-Line.y }};
+}
+
+//	z is 0 if bad lines
+static float2 GetLineLineInfiniteIntersection(float8 LineA,float8 LineB)
+{
+	float8 RayA = LineToRay(LineA);
+	float8 RayB = LineToRay(LineB);
+	return GetRayRayIntersection( RayA, RayB );
+}
+
 #undef x
 #undef y
 #undef z
@@ -2269,17 +2283,17 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 	//	find v/h intersections
 	float2 TruthCorners[4] =
 	{
-		GetRayRayIntersection( SampleTruthLines[0], SampleTruthLines[2] ),
-		GetRayRayIntersection( SampleTruthLines[0], SampleTruthLines[3] ),
-		GetRayRayIntersection( SampleTruthLines[1], SampleTruthLines[2] ),
-		GetRayRayIntersection( SampleTruthLines[1], SampleTruthLines[3] ),
+		GetLineLineInfiniteIntersection( SampleTruthLines[0], SampleTruthLines[2] ),
+		GetLineLineInfiniteIntersection( SampleTruthLines[0], SampleTruthLines[3] ),
+		GetLineLineInfiniteIntersection( SampleTruthLines[1], SampleTruthLines[2] ),
+		GetLineLineInfiniteIntersection( SampleTruthLines[1], SampleTruthLines[3] ),
 	};
 	float2 HoughCorners[4] =
 	{
-		GetRayRayIntersection( SampleHoughLines[0], SampleHoughLines[2] ),
-		GetRayRayIntersection( SampleHoughLines[0], SampleHoughLines[3] ),
-		GetRayRayIntersection( SampleHoughLines[1], SampleHoughLines[2] ),
-		GetRayRayIntersection( SampleHoughLines[1], SampleHoughLines[3] ),
+		GetLineLineInfiniteIntersection( SampleHoughLines[0], SampleHoughLines[2] ),
+		GetLineLineInfiniteIntersection( SampleHoughLines[0], SampleHoughLines[3] ),
+		GetLineLineInfiniteIntersection( SampleHoughLines[1], SampleHoughLines[2] ),
+		GetLineLineInfiniteIntersection( SampleHoughLines[1], SampleHoughLines[3] ),
 	};
 	
 	//float16 Homography = CalcHomography( HoughCorners, TruthCorners );
@@ -2517,7 +2531,6 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	}
 	std::Debug << std::endl;
 }
-
 
 
 

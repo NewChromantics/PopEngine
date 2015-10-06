@@ -2,6 +2,7 @@
 #include "Array.cl"
 
 DECLARE_DYNAMIC_ARRAY(float4);
+#define Index3x3(r,c)	((r*3)+c)
 
 
 __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
@@ -41,7 +42,7 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 		float FarCoord = 10000;
 		if ( fabsf(Intersection.x) > FarCoord || fabsf(Intersection.y) > FarCoord )
 			Score = -1;
-
+		
 		if ( Score < MinScore )
 			Score = 0;
 	}
@@ -488,7 +489,6 @@ static float16 CalcHomography(float2 src[4],float2 dst[4])
 	return ret_H;
 }
 
-#define Index3x3(r,c)	((r*3)+c)
 
 static float16 GetMatrix3x3Inverse(float16 m)
 {
@@ -575,6 +575,55 @@ __kernel void HoughCornerHomography(int MatchIndexOffset,
 	HomographyInvs[(TruthIndex*MatchIndexesCount)+MatchIndex] = HomographyInv;
 }
 
+float16 GetIdentity3x3()
+{
+	float16 Identity = 0;
+	Identity[Index3x3(0,0)] = 1;
+	Identity[Index3x3(1,1)] = 1;
+	Identity[Index3x3(2,2)] = 1;
+	return Identity;
+}
+
+float16 MakeRotationMatrix(float Param,float3 TruthCorner,float3 HoughCorner)
+{
+	/*
+	//	rodrigues axis & angle -> mtx
+	float3 Axis = (float3)(0,0,1);
+	
+	float AngleDeg = Param * 360.f;
+	AngleDeg = 15;
+	float Angle = DegToRad( AngleDeg );
+
+	Axis = normalize(Axis);
+	float s = sinf(Angle);
+	float c = cosf(Angle);
+	float oc = 1.0 - c;
+
+	float3 axis = Axis;
+	*/
+	float16 Mtx3x3 = GetIdentity3x3();
+	/*
+	Mtx3x3[0] = oc * axis.x * axis.x + c;
+	Mtx3x3[1] = oc * axis.x * axis.y - axis.z * s;
+	Mtx3x3[2] = oc * axis.z * axis.x + axis.y * s;
+	Mtx3x3[3] = oc * axis.x * axis.y + axis.z * s;
+	Mtx3x3[4] = oc * axis.y * axis.y + c;
+	Mtx3x3[5] = oc * axis.y * axis.z - axis.x * s;
+	Mtx3x3[6] = oc * axis.z * axis.x - axis.y * s;
+	Mtx3x3[7] = oc * axis.y * axis.z + axis.x * s;
+	Mtx3x3[8] = oc * axis.z * axis.z + c;
+	*/
+	Mtx3x3[0] = TruthCorner.x;
+	Mtx3x3[1] = TruthCorner.y;
+	Mtx3x3[2] = TruthCorner.z;
+	//Mtx3x3[3] = HoughCorner.y;
+	//Mtx3x3[5] += RotateAround.y;
+	
+	float Score = 1;
+	Mtx3x3[15] = Score;
+	return Mtx3x3;
+}
+
 
 
 __kernel void HoughLineHomography(int TruthPairIndexOffset,
@@ -614,17 +663,17 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 	//	find v/h intersections
 	float2 TruthCorners[4] =
 	{
-		GetRayRayIntersection( SampleTruthLines[0].xyzw, SampleTruthLines[2].xyzw ).xy,
-		GetRayRayIntersection( SampleTruthLines[0].xyzw, SampleTruthLines[3].xyzw ).xy,
-		GetRayRayIntersection( SampleTruthLines[1].xyzw, SampleTruthLines[2].xyzw ).xy,
-		GetRayRayIntersection( SampleTruthLines[1].xyzw, SampleTruthLines[3].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleTruthLines[0].xyzw, SampleTruthLines[2].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleTruthLines[0].xyzw, SampleTruthLines[3].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleTruthLines[1].xyzw, SampleTruthLines[2].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleTruthLines[1].xyzw, SampleTruthLines[3].xyzw ).xy,
 	};
 	float2 HoughCorners[4] =
 	{
-		GetRayRayIntersection( SampleHoughLines[0].xyzw, SampleHoughLines[2].xyzw ).xy,
-		GetRayRayIntersection( SampleHoughLines[0].xyzw, SampleHoughLines[3].xyzw ).xy,
-		GetRayRayIntersection( SampleHoughLines[1].xyzw, SampleHoughLines[2].xyzw ).xy,
-		GetRayRayIntersection( SampleHoughLines[1].xyzw, SampleHoughLines[3].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleHoughLines[0].xyzw, SampleHoughLines[2].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleHoughLines[0].xyzw, SampleHoughLines[3].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleHoughLines[1].xyzw, SampleHoughLines[2].xyzw ).xy,
+		GetLineLineInfiniteIntersection( SampleHoughLines[1].xyzw, SampleHoughLines[3].xyzw ).xy,
 	};
 	
 	float16 Homography = CalcHomography( HoughCorners, TruthCorners );
@@ -700,7 +749,7 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	
 	if ( DrawTruthCorner )
 	{
-		Radius = 5;
+		Radius = 3;
 		Corner = TruthCorners[ CornerIndex % TruthCornerCount].xy;
 		Rgba = 1;
 	}
