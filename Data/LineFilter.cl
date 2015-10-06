@@ -21,11 +21,6 @@ const float AngleRange = 360.0f;
 //#define MAX_HOUGH_SCORE	500
 
 
-//	filter out lines if a neighbour is better
-#define CHECK_MAXIMA_ANGLES		20
-#define CHECK_MAXIMA_DISTANCES	30
-
-
 
 static bool GetRingMatch(float3 BaseHsl,int2 BaseUv,float Radius,float AngleDeg,__read_only image2d_t Hsl)
 {
@@ -398,6 +393,7 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 		}
 	}
 	
+
 	float Score = (BestScore.x + BestScore.y)/2.f;
 	float MinScoref = (MinScore.x + MinScore.y)/2.f;
 
@@ -580,7 +576,7 @@ static float4 GetHoughLine(float Distance,float Angle,float2 Originf)
 	return Line;
 }
 
-__kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int HoughScoreMin,int HoughScoreMax)
+__kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_only image2d_t Frag,__read_only image2d_t Frame,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int HoughScoreMin,int HoughScoreMax,int MaximaAngles,int MaximaDistances)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
 	int DistanceIndex = get_global_id(1) + OffsetDistance;
@@ -598,10 +594,9 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
 
 	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
-#if defined(CHECK_MAXIMA_ANGLES)||defined(CHECK_MAXIMA_DISTANCES)	//	OR so errors if a define is missing
-	for ( int x=-CHECK_MAXIMA_ANGLES;	x<=CHECK_MAXIMA_ANGLES;	x++ )
+	for ( int x=-MaximaAngles/2;	x<=MaximaAngles/2;	x++ )
 	{
-		for ( int y=-CHECK_MAXIMA_DISTANCES;	y<=CHECK_MAXIMA_DISTANCES;	y++ )
+		for ( int y=-MaximaDistances/2;	y<=MaximaDistances/2;	y++ )
 		{
 			int NeighbourAngleIndex = clamp( AngleIndex+x, 0, AngleCount-1 );
 			int NeighbourDistanceIndex = clamp( DistanceIndex+y, 0, DistanceCount-1 );
@@ -610,7 +605,6 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 				return;
 		}
 	}
-#endif
 
 	
 	if ( Score < HoughScoreMin )
@@ -659,7 +653,9 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 								int MatchesMax,
 								__read_only image2d_t WhiteFilter,
 								float HoughScoreMin,
-								float HoughScoreMax
+								float HoughScoreMax,
+								int MaximaDistances,
+								int MaximaAngles
 								)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
@@ -680,10 +676,9 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	//	gr: altohugh this score hasn't been corrected, because they're neighbours, we assume the score entropy won't vary massively.
 	//		if we wanted to check with corrected scores we'd have to do this as a seperate stage or calc neighbour corrected scores here which might be a bit expensive
 	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
-#if defined(CHECK_MAXIMA_ANGLES)||defined(CHECK_MAXIMA_DISTANCES)	//	OR so errors if a define is missing
-	for ( int x=-CHECK_MAXIMA_ANGLES;	x<=CHECK_MAXIMA_ANGLES;	x++ )
+	for ( int x=-MaximaAngles/2;	x<=MaximaAngles/2;	x++ )
 	{
-		for ( int y=-CHECK_MAXIMA_DISTANCES;	y<=CHECK_MAXIMA_DISTANCES;	y++ )
+		for ( int y=-MaximaDistances/2;	y<=MaximaDistances/2;	y++ )
 		{
 			int NeighbourAngleIndex = clamp( AngleIndex+x, 0, AngleCount-1 );
 			int NeighbourDistanceIndex = clamp( DistanceIndex+y, 0, DistanceCount-1 );
@@ -692,7 +687,6 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 				return;
 		}
 	}
-#endif
 
 	//	correct the score to be related to maximum possible length (this lets us handle mulitple resolutions)
 	float4 Line = GetHoughLine( Distance, Angle, Originf );
@@ -765,7 +759,7 @@ static bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
 	int PixelSkip = 0;
 	if ( PixelSkip != 0 && ( uv.x % PixelSkip != 0 || uv.y % PixelSkip != 0 ) )
 		return false;
-		
+	
 	return true;
 }
 
@@ -922,6 +916,13 @@ __kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t Whi
 		BaseWhite = WhiteFilterSobel( WhiteFilterGroup, uv ) > 0;
 	}
 #endif
+	
+	//	skip over logo at the bottom
+	if ( uv.y > 950 )
+	{
+		BaseWhite = false;
+	}
+
 	
 	float4 Rgba = BaseWhite ? (float4)(0,0,0,1) : (float4)(1,0,0,1);
 	write_imagef( Frag, uv, Rgba );
