@@ -24,3 +24,19 @@ public:
 	std::string			mImageStage;
 };
 
+
+class TFilterStage_ReadPng : public TFilterStage
+{
+public:
+	TFilterStage_ReadPng(const std::string& Name,const std::string& Filename,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage	( Name, Filter, StageParams ),
+		mFilename		( Filename )
+	{
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string			mFilename;
+};
+

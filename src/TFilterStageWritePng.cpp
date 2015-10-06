@@ -23,3 +23,19 @@ void TFilterStage_WritePng::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterS
 	Soy::ArrayToFile( GetArrayBridge(PngData), mFilename );
 }
 
+
+void TFilterStage_ReadPng::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	Array<char> PngData;
+	Soy::FileToArray( GetArrayBridge(PngData), mFilename );
+	
+	std::shared_ptr<SoyPixelsImpl> Pixels( new SoyPixels );
+	Pixels->SetPng( GetArrayBridge(PngData) );
+	
+	if ( !Data )
+		Data.reset( new TFilterStageRuntimeData_Frame() );
+
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_Frame&>( *Data );
+	StageData.mPixels = Pixels;
+}
+
