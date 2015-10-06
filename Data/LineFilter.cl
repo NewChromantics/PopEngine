@@ -866,10 +866,10 @@ static bool GreenSample(int x,int y,__read_only image2d_t Image,int2 uv)
 	return RgbaToGreen( texture2D( Image, uv+(int2)(x,y) ) );
 }
 
-static float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv)
+static float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv,int GreenDistance)
 {
 	int GreenCount = 0;
-	int GreenRadius = 5;
+	int GreenRadius = GreenDistance;
 
 	GreenCount += GreenSample( -GreenRadius, -GreenRadius, Image, uv );
 	GreenCount += GreenSample(  0, -GreenRadius, Image, uv );
@@ -903,7 +903,7 @@ static float WhiteFilterSobel(__read_only image2d_t Image,int2 uv)
 
 
 
-__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilterGroup,__write_only image2d_t Frag)
+__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilterGroup,__write_only image2d_t Frag,int GreenDistance)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
@@ -912,7 +912,7 @@ __kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t Whi
 	//	if it's white, only keep if there's green nearby
 	if ( BaseWhite )
 	{
-		BaseWhite = WhiteFilterGreenNearBy( WhiteFilterGroup, uv );
+		BaseWhite = WhiteFilterGreenNearBy( WhiteFilterGroup, uv, GreenDistance );
 	}
 	
 	//	if it's a white pixel, only keep if it's an edge

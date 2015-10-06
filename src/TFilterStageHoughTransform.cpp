@@ -643,10 +643,10 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 			FinalHorzLines.Push( Line );
 	}
 	
-	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
-	FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
+	//FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
+	//FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
 	
-	static bool OutputLinesForConfig = true;
+	static bool OutputLinesForConfig = false;
 	if ( OutputLinesForConfig )
 	{
 		Array<cl_float8> Lines;
@@ -687,13 +687,13 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		std::Debug.PopStreamSettings();
 	}
 	
-	static bool DebugExtractedHoughLines = true;
+	std::Debug << "Extracted x" << (StageData.mVertLines.GetSize()+StageData.mHorzLines.GetSize()) << " lines" << std::endl;
+	static bool DebugExtractedHoughLines = false;
 	if ( DebugExtractedHoughLines )
 	{
 		Array<cl_float8> Lines;
 		Lines.PushBackArray( StageData.mVertLines );
 		Lines.PushBackArray( StageData.mHorzLines );
-		std::Debug << "Extracted x" << Lines.GetSize() << " lines" << std::endl;
 		for ( int i=0;	i<Lines.GetSize();	i++ )
 		{
 			auto Line = Lines[i];
@@ -811,7 +811,7 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 	}
 	
 	std::Debug << mName << " extracted x" << FinalCorners.GetSize() << " hough corners: ";
-	static bool DebugExtractedHoughCorners = true;
+	static bool DebugExtractedHoughCorners = false;
 	if ( DebugExtractedHoughCorners )
 	{
 		std::Debug.PushStreamSettings();
@@ -1204,7 +1204,8 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	
 	ReadUniform_ArrayFloat8( StageData.mVertLines, mVerticalLinesUniform );
 	ReadUniform_ArrayFloat8( StageData.mHorzLines, mHorzLinesUniform );
-	
+
+	//	dupes & bad cases
 	FinalVertLines.RemoveBlock(0,1);
 	FinalHorzLines.RemoveBlock(0,1);
 	
@@ -1225,12 +1226,13 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 			if ( AngleIs0 || AngleIs90 || AngleIs180 || AngleIs270 )
 				continue;
 			StageData.mHorzLines.RemoveBlock( i,1 );
-			std::Debug << "Removed horz truth line at " << LineAngle << " degrees" << std::endl;
+			//std::Debug << "Removed horz truth line at " << LineAngle << " degrees" << std::endl;
 		}
 	}
 	
-	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
-	FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
+	//	restrict testing to specific sets
+	//FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
+	//FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
 
 }
 
@@ -1465,36 +1467,39 @@ cl_float16 of_findHomography(cl_float2 srccl[4], cl_float2 dstcl[4])
 	//Result.s[8] = P[8][8];
 
 	
-	//	test
-	for ( int i=0;	i<4;	i++ )
+	static bool Test = false;
+	if ( Test )
 	{
-		auto H = Result.s;
-		float x = H[0]*src[i][0] + H[1]*src[i][1] + H[2];
-		float y = H[3]*src[i][0] + H[4]*src[i][1] + H[5];
-		float z = H[6]*src[i][0] + H[7]*src[i][1] + H[8];
-		
-		x /= z;
-		y /= z;
-		
-		float diffx = dst[i][0] - x;
-		float diffy = dst[i][1] - y;
-		std::Debug << "err src->dst #" << i << ": " << diffx << "," << diffy << std::endl;
+		//	test
+		for ( int i=0;	i<4;	i++ )
+		{
+			auto H = Result.s;
+			float x = H[0]*src[i][0] + H[1]*src[i][1] + H[2];
+			float y = H[3]*src[i][0] + H[4]*src[i][1] + H[5];
+			float z = H[6]*src[i][0] + H[7]*src[i][1] + H[8];
+			
+			x /= z;
+			y /= z;
+			
+			float diffx = dst[i][0] - x;
+			float diffy = dst[i][1] - y;
+			std::Debug << "err src->dst #" << i << ": " << diffx << "," << diffy << std::endl;
+		}
+		for ( int i=0;	i<4;	i++ )
+		{
+			auto H = Result.s;
+			float x = H[0]*dst[i][0] + H[1]*dst[i][1] + H[2];
+			float y = H[3]*dst[i][0] + H[4]*dst[i][1] + H[5];
+			float z = H[6]*dst[i][0] + H[7]*dst[i][1] + H[8];
+			
+			x /= z;
+			y /= z;
+			
+			float diffx = src[i][0] - x;
+			float diffy = src[i][1] - y;
+			std::Debug << "err dst->src #" << i << ": " << diffx << "," << diffy << std::endl;
+		}
 	}
-	for ( int i=0;	i<4;	i++ )
-	{
-		auto H = Result.s;
-		float x = H[0]*dst[i][0] + H[1]*dst[i][1] + H[2];
-		float y = H[3]*dst[i][0] + H[4]*dst[i][1] + H[5];
-		float z = H[6]*dst[i][0] + H[7]*dst[i][1] + H[8];
-		
-		x /= z;
-		y /= z;
-		
-		float diffx = src[i][0] - x;
-		float diffy = src[i][1] - y;
-		std::Debug << "err dst->src #" << i << ": " << diffx << "," << diffy << std::endl;
-	}
-
 	
 	return Result;
 }
@@ -2313,19 +2318,22 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	auto Kernel = GetKernel(ContextCl);
 	if ( !Soy::Assert( Kernel != nullptr, std::string(__func__) + " missing kernel" ) )
 		return;
+
+	static bool SwapTruthHorzAndVert = false;
+	//	gr: need to do all the sets flipped. todo: come up with an aspect-ratio thing to work out if we should be doing vert or horz, per set?
+	static bool SwapHoughHorzAndVert = true;
 	
 	//	merge truth lines into one big set for kernel
 	auto& TruthLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mTruthLineStage );
-	static bool SwapHorzAndVert = false;
-	auto& HorzTruthLines = SwapHorzAndVert ? TruthLinesStageData.mVertLines : TruthLinesStageData.mHorzLines;
-	auto& VertTruthLines = SwapHorzAndVert ? TruthLinesStageData.mHorzLines : TruthLinesStageData.mVertLines;
+	auto& HorzTruthLines = SwapTruthHorzAndVert ? TruthLinesStageData.mVertLines : TruthLinesStageData.mHorzLines;
+	auto& VertTruthLines = SwapTruthHorzAndVert ? TruthLinesStageData.mHorzLines : TruthLinesStageData.mVertLines;
 	Array<cl_float8> AllTruthLines;
 	AllTruthLines.PushBackArray( VertTruthLines );
 	AllTruthLines.PushBackArray( HorzTruthLines );
 	
 	auto& HoughLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineStage );
-	auto& VertHoughLines = HoughLinesStageData.mVertLines;
-	auto& HorzHoughLines = HoughLinesStageData.mHorzLines;
+	auto& VertHoughLines = SwapHoughHorzAndVert ? HoughLinesStageData.mHorzLines : HoughLinesStageData.mVertLines;
+	auto& HorzHoughLines = SwapHoughHorzAndVert ? HoughLinesStageData.mVertLines : HoughLinesStageData.mHorzLines;
 	Array<cl_float8> AllHoughLines;
 	AllHoughLines.PushBackArray( VertHoughLines );
 	AllHoughLines.PushBackArray( HorzHoughLines );
@@ -2446,7 +2454,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	
 	
 	
-	static bool CpuVersion = true;
+	static bool CpuVersion = false;
 	
 	if ( CpuVersion )
 	{
@@ -2604,11 +2612,20 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 		Data.reset( new TFilterStageRuntimeData_GetHoughCornerHomographys() );
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GetHoughCornerHomographys&>( *Data.get() );
 	
+	auto CompareHomographyScores = [](const cl_float16& a,const cl_float16& b)
+	{
+		auto& aScore = a.s[15];
+		auto& bScore = b.s[15];
+		if ( aScore > bScore )	return -1;
+		if ( aScore < bScore )	return 1;
+		return 0;
+	};
+
 	//	here we should sort, and keep the best based on a histogram
 	//	get all the valid homographys
-	
-	auto& FinalHomographys = StageData.mHomographys;
-	auto& FinalHomographyInvs = StageData.mHomographyInvs;
+	//	gr: these SHOULD sort in pairs... lets hope so
+	SortArrayLambda<cl_float16> FinalHomographys( GetArrayBridge(StageData.mHomographys), CompareHomographyScores );
+	SortArrayLambda<cl_float16>  FinalHomographyInvs( GetArrayBridge(StageData.mHomographyInvs), CompareHomographyScores );
 	for ( int i=0;	i<Homographys.GetSize();	i++ )
 	{
 		//	if it's all zero's its invalid
@@ -2618,17 +2635,19 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 
 		if ( Score == 0 )
 			continue;
-		std::Debug << "Homography #" << i << " score: " << Score << std::endl;
+		//std::Debug << "Homography #" << i << " score: " << Score << std::endl;
 		
-		if ( Score > 0.01f )
-		{
-			FinalHomographys.PushBack( Homography );
-			FinalHomographyInvs.PushBack( HomographyInv );
-		}
+		FinalHomographys.Push( Homography );
+		FinalHomographyInvs.Push( HomographyInv );
 	}
 	
-	std::Debug << "Extracted x" << FinalHomographys.GetSize() << " SCORED homographys: ";
-	static bool DebugExtractedHomographys = true;
+	//	cap number of homographys (gets top X from sorted list)
+	TUniformWrapper<int> LimitScoredHomographyCountUniform("LimitScoredHomography", 100 );
+	Frame.SetUniform( LimitScoredHomographyCountUniform, LimitScoredHomographyCountUniform, mFilter, *this );
+	FinalHomographys.SetSize( std::min<size_t>(LimitScoredHomographyCountUniform.mValue, FinalHomographys.GetSize() ) );
+
+	std::Debug << "Extracted & capped x" << FinalHomographys.GetSize() << "/" << Homographys.GetSize() << " SCORED homographys: ";
+	static bool DebugExtractedHomographys = false;
 	if ( DebugExtractedHomographys )
 	{
 		std::Debug.PushStreamSettings();

@@ -741,7 +741,8 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	Corner = TransformedCorner;
 	
 	
-	int Radius = 5;
+	int Radius = 15;
+	int TruthRadius = 7;
 	float4 Rgba = 1;
 	//Rgba.xyz = NormalToRgb( Score );
 	//Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
@@ -749,7 +750,7 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	
 	if ( DrawTruthCorner )
 	{
-		Radius = 3;
+		Radius = TruthRadius;
 		Corner = TruthCorners[ CornerIndex % TruthCornerCount].xy;
 		Rgba = 1;
 	}
@@ -768,8 +769,8 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 	Corner += whf/2.f;
 	
 	//	space out so we can see ones that overlap
-	Corner.x += CornerIndex*2;
-	Corner.y += CornerIndex*2;
+	//Corner.x += CornerIndex*2;
+	//Corner.y += CornerIndex*2;
 	
 
 	
@@ -803,7 +804,9 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	int HomographyIndex = get_global_id(0) + HomographyIndexOffset;
 	float16 Homography = Homographys[HomographyIndex];
 
-	float TotalScore = 0;
+	int MinInliers = 4;
+	int Inliers = 0;
+	float TotalScore = 0;	//	only inliers
 	for ( int CornerIndex=0;	CornerIndex<HoughCornerCount;	CornerIndex++ )
 	{
 		float4 HoughCorner = HoughCorners[CornerIndex];
@@ -811,6 +814,7 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	
 		//	transform corner
 		float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
+		bool Inlier = false;
 		
 		//	find nearest truth corner
 		float BestDistance = MaxDistance;
@@ -821,15 +825,25 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 			if ( Dist <= 0 || Dist >= MaxDistance )
 				continue;
 			BestDistance = min( BestDistance, Dist );
+			Inlier = true;
 		}
+		if ( !Inlier )
+			continue;
 		
+		Inliers++;
 		float Score = BestDistance / MaxDistance;
 		Score = 1.f - clamp( Score, 0.f, 1.f );
 		TotalScore += Score;
 	}
 	
-	if ( HoughCornerCount > 0 )
-		TotalScore /= (float)HoughCornerCount;
+	if ( Inliers > MinInliers )
+	{
+		TotalScore /= (float)Inliers;
+	}
+	else
+	{
+		TotalScore = 0;
+	}
 	
 	if ( TotalScore < MinScore )
 		TotalScore = 0;
@@ -875,9 +889,9 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 		if ( uv.x >= mask_wh.x || uv.y >= mask_wh.y )
 			return;
 		
-		//float HomographyScore = Homographys[HomographyIndex][15];
-		//Rgba.xyz = NormalToRgb(HomographyScore);
-		Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
+		float HomographyScore = Homographys[HomographyIndex][15];
+		Rgba.xyz = NormalToRgb(HomographyScore);
+		//Rgba.xyz = IndexToRgbRainbow((HomographyIndex+1)%20,20);
 		int MaskIndex = RgbToIndex( texture2D( Mask, uv ).xyz, 1 );
 		if ( MaskIndex > 0 )
 			return;
