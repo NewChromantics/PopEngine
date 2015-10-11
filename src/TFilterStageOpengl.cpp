@@ -20,7 +20,6 @@ TFilterStage_ShaderBlit::TFilterStage_ShaderBlit(const std::string& Name,const s
 		auto DoReload = [this]
 		{
 			Reload();
-			return true;
 		};
 		Filter.QueueJob( DoReload );
 	};
@@ -61,7 +60,6 @@ void TFilterStage_ShaderBlit::Reload()
 		{
 			std::Debug << "Failed to compile shader: " << e.what() << std::endl;
 		}
-		return true;
 	};
 	
 	Soy::TSemaphore Semaphore;

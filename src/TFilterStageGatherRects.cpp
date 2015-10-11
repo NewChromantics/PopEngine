@@ -242,7 +242,7 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		Mesh.mVertexes[1].uv = vec2f( 1, 0);
 		Mesh.mVertexes[2].uv = vec2f( 1, 1);
 		Mesh.mVertexes[3].uv = vec2f( 0, 1);
-		Array<GLshort> Indexes;
+		Array<size_t> Indexes;
 		Indexes.PushBack( 0 );
 		Indexes.PushBack( 1 );
 		Indexes.PushBack( 2 );

@@ -310,7 +310,6 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 		{
 			Opengl::TSync SyncCommand;
 			SyncCommand.Wait();
-			return true;
 		};
 		Soy::TSemaphore Semaphore;
 		Filter.GetOpenglContext().PushJob( WaitForSync, Semaphore );
@@ -325,7 +324,6 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 		auto Finish = []
 		{
 			glFinish();
-			return true;
 		};
 		Filter.GetOpenglContext().PushJob( Finish, Semaphore );
 		Semaphore.Wait("glfinish");
@@ -517,7 +515,7 @@ void TFilter::CreateBlitGeo(bool Blocking)
 		Mesh.mVertexes[1].uv = vec2f( 1, 0);
 		Mesh.mVertexes[2].uv = vec2f( 1, 1);
 		Mesh.mVertexes[3].uv = vec2f( 0, 1);
-		Array<GLshort> Indexes;
+		Array<size_t> Indexes;
 		Indexes.PushBack( 0 );
 		Indexes.PushBack( 1 );
 		Indexes.PushBack( 2 );
@@ -538,8 +536,6 @@ void TFilter::CreateBlitGeo(bool Blocking)
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
 		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex ) );
-		
-		return true;
 	};
 	
 	//	create blit geometry
@@ -864,7 +860,7 @@ bool TFilter::Run(SoyTime Time)
 }
 
 
-void TFilter::QueueJob(std::function<bool(void)> Function)
+void TFilter::QueueJob(std::function<void(void)> Function)
 {
 	mOddJobThread.PushJob( Function );
 }

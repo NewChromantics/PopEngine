@@ -16,7 +16,6 @@ TFilterStage_OpenclKernel::TFilterStage_OpenclKernel(const std::string& Name,con
 		auto DoReload = [this]
 		{
 			Reload();
-			return true;
 		};
 		Filter.QueueJob( DoReload );
 	};

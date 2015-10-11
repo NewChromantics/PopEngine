@@ -211,7 +211,7 @@ public:
 	void					OnStagesChanged();
 	void					OnUniformChanged(const std::string& Name);
 
-	void					QueueJob(std::function<bool(void)> Function);			//	queue a misc job (off main thread)
+	void					QueueJob(std::function<void(void)> Function);			//	queue a misc job (off main thread)
 	void					PushDevSnapshot(std::shared_ptr<TFilterStageRuntimeData> StageData,const TFilterStage& Stage);
 
 	//	apply uniform to shader
