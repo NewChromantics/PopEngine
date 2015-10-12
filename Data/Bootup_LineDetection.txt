@@ -70,7 +70,7 @@ addstage LineDetector DrawTruthCorners StageType=DrawHoughCorners cl=HoughCorner
 
 addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines TruthLineData=TruthLines MaxLinesInHoughSets=10 MaxLinesInTruthSets=10  SkipRender=true
 
-addstage LineDetector ScoredHoughLineHomographys StageType=ScoreHomographys cl=HoughCorners.cl kernel=ScoreCornerHomographys CornerData=ExtractHoughCorners TruthCornerData=ExtractTruthCorners HomographyData=GetHoughLineHomographys MaxDistance=10 MinScore=0.01 MinInliers=4 SkipRender=true LimitScoredHomography=5
+addstage LineDetector ScoredHoughLineHomographys StageType=ScoreHomographys cl=HoughCorners.cl kernel=ScoreCornerHomographys CornerData=ExtractHoughCorners TruthCornerData=ExtractTruthCorners HomographyData=GetHoughLineHomographys MaxDistance=10 MinScore=0.01 MinInliers=4 SkipRender=true LimitScoredHomography=100
 addstage LineDetector DrawHomographyCorners StageType=DrawHomographyCorners cl=HoughCorners.cl kernel=DrawHomographyCorners CornerData=ExtractHoughCorners TruthCornerData=ExtractTruthCorners HomographyData=GetHoughLineHomographys MaxDistance=10 Zoom=0.45
 
 addstage LineDetector DrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=Frame DrawFrameOnMask=0 PixelSkip=0 Zoom=1

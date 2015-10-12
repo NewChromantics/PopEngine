@@ -797,6 +797,63 @@ __kernel void DrawHomographyCorners(int CornerIndexOffset,
 }
 
 
+float dot2(float2 d)
+{
+	return (d.x*d.x) + (d.y*d.y);
+}
+float EuclideanDistance(float2 a,float2 b)
+{
+	float2 Delta = a-b;
+	return sqrtf( dot2(Delta) );
+}
+
+static bool IsGoodHomography(float16 Homography3x3)
+{
+#define H(r,c)	Homography3x3[Index3x3(r,c)]
+
+	//	reproject a rectangle (to test aspect ratio)
+	float2 a = (float2)(0,0);
+	float2 b = (float2)(2,0);
+	float2 c = (float2)(2,1);
+	float2 d = (float2)(0,1);
+	
+	float2 m = Transform2ByMatrix3x3( a, Homography3x3 );
+	float2 n = Transform2ByMatrix3x3( b, Homography3x3 );
+	float2 o = Transform2ByMatrix3x3( c, Homography3x3 );
+	float2 p = Transform2ByMatrix3x3( d, Homography3x3 );
+	
+	float x[4] = { m.x, n.x, o.x, p.x };
+	float y[4] = { m.y, n.y, o.y, p.y };
+	
+	bool Sign[4];
+	for ( int i=0;	i<4;	i++ )
+	{
+		int i0 = (i+0)%4;
+		int i1 = (i+1)%4;
+		int i2 = (i+2)%4;
+		float dx1 = x[i1]-x[i0];
+		float dy1 = y[i1]-y[i0];
+		float dx2 = x[i2]-x[i1];
+		float dy2 = y[i2]-y[i1];
+		float zcrossproduct = dx1*dy2 - dy1*dx2;
+		Sign[i0] = zcrossproduct >= 0;
+	}
+	
+	bool AllSame = Sign[0]==Sign[1]==Sign[2]==Sign[3];
+	if ( !AllSame )
+		return false;
+	
+	/*
+	float Dista = EuclideanDistance(a,m);
+	float Distb = EuclideanDistance(b,n);
+	float Distc = EuclideanDistance(c,o);
+	float Distd = EuclideanDistance(d,p);
+ 
+	printf("homo equician %.3f %.3f %.3f %.3f\n", Dista, Distb, Distc, Distd );
+	 */
+	return true;
+#undef H
+}
 
 
 __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
@@ -813,17 +870,40 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 {
 	int HomographyIndex = get_global_id(0) + HomographyIndexOffset;
 	float16 Homography = Homographys[HomographyIndex];
-
+	
+	bool GoodHomography = IsGoodHomography(Homography);
+	if ( !GoodHomography )
+	{
+	//	printf("Homography %d bad\n", HomographyIndex );
+	//	return;
+	}
+	
+	//	other way around, for each truth, find best distance
+	//	this way, if ALL the houghs hit one truth, it doesn't count as high-inlier and high score
+//#define MATCH_HOUGH_TO_TRUTH
+	
+#if defined(MATCH_HOUGH_TO_TRUTH)
+#define MAX_TRUTHS	20
+	int TruthInliers[MAX_TRUTHS] = {0};
+	float TruthBestScore[MAX_TRUTHS] = {0.f};
+#else
+	float TotalScore = 0;
 	int Inliers = 0;
-	float TotalScore = 0;	//	only inliers
+#endif
+	
 	for ( int CornerIndex=0;	CornerIndex<HoughCornerCount;	CornerIndex++ )
 	{
 		float4 HoughCorner = HoughCorners[CornerIndex];
 		float2 Corner = HoughCorner.xy;
-	
+
 		//	transform corner
 		float2 TransformedCorner = Transform2ByMatrix3x3( Corner, Homography );
+
+#if defined(MATCH_HOUGH_TO_TRUTH)
+		int TruthIndex = -1;
+#else
 		bool Inlier = false;
+#endif
 		
 		//	find nearest truth corner
 		float BestDistance = MaxDistance;
@@ -834,26 +914,30 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 			if ( Dist <= 0 || Dist >= MaxDistance )
 				continue;
 			BestDistance = min( BestDistance, Dist );
+			
+#if defined(MATCH_HOUGH_TO_TRUTH)
+			TruthIndex = t;
+#else
 			Inlier = true;
+#endif
 		}
+#if defined(MATCH_HOUGH_TO_TRUTH)
+#else
 		if ( !Inlier )
 			continue;
-		
 		Inliers++;
+#endif
+
 		float Score = BestDistance / MaxDistance;
 		Score = 1.f - clamp( Score, 0.f, 1.f );
 		TotalScore += Score;
 	}
-	
+
+#if defined(MATCH_HOUGH_TO_TRUTH)
+#else
 	if ( Inliers >= MinInliers )
 	{
 		TotalScore /= (float)Inliers;
-		/*
-		if ( Inliers == MinInliers )
-			TotalScore = 0.3f;
-		else
-			TotalScore = 1.f;
-		*/
 		TotalScore = clamp( Inliers / 10.f, 0.f, 1.f );
 		if ( Inliers > 10 )
 			printf("inliers: %d\n", Inliers );
@@ -865,10 +949,13 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	{
 		TotalScore = 0;
 	}
-	
+#endif
 	if ( TotalScore < MinScore )
 		TotalScore = 0;
 	
+	if ( GoodHomography )
+		TotalScore = 0;
+//	TotalScore = GoodHomography ? 1 : 0.2f;
 	
 	//	write score in element 15
 	Homographys[HomographyIndex][15] = TotalScore;
