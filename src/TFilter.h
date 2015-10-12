@@ -64,10 +64,7 @@ public:
 	{
 	}
 	
-	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms)
-	{
-		return false;
-	}
+	virtual bool				SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl);
 
 	//	gr: rework all of this to extract the system-based image we want (opengl, opencl, cpu) and move all conversions out of stages
 	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl,bool Blocking)
@@ -80,6 +77,8 @@ public:
 	{
 		return Opengl::TTexture();
 	}
+	
+	bool						CanHandleUniform(const Soy::TUniform& Uniform,const std::string& ParentStageName,const TJobParams& CurrentStageUniforms);
 	
 	virtual std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& ContextGl);		//	default grabs opengl texture and reads pixels
 };
@@ -132,10 +131,6 @@ private:
 	std::shared_ptr<Opencl::TContext>		mContextCl;
 	
 public:
-	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms);
-	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsImpl& Texture,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms);
-	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms);
-
 	//	deprecate the use of these
 	Opengl::TTexture				GetFrameTexture(TFilter& Filter,bool Blocking=true);
 	std::shared_ptr<SoyPixelsImpl>	GetFramePixels(TFilter& Filter,bool Blocking=true);
@@ -153,7 +148,6 @@ class TFilterStageRuntimeData_Frame : public TFilterStageRuntimeData
 {
 public:
 	virtual void					Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
-	virtual bool					SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms) override;
 	virtual Opengl::TTexture		GetTexture() override	{	return mTexture ? *mTexture : Opengl::TTexture();	}
 	virtual std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& ContextGl) override
 	{

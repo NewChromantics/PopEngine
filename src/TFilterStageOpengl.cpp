@@ -73,8 +73,11 @@ void TFilterStage_ShaderBlit::Reload()
 	this->mOnChanged.OnTriggered(*this);
 }
 
-bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms)
+bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl)
 {
+	if ( TFilterStageRuntimeData::SetUniform(StageName, Shader, Uniform, Filter, StageUniforms, ContextGl) )
+		return true;
+	/*
 	//	pre-emptive for debugging
 	auto& TextureName = StageName;
 	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
@@ -94,6 +97,8 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 	auto Texture = GetTexture();
 	
 	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter, StageUniforms );
+	 */
+	return false;
 }
 
 void TFilterStageRuntimeData_ShaderBlit::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)

@@ -145,20 +145,6 @@ Opengl::TTexture TFilterStageRuntimeData_Frame::GetTexture(Opengl::TContext& Con
 }
 
 
-bool TFilterStageRuntimeData_Frame::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms)
-{
-	if ( mTexture )
-	{
-		return TFilterFrame::SetTextureUniform( Shader, Uniform, *mTexture, StageName, Filter, StageUniforms );
-	}
-	if ( mPixels )
-	{
-		return TFilterFrame::SetTextureUniform( Shader, Uniform, *mPixels, StageName, Filter, StageUniforms );
-	}
-	return false;
-}
-
-
 void TFilterStageRuntimeData_Frame::Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	//	shutdown our data
@@ -363,81 +349,6 @@ bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::T
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,Opengl::TTexture& Texture,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms)
-{
-	std::string TargetName = Uniform.mName;
-	bool SetFromStageUniformValue = false;
-	
-	//	special case, uniform is an image, and value is us!
-	if ( Uniform.mType == "image2d_t" )
-	{
-		auto StageParam = StageUniforms.GetParam( Uniform.mName );
-		if ( StageParam.IsValid() )
-		{
-			auto StageParamValue = StageParam.Decode<std::string>();
-			if ( Soy::StringBeginsWith( StageParamValue, TextureName, true ) )
-			{
-				TargetName = StageParamValue;
-				SetFromStageUniformValue = true;
-			}
-		}
-	}
-	
-	if ( !Soy::StringBeginsWith( TargetName, TextureName, true ) )
-		return false;
-
-	//	is there a suffix?
-	std::string Suffix;
-	Suffix = TargetName.substr( TextureName.length(), std::string::npos );
-	
-	if ( Suffix.empty() )
-	{
-		Shader.SetUniform_s( Uniform.mName, Opengl::TTextureAndContext( Texture, Filter.GetOpenglContext() ) );
-		return true;
-	}
-	
-	Soy::Assert( !SetFromStageUniformValue, "Untested code");
-	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter, StageUniforms );
-}
-
-
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsImpl& Texture,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms)
-{
-	std::string TargetName = Uniform.mName;
-	bool SetFromStageUniformValue = false;
-	
-	//	special case, uniform is an image, and value is us!
-	if ( Uniform.mType == "image2d_t" )
-	{
-		auto StageParam = StageUniforms.GetParam( Uniform.mName );
-		if ( StageParam.IsValid() )
-		{
-			auto StageParamValue = StageParam.Decode<std::string>();
-			if ( Soy::StringBeginsWith( StageParamValue, TextureName, true ) )
-			{
-				TargetName = StageParamValue;
-				SetFromStageUniformValue = true;
-			}
-		}
-	}
-	
-	if ( !Soy::StringBeginsWith( TargetName, TextureName, true ) )
-		return false;
-	
-	//	is there a suffix?
-	std::string Suffix;
-	Suffix = TargetName.substr( TextureName.length(), std::string::npos );
-	
-	if ( Suffix.empty() )
-	{
-		Shader.SetUniform_s( Uniform.mName, Texture );
-		return true;
-	}
-	
-	Soy::Assert( !SetFromStageUniformValue, "Untested code");
-	return SetTextureUniform( Shader, Uniform, Texture.GetMeta(), TextureName, Filter, StageUniforms );
-}
-
 
 bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage)
 {
@@ -454,7 +365,7 @@ bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform
 		if ( !StageData )
 			continue;
 		
-		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter, Stage.mUniforms ) )
+		if ( StageData->SetUniform( StageName, Shader, Uniform, Filter, Stage.mUniforms, Filter.GetOpenglContext() ) )
 			return true;
 	}
 	
@@ -528,7 +439,7 @@ void TFilter::CreateBlitGeo(bool Blocking)
 		Opengl::TGeometryVertex Vertex;
 		auto& UvAttrib = Vertex.mElements.PushBack();
 		UvAttrib.mName = "TexCoord";
-		UvAttrib.mType = GL_FLOAT;
+		UvAttrib.SetType(GL_FLOAT);
 		UvAttrib.mIndex = 0;	//	gr: does this matter?
 		UvAttrib.mArraySize = 2;
 		UvAttrib.mElementDataSize = sizeof( Mesh.mVertexes[0].uv );
@@ -1024,6 +935,58 @@ std::shared_ptr<Opencl::TContext> TFilter::PickNextOpenclContext()
 	return mOpenclContexts[ mCurrentOpenclContext % mOpenclContexts.GetSize() ];
 }
 
+bool TFilterStageRuntimeData::CanHandleUniform(const Soy::TUniform& Uniform,const std::string& ParentStageName,const TJobParams& CurrentStageUniforms)
+{
+	std::string TargetName = Uniform.mName;
+	bool SetFromStageUniformValue = false;
+	
+	//	special case, uniform is an image, and value is us!
+	if ( Uniform.mType == "image2d_t" || Uniform.mType == "GL_SAMPLER_2D" )
+	{
+		auto StageParam = CurrentStageUniforms.GetParam( Uniform.mName );
+		if ( StageParam.IsValid() )
+		{
+			auto StageParamValue = StageParam.Decode<std::string>();
+			if ( Soy::StringBeginsWith( StageParamValue, ParentStageName, true ) )
+			{
+				TargetName = StageParamValue;
+				SetFromStageUniformValue = true;
+			}
+		}
+	}
+	
+	if ( !Soy::StringBeginsWith( TargetName, ParentStageName, true ) )
+		return false;
+	/*
+	//	is there a suffix?
+	std::string Suffix;
+	Suffix = TargetName.substr( TextureName.length(), std::string::npos );
+	*/
+	return true;
+}
+
+
+bool TFilterStageRuntimeData::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl)
+{
+	if ( CanHandleUniform( Uniform, StageName, StageUniforms  ) )
+	{
+		auto Texture = GetTexture();
+		if ( Texture.IsValid(false) )
+		{
+			if ( Shader.SetUniform_s( Uniform.mName, Opengl::TTextureAndContext( Texture, Filter.GetOpenglContext() ) ) )
+				return true;
+		}
+
+		auto Pixels = GetPixels(ContextGl);
+		if ( Pixels )
+		{
+			if ( Shader.SetUniform_s( Uniform.mName, *Pixels ) )
+				return true;
+		}
+	}
+	
+	return false;
+}
 
 std::shared_ptr<SoyPixelsImpl> TFilterStageRuntimeData::GetPixels(Opengl::TContext& ContextGl)
 {

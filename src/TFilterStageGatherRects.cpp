@@ -255,7 +255,7 @@ void TFilterStage_MakeRectAtlas::CreateBlitResources()
 		Opengl::TGeometryVertex Vertex;
 		auto& UvAttrib = Vertex.mElements.PushBack();
 		UvAttrib.mName = "TexCoord";
-		UvAttrib.mType = GL_FLOAT;
+		UvAttrib.SetType(GL_FLOAT);
 		UvAttrib.mIndex = 0;	//	gr: does this matter?
 		UvAttrib.mArraySize = 2;
 		UvAttrib.mElementDataSize = sizeof( Mesh.mVertexes[0].uv );
