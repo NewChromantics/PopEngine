@@ -646,7 +646,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	//FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
 	//FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
 	
-	static bool OutputLinesForConfig = false;
+	static bool OutputLinesForConfig = true;
 	if ( OutputLinesForConfig )
 	{
 		Array<cl_float8> Lines;
@@ -2322,7 +2322,7 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 
 	static bool SwapTruthHorzAndVert = false;
 	//	gr: need to do all the sets flipped. todo: come up with an aspect-ratio thing to work out if we should be doing vert or horz, per set?
-	static bool SwapHoughHorzAndVert = true;
+	static bool SwapHoughHorzAndVert = false;
 	
 	//	merge truth lines into one big set for kernel
 	auto& TruthLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mTruthLineStage );
@@ -2388,18 +2388,29 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	Array<cl_int4> TruthLinePairs;	//	vv, hh
 	Array<cl_int4> HoughLinePairs;	//	vv, hh
 	
+	
 	for ( int va=0;	va<TruthVertLineIndexes.GetSize();	va++ )
 		for ( int vb=va+1;	vb<TruthVertLineIndexes.GetSize();	vb++ )
 			for ( int ha=0;	ha<TruthHorzLineIndexes.GetSize();	ha++ )
 				for ( int hb=ha+1;	hb<TruthHorzLineIndexes.GetSize();	hb++ )
+				{
 					TruthLinePairs.PushBack( Soy::VectorToCl( vec4x<int>( TruthVertLineIndexes[va], TruthVertLineIndexes[vb], TruthHorzLineIndexes[ha], TruthHorzLineIndexes[hb] ) ) );
+				}
 	
 	for ( int va=0;	va<HoughVertLineIndexes.GetSize();	va++ )
 		for ( int vb=va+1;	vb<HoughVertLineIndexes.GetSize();	vb++ )
 			for ( int ha=0;	ha<HoughHorzLineIndexes.GetSize();	ha++ )
 				for ( int hb=ha+1;	hb<HoughHorzLineIndexes.GetSize();	hb++ )
-					HoughLinePairs.PushBack( Soy::VectorToCl( vec4x<int>( HoughVertLineIndexes[va], HoughVertLineIndexes[vb], HoughHorzLineIndexes[ha], HoughHorzLineIndexes[hb] ) ) );
-	 
+				{
+					static bool FlipHoughLines = false;
+					static bool MirroHoughLines = true;
+					int _va = FlipHoughLines ? vb : va;
+					int _vb = FlipHoughLines ? va : vb;
+					int _ha = MirroHoughLines ? hb : ha;
+					int _hb = MirroHoughLines ? ha : hb;
+					HoughLinePairs.PushBack( Soy::VectorToCl( vec4x<int>( HoughVertLineIndexes[_vb], HoughVertLineIndexes[_va], HoughHorzLineIndexes[_ha], HoughHorzLineIndexes[_hb] ) ) );
+				}
+	
 	Opencl::TBufferArray<cl_int4> TruthLinePairsBuffer( GetArrayBridge(TruthLinePairs), ContextCl, "TruthLinePairs" );
 	Opencl::TBufferArray<cl_int4> HoughLinePairsBuffer( GetArrayBridge(HoughLinePairs), ContextCl, "HoughLinePairs" );
 	
