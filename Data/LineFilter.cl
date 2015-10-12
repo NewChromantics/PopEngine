@@ -478,6 +478,7 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 		(float3)( 20/360.f, MatchSat, MatchLum ),
 		(float3)( 50/360.f, MatchSat, MatchLum ),
 		(float3)( 90/360.f, MatchSat, MatchLum ),
+		(float3)( 90/360.f, 0.3f, 0.5f ),
 		(float3)( 150/360.f, MatchSat, MatchLum ),
 		//(float3)( 180/360.f, MatchSat, MatchSatHigh ),
 		(float3)( 190/360.f, MatchSat, MatchLum ),
@@ -904,7 +905,7 @@ __kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t Whi
 	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilterGroup, uv ) );
 	
 	//	if it's white, only keep if there's green nearby
-	if ( BaseWhite )
+	if ( BaseWhite && GreenDistance != 0 )
 	{
 		BaseWhite = WhiteFilterGreenNearBy( WhiteFilterGroup, uv, GreenDistance );
 	}
@@ -917,12 +918,6 @@ __kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t Whi
 	}
 #endif
 	
-	//	skip over logo at the bottom
-	if ( uv.y > 950 )
-	{
-		BaseWhite = false;
-	}
-
 	
 	float4 Rgba = BaseWhite ? (float4)(0,0,0,1) : (float4)(1,0,0,1);
 	write_imagef( Frag, uv, Rgba );
