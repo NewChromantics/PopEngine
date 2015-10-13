@@ -1,10 +1,10 @@
 
 # set meta data
 
-setuniform LineDetector MaskTopLeft=0.295x0.51
-setuniform LineDetector MaskTopRight=0.75x0.52
-setuniform LineDetector MaskBottomRight=1.1x0.83
-setuniform LineDetector MaskBottomLeft=-0.2x0.83
+setuniform LineDetector MaskTopLeft=0.37x0.51
+setuniform LineDetector MaskTopRight=0.66x0.52
+setuniform LineDetector MaskBottomRight=1.0x0.73
+setuniform LineDetector MaskBottomLeft=0.09x0.67
 
 setuniform LineDetector RadialDistortionX=-.0900000036
 setuniform LineDetector RadialDistortionY=.00999999978
@@ -17,9 +17,6 @@ setuniform LineDetector LensOffsetY=.0500000007
 setuniform LineDetector RectMergeMax=50
 setuniform LineDetector AtlasWidth=128 AtlasHeight=512
 
-# lines with real angles and distances now
-setuniform LineDetector TruthVerticalHoughLines=601.653,0.000,619.108,1000.000,179.000,-295.336,1.000,1.000x606.983,1000.000,615.710,0.000,0.500,296.335,1.000,1.000x7.893,0.000,25.348,1000.000,179.000,298.334,1.000,1.000x15.289,1000.000,24.016,0.000,0.500,-295.336,1.000,1.000x468.055,1000.000,476.782,0.000,0.500,157.412,0.370,1.000x452.375,1000.000,478.561,0.000,1.500,150.417,0.369,1.000x151.219,1000.000,159.946,0.000,0.500,-159.411,0.315,1.000x456.374,0.000,482.560,1000.000,178.500,-154.414,0.309,1.000x150.835,0.000,168.290,1000.000,179.000,155.414,0.305,1.000x218.808,0.000,236.263,1000.000,179.000,87.451,0.215,1.000x393.737,1000.000,411.192,0.000,1.000,87.451,0.100,1.000x381.044,0.000,415.965,1000.000,178.000,-83.454,0.074,1.000x
-setuniform LineDetector TruthHorizontalHoughLines=0.000,175.917,630.000,181.415,90.500,-321.322,1.000,0.000x0.000,18.999,630.000,24.496,90.500,-478.234,1.000,0.000x0.000,821.583,630.000,827.081,90.500,324.320,1.000,0.000x0.000,896.544,630.000,902.042,90.500,399.278,1.000,0.000x0.000,991.802,630.000,980.806,89.000,486.230,1.000,0.000x0.000,495.502,630.000,495.502,90.000,-4.498,1.000,0.000x541.261,0.000,630.000,87.203,134.500,-515.214,0.911,0.000x0.000,115.095,630.000,87.589,87.500,-398.279,0.387,0.000x0.000,518.396,630.000,289.095,70.000,-90.450,0.051,0.000x0.000,871.585,630.000,714.508,76.000,284.342,0.048,0.000x0.000,289.095,630.000,518.396,110.000,-90.450,0.036,0.000x0.000,529.715,630.000,275.179,68.000,-90.450,0.031,0.000x0.000,716.797,630.000,868.047,103.500,284.342,0.028,0.000x
 
 setuniform LineDetector HistogramHslsCount=16
 
@@ -27,10 +24,10 @@ setuniform LineDetector HistogramHslsCount=16
 #addstage LineDetector HslHistogram StageType=GenerateHslHistogram cl=HslHistogram.cl kernel=GenerateHslHistogram MaxHistogramSize=20
 
 # line detector
-addstage LineDetector FrameUndistorted vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=0.94 SkipRender=true
+addstage LineDetector FrameUndistorted vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=1.0 SkipRender=true
 addstage LineDetector FrameHsl vert=ScreenQuad.vert frag=FrameToHsl.frag NoSnapshot=true SkipRender=true
-addstage LineDetector HslUncropped vert=ScreenQuad.vert frag=Undistort.frag Tex0=FrameHsl ZoomUv=0.94 SkipRender=true
-addstage LineDetector HslCropped vert=ScreenQuad.vert frag=Crop.frag Tex0=HslUncropped SkipRender=true
+addstage LineDetector HslUncropped vert=ScreenQuad.vert frag=Undistort.frag Tex0=FrameHsl ZoomUv=1.0 SkipRender=true
+addstage LineDetector HslCropped vert=ScreenQuad.vert frag=Crop.frag Tex0=HslUncropped
 
 addstage LineDetector Hsl vert=ScreenQuad.vert frag=HueMask.frag Tex0=HslCropped
 
@@ -41,23 +38,38 @@ addstage LineDetector WhiteFilterGroup_rgb cl=LineFilter.cl kernel=FilterWhite R
 addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges NoSnapshot=true GreenDistance=5
 
 
-setuniform LineDetector HoughDistanceStep=15
+setuniform LineDetector HoughDistanceStep=5
 addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=1 HoughAngleFrom=0.1 SkipRender=true
-addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.1 HoughScoreMax=0.4 SkipRender=true MaximaAngles=6 MaximaDistances=10 MaxVertLines=20 MaxHorzLines=20
+addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.1 HoughScoreMax=0.6 SkipRender=true MaximaAngles=5 MaximaDistances=20 MaxVertLines=10 MaxHorzLines=10
 addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=FrameUndistorted ColourToVertical=0
-#addstage LineDetector DrawTruthLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=TruthLines ClearFrag=false ColourToVertical=0
 
 
 
 
+#addstage LineDetector TruthMask Filename=PitchMask.png
+#setuniform LineDetector TruthVerticalHoughLines=601.653,0.000,619.108,1000.000,179.000,-295.336,1.000,1.000x606.983,1000.000,615.710,0.000,0.500,296.335,1.000,1.000x7.893,0.000,25.348,1000.000,179.000,298.334,1.000,1.000x15.289,1000.000,24.016,0.000,0.500,-295.336,1.000,1.000x468.055,1000.000,476.782,0.000,0.500,157.412,0.370,1.000x452.375,1000.000,478.561,0.000,1.500,150.417,0.369,1.000x151.219,1000.000,159.946,0.000,0.500,-159.411,0.315,1.000x456.374,0.000,482.560,1000.000,178.500,-154.414,0.309,1.000x150.835,0.000,168.290,1000.000,179.000,155.414,0.305,1.000x218.808,0.000,236.263,1000.000,179.000,87.451,0.215,1.000x393.737,1000.000,411.192,0.000,1.000,87.451,0.100,1.000x381.044,0.000,415.965,1000.000,178.000,-83.454,0.074,1.000x
+#setuniform LineDetector TruthHorizontalHoughLines=0.000,175.917,630.000,181.415,90.500,-321.322,1.000,0.000x0.000,18.999,630.000,24.496,90.500,-478.234,1.000,0.000x0.000,821.583,630.000,827.081,90.500,324.320,1.000,0.000x0.000,896.544,630.000,902.042,90.500,399.278,1.000,0.000x0.000,991.802,630.000,980.806,89.000,486.230,1.000,0.000x0.000,495.502,630.000,495.502,90.000,-4.498,1.000,0.000x541.261,0.000,630.000,87.203,134.500,-515.214,0.911,0.000x0.000,115.095,630.000,87.589,87.500,-398.279,0.387,0.000x0.000,518.396,630.000,289.095,70.000,-90.450,0.051,0.000x0.000,871.585,630.000,714.508,76.000,284.342,0.048,0.000x0.000,289.095,630.000,518.396,110.000,-90.450,0.036,0.000x0.000,529.715,630.000,275.179,68.000,-90.450,0.031,0.000x0.000,716.797,630.000,868.047,103.500,284.342,0.028,0.000x
 
-#addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=0 Bounds=Frame
-#addstage LineDetector ExtractTruthCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=TruthLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=1 Bounds=TruthMask
-
-#addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=false Zoom=0.4
-#addstage LineDetector DrawTruthCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractTruthCorners ClearFrag=false Zoom=0.4
+addstage LineDetector TruthMask Filename=SixYardBoxMask.png skiprender=true
+setuniform LineDetector TruthVerticalHoughLines=0.000,224.767,800.000,227.560,90.200,-73.836,1.000,1.000x0.000,168.891,800.000,171.684,90.200,-129.712,1.000,1.000x0.000,320.555,800.000,323.348,90.200,21.951,1.000,1.000x
+setuniform LineDetector TruthHorizontalHoughLines=581.073,600.000,582.120,0.000,0.100,181.596,1.000,0.000x712.781,600.000,713.828,0.000,0.100,313.304,1.000,0.000x122.092,600.000,123.140,0.000,0.100,-277.384,1.000,0.000x253.800,600.000,254.847,0.000,0.100,-145.676,1.000,0.000x489.277,600.000,490.324,0.000,0.100,89.800,1.000,0.000x337.614,600.000,338.661,0.000,0.100,-61.863,1.000,0.000x
 
 
+addstage LineDetector TruthLines StageType=GetTruthLines VertLinesUniform=TruthVerticalHoughLines HorzLinesUniform=TruthHorizontalHoughLines SquareAnglesOnly=1 SkipRender=true
+addstage LineDetector DrawTruthLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=TruthLines ClearFrag=false ColourToVertical=0
+addstage LineDetector ExtractTruthCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=TruthLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=1 Bounds=TruthMask
+addstage LineDetector DrawTruthCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractTruthCorners ClearFrag=false Zoom=0.4
+
+addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=2 Bounds=Frame
+addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=false Zoom=0.4
+
+
+#addstage LineDetector GetHoughLineHomographys StageType=GetHoughLineHomographys cl=HoughCorners.cl kernel=HoughLineHomography HoughLineData=ExtractHoughLines TruthLineData=TruthLines MaxLinesInHoughSets=10 MaxLinesInTruthSets=10  SkipRender=true
+#addstage LineDetector ScoredHoughLineHomographys StageType=ScoreHomographys cl=HoughCorners.cl kernel=ScoreCornerHomographys CornerData=ExtractHoughCorners TruthCornerData=ExtractTruthCorners HomographyData=GetHoughLineHomographys MaxDistance=30 MinScore=0.01 MinInliers=3 SkipRender=true LimitScoredHomography=100
+#addstage LineDetector DrawHomographyCorners StageType=DrawHomographyCorners cl=HoughCorners.cl kernel=DrawHomographyCorners CornerData=ExtractHoughCorners TruthCornerData=ExtractTruthCorners HomographyData=GetHoughLineHomographys MaxDistance=10 Zoom=0.45
+#addstage LineDetector xxDrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=Frame DrawFrameOnMask=0 PixelSkip=0 Zoom=1
+#addstage LineDetector xxDrawMaskOnFrame2 StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0 Zoom=0.3
+#addstage LineDetector xxDrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=1 Zoom=1
 
 
 
