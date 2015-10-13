@@ -518,9 +518,9 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Opencl::TBufferArray<cl_float> AnglesBuffer( GetArrayBridge(Angles), ContextCl, "mAngles" );
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
-	
+	static size_t TotalLineLimit = 2000;
 	Array<cl_float8> AllLines;
-	AllLines.SetSize(400);
+	AllLines.SetSize(TotalLineLimit);
 	int LineBufferCount[] = {0};
 	auto LineBufferCountArray = GetRemoteArray( LineBufferCount );
 	Opencl::TBufferArray<cl_float8> LineBuffer( GetArrayBridge(AllLines), ContextCl, "LineBuffer" );
@@ -567,7 +567,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		
 		if ( LineCount > LineBuffer.GetSize() )
 		{
-			std::Debug << "Extracted " << LineCount << "/" << LineBuffer.GetSize() << std::endl;
+			std::Debug << "Warning: Extracted " << LineCount << "/" << LineBuffer.GetSize() << std::endl;
 		}
 		
 		AllLines.SetSize( std::min( LineCount, size_cast<cl_int>(LineBuffer.GetSize()) ) );
@@ -692,7 +692,11 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		std::Debug.PopStreamSettings();
 	}
 	
-	std::Debug << "Extracted x" << (StageData.mVertLines.GetSize()+StageData.mHorzLines.GetSize()) << " lines" << std::endl;
+	{
+		auto v = StageData.mVertLines.GetSize();
+		auto h = StageData.mHorzLines.GetSize();
+		std::Debug << "Extracted x" << v << " vert lines and x" << h << " horz lines (" << v+h << " total)" << std::endl;
+	}
 	static bool DebugExtractedHoughLines = false;
 	if ( DebugExtractedHoughLines )
 	{
