@@ -955,7 +955,8 @@ bool TFilterStageRuntimeData::CanHandleUniform(const Soy::TUniform& Uniform,cons
 		}
 	}
 	
-	if ( !Soy::StringBeginsWith( TargetName, ParentStageName, true ) )
+	//if ( !Soy::StringBeginsWith( TargetName, ParentStageName, true ) )
+	if ( TargetName != ParentStageName )
 		return false;
 	/*
 	//	is there a suffix?

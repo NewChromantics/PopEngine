@@ -131,6 +131,8 @@ private:
 	std::shared_ptr<Opencl::TContext>		mContextCl;
 	
 public:
+	static bool	SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms);
+
 	//	deprecate the use of these
 	Opengl::TTexture				GetFrameTexture(TFilter& Filter,bool Blocking=true);
 	std::shared_ptr<SoyPixelsImpl>	GetFramePixels(TFilter& Filter,bool Blocking=true);
