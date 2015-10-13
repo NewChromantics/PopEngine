@@ -12,7 +12,11 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 								  global float4* HoughCorners,
 								  float MinScore,
 								  read_only image2d_t Bounds,
-								  int InBoundsCornersOnly
+								  int InBoundsCornersOnly,
+								  float2 MaskTopLeft,
+								  float2 MaskTopRight,
+								  float2 MaskBottomRight,
+								  float2 MaskBottomLeft
 								  )
 {
 	int HoughLineAIndex = get_global_id(0) + OffsetHoughLineAIndex;
@@ -45,11 +49,27 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 		if ( fabsf(Intersection.x) > FarCoord || fabsf(Intersection.y) > FarCoord )
 			Score = -1;
 		
-		if ( InBoundsCornersOnly )
+		if ( InBoundsCornersOnly == 1 )			//	clip to image
 		{
 			int2 wh = get_image_dim(Bounds);
 			if ( Intersection.x < 0 || Intersection.y < 0 || Intersection.x > wh.x || Intersection.y > wh.y )
 				Score = -1;
+		}
+		else if ( InBoundsCornersOnly == 2 )	//	clip to mask
+		{
+			int2 wh = get_image_dim(Bounds);
+			float4 ClipRect;
+			ClipRect.x = min( MaskTopLeft.x, MaskBottomLeft.x );
+			ClipRect.y = min( MaskTopLeft.y, MaskTopRight.y );
+			ClipRect.z = max( MaskTopRight.x, MaskBottomRight.x );
+			ClipRect.w = max( MaskBottomLeft.y, MaskBottomRight.y );
+			ClipRect *= (float4)( wh.x, wh.y, wh.x, wh.y );
+	
+			if ( Intersection.x < ClipRect.x || Intersection.y < ClipRect.y || Intersection.x > ClipRect.z || Intersection.y > ClipRect.w )
+			{
+				//printf("cliprect = (%.2f,%.2f,%.2f,%.2f) vs Intersection(%.2f,%.2f)\n", ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w, Intersection.x, Intersection.y );
+				Score = -1;
+			}
 		}
 		
 		if ( Score < MinScore )
@@ -939,11 +959,13 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	{
 		TotalScore /= (float)Inliers;
 		TotalScore = clamp( Inliers / 10.f, 0.f, 1.f );
+		/*
 		if ( Inliers > 10 )
 			printf("inliers: %d\n", Inliers );
 		
 		if ( Inliers > TruthCornerCount )
 			printf("More inliers(%d) than truths corneers(%d). Hough corners: %d\n", Inliers, TruthCornerCount, HoughCornerCount );
+		 */
 	}
 	else
 	{
