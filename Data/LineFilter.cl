@@ -669,7 +669,11 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 								float HoughScoreMax,
 								int MaximaDistances,
 								int MaximaAngles,
-								float HoughDistanceStep
+								float HoughDistanceStep,
+								float2 MaskTopLeft,
+								float2 MaskTopRight,
+								float2 MaskBottomRight,
+								float2 MaskBottomLeft
 								)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
@@ -704,8 +708,18 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 
 	//	correct the score to be related to maximum possible length (this lets us handle mulitple resolutions)
 	float4 Line = GetHoughLine( Distance, Angle, Originf );
-	int Border = 0;	//	testing clip
-	Line = ClipLine( Line, (float4)(Border,Border,wh.x-Border,wh.y-Border) );
+
+	//	calc clip from [normalised] mask
+	float4 ClipRect;
+	ClipRect.x = min( MaskTopLeft.x, MaskBottomLeft.x );
+	ClipRect.y = min( MaskTopLeft.y, MaskTopRight.y );
+	ClipRect.z = max( MaskTopRight.x, MaskBottomRight.x );
+	ClipRect.w = max( MaskBottomLeft.y, MaskBottomRight.y );
+	ClipRect *= (float4)( wh.x, wh.y, wh.x, wh.y );
+	//printf("cliprect = (%.2f,%.2f,%.2f,%.2f)\n", ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w );
+	
+	Line = ClipLine( Line, ClipRect );
+	
 	float LineLength = length( Line.xy - Line.zw );
 	
 	//	entirely clipped lines... should we have any at all? maybe when distance is too far out
