@@ -1,6 +1,5 @@
 in vec2 fTexCoord;
-uniform sampler2D undistort;
-#define Frame undistort
+uniform sampler2D Tex0;
 uniform vec2 MaskTopLeft = vec2(0,0);
 uniform vec2 MaskTopRight = vec2(0,1);
 uniform vec2 MaskBottomRight = vec2(1,1);
@@ -74,7 +73,7 @@ float2 ZoomTexCoord(float2 TexCoord)
 void main()
 {
 	float2 zTexCoord = ZoomTexCoord(fTexCoord);
-    gl_FragColor = texture2D(Frame, zTexCoord );
+    gl_FragColor = texture2D(Tex0, zTexCoord );
 /*
 	float2 MaskMin = GetMaskMin();
 	float2 MaskMax = GetMaskMax();

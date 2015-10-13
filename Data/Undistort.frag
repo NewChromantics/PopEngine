@@ -1,5 +1,5 @@
 in vec2 fTexCoord;
-uniform sampler2D Frame;
+uniform sampler2D Tex0;
 
 uniform float RadialDistortionX = -.0900000036;
 uniform float RadialDistortionY = .00999999978;
@@ -8,9 +8,8 @@ uniform float TangentialDistortionY = 0;
 uniform float K5Distortion = 0;
 uniform float LensOffsetX = .0299999993;
 uniform float LensOffsetY = .0500000007;
-
+uniform float ZoomUv = 1.0f;
 const bool Invert = false;
-const float ZoomUv = 1;
 
 //	http://stackoverflow.com/questions/21615298/opencv-distort-back
 float2 DistortPixel(float2 point,bool Invert)
@@ -71,7 +70,7 @@ void main()
 	float2 uv = fTexCoord;
 	
 	uv = CenterUv(uv);
-	//uv *= 1.0f / ZoomUv;
+	uv *= 1.0f / ZoomUv;
 	uv = DistortPixel( uv, Invert );
 	uv = UncenterUv(uv);
 	
@@ -97,11 +96,11 @@ void main()
 	}
 	
 	uv = CenterUv(uv);
-	//uv *= 1.0f / ZoomUv;
+	uv *= 1.0f / ZoomUv;
 	uv = UncenterUv(uv);
 	
 	
-	float4 Sample = texture2D( Frame, uv );
+	float4 Sample = texture2D( Tex0, uv );
 
 	gl_FragColor = Sample;
 }
