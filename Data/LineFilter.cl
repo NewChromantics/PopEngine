@@ -227,22 +227,20 @@ __kernel void LineFilter(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__rea
 
 
 
-static bool RgbaToWhite(float4 Rgba)
+static bool RgbaToWhite(float4 Rgba,int HistogramHslsCount)
 {
-//#define HistogramHslsCount	(15)
-	int Index = RgbToIndex( Rgba.xyz, 15 );
+	int Index = RgbToIndex( Rgba.xyz, HistogramHslsCount );
 	return Index == 0;
 }
 
-static bool RgbaToGreen(float4 Rgba)
+static bool RgbaToGreen(float4 Rgba,int HistogramHslsCount)
 {
-	//#define HistogramHslsCount	(15)
-	int Index = RgbToIndex( Rgba.xyz, 15 );
-	return Index==9;
+	int Index = RgbToIndex( Rgba.xyz, HistogramHslsCount );
+	return Index==9 || Index==10;
 }
 
 
-static void GetWhiteSample(float* SampleScores,int2 PatternSize,float2 SampleScale,float AngleDeg,__read_only image2d_t WhiteFilter,float2 BaseUv)
+static void GetWhiteSample(float* SampleScores,int2 PatternSize,float2 SampleScale,float AngleDeg,__read_only image2d_t WhiteFilter,float2 BaseUv,int HistogramHslsCount)
 {
 	float AngleRad = DegToRad(AngleDeg);
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
@@ -262,7 +260,7 @@ static void GetWhiteSample(float* SampleScores,int2 PatternSize,float2 SampleSca
 			//	rotate sample
 			uv += BaseUv;
 			
-			bool IsWhite = RgbaToWhite( read_imagef( WhiteFilter, Sampler, uv ) );
+			bool IsWhite = RgbaToWhite( read_imagef( WhiteFilter, Sampler, uv ), HistogramHslsCount );
 			float Score = IsWhite;
 			SampleScores[x+(y*PatternSize.x)] = Score;
 		}
@@ -272,7 +270,7 @@ static void GetWhiteSample(float* SampleScores,int2 PatternSize,float2 SampleSca
 
 
 //	x is positive score, y is negative score
-static float2 GetWhitePatternScore(float2 SampleSizePx,float AngleDeg,__read_only image2d_t WhiteFilter,float2 BaseUv)
+static float2 GetWhitePatternScore(float2 SampleSizePx,float AngleDeg,__read_only image2d_t WhiteFilter,float2 BaseUv,int HistogramHslsCount)
 {
 	//	this is the image we're trying to match
 	
@@ -303,7 +301,7 @@ static float2 GetWhitePatternScore(float2 SampleSizePx,float AngleDeg,__read_onl
 	float2 SampleScale = (float2)( SampleSizePx.x / PatternWidth, SampleSizePx.y / PatternHeight );
 	float SampleScores[PatternWidth*PatternHeight];
 	
-	GetWhiteSample( SampleScores, PatternSize, SampleScale, AngleDeg, WhiteFilter, BaseUv );
+	GetWhiteSample( SampleScores, PatternSize, SampleScale, AngleDeg, WhiteFilter, BaseUv, HistogramHslsCount );
 	
 	//	compare scores
 	float PositiveScore = 0;
@@ -330,14 +328,14 @@ static float2 GetWhitePatternScore(float2 SampleSizePx,float AngleDeg,__read_onl
 	return (float2)(PositiveScore,NegativeScore);
 }
 
-__kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__read_only image2d_t Frame,__write_only image2d_t Frag)
+__kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__read_only image2d_t Frame,__write_only image2d_t Frag,int HistogramHslsCount)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 
 	//	abort early
 	//float4 InvalidColour = texture2D( Frame, uv );
 	float4 InvalidColour = (float4)(0,0,0,1);
-	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ), HistogramHslsCount );
 	if ( !BaseWhite )
 	{
 		write_imagef( Frag, uv, InvalidColour );
@@ -375,7 +373,7 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 		for ( int a=0;	a<AngleCount;	a++ )
 		{
 			float2 SampleSizePx = (float2)( WindowSize[s], WindowSize[s] );
-			float2 Score = GetWhitePatternScore( SampleSizePx, Angles[a], WhiteFilter, (float2)(uv.x,uv.y) );
+			float2 Score = GetWhitePatternScore( SampleSizePx, Angles[a], WhiteFilter, (float2)(uv.x,uv.y), HistogramHslsCount );
 			if ( Score.x < MinScore.x || Score.y < MinScore.y )
 				continue;
 			if ( Score.x < BestScore.x && Score.y < BestScore.y )
@@ -448,7 +446,7 @@ __kernel void WhiteLineFilter(int OffsetX,int OffsetY,__read_only image2d_t Whit
 
 
 
-__kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag,int RenderAsRgb,int DrawPalette)
+__kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__write_only image2d_t Frag,int RenderAsRgb,int DrawPalette,int HistogramHslsCount)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
@@ -459,9 +457,11 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	float MatchSatHigh = 0.6f;
 	float MatchSatLow = 0.5f;
 	float MatchLum = 0.3f;
-#define HistogramHslsCount	(15)
+#define HISTOGRAM_COUNT	(16)
+	if ( HistogramHslsCount != HISTOGRAM_COUNT && OffsetX < 20 )
+		printf("Error: histogram size mis match: HISTOGRAM_COUNT %d vs HistogramHslsCount %d\n", HISTOGRAM_COUNT, HistogramHslsCount );
 #define LastWhiteIndex		4
-	float3 HistogramHsls[HistogramHslsCount] =
+	float3 HistogramHsls[HISTOGRAM_COUNT] =
 	{
 		(float3)( 0, 0, 0.9f ),	//	white
 		(float3)( 0, 0, 0.8f ),	//	white
@@ -489,7 +489,7 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	
 	int Best = 0;
 	float BestDiff = 1;
-	for ( int i=0;	i<HistogramHslsCount;	i++ )
+	for ( int i=0;	i<HISTOGRAM_COUNT;	i++ )
 	{
 		float Diff = GetHslHslDifference( SourceHsl, HistogramHsls[i] );
 		if ( Diff < BestDiff )
@@ -502,7 +502,9 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	float3 FragHsl = HistogramHsls[Best];
 	float4 Rgba = (float4)(0,0,0,1);
 	
-	bool ColourToRgb = RenderAsRgb!=0;
+	bool ColourToRgb = RenderAsRgb==1;
+	bool ColourToSourceHue = RenderAsRgb==2;
+	bool ColourToHistogramHue = RenderAsRgb==3;
 	bool ColourToMask = false;
 	bool ColourToIndex = true;
 	
@@ -514,6 +516,16 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	{
 		if ( Best <= LastWhiteIndex )
 			Rgba.xyz = 1;
+	}
+	else if ( ColourToSourceHue )
+	{
+		float3 Hsl = (float3)(SourceHsl.x,0.5f,0.5f);
+		Rgba.xyz = HslToRgb( Hsl );
+	}
+	else if ( ColourToHistogramHue )
+	{
+		float3 Hsl = (float3)(FragHsl.x,0.5f,0.5f);
+		Rgba.xyz = HslToRgb( Hsl );
 	}
 	else
 	{
@@ -656,7 +668,8 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 								float HoughScoreMin,
 								float HoughScoreMax,
 								int MaximaDistances,
-								int MaximaAngles
+								int MaximaAngles,
+								float HoughDistanceStep
 								)
 {
 	int AngleIndex = get_global_id(0) + OffsetAngle;
@@ -700,7 +713,6 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 		return;
 
 	//	gr: note: we can have more-pixels for a line depending on distance grouping
-	float HoughDistanceStep = 0.5f;
 	float LineMaxPixels = LineLength * HoughDistanceStep;
 
 	Score /= LineMaxPixels;
@@ -751,9 +763,9 @@ __kernel void DrawHoughGraph(int OffsetAngle,int OffsetDistance,__write_only ima
 }
 
 
-static bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
+static bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv,int HistogramHslsCount)
 {
-	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ) );
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilter, uv ), HistogramHslsCount );
 	if ( !BaseWhite )
 		return false;
 	
@@ -764,7 +776,7 @@ static bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv)
 	return true;
 }
 
-__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
+__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int HistogramHslsCount)
 {
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
@@ -774,7 +786,7 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	float2 Originf = (float2)(Origin.x,Origin.y);
 	
 	//	abort early
-	if ( !HoughIncludePixel( WhiteFilter, uv ) )
+	if ( !HoughIncludePixel( WhiteFilter, uv, HistogramHslsCount ) )
 		return;
 
 	int AngleIndex = uva.z;
@@ -834,12 +846,12 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 }
 
 
-__kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag)
+__kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag,int HistogramHslsCount)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
 	//	abort early
-	if ( !HoughIncludePixel( WhiteFilter, uv ) )
+	if ( !HoughIncludePixel( WhiteFilter, uv, HistogramHslsCount ) )
 	{
 		write_imagef( Frag, uv, (float4)(0,0,0,1) );
 		return;
@@ -851,63 +863,63 @@ __kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t Wh
 
 
 
-static float WhiteSample(int x,int y,__read_only image2d_t Image,int2 uv)
+static float WhiteSample(int x,int y,__read_only image2d_t Image,int2 uv,int HistogramHslsCount)
 {
-	return RgbaToWhite( texture2D( Image, uv+(int2)(x,y) ) ) ? 1:0;
+	return RgbaToWhite( texture2D( Image, uv+(int2)(x,y) ), HistogramHslsCount ) ? 1:0;
 }
 
-static bool GreenSample(int x,int y,__read_only image2d_t Image,int2 uv)
+static bool GreenSample(int x,int y,__read_only image2d_t Image,int2 uv,int HistogramHslsCount)
 {
-	return RgbaToGreen( texture2D( Image, uv+(int2)(x,y) ) );
+	return RgbaToGreen( texture2D( Image, uv+(int2)(x,y) ), HistogramHslsCount );
 }
 
-static float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv,int GreenDistance)
+static float WhiteFilterGreenNearBy(__read_only image2d_t Image,int2 uv,int GreenDistance,int HistogramHslsCount)
 {
 	int GreenCount = 0;
 	int GreenRadius = GreenDistance;
 
-	GreenCount += GreenSample( -GreenRadius, -GreenRadius, Image, uv );
-	GreenCount += GreenSample(  0, -GreenRadius, Image, uv );
-	GreenCount += GreenSample(  GreenRadius, -GreenRadius, Image, uv );
+	GreenCount += GreenSample( -GreenRadius, -GreenRadius, Image, uv, HistogramHslsCount );
+	GreenCount += GreenSample(  0, -GreenRadius, Image, uv, HistogramHslsCount );
+	GreenCount += GreenSample(  GreenRadius, -GreenRadius, Image, uv, HistogramHslsCount );
 	
-	GreenCount += GreenSample( -GreenRadius,  0, Image, uv );
-//	GreenCount += GreenSample(  0,  0, Image, uv );
-	GreenCount += GreenSample(  GreenRadius,  0, Image, uv );
+	GreenCount += GreenSample( -GreenRadius,  0, Image, uv, HistogramHslsCount );
+//	GreenCount += GreenSample(  0,  0, Image, uv, HistogramHslsCount );
+	GreenCount += GreenSample(  GreenRadius,  0, Image, uv, HistogramHslsCount );
 	
-	GreenCount += GreenSample( -GreenRadius,  GreenRadius, Image, uv );
-	GreenCount += GreenSample(  0,  GreenRadius, Image, uv );
-	GreenCount += GreenSample(  GreenRadius,  GreenRadius, Image, uv );
+	GreenCount += GreenSample( -GreenRadius,  GreenRadius, Image, uv, HistogramHslsCount );
+	GreenCount += GreenSample(  0,  GreenRadius, Image, uv, HistogramHslsCount );
+	GreenCount += GreenSample(  GreenRadius,  GreenRadius, Image, uv, HistogramHslsCount );
 	
 	return GreenCount >= 2;
 }
 
-static float WhiteFilterSobel(__read_only image2d_t Image,int2 uv)
+static float WhiteFilterSobel(__read_only image2d_t Image,int2 uv,int HistogramHslsCount)
 {
 	float hc =
-	WhiteSample(-1,-1, Image,uv) *  1. + WhiteSample( 0,-1, Image,uv) *  2.
-	+WhiteSample( 1,-1, Image,uv) *  1. + WhiteSample(-1, 1, Image,uv) * -1.
-	+WhiteSample( 0, 1, Image,uv) * -2. + WhiteSample( 1, 1, Image,uv) * -1.;
+	WhiteSample(-1,-1, Image,uv, HistogramHslsCount) *  1. + WhiteSample( 0,-1, Image,uv, HistogramHslsCount) *  2.
+	+WhiteSample( 1,-1, Image,uv, HistogramHslsCount) *  1. + WhiteSample(-1, 1, Image,uv, HistogramHslsCount) * -1.
+	+WhiteSample( 0, 1, Image,uv, HistogramHslsCount) * -2. + WhiteSample( 1, 1, Image,uv, HistogramHslsCount) * -1.;
 	
 	float vc =
-	WhiteSample(-1,-1, Image,uv) *  1. + WhiteSample(-1, 0, Image,uv) *  2.
-	+WhiteSample(-1, 1, Image,uv) *  1. + WhiteSample( 1,-1, Image,uv) * -1.
-	+WhiteSample( 1, 0, Image,uv) * -2. + WhiteSample( 1, 1, Image,uv) * -1.;
+	WhiteSample(-1,-1, Image,uv, HistogramHslsCount) *  1. + WhiteSample(-1, 0, Image,uv, HistogramHslsCount) *  2.
+	+WhiteSample(-1, 1, Image,uv, HistogramHslsCount) *  1. + WhiteSample( 1,-1, Image,uv, HistogramHslsCount) * -1.
+	+WhiteSample( 1, 0, Image,uv, HistogramHslsCount) * -2. + WhiteSample( 1, 1, Image,uv, HistogramHslsCount) * -1.;
 	
-	return WhiteSample(0, 0, Image,uv) * pow( (vc*vc + hc*hc), .6f);
+	return WhiteSample(0, 0, Image,uv, HistogramHslsCount) * pow( (vc*vc + hc*hc), .6f);
 }
 
 
 
-__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilterGroup,__write_only image2d_t Frag,int GreenDistance)
+__kernel void WhiteFilterEdges(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilterGroup,__write_only image2d_t Frag,int GreenDistance,int HistogramHslsCount)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
-	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilterGroup, uv ) );
+	bool BaseWhite = RgbaToWhite( texture2D( WhiteFilterGroup, uv ), HistogramHslsCount );
 	
 	//	if it's white, only keep if there's green nearby
 	if ( BaseWhite && GreenDistance != 0 )
 	{
-		BaseWhite = WhiteFilterGreenNearBy( WhiteFilterGroup, uv, GreenDistance );
+		BaseWhite = WhiteFilterGreenNearBy( WhiteFilterGroup, uv, GreenDistance, HistogramHslsCount );
 	}
 	
 	//	if it's a white pixel, only keep if it's an edge
