@@ -959,13 +959,16 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	{
 		TotalScore /= (float)Inliers;
 		TotalScore = clamp( Inliers / 10.f, 0.f, 1.f );
-		/*
-		if ( Inliers > 10 )
-			printf("inliers: %d\n", Inliers );
 		
+		if ( Inliers > 10 )
+		{
+			//printf("inliers: %d\n", Inliers );
+		}
+	 
 		if ( Inliers > TruthCornerCount )
-			printf("More inliers(%d) than truths corneers(%d). Hough corners: %d\n", Inliers, TruthCornerCount, HoughCornerCount );
-		 */
+		{
+		//	printf("More inliers(%d) than truths corneers(%d). Hough corners: %d\n", Inliers, TruthCornerCount, HoughCornerCount );
+		}
 	}
 	else
 	{
@@ -975,9 +978,10 @@ __kernel void ScoreCornerHomographys(int HomographyIndexOffset,
 	if ( TotalScore < MinScore )
 		TotalScore = 0;
 	
-	if ( GoodHomography )
-		TotalScore = 0;
+	//if ( GoodHomography )
+	//	TotalScore = 0;
 //	TotalScore = GoodHomography ? 1 : 0.2f;
+	
 	
 	//	write score in element 15
 	Homographys[HomographyIndex][15] = TotalScore;
