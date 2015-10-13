@@ -643,10 +643,15 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 			FinalHorzLines.Push( Line );
 	}
 	
-	//FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), 2 ) );
-	//FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), 2 ) );
+	//	limit output
+	TUniformWrapper<int> MaxVertLinesUniform("MaxVertLines",1000);
+	TUniformWrapper<int> MaxHorzLinesUniform("MaxHorzLines",1000);
+	SetUniform( MaxVertLinesUniform, MaxVertLinesUniform );
+	SetUniform( MaxHorzLinesUniform, MaxHorzLinesUniform );
+	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), MaxVertLinesUniform.mValue ) );
+	FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), MaxHorzLinesUniform.mValue ) );
 	
-	static bool OutputLinesForConfig = true;
+	static bool OutputLinesForConfig = false;
 	if ( OutputLinesForConfig )
 	{
 		Array<cl_float8> Lines;
