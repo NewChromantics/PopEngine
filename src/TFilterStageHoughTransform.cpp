@@ -1216,8 +1216,8 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	ReadUniform_ArrayFloat8( StageData.mHorzLines, mHorzLinesUniform );
 
 	//	dupes & bad cases
-	FinalVertLines.RemoveBlock(0,1);
-	FinalHorzLines.RemoveBlock(0,1);
+	//FinalVertLines.RemoveBlock(0,1);
+	//FinalHorzLines.RemoveBlock(0,1);
 	
 	//	remove non vertical/horizontal lines
 	TUniformWrapper<int> SquareAnglesOnlyUniform("SquareAnglesOnly",false);
@@ -2474,8 +2474,8 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	
 	
 	
-	
-	static bool CpuVersion = false;
+	//	gr: cpu version works much better!
+	static bool CpuVersion = true;
 	
 	if ( CpuVersion )
 	{
