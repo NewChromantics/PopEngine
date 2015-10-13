@@ -10,7 +10,7 @@ uniform float LensOffsetX = .0299999993;
 uniform float LensOffsetY = .0500000007;
 uniform float ZoomUv = 1.0f;
 const bool Invert = false;
-uniform float BarrelPower = 0.413f;
+uniform float BarrelPower = 0.5f;	//	gr: fix these values so -1...1, not -1...0.5...1
 
 //	http://stackoverflow.com/questions/21615298/opencv-distort-back
 float2 DistortPixel(float2 point,bool Invert)
