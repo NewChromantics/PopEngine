@@ -1,0 +1,53 @@
+
+# set meta data
+
+setuniform LineDetector MaskTopLeft=0.295x0.51
+setuniform LineDetector MaskTopRight=0.75x0.52
+setuniform LineDetector MaskBottomRight=1.1x0.83
+setuniform LineDetector MaskBottomLeft=-0.2x0.83
+
+setuniform LineDetector RadialDistortionX=-.0900000036
+setuniform LineDetector RadialDistortionY=.00999999978
+setuniform LineDetector TangentialDistortionX=.0599999987
+setuniform LineDetector TangentialDistortionY=0
+setuniform LineDetector K5Distortion=0
+setuniform LineDetector LensOffsetX=.0299999993
+setuniform LineDetector LensOffsetY=.0500000007
+
+setuniform LineDetector RectMergeMax=50
+setuniform LineDetector AtlasWidth=128 AtlasHeight=512
+
+# lines with real angles and distances now
+setuniform LineDetector TruthVerticalHoughLines=601.653,0.000,619.108,1000.000,179.000,-295.336,1.000,1.000x606.983,1000.000,615.710,0.000,0.500,296.335,1.000,1.000x7.893,0.000,25.348,1000.000,179.000,298.334,1.000,1.000x15.289,1000.000,24.016,0.000,0.500,-295.336,1.000,1.000x468.055,1000.000,476.782,0.000,0.500,157.412,0.370,1.000x452.375,1000.000,478.561,0.000,1.500,150.417,0.369,1.000x151.219,1000.000,159.946,0.000,0.500,-159.411,0.315,1.000x456.374,0.000,482.560,1000.000,178.500,-154.414,0.309,1.000x150.835,0.000,168.290,1000.000,179.000,155.414,0.305,1.000x218.808,0.000,236.263,1000.000,179.000,87.451,0.215,1.000x393.737,1000.000,411.192,0.000,1.000,87.451,0.100,1.000x381.044,0.000,415.965,1000.000,178.000,-83.454,0.074,1.000x
+setuniform LineDetector TruthHorizontalHoughLines=0.000,175.917,630.000,181.415,90.500,-321.322,1.000,0.000x0.000,18.999,630.000,24.496,90.500,-478.234,1.000,0.000x0.000,821.583,630.000,827.081,90.500,324.320,1.000,0.000x0.000,896.544,630.000,902.042,90.500,399.278,1.000,0.000x0.000,991.802,630.000,980.806,89.000,486.230,1.000,0.000x0.000,495.502,630.000,495.502,90.000,-4.498,1.000,0.000x541.261,0.000,630.000,87.203,134.500,-515.214,0.911,0.000x0.000,115.095,630.000,87.589,87.500,-398.279,0.387,0.000x0.000,518.396,630.000,289.095,70.000,-90.450,0.051,0.000x0.000,871.585,630.000,714.508,76.000,284.342,0.048,0.000x0.000,289.095,630.000,518.396,110.000,-90.450,0.036,0.000x0.000,529.715,630.000,275.179,68.000,-90.450,0.031,0.000x0.000,716.797,630.000,868.047,103.500,284.342,0.028,0.000x
+
+setuniform LineDetector HistogramHslsCount=16
+
+
+#addstage LineDetector HslHistogram StageType=GenerateHslHistogram cl=HslHistogram.cl kernel=GenerateHslHistogram MaxHistogramSize=20
+
+# line detector
+addstage LineDetector FrameUndistorted vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=0.94
+addstage LineDetector FrameHsl vert=ScreenQuad.vert frag=FrameToHsl.frag NoSnapshot=true
+addstage LineDetector HslUncropped vert=ScreenQuad.vert frag=Undistort.frag Tex0=FrameHsl ZoomUv=0.94
+addstage LineDetector Hsl vert=ScreenQuad.vert frag=Crop.frag Tex0=HslUncropped
+
+addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=0 DrawPalette=0 NoSnapshot=true
+addstage LineDetector WhiteFilterGroup_rgb cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=1 DrawPalette=1 NoSnapshot=true
+addstage LineDetector WhiteFilterGroup_hue cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=2 DrawPalette=1 NoSnapshot=true
+addstage LineDetector WhiteFilterGroup_histhue cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=3 DrawPalette=1 NoSnapshot=true
+addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges NoSnapshot=true GreenDistance=5
+#addstage LineDetector LineFilter cl=LineFilter.cl kernel=WhiteLineFilter
+#addstage LineDetector HoughFilterPixels cl=LineFilter.cl kernel=HoughFilterPixels
+
+
+setuniform LineDetector HoughDistanceStep=10
+addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=1 HoughAngleFrom=0.1 SkipRender=true
+addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.1 HoughScoreMax=0.3 SkipRender=true MaximaAngles=4 MaximaDistances=10 MaxVertLines=20 MaxHorzLines=20
+addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=FrameUndistorted ColourToVertical=0
+
+
+
+decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
+#decode LineDetector /Volumes/Assets/5goals.mp4
+
