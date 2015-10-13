@@ -27,24 +27,43 @@ setuniform LineDetector HistogramHslsCount=16
 #addstage LineDetector HslHistogram StageType=GenerateHslHistogram cl=HslHistogram.cl kernel=GenerateHslHistogram MaxHistogramSize=20
 
 # line detector
-addstage LineDetector FrameUndistorted vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=0.94
-addstage LineDetector FrameHsl vert=ScreenQuad.vert frag=FrameToHsl.frag NoSnapshot=true
-addstage LineDetector HslUncropped vert=ScreenQuad.vert frag=Undistort.frag Tex0=FrameHsl ZoomUv=0.94
-addstage LineDetector Hsl vert=ScreenQuad.vert frag=Crop.frag Tex0=HslUncropped
+addstage LineDetector FrameUndistorted vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=0.94 SkipRender=true
+addstage LineDetector FrameHsl vert=ScreenQuad.vert frag=FrameToHsl.frag NoSnapshot=true SkipRender=true
+addstage LineDetector HslUncropped vert=ScreenQuad.vert frag=Undistort.frag Tex0=FrameHsl ZoomUv=0.94 SkipRender=true
+addstage LineDetector HslCropped vert=ScreenQuad.vert frag=Crop.frag Tex0=HslUncropped SkipRender=true
+
+addstage LineDetector Hsl vert=ScreenQuad.vert frag=HueMask.frag Tex0=HslCropped
 
 addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=0 DrawPalette=0 NoSnapshot=true
 addstage LineDetector WhiteFilterGroup_rgb cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=1 DrawPalette=1 NoSnapshot=true
-addstage LineDetector WhiteFilterGroup_hue cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=2 DrawPalette=1 NoSnapshot=true
-addstage LineDetector WhiteFilterGroup_histhue cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=3 DrawPalette=1 NoSnapshot=true
+#addstage LineDetector WhiteFilterGroup_hue cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=2 DrawPalette=1 NoSnapshot=true
+#addstage LineDetector WhiteFilterGroup_histhue cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=3 DrawPalette=1 NoSnapshot=true
 addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges NoSnapshot=true GreenDistance=5
-#addstage LineDetector LineFilter cl=LineFilter.cl kernel=WhiteLineFilter
-#addstage LineDetector HoughFilterPixels cl=LineFilter.cl kernel=HoughFilterPixels
 
 
-setuniform LineDetector HoughDistanceStep=10
+setuniform LineDetector HoughDistanceStep=15
 addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=1 HoughAngleFrom=0.1 SkipRender=true
-addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.1 HoughScoreMax=1.0 SkipRender=true MaximaAngles=6 MaximaDistances=10 MaxVertLines=20 MaxHorzLines=20
+addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.1 HoughScoreMax=0.4 SkipRender=true MaximaAngles=6 MaximaDistances=10 MaxVertLines=20 MaxHorzLines=20
 addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=FrameUndistorted ColourToVertical=0
+#addstage LineDetector DrawTruthLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=TruthLines ClearFrag=false ColourToVertical=0
+
+
+
+
+
+#addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=0 Bounds=Frame
+#addstage LineDetector ExtractTruthCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=TruthLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=1 Bounds=TruthMask
+
+#addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=false Zoom=0.4
+#addstage LineDetector DrawTruthCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractTruthCorners ClearFrag=false Zoom=0.4
+
+
+
+
+
+
+
+
 
 
 

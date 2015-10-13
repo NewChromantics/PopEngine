@@ -236,7 +236,7 @@ static bool RgbaToWhite(float4 Rgba,int HistogramHslsCount)
 static bool RgbaToGreen(float4 Rgba,int HistogramHslsCount)
 {
 	int Index = RgbToIndex( Rgba.xyz, HistogramHslsCount );
-	return Index==9 || Index==10;
+	return Index==9 || Index==10 || Index==11;
 }
 
 
@@ -450,7 +450,7 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
 	
-	float3 SourceHsl = texture2D( Hsl, uv ).xyz;
+	float4 SourceHsl = texture2D( Hsl, uv ).xyzw;
 	
 	
 	float MatchSat = 0.5f;
@@ -461,6 +461,7 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	if ( HistogramHslsCount != HISTOGRAM_COUNT && OffsetX < 20 )
 		printf("Error: histogram size mis match: HISTOGRAM_COUNT %d vs HistogramHslsCount %d\n", HISTOGRAM_COUNT, HistogramHslsCount );
 #define LastWhiteIndex		4
+#define InvalidIndex		5	//	black
 	float3 HistogramHsls[HISTOGRAM_COUNT] =
 	{
 		(float3)( 0, 0, 0.9f ),	//	white
@@ -468,22 +469,24 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 		(float3)( 0, 0, 0.7f ),	//	white
 		(float3)( 0, 0, 0.6f ),	//	white
 		(float3)( 0, 0, 0.5f ),	//	white
+		//(float3)( 90/360.f, 0.1f, 0.3f ),	//	white
 		
 //		(float3)( 90/360.f, 0.2f, 0.5f ),	//	white
 //		(float3)( 90/360.f, 0.2f, 0.6f ),	//	white
 //		(float3)( 90/360.f, 0.2f, 0.7f ),	//	white
 
 		(float3)( 0, 0, 0.1f ),	//	black
-		(float3)( 0/360.f, MatchSat, MatchLum ),
-		(float3)( 20/360.f, MatchSat, MatchLum ),
-		(float3)( 50/360.f, MatchSat, MatchLum ),
-		(float3)( 90/360.f, MatchSat, MatchLum ),
-		(float3)( 90/360.f, 0.3f, 0.5f ),
-		(float3)( 150/360.f, MatchSat, MatchLum ),
-		//(float3)( 180/360.f, MatchSat, MatchSatHigh ),
-		(float3)( 190/360.f, MatchSat, MatchLum ),
-		(float3)( 205/360.f, MatchSat, MatchLum ),
-		(float3)( 290/360.f, MatchSat, MatchLum ),
+		(float3)( 0/360.f, MatchSat, MatchLum ),	//	red
+		(float3)( 20/360.f, MatchSat, MatchLum ),	//	burnt
+		(float3)( 50/360.f, MatchSat, MatchLum ),	//	orange
+	
+		(float3)( 90/360.f, 0.5f, 0.3f ),	//	dark green
+		(float3)( 90/360.f, 0.4f, 0.5f ),			//	bright green
+		(float3)( 90/360.f, 0.2f, 0.3f ),	//	mould green
+		(float3)( 180/360.f, MatchSat, MatchSatHigh ),	//	bright blue
+		(float3)( 190/360.f, MatchSat, MatchLum ),	//	blue
+		(float3)( 205/360.f, MatchSat, MatchLum ),	//	blue
+		(float3)( 290/360.f, MatchSat, MatchLum ),	//	purple
 		
 	};
 	
@@ -491,13 +494,16 @@ __kernel void FilterWhite(int OffsetX,int OffsetY,__read_only image2d_t Hsl,__wr
 	float BestDiff = 1;
 	for ( int i=0;	i<HISTOGRAM_COUNT;	i++ )
 	{
-		float Diff = GetHslHslDifference( SourceHsl, HistogramHsls[i] );
+		float Diff = GetHslHslDifference( SourceHsl.xyz, HistogramHsls[i] );
 		if ( Diff < BestDiff )
 		{
 			BestDiff = Diff;
 			Best = i;
 		}
 	}
+	
+	if ( SourceHsl.w == 0 )
+		Best = InvalidIndex;
 	
 	float3 FragHsl = HistogramHsls[Best];
 	float4 Rgba = (float4)(0,0,0,1);
