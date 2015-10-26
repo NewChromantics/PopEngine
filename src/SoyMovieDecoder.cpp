@@ -19,6 +19,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	DecoderParams.mFilename = Meta.mName;
 	DecoderParams.mDecodeAsFormat = SoyPixelsFormat::RGBA;
 	//DecoderParams.mPushBlockSleepMs = 30000;
+	DecoderParams.mPixelBufferParams.mPreSeek = SoyTime(0000ull);
 	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
 	
 	try
@@ -50,8 +51,25 @@ TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string
 {
 	mDecoder = PopMovieDecoder::AllocDecoder( Params );
 	mDecoder->StartMovie();
-	WakeOnEvent( mDecoder->mOnFrameDecoded );
 	
+	auto OnDecoded = [this](SoyTime& Time)
+	{
+		this->Wake();
+	};
+	
+	//WakeOnEvent( mDecoder->GetPixelBufferManager().mOnFrameDecoded );
+	mDecoder->GetPixelBufferManager().mOnFrameDecoded.AddListener( OnDecoded );
+/*
+	//	decode every frame we find
+	auto AutoIncrementTime = [this](SoyTime& Timecode)
+	{
+		//	move decoder along to decode this frame
+		mDecoder->SetPlayerTime( Timecode );
+	};
+	mDecoder->GetPixelBufferManager().mOnFrameFound.AddListener( AutoIncrementTime );
+	*/
+	SoyTime Future( 99999999ull );
+	mDecoder->SetPlayerTime( Future );
 	Start();
 }
 
@@ -68,7 +86,7 @@ bool TMovieDecoder::CanSleep()
 	if ( !mDecoder )
 		return true;
 	
-	auto NextFrameTime = mDecoder->GetNextPixelBufferTime();
+	auto NextFrameTime = mDecoder->GetPixelBufferManager().GetNextPixelBufferTime();
 	
 	//	got a frame to read, don't sleep!
 	if ( NextFrameTime.IsValid() )
@@ -83,7 +101,7 @@ bool TMovieDecoder::Iteration()
 		return true;
 	
 	//	pop pixels
-	auto NextFrameTime = mDecoder->GetNextPixelBufferTime();
+	auto NextFrameTime = mDecoder->GetPixelBufferManager().GetNextPixelBufferTime();
 	auto PixelBuffer = mDecoder->PopPixelBuffer( NextFrameTime );
 	if ( !PixelBuffer )
 		return true;
