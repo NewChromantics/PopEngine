@@ -133,12 +133,25 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
 		return;
 
+	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
+	std::shared_ptr<SoyPixelsImpl> ClearPixels;
+	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
+	try
+	{
+		auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mValue);
+		ClearPixels = ClearFragStageData.GetPixels( ContextGl );
+	}
+	catch(std::exception& e)
+	{
+		//	no frag clearing
+		ClearPixels.reset();
+	}
 
 	//	write straight to a texture
 	//	gr: changed to write to a buffer image, if anything wants a texture, it'll convert on request
 	if ( !Data )
 	{
-		auto CreateTexture = [&Frame,&Data,&FramePixels]
+		auto CreateTexture = [&Frame,&Data,&FramePixels,&ClearPixels]
 		{
 			SoyPixelsMeta OutputPixelsMeta( FramePixels->GetWidth(), FramePixels->GetHeight(), SoyPixelsFormat::RGBA );
 			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
@@ -151,8 +164,12 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 				StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
 			
 				//	clear it
-				static bool ClearTarget = false;
-				if ( ClearTarget )
+				static bool ClearTarget = true;
+				if ( ClearPixels )
+				{
+					StageTarget.Write( *ClearPixels );
+				}
+				else if ( ClearTarget )
 				{
 					Opengl::TRenderTargetFbo Fbo(StageTarget);
 					Fbo.mGenerateMipMaps = false;
