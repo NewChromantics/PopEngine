@@ -1,0 +1,16 @@
+
+
+addstage CrowdFilter Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag crop=Frame
+addstage CrowdFilter ScanlineWidthsWithImage cl=Crowd.cl kernel=CalcHslScanlines Image=Hsl ClearFrag=Frame MinAlignment=0.8 MaxDiff=0.15 MaxSteps=30
+addstage CrowdFilter ScanlineWidths cl=Crowd.cl kernel=CalcHslScanlines Image=Hsl MinAlignment=0.95 MaxDiff=0.15 MaxSteps=30
+
+
+
+
+decode CrowdFilter /Volumes/Assets/ShibuyaCrossing.mp4
+#decode CrowdFilter /Volumes/Assets/5goals.mp4
+#decode CrowdFilter /Volumes/Assets/THD001_Bjork_MoMA/Bjork_2048_30sec.mp4
+
+
+
+

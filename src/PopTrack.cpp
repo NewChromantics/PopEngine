@@ -558,7 +558,8 @@ TPopAppError::Type PopMain(TJobParams& Params)
 	//	bootup commands via a channel
 //	auto BootupFilename = "bootup.txt";
 //	auto BootupFilename = "Bootup_LineDetection.txt";
-	auto BootupFilename = "bootup_FullscreenMatch.txt";
+//	auto BootupFilename = "bootup_FullscreenMatch.txt";
+	auto BootupFilename = "bootup_Crowd.txt";
 	std::shared_ptr<TChannel> BootupChannel( new TChan<TChannelFileRead,TProtocolCli>( SoyRef("Bootup"), BootupFilename, true ) );
 	/*
 	//	display reply to stdout
