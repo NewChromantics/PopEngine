@@ -115,14 +115,19 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 	bool HitLeftEdge = false;
 	bool HitRightEdge = false;
 
-	int2 Left = (int2)(-1,0);
-	int2 Right = (int2)(1,0);
-	int2 Up = (int2)(0,-1);
-	int2 Down = (int2)(0,1);
-//	int2 Left = (int2)(-1,-1);
-//	int2 Right = (int2)(1,1);
-//	int2 Up = (int2)(1,-1);
-//	int2 Down = (int2)(-1,1);
+	
+	int MinWidth = 10;
+	//MinAlignment = 0.8f;
+	MaxSteps = 10;
+	int StepStep = 2;
+	int2 Left = (int2)(-StepStep,0);
+	int2 Right = (int2)(StepStep,0);
+	int2 Up = (int2)(0,-StepStep);
+	int2 Down = (int2)(0,StepStep);
+//	int2 Left = (int2)(-StepStep,-StepStep);
+//	int2 Right = (int2)(StepStep,StepStep);
+//	int2 Up = (int2)(StepStep,-StepStep);
+//	int2 Down = (int2)(-StepStep,StepStep);
 	
 	
 	int WalkLeft = GetWalkHsl( xy, Left, Image, MaxSteps, MaxDiff, &HitLeftEdge );
@@ -136,11 +141,14 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 	float Alignmentx = WalkLeft / (float)(WalkLeft+WalkRight);
 	float Alignmenty = WalkUp / (float)(WalkUp+WalkDown);
 	
+	
+	
 	//	noise
 	float4 Rgba = (float4)( 0, 0, 0, 1 );
-	if ( WalkLeft + WalkRight + WalkUp + WalkDown < 4 )
+	if ( WalkLeft + WalkRight + WalkUp + WalkDown < MinWidth )
 	{
-		Rgba = (float4)(1,0,0,1);
+		bool ShowMin = false;
+		Rgba = (float4)(1,0,0,ShowMin?1:0);
 	}
 	else if ( MaxedWidth || MaxedHeight )
 	{
@@ -152,6 +160,7 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 		Alignmentx = 1.f - (fabsf( Alignmentx - 0.5f ) * 2.f);
 		Alignmenty = 1.f - (fabsf( Alignmenty - 0.5f ) * 2.f);
 
+		
 		//	edges
 		if ( Alignmentx < MinAlignment || Alignmenty < MinAlignment )
 		{
