@@ -251,7 +251,12 @@ static float3 HslToRgb(float3 Hsl)
 	}
 }
 
-
+static float4 HslToRgba(float3 Hsl,float Alpha)
+{
+	float4 Rgba = Alpha;
+	Rgba.xyz = HslToRgb(Hsl);
+	return Rgba;
+}
 
 static float3 NormalToRgb(float Normal)
 {
@@ -373,9 +378,8 @@ static float GetHslHslDifference(float3 a,float3 b)
 
 
 
-static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Score)
+static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t Frag,float4 Rgba)
 {
-	float4 Rgba = NormalToRgba( Score );
 	int2 wh = get_image_dim(Frag);
 	
 	float4 Line4;
@@ -416,3 +420,11 @@ static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,flo
 		}
 	}
 }
+
+
+static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Score)
+{
+	float4 Rgba = NormalToRgba( Score );
+	DrawLineDirect_Colour( From, To, Frag, Rgba );
+}
+
