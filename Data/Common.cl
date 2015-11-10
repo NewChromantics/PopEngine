@@ -1,9 +1,15 @@
 #define const	__constant
 
-#define DRAW_LINE_WIDTH			2
+#define DRAW_LINE_WIDTH			1
+#define PIf 3.14159265359f
 
 
-
+static int2 ClipPointToRect(int2 Point,int4 Rect)
+{
+	Point.x = max( Rect.x, min(Point.x,Rect.x+Rect.z) );
+	Point.y = max( Rect.y, min(Point.y,Rect.y+Rect.w) );
+	return Point;
+}
 
 static float4 ClipLine(float4 Line,float4 Rect)
 {
@@ -197,10 +203,15 @@ static float DegToRad(float Degrees)
 {
 	//	if ( Degrees < 0 )		Degrees += 360;
 	//	if ( Degrees > 360 )	Degrees -= 360;
-#define PIf 3.14159265359f
 	return Degrees * (PIf / 180.f);
 }
 
+static float RadToDeg(float Radians)
+{
+	//	if ( Degrees < 0 )		Degrees += 360;
+	//	if ( Degrees > 360 )	Degrees -= 360;
+	return Radians * (180.f / PIf);
+}
 
 
 static float2 GetVectorAngle(float AngleDeg,float Radius)
