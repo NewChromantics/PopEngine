@@ -1,6 +1,6 @@
 #define const	__constant
 
-#define DRAW_LINE_WIDTH			1
+//#define DRAW_LINE_WIDTH			1
 #define PIf 3.14159265359f
 
 
@@ -378,7 +378,7 @@ static float GetHslHslDifference(float3 a,float3 b)
 
 
 
-static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t Frag,float4 Rgba)
+static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t Frag,float4 Rgba,int DRAW_LINE_WIDTH)
 {
 	int2 wh = get_image_dim(Frag);
 	
@@ -425,6 +425,6 @@ static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t F
 static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Score)
 {
 	float4 Rgba = NormalToRgba( Score );
-	DrawLineDirect_Colour( From, To, Frag, Rgba );
+	DrawLineDirect_Colour( From, To, Frag, Rgba, 2 );
 }
 

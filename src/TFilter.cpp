@@ -706,7 +706,7 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 
 TFilterFrame& TFilter::GetPrevFrame(SoyTime CurrentFrame)
 {
-	static bool OldestFrame = false;
+	static bool OldestFrame = true;
 	
 	SoyTime ClosestPrevFrame;
 	for ( auto it=mFrames.begin();	it!=mFrames.end();	it++ )
