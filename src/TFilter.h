@@ -110,6 +110,20 @@ public:
 		return dynamic_cast<RUNTIMEDATATYPE&>( *pData );
 	}
 	
+	//	use as little as possible!
+	template<class RUNTIMEDATATYPE>
+	std::shared_ptr<RUNTIMEDATATYPE>	GetDataPtr(const std::string& StageName)
+	{
+		auto pData = GetData(StageName);
+		if ( !pData )
+		{
+			std::stringstream Error;
+			Error << "Stage data " << StageName << " not found";
+			throw Soy::AssertException( Error.str() );
+		}
+		return std::dynamic_pointer_cast<RUNTIMEDATATYPE>( pData );
+	}
+	
 	template<class RUNTIMEDATATYPE>
 	std::shared_ptr<RUNTIMEDATATYPE>	AllocData(const std::string& StageName)
 	{
@@ -217,6 +231,7 @@ public:
 	virtual TJobParam		GetUniform(const std::string& Name);
 
 	std::shared_ptr<TFilterFrame>	GetFrame(SoyTime Frame);
+	TFilterFrame&			GetPrevFrame(SoyTime Frame);	//	get frame before this one.
 	bool					DeleteFrame(SoyTime Frame);		//	returns false if it was still in use. throws if it doesnt exist
 	
 	void					CreateBlitGeo(bool Blocking);	//	throws if failed to create (blocking only)

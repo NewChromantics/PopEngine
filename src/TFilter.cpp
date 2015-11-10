@@ -8,6 +8,8 @@
 #include "TFilterStageGatherRects.h"
 #include "TFilterStageHoughTransform.h"
 #include "TFilterStageWritePng.h"
+#include "TFilterStagePrevFrameData.h"
+
 
 const char* TFilter::FrameSourceName = "Frame";
 
@@ -620,6 +622,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_GatherRects( Name, ProgramFilename, KernelName, *this, Params ) );
 	}
+	else if ( StageType == "PrevFrameData" )
+	{
+		Stage.reset( new TFilterStage_PrevFrameData( Name, *this, Params ) );
+	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
@@ -696,6 +702,29 @@ std::shared_ptr<TFilterFrame> TFilter::GetFrame(SoyTime Time)
 
 	std::shared_ptr<TFilterFrame> Frame = FrameIt->second;
 	return Frame;
+}
+
+TFilterFrame& TFilter::GetPrevFrame(SoyTime CurrentFrame)
+{
+	SoyTime ClosestPrevFrame;
+	for ( auto it=mFrames.begin();	it!=mFrames.end();	it++ )
+	{
+		auto& FrameTime = it->first;
+		if ( FrameTime >= CurrentFrame )
+			continue;
+		if ( FrameTime < ClosestPrevFrame )
+			continue;
+		ClosestPrevFrame = FrameTime;
+	}
+	
+	auto pFrame = GetFrame( ClosestPrevFrame );
+	{
+		std::stringstream Error;
+		Error << "No previous frame to " << CurrentFrame;
+		Soy::Assert( pFrame!=nullptr, Error.str() );
+	}
+	
+	return *pFrame;
 }
 
 bool TFilter::DeleteFrame(SoyTime FrameTime)

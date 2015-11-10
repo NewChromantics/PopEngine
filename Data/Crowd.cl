@@ -117,7 +117,7 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 
 	
 	int MinWidth = 10;
-	//MinAlignment = 0.8f;
+	MinAlignment = 0.1f;
 	MaxSteps = 10;
 	int StepStep = 2;
 	int2 Left = (int2)(-StepStep,0);
@@ -147,12 +147,12 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 	float4 Rgba = (float4)( 0, 0, 0, 1 );
 	if ( WalkLeft + WalkRight + WalkUp + WalkDown < MinWidth )
 	{
-		bool ShowMin = false;
+		bool ShowMin = true;
 		Rgba = (float4)(1,0,0,ShowMin?1:0);
 	}
 	else if ( MaxedWidth || MaxedHeight )
 	{
-		Rgba = (float4)(0,0,1,0);
+		Rgba = (float4)(0,0,1,1);
 	}
 	else
 	{
@@ -180,3 +180,16 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 		write_imagef( Frag, xy, Rgba );
 }
 
+
+
+
+__kernel void FindNearestNeighbour(int OffsetX,int OffsetY,__write_only image2d_t Frag,__read_only image2d_t ScanlineWidths,__read_only image2d_t PrevScanlineWidths)
+{
+	int x = get_global_id(0) + OffsetX;
+	int y = get_global_id(1) + OffsetY;
+	int2 xy = (int2)( x, y );
+	int2 wh = get_image_dim(Frag);
+
+	float4 Rgba = (float4)( xy.x/(float)wh.x, xy.y/(float)wh.y, 0, 1 );
+	write_imagef( Frag, xy, Rgba );
+}

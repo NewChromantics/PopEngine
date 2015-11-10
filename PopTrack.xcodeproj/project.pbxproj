@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF192B101BF202A200324911 /* TFilterStagePrevFrameData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */; settings = {ASSET_TAGS = (); }; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF406D431BBC3E8B00CECF4E /* TFilterStageWritePng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
@@ -115,6 +116,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStagePrevFrameData.cpp; path = src/TFilterStagePrevFrameData.cpp; sourceTree = "<group>"; };
+		BF192B0F1BF202A200324911 /* TFilterStagePrevFrameData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStagePrevFrameData.h; path = src/TFilterStagePrevFrameData.h; sourceTree = "<group>"; };
 		BF30550A1B56F553002B0892 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageWritePng.cpp; path = src/TFilterStageWritePng.cpp; sourceTree = "<group>"; };
@@ -386,6 +389,8 @@
 				BF9CCAB71B6E56BC000B19EA /* TFilterStageOpengl.cpp */,
 				BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */,
 				BF406D421BBC3E8B00CECF4E /* TFilterStageWritePng.h */,
+				BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */,
+				BF192B0F1BF202A200324911 /* TFilterStagePrevFrameData.h */,
 				BF9CCAB81B6E56BC000B19EA /* TFilterStageOpengl.h */,
 				BF9CCABB1B6E5705000B19EA /* TPlayerFilter.cpp */,
 				BF9CCABC1B6E5705000B19EA /* TPlayerFilter.h */,
@@ -717,6 +722,7 @@
 				FB2534BC1A974E7400A61590 /* SoyData.cpp in Sources */,
 				FB2534E31A974EFB00A61590 /* Checks.cpp in Sources */,
 				FBF67B361A974AAF00F74C38 /* PopMain.mm in Sources */,
+				BF192B101BF202A200324911 /* TFilterStagePrevFrameData.cpp in Sources */,
 				FB2534E41A974EFB00A61590 /* CurrentTest.cpp in Sources */,
 				FB2534ED1A974EFB00A61590 /* TestReporterStdout.cpp in Sources */,
 				FB2534C51A974E7400A61590 /* TJobRelay.cpp in Sources */,
