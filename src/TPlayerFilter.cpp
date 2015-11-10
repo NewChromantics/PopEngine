@@ -41,6 +41,7 @@ void TPlayerFilter::SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event)
 			auto& LastFrame = Video.GetLastFrame();
 			FramePixels = LastFrame.GetPixelsShared();
 			FrameTime = LastFrame.GetTime();
+			FrameTime.mTime ++;
 		}
 		catch(std::exception& e)
 		{
