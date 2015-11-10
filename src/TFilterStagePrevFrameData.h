@@ -46,6 +46,8 @@ public:
 	
 	virtual Opengl::TTexture				GetTexture()
 	{
+		if ( mPrevFrameData )
+			return mPrevFrameData->GetTexture();
 		return TFilterStageRuntimeData::GetTexture();
 	}
 	
