@@ -1,11 +1,15 @@
 
 
-addstage CrowdFilter Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag crop=Frame
-addstage CrowdFilter ScanlineWidthsWithImage cl=Crowd.cl kernel=CalcHslScanlines Image=Hsl ClearFrag=Frame MinAlignment=0.8 MaxDiff=0.15 MaxSteps=30
-addstage CrowdFilter ScanlineWidths cl=Crowd.cl kernel=CalcHslScanlines Image=Hsl MinAlignment=0.95 MaxDiff=0.15 MaxSteps=30
+addstage CrowdFilter Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag crop=Frame NoSnapshot=true
+addstage CrowdFilter ScanlineWidthsWithImage cl=Crowd.cl kernel=CalcHslScanlines Image=Hsl ClearFrag=Frame MinAlignment=0.8 MaxDiff=0.15 MaxSteps=30 AllowAlpha=1
+addstage CrowdFilter ScanlineWidths cl=Crowd.cl kernel=CalcHslScanlines Image=Hsl MinAlignment=0.95 MaxDiff=0.15 MaxSteps=30 AllowAlpha=0
 
-addstage CrowdFilter PrevScanlineWidths StageType=PrevFrameData PrevStage=ScanlineWidths
-addstage CrowdFilter FindNearestNeighbour cl=Crowd.cl kernel=FindNearestNeighbour
+addstage CrowdFilter PrevScanlineWidths StageType=PrevFrameData PrevStage=ScanlineWidths NoSnapshot=true SkipRender=true
+addstage CrowdFilter PrevHsl StageType=PrevFrameData PrevStage=Hsl NoSnapshot=true SkipRender=true
+#addstage CrowdFilter ShowHslDiff cl=Crowd.cl kernel=ShowPrevNextDiff Prev=PrevHsl Next=Hsl
+#addstage CrowdFilter ShowScanlineDiff cl=Crowd.cl kernel=ShowPrevNextDiff Prev=PrevScanlineWidths Next=ScanlineWidths
+addstage CrowdFilter HighlightTargets cl=Crowd.cl kernel=HighlightTargets NoSnapshot=true ClearFrag=Frame
+addstage CrowdFilter FindNearestNeighbour cl=Crowd.cl kernel=FindNearestNeighbour NoSnapshot=true ClearFrag=Frame
 
 decode CrowdFilter /Volumes/Assets/ShibuyaCrossing.mp4
 #decode CrowdFilter /Volumes/Assets/5goals.mp4
