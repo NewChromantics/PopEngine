@@ -119,7 +119,7 @@ __kernel void CalcHslScanlines(int OffsetX,int OffsetY,__write_only image2d_t Fr
 	
 	int MinWidth = 10;
 	MinAlignment = 0.9f;
-	MaxSteps = 10;
+	MaxSteps = 20;
 	int StepStep = 2;
 	int2 Left = (int2)(-StepStep,0);
 	int2 Right = (int2)(StepStep,0);
@@ -219,27 +219,24 @@ static bool IsValidScanlineSample(float3 Scanline)
 
 
 
-static float GetNearestNeighbourScore(float3 ScanlineA,float3 HslA,float3 ScanlineB,float3 HslB)
+static float3 GetNearestNeighbourScore(float3 ScanlineA,float3 HslA,float3 ScanlineB,float3 HslB)
 {
-	float MinAlignmentScore = 0.95f;
+	float MinAlignmentScore = 0.80f;
 	float AlignmentA = ScanlineA.y;
 	float AlignmentB = ScanlineB.y;
 	float AlignmentScore = 1.f - fabs( AlignmentA - AlignmentB );
-	if ( AlignmentScore < MinAlignmentScore )
-		AlignmentScore = 0;
+	AlignmentScore = max( 0.f, Range( AlignmentScore, MinAlignmentScore, 1.f ) );
 
 	float ValidOutputA = IsValidScanlineSample(ScanlineA) ? 1 : 0;
 	float ValidOutputB = IsValidScanlineSample(ScanlineB) ? 1 : 0;
 	
 	
-	float MaxHslDiff = 0.2f;
-	float ColourScore = GetHslHslDifference( HslA, HslB );
-	if ( ColourScore > MaxHslDiff )
-		ColourScore = 0;
-	else
-		ColourScore = 1 - (ColourScore/MaxHslDiff);
+	float MinHslMatch = 0.70f;
+	float ColourScore = 1.f - GetHslHslDifference( HslA, HslB );
+	ColourScore = max( 0.f, Range( ColourScore, MinHslMatch, 1.f ) );
 	
-	return ValidOutputA * ValidOutputB * AlignmentScore * ColourScore;
+	float TotalScore = ValidOutputA * ValidOutputB * AlignmentScore * ColourScore;
+	return (float3)(TotalScore, AlignmentScore, ColourScore );
 }
 
 
@@ -270,8 +267,8 @@ __kernel void FindNearestNeighbour(int OffsetX,int OffsetY,__write_only image2d_
 	int2 wh = get_image_dim(Frag);
 	
 	//	less noise by skipping
-//	if ( x % 3 != 0 )	return;
-//	if ( y % 3 != 0 )	return;
+	if ( x % 3 != 0 )	return;
+	if ( y % 3 != 0 )	return;
 	
 	float3 ScanlineSample = texture2D( ScanlineWidths, xy ).xyz;
 	float3 HslSample = texture2D( Hsl, xy ).xyz;
@@ -282,13 +279,13 @@ __kernel void FindNearestNeighbour(int OffsetX,int OffsetY,__write_only image2d_
 	}
 	
 
-	int WindowRadius = 5;
-	float WindowStepX = 2.f;
-	float WindowStepY = 2.f;
+	int WindowRadius = 30;
+	float WindowStepX = 1.f;
+	float WindowStepY = 1.f;
 	float2 Bestxyf;
-	float BestxyScore = -1.f;
+	float3 BestxyScore = -1.f;
 	float MinScore = 0.01f;
-	float MaxDistance = length( (float2)(WindowRadius,WindowRadius) );
+	float MaxDistance = length( (float2)(WindowRadius*WindowStepX,WindowRadius*WindowStepY) );
 	
 	//	search window
 	for ( int Matchx=-WindowRadius;	Matchx<=WindowRadius;	Matchx++ )
@@ -299,19 +296,24 @@ __kernel void FindNearestNeighbour(int OffsetX,int OffsetY,__write_only image2d_
 			int2 Matchxy = (int2)( Matchxyf.x, Matchxyf.y );
 			float3 MatchHsl = texture2D( PrevHsl, xy+Matchxy ).xyz;
 			float3 MatchScanline = texture2D( PrevScanlineWidths, xy+Matchxy ).xyz;
-			float MatchScore = GetNearestNeighbourScore( ScanlineSample, HslSample, MatchScanline, MatchHsl );
-			/*
-			//	todo; if == ... or a tolerance... then favour nearest to 0,0
-			float ScoreDiff = fabs( MatchScore - BestxyScore );
-			if ( ScoreDiff < 0.01f )
+			float3 MatchScore = GetNearestNeighbourScore( ScanlineSample, HslSample, MatchScanline, MatchHsl );
+			
+			float ScoreDiff = fabs( MatchScore.x - BestxyScore.x );
+			if ( BestxyScore.x < 0 )
 			{
-				//	further away
+				//	always allow first result
+			}
+			else if ( ScoreDiff < 0.1f )
+			{
+				//	scored tolerace
+				//	skip if further away
 				if ( length(Matchxyf) > length(Bestxyf) )
 					continue;
 			}
-			else*/
+			else
 			{
-				if ( MatchScore <= BestxyScore )
+				//	simple comparison
+				if ( MatchScore.x <= BestxyScore.x )
 					continue;
 			}
 			
@@ -321,39 +323,69 @@ __kernel void FindNearestNeighbour(int OffsetX,int OffsetY,__write_only image2d_
 	}
 	
 	float4 Rgba = (float4)(0,0,0,1);
-	bool RenderBestScore = true;
+	bool RenderBestScore = false;
+	bool RenderDistance = false;
+	bool RenderAngle = false;
 	bool RenderDeltaLine = true;
 	bool RenderDeltaXy = true;
 	
 	//	no match
-	if ( BestxyScore < MinScore )
+	if ( BestxyScore.x < MinScore )
 	{
-		Rgba = (float4)(0,0,1,0);
+		Rgba = (float4)(0,0,1,1);
 	}
 	else if ( RenderBestScore )
 	{
-		Rgba.xyz = NormalToRgb( BestxyScore );
+		//Rgba.xyz = NormalToRgb( BestxyScore );
+		Rgba.x = BestxyScore.y;
+		Rgba.y = BestxyScore.z;
+		Rgba.z = 0;
+	}
+	else if ( RenderDistance )
+	{
+		float Distance = length(Bestxyf) / MaxDistance;
+		Rgba.xyz = NormalToRgb( Distance );
+	}
+	else if ( RenderAngle )
+	{
+		float Distance = length(Bestxyf);
+		if ( Distance < 2.f )
+		{
+			//DrawBox( xy, Frag, 1, (float4)(1,1,1,1) );
+			return;
+		}
+		float2 Delta = Bestxyf;
+		float Angle = atan2( Delta.y, Delta.x );
+		Angle = RadToDeg( Angle );
+		if ( Angle < 360.f )	Angle += 360.f;
+		if ( Angle >= 360.f )	Angle -= 360.f;
+		Angle = Range( Angle, 0, 360.f );
+		
+		Rgba.xyz = HslToRgb( (float3)( Angle, 1.0f, 0.6f ) );
 	}
 	else if ( RenderDeltaLine )
 	{
 		float2 Delta = Bestxyf;
 		float2 xyf = (float2)(xy.x,xy.y);
 		
-		float Distance = length(Bestxyf) / MaxDistance;
+		float Distance = length(Bestxyf);// / MaxDistance;
 		//	for "no movement" draw a white box
-		if ( Distance < 0.001f )
+		if ( Distance < 3.f )
 		{
 			DrawBox( xy, Frag, 1, (float4)(1,1,1,1) );
 			return;
 		}
 		
-		float Angle = atan2( Delta.x, Delta.y );
+		
+		float Angle = atan2( Delta.y, Delta.x );
 		Angle = RadToDeg( Angle );
 		if ( Angle < 360.f )	Angle += 360.f;
 		if ( Angle >= 360.f )	Angle -= 360.f;
 		Angle = Range( Angle, 0, 360.f );
 		
-		DrawLineDirect( xyf, xyf+Delta, Frag, Angle );
+		float4 LineColour = HslToRgba( (float3)( Angle, 1.0f, 0.6f ), 1 );
+		//float LineColour = BestxyScore;
+		DrawLineDirect_Colour( xyf, xyf+Delta, Frag, LineColour );
 		return;
 	}
 	else if ( RenderDeltaXy )
