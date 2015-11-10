@@ -126,8 +126,11 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 		
 		for ( int s=0;	s<StageNames.GetSize();	s++ )
 		{
+			if ( !Frame.mStageDataLock.try_lock() )
+				continue;
 			auto& StageName = StageNames[s];
-			auto& StageData = StageDatas[StageName];
+			auto StageData = StageDatas[StageName];
+			Frame.mStageDataLock.unlock();
 			if ( StageData )
 			{
 				auto StageTexture = StageData->GetTexture();
@@ -141,7 +144,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 			//	next col
 			TileRect.x += TileRect.w;
 		}
-		
+	
 		//	next row
 		TileRect.y += TileRect.h;
 		TileRect.x = 0;
