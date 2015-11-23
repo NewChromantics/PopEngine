@@ -20,6 +20,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	//DecoderParams.mPushBlockSleepMs = 30000;
 	DecoderParams.mPixelBufferParams.mPreSeek = SoyTime(0000ull);
 	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
+	DecoderParams.mPixelBufferParams.mPopFrameSync = false;
 	
 	try
 	{
@@ -51,7 +52,7 @@ TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string
 	mDecoder = PopMovieDecoder::AllocDecoder( Params );
 	mDecoder->StartMovie();
 	
-	auto OnDecoded = [this](SoyTime& Time)
+	auto OnDecoded = [this](const SoyTime& Time)
 	{
 		this->Wake();
 	};
@@ -101,6 +102,11 @@ bool TMovieDecoder::Iteration()
 	
 	//	pop pixels
 	auto NextFrameTime = mDecoder->GetPixelBufferManager().GetNextPixelBufferTime();
+	
+	//	gr: having no effect :/
+	if ( NextFrameTime < mDecoder->mParams.mPixelBufferParams.mPreSeek )
+		NextFrameTime = mDecoder->mParams.mPixelBufferParams.mPreSeek;
+	
 	auto PixelBuffer = mDecoder->PopPixelBuffer( NextFrameTime );
 	if ( !PixelBuffer )
 		return true;
