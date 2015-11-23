@@ -19,8 +19,8 @@ addstage CrowdFilter DrawNNScore cl=Crowd.cl kernel=DrawNearestNeighbourScore Cl
 
 #decode CrowdFilter /Volumes/Assets/ShibuyaCrossing_clip.mp4
 #decode CrowdFilter /Volumes/Assets/ShibuyaCrossing.mp4
-#decode CrowdFilter /Volumes/Assets/haar1___.mov
-decode CrowdFilter /Volumes/Assets/5goals.mp4
+decode CrowdFilter /Volumes/Assets/haar1___.mov
+#decode CrowdFilter /Volumes/Assets/5goals.mp4
 #decode CrowdFilter /Volumes/Assets/THD001_Bjork_MoMA/Bjork_2048_30sec.mp4
 
 

@@ -306,7 +306,7 @@ __kernel void FindNearestNeighbour(int OffsetX,int OffsetY,__write_only image2d_
 			{
 				//	always allow first result
 			}
-			else if ( ScoreDiff < 0.2f )
+			else if ( ScoreDiff < 0.8f )
 			{
 				//	scored tolerace
 				//	skip if further away
@@ -492,8 +492,9 @@ __kernel void DrawNearestNeighbourDelta(int OffsetX,int OffsetY,__write_only ima
 		//DrawBox( xy, Frag, 1, (float4)(1,1,1,1) );
 		return;
 	}
-		
-	//Delta *= 4;
+	
+	float RenderDeltaScale = 5;
+	int RenderDeltaWidth = 3;
 	float Angle = atan2( Delta.y, Delta.x );
 	Angle = RadToDeg( Angle );
 	if ( Angle < 360.f )	Angle += 360.f;
@@ -507,7 +508,7 @@ __kernel void DrawNearestNeighbourDelta(int OffsetX,int OffsetY,__write_only ima
 	 //LineColour.xy = BestxyScore.yz;
 	 LineColour.x = BestxyScore.y;
 	 */
-	DrawLineDirect_Colour( xyf, xyf+Delta, Frag, LineColour, 1 );
+	DrawLineDirect_Colour( xyf, xyf+Delta*RenderDeltaScale, Frag, LineColour, RenderDeltaWidth );
 }
 
 
