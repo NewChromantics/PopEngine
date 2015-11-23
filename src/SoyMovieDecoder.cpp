@@ -21,6 +21,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	DecoderParams.mPixelBufferParams.mPreSeek = SoyTime(0000ull);
 	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
 	DecoderParams.mPixelBufferParams.mPopFrameSync = false;
+	DecoderParams.mPixelBufferParams.mAllowPushRejection = false;
 	
 	try
 	{
