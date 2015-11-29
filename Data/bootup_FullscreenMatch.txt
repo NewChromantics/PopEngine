@@ -63,8 +63,9 @@ addstage LineDetector xxDrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorner
 #addstage LineDetector xxDrawMaskOnFrame2 StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0 Zoom=0.3
 #addstage LineDetector xxDrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=0 Zoom=0.7 Frame=FrameUndistorted
 
-addstage LineDetector DrawMaskOnFrameSolid StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawFrameOnMaskPixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=FrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
-addstage LineDetector MaskToFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=FrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
+addstage LineDetector DrawMaskOnFrameSolid StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawFrameOnMaskPixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
+addstage LineDetector MaskToFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted DistortBarrelPower=0.5
+addstage LineDetector MaskToDistortedFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=Frame DistortBarrelPower=0.413
 
 
 

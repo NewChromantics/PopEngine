@@ -1100,6 +1100,62 @@ __kernel void DrawFrameOnMaskPixelShader(int OffsetX,
 }
 
 
+float2 DistortPixel(float2 point,float BarrelPower,bool Debug)
+{
+	float2 fragCoord;
+	fragCoord.x = (point.x+1.0f)/2.0f;
+	fragCoord.y = (point.y+1.0f)/2.0f;
+
+	float2 p = fragCoord.xy;//normalized coords with some cheat
+	//(assume 1:1 prop)
+	float2 m = (float2)(0.5, 0.5);//center coords
+	float2 d = p - m;//vector from center to current fragment
+	float r = sqrt(dot(d, d)); // distance of pixel from center
+	
+	float power = ( 2.0 * 3.141592 / (2.0 * sqrtf(dot(m, m))) ) * (BarrelPower - 0.5);//amount of effect
+	float bind;//radius of 1:1 effect
+	bind = (power > 0.0)  ? sqrt(dot(m, m)) : m.y;//stick to corners
+	
+	//power = -0.10f;
+	
+	//Weird formulas
+	float2 uv;
+	if (power > 0.0)//fisheye
+		uv = m + normalize(d) * tan(r * power) * bind / tan( bind * power);
+	else if (power < 0.0)//antifisheye
+	{
+		float denom = atan(-power * bind * 10.0);
+		float arctan = atan(r * -power * 10.0);
+		uv = m + normalize(d) * arctan * bind / denom;
+		if ( Debug )
+			printf("distort power=%3.3f denom=%3.3f arctan=%3.3f uv=%3.3f,%3.3f\n", power, denom, arctan, uv.x, uv.y );
+	}
+	else
+		uv = p;//no effect for power = 1.0
+	
+	uv.x = (uv.x * 2.0f) - 1.0f;
+	uv.y = (uv.y * 2.0f) - 1.0f;
+	return (float2)(uv.x, uv.y );
+}
+
+//	0..1 to -1..1
+float2 CenterUv(float2 uv)
+{
+	//	gr: distort maths is for 0=bottom... so flip here for now
+	uv.y = 1 - uv.y;
+	
+	uv = uv*(float2)(2,2) - (float2)(1,1);
+	return uv;
+}
+
+float2 UncenterUv(float2 uv)
+{
+	uv = (uv+(float2)(1,1)) / (float2)(2,2);
+	
+	//	gr: distort maths is for 0=bottom... so flip here for now
+	uv.y = 1 - uv.y;
+	return uv;
+}
 
 __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 										 int OffsetY,
@@ -1111,7 +1167,8 @@ __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 										 __write_only image2d_t Frag,
 										 int DrawFrameOnMask,
 										 int PixelSkip,
-										 float Zoom
+										 float Zoom,
+										 float DistortBarrelPower
 										 )
 {
 	int2 uvi = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
@@ -1119,6 +1176,12 @@ __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 	
 	float2 uv = (float2)( uvi.x / (float)wh.x, uvi.y / (float)wh.y );
 	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
+	//	bool Debug = ( uvi.x < 10 && uvi.y < 10 );
+	bool Debug = false;
+	
+	uv = CenterUv(uv);
+	uv = DistortPixel(uv,DistortBarrelPower,Debug);
+	uv = UncenterUv(uv);
 	
 	float16 Homography = Homographys[HomographyIndex];
 	
@@ -1132,17 +1195,24 @@ __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 	int2 OutputWh = get_image_dim(Mask);
 	HomoOutputUv.x /= (float)OutputWh.x;
 	HomoOutputUv.y /= (float)OutputWh.y;
-	if ( uvi.x < 10 && uvi.y < 10 )
-		printf("%d %d HomoInputUv %.2f %.2f -> HomoOutputUv %.2f %.2f\n", get_image_dim(Frame).x, get_image_dim(Frame).y, HomoInputUv.x, HomoInputUv.y, HomoOutputUv.x, HomoOutputUv.y );
+	//if ( uvi.x < 10 && uvi.y < 10 )
+	//	printf("%d %d HomoInputUv %.2f %.2f -> HomoOutputUv %.2f %.2f\n", get_image_dim(Frame).x, get_image_dim(Frame).y, HomoInputUv.x, HomoInputUv.y, HomoOutputUv.x, HomoOutputUv.y );
 
 	
 	if ( HomoOutputUv.x < 0 || HomoOutputUv.x > 1 || HomoOutputUv.y < 0 || HomoOutputUv.y > 1 )
+	//if ( true )
 	{
-		HomoOutputUvi = uvi;
+		HomoOutputUvi.x = (int)(uv.x * wh.x);
+		HomoOutputUvi.y = (int)(uv.y * wh.y);
 		HomoOutputUvi.x = min( max(0, HomoOutputUvi.x), InputWh.x-1 );
 		HomoOutputUvi.y = min( max(0, HomoOutputUvi.y), InputWh.y-1 );
+		if ( Debug )
+			printf("HomoOutputUvi %d %d\n", HomoOutputUvi.x, HomoOutputUvi.y );
 		float4 Rgba = texture2D( Frame, HomoOutputUvi );
 	
+		//Rgba.xy = uv;
+		//Rgba.z = 0;
+		
 		write_imagef( Frag, uvi, Rgba );
 	}
 	else
