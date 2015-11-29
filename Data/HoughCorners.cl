@@ -1058,4 +1058,97 @@ __kernel void DrawMaskOnFrame(int OffsetX,
 
 
 
+__kernel void DrawFrameOnMaskPixelShader(int OffsetX,
+							  int OffsetY,
+							  int HomographyIndexOffset,
+							  global float16* Homographys,
+							  global float16* HomographyInvs,
+							  __read_only image2d_t Frame,
+							  __read_only image2d_t Mask,
+							  __write_only image2d_t Frag,
+							  int DrawFrameOnMask,
+							  int PixelSkip,
+							  float Zoom
+							  )
+{
+	int2 uvi = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	int2 wh = get_image_dim( Frag );
+
+	float2 uv = (float2)( uvi.x / (float)wh.x, uvi.y / (float)wh.y );
+	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
+
+	float16 Homography = HomographyInvs[HomographyIndex];
+
+	//	calc homo input
+	int2 InputWh = get_image_dim(Mask);
+	float2 HomoInputUv = uv * (float2)(InputWh.x,InputWh.y);
+	
+	//	transform it to be uv of the frame
+	float2 HomoOutputUv = Transform2ByMatrix3x3( HomoInputUv, Homography );
+	int2 HomoOutputUvi = (int2)(HomoOutputUv.x,HomoOutputUv.y);
+
+	float4 Rgba = texture2D( Frame, HomoOutputUvi );
+	
+	if ( uvi.x < 10 && uvi.y < 10 )
+		printf("%d %d HomoInputUv %.2f %.2f -> HomoOutputUv %.2f %.2f (%d %d)\n", get_image_dim(Mask).x, get_image_dim(Mask).y, HomoInputUv.x, HomoInputUv.y, HomoOutputUv.x, HomoOutputUv.y, HomoOutputUvi.x, HomoOutputUvi.y );
+	
+	//Rgba.xy = HomoOutputUv / (float2)(get_image_dim(Frame).x,get_image_dim(Frame).y);
+	//Rgba.xy = HomoInputUv;
+	//Rgba.z = 0;
+	
+	write_imagef( Frag, uvi, Rgba );
+}
+
+
+
+__kernel void DrawMaskOnFramePixelShader(int OffsetX,
+										 int OffsetY,
+										 int HomographyIndexOffset,
+										 global float16* Homographys,
+										 global float16* HomographyInvs,
+										 __read_only image2d_t Frame,
+										 __read_only image2d_t Mask,
+										 __write_only image2d_t Frag,
+										 int DrawFrameOnMask,
+										 int PixelSkip,
+										 float Zoom
+										 )
+{
+	int2 uvi = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	int2 wh = get_image_dim( Frag );
+	
+	float2 uv = (float2)( uvi.x / (float)wh.x, uvi.y / (float)wh.y );
+	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
+	
+	float16 Homography = Homographys[HomographyIndex];
+	
+	//	calc homo input
+	int2 InputWh = get_image_dim(Frame);
+	float2 HomoInputUv = uv * (float2)(InputWh.x,InputWh.y);
+	
+	//	transform it to be uv of the frame
+	float2 HomoOutputUv = Transform2ByMatrix3x3( HomoInputUv, Homography );
+	int2 HomoOutputUvi = (int2)(HomoOutputUv.x,HomoOutputUv.y);
+	int2 OutputWh = get_image_dim(Mask);
+	HomoOutputUv.x /= (float)OutputWh.x;
+	HomoOutputUv.y /= (float)OutputWh.y;
+	if ( uvi.x < 10 && uvi.y < 10 )
+		printf("%d %d HomoInputUv %.2f %.2f -> HomoOutputUv %.2f %.2f\n", get_image_dim(Frame).x, get_image_dim(Frame).y, HomoInputUv.x, HomoInputUv.y, HomoOutputUv.x, HomoOutputUv.y );
+
+	
+	if ( HomoOutputUv.x < 0 || HomoOutputUv.x > 1 || HomoOutputUv.y < 0 || HomoOutputUv.y > 1 )
+	{
+		HomoOutputUvi = uvi;
+		HomoOutputUvi.x = min( max(0, HomoOutputUvi.x), InputWh.x-1 );
+		HomoOutputUvi.y = min( max(0, HomoOutputUvi.y), InputWh.y-1 );
+		float4 Rgba = texture2D( Frame, HomoOutputUvi );
+	
+		write_imagef( Frag, uvi, Rgba );
+	}
+	else
+	{
+		write_imagef( Frag, uvi, (float4)(HomoOutputUv.x,HomoOutputUv.y,0,1) );
+	}
+}
+
 

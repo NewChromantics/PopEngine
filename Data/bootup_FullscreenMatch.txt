@@ -61,7 +61,10 @@ addstage LineDetector ScoredHoughLineHomographys StageType=ScoreHomographys cl=H
 #addstage LineDetector DrawHomographyCorners StageType=DrawHomographyCorners cl=HoughCorners.cl kernel=DrawHomographyCorners CornerData=ExtractHoughCorners TruthCornerData=ExtractTruthCorners HomographyData=GetHoughLineHomographys MaxDistance=30 Zoom=0.45
 addstage LineDetector xxDrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=FrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1
 #addstage LineDetector xxDrawMaskOnFrame2 StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0 Zoom=0.3
-#addstage LineDetector xxDrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=0 Zoom=0.5
+#addstage LineDetector xxDrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=0 Zoom=0.7 Frame=FrameUndistorted
+
+addstage LineDetector DrawMaskOnFrameSolid StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawFrameOnMaskPixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=FrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
+addstage LineDetector MaskToFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=FrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
 
 
 
