@@ -1114,18 +1114,29 @@ float2 DistortPixel(float2 point,float BarrelPower,bool Debug)
 	
 	float power = ( 2.0 * 3.141592 / (2.0 * sqrtf(dot(m, m))) ) * (BarrelPower - 0.5);//amount of effect
 	float bind;//radius of 1:1 effect
-	bind = (power > 0.0)  ? sqrt(dot(m, m)) : m.y;//stick to corners
+	//bind = (power > 0.0)  ? sqrt(dot(m, m)) : m.y;//stick to corners
+	bind = m.y;//stick to corners
 	
 	//power = -0.10f;
 	
 	//Weird formulas
 	float2 uv;
-	if (power > 0.0)//fisheye
-		uv = m + normalize(d) * tan(r * power) * bind / tan( bind * power);
+	if (power > 0.0)
+	{
+		//fisheye
+		float denom = tan( bind * power);
+		float tanv = tan(r * power);
+		uv = m + normalize(d) * tanv * bind / denom;
+		if ( Debug )
+			printf("distort power=%3.3f denom=%3.3f tanv=%3.3f uv=%3.3f,%3.3f\n", power, denom, tanv, uv.x, uv.y );
+	}
 	else if (power < 0.0)//antifisheye
 	{
-		float denom = atan(-power * bind * 10.0);
-		float arctan = atan(r * -power * 10.0);
+		//	gr: being all on one line breaks the result on my macbook geforce :(
+		//	wtf is 10.0
+		float SomeUndocumentedMult = 10;
+		float denom = atan(-power * bind * SomeUndocumentedMult);
+		float arctan = atan(r * -power * SomeUndocumentedMult);
 		uv = m + normalize(d) * arctan * bind / denom;
 		if ( Debug )
 			printf("distort power=%3.3f denom=%3.3f arctan=%3.3f uv=%3.3f,%3.3f\n", power, denom, arctan, uv.x, uv.y );
@@ -1157,6 +1168,13 @@ float2 UncenterUv(float2 uv)
 	return uv;
 }
 
+bool IsChequerOn(int2 Px,int Width)
+{
+	bool x = (Px.x %Width)<(Width/2);
+	bool y = (Px.y %Width)<(Width/2);
+	return x==y;
+}
+
 __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 										 int OffsetY,
 										 int HomographyIndexOffset,
@@ -1171,53 +1189,76 @@ __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 										 float DistortBarrelPower
 										 )
 {
-	int2 uvi = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
-	int2 wh = get_image_dim( Frag );
+	int2 FragPx = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
+	int2 FragWh = get_image_dim( Frag );
 	
-	float2 uv = (float2)( uvi.x / (float)wh.x, uvi.y / (float)wh.y );
+	float2 FishEyeUv = (float2)( FragPx.x / (float)FragWh.x, FragPx.y / (float)FragWh.y );
 	int HomographyIndex = get_global_id(2) + HomographyIndexOffset;
-	//	bool Debug = ( uvi.x < 10 && uvi.y < 10 );
+	//	bool Debug = FragPx.x < 10 && FragPx.y < 10;
 	bool Debug = false;
 	
-	uv = CenterUv(uv);
-	uv = DistortPixel(uv,DistortBarrelPower,Debug);
-	uv = UncenterUv(uv);
+	
+	float2 UndistortedUv = FishEyeUv;
+	UndistortedUv = CenterUv(UndistortedUv);
+	UndistortedUv = DistortPixel(UndistortedUv,DistortBarrelPower,Debug);
+	UndistortedUv = UncenterUv(UndistortedUv);
 	
 	float16 Homography = Homographys[HomographyIndex];
 	
 	//	calc homo input
 	int2 InputWh = get_image_dim(Frame);
-	float2 HomoInputUv = uv * (float2)(InputWh.x,InputWh.y);
+	float2 UndistortedPx = UndistortedUv * (float2)(InputWh.x,InputWh.y);
+	float2 FishEyePx = FishEyeUv * (float2)(InputWh.x,InputWh.y);
 	
 	//	transform it to be uv of the frame
-	float2 HomoOutputUv = Transform2ByMatrix3x3( HomoInputUv, Homography );
-	int2 HomoOutputUvi = (int2)(HomoOutputUv.x,HomoOutputUv.y);
+	float2 HomoOutputUv = Transform2ByMatrix3x3( UndistortedPx, Homography );
+	int2 HomoOutputPx = (int2)(HomoOutputUv.x,HomoOutputUv.y);
 	int2 OutputWh = get_image_dim(Mask);
 	HomoOutputUv.x /= (float)OutputWh.x;
 	HomoOutputUv.y /= (float)OutputWh.y;
-	//if ( uvi.x < 10 && uvi.y < 10 )
-	//	printf("%d %d HomoInputUv %.2f %.2f -> HomoOutputUv %.2f %.2f\n", get_image_dim(Frame).x, get_image_dim(Frame).y, HomoInputUv.x, HomoInputUv.y, HomoOutputUv.x, HomoOutputUv.y );
 
-	
-	if ( HomoOutputUv.x < 0 || HomoOutputUv.x > 1 || HomoOutputUv.y < 0 || HomoOutputUv.y > 1 )
+	if ( Debug )
+	{
+		//	printf("%d %d HomoInputUv %.2f %.2f -> HomoOutputUv %.2f %.2f\n", get_image_dim(Frame).x, get_image_dim(Frame).y, HomoInputUv.x, HomoInputUv.y, HomoOutputUv.x, HomoOutputUv.y );
+		//printf("%dx%d -> %dx%d\n", InputWh.x,InputWh.y,OutputWh.x,OutputWh.y);
+		printf("Homography %4.4f %4.4f %4.4f / %4.4f %4.4f %4.4f / %4.4f %4.4f %4.4f \n", Homography[0], Homography[1], Homography[2], Homography[3], Homography[4], Homography[5], Homography[6], Homography[7], Homography[8] );
+	}
+	/*
+	HomoOutputUv = CenterUv(HomoOutputUv);
+	float ReDistortBarrelPower = 0.5f + (0.5f - DistortBarrelPower);
+	//HomoOutputUv = DistortPixel(HomoOutputUv,ReDistortBarrelPower,Debug);
+	HomoOutputUv = UncenterUv(HomoOutputUv);
+	*/
+	float Border = 0.1f;
+	float2 TestUv = HomoOutputUv;
+	//float2 TestUv = UndistortedUv;
+	bool Outside = ( TestUv.x < 0 || TestUv.x > 1 || TestUv.y < 0 || TestUv.y > 1 );
+	bool Inside =( TestUv.x > Border && TestUv.x < 1-Border && TestUv.y > Border && TestUv.y < 1-Border );
+	if ( Outside || Inside )
 	//if ( true )
 	{
-		HomoOutputUvi.x = (int)(uv.x * wh.x);
-		HomoOutputUvi.y = (int)(uv.y * wh.y);
-		HomoOutputUvi.x = min( max(0, HomoOutputUvi.x), InputWh.x-1 );
-		HomoOutputUvi.y = min( max(0, HomoOutputUvi.y), InputWh.y-1 );
-		if ( Debug )
-			printf("HomoOutputUvi %d %d\n", HomoOutputUvi.x, HomoOutputUvi.y );
-		float4 Rgba = texture2D( Frame, HomoOutputUvi );
+		//	outside the pitch, show the original input pixel
+		//float2 RenderUv = IsChequerOn(FragPx,20) ? FishEyeUv : UndistortedUv;
+		//float2 RenderUv = UndistortedUv;	//	this is the homo input uv
+		float2 RenderUv = FishEyeUv;	//	this is the homo input uv
+		int2 RenderPx;
+		RenderPx.x = (int)(RenderUv.x * InputWh.x);
+		RenderPx.y = (int)(RenderUv.y * InputWh.y);
+		RenderPx.x = min( max(0, RenderPx.x), InputWh.x-1 );
+		RenderPx.y = min( max(0, RenderPx.y), InputWh.y-1 );
+		//if ( Debug )
+		//	printf("HomoOutputUvi %d %d\n", HomoOutputUvi.x, HomoOutputUvi.y );
+		float4 Rgba = texture2D( Frame, RenderPx );
 	
 		//Rgba.xy = uv;
 		//Rgba.z = 0;
 		
-		write_imagef( Frag, uvi, Rgba );
+		write_imagef( Frag, FragPx, Rgba );
 	}
 	else
 	{
-		write_imagef( Frag, uvi, (float4)(HomoOutputUv.x,HomoOutputUv.y,0,1) );
+	//	write_imagef( Frag, FragPx, (float4)(InputUv.x,InputUv.y,0,1) );
+		write_imagef( Frag, FragPx, (float4)(TestUv.x,TestUv.y,0,1) );
 	}
 }
 

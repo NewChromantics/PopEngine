@@ -38,7 +38,7 @@ addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl k
 #setuniform LineDetector TruthHorizontalHoughLines=0.000,175.917,630.000,181.415,90.500,-321.322,1.000,0.000x0.000,18.999,630.000,24.496,90.500,-478.234,1.000,0.000x0.000,821.583,630.000,827.081,90.500,324.320,1.000,0.000x0.000,896.544,630.000,902.042,90.500,399.278,1.000,0.000x0.000,991.802,630.000,980.806,89.000,486.230,1.000,0.000x0.000,495.502,630.000,495.502,90.000,-4.498,1.000,0.000x541.261,0.000,630.000,87.203,134.500,-515.214,0.911,0.000x0.000,115.095,630.000,87.589,87.500,-398.279,0.387,0.000x0.000,518.396,630.000,289.095,70.000,-90.450,0.051,0.000x0.000,871.585,630.000,714.508,76.000,284.342,0.048,0.000x0.000,289.095,630.000,518.396,110.000,-90.450,0.036,0.000x0.000,529.715,630.000,275.179,68.000,-90.450,0.031,0.000x0.000,716.797,630.000,868.047,103.500,284.342,0.028,0.000x
 
 # simple box
-addstage LineDetector TruthMask Filename=PitchMask.png
+addstage LineDetector TruthMask Filename=PitchMask.png SkipRender=true
 setuniform LineDetector TruthVerticalHoughLines=606.689,1000.000,606.691,0.000,0.000,291.690,1.000,1.000x13.337,1000.000,13.339,0.000,0.000,-301.662,0.590,1.000x
 setuniform LineDetector TruthHorizontalHoughLines=0.000,981.163,630.000,981.164,90.000,481.163,1.000,0.000x0.000,492.520,630.000,492.521,90.000,-7.479,0.956,0.000x0.000,18.836,630.000,18.837,90.000,-481.163,0.713,0.000x
 
@@ -63,9 +63,17 @@ addstage LineDetector xxDrawMaskOnFrame StageType=DrawMaskOnFrame cl=HoughCorner
 #addstage LineDetector xxDrawMaskOnFrame2 StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=0 PixelSkip=0 Zoom=0.3
 #addstage LineDetector xxDrawFrameOnMask StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFrame HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask ClearFrag=xxFrame DrawFrameOnMask=1 PixelSkip=0 Zoom=0.7 Frame=FrameUndistorted
 
-addstage LineDetector DrawMaskOnFrameSolid StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawFrameOnMaskPixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
-addstage LineDetector MaskToFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted DistortBarrelPower=0.5
-addstage LineDetector MaskToDistortedFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=Frame DistortBarrelPower=0.413
+# pitch warped to mask
+#addstage LineDetector DrawMaskOnFrameSolid StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawFrameOnMaskPixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted
+
+# mask drawn on top of input as uv
+# distorted input, no distorted uvs
+#addstage LineDetector MaskToFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=FrameUndistorted DistortBarrelPower=0.5
+
+# original undistorted input, distort uvs to match...
+addstage LineDetector FrameRedistorted vert=ScreenQuad.vert frag=Undistort.frag Tex0=FrameUndistorted NoSnapshot=true ZoomUv=1.0 BarrelPower=0.8
+addstage LineDetector MaskToDistortedFramePixelShader StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=Frame DistortBarrelPower=0.5
+addstage LineDetector MaskToDistortedFramePixelShader2 StageType=DrawMaskOnFrame cl=HoughCorners.cl kernel=DrawMaskOnFramePixelShader HomographyData=ScoredHoughLineHomographys MaskStage=TruthMask Mask=TruthMask ClearFrag=xxFrameUndistorted DrawFrameOnMask=0 PixelSkip=0 Zoom=1 Frame=Frame DistortBarrelPower=0.98
 
 
 
@@ -90,6 +98,7 @@ setuniform LineDetector MaskTopRight=0.66x0.52
 setuniform LineDetector MaskBottomRight=1.0x0.73
 setuniform LineDetector MaskBottomLeft=0.09x0.67
 setuniform LineDetector BarrelPower=0.413
+setuniform LineDetector BarrelPowerInv=0.587
 setuniform LineDetector MaximaAngles=5
 setuniform LineDetector MaximaDistances=20
 setuniform LineDetector HoughDistanceStep=5

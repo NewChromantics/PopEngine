@@ -26,8 +26,9 @@ float2 DistortPixel(float2 point,bool Invert)
 	
 	float power = ( 2.0 * 3.141592 / (2.0 * sqrt(dot(m, m))) ) * (BarrelPower - 0.5);//amount of effect
 	float bind;//radius of 1:1 effect
-	bind = (power > 0.0)  ? sqrt(dot(m, m)) : m.y;//stick to corners
-		
+	//bind = (power > 0.0)  ? sqrt(dot(m, m)) : m.y;//stick to corners
+	bind = m.y;//stick to corners
+
 	//Weird formulas
 	float2 uv;
 	if (power > 0.0)//fisheye
