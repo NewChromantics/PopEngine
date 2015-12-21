@@ -1,4 +1,5 @@
-#define const	__constant
+#include "Common.cl"
+
 #pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
 
 #define DECLARE_DYNAMIC_ARRAY(TYPE)		\
@@ -82,11 +83,6 @@ static float2 GetMinMaxSize(float4 MinMax)
 	return (float2)( MinMax.z - MinMax.x, MinMax.w - MinMax.y );
 }
 
-static float Range(float Value,float Start,float End)
-{
-	return (Value-Start) / (End-Start);
-}
-
 
 //	center of rect in uv
 static float2 GetMinMaxAlignment(float4 MinMax,int2 Center)
@@ -120,15 +116,6 @@ static bool GetValidMinMax(float4* MinMax,int2 SampleCoord,float4 Sample)
 	
 	return true;
 }
-
-
-static float4 texture2D(__read_only image2d_t Image,float2 uv)
-{
-	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
-	
-	return read_imagef( Image, Sampler, uv );
-}
-
 
 
 
@@ -265,7 +252,7 @@ __kernel void GatherMinMaxs(int OffsetX,int OffsetY,__read_only image2d_t rectfi
 
 
 //	http://stackoverflow.com/questions/21615298/opencv-distort-back
-float2 DistortPixel(float2 point,struct TDistortionParams Params)
+float2 DistortPixel_Intrinsics(float2 point,struct TDistortionParams Params)
 {
 	float Inverse = Params.Invert?-1:1;
 	float cx = Params.LensOffsetX;
@@ -295,32 +282,13 @@ float2 DistortPixel(float2 point,struct TDistortionParams Params)
 	return (float2)( xDistort, yDistort);
 }
 
-//	0..1 to -1..1
-float2 CenterUv(float2 uv)
-{
-	//	gr: distort maths is for 0=bottom... so flip here for now
-	uv.y = 1 - uv.y;
-	
-	uv = uv*(float2)(2,2) - (float2)(1,1);
-	return uv;
-}
-
-float2 UncenterUv(float2 uv)
-{
-	uv = (uv+(float2)(1,1)) / (float2)(2,2);
-	
-	//	gr: distort maths is for 0=bottom... so flip here for now
-	uv.y = 1 - uv.y;
-	return uv;
-}
-
 
 float2 Undistort(float2 uv,struct TDistortionParams Params,int2 WidthHeight)
 {
 	uv /= (float2)(WidthHeight.x,WidthHeight.y);
 	uv = CenterUv(uv);
 	//uv *= 1.0f / ZoomUv;
-	uv = DistortPixel( uv, Params );
+	uv = DistortPixel_Intrinsics( uv, Params );
 	uv = UncenterUv(uv);
 	uv *= (float2)(WidthHeight.x,WidthHeight.y);
 	return uv;
@@ -377,3 +345,49 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only 
 	MinMaxs[RectIndex] = MinMax;
 }
 
+
+
+float2 UndistortFisheye(float2 Coord,float DistortBarrelPower,int2 CoordSize)
+{
+	int Debug = 0;
+	
+	//	convert to uv
+	Coord /= (float2)(CoordSize.x,CoordSize.y);
+	Coord = CenterUv(Coord);
+	Coord = DistortPixel(Coord,DistortBarrelPower,Debug);
+	Coord = UncenterUv(Coord);
+	Coord *= (float2)(CoordSize.x,CoordSize.y);
+}
+
+
+__kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__read_only image2d_t Frame,float BarrelPower)
+{
+	int RectIndex = get_global_id(0) + IndexOffset;
+	float4 MinMax = MinMaxs[RectIndex];
+	int2 wh = get_image_dim(Frame);
+
+	//	redistort rect corners
+	float2 TopLeft = MinMax.xy;
+	float2 TopRight = MinMax.zy;
+	float2 BottomLeft = MinMax.xw;
+	float2 BottomRight = MinMax.zw;
+	
+	TopLeft = UndistortFisheye( TopLeft, BarrelPower, wh );
+	TopRight = UndistortFisheye( TopRight, BarrelPower, wh );
+	BottomLeft = UndistortFisheye( BottomLeft, BarrelPower, wh );
+	BottomRight = UndistortFisheye( BottomRight, BarrelPower, wh );
+	
+	
+	//	make it square again
+	MinMax.xy = TopLeft;
+	MinMax.zw = BottomRight;
+	
+	//	this is throwing things off. not sure where, but atlas's appear wrong
+	/*
+	 MinMax.x = min4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
+	 MinMax.y = min4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
+	 MinMax.z = max4( TopLeft.x, TopRight.x, BottomLeft.x, BottomRight.x );
+	 MinMax.w = max4( TopLeft.y, TopRight.y, BottomLeft.y, BottomRight.y );
+	 */
+	MinMaxs[RectIndex] = MinMax;
+}

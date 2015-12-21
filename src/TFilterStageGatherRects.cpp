@@ -46,7 +46,7 @@ bool MergeRects(cl_float4& a_cl,cl_float4& b_cl,float NearEdgeDist)
 void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	auto Kernel = GetKernel(ContextCl);
-	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
+	if ( !Soy::Assert( Kernel != nullptr, "GatherRects missing kernel" ) )
 		return;
 	auto FramePixels = Frame.GetFramePixels(mFilter);
 	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
@@ -165,8 +165,7 @@ void TFilterStage_GatherRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilt
 void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
 	auto Kernel = GetKernel(ContextCl);
-	if ( !Soy::Assert( Kernel != nullptr, "TFilterStage_DistortRects missing kernel" ) )
-		return;
+	Soy::Assert( Kernel != nullptr, "TFilterStage_DistortRects missing kernel" );
 	
 	//	grab rect data
 	auto& RectData = Frame.GetData<TFilterStageRuntimeData_GatherRects>( mMinMaxDataStage );

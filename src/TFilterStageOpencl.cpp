@@ -127,11 +127,9 @@ void TFilterStage_OpenclBlit::Execute(TFilterFrame& Frame,std::shared_ptr<TFilte
 {
 	//	copy kernel in case it's replaced during run
 	auto Kernel = GetKernel(ContextCl);
-	if ( !Soy::Assert( Kernel != nullptr, "OpenclBlut missing kernel" ) )
-		return;
+	Soy::Assert( Kernel != nullptr, "OpenclBlit missing kernel" );
 	auto FramePixels = Frame.GetFramePixels(mFilter,true);
-	if ( !Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" ) )
-		return;
+	Soy::Assert( FramePixels != nullptr, "Frame missing frame pixels" );
 
 	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
 	std::shared_ptr<SoyPixelsImpl> ClearPixels;
