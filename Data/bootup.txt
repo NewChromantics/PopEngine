@@ -1,19 +1,12 @@
 # setup filter 01
 
-# push some test input
-#loadframe mancity01 time=1001 input01_undistorted.png
-#decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
 
 # set meta data
-#setuniform input01 MaskTopLeft=0.279179305x0.43300119
-#setuniform input01 MaskTopRight=0.684121192x0.435912013
-#setuniform input01 MaskBottomRight=0.930296421x0.617896974
-#setuniform input01 MaskBottomLeft=0.0111219604x0.624482691
-
-setuniform mancity01 MaskTopLeft=0.285x0.544
-setuniform mancity01 MaskTopRight=0.768x0.552
-setuniform mancity01 MaskBottomRight=0.982x0.840
-setuniform mancity01 MaskBottomLeft=0.0x0.835
+# post barrel un-distort
+setuniform mancity01 MaskTopLeft=0.37x0.51
+setuniform mancity01 MaskTopRight=0.66x0.52
+setuniform mancity01 MaskBottomRight=1.0x0.73
+setuniform mancity01 MaskBottomLeft=0.09x0.67
 
 setuniform mancity01 RadialDistortionX=-.0900000036
 setuniform mancity01 RadialDistortionY=.00999999978
@@ -42,9 +35,11 @@ setuniform mancity01 RectMergeMax=50
 setuniform mancity01 AtlasWidth=128 AtlasHeight=512
 
 # add shader called crop to filter
-addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag
-#addstage mancity01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
-addstage mancity01 crop vert=ScreenQuad.vert frag=Crop.frag
+setuniform mancity01 BarrelPower=0.413
+
+addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=1.0 SkipRender=false
+addstage mancity01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
+addstage mancity01 crop vert=ScreenQuad.vert frag=Crop.frag Tex0=undistort
 addstage mancity01 Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
 addstage mancity01 SegmentedHsl cl=PatchFilter.cl kernel=GroupHsl
 addstage mancity01 grassfilter cl=PatchFilter.cl kernel=FilterColourPatch
@@ -52,15 +47,16 @@ addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill_GreenRed
 addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
 addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
-#addstage mancity01 GatherMinMaxs StageType=GatherRects cl=GatherRects.cl kernel=GatherMinMaxs
-#addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
-#addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
-#addstage mancity01 Segmentation cl=PatchFilter.cl kernel=BlurColour
-#addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
-#addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids
 
-#addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
-#decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
+addstage mancity01 GatherMinMaxs StageType=GatherRects cl=GatherRects.cl kernel=GatherMinMaxs
+##addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
+##addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
+##addstage mancity01 Segmentation cl=PatchFilter.cl kernel=BlurColour
+##addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
+##addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids
+
+##addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
+##decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
 decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
 
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1.rectatlasstream
