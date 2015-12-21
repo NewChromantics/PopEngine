@@ -2,7 +2,6 @@
 #include <RemoteArray.h>
 #include <Build/PopMovieTextureOsxFramework.framework/Headers/PopMovieTextureOsxFramework.h>
 
-
 void TMovieDecoderContainer::GetDevices(ArrayBridge<TVideoDeviceMeta>& Metas)
 {
 	for ( int m=0;	m<mMovies.GetSize();	m++ )
@@ -22,6 +21,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
 	DecoderParams.mPixelBufferParams.mPopFrameSync = false;
 	DecoderParams.mPixelBufferParams.mAllowPushRejection = false;
+	DecoderParams.mForceNonPlanarOutput = true;
 	
 	try
 	{
@@ -59,7 +59,8 @@ TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string
 	};
 	
 	//WakeOnEvent( mDecoder->GetPixelBufferManager().mOnFrameDecoded );
-	mDecoder->GetPixelBufferManager().mOnFrameDecoded.AddListener( OnDecoded );
+	auto StreamIndex = mDecoder->GetVideoStreamIndex(0);
+	mDecoder->GetPixelBufferManager(StreamIndex).mOnFrameDecoded.AddListener( OnDecoded );
 /*
 	//	decode every frame we find
 	auto AutoIncrementTime = [this](SoyTime& Timecode)
@@ -87,7 +88,8 @@ bool TMovieDecoder::CanSleep()
 	if ( !mDecoder )
 		return true;
 	
-	auto NextFrameTime = mDecoder->GetPixelBufferManager().GetNextPixelBufferTime();
+	auto StreamIndex = mDecoder->GetVideoStreamIndex(0);
+	auto NextFrameTime = mDecoder->GetPixelBufferManager(StreamIndex).GetNextPixelBufferTime();
 	
 	//	got a frame to read, don't sleep!
 	if ( NextFrameTime.IsValid() )
@@ -102,15 +104,29 @@ bool TMovieDecoder::Iteration()
 		return true;
 	
 	//	pop pixels
-	auto NextFrameTime = mDecoder->GetPixelBufferManager().GetNextPixelBufferTime();
-	
-	//	gr: having no effect :/
-	if ( NextFrameTime < mDecoder->mParams.mPixelBufferParams.mPreSeek )
-		NextFrameTime = mDecoder->mParams.mPixelBufferParams.mPreSeek;
-	
-	auto PixelBuffer = mDecoder->PopPixelBuffer( NextFrameTime );
+	auto StreamIndex = mDecoder->GetVideoStreamIndex(0);
+	auto& Buffer = mDecoder->GetPixelBufferManager(StreamIndex);
+	auto NextFrameTime = Buffer.GetNextPixelBufferTime();
+	auto PixelBuffer = Buffer.PopPixelBuffer( NextFrameTime );
 	if ( !PixelBuffer )
 		return true;
+	
+	auto PushFrame = [&](SoyPixelsImpl& Pixels)
+	{
+		static bool DoNewFrameLock = true;
+		if ( DoNewFrameLock )
+		{
+			SoyPixelsImpl& NewFramePixels = LockNewFrame();
+			NewFramePixels.Copy( Pixels );
+			UnlockNewFrame( NextFrameTime );
+		}
+		else
+		{
+			//	send new frame
+			OnNewFrame( Pixels, NextFrameTime );
+		}
+	};
+	
 	
 	Array<SoyPixelsImpl*> Pixels;
 	PixelBuffer->Lock( GetArrayBridge(Pixels) );
@@ -119,23 +135,8 @@ bool TMovieDecoder::Iteration()
 		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
 		return true;
 	}
-	
-	static bool DoNewFrameLock = true;
-	if ( DoNewFrameLock )
-	{
-		SoyPixelsImpl& NewFramePixels = LockNewFrame();
-		NewFramePixels.Copy( *Pixels[0] );
-		PixelBuffer->Unlock();
-		UnlockNewFrame( NextFrameTime );
-	}
-	else
-	{
-		//	send new frame
-		OnNewFrame( *Pixels[0], NextFrameTime );
-		PixelBuffer->Unlock();
-	}
-	
-	//std::this_thread::sleep_for( std::chrono::milliseconds(100) );
+	PushFrame( *Pixels[0] );
+	PixelBuffer->Unlock();
 	
 	return true;
 }
