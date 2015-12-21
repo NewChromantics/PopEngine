@@ -1044,6 +1044,7 @@ std::shared_ptr<SoyPixelsImpl> TFilterStageRuntimeData::GetPixels(Opengl::TConte
 	Soy::TSemaphore Semaphore;
 	ContextGl.PushJob( ReadTexture, Semaphore );
 	Semaphore.Wait();
+	Pixels->Flip();
 
 	return Pixels;
 }
