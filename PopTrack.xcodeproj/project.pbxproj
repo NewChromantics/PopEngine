@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BF192B101BF202A200324911 /* TFilterStagePrevFrameData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */; settings = {ASSET_TAGS = (); }; };
+		BF192B101BF202A200324911 /* TFilterStagePrevFrameData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */; };
+		BF1AFF551C2881BC009EBF5F /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1AFF541C2881BC009EBF5F /* ApplicationServices.framework */; };
+		BF1AFF571C2881D3009EBF5F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1AFF561C2881D3009EBF5F /* CoreGraphics.framework */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF406D431BBC3E8B00CECF4E /* TFilterStageWritePng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
@@ -15,7 +17,6 @@
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF7A8DED1B65263800A6C403 /* PopMovieTextureOsxFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFAD33CC1B61740E00D3E7A6 /* PopMovieTextureOsxFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF7A8DEF1B65288100A6C403 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF7A8DEE1B65288100A6C403 /* ApplicationServices.framework */; };
 		BF7A8DF81B652E4F00A6C403 /* PopTrack.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopTrack.xib */; };
 		BF7C5F1A1B52B1B9006D1DC0 /* TFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7C5F181B52B1B9006D1DC0 /* TFilter.cpp */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
@@ -118,6 +119,8 @@
 /* Begin PBXFileReference section */
 		BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStagePrevFrameData.cpp; path = src/TFilterStagePrevFrameData.cpp; sourceTree = "<group>"; };
 		BF192B0F1BF202A200324911 /* TFilterStagePrevFrameData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStagePrevFrameData.h; path = src/TFilterStagePrevFrameData.h; sourceTree = "<group>"; };
+		BF1AFF541C2881BC009EBF5F /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/ApplicationServices.framework; sourceTree = DEVELOPER_DIR; };
+		BF1AFF561C2881D3009EBF5F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
 		BF30550A1B56F553002B0892 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageWritePng.cpp; path = src/TFilterStageWritePng.cpp; sourceTree = "<group>"; };
@@ -135,7 +138,6 @@
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
 		BF79819D1B5E59250047B4CB /* SoyData.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = SoyData.inl; path = src/SoyData.inl; sourceTree = "<group>"; };
-		BF7A8DEE1B65288100A6C403 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		BF7C5F181B52B1B9006D1DC0 /* TFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilter.cpp; path = src/TFilter.cpp; sourceTree = "<group>"; };
 		BF7C5F191B52B1B9006D1DC0 /* TFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilter.h; path = src/TFilter.h; sourceTree = "<group>"; };
 		BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyAssert.cpp; path = src/SoyAssert.cpp; sourceTree = "<group>"; };
@@ -321,9 +323,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF1AFF571C2881D3009EBF5F /* CoreGraphics.framework in Frameworks */,
+				BF1AFF551C2881BC009EBF5F /* ApplicationServices.framework in Frameworks */,
 				BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */,
 				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
-				BF7A8DEF1B65288100A6C403 /* ApplicationServices.framework in Frameworks */,
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				BFAD33CD1B61740E00D3E7A6 /* PopMovieTextureOsxFramework.framework in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
@@ -345,9 +348,10 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BF1AFF561C2881D3009EBF5F /* CoreGraphics.framework */,
+				BF1AFF541C2881BC009EBF5F /* ApplicationServices.framework */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
 				BF321B041B67AD990016E903 /* CoreVideo.framework */,
-				BF7A8DEE1B65288100A6C403 /* ApplicationServices.framework */,
 				BFAD33CC1B61740E00D3E7A6 /* PopMovieTextureOsxFramework.framework */,
 				BFE5727F1B541B3400B17528 /* CoreServices.framework */,
 				FBF67B071A96B2BE00F74C38 /* Cocoa.framework */,
@@ -845,8 +849,10 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
+				SDKROOT = macosx10.10;
 			};
 			name = Debug;
 		};
@@ -867,8 +873,10 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
+				SDKROOT = macosx10.10;
 			};
 			name = Release;
 		};

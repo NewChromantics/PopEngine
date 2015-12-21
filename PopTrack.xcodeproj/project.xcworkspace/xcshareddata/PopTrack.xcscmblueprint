@@ -1,26 +1,26 @@
 {
-  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B",
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
-    "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++1B97B0E" : 0,
-    "87907EAD08F9AC05484849759EAC4E8AE0659685+++4B7788E" : 0,
-    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B" : 0,
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++83D234B" : 0,
-    "869C8B911CF328D50CA81E17EFFE779905E187BC+++B9F3075" : 0,
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1AC2544" : 0,
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++282CE8A" : 0
+    "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++22D2EB2" : 0,
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++ADB7D6F" : 0,
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1D07DBE" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++9C0E33A" : 0,
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++2093AAB" : 0,
+    "869C8B911CF328D50CA81E17EFFE779905E187BC+++3046BE9" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "13612335-CC7F-4957-9869-5175583C4D28",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++1B97B0E" : "Remotery\/",
-    "87907EAD08F9AC05484849759EAC4E8AE0659685+++4B7788E" : "SoyLib",
-    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B" : "PopTrack",
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++83D234B" : "NewChromantics\/PopTrack",
-    "869C8B911CF328D50CA81E17EFFE779905E187BC+++B9F3075" : "RwdMovieTexture\/",
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1AC2544" : "PopLib\/",
-    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++282CE8A" : "NewChromantics\/PopTrack"
+    "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++22D2EB2" : "Remotery\/",
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++ADB7D6F" : "SoyLib",
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE" : "PopTrack",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1D07DBE" : "PopLib\/",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++9C0E33A" : "NewChromantics\/PopTrack",
+    "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++2093AAB" : "NewChromantics\/PopTrack",
+    "869C8B911CF328D50CA81E17EFFE779905E187BC+++3046BE9" : "RwdMovieTexture\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "PopTrack",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -29,37 +29,37 @@
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopLib.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1AC2544"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1D07DBE"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++282CE8A"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++2093AAB"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++83D234B"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++9C0E33A"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/RwdMovieTexture.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "869C8B911CF328D50CA81E17EFFE779905E187BC+++B9F3075"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "869C8B911CF328D50CA81E17EFFE779905E187BC+++3046BE9"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/SoyLib.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++4B7788E"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++ADB7D6F"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Celtoys\/Remotery.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++1B97B0E"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++22D2EB2"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++53C254B"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE"
     }
   ]
 }
