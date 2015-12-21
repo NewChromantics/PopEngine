@@ -42,6 +42,10 @@ public:
 	virtual bool		SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform);
 	virtual bool		AllowRender() const
 	{
+		static bool ForceRender = false;
+		if ( ForceRender )
+			return true;
+		
 		//	skip rendering frames with no visual output
 		if ( mUniforms.HasParam("SkipRender") )
 			return false;
