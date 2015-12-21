@@ -2676,10 +2676,18 @@ void TFilterStage_ScoreHoughCornerHomographys::Execute(TFilterFrame& Frame,std::
 		for ( int i=0;	i<FinalHomographys.GetSize();	i++ )
 		{
 			auto& Homography = FinalHomographys[i];
+			auto& InvHomograph = FinalHomographyInvs[i];
 			static int Precision = 5;
+			
 			std::Debug << std::endl;
+			std::Debug << "homo #" << i << "; ";
 			for ( int s=0;	s<sizeofarray(Homography.s);	s++ )
 				std::Debug << std::fixed << std::setprecision( Precision ) << Homography.s[s] << " x ";
+			
+			std::Debug << std::endl;
+			std::Debug << "inv #" << i << "; ";
+			for ( int s=0;	s<sizeofarray(InvHomograph.s);	s++ )
+				std::Debug << std::fixed << std::setprecision( Precision ) << InvHomograph.s[s] << " x ";
 		}
 
 		std::Debug.PopStreamSettings();
