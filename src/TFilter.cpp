@@ -9,6 +9,7 @@
 #include "TFilterStageHoughTransform.h"
 #include "TFilterStageWritePng.h"
 #include "TFilterStagePrevFrameData.h"
+#include "TFilterStageWriteGif.h"
 
 
 const char* TFilter::FrameSourceName = "Frame";
@@ -514,6 +515,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_WriteRectAtlasStream( Name, AtlasStage, Filename, *this, Params ) );
 	}
+	else if ( StageType == "WriteGif" )
+	{
+		Stage.reset( new TFilterStage_WriteGif( Name, *this, Params ) );
+	}
 	else if ( StageType == "DistortRects" )
 	{
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
@@ -903,16 +908,25 @@ TJobParam TFilter::GetUniform(const std::string& Name)
 
 Opengl::TContext& TFilter::GetOpenglContext()
 {
+	auto Context = GetOpenglContextPtr();
+	Soy::Assert( Context != nullptr, "Expected opengl window to have a context");
+	return *Context;
+}
+
+
+std::shared_ptr<Opengl::TContext> TFilter::GetOpenglContextPtr()
+{
 	//	use shared context
 	if ( mOpenglContext )
-		return *mOpenglContext;
+		return mOpenglContext;
 	
 	Soy::Assert( mWindow!=nullptr, "window not yet allocated" );
 	auto Context = mWindow->GetContext();
 	Soy::Assert( Context != nullptr, "Expected opengl window to have a context");
 	mOpenglContext = Context;
-	return *mOpenglContext;
+	return mOpenglContext;
 }
+
 
 
 void TFilter::CreateOpenclContexts()

@@ -212,7 +212,8 @@ public:
 	virtual ~TFilter()		{}
 	
 	bool					Run(SoyTime Frame);		//	returns true if all stages succeeded
-	Opengl::TContext&		GetOpenglContext();		//	in the window
+	Opengl::TContext&		GetOpenglContext();
+	std::shared_ptr<Opengl::TContext>	GetOpenglContextPtr();
 	//Opencl::TContext&		GetOpenclContext();
 	void					GetOpenclContexts(ArrayBridge<std::shared_ptr<Opencl::TContext>>&& Contexts);
 	void					CreateOpenclContexts();

@@ -2,6 +2,7 @@
 
 
 #include "TFilterStageOpencl.h"
+#include <Build/PopCastFramework.framework/Headers/PopCast.h>
 
 
 class TFilterStage_WriteGif : public TFilterStage
@@ -12,11 +13,11 @@ public:
 	
 	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
-	void				PushFrameData(const ArrayBridge<uint8>&& FrameData);
-	
 public:
-	std::string							mSourceStage;
-	std::string							mOutputFilename;
+	std::string			mSourceStage;
+	std::string			mOutputFilename;
+
+	std::shared_ptr<PopCast::TInstance>	mCastInstance;
 };
 
 class TFilterStageRuntimeData_WriteGif : public TFilterStageRuntimeData

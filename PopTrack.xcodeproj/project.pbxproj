@@ -14,7 +14,7 @@
 		BF406D431BBC3E8B00CECF4E /* TFilterStageWritePng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF691EF71C3EFB310092FC34 /* PopCastFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF80C3371C3EC95600EBE03E /* PopCastFramework.framework */; };
-		BF691EF81C3EFB3B0092FC34 /* PopCastFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF80C3371C3EC95600EBE03E /* PopCastFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF691EFC1C3F08B30092FC34 /* PopCastFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF80C3371C3EC95600EBE03E /* PopCastFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF7146931BB34B370002E23E /* TFilterStageHoughTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
@@ -113,7 +113,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BF691EF81C3EFB3B0092FC34 /* PopCastFramework.framework in CopyFiles */,
+				BF691EFC1C3F08B30092FC34 /* PopCastFramework.framework in CopyFiles */,
 				BF7A8DED1B65263800A6C403 /* PopMovieTextureOsxFramework.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
