@@ -56,7 +56,13 @@ addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Imag
 ##addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
 ##addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids
 
-addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.rectatlasstream
+
+addstage mancity01 WriteRectAtlasGif AtlasStage=WriteGif Source=MakeRectAtlas Filename=/Volumes/Code/Data/ManCity_Camera1_126_Atlas.gif
+#addstage mancity01 WriteRectAtlasSrt AtlasStage=WriteAtlasSrt Filename=/Volumes/Code/Data/ManCity_Camera1_126_Atlas.srt
+#addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/Data/ManCity_Camera1_126.rectatlasstream
+
+
+
 ##decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
 decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
 
