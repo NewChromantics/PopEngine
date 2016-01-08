@@ -14,7 +14,7 @@
 #include <TChannelFile.h>
 
 
-#define FILTER_MAX_FRAMES	5
+#define FILTER_MAX_FRAMES	1
 #define FILTER_MAX_THREADS	1
 #define JOB_THREAD_COUNT	0
 
@@ -166,12 +166,21 @@ void TPopTrack::OnAddStage(TJobAndChannel &JobAndChannel)
 	auto FilterName = Job.mParams.GetParamAs<std::string>("filter");
 	auto Name = Job.mParams.GetParamAs<std::string>("name");
 	
-	auto Filter = GetFilter( FilterName );
-	Filter->AddStage( Name, Job.mParams );
-	
 	TJobReply Reply(Job);
-	Reply.mParams.AddDefaultParam("added stage");
-	
+	try
+	{
+		auto Filter = GetFilter( FilterName );
+		Filter->AddStage( Name, Job.mParams );
+		
+		Reply.mParams.AddDefaultParam("added stage");
+	}
+	catch(std::exception& e)
+	{
+		std::stringstream Error;
+		Error << "Error adding stage: " << e.what();
+		Reply.mParams.AddErrorParam( Error.str() );
+	}
+
 	auto& Channel = JobAndChannel.GetChannel();
 	Channel.SendJobReply( Reply );
 }
@@ -556,10 +565,10 @@ TPopAppError::Type PopMain(TJobParams& Params)
 	
 	
 	//	bootup commands via a channel
-//	auto BootupFilename = "bootup.txt";
+	auto BootupFilename = "bootup.txt";
 //	auto BootupFilename = "Bootup_LineDetection.txt";
 //	auto BootupFilename = "bootup_FullscreenMatch.txt";
-	auto BootupFilename = "bootup_Crowd.txt";
+//	auto BootupFilename = "bootup_Crowd.txt";
 	std::shared_ptr<TChannel> BootupChannel( new TChan<TChannelFileRead,TProtocolCli>( SoyRef("Bootup"), BootupFilename, true ) );
 	/*
 	//	display reply to stdout

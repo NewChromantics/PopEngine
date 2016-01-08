@@ -46,6 +46,9 @@ void TFilterStage_WriteGif::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterS
 	Soy::TSemaphore Semaphore;
 	ContextGl.PushJob( WriteToGif, Semaphore );
 	Semaphore.Wait();
+	
+	//	todo: because gif's dont have timecodes, we need to store the frame number we're writing (caster will need to pre-empt this, or store a cache...)
+	//	and then do a frame->time meta in the text stream
 }
 
 
