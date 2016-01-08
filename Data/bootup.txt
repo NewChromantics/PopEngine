@@ -48,23 +48,23 @@ addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
 addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
 
-addstage mancity01 GatherMinMaxs StageType=GatherRects cl=GatherRects.cl kernel=GatherMinMaxs
+addstage mancity01 GatherMinMaxs StageType=GatherRects cl=GatherRects.cl kernel=GatherMinMaxs SkipRender=true
 #addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
-addstage mancity01 DistortRects StageType=DistortRects cl=GatherRects.cl kernel=DistortMinMaxsFisheye MinMaxDataStage=GatherMinMaxs
+addstage mancity01 DistortRects StageType=DistortRects cl=GatherRects.cl kernel=DistortMinMaxsFisheye MinMaxDataStage=GatherMinMaxs SkipRender=true
 addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Image=Frame Mask=DistortMask
 ##addstage mancity01 Segmentation cl=PatchFilter.cl kernel=BlurColour
 ##addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
 ##addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids
 
 
-addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.gif
-addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.srt
-#addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=../Output/ManCity_Camera1_126.rectatlasstream
+#addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.gif SkipRender=true
+#addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.srt SkipRender=true
+#decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
 
+addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.gif SkipRender=true
+addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.srt SkipRender=true
+decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
 
-
-##decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1_126.mp4
-decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
 
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1.rectatlasstream
 #decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1.mp4

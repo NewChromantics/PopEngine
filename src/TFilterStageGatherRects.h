@@ -79,6 +79,8 @@ class TFilterStageRuntimeData_MakeRectAtlas : public TFilterStageRuntimeData
 public:
 	virtual void				Shutdown(Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
 	
+	virtual Opengl::TTexture	GetTexture() override	{	return mTexture;	}
+	
 public:
 	Array<Soy::Rectf>		mSourceRects;
 	Array<Soy::Rectf>		mDestRects;
