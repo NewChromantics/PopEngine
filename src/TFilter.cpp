@@ -10,6 +10,7 @@
 #include "TFilterStageWritePng.h"
 #include "TFilterStagePrevFrameData.h"
 #include "TFilterStageWriteGif.h"
+#include "TFilterStageWriteAtlasMeta.h"
 
 
 const char* TFilter::FrameSourceName = "Frame";
@@ -518,6 +519,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	else if ( StageType == "WriteGif" )
 	{
 		Stage.reset( new TFilterStage_WriteGif( Name, *this, Params ) );
+	}
+	else if ( StageType == "WriteAtlasMeta" )
+	{
+		Stage.reset( new TFilterStage_WriteAtlasMeta( Name, *this, Params ) );
 	}
 	else if ( StageType == "DistortRects" )
 	{

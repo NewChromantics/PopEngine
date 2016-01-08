@@ -15,6 +15,8 @@
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF691EF71C3EFB310092FC34 /* PopCastFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF80C3371C3EC95600EBE03E /* PopCastFramework.framework */; };
 		BF691EFC1C3F08B30092FC34 /* PopCastFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF80C3371C3EC95600EBE03E /* PopCastFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF691EFF1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF691EFD1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.cpp */; };
+		BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF691F001C3FEEE90092FC34 /* SoySrt.cpp */; };
 		BF7146931BB34B370002E23E /* TFilterStageHoughTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
@@ -135,6 +137,10 @@
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
 		BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_CoreFoundation.h; path = src/SoyTypes_CoreFoundation.h; sourceTree = "<group>"; };
+		BF691EFD1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageWriteAtlasMeta.cpp; path = src/TFilterStageWriteAtlasMeta.cpp; sourceTree = "<group>"; };
+		BF691EFE1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStageWriteAtlasMeta.h; path = src/TFilterStageWriteAtlasMeta.h; sourceTree = "<group>"; };
+		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
+		BF691F011C3FEEE90092FC34 /* SoySrt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySrt.h; path = src/SoySrt.h; sourceTree = "<group>"; };
 		BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageHoughTransform.cpp; path = src/TFilterStageHoughTransform.cpp; sourceTree = "<group>"; };
 		BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStageHoughTransform.h; path = src/TFilterStageHoughTransform.h; sourceTree = "<group>"; };
 		BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyStream.cpp; path = src/SoyStream.cpp; sourceTree = "<group>"; };
@@ -387,30 +393,32 @@
 				BF30550A1B56F553002B0892 /* Data */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				FB8A07181A2E6C3E0099596C /* PopTrack.cpp */,
-				BFAD33D01B6174E600D3E7A6 /* SoyMovieDecoder.cpp */,
-				BFAD33D21B61750200D3E7A6 /* SoyMovieDecoder.h */,
 				FB8A07191A2E6C3E0099596C /* PopTrack.h */,
 				FBF67B371A974BF400F74C38 /* PopTrack.xib */,
-				FB2534F71A97758D00A61590 /* TFilterWindow.cpp */,
-				FB2534F81A97758D00A61590 /* TFilterWindow.h */,
-				BF80C3221C3EB35E00EBE03E /* TFilterStageWriteGif.cpp */,
-				BF80C3231C3EB35E00EBE03E /* TFilterStageWriteGif.h */,
-				BF9CCAB51B6E56BC000B19EA /* TFilterStageOpencl.cpp */,
+				BFAD33D01B6174E600D3E7A6 /* SoyMovieDecoder.cpp */,
+				BFAD33D21B61750200D3E7A6 /* SoyMovieDecoder.h */,
+				BF7C5F181B52B1B9006D1DC0 /* TFilter.cpp */,
+				BF7C5F191B52B1B9006D1DC0 /* TFilter.h */,
 				BFA297261B83654C003B91F6 /* TFilterStageGatherRects.cpp */,
 				BFA297271B83654C003B91F6 /* TFilterStageGatherRects.h */,
 				BF7146911BB34B370002E23E /* TFilterStageHoughTransform.cpp */,
 				BF7146921BB34B370002E23E /* TFilterStageHoughTransform.h */,
+				BF9CCAB51B6E56BC000B19EA /* TFilterStageOpencl.cpp */,
 				BF9CCAB61B6E56BC000B19EA /* TFilterStageOpencl.h */,
 				BF9CCAB71B6E56BC000B19EA /* TFilterStageOpengl.cpp */,
-				BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */,
-				BF406D421BBC3E8B00CECF4E /* TFilterStageWritePng.h */,
+				BF9CCAB81B6E56BC000B19EA /* TFilterStageOpengl.h */,
 				BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */,
 				BF192B0F1BF202A200324911 /* TFilterStagePrevFrameData.h */,
-				BF9CCAB81B6E56BC000B19EA /* TFilterStageOpengl.h */,
+				BF691EFD1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.cpp */,
+				BF691EFE1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.h */,
+				BF80C3221C3EB35E00EBE03E /* TFilterStageWriteGif.cpp */,
+				BF80C3231C3EB35E00EBE03E /* TFilterStageWriteGif.h */,
+				BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */,
+				BF406D421BBC3E8B00CECF4E /* TFilterStageWritePng.h */,
+				FB2534F71A97758D00A61590 /* TFilterWindow.cpp */,
+				FB2534F81A97758D00A61590 /* TFilterWindow.h */,
 				BF9CCABB1B6E5705000B19EA /* TPlayerFilter.cpp */,
 				BF9CCABC1B6E5705000B19EA /* TPlayerFilter.h */,
-				BF7C5F181B52B1B9006D1DC0 /* TFilter.cpp */,
-				BF7C5F191B52B1B9006D1DC0 /* TFilter.h */,
 			);
 			name = src;
 			sourceTree = SOURCE_ROOT;
@@ -473,6 +481,8 @@
 				FB8A064A1A2E5A7C0099596C /* SoyString.h */,
 				BFA664721B55AD0A00C33A2A /* SoyString.mm */,
 				FB8A064B1A2E5A7C0099596C /* SoyTest.cpp */,
+				BF691F001C3FEEE90092FC34 /* SoySrt.cpp */,
+				BF691F011C3FEEE90092FC34 /* SoySrt.h */,
 				FB8A064C1A2E5A7C0099596C /* SoyThread.cpp */,
 				FB8A064D1A2E5A7C0099596C /* SoyThread.h */,
 				FB8A064E1A2E5A7C0099596C /* SoyTime.cpp */,
@@ -719,6 +729,7 @@
 				FB2534C21A974E7400A61590 /* TFeatureBinRing.cpp in Sources */,
 				FB2534CA1A974E7400A61590 /* TProtocolJson.cpp in Sources */,
 				BF9CCABD1B6E5705000B19EA /* TPlayerFilter.cpp in Sources */,
+				BF691EFF1C3FE3940092FC34 /* TFilterStageWriteAtlasMeta.cpp in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
 				FB2534E71A974EFB00A61590 /* MemoryOutStream.cpp in Sources */,
@@ -732,6 +743,7 @@
 				FB2534C61A974E7400A61590 /* TParameters.cpp in Sources */,
 				FB2534EF1A974EFB00A61590 /* TestRunner.cpp in Sources */,
 				FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */,
+				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
 				FB2534FA1A97758D00A61590 /* TFilterWindow.cpp in Sources */,
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
 				FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */,

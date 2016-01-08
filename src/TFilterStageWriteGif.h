@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "TFilterStageOpencl.h"
+#include "TFilter.h"
 #include <Build/PopCastFramework.framework/Headers/PopCast.h>
 
 

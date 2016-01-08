@@ -58,7 +58,7 @@ addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Imag
 
 
 addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.gif
-#addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasSrt Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.srt
+addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.srt
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=../Output/ManCity_Camera1_126.rectatlasstream
 
 
