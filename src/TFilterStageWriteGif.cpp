@@ -16,9 +16,16 @@ TFilterStage_WriteGif::TFilterStage_WriteGif(const std::string& Name,TFilter& Fi
 	auto OpenglContext = Filter.GetOpenglContextPtr();
 	
 	TCasterParams Params;
+	
+	//	setup gif params
+	Params.mGifParams.mAllowIntraFrames =  false;
+	Params.mGifParams.mFindPalettePixelSkip = 0;
+	
+	//	correct filename for popcast
 	std::stringstream Filename;
 	Filename << "file:" << mOutputFilename;
 	Params.mName = Filename.str();
+
 	mCastInstance = PopCast::Alloc( Params, OpenglContext );
 	Soy::Assert( mCastInstance!=nullptr, "PopCast failed to allocate?");
 }
