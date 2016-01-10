@@ -694,6 +694,14 @@ void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)
 	
 	{
 		std::shared_ptr<TFilterStageRuntimeData_Frame> SourceData = Frame->AllocData<TFilterStageRuntimeData_Frame>( TFilter::FrameSourceName );
+		//	gr: getting null ptr here... dynamic cast fail?
+		if ( !SourceData )
+		{
+			//	gr: nothing catching throw!
+			//throw Soy::AssertException("Failed to alloc frame data");
+			return;
+		}
+		
 		SourceData->mPixels = Pixels;
 		
 		OnFrameChanged( Time );
