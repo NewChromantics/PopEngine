@@ -14,7 +14,7 @@
 #include <TChannelFile.h>
 
 
-#define FILTER_MAX_FRAMES	1
+#define FILTER_MAX_FRAMES	5
 #define FILTER_MAX_THREADS	1
 #define JOB_THREAD_COUNT	0
 

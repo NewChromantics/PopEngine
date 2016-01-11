@@ -141,7 +141,7 @@ static void DrawLineVert(int2 Start,int2 End,__write_only image2d_t Frag,float4 
 
 
 
-__kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,__read_only image2d_t undistort,__write_only image2d_t Frag)
+__kernel void DrawFilterRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter,__read_only image2d_t undistort,__write_only image2d_t Frag)
 {
 	int tx = get_global_id(0) + OffsetX;
 	int ty = get_global_id(1) + OffsetY;
@@ -181,6 +181,32 @@ __kernel void DrawRects(int OffsetX,int OffsetY,__read_only image2d_t rectfilter
 	DrawLineVert( TopLeft, BottomLeft, Frag, rgba );
 	DrawLineVert( TopRight, BottomRight, Frag, rgba );
 }
+
+
+__kernel void DrawMinMax(int IndexOffset,global float4* MinMaxs,__write_only image2d_t Frag)
+{
+	int RectIndex = get_global_id(0) + IndexOffset;
+	float4 MinMax = MinMaxs[RectIndex];
+	int2 wh = get_image_dim(Frag);
+	
+	int Minx = clamp( (int)MinMax.x, 0, wh.x-1 );
+	int Miny = clamp( (int)MinMax.y, 0, wh.y-1 );
+	int Maxx = clamp( (int)MinMax.z, 0, wh.x-1 );
+	int Maxy = clamp( (int)MinMax.w, 0, wh.y-1 );
+	int2 TopLeft = (int2)(Minx,Miny);
+	int2 TopRight = (int2)(Maxx,Miny);
+	int2 BottomLeft = (int2)(Minx,Maxy);
+	int2 BottomRight = (int2)(Maxx,Maxy);
+
+	float4 rgba = (float4)( 1,1,1,1);
+
+	DrawLineHorz( TopLeft, TopRight, Frag, rgba );
+	DrawLineHorz( BottomLeft, BottomRight, Frag, rgba );
+	DrawLineVert( TopLeft, BottomLeft, Frag, rgba );
+	DrawLineVert( TopRight, BottomRight, Frag, rgba );
+}
+
+
 
 static bool MinMaxMerge(__global float4* a,float4 b,float NearEdgeDist,bool Merge)
 {
@@ -360,7 +386,7 @@ float2 UndistortFisheye(float2 Coord,float DistortBarrelPower,int2 CoordSize)
 }
 
 
-__kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__read_only image2d_t Frame,float BarrelPower)
+__kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__read_only image2d_t Frame,float InverseBarrelPower)
 {
 	int RectIndex = get_global_id(0) + IndexOffset;
 	float4 MinMax = MinMaxs[RectIndex];
@@ -371,12 +397,17 @@ __kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__rea
 	float2 TopRight = MinMax.zy;
 	float2 BottomLeft = MinMax.xw;
 	float2 BottomRight = MinMax.zw;
-	
+
+	float BarrelPower = InverseBarrelPower;
 	TopLeft = UndistortFisheye( TopLeft, BarrelPower, wh );
 	TopRight = UndistortFisheye( TopRight, BarrelPower, wh );
 	BottomLeft = UndistortFisheye( BottomLeft, BarrelPower, wh );
 	BottomRight = UndistortFisheye( BottomRight, BarrelPower, wh );
 	
+	if ( RectIndex < 4 )
+	{
+		printf("DistortMinMaxsFisheye( barrelpower = %3.3f)\n", BarrelPower );
+	}
 	
 	//	make it square again
 	MinMax.xy = TopLeft;

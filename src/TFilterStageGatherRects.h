@@ -48,6 +48,21 @@ class TFilterStageRuntimeData_DistortRects : public TFilterStageRuntimeData_Gath
 };
 
 
+class TFilterStage_DrawMinMax : public TFilterStage_OpenclKernel
+{
+public:
+	TFilterStage_DrawMinMax(const std::string& Name,const std::string& KernelFilename,const std::string& KernelName,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage_OpenclKernel	( Name, KernelFilename, KernelName, Filter, StageParams )
+	{
+		StageParams.GetParamAs("MinMaxSource",mMinMaxDataStage);
+	}
+	
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+	
+public:
+	std::string		mMinMaxDataStage;
+};
+
 
 
 class TFilterStage_MakeRectAtlas : public TFilterStage

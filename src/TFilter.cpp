@@ -42,6 +42,14 @@ bool SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,cons
 				return true;
 	}
 	
+	if ( Uniform.mType == "GL_INT" )
+	{
+		int v;
+		if ( Param.Decode(v) )
+			if ( Shader.SetUniform( Uniform.mName, v ) )
+				return true;
+	}
+	
 	if ( Uniform.mType == Soy::GetTypeName<float>() )
 	{
 		float v;
@@ -635,6 +643,12 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	else if ( StageType == "PrevFrameData" )
 	{
 		Stage.reset( new TFilterStage_PrevFrameData( Name, *this, Params ) );
+	}
+	else if ( StageType == "DrawMinMax" )
+	{
+		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
+		auto KernelName = Params.GetParamAs<std::string>("kernel");
+		Stage.reset( new TFilterStage_DrawMinMax( Name, ProgramFilename, KernelName, *this, Params ) );
 	}
 	else if ( Params.HasParam("kernel") && Params.HasParam("cl") )
 	{

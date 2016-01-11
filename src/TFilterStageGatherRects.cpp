@@ -1,4 +1,5 @@
 #include "TFilterStageGatherRects.h"
+#include "TFilterStageOpengl.h"
 #include <fstream>
 
 
@@ -216,6 +217,185 @@ void TFilterStage_DistortRects::Execute(TFilterFrame& Frame,std::shared_ptr<TFil
 	Semaphore.Wait();
 }
 
+
+void TFilterStage_DrawMinMax::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	//	copy kernel in case it's replaced during run
+	auto Kernel = GetKernel(ContextCl);
+	if ( !Soy::Assert( Kernel != nullptr, "TFilterStage_DrawMinMax missing kernel" ) )
+		return;
+	
+	//	generic code
+	vec2x<size_t> FragSize;
+	TUniformWrapper<std::string> ClearFragStageName("ClearFrag", std::string() );
+	std::shared_ptr<SoyPixelsImpl> ClearPixels;
+	Frame.SetUniform( ClearFragStageName, ClearFragStageName, mFilter, *this );
+	try
+	{
+		auto& ClearFragStageData = Frame.GetData<TFilterStageRuntimeData&>(ClearFragStageName.mValue);
+		ClearPixels = ClearFragStageData.GetPixels( ContextGl );
+		if ( ClearPixels )
+		{
+			FragSize.x = ClearPixels->GetWidth();
+			FragSize.y = ClearPixels->GetHeight();
+		}
+	}
+	catch(std::exception& e)
+	{
+		//	no frag clearing
+		ClearPixels.reset();
+	}
+	if ( !ClearPixels )
+	{
+		auto FramePixels = Frame.GetFramePixels(mFilter);
+		FragSize.x = FramePixels ? FramePixels->GetWidth() : 0;
+		FragSize.y = FramePixels ? FramePixels->GetHeight() : 0;
+	}
+
+	//	generic code
+	auto CreateTexture = [&Frame,&Data,&FragSize,&ClearPixels]
+	{
+		SoyPixelsMeta OutputPixelsMeta( FragSize.x, FragSize.y, SoyPixelsFormat::RGBA );
+		if ( !Data )
+		{
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+		}
+		auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+		
+		auto& StageTarget = StageData.mTexture;
+		if ( !StageTarget.IsValid() )
+		{
+			SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+			StageTarget = Opengl::TTexture( Meta, GL_TEXTURE_2D );
+		}
+		
+		static bool ClearToBlack = true;	//	get this as a colour, or FALSE from ClearFlag
+		if ( ClearPixels )
+		{
+			StageTarget.Write( *ClearPixels );
+		}
+		else if ( ClearToBlack )
+		{
+			Opengl::TRenderTargetFbo Fbo(StageTarget);
+			Fbo.mGenerateMipMaps = false;
+			Fbo.Bind();
+			Opengl::ClearColour( Soy::TRgb(0,0,0), 0 );
+			Fbo.Unbind();
+			StageTarget.OnWrite();
+		}
+	};
+	
+	auto CreateImageBuffer = [this,&Frame,&Data,&FragSize,&ContextCl]
+	{
+		SoyPixelsMeta OutputPixelsMeta( FragSize.x, FragSize.y, SoyPixelsFormat::RGBA );
+		if ( !Data )
+		{
+			auto* pData = new TFilterStageRuntimeData_ShaderBlit;
+			Data.reset( pData );
+		}
+		auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+		
+		auto& StageTarget = StageData.mImageBuffer;
+		if ( !StageTarget )
+		{
+			SoyPixelsMeta Meta( OutputPixelsMeta.GetWidth(), OutputPixelsMeta.GetHeight(), OutputPixelsMeta.GetFormat() );
+			Opencl::TSync Semaphore;
+			
+			std::stringstream BufferName;
+			BufferName << this->mName << " stage output";
+			std::shared_ptr<Opencl::TBufferImage> ImageBuffer( new Opencl::TBufferImage( OutputPixelsMeta, ContextCl, nullptr, OpenclBufferReadWrite::ReadWrite, BufferName.str(), &Semaphore ) );
+			
+			Semaphore.Wait();
+			//	only assign on success
+			StageTarget = ImageBuffer;
+		}
+	};
+	
+	static bool MakeTargetAsTexture = true;
+	if ( MakeTargetAsTexture )
+	{
+		Soy::TSemaphore Semaphore;
+		auto& ContextGl = mFilter.GetOpenglContext();
+		ContextGl.PushJob( CreateTexture, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Soy::TSemaphore Semaphore;
+		ContextCl.PushJob( CreateImageBuffer, Semaphore );
+		Semaphore.Wait();
+	}
+	
+	//	load mask
+	auto& MinMaxStageData = Frame.GetData<TFilterStageRuntimeData_DistortRects&>(mMinMaxDataStage);
+	Opencl::TBufferArray<cl_float4> MinMaxBuffer( GetArrayBridge(MinMaxStageData.mRects), ContextCl, "RectBuffer" );
+	
+	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
+	
+	
+	auto Init = [this,&Frame,&StageData,&ContextGl,&MinMaxBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	{
+		//	setup params
+		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
+		{
+			auto& Uniform = Kernel.mKernel.mUniforms[u];
+			
+			if ( Frame.SetUniform( Kernel, Uniform, mFilter, *this ) )
+				continue;
+		}
+		
+		//	set output depending on what we made
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", Opengl::TTextureAndContext( StageData.mTexture, ContextGl ), OpenclBufferReadWrite::ReadWrite );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			//	"frag" is output
+			Kernel.SetUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
+
+		Kernel.SetUniform("MinMaxs", MinMaxBuffer );
+		
+		Iterations.PushBack( vec2x<size_t>(0, MinMaxBuffer.GetSize() ) );
+	};
+	
+	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
+	{
+		Kernel.SetUniform("IndexOffset", size_cast<cl_int>(Iteration.mFirst[0]) );
+	};
+	
+	auto Finished = [&StageData,this,&ContextGl](Opencl::TKernelState& Kernel)
+	{
+		ofScopeTimerWarning Timer("opencl blit read frag uniform",10);
+		
+		if ( StageData.mTexture.IsValid(false) )
+		{
+			Opengl::TTextureAndContext Texture( StageData.mTexture, ContextGl );
+			Kernel.ReadUniform("Frag", Texture );
+		}
+		else if ( StageData.mImageBuffer )
+		{
+			Kernel.ReadUniform("Frag", *StageData.mImageBuffer );
+		}
+		else
+		{
+			throw Soy::AssertException("No pixel output created");
+		}
+	};
+	
+	//	run opencl
+	Soy::TSemaphore Semaphore;
+	std::shared_ptr<PopWorker::TJob> Job( new TOpenclRunnerLambda( ContextCl, *Kernel, Init, Iteration, Finished ) );
+	ContextCl.PushJob( Job, Semaphore );
+	Semaphore.Wait(/*"opencl runner"*/);
+}
 
 
 

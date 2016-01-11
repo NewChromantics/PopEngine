@@ -36,6 +36,7 @@ setuniform mancity01 AtlasWidth=128 AtlasHeight=512
 
 # add shader called crop to filter
 setuniform mancity01 BarrelPower=0.413
+setuniform mancity01 InverseBarrelPower=0.7
 
 addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=1.0 SkipRender=false
 addstage mancity01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
@@ -44,9 +45,14 @@ addstage mancity01 Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
 addstage mancity01 SegmentedHsl cl=PatchFilter.cl kernel=GroupHsl
 addstage mancity01 grassfilter cl=PatchFilter.cl kernel=FilterColourPatch
 addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill_GreenRed
+
+#gr I think this needs to be a barrel
 addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
+#addstage mancity01 DistortMask vert=ScreenQuad.vert frag=Undistort.frag Tex0=grassfilled Invert=1
+
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
-addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawRects
+# draw rects from filter
+addstage mancity01 DrawRects cl=GatherRects.cl kernel=DrawFilterRects
 
 addstage mancity01 GatherMinMaxs StageType=GatherRects cl=GatherRects.cl kernel=GatherMinMaxs SkipRender=true
 #addstage mancity01 DistortRects cl=GatherRects.cl kernel=DistortMinMaxs MinMaxDataStage=GatherMinMaxs
@@ -56,6 +62,9 @@ addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Imag
 ##addstage mancity01 Centroids cl=PatchFilter.cl kernel=FindCentroids
 ##addstage mancity01 CentroidsDilated cl=AlphaFill.cl kernel=AlphaFill_Centroids
 
+# show distorted/merged rects
+addstage mancity01 DrawDistortedMinMaxs StageType=DrawMinMax ClearFrag=Frame MinMaxSource=DistortRects cl=GatherRects.cl kernel=DrawMinMax
+
 
 #addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.gif SkipRender=true
 #addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.srt SkipRender=true
@@ -63,8 +72,8 @@ addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Imag
 
 addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.gif SkipRender=true
 addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.srt SkipRender=true
+addstage mancity01 WriteRectAtlasStream StageType=WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.rectatlasstream SkipRender=true
 decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
-
 
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1.rectatlasstream
 #decode mancity01 /Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1.mp4
