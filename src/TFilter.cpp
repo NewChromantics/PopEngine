@@ -42,14 +42,6 @@ bool SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,cons
 				return true;
 	}
 	
-	if ( Uniform.mType == "GL_INT" )
-	{
-		int v;
-		if ( Param.Decode(v) )
-			if ( Shader.SetUniform( Uniform.mName, v ) )
-				return true;
-	}
-	
 	if ( Uniform.mType == Soy::GetTypeName<float>() )
 	{
 		float v;
