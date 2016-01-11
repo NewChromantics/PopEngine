@@ -36,9 +36,9 @@ setuniform mancity01 AtlasWidth=128 AtlasHeight=512
 
 # add shader called crop to filter
 setuniform mancity01 BarrelPower=0.413
-setuniform mancity01 InverseBarrelPower=0.7
+setuniform mancity01 InverseBarrelPower=0.9
 
-addstage mancity01 undistort vert=ScreenQuad.vert frag=Undistort.frag Tex0=Frame NoSnapshot=true ZoomUv=1.0 SkipRender=false
+addstage mancity01 undistort vert=ScreenQuad.vert frag=DistortFisheye.frag Tex0=Frame NoSnapshot=true ZoomUv=1.0 SkipRender=false
 addstage mancity01 debuguv vert=ScreenQuad.vert frag=DebugUv.frag
 addstage mancity01 crop vert=ScreenQuad.vert frag=Crop.frag Tex0=undistort
 addstage mancity01 Hsl vert=ScreenQuad.vert frag=RgbToHsl.frag
@@ -47,8 +47,8 @@ addstage mancity01 grassfilter cl=PatchFilter.cl kernel=FilterColourPatch
 addstage mancity01 grassfilled cl=AlphaFill.cl kernel=AlphaFill_GreenRed
 
 #gr I think this needs to be a barrel
-addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
-#addstage mancity01 DistortMask vert=ScreenQuad.vert frag=Undistort.frag Tex0=grassfilled Invert=1
+#addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortMask.frag
+addstage mancity01 DistortMask vert=ScreenQuad.vert frag=DistortFisheye.frag Tex0=grassfilled Invert=1
 
 addstage mancity01 rectfilter cl=CylinderFilter.cl kernel=FindLooseMinMaxs
 # draw rects from filter
