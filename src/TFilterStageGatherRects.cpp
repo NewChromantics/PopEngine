@@ -585,8 +585,11 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	Array<Soy::Rectf> RectNewRects;
 	
 	bool FilledTexture = false;
-	for ( int i=0;	i<Rects.GetSize();	i++ )
+	int RectIndex = 0;
+	for ( RectIndex=0;	RectIndex<Rects.GetSize();	RectIndex++ )
 	{
+		auto& i = RectIndex;
+		
 		auto SourceRect4 = Soy::ClToVector( Rects[i] );
 		Soy::Rectf SourceRect( ceil(SourceRect4.x), ceil(SourceRect4.y), ceil(SourceRect4.z-SourceRect4.x), ceil(SourceRect4.w-SourceRect4.y) );
 		
@@ -646,8 +649,8 @@ void TFilterStage_MakeRectAtlas::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		RowHeight = std::max( RowHeight, size_cast<size_t>(DestRect.h) );
 	}
 	
-	if ( FilledTexture )
-		std::Debug << "Warning: MakeRectAtlas overflowed the texture, lost some rects" << std::endl;
+	if ( FilledTexture || RectIndex<Rects.GetSize() )
+		std::Debug << "Warning: MakeRectAtlas overflowed the texture, lost " << (Rects.GetSize()-RectIndex) << " rects" << std::endl;
 
 	//	wait for all blits to finish
 	{
