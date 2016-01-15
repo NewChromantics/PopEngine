@@ -1130,10 +1130,10 @@ __kernel void DrawMaskOnFramePixelShader(int OffsetX,
 	//	bool Debug = FragPx.x < 10 && FragPx.y < 10;
 	bool Debug = false;
 	
-	
+	bool InverseDistort = false;
 	float2 UndistortedUv = FishEyeUv;
 	UndistortedUv = CenterUv(UndistortedUv);
-	UndistortedUv = DistortPixel(UndistortedUv,DistortBarrelPower,Debug);
+	UndistortedUv = DistortPixel(UndistortedUv,DistortBarrelPower,Debug,InverseDistort);
 	UndistortedUv = UncenterUv(UndistortedUv);
 	
 	float16 Homography = Homographys[HomographyIndex];

@@ -436,8 +436,54 @@ static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,flo
 
 
 
-float2 DistortPixel(float2 point,float BarrelPower,bool Debug)
+float2 DistortPixel(float2 Inputuv,float BarrelPower,bool Debug,bool DoInvert)
 {
+	//	center point around 0,0
+	float2 Point = (Inputuv + (float2)(1,1)) / (float2)(2,2);
+	float2 LensCenter = (float2)( 0.5f, 0.5f );
+	
+	
+	float2 Delta = Point - LensCenter;
+	float2 DeltaNorm = normalize(Delta);
+	float Radius = length(Delta);
+	float LensCenterLength = length(LensCenter);
+	
+	float UseBarrelPower = DoInvert ? 0.5f+(0.5f-BarrelPower) : BarrelPower;
+	//	-N ... N
+	UseBarrelPower = UseBarrelPower - 0.5f;
+	
+	float power = ( PIf / LensCenterLength ) * (UseBarrelPower);
+	
+	//	stick to corners
+	//float bind = (power > 0.0)  ? LensCenterLength : LensCenter.y;
+	float bind = LensCenter.y;
+	
+	//	gr: arbirtry scalar, remove this
+	float Mult = 10.0f;
+	power *= Mult;
+	
+	//	Weird formulas, don't think fisheye scales right
+	float2 uv = Point;
+	if ( power > 0.0 )
+	{
+		//fisheye
+		float Scalar = bind / tan( power * bind );
+		uv = DeltaNorm * -tan( Radius * power ) * Scalar;
+		uv += LensCenter;
+	}
+	else if (power < 0.0)//antifisheye
+	{
+		float Scalar = bind / atan( -power * bind );
+		uv = DeltaNorm * atan( Radius * -power ) * Scalar;
+		uv += LensCenter;
+	}
+	
+	//	back to uv's
+	uv.x = (uv.x * 2.0f) - 1.0f;
+	uv.y = (uv.y * 2.0f) - 1.0f;
+	return (float2)(uv.x, uv.y );
+	
+	/*
 	float2 fragCoord;
 	fragCoord.x = (point.x+1.0f)/2.0f;
 	fragCoord.y = (point.y+1.0f)/2.0f;
@@ -483,6 +529,7 @@ float2 DistortPixel(float2 point,float BarrelPower,bool Debug)
 	uv.x = (uv.x * 2.0f) - 1.0f;
 	uv.y = (uv.y * 2.0f) - 1.0f;
 	return (float2)(uv.x, uv.y );
+	 */
 }
 
 //	0..1 to -1..1

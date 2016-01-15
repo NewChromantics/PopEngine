@@ -376,17 +376,18 @@ __kernel void DistortMinMaxs(int IndexOffset,global float4* MinMaxs,__read_only 
 float2 UndistortFisheye(float2 Coord,float DistortBarrelPower,int2 CoordSize)
 {
 	int Debug = 0;
+	bool Inverse = true;
 	
 	//	convert to uv
 	Coord /= (float2)(CoordSize.x,CoordSize.y);
 	Coord = CenterUv(Coord);
-	Coord = DistortPixel(Coord,DistortBarrelPower,Debug);
+	Coord = DistortPixel(Coord,DistortBarrelPower,Debug,Inverse);
 	Coord = UncenterUv(Coord);
 	Coord *= (float2)(CoordSize.x,CoordSize.y);
 }
 
 
-__kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__read_only image2d_t Frame,float InverseBarrelPower)
+__kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__read_only image2d_t Frame,float BarrelPower)
 {
 	int RectIndex = get_global_id(0) + IndexOffset;
 	float4 MinMax = MinMaxs[RectIndex];
@@ -398,7 +399,6 @@ __kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__rea
 	float2 BottomLeft = MinMax.xw;
 	float2 BottomRight = MinMax.zw;
 
-	float BarrelPower = InverseBarrelPower;
 	TopLeft = UndistortFisheye( TopLeft, BarrelPower, wh );
 	TopRight = UndistortFisheye( TopRight, BarrelPower, wh );
 	BottomLeft = UndistortFisheye( BottomLeft, BarrelPower, wh );
@@ -406,7 +406,7 @@ __kernel void DistortMinMaxsFisheye(int IndexOffset,global float4* MinMaxs,__rea
 	
 	if ( RectIndex < 4 )
 	{
-		printf("DistortMinMaxsFisheye( barrelpower = %3.3f)\n", BarrelPower );
+		//printf("DistortMinMaxsFisheye( barrelpower = %3.3f)\n", BarrelPower );
 	}
 	
 	//	make it square again
