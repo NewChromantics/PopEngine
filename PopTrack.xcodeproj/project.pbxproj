@@ -10,6 +10,7 @@
 		BF192B101BF202A200324911 /* TFilterStagePrevFrameData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF192B0E1BF202A200324911 /* TFilterStagePrevFrameData.cpp */; };
 		BF1AFF551C2881BC009EBF5F /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1AFF541C2881BC009EBF5F /* ApplicationServices.framework */; };
 		BF1AFF571C2881D3009EBF5F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1AFF561C2881D3009EBF5F /* CoreGraphics.framework */; };
+		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF406D431BBC3E8B00CECF4E /* TFilterStageWritePng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
@@ -128,6 +129,8 @@
 		BF1AFF541C2881BC009EBF5F /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/ApplicationServices.framework; sourceTree = DEVELOPER_DIR; };
 		BF1AFF561C2881D3009EBF5F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
 		BF30550A1B56F553002B0892 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
+		BF31E49D1C56961100AB49AF /* SoyImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyImage.cpp; path = src/SoyImage.cpp; sourceTree = "<group>"; };
+		BF31E49E1C56961100AB49AF /* SoyImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyImage.h; path = src/SoyImage.h; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		BF406D411BBC3E8B00CECF4E /* TFilterStageWritePng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TFilterStageWritePng.cpp; path = src/TFilterStageWritePng.cpp; sourceTree = "<group>"; };
 		BF406D421BBC3E8B00CECF4E /* TFilterStageWritePng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TFilterStageWritePng.h; path = src/TFilterStageWritePng.h; sourceTree = "<group>"; };
@@ -431,10 +434,6 @@
 				FB50C04C1A6ABD480011A9D9 /* HeapArray.hpp */,
 				FB50C04D1A6ABD480011A9D9 /* memheap.cpp */,
 				FB50C04E1A6ABD480011A9D9 /* MemHeap.hpp */,
-				BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */,
-				BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */,
-				BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */,
-				BF7225A91BADCB3B00550AD8 /* SoyStream.h */,
 				FB9C89981A82D2A700931EFB /* RemoteArray.h */,
 				BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */,
 				FB8A07141A2E6B990099596C /* sha1 */,
@@ -452,6 +451,8 @@
 				FB8A062B1A2E5A7C0099596C /* SoyEvent.h */,
 				BFE572831B544E3400B17528 /* SoyFilesystem.cpp */,
 				BFE572841B544E3400B17528 /* SoyFilesystem.h */,
+				BF31E49D1C56961100AB49AF /* SoyImage.cpp */,
+				BF31E49E1C56961100AB49AF /* SoyImage.h */,
 				BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */,
 				BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */,
 				BF89F6B91B4AE28F00F58561 /* SoyMath.h */,
@@ -467,6 +468,8 @@
 				FB8A063A1A2E5A7C0099596C /* SoyPixels.h */,
 				FB8A063B1A2E5A7C0099596C /* SoyPng.cpp */,
 				FB8A063C1A2E5A7C0099596C /* SoyPng.h */,
+				BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */,
+				BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */,
 				FB8A063D1A2E5A7C0099596C /* SoyRef.cpp */,
 				FB8A063E1A2E5A7C0099596C /* SoyRef.h */,
 				FB63E5181A71C3E9002C59BE /* SoyRingArray.cpp */,
@@ -475,14 +478,16 @@
 				FBC3A0E01A308648009DA49E /* SoyScope.h */,
 				BF5B07141B5C12E700C489C6 /* SoyShader.cpp */,
 				BF5B07161B5C130C00C489C6 /* SoyShader.h */,
+				BF691F001C3FEEE90092FC34 /* SoySrt.cpp */,
+				BF691F011C3FEEE90092FC34 /* SoySrt.h */,
 				FB8A06431A2E5A7C0099596C /* SoyState.h */,
 				FB8A06441A2E5A7C0099596C /* SoyState.hpp */,
+				BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */,
+				BF7225A91BADCB3B00550AD8 /* SoyStream.h */,
 				FB8A06491A2E5A7C0099596C /* SoyString.cpp */,
 				FB8A064A1A2E5A7C0099596C /* SoyString.h */,
 				BFA664721B55AD0A00C33A2A /* SoyString.mm */,
 				FB8A064B1A2E5A7C0099596C /* SoyTest.cpp */,
-				BF691F001C3FEEE90092FC34 /* SoySrt.cpp */,
-				BF691F011C3FEEE90092FC34 /* SoySrt.h */,
 				FB8A064C1A2E5A7C0099596C /* SoyThread.cpp */,
 				FB8A064D1A2E5A7C0099596C /* SoyThread.h */,
 				FB8A064E1A2E5A7C0099596C /* SoyTime.cpp */,
@@ -708,6 +713,7 @@
 				FB2534F31A974F1400A61590 /* SignalTranslator.cpp in Sources */,
 				FB2534CB1A974E7400A61590 /* TProtocolWebSocket.cpp in Sources */,
 				FB2534DE1A974E8200A61590 /* PopTrack.cpp in Sources */,
+				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				FB2534E61A974EFB00A61590 /* DeferredTestResult.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
