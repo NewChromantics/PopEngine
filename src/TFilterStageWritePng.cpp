@@ -30,7 +30,7 @@ void TFilterStage_ReadPng::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterSt
 	Soy::FileToArray( GetArrayBridge(PngData), mFilename );
 	
 	std::shared_ptr<SoyPixelsImpl> Pixels( new SoyPixels );
-	Pixels->SetPng( GetArrayBridge(PngData) );
+	Png::Read( *Pixels, GetArrayBridge(PngData) );
 	
 	if ( !Data )
 		Data.reset( new TFilterStageRuntimeData_Frame() );
