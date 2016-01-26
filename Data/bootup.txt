@@ -65,14 +65,9 @@ addstage mancity01 MakeRectAtlas StageType=MakeRectAtlas Rects=DistortRects Imag
 #addstage mancity01 DrawDistortedMinMaxs StageType=DrawMinMax ClearFrag=Frame MinMaxSource=DistortRects cl=GatherRects.cl kernel=DrawMinMax
 addstage mancity01 DrawDistortedMinMaxs StageType=DrawMinMax ClearFrag=undistort MinMaxSource=DistortRects cl=GatherRects.cl kernel=DrawMinMax
 
-
-#addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.gif SkipRender=true
-#addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_126_Atlas.srt SkipRender=true
-#decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
-
-addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.gif SkipRender=true
-addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.srt SkipRender=true
-addstage mancity01 WriteRectAtlasStream StageType=WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.rectatlasstream SkipRender=true
+addstage mancity01 WriteRectAtlasGif StageType=WriteGif Source=MakeRectAtlas Filename=/Volumes/Code/PopTrackFootball/Unity/Assets/StreamingAssets/ManCity_Camera1_Atlas.gif SkipRender=true
+addstage mancity01 WriteRectAtlasSrt StageType=WriteAtlasMeta Source=MakeRectAtlas Filename=/Volumes/Code/PopTrackFootball/Unity/Assets/StreamingAssets/ManCity_Camera1_Atlas.srt SkipRender=true
+#addstage mancity01 WriteRectAtlasStream StageType=WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=../Output/ManCity_Camera1_Atlas.rectatlasstream SkipRender=true
 decode mancity01 /Volumes/Assets/LiveLikeVideo/ManCity_Camera1.mp4
 
 #addstage mancity01 WriteRectAtlasStream AtlasStage=MakeRectAtlas Filename=/Volumes/Code/PopTrack/VideoAugmentation/Assets/StreamingAssets/ManCity_Camera1.rectatlasstream
