@@ -229,20 +229,28 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 	for ( int s=0;	s<Filter.mStages.GetSize();	s++ )
 	{
 		auto pStage = Filter.mStages[s];
-		std::stringstream StageDesc;
-		if ( pStage )
-			StageDesc << pStage->mName;
-		else
-			StageDesc << "#" << s;
-
+		std::string StageDesc;
+		{
+			std::stringstream StageDescStr;
+			if ( pStage )
+				StageDescStr << pStage->mName;
+			else
+				StageDescStr << "#" << s;
+			StageDesc = StageDescStr.str();
+		}
+		
 		auto& TimerTime = StageTimings.PushBack(SoyTime());
-		std::stringstream TimerName;
-		TimerName << Description << " stage " << StageDesc.str();
-		Soy::TScopeTimer Timer( TimerName.str().c_str(), 0, nullptr, true );
+		Soy::TScopeTimer Timer( "", 0, nullptr, true );
+		//	gr: getting crash destructing a stringstream, so isolating it
+		{
+			std::stringstream TimerName;
+			TimerName << Description << " stage " << StageDesc;
+			Timer.SetName( TimerName.str() );
+		}
 	
 		if ( !pStage )
 		{
-			std::Debug << "Warning: Filter " << Filter.mName << " " << StageDesc.str() << " is null" << std::endl;
+			std::Debug << "Warning: Filter " << Filter.mName << " " << StageDesc << " is null" << std::endl;
 			continue;
 		}
 		
