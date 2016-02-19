@@ -15,8 +15,8 @@
 
 
 #define FILTER_MAX_FRAMES	5
-#define FILTER_MAX_THREADS	1
-#define JOB_THREAD_COUNT	0
+#define FILTER_MAX_THREADS	4
+#define JOB_THREAD_COUNT	2
 
 TPopTrack::TPopTrack() :
 	TJobHandler			( static_cast<TChannelManager&>(*this), JOB_THREAD_COUNT ),
