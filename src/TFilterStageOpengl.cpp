@@ -77,27 +77,7 @@ bool TFilterStageRuntimeData_ShaderBlit::SetUniform(const std::string& StageName
 {
 	if ( TFilterStageRuntimeData::SetUniform(StageName, Shader, Uniform, Filter, StageUniforms, ContextGl) )
 		return true;
-	/*
-	//	pre-emptive for debugging
-	auto& TextureName = StageName;
-	if ( !Soy::StringBeginsWith( Uniform.mName, TextureName, true ) )
-		return false;
 
-	//	use opencl buffer directly if it exists
-	if ( Uniform.mType == "image2d_t" && mImageBuffer )
-	{
-		if ( TFilterFrame::SetTextureUniform( Shader, Uniform, mImageBuffer->GetMeta(), StageName, Filter, StageUniforms ) )
-			return true;
-		
-		auto& Kernel = dynamic_cast<Opencl::TKernelState&>( Shader );
-		return Kernel.SetUniform( Uniform.mName.c_str(), *mImageBuffer );
-	}
-	
-	//auto Texture = GetTexture( Filter.GetOpenglContext(), Filter.GetOpenclContext(), true );
-	auto Texture = GetTexture();
-	
-	return TFilterFrame::SetTextureUniform( Shader, Uniform, Texture, StageName, Filter, StageUniforms );
-	 */
 	return false;
 }
 

@@ -331,36 +331,6 @@ bool TFilterFrame::Run(TFilter& Filter,const std::string& Description,std::share
 }
 
 
-bool TFilterFrame::SetTextureUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,const SoyPixelsMeta& Meta,const std::string& TextureName,TFilter& Filter,const TJobParams& StageUniforms)
-{
-	bool TextureIsThis = false;
-	TextureIsThis |= Soy::StringBeginsWith( Uniform.mName, TextureName, true );
-	
-	if ( !TextureIsThis )
-		return false;
-	
-	//	is there a suffix?
-	std::string Suffix;
-	Suffix = Uniform.mName.substr( TextureName.length(), std::string::npos );
-	
-	if ( Suffix == "_TexelWidthHeight" )
-	{
-		vec2f Size( 1.0f / static_cast<float>( Meta.GetWidth()), 1.0f / static_cast<float>(Meta.GetHeight()) );
-		Shader.SetUniform_s( Uniform.mName, Size );
-		return true;
-	}
-	
-	if ( Suffix == "_PixelWidthHeight" )
-	{
-		vec2f Size( Meta.GetWidth(), Meta.GetHeight() );
-		Shader.SetUniform_s( Uniform.mName, Size );
-		return true;
-	}
-	
-	return false;
-}
-
-
 
 bool TFilterFrame::SetUniform(Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,TFilterStage& Stage)
 {
@@ -1016,8 +986,72 @@ std::shared_ptr<Opencl::TContext> TFilter::PickNextOpenclContext()
 	return mOpenclContexts[ mCurrentOpenclContext % mOpenclContexts.GetSize() ];
 }
 
-bool TFilterStageRuntimeData::CanHandleUniform(const Soy::TUniform& Uniform,const std::string& ParentStageName,const TJobParams& CurrentStageUniforms)
+TUniformHandlerFunc TFilterStageRuntimeData::CanHandleUniform(const Soy::TUniform& Uniform,const std::string& ParentStageName,const TJobParams& CurrentStageUniforms)
 {
+	auto SetTexture = [](const std::string& UniformName,TFilterStageRuntimeData& This,Soy::TUniformContainer& Shader,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl)
+	{
+		auto Texture = This.GetTexture();
+		if ( Texture.IsValid(false) )
+		{
+			if ( Shader.SetUniform_s( UniformName, Opengl::TTextureAndContext( Texture, Filter.GetOpenglContext() ) ) )
+				return true;
+		}
+		
+		auto Pixels = This.GetPixels(ContextGl);
+		if ( Pixels )
+		{
+			if ( Shader.SetUniform_s( UniformName, *Pixels ) )
+				return true;
+		}
+		
+		return false;
+	};
+	
+	auto SetTexture_TexelSize = [](const std::string& UniformName,TFilterStageRuntimeData& This,Soy::TUniformContainer& Shader,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl)
+	{
+		SoyPixelsMeta PixelMeta;
+		
+		auto Texture = This.GetTexture();
+		if ( Texture.IsValid(false) )
+			PixelMeta = Texture.GetMeta();
+		
+		auto Pixels = This.GetPixels(ContextGl);
+		if ( Pixels && !PixelMeta.IsValid() )
+			PixelMeta = Pixels->GetMeta();
+		
+		if ( !PixelMeta.IsValid() )
+			return false;
+		
+		vec2f Value( 1.0f / static_cast<float>(PixelMeta.GetWidth()), 1.0f / static_cast<float>(PixelMeta.GetHeight()) );
+		if ( !Shader.SetUniform_s( UniformName, Value ) )
+			return false;
+		
+		return true;
+	};
+	
+	auto SetTexture_PixelSize = [](const std::string& UniformName,TFilterStageRuntimeData& This,Soy::TUniformContainer& Shader,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl)
+	{
+		SoyPixelsMeta PixelMeta;
+		
+		auto Texture = This.GetTexture();
+		if ( Texture.IsValid(false) )
+			PixelMeta = Texture.GetMeta();
+		
+		auto Pixels = This.GetPixels(ContextGl);
+		if ( Pixels && !PixelMeta.IsValid() )
+			PixelMeta = Pixels->GetMeta();
+		
+		if ( !PixelMeta.IsValid() )
+			return false;
+		
+		vec2f Value( static_cast<float>(PixelMeta.GetWidth()), static_cast<float>(PixelMeta.GetHeight()) );
+		if ( !Shader.SetUniform_s( UniformName, Value ) )
+			return false;
+		
+		return true;
+	};
+	
+	
 	std::string TargetName = Uniform.mName;
 	bool SetFromStageUniformValue = false;
 	
@@ -1036,35 +1070,33 @@ bool TFilterStageRuntimeData::CanHandleUniform(const Soy::TUniform& Uniform,cons
 		}
 	}
 	
-	//if ( !Soy::StringBeginsWith( TargetName, ParentStageName, true ) )
-	if ( TargetName != ParentStageName )
-		return false;
-	/*
-	//	is there a suffix?
-	std::string Suffix;
-	Suffix = TargetName.substr( TextureName.length(), std::string::npos );
-	*/
-	return true;
+	if ( !Soy::StringBeginsWith( TargetName, ParentStageName, true ) )
+		return nullptr;
+	
+	//	suffix has to match a magic suffix
+	auto Suffix = TargetName.substr( ParentStageName.length(), std::string::npos );
+	
+	//	just target name
+	if ( Suffix.empty() )
+		return SetTexture;
+	
+	if ( Suffix == "_TexelWidthHeight" )
+		return SetTexture_TexelSize;
+	
+	if ( Suffix == "_PixelWidthHeight" )
+		return SetTexture_PixelSize;
+	
+	return nullptr;
 }
 
 
 bool TFilterStageRuntimeData::SetUniform(const std::string& StageName,Soy::TUniformContainer& Shader,const Soy::TUniform& Uniform,TFilter& Filter,const TJobParams& StageUniforms,Opengl::TContext& ContextGl)
 {
-	if ( CanHandleUniform( Uniform, StageName, StageUniforms  ) )
+	auto SetUniformFunc = CanHandleUniform( Uniform, StageName, StageUniforms );
+	
+	if ( SetUniformFunc )
 	{
-		auto Texture = GetTexture();
-		if ( Texture.IsValid(false) )
-		{
-			if ( Shader.SetUniform_s( Uniform.mName, Opengl::TTextureAndContext( Texture, Filter.GetOpenglContext() ) ) )
-				return true;
-		}
-
-		auto Pixels = GetPixels(ContextGl);
-		if ( Pixels )
-		{
-			if ( Shader.SetUniform_s( Uniform.mName, *Pixels ) )
-				return true;
-		}
+		return SetUniformFunc( Uniform.mName, *this, Shader, Filter, StageUniforms, ContextGl );
 	}
 	
 	return false;

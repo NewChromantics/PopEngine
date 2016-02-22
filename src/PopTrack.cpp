@@ -565,7 +565,7 @@ TPopAppError::Type PopMain(TJobParams& Params)
 	
 	
 	//	bootup commands via a channel
-	auto BootupFilename = "bootup.txt";
+	auto BootupFilename = "Bootup_CameraLines.txt";
 //	auto BootupFilename = "Bootup_LineDetection.txt";
 //	auto BootupFilename = "bootup_FullscreenMatch.txt";
 //	auto BootupFilename = "bootup_Crowd.txt";
