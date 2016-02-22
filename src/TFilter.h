@@ -76,6 +76,12 @@ public:
 		//	fallback is simple version
 		return GetTexture();
 	}
+
+	virtual Opengl::TTexture	GetTexture(Opengl::TContext& ContextGl,bool Blocking)
+	{
+		//	fallback is simple version
+		return GetTexture();
+	}
 	
 	virtual Opengl::TTexture				GetTexture()
 	{
@@ -177,7 +183,7 @@ public:
 	}
 	
 	std::shared_ptr<SoyPixelsImpl>	GetPixels(Opengl::TContext& Context,bool Blocking);
-	Opengl::TTexture				GetTexture(Opengl::TContext& Context,bool Blocking);
+	virtual Opengl::TTexture		GetTexture(Opengl::TContext& Context,bool Blocking) override;
 	
 public:
 	std::shared_ptr<SoyPixelsImpl>		mPixels;

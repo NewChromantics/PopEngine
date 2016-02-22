@@ -80,7 +80,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	glDisable(GL_BLEND);
 	
 	//	collect N frames
-	static int ShowMaxFrames = 0;
+	static int ShowMaxFrames = 5;
 	static int SkipFirstNFrames = 0;
 	
 	if ( ShowMaxFrames == 0 )
@@ -119,6 +119,8 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	//	make rendering tile rect
 	Soy::Rectf TileRect( 0, 0, 1.f/static_cast<float>(StageNames.GetSize()), 1.f/static_cast<float>(FrameCount) );
 	
+	auto OpenglContext = this->GetContext();
+	
 	for ( int f=0;	f<Frames.GetSize();	f++ )
 	{
 		auto& Frame = *Frames[f];
@@ -133,7 +135,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 			Frame.mStageDataLock.unlock();
 			if ( StageData )
 			{
-				auto StageTexture = StageData->GetTexture();
+				auto StageTexture = OpenglContext ? StageData->GetTexture( *OpenglContext, true ) : StageData->GetTexture();
 			
 				if ( StageTexture.IsValid() )
 				{
