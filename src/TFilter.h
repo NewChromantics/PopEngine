@@ -47,7 +47,8 @@ public:
 			return true;
 		
 		//	skip rendering frames with no visual output
-		if ( mUniforms.GetParamAsWithDefault<bool>("SkipRender", false ) == true )
+		//if ( mUniforms.GetParamAsWithDefault<bool>("SkipRender", false ) == true )
+		if ( mUniforms.GetParamAsWithDefault<std::string>("SkipRender", "false" ) == "true" )
 			return false;
 		return true;
 	}
