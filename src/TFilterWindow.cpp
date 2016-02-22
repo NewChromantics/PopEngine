@@ -80,7 +80,7 @@ void TFilterWindow::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
 	glDisable(GL_BLEND);
 	
 	//	collect N frames
-	static int ShowMaxFrames = 5;
+	static int ShowMaxFrames = 3;
 	static int SkipFirstNFrames = 0;
 	
 	if ( ShowMaxFrames == 0 )

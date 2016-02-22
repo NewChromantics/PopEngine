@@ -19,7 +19,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	//DecoderParams.mPushBlockSleepMs = 30000;
 	DecoderParams.mPixelBufferParams.mPreSeek = SoyTime(0000ull);
 	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
-	DecoderParams.mPixelBufferParams.mPopFrameSync = false;
+	DecoderParams.mPixelBufferParams.mPopFrameSync = true;
 	DecoderParams.mPixelBufferParams.mAllowPushRejection = false;
 	DecoderParams.mForceNonPlanarOutput = true;
 	DecoderParams.mPixelBufferParams.mResetInternalTimestamp = true;
