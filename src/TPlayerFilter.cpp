@@ -12,9 +12,9 @@ TPlayerFilter::TPlayerFilter(const std::string& Name,size_t MaxFrames,size_t Max
 	mCylinderPixelWidth = 10;
 	mCylinderPixelHeight = 19;
 	mPitchCorners.PushBack( vec2f(0.0f,0.0f) );
-	mPitchCorners.PushBack( vec2f(0.5f,0.0f) );
-	mPitchCorners.PushBack( vec2f(0.5f,0.8f) );
-	mPitchCorners.PushBack( vec2f(0.0f,0.8f) );
+	mPitchCorners.PushBack( vec2f(1.0f,0.0f) );
+	mPitchCorners.PushBack( vec2f(1.0f,1.0f) );
+	mPitchCorners.PushBack( vec2f(0.0f,1.0f) );
 	mDistortionParams.PushBack(0);
 	mDistortionParams.PushBack(0);
 	mDistortionParams.PushBack(0);
