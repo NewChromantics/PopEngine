@@ -3,7 +3,7 @@ uniform sampler2D Frame;
 uniform vec2 Frame_PixelWidthHeight;
 
 
-uniform float MinThreshold = 0.10;
+uniform float EdgeMinThreshold = 0.10;
 uniform float MagicMult = 1.8;
 
 
@@ -23,6 +23,12 @@ vec4 get_pixel(in vec2 coords, in float dx, in float dy)
 // returns pixel color
 bool IsEdge(in vec2 coords){
 
+	float Border = 0.01f;
+	if ( coords.x < Border || coords.x > 1.0f-Border )
+		return false;
+	if ( coords.y < Border || coords.y > 1.0f-Border )
+		return false;
+	
 	float dxtex = 1.0 / Frame_PixelWidthHeight.x;
 	float dytex = 1.0 / Frame_PixelWidthHeight.y;
 	float pix[9];
@@ -47,7 +53,7 @@ bool IsEdge(in vec2 coords){
 	
 	
 	float Score = MagicMult*delta;
-	if ( Score < MinThreshold )
+	if ( Score < EdgeMinThreshold )
 		return false;
 	
 	return true;

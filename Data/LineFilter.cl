@@ -866,6 +866,80 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 }
 
 
+
+
+__kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
+{
+	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
+	int2 uv = uva.xy;
+	int2 wh = get_image_dim(WhiteFilter);
+	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	int2 Origin = wh/2;
+	float2 Originf = (float2)(Origin.x,Origin.y);
+	
+	{
+		float White = texture2D( WhiteFilter, uv ).x;
+		if ( White < 0.5f )
+			return;
+	}
+	
+	int AngleIndex = uva.z;
+	float Angle = AngleDegs[AngleIndex];
+	
+	//	for every pixel, & angle find it's hough-distance
+	//	increment the count for that [angle][distance] to generate a histogram of RAYS (not storing start/ends)
+	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), Originf, Angle );
+	
+	//	find index
+	//	gr: so slow! make this a binary chop
+	int BestDistanceIndex = -1;
+	int Left = 0;
+	int Right = DistanceCount-1;
+	while ( true )
+	{
+		if ( Left >= Right )
+		{
+			BestDistanceIndex = Left;
+			break;
+		}
+		
+		if ( Distancef <= Distances[Left] )
+		{
+			BestDistanceIndex = Left;
+			break;
+		}
+		if ( Distancef >= Distances[Right] )
+		{
+			BestDistanceIndex = Right;
+			break;
+		}
+		
+		//	chop
+		int Mid = Left + ((Right-Left)/2);
+		if ( Distancef < Distances[Mid] )
+		{
+			Right = Mid;
+			Left++;
+			continue;
+		}
+		else
+		{
+			Left = Mid;
+			Right--;
+			continue;
+		}
+	}
+	
+	int DistanceIndex = BestDistanceIndex;
+	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
+	
+	//	stop convergence at the ends of the distance spectrum (allows smaller distances for testing)
+	if( DistanceIndex != 0 && DistanceIndex != DistanceCount-1)
+		atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
+	
+}
+
+
 __kernel void HoughFilterPixels(int OffsetX,int OffsetY,__read_only image2d_t WhiteFilter,__write_only image2d_t Frag,int HistogramHslsCount)
 {
 	int2 uv = (int2)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY );
