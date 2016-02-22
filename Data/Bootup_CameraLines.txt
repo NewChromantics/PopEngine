@@ -1,0 +1,40 @@
+
+# set meta data
+
+setuniform LineDetector MaskTopLeft=0.285x0.544
+setuniform LineDetector MaskTopRight=0.768x0.552
+setuniform LineDetector MaskBottomRight=0.982x0.840
+setuniform LineDetector MaskBottomLeft=0.0x0.835
+
+setuniform LineDetector RadialDistortionX=-.0900000036
+setuniform LineDetector RadialDistortionY=.00999999978
+setuniform LineDetector TangentialDistortionX=.0599999987
+setuniform LineDetector TangentialDistortionY=0
+setuniform LineDetector K5Distortion=0
+setuniform LineDetector LensOffsetX=.0299999993
+setuniform LineDetector LensOffsetY=.0500000007
+
+setuniform LineDetector RectMergeMax=50
+setuniform LineDetector AtlasWidth=128 AtlasHeight=512
+
+
+# line detector
+
+addstage LineDetector Edges vert=ScreenQuad.vert frag=EdgeFilter.frag NoSnapshot=true SkipRender=false
+
+
+#addstage LineDetector Hsl vert=ScreenQuad.vert frag=FrameToHsl.frag NoSnapshot=true SkipRender=false
+#addstage LineDetector WhiteFilterGroup cl=LineFilter.cl kernel=FilterWhite RenderAsRgb=0 DrawPalette=0 SkipRender=false NoSnapshot=true
+#addstage LineDetector WhiteFilter cl=LineFilter.cl kernel=WhiteFilterEdges NoSnapshot=true GreenDistance=5
+#addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilter HoughAngleStep=0.5 HoughDistanceStep=1 HoughAngleFrom=0.1 SkipRender=true
+#addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMin=0.5 HoughScoreMax=1 SkipRender=true MaximaAngles=40 MaximaDistances=50
+#addstage LineDetector TruthLines StageType=GetTruthLines VertLinesUniform=TruthVerticalHoughLines HorzLinesUniform=TruthHorizontalHoughLines SquareAnglesOnly=1 SkipRender=true
+#addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=Frame ColourToVertical=0
+#addstage LineDetector ExtractHoughCorners StageType=ExtractHoughCorners cl=HoughCorners.cl kernel=ExtractHoughCorners HoughLineData=ExtractHoughLines MinScore=0.01 SkipRender=true InBoundsCornersOnly=0 Bounds=Frame
+#addstage LineDetector DrawHoughCorners StageType=DrawHoughCorners cl=HoughCorners.cl kernel=DrawHoughCorners HoughCornerData=ExtractHoughCorners ClearFrag=false Zoom=0.4
+
+decode LineDetector device:sight
+#decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
+
+
+
