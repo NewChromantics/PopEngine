@@ -22,6 +22,7 @@ std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDe
 	DecoderParams.mPixelBufferParams.mPopFrameSync = false;
 	DecoderParams.mPixelBufferParams.mAllowPushRejection = false;
 	DecoderParams.mForceNonPlanarOutput = true;
+	DecoderParams.mPixelBufferParams.mResetInternalTimestamp = true;
 	
 	try
 	{
@@ -51,28 +52,44 @@ TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string
 	mSerial			( Serial )
 {
 	mDecoder = PopMovieDecoder::AllocDecoder( Params );
+	
+	auto OnStreamsChanged = [this](size_t& StreamIndex)
+	{
+		if ( StreamIndex != 0 )
+			return;
+		
+		auto OnDecoded = [this](const SoyTime& Time)
+		{
+			this->Wake();
+		};
+		
+		//WakeOnEvent( mDecoder->GetPixelBufferManager().mOnFrameDecoded );
+		auto VideoStreamIndex = mDecoder->GetVideoStreamIndex(0);
+		mDecoder->GetPixelBufferManager(VideoStreamIndex).mOnFrameDecoded.AddListener( OnDecoded );
+		/*
+		 //	decode every frame we find
+		 auto AutoIncrementTime = [this](SoyTime& Timecode)
+		 {
+		 //	move decoder along to decode this frame
+		 mDecoder->SetPlayerTime( Timecode );
+		 };
+		 mDecoder->GetPixelBufferManager().mOnFrameFound.AddListener( AutoIncrementTime );
+		 */
+		SoyTime Future( 99999999ull );
+		mDecoder->SetPlayerTime( Future );
+		Start();
+	};
+	
+	auto OnBufferManagerStreamsChanged = [=](size_t StreamIndex,TMediaBufferManager&)
+	{
+		OnStreamsChanged( StreamIndex );
+	};
+
+	mDecoder->mOnBufferManagersChanged.AddListener( OnStreamsChanged );
+	mDecoder->ForEachBufferManager( OnBufferManagerStreamsChanged );
+	
 	mDecoder->StartMovie();
-	
-	auto OnDecoded = [this](const SoyTime& Time)
-	{
-		this->Wake();
-	};
-	
-	//WakeOnEvent( mDecoder->GetPixelBufferManager().mOnFrameDecoded );
-	auto StreamIndex = mDecoder->GetVideoStreamIndex(0);
-	mDecoder->GetPixelBufferManager(StreamIndex).mOnFrameDecoded.AddListener( OnDecoded );
-/*
-	//	decode every frame we find
-	auto AutoIncrementTime = [this](SoyTime& Timecode)
-	{
-		//	move decoder along to decode this frame
-		mDecoder->SetPlayerTime( Timecode );
-	};
-	mDecoder->GetPixelBufferManager().mOnFrameFound.AddListener( AutoIncrementTime );
-	*/
-	SoyTime Future( 99999999ull );
-	mDecoder->SetPlayerTime( Future );
-	Start();
+
 }
 
 TVideoDeviceMeta TMovieDecoder::GetMeta() const
