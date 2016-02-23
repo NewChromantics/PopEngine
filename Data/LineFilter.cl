@@ -660,13 +660,16 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 
 
 
-__kernel void ExtractHoughLines(int OffsetAngle,
+__kernel void ExtractHoughLines(int OffsetWindow,
+								int OffsetAngle,
 								int OffsetDistance,
-								global int* AngleXDistances,
+								global int* WindowXAngleXDistances,
 								global float* AngleDegs,
 								global float* Distances,
 								int AngleCount,
 								int DistanceCount,
+								int WindowCountX,
+								int WindowCountY,
 								global float8* Matches,
 								global volatile int* MatchesCount,
 								int MatchesMax,
@@ -682,8 +685,9 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 								float2 MaskBottomLeft
 								)
 {
-	int AngleIndex = get_global_id(0) + OffsetAngle;
-	int DistanceIndex = get_global_id(1) + OffsetDistance;
+	int WindowIndex = get_global_id(0) + OffsetWindow;
+	int AngleIndex = get_global_id(1) + OffsetAngle;
+	int DistanceIndex = get_global_id(2) + OffsetDistance;
 	int2 wh = get_image_dim(WhiteFilter);
 	
 	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
@@ -695,7 +699,10 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	
 	float Angle = AngleDegs[AngleIndex];
 	
-	float Score = AngleXDistances[ (AngleIndex * DistanceCount ) + DistanceIndex ];
+	int WindowCount = WindowCountX * WindowCountY;
+	int WadIndex = WindowIndex * (DistanceCount * AngleCount);
+	WadIndex += (AngleIndex * DistanceCount ) + DistanceIndex;
+	float Score = WindowXAngleXDistances[WadIndex];
 	
 	//	gr: altohugh this score hasn't been corrected, because they're neighbours, we assume the score entropy won't vary massively.
 	//		if we wanted to check with corrected scores we'd have to do this as a seperate stage or calc neighbour corrected scores here which might be a bit expensive
@@ -704,9 +711,13 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	{
 		for ( int y=-MaximaDistances/2;	y<=MaximaDistances/2;	y++ )
 		{
+			int NeighbourWindowIndex = WindowIndex;
 			int NeighbourAngleIndex = clamp( AngleIndex+x, 0, AngleCount-1 );
 			int NeighbourDistanceIndex = clamp( DistanceIndex+y, 0, DistanceCount-1 );
-			float NeighbourScore = AngleXDistances[ (NeighbourAngleIndex * DistanceCount ) + NeighbourDistanceIndex ];
+			int NeighbourWadIndex = WindowIndex * (DistanceCount * AngleCount);
+			NeighbourWadIndex += (NeighbourAngleIndex * DistanceCount ) + NeighbourDistanceIndex;
+
+			float NeighbourScore = WindowAngleXDistances[NeighbourWadIndex];
 			if ( NeighbourScore > Score )
 				return;
 		}
@@ -723,6 +734,23 @@ __kernel void ExtractHoughLines(int OffsetAngle,
 	ClipRect.w = max( MaskBottomLeft.y, MaskBottomRight.y );
 	ClipRect *= (float4)( wh.x, wh.y, wh.x, wh.y );
 	//printf("cliprect = (%.2f,%.2f,%.2f,%.2f)\n", ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w );
+	
+	//	Apply the window Rect to the clip rect
+	float4 WindowRect;
+	float2 WindowDeltaX = 1.0f / (float)WindowCountX;
+	float2 WindowDeltaY = 1.0f / (float)WindowCountX;
+	int WindowX = (WindowIndex / WindowCountX);
+	int WindowY = (WindowIndex % WindowCountX);
+	WindowRect.x = wh.x * (WindowX+0) * WindowDeltaX;
+	WindowRect.y = wh.y * (WindowY+0) * WindowDeltaY;
+	WindowRect.z = wh.x * (WindowX+1) * WindowDeltaX;
+	WindowRect.w = wh.y * (WindowY+1) * WindowDeltaY;
+	
+	ClipRect.x = max( ClipRect.x, WindowRect.x );
+	ClipRect.y = max( ClipRect.y, WindowRect.y );
+	ClipRect.z = min( ClipRect.z, WindowRect.z );
+	ClipRect.w = min( ClipRect.w, WindowRect.w );
+
 	
 	Line = ClipLine( Line, ClipRect );
 	
@@ -796,26 +824,11 @@ static bool HoughIncludePixel(__read_only image2d_t WhiteFilter,int2 uv,int Hist
 	return true;
 }
 
-__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int HistogramHslsCount)
+
+int GetHoughFilterDistance(int2 uv,float2 Originf,float Angle,global float* Distances,int DistanceCount)
 {
-	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
-	int2 uv = uva.xy;
-	int2 wh = get_image_dim(WhiteFilter);
-	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
-	int2 Origin = wh/2;
-	float2 Originf = (float2)(Origin.x,Origin.y);
-	
-	//	abort early
-	if ( !HoughIncludePixel( WhiteFilter, uv, HistogramHslsCount ) )
-		return;
-
-	int AngleIndex = uva.z;
-	float Angle = AngleDegs[AngleIndex];
-	
-	//	for every pixel, & angle find it's hough-distance
-	//	increment the count for that [angle][distance] to generate a histogram of RAYS (not storing start/ends)
 	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), Originf, Angle );
-
+	
 	//	find index
 	//	gr: so slow! make this a binary chop
 	int BestDistanceIndex = -1;
@@ -857,6 +870,30 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	}
 	
 	int DistanceIndex = BestDistanceIndex;
+	return DistanceIndex;
+}
+
+
+//	todo: change to include windows if this is ever used again
+__kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int HistogramHslsCount)
+{
+	//	for every pixel, & angle find it's hough-distance
+	//	increment the count for that [angle][distance] to generate a histogram of RAYS (not storing start/ends)
+	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
+	int2 uv = uva.xy;
+	int2 wh = get_image_dim(WhiteFilter);
+	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	int2 Origin = wh/2;
+	float2 Originf = (float2)(Origin.x,Origin.y);
+	
+	//	abort early
+	if ( !HoughIncludePixel( WhiteFilter, uv, HistogramHslsCount ) )
+		return;
+
+	int AngleIndex = uva.z;
+	float Angle = AngleDegs[AngleIndex];
+	
+	int DistanceIndex = GetHoughFilterDistance( uv, Originf, Angle, Distances, DistanceCount );
 	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
 	
 	//	stop convergence at the ends of the distance spectrum (allows smaller distances for testing)
@@ -866,9 +903,7 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 }
 
 
-
-
-__kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* AngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount)
+__kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* WindowXAngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int WindowCountX,int WindowCountY)
 {
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
@@ -886,56 +921,22 @@ __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_onl
 	int AngleIndex = uva.z;
 	float Angle = AngleDegs[AngleIndex];
 	
-	//	for every pixel, & angle find it's hough-distance
-	//	increment the count for that [angle][distance] to generate a histogram of RAYS (not storing start/ends)
-	float Distancef = GetHoughDistance( (float2)(uv.x,uv.y), Originf, Angle );
-	
-	//	find index
-	//	gr: so slow! make this a binary chop
-	int BestDistanceIndex = -1;
-	int Left = 0;
-	int Right = DistanceCount-1;
-	while ( true )
-	{
-		if ( Left >= Right )
-		{
-			BestDistanceIndex = Left;
-			break;
-		}
-		
-		if ( Distancef <= Distances[Left] )
-		{
-			BestDistanceIndex = Left;
-			break;
-		}
-		if ( Distancef >= Distances[Right] )
-		{
-			BestDistanceIndex = Right;
-			break;
-		}
-		
-		//	chop
-		int Mid = Left + ((Right-Left)/2);
-		if ( Distancef < Distances[Mid] )
-		{
-			Right = Mid;
-			Left++;
-			continue;
-		}
-		else
-		{
-			Left = Mid;
-			Right--;
-			continue;
-		}
-	}
-	
-	int DistanceIndex = BestDistanceIndex;
+	int DistanceIndex = GetHoughFilterDistance( uv, Originf, Angle, Distances, DistanceCount );
 	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
+
+	int WindowX = ((float)uv.x / (float)wh.x) * (float)WindowCountX;
+	int WindowY = ((float)uv.y / (float)wh.y) * (float)WindowCountY;
+	WindowX = clamp( WindowX, 0, WindowCount.x-1 );
+	WindowY = clamp( WindowY, 0, WindowCount.y-1 );
+	int WindowIndex = WindowY * WindowCountX + WindowX;
+
+	int AngleXDistanceCount = DistanceCount * AngleCount;
+	int WindowXAngleXDistanceIndex = (WindowIndex * AngleXDistanceCount) + AngleXDistanceIndex;
+
 	
 	//	stop convergence at the ends of the distance spectrum (allows smaller distances for testing)
 	if( DistanceIndex != 0 && DistanceIndex != DistanceCount-1)
-		atomic_inc( &AngleXDistances[AngleXDistanceIndex] );
+		atomic_inc( &WindowsXAngleXDistance[WindowXAngleXDistanceIndex] );
 	
 }
 

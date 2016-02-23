@@ -65,16 +65,17 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_GatherHoughTransforms&>( *Data.get() );
 	auto& Angles = StageData.mAngles;
 	auto& Distances = StageData.mDistances;
-	auto& AngleXDistances = StageData.mAngleXDistances;
+	auto& WindowXAngleXDistances = StageData.mWindowXAngleXDistances;
+	auto WindowTotalCount = StageData.mWindowCount.x * StageData.mWindowCount.y;
 	
-	AngleXDistances.SetSize( Angles.GetSize() * Distances.GetSize() );
-	AngleXDistances.SetAll(0);
+	WindowXAngleXDistances.SetSize( WindowTotalCount * Angles.GetSize() * Distances.GetSize() );
+	WindowXAngleXDistances.SetAll(0);
 	
-	Opencl::TBufferArray<cl_int> AngleXDistancesBuffer( GetArrayBridge(AngleXDistances), ContextCl, "mAngleXDistances" );
+	Opencl::TBufferArray<cl_int> WindowXAngleXDistancesBuffer( GetArrayBridge(WindowXAngleXDistances), ContextCl, "mWindowXAngleXDistances" );
 	Opencl::TBufferArray<cl_float> AnglesBuffer( GetArrayBridge(Angles), ContextCl, "mAngles" );
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
-	auto Init = [this,&Frame,&AngleXDistancesBuffer,&AnglesBuffer,&DistancesBuffer,&FrameWidth,&FrameHeight](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&StageData,&Frame,&WindowXAngleXDistancesBuffer,&AnglesBuffer,&DistancesBuffer,&FrameWidth,&FrameHeight](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -85,11 +86,13 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 				continue;
 		}
 	
-		Kernel.SetUniform("AngleXDistances", AngleXDistancesBuffer );
+		Kernel.SetUniform("WindowXAngleXDistances", WindowXAngleXDistancesBuffer );
 		Kernel.SetUniform("AngleDegs", AnglesBuffer );
 		Kernel.SetUniform("Distances", DistancesBuffer );
 		Kernel.SetUniform("AngleCount", size_cast<cl_int>(AnglesBuffer.GetSize()) );
 		Kernel.SetUniform("DistanceCount", size_cast<cl_int>(DistancesBuffer.GetSize()) );
+		Kernel.SetUniform("WindowCountX", size_cast<cl_int>( StageData.mWindowCount.x ) );
+		Kernel.SetUniform("WindowCountY", size_cast<cl_int>( StageData.mWindowCount.y ) );
 	
 		Iterations.PushBack( vec2x<size_t>(ImageCropLeft,FrameWidth-ImageCropRight) );
 		Iterations.PushBack( vec2x<size_t>(ImageCropTop,FrameHeight-ImageCropBottom) );
@@ -103,11 +106,11 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		Kernel.SetUniform("OffsetAngle", size_cast<cl_int>(Iteration.mFirst[2]) );
 	};
 	
-	auto Finished = [&StageData,&AngleXDistances,&AngleXDistancesBuffer](Opencl::TKernelState& Kernel)
+	auto Finished = [&StageData,&WindowXAngleXDistances,&WindowXAngleXDistancesBuffer](Opencl::TKernelState& Kernel)
 	{
 		//	read back the histogram
 		Opencl::TSync Semaphore;
-		AngleXDistancesBuffer.Read( GetArrayBridge(AngleXDistances), Kernel.GetContext(), &Semaphore );
+		WindowXAngleXDistancesBuffer.Read( GetArrayBridge(WindowXAngleXDistances), Kernel.GetContext(), &Semaphore );
 		Semaphore.Wait();
 	};
 	
@@ -123,13 +126,15 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 	if ( DebugHistogramCount )
 	{
 		int TotalDistanceCount = 0;
-		for ( int ad=0;	ad<AngleXDistances.GetSize();	ad++ )
+		for ( int wad=0;	wad<WindowXAngleXDistances.GetSize();	wad++ )
 		{
-			auto d = ad % Distances.GetSize();
+			auto w = wad / WindowTotalCount;
+			auto ad = wad % WindowTotalCount;
 			auto a = ad / Distances.GetSize();
+			auto d = ad % Distances.GetSize();
 
-			std::Debug << "Angle[" << Angles[a] << "][" << Distances[d] << "] x" << AngleXDistances[ad] << std::endl;
-			TotalDistanceCount += AngleXDistances[ad];
+			std::Debug << "Window[" << w << "] Angle[" << Angles[a] << "][" << Distances[d] << "] x" << WindowXAngleXDistances[wad] << std::endl;
+			TotalDistanceCount += WindowXAngleXDistances[wad];
 		}
 		std::Debug << "Total distance count: " << TotalDistanceCount << std::endl;
 	}
@@ -150,8 +155,8 @@ void TFilterStage_DrawHoughLinesDynamic::Execute(TFilterFrame& Frame,std::shared
 	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_GatherHoughTransforms>( mHoughDataStage );
 	auto& Angles = HoughStageData.mAngles;
 	auto& Distances = HoughStageData.mDistances;
-	auto& AnglesXDistances = HoughStageData.mAngleXDistances;
-	Opencl::TBufferArray<cl_int> AngleXDistancesBuffer( GetArrayBridge(AnglesXDistances), ContextCl, "mAngleXDistances" );
+	auto& WindowXAnglesXDistances = HoughStageData.mWindowXAngleXDistances;
+	Opencl::TBufferArray<cl_int> WindowXAngleXDistancesBuffer( GetArrayBridge(WindowXAnglesXDistances), ContextCl, "mWindowXAngleXDistances" );
 	Opencl::TBufferArray<cl_float> AnglesBuffer( GetArrayBridge(Angles), ContextCl, "mAngles" );
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
@@ -242,7 +247,7 @@ void TFilterStage_DrawHoughLinesDynamic::Execute(TFilterFrame& Frame,std::shared
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
 	
-	auto Init = [this,&Frame,&StageData,&ContextGl,&Angles,&Distances,&AngleXDistancesBuffer,&AnglesBuffer,&DistancesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [this,&Frame,&StageData,&ContextGl,&Angles,&Distances,&WindowXAngleXDistancesBuffer,&AnglesBuffer,&DistancesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//ofScopeTimerWarning Timer("opencl blit init",40);
 		
@@ -276,7 +281,7 @@ void TFilterStage_DrawHoughLinesDynamic::Execute(TFilterFrame& Frame,std::shared
 			throw Soy::AssertException("No pixel output created");
 		}
 		
-		Kernel.SetUniform("AngleXDistances", AngleXDistancesBuffer );
+		Kernel.SetUniform("WindowXAngleXDistances", WindowXAngleXDistancesBuffer );
 		Kernel.SetUniform("AngleDegs", AnglesBuffer );
 		Kernel.SetUniform("AngleCount", size_cast<cl_int>(AnglesBuffer.GetSize()) );
 		Kernel.SetUniform("Distances", DistancesBuffer );
@@ -513,8 +518,11 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_GatherHoughTransforms>( mHoughDataStage );
 	auto& Angles = HoughStageData.mAngles;
 	auto& Distances = HoughStageData.mDistances;
-	auto& AnglesXDistances = HoughStageData.mAngleXDistances;
-	Opencl::TBufferArray<cl_int> AngleXDistancesBuffer( GetArrayBridge(AnglesXDistances), ContextCl, "mAngleXDistances" );
+	auto WindowCount = HoughStageData.mWindowCount;
+	auto& WindowXAnglesXDistances = HoughStageData.mWindowXAngleXDistances;
+	cl_int WindowCountX = size_cast<cl_int>( WindowCount.x );
+	cl_int WindowCountY = size_cast<cl_int>( WindowCount.y );
+	Opencl::TBufferArray<cl_int> WindowXAngleXDistancesBuffer( GetArrayBridge(WindowXAnglesXDistances), ContextCl, "mWindowXAngleXDistances" );
 	Opencl::TBufferArray<cl_float> AnglesBuffer( GetArrayBridge(Angles), ContextCl, "mAngles" );
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
@@ -527,7 +535,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Opencl::TBufferArray<cl_int> LineBufferCounter( GetArrayBridge(LineBufferCountArray), ContextCl, "LineBufferCounter" );
 
 	
-	auto Init = [this,&Frame,&LineBuffer,&LineBufferCounter,&Angles,&Distances,&AngleXDistancesBuffer,&AnglesBuffer,&DistancesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
+	auto Init = [&](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
 		//	setup params
 		for ( int u=0;	u<Kernel.mKernel.mUniforms.GetSize();	u++ )
@@ -538,27 +546,31 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 				continue;
 		}
 		
-		Kernel.SetUniform("AngleXDistances", AngleXDistancesBuffer );
+		Kernel.SetUniform("WindowXAngleXDistances", WindowXAngleXDistancesBuffer );
 		Kernel.SetUniform("AngleDegs", AnglesBuffer );
 		Kernel.SetUniform("AngleCount", size_cast<cl_int>(AnglesBuffer.GetSize()) );
 		Kernel.SetUniform("Distances", DistancesBuffer );
 		Kernel.SetUniform("DistanceCount", size_cast<cl_int>(DistancesBuffer.GetSize()) );
+		Kernel.SetUniform("WindowCountX", size_cast<cl_int>(WindowCountX) );
+		Kernel.SetUniform("WindowCountY", size_cast<cl_int>(WindowCountY) );
 		Kernel.SetUniform("Matches", LineBuffer );
 		Kernel.SetUniform("MatchesCount", LineBufferCounter );
 		Kernel.SetUniform("MatchesMax", size_cast<cl_int>(LineBuffer.GetSize()) );
 	
 		
+		Iterations.PushBack( vec2x<size_t>(0, WindowCountX * WindowCountY ) );
 		Iterations.PushBack( vec2x<size_t>(0, Angles.GetSize() ) );
 		Iterations.PushBack( vec2x<size_t>(0, Distances.GetSize() ) );
 	};
 	
 	auto Iteration = [](Opencl::TKernelState& Kernel,const Opencl::TKernelIteration& Iteration,bool& Block)
 	{
-		Kernel.SetUniform("OffsetAngle", size_cast<cl_int>(Iteration.mFirst[0]) );
-		Kernel.SetUniform("OffsetDistance", size_cast<cl_int>(Iteration.mFirst[1]) );
+		Kernel.SetUniform("OffsetWindow", size_cast<cl_int>(Iteration.mFirst[0]) );
+		Kernel.SetUniform("OffsetAngle", size_cast<cl_int>(Iteration.mFirst[1]) );
+		Kernel.SetUniform("OffsetDistance", size_cast<cl_int>(Iteration.mFirst[2]) );
 	};
 	
-	auto Finished = [&AllLines,&LineBuffer,&LineBufferCounter](Opencl::TKernelState& Kernel)
+	auto Finished = [&](Opencl::TKernelState& Kernel)
 	{
 		cl_int LineCount = 0;
 		Opencl::TSync Semaphore;
@@ -586,9 +598,9 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	//	todo: auto gen this by histogramming, find median (vertical) opposite (horizontal)
 	float VerticalAngle = 0;
 	int BestAngleXDistance = 0;
-	for ( int axd=0;	axd<AnglesXDistances.GetSize();	axd++ )
+	for ( int axd=0;	axd<WindowXAnglesXDistances.GetSize();	axd++ )
 	{
-		if ( AnglesXDistances[axd] <= AnglesXDistances[BestAngleXDistance] )
+		if ( WindowXAnglesXDistances[axd] <= WindowXAnglesXDistances[BestAngleXDistance] )
 			continue;
 		BestAngleXDistance = axd;
 	}

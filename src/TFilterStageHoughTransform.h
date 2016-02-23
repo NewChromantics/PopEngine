@@ -23,9 +23,14 @@ public:
 class TFilterStageRuntimeData_GatherHoughTransforms : public TFilterStageRuntimeData
 {
 public:
+	TFilterStageRuntimeData_GatherHoughTransforms() :
+		mWindowCount	( 1, 1 )
+	{
+	}
 	Array<float>				mAngles;
 	Array<float>				mDistances;
-	Array<cl_int>				mAngleXDistances;	//	[Angle][Distance]=Count
+	vec2x<size_t>				mWindowCount;
+	Array<cl_int>				mWindowXAngleXDistances;	//	[Window][Angle][Distance]=Count
 };
 
 
