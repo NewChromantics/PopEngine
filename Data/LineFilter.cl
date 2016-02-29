@@ -717,7 +717,7 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 			int NeighbourWadIndex = WindowIndex * (DistanceCount * AngleCount);
 			NeighbourWadIndex += (NeighbourAngleIndex * DistanceCount ) + NeighbourDistanceIndex;
 
-			float NeighbourScore = WindowAngleXDistances[NeighbourWadIndex];
+			float NeighbourScore = WindowXAngleXDistances[NeighbourWadIndex];
 			if ( NeighbourScore > Score )
 				return;
 		}
@@ -737,8 +737,8 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	
 	//	Apply the window Rect to the clip rect
 	float4 WindowRect;
-	float2 WindowDeltaX = 1.0f / (float)WindowCountX;
-	float2 WindowDeltaY = 1.0f / (float)WindowCountX;
+	float WindowDeltaX = 1.0f / (float)WindowCountX;
+	float WindowDeltaY = 1.0f / (float)WindowCountX;
 	int WindowX = (WindowIndex / WindowCountX);
 	int WindowY = (WindowIndex % WindowCountX);
 	WindowRect.x = wh.x * (WindowX+0) * WindowDeltaX;
@@ -926,8 +926,8 @@ __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_onl
 
 	int WindowX = ((float)uv.x / (float)wh.x) * (float)WindowCountX;
 	int WindowY = ((float)uv.y / (float)wh.y) * (float)WindowCountY;
-	WindowX = clamp( WindowX, 0, WindowCount.x-1 );
-	WindowY = clamp( WindowY, 0, WindowCount.y-1 );
+	WindowX = clamp( WindowX, 0, WindowCountX-1 );
+	WindowY = clamp( WindowY, 0, WindowCountY-1 );
 	int WindowIndex = WindowY * WindowCountX + WindowX;
 
 	int AngleXDistanceCount = DistanceCount * AngleCount;
@@ -936,7 +936,7 @@ __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_onl
 	
 	//	stop convergence at the ends of the distance spectrum (allows smaller distances for testing)
 	if( DistanceIndex != 0 && DistanceIndex != DistanceCount-1)
-		atomic_inc( &WindowsXAngleXDistance[WindowXAngleXDistanceIndex] );
+		atomic_inc( &WindowXAngleXDistances[WindowXAngleXDistanceIndex] );
 	
 }
 
