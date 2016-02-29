@@ -396,7 +396,7 @@ static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t F
 	From = Line4.xy;
 	To = Line4.zw;
 	
-	int Steps = 900;
+	int Steps = 200;
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );
@@ -431,7 +431,7 @@ static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t F
 static void DrawLineDirect(float2 From,float2 To,__write_only image2d_t Frag,float Score)
 {
 	float4 Rgba = NormalToRgba( Score );
-	DrawLineDirect_Colour( From, To, Frag, Rgba, 2 );
+	DrawLineDirect_Colour( From, To, Frag, Rgba, 1 );
 }
 
 

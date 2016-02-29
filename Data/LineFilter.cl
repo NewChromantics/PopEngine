@@ -2,6 +2,16 @@
 #include "Array.cl"
 
 
+static bool CalculateWindow(int WindowIndex)
+{
+	return true;
+	if ( WindowIndex % 10 < 2 )
+		return true;
+	
+	return false;
+}
+
+
 DECLARE_DYNAMIC_ARRAY(float8);
 
 
@@ -659,7 +669,6 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 
 
 
-
 __kernel void ExtractHoughLines(int OffsetWindow,
 								int OffsetAngle,
 								int OffsetDistance,
@@ -690,6 +699,9 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	int DistanceIndex = get_global_id(2) + OffsetDistance;
 	int2 wh = get_image_dim(WhiteFilter);
 	
+	if ( !CalculateWindow(WindowIndex) )
+		return;
+	
 	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
 	int2 Origin = wh/2;
 	float2 Originf = (float2)(Origin.x,Origin.y);
@@ -702,8 +714,13 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	int WindowCount = WindowCountX * WindowCountY;
 	int WadIndex = WindowIndex * (DistanceCount * AngleCount);
 	WadIndex += (AngleIndex * DistanceCount ) + DistanceIndex;
+	if ( WadIndex >= DistanceCount*WindowCount*AngleCount )
+	{
+		printf("wadindex %d/%d\n", WadIndex, DistanceCount*WindowCount*AngleCount );
+		return;
+	}
 	float Score = WindowXAngleXDistances[WadIndex];
-	
+/*
 	//	gr: altohugh this score hasn't been corrected, because they're neighbours, we assume the score entropy won't vary massively.
 	//		if we wanted to check with corrected scores we'd have to do this as a seperate stage or calc neighbour corrected scores here which might be a bit expensive
 	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
@@ -722,7 +739,7 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 				return;
 		}
 	}
-
+*/
 	//	correct the score to be related to maximum possible length (this lets us handle mulitple resolutions)
 	float4 Line = GetHoughLine( Distance, Angle, Originf );
 
@@ -738,13 +755,22 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	//	Apply the window Rect to the clip rect
 	float4 WindowRect;
 	float WindowDeltaX = 1.0f / (float)WindowCountX;
-	float WindowDeltaY = 1.0f / (float)WindowCountX;
-	int WindowX = (WindowIndex / WindowCountX);
-	int WindowY = (WindowIndex % WindowCountX);
-	WindowRect.x = wh.x * (WindowX+0) * WindowDeltaX;
-	WindowRect.y = wh.y * (WindowY+0) * WindowDeltaY;
-	WindowRect.z = wh.x * (WindowX+1) * WindowDeltaX;
-	WindowRect.w = wh.y * (WindowY+1) * WindowDeltaY;
+	float WindowDeltaY = 1.0f / (float)WindowCountY;
+	int WindowX = (WindowIndex % WindowCountX);
+	int WindowY = (WindowIndex / WindowCountX);
+	WindowRect.x = (WindowX+0) * WindowDeltaX;
+	WindowRect.y = (WindowY+0) * WindowDeltaY;
+	WindowRect.z = (WindowX+1) * WindowDeltaX;
+	WindowRect.w = (WindowY+1) * WindowDeltaY;
+	WindowRect *= (float4)( wh.x, wh.y, wh.x, wh.y );
+
+	if ( !CalculateWindow(WindowIndex) )
+		return;
+	if ( /*WindowIndex == 0 && */AngleIndex == 0 && DistanceIndex == 0 )
+	{
+		printf("wi=%d ai=%d di=%d windowrect: %.3f %.3f %.3f %.3f Cliprect: %.3f %.3f %.3f %.3f\n", WindowIndex, AngleIndex, DistanceIndex, WindowRect.x, WindowRect.y, WindowRect.z, WindowRect.w, ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w );
+	}
+
 	
 	ClipRect.x = max( ClipRect.x, WindowRect.x );
 	ClipRect.y = max( ClipRect.y, WindowRect.y );
@@ -757,7 +783,7 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	float LineLength = length( Line.xy - Line.zw );
 	
 	//	entirely clipped lines... should we have any at all? maybe when distance is too far out
-	if ( LineLength <= 0 )
+	if ( LineLength <= 2 )
 		return;
 
 	//	gr: note: we can have more-pixels for a line depending on distance grouping
@@ -929,10 +955,12 @@ __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_onl
 	WindowX = clamp( WindowX, 0, WindowCountX-1 );
 	WindowY = clamp( WindowY, 0, WindowCountY-1 );
 	int WindowIndex = WindowY * WindowCountX + WindowX;
-
+	
+	//if ( !CalculateWindow(WindowIndex) )
+	//	return;
+	
 	int AngleXDistanceCount = DistanceCount * AngleCount;
 	int WindowXAngleXDistanceIndex = (WindowIndex * AngleXDistanceCount) + AngleXDistanceIndex;
-
 	
 	//	stop convergence at the ends of the distance spectrum (allows smaller distances for testing)
 	if( DistanceIndex != 0 && DistanceIndex != DistanceCount-1)
