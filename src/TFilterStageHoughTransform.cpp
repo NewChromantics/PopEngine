@@ -19,8 +19,14 @@ float HoughLine_GetScore(cl_float8& HoughLine,bool Vertical)
 	return HoughLine.s[6];
 }
 
-
-
+size_t GetAngleIndexFromWad(int WadIndex,size_t WindowCount,size_t AngleCount,size_t DistanceCount)
+{
+	auto WindowIndex = WadIndex / (AngleCount*DistanceCount);
+	auto adIndex = WadIndex % (AngleCount*DistanceCount);
+	auto AngleIndex = adIndex / DistanceCount;
+	auto DistanceIndex = adIndex % DistanceCount;
+	return AngleIndex;
+}
 
 void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
@@ -526,7 +532,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Opencl::TBufferArray<cl_float> AnglesBuffer( GetArrayBridge(Angles), ContextCl, "mAngles" );
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
-	static size_t TotalLineLimit = 2000;
+	static size_t TotalLineLimit = 8000;
 	Array<cl_float8> AllLines;
 	AllLines.SetSize(TotalLineLimit);
 	int LineBufferCount[] = {0};
@@ -579,7 +585,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		
 		if ( LineCount > LineBuffer.GetSize() )
 		{
-			std::Debug << "Warning: Extracted " << LineCount << "/" << LineBuffer.GetSize() << std::endl;
+			std::Debug << "Warning: Extracted " << LineCount << "/" << LineBuffer.GetSize() << " lines" << std::endl;
 		}
 		
 		AllLines.SetSize( std::min( LineCount, size_cast<cl_int>(LineBuffer.GetSize()) ) );
@@ -597,14 +603,17 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	//	evaluate if lines are vertical or horizontal
 	//	todo: auto gen this by histogramming, find median (vertical) opposite (horizontal)
 	float VerticalAngle = 0;
-	int BestAngleXDistance = 0;
-	for ( int axd=0;	axd<WindowXAnglesXDistances.GetSize();	axd++ )
+	int BestWad = 0;
+	for ( int wad=0;	wad<WindowXAnglesXDistances.GetSize();	wad++ )
 	{
-		if ( WindowXAnglesXDistances[axd] <= WindowXAnglesXDistances[BestAngleXDistance] )
+		if ( WindowXAnglesXDistances[wad] <= WindowXAnglesXDistances[BestWad] )
 			continue;
-		BestAngleXDistance = axd;
+		BestWad = wad;
 	}
-	VerticalAngle = Angles[BestAngleXDistance / Distances.GetSize()];
+	auto BestAngleIndex = GetAngleIndexFromWad( BestWad, WindowCount.x*WindowCount.y, Angles.GetSize(), Distances.GetSize() );
+	VerticalAngle = Angles[BestAngleIndex];
+	if ( VerticalAngle < Angles[0] )
+		VerticalAngle = Angles[0];
 
 	//	allocate final data
 	if ( !Data )
