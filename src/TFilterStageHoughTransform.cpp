@@ -52,15 +52,16 @@ void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared
 		TUniformWrapper<float> AngleTo("HoughAngleTo",179);
 		TUniformWrapper<float> AngleStep("HoughAngleStep",0.3333f);
 		TUniformWrapper<float> DistanceStep("HoughDistanceStep",2);
+		TUniformWrapper<float> DistanceRadius("HougDistanceRadius",900);
 		
 		Frame.SetUniform( AngleFrom, AngleFrom, mFilter, *this );
 		Frame.SetUniform( AngleTo, AngleTo, mFilter, *this );
 		Frame.SetUniform( AngleStep, AngleStep, mFilter, *this );
 		Frame.SetUniform( DistanceStep, DistanceStep, mFilter, *this );
+		Frame.SetUniform( DistanceRadius, DistanceRadius, mFilter, *this );
 
-		//	gr: remove this and generate max from the image
-		static float DistanceFrom = -900;
-		float DistanceTo = -DistanceFrom;
+		float DistanceTo = DistanceRadius;
+		float DistanceFrom = -DistanceRadius;
 		
 		for ( float a=AngleFrom;	a<=AngleTo;	a+=AngleStep )
 			Angles.PushBack( a );

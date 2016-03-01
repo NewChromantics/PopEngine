@@ -396,7 +396,7 @@ static void DrawLineDirect_Colour(float2 From,float2 To,__write_only image2d_t F
 	From = Line4.xy;
 	To = Line4.zw;
 	
-	int Steps = 200;
+	int Steps = 900;
 	for ( int i=0;	i<Steps;	i++ )
 	{
 		float2 Point = Lerp2( i/(float)Steps, From, To );

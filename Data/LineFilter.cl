@@ -1,9 +1,50 @@
 #include "Common.cl"
 #include "Array.cl"
 
+#define SHOW_ALL_HOUGH_LINES	false
+#define ENABLE_MAXIMA_IN_EXTRACTION
+
+
+static float4 GetWindowRectNormalised(int WindowIndex,int WindowCountX,int WindowCountY)
+{
+	float WindowDeltaX = 1.0f / (float)WindowCountX;
+	float WindowDeltaY = 1.0f / (float)WindowCountY;
+	int WindowX = (WindowIndex % WindowCountX);
+	int WindowY = (WindowIndex / WindowCountX);
+
+	float4 WindowRect;
+	WindowRect.x = (WindowX+0) * WindowDeltaX;
+	WindowRect.y = (WindowY+0) * WindowDeltaY;
+	WindowRect.z = (WindowX+1) * WindowDeltaX;
+	WindowRect.w = (WindowY+1) * WindowDeltaY;
+
+	return WindowRect;
+}
+
+static float2 GetHoughWindowOrigin(int2 ImageWidthHeight,int WindowIndex,int WindowCountX,int WindowCountY)
+{
+	/*
+	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	int2 Origin = wh/2;
+	float2 Originf = (float2)(Origin.x,Origin.y);
+	 */
+	//	origin in the center of each window
+	float4 WindowRect = GetWindowRectNormalised( WindowIndex, WindowCountX, WindowCountY );
+	float2 Originf = (float2)( Lerp(0.5f,WindowRect.x,WindowRect.z), Lerp(0.5f,WindowRect.y,WindowRect.w) );
+	return Originf * (float2)(ImageWidthHeight.x,ImageWidthHeight.y);
+}
+
+#define INDEX_OF(x,y,w,h)	( x + (y*w) )
 
 static bool CalculateWindow(int WindowIndex)
 {
+	return true;
+	//	only draw center
+	if ( WindowIndex >= INDEX_OF( 6, 1, 10, 10 )
+		 && WindowIndex <= INDEX_OF( 10, 2, 10, 10 ) )
+		return true;
+	return false;
+	
 	return true;
 	if ( WindowIndex % 10 < 2 )
 		return true;
@@ -611,9 +652,10 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 	int DistanceIndex = get_global_id(1) + OffsetDistance;
 	int2 wh = get_image_dim(Frag);
 	
-	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
-	int2 Origin = wh/2;
-	float2 Originf = (float2)(Origin.x,Origin.y);
+	int WindowIndex = 0;
+	int WindowCountX = 1;
+	int WindowCountY = 1;
+	float2 Originf = GetHoughWindowOrigin( wh, WindowIndex, WindowCountX, WindowCountY );
 
 	float DistanceNorm = DistanceIndex / (float)DistanceCount;
 	float Distance = Lerp( DistanceNorm, Distances[0], Distances[DistanceCount-1] );
@@ -702,9 +744,7 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	if ( !CalculateWindow(WindowIndex) )
 		return;
 	
-	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
-	int2 Origin = wh/2;
-	float2 Originf = (float2)(Origin.x,Origin.y);
+	float2 Originf = GetHoughWindowOrigin( wh, WindowIndex, WindowCountX, WindowCountY );
 	
 	float DistanceNorm = DistanceIndex / (float)DistanceCount;
 	float Distance = Lerp( DistanceNorm, Distances[0], Distances[DistanceCount-1] );
@@ -720,7 +760,9 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 		return;
 	}
 	float Score = WindowXAngleXDistances[WadIndex];
-/*
+
+	
+#if defined(ENABLE_MAXIMA_IN_EXTRACTION)
 	//	gr: altohugh this score hasn't been corrected, because they're neighbours, we assume the score entropy won't vary massively.
 	//		if we wanted to check with corrected scores we'd have to do this as a seperate stage or calc neighbour corrected scores here which might be a bit expensive
 	//	check local maxima and skip line if a neighbour (near distance/near angle) is better
@@ -739,7 +781,8 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 				return;
 		}
 	}
-*/
+#endif
+	
 	//	correct the score to be related to maximum possible length (this lets us handle mulitple resolutions)
 	float4 Line = GetHoughLine( Distance, Angle, Originf );
 
@@ -753,22 +796,14 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	//printf("cliprect = (%.2f,%.2f,%.2f,%.2f)\n", ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w );
 	
 	//	Apply the window Rect to the clip rect
-	float4 WindowRect;
-	float WindowDeltaX = 1.0f / (float)WindowCountX;
-	float WindowDeltaY = 1.0f / (float)WindowCountY;
-	int WindowX = (WindowIndex % WindowCountX);
-	int WindowY = (WindowIndex / WindowCountX);
-	WindowRect.x = (WindowX+0) * WindowDeltaX;
-	WindowRect.y = (WindowY+0) * WindowDeltaY;
-	WindowRect.z = (WindowX+1) * WindowDeltaX;
-	WindowRect.w = (WindowY+1) * WindowDeltaY;
+	float4 WindowRect = GetWindowRectNormalised( WindowIndex, WindowCountX, WindowCountY );
 	WindowRect *= (float4)( wh.x, wh.y, wh.x, wh.y );
 
 	if ( !CalculateWindow(WindowIndex) )
 		return;
 	if ( /*WindowIndex == 0 && */AngleIndex == 0 && DistanceIndex == 0 )
 	{
-		printf("wi=%d ai=%d di=%d windowrect: %.3f %.3f %.3f %.3f Cliprect: %.3f %.3f %.3f %.3f\n", WindowIndex, AngleIndex, DistanceIndex, WindowRect.x, WindowRect.y, WindowRect.z, WindowRect.w, ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w );
+		//printf("wi=%d ai=%d di=%d windowrect: %.3f %.3f %.3f %.3f Cliprect: %.3f %.3f %.3f %.3f\n", WindowIndex, AngleIndex, DistanceIndex, WindowRect.x, WindowRect.y, WindowRect.z, WindowRect.w, ClipRect.x, ClipRect.y, ClipRect.z, ClipRect.w );
 	}
 
 	
@@ -908,10 +943,12 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
 	int2 wh = get_image_dim(WhiteFilter);
-	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
-	int2 Origin = wh/2;
-	float2 Originf = (float2)(Origin.x,Origin.y);
-	
+
+	int WindowIndex = 0;
+	int WindowCountX = 1;
+	int WindowCountY = 1;
+	float2 Originf = GetHoughWindowOrigin( wh, WindowIndex, WindowCountX, WindowCountY );
+
 	//	abort early
 	if ( !HoughIncludePixel( WhiteFilter, uv, HistogramHslsCount ) )
 		return;
@@ -929,15 +966,14 @@ __kernel void HoughFilter(int OffsetX,int OffsetY,int OffsetAngle,__read_only im
 }
 
 
+
 __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_only image2d_t WhiteFilter,global int* WindowXAngleXDistances,global float* AngleDegs,global float* Distances,int AngleCount,int DistanceCount,int WindowCountX,int WindowCountY)
 {
 	int3 uva = (int3)( get_global_id(0) + OffsetX, get_global_id(1) + OffsetY, get_global_id(2) + OffsetAngle );
 	int2 uv = uva.xy;
 	int2 wh = get_image_dim(WhiteFilter);
-	//	origin around the middle http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
-	int2 Origin = wh/2;
-	float2 Originf = (float2)(Origin.x,Origin.y);
 	
+	if ( !SHOW_ALL_HOUGH_LINES )
 	{
 		float White = texture2D( WhiteFilter, uv ).x;
 		if ( White < 0.5f )
@@ -946,15 +982,18 @@ __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_onl
 	
 	int AngleIndex = uva.z;
 	float Angle = AngleDegs[AngleIndex];
-	
-	int DistanceIndex = GetHoughFilterDistance( uv, Originf, Angle, Distances, DistanceCount );
-	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
 
 	int WindowX = ((float)uv.x / (float)wh.x) * (float)WindowCountX;
 	int WindowY = ((float)uv.y / (float)wh.y) * (float)WindowCountY;
 	WindowX = clamp( WindowX, 0, WindowCountX-1 );
 	WindowY = clamp( WindowY, 0, WindowCountY-1 );
 	int WindowIndex = WindowY * WindowCountX + WindowX;
+
+	float2 Originf = GetHoughWindowOrigin( wh, WindowIndex, WindowCountX, WindowCountY );
+	
+	int DistanceIndex = GetHoughFilterDistance( uv, Originf, Angle, Distances, DistanceCount );
+	int AngleXDistanceIndex = (AngleIndex * DistanceCount) + DistanceIndex;
+
 	
 	//if ( !CalculateWindow(WindowIndex) )
 	//	return;
