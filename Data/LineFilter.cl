@@ -818,7 +818,7 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	float LineLength = length( Line.xy - Line.zw );
 	
 	//	entirely clipped lines... should we have any at all? maybe when distance is too far out
-	if ( LineLength <= 2 )
+	if ( LineLength <= 0 )
 		return;
 
 	//	gr: note: we can have more-pixels for a line depending on distance grouping
@@ -975,7 +975,7 @@ __kernel void HoughFilterMono(int OffsetX,int OffsetY,int OffsetAngle,__read_onl
 	
 	if ( !SHOW_ALL_HOUGH_LINES )
 	{
-		float White = texture2D( WhiteFilter, uv ).x;
+		float White = texture2D( WhiteFilter, uv ).z;
 		if ( White < 0.5f )
 			return;
 	}

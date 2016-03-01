@@ -24,7 +24,7 @@ class TFilterStageRuntimeData_GatherHoughTransforms : public TFilterStageRuntime
 {
 public:
 	TFilterStageRuntimeData_GatherHoughTransforms() :
-		mWindowCount	( 30, 30 )
+		mWindowCount	( 30, 20 )
 	{
 	}
 	Array<float>				mAngles;

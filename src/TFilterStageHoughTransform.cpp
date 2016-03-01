@@ -666,8 +666,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	}
 	
 	//	limit output
-	TUniformWrapper<int> MaxVertLinesUniform("MaxVertLines",1000);
-	TUniformWrapper<int> MaxHorzLinesUniform("MaxHorzLines",1000);
+	TUniformWrapper<int> MaxVertLinesUniform("MaxVertLines",500);
+	TUniformWrapper<int> MaxHorzLinesUniform("MaxHorzLines",3000);
 	SetUniform( MaxVertLinesUniform, MaxVertLinesUniform );
 	SetUniform( MaxHorzLinesUniform, MaxHorzLinesUniform );
 	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), MaxVertLinesUniform.mValue ) );

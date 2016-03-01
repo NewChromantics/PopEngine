@@ -63,8 +63,8 @@ void main()
 {
 	bool Edge = IsEdge( fTexCoord );
 	float v = Edge ? 1.0 : 0.0;
-	gl_FragColor.x = v;
-	gl_FragColor.y = v;
+	gl_FragColor.x = 0;
+	gl_FragColor.y = 0;
 	gl_FragColor.z = v;
 	gl_FragColor.w = 1.0;
 }

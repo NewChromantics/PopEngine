@@ -3,23 +3,24 @@
 
 
 # line detector
-setuniform LineDetector EdgeMinThreshold=0.15
+setuniform LineDetector EdgeMinThreshold=0.08
 
 addstage LineDetector Edges vert=ScreenQuad.vert frag=EdgeFilter.frag NoSnapshot=true SkipRender=true
 
-setuniform LineDetector HougDistanceRadius=25
+setuniform LineDetector HougDistanceRadius=60
 setuniform LineDetector HoughDistanceStep=1
-setuniform LineDetector HoughAngleStep=3
+setuniform LineDetector HoughAngleStep=22.5
 setuniform LineDetector HoughScoreMin=0.75
 setuniform LineDetector MaximaAngles=5
 setuniform LineDetector MaximaDistances=5
 
 addstage LineDetector HoughFilter StageType=GatherHoughLines cl=LineFilter.cl kernel=HoughFilterMono HoughAngleFrom=0.1 SkipRender=true WhiteFilter=Edges
 addstage LineDetector ExtractHoughLines StageType=ExtractHoughLines cl=LineFilter.cl kernel=ExtractHoughLines HoughData=HoughFilter HoughScoreMax=1.0 SkipRender=true  WhiteFilter=Edges
-addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=Edges ColourToVertical=0 WhiteFilter=Edges
+addstage LineDetector DrawHoughLines StageType=DrawHoughLines cl=LineFilter.cl kernel=DrawHoughLines HoughLineData=ExtractHoughLines ClearFrag=xxxEdges ColourToVertical=0 WhiteFilter=Edges
 
 
-decode LineDetector device:sight
+#decode LineDetector device:sight
+decode LineDetector device:left
 #decode LineDetector device:facetime
 #decode LineDetector /Volumes/Assets/LiveLikeVideo/ManCity_Camera1_126.mp4
 
