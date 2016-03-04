@@ -30,59 +30,6 @@ TPlayerFilter::TPlayerFilter(const std::string& Name,size_t MaxFrames,size_t Max
 	Start();
 }
 
-void TPlayerFilter::SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event)
-{
-	auto BlockAndRun = [this](TVideoDevice& Video)
-	{
-		std::shared_ptr<SoyPixelsImpl> FramePixels;
-		SoyTime FrameTime;
-		try
-		{
-			auto& LastFrame = Video.GetLastFrame();
-			FramePixels = LastFrame.GetPixelsShared();
-			FrameTime = LastFrame.GetTime();
-			FrameTime.mTime ++;
-		}
-		catch(std::exception& e)
-		{
-			std::Debug << "Error with last frame; " << e.what() << std::endl;
-			return;
-		}
-		
-		//	copy pixels
-		std::shared_ptr<SoyPixelsImpl> Pixels( new SoyPixels );
-		Pixels->Copy( *FramePixels );
-		
-		class TRunPixelsJob : public PopWorker::TJob
-		{
-		public:
-			TRunPixelsJob(TFilter& Filter,std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time) :
-				mFilter		( Filter ),
-				mTime		( Time ),
-				mPixels		( Pixels )
-			{
-			}
-			
-			virtual void	Run()
-			{
-				//std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
-				mFilter.LoadFrame( mPixels, mTime );
-			}
-
-			TFilter&						mFilter;
-			SoyTime							mTime;
-			std::shared_ptr<SoyPixelsImpl>	mPixels;
-		};
-		
-		std::shared_ptr<PopWorker::TJob> Job( new TRunPixelsJob( *this, Pixels, FrameTime ) );
-		Pixels.reset();
-		//std::Debug << "Queueing load of " << Time << std::endl;
-		mRunThreads.Run( Job );
-	};
-	
-	Event.AddListener( BlockAndRun );
-}
-
 
 TJobParam TPlayerFilter::GetUniform(const std::string& Name)
 {

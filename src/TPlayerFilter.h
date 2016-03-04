@@ -67,8 +67,6 @@ public:
 	virtual bool			Iteration() override;
 	void					DeleteOldFrames();
 	
-	void					SetOnNewVideoEvent(SoyEvent<TVideoDevice>& Event);
-	
 public:
 	TThreadPool				mRunThreads;
 	size_t					mMaxFrames;			//	delete frames if more than this

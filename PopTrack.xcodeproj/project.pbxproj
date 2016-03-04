@@ -46,6 +46,7 @@
 		BFAD33D11B6174E600D3E7A6 /* SoyMovieDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33D01B6174E600D3E7A6 /* SoyMovieDecoder.cpp */; };
 		BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DB1B6406D500D3E7A6 /* SoyVideoDevice.cpp */; };
 		BFAD33E01B6411F500D3E7A6 /* TJobEventSubscriber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DE1B6411F500D3E7A6 /* TJobEventSubscriber.cpp */; };
+		BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
 		FB2534BB1A974E7400A61590 /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A067C1A2E69340099596C /* PopMain.cpp */; };
@@ -196,6 +197,8 @@
 		BFAD33DC1B6406D500D3E7A6 /* SoyVideoDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyVideoDevice.h; path = src/SoyVideoDevice.h; sourceTree = "<group>"; };
 		BFAD33DE1B6411F500D3E7A6 /* TJobEventSubscriber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TJobEventSubscriber.cpp; path = src/TJobEventSubscriber.cpp; sourceTree = "<group>"; };
 		BFAD33DF1B6411F500D3E7A6 /* TJobEventSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TJobEventSubscriber.h; path = src/TJobEventSubscriber.h; sourceTree = "<group>"; };
+		BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMedia.cpp; path = src/SoyMedia.cpp; sourceTree = "<group>"; };
+		BFDE37F91C89B20D00D10F02 /* SoyMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMedia.h; path = src/SoyMedia.h; sourceTree = "<group>"; };
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
@@ -456,6 +459,8 @@
 				BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */,
 				BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */,
 				BF89F6B91B4AE28F00F58561 /* SoyMath.h */,
+				BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */,
+				BFDE37F91C89B20D00D10F02 /* SoyMedia.h */,
 				FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */,
 				FB8A06311A2E5A7C0099596C /* SoyMemFile.h */,
 				BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */,
@@ -729,6 +734,7 @@
 				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
 				FB2534DC1A974E7B00A61590 /* SoyTime.cpp in Sources */,
+				BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */,
 				FB2534CC1A974E7400A61590 /* TSerialisation.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				BF7C5F1A1B52B1B9006D1DC0 /* TFilter.cpp in Sources */,
