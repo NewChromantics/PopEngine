@@ -13,10 +13,40 @@
 #include <TChannelLiteral.h>
 #include <TChannelFile.h>
 
-
 #define FILTER_MAX_FRAMES	10
 #define FILTER_MAX_THREADS	1
 #define JOB_THREAD_COUNT	1
+
+
+namespace PopTrack
+{
+	namespace Private
+	{
+		//	keep alive after PopMain()
+#if defined(TARGET_OSX_BUNDLE)
+		std::shared_ptr<TPopTrack> gOpenglApp;
+#endif
+		
+	}
+	
+	TPopTrack&	GetApp();
+}
+
+
+
+TPopTrack& PopTrack::GetApp()
+{
+	if ( !Private::gOpenglApp )
+	{
+		Private::gOpenglApp.reset( new TPopTrack );
+	}
+	return *Private::gOpenglApp;
+}
+
+
+
+
+
 
 TPopTrack::TPopTrack() :
 	TJobHandler			( static_cast<TChannelManager&>(*this), JOB_THREAD_COUNT ),
@@ -328,18 +358,11 @@ std::shared_ptr<TPlayerFilter> TPopTrack::GetFilter(const std::string& Name)
 	return Filter;
 }
 
-//	keep alive after PopMain()
-#if defined(TARGET_OSX_BUNDLE)
-std::shared_ptr<TPopTrack> gOpenglApp;
-#endif
-
-
 TPopAppError::Type PopMain(TJobParams& Params)
 {
 	std::cout << Params << std::endl;
 	
-	gOpenglApp.reset( new TPopTrack );
-	auto& App = *gOpenglApp;
+	auto& App = PopTrack::GetApp();
 
 	auto CommandLineChannel = std::shared_ptr<TChan<TChannelLiteral,TProtocolCli>>( new TChan<TChannelLiteral,TProtocolCli>( SoyRef("cmdline") ) );
 	
