@@ -842,6 +842,14 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	LineAndMeta[5] = Distance;
 	LineAndMeta[6] = Score;
 	LineAndMeta[7] = LineMaxPixels;
+	LineAndMeta[8] = WindowIndex;
+	LineAndMeta[9] = 0;
+	LineAndMeta[10] = 1;
+	LineAndMeta[11] = 2;
+	LineAndMeta[12] = 3;
+	LineAndMeta[13] = 4;
+	LineAndMeta[14] = 5;
+	LineAndMeta[15] = 6;
 	
 	TArray_THoughLine MatchArray = { Matches, MatchesCount, MatchesMax };
 	PushArray_THoughLine( MatchArray, &LineAndMeta );
