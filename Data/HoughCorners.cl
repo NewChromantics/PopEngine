@@ -1,5 +1,6 @@
 #include "Common.cl"
 #include "Array.cl"
+#include "HoughLines.cl"
 
 DECLARE_DYNAMIC_ARRAY(float4);
 #define Index3x3(r,c)	((r*3)+c)
@@ -7,7 +8,7 @@ DECLARE_DYNAMIC_ARRAY(float4);
 
 __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 								  int OffsetHoughLineBIndex,
-								  global float8* HoughLines,
+								  global THoughLine* HoughLines,
 								  int HoughLineCount,
 								  global float4* HoughCorners,
 								  float MinScore,
@@ -21,8 +22,8 @@ __kernel void ExtractHoughCorners(int OffsetHoughLineAIndex,
 {
 	int HoughLineAIndex = get_global_id(0) + OffsetHoughLineAIndex;
 	int HoughLineBIndex = get_global_id(1) + OffsetHoughLineBIndex;
-	float8 HoughLineA = HoughLines[HoughLineAIndex];
-	float8 HoughLineB = HoughLines[HoughLineBIndex];
+	THoughLine HoughLineA = HoughLines[HoughLineAIndex];
+	THoughLine HoughLineB = HoughLines[HoughLineBIndex];
 	int CornerIndex = (HoughLineAIndex*HoughLineCount) + HoughLineBIndex;
 	
 	float2 Intersection = 0;
@@ -661,8 +662,8 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 									global int4* HoughPairIndexes,
 								  int TruthPairIndexCount,
 								  int HoughPairIndexCount,
-									global float8* HoughLines,
-									global float8* TruthLines,
+									global THoughLine* HoughLines,
+									global THoughLine* TruthLines,
 									global float16* Homographys,
 									global float16* HomographyInvs
 									)
@@ -675,14 +676,14 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 	int4 HoughIndexes = HoughPairIndexes[HoughPairIndex];
 	
 	//	grab the lines and find their intersections to get our four corners
-	float8 SampleTruthLines[4] =
+	THoughLine SampleTruthLines[4] =
 	{
 		TruthLines[TruthIndexes[0]],
 		TruthLines[TruthIndexes[1]],
 		TruthLines[TruthIndexes[2]],
 		TruthLines[TruthIndexes[3]],
 	};
-	float8 SampleHoughLines[4] =
+	THoughLine SampleHoughLines[4] =
 	{
 		HoughLines[HoughIndexes[0]],
 		HoughLines[HoughIndexes[1]],

@@ -1,5 +1,6 @@
 #include "Common.cl"
 #include "Array.cl"
+#include "HoughLines.cl"
 
 #define SHOW_ALL_HOUGH_LINES	false
 #define ENABLE_MAXIMA_IN_EXTRACTION
@@ -53,7 +54,7 @@ static bool CalculateWindow(int WindowIndex)
 }
 
 
-DECLARE_DYNAMIC_ARRAY(float8);
+DECLARE_DYNAMIC_ARRAY(THoughLine);
 
 
 //const int SampleRadius = 8;	//	range 0,9
@@ -693,10 +694,10 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 }
 
 
-__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global float8* HoughLines,int ColourToVertical)
+__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global THoughLine* HoughLines,int ColourToVertical)
 {
 	int LineIndex = get_global_id(0) + OffsetIndex;
-	float8 HoughLine = HoughLines[LineIndex];
+	THoughLine HoughLine = HoughLines[LineIndex];
 	
 	float2 LineStart = HoughLine.xy;
 	float2 LineEnd = HoughLine.zw;
@@ -721,7 +722,7 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 								int DistanceCount,
 								int WindowCountX,
 								int WindowCountY,
-								global float8* Matches,
+								global THoughLine* Matches,
 								global volatile int* MatchesCount,
 								int MatchesMax,
 								__read_only image2d_t WhiteFilter,
@@ -835,15 +836,15 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	
 
 	//	make output
-	float8 LineAndMeta;
+	THoughLine LineAndMeta;
 	LineAndMeta.xyzw = Line;
 	LineAndMeta[4] = Angle;
 	LineAndMeta[5] = Distance;
 	LineAndMeta[6] = Score;
 	LineAndMeta[7] = LineMaxPixels;
 	
-	TArray_float8 MatchArray = { Matches, MatchesCount, MatchesMax };
-	PushArray_float8( MatchArray, &LineAndMeta );
+	TArray_THoughLine MatchArray = { Matches, MatchesCount, MatchesMax };
+	PushArray_THoughLine( MatchArray, &LineAndMeta );
 }
 
 

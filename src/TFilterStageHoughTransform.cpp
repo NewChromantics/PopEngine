@@ -4,22 +4,22 @@
 #include "TFilterStageOpengl.h"
 
 
-bool HoughLine_IsVertical(const cl_float8& HoughLine)
+bool HoughLine_IsVertical(const THoughLine& HoughLine)
 {
 	return HoughLine.s[7] > 0;
 }
 
-void HoughLine_SetVertical(cl_float8& HoughLine,bool Vertical)
+void HoughLine_SetVertical(THoughLine& HoughLine,bool Vertical)
 {
 	HoughLine.s[7] = Vertical ? 1 : 0;
 }
 
-float& HoughLine_GetScore(cl_float8& HoughLine)
+float& HoughLine_GetScore(THoughLine& HoughLine)
 {
 	return HoughLine.s[6];
 }
 
-const float& HoughLine_GetScore(const cl_float8& HoughLine)
+const float& HoughLine_GetScore(const THoughLine& HoughLine)
 {
 	return HoughLine.s[6];
 }
@@ -453,10 +453,10 @@ void TFilterStage_DrawHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_ShaderBlit&>( *Data );
 	
 	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineDataStage );
-	Array<cl_float8> HoughLines;
+	Array<THoughLine> HoughLines;
 	HoughLines.PushBackArray( HoughStageData.mVertLines );
 	HoughLines.PushBackArray( HoughStageData.mHorzLines );
-	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
+	Opencl::TBufferArray<THoughLine> HoughLinesBuffer( GetArrayBridge(HoughLines), ContextCl, "HoughLines" );
 	
 	auto Init = [this,&Frame,&StageData,&ContextGl,&HoughLinesBuffer](Opencl::TKernelState& Kernel,ArrayBridge<vec2x<size_t>>& Iterations)
 	{
@@ -552,11 +552,11 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	Opencl::TBufferArray<cl_float> DistancesBuffer( GetArrayBridge(Distances), ContextCl, "mDirections" );
 
 	static size_t TotalLineLimit = 8000;
-	Array<cl_float8> AllLines;
+	Array<THoughLine> AllLines;
 	AllLines.SetSize(TotalLineLimit);
 	int LineBufferCount[] = {0};
 	auto LineBufferCountArray = GetRemoteArray( LineBufferCount );
-	Opencl::TBufferArray<cl_float8> LineBuffer( GetArrayBridge(AllLines), ContextCl, "LineBuffer" );
+	Opencl::TBufferArray<THoughLine> LineBuffer( GetArrayBridge(AllLines), ContextCl, "LineBuffer" );
 	Opencl::TBufferArray<cl_int> LineBufferCounter( GetArrayBridge(LineBufferCountArray), ContextCl, "LineBufferCounter" );
 
 	
@@ -692,7 +692,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		Soy::TScopeTimerPrint Timer("",2);
 		Timer.SetName(std::string(__func__)+ " ClassifyHorizontalLines");
 		
-		auto CompareLineScores = [](const cl_float8& a,const cl_float8& b)
+		auto CompareLineScores = [](const THoughLine& a,const THoughLine& b)
 		{
 			auto& aScore = HoughLine_GetScore( a );
 			auto& bScore = HoughLine_GetScore( b );
@@ -706,8 +706,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		Frame.SetUniform( VerticalThresholdUniform, VerticalThresholdUniform, mFilter, *this );
 
 		//	copy lines whilst sorting & modify flag to say vertical or horizontal
-		SortArrayLambda<cl_float8> FinalVertLines( GetArrayBridge(StageData.mVertLines), CompareLineScores );
-		SortArrayLambda<cl_float8> FinalHorzLines( GetArrayBridge(StageData.mHorzLines), CompareLineScores );
+		SortArrayLambda<THoughLine> FinalVertLines( GetArrayBridge(StageData.mVertLines), CompareLineScores );
+		SortArrayLambda<THoughLine> FinalHorzLines( GetArrayBridge(StageData.mHorzLines), CompareLineScores );
 		for ( int i=0;	i<AllLines.GetSize();	i++ )
 		{
 			auto& Line = AllLines[i];
@@ -753,13 +753,13 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	static bool OutputLinesForConfig = false;
 	if ( OutputLinesForConfig )
 	{
-		Array<cl_float8> Lines;
+		Array<THoughLine> Lines;
 		Lines.PushBackArray( StageData.mVertLines );
 		Lines.PushBackArray( StageData.mHorzLines );
 		std::Debug.PushStreamSettings();
 		std::Debug << std::fixed << std::setprecision(3);
 		
-		auto PrintLineArray = [](const Array<cl_float8>& Lines,std::function<bool(const cl_float8&)> Filter)
+		auto PrintLineArray = [](const Array<THoughLine>& Lines,std::function<bool(const THoughLine&)> Filter)
 		{
 			auto ComponentDelin = Soy::VecNXDelins[0];
 			auto VectorDelin = Soy::VecNXDelins[1];
@@ -781,11 +781,11 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		};
 		
 		std::Debug << "VerticalHoughLines=";
-		PrintLineArray( Lines, [](const cl_float8& Line)	{	return HoughLine_IsVertical(Line);	} );
+		PrintLineArray( Lines, [](const THoughLine& Line)	{	return HoughLine_IsVertical(Line);	} );
 		std::Debug << std::endl;
 		
 		std::Debug << "HorizontalHoughLines=";
-		PrintLineArray( Lines, [](const cl_float8& Line)	{	return !HoughLine_IsVertical(Line);	} );
+		PrintLineArray( Lines, [](const THoughLine& Line)	{	return !HoughLine_IsVertical(Line);	} );
 		std::Debug << std::endl;
 		
 		std::Debug.PopStreamSettings();
@@ -799,7 +799,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	static bool DebugExtractedHoughLines = false;
 	if ( DebugExtractedHoughLines )
 	{
-		Array<cl_float8> Lines;
+		Array<THoughLine> Lines;
 		Lines.PushBackArray( StageData.mVertLines );
 		Lines.PushBackArray( StageData.mHorzLines );
 		for ( int i=0;	i<Lines.GetSize();	i++ )
@@ -826,11 +826,11 @@ void TFilterStage_ExtractHoughCorners::Execute(TFilterFrame& Frame,std::shared_p
 
 	//	special "stage name" which reads truths from uniforms
 	//	todo: truths will later be "calculated" in a previous stage (calculated once in filter lifetime)
-	Array<cl_float8> Lines;
+	Array<THoughLine> Lines;
 	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineStage );
 	Lines.PushBackArray( HoughStageData.mVertLines );
 	Lines.PushBackArray( HoughStageData.mHorzLines );
-	Opencl::TBufferArray<cl_float8> LinesBuffer( GetArrayBridge(Lines), ContextCl, "mHoughLines" );
+	Opencl::TBufferArray<THoughLine> LinesBuffer( GetArrayBridge(Lines), ContextCl, "mHoughLines" );
 	
 	//	allocate data
 	if ( !Data )
@@ -1303,6 +1303,29 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		
 	};
 	
+	auto ReadUniform_ArrayFloat16 = [&Frame,this](Array<cl_float16>& Float8s,std::string UniformName)
+	{
+		TUniformWrapper<std::string> TruthCornersUniform(UniformName,std::string());
+		if ( !Frame.SetUniform( TruthCornersUniform, TruthCornersUniform, mFilter, *this ) )
+			throw Soy::AssertException( std::string("Missing uniform ") + UniformName );
+		
+		auto PushVec = [&Float8s](const std::string& Part,const char& Delin)
+		{
+			BufferArray<float,16> Components;
+			if ( !Soy::StringParseVecNx( Part, GetArrayBridge(Components) ) )
+				return false;
+			
+			auto float8 = Soy::VectorToCl16(GetArrayBridge(Components));
+			Float8s.PushBack( float8 );
+			return true;
+		};
+		std::string Delins;
+		Delins += Soy::VecNXDelins[1];
+		Soy::StringSplitByMatches( PushVec, TruthCornersUniform.mValue, Delins );
+		Soy::Assert( !Float8s.IsEmpty(), std::string("Failed to extract truth lines ") + UniformName );
+		
+	};
+	
 	//	allocate data
 	if ( !Data )
 		Data.reset( new TFilterStageRuntimeData_HoughLines() );
@@ -1311,8 +1334,8 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	auto& FinalVertLines = StageData.mVertLines;
 	auto& FinalHorzLines = StageData.mHorzLines;
 	
-	ReadUniform_ArrayFloat8( StageData.mVertLines, mVerticalLinesUniform );
-	ReadUniform_ArrayFloat8( StageData.mHorzLines, mHorzLinesUniform );
+	ReadUniform_ArrayFloat16( StageData.mVertLines, mVerticalLinesUniform );
+	ReadUniform_ArrayFloat16( StageData.mHorzLines, mHorzLinesUniform );
 
 	//	dupes & bad cases
 	//FinalVertLines.RemoveBlock(0,1);
@@ -1414,8 +1437,20 @@ static float8 LineToRay(float8 Line)
 	return (cl_float8){ .s={ Line.x, Line.y, Line.z-Line.x, Line.w-Line.y }};
 }
 
+static float8 LineToRay(float16 Line)
+{
+	return (cl_float8){ .s={ Line.x, Line.y, Line.z-Line.x, Line.w-Line.y }};
+}
+
 //	z is 0 if bad lines
 static float2 GetLineLineInfiniteIntersection(float8 LineA,float8 LineB)
+{
+	float8 RayA = LineToRay(LineA);
+	float8 RayB = LineToRay(LineB);
+	return GetRayRayIntersection( RayA, RayB );
+}
+
+static float2 GetLineLineInfiniteIntersection(float16 LineA,float16 LineB)
 {
 	float8 RayA = LineToRay(LineA);
 	float8 RayB = LineToRay(LineB);
@@ -2366,8 +2401,8 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 								  global int4* HoughPairIndexes,
 								  int TruthPairIndexCount,
 								  int HoughPairIndexCount,
-								  global float8* HoughLines,
-								  global float8* TruthLines,
+								  global THoughLine* HoughLines,
+								  global THoughLine* TruthLines,
 								  global float16* Homographys,
 								  global float16* HomographyInvs
 								  )
@@ -2380,14 +2415,14 @@ __kernel void HoughLineHomography(int TruthPairIndexOffset,
 	int4 HoughIndexes = HoughPairIndexes[HoughPairIndex];
 	
 	//	grab the lines and find their intersections to get our four corners
-	float8 SampleTruthLines[4] =
+	THoughLine SampleTruthLines[4] =
 	{
 		TruthLines[TruthIndexes.s[0]],
 		TruthLines[TruthIndexes.s[1]],
 		TruthLines[TruthIndexes.s[2]],
 		TruthLines[TruthIndexes.s[3]],
 	};
-	float8 SampleHoughLines[4] =
+	THoughLine SampleHoughLines[4] =
 	{
 		HoughLines[HoughIndexes.s[0]],
 		HoughLines[HoughIndexes.s[1]],
@@ -2436,18 +2471,18 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 	auto& TruthLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mTruthLineStage );
 	auto& HorzTruthLines = SwapTruthHorzAndVert ? TruthLinesStageData.mVertLines : TruthLinesStageData.mHorzLines;
 	auto& VertTruthLines = SwapTruthHorzAndVert ? TruthLinesStageData.mHorzLines : TruthLinesStageData.mVertLines;
-	Array<cl_float8> AllTruthLines;
+	Array<THoughLine> AllTruthLines;
 	AllTruthLines.PushBackArray( VertTruthLines );
 	AllTruthLines.PushBackArray( HorzTruthLines );
 	
 	auto& HoughLinesStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( mHoughLineStage );
 	auto& VertHoughLines = SwapHoughHorzAndVert ? HoughLinesStageData.mHorzLines : HoughLinesStageData.mVertLines;
 	auto& HorzHoughLines = SwapHoughHorzAndVert ? HoughLinesStageData.mVertLines : HoughLinesStageData.mHorzLines;
-	Array<cl_float8> AllHoughLines;
+	Array<THoughLine> AllHoughLines;
 	AllHoughLines.PushBackArray( VertHoughLines );
 	AllHoughLines.PushBackArray( HorzHoughLines );
-	Opencl::TBufferArray<cl_float8> HoughLinesBuffer( GetArrayBridge(AllHoughLines), ContextCl, "AllHoughLines" );
-	Opencl::TBufferArray<cl_float8> TruthLinesBuffer( GetArrayBridge(AllTruthLines), ContextCl, "AllTruthLines" );
+	Opencl::TBufferArray<THoughLine> HoughLinesBuffer( GetArrayBridge(AllHoughLines), ContextCl, "AllHoughLines" );
+	Opencl::TBufferArray<THoughLine> TruthLinesBuffer( GetArrayBridge(AllTruthLines), ContextCl, "AllTruthLines" );
 	
 	//	make a list of truth indexes sorted by score
 	//	gr: right now I'm pretty sure they are in score order, but later we'll make sure with a sort array
@@ -2582,8 +2617,8 @@ void TFilterStage_GetHoughLineHomographys::Execute(TFilterFrame& Frame,std::shar
 		cl_int4* HoughPairIndexes = HoughLinePairs.GetArray();//HoughLinePairsBuffer
 		int TruthPairIndexCount = size_cast<int>(TruthLinePairsBuffer.GetSize());
 		int HoughPairIndexCount = size_cast<int>(HoughLinePairsBuffer.GetSize());
-		cl_float8* HoughLines = AllHoughLines.GetArray();	//	HoughLinesBuffer;
-		cl_float8* TruthLines = AllTruthLines.GetArray();	//	TruthLinesBuffer;
+		THoughLine* HoughLines = AllHoughLines.GetArray();	//	HoughLinesBuffer;
+		THoughLine* TruthLines = AllTruthLines.GetArray();	//	TruthLinesBuffer;
 		cl_float16* Homographys_ = Homographys.GetArray();	//	HomographysBuffer
 		cl_float16* HomographyInvs_ = HomographyInvs.GetArray();	//	HomographyInvsBuffer
 

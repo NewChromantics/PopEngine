@@ -5,6 +5,8 @@
 
 
 
+typedef cl_float16 THoughLine;
+
 
 
 class TFilterStage_GatherHoughTransforms : public TFilterStage_OpenclKernel
@@ -57,9 +59,9 @@ class TFilterStageRuntimeData_HoughLines : public TFilterStageRuntimeData
 public:
 	//	x0,y0,x1,y1,angle,distance,score,Vertical!=0
 	//	gr: store as 2 arrays or one?
-	//Array<cl_float8>			mHoughLines;
-	Array<cl_float8>			mVertLines;
-	Array<cl_float8>			mHorzLines;
+	//Array<THoughLine>			mHoughLines;
+	Array<THoughLine>			mVertLines;
+	Array<THoughLine>			mHorzLines;
 };
 
 
