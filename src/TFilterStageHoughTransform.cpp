@@ -14,7 +14,12 @@ void HoughLine_SetVertical(cl_float8& HoughLine,bool Vertical)
 	HoughLine.s[7] = Vertical ? 1 : 0;
 }
 
-float HoughLine_GetScore(cl_float8& HoughLine,bool Vertical)
+float& HoughLine_GetScore(cl_float8& HoughLine)
+{
+	return HoughLine.s[6];
+}
+
+const float& HoughLine_GetScore(const cl_float8& HoughLine)
 {
 	return HoughLine.s[6];
 }
@@ -27,6 +32,19 @@ size_t GetAngleIndexFromWad(int WadIndex,size_t WindowCount,size_t AngleCount,si
 	auto DistanceIndex = adIndex % DistanceCount;
 	return AngleIndex;
 }
+
+size_t GetWadIndex(size_t WindowX,size_t WindowY,size_t AngleIndex,size_t DistanceIndex,size_t WindowCountX,size_t WindowCountY,size_t AngleCount,size_t DistanceCount)
+{
+	//	find window start
+	size_t WindowIndex = WindowY * WindowCountX;
+	size_t WindowBlockSize = AngleCount * DistanceCount;
+	size_t Index = WindowIndex * WindowBlockSize;
+
+	Index += AngleIndex * DistanceCount;
+	Index += DistanceIndex;
+	return Index;
+}
+
 
 void TFilterStage_GatherHoughTransforms::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
 {
@@ -600,7 +618,47 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait(/*"opencl runner"*/);
 	
-	
+	/*
+	//	filter max lines per windows
+	TUniformWrapper<int> MaxLinesPerWindow("MaxLinesPerWindow", 1000 );
+	Frame.SetUniform( MaxLinesPerWindow, MaxLinesPerWindow, mFilter, *this );
+	if ( MaxLinesPerWindow > 0 )
+	{
+		for ( int wx=0;	wx<WindowCount.x;	wx++ )
+		{
+			for ( int wy=0;	wy<WindowCount.y;	wy++ )
+			{
+				auto SortIndex = [&](const size_t& wada,const size_t& wadb)
+				{
+					auto Scorea = WindowXAnglesXDistances[wada];
+					auto Scoreb = WindowXAnglesXDistances[wadb];
+					
+					//	descending
+					if ( Scorea < Scoreb )	return 1;
+					if ( Scorea > Scoreb )	return -1;
+					return 0;
+				};
+				Array<size_t> _Indexes;
+				SortArrayLambda<size_t> Indexes( GetArrayBridge(_Indexes), SortIndex );
+
+				auto FirstWad = GetWadIndex( wx, wy, 0, 0, WindowCountX, WindowCountY, Angles.GetSize(), Distances.GetSize() );
+				for ( int i=0;	i<Distances.GetSize()*Angles.GetSize();	i++ )
+				{
+					auto WadIndex = FirstWad + i;
+					Indexes.Push( WadIndex );
+				}
+				
+				//	invalidate bottom N indexes to remove them
+				for ( int i=MaxLinesPerWindow;	i<_Indexes.GetSize();	i++ )
+				{
+					auto& Score = WindowXAnglesXDistances[i];
+					Score = 0;
+				}
+			}
+		}
+	}
+	*/
+	 
 	//	evaluate if lines are vertical or horizontal
 	//	todo: auto gen this by histogramming, find median (vertical) opposite (horizontal)
 	float VerticalAngle = 0;
@@ -623,8 +681,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 
 	auto CompareLineScores = [](const cl_float8& a,const cl_float8& b)
 	{
-		auto& aScore = a.s[6];
-		auto& bScore = b.s[6];
+		auto& aScore = HoughLine_GetScore( a );
+		auto& bScore = HoughLine_GetScore( b );
 		if ( aScore > bScore )	return -1;
 		if ( aScore < bScore )	return 1;
 		return 0;
