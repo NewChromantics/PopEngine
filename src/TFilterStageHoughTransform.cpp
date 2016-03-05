@@ -3,23 +3,27 @@
 #include "TFilterStageOpencl.h"
 #include "TFilterStageOpengl.h"
 
+float GetHoughLineAngleIndex(const THoughLine& HoughLine)
+{
+	return HoughLine.s[4];
+}
 
-bool HoughLine_IsVertical(const THoughLine& HoughLine)
+bool GetHoughLineVertical(const THoughLine& HoughLine)
 {
 	return HoughLine.s[7] > 0;
 }
 
-void HoughLine_SetVertical(THoughLine& HoughLine,bool Vertical)
+void SetHoughLineVertical(THoughLine& HoughLine,bool Vertical)
 {
 	HoughLine.s[7] = Vertical ? 1 : 0;
 }
 
-float& HoughLine_GetScore(THoughLine& HoughLine)
+float& GetHoughLineScore(THoughLine& HoughLine)
 {
 	return HoughLine.s[6];
 }
 
-const float& HoughLine_GetScore(const THoughLine& HoughLine)
+const float& GetHoughLineScore(const THoughLine& HoughLine)
 {
 	return HoughLine.s[6];
 }
@@ -694,8 +698,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		
 		auto CompareLineScores = [](const THoughLine& a,const THoughLine& b)
 		{
-			auto& aScore = HoughLine_GetScore( a );
-			auto& bScore = HoughLine_GetScore( b );
+			auto& aScore = GetHoughLineScore( a );
+			auto& bScore = GetHoughLineScore( b );
 			if ( aScore > bScore )	return -1;
 			if ( aScore < bScore )	return 1;
 			return 0;
@@ -711,7 +715,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		for ( int i=0;	i<AllLines.GetSize();	i++ )
 		{
 			auto& Line = AllLines[i];
-			auto& Angle = Line.s[4];
+			auto Angle = GetHoughLineAngleIndex(Line);
 			
 			float Threshold = VerticalThresholdUniform.mValue;
 			
@@ -723,7 +727,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 			Diff = fabsf(Diff);
 			
 			bool IsVertical = ( Diff <= Threshold );
-			HoughLine_SetVertical( Line, IsVertical );
+			SetHoughLineVertical( Line, IsVertical );
 			
 			static bool DebugVerticalTest = false;
 			if ( DebugVerticalTest )
@@ -781,11 +785,11 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		};
 		
 		std::Debug << "VerticalHoughLines=";
-		PrintLineArray( Lines, [](const THoughLine& Line)	{	return HoughLine_IsVertical(Line);	} );
+		PrintLineArray( Lines, [](const THoughLine& Line)	{	return GetHoughLineVertical(Line);	} );
 		std::Debug << std::endl;
 		
 		std::Debug << "HorizontalHoughLines=";
-		PrintLineArray( Lines, [](const THoughLine& Line)	{	return !HoughLine_IsVertical(Line);	} );
+		PrintLineArray( Lines, [](const THoughLine& Line)	{	return GetHoughLineVertical(Line);	} );
 		std::Debug << std::endl;
 		
 		std::Debug.PopStreamSettings();
@@ -805,8 +809,8 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		for ( int i=0;	i<Lines.GetSize();	i++ )
 		{
 			auto Line = Lines[i];
-			float Score = Line.s[6];
-			float Vertical = Line.s[7];
+			float Score = GetHoughLineScore(Line);
+			float Vertical = GetHoughLineVertical(Line);
 			std::Debug << "#" << i << " Score: " << Score << ", Vertical: " << Vertical << std::endl;
 		}
 	}
@@ -1349,7 +1353,8 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 	{
 		for ( int i=StageData.mHorzLines.GetSize()-1;	i>=0;	i-- )
 		{
-			auto LineAngle = StageData.mHorzLines[i].s[4];
+			throw Soy::AssertException("Test me");
+			auto LineAngle = GetHoughLineAngleIndex(StageData.mHorzLines[i]);
 			static float Tolerance=10;
 			bool AngleIs0 = fabsf( Soy::AngleDegDiff( LineAngle, 0 ) ) < Tolerance;
 			bool AngleIs90 = fabsf( Soy::AngleDegDiff( LineAngle, 90 ) ) < Tolerance;

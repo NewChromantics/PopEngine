@@ -699,13 +699,13 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 	int LineIndex = get_global_id(0) + OffsetIndex;
 	THoughLine HoughLine = HoughLines[LineIndex];
 	
-	float2 LineStart = HoughLine.xy;
-	float2 LineEnd = HoughLine.zw;
-	float Angle = HoughLine[4];
-	float Distance = HoughLine[5];
+	float2 LineStart = GetHoughLineStart(HoughLine);
+	float2 LineEnd = GetHoughLineEnd(HoughLine);
+	float Angle = GetHoughLineAngleIndex(HoughLine);
+	float Distance = GetHoughLineDistanceIndex(HoughLine);
 	
 	//	draw vertical/non vertical
-	float Score = ColourToVertical ? HoughLine[7] : HoughLine[6];
+	float Score = ColourToVertical ? GetHoughLineVertical(HoughLine) : GetHoughLineScore(HoughLine);
 	
 	DrawLineDirect( LineStart, LineEnd, Frag, Score );
 }
@@ -838,18 +838,11 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	//	make output
 	THoughLine LineAndMeta;
 	LineAndMeta.xyzw = Line;
-	LineAndMeta[4] = Angle;
-	LineAndMeta[5] = Distance;
-	LineAndMeta[6] = Score;
-	LineAndMeta[7] = LineMaxPixels;
-	LineAndMeta[8] = WindowIndex;
-	LineAndMeta[9] = 0;
-	LineAndMeta[10] = 1;
-	LineAndMeta[11] = 2;
-	LineAndMeta[12] = 3;
-	LineAndMeta[13] = 4;
-	LineAndMeta[14] = 5;
-	LineAndMeta[15] = 6;
+	SetHoughLineAngleIndex( &LineAndMeta, Angle);
+	SetHoughLineDistanceIndex( &LineAndMeta, Distance);
+	SetHoughLineWindowIndex( &LineAndMeta, WindowIndex);
+	SetHoughLineScore( &LineAndMeta, Score);
+	SetHoughLineMaxPixels( &LineAndMeta, LineMaxPixels);
 	
 	TArray_THoughLine MatchArray = { Matches, MatchesCount, MatchesMax };
 	PushArray_THoughLine( MatchArray, &LineAndMeta );

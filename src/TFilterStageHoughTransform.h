@@ -4,7 +4,8 @@
 #include "TFilterStageOpencl.h"
 
 
-
+//	x0,y0,x1,y1,
+//	angle,distance,score,Vertical!=0,WindowIndex
 typedef cl_float16 THoughLine;
 
 
@@ -57,7 +58,6 @@ public:
 class TFilterStageRuntimeData_HoughLines : public TFilterStageRuntimeData
 {
 public:
-	//	x0,y0,x1,y1,angle,distance,score,Vertical!=0
 	//	gr: store as 2 arrays or one?
 	//Array<THoughLine>			mHoughLines;
 	Array<THoughLine>			mVertLines;
