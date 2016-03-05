@@ -658,78 +658,97 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		}
 	}
 	*/
-	 
+	
+	static bool ClassifyHorizontalLines = false;
+	
 	//	evaluate if lines are vertical or horizontal
 	//	todo: auto gen this by histogramming, find median (vertical) opposite (horizontal)
 	float VerticalAngle = 0;
-	int BestWad = 0;
-	for ( int wad=0;	wad<WindowXAnglesXDistances.GetSize();	wad++ )
+	if ( ClassifyHorizontalLines )
 	{
-		if ( WindowXAnglesXDistances[wad] <= WindowXAnglesXDistances[BestWad] )
-			continue;
-		BestWad = wad;
+		Soy::TScopeTimerPrint Timer("", 2 );
+		Timer.SetName(std::string(__func__)+ " determine vertical line");
+		
+		int BestWad = 0;
+		for ( int wad=0;	wad<WindowXAnglesXDistances.GetSize();	wad++ )
+		{
+			if ( WindowXAnglesXDistances[wad] <= WindowXAnglesXDistances[BestWad] )
+				continue;
+			BestWad = wad;
+		}
+		auto BestAngleIndex = GetAngleIndexFromWad( BestWad, WindowCount.x*WindowCount.y, Angles.GetSize(), Distances.GetSize() );
+		VerticalAngle = Angles[BestAngleIndex];
+		if ( VerticalAngle < Angles[0] )
+			VerticalAngle = Angles[0];
 	}
-	auto BestAngleIndex = GetAngleIndexFromWad( BestWad, WindowCount.x*WindowCount.y, Angles.GetSize(), Distances.GetSize() );
-	VerticalAngle = Angles[BestAngleIndex];
-	if ( VerticalAngle < Angles[0] )
-		VerticalAngle = Angles[0];
-
+	
 	//	allocate final data
 	if ( !Data )
 		Data.reset( new TFilterStageRuntimeData_HoughLines() );
 	auto& StageData = dynamic_cast<TFilterStageRuntimeData_HoughLines&>( *Data.get() );
 
-	auto CompareLineScores = [](const cl_float8& a,const cl_float8& b)
+	if ( ClassifyHorizontalLines )
 	{
-		auto& aScore = HoughLine_GetScore( a );
-		auto& bScore = HoughLine_GetScore( b );
-		if ( aScore > bScore )	return -1;
-		if ( aScore < bScore )	return 1;
-		return 0;
-	};
-	
-	//	gr: the threshold is LESS than 45 (90 degrees) because viewing angles are skewed, lines are rarely ACTUALLY perpendicualr
-	TUniformWrapper<float> VerticalThresholdUniform("VerticalThreshold", 10.f );
-	Frame.SetUniform( VerticalThresholdUniform, VerticalThresholdUniform, mFilter, *this );
+		Soy::TScopeTimerPrint Timer("",2);
+		Timer.SetName(std::string(__func__)+ " ClassifyHorizontalLines");
+		
+		auto CompareLineScores = [](const cl_float8& a,const cl_float8& b)
+		{
+			auto& aScore = HoughLine_GetScore( a );
+			auto& bScore = HoughLine_GetScore( b );
+			if ( aScore > bScore )	return -1;
+			if ( aScore < bScore )	return 1;
+			return 0;
+		};
+		
+		//	gr: the threshold is LESS than 45 (90 degrees) because viewing angles are skewed, lines are rarely ACTUALLY perpendicualr
+		TUniformWrapper<float> VerticalThresholdUniform("VerticalThreshold", 10.f );
+		Frame.SetUniform( VerticalThresholdUniform, VerticalThresholdUniform, mFilter, *this );
 
-	//	copy lines whilst sorting & modify flag to say vertical or horizontal
-	SortArrayLambda<cl_float8> FinalVertLines( GetArrayBridge(StageData.mVertLines), CompareLineScores );
-	SortArrayLambda<cl_float8> FinalHorzLines( GetArrayBridge(StageData.mHorzLines), CompareLineScores );
-	for ( int i=0;	i<AllLines.GetSize();	i++ )
-	{
-		auto& Line = AllLines[i];
-		auto& Angle = Line.s[4];
+		//	copy lines whilst sorting & modify flag to say vertical or horizontal
+		SortArrayLambda<cl_float8> FinalVertLines( GetArrayBridge(StageData.mVertLines), CompareLineScores );
+		SortArrayLambda<cl_float8> FinalHorzLines( GetArrayBridge(StageData.mHorzLines), CompareLineScores );
+		for ( int i=0;	i<AllLines.GetSize();	i++ )
+		{
+			auto& Line = AllLines[i];
+			auto& Angle = Line.s[4];
+			
+			float Threshold = VerticalThresholdUniform.mValue;
+			
+			float Diff = Angle - VerticalAngle;
+			while ( Diff < -90.f )
+				Diff += 180.f;
+			while ( Diff > 90.f )
+				Diff -= 180.f;
+			Diff = fabsf(Diff);
+			
+			bool IsVertical = ( Diff <= Threshold );
+			HoughLine_SetVertical( Line, IsVertical );
+			
+			static bool DebugVerticalTest = false;
+			if ( DebugVerticalTest )
+				std::Debug << Angle << " -> " << VerticalAngle << " diff= " << Diff << " vertical: " << IsVertical << " (threshold: " << Threshold << ")" << std::endl;
+			
+			//	add to sorted list
+			if ( IsVertical )
+				FinalVertLines.Push( Line );
+			else
+				FinalHorzLines.Push( Line );
+		}
 		
-		float Threshold = VerticalThresholdUniform.mValue;
-		
-		float Diff = Angle - VerticalAngle;
-		while ( Diff < -90.f )
-			Diff += 180.f;
-		while ( Diff > 90.f )
-			Diff -= 180.f;
-		Diff = fabsf(Diff);
-		
-		bool IsVertical = ( Diff <= Threshold );
-		HoughLine_SetVertical( Line, IsVertical );
-		
-		static bool DebugVerticalTest = false;
-		if ( DebugVerticalTest )
-			std::Debug << Angle << " -> " << VerticalAngle << " diff= " << Diff << " vertical: " << IsVertical << " (threshold: " << Threshold << ")" << std::endl;
-		
-		//	add to sorted list
-		if ( IsVertical )
-			FinalVertLines.Push( Line );
-		else
-			FinalHorzLines.Push( Line );
+		//	limit output
+		TUniformWrapper<int> MaxVertLinesUniform("MaxVertLines",500);
+		TUniformWrapper<int> MaxHorzLinesUniform("MaxHorzLines",3000);
+		SetUniform( MaxVertLinesUniform, MaxVertLinesUniform );
+		SetUniform( MaxHorzLinesUniform, MaxHorzLinesUniform );
+		FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), MaxVertLinesUniform.mValue ) );
+		FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), MaxHorzLinesUniform.mValue ) );
 	}
-	
-	//	limit output
-	TUniformWrapper<int> MaxVertLinesUniform("MaxVertLines",500);
-	TUniformWrapper<int> MaxHorzLinesUniform("MaxHorzLines",3000);
-	SetUniform( MaxVertLinesUniform, MaxVertLinesUniform );
-	SetUniform( MaxHorzLinesUniform, MaxHorzLinesUniform );
-	FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), MaxVertLinesUniform.mValue ) );
-	FinalHorzLines.SetSize( std::min<size_t>( FinalHorzLines.GetSize(), MaxHorzLinesUniform.mValue ) );
+	else
+	{
+		StageData.mVertLines.Copy( AllLines );
+		//FinalVertLines.SetSize( std::min<size_t>( FinalVertLines.GetSize(), MaxVertLinesUniform.mValue ) );
+	}
 	
 	static bool OutputLinesForConfig = false;
 	if ( OutputLinesForConfig )
