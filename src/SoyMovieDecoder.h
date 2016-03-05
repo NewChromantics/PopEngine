@@ -5,39 +5,42 @@
  
 */
 
-#include <SoyVideoDevice.h>
-#include <SoyOpenglContext.h>
-
-
-class TVideoDecoder;
-class TVideoDecoderParams;
-class TMovieDecoderContainer;
-class TMovieDecoder;
+//	include here so other files can access params etc
+#include <Build/PopMovieTextureOsxFramework.framework/Headers/PopMovieTextureOsxFramework.h>
+#include <SoyMedia.h>
 
 
 
-class TMovieDecoderContainer : public SoyVideoContainer
+class PopVideoDecoderBase
 {
 public:
-	virtual void							GetDevices(ArrayBridge<TVideoDeviceMeta>& Metas) override;
-	virtual std::shared_ptr<TVideoDevice>	AllocDevice(const TVideoDeviceMeta& Meta,std::stringstream& Error) override;
+	PopVideoDecoderBase(const TVideoDecoderParams& Params);
+	~PopVideoDecoderBase();
 	
-	Array<std::shared_ptr<TMovieDecoder>>	mMovies;
+public:
+	SoyEvent<const std::string>					mOnError;
+	SoyEvent<std::pair<SoyPixelsImpl*,SoyTime>>	mOnFrame;
+	
+protected:
+	std::shared_ptr<PopMovie::TInstance>	mInstance;
 };
 
-class TMovieDecoder : public TVideoDevice, public SoyWorkerThread
+
+
+
+class PopVideoDecoder : public PopVideoDecoderBase, public SoyWorkerThread
 {
 public:
-	TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial,std::shared_ptr<Opengl::TContext> OpenglContext);
+	PopVideoDecoder(const TVideoDecoderParams& Params);
+	~PopVideoDecoder();
 	
-	virtual TVideoDeviceMeta	GetMeta() const override;
+protected:
+	virtual bool		Iteration() override;
 	
-	virtual bool				Iteration() override;
-	virtual bool				CanSleep() override;
-	
-	
-public:
-	std::string						mSerial;
-	std::shared_ptr<TVideoDecoder>	mDecoder;
+protected:
+	size_t				mStreamIndex;
+	SoyTime				mInitialTime;	//	use SoyTime() to decode "in real time"
 };
+
+
 

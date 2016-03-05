@@ -46,6 +46,10 @@
 		BFAD33D11B6174E600D3E7A6 /* SoyMovieDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33D01B6174E600D3E7A6 /* SoyMovieDecoder.cpp */; };
 		BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DB1B6406D500D3E7A6 /* SoyVideoDevice.cpp */; };
 		BFAD33E01B6411F500D3E7A6 /* TJobEventSubscriber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DE1B6411F500D3E7A6 /* TJobEventSubscriber.cpp */; };
+		BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
+		BFDE37FE1C8B434F00D10F02 /* PopTrackPlugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37FC1C8B434F00D10F02 /* PopTrackPlugin.cpp */; };
+		BFDE38021C8B446A00D10F02 /* SoyUnity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37FF1C8B446A00D10F02 /* SoyUnity.cpp */; };
+		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
 		FB2534BB1A974E7400A61590 /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A067C1A2E69340099596C /* PopMain.cpp */; };
@@ -196,6 +200,13 @@
 		BFAD33DC1B6406D500D3E7A6 /* SoyVideoDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyVideoDevice.h; path = src/SoyVideoDevice.h; sourceTree = "<group>"; };
 		BFAD33DE1B6411F500D3E7A6 /* TJobEventSubscriber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TJobEventSubscriber.cpp; path = src/TJobEventSubscriber.cpp; sourceTree = "<group>"; };
 		BFAD33DF1B6411F500D3E7A6 /* TJobEventSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TJobEventSubscriber.h; path = src/TJobEventSubscriber.h; sourceTree = "<group>"; };
+		BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMedia.cpp; path = src/SoyMedia.cpp; sourceTree = "<group>"; };
+		BFDE37F91C89B20D00D10F02 /* SoyMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMedia.h; path = src/SoyMedia.h; sourceTree = "<group>"; };
+		BFDE37FC1C8B434F00D10F02 /* PopTrackPlugin.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopTrackPlugin.cpp; path = src/PopTrackPlugin.cpp; sourceTree = "<group>"; };
+		BFDE37FD1C8B434F00D10F02 /* PopTrackPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopTrackPlugin.h; path = src/PopTrackPlugin.h; sourceTree = "<group>"; };
+		BFDE37FF1C8B446A00D10F02 /* SoyUnity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyUnity.cpp; path = src/SoyUnity.cpp; sourceTree = "<group>"; };
+		BFDE38001C8B446A00D10F02 /* SoyUnity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyUnity.h; path = src/SoyUnity.h; sourceTree = "<group>"; };
+		BFDE38011C8B446A00D10F02 /* SoyUnity.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyUnity.mm; path = src/SoyUnity.mm; sourceTree = "<group>"; };
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
@@ -397,6 +408,8 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				FB8A07181A2E6C3E0099596C /* PopTrack.cpp */,
 				FB8A07191A2E6C3E0099596C /* PopTrack.h */,
+				BFDE37FC1C8B434F00D10F02 /* PopTrackPlugin.cpp */,
+				BFDE37FD1C8B434F00D10F02 /* PopTrackPlugin.h */,
 				FBF67B371A974BF400F74C38 /* PopTrack.xib */,
 				BFAD33D01B6174E600D3E7A6 /* SoyMovieDecoder.cpp */,
 				BFAD33D21B61750200D3E7A6 /* SoyMovieDecoder.h */,
@@ -456,6 +469,8 @@
 				BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */,
 				BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */,
 				BF89F6B91B4AE28F00F58561 /* SoyMath.h */,
+				BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */,
+				BFDE37F91C89B20D00D10F02 /* SoyMedia.h */,
 				FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */,
 				FB8A06311A2E5A7C0099596C /* SoyMemFile.h */,
 				BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */,
@@ -494,6 +509,9 @@
 				FB8A064F1A2E5A7C0099596C /* SoyTime.h */,
 				BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */,
 				BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */,
+				BFDE37FF1C8B446A00D10F02 /* SoyUnity.cpp */,
+				BFDE38001C8B446A00D10F02 /* SoyUnity.h */,
+				BFDE38011C8B446A00D10F02 /* SoyUnity.mm */,
 				BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */,
 				FB8A06501A2E5A7C0099596C /* SoyTypes.cpp */,
 				FB8A06511A2E5A7C0099596C /* SoyTypes.h */,
@@ -721,6 +739,7 @@
 				FB2534C71A974E7400A61590 /* TProtocol.cpp in Sources */,
 				FB2534DA1A974E7B00A61590 /* SoyTest.cpp in Sources */,
 				FB2534EE1A974EFB00A61590 /* TestResults.cpp in Sources */,
+				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
 				BFA297161B7E5E66003B91F6 /* SoyOpenglWindow.mm in Sources */,
 				BFA297281B83654C003B91F6 /* TFilterStageGatherRects.cpp in Sources */,
 				BFAD33D11B6174E600D3E7A6 /* SoyMovieDecoder.cpp in Sources */,
@@ -729,6 +748,7 @@
 				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
 				FB2534DC1A974E7B00A61590 /* SoyTime.cpp in Sources */,
+				BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */,
 				FB2534CC1A974E7400A61590 /* TSerialisation.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				BF7C5F1A1B52B1B9006D1DC0 /* TFilter.cpp in Sources */,
@@ -740,6 +760,7 @@
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
 				FB2534E71A974EFB00A61590 /* MemoryOutStream.cpp in Sources */,
 				FB2534BD1A974E7400A61590 /* TChannel.cpp in Sources */,
+				BFDE38021C8B446A00D10F02 /* SoyUnity.cpp in Sources */,
 				BFAD33E01B6411F500D3E7A6 /* TJobEventSubscriber.cpp in Sources */,
 				BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */,
 				FB2534C81A974E7400A61590 /* TProtocolCli.cpp in Sources */,
@@ -759,6 +780,7 @@
 				BF192B101BF202A200324911 /* TFilterStagePrevFrameData.cpp in Sources */,
 				FB2534E41A974EFB00A61590 /* CurrentTest.cpp in Sources */,
 				FB2534ED1A974EFB00A61590 /* TestReporterStdout.cpp in Sources */,
+				BFDE37FE1C8B434F00D10F02 /* PopTrackPlugin.cpp in Sources */,
 				FB2534C51A974E7400A61590 /* TJobRelay.cpp in Sources */,
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,

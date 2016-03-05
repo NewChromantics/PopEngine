@@ -9,7 +9,7 @@ class TFilterWindow;
 class TFilter;
 class TFilterFrame;
 class TFilterStageRuntimeData;
-
+class TPixelBufferFrame;
 
 static size_t ImageCropLeft = 0;
 static size_t ImageCropRight = 0;
@@ -229,6 +229,7 @@ public:
 	void					CreateOpenclContexts();
 	std::shared_ptr<Opencl::TContext>	PickNextOpenclContext();
 	
+	void					LoadFrame(SoyPixelsImpl& Pixels,SoyTime Time);
 	void					LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time);	//	load pixels into [new] frame
 	void					OnFrameChanged(SoyTime Frame)	{	Run(Frame);	}
 

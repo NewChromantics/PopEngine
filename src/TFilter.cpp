@@ -12,7 +12,6 @@
 #include "TFilterStageWriteGif.h"
 #include "TFilterStageWriteAtlasMeta.h"
 
-
 const char* TFilter::FrameSourceName = "Frame";
 
 
@@ -646,6 +645,15 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 	mStages.PushBack( Stage );
 	OnStagesChanged();
 	Stage->mOnChanged.AddListener( [this](TFilterStage&){OnStagesChanged();} );
+}
+
+
+void TFilter::LoadFrame(SoyPixelsImpl& Pixels,SoyTime Time)
+{
+	//	need to make a copy
+	std::shared_ptr<SoyPixelsImpl> pPixels = std::make_shared<SoyPixels>();
+	pPixels->Copy( Pixels );
+	LoadFrame( pPixels, Time );
 }
 
 void TFilter::LoadFrame(std::shared_ptr<SoyPixelsImpl>& Pixels,SoyTime Time)

@@ -1,161 +1,66 @@
 #include "SoyMovieDecoder.h"
 #include <RemoteArray.h>
-#include <Build/PopMovieTextureOsxFramework.framework/Headers/PopMovieTextureOsxFramework.h>
 
-void TMovieDecoderContainer::GetDevices(ArrayBridge<TVideoDeviceMeta>& Metas)
+
+
+PopVideoDecoderBase::PopVideoDecoderBase(const TVideoDecoderParams& Params)
 {
-	for ( int m=0;	m<mMovies.GetSize();	m++ )
-	{
-		Metas.PushBack( mMovies[m]->GetMeta() );
-	}
+	mInstance = PopMovie::Alloc( Params );
+	Soy::Assert( mInstance!=nullptr, "Failed to create movie instance");
 }
 
-std::shared_ptr<TVideoDevice> TMovieDecoderContainer::AllocDevice(const TVideoDeviceMeta& Meta,std::stringstream& Error)
+PopVideoDecoderBase::~PopVideoDecoderBase()
 {
-	//	todo: look for existing
+	if ( mInstance )
+	{
+		PopMovie::Free( mInstance->GetRef() );
+	}
+}
 	
-	TVideoDecoderParams DecoderParams;
-	DecoderParams.mFilename = Meta.mName;
-	//DecoderParams.mPushBlockSleepMs = 30000;
-	DecoderParams.mPixelBufferParams.mPreSeek = SoyTime(0000ull);
-	DecoderParams.mPixelBufferParams.mDebugFrameSkipping = false;
-	DecoderParams.mPixelBufferParams.mPopFrameSync = true;
-	DecoderParams.mPixelBufferParams.mAllowPushRejection = false;
-	DecoderParams.mForceNonPlanarOutput = true;
-	DecoderParams.mPixelBufferParams.mResetInternalTimestamp = true;
-	
+
+PopVideoDecoder::PopVideoDecoder(const TVideoDecoderParams& Params) :
+	PopVideoDecoderBase	( Params ),
+	SoyWorkerThread		( std::string("TVideoDecoder ") + Params.mFilename, SoyWorkerWaitMode::Sleep ),
+	mStreamIndex		( 0 )
+{
+	Start();
+}
+
+PopVideoDecoder::~PopVideoDecoder()
+{
+	WaitToFinish();
+}
+
+bool PopVideoDecoder::Iteration()
+{
 	try
 	{
-		std::shared_ptr<TMovieDecoder> Movie( new TMovieDecoder( DecoderParams, Meta.mSerial, nullptr ) );
-		mMovies.PushBack( Movie );
-		return Movie;
-	}
-	catch ( std::exception& e )
-	{
-		Error << "Failed to create movie decoder: " << e.what();
-		return nullptr;
-	}
-}
-
-TVideoDeviceMeta GetDecoderMeta(const TVideoDecoderParams& Params,const std::string& Serial)
-{
-	TVideoDeviceMeta Meta( Serial, Params.mFilename );
-	Meta.mVideo = true;
-	Meta.mTimecode = true;
-	//Meta.mConnected
-	return Meta;
-}
-
-TMovieDecoder::TMovieDecoder(const TVideoDecoderParams& Params,const std::string& Serial,std::shared_ptr<Opengl::TContext> OpenglContext) :
-	TVideoDevice	( GetDecoderMeta(Params,Serial) ),
-	SoyWorkerThread	( Params.mFilename, SoyWorkerWaitMode::Wake ),
-	mSerial			( Serial )
-{
-	mDecoder = PopMovieDecoder::AllocDecoder( Params );
-	
-	auto OnStreamsChanged = [this](size_t& StreamIndex)
-	{
-		if ( StreamIndex != 0 )
-			return;
+		//	defer initial time until after first frame?
+		if ( !mInitialTime.IsValid() )
+			mInitialTime = SoyTime( true );
 		
-		auto OnDecoded = [this](const SoyTime& Time)
+		//	update time
+		SoyTime Now(true);
+		Now -= mInitialTime;
+		
+		mInstance->SetTimestamp( Now );
+
+		auto HandleFrame = [this](SoyPixelsImpl& Frame,SoyTime Time)
 		{
-			this->Wake();
+			auto FrameAndTime = std::make_pair( &Frame, Time );
+			mOnFrame.OnTriggered( FrameAndTime );
 		};
 		
-		//WakeOnEvent( mDecoder->GetPixelBufferManager().mOnFrameDecoded );
-		auto VideoStreamIndex = mDecoder->GetVideoStreamIndex(0);
-		mDecoder->GetPixelBufferManager(VideoStreamIndex).mOnFrameDecoded.AddListener( OnDecoded );
-		/*
-		 //	decode every frame we find
-		 auto AutoIncrementTime = [this](SoyTime& Timecode)
-		 {
-		 //	move decoder along to decode this frame
-		 mDecoder->SetPlayerTime( Timecode );
-		 };
-		 mDecoder->GetPixelBufferManager().mOnFrameFound.AddListener( AutoIncrementTime );
-		 */
-		SoyTime Future( 99999999ull );
-		mDecoder->SetPlayerTime( Future );
-		Start();
-	};
-	
-	auto OnBufferManagerStreamsChanged = [=](size_t StreamIndex,TMediaBufferManager&)
-	{
-		OnStreamsChanged( StreamIndex );
-	};
-
-	mDecoder->mOnBufferManagersChanged.AddListener( OnStreamsChanged );
-	mDecoder->ForEachBufferManager( OnBufferManagerStreamsChanged );
-	
-	mDecoder->StartMovie();
-
-}
-
-TVideoDeviceMeta TMovieDecoder::GetMeta() const
-{
-	if ( !mDecoder )
-		return TVideoDeviceMeta();
-	
-	return GetDecoderMeta( mDecoder->mParams, mSerial );
-}
-
-bool TMovieDecoder::CanSleep()
-{
-	if ( !mDecoder )
-		return true;
-	
-	auto StreamIndex = mDecoder->GetVideoStreamIndex(0);
-	auto NextFrameTime = mDecoder->GetPixelBufferManager(StreamIndex).GetNextPixelBufferTime();
-	
-	//	got a frame to read, don't sleep!
-	if ( NextFrameTime.IsValid() )
-		return false;
-	
-	return true;
-}
-
-bool TMovieDecoder::Iteration()
-{
-	if ( !mDecoder )
-		return true;
-	
-	//	pop pixels
-	auto StreamIndex = mDecoder->GetVideoStreamIndex(0);
-	auto& Buffer = mDecoder->GetPixelBufferManager(StreamIndex);
-	auto NextFrameTime = Buffer.GetNextPixelBufferTime();
-	auto PixelBuffer = Buffer.PopPixelBuffer( NextFrameTime );
-	if ( !PixelBuffer )
-		return true;
-	
-	auto PushFrame = [&](SoyPixelsImpl& Pixels)
-	{
-		static bool DoNewFrameLock = true;
-		if ( DoNewFrameLock )
-		{
-			SoyPixelsImpl& NewFramePixels = LockNewFrame();
-			NewFramePixels.Copy( Pixels );
-			UnlockNewFrame( NextFrameTime );
-		}
-		else
-		{
-			//	send new frame
-			OnNewFrame( Pixels, NextFrameTime );
-		}
-	};
-	
-	
-	Array<SoyPixelsImpl*> Pixels;
-	PixelBuffer->Lock( GetArrayBridge(Pixels) );
-	if ( Pixels.IsEmpty() )
-	{
-		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
-		return true;
+		mInstance->UpdateTexture( HandleFrame, mStreamIndex );
 	}
-	PushFrame( *Pixels[0] );
-	PixelBuffer->Unlock();
+	catch (std::exception& e)
+	{
+		std::stringstream Error;
+		Error << e.what();
+		mOnError.OnTriggered( Error.str() );
+	}
+	
+	//	detect eof
 	
 	return true;
 }
-
-

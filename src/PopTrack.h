@@ -34,8 +34,7 @@ public:
 private:
 	std::shared_ptr<TPlayerFilter>	GetFilter(const std::string& Name);
 
-	std::shared_ptr<TMovieDecoderContainer>	mMovies;
-	SoyVideoCapture		mVideoCapture;
+	Array<std::shared_ptr<PopVideoDecoder>>	mMovies;
 	TSubscriberManager	mSubcriberManager;
 	
 public:
