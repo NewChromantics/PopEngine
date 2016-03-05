@@ -11,8 +11,7 @@ uniform float MagicMult = 1.8;
 float avg_intensity(in vec4 pix) {
 
 	//	gr: currently using luma plane only
-	//	return (pix.r + pix.g + pix.b)/3.0;
-	return pix.r;
+	return (pix.r + pix.g + pix.b)/3.0;
 }
 
 vec4 get_pixel(in vec2 coords, in float dx, in float dy)
@@ -23,7 +22,7 @@ vec4 get_pixel(in vec2 coords, in float dx, in float dy)
 // returns pixel color
 bool IsEdge(in vec2 coords){
 
-	float Border = 0.01f;
+	float Border = 0.001f;
 	if ( coords.x < Border || coords.x > 1.0f-Border )
 		return false;
 	if ( coords.y < Border || coords.y > 1.0f-Border )
