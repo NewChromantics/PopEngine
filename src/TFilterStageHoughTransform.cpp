@@ -46,6 +46,10 @@ const float& GetHoughLineScore(const THoughLine& HoughLine)
 	return HoughLine.s[6];
 }
 
+int GetHoughLineWindowIndex(const THoughLine& HoughLine)
+{
+	return HoughLine.s[8];
+}
 
 
 void SetHoughLineStartJointVertLineIndex(THoughLine& HoughLine,int Index)
@@ -3285,8 +3289,8 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	
 		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,float& BestVertLineAngle,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
 		{
-			static float MaxDistance = 5;
-			static float MaxAngleDifference = 10;
+			static float MaxDistance = 6;
+			static float MaxAngleDifference = 20;
 			
 			float MatchDistance = GetDistance( TargetStart, MatchPos );
 			auto MatchAngle = GetHoughLineAngle( MatchHoughLine );
@@ -3330,6 +3334,12 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 			
 			//	filter here by neighbouring window, max angle diff etc
 			
+			//	don't join lines in the same window
+			auto vWindowIndex = GetHoughLineWindowIndex( v_HoughLine );
+			auto iWindowIndex = GetHoughLineWindowIndex( i_HoughLine );
+			if ( vWindowIndex == iWindowIndex )
+				continue;
+			
 			auto istart = GetHoughLineStart( i_HoughLine );
 			auto iend = GetHoughLineEnd( i_HoughLine );
 			
@@ -3345,8 +3355,18 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		SetHoughLineStartJointVertLineIndex( v_HoughLine, BestStartVertLineIndex );
 		SetHoughLineEndJointVertLineIndex( v_HoughLine, BestEndVertLineIndex );
 		
+		int JointCount = (BestStartVertLineIndex >= 0 ) + (BestEndVertLineIndex >= 0 );
+		
 		//	remove if no joints
-		if ( BestStartVertLineIndex < 0 && BestEndVertLineIndex < 0 )
+		if ( JointCount == 0 )
+		{
+			VertLines.RemoveBlock( v, 1 );
+			continue;
+		}
+		
+		//	remove if only 1
+		static bool RemoveIfOne = false;
+		if ( JointCount == 1 && RemoveIfOne )
 		{
 			VertLines.RemoveBlock( v, 1 );
 			continue;
