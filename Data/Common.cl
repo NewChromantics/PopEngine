@@ -269,7 +269,7 @@ static float3 NormalToRgb(float Normal)
 	//return (float3)(Normal,Normal,Normal);
 	//	red to green
 	//float Hue = Lerp( Normal, -0.3f, 0.4f );	//	blue to green
-	float Hue = Lerp( Normal, -0.1f, 0.3f );	//	red to green
+	float Hue = Lerp( Normal, -0.01f, 0.3f );	//	red to green
 	float3 Hsl = (float3)( Hue, 1.0f, 0.6f );
 	
 	return HslToRgb( Hsl );
