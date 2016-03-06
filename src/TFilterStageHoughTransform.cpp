@@ -20,6 +20,19 @@ vec2f GetHoughLineEnd(const THoughLine& HoughLine)
 	return vec2f( HoughLine.s[2], HoughLine.s[3] );
 }
 
+void SetHoughLineStart(THoughLine& HoughLine,const vec2f& Start)
+{
+	HoughLine.s[0] = Start.x;
+	HoughLine.s[1] = Start.y;
+}
+
+void SetHoughLineEnd(THoughLine& HoughLine,const vec2f& End)
+{
+	HoughLine.s[2] = End.x;
+	HoughLine.s[3] = End.y;
+}
+
+
 float GetHoughLineAngle(const THoughLine& HoughLine)
 {
 	return HoughLine.s[4];
@@ -3283,11 +3296,14 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		float BestStartDistance = 99999;
 		int BestStartVertLineIndex = -1;
 		float BestStartVertLineAngle;
+		bool BestStartVertLine_IsStart;	//	or does it join the end of the match
+		
 		float BestEndDistance = 99999;
 		int BestEndVertLineIndex = -1;
 		float BestEndVertLineAngle;
+		bool BestEndVertLine_IsStart;	//	or does it join the end of the match
 	
-		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,float& BestVertLineAngle,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,float& BestVertLineAngle,bool& BestVertLine_IsStart,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine,bool MatchLinePosIsStart)
 		{
 			static float MaxDistance = 6;
 			static float MaxAngleDifference = 20;
@@ -3312,16 +3328,17 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 			BestVertLineIndex = MatchIndex;
 			BestDistance = MatchDistance;
 			BestVertLineAngle = MatchAngle;
+			BestVertLine_IsStart = MatchLinePosIsStart;
 		};
 
-		auto UpdateBestStart = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		auto UpdateBestStart = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine,bool MatchLinePosIsStart)
 		{
-			UpdateBest( v_HoughLine, vstart, BestStartDistance, BestStartVertLineIndex, BestStartVertLineAngle, MatchPos, MatchIndex, MatchHoughLine );
+			UpdateBest( v_HoughLine, vstart, BestStartDistance, BestStartVertLineIndex, BestStartVertLineAngle, BestStartVertLine_IsStart, MatchPos, MatchIndex, MatchHoughLine, MatchLinePosIsStart );
 		};
 		
-		auto UpdateBestEnd = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		auto UpdateBestEnd = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine,bool MatchLinePosIsStart)
 		{
-			UpdateBest( v_HoughLine, vend, BestEndDistance, BestEndVertLineIndex, BestEndVertLineAngle, MatchPos, MatchIndex, MatchHoughLine );
+			UpdateBest( v_HoughLine, vend, BestEndDistance, BestEndVertLineIndex, BestEndVertLineAngle, BestEndVertLine_IsStart, MatchPos, MatchIndex, MatchHoughLine, MatchLinePosIsStart );
 		};
 		
 
@@ -3344,10 +3361,10 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 			auto iend = GetHoughLineEnd( i_HoughLine );
 			
 			//	find new best start joint
-			UpdateBestStart( istart, i, i_HoughLine );
-			UpdateBestStart( iend, i, i_HoughLine );
-			UpdateBestEnd( istart, i, i_HoughLine );
-			UpdateBestEnd( iend, i, i_HoughLine );
+			UpdateBestStart( istart, i, i_HoughLine, true );
+			UpdateBestStart( iend, i, i_HoughLine, false );
+			UpdateBestEnd( istart, i, i_HoughLine, true );
+			UpdateBestEnd( iend, i, i_HoughLine, false );
 			
 		}
 		
@@ -3373,7 +3390,27 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		}
 		
 		//	merge larger index into smaller, maybe invalidate wad data?
+		static bool MergeLines = true;
+		if ( MergeLines )
 		{
+			//	merge start
+			if ( BestStartVertLineIndex >= 0 )
+			{
+				auto OldStart = GetHoughLineStart( v_HoughLine );
+				auto OldEnd = GetHoughLineEnd( v_HoughLine );
+
+				//	our start is now the other-line's start/end
+				auto& i_HoughLine = VertLines[BestStartVertLineIndex];
+				//	if we matched the start, our start is the opposite end of the joint
+				auto NewStart = BestStartVertLine_IsStart ? GetHoughLineEnd( i_HoughLine ) : GetHoughLineStart( i_HoughLine );
+				SetHoughLineStart( v_HoughLine, NewStart );
+				
+				if ( BestStartVertLine_IsStart )
+					SetHoughLineEnd( i_HoughLine, OldEnd );
+				else
+					SetHoughLineStart( i_HoughLine, OldEnd );
+			}
+			
 		}
 	}
 }
