@@ -694,7 +694,7 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 }
 
 
-__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global THoughLine* HoughLines,int ColourToVertical,int ColourToJoints)
+__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global THoughLine* HoughLines,int ColourToVertical,int ColourToJoints,int ColourToLength)
 {
 	int LineIndex = get_global_id(0) + OffsetIndex;
 	THoughLine HoughLine = HoughLines[LineIndex];
@@ -702,9 +702,17 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 	float2 LineStart = GetHoughLineStart(HoughLine);
 	float2 LineEnd = GetHoughLineEnd(HoughLine);
 	
-	//	draw vertical/non vertical
 	float Score = ColourToVertical ? GetHoughLineVertical(HoughLine) : GetHoughLineScore(HoughLine);
-	if ( ColourToJoints )
+
+	if ( ColourToLength )
+	{
+		float MaxLength = 300;
+		float MinLength = 0;
+		Score = min( 1.0f, distance( LineStart, LineEnd ) / MaxLength );
+		if ( Score < MinLength/MaxLength )
+			return;
+	}
+	else if ( ColourToJoints )
 	{
 		bool HasStart = GetHoughLineStartJointVertLineIndex( HoughLine ) >= 0;
 		bool HasEnd = GetHoughLineEndJointVertLineIndex( HoughLine ) >= 0;
@@ -717,8 +725,9 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 			Score = 0.5f;
 		else if ( HasStart && HasEnd )
 			Score = 1.0f;
+
 	}
-	
+
 	DrawLineDirect( LineStart, LineEnd, Frag, Score );
 }
 
@@ -746,7 +755,8 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 								float2 MaskTopLeft,
 								float2 MaskTopRight,
 								float2 MaskBottomRight,
-								float2 MaskBottomLeft
+								float2 MaskBottomLeft,
+								float LineMinPixels
 								)
 {
 	int WindowIndex = get_global_id(0) + OffsetWindow;
@@ -837,11 +847,15 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	//	gr: note: we can have more-pixels for a line depending on distance grouping
 	float LineMaxPixels = LineLength * HoughDistanceStep;
 
+	if ( LineMaxPixels < LineMinPixels )
+		return;
+		
 	Score /= LineMaxPixels;
 	if ( Score < HoughScoreMin )
 	{
 		return;
 	}
+	
 
 	Score = clamp( Score, (float)HoughScoreMin, (float)HoughScoreMax );
 	Score = Range( Score, HoughScoreMin, HoughScoreMax );

@@ -10,8 +10,8 @@ void SetHoughLineAngle(THoughLine* HoughLine,float Value)			{	(*HoughLine)[4] = 
 float GetHoughLineDistance(THoughLine HoughLine)					{	return HoughLine[5];	}
 void SetHoughLineDistance(THoughLine* HoughLine,float Value)		{	(*HoughLine)[5] = Value;	}
 
-float GetHoughLineWindowIndex(THoughLine HoughLine)					{	return HoughLine[8];	}
-void SetHoughLineWindowIndex(THoughLine* HoughLine,float Value)		{	(*HoughLine)[8] = Value;	}
+int GetHoughLineWindowIndex(THoughLine HoughLine)					{	return HoughLine[8];	}
+void SetHoughLineWindowIndex(THoughLine* HoughLine,int Value)		{	(*HoughLine)[8] = Value;	}
 
 float GetHoughLineScore(THoughLine HoughLine)						{	return HoughLine[6];	}
 void SetHoughLineScore(THoughLine* HoughLine,float Value)			{	(*HoughLine)[6] = Value;	}

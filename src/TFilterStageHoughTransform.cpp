@@ -3286,6 +3286,7 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	
 	auto& VertLines = HoughLineStageData.mVertLines;
 	auto& HorzLines = HoughLineStageData.mHorzLines;
+	auto OldVertLinesCount = VertLines.GetSize();
 	
 	for ( int v=VertLines.GetSize()-1;	v>=0;	v-- )
 	{
@@ -3305,7 +3306,7 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 	
 		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,float& BestVertLineAngle,bool& BestVertLine_IsStart,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine,bool MatchLinePosIsStart)
 		{
-			static float MaxDistance = 6;
+			static float MaxDistance = 10;
 			static float MaxAngleDifference = 20;
 			
 			float MatchDistance = GetDistance( TargetStart, MatchPos );
@@ -3371,11 +3372,23 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		//	update houghline
 		SetHoughLineStartJointVertLineIndex( v_HoughLine, BestStartVertLineIndex );
 		SetHoughLineEndJointVertLineIndex( v_HoughLine, BestEndVertLineIndex );
+/*
+		if ( BestStartVertLineIndex >= 0 && BestStartVertLine_IsStart )
+			SetHoughLineStartJointVertLineIndex( VertLines[BestStartVertLineIndex], v );
+		if ( BestStartVertLineIndex >= 0 && !BestStartVertLine_IsStart )
+			SetHoughLineEndJointVertLineIndex( VertLines[BestStartVertLineIndex], v );
+		
+		if ( BestEndVertLineIndex >= 0 && BestEndVertLine_IsStart )
+			SetHoughLineStartJointVertLineIndex( VertLines[BestEndVertLineIndex], v );
+		if ( BestEndVertLineIndex >= 0 && !BestEndVertLine_IsStart )
+			SetHoughLineEndJointVertLineIndex( VertLines[BestEndVertLineIndex], v );
+*/
 		
 		int JointCount = (BestStartVertLineIndex >= 0 ) + (BestEndVertLineIndex >= 0 );
 		
 		//	remove if no joints
-		if ( JointCount == 0 )
+		static bool RemoveIfNone = true;
+		if ( JointCount == 0 && RemoveIfNone )
 		{
 			VertLines.RemoveBlock( v, 1 );
 			continue;
@@ -3390,7 +3403,7 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		}
 		
 		//	merge larger index into smaller, maybe invalidate wad data?
-		static bool MergeLines = true;
+		static bool MergeLines = false;
 		if ( MergeLines )
 		{
 			//	merge start
@@ -3398,7 +3411,7 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 			{
 				auto OldStart = GetHoughLineStart( v_HoughLine );
 				auto OldEnd = GetHoughLineEnd( v_HoughLine );
-
+				
 				//	our start is now the other-line's start/end
 				auto& i_HoughLine = VertLines[BestStartVertLineIndex];
 				//	if we matched the start, our start is the opposite end of the joint
@@ -3409,10 +3422,73 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 					SetHoughLineEnd( i_HoughLine, OldEnd );
 				else
 					SetHoughLineStart( i_HoughLine, OldEnd );
+				
+				i_HoughLine = v_HoughLine;
 			}
 			
+			//	merge end
+			if ( BestEndVertLineIndex >= 0 )
+			{
+				auto OldStart = GetHoughLineStart( v_HoughLine );
+				auto OldEnd = GetHoughLineEnd( v_HoughLine );
+				
+				//	our end is now the other-line's start/end
+				auto& i_HoughLine = VertLines[BestEndVertLineIndex];
+				//	if we matched the start, our start is the opposite end of the joint
+				auto NewEnd = BestEndVertLine_IsStart ? GetHoughLineEnd( i_HoughLine ) : GetHoughLineStart( i_HoughLine );
+				SetHoughLineEnd( v_HoughLine, NewEnd );
+				
+				if ( BestEndVertLine_IsStart )
+					SetHoughLineEnd( i_HoughLine, OldStart );
+				else
+					SetHoughLineStart( i_HoughLine, OldStart );
+
+				i_HoughLine = v_HoughLine;
+			}
+			
+			static bool RemoveMerged = true;
+			
+			if ( RemoveMerged && ( BestStartVertLineIndex >= 0 || BestEndVertLineIndex >= 0 ) )
+			{
+				if ( BestStartVertLineIndex > BestEndVertLineIndex && BestStartVertLineIndex > v )
+				{
+					VertLines.RemoveBlock( BestStartVertLineIndex, 1 );
+				}
+				else if ( BestEndVertLineIndex > BestStartVertLineIndex && BestEndVertLineIndex > v )
+				{
+					VertLines.RemoveBlock( BestEndVertLineIndex, 1 );
+				}
+				
+				/*
+				int RemoveA = (BestStartVertLineIndex >= 0) ? std::max( BestStartVertLineIndex, v ) : -1;
+				int RemoveB = (BestEndVertLineIndex >= 0) ? std::max( BestEndVertLineIndex, v ) : -1;
+				
+				if ( RemoveA == RemoveB )
+				{
+					//	occurs on very small lines
+					if ( RemoveA > -1 )
+						VertLines.RemoveBlock( RemoveA, 1 );
+				}
+				else if ( RemoveA > RemoveB )
+				{
+					if ( RemoveA > -1 )
+						VertLines.RemoveBlock( RemoveA, 1 );
+					if ( RemoveB > -1 )
+						VertLines.RemoveBlock( RemoveB, 1 );
+				}
+				else
+				{
+					if ( RemoveB > -1 )
+						VertLines.RemoveBlock( RemoveB, 1 );
+					if ( RemoveA > -1 )
+						VertLines.RemoveBlock( RemoveA, 1 );
+				}
+				 */
+			}
 		}
 	}
+	
+	std::Debug << "Now " << VertLines.GetSize() << "/" << OldVertLinesCount << " vert lines" << std::endl;
 }
 
 
