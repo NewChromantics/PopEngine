@@ -712,9 +712,9 @@ __kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global 
 		if ( !HasStart && !HasEnd )
 			Score = 0;
 		else if ( HasStart && !HasEnd )
-			Score = 0;//0.33f;
+			Score = 0.5f;
 		else if ( !HasStart && HasEnd )
-			Score = 0;//0.66f;
+			Score = 0.5f;
 		else if ( HasStart && HasEnd )
 			Score = 1.0f;
 	}
@@ -850,8 +850,8 @@ __kernel void ExtractHoughLines(int OffsetWindow,
 	//	make output
 	THoughLine LineAndMeta;
 	LineAndMeta.xyzw = Line;
-	SetHoughLineAngleIndex( &LineAndMeta, Angle);
-	SetHoughLineDistanceIndex( &LineAndMeta, Distance);
+	SetHoughLineAngle( &LineAndMeta, Angle);
+	SetHoughLineDistance( &LineAndMeta, Distance);
 	SetHoughLineWindowIndex( &LineAndMeta, WindowIndex);
 	SetHoughLineScore( &LineAndMeta, Score);
 	SetHoughLineMaxPixels( &LineAndMeta, LineMaxPixels);

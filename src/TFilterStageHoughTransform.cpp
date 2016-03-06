@@ -20,7 +20,7 @@ vec2f GetHoughLineEnd(const THoughLine& HoughLine)
 	return vec2f( HoughLine.s[2], HoughLine.s[3] );
 }
 
-float GetHoughLineAngleIndex(const THoughLine& HoughLine)
+float GetHoughLineAngle(const THoughLine& HoughLine)
 {
 	return HoughLine.s[4];
 }
@@ -745,7 +745,7 @@ void TFilterStage_ExtractHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr
 		for ( int i=0;	i<AllLines.GetSize();	i++ )
 		{
 			auto& Line = AllLines[i];
-			auto Angle = GetHoughLineAngleIndex(Line);
+			auto Angle = GetHoughLineAngle(Line);
 			
 			float Threshold = VerticalThresholdUniform.mValue;
 			
@@ -1384,7 +1384,7 @@ void TFilterStage_GetTruthLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFi
 		for ( int i=StageData.mHorzLines.GetSize()-1;	i>=0;	i-- )
 		{
 			throw Soy::AssertException("Test me");
-			auto LineAngle = GetHoughLineAngleIndex(StageData.mHorzLines[i]);
+			auto LineAngle = GetHoughLineAngle(StageData.mHorzLines[i]);
 			static float Tolerance=10;
 			bool AngleIs0 = fabsf( Soy::AngleDegDiff( LineAngle, 0 ) ) < Tolerance;
 			bool AngleIs90 = fabsf( Soy::AngleDegDiff( LineAngle, 90 ) ) < Tolerance;
@@ -3261,10 +3261,14 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 {
 	TUniformWrapper<std::string> HoughDataStageName("HoughData", std::string() );
 	Frame.SetUniform( HoughDataStageName, HoughDataStageName, mFilter, *this );
-	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( HoughDataStageName );
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_GatherHoughTransforms>( HoughDataStageName );
 	
-	auto& VertLines = HoughStageData.mVertLines;
-	auto& HorzLines = HoughStageData.mHorzLines;
+	TUniformWrapper<std::string> HoughLinesDataStageName("HoughLines", std::string() );
+	Frame.SetUniform( HoughLinesDataStageName, HoughLinesDataStageName, mFilter, *this );
+	auto& HoughLineStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( HoughLinesDataStageName );
+	
+	auto& VertLines = HoughLineStageData.mVertLines;
+	auto& HorzLines = HoughLineStageData.mHorzLines;
 	
 	for ( int v=VertLines.GetSize()-1;	v>=0;	v-- )
 	{
@@ -3274,35 +3278,46 @@ void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TF
 		
 		float BestStartDistance = 99999;
 		int BestStartVertLineIndex = -1;
-		int BestStartVertLineAngleIndex;
+		float BestStartVertLineAngle;
 		float BestEndDistance = 99999;
 		int BestEndVertLineIndex = -1;
-		int BestEndVertLineAngleIndex;
+		float BestEndVertLineAngle;
 	
-		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,int& BestVertLineAngleIndex,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,float& BestVertLineAngle,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
 		{
-			static float MaxDistance = 2;
+			static float MaxDistance = 5;
+			static float MaxAngleDifference = 10;
+			
 			float MatchDistance = GetDistance( TargetStart, MatchPos );
-			auto MatchAngleIndex = GetHoughLineAngleIndex( MatchHoughLine );
-			int AngleDifference = MatchAngleIndex - GetHoughLineAngleIndex( TargetLine );
+			auto MatchAngle = GetHoughLineAngle( MatchHoughLine );
+			
+			//	wrap angle diff
+			int AngleDifference = MatchAngle - GetHoughLineAngle( TargetLine );
+			if ( AngleDifference > 360/2 )
+				AngleDifference -= 360;
+			if ( AngleDifference < -(360/2) )
+				AngleDifference += 360;
+			
 			float MatchScore = GetHoughLineScore( MatchHoughLine );
 			if ( MatchDistance > BestDistance )
 				return;
 			if ( MatchDistance > MaxDistance )
 				return;
+			if ( abs(AngleDifference) > MaxAngleDifference )
+				return;
 			BestVertLineIndex = MatchIndex;
 			BestDistance = MatchDistance;
-			BestVertLineAngleIndex = MatchAngleIndex;
+			BestVertLineAngle = MatchAngle;
 		};
 
 		auto UpdateBestStart = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
 		{
-			UpdateBest( v_HoughLine, vstart, BestStartDistance, BestStartVertLineIndex, BestStartVertLineAngleIndex, MatchPos, MatchIndex, MatchHoughLine );
+			UpdateBest( v_HoughLine, vstart, BestStartDistance, BestStartVertLineIndex, BestStartVertLineAngle, MatchPos, MatchIndex, MatchHoughLine );
 		};
 		
 		auto UpdateBestEnd = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
 		{
-			UpdateBest( v_HoughLine, vend, BestEndDistance, BestEndVertLineIndex, BestEndVertLineAngleIndex, MatchPos, MatchIndex, MatchHoughLine );
+			UpdateBest( v_HoughLine, vend, BestEndDistance, BestEndVertLineIndex, BestEndVertLineAngle, MatchPos, MatchIndex, MatchHoughLine );
 		};
 		
 
