@@ -694,18 +694,30 @@ __kernel void DrawHoughLinesDynamic(int OffsetAngle,int OffsetDistance,__write_o
 }
 
 
-__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global THoughLine* HoughLines,int ColourToVertical)
+__kernel void DrawHoughLines(int OffsetIndex,__write_only image2d_t Frag,global THoughLine* HoughLines,int ColourToVertical,int ColourToJoints)
 {
 	int LineIndex = get_global_id(0) + OffsetIndex;
 	THoughLine HoughLine = HoughLines[LineIndex];
 	
 	float2 LineStart = GetHoughLineStart(HoughLine);
 	float2 LineEnd = GetHoughLineEnd(HoughLine);
-	float Angle = GetHoughLineAngleIndex(HoughLine);
-	float Distance = GetHoughLineDistanceIndex(HoughLine);
 	
 	//	draw vertical/non vertical
 	float Score = ColourToVertical ? GetHoughLineVertical(HoughLine) : GetHoughLineScore(HoughLine);
+	if ( ColourToJoints )
+	{
+		bool HasStart = GetHoughLineStartJointVertLineIndex( HoughLine ) >= 0;
+		bool HasEnd = GetHoughLineEndJointVertLineIndex( HoughLine ) >= 0;
+		
+		if ( !HasStart && !HasEnd )
+			Score = 0;
+		else if ( HasStart && !HasEnd )
+			Score = 0;//0.33f;
+		else if ( !HasStart && HasEnd )
+			Score = 0;//0.66f;
+		else if ( HasStart && HasEnd )
+			Score = 1.0f;
+	}
 	
 	DrawLineDirect( LineStart, LineEnd, Frag, Score );
 }

@@ -3,6 +3,23 @@
 #include "TFilterStageOpencl.h"
 #include "TFilterStageOpengl.h"
 
+
+float GetDistance(const vec2f& a,const vec2f& b)
+{
+	vec2f d( a.x - b.x, a.y - b.y );
+	return sqrtf( (d.x*d.x) + (d.y*d.y) );
+}
+
+vec2f GetHoughLineStart(const THoughLine& HoughLine)
+{
+	return vec2f( HoughLine.s[0], HoughLine.s[1] );
+}
+
+vec2f GetHoughLineEnd(const THoughLine& HoughLine)
+{
+	return vec2f( HoughLine.s[2], HoughLine.s[3] );
+}
+
 float GetHoughLineAngleIndex(const THoughLine& HoughLine)
 {
 	return HoughLine.s[4];
@@ -23,9 +40,22 @@ float& GetHoughLineScore(THoughLine& HoughLine)
 	return HoughLine.s[6];
 }
 
+
 const float& GetHoughLineScore(const THoughLine& HoughLine)
 {
 	return HoughLine.s[6];
+}
+
+
+
+void SetHoughLineStartJointVertLineIndex(THoughLine& HoughLine,int Index)
+{
+	HoughLine.s[10] = Index;
+}
+
+void SetHoughLineEndJointVertLineIndex(THoughLine& HoughLine,int Index)
+{
+	HoughLine.s[11] = Index;
 }
 
 size_t GetAngleIndexFromWad(int WadIndex,size_t WindowCount,size_t AngleCount,size_t DistanceCount)
@@ -3224,6 +3254,96 @@ void TFilterStage_DrawMaskOnFrame::Execute(TFilterFrame& Frame,std::shared_ptr<T
 	ContextCl.PushJob( Job, Semaphore );
 	Semaphore.Wait(/*"opencl runner"*/);
 }
+
+
+
+void TFilterStage_JoinHoughLines::Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl)
+{
+	TUniformWrapper<std::string> HoughDataStageName("HoughData", std::string() );
+	Frame.SetUniform( HoughDataStageName, HoughDataStageName, mFilter, *this );
+	auto& HoughStageData = Frame.GetData<TFilterStageRuntimeData_HoughLines>( HoughDataStageName );
+	
+	auto& VertLines = HoughStageData.mVertLines;
+	auto& HorzLines = HoughStageData.mHorzLines;
+	
+	for ( int v=VertLines.GetSize()-1;	v>=0;	v-- )
+	{
+		auto& v_HoughLine = VertLines[v];
+		auto vstart = GetHoughLineStart( v_HoughLine );
+		auto vend = GetHoughLineEnd( v_HoughLine );
+		
+		float BestStartDistance = 99999;
+		int BestStartVertLineIndex = -1;
+		int BestStartVertLineAngleIndex;
+		float BestEndDistance = 99999;
+		int BestEndVertLineIndex = -1;
+		int BestEndVertLineAngleIndex;
+	
+		auto UpdateBest = [](const THoughLine& TargetLine,const vec2f& TargetStart,float& BestDistance,int& BestVertLineIndex,int& BestVertLineAngleIndex,vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		{
+			static float MaxDistance = 2;
+			float MatchDistance = GetDistance( TargetStart, MatchPos );
+			auto MatchAngleIndex = GetHoughLineAngleIndex( MatchHoughLine );
+			int AngleDifference = MatchAngleIndex - GetHoughLineAngleIndex( TargetLine );
+			float MatchScore = GetHoughLineScore( MatchHoughLine );
+			if ( MatchDistance > BestDistance )
+				return;
+			if ( MatchDistance > MaxDistance )
+				return;
+			BestVertLineIndex = MatchIndex;
+			BestDistance = MatchDistance;
+			BestVertLineAngleIndex = MatchAngleIndex;
+		};
+
+		auto UpdateBestStart = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		{
+			UpdateBest( v_HoughLine, vstart, BestStartDistance, BestStartVertLineIndex, BestStartVertLineAngleIndex, MatchPos, MatchIndex, MatchHoughLine );
+		};
+		
+		auto UpdateBestEnd = [&](vec2f MatchPos,size_t MatchIndex,const THoughLine& MatchHoughLine)
+		{
+			UpdateBest( v_HoughLine, vend, BestEndDistance, BestEndVertLineIndex, BestEndVertLineAngleIndex, MatchPos, MatchIndex, MatchHoughLine );
+		};
+		
+
+		for ( int i=0;	i<VertLines.GetSize();	i++ )
+		{
+			if ( i == v )
+				continue;
+			
+			auto& i_HoughLine = VertLines[i];
+			
+			//	filter here by neighbouring window, max angle diff etc
+			
+			auto istart = GetHoughLineStart( i_HoughLine );
+			auto iend = GetHoughLineEnd( i_HoughLine );
+			
+			//	find new best start joint
+			UpdateBestStart( istart, i, i_HoughLine );
+			UpdateBestStart( iend, i, i_HoughLine );
+			UpdateBestEnd( istart, i, i_HoughLine );
+			UpdateBestEnd( iend, i, i_HoughLine );
+			
+		}
+		
+		//	update houghline
+		SetHoughLineStartJointVertLineIndex( v_HoughLine, BestStartVertLineIndex );
+		SetHoughLineEndJointVertLineIndex( v_HoughLine, BestEndVertLineIndex );
+		
+		//	remove if no joints
+		if ( BestStartVertLineIndex < 0 && BestEndVertLineIndex < 0 )
+		{
+			VertLines.RemoveBlock( v, 1 );
+			continue;
+		}
+		
+		//	merge larger index into smaller, maybe invalidate wad data?
+		{
+		}
+	}
+}
+
+
 
 
 

@@ -5,7 +5,9 @@
 
 
 //	x0,y0,x1,y1,
-//	angle,distance,score,Vertical!=0,WindowIndex
+//	angle,distance,score,Vertical!=0,WindowIndex,LineMaxPixels
+//	vert_start_joint_index,vert_end_joint_index		(adjoining line in linesegment at start & end)
+//
 typedef cl_float16 THoughLine;
 
 
@@ -275,6 +277,17 @@ public:
 
 
 
+
+class TFilterStage_JoinHoughLines : public TFilterStage
+{
+public:
+	TFilterStage_JoinHoughLines(const std::string& Name,TFilter& Filter,const TJobParams& StageParams) :
+		TFilterStage	( Name, Filter, StageParams )
+	{
+	}
+
+	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
+};
 
 
 

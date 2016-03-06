@@ -541,6 +541,10 @@ void TFilter::AddStage(const std::string& Name,const TJobParams& Params)
 		
 		Stage.reset( new TFilterStage_ExtractHoughLines( Name, ProgramFilename, KernelName, HoughDataStageName, *this, Params ) );
 	}
+	else if ( StageType == "JoinHoughLines" )
+	{
+		Stage.reset( new TFilterStage_JoinHoughLines( Name, *this, Params ) );
+	}
 	else if ( StageType == "ExtractHoughCorners" )
 	{
 		auto ProgramFilename = Params.GetParamAs<std::string>("cl");
