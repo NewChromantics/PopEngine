@@ -1,48 +1,35 @@
 #pragma once
 #include <SoyApp.h>
-#include <TJob.h>
-#include <TChannel.h>
-#include <TJobEventSubscriber.h>
 
-#include "TPlayerFilter.h"
-#include "SoyMovieDecoder.h"
+//	re-using unity opengl device interface
+#include "SoyOpenglContext.h"
+#include <SoyWindow.h>
 
-
-class TChannelLiteral;
+class TFilter;
+class TOpenglWindow;
 
 
-class TPopTrack : public TJobHandler, public TPopJobHandler, public TChannelManager
+
+namespace Opengl
 {
-public:
-	TPopTrack();
-	
-	virtual bool	AddChannel(std::shared_ptr<TChannel> Channel) override;
-
-	void			OnExit(TJobAndChannel& JobAndChannel);
-	void			OnLoadFrame(TJobAndChannel& JobAndChannel);
-	void			OnAddStage(TJobAndChannel& JobAndChannel);
-	void			OnSetFilterUniform(TJobAndChannel& JobAndChannel);
-	void			OnRunFilter(TJobAndChannel& JobAndChannel);
-	
-	void			OnStartDecode(TJobAndChannel& JobAndChannel);
-	void			OnList(TJobAndChannel& JobAndChannel);
-	void			OnGetFrame(TJobAndChannel& JobAndChannel);
-	void			SubscribeNewFrame(TJobAndChannel& JobAndChannel);
-	bool			OnNewFrameCallback(TEventSubscriptionManager& SubscriptionManager,TJobChannelMeta Client,TVideoDevice& Device);
-
-	
-private:
-	std::shared_ptr<TPlayerFilter>	GetFilter(const std::string& Name);
-
-	Array<std::shared_ptr<PopVideoDecoder>>	mMovies;
-	TSubscriberManager	mSubcriberManager;
-	
-public:
-	Soy::Platform::TConsoleApp	mConsoleApp;
-	
-	Array<std::shared_ptr<TPlayerFilter>>	mFilters;
-	std::shared_ptr<TChannelLiteral>		mLiteralChannel;
+	class TContext;
 };
 
-
-
+class TPopTrack
+{
+public:
+	TPopTrack(const std::string& WindowName);
+	~TPopTrack();
+	
+	void				OnOpenglRender(Opengl::TRenderTarget& RenderTarget);
+	std::shared_ptr<Opengl::TContext>	GetContext();
+	
+	
+protected:
+	void				DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect);
+	
+private:
+	std::shared_ptr<Opengl::TGeometry>	mBlitQuad;
+	std::shared_ptr<Opengl::TShader>	mBlitShader;
+	std::shared_ptr<TOpenglWindow>		mWindow;
+};
