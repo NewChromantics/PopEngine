@@ -36,7 +36,32 @@ namespace PopTrack
 	TPopTrack&	GetApp();
 }
 
+//	v8 template to a TWindow
+class TWindowWrapper
+{
+	
+	static v8::Local<v8::ObjectTemplate> CreateTemplate(v8::Isolate& Isolate);
+};
 
+/*
+v8::Local<v8::ObjectTemplate> TWindowWrapper::CreateTemplate(v8::Isolate& Isolate)
+{
+	auto Template = v8::ObjectTemplate::New(Isolate);
+	
+	//	https://github.com/v8/v8/wiki/Embedder's-Guide
+	//	1 field to 1 c++ object
+	Template->SetInternalFieldCount(1);
+	
+	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
+	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
+	
+	//Point* p = ...;
+	//Local<Object> obj = point_templ->NewInstance();
+	//obj->SetInternalField(0, External::New(isolate, p));
+	
+	return Template;
+}
+*/
 
 TPopTrack& PopTrack::GetApp()
 {
@@ -221,11 +246,36 @@ auto JavascriptMain = R"V0G0N(
 
 function test_function()
 {
+	log("log is working!", "2nd param");
 	return "hello";
 }
 
 
 )V0G0N";
+
+
+
+
+static void LogCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+	using namespace v8;
+	
+	if (args.Length() < 1)
+	{
+		std::Debug << "log() with no args" << std::endl;
+		return;
+	}
+
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+	for ( auto i=0;	i<args.Length();	i++ )
+	{
+		auto arg = args[i];
+		String::Utf8Value value(arg);
+		std::Debug << *value << std::endl;
+	}
+}
+
 
 void TPopTrack::TestV8()
 {
@@ -244,6 +294,9 @@ void TPopTrack::TestV8()
 	
 	v8::Isolate* isolate = v8::Isolate::New(create_params);
 	{
+		//auto WindowTemplate = TWindowWrapper::CreateTemplate(*isolate);
+
+		
 		v8::Isolate::Scope isolate_scope(isolate);
 		// Create a stack-allocated handle scope.
 		v8::HandleScope handle_scope(isolate);
@@ -273,6 +326,12 @@ void TPopTrack::TestV8()
 		auto mainresult = script->Run(context).ToLocalChecked();
 		
 		auto ContextGlobal = context->Global();
+		
+		//	create new function
+		v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New(isolate, LogCallback);
+		auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
+		ContextGlobal->Set( context, v8::String::NewFromUtf8(isolate, "log"), LogFuncWrapperValue);
+		
 		auto FuncNameKey = v8::String::NewFromUtf8( isolate, "test_function", v8::NewStringType::kNormal ).ToLocalChecked();
 	
 		//v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'",v8::NewStringType::kNormal)
