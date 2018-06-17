@@ -217,6 +217,16 @@ public:
 };
 
 
+auto JavascriptMain = R"V0G0N(
+
+function test_function()
+{
+	return "hello";
+}
+
+
+)V0G0N";
+
 void TPopTrack::TestV8()
 {
 	PopV8Allocator Allocator;
@@ -242,18 +252,44 @@ void TPopTrack::TestV8()
 		// Enter the context for compiling and running the hello world script.
 		v8::Context::Scope context_scope(context);
 		// Create a string containing the JavaScript source code.
-		v8::Local<v8::String> source =
-		v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'",
-								v8::NewStringType::kNormal)
-		.ToLocalChecked();
+		auto source = v8::String::NewFromUtf8(isolate, JavascriptMain, v8::NewStringType::kNormal).ToLocalChecked();
+		
+		/*
+		Handle<v8::Object> global = context->Global();
+		Handle<v8::Value> value = global->Get(String::New("test_function"));
+		Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(value);
+		Handle<Value> args[2];
+		Handle<Value> js_result;
+		int final_result;
+		args[0] = v8::String::New("1");
+		args[1] = v8::String::New("1");
+		js_result = func->Call(global, 2, args);
+		String::AsciiValue ascii(js_result);
+		*/
+		
 		// Compile the source code.
-		v8::Local<v8::Script> script =
-		v8::Script::Compile(context, source).ToLocalChecked();
+		v8::Local<v8::Script> script = v8::Script::Compile(context, source).ToLocalChecked();
 		// Run the script to get the result.
-		v8::Local<v8::Value> result = script->Run(context).ToLocalChecked();
+		auto mainresult = script->Run(context).ToLocalChecked();
+		
+		auto ContextGlobal = context->Global();
+		auto FuncNameKey = v8::String::NewFromUtf8( isolate, "test_function", v8::NewStringType::kNormal ).ToLocalChecked();
+	
+		//v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'",v8::NewStringType::kNormal)
+		auto FuncName = ContextGlobal->Get(FuncNameKey);
+										   
+		auto Func = v8::Handle<v8::Function>::Cast(FuncName);
+		
+		v8::Handle<v8::Value> args[0];
+		auto result = Func->Call( context, Func, 0, args ).ToLocalChecked();
+		
+		
 		// Convert the result to an UTF8 string and print it.
-		v8::String::Utf8Value utf8( result);
-		printf("%s\n", *utf8);
+		v8::String::Utf8Value ResultStr(result);
+		printf("result = %s\n", *ResultStr);
+
+		v8::String::Utf8Value MainResultStr(mainresult);
+		printf("MainResultStr = %s\n", *MainResultStr);
 	}
 
 }
