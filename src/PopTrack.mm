@@ -39,18 +39,57 @@ namespace PopTrack
 //	v8 template to a TWindow
 class TWindowWrapper
 {
-	
-	static v8::Local<v8::ObjectTemplate> CreateTemplate(v8::Isolate& Isolate);
+public:
+	static void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static v8::Local<v8::FunctionTemplate> CreateTemplate(v8::Isolate* Isolate);
 };
 
-/*
-v8::Local<v8::ObjectTemplate> TWindowWrapper::CreateTemplate(v8::Isolate& Isolate)
+
+void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
 {
-	auto Template = v8::ObjectTemplate::New(Isolate);
+	using namespace v8;
+	auto* Isolate = Arguments.GetIsolate();
 	
+	if ( !Arguments.IsConstructCall() )
+	{
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
+		Arguments.GetReturnValue().Set(Exception);
+		return;
+	}
+	
+	if ( Arguments.Length() != 1 )
+	{
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "missing arg 0 (window name)"));
+		Arguments.GetReturnValue().Set(Exception);
+		return;
+	}
+	
+	String::Utf8Value WindowName( Arguments[0] );
+	std::Debug << "Window Wrapper constructor (" << *WindowName << ")" << std::endl;
+	
+	//	alloc window
+	Soy::Rectf Rect( 0, 0, 300, 300 );
+	TOpenglParams Params;
+	auto* NewWindow = new TOpenglWindow( *WindowName, Rect, Params );
+	
+	//	set the field
+	Arguments.This()->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWindow ) );
+	
+	// return the new object back to the javascript caller
+	Arguments.GetReturnValue().Set( Arguments.This() );
+
+}
+
+v8::Local<v8::FunctionTemplate> TWindowWrapper::CreateTemplate(v8::Isolate* Isolate)
+{
+	using namespace v8;
+	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor );
+
 	//	https://github.com/v8/v8/wiki/Embedder's-Guide
 	//	1 field to 1 c++ object
-	Template->SetInternalFieldCount(1);
+	//	gr: we can just use the template that's made automatically and modify that!
+	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
+	InstanceTemplate->SetInternalFieldCount(1);
 	
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
@@ -59,9 +98,9 @@ v8::Local<v8::ObjectTemplate> TWindowWrapper::CreateTemplate(v8::Isolate& Isolat
 	//Local<Object> obj = point_templ->NewInstance();
 	//obj->SetInternalField(0, External::New(isolate, p));
 	
-	return Template;
+	return ConstructorFunc;
 }
-*/
+
 
 TPopTrack& PopTrack::GetApp()
 {
@@ -93,7 +132,7 @@ TPopTrack::TPopTrack(const std::string& WindowName)
 {
 	Soy::Rectf Rect( 0, 0, 300, 300 );
 	TOpenglParams Params;
-	
+	/*
 	mWindow.reset( new TOpenglWindow( WindowName, Rect, Params ) );
 	if ( !mWindow->IsValid() )
 	{
@@ -102,7 +141,7 @@ TPopTrack::TPopTrack(const std::string& WindowName)
 	}
 	
 	mWindow->mOnRender.AddListener(*this,&TPopTrack::OnOpenglRender);
-	
+	*/
 	TestV8();
 }
 
@@ -242,16 +281,17 @@ public:
 };
 
 
-auto JavascriptMain = R"V0G0N(
+auto JavascriptMain = R"DONTPANIC(
 
 function test_function()
 {
 	log("log is working!", "2nd param");
+	let Window1 = new OpenglWindow("Hello!");
+	let Window2 = new OpenglWindow("Hello2!");
 	return "hello";
 }
 
-
-)V0G0N";
+)DONTPANIC";
 
 
 
@@ -274,6 +314,8 @@ static void LogCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
 		String::Utf8Value value(arg);
 		std::Debug << *value << std::endl;
 	}
+	
+	//	 return v8::Undefined();
 }
 
 
@@ -294,9 +336,6 @@ void TPopTrack::TestV8()
 	
 	v8::Isolate* isolate = v8::Isolate::New(create_params);
 	{
-		//auto WindowTemplate = TWindowWrapper::CreateTemplate(*isolate);
-
-		
 		v8::Isolate::Scope isolate_scope(isolate);
 		// Create a stack-allocated handle scope.
 		v8::HandleScope handle_scope(isolate);
@@ -328,9 +367,14 @@ void TPopTrack::TestV8()
 		auto ContextGlobal = context->Global();
 		
 		//	create new function
+		auto WindowTemplate = TWindowWrapper::CreateTemplate(isolate);
 		v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New(isolate, LogCallback);
+
 		auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
+		auto OpenglWindowFuncWrapperValue = WindowTemplate->GetFunction();
+		
 		ContextGlobal->Set( context, v8::String::NewFromUtf8(isolate, "log"), LogFuncWrapperValue);
+		ContextGlobal->Set( context, v8::String::NewFromUtf8(isolate, "OpenglWindow"), OpenglWindowFuncWrapperValue);
 		
 		auto FuncNameKey = v8::String::NewFromUtf8( isolate, "test_function", v8::NewStringType::kNormal ).ToLocalChecked();
 	
