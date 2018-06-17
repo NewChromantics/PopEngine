@@ -7,7 +7,7 @@
 class TFilterStage_ShaderBlit : public TFilterStage
 {
 public:
-	TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const Opengl::TGeometryVertex& BlitVertexDescription,TFilter& Filter,const TJobParams& StageParams);
+	TFilterStage_ShaderBlit(const std::string& Name,const std::string& VertFilename,const std::string& FragFilename,const SoyGraphics::TGeometryVertex& BlitVertexDescription,TFilter& Filter,const TJobParams& StageParams);
 	
 	void				Reload();
 	virtual void		Execute(TFilterFrame& Frame,std::shared_ptr<TFilterStageRuntimeData>& Data,Opengl::TContext& ContextGl,Opencl::TContext& ContextCl) override;
@@ -20,7 +20,7 @@ public:
 	Soy::TFileWatch			mVertFileWatch;
 	Soy::TFileWatch			mFragFileWatch;
 	std::shared_ptr<Opengl::TShader>	mShader;
-	Opengl::TGeometryVertex	mBlitVertexDescription;
+	SoyGraphics::TGeometryVertex	mBlitVertexDescription;
 };
 
 class TFilterStageRuntimeData_ShaderBlit : public TFilterStageRuntimeData
