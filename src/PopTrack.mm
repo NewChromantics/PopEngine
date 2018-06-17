@@ -18,7 +18,8 @@
 #define FILTER_MAX_THREADS	1
 #define JOB_THREAD_COUNT	1
 
-
+#include "include/libplatform/libplatform.h"
+#include "include/v8.h"
 
 
 namespace PopTrack
@@ -76,6 +77,8 @@ TPopTrack::TPopTrack(const std::string& WindowName)
 	}
 	
 	mWindow->mOnRender.AddListener(*this,&TPopTrack::OnOpenglRender);
+	
+	TestV8();
 }
 
 TPopTrack::~TPopTrack()
@@ -203,5 +206,78 @@ void TPopTrack::DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect)
 	mBlitQuad->Draw();
 	
 }
+
+class PopV8Allocator : public v8::ArrayBuffer::Allocator
+{
+public:
+	
+	virtual void* Allocate(size_t length) override;
+	virtual void* AllocateUninitialized(size_t length) override;
+	virtual void Free(void* data, size_t length) override;
+};
+
+
+void TPopTrack::TestV8()
+{
+	PopV8Allocator Allocator;
+	//v8::V8::InitializeICUDefaultLocation(argv[0]);
+	v8::V8::InitializeICU(nullptr);
+	//v8::V8::InitializeExternalStartupData(argv[0]);
+	v8::V8::InitializeExternalStartupData(nullptr);
+	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
+	auto platform = v8::platform::CreateDefaultPlatform();
+	v8::V8::InitializePlatform(platform);
+	v8::V8::Initialize();
+	// Create a new Isolate and make it the current one.
+	v8::Isolate::CreateParams create_params;
+	create_params.array_buffer_allocator = &Allocator;
+	
+	v8::Isolate* isolate = v8::Isolate::New(create_params);
+	{
+		v8::Isolate::Scope isolate_scope(isolate);
+		// Create a stack-allocated handle scope.
+		v8::HandleScope handle_scope(isolate);
+		// Create a new context.
+		v8::Local<v8::Context> context = v8::Context::New(isolate);
+		// Enter the context for compiling and running the hello world script.
+		v8::Context::Scope context_scope(context);
+		// Create a string containing the JavaScript source code.
+		v8::Local<v8::String> source =
+		v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'",
+								v8::NewStringType::kNormal)
+		.ToLocalChecked();
+		// Compile the source code.
+		v8::Local<v8::Script> script =
+		v8::Script::Compile(context, source).ToLocalChecked();
+		// Run the script to get the result.
+		v8::Local<v8::Value> result = script->Run(context).ToLocalChecked();
+		// Convert the result to an UTF8 string and print it.
+		v8::String::Utf8Value utf8( result);
+		printf("%s\n", *utf8);
+	}
+
+}
+
+
+
+void* PopV8Allocator::Allocate(size_t length)
+{
+	auto* Bytes = new uint8_t[length];
+	for ( auto i=0;	i<length;	i++ )
+		Bytes[i] = 0;
+	return Bytes;
+}
+
+void* PopV8Allocator::AllocateUninitialized(size_t length)
+{
+	return Allocate( length );
+}
+
+void PopV8Allocator::Free(void* data, size_t length)
+{
+	auto* Bytes = static_cast<uint8_t*>( data );
+	delete[] Bytes;
+}
+
 
 

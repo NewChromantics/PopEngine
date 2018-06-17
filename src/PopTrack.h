@@ -24,6 +24,7 @@ public:
 	void				OnOpenglRender(Opengl::TRenderTarget& RenderTarget);
 	std::shared_ptr<Opengl::TContext>	GetContext();
 	
+	void				TestV8();
 	
 protected:
 	void				DrawQuad(Opengl::TTexture Texture,Soy::Rectf Rect);

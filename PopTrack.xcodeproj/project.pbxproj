@@ -10,7 +10,6 @@
 		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
-		BF689AC320D6C7EB000BC812 /* PopAppBundle.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF689AC220D6C7EB000BC812 /* PopAppBundle.xcconfig */; };
 		BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC520D6C80D000BC812 /* CoreGraphics.framework */; };
 		BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC720D6C811000BC812 /* ApplicationServices.framework */; };
 		BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */; };
@@ -22,6 +21,11 @@
 		BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689ADA20D6DAC0000BC812 /* SoyWave.cpp */; };
 		BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
 		BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
+		BF689AF520D6E8C2000BC812 /* libv8_libplatform.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */; };
+		BF689AF720D6E8D3000BC812 /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF620D6E8D3000BC812 /* libv8_base.a */; };
+		BF689AF920D6E8D6000BC812 /* libv8_libbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF820D6E8D6000BC812 /* libv8_libbase.a */; };
+		BF689AFB20D6E8DD000BC812 /* libv8_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */; };
+		BF689AFD20D6EA21000BC812 /* PopEngineAppBundle.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */; };
 		BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF691F001C3FEEE90092FC34 /* SoySrt.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
@@ -86,7 +90,6 @@
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
 		BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_CoreFoundation.h; path = src/SoyTypes_CoreFoundation.h; sourceTree = "<group>"; };
-		BF689AC220D6C7EB000BC812 /* PopAppBundle.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopAppBundle.xcconfig; path = src/PopLib/PopAppBundle.xcconfig; sourceTree = SOURCE_ROOT; };
 		BF689AC520D6C80D000BC812 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		BF689AC720D6C811000BC812 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyOpenglWindow.mm; path = src/SoyOpenglWindow.mm; sourceTree = "<group>"; };
@@ -105,6 +108,14 @@
 		BF689AE820D6DEB3000BC812 /* PopMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopMain.cpp; path = src/PopMain.cpp; sourceTree = "<group>"; };
 		BF689AE920D6DEB4000BC812 /* PopMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopMain.h; path = src/PopMain.h; sourceTree = "<group>"; };
 		BF689AEA20D6DEB4000BC812 /* PopMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopMain.mm; path = src/PopMain.mm; sourceTree = "<group>"; };
+		BF689AEE20D6E015000BC812 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; name = include; path = ../../../../usr/local/Cellar/v8/5.1.281.47/include; sourceTree = "<group>"; };
+		BF689AEF20D6E015000BC812 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../../../usr/local/Cellar/v8/5.1.281.47/lib; sourceTree = "<group>"; };
+		BF689AF220D6E89E000BC812 /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8.dylib; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8.dylib; sourceTree = "<absolute>"; };
+		BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libplatform.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_libplatform.a; sourceTree = "<absolute>"; };
+		BF689AF620D6E8D3000BC812 /* libv8_base.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_base.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_base.a; sourceTree = "<absolute>"; };
+		BF689AF820D6E8D6000BC812 /* libv8_libbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libbase.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_libbase.a; sourceTree = "<absolute>"; };
+		BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_snapshot.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_snapshot.a; sourceTree = "<absolute>"; };
+		BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngineAppBundle.xcconfig; path = src/PopEngineAppBundle.xcconfig; sourceTree = "<group>"; };
 		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
 		BF691F011C3FEEE90092FC34 /* SoySrt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySrt.h; path = src/SoySrt.h; sourceTree = "<group>"; };
 		BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyStream.cpp; path = src/SoyStream.cpp; sourceTree = "<group>"; };
@@ -200,6 +211,10 @@
 				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
+				BF689AF720D6E8D3000BC812 /* libv8_base.a in Frameworks */,
+				BF689AF920D6E8D6000BC812 /* libv8_libbase.a in Frameworks */,
+				BF689AFB20D6E8DD000BC812 /* libv8_snapshot.a in Frameworks */,
+				BF689AF520D6E8C2000BC812 /* libv8_libplatform.a in Frameworks */,
 				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -207,22 +222,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		BF689AC120D6C7C5000BC812 /* Configuration */ = {
-			isa = PBXGroup;
-			children = (
-				BF689AC220D6C7EB000BC812 /* PopAppBundle.xcconfig */,
-			);
-			path = Configuration;
-			sourceTree = SOURCE_ROOT;
-		};
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				BF689AC720D6C811000BC812 /* ApplicationServices.framework */,
 				BF689AC520D6C80D000BC812 /* CoreGraphics.framework */,
+				BF689AF220D6E89E000BC812 /* libv8.dylib */,
+				BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */,
+				BF689AF620D6E8D3000BC812 /* libv8_base.a */,
+				BF689AF820D6E8D6000BC812 /* libv8_libbase.a */,
+				BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
+		};
+		BF689AED20D6DFB3000BC812 /* V8 */ = {
+			isa = PBXGroup;
+			children = (
+				BF689AEE20D6E015000BC812 /* include */,
+				BF689AEF20D6E015000BC812 /* lib */,
+			);
+			path = V8;
+			sourceTree = V8_PATH;
 		};
 		FB5702CA1A5FDC8800449FF3 /* stb */ = {
 			isa = PBXGroup;
@@ -235,7 +256,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
-				BF689AC120D6C7C5000BC812 /* Configuration */,
+				BF689AED20D6DFB3000BC812 /* V8 */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
 				BF321B041B67AD990016E903 /* CoreVideo.framework */,
 				BFE5727F1B541B3400B17528 /* CoreServices.framework */,
@@ -261,6 +282,7 @@
 			children = (
 				BF30550A1B56F553002B0892 /* Data */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
+				BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */,
 				FB8A07181A2E6C3E0099596C /* PopTrack.mm */,
 				FB8A07191A2E6C3E0099596C /* PopTrack.h */,
 				FBF67B371A974BF400F74C38 /* PopTrack.xib */,
@@ -439,7 +461,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF689AC320D6C7EB000BC812 /* PopAppBundle.xcconfig in Resources */,
+				BF689AFD20D6EA21000BC812 /* PopEngineAppBundle.xcconfig in Resources */,
 				BF7A8DF81B652E4F00A6C403 /* PopTrack.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -568,7 +590,7 @@
 		};
 		FBF67B2D1A974A0900F74C38 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF689AC220D6C7EB000BC812 /* PopAppBundle.xcconfig */;
+			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -583,6 +605,10 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/v8/5.1.281.47/lib,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
 				VALID_ARCHS = x86_64;
@@ -591,7 +617,7 @@
 		};
 		FBF67B2E1A974A0900F74C38 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF689AC220D6C7EB000BC812 /* PopAppBundle.xcconfig */;
+			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -602,6 +628,10 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/v8/5.1.281.47/lib,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
 				VALID_ARCHS = x86_64;
