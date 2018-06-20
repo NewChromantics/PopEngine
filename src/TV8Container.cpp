@@ -195,27 +195,44 @@ TV8Container::TV8Container() :
 	
 	//  for now, single context per isolate
 	CreateContext();
-	LoadScript(JavascriptEmpty);
-	//LoadScript(JavascriptMain);
-	//BindFunction<Log_FunctionName>(OnLog);
-	//ExecuteFunc("test_function");
+	//LoadScript(JavascriptEmpty);
+    BindFunction<Log_FunctionName>(OnLog);
+	LoadScript(JavascriptMain);
+	ExecuteFunc("test_function");
 	
 }
 
-void TV8Contrainer::CreateContext()
+void TV8Container::CreateContext()
 {
-    #error check https://stackoverflow.com/questions/33168903/c-scope-and-google-v8-script-context
+    //#error check https://stackoverflow.com/questions/33168903/c-scope-and-google-v8-script-context
 	auto* isolate = mIsolate;
 	v8::Isolate::Scope isolate_scope(isolate);
 
     //  always need a handle scope to collect locals
 	v8::HandleScope handle_scope(isolate);
 	Local<Context> ContextLocal = v8::Context::New(isolate);
-
+    
+    Context::Scope context_scope( ContextLocal );
+    
 	//  save the persistent	handle
 	mContext.Reset( isolate, ContextLocal );
 }
 
+/*
+V8::Initialize();
+Isolate* isolate = v8::Isolate::New();
+Isolate::Scope isolate_scope(isolate);
+HandleScope handle_scope(isolate);
+Local<Context> context = Context::New(isolate);
+Context::Scope context_scope(context);
+Local<String> source = String::NewFromUtf8(isolate, "var a = 0; function test() { a++; return a.toString(); }");
+Local<Script> script = Script::Compile(source);
+script->Run();
+
+jsGlobal = context->Global();
+Handle<Value> value = jsGlobal->Get(String::NewFromUtf8(isolate, "test"));
+jsUpdateFunc = Handle<Function>::Cast(value);
+*/
 
 void TV8Container::LoadScript(const std::string& Source)
 {
@@ -223,7 +240,7 @@ void TV8Container::LoadScript(const std::string& Source)
 	Isolate::Scope isolate_scope(isolate);
 	HandleScope handle_scope(isolate);
 	Local<Context> context = Local<Context>::New( isolate, mContext );
-	Context::Scope context_scope( Context );
+	Context::Scope context_scope( context );
 
 	// Create a string containing the JavaScript source code.
 	auto* SourceCstr = Source.c_str();
@@ -277,10 +294,10 @@ void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(c
 	HandleScope handle_scope(isolate);
 	//	grab a local
 	Local<Context> context = Local<Context>::New( isolate, mContext );
-	Context::Scope context_scope( Context );
+	Context::Scope context_scope( context );
 
 
-	auto ContextGlobal = context->Global();
+	auto Global = context->Global();
 	/*
 	//	create new function
 	auto WindowTemplate = TWindowWrapper::CreateTemplate(isolate);
@@ -291,34 +308,50 @@ void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(c
 	v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New(isolate, RawFunction );
 	auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
 	auto* FunctionNameCstr = FunctionName;
-	ContextGlobal->Set( context, v8::String::NewFromUtf8(isolate, FunctionNameCstr), LogFuncWrapperValue);
+	auto SetResult = Global->Set( context, v8::String::NewFromUtf8(isolate, FunctionNameCstr), LogFuncWrapperValue);
 }
 
 void TV8Container::ExecuteFunc(const std::string& FunctionName)
 {
-	auto* isolate = mIsolate;
-	Isolate::Scope isolate_scope(isolate);
+    //  setup scope. handle scope always required to GC locals
+    auto* isolate = mIsolate;
+    Isolate::Scope isolate_scope(isolate);
+    HandleScope handle_scope(isolate);
+    //	grab a local
+    Local<Context> context = Local<Context>::New( isolate, mContext );
+    Context::Scope context_scope( context );
 	
-	//	grab a local
-	Local<Context> context = Local<Context>::New( isolate, mContext );
-	//	make current context
-	Context::Scope context_scope( Context );
 	
-	auto ContextGlobal = context->Global();
+	auto Global = context->Global();
 
 	auto* FunctionNameCstr = FunctionName.c_str();
 	auto FuncNameKey = v8::String::NewFromUtf8( isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
 	
-	//v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'",v8::NewStringType::kNormal)
-	auto FuncName = ContextGlobal->Get(FuncNameKey);
+    //  get the global object for this name
+	auto FuncName = Global->Get(FuncNameKey);
 	
-	auto Func = Handle<Function>::Cast(FuncName);
-	
-	Handle<Value> args[0];
-	auto Result = Func->Call( context, Func, 0, args ).ToLocalChecked();
-
-	String::Utf8Value ResultStr(Result);
-	printf("result = %s\n", *ResultStr);
+    //  run the func
+    try
+    {
+        auto Func = Handle<Function>::Cast(FuncName);
+        Handle<Value> args[0];
+        TryCatch trycatch(isolate);
+        auto ResultMaybe = Func->Call( context, Func, 0, args );
+        if ( ResultMaybe.IsEmpty() )
+        {
+            auto Exception = trycatch.Exception();
+            String::Utf8Value ExceptionStr(Exception);
+            throw Soy::AssertException( *ExceptionStr );
+        }
+        auto Result = ResultMaybe.ToLocalChecked();
+        
+        String::Utf8Value ResultStr(Result);
+        printf("result = %s\n", *ResultStr);
+    }
+    catch(std::exception& e)
+    {
+        std::Debug << "Exception executing " << FunctionName << ": " << e.what() << std::endl;
+    }
 }
 
 

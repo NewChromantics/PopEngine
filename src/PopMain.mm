@@ -1,7 +1,5 @@
 #include "PopMain.h"
-#include "TJob.h"
 #import <Cocoa/Cocoa.h>
-#include "UnitTest++/src/UnitTest++.h"
 
 std::shared_ptr<TJobParams> gParams;
 

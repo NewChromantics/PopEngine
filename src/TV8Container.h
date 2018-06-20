@@ -42,6 +42,7 @@ class TV8Container
 public:
 	TV8Container();
 	
+    void        CreateContext();
 	void		LoadScript(const std::string& Source);
 	template<const char* FunctionName>
 	void		BindFunction(std::function<void(v8::CallbackInfo&)> Function)
