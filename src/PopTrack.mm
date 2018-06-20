@@ -1,17 +1,10 @@
 #include "PopTrack.h"
-#include <TParameters.h>
 #include <SoyDebug.h>
-#include <TProtocolCli.h>
-#include <TProtocolHttp.h>
 #include <SoyApp.h>
 #include <PopMain.h>
-#include <TJobRelay.h>
 #include <SoyPixels.h>
 #include <SoyString.h>
-#include <TFeatureBinRing.h>
 #include <SortArray.h>
-#include <TChannelLiteral.h>
-#include <TChannelFile.h>
 #include <SoyOpenglWindow.h>
 
 #define FILTER_MAX_FRAMES	10
