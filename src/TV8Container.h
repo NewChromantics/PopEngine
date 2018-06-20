@@ -60,6 +60,10 @@ public:
 		BindRawFunction( FunctionName, RawFunction );
 	}
 
+	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
+	void					RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
+									  
+	
 private:
 	void		BindRawFunction(const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 

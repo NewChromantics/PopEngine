@@ -14,20 +14,25 @@ using namespace v8;
 class TWindowWrapper
 {
 public:
-    Persistent<Object>              mHandle;
-    std::shared_ptr<TOpenglWindow>  mWindow;
-    
-    void    OnRender(v8::Isolate* Isolate,Opengl::TRenderTarget& RenderTarget);
+	TWindowWrapper() :
+		mContainer	( nullptr )
+	{
+	}
+	
+	void    OnRender(Opengl::TRenderTarget& RenderTarget);
     
 	static void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static v8::Local<v8::FunctionTemplate> CreateTemplate(TV8Container& Container);
+
+public:
+	Persistent<Object>              mHandle;
+	std::shared_ptr<TOpenglWindow>  mWindow;
+	TV8Container*					mContainer;
 };
 
 
-void TWindowWrapper::OnRender(v8::Isolate* Isolate,Opengl::TRenderTarget& RenderTarget)
+void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 {
-    std::Debug << "render" << std::endl;
-    
     auto FrameBufferSize = RenderTarget.GetSize();
     
     Soy::Rectf Viewport(0,0,1,1);
@@ -44,6 +49,14 @@ void TWindowWrapper::OnRender(v8::Isolate* Isolate,Opengl::TRenderTarget& Render
     auto OpenglContext = mWindow->GetContext();
     
     //  call javascript
+	TV8Container& Container = *mContainer;
+	auto Runner = [&](Local<Context> context)
+	{
+		auto* isolate = context->GetIsolate();
+		auto This = Local<Object>::New( isolate, this->mHandle );
+		Container.ExecuteFunc( context, "OnRender", This );
+	};
+	Container.RunScoped( Runner );
     
     //DrawQuad( nullptr, TileRect );
     
@@ -69,49 +82,58 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		Arguments.GetReturnValue().Set(Exception);
 		return;
 	}
+
+	auto This = Arguments.This();
+	auto* Container = reinterpret_cast<TV8Container*>( Local<External>::Cast( Arguments.Data() )->Value() );
+
 	
 	String::Utf8Value WindowName( Arguments[0] );
 	std::Debug << "Window Wrapper constructor (" << *WindowName << ")" << std::endl;
 	
 	//	alloc window
+	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
+	//		but it also needs to know of the V8container to run stuff
+	//		cyclic hell!
     auto* NewWindow = new TWindowWrapper();
 
     Soy::Rectf Rect( 0, 0, 300, 300 );
     TOpenglParams Params;
     NewWindow->mWindow.reset( new TOpenglWindow( *WindowName, Rect, Params ) );
 	
+	//	store persistent handle to the javascript object
     NewWindow->mHandle.Reset( Isolate, Arguments.This() );
-    
-    
-    auto OnRender = [Isolate,NewWindow](Opengl::TRenderTarget& RenderTarget)
+	
+	NewWindow->mContainer = Container;
+	
+    auto OnRender = [NewWindow](Opengl::TRenderTarget& RenderTarget)
     {
-        NewWindow->OnRender( Isolate, RenderTarget );
+        NewWindow->OnRender( RenderTarget );
     };
     NewWindow->mWindow->mOnRender.AddListener( OnRender );
-    
-	//	set the field
-	Arguments.This()->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWindow ) );
+	
+	//	set fields
+	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWindow ) );
 	
 	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( Arguments.This() );
-
+	Arguments.GetReturnValue().Set( This );
 }
 
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
     auto* Isolate = Container.mIsolate;
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor );
+	
+	//	pass the container around
+	auto ContainerHandle = External::New( Isolate, &Container );
+	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
 
 	//	https://github.com/v8/v8/wiki/Embedder's-Guide
 	//	1 field to 1 c++ object
 	//	gr: we can just use the template that's made automatically and modify that!
 	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-    InstanceTemplate->SetInternalFieldCount(2);
-    
-    InstanceTemplate->SetInter
-    Arguments.This()->SetInternalField( 1, External::New( Isolate, Container ) );
-   
-    
+
+	//	[0] object
+	InstanceTemplate->SetInternalFieldCount(2);
+
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
@@ -166,6 +188,11 @@ auto JavascriptEmpty = R"DONTPANIC(
 
 auto JavascriptMain = R"DONTPANIC(
 
+function ReturnSomeString()
+{
+	return "Hello world";
+}
+
 function test_function()
 {
 	let FragShaderSource = `
@@ -178,16 +205,18 @@ function test_function()
 	
 	log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
-	let Window2 = new OpenglWindow("Hello2!");
+	//let Window2 = new OpenglWindow("Hello2!");
 
 	let OnRender = function()
 	{
+		log("Draw quad");
 		Window1.DrawQuad();
 	}
 	Window1.OnRender = OnRender;
-	
-	return "hello";
 }
+
+//	main
+test_function();
 
 )DONTPANIC";
 
@@ -251,7 +280,7 @@ TV8Container::TV8Container() :
     BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate );
     
 	LoadScript(JavascriptMain);
-	ExecuteFunc("test_function");
+	ExecuteFunc("ReturnSomeString");
 	
 }
 
@@ -340,7 +369,7 @@ void TV8Container::LoadScript(const std::string& Source)
 }
 
 
-void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<FunctionTemplate>(Isolate*)> GetTemplate)
+void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate)
 {
     //  setup scope. handle scope always required to GC locals
     auto* isolate = mIsolate;
@@ -354,7 +383,7 @@ void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<Fun
     auto Global = context->Global();
 
     //	create new function
-    auto Template = GetTemplate(isolate);
+    auto Template = GetTemplate(*this);
     auto OpenglWindowFuncWrapperValue = Template->GetFunction();
     auto ObjectNameStr = v8::String::NewFromUtf8(isolate, ObjectName);
     auto SetResult = Global->Set( context, ObjectNameStr, OpenglWindowFuncWrapperValue);
@@ -389,48 +418,67 @@ void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(c
 
 void TV8Container::ExecuteFunc(const std::string& FunctionName)
 {
-    //  setup scope. handle scope always required to GC locals
-    auto* isolate = mIsolate;
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
-    //	grab a local
-    Local<Context> context = Local<Context>::New( isolate, mContext );
-    Context::Scope context_scope( context );
-	
-	
-	auto Global = context->Global();
-
-	auto* FunctionNameCstr = FunctionName.c_str();
-	auto FuncNameKey = v8::String::NewFromUtf8( isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
-	
-    //  get the global object for this name
-	auto FuncName = Global->Get(FuncNameKey);
-	
-    //  run the func
-    try
-    {
-        auto Func = Handle<Function>::Cast(FuncName);
-        
-        Handle<Value> args[0];
-        TryCatch trycatch(isolate);
-        auto This = Global;
-        auto ResultMaybe = Func->Call( context, This, 0, args );
-        if ( ResultMaybe.IsEmpty() )
-        {
-            auto Exception = trycatch.Exception();
-            String::Utf8Value ExceptionStr(Exception);
-            throw Soy::AssertException( *ExceptionStr );
-        }
-        auto Result = ResultMaybe.ToLocalChecked();
-        
-        String::Utf8Value ResultStr(Result);
-        printf("result = %s\n", *ResultStr);
-    }
-    catch(std::exception& e)
-    {
-        std::Debug << "Exception executing " << FunctionName << ": " << e.what() << std::endl;
-    }
+	auto Runner = [&](Local<Context> context)
+	{
+		auto Global = context->Global();
+		auto This = Global;
+		auto Result = ExecuteFunc( context, FunctionName, This );
+		
+		String::Utf8Value ResultStr(Result);
+		printf("result = %s\n", *ResultStr);
+	};
+	RunScoped( Runner );
 }
 
+
+void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
+{
+	//  setup scope. handle scope always required to GC locals
+	auto* isolate = mIsolate;
+	Isolate::Scope isolate_scope(isolate);
+	HandleScope handle_scope(isolate);
+	//	grab a local
+	Local<Context> context = Local<Context>::New( isolate, mContext );
+	Context::Scope context_scope( context );
+
+	Lambda( context );
+}
+
+
+Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::string& FunctionName,Local<Object> This)
+{
+	auto* isolate = ContextHandle->GetIsolate();
+	try
+	{
+		auto* FunctionNameCstr = FunctionName.c_str();
+		auto FuncNameKey = v8::String::NewFromUtf8( isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
+		
+		//  get the global object for this name
+		auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
+
+		//  run the func
+		auto Func = Local<Function>::Cast( FunctionHandle );
+		
+		Handle<Value> args[0];
+		TryCatch trycatch(isolate);
+		auto ResultMaybe = Func->Call( ContextHandle, This, 0, args );
+		if ( ResultMaybe.IsEmpty() )
+		{
+			auto Exception = trycatch.Exception();
+			String::Utf8Value ExceptionStr(Exception);
+			throw Soy::AssertException( *ExceptionStr );
+		}
+		auto Result = ResultMaybe.ToLocalChecked();
+		
+		String::Utf8Value ResultStr(Result);
+		printf("result = %s\n", *ResultStr);
+		return Result;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Exception executing function" << ": " << e.what() << std::endl;
+		return v8::Undefined(isolate);
+	}
+}
 
 
