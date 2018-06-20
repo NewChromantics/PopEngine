@@ -44,6 +44,10 @@ public:
 	
     void        CreateContext();
 	void		LoadScript(const std::string& Source);
+    void		ExecuteFunc(const std::string& FunctionName);
+    
+    void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(v8::Isolate*)> GetTemplate);
+
 	template<const char* FunctionName>
 	void		BindFunction(std::function<void(v8::CallbackInfo&)> Function)
 	{
@@ -55,7 +59,6 @@ public:
 		};
 		BindRawFunction( FunctionName, RawFunction );
 	}
-	void		ExecuteFunc(const std::string& FunctionName);
 
 private:
 	void		BindRawFunction(const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));

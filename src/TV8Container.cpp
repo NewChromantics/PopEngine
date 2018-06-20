@@ -168,6 +168,7 @@ static void OnLog(CallbackInfo& Params)
 	
 	//	 return v8::Undefined();
 }
+
 const char Log_FunctionName[] = "log";
 
 TV8Container::TV8Container() :
@@ -195,8 +196,12 @@ TV8Container::TV8Container() :
 	
 	//  for now, single context per isolate
 	CreateContext();
-	//LoadScript(JavascriptEmpty);
+
+    //  load api's before script & executions
     BindFunction<Log_FunctionName>(OnLog);
+ 
+    BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate );
+    
 	LoadScript(JavascriptMain);
 	ExecuteFunc("test_function");
 	
@@ -285,6 +290,29 @@ void TV8Container::LoadScript(const std::string& Source)
 	printf("MainResultStr = %s\n", *MainResultStr);
 	 */
 }
+
+
+void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<FunctionTemplate>(Isolate*)> GetTemplate)
+{
+    //  setup scope. handle scope always required to GC locals
+    auto* isolate = mIsolate;
+    Isolate::Scope isolate_scope(isolate);
+    HandleScope handle_scope(isolate);
+    //	grab a local
+    Local<Context> context = Local<Context>::New( isolate, mContext );
+    Context::Scope context_scope( context );
+    
+    
+    auto Global = context->Global();
+
+    //	create new function
+    auto Template = GetTemplate(isolate);
+    auto OpenglWindowFuncWrapperValue = Template->GetFunction();
+    auto ObjectNameStr = v8::String::NewFromUtf8(isolate, ObjectName);
+    auto SetResult = Global->Set( context, ObjectNameStr, OpenglWindowFuncWrapperValue);
+}
+
+
 
 void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
 {
