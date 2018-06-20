@@ -14,9 +14,41 @@ using namespace v8;
 class TWindowWrapper
 {
 public:
+    Persistent<Object>              mHandle;
+    std::shared_ptr<TOpenglWindow>  mWindow;
+    
+    void    OnRender(v8::Isolate* Isolate,Opengl::TRenderTarget& RenderTarget);
+    
 	static void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static v8::Local<v8::FunctionTemplate> CreateTemplate(v8::Isolate* Isolate);
+	static v8::Local<v8::FunctionTemplate> CreateTemplate(TV8Container& Container);
 };
+
+
+void TWindowWrapper::OnRender(v8::Isolate* Isolate,Opengl::TRenderTarget& RenderTarget)
+{
+    std::Debug << "render" << std::endl;
+    
+    auto FrameBufferSize = RenderTarget.GetSize();
+    
+    Soy::Rectf Viewport(0,0,1,1);
+    RenderTarget.SetViewportNormalised( Viewport );
+    
+    Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
+    Opengl::ClearDepth();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    
+    //	make rendering tile rect
+    Soy::Rectf TileRect( 0, 0, 1,1);
+    
+    auto OpenglContext = mWindow->GetContext();
+    
+    //  call javascript
+    
+    //DrawQuad( nullptr, TileRect );
+    
+    Opengl_IsOkay();
+}
 
 
 void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
@@ -42,10 +74,21 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	std::Debug << "Window Wrapper constructor (" << *WindowName << ")" << std::endl;
 	
 	//	alloc window
-	Soy::Rectf Rect( 0, 0, 300, 300 );
-	TOpenglParams Params;
-	auto* NewWindow = new TOpenglWindow( *WindowName, Rect, Params );
+    auto* NewWindow = new TWindowWrapper();
+
+    Soy::Rectf Rect( 0, 0, 300, 300 );
+    TOpenglParams Params;
+    NewWindow->mWindow.reset( new TOpenglWindow( *WindowName, Rect, Params ) );
 	
+    NewWindow->mHandle.Reset( Isolate, Arguments.This() );
+    
+    
+    auto OnRender = [Isolate,NewWindow](Opengl::TRenderTarget& RenderTarget)
+    {
+        NewWindow->OnRender( Isolate, RenderTarget );
+    };
+    NewWindow->mWindow->mOnRender.AddListener( OnRender );
+    
 	//	set the field
 	Arguments.This()->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWindow ) );
 	
@@ -54,16 +97,21 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 
 }
 
-Local<FunctionTemplate> TWindowWrapper::CreateTemplate(v8::Isolate* Isolate)
+Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
+    auto* Isolate = Container.mIsolate;
 	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor );
 
 	//	https://github.com/v8/v8/wiki/Embedder's-Guide
 	//	1 field to 1 c++ object
 	//	gr: we can just use the template that's made automatically and modify that!
 	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	InstanceTemplate->SetInternalFieldCount(1);
-	
+    InstanceTemplate->SetInternalFieldCount(2);
+    
+    InstanceTemplate->SetInter
+    Arguments.This()->SetInternalField( 1, External::New( Isolate, Container ) );
+   
+    
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
@@ -362,9 +410,11 @@ void TV8Container::ExecuteFunc(const std::string& FunctionName)
     try
     {
         auto Func = Handle<Function>::Cast(FuncName);
+        
         Handle<Value> args[0];
         TryCatch trycatch(isolate);
-        auto ResultMaybe = Func->Call( context, Func, 0, args );
+        auto This = Global;
+        auto ResultMaybe = Func->Call( context, This, 0, args );
         if ( ResultMaybe.IsEmpty() )
         {
             auto Exception = trycatch.Exception();

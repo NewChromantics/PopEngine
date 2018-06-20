@@ -46,7 +46,7 @@ public:
 	void		LoadScript(const std::string& Source);
     void		ExecuteFunc(const std::string& FunctionName);
     
-    void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(v8::Isolate*)> GetTemplate);
+    void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
 
 	template<const char* FunctionName>
 	void		BindFunction(std::function<void(v8::CallbackInfo&)> Function)
