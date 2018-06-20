@@ -1,6 +1,3 @@
 [submodule "src/SoyLib"]
 	path = src/SoyLib
 	url = https://github.com/SoylentGraham/SoyLib.git
-[submodule "src/PopLib"]
-	path = src/PopLib
-	url = git@gitlab.com:NewChromantics/PopLib.git
