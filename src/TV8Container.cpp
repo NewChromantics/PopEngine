@@ -192,15 +192,9 @@ TV8Container::TV8Container() :
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
 	
-	{
-		auto* isolate = mIsolate;
-		v8::Isolate::Scope isolate_scope(isolate);
-		v8::HandleScope handle_scope(isolate);
-		Local<Context> ContextLocal = v8::Context::New(isolate);
-		
-		mContext.Reset( isolate, ContextLocal );
-	}
 	
+	//  for now, single context per isolate
+	CreateContext();
 	LoadScript(JavascriptEmpty);
 	//LoadScript(JavascriptMain);
 	//BindFunction<Log_FunctionName>(OnLog);
@@ -208,21 +202,28 @@ TV8Container::TV8Container() :
 	
 }
 
+void TV8Contrainer::CreateContext()
+{
+	auto* isolate = mIsolate;
+	v8::Isolate::Scope isolate_scope(isolate);
+
+    //  always need a handle scope to collect locals
+	v8::HandleScope handle_scope(isolate);
+	Local<Context> ContextLocal = v8::Context::New(isolate);
+
+	//  save the persistent	handle
+	mContext.Reset( isolate, ContextLocal );
+}
+
 
 void TV8Container::LoadScript(const std::string& Source)
 {
-	//	gr: is this a lock?
 	auto* isolate = mIsolate;
 	Isolate::Scope isolate_scope(isolate);
-	
-	// Create a stack-allocated handle scope.
 	HandleScope handle_scope(isolate);
-
-	//	grab a local
 	Local<Context> context = Local<Context>::New( isolate, mContext );
-	//	make current context
 	Context::Scope context_scope( Context );
-	
+
 	// Create a string containing the JavaScript source code.
 	auto* SourceCstr = Source.c_str();
 	auto Sourcev8 = v8::String::NewFromUtf8( isolate, SourceCstr, v8::NewStringType::kNormal).ToLocalChecked();
@@ -269,17 +270,14 @@ void TV8Container::LoadScript(const std::string& Source)
 
 void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
 {
-	//	gr: is this a lock?
+    //  setup scope. handle scope always required to GC locals
 	auto* isolate = mIsolate;
 	Isolate::Scope isolate_scope(isolate);
-	
-	// Create a stack-allocated handle scope.
 	HandleScope handle_scope(isolate);
-	
 	//	grab a local
 	Local<Context> context = Local<Context>::New( isolate, mContext );
-	//	make current context
 	Context::Scope context_scope( Context );
+
 
 	auto ContextGlobal = context->Global();
 	/*
