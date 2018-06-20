@@ -44,12 +44,23 @@ public:
 	
     void        CreateContext();
 	void		LoadScript(const std::string& Source);
-    void		ExecuteFunc(const std::string& FunctionName);
-    
+	
+ 	void		ExecuteGlobalFunc(const std::string& FunctionName);
+	template<const char* FunctionName>
+	void		BindGlobalFunction(std::function<void(v8::CallbackInfo&)> Function)
+	{
+		auto Bind = [&](v8::Local<v8::Context> Context)
+		{
+			auto This = Context->Global();
+			BindFunction<FunctionName>(This,Function);
+		};
+		RunScoped(Bind);
+	};
     void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
 
+
 	template<const char* FunctionName>
-	void		BindFunction(std::function<void(v8::CallbackInfo&)> Function)
+	void		BindFunction(v8::Local<v8::Object> This,std::function<void(v8::CallbackInfo&)> Function)
 	{
 		static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
 		auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
@@ -57,15 +68,27 @@ public:
 			v8::CallbackInfo Params( Paramsv8 );
 			FunctionCache( Params );
 		};
-		BindRawFunction( FunctionName, RawFunction );
+		BindRawFunction( This, FunctionName, RawFunction );
 	}
-
+	template<const char* FunctionName>
+	void		BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(v8::CallbackInfo&)> Function)
+	{
+		static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
+		auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
+		{
+			v8::CallbackInfo Params( Paramsv8 );
+			FunctionCache( Params );
+		};
+		BindRawFunction( This, FunctionName, RawFunction );
+	}
+	
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
 	void					RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 									  
 	
 private:
-	void		BindRawFunction(const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
+	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
+	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 
 public:
 	v8::Persistent<v8::Context>		mContext;		//	our "document", keep adding scripts toit

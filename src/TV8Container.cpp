@@ -10,6 +10,26 @@ using namespace v8;
 #include "SoyOpenglWindow.h"
 
 
+const char Log_FunctionName[] = "log";
+const char DrawQuad_FunctionName[] = "DrawQuad";
+
+
+class TRenderWindow : public TOpenglWindow
+{
+public:
+	TRenderWindow(const std::string& Name) :
+		TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), TOpenglParams() )
+	{
+	}
+	
+	void	Clear(Opengl::TRenderTarget& RenderTarget);
+	void	DrawQuad(Soy::Rectf Rect);
+	
+public:
+	std::shared_ptr<Opengl::TGeometry>	mBlitQuad;
+	std::shared_ptr<Opengl::TShader>	mBlitShader;
+};
+
 //	v8 template to a TWindow
 class TWindowWrapper
 {
@@ -22,32 +42,20 @@ public:
 	void    OnRender(Opengl::TRenderTarget& RenderTarget);
     
 	static void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static void	DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static v8::Local<v8::FunctionTemplate> CreateTemplate(TV8Container& Container);
 
 public:
 	Persistent<Object>              mHandle;
-	std::shared_ptr<TOpenglWindow>  mWindow;
+	std::shared_ptr<TRenderWindow>  mWindow;
 	TV8Container*					mContainer;
 };
 
 
 void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 {
-    auto FrameBufferSize = RenderTarget.GetSize();
-    
-    Soy::Rectf Viewport(0,0,1,1);
-    RenderTarget.SetViewportNormalised( Viewport );
-    
-    Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
-    Opengl::ClearDepth();
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    
-    //	make rendering tile rect
-    Soy::Rectf TileRect( 0, 0, 1,1);
-    
-    auto OpenglContext = mWindow->GetContext();
-    
+	mWindow->Clear( RenderTarget );
+
     //  call javascript
 	TV8Container& Container = *mContainer;
 	auto Runner = [&](Local<Context> context)
@@ -57,10 +65,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 		Container.ExecuteFunc( context, "OnRender", This );
 	};
 	Container.RunScoped( Runner );
-    
-    //DrawQuad( nullptr, TileRect );
-    
-    Opengl_IsOkay();
+	
 }
 
 
@@ -96,9 +101,7 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	//		cyclic hell!
     auto* NewWindow = new TWindowWrapper();
 
-    Soy::Rectf Rect( 0, 0, 300, 300 );
-    TOpenglParams Params;
-    NewWindow->mWindow.reset( new TOpenglWindow( *WindowName, Rect, Params ) );
+    NewWindow->mWindow.reset( new TRenderWindow( *WindowName ) );
 	
 	//	store persistent handle to the javascript object
     NewWindow->mHandle.Reset( Isolate, Arguments.This() );
@@ -118,6 +121,19 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	Arguments.GetReturnValue().Set( This );
 }
 
+void TWindowWrapper::DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+{
+	auto* Isolate = Arguments.GetIsolate();
+
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
+	
+	Soy::Rectf Rect(0,0,1,1);
+	This->mWindow->DrawQuad( Rect );
+}
+
+
+
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
     auto* Isolate = Container.mIsolate;
@@ -129,11 +145,16 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	//	https://github.com/v8/v8/wiki/Embedder's-Guide
 	//	1 field to 1 c++ object
 	//	gr: we can just use the template that's made automatically and modify that!
+	//	gr: prototypetemplate and instancetemplate are basically the same
+	//		but for inheritance we may want to use prototype
+	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
 	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
 
 	//	[0] object
 	InstanceTemplate->SetInternalFieldCount(2);
 
+	//	add members
+	//Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
@@ -142,6 +163,107 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	//obj->SetInternalField(0, External::New(isolate, p));
 	
 	return ConstructorFunc;
+}
+
+
+void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
+{
+	auto FrameBufferSize = RenderTarget.GetSize();
+	
+	Soy::Rectf Viewport(0,0,1,1);
+	RenderTarget.SetViewportNormalised( Viewport );
+	
+	Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
+	Opengl::ClearDepth();
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+	
+	
+	auto OpenglContext = this->GetContext();
+	
+	Opengl_IsOkay();
+	
+	Soy::Rectf TileRect( 0, 0, 1,1);
+	DrawQuad( TileRect );
+}
+
+
+void TRenderWindow::DrawQuad(Soy::Rectf Rect)
+{
+	if ( !mBlitQuad )
+	{
+		//	make mesh
+		struct TVertex
+		{
+			vec2f	uv;
+		};
+		class TMesh
+		{
+			public:
+			TVertex	mVertexes[4];
+		};
+		TMesh Mesh;
+		Mesh.mVertexes[0].uv = vec2f( 0, 0);
+		Mesh.mVertexes[1].uv = vec2f( 1, 0);
+		Mesh.mVertexes[2].uv = vec2f( 1, 1);
+		Mesh.mVertexes[3].uv = vec2f( 0, 1);
+		Array<size_t> Indexes;
+		Indexes.PushBack( 0 );
+		Indexes.PushBack( 1 );
+		Indexes.PushBack( 2 );
+		
+		Indexes.PushBack( 2 );
+		Indexes.PushBack( 3 );
+		Indexes.PushBack( 0 );
+		
+		//	for each part of the vertex, add an attribute to describe the overall vertex
+		SoyGraphics::TGeometryVertex Vertex;
+		auto& UvAttrib = Vertex.mElements.PushBack();
+		UvAttrib.mName = "TexCoord";
+		UvAttrib.SetType<vec2f>();
+		UvAttrib.mIndex = 0;	//	gr: does this matter?
+		UvAttrib.mArraySize = 2;
+		//UvAttrib.mElementDataSize = sizeof( Mesh.mVertexes[0].uv );
+		
+		Array<uint8> MeshData;
+		MeshData.PushBackReinterpret( Mesh );
+		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex ) );
+	}
+	
+	//	allocate objects we need!
+	if ( !mBlitShader )
+	{
+		auto& Context = *GetContext();
+		
+		auto VertShader =
+		"uniform vec4 Rect;\n"
+		"attribute vec2 TexCoord;\n"
+		"varying vec2 oTexCoord;\n"
+		"void main()\n"
+		"{\n"
+		"   gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);\n"
+		"   gl_Position.xy *= Rect.zw;\n"
+		"   gl_Position.xy += Rect.xy;\n"
+		//	move to view space 0..1 to -1..1
+		"	gl_Position.xy *= vec2(2,2);\n"
+		"	gl_Position.xy -= vec2(1,1);\n"
+		"	oTexCoord = vec2(TexCoord.x,1-TexCoord.y);\n"
+		"}\n";
+		auto FragShader =
+		"varying vec2 oTexCoord;\n"
+		"void main()\n"
+		"{\n"
+		"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
+		"}\n";
+		
+		mBlitShader.reset( new Opengl::TShader( VertShader, FragShader, mBlitQuad->mVertexDescription, "Blit shader", Context ) );
+	}
+	
+	//	do bindings
+	auto Shader = mBlitShader->Bind();
+	Shader.SetUniform("Rect", Soy::RectToVector(Rect) );
+	mBlitQuad->Draw();
+	Opengl_IsOkay();
 }
 
 class PopV8Allocator : public v8::ArrayBuffer::Allocator
@@ -246,7 +368,6 @@ static void OnLog(CallbackInfo& Params)
 	//	 return v8::Undefined();
 }
 
-const char Log_FunctionName[] = "log";
 
 TV8Container::TV8Container() :
 	mAllocator	( new PopV8Allocator )
@@ -275,12 +396,13 @@ TV8Container::TV8Container() :
 	CreateContext();
 
     //  load api's before script & executions
-    BindFunction<Log_FunctionName>(OnLog);
+    BindGlobalFunction<Log_FunctionName>(OnLog);
  
     BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate );
     
 	LoadScript(JavascriptMain);
-	ExecuteFunc("ReturnSomeString");
+	
+	ExecuteGlobalFunc("ReturnSomeString");
 	
 }
 
@@ -300,21 +422,6 @@ void TV8Container::CreateContext()
 	mContext.Reset( isolate, ContextLocal );
 }
 
-/*
-V8::Initialize();
-Isolate* isolate = v8::Isolate::New();
-Isolate::Scope isolate_scope(isolate);
-HandleScope handle_scope(isolate);
-Local<Context> context = Context::New(isolate);
-Context::Scope context_scope(context);
-Local<String> source = String::NewFromUtf8(isolate, "var a = 0; function test() { a++; return a.toString(); }");
-Local<Script> script = Script::Compile(source);
-script->Run();
-
-jsGlobal = context->Global();
-Handle<Value> value = jsGlobal->Get(String::NewFromUtf8(isolate, "test"));
-jsUpdateFunc = Handle<Function>::Cast(value);
-*/
 
 void TV8Container::LoadScript(const std::string& Source)
 {
@@ -335,37 +442,6 @@ void TV8Container::LoadScript(const std::string& Source)
 	
 	v8::String::Utf8Value MainResultStr(MainResult);
 	printf("MainResultStr = %s\n", *MainResultStr);
-
-	
-	/*
-	//	create new function
-	auto WindowTemplate = TWindowWrapper::CreateTemplate(isolate);
-	v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New(isolate, LogCallback);
-	
-	auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
-	auto OpenglWindowFuncWrapperValue = WindowTemplate->GetFunction();
-	
-	ContextGlobal->Set( context, v8::String::NewFromUtf8(isolate, "log"), LogFuncWrapperValue);
-	ContextGlobal->Set( context, v8::String::NewFromUtf8(isolate, "OpenglWindow"), OpenglWindowFuncWrapperValue);
-	
-	auto FuncNameKey = v8::String::NewFromUtf8( isolate, "test_function", v8::NewStringType::kNormal ).ToLocalChecked();
-	
-	//v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'",v8::NewStringType::kNormal)
-	auto FuncName = ContextGlobal->Get(FuncNameKey);
-	
-	auto Func = v8::Handle<v8::Function>::Cast(FuncName);
-	
-	v8::Handle<v8::Value> args[0];
-	auto result = Func->Call( context, Func, 0, args ).ToLocalChecked();
-	
-	
-	// Convert the result to an UTF8 string and print it.
-	v8::String::Utf8Value ResultStr(result);
-	printf("result = %s\n", *ResultStr);
-	
-	v8::String::Utf8Value MainResultStr(mainresult);
-	printf("MainResultStr = %s\n", *MainResultStr);
-	 */
 }
 
 
@@ -391,7 +467,7 @@ void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<Fun
 
 
 
-void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
+void TV8Container::BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
 {
     //  setup scope. handle scope always required to GC locals
 	auto* isolate = mIsolate;
@@ -400,23 +476,14 @@ void TV8Container::BindRawFunction(const char* FunctionName,void(*RawFunction)(c
 	//	grab a local
 	Local<Context> context = Local<Context>::New( isolate, mContext );
 	Context::Scope context_scope( context );
-
-
-	auto Global = context->Global();
-	/*
-	//	create new function
-	auto WindowTemplate = TWindowWrapper::CreateTemplate(isolate);
-	auto OpenglWindowFuncWrapperValue = WindowTemplate->GetFunction();
-	ContextGlobal->Set( Context, v8::String::NewFromUtf8(isolate, "OpenglWindow"), OpenglWindowFuncWrapperValue);
-*/
 	
 	v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New(isolate, RawFunction );
 	auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
 	auto* FunctionNameCstr = FunctionName;
-	auto SetResult = Global->Set( context, v8::String::NewFromUtf8(isolate, FunctionNameCstr), LogFuncWrapperValue);
+	auto SetResult = This->Set( context, v8::String::NewFromUtf8(isolate, FunctionNameCstr), LogFuncWrapperValue);
 }
 
-void TV8Container::ExecuteFunc(const std::string& FunctionName)
+void TV8Container::ExecuteGlobalFunc(const std::string& FunctionName)
 {
 	auto Runner = [&](Local<Context> context)
 	{
