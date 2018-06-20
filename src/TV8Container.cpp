@@ -204,6 +204,7 @@ TV8Container::TV8Container() :
 
 void TV8Contrainer::CreateContext()
 {
+    #error check https://stackoverflow.com/questions/33168903/c-scope-and-google-v8-script-context
 	auto* isolate = mIsolate;
 	v8::Isolate::Scope isolate_scope(isolate);
 
