@@ -12,7 +12,7 @@ using namespace v8;
 
 const char Log_FunctionName[] = "log";
 const char DrawQuad_FunctionName[] = "DrawQuad";
-const char Clear_FunctionName[] = "Clear";
+const char ClearColour_FunctionName[] = "ClearColour";
 
 
 class TRenderWindow : public TOpenglWindow
@@ -24,6 +24,7 @@ public:
 	}
 	
 	void	Clear(Opengl::TRenderTarget& RenderTarget);
+	void	ClearColour(Soy::TRgb Colour);
 	void	DrawQuad(Soy::Rectf Rect);
 	
 public:
@@ -45,6 +46,7 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static void								DrawQuad(const v8::CallbackInfo& Arguments);
+	static void								ClearColour(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 public:
@@ -153,6 +155,34 @@ void TWindowWrapper::DrawQuad(const v8::CallbackInfo& _Arguments)
 }
 
 
+void TWindowWrapper::ClearColour(const v8::CallbackInfo& _Arguments)
+{
+	auto& Arguments = _Arguments.mParams;
+	auto* Isolate = Arguments.GetIsolate();
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
+	
+	
+	try
+	{
+		if ( Arguments.Length() != 3 )
+			throw Soy::AssertException("Expecting 3 arguments for ClearColour(r,g,b)");
+		auto Red = Local<Number>::Cast( Arguments[0] );
+		auto Green = Local<Number>::Cast( Arguments[1] );
+		auto Blue = Local<Number>::Cast( Arguments[2] );
+		Soy::TRgb Colour( Red->Value(), Green->Value(), Blue->Value() );
+
+		This->mWindow->ClearColour( Colour );
+	}
+	catch(std::exception& e)
+	{
+		//	pass exception to javascript
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
+		Arguments.GetReturnValue().Set(Exception);
+	}
+}
+
 
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
@@ -176,6 +206,7 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	
 	//	add members
 	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
+	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
@@ -194,7 +225,7 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	Soy::Rectf Viewport(0,0,1,1);
 	RenderTarget.SetViewportNormalised( Viewport );
 	
-	Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
+	//Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
 	Opengl::ClearDepth();
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -202,6 +233,12 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	
 	auto OpenglContext = this->GetContext();
 	Opengl_IsOkay();
+}
+
+
+void TRenderWindow::ClearColour(Soy::TRgb Colour)
+{
+	Opengl::ClearColour( Colour );
 }
 
 
@@ -350,10 +387,12 @@ function test_function()
 	{
 		try
 		{
+			Window1.ClearColour(0,1,0);
 			Window1.DrawQuad();
 		}
 		catch(Exception)
 		{
+			Window1.ClearColour(1,0,0);
 			log(Exception);
 		}
 	}
