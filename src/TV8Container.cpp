@@ -12,6 +12,7 @@ using namespace v8;
 
 const char Log_FunctionName[] = "log";
 const char DrawQuad_FunctionName[] = "DrawQuad";
+const char Clear_FunctionName[] = "Clear";
 
 
 class TRenderWindow : public TOpenglWindow
@@ -43,7 +44,7 @@ public:
 	void		OnRender(Opengl::TRenderTarget& RenderTarget);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static void								DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static void								DrawQuad(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 public:
@@ -130,8 +131,9 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	Arguments.GetReturnValue().Set( This );
 }
 
-void TWindowWrapper::DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TWindowWrapper::DrawQuad(const v8::CallbackInfo& _Arguments)
 {
+	auto& Arguments = _Arguments.mParams;
 	auto* Isolate = Arguments.GetIsolate();
 
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
@@ -171,8 +173,9 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	//	[0] object
 	InstanceTemplate->SetInternalFieldCount(2);
 
+	
 	//	add members
-	//Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
+	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
@@ -198,11 +201,7 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	
 	
 	auto OpenglContext = this->GetContext();
-	
 	Opengl_IsOkay();
-	
-	Soy::Rectf TileRect( 0, 0, 1,1);
-	DrawQuad( TileRect );
 }
 
 
@@ -343,14 +342,20 @@ function test_function()
 		}
 	`;
 	
-	log("log is working!", "2nd param");
+	//log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
 	//let Window2 = new OpenglWindow("Hello2!");
 
 	let OnRender = function()
 	{
-		log("Draw quad");
-		Window1.DrawQuad();
+		try
+		{
+			Window1.DrawQuad();
+		}
+		catch(Exception)
+		{
+			log(Exception);
+		}
 	}
 	Window1.OnRender = OnRender;
 }
@@ -500,6 +505,25 @@ void TV8Container::BindRawFunction(v8::Local<v8::Object> This,const char* Functi
 	auto* FunctionNameCstr = FunctionName;
 	auto SetResult = This->Set( context, v8::String::NewFromUtf8(isolate, FunctionNameCstr), LogFuncWrapperValue);
 }
+
+
+void TV8Container::BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
+{
+	//  setup scope. handle scope always required to GC locals
+	auto* isolate = mIsolate;
+	Isolate::Scope isolate_scope(isolate);
+	HandleScope handle_scope(isolate);
+	//	grab a local
+	Local<Context> context = Local<Context>::New( isolate, mContext );
+	Context::Scope context_scope( context );
+	
+	v8::Local<v8::FunctionTemplate> FuncWrapper = v8::FunctionTemplate::New(isolate, RawFunction );
+	auto FuncWrapperValue = FuncWrapper->GetFunction();
+	auto* FunctionNameCstr = FunctionName;
+	
+	This->Set( isolate, FunctionNameCstr, FuncWrapperValue);
+}
+
 
 void TV8Container::ExecuteGlobalFunc(const std::string& FunctionName)
 {
