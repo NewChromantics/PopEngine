@@ -38,19 +38,29 @@ public:
 		mContainer	( nullptr )
 	{
 	}
+	~TWindowWrapper();
 	
-	void    OnRender(Opengl::TRenderTarget& RenderTarget);
-    
-	static void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static void	DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static v8::Local<v8::FunctionTemplate> CreateTemplate(TV8Container& Container);
+	void		OnRender(Opengl::TRenderTarget& RenderTarget);
+
+	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static void								DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 public:
-	Persistent<Object>              mHandle;
-	std::shared_ptr<TRenderWindow>  mWindow;
+	Persistent<Object>				mHandle;
+	std::shared_ptr<TRenderWindow>	mWindow;
 	TV8Container*					mContainer;
 };
 
+
+TWindowWrapper::~TWindowWrapper()
+{
+	if ( mWindow )
+	{
+		mWindow->WaitToFinish();
+		mWindow.reset();
+	}
+}
 
 void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 {
@@ -65,7 +75,6 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 		Container.ExecuteFunc( context, "OnRender", This );
 	};
 	Container.RunScoped( Runner );
-	
 }
 
 
@@ -127,9 +136,18 @@ void TWindowWrapper::DrawQuad(const v8::FunctionCallbackInfo<v8::Value>& Argumen
 
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
-	
-	Soy::Rectf Rect(0,0,1,1);
-	This->mWindow->DrawQuad( Rect );
+
+	try
+	{
+		Soy::Rectf Rect(0,0,1,1);
+		This->mWindow->DrawQuad( Rect );
+	}
+	catch(std::exception& e)
+	{
+		//	pass exception to javascript
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
+		Arguments.GetReturnValue().Set(Exception);
+	}
 }
 
 

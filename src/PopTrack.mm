@@ -56,18 +56,6 @@ TPopAppError::Type PopMain()
 
 TPopTrack::TPopTrack(const std::string& WindowName)
 {
-	Soy::Rectf Rect( 0, 0, 300, 300 );
-	TOpenglParams Params;
-	/*
-	mWindow.reset( new TOpenglWindow( WindowName, Rect, Params ) );
-	if ( !mWindow->IsValid() )
-	{
-		mWindow.reset();
-		return;
-	}
-	
-	mWindow->mOnRender.AddListener(*this,&TPopTrack::OnOpenglRender);
-	*/
 	mV8Container.reset( new TV8Container() );
 }
 
@@ -81,30 +69,6 @@ TPopTrack::~TPopTrack()
 	
 }
 
-
-
-void TPopTrack::OnOpenglRender(Opengl::TRenderTarget& RenderTarget)
-{
-	auto FrameBufferSize = RenderTarget.GetSize();
-	
-	
-	Soy::Rectf Viewport(0,0,1,1);
-	RenderTarget.SetViewportNormalised( Viewport );
-	
-	Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
-	Opengl::ClearDepth();
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
-	
-	//	make rendering tile rect
-	Soy::Rectf TileRect( 0, 0, 1,1);
-	
-	auto OpenglContext = this->GetContext();
-	
-	//DrawQuad( nullptr, TileRect );
-	
-	Opengl_IsOkay();
-}
 
 std::shared_ptr<Opengl::TContext> TPopTrack::GetContext()
 {

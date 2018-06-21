@@ -180,19 +180,31 @@ bool TOpenglView::IsDoubleBuffered() const
 	};
 	auto ContextLock = SoyScope( LockContext, UnlockContext );
 	
+    //  gr: oddly (in PopEngine at least) we now get a draw before the opengl deffered init (which is on the main thread)
+    //      so lets wait for the context to initialise... we may be dropping a frame :(
+    //      while this will still render, none of the extensions will be setup...
+    if ( !Context->IsInitialised() )
+        return;
 	
 	if ( !mParent )
 	{
 		Opengl::ClearColour( Soy::TRgb(1,0,0) );
 		return;
 	}
-	
+    
 	//	do parent's minimal render
 	mParent->mRenderTarget.mRect = NSRectToRect( bounds );
 	mParent->mRenderTarget.Bind();
 	
 	//Opengl::ClearColour( Soy::TRgb(0,1,0) );
-	mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
+    try
+    {
+        mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
+    }
+    catch(std::exception& e)
+    {
+        std::Debug << e.what() << std::endl;
+    }
 	mParent->mRenderTarget.Unbind();
 
 	
