@@ -18,8 +18,8 @@ const char ClearColour_FunctionName[] = "ClearColour";
 class TRenderWindow : public TOpenglWindow
 {
 public:
-	TRenderWindow(const std::string& Name) :
-		TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), TOpenglParams() )
+	TRenderWindow(const std::string& Name,const TOpenglParams& Params) :
+		TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), Params)
 	{
 	}
 	
@@ -113,7 +113,9 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	//		cyclic hell!
     auto* NewWindow = new TWindowWrapper();
 
-    NewWindow->mWindow.reset( new TRenderWindow( *WindowName ) );
+	TOpenglParams Params;
+	Params.mDoubleBuffer = false;
+    NewWindow->mWindow.reset( new TRenderWindow( *WindowName, Params ) );
 	
 	//	store persistent handle to the javascript object
     NewWindow->mHandle.Reset( Isolate, Arguments.This() );
@@ -227,6 +229,7 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	
 	//Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
 	Opengl::ClearDepth();
+	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	
@@ -262,6 +265,7 @@ void TRenderWindow::DrawQuad(Soy::Rectf Rect)
 		Mesh.mVertexes[2].uv = vec2f( 1, 1);
 		Mesh.mVertexes[3].uv = vec2f( 0, 1);
 		Array<size_t> Indexes;
+		
 		Indexes.PushBack( 0 );
 		Indexes.PushBack( 1 );
 		Indexes.PushBack( 2 );
@@ -276,8 +280,6 @@ void TRenderWindow::DrawQuad(Soy::Rectf Rect)
 		UvAttrib.mName = "TexCoord";
 		UvAttrib.SetType<vec2f>();
 		UvAttrib.mIndex = 0;	//	gr: does this matter?
-		UvAttrib.mArraySize = 2;
-		//UvAttrib.mElementDataSize = sizeof( Mesh.mVertexes[0].uv );
 		
 		Array<uint8> MeshData;
 		MeshData.PushBackReinterpret( Mesh );
@@ -290,9 +292,10 @@ void TRenderWindow::DrawQuad(Soy::Rectf Rect)
 		auto& Context = *GetContext();
 		
 		auto VertShader =
+		"#version 410\n"
 		"uniform vec4 Rect;\n"
-		"attribute vec2 TexCoord;\n"
-		"varying vec2 oTexCoord;\n"
+		"in vec2 TexCoord;\n"
+		"out vec2 uv;\n"
 		"void main()\n"
 		"{\n"
 		"   gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);\n"
@@ -301,13 +304,15 @@ void TRenderWindow::DrawQuad(Soy::Rectf Rect)
 		//	move to view space 0..1 to -1..1
 		"	gl_Position.xy *= vec2(2,2);\n"
 		"	gl_Position.xy -= vec2(1,1);\n"
-		"	oTexCoord = vec2(TexCoord.x,1-TexCoord.y);\n"
+		"	uv = vec2(TexCoord.x,1-TexCoord.y);\n"
 		"}\n";
 		auto FragShader =
-		"varying vec2 oTexCoord;\n"
+		"#version 410\n"
+		"in vec2 uv;\n"
+		//"out vec4 FragColor;\n"
 		"void main()\n"
 		"{\n"
-		"	gl_FragColor = vec4(oTexCoord.x,oTexCoord.y,0,1);\n"
+		"	gl_FragColor = vec4(uv.x,uv.y,0,1);\n"
 		"}\n";
 		
 		mBlitShader.reset( new Opengl::TShader( VertShader, FragShader, mBlitQuad->mVertexDescription, "Blit shader", Context ) );
