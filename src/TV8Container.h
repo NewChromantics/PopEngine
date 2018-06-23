@@ -58,29 +58,13 @@ public:
 	};
     void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
 
+	template<typename T>
+	void Test(const T& x);
 
 	template<const char* FunctionName>
-	void		BindFunction(v8::Local<v8::Object> This,std::function<void(v8::CallbackInfo&)> Function)
-	{
-		static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
-		auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
-		{
-			v8::CallbackInfo Params( Paramsv8 );
-			FunctionCache( Params );
-		};
-		BindRawFunction( This, FunctionName, RawFunction );
-	}
+	void		BindFunction(v8::Local<v8::Object> This,std::function<void(v8::CallbackInfo&)> Function);
 	template<const char* FunctionName>
-	void		BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(v8::CallbackInfo&)> Function)
-	{
-		static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
-		auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
-		{
-			v8::CallbackInfo Params( Paramsv8 );
-			FunctionCache( Params );
-		};
-		BindRawFunction( This, FunctionName, RawFunction );
-	}
+	void		BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(v8::CallbackInfo&)> Function);
 	
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
 	void					RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
@@ -97,4 +81,30 @@ public:
 	std::shared_ptr<PopV8Allocator>	mAllocator;
 };
 
+
+
+template<const char* FunctionName>
+inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<void(v8::CallbackInfo&)> Function)
+{
+	static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
+	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
+	{
+		v8::CallbackInfo Params( Paramsv8 );
+		FunctionCache( Params );
+	};
+	BindRawFunction( This, FunctionName, RawFunction );
+}
+
+
+template<const char* FunctionName>
+inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(v8::CallbackInfo&)> Function)
+{
+	static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
+	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
+	{
+		v8::CallbackInfo Params( Paramsv8 );
+		FunctionCache( Params );
+	};
+	BindRawFunction( This, FunctionName, RawFunction );
+}
 

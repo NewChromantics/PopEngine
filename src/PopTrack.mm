@@ -12,6 +12,56 @@
 #define JOB_THREAD_COUNT	1
 
 #include "TV8Container.h"
+#include "TApiCommon.h"
+#include "TApiOpengl.h"
+
+
+
+
+
+auto JavascriptMain = R"DONTPANIC(
+
+function ReturnSomeString()
+{
+	return "Hello world";
+}
+
+function test_function()
+{
+	let FragShaderSource = `
+	varying vec2 oTexCoord;
+	void main()
+	{
+		gl_FragColor = vec4(oTexCoord,0,1);
+	}
+	`;
+	
+	//log("log is working!", "2nd param");
+	let Window1 = new OpenglWindow("Hello!");
+	//let Window2 = new OpenglWindow("Hello2!");
+	
+	let OnRender = function()
+	{
+		try
+		{
+			Window1.ClearColour(0,1,0);
+			Window1.DrawQuad();
+		}
+		catch(Exception)
+		{
+			Window1.ClearColour(1,0,0);
+			log(Exception);
+		}
+	}
+	Window1.OnRender = OnRender;
+}
+
+//	main
+test_function();
+
+)DONTPANIC";
+
+
 
 
 namespace PopTrack
@@ -33,7 +83,7 @@ TPopTrack& PopTrack::GetApp()
 {
 	if ( !Private::gOpenglApp )
 	{
-		Private::gOpenglApp.reset( new TPopTrack("PopEngine") );
+		Private::gOpenglApp.reset( new TPopTrack(JavascriptMain) );
 	}
 	return *Private::gOpenglApp;
 }
@@ -54,9 +104,26 @@ TPopAppError::Type PopMain()
 
 
 
-TPopTrack::TPopTrack(const std::string& WindowName)
+
+
+
+
+
+
+
+
+TPopTrack::TPopTrack(const std::string& BootupJavascript)
 {
 	mV8Container.reset( new TV8Container() );
+	
+	ApiCommon::Bind( *mV8Container );
+	ApiOpengl::Bind( *mV8Container );
+	
+	//	gr: change bootup to include('main.js');
+	mV8Container->LoadScript( BootupJavascript );
+	
+	//	example
+	mV8Container->ExecuteGlobalFunc("ReturnSomeString");
 }
 
 TPopTrack::~TPopTrack()

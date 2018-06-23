@@ -18,7 +18,7 @@ namespace Opengl
 class TPopTrack
 {
 public:
-	TPopTrack(const std::string& WindowName);
+	TPopTrack(const std::string& BootupJavascript);
 	~TPopTrack();
 	
 	void				OnOpenglRender(Opengl::TRenderTarget& RenderTarget);
