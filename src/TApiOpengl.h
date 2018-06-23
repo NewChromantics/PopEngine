@@ -13,7 +13,7 @@ namespace ApiOpengl
 
 class TRenderWindow : public TOpenglWindow
 {
-	public:
+public:
 	TRenderWindow(const std::string& Name,const TOpenglParams& Params) :
 	TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), Params)
 	{
@@ -21,11 +21,16 @@ class TRenderWindow : public TOpenglWindow
 	
 	void	Clear(Opengl::TRenderTarget& RenderTarget);
 	void	ClearColour(Soy::TRgb Colour);
-	void	DrawQuad(Soy::Rectf Rect);
+	void	DrawQuad();
+	void	DrawQuad(Opengl::TShader& Shader);
 	
-	public:
+private:
+	Opengl::TGeometry&	GetBlitQuad();
+	
+public:
 	std::shared_ptr<Opengl::TGeometry>	mBlitQuad;
-	std::shared_ptr<Opengl::TShader>	mBlitShader;
+	
+	std::shared_ptr<Opengl::TShader>	mDebugShader;
 };
 
 
@@ -41,15 +46,36 @@ public:
 	
 	void		OnRender(Opengl::TRenderTarget& RenderTarget);
 	
+	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
 public:
-	v8::Persistent<v8::Object>				mHandle;
+	v8::Persistent<v8::Object>		mHandle;
 	std::shared_ptr<TRenderWindow>	mWindow;
 	TV8Container*					mContainer;
 };
 
+
+class TShaderWrapper
+{
+public:
+	TShaderWrapper() :
+		mContainer	( nullptr )
+	{
+	}
+	~TShaderWrapper();
+	
+	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+
+	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
+	
+	public:
+	v8::Persistent<v8::Object>			mHandle;
+	std::shared_ptr<Opengl::TShader>	mShader;
+	TV8Container*						mContainer;
+};
 

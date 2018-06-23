@@ -20,7 +20,17 @@ public:
 
 
 
-
+V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
+	mError	( Context )
+{
+	//	get the exception from v8
+	auto Exception = TryCatch.Exception();
+	
+	String::Utf8Value ExceptionStr(Exception);
+	auto ExceptionCStr = *ExceptionStr;
+	mError += ": ";
+	mError += ExceptionCStr;
+}
 
 
 
@@ -104,13 +114,26 @@ void TV8Container::LoadScript(const std::string& Source)
 	auto* SourceCstr = Source.c_str();
 	auto Sourcev8 = v8::String::NewFromUtf8( isolate, SourceCstr, v8::NewStringType::kNormal).ToLocalChecked();
 	
-	// Compile the source code.
-	Local<Script> script = Script::Compile(context, Sourcev8).ToLocalChecked();
+	//	compile the source code.
+	Local<Script> NewScript;
+	{
+		TryCatch trycatch(isolate);
+		auto NewScriptMaybe = Script::Compile(context, Sourcev8);
+		if ( NewScriptMaybe.IsEmpty() )
+			throw V8Exception( trycatch, "Compiling script" );
+		NewScript = NewScriptMaybe.ToLocalChecked();
+	}
 
-	auto MainResult = script->Run(context).ToLocalChecked();
-	
-	v8::String::Utf8Value MainResultStr(MainResult);
-	printf("MainResultStr = %s\n", *MainResultStr);
+	{
+		TryCatch trycatch(isolate);
+		auto ScriptResultMaybe = NewScript->Run(context);
+		if ( ScriptResultMaybe.IsEmpty() )
+			throw V8Exception( trycatch, "Running script" );
+		
+		auto ScriptResult = ScriptResultMaybe.ToLocalChecked();
+		v8::String::Utf8Value MainResultStr( ScriptResult );
+		std::Debug << *MainResultStr << std::endl;
+	}
 }
 
 

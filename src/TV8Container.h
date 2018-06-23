@@ -2,6 +2,7 @@
 //#include "PopTrack.h"
 #include <memory>
 #include <functional>
+#include <SoyTypes.h>
 
 class PopV8Allocator;
 
@@ -22,6 +23,22 @@ namespace v8
 
 #include "include/libplatform/libplatform.h"
 #include "include/v8.h"
+
+
+class V8Exception : public std::exception
+{
+public:
+	V8Exception(v8::TryCatch& TryCatch,const std::string& Context);
+
+	virtual const char* what() const __noexcept
+	{
+		return mError.c_str();
+	}
+	
+public:
+	std::string		mError;
+};
+
 
 
 class v8::CallbackInfo

@@ -98,8 +98,7 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
 	
-	Soy::Rectf Rect(0,0,1,1);
-	This->mWindow->DrawQuad( Rect );
+	This->mWindow->DrawQuad();
 	return v8::Undefined(Params.mIsolate);
 }
 
@@ -183,7 +182,7 @@ void TRenderWindow::ClearColour(Soy::TRgb Colour)
 }
 
 
-void TRenderWindow::DrawQuad(Soy::Rectf Rect)
+Opengl::TGeometry& TRenderWindow::GetBlitQuad()
 {
 	if ( !mBlitQuad )
 	{
@@ -224,14 +223,21 @@ void TRenderWindow::DrawQuad(Soy::Rectf Rect)
 		mBlitQuad.reset( new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex ) );
 	}
 	
+	return *mBlitQuad;
+}
+
+void TRenderWindow::DrawQuad()
+{
 	//	allocate objects we need!
-	if ( !mBlitShader )
+	if ( !mDebugShader )
 	{
+		auto& BlitQuad = GetBlitQuad();
 		auto& Context = *GetContext();
 		
 		auto VertShader =
 		"#version 410\n"
-		"uniform vec4 Rect;\n"
+		//"uniform vec4 Rect;\n"
+		"const vec4 Rect = vec4(0,0,1,1);\n"
 		"in vec2 TexCoord;\n"
 		"out vec2 uv;\n"
 		"void main()\n"
@@ -253,12 +259,21 @@ void TRenderWindow::DrawQuad(Soy::Rectf Rect)
 		"	gl_FragColor = vec4(uv.x,uv.y,0,1);\n"
 		"}\n";
 		
-		mBlitShader.reset( new Opengl::TShader( VertShader, FragShader, mBlitQuad->mVertexDescription, "Blit shader", Context ) );
+		mDebugShader.reset( new Opengl::TShader( VertShader, FragShader, BlitQuad.mVertexDescription, "Blit shader", Context ) );
 	}
 	
+	DrawQuad( *mDebugShader );
+}
+
+
+void TRenderWindow::DrawQuad(Opengl::TShader& Shader)
+{
+	auto& BlitQuad = GetBlitQuad();
+	
 	//	do bindings
-	auto Shader = mBlitShader->Bind();
-	Shader.SetUniform("Rect", Soy::RectToVector(Rect) );
+	auto ShaderBound = Shader.Bind();
+	//ShaderBound.SetUniform("Rect", Soy::RectToVector(Rect) );
 	mBlitQuad->Draw();
 	Opengl_IsOkay();
+
 }

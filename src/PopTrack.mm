@@ -39,6 +39,7 @@ function test_function()
 	//log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
 	//let Window2 = new OpenglWindow("Hello2!");
+	//let Shader = new OpenglShader( OpenglWindow, FragShaderSource );
 	
 	let OnRender = function()
 	{
