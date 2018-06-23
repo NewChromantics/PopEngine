@@ -42,8 +42,8 @@ public:
 	void		OnRender(Opengl::TRenderTarget& RenderTarget);
 	
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static void								DrawQuad(const v8::CallbackInfo& Arguments);
-	static void								ClearColour(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
 public:

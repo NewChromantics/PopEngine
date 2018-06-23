@@ -3,7 +3,7 @@
 
 const char Log_FunctionName[] = "log";
 
-static void OnLog(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> OnLog(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -14,7 +14,7 @@ void ApiCommon::Bind(TV8Container& Container)
 
 }
 
-static void OnLog(v8::CallbackInfo& Params)
+static v8::Local<v8::Value> OnLog(v8::CallbackInfo& Params)
 {
 	using namespace v8;
 
@@ -22,12 +22,10 @@ static void OnLog(v8::CallbackInfo& Params)
 	
 	if (args.Length() < 1)
 	{
-		std::Debug << "log() with no args" << std::endl;
-		return;
+		throw Soy::AssertException("log() with no args");
 	}
 	
-	Isolate* isolate = args.GetIsolate();
-	HandleScope scope(isolate);
+	HandleScope scope(Params.mIsolate);
 	for ( auto i=0;	i<args.Length();	i++ )
 	{
 		auto arg = args[i];
@@ -35,5 +33,5 @@ static void OnLog(v8::CallbackInfo& Params)
 		std::Debug << *value << std::endl;
 	}
 	
-	//	 return v8::Undefined();
+	return v8::Undefined(Params.mIsolate);
 }

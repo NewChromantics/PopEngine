@@ -28,11 +28,13 @@ class v8::CallbackInfo
 {
 public:
 	CallbackInfo(const v8::FunctionCallbackInfo<v8::Value>& Params) :
-	mParams	( Params )
+		mParams		( Params ),
+		mIsolate	( mParams.GetIsolate() )
 	{
 	}
 	
-	const v8::FunctionCallbackInfo<v8::Value>& mParams;
+	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
+	v8::Isolate*								mIsolate;
 };
 
 
@@ -47,24 +49,13 @@ public:
 	
  	void		ExecuteGlobalFunc(const std::string& FunctionName);
 	template<const char* FunctionName>
-	void		BindGlobalFunction(std::function<void(v8::CallbackInfo&)> Function)
-	{
-		auto Bind = [&](v8::Local<v8::Context> Context)
-		{
-			auto This = Context->Global();
-			BindFunction<FunctionName>(This,Function);
-		};
-		RunScoped(Bind);
-	};
+	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
     void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
 
-	template<typename T>
-	void Test(const T& x);
-
 	template<const char* FunctionName>
-	void		BindFunction(v8::Local<v8::Object> This,std::function<void(v8::CallbackInfo&)> Function);
+	void					BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	template<const char* FunctionName>
-	void		BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(v8::CallbackInfo&)> Function);
+	void					BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
 	void					RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
@@ -84,27 +75,59 @@ public:
 
 
 template<const char* FunctionName>
-inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<void(v8::CallbackInfo&)> Function)
+inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
 {
-	static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
+	static std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> FunctionCache = Function;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
 		v8::CallbackInfo Params( Paramsv8 );
-		FunctionCache( Params );
+		try
+		{
+			auto ReturnValue = FunctionCache( Params );
+			Params.mParams.GetReturnValue().Set(ReturnValue);
+		}
+		catch(std::exception& e)
+		{
+			//	pass exception to javascript
+			auto* Isolate = Params.mParams.GetIsolate();
+			auto Exception = Isolate->ThrowException( v8::String::NewFromUtf8( Isolate, e.what() ));
+			Params.mParams.GetReturnValue().Set(Exception);
+		}
 	};
 	BindRawFunction( This, FunctionName, RawFunction );
 }
 
 
 template<const char* FunctionName>
-inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(v8::CallbackInfo&)> Function)
+inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
 {
-	static std::function<void(v8::CallbackInfo&)> FunctionCache = Function;
+	static std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> FunctionCache = Function;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
 		v8::CallbackInfo Params( Paramsv8 );
-		FunctionCache( Params );
+		try
+		{
+			auto ReturnValue = FunctionCache( Params );
+			Params.mParams.GetReturnValue().Set(ReturnValue);
+		}
+		catch(std::exception& e)
+		{
+			//	pass exception to javascript
+			auto* Isolate = Params.mParams.GetIsolate();
+			auto Exception = Isolate->ThrowException( v8::String::NewFromUtf8( Isolate, e.what() ));
+			Params.mParams.GetReturnValue().Set(Exception);
+		}
 	};
 	BindRawFunction( This, FunctionName, RawFunction );
 }
 
+template<const char* FunctionName>
+inline void TV8Container::BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
+{
+	auto Bind = [&](v8::Local<v8::Context> Context)
+	{
+		auto This = Context->Global();
+		BindFunction<FunctionName>(This,Function);
+	};
+	RunScoped(Bind);
+};

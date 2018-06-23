@@ -91,54 +91,36 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	Arguments.GetReturnValue().Set( This );
 }
 
-void TWindowWrapper::DrawQuad(const v8::CallbackInfo& _Arguments)
+v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 {
-	auto& Arguments = _Arguments.mParams;
-	auto* Isolate = Arguments.GetIsolate();
+	auto& Arguments = Params.mParams;
 	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
 	
-	try
-	{
-		Soy::Rectf Rect(0,0,1,1);
-		This->mWindow->DrawQuad( Rect );
-	}
-	catch(std::exception& e)
-	{
-		//	pass exception to javascript
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
-		Arguments.GetReturnValue().Set(Exception);
-	}
+	Soy::Rectf Rect(0,0,1,1);
+	This->mWindow->DrawQuad( Rect );
+	return v8::Undefined(Params.mIsolate);
 }
 
 
-void TWindowWrapper::ClearColour(const v8::CallbackInfo& _Arguments)
+v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 {
-	auto& Arguments = _Arguments.mParams;
-	auto* Isolate = Arguments.GetIsolate();
+	auto& Arguments = Params.mParams;
 	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
 	
-	
-	try
-	{
-		if ( Arguments.Length() != 3 )
+	if ( Arguments.Length() != 3 )
 		throw Soy::AssertException("Expecting 3 arguments for ClearColour(r,g,b)");
-		auto Red = Local<Number>::Cast( Arguments[0] );
-		auto Green = Local<Number>::Cast( Arguments[1] );
-		auto Blue = Local<Number>::Cast( Arguments[2] );
-		Soy::TRgb Colour( Red->Value(), Green->Value(), Blue->Value() );
+
+	auto Red = Local<Number>::Cast( Arguments[0] );
+	auto Green = Local<Number>::Cast( Arguments[1] );
+	auto Blue = Local<Number>::Cast( Arguments[2] );
+	Soy::TRgb Colour( Red->Value(), Green->Value(), Blue->Value() );
 		
-		This->mWindow->ClearColour( Colour );
-	}
-	catch(std::exception& e)
-	{
-		//	pass exception to javascript
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
-		Arguments.GetReturnValue().Set(Exception);
-	}
+	This->mWindow->ClearColour( Colour );
+	return v8::Undefined(Params.mIsolate);
 }
 
 
