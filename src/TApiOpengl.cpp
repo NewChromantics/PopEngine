@@ -5,6 +5,7 @@ using namespace v8;
 
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
+const char SetUniform_FunctionName[] = "SetUniform";
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
@@ -380,6 +381,29 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 }
 
 
+v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TShaderWrapper>( ThisHandle );
+	auto& Shader = *This.mShader;
+	
+	auto* UniformName = *String::Utf8Value(Arguments[0]);
+	auto Uniform = Shader.GetUniform( UniformName );
+	if ( !Uniform.IsValid() )
+	{
+		std::stringstream Error;
+		Error << "Shader missing uniform " << UniformName;
+		throw Soy::AssertException(Error.str());
+	}
+
+	//	get type from args
+	//Opengl::SetUniform( Uniform, v );
+
+	return v8::Undefined(Params.mIsolate);
+}
+
 Local<FunctionTemplate> TShaderWrapper::CreateTemplate(TV8Container& Container)
 {
 	auto* Isolate = Container.mIsolate;
@@ -399,6 +423,8 @@ Local<FunctionTemplate> TShaderWrapper::CreateTemplate(TV8Container& Container)
 	//	[0] object
 	InstanceTemplate->SetInternalFieldCount(2);
 	
+	Container.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
+
 	return ConstructorFunc;
 }
 

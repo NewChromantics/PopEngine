@@ -77,7 +77,6 @@ public:
 	static TShaderWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TShaderWrapper>( Value, 0 );	}
 	
 	void									CreateShader(Opengl::TContext& Context,std::function<Opengl::TGeometry&()> GetGeo,const char* VertSource,const char* FragSource);
-
 	
 public:
 	v8::Persistent<v8::Object>			mHandle;
