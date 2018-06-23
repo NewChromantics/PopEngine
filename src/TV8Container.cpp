@@ -201,9 +201,13 @@ void TV8Container::ExecuteGlobalFunc(const std::string& FunctionName)
 		auto Global = context->Global();
 		auto This = Global;
 		auto Result = ExecuteFunc( context, FunctionName, This );
-		
-		String::Utf8Value ResultStr(Result);
-		printf("result = %s\n", *ResultStr);
+
+		//	report anything that isn't undefined
+		if ( !Result->IsUndefined() )
+		{
+			String::Utf8Value ResultStr(Result);
+			std::Debug << *ResultStr << std::endl;
+		}
 	};
 	RunScoped( Runner );
 }
@@ -248,8 +252,12 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 		}
 		auto Result = ResultMaybe.ToLocalChecked();
 		
-		String::Utf8Value ResultStr(Result);
-		printf("result = %s\n", *ResultStr);
+		//	report anything that isn't undefined
+		if ( !Result->IsUndefined() )
+		{
+			String::Utf8Value ResultStr(Result);
+			std::Debug << *ResultStr << std::endl;
+		}
 		return Result;
 	}
 	catch(std::exception& e)

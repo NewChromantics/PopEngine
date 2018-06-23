@@ -15,7 +15,7 @@ class TRenderWindow : public TOpenglWindow
 {
 public:
 	TRenderWindow(const std::string& Name,const TOpenglParams& Params) :
-	TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), Params)
+		TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), Params)
 	{
 	}
 	
@@ -24,7 +24,6 @@ public:
 	void	DrawQuad();
 	void	DrawQuad(Opengl::TShader& Shader);
 	
-private:
 	Opengl::TGeometry&	GetBlitQuad();
 	
 public:
@@ -39,13 +38,15 @@ class TWindowWrapper
 {
 public:
 	TWindowWrapper() :
-	mContainer	( nullptr )
+		mContainer	( nullptr )
 	{
 	}
 	~TWindowWrapper();
 	
 	void		OnRender(Opengl::TRenderTarget& RenderTarget);
 	
+	static TWindowWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TWindowWrapper>( Value, 0 );	}
+
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
@@ -72,8 +73,13 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
+
+	static TShaderWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TShaderWrapper>( Value, 0 );	}
 	
-	public:
+	void									CreateShader(Opengl::TContext& Context,std::function<Opengl::TGeometry&()> GetGeo,const char* VertSource,const char* FragSource);
+
+	
+public:
 	v8::Persistent<v8::Object>			mHandle;
 	std::shared_ptr<Opengl::TShader>	mShader;
 	TV8Container*						mContainer;

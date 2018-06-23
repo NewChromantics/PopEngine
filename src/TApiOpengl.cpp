@@ -9,6 +9,7 @@ const char ClearColour_FunctionName[] = "ClearColour";
 void ApiOpengl::Bind(TV8Container& Container)
 {
 	Container.BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate );
+	Container.BindObjectType("OpenglShader", TShaderWrapper::CreateTemplate );
 }
 
 
@@ -57,7 +58,7 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	}
 	
 	auto This = Arguments.This();
-	auto* Container = reinterpret_cast<TV8Container*>( Local<External>::Cast( Arguments.Data() )->Value() );
+	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
 	
 	
 	String::Utf8Value WindowName( Arguments[0] );
@@ -76,7 +77,7 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	//	store persistent handle to the javascript object
 	NewWindow->mHandle.Reset( Isolate, Arguments.This() );
 	
-	NewWindow->mContainer = Container;
+	NewWindow->mContainer = &Container;
 	
 	auto OnRender = [NewWindow](Opengl::TRenderTarget& RenderTarget)
 	{
@@ -98,7 +99,16 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
 	
-	This->mWindow->DrawQuad();
+	if ( Arguments.Length() == 1 )
+	{
+		auto& Shader = TShaderWrapper::Get( Arguments[0] );
+		This->mWindow->DrawQuad( *Shader.mShader );
+	}
+	else
+	{
+		This->mWindow->DrawQuad();
+	}
+	
 	return v8::Undefined(Params.mIsolate);
 }
 
@@ -273,7 +283,117 @@ void TRenderWindow::DrawQuad(Opengl::TShader& Shader)
 	//	do bindings
 	auto ShaderBound = Shader.Bind();
 	//ShaderBound.SetUniform("Rect", Soy::RectToVector(Rect) );
-	mBlitQuad->Draw();
+	BlitQuad.Draw();
 	Opengl_IsOkay();
 
 }
+
+
+
+
+
+
+TShaderWrapper::~TShaderWrapper()
+{
+	//	todo: opengl deferrefed delete
+}
+
+
+void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+{
+	using namespace v8;
+	auto* Isolate = Arguments.GetIsolate();
+	
+	if ( !Arguments.IsConstructCall() )
+	{
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
+		Arguments.GetReturnValue().Set(Exception);
+		return;
+	}
+	
+	if ( Arguments.Length() != 3 )
+	{
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "missing arguments (Window,FragSource,VertSource)"));
+		Arguments.GetReturnValue().Set(Exception);
+		return;
+	}
+	
+	auto This = Arguments.This();
+	
+	//	gr: auto catch this
+	try
+	{
+		auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
+		
+		//	access to context!
+		auto& Window = TWindowWrapper::Get( Arguments[0] );
+		auto& OpenglContext = *Window.mWindow->GetContext();
+		String::Utf8Value VertSource( Arguments[1] );
+		String::Utf8Value FragSource( Arguments[2] );
+
+		//	this needs to be deffered to be on the opengl thread (or at least wait for context to initialise)
+		std::function<Opengl::TGeometry&()> GetGeo = [&Window]()-> Opengl::TGeometry&
+		{
+			auto& Geo = Window.mWindow->GetBlitQuad();
+			return Geo;
+		};
+		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
+		//		but it also needs to know of the V8container to run stuff
+		//		cyclic hell!
+		auto* NewShader = new TShaderWrapper();
+		NewShader->mHandle.Reset( Isolate, Arguments.This() );
+		NewShader->mContainer = &Container;
+
+		NewShader->CreateShader( OpenglContext, GetGeo, *VertSource, *FragSource );
+		
+		//	set fields
+		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewShader ) );
+		
+		// return the new object back to the javascript caller
+		Arguments.GetReturnValue().Set( This );
+	}
+	catch(std::exception& e)
+	{
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
+		Arguments.GetReturnValue().Set(Exception);
+		return;
+	}
+}
+
+
+Local<FunctionTemplate> TShaderWrapper::CreateTemplate(TV8Container& Container)
+{
+	auto* Isolate = Container.mIsolate;
+	
+	//	pass the container around
+	auto ContainerHandle = External::New( Isolate, &Container );
+	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
+	
+	//	https://github.com/v8/v8/wiki/Embedder's-Guide
+	//	1 field to 1 c++ object
+	//	gr: we can just use the template that's made automatically and modify that!
+	//	gr: prototypetemplate and instancetemplate are basically the same
+	//		but for inheritance we may want to use prototype
+	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
+	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
+	
+	//	[0] object
+	InstanceTemplate->SetInternalFieldCount(2);
+	
+	return ConstructorFunc;
+}
+
+void TShaderWrapper::CreateShader(Opengl::TContext& Context,std::function<Opengl::TGeometry&()> GetGeo,const char* VertSource,const char* FragSource)
+{
+	//	this needs to be deffered along with the context..
+	//	the TShader constructor needs to return a promise really
+	if ( !Context.IsInitialised() )
+		throw Soy::AssertException("Opengl context not yet initialised");
+	
+	auto& Geo = GetGeo();
+	std::string VertSourceStr( VertSource );
+	std::string FragSourceStr( FragSource );
+	mShader.reset( new Opengl::TShader( VertSourceStr, FragSourceStr, Geo.mVertexDescription, "Shader", Context ) );
+
+}
+

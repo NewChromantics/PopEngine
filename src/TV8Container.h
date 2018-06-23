@@ -3,6 +3,7 @@
 #include <memory>
 #include <functional>
 #include <SoyTypes.h>
+#include <SoyAssert.h>
 
 class PopV8Allocator;
 
@@ -12,12 +13,19 @@ namespace v8
 	class Platform;
 	class Isolate;
 	class Context;
-	
+	class Value;
+
+	template<typename T>
+	class Local;
+
 	//	our wrapper
 	class CallbackInfo;
 	
 	template<typename T>
-	class Local;
+	inline T&	GetInternalFieldObject(Local<Value> Value,size_t InternalFieldIndex);
+
+	template<typename T>
+	inline T&	GetObject(Local<Value> Value);
 }
 
 
@@ -148,3 +156,32 @@ inline void TV8Container::BindGlobalFunction(std::function<v8::Local<v8::Value>(
 	};
 	RunScoped(Bind);
 };
+
+
+template<typename T>
+inline T& v8::GetInternalFieldObject(v8::Local<v8::Value> Value,size_t InternalFieldIndex)
+{
+	auto Obj = v8::Local<v8::Object>::Cast( Value );
+	auto FieldCount = Obj->InternalFieldCount();
+	if ( InternalFieldIndex >= FieldCount )
+	{
+		std::stringstream Error;
+		Error << "Object missing internal field " << InternalFieldIndex << "/" << FieldCount;
+		throw Soy::AssertException(Error.str());
+	}
+	auto WindowHandle = Obj->GetInternalField(InternalFieldIndex);
+	return GetObject<T>( WindowHandle );
+}
+
+
+template<typename T>
+inline T& v8::GetObject(v8::Local<v8::Value> Handle)
+{
+	auto WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
+	if ( WindowVoid == nullptr )
+		throw Soy::AssertException("Internal Field is null");
+	auto Window = reinterpret_cast<T*>( WindowVoid );
+	return *Window;
+}
+
+
