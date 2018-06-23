@@ -4,8 +4,10 @@
 #include <functional>
 #include <SoyTypes.h>
 #include <SoyAssert.h>
+#include <Array.hpp>
 
 class PopV8Allocator;
+class TV8Container;
 
 //	forward decalrations
 namespace v8
@@ -52,14 +54,18 @@ public:
 class v8::CallbackInfo
 {
 public:
-	CallbackInfo(const v8::FunctionCallbackInfo<v8::Value>& Params) :
+	CallbackInfo(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container) :
 		mParams		( Params ),
-		mIsolate	( mParams.GetIsolate() )
+		mContainer	( Container ),
+		mIsolate	( mParams.GetIsolate() ),
+		mContext	( mIsolate->GetCurrentContext() )
 	{
 	}
 	
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
+	TV8Container&								mContainer;
 	v8::Isolate*								mIsolate;
+	v8::Local<v8::Context>						mContext;
 };
 
 
@@ -83,6 +89,7 @@ public:
 	void					BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
+	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
 	void					RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 									  
 	
@@ -103,9 +110,10 @@ template<const char* FunctionName>
 inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
 {
 	static std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> FunctionCache = Function;
+	static TV8Container* ContainerCache = nullptr;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
-		v8::CallbackInfo Params( Paramsv8 );
+		v8::CallbackInfo Params( Paramsv8, *ContainerCache );
 		try
 		{
 			auto ReturnValue = FunctionCache( Params );
@@ -119,6 +127,7 @@ inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<
 			Params.mParams.GetReturnValue().Set(Exception);
 		}
 	};
+	ContainerCache = this;
 	BindRawFunction( This, FunctionName, RawFunction );
 }
 
@@ -127,9 +136,10 @@ template<const char* FunctionName>
 inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
 {
 	static std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> FunctionCache = Function;
+	static TV8Container* ContainerCache = nullptr;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
-		v8::CallbackInfo Params( Paramsv8 );
+		v8::CallbackInfo Params( Paramsv8, *ContainerCache );
 		try
 		{
 			auto ReturnValue = FunctionCache( Params );
@@ -143,6 +153,7 @@ inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::f
 			Params.mParams.GetReturnValue().Set(Exception);
 		}
 	};
+	ContainerCache = this;
 	BindRawFunction( This, FunctionName, RawFunction );
 }
 

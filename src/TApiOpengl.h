@@ -22,7 +22,7 @@ public:
 	void	Clear(Opengl::TRenderTarget& RenderTarget);
 	void	ClearColour(Soy::TRgb Colour);
 	void	DrawQuad();
-	void	DrawQuad(Opengl::TShader& Shader);
+	void	DrawQuad(Opengl::TShader& Shader,std::function<void()> OnShaderBind);
 	
 	Opengl::TGeometry&	GetBlitQuad();
 	

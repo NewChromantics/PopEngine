@@ -226,24 +226,16 @@ void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 	Lambda( context );
 }
 
-
-Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::string& FunctionName,Local<Object> This)
+v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
 {
+	auto& Func = FunctionHandle;
 	auto* isolate = ContextHandle->GetIsolate();
 	try
 	{
-		auto* FunctionNameCstr = FunctionName.c_str();
-		auto FuncNameKey = v8::String::NewFromUtf8( isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
-		
-		//  get the global object for this name
-		auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
-
-		//  run the func
-		auto Func = Local<Function>::Cast( FunctionHandle );
-		
-		Handle<Value> args[0];
+		auto ArgCount = Params.GetSize();
+		auto* Args = Params.GetArray();
 		TryCatch trycatch(isolate);
-		auto ResultMaybe = Func->Call( ContextHandle, This, 0, args );
+		auto ResultMaybe = Func->Call( ContextHandle, This, ArgCount, Args );
 		if ( ResultMaybe.IsEmpty() )
 		{
 			auto Exception = trycatch.Exception();
@@ -259,6 +251,30 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 			std::Debug << *ResultStr << std::endl;
 		}
 		return Result;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Exception executing function" << ": " << e.what() << std::endl;
+		return v8::Undefined(isolate);
+	}
+}
+
+Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::string& FunctionName,Local<Object> This)
+{
+	auto* isolate = ContextHandle->GetIsolate();
+	try
+	{
+		auto* FunctionNameCstr = FunctionName.c_str();
+		auto FuncNameKey = v8::String::NewFromUtf8( isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
+		
+		//  get the global object for this name
+		auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
+
+		//  run the func
+		auto Func = Local<Function>::Cast( FunctionHandle );
+		
+		BufferArray<Local<Value>,1> Args;
+		return ExecuteFunc( ContextHandle, Func, This, GetArrayBridge(Args) );
 	}
 	catch(std::exception& e)
 	{

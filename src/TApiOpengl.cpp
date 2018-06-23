@@ -95,18 +95,35 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
+
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
+	auto& This = v8::GetObject<TWindowWrapper>( ThisHandle );
+	//auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
 	
-	if ( Arguments.Length() == 1 )
+	if ( Arguments.Length() >= 1 )
 	{
+		auto ShaderHandle = Arguments[0];
 		auto& Shader = TShaderWrapper::Get( Arguments[0] );
-		This->mWindow->DrawQuad( *Shader.mShader );
+
+		auto OnShaderBindHandle = Arguments[1];
+		std::function<void()> OnShaderBind = []{};
+		if ( !OnShaderBindHandle->IsUndefined() )
+		{
+			auto OnShaderBindHandleFunc = v8::Local<Function>::Cast( OnShaderBindHandle );
+			OnShaderBind = [&]
+			{
+				auto OnShaderBindThis = Params.mContext->Global();
+				BufferArray<Local<Value>,1> Args;
+				Args.PushBack( ShaderHandle );
+				Params.mContainer.ExecuteFunc( Params.mContext, OnShaderBindHandleFunc, OnShaderBindThis, GetArrayBridge(Args) );
+			};
+		}
+		
+		This.mWindow->DrawQuad( *Shader.mShader, OnShaderBind );
 	}
 	else
 	{
-		This->mWindow->DrawQuad();
+		This.mWindow->DrawQuad();
 	}
 	
 	return v8::Undefined(Params.mIsolate);
@@ -272,16 +289,18 @@ void TRenderWindow::DrawQuad()
 		mDebugShader.reset( new Opengl::TShader( VertShader, FragShader, BlitQuad.mVertexDescription, "Blit shader", Context ) );
 	}
 	
-	DrawQuad( *mDebugShader );
+	DrawQuad( *mDebugShader, []{} );
 }
 
 
-void TRenderWindow::DrawQuad(Opengl::TShader& Shader)
+void TRenderWindow::DrawQuad(Opengl::TShader& Shader,std::function<void()> OnBind)
 {
 	auto& BlitQuad = GetBlitQuad();
 	
 	//	do bindings
 	auto ShaderBound = Shader.Bind();
+	OnBind();
+	ShaderBound.SetUniform("Blue", 1.0f );
 	//ShaderBound.SetUniform("Rect", Soy::RectToVector(Rect) );
 	BlitQuad.Draw();
 	Opengl_IsOkay();

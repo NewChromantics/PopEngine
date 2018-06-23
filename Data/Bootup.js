@@ -9,6 +9,8 @@ function test_function()
 	const vec4 Rect = vec4(0,0,1,1);
 	in vec2 TexCoord;
 	out vec2 uv;
+	out float Blue_Frag;
+	uniform float Blue;
 	void main()
 	{
 		gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);
@@ -18,15 +20,17 @@ function test_function()
 		gl_Position.xy *= vec2(2,2);
 		gl_Position.xy -= vec2(1,1);
 		uv = vec2(TexCoord.x,1-TexCoord.y);
+		Blue_Frag = Blue;
 	}
 	`;
 	
 	let FragShaderSource = `#version 410
 	in vec2 uv;
+	in float Blue_Frag;
 	//out vec4 FragColor;
 	void main()
 	{
-		gl_FragColor = vec4(uv.x,uv.y,1,1);
+		gl_FragColor = vec4(uv.x,uv.y,Blue_Frag,1);
 	}
 	`;
 	
@@ -34,6 +38,8 @@ function test_function()
 	let Window1 = new OpenglWindow("Hello!");
 	//let Window2 = new OpenglWindow("Hello2!");
 	let Shader = null;
+	//let Pitch = new Image("Data/FootballPitch_Rotated90.png");
+	var Blue = 0;
 	
 	let OnRender = function()
 	{
@@ -43,8 +49,15 @@ function test_function()
 			if ( Shader == null )
 				Shader = new OpenglShader( Window1, VertShaderSource, FragShaderSource );
 			
+			let SetUniforms = function(Shader)
+			{
+				log("On bind: " + Blue);
+				Blue = (Blue==0) ? 1 : 0;
+				Shader.SetUniform("Blue", Blue );
+			}
+			
 			Window1.ClearColour(0,1,0);
-			Window1.DrawQuad( Shader );
+			Window1.DrawQuad( Shader, SetUniforms );
 		}
 		catch(Exception)
 		{
