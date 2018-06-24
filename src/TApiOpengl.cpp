@@ -168,6 +168,7 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
 	
 	//	[0] object
+	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
 	
 	
@@ -428,12 +429,14 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	}
 
 	//	get type from args
-	//	gr: we dont have types yet, so use arrays
+	//	gr: we dont have vector types yet, so use arrays
 	auto ValueHandle = Arguments[1];
 	
-	//	todo: assuming float, if the uniform is an int, lets assume int in a seperate branch
-	bool TargetIsFloat = true;
-	if ( TargetIsFloat )
+	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
+	{
+		
+	}
+	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
 		BufferArray<float,100> Floats;
 		EnumFloatArray( ValueHandle, GetArrayBridge(Floats) );
@@ -441,7 +444,7 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	}
 	else
 	{
-		throw Soy::AssertException("Currently only float uniform supported");
+		throw Soy::AssertException("Currently only image & float uniform supported");
 	}
 
 	return v8::Undefined(Params.mIsolate);

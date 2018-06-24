@@ -24,7 +24,7 @@ function test_function()
 	}
 	`;
 	
-	let FragShaderSource = `#version 410
+	let DebugFragShaderSource = `#version 410
 	in vec2 uv;
 	in float Blue_Frag;
 	//out vec4 FragColor;
@@ -34,11 +34,20 @@ function test_function()
 	}
 	`;
 	
+	let ImageFragShaderSource = `#version 410
+	in vec2 uv;
+	uniform sampler2D Image;
+	void main()
+	{
+		gl_FragColor = texture( Image, uv );
+	}
+	`;
+	
 	//log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
 	//let Window2 = new OpenglWindow("Hello2!");
 	let Shader = null;
-	//let Pitch = new Image("Data/FootballPitch_Rotated90.png");
+	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
 	var Blue = 0;
 	
 	let OnRender = function()
@@ -47,13 +56,17 @@ function test_function()
 		{
 			//	deffered atm
 			if ( Shader == null )
-				Shader = new OpenglShader( Window1, VertShaderSource, FragShaderSource );
+			{
+				//Shader = new OpenglShader( Window1, VertShaderSource, DebugFragShaderSource );
+				Shader = new OpenglShader( Window1, VertShaderSource, ImageFragShaderSource );
+			}
 			
 			let SetUniforms = function(Shader)
 			{
-				Blue = (Blue==0) ? 1 : 0;
-				log("On bind: " + Blue);
-				Shader.SetUniform("Blue", Blue );
+				//Blue = (Blue==0) ? 1 : 0;
+				//log("On bind: " + Blue);
+				//Shader.SetUniform("Blue", Blue );
+				Shader.SetUniform("Image", Pitch );
 			}
 			
 			Window1.ClearColour(0,1,0);
