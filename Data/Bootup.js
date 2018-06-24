@@ -66,7 +66,8 @@ function test_function()
 				//Blue = (Blue==0) ? 1 : 0;
 				//log("On bind: " + Blue);
 				//Shader.SetUniform("Blue", Blue );
-				Shader.SetUniform("Image", Pitch );
+				log( typeof(Pitch) );
+				Shader.SetUniform("Image", Pitch, 0 );
 			}
 			
 			Window1.ClearColour(0,1,0);

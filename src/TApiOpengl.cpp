@@ -1,5 +1,6 @@
 #include "TApiOpengl.h"
 #include "SoyOpenglWindow.h"
+#include "TApiCommon.h"
 
 using namespace v8;
 
@@ -417,7 +418,8 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TShaderWrapper>( ThisHandle );
-	auto& Shader = *This.mShader;
+	auto pShader = This.mShader;
+	auto& Shader = *pShader;
 	
 	auto* UniformName = *String::Utf8Value(Arguments[0]);
 	auto Uniform = Shader.GetUniform( UniformName );
@@ -434,7 +436,25 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
+		//	gr: we're not using the shader state, so we currently need to manually track bind count at high level
+		auto BindIndexHandle = Arguments[2];
+		if ( !BindIndexHandle->IsNumber() )
+			throw Soy::AssertException("Currently need to pass texture bind index (increment from 0). SetUniform(Name,Image,BindIndex)");
+		auto BindIndex = Local<Number>::Cast( BindIndexHandle )->Int32Value();
 		
+		//	get the image
+		auto& Image = v8::GetObject<TImageWrapper>(ValueHandle);
+		//	gr: planning ahead
+		auto OnTextureLoaded = [&Image,pShader,Uniform,BindIndex]()
+		{
+			pShader->SetUniform( Uniform, Image.GetTexture(), BindIndex );
+		};
+		auto OnTextureError = [](const std::string& Error)
+		{
+			std::Debug << "Error loading texture " << Error << std::endl;
+			std::Debug << "Todo: relay to promise" << std::endl;
+		};
+		Image.GetTexture( OnTextureLoaded, OnTextureError );
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{

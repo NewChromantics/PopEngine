@@ -188,6 +188,20 @@ inline T& v8::GetInternalFieldObject(v8::Local<v8::Value> Value,size_t InternalF
 template<typename T>
 inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 {
+	//	if this isn't an external, lets assume it's it's inernal field
+	if ( !Handle->IsExternal())
+	{
+		if ( Handle->IsObject() )
+		{
+			auto HandleObject = v8::Local<v8::Object>::Cast( Handle );
+			Handle = HandleObject->GetInternalField(0);
+		}
+	}
+	
+	if ( !Handle->IsExternal() )
+		throw Soy::AssertException("Value is not internally backed (external)");
+
+	//	gr: this needs to do type checks, and we need to verify the internal type as we're blindly casting!
 	auto WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
 	if ( WindowVoid == nullptr )
 		throw Soy::AssertException("Internal Field is null");

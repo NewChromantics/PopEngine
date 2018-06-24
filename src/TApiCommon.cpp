@@ -184,4 +184,17 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	throw Soy::AssertException( std::string("Unhandled image file extension of ") + Filename );
 }
 
+void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
+{
+	throw Soy::AssertException("todo: get texture");
+}
+
+const Opengl::TTexture& TImageWrapper::GetTexture()
+{
+	if ( !mOpenglTexture )
+		throw Soy::AssertException("Image missing opengl texture. Accessing before generating.");
+	
+	return *mOpenglTexture;
+}
+
 
