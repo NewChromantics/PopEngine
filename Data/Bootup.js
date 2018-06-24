@@ -51,10 +51,9 @@ function test_function()
 			
 			let SetUniforms = function(Shader)
 			{
-				log("On bind: " + Blue);
 				Blue = (Blue==0) ? 1 : 0;
+				log("On bind: " + Blue);
 				Shader.SetUniform("Blue", Blue );
-				Shader.SetUniform("Colour", [1,1,0] );
 			}
 			
 			Window1.ClearColour(0,1,0);

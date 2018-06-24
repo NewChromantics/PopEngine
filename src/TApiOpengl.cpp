@@ -301,7 +301,6 @@ void TRenderWindow::DrawQuad(Opengl::TShader& Shader,std::function<void()> OnBin
 	//	do bindings
 	auto ShaderBound = Shader.Bind();
 	OnBind();
-	ShaderBound.SetUniform("Blue", 1.0f );
 	//ShaderBound.SetUniform("Rect", Soy::RectToVector(Rect) );
 	BlitQuad.Draw();
 	Opengl_IsOkay();
@@ -380,6 +379,36 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	}
 }
 
+void EnumFloatArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray);
+
+void EnumFloatArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>&& FloatArray)
+{
+	EnumFloatArray( ValueHandle, FloatArray );
+}
+
+void EnumFloatArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray)
+{
+	if ( ValueHandle->IsNumber() )
+	{
+		auto ValueFloat = Local<Number>::Cast( ValueHandle );
+		FloatArray.PushBack( ValueFloat->Value() );
+	}
+	else if ( ValueHandle->IsArray() )
+	{
+		//	we recursively expand arrays
+		//	really we should only allow one level deep and check against the uniform (to allow arrays of vec4)
+		auto ValueArray = Local<v8::Array>::Cast( ValueHandle );
+		for ( auto i=0;	i<ValueArray->Length();	i++ )
+		{
+			auto ElementHandle = ValueArray->Get(i);
+			EnumFloatArray( ElementHandle, FloatArray );
+		}
+	}
+	else
+	{
+		throw Soy::AssertException("Unhandled element type [in array]");
+	}
+}
 
 v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 {
@@ -399,7 +428,21 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	}
 
 	//	get type from args
-	//Opengl::SetUniform( Uniform, v );
+	//	gr: we dont have types yet, so use arrays
+	auto ValueHandle = Arguments[1];
+	
+	//	todo: assuming float, if the uniform is an int, lets assume int in a seperate branch
+	bool TargetIsFloat = true;
+	if ( TargetIsFloat )
+	{
+		BufferArray<float,100> Floats;
+		EnumFloatArray( ValueHandle, GetArrayBridge(Floats) );
+		Shader.SetUniform( Uniform, GetArrayBridge(Floats) );
+	}
+	else
+	{
+		throw Soy::AssertException("Currently only float uniform supported");
+	}
 
 	return v8::Undefined(Params.mIsolate);
 }
