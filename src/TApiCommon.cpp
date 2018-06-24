@@ -3,6 +3,7 @@
 #include <SoyImage.h>
 #include <SoyFilesystem.h>
 #include <SoyStream.h>
+#include <SoyOpengl.h>
 
 using namespace v8;
 
@@ -186,7 +187,28 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 
 void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
-	throw Soy::AssertException("todo: get texture");
+	//	already created
+	if ( mOpenglTexture != nullptr )
+	{
+		OnTextureLoaded();
+		return;
+	}
+	
+	if ( !mPixels )
+		throw Soy::AssertException("Trying to get opengl texture when we have no pixels");
+	
+	//	gr: this may need to be on the context's thread
+	try
+	{
+		mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
+		SoyGraphics::TTextureUploadParams UploadParams;
+		mOpenglTexture->Write( *mPixels, UploadParams );
+		OnTextureLoaded();
+	}
+	catch(std::exception& e)
+	{
+		OnError( e.what() );
+	}
 }
 
 const Opengl::TTexture& TImageWrapper::GetTexture()
