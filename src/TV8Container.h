@@ -28,6 +28,12 @@ namespace v8
 
 	template<typename T>
 	inline T&	GetObject(Local<Value> Value);
+	
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>& FloatArray);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>& IntArray);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray);
+
 }
 
 
@@ -106,6 +112,24 @@ public:
 
 
 
+inline void CallFunc(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)
+{
+	v8::CallbackInfo Params( Paramsv8, Container );
+	try
+	{
+		auto ReturnValue = Function( Params );
+		Params.mParams.GetReturnValue().Set(ReturnValue);
+	}
+	catch(std::exception& e)
+	{
+		//	pass exception to javascript
+		auto* Isolate = Params.mParams.GetIsolate();
+		auto Exception = Isolate->ThrowException( v8::String::NewFromUtf8( Isolate, e.what() ));
+		Params.mParams.GetReturnValue().Set(Exception);
+	}
+}
+
+
 template<const char* FunctionName>
 inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
 {
@@ -113,19 +137,7 @@ inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<
 	static TV8Container* ContainerCache = nullptr;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
-		v8::CallbackInfo Params( Paramsv8, *ContainerCache );
-		try
-		{
-			auto ReturnValue = FunctionCache( Params );
-			Params.mParams.GetReturnValue().Set(ReturnValue);
-		}
-		catch(std::exception& e)
-		{
-			//	pass exception to javascript
-			auto* Isolate = Params.mParams.GetIsolate();
-			auto Exception = Isolate->ThrowException( v8::String::NewFromUtf8( Isolate, e.what() ));
-			Params.mParams.GetReturnValue().Set(Exception);
-		}
+		CallFunc( FunctionCache, Paramsv8, *ContainerCache );
 	};
 	ContainerCache = this;
 	BindRawFunction( This, FunctionName, RawFunction );
@@ -139,19 +151,7 @@ inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::f
 	static TV8Container* ContainerCache = nullptr;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
-		v8::CallbackInfo Params( Paramsv8, *ContainerCache );
-		try
-		{
-			auto ReturnValue = FunctionCache( Params );
-			Params.mParams.GetReturnValue().Set(ReturnValue);
-		}
-		catch(std::exception& e)
-		{
-			//	pass exception to javascript
-			auto* Isolate = Params.mParams.GetIsolate();
-			auto Exception = Isolate->ThrowException( v8::String::NewFromUtf8( Isolate, e.what() ));
-			Params.mParams.GetReturnValue().Set(Exception);
-		}
+		CallFunc( FunctionCache, Paramsv8, *ContainerCache );
 	};
 	ContainerCache = this;
 	BindRawFunction( This, FunctionName, RawFunction );

@@ -283,4 +283,63 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 	}
 }
 
+void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray)
+{
+	EnumArray( ValueHandle, FloatArray );
+}
 
+void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray)
+{
+	EnumArray( ValueHandle, IntArray );
+
+}
+
+
+void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray)
+{
+	if ( ValueHandle->IsNumber() )
+	{
+		auto ValueFloat = Local<Number>::Cast( ValueHandle );
+		FloatArray.PushBack( ValueFloat->Value() );
+	}
+	else if ( ValueHandle->IsArray() )
+	{
+		//	we recursively expand arrays
+		//	really we should only allow one level deep and check against the uniform (to allow arrays of vec4)
+		auto ValueArray = Local<v8::Array>::Cast( ValueHandle );
+		for ( auto i=0;	i<ValueArray->Length();	i++ )
+		{
+			auto ElementHandle = ValueArray->Get(i);
+			EnumArray( ElementHandle, FloatArray );
+		}
+	}
+	else
+	{
+		throw Soy::AssertException("Unhandled element type [in array]");
+	}
+}
+
+
+void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
+{
+	if ( ValueHandle->IsNumber() )
+	{
+		auto ValueFloat = Local<Number>::Cast( ValueHandle );
+		IntArray.PushBack( ValueFloat->Value() );
+	}
+	else if ( ValueHandle->IsArray() )
+	{
+		//	we recursively expand arrays
+		//	really we should only allow one level deep and check against the uniform (to allow arrays of vec4)
+		auto ValueArray = Local<v8::Array>::Cast( ValueHandle );
+		for ( auto i=0;	i<ValueArray->Length();	i++ )
+		{
+			auto ElementHandle = ValueArray->Get(i);
+			EnumArray( ElementHandle, IntArray );
+		}
+	}
+	else
+	{
+		throw Soy::AssertException("Unhandled element type [in array]");
+	}
+}

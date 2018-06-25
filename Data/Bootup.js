@@ -40,57 +40,95 @@ let ImageFragShaderSource = `
 	}
 `;
 
+var DrawImageShader = null;
+var DebugShader = null;
+var LastProcessedImage = null;
+
 function ReturnSomeString()
 {
 	return "Hello world";
 }
 
-function test_function()
+
+function ProcessFrame(RenderTarget,Frame)
+{
+	if ( !DebugShader )
+	{
+		DebugShader = new OpenglShader( RenderTarget, VertShaderSource, DebugFragShaderSource );
+	}
+	
+	let SetUniforms = function(Shader)
+	{
+		Shader.SetUniform("Image", Frame, 0 );
+	}
+	
+	RenderTarget.DrawQuad( DebugShader, SetUniforms );
+}
+
+function StartProcessFrame(Frame,OpenglContext)
+{
+	log( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
+	let FrameEdges = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	//LastProcessedImage = FrameEdges;
+	
+	//	blit into render target
+	let OnBlit = function(RenderTarget)
+	{
+		ProcessFrame( RenderTarget, Frame );
+	};
+	//OpenglContext.Blit( FrameEdges, OnBlit );
+}
+
+
+function WindowRender(RenderTarget)
+{
+	try
+	{
+		if ( LastProcessedImage == null )
+		{
+			RenderTarget.ClearColour(0,1,1);
+			return;
+		}
+		
+		if ( !DrawImageShader )
+		{
+			DrawImageShader = new OpenglShader( RenderTarget, VertShaderSource, ImageFragShaderSource );
+		}
+		
+		let Shader = DrawImageShader;
+		
+		let SetUniforms = function(Shader)
+		{
+			//Blue = (Blue==0) ? 1 : 0;
+			//log("On bind: " + Blue);
+			//Shader.SetUniform("Blue", Blue );
+			//log( typeof(Pitch) );
+			Shader.SetUniform("Image", LastProcessedImage, 0 );
+		}
+		
+		RenderTarget.ClearColour(0,1,0);
+		RenderTarget.DrawQuad( Shader, SetUniforms );
+	}
+	catch(Exception)
+	{
+		RenderTarget.ClearColour(1,0,0);
+		log(Exception);
+	}
+}
+
+function Main()
 {
 	//log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
-	let DrawImageShader = null;
-	let DebugShader = null;
-	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
-	//let PitchEdge = new Image( [Pitch.GetWidth(),Pitch.GetHeight() ] );
-	var Blue = 0;
 	
-	let OnRender = function()
-	{
-		try
-		{
-			//	deffered atm
-			if ( !DebugShader )
-			{
-				DebugShader = new OpenglShader( Window1, VertShaderSource, DebugFragShaderSource );
-			}
-			if ( !DrawImageShader )
-			{
-				DrawImageShader = new OpenglShader( Window1, VertShaderSource, ImageFragShaderSource );
-			}
-			
-			let Shader = DrawImageShader;
-			
-			let SetUniforms = function(Shader)
-			{
-				//Blue = (Blue==0) ? 1 : 0;
-				//log("On bind: " + Blue);
-				//Shader.SetUniform("Blue", Blue );
-				//log( typeof(Pitch) );
-				Shader.SetUniform("Image", Pitch, 0 );
-			}
-			
-			Window1.ClearColour(0,1,0);
-			Window1.DrawQuad( Shader, SetUniforms );
-		}
-		catch(Exception)
-		{
-			Window1.ClearColour(1,0,0);
-			log(Exception);
-		}
-	}
-	Window1.OnRender = OnRender;
+	Window1.OnRender = function(){	WindowRender( Window1 );	};
+	
+	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
+	//LastProcessedImage = Pitch;
+	
+	let OpenglContext = Window1;
+	StartProcessFrame( Pitch, OpenglContext );
 }
 
 //	main
-test_function();
+Main();

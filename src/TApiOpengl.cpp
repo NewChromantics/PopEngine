@@ -381,36 +381,6 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	}
 }
 
-void EnumFloatArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray);
-
-void EnumFloatArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>&& FloatArray)
-{
-	EnumFloatArray( ValueHandle, FloatArray );
-}
-
-void EnumFloatArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray)
-{
-	if ( ValueHandle->IsNumber() )
-	{
-		auto ValueFloat = Local<Number>::Cast( ValueHandle );
-		FloatArray.PushBack( ValueFloat->Value() );
-	}
-	else if ( ValueHandle->IsArray() )
-	{
-		//	we recursively expand arrays
-		//	really we should only allow one level deep and check against the uniform (to allow arrays of vec4)
-		auto ValueArray = Local<v8::Array>::Cast( ValueHandle );
-		for ( auto i=0;	i<ValueArray->Length();	i++ )
-		{
-			auto ElementHandle = ValueArray->Get(i);
-			EnumFloatArray( ElementHandle, FloatArray );
-		}
-	}
-	else
-	{
-		throw Soy::AssertException("Unhandled element type [in array]");
-	}
-}
 
 v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 {
@@ -459,7 +429,7 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
 		BufferArray<float,100> Floats;
-		EnumFloatArray( ValueHandle, GetArrayBridge(Floats) );
+		EnumArray( ValueHandle, GetArrayBridge(Floats) );
 		Shader.SetUniform( Uniform, GetArrayBridge(Floats) );
 	}
 	else
