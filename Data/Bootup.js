@@ -1,11 +1,5 @@
-function ReturnSomeString()
-{
-	return "Hello world";
-}
-
-function test_function()
-{
-	let VertShaderSource = `#version 410
+let VertShaderSource = `
+	#version 410
 	const vec4 Rect = vec4(0,0,1,1);
 	in vec2 TexCoord;
 	out vec2 uv;
@@ -22,9 +16,10 @@ function test_function()
 		uv = vec2(TexCoord.x,1-TexCoord.y);
 		Blue_Frag = Blue;
 	}
-	`;
-	
-	let DebugFragShaderSource = `#version 410
+`;
+
+let DebugFragShaderSource = `
+	#version 410
 	in vec2 uv;
 	in float Blue_Frag;
 	//out vec4 FragColor;
@@ -32,22 +27,32 @@ function test_function()
 	{
 		gl_FragColor = vec4(uv.x,uv.y,Blue_Frag,1);
 	}
-	`;
-	
-	let ImageFragShaderSource = `#version 410
+`;
+
+let ImageFragShaderSource = `
+	#version 410
 	in vec2 uv;
 	uniform sampler2D Image;
 	void main()
 	{
 		gl_FragColor = texture( Image, uv );
+		gl_FragColor *= vec4(uv.x,uv.y,0,1);
 	}
-	`;
-	
+`;
+
+function ReturnSomeString()
+{
+	return "Hello world";
+}
+
+function test_function()
+{
 	//log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
-	//let Window2 = new OpenglWindow("Hello2!");
-	let Shader = null;
+	let DrawImageShader = null;
+	let DebugShader = null;
 	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
+	//let PitchEdge = new Image( [Pitch.GetWidth(),Pitch.GetHeight() ] );
 	var Blue = 0;
 	
 	let OnRender = function()
@@ -55,11 +60,16 @@ function test_function()
 		try
 		{
 			//	deffered atm
-			if ( Shader == null )
+			if ( !DebugShader )
 			{
-				//Shader = new OpenglShader( Window1, VertShaderSource, DebugFragShaderSource );
-				Shader = new OpenglShader( Window1, VertShaderSource, ImageFragShaderSource );
+				DebugShader = new OpenglShader( Window1, VertShaderSource, DebugFragShaderSource );
 			}
+			if ( !DrawImageShader )
+			{
+				DrawImageShader = new OpenglShader( Window1, VertShaderSource, ImageFragShaderSource );
+			}
+			
+			let Shader = DrawImageShader;
 			
 			let SetUniforms = function(Shader)
 			{
