@@ -131,6 +131,9 @@ function StartProcessFrame(Frame,OpenglContext)
 	//	blit into render target
 	let OnBlit = function(RenderTarget)
 	{
+		//	gr: this RenderTarget doesn't currently exist,
+		//	we steal the window. Need to pass a real "render target"
+		//	(with width/height) and access to a context
 		ProcessFrame( OpenglContext, Frame );
 	};
 	OpenglContext.Render( FrameEdges, OnBlit );
@@ -183,7 +186,6 @@ function Main()
 	
 	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
 	//let Pitch = new Image("Data/Cat.jpg");
-	//LastProcessedImage = Pitch;
 	
 	let OpenglContext = Window1;
 	StartProcessFrame( Pitch, OpenglContext );
