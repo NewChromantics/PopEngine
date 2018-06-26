@@ -13,7 +13,7 @@ let VertShaderSource = `
 		//	move to view space 0..1 to -1..1
 		gl_Position.xy *= vec2(2,2);
 		gl_Position.xy -= vec2(1,1);
-		uv = vec2(TexCoord.x,1-TexCoord.y);
+		uv = vec2(TexCoord.x,TexCoord.y);
 		Blue_Frag = Blue;
 	}
 `;
@@ -35,13 +35,67 @@ let ImageFragShaderSource = `
 	uniform sampler2D Image;
 	void main()
 	{
-		gl_FragColor = texture( Image, uv );
-		gl_FragColor *= vec4(uv.x,uv.y,0,1);
+		vec2 Flippeduv = vec2( uv.x, 1-uv.y );
+		gl_FragColor = texture( Image, Flippeduv );
+		//gl_FragColor *= vec4(uv.x,uv.y,0,1);
 	}
 `;
 
+
+let EdgeFragShaderSource = `
+	#version 410
+	in vec2 uv;
+	uniform sampler2D Image;
+
+	float GetLum(vec3 rgb)
+	{
+		float lum = max( rgb.x, max( rgb.y, rgb.z ) );
+		return lum;
+	}
+
+	float GetLumSample(vec2 uvoffset)
+	{
+		vec3 rgb = texture( Image, uv+uvoffset ).xyz;
+		return GetLum(rgb);
+	}
+
+	void main()
+	{
+		vec2 ImageSize = vec2( 1280, 720 );
+		vec2 uvstep2 = 1.0 / ImageSize;
+		#define NeighbourCount	(3*3)
+		float NeighbourLums[NeighbourCount];
+		vec2 NeighbourSteps[NeighbourCount] =
+		vec2[](
+			vec2(-1,-1),	vec2(0,-1),	vec2(1,-1),
+			vec2(-1,0),	vec2(0,0),	vec2(1,-1),
+			vec2(-1,1),	vec2(0,1),	vec2(1,1)
+		);
+		
+		for ( int n=0;	n<NeighbourCount;	n++ )
+		{
+			NeighbourLums[n] = GetLumSample( NeighbourSteps[n] * uvstep2 );
+		}
+		
+		float BiggestDiff = 0;
+		float ThisLum = NeighbourLums[4];
+		for ( int n=0;	n<NeighbourCount;	n++ )
+		{
+			float Diff = abs( ThisLum - NeighbourLums[n] );
+			BiggestDiff = max( Diff, BiggestDiff );
+		}
+		
+		if ( BiggestDiff > 0.1 )
+			gl_FragColor = vec4(1,1,1,1);
+		else
+			gl_FragColor = vec4(0,0,0,1);
+	}
+`;
+
+
 var DrawImageShader = null;
 var DebugShader = null;
+var EdgeShader = null;
 var LastProcessedImage = null;
 
 function ReturnSomeString()
@@ -52,9 +106,12 @@ function ReturnSomeString()
 
 function ProcessFrame(RenderTarget,Frame)
 {
-	if ( !DebugShader )
+	log("Render target callback");
+	RenderTarget.ClearColour(1,0,0);
+	
+	if ( !EdgeShader )
 	{
-		DebugShader = new OpenglShader( RenderTarget, VertShaderSource, DebugFragShaderSource );
+		EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
 	}
 	
 	let SetUniforms = function(Shader)
@@ -62,21 +119,22 @@ function ProcessFrame(RenderTarget,Frame)
 		Shader.SetUniform("Image", Frame, 0 );
 	}
 	
-	RenderTarget.DrawQuad( DebugShader, SetUniforms );
+	RenderTarget.ClearColour(1,0,0);
+	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
 }
 
 function StartProcessFrame(Frame,OpenglContext)
 {
 	log( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	let FrameEdges = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	//LastProcessedImage = FrameEdges;
 	
 	//	blit into render target
 	let OnBlit = function(RenderTarget)
 	{
-		ProcessFrame( RenderTarget, Frame );
+		ProcessFrame( OpenglContext, Frame );
 	};
-	//OpenglContext.Blit( FrameEdges, OnBlit );
+	OpenglContext.Render( FrameEdges, OnBlit );
+	LastProcessedImage = FrameEdges;
 }
 
 
@@ -124,6 +182,7 @@ function Main()
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
 	
 	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
+	//let Pitch = new Image("Data/Cat.jpg");
 	//LastProcessedImage = Pitch;
 	
 	let OpenglContext = Window1;

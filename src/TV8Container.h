@@ -209,4 +209,3 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 	return *Window;
 }
 
-

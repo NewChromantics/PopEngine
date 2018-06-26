@@ -7,6 +7,7 @@ using namespace v8;
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
 const char SetUniform_FunctionName[] = "SetUniform";
+const char Render_FunctionName[] = "Render";
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
@@ -99,8 +100,7 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 	auto& Arguments = Params.mParams;
 
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TWindowWrapper>( ThisHandle );
-	//auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	
 	if ( Arguments.Length() >= 1 )
 	{
@@ -135,9 +135,7 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto* This = reinterpret_cast<TWindowWrapper*>( Local<External>::Cast(ThisHandle)->Value() );
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	
 	if ( Arguments.Length() != 3 )
 		throw Soy::AssertException("Expecting 3 arguments for ClearColour(r,g,b)");
@@ -147,10 +145,102 @@ v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 	auto Blue = Local<Number>::Cast( Arguments[2] );
 	Soy::TRgb Colour( Red->Value(), Green->Value(), Blue->Value() );
 		
-	This->mWindow->ClearColour( Colour );
+	This.mWindow->ClearColour( Colour );
 	return v8::Undefined(Params.mIsolate);
 }
 
+
+v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	if ( Arguments.Length() != 2 )
+		throw Soy::AssertException("Expecting 2 arguments for Render(RenderTarget,Callback)");
+
+	//	first is what we wanna render to
+	//	todo: type check
+	auto* pTargetImage = &v8::GetObject<TImageWrapper>( Arguments[0] );
+	Persistent<Value,CopyablePersistentTraits<Value>> TargetImageHandle;
+	TargetImageHandle.Reset( Params.mIsolate, Arguments[0] );
+	Persistent<Value,CopyablePersistentTraits<Value>> CallbackFunctionHandle;
+	CallbackFunctionHandle.Reset( Params.mIsolate, Arguments[1] );
+	//auto CallbackFunction = Persistent<Function>::Cast( Arguments[1] );
+	
+	//	bit risky with context destruction in future
+	TV8Container* Container = &Params.mContainer;
+	
+	auto Cleanup = [TargetImageHandle,CallbackFunctionHandle]
+	{
+		//TargetImageHandle.Reset();
+		//CallbackFunctionHandle.Reset();
+	};
+
+	//	here we're going from JS thread, to opengl thread, back to js thread.
+	//	maybe lock the JS container to the GL thread... but deadlocks loom.
+	//	promises and a c++ job system will hopefully fix this?
+	auto ExecuteCallback = [Cleanup,Container,TargetImageHandle,CallbackFunctionHandle]
+	{
+		auto Runner = [&](Local<Context> context)
+		{
+			auto* Isolate = Container->mIsolate;
+			auto This = context->Global();
+			BufferArray<v8::Local<v8::Value>,0> CallbackParams;
+			auto CallbackFunctionLocal = Local<Value>::New( Isolate, CallbackFunctionHandle );
+			auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
+			Container->ExecuteFunc( context, CallbackFunctionLocalFunc, This, GetArrayBridge(CallbackParams) );
+		};
+		Container->RunScoped( Runner );
+		Cleanup();
+	};
+	
+	//	opengl job
+	auto Render = [ExecuteCallback,pTargetImage,Isolate,Cleanup]
+	{
+		//	get the texture from the image
+		std::string GenerateTextureError;
+		auto OnError = [&](const std::string& Error)
+		{
+			GenerateTextureError = Error;
+		};
+		
+		//	gr: can't use JS here, we're not in a isolate scope.
+		//auto TargetImageHandleLocal = Local<Value>::New( Isolate, TargetImageHandle );
+		//auto& TargetImage = v8::GetObject<TImageWrapper>(TargetImageHandleLocal);
+		auto& TargetImage = *pTargetImage;
+		TargetImage.GetTexture( []{}, OnError );
+		if ( GenerateTextureError.length() != 0 )
+			throw Soy::AssertException(GenerateTextureError);
+
+		//	setup render target
+		auto& TargetTexture = TargetImage.GetTexture();
+		Opengl::TRenderTargetFbo RenderTarget( TargetTexture );
+		RenderTarget.mGenerateMipMaps = false;
+		RenderTarget.Bind();
+		RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+		try
+		{
+			ExecuteCallback();
+			RenderTarget.Unbind();
+		}
+		catch(std::exception& e)
+		{
+			RenderTarget.Unbind();
+			Cleanup();
+			throw;
+		}
+		
+	};
+	
+	//Soy::TSemaphore Semaphore;
+	auto& OpenglContext = *This.mWindow->GetContext();
+	//OpenglContext.PushJob( Render, Semaphore );
+	OpenglContext.PushJob( Render );
+	//Semaphore.Wait();
+	
+	return v8::Undefined(Params.mIsolate);
+}
 
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
@@ -176,12 +266,10 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	//	add members
 	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
 	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
+	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
+	
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
-	
-	//Point* p = ...;
-	//Local<Object> obj = point_templ->NewInstance();
-	//obj->SetInternalField(0, External::New(isolate, p));
 	
 	return ConstructorFunc;
 }
@@ -410,7 +498,7 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 		auto BindIndexHandle = Arguments[2];
 		if ( !BindIndexHandle->IsNumber() )
 			throw Soy::AssertException("Currently need to pass texture bind index (increment from 0). SetUniform(Name,Image,BindIndex)");
-		auto BindIndex = Local<Number>::Cast( BindIndexHandle )->Int32Value();
+		auto BindIndex = BindIndexHandle.As<Number>()->Int32Value();
 		
 		//	get the image
 		auto& Image = v8::GetObject<TImageWrapper>(ValueHandle);

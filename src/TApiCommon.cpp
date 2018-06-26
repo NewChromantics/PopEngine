@@ -196,35 +196,35 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	
 	if ( Soy::StringEndsWith( Filename, Jpeg::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Jpeg::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
 		return;
 	}
 	
 	if ( Soy::StringEndsWith( Filename, Gif::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Gif::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
 		return;
 	}
 	
 	if ( Soy::StringEndsWith( Filename, Tga::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Tga::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
 		return;
 	}
 	
 	if ( Soy::StringEndsWith( Filename, Bmp::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Bmp::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
 		return;
 	}
 	
 	if ( Soy::StringEndsWith( Filename, Psd::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Psd::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
 		return;
 	}
@@ -285,7 +285,7 @@ void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::functi
 	if ( !mPixels )
 		throw Soy::AssertException("Trying to get opengl texture when we have no pixels");
 	
-	//	gr: this may need to be on the context's thread
+	//	gr: this will need to be on the context's thread
 	try
 	{
 		mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
