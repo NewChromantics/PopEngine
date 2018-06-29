@@ -66,35 +66,23 @@ TPopAppError::Type PopMain()
 
 TPopTrack::TPopTrack(const std::string& BootupFilename)
 {
-	mV8Container.reset( new TV8Container() );
-	
-	ApiCommon::Bind( *mV8Container );
-	ApiOpengl::Bind( *mV8Container );
-	
-	std::string BootupSource;
-	if ( !Soy::FileToString( BootupFilename, BootupSource ) )
-	{
-		std::stringstream Error;
-		Error << "Failed to read bootup file " << BootupFilename;
-		throw Soy::AssertException( Error.str() );
-	}
-	mV8Container->LoadScript( BootupSource );
-	
-	//	example
-	mV8Container->ExecuteGlobalFunc("ReturnSomeString");
+	//	todo: watch for when a file changes and recreate instance
+	mV8Instance.reset( new TV8Instance(BootupFilename) );
+
 }
 
 TPopTrack::~TPopTrack()
 {
+	/*
 	if ( mWindow )
 	{
 		mWindow->WaitToFinish();
 		mWindow.reset();
-	}
+	}*/
 	
 }
 
-
+/*
 std::shared_ptr<Opengl::TContext> TPopTrack::GetContext()
 {
 	if ( !mWindow )
@@ -102,6 +90,59 @@ std::shared_ptr<Opengl::TContext> TPopTrack::GetContext()
 	
 	return mWindow->GetContext();
 }
+*/
 
+TV8Instance::TV8Instance(const std::string& ScriptFilename) :
+	SoyWorkerThread	( ScriptFilename, SoyWorkerWaitMode::Sleep )
+{
+	//	bind first
+	try
+	{
+		mV8Container.reset( new TV8Container() );
+		ApiCommon::Bind( *mV8Container );
+		ApiOpengl::Bind( *mV8Container );
 
+		//	gr: start the thread immediately, there should be no problems having the thread running before queueing a job
+		this->Start();
 
+		std::string BootupSource;
+		if ( !Soy::FileToString( ScriptFilename, BootupSource ) )
+		{
+			std::stringstream Error;
+			Error << "Failed to read bootup file " << ScriptFilename;
+			throw Soy::AssertException( Error.str() );
+		}
+		
+		auto* Container = mV8Container.get();
+		auto LoadScript = [=](v8::Local<v8::Context> Context)
+		{
+			Container->LoadScript( Context, BootupSource );
+		};
+		
+		//	gr: running on another thread causes crash...
+		mV8Container->QueueScoped( LoadScript );
+		//mV8Container->RunScoped( LoadScript );
+	}
+	catch(std::exception& e)
+	{
+		//	clean up
+		mV8Container.reset();
+		throw;
+	}
+}
+
+TV8Instance::~TV8Instance()
+{
+	mV8Thread.reset();
+	mV8Container.reset();
+	
+}
+
+bool TV8Instance::Iteration()
+{
+	if ( !mV8Container )
+		return false;
+		
+	mV8Container->ProcessJobs();
+	return true;
+}

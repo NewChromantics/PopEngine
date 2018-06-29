@@ -150,15 +150,50 @@ v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 }
 
 
+template<typename TYPE>
+v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isolate,Local<TYPE> LocalHandle)
+{
+	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
+	PersistentHandle.Reset( Isolate, LocalHandle );
+	return PersistentHandle;
+}
+
 v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	auto* Isolate = Params.mIsolate;
 	
-	if ( Arguments.Length() != 2 )
-		throw Soy::AssertException("Expecting 2 arguments for Render(RenderTarget,Callback)");
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
 
+	auto CallbackPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	auto* Container = &Params.mContainer;
+	
+	auto OpenglJob = [=]
+	{
+		//	do opengl stuff
+		std::Debug << "do opengl stuff" << std::endl;
+		
+		//	queue the completion
+		auto Complete = [=](Local<Context> Context)
+		{
+			std::Debug << "opengl complete (js callback time)" << std::endl;
+			//	gr: can't do this unless we're in the javascript thread...
+			auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+			auto CallbackLocal = v8::GetLocal( *Isolate, CallbackPersistent );
+			ResolverLocal->Resolve( CallbackLocal );
+		};
+		Container->QueueScoped( Complete );
+	};
+	auto& OpenglContext = *This.mWindow->GetContext();
+	OpenglContext.PushJob( OpenglJob );
+
+	//	return the promise of our resolver
+	auto Promise = Resolver->GetPromise();
+	return Promise;
+	/*
 	//	first is what we wanna render to
 	//	todo: type check
 	auto* pTargetImage = &v8::GetObject<TImageWrapper>( Arguments[0] );
@@ -240,6 +275,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	//Semaphore.Wait();
 	
 	return v8::Undefined(Params.mIsolate);
+	 */
 }
 
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)

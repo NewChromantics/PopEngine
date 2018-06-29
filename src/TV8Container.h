@@ -16,19 +16,40 @@ namespace v8
 	class Isolate;
 	class Context;
 	class Value;
+	class Task;
 
 	template<typename T>
 	class Local;
+	
+	template<typename TYPE>
+	class CopyablePersistentTraits;
+	template<typename T,typename Traits>
+	class Persistent;
 
-	//	our wrapper
+	template<typename TYPE>
+	class FunctionCallbackInfo;
+	
+	//	our wrappers
 	class CallbackInfo;
+	class LambdaTask;
 	
-	template<typename T>
-	inline T&	GetInternalFieldObject(Local<Value> Value,size_t InternalFieldIndex);
+	template<typename TYPE>
+	TYPE&			GetInternalFieldObject(Local<Value> Value,size_t InternalFieldIndex);
 
-	template<typename T>
-	inline T&	GetObject(Local<Value> Value);
+	template<typename TYPE>
+	TYPE&			GetObject(Local<Value> Value);
+
+	//template<typename TYPE>
+	Local<Value>	GetException(v8::Isolate& Isolate,const std::exception& Exception);
 	
+	template<typename TYPE>
+	Persistent<TYPE,CopyablePersistentTraits<TYPE>>	GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle);
+	
+	template<typename TYPE,typename TRAITS>
+	Local<TYPE> 	GetLocal(v8::Isolate& Isolate,Persistent<TYPE,TRAITS> PersistentHandle);
+	
+	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
+
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>& FloatArray);
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray);
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>& IntArray);
@@ -68,23 +89,49 @@ public:
 	{
 	}
 	
+	v8::Isolate&	GetIsolate() const		{	return *mIsolate;	}
+	
+public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
 	TV8Container&								mContainer;
 	v8::Isolate*								mIsolate;
 	v8::Local<v8::Context>						mContext;
 };
 
-
+class v8::LambdaTask : public v8::Task
+{
+public:
+	LambdaTask(std::function<void(v8::Local<v8::Context>)> Lambda,TV8Container& Container):
+		mLambda		( Lambda ),
+		mContainer	( Container )
+	{
+	}
+	virtual void Run() override;
+	
+public:
+	TV8Container&								mContainer;
+	std::function<void(v8::Local<v8::Context>)>	mLambda;
+};
 
 class TV8Container
 {
 public:
 	TV8Container();
 	
-    void        CreateContext();
-	void		LoadScript(const std::string& Source);
+    void     	   CreateContext();
+	v8::Isolate&	GetIsolate()	{	return *mIsolate;	}
 	
- 	void		ExecuteGlobalFunc(const std::string& FunctionName);
+	void		RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
+	void		QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
+	
+	void		ProcessJobs();	//	run all the queued jobs then return
+	
+	//	run these with RunScoped (internal) or QueueJob (external)
+	void		LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
+	void		ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
+
+	
+	
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
     void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
@@ -96,8 +143,7 @@ public:
 	
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
-	void					RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
-									  
+	
 	
 private:
 	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
@@ -111,8 +157,7 @@ public:
 };
 
 
-
-inline void CallFunc(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)
+inline void v8::CallFunc(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)
 {
 	v8::CallbackInfo Params( Paramsv8, Container );
 	try
@@ -122,9 +167,7 @@ inline void CallFunc(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Func
 	}
 	catch(std::exception& e)
 	{
-		//	pass exception to javascript
-		auto* Isolate = Params.mParams.GetIsolate();
-		auto Exception = Isolate->ThrowException( v8::String::NewFromUtf8( Isolate, e.what() ));
+		auto Exception = v8::GetException( Container.GetIsolate(), e );
 		Params.mParams.GetReturnValue().Set(Exception);
 	}
 }
@@ -185,6 +228,13 @@ inline T& v8::GetInternalFieldObject(v8::Local<v8::Value> Value,size_t InternalF
 }
 
 
+inline v8::Local<v8::Value> v8::GetException(v8::Isolate& Isolate,const std::exception& Exception)
+{
+	auto ErrorStr = v8::String::NewFromUtf8( &Isolate, Exception.what() );
+	auto JsException = Isolate.ThrowException( ErrorStr );
+	return JsException;
+}
+
 template<typename T>
 inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 {
@@ -208,4 +258,20 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 	auto Window = reinterpret_cast<T*>( WindowVoid );
 	return *Window;
 }
+
+template<typename TYPE>
+inline v8::Persistent<TYPE,v8::CopyablePersistentTraits<TYPE>> v8::GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle)
+{
+	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
+	PersistentHandle.Reset( &Isolate, LocalHandle );
+	return PersistentHandle;
+}
+	
+template<typename TYPE,typename TRAITS>
+inline v8::Local<TYPE> v8::GetLocal(v8::Isolate& Isolate,Persistent<TYPE,TRAITS> PersistentHandle)
+{
+	Local<TYPE> LocalHandle = Local<TYPE>::New( &Isolate, PersistentHandle );
+	return LocalHandle;
+}
+
 

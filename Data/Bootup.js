@@ -131,13 +131,39 @@ function StartProcessFrame(Frame,OpenglContext)
 	//	blit into render target
 	let OnBlit = function(RenderTarget)
 	{
+		log("OnBlit");
 		//	gr: this RenderTarget doesn't currently exist,
 		//	we steal the window. Need to pass a real "render target"
 		//	(with width/height) and access to a context
-		ProcessFrame( OpenglContext, Frame );
+		//ProcessFrame( OpenglContext, Frame );
 	};
-	OpenglContext.Render( FrameEdges, OnBlit );
-	LastProcessedImage = FrameEdges;
+	let PostBlit = function(What)
+	{
+		log("Post Blit");
+		log(What);
+	};
+	OpenglContext.Render( OnBlit ).then( PostBlit );
+	/*
+	try
+	{
+		const Hsl = await OpenglContext.Render( MakeHsl );
+		const Green = await OpenglContext.Render( MaskGreen );
+		const Pixels = await OpenglContext.Render( ReadPixels );
+		log("Made pixels");
+	}
+	catch(Exception)
+	{
+		log("Exception: " + Exception);
+	}
+	*/
+	/*
+	let OnFoundEdges = function(Edges)
+	{
+		log("OnFoundEdges: " + Edges);
+		//LastProcessedImage = FrameEdges;
+	};
+	 */
+	//.then( OnBlit );
 }
 
 
@@ -179,16 +205,18 @@ function WindowRender(RenderTarget)
 
 function Main()
 {
+	
 	//log("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
 	
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
 	
-	let Pitch = new Image("Data/FootballPitch_Rotated90.png");
+	let Pitch = new Image("Data/ArgentinaVsCroatia.png");
 	//let Pitch = new Image("Data/Cat.jpg");
 	
 	let OpenglContext = Window1;
 	StartProcessFrame( Pitch, OpenglContext );
+	
 }
 
 //	main

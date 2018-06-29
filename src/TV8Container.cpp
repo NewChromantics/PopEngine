@@ -25,9 +25,12 @@ V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
 {
 	//	get the exception from v8
 	auto Exception = TryCatch.Exception();
-	
+
 	String::Utf8Value ExceptionStr(Exception);
 	auto ExceptionCStr = *ExceptionStr;
+	if ( ExceptionCStr == nullptr )
+		ExceptionCStr = "<null> possibly not an exception";
+	
 	mError += ": ";
 	mError += ExceptionCStr;
 }
@@ -77,17 +80,26 @@ TV8Container::TV8Container() :
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
 	
-	
 	//  for now, single context per isolate
 	//	todo: abstract context to be per-script
 	CreateContext();
-
-	
 }
+
+void TV8Container::ProcessJobs()
+{
+	while ( v8::platform::PumpMessageLoop( mPlatform.get(), mIsolate) )
+	{
+		//std::Debug << "Pump message" << std::endl;
+		continue;
+	}
+	//std::Debug << "EOF messages" << std::endl;
+}
+
 
 void TV8Container::CreateContext()
 {
     //#error check https://stackoverflow.com/questions/33168903/c-scope-and-google-v8-script-context
+	v8::Locker locker(mIsolate);
 	auto* isolate = mIsolate;
 	v8::Isolate::Scope isolate_scope(isolate);
 
@@ -102,128 +114,139 @@ void TV8Container::CreateContext()
 }
 
 
-void TV8Container::LoadScript(const std::string& Source)
+void TV8Container::LoadScript(Local<Context> context,const std::string& Source)
 {
-	auto* isolate = mIsolate;
-	Isolate::Scope isolate_scope(isolate);
-	HandleScope handle_scope(isolate);
-	Local<Context> context = Local<Context>::New( isolate, mContext );
-	Context::Scope context_scope( context );
-
+	auto* Isolate = context->GetIsolate();
+	
 	// Create a string containing the JavaScript source code.
 	auto* SourceCstr = Source.c_str();
-	auto Sourcev8 = v8::String::NewFromUtf8( isolate, SourceCstr, v8::NewStringType::kNormal).ToLocalChecked();
+	auto Sourcev8 = v8::String::NewFromUtf8( Isolate, SourceCstr, v8::NewStringType::kNormal).ToLocalChecked();
 	
 	//	compile the source code.
 	Local<Script> NewScript;
 	{
-		TryCatch trycatch(isolate);
+		TryCatch trycatch(Isolate);
 		auto NewScriptMaybe = Script::Compile(context, Sourcev8);
 		if ( NewScriptMaybe.IsEmpty() )
 			throw V8Exception( trycatch, "Compiling script" );
 		NewScript = NewScriptMaybe.ToLocalChecked();
 	}
-
+	
 	{
-		TryCatch trycatch(isolate);
+		TryCatch trycatch(Isolate);
 		auto ScriptResultMaybe = NewScript->Run(context);
 		if ( ScriptResultMaybe.IsEmpty() )
 			throw V8Exception( trycatch, "Running script" );
 		
+		//	gr: scripts can never return anything, so this would always be undefined...
 		auto ScriptResult = ScriptResultMaybe.ToLocalChecked();
-		v8::String::Utf8Value MainResultStr( ScriptResult );
-		std::Debug << *MainResultStr << std::endl;
+		if ( !ScriptResult->IsUndefined() )
+		{
+			v8::String::Utf8Value MainResultStr( ScriptResult );
+			std::Debug << "LoadScript() -> " << *MainResultStr << std::endl;
+		}
 	}
 }
 
 
 void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate)
 {
-    //  setup scope. handle scope always required to GC locals
-    auto* isolate = mIsolate;
-    Isolate::Scope isolate_scope(isolate);
-    HandleScope handle_scope(isolate);
-    //	grab a local
-    Local<Context> context = Local<Context>::New( isolate, mContext );
-    Context::Scope context_scope( context );
-    
-    
-    auto Global = context->Global();
+	auto Bind = [&](Local<v8::Context> Context)
+	{
+		auto* Isolate = Context->GetIsolate();
+	    auto Global = Context->Global();
 
-    //	create new function
-    auto Template = GetTemplate(*this);
-    auto OpenglWindowFuncWrapperValue = Template->GetFunction();
-    auto ObjectNameStr = v8::String::NewFromUtf8(isolate, ObjectName);
-    auto SetResult = Global->Set( context, ObjectNameStr, OpenglWindowFuncWrapperValue);
+    	//	create new function
+    	auto Template = GetTemplate(*this);
+    	auto OpenglWindowFuncWrapperValue = Template->GetFunction();
+    	auto ObjectNameStr = v8::String::NewFromUtf8(Isolate, ObjectName);
+    	auto SetResult = Global->Set( Context, ObjectNameStr, OpenglWindowFuncWrapperValue);
+	};
+	RunScoped(Bind);
 }
 
 
 
 void TV8Container::BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
 {
-    //  setup scope. handle scope always required to GC locals
-	auto* isolate = mIsolate;
-	Isolate::Scope isolate_scope(isolate);
-	HandleScope handle_scope(isolate);
-	//	grab a local
-	Local<Context> context = Local<Context>::New( isolate, mContext );
-	Context::Scope context_scope( context );
+	auto Bind = [&](Local<v8::Context> Context)
+	{
+		auto* Isolate = Context->GetIsolate();
+
+		v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New( Isolate, RawFunction );
+		auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
+		auto* FunctionNameCstr = FunctionName;
+		auto SetResult = This->Set( Context, v8::String::NewFromUtf8(Isolate, FunctionNameCstr), LogFuncWrapperValue);
+	};
+	RunScoped(Bind);
 	
-	v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New(isolate, RawFunction );
-	auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
-	auto* FunctionNameCstr = FunctionName;
-	auto SetResult = This->Set( context, v8::String::NewFromUtf8(isolate, FunctionNameCstr), LogFuncWrapperValue);
 }
 
 
 void TV8Container::BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&))
 {
-	//  setup scope. handle scope always required to GC locals
-	auto* isolate = mIsolate;
-	Isolate::Scope isolate_scope(isolate);
-	HandleScope handle_scope(isolate);
-	//	grab a local
-	Local<Context> context = Local<Context>::New( isolate, mContext );
-	Context::Scope context_scope( context );
-	
-	v8::Local<v8::FunctionTemplate> FuncWrapper = v8::FunctionTemplate::New(isolate, RawFunction );
-	auto FuncWrapperValue = FuncWrapper->GetFunction();
-	auto* FunctionNameCstr = FunctionName;
-	
-	This->Set( isolate, FunctionNameCstr, FuncWrapperValue);
-}
-
-
-void TV8Container::ExecuteGlobalFunc(const std::string& FunctionName)
-{
-	auto Runner = [&](Local<Context> context)
+	auto Bind = [&](Local<v8::Context> Context)
 	{
-		auto Global = context->Global();
-		auto This = Global;
-		auto Result = ExecuteFunc( context, FunctionName, This );
+		auto* Isolate = Context->GetIsolate();
+		
+		v8::Local<v8::FunctionTemplate> FuncWrapper = v8::FunctionTemplate::New( Isolate, RawFunction );
+		auto FuncWrapperValue = FuncWrapper->GetFunction();
+		auto* FunctionNameCstr = FunctionName;
 
-		//	report anything that isn't undefined
-		if ( !Result->IsUndefined() )
-		{
-			String::Utf8Value ResultStr(Result);
-			std::Debug << *ResultStr << std::endl;
-		}
+		This->Set( Isolate, FunctionNameCstr, FuncWrapperValue);
 	};
-	RunScoped( Runner );
+	RunScoped(Bind);
 }
 
+
+void TV8Container::ExecuteGlobalFunc(Local<v8::Context> Context,const std::string& FunctionName)
+{
+	auto Global = Context->Global();
+	auto This = Global;
+	auto Result = ExecuteFunc( Context, FunctionName, This );
+
+	//	report anything that isn't undefined
+	if ( !Result->IsUndefined() )
+	{
+		String::Utf8Value ResultStr(Result);
+		std::Debug << *ResultStr << std::endl;
+	}
+}
+
+
+void TV8Container::QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
+{
+	//	gr: who owns this task?
+	auto* Task = new LambdaTask( Lambda, *this );
+	this->mPlatform->CallOnForegroundThread( mIsolate, Task );
+}
 
 void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 {
-	//  setup scope. handle scope always required to GC locals
 	auto* isolate = mIsolate;
-	Isolate::Scope isolate_scope(isolate);
-	HandleScope handle_scope(isolate);
-	//	grab a local
-	Local<Context> context = Local<Context>::New( isolate, mContext );
-	Context::Scope context_scope( context );
 
-	Lambda( context );
+	//	gr: we're supposed to lock the isolate here, but the setup we have,
+	//	this should only ever be called on the JS thread[s] anyway
+	//	maybe have a recursive mutex and throw if already locked
+	v8::Locker locker(mIsolate);
+	mIsolate->Enter();
+	try
+	{
+		//  setup scope. handle scope always required to GC locals
+		Isolate::Scope isolate_scope(isolate);
+		HandleScope handle_scope(isolate);
+		//	grab a local
+		Local<Context> context = Local<Context>::New( isolate, mContext );
+		Context::Scope context_scope( context );
+
+		//	gr: should we catch stuff here?
+		Lambda( context );
+	}
+	catch(...)
+	{
+		mIsolate->Exit();
+		throw;
+	}
 }
 
 v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
@@ -254,8 +277,8 @@ v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHan
 	}
 	catch(std::exception& e)
 	{
-		std::Debug << "Exception executing function" << ": " << e.what() << std::endl;
-		return v8::Undefined(isolate);
+		auto Exception = v8::GetException( *isolate, e );
+		return Exception;
 	}
 }
 
@@ -278,8 +301,8 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 	}
 	catch(std::exception& e)
 	{
-		std::Debug << "Exception executing function" << ": " << e.what() << std::endl;
-		return v8::Undefined(isolate);
+		auto Exception = v8::GetException( *isolate, e );
+		return Exception;
 	}
 }
 
@@ -342,4 +365,10 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
 	{
 		throw Soy::AssertException("Unhandled element type [in array]");
 	}
+}
+
+
+void v8::LambdaTask::Run()
+{
+	mContainer.RunScoped( mLambda );
 }

@@ -11,6 +11,7 @@
 		BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
 		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
+		BF39256620E51C36005AE288 /* TV8Instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF39256520E51C36005AE288 /* TV8Instance.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC520D6C80D000BC812 /* CoreGraphics.framework */; };
 		BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC720D6C811000BC812 /* ApplicationServices.framework */; };
@@ -91,6 +92,8 @@
 		BF31E49D1C56961100AB49AF /* SoyImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyImage.cpp; path = src/SoyImage.cpp; sourceTree = "<group>"; };
 		BF31E49E1C56961100AB49AF /* SoyImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyImage.h; path = src/SoyImage.h; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		BF39256420E51C36005AE288 /* TV8Instance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Instance.h; path = src/TV8Instance.h; sourceTree = "<group>"; };
+		BF39256520E51C36005AE288 /* TV8Instance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8Instance.cpp; path = src/TV8Instance.cpp; sourceTree = "<group>"; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
@@ -306,6 +309,8 @@
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
+				BF39256520E51C36005AE288 /* TV8Instance.cpp */,
+				BF39256420E51C36005AE288 /* TV8Instance.h */,
 				BF689AFE20D9A52E000BC812 /* TV8Container.cpp */,
 				BF689AFF20D9A52E000BC812 /* TV8Container.h */,
 			);
@@ -500,6 +505,7 @@
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
 				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
 				BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */,
+				BF39256620E51C36005AE288 /* TV8Instance.cpp in Sources */,
 				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
 				FB2534DC1A974E7B00A61590 /* SoyTime.cpp in Sources */,
