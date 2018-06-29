@@ -163,12 +163,15 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	auto* Isolate = Params.mIsolate;
-	
+
+	auto Window = Arguments.This();
+	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
 
-	//auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
 	auto* Container = &Params.mContainer;
@@ -176,11 +179,15 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
 	{
 		auto* Isolate = Container->mIsolate;
-		auto This = Context->Global();
-		BufferArray<v8::Local<v8::Value>,0> CallbackParams;
+		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
+		auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
+		auto TargetLocal = v8::GetLocal( *Isolate, TargetPersistent );
+		CallbackParams.PushBack( WindowLocal );
+		CallbackParams.PushBack( TargetLocal );
 		auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
 		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
-		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, This, GetArrayBridge(CallbackParams) );
+		auto FunctionThis = Context->Global();
+		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
 	};
 	
 	auto OnCompleted = [=](Local<Context> Context)

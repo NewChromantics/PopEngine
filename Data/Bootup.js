@@ -172,25 +172,25 @@ function StartProcessFrame(Frame,OpenglContext)
 	let FrameLineMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 
 	//	blit into render target
-	let MakeHsl = function(RenderTarget)
+	let MakeHsl = function(RenderTarget,RenderTargetTexture)
 	{
-		RenderHsl( OpenglContext, RenderTarget );
+		RenderHsl( RenderTarget );
 		log("MakeHsl:" + RenderTarget );
-		LastProcessedImage = RenderTarget;
+		LastProcessedImage = RenderTargetTexture;
 	};
 	
-	let MakeGreenMask = function(RenderTarget)
+	let MakeGreenMask = function(RenderTarget,RenderTargetTexture)
 	{
-		RenderGreenMask( OpenglContext, RenderTarget );
+		RenderGreenMask( RenderTarget );
 		log("MakeGreenMask:" + RenderTarget );
-		LastProcessedImage = RenderTarget;
+		LastProcessedImage = RenderTargetTexture;
 	};
 	
-	let MakeLineMask = function(RenderTarget)
+	let MakeLineMask = function(RenderTarget,RenderTargetTexture)
 	{
-		RenderLineMask( OpenglContext, RenderTarget );
+		RenderLineMask( RenderTarget );
 		log("MakeLineMask:" + RenderTarget );
-		LastProcessedImage = RenderTarget;
+		LastProcessedImage = RenderTargetTexture;
 	};
 	
 	let OnError = function(Error)
@@ -202,7 +202,7 @@ function StartProcessFrame(Frame,OpenglContext)
 	let Part3 = function()	{	return OpenglContext.Render( FrameLineMask, MakeLineMask );	}
 	let Finish = function()
 	{
-		LastProcessedImage = FrameHsl;
+		//LastProcessedImage = FrameHsl;
 		log("Done!");
 	};
 	Part1().then( Part2 ).then( Part3 ).then( Finish ).catch( OnError );
