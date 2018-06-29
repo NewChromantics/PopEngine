@@ -104,10 +104,10 @@ function ReturnSomeString()
 }
 
 
-function ProcessFrame(RenderTarget,Frame)
+function RenderHsl(RenderTarget)
 {
-	log("Render target callback");
 	RenderTarget.ClearColour(1,0,0);
+	return;
 	
 	if ( !EdgeShader )
 	{
@@ -123,51 +123,89 @@ function ProcessFrame(RenderTarget,Frame)
 	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
 }
 
+
+function RenderGreenMask(RenderTarget)
+{
+	RenderTarget.ClearColour(0,1,0);
+	return;
+
+	if ( !EdgeShader )
+	{
+		EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+	}
+	
+	let SetUniforms = function(Shader)
+	{
+		Shader.SetUniform("Image", Frame, 0 );
+	}
+	
+	RenderTarget.ClearColour(1,0,0);
+	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
+}
+
+
+function RenderLineMask(RenderTarget)
+{
+	RenderTarget.ClearColour(0,0,1);
+	return;
+	
+	if ( !EdgeShader )
+	{
+		EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+	}
+	
+	let SetUniforms = function(Shader)
+	{
+		Shader.SetUniform("Image", Frame, 0 );
+	}
+	
+	RenderTarget.ClearColour(1,0,0);
+	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
+}
+
+
 function StartProcessFrame(Frame,OpenglContext)
 {
 	log( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	let FrameHsl = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	let FrameMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let FrameGreenMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let FrameLineMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 
 	//	blit into render target
 	let MakeHsl = function(RenderTarget)
 	{
-		log("MakeHsl");
-		log(RenderTarget);
-		//	gr: this RenderTarget doesn't currently exist,
-		//	we steal the window. Need to pass a real "render target"
-		//	(with width/height) and access to a context
-		ProcessFrame( OpenglContext, Frame );
+		RenderHsl( OpenglContext, RenderTarget );
+		log("MakeHsl:" + RenderTarget );
+		LastProcessedImage = RenderTarget;
+	};
+	
+	let MakeGreenMask = function(RenderTarget)
+	{
+		RenderGreenMask( OpenglContext, RenderTarget );
+		log("MakeGreenMask:" + RenderTarget );
+		LastProcessedImage = RenderTarget;
+	};
+	
+	let MakeLineMask = function(RenderTarget)
+	{
+		RenderLineMask( OpenglContext, RenderTarget );
+		log("MakeLineMask:" + RenderTarget );
+		LastProcessedImage = RenderTarget;
+	};
+	
+	let OnError = function(Error)
+	{
+		log(Error);
+	};
+	let Part1 = function()	{	return OpenglContext.Render( FrameHsl, MakeHsl );	}
+	let Part2 = function()	{	return OpenglContext.Render( FrameGreenMask, MakeGreenMask );	}
+	let Part3 = function()	{	return OpenglContext.Render( FrameLineMask, MakeLineMask );	}
+	let Finish = function()
+	{
 		LastProcessedImage = FrameHsl;
+		log("Done!");
 	};
-	
-	let MaskGreen = function(RenderTarget)
-	{
-		log("MaskGreen");
-		log(RenderTarget);
-		//log(What);
-	};
-	
-	try
-	{
-		OpenglContext.Render( FrameHsl, MakeHsl );
-		//const Hsl = await OpenglContext.Render( FrameHsl, MakeHsl );
-		//const Green = await OpenglContext.Render( FrameMask, MaskGreen );
-		//log("Made Green Mask");
-	}
-	catch(Exception)
-	{
-		log("Exception: " + Exception);
-	}
-	
-	/*
-	let OnFoundEdges = function(Edges)
-	{
-		log("OnFoundEdges: " + Edges);
-		//LastProcessedImage = FrameEdges;
-	};
-	 */
-	//.then( OnBlit );
+	Part1().then( Part2 ).then( Part3 ).then( Finish ).catch( OnError );
 }
 
 

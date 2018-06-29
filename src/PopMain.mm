@@ -1,5 +1,6 @@
 #include "PopMain.h"
 #import <Cocoa/Cocoa.h>
+#include <SoyFilesystem.h>
 
 std::shared_ptr<TJobParams> gParams;
 
@@ -11,6 +12,7 @@ std::shared_ptr<PopMainThread> Soy::Platform::gMainThread;
 #if defined(TARGET_OSX_BUNDLE)
 int Soy::Platform::BundleAppMain(int argc, const char * argv[])
 {
+	::Platform::ExePath = argv[0];
 	/*
 	auto Params = ::Private::DecodeArgs( argc, argv );
 	

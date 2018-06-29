@@ -1,6 +1,7 @@
 #include "TV8Container.h"
 
 #include <SoyDebug.h>
+#include <SoyFilesystem.h>
 
 
 //	normally I hate using namespace;'s...
@@ -9,7 +10,8 @@ using namespace v8;
 
 
 
-
+//	gr: in 6, allocator type is missing??
+#if V8_VERSION==5
 class PopV8Allocator : public v8::ArrayBuffer::Allocator
 {
 public:
@@ -17,7 +19,7 @@ public:
 	virtual void* AllocateUninitialized(size_t length) override;
 	virtual void Free(void* data, size_t length) override;
 };
-
+#endif
 
 
 V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
@@ -62,7 +64,7 @@ V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
 }
 
 
-
+#if V8_VERSION==5
 void* PopV8Allocator::Allocate(size_t length)
 {
 	auto* Bytes = new uint8_t[length];
@@ -81,18 +83,43 @@ void PopV8Allocator::Free(void* data, size_t length)
 	auto* Bytes = static_cast<uint8_t*>( data );
 	delete[] Bytes;
 }
-
+#endif
 
 
 TV8Container::TV8Container() :
+#if V8_VERSION==5
 	mAllocator	( new PopV8Allocator )
+#elif V8_VERSION==6
+	mAllocator	( v8::ArrayBuffer::Allocator::NewDefaultAllocator() )
+#endif
 {
 	auto& Allocator = *mAllocator;
+
+	auto* ExePath = ::Platform::ExePath.c_str();
+#if V8_VERSION==6
+	auto* IcuFilename = "icudtl.dat";
+	std::string IcuPath = ::Platform::ExePath;
 	
-	//v8::V8::InitializeICUDefaultLocation(argv[0]);
+	BufferArray<std::string,100> PathParts;
+	Soy::StringSplitByMatches( GetArrayBridge(PathParts), IcuPath, "/" );
+	PathParts.PopBack();
+	PathParts.PopBack();
+	PathParts.PushBack("Resources");
+	PathParts.PushBack(IcuFilename);
+	IcuPath = Soy::StringJoin( GetArrayBridge(PathParts), "/" );
+
+	//	gr: 6.X build doesn't include just-null version, perhaps when there IS an ICU, the function disapears?
+	::Platform::ShowFileExplorer( IcuPath );
+	if ( !V8::InitializeICUDefaultLocation( ExePath, IcuPath.c_str() ) )
+		throw Soy::AssertException("Failed to load ICU");
+#elif V8_VERSION==5
 	V8::InitializeICU(nullptr);
+#endif
+	
 	//v8::V8::InitializeExternalStartupData(argv[0]);
-	V8::InitializeExternalStartupData(nullptr);
+	//V8::InitializeExternalStartupData(nullptr);
+	V8::InitializeExternalStartupData( ExePath );
+	
 	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
 	mPlatform.reset( v8::platform::CreateDefaultPlatform() );
 	V8::InitializePlatform( mPlatform.get() );

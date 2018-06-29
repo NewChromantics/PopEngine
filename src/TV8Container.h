@@ -6,6 +6,14 @@
 #include <SoyAssert.h>
 #include <Array.hpp>
 
+//	gr: the diffs are external vs internal as well as API changes
+#define V8_VERSION	5
+//#define V8_VERSION	6
+
+#if !defined(V8_VERSION)
+#error need V8_VERSION 5 or 6
+#endif
+
 class PopV8Allocator;
 class TV8Container;
 
@@ -153,7 +161,7 @@ public:
 	v8::Persistent<v8::Context>		mContext;		//	our "document", keep adding scripts toit
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;
-	std::shared_ptr<PopV8Allocator>	mAllocator;
+	std::shared_ptr<v8::ArrayBuffer::Allocator>	mAllocator;
 };
 
 
