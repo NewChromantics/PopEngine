@@ -126,36 +126,40 @@ function ProcessFrame(RenderTarget,Frame)
 function StartProcessFrame(Frame,OpenglContext)
 {
 	log( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
-	let FrameEdges = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	
+	let FrameHsl = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let FrameMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+
 	//	blit into render target
-	let OnBlit = function(RenderTarget)
+	let MakeHsl = function(RenderTarget)
 	{
-		log("OnBlit");
+		log("MakeHsl");
+		log(RenderTarget);
 		//	gr: this RenderTarget doesn't currently exist,
 		//	we steal the window. Need to pass a real "render target"
 		//	(with width/height) and access to a context
-		//ProcessFrame( OpenglContext, Frame );
+		ProcessFrame( OpenglContext, Frame );
+		LastProcessedImage = FrameHsl;
 	};
-	let PostBlit = function(What)
+	
+	let MaskGreen = function(RenderTarget)
 	{
-		log("Post Blit");
-		log(What);
+		log("MaskGreen");
+		log(RenderTarget);
+		//log(What);
 	};
-	OpenglContext.Render( OnBlit ).then( PostBlit );
-	/*
+	
 	try
 	{
-		const Hsl = await OpenglContext.Render( MakeHsl );
-		const Green = await OpenglContext.Render( MaskGreen );
-		const Pixels = await OpenglContext.Render( ReadPixels );
-		log("Made pixels");
+		OpenglContext.Render( FrameHsl, MakeHsl );
+		//const Hsl = await OpenglContext.Render( FrameHsl, MakeHsl );
+		//const Green = await OpenglContext.Render( FrameMask, MaskGreen );
+		//log("Made Green Mask");
 	}
 	catch(Exception)
 	{
 		log("Exception: " + Exception);
 	}
-	*/
+	
 	/*
 	let OnFoundEdges = function(Edges)
 	{

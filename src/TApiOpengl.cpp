@@ -168,27 +168,79 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
 
-	auto CallbackPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	//auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
+	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
 	auto* Container = &Params.mContainer;
 	
-	auto OpenglJob = [=]
+	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
 	{
-		//	do opengl stuff
-		std::Debug << "do opengl stuff" << std::endl;
-		
-		//	queue the completion
-		auto Complete = [=](Local<Context> Context)
+		auto* Isolate = Container->mIsolate;
+		auto This = Context->Global();
+		BufferArray<v8::Local<v8::Value>,0> CallbackParams;
+		auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
+		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
+		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, This, GetArrayBridge(CallbackParams) );
+	};
+	
+	auto OpenglRender = [=]
+	{
+		try
 		{
-			std::Debug << "opengl complete (js callback time)" << std::endl;
-			//	gr: can't do this unless we're in the javascript thread...
-			auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
-			auto CallbackLocal = v8::GetLocal( *Isolate, CallbackPersistent );
-			ResolverLocal->Resolve( CallbackLocal );
-		};
-		Container->QueueScoped( Complete );
+			//	get the texture from the image
+			std::string GenerateTextureError;
+			auto OnError = [&](const std::string& Error)
+			{
+				throw Soy::AssertException(Error);
+			};
+			TargetImage->GetTexture( []{}, OnError );
+		
+			//	setup render target
+			auto& TargetTexture = TargetImage->GetTexture();
+			Opengl::TRenderTargetFbo RenderTarget( TargetTexture );
+			RenderTarget.mGenerateMipMaps = false;
+			RenderTarget.Bind();
+			RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+			try
+			{
+				//	immediately call the javascript callback
+				Container->RunScoped( ExecuteRenderCallback );
+				RenderTarget.Unbind();
+			}
+			catch(std::exception& e)
+			{
+				RenderTarget.Unbind();
+				throw;
+			}
+			
+			//	queue the completion
+			auto OnCompleted = [=](Local<Context> Context)
+			{
+				//	gr: can't do this unless we're in the javascript thread...
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto Message = String::NewFromUtf8( Isolate, "Yay!");
+				ResolverLocal->Resolve( Message );
+			};
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			std::string ExceptionString(e.what());
+			//	queue the reject
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				//	gr: does this need to be an exception? string?
+				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
+				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
+				//ResolverLocal->Reject( Exception );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
 	};
 	auto& OpenglContext = *This.mWindow->GetContext();
-	OpenglContext.PushJob( OpenglJob );
+	OpenglContext.PushJob( OpenglRender );
 
 	//	return the promise of our resolver
 	auto Promise = Resolver->GetPromise();
