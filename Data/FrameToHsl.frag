@@ -1,4 +1,4 @@
-in vec2 fTexCoord;
+in vec2 uv;
 uniform sampler2D Frame;
 
 
@@ -57,7 +57,7 @@ vec3 RgbToHsl(vec3 rgb)
 
 void main()
 {
-    vec4 rgba = texture2D(Frame,fTexCoord);
+    vec4 rgba = texture2D(Frame,uv);
 	gl_FragColor.xyz = RgbToHsl( rgba.xyz );
 	gl_FragColor.w = rgba.w;
 }

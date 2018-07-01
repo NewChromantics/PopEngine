@@ -25,6 +25,7 @@ namespace v8
 	class Context;
 	class Value;
 	class Task;
+	class String;
 
 	template<typename T>
 	class Local;
@@ -56,6 +57,9 @@ namespace v8
 	template<typename TYPE,typename TRAITS>
 	Local<TYPE> 	GetLocal(v8::Isolate& Isolate,Persistent<TYPE,TRAITS> PersistentHandle);
 	
+	std::string		GetString(Local<Value> Str);
+	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
+
 	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
 
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>& FloatArray);

@@ -7,24 +7,28 @@
 
 using namespace v8;
 
-const char Log_FunctionName[] = "log";
+const char Debug_FunctionName[] = "Debug";
+const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
+
 const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
 const char GetWidth_FunctionName[] = "GetWidth";
 const char GetHeight_FunctionName[] = "GetHeight";
 
 
-static v8::Local<v8::Value> OnLog(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
 {
 	//  load api's before script & executions
-	Container.BindGlobalFunction<Log_FunctionName>(OnLog);
+	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
+	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
 	Container.BindObjectType("Image", TImageWrapper::CreateTemplate );
 }
 
-static Local<Value> OnLog(CallbackInfo& Params)
+static Local<Value> Debug(CallbackInfo& Params)
 {
 	auto& args = Params.mParams;
 	
@@ -44,6 +48,26 @@ static Local<Value> OnLog(CallbackInfo& Params)
 	return Undefined(Params.mIsolate);
 }
 
+
+static Local<Value> LoadFileAsString(CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	if (Arguments.Length() < 1)
+		throw Soy::AssertException("LoadFileAsString(Filename) with no args");
+
+	auto Filename = v8::GetString( Arguments[0] );
+	std::string Contents;
+	if ( !Soy::FileToString( Filename, Contents) )
+	{
+		std::stringstream Error;
+		Error << "Failed to read " << Filename;
+		throw Soy::AssertException( Error.str() );
+	}
+	
+	auto ContentsString = v8::GetString( Params.GetIsolate(), Contents );
+	return ContentsString;
+}
 
 
 

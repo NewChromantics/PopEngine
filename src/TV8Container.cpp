@@ -425,3 +425,29 @@ void v8::LambdaTask::Run()
 {
 	mContainer.RunScoped( mLambda );
 }
+
+std::string v8::GetString(Local<Value> Str)
+{
+	if ( !Str->IsString() )
+		throw Soy::AssertException("Not a string");
+	
+	String::Utf8Value ExceptionStr(Str);
+	auto ExceptionCStr = *ExceptionStr;
+	if ( ExceptionCStr == nullptr )
+		ExceptionCStr = "<null> (Possibly not a string)";
+	
+	std::string NewStr( ExceptionCStr );
+	return NewStr;
+}
+
+
+Local<Value> v8::GetString(v8::Isolate& Isolate,const std::string& Str)
+{
+	auto* CStr = Str.c_str();
+	if ( CStr == nullptr )
+		CStr = "";
+	
+	auto StringHandle = String::NewFromUtf8( &Isolate, CStr );
+	auto StringValue = Local<Value>::Cast( StringHandle );
+	return StringValue;
+}

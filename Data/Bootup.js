@@ -83,6 +83,7 @@ let DebugFrameFragShaderSource = `
 	}
 `;
 
+let RgbToHslFragShaderSource = LoadFileAsString('Data/FrameToHsl.frag');
 
 
 let EdgeFragShaderSource = `
@@ -141,7 +142,20 @@ var DebugShader = null;
 var EdgeShader = null;
 var DebugFrameShader = null;
 var LastProcessedFrame = null;
+var RgbToHslFragShader = null;
 
+function GetRgbToHslShader(OpenglContext)
+{
+	if ( !RgbToHslFragShader )
+	{
+		RgbToHslFragShader = new OpenglShader( OpenglContext, VertShaderSource, RgbToHslFragShaderSource );
+	}
+	return RgbToHslFragShader;
+}
+	
+	
+
+	
 function ReturnSomeString()
 {
 	return "Hello world";
@@ -152,21 +166,14 @@ function MakeHsl(OpenglContext,Frame)
 {
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
-		RenderTarget.ClearColour(1,0,0);
-		return;
-		
-		if ( !EdgeShader )
-		{
-			EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
-		}
-		
+		let Shader = GetRgbToHslShader(RenderTarget);
+
 		let SetUniforms = function(Shader)
 		{
-			Shader.SetUniform("Image", FrameImage, 0 );
+			Shader.SetUniform("Frame", Frame, 0 );
 		}
 		
-		RenderTarget.ClearColour(1,0,0);
-		RenderTarget.DrawQuad( EdgeShader, SetUniforms );
+		RenderTarget.DrawQuad( Shader, SetUniforms );
 	}
 	
 	Frame.Hsl = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
@@ -206,7 +213,7 @@ function MakeLineMask(OpenglContext,Frame)
 {
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
-		log("MakeLineMask::Render");
+		Debug("MakeLineMask::Render");
 		RenderTarget.ClearColour(1,1,0);
 		return;
 		
@@ -232,11 +239,12 @@ function MakeLineMask(OpenglContext,Frame)
 
 function StartProcessFrame(Frame,OpenglContext)
 {
-	log( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
-
+	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
+	//LastProcessedFrame = Frame;
+	
 	let OnError = function(Error)
 	{
-		log(Error);
+		Debug(Error);
 	};
 	let Part1 = function()	{	return MakeHsl( OpenglContext, Frame );	}
 	let Part2 = function()	{	return MakeGreenMask( OpenglContext, Frame );	}
@@ -244,7 +252,7 @@ function StartProcessFrame(Frame,OpenglContext)
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
-		log("Done!");
+		Debug("Done!");
 	};
 	Part1().then( Part2 ).then( Part3 ).then( Finish ).catch( OnError );
 }
@@ -268,9 +276,9 @@ function WindowRender(RenderTarget)
 		let SetUniforms = function(Shader)
 		{
 			//Blue = (Blue==0) ? 1 : 0;
-			//log("On bind: " + Blue);
+			//Debug("On bind: " + Blue);
 			//Shader.SetUniform("Blue", Blue );
-			//log( typeof(Pitch) );
+			//Debug( typeof(Pitch) );
 			Shader.SetUniform("Image0", LastProcessedFrame, 0 );
 			Shader.SetUniform("Image1", LastProcessedFrame.Hsl, 1 );
 			Shader.SetUniform("Image2", LastProcessedFrame.GreenMask, 2 );
@@ -283,14 +291,14 @@ function WindowRender(RenderTarget)
 	catch(Exception)
 	{
 		RenderTarget.ClearColour(1,0,0);
-		log(Exception);
+		Debug(Exception);
 	}
 }
 
 function Main()
 {
 	
-	//log("log is working!", "2nd param");
+	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
 	
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
