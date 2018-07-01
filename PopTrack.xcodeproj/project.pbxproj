@@ -38,6 +38,7 @@
 		BF8EEA6E20E689E400D8D5C8 /* libv8_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */; };
 		BF8EEA6F20E689EA00D8D5C8 /* libv8_libplatform.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */; };
 		BF8EEA7020E689ED00D8D5C8 /* libv8_libbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF820D6E8D6000BC812 /* libv8_libbase.a */; };
+		BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF97592520E9611A0093B296 /* TApiOpencl.cpp */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
 		BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */; };
@@ -145,6 +146,8 @@
 		BF89F6C51B4BCB9E00F58561 /* SoyOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpengl.h; path = src/SoyOpengl.h; sourceTree = "<group>"; };
 		BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglContext.cpp; path = src/SoyOpenglContext.cpp; sourceTree = "<group>"; };
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
+		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
+		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -321,12 +324,14 @@
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
+				BF97592520E9611A0093B296 /* TApiOpencl.cpp */,
+				BF97592420E961190093B296 /* TApiOpencl.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
-				BF39256520E51C36005AE288 /* TV8Instance.cpp */,
-				BF39256420E51C36005AE288 /* TV8Instance.h */,
 				BF689AFE20D9A52E000BC812 /* TV8Container.cpp */,
 				BF689AFF20D9A52E000BC812 /* TV8Container.h */,
+				BF39256520E51C36005AE288 /* TV8Instance.cpp */,
+				BF39256420E51C36005AE288 /* TV8Instance.h */,
 			);
 			name = src;
 			sourceTree = SOURCE_ROOT;
@@ -530,6 +535,7 @@
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
+				BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */,
 				BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */,
 				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
 				BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */,

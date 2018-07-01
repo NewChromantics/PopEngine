@@ -36,6 +36,9 @@ namespace v8
 	class Persistent;
 
 	template<typename TYPE>
+	using Persist = Persistent<TYPE,CopyablePersistentTraits<TYPE>>;
+	
+	template<typename TYPE>
 	class FunctionCallbackInfo;
 	
 	//	our wrappers
@@ -52,10 +55,10 @@ namespace v8
 	Local<Value>	GetException(v8::Isolate& Isolate,const std::exception& Exception);
 	
 	template<typename TYPE>
-	Persistent<TYPE,CopyablePersistentTraits<TYPE>>	GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle);
+	Persist<TYPE>	GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle);
 	
-	template<typename TYPE,typename TRAITS>
-	Local<TYPE> 	GetLocal(v8::Isolate& Isolate,Persistent<TYPE,TRAITS> PersistentHandle);
+	template<typename TYPE>
+	Local<TYPE> 	GetLocal(v8::Isolate& Isolate,Persist<TYPE> PersistentHandle);
 	
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
@@ -162,7 +165,7 @@ private:
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 
 public:
-	v8::Persistent<v8::Context>		mContext;		//	our "document", keep adding scripts toit
+	v8::Persist<v8::Context>		mContext;		//	our "document", keep adding scripts toit
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;
 	std::shared_ptr<v8::ArrayBuffer::Allocator>	mAllocator;
@@ -272,15 +275,15 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 }
 
 template<typename TYPE>
-inline v8::Persistent<TYPE,v8::CopyablePersistentTraits<TYPE>> v8::GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle)
+inline v8::Persist<TYPE> v8::GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle)
 {
 	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
 	PersistentHandle.Reset( &Isolate, LocalHandle );
 	return PersistentHandle;
 }
 	
-template<typename TYPE,typename TRAITS>
-inline v8::Local<TYPE> v8::GetLocal(v8::Isolate& Isolate,Persistent<TYPE,TRAITS> PersistentHandle)
+template<typename TYPE>
+inline v8::Local<TYPE> v8::GetLocal(v8::Isolate& Isolate,Persist<TYPE> PersistentHandle)
 {
 	Local<TYPE> LocalHandle = Local<TYPE>::New( &Isolate, PersistentHandle );
 	return LocalHandle;

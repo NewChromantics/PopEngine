@@ -1,6 +1,7 @@
 #include "TV8Instance.h"
 #include "TApiCommon.h"
 #include "TApiOpengl.h"
+#include "TApiOpencl.h"
 #include "TV8Container.h"
 
 #include <SoyFilesystem.h>
@@ -16,7 +17,8 @@ SoyWorkerThread	( ScriptFilename, SoyWorkerWaitMode::Sleep )
 		mV8Container.reset( new TV8Container() );
 		ApiCommon::Bind( *mV8Container );
 		ApiOpengl::Bind( *mV8Container );
-		
+		ApiOpencl::Bind( *mV8Container );
+
 		//	gr: start the thread immediately, there should be no problems having the thread running before queueing a job
 		this->Start();
 		

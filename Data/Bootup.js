@@ -93,6 +93,8 @@ let RgbToHslFragShaderSource = LoadFileAsString('Data/FrameToHsl.frag');
 let GrassFilterFragShaderSource = LoadFileAsString('Data/GrassFilter.frag');
 let GrassLineFilterFragShaderSource = LoadFileAsString('Data/GrassLineFilter.frag');
 let DrawLinesFragShaderSource = LoadFileAsString('Data/DrawLines.frag');
+let TestLinesKernelSource = LoadFileAsString('Data/TestLines.cl');
+let TestLinesKernelName = 'GetTestLines';
 
 let EdgeFragShaderSource = `
 	#version 410
@@ -154,6 +156,7 @@ var RgbToHslShader = null;
 var GrassFilterShader = null;
 var GrassLineFilterShader = null;
 var DrawLinesShader = null;
+var TestLinesKernel = null;
 
 function GetRgbToHslShader(OpenglContext)
 {
@@ -190,6 +193,16 @@ function GetDrawLinesShader(OpenglContext)
 	}
 	return DrawLinesShader;
 }
+
+function GetTestLineKernel(OpenclContext)
+{
+	if ( !TestLineKernel )
+	{
+		TestLineKernel = new OpenclKernel( OpenclContext, TestLinesKernelSource, TestLinesKernelName );
+	}
+	return TestLineKernel;
+}
+
 
 	
 function ReturnSomeString()
@@ -263,7 +276,7 @@ function MakeLineMask(OpenglContext,Frame)
 	return Prom;
 }
 
-function ExtractLines(Frame)
+function ExtractTestLines(Frame)
 {
 	let TestLines = [ [0,0,1,1], [1,0,0,1] ];
 	
@@ -278,6 +291,22 @@ function ExtractLines(Frame)
 	return Prom;
 }
 
+function ExtractLines(Frame,OpenclContext)
+{
+	let Kernel = GetTestLineKernel(OpenclContext);
+	
+	let OnIteration = function(Kernel,IterationIndexes)
+	{
+		log("OnIteration(" + IterationIndexes + ")");
+	}
+	let OnFinished = function(Kernel)
+	{
+		log("OnFinished");
+	}
+
+	let Prom = OpenclContext.Run( Kernel, [1], OnIteration, OnFinished );
+	return Prom;
+}
 
 function DrawLines(OpenglContext,Frame)
 {
@@ -300,7 +329,7 @@ function DrawLines(OpenglContext,Frame)
 }
 
 
-function StartProcessFrame(Frame,OpenglContext)
+function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 {
 	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	//LastProcessedFrame = Frame;
@@ -313,8 +342,9 @@ function StartProcessFrame(Frame,OpenglContext)
 	let Part1 = function()	{	return MakeHsl( OpenglContext, Frame );	}
 	let Part2 = function()	{	return MakeGrassMask( OpenglContext, Frame );	}
 	let Part3 = function()	{	return MakeLineMask( OpenglContext, Frame );	}
-	let Part4 = function()	{	return ExtractLines( Frame );	}
-	let Part5 = function()	{	return DrawLines( OpenglContext, Frame );	}
+	let Part4 = function()	{	return ExtractTestLines( Frame );	}
+	let Part5 = function()	{	return ExtractLines( OpenclContext, Frame );	}
+	let Part6 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
@@ -327,6 +357,7 @@ function StartProcessFrame(Frame,OpenglContext)
 	.then( Part3 )
 	.then( Part4 )
 	.then( Part5 )
+	.then( Part6 )
 	.then( Finish )
 	.catch( OnError );
 }
@@ -373,18 +404,23 @@ function WindowRender(RenderTarget)
 
 function Main()
 {
-	
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Hello!");
-	
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
+	
+	
+	let OpenclDevices = OpenclEnumDevices();
+	Debug("Opencl devices x" + OpenclDevices.length );
+	if ( OpenclDevices.length == 0 )
+		throw "No opencl devices";
+	OpenclDevices.forEach( Debug );
+	let Opencl = new OpenclContext( OpenclDevices[0] );
 	
 	let Pitch = new Image("Data/ArgentinaVsCroatia.png");
 	//let Pitch = new Image("Data/Cat.jpg");
 	
 	let OpenglContext = Window1;
-	StartProcessFrame( Pitch, OpenglContext );
-	
+	StartProcessFrame( Pitch, OpenglContext, Opencl );
 }
 
 //	main
