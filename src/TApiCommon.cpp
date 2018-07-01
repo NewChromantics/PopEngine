@@ -14,7 +14,7 @@ const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
 const char GetWidth_FunctionName[] = "GetWidth";
 const char GetHeight_FunctionName[] = "GetHeight";
-
+const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
@@ -119,6 +119,7 @@ void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 			};
 			CallFunc( ThisAlloc, Arguments, Container );
 		}
+		
 	}
 	catch(std::exception& e)
 	{
@@ -152,7 +153,8 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Alloc_FunctionName>( InstanceTemplate, TImageWrapper::Alloc );
 	Container.BindFunction<GetWidth_FunctionName>( InstanceTemplate, TImageWrapper::GetWidth );
 	Container.BindFunction<GetHeight_FunctionName>( InstanceTemplate, TImageWrapper::GetHeight );
-	
+	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
+
 	return ConstructorFunc;
 }
 
@@ -258,6 +260,18 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	throw Soy::AssertException( std::string("Unhandled image file extension of ") + Filename );
 }
 
+
+void TImageWrapper::DoSetLinearFilter(bool LinearFilter)
+{
+	//	for now, only allow this pre-creation
+	//	what we could do, is queue an opengl job. but if we're IN a job now, it'll set it too late
+	//	OR, queue it to be called before next GetTexture()
+	if ( mOpenglTexture != nullptr )
+		throw Soy::AssertException("Cannot change linear filter setting if texture is already created");
+
+	mLinearFilter = LinearFilter;
+}
+
 v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -295,7 +309,25 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 	return Number::New( Params.mIsolate, Height );
 }
 
+v8::Local<v8::Value> TImageWrapper::SetLinearFilter(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	
+	if ( Arguments.Length() != 1 )
+		throw Soy::AssertException( "SetLinearFilter(true/false) expected 1 argument");
+	
+	if ( !Arguments[0]->IsBoolean() )
+		throw Soy::AssertException( "SetLinearFilter(true/false) expected boolean argument");
 
+	auto ValueBool = Local<v8::Boolean>::Cast( Arguments[0] );
+	auto LinearFilter = ValueBool->Value();
+	This.DoSetLinearFilter( LinearFilter );
+
+	return v8::Undefined(Params.mIsolate);
+}
 
 void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
@@ -310,9 +342,13 @@ void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::functi
 		throw Soy::AssertException("Trying to get opengl texture when we have no pixels");
 	
 	//	gr: this will need to be on the context's thread
+	//		need to fail here if we're not
 	try
 	{
 		mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
+		mOpenglTexture->SetFilter( mLinearFilter );
+		mOpenglTexture->SetRepeat( mRepeating );
+
 		SoyGraphics::TTextureUploadParams UploadParams;
 		mOpenglTexture->Write( *mPixels, UploadParams );
 		OnTextureLoaded();

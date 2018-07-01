@@ -1,14 +1,15 @@
-in vec2 fTexCoord;
+in vec2 uv;
+#define fTexCoord uv
 uniform sampler2D hsl;
+uniform sampler2D Frame;
 vec4 MatchColour = vec4( 100/255.f, 140/255.f, 72/255.f, 0 );
-float MaxColourDiff = 1;
-float MinColourDiff = 0.263f;
+float MaxColourDiff = 0.06f;
 float SaturationFloor = 0.17f;
 float LuminanceFloor = 0.156f;
 float LuminanceCeiling = 0.75f;
-float HueWeight = 1;
-float SatWeight = 0;
-float LumWeight = 0.85f;
+float HueWeight = 1.4;
+float SatWeight = 0.1;
+float LumWeight = 0.4;
 
 
 
@@ -118,16 +119,17 @@ void main()
 	}
 	 */
 	
-	vec4 Sample = texture2D(hsl,fTexCoord);
+	vec4 SampleHsl = texture2D(hsl,fTexCoord);
+	vec4 SampleRgb = texture2D(Frame,fTexCoord);
 	vec3 MatchHsl = RgbToHsl( MatchColour.xyz );
-	float Diff = GetHslDiff( Sample.xyz, MatchHsl.xyz );
+	float Diff = GetHslDiff( SampleHsl.xyz, MatchHsl.xyz );
 
-	if ( Diff < MinColourDiff )
-		Sample.w = 0;
 	if ( Diff > MaxColourDiff )
-		Sample.w = 0;
-
-	//Sample.xyz = 1.f - (Diff / MaxColourDiff);
-	gl_FragColor = Sample;
-
+		Diff = 0;
+	else
+		Diff = 1;
+	
+	gl_FragColor = vec4( Diff, Diff, Diff, 1 );
+	gl_FragColor = mix( gl_FragColor, SampleRgb, Diff );
+	gl_FragColor.w = Diff;
 }

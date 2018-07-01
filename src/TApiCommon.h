@@ -18,7 +18,9 @@ class TImageWrapper
 {
 public:
 	TImageWrapper() :
-		mContainer	( nullptr )
+		mContainer		( nullptr ),
+		mLinearFilter	( false ),
+		mRepeating		( false )
 	{
 	}
 	
@@ -29,10 +31,12 @@ public:
 	static v8::Local<v8::Value>				LoadFile(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetWidth(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetHeight(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				SetLinearFilter(const v8::CallbackInfo& Arguments);
 
 	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
 	
 	void									DoLoadFile(const std::string& Filename);
+	void									DoSetLinearFilter(bool LinearFilter);
 	void									GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
 	const Opengl::TTexture&					GetTexture();
 
@@ -41,5 +45,9 @@ public:
 	std::shared_ptr<SoyPixels>			mPixels;
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
 	TV8Container*						mContainer;
+	
+	//	texture options
+	bool								mLinearFilter;
+	bool								mRepeating;
 };
 
