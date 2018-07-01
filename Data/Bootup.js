@@ -48,6 +48,8 @@ let DebugFrameFragShaderSource = `
 	uniform sampler2D Image1;
 	uniform sampler2D Image2;
 	uniform sampler2D Image3;
+	uniform sampler2D Image4;
+	uniform sampler2D Image5;
 
 	float Range(float Min,float Max,float Value)
 	{
@@ -61,9 +63,9 @@ let DebugFrameFragShaderSource = `
 	void main()
 	{
 		vec2 Flippeduv = vec2( uv.x, 1-uv.y );
-		vec2 BoxUv = Range2( vec2(0.0,0.0), vec2(0.5,0.5), Flippeduv );
 		float BoxsWide = 2;
-		float BoxsHigh = 2;
+		float BoxsHigh = 3;
+		vec2 BoxUv = Range2( vec2(0.0,0.0), vec2( 1/BoxsWide, 1/BoxsHigh ), Flippeduv );
 		float Indexf = floor(BoxUv.x) + ( floor(BoxUv.y) * BoxsWide );
 		int Index = int(Indexf);
 		
@@ -78,6 +80,10 @@ let DebugFrameFragShaderSource = `
 			gl_FragColor = texture( Image2, fract( BoxUv ) );
 		else if ( Index == 3 )
 			gl_FragColor = texture( Image3, fract( BoxUv ) );
+		else if ( Index == 4 )
+			gl_FragColor = texture( Image4, fract( BoxUv ) );
+		else if ( Index == 5 )
+			gl_FragColor = texture( Image5, fract( BoxUv ) );
 
 		//gl_FragColor *= vec4(uv.x,uv.y,0,1);
 	}
@@ -86,7 +92,7 @@ let DebugFrameFragShaderSource = `
 let RgbToHslFragShaderSource = LoadFileAsString('Data/FrameToHsl.frag');
 let GrassFilterFragShaderSource = LoadFileAsString('Data/GrassFilter.frag');
 let GrassLineFilterFragShaderSource = LoadFileAsString('Data/GrassLineFilter.frag');
-
+let DrawLinesFragShaderSource = LoadFileAsString('Data/DrawLines.frag');
 
 let EdgeFragShaderSource = `
 	#version 410
@@ -144,37 +150,46 @@ var DebugShader = null;
 var EdgeShader = null;
 var DebugFrameShader = null;
 var LastProcessedFrame = null;
-var RgbToHslFragShader = null;
-var GrassFilterFragShader = null;
-var GrassLineFilterFragShader = null;
+var RgbToHslShader = null;
+var GrassFilterShader = null;
+var GrassLineFilterShader = null;
+var DrawLinesShader = null;
 
 function GetRgbToHslShader(OpenglContext)
 {
-	if ( !RgbToHslFragShader )
+	if ( !RgbToHslShader )
 	{
-		RgbToHslFragShader = new OpenglShader( OpenglContext, VertShaderSource, RgbToHslFragShaderSource );
+		RgbToHslShader = new OpenglShader( OpenglContext, VertShaderSource, RgbToHslFragShaderSource );
 	}
-	return RgbToHslFragShader;
+	return RgbToHslShader;
 }
 
 function GetGrassFilterShader(OpenglContext)
 {
-	if ( !GrassFilterFragShader )
+	if ( !GrassFilterShader )
 	{
-		GrassFilterFragShader = new OpenglShader( OpenglContext, VertShaderSource, GrassFilterFragShaderSource );
+		GrassFilterShader = new OpenglShader( OpenglContext, VertShaderSource, GrassFilterFragShaderSource );
 	}
-	return GrassFilterFragShader;
+	return GrassFilterShader;
 }
 
 function GetGrassLineFilterShader(OpenglContext)
 {
-	if ( !GrassLineFilterFragShader )
+	if ( !GrassLineFilterShader )
 	{
-		GrassLineFilterFragShader = new OpenglShader( OpenglContext, VertShaderSource, GrassLineFilterFragShaderSource );
+		GrassLineFilterShader = new OpenglShader( OpenglContext, VertShaderSource, GrassLineFilterFragShaderSource );
 	}
-	return GrassLineFilterFragShader;
+	return GrassLineFilterShader;
 }
-	
+
+function GetDrawLinesShader(OpenglContext)
+{
+	if ( !DrawLinesShader )
+	{
+		DrawLinesShader = new OpenglShader( OpenglContext, VertShaderSource, DrawLinesFragShaderSource );
+	}
+	return DrawLinesShader;
+}
 
 	
 function ReturnSomeString()
@@ -248,6 +263,42 @@ function MakeLineMask(OpenglContext,Frame)
 	return Prom;
 }
 
+function ExtractLines(Frame)
+{
+	let TestLines = [ [0,0,1,1], [1,0,0,1] ];
+	
+	let Runner = function(Resolve,Reject)
+	{
+		Frame.Lines = TestLines;
+		Resolve();
+	}
+	
+	//	high level promise
+	var Prom = new Promise( Runner );
+	return Prom;
+}
+
+
+function DrawLines(OpenglContext,Frame)
+{
+	let Render = function(RenderTarget,RenderTargetTexture)
+	{
+		let Shader = GetDrawLinesShader(RenderTarget);
+		
+		let SetUniforms = function(Shader)
+		{
+			Shader.SetUniform("Lines", Frame.Lines );
+			Shader.SetUniform("Background", Frame, 0 );
+		}
+		
+		RenderTarget.DrawQuad( Shader, SetUniforms );
+	}
+	
+	Frame.DebugLines = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.DebugLines, Render );
+	return Prom;
+}
+
 
 function StartProcessFrame(Frame,OpenglContext)
 {
@@ -258,15 +309,26 @@ function StartProcessFrame(Frame,OpenglContext)
 	{
 		Debug(Error);
 	};
+	
 	let Part1 = function()	{	return MakeHsl( OpenglContext, Frame );	}
 	let Part2 = function()	{	return MakeGrassMask( OpenglContext, Frame );	}
 	let Part3 = function()	{	return MakeLineMask( OpenglContext, Frame );	}
+	let Part4 = function()	{	return ExtractLines( Frame );	}
+	let Part5 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
 		Debug("Done!");
 	};
-	Part1().then( Part2 ).then( Part3 ).then( Finish ).catch( OnError );
+	
+	//	run sequence
+	Part1()
+	.then( Part2 )
+	.then( Part3 )
+	.then( Part4 )
+	.then( Part5 )
+	.then( Finish )
+	.catch( OnError );
 }
 
 
@@ -295,6 +357,8 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("Image1", LastProcessedFrame.Hsl, 1 );
 			Shader.SetUniform("Image2", LastProcessedFrame.GrassMask, 2 );
 			Shader.SetUniform("Image3", LastProcessedFrame.LineMask, 3 );
+			Shader.SetUniform("Image4", LastProcessedFrame.DebugLines, 4 );
+			//Shader.SetUniform("Image5", LastProcessedFrame.DebugLines, 5 );
 		}
 		
 		RenderTarget.ClearColour(0,1,0);

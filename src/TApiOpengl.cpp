@@ -529,8 +529,21 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
-		BufferArray<float,100> Floats;
+		BufferArray<float,1024*4> Floats;
 		EnumArray( ValueHandle, GetArrayBridge(Floats) );
+		
+		//	Pad out if the uniform is an array and we're short...
+		//	maybe need more strict alignment when enumerating sub arrays above
+		auto UniformFloatCount = Uniform.GetFloatCount();
+		if ( Floats.GetSize() < UniformFloatCount )
+		{
+			if ( Uniform.GetArraySize() > 1 )
+			{
+				for ( int i=Floats.GetSize();	i<UniformFloatCount;	i++ )
+					Floats.PushBack(0);
+			}
+		}
+		
 		Shader.SetUniform( Uniform, GetArrayBridge(Floats) );
 	}
 	else
