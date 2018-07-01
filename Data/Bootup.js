@@ -41,6 +41,49 @@ let ImageFragShaderSource = `
 	}
 `;
 
+let DebugFrameFragShaderSource = `
+	#version 410
+	in vec2 uv;
+	uniform sampler2D Image0;
+	uniform sampler2D Image1;
+	uniform sampler2D Image2;
+	uniform sampler2D Image3;
+
+	float Range(float Min,float Max,float Value)
+	{
+		return (Value-Min) / (Max-Min);
+	}
+	vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
+	{
+		return vec2( Range(Min.x,Max.x,Value.x), Range(Min.y,Max.y,Value.y) );
+	}
+
+	void main()
+	{
+		vec2 Flippeduv = vec2( uv.x, 1-uv.y );
+		vec2 BoxUv = Range2( vec2(0.0,0.0), vec2(0.5,0.5), Flippeduv );
+		float BoxsWide = 2;
+		float BoxsHigh = 2;
+		float Indexf = floor(BoxUv.x) + ( floor(BoxUv.y) * BoxsWide );
+		int Index = int(Indexf);
+		
+		gl_FragColor = vec4( fract( BoxUv ), 0, 1 );
+		gl_FragColor = vec4( Flippeduv, 0, 1 );
+		
+		if ( Index == 0 )
+			gl_FragColor = texture( Image0, fract( BoxUv ) );
+		else if ( Index == 1 )
+			gl_FragColor = texture( Image1, fract( BoxUv ) );
+		else if ( Index == 2 )
+			gl_FragColor = texture( Image2, fract( BoxUv ) );
+		else if ( Index == 3 )
+			gl_FragColor = texture( Image3, fract( BoxUv ) );
+
+		//gl_FragColor *= vec4(uv.x,uv.y,0,1);
+	}
+`;
+
+
 
 let EdgeFragShaderSource = `
 	#version 410
@@ -96,7 +139,8 @@ let EdgeFragShaderSource = `
 var DrawImageShader = null;
 var DebugShader = null;
 var EdgeShader = null;
-var LastProcessedImage = null;
+var DebugFrameShader = null;
+var LastProcessedFrame = null;
 
 function ReturnSomeString()
 {
@@ -104,105 +148,102 @@ function ReturnSomeString()
 }
 
 
-function RenderHsl(RenderTarget)
+function MakeHsl(OpenglContext,Frame)
 {
-	RenderTarget.ClearColour(1,0,0);
-	return;
-	
-	if ( !EdgeShader )
+	let Render = function(RenderTarget,RenderTargetTexture)
 	{
-		EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+		RenderTarget.ClearColour(1,0,0);
+		return;
+		
+		if ( !EdgeShader )
+		{
+			EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+		}
+		
+		let SetUniforms = function(Shader)
+		{
+			Shader.SetUniform("Image", FrameImage, 0 );
+		}
+		
+		RenderTarget.ClearColour(1,0,0);
+		RenderTarget.DrawQuad( EdgeShader, SetUniforms );
 	}
 	
-	let SetUniforms = function(Shader)
-	{
-		Shader.SetUniform("Image", Frame, 0 );
-	}
-	
-	RenderTarget.ClearColour(1,0,0);
-	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
+	Frame.Hsl = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.Hsl, Render );
+	return Prom;
 }
 
 
-function RenderGreenMask(RenderTarget)
+function MakeGreenMask(OpenglContext,Frame)
 {
-	RenderTarget.ClearColour(0,1,0);
-	return;
-
-	if ( !EdgeShader )
+	let Render = function(RenderTarget,RenderTargetTexture)
 	{
-		EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+		RenderTarget.ClearColour(0,1,0);
+		return;
+		
+		if ( !EdgeShader )
+		{
+			EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+		}
+		
+		let SetUniforms = function(Shader)
+		{
+			Shader.SetUniform("Image", FrameImage, 0 );
+		}
+		
+		RenderTarget.ClearColour(1,0,0);
+		RenderTarget.DrawQuad( EdgeShader, SetUniforms );
 	}
 	
-	let SetUniforms = function(Shader)
-	{
-		Shader.SetUniform("Image", Frame, 0 );
-	}
-	
-	RenderTarget.ClearColour(1,0,0);
-	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
+	Frame.GreenMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.GreenMask, Render );
+	return Prom;
 }
 
 
-function RenderLineMask(RenderTarget)
+function MakeLineMask(OpenglContext,Frame)
 {
-	RenderTarget.ClearColour(0,0,1);
-	return;
-	
-	if ( !EdgeShader )
+	let Render = function(RenderTarget,RenderTargetTexture)
 	{
-		EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+		log("MakeLineMask::Render");
+		RenderTarget.ClearColour(1,1,0);
+		return;
+		
+		if ( !EdgeShader )
+		{
+			EdgeShader = new OpenglShader( RenderTarget, VertShaderSource, EdgeFragShaderSource );
+		}
+		
+		let SetUniforms = function(Shader)
+		{
+			Shader.SetUniform("Image", FrameImage, 0 );
+		}
+		
+		RenderTarget.ClearColour(1,0,0);
+		RenderTarget.DrawQuad( EdgeShader, SetUniforms );
 	}
 	
-	let SetUniforms = function(Shader)
-	{
-		Shader.SetUniform("Image", Frame, 0 );
-	}
-	
-	RenderTarget.ClearColour(1,0,0);
-	RenderTarget.DrawQuad( EdgeShader, SetUniforms );
+	Frame.LineMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.LineMask, Render );
+	return Prom;
 }
 
 
 function StartProcessFrame(Frame,OpenglContext)
 {
 	log( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
-	let FrameHsl = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	let FrameGreenMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	let FrameLineMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 
-	//	blit into render target
-	let MakeHsl = function(RenderTarget,RenderTargetTexture)
-	{
-		RenderHsl( RenderTarget );
-		log("MakeHsl:" + RenderTarget );
-		LastProcessedImage = RenderTargetTexture;
-	};
-	
-	let MakeGreenMask = function(RenderTarget,RenderTargetTexture)
-	{
-		RenderGreenMask( RenderTarget );
-		log("MakeGreenMask:" + RenderTarget );
-		LastProcessedImage = RenderTargetTexture;
-	};
-	
-	let MakeLineMask = function(RenderTarget,RenderTargetTexture)
-	{
-		RenderLineMask( RenderTarget );
-		log("MakeLineMask:" + RenderTarget );
-		LastProcessedImage = RenderTargetTexture;
-	};
-	
 	let OnError = function(Error)
 	{
 		log(Error);
 	};
-	let Part1 = function()	{	return OpenglContext.Render( FrameHsl, MakeHsl );	}
-	let Part2 = function()	{	return OpenglContext.Render( FrameGreenMask, MakeGreenMask );	}
-	let Part3 = function()	{	return OpenglContext.Render( FrameLineMask, MakeLineMask );	}
+	let Part1 = function()	{	return MakeHsl( OpenglContext, Frame );	}
+	let Part2 = function()	{	return MakeGreenMask( OpenglContext, Frame );	}
+	let Part3 = function()	{	return MakeLineMask( OpenglContext, Frame );	}
 	let Finish = function()
 	{
-		//LastProcessedImage = FrameHsl;
+		LastProcessedFrame = Frame;
 		log("Done!");
 	};
 	Part1().then( Part2 ).then( Part3 ).then( Finish ).catch( OnError );
@@ -213,18 +254,16 @@ function WindowRender(RenderTarget)
 {
 	try
 	{
-		if ( LastProcessedImage == null )
+		if ( LastProcessedFrame == null )
 		{
 			RenderTarget.ClearColour(0,1,1);
 			return;
 		}
 		
-		if ( !DrawImageShader )
+		if ( !DebugFrameShader )
 		{
-			DrawImageShader = new OpenglShader( RenderTarget, VertShaderSource, ImageFragShaderSource );
+			DebugFrameShader = new OpenglShader( RenderTarget, VertShaderSource, DebugFrameFragShaderSource );
 		}
-		
-		let Shader = DrawImageShader;
 		
 		let SetUniforms = function(Shader)
 		{
@@ -232,11 +271,14 @@ function WindowRender(RenderTarget)
 			//log("On bind: " + Blue);
 			//Shader.SetUniform("Blue", Blue );
 			//log( typeof(Pitch) );
-			Shader.SetUniform("Image", LastProcessedImage, 0 );
+			Shader.SetUniform("Image0", LastProcessedFrame, 0 );
+			Shader.SetUniform("Image1", LastProcessedFrame.Hsl, 1 );
+			Shader.SetUniform("Image2", LastProcessedFrame.GreenMask, 2 );
+			Shader.SetUniform("Image3", LastProcessedFrame.LineMask, 3 );
 		}
 		
 		RenderTarget.ClearColour(0,1,0);
-		RenderTarget.DrawQuad( Shader, SetUniforms );
+		RenderTarget.DrawQuad( DebugFrameShader, SetUniforms );
 	}
 	catch(Exception)
 	{
