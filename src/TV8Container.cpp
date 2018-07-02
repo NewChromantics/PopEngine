@@ -452,6 +452,20 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArr
 			EnumArray( ElementHandle, FloatArray );
 		}
 	}
+	else if ( ValueHandle->IsFloat32Array() )
+	{
+		auto ValueArrayHandle = Local<v8::Float32Array>::Cast( ValueHandle );
+		auto ArraySize = ValueArrayHandle->Length();
+		auto* NewElements = FloatArray.PushBlock(ArraySize);
+		auto NewElementsByteSize = FloatArray.GetElementSize() * ArraySize;
+		auto BytesWritten = ValueArrayHandle->CopyContents( NewElements, NewElementsByteSize );
+		if ( NewElementsByteSize != BytesWritten )
+		{
+			std::stringstream Error;
+			Error << "Copying Float32Array, wrote " << BytesWritten << " bytes, expected " << NewElementsByteSize;
+			throw Soy::AssertException( Error.str() );
+		}
+	}
 	else
 	{
 		throw Soy::AssertException("Unhandled element type [in array]");
@@ -514,3 +528,5 @@ Local<Value> v8::GetString(v8::Isolate& Isolate,const std::string& Str)
 	auto StringValue = Local<Value>::Cast( StringHandle );
 	return StringValue;
 }
+
+

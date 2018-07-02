@@ -538,6 +538,30 @@ void TOpenclKernelState::Constructor(const v8::FunctionCallbackInfo<v8::Value>& 
 	return;
 }
 
+std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
+{
+	Array<float> Floats;
+	EnumArray( ValueHandle, GetArrayBridge(Floats) );
+	if ( (Floats.GetSize() % 4)!=0 )
+	{
+		std::stringstream Error;
+		Error << Name << ": Number of floats(" << Floats.GetSize() << ") doesn't align to 4";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	Array<cl_float4> Float4s;
+	for ( int i=0;	i<Floats.GetSize();	i+=4 )
+	{
+		auto& f4 = Float4s.PushBack();
+		f4.s[0] = Floats[i+0];
+		f4.s[1] = Floats[i+1];
+		f4.s[2] = Floats[i+2];
+		f4.s[3] = Floats[i+3];
+	}
+	
+	auto Buffer = Opencl::TBufferArray<cl_float4>::Alloc( GetArrayBridge(Float4s), Context, Name );
+	return Buffer;
+}
 
 v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Params)
 {
@@ -559,6 +583,13 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		BufferArray<int,1> Ints;
 		EnumArray( ValueHandle, GetArrayBridge(Ints) );
 		KernelState.SetUniform( UniformName.c_str(), Ints[0] );
+	}
+	else if ( Uniform.mType == "float4*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto BufferArray = GetFloat4BufferArray( ValueHandle, Context, Uniform.mName );
+		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else
 	{
