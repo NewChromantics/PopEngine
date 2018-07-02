@@ -5,6 +5,7 @@
 #include <SoyTypes.h>
 #include <SoyAssert.h>
 #include <Array.hpp>
+#include <HeapArray.hpp>
 
 //	gr: the diffs are external vs internal as well as API changes
 #define V8_VERSION	5
@@ -128,6 +129,24 @@ public:
 	std::function<void(v8::Local<v8::Context>)>	mLambda;
 };
 
+
+class TV8ObjectTemplate
+{
+public:
+	TV8ObjectTemplate()	{}
+	TV8ObjectTemplate(v8::Persist<v8::ObjectTemplate>& Template,const std::string& Name) :
+		mTemplate	( Template ),
+		mName		( Name )
+	{
+	}
+	
+	bool			operator==(const std::string& Name) const	{	return this->mName == Name;	}
+	
+public:
+	v8::Persist<v8::ObjectTemplate>	mTemplate;
+	std::string						mName;
+};
+
 class TV8Container
 {
 public:
@@ -145,11 +164,16 @@ public:
 	void		LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
 	void		ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
 
-	
-	
+	template<typename WRAPPERTYPE,typename TYPE>
+	v8::Local<v8::Object>	CreateObjectInstance(TYPE& Object)
+	{
+		return CreateObjectInstance( WRAPPERTYPE::GetObjectTypeName(), &Object );
+	}
+	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName,void* Object);
+
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
-    void        BindObjectType(const char* ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
+	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
 
 	template<const char* FunctionName>
 	void					BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
@@ -157,9 +181,11 @@ public:
 	void					BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
+	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>& Params);
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
-	
-	
+	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,ArrayBridge<v8::Local<v8::Value>>&& Params);
+	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
+
 private:
 	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
@@ -169,6 +195,8 @@ public:
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;
 	std::shared_ptr<v8::ArrayBuffer::Allocator>	mAllocator;
+	
+	Array<TV8ObjectTemplate>		mObjectTemplates;
 };
 
 

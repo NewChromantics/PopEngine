@@ -24,8 +24,8 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 
-	static v8::Local<v8::Value>				Run(const v8::CallbackInfo& Arguments);
-	void									DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,v8::Persist<v8::Value> IterationCallback,v8::Persist<v8::Value> FinishedCallback,v8::Persist<v8::Promise::Resolver> Resolver);
+	static v8::Local<v8::Value>				ExecuteKernel(const v8::CallbackInfo& Arguments);
+	void									DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,v8::Persist<v8::Function> IterationCallback,v8::Persist<v8::Function> FinishedCallback,v8::Persist<v8::Promise::Resolver> Resolver);
 
 public:
 	TV8Container&						mContainer;
@@ -62,4 +62,23 @@ public:
 };
 
 
+
+class TOpenclKernelState
+{
+public:
+	static const std::string				GetObjectTypeName()	{	return "OpenclKernelState";	}
+	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+
+	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
+	
+public:
+	TV8Container&						mContainer;
+	v8::Persistent<v8::Object>			mHandle;
+	
+	//	we could have multiple kernels per program, but keeping it simple
+	std::string							mKernelName;
+	std::shared_ptr<Opencl::TProgram>	mProgram;
+	std::shared_ptr<Opencl::TKernel>	mKernel;
+};
 

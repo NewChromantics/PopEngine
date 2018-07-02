@@ -202,7 +202,7 @@ void TV8Container::LoadScript(Local<Context> context,const std::string& Source)
 }
 
 
-void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate)
+void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate)
 {
 	auto Bind = [&](Local<v8::Context> Context)
 	{
@@ -212,8 +212,14 @@ void TV8Container::BindObjectType(const char* ObjectName,std::function<Local<Fun
     	//	create new function
     	auto Template = GetTemplate(*this);
     	auto OpenglWindowFuncWrapperValue = Template->GetFunction();
-    	auto ObjectNameStr = v8::String::NewFromUtf8(Isolate, ObjectName);
+		auto ObjectNameStr = v8::GetString( *Isolate, ObjectName);
     	auto SetResult = Global->Set( Context, ObjectNameStr, OpenglWindowFuncWrapperValue);
+		
+		//	store the template so we can reference it later
+		auto ObjectTemplate = Template->InstanceTemplate();
+		auto ObjectTemplatePersistent = v8::GetPersistent( *Isolate, ObjectTemplate );
+		TV8ObjectTemplate NewTemplate( ObjectTemplatePersistent, ObjectName );
+		mObjectTemplates.PushBack(NewTemplate);
 	};
 	RunScoped(Bind);
 }
@@ -302,7 +308,13 @@ void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 	}
 }
 
+
 v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
+{
+	return ExecuteFunc( ContextHandle, FunctionHandle, This, Params );
+}
+
+v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>& Params)
 {
 	auto& Func = FunctionHandle;
 	auto* isolate = ContextHandle->GetIsolate();
@@ -335,6 +347,27 @@ v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHan
 	}
 }
 
+
+v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
+{
+	//	get a local function
+	auto* Isolate = ContextHandle->GetIsolate();
+	auto FuncLocal = v8::GetLocal( *Isolate, FunctionHandle );
+	return ExecuteFunc( ContextHandle, FuncLocal, This, Params );
+}
+
+v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,ArrayBridge<v8::Local<v8::Value>>&& Params)
+{
+	//	get a local function
+	auto* Isolate = ContextHandle->GetIsolate();
+	auto FuncLocal = v8::GetLocal( *Isolate, FunctionHandle );
+	
+	//	default this to the global
+	auto This = ContextHandle->Global();
+	
+	return ExecuteFunc( ContextHandle, FuncLocal, This, Params );
+}
+
 Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::string& FunctionName,Local<Object> This)
 {
 	auto* isolate = ContextHandle->GetIsolate();
@@ -358,6 +391,36 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 		return Exception;
 	}
 }
+
+v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName,void* Object)
+{
+	//	find template
+	auto* pObjectTemplate = mObjectTemplates.Find( ObjectTypeName );
+	if ( !pObjectTemplate )
+	{
+		std::stringstream Error;
+		Error << "Unknown object typename ";
+		Error << ObjectTypeName;
+		auto ErrorStr = Error.str();
+		throw Soy::AssertException(ErrorStr);
+	}
+	
+	//	instance new one
+	auto& Isolate = GetIsolate();
+	auto& ObjectTemplate = *pObjectTemplate;
+	auto ObjectTemplateLocal = v8::GetLocal( Isolate, ObjectTemplate.mTemplate );
+	auto NewObject = ObjectTemplateLocal->NewInstance();
+
+	//	gr: do this assignment in the class as we may have class specific stuff
+	//		really it'll be done in a binding/wrapper base class anyway
+	auto ObjectPointerHandle = External::New( &Isolate, Object );
+	auto ThisHandle = External::New( &Isolate, this );
+	NewObject->SetInternalField(0, ObjectPointerHandle);
+	NewObject->SetInternalField(1, ThisHandle);
+
+	return NewObject;
+}
+
 
 void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray)
 {

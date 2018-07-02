@@ -293,18 +293,20 @@ function ExtractTestLines(Frame)
 
 function ExtractLines(OpenclContext,Frame)
 {
+	Debug("Opencl ExtractLines");
 	let Kernel = GetTestLinesKernel(OpenclContext);
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
-		log("OnIteration(" + IterationIndexes + ")");
+		Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		//Kernel.SetUniform("NeedAtLeastOneParam", 0 );
 	}
 	let OnFinished = function(Kernel)
 	{
-		log("OnFinished");
+		Debug("OnIteration(" + Kernel + ")");
 	}
 
-	let Prom = OpenclContext.Run( Kernel, [1], OnIteration, OnFinished );
+	let Prom = OpenclContext.ExecuteKernel( Kernel, [1], OnIteration, OnFinished );
 	return Prom;
 }
 

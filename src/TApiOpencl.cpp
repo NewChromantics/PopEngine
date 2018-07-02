@@ -4,6 +4,8 @@
 using namespace v8;
 
 const char OpenclEnumDevices_FunctionName[] = "OpenclEnumDevices";
+const char ExecuteKernel_FunctionName[] = "ExecuteKernel";
+
 
 static v8::Local<v8::Value> OpenclEnumDevices(v8::CallbackInfo& Params);
 
@@ -12,6 +14,7 @@ void ApiOpencl::Bind(TV8Container& Container)
 {
 	Container.BindObjectType("OpenclContext", TOpenclContext::CreateTemplate );
 	Container.BindObjectType("OpenclKernel", TOpenclKernel::CreateTemplate );
+	Container.BindObjectType( TOpenclKernelState::GetObjectTypeName(), TOpenclKernelState::CreateTemplate );
 	Container.BindGlobalFunction<OpenclEnumDevices_FunctionName>( OpenclEnumDevices );
 }
 
@@ -39,6 +42,8 @@ protected:
 	//	after last iteration - read back data etc
 	virtual void		OnFinished(Opencl::TKernelState& Kernel)=0;
 	
+	virtual void		OnError(std::exception& Error)=0;
+	
 public:
 	Opencl::TKernel&	mKernel;
 	Opencl::TContext&	mContext;
@@ -48,11 +53,12 @@ public:
 class TOpenclRunnerLambda : public TOpenclRunner
 {
 public:
-	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda) :
+	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda,std::function<void(std::exception&)> ErrorLambda) :
 		TOpenclRunner		( Context, Kernel ),
 		mIterationLambda	( IterationLambda ),
 		mInitLambda			( InitLambda ),
-		mFinishedLambda		( FinishedLambda )
+		mFinishedLambda		( FinishedLambda ),
+		mErrorLambda		( ErrorLambda )
 	{
 	}
 	
@@ -72,10 +78,16 @@ public:
 		mFinishedLambda( Kernel );
 	}
 	
+	virtual void		OnError(std::exception& Error) override
+	{
+		mErrorLambda( Error );
+	}
+
 public:
 	std::function<void(Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)>	mInitLambda;
 	std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)>	mIterationLambda;
 	std::function<void(Opencl::TKernelState&)>						mFinishedLambda;
+	std::function<void(std::exception&)>							mErrorLambda;
 };
 
 
@@ -97,34 +109,41 @@ void TOpenclRunner::Run()
 	Opencl::TSync LastSemaphore;
 	static bool BlockLast = true;
 	
-	for ( int i=0;	i<IterationSplits.GetSize();	i++ )
+	try
 	{
-		auto& Iteration = IterationSplits[i];
-		
-		//	setup the iteration
-		bool Block = false;
-		RunIteration( Kernel, Iteration, Block );
-		
-		//	execute it
-		Opencl::TSync ItSemaphore;
-		auto* Semaphore = Block ? &ItSemaphore : nullptr;
-		if ( BlockLast && i == IterationSplits.GetSize()-1 )
-			Semaphore = &LastSemaphore;
-		
-		if ( Semaphore )
+		for ( int i=0;	i<IterationSplits.GetSize();	i++ )
 		{
-			Kernel.QueueIteration( Iteration, *Semaphore );
-			Semaphore->Wait();
+			auto& Iteration = IterationSplits[i];
+			
+			//	setup the iteration
+			bool Block = false;
+			RunIteration( Kernel, Iteration, Block );
+			
+			//	execute it
+			Opencl::TSync ItSemaphore;
+			auto* Semaphore = Block ? &ItSemaphore : nullptr;
+			if ( BlockLast && i == IterationSplits.GetSize()-1 )
+				Semaphore = &LastSemaphore;
+			
+			if ( Semaphore )
+			{
+				Kernel.QueueIteration( Iteration, *Semaphore );
+				Semaphore->Wait();
+			}
+			else
+			{
+				Kernel.QueueIteration( Iteration );
+			}
 		}
-		else
-		{
-			Kernel.QueueIteration( Iteration );
-		}
+		
+		LastSemaphore.Wait();
+		
+		OnFinished( Kernel );
 	}
-	
-	LastSemaphore.Wait();
-	
-	OnFinished( Kernel );
+	catch(std::exception& e)
+	{
+		OnError( e );
+	}
 }
 
 
@@ -194,6 +213,8 @@ Local<FunctionTemplate> TOpenclContext::CreateTemplate(TV8Container& Container)
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
 	
+	Container.BindFunction<ExecuteKernel_FunctionName>( InstanceTemplate, ExecuteKernel );
+
 	return ConstructorFunc;
 }
 
@@ -232,7 +253,7 @@ void TOpenclContext::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	
 	//	set fields
 	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewContext ) );
-	
+
 	// return the new object back to the javascript caller
 	Arguments.GetReturnValue().Set( This );
 }
@@ -309,7 +330,7 @@ void TOpenclKernel::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 }
 
 
-v8::Local<v8::Value> TOpenclContext::Run(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenclContext::ExecuteKernel(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TOpenclContext>( Arguments.This() );
@@ -318,17 +339,17 @@ v8::Local<v8::Value> TOpenclContext::Run(const v8::CallbackInfo& Params)
 
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-/*	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
 	
 	//auto KernelPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto& Kernel = v8::GetObject<TOpenclKernel>(Arguments[0]);
 	BufferArray<int,3> IterationCount;
 	v8::EnumArray( Arguments[1], GetArrayBridge(IterationCount) );
-	auto IterationCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[2] );
-	auto FinishedCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[3] );
+	auto IterationCallbackPersistent = v8::GetPersistent( *Isolate, Local<Function>::Cast(Arguments[2]) );
+	auto FinishedCallbackPersistent = v8::GetPersistent( *Isolate, Local<Function>::Cast(Arguments[3]) );
 	
-	This.DoRun( Kernel, IterationCount, IterationCallbackPersistent, FinishedCallbackPersistent, ResolverPersistent );
-	*/
+	This.DoExecuteKernel( Kernel, IterationCount, IterationCallbackPersistent, FinishedCallbackPersistent, ResolverPersistent );
+ 
 	
 	//	return the promise
 	auto Promise = Resolver->GetPromise();
@@ -336,7 +357,7 @@ v8::Local<v8::Value> TOpenclContext::Run(const v8::CallbackInfo& Params)
 }
 
 
-void TOpenclContext::DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,Persist<Value> IterationCallback,Persist<Value> FinishedCallback,Persist<Promise::Resolver> Resolver)
+void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,Persist<Function> IterationCallback,Persist<Function> FinishedCallback,Persist<Promise::Resolver> Resolver)
 {
 	auto* Isolate = &this->mContainer.GetIsolate();
 	auto* Container = &this->mContainer;
@@ -361,29 +382,60 @@ void TOpenclContext::DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCou
 		ResolverLocal->Resolve( v8::Undefined( Isolate ) );
 	};
 	
-	auto KernelInit = [](Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)
+	auto KernelInit = [IterationCount](Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>& IterationMeta)
 	{
+		//	the original implementation is a min/max
+		//	now that iterations are at a high level, this information is a bit superfolous
+		for ( int i=0;	i<IterationCount.GetSize();	i++ )
+		{
+			auto DimensionMin = 0;
+			auto DimensionMax = IterationCount[i];
+			IterationMeta.PushBack( vec2x<size_t>( DimensionMin, DimensionMax ) );
+		}
 	};
 	
-	auto KernelIteration = [=](Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)
+	auto KernelIteration = [=](Opencl::TKernelState& KernelState,const Opencl::TKernelIteration& Iteration,bool&)
 	{
 		auto ExecuteIteration = [&](Local<Context> Context)
 		{
-			
+			//	create temp reference to the kernel state
+			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
+			BufferArray<Local<Value>,10> CallbackParams;
+			CallbackParams.PushBack( KernelStateHandle );
+			//CallbackParams.PushBack( v8::GetArray(*Isolate,GetArrayBridge(Iteration.mFirst) ) );
+			Container->ExecuteFunc( Context, IterationCallback, GetArrayBridge(CallbackParams) );
 		};
 		Container->RunScoped( ExecuteIteration );
 	};
 	
-	auto KernelFinished = [=](Opencl::TKernelState&)
+	auto KernelFinished = [=](Opencl::TKernelState& KernelState)
 	{
-		auto ExecuteIteration = [&](Local<Context> Context)
+		auto ExecuteFinished = [&](Local<Context> Context)
 		{
-			
+			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
+			BufferArray<Local<Value>,10> CallbackParams;
+			CallbackParams.PushBack( KernelStateHandle );
+			Container->ExecuteFunc( Context, FinishedCallback, GetArrayBridge(CallbackParams) );
 		};
-		Container->RunScoped( ExecuteIteration );
+		Container->RunScoped( ExecuteFinished );
 		Container->QueueScoped( OnCompleted );
 	};
 	
+	auto KernelError = [=](std::exception& Exception)
+	{
+		std::string Error;
+		Error += "Kernel Error: ";
+		Error += Exception.what();
+		
+		auto OnError = [=](Local<Context> Context)
+		{
+			auto ResolverLocal = v8::GetLocal( *Isolate, Resolver );
+			auto ErrorStr = v8::GetString( *Isolate, Error );
+			ResolverLocal->Reject( ErrorStr );
+		};
+		Container->QueueScoped( OnError );
+	};
+
 	auto OpenclRun = [=]
 	{
 		/*
@@ -437,7 +489,47 @@ void TOpenclContext::DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCou
 	};
 	
 	auto& OpenclContext = *mOpenclContext;
-	auto* JobRunner = new TOpenclRunnerLambda( OpenclContext, Kernel.GetKernel(), KernelInit, KernelIteration, KernelFinished );
+	auto* JobRunner = new TOpenclRunnerLambda( OpenclContext, Kernel.GetKernel(), KernelInit, KernelIteration, KernelFinished, KernelError );
 	std::shared_ptr<PopWorker::TJob> Job(JobRunner);
 	OpenclContext.PushJob( Job );
 }
+
+
+
+
+
+
+
+Local<FunctionTemplate> TOpenclKernelState::CreateTemplate(TV8Container& Container)
+{
+	auto* Isolate = Container.mIsolate;
+	
+	//	pass the container around
+	auto ContainerHandle = External::New( Isolate, &Container );
+	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
+	
+	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
+	//	[0] object
+	//	[1] container
+	InstanceTemplate->SetInternalFieldCount(2);
+	
+	return ConstructorFunc;
+}
+
+
+void TOpenclKernelState::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+{
+	auto* Isolate = Arguments.GetIsolate();
+	
+	if ( !Arguments.IsConstructCall() )
+	{
+		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
+		Arguments.GetReturnValue().Set(Exception);
+		return;
+	}
+	auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Not allowed to manually construct TOpenclKernelState"));
+	Arguments.GetReturnValue().Set(Exception);
+	return;
+}
+
+
