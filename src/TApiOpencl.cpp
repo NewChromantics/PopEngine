@@ -11,6 +11,7 @@ static v8::Local<v8::Value> OpenclEnumDevices(v8::CallbackInfo& Params);
 void ApiOpencl::Bind(TV8Container& Container)
 {
 	Container.BindObjectType("OpenclContext", TOpenclContext::CreateTemplate );
+	Container.BindObjectType("OpenclKernel", TOpenclKernel::CreateTemplate );
 	Container.BindGlobalFunction<OpenclEnumDevices_FunctionName>( OpenclEnumDevices );
 }
 
@@ -48,10 +49,10 @@ class TOpenclRunnerLambda : public TOpenclRunner
 {
 public:
 	TOpenclRunnerLambda(Opencl::TContext& Context,Opencl::TKernel& Kernel,std::function<void(Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)> InitLambda,std::function<void(Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)> IterationLambda,std::function<void(Opencl::TKernelState&)> FinishedLambda) :
-	TOpenclRunner		( Context, Kernel ),
-	mIterationLambda	( IterationLambda ),
-	mInitLambda			( InitLambda ),
-	mFinishedLambda		( FinishedLambda )
+		TOpenclRunner		( Context, Kernel ),
+		mIterationLambda	( IterationLambda ),
+		mInitLambda			( InitLambda ),
+		mFinishedLambda		( FinishedLambda )
 	{
 	}
 	
@@ -338,16 +339,7 @@ v8::Local<v8::Value> TOpenclContext::Run(const v8::CallbackInfo& Params)
 void TOpenclContext::DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,Persist<Value> IterationCallback,Persist<Value> FinishedCallback,Persist<Promise::Resolver> Resolver)
 {
 	auto* Isolate = &this->mContainer.GetIsolate();
-	
-	auto KernelInit = [](Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)
-	{
-	};
-	auto KernelIteration = [](Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)
-	{
-	};
-	auto KernelFinished = [](Opencl::TKernelState&)
-	{
-	};
+	auto* Container = &this->mContainer;
 	/*
 	 auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
 	 {
@@ -366,7 +358,30 @@ void TOpenclContext::DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCou
 	auto OnCompleted = [=](Local<Context> Context)
 	{
 		auto ResolverLocal = v8::GetLocal( *Isolate, Resolver );
-		//ResolverLocal->Resolve( v8::Undefined(&Isolate) );
+		ResolverLocal->Resolve( v8::Undefined( Isolate ) );
+	};
+	
+	auto KernelInit = [](Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>&)
+	{
+	};
+	
+	auto KernelIteration = [=](Opencl::TKernelState&,const Opencl::TKernelIteration&,bool&)
+	{
+		auto ExecuteIteration = [&](Local<Context> Context)
+		{
+			
+		};
+		Container->RunScoped( ExecuteIteration );
+	};
+	
+	auto KernelFinished = [=](Opencl::TKernelState&)
+	{
+		auto ExecuteIteration = [&](Local<Context> Context)
+		{
+			
+		};
+		Container->RunScoped( ExecuteIteration );
+		Container->QueueScoped( OnCompleted );
 	};
 	
 	auto OpenclRun = [=]
@@ -422,7 +437,7 @@ void TOpenclContext::DoRun(TOpenclKernel& Kernel,BufferArray<int,3> IterationCou
 	};
 	
 	auto& OpenclContext = *mOpenclContext;
-	//auto* JobRunner = new TOpenclRunnerLambda( OpenclContext, Kernel, KernelInit, KernelIteration, KernelFinished );
-	//std::shared_ptr<PopWorker::TJob> Job(JobRunner);
-	//OpenclContext.PushJob( Job );
+	auto* JobRunner = new TOpenclRunnerLambda( OpenclContext, Kernel.GetKernel(), KernelInit, KernelIteration, KernelFinished );
+	std::shared_ptr<PopWorker::TJob> Job(JobRunner);
+	OpenclContext.PushJob( Job );
 }

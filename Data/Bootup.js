@@ -194,13 +194,13 @@ function GetDrawLinesShader(OpenglContext)
 	return DrawLinesShader;
 }
 
-function GetTestLineKernel(OpenclContext)
+function GetTestLinesKernel(OpenclContext)
 {
-	if ( !TestLineKernel )
+	if ( !TestLinesKernel )
 	{
-		TestLineKernel = new OpenclKernel( OpenclContext, TestLinesKernelSource, TestLinesKernelName );
+		TestLinesKernel = new OpenclKernel( OpenclContext, TestLinesKernelSource, TestLinesKernelName );
 	}
-	return TestLineKernel;
+	return TestLinesKernel;
 }
 
 
@@ -291,9 +291,9 @@ function ExtractTestLines(Frame)
 	return Prom;
 }
 
-function ExtractLines(Frame,OpenclContext)
+function ExtractLines(OpenclContext,Frame)
 {
-	let Kernel = GetTestLineKernel(OpenclContext);
+	let Kernel = GetTestLinesKernel(OpenclContext);
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
