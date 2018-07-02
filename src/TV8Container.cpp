@@ -430,8 +430,9 @@ void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray)
 void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray)
 {
 	EnumArray( ValueHandle, IntArray );
-
 }
+
+
 
 
 void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray)
@@ -454,21 +455,11 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArr
 	}
 	else if ( ValueHandle->IsFloat32Array() )
 	{
-		auto ValueArrayHandle = Local<v8::Float32Array>::Cast( ValueHandle );
-		auto ArraySize = ValueArrayHandle->Length();
-		auto* NewElements = FloatArray.PushBlock(ArraySize);
-		auto NewElementsByteSize = FloatArray.GetElementSize() * ArraySize;
-		auto BytesWritten = ValueArrayHandle->CopyContents( NewElements, NewElementsByteSize );
-		if ( NewElementsByteSize != BytesWritten )
-		{
-			std::stringstream Error;
-			Error << "Copying Float32Array, wrote " << BytesWritten << " bytes, expected " << NewElementsByteSize;
-			throw Soy::AssertException( Error.str() );
-		}
+		EnumArray<Float32Array>( ValueHandle, GetArrayBridge(FloatArray) );
 	}
 	else
 	{
-		throw Soy::AssertException("Unhandled element type [in array]");
+		throw Soy::AssertException("Unhandled element type in EnumArray<float>");
 	}
 }
 
@@ -491,9 +482,45 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
 			EnumArray( ElementHandle, IntArray );
 		}
 	}
+	else if ( ValueHandle->IsInt32Array() )
+	{
+		::Array<int32_t> Ints;
+		EnumArray<Int32Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
+	else if ( ValueHandle->IsUint32Array() )
+	{
+		::Array<uint32_t> Ints;
+		EnumArray<Uint32Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
+	else if ( ValueHandle->IsInt16Array() )
+	{
+		::Array<int16_t> Ints;
+		EnumArray<Int16Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
+	else if ( ValueHandle->IsUint16Array() )
+	{
+		::Array<uint16_t> Ints;
+		EnumArray<Uint16Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
+	else if ( ValueHandle->IsInt8Array() )
+	{
+		::Array<int8_t> Ints;
+		EnumArray<Int8Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
+	else if ( ValueHandle->IsUint8Array() )
+	{
+		::Array<uint8_t> Ints;
+		EnumArray<Uint8Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
 	else
 	{
-		throw Soy::AssertException("Unhandled element type [in array]");
+		throw Soy::AssertException("Unhandled element type in EnumArray<float>");
 	}
 }
 

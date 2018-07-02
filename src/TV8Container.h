@@ -28,6 +28,7 @@ namespace v8
 	class Value;
 	class Task;
 	class String;
+	class Float32Array;
 
 	template<typename T>
 	class Local;
@@ -75,7 +76,11 @@ namespace v8
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray);
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>& IntArray);
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray);
-
+	
+	//	fast copy from typed arrays
+	template<typename ARRAYTYPE,typename ELEMENTTYPE>
+	void	EnumArray(Local<Value> ValueArrayHandle,ArrayBridge<ELEMENTTYPE>&& IntArray);
+	
 }
 
 
@@ -334,4 +339,36 @@ inline v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBER
 		ArrayHandle->Set( i, ValueHandle );
 	}
 	return ArrayHandle;
+}
+
+
+template<typename ARRAYTYPE,typename ELEMENTTYPE>
+inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& IntArray)
+{
+	auto ValueArrayHandle = Local<ARRAYTYPE>::Cast( ValueHandle );
+
+	//	skip div0 checks
+	if ( ValueArrayHandle->Length() == 0 )
+		return;
+	
+	//	check arrays align
+	auto ElementSize = IntArray.GetElementSize();
+	auto ElementSizev8 = ValueArrayHandle->ByteLength() / ValueArrayHandle->Length();
+	if ( ElementSize != ElementSizev8 )
+	{
+		std::stringstream Error;
+		Error << "Trying to copy v8 array(elementsize=" << ElementSizev8 <<") into array(elementsize=" << ElementSize <<" but element sizes misaligned";
+		throw Soy::AssertException( Error.str() );
+	}
+	
+	auto ArraySize = ValueArrayHandle->Length();
+	auto* NewElements = IntArray.PushBlock(ArraySize);
+	auto NewElementsByteSize = IntArray.GetElementSize() * ArraySize;
+	auto BytesWritten = ValueArrayHandle->CopyContents( NewElements, NewElementsByteSize );
+	if ( NewElementsByteSize != BytesWritten )
+	{
+		std::stringstream Error;
+		Error << "Copying v8 array, wrote " << BytesWritten << " bytes, expected " << NewElementsByteSize;
+		throw Soy::AssertException( Error.str() );
+	}
 }

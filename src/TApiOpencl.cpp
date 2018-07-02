@@ -563,6 +563,22 @@ std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,O
 	return Buffer;
 }
 
+
+std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
+{
+	Array<int> Ints;
+	EnumArray( ValueHandle, GetArrayBridge(Ints) );
+	
+	Array<cl_int> IntCls;
+	for ( int i=0;	i<Ints.GetSize();	i++ )
+	{
+		IntCls.PushBack( Ints[i] );
+	}
+	
+	auto Buffer = Opencl::TBufferArray<cl_int>::Alloc( GetArrayBridge(IntCls), Context, Name );
+	return Buffer;
+}
+
 v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -589,6 +605,13 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
 		auto BufferArray = GetFloat4BufferArray( ValueHandle, Context, Uniform.mName );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
+	else if ( Uniform.mType == "int*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto BufferArray = GetIntBufferArray( ValueHandle, Context, Uniform.mName );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else
