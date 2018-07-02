@@ -299,7 +299,7 @@ function ExtractLines(OpenclContext,Frame)
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
 		Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
-		let LineBuffer = new Float32Array( 2*4 );
+		let LineBuffer = new Float32Array( 10*4 );
 		let LineCount = new Int32Array(1);
 		Kernel.SetUniform("Lines", LineBuffer );
 		Kernel.SetUniform("LineCount", LineCount );
@@ -310,6 +310,8 @@ function ExtractLines(OpenclContext,Frame)
 	{
 		Debug("OnFinished(" + Kernel + ")");
 		let LineCount = Kernel.ReadUniform("LineCount");
+		let Lines = Kernel.ReadUniform("Lines");
+		Frame.Lines = Lines;
 		Debug("Output linecount=" + LineCount);
 	}
 

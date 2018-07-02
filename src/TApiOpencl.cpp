@@ -7,6 +7,7 @@ using namespace v8;
 const char OpenclEnumDevices_FunctionName[] = "OpenclEnumDevices";
 const char ExecuteKernel_FunctionName[] = "ExecuteKernel";
 const char SetUniform_FunctionName[] = "SetUniform";
+const char ReadUniform_FunctionName[] = "ReadUniform";
 
 
 static v8::Local<v8::Value> OpenclEnumDevices(v8::CallbackInfo& Params);
@@ -518,6 +519,7 @@ Local<FunctionTemplate> TOpenclKernelState::CreateTemplate(TV8Container& Contain
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
 	Container.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
+	Container.BindFunction<ReadUniform_FunctionName>( InstanceTemplate, ReadUniform );
 
 	return ConstructorFunc;
 }
@@ -669,3 +671,41 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 	*/
 	return v8::Undefined(Params.mIsolate);
 }
+
+
+
+
+v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	//	gr: being different to all the others...
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& KernelState = v8::GetObject<Opencl::TKernelState>( ThisHandle );
+	
+	auto UniformName = v8::GetString(Arguments[0]);
+	auto Uniform = KernelState.GetUniform( UniformName );
+
+	//	work out what to do from type
+	if ( Uniform.mType == "float4*" )
+	{
+		Array<cl_float4> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*4 );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
+		return ValuesArray;
+	}
+	else if ( Uniform.mType == "int*" )
+	{
+		Array<int> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Values) );
+		return ValuesArray;
+	}
+
+	std::stringstream Error;
+	Error << "Unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;
+	throw Soy::AssertException( Error.str() );
+}
+
+

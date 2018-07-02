@@ -71,7 +71,8 @@ public:
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 
 	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
-	
+	static v8::Local<v8::Value>				ReadUniform(const v8::CallbackInfo& Arguments);
+
 public:
 
 };
