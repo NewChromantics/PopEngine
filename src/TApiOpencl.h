@@ -73,12 +73,6 @@ public:
 	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
 	
 public:
-	TV8Container&						mContainer;
-	v8::Persistent<v8::Object>			mHandle;
-	
-	//	we could have multiple kernels per program, but keeping it simple
-	std::string							mKernelName;
-	std::shared_ptr<Opencl::TProgram>	mProgram;
-	std::shared_ptr<Opencl::TKernel>	mKernel;
+
 };
 

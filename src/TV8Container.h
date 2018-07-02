@@ -21,6 +21,7 @@ class TV8Container;
 //	forward decalrations
 namespace v8
 {
+	class Array;
 	class Platform;
 	class Isolate;
 	class Context;
@@ -61,6 +62,10 @@ namespace v8
 	template<typename TYPE>
 	Local<TYPE> 	GetLocal(v8::Isolate& Isolate,Persist<TYPE> PersistentHandle);
 	
+	//	todo: specialise this for other types
+	template<typename NUMBERTYPE>
+	Local<Array>	GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBERTYPE>&& Values);
+
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
 
@@ -318,3 +323,15 @@ inline v8::Local<TYPE> v8::GetLocal(v8::Isolate& Isolate,Persist<TYPE> Persisten
 }
 
 
+template<typename NUMBERTYPE>
+inline v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBERTYPE>&& Values)
+{
+	auto ArrayHandle = Array::New( &Isolate );
+	for ( auto i=0;	i<Values.GetSize();	i++ )
+	{
+		double Value = Values[i];
+		auto ValueHandle = Number::New( &Isolate, Value );
+		ArrayHandle->Set( i, ValueHandle );
+	}
+	return ArrayHandle;
+}

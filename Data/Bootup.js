@@ -299,11 +299,11 @@ function ExtractLines(OpenclContext,Frame)
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
 		Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
-		//Kernel.SetUniform("NeedAtLeastOneParam", 0 );
+		Kernel.SetUniform("NeedAtLeastOneParam", 0 );
 	}
 	let OnFinished = function(Kernel)
 	{
-		Debug("OnIteration(" + Kernel + ")");
+		Debug("OnFinished(" + Kernel + ")");
 	}
 
 	let Prom = OpenclContext.ExecuteKernel( Kernel, [1], OnIteration, OnFinished );

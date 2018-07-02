@@ -1,10 +1,12 @@
 #include "TApiOpencl.h"
 #include "TApiCommon.h"
+#include <SoyGraphics.h>
 
 using namespace v8;
 
 const char OpenclEnumDevices_FunctionName[] = "OpenclEnumDevices";
 const char ExecuteKernel_FunctionName[] = "ExecuteKernel";
+const char SetUniform_FunctionName[] = "SetUniform";
 
 
 static v8::Local<v8::Value> OpenclEnumDevices(v8::CallbackInfo& Params);
@@ -158,6 +160,7 @@ static Local<Value> OpenclEnumDevices(CallbackInfo& Params)
 	Opencl::GetDevices( GetArrayBridge(Devices), Filter );
 	
 	//	make an array to return
+	//	todo: use v8::GetArray
 	auto DevicesArray = v8::Array::New( &Params.GetIsolate() );
 	for ( auto i=0;	i<Devices.GetSize();	i++ )
 	{
@@ -400,9 +403,11 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 		{
 			//	create temp reference to the kernel state
 			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
+			BufferArray<int,3> IterationIndexes;
+			auto IterationIndexesHandle = v8::GetArray( *Isolate, GetArrayBridge(Iteration.mFirst) );
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
-			//CallbackParams.PushBack( v8::GetArray(*Isolate,GetArrayBridge(Iteration.mFirst) ) );
+			CallbackParams.PushBack( IterationIndexesHandle );
 			Container->ExecuteFunc( Context, IterationCallback, GetArrayBridge(CallbackParams) );
 		};
 		Container->RunScoped( ExecuteIteration );
@@ -512,7 +517,8 @@ Local<FunctionTemplate> TOpenclKernelState::CreateTemplate(TV8Container& Contain
 	//	[0] object
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
-	
+	Container.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
+
 	return ConstructorFunc;
 }
 
@@ -533,3 +539,79 @@ void TOpenclKernelState::Constructor(const v8::FunctionCallbackInfo<v8::Value>& 
 }
 
 
+v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	//	gr: being different to all the others...
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& KernelState = v8::GetObject<Opencl::TKernelState>( ThisHandle );
+	
+	auto UniformName = v8::GetString(Arguments[0]);
+	auto Uniform = KernelState.GetUniform( UniformName );
+	
+	//	get type from args
+	//	gr: we dont have js vector types yet, so use arrays
+	auto ValueHandle = Arguments[1];
+	
+	if ( Uniform.mType == "int" )
+	{
+		BufferArray<int,1> Ints;
+		EnumArray( ValueHandle, GetArrayBridge(Ints) );
+		KernelState.SetUniform( UniformName.c_str(), Ints[0] );
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "Unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;
+		throw Soy::AssertException( Error.str() );
+	}
+	/*
+	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
+	{
+		//	gr: we're not using the shader state, so we currently need to manually track bind count at high level
+		auto BindIndexHandle = Arguments[2];
+		if ( !BindIndexHandle->IsNumber() )
+			throw Soy::AssertException("Currently need to pass texture bind index (increment from 0). SetUniform(Name,Image,BindIndex)");
+		auto BindIndex = BindIndexHandle.As<Number>()->Int32Value();
+		
+		//	get the image
+		auto& Image = v8::GetObject<TImageWrapper>(ValueHandle);
+		//	gr: planning ahead
+		auto OnTextureLoaded = [&Image,pShader,Uniform,BindIndex]()
+		{
+			pShader->SetUniform( Uniform, Image.GetTexture(), BindIndex );
+		};
+		auto OnTextureError = [](const std::string& Error)
+		{
+			std::Debug << "Error loading texture " << Error << std::endl;
+			std::Debug << "Todo: relay to promise" << std::endl;
+		};
+		Image.GetTexture( OnTextureLoaded, OnTextureError );
+	}
+	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
+	{
+		BufferArray<float,1024*4> Floats;
+		EnumArray( ValueHandle, GetArrayBridge(Floats) );
+		
+		//	Pad out if the uniform is an array and we're short...
+		//	maybe need more strict alignment when enumerating sub arrays above
+		auto UniformFloatCount = Uniform.GetFloatCount();
+		if ( Floats.GetSize() < UniformFloatCount )
+		{
+			if ( Uniform.GetArraySize() > 1 )
+			{
+				for ( int i=Floats.GetSize();	i<UniformFloatCount;	i++ )
+					Floats.PushBack(0);
+			}
+		}
+		
+		Shader.SetUniform( Uniform, GetArrayBridge(Floats) );
+	}
+	else
+	{
+		throw Soy::AssertException("Currently only image & float uniform supported");
+	}
+	*/
+	return v8::Undefined(Params.mIsolate);
+}
