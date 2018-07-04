@@ -203,7 +203,10 @@ function GetTestLinesKernel(OpenclContext)
 	return TestLinesKernel;
 }
 
-
+function MakePromise(Func)
+{
+	return new Promise( Func );
+}
 	
 function ReturnSomeString()
 {
@@ -278,7 +281,6 @@ function MakeLineMask(OpenglContext,Frame)
 
 function ExtractTestLines(Frame)
 {
-	//	box
 	let BoxLines = [
 					[0,0,1,0],
 					[0,1,1,1],
@@ -299,7 +301,7 @@ function ExtractTestLines(Frame)
 	return Prom;
 }
 
-function ExtractLines(OpenclContext,Frame)
+function ExtractOpenclTestLines(OpenclContext,Frame)
 {
 	Debug("Opencl ExtractLines");
 	let Kernel = GetTestLinesKernel(OpenclContext);
@@ -329,8 +331,26 @@ function ExtractLines(OpenclContext,Frame)
 	return Prom;
 }
 
+function ExtractHoughLines(OpenclContext,Frame)
+{
+	let HoughRunner = function(Resolve,Reject)
+	{
+		let a = function()	{	Debug("CalcAngleXDistanceXChunks");	}
+		let b = function()	{	Debug("GraphAngleXDistances");	}
+		let c = function()	{	Debug("ExtractHoughLines");	}
+		MakePromise(a)
+		.then( MakePromise(b) )
+		.then( MakePromise(c) )
+		.then( MakePromise(Resolve) );
+	}
+	
+	//	high level promise
+	return MakePromise( HoughRunner );
+}
+
 function DrawLines(OpenglContext,Frame)
 {
+	Debug("DrawLines");
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
 		let Shader = GetDrawLinesShader(RenderTarget);
@@ -364,8 +384,9 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part2 = function()	{	return MakeGrassMask( OpenglContext, Frame );	}
 	let Part3 = function()	{	return MakeLineMask( OpenglContext, Frame );	}
 	let Part4 = function()	{	return ExtractTestLines( Frame );	}
-	let Part5 = function()	{	return ExtractLines( OpenclContext, Frame );	}
-	let Part6 = function()	{	return DrawLines( OpenglContext, Frame );	}
+	let Part5 = function()	{	return ExtractOpenclTestLines( OpenclContext, Frame );	}
+	let Part6 = function()	{	return ExtractHoughLines( OpenclContext, Frame );	}
+	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
@@ -379,6 +400,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	.then( Part4 )
 	.then( Part5 )
 	.then( Part6 )
+	.then( Part7 )
 	.then( Finish )
 	.catch( OnError );
 }
