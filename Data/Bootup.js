@@ -95,6 +95,9 @@ let GrassLineFilterFragShaderSource = LoadFileAsString('Data/GrassLineFilter.fra
 let DrawLinesFragShaderSource = LoadFileAsString('Data/DrawLines.frag');
 let TestLinesKernelSource = LoadFileAsString('Data/TestLines.cl');
 let TestLinesKernelName = 'GetTestLines';
+let HoughLinesKernelSource = LoadFileAsString('Data/HoughLines.cl');
+let CalcAngleXDistanceXChunksKernelName = 'CalcAngleXDistanceXChunks';
+
 
 let EdgeFragShaderSource = `
 	#version 410
@@ -157,6 +160,7 @@ var GrassFilterShader = null;
 var GrassLineFilterShader = null;
 var DrawLinesShader = null;
 var TestLinesKernel = null;
+var CalcAngleXDistanceXChunksKernel = null;
 
 function GetRgbToHslShader(OpenglContext)
 {
@@ -202,6 +206,16 @@ function GetTestLinesKernel(OpenclContext)
 	}
 	return TestLinesKernel;
 }
+
+function GetCalcAngleXDistanceXChunksKernel(OpenclContext)
+{
+	if ( !CalcAngleXDistanceXChunksKernel )
+	{
+		CalcAngleXDistanceXChunksKernel = new OpenclKernel( OpenclContext, HoughLinesKernelSource, CalcAngleXDistanceXChunksKernelName );
+	}
+	return CalcAngleXDistanceXChunksKernel;
+}
+
 
 function MakePromise(Func)
 {
@@ -331,14 +345,43 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 	return Prom;
 }
 
+function CalcAngleXDistanceXChunks(OpenclContext,Frame)
+{
+	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
+	
+	let OnIteration = function(Kernel,IterationIndexes)
+	{
+		Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		let LineBuffer = new Float32Array( 10*4 );
+		let LineCount = new Int32Array(1);
+		Kernel.SetUniform("Lines", LineBuffer );
+		Kernel.SetUniform("LineCount", LineCount );
+		Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
+	}
+	
+	let OnFinished = function(Kernel)
+	{
+		Debug("OnFinished(" + Kernel + ")");
+		let LineCount = Kernel.ReadUniform("LineCount");
+		let Lines = Kernel.ReadUniform("Lines");
+		if ( !Array.isArray(Frame.Lines) )
+			Frame.Lines = new Array();
+		Frame.Lines.push(...Lines);
+		Debug("Output linecount=" + LineCount);
+	}
+	
+	let Prom = OpenclContext.ExecuteKernel( Kernel, [1], OnIteration, OnFinished );
+	return Prom;
+}
+
 function ExtractHoughLines(OpenclContext,Frame)
 {
 	let HoughRunner = function(Resolve,Reject)
 	{
-		let a = function()	{	Debug("CalcAngleXDistanceXChunks");	}
 		let b = function()	{	Debug("GraphAngleXDistances");	}
 		let c = function()	{	Debug("ExtractHoughLines");	}
-		MakePromise(a)
+		
+		CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		.then( MakePromise(b) )
 		.then( MakePromise(c) )
 		.then( MakePromise(Resolve) );

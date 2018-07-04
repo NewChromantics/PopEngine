@@ -1,14 +1,61 @@
+/*
+ // Create a RenderTexture with enableRandomWrite flag and set it
+ // with cs.SetTexture
+ Texture2D<float4> EdgeTexture;
+ int EdgeTextureWidth;
+ int EdgeTextureHeight;
+ RWTexture2D<float4> GraphTexture;
+ int GraphTextureWidth;
+ int GraphTextureHeight;
+ RWStructuredBuffer<int> AngleXDistanceXChunks;
+ StructuredBuffer<float> Angles;
+ StructuredBuffer<float> Distances;
+ int ChunkCount = 10;
+ AppendStructuredBuffer<THoughLine> ExtractedLines;
+ float ExtractMinScore = 0.5f;
+ float ExtractMinJoinedScore = 1.0f;
+ float HoughOriginX = 0.5f;
+ float HoughOriginY = 0.5f;
+ int HistogramMax = 1000;
+ */
+/*
+constant float HoughOriginX = 0.5f;
+constant float HoughOriginY = 0.5f;
 
-[numthreads(8,8,1)]
-void CalcAngleXDistanceXChunks(uint3 id : SV_DispatchThreadID)
+
+float TimeAlongLine2(float2 Position,float2 Start,float2 End)
 {
-	int x = id.x;
-	int y = id.y;
-	int AngleIndex = id.z;
-	float Angle = GetAngle( AngleIndex );
+	float2 Direction = End - Start;
+	float DirectionLength = length(Direction);
+	float Projection = dot( Position - Start, Direction) / (DirectionLength*DirectionLength);
+	
+	return Projection;
+}
+
+int GetHoughLineChunkIndex(THoughLine HoughLine,float2 Position,int ChunkCount)
+{
+	float Chunkf = TimeAlongLine2( Position, HoughLine.Start, HoughLine.End );
+	int Chunk = (int)( Chunkf * ChunkCount );
+	return Chunk;
+}
+*/
+kernel void CalcAngleXDistanceXChunks(int xFirst,
+										int yFirst,
+										int AngleIndexFirst,
+										global float* Angles,
+										int AngleCount,
+										image2d_t EdgeTexture,
+										int LinesSize)
+{
+	/*
+	uint3 id
+	int x = id.x + xFirst;
+	int y = id.y + yFirst;
+	int AngleIndex = id.z + AngleIndexFirst;
+	float Angle = GetAngle( AngleIndex, Angles, AngleCount );
 	
 	//	read edge
-	bool Edge = (EdgeTexture[id.xy].x > 0.5f);
+	bool Edge = (EdgeTexture[int2(x,y)].x > 0.5f);
 	if ( !Edge )
 		return;
 	
@@ -26,10 +73,11 @@ void CalcAngleXDistanceXChunks(uint3 id : SV_DispatchThreadID)
 	
 	//	gr: this is writing odd values
 	InterlockedAdd( AngleXDistanceXChunks[AngleXDistanceXChunkIndex], 1 );
+	 */
 }
 
 
-
+/*
 [numthreads(32,32,1)]
 void GraphAngleXDistances(uint3 id : SV_DispatchThreadID)
 {
@@ -55,9 +103,10 @@ void GraphAngleXDistances(uint3 id : SV_DispatchThreadID)
 	
 	GraphTexture[id.xy] = float4( Score, Score, 0, 1.0f );
 }
+ */
 
 
-
+/*
 [numthreads(32,32,1)]
 void ExtractHoughLines(uint3 id : SV_DispatchThreadID)
 {
@@ -78,4 +127,4 @@ void ExtractHoughLines(uint3 id : SV_DispatchThreadID)
 		PushLine( Line, Score, ChunkIndex, ChunkIndex );
 	}
 }
-
+*/
