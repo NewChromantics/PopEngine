@@ -278,11 +278,19 @@ function MakeLineMask(OpenglContext,Frame)
 
 function ExtractTestLines(Frame)
 {
-	let TestLines = [ [0,0,1,1], [1,0,0,1] ];
+	//	box
+	let BoxLines = [
+					[0,0,1,0],
+					[0,1,1,1],
+					[0,0,0,1],
+					[1,0,1,1]
+					];
 	
 	let Runner = function(Resolve,Reject)
 	{
-		Frame.Lines = TestLines;
+		if ( !Array.isArray(Frame.Lines) )
+			Frame.Lines = new Array();
+		Frame.Lines.push(...BoxLines);
 		Resolve();
 	}
 	
@@ -311,7 +319,9 @@ function ExtractLines(OpenclContext,Frame)
 		Debug("OnFinished(" + Kernel + ")");
 		let LineCount = Kernel.ReadUniform("LineCount");
 		let Lines = Kernel.ReadUniform("Lines");
-		Frame.Lines = Lines;
+		if ( !Array.isArray(Frame.Lines) )
+			Frame.Lines = new Array();
+		Frame.Lines.push(...Lines);
 		Debug("Output linecount=" + LineCount);
 	}
 
