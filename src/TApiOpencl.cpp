@@ -586,6 +586,16 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		auto BufferArray = GetIntBufferArray( ValueHandle, Context, Uniform.mName );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
+	else if ( Uniform.mType == "image2d_t" )
+	{
+		auto& Image = v8::GetObject<TImageWrapper>( ValueHandle );
+		if ( Image.mPixels == nullptr )
+			throw Soy::AssertException("Using image that hasn't been initialised");
+		auto& Pixels = *Image.mPixels;
+		auto Blocking = true;
+		auto ReadWrite = OpenclBufferReadWrite::ReadWrite;
+		KernelState.SetUniform( UniformName, Pixels, ReadWrite, Blocking );
+	}
 	else
 	{
 		std::stringstream Error;

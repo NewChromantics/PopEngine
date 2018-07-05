@@ -298,8 +298,12 @@ void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 		Local<Context> context = Local<Context>::New( isolate, mContext );
 		Context::Scope context_scope( context );
 
-		//	gr: should we catch stuff here?
+		//	gr: auto catch and turn into a c++ exception
+		TryCatch trycatch(isolate);
 		Lambda( context );
+		if ( trycatch.HasCaught() )
+			throw V8Exception( trycatch, "Running Javascript func" );
+		mIsolate->Exit();
 	}
 	catch(...)
 	{

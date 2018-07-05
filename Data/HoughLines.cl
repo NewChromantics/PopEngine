@@ -21,9 +21,17 @@
 
 constant float HoughOriginX = 0.5f;
 constant float HoughOriginY = 0.5f;
+#define hypotenuse(o,a)	sqrt( (float)((a*a)+(o*o)) )
 
-/*
-float TimeAlongLine2(float2 Position,float2 Start,float2 End)
+typedef struct tag_THoughLine
+{
+	float2	Start;
+	float2	End;
+	float	Score;
+} THoughLine;
+
+
+static float TimeAlongLine2(float2 Position,float2 Start,float2 End)
 {
 	float2 Direction = End - Start;
 	float DirectionLength = length(Direction);
@@ -32,18 +40,83 @@ float TimeAlongLine2(float2 Position,float2 Start,float2 End)
 	return Projection;
 }
 
-int GetHoughLineChunkIndex(THoughLine HoughLine,float2 Position,int ChunkCount)
+static int GetHoughLineChunkIndex(THoughLine HoughLine,float2 Position,int ChunkCount)
 {
 	float Chunkf = TimeAlongLine2( Position, HoughLine.Start, HoughLine.End );
 	int Chunk = (int)( Chunkf * ChunkCount );
 	return Chunk;
 }
-*/
+
+static int GetAngleXDistanceXChunkIndex(int AngleIndex,int DistanceIndex,int ChunkIndex,int DistancesCount,int ChunkCount,int AngleXDistanceXChunkCount)
+{
+	int AngleXDistanceXChunkIndex = (AngleIndex * DistancesCount * ChunkCount);
+	AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
+	AngleXDistanceXChunkIndex += ChunkIndex;
+	
+	int MaxAngleXDistanceXChunkIndex = AngleXDistanceXChunkCount-1;
+	//	just in case...
+	return max(0,min(MaxAngleXDistanceXChunkIndex,AngleXDistanceXChunkIndex));
+}
+
+
+static float GetHoughDistance(float2 Position,float2 Origin,float Angle)
+{
+	//	http://www.keymolen.com/2013/05/hough-transformation-c-implementation.html
+	float2 xy = Position - Origin;
+	float Cos = cos( radians(Angle) );
+	float Sin = sin( radians(Angle) );
+	float r = Cos*xy.x + Sin*xy.y;
+	return r;
+}
+
+static int GetHoughDistanceIndex(float Distance,global float* Distances,int DistancesCount)
+{
+	//	calc this with range & floor
+	for ( int i=DistancesCount-1;	i>0;	i-- )
+	{
+		if ( Distance >= Distances[i] )
+			return i;
+	}
+	return 0;
+}
+
+
+//	same as THoughLine.cginc!
+static THoughLine GetHoughLine(float Angle,float Distance,float2 Origin)
+{
+	//	UV space lines
+	float Length = hypotenuse(1,1);
+	
+	float rho = Distance;
+	float theta = radians(Angle);
+	float Cos = cos( theta );
+	float Sin = sin( theta );
+	
+	//	center of the line
+	float2 Center = (float2)( Cos*rho, Sin*rho ) + Origin;
+	
+	//	scale by an arbirtry number, but still want to be resolution-independent
+	//float Length = 100;
+	
+	float2 Offset = (float2)( Length*-Sin, Length*Cos );
+	
+	THoughLine Line;
+	Line.Start = Center + Offset;
+	Line.End = Center - Offset;
+	Line.Score = 0;
+	return Line;
+}
+ 
+
 kernel void CalcAngleXDistanceXChunks(int xFirst,
 										int yFirst,
 										int AngleIndexFirst,
 										global float* Angles,
 									  	global float* Distances,
+									  	global int* AngleXDistanceXChunks,
+									  	int DistancesCount,
+									 	int ChunkCount,
+									  	int AngleXDistanceXChunkCount,
 										image2d_t EdgeTexture
 									  )
 {
@@ -64,21 +137,26 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	if ( !Edge )
 		return;
 	
+	float EdgeTextureWidthf = get_image_width(EdgeTexture);
+	float EdgeTextureHeightf = get_image_height(EdgeTexture);
+
 	float2 HoughOrigin = float2( HoughOriginX, HoughOriginY );
-	/*
-	//	calc hough distance from position & angle
-	float2 uv = float2( x / (float)EdgeTextureWidth, y / (float)EdgeTextureHeight );
-	float HoughDistance = GetHoughDistance( uv, HoughOrigin, Angle );
-	int HoughDistanceIndex = GetHoughDistanceIndex( HoughDistance );
 	
+	//	calc hough distance from position & angle
+	float2 uv = (float2)( x / EdgeTextureWidthf, y / EdgeTextureHeightf );
+
+	float HoughDistance = GetHoughDistance( uv, HoughOrigin, Angle );
+	int HoughDistanceIndex = GetHoughDistanceIndex( HoughDistance, Distances, DistancesCount );
+
 	THoughLine Line = GetHoughLine( Angle, HoughDistance, HoughOrigin );
 	int ChunkIndex = GetHoughLineChunkIndex( Line, uv, ChunkCount );
-	
-	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex );
-	
+
+	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistancesCount, ChunkCount, AngleXDistanceXChunkCount );
+	/*
 	//	gr: this is writing odd values
 	InterlockedAdd( AngleXDistanceXChunks[AngleXDistanceXChunkIndex], 1 );
-	 */
+*/
+	
 }
 
 

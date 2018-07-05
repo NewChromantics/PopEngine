@@ -363,7 +363,8 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179 );
 	Frame.Distances = GetNumberRangeInclusive( -1, 1, 100 );
 	Frame.ChunkCount = 10;
-
+	Frame.AngleXDistanceXChunks = new Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
+	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
 		Debug("CalcAngleXDistanceXChunks OnIteration(" + Kernel + ", " + IterationIndexes + ")");
@@ -372,6 +373,14 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		Kernel.SetUniform('AngleIndexFirst', IterationIndexes[2] );
 		Kernel.SetUniform('Angles', Frame.Angles );
 		Kernel.SetUniform('Distances', Frame.Distances );
+		Kernel.SetUniform('DistancesCount', Frame.Distances.length );
+		Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
+		if ( IterationIndexes[0]==IterationIndexes[1]==IterationIndexes[2]==0 )
+		{
+			Kernel.SetUniform('EdgeTexture', MaskTexture );
+			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
+			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
+		}
 		/*
 		let LineBuffer = new Float32Array( 10*4 );
 		let LineCount = new Int32Array(1);
