@@ -1,3 +1,4 @@
+#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
 /*
  // Create a RenderTexture with enableRandomWrite flag and set it
  // with cs.SetTexture
@@ -152,11 +153,9 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	int ChunkIndex = GetHoughLineChunkIndex( Line, uv, ChunkCount );
 
 	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistancesCount, ChunkCount, AngleXDistanceXChunkCount );
-	/*
-	//	gr: this is writing odd values
-	InterlockedAdd( AngleXDistanceXChunks[AngleXDistanceXChunkIndex], 1 );
-*/
 	
+	//	gr: this is writing odd values
+	atom_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
 }
 
 
