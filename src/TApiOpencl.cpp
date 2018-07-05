@@ -600,7 +600,7 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 	else
 	{
 		std::stringstream Error;
-		Error << "Unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;
+		Error << __func__ << " unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;
 		throw Soy::AssertException( Error.str() );
 	}
 	/*
@@ -685,7 +685,7 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 	}
 
 	std::stringstream Error;
-	Error << "Unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;
+	Error << __func__ << " unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;
 	throw Soy::AssertException( Error.str() );
 }
 

@@ -394,6 +394,7 @@ function GraphAngleXDistances(OpenclContext,Frame)
 	let OnFinished = function(Kernel)
 	{
 		Debug("GraphAngleXDistances OnFinished(" + Kernel + ")");
+		Frame.HoughHistogram = Kernel.ReadUniform('GraphTexture');
 	}
 	
 	let Dim = [ Frame.HoughHistogram.GetWidth(), Frame.HoughHistogram.GetHeight() ];
@@ -427,26 +428,12 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
 			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
 		}
-		/*
-		let LineBuffer = new Float32Array( 10*4 );
-		let LineCount = new Int32Array(1);
-		Kernel.SetUniform("Lines", LineBuffer );
-		Kernel.SetUniform("LineCount", LineCount );
-		Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
-		 */
 	}
 	
 	let OnFinished = function(Kernel)
 	{
 		Debug("CalcAngleXDistanceXChunks OnFinished(" + Kernel + ")");
-		/*
-		let LineCount = Kernel.ReadUniform("LineCount");
-		let Lines = Kernel.ReadUniform("Lines");
-		if ( !Array.isArray(Frame.Lines) )
-			Frame.Lines = new Array();
-		Frame.Lines.push(...Lines);
-		Debug("Output linecount=" + LineCount);
-		 */
+		Frame.AngleXDistanceXChunks = Kernel.ReadUniform('AngleXDistanceXChunks');
 	}
 
 	let Dim = [MaskTexture.GetWidth(),MaskTexture.GetHeight(), Frame.Angles.length];
