@@ -48,9 +48,9 @@ static int GetHoughLineChunkIndex(THoughLine HoughLine,float2 Position,int Chunk
 	return Chunk;
 }
 
-static int GetAngleXDistanceXChunkIndex(int AngleIndex,int DistanceIndex,int ChunkIndex,int DistancesCount,int ChunkCount,int AngleXDistanceXChunkCount)
+static int GetAngleXDistanceXChunkIndex(int AngleIndex,int DistanceIndex,int ChunkIndex,int DistanceCount,int ChunkCount,int AngleXDistanceXChunkCount)
 {
-	int AngleXDistanceXChunkIndex = (AngleIndex * DistancesCount * ChunkCount);
+	int AngleXDistanceXChunkIndex = (AngleIndex * DistanceCount * ChunkCount);
 	AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
 	AngleXDistanceXChunkIndex += ChunkIndex;
 	
@@ -70,10 +70,10 @@ static float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 	return r;
 }
 
-static int GetHoughDistanceIndex(float Distance,global float* Distances,int DistancesCount)
+static int GetHoughDistanceIndex(float Distance,global float* Distances,int DistanceCount)
 {
 	//	calc this with range & floor
-	for ( int i=DistancesCount-1;	i>0;	i-- )
+	for ( int i=DistanceCount-1;	i>0;	i-- )
 	{
 		if ( Distance >= Distances[i] )
 			return i;
@@ -115,20 +115,15 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 										global float* Angles,
 									  	global float* Distances,
 									  	global int* AngleXDistanceXChunks,
-									  	int DistancesCount,
+									  	int DistanceCount,
 									 	int ChunkCount,
 									  	int AngleXDistanceXChunkCount,
 										image2d_t EdgeTexture
 									  )
 {
-	uint3 id = (uint3)(xFirst,yFirst,AngleIndexFirst);
-	id.x += get_global_id(0);
-	id.y += get_global_id(1);
-	id.z += get_global_id(2);
-	
-	int x = id.x;
-	int y = id.y;
-	int AngleIndex = id.z;
+	int x = get_global_id(0) + xFirst;
+	int y = get_global_id(1) + yFirst;
+	int AngleIndex = get_global_id(2) + AngleIndexFirst;
 	float Angle = Angles[AngleIndex];
 	
 	//	read edge
@@ -147,45 +142,57 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	float2 uv = (float2)( x / EdgeTextureWidthf, y / EdgeTextureHeightf );
 
 	float HoughDistance = GetHoughDistance( uv, HoughOrigin, Angle );
-	int HoughDistanceIndex = GetHoughDistanceIndex( HoughDistance, Distances, DistancesCount );
+	int HoughDistanceIndex = GetHoughDistanceIndex( HoughDistance, Distances, DistanceCount );
 
 	THoughLine Line = GetHoughLine( Angle, HoughDistance, HoughOrigin );
 	int ChunkIndex = GetHoughLineChunkIndex( Line, uv, ChunkCount );
 
-	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistancesCount, ChunkCount, AngleXDistanceXChunkCount );
+	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistanceCount, ChunkCount, AngleXDistanceXChunkCount );
 	
 	//	gr: this is writing odd values
 	atom_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
 }
 
 
-/*
-[numthreads(32,32,1)]
-void GraphAngleXDistances(uint3 id : SV_DispatchThreadID)
+
+kernel void GraphAngleXDistances(int xFirst,
+						  int yFirst,
+						 // write_only image2d_t GraphTexture,
+						  int HistogramHitMax,
+						  int AngleCount,
+						  int DistanceCount,
+						  int ChunkCount,
+						  global int* AngleXDistanceXChunks,
+						 int AngleXDistanceXChunkCount
+						  )
 {
-	int x = id.x;
-	int y = id.y;
+	/*
+	int x = get_global_id(0) + xFirst;
+	int y = get_global_id(1) + yFirst;
 	
-	float u = x / (float)GraphTextureWidth;
-	float v = y / (float)GraphTextureHeight;
+	float u = x / (float)get_image_width(GraphTexture);
+	float v = y / (float)get_image_height(GraphTexture);
 	
-	int AngleIndex = u * GetAngleCount();
-	int DistanceIndex = v * GetDistanceCount();
-	
+	int AngleIndex = u * AngleCount;
+	int DistanceIndex = v * DistanceCount;
+
 	int HitCount = 0;
 	for ( int c=0;	c<ChunkCount;	c++ )
 	{
-		int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex(AngleIndex, DistanceIndex, c );
+		int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex(AngleIndex, DistanceIndex, c, DistanceCount, ChunkCount, AngleXDistanceXChunkCount );
 		HitCount += AngleXDistanceXChunks[AngleXDistanceXChunkIndex];
 	}
 	
-	float HitMax = GetHistogramMax();
+	float HitMax = HistogramHitMax;
 	float Score = HitCount / HitMax;
-	Score = min( 1, Score );
+	Score = min( 1.0f, Score );
 	
-	GraphTexture[id.xy] = float4( Score, Score, 0, 1.0f );
-}
+	int2 PixelCoord = (int2)(x,y);
+	float4 Colour = (float4)( Score, Score, 0, 1.0f );
+	write_imagef( GraphTexture, PixelCoord, Colour );
  */
+}
+
 
 
 /*

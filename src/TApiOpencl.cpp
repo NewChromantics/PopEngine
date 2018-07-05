@@ -436,6 +436,7 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 		{
 			auto ResolverLocal = v8::GetLocal( *Isolate, Resolver );
 			auto ErrorStr = v8::GetString( *Isolate, Error );
+			//std::Debug << "Kernel error rejecting: " << Error << std::endl;
 			ResolverLocal->Reject( ErrorStr );
 		};
 		Container->QueueScoped( OnError );

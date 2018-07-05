@@ -97,6 +97,7 @@ let TestLinesKernelSource = LoadFileAsString('Data/TestLines.cl');
 let TestLinesKernelName = 'GetTestLines';
 let HoughLinesKernelSource = LoadFileAsString('Data/HoughLines.cl');
 let CalcAngleXDistanceXChunksKernelName = 'CalcAngleXDistanceXChunks';
+let GraphAngleXDistancesKernelName = 'GraphAngleXDistances';
 
 
 let EdgeFragShaderSource = `
@@ -161,6 +162,7 @@ var GrassLineFilterShader = null;
 var DrawLinesShader = null;
 var TestLinesKernel = null;
 var CalcAngleXDistanceXChunksKernel = null;
+var GraphAngleXDistancesKernel = null;
 
 function GetRgbToHslShader(OpenglContext)
 {
@@ -215,6 +217,16 @@ function GetCalcAngleXDistanceXChunksKernel(OpenclContext)
 	}
 	return CalcAngleXDistanceXChunksKernel;
 }
+
+function GetGraphAngleXDistancesKernel(OpenclContext)
+{
+	if ( !GraphAngleXDistancesKernel )
+	{
+		GraphAngleXDistancesKernel = new OpenclKernel( OpenclContext, HoughLinesKernelSource, GraphAngleXDistancesKernelName );
+	}
+	return GraphAngleXDistancesKernel;
+}
+
 
 
 function MakePromise(Func)
@@ -356,6 +368,27 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 	return Prom;
 }
 
+function GraphAngleXDistances(OpenclContext,Frame)
+{
+	let Kernel = GetGraphAngleXDistancesKernel(OpenclContext);
+
+	let OnIteration = function(Kernel,IterationIndexes)
+	{
+		Debug("GraphAngleXDistances OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+	}
+	
+	let OnFinished = function(Kernel)
+	{
+		Debug("gfdrjlgfdlkgf");
+		Debug("GraphAngleXDistances OnFinished(" + Kernel + ")");
+	}
+	
+	let Dim = [1,1,1];
+	Debug("GraphAngleXDistances Dim=" + Dim);
+	let Prom = OpenclContext.ExecuteKernel( Kernel, Dim, OnIteration, OnFinished );
+	return Prom;
+}
+
 function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
@@ -373,7 +406,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		Kernel.SetUniform('AngleIndexFirst', IterationIndexes[2] );
 		Kernel.SetUniform('Angles', Frame.Angles );
 		Kernel.SetUniform('Distances', Frame.Distances );
-		Kernel.SetUniform('DistancesCount', Frame.Distances.length );
+		Kernel.SetUniform('DistanceCount', Frame.Distances.length );
 		Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
 		if ( IterationIndexes[0]==IterationIndexes[1]==IterationIndexes[2]==0 )
 		{
@@ -413,16 +446,18 @@ function ExtractHoughLines(OpenclContext,Frame)
 {
 	let HoughRunner = function(Resolve,Reject)
 	{
-		let b = function()	{	Debug("GraphAngleXDistances");	}
+		let a = function()	{	return CalcAngleXDistanceXChunks(OpenclContext,Frame);	}
+		let b = function()	{	return GraphAngleXDistances(OpenclContext,Frame);	}
 		let c = function()	{	Debug("ExtractHoughLines");	}
 		let OnError = function(err)
 		{
-			Debug(err);
+			Debug("hough runner error: " + err);
 			Reject();
 		};
 		
-		CalcAngleXDistanceXChunks(OpenclContext,Frame)
-		.then( MakePromise(b) )
+		//GraphAngleXDistances(OpenclContext,Frame)
+		a()
+		.then( b )
 		.then( MakePromise(c) )
 		.then( MakePromise(Resolve) )
 		.catch( OnError );
