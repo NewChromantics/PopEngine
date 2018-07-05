@@ -520,7 +520,7 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
 	}
 	else
 	{
-		throw Soy::AssertException("Unhandled element type in EnumArray<float>");
+		throw Soy::AssertException("Unhandled element type in EnumArray<ints>");
 	}
 }
 

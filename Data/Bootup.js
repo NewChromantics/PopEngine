@@ -221,6 +221,17 @@ function MakePromise(Func)
 {
 	return new Promise( Func );
 }
+
+function GetNumberRangeInclusive(Min,Max,Steps)
+{
+	let Numbers = [];
+	for ( let t=0;	t<=1;	t+=1/Steps)
+	{
+		let v = Min + (t * (Max-Min));
+		Numbers.push( v );
+	}
+	return Numbers;
+}
 	
 function ReturnSomeString()
 {
@@ -322,7 +333,7 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
-		Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		//Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
 		let LineBuffer = new Float32Array( 10*4 );
 		let LineCount = new Int32Array(1);
 		Kernel.SetUniform("Lines", LineBuffer );
@@ -332,7 +343,7 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 	
 	let OnFinished = function(Kernel)
 	{
-		Debug("OnFinished(" + Kernel + ")");
+		//Debug("OnFinished(" + Kernel + ")");
 		let LineCount = Kernel.ReadUniform("LineCount");
 		let Lines = Kernel.ReadUniform("Lines");
 		if ( !Array.isArray(Frame.Lines) )
@@ -348,29 +359,44 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
-	
+	let MaskTexture = Frame.LineMask;
+	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179 );
+	Frame.Distances = GetNumberRangeInclusive( -1, 1, 100 );
+	Frame.ChunkCount = 10;
+
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
-		Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		Debug("CalcAngleXDistanceXChunks OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		Kernel.SetUniform('xFirst', IterationIndexes[0] );
+		Kernel.SetUniform('yFirst', IterationIndexes[1] );
+		Kernel.SetUniform('AngleIndexFirst', IterationIndexes[2] );
+		Kernel.SetUniform('Angles', Frame.Angles );
+		Kernel.SetUniform('Distances', Frame.Distances );
+		/*
 		let LineBuffer = new Float32Array( 10*4 );
 		let LineCount = new Int32Array(1);
 		Kernel.SetUniform("Lines", LineBuffer );
 		Kernel.SetUniform("LineCount", LineCount );
 		Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
+		 */
 	}
 	
 	let OnFinished = function(Kernel)
 	{
-		Debug("OnFinished(" + Kernel + ")");
+		Debug("CalcAngleXDistanceXChunks OnFinished(" + Kernel + ")");
+		/*
 		let LineCount = Kernel.ReadUniform("LineCount");
 		let Lines = Kernel.ReadUniform("Lines");
 		if ( !Array.isArray(Frame.Lines) )
 			Frame.Lines = new Array();
 		Frame.Lines.push(...Lines);
 		Debug("Output linecount=" + LineCount);
+		 */
 	}
-	
-	let Prom = OpenclContext.ExecuteKernel( Kernel, [1], OnIteration, OnFinished );
+
+	let Dim = [MaskTexture.GetWidth(),MaskTexture.GetHeight(), Frame.Angles.length];
+	Debug("CalcAngleXDistanceXChunks Dim=" + Dim);
+	let Prom = OpenclContext.ExecuteKernel( Kernel, Dim, OnIteration, OnFinished );
 	return Prom;
 }
 
@@ -380,11 +406,17 @@ function ExtractHoughLines(OpenclContext,Frame)
 	{
 		let b = function()	{	Debug("GraphAngleXDistances");	}
 		let c = function()	{	Debug("ExtractHoughLines");	}
+		let OnError = function(err)
+		{
+			Debug(err);
+			Reject();
+		};
 		
 		CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		.then( MakePromise(b) )
 		.then( MakePromise(c) )
-		.then( MakePromise(Resolve) );
+		.then( MakePromise(Resolve) )
+		.catch( OnError );
 	}
 	
 	//	high level promise
@@ -440,8 +472,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Part1()
 	.then( Part2 )
 	.then( Part3 )
-	.then( Part4 )
-	.then( Part5 )
+	//.then( Part4 )
+	//.then( Part5 )
 	.then( Part6 )
 	.then( Part7 )
 	.then( Finish )

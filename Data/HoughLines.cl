@@ -18,11 +18,11 @@
  float HoughOriginY = 0.5f;
  int HistogramMax = 1000;
  */
-/*
+
 constant float HoughOriginX = 0.5f;
 constant float HoughOriginY = 0.5f;
 
-
+/*
 float TimeAlongLine2(float2 Position,float2 Start,float2 End)
 {
 	float2 Direction = End - Start;
@@ -43,24 +43,29 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 										int yFirst,
 										int AngleIndexFirst,
 										global float* Angles,
-										int AngleCount,
-										image2d_t EdgeTexture,
-										int LinesSize)
+									  	global float* Distances,
+										image2d_t EdgeTexture
+									  )
 {
-	/*
-	uint3 id
-	int x = id.x + xFirst;
-	int y = id.y + yFirst;
-	int AngleIndex = id.z + AngleIndexFirst;
-	float Angle = GetAngle( AngleIndex, Angles, AngleCount );
+	uint3 id = (uint3)(xFirst,yFirst,AngleIndexFirst);
+	id.x += get_global_id(0);
+	id.y += get_global_id(1);
+	id.z += get_global_id(2);
+	
+	int x = id.x;
+	int y = id.y;
+	int AngleIndex = id.z;
+	float Angle = Angles[AngleIndex];
 	
 	//	read edge
-	bool Edge = (EdgeTexture[int2(x,y)].x > 0.5f);
+	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+	float4 Edge4 = read_imagef( EdgeTexture, Sampler, (int2)(x,y) );
+	bool Edge = (Edge4.x > 0.5f);
 	if ( !Edge )
 		return;
 	
 	float2 HoughOrigin = float2( HoughOriginX, HoughOriginY );
-	
+	/*
 	//	calc hough distance from position & angle
 	float2 uv = float2( x / (float)EdgeTextureWidth, y / (float)EdgeTextureHeight );
 	float HoughDistance = GetHoughDistance( uv, HoughOrigin, Angle );

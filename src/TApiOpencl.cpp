@@ -404,7 +404,6 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 		{
 			//	create temp reference to the kernel state
 			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
-			BufferArray<int,3> IterationIndexes;
 			auto IterationIndexesHandle = v8::GetArray( *Isolate, GetArrayBridge(Iteration.mFirst) );
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
@@ -442,57 +441,6 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 		Container->QueueScoped( OnError );
 	};
 
-	auto OpenclRun = [=]
-	{
-		/*
-		 try
-		 {
-		 //	get the texture from the image
-		 std::string GenerateTextureError;
-		 auto OnError = [&](const std::string& Error)
-		 {
-		 throw Soy::AssertException(Error);
-		 };
-		 TargetImage->GetTexture( []{}, OnError );
-		 
-		 //	setup render target
-		 auto& TargetTexture = TargetImage->GetTexture();
-		 Opengl::TRenderTargetFbo RenderTarget( TargetTexture );
-		 RenderTarget.mGenerateMipMaps = false;
-		 RenderTarget.Bind();
-		 RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
-		 try
-		 {
-		 //	immediately call the javascript callback
-		 Container->RunScoped( ExecuteRenderCallback );
-		 RenderTarget.Unbind();
-		 }
-		 catch(std::exception& e)
-		 {
-		 RenderTarget.Unbind();
-		 throw;
-		 }
-		 
-		 //	queue the completion, doesn't need to be done instantly
-		 Container->QueueScoped( OnCompleted );
-		 }
-		 catch(std::exception& e)
-		 {
-		 //	queue the error callback
-		 std::string ExceptionString(e.what());
-		 auto OnError = [=](Local<Context> Context)
-		 {
-		 auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
-		 //	gr: does this need to be an exception? string?
-		 auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-		 //auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
-		 //ResolverLocal->Reject( Exception );
-		 ResolverLocal->Reject( Error );
-		 };
-		 Container->QueueScoped( OnError );
-		 }
-		 */
-	};
 	
 	auto& OpenclContext = *mOpenclContext;
 	auto* JobRunner = new TOpenclRunnerLambda( OpenclContext, Kernel.GetKernel(), KernelInit, KernelIteration, KernelFinished, KernelError );
@@ -566,6 +514,21 @@ std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,O
 }
 
 
+std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
+{
+	Array<float> Floats;
+	EnumArray( ValueHandle, GetArrayBridge(Floats) );
+	
+	Array<cl_float> Float1s;
+	for ( int i=0;	i<Floats.GetSize();	i++ )
+	{
+		Float1s.PushBack(Floats[i]);
+	}
+	
+	auto Buffer = Opencl::TBufferArray<cl_float>::Alloc( GetArrayBridge(Float1s), Context, Name );
+	return Buffer;
+}
+
 std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
 {
 	Array<int> Ints;
@@ -607,6 +570,13 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
 		auto BufferArray = GetFloat4BufferArray( ValueHandle, Context, Uniform.mName );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
+	else if ( Uniform.mType == "float*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto BufferArray = GetFloatBufferArray( ValueHandle, Context, Uniform.mName );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "int*" )
