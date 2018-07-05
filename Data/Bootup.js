@@ -371,19 +371,32 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 function GraphAngleXDistances(OpenclContext,Frame)
 {
 	let Kernel = GetGraphAngleXDistancesKernel(OpenclContext);
-
+	Frame.HoughHistogram = new Image( [256,256] );
+	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
 		Debug("GraphAngleXDistances OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		Kernel.SetUniform('xFirst', IterationIndexes[0] );
+		Kernel.SetUniform('yFirst', IterationIndexes[1] );
+
+		if ( IterationIndexes[0]==0 && IterationIndexes[1]==0 )
+		{
+			Kernel.SetUniform('AngleCount', Frame.Angles.length );
+			Kernel.SetUniform('DistanceCount', Frame.Distances.length );
+			Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
+			Kernel.SetUniform('HistogramHitMax', 100 );
+			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
+			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
+			Kernel.SetUniform('GraphTexture', Frame.HoughHistogram );
+		}
 	}
 	
 	let OnFinished = function(Kernel)
 	{
-		Debug("gfdrjlgfdlkgf");
 		Debug("GraphAngleXDistances OnFinished(" + Kernel + ")");
 	}
 	
-	let Dim = [1,1,1];
+	let Dim = [ Frame.HoughHistogram.GetWidth(), Frame.HoughHistogram.GetHeight() ];
 	Debug("GraphAngleXDistances Dim=" + Dim);
 	let Prom = OpenclContext.ExecuteKernel( Kernel, Dim, OnIteration, OnFinished );
 	return Prom;

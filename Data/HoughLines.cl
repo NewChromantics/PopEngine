@@ -157,7 +157,7 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 
 kernel void GraphAngleXDistances(int xFirst,
 						  int yFirst,
-						 // write_only image2d_t GraphTexture,
+						  write_only image2d_t GraphTexture,
 						  int HistogramHitMax,
 						  int AngleCount,
 						  int DistanceCount,
