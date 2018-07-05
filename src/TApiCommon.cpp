@@ -169,12 +169,12 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 	BufferArray<int,2> IntArray;
 	if ( Arguments[0]->IsArray() )
 	{
-		v8::EnumArray( Arguments[0], GetArrayBridge(IntArray) );
+		v8::EnumArray( Arguments[0], GetArrayBridge(IntArray), "Image( [w,h] )" );
 	}
 	else if ( Arguments[0]->IsNumber() && Arguments[1]->IsNumber() )
 	{
-		v8::EnumArray( Arguments[0], GetArrayBridge(IntArray) );
-		v8::EnumArray( Arguments[1], GetArrayBridge(IntArray) );
+		v8::EnumArray( Arguments[0], GetArrayBridge(IntArray), "Image( w*, h )" );
+		v8::EnumArray( Arguments[1], GetArrayBridge(IntArray), "Image( w, h* )" );
 	}
 	else
 		throw Soy::AssertException("Invalid params Alloc(width,height) or Alloc( [width,height] )");

@@ -363,7 +363,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179 );
 	Frame.Distances = GetNumberRangeInclusive( -1, 1, 100 );
 	Frame.ChunkCount = 10;
-	Frame.AngleXDistanceXChunks = new Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
+	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
@@ -441,6 +441,8 @@ function DrawLines(OpenglContext,Frame)
 		
 		let SetUniforms = function(Shader)
 		{
+			if ( !Array.isArray(Frame.Lines) )
+				Frame.Lines = [];
 			Shader.SetUniform("Lines", Frame.Lines );
 			Shader.SetUniform("Background", Frame, 0 );
 		}

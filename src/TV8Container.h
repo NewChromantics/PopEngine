@@ -72,10 +72,10 @@ namespace v8
 
 	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
 
-	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>& FloatArray);
-	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray);
-	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>& IntArray);
-	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>& FloatArray,const std::string& Context);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray,const std::string& Context);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>& IntArray,const std::string& Context);
+	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray,const std::string& Context);
 	
 	//	fast copy from typed arrays
 	template<typename ARRAYTYPE,typename ELEMENTTYPE>

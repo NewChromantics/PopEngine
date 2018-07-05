@@ -348,7 +348,7 @@ v8::Local<v8::Value> TOpenclContext::ExecuteKernel(const v8::CallbackInfo& Param
 	//auto KernelPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto& Kernel = v8::GetObject<TOpenclKernel>(Arguments[0]);
 	BufferArray<int,3> IterationCount;
-	v8::EnumArray( Arguments[1], GetArrayBridge(IterationCount) );
+	v8::EnumArray( Arguments[1], GetArrayBridge(IterationCount), "Kernel Dimensions" );
 	auto IterationCallbackPersistent = v8::GetPersistent( *Isolate, Local<Function>::Cast(Arguments[2]) );
 	auto FinishedCallbackPersistent = v8::GetPersistent( *Isolate, Local<Function>::Cast(Arguments[3]) );
 	
@@ -491,7 +491,7 @@ void TOpenclKernelState::Constructor(const v8::FunctionCallbackInfo<v8::Value>& 
 std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
 {
 	Array<float> Floats;
-	EnumArray( ValueHandle, GetArrayBridge(Floats) );
+	EnumArray( ValueHandle, GetArrayBridge(Floats), Name );
 	if ( (Floats.GetSize() % 4)!=0 )
 	{
 		std::stringstream Error;
@@ -517,7 +517,7 @@ std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,O
 std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
 {
 	Array<float> Floats;
-	EnumArray( ValueHandle, GetArrayBridge(Floats) );
+	EnumArray( ValueHandle, GetArrayBridge(Floats), Name );
 	
 	Array<cl_float> Float1s;
 	for ( int i=0;	i<Floats.GetSize();	i++ )
@@ -532,7 +532,7 @@ std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Op
 std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
 {
 	Array<int> Ints;
-	EnumArray( ValueHandle, GetArrayBridge(Ints) );
+	EnumArray( ValueHandle, GetArrayBridge(Ints), Name );
 	
 	Array<cl_int> IntCls;
 	for ( int i=0;	i<Ints.GetSize();	i++ )
@@ -562,7 +562,7 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 	if ( Uniform.mType == "int" )
 	{
 		BufferArray<int,1> Ints;
-		EnumArray( ValueHandle, GetArrayBridge(Ints) );
+		EnumArray( ValueHandle, GetArrayBridge(Ints), Uniform.mName );
 		KernelState.SetUniform( UniformName.c_str(), Ints[0] );
 	}
 	else if ( Uniform.mType == "float4*" )

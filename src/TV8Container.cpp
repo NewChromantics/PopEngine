@@ -426,20 +426,20 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 }
 
 
-void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray)
+void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray,const std::string& Context)
 {
-	EnumArray( ValueHandle, FloatArray );
+	EnumArray( ValueHandle, FloatArray, Context );
 }
 
-void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray)
+void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<int>&& IntArray,const std::string& Context)
 {
-	EnumArray( ValueHandle, IntArray );
+	EnumArray( ValueHandle, IntArray, Context );
 }
 
 
 
 
-void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray)
+void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArray,const std::string& Context)
 {
 	if ( ValueHandle->IsNumber() )
 	{
@@ -454,7 +454,7 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArr
 		for ( auto i=0;	i<ValueArray->Length();	i++ )
 		{
 			auto ElementHandle = ValueArray->Get(i);
-			EnumArray( ElementHandle, FloatArray );
+			EnumArray( ElementHandle, FloatArray, Context );
 		}
 	}
 	else if ( ValueHandle->IsFloat32Array() )
@@ -463,12 +463,14 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArr
 	}
 	else
 	{
-		throw Soy::AssertException("Unhandled element type in EnumArray<float>");
+		std::stringstream Error;
+		Error << "Unhandled element type in EnumArray<float>. Context: " << Context;
+		throw Soy::AssertException(Error.str());
 	}
 }
 
 
-void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
+void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray,const std::string& Context)
 {
 	if ( ValueHandle->IsNumber() )
 	{
@@ -483,7 +485,7 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
 		for ( auto i=0;	i<ValueArray->Length();	i++ )
 		{
 			auto ElementHandle = ValueArray->Get(i);
-			EnumArray( ElementHandle, IntArray );
+			EnumArray( ElementHandle, IntArray, Context );
 		}
 	}
 	else if ( ValueHandle->IsInt32Array() )
@@ -524,7 +526,9 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray)
 	}
 	else
 	{
-		throw Soy::AssertException("Unhandled element type in EnumArray<ints>");
+		std::stringstream Error;
+		Error << "Unhandled element type in EnumArray<int>. Context: " << Context;
+		throw Soy::AssertException(Error.str());
 	}
 }
 

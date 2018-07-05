@@ -530,7 +530,7 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
 		BufferArray<float,1024*4> Floats;
-		EnumArray( ValueHandle, GetArrayBridge(Floats) );
+		EnumArray( ValueHandle, GetArrayBridge(Floats), Uniform.mName );
 		
 		//	Pad out if the uniform is an array and we're short...
 		//	maybe need more strict alignment when enumerating sub arrays above
