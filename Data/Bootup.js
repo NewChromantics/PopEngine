@@ -312,7 +312,8 @@ function MakeLineMask(OpenglContext,Frame)
 	}
 	
 	Frame.LineMask = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	let Prom = OpenglContext.Render( Frame.LineMask, Render );
+	let ReadBackTexture = true;
+	let Prom = OpenglContext.Render( Frame.LineMask, Render, ReadBackTexture );
 	return Prom;
 }
 
@@ -450,19 +451,23 @@ function ExtractHoughLines(OpenclContext,Frame)
 {
 	let HoughRunner = function(Resolve,Reject)
 	{
-		let a = function()	{	return CalcAngleXDistanceXChunks(OpenclContext,Frame);	}
-		let b = function()	{	return GraphAngleXDistances(OpenclContext,Frame);	}
-		let c = function()	{	Debug("ExtractHoughLines");	}
+		//let a = function()	{	return VisualiseAngleXDistanceXChunks(OpenclContext,Frame);	}
+		let b = function()	{	return CalcAngleXDistanceXChunks(OpenclContext,Frame);	}
+		let c = function()	{	return GraphAngleXDistances(OpenclContext,Frame);	}
+		let d = function()	{	Debug("ExtractHoughLines");	}
+		let DoResolve = function(){	return MakePromise(Resolve);	}
 		let OnError = function(err)
 		{
 			Debug("hough runner error: " + err);
 			Reject();
 		};
 		
-		a()
-		.then( b )
+		b()
+		//a()
+		//.then( b )
+		.then( c )
 		//.then( MakePromise(c) )
-		.then( MakePromise(Resolve) )
+		.then( DoResolve )
 		.catch( OnError );
 	}
 	

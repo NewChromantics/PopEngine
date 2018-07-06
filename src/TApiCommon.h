@@ -11,6 +11,7 @@ namespace ApiCommon
 namespace Opengl
 {
 	class TTexture;
+	class TContext;
 }
 
 //	an image is a generic accessor for pixels, opengl textures, etc etc
@@ -48,6 +49,7 @@ public:
 	//	we consider version 0 uninitisalised
 	size_t									GetLatestVersion() const;
 	void									OnOpenglTextureChanged();
+	void									ReadOpenglPixels();
 	
 public:
 	v8::Persist<v8::Object>				mHandle;

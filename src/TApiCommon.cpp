@@ -420,4 +420,22 @@ void TImageWrapper::OnOpenglTextureChanged()
 	mOpenglTextureVersion = LatestVersion+1;
 }
 
+void TImageWrapper::ReadOpenglPixels()
+{
+	//	gr: this needs to be in the opengl thread!
+	//Context.IsInThread
+	
+	if ( !mOpenglTexture )
+		throw Soy::AssertException("Trying to ReadOpenglPixels with no texture");
+
+		//	warning in case we haven't actually updated
+	if ( mPixelsVersion >= mOpenglTextureVersion )
+		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
+	//	if we have no pixels, alloc
+	if ( mPixels == nullptr )
+		mPixels.reset( new SoyPixels );
+
+	mOpenglTexture->Read( *mPixels );
+	mPixelsVersion = mOpenglTextureVersion;
+}
 

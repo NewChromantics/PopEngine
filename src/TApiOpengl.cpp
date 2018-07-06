@@ -174,6 +174,9 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
+	bool ReadBackPixelsAfterwards = false;
+	if ( Arguments[2]->IsBoolean() )
+		ReadBackPixelsAfterwards = Local<Number>::Cast(Arguments[2])->BooleanValue();
 	auto* Container = &Params.mContainer;
 	
 	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
@@ -221,14 +224,19 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 				//	immediately call the javascript callback
 				Container->RunScoped( ExecuteRenderCallback );
 				RenderTarget.Unbind();
-				TargetImage->OnOpenglTextureChanged();
 			}
 			catch(std::exception& e)
 			{
 				RenderTarget.Unbind();
 				throw;
 			}
-			
+
+			TargetImage->OnOpenglTextureChanged();
+			if ( ReadBackPixelsAfterwards )
+			{
+				TargetImage->ReadOpenglPixels();
+			}
+
 			//	queue the completion, doesn't need to be done instantly
 			Container->QueueScoped( OnCompleted );
 		}
