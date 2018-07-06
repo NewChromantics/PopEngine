@@ -17,12 +17,14 @@ namespace Opengl
 class TImageWrapper
 {
 public:
-	TImageWrapper() :
-		mContainer		( nullptr ),
+	TImageWrapper(TV8Container& Container) :
+		mContainer		( Container ),
 		mLinearFilter	( false ),
 		mRepeating		( false )
 	{
 	}
+	
+	static std::string						GetObjectTypeName()	{	return "Image";	}
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
@@ -41,10 +43,10 @@ public:
 	const Opengl::TTexture&					GetTexture();
 
 public:
-	v8::Persistent<v8::Object>			mHandle;
+	v8::Persist<v8::Object>				mHandle;
 	std::shared_ptr<SoyPixels>			mPixels;
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
-	TV8Container*						mContainer;
+	TV8Container&						mContainer;
 	
 	//	texture options
 	bool								mLinearFilter;

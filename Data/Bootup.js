@@ -395,6 +395,8 @@ function GraphAngleXDistances(OpenclContext,Frame)
 	{
 		Debug("GraphAngleXDistances OnFinished(" + Kernel + ")");
 		Frame.HoughHistogram = Kernel.ReadUniform('GraphTexture');
+		Debug(Frame.HoughHistogram.GetWidth());
+		Debug("Done");
 	}
 	
 	let Dim = [ Frame.HoughHistogram.GetWidth(), Frame.HoughHistogram.GetHeight() ];
@@ -455,10 +457,9 @@ function ExtractHoughLines(OpenclContext,Frame)
 			Reject();
 		};
 		
-		//GraphAngleXDistances(OpenclContext,Frame)
 		a()
 		.then( b )
-		.then( MakePromise(c) )
+		//.then( MakePromise(c) )
 		.then( MakePromise(Resolve) )
 		.catch( OnError );
 	}
@@ -479,7 +480,8 @@ function DrawLines(OpenglContext,Frame)
 			if ( !Array.isArray(Frame.Lines) )
 				Frame.Lines = [];
 			Shader.SetUniform("Lines", Frame.Lines );
-			Shader.SetUniform("Background", Frame, 0 );
+			//	gr: causing uniform error
+			//Shader.SetUniform("Background", Frame, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -518,8 +520,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Part1()
 	.then( Part2 )
 	.then( Part3 )
-	//.then( Part4 )
-	//.then( Part5 )
+	.then( Part4 )
+	.then( Part5 )
 	.then( Part6 )
 	.then( Part7 )
 	.then( Finish )
@@ -553,7 +555,7 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("Image2", LastProcessedFrame.GrassMask, 2 );
 			Shader.SetUniform("Image3", LastProcessedFrame.LineMask, 3 );
 			Shader.SetUniform("Image4", LastProcessedFrame.DebugLines, 4 );
-			//Shader.SetUniform("Image5", LastProcessedFrame.DebugLines, 5 );
+			Shader.SetUniform("Image5", LastProcessedFrame.HoughHistogram, 5 );
 		}
 		
 		RenderTarget.ClearColour(0,1,0);

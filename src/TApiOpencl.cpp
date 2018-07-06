@@ -683,6 +683,18 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Values) );
 		return ValuesArray;
 	}
+	else if ( Uniform.mType == "image2d_t" )
+	{
+		//	create a new image
+		auto& Container = Params.mContainer;
+		auto ImageWrapper = new TImageWrapper( Container );
+		auto ImageWrapperLocal = Container.CreateObjectInstance( TImageWrapper::GetObjectTypeName(), ImageWrapper );
+		ImageWrapper->mHandle = v8::GetPersistent( Params.GetIsolate(), ImageWrapperLocal );
+		ImageWrapper->mPixels.reset( new SoyPixels() );
+		KernelState.ReadUniform( Uniform.mName.c_str(), *ImageWrapper->mPixels );
+				
+		return ImageWrapperLocal;
+	}
 
 	std::stringstream Error;
 	Error << __func__ << " unhandled uniform type [" << Uniform.mType << "] for " << Uniform.mName;

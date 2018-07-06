@@ -25,7 +25,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	//  load api's before script & executions
 	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
 	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
-	Container.BindObjectType("Image", TImageWrapper::CreateTemplate );
+	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate );
 }
 
 static Local<Value> Debug(CallbackInfo& Params)
@@ -93,9 +93,8 @@ void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
 		//		but it also needs to know of the V8container to run stuff
 		//		cyclic hell!
-		auto* NewImage = new TImageWrapper();
+		auto* NewImage = new TImageWrapper(Container);
 		NewImage->mHandle.Reset( Isolate, Arguments.This() );
-		NewImage->mContainer = &Container;
 		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewImage ) );
 		// return the new object back to the javascript caller
 		Arguments.GetReturnValue().Set( This );

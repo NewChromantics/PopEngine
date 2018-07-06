@@ -514,18 +514,18 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 		auto BindIndex = BindIndexHandle.As<Number>()->Int32Value();
 		
 		//	get the image
-		auto& Image = v8::GetObject<TImageWrapper>(ValueHandle);
+		auto* Image = &v8::GetObject<TImageWrapper>(ValueHandle);
 		//	gr: planning ahead
-		auto OnTextureLoaded = [&Image,pShader,Uniform,BindIndex]()
+		auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
 		{
-			pShader->SetUniform( Uniform, Image.GetTexture(), BindIndex );
+			pShader->SetUniform( Uniform, Image->GetTexture(), BindIndex );
 		};
 		auto OnTextureError = [](const std::string& Error)
 		{
 			std::Debug << "Error loading texture " << Error << std::endl;
 			std::Debug << "Todo: relay to promise" << std::endl;
 		};
-		Image.GetTexture( OnTextureLoaded, OnTextureError );
+		Image->GetTexture( OnTextureLoaded, OnTextureError );
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{

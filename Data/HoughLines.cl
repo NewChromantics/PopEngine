@@ -166,13 +166,12 @@ kernel void GraphAngleXDistances(int xFirst,
 						 int AngleXDistanceXChunkCount
 						  )
 {
-	/*
 	int x = get_global_id(0) + xFirst;
 	int y = get_global_id(1) + yFirst;
 	
 	float u = x / (float)get_image_width(GraphTexture);
 	float v = y / (float)get_image_height(GraphTexture);
-	
+	/*
 	int AngleIndex = u * AngleCount;
 	int DistanceIndex = v * DistanceCount;
 
@@ -186,11 +185,11 @@ kernel void GraphAngleXDistances(int xFirst,
 	float HitMax = HistogramHitMax;
 	float Score = HitCount / HitMax;
 	Score = min( 1.0f, Score );
-	
+	*/
 	int2 PixelCoord = (int2)(x,y);
-	float4 Colour = (float4)( Score, Score, 0, 1.0f );
+	//float4 Colour = (float4)( Score, Score, 0, 1.0f );
+	float4 Colour = (float4)( u, v, 0, 1.0f );
 	write_imagef( GraphTexture, PixelCoord, Colour );
- */
 }
 
 
