@@ -372,8 +372,8 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 function GraphAngleXDistances(OpenclContext,Frame)
 {
 	let Kernel = GetGraphAngleXDistancesKernel(OpenclContext);
-	Frame.HoughHistogram = new Image( [1024,1024] );
-	Debug(Frame.AngleXDistanceXChunks);
+	Frame.HoughHistogram = new Image( [2048,2048] );
+	//Debug(Frame.AngleXDistanceXChunks);
 
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
@@ -387,7 +387,7 @@ function GraphAngleXDistances(OpenclContext,Frame)
 			Kernel.SetUniform('AngleCount', Frame.Angles.length );
 			Kernel.SetUniform('DistanceCount', Frame.Distances.length );
 			Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
-			Kernel.SetUniform('HistogramHitMax', 5 );
+			Kernel.SetUniform('HistogramHitMax', Frame.HistogramHitMax );
 			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
 			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
 			Kernel.SetUniform('GraphTexture', Frame.HoughHistogram );
@@ -412,9 +412,9 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
 	let MaskTexture = Frame.LineMask;
-	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179/2 );
+	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179 );
 	Frame.Distances = GetNumberRangeInclusive( -1, 1, 100 );
-	Frame.ChunkCount = 10;
+	Frame.ChunkCount = 20;
 	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
 	
 	let OnIteration = function(Kernel,IterationIndexes)
@@ -449,12 +449,59 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 
 function ExtractHoughLines(OpenclContext,Frame)
 {
+	let MinScore = 0.6;
+	let Angles = Frame.Angles;
+	let Distances = Frame.Distances;
+	let DistanceCount = Distances.length;
+	let ChunkCount = Frame.ChunkCount;
+	let HoughLines = [];
+	let AngleXDistanceXChunkCount = Frame.AngleXDistanceXChunks.length;
+	
+	let GetAngleXDistanceXChunkIndex = function(AngleIndex,DistanceIndex,ChunkIndex)
+	{
+		let AngleXDistanceXChunkIndex = (AngleIndex * DistanceCount * ChunkCount);
+		AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
+		AngleXDistanceXChunkIndex += ChunkIndex;
+		return AngleXDistanceXChunkIndex;
+	}
+	
+	let GetHoughLine = function(AngleIndex,DistanceIndex,ChunkIndex)
+	{
+		let HistogramIndex = GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
+		let HitCount = AngleXDistanceXChunks[HistogramIndex];
+		let Score = HitCount / Frame.HistogramHitMax;
+
+		if ( Score < Frame.ExtractHoughLineMinScore )
+			return;
+		
+		let Line = {};
+		Line.Origin = [Frame.HoughOriginX, Frame.HoughOriginY];
+		Line.AngleIndex = AngleIndex;
+		Line.DistanceIndex = DistanceIndex;
+		Line.ChunkIndex = ChunkIndex;
+		Line.Score = Score;
+		HoughLines.push( Line );
+		
+	}
+	
+	for ( ai=0;	ai<Angles.length;	ai++ )
+		for ( di=0;	di<Distances.length;	di++ )
+			for ( ci=0;	ci<ChunkCount;	ci++ )
+				GetHoughLine( ai, di, ci );
+	
+	Debug("Got " + HoughLines.length + " hough lines");
+	Frame.HoughLines = HoughLines;
+	 
+}
+
+function GetHoughLines(OpenclContext,Frame)
+{
 	let HoughRunner = function(Resolve,Reject)
 	{
 		//let a = function()	{	return VisualiseAngleXDistanceXChunks(OpenclContext,Frame);	}
 		let b = function()	{	return CalcAngleXDistanceXChunks(OpenclContext,Frame);	}
 		let c = function()	{	return GraphAngleXDistances(OpenclContext,Frame);	}
-		let d = function()	{	Debug("ExtractHoughLines");	}
+		let d = function()	{	return ExtractHoughLines(OpenclContext,Frame);	}
 		let DoResolve = function(){	return MakePromise(Resolve);	}
 		let OnError = function(err)
 		{
@@ -504,7 +551,11 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 {
 	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	//LastProcessedFrame = Frame;
-	
+	Frame.HistogramHitMax = 10;
+	Frame.HoughOriginX = 0.5;
+	Frame.HoughOriginY = 0.5;
+	Frame.ExtractHoughLineMinScore = 2;
+
 	let OnError = function(Error)
 	{
 		Debug(Error);
@@ -515,7 +566,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part3 = function()	{	return MakeLineMask( OpenglContext, Frame );	}
 	let Part4 = function()	{	return ExtractTestLines( Frame );	}
 	let Part5 = function()	{	return ExtractOpenclTestLines( OpenclContext, Frame );	}
-	let Part6 = function()	{	return ExtractHoughLines( OpenclContext, Frame );	}
+	let Part6 = function()	{	return GetHoughLines( OpenclContext, Frame );	}
 	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Finish = function()
 	{

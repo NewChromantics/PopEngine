@@ -150,11 +150,8 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 
 	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistanceCount, ChunkCount, AngleXDistanceXChunkCount );
 	
-	//	gr: this is writing odd values
 	//atom_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
 	AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
-	AngleXDistanceXChunks[0]++;
-	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex]=3;
 }
 
 
