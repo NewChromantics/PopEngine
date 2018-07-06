@@ -590,9 +590,7 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 	else if ( Uniform.mType == "image2d_t" )
 	{
 		auto& Image = v8::GetObject<TImageWrapper>( ValueHandle );
-		if ( Image.mPixels == nullptr )
-			throw Soy::AssertException("Using image that hasn't been initialised");
-		auto& Pixels = *Image.mPixels;
+		auto& Pixels = Image.GetPixels();
 		auto Blocking = true;
 		auto ReadWrite = OpenclBufferReadWrite::ReadWrite;
 		KernelState.SetUniform( UniformName, Pixels, ReadWrite, Blocking );
@@ -690,8 +688,7 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 		auto ImageWrapper = new TImageWrapper( Container );
 		auto ImageWrapperLocal = Container.CreateObjectInstance( TImageWrapper::GetObjectTypeName(), ImageWrapper );
 		ImageWrapper->mHandle = v8::GetPersistent( Params.GetIsolate(), ImageWrapperLocal );
-		ImageWrapper->mPixels.reset( new SoyPixels() );
-		KernelState.ReadUniform( Uniform.mName.c_str(), *ImageWrapper->mPixels );
+		KernelState.ReadUniform( Uniform.mName.c_str(), ImageWrapper->GetPixels() );
 				
 		return ImageWrapperLocal;
 	}

@@ -371,20 +371,22 @@ function ExtractOpenclTestLines(OpenclContext,Frame)
 function GraphAngleXDistances(OpenclContext,Frame)
 {
 	let Kernel = GetGraphAngleXDistancesKernel(OpenclContext);
-	Frame.HoughHistogram = new Image( [256,256] );
-	
+	Frame.HoughHistogram = new Image( [1024,1024] );
+	Debug(Frame.AngleXDistanceXChunks);
+
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
 		Debug("GraphAngleXDistances OnIteration(" + Kernel + ", " + IterationIndexes + ")");
 		Kernel.SetUniform('xFirst', IterationIndexes[0] );
 		Kernel.SetUniform('yFirst', IterationIndexes[1] );
 
+		
 		if ( IterationIndexes[0]==0 && IterationIndexes[1]==0 )
 		{
 			Kernel.SetUniform('AngleCount', Frame.Angles.length );
 			Kernel.SetUniform('DistanceCount', Frame.Distances.length );
 			Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
-			Kernel.SetUniform('HistogramHitMax', 100 );
+			Kernel.SetUniform('HistogramHitMax', 5 );
 			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
 			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
 			Kernel.SetUniform('GraphTexture', Frame.HoughHistogram );
@@ -409,7 +411,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
 	let MaskTexture = Frame.LineMask;
-	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179 );
+	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179/2 );
 	Frame.Distances = GetNumberRangeInclusive( -1, 1, 100 );
 	Frame.ChunkCount = 10;
 	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );

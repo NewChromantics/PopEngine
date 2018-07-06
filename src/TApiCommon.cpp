@@ -216,6 +216,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Png::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
+		mPixelsVersion = GetLatestVersion()+1;
 		return;
 	}
 	
@@ -223,6 +224,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Jpeg::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
+		mPixelsVersion = GetLatestVersion()+1;
 		return;
 	}
 	
@@ -230,6 +232,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Gif::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
+		mPixelsVersion = GetLatestVersion()+1;
 		return;
 	}
 	
@@ -237,6 +240,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Tga::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
+		mPixelsVersion = GetLatestVersion()+1;
 		return;
 	}
 	
@@ -244,6 +248,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Bmp::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
+		mPixelsVersion = GetLatestVersion()+1;
 		return;
 	}
 	
@@ -251,6 +256,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Psd::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
+		mPixelsVersion = GetLatestVersion()+1;
 		return;
 	}
 
@@ -330,11 +336,14 @@ v8::Local<v8::Value> TImageWrapper::SetLinearFilter(const v8::CallbackInfo& Para
 
 void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
-	//	already created
+	//	already created & current version
 	if ( mOpenglTexture != nullptr )
 	{
-		OnTextureLoaded();
-		return;
+		if ( mOpenglTextureVersion == GetLatestVersion() )
+		{
+			OnTextureLoaded();
+			return;
+		}
 	}
 	
 	if ( !mPixels )
@@ -350,6 +359,7 @@ void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::functi
 
 		SoyGraphics::TTextureUploadParams UploadParams;
 		mOpenglTexture->Write( *mPixels, UploadParams );
+		mOpenglTextureVersion = mPixelsVersion;
 		OnTextureLoaded();
 	}
 	catch(std::exception& e)
@@ -364,6 +374,50 @@ const Opengl::TTexture& TImageWrapper::GetTexture()
 		throw Soy::AssertException("Image missing opengl texture. Accessing before generating.");
 	
 	return *mOpenglTexture;
+}
+
+
+SoyPixels& TImageWrapper::GetPixels()
+{
+	if ( mPixelsVersion < GetLatestVersion() )
+	{
+		std::stringstream Error;
+		Error << "Image pixels(v" << mPixelsVersion <<") are out of date (v" << GetLatestVersion() << ")";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	//	is latest and not allocated, this is okay, lets just alloc
+	if ( mPixelsVersion == 0 && mPixels == nullptr )
+	{
+		mPixels.reset( new SoyPixels );
+		mPixelsVersion = 1;
+	}
+	
+	if ( mPixels == nullptr )
+	{
+		std::stringstream Error;
+		Error << "Image pixels(v" << mPixelsVersion <<") latest, but null?";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	return *mPixels;
+}
+
+size_t TImageWrapper::GetLatestVersion() const
+{
+	size_t MaxVersion = mPixelsVersion;
+	if ( mOpenglTextureVersion > MaxVersion )
+		MaxVersion = mOpenglTextureVersion;
+
+	return MaxVersion;
+}
+
+
+void TImageWrapper::OnOpenglTextureChanged()
+{
+	//	is now latest version
+	auto LatestVersion = GetLatestVersion();
+	mOpenglTextureVersion = LatestVersion+1;
 }
 
 

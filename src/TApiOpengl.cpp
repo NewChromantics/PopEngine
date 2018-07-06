@@ -221,6 +221,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 				//	immediately call the javascript callback
 				Container->RunScoped( ExecuteRenderCallback );
 				RenderTarget.Unbind();
+				TargetImage->OnOpenglTextureChanged();
 			}
 			catch(std::exception& e)
 			{

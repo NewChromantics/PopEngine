@@ -18,9 +18,11 @@ class TImageWrapper
 {
 public:
 	TImageWrapper(TV8Container& Container) :
-		mContainer		( Container ),
-		mLinearFilter	( false ),
-		mRepeating		( false )
+		mContainer				( Container ),
+		mLinearFilter			( false ),
+		mRepeating				( false ),
+		mPixelsVersion			( 0 ),
+		mOpenglTextureVersion	( 0 )
 	{
 	}
 	
@@ -41,12 +43,21 @@ public:
 	void									DoSetLinearFilter(bool LinearFilter);
 	void									GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
 	const Opengl::TTexture&					GetTexture();
+	SoyPixels&								GetPixels();
 
+	//	we consider version 0 uninitisalised
+	size_t									GetLatestVersion() const;
+	void									OnOpenglTextureChanged();
+	
 public:
 	v8::Persist<v8::Object>				mHandle;
-	std::shared_ptr<SoyPixels>			mPixels;
-	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
 	TV8Container&						mContainer;
+
+protected:
+	std::shared_ptr<SoyPixels>			mPixels;
+	size_t								mPixelsVersion;			//	opengl texture changed
+	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
+	size_t								mOpenglTextureVersion;	//	pixels changed
 	
 	//	texture options
 	bool								mLinearFilter;
