@@ -45,6 +45,10 @@ static int GetHoughLineChunkIndex(THoughLine HoughLine,float2 Position,int Chunk
 {
 	float Chunkf = TimeAlongLine2( Position, HoughLine.Start, HoughLine.End );
 	int Chunk = (int)( Chunkf * ChunkCount );
+	if ( Chunk < 0 )
+		return 0;
+	if ( Chunk >= ChunkCount )
+		return ChunkCount-1;
 	return Chunk;
 }
 
@@ -130,7 +134,8 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	int AngleIndex = get_global_id(2) + AngleIndexFirst;
 	float Angle = Angles[AngleIndex];
 	
-	y = get_image_height(EdgeTexture) - y;
+	//y = get_image_height(EdgeTexture) - y;
+	//x = get_image_width(EdgeTexture) - x;
 	
 	//	read edge
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;

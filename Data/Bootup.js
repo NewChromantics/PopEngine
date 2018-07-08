@@ -370,6 +370,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 	let DistanceRange = 0.68;
 	Frame.Distances = GetNumberRangeInclusive( -DistanceRange, DistanceRange, Frame.DistanceCount );
 	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
+	Debug("Frame.AngleXDistanceXChunks.length = " + Frame.AngleXDistanceXChunks.length);
 	
 	Frame.GetAngleXDistanceXChunkIndex = function(AngleIndex,DistanceIndex,ChunkIndex)
 	{
@@ -408,6 +409,8 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		Debug("CalcAngleXDistanceXChunks OnFinished(" + Kernel + ")");
 		Frame.AngleXDistanceXChunks = Kernel.ReadUniform('AngleXDistanceXChunks');
 		//Debug(Frame.AngleXDistanceXChunks);
+		Debug("readuniform Frame.AngleXDistanceXChunks.length = " + Frame.AngleXDistanceXChunks.length);
+		
 	}
 
 	let Dim = [MaskTexture.GetWidth(),MaskTexture.GetHeight(), Frame.Angles.length];
@@ -584,6 +587,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 			if ( !IsValidLine(Line) )
 				return;
 		Frame.Lines.push( Line );
+		Frame.LineScores.push( HoughLine.Score );
 	}
 	
 	HoughLines.sort(CompareScore);
@@ -596,6 +600,8 @@ function ExtractHoughLines(OpenclContext,Frame)
 	//	convert to real lines
 	if ( !Array.isArray(Frame.Lines) )
 		Frame.Lines = [];
+	if ( !Array.isArray(Frame.LineScores) )
+		Frame.LineScores = [];
 	Frame.HoughLines.forEach( PushHoughLineToLines );
 	Debug("Filtered to " + Frame.Lines.length + " valid lines.");
 }
@@ -648,6 +654,12 @@ function DrawLines(OpenglContext,Frame)
 			if ( Frame.Lines.length > Frame.MaxLines )
 				Frame.Lines.length = Frame.MaxLines;
 			
+			if ( !Array.isArray(Frame.LineScores) )
+				Frame.LineScores = [];
+			if ( Frame.LineScores.length > Frame.MaxLines )
+				Frame.LineScores.length = Frame.MaxLines;
+			
+			//Shader.SetUniform("LineScores", Frame.LineScores );
 			Shader.SetUniform("Lines", Frame.Lines );
 			//	gr: causing uniform error
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
@@ -671,11 +683,11 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
 	Frame.MaxLines = 100;
-	Frame.ChunkCount = 10;
-	Frame.DistanceCount = 100;
+	Frame.ChunkCount = 5;
+	Frame.DistanceCount = 200;
 	Frame.AngleCount = 180;
 	//Frame.FilterOutsideLines = true;
-	Frame.LoadPremadeLineMask = "Data/Box.png";
+	//Frame.LoadPremadeLineMask = "Data/Box.png";
 	Frame.SkipIfBetterNeighbour = true;
 	
 	let OnError = function(Error)

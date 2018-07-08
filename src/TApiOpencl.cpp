@@ -119,7 +119,7 @@ void TOpenclRunner::Run()
 			auto& Iteration = IterationSplits[i];
 			
 			//	setup the iteration
-			bool Block = false;
+			bool Block = true;
 			RunIteration( Kernel, Iteration, Block );
 			
 			//	execute it

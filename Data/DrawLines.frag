@@ -2,11 +2,17 @@ in vec2 uv;
 const float LineWidth = 0.001;
 
 #define UV_ZOOM		0.8
-uniform sampler2D	Background;
+//#define ENABLE_SCORES
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
-const vec4 LineColour = vec4(1,0,1,1);
+#if defined(ENABLE_SCORES)
+uniform float		LineScores[LINE_COUNT];
+#else
+const vec4			LineColour = vec4(1,0,1,1);
+#endif
+uniform sampler2D	Background;
 
+#define endofheader
 
 float TimeAlongLine2(vec2 Position,vec2 Start,vec2 End)
 {
@@ -50,16 +56,27 @@ void main()
 	float Distances[LINE_COUNT];
 
 	float NearestDistance = 999;
+	float LineScore = 0;
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
 		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
-		NearestDistance = min( NearestDistance, Distances[i] );
+		if ( Distances[i] < NearestDistance )
+		{
+#if defined(ENABLE_SCORES)
+			LineScore = max( LineScore, LineScores[i] );
+#endif
+			NearestDistance = min( NearestDistance, Distances[i] );
+		}
 	}
 
 	if ( NearestDistance <= LineWidth )
 	{
+#if defined(ENABLE_SCORES)
+		gl_FragColor = float4( LineScore,LineScore,LineScore,1);
+#else
 		gl_FragColor = LineColour;
+#endif
 	}
 	else
 	{

@@ -4,15 +4,20 @@ uniform sampler2D Hsl;
 const float LumBrighterMin = 0.1;
 const float GrassNeighbourMinScore = 0.2;
 
+float2 GetUv()
+{
+	return float2( uv.x, 1-uv.y );
+}
+
 float GetLumSample(vec2 uvoffset)
 {
-	vec3 hsl = texture( Hsl, uv+uvoffset ).xyz;
+	vec3 hsl = texture( Hsl, GetUv()+uvoffset ).xyz;
 	return hsl.z;
 }
 
 float GetGrassMask(vec2 uvoffset)
 {
-	vec4 GrassMaskSample = texture( GrassMask, uv+uvoffset );
+	vec4 GrassMaskSample = texture( GrassMask, GetUv()+uvoffset );
 	return GrassMaskSample.w;
 }
 
