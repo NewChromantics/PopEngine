@@ -489,7 +489,7 @@ void TOpenclKernelState::Constructor(const v8::FunctionCallbackInfo<v8::Value>& 
 	return;
 }
 
-std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
+std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
 {
 	Array<float> Floats;
 	EnumArray( ValueHandle, GetArrayBridge(Floats), Name );
@@ -510,12 +510,16 @@ std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,O
 		f4.s[3] = Floats[i+3];
 	}
 	
-	auto Buffer = Opencl::TBufferArray<cl_float4>::Alloc( GetArrayBridge(Float4s), Context, Name );
+	Opencl::TSync Sync;
+	auto* pSync = Blocking ? &Sync : nullptr;
+	auto Buffer = Opencl::TBufferArray<cl_float4>::Alloc( GetArrayBridge(Float4s), Context, Name, pSync );
+	if ( pSync )
+		pSync->Wait();
 	return Buffer;
 }
 
 
-std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
+std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
 {
 	Array<float> Floats;
 	EnumArray( ValueHandle, GetArrayBridge(Floats), Name );
@@ -526,12 +530,16 @@ std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Op
 		Float1s.PushBack(Floats[i]);
 	}
 	
-	auto Buffer = Opencl::TBufferArray<cl_float>::Alloc( GetArrayBridge(Float1s), Context, Name );
+	Opencl::TSync Sync;
+	auto* pSync = Blocking ? &Sync : nullptr;
+	auto Buffer = Opencl::TBufferArray<cl_float>::Alloc( GetArrayBridge(Float1s), Context, Name, pSync );
+	if ( pSync )
+		pSync->Wait();
 	return Buffer;
 }
 
 template<typename INTTYPE>
-std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
+std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
 {
 	Array<int> Ints;
 	EnumArray( ValueHandle, GetArrayBridge(Ints), Name );
@@ -542,7 +550,11 @@ std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Open
 		IntCls.PushBack( Ints[i] );
 	}
 	
-	auto Buffer = Opencl::TBufferArray<INTTYPE>::Alloc( GetArrayBridge(IntCls), Context, Name );
+	Opencl::TSync Sync;
+	auto* pSync = Blocking ? &Sync : nullptr;
+	auto Buffer = Opencl::TBufferArray<INTTYPE>::Alloc( GetArrayBridge(IntCls), Context, Name, pSync );
+	if ( pSync )
+		pSync->Wait();
 	return Buffer;
 }
 
@@ -572,28 +584,32 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 	{
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
-		auto BufferArray = GetFloat4BufferArray( ValueHandle, Context, Uniform.mName );
+		auto Blocking = true;
+		auto BufferArray = GetFloat4BufferArray( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "float*" )
 	{
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
-		auto BufferArray = GetFloatBufferArray( ValueHandle, Context, Uniform.mName );
+		auto Blocking = true;
+		auto BufferArray = GetFloatBufferArray( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "int*" )
 	{
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
-		auto BufferArray = GetIntBufferArray<cl_int>( ValueHandle, Context, Uniform.mName );
+		auto Blocking = true;
+		auto BufferArray = GetIntBufferArray<cl_int>( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "uint*" )
 	{
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
-		auto BufferArray = GetIntBufferArray<cl_uint>( ValueHandle, Context, Uniform.mName );
+		auto Blocking = true;
+		auto BufferArray = GetIntBufferArray<cl_uint>( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "image2d_t" )

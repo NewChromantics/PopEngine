@@ -1,6 +1,7 @@
 in vec2 uv;
 const float LineWidth = 0.003;
 
+#define UV_ZOOM		0.7
 uniform sampler2D	Background;
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
@@ -41,13 +42,18 @@ float DistanceToLine2(vec2 Position,vec2 Start,vec2 End)
 
 void main()
 {
+	vec2 FrameUv = uv;
+	FrameUv -= vec2(0.5,0.5);
+	FrameUv /= vec2(UV_ZOOM,UV_ZOOM);
+	FrameUv += vec2(0.5,0.5);
+	
 	float Distances[LINE_COUNT];
 
 	float NearestDistance = 999;
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
-		Distances[i] = DistanceToLine2( uv, Line.xy, Line.zw );
+		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		NearestDistance = min( NearestDistance, Distances[i] );
 	}
 
@@ -57,6 +63,8 @@ void main()
 	}
 	else
 	{
-		gl_FragColor = texture( Background, uv );
+		gl_FragColor = texture( Background, FrameUv );
+		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
+			gl_FragColor = vec4(0,0,0,1);
 	}
 }

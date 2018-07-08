@@ -455,6 +455,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 	{
 		Debug("CalcAngleXDistanceXChunks OnFinished(" + Kernel + ")");
 		Frame.AngleXDistanceXChunks = Kernel.ReadUniform('AngleXDistanceXChunks');
+		//Debug(Frame.AngleXDistanceXChunks);
 	}
 
 	let Dim = [MaskTexture.GetWidth(),MaskTexture.GetHeight(), Frame.Angles.length];
@@ -512,8 +513,6 @@ function ExtractHoughLines(OpenclContext,Frame)
 		}
 		if ( Score < Frame.ExtractHoughLineMinScore )
 			return;
-		//if ( Score > 1 )
-		//	return;
 		
 		let Line = {};
 		Line.Origin = [Frame.HoughOriginX, Frame.HoughOriginY];
@@ -588,8 +587,9 @@ function ExtractHoughLines(OpenclContext,Frame)
 		let ChunkEndTime = (HoughLine.ChunkIndex+1) / ChunkCount;
 		let Line = HoughLineToLine( HoughLine.Angle, HoughLine.Distance, ChunkStartTime, ChunkEndTime, HoughLine.Origin[0], HoughLine.Origin[1] );
 		//Debug(Line);
-		if ( !IsValidLine(Line) )
-			return;
+		if ( Frame.FilterOutsideLines === true )
+			if ( !IsValidLine(Line) )
+				return;
 		Frame.Lines.push( Line );
 	}
 	
@@ -624,7 +624,8 @@ function GetHoughLines(OpenclContext,Frame)
 			Reject();
 		};
 		
-		Frame.LineMask = new Image("Data/Box.png");
+		if ( Frame.LoadPremadeLineMask != undefined )
+			Frame.LineMask = new Image(Frame.LoadPremadeLineMask);
 
 		a()
 		.then( b )
@@ -675,12 +676,14 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HistogramHitMax = 100;
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
-	Frame.ExtractHoughLineMinScore = 0.4;
+	Frame.ExtractHoughLineMinScore = 0.2;
 	Frame.MaxLines = 100;
-	Frame.ChunkCount = 11;
+	Frame.ChunkCount = 5;
 	Frame.DistanceCount = 100;
-	Frame.AngleCount = 180/4;
-
+	Frame.AngleCount = 180/10;
+	Frame.FilterOutsideLines = false;
+	//Frame.LoadPremadeLineMask = "Data/Box.png";
+	
 	let OnError = function(Error)
 	{
 		Debug(Error);
@@ -696,7 +699,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
-		Debug("Done!");
+		Debug("Done frame!");
 	};
 	
 	//	run sequence

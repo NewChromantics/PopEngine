@@ -154,6 +154,8 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	atomic_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
 	//atomic_min( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex], HistogramHitMax );
 	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
+	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex] = AngleXDistanceXChunkIndex;
+	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex] = 100;
 }
 
 
@@ -186,7 +188,7 @@ kernel void GraphAngleXDistances(int xFirst,
 		HitCount += AngleXDistanceXChunks[AngleXDistanceXChunkIndex];
 	}
 	
-	float HitMax = HistogramHitMax;
+	float HitMax = HistogramHitMax /** ChunkCount*/;
 	float Score = HitCount / HitMax;
 	Score = min( 1.0f, Score );
 	
@@ -201,8 +203,8 @@ kernel void GraphAngleXDistances(int xFirst,
 	if ( HitCount < 0 || HitCount > HitMax )
 		Colour = (float4)(0,0,1,1);
 	
-	if ( u < 0 || u > 1 || v < 0 || v > 1 )
-		Colour = (float4)(0,0,1,1);
+	//if ( u < 0 || u > 1 || v < 0 || v > 1 )
+	//	Colour = (float4)(0,0,1,1);
 	
 	write_imagef( GraphTexture, PixelCoord, Colour );
 }
