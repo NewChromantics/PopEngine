@@ -435,7 +435,9 @@ void TImageWrapper::ReadOpenglPixels()
 	if ( mPixels == nullptr )
 		mPixels.reset( new SoyPixels );
 
-	mOpenglTexture->Read( *mPixels );
+	auto Format = SoyPixelsFormat::Invalid;
+	auto Flip = false;
+	mOpenglTexture->Read( *mPixels, Format, Flip );
 	mPixelsVersion = mOpenglTextureVersion;
 }
 

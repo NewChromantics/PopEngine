@@ -530,20 +530,22 @@ std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Op
 	return Buffer;
 }
 
+template<typename INTTYPE>
 std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name)
 {
 	Array<int> Ints;
 	EnumArray( ValueHandle, GetArrayBridge(Ints), Name );
 	
-	Array<cl_int> IntCls;
+	Array<INTTYPE> IntCls;
 	for ( int i=0;	i<Ints.GetSize();	i++ )
 	{
 		IntCls.PushBack( Ints[i] );
 	}
 	
-	auto Buffer = Opencl::TBufferArray<cl_int>::Alloc( GetArrayBridge(IntCls), Context, Name );
+	auto Buffer = Opencl::TBufferArray<INTTYPE>::Alloc( GetArrayBridge(IntCls), Context, Name );
 	return Buffer;
 }
+
 
 v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Params)
 {
@@ -584,7 +586,14 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 	{
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
-		auto BufferArray = GetIntBufferArray( ValueHandle, Context, Uniform.mName );
+		auto BufferArray = GetIntBufferArray<cl_int>( ValueHandle, Context, Uniform.mName );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
+	else if ( Uniform.mType == "uint*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto BufferArray = GetIntBufferArray<cl_uint>( ValueHandle, Context, Uniform.mName );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "image2d_t" )
@@ -676,7 +685,14 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 	}
 	else if ( Uniform.mType == "int*" )
 	{
-		Array<int> Values;
+		Array<cl_int> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Values) );
+		return ValuesArray;
+	}
+	else if ( Uniform.mType == "uint*" )
+	{
+		Array<cl_uint> Values;
 		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
 		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Values) );
 		return ValuesArray;

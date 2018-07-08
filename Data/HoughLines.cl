@@ -66,7 +66,7 @@ static float GetHoughDistance(float2 Position,float2 Origin,float Angle)
 	float2 xy = Position - Origin;
 	float Cos = cos( radians(Angle) );
 	float Sin = sin( radians(Angle) );
-	float r = Cos*xy.x + Sin*xy.y;
+	float r = (Cos*xy.x) + (Sin*xy.y);
 	return r;
 }
 
@@ -114,10 +114,11 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 										int AngleIndexFirst,
 										global float* Angles,
 									  	global float* Distances,
-									  	volatile global int* AngleXDistanceXChunks,
+									  	volatile global uint* AngleXDistanceXChunks,
 									  	int DistanceCount,
 									 	int ChunkCount,
 									  	int AngleXDistanceXChunkCount,
+										int HistogramHitMax,
 										read_only image2d_t EdgeTexture
 									  )
 {
@@ -150,22 +151,24 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 
 	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistanceCount, ChunkCount, AngleXDistanceXChunkCount );
 	
-	atomic_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
-	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
+	//atomic_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
+	//atomic_min( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex], HistogramHitMax );
+	AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
 }
 
 
 
 kernel void GraphAngleXDistances(int xFirst,
-						  int yFirst,
-						  write_only image2d_t GraphTexture,
-						  int HistogramHitMax,
-						  int AngleCount,
-						  int DistanceCount,
-						  int ChunkCount,
-						  global int* AngleXDistanceXChunks,
-						 int AngleXDistanceXChunkCount
-						  )
+							int yFirst,
+							write_only image2d_t GraphTexture,
+							int HistogramHitMax,
+							int AngleCount,
+							int DistanceCount,
+							int ChunkCount,
+							global uint* AngleXDistanceXChunks,
+							int AngleXDistanceXChunkCount,
+							read_only image2d_t EdgeTexture
+							)
 {
 	int x = get_global_id(0) + xFirst;
 	int y = get_global_id(1) + yFirst;
@@ -175,7 +178,7 @@ kernel void GraphAngleXDistances(int xFirst,
 	
 	int AngleIndex = u * AngleCount;
 	int DistanceIndex = v * DistanceCount;
-
+	
 	int HitCount = 0;
 	for ( int c=0;	c<ChunkCount;	c++ )
 	{
@@ -187,10 +190,17 @@ kernel void GraphAngleXDistances(int xFirst,
 	float Score = HitCount / HitMax;
 	Score = min( 1.0f, Score );
 	
-	
 	int2 PixelCoord = (int2)(x,y);
-	float4 Colour = (float4)( Score, Score, 0, 1.0f );
+	float4 Colour = (float4)( 0, Score, 0, 1.0f );
 	//float4 Colour = (float4)( u, v, 0, 1.0f );
+	
+	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+	//Colour = read_imagef( EdgeTexture, Sampler, PixelCoord );
+	//Colour = (float4)(u,v,0,1);
+	
+	if ( u < 0 || u > 1 || v < 0 || v > 1 )
+		Colour = (float4)(0,0,1,1);
+	
 	write_imagef( GraphTexture, PixelCoord, Colour );
 }
 
