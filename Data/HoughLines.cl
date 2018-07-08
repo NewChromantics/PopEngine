@@ -1,4 +1,4 @@
-#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
+//#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
 /*
  // Create a RenderTexture with enableRandomWrite flag and set it
  // with cs.SetTexture
@@ -114,7 +114,7 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 										int AngleIndexFirst,
 										global float* Angles,
 									  	global float* Distances,
-									  	global int* AngleXDistanceXChunks,
+									  	volatile global int* AngleXDistanceXChunks,
 									  	int DistanceCount,
 									 	int ChunkCount,
 									  	int AngleXDistanceXChunkCount,
@@ -137,7 +137,7 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	float EdgeTextureWidthf = get_image_width(EdgeTexture);
 	float EdgeTextureHeightf = get_image_height(EdgeTexture);
 
-	float2 HoughOrigin = float2( HoughOriginX, HoughOriginY );
+	float2 HoughOrigin = (float2)( HoughOriginX, HoughOriginY );
 	
 	//	calc hough distance from position & angle
 	float2 uv = (float2)( x / EdgeTextureWidthf, y / EdgeTextureHeightf );
@@ -150,8 +150,8 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 
 	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistanceCount, ChunkCount, AngleXDistanceXChunkCount );
 	
-	//atom_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
-	AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
+	atomic_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
+	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
 }
 
 
