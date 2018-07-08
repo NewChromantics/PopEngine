@@ -1,5 +1,5 @@
 in vec2 uv;
-const float LineWidth = 0.005;
+const float LineWidth = 0.003;
 
 uniform sampler2D	Background;
 #define LINE_COUNT	100

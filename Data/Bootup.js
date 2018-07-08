@@ -413,10 +413,23 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
 	let MaskTexture = Frame.LineMask;
-	Frame.Angles = GetNumberRangeInclusive( 0, 179, 179/2 );
-	Frame.Distances = GetNumberRangeInclusive( -1, 1, 100 );
-	Frame.ChunkCount = 10;
+	Frame.Angles = GetNumberRangeInclusive( 0, 179, Frame.AngleCount );
+	let DistanceRange = 0.68;
+	Frame.Distances = GetNumberRangeInclusive( -DistanceRange, DistanceRange, Frame.DistanceCount );
 	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
+	
+	Frame.GetAngleXDistanceXChunkIndex = function(AngleIndex,DistanceIndex,ChunkIndex)
+	{
+		AngleIndex = Math.floor(AngleIndex);
+		DistanceIndex = Math.floor(DistanceIndex);
+		ChunkIndex = Math.floor(ChunkIndex);
+		let DistanceCount = Frame.Distances.length;
+		let ChunkCount = Frame.ChunkCount;
+		let AngleXDistanceXChunkIndex = (AngleIndex * DistanceCount * ChunkCount);
+		AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
+		AngleXDistanceXChunkIndex += ChunkIndex;
+		return AngleXDistanceXChunkIndex;
+	}
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
@@ -450,6 +463,30 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 	return Prom;
 }
 
+
+function AddTestAngleXDistanceXChunks(Frame)
+{
+	let WriteTest = function(Resolve)
+	{
+		let AngleIndex = (45/180) * Frame.Angles.length;
+		let DistanceIndex = 0.2 * Frame.Distances.length;
+		//AngleIndex = 3;
+		let ChunkIndex = 0.5 * Frame.ChunkCount;
+		//for ( let DistanceIndex=0;	DistanceIndex<Frame.Distances.length;	DistanceIndex++ )
+		for ( let AngleIndex=0;	AngleIndex<Frame.Angles.length/4;	AngleIndex++ )
+		//for ( let ChunkIndex=0;	ChunkIndex<Frame.ChunkCount;	ChunkIndex++ )
+		for ( let ChunkIndex=1;	ChunkIndex<Frame.ChunkCount-1;	ChunkIndex++ )
+		{
+			let adc_index = Frame.GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
+			Frame.AngleXDistanceXChunks[adc_index] += Frame.HistogramHitMax;
+		}
+		Resolve();
+	}
+	
+	let Prom = MakePromise( WriteTest );
+	return Prom;
+}
+
 function ExtractHoughLines(OpenclContext,Frame)
 {
 	let Angles = Frame.Angles;
@@ -461,18 +498,11 @@ function ExtractHoughLines(OpenclContext,Frame)
 	let AngleXDistanceXChunkCount = AngleXDistanceXChunks.length;
 	Debug("ExtractHoughLines..");
 	
-	let GetAngleXDistanceXChunkIndex = function(AngleIndex,DistanceIndex,ChunkIndex)
-	{
-		let AngleXDistanceXChunkIndex = (AngleIndex * DistanceCount * ChunkCount);
-		AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
-		AngleXDistanceXChunkIndex += ChunkIndex;
-		return AngleXDistanceXChunkIndex;
-	}
 	
 	var MaxScore = 0;
 	let GetHoughLine = function(AngleIndex,DistanceIndex,ChunkIndex)
 	{
-		let HistogramIndex = GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
+		let HistogramIndex = Frame.GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
 		let HitCount = AngleXDistanceXChunks[HistogramIndex];
 		let Score = HitCount / Frame.HistogramHitMax;
 		MaxScore = Math.max( MaxScore, Score );
@@ -482,6 +512,8 @@ function ExtractHoughLines(OpenclContext,Frame)
 		}
 		if ( Score < Frame.ExtractHoughLineMinScore )
 			return;
+		//if ( Score > 1 )
+		//	return;
 		
 		let Line = {};
 		Line.Origin = [Frame.HoughOriginX, Frame.HoughOriginY];
@@ -508,15 +540,9 @@ function ExtractHoughLines(OpenclContext,Frame)
 			return 1;
 		return 0;
 	};
-	HoughLines.sort(CompareScore);
-	Debug("Got " + HoughLines.length + " hough lines. MaxScore=" + MaxScore);
-	Debug("Top 10 scores: ");
-	for ( let i=0;	i<10 && i<HoughLines.length;	i++ )
-		Debug("#" + i + " " + HoughLines[i].Score );
-	Frame.HoughLines = HoughLines;
 	
 	let hypotenuse = function(o,a)			{	return Math.sqrt( (a*a)+(o*o) );	}
-	let DegreesToRadians = function(Degrees){	return Degrees / (Math.PI / 180);	}
+	let DegreesToRadians = function(Degrees){	return Degrees * (Math.PI / 180);	}
 	
 	//	get lines to render
 	let HoughLineToLine = function(Angle,Distance,ChunkStartTime,ChunkEndTime,OriginX,OriginY)
@@ -529,10 +555,10 @@ function ExtractHoughLines(OpenclContext,Frame)
 		let Sin = Math.sin( theta );
 		
 		//	center of the line
-		let CenterX = (Cos*rho) + OriginX;
-		let CenterY = (Sin*rho) + OriginY;
-		let OffsetX = Length*-Sin;
-		let OffsetY = Length*Cos;
+		let CenterX = (Cos * rho) + OriginX;
+		let CenterY = (Sin * rho) + OriginY;
+		let OffsetX = Length * -Sin;
+		let OffsetY = Length * Cos;
 		
 		let HoughLineStartX = CenterX + OffsetX;
 		let HoughLineStartY = CenterY + OffsetY;
@@ -550,17 +576,35 @@ function ExtractHoughLines(OpenclContext,Frame)
 		
 		return [sx,sy,ex,ey];
 	}
+	let IsValidLine = function(Line)
+	{
+		if ( Line[0] < 0 || Line[0] > 1 || Line[1] < 0 || Line[1] > 1 )
+			return false;
+		return true;
+	}
 	let PushHoughLineToLines = function(HoughLine)
 	{
 		let ChunkStartTime = (HoughLine.ChunkIndex+0) / ChunkCount;
 		let ChunkEndTime = (HoughLine.ChunkIndex+1) / ChunkCount;
 		let Line = HoughLineToLine( HoughLine.Angle, HoughLine.Distance, ChunkStartTime, ChunkEndTime, HoughLine.Origin[0], HoughLine.Origin[1] );
 		//Debug(Line);
+		if ( !IsValidLine(Line) )
+			return;
 		Frame.Lines.push( Line );
 	}
+	
+	HoughLines.sort(CompareScore);
+	Debug("Got " + HoughLines.length + " hough lines. MaxScore=" + MaxScore);
+	Debug("Top 10 scores: ");
+	for ( let i=0;	i<10 && i<HoughLines.length;	i++ )
+		Debug("#" + i + " " + HoughLines[i].Score );
+	Frame.HoughLines = HoughLines;
+
+	//	convert to real lines
 	if ( !Array.isArray(Frame.Lines) )
 		Frame.Lines = [];
 	Frame.HoughLines.forEach( PushHoughLineToLines );
+	Debug("Filtered to " + Frame.Lines.length + " valid lines.");
 }
 
 function GetHoughLines(OpenclContext,Frame)
@@ -568,28 +612,32 @@ function GetHoughLines(OpenclContext,Frame)
 	let HoughRunner = function(Resolve,Reject)
 	{
 		//let a = function()	{	return VisualiseAngleXDistanceXChunks(OpenclContext,Frame);	}
-		let a = function()	{	return MakePromise( function(r){r();} );	}
+		let a = function()	{	return MakePromise( function(res){res();} );	}
 		let b = function()	{	return CalcAngleXDistanceXChunks(OpenclContext,Frame);	}
-		let c = function()	{	return GraphAngleXDistances(OpenclContext,Frame);	}
-		let d = function()	{	return ExtractHoughLines(OpenclContext,Frame);	}
-		let DoResolve = function(){	return MakePromise(Resolve);	}
+		let c = function()	{	return AddTestAngleXDistanceXChunks(Frame);	}
+		let d = function()	{	return GraphAngleXDistances(OpenclContext,Frame);	}
+		let e = function()	{	return ExtractHoughLines(OpenclContext,Frame);	}
+		let DoResolve = function(){	return MakePromise( Resolve );	}
 		let OnError = function(err)
 		{
 			Debug("hough runner error: " + err);
 			Reject();
 		};
 		
+		Frame.LineMask = new Image("Data/Box.png");
+
 		a()
 		.then( b )
-		.then( c )
+		//.then( c )
 		.then( d )
+		.then( e )
 		//.then( MakePromise(c) )
 		.then( DoResolve )
 		.catch( OnError );
 	}
 	
 	//	high level promise
-	return MakePromise( HoughRunner );
+	return MakePromise( HoughRunner, false );
 }
 
 function DrawLines(OpenglContext,Frame)
@@ -605,6 +653,7 @@ function DrawLines(OpenglContext,Frame)
 				Frame.Lines = [];
 			if ( Frame.Lines.length > Frame.MaxLines )
 				Frame.Lines.length = Frame.MaxLines;
+			
 			Shader.SetUniform("Lines", Frame.Lines );
 			//	gr: causing uniform error
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
@@ -623,11 +672,14 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 {
 	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	//LastProcessedFrame = Frame;
-	Frame.HistogramHitMax = 200;
+	Frame.HistogramHitMax = 100;
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.4;
-	Frame.MaxLines = 10;
+	Frame.MaxLines = 100;
+	Frame.ChunkCount = 11;
+	Frame.DistanceCount = 100;
+	Frame.AngleCount = 180/4;
 
 	let OnError = function(Error)
 	{

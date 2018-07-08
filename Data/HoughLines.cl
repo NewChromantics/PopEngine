@@ -151,9 +151,9 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 
 	int AngleXDistanceXChunkIndex = GetAngleXDistanceXChunkIndex( AngleIndex, HoughDistanceIndex, ChunkIndex, DistanceCount, ChunkCount, AngleXDistanceXChunkCount );
 	
-	//atomic_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
+	atomic_inc( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex] );
 	//atomic_min( &AngleXDistanceXChunks[AngleXDistanceXChunkIndex], HistogramHitMax );
-	AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
+	//AngleXDistanceXChunks[AngleXDistanceXChunkIndex]++;
 }
 
 
@@ -176,9 +176,9 @@ kernel void GraphAngleXDistances(int xFirst,
 	float u = x / (float)get_image_width(GraphTexture);
 	float v = y / (float)get_image_height(GraphTexture);
 	
-	int AngleIndex = u * AngleCount;
-	int DistanceIndex = v * DistanceCount;
-	
+	int DistanceIndex = u * DistanceCount;
+	int AngleIndex = v * AngleCount;
+
 	int HitCount = 0;
 	for ( int c=0;	c<ChunkCount;	c++ )
 	{
@@ -197,6 +197,9 @@ kernel void GraphAngleXDistances(int xFirst,
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 	//Colour = read_imagef( EdgeTexture, Sampler, PixelCoord );
 	//Colour = (float4)(u,v,0,1);
+	
+	if ( HitCount < 0 || HitCount > HitMax )
+		Colour = (float4)(0,0,1,1);
 	
 	if ( u < 0 || u > 1 || v < 0 || v > 1 )
 		Colour = (float4)(0,0,1,1);
