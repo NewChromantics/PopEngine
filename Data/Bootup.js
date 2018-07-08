@@ -390,14 +390,13 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		Kernel.SetUniform('xFirst', IterationIndexes[0] );
 		Kernel.SetUniform('yFirst', IterationIndexes[1] );
 		Kernel.SetUniform('AngleIndexFirst', IterationIndexes[2] );
-		Kernel.SetUniform('Angles', Frame.Angles );
-		Kernel.SetUniform('Distances', Frame.Distances );
-		Kernel.SetUniform('DistanceCount', Frame.Distances.length );
-		Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
-		Kernel.SetUniform('HistogramHitMax', Frame.HistogramHitMax );
-		
 		if ( IterationIndexes[0]==IterationIndexes[1]==IterationIndexes[2]==0 )
 		{
+			Kernel.SetUniform('Angles', Frame.Angles );
+			Kernel.SetUniform('Distances', Frame.Distances );
+			Kernel.SetUniform('DistanceCount', Frame.Distances.length );
+			Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
+			Kernel.SetUniform('HistogramHitMax', Frame.HistogramHitMax );
 			Kernel.SetUniform('EdgeTexture', MaskTexture );
 			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
 			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
@@ -422,14 +421,16 @@ function AddTestAngleXDistanceXChunks(Frame)
 {
 	let WriteTest = function(Resolve)
 	{
-		let AngleIndex = (45/180) * Frame.Angles.length;
-		let DistanceIndex = 0.2 * Frame.Distances.length;
-		//AngleIndex = 3;
+		let AngleIndex = 0 * Frame.Angles.length;
+		let DistanceIndex = 0.7 * Frame.Distances.length;
 		let ChunkIndex = 0.5 * Frame.ChunkCount;
-		//for ( let DistanceIndex=0;	DistanceIndex<Frame.Distances.length;	DistanceIndex++ )
-		for ( let AngleIndex=0;	AngleIndex<Frame.Angles.length/4;	AngleIndex++ )
-		//for ( let ChunkIndex=0;	ChunkIndex<Frame.ChunkCount;	ChunkIndex++ )
-		for ( let ChunkIndex=1;	ChunkIndex<Frame.ChunkCount-1;	ChunkIndex++ )
+		AngleIndex = 3;
+		//ChunkIndex-=5;
+		Debug("ChunkIndex="+ChunkIndex);
+		//for ( let DistanceIndex=0;	DistanceIndex<Frame.Distances.length;	DistanceIndex+=3 )
+		for ( let AngleIndex=0;	AngleIndex<Frame.Angles.length;	AngleIndex+=10 )
+		for ( let ChunkIndex=0;	ChunkIndex<Frame.ChunkCount;	ChunkIndex+=2 )
+		//for ( let ChunkIndex=1;	ChunkIndex<Frame.ChunkCount-1;	ChunkIndex++ )
 		{
 			let adc_index = Frame.GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
 			Frame.AngleXDistanceXChunks[adc_index] += Frame.HistogramHitMax;
@@ -452,20 +453,57 @@ function ExtractHoughLines(OpenclContext,Frame)
 	let AngleXDistanceXChunkCount = AngleXDistanceXChunks.length;
 	Debug("ExtractHoughLines..");
 	
-	
-	var MaxScore = 0;
-	let GetHoughLine = function(AngleIndex,DistanceIndex,ChunkIndex)
+	var BiggestScore = 0;
+	let GetHoughLineScore = function(AngleIndex,DistanceIndex,ChunkIndex)
 	{
+		if ( AngleIndex < 0 || AngleIndex >= Frame.AngleCount )		return null;
+		if ( DistanceIndex < 0 || DistanceIndex >= Frame.DistanceCount )		return null;
+		if ( ChunkIndex < 0 || ChunkIndex >= Frame.ChunkCount )		return null;
 		let HistogramIndex = Frame.GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
 		let HitCount = AngleXDistanceXChunks[HistogramIndex];
 		let Score = HitCount / Frame.HistogramHitMax;
-		MaxScore = Math.max( MaxScore, Score );
-		if ( HitCount > 0 )
+		BiggestScore = Math.max( BiggestScore, Score );
+		return Score;
+	}
+	
+	let HasBetterNeighbour = function(ThisScore,AngleIndex,DistanceIndex,ChunkIndex)
+	{
+		let Neighbours = [];
+		let AngleRange = 5;
+		let DistanceRange = 3;
+		let ChunkRange = 0;
+		for ( let a=-AngleRange;	a<=AngleRange;	a++ )
+			for ( let d=-DistanceRange;	d<=DistanceRange;	d++ )
+				for ( let c=-ChunkRange;	c<=ChunkRange;	c++ )
+					if ( !(a==0&&d==0&&c==0) )
+						Neighbours.push( [a,d,c] );
+
+		for ( let n=0;	n<Neighbours.length;	n++ )
 		{
-			//Debug(HitCount + "/" + Frame.HistogramHitMax );
+			let a = Neighbours[n][0];
+			let d = Neighbours[n][1];
+			let c = Neighbours[n][2];
+			let ns = GetHoughLineScore( AngleIndex+a, DistanceIndex+d, ChunkIndex+c );
+			if ( ns === null )
+				continue;
+			if ( ns > ThisScore )
+			{
+				return true;
+			}
 		}
+		return false;
+	}
+	
+	let GetHoughLine = function(AngleIndex,DistanceIndex,ChunkIndex)
+	{
+		let Score = GetHoughLineScore( AngleIndex, DistanceIndex, ChunkIndex );
 		if ( Score < Frame.ExtractHoughLineMinScore )
 			return;
+		
+		//	see if we have a better neighbour
+		if ( Frame.SkipIfBetterNeighbour === true )
+			if ( HasBetterNeighbour( Score, AngleIndex, DistanceIndex, ChunkIndex ) )
+				return;
 		
 		let Line = {};
 		Line.Origin = [Frame.HoughOriginX, Frame.HoughOriginY];
@@ -501,11 +539,12 @@ function ExtractHoughLines(OpenclContext,Frame)
 	{
 		//	UV space lines
 		let Length = hypotenuse(1,1);
+		Length = 0.68;
 		let rho = Distance;
 		let theta = DegreesToRadians(Angle);
 		let Cos = Math.cos( theta );
 		let Sin = Math.sin( theta );
-		
+	
 		//	center of the line
 		let CenterX = (Cos * rho) + OriginX;
 		let CenterY = (Sin * rho) + OriginY;
@@ -521,6 +560,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 		{
 			return Min + ( (Max-Min) * Time );
 		}
+		
 		let sx = Lerp( HoughLineStartX, HoughLineEndX, ChunkStartTime );
 		let sy = Lerp( HoughLineStartY, HoughLineEndY, ChunkStartTime );
 		let ex = Lerp( HoughLineStartX, HoughLineEndX, ChunkEndTime );
@@ -547,7 +587,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 	}
 	
 	HoughLines.sort(CompareScore);
-	Debug("Got " + HoughLines.length + " hough lines. MaxScore=" + MaxScore);
+	Debug("Got " + HoughLines.length + " hough lines. BiggestScore=" + BiggestScore);
 	Debug("Top 10 scores: ");
 	for ( let i=0;	i<10 && i<HoughLines.length;	i++ )
 		Debug("#" + i + " " + HoughLines[i].Score );
@@ -629,13 +669,14 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HistogramHitMax = 100;
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
-	Frame.ExtractHoughLineMinScore = 0.2;
+	Frame.ExtractHoughLineMinScore = 0.3;
 	Frame.MaxLines = 100;
-	Frame.ChunkCount = 5;
+	Frame.ChunkCount = 10;
 	Frame.DistanceCount = 100;
-	Frame.AngleCount = 180/10;
-	Frame.FilterOutsideLines = false;
-	//Frame.LoadPremadeLineMask = "Data/Box.png";
+	Frame.AngleCount = 180;
+	//Frame.FilterOutsideLines = true;
+	Frame.LoadPremadeLineMask = "Data/Box.png";
+	Frame.SkipIfBetterNeighbour = true;
 	
 	let OnError = function(Error)
 	{

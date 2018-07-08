@@ -54,6 +54,8 @@ static int GetAngleXDistanceXChunkIndex(int AngleIndex,int DistanceIndex,int Chu
 	AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
 	AngleXDistanceXChunkIndex += ChunkIndex;
 	
+	return AngleXDistanceXChunkIndex;
+	
 	int MaxAngleXDistanceXChunkIndex = AngleXDistanceXChunkCount-1;
 	//	just in case...
 	return max(0,min(MaxAngleXDistanceXChunkIndex,AngleXDistanceXChunkIndex));
@@ -87,6 +89,7 @@ static THoughLine GetHoughLine(float Angle,float Distance,float2 Origin)
 {
 	//	UV space lines
 	float Length = hypotenuse(1,1);
+	Length = 0.68;
 	
 	float rho = Distance;
 	float theta = radians(Angle);
@@ -127,10 +130,12 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	int AngleIndex = get_global_id(2) + AngleIndexFirst;
 	float Angle = Angles[AngleIndex];
 	
+	y = get_image_height(EdgeTexture) - y;
+	
 	//	read edge
 	sampler_t Sampler = CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
 	float4 Edge4 = read_imagef( EdgeTexture, Sampler, (int2)(x,y) );
-	
+
 	bool Edge = (Edge4.x > 0.5f);
 	if ( !Edge )
 		return;
@@ -146,6 +151,15 @@ kernel void CalcAngleXDistanceXChunks(int xFirst,
 	float HoughDistance = GetHoughDistance( uv, HoughOrigin, Angle );
 	int HoughDistanceIndex = GetHoughDistanceIndex( HoughDistance, Distances, DistanceCount );
 
+	/*
+	if ( uv.y < 0.5 )
+		return;
+	if ( uv.x < 0.5 )
+		return;
+	 */
+	//if ( HoughDistance > 0 )
+	//	return;
+	
 	THoughLine Line = GetHoughLine( Angle, HoughDistance, HoughOrigin );
 	int ChunkIndex = GetHoughLineChunkIndex( Line, uv, ChunkCount );
 

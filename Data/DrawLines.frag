@@ -1,7 +1,7 @@
 in vec2 uv;
-const float LineWidth = 0.003;
+const float LineWidth = 0.001;
 
-#define UV_ZOOM		0.7
+#define UV_ZOOM		0.8
 uniform sampler2D	Background;
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
@@ -65,6 +65,6 @@ void main()
 	{
 		gl_FragColor = texture( Background, FrameUv );
 		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
-			gl_FragColor = vec4(0,0,0,1);
+			gl_FragColor = vec4(0,0,1,1);
 	}
 }
