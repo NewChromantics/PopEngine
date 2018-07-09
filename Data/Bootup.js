@@ -602,6 +602,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 				return;
 		Frame.Lines.push( Line );
 		Frame.LineScores.push( HoughLine.Score );
+		Frame.HoughLines.push( HoughLine );
 	}
 	
 	HoughLines.sort(CompareScore);
@@ -616,7 +617,9 @@ function ExtractHoughLines(OpenclContext,Frame)
 		Frame.Lines = [];
 	if ( !Array.isArray(Frame.LineScores) )
 		Frame.LineScores = [];
-	Frame.HoughLines.forEach( PushHoughLineToLines );
+	Frame.UnfilteredHoughLines = Frame.HoughLines;
+	Frame.HoughLines = [];
+	Frame.UnfilteredHoughLines.forEach( PushHoughLineToLines );
 	Debug("Filtered to " + Frame.Lines.length + " valid lines.");
 }
 
@@ -729,10 +732,26 @@ function GetLineCorners(Frame)
 			return null;
 		}
 		
+		let GetAngle180Diff = function(AngleA,AngleB)
+		{
+			let Diff = AngleB - AngleA;
+			while ( Diff > 90 )
+				Diff -= 180;
+			while ( Diff < -90 )
+				Diff += 180;
+			return Diff;
+		}
+		
 		for ( let la=0;	la<Lines.length;	la++ )
 		{
 			for ( let lb=la+1;	lb<Lines.length;	lb++ )
 			{
+				let AngleA = Frame.HoughLines[la].Angle;
+				let AngleB = Frame.HoughLines[lb].Angle;
+				let AngleDiff = GetAngle180Diff( AngleA, AngleB );
+				if ( Math.abs(AngleDiff) < Frame.CornerAngleDiffMin )
+					continue;
+
 				let ScoreA = Frame.LineScores[la];
 				let ScoreB = Frame.LineScores[lb];
 				let Intersection = GetLineIntersection( Lines[la], Lines[lb], ScoreA, ScoreB );
@@ -786,13 +805,14 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
-	Frame.MaxLines = 20;
+	Frame.MaxLines = 14;
 	Frame.ChunkCount = 10;
 	Frame.DistanceCount = 300;
-	Frame.AngleCount = 180;
+	Frame.AngleCount = 180*2;
+	Frame.CornerAngleDiffMin = 10;
 	//Frame.FilterOutsideLines = true;
 	//Frame.LoadPremadeLineMask = "Data/PitchMask.png";
-	Frame.SkipIfBetterNeighbourRanges = { AngleRange:5, DistanceRange:3, ChunkRange:1 };
+	Frame.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:4, ChunkRange:1 };
 	Frame.ExtendChunks = true;
 	
 	let OnError = function(Error)
@@ -880,14 +900,19 @@ function Main()
 	OpenclDevices.forEach( Debug );
 	let Opencl = new OpenclContext( OpenclDevices[0] );
 
-	let Filename = "Data/SwedenVsEngland.png";
-	//let Filename = "Data/ArgentinaVsCroatia.png";
-	//let Filename = "Data/PitchMask.png";
-	let Pitch = new Image(Filename);
-	//let Pitch = new Image("Data/Cat.jpg");
+	let Filenames =
+	[
+		"Data/SwedenVsEngland.png",
+		//"Data/ArgentinaVsCroatia.png"
+	];
 	
-	let OpenglContext = Window1;
-	StartProcessFrame( Pitch, OpenglContext, Opencl );
+	let ProcessFrame = function(Filename)
+	{
+		let Pitch = new Image(Filename);
+		let OpenglContext = Window1;
+		StartProcessFrame( Pitch, OpenglContext, Opencl );
+	};
+	Filenames.forEach(ProcessFrame);
 }
 
 //	main
