@@ -23,17 +23,25 @@ void main()
 	float BoxsWide = 3;
 	float BoxsHigh = 3;
 	
+	BoxsWide = 2;	BoxsHigh = 1;
+	
 	//	debug just one section
 	//BoxsWide = BoxsHigh = 1;
 
-	
+	int ImageOrder[9];
+	ImageOrder[0] = 5;
+	ImageOrder[1] = 6;
+	ImageOrder[2] = 0;
+	ImageOrder[3] = 1;
+	ImageOrder[4] = 2;
+	ImageOrder[5] = 3;
+	ImageOrder[6] = 4;
+
 	vec2 BoxUv = Range2( vec2(0.0,0.0), vec2( 1/BoxsWide, 1/BoxsHigh ), Flippeduv );
 	float Indexf = floor(BoxUv.x) + ( floor(BoxUv.y) * BoxsWide );
 	int Index = int(Indexf);
 	
-	
-	if ( BoxsWide * BoxsHigh == 1 )
-		Index = 6;
+	Index = ImageOrder[Index];
 	
 	gl_FragColor = vec4( fract( BoxUv ), 0, 1 );
 	gl_FragColor = vec4( Flippeduv, 0, 1 );

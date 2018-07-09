@@ -733,7 +733,9 @@ function GetLineCorners(Frame)
 		{
 			for ( let lb=la+1;	lb<Lines.length;	lb++ )
 			{
-				let Intersection = GetLineIntersection( Lines[la], Lines[lb], 1, 1 );
+				let ScoreA = Frame.LineScores[la];
+				let ScoreB = Frame.LineScores[lb];
+				let Intersection = GetLineIntersection( Lines[la], Lines[lb], ScoreA, ScoreB );
 				if ( Intersection === null )
 					continue;
 				Frame.Corners.push( Intersection );
@@ -760,7 +762,7 @@ function DrawCorners(OpenglContext,Frame)
 		let SetUniforms = function(Shader)
 		{
 			Shader.SetUniform("CornerAndScores", Frame.Corners );
-			Shader.SetUniform("Background", Frame, 0 );
+			Shader.SetUniform("Background", Frame.LineMask, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -779,17 +781,18 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 {
 	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	//LastProcessedFrame = Frame;
-	Frame.HistogramHitMax = 100;
+	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
+	Debug("Frame.HistogramHitMax="+ Frame.HistogramHitMax);
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
-	Frame.MaxLines = 15;
-	Frame.ChunkCount = 5;
+	Frame.MaxLines = 20;
+	Frame.ChunkCount = 10;
 	Frame.DistanceCount = 300;
 	Frame.AngleCount = 180;
 	//Frame.FilterOutsideLines = true;
-	//Frame.LoadPremadeLineMask = "Data/Box.png";
-	Frame.SkipIfBetterNeighbourRanges = { AngleRange:5, DistanceRange:10, ChunkRange:1 };
+	//Frame.LoadPremadeLineMask = "Data/PitchMask.png";
+	Frame.SkipIfBetterNeighbourRanges = { AngleRange:5, DistanceRange:3, ChunkRange:1 };
 	Frame.ExtendChunks = true;
 	
 	let OnError = function(Error)
@@ -876,8 +879,11 @@ function Main()
 		throw "No opencl devices";
 	OpenclDevices.forEach( Debug );
 	let Opencl = new OpenclContext( OpenclDevices[0] );
-	
-	let Pitch = new Image("Data/ArgentinaVsCroatia.png");
+
+	let Filename = "Data/SwedenVsEngland.png";
+	//let Filename = "Data/ArgentinaVsCroatia.png";
+	//let Filename = "Data/PitchMask.png";
+	let Pitch = new Image(Filename);
 	//let Pitch = new Image("Data/Cat.jpg");
 	
 	let OpenglContext = Window1;

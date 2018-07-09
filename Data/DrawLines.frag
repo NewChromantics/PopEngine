@@ -1,7 +1,7 @@
 in vec2 uv;
 const float LineWidth = 0.001;
 
-#define UV_ZOOM		0.6
+#define UV_ZOOM		1.0
 //#define ENABLE_SCORES
 #define ENABLE_BACKGROUND
 

@@ -305,9 +305,9 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 	
 	size_t Height = 0;
 	if ( This.mPixels )
-		Height = This.mPixels->GetWidth();
+		Height = This.mPixels->GetHeight();
 	else if ( This.mOpenglTexture )
-		Height = This.mOpenglTexture->GetWidth();
+		Height = This.mOpenglTexture->GetHeight();
 	else
 		throw Soy::AssertException("Image not allocated");
 	
