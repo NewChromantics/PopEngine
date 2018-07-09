@@ -3,6 +3,7 @@ const float LineWidth = 0.001;
 
 #define UV_ZOOM		0.8
 //#define ENABLE_SCORES
+//#define ENABLE_BACKGROUND
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
 #if defined(ENABLE_SCORES)
@@ -10,7 +11,10 @@ uniform float		LineScores[LINE_COUNT];
 #else
 const vec4			LineColour = vec4(1,0,1,1);
 #endif
+
+#if defined(ENABLE_BACKGROUND)
 uniform sampler2D	Background;
+#endif
 
 #define endofheader
 
@@ -80,7 +84,11 @@ void main()
 	}
 	else
 	{
+#if defined(ENABLE_BACKGROUND)
 		gl_FragColor = texture( Background, FrameUv );
+#else
+		gl_FragColor = vec4(0,0,0,1);
+#endif
 		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
 			gl_FragColor = vec4(0,0,1,1);
 	}

@@ -413,10 +413,8 @@ void TRenderWindow::DrawQuad(Opengl::TShader& Shader,std::function<void()> OnBin
 	//	do bindings
 	auto ShaderBound = Shader.Bind();
 	OnBind();
-	//ShaderBound.SetUniform("Rect", Soy::RectToVector(Rect) );
 	BlitQuad.Draw();
 	Opengl_IsOkay();
-
 }
 
 

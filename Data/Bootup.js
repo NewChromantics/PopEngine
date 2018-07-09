@@ -3,8 +3,6 @@ let VertShaderSource = `
 	const vec4 Rect = vec4(0,0,1,1);
 	in vec2 TexCoord;
 	out vec2 uv;
-	out float Blue_Frag;
-	uniform float Blue;
 	void main()
 	{
 		gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);
@@ -14,18 +12,15 @@ let VertShaderSource = `
 		gl_Position.xy *= vec2(2,2);
 		gl_Position.xy -= vec2(1,1);
 		uv = vec2(TexCoord.x,TexCoord.y);
-		Blue_Frag = Blue;
 	}
 `;
 
 let DebugFragShaderSource = `
 	#version 410
 	in vec2 uv;
-	in float Blue_Frag;
-	//out vec4 FragColor;
 	void main()
 	{
-		gl_FragColor = vec4(uv.x,uv.y,Blue_Frag,1);
+		gl_FragColor = vec4(uv.x,uv.y,0,1);
 	}
 `;
 
@@ -474,7 +469,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 		let Neighbours = [];
 		let AngleRange = 5;
 		let DistanceRange = 3;
-		let ChunkRange = 0;
+		let ChunkRange = 1;
 		for ( let a=-AngleRange;	a<=AngleRange;	a++ )
 			for ( let d=-DistanceRange;	d<=DistanceRange;	d++ )
 				for ( let c=-ChunkRange;	c<=ChunkRange;	c++ )
@@ -581,6 +576,13 @@ function ExtractHoughLines(OpenclContext,Frame)
 	{
 		let ChunkStartTime = (HoughLine.ChunkIndex+0) / ChunkCount;
 		let ChunkEndTime = (HoughLine.ChunkIndex+1) / ChunkCount;
+		
+		if ( Frame.ExtendChunks === true )
+		{
+			ChunkStartTime = 0;
+			ChunkEndTime = 1;
+		}
+		
 		let Line = HoughLineToLine( HoughLine.Angle, HoughLine.Distance, ChunkStartTime, ChunkEndTime, HoughLine.Origin[0], HoughLine.Origin[1] );
 		//Debug(Line);
 		if ( Frame.FilterOutsideLines === true )
@@ -659,10 +661,10 @@ function DrawLines(OpenglContext,Frame)
 			if ( Frame.LineScores.length > Frame.MaxLines )
 				Frame.LineScores.length = Frame.MaxLines;
 			
-			//Shader.SetUniform("LineScores", Frame.LineScores );
 			Shader.SetUniform("Lines", Frame.Lines );
+			//Shader.SetUniform("LineScores", Frame.LineScores );
 			//	gr: causing uniform error
-			Shader.SetUniform("Background", Frame.LineMask, 0 );
+			//Shader.SetUniform("Background", Frame.LineMask, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -682,13 +684,14 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
-	Frame.MaxLines = 100;
+	Frame.MaxLines = 10;
 	Frame.ChunkCount = 5;
 	Frame.DistanceCount = 200;
 	Frame.AngleCount = 180;
 	//Frame.FilterOutsideLines = true;
 	//Frame.LoadPremadeLineMask = "Data/Box.png";
 	Frame.SkipIfBetterNeighbour = true;
+	Frame.ExtendChunks = true;
 	
 	let OnError = function(Error)
 	{
@@ -738,10 +741,6 @@ function WindowRender(RenderTarget)
 		
 		let SetUniforms = function(Shader)
 		{
-			//Blue = (Blue==0) ? 1 : 0;
-			//Debug("On bind: " + Blue);
-			//Shader.SetUniform("Blue", Blue );
-			//Debug( typeof(Pitch) );
 			Shader.SetUniform("Image0", LastProcessedFrame, 0 );
 			Shader.SetUniform("Image1", LastProcessedFrame.Hsl, 1 );
 			Shader.SetUniform("Image2", LastProcessedFrame.GrassMask, 2 );

@@ -19,11 +19,17 @@ vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
 void main()
 {
 	vec2 Flippeduv = vec2( uv.x, 1-uv.y );
-	float BoxsWide = 1;
-	float BoxsHigh = 1;
+	float BoxsWide = 2;
+	float BoxsHigh = 3;
+	
+	//	debug just one section
+	BoxsWide = BoxsHigh = 1;
+
+	
 	vec2 BoxUv = Range2( vec2(0.0,0.0), vec2( 1/BoxsWide, 1/BoxsHigh ), Flippeduv );
 	float Indexf = floor(BoxUv.x) + ( floor(BoxUv.y) * BoxsWide );
 	int Index = int(Indexf);
+	
 	
 	if ( BoxsWide * BoxsHigh == 1 )
 		Index = 4;

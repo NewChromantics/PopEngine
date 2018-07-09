@@ -6,7 +6,8 @@ const float GrassNeighbourMinScore = 0.2;
 
 float2 GetUv()
 {
-	return float2( uv.x, 1-uv.y );
+	//return float2( uv.x, 1-uv.y );
+	return uv;
 }
 
 float GetLumSample(vec2 uvoffset)
