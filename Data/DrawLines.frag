@@ -1,9 +1,16 @@
 in vec2 uv;
 const float LineWidth = 0.001;
 
-#define UV_ZOOM		0.8
+#define UV_ZOOM		0.6
 //#define ENABLE_SCORES
-//#define ENABLE_BACKGROUND
+#define ENABLE_BACKGROUND
+
+
+
+#if defined(ENABLE_BACKGROUND)
+ uniform sampler2D	Background;
+#endif
+
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
 #if defined(ENABLE_SCORES)
@@ -12,9 +19,6 @@ uniform float		LineScores[LINE_COUNT];
 const vec4			LineColour = vec4(1,0,1,1);
 #endif
 
-#if defined(ENABLE_BACKGROUND)
-uniform sampler2D	Background;
-#endif
 
 #define endofheader
 

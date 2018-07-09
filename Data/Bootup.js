@@ -464,12 +464,13 @@ function ExtractHoughLines(OpenclContext,Frame)
 		return Score;
 	}
 	
-	let HasBetterNeighbour = function(ThisScore,AngleIndex,DistanceIndex,ChunkIndex)
+	let HasBetterNeighbour = function(ThisScore,AngleIndex,DistanceIndex,ChunkIndex,Ranges)
 	{
 		let Neighbours = [];
-		let AngleRange = 5;
-		let DistanceRange = 3;
-		let ChunkRange = 1;
+		
+		let AngleRange = Ranges.AngleRange;
+		let DistanceRange = Ranges.DistanceRange;
+		let ChunkRange = (Frame.ExtendChunks===true) ? Ranges.ChunkRange : 0;
 		for ( let a=-AngleRange;	a<=AngleRange;	a++ )
 			for ( let d=-DistanceRange;	d<=DistanceRange;	d++ )
 				for ( let c=-ChunkRange;	c<=ChunkRange;	c++ )
@@ -499,8 +500,8 @@ function ExtractHoughLines(OpenclContext,Frame)
 			return;
 		
 		//	see if we have a better neighbour
-		if ( Frame.SkipIfBetterNeighbour === true )
-			if ( HasBetterNeighbour( Score, AngleIndex, DistanceIndex, ChunkIndex ) )
+		if ( Frame.SkipIfBetterNeighbourRanges !== undefined )
+			if ( HasBetterNeighbour( Score, AngleIndex, DistanceIndex, ChunkIndex, Frame.SkipIfBetterNeighbourRanges ) )
 				return;
 		
 		let Line = {};
@@ -664,7 +665,7 @@ function DrawLines(OpenglContext,Frame)
 			Shader.SetUniform("Lines", Frame.Lines );
 			//Shader.SetUniform("LineScores", Frame.LineScores );
 			//	gr: causing uniform error
-			//Shader.SetUniform("Background", Frame.LineMask, 0 );
+			Shader.SetUniform("Background", Frame, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -684,13 +685,13 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
-	Frame.MaxLines = 10;
-	Frame.ChunkCount = 5;
-	Frame.DistanceCount = 200;
+	Frame.MaxLines = 15;
+	Frame.ChunkCount = 8;
+	Frame.DistanceCount = 300;
 	Frame.AngleCount = 180;
 	//Frame.FilterOutsideLines = true;
 	//Frame.LoadPremadeLineMask = "Data/Box.png";
-	Frame.SkipIfBetterNeighbour = true;
+	Frame.SkipIfBetterNeighbourRanges = { AngleRange:5, DistanceRange:10, ChunkRange:1 };
 	Frame.ExtendChunks = true;
 	
 	let OnError = function(Error)
