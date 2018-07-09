@@ -41,6 +41,7 @@ let RgbToHslFragShaderSource = LoadFileAsString('Data/FrameToHsl.frag');
 let GrassFilterFragShaderSource = LoadFileAsString('Data/GrassFilter.frag');
 let GrassLineFilterFragShaderSource = LoadFileAsString('Data/GrassLineFilter.frag');
 let DrawLinesFragShaderSource = LoadFileAsString('Data/DrawLines.frag');
+let DrawCornersFragShaderSource = LoadFileAsString('Data/DrawCorners.frag');
 let TestLinesKernelSource = LoadFileAsString('Data/TestLines.cl');
 let TestLinesKernelName = 'GetTestLines';
 let HoughLinesKernelSource = LoadFileAsString('Data/HoughLines.cl');
@@ -108,6 +109,7 @@ var RgbToHslShader = null;
 var GrassFilterShader = null;
 var GrassLineFilterShader = null;
 var DrawLinesShader = null;
+var DrawCornersShader = null;
 var TestLinesKernel = null;
 var CalcAngleXDistanceXChunksKernel = null;
 var GraphAngleXDistancesKernel = null;
@@ -146,6 +148,15 @@ function GetDrawLinesShader(OpenglContext)
 		DrawLinesShader = new OpenglShader( OpenglContext, VertShaderSource, DrawLinesFragShaderSource );
 	}
 	return DrawLinesShader;
+}
+
+function GetDrawCornersShader(OpenglContext)
+{
+	if ( !DrawCornersShader )
+	{
+		DrawCornersShader = new OpenglShader( OpenglContext, VertShaderSource, DrawCornersFragShaderSource );
+	}
+	return DrawCornersShader;
 }
 
 function GetTestLinesKernel(OpenclContext)
@@ -677,6 +688,93 @@ function DrawLines(OpenglContext,Frame)
 }
 
 
+
+function GetLineCorners(Frame)
+{
+	let GetCorners = function(Resolve)
+	{
+		let Lines = Frame.Lines;
+		let GetLineIntersection = function(LineA,LineB,ScoreA,ScoreB)
+		{
+			let CornerScore = (ScoreA+ScoreB)/2;
+			//return [0.5,0.5,1];
+			
+			//	https://stackoverflow.com/a/1968345
+			
+			// Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
+			// intersect the intersection point may be stored in the floats i_x and i_y.
+			let p0_x = LineA[0];
+			let p0_y = LineA[1];
+			let p1_x = LineA[2];
+			let p1_y = LineA[3];
+			let p2_x = LineB[0];
+			let p2_y = LineB[1];
+			let p3_x = LineB[2];
+			let p3_y = LineB[3];
+
+			let s1_x = p1_x - p0_x;
+			let s1_y = p1_y - p0_y;
+			let s2_x = p3_x - p2_x;
+			let s2_y = p3_y - p2_y;
+		
+			let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+			let t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+				
+			if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+			{
+				let ix = p0_x + (t * s1_x);
+				let iy = p0_y + (t * s1_y);
+				return [ix,iy,CornerScore];
+			}
+			return null;
+		}
+		
+		for ( let la=0;	la<Lines.length;	la++ )
+		{
+			for ( let lb=la+1;	lb<Lines.length;	lb++ )
+			{
+				let Intersection = GetLineIntersection( Lines[la], Lines[lb], 1, 1 );
+				if ( Intersection === null )
+					continue;
+				Frame.Corners.push( Intersection );
+			}
+		}
+		if ( Frame.Corners.length > 100 )
+			Frame.Corners.length = 100;
+		
+		Resolve();
+	}
+	
+	Frame.Corners = [];
+	let Prom = MakePromise( GetCorners );
+	return Prom;
+}
+
+
+function DrawCorners(OpenglContext,Frame)
+{
+	let Render = function(RenderTarget,RenderTargetTexture)
+	{
+		let Shader = GetDrawCornersShader(RenderTarget);
+		
+		let SetUniforms = function(Shader)
+		{
+			Shader.SetUniform("CornerAndScores", Frame.Corners );
+			Shader.SetUniform("Background", Frame, 0 );
+		}
+		
+		RenderTarget.DrawQuad( Shader, SetUniforms );
+	}
+	
+	Frame.DebugCorners = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.DebugCorners, Render );
+	return Prom;
+}
+
+
+
+
+
 function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 {
 	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
@@ -686,7 +784,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
 	Frame.MaxLines = 15;
-	Frame.ChunkCount = 8;
+	Frame.ChunkCount = 5;
 	Frame.DistanceCount = 300;
 	Frame.AngleCount = 180;
 	//Frame.FilterOutsideLines = true;
@@ -706,6 +804,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part5 = function()	{	return ExtractOpenclTestLines( OpenclContext, Frame );	}
 	let Part6 = function()	{	return GetHoughLines( OpenclContext, Frame );	}
 	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
+	let Part8 = function()	{	return GetLineCorners( Frame );	}
+	let Part9 = function()	{	return DrawCorners( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
@@ -720,6 +820,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	//.then( Part5 )
 	.then( Part6 )
 	.then( Part7 )
+	.then( Part8 )
+	.then( Part9 )
 	.then( Finish )
 	.catch( OnError );
 }
@@ -746,8 +848,9 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("Image1", LastProcessedFrame.Hsl, 1 );
 			Shader.SetUniform("Image2", LastProcessedFrame.GrassMask, 2 );
 			Shader.SetUniform("Image3", LastProcessedFrame.LineMask, 3 );
-			Shader.SetUniform("Image4", LastProcessedFrame.DebugLines, 4 );
-			Shader.SetUniform("Image5", LastProcessedFrame.HoughHistogram, 5 );
+			Shader.SetUniform("Image4", LastProcessedFrame.HoughHistogram, 4 );
+			Shader.SetUniform("Image5", LastProcessedFrame.DebugLines, 5 );
+			Shader.SetUniform("Image6", LastProcessedFrame.DebugCorners, 6 );
 		}
 		
 		RenderTarget.ClearColour(0,1,0);
