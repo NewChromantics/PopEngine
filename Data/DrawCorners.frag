@@ -7,7 +7,7 @@ const float LineWidth = 0.01;
 
 uniform sampler2D	Background;
 
-#define CORNER_COUNT	100
+#define CORNER_COUNT	500
 uniform mat4		Transform;
 uniform vec3		CornerAndScores[CORNER_COUNT];
 

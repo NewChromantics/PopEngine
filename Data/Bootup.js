@@ -818,6 +818,18 @@ function GetLineCorners(Frame)
 			WriteStringToFile( Frame.Params.WriteCornersToFilename, CornersJson );
 		}
 		
+		//	sort corners
+		let CompareCorners = function(ca,cb)
+		{
+			if ( ca[2] > cb[2] )
+				return -1;
+			if ( ca[2] < cb[2] )
+				return 1;
+			return 0;
+		};
+		Frame.Corners.sort(CompareCorners);
+		
+		Debug("Found " + Frame.Corners.length + " corners");
 		if ( Frame.Corners.length > Frame.Params.MaxCorners )
 			Frame.Corners.length = Frame.Params.MaxCorners;
 		
@@ -831,24 +843,70 @@ function GetLineCorners(Frame)
 
 
 
-function FindCornerTransform(Frame)
+function LoadGroundTruthCorners(Filename)
 {
+	//	load ground truth corners
+	let CornersJson = JSON.parse( LoadFileAsString(Filename) );
+	
+	//	test: replace our corners with ground truth
+	let GroundTruthCorners = [];
+	let GetGroundTruthCorner = function(GroundTruthCorner)
+	{
+		let Corner = [ GroundTruthCorner.x, GroundTruthCorner.y, 99 ];
+		GroundTruthCorners.push( Corner );
+	};
+	CornersJson.Corners.forEach( GetGroundTruthCorner );
+	
+	return GroundTruthCorners;
+}
+
+
+function FindCornerTransform(OpenclContext,Frame)
+{
+	/*
+	let Kernel = GetHomographyKernel(OpenclContext);
+	
+	//	for now, take top 4 corners
+	//	test against other sets of 4 from ground truth
+	
+	
+	
+	let OnIteration = function(Kernel,IterationIndexes)
+	{
+		//Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		let LineBuffer = new Float32Array( 10*4 );
+		let LineCount = new Int32Array(1);
+		Kernel.SetUniform("Lines", LineBuffer );
+		Kernel.SetUniform("LineCount", LineCount );
+		Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
+	}
+	
+	let OnFinished = function(Kernel)
+	{
+		//Debug("OnFinished(" + Kernel + ")");
+		let LineCount = Kernel.ReadUniform("LineCount");
+		let Lines = Kernel.ReadUniform("Lines");
+		if ( !Array.isArray(Frame.Lines) )
+			Frame.Lines = new Array();
+		Frame.Lines.push(...Lines);
+		Debug("Output linecount=" + LineCount);
+	}
+	
+	let Prom = OpenclContext.ExecuteKernel( Kernel, [1], OnIteration, OnFinished );
+	return Prom;
+	
+	
+	
+	
+	
+	
+	*/
 	let DoFindCornerTransform = function(Resolve)
 	{
-		//	load ground truth corners
-		let CornersJson = JSON.parse( LoadFileAsString(Frame.Params.GroundTruthCorners) );
-		
-		//	test: replace our corners with ground truth
-		let GroundTruthCorners = [];
-		let GetGroundTruthCorner = function(GroundTruthCorner)
-		{
-			let Corner = [ GroundTruthCorner.x, GroundTruthCorner.y, 99 ];
-			GroundTruthCorners.push( Corner );
-		};
-		CornersJson.Corners.forEach( GetGroundTruthCorner );
-		Frame.GroundTruthCorners = GroundTruthCorners;
+		Frame.GroundTruthCorners = LoadGroundTruthCorners(Frame.Params.GroundTruthCorners);
 		
 		//	todo: grab first 4 truth & first 4 detected and get SVD homography
+		
 		
 		//	test with an identity matrix
 		Frame.CornerTransformMatrix = [
@@ -857,7 +915,6 @@ function FindCornerTransform(Frame)
 									   0,0,1,0,
 									   0,0,0,1
 									   ];
-		
 		
 		Resolve();
 	}
@@ -944,12 +1001,13 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.WriteCornersToFilename = "Data/PitchGroundTruthCorners.json";
 
 	let LiveParams = {};
-	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
+	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 15;
 	LiveParams.HoughOriginX = 0.5;
 	LiveParams.HoughOriginY = 0.5;
-	LiveParams.ExtractHoughLineMinScore = 0.3;
-	LiveParams.MaxLines = 100;
-	LiveParams.MaxCorners = 100;
+	LiveParams.ExtractHoughLineMinScore = 0.4;
+	LiveParams.MaxLines = 200;
+	LiveParams.MaxCorners = 20;
+	//LiveParams.MaxCorners = 500;
 	LiveParams.ChunkCount = 20;
 	LiveParams.DistanceCount = 400;
 	LiveParams.AngleCount = 180;
@@ -959,6 +1017,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthCorners = "Data/PitchGroundTruthCorners.json";
+	LiveParams.MergeCornerMaxDistance = 0.05;
 
 	
 	
@@ -994,7 +1053,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part6 = function()	{	return GetHoughLines( OpenclContext, Frame );	}
 	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Part8 = function()	{	return GetLineCorners( Frame );	}
-	let Part9 = function()	{	return FindCornerTransform( Frame );	}
+	let Part9 = function()	{	return FindCornerTransform( OpenclContext, Frame );	}
 	let Part10 = function()	{	return DrawCorners( OpenglContext, Frame );	}
 	let Part11 = function()	{	return DrawTransformedCorners( OpenglContext, Frame );	}
 	let Finish = function()
