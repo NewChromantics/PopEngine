@@ -84,7 +84,8 @@ namespace v8
 }
 
 
-#include "include/libplatform/libplatform.h"
+//#include "include/libplatform/libplatform.h"
+#include "libplatform/libplatform.h"
 #include "include/v8.h"
 
 
