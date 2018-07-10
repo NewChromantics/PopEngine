@@ -865,6 +865,9 @@ function FindCornerTransform(OpenclContext,Frame)
 {
 	/*
 	let Kernel = GetHomographyKernel(OpenclContext);
+
+	
+	
 	
 	//	for now, take top 4 corners
 	//	test against other sets of 4 from ground truth
