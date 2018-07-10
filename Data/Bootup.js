@@ -747,6 +747,46 @@ function GetLineCorners(Frame)
 			return Diff;
 		}
 		
+		let GetDistance = function(xy0,xy1)
+		{
+			var xdelta = xy0[0] - xy1[0];
+			var ydelta = xy0[1] - xy1[1];
+			return Math.sqrt( xdelta*xdelta + ydelta*ydelta );
+		}
+		
+		let GetDuplicateCornerIndex = function(NewCorner)
+		{
+			if ( Frame.Params.MergeCornerMaxDistance === undefined )
+				return false;
+		
+			for ( let i=0;	i<Frame.Corners.length;	i++ )
+			{
+				let OldCorner = Frame.Corners[i];
+				let Distance = GetDistance( OldCorner, NewCorner );
+				if ( Distance >= Frame.Params.MergeCornerMaxDistance )
+					continue;
+				return i;
+			}
+			return false;
+		}
+		
+		let PushCorner = function(NewCorner)
+		{
+			//	reject/replace if better case
+			let DuplicateCornerIndex = GetDuplicateCornerIndex(NewCorner);
+			if ( DuplicateCornerIndex === false )
+			{
+				Frame.Corners.push( NewCorner );
+				return;
+			}
+			
+			//	replace the duplicate with the better score
+			if ( Frame.Corners[DuplicateCornerIndex][3] < NewCorner[3] )
+			{
+				Frame.Corners[DuplicateCornerIndex] = NewCorner;
+			}
+		}
+		
 		for ( let la=0;	la<Lines.length;	la++ )
 		{
 			for ( let lb=la+1;	lb<Lines.length;	lb++ )
@@ -762,7 +802,7 @@ function GetLineCorners(Frame)
 				let Intersection = GetLineIntersection( Lines[la], Lines[lb], ScoreA, ScoreB );
 				if ( Intersection === null )
 					continue;
-				Frame.Corners.push( Intersection );
+				PushCorner( Intersection );
 			}
 		}
 		if ( Frame.Corners.length > 100 )
@@ -820,6 +860,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
 	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
 	TemplateParams.ExtendChunks = 1;
+	TemplateParams.MergeCornerMaxDistance = 0.05;
 
 	let LiveParams = {};
 	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
@@ -839,7 +880,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	
 	
 	Frame.Params = TemplateParams;
-	Frame.Params = LiveParams;
+	//Frame.Params = LiveParams;
 	/*
 	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
 	Debug("Frame.HistogramHitMax="+ Frame.HistogramHitMax);
