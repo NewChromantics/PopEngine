@@ -846,9 +846,9 @@ function FindCornerTransform(Frame)
 			GroundTruthCorners.push( Corner );
 		};
 		CornersJson.Corners.forEach( GetGroundTruthCorner );
-		Frame.Corners = GroundTruthCorners;
+		Frame.GroundTruthCorners = GroundTruthCorners;
 		
-		//	todo: grab first 4 truth & first 4 detected and get SVD
+		//	todo: grab first 4 truth & first 4 detected and get SVD homography
 		
 		//	test with an identity matrix
 		Frame.CornerTransformMatrix = [
@@ -883,7 +883,7 @@ function DrawCorners(OpenglContext,Frame)
 									];
 			Shader.SetUniform("Transform", TransformIdentity );
 			Shader.SetUniform("CornerAndScores", Frame.Corners );
-			Shader.SetUniform("Background", Frame.LineMask, 0 );
+			Shader.SetUniform("Background", Frame, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -891,6 +891,28 @@ function DrawCorners(OpenglContext,Frame)
 	
 	Frame.DebugCorners = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 	let Prom = OpenglContext.Render( Frame.DebugCorners, Render );
+	return Prom;
+}
+
+
+function DrawTransformedCorners(OpenglContext,Frame)
+{
+	let Render = function(RenderTarget,RenderTargetTexture)
+	{
+		let Shader = GetDrawCornersShader(RenderTarget);
+		
+		let SetUniforms = function(Shader)
+		{
+			Shader.SetUniform("Transform", Frame.CornerTransformMatrix );
+			Shader.SetUniform("CornerAndScores", Frame.GroundTruthCorners );
+			Shader.SetUniform("Background", Frame, 0 );
+		}
+		
+		RenderTarget.DrawQuad( Shader, SetUniforms );
+	}
+	
+	Frame.DebugTransformedCorners = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.DebugTransformedCorners, Render );
 	return Prom;
 }
 
@@ -974,6 +996,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part8 = function()	{	return GetLineCorners( Frame );	}
 	let Part9 = function()	{	return FindCornerTransform( Frame );	}
 	let Part10 = function()	{	return DrawCorners( OpenglContext, Frame );	}
+	let Part11 = function()	{	return DrawTransformedCorners( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
@@ -991,6 +1014,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	.then( Part8 )
 	.then( Part9 )
 	.then( Part10 )
+	.then( Part11 )
 	.then( Finish )
 	.catch( OnError );
 }
@@ -1020,6 +1044,7 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("Image4", LastProcessedFrame.HoughHistogram, 4 );
 			Shader.SetUniform("Image5", LastProcessedFrame.DebugLines, 5 );
 			Shader.SetUniform("Image6", LastProcessedFrame.DebugCorners, 6 );
+			Shader.SetUniform("Image7", LastProcessedFrame.DebugTransformedCorners, 7 );
 		}
 		
 		RenderTarget.ClearColour(0,1,0);

@@ -7,6 +7,7 @@ uniform sampler2D Image3;
 uniform sampler2D Image4;
 uniform sampler2D Image5;
 uniform sampler2D Image6;
+uniform sampler2D Image7;
 
 float Range(float Min,float Max,float Value)
 {
@@ -24,6 +25,7 @@ void main()
 	float BoxsHigh = 3;
 	
 	//BoxsWide = 2;	BoxsHigh = 1;
+	BoxsWide = 3;	BoxsHigh = 1;
 	
 	//	debug just one section
 	//BoxsWide = BoxsHigh = 1;
@@ -31,11 +33,12 @@ void main()
 	int ImageOrder[9];
 	ImageOrder[0] = 5;
 	ImageOrder[1] = 6;
-	ImageOrder[2] = 0;
-	ImageOrder[3] = 1;
-	ImageOrder[4] = 2;
-	ImageOrder[5] = 3;
-	ImageOrder[6] = 4;
+	ImageOrder[2] = 7;
+	ImageOrder[3] = 0;
+	ImageOrder[4] = 1;
+	ImageOrder[5] = 2;
+	ImageOrder[6] = 3;
+	ImageOrder[7] = 4;
 
 	vec2 BoxUv = Range2( vec2(0.0,0.0), vec2( 1/BoxsWide, 1/BoxsHigh ), Flippeduv );
 	float Indexf = floor(BoxUv.x) + ( floor(BoxUv.y) * BoxsWide );
@@ -60,6 +63,8 @@ void main()
 		gl_FragColor = texture( Image5, fract( BoxUv ) );
 	else if ( Index == 6 )
 		gl_FragColor = texture( Image6, fract( BoxUv ) );
+	else if ( Index == 7 )
+		gl_FragColor = texture( Image7, fract( BoxUv ) );
 	
 	//gl_FragColor *= vec4(uv.x,uv.y,0,1);
 }
