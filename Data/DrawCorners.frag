@@ -2,17 +2,14 @@ in vec2 uv;
 const float LineWidth = 0.01;
 
 #define UV_ZOOM		0.8
-#define ENABLE_BACKGROUND
 
 
 
-#if defined(ENABLE_BACKGROUND)
 uniform sampler2D	Background;
-#endif
 
 #define CORNER_COUNT	100
+uniform mat4		Transform;
 uniform vec3		CornerAndScores[CORNER_COUNT];
-
 
 #define endofheader
 
@@ -23,6 +20,8 @@ float2 DistanceToCorner(vec2 Position,int CornerIndex)
 	float2 Corner2 = CornerAndScores[CornerIndex].xy;
 	float CornerScore = CornerAndScores[CornerIndex].z;
 	float Distance = length( Position - Corner2 );
+	if ( CornerScore == 0 )
+		Distance = 999;
 	return float2( Distance, CornerScore );
 }
 
@@ -50,6 +49,8 @@ void main()
 	FrameUv /= vec2(UV_ZOOM,UV_ZOOM);
 	FrameUv += vec2(0.5,0.5);
 	
+	vec4 FrameUv4 = Transform * float4( FrameUv, 0, 1 );
+	FrameUv = FrameUv4.xy;
 	
 	float NearestDistance = 999;
 	float NearestScore = 0;

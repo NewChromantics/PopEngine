@@ -682,8 +682,7 @@ function DrawLines(OpenglContext,Frame)
 				Frame.LineScores.length = Frame.Params.MaxLines;
 			
 			Shader.SetUniform("Lines", Frame.Lines );
-			//Shader.SetUniform("LineScores", Frame.LineScores );
-			//	gr: causing uniform error
+			Shader.SetUniform("LineScores", Frame.LineScores );
 			Shader.SetUniform("Background", Frame, 0 );
 		}
 		
@@ -849,6 +848,17 @@ function FindCornerTransform(Frame)
 		CornersJson.Corners.forEach( GetGroundTruthCorner );
 		Frame.Corners = GroundTruthCorners;
 		
+		//	todo: grab first 4 truth & first 4 detected and get SVD
+		
+		//	test with an identity matrix
+		Frame.CornerTransformMatrix = [
+									   1,0,0,0,
+									   0,1,0,0,
+									   0,0,1,0,
+									   0,0,0,1
+									   ];
+		
+		
 		Resolve();
 	}
 	
@@ -865,6 +875,13 @@ function DrawCorners(OpenglContext,Frame)
 		
 		let SetUniforms = function(Shader)
 		{
+			let TransformIdentity = [
+									1,0,0,0,
+									0,1,0,0,
+									0,0,1,0,
+									0,0,0,1
+									];
+			Shader.SetUniform("Transform", TransformIdentity );
 			Shader.SetUniform("CornerAndScores", Frame.Corners );
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
 		}

@@ -23,7 +23,7 @@ void main()
 	float BoxsWide = 3;
 	float BoxsHigh = 3;
 	
-	BoxsWide = 2;	BoxsHigh = 1;
+	//BoxsWide = 2;	BoxsHigh = 1;
 	
 	//	debug just one section
 	//BoxsWide = BoxsHigh = 1;

@@ -2,22 +2,14 @@ in vec2 uv;
 const float LineWidth = 0.001;
 
 #define UV_ZOOM		1.0
-//#define ENABLE_SCORES
-#define ENABLE_BACKGROUND
 
 
 
-#if defined(ENABLE_BACKGROUND)
- uniform sampler2D	Background;
-#endif
+uniform sampler2D	Background;
 
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
-#if defined(ENABLE_SCORES)
 uniform float		LineScores[LINE_COUNT];
-#else
-const vec4			LineColour = vec4(1,0,1,1);
-#endif
 
 
 #define endofheader
@@ -30,6 +22,24 @@ float TimeAlongLine2(vec2 Position,vec2 Start,vec2 End)
 	
 	return Projection;
 }
+
+float3 NormalToRedGreen(float Normal)
+{
+	if ( Normal < 0.5 )
+	{
+		Normal = Normal / 0.5;
+		return float3( 1, Normal, 0 );
+	}
+	else if ( Normal <= 1 )
+	{
+		Normal = (Normal-0.5) / 0.5;
+		return float3( 1-Normal, 1, 0 );
+	}
+	
+	//	>1
+	return float3( 0,0,1 );
+}
+
 
 
 vec2 NearestToLine2(vec2 Position,vec2 Start,vec2 End)
@@ -71,28 +81,18 @@ void main()
 		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
-#if defined(ENABLE_SCORES)
-			LineScore = max( LineScore, LineScores[i] );
-#endif
+			LineScore = LineScores[i];
 			NearestDistance = min( NearestDistance, Distances[i] );
 		}
 	}
 
 	if ( NearestDistance <= LineWidth )
 	{
-#if defined(ENABLE_SCORES)
-		gl_FragColor = float4( LineScore,LineScore,LineScore,1);
-#else
-		gl_FragColor = LineColour;
-#endif
+		gl_FragColor = float4( NormalToRedGreen(LineScore),1);
 	}
 	else
 	{
-#if defined(ENABLE_BACKGROUND)
 		gl_FragColor = texture( Background, FrameUv );
-#else
-		gl_FragColor = vec4(0,0,0,1);
-#endif
 		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
 			gl_FragColor = vec4(0,0,1,1);
 	}
