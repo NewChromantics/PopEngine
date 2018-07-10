@@ -347,8 +347,8 @@ function GraphAngleXDistances(OpenclContext,Frame)
 		{
 			Kernel.SetUniform('AngleCount', Frame.Angles.length );
 			Kernel.SetUniform('DistanceCount', Frame.Distances.length );
-			Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
-			Kernel.SetUniform('HistogramHitMax', Frame.HistogramHitMax );
+			Kernel.SetUniform('ChunkCount', Frame.Params.ChunkCount );
+			Kernel.SetUniform('HistogramHitMax', Frame.Params.HistogramHitMax );
 			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
 			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
 			Kernel.SetUniform('EdgeTexture', Frame.LineMask );
@@ -372,10 +372,10 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
 	let MaskTexture = Frame.LineMask;
-	Frame.Angles = GetNumberRangeInclusive( 0, 179, Frame.AngleCount );
+	Frame.Angles = GetNumberRangeInclusive( 0, 179, Frame.Params.AngleCount );
 	let DistanceRange = 0.68;
-	Frame.Distances = GetNumberRangeInclusive( -DistanceRange, DistanceRange, Frame.DistanceCount );
-	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.ChunkCount );
+	Frame.Distances = GetNumberRangeInclusive( -DistanceRange, DistanceRange, Frame.Params.DistanceCount );
+	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.Params.ChunkCount );
 	Debug("Frame.AngleXDistanceXChunks.length = " + Frame.AngleXDistanceXChunks.length);
 	
 	Frame.GetAngleXDistanceXChunkIndex = function(AngleIndex,DistanceIndex,ChunkIndex)
@@ -384,7 +384,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		DistanceIndex = Math.floor(DistanceIndex);
 		ChunkIndex = Math.floor(ChunkIndex);
 		let DistanceCount = Frame.Distances.length;
-		let ChunkCount = Frame.ChunkCount;
+		let ChunkCount = Frame.Params.ChunkCount;
 		let AngleXDistanceXChunkIndex = (AngleIndex * DistanceCount * ChunkCount);
 		AngleXDistanceXChunkIndex += DistanceIndex * ChunkCount;
 		AngleXDistanceXChunkIndex += ChunkIndex;
@@ -402,8 +402,8 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 			Kernel.SetUniform('Angles', Frame.Angles );
 			Kernel.SetUniform('Distances', Frame.Distances );
 			Kernel.SetUniform('DistanceCount', Frame.Distances.length );
-			Kernel.SetUniform('ChunkCount', Frame.ChunkCount );
-			Kernel.SetUniform('HistogramHitMax', Frame.HistogramHitMax );
+			Kernel.SetUniform('ChunkCount', Frame.Params.ChunkCount );
+			Kernel.SetUniform('HistogramHitMax', Frame.Params.HistogramHitMax );
 			Kernel.SetUniform('EdgeTexture', MaskTexture );
 			Kernel.SetUniform('AngleXDistanceXChunks', Frame.AngleXDistanceXChunks );
 			Kernel.SetUniform('AngleXDistanceXChunkCount', Frame.AngleXDistanceXChunks.length );
@@ -432,17 +432,17 @@ function AddTestAngleXDistanceXChunks(Frame)
 	{
 		let AngleIndex = 0 * Frame.Angles.length;
 		let DistanceIndex = 0.7 * Frame.Distances.length;
-		let ChunkIndex = 0.5 * Frame.ChunkCount;
+		let ChunkIndex = 0.5 * Frame.Params.ChunkCount;
 		AngleIndex = 3;
 		//ChunkIndex-=5;
 		Debug("ChunkIndex="+ChunkIndex);
 		//for ( let DistanceIndex=0;	DistanceIndex<Frame.Distances.length;	DistanceIndex+=3 )
 		for ( let AngleIndex=0;	AngleIndex<Frame.Angles.length;	AngleIndex+=10 )
-		for ( let ChunkIndex=0;	ChunkIndex<Frame.ChunkCount;	ChunkIndex+=2 )
-		//for ( let ChunkIndex=1;	ChunkIndex<Frame.ChunkCount-1;	ChunkIndex++ )
+		for ( let ChunkIndex=0;	ChunkIndex<Frame.Params.ChunkCount;	ChunkIndex+=2 )
+		//for ( let ChunkIndex=1;	ChunkIndex<Frame.Params.ChunkCount-1;	ChunkIndex++ )
 		{
 			let adc_index = Frame.GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
-			Frame.AngleXDistanceXChunks[adc_index] += Frame.HistogramHitMax;
+			Frame.AngleXDistanceXChunks[adc_index] += Frame.Params.HistogramHitMax;
 		}
 		Resolve();
 	}
@@ -456,7 +456,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 	let Angles = Frame.Angles;
 	let Distances = Frame.Distances;
 	let DistanceCount = Distances.length;
-	let ChunkCount = Frame.ChunkCount;
+	let ChunkCount = Frame.Params.ChunkCount;
 	let HoughLines = [];
 	let AngleXDistanceXChunks = Frame.AngleXDistanceXChunks;
 	let AngleXDistanceXChunkCount = AngleXDistanceXChunks.length;
@@ -465,12 +465,12 @@ function ExtractHoughLines(OpenclContext,Frame)
 	var BiggestScore = 0;
 	let GetHoughLineScore = function(AngleIndex,DistanceIndex,ChunkIndex)
 	{
-		if ( AngleIndex < 0 || AngleIndex >= Frame.AngleCount )		return null;
-		if ( DistanceIndex < 0 || DistanceIndex >= Frame.DistanceCount )		return null;
-		if ( ChunkIndex < 0 || ChunkIndex >= Frame.ChunkCount )		return null;
+		if ( AngleIndex < 0 || AngleIndex >= Frame.Angles.length )		return null;
+		if ( DistanceIndex < 0 || DistanceIndex >= Frame.Distances.length )		return null;
+		if ( ChunkIndex < 0 || ChunkIndex >= Frame.Params.ChunkCount )		return null;
 		let HistogramIndex = Frame.GetAngleXDistanceXChunkIndex( AngleIndex, DistanceIndex, ChunkIndex );
 		let HitCount = AngleXDistanceXChunks[HistogramIndex];
-		let Score = HitCount / Frame.HistogramHitMax;
+		let Score = HitCount / Frame.Params.HistogramHitMax;
 		BiggestScore = Math.max( BiggestScore, Score );
 		return Score;
 	}
@@ -481,7 +481,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 		
 		let AngleRange = Ranges.AngleRange;
 		let DistanceRange = Ranges.DistanceRange;
-		let ChunkRange = (Frame.ExtendChunks===true) ? Ranges.ChunkRange : 0;
+		let ChunkRange = (Frame.Params.ExtendChunks===true) ? Ranges.ChunkRange : 0;
 		for ( let a=-AngleRange;	a<=AngleRange;	a++ )
 			for ( let d=-DistanceRange;	d<=DistanceRange;	d++ )
 				for ( let c=-ChunkRange;	c<=ChunkRange;	c++ )
@@ -507,16 +507,16 @@ function ExtractHoughLines(OpenclContext,Frame)
 	let GetHoughLine = function(AngleIndex,DistanceIndex,ChunkIndex)
 	{
 		let Score = GetHoughLineScore( AngleIndex, DistanceIndex, ChunkIndex );
-		if ( Score < Frame.ExtractHoughLineMinScore )
+		if ( Score < Frame.Params.ExtractHoughLineMinScore )
 			return;
 		
 		//	see if we have a better neighbour
-		if ( Frame.SkipIfBetterNeighbourRanges !== undefined )
-			if ( HasBetterNeighbour( Score, AngleIndex, DistanceIndex, ChunkIndex, Frame.SkipIfBetterNeighbourRanges ) )
+		if ( Frame.Params.SkipIfBetterNeighbourRanges !== undefined )
+			if ( HasBetterNeighbour( Score, AngleIndex, DistanceIndex, ChunkIndex, Frame.Params.SkipIfBetterNeighbourRanges ) )
 				return;
 		
 		let Line = {};
-		Line.Origin = [Frame.HoughOriginX, Frame.HoughOriginY];
+		Line.Origin = [Frame.Params.HoughOriginX, Frame.Params.HoughOriginY];
 		Line.Angle = Angles[AngleIndex];
 		Line.Distance = Distances[DistanceIndex];
 		Line.AngleIndex = AngleIndex;
@@ -589,10 +589,15 @@ function ExtractHoughLines(OpenclContext,Frame)
 		let ChunkStartTime = (HoughLine.ChunkIndex+0) / ChunkCount;
 		let ChunkEndTime = (HoughLine.ChunkIndex+1) / ChunkCount;
 		
-		if ( Frame.ExtendChunks === true )
+		if ( Frame.Params.ExtendChunks === true )
 		{
 			ChunkStartTime = 0;
 			ChunkEndTime = 1;
+		}
+		else if ( Number.isInteger(Frame.Params.ExtendChunks) )
+		{
+			ChunkStartTime = (HoughLine.ChunkIndex-Frame.Params.ExtendChunks) / ChunkCount;
+			ChunkEndTime = (HoughLine.ChunkIndex+1+Frame.Params.ExtendChunks) / ChunkCount;
 		}
 		
 		let Line = HoughLineToLine( HoughLine.Angle, HoughLine.Distance, ChunkStartTime, ChunkEndTime, HoughLine.Origin[0], HoughLine.Origin[1] );
@@ -640,8 +645,8 @@ function GetHoughLines(OpenclContext,Frame)
 			Reject();
 		};
 		
-		if ( Frame.LoadPremadeLineMask != undefined )
-			Frame.LineMask = new Image(Frame.LoadPremadeLineMask);
+		if ( Frame.Params.LoadPremadeLineMask != undefined )
+			Frame.LineMask = new Image(Frame.Params.LoadPremadeLineMask);
 
 		a()
 		.then( b )
@@ -668,13 +673,13 @@ function DrawLines(OpenglContext,Frame)
 		{
 			if ( !Array.isArray(Frame.Lines) )
 				Frame.Lines = [];
-			if ( Frame.Lines.length > Frame.MaxLines )
-				Frame.Lines.length = Frame.MaxLines;
+			if ( Frame.Lines.length > Frame.Params.MaxLines )
+				Frame.Lines.length = Frame.Params.MaxLines;
 			
 			if ( !Array.isArray(Frame.LineScores) )
 				Frame.LineScores = [];
-			if ( Frame.LineScores.length > Frame.MaxLines )
-				Frame.LineScores.length = Frame.MaxLines;
+			if ( Frame.LineScores.length > Frame.Params.MaxLines )
+				Frame.LineScores.length = Frame.Params.MaxLines;
 			
 			Shader.SetUniform("Lines", Frame.Lines );
 			//Shader.SetUniform("LineScores", Frame.LineScores );
@@ -749,7 +754,7 @@ function GetLineCorners(Frame)
 				let AngleA = Frame.HoughLines[la].Angle;
 				let AngleB = Frame.HoughLines[lb].Angle;
 				let AngleDiff = GetAngle180Diff( AngleA, AngleB );
-				if ( Math.abs(AngleDiff) < Frame.CornerAngleDiffMin )
+				if ( Math.abs(AngleDiff) < Frame.Params.CornerAngleDiffMin )
 					continue;
 
 				let ScoreA = Frame.LineScores[la];
@@ -800,20 +805,57 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 {
 	Debug( "Frame size: " + Frame.GetWidth() + "x" + Frame.GetHeight() );
 	//LastProcessedFrame = Frame;
+	
+	let TemplateParams = {};
+	TemplateParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
+	TemplateParams.HoughOriginX = 0.5;
+	TemplateParams.HoughOriginY = 0.5;
+	TemplateParams.ExtractHoughLineMinScore = 0.3;
+	TemplateParams.MaxLines = 100;
+	TemplateParams.ChunkCount = 20;
+	TemplateParams.DistanceCount = 400;
+	TemplateParams.AngleCount = 180;
+	TemplateParams.CornerAngleDiffMin = 10;
+	//TemplateParams.FilterOutsideLines = true;
+	TemplateParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
+	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
+	TemplateParams.ExtendChunks = 1;
+
+	let LiveParams = {};
+	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
+	LiveParams.HoughOriginX = 0.5;
+	LiveParams.HoughOriginY = 0.5;
+	LiveParams.ExtractHoughLineMinScore = 0.3;
+	LiveParams.MaxLines = 100;
+	LiveParams.ChunkCount = 20;
+	LiveParams.DistanceCount = 400;
+	LiveParams.AngleCount = 180;
+	LiveParams.CornerAngleDiffMin = 10;
+	//LiveParams.FilterOutsideLines = true;
+	//LiveParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
+	LiveParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
+	LiveParams.ExtendChunks = true;
+	
+	
+	
+	Frame.Params = TemplateParams;
+	Frame.Params = LiveParams;
+	/*
 	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
 	Debug("Frame.HistogramHitMax="+ Frame.HistogramHitMax);
 	Frame.HoughOriginX = 0.5;
 	Frame.HoughOriginY = 0.5;
 	Frame.ExtractHoughLineMinScore = 0.3;
-	Frame.MaxLines = 14;
-	Frame.ChunkCount = 10;
-	Frame.DistanceCount = 300;
-	Frame.AngleCount = 180*2;
+	Frame.MaxLines = 100;
+	Frame.ChunkCount = 20;
+	Frame.DistanceCount = 400;
+	Frame.AngleCount = 180;
 	Frame.CornerAngleDiffMin = 10;
 	//Frame.FilterOutsideLines = true;
-	//Frame.LoadPremadeLineMask = "Data/PitchMask.png";
-	Frame.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:4, ChunkRange:1 };
-	Frame.ExtendChunks = true;
+	Frame.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
+	Frame.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
+	//Frame.ExtendChunks = Frame.ChunkCount/4;
+	*/
 	
 	let OnError = function(Error)
 	{
@@ -902,6 +944,7 @@ function Main()
 
 	let Filenames =
 	[
+		//"Data/PitchMask2.png",
 		"Data/SwedenVsEngland.png",
 		//"Data/ArgentinaVsCroatia.png"
 	];
