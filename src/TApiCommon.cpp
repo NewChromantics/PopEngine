@@ -9,6 +9,7 @@ using namespace v8;
 
 const char Debug_FunctionName[] = "Debug";
 const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
+const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 
 const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
@@ -18,6 +19,7 @@ const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -25,6 +27,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	//  load api's before script & executions
 	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
 	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
+	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate );
 }
 
@@ -67,6 +70,27 @@ static Local<Value> LoadFileAsString(CallbackInfo& Params)
 	
 	auto ContentsString = v8::GetString( Params.GetIsolate(), Contents );
 	return ContentsString;
+}
+
+
+static Local<Value> WriteStringToFile(CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	if (Arguments.Length() < 2)
+		throw Soy::AssertException("WriteStringToFile(Filename,String) with no args");
+	
+	auto Filename = v8::GetString( Arguments[0] );
+	auto Contents = v8::GetString( Arguments[1] );
+
+	if ( !Soy::StringToFile( Filename, Contents ) )
+	{
+		std::stringstream Error;
+		Error << "Failed to write " << Filename;
+		throw Soy::AssertException( Error.str() );
+	}
+
+	return v8::Undefined(Params.mIsolate);
 }
 
 

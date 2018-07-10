@@ -805,14 +805,54 @@ function GetLineCorners(Frame)
 				PushCorner( Intersection );
 			}
 		}
-		if ( Frame.Corners.length > 100 )
-			Frame.Corners.length = 100;
+
+		if ( Frame.Params.WriteCornersToFilename != undefined )
+		{
+			let NiceCorners = [];
+			let PushNiceCorner = function(Corner)
+			{
+				NiceCorners.push( { x:Corner[0], y:Corner[1] } );
+			};
+			Frame.Corners.forEach( PushNiceCorner );
+			NiceCorners = { Corners:NiceCorners };
+			let CornersJson = JSON.stringify( NiceCorners, null, '\t' );
+			WriteStringToFile( Frame.Params.WriteCornersToFilename, CornersJson );
+		}
+		
+		if ( Frame.Corners.length > Frame.Params.MaxCorners )
+			Frame.Corners.length = Frame.Params.MaxCorners;
 		
 		Resolve();
 	}
 	
 	Frame.Corners = [];
 	let Prom = MakePromise( GetCorners );
+	return Prom;
+}
+
+
+
+function FindCornerTransform(Frame)
+{
+	let DoFindCornerTransform = function(Resolve)
+	{
+		//	load ground truth corners
+		let CornersJson = JSON.parse( LoadFileAsString(Frame.Params.GroundTruthCorners) );
+		
+		//	test: replace our corners with ground truth
+		let GroundTruthCorners = [];
+		let GetGroundTruthCorner = function(GroundTruthCorner)
+		{
+			let Corner = [ GroundTruthCorner.x, GroundTruthCorner.y, 99 ];
+			GroundTruthCorners.push( Corner );
+		};
+		CornersJson.Corners.forEach( GetGroundTruthCorner );
+		Frame.Corners = GroundTruthCorners;
+		
+		Resolve();
+	}
+	
+	let Prom = MakePromise( DoFindCornerTransform );
 	return Prom;
 }
 
@@ -852,6 +892,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.HoughOriginY = 0.5;
 	TemplateParams.ExtractHoughLineMinScore = 0.3;
 	TemplateParams.MaxLines = 100;
+	TemplateParams.MaxCorners = 100;
 	TemplateParams.ChunkCount = 20;
 	TemplateParams.DistanceCount = 400;
 	TemplateParams.AngleCount = 180;
@@ -861,6 +902,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
 	TemplateParams.ExtendChunks = 1;
 	TemplateParams.MergeCornerMaxDistance = 0.05;
+	TemplateParams.WriteCornersToFilename = "Data/PitchGroundTruthCorners.json";
 
 	let LiveParams = {};
 	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
@@ -868,6 +910,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.HoughOriginY = 0.5;
 	LiveParams.ExtractHoughLineMinScore = 0.3;
 	LiveParams.MaxLines = 100;
+	LiveParams.MaxCorners = 100;
 	LiveParams.ChunkCount = 20;
 	LiveParams.DistanceCount = 400;
 	LiveParams.AngleCount = 180;
@@ -876,11 +919,12 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	//LiveParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
 	LiveParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
 	LiveParams.ExtendChunks = true;
-	
+	LiveParams.GroundTruthCorners = "Data/PitchGroundTruthCorners.json";
+
 	
 	
 	Frame.Params = TemplateParams;
-	//Frame.Params = LiveParams;
+	Frame.Params = LiveParams;
 	/*
 	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
 	Debug("Frame.HistogramHitMax="+ Frame.HistogramHitMax);
@@ -911,7 +955,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part6 = function()	{	return GetHoughLines( OpenclContext, Frame );	}
 	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Part8 = function()	{	return GetLineCorners( Frame );	}
-	let Part9 = function()	{	return DrawCorners( OpenglContext, Frame );	}
+	let Part9 = function()	{	return FindCornerTransform( Frame );	}
+	let Part10 = function()	{	return DrawCorners( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
@@ -928,6 +973,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	.then( Part7 )
 	.then( Part8 )
 	.then( Part9 )
+	.then( Part10 )
 	.then( Finish )
 	.catch( OnError );
 }
