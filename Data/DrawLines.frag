@@ -4,12 +4,15 @@ const float LineWidth = 0.001;
 #define UV_ZOOM		1.0
 
 
+//#define COLOUR_TO_SCORES
+#define COLOUR_TO_ANGLES
 
 uniform sampler2D	Background;
 
-#define LINE_COUNT	200
+#define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
+uniform float		LineAngles[LINE_COUNT];
 
 
 #define endofheader
@@ -40,6 +43,17 @@ float3 NormalToRedGreen(float Normal)
 	return float3( 0,0,1 );
 }
 
+float3 GetAngleColour(float Angle)
+{
+	//	0 and 180 need to be kinda the same colour
+	float AngleNorm;
+	if ( Angle <= 90 )
+		AngleNorm = Angle / 90.0f;
+	else
+		AngleNorm = 1 - ((Angle-90.0f) / 90.0f);
+
+	return NormalToRedGreen(AngleNorm);
+}
 
 
 vec2 NearestToLine2(vec2 Position,vec2 Start,vec2 End)
@@ -75,6 +89,7 @@ void main()
 
 	float NearestDistance = 999;
 	float LineScore = 0;
+	float LineAngle = 0;
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
@@ -82,13 +97,21 @@ void main()
 		if ( Distances[i] < NearestDistance )
 		{
 			LineScore = LineScores[i];
+			LineAngle = LineAngles[i];
 			NearestDistance = min( NearestDistance, Distances[i] );
 		}
 	}
 
 	if ( NearestDistance <= LineWidth )
 	{
-		gl_FragColor = float4( NormalToRedGreen(LineScore),1);
+#if defined(COLOUR_TO_SCORES)
+		float3 LineColour = NormalToRedGreen(LineScore);
+#elif defined(COLOUR_TO_ANGLES)
+		float3 LineColour = GetAngleColour(LineAngle);
+#else
+		#error no colour mode defined
+#endif
+		gl_FragColor = float4( LineColour,1);
 	}
 	else
 	{

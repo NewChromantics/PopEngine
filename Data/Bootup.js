@@ -607,6 +607,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 				return;
 		Frame.Lines.push( Line );
 		Frame.LineScores.push( HoughLine.Score );
+		Frame.LineAngles.push( HoughLine.Angle );
 		Frame.HoughLines.push( HoughLine );
 	}
 	
@@ -618,10 +619,10 @@ function ExtractHoughLines(OpenclContext,Frame)
 	Frame.HoughLines = HoughLines;
 
 	//	convert to real lines
-	if ( !Array.isArray(Frame.Lines) )
-		Frame.Lines = [];
-	if ( !Array.isArray(Frame.LineScores) )
-		Frame.LineScores = [];
+	if ( !Array.isArray(Frame.Lines) )		Frame.Lines = [];
+	if ( !Array.isArray(Frame.LineScores) )	Frame.LineScores = [];
+	if ( !Array.isArray(Frame.LineAngles) )	Frame.LineAngles = [];
+	
 	Frame.UnfilteredHoughLines = Frame.HoughLines;
 	Frame.HoughLines = [];
 	Frame.UnfilteredHoughLines.forEach( PushHoughLineToLines );
@@ -671,17 +672,15 @@ function DrawLines(OpenglContext,Frame)
 		
 		let SetUniforms = function(Shader)
 		{
-			if ( !Array.isArray(Frame.Lines) )
-				Frame.Lines = [];
-			if ( Frame.Lines.length > Frame.Params.MaxLines )
-				Frame.Lines.length = Frame.Params.MaxLines;
-			
-			if ( !Array.isArray(Frame.LineScores) )
-				Frame.LineScores = [];
-			if ( Frame.LineScores.length > Frame.Params.MaxLines )
-				Frame.LineScores.length = Frame.Params.MaxLines;
+			if ( !Array.isArray(Frame.Lines) )						Frame.Lines = [];
+			if ( Frame.Lines.length > Frame.Params.MaxLines )		Frame.Lines.length = Frame.Params.MaxLines;
+			if ( !Array.isArray(Frame.LineScores) )					Frame.LineScores = [];
+			if ( Frame.LineScores.length > Frame.Params.MaxLines )	Frame.LineScores.length = Frame.Params.MaxLines;
+			if ( !Array.isArray(Frame.LineAngles) )					Frame.LineAngles = [];
+			if ( Frame.LineAngles.length > Frame.Params.MaxLines )	Frame.LineAngles.length = Frame.Params.MaxLines;
 			
 			Shader.SetUniform("Lines", Frame.Lines );
+			Shader.SetUniform("LineAngles", Frame.LineAngles );
 			Shader.SetUniform("LineScores", Frame.LineScores );
 			Shader.SetUniform("Background", Frame, 0 );
 		}
