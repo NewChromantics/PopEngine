@@ -429,7 +429,7 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 		Kernel.SetUniform('xFirst', IterationIndexes[0] );
 		Kernel.SetUniform('yFirst', IterationIndexes[1] );
 		Kernel.SetUniform('AngleIndexFirst', IterationIndexes[2] );
-		if ( IterationIndexes[0]==IterationIndexes[1]==IterationIndexes[2]==0 )
+		if ( IterationIndexes[0]==0 && IterationIndexes[1]==0 && IterationIndexes[2]==0 )
 		{
 			Kernel.SetUniform('Angles', Frame.Angles );
 			Kernel.SetUniform('Distances', Frame.Distances );
