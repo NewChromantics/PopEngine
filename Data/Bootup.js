@@ -1268,12 +1268,13 @@ function RectsToCornerFloatArray(Rects)
 function FindCornerTransform(OpenclContext,Frame)
 {
 	let Kernel = GetFindHomographyKernel(OpenclContext);
-	
+	let Dim = [ Frame.Rects.length, Frame.GroundTruthRects.length ];
+
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
 		if ( IterationIndexes[0]==0 && IterationIndexes[1]==0 )
 		{
-			let ResultCount = 1;
+			let ResultCount = Dim[0] * Dim[1];
 			let ResultMatrixBuffer = new Float32Array( 16*ResultCount );
 			let ResultScoreBuffer = new Float32Array( 1*ResultCount );
 			Kernel.SetUniform("ResultHomographys", ResultMatrixBuffer );
@@ -1314,12 +1315,12 @@ function FindCornerTransform(OpenclContext,Frame)
 			BestScoreIndex = r;
 		}
 		
-		Debug("Best matrix score: " + ScoreBuffer[BestScoreIndex] );
+		Debug(ScoreBuffer);
+		Debug("Best matrix score (out of " + ScoreBuffer.length + "): " + ScoreBuffer[BestScoreIndex] );
 		Frame.TransformMatrix = GetFloat16Element( MatrixBuffer, BestScoreIndex );
 		Debug("-> " + Frame.TransformMatrix );
 	}
 	
-	let Dim = [ Frame.Rects.length, Frame.GroundTruthRects.length ];
 	let Prom = OpenclContext.ExecuteKernel( Kernel, Dim, OnIteration, OnFinished );
 	return Prom;
 }
