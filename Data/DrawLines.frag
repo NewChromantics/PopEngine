@@ -15,6 +15,7 @@ uniform float		LineScores[LINE_COUNT];
 uniform float		LineAngles[LINE_COUNT];
 uniform bool		ShowIndexes;
 #define INDEX_COLOUR_MAX	8
+uniform mat4		Transform;
 
 #define endofheader
 
@@ -86,6 +87,9 @@ void main()
 	FrameUv /= vec2(UV_ZOOM,UV_ZOOM);
 	FrameUv += vec2(0.5,0.5);
 	
+	vec4 FrameUv4 = Transform * float4( FrameUv, 0, 1 );
+	FrameUv = FrameUv4.xy;
+
 	float Distances[LINE_COUNT];
 
 	float NearestDistance = 999;

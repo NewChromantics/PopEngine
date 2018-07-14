@@ -29,12 +29,12 @@ void main()
 	BoxsWide = 2;	BoxsHigh = 2;
 	
 	//	debug just one section
-	//BoxsWide = BoxsHigh = 1;
+	BoxsWide = BoxsHigh = 1;
 
 	int ImageOrder[9];
-	ImageOrder[0] = 5;
+	ImageOrder[0] = 7;
 	ImageOrder[1] = 6;
-	ImageOrder[2] = 7;
+	ImageOrder[2] = 5;
 	ImageOrder[3] = 8;
 	ImageOrder[4] = 1;
 	ImageOrder[5] = 2;
