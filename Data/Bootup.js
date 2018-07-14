@@ -47,7 +47,8 @@ let TestLinesKernelName = 'GetTestLines';
 let HoughLinesKernelSource = LoadFileAsString('Data/HoughLines.cl');
 let CalcAngleXDistanceXChunksKernelName = 'CalcAngleXDistanceXChunks';
 let GraphAngleXDistancesKernelName = 'GraphAngleXDistances';
-
+let FindHomographyKernelSource = LoadFileAsString('Data/FindHomography.cl');
+let FindHomographyKernelName = 'GetTestHomography';
 
 let EdgeFragShaderSource = `
 	#version 410
@@ -113,6 +114,7 @@ var DrawCornersShader = null;
 var TestLinesKernel = null;
 var CalcAngleXDistanceXChunksKernel = null;
 var GraphAngleXDistancesKernel = null;
+var FindHomographyKernel = null;
 
 function GetRgbToHslShader(OpenglContext)
 {
@@ -185,6 +187,16 @@ function GetGraphAngleXDistancesKernel(OpenclContext)
 	}
 	return GraphAngleXDistancesKernel;
 }
+
+function GetFindHomographyKernel(OpenclContext)
+{
+	if ( !FindHomographyKernel )
+	{
+		FindHomographyKernel = new OpenclKernel( OpenclContext, FindHomographyKernelSource, FindHomographyKernelName );
+	}
+	return FindHomographyKernel;
+}
+
 
 
 
@@ -735,7 +747,6 @@ function DrawLines(OpenglContext,Frame)
 
 function DrawRectLines(OpenglContext,Frame)
 {
-	Debug("DrawRectLines");
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
 		let Shader = GetDrawLinesShader(RenderTarget);
@@ -773,7 +784,8 @@ function DrawRectLines(OpenglContext,Frame)
 			Shader.SetUniform("LineScores", RectLineScores );
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
 			Shader.SetUniform("ShowIndexes", true );
-			Shader.SetUniform("Transform", GetIdentityFloat4x4() );
+			Shader.SetUniform("Transform", Frame.TransformMatrix );
+			//Shader.SetUniform("Transform", GetIdentityFloat4x4() );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -787,10 +799,8 @@ function DrawRectLines(OpenglContext,Frame)
 
 function DrawGroundTruthRectLines(OpenglContext,Frame)
 {
-	Debug("DrawGroundTruthRectLines");
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
-		Debug("render DrawGroundTruthRectLines " + Frame.GroundTruthRects);
 		if ( !Array.isArray(Frame.GroundTruthRects) )
 		{
 			RenderTarget.ClearColour(1,0,0);
@@ -1195,72 +1205,31 @@ function LoadGroundTruths(Frame)
 
 function FindCornerTransform(OpenclContext,Frame)
 {
-	/*
-	let Kernel = GetHomographyKernel(OpenclContext);
-
-	
-	
-	
-	//	for now, take top 4 corners
-	//	test against other sets of 4 from ground truth
-	
-	
+	let Kernel = GetFindHomographyKernel(OpenclContext);
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
+		let MatrixCount = 1;
+		let MatrixBuffer = new Float32Array( 16*MatrixCount );
+		Kernel.SetUniform("ResultHomographys", MatrixBuffer );
+		/*
 		//Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
 		let LineBuffer = new Float32Array( 10*4 );
 		let LineCount = new Int32Array(1);
 		Kernel.SetUniform("Lines", LineBuffer );
 		Kernel.SetUniform("LineCount", LineCount );
 		Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
+		 */
 	}
 	
 	let OnFinished = function(Kernel)
 	{
-		//Debug("OnFinished(" + Kernel + ")");
-		let LineCount = Kernel.ReadUniform("LineCount");
-		let Lines = Kernel.ReadUniform("Lines");
-		if ( !Array.isArray(Frame.Lines) )
-			Frame.Lines = new Array();
-		Frame.Lines.push(...Lines);
-		Debug("Output linecount=" + LineCount);
+		let MatrixBuffer = Kernel.ReadUniform("ResultHomographys");
+		Debug("MatrixBuffer:" + MatrixBuffer);
+		Frame.TransformMatrix = MatrixBuffer;
 	}
 	
 	let Prom = OpenclContext.ExecuteKernel( Kernel, [1], OnIteration, OnFinished );
-	return Prom;
-	
-	
-	
-	
-	
-	
-	*/
-	let DoFindCornerTransform = function(Resolve)
-	{
-		//	init to identity
-		Frame.TransformMatrix = GetIdentityFloat4x4();
-		Resolve();
-		/*
-		if ( Frame.Params.GroundTruthCorners === undefined )
-		{
-			Resolve();
-			return;
-		}
-		
-		Frame.GroundTruthCorners = LoadGroundTruthCorners(Frame.Params.GroundTruthCorners);
-		
-		//	todo: grab first 4 truth & first 4 detected and get SVD homography
-		
-		
-		//	test with an identity matrix
-		Frame.CornerTransformMatrix = GetIdentityFloat4x4();
-		
-		Resolve();
-		 */
-	}
-	
-	let Prom = MakePromise( DoFindCornerTransform );
 	return Prom;
 }
 
@@ -1298,7 +1267,7 @@ function DrawTransformedCorners(OpenglContext,Frame)
 		{
 			if ( !Array.isArray(Frame.GroundTruthCorners) )	Frame.GroundTruthCorners = [];
 			
-			Shader.SetUniform("Transform", Frame.CornerTransformMatrix );
+			Shader.SetUniform("Transform", Frame.TransformMatrix );
 			Shader.SetUniform("CornerAndScores", Frame.GroundTruthCorners );
 			Shader.SetUniform("Background", Frame, 0 );
 		}
@@ -1345,7 +1314,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.HoughOriginX = 0.5;
 	LiveParams.HoughOriginY = 0.5;
 	LiveParams.ExtractHoughLineMinScore = 0.4;
-	LiveParams.MaxLines = 30;
+	LiveParams.MaxLines = 10;
 	LiveParams.MaxCorners = 40;
 	//LiveParams.MaxCorners = 500;
 	LiveParams.ChunkCount = 20;
@@ -1396,9 +1365,9 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
 	let Part8 = function()	{	return GetLineRects( Frame );	}
 	let Part9 = function()	{	return GetLineCorners( Frame );	}
-	let Part10 = function()	{	return DrawRectLines( OpenglContext, Frame );	}
-	let Part11 = function()	{	return LoadGroundTruths( Frame );	}
-	let Part12 = function()	{	return FindCornerTransform( OpenclContext, Frame );	}
+	let Part10 = function()	{	return LoadGroundTruths( Frame );	}
+	let Part11 = function()	{	return FindCornerTransform( OpenclContext, Frame );	}
+	let Part12 = function()	{	return DrawRectLines( OpenglContext, Frame );	}
 	let Part13 = function()	{	return DrawGroundTruthRectLines( OpenglContext, Frame );	}
 	let Finish = function()
 	{

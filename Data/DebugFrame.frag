@@ -29,17 +29,17 @@ void main()
 	BoxsWide = 2;	BoxsHigh = 2;
 	
 	//	debug just one section
-	BoxsWide = BoxsHigh = 1;
+	//BoxsWide = BoxsHigh = 1;
 
 	int ImageOrder[9];
 	ImageOrder[0] = 7;
-	ImageOrder[1] = 6;
+	ImageOrder[1] = 4;
 	ImageOrder[2] = 5;
 	ImageOrder[3] = 8;
 	ImageOrder[4] = 1;
 	ImageOrder[5] = 2;
 	ImageOrder[6] = 3;
-	ImageOrder[7] = 4;
+	ImageOrder[7] = 6;
 	ImageOrder[8] = 0;
 
 	vec2 BoxUv = Range2( vec2(0.0,0.0), vec2( 1/BoxsWide, 1/BoxsHigh ), Flippeduv );

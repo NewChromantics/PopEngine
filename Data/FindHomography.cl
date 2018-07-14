@@ -1,5 +1,11 @@
 
 
+kernel void GetTestHomography(	volatile global float16* ResultHomographys
+							  )
+{
+	ResultHomographys[0] = (float16)( 1,0,0,0,	0,1,0,0,	0,0,1,0,	0,0,0,1	);
+}
+/*
 
 static float16 GetHomographyMatrix(float2* Match4,float2* Truth4)
 {
@@ -100,3 +106,4 @@ kernel void FindHomographies(	int MatchSetIndexFirst,
 	ResultScores[ResultIndex] = ResultScore;
 
 }
+ */

@@ -489,50 +489,61 @@ void TOpenclKernelState::Constructor(const v8::FunctionCallbackInfo<v8::Value>& 
 	return;
 }
 
-std::shared_ptr<Opencl::TBuffer> GetFloat4BufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
+template<typename CL_FLOATX,size_t XSIZE>
+std::shared_ptr<Opencl::TBuffer> GetFloatXBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
 {
 	Array<float> Floats;
 	EnumArray( ValueHandle, GetArrayBridge(Floats), Name );
-	if ( (Floats.GetSize() % 4)!=0 )
+	if ( (Floats.GetSize() % XSIZE)!=0 )
 	{
 		std::stringstream Error;
-		Error << Name << ": Number of floats(" << Floats.GetSize() << ") doesn't align to 4";
+		Error << Name << ": Number of floats(" << Floats.GetSize() << ") doesn't align to " << XSIZE;
 		throw Soy::AssertException(Error.str());
 	}
 	
-	Array<cl_float4> Float4s;
-	for ( int i=0;	i<Floats.GetSize();	i+=4 )
+	Array<CL_FLOATX> FloatXs;
+	for ( int i=0;	i<Floats.GetSize();	i+=XSIZE )
 	{
-		auto& f4 = Float4s.PushBack();
-		f4.s[0] = Floats[i+0];
-		f4.s[1] = Floats[i+1];
-		f4.s[2] = Floats[i+2];
-		f4.s[3] = Floats[i+3];
+		auto& f4 = FloatXs.PushBack();
+		for ( int n=0;	n<XSIZE;	n++ )
+			f4.s[n] = Floats[i+n];
 	}
 	
 	Opencl::TSync Sync;
 	auto* pSync = Blocking ? &Sync : nullptr;
-	auto Buffer = Opencl::TBufferArray<cl_float4>::Alloc( GetArrayBridge(Float4s), Context, Name, pSync );
+	auto Buffer = Opencl::TBufferArray<CL_FLOATX>::Alloc( GetArrayBridge(FloatXs), Context, Name, pSync );
 	if ( pSync )
 		pSync->Wait();
 	return Buffer;
 }
 
 
-std::shared_ptr<Opencl::TBuffer> GetFloatBufferArray(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
+template<>
+std::shared_ptr<Opencl::TBuffer> GetFloatXBufferArray<cl_float,1>(Local<Value> ValueHandle,Opencl::TContext& Context,const std::string& Name,bool Blocking)
 {
+	auto XSIZE = 1;
+	typedef cl_float CL_FLOATX;
+	
 	Array<float> Floats;
 	EnumArray( ValueHandle, GetArrayBridge(Floats), Name );
-	
-	Array<cl_float> Float1s;
-	for ( int i=0;	i<Floats.GetSize();	i++ )
+	if ( (Floats.GetSize() % XSIZE)!=0 )
 	{
-		Float1s.PushBack(Floats[i]);
+		std::stringstream Error;
+		Error << Name << ": Number of floats(" << Floats.GetSize() << ") doesn't align to " << XSIZE;
+		throw Soy::AssertException(Error.str());
+	}
+	
+	Array<CL_FLOATX> FloatXs;
+	for ( int i=0;	i<Floats.GetSize();	i+=XSIZE )
+	{
+		auto& f4 = FloatXs.PushBack();
+		int n = 0;
+		f4 = Floats[i+n];
 	}
 	
 	Opencl::TSync Sync;
 	auto* pSync = Blocking ? &Sync : nullptr;
-	auto Buffer = Opencl::TBufferArray<cl_float>::Alloc( GetArrayBridge(Float1s), Context, Name, pSync );
+	auto Buffer = Opencl::TBufferArray<CL_FLOATX>::Alloc( GetArrayBridge(FloatXs), Context, Name, pSync );
 	if ( pSync )
 		pSync->Wait();
 	return Buffer;
@@ -585,7 +596,7 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
 		auto Blocking = true;
-		auto BufferArray = GetFloat4BufferArray( ValueHandle, Context, Uniform.mName, Blocking );
+		auto BufferArray = GetFloatXBufferArray<cl_float4,4>( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "float*" )
@@ -593,7 +604,15 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		//	need to check here for buffer reuse
 		auto& Context = KernelState.GetContext();
 		auto Blocking = true;
-		auto BufferArray = GetFloatBufferArray( ValueHandle, Context, Uniform.mName, Blocking );
+		auto BufferArray = GetFloatXBufferArray<cl_float,1>( ValueHandle, Context, Uniform.mName, Blocking );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
+	else if ( Uniform.mType == "float16*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto Blocking = true;
+		auto BufferArray = GetFloatXBufferArray<cl_float16,16>( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "int*" )
@@ -693,9 +712,19 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 	//	work out what to do from type
 	if ( Uniform.mType == "float4*" )
 	{
+		auto Alignment = 4;
 		Array<cl_float4> Values;
 		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
-		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*4 );
+		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
+		return ValuesArray;
+	}
+	else if ( Uniform.mType == "float16*" )
+	{
+		auto Alignment = 16;
+		Array<cl_float16> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
 		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
 		return ValuesArray;
 	}
