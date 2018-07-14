@@ -733,18 +733,35 @@ function DrawRectLines(OpenglContext,Frame)
 		
 		let SetUniforms = function(Shader)
 		{
-			if ( !Array.isArray(Frame.RectLines) )
+			if ( !Array.isArray(Frame.Rects) )
 			{
 				RenderTarget.ClearColour(1,0,0);
 				return;
 			}
-			if ( Frame.RectLines.length > 200 )
-				Frame.RectLines.length = 200;
-			if ( Frame.RectLineScores.length > 200 )
-				Frame.RectLineScores.length = 200;
 
-			Shader.SetUniform("Lines", Frame.RectLines );
-			Shader.SetUniform("LineScores", Frame.RectLineScores );
+			//	make lines from rects
+			let RectLines = [];
+			let RectLineScores = [];
+			let PushRectLines = function(Rect)
+			{
+				RectLines.push( [Rect.p0.x,Rect.p0.y,Rect.p1.x,Rect.p1.y] );
+				RectLines.push( [Rect.p1.x,Rect.p1.y,Rect.p2.x,Rect.p2.y] );
+				RectLines.push( [Rect.p2.x,Rect.p2.y,Rect.p3.x,Rect.p3.y] );
+				RectLines.push( [Rect.p3.x,Rect.p3.y,Rect.p0.x,Rect.p0.y] );
+				RectLineScores.push( Rect.Score );
+				RectLineScores.push( Rect.Score );
+				RectLineScores.push( Rect.Score );
+				RectLineScores.push( Rect.Score );
+			};
+			Frame.Rects.forEach(PushRectLines);
+			
+			if ( RectLines.length > 200 )
+				RectLines.length = 200;
+			if ( RectLineScores.length > 200 )
+				RectLineScores.length = 200;
+
+			Shader.SetUniform("Lines", RectLines );
+			Shader.SetUniform("LineScores", RectLineScores );
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
 			Shader.SetUniform("ShowIndexes", true );
 		}
@@ -1010,8 +1027,6 @@ function GetLineRects(Frame)
 		Debug("Found " + RectLineSets.length + " rect sets");
 		
 		//	for each set, get the intersections and spit out a rect
-		Frame.RectLines = [];
-		Frame.RectLineScores = [];
 		Frame.Rects = [];
 		let PushRectSetRect = function(RectCorners,Score)
 		{
@@ -1032,7 +1047,7 @@ function GetLineRects(Frame)
 			Rect.p3 = {	x:RectCorners[3][0], y:RectCorners[3][1] };
 			Rect.Score = Score;
 			Frame.Rects.push( Rect );
-			
+			/*
 			//	make lines
 			let PushRectCornerLine = function(a,b)
 			{
@@ -1043,6 +1058,7 @@ function GetLineRects(Frame)
 			PushRectCornerLine( 1,2 );
 			PushRectCornerLine( 2,3 );
 			PushRectCornerLine( 3,0 );
+			 */
 		}
 		let ProcessRectSetRect = function(RectSet)
 		{
@@ -1061,7 +1077,7 @@ function GetLineRects(Frame)
 		}
 		RectLineSets.forEach( ProcessRectSetRect );
 		
-		Debug("Found " + Frame.RectLines.length + " complete rects");
+		Debug("Found " + Frame.Rects.length + " complete rects");
 		
 		if ( Frame.Params.WriteRectsToFilename != undefined )
 		{
