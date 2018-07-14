@@ -89,7 +89,7 @@ void main()
 	FrameUv += vec2(0.5,0.5);
 	vec2 UntransformedFrameUv = FrameUv;
 	vec4 FrameUv4 = Transform * float4( FrameUv, 0, 1 );
-	FrameUv = FrameUv4.xy;
+	FrameUv = FrameUv4.xy / FrameUv4.w;
 
 	float Distances[LINE_COUNT];
 
