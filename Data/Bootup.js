@@ -372,7 +372,10 @@ function CalcAngleXDistanceXChunks(OpenclContext,Frame)
 {
 	let Kernel = GetCalcAngleXDistanceXChunksKernel(OpenclContext);
 	let MaskTexture = Frame.LineMask;
-	Frame.Angles = GetNumberRangeInclusive( 0, 179, Frame.Params.AngleCount );
+	if ( Frame.Params.Angles !== undefined )
+		Frame.Angles = Frame.Params.Angles;
+	else
+		Frame.Angles = GetNumberRangeInclusive( 0, 179, Frame.Params.AngleCount );
 	let DistanceRange = 0.68;
 	Frame.Distances = GetNumberRangeInclusive( -DistanceRange, DistanceRange, Frame.Params.DistanceCount );
 	Frame.AngleXDistanceXChunks = new Uint32Array( Frame.Angles.length * Frame.Distances.length * Frame.Params.ChunkCount );
@@ -481,7 +484,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 		
 		let AngleRange = Ranges.AngleRange;
 		let DistanceRange = Ranges.DistanceRange;
-		let ChunkRange = (Frame.Params.ExtendChunks===true) ? Ranges.ChunkRange : 0;
+		let ChunkRange = Ranges.ChunkRange;
 		for ( let a=-AngleRange;	a<=AngleRange;	a++ )
 			for ( let d=-DistanceRange;	d<=DistanceRange;	d++ )
 				for ( let c=-ChunkRange;	c<=ChunkRange;	c++ )
@@ -496,7 +499,8 @@ function ExtractHoughLines(OpenclContext,Frame)
 			let ns = GetHoughLineScore( AngleIndex+a, DistanceIndex+d, ChunkIndex+c );
 			if ( ns === null )
 				continue;
-			if ( ns > ThisScore )
+			//	use >= so we merge two lines of 1.0 score
+			if ( ns >= ThisScore )
 			{
 				return true;
 			}
@@ -683,7 +687,7 @@ function DrawLines(OpenglContext,Frame)
 			Shader.SetUniform("LineAngles", Frame.LineAngles );
 			Shader.SetUniform("LineScores", Frame.LineScores );
 			Shader.SetUniform("ShowIndexes", false );
-			Shader.SetUniform("Background", Frame, 0 );
+			Shader.SetUniform("Background", Frame.LineMask, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -715,8 +719,8 @@ function DrawRectLines(OpenglContext,Frame)
 
 			Shader.SetUniform("Lines", Frame.RectLines );
 			Shader.SetUniform("LineScores", Frame.RectLineScores );
-			Shader.SetUniform("Background", Frame, 0 );
-			Shader.SetUniform("ShowIndexes", true );
+			Shader.SetUniform("Background", Frame.LineMask, 0 );
+			Shader.SetUniform("ShowIndexes", false );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -932,6 +936,7 @@ function GetLineRects(Frame)
 		
 		//	array of [p,p,o,o,avgscore] linesets
 		let RectLineSets = [];
+		let ScoreIsMin = false;
 		
 		//	now, for each line, pick a parallel, then an orthographic and it's parallel
 		for ( let lpa=0;	lpa<HoughLines.length;	lpa++ )
@@ -954,12 +959,15 @@ function GetLineRects(Frame)
 
 						let Score = (HoughLinepa.Score + HoughLinepb.Score + HoughLineoa.Score + HoughLineob.Score) / 4;
 						
-						Score = 1;
-						Score = Math.min(HoughLinepa.Score,Score);
-						Score = Math.min(HoughLinepb.Score,Score);
-						Score = Math.min(HoughLineoa.Score,Score);
-						Score = Math.min(HoughLineob.Score,Score);
-
+						if ( ScoreIsMin )
+						{
+							Score = 1;
+							Score = Math.min(HoughLinepa.Score,Score);
+							Score = Math.min(HoughLinepb.Score,Score);
+							Score = Math.min(HoughLineoa.Score,Score);
+							Score = Math.min(HoughLineob.Score,Score);
+						}
+						
 						//	gr: somewhere we need to check these lines intersect (or do we?)
 						let RectSet = [lpa,lpb,loa,lob,Score];
 						RectLineSets.push( RectSet );
@@ -1137,7 +1145,7 @@ function DrawCorners(OpenglContext,Frame)
 									];
 			Shader.SetUniform("Transform", TransformIdentity );
 			Shader.SetUniform("CornerAndScores", Frame.Corners );
-			Shader.SetUniform("Background", Frame, 0 );
+			Shader.SetUniform("Background", Frame.LineMask, 0 );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -1185,17 +1193,18 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
 	TemplateParams.HoughOriginX = 0.5;
 	TemplateParams.HoughOriginY = 0.5;
-	TemplateParams.ExtractHoughLineMinScore = 0.3;
-	TemplateParams.MaxLines = 100;
+	TemplateParams.ExtractHoughLineMinScore = 0.2;
+	TemplateParams.MaxLines = 20;
 	TemplateParams.MaxCorners = 100;
-	TemplateParams.ChunkCount = 20;
-	TemplateParams.DistanceCount = 400;
-	TemplateParams.AngleCount = 180;
+	TemplateParams.ChunkCount = 5;
+	TemplateParams.DistanceCount = 300;
+	TemplateParams.Angles = [0,90];
 	TemplateParams.CornerAngleDiffMin = 10;
 	//TemplateParams.FilterOutsideLines = true;
 	TemplateParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
-	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
-	TemplateParams.ExtendChunks = 1;
+	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:1, DistanceRange:10, ChunkRange:0 };
+	//TemplateParams.ExtendChunks = 1;
+	TemplateParams.ExtendChunks = true;
 	TemplateParams.MergeCornerMaxDistance = 0.05;
 	TemplateParams.WriteCornersToFilename = "Data/PitchGroundTruthCorners.json";
 
@@ -1204,7 +1213,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.HoughOriginX = 0.5;
 	LiveParams.HoughOriginY = 0.5;
 	LiveParams.ExtractHoughLineMinScore = 0.4;
-	LiveParams.MaxLines = 20;
+	LiveParams.MaxLines = 30;
 	LiveParams.MaxCorners = 40;
 	//LiveParams.MaxCorners = 500;
 	LiveParams.ChunkCount = 20;
@@ -1212,7 +1221,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.AngleCount = 180*2;
 	LiveParams.CornerAngleDiffMin = 20;
 	LiveParams.ParallelLineAngleDiffMax = 4;
-	LiveParams.LineDistanceIndexDiffMin = 10;
+	LiveParams.LineDistanceIndexDiffMin = 5;
 	//LiveParams.FilterOutsideLines = true;
 	//LiveParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
 	LiveParams.SkipIfBetterNeighbourRanges = { AngleRange:20, DistanceRange:10, ChunkRange:1 };
@@ -1222,8 +1231,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 
 	
 	
-	//Frame.Params = TemplateParams;
-	Frame.Params = LiveParams;
+	Frame.Params = TemplateParams;
+	//Frame.Params = LiveParams;
 	/*
 	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
 	Debug("Frame.HistogramHitMax="+ Frame.HistogramHitMax);
@@ -1339,8 +1348,8 @@ function Main()
 	let Filenames =
 	[
 		//"Data/PitchMask2.png",
-		//"Data/SwedenVsEngland.png",
-		"Data/ArgentinaVsCroatia.png"
+		"Data/SwedenVsEngland.png",
+		//"Data/ArgentinaVsCroatia.png"
 	];
 	
 	let ProcessFrame = function(Filename)

@@ -1,5 +1,5 @@
 in vec2 uv;
-const float LineWidth = 0.004;
+const float LineWidth = 0.002;
 
 #define UV_ZOOM		1.0
 
