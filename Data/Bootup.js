@@ -1012,6 +1012,7 @@ function GetLineRects(Frame)
 		//	for each set, get the intersections and spit out a rect
 		Frame.RectLines = [];
 		Frame.RectLineScores = [];
+		Frame.Rects = [];
 		let PushRectSetRect = function(RectCorners,Score)
 		{
 			//	a line didn't intersect
@@ -1022,6 +1023,15 @@ function GetLineRects(Frame)
 			{
 				return;
 			}
+			
+			//	nice rect for json readability
+			let Rect = {};
+			Rect.p0 = {	x:RectCorners[0][0], y:RectCorners[0][1] };
+			Rect.p1 = {	x:RectCorners[1][0], y:RectCorners[1][1] };
+			Rect.p2 = {	x:RectCorners[2][0], y:RectCorners[2][1] };
+			Rect.p3 = {	x:RectCorners[3][0], y:RectCorners[3][1] };
+			Rect.Score = Score;
+			Frame.Rects.push( Rect );
 			
 			//	make lines
 			let PushRectCornerLine = function(a,b)
@@ -1052,6 +1062,13 @@ function GetLineRects(Frame)
 		RectLineSets.forEach( ProcessRectSetRect );
 		
 		Debug("Found " + Frame.RectLines.length + " complete rects");
+		
+		if ( Frame.Params.WriteRectsToFilename != undefined )
+		{
+			var NiceRects = { Rects:Frame.Rects };
+			let RectsJson = JSON.stringify( NiceRects, null, '\t' );
+			WriteStringToFile( Frame.Params.WriteRectsToFilename, RectsJson );
+		}
 		
 		
 		Resolve();
@@ -1237,7 +1254,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:1, DistanceRange:10, ChunkRange:0 };
 	TemplateParams.ExtendChunks = true;
 	TemplateParams.MergeCornerMaxDistance = 0.05;
-	//TemplateParams.WriteRectsToFilename = "Data/PitchGroundTruthRects.json";
+	TemplateParams.WriteRectsToFilename = "Data/PitchGroundTruthRects.json";
 	TemplateParams.ParallelLineAngleDiffMax = 1;
 	TemplateParams.LineDistanceIndexDiffMin = 1;
 	
