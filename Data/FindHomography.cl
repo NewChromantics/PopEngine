@@ -200,7 +200,11 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 		for ( int m=0;	m<MatchCornerCount;	m++ )
 		{
 			float2 Match2 = MatchCorners[m];
-			float Distance = length( Match2 - TruthInverse2 );
+			float4 MatchInverse4 = MatrixMultiply( HomographyMatrix, (float4)( Match2.x, Match2.y, 0, 1 ) );
+			float2 MatchInverse2 = MatchInverse4.xy / MatchInverse4.w;
+			
+			//float Distance = length( Match2 - TruthInverse2 );
+			float Distance = length( MatchInverse2 - Truth2 );
 			if ( Distance > MaxMatchDistance )
 				continue;
 			TClosest = min( TClosest, Distance );
