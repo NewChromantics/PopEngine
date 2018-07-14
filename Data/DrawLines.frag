@@ -1,5 +1,5 @@
 in vec2 uv;
-const float LineWidth = 0.002;
+const float LineWidth = 0.004;
 
 #define UV_ZOOM		1.0
 
@@ -14,6 +14,7 @@ uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 uniform float		LineAngles[LINE_COUNT];
 uniform bool		ShowIndexes;
+#define INDEX_COLOUR_MAX	8
 
 #define endofheader
 
@@ -97,7 +98,7 @@ void main()
 		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
-			LineIndexNorm = i / float(LINE_COUNT);
+			LineIndexNorm = i / float(INDEX_COLOUR_MAX);
 			LineScore = LineScores[i];
 			LineAngle = LineAngles[i];
 			NearestDistance = min( NearestDistance, Distances[i] );
@@ -116,7 +117,7 @@ void main()
 		
 		if ( ShowIndexes )
 		{
-			LineColour = NormalToRedGreen(LineIndexNorm);
+			LineColour = NormalToRedGreen( fract(LineIndexNorm) );
 		}
 		
 		gl_FragColor = float4( LineColour,1);

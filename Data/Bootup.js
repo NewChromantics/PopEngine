@@ -525,10 +525,46 @@ function ExtractHoughLines(OpenclContext,Frame)
 		Line.Distance = Distances[DistanceIndex];
 		Line.AngleIndex = AngleIndex;
 		Line.DistanceIndex = DistanceIndex;
-		Line.ChunkIndex = ChunkIndex;
-		Line.Score = Score;
-		HoughLines.push( Line );
+		Line.ChunkIndexStart = ChunkIndex;
+		Line.ChunkIndexEnd = ChunkIndex+1;
 		
+		if ( Frame.Params.ExtendChunks === true )
+		{
+			Line.ChunkIndexStart = 0;
+			Line.ChunkIndexEnd = ChunkCount;
+		}
+		else if ( Number.isInteger(Frame.Params.ExtendChunks) )
+		{
+			Line.ChunkIndexStart -= Frame.Params.ExtendChunks;
+			Line.ChunkIndexEnd += Frame.Params.ExtendChunks;
+		}
+		
+		Line.Score = Score;
+		
+		
+		//	check not already included in other line(because of chunk extending)
+		for ( let oh=0;	oh<HoughLines.length;	oh++ )
+		{
+			let OtherHoughLine = HoughLines[oh];
+			if ( OtherHoughLine.AngleIndex != Line.AngleIndex )
+				continue;
+			if ( OtherHoughLine.DistanceIndex != Line.DistanceIndex )
+				continue;
+			
+			//	look for chunk overlap
+			if ( Line.ChunkIndexStart > OtherHoughLine.ChunkIndexEnd )
+				continue;
+			if ( Line.ChunkIndexEnd < OtherHoughLine.ChunkIndexStart )
+				continue;
+			
+			//	overlap, absorb!
+			OtherHoughLine.Score = Math.max( Line.Score, OtherHoughLine.Score );
+			OtherHoughLine.ChunkIndexStart = Math.min( Line.ChunkIndexStart, OtherHoughLine.ChunkIndexStart );
+			OtherHoughLine.ChunkIndexEnd = Math.max( Line.ChunkIndexEnd, OtherHoughLine.ChunkIndexEnd );
+			return;
+		}
+		
+		HoughLines.push( Line );
 	}
 	
 	for ( ai=0;	ai<Angles.length;	ai++ )
@@ -590,19 +626,8 @@ function ExtractHoughLines(OpenclContext,Frame)
 	}
 	let PushHoughLineToLines = function(HoughLine)
 	{
-		let ChunkStartTime = (HoughLine.ChunkIndex+0) / ChunkCount;
-		let ChunkEndTime = (HoughLine.ChunkIndex+1) / ChunkCount;
-		
-		if ( Frame.Params.ExtendChunks === true )
-		{
-			ChunkStartTime = 0;
-			ChunkEndTime = 1;
-		}
-		else if ( Number.isInteger(Frame.Params.ExtendChunks) )
-		{
-			ChunkStartTime = (HoughLine.ChunkIndex-Frame.Params.ExtendChunks) / ChunkCount;
-			ChunkEndTime = (HoughLine.ChunkIndex+1+Frame.Params.ExtendChunks) / ChunkCount;
-		}
+		let ChunkStartTime = (HoughLine.ChunkIndexStart) / ChunkCount;
+		let ChunkEndTime = (HoughLine.ChunkIndexEnd) / ChunkCount;
 		
 		let Line = HoughLineToLine( HoughLine.Angle, HoughLine.Distance, ChunkStartTime, ChunkEndTime, HoughLine.Origin[0], HoughLine.Origin[1] );
 		//Debug(Line);
@@ -630,6 +655,7 @@ function ExtractHoughLines(OpenclContext,Frame)
 	Frame.UnfilteredHoughLines = Frame.HoughLines;
 	Frame.HoughLines = [];
 	Frame.UnfilteredHoughLines.forEach( PushHoughLineToLines );
+	
 	Debug("Filtered to " + Frame.Lines.length + " valid lines.");
 }
 
@@ -720,7 +746,7 @@ function DrawRectLines(OpenglContext,Frame)
 			Shader.SetUniform("Lines", Frame.RectLines );
 			Shader.SetUniform("LineScores", Frame.RectLineScores );
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
-			Shader.SetUniform("ShowIndexes", false );
+			Shader.SetUniform("ShowIndexes", true );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -896,7 +922,10 @@ function GetLineRects(Frame)
 			let AngleB = HoughLineB.Angle;
 			let AngleDiff = GetAngle180Diff( AngleA, AngleB );
 			if ( Math.abs(AngleDiff) < Frame.Params.ParallelLineAngleDiffMax )
+			{
+				//Debug("parallel angle " + AngleA + " and " + AngleB );
 				return true;
+			}
 			return false;
 		}
 	
@@ -933,6 +962,8 @@ function GetLineRects(Frame)
 				HoughLines[la].ParallelLineIndexes.push( lb );
 			}
 		}
+		
+		Debug("HoughLines[0].ParallelLineIndexes=" + HoughLines[0].ParallelLineIndexes );
 		
 		//	array of [p,p,o,o,avgscore] linesets
 		let RectLineSets = [];
@@ -975,6 +1006,7 @@ function GetLineRects(Frame)
 				}
 			}
 		}
+		Debug(RectLineSets.join("\n"));
 		Debug("Found " + RectLineSets.length + " rect sets");
 		
 		//	for each set, get the intersections and spit out a rect
@@ -1194,7 +1226,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	TemplateParams.HoughOriginX = 0.5;
 	TemplateParams.HoughOriginY = 0.5;
 	TemplateParams.ExtractHoughLineMinScore = 0.2;
-	TemplateParams.MaxLines = 20;
+	TemplateParams.MaxLines = 100;
 	TemplateParams.MaxCorners = 100;
 	TemplateParams.ChunkCount = 5;
 	TemplateParams.DistanceCount = 300;
@@ -1203,11 +1235,12 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	//TemplateParams.FilterOutsideLines = true;
 	TemplateParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
 	TemplateParams.SkipIfBetterNeighbourRanges = { AngleRange:1, DistanceRange:10, ChunkRange:0 };
-	//TemplateParams.ExtendChunks = 1;
 	TemplateParams.ExtendChunks = true;
 	TemplateParams.MergeCornerMaxDistance = 0.05;
-	TemplateParams.WriteCornersToFilename = "Data/PitchGroundTruthCorners.json";
-
+	//TemplateParams.WriteRectsToFilename = "Data/PitchGroundTruthRects.json";
+	TemplateParams.ParallelLineAngleDiffMax = 1;
+	TemplateParams.LineDistanceIndexDiffMin = 1;
+	
 	let LiveParams = {};
 	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 15;
 	LiveParams.HoughOriginX = 0.5;
