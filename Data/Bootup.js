@@ -792,9 +792,9 @@ function DrawRectLines(OpenglContext,Frame)
 			Shader.SetUniform("Lines", RectLines );
 			Shader.SetUniform("LineScores", RectLineScores );
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
-			Shader.SetUniform("ShowIndexes", true );
+			Shader.SetUniform("ShowIndexes", false );
 			Shader.SetUniform("Transform", Frame.TransformMatrix );
-			//Shader.SetUniform("Transform", GetIdentityFloat4x4() );
+			Shader.SetUniform("Transform", GetIdentityFloat4x4() );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -851,6 +851,7 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 			Shader.SetUniform("Background", Frame, 0 );
 			Shader.SetUniform("ShowIndexes", true );
 			Shader.SetUniform("Transform", Frame.TransformMatrix );
+			Shader.SetUniform("TransformBackground", false );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -1437,8 +1438,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 15;
 	LiveParams.HoughOriginX = 0.5;
 	LiveParams.HoughOriginY = 0.5;
-	LiveParams.ExtractHoughLineMinScore = 0.4;
-	LiveParams.MaxLines = 10;
+	LiveParams.ExtractHoughLineMinScore = 0.3;
+	LiveParams.MaxLines = 20;
 	LiveParams.MaxCorners = 40;
 	//LiveParams.MaxCorners = 500;
 	LiveParams.ChunkCount = 20;
@@ -1453,7 +1454,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-	LiveParams.HomographyMaxMatchDistance = 0.10;
+	LiveParams.HomographyMaxMatchDistance = 0.05;
 	
 	
 	//Frame.Params = TemplateParams;
@@ -1574,8 +1575,8 @@ function Main()
 	let Filenames =
 	[
 		//"Data/PitchMask2.png",
-		"Data/SwedenVsEngland.png",
-		//"Data/ArgentinaVsCroatia.png"
+		//"Data/SwedenVsEngland.png",
+		"Data/ArgentinaVsCroatia.png"
 	];
 	
 	let ProcessFrame = function(Filename)

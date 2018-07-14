@@ -16,6 +16,7 @@ uniform float		LineAngles[LINE_COUNT];
 uniform bool		ShowIndexes;
 #define INDEX_COLOUR_MAX	8
 uniform mat4		Transform;
+uniform bool		TransformBackground;
 
 #define endofheader
 
@@ -86,7 +87,7 @@ void main()
 	FrameUv -= vec2(0.5,0.5);
 	FrameUv /= vec2(UV_ZOOM,UV_ZOOM);
 	FrameUv += vec2(0.5,0.5);
-	
+	vec2 UntransformedFrameUv = FrameUv;
 	vec4 FrameUv4 = Transform * float4( FrameUv, 0, 1 );
 	FrameUv = FrameUv4.xy;
 
@@ -102,7 +103,7 @@ void main()
 		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
-			LineIndexNorm = i / float(INDEX_COLOUR_MAX);
+			LineIndexNorm = (i/4) / float(INDEX_COLOUR_MAX);
 			LineScore = LineScores[i];
 			LineAngle = LineAngles[i];
 			NearestDistance = min( NearestDistance, Distances[i] );
@@ -128,8 +129,10 @@ void main()
 	}
 	else
 	{
-		gl_FragColor = texture( Background, FrameUv );
-		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
+		vec2 BackgroundUv = TransformBackground ? FrameUv : UntransformedFrameUv;
+		gl_FragColor = texture( Background, BackgroundUv );
+		if ( BackgroundUv.x < 0 || BackgroundUv.x > 1 || BackgroundUv.y < 0 || BackgroundUv.y > 1 )
+		//if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
 			gl_FragColor = vec4(0,0,1,1);
 	}
 }

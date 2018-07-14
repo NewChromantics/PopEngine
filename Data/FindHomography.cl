@@ -206,12 +206,13 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			TClosest = min( TClosest, Distance );
 		}
 		
-		if ( TClosest <= MaxMatchDistance )
-			Score ++;
-		/*
-		float TScore = 1 - Range01( 0, MaxMatchDistance, TClosest );
+		
+		//if ( TClosest <= MaxMatchDistance )
+		//	Score ++;
+		
+		float TScore = 1.0f - min( 1.0f, TClosest/MaxMatchDistance );
 		Score += TScore;
-		 */
+		
 	}
 	//Score /= (TruthCornerCount);
 	
