@@ -682,6 +682,7 @@ function DrawLines(OpenglContext,Frame)
 			Shader.SetUniform("Lines", Frame.Lines );
 			Shader.SetUniform("LineAngles", Frame.LineAngles );
 			Shader.SetUniform("LineScores", Frame.LineScores );
+			Shader.SetUniform("ShowIndexes", false );
 			Shader.SetUniform("Background", Frame, 0 );
 		}
 		
@@ -715,7 +716,7 @@ function DrawRectLines(OpenglContext,Frame)
 			Shader.SetUniform("Lines", Frame.RectLines );
 			Shader.SetUniform("LineScores", Frame.RectLineScores );
 			Shader.SetUniform("Background", Frame, 0 );
-			//Shader.SetUniform("ShowIndexes", true );
+			Shader.SetUniform("ShowIndexes", true );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );

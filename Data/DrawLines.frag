@@ -13,8 +13,7 @@ uniform sampler2D	Background;
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 uniform float		LineAngles[LINE_COUNT];
-//uniform bool		ShowIndexes;
-uniform int		ShowIndexes;
+uniform bool		ShowIndexes;
 
 #define endofheader
 
@@ -115,7 +114,7 @@ void main()
 		#error no colour mode defined
 #endif
 		
-		if ( ShowIndexes==1 )
+		if ( ShowIndexes )
 		{
 			LineColour = NormalToRedGreen(LineIndexNorm);
 		}
