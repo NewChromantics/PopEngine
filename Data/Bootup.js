@@ -48,7 +48,8 @@ let HoughLinesKernelSource = LoadFileAsString('Data/HoughLines.cl');
 let CalcAngleXDistanceXChunksKernelName = 'CalcAngleXDistanceXChunks';
 let GraphAngleXDistancesKernelName = 'GraphAngleXDistances';
 let FindHomographyKernelSource = LoadFileAsString('Data/FindHomography.cl');
-let FindHomographyKernelName = 'GetTestHomography';
+let FindHomographyKernelName = 'FindHomographies';
+let TestHomographyKernelName = 'GetTestHomography';
 
 let EdgeFragShaderSource = `
 	#version 410
@@ -197,6 +198,14 @@ function GetFindHomographyKernel(OpenclContext)
 	return FindHomographyKernel;
 }
 
+function GetTestHomographyKernel(OpenclContext)
+{
+	if ( !TestHomographyKernel )
+	{
+		TestHomographyKernel = new OpenclKernel( OpenclContext, FindHomographyKernelSource, TestHomographyKernelName );
+	}
+	return TestHomographyKernel;
+}
 
 
 
@@ -1203,9 +1212,122 @@ function LoadGroundTruths(Frame)
 	return Prom;
 }
 
+function GetFloat16Element(FloatArray,Float16Index)
+{
+	let Float16 = new Float32Array(16);
+	for ( let i=0;	i<16;	i++ )
+	{
+		let fi = (Float16Index*16) + i;
+		Float16[i] = FloatArray[fi];
+	}
+	return Float16;
+}
+
+
+function RectsToFloatArray(Rects)
+{
+	let Floats = new Float32Array( Rects.length * 16 );
+	let i=0;
+	let PushRectFloats = function(Rect)
+	{
+		Floats[i++] = Rect.p0.x;
+		Floats[i++] = Rect.p0.y;
+		Floats[i++] = Rect.p1.x;
+		Floats[i++] = Rect.p1.y;
+		Floats[i++] = Rect.p2.x;
+		Floats[i++] = Rect.p2.y;
+		Floats[i++] = Rect.p3.x;
+		Floats[i++] = Rect.p3.y;
+		i+=8;
+	}
+	Rects.forEach( PushRectFloats );
+	return Floats;
+}
+
+
+function RectsToCornerFloatArray(Rects)
+{
+	let Floats = new Float32Array( Rects.length * 4*2 );
+	let i=0;
+	let PushRectFloats = function(Rect)
+	{
+		Floats[i++] = Rect.p0.x;
+		Floats[i++] = Rect.p0.y;
+		Floats[i++] = Rect.p1.x;
+		Floats[i++] = Rect.p1.y;
+		Floats[i++] = Rect.p2.x;
+		Floats[i++] = Rect.p2.y;
+		Floats[i++] = Rect.p3.x;
+		Floats[i++] = Rect.p3.y;
+	}
+	Rects.forEach( PushRectFloats );
+	return Floats;
+}
+
+
 function FindCornerTransform(OpenclContext,Frame)
 {
 	let Kernel = GetFindHomographyKernel(OpenclContext);
+	
+	let OnIteration = function(Kernel,IterationIndexes)
+	{
+		if ( IterationIndexes[0]==0 && IterationIndexes[1]==0 )
+		{
+			let ResultCount = 1;
+			let ResultMatrixBuffer = new Float32Array( 16*ResultCount );
+			let ResultScoreBuffer = new Float32Array( 1*ResultCount );
+			Kernel.SetUniform("ResultHomographys", ResultMatrixBuffer );
+			Kernel.SetUniform("ResultScores", ResultScoreBuffer );
+
+			//	gr: these corners need to include non-rect'd ones
+			let Rectsf = RectsToFloatArray( Frame.Rects );
+			let Cornersf = RectsToCornerFloatArray( Frame.Rects );
+			Kernel.SetUniform("MatchRects", Rectsf );
+			Kernel.SetUniform("MatchRectCount", Frame.Rects.length );
+			Kernel.SetUniform("MatchCorners", Cornersf );
+			Kernel.SetUniform("MatchCornerCount", Cornersf.length );
+
+			let GroundTruthRectsf = RectsToFloatArray( Frame.GroundTruthRects );
+			let GroundTruthCornersf = RectsToCornerFloatArray( Frame.GroundTruthRects );
+			Kernel.SetUniform("TruthRects", GroundTruthRectsf );
+			Kernel.SetUniform("TruthRectCount", Frame.GroundTruthRects.length );
+			Kernel.SetUniform("TruthCorners", GroundTruthCornersf );
+			Kernel.SetUniform("TruthCornerCount", GroundTruthCornersf.length );
+
+			Kernel.SetUniform("MaxMatchDistance", Frame.Params.HomographyMaxMatchDistance );
+		}
+		Kernel.SetUniform("MatchRectIndexFirst", IterationIndexes[0] );
+		Kernel.SetUniform("TruthRectIndexFirst", IterationIndexes[1] );
+	}
+	
+	let OnFinished = function(Kernel)
+	{
+		let MatrixBuffer = Kernel.ReadUniform("ResultHomographys");
+		let ScoreBuffer = Kernel.ReadUniform("ResultScores");
+		
+		//	get best
+		let BestScoreIndex = 0;
+		for ( let r=0;	r<ScoreBuffer.length;	r++ )
+		{
+			if ( ScoreBuffer[r] < ScoreBuffer[BestScoreIndex] )
+				continue;
+			BestScoreIndex = r;
+		}
+		
+		Debug("Best matrix score: " + ScoreBuffer[BestScoreIndex] );
+		Frame.TransformMatrix = GetFloat16Element( MatrixBuffer, BestScoreIndex );
+		Debug("-> " + Frame.TransformMatrix );
+	}
+	
+	let Dim = [ Frame.Rects.length, Frame.GroundTruthRects.length ];
+	let Prom = OpenclContext.ExecuteKernel( Kernel, Dim, OnIteration, OnFinished );
+	return Prom;
+}
+
+
+function GetTestCornerTransform(OpenclContext,Frame)
+{
+	let Kernel = GetTestHomographyKernel(OpenclContext);
 	
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
@@ -1213,12 +1335,12 @@ function FindCornerTransform(OpenclContext,Frame)
 		let MatrixBuffer = new Float32Array( 16*MatrixCount );
 		Kernel.SetUniform("ResultHomographys", MatrixBuffer );
 		/*
-		//Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
-		let LineBuffer = new Float32Array( 10*4 );
-		let LineCount = new Int32Array(1);
-		Kernel.SetUniform("Lines", LineBuffer );
-		Kernel.SetUniform("LineCount", LineCount );
-		Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
+		 //Debug("OnIteration(" + Kernel + ", " + IterationIndexes + ")");
+		 let LineBuffer = new Float32Array( 10*4 );
+		 let LineCount = new Int32Array(1);
+		 Kernel.SetUniform("Lines", LineBuffer );
+		 Kernel.SetUniform("LineCount", LineCount );
+		 Kernel.SetUniform("LinesSize", LineBuffer.length/4 );
 		 */
 	}
 	
@@ -1329,7 +1451,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-
+	LiveParams.HomographyMaxMatchDistance = 0.04;
 	
 	
 	//Frame.Params = TemplateParams;
@@ -1366,6 +1488,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part8 = function()	{	return GetLineRects( Frame );	}
 	let Part9 = function()	{	return GetLineCorners( Frame );	}
 	let Part10 = function()	{	return LoadGroundTruths( Frame );	}
+	//let Part11 = function()	{	return GetTestCornerTransform( OpenclContext, Frame );	}
 	let Part11 = function()	{	return FindCornerTransform( OpenclContext, Frame );	}
 	let Part12 = function()	{	return DrawRectLines( OpenglContext, Frame );	}
 	let Part13 = function()	{	return DrawGroundTruthRectLines( OpenglContext, Frame );	}

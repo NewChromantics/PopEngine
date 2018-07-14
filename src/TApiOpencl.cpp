@@ -591,6 +591,12 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		EnumArray( ValueHandle, GetArrayBridge(Ints), Uniform.mName );
 		KernelState.SetUniform( UniformName.c_str(), Ints[0] );
 	}
+	else if ( Uniform.mType == "float" )
+	{
+		BufferArray<float,1> Floats;
+		EnumArray( ValueHandle, GetArrayBridge(Floats), Uniform.mName );
+		KernelState.SetUniform( UniformName.c_str(), Floats[0] );
+	}
 	else if ( Uniform.mType == "float4*" )
 	{
 		//	need to check here for buffer reuse
@@ -605,6 +611,14 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		auto& Context = KernelState.GetContext();
 		auto Blocking = true;
 		auto BufferArray = GetFloatXBufferArray<cl_float,1>( ValueHandle, Context, Uniform.mName, Blocking );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
+	else if ( Uniform.mType == "float2*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto Blocking = true;
+		auto BufferArray = GetFloatXBufferArray<cl_float2,2>( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
 	else if ( Uniform.mType == "float16*" )
@@ -714,6 +728,15 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 	{
 		auto Alignment = 4;
 		Array<cl_float4> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
+		return ValuesArray;
+	}
+	else if ( Uniform.mType == "float*" )
+	{
+		auto Alignment = 1;
+		Array<cl_float> Values;
 		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
 		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
 		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
