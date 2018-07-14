@@ -1,19 +1,20 @@
 in vec2 uv;
-const float LineWidth = 0.001;
+const float LineWidth = 0.004;
 
 #define UV_ZOOM		1.0
 
 
-//#define COLOUR_TO_SCORES
-#define COLOUR_TO_ANGLES
+#define COLOUR_TO_SCORES
+//#define COLOUR_TO_ANGLES
 
 uniform sampler2D	Background;
 
-#define LINE_COUNT	100
+#define LINE_COUNT	200
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 uniform float		LineAngles[LINE_COUNT];
-
+//uniform bool		ShowIndexes;
+uniform int		ShowIndexes;
 
 #define endofheader
 
@@ -90,12 +91,14 @@ void main()
 	float NearestDistance = 999;
 	float LineScore = 0;
 	float LineAngle = 0;
+	float LineIndexNorm = 0;
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
 		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
+			LineIndexNorm = i / float(LINE_COUNT);
 			LineScore = LineScores[i];
 			LineAngle = LineAngles[i];
 			NearestDistance = min( NearestDistance, Distances[i] );
@@ -111,6 +114,12 @@ void main()
 #else
 		#error no colour mode defined
 #endif
+		
+		if ( ShowIndexes==1 )
+		{
+			LineColour = NormalToRedGreen(LineIndexNorm);
+		}
+		
 		gl_FragColor = float4( LineColour,1);
 	}
 	else

@@ -693,64 +693,101 @@ function DrawLines(OpenglContext,Frame)
 	return Prom;
 }
 
+function DrawRectLines(OpenglContext,Frame)
+{
+	Debug("DrawRectLines");
+	let Render = function(RenderTarget,RenderTargetTexture)
+	{
+		let Shader = GetDrawLinesShader(RenderTarget);
+		
+		let SetUniforms = function(Shader)
+		{
+			if ( !Array.isArray(Frame.RectLines) )
+			{
+				RenderTarget.ClearColour(1,0,0);
+				return;
+			}
+			if ( Frame.RectLines.length > 200 )
+				Frame.RectLines.length = 200;
+			if ( Frame.RectLineScores.length > 200 )
+				Frame.RectLineScores.length = 200;
 
+			Shader.SetUniform("Lines", Frame.RectLines );
+			Shader.SetUniform("LineScores", Frame.RectLineScores );
+			Shader.SetUniform("Background", Frame, 0 );
+			//Shader.SetUniform("ShowIndexes", true );
+		}
+		
+		RenderTarget.DrawQuad( Shader, SetUniforms );
+	}
+	
+	Frame.DebugRectLines = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
+	let Prom = OpenglContext.Render( Frame.DebugRectLines, Render );
+	return Prom;
+}
+
+function GetAngle180Diff(AngleA,AngleB)
+{
+	let Diff = AngleB - AngleA;
+	while ( Diff > 90 )
+		Diff -= 180;
+	while ( Diff < -90 )
+		Diff += 180;
+	return Diff;
+}
+
+function GetDistance(xy0,xy1)
+{
+	var xdelta = xy0[0] - xy1[0];
+	var ydelta = xy0[1] - xy1[1];
+	return Math.sqrt( xdelta*xdelta + ydelta*ydelta );
+}
+
+
+function GetLineLineIntersection(LineA,LineB,ScoreA,ScoreB)
+{
+	let CornerScore = (ScoreA+ScoreB)/2;
+	//return [0.5,0.5,1];
+	
+	//	https://stackoverflow.com/a/1968345
+	
+	// Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
+	// intersect the intersection point may be stored in the floats i_x and i_y.
+	let p0_x = LineA[0];
+	let p0_y = LineA[1];
+	let p1_x = LineA[2];
+	let p1_y = LineA[3];
+	let p2_x = LineB[0];
+	let p2_y = LineB[1];
+	let p3_x = LineB[2];
+	let p3_y = LineB[3];
+	
+	let s1_x = p1_x - p0_x;
+	let s1_y = p1_y - p0_y;
+	let s2_x = p3_x - p2_x;
+	let s2_y = p3_y - p2_y;
+	
+	let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+	let t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+	
+	if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+	{
+		let ix = p0_x + (t * s1_x);
+		let iy = p0_y + (t * s1_y);
+		if ( ScoreA===undefined )
+			return [ix,iy];
+		return [ix,iy,CornerScore];
+	}
+	return null;
+}
 
 function GetLineCorners(Frame)
 {
 	let GetCorners = function(Resolve)
 	{
 		let Lines = Frame.Lines;
-		let GetLineIntersection = function(LineA,LineB,ScoreA,ScoreB)
-		{
-			let CornerScore = (ScoreA+ScoreB)/2;
-			//return [0.5,0.5,1];
-			
-			//	https://stackoverflow.com/a/1968345
-			
-			// Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
-			// intersect the intersection point may be stored in the floats i_x and i_y.
-			let p0_x = LineA[0];
-			let p0_y = LineA[1];
-			let p1_x = LineA[2];
-			let p1_y = LineA[3];
-			let p2_x = LineB[0];
-			let p2_y = LineB[1];
-			let p3_x = LineB[2];
-			let p3_y = LineB[3];
-
-			let s1_x = p1_x - p0_x;
-			let s1_y = p1_y - p0_y;
-			let s2_x = p3_x - p2_x;
-			let s2_y = p3_y - p2_y;
 		
-			let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
-			let t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
-				
-			if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
-			{
-				let ix = p0_x + (t * s1_x);
-				let iy = p0_y + (t * s1_y);
-				return [ix,iy,CornerScore];
-			}
-			return null;
-		}
 		
-		let GetAngle180Diff = function(AngleA,AngleB)
-		{
-			let Diff = AngleB - AngleA;
-			while ( Diff > 90 )
-				Diff -= 180;
-			while ( Diff < -90 )
-				Diff += 180;
-			return Diff;
-		}
-		
-		let GetDistance = function(xy0,xy1)
-		{
-			var xdelta = xy0[0] - xy1[0];
-			var ydelta = xy0[1] - xy1[1];
-			return Math.sqrt( xdelta*xdelta + ydelta*ydelta );
-		}
 		
 		let GetDuplicateCornerIndex = function(NewCorner)
 		{
@@ -797,7 +834,7 @@ function GetLineCorners(Frame)
 
 				let ScoreA = Frame.LineScores[la];
 				let ScoreB = Frame.LineScores[lb];
-				let Intersection = GetLineIntersection( Lines[la], Lines[lb], ScoreA, ScoreB );
+				let Intersection = GetLineLineIntersection( Lines[la], Lines[lb], ScoreA, ScoreB );
 				if ( Intersection === null )
 					continue;
 				PushCorner( Intersection );
@@ -841,6 +878,148 @@ function GetLineCorners(Frame)
 }
 
 
+function GetLineRects(Frame)
+{
+	let Functor = function(Resolve)
+	{
+		let Lines = Frame.Lines;
+		let HoughLines = Frame.HoughLines;
+		
+		let AreLinesParallel = function(HoughLineA,HoughLineB)
+		{
+			let AngleA = HoughLineA.Angle;
+			let AngleB = HoughLineB.Angle;
+			let AngleDiff = GetAngle180Diff( AngleA, AngleB );
+			if ( Math.abs(AngleDiff) < Frame.Params.ParallelLineAngleDiffMax )
+				return true;
+			return false;
+		}
+	
+		let AreLinesClose = function(HoughLineA,HoughLineB)
+		{
+			let DistanceIndexA = HoughLineA.DistanceIndex;
+			let DistanceIndexB = HoughLineB.DistanceIndex;
+			let DistanceDiff = Math.abs( DistanceIndexA - DistanceIndexB);
+			if ( DistanceDiff <= Frame.Params.LineDistanceIndexDiffMin )
+				return true;
+			return false;
+		}
+		
+		
+		//	get 2 sets of pairs of parallel lines
+		//	make a box from them where they intersect
+		//	avoid dupes
+		
+		//	for each line, get a list of it's parallels (from N+1 as we are skipping duplicate sets)
+		for ( let la=0;	la<HoughLines.length;	la++ )
+		{
+			HoughLines[la].ParallelLineIndexes = [];
+			for ( let lb=la+1;	lb<HoughLines.length;	lb++ )
+			{
+				if ( !AreLinesParallel( HoughLines[la], HoughLines[lb] ) )
+					continue;
+				if ( AreLinesClose( HoughLines[la], HoughLines[lb] ) )
+					continue;
+				
+				//	line count gets capped so avoid overflow later
+				if ( la >= Lines.length || lb >= Lines.length )
+					continue;
+				
+				HoughLines[la].ParallelLineIndexes.push( lb );
+			}
+		}
+		
+		//	array of [p,p,o,o,avgscore] linesets
+		let RectLineSets = [];
+		
+		//	now, for each line, pick a parallel, then an orthographic and it's parallel
+		for ( let lpa=0;	lpa<HoughLines.length;	lpa++ )
+		{
+			let HoughLinepa = HoughLines[lpa];
+			for ( let pbindex=0;	pbindex<HoughLinepa.ParallelLineIndexes.length;	pbindex++ )
+			{
+				let lpb = HoughLinepa.ParallelLineIndexes[pbindex];
+				let HoughLinepb = HoughLines[lpb];
+				
+				//	find orthogonal lines
+				//	we don't need to start from the start, because an earlier line would have gone through this set already
+				for ( let loa=lpa+1;	loa<HoughLines.length;	loa++ )
+				{
+					let HoughLineoa = HoughLines[loa];
+					for ( let obindex=0;	obindex<HoughLineoa.ParallelLineIndexes.length;	obindex++ )
+					{
+						let lob = HoughLineoa.ParallelLineIndexes[obindex];
+						let HoughLineob = HoughLines[lob];
+
+						let Score = (HoughLinepa.Score + HoughLinepb.Score + HoughLineoa.Score + HoughLineob.Score) / 4;
+						
+						Score = 1;
+						Score = Math.min(HoughLinepa.Score,Score);
+						Score = Math.min(HoughLinepb.Score,Score);
+						Score = Math.min(HoughLineoa.Score,Score);
+						Score = Math.min(HoughLineob.Score,Score);
+
+						//	gr: somewhere we need to check these lines intersect (or do we?)
+						let RectSet = [lpa,lpb,loa,lob,Score];
+						RectLineSets.push( RectSet );
+					}
+				}
+			}
+		}
+		Debug("Found " + RectLineSets.length + " rect sets");
+		
+		//	for each set, get the intersections and spit out a rect
+		Frame.RectLines = [];
+		Frame.RectLineScores = [];
+		let PushRectSetRect = function(RectCorners,Score)
+		{
+			//	a line didn't intersect
+			if ( RectCorners[0] === null ||
+				RectCorners[1] === null ||
+				RectCorners[2] === null ||
+				RectCorners[3] === null )
+			{
+				return;
+			}
+			
+			//	make lines
+			let PushRectCornerLine = function(a,b)
+			{
+				Frame.RectLines.push( [ RectCorners[a],RectCorners[b] ] );
+				Frame.RectLineScores.push( Score );
+			};
+			PushRectCornerLine( 0,1 );
+			PushRectCornerLine( 1,2 );
+			PushRectCornerLine( 2,3 );
+			PushRectCornerLine( 3,0 );
+		}
+		let ProcessRectSetRect = function(RectSet)
+		{
+			let line_pa = Frame.Lines[ RectSet[0] ];
+			let line_pb = Frame.Lines[ RectSet[1] ];
+			let line_oa = Frame.Lines[ RectSet[2] ];
+			let line_ob = Frame.Lines[ RectSet[3] ];
+			let Score = RectSet[4];
+			
+			//	get intersections between parallel lines and orthogonal lines
+			let Intersection_paoa = GetLineLineIntersection( line_pa, line_oa );
+			let Intersection_pboa = GetLineLineIntersection( line_pb, line_oa );
+			let Intersection_paob = GetLineLineIntersection( line_pa, line_ob );
+			let Intersection_pbob = GetLineLineIntersection( line_pb, line_ob );
+			PushRectSetRect( [Intersection_paoa,Intersection_pboa,Intersection_pbob,Intersection_paob], Score );
+		}
+		RectLineSets.forEach( ProcessRectSetRect );
+		
+		Debug("Found " + Frame.RectLines.length + " complete rects");
+		
+		
+		Resolve();
+	}
+	
+	Frame.Rects = [];
+	let Prom = MakePromise( Functor );
+	return Prom;
+}
 
 function LoadGroundTruthCorners(Filename)
 {
@@ -905,6 +1084,21 @@ function FindCornerTransform(OpenclContext,Frame)
 	*/
 	let DoFindCornerTransform = function(Resolve)
 	{
+		//	init to identity
+		Frame.CornerTransformMatrix = [
+									   1,0,0,0,
+									   0,1,0,0,
+									   0,0,1,0,
+									   0,0,0,1
+									   ];
+		
+		
+		if ( Frame.Params.GroundTruthCorners === undefined )
+		{
+			Resolve();
+			return;
+		}
+		
 		Frame.GroundTruthCorners = LoadGroundTruthCorners(Frame.Params.GroundTruthCorners);
 		
 		//	todo: grab first 4 truth & first 4 detected and get SVD homography
@@ -962,6 +1156,8 @@ function DrawTransformedCorners(OpenglContext,Frame)
 		
 		let SetUniforms = function(Shader)
 		{
+			if ( !Array.isArray(Frame.GroundTruthCorners) )	Frame.GroundTruthCorners = [];
+			
 			Shader.SetUniform("Transform", Frame.CornerTransformMatrix );
 			Shader.SetUniform("CornerAndScores", Frame.GroundTruthCorners );
 			Shader.SetUniform("Background", Frame, 0 );
@@ -1007,23 +1203,25 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.HoughOriginX = 0.5;
 	LiveParams.HoughOriginY = 0.5;
 	LiveParams.ExtractHoughLineMinScore = 0.4;
-	LiveParams.MaxLines = 200;
-	LiveParams.MaxCorners = 20;
+	LiveParams.MaxLines = 20;
+	LiveParams.MaxCorners = 40;
 	//LiveParams.MaxCorners = 500;
 	LiveParams.ChunkCount = 20;
 	LiveParams.DistanceCount = 400;
-	LiveParams.AngleCount = 180;
-	LiveParams.CornerAngleDiffMin = 10;
+	LiveParams.AngleCount = 180*2;
+	LiveParams.CornerAngleDiffMin = 20;
+	LiveParams.ParallelLineAngleDiffMax = 4;
+	LiveParams.LineDistanceIndexDiffMin = 10;
 	//LiveParams.FilterOutsideLines = true;
 	//LiveParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
-	LiveParams.SkipIfBetterNeighbourRanges = { AngleRange:10, DistanceRange:10, ChunkRange:1 };
+	LiveParams.SkipIfBetterNeighbourRanges = { AngleRange:20, DistanceRange:10, ChunkRange:1 };
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthCorners = "Data/PitchGroundTruthCorners.json";
-	LiveParams.MergeCornerMaxDistance = 0.05;
+	LiveParams.MergeCornerMaxDistance = 0.02;
 
 	
 	
-	Frame.Params = TemplateParams;
+	//Frame.Params = TemplateParams;
 	Frame.Params = LiveParams;
 	/*
 	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;
@@ -1054,10 +1252,12 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	let Part5 = function()	{	return ExtractOpenclTestLines( OpenclContext, Frame );	}
 	let Part6 = function()	{	return GetHoughLines( OpenclContext, Frame );	}
 	let Part7 = function()	{	return DrawLines( OpenglContext, Frame );	}
-	let Part8 = function()	{	return GetLineCorners( Frame );	}
-	let Part9 = function()	{	return FindCornerTransform( OpenclContext, Frame );	}
-	let Part10 = function()	{	return DrawCorners( OpenglContext, Frame );	}
-	let Part11 = function()	{	return DrawTransformedCorners( OpenglContext, Frame );	}
+	let Part8 = function()	{	return GetLineRects( Frame );	}
+	let Part9 = function()	{	return GetLineCorners( Frame );	}
+	let Part10 = function()	{	return DrawRectLines( OpenglContext, Frame );	}
+	let Part11 = function()	{	return FindCornerTransform( OpenclContext, Frame );	}
+	let Part12 = function()	{	return DrawCorners( OpenglContext, Frame );	}
+	let Part13 = function()	{	return DrawTransformedCorners( OpenglContext, Frame );	}
 	let Finish = function()
 	{
 		LastProcessedFrame = Frame;
@@ -1076,6 +1276,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	.then( Part9 )
 	.then( Part10 )
 	.then( Part11 )
+	.then( Part12 )
+	.then( Part13 )
 	.then( Finish )
 	.catch( OnError );
 }
@@ -1106,6 +1308,7 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("Image5", LastProcessedFrame.DebugLines, 5 );
 			Shader.SetUniform("Image6", LastProcessedFrame.DebugCorners, 6 );
 			Shader.SetUniform("Image7", LastProcessedFrame.DebugTransformedCorners, 7 );
+			Shader.SetUniform("Image8", LastProcessedFrame.DebugRectLines, 8 );
 		}
 		
 		RenderTarget.ClearColour(0,1,0);
@@ -1135,8 +1338,8 @@ function Main()
 	let Filenames =
 	[
 		//"Data/PitchMask2.png",
-		"Data/SwedenVsEngland.png",
-		//"Data/ArgentinaVsCroatia.png"
+		//"Data/SwedenVsEngland.png",
+		"Data/ArgentinaVsCroatia.png"
 	];
 	
 	let ProcessFrame = function(Filename)
