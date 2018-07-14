@@ -852,6 +852,7 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 			Shader.SetUniform("ShowIndexes", true );
 			Shader.SetUniform("Transform", Frame.TransformMatrix );
 			Shader.SetUniform("TransformBackground", false );
+			Shader.SetUniform("TransformLines", true );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -1457,7 +1458,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-	LiveParams.HomographyMaxMatchDistance = 0.01;
+	LiveParams.HomographyMaxMatchDistance = 0.005;
 	
 	
 	//Frame.Params = TemplateParams;

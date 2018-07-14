@@ -17,6 +17,7 @@ uniform bool		ShowIndexes;
 #define INDEX_COLOUR_MAX	8
 uniform mat4		Transform;
 uniform bool		TransformBackground;
+uniform bool		TransformLines;
 
 #define endofheader
 
@@ -100,7 +101,8 @@ void main()
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
-		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
+		vec2 LineUv = TransformLines ? FrameUv : UntransformedFrameUv;
+		Distances[i] = DistanceToLine2( LineUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
 			LineIndexNorm = (i/4) / float(INDEX_COLOUR_MAX);
@@ -131,8 +133,8 @@ void main()
 	{
 		vec2 BackgroundUv = TransformBackground ? FrameUv : UntransformedFrameUv;
 		gl_FragColor = texture( Background, BackgroundUv );
-		if ( BackgroundUv.x < 0 || BackgroundUv.x > 1 || BackgroundUv.y < 0 || BackgroundUv.y > 1 )
-		//if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
+		//if ( BackgroundUv.x < 0 || BackgroundUv.x > 1 || BackgroundUv.y < 0 || BackgroundUv.y > 1 )
+		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
 			gl_FragColor = vec4(0,0,1,1);
 	}
 }

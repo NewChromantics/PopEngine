@@ -1,4 +1,4 @@
-
+#define GENERATE_TRUTH_TO_MATCH_MATRIX
 
 kernel void GetTestHomography(volatile global float16* ResultHomographys)
 {
@@ -148,7 +148,11 @@ static float16 GetHomographyMatrix(float16 Match4x2,float16 Truth4x2)
 	t[2] = (float3)( Truth4x2[4], Truth4x2[5], 0 );
 	t[3] = (float3)( Truth4x2[6], Truth4x2[7], 0 );
 
+#if defined(GENERATE_TRUTH_TO_MATCH_MATRIX)
 	return CalcHomography( m, t );
+#else
+	return CalcHomography( t, m );
+#endif
 	//return (float16)( 1,0,0,0,	0,1,0,0,	0,0,1,0,	0,0,0,1	);
 }
 
@@ -203,8 +207,11 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			float4 MatchInverse4 = MatrixMultiply( HomographyMatrix, (float4)( Match2.x, Match2.y, 0, 1 ) );
 			float2 MatchInverse2 = MatchInverse4.xy / MatchInverse4.w;
 			
-			//float Distance = length( Match2 - TruthInverse2 );
+#if defined(GENERATE_TRUTH_TO_MATCH_MATRIX)
 			float Distance = length( MatchInverse2 - Truth2 );
+#else
+			float Distance = length( Match2 - TruthInverse2 );
+#endif
 			if ( Distance > MaxMatchDistance )
 				continue;
 			TClosest = min( TClosest, Distance );
@@ -249,10 +256,42 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 	float16 TruthRect0 = TruthRects[TruthIndex];
 	
 	//	our rects might be in the wrong order, need to cycle coords (and reverse?)
-	float16 MatchRect0 = MatchRects[MatchIndex];
-	float16 ResultHomography;
-	float ResultScore = FindHomography( MatchRect0, TruthRect0, MatchCorners, MatchCornerCount, TruthCorners, TruthCornerCount, MaxMatchDistance, &ResultHomography );
+	float16 MatchRectOrig = MatchRects[MatchIndex];
+	float16 MatchRect0;
+#define ORDER_COUNT	8
+	int4 Order[ORDER_COUNT] =
+	{
+		(int4)(0,1,2,3),
+		(int4)(1,2,3,0),
+		(int4)(2,3,0,1),
+		(int4)(3,0,1,2),
+
+		(int4)(0,3,2,1),
+		(int4)(3,2,1,0),
+		(int4)(2,1,0,3),
+		(int4)(1,0,3,2),
+	};
 	
-	ResultHomographys[ResultIndex] = ResultHomography;
-	ResultScores[ResultIndex] = ResultScore;
+	float BestScore = 0;
+	//for ( int o=0;	o<ORDER_COUNT;	o++ )
+	int o = 0;
+	{
+		for ( int i=0;	i<4;	i++ )
+		{
+			int4 j4 = Order[o];
+			int j = j4[i];
+			MatchRect0[(i*2)+0] = MatchRectOrig[(j*2)+0];
+			MatchRect0[(i*2)+1] = MatchRectOrig[(j*2)+1];
+		}
+	
+		float16 ResultHomography;
+		float ResultScore = FindHomography( MatchRect0, TruthRect0, MatchCorners, MatchCornerCount, TruthCorners, TruthCornerCount, MaxMatchDistance, &ResultHomography );
+	
+		if ( ResultScore > BestScore )
+		{
+			ResultHomographys[ResultIndex] = ResultHomography;
+			ResultScores[ResultIndex] = ResultScore;
+			BestScore = ResultScore;
+		}
+	}
 }
