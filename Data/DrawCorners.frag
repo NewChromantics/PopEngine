@@ -9,20 +9,17 @@ uniform sampler2D	Background;
 
 #define CORNER_COUNT	500
 uniform mat4		Transform;
-uniform vec3		CornerAndScores[CORNER_COUNT];
+uniform vec2		Corners[CORNER_COUNT];
 
 #define endofheader
 
 
 //	returns score and distance
-float2 DistanceToCorner(vec2 Position,int CornerIndex)
+float DistanceToCorner(vec2 Position,int CornerIndex)
 {
-	float2 Corner2 = CornerAndScores[CornerIndex].xy;
-	float CornerScore = CornerAndScores[CornerIndex].z;
+	float2 Corner2 = Corners[CornerIndex];
 	float Distance = length( Position - Corner2 );
-	if ( CornerScore == 0 )
-		Distance = 999;
-	return float2( Distance, CornerScore );
+	return Distance;
 }
 
 float3 NormalToRedGreen(float Normal)
@@ -53,14 +50,13 @@ void main()
 	FrameUv = FrameUv4.xy;
 	
 	float NearestDistance = 999;
-	float NearestScore = 0;
+	float NearestScore = 999;
 	for ( int i=0;	i<CORNER_COUNT;	i++)
 	{
-		float2 DistanceAndScore = DistanceToCorner( FrameUv, i );
-		if ( DistanceAndScore.x < LineWidth )
+		float Distance = DistanceToCorner( FrameUv, i );
+		if ( Distance < LineWidth )
 		{
-			NearestDistance = min( NearestDistance, DistanceAndScore.x );
-			NearestScore = max( NearestScore, DistanceAndScore.y );
+			NearestDistance = min( NearestDistance, Distance );
 		}
 	}
 

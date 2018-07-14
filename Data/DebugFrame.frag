@@ -33,7 +33,7 @@ void main()
 
 	int ImageOrder[9];
 	ImageOrder[0] = 7;
-	ImageOrder[1] = 4;
+	ImageOrder[1] = 6;
 	ImageOrder[2] = 5;
 	ImageOrder[3] = 8;
 	ImageOrder[4] = 1;
