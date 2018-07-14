@@ -5,6 +5,80 @@ kernel void GetTestHomography(volatile global float16* ResultHomographys)
 	ResultHomographys[0] = (float16)( 1,0,0,0,	0,1,0,0,	0,0,1,0,	0,0,0,1	);
 }
 
+
+static void GaussianElimination(float A[8][9], int n)
+{
+	
+	// originally by arturo castro - 08/01/2010
+	//
+	// ported to c from pseudocode in
+	// http://en.wikipedia.org/wiki/Gaussian_elimination
+	
+	int i = 0;
+	int j = 0;
+	int m = n - 1;
+	
+	while (i < m && j < n)
+	{
+		// Find pivot in column j, starting in row i:
+		int maxi = i;
+		
+		for (int k = i + 1; k < m; k++)
+		{
+			float a = fabs( A[k][j] );
+			float b = fabs( A[maxi][j] );
+			if ( a > b )
+			{
+				maxi = k;
+			}
+		}
+		
+		if (A[maxi][j] != 0)
+		{
+			//swap rows i and maxi, but do not change the value of i
+			if (i != maxi)
+				for (int k = 0; k < n; k++)
+				{
+					float aux = A[i][k];
+					A[i][k] = A[maxi][k];
+					A[maxi][k] = aux;
+				}
+			//Now A[i,j] will contain the old value of A[maxi,j].
+			//divide each entry in row i by A[i,j]
+			float A_ij = A[i][j];
+			for (int k = 0; k < n; k++)
+			{
+				A[i][k] /= A_ij;
+			}
+			//Now A[i,j] will have the value 1.
+			for (int u = i + 1; u < m; u++)
+			{
+				//subtract A[u,j] * row i from row u
+				float A_uj = A[u][j];
+				for (int k = 0; k < n; k++)
+				{
+					A[u][k] -= A_uj * A[i][k];
+				}
+				//Now A[u,j] will be 0, since A[u,j] - A[i,j] * A[u,j] = A[u,j] - 1 * A[u,j] = 0.
+			}
+			i++;
+		}
+		j++;
+	}
+	
+	//back substitution
+	for (int k = m - 2; k >= 0; k--)
+	{
+		for (int l = k + 1; l < n - 1; l++)
+		{
+			A[k][m] -= A[k][l] * A[l][m];
+			//A[i*n+j]=0;
+		}
+	}
+	
+}
+
+
 static float16 CalcHomography(float3* src,float3* dest)
 {
 	// originally by arturo castro - 08/01/2010
@@ -41,9 +115,9 @@ static float16 CalcHomography(float3* src,float3* dest)
 		{  0,   0,  0, -src[3].x, -src[3].y, -1, src[3].x*dest[3].y, src[3].y*dest[3].y, -dest[3].y }, // h32
 	 };
 	
-	/*
-	GaussianElimination(ref P, 9);
-	*/
+	
+	GaussianElimination( P, 9 );
+	
 	
 	//	gr: to let us invert, need determinet to be non zero
 	float m22 = 1;
@@ -59,74 +133,7 @@ static float16 CalcHomography(float3* src,float3* dest)
 	return HomographyMtx;
 }
 
-/*
-static void GaussianElimination(float[8,9] A, int n)
-{
-	// originally by arturo castro - 08/01/2010
-	//
-	// ported to c from pseudocode in
-	// http://en.wikipedia.org/wiki/Gaussian_elimination
-	
-	int i = 0;
-	int j = 0;
-	int m = n - 1;
-	while (i < m && j < n)
-	{
-		// Find pivot in column j, starting in row i:
-		int maxi = i;
-		for (int k = i + 1; k < m; k++)
-		{
-			if (Mathf.Abs(A[k, j]) > Mathf.Abs(A[maxi, j]))
-			{
-				maxi = k;
-			}
-		}
-		if (A[maxi, j] != 0)
-		{
-			//swap rows i and maxi, but do not change the value of i
-			if (i != maxi)
-				for (int k = 0; k < n; k++)
-				{
-					float aux = A[i, k];
-					A[i, k] = A[maxi, k];
-					A[maxi, k] = aux;
-				}
-			//Now A[i,j] will contain the old value of A[maxi,j].
-			//divide each entry in row i by A[i,j]
-			float A_ij = A[i, j];
-			for (int k = 0; k < n; k++)
-			{
-				A[i, k] /= A_ij;
-			}
-			//Now A[i,j] will have the value 1.
-			for (int u = i + 1; u < m; u++)
-			{
-				//subtract A[u,j] * row i from row u
-				float A_uj = A[u, j];
-				for (int k = 0; k < n; k++)
-				{
-					A[u, k] -= A_uj * A[i, k];
-				}
-				//Now A[u,j] will be 0, since A[u,j] - A[i,j] * A[u,j] = A[u,j] - 1 * A[u,j] = 0.
-			}
-			
-			i++;
-		}
-		j++;
-	}
-	
-	//back substitution
-	for (int k = m - 2; k >= 0; k--)
-	{
-		for (int l = k + 1; l < n - 1; l++)
-		{
-			A[k, m] -= A[k, l] * A[l, m];
-			//A[i*n+j]=0;
-		}
-	}
 
-}
-*/
 
 static float16 GetHomographyMatrix(float16 Match4x2,float16 Truth4x2)
 {
@@ -186,7 +193,7 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 		//	need to exclude sources here really
 		float2 Truth2 = TruthCorners[t];
 		float4 TruthInverse4 = MatrixMultiply( HomographyMatrix, (float4)( Truth2.x, Truth2.y, 0, 1 ) );
-		float2 TruthInverse2 = TruthInverse4.xy;
+		float2 TruthInverse2 = TruthInverse4.xy / TruthInverse4.w;
 		
 		float TClosest = 999;
 		
@@ -199,12 +206,15 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			TClosest = min( TClosest, Distance );
 		}
 		
+		if ( TClosest <= MaxMatchDistance )
+			Score ++;
+		/*
 		float TScore = 1 - Range01( 0, MaxMatchDistance, TClosest );
 		Score += TScore;
+		 */
 	}
-	Score /= (TruthCornerCount);
+	//Score /= (TruthCornerCount);
 	
-
 	return Score;
 }
 

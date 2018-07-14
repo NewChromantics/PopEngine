@@ -850,7 +850,7 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 			Shader.SetUniform("LineScores", RectLineScores );
 			Shader.SetUniform("Background", Frame, 0 );
 			Shader.SetUniform("ShowIndexes", true );
-			Shader.SetUniform("Transform", GetIdentityFloat4x4() );
+			Shader.SetUniform("Transform", Frame.TransformMatrix );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
@@ -1283,6 +1283,7 @@ function FindCornerTransform(OpenclContext,Frame)
 			//	gr: these corners need to include non-rect'd ones
 			let Rectsf = RectsToFloatArray( Frame.Rects );
 			let Cornersf = RectsToCornerFloatArray( Frame.Rects );
+			//Debug( Cornersf.join("\n") );
 			Kernel.SetUniform("MatchRects", Rectsf );
 			Kernel.SetUniform("MatchRectCount", Frame.Rects.length );
 			Kernel.SetUniform("MatchCorners", Cornersf );
@@ -1452,7 +1453,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-	LiveParams.HomographyMaxMatchDistance = 0.04;
+	LiveParams.HomographyMaxMatchDistance = 0.10;
 	
 	
 	//Frame.Params = TemplateParams;
