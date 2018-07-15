@@ -1458,7 +1458,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-	LiveParams.HomographyMaxMatchDistance = 0.005;
+	LiveParams.HomographyMaxMatchDistance = 0.01;
 	
 	
 	//Frame.Params = TemplateParams;

@@ -212,8 +212,6 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 #else
 			float Distance = length( Match2 - TruthInverse2 );
 #endif
-			if ( Distance > MaxMatchDistance )
-				continue;
 			TClosest = min( TClosest, Distance );
 		}
 		
@@ -273,8 +271,7 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 	};
 	
 	float BestScore = 0;
-	//for ( int o=0;	o<ORDER_COUNT;	o++ )
-	int o = 0;
+	for ( int o=0;	o<ORDER_COUNT;	o++ )
 	{
 		for ( int i=0;	i<4;	i++ )
 		{
