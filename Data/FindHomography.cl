@@ -198,7 +198,7 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 		float2 Truth2 = TruthCorners[t];
 		float4 TruthInverse4 = MatrixMultiply( HomographyMatrix, (float4)( Truth2.x, Truth2.y, 0, 1 ) );
 		float2 TruthInverse2 = TruthInverse4.xy / TruthInverse4.w;
-		
+	
 		float TClosest = 999;
 		
 		for ( int m=0;	m<MatchCornerCount;	m++ )
@@ -215,7 +215,7 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			TClosest = min( TClosest, Distance );
 		}
 		
-		bool WholeScores = true;
+		bool WholeScores = false;
 		
 		if ( WholeScores )
 		{
@@ -227,7 +227,7 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			float TScore = 1.0f - min( 1.0f, TClosest/MaxMatchDistance );
 			//	square to favour better, but still count matches
 			//	^^ use with big radius
-			TScore *= TScore;
+			//TScore *= TScore;
 			Score += TScore;
 		}
 	}
@@ -280,6 +280,7 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 		(int4)(1,0,3,2),
 	};
 	
+
 	float BestScore = 0;
 	//ResultScores[ResultIndex] = -1;
 	for ( int o=0;	o<ORDER_COUNT;	o++ )
