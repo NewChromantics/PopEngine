@@ -685,7 +685,10 @@ function ExtractHoughLines(OpenclContext,Frame)
 	Frame.HoughLines = [];
 	Frame.UnfilteredHoughLines.forEach( PushHoughLineToLines );
 	
-	Debug("Filtered to " + Frame.Lines.length + " valid lines.");
+	Debug("Filtered to " + Frame.Lines.length + " valid lines. (cut to " + Frame.Params.MaxLines + ")");
+	Frame.Lines.length = Math.min( Frame.Lines.length, Frame.Params.MaxLines );
+	Frame.LineScores.length = Math.min( Frame.LineScores.length, Frame.Params.MaxLines );
+	Frame.HoughLines.length = Math.min( Frame.HoughLines.length, Frame.Params.MaxLines );
 }
 
 function GetHoughLines(OpenclContext,Frame)
@@ -756,6 +759,7 @@ function DrawLines(OpenglContext,Frame)
 
 function DrawRectLines(OpenglContext,Frame)
 {
+	Debug("DrawRectLines");
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
 		let Shader = GetDrawLinesShader(RenderTarget);
@@ -808,6 +812,7 @@ function DrawRectLines(OpenglContext,Frame)
 
 function DrawGroundTruthRectLines(OpenglContext,Frame)
 {
+	Debug("DrawGroundTruthRectLines");
 	let Render = function(RenderTarget,RenderTargetTexture,LastRenderTargetTexture,Iteration)
 	{
 		if ( !Array.isArray(Frame.GroundTruthRects) )
@@ -828,10 +833,13 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 				RectLines.push( [Rect.p1.x,Rect.p1.y,Rect.p2.x,Rect.p2.y] );
 				RectLines.push( [Rect.p2.x,Rect.p2.y,Rect.p3.x,Rect.p3.y] );
 				RectLines.push( [Rect.p3.x,Rect.p3.y,Rect.p0.x,Rect.p0.y] );
-				RectLineScores.push( Rect.Score );
-				RectLineScores.push( Rect.Score );
-				RectLineScores.push( Rect.Score );
-				RectLineScores.push( Rect.Score );
+				
+				let Score = Iteration / Frame.Transforms.length;
+				//let Score = Rect.Score;
+				RectLineScores.push( Score );
+				RectLineScores.push( Score );
+				RectLineScores.push( Score );
+				RectLineScores.push( Score );
 			};
 			Frame.GroundTruthRects.forEach(PushRectLines);
 			
@@ -853,7 +861,7 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 			Shader.SetUniform("Lines", RectLines );
 			Shader.SetUniform("LineScores", RectLineScores );
 			Shader.SetUniform("Background", Background, 0 );
-			Shader.SetUniform("ShowIndexes", true );
+			Shader.SetUniform("ShowIndexes", false );
 			Shader.SetUniform("Transform", Frame.Transforms[Iteration].Matrix );
 			Shader.SetUniform("TransformBackground", false );
 			Shader.SetUniform("TransformLines", true );
@@ -863,6 +871,7 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 	}
 	
 	let ChainCount = Frame.Transforms.length;
+	//let ChainCount = 1;
 	let TempTexture = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 	Frame.DebugGroundTruthRectLines = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 	let Prom = OpenglContext.RenderChain( Frame.DebugGroundTruthRectLines, Render, false, TempTexture, ChainCount );
@@ -1012,6 +1021,9 @@ function GetLineCorners(Frame)
 		if ( Frame.Corners.length > Frame.Params.MaxCorners )
 			Frame.Corners.length = Frame.Params.MaxCorners;
 		
+		if ( Frame.Params.UseRectCorners === true )
+			Frame.Corners = RectsToCornerFloatArray( Frame.Rects );
+		
 		Resolve();
 	}
 	
@@ -1023,6 +1035,7 @@ function GetLineCorners(Frame)
 
 function GetLineRects(Frame)
 {
+	Debug("GetLineRects");
 	let Functor = function(Resolve)
 	{
 		let Lines = Frame.Lines;
@@ -1067,15 +1080,11 @@ function GetLineRects(Frame)
 				if ( AreLinesClose( HoughLines[la], HoughLines[lb] ) )
 					continue;
 				
-				//	line count gets capped so avoid overflow later
-				if ( la >= Lines.length || lb >= Lines.length )
-					continue;
-				
 				HoughLines[la].ParallelLineIndexes.push( lb );
 			}
 		}
 		
-		Debug("HoughLines[0].ParallelLineIndexes=" + HoughLines[0].ParallelLineIndexes );
+		//Debug("HoughLines[0].ParallelLineIndexes=" + HoughLines[0].ParallelLineIndexes );
 		
 		//	array of [p,p,o,o,avgscore] linesets
 		let RectLineSets = [];
@@ -1118,8 +1127,8 @@ function GetLineRects(Frame)
 				}
 			}
 		}
-		Debug(RectLineSets.join("\n"));
-		Debug("Found " + RectLineSets.length + " rect sets");
+		//Debug(RectLineSets.join("\n"));
+		//Debug("Found " + RectLineSets.length + " rect sets");
 		
 		//	for each set, get the intersections and spit out a rect
 		Frame.Rects = [];
@@ -1142,18 +1151,6 @@ function GetLineRects(Frame)
 			Rect.p3 = {	x:RectCorners[3][0], y:RectCorners[3][1] };
 			Rect.Score = Score;
 			Frame.Rects.push( Rect );
-			/*
-			//	make lines
-			let PushRectCornerLine = function(a,b)
-			{
-				Frame.RectLines.push( [ RectCorners[a],RectCorners[b] ] );
-				Frame.RectLineScores.push( Score );
-			};
-			PushRectCornerLine( 0,1 );
-			PushRectCornerLine( 1,2 );
-			PushRectCornerLine( 2,3 );
-			PushRectCornerLine( 3,0 );
-			 */
 		}
 		let ProcessRectSetRect = function(RectSet)
 		{
@@ -1182,7 +1179,7 @@ function GetLineRects(Frame)
 		}
 		
 		
-		Frame.Rects = [Frame.Rects[3]];
+		//Frame.Rects = Frame.Rects.slice(0,3);
 		
 		Resolve();
 	}
@@ -1204,6 +1201,7 @@ function LoadGroundTruthRects(Filename)
 
 function LoadGroundTruths(Frame)
 {
+	Debug("LoadGroundTruths");
 	let Runner = function(Resolve)
 	{
 		if ( Frame.Params.GroundTruthRectsFilename === undefined )
@@ -1214,7 +1212,7 @@ function LoadGroundTruths(Frame)
 		}
 		
 		Frame.GroundTruthRects = LoadGroundTruthRects(Frame.Params.GroundTruthRectsFilename);
-		
+		Debug("There are " + Frame.GroundTruthRects.length + " ground truth rects");
 		Resolve();
 	}
 	
@@ -1277,8 +1275,30 @@ function RectsToCornerFloatArray(Rects)
 
 function FindCornerTransform(OpenclContext,Frame)
 {
-	let Kernel = GetFindHomographyKernel(OpenclContext);
+	Debug("FindCornerTransform");
+	
+	let Skip = function()
+	{
+		Debug("Skipping FindCornerTransform()" );
+		let Dummy = function(Resolve)
+		{
+			let IdentityTransform = { Matrix:GetIdentityFloat4x4(), Score:0 };
+			Frame.Transforms = [ IdentityTransform ];
+			Frame.TransformMatrix = Frame.Transforms[0].Matrix;
+			Resolve();
+		}
+		let Prom = MakePromise( Dummy );
+		return Prom;
+	};
+	
+	if ( Frame.GroundTruthRects === undefined )
+		return Skip();
+
 	let Dim = [ Frame.Rects.length, Frame.GroundTruthRects.length ];
+	if ( Dim[0] == 0 || Dim[1] == 0 )
+		return Skip();
+
+	let Kernel = GetFindHomographyKernel(OpenclContext);
 
 	let OnIteration = function(Kernel,IterationIndexes)
 	{
@@ -1292,13 +1312,10 @@ function FindCornerTransform(OpenclContext,Frame)
 
 			//	gr: these corners need to include non-rect'd ones
 			let Rectsf = RectsToFloatArray( Frame.Rects );
-			//let Cornersf = RectsToCornerFloatArray( Frame.Rects );
-			let Cornersf = Frame.Corners;
-			//Debug( Cornersf.join("\n") );
 			Kernel.SetUniform("MatchRects", Rectsf );
 			Kernel.SetUniform("MatchRectCount", Frame.Rects.length );
-			Kernel.SetUniform("MatchCorners", Cornersf );
-			Kernel.SetUniform("MatchCornerCount", Cornersf.length );
+			Kernel.SetUniform("MatchCorners", Frame.Corners );
+			Kernel.SetUniform("MatchCornerCount", Frame.Corners.length );
 
 			let GroundTruthRectsf = RectsToFloatArray( Frame.GroundTruthRects );
 			let GroundTruthCornersf = RectsToCornerFloatArray( Frame.GroundTruthRects );
@@ -1321,7 +1338,7 @@ function FindCornerTransform(OpenclContext,Frame)
 		let Transforms = [];
 		for ( let r=0;	r<ScoreBuffer.length;	r++ )
 		{
-			if ( ScoreBuffer[r] == 0 )
+			if ( ScoreBuffer[r] < Frame.Params.HomographyMinScore )
 				continue;
 			let Transform = {};
 			Transform.Score = ScoreBuffer[r];
@@ -1332,16 +1349,20 @@ function FindCornerTransform(OpenclContext,Frame)
 		{
 			if ( ta.Score > tb.Score )
 				return -1;
-			if ( ta.Score > tb.Score )
-				return -1;
+			if ( ta.Score < tb.Score )
+				return 1;
 			return 0;
 		}
 		Transforms.sort( Compare );
 		
-		Debug(ScoreBuffer);
-		Debug("Best matrix score (out of " + ScoreBuffer.length + "): " + Transforms[0].Score );
+		Debug("Got " + Transforms.length + " matrixes with score >=" + Frame.Params.HomographyMinScore );
+		Transforms.forEach( function(t)	{	Debug(t.Score);	}	);
+		//Debug(ScoreBuffer);
+		//Debug("Best matrix score (out of " + ScoreBuffer.length + "): " + Transforms[0].Score );
+		if ( Transforms.length == 0 )
+			Transforms.push( {	Matrix:GetIdentityFloat4x4(), Score:0 });
 		Frame.Transforms = Transforms;
-		Frame.TransformMatrix = Transforms[6].Matrix;
+		Frame.TransformMatrix = Transforms[0].Matrix;
 		Debug("-> " + Frame.TransformMatrix );
 	}
 	
@@ -1383,6 +1404,7 @@ function GetTestCornerTransform(OpenclContext,Frame)
 
 function DrawCorners(OpenglContext,Frame)
 {
+	Debug("DrawCorners");
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
 		let Shader = GetDrawCornersShader(RenderTarget);
@@ -1463,7 +1485,7 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtractHoughLineMinScore = 0.3;
 	LiveParams.MaxLines = 20;
 	LiveParams.MaxCorners = 40;
-	//LiveParams.MaxCorners = 500;
+	//LiveParams.UseRectCorners = true;
 	LiveParams.ChunkCount = 20;
 	LiveParams.DistanceCount = 400;
 	LiveParams.AngleCount = 180*2;
@@ -1477,9 +1499,9 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
 	LiveParams.HomographyMaxMatchDistance = 0.01;
+	LiveParams.HomographyMinScore = 1.0;
 	
-	
-	//Frame.Params = TemplateParams;
+	Frame.Params = TemplateParams;
 	Frame.Params = LiveParams;
 	/*
 	Frame.HistogramHitMax = Math.sqrt( Frame.GetWidth() * Frame.GetHeight() ) / 10;

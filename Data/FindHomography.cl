@@ -256,7 +256,6 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 	
 	//	our rects might be in the wrong order, need to cycle coords (and reverse?)
 	float16 MatchRectOrig = MatchRects[MatchIndex];
-	float16 MatchRect0;
 #define ORDER_COUNT	8
 	int4 Order[ORDER_COUNT] =
 	{
@@ -272,8 +271,10 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 	};
 	
 	float BestScore = 0;
+	ResultScores[ResultIndex] = -1;
 	for ( int o=0;	o<ORDER_COUNT;	o++ )
 	{
+		float16 MatchRect0;
 		for ( int i=0;	i<4;	i++ )
 		{
 			int4 j4 = Order[o];
