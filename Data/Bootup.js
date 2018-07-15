@@ -766,16 +766,16 @@ function DrawRectLines(OpenglContext,Frame)
 	Debug("DrawRectLines");
 	let Render = function(RenderTarget,RenderTargetTexture)
 	{
+		if ( !Array.isArray(Frame.Rects) )
+		{
+			RenderTarget.ClearColour(1,0,0);
+			return;
+		}
+		RenderTarget.ClearColour(1,0,0);
 		let Shader = GetDrawLinesShader(RenderTarget);
 		
 		let SetUniforms = function(Shader)
 		{
-			if ( !Array.isArray(Frame.Rects) )
-			{
-				RenderTarget.ClearColour(1,0,0);
-				return;
-			}
-
 			//	make lines from rects
 			let RectLines = [];
 			let RectLineScores = [];
@@ -820,69 +820,86 @@ function DrawRectLines(OpenglContext,Frame)
 function DrawGroundTruthRectLines(OpenglContext,Frame)
 {
 	Debug("DrawGroundTruthRectLines");
-	let Render = function(RenderTarget,RenderTargetTexture,LastRenderTargetTexture,Iteration)
+	
+	let Render = function(RenderTarget,RenderTargetTexture)
 	{
 		if ( !Array.isArray(Frame.GroundTruthRects) )
 		{
 			RenderTarget.ClearColour(1,0,0);
 			return;
 		}
+
+		RenderTarget.ClearColour(1,0,0);
 		let Shader = GetDrawLinesShader(RenderTarget);
-		
-		let SetUniforms = function(Shader)
+
+		let IterationCount = Frame.Transforms.length;
+		for ( let Iteration=0;	Iteration<IterationCount;	Iteration++ )
 		{
-			//	make lines from rects
-			let RectLines = [];
-			let RectLineScores = [];
-			let PushRectLines = function(Rect)
+			let ItWide = Math.ceil( Math.sqrt( IterationCount ) );
+			let ItHigh = ItWide;
+			let Itx = Iteration % ItWide;
+			let Ity = Math.floor( Iteration / ItWide );
+			let Viewport = [];
+
+			Viewport[0] = Itx / ItWide;
+			Viewport[1] = Ity / ItHigh;
+			Viewport[2] = 1 / ItWide;
+			Viewport[3] = 1 / ItHigh;
+			Debug( Itx + "," + Ity + " -> " + Viewport);
+			RenderTarget.SetViewport( Viewport );
+			
+			let SetUniforms = function(Shader)
 			{
-				RectLines.push( [Rect.p0.x,Rect.p0.y,Rect.p1.x,Rect.p1.y] );
-				RectLines.push( [Rect.p1.x,Rect.p1.y,Rect.p2.x,Rect.p2.y] );
-				RectLines.push( [Rect.p2.x,Rect.p2.y,Rect.p3.x,Rect.p3.y] );
-				RectLines.push( [Rect.p3.x,Rect.p3.y,Rect.p0.x,Rect.p0.y] );
+				//	make lines from rects
+				let RectLines = [];
+				let RectLineScores = [];
+				let PushRectLines = function(Rect)
+				{
+					RectLines.push( [Rect.p0.x,Rect.p0.y,Rect.p1.x,Rect.p1.y] );
+					RectLines.push( [Rect.p1.x,Rect.p1.y,Rect.p2.x,Rect.p2.y] );
+					RectLines.push( [Rect.p2.x,Rect.p2.y,Rect.p3.x,Rect.p3.y] );
+					RectLines.push( [Rect.p3.x,Rect.p3.y,Rect.p0.x,Rect.p0.y] );
+					
+					let Score = Range( Frame.Params.HomographyMinScore, Frame.Params.HomographyMaxScore, Frame.Transforms[Iteration].Score );
+					//let Score = Iteration / Frame.Transforms.length;
+					//let Score = Rect.Score;
+					RectLineScores.push( Score );
+					RectLineScores.push( Score );
+					RectLineScores.push( Score );
+					RectLineScores.push( Score );
+				};
+				Frame.GroundTruthRects.forEach(PushRectLines);
 				
-				let Score = Range( Frame.Params.HomographyMinScore, Frame.Params.HomographyMaxScore, Frame.Transforms[Iteration].Score );
-				//let Score = Iteration / Frame.Transforms.length;
-				//let Score = Rect.Score;
-				RectLineScores.push( Score );
-				RectLineScores.push( Score );
-				RectLineScores.push( Score );
-				RectLineScores.push( Score );
-			};
-			Frame.GroundTruthRects.forEach(PushRectLines);
-			
-			if ( RectLines.length > 200 )
-				RectLines.length = 200;
-			if ( RectLineScores.length > 200 )
-				RectLineScores.length = 200;
-			
-			while ( RectLines.length < 200 )
-			{
-				RectLines.push( [0,0,0,0] );
-				RectLineScores.push( 0 );
+				if ( RectLines.length > 200 )
+					RectLines.length = 200;
+				if ( RectLineScores.length > 200 )
+					RectLineScores.length = 200;
+				
+				while ( RectLines.length < 200 )
+				{
+					RectLines.push( [0,0,0,0] );
+					RectLineScores.push( 0 );
+				}
+				
+				let Background = Frame;
+				//if ( Iteration > 0 )
+				//	Background = LastRenderTargetTexture;
+				
+				Shader.SetUniform("Lines", RectLines );
+				Shader.SetUniform("LineScores", RectLineScores );
+				Shader.SetUniform("Background", Background, 0 );
+				Shader.SetUniform("ShowIndexes", false );
+				Shader.SetUniform("Transform", Frame.Transforms[Iteration].Matrix );
+				Shader.SetUniform("TransformBackground", false );
+				Shader.SetUniform("TransformLines", true );
 			}
-			
-			let Background = Frame;
-			if ( Iteration > 0 )
-				Background = LastRenderTargetTexture;
-			
-			Shader.SetUniform("Lines", RectLines );
-			Shader.SetUniform("LineScores", RectLineScores );
-			Shader.SetUniform("Background", Background, 0 );
-			Shader.SetUniform("ShowIndexes", false );
-			Shader.SetUniform("Transform", Frame.Transforms[Iteration].Matrix );
-			Shader.SetUniform("TransformBackground", false );
-			Shader.SetUniform("TransformLines", true );
-		}
 		
-		RenderTarget.DrawQuad( Shader, SetUniforms );
+			RenderTarget.DrawQuad( Shader, SetUniforms );
+		}
 	}
 	
-	let ChainCount = Frame.Transforms.length;
-	//let ChainCount = 1;
-	let TempTexture = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 	Frame.DebugGroundTruthRectLines = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	let Prom = OpenglContext.RenderChain( Frame.DebugGroundTruthRectLines, Render, false, TempTexture, ChainCount );
+	let Prom = OpenglContext.Render( Frame.DebugGroundTruthRectLines, Render );
 	return Prom;
 }
 
@@ -1507,8 +1524,8 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-	LiveParams.HomographyMaxMatchDistance = 0.005;
-	LiveParams.HomographyMinScore = 5.0;
+	LiveParams.HomographyMaxMatchDistance = 0.001;
+	LiveParams.HomographyMinScore = 7.0;
 	LiveParams.HomographyMaxScore = 8.0;	//	for visualisation
 
 	Frame.Params = TemplateParams;

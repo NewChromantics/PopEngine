@@ -84,6 +84,7 @@ float DistanceToLine2(vec2 Position,vec2 Start,vec2 End)
 
 void main()
 {
+	
 	vec2 FrameUv = uv;
 	FrameUv -= vec2(0.5,0.5);
 	FrameUv /= vec2(UV_ZOOM,UV_ZOOM);
@@ -139,4 +140,5 @@ void main()
 			gl_FragColor = vec4(0,0,1,1);
 		 */
 	}
+
 }

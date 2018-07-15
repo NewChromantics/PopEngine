@@ -38,7 +38,8 @@ class TWindowWrapper
 {
 public:
 	TWindowWrapper() :
-		mContainer	( nullptr )
+		mContainer			( nullptr ),
+		mActiveRenderTarget	(nullptr)
 	{
 	}
 	~TWindowWrapper();
@@ -54,6 +55,7 @@ public:
 	//	these are context things
 	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				SetViewport(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
 
@@ -61,6 +63,8 @@ public:
 	v8::Persistent<v8::Object>		mHandle;
 	std::shared_ptr<TRenderWindow>	mWindow;
 	TV8Container*					mContainer;
+	
+	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object
 };
 
 

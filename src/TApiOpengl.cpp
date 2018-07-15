@@ -6,6 +6,7 @@ using namespace v8;
 
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
+const char SetViewport_FunctionName[] = "SetViewport";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
@@ -151,6 +152,24 @@ v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 }
 
 
+v8::Local<v8::Value> TWindowWrapper::SetViewport(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+
+	BufferArray<float,4> Viewportxywh;
+	v8::EnumArray( Arguments[0], GetArrayBridge(Viewportxywh), "SetViewport" );
+	Soy::Rectf ViewportRect( Viewportxywh[0], Viewportxywh[1], Viewportxywh[2], Viewportxywh[3] );
+	
+	if ( !This.mActiveRenderTarget )
+		throw Soy::AssertException("No active render target");
+	
+	This.mActiveRenderTarget->SetViewportNormalised( ViewportRect );
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
+
 template<typename TYPE>
 v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isolate,Local<TYPE> LocalHandle)
 {
@@ -165,9 +184,10 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	auto* Isolate = Params.mIsolate;
 
+	auto* pThis = &This;
 	auto Window = Arguments.This();
 	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
-
+	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
@@ -221,15 +241,20 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			Opengl::TRenderTargetFbo RenderTarget( TargetTexture );
 			RenderTarget.mGenerateMipMaps = false;
 			RenderTarget.Bind();
+			
+			//	hack! need to turn render target into it's own javasript object
+			pThis->mActiveRenderTarget = &RenderTarget;
 			RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 			try
 			{
 				//	immediately call the javascript callback
 				Container->RunScoped( ExecuteRenderCallback );
+				pThis->mActiveRenderTarget = nullptr;
 				RenderTarget.Unbind();
 			}
 			catch(std::exception& e)
 			{
+				pThis->mActiveRenderTarget = nullptr;
 				RenderTarget.Unbind();
 				throw;
 			}
@@ -275,6 +300,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	auto* Isolate = Params.mIsolate;
 	
+	auto* pThis = &This;
 	auto Window = Arguments.This();
 	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
 	
@@ -342,6 +368,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 				Opengl::TRenderTargetFbo RenderTarget( CurrentBuffer.GetTexture() );
 				RenderTarget.mGenerateMipMaps = false;
 				RenderTarget.Bind();
+				pThis->mActiveRenderTarget = &RenderTarget;
 				RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 				try
 				{
@@ -365,11 +392,13 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 					
 					//	immediately call the javascript callback
 					Container->RunScoped( ExecuteRenderCallback );
+					pThis->mActiveRenderTarget = nullptr;
 					RenderTarget.Unbind();
 					CurrentBuffer.OnOpenglTextureChanged();
 				}
 				catch(std::exception& e)
 				{
+					pThis->mActiveRenderTarget = nullptr;
 					RenderTarget.Unbind();
 					throw;
 				}
@@ -432,6 +461,7 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	
 	//	add members
 	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
+	Container.BindFunction<SetViewport_FunctionName>( InstanceTemplate, SetViewport );
 	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
 	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
 	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );

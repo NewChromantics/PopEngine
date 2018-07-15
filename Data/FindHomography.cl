@@ -215,7 +215,7 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			TClosest = min( TClosest, Distance );
 		}
 		
-		bool WholeScores = false;
+		bool WholeScores = true;
 		
 		if ( WholeScores )
 		{
