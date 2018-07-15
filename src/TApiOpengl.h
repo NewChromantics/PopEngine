@@ -55,6 +55,7 @@ public:
 	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
 
 public:
 	v8::Persistent<v8::Object>		mHandle;

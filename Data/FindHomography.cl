@@ -220,7 +220,8 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 		//	Score ++;
 		
 		float TScore = 1.0f - min( 1.0f, TClosest/MaxMatchDistance );
-		Score += TScore;
+		//	square to favour better, but still count matches
+		Score += TScore * TScore;
 		
 	}
 	//Score /= (TruthCornerCount);

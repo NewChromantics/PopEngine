@@ -8,6 +8,7 @@ const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
+const char RenderChain_FunctionName[] = "RenderChain";
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
@@ -177,6 +178,8 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	bool ReadBackPixelsAfterwards = false;
 	if ( Arguments[2]->IsBoolean() )
 		ReadBackPixelsAfterwards = Local<Number>::Cast(Arguments[2])->BooleanValue();
+	else if ( !Arguments[2]->IsUndefined() )
+		throw Soy::AssertException("3rd argument(ReadBackPixels) must be bool or undefined.");
 	auto* Container = &Params.mContainer;
 	
 	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
@@ -264,6 +267,148 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	return Promise;
 }
 
+
+
+v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	auto Window = Arguments.This();
+	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	
+	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
+	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
+	bool ReadBackPixelsAfterwards = false;
+	if ( Arguments[2]->IsBoolean() )
+		ReadBackPixelsAfterwards = Local<Number>::Cast(Arguments[2])->BooleanValue();
+	else if ( !Arguments[2]->IsUndefined() )
+		throw Soy::AssertException("3rd argument(ReadBackPixels) must be bool or undefined.");
+	auto TempPersistent = v8::GetPersistent( *Isolate, Arguments[3] );
+	auto* TempImage = &v8::GetObject<TImageWrapper>(Arguments[3]);
+	auto IterationCount = Local<Number>::Cast( Arguments[4] )->Int32Value();
+	auto* Container = &Params.mContainer;
+	
+	auto OnCompleted = [=](Local<Context> Context)
+	{
+		//	gr: can't do this unless we're in the javascript thread...
+		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+		auto Message = String::NewFromUtf8( Isolate, "Yay!");
+		ResolverLocal->Resolve( Message );
+	};
+	
+	
+	auto OpenglRender = [=]
+	{
+		try
+		{
+			//	get the texture from the image
+			std::string GenerateTextureError;
+			auto OnError = [&](const std::string& Error)
+			{
+				throw Soy::AssertException(Error);
+			};
+			TargetImage->GetTexture( []{}, OnError );
+			TempImage->GetTexture( []{}, OnError );
+			
+			//	targets for chain
+			auto& FinalTargetTexture = TargetImage->GetTexture();
+			auto& TempTargetTexture = TempImage->GetTexture();
+			
+			//	do back/front buffer order so FinalTarget is always last front-target
+			BufferArray<TImageWrapper*,2> Targets;
+			if ( IterationCount % 2 == 1 )
+			{
+				Targets.PushBack( TempImage );
+				Targets.PushBack( TargetImage );
+			}
+			else
+			{
+				Targets.PushBack( TargetImage );
+				Targets.PushBack( TempImage );
+			}
+			
+			for ( int it=0;	it<IterationCount;	it++ )
+			{
+				auto& PreviousBuffer = *Targets[ (it+0) % Targets.GetSize() ];
+				auto& CurrentBuffer = *Targets[ (it+1) % Targets.GetSize() ];
+				
+				Opengl::TRenderTargetFbo RenderTarget( CurrentBuffer.GetTexture() );
+				RenderTarget.mGenerateMipMaps = false;
+				RenderTarget.Bind();
+				RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+				try
+				{
+					auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
+					{
+						auto* Isolate = Container->mIsolate;
+						BufferArray<v8::Local<v8::Value>,4> CallbackParams;
+						auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
+						auto CurrentLocal = v8::GetLocal( *Isolate, CurrentBuffer.mHandle );
+						auto PreviousLocal = v8::GetLocal( *Isolate, PreviousBuffer.mHandle );
+						auto IterationLocal = Number::New( Isolate, it );
+						CallbackParams.PushBack( WindowLocal );
+						CallbackParams.PushBack( CurrentLocal );
+						CallbackParams.PushBack( PreviousLocal );
+						CallbackParams.PushBack( IterationLocal );
+						auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
+						auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
+						auto FunctionThis = Context->Global();
+						Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
+					};
+					
+					//	immediately call the javascript callback
+					Container->RunScoped( ExecuteRenderCallback );
+					RenderTarget.Unbind();
+					CurrentBuffer.OnOpenglTextureChanged();
+				}
+				catch(std::exception& e)
+				{
+					RenderTarget.Unbind();
+					throw;
+				}
+				
+			}
+
+			if ( ReadBackPixelsAfterwards )
+			{
+				TargetImage->ReadOpenglPixels();
+			}
+			
+			//	queue the completion, doesn't need to be done instantly
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				//	gr: does this need to be an exception? string?
+				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
+				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
+				//ResolverLocal->Reject( Exception );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
+	auto& OpenglContext = *This.mWindow->GetContext();
+	OpenglContext.PushJob( OpenglRender );
+	
+	//	return the promise
+	auto Promise = Resolver->GetPromise();
+	return Promise;
+}
+
+
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
 	auto* Isolate = Container.mIsolate;
@@ -289,7 +434,8 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
 	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
 	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
-	
+	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
+
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	

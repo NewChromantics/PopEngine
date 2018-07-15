@@ -808,7 +808,7 @@ function DrawRectLines(OpenglContext,Frame)
 
 function DrawGroundTruthRectLines(OpenglContext,Frame)
 {
-	let Render = function(RenderTarget,RenderTargetTexture)
+	let Render = function(RenderTarget,RenderTargetTexture,LastRenderTargetTexture,Iteration)
 	{
 		if ( !Array.isArray(Frame.GroundTruthRects) )
 		{
@@ -846,11 +846,15 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 				RectLineScores.push( 0 );
 			}
 			
+			let Background = Frame;
+			if ( Iteration > 0 )
+				Background = LastRenderTargetTexture;
+			
 			Shader.SetUniform("Lines", RectLines );
 			Shader.SetUniform("LineScores", RectLineScores );
-			Shader.SetUniform("Background", Frame, 0 );
+			Shader.SetUniform("Background", Background, 0 );
 			Shader.SetUniform("ShowIndexes", true );
-			Shader.SetUniform("Transform", Frame.TransformMatrix );
+			Shader.SetUniform("Transform", Frame.Transforms[Iteration].Matrix );
 			Shader.SetUniform("TransformBackground", false );
 			Shader.SetUniform("TransformLines", true );
 		}
@@ -858,8 +862,10 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 		RenderTarget.DrawQuad( Shader, SetUniforms );
 	}
 	
+	let ChainCount = Frame.Transforms.length;
+	let TempTexture = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
 	Frame.DebugGroundTruthRectLines = new Image( [Frame.GetWidth(),Frame.GetHeight() ] );
-	let Prom = OpenglContext.Render( Frame.DebugGroundTruthRectLines, Render );
+	let Prom = OpenglContext.RenderChain( Frame.DebugGroundTruthRectLines, Render, false, TempTexture, ChainCount );
 	return Prom;
 }
 
@@ -1176,7 +1182,7 @@ function GetLineRects(Frame)
 		}
 		
 		
-		//Frame.Rects = [Frame.Rects[3]];
+		Frame.Rects = [Frame.Rects[3]];
 		
 		Resolve();
 	}
@@ -1311,19 +1317,31 @@ function FindCornerTransform(OpenclContext,Frame)
 	{
 		let MatrixBuffer = Kernel.ReadUniform("ResultHomographys");
 		let ScoreBuffer = Kernel.ReadUniform("ResultScores");
-		
-		//	get best
-		let BestScoreIndex = 0;
+
+		let Transforms = [];
 		for ( let r=0;	r<ScoreBuffer.length;	r++ )
 		{
-			if ( ScoreBuffer[r] < ScoreBuffer[BestScoreIndex] )
+			if ( ScoreBuffer[r] == 0 )
 				continue;
-			BestScoreIndex = r;
+			let Transform = {};
+			Transform.Score = ScoreBuffer[r];
+			Transform.Matrix = GetFloat16Element( MatrixBuffer, r );
+			Transforms.push( Transform );
 		}
+		let Compare = function(ta,tb)
+		{
+			if ( ta.Score > tb.Score )
+				return -1;
+			if ( ta.Score > tb.Score )
+				return -1;
+			return 0;
+		}
+		Transforms.sort( Compare );
 		
 		Debug(ScoreBuffer);
-		Debug("Best matrix score (out of " + ScoreBuffer.length + "): " + ScoreBuffer[BestScoreIndex] );
-		Frame.TransformMatrix = GetFloat16Element( MatrixBuffer, BestScoreIndex );
+		Debug("Best matrix score (out of " + ScoreBuffer.length + "): " + Transforms[0].Score );
+		Frame.Transforms = Transforms;
+		Frame.TransformMatrix = Transforms[6].Matrix;
 		Debug("-> " + Frame.TransformMatrix );
 	}
 	

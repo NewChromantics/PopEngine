@@ -133,8 +133,10 @@ void main()
 	{
 		vec2 BackgroundUv = TransformBackground ? FrameUv : UntransformedFrameUv;
 		gl_FragColor = texture( Background, BackgroundUv );
+		/*
 		//if ( BackgroundUv.x < 0 || BackgroundUv.x > 1 || BackgroundUv.y < 0 || BackgroundUv.y > 1 )
 		if ( FrameUv.x < 0 || FrameUv.x > 1 || FrameUv.y < 0 || FrameUv.y > 1 )
 			gl_FragColor = vec4(0,0,1,1);
+		 */
 	}
 }
