@@ -215,14 +215,21 @@ static float FindHomography(float16 MatchRect,float16 TruthRect,global float2* M
 			TClosest = min( TClosest, Distance );
 		}
 		
+		bool WholeScores = false;
 		
-		//if ( TClosest <= MaxMatchDistance )
-		//	Score ++;
-		
-		float TScore = 1.0f - min( 1.0f, TClosest/MaxMatchDistance );
-		//	square to favour better, but still count matches
-		Score += TScore * TScore;
-		
+		if ( WholeScores )
+		{
+			if ( TClosest <= MaxMatchDistance )
+				Score ++;
+		}
+		else
+		{
+			float TScore = 1.0f - min( 1.0f, TClosest/MaxMatchDistance );
+			//	square to favour better, but still count matches
+			//	^^ use with big radius
+			TScore *= TScore;
+			Score += TScore;
+		}
 	}
 	//Score /= (TruthCornerCount);
 	
@@ -248,15 +255,18 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 								float MaxMatchDistance
 								)
 {
+#define ORDER_COUNT	8
+
 	int MatchIndex = get_global_id(0) + MatchRectIndexFirst;
 	int TruthIndex = get_global_id(1) + TruthRectIndexFirst;
-	int ResultIndex = (TruthIndex*MatchRectCount) + MatchIndex;
-
+	//int OrderIndex = get_global_id(2);
+	int BaseResultIndex = TruthIndex * (MatchRectCount*ORDER_COUNT);
+	BaseResultIndex += MatchIndex * (ORDER_COUNT);
+	//ResultIndex += OrderIndex;
 	float16 TruthRect0 = TruthRects[TruthIndex];
 	
 	//	our rects might be in the wrong order, need to cycle coords (and reverse?)
 	float16 MatchRectOrig = MatchRects[MatchIndex];
-#define ORDER_COUNT	8
 	int4 Order[ORDER_COUNT] =
 	{
 		(int4)(0,1,2,3),
@@ -271,9 +281,10 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 	};
 	
 	float BestScore = 0;
-	ResultScores[ResultIndex] = -1;
+	//ResultScores[ResultIndex] = -1;
 	for ( int o=0;	o<ORDER_COUNT;	o++ )
 	{
+		int ResultIndex = BaseResultIndex + o;
 		float16 MatchRect0;
 		for ( int i=0;	i<4;	i++ )
 		{
@@ -286,7 +297,7 @@ kernel void FindHomographies(	volatile global float16* ResultHomographys,
 		float16 ResultHomography;
 		float ResultScore = FindHomography( MatchRect0, TruthRect0, MatchCorners, MatchCornerCount, TruthCorners, TruthCornerCount, MaxMatchDistance, &ResultHomography );
 	
-		if ( ResultScore > BestScore )
+		//if ( ResultScore > BestScore )
 		{
 			ResultHomographys[ResultIndex] = ResultHomography;
 			ResultScores[ResultIndex] = ResultScore;

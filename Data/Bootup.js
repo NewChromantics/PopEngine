@@ -214,6 +214,10 @@ function MakePromise(Func)
 	return new Promise( Func );
 }
 
+function Range(Min,Max,Value)
+{
+	return (Value-Min) / (Max-Min);
+}
 function GetNumberRangeInclusive(Min,Max,Steps)
 {
 	let Numbers = [];
@@ -837,7 +841,8 @@ function DrawGroundTruthRectLines(OpenglContext,Frame)
 				RectLines.push( [Rect.p2.x,Rect.p2.y,Rect.p3.x,Rect.p3.y] );
 				RectLines.push( [Rect.p3.x,Rect.p3.y,Rect.p0.x,Rect.p0.y] );
 				
-				let Score = Iteration / Frame.Transforms.length;
+				let Score = Range( Frame.Params.HomographyMinScore, Frame.Params.HomographyMaxScore, Frame.Transforms[Iteration].Score );
+				//let Score = Iteration / Frame.Transforms.length;
 				//let Score = Rect.Score;
 				RectLineScores.push( Score );
 				RectLineScores.push( Score );
@@ -1182,7 +1187,7 @@ function GetLineRects(Frame)
 		}
 		
 		
-		//Frame.Rects = Frame.Rects.slice(0,3);
+		//Frame.Rects = Frame.Rects.slice(20,26);
 		
 		Resolve();
 	}
@@ -1297,6 +1302,7 @@ function FindCornerTransform(OpenclContext,Frame)
 	if ( Frame.GroundTruthRects === undefined )
 		return Skip();
 
+	let ORDER_COUNT = 8;
 	let Dim = [ Frame.Rects.length, Frame.GroundTruthRects.length ];
 	if ( Dim[0] == 0 || Dim[1] == 0 )
 		return Skip();
@@ -1307,7 +1313,7 @@ function FindCornerTransform(OpenclContext,Frame)
 	{
 		if ( IterationIndexes[0]==0 && IterationIndexes[1]==0 )
 		{
-			let ResultCount = Dim[0] * Dim[1];
+			let ResultCount = Dim[0] * Dim[1] * ORDER_COUNT;
 			let ResultMatrixBuffer = new Float32Array( 16*ResultCount );
 			let ResultScoreBuffer = new Float32Array( 1*ResultCount );
 			Kernel.SetUniform("ResultHomographys", ResultMatrixBuffer );
@@ -1488,12 +1494,12 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtractHoughLineMinScore = 0.3;
 	LiveParams.MaxLines = 20;
 	LiveParams.MaxCorners = 40;
-	//LiveParams.UseRectCorners = true;
+	LiveParams.UseRectCorners = true;
 	LiveParams.ChunkCount = 20;
 	LiveParams.DistanceCount = 400;
 	LiveParams.AngleCount = 180*2;
 	LiveParams.CornerAngleDiffMin = 20;
-	LiveParams.ParallelLineAngleDiffMax = 4;
+	LiveParams.ParallelLineAngleDiffMax = 6;
 	LiveParams.LineDistanceIndexDiffMin = 5;
 	//LiveParams.FilterOutsideLines = true;
 	//LiveParams.LoadPremadeLineMask = "Data/PitchMaskHalf.png";
@@ -1501,9 +1507,10 @@ function StartProcessFrame(Frame,OpenglContext,OpenclContext)
 	LiveParams.ExtendChunks = true;
 	LiveParams.GroundTruthRectsFilename = "Data/PitchGroundTruthRects.json";
 	LiveParams.MergeCornerMaxDistance = 0.02;
-	LiveParams.HomographyMaxMatchDistance = 0.01;
-	LiveParams.HomographyMinScore = 1.0;
-	
+	LiveParams.HomographyMaxMatchDistance = 0.005;
+	LiveParams.HomographyMinScore = 5.0;
+	LiveParams.HomographyMaxScore = 8.0;	//	for visualisation
+
 	Frame.Params = TemplateParams;
 	Frame.Params = LiveParams;
 	/*
