@@ -781,10 +781,12 @@ function DrawRectLines(OpenglContext,Frame)
 				RectLines.push( [Rect.p1.x,Rect.p1.y,Rect.p2.x,Rect.p2.y] );
 				RectLines.push( [Rect.p2.x,Rect.p2.y,Rect.p3.x,Rect.p3.y] );
 				RectLines.push( [Rect.p3.x,Rect.p3.y,Rect.p0.x,Rect.p0.y] );
-				RectLineScores.push( Rect.Score );
-				RectLineScores.push( Rect.Score );
-				RectLineScores.push( Rect.Score );
-				RectLineScores.push( Rect.Score );
+				let Score = (RectLineScores.length/4) / Frame.Rects.length;
+				//let Score = Rect.Score;
+				RectLineScores.push( Score );
+				RectLineScores.push( Score );
+				RectLineScores.push( Score );
+				RectLineScores.push( Score );
 			};
 			Frame.Rects.forEach(PushRectLines);
 			
@@ -797,8 +799,9 @@ function DrawRectLines(OpenglContext,Frame)
 			Shader.SetUniform("LineScores", RectLineScores );
 			Shader.SetUniform("Background", Frame.LineMask, 0 );
 			Shader.SetUniform("ShowIndexes", false );
-			Shader.SetUniform("Transform", Frame.TransformMatrix );
 			Shader.SetUniform("Transform", GetIdentityFloat4x4() );
+			Shader.SetUniform("TransformBackground", false );
+			Shader.SetUniform("TransformLines", false );
 		}
 		
 		RenderTarget.DrawQuad( Shader, SetUniforms );
