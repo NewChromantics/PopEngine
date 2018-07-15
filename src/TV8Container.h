@@ -69,6 +69,7 @@ namespace v8
 
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
+	std::string		GetTypeName(v8::Local<v8::Value> Handle);
 
 	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
 

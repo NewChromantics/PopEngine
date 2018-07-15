@@ -426,6 +426,15 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 }
 
 
+std::string v8::GetTypeName(v8::Local<v8::Value> Handle)
+{
+	if ( Handle->IsUndefined() )	return "Undefined";
+	if ( Handle->IsNull() )		return "Null";
+	if ( Handle->IsFunction() )		return "Function";
+
+	return "Unknown type";
+}
+
 void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray,const std::string& Context)
 {
 	EnumArray( ValueHandle, FloatArray, Context );
@@ -464,7 +473,7 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<float>& FloatArr
 	else
 	{
 		std::stringstream Error;
-		Error << "Unhandled element type in EnumArray<float>. Context: " << Context;
+		Error << "Unhandled element type(" << v8::GetTypeName(ValueHandle) << ") in EnumArray<float>. Context: " << Context;
 		throw Soy::AssertException(Error.str());
 	}
 }
@@ -527,7 +536,7 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray,c
 	else
 	{
 		std::stringstream Error;
-		Error << "Unhandled element type in EnumArray<int>. Context: " << Context;
+		Error << "Unhandled element type(" << v8::GetTypeName(ValueHandle) << ") in EnumArray<int>. Context: " << Context;
 		throw Soy::AssertException(Error.str());
 	}
 }
