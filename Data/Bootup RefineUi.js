@@ -22,6 +22,9 @@ var RefineUi_Shader = null;
 var UserCoords = [];
 var UserCoordViewport = [0,0,1,1];
 
+//  using nomenclature from auto-resolver
+var LastFrame = null;
+
 function Range(Min,Max,Value)
 {
 	return (Value-Min) / (Max-Min);
@@ -63,10 +66,50 @@ function WindowRender(RenderTarget)
 
 }
 
-function OnClick(Window,uv)
+function OnNewFrame(NewFrame)
 {
+    LastFrame = NewFrame;
+}
+
+function OnError(Error)
+{
+    Debug(Error);
+    LastFrame = null;
+}
+
+function CalculateFrame(MatchRects)
+{
+    //  setup frame with params
+    let Frame = {};
+    
+    let RunCalcFrame = function(Resolve,Reject)
+    {
+        //  run the usual kernels
+        Resolve();
+    };
+    
+    let Prom = MakePromise( RunCalcFrame );
+    return Prom;
+}
+
+function OnUserCoordsChanged(UserCoords)
+{
+    //  recalc frame
+    let Rect = [ UserCoords ];
+    let Rects = [Rect];
+    
+    //  trigger frame calculation
+    CalculateFrame(Rects).
+    then( OnNewFrame ).
+    catch( OnError );
+}
+
+function OnClick(uv)
+{
+    //  add a new coord and cap to 4
 	UserCoords.push( Range01InRect(UserCoordViewport,uv) );
 	UserCoords = UserCoords.slice(-4);
+	OnUserCoordsChanged();
 }
 
 
@@ -78,23 +121,14 @@ function Main()
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
 	Window1.OnClick = OnClick;
 
-	
+	/*
 	let OpenclDevices = OpenclEnumDevices();
 	Debug("Opencl devices x" + OpenclDevices.length );
 	if ( OpenclDevices.length == 0 )
 		throw "No opencl devices";
 	OpenclDevices.forEach( Debug );
 	let Opencl = new OpenclContext( OpenclDevices[0] );
-
-	let Filenames =
-	[
-		//"Data/PitchMask2.png",
-		//"Data/SwedenVsEngland.png",
-		"Data/ArgentinaVsCroatia.png",
-	 //"Data/KoreaVsGermany1.png",
-	 //"Data/KoreaVsGermany2.png",
-	];
-	
+    */
 }
 
 //	main
