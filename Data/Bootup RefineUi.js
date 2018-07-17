@@ -19,11 +19,13 @@ var RefineUi_FragShaderSource = LoadFileAsString('Data/RefineUi.frag');
 var RefineUi_Shader = null;
 
 
-var UserCoords = [];
-var UserCoordViewport = [0,0,1,1];
+var MousePos = [0,0];
+var UserPositions = [];
+var UserViewport = [0,0,1,1];
 
 //  using nomenclature from auto-resolver
 var LastFrame = null;
+var FrameTemplate = {};
 
 function Range(Min,Max,Value)
 {
@@ -49,6 +51,11 @@ function Range01InRect(Rect,Pos2)
 	return Pos2;
 }
 
+function GetIdentityMatrix4x4()
+{
+	return [	1,0,0,0,	0,1,0,0,	0,0,1,0,	0,0,0,1	];
+}
+
 function WindowRender(RenderTarget)
 {
 	RenderTarget.ClearColour(0,1,1);
@@ -58,10 +65,14 @@ function WindowRender(RenderTarget)
 	
 	let SetUniforms = function(Shader)
 	{
-		Shader.SetUniform("Positions", UserCoords );
+		Shader.SetUniform("UserMousePos", UserMousePos );
+
+		Shader.SetUniform("UserPositions", UserPositions );
+		Shader.SetUniform("UserTransform", GetIdentityMatrix4x4() );
+		Shader.SetUniform("Background", FrameTemplate.MatchImage );
 	}
 	
-	//RenderTarget.SetViewport( UserCoordViewport );
+	//RenderTarget.SetViewport( UserViewport );
 	RenderTarget.DrawQuad( DebugFrameShader, SetUniforms );
 
 }
@@ -92,10 +103,10 @@ function CalculateFrame(MatchRects)
     return Prom;
 }
 
-function OnUserCoordsChanged(UserCoords)
+function OnUserPositionsChanged()
 {
     //  recalc frame
-    let Rect = [ UserCoords ];
+    let Rect = [ UserPositions ];
     let Rects = [Rect];
     
     //  trigger frame calculation
@@ -104,22 +115,36 @@ function OnUserCoordsChanged(UserCoords)
     catch( OnError );
 }
 
-function OnClick(uv)
+function OnMousePressed(uv,Button)
 {
-    //  add a new coord and cap to 4
-	UserCoords.push( Range01InRect(UserCoordViewport,uv) );
-	UserCoords = UserCoords.slice(-4);
-	OnUserCoordsChanged();
+	if ( Button == 0 )
+	{
+	    //  add a new coord and cap to 4
+		UserPositions.push( Range01InRect(UserCoordViewport,uv) );
+		UserPositions = UserPositions.slice(-4);
+		OnUserPositionsChanged();
+	}
+	else
+	{
+		Debug("OnMouseClick( " + uv + ", " + Button + " )");
+	}
 }
 
+function OnMouseMove(uv)
+{
+	UserMousePos = uv;
+}
 
 
 function Main()
 {
+	FrameTemplate.MatchImage = new Image("Data/SwedenVsEngland.png");
+
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Auto Refine UI");
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
-	Window1.OnClick = OnClick;
+	Window1.OnMousePressed = OnMousePressed;
+	Window1.OnMouseMove = OnMouseMove;
 
 	/*
 	let OpenclDevices = OpenclEnumDevices();
