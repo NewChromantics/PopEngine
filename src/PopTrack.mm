@@ -24,7 +24,7 @@ TPopTrack& PopTrack::GetApp()
 {
 	if ( !Private::gOpenglApp )
 	{
-		Private::gOpenglApp.reset( new TPopTrack("Data/Bootup.js") );
+		Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
 	}
 	return *Private::gOpenglApp;
 }
