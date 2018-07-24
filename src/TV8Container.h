@@ -174,6 +174,7 @@ public:
 	
 	//	run these with RunScoped (internal) or QueueJob (external)
 	void		LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
+	void		LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source);
 	void		ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
 
 	template<typename WRAPPERTYPE,typename TYPE>

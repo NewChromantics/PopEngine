@@ -169,17 +169,25 @@ void TV8Container::CreateContext()
 
 void TV8Container::LoadScript(Local<Context> context,const std::string& Source)
 {
-	auto* Isolate = context->GetIsolate();
+	auto* CStr = Source.c_str();
+	if ( CStr == nullptr )
+		CStr = "";
 	
-	// Create a string containing the JavaScript source code.
-	auto* SourceCstr = Source.c_str();
-	auto Sourcev8 = v8::String::NewFromUtf8( Isolate, SourceCstr, v8::NewStringType::kNormal).ToLocalChecked();
+	auto* Isolate = context->GetIsolate();
+	auto StringHandle = String::NewFromUtf8( Isolate, CStr );
+	LoadScript( context, StringHandle );
+}
+
+
+void TV8Container::LoadScript(Local<Context> context,Local<String> Source)
+{
+	auto* Isolate = context->GetIsolate();
 	
 	//	compile the source code.
 	Local<Script> NewScript;
 	{
 		TryCatch trycatch(Isolate);
-		auto NewScriptMaybe = Script::Compile(context, Sourcev8);
+		auto NewScriptMaybe = Script::Compile(context, Source);
 		if ( NewScriptMaybe.IsEmpty() )
 			throw V8Exception( trycatch, "Compiling script" );
 		NewScript = NewScriptMaybe.ToLocalChecked();

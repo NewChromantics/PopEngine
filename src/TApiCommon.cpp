@@ -8,6 +8,7 @@
 using namespace v8;
 
 const char Debug_FunctionName[] = "Debug";
+const char CompileAndRun_FunctionName[] = "CompileAndRun";
 const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
 const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 
@@ -18,6 +19,7 @@ const char GetHeight_FunctionName[] = "GetHeight";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 
@@ -26,6 +28,7 @@ void ApiCommon::Bind(TV8Container& Container)
 {
 	//  load api's before script & executions
 	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
+	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
 	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate );
@@ -47,6 +50,22 @@ static Local<Value> Debug(CallbackInfo& Params)
 		String::Utf8Value value(arg);
 		std::Debug << *value << std::endl;
 	}
+	
+	return Undefined(Params.mIsolate);
+}
+
+static Local<Value> CompileAndRun(CallbackInfo& Params)
+{
+	auto& args = Params.mParams;
+	
+	if (args.Length() != 1)
+	{
+		throw Soy::AssertException("Expected source as first argument");
+	}
+	
+	auto Source = Local<String>::Cast( args[0] );
+
+	Params.mContainer.LoadScript( Params.mContext, Source );
 	
 	return Undefined(Params.mIsolate);
 }
