@@ -27,10 +27,11 @@ function GetLocalFilenameOfUrl(Url)
 
 function XMLHttpRequest()
 {
-	Debug("Created a XMLHttpRequest");
-	this.responseType = undefined;
+	//Debug("Created a XMLHttpRequest");
+	this.responseType = 'string';
 	this.status = 404;
 	this.Filename = null;
+	this.responseText = null;
 	
 	this.open = function(RequestMode,Url)
 	{
@@ -60,9 +61,15 @@ function XMLHttpRequest()
 	{
 		try
 		{
+			arraybuffer
+			Debug("Requesting " + this.Filename + " as " + this.responseType );
+			
 			let Contents = LoadFileAsString(this.Filename);
+			this.responseText = Contents;
 			Debug("Loaded: " + this.Filename + " length: " + Contents.length );
 			Debug(Contents);
+			Debug("calling onload...");
+			this.status = 200;
 			this.onload();
 		}
 		catch(e)
