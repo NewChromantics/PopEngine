@@ -49,6 +49,62 @@ function GetLocalFilenameOfUrl(Url)
 	return LocalPath;
 }
 
+//	to allow tensorflow to TRY and read video, (and walk past the code), we at least need a constructor for instanceof HTMLVideoElement
+function HTMLVideoElement()
+{
+	
+}
+
+
+//	need to get this working with Image
+/*
+ e.prototype.fromPixels = function(e, t) {
+ if (null == e)
+ throw new Error("MathBackendWebGL.writePixels(): pixels can not be null");
+ var r = [e.height, e.width]
+ , n = [e.height, e.width, t];
+ if (e instanceof HTMLVideoElement) {
+ if (null == this.fromPixelsCanvas) {
+ if (!ENV.get("IS_BROWSER"))
+ throw new Error("Can't read pixels from HTMLImageElement outside the browser.");
+ if ("complete" !== document.readyState)
+ throw new Error("The DOM is not ready yet. Please call tf.fromPixels() once the DOM is ready. One way to do that is to add an event listener for `DOMContentLoaded` on the document object");
+ this.fromPixelsCanvas = document.createElement("canvas")
+ }
+ this.fromPixelsCanvas.width = e.width,
+ this.fromPixelsCanvas.height = e.height,
+ this.fromPixelsCanvas.getContext("2d").drawImage(e, 0, 0, e.width, e.height),
+ e = this.fromPixelsCanvas
+ }
+ var a = Tensor.make(r, {}, "int32");
+ this.texData.get(a.dataId).usage = TextureUsage.PIXELS,
+ this.gpgpu.uploadPixelDataToTexture(this.getTexture(a.dataId), e);
+ var i = new FromPixelsProgram(n)
+ , o = this.compileAndRun(i, [a]);
+ return a.dispose(),
+ o
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ function uploadPixelDataToTexture(e, t, r) {
+ callAndCheck(e, function() {
+ return e.bindTexture(e.TEXTURE_2D, t)
+ }),
+ callAndCheck(e, function() {
+ return e.texImage2D(e.TEXTURE_2D, 0, e.RGBA, e.RGBA, e.UNSIGNED_BYTE, r)
+ }),
+ callAndCheck(e, function() {
+ return e.bindTexture(e.TEXTURE_2D, null)
+ })
+ }
+ */
+
+//	wrapper for file loading in posenet
 function XMLHttpRequest()
 {
 	//Debug("Created a XMLHttpRequest");
@@ -61,7 +117,7 @@ function XMLHttpRequest()
 	this.open = function(RequestMode,Url)
 	{
 		Debug("XMLHttpRequest.open( " + RequestMode + " " + Url );
-		
+ 
 		try
 		{
 			this.Filename = GetLocalFilenameOfUrl( Url );
@@ -119,7 +175,7 @@ function XMLHttpRequest()
 	}
 }
 
-function OpenglExtension_LoseContext()
+function WebglExtension_LoseContext()
 {
 	this.loseContext = function()
 	{
@@ -127,34 +183,42 @@ function OpenglExtension_LoseContext()
 	}
 }
 
-function OpenglExtension_EXTColorBufferFloat()
+function WebglExtension_EXTColorBufferFloat()
 {
 	
 }
 
-function OpenglDataBuffer(Name)
+function WebglDataBuffer(Name)
 {
 	this.Name = Name;
 }
 
-function OpenglFrameBuffer(Name)
+function WebglFrameBuffer(Name)
 {
 	this.Name = Name;
+}
+
+function WebglShader()
+{
+	
 }
 
 function FakeOpenglContext(ContextType)
 {
 	Debug("FakeOpenglContext(" + ContextType + ")");
 
+	//	constants
+	this.FRAMEBUFFER_COMPLETE = 0;
+	
 	this.DataBufferCounter = 0;
 	this.FrameBufferCounter = 0;
 	
 	this.getExtension = function(ExtensionName)
 	{
 		if ( ExtensionName == "WEBGL_lose_context" )
-			return new OpenglExtension_LoseContext();
+			return new WebglExtension_LoseContext();
 		if ( ExtensionName == "EXT_color_buffer_float" )
-			return new OpenglExtension_EXTColorBufferFloat();
+			return new WebglExtension_EXTColorBufferFloat();
 		
 		//WEBGL_get_buffer_sub_data_async
 		return null;
@@ -165,10 +229,15 @@ function FakeOpenglContext(ContextType)
 	this.enable = function(GlStateEnum)		{	Debug("glenable(" + GlStateEnum +")");	}
 	this.cullFace = function(CullFaceEnum)	{	Debug("cullFace(" + CullFaceEnum +")");	}
 
+	this.getParameter = function(ParameterEnum)
+	{
+		Debug("getParameter(" + ParameterEnum + ")" );
+	}
+	
 	this.createBuffer = function()
 	{
 		this.DataBufferCounter++;
-		let NewBuffer = new OpenglDataBuffer(this.DataBufferCounter);
+		let NewBuffer = new WebglDataBuffer(this.DataBufferCounter);
 		return NewBuffer;
 	}
 	
@@ -185,10 +254,69 @@ function FakeOpenglContext(ContextType)
 	this.createFramebuffer = function()
 	{
 		this.FrameBufferCounter++;
-		let NewBuffer = new OpenglFrameBuffer(this.FrameBufferCounter);
+		let NewBuffer = new WebglFrameBuffer(this.FrameBufferCounter);
 		return NewBuffer;
+	}
+	
+	this.bindFramebuffer = function(Binding,FrameBuffer)
+	{
+		//Binding = e.FRAMEBUFFER
+	}
+	this.framebufferTexture2D = function(Binding,Attachment,TextureBinding,Texture,x)
+	{
+	}
+	
+	this.createTexture = function()
+	{
+		return new Image();
+	}
+	
+	this.bindTexture = function(Binding,Texture)
+	{
+		Debug("bindTexture(" + Binding + ", " + Texture + ")");
+	}
+
+	this.texImage2D = function(Binding,a,b,c,d,e,internalformat,pixelformat,pixeldata)
+	{
+		Debug("texImage2D()");
+	}
+	
+
+	this.texParameteri = function(Binding,ParameterEnum,Value)
+	{
+	}
+	
+	this.checkFramebufferStatus = function(Binding)
+	{
+		return this.FRAMEBUFFER_COMPLETE;
+	}
+	
+	this.createShader = function(ShaderType)
+	{
+		return new WebglShader();
+	}
+	
+	this.shaderSource = function(Shader,Source)
+	{
+		Debug("shaderSource(" + Source + ")");
+	}
+	
+	this.compileShader = function(Shader)
+	{
 		
 	}
+	
+	this.getShaderParameter = function(ParameterEnum)
+	{
+		//COMPILE_STATUS
+		return 1;
+	}
+	
+	this.createProgram = function()
+	{
+	}
+	
+	this.attachShader = function
 }
 
 /*
@@ -332,10 +460,82 @@ function WindowRender(RenderTarget)
 	}
 }
 
-function StartPoseDetection(Posenet)
+
+function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
+{
+	var imageScaleFactor = 0.20;
+	var outputStride = 16;
+	var flipHorizontal = false;
+	
+	//console.log("Processing...");
+	//console.log(NewImage);
+	//let StartTime = performance.now();
+	
+	let OnNewPose = function(NewPose)
+	{
+		//let EndTime = performance.now();
+		//let ProcessingTime = EndTime - StartTime;
+		//NewPose.ProcessingTimeMs = ProcessingTime;
+		
+		let ImageWidth = NewImage.width;
+		let ImageHeight = NewImage.height;
+		//console.log(ImageWidth);
+		
+		//	put coords in uv space
+		let RescaleCoords = function(keypoint)
+		{
+			keypoint.position.x /= ImageWidth;
+			keypoint.position.y /= ImageHeight;
+			keypoint.position.y = 1-keypoint.position.y;
+		};
+		NewPose.keypoints.forEach( RescaleCoords );
+		
+		OnPoseFound(NewPose);
+	}
+	
+	let OnEstimateFailed = function(e)
+	{
+		Debug("estimateSinglePose failed");
+		Debug(e);
+	}
+	
+	let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
+	EstimatePromise.then( OnNewPose ).catch( OnEstimateFailed );
+}
+
+function StartPoseDetection(PoseNet)
 {
 	Debug("Posenet loaded!");
-	Debug(Posenet);
+	
+	let OnFoundPose = function(Pose)
+	{
+		try
+		{
+			//SendNewPose(Pose);
+		}
+		catch(e)
+		{
+			console.log(e);
+		}
+		Debug("Found pose");
+		//console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
+		console.log(Pose);
+	}
+
+	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
+	FrameImage.width = FrameImage.GetWidth();
+	FrameImage.height = FrameImage.GetHeight();
+	
+	try
+	{
+		RunPoseDetection( PoseNet, FrameImage, OnFoundPose );
+	}
+	catch(e)
+	{
+		//OnFoundPose(null, 0);
+		console.log(e);
+	}
+
 }
 
 function PosenetFailed(Arg1)
@@ -352,9 +552,8 @@ function Main()
 
 	
 	//	load posenet
-	Debug("Posenet is... " + posenet );
+	Debug("Loading posenet...");
 	posenet.load().then( StartPoseDetection ).catch( PosenetFailed );
-
 	
 }
 
