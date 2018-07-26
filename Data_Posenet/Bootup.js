@@ -1,3 +1,78 @@
+String.prototype.replaceAll = function(search, replace)
+{
+	//	https://stackoverflow.com/questions/1967119/why-does-javascript-replace-only-first-instance-when-using-replace
+	if (replace === undefined) {
+		return this.toString();
+	}
+	return this.split(search).join(replace);
+}
+
+function GetLocalFilenameOfUrl(Url)
+{
+	var UrlRegex = new RegExp('^http[s]://([a-zA-z\-.]+)/(.*)');
+	var Match = Url.match( UrlRegex );
+	
+	let Domain = Match[1];
+	let Path = Match[2];
+	
+	//	gr: maybe some better local cache thing
+	//if ( Domain == 'storage.googleapis.com' )
+	let Filename = Path.replaceAll('/','_');
+	Debug("Converted " + Url + " to " + Filename);
+	
+	Filename = "Data_Posenet/" + Filename;
+	
+	return Filename;
+}
+
+function XMLHttpRequest()
+{
+	Debug("Created a XMLHttpRequest");
+	this.responseType = undefined;
+	this.status = 404;
+	this.Filename = null;
+	
+	this.open = function(RequestMode,Url)
+	{
+		Debug("XMLHttpRequest.open( " + RequestMode + " " + Url );
+		
+		try
+		{
+			this.Filename = GetLocalFilenameOfUrl( Url );
+		}
+		catch(e)
+		{
+			Debug(e);
+		}
+	}
+	
+	this.onload = function()
+	{
+		Debug("OnLoad");
+	}
+	
+	this.onerror = function(Error)
+	{
+		Debug("OnError(" + Error +")");
+	}
+	
+	this.send = function()
+	{
+		try
+		{
+			let Contents = LoadFileAsString(this.Filename);
+			Debug("Loaded: " + this.Filename + " length: " + Contents.length );
+			Debug(Contents);
+			this.onload();
+		}
+		catch(e)
+		{
+			Debug("XMLHttpRequest error: " + e);
+			this.onerror(e);
+		}
+	}
+}
+
 function OpenglExtension_LoseContext()
 {
 	this.loseContext = function()
@@ -141,7 +216,6 @@ function createIndexBuffer(e) {
 
 
 
-
 //	gr: window wrapper to emulate browser for tensor flow
 var window = new FakeWindow();
 var console = new FakeConsole();
@@ -212,11 +286,29 @@ function WindowRender(RenderTarget)
 	}
 }
 
+function StartPoseDetection(Posenet)
+{
+	Debug("Posenet loaded!");
+	Debug(Posenet);
+}
+
+function PosenetFailed(Arg1)
+{
+	Debug("Posenet failed to load");
+	Debug(Arg1);
+}
+
 function Main()
 {
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Posenet");
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
+
+	
+	//	load posenet
+	Debug("Posenet is... " + posenet );
+	posenet.load().then( StartPoseDetection ).catch( PosenetFailed );
+
 	
 }
 
