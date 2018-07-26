@@ -10,6 +10,7 @@ using namespace v8;
 const char Debug_FunctionName[] = "Debug";
 const char CompileAndRun_FunctionName[] = "CompileAndRun";
 const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
+const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
 const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 
 const char LoadFile_FunctionName[] = "Load";
@@ -21,6 +22,7 @@ const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 
 
@@ -30,6 +32,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
 	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
 	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
+	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate );
 }
@@ -71,6 +74,7 @@ static Local<Value> CompileAndRun(CallbackInfo& Params)
 }
 
 
+
 static Local<Value> LoadFileAsString(CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -90,6 +94,38 @@ static Local<Value> LoadFileAsString(CallbackInfo& Params)
 	auto ContentsString = v8::GetString( Params.GetIsolate(), Contents );
 	return ContentsString;
 }
+
+
+static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	if (Arguments.Length() < 1)
+		throw Soy::AssertException("LoadFileAsArrayBuffer(Filename) with no args");
+
+	
+	auto Filename = v8::GetString( Arguments[0] );
+	Array<char> FileContents;
+	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
+	
+	auto ArrayBuffer = v8::ArrayBuffer::New( Params.mIsolate, FileContents.GetSize() );
+
+	auto& Isolate = *Params.mIsolate;
+	
+	//	like v8::GetArray
+	auto& Values = FileContents;
+	auto& ArrayHandle = ArrayBuffer;
+	for ( auto i=0;	i<Values.GetSize();	i++ )
+	{
+		double Value = Values[i];
+		auto ValueHandle = Number::New( &Isolate, Value );
+		ArrayHandle->Set( i, ValueHandle );
+	}
+	
+	
+	return ArrayBuffer;
+}
+
 
 
 static Local<Value> WriteStringToFile(CallbackInfo& Params)

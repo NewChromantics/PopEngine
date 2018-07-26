@@ -1,3 +1,26 @@
+function ToHexString(Bytes,JoinChar,MaxBytes)
+{
+	if ( MaxBytes === undefined )
+		MaxBytes = Bytes.byteLength;
+	let Length = Math.min( MaxBytes, Bytes.byteLength );
+	
+	if ( JoinChar === undefined )
+		JoinChar = '';
+	
+	let Str = '';
+	let PushByte = function(byte)
+	{
+		Str += ('0' + (byte & 0xFF).toString(16)).slice(-2);
+		Str += JoinChar;
+	}
+
+	for ( let i=0;	i<Length;	i++ )
+		PushByte(Bytes[i]);
+	
+	//Bytes.forEach(PushByte);
+	return Str;
+}
+
 String.prototype.replaceAll = function(search, replace)
 {
 	//	https://stackoverflow.com/questions/1967119/why-does-javascript-replace-only-first-instance-when-using-replace
@@ -17,21 +40,23 @@ function GetLocalFilenameOfUrl(Url)
 	
 	//	gr: maybe some better local cache thing
 	//if ( Domain == 'storage.googleapis.com' )
-	let Filename = Path.replaceAll('/','_');
+	let PathParts = Path.split('/');
+	let Filename = PathParts.pop();
+	let LocalPath = PathParts.join('_');
+	LocalPath = "Data_Posenet/" + LocalPath + "/" + Filename;
 	Debug("Converted " + Url + " to " + Filename);
 	
-	Filename = "Data_Posenet/" + Filename;
-	
-	return Filename;
+	return LocalPath;
 }
 
 function XMLHttpRequest()
 {
 	//Debug("Created a XMLHttpRequest");
-	this.responseType = 'string';
 	this.status = 404;
 	this.Filename = null;
+	this.responseType = 'string';
 	this.responseText = null;
+	this.response = null;
 	
 	this.open = function(RequestMode,Url)
 	{
@@ -61,13 +86,27 @@ function XMLHttpRequest()
 	{
 		try
 		{
-			arraybuffer
 			Debug("Requesting " + this.Filename + " as " + this.responseType );
+
+			if ( this.responseType == 'string' )
+			{
+				let Contents = LoadFileAsString(this.Filename);
+				this.responseText = Contents;
+				Debug("Loaded: " + this.Filename + " length: " + Contents.length );
+				Debug(Contents);
+			}
+			else if ( this.responseType == 'arraybuffer' )
+			{
+				let Contents = LoadFileAsArrayBuffer(this.Filename)
+				this.response = Contents;
+				Debug("Loaded: " + this.Filename + " byte length: " + Contents.byteLength );
+				Debug( ToHexString(Contents,' ',40) + "..." );
+			}
+			else
+			{
+				throw "Don't know how to load url/file as " + this.responseType;
+			}
 			
-			let Contents = LoadFileAsString(this.Filename);
-			this.responseText = Contents;
-			Debug("Loaded: " + this.Filename + " length: " + Contents.length );
-			Debug(Contents);
 			Debug("calling onload...");
 			this.status = 200;
 			this.onload();
