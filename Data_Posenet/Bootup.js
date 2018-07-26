@@ -198,21 +198,66 @@ function WebglFrameBuffer(Name)
 	this.Name = Name;
 }
 
-function WebglShader()
+function WebglVertShader()
 {
-	
+	this.Source = null;
 }
 
-function FakeOpenglContext(ContextType)
+function WebglFragShader()
+{
+	this.Source = null;
+}
+
+function WebglProgram()
+{
+	this.VertShader = null;
+	this.FragShader = null;
+	this.Shader = null;
+	this.Error = null;
+	
+	this.AddShader = function(Shader)
+	{
+		if ( Shader instanceof WebglVertShader )
+			this.VertShader = Shader;
+		else if ( Shader instanceof WebglFragShader )
+			this.FragShader = Shader;
+		else
+			throw "Don't know what type of shader is supplied for program";
+	}
+	
+	this.Build = function(OpenglContext)
+	{
+		try
+		{
+			let VertSource = this.VertShader.Source;
+			let FragSource = this.FragShader.Source;
+			this.Shader = new OpenglShader( OpenglContext, VertSource, FragSource );
+		}
+		catch(e)
+		{
+			this.Error = e;
+		}
+	}
+}
+
+function FakeOpenglContext(ContextType,ParentCanvas)
 {
 	Debug("FakeOpenglContext(" + ContextType + ")");
 
 	//	constants
-	this.FRAMEBUFFER_COMPLETE = 0;
+	let CONST = 1;
+	this.FRAMEBUFFER_COMPLETE = CONST++;
+	this.VERTEX_SHADER = CONST++;
+	this.FRAGMENT_SHADER = CONST++;
 	
-	this.DataBufferCounter = 0;
-	this.FrameBufferCounter = 0;
 	
+	this.ParentCanvas = ParentCanvas;
+	
+	this.GetOpenglContext = function()
+	{
+		return this.ParentCanvas.WebWindow.OpenglContext;
+	}
+
 	this.getExtension = function(ExtensionName)
 	{
 		if ( ExtensionName == "WEBGL_lose_context" )
@@ -236,7 +281,6 @@ function FakeOpenglContext(ContextType)
 	
 	this.createBuffer = function()
 	{
-		this.DataBufferCounter++;
 		let NewBuffer = new WebglDataBuffer(this.DataBufferCounter);
 		return NewBuffer;
 	}
@@ -293,30 +337,59 @@ function FakeOpenglContext(ContextType)
 	
 	this.createShader = function(ShaderType)
 	{
-		return new WebglShader();
+		if ( ShaderType == this.VERTEX_SHADER )
+			return new WebglVertShader();
+		
+		if ( ShaderType == this.FRAGMENT_SHADER )
+			return new WebglFragShader();
+		
+		throw "Unknown shader type " + ShaderType;
 	}
 	
 	this.shaderSource = function(Shader,Source)
 	{
-		Debug("shaderSource(" + Source + ")");
+		Shader.Source = Source;
 	}
 	
 	this.compileShader = function(Shader)
 	{
-		
 	}
 	
-	this.getShaderParameter = function(ParameterEnum)
+	this.getShaderParameter = function(Shader,ParameterEnum)
 	{
-		//COMPILE_STATUS
-		return 1;
+		if ( ParameterEnum == this.COMPILE_STATUS )
+			return true;
+		
+		throw "Unknown shader parameter " + ParameterEnum;
+	}
+	
+	this.getProgramParameter = function(Program,ParameterEnum)
+	{
+		if ( ParameterEnum == this.LINK_STATUS )
+			return (Program.Error == null);
+		
+		throw "Unknown program parameter " + ParameterEnum;
 	}
 	
 	this.createProgram = function()
 	{
+		return new WebglProgram();
 	}
 	
-	this.attachShader = function
+	this.attachShader = function(Program,Shader)
+	{
+		Program.AddShader(Shader);
+	}
+
+	this.linkProgram = function(Program)
+	{
+		Program.Build( this.GetOpenglContext() );
+	}
+	
+	this.getProgramInfoLog = function(Program)
+	{
+		return Program.Error;
+	}
 }
 
 /*
@@ -333,18 +406,21 @@ function FakeOpenglContext(ContextType)
  }),
  !0)*/
 
-function FakeCanvas()
+function FakeCanvas(WebWindow)
 {
-	this.Context = null;
+	this.WebWindow = WebWindow;
+	//this.Window.OnRender = function(){	/*WindowRender( Window1 );*/	};
+
+	this.WebglContext = null;
 	
 	let This = this;
 	this.getContext = function(ContextType)
 	{
-		if ( This.Context == null )
+		if ( This.WebglContext == null )
 		{
-			This.Context = new FakeOpenglContext(ContextType);
+			This.WebglContext = new FakeOpenglContext( ContextType, This );
 		}
-		return This.Context;
+		return This.WebglContext;
 	}
 	
 }
@@ -357,15 +433,16 @@ function FakeScreen()
 
 function FakeWindow()
 {
+	this.OpenglContext = null;
 	this.screen = new FakeScreen();
 }
 
-function FakeDocument()
+function FakeDocument(WebWindow)
 {
 	this.createElement = function(Type)
 	{
 		if ( Type == "canvas" )
-			return new FakeCanvas();
+			return new FakeCanvas(WebWindow);
 		
 		throw "Need to create a fake " + Type;
 	}
@@ -377,7 +454,7 @@ function FakeConsole()
 	this.warn = Debug;
 }
 
-
+/*
 function createVertexShader$1(e) {
 	return createVertexShader(e, "\n    precision highp float;\n    attribute vec3 clipSpacePos;\n    attribute vec2 uv;\n    varying vec2 resultUV;\n\n    void main() {\n      gl_Position = vec4(clipSpacePos, 1);\n      resultUV = uv;\n    }")
 }
@@ -387,13 +464,13 @@ function createVertexBuffer(e) {
 function createIndexBuffer(e) {
 	return createStaticIndexBuffer(e, new Uint16Array([0, 1, 2, 2, 1, 3]))
 }
-
+*/
 
 
 //	gr: window wrapper to emulate browser for tensor flow
 var window = new FakeWindow();
 var console = new FakeConsole();
-var document = new FakeDocument();
+var document = new FakeDocument(window);
 
 
 
@@ -549,6 +626,8 @@ function Main()
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Posenet");
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
+
+	window.OpenglContext = Window1;
 
 	
 	//	load posenet
