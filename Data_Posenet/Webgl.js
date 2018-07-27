@@ -85,6 +85,50 @@ function WebglProgram()
 	}
 }
 
+function OpenglCommandQueue()
+{
+	this.Commands = [];
+	
+	this.Push = function(Function,arguments)
+	{
+		//	turn arguments into an array
+		//	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+		const args = Array.from(arguments);
+		//var args = (arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments));
+		//Debug("args... x" + args.length);
+		//Debug(args);
+		args.splice( 0, 0, Function );
+		this.Commands.push( args );
+	}
+	
+	this.Flush = function(Context)
+	{
+		let Execute = function()
+		{
+			let ExecuteCommand = function(Command)
+			{
+				//	first arg is the function, then pass arguments
+				let Func = Command.shift();
+				Func( Command );
+			}
+			
+			try
+			{
+				this.Commands.forEach( ExecuteCommand );
+			}
+			catch(e)
+			{
+				this.Commands = [];
+				throw e;
+			}
+		}
+		
+		//	run these commands on the opengl thread
+		Debug("Running opengl command queue");
+		Context.RunQueue( Execute );
+	}
+}
+
 function FakeOpenglContext(ContextType,ParentCanvas)
 {
 	Debug("FakeOpenglContext(" + ContextType + ")");
@@ -126,6 +170,8 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	
 	
 	this.ParentCanvas = ParentCanvas;
+	this.CommandQueue = new OpenglCommandQueue();
+	
 	
 	this.GetOpenglContext = function()
 	{
@@ -146,11 +192,43 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return null;
 	}
 	//WebGLRenderingContext.getSupportedExtensions.
+	this.disable = function()	{	this.CommandQueue.Push( this.GetOpenglContext().disable, arguments );	}
+	this.enable = function()		{	this.CommandQueue.Push( this.GetOpenglContext().enable, arguments );		}
+	this.cullFace = function()	{	this.CommandQueue.Push( this.GetOpenglContext().cullFace, arguments );		}
+	this.bindBuffer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindBuffer, arguments );		}
+	this.bufferData = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bufferData, arguments );		}
+	this.bindFramebuffer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindFramebuffer, arguments );		}
+	this.framebufferTexture2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().framebufferTexture2D, arguments );		}
+	this.bindTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindTexture, arguments );		}
+	this.texImage2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );		}
+	this.useProgram = function()	{	this.CommandQueue.Push( this.GetOpenglContext().useProgram, arguments );		}
+	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
+	this.attachShader = function()	{	this.CommandQueue.Push( this.GetOpenglContext().attachShader, arguments );		}
+	this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
+	this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
+	this.SetUniform = function()	{	this.CommandQueue.Push( this.GetOpenglContext().SetUniform, arguments );		}
+	this.texSubImage2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texSubImage2D, arguments );		}
+	//this.readPixels = function()	{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
+	this.viewport = function()	{	this.CommandQueue.Push( this.GetOpenglContext().viewport, arguments );		}
+	this.scissor = function()	{	this.CommandQueue.Push( this.GetOpenglContext().scissor, arguments );		}
+	this.activeTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().activeTexture, arguments );		}
 	
-	this.disable = function(GlStateEnum)	{	Debug("gldisable(" + GlStateEnum +")");	}
-	this.enable = function(GlStateEnum)		{	Debug("glenable(" + GlStateEnum +")");	}
-	this.cullFace = function(CullFaceEnum)	{	Debug("cullFace(" + CullFaceEnum +")");	}
 
+	
+	this.readPixels = function()
+	{
+		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		this.CommandQueue.Flush();
+	}
+	
+	
+	
+	this.createBuffer = function()
+	{
+		let NewBuffer = new WebglDataBuffer();
+		return NewBuffer;
+	}
+	
 	this.getParameter = function(ParameterEnum)
 	{
 		if ( ParameterEnum == this.MAX_TEXTURE_SIZE )
@@ -158,23 +236,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		
 		Debug("getParameter(" + ParameterEnum + ")" );
 	}
-	
-	this.createBuffer = function()
-	{
-		let NewBuffer = new WebglDataBuffer(this.DataBufferCounter);
-		return NewBuffer;
-	}
-	
-	this.bindBuffer = function(BufferBinding,Buffer)
-	{
-		Debug("BindBuffer( " + BufferBinding + ", " + Buffer.Name + ")" );
-	}
-	
-	this.bufferData = function(BufferBinding,Data,Mode)
-	{
-		Debug("bufferData( " + BufferBinding + ", " + Data + ", " + Mode + " )" );
-	}
-	
+
 	this.createFramebuffer = function()
 	{
 		this.FrameBufferCounter++;
@@ -182,33 +244,11 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return NewBuffer;
 	}
 	
-	this.bindFramebuffer = function(Binding,FrameBuffer)
-	{
-		//Binding = e.FRAMEBUFFER
-	}
-	this.framebufferTexture2D = function(Binding,Attachment,TextureBinding,Texture,x)
-	{
-	}
-	
 	this.createTexture = function()
 	{
 		return new Image();
 	}
-	
-	this.bindTexture = function(Binding,Texture)
-	{
-		Debug("bindTexture(" + Binding + ", " + Texture + ")");
-	}
 
-	this.texImage2D = function(Binding,a,b,c,d,e,internalformat,pixelformat,pixeldata)
-	{
-		Debug("texImage2D()");
-	}
-	
-
-	this.texParameteri = function(Binding,ParameterEnum,Value)
-	{
-	}
 	
 	this.checkFramebufferStatus = function(Binding)
 	{
@@ -256,10 +296,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return new WebglProgram();
 	}
 	
-	this.attachShader = function(Program,Shader)
-	{
-		Program.AddShader(Shader);
-	}
 
 	this.linkProgram = function(Program)
 	{
@@ -271,11 +307,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return Program.Error;
 	}
 	
-	this.useProgram = function(Program)
-	{
-		//	current program = x
-	}
-	
+
 	this.getAttribLocation = function(Program,Name)
 	{
 		return Name;
@@ -283,14 +315,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return 0;
 	}
 	
-	this.vertexAttribPointer = function(index, size, type, normalized, stride, offset)
-	{
-	}
-	
-	this.enableVertexAttribArray = function(index)
-	{
-		
-	}
 	
 	this.getUniformLocation = function(Program,Name)
 	{
@@ -299,7 +323,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return 0;
 	}
 	
-	this.SetUniform = function(Location,Value)	{	Debug("SetUniform(" + Location +")");	}
 	
 	this.uniform1f = this.SetUniform;
 	this.uniform2f = this.SetUniform;
@@ -318,40 +341,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.uniform3iv = this.SetUniform;
 	this.uniform4iv = this.SetUniform;
 
-	this.drawElements = function(PrimitiveEnum, count, type, offset)
-	{
-		
-	}
 
-	//	lots of variants;
-	//	https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texSubImage2D
-	this.texSubImage2D = function(Binding,MipLevel,xoffset,yoffset,MoreParams)	{}
-	
-	this.readPixels = function(x, y, width, height, format, type, pixels, offset)
-	{
-		//	pixels is optional
-		if ( offset === undefined )
-		{
-			offset = pixels;
-			pixels = undefined;
-		}
-	}
-	
-	this.viewport = function(x, y, width, height)
-	{
-		
-	}
-	
-	this.scissor = function(x, y, width, height)
-	{
-		
-	}
-	
-	this.activeTexture = function(TextureEnum)
-	{
-		
-	}
-	
 	this.getError = function()
 	{
 		return this.NO_ERROR;
@@ -383,9 +373,6 @@ function FakeCanvas(WebWindow)
 	let This = this;
 	this.getContext = function(ContextType)
 	{
-		//	gr: go with cpu for now
-		return null;
-		
 		if ( This.WebglContext == null )
 		{
 			This.WebglContext = new FakeOpenglContext( ContextType, This );

@@ -74,10 +74,6 @@ e.prototype.fromPixels = function(e, t) {
 
 
 
-include('Data_Posenet/tfjs.0.11.7.js');
-include('Data_Posenet/posenet.0.1.2.js');
-//include("Data_Posenet/Hello.js");
-
 
 let VertShaderSource = `
 	#version 410
@@ -254,7 +250,6 @@ function StartPoseDetection(PoseNet)
 		{
 			console.log(e);
 		}
-		Debug("Found pose");
 		//console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
 		console.log(Pose);
 	}
@@ -280,13 +275,52 @@ function PosenetFailed(Arg1)
 	Debug(Arg1);
 }
 
+
+
+
+//	adding here and we'll put them into our system
+function AddWebglBindings(This)
+{
+	This.disable =				function()	{	Debug("disable");	};
+	This.enable =				function()	{	Debug("enable");	};
+	This.cullFace =				function()	{	Debug("cullFace");	};
+	This.bindBuffer =			function()	{	Debug("bindBuffer");	};
+	This.bufferData =			function()	{	Debug("bufferData");	};
+	This.bindFramebuffer =		function()	{	Debug("bindFramebuffer");	};
+	This.framebufferTexture2D =	function()	{	Debug("framebufferTexture2D");	};
+	This.bindTexture =			function()	{	Debug("bindTexture");	};
+	This.texImage2D =			function()	{	Debug("texImage2D");	};
+	This.texParameteri =		function()	{	Debug("texParameteri");	};
+	This.useProgram =			function()	{	Debug("useProgram");	};
+	This.vertexAttribPointer =	function()	{	Debug("vertexAttribPointer");	};
+	This.enableVertexAttribArray = function()	{	Debug("enableVertexAttribArray");	};
+	This.SetUniform =			function()	{	Debug("SetUniform");	};
+	This.drawElements =			function()	{	Debug("drawElements");	};
+	This.texSubImage2D =		function()	{	Debug("texSubImage2D");	};
+	This.readPixels =			function()	{	Debug("readPixels");	};
+	This.viewport =				function()	{	Debug("viewport");	};
+	This.scissor =				function()	{	Debug("scissor");	};
+	This.activeTexture =		function()	{	Debug("activeTexture");	};
+}
+
+
+
+
 function Main()
 {
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Posenet");
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
-
+	AddWebglBindings(Window1);
+	
+	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;
+	
+	//	make a context, then let tensorflow grab the bindings
+	include('Data_Posenet/tfjs.0.11.7.js');
+	include('Data_Posenet/posenet.0.1.2.js');
+	//include("Data_Posenet/Hello.js");
+
 
 	
 	//	load posenet
