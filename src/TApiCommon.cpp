@@ -15,6 +15,7 @@ const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 
 const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
+const char Flip_FunctionName[] = "Flip";
 const char GetWidth_FunctionName[] = "GetWidth";
 const char GetHeight_FunctionName[] = "GetHeight";
 const char GetRgba8_FunctionName[] = "GetRgba8";
@@ -230,6 +231,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	
 	Container.BindFunction<LoadFile_FunctionName>( InstanceTemplate, TImageWrapper::LoadFile );
 	Container.BindFunction<Alloc_FunctionName>( InstanceTemplate, TImageWrapper::Alloc );
+	Container.BindFunction<Flip_FunctionName>( InstanceTemplate, TImageWrapper::Flip );
 	Container.BindFunction<GetWidth_FunctionName>( InstanceTemplate, TImageWrapper::GetWidth );
 	Container.BindFunction<GetHeight_FunctionName>( InstanceTemplate, TImageWrapper::GetHeight );
 	Container.BindFunction<GetRgba8_FunctionName>( InstanceTemplate, TImageWrapper::GetRgba8 );
@@ -266,6 +268,21 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 
 	return v8::Undefined(Params.mIsolate);
 }
+
+
+v8::Local<v8::Value> TImageWrapper::Flip(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	
+	auto& Pixels = This.GetPixels();
+	Pixels.Flip();
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
 
 
 v8::Local<v8::Value> TImageWrapper::LoadFile(const v8::CallbackInfo& Params)

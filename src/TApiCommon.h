@@ -33,6 +33,7 @@ public:
 	
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static v8::Local<v8::Value>				Alloc(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Flip(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				LoadFile(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetWidth(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetHeight(const v8::CallbackInfo& Arguments);

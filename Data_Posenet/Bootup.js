@@ -27,6 +27,8 @@ function ImageData(Pixels)
 		this.width = Img.GetWidth();
 		this.height = Img.GetHeight();
 		this.data = Img.GetRgba8();
+		
+		//Debug( ToHexString(this.data,' ', 20 ) );
 	}
 	
 	//	auto load
@@ -94,34 +96,81 @@ let VertShaderSource = `
 	}
 `;
 
-let DebugFragShaderSource = `
-#version 410
-in vec2 uv;
-void main()
-{
-	gl_FragColor = vec4(uv.x,uv.y,0,1);
-}
-`;
+let FrameFragShaderSource = LoadFileAsString("Data_Posenet/DrawFrameAndPose.frag");
+var FrameShader = null;
+var LastFrameImage = null;
+var LastPose = null;
 
-var DebugFrameShader = null;
+function GetPoseLines(Pose)
+{
+	if ( Pose == null )
+		return [0,0,1,1];
+	
+	let Lines = [];
+
+	let PushLine = function(Keypointa,Keypointb)
+	{
+		if ( Keypointa === undefined || Keypointb === undefined )
+			return;
+		//	multiplier for debugging
+		let Mult = 100;
+		Lines.push( Keypointa.position.x * Mult );
+		Lines.push( Keypointa.position.y * Mult );
+		Lines.push( Keypointb.position.x * Mult );
+		Lines.push( Keypointb.position.y * Mult );
+	}
+
+	let GetKeypoint = function(Name)
+	{
+		let IsMatch = function(Keypoint)
+		{
+			return Keypoint.part == Name;
+		}
+		return Pose.keypoints.find( IsMatch );
+	}
+	
+	let PushBone = function(BonePair)
+	{
+		let kpa = GetKeypoint(BonePair[0]);
+		let kpb = GetKeypoint(BonePair[1]);
+		PushLine( kpa, kpb );
+	}
+
+	let Bones = [["nose", "leftEye"], ["leftEye", "leftEar"], ["nose", "rightEye"], ["rightEye", "rightEar"], ["nose", "leftShoulder"], ["leftShoulder", "leftElbow"], ["leftElbow", "leftWrist"], ["leftShoulder", "leftHip"], ["leftHip", "leftKnee"], ["leftKnee", "leftAnkle"], ["nose", "rightShoulder"], ["rightShoulder", "rightElbow"], ["rightElbow", "rightWrist"], ["rightShoulder", "rightHip"], ["rightHip", "rightKnee"], ["rightKnee", "rightAnkle"]];
+	Bones.forEach( PushBone );
+	
+	Debug("Got " + Lines.length + " lines for the pose");
+	
+	return Lines;
+}
 
 function WindowRender(RenderTarget)
 {
 	try
 	{
-		if ( !DebugFrameShader )
+		if ( !FrameShader )
 		{
-			Debug("Creating window render shader");
-			DebugFrameShader = new OpenglShader( RenderTarget, VertShaderSource, DebugFragShaderSource );
+			FrameShader = new OpenglShader( RenderTarget, VertShaderSource, FrameFragShaderSource );
 		}
 		
-		let SetUniforms = function()
+		let SetUniforms = function(Shader)
 		{
+			if ( LastFrameImage != null )
+				Shader.SetUniform("Frame", LastFrameImage, 0 );
+			Shader.SetUniform("HasFrame", LastFrameImage!=null );
 			
+			const MAX_LINES = 100;
+			let PoseLines = GetPoseLines(LastPose);
+			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
+			Debug(PoseLines);
+			Shader.SetUniform("Lines", PoseLines );
+			/*
+			uniform vec4		Lines[LINE_COUNT];
+			uniform float		LineScores[LINE_COUNT];
+			*/
 		}
 		
-		RenderTarget.ClearColour(0,1,0);
-		RenderTarget.DrawQuad( DebugFrameShader, SetUniforms );
+		RenderTarget.DrawQuad( FrameShader, SetUniforms );
 	}
 	catch(Exception)
 	{
@@ -135,10 +184,14 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 {
 	//	for CPU mode (and gpu?)
 	if ( NewImage instanceof Image )
+	{
+		Debug("Converting image to ImageData..");
 		NewImage = new ImageData(NewImage);
-		
+	}
+	
 	var imageScaleFactor = 0.20;
-	var outputStride = 16;
+	//var outputStride = 16;
+	var outputStride = 32;
 	var flipHorizontal = false;
 	
 	//console.log("Processing...");
@@ -147,6 +200,7 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 	
 	let OnNewPose = function(NewPose)
 	{
+		Debug("OnNewPose...");
 		//let EndTime = performance.now();
 		//let ProcessingTime = EndTime - StartTime;
 		//NewPose.ProcessingTimeMs = ProcessingTime;
@@ -162,7 +216,7 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 			keypoint.position.y /= ImageHeight;
 			keypoint.position.y = 1-keypoint.position.y;
 		};
-		NewPose.keypoints.forEach( RescaleCoords );
+		//NewPose.keypoints.forEach( RescaleCoords );
 		
 		OnPoseFound(NewPose);
 	}
@@ -173,6 +227,7 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 		Debug(e);
 	}
 	
+	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
 	let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
 	EstimatePromise.then( OnNewPose ).catch( OnEstimateFailed );
 }
@@ -183,6 +238,14 @@ function StartPoseDetection(PoseNet)
 	
 	let OnFoundPose = function(Pose)
 	{
+		Debug("Found pose, score=" + Pose.score );
+		let DebugKeypoint = function(kp)
+		{
+			Debug("Keypoint: " + kp.part + " score=" + kp.score + " " + kp.position.x + "," + kp.position.y );
+		}
+		Pose.keypoints.forEach( DebugKeypoint );
+		
+		LastPose = Pose;
 		try
 		{
 			//SendNewPose(Pose);
@@ -197,9 +260,8 @@ function StartPoseDetection(PoseNet)
 	}
 
 	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
-	FrameImage.width = FrameImage.GetWidth();
-	FrameImage.height = FrameImage.GetHeight();
-	
+	//FrameImage.Flip();
+	LastFrameImage = FrameImage;
 	try
 	{
 		RunPoseDetection( PoseNet, FrameImage, OnFoundPose );
