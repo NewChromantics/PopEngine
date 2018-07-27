@@ -17,6 +17,7 @@ const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
 const char GetWidth_FunctionName[] = "GetWidth";
 const char GetHeight_FunctionName[] = "GetHeight";
+const char GetRgba8_FunctionName[] = "GetRgba8";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
@@ -231,6 +232,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Alloc_FunctionName>( InstanceTemplate, TImageWrapper::Alloc );
 	Container.BindFunction<GetWidth_FunctionName>( InstanceTemplate, TImageWrapper::GetWidth );
 	Container.BindFunction<GetHeight_FunctionName>( InstanceTemplate, TImageWrapper::GetHeight );
+	Container.BindFunction<GetRgba8_FunctionName>( InstanceTemplate, TImageWrapper::GetRgba8 );
 	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
 
 	return ConstructorFunc;
@@ -392,6 +394,46 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 	
 	return Number::New( Params.mIsolate, Height );
 }
+
+
+v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	
+	//	gr: this func will probably need to return a promise if reading from opengl etc (we want it to be async anyway!)
+	auto& CurrentPixels = This.GetPixels();
+	
+	//	convert pixels if they're in the wrong format
+	std::shared_ptr<SoyPixels> ConvertedPixels;
+	SoyPixels* pPixels = nullptr;
+	if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
+	{
+		pPixels = &CurrentPixels;
+	}
+	else
+	{
+		ConvertedPixels.reset( new SoyPixels(CurrentPixels) );
+		ConvertedPixels->SetFormat( SoyPixelsFormat::RGBA );
+		pPixels = ConvertedPixels.get();
+	}	
+	auto& Pixels = *pPixels;
+	
+	//	we have some more efficient parallel funcs for image conversion, so throw if not rgba for now
+	auto Meta = Pixels.GetMeta();
+	
+	auto Rgba8Buffer = v8::ArrayBuffer::New( &Params.GetIsolate(), Meta.GetDataSize() );
+	auto Rgba8BufferContents = Rgba8Buffer->GetContents();
+	auto Rgba8DataArray = GetRemoteArray( static_cast<uint8_t*>( Rgba8BufferContents.Data() ), Rgba8BufferContents.ByteLength() );
+	Rgba8DataArray.Copy( Pixels.GetPixelsArray() );
+
+	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
+	
+	return Rgba8;
+}
+
 
 v8::Local<v8::Value> TImageWrapper::SetLinearFilter(const v8::CallbackInfo& Params)
 {

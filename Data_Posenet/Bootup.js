@@ -16,8 +16,59 @@ function HTMLVideoElement()
 	
 }
 
+function ImageData(Pixels)
+{
+	this.width = 0;
+	this.height = 0;
+	this.data = null;	//	Uint8ClampedArray rgba
+	
+	this.SetFromImage = function(Img)
+	{
+		this.width = Img.GetWidth();
+		this.height = Img.GetHeight();
+		this.data = Img.GetRgba8();
+	}
+	
+	//	auto load
+	if ( Pixels instanceof Image )
+	{
+		this.SetFromImage( Pixels );
+	}
+}
 
 
+/*	This is the tensorflow pixel reading for cpu... make this fast
+e.prototype.fromPixels = function(e, t) {
+	if (null == e)
+		throw new Error("MathBackendCPU.writePixels(): pixels can not be null");
+	var r, n;
+	if (e instanceof ImageData)
+		r = e.data;
+	else if (e instanceof HTMLCanvasElement)
+		r = e.getContext("2d").getImageData(0, 0, e.width, e.height).data;
+	else {
+		if (!(e instanceof HTMLImageElement || e instanceof HTMLVideoElement))
+			throw new Error("pixels is of unknown type: " + e.constructor.name);
+		if (null == this.canvas)
+			throw new Error("Can't read pixels from HTMLImageElement outside the browser.");
+		this.canvas.width = e.width,
+		this.canvas.height = e.height,
+		this.canvas.getContext("2d").drawImage(e, 0, 0, e.width, e.height),
+		r = this.canvas.getContext("2d").getImageData(0, 0, e.width, e.height).data
+	}
+	if (4 === t)
+		n = new Int32Array(r);
+	else {
+		var a = e.width * e.height;
+		n = new Int32Array(a * t);
+		for (var i = 0; i < a; i++)
+			for (var o = 0; o < t; ++o)
+				n[i * t + o] = r[4 * i + o]
+				}
+	var s = [e.height, e.width, t];
+	return tensor3d(n, s, "int32")
+}
+*/
 
 
 
@@ -82,6 +133,10 @@ function WindowRender(RenderTarget)
 
 function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 {
+	//	for CPU mode (and gpu?)
+	if ( NewImage instanceof Image )
+		NewImage = new ImageData(NewImage);
+		
 	var imageScaleFactor = 0.20;
 	var outputStride = 16;
 	var flipHorizontal = false;

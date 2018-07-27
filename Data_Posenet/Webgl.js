@@ -285,7 +285,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	
 	this.vertexAttribPointer = function(index, size, type, normalized, stride, offset)
 	{
-		
 	}
 	
 	this.enableVertexAttribArray = function(index)
@@ -384,6 +383,9 @@ function FakeCanvas(WebWindow)
 	let This = this;
 	this.getContext = function(ContextType)
 	{
+		//	gr: go with cpu for now
+		return null;
+		
 		if ( This.WebglContext == null )
 		{
 			This.WebglContext = new FakeOpenglContext( ContextType, This );

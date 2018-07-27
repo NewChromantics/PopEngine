@@ -36,6 +36,7 @@ public:
 	static v8::Local<v8::Value>				LoadFile(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetWidth(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetHeight(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				GetRgba8(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				SetLinearFilter(const v8::CallbackInfo& Arguments);
 
 	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
