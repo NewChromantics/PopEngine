@@ -103,7 +103,7 @@ function OpenglCommandQueue()
 	
 	this.Flush = function(Context)
 	{
-		let Execute = function()
+		let ExecuteQueue = function()
 		{
 			let ExecuteCommand = function(Command)
 			{
@@ -125,7 +125,7 @@ function OpenglCommandQueue()
 		
 		//	run these commands on the opengl thread
 		Debug("Running opengl command queue");
-		Context.RunQueue( Execute );
+		Context.Execute( ExecuteQueue );
 	}
 }
 
@@ -212,13 +212,14 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.viewport = function()	{	this.CommandQueue.Push( this.GetOpenglContext().viewport, arguments );		}
 	this.scissor = function()	{	this.CommandQueue.Push( this.GetOpenglContext().scissor, arguments );		}
 	this.activeTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().activeTexture, arguments );		}
+	this.drawElements = function()	{	this.CommandQueue.Push( this.GetOpenglContext().drawElements, arguments );		}
 	
 
 	
 	this.readPixels = function()
 	{
 		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
-		this.CommandQueue.Flush();
+		this.CommandQueue.Flush( this.GetOpenglContext() );
 	}
 	
 	
@@ -299,7 +300,8 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 
 	this.linkProgram = function(Program)
 	{
-		Program.Build( this.GetOpenglContext() );
+		//	gr: link on use
+		//Program.Build( this.GetOpenglContext() );
 	}
 	
 	this.getProgramInfoLog = function(Program)

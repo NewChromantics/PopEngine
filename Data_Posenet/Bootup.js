@@ -158,7 +158,7 @@ function WindowRender(RenderTarget)
 			const MAX_LINES = 100;
 			let PoseLines = GetPoseLines(LastPose);
 			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
-			Debug(PoseLines);
+			//Debug(PoseLines);
 			Shader.SetUniform("Lines", PoseLines );
 			/*
 			uniform vec4		Lines[LINE_COUNT];
