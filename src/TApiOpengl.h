@@ -58,6 +58,8 @@ public:
 	static v8::Local<v8::Value>				SetViewport(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	
 
 public:
 	v8::Persistent<v8::Object>		mHandle;

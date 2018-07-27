@@ -168,6 +168,7 @@ public:
 	v8::Isolate&	GetIsolate()	{	return *mIsolate;	}
 	
 	void		RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
+	bool		TryRunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 	void		QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 	
 	void		ProcessJobs();	//	run all the queued jobs then return
@@ -204,6 +205,7 @@ private:
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 
 public:
+	std::recursive_mutex			mIsolateLock;	//	the v8 locker doesn't have try_lock, so we have one
 	v8::Persist<v8::Context>		mContext;		//	our "document", keep adding scripts toit
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;

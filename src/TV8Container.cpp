@@ -291,7 +291,14 @@ void TV8Container::QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambd
 void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 {
 	auto* isolate = mIsolate;
-
+	
+	if ( !mIsolateLock.try_lock() )
+		std::Debug << "Failed to get lock..." << std::endl;
+	std::lock_guard<std::recursive_mutex> LockGuard(mIsolateLock);
+	
+	//	unlock the try
+	mIsolateLock.unlock();
+	
 	//	gr: we're supposed to lock the isolate here, but the setup we have,
 	//	this should only ever be called on the JS thread[s] anyway
 	//	maybe have a recursive mutex and throw if already locked
@@ -319,6 +326,26 @@ void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 		throw;
 	}
 }
+
+
+bool TV8Container::TryRunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
+{
+	if ( !mIsolateLock.try_lock() )
+		return false;
+	
+	try
+	{
+		RunScoped( Lambda );
+		mIsolateLock.unlock();
+		return true;
+	}
+	catch(...)
+	{
+		mIsolateLock.unlock();
+		throw;
+	}
+}
+
 
 
 v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)

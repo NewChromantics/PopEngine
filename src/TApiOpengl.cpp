@@ -10,6 +10,7 @@ const char SetViewport_FunctionName[] = "SetViewport";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
+const char Execute_FunctionName[] = "Execute";
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
@@ -39,7 +40,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 		auto This = Local<Object>::New( isolate, this->mHandle );
 		Container.ExecuteFunc( context, "OnRender", This );
 	};
-	Container.RunScoped( Runner );
+	Container.TryRunScoped( Runner );
 }
 
 
@@ -438,6 +439,49 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 }
 
 
+
+v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	auto* pThis = &This;
+	auto Window = Arguments.This();
+	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	
+	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	auto* Container = &Params.mContainer;
+	
+	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
+	{
+		auto* Isolate = Container->mIsolate;
+		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
+		auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
+		CallbackParams.PushBack( WindowLocal );
+		auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
+		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
+		auto FunctionThis = Context->Global();
+		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
+	};
+	
+	auto OpenglRender = [=]
+	{
+		Container->RunScoped( ExecuteRenderCallback );
+	};
+	
+	Soy::TSemaphore Semaphore;
+	auto& OpenglContext = *This.mWindow->GetContext();
+	OpenglContext.PushJob( OpenglRender, Semaphore );
+	Semaphore.Wait();
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+
+
+
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
 	auto* Isolate = Container.mIsolate;
@@ -465,6 +509,7 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
 	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
 	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
+	Container.BindFunction<Execute_FunctionName>( InstanceTemplate, Execute );
 
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
