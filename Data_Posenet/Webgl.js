@@ -89,12 +89,37 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 {
 	Debug("FakeOpenglContext(" + ContextType + ")");
 
-	//	constants
+	//	constants, we just need arbritry enum values
 	let CONST = 1;
+	
+	this.NO_ERROR = CONST++;
+	this.INVALID_ENUM = CONST++;
+	this.INVALID_VALUE = CONST++;
+	this.INVALID_OPERATION = CONST++;
+	this.INVALID_FRAMEBUFFER_OPERATION = CONST++;
+	this.OUT_OF_MEMORY = CONST++;
+	this.CONTEXT_LOST_WEBGL = CONST++;
+	
 	this.FRAMEBUFFER_COMPLETE = CONST++;
 	this.VERTEX_SHADER = CONST++;
 	this.FRAGMENT_SHADER = CONST++;
-	
+	this.TEXTURE0 = CONST++;
+	this.TEXTURE1 = CONST++;
+	this.TEXTURE2 = CONST++;
+	this.TEXTURE3 = CONST++;
+	this.TEXTURE4 = CONST++;
+	this.TEXTURE5 = CONST++;
+	this.TEXTURE6 = CONST++;
+	this.TEXTURE7 = CONST++;
+	this.TEXTURE8 = CONST++;
+	this.TEXTURE9 = CONST++;
+	this.TEXTURE10 = CONST++;
+	this.TEXTURE11 = CONST++;
+	this.TEXTURE12 = CONST++;
+	this.TEXTURE13 = CONST++;
+	this.TEXTURE14 = CONST++;
+	this.TEXTURE15 = CONST++;
+
 	
 	this.ParentCanvas = ParentCanvas;
 	
@@ -235,6 +260,90 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	{
 		return Program.Error;
 	}
+	
+	this.useProgram = function(Program)
+	{
+		//	current program = x
+	}
+	
+	this.getAttribLocation = function(Program,Name)
+	{
+		//	return -1 if not found
+		return 0;
+	}
+	
+	this.vertexAttribPointer = function(index, size, type, normalized, stride, offset)
+	{
+		
+	}
+	
+	this.enableVertexAttribArray = function(index)
+	{
+		
+	}
+	
+	this.getUniformLocation = function(Program,Name)
+	{
+		//	return -1 if not found
+		return 0;
+	}
+	
+	this.uniform1f = function(Location,Value)	{}
+	this.uniform2f = function(Location,Value)	{}
+	this.uniform3f = function(Location,Value)	{}
+	this.uniform4f = function(Location,Value)	{}
+	this.uniform1fv = function(Location,Value)	{}
+	this.uniform2fv = function(Location,Value)	{}
+	this.uniform3fv = function(Location,Value)	{}
+	this.uniform4fv = function(Location,Value)	{}
+	this.uniform1i = function(Location,Value)	{}
+	this.uniform2i = function(Location,Value)	{}
+	this.uniform3i = function(Location,Value)	{}
+	this.uniform4i = function(Location,Value)	{}
+	this.uniform1iv = function(Location,Value)	{}
+	this.uniform2iv = function(Location,Value)	{}
+	this.uniform3iv = function(Location,Value)	{}
+	this.uniform4iv = function(Location,Value)	{}
+
+	this.drawElements = function(PrimitiveEnum, count, type, offset)
+	{
+		
+	}
+
+	//	lots of variants;
+	//	https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texSubImage2D
+	this.texSubImage2D = function(Binding,MipLevel,xoffset,yoffset,MoreParams)	{}
+	
+	this.readPixels = function(x, y, width, height, format, type, pixels, offset)
+	{
+		//	pixels is optional
+		if ( offset === undefined )
+		{
+			offset = pixels;
+			pixels = undefined;
+		}
+	}
+	
+	this.viewport = function(x, y, width, height)
+	{
+		
+	}
+	
+	this.scissor = function(x, y, width, height)
+	{
+		
+	}
+	
+	this.activeTexture = function(TextureEnum)
+	{
+		
+	}
+	
+	this.getError = function()
+	{
+		return this.NO_ERROR;
+	}
+
 }
 
 /*
