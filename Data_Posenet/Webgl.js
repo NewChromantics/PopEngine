@@ -119,7 +119,11 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.TEXTURE13 = CONST++;
 	this.TEXTURE14 = CONST++;
 	this.TEXTURE15 = CONST++;
-
+	
+	//	Parameters
+	this.GPU_DISJOINT_EXT = CONST++;
+	this.MAX_TEXTURE_SIZE = CONST++;
+	
 	
 	this.ParentCanvas = ParentCanvas;
 	
@@ -135,6 +139,9 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		if ( ExtensionName == "EXT_color_buffer_float" )
 			return new WebglExtension_EXTColorBufferFloat();
 		
+		Debug("GetExtension(" + ExtensionName + ")");
+		//EXT_disjoint_timer_query_webgl2
+		
 		//WEBGL_get_buffer_sub_data_async
 		return null;
 	}
@@ -146,6 +153,9 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 
 	this.getParameter = function(ParameterEnum)
 	{
+		if ( ParameterEnum == this.MAX_TEXTURE_SIZE )
+			return 8192;
+		
 		Debug("getParameter(" + ParameterEnum + ")" );
 	}
 	
@@ -268,6 +278,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	
 	this.getAttribLocation = function(Program,Name)
 	{
+		return Name;
 		//	return -1 if not found
 		return 0;
 	}
@@ -285,25 +296,28 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.getUniformLocation = function(Program,Name)
 	{
 		//	return -1 if not found
+		return Name;
 		return 0;
 	}
 	
-	this.uniform1f = function(Location,Value)	{}
-	this.uniform2f = function(Location,Value)	{}
-	this.uniform3f = function(Location,Value)	{}
-	this.uniform4f = function(Location,Value)	{}
-	this.uniform1fv = function(Location,Value)	{}
-	this.uniform2fv = function(Location,Value)	{}
-	this.uniform3fv = function(Location,Value)	{}
-	this.uniform4fv = function(Location,Value)	{}
-	this.uniform1i = function(Location,Value)	{}
-	this.uniform2i = function(Location,Value)	{}
-	this.uniform3i = function(Location,Value)	{}
-	this.uniform4i = function(Location,Value)	{}
-	this.uniform1iv = function(Location,Value)	{}
-	this.uniform2iv = function(Location,Value)	{}
-	this.uniform3iv = function(Location,Value)	{}
-	this.uniform4iv = function(Location,Value)	{}
+	this.SetUniform = function(Location,Value)	{	Debug("SetUniform(" + Location +")");	}
+	
+	this.uniform1f = this.SetUniform;
+	this.uniform2f = this.SetUniform;
+	this.uniform3f = this.SetUniform;
+	this.uniform4f = this.SetUniform;
+	this.uniform1fv = this.SetUniform;
+	this.uniform2fv = this.SetUniform;
+	this.uniform3fv = this.SetUniform;
+	this.uniform4fv = this.SetUniform;
+	this.uniform1i = this.SetUniform;
+	this.uniform2i = this.SetUniform;
+	this.uniform3i = this.SetUniform;
+	this.uniform4i = this.SetUniform;
+	this.uniform1iv = this.SetUniform;
+	this.uniform2iv = this.SetUniform;
+	this.uniform3iv = this.SetUniform;
+	this.uniform4iv = this.SetUniform;
 
 	this.drawElements = function(PrimitiveEnum, count, type, offset)
 	{
