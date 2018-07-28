@@ -59,7 +59,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 }
 
 TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params) :
-	SoyWorkerThread		( Soy::GetTypeName(*this), SoyWorkerWaitMode::Sleep ),
+	SoyWorkerThread		( Soy::GetTypeName(*this), Params.mAutoRedraw ? SoyWorkerWaitMode::Sleep : SoyWorkerWaitMode::Wake ),
 	mName				( Name ),
 	mParams				( Params )
 {

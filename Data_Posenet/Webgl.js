@@ -91,6 +91,9 @@ function OpenglCommandQueue()
 	
 	this.Push = function(Function,arguments)
 	{
+		if ( typeof Function != 'function' )
+			throw Function + " is not a function";
+		
 		//	turn arguments into an array
 		//	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
 		const args = Array.from(arguments);
@@ -103,74 +106,64 @@ function OpenglCommandQueue()
 	
 	this.Flush = function(Context)
 	{
-		let ExecuteQueue = function()
+		let ExecuteQueue = function(Commands)
 		{
+			Debug("Execute Queue x" + Commands.length );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
 				let Func = Command.shift();
-				Func( Command );
+				let Arguments = Command;
+				Func.apply( null, Arguments );
 			}
-			
 			try
 			{
-				this.Commands.forEach( ExecuteCommand );
+				Commands.forEach( ExecuteCommand );
 			}
 			catch(e)
 			{
-				this.Commands = [];
-				throw e;
+				Debug("exception in queue: ");
+				Debug(e);
 			}
 		}
 		
 		//	run these commands on the opengl thread
 		Debug("Running opengl command queue");
-		Context.Execute( ExecuteQueue );
+		//	capture commands and remove from our list
+		let Cmds = this.Commands;
+		this.Commands = [];
+		let RunCommands = function()
+		{
+			ExecuteQueue(Cmds);
+		}
+		let Promise = Context.Execute( RunCommands, true );
+		return Promise;
 	}
 }
 
+		
 function FakeOpenglContext(ContextType,ParentCanvas)
 {
-	Debug("FakeOpenglContext(" + ContextType + ")");
-
-	//	constants, we just need arbritry enum values
-	let CONST = 1;
-	
-	this.NO_ERROR = CONST++;
-	this.INVALID_ENUM = CONST++;
-	this.INVALID_VALUE = CONST++;
-	this.INVALID_OPERATION = CONST++;
-	this.INVALID_FRAMEBUFFER_OPERATION = CONST++;
-	this.OUT_OF_MEMORY = CONST++;
-	this.CONTEXT_LOST_WEBGL = CONST++;
-	
-	this.FRAMEBUFFER_COMPLETE = CONST++;
-	this.VERTEX_SHADER = CONST++;
-	this.FRAGMENT_SHADER = CONST++;
-	this.TEXTURE0 = CONST++;
-	this.TEXTURE1 = CONST++;
-	this.TEXTURE2 = CONST++;
-	this.TEXTURE3 = CONST++;
-	this.TEXTURE4 = CONST++;
-	this.TEXTURE5 = CONST++;
-	this.TEXTURE6 = CONST++;
-	this.TEXTURE7 = CONST++;
-	this.TEXTURE8 = CONST++;
-	this.TEXTURE9 = CONST++;
-	this.TEXTURE10 = CONST++;
-	this.TEXTURE11 = CONST++;
-	this.TEXTURE12 = CONST++;
-	this.TEXTURE13 = CONST++;
-	this.TEXTURE14 = CONST++;
-	this.TEXTURE15 = CONST++;
-	
-	//	Parameters
-	this.GPU_DISJOINT_EXT = CONST++;
-	this.MAX_TEXTURE_SIZE = CONST++;
-	
-	
+	let ContextsType = ParentCanvas.WebWindow.OpenglContext.constructor.name;
+	Debug("FakeOpenglContext(" + ContextType + ", " + ContextsType +")");
 	this.ParentCanvas = ParentCanvas;
 	this.CommandQueue = new OpenglCommandQueue();
+
+	//	setup enums
+	let Enums = ParentCanvas.WebWindow.OpenglContext.Enums;
+	Object.assign( this, Enums );
+	
+	this.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
+	this.COMPILE_STATUS = 'COMPILE_STATUS';
+	this.MAX_TEXTURE_SIZE = 'MAX_TEXTURE_SIZE';
+	this.FRAMEBUFFER_COMPLETE = 'FRAMEBUFFER_COMPLETE';
+	this.VERTEX_SHADER = 'VERTEX_SHADER';
+	this.FRAGMENT_SHADER = 'FRAGMENT_SHADER';
+	this.COMPILE_STATUS = 'COMPILE_STATUS';
+	this.LINK_STATUS = 'LINK_STATUS';
+	Debug(Object.keys(this));
+
+	
 	
 	
 	this.GetOpenglContext = function()
@@ -221,7 +214,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		this.CommandQueue.Flush( this.GetOpenglContext() );
 	}
-	
 	
 	
 	this.createBuffer = function()
@@ -351,35 +343,24 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 
 }
 
-/*
- unction bindVertexBufferToProgramAttribute(e, t, r, n, a, i, o) {
- var s = e.getAttribLocation(t, r);
- return -1 !== s && (callAndCheck(e, function() {
- return e.bindBuffer(e.ARRAY_BUFFER, n)
- }),
- callAndCheck(e, function() {
- return e.vertexAttribPointer(s, a, e.FLOAT, !1, i, o)
- }),
- callAndCheck(e, function() {
- return e.enableVertexAttribArray(s)
- }),
- !0)*/
+
+
 
 function FakeCanvas(WebWindow)
 {
+	//Debug("New canvas");
 	this.WebWindow = WebWindow;
 	//this.Window.OnRender = function(){	/*WindowRender( Window1 );*/	};
 
 	this.WebglContext = null;
 	
-	let This = this;
 	this.getContext = function(ContextType)
 	{
-		if ( This.WebglContext == null )
+		if ( this.WebglContext == null )
 		{
-			This.WebglContext = new FakeOpenglContext( ContextType, This );
+			this.WebglContext = new FakeOpenglContext( ContextType, this );
 		}
-		return This.WebglContext;
+		return this.WebglContext;
 	}
 	
 }

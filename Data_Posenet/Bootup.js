@@ -28,7 +28,7 @@ function ImageData(Pixels)
 		this.height = Img.GetHeight();
 		this.data = Img.GetRgba8();
 		
-		//Debug( ToHexString(this.data,' ', 20 ) );
+		//Debug( ToHexString(this.data,'  20 ) );
 	}
 	
 	//	auto load
@@ -135,7 +135,7 @@ function GetPoseLines(Pose)
 	let Bones = [["nose", "leftEye"], ["leftEye", "leftEar"], ["nose", "rightEye"], ["rightEye", "rightEar"], ["nose", "leftShoulder"], ["leftShoulder", "leftElbow"], ["leftElbow", "leftWrist"], ["leftShoulder", "leftHip"], ["leftHip", "leftKnee"], ["leftKnee", "leftAnkle"], ["nose", "rightShoulder"], ["rightShoulder", "rightElbow"], ["rightElbow", "rightWrist"], ["rightShoulder", "rightHip"], ["rightHip", "rightKnee"], ["rightKnee", "rightAnkle"]];
 	Bones.forEach( PushBone );
 	
-	Debug("Got " + Lines.length + " lines for the pose");
+	//Debug("Got " + Lines.length + " lines for the pose");
 	
 	return Lines;
 }
@@ -275,32 +275,101 @@ function PosenetFailed(Arg1)
 	Debug(Arg1);
 }
 
+let OpenglEnumNames = `
+NO_ERROR
+INVALID_ENUM
+INVALID_VALUE
+INVALID_OPERATION
+INVALID_FRAMEBUFFER_OPERATION
+OUT_OF_MEMORY
+CONTEXT_LOST_WEBGL
 
+DEPTH_TEST
+STENCIL_TEST
+BLEND
+DITHER
+POLYGON_OFFSET_FILL
+SAMPLE_COVERAGE
+SCISSOR_TEST
+FRAMEBUFFER_COMPLETE
+VERTEX_SHADER
+FRAGMENT_SHADER
+
+TEXTURE0
+TEXTURE1
+TEXTURE2
+TEXTURE3
+TEXTURE4
+TEXTURE5
+TEXTURE6
+TEXTURE7
+TEXTURE8
+TEXTURE9
+TEXTURE10
+TEXTURE11
+TEXTURE12
+TEXTURE13
+TEXTURE14
+TEXTURE15
+
+//	Params
+GPU_DISJOINT_EXT
+MAX_TEXTURE_SIZE
+CULL_FACE
+BACK
+TEXTURE_WRAP_S
+CLAMP_TO_EDGE
+TEXTURE_WRAP_T
+CLAMP_TO_EDGE
+TEXTURE_MIN_FILTER
+NEAREST
+TEXTURE_MAG_FILTER
+TEXTURE_2D
+`;
 
 
 //	adding here and we'll put them into our system
 function AddWebglBindings(This)
 {
-	This.disable =				function()	{	Debug("disable");	};
-	This.enable =				function()	{	Debug("enable");	};
-	This.cullFace =				function()	{	Debug("cullFace");	};
+	This.Enums = {};
+	let PushEnum = function(Name)
+	{
+		if ( Name.length == 0 )
+			return;
+		if ( Name.startsWith('//') )
+			return;
+		//Debug("Enum="+Name+"[" + Name.length);
+		This.Enums[Name] = Name;
+	}
+	try
+	{
+		OpenglEnumNames.split('\n').forEach( PushEnum );
+	}
+	catch(e)
+	{
+		Debug(e);
+	}
+	This.disable =				function(Enum)	{	Debug("disable("+ Enum);	};
+	This.enable =				function(Enum)	{	Debug("enable("+ Enum);	};
+	This.cullFace =				function(Enum)	{	Debug("cullFace("+ Enum);	};
 	This.bindBuffer =			function()	{	Debug("bindBuffer");	};
 	This.bufferData =			function()	{	Debug("bufferData");	};
 	This.bindFramebuffer =		function()	{	Debug("bindFramebuffer");	};
 	This.framebufferTexture2D =	function()	{	Debug("framebufferTexture2D");	};
-	This.bindTexture =			function()	{	Debug("bindTexture");	};
+	This.bindTexture =			function(Enum,Texture)	{	Debug("bindTexture");	};
 	This.texImage2D =			function()	{	Debug("texImage2D");	};
-	This.texParameteri =		function()	{	Debug("texParameteri");	};
 	This.useProgram =			function()	{	Debug("useProgram");	};
+	This.texParameteri =		function(Texture,Enum,Value)	{	Debug("texParameteri("+Texture+","+ Enum+"," + Value);	};
+	This.attachShader =			function()	{	Debug("attachShader");	};
 	This.vertexAttribPointer =	function()	{	Debug("vertexAttribPointer");	};
 	This.enableVertexAttribArray = function()	{	Debug("enableVertexAttribArray");	};
-	This.SetUniform =			function()	{	Debug("SetUniform");	};
-	This.drawElements =			function()	{	Debug("drawElements");	};
+	This.SetUniform =			function(Name,Value)	{	Debug("SetUniform("+Name+","+Value);	};
 	This.texSubImage2D =		function()	{	Debug("texSubImage2D");	};
 	This.readPixels =			function()	{	Debug("readPixels");	};
 	This.viewport =				function()	{	Debug("viewport");	};
 	This.scissor =				function()	{	Debug("scissor");	};
 	This.activeTexture =		function()	{	Debug("activeTexture");	};
+	This.drawElements =			function()	{	Debug("drawElements");	};
 }
 
 

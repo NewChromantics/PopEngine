@@ -44,6 +44,7 @@ public:
 	}
 	~TWindowWrapper();
 	
+	//	gr: removing this!
 	void		OnRender(Opengl::TRenderTarget& RenderTarget);
 	
 	static TWindowWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TWindowWrapper>( Value, 0 );	}

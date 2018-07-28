@@ -261,6 +261,10 @@ bool GlViewContext::Lock()
 void GlViewContext::Unlock()
 {
 	auto ContextObj = [mParent.mView.openGLContext CGLContextObj];
+	
+	//	gr: this is missing
+	//CGLSetCurrentContext( nullptr );
+	
 	if ( DoCGLLock )
 		CGLUnlockContext( ContextObj );
 //	leaves artifacts everywhere

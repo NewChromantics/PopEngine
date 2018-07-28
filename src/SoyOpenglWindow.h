@@ -22,6 +22,7 @@ public:
 	bool		mRedrawWithDisplayLink = false;
 	int			mVsyncSwapInterval = 0;	//	0 = no vsync
 	int			mRefreshRate = 30;		//	will try to skip redraws if vsync on
+	bool		mAutoRedraw = true;
 };
 
 class TOpenglWindow : public SoyWindow, public SoyWorkerThread

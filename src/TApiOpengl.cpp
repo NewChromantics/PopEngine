@@ -40,7 +40,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 		auto This = Local<Object>::New( isolate, this->mHandle );
 		Container.ExecuteFunc( context, "OnRender", This );
 	};
-	Container.TryRunScoped( Runner );
+	Container.RunScoped( Runner );
 }
 
 
@@ -78,6 +78,7 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	
 	TOpenglParams Params;
 	Params.mDoubleBuffer = false;
+	Params.mAutoRedraw = false;
 	NewWindow->mWindow.reset( new TRenderWindow( *WindowName, Params ) );
 	
 	//	store persistent handle to the javascript object
@@ -446,10 +447,19 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	auto* Isolate = Params.mIsolate;
 	
-	auto* pThis = &This;
 	auto Window = Arguments.This();
 	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
 	
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	
+	bool StealThread = false;
+	if ( Arguments[1]->IsBoolean() )
+		StealThread = Local<Number>::Cast(Arguments[1])->BooleanValue();
+	else if ( !Arguments[1]->IsUndefined() )
+		throw Soy::AssertException("2nd argument(StealThread) must be bool or undefined (default to false).");
+
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* Container = &Params.mContainer;
 	
@@ -465,17 +475,68 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
 	};
 	
-	auto OpenglRender = [=]
+	auto OnCompleted = [=](Local<Context> Context)
 	{
-		Container->RunScoped( ExecuteRenderCallback );
+		//	gr: can't do this unless we're in the javascript thread...
+		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+		auto Message = String::NewFromUtf8( Isolate, "Yay!");
+		ResolverLocal->Resolve( Message );
 	};
 	
-	Soy::TSemaphore Semaphore;
+	auto OpenglRender = [=]
+	{
+		try
+		{
+			//	immediately call the javascript callback
+			Container->RunScoped( ExecuteRenderCallback );
+			
+			//	queue the completion, doesn't need to be done instantly
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				//	gr: does this need to be an exception? string?
+				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
+				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
+				//ResolverLocal->Reject( Exception );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
 	auto& OpenglContext = *This.mWindow->GetContext();
-	OpenglContext.PushJob( OpenglRender, Semaphore );
-	Semaphore.Wait();
 	
-	return v8::Undefined(Params.mIsolate);
+	if ( StealThread )
+	{
+		if ( !OpenglContext.Lock() )
+			throw Soy::AssertException("Failed to steal thread (lock context)");
+		
+		try
+		{
+			//	immediately call the javascript callback
+			Container->RunScoped( ExecuteRenderCallback );
+			OpenglContext.Unlock();
+		}
+		catch(...)
+		{
+			OpenglContext.Unlock();
+			throw;
+		}
+		return v8::Undefined(Params.mIsolate);
+	}
+	else
+	{
+		OpenglContext.PushJob( OpenglRender );
+	
+		//	return the promise
+		auto Promise = Resolver->GetPromise();
+		return Promise;
+	}
 }
 
 
