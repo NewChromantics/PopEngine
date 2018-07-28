@@ -295,23 +295,6 @@ FRAMEBUFFER_COMPLETE
 VERTEX_SHADER
 FRAGMENT_SHADER
 
-TEXTURE0
-TEXTURE1
-TEXTURE2
-TEXTURE3
-TEXTURE4
-TEXTURE5
-TEXTURE6
-TEXTURE7
-TEXTURE8
-TEXTURE9
-TEXTURE10
-TEXTURE11
-TEXTURE12
-TEXTURE13
-TEXTURE14
-TEXTURE15
-
 //	Params
 GPU_DISJOINT_EXT
 MAX_TEXTURE_SIZE
@@ -341,14 +324,17 @@ function AddWebglBindings(This)
 		//Debug("Enum="+Name+"[" + Name.length);
 		This.Enums[Name] = Name;
 	}
-	try
-	{
-		OpenglEnumNames.split('\n').forEach( PushEnum );
-	}
-	catch(e)
-	{
-		Debug(e);
-	}
+	OpenglEnumNames.split('\n').forEach( PushEnum );
+
+	//	special case (incrementing enum value)
+	This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
+	This.TEXTURE0 = 1000;
+	for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
+		This['TEXTURE'+i] = This['TEXTURE0']+i;
+	
+	
+	
+	
 	This.disable =				function(Enum)	{	Debug("disable("+ Enum);	};
 	This.enable =				function(Enum)	{	Debug("enable("+ Enum);	};
 	This.cullFace =				function(Enum)	{	Debug("cullFace("+ Enum);	};
@@ -356,7 +342,7 @@ function AddWebglBindings(This)
 	This.bufferData =			function()	{	Debug("bufferData");	};
 	This.bindFramebuffer =		function()	{	Debug("bindFramebuffer");	};
 	This.framebufferTexture2D =	function()	{	Debug("framebufferTexture2D");	};
-	This.bindTexture =			function(Enum,Texture)	{	Debug("bindTexture");	};
+	This.bindTexture =			function(Enum,Texture)	{	Debug("bindTexture("+ Enum+","+Texture);	};
 	This.texImage2D =			function()	{	Debug("texImage2D");	};
 	This.useProgram =			function()	{	Debug("useProgram");	};
 	This.texParameteri =		function(Texture,Enum,Value)	{	Debug("texParameteri("+Texture+","+ Enum+"," + Value);	};
