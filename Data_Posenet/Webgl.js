@@ -216,12 +216,12 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	}
 	
 	
-	this.createBuffer = function()
-	{
-		let NewBuffer = new WebglDataBuffer();
-		return NewBuffer;
-	}
-	
+	//	gr: these need to create objects as caller checks for return
+	this.BufferCounter = 1000;
+	this.FrameBufferCounter = 1000;
+	this.createBuffer = function()	{	return this.BufferCounter++;	}
+	this.createFrameBuffer = function()	{	return this.FrameBufferCounter++;	}
+
 	this.getParameter = function(ParameterEnum)
 	{
 		if ( ParameterEnum == this.MAX_TEXTURE_SIZE )
@@ -230,18 +230,10 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		Debug("getParameter(" + ParameterEnum + ")" );
 	}
 
-	this.createFramebuffer = function()
-	{
-		this.FrameBufferCounter++;
-		let NewBuffer = new WebglFrameBuffer(this.FrameBufferCounter);
-		return NewBuffer;
-	}
-	
 	this.createTexture = function()
 	{
 		return new Image();
 	}
-
 	
 	this.checkFramebufferStatus = function(Binding)
 	{
@@ -301,21 +293,9 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 		return Program.Error;
 	}
 	
-
-	this.getAttribLocation = function(Program,Name)
-	{
-		return Name;
-		//	return -1 if not found
-		return 0;
-	}
-	
-	
-	this.getUniformLocation = function(Program,Name)
-	{
-		//	return -1 if not found
-		return Name;
-		return 0;
-	}
+	//	just pass name around and resolve when we need it
+	this.getAttribLocation = function(Program,Name)		{	return Name;	}
+	this.getUniformLocation = function(Program,Name)	{	return Name;	}
 	
 	
 	this.uniform1f = this.SetUniform;
