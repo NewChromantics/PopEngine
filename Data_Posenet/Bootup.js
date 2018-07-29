@@ -314,27 +314,27 @@ TEXTURE_2D
 //	adding here and we'll put them into our system
 function AddWebglBindings(This)
 {
-	This.Enums = {};
-	let PushEnum = function(Name)
+	if ( This.Enums === undefined )
 	{
-		if ( Name.length == 0 )
-			return;
-		if ( Name.startsWith('//') )
-			return;
-		//Debug("Enum="+Name+"[" + Name.length);
-		This.Enums[Name] = Name;
-	}
-	OpenglEnumNames.split('\n').forEach( PushEnum );
+		This.Enums = {};
+		let PushEnum = function(Name)
+		{
+			if ( Name.length == 0 )
+				return;
+			if ( Name.startsWith('//') )
+				return;
+			//Debug("Enum="+Name+"[" + Name.length);
+			This.Enums[Name] = Name;
+		}
+		OpenglEnumNames.split('\n').forEach( PushEnum );
 
-	//	special case (incrementing enum value)
-	This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
-	This.TEXTURE0 = 1000;
-	for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
-		This['TEXTURE'+i] = This['TEXTURE0']+i;
-	
-	
-	
-	
+		//	special case (incrementing enum value)
+		This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
+		This.TEXTURE0 = 1000;
+		for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
+			This['TEXTURE'+i] = This['TEXTURE0']+i;
+	}	
+	/*
 	This.disable =				function(Enum)	{	Debug("disable("+ Enum);	};
 	This.enable =				function(Enum)	{	Debug("enable("+ Enum);	};
 	This.cullFace =				function(Enum)	{	Debug("cullFace("+ Enum);	};
@@ -356,6 +356,7 @@ function AddWebglBindings(This)
 	This.scissor =				function()	{	Debug("scissor");	};
 	This.activeTexture =		function()	{	Debug("activeTexture");	};
 	This.drawElements =			function()	{	Debug("drawElements");	};
+	 */
 }
 
 

@@ -12,6 +12,34 @@ const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
 const char Execute_FunctionName[] = "Execute";
 
+#define DECLARE_IMMEDIATE_FUNC_NAME(NAME)	\
+const char Immediate_##NAME##_FunctionName[] = #NAME
+
+#define DEFINE_IMMEDIATE(NAME)	DECLARE_IMMEDIATE_FUNC_NAME(NAME)
+DEFINE_IMMEDIATE(disable);
+DEFINE_IMMEDIATE(enable);
+DEFINE_IMMEDIATE(cullFace);
+DEFINE_IMMEDIATE(bindBuffer);
+DEFINE_IMMEDIATE(bufferData);
+DEFINE_IMMEDIATE(bindFramebuffer);
+DEFINE_IMMEDIATE(framebufferTexture2D);
+DEFINE_IMMEDIATE(bindTexture);
+DEFINE_IMMEDIATE(texImage2D);
+DEFINE_IMMEDIATE(useProgram);
+DEFINE_IMMEDIATE(texParameteri);
+DEFINE_IMMEDIATE(attachShader);
+DEFINE_IMMEDIATE(vertexAttribPointer);
+DEFINE_IMMEDIATE(enableVertexAttribArray);
+DEFINE_IMMEDIATE(setUniform);
+DEFINE_IMMEDIATE(texSubImage2D);
+DEFINE_IMMEDIATE(readPixels);
+DEFINE_IMMEDIATE(viewport);
+DEFINE_IMMEDIATE(scissor);
+DEFINE_IMMEDIATE(activeTexture);
+DEFINE_IMMEDIATE(drawElements);
+#undef DEFINE_IMMEDIATE
+
+
 void ApiOpengl::Bind(TV8Container& Container)
 {
 	Container.BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate );
@@ -572,10 +600,232 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
 	Container.BindFunction<Execute_FunctionName>( InstanceTemplate, Execute );
 
+#define BIND_IMMEDIATE(NAME)	\
+	Container.BindFunction<Immediate_## NAME ##_FunctionName>( InstanceTemplate, Immediate_ ## NAME );{}
+
+#define DEFINE_IMMEDIATE(NAME)	BIND_IMMEDIATE(NAME)
+	DEFINE_IMMEDIATE(disable);
+	DEFINE_IMMEDIATE(enable);
+	DEFINE_IMMEDIATE(cullFace);
+	DEFINE_IMMEDIATE(bindBuffer);
+	DEFINE_IMMEDIATE(bufferData);
+	DEFINE_IMMEDIATE(bindFramebuffer);
+	DEFINE_IMMEDIATE(framebufferTexture2D);
+	DEFINE_IMMEDIATE(bindTexture);
+	DEFINE_IMMEDIATE(texImage2D);
+	DEFINE_IMMEDIATE(useProgram);
+	DEFINE_IMMEDIATE(texParameteri);
+	DEFINE_IMMEDIATE(attachShader);
+	DEFINE_IMMEDIATE(vertexAttribPointer);
+	DEFINE_IMMEDIATE(enableVertexAttribArray);
+	DEFINE_IMMEDIATE(setUniform);
+	DEFINE_IMMEDIATE(texSubImage2D);
+	DEFINE_IMMEDIATE(readPixels);
+	DEFINE_IMMEDIATE(viewport);
+	DEFINE_IMMEDIATE(scissor);
+	DEFINE_IMMEDIATE(activeTexture);
+	DEFINE_IMMEDIATE(drawElements);
+#undef DEFINE_IMMEDIATE
+	
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
 	return ConstructorFunc;
+}
+
+
+template<typename TYPE>
+TYPE GetGlValue(Local<Value> Argument);
+
+template<>
+GLenum GetGlValue(Local<Value> Argument)
+{
+	auto Value32 = Argument.As<Number>()->Uint32Value();
+	auto Value = size_cast<GLenum>(Value32);
+	return Value;
+}
+
+template<>
+GLint GetGlValue(Local<Value> Argument)
+{
+	auto Value32 = Argument.As<Number>()->Int32Value();
+	auto Value = size_cast<GLint>(Value32);
+	return Value;
+}
+
+template<>
+GLsizeiptr GetGlValue(Local<Value> Argument)
+{
+	return 0;
+}
+
+template<>
+const GLvoid* GetGlValue(Local<Value> Argument)
+{
+	return nullptr;
+}
+
+
+
+template<typename RETURN,typename ARG0>
+v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments)
+{
+	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
+	FunctionPtr( Arg0 );
+	return v8::Undefined(&Arguments.GetIsolate());
+}
+
+template<typename RETURN,typename ARG0,typename ARG1>
+v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments)
+{
+	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
+	FunctionPtr( Arg0, Arg1 );
+	return v8::Undefined(&Arguments.GetIsolate());
+}
+
+template<typename RETURN,typename ARG0,typename ARG1,typename ARG2>
+v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1,ARG2),const v8::CallbackInfo& Arguments)
+{
+	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
+	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
+	FunctionPtr( Arg0, Arg1, Arg2 );
+	return v8::Undefined(&Arguments.GetIsolate());
+}
+
+template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3>
+v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3),const v8::CallbackInfo& Arguments)
+{
+	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
+	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
+	auto Arg3 = GetGlValue<ARG3>( Arguments.mParams[3] );
+	FunctionPtr( Arg0, Arg1, Arg2, Arg3 );
+	return v8::Undefined(&Arguments.GetIsolate());
+}
+
+template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4>
+v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4),const v8::CallbackInfo& Arguments)
+{
+	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
+	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
+	auto Arg3 = GetGlValue<ARG3>( Arguments.mParams[3] );
+	auto Arg4 = GetGlValue<ARG4>( Arguments.mParams[4] );
+	FunctionPtr( Arg0, Arg1, Arg2, Arg3, Arg4 );
+	return v8::Undefined(&Arguments.GetIsolate());
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_disable(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glDisable, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_enable(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glEnable, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_cullFace(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glCullFace, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_bindBuffer(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glBindBuffer, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_bufferData(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glBufferData, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glBindFramebuffer, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glFramebufferTexture2D, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glBindTexture, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo& Arguments)
+{
+	//	probably needs something specific rather than 9 arg template
+	throw Soy::AssertException("texImage2D needs some specifics");
+	//return Immediate_Func( glTexImage2D, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_useProgram(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glUseProgram, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_texParameteri(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glTexParameteri, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_attachShader(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glAttachShader, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments)
+{
+	throw Soy::AssertException("glVertexAttribPointer needs some specifics");
+	//return Immediate_Func( glVertexAttribPointer, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glEnableVertexAttribArray, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_setUniform(const v8::CallbackInfo& Arguments)
+{
+	throw Soy::AssertException("Set Uniform needs some specifics");
+	//return Immediate_Func( glDisable, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_texSubImage2D(const v8::CallbackInfo& Arguments)
+{
+	throw Soy::AssertException("glTexSubImage2D needs some specifics");
+	//return Immediate_Func( glTexSubImage2D, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo& Arguments)
+{
+	throw Soy::AssertException("glReadPixels needs some specifics");
+	//return Immediate_Func( glReadPixels, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_viewport(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glViewport, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_scissor(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glScissor, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_activeTexture(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glActiveTexture, Arguments );
+}
+
+v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackInfo& Arguments)
+{
+	return Immediate_Func( glDrawElements, Arguments );
 }
 
 
@@ -698,7 +948,6 @@ void TRenderWindow::DrawQuad(Opengl::TShader& Shader,std::function<void()> OnBin
 	BlitQuad.Draw();
 	Opengl_IsOkay();
 }
-
 
 
 

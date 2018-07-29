@@ -61,6 +61,29 @@ public:
 	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
 	
+	//	immediate calls
+	static v8::Local<v8::Value>				Immediate_disable(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_enable(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_cullFace(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_bindBuffer(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_bufferData(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_bindTexture(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_texImage2D(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_useProgram(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_attachShader(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_setUniform(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_texSubImage2D(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_readPixels(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_viewport(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_scissor(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+
 
 public:
 	v8::Persistent<v8::Object>		mHandle;

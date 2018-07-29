@@ -92,7 +92,7 @@ function OpenglCommandQueue()
 	this.Push = function(Function,arguments)
 	{
 		if ( typeof Function != 'function' )
-			throw Function + " is not a function";
+			throw Function + " is not a function. From " + this.Push.caller;
 		
 		//	turn arguments into an array
 		//	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
@@ -124,6 +124,7 @@ function OpenglCommandQueue()
 			{
 				Debug("exception in queue: ");
 				Debug(e);
+				//throw e;
 			}
 		}
 		
@@ -199,7 +200,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.attachShader = function()	{	this.CommandQueue.Push( this.GetOpenglContext().attachShader, arguments );		}
 	this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
 	this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
-	this.SetUniform = function()	{	this.CommandQueue.Push( this.GetOpenglContext().SetUniform, arguments );		}
+	this.SetUniform = function()	{	this.CommandQueue.Push( this.GetOpenglContext().setUniform, arguments );		}
 	this.texSubImage2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texSubImage2D, arguments );		}
 	//this.readPixels = function()	{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
 	this.viewport = function()	{	this.CommandQueue.Push( this.GetOpenglContext().viewport, arguments );		}
@@ -220,7 +221,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.BufferCounter = 1000;
 	this.FrameBufferCounter = 1000;
 	this.createBuffer = function()	{	return this.BufferCounter++;	}
-	this.createFrameBuffer = function()	{	return this.FrameBufferCounter++;	}
+	this.createFramebuffer = function()	{	return this.FrameBufferCounter++;	}
 
 	this.getParameter = function(ParameterEnum)
 	{
