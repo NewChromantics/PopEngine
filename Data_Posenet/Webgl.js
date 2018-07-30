@@ -218,7 +218,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.FRAGMENT_SHADER = 'FRAGMENT_SHADER';
 	this.COMPILE_STATUS = 'COMPILE_STATUS';
 	this.LINK_STATUS = 'LINK_STATUS';
-	Debug(Object.keys(this));
+	//Debug(Object.keys(this));
 
 	
 	
@@ -252,12 +252,13 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.bindTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindTexture, arguments );		}
 	this.texImage2D = function()
 	{
+		/*
 		let DebugStr = "texImage2D(";
 		for ( let a=0;	a<arguments.length;	a++ )
 			DebugStr += GetTypename( arguments[a] )+ ", ";
 		DebugStr+=")";
 		Debug(DebugStr);
-
+		*/
 		this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );
 	}
 	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
@@ -278,14 +279,14 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 			let Context = this;
 			if ( arguments[0] === null )
 			{
-				Debug( GetTypename(Context) + ".Use program(null)");
+				//Debug( GetTypename(Context) + ".Use program(null)");
 				Context.useProgram( null );
 				Context.LastProgram = null;
 			}
 			else
 			{
 				let Program = arguments[0];
-				Debug( GetTypename(this) + ".UseProgram( " + GetTypename(Program) + ")" );
+				//Debug( GetTypename(this) + ".UseProgram( " + GetTypename(Program) + ")" );
 				if ( Program.Shader == null )
 				{
 					//Debug("Allocating shader");
@@ -330,7 +331,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.readPixels = function()
 	{
 		//	work out what we're reading into
-		Debug("ReadPixels into " + arguments[6].constructor.name);
+		//Debug("ReadPixels into " + arguments[6].constructor.name);
 		
 		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		this.CommandQueue.Flush( this.GetOpenglContext() );

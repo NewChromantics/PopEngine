@@ -763,12 +763,13 @@ const GLvoid* GetGlValue(Local<Value> Argument)
 	return Pointer;
 }
 
-
+static bool ShowImmediateFunctionCalls = false;
 
 template<typename RETURN,typename ARG0>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments,const ARG0& Arg0)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	FunctionPtr( Arg0 );
 	Opengl::IsOkay(Context);
 	return v8::Undefined(&Arguments.GetIsolate());
@@ -777,7 +778,8 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 template<typename RETURN,typename ARG0,typename ARG1>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments,const ARG0& Arg0,const ARG0& Arg1)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	FunctionPtr( Arg0, Arg1 );
 	Opengl::IsOkay(Context);
 	return v8::Undefined(&Arguments.GetIsolate());
@@ -786,7 +788,8 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 template<typename RETURN,typename ARG0>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	FunctionPtr( Arg0 );
 	Opengl::IsOkay(Context);
@@ -804,7 +807,8 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARGARRAY>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2),ARGARRAY& Arguments,v8::Isolate* Isolate)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments[2] );
@@ -816,7 +820,8 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3),const v8::CallbackInfo& Arguments)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
@@ -829,7 +834,8 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4),const v8::CallbackInfo& Arguments)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
@@ -844,7 +850,8 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4,typename ARG5,typename ARGARRAY>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4,ARG5),const ARGARRAY& Arguments,v8::Isolate* Isolate)
 {
-	std::Debug << Context << std::endl;
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments[2] );
