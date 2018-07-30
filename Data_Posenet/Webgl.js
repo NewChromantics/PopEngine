@@ -185,6 +185,8 @@ function GetTypename(Object)
 	else if ( Type == "object" )
 	{
 		Type = Object.constructor.name;
+		if ( Type.length == 0 )
+			Type = "Object{}";
 	}
 	
 	return Type;
@@ -251,7 +253,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 
 		this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );
 	}
-	this.useProgram = function()	{	this.CommandQueue.Push( this.GetOpenglContext().useProgram, arguments );		}
 	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
 	this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
 	this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
@@ -263,6 +264,43 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.activeTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().activeTexture, arguments );		}
 	this.drawElements = function()	{	this.CommandQueue.Push( this.GetOpenglContext().drawElements, arguments );		}
 	
+	this.useProgram = function()
+	{
+		//	this should be executed on the immediate thread inside Execute()
+		let AllocAndUseProgram = function()
+		{
+			let Context = this;
+			if ( arguments[0] === null )
+			{
+				Debug( GetTypename(Context) + ".Use program(null)");
+				Context.useProgram( null );
+			}
+			else
+			{
+				let Program = arguments[0];
+				Debug( GetTypename(this) + ".UseProgram( " + GetTypename(Program) + ")" );
+				if ( Program.Shader == null )
+				{
+					Debug("Allocating shader");
+					let VertShaderSource = Program.VertShaderSource;
+					let FragShaderSource = Program.FragShaderSource;
+					
+					//	tensorflow adds some funcs that GL ES doesn't support
+					//	we need to remove them
+					//	todo: do all the Soy shader upgrade stuff here!
+					VertShaderSource = VertShaderSource.replace("int round(float", "int IGNORETHISFUNC_round(float");
+					FragShaderSource = FragShaderSource.replace("int round(float", "int IGNORETHISFUNC_round(float");
+
+					let RenderTarget = Context;
+					Debug("VertShaderSource="+VertShaderSource);
+					Debug("FragShaderSource="+FragShaderSource);
+					Program.Shader = new OpenglShader( RenderTarget, VertShaderSource, FragShaderSource );
+				}
+				this.useProgram( Program.Shader );
+			}
+		}
+		this.CommandQueue.Push( AllocAndUseProgram, arguments );
+	}
 
 	
 	this.readPixels = function()

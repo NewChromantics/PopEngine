@@ -1065,30 +1065,13 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_useProgram(const v8::CallbackInfo& Arguments)
 {
-	//	arg0 is a js WebglProgram, may need compiling
 	GLuint ShaderName = GL_ASSET_INVALID;
 	auto Arg0 = Arguments.mParams[0];
 	if ( !Arg0->IsNull() )
 	{
-		auto WebglProgram = Arguments.mParams[0].As<Object>();
-		auto ShaderHandle = WebglProgram->Get( String::Utf8Value("Shader") );
-	
-		//	see if .Shader is non-null
-		if ( ShaderHandle->IsNull() )
-		{
-			auto VertShaderSource = v8::GetString( WebglProgram->Get(String::Utf8Value("VertShaderSource") ) );
-			auto FragShaderSource = v8::GetString( WebglProgram->Get(String::Utf8Value("FragShaderSource") ) );
-
-			//	alloc shader
-			
-			//	compile shader
-		}
-		
-		//	get shader name
-		auto& Shader = v8::GetObject<TShaderWrapper>(ShaderHandle);
-		ShaderName = Shader.mShader.mAsset.mName;
+		auto& Shader = v8::GetObject<TShaderWrapper>( Arguments.mParams[0] );
+		ShaderName = Shader.mShader->mProgram.mName;
 	}
-	
 	return Immediate_Func( "glUseProgram", glUseProgram, Arguments, ShaderName );
 }
 
@@ -1342,7 +1325,7 @@ void TRenderWindow::DrawQuad()
 		"	gl_FragColor = vec4(uv.x,uv.y,0,1);\n"
 		"}\n";
 		
-		mDebugShader.reset( new Opengl::TShader( VertShader, FragShader, BlitQuad.mVertexDescription, "Blit shader", Context ) );
+		mDebugShader.reset( new Opengl::TShader( VertShader, FragShader, "Blit shader", Context ) );
 	}
 	
 	DrawQuad( *mDebugShader, []{} );
@@ -1402,12 +1385,6 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		String::Utf8Value VertSource( Arguments[1] );
 		String::Utf8Value FragSource( Arguments[2] );
 
-		//	this needs to be deffered to be on the opengl thread (or at least wait for context to initialise)
-		std::function<Opengl::TGeometry&()> GetGeo = [&Window]()-> Opengl::TGeometry&
-		{
-			auto& Geo = Window.mWindow->GetBlitQuad();
-			return Geo;
-		};
 		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
 		//		but it also needs to know of the V8container to run stuff
 		//		cyclic hell!
@@ -1415,7 +1392,7 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		NewShader->mHandle.Reset( Isolate, Arguments.This() );
 		NewShader->mContainer = &Container;
 
-		NewShader->CreateShader( OpenglContext, GetGeo, *VertSource, *FragSource );
+		NewShader->CreateShader( OpenglContext, *VertSource, *FragSource );
 		
 		//	set fields
 		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewShader ) );
@@ -1533,17 +1510,16 @@ Local<FunctionTemplate> TShaderWrapper::CreateTemplate(TV8Container& Container)
 	return ConstructorFunc;
 }
 
-void TShaderWrapper::CreateShader(Opengl::TContext& Context,std::function<Opengl::TGeometry&()> GetGeo,const char* VertSource,const char* FragSource)
+void TShaderWrapper::CreateShader(Opengl::TContext& Context,const char* VertSource,const char* FragSource)
 {
 	//	this needs to be deffered along with the context..
 	//	the TShader constructor needs to return a promise really
 	if ( !Context.IsInitialised() )
 		throw Soy::AssertException("Opengl context not yet initialised");
 	
-	auto& Geo = GetGeo();
 	std::string VertSourceStr( VertSource );
 	std::string FragSourceStr( FragSource );
-	mShader.reset( new Opengl::TShader( VertSourceStr, FragSourceStr, Geo.mVertexDescription, "Shader", Context ) );
+	mShader.reset( new Opengl::TShader( VertSourceStr, FragSourceStr, "Shader", Context ) );
 
 }
 
