@@ -11,6 +11,7 @@ const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
 const char Execute_FunctionName[] = "Execute";
+const char GetEnums_FunctionName[] = "GetEnums";
 
 #define DECLARE_IMMEDIATE_FUNC_NAME(NAME)	\
 const char Immediate_##NAME##_FunctionName[] = #NAME
@@ -569,6 +570,50 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 
 
 
+v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
+{
+	auto* Isolate = &Params.GetIsolate();
+	//	make an associative array of opengl enums for immediate use
+	auto ArrayHandle = Object::New( Isolate );
+	
+	auto PushEnum = [&](const char* GlName,uint32_t Value)
+	{
+		std::string Name( GlName );
+		//	strip GL_ off the start
+		Soy::StringTrimLeft(Name,"GL_",true);
+		
+		auto KeyHandle = v8::GetString( *Isolate, Name );
+		auto ValueHandle = Number::New( Isolate, Value );
+		ArrayHandle->Set( KeyHandle, ValueHandle );
+	};
+#define PUSH_ENUM(NAME)	PushEnum( #NAME, NAME )
+	PUSH_ENUM( GL_TEXTURE_2D );
+	PUSH_ENUM( GL_DEPTH_TEST );
+	PUSH_ENUM( GL_STENCIL_TEST );
+	PUSH_ENUM( GL_BLEND );
+	PUSH_ENUM( GL_DITHER );
+	PUSH_ENUM( GL_POLYGON_OFFSET_FILL );
+	PUSH_ENUM( GL_SAMPLE_COVERAGE );
+	PUSH_ENUM( GL_SCISSOR_TEST );
+	PUSH_ENUM( GL_FRAMEBUFFER_COMPLETE );
+	PUSH_ENUM( GL_CULL_FACE );
+	PUSH_ENUM( GL_BACK );
+	PUSH_ENUM( GL_TEXTURE_WRAP_S );
+	PUSH_ENUM( GL_CLAMP_TO_EDGE );
+	PUSH_ENUM( GL_TEXTURE_WRAP_T );
+	PUSH_ENUM( GL_CLAMP_TO_EDGE );
+	PUSH_ENUM( GL_TEXTURE_MIN_FILTER );
+	PUSH_ENUM( GL_NEAREST );
+	PUSH_ENUM( GL_TEXTURE_MAG_FILTER );
+	PUSH_ENUM( GL_ARRAY_BUFFER );
+	PUSH_ENUM( GL_ELEMENT_ARRAY_BUFFER );
+	PUSH_ENUM( GL_FLOAT );
+	PUSH_ENUM( GL_STATIC_DRAW );
+
+	return ArrayHandle;
+	
+}
+
 
 
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
@@ -627,6 +672,8 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	DEFINE_IMMEDIATE(drawElements);
 #undef DEFINE_IMMEDIATE
 	
+	Container.BindFunction<GetEnums_FunctionName>( InstanceTemplate, GetEnums );
+
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "x"), GetPointX, SetPointX);
 	//point_templ.SetAccessor(String::NewFromUtf8(isolate, "y"), GetPointY, SetPointY);
 	
@@ -640,6 +687,15 @@ TYPE GetGlValue(Local<Value> Argument);
 template<>
 GLenum GetGlValue(Local<Value> Argument)
 {
+	if ( !Argument->IsNumber() )
+	{
+		std::stringstream Error;
+		Error << "Expecting argument as number, but is " << v8::GetTypeName(Argument);
+		if ( Argument->IsString() )
+			Error << " (" << v8::GetString(Argument) << ")";
+		throw Soy::AssertException(Error.str());
+	}
+
 	auto Value32 = Argument.As<Number>()->Uint32Value();
 	auto Value = size_cast<GLenum>(Value32);
 	return Value;
@@ -648,11 +704,19 @@ GLenum GetGlValue(Local<Value> Argument)
 template<>
 GLint GetGlValue(Local<Value> Argument)
 {
+	if ( !Argument->IsNumber() )
+	{
+		std::stringstream Error;
+		Error << "Expecting argument as number, but is " << v8::GetTypeName(Argument);
+		throw Soy::AssertException(Error.str());
+	}
+	
 	auto Value32 = Argument.As<Number>()->Int32Value();
 	auto Value = size_cast<GLint>(Value32);
 	return Value;
 }
 
+/*
 template<>
 GLsizeiptr GetGlValue(Local<Value> Argument)
 {
@@ -664,119 +728,174 @@ const GLvoid* GetGlValue(Local<Value> Argument)
 {
 	return nullptr;
 }
+*/
 
 
+template<typename RETURN,typename ARG0,typename ARG1>
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments,const ARG0& Arg0,const ARG0& Arg1)
+{
+	std::Debug << Context << std::endl;
+	FunctionPtr( Arg0, Arg1 );
+	Opengl::IsOkay(Context);
+	return v8::Undefined(&Arguments.GetIsolate());
+}
 
 template<typename RETURN,typename ARG0>
-v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments)
 {
+	std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	FunctionPtr( Arg0 );
+	Opengl::IsOkay(Context);
 	return v8::Undefined(&Arguments.GetIsolate());
 }
 
 template<typename RETURN,typename ARG0,typename ARG1>
-v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments)
 {
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
-	FunctionPtr( Arg0, Arg1 );
-	return v8::Undefined(&Arguments.GetIsolate());
+	return Immediate_Func( Context, FunctionPtr, Arguments, Arg0, Arg1 );
 }
 
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2>
-v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1,ARG2),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2),const v8::CallbackInfo& Arguments)
 {
+	std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
 	FunctionPtr( Arg0, Arg1, Arg2 );
+	Opengl::IsOkay(Context);
 	return v8::Undefined(&Arguments.GetIsolate());
 }
 
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3>
-v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3),const v8::CallbackInfo& Arguments)
 {
+	std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
 	auto Arg3 = GetGlValue<ARG3>( Arguments.mParams[3] );
 	FunctionPtr( Arg0, Arg1, Arg2, Arg3 );
+	Opengl::IsOkay(Context);
 	return v8::Undefined(&Arguments.GetIsolate());
 }
 
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4>
-v8::Local<v8::Value> Immediate_Func(RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4),const v8::CallbackInfo& Arguments)
 {
+	std::Debug << Context << std::endl;
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
 	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
 	auto Arg3 = GetGlValue<ARG3>( Arguments.mParams[3] );
 	auto Arg4 = GetGlValue<ARG4>( Arguments.mParams[4] );
 	FunctionPtr( Arg0, Arg1, Arg2, Arg3, Arg4 );
+	Opengl::IsOkay(Context);
 	return v8::Undefined(&Arguments.GetIsolate());
 }
 
+
+
 v8::Local<v8::Value> TWindowWrapper::Immediate_disable(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glDisable, Arguments );
+	return Immediate_Func( "glDisable", glDisable, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_enable(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glEnable, Arguments );
+	return Immediate_Func( "glEnable", glEnable, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_cullFace(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glCullFace, Arguments );
+	return Immediate_Func( "glCullFace", glCullFace, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bindBuffer(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glBindBuffer, Arguments );
+	//	gr; buffers are allocated as-required, high-level they're just an id
+	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
+
+	auto BufferNameJs = GetGlValue<int>( Arguments.mParams[1] );
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.mParams.This() );
+
+	//	get/alloc our instance
+	auto BufferName = This.mImmediateObjects.GetBuffer(BufferNameJs).mName;
+	//	gr: this check is useless here, but we can do it immediate after
+	//A name returned by glGenBuffers, but not yet associated with a buffer object by calling glBindBuffer, is not the name of a buffer object.
+	/*
+	if ( !glIsBuffer( BufferName ) )
+	{
+		std::stringstream Error;
+		Error << BufferNameJs << " is not a valid buffer id";
+		throw Soy::AssertException(Error.str());
+	}
+	 */
+	auto Return = Immediate_Func( "glBindBuffer", glBindBuffer, Arguments, Binding, BufferName );
+	
+	//	if bound, then NOW is should be valid
+	if ( !glIsBuffer( BufferName ) )
+	{
+		std::stringstream Error;
+		Error << BufferNameJs << "(" << BufferName << ") is not a valid buffer id";
+		throw Soy::AssertException(Error.str());
+	}
+	return Return;
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bufferData(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glBufferData, Arguments );
+	//GLAPI void APIENTRY glBufferData (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+	//glBufferData
+	throw Soy::AssertException("glBufferData needs some specifics");
+	//return Immediate_Func( "glBufferData", glBufferData, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glBindFramebuffer, Arguments );
+	return Immediate_Func( "glBindFramebuffer", glBindFramebuffer, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glFramebufferTexture2D, Arguments );
+	return Immediate_Func( "glFramebufferTexture2D", glFramebufferTexture2D, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glBindTexture, Arguments );
+	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
+	
+	//	get texture
+	auto& Image = v8::GetObject<TImageWrapper>( Arguments.mParams[1] );
+	Image.GetTexture( []{}, [](const std::string& Error){} );
+	auto& Texture = Image.GetTexture();
+	auto TextureName = Texture.mTexture.mName;
+	
+	return Immediate_Func( "glBindTexture", glBindTexture, Arguments, Binding, TextureName );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo& Arguments)
 {
-	//	probably needs something specific rather than 9 arg template
 	throw Soy::AssertException("texImage2D needs some specifics");
 	//return Immediate_Func( glTexImage2D, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_useProgram(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glUseProgram, Arguments );
+	return Immediate_Func( "glUseProgram", glUseProgram, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texParameteri(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glTexParameteri, Arguments );
+	return Immediate_Func( "glTexParameteri", glTexParameteri, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_attachShader(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glAttachShader, Arguments );
+	return Immediate_Func( "glAttachShader", glAttachShader, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments)
@@ -787,7 +906,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_vertexAttribPointer(const v8::Cal
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glEnableVertexAttribArray, Arguments );
+	return Immediate_Func( "glEnableVertexAttribArray", glEnableVertexAttribArray, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_setUniform(const v8::CallbackInfo& Arguments)
@@ -810,22 +929,23 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_viewport(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glViewport, Arguments );
+	return Immediate_Func( "glViewport", glViewport, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_scissor(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glScissor, Arguments );
+	return Immediate_Func( "glScissor", glScissor, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_activeTexture(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glActiveTexture, Arguments );
+	return Immediate_Func( "glActiveTexture", glActiveTexture, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( glDrawElements, Arguments );
+	throw Soy::AssertException("glDrawElements needs some specifics");
+	//return Immediate_Func( "glDrawElements", glDrawElements, Arguments );
 }
 
 
@@ -1134,5 +1254,25 @@ void TShaderWrapper::CreateShader(Opengl::TContext& Context,std::function<Opengl
 	std::string FragSourceStr( FragSource );
 	mShader.reset( new Opengl::TShader( VertSourceStr, FragSourceStr, Geo.mVertexDescription, "Shader", Context ) );
 
+}
+
+
+Opengl::TAsset OpenglObjects::GetBuffer(int JavascriptName)
+{
+	for ( int i=0;	i<mBuffers.GetSize();	i++ )
+	{
+		auto& Pair = mBuffers[i];
+		if ( Pair.first == JavascriptName )
+			return Pair.second;
+	}
+	
+	Opengl::TAsset NewBuffer;
+	glGenBuffers(1,&NewBuffer.mName);
+	Opengl::IsOkay("glGenBuffers");
+	if ( !NewBuffer.IsValid() )
+		throw Soy::AssertException("Failed to create new buffer");
+	
+	mBuffers.PushBack( std::make_pair(JavascriptName,NewBuffer) );
+	return NewBuffer;
 }
 

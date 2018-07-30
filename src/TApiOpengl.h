@@ -33,6 +33,16 @@ public:
 };
 
 
+class OpenglObjects
+{
+public:
+	//	assuming we're on opengl thread
+	Opengl::TAsset	GetBuffer(int JavascriptName);	//	get/alloc buffer with this id
+
+public:
+	Array<std::pair<int,Opengl::TAsset>>	mBuffers;
+};
+
 //	v8 template to a TWindow
 class TWindowWrapper
 {
@@ -59,30 +69,35 @@ public:
 	static v8::Local<v8::Value>				SetViewport(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	
+
+	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);
+
+	//	return a named array of immediate-use GL enum values
+	static v8::Local<v8::Value>				GetEnums(const v8::CallbackInfo& Arguments);
+
 	//	immediate calls
-	static v8::Local<v8::Value>				Immediate_disable(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_enable(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_cullFace(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_bindBuffer(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_bufferData(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_bindTexture(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_texImage2D(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_useProgram(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_attachShader(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_setUniform(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_texSubImage2D(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_readPixels(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_viewport(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_scissor(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);	//	run javascript on gl thread for immediate mode stuff
+	static v8::Local<v8::Value>				Immediate_disable(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_enable(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_cullFace(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_bindBuffer(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_bufferData(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_bindTexture(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_texImage2D(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_useProgram(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_attachShader(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_setUniform(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_texSubImage2D(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_readPixels(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_viewport(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_scissor(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);
 
 
 public:
@@ -91,6 +106,9 @@ public:
 	TV8Container*					mContainer;
 	
 	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object
+	
+	//	opengl objects allocated for immediate mode
+	OpenglObjects					mImmediateObjects;
 };
 
 

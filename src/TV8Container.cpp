@@ -438,8 +438,16 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 std::string v8::GetTypeName(v8::Local<v8::Value> Handle)
 {
 	if ( Handle->IsUndefined() )	return "Undefined";
-	if ( Handle->IsNull() )		return "Null";
+	if ( Handle->IsNull() )			return "Null";
 	if ( Handle->IsFunction() )		return "Function";
+	if ( Handle->IsString())		return "String";
+	if ( Handle->IsMap() )			return "Map";
+	if ( Handle->IsDate())			return "Date";
+	if ( Handle->IsArray() )		return "Array";
+	if ( Handle->IsBoolean() )		return "Boolean";
+	if ( Handle->IsNumber() )		return "Number";
+	if ( Handle->IsPromise() )		return "Promise";
+	if ( Handle->IsObject() )		return "Object";
 
 	return "Unknown type";
 }

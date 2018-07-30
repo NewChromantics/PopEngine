@@ -114,7 +114,7 @@ function OpenglCommandQueue()
 				//	first arg is the function, then pass arguments
 				let Func = Command.shift();
 				let Arguments = Command;
-				Func.apply( null, Arguments );
+				Func.apply( Context, Arguments );
 			}
 			try
 			{
@@ -233,7 +233,8 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 
 	this.createTexture = function()
 	{
-		return new Image();
+		//	gr: internally the code is currently expecting some pixels
+		return new Image([1,1]);
 	}
 	
 	this.checkFramebufferStatus = function(Binding)

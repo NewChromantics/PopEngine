@@ -308,32 +308,43 @@ TEXTURE_MIN_FILTER
 NEAREST
 TEXTURE_MAG_FILTER
 TEXTURE_2D
+
+ARRAY_BUFFER
+ELEMENT_ARRAY_BUFFER
+STATIC_DRAW
+FLOAT
 `;
 
 
 //	adding here and we'll put them into our system
 function AddWebglBindings(This)
 {
-	if ( This.Enums === undefined )
-	{
-		This.Enums = {};
-		let PushEnum = function(Name)
-		{
-			if ( Name.length == 0 )
-				return;
-			if ( Name.startsWith('//') )
-				return;
-			//Debug("Enum="+Name+"[" + Name.length);
-			This.Enums[Name] = Name;
-		}
-		OpenglEnumNames.split('\n').forEach( PushEnum );
+	This.Enums = This.GetEnums();
+	Debug("Pre-existing enums: ");
+	Object.keys(This.Enums).forEach( function(k){	Debug(k+"=" + This.Enums[k]);} );
 
-		//	special case (incrementing enum value)
-		This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
-		This.TEXTURE0 = 1000;
-		for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
-			This['TEXTURE'+i] = This['TEXTURE0']+i;
-	}	
+	let PushEnum = function(Name)
+	{
+		if ( Name.length == 0 )
+			return;
+		if ( Name.startsWith('//') )
+			return;
+		
+		//	enum already done
+		if ( This.Enums[Name] !== undefined )
+			return;
+		
+		Debug("Added Enum "+Name);
+		This.Enums[Name] = Name;
+	}
+	OpenglEnumNames.split('\n').forEach( PushEnum );
+
+	//	special case (incrementing enum value)
+	This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
+	This.TEXTURE0 = 1000;
+	for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
+		This['TEXTURE'+i] = This['TEXTURE0']+i;
+
 	/*
 	This.disable =				function(Enum)	{	Debug("disable("+ Enum);	};
 	This.enable =				function(Enum)	{	Debug("enable("+ Enum);	};
