@@ -924,6 +924,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::Ca
 	auto level = GetGlValue<GLint>( Arguments.mParams[4] );
 	
 	auto& Image = v8::GetObject<TImageWrapper>(TextureHandle);
+	Image.GetTexture( []{}, [](const std::string& Error){} );
 	auto& Texture = Image.GetTexture();
 	auto TextureName = Texture.mTexture.mName;
 	
