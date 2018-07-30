@@ -28,7 +28,6 @@ DEFINE_IMMEDIATE(bindTexture);
 DEFINE_IMMEDIATE(texImage2D);
 DEFINE_IMMEDIATE(useProgram);
 DEFINE_IMMEDIATE(texParameteri);
-DEFINE_IMMEDIATE(attachShader);
 DEFINE_IMMEDIATE(vertexAttribPointer);
 DEFINE_IMMEDIATE(enableVertexAttribArray);
 DEFINE_IMMEDIATE(setUniform);
@@ -669,7 +668,6 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	DEFINE_IMMEDIATE(texImage2D);
 	DEFINE_IMMEDIATE(useProgram);
 	DEFINE_IMMEDIATE(texParameteri);
-	DEFINE_IMMEDIATE(attachShader);
 	DEFINE_IMMEDIATE(vertexAttribPointer);
 	DEFINE_IMMEDIATE(enableVertexAttribArray);
 	DEFINE_IMMEDIATE(setUniform);
@@ -741,6 +739,15 @@ const GLvoid* GetGlValue(Local<Value> Argument)
 }
 */
 
+
+template<typename RETURN,typename ARG0>
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments,const ARG0& Arg0)
+{
+	std::Debug << Context << std::endl;
+	FunctionPtr( Arg0 );
+	Opengl::IsOkay(Context);
+	return v8::Undefined(&Arguments.GetIsolate());
+}
 
 template<typename RETURN,typename ARG0,typename ARG1>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments,const ARG0& Arg0,const ARG0& Arg1)
@@ -1058,17 +1065,36 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_useProgram(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( "glUseProgram", glUseProgram, Arguments );
+	//	arg0 is a js WebglProgram, may need compiling
+	GLuint ShaderName = GL_ASSET_INVALID;
+	auto Arg0 = Arguments.mParams[0];
+	if ( !Arg0->IsNull() )
+	{
+		auto WebglProgram = Arguments.mParams[0].As<Object>();
+		auto ShaderHandle = WebglProgram->Get( String::Utf8Value("Shader") );
+	
+		//	see if .Shader is non-null
+		if ( ShaderHandle->IsNull() )
+		{
+			auto VertShaderSource = v8::GetString( WebglProgram->Get(String::Utf8Value("VertShaderSource") ) );
+			auto FragShaderSource = v8::GetString( WebglProgram->Get(String::Utf8Value("FragShaderSource") ) );
+
+			//	alloc shader
+			
+			//	compile shader
+		}
+		
+		//	get shader name
+		auto& Shader = v8::GetObject<TShaderWrapper>(ShaderHandle);
+		ShaderName = Shader.mShader.mAsset.mName;
+	}
+	
+	return Immediate_Func( "glUseProgram", glUseProgram, Arguments, ShaderName );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texParameteri(const v8::CallbackInfo& Arguments)
 {
 	return Immediate_Func( "glTexParameteri", glTexParameteri, Arguments );
-}
-
-v8::Local<v8::Value> TWindowWrapper::Immediate_attachShader(const v8::CallbackInfo& Arguments)
-{
-	return Immediate_Func( "glAttachShader", glAttachShader, Arguments );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments)

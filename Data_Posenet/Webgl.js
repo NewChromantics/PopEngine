@@ -101,38 +101,21 @@ function WebglFragShader()
 
 function WebglProgram()
 {
-	this.VertShader = null;
-	this.FragShader = null;
+	this.VertShaderSource = null;
+	this.FragShaderSource = null;
 	this.Shader = null;
 	this.Error = null;
 	
 	this.AddShader = function(Shader)
 	{
 		if ( Shader instanceof WebglVertShader )
-			this.VertShader = Shader;
+			this.VertShaderSource = Shader.Source;
 		else if ( Shader instanceof WebglFragShader )
-			this.FragShader = Shader;
+			this.FragShaderSource = Shader.Source;
 		else
 			throw "Don't know what type of shader is supplied for program";
 	}
 	
-	this.Build = function(OpenglContext)
-	{
-		try
-		{
-			let VertSource = this.VertShader.Source;
-			let FragSource = this.FragShader.Source;
-			Debug("Building shader...");
-			//	gr: this is expected to be immediate for tensor flow/webgl, but we want a deffered version (promise)
-			//		lets see if we can have all stubs for webgl api and handle it our javascript side
-			//this.Shader = new OpenglShader( OpenglContext, VertSource, FragSource );
-			this.Shader = {};
-		}
-		catch(e)
-		{
-			this.Error = e;
-		}
-	}
 }
 
 function OpenglCommandQueue()
@@ -270,7 +253,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	}
 	this.useProgram = function()	{	this.CommandQueue.Push( this.GetOpenglContext().useProgram, arguments );		}
 	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
-	this.attachShader = function()	{	this.CommandQueue.Push( this.GetOpenglContext().attachShader, arguments );		}
 	this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
 	this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
 	this.SetUniform = function()	{	this.CommandQueue.Push( this.GetOpenglContext().setUniform, arguments );		}
@@ -333,6 +315,11 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	{
 		Shader.Source = Source;
 	}
+
+	this.attachShader = function(Program,Shader)
+	{
+		Program.AddShader( Shader );
+	}
 	
 	this.compileShader = function(Shader)
 	{
@@ -363,7 +350,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.linkProgram = function(Program)
 	{
 		//	gr: link on use
-		//Program.Build( this.GetOpenglContext() );
 	}
 	
 	this.getProgramInfoLog = function(Program)

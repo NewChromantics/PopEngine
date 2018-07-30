@@ -94,7 +94,6 @@ public:
 	static v8::Local<v8::Value>				Immediate_texImage2D(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_useProgram(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_attachShader(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_setUniform(const v8::CallbackInfo& Arguments);
