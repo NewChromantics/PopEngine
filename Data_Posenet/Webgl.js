@@ -203,7 +203,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	let Enums = ParentCanvas.WebWindow.OpenglContext.Enums;
 	Object.assign( this, Enums );
 	
-	this.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
 	this.COMPILE_STATUS = 'COMPILE_STATUS';
 	this.MAX_TEXTURE_SIZE = 'MAX_TEXTURE_SIZE';
 	this.FRAMEBUFFER_COMPLETE = 'FRAMEBUFFER_COMPLETE';

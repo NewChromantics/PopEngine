@@ -575,9 +575,9 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	//	make an associative array of opengl enums for immediate use
 	auto ArrayHandle = Object::New( Isolate );
 	
-	auto PushEnum = [&](const char* GlName,uint32_t Value)
+	auto PushEnum = [&](std::string Name,uint32_t Value)
 	{
-		std::string Name( GlName );
+		//std::string Name( GlName );
 		//	strip GL_ off the start
 		Soy::StringTrimLeft(Name,"GL_",true);
 		
@@ -618,6 +618,15 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	PUSH_ENUM( GL_R32F );
 	PUSH_ENUM( GL_RED );
 	
+	auto MaxTextures = 32;
+	for ( int t=0;	t<MaxTextures;	t++ )
+	{
+		std::stringstream Name;
+		Name << "GL_TEXTURE" << t;
+		auto Value = GL_TEXTURE0 + t;
+		PushEnum( Name.str(), Value );
+	}
+
 	return ArrayHandle;
 	
 }

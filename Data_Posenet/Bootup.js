@@ -301,10 +301,16 @@ function AddWebglBindings(This)
 	WebglEnumNames.forEach( PushEnum );
 
 	//	special case (incrementing enum value)
-	This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 16;
-	This.TEXTURE0 = 1000;
+	This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 32;
+	/*
 	for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
-		This['TEXTURE'+i] = This['TEXTURE0']+i;
+	{
+		let Name = 'TEXTURE'+i;
+		if ( This.Enums[Name] !== undefined )
+			return;
+		This.Enums[Name] = This.Enums['TEXTURE0']+i;
+	}
+	 */
 
 	/*
 	This.disable =				function(Enum)	{	Debug("disable("+ Enum);	};
