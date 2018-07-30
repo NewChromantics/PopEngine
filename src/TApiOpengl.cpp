@@ -1030,10 +1030,102 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texSubImage2D(const v8::CallbackI
 	//return Immediate_Func( glTexSubImage2D, Arguments );
 }
 
+namespace Opengl
+{
+	size_t	GetPixelDataSize(GLint DataType);
+}
+
+size_t Opengl::GetPixelDataSize(GLint DataType)
+{
+	switch( DataType )
+	{
+		case GL_UNSIGNED_BYTE:			return 1;
+		case GL_UNSIGNED_SHORT_5_6_5:	return 2;
+		case GL_UNSIGNED_SHORT_4_4_4_4:	return 2;
+		case GL_UNSIGNED_SHORT_5_5_5_1:	return 2;
+		case GL_UNSIGNED_SHORT:			return 2;
+		case GL_FLOAT:					return 4;
+	}
+	std::stringstream Error;
+	
+	Error << "Unknown opengl Data type 0x";
+	auto* DataType8 = reinterpret_cast<uint8_t*>( &DataType );
+	Soy::ByteToHex(DataType8[0], Error );
+	Soy::ByteToHex(DataType8[1], Error );
+	Soy::ByteToHex(DataType8[2], Error );
+	Soy::ByteToHex(DataType8[3], Error );
+	throw Error;
+}
+
 v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo& Arguments)
 {
-	throw Soy::AssertException("glReadPixels needs some specifics");
-	//return Immediate_Func( glReadPixels, Arguments );
+	/*
+	// WebGL1:
+	void gl.readPixels(x, y, width, height, format, type, pixels);
+
+	// WebGL2:
+	void gl.readPixels(x, y, width, height, format, type, GLintptr offset);
+	void gl.readPixels(x, y, width, height, format, type, ArrayBufferView pixels, GLuint dstOffset);
+	*/
+	auto x = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto y = GetGlValue<GLint>( Arguments.mParams[1] );
+	auto width = GetGlValue<GLint>( Arguments.mParams[2] );
+	auto height = GetGlValue<GLsizei>( Arguments.mParams[3] );
+	auto format = GetGlValue<GLsizei>( Arguments.mParams[4] );
+	auto type = GetGlValue<GLint>( Arguments.mParams[5] );
+	auto OutputHandle = Arguments.mParams[6];
+	
+	//	we need to alloc a buffer to read into, then push it back to the output
+	Array<uint8_t> PixelBuffer;
+	auto PixelFormat = Opengl::GetDownloadPixelFormat(format);
+	auto ChannelCount = SoyPixelsFormat::GetChannelCount( PixelFormat );
+	auto TotalComponentCount = ChannelCount * width * height;
+	
+	if ( !OutputHandle->IsNull() )
+	{
+		//	alloc buffer to read into
+		auto ComponentSize = Opengl::GetPixelDataSize(type);
+		PixelBuffer.SetSize( TotalComponentCount * ComponentSize );
+	}
+	
+	glReadPixels( x, y, width, height, format, type, PixelBuffer.GetArray() );
+	Opengl::IsOkay("glReadPixels");
+	
+	//	push data into output
+	if ( OutputHandle->IsNull() )
+	{
+	}
+	else if ( OutputHandle->IsFloat32Array() )
+	{
+		//	same formats, we can just copy
+		if ( type == GL_FLOAT )
+		{
+			auto OutputArray = OutputHandle.As<TypedArray>();
+			if ( OutputArray->Length() != TotalComponentCount )
+			{
+				std::stringstream Error;
+				Error << "Expecting output array[" <<  OutputArray->Length() << " to be " << TotalComponentCount << " in length";
+				throw Soy::AssertException(Error.str());
+			}
+			auto OutputBufferContents = OutputArray->Buffer()->GetContents();
+			auto OutputContentsArray = GetRemoteArray( static_cast<uint8_t*>( OutputBufferContents.Data() ), OutputBufferContents.ByteLength() );
+			OutputContentsArray.Copy( PixelBuffer );
+		}
+		else
+		{
+			std::stringstream Error;
+			Error << "Need to convert from " << PixelFormat << " pixels to float32 array output";
+			throw Soy::AssertException(Error.str());
+		}
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "glreadPixels into output buffer of " << v8::GetTypeName(OutputHandle);
+		throw Soy::AssertException(Error.str());
+	}
+	
+	return v8::Undefined( Arguments.mIsolate );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_viewport(const v8::CallbackInfo& Arguments)

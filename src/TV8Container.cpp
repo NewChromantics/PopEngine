@@ -447,6 +447,15 @@ std::string v8::GetTypeName(v8::Local<v8::Value> Handle)
 	if ( Handle->IsBoolean() )		return "Boolean";
 	if ( Handle->IsNumber() )		return "Number";
 	if ( Handle->IsPromise() )		return "Promise";
+	if ( Handle->IsFloat32Array() )	return "Float32Array";
+	if ( Handle->IsFloat64Array() )	return "Float64Array";
+	if ( Handle->IsInt8Array() )	return "Int8Array";
+	if ( Handle->IsInt16Array() )	return "Int16Array";
+	if ( Handle->IsInt32Array() )	return "Int32Array";
+	if ( Handle->IsUint8Array() )	return "Uint8Array";
+	if ( Handle->IsUint16Array() )	return "Uint16Array";
+	if ( Handle->IsUint32Array() )	return "Uint32Array";
+	
 	if ( Handle->IsObject() )		return "Object";
 
 	return "Unknown type";

@@ -45,6 +45,9 @@ RGBA32F
 FLOAT16
 FLOAT32
 UNSIGNED_BYTE
+UNSIGNED_SHORT_5_6_5
+UNSIGNED_SHORT_4_4_4_4
+UNSIGNED_SHORT_5_5_5_1
 
 `;
 var IsValidWebglEnum = function(Enum)
@@ -256,6 +259,9 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	
 	this.readPixels = function()
 	{
+		//	work out what we're reading into
+		Debug("ReadPixels into " + arguments[6].constructor.name);
+		
 		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		this.CommandQueue.Flush( this.GetOpenglContext() );
 	}
