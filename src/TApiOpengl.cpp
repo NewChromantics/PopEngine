@@ -731,13 +731,24 @@ GLsizeiptr GetGlValue(Local<Value> Argument)
 {
 	return 0;
 }
+*/
 
+template<>
+GLboolean GetGlValue(Local<Value> Argument)
+{
+	auto ValueBool = Argument.As<Boolean>()->BooleanValue();
+	return ValueBool;
+}
+
+//	gr: this for glVertexAttributePointer is an offset, so it's a number cast to a void*
 template<>
 const GLvoid* GetGlValue(Local<Value> Argument)
 {
-	return nullptr;
+	auto Value32 = Argument.As<Number>()->Uint32Value();
+	void* Pointer = (void*)Value32;
+	return Pointer;
 }
-*/
+
 
 
 template<typename RETURN,typename ARG0>
@@ -816,6 +827,21 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 }
 
 
+template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4,typename ARG5,typename ARGARRAY>
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4,ARG5),const ARGARRAY& Arguments,v8::Isolate* Isolate)
+{
+	std::Debug << Context << std::endl;
+	auto Arg0 = GetGlValue<ARG0>( Arguments[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments[1] );
+	auto Arg2 = GetGlValue<ARG2>( Arguments[2] );
+	auto Arg3 = GetGlValue<ARG3>( Arguments[3] );
+	auto Arg4 = GetGlValue<ARG4>( Arguments[4] );
+	auto Arg5 = GetGlValue<ARG5>( Arguments[5] );
+	FunctionPtr( Arg0, Arg1, Arg2, Arg3, Arg4, Arg5 );
+	Opengl::IsOkay(Context);
+	return v8::Undefined(Isolate);
+}
+
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_disable(const v8::CallbackInfo& Arguments)
 {
@@ -839,6 +865,12 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindBuffer(const v8::CallbackInfo
 	auto BufferNameJs = GetGlValue<int>( Arguments.mParams[1] );
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.mParams.This() );
 
+	//	gr: in CORE (but not ES), we need a VAO. To keep this simple, we keep one per Buffer
+	auto VaoName = This.mImmediateObjects.GetVao(BufferNameJs).mName;
+	//	bind the VAO whenever we use the buffer associated with it
+	Opengl::BindVertexArray( VaoName );
+	Opengl_IsOkay();
+	
 	//	get/alloc our instance
 	auto BufferName = This.mImmediateObjects.GetBuffer(BufferNameJs).mName;
 	//	gr: glIsBuffer check is useless here, but we can do it immediate after
@@ -1082,13 +1114,44 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texParameteri(const v8::CallbackI
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments)
 {
-	throw Soy::AssertException("glVertexAttribPointer needs some specifics");
-	//return Immediate_Func( glVertexAttribPointer, Arguments );
+	//	webgl
+	//	void gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+	//GLAPI void APIENTRY glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
+	//	glVertexAttribPointer takes a pointer, but it's actually a byte offset.
+	
+	//	our api sends a name instead of an attrib/vert location, so swap itout
+
+	GLint Program = GL_ASSET_INVALID;
+	glGetIntegerv( GL_CURRENT_PROGRAM, &Program );
+	Opengl::IsOkay("glGet(GL_CURRENT_PROGRAM)");
+	auto AttribName = v8::GetString( Arguments.mParams[0] );
+	auto AttribLocation = glGetAttribLocation(Program, AttribName.c_str() );
+	Opengl::IsOkay("glGetAttribLocation(AttribName)");
+	auto AttribLocationHandle = v8::Number::New( Arguments.mIsolate, AttribLocation );
+
+	BufferArray<Local<Value>,6> NewArguments;
+	NewArguments.PushBack( AttribLocationHandle );
+	NewArguments.PushBack( Arguments.mParams[1] );
+	NewArguments.PushBack( Arguments.mParams[2] );
+	NewArguments.PushBack( Arguments.mParams[3] );
+	NewArguments.PushBack( Arguments.mParams[4] );
+	NewArguments.PushBack( Arguments.mParams[5] );
+
+	return Immediate_Func( "glVertexAttribPointer", glVertexAttribPointer, NewArguments, &Arguments.GetIsolate() );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( "glEnableVertexAttribArray", glEnableVertexAttribArray, Arguments );
+	//	our api sends a name instead of an attrib/vert location, so swap itout
+	
+	GLint Program = GL_ASSET_INVALID;
+	glGetIntegerv( GL_CURRENT_PROGRAM, &Program );
+	Opengl::IsOkay("glGet(GL_CURRENT_PROGRAM)");
+	auto AttribName = v8::GetString( Arguments.mParams[0] );
+	auto AttribLocation = (GLuint)glGetAttribLocation(Program, AttribName.c_str() );
+	Opengl::IsOkay("glGetAttribLocation(AttribName)");
+	
+	return Immediate_Func( "glEnableVertexAttribArray", glEnableVertexAttribArray, Arguments, AttribLocation );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_setUniform(const v8::CallbackInfo& Arguments)
@@ -1542,6 +1605,11 @@ Opengl::TAsset OpenglObjects::GetObject(int JavascriptName,Array<std::pair<int,O
 	return NewBuffer;
 }
 
+
+Opengl::TAsset OpenglObjects::GetVao(int JavascriptName)
+{
+	return GetObject( JavascriptName, mVaos, glGenVertexArrays, "glGenVertexArrays" );
+}
 
 Opengl::TAsset OpenglObjects::GetBuffer(int JavascriptName)
 {

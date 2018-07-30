@@ -281,7 +281,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 				Debug( GetTypename(this) + ".UseProgram( " + GetTypename(Program) + ")" );
 				if ( Program.Shader == null )
 				{
-					Debug("Allocating shader");
+					//Debug("Allocating shader");
 					let VertShaderSource = Program.VertShaderSource;
 					let FragShaderSource = Program.FragShaderSource;
 					
@@ -292,8 +292,8 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 					FragShaderSource = FragShaderSource.replace("int round(float", "int IGNORETHISFUNC_round(float");
 
 					let RenderTarget = Context;
-					Debug("VertShaderSource="+VertShaderSource);
-					Debug("FragShaderSource="+FragShaderSource);
+					//Debug("VertShaderSource="+VertShaderSource);
+					//Debug("FragShaderSource="+FragShaderSource);
 					Program.Shader = new OpenglShader( RenderTarget, VertShaderSource, FragShaderSource );
 				}
 				this.useProgram( Program.Shader );
