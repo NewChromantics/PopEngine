@@ -98,7 +98,6 @@ public:
 	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_setUniform(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_texSubImage2D(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_readPixels(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_viewport(const v8::CallbackInfo& Arguments);
@@ -132,6 +131,7 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
+	v8::Local<v8::Value>					DoSetUniform(const v8::CallbackInfo& Arguments);
 
 	static TShaderWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TShaderWrapper>( Value, 0 );	}
 	

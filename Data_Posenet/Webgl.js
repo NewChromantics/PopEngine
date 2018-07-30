@@ -255,7 +255,6 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
 	this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
 	this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
-	this.SetUniform = function()	{	this.CommandQueue.Push( this.GetOpenglContext().setUniform, arguments );		}
 	this.texSubImage2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texSubImage2D, arguments );		}
 	//this.readPixels = function()	{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
 	this.viewport = function()	{	this.CommandQueue.Push( this.GetOpenglContext().viewport, arguments );		}
@@ -273,6 +272,7 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 			{
 				Debug( GetTypename(Context) + ".Use program(null)");
 				Context.useProgram( null );
+				Context.LastProgram = null;
 			}
 			else
 			{
@@ -296,9 +296,24 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 					Program.Shader = new OpenglShader( RenderTarget, VertShaderSource, FragShaderSource );
 				}
 				this.useProgram( Program.Shader );
+				Context.LastProgram = Program;
 			}
 		}
 		this.CommandQueue.Push( AllocAndUseProgram, arguments );
+	}
+
+	//	this is deffered like useProgram's allocation
+	this.SetUniform = function()
+	{
+		//	this should be executed on the immediate thread inside Execute()
+		let ShaderSetUniform = function()
+		{
+			let Context = this;
+			let CurrentProgram = Context.LastProgram;
+			let CurrentShader = CurrentProgram.Shader;
+			CurrentShader.SetUniform.apply( CurrentShader, arguments );
+		}
+		this.CommandQueue.Push( ShaderSetUniform, arguments );
 	}
 
 	

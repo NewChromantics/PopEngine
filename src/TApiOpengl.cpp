@@ -30,7 +30,6 @@ DEFINE_IMMEDIATE(useProgram);
 DEFINE_IMMEDIATE(texParameteri);
 DEFINE_IMMEDIATE(vertexAttribPointer);
 DEFINE_IMMEDIATE(enableVertexAttribArray);
-DEFINE_IMMEDIATE(setUniform);
 DEFINE_IMMEDIATE(texSubImage2D);
 DEFINE_IMMEDIATE(readPixels);
 DEFINE_IMMEDIATE(viewport);
@@ -679,7 +678,6 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	DEFINE_IMMEDIATE(texParameteri);
 	DEFINE_IMMEDIATE(vertexAttribPointer);
 	DEFINE_IMMEDIATE(enableVertexAttribArray);
-	DEFINE_IMMEDIATE(setUniform);
 	DEFINE_IMMEDIATE(texSubImage2D);
 	DEFINE_IMMEDIATE(readPixels);
 	DEFINE_IMMEDIATE(viewport);
@@ -1163,12 +1161,6 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_enableVertexAttribArray(const v8:
 	return Immediate_Func( "glEnableVertexAttribArray", glEnableVertexAttribArray, Arguments, AttribLocation );
 }
 
-v8::Local<v8::Value> TWindowWrapper::Immediate_setUniform(const v8::CallbackInfo& Arguments)
-{
-	throw Soy::AssertException("Set Uniform needs some specifics");
-	//return Immediate_Func( glDisable, Arguments );
-}
-
 v8::Local<v8::Value> TWindowWrapper::Immediate_texSubImage2D(const v8::CallbackInfo& Arguments)
 {
 	throw Soy::AssertException("glTexSubImage2D needs some specifics");
@@ -1483,10 +1475,16 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 
 v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 {
+	auto ThisHandle = Params.mParams.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TShaderWrapper>( ThisHandle );
+	return This.DoSetUniform( Params );
+}
+
+v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params)
+{
+	auto& This = *this;
 	auto& Arguments = Params.mParams;
 	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TShaderWrapper>( ThisHandle );
 	auto pShader = This.mShader;
 	auto& Shader = *pShader;
 	
@@ -1505,25 +1503,37 @@ v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
 	
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
-		//	gr: we're not using the shader state, so we currently need to manually track bind count at high level
-		auto BindIndexHandle = Arguments[2];
-		if ( !BindIndexHandle->IsNumber() )
-			throw Soy::AssertException("Currently need to pass texture bind index (increment from 0). SetUniform(Name,Image,BindIndex)");
-		auto BindIndex = BindIndexHandle.As<Number>()->Int32Value();
-		
-		//	get the image
-		auto* Image = &v8::GetObject<TImageWrapper>(ValueHandle);
-		//	gr: planning ahead
-		auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
+		//	for immediate mode, glActiveTexture has already been done
+		//	and texture has been bound, so if we just have 1 argument, it's the index for the activetexture
+		//	really we want to grab all that at a high level.
+		//	we could override, but there's a possibility the shader explicitly is picking binding slots
+		if ( Arguments.Length() == 2 && Arguments[1]->IsNumber() )
 		{
-			pShader->SetUniform( Uniform, Image->GetTexture(), BindIndex );
-		};
-		auto OnTextureError = [](const std::string& Error)
+			auto BindIndex = Arguments[1].As<Number>()->Int32Value();
+			pShader->SetUniform( Uniform, BindIndex );
+		}
+		else
 		{
-			std::Debug << "Error loading texture " << Error << std::endl;
-			std::Debug << "Todo: relay to promise" << std::endl;
-		};
-		Image->GetTexture( OnTextureLoaded, OnTextureError );
+			//	gr: we're not using the shader state, so we currently need to manually track bind count at high level
+			auto BindIndexHandle = Arguments[2];
+			if ( !BindIndexHandle->IsNumber() )
+				throw Soy::AssertException("Currently need to pass texture bind index (increment from 0). SetUniform(Name,Image,BindIndex)");
+			auto BindIndex = BindIndexHandle.As<Number>()->Int32Value();
+			
+			//	get the image
+			auto* Image = &v8::GetObject<TImageWrapper>(ValueHandle);
+			//	gr: planning ahead
+			auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
+			{
+				pShader->SetUniform( Uniform, Image->GetTexture(), BindIndex );
+			};
+			auto OnTextureError = [](const std::string& Error)
+			{
+				std::Debug << "Error loading texture " << Error << std::endl;
+				std::Debug << "Todo: relay to promise" << std::endl;
+			};
+			Image->GetTexture( OnTextureLoaded, OnTextureError );
+		}
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
