@@ -615,6 +615,9 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	PUSH_ENUM( GL_RGB32F );
 	PUSH_ENUM( GL_RGBA32F );
 	PUSH_ENUM( GL_COLOR_ATTACHMENT0 );
+	PUSH_ENUM( GL_UNSIGNED_BYTE );
+	PUSH_ENUM( GL_R32F );
+	PUSH_ENUM( GL_RED );
 	
 	return ArrayHandle;
 	
@@ -933,14 +936,55 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::Ca
 v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInfo& Arguments)
 {
 	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto Arg1 = Arguments.mParams[1];
 	
-	//	get texture
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments.mParams[1] );
-	Image.GetTexture( []{}, [](const std::string& Error){} );
-	auto& Texture = Image.GetTexture();
-	auto TextureName = Texture.mTexture.mName;
+	GLuint TextureName = GL_ASSET_INVALID;
+	//	webgl passes in null to unbind (or 0?)
+	if ( !Arg1->IsNull() )
+	{
+		//	get texture
+		auto& Image = v8::GetObject<TImageWrapper>( Arguments.mParams[1] );
+		Image.GetTexture( []{}, [](const std::string& Error){} );
+		auto& Texture = Image.GetTexture();
+		TextureName = Texture.mTexture.mName;
+	}
 	
 	return Immediate_Func( "glBindTexture", glBindTexture, Arguments, Binding, TextureName );
+}
+
+
+
+void GetPixelData(Local<Value> DataHandle,ArrayBridge<uint8_t>&& PixelData8,v8::Isolate* Isolate)
+{
+	if ( DataHandle->IsNull() )
+	{
+		PixelData8.Clear();
+		return;
+	}
+	
+	//	try and detect an Image
+	if ( DataHandle->IsObject() )
+	{
+		auto ObjectHandle = DataHandle.As<Object>();
+		
+		//	assume is ImageData for now {width, height,data}
+		auto widthstring = String::NewFromUtf8(Isolate,"width");
+		auto heightstring = String::NewFromUtf8(Isolate,"height");
+		auto datastring = String::NewFromUtf8(Isolate,"data");
+		if ( ObjectHandle->HasOwnProperty(widthstring) && ObjectHandle->HasOwnProperty(heightstring) && ObjectHandle->HasOwnProperty(datastring) )
+		{
+			auto DataDataHandle = ObjectHandle->Get(datastring);
+			if ( DataDataHandle->IsUint8ClampedArray() )
+			{
+				v8::EnumArray<Uint8ClampedArray>(DataDataHandle, PixelData8 );
+				return;
+			}
+		}
+	}
+	
+	std::stringstream Error;
+	Error << "don't know how to handle texImage2D data of " << v8::GetTypeName(DataHandle);
+	throw Soy::AssertException(Error.str());
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo& Arguments)
@@ -968,26 +1012,45 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 	auto binding = GetGlValue<GLenum>( Arguments.mParams[0] );
 	auto level = GetGlValue<GLint>( Arguments.mParams[1] );
 	auto internalformat = GetGlValue<GLint>( Arguments.mParams[2] );
-	auto width = GetGlValue<GLsizei>( Arguments.mParams[3] );
-	auto height = GetGlValue<GLsizei>( Arguments.mParams[4] );
-	auto border = GetGlValue<GLint>( Arguments.mParams[5] );
-	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[6] );
-	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[7] );
-	auto DataHandle = Arguments.mParams[8];
-
-	void* PixelData = nullptr;
-	if ( DataHandle->IsNull() )
+	GLsizei width;
+	GLsizei height;
+	GLint border;
+	int externalformatIndex;
+	int externaltypeIndex;
+	int DataHandleIndex;
+	
+	//	gr: but sometimes we get webgl1 calls...
+	if ( Arguments.mParams[5]->IsObject() )
 	{
-		//	this is fine... allocating
+		//	need to grab texture size
+		glGetTexLevelParameteriv(binding, level, GL_TEXTURE_WIDTH, &width );
+		Opengl::IsOkay("glGetTexLevelParameteriv(GL_TEXTURE_WIDTH)");
+		glGetTexLevelParameteriv(binding, level, GL_TEXTURE_HEIGHT, &height );
+		Opengl::IsOkay("glGetTexLevelParameteriv(GL_TEXTURE_HEIGHT)");
+		border = 0;
+		externalformatIndex = 3;
+		externaltypeIndex = 4;
+		DataHandleIndex = 5;
 	}
 	else
 	{
-		std::stringstream Error;
-		Error << "don't know how to handle texImage2D data of " << v8::GetTypeName(DataHandle);
-		throw Soy::AssertException(Error.str());
+		width = GetGlValue<GLsizei>( Arguments.mParams[3] );
+		height = GetGlValue<GLsizei>( Arguments.mParams[4] );
+		border = GetGlValue<GLint>( Arguments.mParams[5] );
+		externalformatIndex = 6;
+		externaltypeIndex = 7;
+		DataHandleIndex = 8;
 	}
 	
-	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData );
+	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[externalformatIndex] );
+	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[externaltypeIndex] );
+	auto DataHandle = Arguments.mParams[DataHandleIndex];
+	
+	Array<uint8_t> PixelData;
+	GetPixelData( DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
+	
+	
+	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData.GetArray() );
 	Opengl::IsOkay("glTexImage2D");
 	return v8::Undefined( Arguments.mIsolate );
 }

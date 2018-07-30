@@ -591,9 +591,14 @@ std::string v8::GetString(Local<Value> Str)
 Local<Value> v8::GetString(v8::Isolate& Isolate,const std::string& Str)
 {
 	auto* CStr = Str.c_str();
+	return GetString(Isolate,CStr);
+}
+
+Local<Value> v8::GetString(v8::Isolate& Isolate,const char* CStr)
+{
 	if ( CStr == nullptr )
 		CStr = "";
-	
+
 	auto StringHandle = String::NewFromUtf8( &Isolate, CStr );
 	auto StringValue = Local<Value>::Cast( StringHandle );
 	return StringValue;

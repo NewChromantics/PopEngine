@@ -16,6 +16,7 @@ function HTMLVideoElement()
 	
 }
 
+//	gr: this might eed to be more intelligently back if accessing pixels synchronously
 function ImageData(Pixels)
 {
 	this.width = 0;
@@ -27,7 +28,6 @@ function ImageData(Pixels)
 		this.width = Img.GetWidth();
 		this.height = Img.GetHeight();
 		this.data = Img.GetRgba8();
-		
 		//Debug( ToHexString(this.data,'  20 ) );
 	}
 	

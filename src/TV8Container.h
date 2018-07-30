@@ -69,6 +69,7 @@ namespace v8
 
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
+	Local<Value>	GetString(v8::Isolate& Isolate,const char* Str);
 	std::string		GetTypeName(v8::Local<v8::Value> Handle);
 
 	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
@@ -81,6 +82,8 @@ namespace v8
 	//	fast copy from typed arrays
 	template<typename ARRAYTYPE,typename ELEMENTTYPE>
 	void	EnumArray(Local<Value> ValueArrayHandle,ArrayBridge<ELEMENTTYPE>&& IntArray);
+	template<typename ARRAYTYPE,typename ELEMENTTYPE>
+	void	EnumArray(Local<Value> ValueArrayHandle,ArrayBridge<ELEMENTTYPE>& IntArray);
 	
 }
 
@@ -305,8 +308,12 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 	}
 	
 	if ( !Handle->IsExternal() )
-		throw Soy::AssertException("Value is not internally backed (external)");
-
+	{
+		std::stringstream Error;
+		Error << "Getting object from Value(" << v8::GetTypeName(Handle) << ") is not internally backed (!IsExternal)";
+		throw Soy::AssertException(Error.str());
+	}
+	
 	//	gr: this needs to do type checks, and we need to verify the internal type as we're blindly casting!
 	auto WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
 	if ( WindowVoid == nullptr )
@@ -344,9 +351,8 @@ inline v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBER
 	return ArrayHandle;
 }
 
-
 template<typename ARRAYTYPE,typename ELEMENTTYPE>
-inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& IntArray)
+inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>& IntArray)
 {
 	auto ValueArrayHandle = Local<ARRAYTYPE>::Cast( ValueHandle );
 
@@ -375,3 +381,10 @@ inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& In
 		throw Soy::AssertException( Error.str() );
 	}
 }
+
+template<typename ARRAYTYPE,typename ELEMENTTYPE>
+inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& IntArray)
+{
+	EnumArray<ARRAYTYPE,ELEMENTTYPE>( ValueHandle, IntArray );
+}
+

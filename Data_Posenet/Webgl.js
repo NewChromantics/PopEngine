@@ -48,7 +48,10 @@ UNSIGNED_BYTE
 UNSIGNED_SHORT_5_6_5
 UNSIGNED_SHORT_4_4_4_4
 UNSIGNED_SHORT_5_5_5_1
-
+R32F
+R16F
+RED
+HALF_FLOAT
 `;
 var IsValidWebglEnum = function(Enum)
 {
@@ -189,6 +192,20 @@ function OpenglCommandQueue()
 	}
 }
 
+function GetTypename(Object)
+{
+	let Type = typeof Object;
+	if ( Object === null )
+	{
+		Type = "null";
+	}
+	else if ( Type == "object" )
+	{
+		Type = Object.constructor.name;
+	}
+	
+	return Type;
+}
 		
 function FakeOpenglContext(ContextType,ParentCanvas)
 {
@@ -241,7 +258,16 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.bindFramebuffer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindFramebuffer, arguments );		}
 	this.framebufferTexture2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().framebufferTexture2D, arguments );		}
 	this.bindTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindTexture, arguments );		}
-	this.texImage2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );		}
+	this.texImage2D = function()
+	{
+		let DebugStr = "texImage2D(";
+		for ( let a=0;	a<arguments.length;	a++ )
+			DebugStr += GetTypename( arguments[a] )+ ", ";
+		DebugStr+=")";
+		Debug(DebugStr);
+
+		this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );
+	}
 	this.useProgram = function()	{	this.CommandQueue.Push( this.GetOpenglContext().useProgram, arguments );		}
 	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
 	this.attachShader = function()	{	this.CommandQueue.Push( this.GetOpenglContext().attachShader, arguments );		}
