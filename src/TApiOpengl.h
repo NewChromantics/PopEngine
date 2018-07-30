@@ -36,11 +36,17 @@ public:
 class OpenglObjects
 {
 public:
-	//	assuming we're on opengl thread
-	Opengl::TAsset	GetBuffer(int JavascriptName);	//	get/alloc buffer with this id
+	//	all funcs are immediate, assuming we're on opengl thread
+	//	get/alloc buffer with this id
+	Opengl::TAsset	GetBuffer(int JavascriptName);
+	Opengl::TAsset	GetFrameBuffer(int JavascriptName);
+
+private:
+	Opengl::TAsset	GetObject(int JavascriptName,Array<std::pair<int,Opengl::TAsset>>& Buffers,std::function<void(GLuint,GLuint*)> Alloc,const char* AllocFuncName);
 
 public:
 	Array<std::pair<int,Opengl::TAsset>>	mBuffers;
+	Array<std::pair<int,Opengl::TAsset>>	mFrameBuffers;
 };
 
 //	v8 template to a TWindow

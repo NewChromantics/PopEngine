@@ -609,6 +609,7 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	PUSH_ENUM( GL_ELEMENT_ARRAY_BUFFER );
 	PUSH_ENUM( GL_FLOAT );
 	PUSH_ENUM( GL_STATIC_DRAW );
+	PUSH_ENUM( GL_FRAMEBUFFER );
 
 	return ArrayHandle;
 	
@@ -818,22 +819,14 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindBuffer(const v8::CallbackInfo
 {
 	//	gr; buffers are allocated as-required, high-level they're just an id
 	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
-
 	auto BufferNameJs = GetGlValue<int>( Arguments.mParams[1] );
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.mParams.This() );
 
 	//	get/alloc our instance
 	auto BufferName = This.mImmediateObjects.GetBuffer(BufferNameJs).mName;
-	//	gr: this check is useless here, but we can do it immediate after
+	//	gr: glIsBuffer check is useless here, but we can do it immediate after
 	//A name returned by glGenBuffers, but not yet associated with a buffer object by calling glBindBuffer, is not the name of a buffer object.
-	/*
-	if ( !glIsBuffer( BufferName ) )
-	{
-		std::stringstream Error;
-		Error << BufferNameJs << " is not a valid buffer id";
-		throw Soy::AssertException(Error.str());
-	}
-	 */
+	
 	auto Return = Immediate_Func( "glBindBuffer", glBindBuffer, Arguments, Binding, BufferName );
 	
 	//	if bound, then NOW is should be valid
@@ -848,19 +841,73 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindBuffer(const v8::CallbackInfo
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bufferData(const v8::CallbackInfo& Arguments)
 {
-	//GLAPI void APIENTRY glBufferData (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-	//glBufferData
-	throw Soy::AssertException("glBufferData needs some specifics");
-	//return Immediate_Func( "glBufferData", glBufferData, Arguments );
+	auto target = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto usage = GetGlValue<GLenum>( Arguments.mParams[2] );
+	auto Arg1 = Arguments.mParams[1];
+
+	if ( Arg1->IsNumber() )
+	{
+		//	uninitialised but allocated buffer
+		auto SizeValue = Arg1.As<Number>();
+		auto size = SizeValue->Uint32Value();
+		glBufferData( target, size, nullptr, usage );
+	}
+	//	gr: don't currently know if I can send a mix of ints and floats to gl buffer data for different things (vertex vs index)
+	//	so for now explicity get floats or uint16's
+	else if ( Arg1->IsFloat32Array() )
+	{
+		Array<float> Data;
+		v8::EnumArray( Arg1, GetArrayBridge(Data), "glBufferData" );
+		auto size = Data.GetDataSize();
+		glBufferData( target,  Data.GetDataSize(), Data.GetArray(), usage );
+	}
+	else if ( Arg1->IsUint16Array() )
+	{
+		Array<uint16_t> Data;
+		EnumArray<Uint16Array>( Arg1, GetArrayBridge(Data) );
+		//v8::EnumArray( Arg1, GetArrayBridge(Data), "glBufferData" );
+		auto size = Data.GetDataSize();
+		glBufferData( target,  Data.GetDataSize(), Data.GetArray(), usage );
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "Not yet handling " << v8::GetTypeName(Arg1) << " for glBufferData. Need to work out what we're allowed to send";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	Opengl::IsOkay("glBufferData");
+	return v8::Undefined( Arguments.mIsolate );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( "glBindFramebuffer", glBindFramebuffer, Arguments );
+	//	gr; buffers are allocated as-required, high-level they're just an id
+	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto BufferNameJs = GetGlValue<int>( Arguments.mParams[1] );
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.mParams.This() );
+	
+	//	get/alloc our instance
+	auto BufferName = This.mImmediateObjects.GetFrameBuffer(BufferNameJs).mName;
+	//	gr: glIsBuffer check is useless here, but we can do it immediate after
+	//A name returned by glGenBuffers, but not yet associated with a buffer object by calling glBindBuffer, is not the name of a buffer object.
+	
+	auto Return = Immediate_Func( "glBindFramebuffer", glBindFramebuffer, Arguments, Binding, BufferName );
+	
+	//	if bound, then NOW is should be valid
+	if ( !glIsFramebuffer( BufferName ) )
+	{
+		std::stringstream Error;
+		Error << BufferNameJs << "(" << BufferName << ") is not a valid Framebuffer id";
+		throw Soy::AssertException(Error.str());
+	}
+	return Return;
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments)
 {
+	//	3 is texture
+	throw Soy::AssertException("Arg3 is texture");
 	return Immediate_Func( "glFramebufferTexture2D", glFramebufferTexture2D, Arguments );
 }
 
@@ -1256,23 +1303,32 @@ void TShaderWrapper::CreateShader(Opengl::TContext& Context,std::function<Opengl
 
 }
 
-
-Opengl::TAsset OpenglObjects::GetBuffer(int JavascriptName)
+Opengl::TAsset OpenglObjects::GetObject(int JavascriptName,Array<std::pair<int,Opengl::TAsset>>& Buffers,std::function<void(GLuint,GLuint*)> Alloc,const char* AllocFuncName)
 {
-	for ( int i=0;	i<mBuffers.GetSize();	i++ )
+	for ( int i=0;	i<Buffers.GetSize();	i++ )
 	{
-		auto& Pair = mBuffers[i];
+		auto& Pair = Buffers[i];
 		if ( Pair.first == JavascriptName )
 			return Pair.second;
 	}
 	
 	Opengl::TAsset NewBuffer;
-	glGenBuffers(1,&NewBuffer.mName);
-	Opengl::IsOkay("glGenBuffers");
+	Alloc(1,&NewBuffer.mName);
+	Opengl::IsOkay(AllocFuncName);
 	if ( !NewBuffer.IsValid() )
 		throw Soy::AssertException("Failed to create new buffer");
 	
-	mBuffers.PushBack( std::make_pair(JavascriptName,NewBuffer) );
+	Buffers.PushBack( std::make_pair(JavascriptName,NewBuffer) );
 	return NewBuffer;
 }
 
+
+Opengl::TAsset OpenglObjects::GetBuffer(int JavascriptName)
+{
+	return GetObject( JavascriptName, mBuffers, glGenBuffers, "glGenBuffers" );
+}
+
+Opengl::TAsset OpenglObjects::GetFrameBuffer(int JavascriptName)
+{
+	return GetObject( JavascriptName, mFrameBuffers, glGenFramebuffers, "glGenFramebuffers" );
+}
