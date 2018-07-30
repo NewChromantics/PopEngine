@@ -610,7 +610,12 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	PUSH_ENUM( GL_FLOAT );
 	PUSH_ENUM( GL_STATIC_DRAW );
 	PUSH_ENUM( GL_FRAMEBUFFER );
-
+	PUSH_ENUM( GL_RGBA );
+	PUSH_ENUM( GL_RGB );
+	PUSH_ENUM( GL_RGB32F );
+	PUSH_ENUM( GL_RGBA32F );
+	PUSH_ENUM( GL_COLOR_ATTACHMENT0 );
+	
 	return ArrayHandle;
 	
 }
@@ -709,6 +714,8 @@ GLint GetGlValue(Local<Value> Argument)
 	{
 		std::stringstream Error;
 		Error << "Expecting argument as number, but is " << v8::GetTypeName(Argument);
+		if ( Argument->IsString() )
+			Error << " (" << v8::GetString(Argument) << ")";
 		throw Soy::AssertException(Error.str());
 	}
 	
@@ -906,9 +913,21 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindFramebuffer(const v8::Callbac
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments)
 {
-	//	3 is texture
-	throw Soy::AssertException("Arg3 is texture");
-	return Immediate_Func( "glFramebufferTexture2D", glFramebufferTexture2D, Arguments );
+	//GLAPI void APIENTRY glFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+	auto target = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto attachment = GetGlValue<GLenum>( Arguments.mParams[1] );
+	auto textarget = GetGlValue<GLenum>( Arguments.mParams[2] );
+	auto TextureHandle = Arguments.mParams[3];
+	auto level = GetGlValue<GLint>( Arguments.mParams[4] );
+	
+	auto& Image = v8::GetObject<TImageWrapper>(TextureHandle);
+	auto& Texture = Image.GetTexture();
+	auto TextureName = Texture.mTexture.mName;
+	
+	//GLAPI void APIENTRY glFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+	glFramebufferTexture2D( target, attachment, textarget, TextureName, level );
+	Opengl::IsOkay("glFramebufferTexture2D");
+	return v8::Undefined( Arguments.mIsolate );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInfo& Arguments)
@@ -926,8 +945,51 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInf
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo& Arguments)
 {
-	throw Soy::AssertException("texImage2D needs some specifics");
-	//return Immediate_Func( glTexImage2D, Arguments );
+	/*
+	 https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+	 //Webgl1
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels);
+	 void gl.texImage2D(target, level, internalformat, format, type, ImageData? pixels);
+	 void gl.texImage2D(target, level, internalformat, format, type, HTMLImageElement? pixels);
+	 void gl.texImage2D(target, level, internalformat, format, type, HTMLCanvasElement? pixels);
+	 void gl.texImage2D(target, level, internalformat, format, type, HTMLVideoElement? pixels);
+	 void gl.texImage2D(target, level, internalformat, format, type, ImageBitmap? pixels);
+	 
+	 // WebGL2:
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, GLintptr offset);
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, HTMLCanvasElement source);
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, HTMLImageElement source);
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, HTMLVideoElement source);
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, ImageBitmap source);
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, ImageData source);
+	 void gl.texImage2D(target, level, internalformat, width, height, border, format, type, ArrayBufferView srcData, srcOffset);
+	 */
+	//	gr: we're emulating webgl2
+	auto binding = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto level = GetGlValue<GLint>( Arguments.mParams[1] );
+	auto internalformat = GetGlValue<GLint>( Arguments.mParams[2] );
+	auto width = GetGlValue<GLsizei>( Arguments.mParams[3] );
+	auto height = GetGlValue<GLsizei>( Arguments.mParams[4] );
+	auto border = GetGlValue<GLint>( Arguments.mParams[5] );
+	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[6] );
+	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[7] );
+	auto DataHandle = Arguments.mParams[8];
+
+	void* PixelData = nullptr;
+	if ( DataHandle->IsNull() )
+	{
+		//	this is fine... allocating
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "don't know how to handle texImage2D data of " << v8::GetTypeName(DataHandle);
+		throw Soy::AssertException(Error.str());
+	}
+	
+	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData );
+	Opengl::IsOkay("glTexImage2D");
+	return v8::Undefined( Arguments.mIsolate );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_useProgram(const v8::CallbackInfo& Arguments)

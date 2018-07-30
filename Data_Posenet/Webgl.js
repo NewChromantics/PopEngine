@@ -1,17 +1,61 @@
+var WebglEnumNames = `
+NO_ERROR
+INVALID_ENUM
+INVALID_VALUE
+INVALID_OPERATION
+INVALID_FRAMEBUFFER_OPERATION
+OUT_OF_MEMORY
+CONTEXT_LOST_WEBGL
 
-/*
- unction bindVertexBufferToProgramAttribute(e, t, r, n, a, i, o) {
- var s = e.getAttribLocation(t, r);
- return -1 !== s && (callAndCheck(e, function() {
- return e.bindBuffer(e.ARRAY_BUFFER, n)
- }),
- callAndCheck(e, function() {
- return e.vertexAttribPointer(s, a, e.FLOAT, !1, i, o)
- }),
- callAndCheck(e, function() {
- return e.enableVertexAttribArray(s)
- }),
- !0)*/
+DEPTH_TEST
+STENCIL_TEST
+BLEND
+DITHER
+POLYGON_OFFSET_FILL
+SAMPLE_COVERAGE
+SCISSOR_TEST
+FRAMEBUFFER_COMPLETE
+VERTEX_SHADER
+FRAGMENT_SHADER
+
+//	Params
+GPU_DISJOINT_EXT
+MAX_TEXTURE_SIZE
+CULL_FACE
+BACK
+TEXTURE_WRAP_S
+CLAMP_TO_EDGE
+TEXTURE_WRAP_T
+CLAMP_TO_EDGE
+TEXTURE_MIN_FILTER
+NEAREST
+TEXTURE_MAG_FILTER
+TEXTURE_2D
+
+ARRAY_BUFFER
+ELEMENT_ARRAY_BUFFER
+STATIC_DRAW
+FLOAT
+FRAMEBUFFER
+COLOR_ATTACHMENT0
+
+RGB
+RGBA
+RGBA32F
+FLOAT16
+FLOAT32
+UNSIGNED_BYTE
+
+`;
+var IsValidWebglEnum = function(Enum)
+{
+	if ( Enum.length == 0 )
+		return false;
+	if ( Enum.startsWith('//') )
+		return false;
+	return true;
+}
+WebglEnumNames = WebglEnumNames.split('\n').filter(IsValidWebglEnum);
 
 
 
@@ -124,7 +168,7 @@ function OpenglCommandQueue()
 			{
 				Debug("exception in queue: ");
 				Debug(e);
-				//throw e;
+				throw e;
 			}
 		}
 		
