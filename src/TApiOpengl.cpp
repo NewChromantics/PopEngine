@@ -616,7 +616,14 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	PUSH_ENUM( GL_UNSIGNED_BYTE );
 	PUSH_ENUM( GL_R32F );
 	PUSH_ENUM( GL_RED );
-	
+	PUSH_ENUM( GL_POINTS );
+	PUSH_ENUM( GL_LINE_STRIP );
+	PUSH_ENUM( GL_LINE_LOOP );
+	PUSH_ENUM( GL_LINES );
+	PUSH_ENUM( GL_TRIANGLE_STRIP );
+	PUSH_ENUM( GL_TRIANGLE_FAN );
+	PUSH_ENUM( GL_TRIANGLES );
+
 	auto MaxTextures = 32;
 	for ( int t=0;	t<MaxTextures;	t++ )
 	{
@@ -794,16 +801,16 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 	return Immediate_Func( Context, FunctionPtr, Arguments, Arg0, Arg1 );
 }
 
-template<typename RETURN,typename ARG0,typename ARG1,typename ARG2>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2),const v8::CallbackInfo& Arguments)
+template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARGARRAY>
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2),ARGARRAY& Arguments,v8::Isolate* Isolate)
 {
 	std::Debug << Context << std::endl;
-	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
-	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
-	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
+	auto Arg0 = GetGlValue<ARG0>( Arguments[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments[1] );
+	auto Arg2 = GetGlValue<ARG2>( Arguments[2] );
 	FunctionPtr( Arg0, Arg1, Arg2 );
 	Opengl::IsOkay(Context);
-	return v8::Undefined(&Arguments.GetIsolate());
+	return v8::Undefined(Isolate);
 }
 
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3>
@@ -1116,7 +1123,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_useProgram(const v8::CallbackInfo
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texParameteri(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( "glTexParameteri", glTexParameteri, Arguments );
+	return Immediate_Func( "glTexParameteri", glTexParameteri, Arguments.mParams, &Arguments.GetIsolate() );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments)
@@ -1282,8 +1289,32 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_activeTexture(const v8::CallbackI
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackInfo& Arguments)
 {
-	throw Soy::AssertException("glDrawElements needs some specifics");
-	//return Immediate_Func( "glDrawElements", glDrawElements, Arguments );
+	//	webgl doesnt take indexes, they're in a buffer!
+	//	void gl.drawElements(mode, count, type, offset);
+	//	which in Capi is
+	//	GLAPI void APIENTRY glDrawArrays (GLenum mode, GLint first, GLsizei count);
+	
+	//	webgl expects a type... but shouldn't this have alreayd been setup in the buffer? hmm
+	//A GLenum specifying the type of the values in the element array buffer. Possible values are:
+	//gl.UNSIGNED_BYTE
+	//gl.UNSIGNED_SHORT
+	//gl.UNSIGNED_INT (OES_element_index_uint)
+	
+	//	extra annoying, in webgl offset
+	//		A GLintptr specifying an offset in the element array buffer. Must be a valid multiple of the size of the given type.
+	//	so we need to know the type... if it's not zero
+
+	auto mode = Arguments.mParams[0];
+	auto count = Arguments.mParams[1];
+	auto type = Arguments.mParams[2];
+	auto offset = Arguments.mParams[3];
+
+	BufferArray<Local<Value>,3> GlArguments;
+	GlArguments.PushBack( mode );
+	GlArguments.PushBack( offset );
+	GlArguments.PushBack( count );
+
+	return Immediate_Func( "glDrawArrays", glDrawArrays, GlArguments, &Arguments.GetIsolate() );
 }
 
 
