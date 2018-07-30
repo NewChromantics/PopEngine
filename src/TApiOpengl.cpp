@@ -1008,7 +1008,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInf
 
 
 
-void GetPixelData(Local<Value> DataHandle,ArrayBridge<uint8_t>&& PixelData8,v8::Isolate* Isolate)
+void GetPixelData(const char* Context,Local<Value> DataHandle,ArrayBridge<uint8_t>&& PixelData8,v8::Isolate* Isolate)
 {
 	if ( DataHandle->IsNull() )
 	{
@@ -1017,6 +1017,15 @@ void GetPixelData(Local<Value> DataHandle,ArrayBridge<uint8_t>&& PixelData8,v8::
 	}
 	
 	//	try and detect an Image
+	if ( DataHandle->IsFloat32Array())
+	{
+		Array<float> FloatArray;
+		v8::EnumArray( DataHandle, GetArrayBridge(FloatArray), Context );
+		auto FloatArrayAs8 = GetArrayBridge(FloatArray).GetSubArray<uint8_t>(0, FloatArray.GetDataSize() );
+		PixelData8.Copy(FloatArrayAs8);
+		return;
+	}
+	
 	if ( DataHandle->IsObject() )
 	{
 		auto ObjectHandle = DataHandle.As<Object>();
@@ -1035,9 +1044,10 @@ void GetPixelData(Local<Value> DataHandle,ArrayBridge<uint8_t>&& PixelData8,v8::
 			}
 		}
 	}
+
 	
 	std::stringstream Error;
-	Error << "don't know how to handle texImage2D data of " << v8::GetTypeName(DataHandle);
+	Error << "don't know how to handle " << Context << " data of " << v8::GetTypeName(DataHandle);
 	throw Soy::AssertException(Error.str());
 }
 
@@ -1101,7 +1111,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 	auto DataHandle = Arguments.mParams[DataHandleIndex];
 	
 	Array<uint8_t> PixelData;
-	GetPixelData( DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
+	GetPixelData( "glTexImage2D", DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
 	
 	
 	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData.GetArray() );
@@ -1170,8 +1180,55 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_enableVertexAttribArray(const v8:
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_texSubImage2D(const v8::CallbackInfo& Arguments)
 {
-	throw Soy::AssertException("glTexSubImage2D needs some specifics");
-	//return Immediate_Func( glTexSubImage2D, Arguments );
+	/*
+	 https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+	 // WebGL 1:
+	 void gl.texSubImage2D(target, level, xoffset, yoffset, format, type, OBJECT
+	 void gl.texSubImage2D(target, level, xoffset, yoffset, format, type, offset);
+	 void gl.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, OBJECT );
+	 void gl.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, OBJECT, srcOffset);
+	 */
+	//	gr: we're emulating webgl2
+	auto binding = GetGlValue<GLenum>( Arguments.mParams[0] );
+	auto level = GetGlValue<GLint>( Arguments.mParams[1] );
+	auto xoffset = GetGlValue<GLint>( Arguments.mParams[2] );
+	auto yoffset = GetGlValue<GLint>( Arguments.mParams[3] );
+	GLsizei width;
+	GLsizei height;
+	int externalformatIndex;
+	int externaltypeIndex;
+	int DataHandleIndex;
+	
+	if ( Arguments.mParams[6]->IsObject() )
+	{
+		//	need to grab texture size
+		glGetTexLevelParameteriv(binding, level, GL_TEXTURE_WIDTH, &width );
+		Opengl::IsOkay("glGetTexLevelParameteriv(GL_TEXTURE_WIDTH)");
+		glGetTexLevelParameteriv(binding, level, GL_TEXTURE_HEIGHT, &height );
+		Opengl::IsOkay("glGetTexLevelParameteriv(GL_TEXTURE_HEIGHT)");
+		externalformatIndex = 4;
+		externaltypeIndex = 5;
+		DataHandleIndex = 6;
+	}
+	else
+	{
+		width = GetGlValue<GLsizei>( Arguments.mParams[4] );
+		height = GetGlValue<GLsizei>( Arguments.mParams[5] );
+		externalformatIndex = 6;
+		externaltypeIndex = 7;
+		DataHandleIndex = 8;
+	}
+	
+	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[externalformatIndex] );
+	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[externaltypeIndex] );
+	auto DataHandle = Arguments.mParams[DataHandleIndex];
+	
+	Array<uint8_t> PixelData;
+	GetPixelData( "glTexSubImage2D", DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
+	
+	glTexSubImage2D( binding, level, xoffset, yoffset, width, height, externalformat, externaltype, PixelData.GetArray() );
+	Opengl::IsOkay("glTexSubImage2D");
+	return v8::Undefined( Arguments.mIsolate );
 }
 
 namespace Opengl

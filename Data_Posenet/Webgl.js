@@ -295,8 +295,10 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 					//	tensorflow adds some funcs that GL ES doesn't support
 					//	we need to remove them
 					//	todo: do all the Soy shader upgrade stuff here!
-					VertShaderSource = VertShaderSource.replace("int round(float", "int IGNORETHISFUNC_round(float");
-					FragShaderSource = FragShaderSource.replace("int round(float", "int IGNORETHISFUNC_round(float");
+					//	gr: there are some uses that expect int return, but the default returns float
+					//		and we get int x = float errors, so work around it
+					VertShaderSource = VertShaderSource.replaceAll(" round(", " roundToInt(");
+					FragShaderSource = FragShaderSource.replaceAll(" round(", " roundToInt(");
 
 					let RenderTarget = Context;
 					//Debug("VertShaderSource="+VertShaderSource);
