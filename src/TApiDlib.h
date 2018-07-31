@@ -15,7 +15,7 @@ namespace ApiDlib
 class TDlib
 {
 public:
-	Array<vec2f>	GetFaceLandmarks(const SoyPixelsImpl& Pixels);
+	void		GetFaceLandmarks(const SoyPixelsImpl& Pixels,ArrayBridge<vec2f>&& Landmarks);
 };
 
 
@@ -27,6 +27,7 @@ public:
 		mContainer		( nullptr ),
 		mDlibJobQueue	( "DLibJobQueue")
 	{
+		mDlibJobQueue.Start();
 	}
 	~TDlibWrapper();
 	

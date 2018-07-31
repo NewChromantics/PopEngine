@@ -67,7 +67,6 @@ Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
 	
-	
 	//	add members
 	Container.BindFunction<FindFace_FunctionName>( InstanceTemplate, FindFace );
 	
@@ -91,8 +90,6 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 	auto* Isolate = Params.mIsolate;
 
 	auto* pThis = &This;
-	auto Window = Arguments.This();
-	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
@@ -107,12 +104,13 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 		try
 		{
 			auto& Pixels = TargetImage->GetPixels();
-			auto Landmarks = pThis->mDlib.GetFaceLandmarks(Pixels);
-			Array<float> LandmarkFloats;
-			for ( int i=0;	i<Landmarks.GetSize();	i++ )
+			BufferArray<vec2f,100> Landmark2s;
+			pThis->mDlib.GetFaceLandmarks(Pixels, GetArrayBridge(Landmark2s) );
+			BufferArray<float,200> Landmarkfs;
+			for ( int i=0;	i<Landmark2s.GetSize();	i++ )
 			{
-				LandmarkFloats.PushBack( Landmarks[i].x );
-				LandmarkFloats.PushBack( Landmarks[i].y );
+				Landmarkfs.PushBack( Landmark2s[i].x );
+				Landmarkfs.PushBack( Landmark2s[i].y );
 			}
 			
 			auto OnCompleted = [=](Local<Context> Context)
@@ -120,8 +118,10 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 				//	return face points here
 				//	gr: can't do this unless we're in the javascript thread...
 				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
-				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(LandmarkFloats) );
+				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Landmarkfs) );
 				ResolverLocal->Resolve( LandmarksArray );
+				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
+				//ResolverLocal->Resolve( Message );
 			};
 			
 			//	queue the completion, doesn't need to be done instantly
@@ -152,10 +152,11 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 }
 
 
-Array<vec2f> TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels)
+void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<vec2f>&& Landmarks)
 {
+	Landmarks.PushBack( vec2f(123,456) );
 	//using namespace dlib;
-	throw Soy::AssertException("todo! Dlib::GetFaceLandmarks");
+	//throw Soy::AssertException("todo! Dlib::GetFaceLandmarks");
 	/*
 	// We need a face detector.  We will use this to get bounding boxes for
 	// each face in an image.

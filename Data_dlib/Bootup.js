@@ -57,10 +57,36 @@ function WindowRender(RenderTarget)
 }
 
 
+function OnNewFace(FaceLandmarks)
+{
+	Debug("Got facelandmarks: ");
+	Debug(FaceLandmarks);
+}
+
+function OnFailedNewFace(Error)
+{
+	Debug("Failed to get facelandmarks: " + Error);
+}
+
+
 function Main()
 {
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("dlib");
+	
+	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
+
+	let FaceProcessor = new Dlib();
+	//try
+	{
+		Debug("Running find face...");
+		FaceProcessor.FindFace(FrameImage).then(OnNewFace).catch( OnFailedNewFace );
+	}
+	//catch(e)
+	{
+	//	Debug(e);
+	//	OnFailedNewFace(e);
+	}
 }
 
 //	main
