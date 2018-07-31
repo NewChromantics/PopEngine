@@ -635,3 +635,13 @@ Local<Value> v8::GetString(v8::Isolate& Isolate,const char* CStr)
 }
 
 
+v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,size_t ElementCount,std::function<Local<Value>(size_t)> GetElement)
+{
+	auto ArrayHandle = Array::New( &Isolate );
+	for ( auto i=0;	i<ElementCount;	i++ )
+	{
+		auto ValueHandle = GetElement(i);
+		ArrayHandle->Set( i, ValueHandle );
+	}
+	return ArrayHandle;
+}

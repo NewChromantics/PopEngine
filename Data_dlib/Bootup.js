@@ -89,6 +89,14 @@ function OnFailedNewFace(Error)
 	Debug("Failed to get facelandmarks: " + Error);
 }
 
+function EnumDevices(DeviceNames)
+{
+	let EnumDevice = function(DeviceName)
+	{
+		Debug(DeviceName);
+	}
+	DeviceNames.forEach( EnumDevice );
+}
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
 
@@ -98,6 +106,9 @@ function Main()
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("dlib");
 	Window1.OnRender = function(){	WindowRender(Window1);	};
+	
+	let MediaDevices = new Media();
+	MediaDevices.EnumDevices().then( EnumDevices );
 	
 	let FrameImage = new Image('Data_dlib/NataliePortman.jpg');
 	//FrameImage.Flip();

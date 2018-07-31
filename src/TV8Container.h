@@ -66,6 +66,7 @@ namespace v8
 	//	todo: specialise this for other types
 	template<typename NUMBERTYPE>
 	Local<Array>	GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBERTYPE>&& Values);
+	Local<Array>	GetArray(v8::Isolate& Isolate,size_t ElementCount,std::function<Local<Value>(size_t)> GetElement);
 
 	//	get a specific typed/memory backed array
 	//	uint8_t -> uint8clampedarray
@@ -355,6 +356,8 @@ inline v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBER
 	}
 	return ArrayHandle;
 }
+
+
 
 template<typename ARRAYTYPE,typename ELEMENTTYPE>
 inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>& IntArray)
