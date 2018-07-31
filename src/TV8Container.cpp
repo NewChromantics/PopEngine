@@ -449,6 +449,7 @@ std::string v8::GetTypeName(v8::Local<v8::Value> Handle)
 	if ( Handle->IsPromise() )		return "Promise";
 	if ( Handle->IsFloat32Array() )	return "Float32Array";
 	if ( Handle->IsFloat64Array() )	return "Float64Array";
+	if ( Handle->IsUint8ClampedArray() )	return "Uint8ClampedArray";
 	if ( Handle->IsInt8Array() )	return "Int8Array";
 	if ( Handle->IsInt16Array() )	return "Int16Array";
 	if ( Handle->IsInt32Array() )	return "Int32Array";
@@ -460,6 +461,22 @@ std::string v8::GetTypeName(v8::Local<v8::Value> Handle)
 
 	return "Unknown type";
 }
+
+
+//	uint8_t -> uint8clampedarray
+Local<v8::Value> v8::GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values)
+{
+	auto Size = Values.GetDataSize();
+	auto Rgba8Buffer = v8::ArrayBuffer::New( &Isolate, Size );
+	auto Rgba8BufferContents = Rgba8Buffer->GetContents();
+	auto Rgba8DataArray = GetRemoteArray( static_cast<uint8_t*>( Rgba8BufferContents.Data() ), Rgba8BufferContents.ByteLength() );
+	Rgba8DataArray.Copy( Values );
+	
+	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
+	return Rgba8;
+}
+
+
 
 void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray,const std::string& Context)
 {
@@ -557,6 +574,12 @@ void v8::EnumArray(v8::Local<v8::Value> ValueHandle,ArrayBridge<int>& IntArray,c
 	{
 		::Array<uint8_t> Ints;
 		EnumArray<Uint8Array>( ValueHandle, GetArrayBridge(Ints) );
+		IntArray.PushBackArray(Ints);
+	}
+	else if ( ValueHandle->IsUint8ClampedArray() )
+	{
+		::Array<uint8_t> Ints;
+		EnumArray<Uint8ClampedArray>( ValueHandle, GetArrayBridge(Ints) );
 		IntArray.PushBackArray(Ints);
 	}
 	else

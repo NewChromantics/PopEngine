@@ -109,9 +109,13 @@ static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
 	auto Filename = v8::GetString( Arguments[0] );
 	Array<char> FileContents;
 	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
-	
-	auto ArrayBuffer = v8::ArrayBuffer::New( Params.mIsolate, FileContents.GetSize() );
+	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
 
+	//	gr: way too slow to set for big files.
+	//	make a typed array
+	auto ArrayBuffer = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(FileContentsu8) );
+/*
+	auto ArrayBuffer = v8::ArrayBuffer::New( Params.mIsolate, FileContents.GetSize() );
 	auto& Isolate = *Params.mIsolate;
 	
 	//	like v8::GetArray
@@ -123,7 +127,7 @@ static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
 		auto ValueHandle = Number::New( &Isolate, Value );
 		ArrayHandle->Set( i, ValueHandle );
 	}
-	
+*/	
 	
 	return ArrayBuffer;
 }
@@ -441,13 +445,8 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	//	we have some more efficient parallel funcs for image conversion, so throw if not rgba for now
 	auto Meta = Pixels.GetMeta();
 	
-	auto Rgba8Buffer = v8::ArrayBuffer::New( &Params.GetIsolate(), Meta.GetDataSize() );
-	auto Rgba8BufferContents = Rgba8Buffer->GetContents();
-	auto Rgba8DataArray = GetRemoteArray( static_cast<uint8_t*>( Rgba8BufferContents.Data() ), Rgba8BufferContents.ByteLength() );
-	Rgba8DataArray.Copy( Pixels.GetPixelsArray() );
-
-	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
-	
+	auto& PixelsArray = Pixels.GetPixelsArray();
+	auto Rgba8 = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(PixelsArray) );
 	return Rgba8;
 }
 

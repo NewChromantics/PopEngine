@@ -69,6 +69,9 @@ function OnFailedNewFace(Error)
 }
 
 
+var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
+
+
 function Main()
 {
 	//Debug("log is working!", "2nd param");
@@ -76,7 +79,8 @@ function Main()
 	
 	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
 
-	let FaceProcessor = new Dlib();
+	Debug("DlibLandMarksdat = "+ DlibLandMarksdat.constructor.name );
+	let FaceProcessor = new Dlib(DlibLandMarksdat);
 	//try
 	{
 		Debug("Running find face...");

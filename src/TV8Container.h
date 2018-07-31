@@ -67,6 +67,11 @@ namespace v8
 	template<typename NUMBERTYPE>
 	Local<Array>	GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBERTYPE>&& Values);
 
+	//	get a specific typed/memory backed array
+	//	uint8_t -> uint8clampedarray
+	Local<Value>	GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values);
+	
+	
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const char* Str);

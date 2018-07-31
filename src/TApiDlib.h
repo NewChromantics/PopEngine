@@ -9,13 +9,23 @@ namespace ApiDlib
 	void	Bind(TV8Container& Container);
 }
 
-
+class TFace
+{
+public:
+	Soy::Rectf				mRect;
+	BufferArray<vec2f,100>	mFeatures;
+};
 
 //	gr: this may need to have a job queue, see if it's thread safe etc
 class TDlib
 {
 public:
-	void		GetFaceLandmarks(const SoyPixelsImpl& Pixels,ArrayBridge<vec2f>&& Landmarks);
+	void			GetFaceLandmarks(const SoyPixelsImpl& Pixels,ArrayBridge<TFace>&& Faces);
+
+	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);
+	
+public:
+	Array<uint8_t>		mFaceLandmarksDat;
 };
 
 
@@ -38,6 +48,9 @@ public:
 	
 	static v8::Local<v8::Value>				FindFace(const v8::CallbackInfo& Arguments);
 
+	
+
+	
 public:
 	v8::Persistent<v8::Object>	mHandle;
 	TV8Container*				mContainer;
