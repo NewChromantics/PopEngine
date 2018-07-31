@@ -53,6 +53,8 @@
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
+		EB0EA5632110AAF9008D6DAA /* Data_dlib in Resources */ = {isa = PBXBuildFile; fileRef = EB0EA5622110AAF9008D6DAA /* Data_dlib */; };
+		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
 		FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
@@ -176,6 +178,9 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
+		EB0EA5622110AAF9008D6DAA /* Data_dlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_dlib; sourceTree = "<group>"; };
+		EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDlib.cpp; path = src/TApiDlib.cpp; sourceTree = "<group>"; };
+		EB0EA5652110AB53008D6DAA /* TApiDlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDlib.h; path = src/TApiDlib.h; sourceTree = "<group>"; };
 		FB50C04A1A6ABD480011A9D9 /* array.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = array.hpp; path = src/array.hpp; sourceTree = "<group>"; };
 		FB50C04B1A6ABD480011A9D9 /* bufferarray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = bufferarray.hpp; path = src/bufferarray.hpp; sourceTree = "<group>"; };
 		FB50C04C1A6ABD480011A9D9 /* HeapArray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = HeapArray.hpp; path = src/HeapArray.hpp; sourceTree = "<group>"; };
@@ -313,6 +318,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				EB0EA5622110AAF9008D6DAA /* Data_dlib */,
 				BFCF8B562107552700EE7307 /* Data_Posenet */,
 				BF30550A1B56F553002B0892 /* Data */,
 				BF51EA4220ED83F6007443D8 /* DataOld */,
@@ -334,6 +340,8 @@
 				BF97592420E961190093B296 /* TApiOpencl.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
+				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
+				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF689AFE20D9A52E000BC812 /* TV8Container.cpp */,
 				BF689AFF20D9A52E000BC812 /* TV8Container.h */,
 				BF39256520E51C36005AE288 /* TV8Instance.cpp */,
@@ -509,6 +517,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF51EA4320ED83F7007443D8 /* DataOld in Resources */,
+				EB0EA5632110AAF9008D6DAA /* Data_dlib in Resources */,
 				BFCF8B572107552700EE7307 /* Data_Posenet in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 			);
@@ -527,6 +536,7 @@
 				BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */,
 				BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */,
 				FB2534DE1A974E8200A61590 /* PopTrack.mm in Sources */,
+				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
