@@ -16,7 +16,7 @@ let VertShaderSource = `
 	}
 `;
 
-let FrameFragShaderSource = LoadFileAsString("Data_Posenet/DrawFrameAndPose.frag");
+let FrameFragShaderSource = LoadFileAsString("Data_dlib/DrawFrameAndPose.frag");
 var FrameShader = null;
 var LastFrameImage = null;
 var LastFrameFeatures = null;
@@ -99,7 +99,8 @@ function Main()
 	let Window1 = new OpenglWindow("dlib");
 	Window1.OnRender = function(){	WindowRender(Window1);	};
 	
-	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
+	let FrameImage = new Image('Data_dlib/NataliePortman.jpg');
+	//FrameImage.Flip();
 	LastFrameImage = FrameImage;
 	
 	let FaceProcessor = new Dlib(DlibLandMarksdat);

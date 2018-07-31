@@ -217,14 +217,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	array2d<rgb_pixel> img;
 	img.set_size( Pixels.GetHeight(), Pixels.GetWidth() );
 	
-	auto NormaliseCoord = [&](const point& PositionPx)
-	{
-		vec2f Pos2( PositionPx.x(), PositionPx.y() );
-		Pos2.x /= Pixels.GetWidth();
-		Pos2.y /= Pixels.GetHeight();
-		return Pos2;
-	};
-	
+
 	for ( int y=0;	y<img.nr();	y++ )
 	{
 		auto Row = img[y];
@@ -252,9 +245,18 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	}
 	//load_image(img, argv[i]);
 	// Make the image larger so we can detect small faces.
-	std::Debug << "scaling up for pyramid..." << std::endl;
-	pyramid_up(img);
+	//std::Debug << "scaling up for pyramid..." << std::endl;
+	//pyramid_up(img);
 
+	//	use the resized image
+	auto NormaliseCoord = [&](const point& PositionPx)
+	{
+		vec2f Pos2( PositionPx.x(), PositionPx.y() );
+		Pos2.x /= img.nc();
+		Pos2.y /= img.nr();
+		return Pos2;
+	};
+	
 	// Now tell the face detector to give us a list of bounding boxes
 	// around all the faces in the image.
 	std::vector<rectangle> FaceRects = detector(img);

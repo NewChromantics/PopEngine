@@ -71,6 +71,8 @@ float DistanceToLine2(vec2 Position,vec2 Start,vec2 End)
 
 void main()
 {
+	vec2 FrameUv = vec2( uv.x, 1-uv.y );
+	//vec2 FrameUv = uv;
 	float Distances[LINE_COUNT];
 
 	float NearestDistance = 999;
@@ -78,7 +80,7 @@ void main()
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
-		Distances[i] = DistanceToLine2( uv, Line.xy, Line.zw );
+		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
 			LineScore = LineScores[i];
@@ -93,11 +95,11 @@ void main()
 	}
 	else if ( HasFrame )
 	{
-		gl_FragColor = texture( Frame, uv );
+		gl_FragColor = texture( Frame, FrameUv );
 	}
 	else
 	{
-		gl_FragColor = float4( uv, 0, 1 );
+		gl_FragColor = float4( FrameUv, 0, 1 );
 	}
 
 }
