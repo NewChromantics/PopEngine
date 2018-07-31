@@ -818,18 +818,20 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 	return v8::Undefined(Isolate);
 }
 
-template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3),const v8::CallbackInfo& Arguments)
+template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARGARRAY>
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3),ARGARRAY& Arguments,v8::Isolate* Isolate)
 {
 	if ( ShowImmediateFunctionCalls )
 		std::Debug << Context << std::endl;
-	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
-	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
-	auto Arg2 = GetGlValue<ARG2>( Arguments.mParams[2] );
-	auto Arg3 = GetGlValue<ARG3>( Arguments.mParams[3] );
+	auto Arg0 = GetGlValue<ARG0>( Arguments[0] );
+	auto Arg1 = GetGlValue<ARG1>( Arguments[1] );
+	auto Arg2 = GetGlValue<ARG2>( Arguments[2] );
+	auto Arg3 = GetGlValue<ARG3>( Arguments[3] );
+	if ( ShowImmediateFunctionCalls )
+		std::Debug << Context << "(" << Arg0 << "," << Arg1 << "," << Arg2 << "," << Arg3 << ")" << std::endl;
 	FunctionPtr( Arg0, Arg1, Arg2, Arg3 );
 	Opengl::IsOkay(Context);
-	return v8::Undefined(&Arguments.GetIsolate());
+	return v8::Undefined(Isolate);
 }
 
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4>
@@ -1361,12 +1363,12 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_viewport(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( "glViewport", glViewport, Arguments );
+	return Immediate_Func( "glViewport", glViewport, Arguments.mParams, &Arguments.GetIsolate() );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_scissor(const v8::CallbackInfo& Arguments)
 {
-	return Immediate_Func( "glScissor", glScissor, Arguments );
+	return Immediate_Func( "glScissor", glScissor, Arguments.mParams, &Arguments.GetIsolate() );
 }
 
 v8::Local<v8::Value> TWindowWrapper::Immediate_activeTexture(const v8::CallbackInfo& Arguments)
@@ -1391,20 +1393,64 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 	//		A GLintptr specifying an offset in the element array buffer. Must be a valid multiple of the size of the given type.
 	//	so we need to know the type... if it's not zero
 
-	auto mode = Arguments.mParams[0];
+	auto primitivemode = Arguments.mParams[0];
 	auto count = Arguments.mParams[1];
 	auto type = Arguments.mParams[2];
 	auto offset = Arguments.mParams[3];
 
 	//	here we need to verify type (eg. UNSIGNED_SHORT) matches the ARRAY_ELEMENT_BUFFER's type
-	auto TheType = GetGlValue<GLuint>(type);
-	
-	BufferArray<Local<Value>,3> GlArguments;
-	GlArguments.PushBack( mode );
-	GlArguments.PushBack( offset );
-	GlArguments.PushBack( count );
+	auto TheType = GetGlValue<GLenum>(type);
 
-	return Immediate_Func( "glDrawArrays", glDrawArrays, GlArguments, &Arguments.GetIsolate() );
+	GLint Program = GL_ASSET_INVALID;
+	glGetIntegerv( GL_CURRENT_PROGRAM, &Program );
+	Opengl::IsOkay("glGet(GL_CURRENT_PROGRAM)");
+	if ( Program == GL_ASSET_INVALID )
+		throw Soy::AssertException("Attempt to glDrawElements without a program bound");
+
+	//	validate program will do a dry-run of a render to see if everything is in it's current state
+	//	https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glValidateProgram.xhtml
+	glValidateProgram( Program );
+	Opengl::IsOkay("glValidateProgram");
+	GLint Validated = GL_FALSE;
+	glGetProgramiv(	Program, GL_VALIDATE_STATUS, &Validated );
+	Opengl::IsOkay("glGetProgramiv");
+	if ( Validated != GL_TRUE )
+	{
+		GLchar LogString[1000];
+		GLsizei Length = sizeofarray(LogString);
+		glGetProgramInfoLog( Program, Length, &Length, LogString );
+		Opengl::IsOkay("glGetProgramInfoLog");
+		LogString[Length-1] = '\0';
+		std::Debug << "Verification output: " << LogString << std::endl;
+		throw Soy::AssertException("glValidateProgram failed");
+	}
+	
+	
+	//	gr: current issue; draw elements errors, but drawarrays doesnt
+	static bool UseDrawElements = true;
+	
+	//	GL_INVALID_OPERATION is generated if a non-zero buffer object name is bound to an enabled array and the buffer object's data store is currently mapped.
+	
+	if ( UseDrawElements )
+	{
+		BufferArray<Local<Value>,4> GlArguments;
+		GlArguments.PushBack( primitivemode );
+		GlArguments.PushBack( count );
+		GlArguments.PushBack( type );
+		GlArguments.PushBack( offset );
+		
+		//	webgl call: .drawElements(e.TRIANGLES, 6, e.UNSIGNED_SHORT, 0)
+		//GLAPI void APIENTRY glDrawElements (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
+		return Immediate_Func( "glDrawElements", glDrawElements, GlArguments, &Arguments.GetIsolate() );
+	}
+	else
+	{
+		BufferArray<Local<Value>,3> GlArguments;
+		GlArguments.PushBack( primitivemode );
+		GlArguments.PushBack( offset );
+		GlArguments.PushBack( count );
+		return Immediate_Func( "glDrawArrays", glDrawArrays, GlArguments, &Arguments.GetIsolate() );
+	}
 }
 
 
