@@ -19,7 +19,26 @@ let VertShaderSource = `
 let FrameFragShaderSource = LoadFileAsString("Data_Posenet/DrawFrameAndPose.frag");
 var FrameShader = null;
 var LastFrameImage = null;
+var LastFrameFeatures = null;
 
+function GetFeatureLines(Features)
+{
+	let Lines = [];
+	let LineOffset = 1 / 400;
+	let PushFeatureLine = function(fx,fy)
+	{
+		let x0 = fx-LineOffset;
+		let x1 = fx+LineOffset;
+		let y0 = fy-LineOffset;
+		let y1 = fy+LineOffset;
+		Lines.push( [x0,y0,x1,y1] );
+	}
+	for ( let i=0;	Features!=null && i<Features.length;	i+=2 )
+	{
+		PushFeatureLine( Features[i+0], Features[i+1] );
+	}
+	return Lines;
+}
 
 function WindowRender(RenderTarget)
 {
@@ -37,7 +56,7 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("HasFrame", LastFrameImage!=null );
 			
 			const MAX_LINES = 100;
-			let PoseLines = GetPoseLines(LastPose);
+			let PoseLines = GetFeatureLines(LastFrameFeatures);
 			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
 			//Debug(PoseLines);
 			Shader.SetUniform("Lines", PoseLines );
@@ -59,7 +78,9 @@ function WindowRender(RenderTarget)
 
 function OnNewFace(FaceLandmarks)
 {
-	Debug("Got facelandmarks: ");
+	LastFrameFeatures = FaceLandmarks;
+	
+	Debug("Got facelandmarks: x" + 	FaceLandmarks.length );
 	Debug(FaceLandmarks);
 }
 
@@ -76,10 +97,11 @@ function Main()
 {
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("dlib");
+	Window1.OnRender = function(){	WindowRender(Window1);	};
 	
 	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
-
-	Debug("DlibLandMarksdat = "+ DlibLandMarksdat.constructor.name );
+	LastFrameImage = FrameImage;
+	
 	let FaceProcessor = new Dlib(DlibLandMarksdat);
 	//try
 	{

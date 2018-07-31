@@ -124,7 +124,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 			for ( int f=0;	f<Faces.GetSize();	f++ )
 			{
 				auto& FaceFeatures = Faces[f].mFeatures;
-				for ( int i=0;	i<Features.GetSize();	i++ )
+				for ( int i=0;	i<FaceFeatures.GetSize();	i++ )
 				{
 					Features.PushBack( FaceFeatures[i].x );
 					Features.PushBack( FaceFeatures[i].y );
@@ -216,6 +216,15 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	//	gr: switch to soypixels fast rgba->rgb conversion and copy rows!
 	array2d<rgb_pixel> img;
 	img.set_size( Pixels.GetHeight(), Pixels.GetWidth() );
+	
+	auto NormaliseCoord = [&](const point& PositionPx)
+	{
+		vec2f Pos2( PositionPx.x(), PositionPx.y() );
+		Pos2.x /= Pixels.GetWidth();
+		Pos2.y /= Pixels.GetHeight();
+		return Pos2;
+	};
+	
 	for ( int y=0;	y<img.nr();	y++ )
 	{
 		auto Row = img[y];
@@ -264,7 +273,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 		for ( int p=0;	p<PartCount;	p++ )
 		{
 			auto PositionPx = shape.part(p);
-			vec2f Position2( PositionPx.x(), PositionPx.y() );
+			auto Position2 = NormaliseCoord( PositionPx );
 			NewFace.mFeatures.PushBack( Position2 );
 		}
 		

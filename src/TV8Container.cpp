@@ -392,6 +392,13 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 		//  get the global object for this name
 		auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
 
+		if ( FunctionHandle->IsUndefined() )
+		{
+			std::stringstream Error;
+			Error << "Function " << FunctionName << " is undefined, not called.";
+			throw Soy::AssertException( Error.str() );
+		}
+		
 		//  run the func
 		auto Func = Local<Function>::Cast( FunctionHandle );
 		
