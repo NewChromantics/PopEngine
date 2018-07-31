@@ -614,6 +614,7 @@ v8::Local<v8::Value> TWindowWrapper::GetEnums(const v8::CallbackInfo& Params)
 	PUSH_ENUM( GL_RGBA32F );
 	PUSH_ENUM( GL_COLOR_ATTACHMENT0 );
 	PUSH_ENUM( GL_UNSIGNED_BYTE );
+	PUSH_ENUM( GL_UNSIGNED_SHORT );
 	PUSH_ENUM( GL_R32F );
 	PUSH_ENUM( GL_RED );
 	PUSH_ENUM( GL_POINTS );
@@ -763,7 +764,7 @@ const GLvoid* GetGlValue(Local<Value> Argument)
 	return Pointer;
 }
 
-static bool ShowImmediateFunctionCalls = false;
+static bool ShowImmediateFunctionCalls = true;
 
 template<typename RETURN,typename ARG0>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments,const ARG0& Arg0)
@@ -912,8 +913,8 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindBuffer(const v8::CallbackInfo
 v8::Local<v8::Value> TWindowWrapper::Immediate_bufferData(const v8::CallbackInfo& Arguments)
 {
 	auto target = GetGlValue<GLenum>( Arguments.mParams[0] );
-	auto usage = GetGlValue<GLenum>( Arguments.mParams[2] );
 	auto Arg1 = Arguments.mParams[1];
+	auto usage = GetGlValue<GLenum>( Arguments.mParams[2] );
 
 	if ( Arg1->IsNumber() )
 	{
@@ -922,22 +923,38 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bufferData(const v8::CallbackInfo
 		auto size = SizeValue->Uint32Value();
 		glBufferData( target, size, nullptr, usage );
 	}
-	//	gr: don't currently know if I can send a mix of ints and floats to gl buffer data for different things (vertex vs index)
-	//	so for now explicity get floats or uint16's
-	else if ( Arg1->IsFloat32Array() )
+	else if ( Arg1->IsFloat32Array() || Arg1->IsUint16Array() )
 	{
-		Array<float> Data;
-		v8::EnumArray( Arg1, GetArrayBridge(Data), "glBufferData" );
-		auto size = Data.GetDataSize();
-		glBufferData( target,  Data.GetDataSize(), Data.GetArray(), usage );
-	}
-	else if ( Arg1->IsUint16Array() )
-	{
-		Array<uint16_t> Data;
-		EnumArray<Uint16Array>( Arg1, GetArrayBridge(Data) );
-		//v8::EnumArray( Arg1, GetArrayBridge(Data), "glBufferData" );
-		auto size = Data.GetDataSize();
-		glBufferData( target,  Data.GetDataSize(), Data.GetArray(), usage );
+		//	webgl2 calls have these two additional params
+		auto srcOffset = 0;
+		auto length = 0;
+		
+		auto srcOffsetHandle = Arguments.mParams[3];
+		auto lengthHandle = Arguments.mParams[4];
+		if ( !srcOffsetHandle->IsUndefined() || !lengthHandle->IsUndefined() )
+		{
+			std::stringstream Error;
+			Error << "Need to handle srcoffset(" << v8::GetTypeName(srcOffsetHandle) << ") and length (" << v8::GetTypeName(lengthHandle) << ") in bufferdata";
+			throw Soy::AssertException(Error.str());
+		}
+		
+		//	gr: don't currently know if I can send a mix of ints and floats to gl buffer data for different things (vertex vs index)
+		//	so for now explicity get floats or uint16's
+		if ( Arg1->IsFloat32Array() )
+		{
+			Array<float> Data;
+			v8::EnumArray( Arg1, GetArrayBridge(Data), "glBufferData" );
+			auto size = Data.GetDataSize();
+			glBufferData( target, size, Data.GetArray(), usage );
+		}
+		else if ( Arg1->IsUint16Array() )
+		{
+			Array<uint16_t> Data;
+			EnumArray<Uint16Array>( Arg1, GetArrayBridge(Data) );
+			//v8::EnumArray( Arg1, GetArrayBridge(Data), "glBufferData" );
+			auto size = Data.GetDataSize();
+			glBufferData( target, size, Data.GetArray(), usage );
+		}
 	}
 	else
 	{
@@ -1281,14 +1298,14 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo
 	auto height = GetGlValue<GLsizei>( Arguments.mParams[3] );
 	auto format = GetGlValue<GLsizei>( Arguments.mParams[4] );
 	auto type = GetGlValue<GLint>( Arguments.mParams[5] );
-	auto OutputHandle = Arguments.mParams[6];
 	
 	//	we need to alloc a buffer to read into, then push it back to the output
 	Array<uint8_t> PixelBuffer;
 	auto PixelFormat = Opengl::GetDownloadPixelFormat(format);
 	auto ChannelCount = SoyPixelsFormat::GetChannelCount( PixelFormat );
 	auto TotalComponentCount = ChannelCount * width * height;
-	
+
+	auto OutputHandle = Arguments.mParams[6];
 	if ( !OutputHandle->IsNull() )
 	{
 		//	alloc buffer to read into
@@ -1305,6 +1322,12 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo
 	}
 	else if ( OutputHandle->IsFloat32Array() )
 	{
+		auto OffsetHandle = Arguments.mParams[7];
+		if ( !OffsetHandle->IsUndefined() )
+		{
+			throw Soy::AssertException("Need to handle offset of readpixels output");
+		}
+		
 		//	same formats, we can just copy
 		if ( type == GL_FLOAT )
 		{
@@ -1373,6 +1396,9 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 	auto type = Arguments.mParams[2];
 	auto offset = Arguments.mParams[3];
 
+	//	here we need to verify type (eg. UNSIGNED_SHORT) matches the ARRAY_ELEMENT_BUFFER's type
+	auto TheType = GetGlValue<GLuint>(type);
+	
 	BufferArray<Local<Value>,3> GlArguments;
 	GlArguments.PushBack( mode );
 	GlArguments.PushBack( offset );
