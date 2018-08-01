@@ -192,6 +192,8 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 	{
 		auto DeviceName = v8::GetString( Arguments[0] );
 		TMediaExtractorParams Params( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
+		Params.mForceNonPlanarOutput = false;
+		Params.mDiscardOldFrames = true;
 		NewWrapper->mExtractor = ::Platform::AllocCaptureExtractor( Params, nullptr );
 		NewWrapper->mExtractor->AllocStreamBuffer(0);
 		NewWrapper->mExtractor->Start(false);
@@ -274,7 +276,11 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 	PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
 	try
 	{
-		pImage->SetPixels( *Textures[0] );
+		//	convert pixels to RGB for face.
+		//	todo: move to JS call which gives a promise, or more likely, opengl shader for when we want just a rect of the image
+		SoyPixels RgbPixels( *Textures[0] );
+		RgbPixels.SetFormat( SoyPixelsFormat::RGB );
+		pImage->SetPixels( RgbPixels );
 		PixelBuffer->Unlock();
 	}
 	catch(std::exception& e)

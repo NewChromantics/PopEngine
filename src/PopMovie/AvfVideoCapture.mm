@@ -194,7 +194,7 @@ AvfVideoCapture::AvfVideoCapture(const TMediaExtractorParams& Params,std::shared
 	mForceNonPlanarOutput	( Params.mForceNonPlanarOutput )
 {
 	bool KeepOldFrames = !mDiscardOldFrames;
-	Run( Params.mFilename, TVideoQuality::High, KeepOldFrames );
+	Run( Params.mFilename, TVideoQuality::Low, KeepOldFrames );
 	StartStream();
 }
 

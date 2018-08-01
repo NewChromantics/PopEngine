@@ -207,41 +207,40 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	// landmark positions given an image and face bounding box.  Here we are just
 	// loading the model from the shape_predictor_68_face_landmarks.dat file you gave
 	// as a command line argument.
-	std::Debug << "loading landmarks data..." << std::endl;
-	shape_predictor sp;
-	imemstream LandmarkDataMemStream( mFaceLandmarksDat.GetArray(), mFaceLandmarksDat.GetDataSize() );
-	deserialize( sp, LandmarkDataMemStream );
+	//gr: load once
+	auto& sp = *mShapePredictor;
 
-	std::Debug << "converting pixels to rgb image..." << std::endl;
 	//	gr: switch to soypixels fast rgba->rgb conversion and copy rows!
 	array2d<rgb_pixel> img;
 	img.set_size( Pixels.GetHeight(), Pixels.GetWidth() );
 	
-
-	for ( int y=0;	y<img.nr();	y++ )
+	if ( Pixels.GetFormat() == SoyPixelsFormat::RGB )
 	{
-		auto Row = img[y];
-		auto* FirstDstPixel = &Row[0].red;
-		auto* FirstSrcPixel = &Pixels.GetPixelPtr( 0, y, 0 );
-		auto DstStep = 3;
-		auto SrcStep = Pixels.GetChannels();
-		for ( int x=0;	x<Row.nc();	x++ )
+		auto* ImgPixelsByte = &img.begin()->red;
+		SoyPixelsRemote imgPixels( ImgPixelsByte, Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetMeta().GetDataSize(), Pixels.GetFormat() );
+		imgPixels.Copy( Pixels );
+	}
+	else
+	{
+		std::Debug << "dlib converting " << Pixels.GetFormat() << " pixels to " << SoyPixelsFormat::RGB << "..." << std::endl;
+		for ( int y=0;	y<img.nr();	y++ )
 		{
-			FirstDstPixel[0] = FirstSrcPixel[0%SrcStep];
-			FirstDstPixel[1] = FirstSrcPixel[1%SrcStep];
-			FirstDstPixel[2] = FirstSrcPixel[2%SrcStep];
-			FirstSrcPixel += SrcStep;
-			FirstDstPixel += DstStep;
+			auto Row = img[y];
+			auto* FirstDstPixel = &Row[0].red;
+			auto* FirstSrcPixel = &Pixels.GetPixelPtr( 0, y, 0 );
+			
+			auto DstStep = 3;
+			auto SrcStep = Pixels.GetChannels();
+			
+			for ( int x=0;	x<Row.nc();	x++ )
+			{
+				FirstDstPixel[0] = FirstSrcPixel[0%SrcStep];
+				FirstDstPixel[1] = FirstSrcPixel[1%SrcStep];
+				FirstDstPixel[2] = FirstSrcPixel[2%SrcStep];
+				FirstSrcPixel += SrcStep;
+				FirstDstPixel += DstStep;
+			}
 		}
-		/*
-		for ( int x=0;	x<Row.nc();	x++ )
-		{
-			auto& Pixel = FirstPixel[x];
-			Pixel.red = Pixels.GetPixel( x, y, 0 );
-			Pixel.green = Pixels.GetPixel( x, y, 1 );
-			Pixel.blue = Pixels.GetPixel( x, y, 2 );
-		}
-		 */
 	}
 	//load_image(img, argv[i]);
 	// Make the image larger so we can detect small faces.
@@ -293,6 +292,12 @@ void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes)
 		auto Byte = LandmarksDatBytes[i];
 		mFaceLandmarksDat.PushBack( size_cast<uint8_t>(Byte) );
 	}
+
+	std::Debug << "loading landmarks data..." << std::endl;
+	mShapePredictor.reset( new dlib::shape_predictor() );
+	auto& sp = *mShapePredictor;
+	imemstream LandmarkDataMemStream( mFaceLandmarksDat.GetArray(), mFaceLandmarksDat.GetDataSize() );
+	deserialize( sp, LandmarkDataMemStream );
 
 }
 

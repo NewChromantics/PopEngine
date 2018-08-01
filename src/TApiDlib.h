@@ -9,12 +9,18 @@ namespace ApiDlib
 	void	Bind(TV8Container& Container);
 }
 
+namespace dlib
+{
+	class shape_predictor;
+}
+
 class TFace
 {
 public:
 	Soy::Rectf				mRect;
 	BufferArray<vec2f,100>	mFeatures;
 };
+
 
 //	gr: this may need to have a job queue, see if it's thread safe etc
 class TDlib
@@ -23,9 +29,10 @@ public:
 	void			GetFaceLandmarks(const SoyPixelsImpl& Pixels,ArrayBridge<TFace>&& Faces);
 
 	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);
-	
+
 public:
 	Array<uint8_t>		mFaceLandmarksDat;
+	std::shared_ptr<dlib::shape_predictor>	mShapePredictor;	//	preloaded/deserliased shape predictor
 };
 
 
