@@ -101,19 +101,19 @@ function EnumDevices(DeviceNames)
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = new Dlib(DlibLandMarksdat);
-var CurrentProcessingImage = null;
+var CurrentProcessingImageCount = 0;
 
 function OnNewFrame(NewFrameImage)
 {
 	//	temp work throttler
-	if ( CurrentProcessingImage != null )
+	if ( CurrentProcessingImageCount > 5 )
 		return;
-	CurrentProcessingImage = NewFrameImage;
+	CurrentProcessingImageCount++;
 	Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
 	let OnFace = function(Face)
 	{
-		CurrentProcessingImage = null;
+		CurrentProcessingImageCount--;
 		OnNewFace(Face,NewFrameImage);
 	}
 	

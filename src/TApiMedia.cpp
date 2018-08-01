@@ -280,6 +280,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		//	todo: move to JS call which gives a promise, or more likely, opengl shader for when we want just a rect of the image
 		SoyPixels RgbPixels( *Textures[0] );
 		RgbPixels.SetFormat( SoyPixelsFormat::RGB );
+		RgbPixels.ResizeFastSample( 640, 480 );
 		pImage->SetPixels( RgbPixels );
 		PixelBuffer->Unlock();
 	}

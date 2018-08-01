@@ -85,6 +85,26 @@ Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
 	return ConstructorFunc;
 }
 
+SoyWorkerJobThread& TDlibWrapper::GetDlibJobQueue()
+{
+	//	get queue with least jobs
+	SoyWorkerJobThread* Queues[6] =
+	{
+		&mDlibJobQueue1,
+		&mDlibJobQueue2,
+		&mDlibJobQueue3,
+		&mDlibJobQueue4,
+		&mDlibJobQueue5,
+		&mDlibJobQueue6
+	};
+
+	auto LeastJobQueue = 0;
+	for ( int i=0;	i<sizeofarray(Queues);	i++ )
+		if ( Queues[i]->GetJobCount() < Queues[LeastJobQueue]->GetJobCount() )
+			LeastJobQueue = i;
+	
+	return *Queues[LeastJobQueue];
+}
 
 
 template<typename TYPE>
@@ -161,7 +181,8 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 			Container->QueueScoped( OnError );
 		}
 	};
-	auto& Dlib = This.mDlibJobQueue;
+	
+	auto& Dlib = This.GetDlibJobQueue();
 	Dlib.PushJob( RunFaceDetector );
 
 	//	return the promise
@@ -197,18 +218,29 @@ public:
 
 void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Faces)
 {
-	using namespace dlib;
+	Soy::TScopeTimerPrint Timer_FindFace("TDlib::GetFaceLandmarks",10);
 
+	using namespace dlib;
+#define COPY_DETECTORS
+	
+#if defined(COPY_DETECTORS)
+	auto detector = *mFaceDetector;
+#else
+	auto& detector = *mFaceDetector;
+#endif
 	// We need a face detector.  We will use this to get bounding boxes for
 	// each face in an image.
-	auto detector = get_frontal_face_detector();
 	
 	// And we also need a shape_predictor.  This is the tool that will predict face
 	// landmark positions given an image and face bounding box.  Here we are just
 	// loading the model from the shape_predictor_68_face_landmarks.dat file you gave
 	// as a command line argument.
 	//gr: load once
+#if defined(COPY_DETECTORS)
+	auto sp = *mShapePredictor;
+#else
 	auto& sp = *mShapePredictor;
+#endif
 
 	//	gr: switch to soypixels fast rgba->rgb conversion and copy rows!
 	array2d<rgb_pixel> img;
@@ -216,6 +248,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	
 	if ( Pixels.GetFormat() == SoyPixelsFormat::RGB )
 	{
+		Soy::TScopeTimerPrint Timer_1("FindFace: Copying pixels to img",10);
 		auto* ImgPixelsByte = &img.begin()->red;
 		SoyPixelsRemote imgPixels( ImgPixelsByte, Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetMeta().GetDataSize(), Pixels.GetFormat() );
 		imgPixels.Copy( Pixels );
@@ -258,18 +291,26 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	
 	// Now tell the face detector to give us a list of bounding boxes
 	// around all the faces in the image.
-	std::vector<rectangle> FaceRects = detector(img);
+	Soy::TScopeTimerPrint Timer_2("FindFace: detector(img)",10);
+	std::vector<rect_detection> FaceRects;
+	auto adjust_threshold = 0;
+	detector(img, FaceRects, adjust_threshold);
+	Timer_2.Stop();
+	
 	for ( int f=0;	f<FaceRects.size();	f++ )
 	{
-		std::Debug << "Extracting face " << f << "/" << FaceRects.size() << " landmarks..." << std::endl;
+		auto& FaceDetected = FaceRects[f];
+		auto& FaceRect = FaceDetected.rect;
+		std::Debug << "Extracting face " << f << "/" << FaceRects.size() << " landmarks... Score = " << FaceDetected.detection_confidence << std::endl;
 		
-		// Now we will go ask the shape_predictor to tell us the pose of
-		// each face we detected.
-		auto& FaceRect = FaceRects[f];
+		Soy::TScopeTimerPrint Timer_3("FindFace: get shape(img)",1);
 		full_object_detection shape = sp(img, FaceRect);
+		Timer_3.Stop();
+		
 		TFace NewFace;
 		NewFace.mRect = Soy::Rectf( FaceRect.left(), FaceRect.top(), FaceRect.width(), FaceRect.height() );
 			
+		Soy::TScopeTimerPrint Timer_4("FindFace: getting parts",1);
 		auto PartCount = shape.num_parts();
 		for ( int p=0;	p<PartCount;	p++ )
 		{
@@ -277,6 +318,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 			auto Position2 = NormaliseCoord( PositionPx );
 			NewFace.mFeatures.PushBack( Position2 );
 		}
+		Timer_4.Stop();
 		
 		Faces.PushBack(NewFace);
 	}
@@ -293,6 +335,18 @@ void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes)
 		mFaceLandmarksDat.PushBack( size_cast<uint8_t>(Byte) );
 	}
 
+	std::Debug << "loading facedetector data..." << std::endl;
+	mFaceDetector.reset( new dlib::frontal_face_detector() );
+	auto& fd = *mFaceDetector;
+	fd = dlib::get_frontal_face_detector();
+/*
+	get_frontal_face_detector() );
+	auto& sp = *mShapePredictor;
+	imemstream LandmarkDataMemStream( mFaceLandmarksDat.GetArray(), mFaceLandmarksDat.GetDataSize() );
+	deserialize( sp, LandmarkDataMemStream );
+	auto detector = get_frontal_face_detector();
+*/
+	
 	std::Debug << "loading landmarks data..." << std::endl;
 	mShapePredictor.reset( new dlib::shape_predictor() );
 	auto& sp = *mShapePredictor;

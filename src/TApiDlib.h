@@ -9,9 +9,12 @@ namespace ApiDlib
 	void	Bind(TV8Container& Container);
 }
 
+
+#include <dlib/image_processing/frontal_face_detector.h>
 namespace dlib
 {
 	class shape_predictor;
+	//class frontal_face_detector;
 }
 
 class TFace
@@ -32,7 +35,10 @@ public:
 
 public:
 	Array<uint8_t>		mFaceLandmarksDat;
-	std::shared_ptr<dlib::shape_predictor>	mShapePredictor;	//	preloaded/deserliased shape predictor
+
+	//	preloaded data
+	std::shared_ptr<dlib::shape_predictor>			mShapePredictor;
+	std::shared_ptr<dlib::frontal_face_detector>	mFaceDetector;
 };
 
 
@@ -42,9 +48,19 @@ class TDlibWrapper
 public:
 	TDlibWrapper() :
 		mContainer		( nullptr ),
-		mDlibJobQueue	( "DLibJobQueue")
+		mDlibJobQueue1	( "DLibJobQueue1"),
+		mDlibJobQueue2	( "DLibJobQueue2"),
+		mDlibJobQueue3	( "DLibJobQueue3"),
+		mDlibJobQueue4	( "DLibJobQueue4"),
+		mDlibJobQueue5	( "DLibJobQueue5"),
+		mDlibJobQueue6	( "DLibJobQueue6")
 	{
-		mDlibJobQueue.Start();
+		mDlibJobQueue1.Start();
+		mDlibJobQueue2.Start();
+		mDlibJobQueue3.Start();
+		mDlibJobQueue4.Start();
+		mDlibJobQueue5.Start();
+		mDlibJobQueue6.Start();
 	}
 	~TDlibWrapper();
 	
@@ -55,14 +71,20 @@ public:
 	
 	static v8::Local<v8::Value>				FindFace(const v8::CallbackInfo& Arguments);
 
-	
-
+private:
+	SoyWorkerJobThread&						GetDlibJobQueue();
 	
 public:
 	v8::Persistent<v8::Object>	mHandle;
 	TV8Container*				mContainer;
 
+private:
 	TDlib						mDlib;
-	SoyWorkerJobThread			mDlibJobQueue;
+	SoyWorkerJobThread			mDlibJobQueue1;
+	SoyWorkerJobThread			mDlibJobQueue2;
+	SoyWorkerJobThread			mDlibJobQueue3;
+	SoyWorkerJobThread			mDlibJobQueue4;
+	SoyWorkerJobThread			mDlibJobQueue5;
+	SoyWorkerJobThread			mDlibJobQueue6;
 };
 
