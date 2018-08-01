@@ -30,7 +30,11 @@ class TDlib
 {
 public:
 	void			GetFaceLandmarks(const SoyPixelsImpl& Pixels,ArrayBridge<TFace>&& Faces);
+	TFace			GetFaceLandmarks(const SoyPixelsImpl& Pixels,Soy::Rectf FaceRect);
+	TFace			GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::Rectf FaceRect);
 
+	
+	
 	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);
 
 public:
@@ -54,7 +58,8 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	
-	static v8::Local<v8::Value>				FindFace(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				FindFaces(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				FindFaceFeatures(const v8::CallbackInfo& Arguments);
 
 private:
 	SoyWorkerJobThread&						GetDlibJobQueue();

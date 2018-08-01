@@ -11,7 +11,8 @@
 
 using namespace v8;
 
-const char FindFace_FunctionName[] = "FindFace";
+const char FindFaces_FunctionName[] = "FindFaces";
+const char FindFaceFeatures_FunctionName[] = "FindFaceFeatures";
 
 
 void ApiDlib::Bind(TV8Container& Container)
@@ -105,7 +106,8 @@ Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
 	InstanceTemplate->SetInternalFieldCount(2);
 	
 	//	add members
-	Container.BindFunction<FindFace_FunctionName>( InstanceTemplate, FindFace );
+	Container.BindFunction<FindFaces_FunctionName>( InstanceTemplate, FindFaces );
+	Container.BindFunction<FindFaceFeatures_FunctionName>( InstanceTemplate, FindFaceFeatures );
 	
 	return ConstructorFunc;
 }
@@ -134,7 +136,7 @@ v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isola
 	return PersistentHandle;
 }
 
-v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TDlibWrapper>( Arguments.This() );
@@ -210,6 +212,83 @@ v8::Local<v8::Value> TDlibWrapper::FindFace(const v8::CallbackInfo& Params)
 }
 
 
+v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TDlibWrapper>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	auto* pThis = &This;
+	
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	
+	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
+	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
+	auto* Container = &Params.mContainer;
+
+	BufferArray<float,4> RectFloats;
+	v8::EnumArray( Arguments[1], GetArrayBridge(RectFloats), "FindFaceFeatures(img,rect)" );
+	Soy::Rectf TargetRect( RectFloats[0], RectFloats[1], RectFloats[2], RectFloats[3] );
+
+	
+	auto RunFaceDetector = [=]
+	{
+		try
+		{
+			auto& Pixels = TargetImage->GetPixels();
+			auto Face = pThis->mDlib.GetFaceLandmarks(Pixels, TargetRect );
+			
+			//	temp
+			BufferArray<float,1000> Features;
+			auto& FaceFeatures = Face.mFeatures;
+			for ( int i=0;	i<FaceFeatures.GetSize();	i++ )
+			{
+				Features.PushBack( FaceFeatures[i].x );
+				Features.PushBack( FaceFeatures[i].y );
+			}
+			
+			auto OnCompleted = [=](Local<Context> Context)
+			{
+				//	return face points here
+				//	gr: can't do this unless we're in the javascript thread...
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Features) );
+				ResolverLocal->Resolve( LandmarksArray );
+				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
+				//ResolverLocal->Resolve( Message );
+			};
+			
+			//	queue the completion, doesn't need to be done instantly
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				//	gr: does this need to be an exception? string?
+				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
+				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
+				//ResolverLocal->Reject( Exception );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
+	
+	auto& Dlib = This.GetDlibJobQueue();
+	Dlib.PushJob( RunFaceDetector );
+	
+	//	return the promise
+	auto Promise = Resolver->GetPromise();
+	return Promise;
+}
+
+
 #include <streambuf>
 #include <istream>
 
@@ -233,35 +312,42 @@ public:
 	}
 };
 
-
-
-void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Faces)
+float Range(float Min, float Max, float Value )
 {
-	Soy::TScopeTimerPrint Timer_FindFace("TDlib::GetFaceLandmarks",10);
+	return (Value-Min) / (Max-Min);
+}
 
+float Lerp(float Min,float Max,float Time)
+{
+	return Min + ( Time * (Max-Min) );
+}
+
+void Normalise(Soy::Rectf& Child,const Soy::Rectf& Parent)
+{
+	auto l = Range( Parent.Left(), Parent.Right(), Child.Left() );
+	auto r = Range( Parent.Left(), Parent.Right(), Child.Right() );
+	auto t = Range( Parent.Top(), Parent.Bottom(), Child.Top() );
+	auto b = Range( Parent.Top(), Parent.Bottom(), Child.Bottom() );
+	auto w = r-l;
+	auto h = b-t;
+	Child = Soy::Rectf( l, t, w, h );
+}
+
+void ScaleUp(Soy::Rectf& Normalised,const Soy::Rectf& Parent)
+{
+	auto l = Lerp( Parent.Left(), Parent.Right(), Normalised.Left() );
+	auto r = Lerp( Parent.Left(), Parent.Right(), Normalised.Right() );
+	auto t = Lerp( Parent.Top(), Parent.Bottom(), Normalised.Top() );
+	auto b = Lerp( Parent.Top(), Parent.Bottom(), Normalised.Bottom() );
+	auto w = r-l;
+	auto h = b-t;
+	Normalised = Soy::Rectf( l, t, w, h );
+}
+
+
+dlib::array2d<dlib::rgb_pixel> GetImageFromPixels(const SoyPixelsImpl &Pixels)
+{
 	using namespace dlib;
-#define COPY_DETECTORS
-	
-#if defined(COPY_DETECTORS)
-	auto detector = *mFaceDetector;
-#else
-	auto& detector = *mFaceDetector;
-#endif
-	// We need a face detector.  We will use this to get bounding boxes for
-	// each face in an image.
-	
-	// And we also need a shape_predictor.  This is the tool that will predict face
-	// landmark positions given an image and face bounding box.  Here we are just
-	// loading the model from the shape_predictor_68_face_landmarks.dat file you gave
-	// as a command line argument.
-	//gr: load once
-#if defined(COPY_DETECTORS)
-	auto sp = *mShapePredictor;
-#else
-	auto& sp = *mShapePredictor;
-#endif
-
-	//	gr: switch to soypixels fast rgba->rgb conversion and copy rows!
 	array2d<rgb_pixel> img;
 	img.set_size( Pixels.GetHeight(), Pixels.GetWidth() );
 	
@@ -294,17 +380,51 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 			}
 		}
 	}
+	return img;
+}
+
+
+void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Faces)
+{
+	Soy::TScopeTimerPrint Timer_FindFace("TDlib::GetFaceLandmarks",10);
+
+	using namespace dlib;
+#define COPY_DETECTORS
+	
+#if defined(COPY_DETECTORS)
+	auto detector = *mFaceDetector;
+#else
+	auto& detector = *mFaceDetector;
+#endif
+	// We need a face detector.  We will use this to get bounding boxes for
+	// each face in an image.
+	
+	// And we also need a shape_predictor.  This is the tool that will predict face
+	// landmark positions given an image and face bounding box.  Here we are just
+	// loading the model from the shape_predictor_68_face_landmarks.dat file you gave
+	// as a command line argument.
+	//gr: load once
+#if defined(COPY_DETECTORS)
+	auto sp = *mShapePredictor;
+#else
+	auto& sp = *mShapePredictor;
+#endif
+
+	auto img = GetImageFromPixels( Pixels );
+
 	//load_image(img, argv[i]);
 	// Make the image larger so we can detect small faces.
 	//std::Debug << "scaling up for pyramid..." << std::endl;
 	//pyramid_up(img);
 
 	//	use the resized image
+	auto Width = static_cast<float>(img.nc());
+	auto Height = static_cast<float>(img.nr());
 	auto NormaliseCoord = [&](const point& PositionPx)
 	{
 		vec2f Pos2( PositionPx.x(), PositionPx.y() );
-		Pos2.x /= img.nc();
-		Pos2.y /= img.nr();
+		Pos2.x /= Width;
+		Pos2.y /= Height;
 		return Pos2;
 	};
 	
@@ -326,25 +446,74 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 		full_object_detection shape = sp(img, FaceRect);
 		Timer_3.Stop();
 		
-		TFace NewFace;
-		NewFace.mRect = Soy::Rectf( FaceRect.left(), FaceRect.top(), FaceRect.width(), FaceRect.height() );
-			
-		Soy::TScopeTimerPrint Timer_4("FindFace: getting parts",1);
-		auto PartCount = shape.num_parts();
-		for ( int p=0;	p<PartCount;	p++ )
-		{
-			auto PositionPx = shape.part(p);
-			auto Position2 = NormaliseCoord( PositionPx );
-			NewFace.mFeatures.PushBack( Position2 );
-		}
-		Timer_4.Stop();
+		Soy::Rectf FaceRectf( FaceRect.left(), FaceRect.top(), FaceRect.width(), FaceRect.height() );
+		Soy::Rectf ImageRect( 0, 0, Width, Height );
+		Normalise( FaceRectf, ImageRect );
 		
+		TFace NewFace = GetFaceLandmarks( img, FaceRectf );
 		Faces.PushBack(NewFace);
 	}
 
 	std::Debug << "found " << Faces.GetSize() << " faces" << std::endl;
 }
-					 
+
+
+TFace TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,Soy::Rectf FaceRect)
+{
+	auto img = GetImageFromPixels( Pixels );
+	
+	return GetFaceLandmarks( img, FaceRect );
+}
+
+
+
+TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::Rectf FaceRectf)
+{
+	using namespace dlib;
+	
+#if defined(COPY_DETECTORS)
+	auto sp = *mShapePredictor;
+#else
+	auto& sp = *mShapePredictor;
+#endif
+	auto Width = static_cast<float>(Image.nc());
+	auto Height = static_cast<float>(Image.nr());
+	
+	//	use the resized image
+	auto NormaliseCoord = [&](const point& PositionPx)
+	{
+		vec2f Pos2( PositionPx.x(), PositionPx.y() );
+		Pos2.x /= Width;
+		Pos2.y /= Height;
+		return Pos2;
+	};
+	
+	TFace NewFace;
+	NewFace.mRect = FaceRectf;
+
+	Soy::Rectf ImageRect( 0, 0, Width, Height );
+	ScaleUp( FaceRectf, ImageRect );
+	
+	rectangle FaceRect( FaceRectf.Left(), FaceRectf.Top(), FaceRectf.Right(), FaceRectf.Bottom() );
+	
+	Soy::TScopeTimerPrint Timer_3("FindFace: get shape(img)",1);
+	full_object_detection shape = sp( Image, FaceRect );
+	Timer_3.Stop();
+		
+	
+	auto PartCount = shape.num_parts();
+	for ( int p=0;	p<PartCount;	p++ )
+	{
+		auto PositionPx = shape.part(p);
+		auto Position2 = NormaliseCoord( PositionPx );
+		NewFace.mFeatures.PushBack( Position2 );
+	}
+	
+	return NewFace;
+}
+
+
+
 void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes)
 {
 	mFaceLandmarksDat.Clear();

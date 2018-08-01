@@ -37,6 +37,7 @@ function GetFeatureLines(Face)
 	}
 	if ( Face != null )
 		Face.Features.forEach( PushFeatureLine );
+	Debug(Lines);
 	return Lines;
 }
 
@@ -94,7 +95,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 		PushFeature( FaceLandmarks[i+0], FaceLandmarks[i+1] );
 	}
 	
-	Debug("Got face: x" + Face.Features.length );
+	Debug("Got face: x" + Face.Features.length + " features" );
 	
 	if ( SaveFilename != undefined )
 	{
@@ -127,7 +128,7 @@ var CurrentProcessingImageCount = 0;
 function OnNewFrame(NewFrameImage,SaveFilename)
 {
 	//	temp work throttler
-	if ( CurrentProcessingImageCount > 5 )
+	if ( CurrentProcessingImageCount > DlibThreadCount )
 		return;
 	CurrentProcessingImageCount++;
 	Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
@@ -138,7 +139,10 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
 	
-	FaceProcessor.FindFace(NewFrameImage)
+	let FaceRect = [0,0,1,1];
+	
+	FaceProcessor.FindFaces(NewFrameImage)
+	//FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
 	.then( OnFace )
 	.catch( OnFailedNewFace );
 }
