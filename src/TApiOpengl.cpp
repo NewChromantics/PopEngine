@@ -83,7 +83,7 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		return;
 	}
 	
-	if ( Arguments.Length() != 1 )
+	if ( Arguments.Length() < 1 )
 	{
 		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "missing arg 0 (window name)"));
 		Arguments.GetReturnValue().Set(Exception);
@@ -105,7 +105,10 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	
 	TOpenglParams Params;
 	Params.mDoubleBuffer = false;
-	Params.mAutoRedraw = false;
+	Params.mAutoRedraw = true;
+	if ( Arguments[1]->IsBoolean() )
+		Params.mAutoRedraw = Arguments[1].As<Boolean>()->BooleanValue();
+	
 	NewWindow->mWindow.reset( new TRenderWindow( *WindowName, Params ) );
 	
 	//	store persistent handle to the javascript object
