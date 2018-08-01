@@ -46,22 +46,7 @@ public:
 class TDlibWrapper
 {
 public:
-	TDlibWrapper() :
-		mContainer		( nullptr ),
-		mDlibJobQueue1	( "DLibJobQueue1"),
-		mDlibJobQueue2	( "DLibJobQueue2"),
-		mDlibJobQueue3	( "DLibJobQueue3"),
-		mDlibJobQueue4	( "DLibJobQueue4"),
-		mDlibJobQueue5	( "DLibJobQueue5"),
-		mDlibJobQueue6	( "DLibJobQueue6")
-	{
-		mDlibJobQueue1.Start();
-		mDlibJobQueue2.Start();
-		mDlibJobQueue3.Start();
-		mDlibJobQueue4.Start();
-		mDlibJobQueue5.Start();
-		mDlibJobQueue6.Start();
-	}
+	TDlibWrapper(size_t ThreadCount);
 	~TDlibWrapper();
 	
 	
@@ -80,11 +65,6 @@ public:
 
 private:
 	TDlib						mDlib;
-	SoyWorkerJobThread			mDlibJobQueue1;
-	SoyWorkerJobThread			mDlibJobQueue2;
-	SoyWorkerJobThread			mDlibJobQueue3;
-	SoyWorkerJobThread			mDlibJobQueue4;
-	SoyWorkerJobThread			mDlibJobQueue5;
-	SoyWorkerJobThread			mDlibJobQueue6;
+	Array<std::shared_ptr<SoyWorkerJobThread>>	mDlibJobQueues;
 };
 

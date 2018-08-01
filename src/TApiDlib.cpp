@@ -20,6 +20,23 @@ void ApiDlib::Bind(TV8Container& Container)
 }
 
 
+TDlibWrapper::TDlibWrapper(size_t ThreadCount) :
+	mContainer		( nullptr )
+{
+	if ( ThreadCount < 1 )
+		ThreadCount = 1;
+
+	for ( int i=0;	i<ThreadCount;	i++ )
+	{
+		std::stringstream Name;
+		Name << "Dlib Job Queue " << i;
+		std::shared_ptr<SoyWorkerJobThread> Queue( new SoyWorkerJobThread(Name.str() ) );
+		mDlibJobQueues.PushBack(Queue);
+		Queue->Start();
+	}
+}
+
+
 void TDlibWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
 {
 	using namespace v8;
@@ -35,11 +52,19 @@ void TDlibWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argume
 	auto This = Arguments.This();
 	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
 	
+	auto ThreadCountArg = Arguments[1];
+	auto LandmarksDatArg = Arguments[0];
+	
+	size_t ThreadCount = 1;
+	if ( ThreadCountArg->IsNumber() )
+		ThreadCount = ThreadCountArg.As<Number>()->Uint32Value();
+	
+	
 	//	alloc window
 	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
 	//		but it also needs to know of the V8container to run stuff
 	//		cyclic hell!
-	auto* NewWrapper = new TDlibWrapper();
+	auto* NewWrapper = new TDlibWrapper(ThreadCount);
 	
 	//	store persistent handle to the javascript object
 	NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
@@ -47,7 +72,7 @@ void TDlibWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argume
 
 	//	first argument is the landmarks data as bytes
 	Array<int> LandmarksDatBytes;
-	v8::EnumArray( Arguments[0], GetArrayBridge(LandmarksDatBytes), "DLib arg0 (shape_predictor_68_face_landmarks.dat)" );
+	v8::EnumArray( LandmarksDatArg, GetArrayBridge(LandmarksDatBytes), "DLib arg0 (shape_predictor_68_face_landmarks.dat)" );
 	NewWrapper->mDlib.SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksDatBytes) );
 	
 	
@@ -88,22 +113,16 @@ Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
 SoyWorkerJobThread& TDlibWrapper::GetDlibJobQueue()
 {
 	//	get queue with least jobs
-	SoyWorkerJobThread* Queues[6] =
-	{
-		&mDlibJobQueue1,
-		&mDlibJobQueue2,
-		&mDlibJobQueue3,
-		&mDlibJobQueue4,
-		&mDlibJobQueue5,
-		&mDlibJobQueue6
-	};
-
 	auto LeastJobQueue = 0;
-	for ( int i=0;	i<sizeofarray(Queues);	i++ )
-		if ( Queues[i]->GetJobCount() < Queues[LeastJobQueue]->GetJobCount() )
+	for ( int i=0;	i<mDlibJobQueues.GetSize();	i++ )
+	{
+		auto& Queue = *mDlibJobQueues[i];
+		auto& BestQueue = *mDlibJobQueues[LeastJobQueue];
+		if ( Queue.GetJobCount() < BestQueue.GetJobCount() )
 			LeastJobQueue = i;
+	}
 	
-	return *Queues[LeastJobQueue];
+	return *mDlibJobQueues[LeastJobQueue];
 }
 
 
