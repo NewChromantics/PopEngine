@@ -19,24 +19,24 @@ let VertShaderSource = `
 let FrameFragShaderSource = LoadFileAsString("Data_dlib/DrawFrameAndPose.frag");
 var FrameShader = null;
 var LastFrameImage = null;
-var LastFrameFeatures = null;
+var LastFace = null;
 
-function GetFeatureLines(Features)
+function GetFeatureLines(Face)
 {
 	let Lines = [];
 	let LineOffset = 1 / 400;
-	let PushFeatureLine = function(fx,fy)
+	let PushFeatureLine = function(Feature)
 	{
+		let fx = Feature.x;
+		let fy = Feature.y;
 		let x0 = fx-LineOffset;
 		let x1 = fx+LineOffset;
 		let y0 = fy-LineOffset;
 		let y1 = fy+LineOffset;
 		Lines.push( [x0,y0,x1,y1] );
 	}
-	for ( let i=0;	Features!=null && i<Features.length;	i+=2 )
-	{
-		PushFeatureLine( Features[i+0], Features[i+1] );
-	}
+	if ( Face != null )
+		Face.Features.forEach( PushFeatureLine );
 	return Lines;
 }
 
@@ -56,7 +56,7 @@ function WindowRender(RenderTarget)
 			Shader.SetUniform("HasFrame", LastFrameImage!=null );
 			
 			const MAX_LINES = 100;
-			let PoseLines = GetFeatureLines(LastFrameFeatures);
+			let PoseLines = GetFeatureLines(LastFace);
 			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
 			//Debug(PoseLines);
 			Shader.SetUniform("Lines", PoseLines );
@@ -76,13 +76,33 @@ function WindowRender(RenderTarget)
 }
 
 
-function OnNewFace(FaceLandmarks,FaceImage)
+function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 {
 	LastFrameImage = FaceImage;
-	LastFrameFeatures = FaceLandmarks;
 	
-	Debug("Got facelandmarks: x" + 	FaceLandmarks.length );
-	Debug(FaceLandmarks);
+	//	make a face
+	let Face = {};
+	Face.Features = [];
+	let PushFeature = function(fx,fy)
+	{
+		let f = { x:fx, y:fy };
+		Face.Features.push( f );
+	}
+	
+	for ( let i=0;	i<FaceLandmarks.length;	i+=2 )
+	{
+		PushFeature( FaceLandmarks[i+0], FaceLandmarks[i+1] );
+	}
+	
+	Debug("Got face: x" + Face.Features.length );
+	
+	if ( SaveFilename != undefined )
+	{
+		let FaceJson = JSON.stringify( Face, null, '\t' );
+		WriteStringToFile( SaveFilename, FaceJson );
+	}
+	
+	LastFace = Face;
 }
 
 function OnFailedNewFace(Error)
@@ -99,11 +119,12 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
+var DlibThreadCount = 1;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
-var FaceProcessor = new Dlib(DlibLandMarksdat);
+var FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 var CurrentProcessingImageCount = 0;
 
-function OnNewFrame(NewFrameImage)
+function OnNewFrame(NewFrameImage,SaveFilename)
 {
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > 5 )
@@ -114,7 +135,7 @@ function OnNewFrame(NewFrameImage)
 	let OnFace = function(Face)
 	{
 		CurrentProcessingImageCount--;
-		OnNewFace(Face,NewFrameImage);
+		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
 	
 	FaceProcessor.FindFace(NewFrameImage)
@@ -166,10 +187,12 @@ function Main()
 	}
 	
 	let MediaDevices = new Media();
-	MediaDevices.EnumDevices().then(LoadDevice);
+	//MediaDevices.EnumDevices().then(LoadDevice);
 
-	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-	OnNewFrame(TestImage);
+	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
+	let TestImage = new Image('Data_dlib/Face.png');
+	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
+	OnNewFrame(TestImage,'Data_dlib/Face.json');
 	
 	
 }
