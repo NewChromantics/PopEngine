@@ -76,8 +76,9 @@ function WindowRender(RenderTarget)
 }
 
 
-function OnNewFace(FaceLandmarks)
+function OnNewFace(FaceLandmarks,FaceImage)
 {
+	LastFrameImage = FaceImage;
 	LastFrameFeatures = FaceLandmarks;
 	
 	Debug("Got facelandmarks: x" + 	FaceLandmarks.length );
@@ -109,44 +110,22 @@ function Main()
 	let MediaDevices = new Media();
 	MediaDevices.EnumDevices().then( EnumDevices );
 
-	var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
+	let DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
 	let FaceProcessor = new Dlib(DlibLandMarksdat);
 
 	let OnNewFramePromise = function(NextFramePromise)
 	{
-		let DebugImage = function(Img)
-		{
-			/*
-			 Debug("Incoming image is... " + Img);
-			 Debug(Img.constructor.name);
-			 Debug(Object.keys(Img));
-			 return Img;
-			 */
-			let Run = function(Resolve)
-			{
-				Debug("Incoming image is... " + Img);
-				Debug(Img.constructor.name);
-				Debug(Object.keys(Img));
-				Resolve(Img);
-			}
-			return new Promise(Run);
-		}
 		NextFramePromise
-		.then( DebugImage )
 		.then( FaceProcessor.FindFace )
 		.then( OnNewFace )
 		.catch( OnFailedNewFace );
 	}
 	
-	///let VideoCapture = new MediaSource("isight");
+	//let VideoCapture = new MediaSource("facetime");
 	//VideoCapture.OnNewFrameLoading = OnNewFramePromise;
 	
-	let LoadTestImage = function(Resolve,Reject)
-	{
-		let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-		Resolve(TestImage);
-	}
-	OnNewFramePromise( new Promise( LoadTestImage ) );
+	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
+	FaceProcessor.FindFace(TestImage).then( function(Face){OnNewFace(Face,TestImage);} ).catch( OnFailedNewFace );
 	
 }
 
