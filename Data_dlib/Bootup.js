@@ -99,6 +99,40 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
+var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
+var FaceProcessor = new Dlib(DlibLandMarksdat);
+var CurrentProcessingImage = null;
+
+function OnNewFrame(NewFrameImage)
+{
+	//	temp work throttler
+	if ( CurrentProcessingImage != null )
+		return;
+	CurrentProcessingImage = NewFrameImage;
+	Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
+	
+	let OnFace = function(Face)
+	{
+		CurrentProcessingImage = null;
+		OnNewFace(Face,NewFrameImage);
+	}
+	
+	FaceProcessor.FindFace(NewFrameImage)
+	.then( OnFace )
+	.catch( OnFailedNewFace );
+}
+
+function GetDeviceNameMatch(DeviceNames,MatchName)
+{
+	let MatchDeviceName = function(DeviceName)
+	{
+		//	case insensitive match
+		let MatchIndex = DeviceName.search(new RegExp(MatchName, "i"));
+		return (MatchIndex==-1) ? false : true;
+	}
+	let Match = DeviceNames.find( MatchDeviceName );
+	return Match;
+}
 
 
 function Main()
@@ -107,25 +141,36 @@ function Main()
 	let Window1 = new OpenglWindow("dlib");
 	Window1.OnRender = function(){	WindowRender(Window1);	};
 	
-	let MediaDevices = new Media();
-	MediaDevices.EnumDevices().then( EnumDevices );
 
-	let DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
-	let FaceProcessor = new Dlib(DlibLandMarksdat);
-
-	let OnNewFramePromise = function(NextFramePromise)
+	
+	let VideoDeviceName = "Facetime";
+	
+	let LoadDevice = function(DeviceNames)
 	{
-		NextFramePromise
-		.then( FaceProcessor.FindFace )
-		.then( OnNewFace )
-		.catch( OnFailedNewFace );
+		try
+		{
+			//	find best match name
+			Debug("Got devices: x" + DeviceNames.length);
+			Debug(DeviceNames);
+			VideoDeviceName = GetDeviceNameMatch(DeviceNames,VideoDeviceName);
+			Debug("Loading device: " + VideoDeviceName);
+		
+			let VideoCapture = new MediaSource(VideoDeviceName);
+			VideoCapture.OnNewFrame = OnNewFrame;
+		}
+		catch(e)
+		{
+			Debug(e);
+		}
+
 	}
 	
-	//let VideoCapture = new MediaSource("facetime");
-	//VideoCapture.OnNewFrameLoading = OnNewFramePromise;
-	
+	let MediaDevices = new Media();
+	MediaDevices.EnumDevices().then(LoadDevice);
+
 	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-	FaceProcessor.FindFace(TestImage).then( function(Face){OnNewFace(Face,TestImage);} ).catch( OnFailedNewFace );
+	OnNewFrame(TestImage);
+	
 	
 }
 

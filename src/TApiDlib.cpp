@@ -227,9 +227,9 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 		auto SrcStep = Pixels.GetChannels();
 		for ( int x=0;	x<Row.nc();	x++ )
 		{
-			FirstDstPixel[0] = FirstSrcPixel[0];
-			FirstDstPixel[1] = FirstSrcPixel[1];
-			FirstDstPixel[2] = FirstSrcPixel[2];
+			FirstDstPixel[0] = FirstSrcPixel[0%SrcStep];
+			FirstDstPixel[1] = FirstSrcPixel[1%SrcStep];
+			FirstDstPixel[2] = FirstSrcPixel[2%SrcStep];
 			FirstSrcPixel += SrcStep;
 			FirstDstPixel += DstStep;
 		}

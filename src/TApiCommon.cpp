@@ -155,7 +155,10 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 }
 
 
-
+TImageWrapper::~TImageWrapper()
+{
+	std::Debug << "Dealloc TImageWrapper" << std::endl;
+}
 
 void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
 {
@@ -555,6 +558,12 @@ void TImageWrapper::OnOpenglTextureChanged()
 	//	is now latest version
 	auto LatestVersion = GetLatestVersion();
 	mOpenglTextureVersion = LatestVersion+1;
+}
+
+void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
+{
+	mPixels.reset( new SoyPixels(NewPixels) );
+	mPixelsVersion = GetLatestVersion()+1;
 }
 
 void TImageWrapper::ReadOpenglPixels()

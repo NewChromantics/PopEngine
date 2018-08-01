@@ -386,22 +386,7 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 	auto* isolate = ContextHandle->GetIsolate();
 	try
 	{
-		auto* FunctionNameCstr = FunctionName.c_str();
-		auto FuncNameKey = v8::String::NewFromUtf8( isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
-		
-		//  get the global object for this name
-		auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
-
-		if ( FunctionHandle->IsUndefined() )
-		{
-			std::stringstream Error;
-			Error << "Function " << FunctionName << " is undefined, not called.";
-			throw Soy::AssertException( Error.str() );
-		}
-		
-		//  run the func
-		auto Func = Local<Function>::Cast( FunctionHandle );
-		
+		auto Func = v8::GetFunction( ContextHandle, This, FunctionName );
 		BufferArray<Local<Value>,1> Args;
 		return ExecuteFunc( ContextHandle, Func, This, GetArrayBridge(Args) );
 	}
@@ -411,6 +396,32 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 		return Exception;
 	}
 }
+
+
+Local<Function> v8::GetFunction(Local<Context> ContextHandle,Local<Object> This,const std::string& FunctionName)
+{
+	auto* Isolate = ContextHandle->GetIsolate();
+	auto* FunctionNameCstr = FunctionName.c_str();
+	auto FuncNameKey = v8::String::NewFromUtf8( Isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
+	
+	//  get the global object for this name
+	auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
+	
+	if ( !FunctionHandle->IsFunction() )
+	{
+		std::stringstream Error;
+		Error << FunctionName << " is not function (" << v8::GetTypeName(FunctionHandle) << ")";
+		throw Soy::AssertException( Error.str() );
+	}
+	
+	//  run the func
+	auto Func = FunctionHandle.As<Function>();
+	return Func;
+	
+}
+
+
+
 
 v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName,void* Object)
 {

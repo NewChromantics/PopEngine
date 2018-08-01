@@ -29,6 +29,8 @@ namespace v8
 	class Task;
 	class String;
 	class Float32Array;
+	class Function;
+	class Object;
 
 	template<typename T>
 	class Local;
@@ -76,6 +78,7 @@ namespace v8
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const char* Str);
+	Local<Function>	GetFunction(Local<Context> Context,Local<Object> This,const std::string& FunctionName);
 	std::string		GetTypeName(v8::Local<v8::Value> Handle);
 
 	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
@@ -395,4 +398,5 @@ inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& In
 {
 	EnumArray<ARRAYTYPE,ELEMENTTYPE>( ValueHandle, IntArray );
 }
+
 

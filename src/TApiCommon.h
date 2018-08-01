@@ -2,6 +2,7 @@
 #include "TV8Container.h"
 
 class SoyPixels;
+class SoyPixelsImpl;
 
 namespace ApiCommon
 {
@@ -26,6 +27,7 @@ public:
 		mOpenglTextureVersion	( 0 )
 	{
 	}
+	~TImageWrapper();
 	
 	static std::string						GetObjectTypeName()	{	return "Image";	}
 	
@@ -52,6 +54,7 @@ public:
 	size_t									GetLatestVersion() const;
 	void									OnOpenglTextureChanged();
 	void									ReadOpenglPixels();
+	void									SetPixels(const SoyPixelsImpl& NewPixels);
 	
 public:
 	v8::Persist<v8::Object>				mHandle;
