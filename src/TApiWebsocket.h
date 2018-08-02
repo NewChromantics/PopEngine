@@ -4,6 +4,12 @@
 
 //#include "TPopServerThread.h"
 #include <SoyRef.h>
+#include <SoyStream.h>
+#include "SoyWebsocket.h"
+#include "SoyHttp.h"
+#include "SoySocketStream.h"
+
+
 
 class SoySocket;
 
@@ -14,20 +20,20 @@ namespace ApiWebsocket
 
 
 
-class TClient
+class TClient : public TSocketReadThread_Impl<Http::TRequestProtocol>
 {
 public:
-	TClient(SoyRef Ref) :
-		mRef	( Ref )
+	TClient(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnWebSocketMessage) :
+		TSocketReadThread_Impl<Http::TRequestProtocol>	( Socket, Ref ),
+		mOnWebSocketMessage			( OnWebSocketMessage )
 	{
 	}
-	
-	void		OnRecvData(ArrayBridge<char>&& Data);
-	
-	bool		operator==(const SoyRef& ThatRef) const	{	return ThatRef == this->mRef;	}
 
+	virtual void		OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& Data) override;
+	
 public:
-	SoyRef		mRef;
+	std::function<void(const std::string&)>	mOnWebSocketMessage;
+	TWebSocketClient	mWebsocketMeta;
 };
 
 

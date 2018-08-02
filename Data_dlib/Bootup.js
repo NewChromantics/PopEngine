@@ -139,7 +139,7 @@ function EnumDevices(DeviceNames)
 
 var DlibThreadCount = 10;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
-var FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
+//var FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 var CurrentProcessingImageCount = 0;
 
 function OnNewFrame(NewFrameImage,SaveFilename)

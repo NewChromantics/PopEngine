@@ -116,7 +116,7 @@ bool TWebsocketServer::Iteration()
 	auto NewClient = mSocket->WaitForClient();
 	if ( NewClient.IsValid() )
 		std::Debug << "new client connected: " << NewClient << std::endl;
-	
+	/*
 	Array<char> RecvBuffer;
 	auto RecvFromConnection = [&](SoyRef ClientRef,SoySocketConnection ClientCon)
 	{
@@ -129,20 +129,14 @@ bool TWebsocketServer::Iteration()
 		}
 	};
 	mSocket->EnumConnections( RecvFromConnection );
-	
+	*/
 	return true;
-}
-
-
-void TClient::OnRecvData(ArrayBridge<char>&& Data)
-{
-	std::Debug << "Recieved " << Data.GetSize() << " from client" << std::endl;
-
 }
 
 
 std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
 {
+	/*
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	for ( int c=0;	c<mClients.GetSize();	c++ )
 	{
@@ -150,17 +144,47 @@ std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
 		if ( pClient->mRef == ClientRef )
 			return pClient;
 	}
+	 */
 	throw Soy::AssertException("Client not found");
 }
 
 void TWebsocketServer::AddClient(SoyRef ClientRef)
 {
-	std::shared_ptr<TClient> Client( new TClient(ClientRef) );
+	auto OnWebsocketMessage = [](const std::string& Message)
+	{
+		std::Debug << Message << std::endl;
+	};
+	
+	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, OnWebsocketMessage ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
+	Client->Start();
 }
 
 void TWebsocketServer::RemoveClient(SoyRef ClientRef)
 {
 	
 }
+
+
+void TClient::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pData)
+{
+	auto& Data = *pData;
+	
+	std::stringstream Message;
+	
+	Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
+
+	for ( auto Header : Data.mHeaders )
+	{
+		Message << Header.first << ": " << Header.second << std::endl;
+	}
+
+	Message << "Content size: " << Data.mContent.GetSize();
+	for ( int i=0;	i<Data.mContent.GetSize();	i++ )
+		Message << Data.mContent[i];
+	Message << std::endl;
+	
+	mOnWebSocketMessage( Message.str() );
+}
+	
