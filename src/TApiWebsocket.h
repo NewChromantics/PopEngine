@@ -3,7 +3,7 @@
 #include "SoyOpenglWindow.h"
 
 //#include "TPopServerThread.h"
-
+#include <SoyRef.h>
 
 class SoySocket;
 
@@ -14,6 +14,22 @@ namespace ApiWebsocket
 
 
 
+class TClient
+{
+public:
+	TClient(SoyRef Ref) :
+		mRef	( Ref )
+	{
+	}
+	
+	void		OnRecvData(ArrayBridge<char>&& Data);
+	
+	bool		operator==(const SoyRef& ThatRef) const	{	return ThatRef == this->mRef;	}
+
+public:
+	SoyRef		mRef;
+};
+
 
 class TWebsocketServer : public SoyWorkerThread
 {
@@ -21,10 +37,17 @@ public:
 	TWebsocketServer(uint16_t ListenPort);
 
 protected:
-	virtual bool		Iteration() override;
+	virtual bool				Iteration() override;
+	
+	void						AddClient(SoyRef ClientRef);
+	void						RemoveClient(SoyRef ClientRef);
+	std::shared_ptr<TClient>	GetClient(SoyRef ClientRef);
 	
 private:
-	std::shared_ptr<SoySocket>	mSocket;
+	std::shared_ptr<SoySocket>		mSocket;
+	
+	std::recursive_mutex			mClientsLock;
+	Array<std::shared_ptr<TClient>>	mClients;
 };
 
 

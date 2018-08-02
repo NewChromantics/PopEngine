@@ -87,9 +87,20 @@ TWebsocketServer::TWebsocketServer(uint16_t ListenPort) :
 	SoyWorkerThread	( Soy::StreamToString(std::stringstream()<<"WebsocketServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep )
 {
 	mSocket.reset( new SoySocket() );
-	mSocket->CreateTcp();
+	mSocket->CreateTcp(true);
 	mSocket->ListenTcp(ListenPort);
+	
+	mSocket->mOnConnect = [=](SoyRef ClientRef)
+	{
+		AddClient(ClientRef);
+	};
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	{
+		RemoveClient(ClientRef);
+	};
+	
 	Start();
+	
 }
 	
 
@@ -107,12 +118,15 @@ bool TWebsocketServer::Iteration()
 		std::Debug << "new client connected: " << NewClient << std::endl;
 	
 	Array<char> RecvBuffer;
-	auto RecvFromConnection = [&](SoySocketConnection Client)
+	auto RecvFromConnection = [&](SoyRef ClientRef,SoySocketConnection ClientCon)
 	{
 		RecvBuffer.Clear();
-		Client.Recieve( GetArrayBridge(RecvBuffer) );
+		ClientCon.Recieve( GetArrayBridge(RecvBuffer) );
 		if ( !RecvBuffer.IsEmpty() )
-			std::Debug << "Recieved " << RecvBuffer.GetSize() << " from client" << std::endl;
+		{
+			auto Client = GetClient(ClientRef);
+			Client->OnRecvData( GetArrayBridge(RecvBuffer) );
+		}
 	};
 	mSocket->EnumConnections( RecvFromConnection );
 	
@@ -120,5 +134,33 @@ bool TWebsocketServer::Iteration()
 }
 
 
+void TClient::OnRecvData(ArrayBridge<char>&& Data)
+{
+	std::Debug << "Recieved " << Data.GetSize() << " from client" << std::endl;
+
+}
 
 
+std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
+	for ( int c=0;	c<mClients.GetSize();	c++ )
+	{
+		auto& pClient = mClients[c];
+		if ( pClient->mRef == ClientRef )
+			return pClient;
+	}
+	throw Soy::AssertException("Client not found");
+}
+
+void TWebsocketServer::AddClient(SoyRef ClientRef)
+{
+	std::shared_ptr<TClient> Client( new TClient(ClientRef) );
+	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
+	mClients.PushBack(Client);
+}
+
+void TWebsocketServer::RemoveClient(SoyRef ClientRef)
+{
+	
+}
