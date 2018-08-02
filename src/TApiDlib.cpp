@@ -164,6 +164,12 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 			BufferArray<float,1000> Features;
 			for ( int f=0;	f<Faces.GetSize();	f++ )
 			{
+				auto& FaceRect = Faces[f].mRect;
+				Features.PushBack( FaceRect.Left() );
+				Features.PushBack( FaceRect.Top() );
+				Features.PushBack( FaceRect.GetWidth() );
+				Features.PushBack( FaceRect.GetHeight() );
+				
 				auto& FaceFeatures = Faces[f].mFeatures;
 				for ( int i=0;	i<FaceFeatures.GetSize();	i++ )
 				{
