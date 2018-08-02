@@ -67,6 +67,9 @@
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
+		EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
+		EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */; };
+		EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA66211333020014E998 /* SoySocket.cpp */; };
 		FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
 		FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
@@ -211,6 +214,16 @@
 		EB0EA56C2110B936008D6DAA /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
 		EB0EA56E2110BA27008D6DAA /* libdlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdlib.a; path = ../../../usr/local/Cellar/dlib/19.15/lib/libdlib.a; sourceTree = "<group>"; };
 		EB0EA5702110BAD7008D6DAA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiWebsocket.cpp; path = src/TApiWebsocket.cpp; sourceTree = "<group>"; };
+		EBC8FA5B21131E9F0014E998 /* TApiWebsocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiWebsocket.h; path = src/TApiWebsocket.h; sourceTree = "<group>"; };
+		EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySocketStream.cpp; path = src/SoySocketStream.cpp; sourceTree = "<group>"; };
+		EBC8FA5E21131F000014E998 /* SoySocketStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySocketStream.h; path = src/SoySocketStream.h; sourceTree = "<group>"; };
+		EBC8FA6021132D300014E998 /* TPopServerThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TPopServerThread.cpp; path = src/TPopServerThread.cpp; sourceTree = "<group>"; };
+		EBC8FA6121132D300014E998 /* TPopServerThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TPopServerThread.h; path = src/TPopServerThread.h; sourceTree = "<group>"; };
+		EBC8FA6221132D300014E998 /* TProtocolWebSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TProtocolWebSocket.cpp; path = src/TProtocolWebSocket.cpp; sourceTree = "<group>"; };
+		EBC8FA6321132D300014E998 /* TProtocolWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TProtocolWebSocket.h; path = src/TProtocolWebSocket.h; sourceTree = "<group>"; };
+		EBC8FA66211333020014E998 /* SoySocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySocket.cpp; path = src/SoySocket.cpp; sourceTree = "<group>"; };
+		EBC8FA67211333020014E998 /* SoySocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySocket.h; path = src/SoySocket.h; sourceTree = "<group>"; };
 		FB50C04A1A6ABD480011A9D9 /* array.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = array.hpp; path = src/array.hpp; sourceTree = "<group>"; };
 		FB50C04B1A6ABD480011A9D9 /* bufferarray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = bufferarray.hpp; path = src/bufferarray.hpp; sourceTree = "<group>"; };
 		FB50C04C1A6ABD480011A9D9 /* HeapArray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = HeapArray.hpp; path = src/HeapArray.hpp; sourceTree = "<group>"; };
@@ -405,6 +418,12 @@
 				BF97592420E961190093B296 /* TApiOpencl.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
+				EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */,
+				EBC8FA5B21131E9F0014E998 /* TApiWebsocket.h */,
+				EBC8FA6021132D300014E998 /* TPopServerThread.cpp */,
+				EBC8FA6121132D300014E998 /* TPopServerThread.h */,
+				EBC8FA6221132D300014E998 /* TProtocolWebSocket.cpp */,
+				EBC8FA6321132D300014E998 /* TProtocolWebSocket.h */,
 				BF689AFE20D9A52E000BC812 /* TV8Container.cpp */,
 				BF689AFF20D9A52E000BC812 /* TV8Container.h */,
 				BF39256520E51C36005AE288 /* TV8Instance.cpp */,
@@ -476,6 +495,8 @@
 				FB63E5191A71C3E9002C59BE /* SoyRingArray.h */,
 				BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */,
 				BFD4456620E6711A007E2497 /* SoyRuntimeLibrary.h */,
+				EBC8FA66211333020014E998 /* SoySocket.cpp */,
+				EBC8FA67211333020014E998 /* SoySocket.h */,
 				FBC3A0DF1A308648009DA49E /* SoyScope.cpp */,
 				FBC3A0E01A308648009DA49E /* SoyScope.h */,
 				BF5B07141B5C12E700C489C6 /* SoyShader.cpp */,
@@ -485,6 +506,8 @@
 				FB8A06431A2E5A7C0099596C /* SoyState.h */,
 				FB8A06441A2E5A7C0099596C /* SoyState.hpp */,
 				BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */,
+				EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */,
+				EBC8FA5E21131F000014E998 /* SoySocketStream.h */,
 				BF7225A91BADCB3B00550AD8 /* SoyStream.h */,
 				FB8A06491A2E5A7C0099596C /* SoyString.cpp */,
 				FB8A064A1A2E5A7C0099596C /* SoyString.h */,
@@ -605,6 +628,7 @@
 				BF6EB3262111160500FC991B /* AvfVideoCapture.mm in Sources */,
 				FB2534DE1A974E8200A61590 /* PopTrack.mm in Sources */,
 				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
+				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
@@ -620,6 +644,7 @@
 				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
+				EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */,
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
 				BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */,
 				BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */,
@@ -635,6 +660,7 @@
 				BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
 				FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */,
+				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
 				BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */,
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,

@@ -178,6 +178,14 @@ function GetDeviceNameMatch(DeviceNames,MatchName)
 }
 
 
+var Server = null;
+var ServerPort = 8008;
+
+function OnSkeletonJson(SkeletonJson)
+{
+	Debug("Got skeleton json: " + SkeletonJson);
+}
+
 function Main()
 {
 	//Debug("log is working!", "2nd param");
@@ -209,13 +217,16 @@ function Main()
 	}
 	
 	let MediaDevices = new Media();
-	MediaDevices.EnumDevices().then( LoadDevice );
+	//MediaDevices.EnumDevices().then( LoadDevice );
 
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	OnNewFrame(TestImage,'Data_dlib/Face.json');
+	//OnNewFrame(TestImage,'Data_dlib/Face.json');
 	
+	Server = new WebsocketServer(ServerPort);
+	Server.OnMessage = OnSkeletonJson;
+
 	
 }
 
