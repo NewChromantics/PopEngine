@@ -20,10 +20,23 @@ let FrameFragShaderSource = LoadFileAsString("Data_dlib/DrawFrameAndPose.frag");
 var FrameShader = null;
 var LastFrameImage = null;
 var LastFace = null;
+var LastFaceRect = [0,0,1,1];
 
 function GetFeatureLines(Face)
 {
 	let Lines = [];
+	
+	{
+		let l = LastFaceRect[0];
+		let r = LastFaceRect[0] + LastFaceRect[2];
+		let t = LastFaceRect[1];
+		let b = LastFaceRect[1] + LastFaceRect[3];
+		Lines.push( [l,t,r,t] );
+		Lines.push( [r,t,r,b] );
+		Lines.push( [r,b,l,b] );
+		Lines.push( [l,b,l,t] );
+	}
+	
 	let LineOffset = 1 / 400;
 	let PushFeatureLine = function(Feature)
 	{
@@ -120,13 +133,14 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
-var DlibThreadCount = 1;
+var DlibThreadCount = 30;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 var CurrentProcessingImageCount = 0;
 
 function OnNewFrame(NewFrameImage,SaveFilename)
 {
+	//LastFrameImage = NewFrameImage;
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > DlibThreadCount )
 		return;
@@ -139,10 +153,11 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
 	
-	let FaceRect = [0,0,1,1];
+	let FaceRect = [0.3,0.1,0.3,0.5];
+	LastFaceRect = FaceRect;
 	
-	FaceProcessor.FindFaces(NewFrameImage)
-	//FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
+	//FaceProcessor.FindFaces(NewFrameImage)
+	FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
 	.then( OnFace )
 	.catch( OnFailedNewFace );
 }
@@ -191,7 +206,7 @@ function Main()
 	}
 	
 	let MediaDevices = new Media();
-	MediaDevices.EnumDevices().then(LoadDevice);
+	MediaDevices.EnumDevices().then( LoadDevice );
 
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	let TestImage = new Image('Data_dlib/Face.png');
