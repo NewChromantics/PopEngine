@@ -20,13 +20,16 @@ namespace ApiWebsocket
 
 
 
-class TClient : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>
+class TClient : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
 {
 public:
 	TClient(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnWebSocketMessage) :
 		TSocketReadThread_Impl	( Socket, Ref ),
+		TSocketWriteThread		( Socket, Ref ),
 		mOnWebSocketMessage		( OnWebSocketMessage )
 	{
+		TSocketReadThread_Impl::Start();
+		TSocketWriteThread::Start();
 	}
 
 	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;

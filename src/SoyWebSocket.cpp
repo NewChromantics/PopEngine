@@ -6,6 +6,7 @@
 #include <smallsha1/sha1.h>
 #include <SoyApp.h>
 #include <SoyEnum.h>
+#include <SoyBase64.h>
 
 
 
@@ -22,8 +23,7 @@ WebSocket::THandshakeMeta::THandshakeMeta() :
 {
 }
 
-/*
-std::string SoyWebSocketHeader::GetReplyKey() const
+std::string WebSocket::THandshakeMeta::GetReplyKey() const
 {
 	//	http://en.wikipedia.org/wiki/WebSocket
 	//	The client sends a Sec-WebSocket-Key which is a random value that has been base64 encoded.
@@ -47,12 +47,12 @@ std::string SoyWebSocketHeader::GetReplyKey() const
 	auto HashBridge = GetArrayBridge( Hash );
 	Array<char> Encoded;
 	auto EncodedBridge = GetArrayBridge( Encoded );
-	Soy::base64_encode( EncodedBridge, HashBridge );
+	Base64::Encode(EncodedBridge, HashBridge);
 	std::string EncodedKey = Soy::ArrayToString( EncodedBridge );
 	return EncodedKey;
 }
 
-*/
+
 
 bool WebSocket::TRequestProtocol::ParseSpecificHeader(const std::string& Key,const std::string& Value)
 {
@@ -86,6 +86,33 @@ bool WebSocket::TRequestProtocol::ParseSpecificHeader(const std::string& Key,con
 	
 	return Http::TRequestProtocol::ParseSpecificHeader(Key,Value);
 }
+
+
+
+
+WebSocket::THandshakeResponseProtocol::THandshakeResponseProtocol(const THandshakeMeta& Handshake)
+{
+	//	setup http response for websocket acceptance
+	
+	//	add http headers we need to reply with
+	if ( !Handshake.mProtocol.empty() )
+		mHeaders.insert( {"Sec-WebSocket-Protocol", Handshake.mProtocol} );
+	
+	if ( Handshake.mIsWebSocketUpgrade )
+	{
+		mHeaders.insert( {"Sec-WebSocket-Accept", Handshake.GetReplyKey() } );
+		mHeaders.insert( {"Upgrade", "websocket"} );
+		mHeaders.insert( {"Connection", "Upgrade"} );
+	}
+	
+	//	gr: need content length or chrome never displays...
+	//	gr: ^^ I think this was related to png, let base class deal with that
+	//Http.PushHeader( "Content-Length", std::stringstream() << DefaultParam.GetDataSize() );
+	//Http.PushHeader( SoyHttpHeaderElement("Content-Type", SoyHttpHeader::FormatToHttpContentType(Reply.mData.mFormat).c_str() ) );
+	
+	mResponseCode = Http::Response_SwitchingProtocols;
+}
+
 
 /*
 

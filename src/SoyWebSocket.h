@@ -7,6 +7,7 @@ namespace WebSocket
 {
 	class TRequestProtocol;
 	class THandshakeMeta;
+	class THandshakeResponseProtocol;
 }
 
 #include <SoyHttp.h>
@@ -51,6 +52,9 @@ public:
 	static bool			EncodeMessageData(Array<char>& EncodedData,const Array<char>& DecodedData,const bool DataIsText);
 	static bool			DecodeMessageData(Array<char>& DecodedData,const Array<char>& EncodedData,bool& DataIsText);
 	*/
+	
+	std::string			GetReplyKey() const;
+	
 public:
 	//	protocol and version are optional
 	std::string			mProtocol;
@@ -75,6 +79,13 @@ public:
 	
 public:
 	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
+};
+
+
+class WebSocket::THandshakeResponseProtocol : public Http::TResponseProtocol
+{
+public:
+	THandshakeResponseProtocol(const THandshakeMeta& Handshake);
 };
 
 

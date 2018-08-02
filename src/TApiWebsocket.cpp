@@ -158,7 +158,6 @@ void TWebsocketServer::AddClient(SoyRef ClientRef)
 	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, OnWebsocketMessage ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
-	Client->Start();
 }
 
 void TWebsocketServer::RemoveClient(SoyRef ClientRef)
@@ -187,6 +186,15 @@ void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData
 	
 	
 	
+	
+	//	send back a response if it's a handshake
+	if ( Data.mHandshake.mIsWebSocketUpgrade )
+	{
+		std::shared_ptr<Soy::TWriteProtocol> pResponse( new WebSocket::THandshakeResponseProtocol(mHandshake) );
+		auto& Response = *dynamic_cast<WebSocket::THandshakeResponseProtocol*>( pResponse.get() );
+		Push( pResponse );
+	}
+
 	//	success parsing!
 	//	gr: if we have all vars, handshaked
 	//mHasHandshaked = true;
