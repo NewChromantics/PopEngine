@@ -37,7 +37,7 @@ function GetFeatureLines(Face)
 	}
 	if ( Face != null )
 		Face.Features.forEach( PushFeatureLine );
-	Debug(Lines);
+
 	return Lines;
 }
 
@@ -191,7 +191,7 @@ function Main()
 	}
 	
 	let MediaDevices = new Media();
-	//MediaDevices.EnumDevices().then(LoadDevice);
+	MediaDevices.EnumDevices().then(LoadDevice);
 
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	let TestImage = new Image('Data_dlib/Face.png');

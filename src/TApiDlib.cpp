@@ -312,38 +312,6 @@ public:
 	}
 };
 
-float Range(float Min, float Max, float Value )
-{
-	return (Value-Min) / (Max-Min);
-}
-
-float Lerp(float Min,float Max,float Time)
-{
-	return Min + ( Time * (Max-Min) );
-}
-
-void Normalise(Soy::Rectf& Child,const Soy::Rectf& Parent)
-{
-	auto l = Range( Parent.Left(), Parent.Right(), Child.Left() );
-	auto r = Range( Parent.Left(), Parent.Right(), Child.Right() );
-	auto t = Range( Parent.Top(), Parent.Bottom(), Child.Top() );
-	auto b = Range( Parent.Top(), Parent.Bottom(), Child.Bottom() );
-	auto w = r-l;
-	auto h = b-t;
-	Child = Soy::Rectf( l, t, w, h );
-}
-
-void ScaleUp(Soy::Rectf& Normalised,const Soy::Rectf& Parent)
-{
-	auto l = Lerp( Parent.Left(), Parent.Right(), Normalised.Left() );
-	auto r = Lerp( Parent.Left(), Parent.Right(), Normalised.Right() );
-	auto t = Lerp( Parent.Top(), Parent.Bottom(), Normalised.Top() );
-	auto b = Lerp( Parent.Top(), Parent.Bottom(), Normalised.Bottom() );
-	auto w = r-l;
-	auto h = b-t;
-	Normalised = Soy::Rectf( l, t, w, h );
-}
-
 
 dlib::array2d<dlib::rgb_pixel> GetImageFromPixels(const SoyPixelsImpl &Pixels)
 {
@@ -448,7 +416,8 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 		
 		Soy::Rectf FaceRectf( FaceRect.left(), FaceRect.top(), FaceRect.width(), FaceRect.height() );
 		Soy::Rectf ImageRect( 0, 0, Width, Height );
-		Normalise( FaceRectf, ImageRect );
+		FaceRectf.Normalise( ImageRect );
+		
 		
 		TFace NewFace = GetFaceLandmarks( img, FaceRectf );
 		Faces.PushBack(NewFace);
@@ -492,14 +461,13 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 	NewFace.mRect = FaceRectf;
 
 	Soy::Rectf ImageRect( 0, 0, Width, Height );
-	ScaleUp( FaceRectf, ImageRect );
+	FaceRectf.ScaleTo( ImageRect );
 	
 	rectangle FaceRect( FaceRectf.Left(), FaceRectf.Top(), FaceRectf.Right(), FaceRectf.Bottom() );
 	
 	Soy::TScopeTimerPrint Timer_3("FindFace: get shape(img)",1);
 	full_object_detection shape = sp( Image, FaceRect );
 	Timer_3.Stop();
-		
 	
 	auto PartCount = shape.num_parts();
 	for ( int p=0;	p<PartCount;	p++ )
