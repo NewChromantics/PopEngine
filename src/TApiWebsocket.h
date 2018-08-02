@@ -20,20 +20,25 @@ namespace ApiWebsocket
 
 
 
-class TClient : public TSocketReadThread_Impl<Http::TRequestProtocol>
+class TClient : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>
 {
 public:
 	TClient(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnWebSocketMessage) :
-		TSocketReadThread_Impl<Http::TRequestProtocol>	( Socket, Ref ),
-		mOnWebSocketMessage			( OnWebSocketMessage )
+		TSocketReadThread_Impl	( Socket, Ref ),
+		mOnWebSocketMessage		( OnWebSocketMessage )
 	{
 	}
 
-	virtual void		OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& Data) override;
+	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
+	
+	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override
+	{
+		return std::shared_ptr<Soy::TReadProtocol>( new WebSocket::TRequestProtocol(mHandshake) );
+	}
 	
 public:
 	std::function<void(const std::string&)>	mOnWebSocketMessage;
-	TWebSocketClient	mWebsocketMeta;
+	WebSocket::THandshakeMeta	mHandshake;
 };
 
 

@@ -167,7 +167,7 @@ void TWebsocketServer::RemoveClient(SoyRef ClientRef)
 }
 
 
-void TClient::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pData)
+void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
 {
 	auto& Data = *pData;
 	
@@ -184,6 +184,33 @@ void TClient::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pData)
 	for ( int i=0;	i<Data.mContent.GetSize();	i++ )
 		Message << Data.mContent[i];
 	Message << std::endl;
+	
+	
+	
+	//	success parsing!
+	//	gr: if we have all vars, handshaked
+	//mHasHandshaked = true;
+	
+	//	gr: need to reply here
+	/*
+	 //	force an immediate reply using bounce
+	 Job.mParams.mCommand = "Handshake";
+	 
+	 //	add http headers we need to reply with
+	 if ( !mProtocol.empty() )
+		Job.mParams.AddParam("Sec-WebSocket-Protocol", mProtocol );
+	 
+	 if ( Header.mIsWebSocketUpgrade )
+	 {
+		Job.mParams.AddParam( "Sec-WebSocket-Accept", Header.GetReplyKey() );
+		Job.mParams.AddParam( "Upgrade", "websocket" );
+		Job.mParams.AddParam( "Connection", "Upgrade" );
+	 }
+	 //	need to force a reply here...
+	 return TDecodeResult::Bounce;
+	 */
+
+	
 	
 	mOnWebSocketMessage( Message.str() );
 }

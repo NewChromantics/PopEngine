@@ -17,8 +17,7 @@ const std::string WebsocketPayloadParam = "_ws_payload";
 const std::string WebsocketIsContinuationParam = "_ws_iscontinuation";
 
 
-TWebSocketClient::TWebSocketClient() :
-	mHasHandshaked		( false ),
+WebSocket::THandshakeMeta::THandshakeMeta() :
 	mIsWebSocketUpgrade	( true )
 {
 }
@@ -53,6 +52,42 @@ std::string SoyWebSocketHeader::GetReplyKey() const
 	return EncodedKey;
 }
 
+*/
+
+bool WebSocket::TRequestProtocol::ParseSpecificHeader(const std::string& Key,const std::string& Value)
+{
+	//	extract web-socket special headers
+	if ( Soy::StringMatches(Key,"Upgrade", false ) )
+	{
+		if ( Soy::StringMatches(Value,"websocket", false ) )
+		{
+			mHandshake.mIsWebSocketUpgrade = true;
+			return true;
+		}
+	}
+	
+	if ( Soy::StringMatches(Key,"Sec-WebSocket-Key", false ) )
+	{
+		mHandshake.mWebSocketKey = Value;
+		return true;
+	}
+	
+	if ( Soy::StringMatches(Key,"Sec-WebSocket-Protocol", false ) )
+	{
+		mHandshake.mProtocol = Value;
+		return true;
+	}
+
+	if ( Soy::StringMatches(Key,"Sec-WebSocket-Version", false ) )
+	{
+		mHandshake.mVersion = Value;
+		return true;
+	}
+	
+	return Http::TRequestProtocol::ParseSpecificHeader(Key,Value);
+}
+
+/*
 
 bool SoyWebSocketHeader::PushRawHeader(const std::string& Header)
 {
@@ -88,6 +123,28 @@ bool TProtocolWebSocketImpl::FixParamFormat(TJobParam& Param,std::stringstream& 
 	
 	return true;
 }
+*/
+
+/*
+ 
+ TProtocolState::Type Http::TCommonProtocol::Decode(TStreamBuffer& Buffer)
+ {
+	auto HeaderState = DecodeHeaders(Buffer);
+	if ( HeaderState != TProtocolState::Finished )
+ return HeaderState;
+	
+	//	read data
+	if ( mContentLength == 0 )
+ return TProtocolState::Finished;
+	
+	if ( !Buffer.Pop( mContentLength, GetArrayBridge(mContent) ) )
+ return TProtocolState::Waiting;
+	
+	if ( !mKeepAlive )
+ return TProtocolState::Disconnect;
+	
+	return TProtocolState::Finished;
+ }
 
 TDecodeResult::Type TWebSocketClient::DecodeHandshake(TJob& Job,TStreamBuffer& Stream)
 {
@@ -117,7 +174,7 @@ TDecodeResult::Type TWebSocketClient::DecodeHandshake(TJob& Job,TStreamBuffer& S
 	
 	//	success parsing!
 	mHasHandshaked = true;
-
+	
 	//	force an immediate reply using bounce
 	Job.mParams.mCommand = "Handshake";
 	
@@ -131,7 +188,7 @@ TDecodeResult::Type TWebSocketClient::DecodeHandshake(TJob& Job,TStreamBuffer& S
 		Job.mParams.AddParam( "Upgrade", "websocket" );
 		Job.mParams.AddParam( "Connection", "Upgrade" );
 	}
-
+	
 	
 	//	need to force a reply here...
 	return TDecodeResult::Bounce;

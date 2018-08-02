@@ -2,8 +2,16 @@
 
 #include <SoyProtocol.h>
 
-/*
+
+namespace WebSocket
+{
+	class TRequestProtocol;
+	class THandshakeMeta;
+}
+
 #include <SoyHttp.h>
+
+/*
 
  
 class SoyWebSocketHeader : public Http::TCommonProtocol
@@ -30,10 +38,10 @@ public:
 
 
 //	gr: name is a little misleading, it's the websocket connection meta
-class TWebSocketClient
+class WebSocket::THandshakeMeta
 {
 public:
-	TWebSocketClient();
+	THandshakeMeta();
 	
 //	TDecodeResult::Type DecodeHandshake(TJob& Job,TStreamBuffer& Stream);
 //	bool				EncodeHandshake(const TJobReply& Reply,Array<char>& Output);
@@ -44,11 +52,32 @@ public:
 	static bool			DecodeMessageData(Array<char>& DecodedData,const Array<char>& EncodedData,bool& DataIsText);
 	*/
 public:
-	bool				mHasHandshaked;
+	//	protocol and version are optional
+	std::string			mProtocol;
+	std::string			mVersion;
 	bool				mIsWebSocketUpgrade;
-	std::string			mProtocol;			//	if it was supplied this is the protocol
-	std::string			mVersion;			//	if it was supplied this is the version
+	std::string			mWebSocketKey;
 };
+
+
+
+//	a websocket client
+class WebSocket::TRequestProtocol : public Http::TRequestProtocol
+{
+public:
+	TRequestProtocol() : mHandshake(*(THandshakeMeta*)nullptr)	{	throw Soy::AssertException("Should not be called");	}
+	TRequestProtocol(THandshakeMeta& Handshake) :
+		mHandshake	( Handshake )
+	{
+	}
+
+	virtual bool		ParseSpecificHeader(const std::string& Key,const std::string& Value) override;
+	
+public:
+	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
+};
+
+
 
 /*
 class TProtocolWebSocketImpl : public TProtocol
