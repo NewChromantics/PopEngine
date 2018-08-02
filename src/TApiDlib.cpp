@@ -248,11 +248,19 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 			
 			//	temp
 			BufferArray<float,1000> Features;
-			auto& FaceFeatures = Face.mFeatures;
-			for ( int i=0;	i<FaceFeatures.GetSize();	i++ )
 			{
-				Features.PushBack( FaceFeatures[i].x );
-				Features.PushBack( FaceFeatures[i].y );
+				auto& FaceRect = Face.mRect;
+				Features.PushBack( FaceRect.Left() );
+				Features.PushBack( FaceRect.Top() );
+				Features.PushBack( FaceRect.GetWidth() );
+				Features.PushBack( FaceRect.GetHeight() );
+				
+				auto& FaceFeatures = Face.mFeatures;
+				for ( int i=0;	i<FaceFeatures.GetSize();	i++ )
+				{
+					Features.PushBack( FaceFeatures[i].x );
+					Features.PushBack( FaceFeatures[i].y );
+				}
 			}
 			
 			auto OnCompleted = [=](Local<Context> Context)

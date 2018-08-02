@@ -157,10 +157,10 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
 	
-	let FaceRect = [0.3,0.1,0.3,0.5];
+	let FaceRect = [0.3,0.2,0.3,0.4];
 	
-	FaceProcessor.FindFaces(NewFrameImage)
-	//FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
+	//FaceProcessor.FindFaces(NewFrameImage)
+	FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
 	.then( OnFace )
 	.catch( OnFailedNewFace );
 }
@@ -209,7 +209,7 @@ function Main()
 	}
 	
 	let MediaDevices = new Media();
-	//MediaDevices.EnumDevices().then( LoadDevice );
+	MediaDevices.EnumDevices().then( LoadDevice );
 
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	let TestImage = new Image('Data_dlib/Face.png');
