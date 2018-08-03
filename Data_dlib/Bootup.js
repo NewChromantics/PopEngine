@@ -66,7 +66,6 @@ function GetSkeletonLines(Skeleton)
 	PushLine('rightHip','rightKnee');
 	PushLine('rightKnee','rightAnkle');
 	
-	Debug( Lines.length + " skeleton lines");
 	return Lines;
 }
 
@@ -193,7 +192,10 @@ var CurrentProcessingImageCount = 0;
 
 function OnNewFrame(NewFrameImage,SaveFilename)
 {
-	//LastFrameImage = NewFrameImage;
+	LastFrameImage = NewFrameImage;
+	return;
+	
+	
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > DlibThreadCount )
 		return;
@@ -232,12 +234,15 @@ var ServerPort = 8008;
 
 function OnSkeletonJson(SkeletonJson)
 {
-	var Skeleton = JSON.parse(SkeletonJson);
+	let Skeleton = JSON.parse(SkeletonJson);
+	let MinScore = 0.3;
 	
 	let GetKeypointPos = function(Name)
 	{
 		let FindKeypointPart = function(Keypoint)
 		{
+			if ( Keypoint.score < MinScore )
+				return false;
 			return Keypoint.part == Name;
 		};
 		let Keypoints = Skeleton.keypoints;
@@ -247,6 +252,7 @@ function OnSkeletonJson(SkeletonJson)
 			Debug("Failed to find keypoint " + Name);
 			return undefined;
 		}
+		kp.position.y = 1 - kp.position.y;
 		return kp.position;
 	}
 	
@@ -311,7 +317,7 @@ function Main()
 	}
 	
 	let MediaDevices = new Media();
-	//MediaDevices.EnumDevices().then( LoadDevice );
+	MediaDevices.EnumDevices().then( LoadDevice );
 
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	let TestImage = new Image('Data_dlib/Face.png');
