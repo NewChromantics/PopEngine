@@ -1,10 +1,10 @@
 in vec2 uv;
-const float LineWidth = 0.004;
+const float LineWidth = 0.001;
 
 uniform sampler2D	Frame;
 uniform bool		HasFrame;
 
-#define LINE_COUNT	100
+#define LINE_COUNT	200
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 

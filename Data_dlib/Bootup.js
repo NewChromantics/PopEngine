@@ -135,7 +135,7 @@ function WindowRender(RenderTarget)
 			
 			PoseLines = SkeletonLines.concat( PoseLines );
 			
-			const MAX_LINES = 100;
+			const MAX_LINES = 200;
 			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
 			
 			Shader.SetUniform("Lines", PoseLines );
@@ -197,15 +197,15 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
-var DlibThreadCount = 10;
+var DlibThreadCount = 1;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
 
 var LastSkeletonFaceRect = null;
-var ShoulderToHeadWidthRatio = 0.4;
+var ShoulderToHeadWidthRatio = 0.45;
 var HeadWidthToHeightRatio = 2.1;
-var NoseHeightInHead = 0.6;
+var NoseHeightInHead = 0.5;
 
 
 function OnNewFrame(NewFrameImage,SaveFilename)
