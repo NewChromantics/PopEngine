@@ -12,7 +12,7 @@
 
 
 TV8Instance::TV8Instance(const std::string& ScriptFilename) :
-SoyWorkerThread	( ScriptFilename, SoyWorkerWaitMode::Sleep )
+	SoyWorkerThread	( ScriptFilename, SoyWorkerWaitMode::NoWait )
 {
 	//	bind first
 	try
