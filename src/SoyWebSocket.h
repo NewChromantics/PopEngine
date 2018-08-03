@@ -86,19 +86,21 @@ public:
 class WebSocket::TMessage
 {
 public:
-	TMessage(std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
-		mOnTextMessage		( OnTextMessage ),
-		mOnBinaryMessage	( OnBinaryMessage )
+	TMessage() :
+		mIsComplete	(false )
 	{
 	}
-
+	
 	void				PushMessageData(TOpCode::Type PayloadFormat,bool IsLastPayload,const ArrayBridge<char>&& Payload);
 	void				PushTextMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload);
 	void				PushBinaryMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload);
 	
+	bool				IsCompleteTextMessage() const	{	return mIsComplete && mTextData.length() > 0;	}
+	bool				IsCompleteBinaryMessage() const	{	return mIsComplete && mBinaryData.GetSize() > 0;	}
+	
+	
 public:
-	std::function<void(const std::string&)>		mOnTextMessage;
-	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
+	bool				mIsComplete;
 	Array<uint8_t>		mBinaryData;	//	binary message
 	std::string			mTextData;		//	text message
 };
@@ -129,12 +131,12 @@ public:
 	BufferArray<unsigned char,4> MaskKey;	//	store & 32 bit int
 	
 	TOpCode::Type	GetOpCode() const	{	return TOpCode::Validate( OpCode );	}
-	bool		IsText() const			{	return OpCode == TOpCode::TextFrame;	}
-	size_t		GetLength() const;
-	std::string	GetMaskKeyString() const;
-	bool		IsValid(std::stringstream& Error) const;
-	bool		Decode(TStreamBuffer& Data);		//	returns false if not got enough data. throws on error
-	bool		Encode(ArrayBridge<char>& Data,const ArrayBridge<char>& MessageData,std::stringstream& Error);
+	bool			IsText() const			{	return OpCode == TOpCode::TextFrame;	}
+	size_t			GetLength() const;
+	std::string		GetMaskKeyString() const;
+	void			IsValid() const;					//	throws if not valid
+	bool			Decode(TStreamBuffer& Data);		//	returns false if not got enough data. throws on error
+	bool			Encode(ArrayBridge<char>& Data,const ArrayBridge<char>& MessageData,std::stringstream& Error);
 };
 
 
@@ -143,7 +145,7 @@ public:
 class WebSocket::TRequestProtocol : public Http::TRequestProtocol
 {
 public:
-	TRequestProtocol() : mHandshake(* new THandshakeMeta() ), mMessage( *new TMessage(nullptr,nullptr) )	{	throw Soy::AssertException("Should not be called");	}
+	TRequestProtocol() : mHandshake(* new THandshakeMeta() ), mMessage( *new TMessage() )	{	throw Soy::AssertException("Should not be called");	}
 	TRequestProtocol(THandshakeMeta& Handshake,TMessage& Message) :
 		mHandshake	( Handshake ),
 		mMessage	( Message )
@@ -157,6 +159,10 @@ protected:
 	TProtocolState::Type	DecodeBody(TMessageHeader& Header,TStreamBuffer& Buffer);
 
 public:
+	//	if we've generated a "reply with this message" its the HTTP-reply to allow websocket (and not an actual packet)
+	//	if this is present, send it to the socket :)
+	std::shared_ptr<Soy::TWriteProtocol>	mReplyMessage;
+	
 	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
 	TMessage&			mMessage;	//	persistent message for multi-frame messages
 };

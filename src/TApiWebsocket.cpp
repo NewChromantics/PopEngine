@@ -174,47 +174,52 @@ void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData
 {
 	auto& Data = *pData;
 	
-	std::stringstream Message;
-	
-	Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
-
-	for ( auto Header : Data.mHeaders )
+	//	this was the http request, send the reply
+	if ( pData->mReplyMessage )
 	{
-		Message << Header.first << ": " << Header.second << std::endl;
+		auto& Message = std::Debug;
+		Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
+		for ( auto Header : Data.mHeaders )
+		{
+			Message << Header.first << ": " << Header.second << std::endl;
+		}
+		Message << "Content size: " << Data.mContent.GetSize();
+		for ( int i=0;	i<Data.mContent.GetSize();	i++ )
+			Message << Data.mContent[i];
+		Message << std::endl;
+		
+		
+		std::Debug << "Sending handshake response" << std::endl;
+		Push( pData->mReplyMessage );
+		return;
+	}
+	
+	//	packet with data!
+	auto& Packet = pData->mMessage;
+	if ( Packet.IsCompleteTextMessage() )
+	{
+		mOnTextMessage( Packet.mTextData );
+		//	gr: there's a bit of a disconnect here between Some-reponse-packet data and our persistent data
+		//		should probbaly change this to like
+		//	pData->PopTextMessage()
+		//		and a call back to owner to clear. or a "alloc new data" thing for the response class
+		mCurrentMessage.reset();
+	}
+	if ( Packet.IsCompleteBinaryMessage() )
+	{
+		mOnBinaryMessage( Packet.mBinaryData );
+		//	see above
+		mCurrentMessage.reset();
 	}
 
-	Message << "Content size: " << Data.mContent.GetSize();
-	for ( int i=0;	i<Data.mContent.GetSize();	i++ )
-		Message << Data.mContent[i];
-	Message << std::endl;
-	
-	//	send back a response if it's a handshake
-	if ( Data.mHandshake.mIsWebSocketUpgrade )
-	{
-		std::shared_ptr<Soy::TWriteProtocol> pResponse( new WebSocket::THandshakeResponseProtocol(mHandshake) );
-		//auto& Response = *dynamic_cast<WebSocket::THandshakeResponseProtocol*>( pResponse.get() );
-		Push( pResponse );
-	}
 }
 
 
 
 std::shared_ptr<Soy::TReadProtocol> TClient::AllocProtocol()
 {
-	auto OnTextMessage = [this](const std::string& Message)
-	{
-		mOnTextMessage( Message );
-		mCurrentMessage.reset();
-	};
-	
-	auto OnBinaryMessage = [this](const Array<uint8_t>& Message)
-	{
-		mOnBinaryMessage( Message );
-		mCurrentMessage.reset();
-	};
-	
 	if ( !mCurrentMessage )
-		mCurrentMessage.reset( new WebSocket::TMessage(OnTextMessage,OnBinaryMessage) );
+		mCurrentMessage.reset( new WebSocket::TMessage() );
 	
 	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,*mCurrentMessage);
 	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
