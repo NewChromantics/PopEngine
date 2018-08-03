@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SoyProtocol.h>
+#include <SoyHttp.h>
 
 
 namespace WebSocket
@@ -8,9 +9,26 @@ namespace WebSocket
 	class TRequestProtocol;
 	class THandshakeMeta;
 	class THandshakeResponseProtocol;
+	class TMessageHeader;
+	
+	
+	namespace TOpCode
+	{
+		enum Type
+		{
+			Invalid					= -1,
+			ContinuationFrame		= 0,
+			TextFrame				= 1,
+			BinaryFrame				= 2,
+			ConnectionCloseFrame	= 8,
+			PingFrame				= 9,
+			PongFrame				= 10,
+		};
+		DECLARE_SOYENUM( WebSocket::TOpCode );
+	}
+
 }
 
-#include <SoyHttp.h>
 
 /*
 
@@ -54,6 +72,7 @@ public:
 	*/
 	
 	std::string			GetReplyKey() const;
+	bool				IsCompleted() const	{	return mIsWebSocketUpgrade && mWebSocketKey.length()!=0 && mVersion.length()!=0;	}
 	
 public:
 	//	protocol and version are optional
@@ -61,6 +80,40 @@ public:
 	std::string			mVersion;
 	bool				mIsWebSocketUpgrade;
 	std::string			mWebSocketKey;
+};
+
+
+class WebSocket::TMessageHeader
+{
+public:
+	TMessageHeader() :
+		Length		( 0 ),
+		Length16	( 0 ),
+		LenMostSignificant	( 0 ),
+		Length64	( 0 ),
+		Fin			( 1 ),
+		Reserved	( 0 ),
+		OpCode		( WebSocket::TOpCode::Invalid ),
+		Masked		( false )
+	{
+	}
+	
+	int		Fin;
+	int		Reserved;
+	int		OpCode;
+	int		Masked;
+	int		Length;
+	int		Length16;
+	int		LenMostSignificant;
+	uint64	Length64;
+	BufferArray<unsigned char,4> MaskKey;	//	store & 32 bit int
+	
+	bool		IsText() const		{	return OpCode == TOpCode::TextFrame;	}
+	int			GetLength() const;
+	std::string	GetMaskKeyString() const;
+	bool		IsValid(std::stringstream& Error) const;
+	bool		Decode(TStreamBuffer& Data);		//	returns false if not got enough data. throws on error
+	bool		Encode(ArrayBridge<char>& Data,const ArrayBridge<char>& MessageData,std::stringstream& Error);
 };
 
 
@@ -75,10 +128,15 @@ public:
 	{
 	}
 
-	virtual bool		ParseSpecificHeader(const std::string& Key,const std::string& Value) override;
+	virtual TProtocolState::Type	Decode(TStreamBuffer& Buffer) override;
+	virtual bool					ParseSpecificHeader(const std::string& Key,const std::string& Value) override;
 	
 public:
 	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
+	
+	//	decoded data
+	Array<uint8_t>		mBinaryData;	//	binary message
+	std::string			mTextData;		//	text message
 };
 
 

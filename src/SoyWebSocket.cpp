@@ -7,6 +7,7 @@
 #include <SoyApp.h>
 #include <SoyEnum.h>
 #include <SoyBase64.h>
+#include <SoyStream.h>
 
 
 
@@ -52,6 +53,33 @@ std::string WebSocket::THandshakeMeta::GetReplyKey() const
 	return EncodedKey;
 }
 
+
+TProtocolState::Type WebSocket::TRequestProtocol::Decode(TStreamBuffer& Buffer)
+{
+	//	if we haven't handshaken yet, the first request should be a regular HTTP asking for an upgrade
+	if ( !mHandshake.IsCompleted() )
+	{
+		return TCommonProtocol::Decode( Buffer );
+	}
+
+	//	we're doing websocket now, so we need to decode incoming data
+	TMessageHeader MessageHeader;
+	
+	try
+	{
+		if ( !MessageHeader.Decode( Buffer ) )
+			return TProtocolState::Waiting;
+		
+		//	decode body
+		throw Soy::AssertException("Decode websocket body!");
+		return TProtocolState::Finished;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+		return TProtocolState::Disconnect;
+	}
+}
 
 
 bool WebSocket::TRequestProtocol::ParseSpecificHeader(const std::string& Key,const std::string& Value)
@@ -263,73 +291,22 @@ bool TWebSocketClient::EncodeHandshake(const TJobReply& Reply,Array<char>& Outpu
 }
 */
 
-namespace TWebSockets
+
+
+std::map<WebSocket::TOpCode::Type,std::string> WebSocket::TOpCode::EnumMap =
 {
-	namespace TOpCode
-	{
-		enum Type
-		{
-			Invalid					= -1,
-			ContinuationFrame		= 0,
-			TextFrame				= 1,
-			BinaryFrame				= 2,
-			ConnectionCloseFrame	= 8,
-			PingFrame				= 9,
-			PongFrame				= 10,
-		};
-		DECLARE_SOYENUM( TWebSockets::TOpCode );
-	}
-}
-
-
-
-std::map<TWebSockets::TOpCode::Type,std::string> TWebSockets::TOpCode::EnumMap =
-{
-	{ TWebSockets::TOpCode::Invalid,				"invalid" },
-	{ TWebSockets::TOpCode::ContinuationFrame,		"ContinuationFrame" },
-	{ TWebSockets::TOpCode::TextFrame,				"TextFrame" },
-	{ TWebSockets::TOpCode::BinaryFrame,			"BinaryFrame" },
-	{ TWebSockets::TOpCode::ConnectionCloseFrame,	"ConnectionCloseFrame" },
-	{ TWebSockets::TOpCode::PingFrame,				"PingFrame" },
-	{ TWebSockets::TOpCode::PongFrame,				"PongFrame" },
+	{ TOpCode::Invalid,					"invalid" },
+	{ TOpCode::ContinuationFrame,		"ContinuationFrame" },
+	{ TOpCode::TextFrame,				"TextFrame" },
+	{ TOpCode::BinaryFrame,				"BinaryFrame" },
+	{ TOpCode::ConnectionCloseFrame,	"ConnectionCloseFrame" },
+	{ TOpCode::PingFrame,				"PingFrame" },
+	{ TOpCode::PongFrame,				"PongFrame" },
 };
 
 
 
 
-
-//	gr: make this serialiseable!
-class TWebSocketMessageHeader
-{
-public:
-	TWebSocketMessageHeader() :
-		Length		( 0 ),
-		Length16	( 0 ),
-		LenMostSignificant	( 0 ),
-		Length64	( 0 ),
-		Fin			( 1 ),
-		Reserved	( 0 ),
-		OpCode		( TWebSockets::TOpCode::Invalid ),
-		Masked		( false )
-	{
-	}
-	int		Fin;
-	int		Reserved;
-	int		OpCode;
-	int		Masked;
-	int		Length;
-	int		Length16;
-	int		LenMostSignificant;
-	uint64	Length64;
-	BufferArray<unsigned char,4> MaskKey;	//	store & 32 bit int
-	
-	bool		IsText() const		{	return OpCode == TWebSockets::TOpCode::TextFrame;	}
-	int			GetLength() const;
-	std::string	GetMaskKeyString() const;
-	bool		IsValid(std::stringstream& Error) const;
-	bool		Decode(const ArrayBridge<char>& HeaderData,int& MoreDataRequired,std::stringstream& Error);
-	bool		Encode(ArrayBridge<char>& Data,const ArrayBridge<char>& MessageData,std::stringstream& Error);
-};
 
 
 /*
@@ -355,7 +332,7 @@ TEST(EncodeAndDecodeWebSocketMessageHeader)
 }
 */
 
-int TWebSocketMessageHeader::GetLength() const
+int WebSocket::TMessageHeader::GetLength() const
 {
 	if ( Length64 != 0 )
 	{
@@ -466,7 +443,7 @@ TEST(WriteHex)
 }
 
 */
-std::string TWebSocketMessageHeader::GetMaskKeyString() const
+std::string WebSocket::TMessageHeader::GetMaskKeyString() const
 {
 	if ( MaskKey.IsEmpty() )
 		return std::string();
@@ -480,7 +457,7 @@ std::string TWebSocketMessageHeader::GetMaskKeyString() const
 	return s.str();
 }
 
-bool TWebSocketMessageHeader::IsValid(std::stringstream& Error) const
+bool WebSocket::TMessageHeader::IsValid(std::stringstream& Error) const
 {
 	if ( Reserved != 0 )
 	{
@@ -512,12 +489,12 @@ bool TWebSocketMessageHeader::IsValid(std::stringstream& Error) const
 	//	we only support some opcodes atm
 	switch ( OpCode )
 	{
-		case TWebSockets::TOpCode::TextFrame:
-		case TWebSockets::TOpCode::BinaryFrame:
-		case TWebSockets::TOpCode::ConnectionCloseFrame:
+		case TOpCode::TextFrame:
+		case TOpCode::BinaryFrame:
+		case TOpCode::ConnectionCloseFrame:
 			return true;
 
-		case TWebSockets::TOpCode::ContinuationFrame:
+		case TOpCode::ContinuationFrame:
 			return true;
 			
 		default:
@@ -528,15 +505,23 @@ bool TWebSocketMessageHeader::IsValid(std::stringstream& Error) const
 	return true;
 }
 
-bool TWebSocketMessageHeader::Decode(const ArrayBridge<char>& Data,int& MoreDataRequired,std::stringstream& Error)
+
+//	return false if not enough data, throw on error
+bool WebSocket::TMessageHeader::Decode(TStreamBuffer& Buffer)
 {
-	TBitReader BitReader( Data );
+	//	peek the max we might need (this is variable, but expecting data after anyway that we wont read)
+	auto MaxBits = 32 + 64;	//	worst case, this is the most amount of bits we'll need
+	Array<char> HeaderData;
+	HeaderData.SetSize( MaxBits/8 );
+	if ( !Buffer.Peek( GetArrayBridge(HeaderData) ) )
+		return false;
+	TBitReader BitReader( GetArrayBridge(HeaderData) );
 
 	//	return false & no data == error
 	//	return false & MoreData == need more data
 
 	//	if any of these fail, we need more data
-	MoreDataRequired = 1;
+	int MoreDataRequired = 1;
 	if ( !BitReader.Read( Fin, 1 ) )
 		return false;
 	if ( !BitReader.Read( Reserved, 3 ) )
@@ -566,6 +551,9 @@ bool TWebSocketMessageHeader::Decode(const ArrayBridge<char>& Data,int& MoreData
 			return false;
 	}
 	
+	//	pop out all the data we read
+	Buffer.Pop( BitReader.BytesRead() );
+	
 	MaskKey.Clear();
 	if ( Masked )
 	{
@@ -589,16 +577,10 @@ bool TWebSocketMessageHeader::Decode(const ArrayBridge<char>& Data,int& MoreData
 	if ( BitPos % 8 != 0 )
 		return false;
 
-	//	check state of everything we read
-	if ( !IsValid(Error) )
-	{
-		MoreDataRequired = 0;
-		return false;
-	}
 	return true;
 }
 
-
+/*
 bool TWebSocketMessageHeader::Encode(ArrayBridge<char>& OutputData,const ArrayBridge<char>& MessageData,std::stringstream& Error)
 {
 	//	should be valid here. with zero length
@@ -681,6 +663,8 @@ bool TWebSocketMessageHeader::Encode(ArrayBridge<char>& OutputData,const ArrayBr
 	OutputData.InsertArray( HeaderData,0 );
 	return true;
 }
+*/
+
 /*
 TDecodeResult::Type TProtocolWebSocketImpl::DecodeHeader(TJob& Job,TStreamBuffer& Stream)
 {
