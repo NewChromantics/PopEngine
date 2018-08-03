@@ -63,16 +63,19 @@ TProtocolState::Type WebSocket::TRequestProtocol::Decode(TStreamBuffer& Buffer)
 	}
 
 	//	we're doing websocket now, so we need to decode incoming data
-	TMessageHeader MessageHeader;
+	TMessageHeader Header;
 	
 	try
 	{
-		if ( !MessageHeader.Decode( Buffer ) )
+		if ( !Header.Decode( Buffer ) )
 			return TProtocolState::Waiting;
 		
+		//	just a close command
+		if ( Header.OpCode == TOpCode::ConnectionCloseFrame )
+			return TProtocolState::Disconnect;
+		
 		//	decode body
-		throw Soy::AssertException("Decode websocket body!");
-		return TProtocolState::Finished;
+		return DecodeBody( Header, Buffer );
 	}
 	catch(std::exception& e)
 	{
@@ -117,6 +120,123 @@ bool WebSocket::TRequestProtocol::ParseSpecificHeader(const std::string& Key,con
 
 
 
+TProtocolState::Type WebSocket::TRequestProtocol::DecodeBody(TMessageHeader& Header,TStreamBuffer& Buffer)
+{
+	//	gr: to handle mulitple messages, the data all goes into the payload param
+	//	if the param is missing, we haven't loaded our payload yet
+	//	gr: ^^^ old approach. Now, we probably need to store a payload buffer in the request protocol that's persistent
+	
+	
+	//	work out the size of the data we still need to read
+	auto MessageDataSize = Header.GetLength();
+	//	^^payloadsize
+	//	std::Debug << "Websocket header was " << HeaderData.GetSize() << " bytes" << std::endl;
+	//	std::Debug << "Websocket length: " << Header.GetLength() << " bytes" << std::endl;
+	//	std::Debug << "MessageDataSize: " << MessageDataSize << " bytes " << std::endl;
+
+	/*
+	//	setup the job and the meta we need (todo: serialise TWebSocketMessageHeader into a single param?)
+	Job.mParams.mCommand = WebsocketMessageCommand;
+	Job.mParams.AddParam("payloadsize", Soy::StreamToString(std::stringstream()<<MessageDataSize) );
+	//	set format if it's text, otherwise binary
+	if ( Header.IsText() )
+		Job.mParams.AddParam("format", TJobFormat( "text" ).GetFormatString() );
+	if ( Header.Masked )
+		Job.mParams.AddParam(WebsocketMaskKeyParam, Header.GetMaskKeyString() );
+	Job.mParams.AddParam(WebSocketFinParam, (Header.Fin==1) );
+	Job.mParams.AddParam(WebsocketIsContinuationParam, (Header.OpCode == TWebSockets::TOpCode::ContinuationFrame) );
+	
+*/
+	//	read the data we're expecting
+	Array<char> PayloadData;
+	if ( !Buffer.Pop( MessageDataSize, GetArrayBridge(PayloadData) ) )
+		return TProtocolState::Waiting;
+		
+	//	unmask the data
+	{
+		auto& MaskKey = Header.MaskKey;
+		for ( int i=0;	i<PayloadData.GetSize();	i++ )
+		{
+			char Encoded = PayloadData[i];
+			char Decoded = Encoded ^ MaskKey[i%4];
+			PayloadData[i] = Decoded;
+		}
+	}
+		
+	//	opcode tells us if it's text/binary, but we only know that if we're the first packet
+	//	but we do know when we're the last one.
+	auto IsLastPayload = (Header.Fin==1);
+	mMessage.PushMessageData( Header.GetOpCode(), IsLastPayload, GetArrayBridge(PayloadData) );
+	return TProtocolState::Finished;
+}
+		
+		
+void WebSocket::TMessage::PushMessageData(TOpCode::Type PayloadFormat,bool IsLastPayload,const ArrayBridge<char>&& Payload)
+{
+	//	if the payload format is text/binary then it's new data (additional data is always continuation)
+	if ( PayloadFormat != TOpCode::TextFrame && PayloadFormat != TOpCode::BinaryFrame )
+	{
+		//	if there's existing data, error!
+		if ( !mBinaryData.IsEmpty() || mTextData.length() > 0 )
+		{
+			throw Soy::AssertException("Got new payload, but old one didn't finish");
+		}
+	}
+	
+	if ( PayloadFormat == TOpCode::ContinuationFrame )
+	{
+		if ( !mBinaryData.IsEmpty() )
+		{
+			PayloadFormat = TOpCode::BinaryFrame;
+		}
+		else if ( mTextData.length() > 0 )
+		{
+			PayloadFormat = TOpCode::TextFrame;
+		}
+		else
+		{
+			throw Soy::AssertException("Got a contiuation frame, but don't know the [old] payload format");
+		}
+	}
+	
+	//	binary data
+	if ( PayloadFormat == TOpCode::BinaryFrame )
+	{
+		PushBinaryMessageData( Payload, IsLastPayload );
+	}
+	else if ( PayloadFormat == TOpCode::TextFrame )
+	{
+		PushTextMessageData( Payload, IsLastPayload );
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "Unexpected payload type: " << PayloadFormat;
+		throw Soy::AssertException(Error.str());
+	}
+}
+
+
+void WebSocket::TMessage::PushBinaryMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload)
+{
+	mBinaryData.PushBackArray( Payload );
+	
+	if ( IsLastPayload )
+	{
+		mOnBinaryMessage( mBinaryData );
+	}
+}
+
+void WebSocket::TMessage::PushTextMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload)
+{
+	auto PayloadString = Soy::ArrayToString( Payload );
+	mTextData += PayloadString;
+	
+	if ( IsLastPayload )
+	{
+		mOnTextMessage( mTextData );
+	}
+}
 
 WebSocket::THandshakeResponseProtocol::THandshakeResponseProtocol(const THandshakeMeta& Handshake)
 {
@@ -332,7 +452,7 @@ TEST(EncodeAndDecodeWebSocketMessageHeader)
 }
 */
 
-int WebSocket::TMessageHeader::GetLength() const
+size_t WebSocket::TMessageHeader::GetLength() const
 {
 	if ( Length64 != 0 )
 	{
@@ -342,7 +462,7 @@ int WebSocket::TMessageHeader::GetLength() const
 		//	currently limited cos we're using 32bit lengths in arrays and stuff
 		if ( Length64 > std::numeric_limits<int>::max() )
 			return -1;
-		return static_cast<int>( Length64 );
+		return Length64;
 	}
 	
 	if ( Length16 != 0 )
@@ -352,25 +472,30 @@ int WebSocket::TMessageHeader::GetLength() const
 		return Length16;
 	}
 
-	auto Error = [this]
+	if ( Length >= 127 )
 	{
 		std::stringstream Error;
 		Error << "Length (" << this->Length << ") expected < 127";
-		return Error.str();
-	};
-
-	if ( !Soy::Assert( Length < 127, Error  ) )
-		return -1;
+		throw Soy::AssertException( Error.str() );
+	}
 	
-//	if ( Length < 127 )
 	{
 		if ( Length64 != 0 || Length16 != 0 )
-			return -1;
+		{
+			std::stringstream Error;
+			Error << "Expected length 16/64 to be non-zero";
+			throw Soy::AssertException( Error.str() );
+		}
 	}
 	
 	//	length must be 0?
 	if ( Length < 0 )
-		return -1;
+	{
+		std::stringstream Error;
+		Error << "Unexpected length: " << Length;
+		throw Soy::AssertException( Error.str() );
+	}
+
 	return Length;
 }
 
@@ -551,8 +676,7 @@ bool WebSocket::TMessageHeader::Decode(TStreamBuffer& Buffer)
 			return false;
 	}
 	
-	//	pop out all the data we read
-	Buffer.Pop( BitReader.BytesRead() );
+
 	
 	MaskKey.Clear();
 	if ( Masked )
@@ -570,13 +694,25 @@ bool WebSocket::TMessageHeader::Decode(TStreamBuffer& Buffer)
 	}
 	
 	//	check theres enough data left...
-	int BitPos = BitReader.BitPosition();
+	auto BitPos = BitReader.BitPosition();
 	//int BytesRead = BitPos / 8;
 	//	gr: expecting this to align, no mentiuon in the RFC but pretty sure it does (and makes sense
 	MoreDataRequired = 0;
 	if ( BitPos % 8 != 0 )
-		return false;
-
+	{
+		throw Soy::AssertException("Bits read in websocket header not aligned to 8");
+	}
+	
+	//	check integrity
+	{
+		std::stringstream Error;
+		if ( !IsValid( Error ) )
+			throw Soy::AssertException( Error.str() );
+	}
+	
+	//	pop out all the data we read
+	Buffer.Pop( BitReader.BytesRead() );
+	
 	return true;
 }
 

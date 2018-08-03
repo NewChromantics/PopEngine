@@ -23,10 +23,11 @@ namespace ApiWebsocket
 class TClient : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
 {
 public:
-	TClient(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnWebSocketMessage) :
+	TClient(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
 		TSocketReadThread_Impl	( Socket, Ref ),
 		TSocketWriteThread		( Socket, Ref ),
-		mOnWebSocketMessage		( OnWebSocketMessage )
+		mOnTextMessage			( OnTextMessage ),
+		mOnBinaryMessage		( OnBinaryMessage )
 	{
 		TSocketReadThread_Impl::Start();
 		TSocketWriteThread::Start();
@@ -34,14 +35,13 @@ public:
 
 	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
 	
-	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override
-	{
-		return std::shared_ptr<Soy::TReadProtocol>( new WebSocket::TRequestProtocol(mHandshake) );
-	}
+	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
 	
 public:
-	std::function<void(const std::string&)>	mOnWebSocketMessage;
-	WebSocket::THandshakeMeta	mHandshake;
+	std::function<void(const std::string&)>		mOnTextMessage;
+	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
+	WebSocket::THandshakeMeta					mHandshake;
+	std::shared_ptr<WebSocket::TMessage>		mCurrentMessage;
 };
 
 

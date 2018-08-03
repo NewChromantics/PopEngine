@@ -10,7 +10,7 @@ namespace WebSocket
 	class THandshakeMeta;
 	class THandshakeResponseProtocol;
 	class TMessageHeader;
-	
+	class TMessage;
 	
 	namespace TOpCode
 	{
@@ -83,6 +83,26 @@ public:
 };
 
 
+class WebSocket::TMessage
+{
+public:
+	TMessage(std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
+		mOnTextMessage		( OnTextMessage ),
+		mOnBinaryMessage	( OnBinaryMessage )
+	{
+	}
+
+	void				PushMessageData(TOpCode::Type PayloadFormat,bool IsLastPayload,const ArrayBridge<char>&& Payload);
+	void				PushTextMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload);
+	void				PushBinaryMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload);
+	
+public:
+	std::function<void(const std::string&)>		mOnTextMessage;
+	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
+	Array<uint8_t>		mBinaryData;	//	binary message
+	std::string			mTextData;		//	text message
+};
+
 class WebSocket::TMessageHeader
 {
 public:
@@ -108,8 +128,9 @@ public:
 	uint64	Length64;
 	BufferArray<unsigned char,4> MaskKey;	//	store & 32 bit int
 	
-	bool		IsText() const		{	return OpCode == TOpCode::TextFrame;	}
-	int			GetLength() const;
+	TOpCode::Type	GetOpCode() const	{	return TOpCode::Validate( OpCode );	}
+	bool		IsText() const			{	return OpCode == TOpCode::TextFrame;	}
+	size_t		GetLength() const;
 	std::string	GetMaskKeyString() const;
 	bool		IsValid(std::stringstream& Error) const;
 	bool		Decode(TStreamBuffer& Data);		//	returns false if not got enough data. throws on error
@@ -122,21 +143,22 @@ public:
 class WebSocket::TRequestProtocol : public Http::TRequestProtocol
 {
 public:
-	TRequestProtocol() : mHandshake(*(THandshakeMeta*)nullptr)	{	throw Soy::AssertException("Should not be called");	}
-	TRequestProtocol(THandshakeMeta& Handshake) :
-		mHandshake	( Handshake )
+	TRequestProtocol() : mHandshake(* new THandshakeMeta() ), mMessage( *new TMessage(nullptr,nullptr) )	{	throw Soy::AssertException("Should not be called");	}
+	TRequestProtocol(THandshakeMeta& Handshake,TMessage& Message) :
+		mHandshake	( Handshake ),
+		mMessage	( Message )
 	{
 	}
 
 	virtual TProtocolState::Type	Decode(TStreamBuffer& Buffer) override;
 	virtual bool					ParseSpecificHeader(const std::string& Key,const std::string& Value) override;
 	
+protected:
+	TProtocolState::Type	DecodeBody(TMessageHeader& Header,TStreamBuffer& Buffer);
+
 public:
 	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
-	
-	//	decoded data
-	Array<uint8_t>		mBinaryData;	//	binary message
-	std::string			mTextData;		//	text message
+	TMessage&			mMessage;	//	persistent message for multi-frame messages
 };
 
 

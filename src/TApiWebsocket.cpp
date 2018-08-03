@@ -150,12 +150,16 @@ std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
 
 void TWebsocketServer::AddClient(SoyRef ClientRef)
 {
-	auto OnWebsocketMessage = [](const std::string& Message)
+	auto OnTextMessage = [](const std::string& Message)
 	{
 		std::Debug << Message << std::endl;
 	};
+	auto OnBinaryMessage = [](const Array<uint8_t>& Message)
+	{
+		std::Debug << "Binary message: x" << Message.GetDataSize() << " bytes " << std::endl;
+	};
 	
-	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, OnWebsocketMessage ) );
+	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, OnTextMessage, OnBinaryMessage ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
 }
@@ -184,42 +188,35 @@ void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData
 		Message << Data.mContent[i];
 	Message << std::endl;
 	
-	
-	
-	
 	//	send back a response if it's a handshake
 	if ( Data.mHandshake.mIsWebSocketUpgrade )
 	{
 		std::shared_ptr<Soy::TWriteProtocol> pResponse( new WebSocket::THandshakeResponseProtocol(mHandshake) );
-		auto& Response = *dynamic_cast<WebSocket::THandshakeResponseProtocol*>( pResponse.get() );
+		//auto& Response = *dynamic_cast<WebSocket::THandshakeResponseProtocol*>( pResponse.get() );
 		Push( pResponse );
 	}
+}
 
-	//	success parsing!
-	//	gr: if we have all vars, handshaked
-	//mHasHandshaked = true;
-	
-	//	gr: need to reply here
-	/*
-	 //	force an immediate reply using bounce
-	 Job.mParams.mCommand = "Handshake";
-	 
-	 //	add http headers we need to reply with
-	 if ( !mProtocol.empty() )
-		Job.mParams.AddParam("Sec-WebSocket-Protocol", mProtocol );
-	 
-	 if ( Header.mIsWebSocketUpgrade )
-	 {
-		Job.mParams.AddParam( "Sec-WebSocket-Accept", Header.GetReplyKey() );
-		Job.mParams.AddParam( "Upgrade", "websocket" );
-		Job.mParams.AddParam( "Connection", "Upgrade" );
-	 }
-	 //	need to force a reply here...
-	 return TDecodeResult::Bounce;
-	 */
 
+
+std::shared_ptr<Soy::TReadProtocol> TClient::AllocProtocol()
+{
+	auto OnTextMessage = [this](const std::string& Message)
+	{
+		mOnTextMessage( Message );
+		mCurrentMessage.reset();
+	};
 	
+	auto OnBinaryMessage = [this](const Array<uint8_t>& Message)
+	{
+		mOnBinaryMessage( Message );
+		mCurrentMessage.reset();
+	};
 	
-	mOnWebSocketMessage( Message.str() );
+	if ( !mCurrentMessage )
+		mCurrentMessage.reset( new WebSocket::TMessage(OnTextMessage,OnBinaryMessage) );
+	
+	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,*mCurrentMessage);
+	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
 }
 	
