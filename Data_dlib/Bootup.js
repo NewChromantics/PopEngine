@@ -22,13 +22,32 @@ var LastFrameImage = null;
 var LastFace = null;
 var LastSkeleton = null;
 
+function GetRectLines(Rect)
+{
+	let Lines = [];
+	
+	let l = Rect[0];
+	let t = Rect[1];
+	let r = Rect[0] + Rect[2];
+	let b = Rect[1] + Rect[3];
+	
+	Lines.push( [l,t,	r,t] );
+	Lines.push( [r,t,	r,b] );
+	Lines.push( [r,b,	l,b] );
+	Lines.push( [l,b,	l,t] );
+	
+	return Lines;
+}
 
 function GetSkeletonLines(Skeleton)
 {
-	if ( Skeleton == null )
-		return [];
-	
 	let Lines = [];
+
+	if ( LastSkeletonFaceRect )
+		Lines = Lines.concat( GetRectLines(LastSkeletonFaceRect) );
+	
+	if ( Skeleton == null )
+		return Lines;
 	
 	let PushLine = function(namea,nameb)
 	{
@@ -76,14 +95,7 @@ function GetFeatureLines(Face)
 	if ( Face != null )
 	{
 		let FaceRect = Face.Rect;
-		let l = FaceRect[0];
-		let r = FaceRect[0] + FaceRect[2];
-		let t = FaceRect[1];
-		let b = FaceRect[1] + FaceRect[3];
-		Lines.push( [l,t,r,t] );
-		Lines.push( [r,t,r,b] );
-		Lines.push( [r,b,l,b] );
-		Lines.push( [l,b,l,t] );
+		Lines.concat( GetRectLines(FaceRect) );
 	}
 	
 	let LineOffset = 1 / 400;
@@ -187,19 +199,23 @@ function EnumDevices(DeviceNames)
 
 var DlibThreadCount = 10;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
-//var FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
+var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
+
+var LastSkeletonFaceRect = null;
+var ShoulderToHeadWidthRatio = 0.4;
+var HeadWidthToHeightRatio = 2.1;
+var NoseHeightInHead = 0.6;
+
 
 function OnNewFrame(NewFrameImage,SaveFilename)
 {
-	LastFrameImage = NewFrameImage;
-	return;
-	
+	NewFrameImage.Timestamp = Date.now();
 	
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > DlibThreadCount )
 		return;
-	CurrentProcessingImageCount++;
+	
 	Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
 	let OnFace = function(Face)
@@ -208,12 +224,34 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
 	
-	let FaceRect = [0.3,0.2,0.3,0.4];
-	
-	//FaceProcessor.FindFaces(NewFrameImage)
-	FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
-	.then( OnFace )
-	.catch( OnFailedNewFace );
+	if ( LastSkeletonFaceRect == null )
+	{
+		Debug("Waiting for LastSkeletonFaceRect");
+		LastFrameImage = NewFrameImage;
+		return;
+	}
+
+	//	load on first use
+	if ( FaceProcessor == null )
+		FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
+
+	try
+	{
+		let FaceRect = LastSkeletonFaceRect;
+		CurrentProcessingImageCount++;
+
+		//	gr: this was silently throwing when FaceProcessor == null/undefined!
+		//FaceProcessor.FindFaces(NewFrameImage)
+		FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
+		.then( OnFace )
+		.catch( OnFailedNewFace );
+	}
+	catch(e)
+	{
+		CurrentProcessingImageCount--;
+
+		Debug("Error setting up promise chain: " + e );
+	}
 }
 
 function GetDeviceNameMatch(DeviceNames,MatchName)
@@ -249,7 +287,7 @@ function OnSkeletonJson(SkeletonJson)
 		let kp = Keypoints.find( FindKeypointPart );
 		if ( kp === undefined )
 		{
-			Debug("Failed to find keypoint " + Name);
+			//Debug("Failed to find keypoint " + Name);
 			return undefined;
 		}
 		kp.position.y = 1 - kp.position.y;
@@ -257,6 +295,7 @@ function OnSkeletonJson(SkeletonJson)
 	}
 	
 	let SimpleSkeleton = {};
+	SimpleSkeleton.Timestamp = Date.now();
 	
 	let PushKeypoint = function(Name)
 	{
@@ -282,6 +321,32 @@ function OnSkeletonJson(SkeletonJson)
 	PushKeypoint('rightKnee');
 	PushKeypoint('leftAnkle');
 	PushKeypoint('rightAnkle');
+	
+	
+	//	make a skeleton face rect
+	{
+		//	gr: ears are unreliable, get head size from shoulders
+		//		which is a shame as we basically need ear to ear size
+		let Nose = SimpleSkeleton.nose;
+		let Left = SimpleSkeleton.leftShoulder;
+		let Right = SimpleSkeleton.rightShoulder;
+		if ( Nose && Left && Right )
+		{
+			if ( Left.x > Right.x )
+			{
+				let Temp = Right;
+				Right = Left;
+				Left = Temp;
+			}
+			let Width = (Right.x - Left.x) * ShoulderToHeadWidthRatio;
+			let Height = Width * HeadWidthToHeightRatio;
+			let Bottom = Nose.y + (Height * NoseHeightInHead);
+			let x = Nose.x - (Width/2);
+			let y = Bottom - Height;
+			LastSkeletonFaceRect = [x,y,Width,Height];
+		}
+	}
+	
 	
 	LastSkeleton = SimpleSkeleton;
 }
@@ -322,7 +387,7 @@ function Main()
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	//OnNewFrame(TestImage,'Data_dlib/Face.json');
+	OnNewFrame(TestImage,'Data_dlib/Face.json');
 	
 	Server = new WebsocketServer(ServerPort);
 	Server.OnMessage = OnSkeletonJson;
