@@ -20,6 +20,55 @@ let FrameFragShaderSource = LoadFileAsString("Data_dlib/DrawFrameAndPose.frag");
 var FrameShader = null;
 var LastFrameImage = null;
 var LastFace = null;
+var LastSkeleton = null;
+
+
+function GetSkeletonLines(Skeleton)
+{
+	if ( Skeleton == null )
+		return [];
+	
+	let Lines = [];
+	
+	let PushLine = function(namea,nameb)
+	{
+		let Posa = Skeleton[namea];
+		let Posb = Skeleton[nameb];
+		if ( Posa == undefined || Posb == undefined )
+			return;
+		
+		Lines.push( Posa.x );
+		Lines.push( Posa.y );
+		Lines.push( Posb.x );
+		Lines.push( Posb.y );
+	}
+	
+	PushLine('nose','leftEye');
+	PushLine('nose','rightEye');
+	PushLine('leftEar','leftEye');
+	PushLine('rightEar','rightEye');
+
+	PushLine('nose','leftShoulder');
+	PushLine('nose','rightShoulder');
+
+	PushLine('leftShoulder','rightShoulder');
+	PushLine('leftHip','rightHip');
+
+	PushLine('leftShoulder','leftElbow');
+	PushLine('leftElbow','leftWrist');
+	PushLine('leftShoulder','leftHip');
+	PushLine('leftHip','leftKnee');
+	PushLine('leftKnee','leftAnkle');
+
+	PushLine('rightShoulder','rightElbow');
+	PushLine('rightElbow','rightWrist');
+	PushLine('rightShoulder','rightHip');
+	PushLine('rightHip','rightKnee');
+	PushLine('rightKnee','rightAnkle');
+	
+	Debug( Lines.length + " skeleton lines");
+	return Lines;
+}
 
 function GetFeatureLines(Face)
 {
@@ -70,15 +119,15 @@ function WindowRender(RenderTarget)
 				Shader.SetUniform("Frame", LastFrameImage, 0 );
 			Shader.SetUniform("HasFrame", LastFrameImage!=null );
 			
-			const MAX_LINES = 100;
+			let SkeletonLines = GetSkeletonLines( LastSkeleton );
 			let PoseLines = GetFeatureLines(LastFace);
+			
+			PoseLines = SkeletonLines.concat( PoseLines );
+			
+			const MAX_LINES = 100;
 			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
-			//Debug(PoseLines);
+			
 			Shader.SetUniform("Lines", PoseLines );
-			/*
-			uniform vec4		Lines[LINE_COUNT];
-			uniform float		LineScores[LINE_COUNT];
-			*/
 		}
 		
 		RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -183,7 +232,52 @@ var ServerPort = 8008;
 
 function OnSkeletonJson(SkeletonJson)
 {
-	Debug("Got skeleton json: " + SkeletonJson);
+	var Skeleton = JSON.parse(SkeletonJson);
+	
+	let GetKeypointPos = function(Name)
+	{
+		let FindKeypointPart = function(Keypoint)
+		{
+			return Keypoint.part == Name;
+		};
+		let Keypoints = Skeleton.keypoints;
+		let kp = Keypoints.find( FindKeypointPart );
+		if ( kp === undefined )
+		{
+			Debug("Failed to find keypoint " + Name);
+			return undefined;
+		}
+		return kp.position;
+	}
+	
+	let SimpleSkeleton = {};
+	
+	let PushKeypoint = function(Name)
+	{
+		let Pos = GetKeypointPos(Name);
+		if ( Pos == undefined )
+			return;
+		SimpleSkeleton[Name] = Pos;
+	}
+	PushKeypoint('nose');
+	PushKeypoint('leftEye');
+	PushKeypoint('rightEye');
+	PushKeypoint('leftEar');
+	PushKeypoint('rightEar');
+	PushKeypoint('leftShoulder');
+	PushKeypoint('rightShoulder');
+	PushKeypoint('leftElbow');
+	PushKeypoint('rightElbow');
+	PushKeypoint('leftWrist');
+	PushKeypoint('rightWrist');
+	PushKeypoint('leftHip');
+	PushKeypoint('rightHip');
+	PushKeypoint('leftKnee');
+	PushKeypoint('rightKnee');
+	PushKeypoint('leftAnkle');
+	PushKeypoint('rightAnkle');
+	
+	LastSkeleton = SimpleSkeleton;
 }
 
 function Main()

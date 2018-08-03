@@ -346,7 +346,6 @@ inline v8::Local<TYPE> v8::GetLocal(v8::Isolate& Isolate,Persist<TYPE> Persisten
 	return LocalHandle;
 }
 
-
 template<typename NUMBERTYPE>
 inline v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBERTYPE>&& Values)
 {

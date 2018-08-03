@@ -63,8 +63,8 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 	TV8Container& Container = *mContainer;
 	auto Runner = [&](Local<Context> context)
 	{
-		auto* isolate = context->GetIsolate();
-		auto This = Local<Object>::New( isolate, this->mHandle );
+		auto& isolate = *context->GetIsolate();
+		auto This = Local<Object>::New( &isolate, this->mHandle );
 		Container.ExecuteFunc( context, "OnRender", This );
 	};
 	Container.RunScoped( Runner );

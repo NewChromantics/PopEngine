@@ -48,7 +48,7 @@ public:
 class TWebsocketServer : public SoyWorkerThread
 {
 public:
-	TWebsocketServer(uint16_t ListenPort);
+	TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage);
 
 protected:
 	virtual bool				Iteration() override;
@@ -62,6 +62,9 @@ private:
 	
 	std::recursive_mutex			mClientsLock;
 	Array<std::shared_ptr<TClient>>	mClients;
+	
+	std::function<void(const std::string&)>		mOnTextMessage;
+	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
 };
 
 
@@ -74,6 +77,10 @@ public:
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	
+	//	queue up a callback for This handle's OnMessage callback
+	void						OnMessage(const std::string& Message);
+	void						OnMessage(const Array<uint8_t>& Message);
 	
 public:
 	v8::Persistent<v8::Object>	mHandle;

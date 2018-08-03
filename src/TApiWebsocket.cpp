@@ -78,13 +78,65 @@ Local<FunctionTemplate> TWebsocketServerWrapper::CreateTemplate(TV8Container& Co
 TWebsocketServerWrapper::TWebsocketServerWrapper(uint16_t ListenPort) :
 	mContainer		( nullptr )
 {
-	mSocket.reset( new TWebsocketServer(ListenPort) );
+	auto OnTextMessage = [this](const std::string& Message)
+	{
+		this->OnMessage(Message);
+	};
+	
+	auto OnBinaryMessage = [this](const Array<uint8_t>& Message)
+	{
+		this->OnMessage(Message);
+	};
+	
+	mSocket.reset( new TWebsocketServer(ListenPort, OnTextMessage, OnBinaryMessage ) );
+}
+
+
+void TWebsocketServerWrapper::OnMessage(const std::string& Message)
+{
+	auto SendJsMessage = [=](Local<Context> Context)
+	{
+		auto& Container = *this->mContainer;
+		auto& Isolate = *Context->GetIsolate();
+		auto ThisHandle = Local<Object>::New( &Isolate, this->mHandle );
+		BufferArray<Local<Value>,1> Args;
+		auto FunctionHandle = v8::GetFunction( Context, ThisHandle, "OnMessage" );
+		
+		auto MessageHandle = v8::GetString( Isolate, Message );
+		Args.PushBack( MessageHandle );
+		
+		Container.ExecuteFunc( Context, FunctionHandle, ThisHandle, GetArrayBridge(Args) );
+	};
+	
+	mContainer->QueueScoped( SendJsMessage );
+}
+
+void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
+{
+	auto SendJsMessage = [=](Local<Context> Context)
+	{
+		auto& Container = *this->mContainer;
+		auto& Isolate = *Context->GetIsolate();
+		auto ThisHandle = Local<Object>::New( &Isolate, this->mHandle );
+		BufferArray<Local<Value>,1> Args;
+		auto FunctionHandle = v8::GetFunction( Context, ThisHandle, "OnMessage" );
+		
+		auto MessageHandle = v8::GetTypedArray( Isolate, GetArrayBridge(Message) );
+		Args.PushBack( MessageHandle );
+		
+		Container.ExecuteFunc( Context, FunctionHandle, ThisHandle, GetArrayBridge(Args) );
+	};
+	
+	mContainer->QueueScoped( SendJsMessage );
 }
 
 
 
-TWebsocketServer::TWebsocketServer(uint16_t ListenPort) :
-	SoyWorkerThread	( Soy::StreamToString(std::stringstream()<<"WebsocketServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep )
+
+TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
+	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"WebsocketServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
+	mOnTextMessage		( OnTextMessage ),
+	mOnBinaryMessage	( OnBinaryMessage )
 {
 	mSocket.reset( new SoySocket() );
 	mSocket->CreateTcp(true);
@@ -150,16 +202,7 @@ std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
 
 void TWebsocketServer::AddClient(SoyRef ClientRef)
 {
-	auto OnTextMessage = [](const std::string& Message)
-	{
-		std::Debug << Message << std::endl;
-	};
-	auto OnBinaryMessage = [](const Array<uint8_t>& Message)
-	{
-		std::Debug << "Binary message: x" << Message.GetDataSize() << " bytes " << std::endl;
-	};
-	
-	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, OnTextMessage, OnBinaryMessage ) );
+	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
 }
@@ -218,6 +261,7 @@ void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData
 
 std::shared_ptr<Soy::TReadProtocol> TClient::AllocProtocol()
 {
+	//	this needs revising... or locking at least
 	if ( !mCurrentMessage )
 		mCurrentMessage.reset( new WebSocket::TMessage() );
 	
