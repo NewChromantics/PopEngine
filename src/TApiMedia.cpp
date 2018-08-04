@@ -116,6 +116,7 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 				//	return face points here
 				//	gr: can't do this unless we're in the javascript thread...
 				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				//ResolverPersistent.Reset();
 				auto GetValue = [&](size_t Index)
 				{
 					return v8::GetString(*Context->GetIsolate(), DeviceNames[Index] );
@@ -134,6 +135,7 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 			auto OnError = [=](Local<Context> Context)
 			{
 				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				//ResolverPersistent.Reset();
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				ResolverLocal->Reject( Error );
 			};

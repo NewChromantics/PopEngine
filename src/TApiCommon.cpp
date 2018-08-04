@@ -160,6 +160,11 @@ TImageWrapper::~TImageWrapper()
 	std::Debug << "Dealloc TImageWrapper" << std::endl;
 }
 
+void OnFree(const WeakCallbackInfo<TImageWrapper>& data)
+{
+	std::Debug << "Free image wrapper!" << std::endl;
+}
+
 void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
 {
 	auto* Isolate = Arguments.GetIsolate();
@@ -183,6 +188,9 @@ void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 		//		cyclic hell!
 		auto* NewImage = new TImageWrapper(Container);
 		NewImage->mHandle.Reset( Isolate, Arguments.This() );
+		
+		NewImage->mHandle.SetWeak( NewImage, OnFree, v8::WeakCallbackType::kInternalFields );
+		
 		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewImage ) );
 		// return the new object back to the javascript caller
 		Arguments.GetReturnValue().Set( This );

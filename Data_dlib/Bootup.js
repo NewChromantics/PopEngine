@@ -210,6 +210,9 @@ var NoseHeightInHead = 0.5;
 
 function OnNewFrame(NewFrameImage,SaveFilename)
 {
+	LastFrameImage = NewFrameImage;
+	return;
+	
 	NewFrameImage.Timestamp = Date.now();
 	
 	//	temp work throttler
@@ -376,7 +379,7 @@ function Main()
 	
 
 	
-	let VideoDeviceName = "Facetime";
+	let VideoDeviceName = "isight";
 	
 	let LoadDevice = function(DeviceNames)
 	{
@@ -405,13 +408,13 @@ function Main()
 	//let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
 	//OnNewFrame(TestImage,'Data_dlib/Face.json');
-	
+	/*
 	Server = new WebsocketServer(ServerPort);
 	Server.OnMessage = OnSkeletonJson;
 	
 	BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
 	BroadcastServer.OnMessage = OnBroadcastMessage;
-
+*/
 	
 }
 
