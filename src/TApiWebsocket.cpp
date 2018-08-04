@@ -186,7 +186,7 @@ bool TWebsocketServer::Iteration()
 }
 
 
-std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
+std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetClient(SoyRef ClientRef)
 {
 	/*
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
@@ -202,7 +202,7 @@ std::shared_ptr<TClient> TWebsocketServer::GetClient(SoyRef ClientRef)
 
 void TWebsocketServer::AddClient(SoyRef ClientRef)
 {
-	std::shared_ptr<TClient> Client( new TClient( mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage ) );
+	std::shared_ptr<TWebsocketServerPeer> Client( new TWebsocketServerPeer( mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
 }
@@ -213,7 +213,7 @@ void TWebsocketServer::RemoveClient(SoyRef ClientRef)
 }
 
 
-void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
+void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
 {
 	auto& Data = *pData;
 	
@@ -259,7 +259,7 @@ void TClient::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData
 
 
 
-std::shared_ptr<Soy::TReadProtocol> TClient::AllocProtocol()
+std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 {
 	//	this needs revising... or locking at least
 	if ( !mCurrentMessage )

@@ -415,13 +415,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	//	use the resized image
 	auto Width = static_cast<float>(img.nc());
 	auto Height = static_cast<float>(img.nr());
-	auto NormaliseCoord = [&](const point& PositionPx)
-	{
-		vec2f Pos2( PositionPx.x(), PositionPx.y() );
-		Pos2.x /= Width;
-		Pos2.y /= Height;
-		return Pos2;
-	};
+
 	
 	// Now tell the face detector to give us a list of bounding boxes
 	// around all the faces in the image.

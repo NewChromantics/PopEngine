@@ -19,11 +19,11 @@ namespace ApiWebsocket
 }
 
 
-
-class TClient : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
+//	client connected to us
+class TWebsocketServerPeer : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
 {
 public:
-	TClient(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
+	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
 		TSocketReadThread_Impl	( Socket, Ref ),
 		TSocketWriteThread		( Socket, Ref ),
 		mOnTextMessage			( OnTextMessage ),
@@ -55,13 +55,13 @@ protected:
 	
 	void						AddClient(SoyRef ClientRef);
 	void						RemoveClient(SoyRef ClientRef);
-	std::shared_ptr<TClient>	GetClient(SoyRef ClientRef);
+	std::shared_ptr<TWebsocketServerPeer>	GetClient(SoyRef ClientRef);
 	
 private:
 	std::shared_ptr<SoySocket>		mSocket;
 	
 	std::recursive_mutex			mClientsLock;
-	Array<std::shared_ptr<TClient>>	mClients;
+	Array<std::shared_ptr<TWebsocketServerPeer>>	mClients;
 	
 	std::function<void(const std::string&)>		mOnTextMessage;
 	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
@@ -88,4 +88,9 @@ public:
 
 	std::shared_ptr<TWebsocketServer>	mSocket;
 };
+
+
+
+
+
 

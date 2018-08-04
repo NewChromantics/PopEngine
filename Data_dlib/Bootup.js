@@ -269,9 +269,26 @@ function GetDeviceNameMatch(DeviceNames,MatchName)
 
 var Server = null;
 var ServerPort = 8008;
+var BroadcastServer = null;
+var BroadcastServerPort = 8009;
+
+
+function OnBroadcastMessage(PacketBytes,Sender,Socket)
+{
+	Debug("Got UDP broadcast x" + PacketBytes.length + " bytes");
+
+	//	get string from bytes
+	let PacketString = String.fromCharCode.apply(null, PacketBytes);
+	Debug(PacketString);
+	
+	//	reply
+	//Socket.Send( Sender, Server.GetAddress() );
+}
+
 
 function OnSkeletonJson(SkeletonJson)
 {
+	Debug("Got skeleton: " + SkeletonJson);
 	let Skeleton = JSON.parse(SkeletonJson);
 	let MinScore = 0.3;
 	
@@ -385,12 +402,15 @@ function Main()
 	MediaDevices.EnumDevices().then( LoadDevice );
 
 	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-	let TestImage = new Image('Data_dlib/Face.png');
+	//let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	OnNewFrame(TestImage,'Data_dlib/Face.json');
+	//OnNewFrame(TestImage,'Data_dlib/Face.json');
 	
 	Server = new WebsocketServer(ServerPort);
 	Server.OnMessage = OnSkeletonJson;
+	
+	BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
+	BroadcastServer.OnMessage = OnBroadcastMessage;
 
 	
 }
