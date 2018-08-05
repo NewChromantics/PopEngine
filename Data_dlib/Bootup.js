@@ -200,6 +200,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	if ( ServerSkeletonSender )
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
+		Debug("Send FaceJson to " + ServerSkeletonSender.GetAddress() );
 		//ServerSkeletonSender.SendAll( FaceJson );
 	}
 	
@@ -316,7 +317,12 @@ function OnBroadcastMessage(PacketBytes,Sender,Socket)
 		let Address = Addresses[0];
 			
 		Debug("Send back [" + Address + "]" );
-		//Socket.Send( Sender, ServerSkeletonSender.GetAddress() );
+		
+		//	udp needs a binary array, we'll make c++ more flexible later
+		let Address8 = new Uint8Array(Address.length);
+		for ( let i=0;	i<Address.length;	i++ )
+			Address8[i] = Address.charCodeAt(i);
+		Socket.Send( Sender, Address8 );
 	}
 }
 
@@ -406,7 +412,7 @@ function OnSkeletonJson(SkeletonJson)
 function Main()
 {
 	//Debug("log is working!", "2nd param");
-	let Window1 = new OpenglWindow("dlib");
+	let Window1 = new OpenglWindow("PopTrack4");
 	Window1.OnRender = function(){	WindowRender(Window1);	};
 	
 

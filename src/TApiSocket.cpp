@@ -6,6 +6,7 @@
 using namespace v8;
 
 const char GetAddress_FunctionName[] = "GetAddress";
+const char Send_FunctionName[] = "Send";
 
 
 
@@ -72,6 +73,7 @@ Local<FunctionTemplate> TUdpBroadcastServerWrapper::CreateTemplate(TV8Container&
 	InstanceTemplate->SetInternalFieldCount(2);
 	
 	Container.BindFunction<GetAddress_FunctionName>( InstanceTemplate, GetAddress );
+	Container.BindFunction<Send_FunctionName>( InstanceTemplate, Send );
 
 	return ConstructorFunc;
 }
@@ -101,7 +103,7 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 		
 		BufferArray<Local<Value>,2> Args;
 		auto MessageHandle = v8::GetTypedArray( Isolate, GetArrayBridge(Message) );
-		auto RefHandle = v8::Number::New( &Isolate, Sender.GetInt64() );
+		auto RefHandle = v8::GetString( Isolate, Sender.ToString() );
 		Args.PushBack( MessageHandle );
 		Args.PushBack( RefHandle );
 
@@ -135,6 +137,37 @@ v8::Local<v8::Value> TSocketWrapper::GetAddress(const v8::CallbackInfo& Params)
 	
 	auto AddressStrHandle = v8::GetString( Params.GetIsolate(), AddressesStr );
 	return AddressStrHandle;
+}
+
+
+v8::Local<v8::Value> TSocketWrapper::Send(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TSocketWrapper>( ThisHandle );
+	auto ThisSocket = This.GetSocket();
+	if ( !ThisSocket )
+		throw Soy::AssertException("Socket not allocated");
+	
+	if ( Arguments.Length() != 2 )
+		throw Soy::AssertException("Expected 2 arguments Send(Sender,Data)");
+	
+	auto SenderHandle = Arguments[0];
+	auto DataHandle = Arguments[1];
+
+	auto SenderStr = v8::GetString( SenderHandle );
+	auto Sender = SoyRef( SenderStr );
+	
+	Array<uint8_t> Data;
+	v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
+
+	auto& Socket = *ThisSocket;
+	auto Connection = Socket.GetConnection( Sender );
+	auto DataChars = GetArrayBridge(Data).GetSubArray<char>(0,Data.GetSize());
+	Connection.Send( GetArrayBridge(DataChars), Socket.IsUdp() );
+	
+	return v8::Undefined(Params.mIsolate);
 }
 
 
@@ -193,14 +226,4 @@ bool TUdpBroadcastServer::Iteration()
 	return true;
 }
 
-
-std::string TUdpBroadcastServer::GetAddress() const
-{
-	if ( !mSocket )
-		throw Soy::AssertException("Socket not allocated");
-	
-	std::stringstream Address;
-	Address << mSocket->mSocketAddr;
-	return Address.str();
-}
 

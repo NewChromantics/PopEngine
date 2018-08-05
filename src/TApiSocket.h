@@ -41,6 +41,7 @@ class TSocketWrapper
 {
 public:
 	static v8::Local<v8::Value>			GetAddress(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>			Send(const v8::CallbackInfo& Arguments);
 
 	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
 };
