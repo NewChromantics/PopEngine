@@ -167,6 +167,9 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	//	first 4 floats are the rect
 	Face.Rect = [ FaceLandmarks[0], FaceLandmarks[1], FaceLandmarks[2], FaceLandmarks[3] ];
 	
+	if ( LastSkeletonFaceRect == null )
+		LastSkeletonFaceRect = Face.Rect;
+	
 	for ( let i=4;	i<FaceLandmarks.length;	i+=2 )
 	{
 		PushFeature( FaceLandmarks[i+0], FaceLandmarks[i+1] );
@@ -224,13 +227,6 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
 	
-	if ( LastSkeletonFaceRect == null )
-	{
-		Debug("Waiting for LastSkeletonFaceRect");
-		LastFrameImage = NewFrameImage;
-		return;
-	}
-
 	//	load on first use
 	if ( FaceProcessor == null )
 		FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
@@ -240,9 +236,13 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		let FaceRect = LastSkeletonFaceRect;
 		CurrentProcessingImageCount++;
 
-		//	gr: this was silently throwing when FaceProcessor == null/undefined!
-		//FaceProcessor.FindFaces(NewFrameImage)
-		FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect )
+		let FindFacePromise;
+		if ( FaceRect )
+			FindFacePromise = FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect );
+		else
+			FindFacePromise = FaceProcessor.FindFaces( NewFrameImage );
+		
+		FindFacePromise
 		.then( OnFace )
 		.catch( OnFailedNewFace );
 	}
@@ -389,17 +389,7 @@ function Main()
 			Debug("Loading device: " + VideoDeviceName);
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
-			//VideoCapture.OnNewFrame = OnNewFrame;
-			
-			VideoCapture.OnNewFrame = function(NewFrame)
-			{
-				LastFrameImage = NewFrame;
-				
-				//	cleanup old frames I hope
-				GarbageCollect();				
-				return;
-			}
-
+			VideoCapture.OnNewFrame = OnNewFrame;
 		}
 		catch(e)
 		{
@@ -412,21 +402,18 @@ function Main()
 	MediaDevices.EnumDevices().then( LoadDevice );
 
 	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-
-	//	test cleanup
-	TestImage = null;
-	GarbageCollect();
-	
 	//let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	//OnNewFrame(TestImage,'Data_dlib/Face.json');
-	/*
+	OnNewFrame(TestImage,'Data_dlib/Face.json');
+	TestImage = null;
+	GarbageCollect();
+
 	Server = new WebsocketServer(ServerPort);
-	Server.OnMessage = OnSkeletonJson;
-	
+	//Server.OnMessage = OnSkeletonJson;
+
 	BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
 	BroadcastServer.OnMessage = OnBroadcastMessage;
-*/
+
 	
 }
 
