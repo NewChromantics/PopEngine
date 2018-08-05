@@ -9,8 +9,6 @@
 //#include <dlib/gui_widgets.h>
 //#include <dlib/image_io.h>
 
-//#define COPY_DETECTORS
-
 
 using namespace v8;
 
@@ -396,24 +394,9 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 
 	using namespace dlib;
 	
-#if defined(COPY_DETECTORS)
-	auto detector = *mFaceDetector;
-#else
-	auto& detector = *mFaceDetector;
-#endif
 	// We need a face detector.  We will use this to get bounding boxes for
 	// each face in an image.
-	
-	// And we also need a shape_predictor.  This is the tool that will predict face
-	// landmark positions given an image and face bounding box.  Here we are just
-	// loading the model from the shape_predictor_68_face_landmarks.dat file you gave
-	// as a command line argument.
-	//gr: load once
-#if defined(COPY_DETECTORS)
-	auto sp = *mShapePredictor;
-#else
-	auto& sp = *mShapePredictor;
-#endif
+	auto& detector = *mFaceDetector;
 
 	auto img = GetImageFromPixels( Pixels );
 
@@ -441,14 +424,9 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 		auto& FaceRect = FaceDetected.rect;
 		std::Debug << "Extracting face " << f << "/" << FaceRects.size() << " landmarks... Score = " << FaceDetected.detection_confidence << std::endl;
 		
-		Soy::TScopeTimerPrint Timer_3("FindFace: get shape(img)",1);
-		full_object_detection shape = sp(img, FaceRect);
-		Timer_3.Stop();
-		
 		Soy::Rectf FaceRectf( FaceRect.left(), FaceRect.top(), FaceRect.width(), FaceRect.height() );
 		Soy::Rectf ImageRect( 0, 0, Width, Height );
 		FaceRectf.Normalise( ImageRect );
-		
 		
 		TFace NewFace = GetFaceLandmarks( img, FaceRectf );
 		Faces.PushBack(NewFace);
@@ -471,13 +449,10 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 {
 	using namespace dlib;
 	
-#if defined(COPY_DETECTORS)
-	Soy::TScopeTimerPrint Timer_Copy("FindFace: CopyShapePredictor",1);
-	auto sp = *mShapePredictor;
-	Timer_Copy.Stop();
-#else
+	Soy::TScopeTimerPrint Timer_1("auto& sp = *mShapePredictor;",10);
 	auto& sp = *mShapePredictor;
-#endif
+	Timer_1.Stop();
+	
 	auto Width = static_cast<float>(Image.nc());
 	auto Height = static_cast<float>(Image.nr());
 	
@@ -539,14 +514,7 @@ void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>& LandmarksDatBytes)
 	mFaceDetector.reset( new dlib::frontal_face_detector() );
 	auto& fd = *mFaceDetector;
 	fd = dlib::get_frontal_face_detector();
-/*
-	get_frontal_face_detector() );
-	auto& sp = *mShapePredictor;
-	imemstream LandmarkDataMemStream( mFaceLandmarksDat.GetArray(), mFaceLandmarksDat.GetDataSize() );
-	deserialize( sp, LandmarkDataMemStream );
-	auto detector = get_frontal_face_detector();
-*/
-	
+
 	std::Debug << "loading landmarks data..." << std::endl;
 	mShapePredictor.reset( new dlib::shape_predictor() );
 	auto& sp = *mShapePredictor;
