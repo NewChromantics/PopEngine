@@ -8,6 +8,7 @@
 #include "SoyWebsocket.h"
 #include "SoyHttp.h"
 #include "SoySocketStream.h"
+#include "TApiSocket.h"
 
 
 
@@ -58,10 +59,11 @@ protected:
 	void						AddClient(SoyRef ClientRef);
 	void						RemoveClient(SoyRef ClientRef);
 	std::shared_ptr<TWebsocketServerPeer>	GetClient(SoyRef ClientRef);
-	
-private:
+
+public:
 	std::shared_ptr<SoySocket>		mSocket;
 	
+protected:
 	std::recursive_mutex			mClientsLock;
 	Array<std::shared_ptr<TWebsocketServerPeer>>	mClients;
 	
@@ -71,7 +73,7 @@ private:
 
 
 
-class TWebsocketServerWrapper
+class TWebsocketServerWrapper : public TSocketWrapper
 {
 public:
 	TWebsocketServerWrapper(uint16_t ListenPort);
@@ -79,12 +81,13 @@ public:
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static v8::Local<v8::Value>				GetAddress(const v8::CallbackInfo& Arguments);
 
 	//	queue up a callback for This handle's OnMessage callback
-	void						OnMessage(const std::string& Message);
-	void						OnMessage(const Array<uint8_t>& Message);
+	void									OnMessage(const std::string& Message);
+	void									OnMessage(const Array<uint8_t>& Message);
 	
+	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
+
 public:
 	v8::Persistent<v8::Object>	mHandle;
 	TV8Container*				mContainer;

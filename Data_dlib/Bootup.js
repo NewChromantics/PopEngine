@@ -301,9 +301,21 @@ function OnBroadcastMessage(PacketBytes,Sender,Socket)
 	Debug(PacketString);
 	
 	//	reply
-	if ( ServerSkeletonSender )
+	if ( ServerSkeletonSender && PacketString == "whereisobserverserver" )
 	{
-		Debug("Send back " + ServerSkeletonSender.GetAddress() + ", I am " + Socket.GetAddress() );
+		//	get all addresses and filter best one (ie, ignore local host)
+		let Addresses = ServerSkeletonSender.GetAddress().split(',');
+		if ( Addresses.length > 1 )
+		{
+			let IsNotLocalhost = function(Address)
+			{
+				return !Address.startsWith("127.0.0.1:");
+			}
+			Addresses = Addresses.filter( IsNotLocalhost );
+		}
+		let Address = Addresses[0];
+			
+		Debug("Send back [" + Address + "]" );
 		//Socket.Send( Sender, ServerSkeletonSender.GetAddress() );
 	}
 }

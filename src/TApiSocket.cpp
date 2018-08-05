@@ -112,18 +112,28 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 }
 
 
-v8::Local<v8::Value> TUdpBroadcastServerWrapper::GetAddress(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TSocketWrapper::GetAddress(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TUdpBroadcastServerWrapper>( ThisHandle );
-	
-	if ( !This.mSocket )
+	auto& This = v8::GetObject<TSocketWrapper>( ThisHandle );
+	auto ThisSocket = This.GetSocket();
+	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
+
+	//	we return all the addresses with , seperator
+	//	high level can pick the best one
+	std::stringstream Addresses;
+	auto AppendAddress = [&](std::string& InterfaceName,SoySockAddr& InterfaceAddress)
+	{
+		Addresses << InterfaceAddress << ',';
+	};
+	ThisSocket->GetSocketAddresses( AppendAddress );
+	auto AddressesStr = Addresses.str();
+	Soy::StringTrimRight( AddressesStr, ',' );
 	
-	auto AddressStr = This.mSocket->GetAddress();
-	auto AddressStrHandle = v8::GetString( Params.GetIsolate(), AddressStr );
+	auto AddressStrHandle = v8::GetString( Params.GetIsolate(), AddressesStr );
 	return AddressStrHandle;
 }
 
