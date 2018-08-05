@@ -12,8 +12,8 @@ const char EnumDevices_FunctionName[] = "EnumDevices";
 
 void ApiMedia::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("Media", TMediaWrapper::CreateTemplate );
-	Container.BindObjectType("MediaSource", TMediaSourceWrapper::CreateTemplate );
+	Container.BindObjectType("Media", TMediaWrapper::CreateTemplate, nullptr );
+	Container.BindObjectType("MediaSource", TMediaSourceWrapper::CreateTemplate, nullptr );
 }
 
 

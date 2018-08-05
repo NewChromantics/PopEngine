@@ -15,9 +15,9 @@ static v8::Local<v8::Value> OpenclEnumDevices(v8::CallbackInfo& Params);
 
 void ApiOpencl::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("OpenclContext", TOpenclContext::CreateTemplate );
-	Container.BindObjectType("OpenclKernel", TOpenclKernel::CreateTemplate );
-	Container.BindObjectType( TOpenclKernelState::GetObjectTypeName(), TOpenclKernelState::CreateTemplate );
+	Container.BindObjectType("OpenclContext", TOpenclContext::CreateTemplate, nullptr );
+	Container.BindObjectType("OpenclKernel", TOpenclKernel::CreateTemplate, nullptr );
+	Container.BindObjectType( TOpenclKernelState::GetObjectTypeName(), TOpenclKernelState::CreateTemplate, nullptr );
 	Container.BindGlobalFunction<OpenclEnumDevices_FunctionName>( OpenclEnumDevices );
 }
 

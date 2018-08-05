@@ -9,7 +9,7 @@ using namespace v8;
 
 void ApiSocket::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("UdpBroadcastServer", TUdpBroadcastServerWrapper::CreateTemplate );
+	Container.BindObjectType("UdpBroadcastServer", TUdpBroadcastServerWrapper::CreateTemplate, nullptr );
 }
 
 

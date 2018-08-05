@@ -210,9 +210,6 @@ var NoseHeightInHead = 0.5;
 
 function OnNewFrame(NewFrameImage,SaveFilename)
 {
-	LastFrameImage = NewFrameImage;
-	return;
-	
 	NewFrameImage.Timestamp = Date.now();
 	
 	//	temp work throttler
@@ -392,7 +389,17 @@ function Main()
 			Debug("Loading device: " + VideoDeviceName);
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
-			VideoCapture.OnNewFrame = OnNewFrame;
+			//VideoCapture.OnNewFrame = OnNewFrame;
+			
+			VideoCapture.OnNewFrame = function(NewFrame)
+			{
+				LastFrameImage = NewFrame;
+				
+				//	cleanup old frames I hope
+				GarbageCollect();				
+				return;
+			}
+
 		}
 		catch(e)
 		{
@@ -404,7 +411,12 @@ function Main()
 	let MediaDevices = new Media();
 	MediaDevices.EnumDevices().then( LoadDevice );
 
-	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
+	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
+
+	//	test cleanup
+	TestImage = null;
+	GarbageCollect();
+	
 	//let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
 	//OnNewFrame(TestImage,'Data_dlib/Face.json');

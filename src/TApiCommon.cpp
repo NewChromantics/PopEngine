@@ -4,6 +4,7 @@
 #include <SoyFilesystem.h>
 #include <SoyStream.h>
 #include <SoyOpengl.h>
+#include <SoyOpenglContext.h>
 
 using namespace v8;
 
@@ -44,7 +45,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
 
-	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate );
+	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
 
 static Local<Value> Debug(CallbackInfo& Params)
@@ -176,66 +177,28 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 }
 
 
-void OnFree(const WeakCallbackInfo<TImageWrapper>& data)
+TImageWrapper::~TImageWrapper()
 {
-	std::Debug << "Free image wrapper!" << std::endl;
-	auto* Image = data.GetParameter();
-	delete Image;
+	if ( mOpenglTextureDealloc )
+		mOpenglTextureDealloc();
 }
 
-void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TImageWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
-	auto* Isolate = Arguments.GetIsolate();
-	
-	if ( !Arguments.IsConstructCall() )
+	//	construct with filename
+	if ( Arguments.mParams[0]->IsString() )
 	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
+		LoadFile(Arguments);
 		return;
 	}
-	
-	auto This = Arguments.This();
-	
-	//	gr: auto catch this
-	try
+		
+	//	construct with size
+	if ( Arguments.mParams[0]->IsArray() )
 	{
-		auto& Container = GetObject<TV8Container>( Arguments.Data() );
-		
-		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-		//		but it also needs to know of the V8container to run stuff
-		//		cyclic hell!
-		auto* NewImage = new TImageWrapper(Container,This);
-		
-		// return the new object back to the javascript caller
-		Arguments.GetReturnValue().Set( This );
-		
-		//	construct with filename
-		if ( Arguments[0]->IsString() )
-		{
-			auto ThisLoadFile = [&](v8::CallbackInfo& Args)
-			{
-				return NewImage->LoadFile(Args);
-			};
-			CallFunc( ThisLoadFile, Arguments, Container );
-		}
-		
-		//	construct with size
-		if ( Arguments[0]->IsArray() )
-		{
-			auto ThisAlloc = [&](v8::CallbackInfo& Args)
-			{
-				return NewImage->Alloc(Args);
-			};
-			CallFunc( ThisAlloc, Arguments, Container );
-		}
-		
-	}
-	catch(std::exception& e)
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
-		Arguments.GetReturnValue().Set(Exception);
+		Alloc(Arguments);
 		return;
 	}
+
 }
 
 Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
@@ -496,7 +459,7 @@ v8::Local<v8::Value> TImageWrapper::SetLinearFilter(const v8::CallbackInfo& Para
 	return v8::Undefined(Params.mIsolate);
 }
 
-void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
+void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
 	//	already created & current version
 	if ( mOpenglTexture != nullptr )
@@ -511,23 +474,38 @@ void TImageWrapper::GetTexture(std::function<void()> OnTextureLoaded,std::functi
 	if ( !mPixels )
 		throw Soy::AssertException("Trying to get opengl texture when we have no pixels");
 	
-	//	gr: this will need to be on the context's thread
-	//		need to fail here if we're not
-	try
+	auto* pContext = &Context;
+	auto AllocAndOrUpload = [=]
 	{
-		mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
-		mOpenglTexture->SetFilter( mLinearFilter );
-		mOpenglTexture->SetRepeat( mRepeating );
+		//	gr: this will need to be on the context's thread
+		//		need to fail here if we're not
+		try
+		{
+			if ( mOpenglTexture == nullptr )
+			{
+				mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
+				
+				//	alloc the deffered delete func
+				mOpenglTextureDealloc = [this,pContext]
+				{
+					pContext->QueueDelete(mOpenglTexture);
+				};
+			}
 
-		SoyGraphics::TTextureUploadParams UploadParams;
-		mOpenglTexture->Write( *mPixels, UploadParams );
-		mOpenglTextureVersion = mPixelsVersion;
-		OnTextureLoaded();
-	}
-	catch(std::exception& e)
-	{
-		OnError( e.what() );
-	}
+			mOpenglTexture->SetFilter( mLinearFilter );
+			mOpenglTexture->SetRepeat( mRepeating );
+
+			SoyGraphics::TTextureUploadParams UploadParams;
+			mOpenglTexture->Write( *mPixels, UploadParams );
+			mOpenglTextureVersion = mPixelsVersion;
+			OnTextureLoaded();
+		}
+		catch(std::exception& e)
+		{
+			OnError( e.what() );
+		}
+	};
+	Context.PushJob( AllocAndOrUpload );
 }
 
 const Opengl::TTexture& TImageWrapper::GetTexture()

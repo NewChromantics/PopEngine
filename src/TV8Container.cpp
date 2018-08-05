@@ -215,7 +215,7 @@ void TV8Container::LoadScript(Local<Context> context,Local<String> Source)
 }
 
 
-void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate)
+void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator)
 {
 	auto Bind = [&](Local<v8::Context> Context)
 	{
@@ -232,6 +232,7 @@ void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Lo
 		auto ObjectTemplate = Template->InstanceTemplate();
 		auto ObjectTemplatePersistent = v8::GetPersistent( *Isolate, ObjectTemplate );
 		TV8ObjectTemplate NewTemplate( ObjectTemplatePersistent, ObjectName );
+		NewTemplate.mAllocator = Allocator;
 		mObjectTemplates.PushBack(NewTemplate);
 	};
 	RunScoped(Bind);
@@ -435,6 +436,21 @@ void OnFree(const WeakCallbackInfo<void>& data)
 	auto* Image = data.GetParameter();
 	//delete Image;
 }
+
+TV8ObjectTemplate::ALLOCATOR TV8Container::GetAllocator(const char* TYPENAME)
+{
+	//	find template
+	auto* pObjectTemplate = mObjectTemplates.Find( TYPENAME );
+	if ( !pObjectTemplate )
+	{
+		std::stringstream Error;
+		Error << "Unknown object typename " << TYPENAME;
+		auto ErrorStr = Error.str();
+		throw Soy::AssertException(ErrorStr);
+	}
+	return pObjectTemplate->mAllocator;
+}
+
 
 v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName)
 {

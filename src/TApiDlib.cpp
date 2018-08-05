@@ -20,7 +20,7 @@ const char FindFaceFeatures_FunctionName[] = "FindFaceFeatures";
 
 void ApiDlib::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("Dlib", TDlibWrapper::CreateTemplate );
+	Container.BindObjectType("Dlib", TDlibWrapper::CreateTemplate, nullptr );
 }
 
 

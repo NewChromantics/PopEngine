@@ -41,8 +41,8 @@ DEFINE_IMMEDIATE(drawElements);
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate );
-	Container.BindObjectType("OpenglShader", TShaderWrapper::CreateTemplate );
+	Container.BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate, nullptr );
+	Container.BindObjectType("OpenglShader", TShaderWrapper::CreateTemplate, nullptr );
 }
 
 
@@ -256,6 +256,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 		ResolverLocal->Resolve( Message );
 	};
 	
+	auto OpenglContext = This.mWindow->GetContext();
 	auto OpenglRender = [=]
 	{
 		try
@@ -266,7 +267,8 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			{
 				throw Soy::AssertException(Error);
 			};
-			TargetImage->GetTexture( []{}, OnError );
+			//	gr: this auto execute automatically
+			TargetImage->GetTexture( *OpenglContext, []{}, OnError );
 		
 			//	setup render target
 			auto& TargetTexture = TargetImage->GetTexture();
@@ -316,8 +318,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			Container->QueueScoped( OnError );
 		}
 	};
-	auto& OpenglContext = *This.mWindow->GetContext();
-	OpenglContext.PushJob( OpenglRender );
+	OpenglContext->PushJob( OpenglRender );
 
 	//	return the promise
 	auto Promise = Resolver->GetPromise();
@@ -362,6 +363,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 	};
 	
 	
+	auto OpenglContext = This.mWindow->GetContext();
 	auto OpenglRender = [=]
 	{
 		try
@@ -372,8 +374,8 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 			{
 				throw Soy::AssertException(Error);
 			};
-			TargetImage->GetTexture( []{}, OnError );
-			TempImage->GetTexture( []{}, OnError );
+			TargetImage->GetTexture( *OpenglContext, []{}, OnError );
+			TempImage->GetTexture( *OpenglContext, []{}, OnError );
 			
 			//	targets for chain
 			auto& FinalTargetTexture = TargetImage->GetTexture();
@@ -394,10 +396,10 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 			
 			for ( int it=0;	it<IterationCount;	it++ )
 			{
-				auto& PreviousBuffer = *Targets[ (it+0) % Targets.GetSize() ];
-				auto& CurrentBuffer = *Targets[ (it+1) % Targets.GetSize() ];
+				auto* PreviousBuffer = Targets[ (it+0) % Targets.GetSize() ];
+				auto* CurrentBuffer = Targets[ (it+1) % Targets.GetSize() ];
 				
-				Opengl::TRenderTargetFbo RenderTarget( CurrentBuffer.GetTexture() );
+				Opengl::TRenderTargetFbo RenderTarget( CurrentBuffer->GetTexture() );
 				RenderTarget.mGenerateMipMaps = false;
 				RenderTarget.Bind();
 				pThis->mActiveRenderTarget = &RenderTarget;
@@ -409,8 +411,8 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 						auto* Isolate = Container->mIsolate;
 						BufferArray<v8::Local<v8::Value>,4> CallbackParams;
 						auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
-						auto CurrentLocal = CurrentBuffer.GetHandle();
-						auto PreviousLocal = PreviousBuffer.GetHandle();
+						auto CurrentLocal = CurrentBuffer->GetHandle();
+						auto PreviousLocal = PreviousBuffer->GetHandle();
 						auto IterationLocal = Number::New( Isolate, it );
 						CallbackParams.PushBack( WindowLocal );
 						CallbackParams.PushBack( CurrentLocal );
@@ -426,7 +428,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 					Container->RunScoped( ExecuteRenderCallback );
 					pThis->mActiveRenderTarget = nullptr;
 					RenderTarget.Unbind();
-					CurrentBuffer.OnOpenglTextureChanged();
+					CurrentBuffer->OnOpenglTextureChanged();
 				}
 				catch(std::exception& e)
 				{
@@ -461,8 +463,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 			Container->QueueScoped( OnError );
 		}
 	};
-	auto& OpenglContext = *This.mWindow->GetContext();
-	OpenglContext.PushJob( OpenglRender );
+	OpenglContext->PushJob( OpenglRender );
 	
 	//	return the promise
 	auto Promise = Resolver->GetPromise();
@@ -1005,8 +1006,10 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_framebufferTexture2D(const v8::Ca
 	auto TextureHandle = Arguments.mParams[3];
 	auto level = GetGlValue<GLint>( Arguments.mParams[4] );
 	
+	auto OpenglContext = Arguments.GetThis<TWindowWrapper>().mWindow->GetContext();
+	
 	auto& Image = v8::GetObject<TImageWrapper>(TextureHandle);
-	Image.GetTexture( []{}, [](const std::string& Error){} );
+	Image.GetTexture( *OpenglContext, []{}, [](const std::string& Error){} );
 	auto& Texture = Image.GetTexture();
 	auto TextureName = Texture.mTexture.mName;
 	
@@ -1025,9 +1028,10 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_bindTexture(const v8::CallbackInf
 	//	webgl passes in null to unbind (or 0?)
 	if ( !Arg1->IsNull() )
 	{
+		auto OpenglContext = Arguments.GetThis<TWindowWrapper>().mWindow->GetContext();
 		//	get texture
 		auto& Image = v8::GetObject<TImageWrapper>( Arguments.mParams[1] );
-		Image.GetTexture( []{}, [](const std::string& Error){} );
+		Image.GetTexture( *OpenglContext, []{}, [](const std::string& Error){} );
 		auto& Texture = Image.GetTexture();
 		TextureName = Texture.mTexture.mName;
 	}
@@ -1615,7 +1619,7 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		
 		//	access to context!
 		auto& Window = TWindowWrapper::Get( Arguments[0] );
-		auto& OpenglContext = *Window.mWindow->GetContext();
+		auto OpenglContext = Window.mWindow->GetContext();
 		String::Utf8Value VertSource( Arguments[1] );
 		String::Utf8Value FragSource( Arguments[2] );
 
@@ -1702,7 +1706,7 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 				std::Debug << "Error loading texture " << Error << std::endl;
 				std::Debug << "Todo: relay to promise" << std::endl;
 			};
-			Image->GetTexture( OnTextureLoaded, OnTextureError );
+			Image->GetTexture( *mOpenglContext, OnTextureLoaded, OnTextureError );
 		}
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
@@ -1762,8 +1766,9 @@ Local<FunctionTemplate> TShaderWrapper::CreateTemplate(TV8Container& Container)
 	return ConstructorFunc;
 }
 
-void TShaderWrapper::CreateShader(Opengl::TContext& Context,const char* VertSource,const char* FragSource)
+void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)
 {
+	auto& Context = *pContext;
 	//	this needs to be deffered along with the context..
 	//	the TShader constructor needs to return a promise really
 	if ( !Context.IsInitialised() )
@@ -1773,6 +1778,11 @@ void TShaderWrapper::CreateShader(Opengl::TContext& Context,const char* VertSour
 	std::string FragSourceStr( FragSource );
 	mShader.reset( new Opengl::TShader( VertSourceStr, FragSourceStr, "Shader", Context ) );
 
+	mOpenglContext = pContext;
+	mShaderDealloc = [=]
+	{
+		pContext->QueueDelete( mShader );
+	};
 }
 
 Opengl::TAsset OpenglObjects::GetObject(int JavascriptName,Array<std::pair<int,Opengl::TAsset>>& Buffers,std::function<void(GLuint,GLuint*)> Alloc,const char* AllocFuncName)

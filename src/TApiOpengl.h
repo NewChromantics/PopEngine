@@ -135,11 +135,14 @@ public:
 
 	static TShaderWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TShaderWrapper>( Value, 0 );	}
 	
-	void									CreateShader(Opengl::TContext& Context,const char* VertSource,const char* FragSource);
+	void									CreateShader(std::shared_ptr<Opengl::TContext>& Context,const char* VertSource,const char* FragSource);
 	
 public:
+	Opengl::TContext*					mContext;
 	v8::Persistent<v8::Object>			mHandle;
 	std::shared_ptr<Opengl::TShader>	mShader;
+	std::shared_ptr<Opengl::TContext>	mOpenglContext;
+	std::function<void()>				mShaderDealloc;
 	TV8Container*						mContainer;
 };
 

@@ -130,6 +130,8 @@ public:
 	}
 	
 	v8::Isolate&	GetIsolate() const		{	return *mIsolate;	}
+	template<typename TYPE>
+	TYPE&			GetThis() const			{	return v8::GetObject<TYPE>( mParams.This() );	}
 	
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
@@ -154,8 +156,28 @@ public:
 };
 
 
+
+class TV8ObjectWrapperBase
+{
+public:
+	virtual ~TV8ObjectWrapperBase()	{}
+	
+	//	handle actual constructor (arguments etc), throw on error
+	virtual void 	Construct(const v8::CallbackInfo& Arguments)=0;
+	
+	template<typename TYPE>
+	static TV8ObjectWrapperBase*	Allocate(TV8Container& Container,v8::Local<v8::Object> This)
+	{
+		return new TYPE( Container, This );
+	}
+};
+
+
 class TV8ObjectTemplate
 {
+public:
+	typedef std::function<TV8ObjectWrapperBase*(TV8Container&,v8::Local<v8::Object>)> ALLOCATOR;
+
 public:
 	TV8ObjectTemplate()	{}
 	TV8ObjectTemplate(v8::Persist<v8::ObjectTemplate>& Template,const std::string& Name) :
@@ -167,6 +189,7 @@ public:
 	bool			operator==(const std::string& Name) const	{	return this->mName == Name;	}
 	
 public:
+	ALLOCATOR						mAllocator;
 	v8::Persist<v8::ObjectTemplate>	mTemplate;
 	std::string						mName;
 };
@@ -189,6 +212,8 @@ public:
 	void		LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source);
 	void		ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
 
+	TV8ObjectTemplate::ALLOCATOR	GetAllocator(const char* TYPENAME);
+	//	deprecated for object
 	template<typename WRAPPERTYPE,typename TYPE>
 	v8::Local<v8::Object>	CreateObjectInstance(TYPE& Object)
 	{
@@ -199,7 +224,7 @@ public:
 
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
-	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate);
+	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator);
 
 	template<const char* FunctionName>
 	void					BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);

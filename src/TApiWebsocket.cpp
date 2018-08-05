@@ -9,7 +9,7 @@ using namespace v8;
 
 void ApiWebsocket::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("WebsocketServer", TWebsocketServerWrapper::CreateTemplate );
+	Container.BindObjectType("WebsocketServer", TWebsocketServerWrapper::CreateTemplate, nullptr );
 }
 
 
