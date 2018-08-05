@@ -5,6 +5,7 @@
 
 using namespace v8;
 
+const char GetAddress_FunctionName[] = "GetAddress";
 
 
 void ApiWebsocket::Bind(TV8Container& Container)
@@ -68,7 +69,8 @@ Local<FunctionTemplate> TWebsocketServerWrapper::CreateTemplate(TV8Container& Co
 	//	[0] object
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
-	
+
+	Container.BindFunction<GetAddress_FunctionName>( InstanceTemplate, GetAddress );
 	
 	return ConstructorFunc;
 }
@@ -131,6 +133,20 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 }
 
 
+v8::Local<v8::Value> TWebsocketServerWrapper::GetAddress(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TWebsocketServerWrapper>( ThisHandle );
+	
+	if ( !This.mSocket )
+		throw Soy::AssertException("Socket not allocated");
+	
+	auto AddressStr = This.mSocket->GetAddress();	
+	auto AddressStrHandle = v8::GetString( Params.GetIsolate(), AddressStr );
+	return AddressStrHandle;
+}
 
 
 TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
@@ -212,6 +228,15 @@ void TWebsocketServer::RemoveClient(SoyRef ClientRef)
 	
 }
 
+std::string TWebsocketServer::GetAddress() const
+{
+	if ( !mSocket )
+		throw Soy::AssertException("Socket not allocated");
+	
+	std::stringstream Address;
+	Address << mSocket->mSocketAddr;
+	return Address.str();
+}
 
 void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
 {

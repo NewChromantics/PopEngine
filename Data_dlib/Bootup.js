@@ -22,6 +22,16 @@ var LastFrameImage = null;
 var LastFace = null;
 var LastSkeleton = null;
 
+
+var ServerSkeletonReciever = null;
+var ServerSkeletonRecieverPort = 8008;
+var ServerSkeletonSender = null;
+var ServerSkeletonSenderPort = 8007;
+var BroadcastServer = null;
+var BroadcastServerPort = 8009;
+
+
+
 function GetRectLines(Rect)
 {
 	let Lines = [];
@@ -155,6 +165,10 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 {
 	LastFrameImage = FaceImage;
 	
+	//	handle no-face
+	if ( FaceLandmarks == null )
+		return;
+	
 	//	make a face
 	let Face = {};
 	Face.Features = [];
@@ -165,12 +179,12 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	}
 	
 	//	first 4 floats are the rect
-	Face.Rect = [ FaceLandmarks[0], FaceLandmarks[1], FaceLandmarks[2], FaceLandmarks[3] ];
+	Face.Rect = [ FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift() ];
 	
 	if ( LastSkeletonFaceRect == null )
 		LastSkeletonFaceRect = Face.Rect;
 	
-	for ( let i=4;	i<FaceLandmarks.length;	i+=2 )
+	for ( let i=0;	i<FaceLandmarks.length;	i+=2 )
 	{
 		PushFeature( FaceLandmarks[i+0], FaceLandmarks[i+1] );
 	}
@@ -182,13 +196,14 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 		let FaceJson = JSON.stringify( Face, null, '\t' );
 		WriteStringToFile( SaveFilename, FaceJson );
 	}
+
+	if ( ServerSkeletonSender )
+	{
+		let FaceJson = JSON.stringify( Face, null, '\t' );
+		ServerSkeletonSender.SendAll( FaceJson );
+	}
 	
 	LastFace = Face;
-}
-
-function OnFailedNewFace(Error)
-{
-	Debug("Failed to get facelandmarks: " + Error);
 }
 
 function EnumDevices(DeviceNames)
@@ -221,11 +236,21 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 	
 	Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
+	let OnFaceError = function(Error)
+	{
+		Debug("Failed to get facelandmarks: " + Error);
+		CurrentProcessingImageCount--;
+	}
+
 	let OnFace = function(Face)
 	{
 		CurrentProcessingImageCount--;
+		if ( Face.length == 0 )
+			Face = null;
 		OnNewFace(Face,NewFrameImage,SaveFilename);
 	}
+	
+
 	
 	//	load on first use
 	if ( FaceProcessor == null )
@@ -244,7 +269,7 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		
 		FindFacePromise
 		.then( OnFace )
-		.catch( OnFailedNewFace );
+		.catch( OnFaceError );
 	}
 	catch(e)
 	{
@@ -267,22 +292,20 @@ function GetDeviceNameMatch(DeviceNames,MatchName)
 }
 
 
-var Server = null;
-var ServerPort = 8008;
-var BroadcastServer = null;
-var BroadcastServerPort = 8009;
-
-
 function OnBroadcastMessage(PacketBytes,Sender,Socket)
 {
 	Debug("Got UDP broadcast x" + PacketBytes.length + " bytes");
-
+	
 	//	get string from bytes
 	let PacketString = String.fromCharCode.apply(null, PacketBytes);
 	Debug(PacketString);
 	
 	//	reply
-	//Socket.Send( Sender, Server.GetAddress() );
+	if ( ServerSkeletonSender )
+	{
+		Debug("Send back " + ServerSkeletonSender.GetAddress() );
+		//Socket.Send( Sender, ServerSkeletonSender.GetAddress() );
+	}
 }
 
 
@@ -404,15 +427,16 @@ function Main()
 	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
 	//let TestImage = new Image('Data_dlib/Face.png');
 	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	OnNewFrame(TestImage,'Data_dlib/Face.json');
+	//OnNewFrame(TestImage,'Data_dlib/Face.json');
 	TestImage = null;
 	GarbageCollect();
 
-	Server = new WebsocketServer(ServerPort);
-	//Server.OnMessage = OnSkeletonJson;
+	ServerSkeletonReciever = new WebsocketServer(ServerSkeletonRecieverPort);
+	ServerSkeletonReciever.OnMessage = OnSkeletonJson;
+	ServerSkeletonSender = new WebsocketServer(ServerSkeletonSenderPort);
 
 	BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
-	BroadcastServer.OnMessage = OnBroadcastMessage;
+	BroadcastServer.OnMessage = function(Data,Sender)	{	OnBroadcastMessage(Data,Sender,BroadcastServer);	}
 
 	
 }
