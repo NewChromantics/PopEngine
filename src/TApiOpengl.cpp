@@ -409,8 +409,8 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 						auto* Isolate = Container->mIsolate;
 						BufferArray<v8::Local<v8::Value>,4> CallbackParams;
 						auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
-						auto CurrentLocal = v8::GetLocal( *Isolate, CurrentBuffer.mHandle );
-						auto PreviousLocal = v8::GetLocal( *Isolate, PreviousBuffer.mHandle );
+						auto CurrentLocal = CurrentBuffer.GetHandle();
+						auto PreviousLocal = PreviousBuffer.GetHandle();
 						auto IterationLocal = Number::New( Isolate, it );
 						CallbackParams.PushBack( WindowLocal );
 						CallbackParams.PushBack( CurrentLocal );

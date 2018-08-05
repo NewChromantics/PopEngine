@@ -261,7 +261,7 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 {
 	//	do a queued callback for OnNewFrame member
-	auto* pImage = new TImageWrapper( *mContainer );
+	std::shared_ptr<SoyPixels> Pixels;
 	
 	//	get pixel buffer as pixels
 	//	todo: put this in ImageWrapper so we can get opengl packets etc without conversion
@@ -283,7 +283,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		SoyPixels RgbPixels( *Textures[0] );
 		RgbPixels.SetFormat( SoyPixelsFormat::RGB );
 		RgbPixels.ResizeFastSample( 640, 480 );
-		pImage->SetPixels( RgbPixels );
+		Pixels.reset( new SoyPixels(RgbPixels) );
 		PixelBuffer->Unlock();
 	}
 	catch(std::exception& e)
@@ -292,16 +292,16 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		throw;
 	}
 	
-	auto Runner = [this,pImage](Local<Context> context)
+	auto Runner = [this,Pixels](Local<Context> context)
 	{
 		auto* isolate = context->GetIsolate();
 		auto This = Local<Object>::New( isolate, this->mHandle );
 		
-		auto& Image = *pImage;
-		auto ImageHandle = mContainer->CreateObjectInstance<TImageWrapper>( Image );
+		auto Image = *new TImageWrapper( *this->mContainer );
+		Image.SetPixels(Pixels);
 		
 		BufferArray<Local<Value>,2> Args;
-		Args.PushBack(ImageHandle);
+		Args.PushBack( Image.GetHandle() );
 	
 		auto FuncHandle = v8::GetFunction( context, This, "OnNewFrame" );
 		

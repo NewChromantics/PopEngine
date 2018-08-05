@@ -768,13 +768,10 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 	else if ( Uniform.mType == "image2d_t" )
 	{
 		//	create a new image
-		auto& Container = Params.mContainer;
-		auto ImageWrapper = new TImageWrapper( Container );
-		auto ImageWrapperLocal = Container.CreateObjectInstance( TImageWrapper::GetObjectTypeName(), ImageWrapper );
-		ImageWrapper->mHandle = v8::GetPersistent( Params.GetIsolate(), ImageWrapperLocal );
+		auto* ImageWrapper = new TImageWrapper( Params.mContainer );
 		KernelState.ReadUniform( Uniform.mName.c_str(), ImageWrapper->GetPixels() );
 				
-		return ImageWrapperLocal;
+		return ImageWrapper->GetHandle();
 	}
 
 	std::stringstream Error;

@@ -428,6 +428,35 @@ Local<Function> v8::GetFunction(Local<Context> ContextHandle,Local<Object> This,
 
 
 
+
+void OnFree(const WeakCallbackInfo<void>& data)
+{
+	std::Debug << "Free some object!" << std::endl;
+	auto* Image = data.GetParameter();
+	//delete Image;
+}
+
+v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName)
+{
+	//	find template
+	auto* pObjectTemplate = mObjectTemplates.Find( ObjectTypeName );
+	if ( !pObjectTemplate )
+	{
+		std::stringstream Error;
+		Error << "Unknown object typename ";
+		Error << ObjectTypeName;
+		auto ErrorStr = Error.str();
+		throw Soy::AssertException(ErrorStr);
+	}
+	
+	//	instance new one
+	auto& Isolate = GetIsolate();
+	auto& ObjectTemplate = *pObjectTemplate;
+	auto ObjectTemplateLocal = v8::GetLocal( Isolate, ObjectTemplate.mTemplate );
+	auto NewObject = ObjectTemplateLocal->NewInstance();
+	return NewObject;
+}
+
 v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName,void* Object)
 {
 	//	find template
@@ -447,6 +476,11 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 	auto ObjectTemplateLocal = v8::GetLocal( Isolate, ObjectTemplate.mTemplate );
 	auto NewObject = ObjectTemplateLocal->NewInstance();
 
+	//	make a persistent handle here
+	v8::Persist<v8::Object> NewObjectHandle;
+	NewObjectHandle.Reset( &Isolate, NewObject );
+	NewObjectHandle.SetWeak( Object, OnFree, v8::WeakCallbackType::kInternalFields );
+	
 	//	gr: do this assignment in the class as we may have class specific stuff
 	//		really it'll be done in a binding/wrapper base class anyway
 	auto ObjectPointerHandle = External::New( &Isolate, Object );

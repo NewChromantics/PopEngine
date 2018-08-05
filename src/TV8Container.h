@@ -195,6 +195,7 @@ public:
 		return CreateObjectInstance( WRAPPERTYPE::GetObjectTypeName(), &Object );
 	}
 	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName,void* Object);
+	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName);
 
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);

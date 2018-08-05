@@ -23,6 +23,9 @@ const char GetHeight_FunctionName[] = "GetHeight";
 const char GetRgba8_FunctionName[] = "GetRgba8";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 
+const char Image_TypeName[] = "Image";
+
+
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
@@ -173,14 +176,11 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 }
 
 
-TImageWrapper::~TImageWrapper()
-{
-	std::Debug << "Dealloc TImageWrapper" << std::endl;
-}
-
 void OnFree(const WeakCallbackInfo<TImageWrapper>& data)
 {
 	std::Debug << "Free image wrapper!" << std::endl;
+	auto* Image = data.GetParameter();
+	delete Image;
 }
 
 void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
@@ -204,13 +204,8 @@ void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
 		//		but it also needs to know of the V8container to run stuff
 		//		cyclic hell!
-		auto* NewImage = new TImageWrapper(Container);
-		NewImage->mHandle.Reset( Isolate, Arguments.This() );
+		auto* NewImage = new TImageWrapper(Container,This);
 		
-		//	https://itnext.io/v8-wrapped-objects-lifecycle-42272de712e0
-		NewImage->mHandle.SetWeak( NewImage, OnFree, v8::WeakCallbackType::kInternalFields );
-		
-		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewImage ) );
 		// return the new object back to the javascript caller
 		Arguments.GetReturnValue().Set( This );
 		
@@ -590,6 +585,12 @@ void TImageWrapper::OnOpenglTextureChanged()
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 {
 	mPixels.reset( new SoyPixels(NewPixels) );
+	mPixelsVersion = GetLatestVersion()+1;
+}
+
+void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
+{
+	mPixels = NewPixels;
 	mPixelsVersion = GetLatestVersion()+1;
 }
 
