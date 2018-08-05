@@ -200,7 +200,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	if ( ServerSkeletonSender )
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
-		ServerSkeletonSender.SendAll( FaceJson );
+		//ServerSkeletonSender.SendAll( FaceJson );
 	}
 	
 	LastFace = Face;
@@ -303,7 +303,7 @@ function OnBroadcastMessage(PacketBytes,Sender,Socket)
 	//	reply
 	if ( ServerSkeletonSender )
 	{
-		Debug("Send back " + ServerSkeletonSender.GetAddress() );
+		Debug("Send back " + ServerSkeletonSender.GetAddress() + ", I am " + Socket.GetAddress() );
 		//Socket.Send( Sender, ServerSkeletonSender.GetAddress() );
 	}
 }

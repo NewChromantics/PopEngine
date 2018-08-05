@@ -5,6 +5,8 @@
 
 using namespace v8;
 
+const char GetAddress_FunctionName[] = "GetAddress";
+
 
 
 void ApiSocket::Bind(TV8Container& Container)
@@ -69,7 +71,8 @@ Local<FunctionTemplate> TUdpBroadcastServerWrapper::CreateTemplate(TV8Container&
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
 	
-	
+	Container.BindFunction<GetAddress_FunctionName>( InstanceTemplate, GetAddress );
+
 	return ConstructorFunc;
 }
 
@@ -108,6 +111,21 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 	mContainer->QueueScoped( SendJsMessage );
 }
 
+
+v8::Local<v8::Value> TUdpBroadcastServerWrapper::GetAddress(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TUdpBroadcastServerWrapper>( ThisHandle );
+	
+	if ( !This.mSocket )
+		throw Soy::AssertException("Socket not allocated");
+	
+	auto AddressStr = This.mSocket->GetAddress();
+	auto AddressStrHandle = v8::GetString( Params.GetIsolate(), AddressStr );
+	return AddressStrHandle;
+}
 
 
 
@@ -165,4 +183,14 @@ bool TUdpBroadcastServer::Iteration()
 	return true;
 }
 
+
+std::string TUdpBroadcastServer::GetAddress() const
+{
+	if ( !mSocket )
+		throw Soy::AssertException("Socket not allocated");
+	
+	std::stringstream Address;
+	Address << mSocket->mSocketAddr;
+	return Address.str();
+}
 
