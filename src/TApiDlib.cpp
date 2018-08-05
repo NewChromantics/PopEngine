@@ -34,7 +34,7 @@ TDlibWrapper::TDlibWrapper(size_t ThreadCount) :
 	{
 		std::stringstream Name;
 		Name << "Dlib Job Queue " << i;
-		std::shared_ptr<SoyWorkerJobThread> Queue( new SoyWorkerJobThread(Name.str() ) );
+		std::shared_ptr<TDlib> Queue( new TDlib(Name.str() ) );
 		mDlibJobQueues.PushBack(Queue);
 		Queue->Start();
 	}
@@ -77,7 +77,7 @@ void TDlibWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argume
 	//	first argument is the landmarks data as bytes
 	Array<int> LandmarksDatBytes;
 	v8::EnumArray( LandmarksDatArg, GetArrayBridge(LandmarksDatBytes), "DLib arg0 (shape_predictor_68_face_landmarks.dat)" );
-	NewWrapper->mDlib.SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksDatBytes) );
+	NewWrapper->SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksDatBytes) );
 	
 	
 	//	set fields
@@ -115,7 +115,7 @@ Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
 	return ConstructorFunc;
 }
 
-SoyWorkerJobThread& TDlibWrapper::GetDlibJobQueue()
+TDlib& TDlibWrapper::GetDlibJobQueue()
 {
 	//	get queue with least jobs
 	auto LeastJobQueue = 0;
@@ -128,6 +128,19 @@ SoyWorkerJobThread& TDlibWrapper::GetDlibJobQueue()
 	}
 	
 	return *mDlibJobQueues[LeastJobQueue];
+}
+
+//	this loads the shape predictors etc and copies to each thread
+void TDlibWrapper::SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes)
+{
+	//	setup first one, then copy to others
+	auto& Dlib0 = *mDlibJobQueues[0];
+	Dlib0.SetShapePredictorFaceLandmarks(LandmarksDatBytes);
+	for ( int i=1;	i<mDlibJobQueues.GetSize();	i++ )
+	{
+		auto& DlibN = *mDlibJobQueues[i];
+		DlibN.SetShapePredictorFaceLandmarks(Dlib0);
+	}
 }
 
 
@@ -155,13 +168,14 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
 	auto* Container = &Params.mContainer;
 	
-	auto RunFaceDetector = [=]
+	auto& Dlib = This.GetDlibJobQueue();
+	auto RunFaceDetector = [=,&Dlib]
 	{
 		try
 		{
 			auto& Pixels = TargetImage->GetPixels();
 			BufferArray<TFace,100> Faces;
-			pThis->mDlib.GetFaceLandmarks(Pixels, GetArrayBridge(Faces) );
+			Dlib.GetFaceLandmarks(Pixels, GetArrayBridge(Faces) );
 		
 			//	temp
 			BufferArray<float,1000> Features;
@@ -211,8 +225,6 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 			Container->QueueScoped( OnError );
 		}
 	};
-	
-	auto& Dlib = This.GetDlibJobQueue();
 	Dlib.PushJob( RunFaceDetector );
 
 	//	return the promise
@@ -241,8 +253,8 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 	v8::EnumArray( Arguments[1], GetArrayBridge(RectFloats), "FindFaceFeatures(img,rect)" );
 	Soy::Rectf TargetRect( RectFloats[0], RectFloats[1], RectFloats[2], RectFloats[3] );
 
-	
-	auto RunFaceDetector = [=]
+	auto& Dlib = This.GetDlibJobQueue();
+	auto RunFaceDetector = [=,&Dlib]
 	{
 		try
 		{
@@ -253,7 +265,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 			Timer5.Stop();
 			
 			Soy::TScopeTimerPrint Timer6("FindFaceFeatures::GetFaceLandmarks",10);
-			auto Face = pThis->mDlib.GetFaceLandmarks(Pixels, TargetRect );
+			auto Face = Dlib.GetFaceLandmarks(Pixels, TargetRect );
 			Timer6.Stop();
 			
 			//	temp
@@ -307,8 +319,6 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 			Container->QueueScoped( OnError );
 		}
 	};
-	
-	auto& Dlib = This.GetDlibJobQueue();
 	Dlib.PushJob( RunFaceDetector );
 	
 	//	return the promise
@@ -503,9 +513,20 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 	return NewFace;
 }
 
+void TDlib::SetShapePredictorFaceLandmarks(TDlib& Copy)
+{
+	std::Debug << "copying facedetector data..." << std::endl;
+	mFaceDetector.reset( new dlib::frontal_face_detector(*Copy.mFaceDetector) );
+	//auto& fd = *mFaceDetector;
+	//fd = *Copy.mFaceDetector;
+	
+	std::Debug << "copying shape_predictor data..." << std::endl;
+	mShapePredictor.reset( new dlib::shape_predictor() );
+	auto& sp = *mShapePredictor;
+	sp = *Copy.mShapePredictor;
+}
 
-
-void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes)
+void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>& LandmarksDatBytes)
 {
 	mFaceLandmarksDat.Clear();
 	for ( int i=0;	i<LandmarksDatBytes.GetSize();	i++ )

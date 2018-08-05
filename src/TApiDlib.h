@@ -26,16 +26,20 @@ public:
 
 
 //	gr: this may need to have a job queue, see if it's thread safe etc
-class TDlib
+class TDlib : public SoyWorkerJobThread
 {
 public:
+	TDlib(const std::string& ThreadName) :
+		SoyWorkerJobThread	( ThreadName )
+	{
+	}
+	
 	void			GetFaceLandmarks(const SoyPixelsImpl& Pixels,ArrayBridge<TFace>&& Faces);
 	TFace			GetFaceLandmarks(const SoyPixelsImpl& Pixels,Soy::Rectf FaceRect);
 	TFace			GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::Rectf FaceRect);
 
-	
-	
-	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);
+	void			SetShapePredictorFaceLandmarks(TDlib& Copy);
+	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>& LandmarksDatBytes);
 
 public:
 	Array<uint8_t>		mFaceLandmarksDat;
@@ -61,15 +65,17 @@ public:
 	static v8::Local<v8::Value>				FindFaces(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				FindFaceFeatures(const v8::CallbackInfo& Arguments);
 
+	//	this loads the shape predictors etc and copies to each thread
+	void									SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);
+
 private:
-	SoyWorkerJobThread&						GetDlibJobQueue();
+	TDlib&									GetDlibJobQueue();
 	
 public:
 	v8::Persistent<v8::Object>	mHandle;
 	TV8Container*				mContainer;
 
 private:
-	TDlib						mDlib;
-	Array<std::shared_ptr<SoyWorkerJobThread>>	mDlibJobQueues;
+	Array<std::shared_ptr<TDlib>>	mDlibJobQueues;
 };
 
