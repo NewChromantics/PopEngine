@@ -201,7 +201,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
 		Debug("Send FaceJson to " + ServerSkeletonSender.GetAddress() );
-		//ServerSkeletonSender.SendAll( FaceJson );
+		ServerSkeletonSender.SendAll( FaceJson );
 	}
 	
 	LastFace = Face;
