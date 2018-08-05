@@ -12,6 +12,8 @@ const char CompileAndRun_FunctionName[] = "CompileAndRun";
 const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
 const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
 const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
+const char GarbageCollect_FunctionName[] = "GarbageCollect";
+
 
 const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
@@ -26,6 +28,7 @@ static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -36,6 +39,8 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
 	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
+	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
+
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate );
 }
 
@@ -58,6 +63,19 @@ static Local<Value> Debug(CallbackInfo& Params)
 	
 	return Undefined(Params.mIsolate);
 }
+
+
+static Local<Value> GarbageCollect(CallbackInfo& Params)
+{
+	auto& args = Params.mParams;
+	
+	HandleScope scope(Params.mIsolate);
+	std::Debug << "Invoking garbage collection..." << std::endl;
+	Params.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
+	
+	return Undefined(Params.mIsolate);
+}
+
 
 static Local<Value> CompileAndRun(CallbackInfo& Params)
 {
@@ -189,6 +207,7 @@ void TImageWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 		auto* NewImage = new TImageWrapper(Container);
 		NewImage->mHandle.Reset( Isolate, Arguments.This() );
 		
+		//	https://itnext.io/v8-wrapped-objects-lifecycle-42272de712e0
 		NewImage->mHandle.SetWeak( NewImage, OnFree, v8::WeakCallbackType::kInternalFields );
 		
 		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewImage ) );

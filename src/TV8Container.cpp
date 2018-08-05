@@ -94,7 +94,12 @@ TV8Container::TV8Container() :
 #endif
 {
 	auto& Allocator = *mAllocator;
-
+	
+	//	well this is an annoying interface
+	std::string Flags = "--expose_gc";
+	//v8::internal::FLAG_expose_gc = true;
+	V8::SetFlagsFromString( Flags.c_str(), static_cast<int>(Flags.length()) );
+	
 	auto* ExePath = ::Platform::ExePath.c_str();
 #if V8_VERSION==6
 	auto* IcuFilename = "icudtl.dat";
