@@ -286,6 +286,8 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 				//	gr: can't do this unless we're in the javascript thread...
 				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
 				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Features) );
+
+				//	gr: these seem to be getting cleaned up on garbage collect, I think
 				ResolverLocal->Resolve( LandmarksArray );
 				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
 				//ResolverLocal->Resolve( Message );
