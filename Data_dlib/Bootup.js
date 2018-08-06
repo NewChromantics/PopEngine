@@ -201,7 +201,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
 		Debug("Send FaceJson to " + ServerSkeletonSender.GetAddress() );
-		ServerSkeletonSender.SendAll( FaceJson );
+		//ServerSkeletonSender.SendAll( FaceJson );
 	}
 	
 	LastFace = Face;
@@ -225,6 +225,7 @@ var LastSkeletonFaceRect = null;
 var ShoulderToHeadWidthRatio = 0.45;
 var HeadWidthToHeightRatio = 2.1;
 var NoseHeightInHead = 0.5;
+var FindFaceIfNoSkeleton = false;
 
 
 function OnNewFrame(NewFrameImage,SaveFilename)
@@ -264,9 +265,18 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 
 		let FindFacePromise;
 		if ( FaceRect )
+		{
 			FindFacePromise = FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect );
-		else
+		}
+		else if ( FindFaceIfNoSkeleton )
+		{
 			FindFacePromise = FaceProcessor.FindFaces( NewFrameImage );
+		}
+		else
+		{
+			OnFaceError("Waiting for face rect");
+			return;
+		}
 		
 		FindFacePromise
 		.then( OnFace )
@@ -329,7 +339,7 @@ function OnBroadcastMessage(PacketBytes,Sender,Socket)
 
 function OnSkeletonJson(SkeletonJson)
 {
-	Debug("Got skeleton: " + SkeletonJson);
+	//Debug("Got skeleton: " + SkeletonJson);
 	let Skeleton = JSON.parse(SkeletonJson);
 	let MinScore = 0.3;
 	
@@ -417,7 +427,7 @@ function Main()
 	
 
 	
-	let VideoDeviceName = "isight";
+	let VideoDeviceName = "facetime";
 	
 	let LoadDevice = function(DeviceNames)
 	{
