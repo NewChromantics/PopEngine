@@ -6,6 +6,8 @@
 using namespace v8;
 
 const char GetAddress_FunctionName[] = "GetAddress";
+const char Send_FunctionName[] = "Send";
+const char GetPeers_FunctionName[] = "GetPeers";
 
 
 void ApiWebsocket::Bind(TV8Container& Container)
@@ -71,7 +73,9 @@ Local<FunctionTemplate> TWebsocketServerWrapper::CreateTemplate(TV8Container& Co
 	InstanceTemplate->SetInternalFieldCount(2);
 
 	Container.BindFunction<GetAddress_FunctionName>( InstanceTemplate, GetAddress );
-	
+	Container.BindFunction<Send_FunctionName>( InstanceTemplate, Send );
+	Container.BindFunction<GetPeers_FunctionName>( InstanceTemplate, GetPeers );
+
 	return ConstructorFunc;
 }
 

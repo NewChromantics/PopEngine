@@ -190,6 +190,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	}
 	
 	Debug("Got face: x" + Face.Features.length + " features" );
+	LastFace = Face;
 	
 	if ( SaveFilename != undefined )
 	{
@@ -201,10 +202,13 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
 		Debug("Send FaceJson to " + ServerSkeletonSender.GetAddress() );
-		//ServerSkeletonSender.SendAll( FaceJson );
-	}
-	
-	LastFace = Face;
+		let Peers = ServerSkeletonSender.GetPeers();
+		let SendToPeer = function(Peer)
+		{
+			ServerSkeletonSender.Send( Peer, FaceJson );
+		}
+		Peers.forEach( SendToPeer );
+	}	
 }
 
 function EnumDevices(DeviceNames)

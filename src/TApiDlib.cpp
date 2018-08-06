@@ -203,7 +203,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
 				//ResolverLocal->Resolve( Message );
 			};
-			
+
 			//	queue the completion, doesn't need to be done instantly
 			Container->QueueScoped( OnCompleted );
 		}

@@ -94,6 +94,13 @@ namespace v8
 	template<typename ARRAYTYPE,typename ELEMENTTYPE>
 	void	EnumArray(Local<Value> ValueArrayHandle,ArrayBridge<ELEMENTTYPE>& IntArray);
 	
+	
+	//	our own type caster which throws if cast fails.
+	//	needed because my v8 built doesnt have cast checks, and I can't determine if they're enabled or not
+	template<typename TYPE>
+	Local<TYPE>	SafeCast(Local<Value>& ValueHandle);
+	template<typename TYPE>
+	bool		IsType(Local<Value>& ValueHandle);
 }
 
 
@@ -390,8 +397,8 @@ inline v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,ArrayBridge<NUMBER
 template<typename ARRAYTYPE,typename ELEMENTTYPE>
 inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>& IntArray)
 {
-	auto ValueArrayHandle = Local<ARRAYTYPE>::Cast( ValueHandle );
-
+	auto ValueArrayHandle = v8::SafeCast<ARRAYTYPE>( ValueHandle );
+	
 	//	skip div0 checks
 	if ( ValueArrayHandle->Length() == 0 )
 		return;
@@ -423,5 +430,44 @@ inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& In
 {
 	EnumArray<ARRAYTYPE,ELEMENTTYPE>( ValueHandle, IntArray );
 }
+
+
+//	our own type caster which throws if cast fails.
+//	needed because my v8 built doesnt have cast checks, and I can't determine if they're enabled or not
+template<typename TYPE>
+inline v8::Local<TYPE> v8::SafeCast(Local<Value>& ValueHandle)
+{
+	if ( !IsType<TYPE>(ValueHandle) )
+	{
+		std::stringstream Error;
+		Error << "Trying to cast " << GetTypeName(ValueHandle) << " to other type " << Soy::GetTypeName<TYPE>();
+		throw Soy::AssertException(Error.str());
+	}
+	return ValueHandle.As<TYPE>();
+}
+
+/*	gr: I wanted a static assert, but
+	a) xcode/clang resolves error at source.cpp:1 so I can't find caller
+	b) can't error type info :/
+	c) Just omitting the base implementation means we get link errors for specific types, which is a bit easier
+template<typename TYPE>
+inline bool v8::IsType(Local<Value>& ValueHandle)
+{
+	//static_assert(false, "This function needs specialising");
+}
+*/
+
+#define ISTYPE_DEFINITION(TYPE)	\
+template<> inline bool v8::IsType<v8::TYPE>(Local<Value>& ValueHandle)	{	return ValueHandle->Is##TYPE();	}
+
+ISTYPE_DEFINITION(Int8Array);
+ISTYPE_DEFINITION(Uint8Array);
+ISTYPE_DEFINITION(Uint8ClampedArray);
+ISTYPE_DEFINITION(Int16Array);
+ISTYPE_DEFINITION(Uint16Array);
+ISTYPE_DEFINITION(Int32Array);
+ISTYPE_DEFINITION(Uint32Array);
+ISTYPE_DEFINITION(Float32Array);
+
 
 

@@ -7,6 +7,7 @@ using namespace v8;
 
 const char GetAddress_FunctionName[] = "GetAddress";
 const char Send_FunctionName[] = "Send";
+const char GetPeers_FunctionName[] = "GetPeers";
 
 
 
@@ -74,6 +75,7 @@ Local<FunctionTemplate> TUdpBroadcastServerWrapper::CreateTemplate(TV8Container&
 	
 	Container.BindFunction<GetAddress_FunctionName>( InstanceTemplate, GetAddress );
 	Container.BindFunction<Send_FunctionName>( InstanceTemplate, Send );
+	Container.BindFunction<GetPeers_FunctionName>( InstanceTemplate, GetPeers );
 
 	return ConstructorFunc;
 }
@@ -168,6 +170,36 @@ v8::Local<v8::Value> TSocketWrapper::Send(const v8::CallbackInfo& Params)
 	Connection.Send( GetArrayBridge(DataChars), Socket.IsUdp() );
 	
 	return v8::Undefined(Params.mIsolate);
+}
+
+
+v8::Local<v8::Value> TSocketWrapper::GetPeers(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TSocketWrapper>( ThisHandle );
+	auto ThisSocket = This.GetSocket();
+	if ( !ThisSocket )
+		throw Soy::AssertException("Socket not allocated");
+
+	//	get connection references
+	Array<std::string> PeerNames;
+	auto& Socket = *ThisSocket;
+	auto EnumPeer = [&](SoyRef ConnectionRef,SoySocketConnection Connection)
+	{
+		PeerNames.PushBack( ConnectionRef.ToString() );
+	};
+	Socket.EnumConnections( EnumPeer );
+	
+	//	convert to v8 array
+	auto GetHandle = [&](size_t Index)
+	{
+		return v8::GetString( Params.GetIsolate(), PeerNames[Index] );
+	};
+	auto PeerNamesHandle = v8::GetArray( Params.GetIsolate(), PeerNames.GetSize(), GetHandle );
+	
+	return PeerNamesHandle;
 }
 
 
