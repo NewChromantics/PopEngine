@@ -189,7 +189,7 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 		PushFeature( FaceLandmarks[i+0], FaceLandmarks[i+1] );
 	}
 	
-	Debug("Got face: x" + Face.Features.length + " features" );
+	//Debug("Got face: x" + Face.Features.length + " features" );
 	LastFace = Face;
 	
 	if ( SaveFilename != undefined )
@@ -201,10 +201,10 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	if ( ServerSkeletonSender )
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
-		Debug("Send FaceJson to " + ServerSkeletonSender.GetAddress() );
 		let Peers = ServerSkeletonSender.GetPeers();
 		let SendToPeer = function(Peer)
 		{
+			Debug("Send FaceJson to " + Peer + " on socket " + ServerSkeletonSender.GetAddress() );
 			ServerSkeletonSender.Send( Peer, FaceJson );
 		}
 		Peers.forEach( SendToPeer );
@@ -240,7 +240,7 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 	if ( CurrentProcessingImageCount > DlibThreadCount )
 		return;
 	
-	Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
+	//Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
 	let OnFaceError = function(Error)
 	{
