@@ -261,7 +261,6 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 {
 	//	do a queued callback for OnNewFrame member
-	std::shared_ptr<SoyPixels> Pixels;
 	
 	//	get pixel buffer as pixels
 	//	todo: put this in ImageWrapper so we can get opengl packets etc without conversion
@@ -276,14 +275,16 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 	BufferArray<SoyPixelsImpl*,2> Textures;
 	float3x3 Transform;
 	PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+	std::shared_ptr<SoyPixels> Pixels;
 	try
 	{
 		//	convert pixels to RGB for face.
 		//	todo: move to JS call which gives a promise, or more likely, opengl shader for when we want just a rect of the image
-		SoyPixels RgbPixels( *Textures[0] );
+		Pixels.reset( new SoyPixels );
+		auto& RgbPixels = *Pixels;
+		RgbPixels.Copy( *Textures[0] );
 		RgbPixels.SetFormat( SoyPixelsFormat::RGB );
-		RgbPixels.ResizeFastSample( 640, 480 );
-		Pixels.reset( new SoyPixels(RgbPixels) );
+		//RgbPixels.ResizeFastSample( 640, 480 );
 		PixelBuffer->Unlock();
 	}
 	catch(std::exception& e)
@@ -297,7 +298,8 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		auto* isolate = context->GetIsolate();
 		auto This = Local<Object>::New( isolate, this->mHandle );
 		
-		auto& Image = *new TImageWrapper( *this->mContainer );
+		auto* pImage = new TImageWrapper( *this->mContainer );
+		auto& Image = *pImage;
 		Image.SetPixels(Pixels);
 		
 		BufferArray<Local<Value>,2> Args;
