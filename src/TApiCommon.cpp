@@ -179,6 +179,14 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 
 TImageWrapper::~TImageWrapper()
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	if ( mOpenglTexture )
+	{
+		mOpenglTexture->mAutoRelease = false;
+		//mOpenglTexture.reset();
+	}
+
 	if ( mOpenglTextureDealloc )
 		mOpenglTextureDealloc();
 }
@@ -256,7 +264,8 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 	auto Width = IntArray[0];
 	auto Height = IntArray[1];
 	auto Format = SoyPixelsFormat::Type::RGBA;
-	This.mPixels.reset( new SoyPixels( SoyPixelsMeta( Width, Height, Format ) ) );
+	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ) );
+	This.SetPixels(Pixels);
 
 	return v8::Undefined(Params.mIsolate);
 }
@@ -374,6 +383,8 @@ v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 
+	std::lock_guard<std::recursive_mutex> Lock(This.mPixelsLock);
+
 	size_t Width = 0;
 	if ( This.mPixels )
 		Width = This.mPixels->GetWidth();
@@ -393,6 +404,8 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	
+	std::lock_guard<std::recursive_mutex> Lock(This.mPixelsLock);
+
 	size_t Height = 0;
 	if ( This.mPixels )
 		Height = This.mPixels->GetHeight();
@@ -481,6 +494,8 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 		//		need to fail here if we're not
 		try
 		{
+			std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
 			if ( mOpenglTexture == nullptr )
 			{
 				mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
@@ -562,12 +577,14 @@ void TImageWrapper::OnOpenglTextureChanged()
 
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels.reset( new SoyPixels(NewPixels) );
 	mPixelsVersion = GetLatestVersion()+1;
 }
 
 void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels = NewPixels;
 	mPixelsVersion = GetLatestVersion()+1;
 }
@@ -580,7 +597,9 @@ void TImageWrapper::ReadOpenglPixels()
 	if ( !mOpenglTexture )
 		throw Soy::AssertException("Trying to ReadOpenglPixels with no texture");
 
-		//	warning in case we haven't actually updated
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	//	warning in case we haven't actually updated
 	if ( mPixelsVersion >= mOpenglTextureVersion )
 		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
 	//	if we have no pixels, alloc

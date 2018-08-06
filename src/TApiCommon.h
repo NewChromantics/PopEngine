@@ -63,6 +63,7 @@ public:
 	void									SetPixels(std::shared_ptr<SoyPixels> NewPixels);
 
 protected:
+	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?
 	std::shared_ptr<SoyPixels>&			mPixels = mObject;
 	size_t								mPixelsVersion;			//	opengl texture changed
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;

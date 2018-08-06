@@ -297,7 +297,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		auto* isolate = context->GetIsolate();
 		auto This = Local<Object>::New( isolate, this->mHandle );
 		
-		auto Image = *new TImageWrapper( *this->mContainer );
+		auto& Image = *new TImageWrapper( *this->mContainer );
 		Image.SetPixels(Pixels);
 		
 		BufferArray<Local<Value>,2> Args;
