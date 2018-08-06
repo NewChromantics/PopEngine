@@ -36,8 +36,11 @@ namespace WebSocket
 class WebSocket::THandshakeMeta
 {
 public:
-	THandshakeMeta();
-	
+	THandshakeMeta() :
+		mIsWebSocketUpgrade	( true ),
+		mHasSentAcceptReply	( false )
+	{
+	}
 	std::string			GetReplyKey() const;
 	bool				IsCompleted() const	{	return mIsWebSocketUpgrade && mWebSocketKey.length()!=0 && mVersion.length()!=0;	}
 	
@@ -47,6 +50,9 @@ public:
 	std::string			mVersion;
 	bool				mIsWebSocketUpgrade;
 	std::string			mWebSocketKey;
+	
+	
+	bool				mHasSentAcceptReply;
 };
 
 

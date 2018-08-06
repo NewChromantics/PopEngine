@@ -260,6 +260,8 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 	//	this was the http request, send the reply
 	if ( pData->mReplyMessage )
 	{
+		if ( pData->mHandshake.mHasSentAcceptReply )
+			throw Soy::AssertException("Already sent handshake reply");
 		/*
 		auto& Message = std::Debug;
 		Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
@@ -272,9 +274,10 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 			Message << Data.mContent[i];
 		Message << std::endl;
 		
-		
-		std::Debug << "Sending handshake response" << std::endl;
 		*/
+	
+		std::Debug << "Sending handshake response to " << this->GetSocketAddress() << std::endl;
+		pData->mHandshake.mHasSentAcceptReply = true;
 		Push( pData->mReplyMessage );
 		return;
 	}
@@ -339,6 +342,11 @@ std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 
 void TWebsocketServerPeer::Send(const std::string& Message)
 {
+	//	gr: cannot send if handshake hasn't completed
+	if ( !this->mHandshake.IsCompleted() )
+	{
+		throw Soy::AssertException("Sending message before handshake complete");
+	}
 	std::shared_ptr<Soy::TWriteProtocol> Packet( new WebSocket::TMessageProtocol( this->mHandshake, Message ) );
 	Push( Packet );
 }

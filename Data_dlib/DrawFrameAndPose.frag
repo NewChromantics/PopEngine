@@ -1,5 +1,5 @@
 in vec2 uv;
-const float LineWidth = 0.005;
+const float LineWidth = 0.001;
 
 uniform sampler2D	Frame;
 uniform bool		HasFrame;

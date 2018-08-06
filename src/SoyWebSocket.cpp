@@ -22,10 +22,7 @@ public:
 
 
 
-WebSocket::THandshakeMeta::THandshakeMeta() :
-	mIsWebSocketUpgrade	( true )
-{
-}
+
 
 std::string WebSocket::THandshakeMeta::GetReplyKey() const
 {

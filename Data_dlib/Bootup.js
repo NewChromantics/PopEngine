@@ -108,7 +108,7 @@ function GetFeatureLines(Face)
 		Lines.concat( GetRectLines(FaceRect) );
 	}
 	
-	let LineOffset = 1 / 400;
+	let LineOffset = 1 / 600;
 	let PushFeatureLine = function(Feature)
 	{
 		let fx = Feature.x;
@@ -202,10 +202,22 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
 		let Peers = ServerSkeletonSender.GetPeers();
+		
+		if ( Peers.length > 0 )
+		{
+			Debug("Sending FaceJson to x" + Peers.length + " peers on socket " + ServerSkeletonSender.GetAddress() );
+		}
+		
 		let SendToPeer = function(Peer)
 		{
-			Debug("Send FaceJson to " + Peer + " on socket " + ServerSkeletonSender.GetAddress() );
-			ServerSkeletonSender.Send( Peer, FaceJson );
+			try
+			{
+				ServerSkeletonSender.Send( Peer, FaceJson );
+			}
+			catch(e)
+			{
+				Debug("Failed to send to "+Peer+": " + e);
+			}
 		}
 		Peers.forEach( SendToPeer );
 	}	
@@ -229,10 +241,9 @@ var LastSkeletonFaceRect = null;
 var ShoulderToHeadWidthRatio = 0.45;
 var HeadWidthToHeightRatio = 2.1;
 var NoseHeightInHead = 0.5;
-var FindFaceIfNoSkeleton = false;
 
 
-function OnNewFrame(NewFrameImage,SaveFilename)
+function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton)
 {
 	NewFrameImage.Timestamp = Date.now();
 	
@@ -278,7 +289,7 @@ function OnNewFrame(NewFrameImage,SaveFilename)
 		}
 		else
 		{
-			OnFaceError("Waiting for face rect");
+			OnFaceError("Waiting for face rect; FindFaceIfNoSkeleton=" + FindFaceIfNoSkeleton);
 			return;
 		}
 		
@@ -444,7 +455,7 @@ function Main()
 			Debug("Loading device: " + VideoDeviceName);
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
-			VideoCapture.OnNewFrame = OnNewFrame;
+			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,false);	};
 		}
 		catch(e)
 		{
@@ -452,16 +463,25 @@ function Main()
 		}
 
 	}
+
+	/*
+	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
+	//let TestImage = new Image('Data_dlib/MicTest1.png');
+	//let TestImage = new Image('Data_dlib/MicTest2.png');
+	let TestImage = new Image('Data_dlib/MicTest3.png');
+	
+	//let TestImage = new Image('Data_dlib/Face.png');
+	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
+	//OnNewFrame(TestImage,'Data_dlib/Face.json');
+	OnNewFrame(TestImage,null,true);
+	return;
+	//TestImage = null;
+	//GarbageCollect();
+	 */
 	
 	let MediaDevices = new Media();
 	MediaDevices.EnumDevices().then( LoadDevice );
 
-	let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-	//let TestImage = new Image('Data_dlib/Face.png');
-	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	//OnNewFrame(TestImage,'Data_dlib/Face.json');
-	TestImage = null;
-	GarbageCollect();
 
 	ServerSkeletonReciever = new WebsocketServer(ServerSkeletonRecieverPort);
 	ServerSkeletonReciever.OnMessage = OnSkeletonJson;
