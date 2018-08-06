@@ -125,6 +125,7 @@ function GetFeatureLines(Face)
 	return Lines;
 }
 
+
 function WindowRender(RenderTarget)
 {
 	try
@@ -161,43 +162,25 @@ function WindowRender(RenderTarget)
 }
 
 
-function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
+
+//	todo: name properly
+let FaceLandMarkNames = [];
+for ( let i=0;	i<68;	i++ )
+	FaceLandMarkNames.push("FaceFeature"+i);
+
+
+function OnNewSkeleton(Skeleton,Image,SaveFilename)
 {
-	LastFrameImage = FaceImage;
+	LastFrameImage = Image;
+	LastSkeleton = Skeleton;
 	
-	//	handle no-face
-	if ( FaceLandmarks == null )
-		return;
-	
-	//	make a face
-	let Face = {};
-	Face.Features = [];
-	let PushFeature = function(fx,fy)
-	{
-		let f = { x:fx, y:fy };
-		Face.Features.push( f );
-	}
-	
-	//	first 4 floats are the rect
-	Face.Rect = [ FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift() ];
-	
-	if ( LastSkeletonFaceRect == null )
-		LastSkeletonFaceRect = Face.Rect;
-	
-	for ( let i=0;	i<FaceLandmarks.length;	i+=2 )
-	{
-		PushFeature( FaceLandmarks[i+0], FaceLandmarks[i+1] );
-	}
-	
-	//Debug("Got face: x" + Face.Features.length + " features" );
-	LastFace = Face;
 	
 	if ( SaveFilename != undefined )
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
 		WriteStringToFile( SaveFilename, FaceJson );
 	}
-
+	
 	if ( ServerSkeletonSender )
 	{
 		let FaceJson = JSON.stringify( Face, null, '\t' );
@@ -220,7 +203,40 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename)
 			}
 		}
 		Peers.forEach( SendToPeer );
-	}	
+	}
+}
+
+
+function OnNewFace(FaceLandmarks,FaceImage,SaveFilename,Skeleton)
+{
+	//	handle no-face
+	if ( FaceLandmarks == null )
+	{
+		OnNewSkeleton( Skeleton, FaceImage, SaveFilename );
+		return;
+	}
+	
+	//	first 4 floats are the rect
+	let FaceRect = [ FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift() ];
+
+	//	if no skeleton, make one
+	if ( !Skeleton )
+	{
+		Skeleton = GetDefaultSkeleton(FaceRect);
+		LastSkeleton = Skeleton;
+	}
+	
+	let PushFeature = function(Name,fx,fy)
+	{
+		let Keypoint = { part:Name, x:fx, y:fy };
+		Skeleton.keyPoints.push(Keypoint);
+	}
+	
+	for ( let i=0;	i<FaceLandmarks.length;	i+=2 )
+	{
+		let FeatureName = FaceLandMarkNames[i/2];
+		PushFeature( FeatureName, FaceLandmarks[i+0], FaceLandmarks[i+1] );
+	}
 }
 
 function EnumDevices(DeviceNames)
@@ -237,13 +253,42 @@ var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_
 var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
 
-var LastSkeletonFaceRect = null;
 var ShoulderToHeadWidthRatio = 0.45;
 var HeadWidthToHeightRatio = 2.1;
 var NoseHeightInHead = 0.5;
 
 
-function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton)
+function GetSkeletonFaceRect(Skeleton)
+{
+	if ( !Skeleton )
+		return null;
+	
+	//	gr: ears are unreliable, get head size from shoulders
+	//		which is a shame as we basically need ear to ear size
+	let Nose = Skeleton.nose;
+	let Left = Skeleton.leftShoulder;
+	let Right = Skeleton.rightShoulder;
+	if ( !Nose || !Left || !Right )
+		return null;
+	
+	if ( Left.x > Right.x )
+	{
+		let Temp = Right;
+		Right = Left;
+		Left = Temp;
+	}
+	let Width = (Right.x - Left.x) * ShoulderToHeadWidthRatio;
+	let Height = Width * HeadWidthToHeightRatio;
+	let Bottom = Nose.y + (Height * NoseHeightInHead);
+	let x = Nose.x - (Width/2);
+	let y = Bottom - Height;
+	
+	let Rect = [x,y,Width,Height];
+	return Rect;
+}
+
+
+function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 {
 	NewFrameImage.Timestamp = Date.now();
 	
@@ -264,7 +309,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton)
 		CurrentProcessingImageCount--;
 		if ( Face.length == 0 )
 			Face = null;
-		OnNewFace(Face,NewFrameImage,SaveFilename);
+		OnNewFace(Face,NewFrameImage,SaveFilename,Skeleton);
 	}
 	
 
@@ -275,7 +320,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton)
 
 	try
 	{
-		let FaceRect = LastSkeletonFaceRect;
+		let FaceRect = GetSkeletonFaceRect(Skeleton);
 		CurrentProcessingImageCount++;
 
 		let FindFacePromise;
@@ -341,7 +386,7 @@ function OnBroadcastMessage(PacketBytes,Sender,Socket)
 		}
 		let Address = Addresses[0];
 			
-		Debug("Send back [" + Address + "]" );
+		//Debug("Send back [" + Address + "]" );
 		
 		//	udp needs a binary array, we'll make c++ more flexible later
 		let Address8 = new Uint8Array(Address.length);
@@ -406,31 +451,6 @@ function OnSkeletonJson(SkeletonJson)
 	PushKeypoint('rightAnkle');
 	
 	
-	//	make a skeleton face rect
-	{
-		//	gr: ears are unreliable, get head size from shoulders
-		//		which is a shame as we basically need ear to ear size
-		let Nose = SimpleSkeleton.nose;
-		let Left = SimpleSkeleton.leftShoulder;
-		let Right = SimpleSkeleton.rightShoulder;
-		if ( Nose && Left && Right )
-		{
-			if ( Left.x > Right.x )
-			{
-				let Temp = Right;
-				Right = Left;
-				Left = Temp;
-			}
-			let Width = (Right.x - Left.x) * ShoulderToHeadWidthRatio;
-			let Height = Width * HeadWidthToHeightRatio;
-			let Bottom = Nose.y + (Height * NoseHeightInHead);
-			let x = Nose.x - (Width/2);
-			let y = Bottom - Height;
-			LastSkeletonFaceRect = [x,y,Width,Height];
-		}
-	}
-	
-	
 	LastSkeleton = SimpleSkeleton;
 }
 
@@ -455,7 +475,7 @@ function Main()
 			Debug("Loading device: " + VideoDeviceName);
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
-			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,false);	};
+			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,false,LastSkeleton);	};
 		}
 		catch(e)
 		{
