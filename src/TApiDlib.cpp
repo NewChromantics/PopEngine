@@ -10,6 +10,8 @@
 //#include <dlib/image_io.h>
 
 
+#define TIMER_WARNING_MIN_MS	30
+
 using namespace v8;
 
 const char FindFaces_FunctionName[] = "FindFaces";
@@ -256,20 +258,14 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 	{
 		try
 		{
-			Soy::TScopeTimerPrint Timer("FindFaceFeatures::RunFaceDetector",10);
-			
-			Soy::TScopeTimerPrint Timer5("FindFaceFeatures::GetPixels",10);
-			auto& Pixels = TargetImage->GetPixels();
-			Timer5.Stop();
-			
-			Soy::TScopeTimerPrint Timer6("FindFaceFeatures::GetFaceLandmarks",10);
+			//	gr: copy pixels
+			SoyPixels Pixels;
+			TargetImage->GetPixels(Pixels);
 			auto Face = Dlib.GetFaceLandmarks(Pixels, TargetRect );
-			Timer6.Stop();
 			
 			//	temp
 			BufferArray<float,1000> Features;
 			{
-				Soy::TScopeTimerPrint Timer3("FindFaceFeatures::CopyFloats",10);
 				auto& FaceRect = Face.mRect;
 				Features.PushBack( FaceRect.Left() );
 				Features.PushBack( FaceRect.Top() );
@@ -284,7 +280,6 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 				}
 			}
 			
-			Soy::TScopeTimerPrint Timer4("FindFaceFeatures::MakeLambda",10);
 			auto OnCompleted = [=](Local<Context> Context)
 			{
 				//	return face points here
@@ -295,10 +290,8 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
 				//ResolverLocal->Resolve( Message );
 			};
-			Timer4.Stop();
 			
 			//	queue the completion, doesn't need to be done instantly
-			Soy::TScopeTimerPrint Timer2("FindFaceFeatures::QueueScoped",10);
 			Container->QueueScoped( OnCompleted );
 		}
 		catch(std::exception& e)
@@ -357,7 +350,7 @@ dlib::array2d<dlib::rgb_pixel> GetImageFromPixels(const SoyPixelsImpl &Pixels)
 	
 	if ( Pixels.GetFormat() == SoyPixelsFormat::RGB )
 	{
-		Soy::TScopeTimerPrint Timer_1("FindFace: Copying pixels to img",10);
+		Soy::TScopeTimerPrint Timer_1("FindFace: Copying pixels to img",TIMER_WARNING_MIN_MS);
 		auto* ImgPixelsByte = &img.begin()->red;
 		SoyPixelsRemote imgPixels( ImgPixelsByte, Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetMeta().GetDataSize(), Pixels.GetFormat() );
 		imgPixels.Copy( Pixels );
@@ -390,7 +383,7 @@ dlib::array2d<dlib::rgb_pixel> GetImageFromPixels(const SoyPixelsImpl &Pixels)
 
 void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Faces)
 {
-	Soy::TScopeTimerPrint Timer_FindFace("TDlib::GetFaceLandmarks",10);
+	Soy::TScopeTimerPrint Timer_FindFace("TDlib::GetFaceLandmarks",TIMER_WARNING_MIN_MS);
 
 	using namespace dlib;
 	
@@ -412,7 +405,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	
 	// Now tell the face detector to give us a list of bounding boxes
 	// around all the faces in the image.
-	Soy::TScopeTimerPrint Timer_2("FindFace: detector(img)",10);
+	Soy::TScopeTimerPrint Timer_2("FindFace: detector(img)",TIMER_WARNING_MIN_MS);
 	std::vector<rect_detection> FaceRects;
 	auto adjust_threshold = 0;
 	detector(img, FaceRects, adjust_threshold);
@@ -449,7 +442,7 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 {
 	using namespace dlib;
 	
-	Soy::TScopeTimerPrint Timer_1("auto& sp = *mShapePredictor;",10);
+	Soy::TScopeTimerPrint Timer_1("auto& sp = *mShapePredictor;",TIMER_WARNING_MIN_MS);
 	auto& sp = *mShapePredictor;
 	Timer_1.Stop();
 	
@@ -473,7 +466,7 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 	
 	rectangle FaceRect( FaceRectf.Left(), FaceRectf.Top(), FaceRectf.Right(), FaceRectf.Bottom() );
 	
-	Soy::TScopeTimerPrint Timer_3("FindFace: get shape(img)",1);
+	Soy::TScopeTimerPrint Timer_3("FindFace: get shape(img)",TIMER_WARNING_MIN_MS);
 	full_object_detection shape = sp( Image, FaceRect );
 	Timer_3.Stop();
 	

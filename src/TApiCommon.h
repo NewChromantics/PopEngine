@@ -54,6 +54,7 @@ public:
 	void									GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
 	const Opengl::TTexture&					GetTexture();
 	SoyPixels&								GetPixels();
+	void									GetPixels(SoyPixelsImpl& CopyTarget);	//	safely copy pixels
 
 	//	we consider version 0 uninitisalised
 	size_t									GetLatestVersion() const;

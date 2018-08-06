@@ -532,6 +532,15 @@ const Opengl::TTexture& TImageWrapper::GetTexture()
 }
 
 
+
+void TImageWrapper::GetPixels(SoyPixelsImpl& CopyTarget)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+	auto& Pixels = GetPixels();
+	CopyTarget.Copy(Pixels);
+}
+
+
 SoyPixels& TImageWrapper::GetPixels()
 {
 	if ( mPixelsVersion < GetLatestVersion() )
@@ -544,6 +553,7 @@ SoyPixels& TImageWrapper::GetPixels()
 	//	is latest and not allocated, this is okay, lets just alloc
 	if ( mPixelsVersion == 0 && mPixels == nullptr )
 	{
+		std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 		mPixels.reset( new SoyPixels );
 		mPixelsVersion = 1;
 	}
@@ -584,6 +594,9 @@ void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 
 void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
 {
+	if ( NewPixels->GetFormat() != SoyPixelsFormat::RGB )
+		std::Debug << "Setting image to pixels: " << NewPixels->GetMeta() << std::endl;
+	
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels = NewPixels;
 	mPixelsVersion = GetLatestVersion()+1;
