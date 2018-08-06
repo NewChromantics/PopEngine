@@ -137,6 +137,41 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 }
 
 
+v8::Local<v8::Value> TWebsocketServerWrapper::Send(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TWebsocketServerWrapper>( ThisHandle );
+	auto ThisSocket = This.mSocket;
+	if ( !ThisSocket )
+		throw Soy::AssertException("Socket not allocated");
+	
+	if ( Arguments.Length() != 2 )
+		throw Soy::AssertException("Expected 2 arguments Send(Sender,Data)");
+	
+	auto PeerHandle = Arguments[0];
+	auto DataHandle = Arguments[1];
+	
+	auto PeerStr = v8::GetString( PeerHandle );
+	auto PeerRef = SoyRef( PeerStr );
+	
+	//	get data
+	if ( DataHandle->IsString() )
+	{
+		auto DataString = v8::GetString( DataHandle );
+		ThisSocket->Send( PeerRef, DataString );
+	}
+	else
+	{
+		Array<uint8_t> Data;
+		v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
+		ThisSocket->Send( PeerRef, GetArrayBridge(Data) );
+	}
+
+	return v8::Undefined(Params.mIsolate);
+}
+
 
 
 TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
@@ -194,15 +229,14 @@ bool TWebsocketServer::Iteration()
 
 std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetClient(SoyRef ClientRef)
 {
-	/*
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	for ( int c=0;	c<mClients.GetSize();	c++ )
 	{
 		auto& pClient = mClients[c];
-		if ( pClient->mRef == ClientRef )
+		if ( pClient->mConnectionRef == ClientRef )
 			return pClient;
 	}
-	 */
+
 	throw Soy::AssertException("Client not found");
 }
 
@@ -264,6 +298,31 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 }
 
 
+void TWebsocketServer::Send(SoyRef ClientRef,const std::string& Message)
+{
+	auto Peer = GetClient(ClientRef);
+	if ( !Peer )
+	{
+		std::stringstream Error;
+		Error << "No peer matching " << ClientRef;
+		throw Soy::AssertException(Error.str());
+	}
+	Peer->Send(Message);
+}
+
+
+void TWebsocketServer::Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message)
+{
+	auto Peer = GetClient(ClientRef);
+	if ( !Peer )
+	{
+		std::stringstream Error;
+		Error << "No peer matching " << ClientRef;
+		throw Soy::AssertException(Error.str());
+	}
+	Peer->Send(Message);
+}
+
 
 std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 {
@@ -274,4 +333,39 @@ std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,*mCurrentMessage);
 	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
 }
+
+
+void TWebsocketServerPeer::Send(const std::string& Message)
+{
+	throw Soy::AssertException("Encode to websocket protocol");
+	/*
+	//	encode and send
+	auto pMessageEncoded = std::make_shared<WebSocket::TRProtocol
 	
+	//	this was the http request, send the reply
+	if ( pData->mReplyMessage )
+	{
+		auto& Message = std::Debug;
+		Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
+		for ( auto Header : Data.mHeaders )
+		{
+			Message << Header.first << ": " << Header.second << std::endl;
+		}
+		Message << "Content size: " << Data.mContent.GetSize();
+		for ( int i=0;	i<Data.mContent.GetSize();	i++ )
+			Message << Data.mContent[i];
+		Message << std::endl;
+		
+		
+		std::Debug << "Sending handshake response" << std::endl;
+		Push( pData->mReplyMessage );
+		return;
+	 */
+}
+
+void TWebsocketServerPeer::Send(const ArrayBridge<uint8_t>& Message)
+{
+	throw Soy::AssertException("Encode to websocket protocol");
+	
+}
+

@@ -24,11 +24,12 @@ namespace ApiWebsocket
 class TWebsocketServerPeer : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
 {
 public:
-	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket,SoyRef Ref,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
-		TSocketReadThread_Impl	( Socket, Ref ),
-		TSocketWriteThread		( Socket, Ref ),
+	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket,SoyRef ConnectionRef,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
+		TSocketReadThread_Impl	( Socket, ConnectionRef ),
+		TSocketWriteThread		( Socket, ConnectionRef ),
 		mOnTextMessage			( OnTextMessage ),
-		mOnBinaryMessage		( OnBinaryMessage )
+		mOnBinaryMessage		( OnBinaryMessage ),
+		mConnectionRef			( ConnectionRef )
 	{
 		TSocketReadThread_Impl::Start();
 		TSocketWriteThread::Start();
@@ -37,8 +38,12 @@ public:
 	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
 	
 	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
+
+	void				Send(const std::string& Message);
+	void				Send(const ArrayBridge<uint8_t>& Message);
 	
 public:
+	SoyRef										mConnectionRef;
 	std::function<void(const std::string&)>		mOnTextMessage;
 	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
 	WebSocket::THandshakeMeta					mHandshake;
@@ -53,13 +58,16 @@ public:
 
 	std::string					GetAddress() const;
 
+	void						Send(SoyRef ClientRef,const std::string& Message);
+	void						Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message);
+
 protected:
 	virtual bool				Iteration() override;
 	
 	void						AddClient(SoyRef ClientRef);
 	void						RemoveClient(SoyRef ClientRef);
 	std::shared_ptr<TWebsocketServerPeer>	GetClient(SoyRef ClientRef);
-
+	
 public:
 	std::shared_ptr<SoySocket>		mSocket;
 	
@@ -81,6 +89,7 @@ public:
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static v8::Local<v8::Value>				Send(const v8::CallbackInfo& Arguments);
 
 	//	queue up a callback for This handle's OnMessage callback
 	void									OnMessage(const std::string& Message);
