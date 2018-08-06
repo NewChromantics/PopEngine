@@ -260,6 +260,7 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 	//	this was the http request, send the reply
 	if ( pData->mReplyMessage )
 	{
+		/*
 		auto& Message = std::Debug;
 		Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
 		for ( auto Header : Data.mHeaders )
@@ -273,6 +274,7 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 		
 		
 		std::Debug << "Sending handshake response" << std::endl;
+		*/
 		Push( pData->mReplyMessage );
 		return;
 	}
@@ -328,7 +330,7 @@ std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 {
 	//	this needs revising... or locking at least
 	if ( !mCurrentMessage )
-		mCurrentMessage.reset( new WebSocket::TMessage() );
+		mCurrentMessage.reset( new WebSocket::TMessageBuffer() );
 	
 	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,*mCurrentMessage);
 	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
@@ -337,30 +339,8 @@ std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 
 void TWebsocketServerPeer::Send(const std::string& Message)
 {
-	throw Soy::AssertException("Encode to websocket protocol");
-	/*
-	//	encode and send
-	auto pMessageEncoded = std::make_shared<WebSocket::TRProtocol
-	
-	//	this was the http request, send the reply
-	if ( pData->mReplyMessage )
-	{
-		auto& Message = std::Debug;
-		Message << "http request " << Data.mHost << " " << Data.mUrl << std::endl;
-		for ( auto Header : Data.mHeaders )
-		{
-			Message << Header.first << ": " << Header.second << std::endl;
-		}
-		Message << "Content size: " << Data.mContent.GetSize();
-		for ( int i=0;	i<Data.mContent.GetSize();	i++ )
-			Message << Data.mContent[i];
-		Message << std::endl;
-		
-		
-		std::Debug << "Sending handshake response" << std::endl;
-		Push( pData->mReplyMessage );
-		return;
-	 */
+	std::shared_ptr<Soy::TWriteProtocol> Packet( new WebSocket::TMessageProtocol( this->mHandshake, Message ) );
+	Push( Packet );
 }
 
 void TWebsocketServerPeer::Send(const ArrayBridge<uint8_t>& Message)

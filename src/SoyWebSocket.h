@@ -10,7 +10,8 @@ namespace WebSocket
 	class THandshakeMeta;
 	class THandshakeResponseProtocol;
 	class TMessageHeader;
-	class TMessage;
+	class TMessageBuffer;
+	class TMessageProtocol;
 	
 	namespace TOpCode
 	{
@@ -49,10 +50,10 @@ public:
 };
 
 
-class WebSocket::TMessage
+class WebSocket::TMessageBuffer
 {
 public:
-	TMessage() :
+	TMessageBuffer() :
 		mIsComplete	(false )
 	{
 	}
@@ -81,11 +82,36 @@ public:
 		Length64	( 0 ),
 		Fin			( 1 ),
 		Reserved	( 0 ),
-		OpCode		( WebSocket::TOpCode::Invalid ),
+		OpCode		( TOpCode::Invalid ),
+		Masked		( false )
+	{
+	}
+	explicit TMessageHeader(TOpCode::Type Opcode) :
+		Length		( 0 ),
+		Length16	( 0 ),
+		LenMostSignificant	( 0 ),
+		Length64	( 0 ),
+		Fin			( 1 ),
+		Reserved	( 0 ),
+		OpCode		( Opcode ),
 		Masked		( false )
 	{
 	}
 	
+public:
+	TOpCode::Type	GetOpCode() const	{	return TOpCode::Validate( OpCode );	}
+	bool			IsText() const			{	return OpCode == TOpCode::TextFrame;	}
+	size_t			GetLength() const;
+	std::string		GetMaskKeyString() const;
+	bool			IsLastMessage() const	{	return Fin==1;	}
+	void			IsValid(bool ExpectedNonZeroLength) const;					//	throws if not valid
+	bool			Decode(TStreamBuffer& Data);		//	returns false if not got enough data. throws on error
+	void			Encode(TStreamBuffer& Buffer,ArrayBridge<uint8_t>&& PayloadData);
+
+public:
+	BufferArray<unsigned char,4> MaskKey;	//	store & 32 bit int
+
+private:
 	int		Fin;
 	int		Reserved;
 	int		OpCode;
@@ -94,25 +120,16 @@ public:
 	int		Length16;
 	int		LenMostSignificant;
 	uint64	Length64;
-	BufferArray<unsigned char,4> MaskKey;	//	store & 32 bit int
-	
-	TOpCode::Type	GetOpCode() const	{	return TOpCode::Validate( OpCode );	}
-	bool			IsText() const			{	return OpCode == TOpCode::TextFrame;	}
-	size_t			GetLength() const;
-	std::string		GetMaskKeyString() const;
-	void			IsValid() const;					//	throws if not valid
-	bool			Decode(TStreamBuffer& Data);		//	returns false if not got enough data. throws on error
-	bool			Encode(ArrayBridge<char>& Data,const ArrayBridge<char>& MessageData,std::stringstream& Error);
 };
 
 
-
-//	a websocket client
+//	a websocket client connecting to us (via http)
+//	we should THEN switch to websocket::TMessageProtocol as all messages recieved will be that afterwards
 class WebSocket::TRequestProtocol : public Http::TRequestProtocol
 {
 public:
-	TRequestProtocol() : mHandshake(* new THandshakeMeta() ), mMessage( *new TMessage() )	{	throw Soy::AssertException("Should not be called");	}
-	TRequestProtocol(THandshakeMeta& Handshake,TMessage& Message) :
+	TRequestProtocol() : mHandshake(* new THandshakeMeta() ), mMessage( *new TMessageBuffer() )	{	throw Soy::AssertException("Should not be called");	}
+	TRequestProtocol(THandshakeMeta& Handshake,TMessageBuffer& Message) :
 		mHandshake	( Handshake ),
 		mMessage	( Message )
 	{
@@ -122,7 +139,7 @@ public:
 	virtual bool					ParseSpecificHeader(const std::string& Key,const std::string& Value) override;
 	
 protected:
-	TProtocolState::Type	DecodeBody(TMessageHeader& Header,TStreamBuffer& Buffer);
+	static TProtocolState::Type	DecodeBody(TMessageHeader& Header,TMessageBuffer& Message,TStreamBuffer& Buffer);
 
 public:
 	//	if we've generated a "reply with this message" its the HTTP-reply to allow websocket (and not an actual packet)
@@ -130,7 +147,7 @@ public:
 	std::shared_ptr<Soy::TWriteProtocol>	mReplyMessage;
 	
 	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
-	TMessage&			mMessage;	//	persistent message for multi-frame messages
+	TMessageBuffer&		mMessage;	//	persistent message for multi-frame messages
 };
 
 
@@ -140,5 +157,23 @@ public:
 	THandshakeResponseProtocol(const THandshakeMeta& Handshake);
 };
 
+
+//	a single message (which is decoded and encoded)
+class WebSocket::TMessageProtocol : public Soy::TWriteProtocol
+{
+public:
+	TMessageProtocol(THandshakeMeta& Handshake,const std::string& Message) :
+		mHandshake	( Handshake ),
+		mMessage	( Message )
+	{
+	}
+
+protected:
+	virtual void					Encode(TStreamBuffer& Buffer) override;
+	
+public:
+	THandshakeMeta&		mHandshake;
+	std::string			mMessage;
+};
 
 

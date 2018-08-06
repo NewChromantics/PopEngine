@@ -47,7 +47,7 @@ public:
 	std::function<void(const std::string&)>		mOnTextMessage;
 	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
 	WebSocket::THandshakeMeta					mHandshake;
-	std::shared_ptr<WebSocket::TMessage>		mCurrentMessage;
+	std::shared_ptr<WebSocket::TMessageBuffer>	mCurrentMessage;
 };
 
 

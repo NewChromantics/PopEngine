@@ -91,11 +91,11 @@ TProtocolState::Type WebSocket::TRequestProtocol::Decode(TStreamBuffer& Buffer)
 		}
 		
 		//	just a close command
-		if ( Header.OpCode == TOpCode::ConnectionCloseFrame )
+		if ( Header.GetOpCode() == TOpCode::ConnectionCloseFrame )
 			return TProtocolState::Disconnect;
 		
 		//	decode body
-		return DecodeBody( Header, Buffer );
+		return DecodeBody( Header, mMessage, Buffer );
 	}
 	catch(std::exception& e)
 	{
@@ -140,7 +140,7 @@ bool WebSocket::TRequestProtocol::ParseSpecificHeader(const std::string& Key,con
 
 
 
-TProtocolState::Type WebSocket::TRequestProtocol::DecodeBody(TMessageHeader& Header,TStreamBuffer& Buffer)
+TProtocolState::Type WebSocket::TRequestProtocol::DecodeBody(TMessageHeader& Header,TMessageBuffer& MessageBuffer,TStreamBuffer& Buffer)
 {
 	//	gr: to handle mulitple messages, the data all goes into the payload param
 	//	if the param is missing, we haven't loaded our payload yet
@@ -185,13 +185,13 @@ TProtocolState::Type WebSocket::TRequestProtocol::DecodeBody(TMessageHeader& Hea
 		
 	//	opcode tells us if it's text/binary, but we only know that if we're the first packet
 	//	but we do know when we're the last one.
-	auto IsLastPayload = (Header.Fin==1);
-	mMessage.PushMessageData( Header.GetOpCode(), IsLastPayload, GetArrayBridge(PayloadData) );
+	auto IsLastPayload = Header.IsLastMessage();
+	MessageBuffer.PushMessageData( Header.GetOpCode(), IsLastPayload, GetArrayBridge(PayloadData) );
 	return TProtocolState::Finished;
 }
 		
 		
-void WebSocket::TMessage::PushMessageData(TOpCode::Type PayloadFormat,bool IsLastPayload,const ArrayBridge<char>&& Payload)
+void WebSocket::TMessageBuffer::PushMessageData(TOpCode::Type PayloadFormat,bool IsLastPayload,const ArrayBridge<char>&& Payload)
 {
 	if ( mIsComplete )
 	{
@@ -242,13 +242,13 @@ void WebSocket::TMessage::PushMessageData(TOpCode::Type PayloadFormat,bool IsLas
 }
 
 
-void WebSocket::TMessage::PushBinaryMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload)
+void WebSocket::TMessageBuffer::PushBinaryMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload)
 {
 	mBinaryData.PushBackArray( Payload );
 	mIsComplete = IsLastPayload;
 }
 
-void WebSocket::TMessage::PushTextMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload)
+void WebSocket::TMessageBuffer::PushTextMessageData(const ArrayBridge<char>& Payload,bool IsLastPayload)
 {
 	auto PayloadString = Soy::ArrayToString( Payload );
 	mTextData += PayloadString;
@@ -372,7 +372,7 @@ std::string WebSocket::TMessageHeader::GetMaskKeyString() const
 	return s.str();
 }
 
-void WebSocket::TMessageHeader::IsValid() const
+void WebSocket::TMessageHeader::IsValid(bool ExpectedNonZeroLength) const
 {
 	std::stringstream Error;
 
@@ -400,8 +400,11 @@ void WebSocket::TMessageHeader::IsValid() const
 	auto Length = GetLength();
 	if ( Length == 0 )
 	{
-		Error << "Length of " << OpCode << " message is 0";
-		throw Soy::AssertException(Error.str());
+		if ( ExpectedNonZeroLength )
+		{
+			Error << "Length of " << OpCode << " message is 0";
+			throw Soy::AssertException(Error.str());
+		}
 	}
 	
 	//	we only support some opcodes atm
@@ -497,10 +500,106 @@ bool WebSocket::TMessageHeader::Decode(TStreamBuffer& Buffer)
 	}
 	
 	//	check integrity
-	IsValid();
+	IsValid(true);
 	
 	//	pop out all the data we read
 	Buffer.Pop( BitReader.BytesRead() );
 	
 	return true;
 }
+
+
+
+void WebSocket::TMessageHeader::Encode(TStreamBuffer& Buffer,ArrayBridge<uint8_t>&& PayloadData)
+{
+	//	should be valid here. with zero length
+	IsValid(false);
+	if ( GetLength() != 0 )
+	{
+		std::stringstream Error;
+		Error << "expected length(" << GetLength() << ") to be zero";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	//	write header to it's own array first
+	BufferArray<char,10> HeaderData;
+	auto HeaderDataBridge = GetArrayBridge( HeaderData );
+	
+	//	write message header
+	TBitWriter BitWriter( HeaderDataBridge );
+	BitWriter.WriteBit( Fin );		//	fin
+	BitWriter.Write( (uint8)Reserved, 3 );	//	reserved
+	
+	BitWriter.Write( (uint8)OpCode, 4 );
+	BitWriter.WriteBit(Masked);	//	masked
+	
+	uint64 PayloadLength = PayloadData.GetDataSize();
+	//	write length
+	if ( PayloadLength > 0xffff )
+	{
+		//	64 bit length
+		BitWriter.Write( 127u, 7 );	//	"theres another 64 bit length"
+		BitWriter.Write( PayloadLength, 64 );
+	}
+	else if ( PayloadLength > 125 )
+	{
+		BitWriter.Write( 126u, 7 );	//	"theres another 16 bit length"
+		BitWriter.Write( PayloadLength, 16 );
+	}
+	else
+	{
+		BitWriter.Write( PayloadLength, 7 );
+	}
+	
+	if ( Masked )
+	{
+		unsigned char _MaskKey[4] = {1,2,3,4};
+		BufferArray<unsigned char,4> MaskKey(_MaskKey);
+		BitWriter.Write( MaskKey[0], 8 );
+		BitWriter.Write( MaskKey[1], 8 );
+		BitWriter.Write( MaskKey[2], 8 );
+		BitWriter.Write( MaskKey[3], 8 );
+	}
+	
+	//	data left over should align!
+	int Remainder = BitWriter.BitPosition() % 8;
+	if ( Remainder != 0 )
+	{
+		std::stringstream Error;
+		Error << "Websocket header data doesn't align to 8 bits (" << Remainder << ")";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	//	mask all the data
+	if ( Masked )
+	{
+		throw Soy::AssertException("Todo: encode websocket message data with mask");
+	}
+	/*	gr: do this at higher level
+	static bool TestForUtf8 = false;
+	if ( TestForUtf8 && this->IsText() )
+	{
+		std::stringstream OutputString;
+		Soy::ArrayToString( OutputData, OutputString );
+		bool IsUtf8 = Soy::IsUtf8String( OutputString.str() );
+		if ( !Soy::Assert( IsUtf8, "Unexpected non-UTF8 char in websocket text message" ) )
+			return false;
+	}
+	*/
+	Buffer.Push( GetArrayBridge(HeaderData) );
+	Buffer.Push( PayloadData );
+}
+
+
+void WebSocket::TMessageProtocol::Encode(TStreamBuffer& Buffer)
+{
+	TMessageHeader Header(TOpCode::TextFrame);
+	
+	Array<uint8_t> MessageData;
+	Soy::StringToArray( mMessage, GetArrayBridge(MessageData) );
+	
+	Header.Encode( Buffer, GetArrayBridge(MessageData) );
+}
+	
+
+
