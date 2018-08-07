@@ -233,6 +233,25 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 }
 
 
+//	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
+//	gr: I think in the use case (a lambda) it becomes const so won't get freed anyway?
+template<typename TYPE>
+class V8Storage
+{
+public:
+	V8Storage(v8::Isolate& Isolate,v8::Local<TYPE>& Local) :
+		mPersistent	( v8::GetPersistent( Isolate, Local ) )
+	{
+		
+	}
+	~V8Storage()
+	{
+		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
+	}
+	
+	v8::Persist<v8::Promise::Resolver>	mPersistent;
+};
+
 v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -243,7 +262,8 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	auto pResolverPersistent = std::make_shared<V8Storage<v8::Promise::Resolver>>( *Isolate, Resolver );
+	//auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
 	
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
@@ -284,7 +304,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 			{
 				//	return face points here
 				//	gr: can't do this unless we're in the javascript thread...
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, pResolverPersistent->mPersistent );
 				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Features) );
 
 				//	gr: these seem to be getting cleaned up on garbage collect, I think
@@ -302,7 +322,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, pResolverPersistent->mPersistent );
 				//	gr: does this need to be an exception? string?
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
