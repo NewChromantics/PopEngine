@@ -138,7 +138,7 @@ static Local<Value> LoadFileAsString(CallbackInfo& Params)
 	if (Arguments.Length() < 1)
 		throw Soy::AssertException("LoadFileAsString(Filename) with no args");
 
-	auto Filename = v8::GetString( Arguments[0] );
+	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
 	std::string Contents;
 	if ( !Soy::FileToString( Filename, Contents) )
 	{
@@ -160,7 +160,7 @@ static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
 		throw Soy::AssertException("LoadFileAsArrayBuffer(Filename) with no args");
 
 	
-	auto Filename = v8::GetString( Arguments[0] );
+	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
 	Array<char> FileContents;
 	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
@@ -195,7 +195,7 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 	if (Arguments.Length() < 2)
 		throw Soy::AssertException("WriteStringToFile(Filename,String) with no args");
 	
-	auto Filename = v8::GetString( Arguments[0] );
+	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
 	auto Contents = v8::GetString( Arguments[1] );
 
 	if ( !Soy::StringToFile( Filename, Contents ) )
@@ -327,7 +327,7 @@ v8::Local<v8::Value> TImageWrapper::LoadFile(const v8::CallbackInfo& Params)
 
 	//	if first arg is filename...
 	
-	std::string Filename( *String::Utf8Value(Arguments[0]) );
+	auto Filename = Params.GetRootDirectory() + v8::GetString(Arguments[0]);
 	This.DoLoadFile( Filename );
 	return v8::Undefined(Params.mIsolate);
 }

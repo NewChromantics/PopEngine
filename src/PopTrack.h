@@ -7,7 +7,7 @@ class TV8Instance;
 class TPopTrack
 {
 public:
-	TPopTrack(const std::string& BootupFilename);
+	TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename);
 	~TPopTrack();
 	
 private:

@@ -86,12 +86,20 @@ void PopV8Allocator::Free(void* data, size_t length)
 #endif
 
 
-TV8Container::TV8Container() :
+const std::string& v8::CallbackInfo::GetRootDirectory() const
+{
+	return mContainer.mRootDirectory;
+}
+
+
+TV8Container::TV8Container(const std::string& RootDirectory) :
+	mRootDirectory	( RootDirectory ),
 #if V8_VERSION==5
 	mAllocator	( new PopV8Allocator )
 #elif V8_VERSION==6
 	mAllocator	( v8::ArrayBuffer::Allocator::NewDefaultAllocator() )
 #endif
+
 {
 	auto& Allocator = *mAllocator;
 	
@@ -100,22 +108,14 @@ TV8Container::TV8Container() :
 	//v8::internal::FLAG_expose_gc = true;
 	V8::SetFlagsFromString( Flags.c_str(), static_cast<int>(Flags.length()) );
 	
-	auto* ExePath = ::Platform::ExePath.c_str();
+	auto& ExePath = ::Platform::ExePath;
 #if V8_VERSION==6
 	auto* IcuFilename = "icudtl.dat";
-	std::string IcuPath = ::Platform::ExePath;
-	
-	BufferArray<std::string,100> PathParts;
-	Soy::StringSplitByMatches( GetArrayBridge(PathParts), IcuPath, "/" );
-	PathParts.PopBack();
-	PathParts.PopBack();
-	PathParts.PushBack("Resources");
-	PathParts.PushBack(IcuFilename);
-	IcuPath = Soy::StringJoin( GetArrayBridge(PathParts), "/" );
+	std::string IcuPath = mRootDirectory + IcuFilename;
 
 	//	gr: 6.X build doesn't include just-null version, perhaps when there IS an ICU, the function disapears?
 	::Platform::ShowFileExplorer( IcuPath );
-	if ( !V8::InitializeICUDefaultLocation( ExePath, IcuPath.c_str() ) )
+	if ( !V8::InitializeICUDefaultLocation( ExePath.c_str(), IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
 #elif V8_VERSION==5
 	V8::InitializeICU(nullptr);
@@ -123,7 +123,7 @@ TV8Container::TV8Container() :
 	
 	//v8::V8::InitializeExternalStartupData(argv[0]);
 	//V8::InitializeExternalStartupData(nullptr);
-	V8::InitializeExternalStartupData( ExePath );
+	V8::InitializeExternalStartupData( ExePath.c_str() );
 	
 	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
 	mPlatform.reset( v8::platform::CreateDefaultPlatform() );

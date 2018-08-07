@@ -11,7 +11,7 @@
 class TV8Instance : public SoyWorkerThread
 {
 public:
-	TV8Instance(const std::string& ScriptFilename);
+	TV8Instance(const std::string& RootDirectory,const std::string& ScriptFilename);
 	~TV8Instance();
 	
 	std::shared_ptr<TV8Container>		mV8Container;
@@ -20,4 +20,6 @@ public:
 protected:
 	virtual bool	Iteration() override;
 	
+public:
+	std::string		mRootDirectory;
 };

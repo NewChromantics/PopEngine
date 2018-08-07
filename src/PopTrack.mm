@@ -3,7 +3,7 @@
 #include <SoyApp.h>
 #include <PopMain.h>
 #include "TV8Instance.h"
-
+#include <SoyFileSystem.h>
 
 namespace PopTrack
 {
@@ -24,8 +24,11 @@ TPopTrack& PopTrack::GetApp()
 {
 	if ( !Private::gOpenglApp )
 	{
+		//	proper way would be to use the current working dir. But for now lets force it
+		auto RootDir = Platform::GetAppResourcesDirectory();
+		
 		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
-		Private::gOpenglApp.reset( new TPopTrack("Data_Dlib/Bootup.js") );
+		Private::gOpenglApp.reset( new TPopTrack( RootDir, "Data_Dlib/Bootup.js") );
 	}
 	return *Private::gOpenglApp;
 }
@@ -47,10 +50,10 @@ TPopAppError::Type PopMain()
 
 
 
-TPopTrack::TPopTrack(const std::string& BootupFilename)
+TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
 	//	todo: watch for when a file changes and recreate instance
-	mV8Instance.reset( new TV8Instance(BootupFilename) );
+	mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
 
 }
 

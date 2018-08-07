@@ -140,6 +140,8 @@ public:
 	template<typename TYPE>
 	TYPE&			GetThis() const			{	return v8::GetObject<TYPE>( mParams.This() );	}
 	
+	const std::string&	GetRootDirectory() const;
+	
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
 	TV8Container&								mContainer;
@@ -204,7 +206,7 @@ public:
 class TV8Container
 {
 public:
-	TV8Container();
+	TV8Container(const std::string& RootDirectory);
 	
     void     	   CreateContext();
 	v8::Isolate&	GetIsolate()	{	return *mIsolate;	}
@@ -256,6 +258,7 @@ public:
 	std::shared_ptr<v8::ArrayBuffer::Allocator>	mAllocator;
 	
 	Array<TV8ObjectTemplate>		mObjectTemplates;
+	std::string						mRootDirectory;
 };
 
 
