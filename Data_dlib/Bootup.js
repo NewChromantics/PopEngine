@@ -638,14 +638,41 @@ function Main()
 	MediaDevices.EnumDevices().then( LoadDevice );
 
 
-	ServerSkeletonReciever = new WebsocketServer(ServerSkeletonRecieverPort);
-	ServerSkeletonReciever.OnMessage = OnSkeletonJson;
-	ServerSkeletonSender = new WebsocketServer(ServerSkeletonSenderPort);
-
-	BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
-	BroadcastServer.OnMessage = function(Data,Sender)	{	OnBroadcastMessage(Data,Sender,BroadcastServer);	}
-
+	let AllocSkeletonReciever = function()
+	{
+		ServerSkeletonReciever = new WebsocketServer(ServerSkeletonRecieverPort);
+		ServerSkeletonReciever.OnMessage = OnSkeletonJson;
+	}
 	
+	let AllocSkeletonSender = function()
+	{
+		ServerSkeletonSender = new WebsocketServer(ServerSkeletonSenderPort);
+	}
+	
+	let AllocBroadcastServer = function()
+	{
+		BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
+		BroadcastServer.OnMessage = function(Data,Sender)	{	OnBroadcastMessage(Data,Sender,BroadcastServer);	}
+	}
+	
+
+	let Retry = function(RetryFunc,Timeout)
+	{
+		try
+		{
+			RetryFunc();
+		}
+		catch(e)
+		{
+			Debug(e+"... retrying in " + Timeout);
+			setTimeout( function(){	Retry(RetryFunc);}, Timeout );
+		}
+	}
+	Retry( AllocSkeletonReciever, 1000 );
+	Retry( AllocSkeletonSender, 1000 );
+	Retry( AllocBroadcastServer, 1000 );
+	
+
 }
 
 //	main

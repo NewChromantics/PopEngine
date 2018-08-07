@@ -22,33 +22,38 @@ void TWebsocketServerWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Val
 	using namespace v8;
 	auto* Isolate = Arguments.GetIsolate();
 	
-	if ( !Arguments.IsConstructCall() )
+	try
 	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
+		if ( !Arguments.IsConstructCall() )
+			throw Soy::AssertException("Expecting to be used as constructor.");
 	
-	auto This = Arguments.This();
-	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-	
-	auto ListenPortArg = Arguments[0].As<Number>()->Uint32Value();
-	
-	//	alloc window
-	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-	//		but it also needs to know of the V8container to run stuff
-	//		cyclic hell!
-	auto* NewWrapper = new TWebsocketServerWrapper(ListenPortArg);
-	
-	//	store persistent handle to the javascript object
-	NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
-	NewWrapper->mContainer = &Container;
+		auto This = Arguments.This();
+		auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
+		
+		auto ListenPortArg = Arguments[0].As<Number>()->Uint32Value();
+		
+		//	alloc window
+		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
+		//		but it also needs to know of the V8container to run stuff
+		//		cyclic hell!
+		auto* NewWrapper = new TWebsocketServerWrapper(ListenPortArg);
+		
+		//	store persistent handle to the javascript object
+		NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
+		NewWrapper->mContainer = &Container;
 
-	//	set fields
-	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
-	
-	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( This );
+		//	set fields
+		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
+		
+		// return the new object back to the javascript caller
+		Arguments.GetReturnValue().Set( This );
+	}
+	catch(std::exception& e)
+	{
+		auto Str = v8::GetString( *Isolate, e.what() );
+		auto Exception = Isolate->ThrowException(Str);
+		Arguments.GetReturnValue().Set(Exception);
+	}
 }
 
 
