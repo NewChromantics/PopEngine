@@ -18,8 +18,13 @@ let VertShaderSource = `
 
 let FrameFragShaderSource = LoadFileAsString("Data_dlib/DrawFrameAndPose.frag");
 var FrameShader = null;
-var LastFrameImage = null;
-var LastFace = null;
+
+
+//	skeleton + face
+var OutputSkeleton = null;
+var OutputImage = null;
+
+//	last simple skeleton we recieved
 var LastSkeleton = null;
 
 
@@ -53,12 +58,16 @@ function GetSkeletonLines(Skeleton)
 {
 	let Lines = [];
 
-	if ( LastSkeletonFaceRect )
-		Lines = Lines.concat( GetRectLines(LastSkeletonFaceRect) );
-	
 	if ( Skeleton == null )
+	{
+		//	X
+		Lines.push( [0,0,1,1] );
+		Lines.push( [1,0,0,1] );
 		return Lines;
+	}
 	
+	Lines = Lines.concat( GetRectLines(Skeleton.FaceRect) );
+
 	let PushLine = function(namea,nameb)
 	{
 		let Posa = Skeleton[namea];
@@ -70,6 +79,22 @@ function GetSkeletonLines(Skeleton)
 		Lines.push( Posa.y );
 		Lines.push( Posb.x );
 		Lines.push( Posb.y );
+	}
+
+	let PushPoint = function(name)
+	{
+		let Pos = Skeleton[name];
+		if ( Pos == undefined )
+			return;
+		let LineOffset = 1 / 600;
+		
+		let fx = Pos.x;
+		let fy = Pos.y;
+		let x0 = fx-LineOffset;
+		let x1 = fx+LineOffset;
+		let y0 = fy-LineOffset;
+		let y1 = fy+LineOffset;
+		Lines.push( [x0,y0,x1,y1] );
 	}
 	
 	PushLine('nose','leftEye');
@@ -98,32 +123,6 @@ function GetSkeletonLines(Skeleton)
 	return Lines;
 }
 
-function GetFeatureLines(Face)
-{
-	let Lines = [];
-	
-	if ( Face != null )
-	{
-		let FaceRect = Face.Rect;
-		Lines.concat( GetRectLines(FaceRect) );
-	}
-	
-	let LineOffset = 1 / 600;
-	let PushFeatureLine = function(Feature)
-	{
-		let fx = Feature.x;
-		let fy = Feature.y;
-		let x0 = fx-LineOffset;
-		let x1 = fx+LineOffset;
-		let y0 = fy-LineOffset;
-		let y1 = fy+LineOffset;
-		Lines.push( [x0,y0,x1,y1] );
-	}
-	if ( Face != null )
-		Face.Features.forEach( PushFeatureLine );
-
-	return Lines;
-}
 
 
 function WindowRender(RenderTarget)
@@ -137,19 +136,16 @@ function WindowRender(RenderTarget)
 		
 		let SetUniforms = function(Shader)
 		{
-			if ( LastFrameImage != null )
-				Shader.SetUniform("Frame", LastFrameImage, 0 );
-			Shader.SetUniform("HasFrame", LastFrameImage!=null );
+			if ( OutputImage != null )
+				Shader.SetUniform("Frame", OutputImage, 0 );
+			Shader.SetUniform("HasFrame", OutputImage!=null );
 			
-			let SkeletonLines = GetSkeletonLines( LastSkeleton );
-			let PoseLines = GetFeatureLines(LastFace);
-			
-			PoseLines = SkeletonLines.concat( PoseLines );
+			let SkeletonLines = GetSkeletonLines( OutputSkeleton );
 			
 			const MAX_LINES = 200;
-			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
+			SkeletonLines.length = Math.min( SkeletonLines.length, MAX_LINES );
 			
-			Shader.SetUniform("Lines", PoseLines );
+			Shader.SetUniform("Lines", SkeletonLines );
 		}
 		
 		RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -169,50 +165,71 @@ for ( let i=0;	i<68;	i++ )
 	FaceLandMarkNames.push("FaceFeature"+i);
 
 
-function OnNewSkeleton(Skeleton,Image,SaveFilename)
+function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 {
-	LastFrameImage = Image;
-	LastSkeleton = Skeleton;
-	
+	OutputImage = Image;
+	OutputSkeleton = Skeleton;
 	
 	if ( SaveFilename != undefined )
 	{
-		let FaceJson = JSON.stringify( Face, null, '\t' );
-		WriteStringToFile( SaveFilename, FaceJson );
+		try
+		{
+			let Json = JSON.stringify( Skeleton, null, '\t' );
+			WriteStringToFile( SaveFilename, Json );
+		}
+		catch(e)
+		{
+			Debug("Failed to write to file " + e);
+		}
 	}
 	
 	if ( ServerSkeletonSender )
 	{
-		let FaceJson = JSON.stringify( Face, null, '\t' );
-		let Peers = ServerSkeletonSender.GetPeers();
-		
-		if ( Peers.length > 0 )
+		try
 		{
-			Debug("Sending FaceJson to x" + Peers.length + " peers on socket " + ServerSkeletonSender.GetAddress() );
+			let Json = JSON.stringify( Skeleton, null, '\t' );
+			let Peers = ServerSkeletonSender.GetPeers();
+			
+			if ( Peers.length > 0 )
+			{
+				Debug("Sending FaceJson to x" + Peers.length + " peers on socket " + ServerSkeletonSender.GetAddress() );
+			}
+			
+			let SendToPeer = function(Peer)
+			{
+				try
+				{
+					ServerSkeletonSender.Send( Peer, Json );
+				}
+				catch(e)
+				{
+					Debug("Failed to send to "+Peer+": " + e);
+				}
+			}
+			Peers.forEach( SendToPeer );
 		}
-		
-		let SendToPeer = function(Peer)
+		catch(e)
 		{
-			try
-			{
-				ServerSkeletonSender.Send( Peer, FaceJson );
-			}
-			catch(e)
-			{
-				Debug("Failed to send to "+Peer+": " + e);
-			}
+			Debug("Failed to write to stream out " + e);
 		}
-		Peers.forEach( SendToPeer );
 	}
 }
 
 
-function OnNewFace(FaceLandmarks,FaceImage,SaveFilename,Skeleton)
+function GetDefaultSkeleton(FaceRect)
+{
+	let Skeleton = {};
+	Skeleton.FaceRect = FaceRect;
+	return Skeleton;
+}
+
+
+function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 {
 	//	handle no-face
 	if ( FaceLandmarks == null )
 	{
-		OnNewSkeleton( Skeleton, FaceImage, SaveFilename );
+		OnOutputSkeleton( Skeleton, Image, SaveFilename );
 		return;
 	}
 	
@@ -222,14 +239,19 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename,Skeleton)
 	//	if no skeleton, make one
 	if ( !Skeleton )
 	{
+		Debug("Making default skeleton");
 		Skeleton = GetDefaultSkeleton(FaceRect);
-		LastSkeleton = Skeleton;
+		
+		if ( !LastSkeleton )
+		{
+			Debug("Default skeleton is now LastSkeleton for face rect base");
+			LastSkeleton = Skeleton;
+		}
 	}
 	
 	let PushFeature = function(Name,fx,fy)
 	{
-		let Keypoint = { part:Name, x:fx, y:fy };
-		Skeleton.keyPoints.push(Keypoint);
+		Skeleton[Name] = { x:fx, y:fy };
 	}
 	
 	for ( let i=0;	i<FaceLandmarks.length;	i+=2 )
@@ -237,6 +259,8 @@ function OnNewFace(FaceLandmarks,FaceImage,SaveFilename,Skeleton)
 		let FeatureName = FaceLandMarkNames[i/2];
 		PushFeature( FeatureName, FaceLandmarks[i+0], FaceLandmarks[i+1] );
 	}
+	
+	OnOutputSkeleton( Skeleton, Image, SaveFilename );
 }
 
 function EnumDevices(DeviceNames)
@@ -290,6 +314,9 @@ function GetSkeletonFaceRect(Skeleton)
 
 function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 {
+	if ( OutputImage == null )
+		OutputImage = NewFrameImage;
+	
 	NewFrameImage.Timestamp = Date.now();
 	
 	//	temp work throttler
@@ -302,6 +329,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 	{
 		Debug("Failed to get facelandmarks: " + Error);
 		CurrentProcessingImageCount--;
+		OnNewFace(null,NewFrameImage,SaveFilename,Skeleton);
 	}
 
 	let OnFace = function(Face)
@@ -320,7 +348,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 
 	try
 	{
-		let FaceRect = GetSkeletonFaceRect(Skeleton);
+		let FaceRect = Skeleton ? Skeleton.FaceRect : null;
 		CurrentProcessingImageCount++;
 
 		let FindFacePromise;
@@ -450,8 +478,11 @@ function OnSkeletonJson(SkeletonJson)
 	PushKeypoint('leftAnkle');
 	PushKeypoint('rightAnkle');
 	
+	SimpleSkeleton.FaceRect = GetSkeletonFaceRect(SimpleSkeleton);
 	
 	LastSkeleton = SimpleSkeleton;
+	if ( OutputSkeleton == null )
+		OutputSkeleton = LastSkeleton;
 }
 
 function Main()
@@ -462,7 +493,7 @@ function Main()
 	
 
 	
-	let VideoDeviceName = "facetime";
+	let VideoDeviceName = "isight";
 	
 	let LoadDevice = function(DeviceNames)
 	{
@@ -475,7 +506,8 @@ function Main()
 			Debug("Loading device: " + VideoDeviceName);
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
-			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,false,LastSkeleton);	};
+			let FindFaceIfNoSkeleton = true;
+			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,FindFaceIfNoSkeleton,LastSkeleton);	};
 		}
 		catch(e)
 		{
