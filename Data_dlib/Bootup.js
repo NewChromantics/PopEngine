@@ -201,82 +201,121 @@ let FaceLandMarkNames =
 	"FaceOutline14",
 	"FaceOutline15",
 	"LeftEarTop",
- 
- 	//
- "RightEyebrowOuter",
- "RightEyebrow1",
- "RightEyebrow2",
- "RightEyebrow3",
- "RightEyebrowInner",
- 
- "LeftEyebrowInner",
- "LeftEyebrow3",
- "LeftEyebrow2",
- "LeftEyebrow1",
- "LeftEyebrowOuter",
- 
- "NoseTop",
- "Nose1",
- "Nose2",
- "Nose3",
- "NoseRight",
- "NoseMidRight",
- "Nose",
- "NoseMidLeft",
- "NoseLeft",
- 
- "EyeRight_Outer",
- "EyeRight_TopOuter",
- "EyeRight_TopInner",
- "EyeRight_Inner",
- "EyeRight_BottomInner",
- "EyeRight_BottomOuter",
- 
- "EyeLeft_Inner",
- "EyeLeft_TopInner",
- "EyeLeft_TopOuter",
- "EyeLeft_Outer",
- "EyeLeft_BottomOuter",
- "EyeLeft_BottomInner",
- 
- "MouthRight",
- "Mouth1",
- "Mouth2",
- "MouthTop",
- "Mouth4",
- "Mouth5",
- "MouthLeft",
- 
- "Mouth7",
- "Mouth8",
- "Mouth9",
- "MouthBottom",
- "Mouth11",
- "Mouth12",
- "Mouth13",
 
- "TeethTopRight",
- "TeethTopMiddle",
- "TeethTopLeft",
- "TeethBottomRight",
- "TeethBottomMiddle",
- "TeethBottomLeft",
+	//
+	"RightEyebrowOuter",
+	"RightEyebrow1",
+	"RightEyebrow2",
+	"RightEyebrow3",
+	"RightEyebrowInner",
+
+	"LeftEyebrowInner",
+	"LeftEyebrow3",
+	"LeftEyebrow2",
+	"LeftEyebrow1",
+	"LeftEyebrowOuter",
+
+	"NoseTop",
+	"Nose1",
+	"Nose2",
+	"Nose3",
+	"NoseRight",
+	"NoseMidRight",
+	"Nose",
+	"NoseMidLeft",
+	"NoseLeft",
+
+	"EyeRight_Outer",
+	"EyeRight_TopOuter",
+	"EyeRight_TopInner",
+	"EyeRight_Inner",
+	"EyeRight_BottomInner",
+	"EyeRight_BottomOuter",
+
+	"EyeLeft_Inner",
+	"EyeLeft_TopInner",
+	"EyeLeft_TopOuter",
+	"EyeLeft_Outer",
+	"EyeLeft_BottomOuter",
+	"EyeLeft_BottomInner",
+
+	"MouthRight",
+	"Mouth1",
+	"Mouth2",
+	"MouthTop",
+	"Mouth4",
+	"Mouth5",
+	"MouthLeft",
+
+	"Mouth7",
+	"Mouth8",
+	"Mouth9",
+	"MouthBottom",
+	"Mouth11",
+	"Mouth12",
+	"Mouth13",
+
+	"TeethTopRight",
+	"TeethTopMiddle",
+	"TeethTopLeft",
+	"TeethBottomRight",
+	"TeethBottomMiddle",
+	"TeethBottomLeft",
  
 ];
 if ( FaceLandMarkNames.length != 68 )
 	throw "FaceLandMarkNames should have 68 entries, not " + FaceLandMarkNames.length;
 
 
+
+//	get json, but in the original keypoint format, so that unity can still process skeleton from posenet
+function GetSkeletonJson(Skeleton,Pretty)
+{
+	let KeypointSkeleton = {};
+	
+	//	convert any position to a keypoint
+	KeypointSkeleton.ProcessingTimeMs = 999;
+	
+	if ( Skeleton == null )
+	{
+		KeypointSkeleton.score = 0;
+	}
+	else
+	{
+		KeypointSkeleton.score = 0.45789;
+		KeypointSkeleton.FaceRect = Skeleton.FaceRect;
+		KeypointSkeleton.keypoints = [];
+		
+		let PushKeypoint = function(Name)
+		{
+			let Pos = Skeleton[Name];
+			if ( Pos && Pos.x !== undefined )
+				return;
+			
+			let Score = KeypointSkeleton.score;
+			let Keypoint = { part:Name, position:Pos, score:Score };
+			KeypointSkeleton.keypoints.push(Keypoint);
+		}
+		let Keys = Object.keys(Skeleton);
+		Keys.forEach( PushKeypoint );
+	}
+	
+	let Json = Pretty ? JSON.stringify( KeypointSkeleton, null, '\t' ) : JSON.stringify( KeypointSkeleton );
+	return Json;
+}
+
 function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 {
 	OutputImage = Image;
 	OutputSkeleton = Skeleton;
 	
+	let Pretty = true;
+	let Json = (SaveFilename || ServerSkeletonSender) ? GetSkeletonJson(Skeleton,Pretty) : null;
+	
 	if ( SaveFilename != undefined )
 	{
 		try
 		{
-			let Json = JSON.stringify( Skeleton, null, '\t' );
 			WriteStringToFile( SaveFilename, Json );
 		}
 		catch(e)
@@ -289,7 +328,6 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 	{
 		try
 		{
-			let Json = JSON.stringify( Skeleton, null, '\t' );
 			let Peers = ServerSkeletonSender.GetPeers();
 			
 			if ( Peers.length > 0 )
@@ -375,7 +413,7 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
-var DlibThreadCount = 1;
+var DlibThreadCount = 5;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
@@ -561,6 +599,8 @@ function OnSkeletonJson(SkeletonJson)
 		let Pos = GetKeypointPos(Name);
 		if ( Pos == undefined )
 			return;
+		
+		//	capitalise name
 		SimpleSkeleton[Name] = Pos;
 	}
 	PushKeypoint('nose');
@@ -596,7 +636,7 @@ function Main()
 	
 
 	
-	let VideoDeviceName = "isight";
+	let VideoDeviceName = "facetime";
 	
 	let LoadDevice = function(DeviceNames)
 	{
