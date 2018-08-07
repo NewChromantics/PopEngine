@@ -35,6 +35,8 @@ var ServerSkeletonSenderPort = 8007;
 var BroadcastServer = null;
 var BroadcastServerPort = 8009;
 
+var FlipOutputSkeleton = true;
+var FlipInputSkeleton = true;
 
 
 function GetRectLines(Rect)
@@ -295,7 +297,15 @@ function GetSkeletonJson(Skeleton,Pretty)
 				return;
 			
 			let Score = KeypointSkeleton.score;
+
+			if ( FlipOutputSkeleton )
+			{
+				//	gotta copy, not modify orig
+				let NewPosY = 1-Pos.y;
+				Pos = { x:Pos.x, y:NewPosY };
+			}
 			let Keypoint = { part:Name, position:Pos, score:Score };
+			
 			KeypointSkeleton.keypoints.push(Keypoint);
 		}
 		let Keys = Object.keys(Skeleton);
@@ -307,7 +317,6 @@ function GetSkeletonJson(Skeleton,Pretty)
 }
 
 
-var FirstOutput = true;
 function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 {
 	OutputImage = Image;
@@ -315,13 +324,7 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 	
 	let Pretty = true;
 	let Json = (SaveFilename || ServerSkeletonSender) ? GetSkeletonJson(Skeleton,Pretty) : null;
-	
-	if ( FirstOutput && Json )
-	{
-		Debug(Json);
-		FirstOutput = false;
-	}
-	
+
 	if ( SaveFilename != undefined )
 	{
 		try
@@ -342,7 +345,7 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 			
 			if ( Peers.length > 0 )
 			{
-				Debug("Sending FaceJson to x" + Peers.length + " peers on socket " + ServerSkeletonSender.GetAddress() );
+				//Debug("Sending FaceJson to x" + Peers.length + " peers on socket " + ServerSkeletonSender.GetAddress() );
 			}
 			
 			let SendToPeer = function(Peer)
@@ -597,7 +600,8 @@ function OnSkeletonJson(SkeletonJson)
 			//Debug("Failed to find keypoint " + Name);
 			return undefined;
 		}
-		kp.position.y = 1 - kp.position.y;
+		if ( FlipInputSkeleton )
+			kp.position.y = 1 - kp.position.y;
 		return kp.position;
 	}
 	
