@@ -54,36 +54,42 @@ function GetRectLines(Rect)
 	return Lines;
 }
 
-function GetSkeletonLines(Skeleton)
+
+
+function GetSkeletonLinesAndScores(Skeleton)
 {
 	let Lines = [];
+	let Scores = [];
 
 	if ( Skeleton == null )
 	{
 		//	X
 		Lines.push( [0,0,1,1] );
 		Lines.push( [1,0,0,1] );
+		Scores.push( 0 );
+		Scores.push( 1 );
 		return Lines;
 	}
-	
-	Lines = Lines.concat( GetRectLines(Skeleton.FaceRect) );
 
-	let PushLine = function(namea,nameb)
+	//	make rect lines blue
+	Lines = Lines.concat( GetRectLines(Skeleton.FaceRect) );
+	Scores = Scores.concat( [9,9,9,9] );
+
+	let PushLine = function(namea,nameb,Score)
 	{
+		Score = Score || 99;
 		let Posa = Skeleton[namea];
 		let Posb = Skeleton[nameb];
 		if ( Posa == undefined || Posb == undefined )
 			return;
 		
-		Lines.push( Posa.x );
-		Lines.push( Posa.y );
-		Lines.push( Posb.x );
-		Lines.push( Posb.y );
+		Lines.push( [Posa.x,Posa.y,Posb.x,Posb.y] );
+		Scores.push(Score);
 	}
 
-	let PushPoint = function(name)
+	let PushPoint = function(Name,Score)
 	{
-		let Pos = Skeleton[name];
+		let Pos = Skeleton[Name];
 		if ( Pos == undefined )
 			return;
 		let LineOffset = 1 / 600;
@@ -95,6 +101,7 @@ function GetSkeletonLines(Skeleton)
 		let y0 = fy-LineOffset;
 		let y1 = fy+LineOffset;
 		Lines.push( [x0,y0,x1,y1] );
+		Scores.push(Score);
 	}
 	
 	PushLine('nose','leftEye');
@@ -120,7 +127,16 @@ function GetSkeletonLines(Skeleton)
 	PushLine('rightHip','rightKnee');
 	PushLine('rightKnee','rightAnkle');
 	
-	return Lines;
+	for ( let i=0;	i<FaceLandMarkNames.length;	i++)
+	{
+		let Name = FaceLandMarkNames[i];
+		let Score = i / FaceLandMarkNames.length;
+		if ( i >= 65 )
+			Score= 9;
+		PushPoint( Name, Score);
+	}
+	
+	return [Lines,Scores];
 }
 
 
@@ -140,12 +156,16 @@ function WindowRender(RenderTarget)
 				Shader.SetUniform("Frame", OutputImage, 0 );
 			Shader.SetUniform("HasFrame", OutputImage!=null );
 			
-			let SkeletonLines = GetSkeletonLines( OutputSkeleton );
+			let LinesAndScores = GetSkeletonLinesAndScores( OutputSkeleton );
+			let Lines = LinesAndScores[0];
+			let Scores = LinesAndScores[1];
+
+			const MAX_LINES = 100;
+			Lines.length = Math.min( Lines.length, MAX_LINES );
+			Scores.length = Math.min( Scores.length, MAX_LINES );
 			
-			const MAX_LINES = 200;
-			SkeletonLines.length = Math.min( SkeletonLines.length, MAX_LINES );
-			
-			Shader.SetUniform("Lines", SkeletonLines );
+			Shader.SetUniform("Lines", Lines );
+			Shader.SetUniform("LineScores", Scores );
 		}
 		
 		RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -160,9 +180,91 @@ function WindowRender(RenderTarget)
 
 
 //	todo: name properly
-let FaceLandMarkNames = [];
-for ( let i=0;	i<68;	i++ )
-	FaceLandMarkNames.push("FaceFeature"+i);
+let FaceLandMarkNames =
+[
+ 	//	right is actor-right, not image-right
+	//	17 outline features
+	"RightEarTop",
+	"FaceOutline1",
+	"FaceOutline2",
+	"FaceOutline3",
+	"FaceOutline4",
+	"FaceOutline5",
+	"FaceOutline6",
+	"Chin",
+	"FaceOutline8",
+	"FaceOutline9",
+	"FaceOutline10",
+	"FaceOutline11",
+	"FaceOutline12",
+	"FaceOutline13",
+	"FaceOutline14",
+	"FaceOutline15",
+	"LeftEarTop",
+ 
+ 	//
+ "RightEyebrowOuter",
+ "RightEyebrow1",
+ "RightEyebrow2",
+ "RightEyebrow3",
+ "RightEyebrowInner",
+ 
+ "LeftEyebrowInner",
+ "LeftEyebrow3",
+ "LeftEyebrow2",
+ "LeftEyebrow1",
+ "LeftEyebrowOuter",
+ 
+ "NoseTop",
+ "Nose1",
+ "Nose2",
+ "Nose3",
+ "NoseRight",
+ "NoseMidRight",
+ "Nose",
+ "NoseMidLeft",
+ "NoseLeft",
+ 
+ "EyeRight_Outer",
+ "EyeRight_TopOuter",
+ "EyeRight_TopInner",
+ "EyeRight_Inner",
+ "EyeRight_BottomInner",
+ "EyeRight_BottomOuter",
+ 
+ "EyeLeft_Inner",
+ "EyeLeft_TopInner",
+ "EyeLeft_TopOuter",
+ "EyeLeft_Outer",
+ "EyeLeft_BottomOuter",
+ "EyeLeft_BottomInner",
+ 
+ "MouthRight",
+ "Mouth1",
+ "Mouth2",
+ "MouthTop",
+ "Mouth4",
+ "Mouth5",
+ "MouthLeft",
+ 
+ "Mouth7",
+ "Mouth8",
+ "Mouth9",
+ "MouthBottom",
+ "Mouth11",
+ "Mouth12",
+ "Mouth13",
+
+ "TeethTopRight",
+ "TeethTopMiddle",
+ "TeethTopLeft",
+ "TeethBottomRight",
+ "TeethBottomMiddle",
+ "TeethBottomLeft",
+ 
+];
+if ( FaceLandMarkNames.length != 68 )
+	throw "FaceLandMarkNames should have 68 entries, not " + FaceLandMarkNames.length;
 
 
 function OnOutputSkeleton(Skeleton,Image,SaveFilename)
@@ -251,6 +353,7 @@ function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 	
 	let PushFeature = function(Name,fx,fy)
 	{
+		//Debug("Push feature: " + Name + " at " + fx + "," + fy);
 		Skeleton[Name] = { x:fx, y:fy };
 	}
 	
