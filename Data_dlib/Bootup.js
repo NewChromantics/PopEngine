@@ -179,50 +179,50 @@ function WindowRender(RenderTarget)
 
 
 
-//	todo: name properly
+//	if it ends with !, we don't bother sending it out
 let FaceLandMarkNames =
 [
  	//	right is actor-right, not image-right
 	//	17 outline features
 	"RightEarTop",
-	"FaceOutline1",
-	"FaceOutline2",
-	"FaceOutline3",
-	"FaceOutline4",
-	"FaceOutline5",
-	"FaceOutline6",
+	"FaceOutline1!",
+	"FaceOutline2!",
+	"FaceOutline3!",
+	"FaceOutline4!",
+	"FaceOutline5!",
+	"FaceOutline6!",
 	"Chin",
-	"FaceOutline8",
-	"FaceOutline9",
-	"FaceOutline10",
-	"FaceOutline11",
-	"FaceOutline12",
-	"FaceOutline13",
-	"FaceOutline14",
-	"FaceOutline15",
+	"FaceOutline8!",
+	"FaceOutline9!",
+	"FaceOutline10!",
+	"FaceOutline11!",
+	"FaceOutline12!",
+	"FaceOutline13!",
+	"FaceOutline14!",
+	"FaceOutline15!",
 	"LeftEarTop",
 
 	//
 	"RightEyebrowOuter",
-	"RightEyebrow1",
+	"RightEyebrow1!",
 	"RightEyebrow2",
-	"RightEyebrow3",
+	"RightEyebrow3!",
 	"RightEyebrowInner",
 
 	"LeftEyebrowInner",
-	"LeftEyebrow3",
+	"LeftEyebrow3!",
 	"LeftEyebrow2",
-	"LeftEyebrow1",
+	"LeftEyebrow1!",
 	"LeftEyebrowOuter",
 
 	"NoseTop",
-	"Nose1",
-	"Nose2",
-	"Nose3",
+	"Nose1!",
+	"Nose2!",
+	"Nose3!",
 	"NoseRight",
-	"NoseMidRight",
+	"NoseMidRight!",
 	"Nose",
-	"NoseMidLeft",
+	"NoseMidLeft!",
 	"NoseLeft",
 
 	"EyeRight_Outer",
@@ -240,27 +240,27 @@ let FaceLandMarkNames =
 	"EyeLeft_BottomInner",
 
 	"MouthRight",
-	"Mouth1",
-	"Mouth2",
+	"Mouth1!",
+	"Mouth2!",
 	"MouthTop",
-	"Mouth4",
-	"Mouth5",
+	"Mouth4!",
+	"Mouth5!",
 	"MouthLeft",
 
-	"Mouth7",
-	"Mouth8",
-	"Mouth9",
+	"Mouth7!",
+	"Mouth8!",
+	"Mouth9!",
 	"MouthBottom",
-	"Mouth11",
-	"Mouth12",
-	"Mouth13",
+	"Mouth11!",
+	"Mouth12!",
+	"Mouth13!",
 
-	"TeethTopRight",
-	"TeethTopMiddle",
-	"TeethTopLeft",
-	"TeethBottomRight",
-	"TeethBottomMiddle",
-	"TeethBottomLeft",
+	"TeethTopRight!",
+	"TeethTopMiddle!",
+	"TeethTopLeft!",
+	"TeethBottomRight!",
+	"TeethBottomMiddle!",
+	"TeethBottomLeft!",
  
 ];
 if ( FaceLandMarkNames.length != 68 )
@@ -288,15 +288,21 @@ function GetSkeletonJson(Skeleton,Pretty)
 		
 		let PushKeypoint = function(Name)
 		{
+			if ( Name.includes("!") || Name == "FaceRect" )
+				return;
 			let Pos = Skeleton[Name];
 			if ( Pos && Pos.x !== undefined )
+			{
+				Debug(Name + "=" + Pos);
 				return;
+			}
 			
 			let Score = KeypointSkeleton.score;
 			let Keypoint = { part:Name, position:Pos, score:Score };
 			KeypointSkeleton.keypoints.push(Keypoint);
 		}
 		let Keys = Object.keys(Skeleton);
+		Debug(Keys);
 		Keys.forEach( PushKeypoint );
 	}
 	
@@ -304,6 +310,8 @@ function GetSkeletonJson(Skeleton,Pretty)
 	return Json;
 }
 
+
+var FirstOutput = true;
 function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 {
 	OutputImage = Image;
@@ -311,6 +319,12 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 	
 	let Pretty = true;
 	let Json = (SaveFilename || ServerSkeletonSender) ? GetSkeletonJson(Skeleton,Pretty) : null;
+	
+	if ( FirstOutput && Json )
+	{
+		Debug(Json);
+		FirstOutput = false;
+	}
 	
 	if ( SaveFilename != undefined )
 	{
@@ -340,6 +354,7 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 				try
 				{
 					ServerSkeletonSender.Send( Peer, Json );
+					Debug(Json);
 				}
 				catch(e)
 				{
@@ -698,6 +713,7 @@ function Main()
 
 	let Retry = function(RetryFunc,Timeout)
 	{
+		let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
 		try
 		{
 			RetryFunc();
@@ -705,13 +721,12 @@ function Main()
 		catch(e)
 		{
 			Debug(e+"... retrying in " + Timeout);
-			setTimeout( function(){	Retry(RetryFunc);}, Timeout );
+			setTimeout( RetryAgain, Timeout );
 		}
 	}
 	Retry( AllocSkeletonReciever, 1000 );
 	Retry( AllocSkeletonSender, 1000 );
 	Retry( AllocBroadcastServer, 1000 );
-	
 
 }
 

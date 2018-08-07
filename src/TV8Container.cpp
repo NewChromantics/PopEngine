@@ -294,6 +294,15 @@ void TV8Container::QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambd
 	this->mPlatform->CallOnForegroundThread( mIsolate, Task );
 }
 
+
+void TV8Container::QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> Lambda,size_t DelayMs)
+{
+	//	gr: who owns this task?
+	auto* Task = new LambdaTask( Lambda, *this );
+	auto DelayDouble = DelayMs / 1000.0;
+	this->mPlatform->CallDelayedOnForegroundThread( mIsolate, Task, DelayDouble );
+}
+
 void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 {
 	auto* isolate = mIsolate;
@@ -342,7 +351,7 @@ v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHan
 		auto ArgCount = Params.GetSize();
 		auto* Args = Params.GetArray();
 		TryCatch trycatch(isolate);
-		auto ResultMaybe = Func->Call( ContextHandle, This, ArgCount, Args );
+		auto ResultMaybe = Func->Call( ContextHandle, This, size_cast<int>(ArgCount), Args );
 		if ( ResultMaybe.IsEmpty() )
 		{
 			auto Exception = trycatch.Exception();

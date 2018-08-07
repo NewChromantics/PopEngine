@@ -98,7 +98,7 @@ namespace v8
 	//	our own type caster which throws if cast fails.
 	//	needed because my v8 built doesnt have cast checks, and I can't determine if they're enabled or not
 	template<typename TYPE>
-	Local<TYPE>	SafeCast(Local<Value>& ValueHandle);
+	Local<TYPE>	SafeCast(Local<Value> ValueHandle);
 	template<typename TYPE>
 	bool		IsType(Local<Value>& ValueHandle);
 }
@@ -211,7 +211,8 @@ public:
 	
 	void		RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 	void		QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
-	
+	void		QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> Lambda,size_t DelayMs);
+
 	void		ProcessJobs();	//	run all the queued jobs then return
 	
 	//	run these with RunScoped (internal) or QueueJob (external)
@@ -435,7 +436,7 @@ inline void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<ELEMENTTYPE>&& In
 //	our own type caster which throws if cast fails.
 //	needed because my v8 built doesnt have cast checks, and I can't determine if they're enabled or not
 template<typename TYPE>
-inline v8::Local<TYPE> v8::SafeCast(Local<Value>& ValueHandle)
+inline v8::Local<TYPE> v8::SafeCast(Local<Value> ValueHandle)
 {
 	if ( !IsType<TYPE>(ValueHandle) )
 	{
@@ -468,6 +469,30 @@ ISTYPE_DEFINITION(Uint16Array);
 ISTYPE_DEFINITION(Int32Array);
 ISTYPE_DEFINITION(Uint32Array);
 ISTYPE_DEFINITION(Float32Array);
+ISTYPE_DEFINITION(Number);
+ISTYPE_DEFINITION(Function);
 
 
 
+
+//	make our own persistent object that won't get garbage collected across threads
+//	std::shared_ptr<V8Storage<TYPE>>
+
+//	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
+//	gr: I think in the use case (a lambda) it becomes const so won't get freed anyway?
+template<typename TYPE>
+class V8Storage
+{
+public:
+	V8Storage(v8::Isolate& Isolate,v8::Local<TYPE>& Local) :
+		mPersistent	( v8::GetPersistent( Isolate, Local ) )
+	{
+		
+	}
+	~V8Storage()
+	{
+		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
+	}
+	
+	v8::Persist<TYPE>	mPersistent;
+};

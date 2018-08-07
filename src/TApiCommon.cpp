@@ -14,6 +14,7 @@ const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
 const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
 const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 const char GarbageCollect_FunctionName[] = "GarbageCollect";
+const char SetTimeout_FunctionName[] = "setTimeout";
 
 
 const char LoadFile_FunctionName[] = "Load";
@@ -33,6 +34,7 @@ static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -44,6 +46,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
+	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
 
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
@@ -71,14 +74,43 @@ static Local<Value> Debug(CallbackInfo& Params)
 
 static Local<Value> GarbageCollect(CallbackInfo& Params)
 {
-	auto& args = Params.mParams;
+	//auto& args = Params.mParams;
 	
-	HandleScope scope(Params.mIsolate);
-	std::Debug << "Invoking garbage collection..." << std::endl;
-	Params.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
+	//	queue as job?
+	{
+		HandleScope scope(Params.mIsolate);
+		std::Debug << "Invoking garbage collection..." << std::endl;
+		Params.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
+	}
 	
 	return Undefined(Params.mIsolate);
 }
+
+
+static Local<Value> SetTimeout(CallbackInfo& Params)
+{
+	auto Callback = v8::SafeCast<Function>(Params.mParams[0]);
+	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[1]);
+	auto TimeoutMs = TimeoutMsHandle->Uint32Value();
+	auto CallbackPersistent = std::make_shared<V8Storage<Function>>( Params.GetIsolate(), Callback );
+
+	auto* Container = &Params.mContainer;
+	
+	auto OnRun = [=](Local<v8::Context> Context)
+	{
+		auto& Isolate = *Context->GetIsolate();
+		//auto CallbackLocal = v8::GetLocal( Isolate, CallbackPersistent->mPersistent );
+		BufferArray<v8::Local<v8::Value>,1> Args;
+		Container->ExecuteFunc( Context, CallbackPersistent->mPersistent, GetArrayBridge(Args) );
+	};
+	//	need a persistent handle to the callback?
+	Params.mContainer.QueueDelayScoped( OnRun, TimeoutMs );
+
+	//	web normally returns a handle that can be cancelled
+	return Undefined(Params.mIsolate);
+}
+
+
 
 
 static Local<Value> CompileAndRun(CallbackInfo& Params)

@@ -233,25 +233,6 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 }
 
 
-//	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
-//	gr: I think in the use case (a lambda) it becomes const so won't get freed anyway?
-template<typename TYPE>
-class V8Storage
-{
-public:
-	V8Storage(v8::Isolate& Isolate,v8::Local<TYPE>& Local) :
-		mPersistent	( v8::GetPersistent( Isolate, Local ) )
-	{
-		
-	}
-	~V8Storage()
-	{
-		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
-	}
-	
-	v8::Persist<v8::Promise::Resolver>	mPersistent;
-};
-
 v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -263,7 +244,6 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto pResolverPersistent = std::make_shared<V8Storage<v8::Promise::Resolver>>( *Isolate, Resolver );
-	//auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
 	
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);

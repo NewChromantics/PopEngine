@@ -55,7 +55,7 @@ TObjectWrapper<TYPENAME,TYPE>::TObjectWrapper(TV8Container& Container,v8::Local<
 template<const char* TYPENAME,class TYPE>
 inline void TObjectWrapper<TYPENAME,TYPE>::OnFree(const v8::WeakCallbackInfo<TObjectWrapper>& WeakCallbackData)
 {
-	std::Debug << "Freeing " << TYPENAME << "..." << std::endl;
+	//std::Debug << "Freeing " << TYPENAME << "..." << std::endl;
 	auto* ObjectWrapper = WeakCallbackData.GetParameter();
 	delete ObjectWrapper;
 }
