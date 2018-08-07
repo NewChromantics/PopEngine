@@ -291,18 +291,14 @@ function GetSkeletonJson(Skeleton,Pretty)
 			if ( Name.includes("!") || Name == "FaceRect" )
 				return;
 			let Pos = Skeleton[Name];
-			if ( Pos && Pos.x !== undefined )
-			{
-				Debug(Name + "=" + Pos);
+			if ( !Pos || Pos.x === undefined )
 				return;
-			}
 			
 			let Score = KeypointSkeleton.score;
 			let Keypoint = { part:Name, position:Pos, score:Score };
 			KeypointSkeleton.keypoints.push(Keypoint);
 		}
 		let Keys = Object.keys(Skeleton);
-		Debug(Keys);
 		Keys.forEach( PushKeypoint );
 	}
 	
@@ -354,7 +350,6 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 				try
 				{
 					ServerSkeletonSender.Send( Peer, Json );
-					Debug(Json);
 				}
 				catch(e)
 				{
