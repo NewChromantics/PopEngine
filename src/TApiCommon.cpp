@@ -590,13 +590,24 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 			OnError( e.what() );
 		}
 	};
-	Context.PushJob( AllocAndOrUpload );
+	
+	if ( Context.IsLockedToThisThread() )
+	{
+		AllocAndOrUpload();
+	}
+	else
+	{
+		Context.PushJob( AllocAndOrUpload );
+	}
 }
 
 const Opengl::TTexture& TImageWrapper::GetTexture()
 {
 	if ( !mOpenglTexture )
 		throw Soy::AssertException("Image missing opengl texture. Accessing before generating.");
+	
+	if ( mOpenglTextureVersion != GetLatestVersion() )
+		throw Soy::AssertException("Opengl texture is out of date");
 	
 	return *mOpenglTexture;
 }
