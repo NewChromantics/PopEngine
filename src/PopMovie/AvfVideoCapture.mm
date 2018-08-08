@@ -15,7 +15,7 @@
 namespace AvfCapture
 {
 	class TDeviceMeta;
-	void	EnumDevices(ArrayBridge<TDeviceMeta>&& Devices);
+	void	EnumDevices(ArrayBridge<TDeviceMeta>&& Devices,std::function<bool(const TDeviceMeta&)> Filter=nullptr);
 }
 
 class AvfCapture::TDeviceMeta
@@ -25,24 +25,48 @@ public:
 		mDevice	( nullptr )
 	{
 	}
-	TDeviceMeta(AVCaptureDevice& Device) :
-		mDevice	( &Device )
-	{
-		mName = Soy::NSStringToString( [&Device localizedName] );
-		mSerial = Soy::NSStringToString( [&Device uniqueID] );
-#if defined(TARGET_IOS)
-		mVendor = "ios";
-#else
-		mVendor = Soy::NSStringToString( [&Device manufacturer] );
-#endif
-	}
+	TDeviceMeta(AVCaptureDevice& Device);
 	
-	AVCaptureDevice*	mDevice;	//	gr: not sure of the lifetime of this :/
+	AVCaptureDevice*	mDevice = nullptr;	//	gr: not sure of the lifetime of this :/
 	std::string			mName;
 	std::string			mSerial;
 	std::string			mVendor;
+	bool				mIsConnected = false;
+	bool				mIsSuspended = false;
+	bool				mHasAudio = false;
+	bool				mHasVideo = false;
 };
 
+
+AvfCapture::TDeviceMeta::TDeviceMeta(AVCaptureDevice& Device) :
+	mDevice	( &Device )
+{
+	mName = Soy::NSStringToString( [&Device localizedName] );
+	mSerial = Soy::NSStringToString( [&Device uniqueID] );
+#if defined(TARGET_IOS)
+	mVendor = "ios";
+#else
+	mVendor = Soy::NSStringToString( [&Device manufacturer] );
+#endif
+	mIsConnected = YES == [mDevice isConnected];
+	mHasVideo = YES == [mDevice hasMediaType:AVMediaTypeVideo];
+	mHasAudio = YES == [mDevice hasMediaType:AVMediaTypeAudio];
+	
+	//	asleep, eg. macbook camera when lid is down
+#if defined(TARGET_IOS)
+	mIsSuspended = false;
+#else
+	mIsSuspended = false;
+	try
+	{
+		mIsSuspended = YES == [mDevice isSuspended];
+	}
+	catch(...)
+	{
+		//	unsupported method on this device. case grahams: DK2 Left&Right webcam throws exception here
+	}
+#endif
+}
 
 /*
 TVideoDeviceMeta GetDeviceMeta(AVCaptureDevice* Device)
@@ -172,14 +196,26 @@ void Platform::EnumCaptureDevices(std::function<void(const std::string&)> Append
 	}
 }
 
-void AvfCapture::EnumDevices(ArrayBridge<TDeviceMeta>&& DeviceMetas)
+void AvfCapture::EnumDevices(ArrayBridge<TDeviceMeta>&& DeviceMetas,std::function<bool(const TDeviceMeta&)> Filter)
 {
+	if ( Filter == nullptr )
+	{
+		Filter = [](const TDeviceMeta& Meta)
+		{
+			return Meta.mHasVideo;
+		};
+	}
+	
 	NSArray* Devices = [AVCaptureDevice devices];
 	for ( AVCaptureDevice* Device in Devices )
 	{
 		if ( !Device )
 			continue;
 		TDeviceMeta Meta( *Device );
+		
+		if ( !Filter(Meta) )
+			continue;
+		
 		DeviceMetas.PushBack( Meta );
 	}
 }
@@ -194,7 +230,7 @@ AvfVideoCapture::AvfVideoCapture(const TMediaExtractorParams& Params,std::shared
 	mForceNonPlanarOutput	( Params.mForceNonPlanarOutput )
 {
 	bool KeepOldFrames = !mDiscardOldFrames;
-	Run( Params.mFilename, TVideoQuality::Low, KeepOldFrames );
+	Run( Params.mFilename, TVideoQuality::High, KeepOldFrames );
 	StartStream();
 }
 
@@ -362,41 +398,17 @@ std::string FindFullSerial(const std::string& SerialNeedle,ArrayBridge<AvfCaptur
 		if ( Match.GetScore() == 0 )
 			continue;
 
-		//	now filter out certain devices
-		bool IsConnected = YES == [Device isConnected];
-		bool IsVideo = YES == [Device hasMediaType:AVMediaTypeVideo];
-		bool IsAudio = YES == [Device hasMediaType:AVMediaTypeAudio];
-
-		//	asleep, eg. macbook camera when lid is down
-#if defined(TARGET_IOS)
-		bool IsSuspended = false;
-#else
-		bool IsSuspended = false;
-		try
-		{
-			IsSuspended = YES == [Device isSuspended];
-		}
-		catch(...)
-		{
-			//	unsupported method on this device. case grahams: DK2 Left&Right webcam throws exception here
-		}
-#endif
-		if ( !IsConnected )
+		if ( !Meta.mIsConnected )
 		{
 			MatchRejection << Name << "/" << Serial << " not connected. ";
 			continue;
 		}
-		if ( IsSuspended )
+		if ( Meta.mIsSuspended )
 		{
 			MatchRejection << Name << "/" << Serial << " is suspended. ";
 			continue;
 		}
-		if ( !IsVideo && !IsAudio )
-		{
-			MatchRejection << Name << "/" << Serial << " has no video or audio capabilities. ";
-			continue;
-		}
-
+		
 		//	already have better
 		if ( Match.GetScore() < BestMatch.GetScore() )
 			continue;
@@ -419,17 +431,28 @@ std::string FindFullSerial(const std::string& SerialNeedle,ArrayBridge<AvfCaptur
 void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQuality,bool KeepOldFrames)
 {
 	Array<AvfCapture::TDeviceMeta> DeviceMetas;
-	EnumDevices( GetArrayBridge(DeviceMetas) );
+	
+	auto Filter = [&](const AvfCapture::TDeviceMeta& Meta)
+	{
+		if ( !Meta.mHasVideo )
+			return false;
+		return true;
+	};
+	
+	EnumDevices( GetArrayBridge(DeviceMetas), Filter );
 	if ( DeviceMetas.IsEmpty() )
 		throw Soy::AssertException("No AVCapture devices found");
-
+	
 	auto FullSerial = FindFullSerial( Serial, GetArrayBridge(DeviceMetas) );
- 
 	mProxy.Retain( [[VideoCaptureProxy alloc] initWithVideoCapturePrivate:this] );
 	mSession.Retain( [[AVCaptureSession alloc] init] );
 	auto& Session = mSession.mObject;
 	auto& Proxy = mProxy.mObject;
 	
+	static bool MarkBeginConfig = false;
+	if ( MarkBeginConfig )
+		[Session beginConfiguration];
+
 	//	try all the qualitys
 	Array<TVideoQuality::Type> Qualitys;
 	Qualitys.PushBack( DesiredQuality );
@@ -558,7 +581,6 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 		Output.alwaysDiscardsLateVideoFrames = KeepOldFrames ? NO : YES;
 		Output.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
 								 [NSNumber numberWithInt:Format], kCVPixelBufferPixelFormatTypeKey, nil];
-		
 		if ( ![Session canAddOutput:Output] )
 		{
 			std::Debug << "Device " << FullSerial << " does not support pixel format " << PixelFormat << " (despite claiming it does)" << std::endl;
@@ -588,6 +610,9 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	//[_output setSampleBufferDelegate:_proxy queue:dispatch_get_main_queue()];
 	if ( !mQueue )
 		mQueue = dispatch_queue_create("camera_queue", NULL);
+	
+	if ( MarkBeginConfig )
+		[Session commitConfiguration];
 	
 	[Output setSampleBufferDelegate:Proxy queue: mQueue];
 }
