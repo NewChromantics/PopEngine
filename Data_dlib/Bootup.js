@@ -512,8 +512,8 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 
 		let ResizePromise = null;
 		let SmallImage = null;
-		let SmallImageWidth = 16;
-		let SmallImageHeight = 16;
+		let SmallImageWidth = 640;
+		let SmallImageHeight = 480;
 		if ( OpenglContext )
 		{
 			let ResizeRender = function(RenderTarget,RenderTargetTexture)
@@ -532,10 +532,6 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		{
 			let ResizeCpu = function(Resolve,Reject)
 			{
-				Debug("Resize cpu");
-				SmallImage = NewFrameImage;
-				Resolve();
-				/*
 				try
 				{
 					SmallImage = new Image();
@@ -548,7 +544,6 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 					Debug(e);
 					Reject();
 				}
-				*/
 			}
 			ResizePromise = new Promise( ResizeCpu );
 		}

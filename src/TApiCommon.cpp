@@ -664,8 +664,8 @@ void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 
 void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
 {
-	if ( NewPixels->GetFormat() != SoyPixelsFormat::RGB )
-		std::Debug << "Setting image to pixels: " << NewPixels->GetMeta() << std::endl;
+	//if ( NewPixels->GetFormat() != SoyPixelsFormat::RGB )
+	//	std::Debug << "Setting image to pixels: " << NewPixels->GetMeta() << std::endl;
 	
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels = NewPixels;
