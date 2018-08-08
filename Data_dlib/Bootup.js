@@ -381,6 +381,8 @@ function GetDefaultSkeleton(FaceRect)
 
 function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 {
+	Debug("OnNewFace " + (typeof FaceLandmarks) );
+
 	//	handle no-face
 	if ( FaceLandmarks == null )
 	{
@@ -468,7 +470,7 @@ function GetSkeletonFaceRect(Skeleton)
 }
 
 
-function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
+function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 {
 	if ( OutputImage == null )
 		OutputImage = NewFrameImage;
@@ -488,12 +490,13 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 		OnNewFace(null,NewFrameImage,SaveFilename,Skeleton);
 	}
 
-	let OnFace = function(Face)
+	let OnFace = function(Face,Image)
 	{
 		CurrentProcessingImageCount--;
+		//Debug("OnFace: " + typeof Face );
 		if ( Face.length == 0 )
 			Face = null;
-		OnNewFace(Face,NewFrameImage,SaveFilename,Skeleton);
+		OnNewFace(Face,Image,SaveFilename,Skeleton);
 	}
 	
 
@@ -507,23 +510,74 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 		let FaceRect = Skeleton ? Skeleton.FaceRect : null;
 		CurrentProcessingImageCount++;
 
-		let FindFacePromise;
-		if ( FaceRect )
+		let ResizePromise = null;
+		let SmallImage = null;
+		let SmallImageWidth = 16;
+		let SmallImageHeight = 16;
+		if ( OpenglContext )
 		{
-			FindFacePromise = FaceProcessor.FindFaceFeatures( NewFrameImage, FaceRect );
-		}
-		else if ( FindFaceIfNoSkeleton )
-		{
-			FindFacePromise = FaceProcessor.FindFaces( NewFrameImage );
+			let ResizeRender = function(RenderTarget,RenderTargetTexture)
+			{
+				let Shader = GetResizeShader(RenderTarget);
+				let SetUniforms = function(Shader)
+				{
+					Shader.SetUniform("Source", NewFrameImage, 0 );
+				}
+				RenderTarget.DrawQuad( Shader, SetUniforms );
+			}
+			SmallImage = new Image( SmallImageWidth, SmallImageHeight );
+			ResizePromise = OpenglContext.Render( SmallImage, ResizeRender );
 		}
 		else
 		{
-			OnFaceError("Waiting for face rect; FindFaceIfNoSkeleton=" + FindFaceIfNoSkeleton);
-			return;
+			let ResizeCpu = function(Resolve,Reject)
+			{
+				Debug("Resize cpu");
+				SmallImage = NewFrameImage;
+				Resolve();
+				/*
+				try
+				{
+					SmallImage = new Image();
+					SmallImage.Copy(NewFrameImage);
+					SmallImage.Resize( SmallImageWidth, SmallImageHeight );
+					Resolve();
+				}
+				catch(e)
+				{
+					Debug(e);
+					Reject();
+				}
+				*/
+			}
+			ResizePromise = new Promise( ResizeCpu );
 		}
 		
-		FindFacePromise
-		.then( OnFace )
+		let GetFindFacePromise = function()
+		{
+			Debug("GetFindFacePromise");
+			let FindFacePromise;
+	
+			if ( FaceRect )
+			{
+				FindFacePromise = FaceProcessor.FindFaceFeatures( SmallImage, FaceRect );
+				return FindFacePromise;
+			}
+			else if ( FindFaceIfNoSkeleton )
+			{
+				FindFacePromise = FaceProcessor.FindFaces( SmallImage );
+				return FindFacePromise;
+			}
+			else
+			{
+				Debug("throwing");
+				throw "Waiting for face rect; FindFaceIfNoSkeleton=" + FindFaceIfNoSkeleton;
+			}
+		}
+		
+		ResizePromise
+		.then( GetFindFacePromise )
+		.then( function(f){	OnFace(f,SmallImage); } )
 		.catch( OnFaceError );
 	}
 	catch(e)
