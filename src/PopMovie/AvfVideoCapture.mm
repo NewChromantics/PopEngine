@@ -467,8 +467,11 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	auto& Device = mDevice.mObject;
 	
 	AVCaptureDeviceInput* _input = [AVCaptureDeviceInput deviceInputWithDevice:Device error:&error];
-	if (_input && [Session canAddInput:_input])
-		[Session addInput:_input];
+	if ( !_input || ![Session canAddInput:_input])
+	{
+		throw Soy::AssertException("Cannot add AVCaptureDeviceInput");
+	}
+	[Session addInput:_input];
 	
 	mOutput.Retain( [[AVCaptureVideoDataOutput alloc] init] );
 	auto& Output = mOutput.mObject;
