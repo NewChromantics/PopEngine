@@ -44,6 +44,40 @@ var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
 
 
+var LastFrameRateTimelapse = Date.now();
+var FrameCounters = {};
+
+function CheckFrameRateLapse()
+{
+	let Now = Date.now();
+	if ( Now - LastFrameRateTimelapse < 1000 )
+		return;
+	//	1 sec has lapsed
+	//	ideally timelapsed = 1
+	let TimeLapsed = (Now - LastFrameRateTimelapse) / 1000;
+	
+	let UpdateCounter = function(CounterName)
+	{
+		let Count = FrameCounters[CounterName];
+		FrameCounters[CounterName] = 0;
+		let Fps = Count / TimeLapsed;
+		Debug( CounterName + " " + Fps.toFixed(2) + "fps");
+	}
+	let CounterNames = Object.keys(FrameCounters);
+	CounterNames.forEach( UpdateCounter );
+	LastFrameRateTimelapse = Now;
+}
+
+function UpdateFrameCounter(CounterName)
+{
+	if ( FrameCounters[CounterName] === undefined )
+		FrameCounters[CounterName] = 0;
+	FrameCounters[CounterName]++;
+	CheckFrameRateLapse();
+}
+
+
+
 function GetRectLines(Rect)
 {
 	let Lines = [];
@@ -384,6 +418,8 @@ function GetDefaultSkeleton(FaceRect)
 
 function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 {
+	UpdateFrameCounter('NewFace');
+	
 	//	handle no-face
 	if ( FaceLandmarks == null )
 	{
@@ -431,7 +467,7 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
-var DlibThreadCount = 1;
+var DlibThreadCount = 3;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
@@ -473,6 +509,8 @@ function GetSkeletonFaceRect(Skeleton)
 
 function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 {
+	UpdateFrameCounter('CameraFrameRate');
+
 	if ( OutputImage == null )
 		OutputImage = NewFrameImage;
 	
