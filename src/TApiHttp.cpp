@@ -2,6 +2,8 @@
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 #include <SoySocket.h>
+#include <SoyFilesystem.h>
+#include <SoyMediaFormat.h>
 
 using namespace v8;
 
@@ -89,13 +91,38 @@ Local<FunctionTemplate> THttpServerWrapper::CreateTemplate(TV8Container& Contain
 THttpServerWrapper::THttpServerWrapper(uint16_t ListenPort) :
 	mContainer		( nullptr )
 {
-	mSocket.reset( new THttpServer(ListenPort ) );
+	auto OnRequest = [this](std::string& Url,Http::TResponseProtocol& Response)
+	{
+		this->OnRequest(Url,Response);
+	};
+	mSocket.reset( new THttpServer( ListenPort, OnRequest ) );
+}
+
+void THttpServerWrapper::OnRequest(std::string& Url,Http::TResponseProtocol& Response)
+{
+	//	todo: make the response a function that we can defer to other threads
+	//	then we can make callbacks for certain urls in javascript for dynamic replies
+	auto Filename = mContainer->mRootDirectory + Url;
+	
+	//	todo: get mime type and do binary vs text properly
+	std::string Contents;
+	Soy::FileToString( Filename, Contents );
+	
+	//	get mimetype from extension
+	std::string Extension;
+	auto GetLastPart = [&](const std::string& Part,char SplitChar)
+	{
+		Extension = Part;
+		return true;
+	};
+	Soy::StringSplitByMatches(GetLastPart, Url, "." );
+	auto Format = SoyMediaFormat::FromExtension(Extension);
+	auto MimeType = SoyMediaFormat::ToMime(Format);
+	Response.SetContent( Contents, Format );
 }
 
 
-
-
-THttpServer::THttpServer(uint16_t ListenPort) :
+THttpServer::THttpServer(uint16_t ListenPort,std::function<void(std::string&,Http::TResponseProtocol&)> OnRequest) :
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"HttpServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep )
 {
 	mSocket.reset( new SoySocket() );
@@ -104,7 +131,7 @@ THttpServer::THttpServer(uint16_t ListenPort) :
 	
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
 	{
-		AddClient(ClientRef);
+		AddClient( ClientRef, OnRequest );
 	};
 	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
 	{
@@ -159,9 +186,9 @@ std::shared_ptr<THttpServerPeer> THttpServer::GetClient(SoyRef ClientRef)
 	throw Soy::AssertException("Client not found");
 }
 
-void THttpServer::AddClient(SoyRef ClientRef)
+void THttpServer::AddClient(SoyRef ClientRef,std::function<void(std::string&,Http::TResponseProtocol&)> OnRequest)
 {
-	std::shared_ptr<THttpServerPeer> Client( new THttpServerPeer( mSocket, ClientRef ) );
+	std::shared_ptr<THttpServerPeer> Client( new THttpServerPeer( mSocket, ClientRef, OnRequest ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
 }
@@ -176,8 +203,27 @@ void THttpServerPeer::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pD
 {
 	auto& Data = *pData;
 	
-	//	send http reply
-	std::Debug << "Send http reply" << std::endl;
+	//	send file back
+	//	todo: let JS register url callbacks
+	if ( Data.mUrl.empty() )
+		Data.mUrl = "index.html";
+	
+	auto pResponse = std::make_shared<Http::TResponseProtocol>();
+	auto& Response = *pResponse;
+	try
+	{
+		mOnRequest( Data.mUrl, Response );
+	}
+	catch(std::exception& e)
+	{
+		std::stringstream ResponseMessage;
+		ResponseMessage << "Exception fetching " << Data.mUrl << ": " << e.what();
+		Response.SetContent( ResponseMessage.str() );
+		Response.mResponseCode = Http::Response_Error;
+		Response.mResponseString = "Exception";
+	}
+
+	Push( pResponse );
 }
 
 

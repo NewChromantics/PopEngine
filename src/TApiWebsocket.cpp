@@ -124,6 +124,7 @@ void TWebsocketServerWrapper::OnMessage(const std::string& Message)
 
 void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 {
+	Array<uint8_t> MessageCopy( Message );
 	auto SendJsMessage = [=](Local<Context> Context)
 	{
 		auto& Container = *this->mContainer;
@@ -132,7 +133,7 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 		BufferArray<Local<Value>,1> Args;
 		auto FunctionHandle = v8::GetFunction( Context, ThisHandle, "OnMessage" );
 		
-		auto MessageHandle = v8::GetTypedArray( Isolate, GetArrayBridge(Message) );
+		auto MessageHandle = v8::GetTypedArray( Isolate, GetArrayBridge(MessageCopy) );
 		Args.PushBack( MessageHandle );
 		
 		Container.ExecuteFunc( Context, FunctionHandle, ThisHandle, GetArrayBridge(Args) );
