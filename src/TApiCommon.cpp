@@ -140,12 +140,7 @@ static Local<Value> LoadFileAsString(CallbackInfo& Params)
 
 	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
 	std::string Contents;
-	if ( !Soy::FileToString( Filename, Contents) )
-	{
-		std::stringstream Error;
-		Error << "Failed to read " << Filename;
-		throw Soy::AssertException( Error.str() );
-	}
+	Soy::FileToString( Filename, Contents);
 	
 	auto ContentsString = v8::GetString( Params.GetIsolate(), Contents );
 	return ContentsString;
