@@ -794,101 +794,112 @@ void AvfPixelBuffer::Lock(ArrayBridge<SoyPixelsImpl*>&& Planes,float3x3& Transfo
 {
 	mLockLock.lock();
 	
-	//	reset
-	mLockedPixels.SetAll( SoyPixelsRemote() );
-	mLockedPixels.SetSize(0);
-	
-	auto PixelBuffer = LockImageBuffer();
-	if ( !PixelBuffer )
+	try
 	{
-		Unlock();
-		return;
-	}
+		//	reset
+		mLockedPixels.SetAll( SoyPixelsRemote() );
+		mLockedPixels.SetSize(0);
 	
-	auto Error = CVPixelBufferLockBaseAddress( PixelBuffer, mReadOnlyLock ? kCVPixelBufferLock_ReadOnly : 0 );
-	if ( Error != kCVReturnSuccess )
-	{
-		std::Debug << "Failed to lock CVPixelBuffer address " << Platform::GetCVReturnString( Error ) << std::endl;
-		Unlock();
-		return;
-	}
+		auto PixelBuffer = LockImageBuffer();
+		if ( !PixelBuffer )
+			throw Soy::AssertException("Failed to LockImageBuffer");
 	
-	//	here we diverge for multiple planes
-	auto PlaneCount = CVPixelBufferGetPlaneCount( PixelBuffer );
-	if ( PlaneCount >= 1 )
-	{
-		BufferArray<SoyPixelsFormat::Type,2> PlaneFormats;
-		auto Format = CVPixelBufferGetPixelFormatType( PixelBuffer );
-		auto SoyFormat = Avf::GetPixelFormat( Format );
-		SoyPixelsFormat::GetFormatPlanes( SoyFormat, GetArrayBridge(PlaneFormats) );
-		auto PixelBufferDataSize = CVPixelBufferGetDataSize(PixelBuffer);
-		for ( size_t PlaneIndex=0;	PlaneIndex<PlaneCount;	PlaneIndex++ )
+		auto Error = CVPixelBufferLockBaseAddress( PixelBuffer, mReadOnlyLock ? kCVPixelBufferLock_ReadOnly : 0 );
+		if ( Error != kCVReturnSuccess )
 		{
-			//	gr: although the blitter can split this for us, I assume there MAY be a case where planes are not contiguous, so for this platform handle it explicitly
-			auto Width = CVPixelBufferGetWidthOfPlane( PixelBuffer, PlaneIndex );
-			auto Height = CVPixelBufferGetHeightOfPlane( PixelBuffer, PlaneIndex );
-			auto* Pixels = CVPixelBufferGetBaseAddressOfPlane( PixelBuffer, PlaneIndex );
-			auto BytesPerRow = CVPixelBufferGetBytesPerRowOfPlane( PixelBuffer, PlaneIndex );
-			auto PlaneFormat = PlaneFormats[PlaneIndex];
-			if ( !Pixels )
+			std::stringstream Err;
+			Err << "Failed to lock CVPixelBuffer address " << Platform::GetCVReturnString( Error );
+			throw Soy::AssertException(Err.str());
+		}
+	
+		//	here we diverge for multiple planes
+		auto PlaneCount = CVPixelBufferGetPlaneCount( PixelBuffer );
+		if ( PlaneCount >= 1 )
+		{
+			BufferArray<SoyPixelsFormat::Type,2> PlaneFormats;
+			auto Format = CVPixelBufferGetPixelFormatType( PixelBuffer );
+			auto SoyFormat = Avf::GetPixelFormat( Format );
+			SoyPixelsFormat::GetFormatPlanes( SoyFormat, GetArrayBridge(PlaneFormats) );
+			auto PixelBufferDataSize = CVPixelBufferGetDataSize(PixelBuffer);
+			for ( size_t PlaneIndex=0;	PlaneIndex<PlaneCount;	PlaneIndex++ )
 			{
-				std::Debug << "Image plane #" << PlaneIndex << "/" << PlaneCount << " " << Width << "x" << Height << " return null" << std::endl;
-				continue;
+				//	gr: although the blitter can split this for us, I assume there MAY be a case where planes are not contiguous, so for this platform handle it explicitly
+				auto Width = CVPixelBufferGetWidthOfPlane( PixelBuffer, PlaneIndex );
+				auto Height = CVPixelBufferGetHeightOfPlane( PixelBuffer, PlaneIndex );
+				auto* Pixels = CVPixelBufferGetBaseAddressOfPlane( PixelBuffer, PlaneIndex );
+				auto BytesPerRow = CVPixelBufferGetBytesPerRowOfPlane( PixelBuffer, PlaneIndex );
+				auto PlaneFormat = PlaneFormats[PlaneIndex];
+				
+				//	gr: should this throw?
+				if ( !Pixels )
+				{
+					std::Debug << "Image plane #" << PlaneIndex << "/" << PlaneCount << " " << Width << "x" << Height << " return null" << std::endl;
+					continue;
+				}
+				
+				//	data size here is for the whole image, so we need to calculate (ie. ASSUME) it ourselves.
+				SoyPixelsMeta PlaneMeta( Width, Height, PlaneFormat );
+
+				//	should be LESS as there are multiple plaens in the total buffer, but we'll do = just for the sake of the safety
+				Soy::Assert( PlaneMeta.GetDataSize() <= PixelBufferDataSize, "Plane's calcualted data size exceeds the total buffer size" );
+
+				//	gr: currently we only have one transform... so... only apply to main plane (and hope they're the same)
+				float3x3 DummyTransform;
+				float3x3& PlaneTransform = (PlaneIndex == 0) ? Transform : DummyTransform;
+				
+				LockPixels( Planes, Pixels, BytesPerRow, PlaneMeta, PlaneTransform );
+			}
+		}
+		else
+		{
+			//	get the "non-planar" image
+			auto Height = CVPixelBufferGetHeight( PixelBuffer );
+			auto Width = CVPixelBufferGetWidth( PixelBuffer );
+			auto* Pixels = CVPixelBufferGetBaseAddress(PixelBuffer);
+			auto Format = CVPixelBufferGetPixelFormatType( PixelBuffer );
+			auto DataSize = CVPixelBufferGetDataSize(PixelBuffer);
+			auto SoyFormat = Avf::GetPixelFormat( Format );
+			auto BytesPerRow = CVPixelBufferGetBytesPerRow( PixelBuffer );
+			
+			if ( SoyFormat == SoyPixelsFormat::Invalid )
+			{
+				std::stringstream Error;
+				Error << "Trying to lock plane but pixel format(" << Format << ") is unsupported(" << SoyFormat << ")";
+				throw Soy::AssertException(Error.str());
 			}
 			
-			//	data size here is for the whole image, so we need to calculate (ie. ASSUME) it ourselves.
-			SoyPixelsMeta PlaneMeta( Width, Height, PlaneFormat );
-
-			//	should be LESS as there are multiple plaens in the total buffer, but we'll do = just for the sake of the safety
-			Soy::Assert( PlaneMeta.GetDataSize() <= PixelBufferDataSize, "Plane's calcualted data size exceeds the total buffer size" );
-
-			//	gr: currently we only have one transform... so... only apply to main plane (and hope they're the same)
-			float3x3 DummyTransform;
-			float3x3& PlaneTransform = (PlaneIndex == 0) ? Transform : DummyTransform;
+			if ( !Pixels )
+				throw Soy::AssertException("Failed to get pixel buffer address");
 			
-			LockPixels( Planes, Pixels, BytesPerRow, PlaneMeta, PlaneTransform );
+			SoyPixelsMeta Meta( Width, Height, SoyFormat );
+			LockPixels( Planes, Pixels, BytesPerRow, Meta, Transform, DataSize );
+
+			/*
+			if ( Meta.GetRowDataSize() != BytesPerRow )
+			{
+				std::stringstream Error;
+				Error << "CVPixelBuffer (" << Meta << ") row mis-aligned, handle this. Expected " << Meta.GetRowDataSize() << " is " << BytesPerRow;
+				throw Soy::AssertException( Error.str() );
+			}
+			 */
+			
+			//	gr: wierdly... with bjork, RGB data, 2048x2048... there are an extra 32 bytes... the plane split will throw an error on this, so just trim it...
+			if ( DataSize > Meta.GetDataSize() )
+			{
+				//auto Diff = DataSize - Meta.GetDataSize();
+				//std::Debug << "Warning: CVPixelBuffer data has an extra " << Diff << " bytes. Trimming..." << std::endl;
+				DataSize = Meta.GetDataSize();
+			}
+			
+			SoyPixelsRemote Temp( reinterpret_cast<uint8*>(Pixels), Width, Height, DataSize, SoyFormat );
+			mLockedPixels[0] = Temp;
+			Planes.PushBack( &mLockedPixels[0] );
 		}
 	}
-	else
+	catch(...)
 	{
-		//	get the "non-planar" image
-		auto Height = CVPixelBufferGetHeight( PixelBuffer );
-		auto Width = CVPixelBufferGetWidth( PixelBuffer );
-		auto* Pixels = CVPixelBufferGetBaseAddress(PixelBuffer);
-		auto Format = CVPixelBufferGetPixelFormatType( PixelBuffer );
-		auto DataSize = CVPixelBufferGetDataSize(PixelBuffer);
-		auto SoyFormat = Avf::GetPixelFormat( Format );
-		auto BytesPerRow = CVPixelBufferGetBytesPerRow( PixelBuffer );
-		
-		if ( !Pixels )
-		{
-			Unlock();
-			return;
-		}
-		
-		SoyPixelsMeta Meta( Width, Height, SoyFormat );
-		LockPixels( Planes, Pixels, BytesPerRow, Meta, Transform, DataSize );
-
-		/*
-		if ( Meta.GetRowDataSize() != BytesPerRow )
-		{
-			std::stringstream Error;
-			Error << "CVPixelBuffer (" << Meta << ") row mis-aligned, handle this. Expected " << Meta.GetRowDataSize() << " is " << BytesPerRow;
-			throw Soy::AssertException( Error.str() );
-		}
-		 */
-		
-		//	gr: wierdly... with bjork, RGB data, 2048x2048... there are an extra 32 bytes... the plane split will throw an error on this, so just trim it...
-		if ( DataSize > Meta.GetDataSize() )
-		{
-			//auto Diff = DataSize - Meta.GetDataSize();
-			//std::Debug << "Warning: CVPixelBuffer data has an extra " << Diff << " bytes. Trimming..." << std::endl;
-			DataSize = Meta.GetDataSize();
-		}
-		
-		SoyPixelsRemote Temp( reinterpret_cast<uint8*>(Pixels), Width, Height, DataSize, SoyFormat );
-		mLockedPixels[0] = Temp;
-		Planes.PushBack( &mLockedPixels[0] );
+		Unlock();
+		throw;
 	}
 }
 
