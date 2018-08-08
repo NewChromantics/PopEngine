@@ -14,7 +14,7 @@
 
 
 TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& ScriptFilename) :
-	SoyWorkerThread	( ScriptFilename, SoyWorkerWaitMode::NoWait ),
+	SoyWorkerThread	( ScriptFilename, SoyWorkerWaitMode::Sleep ),
 	mRootDirectory	( RootDirectory )
 {
 	//	bind first
@@ -34,12 +34,7 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 		this->Start();
 		
 		std::string BootupSource;
-		if ( !Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource ) )
-		{
-			std::stringstream Error;
-			Error << "Failed to read bootup file " << ScriptFilename;
-			throw Soy::AssertException( Error.str() );
-		}
+		Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
 		
 		auto* Container = mV8Container.get();
 		auto LoadScript = [=](v8::Local<v8::Context> Context)
