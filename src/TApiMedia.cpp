@@ -283,8 +283,6 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		Pixels.reset( new SoyPixels );
 		auto& RgbPixels = *Pixels;
 		RgbPixels.Copy( *Textures[0] );
-		RgbPixels.SetFormat( SoyPixelsFormat::RGB );
-		RgbPixels.ResizeFastSample( 640, 480 );
 		PixelBuffer->Unlock();
 	}
 	catch(std::exception& e)
