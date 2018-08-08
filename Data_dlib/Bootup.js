@@ -34,6 +34,8 @@ var ServerSkeletonSender = null;
 var ServerSkeletonSenderPort = 8007;
 var BroadcastServer = null;
 var BroadcastServerPort = 8009;
+var WebServer = null;
+var WebServerPort = 8000;
 
 var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
@@ -650,7 +652,7 @@ function Main()
 	
 
 	
-	let VideoDeviceName = "facetime";
+	let VideoDeviceName = "c920";
 	
 	let LoadDevice = function(DeviceNames)
 	{
@@ -709,6 +711,11 @@ function Main()
 		BroadcastServer.OnMessage = function(Data,Sender)	{	OnBroadcastMessage(Data,Sender,BroadcastServer);	}
 	}
 	
+	let AllocWebServer = function()
+	{
+		WebServer = new HttpServer(WebServerPort);
+	}
+
 
 	let Retry = function(RetryFunc,Timeout)
 	{
@@ -726,6 +733,7 @@ function Main()
 	Retry( AllocSkeletonReciever, 1000 );
 	Retry( AllocSkeletonSender, 1000 );
 	Retry( AllocBroadcastServer, 1000 );
+	Retry( AllocWebServer, 1000 );
 
 }
 

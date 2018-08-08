@@ -7,6 +7,7 @@
 #include "TApiMedia.h"
 #include "TApiWebsocket.h"
 #include "TApiSocket.h"
+#include "TApiHttp.h"
 
 #include <SoyFilesystem.h>
 
@@ -26,6 +27,7 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 		ApiDlib::Bind( *mV8Container );
 		ApiMedia::Bind( *mV8Container );
 		ApiWebsocket::Bind( *mV8Container );
+		ApiHttp::Bind( *mV8Container );
 		ApiSocket::Bind( *mV8Container );
 
 		//	gr: start the thread immediately, there should be no problems having the thread running before queueing a job
