@@ -19,6 +19,9 @@ let VertShaderSource = `
 let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
 
+let ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
+var ResizeFragShader = null;
+
 
 //	skeleton + face
 var OutputSkeleton = null;
@@ -381,8 +384,6 @@ function GetDefaultSkeleton(FaceRect)
 
 function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 {
-	Debug("OnNewFace " + (typeof FaceLandmarks) );
-
 	//	handle no-face
 	if ( FaceLandmarks == null )
 	{
@@ -514,19 +515,32 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		let SmallImage = null;
 		let SmallImageWidth = 640;
 		let SmallImageHeight = 480;
+		
+		if ( !FaceRect )
+		{
+			SmallImageWidth = 256;
+			SmallImageHeight = 128;
+		}
+		
 		if ( OpenglContext )
 		{
 			let ResizeRender = function(RenderTarget,RenderTargetTexture)
 			{
-				let Shader = GetResizeShader(RenderTarget);
+				if ( !ResizeFragShader )
+				{
+					ResizeFragShader = new OpenglShader( RenderTarget, VertShaderSource, ResizeFragShaderSource );
+				}
+				
 				let SetUniforms = function(Shader)
 				{
 					Shader.SetUniform("Source", NewFrameImage, 0 );
 				}
-				RenderTarget.DrawQuad( Shader, SetUniforms );
+				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 			}
-			SmallImage = new Image( SmallImageWidth, SmallImageHeight );
-			ResizePromise = OpenglContext.Render( SmallImage, ResizeRender );
+			SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
+			//Debug("SmallImage.width=" + SmallImage.GetWidth() );
+			let ReadBackPixels = true;
+			ResizePromise = OpenglContext.Render( SmallImage, ResizeRender, ReadBackPixels );
 		}
 		else
 		{
@@ -550,7 +564,6 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		
 		let GetFindFacePromise = function()
 		{
-			Debug("GetFindFacePromise");
 			let FindFacePromise;
 	
 			if ( FaceRect )
@@ -715,7 +728,8 @@ function Main()
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
 			let FindFaceIfNoSkeleton = true;
-			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,FindFaceIfNoSkeleton,LastSkeleton);	};
+			let OpenglContext = Window1;
+			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,FindFaceIfNoSkeleton,LastSkeleton,OpenglContext);	};
 		}
 		catch(e)
 		{

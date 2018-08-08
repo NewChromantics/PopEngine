@@ -700,8 +700,12 @@ void TImageWrapper::ReadOpenglPixels()
 	if ( mPixels == nullptr )
 		mPixels.reset( new SoyPixels );
 
-	auto Format = SoyPixelsFormat::Invalid;
+	auto Format = SoyPixelsFormat::RGB;
 	auto Flip = false;
+	
+	mPixels->GetMeta().DumbSetFormat(Format);
+	mPixels->GetPixelsArray().SetSize( mPixels->GetMeta().GetDataSize() );
+	
 	mOpenglTexture->Read( *mPixels, Format, Flip );
 	mPixelsVersion = mOpenglTextureVersion;
 }
