@@ -162,7 +162,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	auto ResolverPersistent = std::make_shared<V8Storage<Promise::Resolver>>( Params.GetIsolate(), Resolver );
 
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
@@ -199,7 +199,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 			{
 				//	return face points here
 				//	gr: can't do this unless we're in the javascript thread...
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Features) );
 				ResolverLocal->Resolve( LandmarksArray );
 				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
@@ -215,7 +215,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				//	gr: does this need to be an exception? string?
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
