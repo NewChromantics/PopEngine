@@ -24,6 +24,8 @@ const char GetWidth_FunctionName[] = "GetWidth";
 const char GetHeight_FunctionName[] = "GetHeight";
 const char GetRgba8_FunctionName[] = "GetRgba8";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
+const char Copy_FunctionName[] = "Copy";
+const char Resize_FunctionName[] = "Resize";
 
 const char Image_TypeName[] = "Image";
 
@@ -263,6 +265,8 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<GetHeight_FunctionName>( InstanceTemplate, TImageWrapper::GetHeight );
 	Container.BindFunction<GetRgba8_FunctionName>( InstanceTemplate, TImageWrapper::GetRgba8 );
 	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
+	Container.BindFunction<Copy_FunctionName>( InstanceTemplate, TImageWrapper::Copy );
+	Container.BindFunction<Resize_FunctionName>( InstanceTemplate, TImageWrapper::Resize );
 
 	return ConstructorFunc;
 }
@@ -401,6 +405,45 @@ void TImageWrapper::DoSetLinearFilter(bool LinearFilter)
 		throw Soy::AssertException("Cannot change linear filter setting if texture is already created");
 
 	mLinearFilter = LinearFilter;
+}
+
+
+v8::Local<v8::Value> TImageWrapper::Copy(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto& That = v8::GetObject<TImageWrapper>( Arguments[0] );
+	
+	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
+	std::lock_guard<std::recursive_mutex> ThatLock(That.mPixelsLock);
+
+	auto& ThisPixels = This.GetPixels();
+	auto& ThatPixels = That.GetPixels();
+
+	ThisPixels.Copy(ThatPixels);
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+v8::Local<v8::Value> TImageWrapper::Resize(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto NewWidth = v8::SafeCast<Number>( Arguments[0] )->Uint32Value();
+	auto NewHeight = v8::SafeCast<Number>( Arguments[1] )->Uint32Value();
+
+	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
+	
+	auto& ThisPixels = This.GetPixels();
+	
+	ThisPixels.ResizeFastSample( NewWidth, NewHeight );
+	
+	return v8::Undefined(Params.mIsolate);
 }
 
 v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
