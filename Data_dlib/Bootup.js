@@ -16,7 +16,7 @@ let VertShaderSource = `
 	}
 `;
 
-let FrameFragShaderSource = LoadFileAsString("Data_dlib/DrawFrameAndPose.frag");
+let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
 
 
@@ -428,8 +428,8 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
-var DlibThreadCount = 5;
-var DlibLandMarksdat = LoadFileAsArrayBuffer('Data_Dlib/shape_predictor_68_face_landmarks.dat');
+var DlibThreadCount = 1;
+var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
 
@@ -478,7 +478,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton)
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > DlibThreadCount )
 		return;
-	
+
 	//Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
 	let OnFaceError = function(Error)
@@ -676,14 +676,14 @@ function Main()
 	}
 
 	/*
-	//let TestImage = new Image('Data_dlib/NataliePortman.jpg');
-	//let TestImage = new Image('Data_dlib/MicTest1.png');
-	//let TestImage = new Image('Data_dlib/MicTest2.png');
-	let TestImage = new Image('Data_dlib/MicTest3.png');
+	//let TestImage = new Image('NataliePortman.jpg');
+	//let TestImage = new Image('MicTest1.png');
+	//let TestImage = new Image('MicTest2.png');
+	let TestImage = new Image('MicTest3.png');
 	
-	//let TestImage = new Image('Data_dlib/Face.png');
-	//let TestImage = new Image('Data_dlib/FaceLeft.jpg');
-	//OnNewFrame(TestImage,'Data_dlib/Face.json');
+	//let TestImage = new Image('Face.png');
+	//let TestImage = new Image('FaceLeft.jpg');
+	//OnNewFrame(TestImage,'Face.json');
 	OnNewFrame(TestImage,null,true);
 	return;
 	//TestImage = null;
