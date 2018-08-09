@@ -56,6 +56,7 @@ var FlipInputSkeleton = true;
 var RenderLastFrame = true;
 var AlwaysFindFaceRect = true;
 var EnableKalmanFilter = false;
+var AlwaysScanSameFrame = false;
 
 var DlibThreadCount = 1;
 var ShoulderToHeadWidthRatio = 0.45;
@@ -380,9 +381,8 @@ function GetSkeletonJson(Skeleton,Pretty)
 function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 {
 	//	try and free unused memory manually
-	if ( OutputImage != null )
+	if ( OutputImage != null && OutputImage != Image )
 		OutputImage.Clear();
-	
 	OutputImage = Image;
 	OutputSkeleton = Skeleton;
 	
@@ -584,11 +584,26 @@ function GetSkeletonFaceRect(Skeleton)
 	return Rect;
 }
 
+var AlwaysThisFrame = null;
 
 function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 {
 	UpdateFrameCounter('CameraFrameRate');
 
+	if ( AlwaysScanSameFrame === true )
+	{
+		if ( AlwaysThisFrame == null && OutputImage != null )
+		{
+			AlwaysThisFrame = new Image();
+			AlwaysThisFrame.Copy(OutputImage);
+		}
+	}
+	
+	if( AlwaysThisFrame != null )
+	{
+		NewFrameImage.Copy(AlwaysThisFrame);
+	}
+	
 	if ( OutputImage == null )
 		OutputImage = NewFrameImage;
 	
@@ -636,14 +651,15 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		let SmallImage = null;
 		let SmallImageWidth = NewFrameImage.GetWidth();
 		let SmallImageHeight = NewFrameImage.GetHeight();
-		//SmallImageWidth = 640;
-		//SmallImageHeight = 480;
+		let HeightRatio = SmallImageHeight / SmallImageWidth;
+		SmallImageWidth = 640;
+		SmallImageHeight = SmallImageWidth * HeightRatio;
 		
 		//	the face search looks for 80x80 size faces
 		if ( !FaceRect )
 		{
-			SmallImageWidth = 80 * 8;
-			SmallImageHeight = 80 * 4;
+			SmallImageWidth = 400;
+			SmallImageHeight = SmallImageWidth * HeightRatio;
 		}
 		
 		if ( OpenglContext )
