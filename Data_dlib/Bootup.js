@@ -1,3 +1,4 @@
+//Debug = function(){};
 
 let VertShaderSource = `
 	#version 410
@@ -358,6 +359,10 @@ function GetSkeletonJson(Skeleton,Pretty)
 
 function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 {
+	//	try and free unused memory manually
+	if ( OutputImage != null )
+		OutputImage.Clear();
+	
 	OutputImage = Image;
 	OutputSkeleton = Skeleton;
 	
@@ -518,8 +523,10 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 	
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > DlibThreadCount )
+	{
+		NewFrameImage.Clear();
 		return;
-
+	}
 	//Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
 	let OnFaceError = function(Error)
@@ -551,13 +558,15 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 
 		let ResizePromise = null;
 		let SmallImage = null;
+		//let SmallImageWidth = NewFrameImage.GetWidth();
+		//let SmallImageHeight = NewFrameImage.GetHeight();
 		let SmallImageWidth = 640;
 		let SmallImageHeight = 480;
 		
 		if ( !FaceRect )
 		{
 			SmallImageWidth = 256;
-			SmallImageHeight = 128;
+			SmallImageHeight = 256;
 		}
 		
 		if ( OpenglContext )
@@ -752,7 +761,7 @@ function Main()
 	
 
 	
-	let VideoDeviceName = "c920";
+	let VideoDeviceName = "isight";
 	
 	let LoadDevice = function(DeviceNames)
 	{

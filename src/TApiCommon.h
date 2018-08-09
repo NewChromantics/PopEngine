@@ -48,7 +48,8 @@ public:
 	static v8::Local<v8::Value>				SetLinearFilter(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Copy(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Resize(const v8::CallbackInfo& Arguments);
-	
+	static v8::Local<v8::Value>				Clear(const v8::CallbackInfo& Arguments);
+
 	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
 	
 	void									DoLoadFile(const std::string& Filename);
@@ -65,6 +66,9 @@ public:
 	void									SetPixels(const SoyPixelsImpl& NewPixels);
 	void									SetPixels(std::shared_ptr<SoyPixels> NewPixels);
 
+protected:
+	void								Free();
+	
 protected:
 	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?
 	std::shared_ptr<SoyPixels>&			mPixels = mObject;

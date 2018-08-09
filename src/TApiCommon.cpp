@@ -26,6 +26,7 @@ const char GetRgba8_FunctionName[] = "GetRgba8";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 const char Copy_FunctionName[] = "Copy";
 const char Resize_FunctionName[] = "Resize";
+const char Clear_FunctionName[] = "Clear";
 
 const char Image_TypeName[] = "Image";
 
@@ -208,16 +209,7 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 
 TImageWrapper::~TImageWrapper()
 {
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	if ( mOpenglTexture )
-	{
-		mOpenglTexture->mAutoRelease = false;
-		//mOpenglTexture.reset();
-	}
-
-	if ( mOpenglTextureDealloc )
-		mOpenglTextureDealloc();
+	Free();
 }
 
 void TImageWrapper::Construct(const v8::CallbackInfo& Arguments)
@@ -267,6 +259,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
 	Container.BindFunction<Copy_FunctionName>( InstanceTemplate, TImageWrapper::Copy );
 	Container.BindFunction<Resize_FunctionName>( InstanceTemplate, TImageWrapper::Resize );
+	Container.BindFunction<Clear_FunctionName>( InstanceTemplate, TImageWrapper::Clear );
 
 	return ConstructorFunc;
 }
@@ -444,6 +437,44 @@ v8::Local<v8::Value> TImageWrapper::Resize(const v8::CallbackInfo& Params)
 	ThisPixels.ResizeFastSample( NewWidth, NewHeight );
 	
 	return v8::Undefined(Params.mIsolate);
+}
+
+
+v8::Local<v8::Value> TImageWrapper::Clear(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	
+	This.Free();
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+void TImageWrapper::Free()
+{
+	std::lock_guard<std::recursive_mutex> ThisLock(mPixelsLock);
+
+	//	clear pixels
+	mPixels.reset();
+	mPixelsVersion = 0;
+	
+
+	/*
+	if ( mOpenglTexture )
+		mOpenglTexture->mAutoRelease = false;
+	*/
+
+	//	clear gl
+	if ( mOpenglTextureDealloc )
+	{
+		mOpenglTextureDealloc();
+		mOpenglTextureDealloc = nullptr;
+	}
+	mOpenglTexture.reset();
+	mOpenglTextureVersion = 0;
 }
 
 v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
