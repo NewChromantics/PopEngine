@@ -238,11 +238,11 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	{
 		auto* Isolate = Container->mIsolate;
 		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
-		auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
-		auto TargetLocal = v8::GetLocal( *Isolate, TargetPersistent );
+		auto WindowLocal = WindowPersistent->GetLocal(*Isolate);
+		auto TargetLocal = TargetPersistent->GetLocal(*Isolate);
 		CallbackParams.PushBack( WindowLocal );
 		CallbackParams.PushBack( TargetLocal );
-		auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
+		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
 		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
 		auto FunctionThis = Context->Global();
 		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
@@ -410,7 +410,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 					{
 						auto* Isolate = Container->mIsolate;
 						BufferArray<v8::Local<v8::Value>,4> CallbackParams;
-						auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
+						auto WindowLocal = WindowPersistent->GetLocal(*Isolate);
 						auto CurrentLocal = CurrentBuffer->GetHandle();
 						auto PreviousLocal = PreviousBuffer->GetHandle();
 						auto IterationLocal = Number::New( Isolate, it );
@@ -418,7 +418,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 						CallbackParams.PushBack( CurrentLocal );
 						CallbackParams.PushBack( PreviousLocal );
 						CallbackParams.PushBack( IterationLocal );
-						auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
+						auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
 						auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
 						auto FunctionThis = Context->Global();
 						Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
@@ -498,9 +498,9 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 	{
 		auto* Isolate = Container->mIsolate;
 		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
-		auto WindowLocal = v8::GetLocal( *Isolate, WindowPersistent );
+		auto WindowLocal = WindowPersistent->GetLocal(*Isolate);
 		CallbackParams.PushBack( WindowLocal );
-		auto CallbackFunctionLocal = v8::GetLocal( *Isolate, RenderCallbackPersistent );
+		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
 		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
 		auto FunctionThis = Context->Global();
 		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );

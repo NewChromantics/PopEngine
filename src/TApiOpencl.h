@@ -25,7 +25,7 @@ public:
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 
 	static v8::Local<v8::Value>				ExecuteKernel(const v8::CallbackInfo& Arguments);
-	void									DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,v8::Persist<v8::Function> IterationCallback,v8::Persist<v8::Function> FinishedCallback,v8::Persist<v8::Promise::Resolver> Resolver);
+	void									DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,std::shared_ptr<V8Storage<v8::Function>> IterationCallback,std::shared_ptr<V8Storage<v8::Function>> FinishedCallback,std::shared_ptr<V8Storage<v8::Promise::Resolver>> Resolver);
 
 public:
 	TV8Container&						mContainer;

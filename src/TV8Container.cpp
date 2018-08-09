@@ -478,7 +478,7 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 	//	instance new one
 	auto& Isolate = GetIsolate();
 	auto& ObjectTemplate = *pObjectTemplate;
-	auto ObjectTemplateLocal = v8::GetLocal( Isolate, ObjectTemplate.mTemplate );
+	auto ObjectTemplateLocal = ObjectTemplate.mTemplate->GetLocal(Isolate);
 	auto NewObject = ObjectTemplateLocal->NewInstance();
 	return NewObject;
 }
@@ -499,7 +499,7 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 	//	instance new one
 	auto& Isolate = GetIsolate();
 	auto& ObjectTemplate = *pObjectTemplate;
-	auto ObjectTemplateLocal = v8::GetLocal( Isolate, ObjectTemplate.mTemplate );
+	auto ObjectTemplateLocal = ObjectTemplate.mTemplate->GetLocal(Isolate);
 	auto NewObject = ObjectTemplateLocal->NewInstance();
 
 	//	make a persistent handle here

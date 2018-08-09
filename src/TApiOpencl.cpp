@@ -361,7 +361,7 @@ v8::Local<v8::Value> TOpenclContext::ExecuteKernel(const v8::CallbackInfo& Param
 }
 
 
-void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,Persist<Function> IterationCallback,Persist<Function> FinishedCallback,Persist<Promise::Resolver> Resolver)
+void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,std::shared_ptr<V8Storage<v8::Function>> IterationCallback,std::shared_ptr<V8Storage<v8::Function>> FinishedCallback,std::shared_ptr<V8Storage<Promise::Resolver>> Resolver)
 {
 	auto* Isolate = &this->mContainer.GetIsolate();
 	auto* Container = &this->mContainer;
@@ -382,7 +382,7 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 	 */
 	auto OnCompleted = [=](Local<Context> Context)
 	{
-		auto ResolverLocal = v8::GetLocal( *Isolate, Resolver );
+		auto ResolverLocal = Resolver->GetLocal(*Isolate);
 		ResolverLocal->Resolve( v8::Undefined( Isolate ) );
 	};
 	
@@ -408,7 +408,7 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
 			CallbackParams.PushBack( IterationIndexesHandle );
-			Container->ExecuteFunc( Context, IterationCallback, GetArrayBridge(CallbackParams) );
+			Container->ExecuteFunc( Context, IterationCallback->mPersistent, GetArrayBridge(CallbackParams) );
 		};
 		Container->RunScoped( ExecuteIteration );
 	};
@@ -420,7 +420,7 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
-			Container->ExecuteFunc( Context, FinishedCallback, GetArrayBridge(CallbackParams) );
+			Container->ExecuteFunc( Context, FinishedCallback->mPersistent, GetArrayBridge(CallbackParams) );
 		};
 		Container->RunScoped( ExecuteFinished );
 		Container->QueueScoped( OnCompleted );
@@ -434,7 +434,7 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 		
 		auto OnError = [=](Local<Context> Context)
 		{
-			auto ResolverLocal = v8::GetLocal( *Isolate, Resolver );
+			auto ResolverLocal = Resolver->GetLocal(*Isolate);
 			auto ErrorStr = v8::GetString( *Isolate, Error );
 			//std::Debug << "Kernel error rejecting: " << Error << std::endl;
 			ResolverLocal->Reject( ErrorStr );

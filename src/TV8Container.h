@@ -18,6 +18,9 @@
 class PopV8Allocator;
 class TV8Container;
 
+template<typename TYPE>
+class V8Storage;
+
 //	forward decalrations
 namespace v8
 {
@@ -60,7 +63,7 @@ namespace v8
 	Local<Value>	GetException(v8::Isolate& Isolate,const std::exception& Exception);
 	
 	template<typename TYPE>
-	Persist<TYPE>	GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle);
+	std::shared_ptr<V8Storage<TYPE>>	GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle);
 	
 	template<typename TYPE>
 	Local<TYPE> 	GetLocal(v8::Isolate& Isolate,Persist<TYPE> PersistentHandle);
@@ -123,6 +126,43 @@ public:
 	std::string		mError;
 };
 
+
+
+
+
+//	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
+//	gr: I think in the use case (a lambda) it becomes const so won't get freed anyway?
+template<typename TYPE>
+class V8Storage
+{
+public:
+	V8Storage(v8::Isolate& Isolate,v8::Local<TYPE>& Local)
+	{
+		/*
+		Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
+		PersistentHandle.Reset( &Isolate, LocalHandle );
+		return PersistentHandle;
+		 */
+		mPersistent.Reset( &Isolate, Local );
+	}
+	~V8Storage()
+	{
+		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
+	}
+	
+	v8::Local<TYPE>		GetLocal(v8::Isolate& Isolate)
+	{
+		return v8::Local<TYPE>::New( &Isolate, mPersistent );
+	}
+	v8::Persist<TYPE>	mPersistent;
+};
+
+template<typename TYPE>
+inline std::shared_ptr<V8Storage<TYPE>> v8::GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle)
+{
+	auto ResolverPersistent = std::make_shared<V8Storage<TYPE>>( Isolate, LocalHandle );
+	return ResolverPersistent;
+}
 
 
 class v8::CallbackInfo
@@ -189,7 +229,7 @@ public:
 
 public:
 	TV8ObjectTemplate()	{}
-	TV8ObjectTemplate(v8::Persist<v8::ObjectTemplate>& Template,const std::string& Name) :
+	TV8ObjectTemplate(std::shared_ptr<V8Storage<v8::ObjectTemplate>> Template,const std::string& Name) :
 		mTemplate	( Template ),
 		mName		( Name )
 	{
@@ -199,7 +239,7 @@ public:
 	
 public:
 	ALLOCATOR						mAllocator;
-	v8::Persist<v8::ObjectTemplate>	mTemplate;
+	std::shared_ptr<V8Storage<v8::ObjectTemplate>>	mTemplate;
 	std::string						mName;
 };
 
@@ -376,14 +416,7 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 	return *Window;
 }
 
-template<typename TYPE>
-inline v8::Persist<TYPE> v8::GetPersistent(v8::Isolate& Isolate,Local<TYPE> LocalHandle)
-{
-	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
-	PersistentHandle.Reset( &Isolate, LocalHandle );
-	return PersistentHandle;
-}
-	
+
 template<typename TYPE>
 inline v8::Local<TYPE> v8::GetLocal(v8::Isolate& Isolate,Persist<TYPE> PersistentHandle)
 {
@@ -485,25 +518,3 @@ ISTYPE_DEFINITION(Function);
 
 
 
-
-//	make our own persistent object that won't get garbage collected across threads
-//	std::shared_ptr<V8Storage<TYPE>>
-
-//	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
-//	gr: I think in the use case (a lambda) it becomes const so won't get freed anyway?
-template<typename TYPE>
-class V8Storage
-{
-public:
-	V8Storage(v8::Isolate& Isolate,v8::Local<TYPE>& Local) :
-		mPersistent	( v8::GetPersistent( Isolate, Local ) )
-	{
-		
-	}
-	~V8Storage()
-	{
-		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
-	}
-	
-	v8::Persist<TYPE>	mPersistent;
-};
