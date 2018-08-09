@@ -37,6 +37,7 @@ public:
 	void			GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(SoyPixelsImpl&)> CopyPixels,ArrayBridge<TFace>&& Faces);
 	TFace			GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(SoyPixelsImpl&)> CopyPixels,Soy::Rectf FaceRect);
 	TFace			GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::Rectf FaceRect);
+	TFace			GetFaceLandmarks(const dlib::array2d<uint8_t>& Image,Soy::Rectf FaceRect);
 
 	void			SetShapePredictorFaceLandmarks(TDlib& Copy);
 	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>& LandmarksDatBytes);

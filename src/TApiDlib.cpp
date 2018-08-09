@@ -353,16 +353,19 @@ public:
 };
 
 
-void GetImageFromPixels(const SoyPixelsMeta& PixelsMeta,dlib::array2d<dlib::rgb_pixel>& DlibImage,std::function<void(SoyPixelsImpl&)>& CopyPixels)
+template<SoyPixelsFormat::Type OutputFormat,typename PIXELTYPE>
+void GetImageFromPixels(const SoyPixelsMeta& PixelsMeta,dlib::array2d<PIXELTYPE>& DlibImage,std::function<void(SoyPixelsImpl&)>& CopyPixels)
 {
 	using namespace dlib;
 	
 	//	alloc image
 	DlibImage.set_size( PixelsMeta.GetHeight(), PixelsMeta.GetWidth() );
-	auto* ImgPixelsByte = &DlibImage.begin()->red;
+	auto it = DlibImage.begin();
+	//auto* ImgPixelsByte = &DlibImage.begin()->red;
+	auto* ImgPixelsByte = reinterpret_cast<uint8_t*>(&(*it));
 	auto DlibImageDataSize = DlibImage.width_step() * DlibImage.nr();
-	SoyPixelsRemote DlibPixels( ImgPixelsByte, DlibImage.nc(), DlibImage.nr(), DlibImageDataSize, SoyPixelsFormat::RGB );
-
+	SoyPixelsRemote DlibPixels( ImgPixelsByte, DlibImage.nc(), DlibImage.nr(), DlibImageDataSize, OutputFormat );
+	
 	if ( PixelsMeta.GetFormat() == DlibPixels.GetFormat() )
 	{
 		CopyPixels( DlibPixels );
@@ -372,42 +375,12 @@ void GetImageFromPixels(const SoyPixelsMeta& PixelsMeta,dlib::array2d<dlib::rgb_
 		std::stringstream TimerName;
 		TimerName << "dlib converting " << PixelsMeta.GetFormat() << " pixels to " << DlibPixels.GetFormat();
 		Soy::TScopeTimerPrint Timer_Convert(TimerName.str().c_str(),TIMER_WARNING_MIN_MS);
-
+		
 		SoyPixels NonRgbPixels;
 		CopyPixels( NonRgbPixels );
-		NonRgbPixels.SetFormat(SoyPixelsFormat::RGB);
+		NonRgbPixels.SetFormat(DlibPixels.GetFormat());
 		DlibPixels.Copy( NonRgbPixels );
 	}
-	/*
-	array2d<rgb_pixel> img;
-	img.set_size( Pixels.GetHeight(), Pixels.GetWidth() );
-	
-	if ( Pixels.GetFormat() == SoyPixelsFormat::RGB )
-	{
-		Soy::TScopeTimerPrint Timer_1("FindFace: Copying pixels to img",TIMER_WARNING_MIN_MS);
-	}
-	else
-	{
-		for ( int y=0;	y<img.nr();	y++ )
-		{
-			auto Row = img[y];
-			auto* FirstDstPixel = &Row[0].red;
-			auto* FirstSrcPixel = &Pixels.GetPixelPtr( 0, y, 0 );
-			
-			auto DstStep = 3;
-			auto SrcStep = Pixels.GetChannels();
-			
-			for ( int x=0;	x<Row.nc();	x++ )
-			{
-				FirstDstPixel[0] = FirstSrcPixel[0%SrcStep];
-				FirstDstPixel[1] = FirstSrcPixel[1%SrcStep];
-				FirstDstPixel[2] = FirstSrcPixel[2%SrcStep];
-				FirstSrcPixel += SrcStep;
-				FirstDstPixel += DstStep;
-			}
-		}
-	}
-	 */
 }
 
 
@@ -421,14 +394,17 @@ void TDlib::GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(
 	// each face in an image.
 	auto& detector = *mFaceDetector;
 
-	dlib::array2d<dlib::rgb_pixel> img;
-	GetImageFromPixels( PixelsMeta, img, CopyPixels );
-
+	
+	dlib::array2d<uint8_t> img;
+	GetImageFromPixels<SoyPixelsFormat::Greyscale>( PixelsMeta, img, CopyPixels );
+	//dlib::array2d<dlib::rgb_pixel> img;
+	//GetImageFromPixels<SoyPixelsFormat::RGB>( PixelsMeta, img, CopyPixels );
 	//load_image(img, argv[i]);
 	// Make the image larger so we can detect small faces.
 	//std::Debug << "scaling up for pyramid..." << std::endl;
 	//pyramid_up(img);
-
+	
+	
 	//	use the resized image
 	auto Width = static_cast<float>(img.nc());
 	auto Height = static_cast<float>(img.nr());
@@ -462,20 +438,28 @@ void TDlib::GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(
 
 TFace TDlib::GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(SoyPixelsImpl&)> CopyPixels,Soy::Rectf FaceRect)
 {
-	dlib::array2d<dlib::rgb_pixel> img;
-	GetImageFromPixels( PixelsMeta, img, CopyPixels );
-
-	return GetFaceLandmarks( img, FaceRect );
+	if ( PixelsMeta.GetFormat() == SoyPixelsFormat::RGB )
+	{
+		dlib::array2d<dlib::rgb_pixel> img;
+		GetImageFromPixels<SoyPixelsFormat::RGB>( PixelsMeta, img, CopyPixels );
+		return GetFaceLandmarks( img, FaceRect );
+	}
+	else
+	{
+		dlib::array2d<uint8_t> img;
+		GetImageFromPixels<SoyPixelsFormat::Greyscale>( PixelsMeta, img, CopyPixels );
+		return GetFaceLandmarks( img, FaceRect );
+	}
 }
 
 
-
-TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::Rectf FaceRectf)
+template<typename PIXELTYPE>
+TFace GetFaceLandmarks(dlib::shape_predictor& ShapePredictor,const dlib::array2d<PIXELTYPE>& Image,Soy::Rectf FaceRectf)
 {
 	using namespace dlib;
 	
 	Soy::TScopeTimerPrint Timer_1("auto& sp = *mShapePredictor;",TIMER_WARNING_MIN_MS);
-	auto& sp = *mShapePredictor;
+	auto& sp = ShapePredictor;
 	Timer_1.Stop();
 	
 	auto Width = static_cast<float>(Image.nc());
@@ -492,7 +476,7 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 	
 	TFace NewFace;
 	NewFace.mRect = FaceRectf;
-
+	
 	Soy::Rectf ImageRect( 0, 0, Width, Height );
 	FaceRectf.ScaleTo( ImageRect );
 	
@@ -511,6 +495,22 @@ TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::R
 	}
 	
 	return NewFace;
+}
+
+TFace TDlib::GetFaceLandmarks(const dlib::array2d<dlib::rgb_pixel>& Image,Soy::Rectf FaceRectf)
+{
+	Soy::TScopeTimerPrint Timer_1("auto& sp = *mShapePredictor;",TIMER_WARNING_MIN_MS);
+	auto& sp = *mShapePredictor;
+	Timer_1.Stop();
+	return ::GetFaceLandmarks( sp, Image, FaceRectf );
+}
+
+TFace TDlib::GetFaceLandmarks(const dlib::array2d<uint8_t>& Image,Soy::Rectf FaceRectf)
+{
+	Soy::TScopeTimerPrint Timer_1("auto& sp = *mShapePredictor;",TIMER_WARNING_MIN_MS);
+	auto& sp = *mShapePredictor;
+	Timer_1.Stop();
+	return ::GetFaceLandmarks( sp, Image, FaceRectf );
 }
 
 void TDlib::SetShapePredictorFaceLandmarks(TDlib& Copy)
