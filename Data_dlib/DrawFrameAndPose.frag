@@ -3,6 +3,7 @@ const float LineWidth = 0.003;
 
 uniform sampler2D	Frame;
 uniform bool		HasFrame;
+uniform vec4		UnClipRect;
 
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
@@ -73,11 +74,22 @@ float DistanceToLine2(vec2 Position,vec2 Start,vec2 End)
 	return length( Near - Position );
 }
 
+float Range(float Min,float Max,float Value)
+{
+	return (Value-Min) / (Max-Min);
+}
+
+vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
+{
+	return vec2( Range(Min.x,Max.x,Value.x), Range(Min.y,Max.y,Value.y) );
+}
 
 void main()
 {
 	vec2 FrameUv = vec2( uv.x, 1-uv.y );
 	//vec2 FrameUv = uv;
+	//FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
+
 	float Distances[LINE_COUNT];
 
 	float NearestDistance = 999;
@@ -100,6 +112,7 @@ void main()
 	}
 	else if ( HasFrame )
 	{
+		FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
 		gl_FragColor = texture( Frame, FrameUv );
 	}
 	else
