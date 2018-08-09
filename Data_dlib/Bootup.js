@@ -1,3 +1,11 @@
+//	gr: include is not a generic thing (or a wrapper yet) so we can change
+//	LoadFileAsString to a file-handle to detect file changes to auto reload things
+function include(Filename)
+{
+	let Source = LoadFileAsString(Filename);
+	CompileAndRun( Source );
+}
+
 //Debug = function(){};
 
 let VertShaderSource = `
@@ -40,6 +48,8 @@ var BroadcastServer = null;
 var BroadcastServerPort = 8009;
 var WebServer = null;
 var WebServerPort = 8000;
+
+var VideoDeviceName = "c920";
 
 var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
@@ -420,6 +430,29 @@ function GetDefaultSkeleton(FaceRect)
 	return Skeleton;
 }
 
+var EnableKalmanFilter = true;
+
+if ( EnableKalmanFilter )
+{
+	include('KalmanFilter.js');
+	var KalmanFilters = {};
+}
+
+function UpdateKalmanFilter(Name,NewValue)
+{
+	if ( !EnableKalmanFilter )
+		return NewValue;
+	
+	if ( KalmanFilters[Name] === undefined )
+		KalmanFilters[Name] = new KalmanFilter(NewValue);
+	let Filter = KalmanFilters[Name];
+	Filter.Push( NewValue );
+	let v = NewValue;
+	NewValue = Filter.GetEstimatedPosition(0);
+	Debug( Name + ": " + v + " -> " + NewValue );
+	return NewValue;
+}
+
 
 function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 {
@@ -450,7 +483,8 @@ function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 	
 	let PushFeature = function(Name,fx,fy)
 	{
-		//Debug("Push feature: " + Name + " at " + fx + "," + fy);
+		fx = UpdateKalmanFilter( Name+"_x", fx );
+		fy = UpdateKalmanFilter( Name+"_y", fy );
 		Skeleton[Name] = { x:fx, y:fy };
 	}
 	
@@ -762,9 +796,6 @@ function Main()
 	Window1.OnRender = function(){	WindowRender(Window1);	};
 	
 
-	
-	let VideoDeviceName = "isight";
-	
 	let LoadDevice = function(DeviceNames)
 	{
 		try
