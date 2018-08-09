@@ -449,7 +449,7 @@ function UpdateKalmanFilter(Name,NewValue)
 	Filter.Push( NewValue );
 	let v = NewValue;
 	NewValue = Filter.GetEstimatedPosition(0);
-	Debug( Name + ": " + v + " -> " + NewValue );
+	//Debug( Name + ": " + v + " -> " + NewValue );
 	return NewValue;
 }
 

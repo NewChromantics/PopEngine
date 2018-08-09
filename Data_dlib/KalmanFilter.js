@@ -7,8 +7,16 @@ function KalmanFilter(InitialPos,QNoise,RNoise)
 {
 	this.lastcorrected = InitialPos;
 	this.P_last = 0;
-	this.QNoise = QNoise || 0.05;
-	this.RNoise = RNoise || 0.50;
+	//	very slow to resolve. minimal damping
+	//	QNoise = 0.001;
+	//	RNoise = 0.80;
+
+	//	min damping but higher spring?
+	//	QNoise = 0.001;
+	//	RNoise = 2.10;
+	
+	this.QNoise = QNoise || 0.10;
+	this.RNoise = RNoise || 0.20;
 	this.TotalError = 0;
 	this.x_est_last = InitialPos;
 
