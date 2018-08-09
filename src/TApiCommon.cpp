@@ -288,7 +288,8 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 	auto Width = IntArray[0];
 	auto Height = IntArray[1];
 	auto Format = SoyPixelsFormat::Type::RGBA;
-	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ) );
+	auto& Heap = Params.mContainer.GetImageHeap();
+	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ), Heap );
 	This.SetPixels(Pixels);
 
 	return v8::Undefined(Params.mIsolate);
@@ -333,7 +334,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	BytesBuffer.Push( GetArrayBridge(Bytes) );
 
 	//	alloc pixels
-	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels );
+	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels(mContainer.GetImageHeap()) );
 	
 	if ( Soy::StringEndsWith( Filename, Png::FileExtensions, false ) )
 	{
@@ -522,6 +523,7 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
+	auto& mContainer = Params.mContainer;
 	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
@@ -538,7 +540,7 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	}
 	else
 	{
-		ConvertedPixels.reset( new SoyPixels(CurrentPixels) );
+		ConvertedPixels.reset( new SoyPixels(CurrentPixels,mContainer.GetImageHeap()) );
 		ConvertedPixels->SetFormat( SoyPixelsFormat::RGBA );
 		pPixels = ConvertedPixels.get();
 	}	
@@ -666,7 +668,7 @@ SoyPixels& TImageWrapper::GetPixels()
 	if ( mPixelsVersion == 0 && mPixels == nullptr )
 	{
 		std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-		mPixels.reset( new SoyPixels );
+		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
 		mPixelsVersion = 1;
 	}
 	
@@ -700,7 +702,7 @@ void TImageWrapper::OnOpenglTextureChanged()
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	mPixels.reset( new SoyPixels(NewPixels) );
+	mPixels.reset( new SoyPixels(NewPixels,mContainer.GetImageHeap()) );
 	mPixelsVersion = GetLatestVersion()+1;
 }
 
@@ -729,7 +731,7 @@ void TImageWrapper::ReadOpenglPixels()
 		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
 	//	if we have no pixels, alloc
 	if ( mPixels == nullptr )
-		mPixels.reset( new SoyPixels );
+		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
 
 	auto Format = SoyPixelsFormat::RGB;
 	auto Flip = false;

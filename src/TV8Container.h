@@ -247,6 +247,11 @@ public:
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,ArrayBridge<v8::Local<v8::Value>>&& Params);
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
 
+	
+	
+	//	less v8-y stuff
+	prmem::Heap&			GetImageHeap()	{	return mImageHeap;	}
+	
 private:
 	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
@@ -259,6 +264,9 @@ public:
 	
 	Array<TV8ObjectTemplate>		mObjectTemplates;
 	std::string						mRootDirectory;
+	
+private:
+	prmem::Heap						mImageHeap;
 };
 
 

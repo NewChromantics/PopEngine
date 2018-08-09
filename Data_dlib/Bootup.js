@@ -565,7 +565,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		
 		if ( !FaceRect )
 		{
-			SmallImageWidth = 256;
+			SmallImageWidth = 512;
 			SmallImageHeight = 256;
 		}
 		
@@ -583,6 +583,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 					Shader.SetUniform("Source", NewFrameImage, 0 );
 				}
 				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
+				NewFrameImage.Clear();
 			}
 			SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
 			//Debug("SmallImage.width=" + SmallImage.GetWidth() );
@@ -597,6 +598,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 				{
 					SmallImage = new Image();
 					SmallImage.Copy(NewFrameImage);
+					NewFrameImage.Clear();
 					SmallImage.Resize( SmallImageWidth, SmallImageHeight );
 					Resolve();
 				}

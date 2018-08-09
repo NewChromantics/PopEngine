@@ -93,6 +93,7 @@ const std::string& v8::CallbackInfo::GetRootDirectory() const
 
 
 TV8Container::TV8Container(const std::string& RootDirectory) :
+	mImageHeap		( true, true, "Image Heap", 0 , false ),
 	mRootDirectory	( RootDirectory ),
 #if V8_VERSION==5
 	mAllocator	( new PopV8Allocator )
