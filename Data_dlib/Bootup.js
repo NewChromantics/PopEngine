@@ -53,7 +53,7 @@ var VideoDeviceName = "c920";
 
 var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
-
+var RenderLastFrame = false;
 
 var LastFrameRateTimelapse = Date.now();
 var FrameCounters = {};
@@ -206,7 +206,7 @@ function WindowRender(RenderTarget)
 		{
 			if ( OutputImage != null )
 				Shader.SetUniform("Frame", OutputImage, 0 );
-			Shader.SetUniform("HasFrame", OutputImage!=null );
+			Shader.SetUniform("HasFrame", RenderLastFrame && OutputImage!=null );
 			
 			let LinesAndScores = GetSkeletonLinesAndScores( OutputSkeleton );
 			let Lines = LinesAndScores[0];
@@ -438,13 +438,19 @@ if ( EnableKalmanFilter )
 	var KalmanFilters = {};
 }
 
-function UpdateKalmanFilter(Name,NewValue)
+function UpdateKalmanFilter(Name,NewValue,TightNoise)
 {
 	if ( !EnableKalmanFilter )
 		return NewValue;
 	
+	TightNoise = TightNoise === true;
+	let Noise = TightNoise ? [0.10,0.99] : [0.20,0.20];
+	
 	if ( KalmanFilters[Name] === undefined )
-		KalmanFilters[Name] = new KalmanFilter(NewValue);
+	{
+		KalmanFilters[Name] = new KalmanFilter( NewValue, Noise[0], Noise[1] );
+	}
+	
 	let Filter = KalmanFilters[Name];
 	Filter.Push( NewValue );
 	let v = NewValue;
@@ -481,11 +487,37 @@ function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 		}
 	}
 	
-	let PushFeature = function(Name,fx,fy)
+	let FilterAroundNose = true;
+	let PushFeature;
+	
+	if ( FilterAroundNose )
 	{
-		fx = UpdateKalmanFilter( Name+"_x", fx );
-		fy = UpdateKalmanFilter( Name+"_y", fy );
-		Skeleton[Name] = { x:fx, y:fy };
+		//	filter nose
+		let NoseIndex = FaceLandMarkNames.indexOf("Nose");
+		let Nosex = FaceLandmarks[ (NoseIndex*2)+0 ];
+		let Nosey = FaceLandmarks[ (NoseIndex*2)+1 ];
+		Nosex = UpdateKalmanFilter( "BaseNoseX", Nosex, true );
+		Nosey = UpdateKalmanFilter( "BaseNoseY", Nosey, true );
+		
+		PushFeature = function(Name,fx,fy)
+		{
+			fx -= Nosex;
+			fy -= Nosey;
+			fx = UpdateKalmanFilter( Name+"_x", fx, false );
+			fy = UpdateKalmanFilter( Name+"_y", fy, false );
+			fx += Nosex;
+			fy += Nosey;
+			Skeleton[Name] = { x:fx, y:fy };
+		}
+	}
+	else
+	{
+		PushFeature = function(Name,fx,fy)
+		{
+			fx = UpdateKalmanFilter( Name+"_x", fx );
+			fy = UpdateKalmanFilter( Name+"_y", fy );
+			Skeleton[Name] = { x:fx, y:fy };
+		}
 	}
 	
 	for ( let i=0;	i<FaceLandmarks.length;	i+=2 )
