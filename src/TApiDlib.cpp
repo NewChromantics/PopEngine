@@ -24,6 +24,7 @@ void ApiDlib::Bind(TV8Container& Container)
 }
 
 
+
 TDlibWrapper::TDlibWrapper(size_t ThreadCount) :
 	mContainer		( nullptr )
 {
@@ -173,9 +174,13 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 	{
 		try
 		{
-			auto& Pixels = TargetImage->GetPixels();
+			auto PixelsMeta = TargetImage->GetPixels().GetMeta();
+			auto CopyPixels = [TargetImage](SoyPixelsImpl& Pixels)
+			{
+				TargetImage->GetPixels(Pixels);
+			};
 			BufferArray<TFace,100> Faces;
-			Dlib.GetFaceLandmarks(Pixels, GetArrayBridge(Faces) );
+			Dlib.GetFaceLandmarks( PixelsMeta, CopyPixels, GetArrayBridge(Faces) );
 		
 			//	temp
 			BufferArray<float,1000> Features;
@@ -259,10 +264,14 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Para
 		try
 		{
 			//	gr: copy pixels
-			SoyPixels Pixels;
-			TargetImage->GetPixels(Pixels);
-			auto Face = Dlib.GetFaceLandmarks(Pixels, TargetRect );
-			
+			auto PixelsMeta = TargetImage->GetPixels().GetMeta();
+			auto CopyPixels = [TargetImage](SoyPixelsImpl& Pixels)
+			{
+				TargetImage->GetPixels(Pixels);
+			};
+			BufferArray<TFace,100> Faces;
+			auto Face = Dlib.GetFaceLandmarks( PixelsMeta, CopyPixels, TargetRect );
+
 			//	temp
 			BufferArray<float,1000> Features;
 			{
@@ -344,22 +353,41 @@ public:
 };
 
 
-dlib::array2d<dlib::rgb_pixel> GetImageFromPixels(const SoyPixelsImpl &Pixels)
+void GetImageFromPixels(const SoyPixelsMeta& PixelsMeta,dlib::array2d<dlib::rgb_pixel>& DlibImage,std::function<void(SoyPixelsImpl&)>& CopyPixels)
 {
 	using namespace dlib;
+	
+	//	alloc image
+	DlibImage.set_size( PixelsMeta.GetHeight(), PixelsMeta.GetWidth() );
+	auto* ImgPixelsByte = &DlibImage.begin()->red;
+	auto DlibImageDataSize = DlibImage.width_step() * DlibImage.nr();
+	SoyPixelsRemote DlibPixels( ImgPixelsByte, DlibImage.nc(), DlibImage.nr(), DlibImageDataSize, SoyPixelsFormat::RGB );
+
+	if ( PixelsMeta.GetFormat() == DlibPixels.GetFormat() )
+	{
+		CopyPixels( DlibPixels );
+	}
+	else
+	{
+		std::stringstream TimerName;
+		TimerName << "dlib converting " << PixelsMeta.GetFormat() << " pixels to " << DlibPixels.GetFormat();
+		Soy::TScopeTimerPrint Timer_Convert(TimerName.str().c_str(),TIMER_WARNING_MIN_MS);
+
+		SoyPixels NonRgbPixels;
+		CopyPixels( NonRgbPixels );
+		NonRgbPixels.SetFormat(SoyPixelsFormat::RGB);
+		DlibPixels.Copy( NonRgbPixels );
+	}
+	/*
 	array2d<rgb_pixel> img;
 	img.set_size( Pixels.GetHeight(), Pixels.GetWidth() );
 	
 	if ( Pixels.GetFormat() == SoyPixelsFormat::RGB )
 	{
 		Soy::TScopeTimerPrint Timer_1("FindFace: Copying pixels to img",TIMER_WARNING_MIN_MS);
-		auto* ImgPixelsByte = &img.begin()->red;
-		SoyPixelsRemote imgPixels( ImgPixelsByte, Pixels.GetWidth(), Pixels.GetHeight(), Pixels.GetMeta().GetDataSize(), Pixels.GetFormat() );
-		imgPixels.Copy( Pixels );
 	}
 	else
 	{
-		std::Debug << "dlib converting " << Pixels.GetFormat() << " pixels to " << SoyPixelsFormat::RGB << "..." << std::endl;
 		for ( int y=0;	y<img.nr();	y++ )
 		{
 			auto Row = img[y];
@@ -379,11 +407,11 @@ dlib::array2d<dlib::rgb_pixel> GetImageFromPixels(const SoyPixelsImpl &Pixels)
 			}
 		}
 	}
-	return img;
+	 */
 }
 
 
-void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Faces)
+void TDlib::GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(SoyPixelsImpl&)> CopyPixels,ArrayBridge<TFace>&& Faces)
 {
 	Soy::TScopeTimerPrint Timer_FindFace("TDlib::GetFaceLandmarks",TIMER_WARNING_MIN_MS);
 
@@ -393,7 +421,8 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	// each face in an image.
 	auto& detector = *mFaceDetector;
 
-	auto img = GetImageFromPixels( Pixels );
+	dlib::array2d<dlib::rgb_pixel> img;
+	GetImageFromPixels( PixelsMeta, img, CopyPixels );
 
 	//load_image(img, argv[i]);
 	// Make the image larger so we can detect small faces.
@@ -417,7 +446,7 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 	{
 		auto& FaceDetected = FaceRects[f];
 		auto& FaceRect = FaceDetected.rect;
-		std::Debug << "Extracting face " << f << "/" << FaceRects.size() << " landmarks... Score = " << FaceDetected.detection_confidence << std::endl;
+		//std::Debug << "Extracting face " << f << "/" << FaceRects.size() << " landmarks... Score = " << FaceDetected.detection_confidence << std::endl;
 		
 		Soy::Rectf FaceRectf( FaceRect.left(), FaceRect.top(), FaceRect.width(), FaceRect.height() );
 		Soy::Rectf ImageRect( 0, 0, Width, Height );
@@ -427,14 +456,15 @@ void TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,ArrayBridge<TFace>&& Fa
 		Faces.PushBack(NewFace);
 	}
 
-	std::Debug << "found " << Faces.GetSize() << " faces" << std::endl;
+	//std::Debug << "found " << Faces.GetSize() << " faces" << std::endl;
 }
 
 
-TFace TDlib::GetFaceLandmarks(const SoyPixelsImpl &Pixels,Soy::Rectf FaceRect)
+TFace TDlib::GetFaceLandmarks(const SoyPixelsMeta& PixelsMeta,std::function<void(SoyPixelsImpl&)> CopyPixels,Soy::Rectf FaceRect)
 {
-	auto img = GetImageFromPixels( Pixels );
-	
+	dlib::array2d<dlib::rgb_pixel> img;
+	GetImageFromPixels( PixelsMeta, img, CopyPixels );
+
 	return GetFaceLandmarks( img, FaceRect );
 }
 
