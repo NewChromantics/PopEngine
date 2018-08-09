@@ -733,7 +733,8 @@ void TImageWrapper::ReadOpenglPixels()
 	if ( mPixels == nullptr )
 		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
 
-	auto Format = SoyPixelsFormat::RGB;
+	//auto Format = SoyPixelsFormat::RGB;
+	auto Format = SoyPixelsFormat::Greyscale;
 	auto Flip = false;
 	
 	mPixels->GetMeta().DumbSetFormat(Format);
