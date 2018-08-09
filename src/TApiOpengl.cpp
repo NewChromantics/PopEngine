@@ -222,7 +222,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	auto ResolverPersistent = std::make_shared<V8Storage<Promise::Resolver>>( Params.GetIsolate(), Resolver );
 
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
@@ -251,7 +251,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto OnCompleted = [=](Local<Context> Context)
 	{
 		//	gr: can't do this unless we're in the javascript thread...
-		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 		auto Message = String::NewFromUtf8( Isolate, "Yay!");
 		ResolverLocal->Resolve( Message );
 	};
@@ -308,7 +308,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				//	gr: does this need to be an exception? string?
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
@@ -339,8 +339,8 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
-	
+	auto ResolverPersistent = std::make_shared<V8Storage<Promise::Resolver>>( Params.GetIsolate(), Resolver );
+
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
@@ -357,7 +357,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 	auto OnCompleted = [=](Local<Context> Context)
 	{
 		//	gr: can't do this unless we're in the javascript thread...
-		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 		auto Message = String::NewFromUtf8( Isolate, "Yay!");
 		ResolverLocal->Resolve( Message );
 	};
@@ -453,7 +453,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				//	gr: does this need to be an exception? string?
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
@@ -483,8 +483,8 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
-	
+	auto ResolverPersistent = std::make_shared<V8Storage<Promise::Resolver>>( Params.GetIsolate(), Resolver );
+
 	bool StealThread = false;
 	if ( Arguments[1]->IsBoolean() )
 		StealThread = Local<Number>::Cast(Arguments[1])->BooleanValue();
@@ -509,7 +509,7 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 	auto OnCompleted = [=](Local<Context> Context)
 	{
 		//	gr: can't do this unless we're in the javascript thread...
-		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+		auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 		auto Message = String::NewFromUtf8( Isolate, "Yay!");
 		ResolverLocal->Resolve( Message );
 	};
@@ -530,7 +530,7 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				//	gr: does this need to be an exception? string?
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)

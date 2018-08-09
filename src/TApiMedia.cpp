@@ -96,7 +96,7 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	auto ResolverPersistent = std::make_shared<V8Storage<Promise::Resolver>>( Params.GetIsolate(), Resolver );
 
 	auto* Container = &Params.mContainer;
 	
@@ -115,7 +115,7 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 			{
 				//	return face points here
 				//	gr: can't do this unless we're in the javascript thread...
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				//ResolverPersistent.Reset();
 				auto GetValue = [&](size_t Index)
 				{
@@ -134,7 +134,7 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent );
+				auto ResolverLocal = v8::GetLocal( *Isolate, ResolverPersistent->mPersistent );
 				//ResolverPersistent.Reset();
 				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
 				ResolverLocal->Reject( Error );
