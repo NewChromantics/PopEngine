@@ -53,10 +53,20 @@ var VideoDeviceName = "c920";
 
 var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
-var RenderLastFrame = false;
+var RenderLastFrame = true;
+var AlwaysFindFaceRect = true;
+var EnableKalmanFilter = false;
+
+var DlibThreadCount = 1;
+var ShoulderToHeadWidthRatio = 0.45;
+var HeadWidthToHeightRatio = 2.1;
+var NoseHeightInHead = 0.5;
+
+
 
 var LastFrameRateTimelapse = Date.now();
 var FrameCounters = {};
+
 
 function CheckFrameRateLapse()
 {
@@ -430,7 +440,6 @@ function GetDefaultSkeleton(FaceRect)
 	return Skeleton;
 }
 
-var EnableKalmanFilter = true;
 
 if ( EnableKalmanFilter )
 {
@@ -541,14 +550,9 @@ function EnumDevices(DeviceNames)
 	DeviceNames.forEach( EnumDevice );
 }
 
-var DlibThreadCount = 3;
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
 var FaceProcessor = null;
 var CurrentProcessingImageCount = 0;
-
-var ShoulderToHeadWidthRatio = 0.45;
-var HeadWidthToHeightRatio = 2.1;
-var NoseHeightInHead = 0.5;
 
 
 function GetSkeletonFaceRect(Skeleton)
@@ -623,19 +627,23 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 	try
 	{
 		let FaceRect = Skeleton ? Skeleton.FaceRect : null;
+		if ( AlwaysFindFaceRect )
+			FaceRect = null;
+		
 		CurrentProcessingImageCount++;
 
 		let ResizePromise = null;
 		let SmallImage = null;
-		//let SmallImageWidth = NewFrameImage.GetWidth();
-		//let SmallImageHeight = NewFrameImage.GetHeight();
-		let SmallImageWidth = 640;
-		let SmallImageHeight = 480;
+		let SmallImageWidth = NewFrameImage.GetWidth();
+		let SmallImageHeight = NewFrameImage.GetHeight();
+		//SmallImageWidth = 640;
+		//SmallImageHeight = 480;
 		
+		//	the face search looks for 80x80 size faces
 		if ( !FaceRect )
 		{
-			SmallImageWidth = 512;
-			SmallImageHeight = 256;
+			SmallImageWidth = 80 * 8;
+			SmallImageHeight = 80 * 4;
 		}
 		
 		if ( OpenglContext )
@@ -655,6 +663,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 				NewFrameImage.Clear();
 			}
 			SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
+			SmallImage.SetLinearFilter(true);
 			//Debug("SmallImage.width=" + SmallImage.GetWidth() );
 			let ReadBackPixels = true;
 			ResizePromise = OpenglContext.Render( SmallImage, ResizeRender, ReadBackPixels );
