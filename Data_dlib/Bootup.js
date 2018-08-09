@@ -487,6 +487,9 @@ function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 		}
 	}
 	
+	//	update rect
+	Skeleton.FaceRect = FaceRect;
+	
 	let FilterAroundNose = true;
 	let PushFeature;
 	
