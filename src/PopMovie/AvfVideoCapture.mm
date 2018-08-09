@@ -525,7 +525,8 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 		return 0;
 	};
 	Array<OSType> _TryPixelFormats;
-	SortArrayLambda<OSType> TryPixelFormats( GetArrayBridge(_TryPixelFormats), SortFormats );
+	auto _TryPixelFormatsBridge = GetArrayBridge(_TryPixelFormats);
+	SortArrayLambda<OSType> TryPixelFormats( _TryPixelFormatsBridge, SortFormats );
 	{
 		NSArray* AvailibleFormats = [Output availableVideoCVPixelFormatTypes];
 		Soy::Assert( AvailibleFormats != nullptr, "availableVideoCVPixelFormatTypes returned null array" );
