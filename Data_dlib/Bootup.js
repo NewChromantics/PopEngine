@@ -69,6 +69,55 @@ var LastFrameRateTimelapse = Date.now();
 var FrameCounters = {};
 
 
+function Range(Min,Max,Value)
+{
+	return (Value-Min) / (Max-Min);
+}
+
+function Lerp(Min,Max,Value)
+{
+	return Min + ( Value * (Max-Min) );
+}
+
+
+function ClampRect01(Rect)
+{
+	if ( Rect[0] < 0 )
+	{
+		Rect[2] -= Rect[0];
+		Rect[0] = 0;
+	}
+	if ( Rect[1] < 0 )
+	{
+		Rect[3] -= Rect[1];
+		Rect[1] = 0;
+	}
+	if ( Rect[0]+Rect[2] > 1 )
+	{
+		Rect[2] -= (Rect[0]+Rect[2])-1;
+	}
+	if ( Rect[1]+Rect[3] > 1 )
+	{
+		Rect[3] -= (Rect[1]+Rect[3])-1;
+	}
+}
+
+function ScaleRect(Rect,Scale)
+{
+	let w = Rect[2];
+	let h = Rect[3];
+	let cx = Rect[0] + (w/2);
+	let cy = Rect[1] + (h/2);
+	
+	//	scale size
+	w *= Scale;
+	h *= Scale;
+
+	let l = cx - (w/2);
+	let t = cy - (h/2);
+	return [l,t,w,h];
+}
+
 function CheckFrameRateLapse()
 {
 	let Now = Date.now();
@@ -137,7 +186,13 @@ function GetSkeletonLinesAndScores(Skeleton)
 	//	make rect lines blue
 	Lines = Lines.concat( GetRectLines(Skeleton.FaceRect) );
 	Scores = Scores.concat( [9,9,9,9] );
-
+	
+	if ( Skeleton.ClipRect )
+	{
+		Lines = Lines.concat( GetRectLines(Skeleton.ClipRect) );
+		Scores = Scores.concat( [0.5,0.5,0.5,0.5] );
+	}
+	
 	let PushLine = function(namea,nameb,Score)
 	{
 		Score = Score || 99;
@@ -469,7 +524,7 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise)
 }
 
 
-function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
+function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,SaveFilename,Skeleton)
 {
 	UpdateFrameCounter('NewFace');
 	
@@ -479,9 +534,6 @@ function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 		OnOutputSkeleton( Skeleton, Image, SaveFilename );
 		return;
 	}
-	
-	//	first 4 floats are the rect
-	let FaceRect = [ FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift(), FaceLandmarks.shift() ];
 
 	//	if no skeleton, make one
 	if ( !Skeleton )
@@ -498,7 +550,8 @@ function OnNewFace(FaceLandmarks,Image,SaveFilename,Skeleton)
 	
 	//	update rect
 	Skeleton.FaceRect = FaceRect;
-	
+	Skeleton.ClipRect = ClipRect;
+
 	let FilterAroundNose = true;
 	let PushFeature;
 	
@@ -621,16 +674,54 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 	{
 		Debug("Failed to get facelandmarks: " + Error);
 		CurrentProcessingImageCount--;
-		OnNewFace(null,NewFrameImage,SaveFilename,Skeleton);
+		OnNewFace(null,null,null,NewFrameImage,SaveFilename,Skeleton);
 	}
 
-	let OnFace = function(Face,Image)
+	let OnFace = function(Face,Image,ClipRect)
 	{
+		Image = NewFrameImage;
+		Debug("ClipRect=" + ClipRect);
+		//	get the inverse rect
+		let Unnormalise = function(x,y)
+		{
+			let cx = x;
+			let cy = y;
+			let ix = Lerp( ClipRect[0], ClipRect[0]+ClipRect[2], cx );
+			let iy = Lerp( ClipRect[1], ClipRect[1]+ClipRect[3], cy );
+			return [ix,iy];
+		}
+		
+		let UnnormaliseRect = function(Rect)
+		{
+			let tl = Unnormalise( Rect[0], Rect[1] );
+			let br = Unnormalise( Rect[0]+Rect[2], Rect[1]+Rect[3] );
+			Rect[0] = tl[0];
+			Rect[1] = tl[1];
+			Rect[2] = br[0] - tl[0];
+			Rect[3] = br[1] - tl[1];
+		}
+		
+		
 		CurrentProcessingImageCount--;
 		//Debug("OnFace: " + typeof Face );
 		if ( Face.length == 0 )
 			Face = null;
-		OnNewFace(Face,Image,SaveFilename,Skeleton);
+		
+		let FaceRect = null;
+		
+		//	need to put uv's back to image space
+		if ( Face != null )
+		{
+			FaceRect = [ Face.shift(), Face.shift(), Face.shift(), Face.shift() ];
+			UnnormaliseRect( FaceRect );
+			for ( let i=0;	i<Face.length;	i+=2 )
+			{
+				let xy = Unnormalise( Face[i+0], Face[i+1] );
+				Face[i+0] = xy[0];
+				Face[i+1] = xy[1];
+			}
+		}
+		OnNewFace(Face,FaceRect,ClipRect,Image,SaveFilename,Skeleton);
 	}
 	
 
@@ -642,8 +733,17 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 	try
 	{
 		let FaceRect = Skeleton ? Skeleton.FaceRect : null;
+		let ClipRect = null;
+		
 		if ( AlwaysFindFaceRect )
+		{
+			if ( FaceRect )
+			{
+				ClipRect = ScaleRect( FaceRect, 1.4 );
+				ClampRect01( ClipRect );
+			}
 			FaceRect = null;
+		}
 		
 		CurrentProcessingImageCount++;
 
@@ -658,9 +758,21 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		//	the face search looks for 80x80 size faces
 		if ( !FaceRect )
 		{
-			SmallImageWidth = 400;
-			SmallImageHeight = SmallImageWidth * HeightRatio;
+			if ( ClipRect == null )
+			{
+				SmallImageWidth = 500;
+				SmallImageHeight = SmallImageWidth * HeightRatio;
+			}
+			else
+			{
+				//ClipRect[3] = ClipRect[2] * HeightRatio;
+				SmallImageWidth = (NewFrameImage.GetWidth()/2) * ClipRect[2];
+				SmallImageHeight = (NewFrameImage.GetHeight()/2) * ClipRect[3];
+			}
 		}
+		
+		if ( ClipRect == null )
+			ClipRect = [0,0,1,1];
 		
 		if ( OpenglContext )
 		{
@@ -673,10 +785,11 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 				
 				let SetUniforms = function(Shader)
 				{
+					Shader.SetUniform("ClipRect", ClipRect );
 					Shader.SetUniform("Source", NewFrameImage, 0 );
 				}
 				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
-				NewFrameImage.Clear();
+				//NewFrameImage.Clear();
 			}
 			SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
 			SmallImage.SetLinearFilter(true);
@@ -728,7 +841,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		
 		ResizePromise
 		.then( GetFindFacePromise )
-		.then( function(f){	OnFace(f,SmallImage); } )
+		.then( function(f){	OnFace(f,SmallImage,ClipRect); } )
 		.catch( OnFaceError );
 	}
 	catch(e)
