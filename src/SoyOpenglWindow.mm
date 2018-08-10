@@ -195,6 +195,7 @@ bool TOpenglWindow::Iteration()
 	
 	auto RedrawImpl = [this]
 	{
+		//	gr: OSX/Xcode will give a warning if this is not called on the main thread
 		[mView->mView setNeedsDisplay:YES];
 		//[mView->mView display];
 	};

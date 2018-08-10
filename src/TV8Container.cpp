@@ -685,7 +685,7 @@ std::string v8::GetString(Local<Value> Str)
 		throw Soy::AssertException("Not a string");
 	
 	String::Utf8Value ExceptionStr(Str);
-	auto ExceptionCStr = *ExceptionStr;
+	const auto* ExceptionCStr = *ExceptionStr;
 	if ( ExceptionCStr == nullptr )
 		ExceptionCStr = "<null> (Possibly not a string)";
 	
