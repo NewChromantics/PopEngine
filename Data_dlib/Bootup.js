@@ -56,9 +56,10 @@ var WebServerPort = 8000;
 var VideoDeviceNames = ["c920","isight","facetime"];
 
 var FlipOutputSkeleton = true;
-var FlipInputSkeleton = true;
+var FlipInputSkeleton = false;
 var RenderLastFrame = true;
 var RenderRects = true;
+var JustShowCamera = false;
 
 var AlwaysFindFaceRect = true;
 var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
@@ -1038,7 +1039,12 @@ function Main()
 			let VideoCapture = new MediaSource(VideoDeviceName);
 			let FindFaceIfNoSkeleton = true;
 			let OpenglContext = Window1;
+			
 			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,FindFaceIfNoSkeleton,LastSkeleton,OpenglContext);	};
+
+			//	just webcam mode
+			if ( JustShowCamera )
+				VideoCapture.OnNewFrame = function(img)	{	OutputImage = img;	};
 		}
 		catch(e)
 		{

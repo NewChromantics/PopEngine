@@ -280,9 +280,10 @@
 		{
 			keypoint.position.x /= ImageWidth;
 			keypoint.position.y /= ImageHeight;
-			keypoint.position.y = 1-keypoint.position.y;
 		};
 		NewPose.keypoints.forEach ( RescaleCoords );
+		NewPose.ImageWidth = ImageWidth;
+		NewPose.ImageHeight = ImageHeight;
 		
 		OnPoseFound(NewPose);
 	}
