@@ -134,8 +134,8 @@ private:
 class WebSocket::TRequestProtocol : public Http::TRequestProtocol
 {
 public:
-	TRequestProtocol() : mHandshake(* new THandshakeMeta() ), mMessage( *new TMessageBuffer() )	{	throw Soy::AssertException("Should not be called");	}
-	TRequestProtocol(THandshakeMeta& Handshake,TMessageBuffer& Message) :
+	TRequestProtocol() : mHandshake(* new THandshakeMeta() ) 	{	throw Soy::AssertException("Should not be called");	}
+	TRequestProtocol(THandshakeMeta& Handshake,std::shared_ptr<TMessageBuffer> Message) :
 		mHandshake	( Handshake ),
 		mMessage	( Message )
 	{
@@ -153,7 +153,7 @@ public:
 	std::shared_ptr<Soy::TWriteProtocol>	mReplyMessage;
 	
 	THandshakeMeta&		mHandshake;	//	persistent handshake data etc
-	TMessageBuffer&		mMessage;	//	persistent message for multi-frame messages
+	std::shared_ptr<TMessageBuffer>		mMessage;	//	persistent message for multi-frame messages
 };
 
 

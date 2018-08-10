@@ -46,7 +46,10 @@ public:
 	SoyRef										mConnectionRef;
 	std::function<void(const std::string&)>		mOnTextMessage;
 	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
-	WebSocket::THandshakeMeta					mHandshake;
+	WebSocket::THandshakeMeta					mHandshake;				//	handshake probably doesn't need a lock as its only modified by packets
+	//	current message gets reset & used & allocated on different threads though
+	//	I think it may need an id so it doesnt get passed along to a packet WHILST we finish decoding the last one? (recv is serial though...)
+	std::recursive_mutex						mCurrentMessageLock;
 	std::shared_ptr<WebSocket::TMessageBuffer>	mCurrentMessage;
 };
 

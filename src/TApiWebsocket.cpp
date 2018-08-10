@@ -289,23 +289,27 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 	}
 	
 	//	packet with data!
-	auto& Packet = pData->mMessage;
-	if ( Packet.IsCompleteTextMessage() )
+	if ( pData->mMessage )
 	{
-		mOnTextMessage( Packet.mTextData );
-		//	gr: there's a bit of a disconnect here between Some-reponse-packet data and our persistent data
-		//		should probbaly change this to like
-		//	pData->PopTextMessage()
-		//		and a call back to owner to clear. or a "alloc new data" thing for the response class
-		mCurrentMessage.reset();
+		auto& Packet = *pData->mMessage;
+		if ( Packet.IsCompleteTextMessage() )
+		{
+			mOnTextMessage( Packet.mTextData );
+			//	gr: there's a bit of a disconnect here between Some-reponse-packet data and our persistent data
+			//		should probbaly change this to like
+			//	pData->PopTextMessage()
+			//		and a call back to owner to clear. or a "alloc new data" thing for the response class
+			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
+			mCurrentMessage.reset();
+		}
+		if ( Packet.IsCompleteBinaryMessage() )
+		{
+			mOnBinaryMessage( Packet.mBinaryData );
+			//	see above
+			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
+			mCurrentMessage.reset();
+		}
 	}
-	if ( Packet.IsCompleteBinaryMessage() )
-	{
-		mOnBinaryMessage( Packet.mBinaryData );
-		//	see above
-		mCurrentMessage.reset();
-	}
-
 }
 
 
@@ -338,10 +342,11 @@ void TWebsocketServer::Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message
 std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 {
 	//	this needs revising... or locking at least
+	std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
 	if ( !mCurrentMessage )
 		mCurrentMessage.reset( new WebSocket::TMessageBuffer() );
 	
-	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,*mCurrentMessage);
+	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,mCurrentMessage);
 	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
 }
 
