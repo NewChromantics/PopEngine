@@ -35,6 +35,8 @@ var ResizeFragShader = null;
 //	skeleton + face
 var OutputSkeleton = null;
 var OutputImage = null;
+var OutputFilename = "../../../../SkeletonOutputFrames.json";
+var OutputSkipFirstFrames = 20;
 
 //	last simple skeleton we recieved
 var LastSkeleton = null;
@@ -407,12 +409,9 @@ if ( FaceLandMarkNames.length != 68 )
 
 
 //	get json, but in the original keypoint format, so that unity can still process skeleton from posenet
-function GetSkeletonJson(Skeleton,Pretty)
+function GetSkeletonJson(Skeleton,Pretty,KeypointCountArray)
 {
 	let KeypointSkeleton = {};
-	
-	//	convert any position to a keypoint
-	KeypointSkeleton.ProcessingTimeMs = 999;
 	
 	if ( Skeleton == null )
 	{
@@ -420,10 +419,13 @@ function GetSkeletonJson(Skeleton,Pretty)
 	}
 	else
 	{
-		KeypointSkeleton.score = 0.45789;
+		//	gr: todo: copy other keys automatically
+		//KeypointSkeleton.score = 0.45789;
+		KeypointSkeleton.Time = Skeleton.Time;
 		KeypointSkeleton.FaceRect = Skeleton.FaceRect;
 		KeypointSkeleton.keypoints = [];
 		
+		//	convert any position to a keypoint
 		let PushKeypoint = function(Name)
 		{
 			if ( Name.includes("!") || Name == "FaceRect" )
@@ -443,6 +445,7 @@ function GetSkeletonJson(Skeleton,Pretty)
 			let Keypoint = { part:Name, position:Pos, score:Score };
 			
 			KeypointSkeleton.keypoints.push(Keypoint);
+			KeypointCountArray[0]++;
 		}
 		let Keys = Object.keys(Skeleton);
 		Keys.forEach( PushKeypoint );
@@ -453,7 +456,7 @@ function GetSkeletonJson(Skeleton,Pretty)
 }
 
 
-function OnOutputSkeleton(Skeleton,Image,SaveFilename)
+function OnOutputSkeleton(Skeleton,Image)
 {
 	//	try and free unused memory manually
 	if ( OutputImage != null && OutputImage != Image )
@@ -461,14 +464,34 @@ function OnOutputSkeleton(Skeleton,Image,SaveFilename)
 	OutputImage = Image;
 	OutputSkeleton = Skeleton;
 	
-	let Pretty = true;
-	let Json = (SaveFilename || ServerSkeletonSender) ? GetSkeletonJson(Skeleton,Pretty) : null;
+	if ( OutputSkeleton == null )
+		return;
+	
+	if ( OutputSkipFirstFrames-- > 0 )
+		return;
+	
+	//	nowhere to output
+	let SaveFilename = OutputFilename;
+	if ( !SaveFilename && !ServerSkeletonSender )
+		return;
+	
+	OutputSkeleton.Time = /*Image.Time || */Date.now();
+	
+	let Pretty = false;
+	let KeypointCount = [0];
+	let Json = GetSkeletonJson(OutputSkeleton,Pretty,KeypointCount) + "\n";
 
-	if ( SaveFilename != undefined )
+	if ( KeypointCount[0] == 0 )
+	{
+		Debug("No keypoints");
+		return;
+	}
+	
+	if ( SaveFilename )
 	{
 		try
 		{
-			WriteStringToFile( SaveFilename, Json );
+			WriteStringToFile( SaveFilename, Json, true );
 		}
 		catch(e)
 		{
@@ -544,14 +567,14 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise)
 }
 
 
-function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,SaveFilename,Skeleton)
+function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,Skeleton)
 {
 	UpdateFrameCounter('NewFace');
 	
 	//	handle no-face
 	if ( FaceLandmarks == null )
 	{
-		OnOutputSkeleton( Skeleton, Image, SaveFilename );
+		OnOutputSkeleton( Skeleton, Image );
 		return;
 	}
 
@@ -610,7 +633,7 @@ function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,SaveFilename,Skeleton)
 		PushFeature( FeatureName, FaceLandmarks[i+0], FaceLandmarks[i+1] );
 	}
 	
-	OnOutputSkeleton( Skeleton, Image, SaveFilename );
+	OnOutputSkeleton( Skeleton, Image );
 }
 
 function EnumDevices(DeviceNames)
@@ -658,7 +681,7 @@ function GetSkeletonFaceRect(Skeleton)
 
 var AlwaysThisFrame = null;
 
-function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
+function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 {
 	UpdateFrameCounter('CameraFrameRate');
 
@@ -693,7 +716,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 	{
 		Debug("Failed to get facelandmarks: " + Error);
 		CurrentProcessingImageCount--;
-		OnNewFace(null,null,null,NewFrameImage,SaveFilename,Skeleton);
+		OnNewFace(null,null,null,NewFrameImage,Skeleton);
 	}
 
 	let OnFace = function(Face,Image,ClipRect)
@@ -739,7 +762,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 				Face[i+1] = xy[1];
 			}
 		}
-		OnNewFace(Face,FaceRect,ClipRect,Image,SaveFilename,Skeleton);
+		OnNewFace(Face,FaceRect,ClipRect,Image,Skeleton);
 	}
 	
 
@@ -1000,7 +1023,7 @@ function Main()
 			let VideoCapture = new MediaSource(VideoDeviceName);
 			let FindFaceIfNoSkeleton = true;
 			let OpenglContext = Window1;
-			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,null,FindFaceIfNoSkeleton,LastSkeleton,OpenglContext);	};
+			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,FindFaceIfNoSkeleton,LastSkeleton,OpenglContext);	};
 		}
 		catch(e)
 		{
