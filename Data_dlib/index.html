@@ -78,6 +78,9 @@
 	var ProcessingImage = null;
 	var Websocket = null;
 	var WebsocketReconnect = null;
+	var CameraWidth = 640;
+	var CameraRatio = 1920/1080;	//640/480
+	var CameraHeight = 640/CameraRatio;
 	
 	
 	function IsString(Variable)
@@ -382,8 +385,8 @@
 			throw new Error('Browser API navigator.mediaDevices.getUserMedia not available');
 		}
 		
-		let videoWidth = 640;
-		let videoHeight = 480;
+		let videoWidth = CameraWidth;
+		let videoHeight = CameraHeight;
 		VideoElement.width = videoWidth;
 		VideoElement.height = videoHeight;
 		
