@@ -92,7 +92,7 @@ TProtocolState::Type WebSocket::TRequestProtocol::Decode(TStreamBuffer& Buffer)
 			return TProtocolState::Disconnect;
 		
 		//	decode body
-		return DecodeBody( Header, mMessage, Buffer );
+		return DecodeBody( Header, *mMessage, Buffer );
 	}
 	catch(std::exception& e)
 	{
@@ -426,14 +426,15 @@ bool WebSocket::TMessageHeader::Decode(TStreamBuffer& Buffer)
 	//	peek the max we might need (this is variable, but expecting data after anyway that we wont read)
 	auto MaxBits = 32 + 64;	//	worst case, this is the most amount of bits we'll need
 	Array<char> HeaderData;
+	auto HeaderDataBridge = GetArrayBridge(HeaderData);
 	
 	//	gr: if it's EOF, then there will be no more data, so read all we can (probably just a "disconnect" websocket header when its a few bytes)
 	auto MaxBytes = std::min<size_t>( MaxBits / 8, Buffer.GetBufferedSize() );
 	HeaderData.SetSize( MaxBits/8 );
 	
-	if ( !Buffer.Peek( GetArrayBridge(HeaderData) ) )
+	if ( !Buffer.Peek( HeaderDataBridge ) )
 		return false;
-	TBitReader BitReader( GetArrayBridge(HeaderData) );
+	TBitReader BitReader( HeaderDataBridge );
 
 	//	return false & no data == error
 	//	return false & MoreData == need more data
