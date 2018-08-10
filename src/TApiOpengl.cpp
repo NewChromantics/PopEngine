@@ -1639,12 +1639,12 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 	auto pShader = This.mShader;
 	auto& Shader = *pShader;
 	
-	auto* UniformName = *String::Utf8Value(Arguments[0]);
-	auto Uniform = Shader.GetUniform( UniformName );
+	auto UniformName = v8::GetString(Arguments[0]);
+	auto Uniform = Shader.GetUniform( UniformName.c_str() );
 	if ( !Uniform.IsValid() )
 	{
 		std::stringstream Error;
-		Error << "Shader missing uniform " << UniformName;
+		Error << "Shader missing uniform \"" << UniformName << "\"";
 		throw Soy::AssertException(Error.str());
 	}
 
