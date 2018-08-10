@@ -4,6 +4,8 @@
 
 using namespace v8;
 
+const char Window_TypeName[] = "OpenglWindow";
+
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
 const char SetViewport_FunctionName[] = "SetViewport";
@@ -41,7 +43,7 @@ DEFINE_IMMEDIATE(drawElements);
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("OpenglWindow", TWindowWrapper::CreateTemplate, nullptr );
+	Container.BindObjectType( TWindowWrapper::GetObjectTypeName(), TWindowWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TWindowWrapper> );
 	Container.BindObjectType("OpenglShader", TShaderWrapper::CreateTemplate, nullptr );
 }
 
@@ -57,87 +59,50 @@ TWindowWrapper::~TWindowWrapper()
 
 void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 {
-	mWindow->Clear( RenderTarget );
+	if ( !mWindow )
+	{
+		std::Debug << "Should there be a window here in OnRender?" << std::endl;
+	}
+	else
+	{
+		mWindow->Clear( RenderTarget );
+	}
 	
 	//  call javascript
-	TV8Container& Container = *mContainer;
 	auto Runner = [&](Local<Context> context)
 	{
 		auto& isolate = *context->GetIsolate();
 		auto This = Local<Object>::New( &isolate, this->mHandle );
-		Container.ExecuteFunc( context, "OnRender", This );
+		mContainer.ExecuteFunc( context, "OnRender", This );
 	};
-	Container.RunScoped( Runner );
+	mContainer.RunScoped( Runner );
 }
 
 
-void TWindowWrapper::OnFree(const v8::WeakCallbackInfo<TWindowWrapper>& WeakCallbackData)
-{
-	std::Debug << "Freeing TWindowWrapper..." << std::endl;
-	auto* ObjectWrapper = WeakCallbackData.GetParameter();
-	delete ObjectWrapper;
-}
-
-void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
 	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
+	auto& Isolate = Arguments.GetIsolate();
 	
-	if ( !Arguments.IsConstructCall() )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	if ( Arguments.Length() < 1 )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "missing arg 0 (window name)"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	auto This = Arguments.This();
-	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-	
-	
-	String::Utf8Value WindowName( Arguments[0] );
-	std::Debug << "Window Wrapper constructor (" << *WindowName << ")" << std::endl;
-	
-	//	alloc window
-	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-	//		but it also needs to know of the V8container to run stuff
-	//		cyclic hell!
-	auto* NewWindow = new TWindowWrapper();
-	
+	auto WindowNameHandle = Arguments.mParams[0];
+	auto AutoRedrawHandle = Arguments.mParams[1];
+
+	auto WindowName = v8::GetString( WindowNameHandle );
+
 	TOpenglParams Params;
 	Params.mDoubleBuffer = false;
 	Params.mAutoRedraw = true;
-	if ( Arguments[1]->IsBoolean() )
-		Params.mAutoRedraw = Arguments[1].As<Boolean>()->BooleanValue();
-	
-	NewWindow->mWindow.reset( new TRenderWindow( *WindowName, Params ) );
-	
-	//	store persistent handle to the javascript object
-	NewWindow->mHandle.Reset( Isolate, Arguments.This() );
-	
-	//  make it weak
-	//  https://itnext.io/v8-wrapped-objects-lifecycle-42272de712e0
-	NewWindow->mHandle.SetWeak( NewWindow, OnFree, v8::WeakCallbackType::kInternalFields );
-	
-	NewWindow->mContainer = &Container;
-	
-	auto OnRender = [NewWindow](Opengl::TRenderTarget& RenderTarget)
+	if ( AutoRedrawHandle->IsBoolean() )
 	{
-		NewWindow->OnRender( RenderTarget );
+		Params.mAutoRedraw = v8::SafeCast<Number>(AutoRedrawHandle)->BooleanValue();
+	}
+	mWindow.reset( new TRenderWindow( WindowName, Params ) );
+	
+	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget)
+	{
+		this->OnRender( RenderTarget );
 	};
-	NewWindow->mWindow->mOnRender.AddListener( OnRender );
-	
-	//	set fields
-	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWindow ) );
-	
-	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( This );
+	mWindow->mOnRender.AddListener( OnRender );
 }
 
 v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
@@ -1629,10 +1594,11 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
 		
 		//	access to context!
-		auto& Window = TWindowWrapper::Get( Arguments[0] );
+		auto RenderTargetHandle = Arguments[0];
+		auto& Window = v8::GetObject<TWindowWrapper>(RenderTargetHandle);
 		auto OpenglContext = Window.mWindow->GetContext();
-		String::Utf8Value VertSource( Arguments[1] );
-		String::Utf8Value FragSource( Arguments[2] );
+		auto VertSource = v8::GetString( Arguments[1] );
+		auto FragSource = v8::GetString( Arguments[2] );
 
 		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
 		//		but it also needs to know of the V8container to run stuff
@@ -1641,7 +1607,7 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		NewShader->mHandle.Reset( Isolate, Arguments.This() );
 		NewShader->mContainer = &Container;
 
-		NewShader->CreateShader( OpenglContext, *VertSource, *FragSource );
+		NewShader->CreateShader( OpenglContext, VertSource.c_str(), FragSource.c_str() );
 		
 		//	set fields
 		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewShader ) );

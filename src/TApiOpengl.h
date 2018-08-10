@@ -1,6 +1,7 @@
 #pragma once
 #include "TV8Container.h"
 #include "SoyOpenglWindow.h"
+#include "TV8ObjectWrapper.h"
 
 
 
@@ -51,12 +52,17 @@ public:
 	Array<std::pair<int,Opengl::TAsset>>	mFrameBuffers;
 };
 
-//	v8 template to a TWindow
-class TWindowWrapper
+
+
+
+	
+	
+extern const char Window_TypeName[];
+class TWindowWrapper : public TObjectWrapper<Window_TypeName,TRenderWindow>
 {
 public:
-	TWindowWrapper() :
-		mContainer			( nullptr ),
+	TWindowWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
+		TObjectWrapper		( Container, This ),
 		mActiveRenderTarget	(nullptr)
 	{
 	}
@@ -65,12 +71,10 @@ public:
 	//	gr: removing this!
 	void		OnRender(Opengl::TRenderTarget& RenderTarget);
 	
-	static TWindowWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TWindowWrapper>( Value, 0 );	}
-
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
-	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	
+	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+
 	//	these are context things
 	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
@@ -109,9 +113,7 @@ protected:
 	static void								OnFree(const v8::WeakCallbackInfo<TWindowWrapper>& data);
 
 public:
-	v8::Persistent<v8::Object>		mHandle;
-	std::shared_ptr<TRenderWindow>	mWindow;
-	TV8Container*					mContainer;
+	std::shared_ptr<TRenderWindow>&	mWindow = mObject;
 	
 	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object
 	
