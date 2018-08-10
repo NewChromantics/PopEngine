@@ -71,6 +71,13 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 }
 
 
+void TWindowWrapper::OnFree(const v8::WeakCallbackInfo<TWindowWrapper>& WeakCallbackData)
+{
+	std::Debug << "Freeing TWindowWrapper..." << std::endl;
+	auto* ObjectWrapper = WeakCallbackData.GetParameter();
+	delete ObjectWrapper;
+}
+
 void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
 {
 	using namespace v8;
@@ -113,6 +120,10 @@ void TWindowWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 	
 	//	store persistent handle to the javascript object
 	NewWindow->mHandle.Reset( Isolate, Arguments.This() );
+	
+	//  make it weak
+	//  https://itnext.io/v8-wrapped-objects-lifecycle-42272de712e0
+	NewWindow->mHandle.SetWeak( NewWindow, OnFree, v8::WeakCallbackType::kInternalFields );
 	
 	NewWindow->mContainer = &Container;
 	

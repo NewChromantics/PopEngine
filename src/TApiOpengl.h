@@ -105,6 +105,8 @@ public:
 	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);
 
+protected:
+	static void								OnFree(const v8::WeakCallbackInfo<TWindowWrapper>& data);
 
 public:
 	v8::Persistent<v8::Object>		mHandle;
