@@ -54,14 +54,22 @@ var VideoDeviceName = "c920";
 var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
 var RenderLastFrame = true;
-var AlwaysFindFaceRect = true;
-var EnableKalmanFilter = false;
-var AlwaysScanSameFrame = false;
+var RenderRects = true;
 
-var DlibThreadCount = 1;
+var AlwaysFindFaceRect = true;
+var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
+var FindFaceAroundLastFaceRect = true;
+var ClippedImageScale = 0.300;
+
+var EnableKalmanFilter = true;
+var AlwaysScanSameFrame = false;
+var FilterAroundNose = true;
+
+var DlibThreadCount = 2;
 var ShoulderToHeadWidthRatio = 0.45;
 var HeadWidthToHeightRatio = 2.1;
 var NoseHeightInHead = 0.5;
+
 
 
 
@@ -168,7 +176,7 @@ function GetRectLines(Rect)
 
 
 
-function GetSkeletonLinesAndScores(Skeleton)
+function GetSkeletonLinesAndScores(Skeleton,GetRects)
 {
 	let Lines = [];
 	let Scores = [];
@@ -183,14 +191,17 @@ function GetSkeletonLinesAndScores(Skeleton)
 		return Lines;
 	}
 
-	//	make rect lines blue
-	Lines = Lines.concat( GetRectLines(Skeleton.FaceRect) );
-	Scores = Scores.concat( [9,9,9,9] );
-	
-	if ( Skeleton.ClipRect )
+	if ( GetRects )
 	{
-		Lines = Lines.concat( GetRectLines(Skeleton.ClipRect) );
-		Scores = Scores.concat( [0.5,0.5,0.5,0.5] );
+		//	make rect lines blue
+		Lines = Lines.concat( GetRectLines(Skeleton.FaceRect) );
+		Scores = Scores.concat( [9,9,9,9] );
+		
+		if ( Skeleton.ClipRect )
+		{
+			Lines = Lines.concat( GetRectLines(Skeleton.ClipRect) );
+			Scores = Scores.concat( [0.5,0.5,0.5,0.5] );
+		}
 	}
 	
 	let PushLine = function(namea,nameb,Score)
@@ -274,7 +285,16 @@ function WindowRender(RenderTarget)
 				Shader.SetUniform("Frame", OutputImage, 0 );
 			Shader.SetUniform("HasFrame", RenderLastFrame && OutputImage!=null );
 			
-			let LinesAndScores = GetSkeletonLinesAndScores( OutputSkeleton );
+			if ( OutputSkeleton && OutputSkeleton.ClipRect )
+			{
+				Shader.SetUniform("UnClipRect", OutputSkeleton.ClipRect );
+			}
+			else
+			{
+				Shader.SetUniform("UnClipRect", [0,0,1,1] );
+			}
+			
+			let LinesAndScores = GetSkeletonLinesAndScores( OutputSkeleton, RenderRects );
 			let Lines = LinesAndScores[0];
 			let Scores = LinesAndScores[1];
 
@@ -552,7 +572,6 @@ function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,SaveFilename,Skeleton)
 	Skeleton.FaceRect = FaceRect;
 	Skeleton.ClipRect = ClipRect;
 
-	let FilterAroundNose = true;
 	let PushFeature;
 	
 	if ( FilterAroundNose )
@@ -679,8 +698,7 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 
 	let OnFace = function(Face,Image,ClipRect)
 	{
-		Image = NewFrameImage;
-		Debug("ClipRect=" + ClipRect);
+		//Debug("ClipRect=" + ClipRect);
 		//	get the inverse rect
 		let Unnormalise = function(x,y)
 		{
@@ -737,9 +755,9 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 		
 		if ( AlwaysFindFaceRect )
 		{
-			if ( FaceRect )
+			if ( FaceRect && FindFaceAroundLastFaceRect )
 			{
-				ClipRect = ScaleRect( FaceRect, 1.4 );
+				ClipRect = ScaleRect( FaceRect, FindFaceAroundLastFaceRectScale );
 				ClampRect01( ClipRect );
 			}
 			FaceRect = null;
@@ -766,8 +784,8 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 			else
 			{
 				//ClipRect[3] = ClipRect[2] * HeightRatio;
-				SmallImageWidth = (NewFrameImage.GetWidth()/2) * ClipRect[2];
-				SmallImageHeight = (NewFrameImage.GetHeight()/2) * ClipRect[3];
+				SmallImageWidth = (NewFrameImage.GetWidth() * ClippedImageScale) * ClipRect[2];
+				SmallImageHeight = (NewFrameImage.GetHeight() * ClippedImageScale) * ClipRect[3];
 			}
 		}
 		
@@ -789,11 +807,11 @@ function OnNewFrame(NewFrameImage,SaveFilename,FindFaceIfNoSkeleton,Skeleton,Ope
 					Shader.SetUniform("Source", NewFrameImage, 0 );
 				}
 				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
-				//NewFrameImage.Clear();
+				NewFrameImage.Clear();
 			}
 			SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
 			SmallImage.SetLinearFilter(true);
-			//Debug("SmallImage.width=" + SmallImage.GetWidth() );
+			//Debug("searching SmallImage.width=" + SmallImage.GetWidth() + " SmallImage.height=" + SmallImage.GetHeight() );
 			let ReadBackPixels = true;
 			ResizePromise = OpenglContext.Render( SmallImage, ResizeRender, ReadBackPixels );
 		}
