@@ -51,7 +51,8 @@ var BroadcastServerPort = 8009;
 var WebServer = null;
 var WebServerPort = 8000;
 
-var VideoDeviceName = "c920";
+//	tries to find these in order, then grabs any
+var VideoDeviceNames = ["c920","isight","facetime"];
 
 var FlipOutputSkeleton = true;
 var FlipInputSkeleton = true;
@@ -1017,7 +1018,17 @@ function Main()
 			//	find best match name
 			Debug("Got devices: x" + DeviceNames.length);
 			Debug(DeviceNames);
-			VideoDeviceName = GetDeviceNameMatch(DeviceNames,VideoDeviceName);
+			
+			//	find device in list
+			let VideoDeviceName = VideoDeviceNames.length ? VideoDeviceNames[0] : null;
+			for ( let i=0;	i<VideoDeviceNames.length;	i++ )
+			{
+				let MatchedName = GetDeviceNameMatch(DeviceNames,VideoDeviceNames[i]);
+				if ( !MatchedName )
+					continue;
+				VideoDeviceName = MatchedName;
+				break;
+			}
 			Debug("Loading device: " + VideoDeviceName);
 		
 			let VideoCapture = new MediaSource(VideoDeviceName);
