@@ -191,17 +191,22 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 	auto& Arguments = Params.mParams;
 	
 	if (Arguments.Length() < 2)
-		throw Soy::AssertException("WriteStringToFile(Filename,String) with no args");
-	
-	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
-	auto Contents = v8::GetString( Arguments[1] );
-
-	if ( !Soy::StringToFile( Filename, Contents ) )
 	{
 		std::stringstream Error;
-		Error << "Failed to write " << Filename;
-		throw Soy::AssertException( Error.str() );
+		Error << "WriteStringToFile(Filename,String,[Append]) " << Arguments.Length() << " args";
+		throw Soy::AssertException(Error.str());
 	}
+	auto FilenameHandle = Arguments[0];
+	auto ContentsHandle = Arguments[1];
+	auto AppendHandle = Arguments[2];
+
+	auto Filename = Params.GetRootDirectory() + v8::GetString( FilenameHandle );
+	auto Contents = v8::GetString( ContentsHandle );
+	bool Append = false;
+	if ( AppendHandle->IsBoolean() )
+		Append = v8::SafeCast<v8::Boolean>(AppendHandle)->BooleanValue();
+	
+	Soy::StringToFile( Filename, Contents, Append );
 
 	return v8::Undefined(Params.mIsolate);
 }
