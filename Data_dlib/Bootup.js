@@ -35,7 +35,8 @@ var ResizeFragShader = null;
 //	skeleton + face
 var OutputSkeleton = null;
 var OutputImage = null;
-var OutputFilename = "../../../../SkeletonOutputFrames.json";
+//var OutputFilename = "../../../../SkeletonOutputFrames.json";
+var OutputFilename = null;
 var OutputSkipFirstFrames = 20;
 
 //	last simple skeleton we recieved
@@ -62,15 +63,15 @@ var RenderRects = true;
 var AlwaysFindFaceRect = true;
 var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
 var FindFaceAroundLastFaceRect = true;
-var ClippedImageScale = 0.300;
+var ClippedImageScale = 0.400;
 
-var EnableKalmanFilter = true;
+var EnableKalmanFilter = false;
 var AlwaysScanSameFrame = false;
 var FilterAroundNose = true;
 
 var DlibThreadCount = 2;
-var ShoulderToHeadWidthRatio = 0.45;
-var HeadWidthToHeightRatio = 2.1;
+var ShoulderToHeadWidthRatio = 0.8;
+var HeadWidthToHeightRatio = 2.4;
 var NoseHeightInHead = 0.5;
 
 
@@ -472,8 +473,7 @@ function OnOutputSkeleton(Skeleton,Image)
 		return;
 	
 	//	nowhere to output
-	let SaveFilename = OutputFilename;
-	if ( !SaveFilename && !ServerSkeletonSender )
+	if ( !OutputFilename && !ServerSkeletonSender )
 		return;
 	
 	OutputSkeleton.Time = /*Image.Time || */Date.now();
@@ -488,11 +488,11 @@ function OnOutputSkeleton(Skeleton,Image)
 		return;
 	}
 	
-	if ( SaveFilename )
+	if ( OutputFilename )
 	{
 		try
 		{
-			WriteStringToFile( SaveFilename, Json, true );
+			WriteStringToFile( OutputFilename, Json, true );
 		}
 		catch(e)
 		{
@@ -575,6 +575,8 @@ function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,Skeleton)
 	//	handle no-face
 	if ( FaceLandmarks == null )
 	{
+		if ( Skeleton )
+			Skeleton.ClipRect = ClipRect;
 		OnOutputSkeleton( Skeleton, Image );
 		return;
 	}
@@ -712,7 +714,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		return;
 	}
 	//Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
-	
+
 	let OnFaceError = function(Error)
 	{
 		Debug("Failed to get facelandmarks: " + Error);
@@ -763,6 +765,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 				Face[i+1] = xy[1];
 			}
 		}
+		
 		OnNewFace(Face,FaceRect,ClipRect,Image,Skeleton);
 	}
 	
@@ -800,13 +803,15 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		//	the face search looks for 80x80 size faces
 		if ( !FaceRect )
 		{
-			if ( ClipRect == null )
+			if ( !ClipRect )
 			{
+				Debug("No face rect, no clip rect");
 				SmallImageWidth = 500;
 				SmallImageHeight = SmallImageWidth * HeightRatio;
 			}
 			else
 			{
+				Debug("No face rect, HAS clip rect");
 				//ClipRect[3] = ClipRect[2] * HeightRatio;
 				SmallImageWidth = (NewFrameImage.GetWidth() * ClippedImageScale) * ClipRect[2];
 				SmallImageHeight = (NewFrameImage.GetHeight() * ClippedImageScale) * ClipRect[3];
@@ -876,7 +881,6 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 			}
 			else
 			{
-				Debug("throwing");
 				throw "Waiting for face rect; FindFaceIfNoSkeleton=" + FindFaceIfNoSkeleton;
 			}
 		}
