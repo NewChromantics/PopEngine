@@ -1,9 +1,11 @@
 #pragma once
 #include "TV8Container.h"
 #include "TV8ObjectWrapper.h"
+#include <SoyPixels.h>
 
 class SoyPixels;
 class SoyPixelsImpl;
+class TPixelBuffer;
 
 namespace ApiCommon
 {
@@ -30,6 +32,7 @@ public:
 		mRepeating				( false ),
 		mPixelsVersion			( 0 ),
 		mOpenglTextureVersion	( 0 ),
+		mPixelBufferVersion		( 0 ),
 		mPixels					( mObject )
 	{
 	}
@@ -65,6 +68,8 @@ public:
 	void									ReadOpenglPixels();
 	void									SetPixels(const SoyPixelsImpl& NewPixels);
 	void									SetPixels(std::shared_ptr<SoyPixels> NewPixels);
+	void									SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels);
+	SoyPixelsMeta							GetMeta();
 
 protected:
 	void								Free();
@@ -73,9 +78,15 @@ protected:
 	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?
 	std::shared_ptr<SoyPixels>&			mPixels = mObject;
 	size_t								mPixelsVersion;			//	opengl texture changed
+
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
 	std::function<void()>				mOpenglTextureDealloc;
 	size_t								mOpenglTextureVersion;	//	pixels changed
+
+	//	abstracted pixel buffer from media
+	std::shared_ptr<TPixelBuffer>		mPixelBuffer;
+	size_t								mPixelBufferVersion;
+	SoyPixelsMeta						mPixelBufferMeta;
 	
 	//	texture options
 	bool								mLinearFilter;

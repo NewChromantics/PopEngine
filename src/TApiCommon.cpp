@@ -5,6 +5,7 @@
 #include <SoyStream.h>
 #include <SoyOpengl.h>
 #include <SoyOpenglContext.h>
+#include <SoyMedia.h>
 
 using namespace v8;
 
@@ -481,6 +482,11 @@ void TImageWrapper::Free()
 	}
 	mOpenglTexture.reset();
 	mOpenglTextureVersion = 0;
+	
+	//	clear pixel buffer
+	mPixelBuffer.reset();
+	mPixelBufferMeta = SoyPixelsMeta();
+	mPixelBufferVersion = 0;
 }
 
 v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
@@ -490,17 +496,8 @@ v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 
-	std::lock_guard<std::recursive_mutex> Lock(This.mPixelsLock);
-
-	size_t Width = 0;
-	if ( This.mPixels )
-		Width = This.mPixels->GetWidth();
-	else if ( This.mOpenglTexture )
-		Width = This.mOpenglTexture->GetWidth();
-	else
-		throw Soy::AssertException("Image not allocated");
-	
-	return Number::New( Params.mIsolate, Width );
+	auto Meta = This.GetMeta();
+	return Number::New( Params.mIsolate, Meta.GetWidth() );
 }
 
 
@@ -511,17 +508,8 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	
-	std::lock_guard<std::recursive_mutex> Lock(This.mPixelsLock);
-
-	size_t Height = 0;
-	if ( This.mPixels )
-		Height = This.mPixels->GetHeight();
-	else if ( This.mOpenglTexture )
-		Height = This.mOpenglTexture->GetHeight();
-	else
-		throw Soy::AssertException("Image not allocated");
-	
-	return Number::New( Params.mIsolate, Height );
+	auto Meta = This.GetMeta();
+	return Number::New( Params.mIsolate, Meta.GetHeight() );
 }
 
 
@@ -592,8 +580,8 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 		}
 	}
 	
-	if ( !mPixels )
-		throw Soy::AssertException("Trying to get opengl texture when we have no pixels");
+	if ( !mPixels && !mPixelBuffer )
+		throw Soy::AssertException("Trying to get opengl texture when we have no pixels/pixelbuffer");
 	
 	auto* pContext = &Context;
 	auto AllocAndOrUpload = [=]
@@ -604,23 +592,55 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 		{
 			std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
-			if ( mOpenglTexture == nullptr )
+			auto AllocTexture = [&](const SoyPixelsMeta& Meta)
 			{
-				mOpenglTexture.reset( new Opengl::TTexture( mPixels->GetMeta(), GL_TEXTURE_2D ) );
-				
-				//	alloc the deffered delete func
-				mOpenglTextureDealloc = [this,pContext]
+				if ( mOpenglTexture == nullptr )
 				{
+					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
+				
+					//	alloc the deffered delete func
+					mOpenglTextureDealloc = [this,pContext]
+						{
 					pContext->QueueDelete(mOpenglTexture);
-				};
-			}
-
-			mOpenglTexture->SetFilter( mLinearFilter );
-			mOpenglTexture->SetRepeat( mRepeating );
+					};
+				}
+				mOpenglTexture->SetFilter( mLinearFilter );
+				mOpenglTexture->SetRepeat( mRepeating );
+			};
 
 			SoyGraphics::TTextureUploadParams UploadParams;
-			mOpenglTexture->Write( *mPixels, UploadParams );
-			mOpenglTextureVersion = mPixelsVersion;
+			
+			if ( GetLatestVersion() == mPixelsVersion )
+			{
+				AllocTexture( mPixels->GetMeta() );
+				mOpenglTexture->Write( *mPixels, UploadParams );
+				mOpenglTextureVersion = mPixelsVersion;
+			}
+			else if ( GetLatestVersion() == mPixelBufferVersion )
+			{
+				//	todo: try and lock opengl texture & copy that
+				BufferArray<SoyPixelsImpl*,2> Textures;
+				float3x3 Transform;
+				mPixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+				try
+				{
+					auto& Pixels = *Textures[0];
+					mPixelBufferMeta = Pixels.GetMeta();
+					AllocTexture( mPixelBufferMeta );
+					mOpenglTexture->Write( Pixels, UploadParams );
+					mPixelBuffer->Unlock();
+					mOpenglTextureVersion = mPixelBufferVersion;
+				}
+				catch(std::exception& e)
+				{
+					mPixelBuffer->Unlock();
+					throw;
+				}
+			}
+			else
+			{
+				throw Soy::AssertException("Don't know where to get meta for new opengl texture");
+			}
 			OnTextureLoaded();
 		}
 		catch(std::exception& e)
@@ -659,6 +679,50 @@ void TImageWrapper::GetPixels(SoyPixelsImpl& CopyTarget)
 	CopyTarget.Copy(Pixels);
 }
 
+SoyPixelsMeta TImageWrapper::GetMeta()
+{
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	auto LatestVersion = GetLatestVersion();
+
+	if ( mOpenglTextureVersion == LatestVersion )
+	{
+		return mOpenglTexture->GetMeta();
+	}
+	
+	if ( mPixelsVersion == LatestVersion )
+		return mPixels->GetMeta();
+
+	if ( mPixelBufferVersion == LatestVersion )
+	{
+		if ( mPixelBufferMeta.IsValid() )
+			return mPixelBufferMeta;
+
+		//	need to fetch the pixels to get the meta :/
+		//	so we need to read the pixels, then get the meta from there
+		BufferArray<SoyPixelsImpl*,2> Textures;
+		float3x3 Transform;
+		mPixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+		try
+		{
+			//	gr: there's a chance here, some TPixelBuffers unlock and then release the data.
+			//		need to not let that happen
+			mPixelBufferMeta = Textures[0]->GetMeta();
+			mPixelBuffer->Unlock();
+			return mPixelBufferMeta;
+		}
+		catch(std::exception& e)
+		{
+			mPixelBuffer->Unlock();
+			throw;
+		}
+	}
+	
+	if ( mPixelsVersion == LatestVersion )
+		return mPixels->GetMeta();
+	
+	throw Soy::AssertException("Don't know where to get meta from");
+}
 
 SoyPixels& TImageWrapper::GetPixels()
 {
@@ -692,7 +756,10 @@ size_t TImageWrapper::GetLatestVersion() const
 	size_t MaxVersion = mPixelsVersion;
 	if ( mOpenglTextureVersion > MaxVersion )
 		MaxVersion = mOpenglTextureVersion;
-
+	
+	if ( mPixelBufferVersion > MaxVersion )
+		MaxVersion = mPixelBufferVersion;
+	
 	return MaxVersion;
 }
 
@@ -719,6 +786,13 @@ void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels = NewPixels;
 	mPixelsVersion = GetLatestVersion()+1;
+}
+
+void TImageWrapper::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+	mPixelBuffer = NewPixels;
+	mPixelBufferVersion = GetLatestVersion()+1;
 }
 
 void TImageWrapper::ReadOpenglPixels()

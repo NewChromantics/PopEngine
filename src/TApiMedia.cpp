@@ -168,47 +168,54 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 	
 	auto This = Arguments.This();
 	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-	
-	//	alloc window
-	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-	//		but it also needs to know of the V8container to run stuff
-	//		cyclic hell!
-	auto* NewWrapper = new TMediaSourceWrapper();
-	
-	//	store persistent handle to the javascript object
-	NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
-	NewWrapper->mContainer = &Container;
 
-	auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
-	{
-		//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
-		NewWrapper->OnNewFrame(StreamIndex);
-	};
-	auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
-	{
-		//std::Debug << "OnPrePushFrame" << std::endl;
-	};
-
-	//	create device
 	try
 	{
-		auto DeviceName = v8::GetString( Arguments[0] );
+		auto DeviceNameHandle = Arguments[0];
+		auto SinglePlaneOutputHandle = Arguments[1];
+	
+		bool SinglePlaneOutput = false;
+		if ( !SinglePlaneOutputHandle->IsUndefined() )
+			SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
+		
+		//	alloc window
+		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
+		//		but it also needs to know of the V8container to run stuff
+		//		cyclic hell!
+		auto* NewWrapper = new TMediaSourceWrapper();
+		
+		//	store persistent handle to the javascript object
+		NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
+		NewWrapper->mContainer = &Container;
+
+		auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
+		{
+			//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
+			NewWrapper->OnNewFrame(StreamIndex);
+		};
+		auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
+		{
+			//std::Debug << "OnPrePushFrame" << std::endl;
+		};
+
+		//	create device
+		auto DeviceName = v8::GetString( DeviceNameHandle );
 		TMediaExtractorParams Params( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
-		Params.mForceNonPlanarOutput = false;
+		Params.mForceNonPlanarOutput = SinglePlaneOutput;
 		Params.mDiscardOldFrames = true;
 		NewWrapper->mExtractor = ::Platform::AllocCaptureExtractor( Params, nullptr );
 		NewWrapper->mExtractor->AllocStreamBuffer(0);
 		NewWrapper->mExtractor->Start(false);
+
+		//	set fields
+		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
 	}
 	catch(std::exception& e)
 	{
 		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
 		Arguments.GetReturnValue().Set(Exception);
 		return;
-	}
-	
-	//	set fields
-	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
+	}	
 	
 	// return the new object back to the javascript caller
 	Arguments.GetReturnValue().Set( This );
@@ -271,36 +278,44 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		return;
 	}
 	
-	//	may get 2 planes
-	BufferArray<SoyPixelsImpl*,2> Textures;
-	float3x3 Transform;
-	PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+	static bool ReadToPixels = false;
 	std::shared_ptr<SoyPixels> Pixels;
-	try
+
+	if ( ReadToPixels )
 	{
-		//	convert pixels to RGB for face.
-		//	todo: move to JS call which gives a promise, or more likely, opengl shader for when we want just a rect of the image
-		Pixels.reset( new SoyPixels( mContainer->GetImageHeap() ) );
-		//std::Debug << "Image heap now " << mContainer->GetImageHeap().GetAllocatedMegaBytes() << "mb x" << mContainer->GetImageHeap().GetAllocCount() << std::endl;
-		auto& RgbPixels = *Pixels;
-		RgbPixels.Copy( *Textures[0] );
-		PixelBuffer->Unlock();
-	}
-	catch(std::exception& e)
-	{
-		PixelBuffer->Unlock();
-		throw;
+		//	may get 2 planes
+		BufferArray<SoyPixelsImpl*,2> Textures;
+		float3x3 Transform;
+		PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+		try
+		{
+			//	convert pixels to RGB for face.
+			//	todo: move to JS call which gives a promise, or more likely, opengl shader for when we want just a rect of the image
+			Pixels.reset( new SoyPixels( mContainer->GetImageHeap() ) );
+			//std::Debug << "Image heap now " << mContainer->GetImageHeap().GetAllocatedMegaBytes() << "mb x" << mContainer->GetImageHeap().GetAllocCount() << std::endl;
+			auto& RgbPixels = *Pixels;
+			RgbPixels.Copy( *Textures[0] );
+			PixelBuffer->Unlock();
+		}
+		catch(std::exception& e)
+		{
+			PixelBuffer->Unlock();
+			throw;
+		}
 	}
 	
-	auto Runner = [this,Pixels](Local<Context> context)
+	auto Runner = [this,Pixels,PixelBuffer](Local<Context> context)
 	{
 		auto* isolate = context->GetIsolate();
 		auto This = Local<Object>::New( isolate, this->mHandle );
 		
 		auto* pImage = new TImageWrapper( *this->mContainer );
 		auto& Image = *pImage;
-		Image.SetPixels(Pixels);
-		
+		if ( Pixels )
+			Image.SetPixels(Pixels);
+		else
+			Image.SetPixelBuffer(PixelBuffer);
+
 		BufferArray<Local<Value>,2> Args;
 		Args.PushBack( Image.GetHandle() );
 	
