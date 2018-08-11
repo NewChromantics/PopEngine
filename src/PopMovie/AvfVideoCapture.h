@@ -75,6 +75,7 @@ protected:
 
 	void					StartStream();
 	void					StopStream();
+	virtual bool			CanSleep() override	{	return true;	}
 
 private:
 	void		Shutdown();
