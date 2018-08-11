@@ -87,7 +87,7 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params) 
 	{
 		mContext->WakeThread();
 	};
-	mContext->mOnJobPushed.AddListener( OnJobPushed );
+	mContext->mOnJobPushed = OnJobPushed;
 	
 	//	do init on first thread run
 	auto DefferedInit = [this]
@@ -124,7 +124,8 @@ bool TOpenglView::IsDoubleBuffered() const
 
 	Soy::Platform::PushCursor(SoyCursor::Hand);
 	auto Pos = ViewPointToVector( self, event.locationInWindow );
-	mParent->mOnMouseDown.OnTriggered( Pos );
+	if ( mParent->mOnMouseDown )
+		mParent->mOnMouseDown( Pos );
 	mLastPos = event.locationInWindow;
 }
 
@@ -134,7 +135,8 @@ bool TOpenglView::IsDoubleBuffered() const
 		return;
 
 	auto Pos = ViewPointToVector( self, event.locationInWindow );
-	mParent->mOnMouseMove.OnTriggered( Pos );
+	if ( mParent->mOnMouseMove )
+		mParent->mOnMouseMove( Pos );
 	mLastPos = event.locationInWindow;
 }
 
@@ -144,7 +146,8 @@ bool TOpenglView::IsDoubleBuffered() const
 		return;
 
 	auto Pos = ViewPointToVector( self, mLastPos );
-	mParent->mOnMouseUp.OnTriggered( Pos );
+	if ( mParent->mOnMouseUp )
+		mParent->mOnMouseUp( Pos );
 	Soy::Platform::PopCursor();
 }
 
@@ -199,7 +202,8 @@ bool TOpenglView::IsDoubleBuffered() const
 	//Opengl::ClearColour( Soy::TRgb(0,1,0) );
     try
     {
-        mParent->mOnRender.OnTriggered( mParent->mRenderTarget );
+		if ( mParent->mOnRender )
+     	   mParent->mOnRender( mParent->mRenderTarget );
     }
     catch(std::exception& e)
     {

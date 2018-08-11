@@ -102,7 +102,7 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	{
 		this->OnRender( RenderTarget );
 	};
-	mWindow->mOnRender.AddListener( OnRender );
+	mWindow->mOnRender = OnRender;
 }
 
 v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
@@ -196,6 +196,8 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto Window = Arguments.This();
 	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
 	
+	//	gr: got a crash here where v8 was writing to 0xaaaaaaaaa
+	//		which is scribbled memory (freshly initialised)
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );

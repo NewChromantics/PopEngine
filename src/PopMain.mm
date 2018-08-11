@@ -35,7 +35,7 @@ PopMainThread::PopMainThread()
 	{
 		TriggerIteration();
 	};
-	mOnJobPushed.AddListener( OnJobPushed );
+	mOnJobPushed = OnJobPushed;
 }
 
 void PopMainThread::TriggerIteration()

@@ -92,7 +92,11 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
 		Soy::Assert( mView->IsValid(), "view isn't valid?" );
 
-		mOnRenderListener = mView->mOnRender.AddListener( *this, &TOpenglWindow::OnViewRender );
+		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget)
+		{
+			OnViewRender(RenderTarget);
+		};
+		mView->mOnRender = OnRender;
 
 		//[[NSAutoreleasePool alloc] init];
 		
@@ -133,9 +137,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		
 		//	mouse callbacks
 		[mWindow setAcceptsMouseMovedEvents:TRUE];
-		mView->mOnMouseDown.AddListener( mOnMouseDown );
-		mView->mOnMouseMove.AddListener( mOnMouseMove );
-		mView->mOnMouseUp.AddListener( mOnMouseUp );
+		mView->mOnMouseDown = mOnMouseDown;
+		mView->mOnMouseMove = mOnMouseMove;
+		mView->mOnMouseUp = mOnMouseUp;
 
 	};
 	Soy::TSemaphore Semaphore;

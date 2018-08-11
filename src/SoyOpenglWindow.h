@@ -43,19 +43,18 @@ public:
 private:
 	void			OnViewRender(Opengl::TRenderTarget& RenderTarget)
 	{
-		mOnRender.OnTriggered(RenderTarget);
+		if ( mOnRender )
+			mOnRender(RenderTarget);
 	}
 	
 public:
-	SoyEvent<Opengl::TRenderTarget>	mOnRender;
+	std::function<void(Opengl::TRenderTarget&)>	mOnRender;
 	std::shared_ptr<TOpenglView>	mView;
 
 protected:
 	TOpenglParams	mParams;
 	
 private:
-	SoyListenerId	mOnRenderListener;
-	
 	std::string		mName;
 	std::shared_ptr<MacWindow>		mMacWindow;
 };

@@ -87,11 +87,11 @@ public:
 	bool			IsDoubleBuffered() const;
 	
 public:
-	SoyEvent<const TMousePos>	mOnMouseDown;
-	SoyEvent<const TMousePos>	mOnMouseMove;
-	SoyEvent<const TMousePos>	mOnMouseUp;
-	SoyEvent<Opengl::TRenderTarget>	mOnRender;
-	MacOpenglView*				mView;
-	std::shared_ptr<GlViewContext>	mContext;
-	GlViewRenderTarget			mRenderTarget;
+	std::function<void(const TMousePos&)>		mOnMouseDown;
+	std::function<void(const TMousePos&)>		mOnMouseMove;
+	std::function<void(const TMousePos&)>		mOnMouseUp;
+	std::function<void(Opengl::TRenderTarget&)>	mOnRender;
+	MacOpenglView*								mView;
+	std::shared_ptr<GlViewContext>				mContext;
+	GlViewRenderTarget							mRenderTarget;
 };

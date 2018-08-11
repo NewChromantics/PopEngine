@@ -10,7 +10,7 @@
 //#include <dlib/image_io.h>
 
 
-#define TIMER_WARNING_MIN_MS	30
+#define TIMER_WARNING_MIN_MS	50
 
 using namespace v8;
 
