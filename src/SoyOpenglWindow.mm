@@ -191,7 +191,14 @@ bool TOpenglWindow::Iteration()
 		return true;
 	}
 	
-	static bool RedrawOnMainThread = true;
+	//	see if this works, we're interrupting the main thread though
+	dispatch_queue_t q = dispatch_get_main_queue();
+	dispatch_async(q, ^{
+		[mView->mView setNeedsDisplay: YES];
+	});
+	return true;
+	
+	static bool RedrawOnMainThread = false;
 	
 	auto RedrawImpl = [this]
 	{
