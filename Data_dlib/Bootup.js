@@ -7,6 +7,11 @@ function include(Filename)
 }
 
 //Debug = function(){};
+let DebugGarbageCollect = function()
+{
+	//	enable this to garbage collect whenever we get new frames & data
+	//GarbageCollect();
+}
 
 let VertShaderSource = `
 	#version 410
@@ -66,7 +71,7 @@ var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
 var FindFaceAroundLastFaceRect = true;
 var ClippedImageScale = 0.400;
 
-var EnableKalmanFilter = false;
+var EnableKalmanFilter = true;
 var AlwaysScanSameFrame = false;
 var FilterAroundNose = true;
 
@@ -806,13 +811,13 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		{
 			if ( !ClipRect )
 			{
-				Debug("No face rect, no clip rect");
+				//Debug("No face rect, no clip rect");
 				SmallImageWidth = 500;
 				SmallImageHeight = SmallImageWidth * HeightRatio;
 			}
 			else
 			{
-				Debug("No face rect, HAS clip rect");
+				//Debug("No face rect, HAS clip rect");
 				//ClipRect[3] = ClipRect[2] * HeightRatio;
 				SmallImageWidth = (NewFrameImage.GetWidth() * ClippedImageScale) * ClipRect[2];
 				SmallImageHeight = (NewFrameImage.GetHeight() * ClippedImageScale) * ClipRect[3];
@@ -1013,7 +1018,7 @@ function Main()
 {
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("PopTrack4");
-	Window1.OnRender = function(){	WindowRender(Window1);	};
+	Window1.OnRender = function(){	DebugGarbageCollect();	WindowRender(Window1);	};
 	
 
 	let LoadDevice = function(DeviceNames)
@@ -1040,11 +1045,11 @@ function Main()
 			let FindFaceIfNoSkeleton = true;
 			let OpenglContext = Window1;
 			
-			VideoCapture.OnNewFrame = function(img)	{	OnNewFrame(img,FindFaceIfNoSkeleton,LastSkeleton,OpenglContext);	};
+			VideoCapture.OnNewFrame = function(img)	{	DebugGarbageCollect();	OnNewFrame(img,FindFaceIfNoSkeleton,LastSkeleton,OpenglContext);	};
 
 			//	just webcam mode
 			if ( JustShowCamera )
-				VideoCapture.OnNewFrame = function(img)	{	OutputImage = img;	};
+				VideoCapture.OnNewFrame = function(img)	{	DebugGarbageCollect();	OutputImage = img;	};
 		}
 		catch(e)
 		{
@@ -1108,6 +1113,7 @@ function Main()
 			setTimeout( RetryAgain, Timeout );
 		}
 	}
+	
 	Retry( AllocSkeletonReciever, 1000 );
 	Retry( AllocSkeletonSender, 1000 );
 	Retry( AllocBroadcastServer, 1000 );
