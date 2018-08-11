@@ -6,8 +6,8 @@ function include(Filename)
 	CompileAndRun( Source );
 }
 
-include('Data_Posenet/XMLHttpRequest.js');
-include('Data_Posenet/Webgl.js');
+include('XMLHttpRequest.js');
+include('Webgl.js');
 
 
 //	to allow tensorflow to TRY and read video, (and walk past the code), we at least need a constructor for instanceof HTMLVideoElement
@@ -92,7 +92,7 @@ let VertShaderSource = `
 	}
 `;
 
-let FrameFragShaderSource = LoadFileAsString("Data_Posenet/DrawFrameAndPose.frag");
+let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
 var LastFrameImage = null;
 var LastPose = null;
@@ -254,7 +254,7 @@ function StartPoseDetection(PoseNet)
 		console.log(Pose);
 	}
 
-	let FrameImage = new Image('Data_Posenet/jazzflute.jpg');
+	let FrameImage = new Image('jazzflute.jpg');
 	//FrameImage.Flip();
 	LastFrameImage = FrameImage;
 	try
@@ -351,9 +351,9 @@ function Main()
 	window.OpenglContext = Window1;
 	
 	//	make a context, then let tensorflow grab the bindings
-	include('Data_Posenet/tfjs.0.11.7.js');
-	include('Data_Posenet/posenet.0.1.2.js');
-	//include("Data_Posenet/Hello.js");
+	include('tfjs.0.11.7.js');
+	include('posenet.0.1.2.js');
+	//include("Hello.js");
 
 
 	

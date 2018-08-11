@@ -45,7 +45,7 @@ function GetLocalFilenameOfUrl(Url)
 	let PathParts = Path.split('/');
 	let Filename = PathParts.pop();
 	let LocalPath = PathParts.join('_');
-	LocalPath = "Data_Posenet/" + LocalPath + "/" + Filename;
+	LocalPath = LocalPath + "/" + Filename;
 	//Debug("Converted " + Url + " to " + Filename);
 	
 	return LocalPath;
