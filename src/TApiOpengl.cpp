@@ -71,8 +71,8 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
 	//  call javascript
 	auto Runner = [&](Local<Context> context)
 	{
-		auto& isolate = *context->GetIsolate();
-		auto This = Local<Object>::New( &isolate, this->mHandle );
+		auto& Isolate = *context->GetIsolate();
+		auto This = this->GetHandle();
 		mContainer.ExecuteFunc( context, "OnRender", This );
 	};
 	mContainer.RunScoped( Runner );
