@@ -5,8 +5,6 @@
 //	todo: generic this, Everywhere with Vector3 can be swapped for another type
 function KalmanFilter(InitialPos,QNoise,RNoise)
 {
-	this.lastcorrected = InitialPos;
-	this.P_last = 0;
 	//	very slow to resolve. minimal damping
 	//	QNoise = 0.001;
 	//	RNoise = 0.80;
@@ -18,7 +16,9 @@ function KalmanFilter(InitialPos,QNoise,RNoise)
 	this.QNoise = QNoise || 0.10;
 	this.RNoise = RNoise || 0.20;
 	this.TotalError = 0;
-	this.x_est_last = InitialPos;
+	this.x_est_last = 0;
+	this.lastcorrected = InitialPos;
+	this.P_last = InitialPos;
 
 	this.Push = function(Position)
 	{
