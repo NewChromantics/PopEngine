@@ -417,23 +417,13 @@ Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::s
 Local<Function> v8::GetFunction(Local<Context> ContextHandle,Local<Object> This,const std::string& FunctionName)
 {
 	auto* Isolate = ContextHandle->GetIsolate();
-	auto* FunctionNameCstr = FunctionName.c_str();
-	auto FuncNameKey = v8::String::NewFromUtf8( Isolate, FunctionNameCstr, v8::NewStringType::kNormal ).ToLocalChecked();
+	auto FuncNameKey = v8::GetString( *Isolate, FunctionName );
 	
 	//  get the global object for this name
 	auto FunctionHandle = This->Get( ContextHandle, FuncNameKey).ToLocalChecked();
 	
-	if ( !FunctionHandle->IsFunction() )
-	{
-		std::stringstream Error;
-		Error << FunctionName << " is not function (" << v8::GetTypeName(FunctionHandle) << ")";
-		throw Soy::AssertException( Error.str() );
-	}
-	
-	//  run the func
-	auto Func = FunctionHandle.As<Function>();
+	auto Func = v8::SafeCast<v8::Function>( FunctionHandle );
 	return Func;
-	
 }
 
 
