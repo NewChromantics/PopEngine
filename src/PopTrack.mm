@@ -27,6 +27,7 @@ TPopTrack& PopTrack::GetApp()
 		//	proper way would be to use the current working dir. But for now lets force it
 		auto RootDir = Platform::GetAppResourcesDirectory();
 		RootDir += "Data_dlib/";
+		//RootDir += "Data_Posenet/";
 		
 		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
 		Private::gOpenglApp.reset( new TPopTrack( RootDir, "Bootup.js") );

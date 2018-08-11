@@ -70,6 +70,7 @@ var AlwaysFindFaceRect = true;
 var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
 var FindFaceAroundLastFaceRect = true;
 var ClippedImageScale = 0.400;
+var BlurLandmarkSearch = false;
 
 var EnableKalmanFilter = true;
 var AlwaysScanSameFrame = false;
@@ -840,6 +841,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 				{
 					Shader.SetUniform("ClipRect", ClipRect );
 					Shader.SetUniform("Source", NewFrameImage, 0 );
+					Shader.SetUniform("ApplyBlur", BlurLandmarkSearch );
 				}
 				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 				NewFrameImage.Clear();
