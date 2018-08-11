@@ -94,7 +94,7 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	Params.mAutoRedraw = true;
 	if ( AutoRedrawHandle->IsBoolean() )
 	{
-		Params.mAutoRedraw = v8::SafeCast<Number>(AutoRedrawHandle)->BooleanValue();
+		Params.mAutoRedraw = v8::SafeCast<Boolean>(AutoRedrawHandle)->BooleanValue();
 	}
 	mWindow.reset( new TRenderWindow( WindowName, Params ) );
 	
