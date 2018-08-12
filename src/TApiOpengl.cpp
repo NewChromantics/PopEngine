@@ -465,7 +465,7 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 
 	bool StealThread = false;
 	if ( Arguments[1]->IsBoolean() )
-		StealThread = v8::SafeCast<Number>(Arguments[1])->BooleanValue();
+		StealThread = v8::SafeCast<Boolean>(Arguments[1])->BooleanValue();
 	else if ( !Arguments[1]->IsUndefined() )
 		throw Soy::AssertException("2nd argument(StealThread) must be bool or undefined (default to false).");
 
