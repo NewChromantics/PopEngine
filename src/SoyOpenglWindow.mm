@@ -92,9 +92,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
 		Soy::Assert( mView->IsValid(), "view isn't valid?" );
 
-		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget)
+		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 		{
-			OnViewRender(RenderTarget);
+			OnViewRender( RenderTarget, LockContext );
 		};
 		mView->mOnRender = OnRender;
 

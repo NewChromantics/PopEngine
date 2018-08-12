@@ -41,14 +41,14 @@ public:
 
 	
 private:
-	void			OnViewRender(Opengl::TRenderTarget& RenderTarget)
+	void			OnViewRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 	{
 		if ( mOnRender )
-			mOnRender(RenderTarget);
+			mOnRender(RenderTarget, LockContext );
 	}
 	
 public:
-	std::function<void(Opengl::TRenderTarget&)>	mOnRender;
+	std::function<void(Opengl::TRenderTarget&,std::function<void()> LockContext)>	mOnRender;
 	std::shared_ptr<TOpenglView>	mView;
 
 protected:

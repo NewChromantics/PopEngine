@@ -69,7 +69,7 @@ public:
 	~TWindowWrapper();
 	
 	//	gr: removing this!
-	void		OnRender(Opengl::TRenderTarget& RenderTarget);
+	void		OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext);
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 

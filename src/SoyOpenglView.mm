@@ -171,60 +171,81 @@ bool TOpenglView::IsDoubleBuffered() const
 	//	lock the context as we do iteration from the main thread
 	//	gr: maybe have a specific thread for this, as this view-redraw is called from our own thread anyway
 	auto& Context = mParent->mContext;
-	auto LockContext = [&Context]
+	//  gr: oddly (in PopEngine at least) we now get a draw before the opengl deffered init (which is on the main thread)
+	//      so lets wait for the context to initialise... we may be dropping a frame :(
+	//      while this will still render, none of the extensions will be setup...
+	//	gr: does this need a lock?
+	if ( !Context->IsInitialised() )
+		return;
+	
+	Soy::Rectx<size_t> BoundsRect = NSRectToRect( bounds );
+	auto& Parent = *mParent;
+
+	bool DoneLock = false;
+	auto LockContext = [&]
 	{
+		if ( DoneLock )
+			return;
 		Context->Lock();
+		DoneLock = true;
 		Opengl::IsOkay("pre drawRect flush",false);
+		//	do parent's minimal render
+		Parent.mRenderTarget.mRect = BoundsRect;
+		Parent.mRenderTarget.Bind();
 	};
-	auto UnlockContext = [&Context]
+	auto UnlockContext = [&]
 	{
+		Parent.mRenderTarget.Unbind();
 		Opengl::IsOkay("Post drawRect flush",false);
 		Context->Unlock();
 	};
-	auto ContextLock = SoyScope( LockContext, UnlockContext );
-	
-    //  gr: oddly (in PopEngine at least) we now get a draw before the opengl deffered init (which is on the main thread)
-    //      so lets wait for the context to initialise... we may be dropping a frame :(
-    //      while this will still render, none of the extensions will be setup...
-    if ( !Context->IsInitialised() )
-        return;
 	
 	if ( !mParent )
 	{
+		auto ContextLock = SoyScope( LockContext, UnlockContext );
 		Opengl::ClearColour( Soy::TRgb(1,0,0) );
 		return;
 	}
-    
-	//	do parent's minimal render
-	mParent->mRenderTarget.mRect = NSRectToRect( bounds );
-	mParent->mRenderTarget.Bind();
 	
-	//Opengl::ClearColour( Soy::TRgb(0,1,0) );
     try
     {
-		if ( mParent->mOnRender )
-     	   mParent->mOnRender( mParent->mRenderTarget );
+		if ( !mParent->mOnRender )
+			throw Soy::AssertException("No OnRender callback");
+		
+		mParent->mOnRender( mParent->mRenderTarget, LockContext );
     }
     catch(std::exception& e)
     {
-        std::Debug << e.what() << std::endl;
+		LockContext();
+		Opengl::ClearColour( Soy::TRgb(1,0,0) );
+		std::Debug << e.what() << std::endl;
     }
-	mParent->mRenderTarget.Unbind();
-
 	
+	//	in case lock hasn't been done
+	LockContext();
 	
-	if ( Context->IsDoubleBuffered() )
+	try
 	{
-		//	let OSX flush and flip (probably sync'd better than we ever could)
-		//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
-		//	http://stackoverflow.com/a/13633191/355753
-		[[self openGLContext] flushBuffer];
+		if ( Context->IsDoubleBuffered() )
+		{
+			//	let OSX flush and flip (probably sync'd better than we ever could)
+			//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
+			//	http://stackoverflow.com/a/13633191/355753
+			[[self openGLContext] flushBuffer];
+		}
+		else
+		{
+			glFlush();
+			Opengl::IsOkay("glFlush");
+		}
+		
+		UnlockContext();
 	}
-	else
+	catch(std::exception& e)
 	{
-		glFlush();
+		UnlockContext();
+		std::Debug << e.what() << std::endl;
 	}
-	
 }
 
 @end

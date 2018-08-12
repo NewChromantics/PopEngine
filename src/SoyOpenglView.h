@@ -90,7 +90,7 @@ public:
 	std::function<void(const TMousePos&)>		mOnMouseDown;
 	std::function<void(const TMousePos&)>		mOnMouseMove;
 	std::function<void(const TMousePos&)>		mOnMouseUp;
-	std::function<void(Opengl::TRenderTarget&)>	mOnRender;
+	std::function<void(Opengl::TRenderTarget&,std::function<void()>)>	mOnRender;
 	MacOpenglView*								mView;
 	std::shared_ptr<GlViewContext>				mContext;
 	GlViewRenderTarget							mRenderTarget;

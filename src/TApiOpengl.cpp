@@ -57,20 +57,18 @@ TWindowWrapper::~TWindowWrapper()
 	}
 }
 
-void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget)
+void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 {
-	if ( !mWindow )
-	{
-		std::Debug << "Should there be a window here in OnRender?" << std::endl;
-	}
-	else
-	{
-		mWindow->Clear( RenderTarget );
-	}
-	
 	//  call javascript
 	auto Runner = [&](Local<Context> context)
 	{
+		LockContext();
+		
+		if ( !mWindow )
+			std::Debug << "Should there be a window here in OnRender?" << std::endl;
+		else
+			mWindow->Clear( RenderTarget );
+		
 		auto& Isolate = *context->GetIsolate();
 		auto This = this->GetHandle();
 		mContainer.ExecuteFunc( context, "OnRender", This );
@@ -98,9 +96,9 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	}
 	mWindow.reset( new TRenderWindow( WindowName, Params ) );
 	
-	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget)
+	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 	{
-		this->OnRender( RenderTarget );
+		this->OnRender( RenderTarget, LockContext );
 	};
 	mWindow->mOnRender = OnRender;
 }
@@ -1117,6 +1115,8 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 		DataHandleIndex = 8;
 	}
 	
+	std::Debug << "glTexImage2D(" << width << "x" << height << ")" << std::endl;
+	
 	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[externalformatIndex] );
 	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[externaltypeIndex] );
 	auto DataHandle = Arguments.mParams[DataHandleIndex];
@@ -1412,7 +1412,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 	
 	
 	//	gr: current issue; draw elements errors, but drawarrays doesnt
-	static bool UseDrawElements = true;
+	static bool UseDrawElements = false;
 	
 	//	GL_INVALID_OPERATION is generated if a non-zero buffer object name is bound to an enabled array and the buffer object's data store is currently mapped.
 	
