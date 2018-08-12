@@ -103,8 +103,13 @@ function XMLHttpRequest()
 			}
 			else if ( this.responseType == 'arraybuffer' )
 			{
-				let Contents = LoadFileAsArrayBuffer(this.Filename)
+				//	gr: this currently returns uint8array (cos its fast to fill c side)
+				//		but things that use this, need an array buffer.
+				let Contents = LoadFileAsArrayBuffer(this.Filename);
+				Contents = Contents.buffer;
+				
 				this.response = Contents;
+				//	test here
 				Debug("Loaded: " + this.Filename + " byte length: " + Contents.byteLength );
 				//Debug( ToHexString(Contents,' ',40) + "..." );
 			}
