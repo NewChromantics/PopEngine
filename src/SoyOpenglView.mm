@@ -190,6 +190,7 @@ bool TOpenglView::IsDoubleBuffered() const
 		DoneLock = true;
 		Opengl::IsOkay("pre drawRect flush",false);
 		//	do parent's minimal render
+		//	gr: reset state here!
 		Parent.mRenderTarget.mRect = BoundsRect;
 		Parent.mRenderTarget.Bind();
 	};
@@ -213,11 +214,12 @@ bool TOpenglView::IsDoubleBuffered() const
 			throw Soy::AssertException("No OnRender callback");
 		
 		mParent->mOnRender( mParent->mRenderTarget, LockContext );
+		//Opengl::ClearColour( Soy::TRgb(0,1,0) );
     }
     catch(std::exception& e)
     {
 		LockContext();
-		Opengl::ClearColour( Soy::TRgb(1,0,0) );
+		Opengl::ClearColour( Soy::TRgb(0,0,1) );
 		std::Debug << e.what() << std::endl;
     }
 	
