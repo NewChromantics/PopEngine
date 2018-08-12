@@ -180,8 +180,7 @@ static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
 		auto ValueHandle = Number::New( &Isolate, Value );
 		ArrayHandle->Set( i, ValueHandle );
 	}
-*/	
-	
+*/
 	return ArrayBuffer;
 }
 

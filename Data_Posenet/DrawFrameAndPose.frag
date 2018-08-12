@@ -19,7 +19,11 @@ float TimeAlongLine2(vec2 Position,vec2 Start,vec2 End)
 
 float3 NormalToRedGreen(float Normal)
 {
-	if ( Normal < 0.5 )
+	if ( Normal < 0.0 )
+	{
+		return float3( 0,1,1 );
+	}
+	else if ( Normal < 0.5 )
 	{
 		Normal = Normal / 0.5;
 		return float3( 1, Normal, 0 );
@@ -29,9 +33,10 @@ float3 NormalToRedGreen(float Normal)
 		Normal = (Normal-0.5) / 0.5;
 		return float3( 1-Normal, 1, 0 );
 	}
-	
-	//	>1
-	return float3( 0,0,1 );
+	else	//	>1
+	{
+		return float3( 0,0,1 );
+	}
 }
 
 float3 GetAngleColour(float Angle)
@@ -93,7 +98,10 @@ void main()
 	}
 	else if ( HasFrame )
 	{
-		gl_FragColor = texture( Frame, uv );
+		float Value = texture( Frame, uv ).r;
+		gl_FragColor.xyz = NormalToRedGreen( Value );
+		gl_FragColor.w = 1;
+		//gl_FragColor = texture( Frame, uv );
 	}
 	else
 	{

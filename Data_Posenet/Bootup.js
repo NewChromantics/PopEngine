@@ -6,8 +6,15 @@ function include(Filename)
 	CompileAndRun( Source );
 }
 
+var PosenetTextures = [];
+var OnOpenglImageCreated = function(Texture)
+{
+	PosenetTextures.push( Texture );
+}
+
 include('XMLHttpRequest.js');
 include('Webgl.js');
+
 
 
 //	to allow tensorflow to TRY and read video, (and walk past the code), we at least need a constructor for instanceof HTMLVideoElement
@@ -140,6 +147,8 @@ function GetPoseLines(Pose)
 	return Lines;
 }
 
+var CurrentTexture = 0;
+
 function WindowRender(RenderTarget)
 {
 	try
@@ -154,6 +163,16 @@ function WindowRender(RenderTarget)
 			if ( LastFrameImage != null )
 				Shader.SetUniform("Frame", LastFrameImage, 0 );
 			Shader.SetUniform("HasFrame", LastFrameImage!=null );
+		
+			if ( PosenetTextures.length )
+			{
+				CurrentTexture++;
+				let Index = Math.floor(CurrentTexture / 10) % PosenetTextures.length;
+				Debug(Index + " = " + PosenetTextures[Index]);
+				Shader.SetUniform("Frame", PosenetTextures[Index], 0 );
+				Shader.SetUniform("HasFrame", true );
+			}
+			
 			
 			const MAX_LINES = 100;
 			let PoseLines = GetPoseLines(LastPose);
@@ -343,7 +362,7 @@ function AddWebglBindings(This)
 function Main()
 {
 	//Debug("log is working!", "2nd param");
-	let Window1 = new OpenglWindow("Posenet");
+	let Window1 = new OpenglWindow("Posenet",true);
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
 	AddWebglBindings(Window1);
 	

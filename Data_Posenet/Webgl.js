@@ -201,7 +201,7 @@ function GetTypename(Object)
 	return Type;
 }
 		
-function FakeOpenglContext(ContextType,ParentCanvas)
+function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 {
 	let ContextsType = ParentCanvas.WebWindow.OpenglContext.constructor.name;
 	Debug("FakeOpenglContext(" + ContextType + ", " + ContextsType +")");
@@ -356,7 +356,12 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 	this.createTexture = function()
 	{
 		//	gr: internally the code is currently expecting some pixels
-		return new Image([1,1]);
+		let NewImage = new Image([1,1]);
+		if ( OnImageCreated )
+		{
+			OnImageCreated(NewImage);
+		}
+		return NewImage;
 	}
 	
 	this.checkFramebufferStatus = function(Binding)
@@ -451,8 +456,8 @@ function FakeOpenglContext(ContextType,ParentCanvas)
 
 }
 
-
-
+if ( OnOpenglImageCreated === undefined )
+	OnOpenglImageCreated = function(img)	{};
 
 function FakeCanvas(WebWindow)
 {
@@ -466,7 +471,7 @@ function FakeCanvas(WebWindow)
 	{
 		if ( this.WebglContext == null )
 		{
-			this.WebglContext = new FakeOpenglContext( ContextType, this );
+			this.WebglContext = new FakeOpenglContext( ContextType, this, OnOpenglImageCreated );
 		}
 		return this.WebglContext;
 	}

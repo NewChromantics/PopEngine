@@ -1424,6 +1424,13 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 		GlArguments.PushBack( type );
 		GlArguments.PushBack( offset );
 		
+		auto Prim = GetGlValue<GLenum>(type);
+		
+		glDrawElements( GL_TRIANGLES, 1, GL_UNSIGNED_SHORT, nullptr );	//	1 2 3
+		Opengl::IsOkay("glDrawElements");
+		return v8::Undefined(&Arguments.GetIsolate());
+		
+		
 		//	webgl call: .drawElements(e.TRIANGLES, 6, e.UNSIGNED_SHORT, 0)
 		//GLAPI void APIENTRY glDrawElements (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
 		return Immediate_Func( "glDrawElements", glDrawElements, GlArguments, &Arguments.GetIsolate() );
@@ -1434,7 +1441,19 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 		GlArguments.PushBack( primitivemode );
 		GlArguments.PushBack( offset );
 		GlArguments.PushBack( count );
+		
+		//	gr: drawarrays goes in order, not vertex re-use
+		glDrawArrays( GL_TRIANGLES, 0, 3 );	//	0 1 2
+		Opengl::IsOkay("glDrawArrays 0 1 2");
+		glDrawArrays( GL_TRIANGLES, 1, 3 );	//	1 2 3
+		Opengl::IsOkay("glDrawArrays 1 2 3");
+		return v8::Undefined(&Arguments.GetIsolate());
+		auto Prim = GetGlValue<GLenum>(primitivemode);
+		auto Offset = GetGlValue<GLint>(offset);
+		auto Count = GetGlValue<GLint>(count);
 		return Immediate_Func( "glDrawArrays", glDrawArrays, GlArguments, &Arguments.GetIsolate() );
+		
+		
 	}
 }
 
