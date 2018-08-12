@@ -255,6 +255,7 @@ void GlViewRenderTarget::Bind()
 {
 	//	gr: maybe need to work out how to bind to the default render target rather than relying on others to unbind
 	Opengl::BindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_SCISSOR_TEST);
 }
 
 
