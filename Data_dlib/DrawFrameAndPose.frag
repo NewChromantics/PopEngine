@@ -114,6 +114,7 @@ void main()
 	{
 		FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
 		gl_FragColor = texture( Frame, FrameUv );
+		gl_FragColor.xyz = gl_FragColor.xxx;
 	}
 	else
 	{
