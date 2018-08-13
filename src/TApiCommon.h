@@ -54,7 +54,8 @@ public:
 	static v8::Local<v8::Value>				Copy(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Resize(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Clear(const v8::CallbackInfo& Arguments);
-
+	static v8::Local<v8::Value>				SetFormat(const v8::CallbackInfo& Arguments);
+	
 	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
 	
 	void									DoLoadFile(const std::string& Filename);

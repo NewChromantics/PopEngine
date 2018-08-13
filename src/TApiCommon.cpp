@@ -28,6 +28,7 @@ const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 const char Copy_FunctionName[] = "Copy";
 const char Resize_FunctionName[] = "Resize";
 const char Clear_FunctionName[] = "Clear";
+const char SetFormat_FunctionName[] = "SetFormat";
 
 const char Image_TypeName[] = "Image";
 
@@ -265,6 +266,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Copy_FunctionName>( InstanceTemplate, TImageWrapper::Copy );
 	Container.BindFunction<Resize_FunctionName>( InstanceTemplate, TImageWrapper::Resize );
 	Container.BindFunction<Clear_FunctionName>( InstanceTemplate, TImageWrapper::Clear );
+	Container.BindFunction<SetFormat_FunctionName>( InstanceTemplate, TImageWrapper::SetFormat );
 
 	return ConstructorFunc;
 }
@@ -454,6 +456,27 @@ v8::Local<v8::Value> TImageWrapper::Clear(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	
 	This.Free();
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+v8::Local<v8::Value> TImageWrapper::SetFormat(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+
+	auto FormatNameHandle = Arguments[0];
+	auto FormatName = v8::GetString(FormatNameHandle);
+	auto NewFormat = SoyPixelsFormat::ToType(FormatName);
+	
+	//	gr: currently only handling pixels
+	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
+	auto& Pixels = This.GetPixels();
+	Pixels.SetFormat(NewFormat);
+	This.mPixelsVersion++;
 	
 	return v8::Undefined(Params.mIsolate);
 }
