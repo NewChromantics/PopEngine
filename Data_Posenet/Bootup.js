@@ -198,7 +198,7 @@ function WindowRender(RenderTarget)
 
 var CachedImageData = null;
 
-function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
+function RunPoseDetection(PoseNet,NewImage)
 {
 	//	for CPU mode (and gpu?)
 	if ( NewImage instanceof Image )
@@ -225,30 +225,6 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 	//console.log(NewImage);
 	//let StartTime = performance.now();
 	
-	let OnNewPose = function(NewPose)
-	{
-		Debug("OnNewPose...");
-		//let EndTime = performance.now();
-		//let ProcessingTime = EndTime - StartTime;
-		//NewPose.ProcessingTimeMs = ProcessingTime;
-		
-		let ImageWidth = NewImage.width;
-		let ImageHeight = NewImage.height;
-		//console.log(ImageWidth);
-		
-		//	put coords in uv space
-		let RescaleCoords = function(keypoint)
-		{
-			keypoint.position.x /= ImageWidth;
-			keypoint.position.y /= ImageHeight;
-			//keypoint.position.y = 1-keypoint.position.y;
-			//keypoint.position.x = 1-keypoint.position.x;
-		};
-		NewPose.keypoints.forEach( RescaleCoords );
-		
-		OnPoseFound(NewPose);
-	}
-	
 	let OnEstimateFailed = function(e)
 	{
 		Debug("estimateSinglePose failed");
@@ -257,12 +233,58 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 	
 	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
 	let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
-	EstimatePromise.then( OnNewPose ).catch( OnEstimateFailed );
+	return EstimatePromise;
 }
 
 
 function OnFoundPose(Pose,Image)
 {
+	Debug("OnNewPose...");
+	//let EndTime = performance.now();
+	//let ProcessingTime = EndTime - StartTime;
+	//NewPose.ProcessingTimeMs = ProcessingTime;
+		
+	let ImageWidth = Image.GetWidth();
+	let ImageHeight = Image.GetHeight();
+	//console.log(ImageWidth);
+		
+	//	put coords in uv space
+	let RescaleCoords = function(keypoint)
+	{
+		keypoint.position.x /= ImageWidth;
+		keypoint.position.y /= ImageHeight;
+		//keypoint.position.y = 1-keypoint.position.y;
+		//keypoint.position.x = 1-keypoint.position.x;
+	};
+	Pose.keypoints.forEach( RescaleCoords );
+	
+
+	/*
+		let OnFoundPose = function(Pose)
+		{
+	 Debug("Found pose, score=" + Pose.score );
+	 let DebugKeypoint = function(kp)
+	 {
+	 Debug("Keypoint: " + kp.part + " score=" + kp.score + " " + kp.position.x + "," + kp.position.y );
+	 }
+	 Pose.keypoints.forEach( DebugKeypoint );
+	 
+	 LastPose = Pose;
+	 
+	 try
+	 {
+	 //SendNewPose(Pose);
+	 }
+	 catch(e)
+	 {
+	 console.log(e);
+	 }
+	 //console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
+	 console.log(Pose);
+		}
+		*/
+
+	
 	LastPose = Pose;
 	
 	if ( LastFrameImage!=null )
@@ -298,36 +320,15 @@ function StartPoseDetection(PoseNet)
 	
 	if ( UseTestImage )
 	{
-		let OnFoundPose = function(Pose)
-		{
-			Debug("Found pose, score=" + Pose.score );
-			let DebugKeypoint = function(kp)
-			{
-				Debug("Keypoint: " + kp.part + " score=" + kp.score + " " + kp.position.x + "," + kp.position.y );
-			}
-			Pose.keypoints.forEach( DebugKeypoint );
-			
-			LastPose = Pose;
-			
-			try
-			{
-				//SendNewPose(Pose);
-			}
-			catch(e)
-			{
-				console.log(e);
-			}
-			//console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
-			console.log(Pose);
-		}
-		
 		
 		let FrameImage = new Image('girlstanding.jpg');
 		//FrameImage.Flip();
 		LastFrameImage = FrameImage;
 		try
 		{
-			RunPoseDetection( PoseNet, FrameImage, OnFoundPose );
+			RunPoseDetection( PoseNet, FrameImage )
+			.then( OnFoundPose )
+			.catch( Debug );
 		}
 		catch(e)
 		{
@@ -342,24 +343,31 @@ function StartPoseDetection(PoseNet)
 		{
 			if ( CurrentProcessingCount >= 1 )
 			{
+				Debug("Skipping frame");
 				FrameImage.Clear();
 				return;
 			}
+			CurrentProcessingCount++;
 			
 			if ( FlipCameraInput )
 				FrameImage.Flip();
 			
-			CurrentProcessingCount++;
+			let StartTime = Date.now();
 			let OnPose = function(Pose)
 			{
+				Debug("Onpose");
 				CurrentProcessingCount--;
+				let PoseDetectionDuration = Date.now() - StartTime;
+				Pose.Duration = PoseDetectionDuration;
+				Debug("Pose detection took " + Pose.Duration + "ms" );
 				OnFoundPose(Pose,FrameImage);
 			}
-			RunPoseDetection( PoseNet, FrameImage, OnPose );
-		}
-		
-		
 
+			//	run promise
+			RunPoseDetection( PoseNet, FrameImage )
+			.then( OnPose )
+			.catch( Debug );
+		}
 		
 		//	tries to find these in order, then grabs any
 		var VideoDeviceNames = ["c920","isight","facetime"];
