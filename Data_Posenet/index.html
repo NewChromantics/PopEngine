@@ -1,0 +1,429 @@
+<html>
+<head>
+	<!-- Load TensorFlow.js -->
+	<!--<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.7"></script>-->
+	<!-- Load Posenet -->
+	<!--<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@0.1.2"></script>-->
+	<script src="tfjs.0.11.7.js"></script>
+	<script src="posenet.0.1.2.js"></script>
+	
+	
+	<style type=text/css>
+
+	
+	/*
+	http://jsfiddle.net/RjWJ8/
+ 
+	add
+ onchange/oninput="this.setAttribute('value',this.value);
+ */
+ input[type=range]
+ {
+	margin-right:	25pt;
+	}
+	input[type=range]:after
+	{
+	margin-right:	-20pt;
+	content:		attr(value) "%";
+	color:			#000;
+	xposition:		absolute;
+	xright:			0px;
+	}
+	</style>
+	
+	
+</head>
+
+<body>
+
+	<div>
+		<h1>Connect To Host</h1>
+		<input type=text id='WebsocketHostAndPort' value='localhost:8000' onchange="OnWebsocketHostnameChanged(this.value);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" />
+		<!--<input type=button id='WebsocketConnectButton' value='connect' onclick="ConnectToWebsocket();" />-->
+		<div id=WebsocketStatus>I love lamp.</div>
+	</div>
+	
+	<div>
+		<h1>Input</h1>
+		
+		<div>
+			<label for="ImageSizeScalar">Image Scale</label>
+			<input type="range" id="ImageSizeScalar" name="ImageSizeScalar" min="20" max="100" value="40" oninput="this.setAttribute('value',this.value);OnImageScaleSliderChanged(this);" />
+		</div>
+	
+		<div>
+			<div>
+			<select id=WebcamDeviceId onchange="SetupCamera();" >
+				<script>{let Parent = document.scripts[document.scripts.length-1].parentNode;	document.addEventListener('DOMContentLoaded', function(){	PopulateVideoSources(Parent);	} );}</script>
+			</select>
+			</div>
+			<video id="video" playsinline="" style=" -moz-transform: scaleX(-1);
+				-o-transform: scaleX(-1);
+				-webkit-transform: scaleX(-1);
+				transform: scaleX(-1);
+				
+				">
+			</video>
+		</div>
+		<img id='cat' src='jazzflute.jpg' ondrop="OnDroppedFile(this,event);" ondragover="OnDroppingFile(event);" />
+	</div>
+	
+</body>
+
+<script>
+	var imageScaleFactor = 0.20;
+	var outputStride = 16;
+	var flipHorizontal = false;
+	var QueuedImage = null;
+	var ProcessingImage = null;
+	var Websocket = null;
+	var WebsocketReconnect = null;
+	var CameraWidth = 640;
+	var CameraRatio = 1920/1080;	//640/480
+	var CameraHeight = 640/CameraRatio;
+	
+	
+	function IsString(Variable)
+	{
+		return typeof Variable == 'string' || Variable instanceof String;
+	}
+
+	function GetElement(Element)
+	{
+		//	fetch element by id if string
+		if ( IsString(Element) )
+		return document.getElementById(Element);
+		
+		return Element;
+	}
+
+	function GetElementValue(Element,Normalise)
+	{
+		var Element = GetElement(Element);
+		//console.log("GetElementValue(" + Element + "," + Normalise + ")");
+		//console.log(Element);
+		
+		//	gr: a range input has false for checked :/
+		if ( Element.checked !== undefined && Element.type=="checkbox")
+		{
+			//console.log("checked="+Element.checked);
+			return Element.checked;
+		}
+		
+		if ( Element.min !== undefined && Element.max !== undefined && Normalise === true )
+		{
+			var Value = Element.value;
+			var Min = Element.min;
+			var Max = Element.max;
+			Value = (Value-Min) / (Max-Min);
+			//console.log("Normalised="+Value);
+			return Value;
+		}
+		
+		return Element.value;
+	}
+
+	function EnumMediaDevices(OnEnumDevice)
+	{
+		var EnumDevices = function(Devices)
+		{
+			Devices.forEach(OnEnumDevice);
+		};
+		
+		//	todo: .catch denial
+		navigator.mediaDevices.enumerateDevices().then(EnumDevices);
+	}
+
+	function PopulateVideoSources(SelectElement)
+	{
+		//console.log("PopulateVideoSources()");
+		//console.log(SelectElement);
+		SelectElement = (SelectElement);
+		
+		var EnumDevice = function(Device)
+		{
+			if ( Device.kind != 'videoinput' )
+				return;
+			var Option = document.createElement("option");
+			Option.text = Device.label;
+			Option.value = Device.deviceId;
+			SelectElement.add(Option);
+		};
+		EnumMediaDevices( EnumDevice );
+	}
+
+	function OnImageScaleSliderChanged(InputElement)
+	{
+		imageScaleFactor = GetElementValue(InputElement) / 100;
+		console.log("Image scale now " + imageScaleFactor);
+	}
+
+	function SetWebsocketStatus(Status)
+	{
+		let Element = document.getElementById('WebsocketStatus');
+		Element.innerText = Status;
+	}
+
+
+	function OnWebsocketConnectSuccess()
+	{
+		SetWebsocketStatus("Connected to " + Websocket.hostname);
+	}
+
+	function OnWebsocketConnectFailed(ErrorEvent)
+	{
+		console.log(ErrorEvent);
+		let Error = ErrorEvent.reason;
+		if ( Error === undefined )
+			Error = "Unknown error";
+		if ( ErrorEvent.code !== undefined )
+			Error += " (code " + ErrorEvent.code + ")";
+			
+		SetWebsocketStatus("Failed to connect: " + Error);
+		WebsocketReconnect = setTimeout( ConnectToWebsocket, 1000 );
+	}
+
+	function OnWebsocketMessage(MessageEvent)
+	{
+	}
+
+	function DisconnectWebsocket()
+	{
+		if ( Websocket == null )
+			return;
+			
+		try
+		{
+			Websocket.close();
+			Websocket = null;
+		}
+		catch(e)
+		{
+			SetWebsocketStatus("Disconnect error: " + e);
+			Websocket = null;
+		}
+	}
+
+	function ConnectToWebsocket(HostnameAndPort)
+	{
+		if ( HostnameAndPort === undefined )
+			HostnameAndPort = GetElementValue('WebsocketHostAndPort');
+		
+		
+		if ( Websocket != null )
+			DisconnectWebsocket();
+		
+		clearTimeout(WebsocketReconnect);
+			
+		try
+		{
+			let Url = 'ws:' + HostnameAndPort + '/';
+			SetWebsocketStatus("Connecting to : " + Url);
+			let NewWebsocket = new WebSocket(Url);
+			NewWebsocket.onopen = OnWebsocketConnectSuccess;
+			NewWebsocket.onclose = OnWebsocketConnectFailed;
+			NewWebsocket.onmessage = OnWebsocketMessage;
+			//NewWebsocket.onerror = OnWebsocketConnectFailed;
+			
+			Websocket = NewWebsocket;
+		}
+		catch(e)
+		{
+			console.log(e);
+			DisconnectWebsocket();
+		}
+	}
+
+	function ShowConnectToWebsocketButton(Visible)
+	{
+		let Element = document.getElementById('WebsocketStatus');
+		Element.style.Visibility = Visible ? 'visible' : 'hidden';
+	}
+
+	function OnWebsocketHostnameChanged(NewHostnameAndPort)
+	{
+		ConnectToWebsocket();
+	}
+
+	function SendNewPose(NewPose)
+	{
+		//	not connected, don't send anything
+		if ( Websocket == null )
+			return;
+		if ( Websocket.readyState !== Websocket.OPEN )
+			return;
+		
+		//console.log(NewPose);
+		//console.log("Found pose in " + NewPose.ProcessingTimeMs + "ms: " + Pose);
+		
+		let PoseJson = JSON.stringify( NewPose );
+		Websocket.send( PoseJson );
+	}
+
+	//console.log("Loading posenet...");
+
+	async function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
+	{
+		//console.log("Processing...");
+		//console.log(NewImage);
+		let StartTime = performance.now();
+		
+		const NewPose = await PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
+		let EndTime = performance.now();
+		let ProcessingTime = EndTime - StartTime;
+		NewPose.ProcessingTimeMs = ProcessingTime;
+		
+		let ImageWidth = NewImage.width;
+		let ImageHeight = NewImage.height;
+		//console.log(ImageWidth);
+		
+		console.log(NewPose);
+		//	put coords in uv space
+		let RescaleCoords = function(keypoint)
+		{
+			keypoint.position.x /= ImageWidth;
+			keypoint.position.y /= ImageHeight;
+		};
+		NewPose.keypoints.forEach ( RescaleCoords );
+		NewPose.ImageWidth = ImageWidth;
+		NewPose.ImageHeight = ImageHeight;
+		
+		OnPoseFound(NewPose);
+	}
+
+	function OnDroppingFile(DropEvent)
+	{
+		//	allow file drop
+		DropEvent.preventDefault();
+	}
+
+	function OnDroppedFile(DropTargetElement,DropEvent)
+	{
+		//	allow
+		DropEvent.preventDefault();
+		
+		//	convert first dropped file to a blob we can read
+		let File = DropEvent.dataTransfer.files[0];
+		let FileUrl = window.URL.createObjectURL(File);
+		
+		DropTargetElement.src = FileUrl;
+		QueueImage(DropTargetElement);
+	}
+
+	function QueueImage(NewImage)
+	{
+		QueuedImage = NewImage;
+	}
+
+
+	function QueueWebcamFrame()
+	{
+		let imageElement = document.getElementById('video');
+		QueueImage(imageElement);
+	}
+
+	function QueueTestImage()
+	{
+		QueueWebcamFrame();
+		//let imageElement = document.getElementById('cat');
+		//QueueImage(imageElement);
+	}
+
+	function Loop(PoseNet)
+	{
+		let OnFoundPose = function(Pose,DurationMs)
+		{
+			try
+			{
+				SendNewPose(Pose);
+			}
+			catch(e)
+			{
+				console.log(e);
+			}
+			//console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
+			//console.log(Pose);
+			ProcessingImage = null;
+			QueueTestImage();
+		}
+
+		if ( QueuedImage != null && ProcessingImage == null )
+		{
+			ProcessingImage = QueuedImage;
+			QueuedImage = null;
+			try
+			{
+				RunPoseDetection( PoseNet, ProcessingImage, OnFoundPose );
+			}
+			catch(e)
+			{
+				OnFoundPose(null, 0);
+				console.log(e);
+			}
+		}
+
+		window.requestAnimationFrame( function(FrameTime){	Loop(PoseNet);	} );
+	}
+
+	function StartPoseDetection(PoseNet)
+	{
+		console.log("StartPoseDetection posenet: " + PoseNet);
+		QueueTestImage();
+		Loop( PoseNet );
+	}
+
+
+
+	//	setup webcam
+	async function SetupCamera()
+	{
+		let VideoElement = document.getElementById('video');
+		let DeviceName = GetElementValue('WebcamDeviceId');
+		 
+		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+		{
+			throw new Error('Browser API navigator.mediaDevices.getUserMedia not available');
+		}
+		
+		let videoWidth = CameraWidth;
+		let videoHeight = CameraHeight;
+		VideoElement.width = videoWidth;
+		VideoElement.height = videoHeight;
+		
+		let MediaParams ={
+			'audio': false,
+			'video': {
+				optional: [{sourceId: DeviceName}]
+			}
+		}
+		
+		console.log("Setting up stream");
+		const stream = await navigator.mediaDevices.getUserMedia(MediaParams);
+		VideoElement.srcObject = stream;
+		/*
+			return new _promise2.default(resolve => {	video.onloadedmetadata = () => {
+		 resolve(video);
+		 };
+		 });
+		 */
+		console.log("Play video");
+		VideoElement.play();
+	}
+
+	//	init hostname to our hostname
+	let DefaultHostname = location.host.split(':')[0] + ':8008';
+	let HostnameElement = document.getElementById('WebsocketHostAndPort');
+	HostnameElement.value = DefaultHostname;
+	
+	//	connect socket on startup
+	ConnectToWebsocket();
+
+	//	load posenet
+	posenet.load().then( StartPoseDetection );
+	
+	SetupCamera();
+	
+
+
+</script>
+</html>

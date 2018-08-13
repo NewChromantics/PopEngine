@@ -19,6 +19,11 @@ var ShowPosenetImages = false;
 var RGBAFromCamera = true;
 var FlipCameraInput = false;
 
+var WebServer = null;
+var WebServerPort = 8000;
+
+
+
 //	to allow tensorflow to TRY and read video, (and walk past the code), we at least need a constructor for instanceof HTMLVideoElement
 function HTMLVideoElement()
 {
@@ -216,7 +221,7 @@ function RunPoseDetection(PoseNet,NewImage)
 	}
 	
 		
-	var imageScaleFactor = 0.20;
+	var imageScaleFactor = 0.30;
 	var outputStride = 16;
 	//var outputStride = 32;
 	var flipHorizontal = false;
@@ -508,6 +513,28 @@ function Main()
 	Debug("Loading posenet...");
 	posenet.load().then( StartPoseDetection ).catch( PosenetFailed );
 	
+	
+	let AllocWebServer = function()
+	{
+		WebServer = new HttpServer(WebServerPort);
+	}
+	
+	let Retry = function(RetryFunc,Timeout)
+	{
+		let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
+		try
+		{
+			RetryFunc();
+		}
+		catch(e)
+		{
+			Debug(e+"... retrying in " + Timeout);
+			setTimeout( RetryAgain, Timeout );
+		}
+	}
+	
+	Retry( AllocWebServer, 1000 );
+
 }
 
 //	main
