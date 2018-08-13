@@ -40,6 +40,7 @@ var ResizeFragShader = null;
 //	skeleton + face
 var OutputSkeleton = null;
 var OutputImage = null;
+var OutputImageIsClipped = false;
 //var OutputFilename = "../../../../SkeletonOutputFrames.json";
 var OutputFilename = null;
 var OutputSkipFirstFrames = 20;
@@ -296,7 +297,7 @@ function WindowRender(RenderTarget)
 				Shader.SetUniform("Frame", OutputImage, 0 );
 			Shader.SetUniform("HasFrame", RenderLastFrame && OutputImage!=null );
 			
-			if ( OutputSkeleton && OutputSkeleton.ClipRect )
+			if ( OutputSkeleton && OutputSkeleton.ClipRect && OutputImageIsClipped )
 			{
 				Shader.SetUniform("UnClipRect", OutputSkeleton.ClipRect );
 			}
@@ -465,13 +466,18 @@ function GetSkeletonJson(Skeleton,Pretty,KeypointCountArray)
 }
 
 
-function OnOutputSkeleton(Skeleton,Image)
+function OnOutputSkeleton(Skeleton,FullImage,ClippedImage)
 {
 	//	try and free unused memory manually
-	if ( OutputImage != null && OutputImage != Image )
+	if ( OutputImage != null && OutputImage != FullImage )
 		OutputImage.Clear();
-	OutputImage = Image;
+	OutputImage = FullImage;
+	OutputImageIsClipped = false;
 	OutputSkeleton = Skeleton;
+	
+	//	don't need this atm
+	if ( ClippedImage )
+		ClippedImage.Clear();
 	
 	if ( OutputSkeleton == null )
 		return;
@@ -575,7 +581,7 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise)
 }
 
 
-function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,Skeleton)
+function OnNewFace(FaceLandmarks,FaceRect,ClipRect,FullImage,ClippedImage,Skeleton)
 {
 	UpdateFrameCounter('NewFace');
 	
@@ -584,7 +590,7 @@ function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,Skeleton)
 	{
 		if ( Skeleton )
 			Skeleton.ClipRect = ClipRect;
-		OnOutputSkeleton( Skeleton, Image );
+		OnOutputSkeleton( Skeleton, FullImage, ClippedImage );
 		return;
 	}
 
@@ -643,7 +649,7 @@ function OnNewFace(FaceLandmarks,FaceRect,ClipRect,Image,Skeleton)
 		PushFeature( FeatureName, FaceLandmarks[i+0], FaceLandmarks[i+1] );
 	}
 	
-	OnOutputSkeleton( Skeleton, Image );
+	OnOutputSkeleton( Skeleton, FullImage, ClippedImage );
 }
 
 function EnumDevices(DeviceNames)
@@ -709,6 +715,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		NewFrameImage.Copy(AlwaysThisFrame);
 	}
 	
+	//	asap show any image
 	if ( OutputImage == null )
 		OutputImage = NewFrameImage;
 	
@@ -726,10 +733,10 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 	{
 		Debug("Failed to get facelandmarks: " + Error);
 		CurrentProcessingImageCount--;
-		OnNewFace(null,null,null,NewFrameImage,Skeleton);
+		OnNewFace(null,null,null,NewFrameImage,null,Skeleton);
 	}
 
-	let OnFace = function(Face,Image,ClipRect)
+	let OnFace = function(Face,FullImage,ClippedImage,ClipRect)
 	{
 		//Debug("ClipRect=" + ClipRect);
 		//	get the inverse rect
@@ -773,7 +780,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 			}
 		}
 		
-		OnNewFace(Face,FaceRect,ClipRect,Image,Skeleton);
+		OnNewFace(Face,FaceRect,ClipRect,FullImage,ClippedImage,Skeleton);
 	}
 	
 
@@ -844,7 +851,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 					Shader.SetUniform("ApplyBlur", BlurLandmarkSearch );
 				}
 				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
-				NewFrameImage.Clear();
+				//NewFrameImage.Clear();
 			}
 			SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
 			SmallImage.SetLinearFilter(true);
@@ -860,7 +867,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 				{
 					SmallImage = new Image();
 					SmallImage.Copy(NewFrameImage);
-					NewFrameImage.Clear();
+					//NewFrameImage.Clear();
 					SmallImage.Resize( SmallImageWidth, SmallImageHeight );
 					Resolve();
 				}
@@ -895,7 +902,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		
 		ResizePromise
 		.then( GetFindFacePromise )
-		.then( function(f){	OnFace(f,SmallImage,ClipRect); } )
+		.then( function(f){	OnFace(f,NewFrameImage,SmallImage,ClipRect); } )
 		.catch( OnFaceError );
 	}
 	catch(e)
