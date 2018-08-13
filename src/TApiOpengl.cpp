@@ -1136,7 +1136,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 		if ( PixelData.GetDataSize() != UploadMeta.GetDataSize() )
 		{
 			std::stringstream Error;
-			Error << "glTexImage2D( " << UploadMeta << ") but data mismatch: " << PixelData.GetDataSize() << " bytes";
+			Error << "glTexImage2D( " << UploadMeta << ", " << UploadMeta.GetDataSize() << " bytes) but data mismatch: " << PixelData.GetDataSize() << " bytes";
 			throw Soy::AssertException(Error.str());
 		}
 	}
