@@ -50,6 +50,7 @@ public:
 
 public:
 	v8::Persistent<v8::Object>			mHandle;
+	std::shared_ptr<V8Storage<v8::Function>>	mOnFrameFilter;
 	TV8Container*						mContainer;
 	
 	std::shared_ptr<TMediaExtractor>	mExtractor;

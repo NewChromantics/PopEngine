@@ -173,10 +173,18 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 	{
 		auto DeviceNameHandle = Arguments[0];
 		auto SinglePlaneOutputHandle = Arguments[1];
+		auto FilterCallbackHandle = Arguments[2];
 	
 		bool SinglePlaneOutput = false;
 		if ( !SinglePlaneOutputHandle->IsUndefined() )
 			SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
+		
+		std::shared_ptr<V8Storage<v8::Function>> mOnFrameFilter;
+		if ( !FilterCallbackHandle->IsUndefined() )
+		{
+			auto FilterCallback = v8::SafeCast<v8::Function>(FilterCallbackHandle);
+			mOnFrameFilter = v8::GetPersistent( *Isolate, FilterCallback );
+		}
 		
 		//	alloc window
 		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
@@ -187,6 +195,7 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 		//	store persistent handle to the javascript object
 		NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
 		NewWrapper->mContainer = &Container;
+		NewWrapper->mOnFrameFilter = mOnFrameFilter;
 
 		auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
 		{
@@ -195,6 +204,7 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 		};
 		auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
 		{
+			//	gr: do filter here!
 			//std::Debug << "OnPrePushFrame" << std::endl;
 		};
 
@@ -278,6 +288,30 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		return;
 	}
 	
+	if ( mOnFrameFilter )
+	{
+		//	When we're stuck with non-async stuff in js (posenet)
+		//	lets do an immediate "reject frame" option
+		 //	and if the isolate is yeilded (sleep()) then this can execute now
+		bool AllowFrame = true;
+		auto FilterRunner = [this,PixelBuffer,&AllowFrame](Local<Context> context)
+		{
+			auto& Isolate = *context->GetIsolate();
+			
+			BufferArray<Local<Value>,2> Args;
+			
+			auto FuncHandle = mOnFrameFilter->GetLocal(Isolate);
+			auto ThisHandle = v8::Local<v8::Object>();
+			
+			auto AllowHandle = mContainer->ExecuteFunc( context, FuncHandle, ThisHandle, GetArrayBridge(Args) );
+			auto AllowBoolHandle = v8::SafeCast<v8::Boolean>(AllowHandle);
+			AllowFrame = AllowBoolHandle->BooleanValue();
+		};
+		mContainer->RunScoped( FilterRunner );
+		if ( !AllowFrame )
+			return;
+	}
+	
 	static bool ReadToPixels = false;
 	std::shared_ptr<SoyPixels> Pixels;
 
@@ -303,6 +337,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 			throw;
 		}
 	}
+	
 	
 	auto Runner = [this,Pixels,PixelBuffer](Local<Context> context)
 	{

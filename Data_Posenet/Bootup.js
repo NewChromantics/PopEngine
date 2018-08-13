@@ -339,11 +339,21 @@ function StartPoseDetection(PoseNet)
 	}
 	else//	not test image
 	{
+		let OnFrameFilter = function()
+		{
+			if ( CurrentProcessingCount >= 1 )
+			{
+				Debug("Frame rejected:" + CurrentProcessingCount);
+				return false;
+			}
+			return true;
+		}
+		
 		let OnFrame = function(FrameImage)
 		{
 			if ( CurrentProcessingCount >= 1 )
 			{
-				Debug("Skipping frame");
+				Debug("Skipping frame:" + CurrentProcessingCount);
 				FrameImage.Clear();
 				return;
 			}
@@ -392,7 +402,7 @@ function StartPoseDetection(PoseNet)
 				}
 				Debug("Loading device: " + VideoDeviceName);
 				
-				let VideoCapture = new MediaSource(VideoDeviceName,RGBAFromCamera);
+				let VideoCapture = new MediaSource(VideoDeviceName,RGBAFromCamera,OnFrameFilter);
 				VideoCapture.OnNewFrame = OnFrame;
 			}
 			catch(e)

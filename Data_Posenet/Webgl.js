@@ -81,6 +81,10 @@ function WebglExtension_LoseContext()
 	{
 		Debug("Do loseContext");
 	}
+	this.restoreContext = function()
+	{
+		Debug("@@@@@@@@@@@@@@@@@@@@ Do restorecontext");
+	}
 }
 
 function WebglExtension_EXTColorBufferFloat()
@@ -150,7 +154,7 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			Debug("Execute Queue x" + Commands.length );
+			//Debug("Execute Queue x" + Commands.length );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
@@ -171,7 +175,7 @@ function OpenglCommandQueue()
 		}
 		
 		//	run these commands on the opengl thread
-		Debug("Running opengl command queue");
+		//Debug("Running opengl command queue");
 		//	capture commands and remove from our list
 		let Cmds = this.Commands;
 		this.Commands = [];
@@ -233,6 +237,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	{
 		if ( ExtensionName == "WEBGL_lose_context" )
 			return new WebglExtension_LoseContext();
+
 		if ( ExtensionName == "EXT_color_buffer_float" )
 			return new WebglExtension_EXTColorBufferFloat();
 		
@@ -333,8 +338,9 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	{
 		//	work out what we're reading into
 		//Debug("ReadPixels into " + arguments[6].constructor.name);
-		
 		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		
+		Sleep(1);
 		this.CommandQueue.Flush( this.GetOpenglContext() );
 	}
 	
