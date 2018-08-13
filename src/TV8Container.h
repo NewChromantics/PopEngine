@@ -256,6 +256,8 @@ public:
 	void		QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 	void		QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> Lambda,size_t DelayMs);
 
+	void		Yield(size_t SleepMilliseconds);
+	
 	void		ProcessJobs();	//	run all the queued jobs then return
 	
 	//	run these with RunScoped (internal) or QueueJob (external)

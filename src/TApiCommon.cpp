@@ -16,7 +16,13 @@ const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
 const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 const char GarbageCollect_FunctionName[] = "GarbageCollect";
 const char SetTimeout_FunctionName[] = "setTimeout";
+const char Sleep_FunctionName[] = "Sleep";
 
+
+
+
+
+const char Image_TypeName[] = "Image";
 
 const char LoadFile_FunctionName[] = "Load";
 const char Alloc_FunctionName[] = "Create";
@@ -30,7 +36,6 @@ const char Resize_FunctionName[] = "Resize";
 const char Clear_FunctionName[] = "Clear";
 const char SetFormat_FunctionName[] = "SetFormat";
 
-const char Image_TypeName[] = "Image";
 
 
 static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
@@ -40,6 +45,7 @@ static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -52,6 +58,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
 	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
+	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
 
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
@@ -115,6 +122,17 @@ static Local<Value> SetTimeout(CallbackInfo& Params)
 	return Undefined(Params.mIsolate);
 }
 
+
+
+static Local<Value> Sleep(CallbackInfo& Params)
+{
+	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[0]);
+	auto TimeoutMs = TimeoutMsHandle->Uint32Value();
+	
+	Params.mContainer.Yield( TimeoutMs );
+	
+	return Undefined(Params.mIsolate);
+}
 
 
 

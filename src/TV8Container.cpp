@@ -304,6 +304,16 @@ void TV8Container::QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> 
 	this->mPlatform->CallDelayedOnForegroundThread( mIsolate, Task, DelayDouble );
 }
 
+void TV8Container::Yield(size_t SleepMilliseconds)
+{
+	v8::Unlocker unlocker(mIsolate);
+	
+	//	isolate unlock for a moment, let another thread jump in and run stuff
+	auto ms = std::chrono::milliseconds(SleepMilliseconds);
+	std::this_thread::sleep_for( ms );
+}
+
+
 void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 {
 	auto* isolate = mIsolate;
@@ -349,6 +359,11 @@ v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHan
 	auto* isolate = ContextHandle->GetIsolate();
 	try
 	{
+		//	default this to the global
+		if ( This.IsEmpty() )
+			This = ContextHandle->Global();
+
+		
 		auto ArgCount = Params.GetSize();
 		auto* Args = Params.GetArray();
 		TryCatch trycatch(isolate);
