@@ -2,10 +2,12 @@
 #include "TV8Container.h"
 #include "TV8ObjectWrapper.h"
 #include <SoyPixels.h>
+#include <SoyVector.h>
 
 class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;
+
 
 namespace ApiCommon
 {
@@ -70,9 +72,11 @@ public:
 	void									SetPixels(std::shared_ptr<SoyPixels> NewPixels);
 	void									SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels);
 	SoyPixelsMeta							GetMeta();
+	void									GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback);	//	lock & unlock pixels for processing
 
 protected:
 	void								Free();
+	
 	
 protected:
 	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?

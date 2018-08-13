@@ -567,6 +567,31 @@ v8::Local<v8::Value> TImageWrapper::SetLinearFilter(const v8::CallbackInfo& Para
 	return v8::Undefined(Params.mIsolate);
 }
 
+
+void TImageWrapper::GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback)
+{
+	if ( !mPixelBuffer )
+		throw Soy::AssertException("Can't get pixel buffer pixels with no pixelbuffer");
+	
+	if ( mPixelBufferVersion != GetLatestVersion() )
+		throw Soy::AssertException("Trying to get pixel buffer pixels that are out of date");
+
+	//	lock pixels
+	BufferArray<SoyPixelsImpl*,2> Textures;
+	float3x3 Transform;
+	mPixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+	try
+	{
+		Callback( GetArrayBridge(Textures), Transform );
+		mPixelBuffer->Unlock();
+	}
+	catch(std::exception& e)
+	{
+		mPixelBuffer->Unlock();
+		throw;
+	}
+}
+
 void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
 	//	already created & current version
@@ -617,24 +642,15 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 			}
 			else if ( GetLatestVersion() == mPixelBufferVersion )
 			{
-				//	todo: try and lock opengl texture & copy that
-				BufferArray<SoyPixelsImpl*,2> Textures;
-				float3x3 Transform;
-				mPixelBuffer->Lock( GetArrayBridge(Textures), Transform );
-				try
+				auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Textures,float3x3& Transform)
 				{
 					auto& Pixels = *Textures[0];
 					mPixelBufferMeta = Pixels.GetMeta();
 					AllocTexture( mPixelBufferMeta );
 					mOpenglTexture->Write( Pixels, UploadParams );
-					mPixelBuffer->Unlock();
 					mOpenglTextureVersion = mPixelBufferVersion;
-				}
-				catch(std::exception& e)
-				{
-					mPixelBuffer->Unlock();
-					throw;
-				}
+				};
+				GetPixelBufferPixels(CopyPixels);
 			}
 			else
 			{
@@ -725,6 +741,22 @@ SoyPixelsMeta TImageWrapper::GetMeta()
 
 SoyPixels& TImageWrapper::GetPixels()
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	if ( mPixelsVersion < GetLatestVersion() && mPixelBufferVersion == GetLatestVersion() )
+	{
+		//	grab pixels from image buffer
+		auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Pixels,float3x3& Transform)
+		{
+			mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
+			mPixels->Copy( *Pixels[0] );
+			mPixelsVersion = mPixelBufferVersion;
+		};
+		this->GetPixelBufferPixels( CopyPixels );
+		return *mPixels;
+	}
+	
+
 	if ( mPixelsVersion < GetLatestVersion() )
 	{
 		std::stringstream Error;
@@ -735,7 +767,6 @@ SoyPixels& TImageWrapper::GetPixels()
 	//	is latest and not allocated, this is okay, lets just alloc
 	if ( mPixelsVersion == 0 && mPixels == nullptr )
 	{
-		std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
 		mPixelsVersion = 1;
 	}
