@@ -1321,7 +1321,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_readPixels(const v8::CallbackInfo
 	{
 		std::stringstream TimerName;
 		TimerName << "glReadPixels( " << x << "," << y << "," << width << "x" << height << ")";
-		Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 1 );
+		Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 10 );
 		glReadPixels( x, y, width, height, format, type, PixelBuffer.GetArray() );
 		Opengl::IsOkay("glReadPixels");
 	}

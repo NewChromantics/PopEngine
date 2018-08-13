@@ -8,6 +8,7 @@
 using namespace v8;
 
 
+bool ReportDefinedReturns = false;
 
 
 //	gr: in 6, allocator type is missing??
@@ -280,7 +281,7 @@ void TV8Container::ExecuteGlobalFunc(Local<v8::Context> Context,const std::strin
 	auto Result = ExecuteFunc( Context, FunctionName, This );
 
 	//	report anything that isn't undefined
-	if ( !Result->IsUndefined() )
+	if ( ReportDefinedReturns && !Result->IsUndefined() )
 	{
 		String::Utf8Value ResultStr(Result);
 		std::Debug << *ResultStr << std::endl;
@@ -377,7 +378,7 @@ v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHan
 		auto Result = ResultMaybe.ToLocalChecked();
 		
 		//	report anything that isn't undefined
-		if ( !Result->IsUndefined() )
+		if ( ReportDefinedReturns && !Result->IsUndefined() )
 		{
 			String::Utf8Value ResultStr(Result);
 			std::Debug << *ResultStr << std::endl;

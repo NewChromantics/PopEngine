@@ -343,7 +343,7 @@ function StartPoseDetection(PoseNet)
 		{
 			if ( CurrentProcessingCount >= 1 )
 			{
-				Debug("Frame rejected:" + CurrentProcessingCount);
+				//Debug("Frame rejected:" + CurrentProcessingCount);
 				return false;
 			}
 			return true;
@@ -353,7 +353,7 @@ function StartPoseDetection(PoseNet)
 		{
 			if ( CurrentProcessingCount >= 1 )
 			{
-				Debug("Skipping frame:" + CurrentProcessingCount);
+				//Debug("Skipping frame:" + CurrentProcessingCount);
 				FrameImage.Clear();
 				return;
 			}
@@ -365,7 +365,6 @@ function StartPoseDetection(PoseNet)
 			let StartTime = Date.now();
 			let OnPose = function(Pose)
 			{
-				Debug("Onpose");
 				CurrentProcessingCount--;
 				let PoseDetectionDuration = Date.now() - StartTime;
 				Pose.Duration = PoseDetectionDuration;
