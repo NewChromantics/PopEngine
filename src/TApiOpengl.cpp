@@ -1128,6 +1128,18 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 	Array<uint8_t> PixelData;
 	GetPixelData( "glTexImage2D", DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
 	
+	if ( PixelData.GetDataSize() != 0 )
+	{
+		//	check format match
+		auto ExpectedFormat = Opengl::GetDownloadPixelFormat(externalformat);
+		auto UploadMeta = SoyPixelsMeta( width, height, ExpectedFormat );
+		if ( PixelData.GetDataSize() != UploadMeta.GetDataSize() )
+		{
+			std::stringstream Error;
+			Error << "glTexImage2D( " << UploadMeta << ") but data mismatch: " << PixelData.GetDataSize() << " bytes";
+			throw Soy::AssertException(Error.str());
+		}
+	}
 	
 	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData.GetArray() );
 	Opengl::IsOkay("glTexImage2D");
