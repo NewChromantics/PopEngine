@@ -116,7 +116,7 @@ function GetPoseLines(Pose)
 		if ( Keypointa === undefined || Keypointb === undefined )
 			return;
 		//	multiplier for debugging
-		let Mult = 100;
+		let Mult = 1/1000;
 		Lines.push( Keypointa.position.x * Mult );
 		Lines.push( Keypointa.position.y * Mult );
 		Lines.push( Keypointb.position.x * Mult );
