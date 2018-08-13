@@ -543,6 +543,11 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	
+	auto AllowBgraAsRgbaHandle = Arguments[0];
+	bool AllowBgraAsRgba = false;
+	if ( AllowBgraAsRgbaHandle->IsBoolean() )
+		AllowBgraAsRgba = v8::SafeCast<v8::Boolean>(AllowBgraAsRgbaHandle)->BooleanValue();
+	
 	//	gr: this func will probably need to return a promise if reading from opengl etc (we want it to be async anyway!)
 	auto& CurrentPixels = This.GetPixels();
 	
@@ -550,6 +555,10 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	std::shared_ptr<SoyPixels> ConvertedPixels;
 	SoyPixels* pPixels = nullptr;
 	if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
+	{
+		pPixels = &CurrentPixels;
+	}
+	else if ( AllowBgraAsRgba && CurrentPixels.GetFormat() == SoyPixelsFormat::BGRA )
 	{
 		pPixels = &CurrentPixels;
 	}
