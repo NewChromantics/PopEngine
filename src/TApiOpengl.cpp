@@ -41,6 +41,11 @@ DEFINE_IMMEDIATE(drawElements);
 #undef DEFINE_IMMEDIATE
 
 
+static bool ShowImmediateFunctionCalls = false;
+
+
+
+
 void ApiOpengl::Bind(TV8Container& Container)
 {
 	Container.BindObjectType( TWindowWrapper::GetObjectTypeName(), TWindowWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TWindowWrapper> );
@@ -744,7 +749,6 @@ const GLvoid* GetGlValue(Local<Value> Argument)
 	return Pointer;
 }
 
-static bool ShowImmediateFunctionCalls = true;
 
 template<typename RETURN,typename ARG0>
 v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments,const ARG0& Arg0)
@@ -1115,7 +1119,7 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_texImage2D(const v8::CallbackInfo
 		DataHandleIndex = 8;
 	}
 	
-	std::Debug << "glTexImage2D(" << width << "x" << height << ")" << std::endl;
+	//std::Debug << "glTexImage2D(" << width << "x" << height << ")" << std::endl;
 	
 	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[externalformatIndex] );
 	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[externaltypeIndex] );
@@ -1426,6 +1430,17 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 		
 		auto Prim = GetGlValue<GLenum>(type);
 		
+		throw Soy::AssertException("Still trying to sort these");
+		GLushort Indexes[6] =
+		{
+			0,1,2,
+			1,3,2,
+		};
+		glDrawElements( GL_TRIANGLES, 2, GL_UNSIGNED_SHORT, Indexes );	//	1 2 3
+		Opengl::IsOkay("glDrawElements");
+		return v8::Undefined(&Arguments.GetIsolate());
+		
+		
 		glDrawElements( GL_TRIANGLES, 1, GL_UNSIGNED_SHORT, nullptr );	//	1 2 3
 		Opengl::IsOkay("glDrawElements");
 		return v8::Undefined(&Arguments.GetIsolate());
@@ -1437,23 +1452,27 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 	}
 	else
 	{
-		BufferArray<Local<Value>,3> GlArguments;
-		GlArguments.PushBack( primitivemode );
-		GlArguments.PushBack( offset );
-		GlArguments.PushBack( count );
+		glDisable(GL_CULL_FACE);
+		//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 		
-		//	gr: drawarrays goes in order, not vertex re-use
+		//	count = number of indexes
+		//	gr: drawarrays goes in order, not vertex re-use. 0 1 2 3 4 5 6
 		glDrawArrays( GL_TRIANGLES, 0, 3 );	//	0 1 2
 		Opengl::IsOkay("glDrawArrays 0 1 2");
 		glDrawArrays( GL_TRIANGLES, 1, 3 );	//	1 2 3
 		Opengl::IsOkay("glDrawArrays 1 2 3");
 		return v8::Undefined(&Arguments.GetIsolate());
+		/*
+		BufferArray<Local<Value>,3> GlArguments;
+		GlArguments.PushBack( primitivemode );
+		GlArguments.PushBack( offset );
+		GlArguments.PushBack( count );
+
 		auto Prim = GetGlValue<GLenum>(primitivemode);
 		auto Offset = GetGlValue<GLint>(offset);
 		auto Count = GetGlValue<GLint>(count);
 		return Immediate_Func( "glDrawArrays", glDrawArrays, GlArguments, &Arguments.GetIsolate() );
-		
-		
+		*/
 	}
 }
 
