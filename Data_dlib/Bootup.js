@@ -152,7 +152,7 @@ function CheckFrameRateLapse()
 		let Count = FrameCounters[CounterName];
 		FrameCounters[CounterName] = 0;
 		let Fps = Count / TimeLapsed;
-		Debug( CounterName + " " + Fps.toFixed(2) + "fps");
+		Debug( "Framerate of " + CounterName + ": " + Fps.toFixed(2) + "fps");
 	}
 	let CounterNames = Object.keys(FrameCounters);
 	CounterNames.forEach( UpdateCounter );
@@ -715,6 +715,12 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		NewFrameImage.Copy(AlwaysThisFrame);
 	}
 	
+	if ( FaceProcessor == null )
+	{
+		OnNewFace(null,null,null,NewFrameImage,null,Skeleton);
+		return;
+	}
+	
 	//	asap show any image
 	if ( OutputImage == null )
 		OutputImage = NewFrameImage;
@@ -786,7 +792,7 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 
 	
 	//	load on first use
-	if ( FaceProcessor == null )
+	if ( FaceProcessor == null && DlibThreadCount > 0 )
 		FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 
 	try
