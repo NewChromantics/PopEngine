@@ -262,6 +262,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 			try
 			{
+				Soy::TScopeTimerPrint Timer("Opengl.Render callback",30);
 				//	immediately call the javascript callback
 				Container->RunScoped( ExecuteRenderCallback );
 				pThis->mActiveRenderTarget = nullptr;
@@ -477,6 +478,7 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 	
 	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
 	{
+		Soy::TScopeTimerPrint Timer("Opengl.Execute callback",30);
 		auto* Isolate = Container->mIsolate;
 		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
 		auto WindowLocal = WindowPersistent->GetLocal(*Isolate);
