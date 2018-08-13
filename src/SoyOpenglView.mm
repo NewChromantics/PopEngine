@@ -272,6 +272,9 @@ bool GlViewContext::Lock()
 		return false;
 	
 	auto mContext = [mParent.mView.openGLContext CGLContextObj];
+	if ( mContext == nullptr )
+		throw Soy::AssertException("GlViewContext missing context");
+	
 	if ( DoCGLLock )
 		CGLLockContext( mContext );
 	
