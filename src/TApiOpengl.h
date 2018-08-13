@@ -42,6 +42,7 @@ public:
 	Opengl::TAsset	GetVao(int JavascriptName);
 	Opengl::TAsset	GetBuffer(int JavascriptName);
 	Opengl::TAsset	GetFrameBuffer(int JavascriptName);
+	int				GetBufferJavascriptName(Opengl::TAsset Asset);
 
 private:
 	Opengl::TAsset	GetObject(int JavascriptName,Array<std::pair<int,Opengl::TAsset>>& Buffers,std::function<void(GLuint,GLuint*)> Alloc,const char* AllocFuncName);

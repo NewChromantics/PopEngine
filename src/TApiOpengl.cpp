@@ -1427,6 +1427,9 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 	}
 	
 	
+	//	workout if the right buffers/vao are bound?
+	
+	
 	//	gr: current issue; draw elements errors, but drawarrays doesnt
 	static bool UseDrawElements = false;
 	
@@ -1465,7 +1468,25 @@ v8::Local<v8::Value> TWindowWrapper::Immediate_drawElements(const v8::CallbackIn
 	else
 	{
 		glDisable(GL_CULL_FACE);
-		//glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+		
+		auto& This = Arguments.GetThis<TWindowWrapper>();
+		
+		//	gr: hack! find the right data for here!
+		auto JsName = 1000;
+		auto ArrayBuffer = This.mImmediateObjects.GetBuffer(JsName);
+		auto VaoBuffer = This.mImmediateObjects.GetVao(JsName);
+		Opengl::BindVertexArray( VaoBuffer.mName );
+		glBindBuffer( GL_ARRAY_BUFFER, ArrayBuffer.mName );
+		
+		//auto ArrayBufferJsName = This.mImmediateObjects.GetBufferJavascriptName(Opengl::TAsset(ArrayBufferName));
+		
+		//	check correct vertex array is bound
+		//	gr: need to get VAO name
+		GLint ArrayBufferName = 0;
+		glGetIntegerv( GL_ARRAY_BUFFER_BINDING, &ArrayBufferName );
+		auto ArrayBufferJsName = This.mImmediateObjects.GetBufferJavascriptName(Opengl::TAsset(ArrayBufferName));
+		//std::Debug << "Array buffer bound=" << ArrayBufferJsName << std::endl;
 		
 		//	count = number of indexes
 		//	gr: drawarrays goes in order, not vertex re-use. 0 1 2 3 4 5 6
@@ -1848,3 +1869,16 @@ Opengl::TAsset OpenglObjects::GetFrameBuffer(int JavascriptName)
 {
 	return GetObject( JavascriptName, mFrameBuffers, glGenFramebuffers, "glGenFramebuffers" );
 }
+
+int OpenglObjects::GetBufferJavascriptName(Opengl::TAsset Asset)
+{
+	auto& Buffers = mBuffers;
+	for ( int i=0;	i<Buffers.GetSize();	i++ )
+	{
+		auto& Pair = Buffers[i];
+		if ( Pair.second == Asset )
+			return Pair.first;
+	}
+	throw Soy::AssertException("Failed to find javascript buffer for asset");
+}
+
