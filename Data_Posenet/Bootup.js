@@ -15,7 +15,9 @@ var OnOpenglImageCreated = function(Texture)
 include('XMLHttpRequest.js');
 include('Webgl.js');
 
-
+var ShowPosenetImages = false;
+var RGBAFromCamera = true;
+var FlipCameraInput = false;
 
 //	to allow tensorflow to TRY and read video, (and walk past the code), we at least need a constructor for instanceof HTMLVideoElement
 function HTMLVideoElement()
@@ -115,8 +117,7 @@ function GetPoseLines(Pose)
 	{
 		if ( Keypointa === undefined || Keypointb === undefined )
 			return;
-		//	multiplier for debugging
-		let Mult = 1/1000;
+		let Mult = 1;
 		Lines.push( Keypointa.position.x * Mult );
 		Lines.push( Keypointa.position.y * Mult );
 		Lines.push( Keypointb.position.x * Mult );
@@ -164,11 +165,11 @@ function WindowRender(RenderTarget)
 				Shader.SetUniform("Frame", LastFrameImage, 0 );
 			Shader.SetUniform("HasFrame", LastFrameImage!=null );
 		
-			if ( PosenetTextures.length )
+			if ( PosenetTextures.length && ShowPosenetImages )
 			{
 				CurrentTexture++;
-				let Index = Math.floor(CurrentTexture / 10) % PosenetTextures.length;
-				Debug(Index + " = " + PosenetTextures[Index]);
+				let Index = Math.floor(CurrentTexture / 3) % PosenetTextures.length;
+				//Debug(Index + " = " + PosenetTextures[Index]);
 				Shader.SetUniform("Frame", PosenetTextures[Index], 0 );
 				Shader.SetUniform("HasFrame", true );
 			}
@@ -179,10 +180,6 @@ function WindowRender(RenderTarget)
 			PoseLines.length = Math.min( PoseLines.length, MAX_LINES );
 			//Debug(PoseLines);
 			Shader.SetUniform("Lines", PoseLines );
-			/*
-			uniform vec4		Lines[LINE_COUNT];
-			uniform float		LineScores[LINE_COUNT];
-			*/
 		}
 		
 		RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -204,9 +201,9 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 		NewImage = new ImageData(NewImage);
 	}
 	
-	var imageScaleFactor = 0.20;
-	//var outputStride = 16;
-	var outputStride = 32;
+	var imageScaleFactor = 0.60;
+	var outputStride = 16;
+	//var outputStride = 32;
 	var flipHorizontal = false;
 	
 	//console.log("Processing...");
@@ -229,9 +226,10 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 		{
 			keypoint.position.x /= ImageWidth;
 			keypoint.position.y /= ImageHeight;
-			keypoint.position.y = 1-keypoint.position.y;
+			//keypoint.position.y = 1-keypoint.position.y;
+			//keypoint.position.x = 1-keypoint.position.x;
 		};
-		//NewPose.keypoints.forEach( RescaleCoords );
+		NewPose.keypoints.forEach( RescaleCoords );
 		
 		OnPoseFound(NewPose);
 	}
@@ -247,45 +245,142 @@ function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 	EstimatePromise.then( OnNewPose ).catch( OnEstimateFailed );
 }
 
+
+function OnFoundPose(Pose,Image)
+{
+	LastPose = Pose;
+	
+	if ( LastFrameImage!=null )
+	{
+		LastFrameImage.Clear();
+	}
+	
+	LastFrameImage = Image;
+}
+
+
+function GetDeviceNameMatch(DeviceNames,MatchName)
+{
+	let MatchDeviceName = function(DeviceName)
+	{
+		//	case insensitive match
+		let MatchIndex = DeviceName.search(new RegExp(MatchName, "i"));
+		return (MatchIndex==-1) ? false : true;
+	}
+	let Match = DeviceNames.find( MatchDeviceName );
+	return Match;
+}
+
+
+var CurrentProcessingCount = 0;
+
 function StartPoseDetection(PoseNet)
 {
 	Debug("Posenet loaded!");
 	
-	let OnFoundPose = function(Pose)
+	var UseTestImage = false;
+	
+	
+	if ( UseTestImage )
 	{
-		Debug("Found pose, score=" + Pose.score );
-		let DebugKeypoint = function(kp)
+		let OnFoundPose = function(Pose)
 		{
-			Debug("Keypoint: " + kp.part + " score=" + kp.score + " " + kp.position.x + "," + kp.position.y );
+			Debug("Found pose, score=" + Pose.score );
+			let DebugKeypoint = function(kp)
+			{
+				Debug("Keypoint: " + kp.part + " score=" + kp.score + " " + kp.position.x + "," + kp.position.y );
+			}
+			Pose.keypoints.forEach( DebugKeypoint );
+			
+			LastPose = Pose;
+			
+			try
+			{
+				//SendNewPose(Pose);
+			}
+			catch(e)
+			{
+				console.log(e);
+			}
+			//console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
+			console.log(Pose);
 		}
-		Pose.keypoints.forEach( DebugKeypoint );
 		
-		LastPose = Pose;
+		
+		let FrameImage = new Image('girlstanding.jpg');
+		//FrameImage.Flip();
+		LastFrameImage = FrameImage;
 		try
 		{
-			//SendNewPose(Pose);
+			RunPoseDetection( PoseNet, FrameImage, OnFoundPose );
 		}
 		catch(e)
 		{
+			//OnFoundPose(null, 0);
 			console.log(e);
 		}
-		//console.log("Found pose in " + Pose.ProcessingTimeMs + "ms: ");
-		console.log(Pose);
+		
 	}
-
-	let FrameImage = new Image('jazzflute.jpg');
-	//FrameImage.Flip();
-	LastFrameImage = FrameImage;
-	try
+	else//	not test image
 	{
-		RunPoseDetection( PoseNet, FrameImage, OnFoundPose );
-	}
-	catch(e)
-	{
-		//OnFoundPose(null, 0);
-		console.log(e);
-	}
+		let OnFrame = function(FrameImage)
+		{
+			if ( CurrentProcessingCount >= 1 )
+			{
+				FrameImage.Clear();
+				return;
+			}
+			if ( FlipCameraInput )
+				FrameImage.Flip();
+			CurrentProcessingCount++;
+			let OnPose = function(Pose)
+			{
+				CurrentProcessingCount--;
+				OnFoundPose(Pose,FrameImage);
+			}
+			RunPoseDetection( PoseNet, FrameImage, OnPose );
+		}
+		
+		
 
+		
+		//	tries to find these in order, then grabs any
+		var VideoDeviceNames = ["c920","isight","facetime"];
+
+		let LoadDevice = function(DeviceNames)
+		{
+			try
+			{
+				//	find best match name
+				Debug("Got devices: x" + DeviceNames.length);
+				Debug(DeviceNames);
+				
+				//	find device in list
+				let VideoDeviceName = VideoDeviceNames.length ? VideoDeviceNames[0] : null;
+				for ( let i=0;	i<VideoDeviceNames.length;	i++ )
+				{
+					let MatchedName = GetDeviceNameMatch(DeviceNames,VideoDeviceNames[i]);
+					if ( !MatchedName )
+						continue;
+					VideoDeviceName = MatchedName;
+					break;
+				}
+				Debug("Loading device: " + VideoDeviceName);
+				
+				let VideoCapture = new MediaSource(VideoDeviceName,RGBAFromCamera);
+				VideoCapture.OnNewFrame = OnFrame;
+			}
+			catch(e)
+			{
+				Debug(e);
+			}
+		}
+
+		
+		//	load webcam
+		let MediaDevices = new Media();
+		MediaDevices.EnumDevices().then( LoadDevice );
+	}
 }
 
 function PosenetFailed(Arg1)
@@ -375,7 +470,6 @@ function Main()
 	//include("Hello.js");
 
 
-	
 	//	load posenet
 	Debug("Loading posenet...");
 	posenet.load().then( StartPoseDetection ).catch( PosenetFailed );

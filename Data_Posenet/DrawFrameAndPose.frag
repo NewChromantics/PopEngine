@@ -104,7 +104,7 @@ void main()
 		float Value = texture( Frame, FrameUv ).r;
 		gl_FragColor.xyz = NormalToRedGreen( Value );
 		gl_FragColor.w = 1;
-		//gl_FragColor = texture( Frame, uv );
+		gl_FragColor = texture( Frame, FrameUv );
 	}
 	else
 	{
