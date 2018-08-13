@@ -76,7 +76,8 @@ namespace v8
 	//	get a specific typed/memory backed array
 	//	uint8_t -> uint8clampedarray
 	Local<Value>	GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values);
-	
+	void			CopyToTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values,Local<v8::Value> ArrayHandle);
+
 	
 	std::string		GetString(Local<Value> Str);
 	Local<Value>	GetString(v8::Isolate& Isolate,const std::string& Str);

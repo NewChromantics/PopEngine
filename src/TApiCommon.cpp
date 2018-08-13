@@ -547,6 +547,8 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	bool AllowBgraAsRgba = false;
 	if ( AllowBgraAsRgbaHandle->IsBoolean() )
 		AllowBgraAsRgba = v8::SafeCast<v8::Boolean>(AllowBgraAsRgbaHandle)->BooleanValue();
+	auto TargetArrayHandle = Arguments[1];
+	
 	
 	//	gr: this func will probably need to return a promise if reading from opengl etc (we want it to be async anyway!)
 	auto& CurrentPixels = This.GetPixels();
@@ -574,8 +576,17 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	auto Meta = Pixels.GetMeta();
 	
 	auto& PixelsArray = Pixels.GetPixelsArray();
-	auto Rgba8 = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(PixelsArray) );
-	return Rgba8;
+	
+	if ( !TargetArrayHandle->IsUndefined() )
+	{
+		v8::CopyToTypedArray( Params.GetIsolate(), GetArrayBridge(PixelsArray), TargetArrayHandle );
+		return TargetArrayHandle;
+	}
+	else
+	{
+		auto Rgba8 = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(PixelsArray) );
+		return Rgba8;
+	}
 }
 
 

@@ -25,6 +25,9 @@ function HTMLVideoElement()
 	
 }
 
+var AllowBgraAsRgba = true;
+
+
 //	gr: this might eed to be more intelligently back if accessing pixels synchronously
 function ImageData(Pixels)
 {
@@ -36,7 +39,8 @@ function ImageData(Pixels)
 	{
 		this.width = Img.GetWidth();
 		this.height = Img.GetHeight();
-		this.data = Img.GetRgba8();
+		this.data = Img.GetRgba8(AllowBgraAsRgba);
+		
 		//Debug( ToHexString(this.data,'  20 ) );
 	}
 	
@@ -192,16 +196,27 @@ function WindowRender(RenderTarget)
 }
 
 
+var CachedImageData = null;
+
 function RunPoseDetection(PoseNet,NewImage,OnPoseFound)
 {
 	//	for CPU mode (and gpu?)
 	if ( NewImage instanceof Image )
 	{
 		Debug("Converting image to ImageData..");
-		NewImage = new ImageData(NewImage);
+		if ( CachedImageData == null )
+		{
+			CachedImageData = new ImageData(NewImage);
+		}
+		else
+		{
+			NewImage.GetRgba8(AllowBgraAsRgba,CachedImageData.data);
+		}
+		NewImage = CachedImageData;
 	}
 	
-	var imageScaleFactor = 0.60;
+		
+	var imageScaleFactor = 0.20;
 	var outputStride = 16;
 	//var outputStride = 32;
 	var flipHorizontal = false;
@@ -330,8 +345,10 @@ function StartPoseDetection(PoseNet)
 				FrameImage.Clear();
 				return;
 			}
+			
 			if ( FlipCameraInput )
 				FrameImage.Flip();
+			
 			CurrentProcessingCount++;
 			let OnPose = function(Pose)
 			{

@@ -539,6 +539,10 @@ std::string v8::GetTypeName(v8::Local<v8::Value> Handle)
 //	uint8_t -> uint8clampedarray
 Local<v8::Value> v8::GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values)
 {
+	std::stringstream TimerName;
+	TimerName << "v8::GetTypedArray( " << Values.GetSize() << " )";
+	Soy::TScopeTimerPrint Timer(TimerName.str().c_str(), 10 );
+	
 	auto Size = Values.GetDataSize();
 	auto Rgba8Buffer = v8::ArrayBuffer::New( &Isolate, Size );
 	auto Rgba8BufferContents = Rgba8Buffer->GetContents();
@@ -548,6 +552,31 @@ Local<v8::Value> v8::GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& V
 	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
 	return Rgba8;
 }
+
+
+//	uint8_t -> uint8clampedarray
+void v8::CopyToTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values,Local<v8::Value> ArrayHandle)
+{
+	std::stringstream TimerName;
+	TimerName << "v8::CopyToTypedArray( " << Values.GetSize() << " )";
+	Soy::TScopeTimerPrint Timer(TimerName.str().c_str(), 10 );
+
+	auto u8ArrayHandle = v8::SafeCast<v8::Uint8ClampedArray>( ArrayHandle );
+	auto Buffer = u8ArrayHandle->Buffer();
+	auto BufferContents = Buffer->GetContents();
+	auto u8DataArray = GetRemoteArray( static_cast<uint8_t*>( BufferContents.Data() ), BufferContents.ByteLength() );
+	u8DataArray.Copy( Values );
+	/*
+	auto Size = Values.GetDataSize();
+	auto Rgba8Buffer = v8::ArrayBuffer::New( &Isolate, Size );
+	auto Rgba8BufferContents = Rgba8Buffer->GetContents();
+	auto Rgba8DataArray = GetRemoteArray( static_cast<uint8_t*>( Rgba8BufferContents.Data() ), Rgba8BufferContents.ByteLength() );
+	Rgba8DataArray.Copy( Values );
+	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
+	return Rgba8;
+	 */
+}
+
 
 
 
