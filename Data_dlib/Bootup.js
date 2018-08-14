@@ -41,8 +41,8 @@ var ResizeFragShader = null;
 var OutputSkeleton = null;
 var OutputImage = null;
 var OutputImageIsClipped = false;
-//var OutputFilename = "../../../../SkeletonOutputFrames.json";
-var OutputFilename = null;
+var OutputFilename = "../../../../SkeletonOutputFrames.json";
+//var OutputFilename = null;
 var OutputSkipFirstFrames = 20;
 
 //	last simple skeleton we recieved
@@ -68,9 +68,9 @@ var RenderRects = true;
 var JustShowCamera = false;
 
 var AlwaysFindFaceRect = true;
-var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
+var FindFaceAroundLastFaceRectScale = 1.3;	//	make this expand more width ways
 var FindFaceAroundLastFaceRect = true;
-var ClippedImageScale = 0.400;
+var ClippedImageScale = 0.700;
 var BlurLandmarkSearch = false;
 
 var EnableKalmanFilter = true;
@@ -79,7 +79,7 @@ var FilterAroundNose = true;
 
 var DlibThreadCount = 2;
 var ShoulderToHeadWidthRatio = 0.8;
-var HeadWidthToHeightRatio = 2.4;
+var HeadWidthToHeightRatio = 1.8;
 var NoseHeightInHead = 0.5;
 
 
@@ -715,8 +715,15 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		NewFrameImage.Copy(AlwaysThisFrame);
 	}
 	
+	
+	//	load on first use
+	if ( FaceProcessor == null && DlibThreadCount > 0 )
+		FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
+	
+	
 	if ( FaceProcessor == null )
 	{
+		Debug("Face processor null");
 		OnNewFace(null,null,null,NewFrameImage,null,Skeleton);
 		return;
 	}
@@ -726,6 +733,8 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		OutputImage = NewFrameImage;
 	
 	NewFrameImage.Timestamp = Date.now();
+
+	//Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 	
 	//	temp work throttler
 	if ( CurrentProcessingImageCount > DlibThreadCount )
@@ -733,7 +742,6 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		NewFrameImage.Clear();
 		return;
 	}
-	//Debug("Now processing image " + NewFrameImage.GetWidth() + "x" + NewFrameImage.GetHeight() );
 
 	let OnFaceError = function(Error)
 	{
@@ -789,11 +797,6 @@ function OnNewFrame(NewFrameImage,FindFaceIfNoSkeleton,Skeleton,OpenglContext)
 		OnNewFace(Face,FaceRect,ClipRect,FullImage,ClippedImage,Skeleton);
 	}
 	
-
-	
-	//	load on first use
-	if ( FaceProcessor == null && DlibThreadCount > 0 )
-		FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 
 	try
 	{
