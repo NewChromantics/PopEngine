@@ -2,7 +2,12 @@
 #import "SoyOpenGLWindow.h"
 #include <SoyMath.h>
 
-static bool DoCGLLock = true;
+
+//	gr; we don't use the CG lock as we have our own internal checks, which should now be locked with our own mutex
+//		this CGLLockContext just implements recursive mutex internally, so redundant if we have our own
+//		we were getting asserts in Opengl::Context::Lock as the thread id was being released at a different time to unlocking the context (race condition)
+//	https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_threading/opengl_threading.html#//apple_ref/doc/uid/TP40001987-CH409-SW7
+static bool DoCGLLock = false;
 
 vec2f ViewPointToVector(NSView* View,const NSPoint& Point)
 {
@@ -265,46 +270,98 @@ void GlViewRenderTarget::Unbind()
 {
 }
 
-
-bool GlViewContext::Lock()
+std::string GetErrorString(CGLError Error)
 {
-	if ( !mParent.mView )
-		return false;
-	
-	auto mContext = [mParent.mView.openGLContext CGLContextObj];
-	if ( mContext == nullptr )
-		throw Soy::AssertException("GlViewContext missing context");
-	
-	if ( DoCGLLock )
-		CGLLockContext( mContext );
-	
-	//	make current thread
-	auto CurrentContext = CGLGetCurrentContext();
-	if ( CurrentContext != mContext )
+	switch ( Error )
 	{
-		auto Error = CGLSetCurrentContext( mContext );
-		if ( !Soy::Assert( Error == kCGLNoError, "Error setting current context" ) )
-			return false;
+		case kCGLNoError:			return "kCGLNoError";
+		case kCGLBadAttribute:		return "kCGLBadAttribute";
+		case kCGLBadProperty:		return "kCGLBadProperty";
+		case kCGLBadPixelFormat:	return "kCGLBadPixelFormat";
+		case kCGLBadRendererInfo:	return "kCGLBadRendererInfo";
+		case kCGLBadContext:		return "kCGLBadContext";
+		case kCGLBadDrawable:		return "kCGLBadDrawable";
+		case kCGLBadDisplay:		return "kCGLBadDisplay";
+		case kCGLBadState:			return "kCGLBadState";
+		case kCGLBadValue:			return "kCGLBadValue";
+		case kCGLBadMatch:			return "kCGLBadMatch";
+		case kCGLBadEnumeration:	return "kCGLBadEnumeration";
+		case kCGLBadOffScreen:		return "kCGLBadOffScreen";
+		case kCGLBadFullScreen:		return "kCGLBadFullScreen";
+		case kCGLBadWindow:			return "kCGLBadWindow";
+		case kCGLBadAddress:		return "kCGLBadAddress";
+		case kCGLBadCodeModule:		return "kCGLBadCodeModule";
+		case kCGLBadAlloc:			return "kCGLBadAlloc";
+		case kCGLBadConnection:		return "kCGLBadConnection";
 	}
 	
-	return Opengl::TContext::Lock();
+	std::stringstream ValueStr;
+	ValueStr << "<Unknown CGLError " << Error <<">";
+	return ValueStr.str();
 }
 
-void GlViewContext::Unlock()
+
+void OsxOpenglContext::Lock()
 {
-	auto ContextObj = [mParent.mView.openGLContext CGLContextObj];
+	//	lock then switch context's thread
+	Opengl::TContext::Lock();
+	try
+	{
+		auto mContext = GetPlatformContext();
+		if ( mContext == nullptr )
+			throw Soy::AssertException("GlViewContext missing context");
+		
+		//	gr: should never block here any more as our own context has a lock
+		if ( DoCGLLock )
+			CGLLockContext( mContext );
+		
+		//	make current thread
+		auto CurrentContext = CGLGetCurrentContext();
+		if ( CurrentContext != mContext )
+		{
+			auto Error = CGLSetCurrentContext( mContext );
+			if ( Error != kCGLNoError )
+			{
+				std::stringstream ErrorString;
+				ErrorString << "Error setting current context: " << GetErrorString(Error);
+				throw Soy::AssertException(ErrorString.str());
+			}
+		}
+	}
+	catch(...)
+	{
+		Unlock();
+		throw;
+	}
+}
+
+
+void OsxOpenglContext::Unlock()
+{
+	auto ContextObj = GetPlatformContext();
 	
 	//	gr: this is missing
+	//	gr: 2018, but I don't think we need it, we just set it as we need
 	//CGLSetCurrentContext( nullptr );
 	
 	if ( DoCGLLock )
 		CGLUnlockContext( ContextObj );
-//	leaves artifacts everywhere
+	//	leaves artifacts everywhere
 	//[mParent.mView.openGLContext flushBuffer];
 	
 	Opengl::TContext::Unlock();
 }
 
+
+
+
+void GlViewContext::Lock()
+{
+	if ( !mParent.mView )
+		throw Soy::AssertException("GlViewContext missing parent view");
+	
+	OsxOpenglContext::Lock();
+}
 
 void GlViewContext::WakeThread()
 {
@@ -377,27 +434,4 @@ GlViewSharedContext::~GlViewSharedContext()
 {
 	
 }
-
-bool GlViewSharedContext::Lock()
-{
-	if ( DoCGLLock )
-		CGLLockContext( mContext );
-
-	//	make current thread
-	auto CurrentContext = CGLGetCurrentContext();
-	if ( CurrentContext != mContext )
-	{
-		auto Error = CGLSetCurrentContext( mContext );
-		if ( !Soy::Assert( Error == kCGLNoError, "Error setting current context" ) )
-			return false;
-	}
-	return true;
-}
-
-void GlViewSharedContext::Unlock()
-{
-	if ( DoCGLLock )
-		CGLUnlockContext( mContext );
-}
-
 

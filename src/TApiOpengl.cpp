@@ -527,8 +527,7 @@ v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
 	
 	if ( StealThread )
 	{
-		if ( !OpenglContext.Lock() )
-			throw Soy::AssertException("Failed to steal thread (lock context)");
+		OpenglContext.Lock();
 		
 		try
 		{

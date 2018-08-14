@@ -26,7 +26,7 @@ public:
 	PopMainThread();
 	virtual ~PopMainThread()				{}
 	
-	virtual bool	Lock() override		{	return true;	}
+	virtual void	Lock() override		{	}
 	virtual void	Unlock() override	{	}
 	
 	void			TriggerIteration();

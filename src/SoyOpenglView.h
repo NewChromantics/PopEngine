@@ -40,7 +40,14 @@ public:
 	Soy::Rectx<size_t>			mRect;
 };
 
-class GlViewContext : public Opengl::TContext
+class OsxOpenglContext : public Opengl::TContext
+{
+public:
+	virtual void	Lock() override;
+	virtual void	Unlock() override;
+};
+
+class GlViewContext : public OsxOpenglContext
 {
 public:
 	GlViewContext(TOpenglView& Parent) :
@@ -48,9 +55,7 @@ public:
 	{
 	}
 	
-	virtual bool	Lock() override;
-	virtual void	Unlock() override;
-	
+	virtual void	Lock() override;
 	void			WakeThread();
 	bool			IsDoubleBuffered() const;
 	
@@ -61,14 +66,12 @@ public:
 	TOpenglView&	mParent;
 };
 
-class GlViewSharedContext : public Opengl::TContext, public SoyWorkerThread
+class GlViewSharedContext : public OsxOpenglContext, public SoyWorkerThread
 {
 public:
 	GlViewSharedContext(CGLContextObj NewContextHandle);
 	~GlViewSharedContext();
 	
-	virtual bool		Lock() override;
-	virtual void		Unlock() override;
 	virtual bool		Iteration() override	{	PopWorker::TJobQueue::Flush(*this);	return true;	}
 	virtual bool		CanSleep() override		{	return !PopWorker::TJobQueue::HasJobs();	}	//	break out of conditional with this
 	virtual CGLContextObj	GetPlatformContext() override	{	return mContext;	}
