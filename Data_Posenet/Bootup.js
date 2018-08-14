@@ -31,6 +31,7 @@ function HTMLVideoElement()
 }
 
 var AllowBgraAsRgba = true;
+var ClipToSquare = true;
 
 
 //	gr: this might eed to be more intelligently back if accessing pixels synchronously
@@ -221,7 +222,7 @@ function RunPoseDetection(PoseNet,NewImage)
 	}
 	
 		
-	var imageScaleFactor = 0.30;
+	var imageScaleFactor = 0.35;
 	var outputStride = 16;
 	//var outputStride = 32;
 	var flipHorizontal = false;
@@ -377,6 +378,16 @@ function StartPoseDetection(PoseNet)
 				OnFoundPose(Pose,FrameImage);
 			}
 
+			//	clip image to square
+			if ( ClipToSquare )
+			{
+				let Width = FrameImage.GetWidth();
+				let Height = FrameImage.GetHeight();
+				Width = Math.min( Width, Height );
+				Height = Math.min( Width, Height );
+				FrameImage.Clip( [0,0,Width,Height] );
+			}
+			
 			//	run promise
 			RunPoseDetection( PoseNet, FrameImage )
 			.then( OnPose )
