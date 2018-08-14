@@ -33,6 +33,7 @@ const char GetRgba8_FunctionName[] = "GetRgba8";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 const char Copy_FunctionName[] = "Copy";
 const char Resize_FunctionName[] = "Resize";
+const char Clip_FunctionName[] = "Clip";
 const char Clear_FunctionName[] = "Clear";
 const char SetFormat_FunctionName[] = "SetFormat";
 
@@ -283,6 +284,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
 	Container.BindFunction<Copy_FunctionName>( InstanceTemplate, TImageWrapper::Copy );
 	Container.BindFunction<Resize_FunctionName>( InstanceTemplate, TImageWrapper::Resize );
+	Container.BindFunction<Clip_FunctionName>( InstanceTemplate, TImageWrapper::Clip );
 	Container.BindFunction<Clear_FunctionName>( InstanceTemplate, TImageWrapper::Clear );
 	Container.BindFunction<SetFormat_FunctionName>( InstanceTemplate, TImageWrapper::SetFormat );
 
@@ -474,6 +476,42 @@ v8::Local<v8::Value> TImageWrapper::Clear(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	
 	This.Free();
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+
+v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto RectHandle = Arguments[0];
+	
+	BufferArray<int,4> RectPx;
+	v8::EnumArray( RectHandle, GetArrayBridge(RectPx), __FUNCTION__ );
+	
+	if ( RectPx.GetSize() != 4 )
+	{
+		std::stringstream Error;
+		Error << "Expected 4 values for cliping rect (got " << RectPx.GetSize() << ")";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	if ( RectPx[0] != 0 || RectPx[1] != 0 )
+	{
+		std::stringstream Error;
+		Error << "Current Clip() only works on width & height. xy needs to be zero. Clip(" << RectPx[0] << "," << RectPx[1] << "," << RectPx[2] << "," << RectPx[3] << ")";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
+	
+	auto& ThisPixels = This.GetPixels();
+	
+	ThisPixels.ResizeClip( RectPx[2], RectPx[3] );
 	
 	return v8::Undefined(Params.mIsolate);
 }
