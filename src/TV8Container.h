@@ -412,6 +412,8 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 	}
 	
 	//	gr: this needs to do type checks, and we need to verify the internal type as we're blindly casting!
+	//	gr: also, to deal with multiple inheritence,
+	//		cast this to the base object wrapper, then dynamic cast to T (which'll solve all our problems)
 	auto* WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
 	if ( WindowVoid == nullptr )
 		throw Soy::AssertException("Internal Field is null");
