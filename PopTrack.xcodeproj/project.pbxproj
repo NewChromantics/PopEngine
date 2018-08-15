@@ -71,6 +71,7 @@
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
+		EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */; };
 		EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB6D678121136A4E00687768 /* SoyBase64.cpp */; };
 		EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */; };
@@ -229,6 +230,8 @@
 		EB0EA56C2110B936008D6DAA /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
 		EB0EA56E2110BA27008D6DAA /* libdlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdlib.a; path = ../../../usr/local/Cellar/dlib/19.15/lib/libdlib.a; sourceTree = "<group>"; };
 		EB0EA5702110BAD7008D6DAA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenglContext.cpp; path = src/TApiOpenglContext.cpp; sourceTree = "<group>"; };
+		EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenglContext.h; path = src/TApiOpenglContext.h; sourceTree = "<group>"; };
 		EB6D678121136A4E00687768 /* SoyBase64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyBase64.cpp; path = src/SoyBase64.cpp; sourceTree = "<group>"; };
 		EB6D678221136A4E00687768 /* SoyBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyBase64.h; path = src/SoyBase64.h; sourceTree = "<group>"; };
 		EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiWebsocket.cpp; path = src/TApiWebsocket.cpp; sourceTree = "<group>"; };
@@ -443,6 +446,8 @@
 				BF97592420E961190093B296 /* TApiOpencl.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
+				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
+				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
 				EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */,
@@ -714,6 +719,7 @@
 				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
 				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
 				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
+				EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */,
 				BF1E05AE2117328300B56DE4 /* TV8ObjectWrapper.cpp in Sources */,
 				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
 				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
@@ -804,7 +810,7 @@
 					"$(POPCAST_PATH)/build",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",

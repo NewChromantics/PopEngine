@@ -412,10 +412,10 @@ inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 	}
 	
 	//	gr: this needs to do type checks, and we need to verify the internal type as we're blindly casting!
-	auto WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
+	auto* WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
 	if ( WindowVoid == nullptr )
 		throw Soy::AssertException("Internal Field is null");
-	auto Window = reinterpret_cast<T*>( WindowVoid );
+	auto* Window = reinterpret_cast<T*>( WindowVoid );
 	return *Window;
 }
 

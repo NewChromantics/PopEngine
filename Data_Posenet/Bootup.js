@@ -238,8 +238,16 @@ function RunPoseDetection(PoseNet,NewImage)
 	}
 	
 	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
-	let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
-	return EstimatePromise;
+	try
+	{
+		let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
+		Debug("Started promise");
+		return EstimatePromise;
+	}
+	catch(e)
+	{
+		Debug("Error during PoseNet.estimateSinglePose: " + e);
+	}
 }
 
 
@@ -339,7 +347,7 @@ function StartPoseDetection(PoseNet)
 		catch(e)
 		{
 			//OnFoundPose(null, 0);
-			console.log(e);
+			Debug(e);
 		}
 		
 	}
@@ -441,67 +449,6 @@ function PosenetFailed(Arg1)
 
 
 
-//	adding here and we'll put them into our system
-function AddWebglBindings(This)
-{
-	This.Enums = This.GetEnums();
-	Debug("Pre-existing enums: ");
-	Object.keys(This.Enums).forEach( function(k){	Debug(k+"=" + This.Enums[k]);} );
-
-	let PushEnum = function(Name)
-	{
-		if ( Name.length == 0 )
-			return;
-		if ( Name.startsWith('//') )
-			return;
-		
-		//	enum already done
-		if ( This.Enums[Name] !== undefined )
-			return;
-		
-		Debug("Added Enum "+Name);
-		This.Enums[Name] = Name;
-	}
-	WebglEnumNames.forEach( PushEnum );
-
-	//	special case (incrementing enum value)
-	This.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 32;
-	/*
-	for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
-	{
-		let Name = 'TEXTURE'+i;
-		if ( This.Enums[Name] !== undefined )
-			return;
-		This.Enums[Name] = This.Enums['TEXTURE0']+i;
-	}
-	 */
-
-	/*
-	This.disable =				function(Enum)	{	Debug("disable("+ Enum);	};
-	This.enable =				function(Enum)	{	Debug("enable("+ Enum);	};
-	This.cullFace =				function(Enum)	{	Debug("cullFace("+ Enum);	};
-	This.bindBuffer =			function()	{	Debug("bindBuffer");	};
-	This.bufferData =			function()	{	Debug("bufferData");	};
-	This.bindFramebuffer =		function()	{	Debug("bindFramebuffer");	};
-	This.framebufferTexture2D =	function()	{	Debug("framebufferTexture2D");	};
-	This.bindTexture =			function(Enum,Texture)	{	Debug("bindTexture("+ Enum+","+Texture);	};
-	This.texImage2D =			function()	{	Debug("texImage2D");	};
-	This.useProgram =			function()	{	Debug("useProgram");	};
-	This.texParameteri =		function(Texture,Enum,Value)	{	Debug("texParameteri("+Texture+","+ Enum+"," + Value);	};
-	This.attachShader =			function()	{	Debug("attachShader");	};
-	This.vertexAttribPointer =	function()	{	Debug("vertexAttribPointer");	};
-	This.enableVertexAttribArray = function()	{	Debug("enableVertexAttribArray");	};
-	This.SetUniform =			function(Name,Value)	{	Debug("SetUniform("+Name+","+Value);	};
-	This.texSubImage2D =		function()	{	Debug("texSubImage2D");	};
-	This.readPixels =			function()	{	Debug("readPixels");	};
-	This.viewport =				function()	{	Debug("viewport");	};
-	This.scissor =				function()	{	Debug("scissor");	};
-	This.activeTexture =		function()	{	Debug("activeTexture");	};
-	This.drawElements =			function()	{	Debug("drawElements");	};
-	 */
-}
-
-
 
 
 function Main()
@@ -509,10 +456,11 @@ function Main()
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("Posenet",true);
 	Window1.OnRender = function(){	WindowRender( Window1 );	};
-	AddWebglBindings(Window1);
 	
 	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;
+	
+	Debug("Loading tensorflow");
 	
 	//	make a context, then let tensorflow grab the bindings
 	include('tfjs.0.11.7.js');

@@ -1,4 +1,6 @@
+#if defined(__OBJC__)
 #import <Cocoa/Cocoa.h>
+#endif
 #include <SoyOpenglContext.h>
 #include <SoyWindow.h>
 
@@ -6,6 +8,7 @@ class TOpenglView;
 class TOpenglParams;
 
 
+#if defined(__OBJC__)
 @interface MacOpenglView : NSOpenGLView
 {
 	TOpenglView*	mParent;
@@ -23,7 +26,7 @@ class TOpenglParams;
 -(void)mouseUp:(NSEvent *)event;
 
 @end
-
+#endif
 
 class GlViewRenderTarget : public Opengl::TRenderTarget
 {
@@ -80,6 +83,9 @@ public:
 	CGLContextObj		mContext;
 };
 
+
+
+#if defined(__OBJC__)
 class TOpenglView
 {
 public:
@@ -98,3 +104,4 @@ public:
 	std::shared_ptr<GlViewContext>				mContext;
 	GlViewRenderTarget							mRenderTarget;
 };
+#endif

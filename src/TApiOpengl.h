@@ -34,32 +34,21 @@ public:
 };
 
 
-class OpenglObjects
+
+
+//	merge these soon so they share functions!
+class TOpenglContextWrapper
 {
 public:
-	//	all funcs are immediate, assuming we're on opengl thread
-	//	get/alloc buffer with this id
-	Opengl::TAsset	GetVao(int JavascriptName);
-	Opengl::TAsset	GetBuffer(int JavascriptName);
-	Opengl::TAsset	GetFrameBuffer(int JavascriptName);
-	int				GetBufferJavascriptName(Opengl::TAsset Asset);
-
-private:
-	Opengl::TAsset	GetObject(int JavascriptName,Array<std::pair<int,Opengl::TAsset>>& Buffers,std::function<void(GLuint,GLuint*)> Alloc,const char* AllocFuncName);
-
-public:
-	Array<std::pair<int,Opengl::TAsset>>	mVaos;
-	Array<std::pair<int,Opengl::TAsset>>	mBuffers;
-	Array<std::pair<int,Opengl::TAsset>>	mFrameBuffers;
+	virtual ~TOpenglContextWrapper()	{}
+	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext()=0;
 };
-
-
 
 
 	
 	
 extern const char Window_TypeName[];
-class TWindowWrapper : public TObjectWrapper<Window_TypeName,TRenderWindow>
+class TWindowWrapper : public TObjectWrapper<Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
 {
 public:
 	TWindowWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
@@ -86,41 +75,14 @@ public:
 	//	run javascript on gl thread for immediate mode stuff
 	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);
 
-	//	return a named array of immediate-use GL enum values
-	static v8::Local<v8::Value>				GetEnums(const v8::CallbackInfo& Arguments);
-
-	//	immediate calls
-	static v8::Local<v8::Value>				Immediate_disable(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_enable(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_cullFace(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bindBuffer(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bufferData(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bindTexture(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_texImage2D(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_useProgram(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_texSubImage2D(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_readPixels(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_viewport(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_scissor(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);
-
-protected:
-	static void								OnFree(const v8::WeakCallbackInfo<TWindowWrapper>& data);
+	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
 public:
 	std::shared_ptr<TRenderWindow>&	mWindow = mObject;
 	
 	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object
-	
-	//	opengl objects allocated for immediate mode
-	OpenglObjects					mImmediateObjects;
 };
+
 
 
 class TShaderWrapper
