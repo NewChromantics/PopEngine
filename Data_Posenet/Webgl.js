@@ -154,7 +154,7 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			//Debug("Execute Queue x" + Commands.length );
+			Debug("Execute Queue x" + Commands.length );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
@@ -175,7 +175,7 @@ function OpenglCommandQueue()
 		}
 		
 		//	run these commands on the opengl thread
-		//Debug("Running opengl command queue");
+		Debug("Running opengl command queue");
 		//	capture commands and remove from our list
 		let Cmds = this.Commands;
 		this.Commands = [];
@@ -199,10 +199,52 @@ function GetTypename(Object)
 	{
 		Type = Object.constructor.name;
 		if ( Type.length == 0 )
-			Type = "Object{}";
+			Type = "Object{} (No constructor)";
 	}
 	
 	return Type;
+}
+
+
+function GetAllEnums(Enums)
+{
+	Debug("Pre-existing enums: ");
+	Object.keys(Enums).forEach( function(k){	Debug("InputEnum: " + k + "=" + Enums[k]);} );
+		
+
+	//	add fake enums (as names so we can identify missing ones)
+	let PushEnum = function(Name)
+	{
+		if ( Name.length == 0 )
+			return;
+		if ( Name.startsWith('//') )
+			return;
+		
+		//	enum already done
+		if ( Enums[Name] !== undefined )
+			return;
+		
+		Debug("Added Enum "+Name);
+		Enums[Name] = Name;
+	}
+	WebglEnumNames.forEach( PushEnum );
+	
+		//	special case (incrementing enum value)
+	//Enums['MAX_COMBINED_TEXTURE_IMAGE_UNITS'] = 32;
+	Enums.MAX_COMBINED_TEXTURE_IMAGE_UNITS = 27;
+	Enums.MAX_COMBINED_TEXTURE_IMAGE_UNITS = Enums['TEXTURE0'] + Enums.MAX_COMBINED_TEXTURE_IMAGE_UNITS;
+	//MAX_COMBINED_TEXTURE_IMAGE_UNITS
+/*
+	 for ( let i=0;	i<This.MAX_COMBINED_TEXTURE_IMAGE_UNITS;	i++ )
+	 {
+	 let Name = 'TEXTURE'+i;
+	 if ( This.Enums[Name] !== undefined )
+	 return;
+	 This.Enums[Name] = This.Enums['TEXTURE0']+i;
+	 }
+	 */
+	
+	return Enums;
 }
 		
 function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
@@ -212,8 +254,17 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.ParentCanvas = ParentCanvas;
 	this.CommandQueue = new OpenglCommandQueue();
 
-	//	setup enums
-	let Enums = ParentCanvas.WebWindow.OpenglContext.Enums;
+	//	make a new context
+	let ParentContext = ParentCanvas.WebWindow.OpenglContext;
+	Debug("Parent Context is " + GetTypename(ParentContext) );
+	Debug( Object.keys(ParentContext) );
+	Debug("ParentContext==null : " + (ParentContext==null) );
+	this.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
+	
+	//  setup enums
+	let Enums = GetAllEnums( this.SharedOpenglContext.GetEnums() );
+	
+	//	copy enums [key]=value to this.key=value
 	Object.assign( this, Enums );
 	
 	this.COMPILE_STATUS = 'COMPILE_STATUS';
@@ -223,14 +274,16 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.FRAGMENT_SHADER = 'FRAGMENT_SHADER';
 	this.COMPILE_STATUS = 'COMPILE_STATUS';
 	this.LINK_STATUS = 'LINK_STATUS';
-	//Debug(Object.keys(this));
+	
+	Debug("This keys after adding enums:");
+	Debug(Object.keys(this));
 
-	
-	
+	Debug("TEXTURE0=" + this.TEXTURE0 );
+	Debug("TEXTURE31=" + this.TEXTURE31 );
 	
 	this.GetOpenglContext = function()
 	{
-		return this.ParentCanvas.WebWindow.OpenglContext;
+		return this.SharedOpenglContext;
 	}
 
 	this.getExtension = function(ExtensionName)
@@ -241,7 +294,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		if ( ExtensionName == "EXT_color_buffer_float" )
 			return new WebglExtension_EXTColorBufferFloat();
 		
-		Debug("GetExtension(" + ExtensionName + ")");
+		Debug("ignored/failed GetExtension(" + ExtensionName + ")");
 		//EXT_disjoint_timer_query_webgl2
 		
 		//WEBGL_get_buffer_sub_data_async
@@ -460,6 +513,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		return this.NO_ERROR;
 	}
 
+	
 }
 
 if ( OnOpenglImageCreated === undefined )
@@ -477,7 +531,14 @@ function FakeCanvas(WebWindow)
 	{
 		if ( this.WebglContext == null )
 		{
-			this.WebglContext = new FakeOpenglContext( ContextType, this, OnOpenglImageCreated );
+			try
+			{
+				this.WebglContext = new FakeOpenglContext( ContextType, this, OnOpenglImageCreated );
+			}
+			catch(e)
+			{
+				Debug("Error making webglcontext: " + e);
+			}
 		}
 		return this.WebglContext;
 	}
