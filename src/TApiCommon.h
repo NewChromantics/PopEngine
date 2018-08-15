@@ -62,7 +62,7 @@ public:
 	void									DoLoadFile(const std::string& Filename);
 	void									DoSetLinearFilter(bool LinearFilter);
 	void									GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
-	const Opengl::TTexture&					GetTexture();
+	Opengl::TTexture&						GetTexture();
 	SoyPixels&								GetPixels();
 	void									GetPixels(SoyPixelsImpl& CopyTarget);	//	safely copy pixels
 
@@ -88,6 +88,7 @@ protected:
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
 	std::function<void()>				mOpenglTextureDealloc;
 	size_t								mOpenglTextureVersion;	//	pixels changed
+	std::shared_ptr<SoyPixels>			mOpenglClientStorage;	//	gr: apple specific client storage for texture. currently kept away from normal pixels for safety, but merge later
 
 	//	abstracted pixel buffer from media
 	std::shared_ptr<TPixelBuffer>		mPixelBuffer;

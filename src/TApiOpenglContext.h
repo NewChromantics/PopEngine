@@ -5,7 +5,7 @@
 #include "TApiOpengl.h"
 
 class GlViewSharedContext;
-
+class TImageWrapper;
 
 class OpenglObjects
 {
@@ -39,7 +39,9 @@ private:
 	
 public:
 	TOpenglImmediateContextWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
-		TObjectWrapper		( Container, This )
+		TObjectWrapper			( Container, This ),
+		mLastFrameBufferTexture	( nullptr ),
+		mLastBoundTexture		( nullptr )
 	{
 	}
 	~TOpenglImmediateContextWrapper();
@@ -78,11 +80,17 @@ public:
 	
 	virtual std::shared_ptr<Opengl::TContext>		GetOpenglContext() override {	return mContext;	}
 	
+	TImageWrapper*							GetBoundTexture(GLenum Binding);
+	
 public:
 	std::shared_ptr<Opengl::TContext>&		mContext = mObject;
 	
 	//	opengl objects allocated for immediate mode
 	OpenglObjects							mImmediateObjects;
+	
+	//	hack!
+	TImageWrapper*			mLastFrameBufferTexture;
+	TImageWrapper*			mLastBoundTexture;
 };
 
 

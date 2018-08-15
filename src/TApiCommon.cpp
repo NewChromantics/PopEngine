@@ -720,11 +720,13 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 				if ( mOpenglTexture == nullptr )
 				{
 					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
+					this->mOpenglClientStorage.reset( new SoyPixels );
+					//mOpenglTexture->mClientBuffer = this->mOpenglClientStorage;
 				
 					//	alloc the deffered delete func
 					mOpenglTextureDealloc = [this,pContext]
-						{
-					pContext->QueueDelete(mOpenglTexture);
+					{
+						pContext->QueueDelete(mOpenglTexture);
 					};
 				}
 				mOpenglTexture->SetFilter( mLinearFilter );
@@ -732,6 +734,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 			};
 
 			SoyGraphics::TTextureUploadParams UploadParams;
+			UploadParams.mAllowClientStorage = true;
 			
 			if ( GetLatestVersion() == mPixelsVersion )
 			{
@@ -773,7 +776,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 	}
 }
 
-const Opengl::TTexture& TImageWrapper::GetTexture()
+Opengl::TTexture& TImageWrapper::GetTexture()
 {
 	if ( !mOpenglTexture )
 		throw Soy::AssertException("Image missing opengl texture. Accessing before generating.");

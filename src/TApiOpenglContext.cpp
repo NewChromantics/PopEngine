@@ -38,7 +38,7 @@ DEFINE_IMMEDIATE(drawElements);
 #undef DEFINE_IMMEDIATE
 
 
-static bool ShowImmediateFunctionCalls = true;
+static bool ShowImmediateFunctionCalls = false;
 
 
 
@@ -620,12 +620,15 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_framebufferTextur
 	auto TextureHandle = Arguments.mParams[3];
 	auto level = GetGlValue<GLint>( Arguments.mParams[4] );
 	
+	auto& This = Arguments.GetThis<TOpenglImmediateContextWrapper>();
+	
 	auto& OpenglContext = *Arguments.GetThis<this_type>().GetOpenglContext();
 	
 	auto& Image = v8::GetObject<TImageWrapper>(TextureHandle);
 	Image.GetTexture( OpenglContext, []{}, [](const std::string& Error){} );
 	auto& Texture = Image.GetTexture();
 	auto TextureName = Texture.mTexture.mName;
+	This.mLastFrameBufferTexture = &Image;
 	
 	//GLAPI void APIENTRY glFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 	glFramebufferTexture2D( target, attachment, textarget, TextureName, level );
@@ -637,6 +640,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindTexture(const
 {
 	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
 	auto Arg1 = Arguments.mParams[1];
+	auto& This = Arguments.GetThis<this_type>();
 	
 	GLuint TextureName = GL_ASSET_INVALID;
 	//	webgl passes in null to unbind (or 0?)
@@ -648,6 +652,11 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindTexture(const
 		Image.GetTexture( OpenglContext, []{}, [](const std::string& Error){} );
 		auto& Texture = Image.GetTexture();
 		TextureName = Texture.mTexture.mName;
+		This.mLastBoundTexture = &Image;
+	}
+	else
+	{
+		This.mLastBoundTexture = nullptr;
 	}
 	
 	return Immediate_Func( "glBindTexture", glBindTexture, Arguments, Binding, TextureName );
@@ -730,6 +739,8 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const 
 	int externaltypeIndex;
 	int DataHandleIndex;
 	
+	auto& This = Arguments.GetThis<TOpenglImmediateContextWrapper>();
+	
 	//	gr: but sometimes we get webgl1 calls...
 	if ( Arguments.mParams[5]->IsObject() )
 	{
@@ -774,7 +785,28 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const 
 			throw Soy::AssertException(Error.str());
 		}
 	}
-	
+
+	//	grab the target texture, and try and use our own functions, which will use client stuff
+	auto* BoundTexture = This.GetBoundTexture(binding);
+	//	gr: here we really wanna handle null, to get clientside allocation/buffering
+	if ( BoundTexture && !PixelData.IsEmpty() )
+	{
+		if ( externaltype == GL_UNSIGNED_BYTE )
+		{
+			auto Format = Opengl::GetDownloadPixelFormat(externalformat);
+			SoyPixelsRemote SourcePixels( PixelData.GetArray(), width, height, PixelData.GetDataSize(), Format );
+			auto& BoundTextureTexture = BoundTexture->GetTexture();
+			SoyGraphics::TTextureUploadParams UploadParams;
+			UploadParams.mAllowClientStorage = true;
+			BoundTextureTexture.Write( SourcePixels );
+			return v8::Undefined( Arguments.mIsolate );
+		}
+		else
+		{
+			std::Debug << "Couldn't use Opengl::Texture::Write as uploading data format is " << externaltype << " (not GL_UNSIGNED_BYTE)" << std::endl;
+		}
+	}
+
 	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData.GetArray() );
 	Opengl::IsOkay("glTexImage2D");
 	return v8::Undefined( Arguments.mIsolate );
@@ -936,6 +968,8 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	auto format = GetGlValue<GLsizei>( Arguments.mParams[4] );
 	auto type = GetGlValue<GLint>( Arguments.mParams[5] );
 	
+	auto& This = Arguments.GetThis<TOpenglImmediateContextWrapper>();
+	
 	//	we need to alloc a buffer to read into, then push it back to the output
 	Array<uint8_t> PixelBuffer;
 	auto PixelFormat = Opengl::GetDownloadPixelFormat(format);
@@ -949,7 +983,76 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		auto ComponentSize = Opengl::GetPixelDataSize(type);
 		PixelBuffer.SetSize( TotalComponentCount * ComponentSize );
 	}
+
+	//	reading an image from the frame buffer
+	bool DirectRead = true;
+	/*
+	bool BigTexture = (width*height) > (4*4);
+ 
+	if ( BigTexture && This.mLastFrameBufferTexture )
+	{
+		//	check the current texture attached to the frame buffer is this texture
+		GLint BoundTextureName = 0;
+		glGetFramebufferAttachmentParameteriv( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &BoundTextureName );
+		Opengl::IsOkay("glGetFramebufferAttachmentParameteriv( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &BoundTextureName )");
+
+		auto& Texture = This.mLastFrameBufferTexture->GetTexture();
+		auto LastFrameBufferTextureName = Texture.mTexture.mName;
+		if ( LastFrameBufferTextureName == BoundTextureName )
+		{
+			SoyPixels Pixels;
+			SoyPixelsFormat::Type ForceFormat = SoyPixelsFormat::Invalid;
+			bool Flip = false;
+			Texture.Read( Pixels, ForceFormat, Flip );
+			DirectRead = false;
+		}
+		else
+		{
+			std::Debug << "Bound texture is " << BoundTextureName << ", last bound is " << LastFrameBufferTextureName << " so fast read skipped" << std::endl;
+		}
+	}
+	*/
 	
+	static bool UsePbo = true;
+	if ( UsePbo && !PixelBuffer.IsEmpty() )
+	{
+		try
+		{
+			auto ReadPixelFormat = ( type == GL_UNSIGNED_BYTE ) ? PixelFormat : SoyPixelsFormat::Float4;
+			SoyPixelsMeta PboMeta( width, height, ReadPixelFormat );
+			
+			Opengl::TPbo Pbo( PboMeta );
+			{
+				std::stringstream TimerName;
+				TimerName << "PBO glReadPixels( " << PboMeta << ")";
+				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 10 );
+				Pbo.ReadPixels(type);
+			}
+
+			std::stringstream TimerName_Lock;
+			TimerName_Lock << "PBO Lock( " << PboMeta << ")";
+			Soy::TScopeTimerPrint ReadPixelsTimer_Lock( TimerName_Lock.str().c_str(), 10 );
+			auto* pData = Pbo.LockBuffer();
+			auto PboArray = GetRemoteArray<uint8_t>( pData, PboMeta.GetDataSize() );
+			ReadPixelsTimer_Lock.Stop();
+			
+			{
+				std::stringstream TimerName;
+				TimerName << "PBO Copy( " << PboMeta << ")";
+				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 10 );
+				PixelBuffer.Copy(PboArray);
+			}
+			Pbo.UnlockBuffer();
+			DirectRead = false;
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "PBO read failed" << e.what() << std::endl;
+		}
+	}
+
+	
+	if ( DirectRead )
 	{
 		std::stringstream TimerName;
 		TimerName << "glReadPixels( " << x << "," << y << "," << width << "x" << height << ")";
@@ -1149,6 +1252,27 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(cons
 	}
 }
 
+
+TImageWrapper* TOpenglImmediateContextWrapper::GetBoundTexture(GLenum Binding)
+{
+	if ( !mLastBoundTexture )
+		return nullptr;
+	
+	//	verify the last bound texture against the current one, and if it's the same, return it
+	auto& Texture = mLastBoundTexture->GetTexture();
+	
+	GLint BoundTextureName = GL_ASSET_INVALID;
+	glGetIntegerv( GL_TEXTURE_BINDING_2D, &BoundTextureName );
+	Opengl::IsOkay("glGetIntegerv( GL_TEXTURE_BINDING_2D)");
+
+	if ( Texture.mTexture.mName != BoundTextureName )
+	{
+		std::Debug << "Last bound texture doesn't match current" << std::endl;
+		return nullptr;
+	}
+	
+	return mLastBoundTexture;
+}
 
 
 
