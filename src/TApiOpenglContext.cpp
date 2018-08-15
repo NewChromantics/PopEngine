@@ -10,6 +10,7 @@ using namespace v8;
 const char OpenglImmediateContext_TypeName[] = "OpenglImmediateContext";
 
 const char Execute_FunctionName[] = "Execute";
+const char ExecuteCompiledQueue_FunctionName[] = "ExecuteCompiledQueue";
 const char GetEnums_FunctionName[] = "GetEnums";
 
 #define DECLARE_IMMEDIATE_FUNC_NAME(NAME)	\
@@ -192,6 +193,29 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 
 
 
+
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<this_type>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	auto Window = Arguments.This();
+	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
+	
+	
+	
+	//
+	
+	throw Soy::AssertException("Todo");
+	
+}
+
+
 v8::Local<v8::Value> TOpenglImmediateContextWrapper::GetEnums(const v8::CallbackInfo& Params)
 {
 	auto* Isolate = &Params.GetIsolate();
@@ -287,6 +311,7 @@ Local<FunctionTemplate> TOpenglImmediateContextWrapper::CreateTemplate(TV8Contai
 	
 	//	add members
 	Container.BindFunction<Execute_FunctionName>( InstanceTemplate, Execute );
+	Container.BindFunction<ExecuteCompiledQueue_FunctionName>( InstanceTemplate, ExecuteCompiledQueue );
 
 #define BIND_IMMEDIATE(NAME)	\
 	Container.BindFunction<Immediate_## NAME ##_FunctionName>( InstanceTemplate, Immediate_ ## NAME );{}

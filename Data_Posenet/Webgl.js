@@ -134,6 +134,7 @@ function WebglProgram()
 function OpenglCommandQueue()
 {
 	this.Commands = [];
+	this.IsCompiledMode = false;
 	
 	this.Push = function(Function,arguments)
 	{
@@ -154,7 +155,7 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			Debug("Execute Queue x" + Commands.length );
+			//Debug("Execute Queue x" + Commands.length );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
@@ -175,7 +176,7 @@ function OpenglCommandQueue()
 		}
 		
 		//	run these commands on the opengl thread
-		Debug("Running opengl command queue");
+		//Debug("Running opengl command queue");
 		//	capture commands and remove from our list
 		let Cmds = this.Commands;
 		this.Commands = [];
@@ -187,6 +188,60 @@ function OpenglCommandQueue()
 		return Promise;
 	}
 }
+
+
+
+function OpenglCompiledCommandQueue()
+{
+	this.Commands = [];
+	this.IsCompiledMode = true;
+	
+	
+	this.Push = function(Function,arguments)
+	{
+		//	turn arguments into an array
+		//	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+		const args = Array.from(arguments);
+		args.splice( 0, 0, Function );
+		this.Commands.push( args );
+	}
+	
+	this.Flush = function(Context)
+	{
+		Debug("flush");
+		let ExecuteQueue = function(Commands)
+		{
+			let ExecuteCommand = function(Command)
+			{
+				Debug("cmd " + Command[0] + " (x" + (Command.length-1) + " args)");
+			}
+			try
+			{
+				Commands.forEach( ExecuteCommand );
+			}
+			catch(e)
+			{
+				Debug("exception in queue: ");
+				Debug(e);
+				throw e;
+			}
+		}
+		
+		//	run these commands on the opengl thread
+		//Debug("Running opengl command queue");
+		//	capture commands and remove from our list
+		let Cmds = this.Commands;
+		this.Commands = [];
+		let RunCommands = function(Resolve,Reject)
+		{
+			ExecuteQueue(Cmds);
+			Resolve();
+		}
+		let Promise = new Promise(RunCommands);
+		return Promise;
+	}
+}
+
 
 function GetTypename(Object)
 {
@@ -252,6 +307,8 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	let ContextsType = ParentCanvas.WebWindow.OpenglContext.constructor.name;
 	Debug("FakeOpenglContext(" + ContextType + ", " + ContextsType +")");
 	this.ParentCanvas = ParentCanvas;
+	OpenglCompiledCommandQueue
+	//this.CommandQueue = new OpenglCompiledCommandQueue();
 	this.CommandQueue = new OpenglCommandQueue();
 
 	//	make a new context
@@ -300,36 +357,53 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//WEBGL_get_buffer_sub_data_async
 		return null;
 	}
-	//WebGLRenderingContext.getSupportedExtensions.
-	this.disable = function()	{	this.CommandQueue.Push( this.GetOpenglContext().disable, arguments );	}
-	this.enable = function()		{	this.CommandQueue.Push( this.GetOpenglContext().enable, arguments );		}
-	this.cullFace = function()	{	this.CommandQueue.Push( this.GetOpenglContext().cullFace, arguments );		}
-	this.bindBuffer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindBuffer, arguments );		}
-	this.bufferData = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bufferData, arguments );		}
-	this.bindFramebuffer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindFramebuffer, arguments );		}
-	this.framebufferTexture2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().framebufferTexture2D, arguments );		}
-	this.bindTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().bindTexture, arguments );		}
-	this.texImage2D = function()
-	{
-		/*
-		let DebugStr = "texImage2D(";
-		for ( let a=0;	a<arguments.length;	a++ )
-			DebugStr += GetTypename( arguments[a] )+ ", ";
-		DebugStr+=")";
-		Debug(DebugStr);
-		*/
-		this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );
-	}
-	this.texParameteri = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
-	this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
-	this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
-	this.texSubImage2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().texSubImage2D, arguments );		}
-	//this.readPixels = function()	{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
-	this.viewport = function()	{	this.CommandQueue.Push( this.GetOpenglContext().viewport, arguments );		}
-	this.scissor = function()	{	this.CommandQueue.Push( this.GetOpenglContext().scissor, arguments );		}
-	this.activeTexture = function()	{	this.CommandQueue.Push( this.GetOpenglContext().activeTexture, arguments );		}
-	this.drawElements = function()	{	this.CommandQueue.Push( this.GetOpenglContext().drawElements, arguments );		}
 	
+	if ( this.CommandQueue.IsCompiledMode )
+	{
+		//WebGLRenderingContext.getSupportedExtensions.
+		this.disable = function()				{	this.CommandQueue.Push( this.GetOpenglContext().disable, arguments );	}
+		this.enable = function()				{	this.CommandQueue.Push( this.GetOpenglContext().enable, arguments );		}
+		this.cullFace = function()				{	this.CommandQueue.Push( this.GetOpenglContext().cullFace, arguments );		}
+		this.bindBuffer = function()			{	this.CommandQueue.Push( this.GetOpenglContext().bindBuffer, arguments );		}
+		this.bufferData = function()			{	this.CommandQueue.Push( this.GetOpenglContext().bufferData, arguments );		}
+		this.bindFramebuffer = function()		{	this.CommandQueue.Push( this.GetOpenglContext().bindFramebuffer, arguments );		}
+		this.framebufferTexture2D = function()	{	this.CommandQueue.Push( this.GetOpenglContext().framebufferTexture2D, arguments );		}
+		this.bindTexture = function()			{	this.CommandQueue.Push( this.GetOpenglContext().bindTexture, arguments );		}
+		this.texImage2D = function()			{	this.CommandQueue.Push( this.GetOpenglContext().texImage2D, arguments );	}
+		this.texParameteri = function()			{	this.CommandQueue.Push( this.GetOpenglContext().texParameteri, arguments );		}
+		this.vertexAttribPointer = function()	{	this.CommandQueue.Push( this.GetOpenglContext().vertexAttribPointer, arguments );		}
+		this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( this.GetOpenglContext().enableVertexAttribArray, arguments );		}
+		this.texSubImage2D = function()			{	this.CommandQueue.Push( this.GetOpenglContext().texSubImage2D, arguments );		}
+		//this.readPixels = function()			{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
+		this.viewport = function()				{	this.CommandQueue.Push( this.GetOpenglContext().viewport, arguments );		}
+		this.scissor = function()				{	this.CommandQueue.Push( this.GetOpenglContext().scissor, arguments );		}
+		this.activeTexture = function()			{	this.CommandQueue.Push( this.GetOpenglContext().activeTexture, arguments );		}
+		this.drawElements = function()			{	this.CommandQueue.Push( this.GetOpenglContext().drawElements, arguments );		}
+		this.RealReadPixels = function()		{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
+	}
+	else
+	{
+		//WebGLRenderingContext.getSupportedExtensions.
+		this.disable = function()				{	this.CommandQueue.Push( 'ds', arguments );	}
+		this.enable = function()				{	this.CommandQueue.Push( 'en', arguments );		}
+		this.cullFace = function()				{	this.CommandQueue.Push( 'cf', arguments );		}
+		this.bindBuffer = function()			{	this.CommandQueue.Push( 'bb', arguments );		}
+		this.bufferData = function()			{	this.CommandQueue.Push( 'bd', arguments );		}
+		this.bindFramebuffer = function()		{	this.CommandQueue.Push( 'bfb', arguments );		}
+		this.framebufferTexture2D = function()	{	this.CommandQueue.Push( 'fbt', arguments );		}
+		this.bindTexture = function()			{	this.CommandQueue.Push( 'bt', arguments );		}
+		this.texImage2D = function()			{	this.CommandQueue.Push( 'ti', arguments );	}
+		this.texParameteri = function()			{	this.CommandQueue.Push( 'tp', arguments );		}
+		this.vertexAttribPointer = function()	{	this.CommandQueue.Push( 'vap', arguments );		}
+		this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( 'eva', arguments );		}
+		this.texSubImage2D = function()			{	this.CommandQueue.Push( 'tsi', arguments );		}
+		this.viewport = function()				{	this.CommandQueue.Push( 'vp', arguments );		}
+		this.scissor = function()				{	this.CommandQueue.Push( 'sc', arguments );		}
+		this.activeTexture = function()			{	this.CommandQueue.Push( 'at', arguments );		}
+		this.drawElements = function()			{	this.CommandQueue.Push( 'drw', arguments );		}
+		this.RealReadPixels = function()		{	this.CommandQueue.Push( 'rp', arguments );		}
+	}
+		
 	this.useProgram = function()
 	{
 		//	this should be executed on the immediate thread inside Execute()
@@ -389,9 +463,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	this.readPixels = function()
 	{
-		//	work out what we're reading into
-		//Debug("ReadPixels into " + arguments[6].constructor.name);
-		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		this.ReadReadPixels( arguments );
 		
 		Sleep(1);
 		this.CommandQueue.Flush( this.GetOpenglContext() );

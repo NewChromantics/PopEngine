@@ -237,11 +237,10 @@ function RunPoseDetection(PoseNet,NewImage)
 		Debug(e);
 	}
 	
-	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
+	//Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
 	try
 	{
 		let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
-		Debug("Started promise");
 		return EstimatePromise;
 	}
 	catch(e)
