@@ -490,6 +490,8 @@ v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	auto RectHandle = Arguments[0];
 	
+	Soy::TScopeTimerPrint Timer(__func__,5);
+
 	BufferArray<int,4> RectPx;
 	v8::EnumArray( RectHandle, GetArrayBridge(RectPx), __FUNCTION__ );
 	
@@ -605,6 +607,7 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 		AllowBgraAsRgba = v8::SafeCast<v8::Boolean>(AllowBgraAsRgbaHandle)->BooleanValue();
 	auto TargetArrayHandle = Arguments[1];
 	
+	Soy::TScopeTimerPrint Timer(__func__,5);
 	
 	//	gr: this func will probably need to return a promise if reading from opengl etc (we want it to be async anyway!)
 	auto& CurrentPixels = This.GetPixels();
