@@ -680,3 +680,33 @@ var document = new FakeDocument(window);
 
 
 
+//	to allow tensorflow to TRY and read video, (and walk past the code), we at least need a constructor for instanceof HTMLVideoElement
+function HTMLVideoElement()
+{
+	
+}
+
+
+//	gr: this might need to be more intelligently back if accessing pixels synchronously
+function ImageData(Pixels)
+{
+	this.width = 0;
+	this.height = 0;
+	this.data = null;	//	Uint8ClampedArray rgba
+	
+	this.SetFromImage = function(Img)
+	{
+		this.width = Img.GetWidth();
+		this.height = Img.GetHeight();
+		this.data = Img.GetRgba8(AllowBgraAsRgba);
+		
+		//Debug( ToHexString(this.data,'  20 ) );
+	}
+	
+	//	auto load
+	if ( Pixels instanceof Image )
+	{
+		this.SetFromImage( Pixels );
+	}
+}
+

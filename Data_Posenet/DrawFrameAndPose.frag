@@ -1,8 +1,9 @@
 in vec2 uv;
-const float LineWidth = 0.004;
+const float LineWidth = 0.003;
 
 uniform sampler2D	Frame;
 uniform bool		HasFrame;
+uniform vec4		UnClipRect;
 
 #define LINE_COUNT	100
 uniform vec4		Lines[LINE_COUNT];
@@ -19,7 +20,7 @@ float TimeAlongLine2(vec2 Position,vec2 Start,vec2 End)
 
 float3 NormalToRedGreen(float Normal)
 {
-	if ( Normal < 0.0 )
+	if ( Normal < 0 )
 	{
 		return float3( 0,1,1 );
 	}
@@ -33,7 +34,7 @@ float3 NormalToRedGreen(float Normal)
 		Normal = (Normal-0.5) / 0.5;
 		return float3( 1-Normal, 1, 0 );
 	}
-	else	//	>1
+	else //	>1
 	{
 		return float3( 0,0,1 );
 	}
@@ -73,11 +74,22 @@ float DistanceToLine2(vec2 Position,vec2 Start,vec2 End)
 	return length( Near - Position );
 }
 
+float Range(float Min,float Max,float Value)
+{
+	return (Value-Min) / (Max-Min);
+}
+
+vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
+{
+	return vec2( Range(Min.x,Max.x,Value.x), Range(Min.y,Max.y,Value.y) );
+}
 
 void main()
 {
-	float2 FrameUv = float2( uv.x, 1-uv.y );
-	
+	vec2 FrameUv = vec2( uv.x, 1-uv.y );
+	//vec2 FrameUv = uv;
+	//FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
+
 	float Distances[LINE_COUNT];
 
 	float NearestDistance = 999;
@@ -85,7 +97,6 @@ void main()
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
-		
 		Distances[i] = DistanceToLine2( FrameUv, Line.xy, Line.zw );
 		if ( Distances[i] < NearestDistance )
 		{
@@ -101,9 +112,7 @@ void main()
 	}
 	else if ( HasFrame )
 	{
-		float Value = texture( Frame, FrameUv ).r;
-		gl_FragColor.xyz = NormalToRedGreen( Value );
-		gl_FragColor.w = 1;
+		FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
 		gl_FragColor = texture( Frame, FrameUv );
 	}
 	else

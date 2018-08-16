@@ -721,7 +721,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 				if ( mOpenglTexture == nullptr )
 				{
 					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
-					this->mOpenglClientStorage.reset( new SoyPixels );
+					//this->mOpenglClientStorage.reset( new SoyPixels );
 					//mOpenglTexture->mClientBuffer = this->mOpenglClientStorage;
 				
 					//	alloc the deffered delete func
