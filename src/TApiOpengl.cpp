@@ -14,36 +14,6 @@ const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
 const char Execute_FunctionName[] = "Execute";
-const char GetEnums_FunctionName[] = "GetEnums";
-
-#define DECLARE_IMMEDIATE_FUNC_NAME(NAME)	\
-const char Immediate_##NAME##_FunctionName[] = #NAME
-
-#define DEFINE_IMMEDIATE(NAME)	DECLARE_IMMEDIATE_FUNC_NAME(NAME)
-DEFINE_IMMEDIATE(disable);
-DEFINE_IMMEDIATE(enable);
-DEFINE_IMMEDIATE(cullFace);
-DEFINE_IMMEDIATE(bindBuffer);
-DEFINE_IMMEDIATE(bufferData);
-DEFINE_IMMEDIATE(bindFramebuffer);
-DEFINE_IMMEDIATE(framebufferTexture2D);
-DEFINE_IMMEDIATE(bindTexture);
-DEFINE_IMMEDIATE(texImage2D);
-DEFINE_IMMEDIATE(useProgram);
-DEFINE_IMMEDIATE(texParameteri);
-DEFINE_IMMEDIATE(vertexAttribPointer);
-DEFINE_IMMEDIATE(enableVertexAttribArray);
-DEFINE_IMMEDIATE(texSubImage2D);
-DEFINE_IMMEDIATE(readPixels);
-DEFINE_IMMEDIATE(viewport);
-DEFINE_IMMEDIATE(scissor);
-DEFINE_IMMEDIATE(activeTexture);
-DEFINE_IMMEDIATE(drawElements);
-#undef DEFINE_IMMEDIATE
-
-
-static bool ShowImmediateFunctionCalls = true;
-
 
 
 
