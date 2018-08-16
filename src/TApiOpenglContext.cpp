@@ -691,6 +691,8 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindTexture(const
 
 void GetPixelData(const char* Context,Local<Value> DataHandle,ArrayBridge<uint8_t>&& PixelData8,v8::Isolate* Isolate)
 {
+	Soy::TScopeTimerPrint Timer(__func__,10);
+
 	if ( DataHandle->IsNull() )
 	{
 		PixelData8.Clear();
@@ -832,8 +834,15 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const 
 		}
 	}
 
+	glFinish();
+	Opengl::IsOkay("pre glFinish");
+
+	Soy::TScopeTimerPrint Timer(__func__,10);
 	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData.GetArray() );
 	Opengl::IsOkay("glTexImage2D");
+	//	see if the flush is slow!
+	glFinish();
+	Opengl::IsOkay("glFinish");
 	return v8::Undefined( Arguments.mIsolate );
 }
 
@@ -940,12 +949,21 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texSubImage2D(con
 	auto externalformat = GetGlValue<GLenum>( Arguments.mParams[externalformatIndex] );
 	auto externaltype = GetGlValue<GLenum>( Arguments.mParams[externaltypeIndex] );
 	auto DataHandle = Arguments.mParams[DataHandleIndex];
-	
+
 	Array<uint8_t> PixelData;
 	GetPixelData( "glTexSubImage2D", DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
 	
+	glFinish();
+	Opengl::IsOkay("pre glFinish");
+	
+	Soy::TScopeTimerPrint Timer(__func__,10);
 	glTexSubImage2D( binding, level, xoffset, yoffset, width, height, externalformat, externaltype, PixelData.GetArray() );
 	Opengl::IsOkay("glTexSubImage2D");
+
+	//	see if the flush is slow!
+	glFinish();
+	Opengl::IsOkay("glFinish");
+
 	return v8::Undefined( Arguments.mIsolate );
 }
 
@@ -1038,6 +1056,21 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	}
 	*/
 	
+	
+	auto TimerWarningMs = 10;
+	//	always show timing if we're outputting to a buffer
+	if (!PixelBuffer.IsEmpty())
+		TimerWarningMs = 0;
+	
+	static bool PreFlush = true;
+	if ( PreFlush && !PixelBuffer.IsEmpty() )
+	{
+		Soy::TScopeTimerPrint Timer("ReadPixels pre flush", 10 );
+		glFinish();
+		Opengl::IsOkay("ReadPixels pre flush");
+	}
+
+	
 	static bool UsePbo = true;
 	if ( UsePbo && !PixelBuffer.IsEmpty() )
 	{
@@ -1064,7 +1097,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 			{
 				std::stringstream TimerName;
 				TimerName << "PBO Copy( " << PboMeta << ")";
-				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 10 );
+				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), TimerWarningMs );
 				PixelBuffer.Copy(PboArray);
 			}
 			Pbo.UnlockBuffer();
@@ -1081,7 +1114,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	{
 		std::stringstream TimerName;
 		TimerName << "glReadPixels( " << x << "," << y << "," << width << "x" << height << ")";
-		Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 10 );
+		Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), TimerWarningMs );
 		glReadPixels( x, y, width, height, format, type, PixelBuffer.GetArray() );
 		Opengl::IsOkay("glReadPixels");
 	}
