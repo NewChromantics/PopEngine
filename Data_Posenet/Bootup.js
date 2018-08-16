@@ -3,7 +3,7 @@
 function include(Filename)
 {
 	let Source = LoadFileAsString(Filename);
-	CompileAndRun( Source );
+	return CompileAndRun( Source );
 }
 
 var PosenetTextures = [];
@@ -31,7 +31,12 @@ function HTMLVideoElement()
 }
 
 var AllowBgraAsRgba = true;
-var ClipToSquare = true;
+var imageScaleFactor = 0.20;
+var outputStride = 32;
+//var outputStride = 32;
+var ClipToSquare = false;
+//var ClipToSquare = true;	//	gr: slow atm!
+//var ClipToSquare = outputStride * 10;	//	gr: slow atm!
 
 
 //	gr: this might eed to be more intelligently back if accessing pixels synchronously
@@ -209,7 +214,6 @@ function RunPoseDetection(PoseNet,NewImage)
 	//	for CPU mode (and gpu?)
 	if ( NewImage instanceof Image )
 	{
-		Debug("Converting image to ImageData..");
 		if ( CachedImageData == null )
 		{
 			CachedImageData = new ImageData(NewImage);
@@ -222,9 +226,6 @@ function RunPoseDetection(PoseNet,NewImage)
 	}
 	
 		
-	var imageScaleFactor = 0.35;
-	var outputStride = 16;
-	//var outputStride = 32;
 	var flipHorizontal = false;
 	
 	//console.log("Processing...");
@@ -237,15 +238,29 @@ function RunPoseDetection(PoseNet,NewImage)
 		Debug(e);
 	}
 	
-	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height + " at " + Date.now() );
+	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
 	try
 	{
+		/*
+		Debug(tf);
+		Debug("PoseNet keys");
+		Debug( Object.keys(PoseNet.mobileNet) );
+		let tf = require("@tensorflow/tfjs");
+		Debug(tf);
+		//	gr: this input tensor is setup, then GPU uploads to a texture which is associated with the tensor's
+		//		.dataId (arbirtry name)
+		let TensorSize = [NewImage.width,NewImage.height];
+		let InputTensor = Tensor.make( TensorSize, {}, "int32" );
+		PoseNet.predictForSinglePose(InputTensor, outputStride);
+		
+		*/
 		let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
 		return EstimatePromise;
 	}
 	catch(e)
 	{
 		Debug("Error during PoseNet.estimateSinglePose: " + e);
+		throw e;
 	}
 }
 
@@ -326,8 +341,6 @@ var CurrentProcessingCount = 0;
 
 function StartPoseDetection(PoseNet)
 {
-	Debug("Posenet loaded!");
-	
 	var UseTestImage = false;
 	
 	
@@ -389,8 +402,12 @@ function StartPoseDetection(PoseNet)
 			{
 				let Width = FrameImage.GetWidth();
 				let Height = FrameImage.GetHeight();
+				if ( typeof ClipToSquare == "number" )
+					Width = ClipToSquare;
+				
 				Width = Math.min( Width, Height );
 				Height = Math.min( Width, Height );
+				
 				FrameImage.Clip( [0,0,Width,Height] );
 			}
 			
@@ -447,9 +464,6 @@ function PosenetFailed(Arg1)
 }
 
 
-
-
-
 function Main()
 {
 	//Debug("log is working!", "2nd param");
@@ -464,13 +478,11 @@ function Main()
 	//	make a context, then let tensorflow grab the bindings
 	include('tfjs.0.11.7.js');
 	include('posenet.0.1.2.js');
-	//include("Hello.js");
 
 
 	//	load posenet
 	Debug("Loading posenet...");
 	posenet.load().then( StartPoseDetection ).catch( PosenetFailed );
-	
 	
 	let AllocWebServer = function()
 	{
