@@ -210,12 +210,12 @@ function OpenglCompiledCommandQueue()
 	
 	this.Flush = function(Context)
 	{
-		Debug("flush");
+		//Debug("flush");
 		let ExecuteQueue = function(Commands)
 		{
 			let ExecuteCommand = function(Command)
 			{
-			//	Debug("cmd " + Command[0] + " (x" + (Command.length-1) + " args)");
+				//Debug("cmd " + Command[0] + " (x" + (Command.length-1) + " args)");
 			}
 			try
 			{
@@ -310,8 +310,8 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	Debug("FakeOpenglContext(" + ContextType + ", " + ContextsType +")");
 	this.ParentCanvas = ParentCanvas;
 	
-	this.CommandQueue = new OpenglCompiledCommandQueue();
-	//this.CommandQueue = new OpenglCommandQueue();
+	//this.CommandQueue = new OpenglCompiledCommandQueue();
+	this.CommandQueue = new OpenglCommandQueue();
 
 	//	make a new context
 	let ParentContext = ParentCanvas.WebWindow.OpenglContext;
@@ -334,11 +334,10 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.COMPILE_STATUS = 'COMPILE_STATUS';
 	this.LINK_STATUS = 'LINK_STATUS';
 	
-	Debug("This keys after adding enums:");
-	Debug(Object.keys(this));
-
-	Debug("TEXTURE0=" + this.TEXTURE0 );
-	Debug("TEXTURE31=" + this.TEXTURE31 );
+	//Debug("This keys after adding enums:");
+	//Debug(Object.keys(this));
+	//Debug("TEXTURE0=" + this.TEXTURE0 );
+	//Debug("TEXTURE31=" + this.TEXTURE31 );
 	
 	this.GetOpenglContext = function()
 	{
@@ -482,7 +481,10 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	{
 		try
 		{
-			this.RealReadPixels( arguments );
+			if ( this.CommandQueue.IsCompiledMode )
+				this.RealReadPixels( arguments );
+			else	//	gr: losing arguments somewhere in the chain if we pass it along
+				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		
 			Sleep(0);
 			this.CommandQueue.Flush( this.GetOpenglContext() );

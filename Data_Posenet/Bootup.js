@@ -237,7 +237,7 @@ function RunPoseDetection(PoseNet,NewImage)
 		Debug(e);
 	}
 	
-	//Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height );
+	Debug("Estimating pose... on " + NewImage.width + "x" + NewImage.height + " at " + Date.now() );
 	try
 	{
 		let EstimatePromise = PoseNet.estimateSinglePose(NewImage, imageScaleFactor, flipHorizontal, outputStride);
@@ -375,7 +375,6 @@ function StartPoseDetection(PoseNet)
 			if ( FlipCameraInput )
 				FrameImage.Flip();
 			
-			let StartTime = Date.now();
 			let OnPose = function(Pose)
 			{
 				CurrentProcessingCount--;
@@ -396,6 +395,7 @@ function StartPoseDetection(PoseNet)
 			}
 			
 			//	run promise
+			let StartTime = Date.now();
 			RunPoseDetection( PoseNet, FrameImage )
 			.then( OnPose )
 			.catch( Debug );
