@@ -148,9 +148,7 @@ static Local<Value> CompileAndRun(CallbackInfo& Params)
 	
 	auto Source = Local<String>::Cast( args[0] );
 
-	Params.mContainer.LoadScript( Params.mContext, Source );
-	
-	return Undefined(Params.mIsolate);
+	return Params.mContainer.LoadScript( Params.mContext, Source );
 }
 
 
