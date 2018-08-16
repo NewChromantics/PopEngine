@@ -727,6 +727,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 					//	alloc the deffered delete func
 					mOpenglTextureDealloc = [this,pContext]
 					{
+						//	gr: this context can be deleted here...
 						pContext->QueueDelete(mOpenglTexture);
 					};
 				}

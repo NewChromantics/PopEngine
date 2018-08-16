@@ -78,6 +78,7 @@ public:
 	virtual bool		Iteration() override	{	PopWorker::TJobQueue::Flush(*this);	return true;	}
 	virtual bool		CanSleep() override		{	return !PopWorker::TJobQueue::HasJobs();	}	//	break out of conditional with this
 	virtual CGLContextObj	GetPlatformContext() override	{	return mContext;	}
+	virtual void	WaitForThreadToFinish() override	{	WaitToFinish();	}
 
 public:
 	CGLContextObj		mContext;

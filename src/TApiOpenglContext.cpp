@@ -57,14 +57,14 @@ v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isola
 
 TOpenglImmediateContextWrapper::~TOpenglImmediateContextWrapper()
 {
-	//	gr: need to wait here, maybe GlViewSharedContext can wait in the destructor?
-	/*
 	if ( mContext )
 	{
-		mContext->WaitToFinish();
+		//	gr: dont flush on a different thread!
+		//mContext->Flush(*mContext);
+		mContext->WaitForThreadToFinish();
 		mContext.reset();
 	}
-	 */
+	
 	mContext.reset();
 }
 

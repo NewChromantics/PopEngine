@@ -318,7 +318,12 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	//Debug("Parent Context is " + GetTypename(ParentContext) );
 	//Debug( Object.keys(ParentContext) );
 	//Debug("ParentContext==null : " + (ParentContext==null) );
-	this.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
+	
+	//	for now, share a global context, we have a problem where a context gets deleted BEFORE an image (belonging to that context) does
+	//	ownership of opengl textures in a TImageWrapper needs to move into the context and remove itself... i guess
+	if ( !ParentCanvas.WebWindow.SharedOpenglContext )
+		ParentCanvas.WebWindow.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
+	this.SharedOpenglContext = ParentCanvas.WebWindow.SharedOpenglContext;
 	
 	//  setup enums
 	let Enums = GetAllEnums( this.SharedOpenglContext.GetEnums() );
