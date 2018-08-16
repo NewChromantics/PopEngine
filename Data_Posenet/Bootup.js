@@ -88,6 +88,9 @@ function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
 	Bones.forEach( PushBone );
 }
 
+
+var TempSharedImageData = null;
+
 var TFrame = function()
 {
 	this.Image = null;
@@ -126,8 +129,17 @@ var TFrame = function()
 		if ( !(this.Image instanceof Image) )
 			throw "Expecting frame image to be an Image";
 		
-		this.ImageData = new ImageData(this.Image);
-		//NewImage.GetRgba8(AllowBgraAsRgba,CachedImageData.data);
+		if ( TempSharedImageData == null )
+		//if ( true )
+		{
+			TempSharedImageData = new ImageData(this.Image);
+			this.ImageData = TempSharedImageData;
+		}
+		else
+		{
+			this.Image.GetRgba8(AllowBgraAsRgba,TempSharedImageData.data);
+			this.ImageData = TempSharedImageData;
+		}
 	}
 }
 
@@ -228,8 +240,6 @@ function OnFrameCompleted(Frame)
 	if ( LastFrame != null )
 		LastFrame.Clear();
 	LastFrame = Frame;
-	
-	Debug("Got a pose? " + Frame.Pose );
 }
 
 function OnFrameError(Frame,Error)
