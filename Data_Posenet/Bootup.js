@@ -50,6 +50,43 @@ function GetXLinesAndScores(Lines,Scores)
 	Scores.push( [0] );
 }
 
+function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
+{
+	if ( !Pose )
+		return;
+	
+	let PushLine = function(Keypointa,Keypointb)
+	{
+		if ( Keypointa === undefined || Keypointb === undefined )
+			return;
+		
+		let Score = (Keypointa.score + Keypointb.score)/2;
+		let Start = Normalise( Keypointa.position.x, Keypointa.position.y );
+		let End = Normalise( Keypointb.position.x, Keypointb.position.y );
+		let Line = [ Start[0], Start[1], End[0], End[1] ];
+		Lines.push( Line );
+		Scores.push( Score );
+	}
+	
+	let GetKeypoint = function(Name)
+	{
+		let IsMatch = function(Keypoint)
+		{
+			return Keypoint.part == Name;
+		}
+		return Pose.keypoints.find( IsMatch );
+	}
+	
+	let PushBone = function(BonePair)
+	{
+		let kpa = GetKeypoint(BonePair[0]);
+		let kpb = GetKeypoint(BonePair[1]);
+		PushLine( kpa, kpb );
+	}
+	
+	let Bones = [["nose", "leftEye"], ["leftEye", "leftEar"], ["nose", "rightEye"], ["rightEye", "rightEar"], ["nose", "leftShoulder"], ["leftShoulder", "leftElbow"], ["leftElbow", "leftWrist"], ["leftShoulder", "leftHip"], ["leftHip", "leftKnee"], ["leftKnee", "leftAnkle"], ["nose", "rightShoulder"], ["rightShoulder", "rightElbow"], ["rightElbow", "rightWrist"], ["rightShoulder", "rightHip"], ["rightHip", "rightKnee"], ["rightKnee", "rightAnkle"]];
+	Bones.forEach( PushBone );
+}
 
 var TFrame = function()
 {
@@ -72,7 +109,13 @@ var TFrame = function()
 	
 	this.GetLinesAndScores = function(Lines,Scores)
 	{
-		GetXLinesAndScores(Lines,Scores);
+		let w = this.ImageData.width;
+		let h = this.ImageData.height;
+		let Normalise = function(x,y)
+		{
+			return [ x/w, y/h ];
+		}
+		GetPoseLinesAndScores( this.Pose, Lines, Scores, Normalise );
 	}
 	
 	
@@ -142,7 +185,6 @@ function WindowRender(RenderTarget)
 			const MAX_LINES = 100;
 			Lines.length = Math.min( Lines.length, MAX_LINES );
 			Scores.length = Math.min( Scores.length, MAX_LINES );
-			//Debug(PoseLines);
 			Shader.SetUniform("Lines", Lines );
 			Shader.SetUniform("LineScores", Scores );
 		}
@@ -186,6 +228,8 @@ function OnFrameCompleted(Frame)
 	if ( LastFrame != null )
 		LastFrame.Clear();
 	LastFrame = Frame;
+	
+	Debug("Got a pose? " + Frame.Pose );
 }
 
 function OnFrameError(Frame,Error)
