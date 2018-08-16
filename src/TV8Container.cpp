@@ -174,7 +174,7 @@ void TV8Container::CreateContext()
 }
 
 
-void TV8Container::LoadScript(Local<Context> context,const std::string& Source)
+Local<Value> TV8Container::LoadScript(Local<Context> context,const std::string& Source)
 {
 	auto* CStr = Source.c_str();
 	if ( CStr == nullptr )
@@ -182,11 +182,11 @@ void TV8Container::LoadScript(Local<Context> context,const std::string& Source)
 	
 	auto* Isolate = context->GetIsolate();
 	auto StringHandle = String::NewFromUtf8( Isolate, CStr );
-	LoadScript( context, StringHandle );
+	return LoadScript( context, StringHandle );
 }
 
 
-void TV8Container::LoadScript(Local<Context> context,Local<String> Source)
+Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Source)
 {
 	auto* Isolate = context->GetIsolate();
 	
@@ -211,8 +211,9 @@ void TV8Container::LoadScript(Local<Context> context,Local<String> Source)
 		if ( !ScriptResult->IsUndefined() )
 		{
 			v8::String::Utf8Value MainResultStr( ScriptResult );
-			std::Debug << "LoadScript() -> " << *MainResultStr << std::endl;
+			std::Debug << "LoadScript() -> " << *MainResultStr << " (" << v8::GetTypeName(ScriptResult) << ")" << std::endl;
 		}
+		return ScriptResult;
 	}
 }
 
@@ -274,7 +275,7 @@ void TV8Container::BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char
 }
 
 
-void TV8Container::ExecuteGlobalFunc(Local<v8::Context> Context,const std::string& FunctionName)
+Local<Value> TV8Container::ExecuteGlobalFunc(Local<v8::Context> Context,const std::string& FunctionName)
 {
 	auto Global = Context->Global();
 	auto This = Global;
@@ -286,6 +287,8 @@ void TV8Container::ExecuteGlobalFunc(Local<v8::Context> Context,const std::strin
 		String::Utf8Value ResultStr(Result);
 		std::Debug << *ResultStr << std::endl;
 	}
+	
+	return Result;
 }
 
 

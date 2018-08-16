@@ -261,9 +261,9 @@ public:
 	void		ProcessJobs();	//	run all the queued jobs then return
 	
 	//	run these with RunScoped (internal) or QueueJob (external)
-	void		LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
-	void		LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source);
-	void		ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
+	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
+	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source);
+	v8::Local<v8::Value>	ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
 
 	TV8ObjectTemplate::ALLOCATOR	GetAllocator(const char* TYPENAME);
 	//	deprecated for object
