@@ -177,7 +177,7 @@ function OpenglCommandQueue()
 		}
 		
 		//	run these commands on the opengl thread
-		Debug("Running opengl command queue");
+		//Debug("Running opengl command queue");
 		//	capture commands and remove from our list
 		let Cmds = this.Commands;
 		this.Commands = [];
