@@ -22,15 +22,17 @@ var WebServerPort = 8000;
 
 
 var AllowBgraAsRgba = true;
-var imageScaleFactor = 0.20;
-var outputStride = 32;
+var PoseNetScale = 0.20;
+var PoseNetOutputStride = 32;
+var PoseNetMirror = false;
 //var outputStride = 32;
-var ClipToSquare = false;
+//var ClipToSquare = false;
 //var ClipToSquare = true;	//	gr: slow atm!
-//var ClipToSquare = outputStride * 10;	//	gr: slow atm!
+var ClipToSquare = 500;	//	gr: slow atm!
 
 
 
+var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
 
 
@@ -54,6 +56,7 @@ var TFrame = function()
 	this.Image = null;
 	this.FaceFeatures = null;
 	this.SkeletonPose = null;
+	this.ImageData = null;
 	
 	this.Clear = function()
 	{
@@ -62,11 +65,26 @@ var TFrame = function()
 			this.Image.Clear();
 			this.Image = null;
 		}
+		
+		this.ImageData = null;
+		//GarbageCollect();
 	}
 	
 	this.GetLinesAndScores = function(Lines,Scores)
 	{
 		GetXLinesAndScores(Lines,Scores);
+	}
+	
+	
+	this.SetupImageData = function()
+	{
+		//	here, the typedarray just hangs around until garbage collection
+		//	todo: make a pool & return to the pool when done
+		if ( !(this.Image instanceof Image) )
+			throw "Expecting frame image to be an Image";
+		
+		this.ImageData = new ImageData(this.Image);
+		//NewImage.GetRgba8(AllowBgraAsRgba,CachedImageData.data);
 	}
 }
 
@@ -153,12 +171,17 @@ function IsIdle()
 {
 	if ( !IsReady() )
 		return false;
+	
+	if ( CurrentFrames.length > 0 )
+		return false;
 	return true;
 }
 
 function OnFrameCompleted(Frame)
 {
 	UpdateFrameCounter('FrameCompleted');
+	
+	CurrentFrames = CurrentFrames.filter( function(el)	{	return el!=Frame;	} );
 	
 	if ( LastFrame != null )
 		LastFrame.Clear();
@@ -168,6 +191,8 @@ function OnFrameCompleted(Frame)
 function OnFrameError(Frame,Error)
 {
 	Debug("OnFrameError(" + Error + ")");
+	CurrentFrames = CurrentFrames.filter( function(el)	{	return el!=Frame;	} );
+
 	Frame.Clear();
 }
 
@@ -210,19 +235,49 @@ function SetupForPoseDetection(Frame)
 {
 	let Runner = function(Resolve,Reject)
 	{
-		Debug("Do SetupForPoseDetection");
+		//	gr: we may resize & filter here ourselves before putting into the tensorflow resize
+		/*
+		//	clip image to square
+		if ( ClipToSquare )
+		{
+			let Width = Frame.Image.GetWidth();
+			let Height = Frame.Image.GetHeight();
+			if ( typeof ClipToSquare == "number" )
+				Width = ClipToSquare;
+			
+			Width = Math.min( Width, Height );
+			Height = Math.min( Width, Height );
+			
+			Frame.Image.Clip( [0,0,Width,Height] );
+		}
+		*/
+		Frame.SetupImageData();
+		
 		Resolve(Frame);
 	}
 	
 	return new Promise(Runner);
 }
 
+
 function GetPoseDetectionPromise(Frame)
 {
 	let Runner = function(Resolve,Reject)
 	{
-		Debug("Do Posedetection");
-		Resolve(Frame);
+		let OnPose = function(Pose)
+		{
+			Frame.Pose = Pose;
+			Resolve(Frame);
+		}
+		
+		let OnPoseError = function(Error)
+		{
+			Reject(Error);
+		}
+		
+		let EstimatePromise = PoseNet.estimateSinglePose( Frame.ImageData, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
+		EstimatePromise.then( OnPose )
+		.catch( OnPoseError );
 	}
 	
 	return new Promise(Runner);
@@ -274,9 +329,11 @@ function OnNewVideoFrame(FrameImage)
 
 	//	make a new frame
 	let NewFrame = new TFrame();
+	CurrentFrames.push( NewFrame );
+	
 	NewFrame.Image = FrameImage;
 
-	SetupForPoseDetection(NewFrame)
+	SetupForPoseDetection( NewFrame )
 	.then( GetPoseDetectionPromise )
 	.then( SetupForFaceDetection )
 	.then( GetFaceDetectionPromise )
