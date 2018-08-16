@@ -135,6 +135,7 @@ function OpenglCommandQueue()
 {
 	this.Commands = [];
 	this.IsCompiledMode = false;
+	Debug("OpenglCommandQueue()");
 	
 	this.Push = function(Function,arguments)
 	{
@@ -184,8 +185,8 @@ function OpenglCommandQueue()
 		{
 			ExecuteQueue(Cmds);
 		}
-		let Promise = Context.Execute( RunCommands, true );
-		return Promise;
+		let Prom = Context.Execute( RunCommands, true );
+		return Prom;
 	}
 }
 
@@ -195,7 +196,8 @@ function OpenglCompiledCommandQueue()
 {
 	this.Commands = [];
 	this.IsCompiledMode = true;
-	
+	Debug("OpenglCompiledCommandQueue()");
+
 	
 	this.Push = function(Function,arguments)
 	{
@@ -213,7 +215,7 @@ function OpenglCompiledCommandQueue()
 		{
 			let ExecuteCommand = function(Command)
 			{
-				Debug("cmd " + Command[0] + " (x" + (Command.length-1) + " args)");
+			//	Debug("cmd " + Command[0] + " (x" + (Command.length-1) + " args)");
 			}
 			try
 			{
@@ -237,8 +239,8 @@ function OpenglCompiledCommandQueue()
 			ExecuteQueue(Cmds);
 			Resolve();
 		}
-		let Promise = new Promise(RunCommands);
-		return Promise;
+		let Prom = new Promise(RunCommands);
+		return Prom;
 	}
 }
 
@@ -263,8 +265,8 @@ function GetTypename(Object)
 
 function GetAllEnums(Enums)
 {
-	Debug("Pre-existing enums: ");
-	Object.keys(Enums).forEach( function(k){	Debug("InputEnum: " + k + "=" + Enums[k]);} );
+	//Debug("Pre-existing enums: ");
+	//Object.keys(Enums).forEach( function(k){	Debug("InputEnum: " + k + "=" + Enums[k]);} );
 		
 
 	//	add fake enums (as names so we can identify missing ones)
@@ -279,7 +281,7 @@ function GetAllEnums(Enums)
 		if ( Enums[Name] !== undefined )
 			return;
 		
-		Debug("Added Enum "+Name);
+		Debug("Added filler Enum "+Name);
 		Enums[Name] = Name;
 	}
 	WebglEnumNames.forEach( PushEnum );
@@ -307,15 +309,15 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	let ContextsType = ParentCanvas.WebWindow.OpenglContext.constructor.name;
 	Debug("FakeOpenglContext(" + ContextType + ", " + ContextsType +")");
 	this.ParentCanvas = ParentCanvas;
-	OpenglCompiledCommandQueue
-	//this.CommandQueue = new OpenglCompiledCommandQueue();
-	this.CommandQueue = new OpenglCommandQueue();
+	
+	this.CommandQueue = new OpenglCompiledCommandQueue();
+	//this.CommandQueue = new OpenglCommandQueue();
 
 	//	make a new context
 	let ParentContext = ParentCanvas.WebWindow.OpenglContext;
-	Debug("Parent Context is " + GetTypename(ParentContext) );
-	Debug( Object.keys(ParentContext) );
-	Debug("ParentContext==null : " + (ParentContext==null) );
+	//Debug("Parent Context is " + GetTypename(ParentContext) );
+	//Debug( Object.keys(ParentContext) );
+	//Debug("ParentContext==null : " + (ParentContext==null) );
 	this.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
 	
 	//  setup enums
@@ -360,6 +362,30 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	if ( this.CommandQueue.IsCompiledMode )
 	{
+		Debug("Setting up command mode");
+		//WebGLRenderingContext.getSupportedExtensions.
+		this.disable = function()				{	this.CommandQueue.Push( 'ds', arguments );	}
+		this.enable = function()				{	this.CommandQueue.Push( 'en', arguments );		}
+		this.cullFace = function()				{	this.CommandQueue.Push( 'cf', arguments );		}
+		this.bindBuffer = function()			{	this.CommandQueue.Push( 'bb', arguments );		}
+		this.bufferData = function()			{	this.CommandQueue.Push( 'bd', arguments );		}
+		this.bindFramebuffer = function()		{	this.CommandQueue.Push( 'bfb', arguments );		}
+		this.framebufferTexture2D = function()	{	this.CommandQueue.Push( 'fbt', arguments );		}
+		this.bindTexture = function()			{	this.CommandQueue.Push( 'bt', arguments );		}
+		this.texImage2D = function()			{	this.CommandQueue.Push( 'ti', arguments );	}
+		this.texParameteri = function()			{	this.CommandQueue.Push( 'tp', arguments );		}
+		this.vertexAttribPointer = function()	{	this.CommandQueue.Push( 'vap', arguments );		}
+		this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( 'eva', arguments );		}
+		this.texSubImage2D = function()			{	this.CommandQueue.Push( 'tsi', arguments );		}
+		this.viewport = function()				{	this.CommandQueue.Push( 'vp', arguments );		}
+		this.scissor = function()				{	this.CommandQueue.Push( 'sc', arguments );		}
+		this.activeTexture = function()			{	this.CommandQueue.Push( 'at', arguments );		}
+		this.drawElements = function()			{	this.CommandQueue.Push( 'drw', arguments );		}
+		this.RealReadPixels = function()		{	this.CommandQueue.Push( 'rp', arguments );		}
+	}
+	else
+	{
+		Debug("Setting up immediate mode");
 		//WebGLRenderingContext.getSupportedExtensions.
 		this.disable = function()				{	this.CommandQueue.Push( this.GetOpenglContext().disable, arguments );	}
 		this.enable = function()				{	this.CommandQueue.Push( this.GetOpenglContext().enable, arguments );		}
@@ -381,31 +407,16 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		this.drawElements = function()			{	this.CommandQueue.Push( this.GetOpenglContext().drawElements, arguments );		}
 		this.RealReadPixels = function()		{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
 	}
-	else
-	{
-		//WebGLRenderingContext.getSupportedExtensions.
-		this.disable = function()				{	this.CommandQueue.Push( 'ds', arguments );	}
-		this.enable = function()				{	this.CommandQueue.Push( 'en', arguments );		}
-		this.cullFace = function()				{	this.CommandQueue.Push( 'cf', arguments );		}
-		this.bindBuffer = function()			{	this.CommandQueue.Push( 'bb', arguments );		}
-		this.bufferData = function()			{	this.CommandQueue.Push( 'bd', arguments );		}
-		this.bindFramebuffer = function()		{	this.CommandQueue.Push( 'bfb', arguments );		}
-		this.framebufferTexture2D = function()	{	this.CommandQueue.Push( 'fbt', arguments );		}
-		this.bindTexture = function()			{	this.CommandQueue.Push( 'bt', arguments );		}
-		this.texImage2D = function()			{	this.CommandQueue.Push( 'ti', arguments );	}
-		this.texParameteri = function()			{	this.CommandQueue.Push( 'tp', arguments );		}
-		this.vertexAttribPointer = function()	{	this.CommandQueue.Push( 'vap', arguments );		}
-		this.enableVertexAttribArray = function()	{	this.CommandQueue.Push( 'eva', arguments );		}
-		this.texSubImage2D = function()			{	this.CommandQueue.Push( 'tsi', arguments );		}
-		this.viewport = function()				{	this.CommandQueue.Push( 'vp', arguments );		}
-		this.scissor = function()				{	this.CommandQueue.Push( 'sc', arguments );		}
-		this.activeTexture = function()			{	this.CommandQueue.Push( 'at', arguments );		}
-		this.drawElements = function()			{	this.CommandQueue.Push( 'drw', arguments );		}
-		this.RealReadPixels = function()		{	this.CommandQueue.Push( 'rp', arguments );		}
-	}
+
 		
 	this.useProgram = function()
 	{
+		if ( this.CommandQueue.IsCompiledMode )
+		{
+			this.CommandQueue.Push( 'up', arguments );
+			return;
+		}
+		
 		//	this should be executed on the immediate thread inside Execute()
 		let AllocAndUseProgram = function()
 		{
@@ -449,6 +460,12 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	//	this is deffered like useProgram's allocation
 	this.SetUniform = function()
 	{
+		if ( this.CommandQueue.IsCompiledMode )
+		{
+			this.CommandQueue.Push( 'su', arguments );
+			return;
+		}
+
 		//	this should be executed on the immediate thread inside Execute()
 		let ShaderSetUniform = function()
 		{
@@ -463,10 +480,17 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	this.readPixels = function()
 	{
-		this.ReadReadPixels( arguments );
+		try
+		{
+			this.RealReadPixels( arguments );
 		
-		Sleep(1);
-		this.CommandQueue.Flush( this.GetOpenglContext() );
+			Sleep(0);
+			this.CommandQueue.Flush( this.GetOpenglContext() );
+		}
+		catch(e)
+		{
+			Debug("readpixels exception: " + e);
+		}
 	}
 	
 	
