@@ -23,14 +23,14 @@ var WebServerPort = 8000;
 
 var AllowBgraAsRgba = true;
 var PoseNetScale = 0.20;
-var PoseNetOutputStride = 32;
+var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;	//	gr: slow atm!
 var ClipToSquare = 500;	//	gr: slow atm!
 
-var FindFaceAroundLastHeadRectScale = 1.5;	//	make this expand more width ways
+var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
 var SmallImageMinSize = 80;
 var ClippedImageScale = 0.400;
 var BlurLandmarkSearch = false;
@@ -40,7 +40,7 @@ var NoseHeightInHead = 0.5;
 
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
-var DrawSmallImage = true;
+var DrawSmallImage = false;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -48,7 +48,7 @@ var LastFrame = null;	//	completed TFrame
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 1;
+var DlibThreadCount = 4;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 
@@ -115,7 +115,6 @@ function ClipRect(ChildRect,ParentRect)
 	ChildRect[1] = ct;
 	ChildRect[2] = cr-cl;
 	ChildRect[3] = cb-ct;
-	Debug(ChildRect);
 }
 
 
@@ -168,7 +167,7 @@ function ClampRect(ChildRect,ParentRect)
 	ChildRect[1] = ct;
 	ChildRect[2] = cr-cl;
 	ChildRect[3] = cb-ct;
-	Debug(ChildRect);
+	//Debug(ChildRect);
 }
 
 function UnnormaliseRect(ChildRect,ParentRect)
@@ -340,6 +339,9 @@ function GetPointLinesAndScores(Points,Lines,Scores,Normalise,Score)
 
 function GetRectLines(Rect,Lines,Scores,Normalise,Score)
 {
+	if ( !Rect )
+		return;
+	
 	let l = Rect[0];
 	let t = Rect[1];
 	let r = Rect[0] + Rect[2];
@@ -379,7 +381,7 @@ var TFrame = function(OpenglContext)
 	
 	//	rects are in Image space(px)
 	this.HeadRect = [0,0,1,1];	//	head area on skeleton
-	this.FaceRect = [0,0,1,1];	//	detected face
+	this.FaceRect = null;	//	detected face
 	this.ClipRect = [0,0,1,1];	//	small image clip rect. Normalised to image(0..1)
 	
 	this.GetWidth = function()
@@ -503,13 +505,14 @@ var TFrame = function(OpenglContext)
 	{
 		if ( FaceLandMarks.length == 0 )
 		{
-			Debug("No face found");
-			this.FaceRect = [0,0,1,1];
-			this.FaceFeatures = [];
+			//Debug("No face found");
+			this.FaceRect = null;
+			this.FaceFeatures = null;
 			return;
 		}
 		
 		Debug("SetFaceLandmarks(x" + FaceLandMarks.length + ")");
+		this.FaceRect = [];
 		//	first four are the found-face rect
 		this.FaceRect[0] = FaceLandMarks.shift();
 		this.FaceRect[1] = FaceLandMarks.shift();
@@ -621,7 +624,10 @@ function IsIdle()
 		return false;
 	
 	if ( CurrentFrames.length >= MaxConcurrentFrames )
+	{
+		Debug("Waiting on " + CurrentFrames.length + " frames");
 		return false;
+	}
 	
 	return true;
 }
@@ -765,14 +771,14 @@ function SetupForFaceDetection(Frame)
 	let SmallImageHeight = Frame.ClipRect[3] * Scale;
 	
 	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
-	Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
+	//Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
 	
 	//	return a resizing promise
 	if ( Frame.OpenglContext )
 	{
 		let ResizeRender = function(RenderTarget,RenderTargetTexture)
 		{
-			Debug("ResizeRender Frame=" + Frame);
+			//Debug("ResizeRender Frame=" + Frame);
 
 			if ( !ResizeFragShader )
 			{
@@ -788,25 +794,17 @@ function SetupForFaceDetection(Frame)
 			RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 		}
 		
-		try	//	these promise exceptions aren't being caught in the grand chain
-		{
-			//Debug("SmallImageWidth=" + SmallImageWidth + " SmallImageHeight=" + SmallImageHeight);
-			Frame.SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
-			//Debug("allocated");
-			Frame.SmallImage.SetLinearFilter(true);
-			//Debug("searching SmallImage.width=" + Frame.SmallImage.GetWidth() + " SmallImage.height=" + Frame.SmallImage.GetHeight() );
-			let ReadBackPixels = true;
+		//Debug("SmallImageWidth=" + SmallImageWidth + " SmallImageHeight=" + SmallImageHeight);
+		Frame.SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
+		//Debug("allocated");
+		Frame.SmallImage.SetLinearFilter(true);
+		//Debug("searching SmallImage.width=" + Frame.SmallImage.GetWidth() + " SmallImage.height=" + Frame.SmallImage.GetHeight() );
+		let ReadBackPixels = true;
 			
-			//	return resizing promise
-			//Debug("Frame.OpenglContext.Render");
-			let ResizePromise = Frame.OpenglContext.Render( Frame.SmallImage, ResizeRender, ReadBackPixels );
-			return ResizePromise;
-		}
-		catch(e)
-		{
-			Debug(e);
-			throw e;
-		}
+		//	return resizing promise
+		//Debug("Frame.OpenglContext.Render");
+		let ResizePromise = Frame.OpenglContext.Render( Frame.SmallImage, ResizeRender, ReadBackPixels );
+		return ResizePromise;
 	}
 	else	//	CPU mode
 	{
@@ -836,7 +834,7 @@ function SetupForFaceDetection(Frame)
 
 function GetFaceDetectionPromise(Frame)
 {
-	Debug("GetFaceDetectionPromise on " + Frame.SmallImage );
+	//Debug("GetFaceDetectionPromise on " + Frame.SmallImage );
 	return FaceProcessor.FindFaces( Frame.SmallImage );
 }
 
