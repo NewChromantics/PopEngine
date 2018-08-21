@@ -482,7 +482,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	}
 
 	
-	this.readPixels = function()
+	this.readPixels = function(x,y,w,h,format,type,output)
 	{
 		try
 		{
@@ -490,7 +490,11 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 				this.RealReadPixels( arguments );
 			else	//	gr: losing arguments somewhere in the chain if we pass it along
 				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
-		
+
+			//	don't need to return immediately
+			if ( output == null )
+				return;
+			
 			Sleep(0);
 			this.CommandQueue.Flush( this.GetOpenglContext() );
 		}

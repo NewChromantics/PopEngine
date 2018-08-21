@@ -27,8 +27,9 @@ var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
-//var ClipToSquare = true;	//	gr: slow atm!
-var ClipToSquare = 600;	//	gr: slow atm!
+//var ClipToSquare = true;
+var ClipToSquare = 500;
+var EnableGpuClip = true;
 
 var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
 var SmallImageMinSize = 80;
@@ -41,6 +42,8 @@ var NoseHeightInHead = 0.5;
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
+var DrawRects = false;
+var DrawSkeletonMinScore = 0.4;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -397,6 +400,9 @@ function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
 			return;
 		
 		let Score = (Keypointa.score + Keypointb.score)/2;
+		if ( Score < DrawSkeletonMinScore )
+			return;
+		
 		let Start = Normalise( Keypointa.position.x, Keypointa.position.y );
 		let End = Normalise( Keypointb.position.x, Keypointb.position.y );
 		let Line = [ Start[0], Start[1], End[0], End[1] ];
@@ -476,6 +482,7 @@ var TempSharedImageData = null;
 var TFrame = function(OpenglContext)
 {
 	this.Image = null;
+	this.OriginalImage = null;	//	if we clipped image on gpu for posenet, the original gets stored here
 	this.SmallImage = null;		//	face search image (clipped image)
 	this.FaceFeatures = null;	//	normalised to image(0..1)
 	this.SkeletonPose = null;	//	image space(px)
@@ -504,6 +511,12 @@ var TFrame = function(OpenglContext)
 	
 	this.Clear = function()
 	{
+		if ( this.OriginalImage )
+		{
+			this.OriginalImage.Clear();
+			this.OriginalImage = null;
+		}
+		
 		if ( this.Image )
 		{
 			this.Image.Clear();
@@ -532,9 +545,13 @@ var TFrame = function(OpenglContext)
 		{
 			return [x,y];
 		}
-		GetRectLines( this.HeadRect, Lines, Scores, Normalise, 0 );
-		GetRectLines( this.ClipRect, Lines, Scores, AlreadyNormalised, 1.5 );
-		GetRectLines( this.FaceRect, Lines, Scores, AlreadyNormalised, 0.5 );
+		
+		if ( DrawRects )
+		{
+			GetRectLines( this.HeadRect, Lines, Scores, Normalise, 0 );
+			GetRectLines( this.ClipRect, Lines, Scores, AlreadyNormalised, 1.5 );
+			GetRectLines( this.FaceRect, Lines, Scores, AlreadyNormalised, 0.5 );
+		}
 		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores, Normalise );
 		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, AlreadyNormalised, 1 );
 	}
@@ -614,7 +631,7 @@ var TFrame = function(OpenglContext)
 			return;
 		}
 		
-		Debug("SetFaceLandmarks(x" + FaceLandMarks.length + ")");
+		//Debug("SetFaceLandmarks(x" + FaceLandMarks.length + ")");
 		this.FaceRect = [];
 		//	first four are the found-face rect
 		this.FaceRect[0] = FaceLandMarks.shift();
@@ -834,30 +851,64 @@ function LoadPosenet()
 
 function SetupForPoseDetection(Frame)
 {
-	let Runner = function(Resolve,Reject)
+	if ( Frame.OpenglContext && EnableGpuClip )
 	{
-		//	gr: we may resize & filter here ourselves before putting into the tensorflow resize
+		//	make it square
+		let ClipRect = Frame.GetImageRect();
+		let Size = Math.min( ClipRect[2], ClipRect[3] );
+		SetRectSizeAlignMiddle( ClipRect, Size, Size );
+		NormaliseRect( ClipRect, Frame.GetImageRect() );
 		
-		//	clip image to square
-		if ( ClipToSquare )
+		if ( typeof ClipToSquare == "number" )
+			Size = ClipToSquare;
+		
+		//	gr: here we can do some custom filtering! up the contrast, greenscreen etc
+		let ResizeRender = function(RenderTarget,RenderTargetTexture)
 		{
-			let Width = Frame.Image.GetWidth();
-			let Height = Frame.Image.GetHeight();
-			if ( typeof ClipToSquare == "number" )
-				Width = ClipToSquare;
+			if ( !ResizeFragShader )
+			{
+				ResizeFragShader = new OpenglShader( RenderTarget, VertShaderSource, ResizeFragShaderSource );
+			}
 			
-			Width = Math.min( Width, Height );
-			Height = Math.min( Width, Height );
-			
-			Frame.Image.Clip( [0,0,Width,Height] );
+			let SetUniforms = function(Shader)
+			{
+				Shader.SetUniform("ClipRect", ClipRect );
+				Shader.SetUniform("Source", Frame.OriginalImage, 0 );
+				Shader.SetUniform("ApplyBlur", false );
+			}
+			RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 		}
 		
-		Frame.SetupImageData();
+		Frame.OriginalImage = Frame.Image;
+		Frame.Image = new Image( [Size, Size] );
+		Frame.Image.SetLinearFilter(true);
+		let ReadBackPixels = true;
 		
-		Resolve(Frame);
+		let ResizePromise = Frame.OpenglContext.Render( Frame.Image, ResizeRender, ReadBackPixels );
+		return ResizePromise;
 	}
-	
-	return new Promise(Runner);
+	else
+	{
+		let Runner = function(Resolve,Reject)
+		{
+			//	clip image to square
+			if ( ClipToSquare )
+			{
+				let Width = Frame.Image.GetWidth();
+				let Height = Frame.Image.GetHeight();
+				if ( typeof ClipToSquare == "number" )
+					Width = ClipToSquare;
+				
+				Width = Math.min( Width, Height );
+				Height = Math.min( Width, Height );
+				
+				Frame.Image.Clip( [0,0,Width,Height] );
+			}
+			
+			Resolve(Frame);
+		}
+		return new Promise(Runner);
+	}
 }
 
 
@@ -865,6 +916,8 @@ function GetPoseDetectionPromise(Frame)
 {
 	let Runner = function(Resolve,Reject)
 	{
+		Frame.SetupImageData();
+		
 		let OnPose = function(Pose)
 		{
 			Frame.SkeletonPose = Pose;
@@ -1032,7 +1085,7 @@ function OnNewVideoFrame(FrameImage)
 	if ( !IsIdle() )
 	{
 		FrameImage.Clear();
-		Debug("Skipped webcam image");
+		//Debug("Skipped webcam image");
 		return;
 	}
 
@@ -1044,7 +1097,7 @@ function OnNewVideoFrame(FrameImage)
 	Frame.Image = FrameImage;
 
 	SetupForPoseDetection( Frame )
-	.then( GetPoseDetectionPromise )
+	.then( function()			{	return GetPoseDetectionPromise(Frame);	}	)
 	.then( SetupForFaceDetection )
 	.then( function()			{	return GetFaceDetectionPromise(Frame);		}	)
 	.then( function(NewFace)	{	return GetHandleNewFaceLandmarksPromise(Frame,NewFace);		}	)
