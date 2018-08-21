@@ -39,17 +39,17 @@ var NoseHeightInHead = 0.5;
 
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
-var DrawSmallImage = true;
+var DrawSmallImage = false;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
 
 
 
-
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 2;
+var DlibThreadCount = 3;
 var FaceProcessor = null;
+var MaxConcurrentFrames = DlibThreadCount;
 
 
 
@@ -92,6 +92,51 @@ function ClampRect01(Rect)
 	Rect[3] = b-t;
 }
 
+
+function UnnormaliseRect(ChildRect,ParentRect)
+{
+	//	ChildRect is normalised, so put it in parent rect space
+	//	Soy::Rectx<TYPE>::ScaleTo
+	let pl = ParentRect[0];
+	let pr = pl + ParentRect[2];
+	let pt = ParentRect[1];
+	let pb = pt + ParentRect[3];
+	
+	let cl = ChildRect[0];
+	let cr = cl + ChildRect[2];
+	let ct = ChildRect[1];
+	let cb = ct + ChildRect[3];
+
+	
+	let l = Lerp( pl, pr, cl );
+	let r = Lerp( pl, pr, cr );
+	let t = Lerp( pt, pb, ct );
+	let b = Lerp( pt, pb, cb );
+	let w = r-l;
+	let h = b-t;
+	ChildRect[0] = l;
+	ChildRect[1] = t;
+	ChildRect[2] = w;
+	ChildRect[3] = h;
+}
+
+function UnnormalisePoint(x,y,ParentRect)
+{
+	//	ChildRect is normalised, so put it in parent rect space
+	//	Soy::Rectx<TYPE>::ScaleTo
+	let pl = ParentRect[0];
+	let pr = pl + ParentRect[2];
+	let pt = ParentRect[1];
+	let pb = pt + ParentRect[3];
+	
+	let cl = x;
+	let ct = y;
+	
+	let l = Lerp( pl, pr, cl );
+	let t = Lerp( pt, pb, ct );
+
+	return [l,t];
+}
 
 
 function NormaliseRect(ChildRect,ParentRect)
@@ -190,6 +235,21 @@ function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
 }
 
 
+function GetPointLinesAndScores(Points,Lines,Scores,Normalise,Score)
+{
+	if ( !Points )
+		return;
+	
+	let PushX = function(xy)
+	{
+		Lines.push( [xy,xy] );
+		Scores.push( Score );
+	}
+
+	Points.forEach( PushX );
+}
+
+
 function GetRectLines(Rect,Lines,Scores,Normalise,Score)
 {
 	let l = Rect[0];
@@ -223,17 +283,16 @@ var TempSharedImageData = null;
 var TFrame = function(OpenglContext)
 {
 	this.Image = null;
-	this.SmallImage = null;		//	face search image
-	this.FaceFeatures = null;
-	this.SkeletonPose = null;
+	this.SmallImage = null;		//	face search image (clipped image)
+	this.FaceFeatures = null;	//	normalised to image(0..1)
+	this.SkeletonPose = null;	//	image space(px)
 	this.ImageData = null;
 	this.OpenglContext = OpenglContext;
 	
 	//	rects are in Image space(px)
 	this.HeadRect = [0,0,1,1];	//	head area on skeleton
 	this.FaceRect = [0,0,1,1];	//	detected face
-	//	gr: currently normalised!
-	this.ClipRect = [0,0,1,1];	//	small image clip rect
+	this.ClipRect = [0,0,1,1];	//	small image clip rect. Normalised to image(0..1)
 	
 	this.GetWidth = function()
 	{
@@ -276,10 +335,15 @@ var TFrame = function(OpenglContext)
 		{
 			return [ x/w, y/h ];
 		}
+		let AlreadyNormalised = function(x,y)
+		{
+			return [x,y];
+		}
 		GetRectLines( this.HeadRect, Lines, Scores, Normalise, 0 );
-		GetRectLines( this.ClipRect, Lines, Scores, function(x,y){	return[x,y];}, 1.5 );
-		//GetRectLines( this.FaceRect, Lines, Scores, Normalise, 0.5 );
-		GetPoseLinesAndScores( this.Pose, Lines, Scores, Normalise );
+		GetRectLines( this.ClipRect, Lines, Scores, AlreadyNormalised, 1.5 );
+		GetRectLines( this.FaceRect, Lines, Scores, AlreadyNormalised, 0.5 );
+		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores, Normalise );
+		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, AlreadyNormalised, 1 );
 	}
 	
 	
@@ -309,7 +373,7 @@ var TFrame = function(OpenglContext)
 		{
 			return Keypoint.part == Name;
 		}
-		return this.Pose.keypoints.find( IsMatch );
+		return this.SkeletonPose.keypoints.find( IsMatch );
 	}
 	
 	this.SetupHeadRect = function()
@@ -344,6 +408,36 @@ var TFrame = function(OpenglContext)
 		Height = Math.floor(Height);
 		
 		this.HeadRect = [x,y,Width,Height];
+	}
+	
+	
+	this.SetFaceLandmarks = function(FaceLandMarks)
+	{
+		if ( FaceLandMarks.length == 0 )
+		{
+			Debug("No face found");
+			this.FaceRect = [0,0,1,1];
+			this.FaceFeatures = [];
+			return;
+		}
+		
+		Debug("SetFaceLandmarks(x" + FaceLandMarks.length + ")");
+		//	first four are the found-face rect
+		this.FaceRect[0] = FaceLandMarks.shift();
+		this.FaceRect[1] = FaceLandMarks.shift();
+		this.FaceRect[2] = FaceLandMarks.shift();
+		this.FaceRect[3] = FaceLandMarks.shift();
+		
+		UnnormaliseRect( this.FaceRect, this.ClipRect );
+		
+		this.FaceFeatures = [];
+		for ( let ff=0;	ff<FaceLandMarks.length;	ff+=2 )
+		{
+			let fx = FaceLandMarks[ff+0];
+			let fy = FaceLandMarks[ff+1];
+			this.FaceFeatures.push( UnnormalisePoint( fx,fy, this.ClipRect ) );
+		}
+		
 	}
 }
 
@@ -438,8 +532,9 @@ function IsIdle()
 	if ( !IsReady() )
 		return false;
 	
-	if ( CurrentFrames.length > 0 )
+	if ( CurrentFrames.length >= MaxConcurrentFrames )
 		return false;
+	
 	return true;
 }
 
@@ -532,7 +627,7 @@ function GetPoseDetectionPromise(Frame)
 	{
 		let OnPose = function(Pose)
 		{
-			Frame.Pose = Pose;
+			Frame.SkeletonPose = Pose;
 			Resolve(Frame);
 		}
 		
@@ -564,6 +659,7 @@ function SetupForFaceDetection(Frame)
 	
 	if ( Frame.ClipRect[2] <= 0 || Frame.ClipRect[3] <= 0 )
 	{
+		Debug("Cliprect offscreen/zero width: " + Frame.ClipRect);
 		throw "Cliprect offscreen/zero width: " + Frame.ClipRect;
 	}
 	Debug("Frame.ClipRect[D]=" + Frame.ClipRect);
@@ -673,6 +769,26 @@ function OnNewVideoFrameFilter()
 	return IsIdle();
 }
 
+
+function GetHandleNewFaceLandmarksPromise(Frame,Face)
+{
+	let Handle = function(Resolve,Reject)
+	{
+		try
+		{
+			Frame.SetFaceLandmarks(Face);
+			OnFrameCompleted(Frame);
+			Resolve();
+		}
+		catch(e)
+		{
+			Reject(e);
+		}
+	}
+	
+	return new Promise(Handle);
+}
+
 function OnNewVideoFrame(FrameImage)
 {
 	if ( !IsIdle() )
@@ -692,9 +808,9 @@ function OnNewVideoFrame(FrameImage)
 	SetupForPoseDetection( Frame )
 	.then( GetPoseDetectionPromise )
 	.then( SetupForFaceDetection )
-	.then( function()		{	return GetFaceDetectionPromise(Frame);		}	)
-	.then( function(Face)	{	Frame.Face = Face;	return OnFrameCompleted(Frame);		}	)
-	.catch( function(Error)	{	OnFrameError(NewFrame,Error);	}	);
+	.then( function()			{	return GetFaceDetectionPromise(Frame);		}	)
+	.then( function(NewFace)	{	return GetHandleNewFaceLandmarksPromise(Frame,NewFace);		}	)
+	.catch( function(Error)		{	OnFrameError(NewFrame,Error);	}	);
 }
 
 
