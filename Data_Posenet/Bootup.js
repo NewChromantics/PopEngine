@@ -27,10 +27,11 @@ var PoseNetOutputStride = 32;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
-var ClipToSquare = true;	//	gr: slow atm!
-//var ClipToSquare = 500;	//	gr: slow atm!
+//var ClipToSquare = true;	//	gr: slow atm!
+var ClipToSquare = 500;	//	gr: slow atm!
 
 var FindFaceAroundLastHeadRectScale = 1.6;	//	make this expand more width ways
+var SmallImageMinSize = 80;
 var ClippedImageScale = 0.400;
 var BlurLandmarkSearch = false;
 var ShoulderToHeadWidthRatio = 0.8;
@@ -47,7 +48,7 @@ var LastFrame = null;	//	completed TFrame
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 3;
+var DlibThreadCount = 1;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 
@@ -650,6 +651,9 @@ function SetupForFaceDetection(Frame)
 	//	work out where to search
 	Frame.SetupHeadRect();
 	Frame.ClipRect = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
+	
+	
+	
 	Debug("Frame.HeadRect=" + Frame.HeadRect);
 	Debug("Frame.ClipRect[A]=" + Frame.ClipRect);
 	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
@@ -657,11 +661,12 @@ function SetupForFaceDetection(Frame)
 	ClampRect01( Frame.ClipRect );
 	Debug("Frame.ClipRect[C]=" + Frame.ClipRect);
 	
+	
 	if ( Frame.ClipRect[2] <= 0 || Frame.ClipRect[3] <= 0 )
 	{
-		Debug("Cliprect offscreen/zero width: " + Frame.ClipRect);
 		throw "Cliprect offscreen/zero width: " + Frame.ClipRect;
 	}
+	 
 	Debug("Frame.ClipRect[D]=" + Frame.ClipRect);
 	
 	//	setup the image
@@ -674,6 +679,8 @@ function SetupForFaceDetection(Frame)
 	//	the face search looks for 80x80 size faces, scale and blur accordingly
 	SmallImageWidth = (Frame.GetWidth() * ClippedImageScale) * Frame.ClipRect[2];
 	SmallImageHeight = (Frame.GetHeight() * ClippedImageScale) * Frame.ClipRect[3];
+	SmallImageWidth = Math.max( SmallImageMinSize, Math.floor(SmallImageWidth) );
+	SmallImageHeight = Math.max( SmallImageMinSize, Math.floor(SmallImageHeight) );
 	
 	Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
 	
@@ -682,28 +689,20 @@ function SetupForFaceDetection(Frame)
 	{
 		let ResizeRender = function(RenderTarget,RenderTargetTexture)
 		{
-			try	//	these promise exceptions aren't being caught in the grand chain
-			{
-				Debug("ResizeRender Frame=" + Frame);
+			Debug("ResizeRender Frame=" + Frame);
 
-				if ( !ResizeFragShader )
-				{
-					ResizeFragShader = new OpenglShader( RenderTarget, VertShaderSource, ResizeFragShaderSource );
-				}
-					
-				let SetUniforms = function(Shader)
-				{
-					Shader.SetUniform("ClipRect", Frame.ClipRect );
-					Shader.SetUniform("Source", Frame.Image, 0 );
-					Shader.SetUniform("ApplyBlur", BlurLandmarkSearch );
-				}
-				RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
-			}
-			catch(e)
+			if ( !ResizeFragShader )
 			{
-				Debug(e);
-				throw e;
+				ResizeFragShader = new OpenglShader( RenderTarget, VertShaderSource, ResizeFragShaderSource );
 			}
+				
+			let SetUniforms = function(Shader)
+			{
+				Shader.SetUniform("ClipRect", Frame.ClipRect );
+				Shader.SetUniform("Source", Frame.Image, 0 );
+				Shader.SetUniform("ApplyBlur", BlurLandmarkSearch );
+			}
+			RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 		}
 		
 		try	//	these promise exceptions aren't being caught in the grand chain
@@ -774,19 +773,31 @@ function GetHandleNewFaceLandmarksPromise(Frame,Face)
 {
 	let Handle = function(Resolve,Reject)
 	{
-		try
-		{
-			Frame.SetFaceLandmarks(Face);
-			OnFrameCompleted(Frame);
-			Resolve();
-		}
-		catch(e)
-		{
-			Reject(e);
-		}
+		Frame.SetFaceLandmarks(Face);
+		OnFrameCompleted(Frame);
+		Resolve();
 	}
 	
 	return new Promise(Handle);
+}
+
+function GetSetupForFaceDetectionPromise(Frame)
+{
+	let Runner = function(Resolve,Reject)
+	{
+		throw "xxx";
+		try
+		{
+			let FaceDetectionSetupPromise = SetupForFaceDetection(Frame);
+			Resolve(FaceDetectionSetupPromise);
+		}
+		catch(e)
+		{
+			Debug("GetSetupForFaceDetectionPromise exception "+e);
+			Reject(e);
+		}
+	}
+	return new Promise( Runner );
 }
 
 function OnNewVideoFrame(FrameImage)
@@ -810,7 +821,7 @@ function OnNewVideoFrame(FrameImage)
 	.then( SetupForFaceDetection )
 	.then( function()			{	return GetFaceDetectionPromise(Frame);		}	)
 	.then( function(NewFace)	{	return GetHandleNewFaceLandmarksPromise(Frame,NewFace);		}	)
-	.catch( function(Error)		{	OnFrameError(NewFrame,Error);	}	);
+	.catch( function(Error)		{	OnFrameError(Frame,Error);	}	);
 }
 
 
