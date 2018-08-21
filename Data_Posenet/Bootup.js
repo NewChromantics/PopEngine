@@ -37,8 +37,9 @@ var ShoulderToHeadWidthRatio = 0.8;
 var HeadWidthToHeightRatio = 2.4;
 var NoseHeightInHead = 0.5;
 
-let ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
+var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
+var DrawSmallImage = true;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -391,10 +392,18 @@ function WindowRender(RenderTarget)
 			}
 			else
 			{
-				Shader.SetUniform("Frame", LastFrame.Image, 0 );
+				if ( DrawSmallImage )
+				{
+					Shader.SetUniform("Frame", LastFrame.SmallImage, 0 );
+					Shader.SetUniform("UnClipRect", LastFrame.ClipRect );
+				}
+				else
+				{
+					Shader.SetUniform("Frame", LastFrame.Image, 0 );
+					Shader.SetUniform("UnClipRect", [0,0,1,1] );
+				}
 				Shader.SetUniform("HasFrame", true );
 				LastFrame.GetLinesAndScores( Lines, Scores );
-				Shader.SetUniform("UnClipRect", [0,0,1,1] );
 			}
 			
 			const MAX_LINES = 100;
