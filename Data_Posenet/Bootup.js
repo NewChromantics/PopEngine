@@ -30,7 +30,7 @@ var PoseNetMirror = false;
 //var ClipToSquare = true;	//	gr: slow atm!
 var ClipToSquare = 500;	//	gr: slow atm!
 
-var FindFaceAroundLastHeadRectScale = 1.6;	//	make this expand more width ways
+var FindFaceAroundLastHeadRectScale = 1.5;	//	make this expand more width ways
 var SmallImageMinSize = 80;
 var ClippedImageScale = 0.400;
 var BlurLandmarkSearch = false;
@@ -40,7 +40,7 @@ var NoseHeightInHead = 0.5;
 
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
-var DrawSmallImage = false;
+var DrawSmallImage = true;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -75,7 +75,7 @@ function Clamp01(Value)
 	return Clamp( 0, 1, Value );
 }
 
-function ClampRect01(Rect)
+function ClipRect01(Rect)
 {
 	let l = Rect[0];
 	let t = Rect[1];
@@ -93,6 +93,83 @@ function ClampRect01(Rect)
 	Rect[3] = b-t;
 }
 
+
+function ClipRect(ChildRect,ParentRect)
+{
+	let cl = ChildRect[0];
+	let ct = ChildRect[1];
+	let cr = cl + ChildRect[2];
+	let cb = ct + ChildRect[3];
+	
+	let pl = ParentRect[0];
+	let pt = ParentRect[1];
+	let pr = pl + ParentRect[2];
+	let pb = pt + ParentRect[3];
+
+	cl = Clamp( pl,pr,cl );
+	ct = Clamp( pt,pb,ct );
+	cr = Clamp( pl,pr,cr );
+	cb = Clamp( pt,pb,cb );
+	
+	ChildRect[0] = cl;
+	ChildRect[1] = ct;
+	ChildRect[2] = cr-cl;
+	ChildRect[3] = cb-ct;
+	Debug(ChildRect);
+}
+
+
+function ClampRect(ChildRect,ParentRect)
+{
+	let cl = ChildRect[0];
+	let ct = ChildRect[1];
+	let cr = cl + ChildRect[2];
+	let cb = ct + ChildRect[3];
+	
+	let pl = ParentRect[0];
+	let pt = ParentRect[1];
+	let pr = pl + ParentRect[2];
+	let pb = pt + ParentRect[3];
+	
+	//	move to stick inside
+	if ( cl < pl )
+	{
+		let Shift = pl - cl;
+		cl += Shift;
+		cr += Shift;
+	}
+	if ( ct < pt )
+	{
+		let Shift = pt - ct;
+		ct += Shift;
+		cb += Shift;
+	}
+	if ( cr > pr )
+	{
+		let Shift = pr - cr;
+		cl += Shift;
+		cr += Shift;
+	}
+	if ( cb > pb )
+	{
+		let Shift = pb - cb;
+		ct += Shift;
+		cb += Shift;
+	}
+	
+	//	THEN still clamp
+	cl = Clamp( pl,pr,cl );
+	ct = Clamp( pt,pb,ct );
+	cr = Clamp( pl,pr,cr );
+	cb = Clamp( pt,pb,cb );
+	
+	
+	ChildRect[0] = cl;
+	ChildRect[1] = ct;
+	ChildRect[2] = cr-cl;
+	ChildRect[3] = cb-ct;
+	Debug(ChildRect);
+}
 
 function UnnormaliseRect(ChildRect,ParentRect)
 {
@@ -164,6 +241,16 @@ function NormaliseRect(ChildRect,ParentRect)
 	ChildRect[3] = h;
 }
 
+function SetRectSizeAlignMiddle(Rect,Width,Height)
+{
+	let ChangeX = Rect[2] - Width;
+	Rect[0] += ChangeX/2;
+	Rect[2] -= ChangeX;
+	
+	let ChangeY = Rect[3] - Height;
+	Rect[1] += ChangeY/2;
+	Rect[3] -= ChangeY;
+}
 
 function GetScaledRect(Rect,Scale)
 {
@@ -651,37 +738,33 @@ function SetupForFaceDetection(Frame)
 	//	work out where to search
 	Frame.SetupHeadRect();
 	Frame.ClipRect = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
+
+	//	resize down to 80x80 (or a multiple?)
+	//	gr: decide here if we should blur (if we're going up or down maybe)
+	//	gr: should be square?
+	let SmallImageSize = 80 * 3;
+	let SmallImageSquare = true;
+	BlurLandmarkSearch = false;
 	
-	
-	
-	Debug("Frame.HeadRect=" + Frame.HeadRect);
-	Debug("Frame.ClipRect[A]=" + Frame.ClipRect);
-	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
-	Debug("Frame.ClipRect[B]=" + Frame.ClipRect);
-	ClampRect01( Frame.ClipRect );
-	Debug("Frame.ClipRect[C]=" + Frame.ClipRect);
-	
-	
-	if ( Frame.ClipRect[2] <= 0 || Frame.ClipRect[3] <= 0 )
+	if ( SmallImageSquare )
 	{
-		throw "Cliprect offscreen/zero width: " + Frame.ClipRect;
-	}
-	 
-	Debug("Frame.ClipRect[D]=" + Frame.ClipRect);
-	
-	//	setup the image
-	let SmallImageWidth = Frame.GetWidth();
-	let SmallImageHeight = Frame.GetHeight();
-	let HeightRatio = SmallImageHeight / SmallImageWidth;
-	SmallImageWidth = 640;
-	SmallImageHeight = SmallImageWidth * HeightRatio;
+		let Size = Math.min( Frame.ClipRect[2], Frame.ClipRect[3] );
+		Size = Math.max( SmallImageSize, Size );
 		
-	//	the face search looks for 80x80 size faces, scale and blur accordingly
-	SmallImageWidth = (Frame.GetWidth() * ClippedImageScale) * Frame.ClipRect[2];
-	SmallImageHeight = (Frame.GetHeight() * ClippedImageScale) * Frame.ClipRect[3];
-	SmallImageWidth = Math.max( SmallImageMinSize, Math.floor(SmallImageWidth) );
-	SmallImageHeight = Math.max( SmallImageMinSize, Math.floor(SmallImageHeight) );
+		SetRectSizeAlignMiddle( Frame.ClipRect, Size, Size );
+	}
+	else
+	{
+		Frame.ClipRect[2] = Math.max( SmallImageSize, Frame.ClipRect[2] );
+		Frame.ClipRect[3] = Math.max( SmallImageSize, Frame.ClipRect[3] );
+	}
+	ClampRect( Frame.ClipRect, Frame.GetImageRect() );
+	let Scale = SmallImageSize / Frame.ClipRect[2];
 	
+	let SmallImageWidth = Frame.ClipRect[2] * Scale;
+	let SmallImageHeight = Frame.ClipRect[3] * Scale;
+	
+	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
 	Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
 	
 	//	return a resizing promise
