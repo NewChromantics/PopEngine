@@ -3,6 +3,7 @@ in vec2 uv;
 uniform sampler2D	Source;
 uniform vec4		ClipRect;
 uniform bool		ApplyBlur;
+uniform bool		OutputGreyscale;
 
 float normpdf(in float x, in float sigma)
 {
@@ -73,5 +74,6 @@ void main()
 	gl_FragColor.w = 1;
 	
 	//	convert any greyscale (one red channel) to full greyscale
-	gl_FragColor.xyz = gl_FragColor.xxx;
+	if ( OutputGreyscale )
+		gl_FragColor.xyz = gl_FragColor.xxx;
 }

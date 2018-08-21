@@ -28,8 +28,10 @@ var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = 500;
+var ClipToSquare = 512;
 var EnableGpuClip = true;
+var ClipToGreyscale = true;	//	GPU only! shader option
+var ApplyBlurInClip = false;
 
 var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
 var SmallImageMinSize = 80;
@@ -43,7 +45,7 @@ var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
 var DrawRects = false;
-var DrawSkeletonMinScore = 0.4;
+var DrawSkeletonMinScore = 0.5;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -874,7 +876,8 @@ function SetupForPoseDetection(Frame)
 			{
 				Shader.SetUniform("ClipRect", ClipRect );
 				Shader.SetUniform("Source", Frame.OriginalImage, 0 );
-				Shader.SetUniform("ApplyBlur", false );
+				Shader.SetUniform("ApplyBlur", ApplyBlurInClip );
+				Shader.SetUniform("OutputGreyscale", ClipToGreyscale );
 			}
 			RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 		}
@@ -989,6 +992,7 @@ function SetupForFaceDetection(Frame)
 				Shader.SetUniform("ClipRect", Frame.ClipRect );
 				Shader.SetUniform("Source", Frame.Image, 0 );
 				Shader.SetUniform("ApplyBlur", BlurLandmarkSearch );
+				Shader.SetUniform("OutputGreyscale", true );
 			}
 			RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 		}
