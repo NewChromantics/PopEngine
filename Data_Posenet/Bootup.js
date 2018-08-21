@@ -22,13 +22,13 @@ var WebServerPort = 8000;
 
 
 var AllowBgraAsRgba = true;
-var PoseNetScale = 0.20;
+var PoseNetScale = 0.40;
 var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;	//	gr: slow atm!
-var ClipToSquare = 500;	//	gr: slow atm!
+var ClipToSquare = 600;	//	gr: slow atm!
 
 var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
 var SmallImageMinSize = 80;
@@ -48,9 +48,112 @@ var LastFrame = null;	//	completed TFrame
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 4;
+var DlibThreadCount = 3;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
+
+
+
+
+var ServerSkeletonSender = null;
+var ServerSkeletonSenderPort = 8007;
+var BroadcastServer = null;
+var BroadcastServerPort = 8009;
+var OutputFilename = "../../../../SkeletonOutputFrames.json";
+//var OutputFilename = null;
+var FlipOutputSkeleton = true;
+var MirrorOutputSkeleton = false;
+
+
+//	if it ends with !, we don't bother sending it out
+let FaceLandMarkNames =
+[
+ //	right is actor-right, not image-right
+	//	17 outline features
+	"RightEarTop",
+	"FaceOutline1!",
+	"FaceOutline2!",
+	"FaceOutline3!",
+	"FaceOutline4!",
+	"FaceOutline5!",
+	"FaceOutline6!",
+	"Chin",
+	"FaceOutline8!",
+	"FaceOutline9!",
+	"FaceOutline10!",
+	"FaceOutline11!",
+	"FaceOutline12!",
+	"FaceOutline13!",
+	"FaceOutline14!",
+	"FaceOutline15!",
+	"LeftEarTop",
+ 
+	//
+	"RightEyebrowOuter",
+	"RightEyebrow1!",
+	"RightEyebrow2",
+	"RightEyebrow3!",
+	"RightEyebrowInner",
+ 
+	"LeftEyebrowInner",
+	"LeftEyebrow3!",
+	"LeftEyebrow2",
+	"LeftEyebrow1!",
+	"LeftEyebrowOuter",
+ 
+	"NoseTop",
+	"Nose1!",
+	"Nose2!",
+	"Nose3!",
+	"NoseRight",
+	"NoseMidRight!",
+	"Nose",
+	"NoseMidLeft!",
+	"NoseLeft",
+ 
+	"EyeRight_Outer",
+	"EyeRight_TopOuter",
+	"EyeRight_TopInner",
+	"EyeRight_Inner",
+	"EyeRight_BottomInner",
+	"EyeRight_BottomOuter",
+ 
+	"EyeLeft_Inner",
+	"EyeLeft_TopInner",
+	"EyeLeft_TopOuter",
+	"EyeLeft_Outer",
+	"EyeLeft_BottomOuter",
+	"EyeLeft_BottomInner",
+ 
+	"MouthRight",
+	"Mouth1!",
+	"Mouth2!",
+	"MouthTop",
+	"Mouth4!",
+	"Mouth5!",
+	"MouthLeft",
+ 
+	"Mouth7!",
+	"Mouth8!",
+	"Mouth9!",
+	"MouthBottom",
+	"Mouth11!",
+	"Mouth12!",
+	"Mouth13!",
+ 
+	"TeethTopRight!",
+	"TeethTopMiddle!",
+	"TeethTopLeft!",
+	"TeethBottomRight!",
+	"TeethBottomMiddle!",
+	"TeethBottomLeft!",
+ 
+ ];
+if ( FaceLandMarkNames.length != 68 )
+	throw "FaceLandMarkNames should have 68 entries, not " + FaceLandMarkNames.length;
+
+
+
 
 
 
@@ -530,6 +633,40 @@ var TFrame = function(OpenglContext)
 		}
 		
 	}
+	
+	this.EnumKeypoints = function(EnumNamePosScore)
+	{
+		let Width = this.GetWidth();
+		let Height = this.GetHeight();
+		let Normalise = function(px,py)
+		{
+			px /= Width;
+			py /= Height;
+			return { x:px, y:py };
+		}
+		
+		let EnumKeypoint = function(Keypoint)
+		{
+			//	gr: sending pose here is mutable!
+			EnumNamePosScore( Keypoint.part, Normalise(Keypoint.position.x,Keypoint.position.y), Keypoint.score );
+		}
+		this.SkeletonPose.keypoints.forEach( EnumKeypoint );
+		
+		if ( this.FaceFeatures != null )
+		{
+			for ( let ff=0;	ff<this.FaceFeatures.length;	ff++)
+			{
+				let Name = FaceLandMarkNames[ff];
+				let fx = this.FaceFeatures[ff][0];
+				let fy = this.FaceFeatures[ff][1];
+				let Pos = { x:fx, y:fy };
+				let Score = 0.5;
+				EnumNamePosScore( Name, Pos, Score );
+			}
+			
+		}
+		
+	}
 }
 
 
@@ -625,7 +762,7 @@ function IsIdle()
 	
 	if ( CurrentFrames.length >= MaxConcurrentFrames )
 	{
-		Debug("Waiting on " + CurrentFrames.length + " frames");
+		//Debug("Waiting on " + CurrentFrames.length + " frames");
 		return false;
 	}
 	
@@ -641,6 +778,15 @@ function OnFrameCompleted(Frame)
 	if ( LastFrame != null )
 		LastFrame.Clear();
 	LastFrame = Frame;
+	
+	try
+	{
+		OutputFrame(LastFrame);
+	}
+	catch(e)
+	{
+		Debug("Error outputting frame: " + e);
+	}
 }
 
 function OnFrameError(Frame,Error)
@@ -971,6 +1117,166 @@ function LoadDlib()
 
 
 
+function OnBroadcastMessage(PacketBytes,Sender,Socket)
+{
+	Debug("Got UDP broadcast x" + PacketBytes.length + " bytes");
+	
+	//	get string from bytes
+	let PacketString = String.fromCharCode.apply(null, PacketBytes);
+	Debug(PacketString);
+	
+	//	reply
+	if ( ServerSkeletonSender && PacketString == "whereisobserverserver" )
+	{
+		//	get all addresses and filter best one (ie, ignore local host)
+		let Addresses = ServerSkeletonSender.GetAddress().split(',');
+		if ( Addresses.length > 1 )
+		{
+			let IsNotLocalhost = function(Address)
+			{
+				return !Address.startsWith("127.0.0.1:");
+			}
+			Addresses = Addresses.filter( IsNotLocalhost );
+		}
+		let Address = Addresses[0];
+		
+		//Debug("Send back [" + Address + "]" );
+		
+		//	udp needs a binary array, we'll make c++ more flexible later
+		let Address8 = new Uint8Array(Address.length);
+		for ( let i=0;	i<Address.length;	i++ )
+			Address8[i] = Address.charCodeAt(i);
+		Socket.Send( Sender, Address8 );
+	}
+}
+
+
+function GetSkeletonJson(Frame,Pretty)
+{
+	let KeypointSkeleton = {};
+
+	let EnumKeypoint = function(Name,Position,Score)
+	{
+		if ( Name.includes("!") )
+			return;
+		
+		if ( FlipOutputSkeleton )
+			Position.y = 1-Position.y;
+		
+		if ( MirrorOutputSkeleton )
+			Position.x = 1-Position.x;
+
+		let Keypoint = {};
+		Keypoint.part = Name;
+		Keypoint.position = Position;
+		Keypoint.score = Score;
+		KeypointSkeleton.keypoints.push( Keypoint );
+	}
+
+	//	other meta
+	KeypointSkeleton.FaceRect = Frame.FaceRect;
+	KeypointSkeleton.score = 0.4567;
+	KeypointSkeleton.keypoints = [];
+
+	//	get keypoints
+	Frame.EnumKeypoints( EnumKeypoint );
+	
+	let Json = Pretty ? JSON.stringify( KeypointSkeleton, null, '\t' ) : JSON.stringify( KeypointSkeleton );
+	return Json;
+}
+
+
+function OutputFrame(Frame)
+{
+	//	nowhere to output
+	if ( !ServerSkeletonSender && !OutputFilename )
+		return;
+
+	//	need one line output if going to file
+	let Pretty = OutputFilename ? false : true;
+	let Json = GetSkeletonJson(Frame,Pretty) + "\n";
+
+	if ( OutputFilename )
+	{
+		try
+		{
+			WriteStringToFile( OutputFilename, Json, true );
+		}
+		catch(e)
+		{
+			Debug("Failed to write to file " + e);
+		}
+	}
+	
+	if ( ServerSkeletonSender )
+	{
+		try
+		{
+			let Peers = ServerSkeletonSender.GetPeers();
+			
+			if ( Peers.length > 0 )
+			{
+				//Debug("Sending FaceJson to x" + Peers.length + " peers on socket " + ServerSkeletonSender.GetAddress() );
+			}
+			
+			let SendToPeer = function(Peer)
+			{
+				try
+				{
+					ServerSkeletonSender.Send( Peer, Json );
+				}
+				catch(e)
+				{
+					Debug("Failed to send to "+Peer+": " + e);
+				}
+			}
+			Peers.forEach( SendToPeer );
+		}
+		catch(e)
+		{
+			Debug("Failed to write to stream out " + e);
+		}
+	}
+}
+
+
+function LoadSockets()
+{
+	let AllocSkeletonSender = function()
+	{
+		ServerSkeletonSender = new WebsocketServer(ServerSkeletonSenderPort);
+	}
+	
+	let AllocBroadcastServer = function()
+	{
+		BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
+		BroadcastServer.OnMessage = function(Data,Sender)	{	OnBroadcastMessage(Data,Sender,BroadcastServer);	}
+	}
+	
+	
+	let Retry = function(RetryFunc,Timeout)
+	{
+		let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
+		try
+		{
+			RetryFunc();
+		}
+		catch(e)
+		{
+			Debug(e+"... retrying in " + Timeout);
+			setTimeout( RetryAgain, Timeout );
+		}
+	}
+	
+	Retry( AllocSkeletonSender, 1000 );
+	Retry( AllocBroadcastServer, 1000 );
+}
+
+
+
+
+
+
 function Main()
 {
 	//Debug("log is working!", "2nd param");
@@ -983,6 +1289,7 @@ function Main()
 	LoadDlib();
 	LoadPosenet();
 	LoadVideo();
+	LoadSockets();
 }
 
 //	main

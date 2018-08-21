@@ -17,7 +17,6 @@ function PopFrameRateCounter()
 		let This = this;
 		let UpdateCounter = function(CounterName)
 		{
-			Debug("UpdateCounter");
 			let Count = This.FrameCounters[CounterName];
 			This.FrameCounters[CounterName] = 0;
 			let Fps = Count / TimeLapsed;
