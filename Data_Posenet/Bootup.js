@@ -27,10 +27,10 @@ var PoseNetOutputStride = 32;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
-//var ClipToSquare = true;	//	gr: slow atm!
-var ClipToSquare = 500;	//	gr: slow atm!
+var ClipToSquare = true;	//	gr: slow atm!
+//var ClipToSquare = 500;	//	gr: slow atm!
 
-var FindFaceAroundLastFaceRectScale = 1.6;	//	make this expand more width ways
+var FindFaceAroundLastHeadRectScale = 1.6;	//	make this expand more width ways
 var ClippedImageScale = 0.400;
 var BlurLandmarkSearch = false;
 var ShoulderToHeadWidthRatio = 0.8;
@@ -63,37 +63,62 @@ function Lerp(Min,Max,Value)
 }
 
 
-function ClampRect01(Rect)
+function Clamp(Min,Max,Value)
 {
-	if ( Rect[0] < 0 )
-	{
-		Rect[2] += Rect[0];
-		if ( Rect[2] < 0 )
-			Rect[2] = 0;
-		Rect[0] = 0;
-	}
-	if ( Rect[1] < 0 )
-	{
-		Rect[3] += Rect[1];
-		if ( Rect[3] < 0 )
-			Rect[3] = 0;
-		Rect[1] = 0;
-	}
-	if ( Rect[0]+Rect[2] > 1 )
-	{
-		Rect[2] -= (Rect[0]+Rect[2])-1;
-		if ( Rect[2] < 0 )
-			Rect[2] = 0;
-	}
-	if ( Rect[1]+Rect[3] > 1 )
-	{
-		Rect[3] -= (Rect[1]+Rect[3])-1;
-		if ( Rect[3] < 0 )
-			Rect[3] = 0;
-	}
+	return Math.min( Max, Math.max( Min, Value ) );
 }
 
-function ScaleRect(Rect,Scale)
+function Clamp01(Value)
+{
+	return Clamp( 0, 1, Value );
+}
+
+function ClampRect01(Rect)
+{
+	let l = Rect[0];
+	let t = Rect[1];
+	let r = l + Rect[2];
+	let b = t + Rect[3];
+	
+	l = Clamp01(l);
+	r = Clamp01(r);
+	t = Clamp01(t);
+	b = Clamp01(b);
+	
+	Rect[0] = l;
+	Rect[1] = t;
+	Rect[2] = r-l;
+	Rect[3] = b-t;
+}
+
+
+
+function NormaliseRect(ChildRect,ParentRect)
+{
+	let pl = ParentRect[0];
+	let pr = pl + ParentRect[2];
+	let pt = ParentRect[1];
+	let pb = pt + ParentRect[3];
+	
+	let cl = ChildRect[0];
+	let cr = cl + ChildRect[2];
+	let ct = ChildRect[1];
+	let cb = ct + ChildRect[3];
+	
+	let l = Range( pl, pr, cl );
+	let r = Range( pl, pr, cr );
+	let t = Range( pt, pb, ct );
+	let b = Range( pt, pb, cb );
+	let w = r-l;
+	let h = b-t;
+	ChildRect[0] = l;
+	ChildRect[1] = t;
+	ChildRect[2] = w;
+	ChildRect[3] = h;
+}
+
+
+function GetScaledRect(Rect,Scale)
 {
 	let w = Rect[2];
 	let h = Rect[3];
@@ -164,6 +189,34 @@ function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
 }
 
 
+function GetRectLines(Rect,Lines,Scores,Normalise,Score)
+{
+	let l = Rect[0];
+	let t = Rect[1];
+	let r = Rect[0] + Rect[2];
+	let b = Rect[1] + Rect[3];
+
+	let lt = Normalise( l,t );
+	let rb = Normalise( r,b );
+	l = lt[0];
+	t = lt[1];
+	r = rb[0];
+	b = rb[1];
+	
+	Lines.push( [l,t,	r,t] );
+	Lines.push( [r,t,	r,b] );
+	Lines.push( [r,b,	l,b] );
+	Lines.push( [l,b,	l,t] );
+
+	Scores.push( Score );
+	Scores.push( Score );
+	Scores.push( Score );
+	Scores.push( Score );
+}
+
+
+
+
 var TempSharedImageData = null;
 
 var TFrame = function(OpenglContext)
@@ -174,7 +227,11 @@ var TFrame = function(OpenglContext)
 	this.SkeletonPose = null;
 	this.ImageData = null;
 	this.OpenglContext = OpenglContext;
-	this.FaceRect = [0,0,1,1];
+	
+	//	rects are in Image space(px)
+	this.HeadRect = [0,0,1,1];	//	head area on skeleton
+	this.FaceRect = [0,0,1,1];	//	detected face
+	//	gr: currently normalised!
 	this.ClipRect = [0,0,1,1];	//	small image clip rect
 	
 	this.GetWidth = function()
@@ -185,6 +242,11 @@ var TFrame = function(OpenglContext)
 	this.GetHeight = function()
 	{
 		return this.Image.GetHeight();
+	}
+	
+	this.GetImageRect = function()
+	{
+		return [0,0,this.GetWidth(),this.GetHeight()];
 	}
 	
 	this.Clear = function()
@@ -213,6 +275,9 @@ var TFrame = function(OpenglContext)
 		{
 			return [ x/w, y/h ];
 		}
+		GetRectLines( this.HeadRect, Lines, Scores, Normalise, 0 );
+		GetRectLines( this.ClipRect, Lines, Scores, function(x,y){	return[x,y];}, 1.5 );
+		//GetRectLines( this.FaceRect, Lines, Scores, Normalise, 0.5 );
 		GetPoseLinesAndScores( this.Pose, Lines, Scores, Normalise );
 	}
 	
@@ -246,7 +311,7 @@ var TFrame = function(OpenglContext)
 		return this.Pose.keypoints.find( IsMatch );
 	}
 	
-	this.SetupFaceRect = function()
+	this.SetupHeadRect = function()
 	{
 		//	gr: ears are unreliable, get head size from shoulders
 		//		which is a shame as we basically need ear to ear size
@@ -277,7 +342,7 @@ var TFrame = function(OpenglContext)
 		Width = Math.floor(Width);
 		Height = Math.floor(Height);
 		
-		this.FaceRect = [x,y,Width,Height];
+		this.HeadRect = [x,y,Width,Height];
 	}
 }
 
@@ -479,15 +544,20 @@ function GetPoseDetectionPromise(Frame)
 function SetupForFaceDetection(Frame)
 {
 	//	work out where to search
-	Frame.SetupFaceRect();
-	Frame.ClipRect = ScaleRect( Frame.FaceRect, FindFaceAroundLastFaceRectScale );
-	Debug("Frame.FaceRect=" + Frame.FaceRect);
-	Debug("Frame.ClipRect=" + Frame.ClipRect);
+	Frame.SetupHeadRect();
+	Frame.ClipRect = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
+	Debug("Frame.HeadRect=" + Frame.HeadRect);
+	Debug("Frame.ClipRect[A]=" + Frame.ClipRect);
+	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
+	Debug("Frame.ClipRect[B]=" + Frame.ClipRect);
 	ClampRect01( Frame.ClipRect );
+	Debug("Frame.ClipRect[C]=" + Frame.ClipRect);
 	
-	//	deal with off-screen heads later
-	Frame.ClipRect[2] = Math.max( Frame.ClipRect[2], 1 );
-	Frame.ClipRect[3] = Math.max( Frame.ClipRect[3], 1 );
+	if ( Frame.ClipRect[2] <= 0 || Frame.ClipRect[3] <= 0 )
+	{
+		throw "Cliprect offscreen/zero width: " + Frame.ClipRect;
+	}
+	Debug("Frame.ClipRect[D]=" + Frame.ClipRect);
 	
 	//	setup the image
 	let SmallImageWidth = Frame.GetWidth();
@@ -500,8 +570,7 @@ function SetupForFaceDetection(Frame)
 	SmallImageWidth = (Frame.GetWidth() * ClippedImageScale) * Frame.ClipRect[2];
 	SmallImageHeight = (Frame.GetHeight() * ClippedImageScale) * Frame.ClipRect[3];
 	
-	Debug("SmallImageWidth="+ SmallImageWidth + " Frame.GetWidth()=" + Frame.GetWidth() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]=" + Frame.ClipRect[2]);
-	Debug("SmallImageHeight="+ SmallImageHeight + " Frame.GetHeight()=" + Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[3]=" + Frame.ClipRect[3]);
+	Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
 	
 	//	return a resizing promise
 	if ( Frame.OpenglContext )
