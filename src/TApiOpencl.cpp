@@ -408,7 +408,8 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
 			CallbackParams.PushBack( IterationIndexesHandle );
-			Container->ExecuteFunc( Context, IterationCallback->mPersistent, GetArrayBridge(CallbackParams) );
+			auto This = v8::Local<Object>();
+			Container->ExecuteFunc( Context, IterationCallback->GetLocal(*Isolate), This, GetArrayBridge(CallbackParams) );
 		};
 		Container->RunScoped( ExecuteIteration );
 	};
@@ -420,7 +421,8 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
-			Container->ExecuteFunc( Context, FinishedCallback->mPersistent, GetArrayBridge(CallbackParams) );
+			auto This = v8::Local<Object>();
+			Container->ExecuteFunc( Context, FinishedCallback->GetLocal(*Isolate), This, GetArrayBridge(CallbackParams) );
 		};
 		Container->RunScoped( ExecuteFinished );
 		Container->QueueScoped( OnCompleted );

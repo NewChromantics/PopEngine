@@ -282,23 +282,6 @@ void TV8Container::BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char
 }
 
 
-Local<Value> TV8Container::ExecuteGlobalFunc(Local<v8::Context> Context,const std::string& FunctionName)
-{
-	auto Global = Context->Global();
-	auto This = Global;
-	auto Result = ExecuteFunc( Context, FunctionName, This );
-
-	//	report anything that isn't undefined
-	if ( ReportDefinedReturns && !Result->IsUndefined() )
-	{
-		String::Utf8Value ResultStr(Result);
-		std::Debug << *ResultStr << std::endl;
-	}
-	
-	return Result;
-}
-
-
 void TV8Container::QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 {
 	//	gr: who owns this task?
@@ -365,84 +348,59 @@ void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 
 
 
-v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
+v8::Local<v8::Value> TV8Container::ExecuteFuncAndCatch(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>& Params)
 {
-	return ExecuteFunc( ContextHandle, FunctionHandle, This, Params );
+	auto* isolate = ContextHandle->GetIsolate();
+	try
+	{
+		return ExecuteFunc( ContextHandle, FunctionHandle, This, Params );
+	}
+	/*	gr: can we send the exception object straight back?
+	catch(V8Exception& e)
+	{
+		return e.mLocalException;
+	}
+	 */
+	catch(std::exception& e)
+	{
+		//	catch exceptions and turn them into new v8 exceptions
+		auto Exception = v8::GetException( *isolate, e );
+		return Exception;
+	}
 }
+
+
 
 v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>& Params)
 {
 	auto& Func = FunctionHandle;
 	auto* isolate = ContextHandle->GetIsolate();
-	try
-	{
-		//	default this to the global
-		if ( This.IsEmpty() )
-			This = ContextHandle->Global();
 
-		
-		auto ArgCount = Params.GetSize();
-		auto* Args = Params.GetArray();
-		TryCatch trycatch(isolate);
-		auto ResultMaybe = Func->Call( ContextHandle, This, size_cast<int>(ArgCount), Args );
-		if ( ResultMaybe.IsEmpty() )
-		{
-			auto Exception = trycatch.Exception();
-			String::Utf8Value ExceptionStr(Exception);
-			throw Soy::AssertException( *ExceptionStr );
-		}
-		auto Result = ResultMaybe.ToLocalChecked();
-		
-		//	report anything that isn't undefined
-		if ( ReportDefinedReturns && !Result->IsUndefined() )
-		{
-			String::Utf8Value ResultStr(Result);
-			std::Debug << *ResultStr << std::endl;
-		}
-		return Result;
-	}
-	catch(std::exception& e)
-	{
-		auto Exception = v8::GetException( *isolate, e );
-		return Exception;
-	}
-}
-
-
-v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
-{
-	//	get a local function
-	auto* Isolate = ContextHandle->GetIsolate();
-	auto FuncLocal = v8::GetLocal( *Isolate, FunctionHandle );
-	return ExecuteFunc( ContextHandle, FuncLocal, This, Params );
-}
-
-v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,ArrayBridge<v8::Local<v8::Value>>&& Params)
-{
-	//	get a local function
-	auto* Isolate = ContextHandle->GetIsolate();
-	auto FuncLocal = v8::GetLocal( *Isolate, FunctionHandle );
-	
 	//	default this to the global
-	auto This = ContextHandle->Global();
+	if ( This.IsEmpty() )
+		This = ContextHandle->Global();
+		
+		
+	auto ArgCount = Params.GetSize();
+	auto* Args = Params.GetArray();
 	
-	return ExecuteFunc( ContextHandle, FuncLocal, This, Params );
-}
+	//	run, and catch any v8 exceptions and throw them back to C
+	TryCatch trycatch(isolate);
+	auto ResultMaybe = Func->Call( ContextHandle, This, size_cast<int>(ArgCount), Args );
+	if ( ResultMaybe.IsEmpty() )
+	{
+		throw V8Exception( trycatch, "ExecuteFunc(???)");
+	}
 
-Local<Value> TV8Container::ExecuteFunc(Local<Context> ContextHandle,const std::string& FunctionName,Local<Object> This)
-{
-	auto* isolate = ContextHandle->GetIsolate();
-	try
+	auto Result = ResultMaybe.ToLocalChecked();
+		
+	//	report anything that isn't undefined
+	if ( ReportDefinedReturns && !Result->IsUndefined() )
 	{
-		auto Func = v8::GetFunction( ContextHandle, This, FunctionName );
-		BufferArray<Local<Value>,1> Args;
-		return ExecuteFunc( ContextHandle, Func, This, GetArrayBridge(Args) );
+		String::Utf8Value ResultStr(Result);
+		std::Debug << *ResultStr << std::endl;
 	}
-	catch(std::exception& e)
-	{
-		auto Exception = v8::GetException( *isolate, e );
-		return Exception;
-	}
+	return Result;
 }
 
 
@@ -464,7 +422,7 @@ Local<Function> v8::GetFunction(Local<Context> ContextHandle,Local<Object> This,
 
 void OnFree(const WeakCallbackInfo<void>& data)
 {
-	std::Debug << "Free some object!" << std::endl;
+	std::Debug << "Leaking object created with CreateObjectInstance()!" << std::endl;
 	auto* Image = data.GetParameter();
 	//delete Image;
 }

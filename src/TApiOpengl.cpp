@@ -46,9 +46,22 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 		else
 			mWindow->Clear( RenderTarget );
 		
-		auto& Isolate = *context->GetIsolate();
-		auto This = this->GetHandle();
-		mContainer.ExecuteFunc( context, "OnRender", This );
+		//	gr: allow this to fail silently if the user has assigned nothing
+		//	gr: kinda want a specific "is undefined" exception so we don't miss important things
+		static bool SwallowException = true;
+		try
+		{
+			auto This = this->GetHandle();
+			auto Func = v8::GetFunction( context, This, "OnRender" );
+			BufferArray<Local<Value>,1> Args;
+			mContainer.ExecuteFunc( context, Func, This, GetArrayBridge(Args) );
+		}
+		catch(std::exception& e)
+		{
+			if ( SwallowException )
+				return;
+			throw;
+		}
 	};
 	mContainer.RunScoped( Runner );
 }
@@ -57,7 +70,6 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
 	using namespace v8;
-	auto& Isolate = Arguments.GetIsolate();
 	
 	auto WindowNameHandle = Arguments.mParams[0];
 	auto AutoRedrawHandle = Arguments.mParams[1];
@@ -234,7 +246,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 			try
 			{
-				Soy::TScopeTimerPrint Timer("Opengl.Render callback",30);
+				Soy::TScopeTimerPrint Timer("Opengl.Render callback",10);
 				//	immediately call the javascript callback
 				Container->RunScoped( ExecuteRenderCallback );
 				pThis->mActiveRenderTarget = nullptr;

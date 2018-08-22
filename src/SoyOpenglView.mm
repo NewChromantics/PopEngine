@@ -225,7 +225,7 @@ bool TOpenglView::IsDoubleBuffered() const
     {
 		LockContext();
 		Opengl::ClearColour( Soy::TRgb(0,0,1) );
-		std::Debug << e.what() << std::endl;
+		std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
     }
 	
 	//	in case lock hasn't been done

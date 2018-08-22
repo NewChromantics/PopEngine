@@ -263,7 +263,6 @@ public:
 	//	run these with RunScoped (internal) or QueueJob (external)
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source);
-	v8::Local<v8::Value>	ExecuteGlobalFunc(v8::Local<v8::Context> Context,const std::string& FunctionName);
 
 	TV8ObjectTemplate::ALLOCATOR	GetAllocator(const char* TYPENAME);
 	//	deprecated for object
@@ -284,11 +283,21 @@ public:
 	template<const char* FunctionName>
 	void					BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	
+	//	execute, but catch c++ or v8 exceptions and return them at v8 exceptions back to javascript
+	v8::Local<v8::Value>	ExecuteFuncAndCatch(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
+	v8::Local<v8::Value>	ExecuteFuncAndCatch(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>& Params);
+	v8::Local<v8::Value>	ExecuteFuncAndCatch(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
+	{
+		return ExecuteFuncAndCatch(ContextHandle,FunctionHandle,This,Params);
+	}
+
+	//	execute, but throw c++ or v8 exceptions
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
 	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>& Params);
-	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
-	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,ArrayBridge<v8::Local<v8::Value>>&& Params);
-	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Persist<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params);
+	v8::Local<v8::Value>	ExecuteFunc(v8::Local<v8::Context> ContextHandle,v8::Local<v8::Function> FunctionHandle,v8::Local<v8::Object> This,ArrayBridge<v8::Local<v8::Value>>&& Params)
+	{
+		return ExecuteFunc(ContextHandle,FunctionHandle,This,Params);
+	}
 
 	
 	

@@ -114,7 +114,8 @@ static Local<Value> SetTimeout(CallbackInfo& Params)
 		auto& Isolate = *Context->GetIsolate();
 		//auto CallbackLocal = v8::GetLocal( Isolate, CallbackPersistent->mPersistent );
 		BufferArray<v8::Local<v8::Value>,1> Args;
-		Container->ExecuteFunc( Context, CallbackPersistent->mPersistent, GetArrayBridge(Args) );
+		Local<Object> This;
+		Container->ExecuteFunc( Context, CallbackPersistent->GetLocal(Isolate), This, GetArrayBridge(Args) );
 	};
 	//	need a persistent handle to the callback?
 	Params.mContainer.QueueDelayScoped( OnRun, TimeoutMs );
@@ -715,6 +716,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 		try
 		{
 			std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+			Soy::TScopeTimerPrint Timer("TImageWrapper::GetTexture::Alloc/Upload", 5 );
 
 			auto AllocTexture = [&](const SoyPixelsMeta& Meta)
 			{

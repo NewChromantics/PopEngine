@@ -5,7 +5,7 @@ uniform sampler2D	Frame;
 uniform bool		HasFrame;
 uniform vec4		UnClipRect;
 
-#define LINE_COUNT	100
+#define LINE_COUNT	50
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 

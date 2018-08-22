@@ -28,13 +28,12 @@ var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = 800;
+var ClipToSquare = 600;
 var EnableGpuClip = true;
 var ClipToGreyscale = true;	//	GPU only! shader option
 var ApplyBlurInClip = false;
 
 var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
-var BlurLandmarkSearch = false;
 var ShoulderToHeadWidthRatio = 0.8;
 var HeadWidthToHeightRatio = 2.4;
 var NoseHeightInHead = 0.5;
@@ -43,11 +42,13 @@ var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
 var DrawRects = false;
-var DrawSkeletonMinScore = 0.5;
+var DrawSkeletonMinScore = 0;//0.5;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
 
+//	gr: for some reason, without this... v8 has no jobs?
+var EnableWindowRender = true;
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
@@ -58,6 +59,7 @@ var SmallImageSize = 80 * 3;
 var SmallImageSquare = true;
 var NoFaceSendLast = true;
 var FailIfNoFace = false;
+var BlurLandmarkSearch = false;
 
 
 
@@ -720,8 +722,6 @@ var TFrame = function(OpenglContext)
 			let Delta = [ NewJointPos.x - OldJointPos.x, NewJointPos.y - OldJointPos.y ];
 			Delta = this.NormaliseImagePosition(Delta);
 			
-			Debug("Move head " + Delta);
-			
 			let ApplyDelta = function(FaceFeaturePos)
 			{
 				FaceFeaturePos[0] += Delta[0];
@@ -758,57 +758,50 @@ void main()
 
 let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
+const LINE_COUNT = 50;
+
 
 function WindowRender(RenderTarget)
 {
-	try
+	if ( !FrameShader )
 	{
-		if ( !FrameShader )
-		{
-			FrameShader = new OpenglShader( RenderTarget, VertShaderSource, FrameFragShaderSource );
-		}
+		FrameShader = new OpenglShader( RenderTarget, VertShaderSource, FrameFragShaderSource );
+	}
+	
+	let SetUniforms = function(Shader)
+	{
+		let Lines = [];
+		let Scores = [];
 		
-		let SetUniforms = function(Shader)
+		if ( LastFrame == null )
 		{
-			let Lines = [];
-			let Scores = [];
-			
-			if ( LastFrame == null )
+			Shader.SetUniform("HasFrame", false );
+			GetXLinesAndScores( Lines, Scores );
+			Shader.SetUniform("UnClipRect", [0,0,1,1] );
+		}
+		else
+		{
+			if ( DrawSmallImage )
 			{
-				Shader.SetUniform("HasFrame", false );
-				GetXLinesAndScores( Lines, Scores );
-				Shader.SetUniform("UnClipRect", [0,0,1,1] );
+				Shader.SetUniform("Frame", LastFrame.SmallImage, 0 );
+				Shader.SetUniform("UnClipRect", LastFrame.ClipRect );
 			}
 			else
 			{
-				if ( DrawSmallImage )
-				{
-					Shader.SetUniform("Frame", LastFrame.SmallImage, 0 );
-					Shader.SetUniform("UnClipRect", LastFrame.ClipRect );
-				}
-				else
-				{
-					Shader.SetUniform("Frame", LastFrame.Image, 0 );
-					Shader.SetUniform("UnClipRect", [0,0,1,1] );
-				}
-				Shader.SetUniform("HasFrame", true );
-				LastFrame.GetLinesAndScores( Lines, Scores );
+				Shader.SetUniform("Frame", LastFrame.Image, 0 );
+				Shader.SetUniform("UnClipRect", [0,0,1,1] );
 			}
-			
-			const MAX_LINES = 100;
-			Lines.length = Math.min( Lines.length, MAX_LINES );
-			Scores.length = Math.min( Scores.length, MAX_LINES );
-			Shader.SetUniform("Lines", Lines );
-			Shader.SetUniform("LineScores", Scores );
+			Shader.SetUniform("HasFrame", true );
+			LastFrame.GetLinesAndScores( Lines, Scores );
 		}
 		
-		RenderTarget.DrawQuad( FrameShader, SetUniforms );
+		Lines.length = Math.min( Lines.length, LINE_COUNT );
+		Scores.length = Math.min( Scores.length, LINE_COUNT );
+		Shader.SetUniform("Lines", Lines );
+		Shader.SetUniform("LineScores", Scores );
 	}
-	catch(Exception)
-	{
-		RenderTarget.ClearColour(1,0,0);
-		Debug(Exception);
-	}
+	
+	RenderTarget.DrawQuad( FrameShader, SetUniforms );
 }
 
 
@@ -1393,7 +1386,8 @@ function Main()
 {
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("PopTrack5",true);
-	Window1.OnRender = function(){	WindowRender( Window1 );	};
+	if ( EnableWindowRender )
+		Window1.OnRender = function(){	WindowRender( Window1 );	};
 	
 	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;
