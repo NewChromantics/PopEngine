@@ -48,7 +48,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 		
 		//	gr: allow this to fail silently if the user has assigned nothing
 		//	gr: kinda want a specific "is undefined" exception so we don't miss important things
-		static bool SwallowException = true;
+		static bool SwallowException = false;
 		try
 		{
 			auto This = this->GetHandle();
