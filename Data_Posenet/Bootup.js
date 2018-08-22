@@ -962,7 +962,7 @@ function LoadPosenet()
 {
 	//	make a context, then let tensorflow grab the bindings
 	include('tfjs.0.11.7.js');
-	include('posenet.0.1.2.js');
+	include('posenet.0.2.2.js');
 	
 	//	load posenet
 	Debug("Loading posenet...");
