@@ -56,7 +56,8 @@ var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 3;
 var SmallImageSquare = true;
-var FailIfNoFace = true;
+var NoFaceSendLast = true;
+var FailIfNoFace = false;
 
 
 
@@ -487,6 +488,7 @@ var TFrame = function(OpenglContext)
 	this.OriginalImage = null;	//	if we clipped image on gpu for posenet, the original gets stored here
 	this.SmallImage = null;		//	face search image (clipped image)
 	this.FaceFeatures = null;	//	normalised to image(0..1)
+	this.FaceScore = 0.5;
 	this.SkeletonPose = null;	//	image space(px)
 	this.ImageData = null;
 	this.OpenglContext = OpenglContext;
@@ -555,7 +557,7 @@ var TFrame = function(OpenglContext)
 			GetRectLines( this.FaceRect, Lines, Scores, AlreadyNormalised, 0.5 );
 		}
 		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores, Normalise );
-		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, AlreadyNormalised, 1 );
+		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, AlreadyNormalised, this.FaceScore );
 	}
 	
 	
@@ -631,6 +633,7 @@ var TFrame = function(OpenglContext)
 				throw "No face found";
 
 			//Debug("No face found");
+			this.FaceScore = 0;
 			this.FaceRect = null;
 			this.FaceFeatures = null;
 			return;
@@ -643,6 +646,7 @@ var TFrame = function(OpenglContext)
 		this.FaceRect[1] = FaceLandMarks.shift();
 		this.FaceRect[2] = FaceLandMarks.shift();
 		this.FaceRect[3] = FaceLandMarks.shift();
+		this.FaceScore = 1;
 		
 		UnnormaliseRect( this.FaceRect, this.ClipRect );
 		
@@ -682,12 +686,53 @@ var TFrame = function(OpenglContext)
 				let fx = this.FaceFeatures[ff][0];
 				let fy = this.FaceFeatures[ff][1];
 				let Pos = { x:fx, y:fy };
-				let Score = 0.5;
+				let Score = this.FaceScore;
 				EnumNamePosScore( Name, Pos, Score );
 			}
 			
 		}
 		
+	}
+	
+	this.NormaliseImagePosition = function(xy)
+	{
+		xy[0] /= this.GetWidth();
+		xy[1] /= this.GetHeight();
+		return xy;
+	}
+	
+	this.CopyFace = function(LastFrame)
+	{
+		if ( !LastFrame )
+			throw "No last frame to copy face from";
+		
+		this.FaceFeatures = LastFrame.FaceFeatures;
+		this.FaceRect = LastFrame.FaceRect;
+		
+		//	get a delta where we need to move all the features so they attach to the skeleton
+		let TrackJoint = 'nose';
+		try
+		{
+			let OldJointPos = LastFrame.GetSkeletonKeypoint(TrackJoint).position;
+			let NewJointPos = this.GetSkeletonKeypoint(TrackJoint).position;
+			
+			//	put skeleton point into face(normalised) space
+			let Delta = [ NewJointPos.x - OldJointPos.x, NewJointPos.y - OldJointPos.y ];
+			Delta = this.NormaliseImagePosition(Delta);
+			
+			Debug("Move head " + Delta);
+			
+			let ApplyDelta = function(FaceFeaturePos)
+			{
+				FaceFeaturePos[0] += Delta[0];
+				FaceFeaturePos[1] += Delta[1];
+			}
+			this.FaceFeatures.forEach( ApplyDelta );
+		}
+		catch(e)
+		{
+			Debug("Error moving copied head: " + e );
+		}
 	}
 }
 
@@ -796,6 +841,16 @@ function OnFrameCompleted(Frame)
 	UpdateFrameCounter('FrameCompleted');
 	
 	CurrentFrames = CurrentFrames.filter( function(el)	{	return el!=Frame;	} );
+	
+	//	don't send no-head
+	if ( Frame.FaceFeatures == null && LastFrame )
+	{
+		if ( NoFaceSendLast )
+		{
+			Frame.CopyFace(LastFrame);
+		}
+	}
+	
 	
 	if ( LastFrame != null )
 		LastFrame.Clear();
