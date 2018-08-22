@@ -56,7 +56,7 @@ var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 3;
 var SmallImageSquare = true;
-
+var FailIfNoFace = true;
 
 
 
@@ -627,6 +627,9 @@ var TFrame = function(OpenglContext)
 	{
 		if ( FaceLandMarks.length == 0 )
 		{
+			if ( FailIfNoFace )
+				throw "No face found";
+
 			//Debug("No face found");
 			this.FaceRect = null;
 			this.FaceFeatures = null;
