@@ -258,7 +258,7 @@ public:
 
 	void		Yield(size_t SleepMilliseconds);
 	
-	void		ProcessJobs();	//	run all the queued jobs then return
+	void		ProcessJobs(std::function<bool()> IsRunning);	//	run all the queued jobs then return
 	
 	//	run these with RunScoped (internal) or QueueJob (external)
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source);

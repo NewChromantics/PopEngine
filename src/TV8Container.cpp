@@ -145,13 +145,20 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	CreateContext();
 }
 
-void TV8Container::ProcessJobs()
+void TV8Container::ProcessJobs(std::function<bool()> IsRunning)
 {
-	while ( v8::platform::PumpMessageLoop( mPlatform.get(), mIsolate) )
+	do
 	{
 		//std::Debug << "Pump message" << std::endl;
-		continue;
+		v8::Locker Locker(mIsolate);
+		mIsolate->Enter();
+		bool MoreJobs = v8::platform::PumpMessageLoop( mPlatform.get(), mIsolate);
+		mIsolate->Exit();
+		
+		if ( !MoreJobs )
+			break;
 	}
+	while ( IsRunning() );
 	//std::Debug << "EOF messages" << std::endl;
 }
 
@@ -310,11 +317,17 @@ void TV8Container::QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> 
 
 void TV8Container::Yield(size_t SleepMilliseconds)
 {
-	v8::Unlocker unlocker(mIsolate);
+	//	gr: temporary unlock, but need to exit&enter too
+	{
+		mIsolate->Exit();
+		v8::Unlocker unlocker(mIsolate);
 	
-	//	isolate unlock for a moment, let another thread jump in and run stuff
-	auto ms = std::chrono::milliseconds(SleepMilliseconds);
-	std::this_thread::sleep_for( ms );
+		//	isolate unlock for a moment, let another thread jump in and run stuff
+		auto ms = std::chrono::milliseconds(SleepMilliseconds);
+		std::this_thread::sleep_for( ms );
+	}
+	//	re-enter after unlocker has gone out of scope
+	mIsolate->Enter();
 }
 
 

@@ -66,6 +66,11 @@ bool TV8Instance::Iteration()
 	if ( !mV8Container )
 		return false;
 	
-	mV8Container->ProcessJobs();
+	auto IsRunning = [this]()
+	{
+		return this->IsWorking();
+	};
+	
+	mV8Container->ProcessJobs( IsRunning );
 	return true;
 }
