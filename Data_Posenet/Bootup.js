@@ -423,7 +423,7 @@ function GetXLinesAndScores(Lines,Scores)
 	Scores.push( [0] );
 }
 
-function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
+function GetPoseLinesAndScores(Pose,Lines,Scores)
 {
 	if ( !Pose )
 		return;
@@ -437,9 +437,11 @@ function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
 		if ( Score < DrawSkeletonMinScore )
 			return;
 		
-		let Start = Normalise( Keypointa.position.x, Keypointa.position.y );
-		let End = Normalise( Keypointb.position.x, Keypointb.position.y );
-		let Line = [ Start[0], Start[1], End[0], End[1] ];
+		let sx = Keypointa.position.x;
+		let sy = Keypointa.position.y;
+		let ex = Keypointb.position.x;
+		let ey = Keypointb.position.y;
+		let Line = [ sx,sy,ex,ey ];
 		Lines.push( Line );
 		Scores.push( Score );
 	}
@@ -465,7 +467,7 @@ function GetPoseLinesAndScores(Pose,Lines,Scores,Normalise)
 }
 
 
-function GetPointLinesAndScores(Points,Lines,Scores,Normalise,Score)
+function GetPointLinesAndScores(Points,Lines,Scores,Score)
 {
 	if ( !Points )
 		return;
@@ -480,7 +482,7 @@ function GetPointLinesAndScores(Points,Lines,Scores,Normalise,Score)
 }
 
 
-function GetRectLines(Rect,Lines,Scores,Normalise,Score)
+function GetRectLines(Rect,Lines,Scores,Score)
 {
 	if ( !Rect )
 		return;
@@ -489,13 +491,6 @@ function GetRectLines(Rect,Lines,Scores,Normalise,Score)
 	let t = Rect[1];
 	let r = Rect[0] + Rect[2];
 	let b = Rect[1] + Rect[3];
-
-	let lt = Normalise( l,t );
-	let rb = Normalise( r,b );
-	l = lt[0];
-	t = lt[1];
-	r = rb[0];
-	b = rb[1];
 	
 	Lines.push( [l,t,	r,t] );
 	Lines.push( [r,t,	r,b] );
@@ -570,25 +565,14 @@ var TFrame = function(OpenglContext)
 	
 	this.GetLinesAndScores = function(Lines,Scores)
 	{
-		let w = this.ImageData.width;
-		let h = this.ImageData.height;
-		let Normalise = function(x,y)
-		{
-			return [ x/w, y/h ];
-		}
-		let AlreadyNormalised = function(x,y)
-		{
-			return [x,y];
-		}
-		
 		if ( DrawRects )
 		{
-			GetRectLines( this.HeadRect, Lines, Scores, AlreadyNormalised, 0 );
-			GetRectLines( this.ClipRect, Lines, Scores, AlreadyNormalised, 1.5 );
-			GetRectLines( this.FaceRect, Lines, Scores, AlreadyNormalised, 0.5 );
+			GetRectLines( this.HeadRect, Lines, Scores, 0 );
+			GetRectLines( this.ClipRect, Lines, Scores, 1.5 );
+			GetRectLines( this.FaceRect, Lines, Scores, 0.5 );
 		}
-		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores, AlreadyNormalised );
-		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, AlreadyNormalised, this.FaceScore );
+		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores );
+		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, this.FaceScore );
 	}
 	
 	
@@ -795,7 +779,7 @@ void main()
 
 let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
-const LINE_COUNT = 50;
+const LINE_COUNT = 100;
 
 
 function WindowRender(RenderTarget)
@@ -1038,11 +1022,9 @@ function SetupForFaceDetection(Frame)
 	Frame.SetupHeadRect();
 	let ClipRectPx = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
 
-	Debug("Frame.HeadRect="+Frame.HeadRect);
-	Debug("ClipRectPx pre="+ClipRectPx);
+	//	sort out rect in pixel space
 	UnnormaliseRect( ClipRectPx, Frame.GetImageRect() );
-	Debug("ClipRectPx post="+ClipRectPx);
-
+	
 	//	resize down to 80x80 (or a multiple?)
 	//	gr: decide here if we should blur (if we're going up or down maybe)
 	//	gr: should be square?
@@ -1070,7 +1052,7 @@ function SetupForFaceDetection(Frame)
 	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
 	//Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
 	
-	Debug("Frame.ClipRect="+Frame.ClipRect);
+	//Debug("Frame.ClipRect="+Frame.ClipRect);
 	
 	//	return a resizing promise
 	if ( Frame.OpenglContext )
@@ -1314,16 +1296,18 @@ function GetSkeletonJson(Frame,Pretty)
 		if ( Name.includes("!") )
 			return;
 		
-		let Keypoint = {};
-		Keypoint.part = Name;
-		Keypoint.position = Position;
-		Keypoint.score = Score;
-		
-		if ( FlipOutputSkeleton )
-			Keypoint.position.y = 1 - Keypoint.position.y;
+		let px = Position.x;
+		let py = Position.y;
 		
 		if ( MirrorOutputSkeleton )
-			Keypoint.position.x = 1 - Keypoint.position.x;
+			px = 1 - px;
+		if ( FlipOutputSkeleton )
+			py = 1 - py;
+		
+		let Keypoint = {};
+		Keypoint.part = Name;
+		Keypoint.position = { x:px, y:py };
+		Keypoint.score = Score;
 		
 		KeypointSkeleton.keypoints.push( Keypoint );
 	}
