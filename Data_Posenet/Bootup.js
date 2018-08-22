@@ -46,6 +46,10 @@ var DrawSkeletonMinScore = 0;//0.5;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
+var EnableKalmanFilter = true;
+
+
+
 
 //	gr: for some reason, without this... v8 has no jobs?
 var EnableWindowRender = true;
@@ -162,6 +166,33 @@ if ( FaceLandMarkNames.length != 68 )
 
 
 
+
+if ( EnableKalmanFilter )
+{
+	include('KalmanFilter.js');
+	var KalmanFilters = {};
+}
+
+function UpdateKalmanFilter(Name,NewValue,TightNoise)
+{
+	if ( !EnableKalmanFilter )
+		return NewValue;
+	
+	TightNoise = TightNoise === true;
+	let Noise = TightNoise ? [0.10,0.99] : [0.20,0.20];
+	
+	if ( KalmanFilters[Name] === undefined )
+	{
+		KalmanFilters[Name] = new KalmanFilter( NewValue, Noise[0], Noise[1] );
+	}
+	
+	let Filter = KalmanFilters[Name];
+	Filter.Push( NewValue );
+	let v = NewValue;
+	NewValue = Filter.GetEstimatedPosition(0);
+	//Debug( Name + ": " + v + " -> " + NewValue );
+	return NewValue;
+}
 
 
 
@@ -323,7 +354,10 @@ function UnnormalisePoint(x,y,ParentRect)
 	let l = Lerp( pl, pr, cl );
 	let t = Lerp( pt, pb, ct );
 
-	return [l,t];
+	let xy = {};
+	xy.x = l;
+	xy.y = t;
+	return xy;
 }
 
 
@@ -443,7 +477,7 @@ function GetPointLinesAndScores(Points,Lines,Scores,Normalise,Score)
 	
 	let PushX = function(xy)
 	{
-		Lines.push( [xy,xy] );
+		Lines.push( [ xy.x, xy.y, xy.x, xy.y ] );
 		Scores.push( Score );
 	}
 
@@ -675,7 +709,7 @@ var TFrame = function(OpenglContext)
 		
 		let EnumKeypoint = function(Keypoint)
 		{
-			//	gr: sending pose here is mutable!
+			//	gr: sending pos here is mutable!
 			EnumNamePosScore( Keypoint.part, Normalise(Keypoint.position.x,Keypoint.position.y), Keypoint.score );
 		}
 		this.SkeletonPose.keypoints.forEach( EnumKeypoint );
@@ -685,9 +719,7 @@ var TFrame = function(OpenglContext)
 			for ( let ff=0;	ff<this.FaceFeatures.length;	ff++)
 			{
 				let Name = FaceLandMarkNames[ff];
-				let fx = this.FaceFeatures[ff][0];
-				let fy = this.FaceFeatures[ff][1];
-				let Pos = { x:fx, y:fy };
+				let Pos = this.FaceFeatures[ff];
 				let Score = this.FaceScore;
 				EnumNamePosScore( Name, Pos, Score );
 			}
@@ -724,8 +756,8 @@ var TFrame = function(OpenglContext)
 			
 			let ApplyDelta = function(FaceFeaturePos)
 			{
-				FaceFeaturePos[0] += Delta[0];
-				FaceFeaturePos[1] += Delta[1];
+				FaceFeaturePos.x += Delta[0];
+				FaceFeaturePos.y += Delta[1];
 			}
 			this.FaceFeatures.forEach( ApplyDelta );
 		}
@@ -843,6 +875,9 @@ function OnFrameCompleted(Frame)
 			Frame.CopyFace(LastFrame);
 		}
 	}
+	
+	//	apply kalman filter to reject bad keypoints
+	//Frame.EnumKeypoints
 	
 	
 	if ( LastFrame != null )
@@ -1265,16 +1300,17 @@ function GetSkeletonJson(Frame,Pretty)
 		if ( Name.includes("!") )
 			return;
 		
-		if ( FlipOutputSkeleton )
-			Position.y = 1-Position.y;
-		
-		if ( MirrorOutputSkeleton )
-			Position.x = 1-Position.x;
-
 		let Keypoint = {};
 		Keypoint.part = Name;
 		Keypoint.position = Position;
 		Keypoint.score = Score;
+		
+		if ( FlipOutputSkeleton )
+			Keypoint.position.y = 1 - Keypoint.position.y;
+		
+		if ( MirrorOutputSkeleton )
+			Keypoint.position.x = 1 - Keypoint.position.x;
+		
 		KeypointSkeleton.keypoints.push( Keypoint );
 	}
 
