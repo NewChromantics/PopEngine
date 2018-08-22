@@ -15,7 +15,7 @@ include('FrameCounter.js');
 var RGBAFromCamera = true;
 var FlipCameraInput = false;
 //	tries to find these in order, then grabs any
-var VideoDeviceNames = ["c920","isight","facetime"];
+var VideoDeviceNames = ["facetime","c920","isight"];
 
 var WebServer = null;
 var WebServerPort = 8000;
@@ -41,7 +41,7 @@ var NoseHeightInHead = 0.5;
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
-var DrawRects = false;
+var DrawRects = true;
 var DrawSkeletonMinScore = 0;//0.5;
 
 var CurrentFrames = [];
@@ -410,11 +410,6 @@ function GetScaledRect(Rect,Scale)
 	let l = cx - (w/2);
 	let t = cy - (h/2);
 	
-	l = Math.floor(l);
-	t = Math.floor(t);
-	w = Math.floor(w);
-	h = Math.floor(h);
-	
 	return [l,t,w,h];
 }
 
@@ -530,7 +525,7 @@ var TFrame = function(OpenglContext)
 	this.OpenglContext = OpenglContext;
 	
 	//	rects are in Image space(px)
-	this.HeadRect = [0,0,1,1];	//	head area on skeleton
+	this.HeadRect = [0,0,1,1];	//	head area on skeleton (normalised)
 	this.FaceRect = null;	//	detected face
 	this.ClipRect = [0,0,1,1];	//	small image clip rect. Normalised to image(0..1)
 	
@@ -588,11 +583,11 @@ var TFrame = function(OpenglContext)
 		
 		if ( DrawRects )
 		{
-			GetRectLines( this.HeadRect, Lines, Scores, Normalise, 0 );
+			GetRectLines( this.HeadRect, Lines, Scores, AlreadyNormalised, 0 );
 			GetRectLines( this.ClipRect, Lines, Scores, AlreadyNormalised, 1.5 );
 			GetRectLines( this.FaceRect, Lines, Scores, AlreadyNormalised, 0.5 );
 		}
-		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores, Normalise );
+		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores, AlreadyNormalised );
 		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, AlreadyNormalised, this.FaceScore );
 	}
 	
@@ -626,6 +621,21 @@ var TFrame = function(OpenglContext)
 		return this.SkeletonPose.keypoints.find( IsMatch );
 	}
 	
+	this.SetSkeletonPose = function(Pose)
+	{
+		this.SkeletonPose = Pose;
+		
+		//	normalise positions
+		let w = this.GetWidth();
+		let h = this.GetHeight();
+		let Normalise = function(Keypoint)
+		{
+			Keypoint.position.x /= w;
+			Keypoint.position.y /= h;
+		}
+		this.SkeletonPose.keypoints.forEach( Normalise );
+	}
+	
 	this.SetupHeadRect = function()
 	{
 		//	gr: ears are unreliable, get head size from shoulders
@@ -651,11 +661,6 @@ var TFrame = function(OpenglContext)
 		let Bottom = Nose.y + (Height * NoseHeightInHead);
 		let x = Nose.x - (Width/2);
 		let y = Bottom - Height;
-		
-		x = Math.floor(x);
-		y = Math.floor(y);
-		Width = Math.floor(Width);
-		Height = Math.floor(Height);
 		
 		this.HeadRect = [x,y,Width,Height];
 	}
@@ -1009,7 +1014,7 @@ function GetPoseDetectionPromise(Frame)
 		
 		let OnPose = function(Pose)
 		{
-			Frame.SkeletonPose = Pose;
+			Frame.SetSkeletonPose(Pose);
 			Resolve(Frame);
 		}
 		
@@ -1031,7 +1036,12 @@ function SetupForFaceDetection(Frame)
 {
 	//	work out where to search
 	Frame.SetupHeadRect();
-	Frame.ClipRect = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
+	let ClipRectPx = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
+
+	Debug("Frame.HeadRect="+Frame.HeadRect);
+	Debug("ClipRectPx pre="+ClipRectPx);
+	UnnormaliseRect( ClipRectPx, Frame.GetImageRect() );
+	Debug("ClipRectPx post="+ClipRectPx);
 
 	//	resize down to 80x80 (or a multiple?)
 	//	gr: decide here if we should blur (if we're going up or down maybe)
@@ -1039,24 +1049,28 @@ function SetupForFaceDetection(Frame)
 	
 	if ( SmallImageSquare )
 	{
-		let Size = Math.min( Frame.ClipRect[2], Frame.ClipRect[3] );
+		let Size = Math.min( ClipRectPx[2], ClipRectPx[3] );
 		Size = Math.max( SmallImageSize, Size );
 		
-		SetRectSizeAlignMiddle( Frame.ClipRect, Size, Size );
+		SetRectSizeAlignMiddle( ClipRectPx, Size, Size );
 	}
 	else
 	{
-		Frame.ClipRect[2] = Math.max( SmallImageSize, Frame.ClipRect[2] );
-		Frame.ClipRect[3] = Math.max( SmallImageSize, Frame.ClipRect[3] );
+		ClipRectPx[2] = Math.max( SmallImageSize, ClipRectPx[2] );
+		ClipRectPx[3] = Math.max( SmallImageSize, ClipRectPx[3] );
 	}
-	ClampRect( Frame.ClipRect, Frame.GetImageRect() );
-	let Scale = SmallImageSize / Frame.ClipRect[2];
+	ClampRect( ClipRectPx, Frame.GetImageRect() );
+	let Scale = SmallImageSize / ClipRectPx[2];
 	
-	let SmallImageWidth = Frame.ClipRect[2] * Scale;
-	let SmallImageHeight = Frame.ClipRect[3] * Scale;
+	let SmallImageWidth = ClipRectPx[2] * Scale;
+	let SmallImageHeight = ClipRectPx[3] * Scale;
 	
+	//	save the normalised rect
+	Frame.ClipRect = ClipRectPx;
 	NormaliseRect( Frame.ClipRect, Frame.GetImageRect() );
 	//Debug("SmallImage="+ SmallImageWidth+"x"+SmallImageHeight+ " Frame=" + Frame.GetWidth()+"x"+Frame.GetHeight() + " ClippedImageScale=" + ClippedImageScale + " Frame.ClipRect[2]x[3]=" + Frame.ClipRect[2]+"x"+Frame.ClipRect[3]);
+	
+	Debug("Frame.ClipRect="+Frame.ClipRect);
 	
 	//	return a resizing promise
 	if ( Frame.OpenglContext )
