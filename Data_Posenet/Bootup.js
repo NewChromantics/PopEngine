@@ -28,14 +28,12 @@ var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = 512;
+var ClipToSquare = 800;
 var EnableGpuClip = true;
 var ClipToGreyscale = true;	//	GPU only! shader option
 var ApplyBlurInClip = false;
 
 var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
-var SmallImageMinSize = 80;
-var ClippedImageScale = 0.400;
 var BlurLandmarkSearch = false;
 var ShoulderToHeadWidthRatio = 0.8;
 var HeadWidthToHeightRatio = 2.4;
@@ -53,9 +51,11 @@ var LastFrame = null;	//	completed TFrame
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 3;
+var DlibThreadCount = 2;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
+var SmallImageSize = 80 * 3;
+var SmallImageSquare = true;
 
 
 
@@ -950,9 +950,6 @@ function SetupForFaceDetection(Frame)
 	//	resize down to 80x80 (or a multiple?)
 	//	gr: decide here if we should blur (if we're going up or down maybe)
 	//	gr: should be square?
-	let SmallImageSize = 80 * 3;
-	let SmallImageSquare = true;
-	BlurLandmarkSearch = false;
 	
 	if ( SmallImageSquare )
 	{
