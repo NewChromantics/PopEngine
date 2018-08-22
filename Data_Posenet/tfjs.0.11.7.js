@@ -1709,7 +1709,8 @@
                 indices: e
             })
         }, e.fromPixels = function(e, t) {
-            if (void 0 === t && (t = 3), t > 4) throw new Error("Cannot construct Tensor with more than 4 channels from pixels.");
+  Debug("frompixels 2");
+          if (void 0 === t && (t = 3), t > 4) throw new Error("Cannot construct Tensor with more than 4 channels from pixels.");
             return ENV.engine.fromPixels(e, t)
         }, e.toPixels = function(e, t) {
             return __awaiter(this, void 0, void 0, function() {
@@ -7014,7 +7015,8 @@
                     usage: TextureUsage.RENDER
                 })
             }, e.prototype.fromPixels = function(e, t) {
-                if (null == e) throw new Error("MathBackendWebGL.writePixels(): pixels can not be null");
+    Debug("MathBackendWebGL.fromPixels");
+  if (null == e) throw new Error("MathBackendWebGL.writePixels(): pixels can not be null");
                 var r = [e.height, e.width],
                     n = [e.height, e.width, t];
                 if (e instanceof HTMLVideoElement) {
@@ -7654,6 +7656,7 @@
             if (null == t) throw new Error("MathBackendCPU.write(): values can not be null");
             this.throwIfNoData(e), this.data.set(e, t)
         }, e.prototype.fromPixels = function(e, t) {
+  Debug("MathBackendCPU.writePixels");
             if (null == e) throw new Error("MathBackendCPU.writePixels(): pixels can not be null");
             var r, n;
             if (e instanceof ImageData) r = e.data;

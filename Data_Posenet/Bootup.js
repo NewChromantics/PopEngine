@@ -28,7 +28,7 @@ var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = 600;
+var ClipToSquare = PoseNetOutputStride * 32;
 var EnableGpuClip = true;
 var ClipToGreyscale = true;	//	GPU only! shader option
 var ApplyBlurInClip = false;
@@ -483,7 +483,25 @@ function GetPoseLinesAndScores(Pose,Lines,Scores)
 		PushLine( kpa, kpb );
 	}
 	
-	let Bones = [["nose", "leftEye"], ["leftEye", "leftEar"], ["nose", "rightEye"], ["rightEye", "rightEar"], ["nose", "leftShoulder"], ["leftShoulder", "leftElbow"], ["leftElbow", "leftWrist"], ["leftShoulder", "leftHip"], ["leftHip", "leftKnee"], ["leftKnee", "leftAnkle"], ["nose", "rightShoulder"], ["rightShoulder", "rightElbow"], ["rightElbow", "rightWrist"], ["rightShoulder", "rightHip"], ["rightHip", "rightKnee"], ["rightKnee", "rightAnkle"]];
+	let Bones = [
+				 ["nose", "leftEye"],
+				 ["leftEye", "leftEar"],
+				 ["nose", "rightEye"],
+				 ["rightEye", "rightEar"],
+				 ["leftShoulder", "rightShoulder"],
+				 ["nose", "leftShoulder"],
+				 ["leftShoulder", "leftElbow"],
+				 ["leftElbow", "leftWrist"],
+				 ["leftShoulder", "leftHip"],
+				 ["leftHip", "leftKnee"],
+				 ["leftKnee", "leftAnkle"],
+				 ["nose", "rightShoulder"],
+				 ["rightShoulder", "rightElbow"],
+				 ["rightElbow", "rightWrist"],
+				 ["rightShoulder", "rightHip"],
+				 ["rightHip", "rightKnee"],
+				 ["rightKnee", "rightAnkle"]
+				 ];
 	Bones.forEach( PushBone );
 }
 
@@ -947,10 +965,21 @@ function OnFrameError(Frame,Error)
 
 //	valid when posenet is loaded
 var PoseNet = null;
+var TensorFlow = null;
 
 function OnPoseNetLoaded(pn)
 {
-	PoseNet = pn;
+	try
+	{
+		Debug("OnPoseNetLoaded");
+		PoseNet = pn;
+		TensorFlow = tf;
+	}
+	catch(e)
+	{
+		Debug(e);
+		throw e;
+	}
 }
 
 function OnPoseNetFailed(Error)
@@ -1052,7 +1081,50 @@ function GetPoseDetectionPromise(Frame)
 			Reject(Error);
 		}
 		
-		let EstimatePromise = PoseNet.estimateSinglePose( Frame.ImageData, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
+		//	gr: this TAKES rgba(x4) data, then puts it in x3 int32array I think!
+		//	gr: somewhere in
+		//		Debug("MathBackendWebGL.fromPixels");
+		//	a texture is stored
+		let Tensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
+		
+		/*
+		//	gr: note size is backwards! rows then cols
+		let TensorSize = [ Frame.GetHeight(), Frame.GetWidth(), 3 ];
+
+		//	gr: here tensor3d fails as it wants RGB data not RGBA (but fitting into int32?)
+		//tensor3d( data, size3, "int32");
+		let Bytes = new Int32Array(Frame.ImageData.data);
+		//let TensorData = {};
+		//	gr: Int32Array would be faster here no conversion!
+		//TensorData.values = new Int32Array( Frame.ImageData.data );
+		//let Tensor = TensorFlow.Tensor.make( TensorSize, TensorData, "int32");
+		//Debug("isTypedArray(BYtes)="+ TensorFlow.isTypedArray(Bytes) );
+		let Tensor = TensorFlow.tensor3d( Bytes, TensorSize, "int32");
+		*/
+		
+		//	gr: here, try and make a new TensorFlow.Tensor, referencing the opengl texture and use it directly without having to read back pixels earlier
+		/*
+		 if (null == e) throw new Error("MathBackendWebGL.writePixels(): pixels can not be null");
+		 var r = [e.height, e.width],
+		 n = [e.height, e.width, t];
+		 if (e instanceof HTMLVideoElement) {
+		 if (null == this.fromPixelsCanvas) {
+		 if (!ENV.get("IS_BROWSER")) throw new Error("Can't read pixels from HTMLImageElement outside the browser.");
+		 if ("complete" !== document.readyState) throw new Error("The DOM is not ready yet. Please call tf.fromPixels() once the DOM is ready. One way to do that is to add an event listener for `DOMContentLoaded` on the document object");
+		 this.fromPixelsCanvas = document.createElement("canvas")
+		 }
+		 this.fromPixelsCanvas.width = e.width, this.fromPixelsCanvas.height = e.height, this.fromPixelsCanvas.getContext("2d").drawImage(e, 0, 0, e.width, e.height), e = this.fromPixelsCanvas
+		 }
+		 var a = Tensor.make(r, {}, "int32");
+		 this.texData.get(a.dataId).usage = TextureUsage.PIXELS, this.gpgpu.uploadPixelDataToTexture(this.getTexture(a.dataId), e);
+		 var i = new FromPixelsProgram(n),
+		 o = this.compileAndRun(i, [a]);
+		 return a.dispose(), o
+		 */
+		//let Tensor = Frame.ImageData;
+		
+		
+		let EstimatePromise = PoseNet.estimateSinglePose( Tensor, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
 		EstimatePromise.then( OnPose )
 		.catch( OnPoseError );
 	}
