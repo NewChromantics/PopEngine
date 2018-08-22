@@ -61,6 +61,41 @@ function KalmanFilter(InitialPos,QNoise,RNoise)
 		return Error;
 	}
 	
+	//	this returns error, without updating our values
+	this.Peek = function(Position)
+	{
+		//do a prediction
+		let x_temp_est = this.x_est_last;
+		let P_temp = this.P_last + this.QNoise;
+		
+		//Debug("QNoise/" + QNoise + " - this.P_last/" + this.P_last );
+		//Debug("x_temp_est/" + x_temp_est + " - P_temp/" + P_temp );
+		
+		//calculate the Kalman gain
+		//	gr: timestep here?
+		let KGain = P_temp * (1.0 / (P_temp + this.RNoise));
+		
+		//Debug("KGain/" + KGain + " - P_temp/" + P_temp );
+		
+		//	measured input
+		let Accell = Position - this.lastcorrected;
+		let z_measured = Accell;
+		
+		
+		//	do correction to the estimate
+		let x_est = x_temp_est + KGain * (z_measured - x_temp_est);
+		//Debug("Accell/" + Accell + " - x_est/" + x_est );
+		let P = (1 - KGain) * P_temp;
+		
+		//Debug("x_est/" + x_est + " - z_measured/" + z_measured );
+		
+		//	error is difference from the corrected estimate
+		//let Error = Vector3.Distance(z_measured, x_est);
+		let Error = x_est - z_measured;
+		return Error;
+	}
+
+	
 	this.GetAcceleration = function()
 	{
 		return this.x_est_last;

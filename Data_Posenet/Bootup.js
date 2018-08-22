@@ -15,7 +15,7 @@ include('FrameCounter.js');
 var RGBAFromCamera = true;
 var FlipCameraInput = false;
 //	tries to find these in order, then grabs any
-var VideoDeviceNames = ["facetime","c920","isight"];
+var VideoDeviceNames = ["c920","facetime","c920","isight"];
 
 var WebServer = null;
 var WebServerPort = 8000;
@@ -41,8 +41,9 @@ var NoseHeightInHead = 0.5;
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
-var DrawRects = true;
-var DrawSkeletonMinScore = 0;//0.5;
+var DrawRects = false;
+var DrawSkeletonMinScore = 0.0;
+var IgnoreJointMaxScore = 0.5;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -173,11 +174,24 @@ if ( EnableKalmanFilter )
 	var KalmanFilters = {};
 }
 
-function UpdateKalmanFilter(Name,NewValue,TightNoise)
+
+function GetCurrentFilteredPosition(Name)
+{
+	if ( KalmanFilters[Name] === undefined )
+		throw "No existing kalman data for " + Name;
+	
+	let Filter = KalmanFilters[Name];
+	let CurrentValue = Filter.GetEstimatedPosition(0);
+	//Debug( Name + ": " + v + " -> " + NewValue );
+	return CurrentValue;
+}
+
+function UpdateKalmanFilter(Name,NewValue,TightNoise,MaxError)
 {
 	if ( !EnableKalmanFilter )
 		return NewValue;
 	
+	MaxError = MaxError || 9999;
 	TightNoise = TightNoise === true;
 	let Noise = TightNoise ? [0.10,0.99] : [0.20,0.20];
 	
@@ -187,8 +201,15 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise)
 	}
 	
 	let Filter = KalmanFilters[Name];
-	Filter.Push( NewValue );
+	let Error = Filter.Peek( NewValue );
+	
 	let v = NewValue;
+	
+	if ( Error < MaxError )
+		Error = Filter.Push( NewValue );
+	else
+		Debug( Name + " error=" + Error.toFixed(4) + "/" + MaxError.toFixed(4) );
+	
 	NewValue = Filter.GetEstimatedPosition(0);
 	//Debug( Name + ": " + v + " -> " + NewValue );
 	return NewValue;
@@ -689,17 +710,11 @@ var TFrame = function(OpenglContext)
 	{
 		let Width = this.GetWidth();
 		let Height = this.GetHeight();
-		let Normalise = function(px,py)
-		{
-			px /= Width;
-			py /= Height;
-			return { x:px, y:py };
-		}
 		
 		let EnumKeypoint = function(Keypoint)
 		{
 			//	gr: sending pos here is mutable!
-			EnumNamePosScore( Keypoint.part, Normalise(Keypoint.position.x,Keypoint.position.y), Keypoint.score );
+			EnumNamePosScore( Keypoint.part, Keypoint.position, Keypoint.score );
 		}
 		this.SkeletonPose.keypoints.forEach( EnumKeypoint );
 		
@@ -866,7 +881,37 @@ function OnFrameCompleted(Frame)
 	}
 	
 	//	apply kalman filter to reject bad keypoints
-	//Frame.EnumKeypoints
+	//	these keypoint positions are mutable, so we can just modify them
+	let UpdateKeypointPosition = function(Name,Position,Score)
+	{
+		let Namex = Name+"_x";
+		let Namey = Name+"_y";
+		if ( Score < IgnoreJointMaxScore )
+		{
+			//Position.x = 0;
+			//Position.y = 0;
+			try
+			{
+				Position.x = GetCurrentFilteredPosition(Namex);
+				Position.y = GetCurrentFilteredPosition(Namey);
+			}
+			catch(e)
+			{
+				//	no existing data
+			}
+			return;
+		}
+		
+		let TightNoise = false;
+		let MaxError = 0.9;
+		let x = Position.x;
+		let y = Position.y;
+		x = UpdateKalmanFilter( Namex, x, TightNoise, MaxError );
+		y = UpdateKalmanFilter( Namey, y, TightNoise, MaxError );
+		//Position.x = x;
+		//Position.y = y;
+	}
+	Frame.EnumKeypoints( UpdateKeypointPosition );
 	
 	
 	if ( LastFrame != null )
