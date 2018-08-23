@@ -152,10 +152,11 @@ function OpenglCommandQueue()
 		this.Commands.push( args );
 	}
 	
-	this.Flush = function(Context)
+	this.Flush = function(Context,Async)
 	{
 		let ExecuteQueue = function(Commands)
 		{
+			Debug("Flush::RunCommands::ExecuteQueue");
 			//Debug("Execute Queue x" + Commands.length );
 			let ExecuteCommand = function(Command)
 			{
@@ -183,9 +184,12 @@ function OpenglCommandQueue()
 		this.Commands = [];
 		let RunCommands = function()
 		{
+			Debug("Flush::RunCommands");
 			ExecuteQueue(Cmds);
 		}
-		let Prom = Context.Execute( RunCommands, true );
+		Debug("Flush::Context.Execute(Async="+Async+")");
+		let Prom = Context.Execute( RunCommands, !Async );
+		Debug("Flush::Context return promise(Async="+Async+")");
 		return Prom;
 	}
 }
@@ -486,22 +490,40 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	{
 		try
 		{
+			//	gr: losing arguments somewhere in the chain if we pass it along
 			if ( this.CommandQueue.IsCompiledMode )
+			{
 				this.RealReadPixels( arguments );
-			else	//	gr: losing arguments somewhere in the chain if we pass it along
+			}
+			else
+			{
+				//	gr: read twice to test cache usage
 				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+			}
 
 			//	don't need to return immediately
 			if ( output == null )
 				return;
 			
 			Sleep(0);
-			this.CommandQueue.Flush( this.GetOpenglContext() );
+			let Async = false;
+			this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		}
 		catch(e)
 		{
 			Debug("readpixels exception: " + e);
 		}
+	}
+	
+	
+	//	returns a promise
+	this.readPixelsAsync = function(x,y,w,h,format,type,output)
+	{
+		let Async = true;
+		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		let FlushPromise = this.CommandQueue.Flush( this.GetOpenglContext(), Async );
+		return FlushPromise;
 	}
 	
 	
