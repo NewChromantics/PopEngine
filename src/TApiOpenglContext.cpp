@@ -834,15 +834,24 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const 
 		}
 	}
 
-	glFinish();
-	Opengl::IsOkay("pre glFinish");
+	//glFinish();
+	//Opengl::IsOkay("pre glFinish");
 
 	Soy::TScopeTimerPrint Timer(__func__,10);
 	glTexImage2D( binding, level, internalformat, width, height, border, externalformat, externaltype, PixelData.GetArray() );
 	Opengl::IsOkay("glTexImage2D");
+	
 	//	see if the flush is slow!
-	glFinish();
-	Opengl::IsOkay("glFinish");
+	//glFinish();
+	//Opengl::IsOkay("glFinish");
+	
+	if ( BoundTexture )
+	{
+		BoundTexture->OnOpenglTextureChanged();
+	}
+	else
+		std::Debug << "Bound texture changed (" << width << "x" << height << ") but unknown bound" << std::endl;
+	
 	return v8::Undefined( Arguments.mIsolate );
 }
 
@@ -1264,7 +1273,16 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(cons
 		
 		//	webgl call: .drawElements(e.TRIANGLES, 6, e.UNSIGNED_SHORT, 0)
 		//GLAPI void APIENTRY glDrawElements (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
-		return Immediate_Func( "glDrawElements", glDrawElements, GlArguments, &Arguments.GetIsolate() );
+		auto Result = Immediate_Func( "glDrawElements", glDrawElements, GlArguments, &Arguments.GetIsolate() );
+		
+		auto& This = Arguments.GetThis<this_type>();
+		auto* LastFrameBufferTexture = This.GetBoundFrameBufferTexture();
+		if ( LastFrameBufferTexture )
+			LastFrameBufferTexture->OnOpenglTextureChanged();
+		else
+			std::Debug << "Warning, drew primitives, but unknown bound texture, so not updated version" << std::endl;
+		
+		return Result;
 	}
 	else
 	{
@@ -1295,6 +1313,15 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(cons
 		Opengl::IsOkay("glDrawArrays 0 1 2");
 		glDrawArrays( GL_TRIANGLES, 1, 3 );	//	1 2 3
 		Opengl::IsOkay("glDrawArrays 1 2 3");
+		
+		
+		auto* LastFrameBufferTexture = This.GetBoundFrameBufferTexture();
+		if ( LastFrameBufferTexture )
+			LastFrameBufferTexture->OnOpenglTextureChanged();
+		else
+			std::Debug << "Warning, drew primitives, but unknown bound texture, so not updated version" << std::endl;
+
+		
 		return v8::Undefined(&Arguments.GetIsolate());
 		/*
 		BufferArray<Local<Value>,3> GlArguments;
