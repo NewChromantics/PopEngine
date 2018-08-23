@@ -1709,7 +1709,7 @@
                 indices: e
             })
         }, e.fromPixels = function(e, t) {
-  Debug("frompixels 2");
+ // Debug("frompixels 2");
           if (void 0 === t && (t = 3), t > 4) throw new Error("Cannot construct Tensor with more than 4 channels from pixels.");
             return ENV.engine.fromPixels(e, t)
         }, e.toPixels = function(e, t) {
@@ -4248,6 +4248,17 @@
             }, e.prototype.data = function() {
                 return __awaiter(this, void 0, void 0, function() {
                     return __generator(this, function(e) {
+									   
+									   let This = this;
+									   let Runner = function(Resolve,Reject)
+									   {
+										let ReadData = ENV.engine.read(This.dataId);
+										Resolve( ReadData );
+									   };
+									   let Prom = new Promise(Runner);
+									   return [2, Prom];
+
+									   
                         return this.throwIfDisposed(), [2, ENV.engine.read(this.dataId)]
                     })
                 })
@@ -7069,10 +7080,45 @@
                     return __generator(this, function(l) {
                         switch (l.label) {
                             case 0:
-                                return this.pendingRead.has(e) ? (t = this.pendingRead.get(e), [2, new Promise(function(e) {
-                                    return t.push(e)
-                                })]) : (this.throwIfNoData(e), r = this.texData.get(e), n = r.texture, a = r.values, i = r.texShape, null != a ? (this.cacheOnCPU(e), [2, a]) : ENV.get("WEBGL_GET_BUFFER_SUB_DATA_ASYNC_EXTENSION_ENABLED") ? [4, this.gpgpu.downloadMatrixFromTextureAsync(n, i[0], i[1])] : [3, 2]);
-                            case 1:
+									   
+									   if ( this.pendingRead.has(e) )
+									   {
+									   Debug("doing pending read for e="+e);
+									    t = this.pendingRead.get(e);
+									   let Runner = function(Resolve,Reject)
+									   {
+									   //	gr: this returns length... why or what uses this?
+										return t.push(Resolve);
+									   }
+									   return [2, new Promise(Runner)];
+									   }
+									   else
+									   {
+										   Debug("No pending read for e="+e);
+										   this.throwIfNoData(e);
+										   r = this.texData.get(e);
+										   n = r.texture;
+										   a = r.values;
+										   i = r.texShape;
+										   if ( null != a )
+										   {
+									   return (this.cacheOnCPU(e), [2, a]);
+										   }
+										   else
+										   {
+											return ENV.get("WEBGL_GET_BUFFER_SUB_DATA_ASYNC_EXTENSION_ENABLED") ? [4, this.gpgpu.downloadMatrixFromTextureAsync(n, i[0], i[1])] : [3, 2];
+										   }
+									   }
+								 
+									   
+									   
+									   
+									   
+									   
+									   
+									   
+									   
+									   case 1:
                                 return o = l.sent(), this.cacheOnCPU(e, o), [2, r.values];
                             case 2:
                                 return 0 === ENV.get("WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION") ? [2, this.readSync(e)] : (this.pendingRead.set(e, []), [4, this.gpgpu.runQuery(function() {})]);
