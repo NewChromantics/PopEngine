@@ -156,7 +156,7 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			//Debug("Execute Queue x" + Commands.length );
+			Debug("Execute Queue x" + Commands.length + (Async?" (async)":"") );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
@@ -525,7 +525,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.readPixelsAsync = function(x,y,w,h,format,type,output,Texture)
 	{
 		Sleep(0);
-		return null;
+		//return null;
 		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 		/*

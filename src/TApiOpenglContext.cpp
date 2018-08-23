@@ -1068,36 +1068,56 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		auto ComponentSize = Opengl::GetPixelDataSize(type);
 		PixelBuffer.SetSize( TotalComponentCount * ComponentSize );
 	}
+	
+	
+	auto AsyncTextureHandle = Arguments.mParams[7];
+	TImageWrapper* AsyncTexture = nullptr;
+	if ( AsyncTextureHandle->IsObject() )
+		AsyncTexture = &v8::GetObject<TImageWrapper>(AsyncTextureHandle);
+	
 
 	//	reading an image from the frame buffer
 	bool DataRead = false;
 	
-	bool BigTexture = (width*height) > (4*4);
+	//bool BigTexture = (width*height) > (4*4);
+	bool BigTexture = true;
  
 	auto* LastFrameBufferTexture = This.GetBoundFrameBufferTexture();
-	if ( BigTexture && LastFrameBufferTexture )
+
+	if ( AsyncTexture && LastFrameBufferTexture )
+	{
+		if ( AsyncTexture != LastFrameBufferTexture )
+		{
+			std::Debug << "Async texture (" << AsyncTexture->GetMeta() << ") and LastFrameBufferTexture(" << LastFrameBufferTexture->GetMeta() << ") are different" << std::endl;
+		}
+		else
+			std::Debug << "Async texture and LastFrameBufferTexture are SAME" << std::endl;
+	}
+
+	
+	if ( !DataRead && BigTexture && LastFrameBufferTexture )
 	{
 		auto& Texture = *LastFrameBufferTexture;
 		auto ReadMeta = SoyPixelsMeta(width,height,PixelFormat);
 		std::Debug << "Known last texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << std::endl;
 		
-		if ( LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion == LastFrameBufferTexture->GetLatestVersion() )
+		if ( Texture.mOpenglLastPixelReadBufferVersion == Texture.GetLatestVersion() )
 		{
-			auto& LastBuffer = *LastFrameBufferTexture->mOpenglLastPixelReadBuffer;
+			auto& LastBuffer = *Texture.mOpenglLastPixelReadBuffer;
 			if ( LastBuffer.GetDataSize() == PixelBuffer.GetDataSize() )
 			{
-				std::Debug << "Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+				std::Debug << "(LASTKNOWN) Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
 				PixelBuffer.Copy( LastBuffer );
 				DataRead = true;
 			}
 			else
 			{
-				std::Debug << "Skipping cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) vs PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+				std::Debug << "(LASTKNOWN) Skipping cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) vs PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
 			}
 		}
 		else
 		{
-			std::Debug << "Last known texture pixel buffer (" << LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion << ") is out of date (" << LastFrameBufferTexture->GetLatestVersion() << ")" << std::endl;
+			std::Debug << "Last known texture pixel buffer (" << Texture.mOpenglLastPixelReadBufferVersion << ") is out of date (" << Texture.GetLatestVersion() << ")" << std::endl;
 		}
 		
 		/*
@@ -1109,7 +1129,35 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		*/
 	}
 	
-	
+	//	gr: we should never be reading this?
+	/*
+	if ( !DataRead && BigTexture && AsyncTexture )
+	{
+		auto& Texture = *AsyncTexture;
+		auto ReadMeta = SoyPixelsMeta(width,height,PixelFormat);
+		std::Debug << "Known last texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << std::endl;
+		
+		if ( Texture.mOpenglLastPixelReadBufferVersion == Texture.GetLatestVersion() )
+		{
+			auto& LastBuffer = *Texture.mOpenglLastPixelReadBuffer;
+			if ( LastBuffer.GetDataSize() == PixelBuffer.GetDataSize() )
+			{
+				std::Debug << "(ASYNC) Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+				PixelBuffer.Copy( LastBuffer );
+				DataRead = true;
+			}
+			else
+			{
+				std::Debug << "(ASYNC) Skipping cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) vs PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+			}
+		}
+		else
+		{
+			std::Debug << "ASYNC texture pixel buffer (" << LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion << ") is out of date (" << LastFrameBufferTexture->GetLatestVersion() << ")" << std::endl;
+		}
+
+	}
+	*/
 	
 	auto TimerWarningMs = 10;
 	//	always show timing if we're outputting to a buffer
@@ -1173,7 +1221,11 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		Opengl::IsOkay("glReadPixels");
 	}
 	
-	if ( LastFrameBufferTexture )
+	if ( AsyncTexture )
+	{
+		AsyncTexture->SetOpenglLastPixelReadBuffer(pPixelBuffer);
+	}
+	else if ( LastFrameBufferTexture )
 	{
 		LastFrameBufferTexture->SetOpenglLastPixelReadBuffer(pPixelBuffer);
 	}
@@ -1184,7 +1236,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	}
 	else if ( OutputHandle->IsFloat32Array() )
 	{
-		std::Debug << "Writing out Float32Array... from PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+		//std::Debug << "Writing out Float32Array... from PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
 		
 		//	gr: for our hacky readpixelsasync, we're passing the texture as the 7th arg
 		auto OffsetHandle = Arguments.mParams[7];

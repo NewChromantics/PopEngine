@@ -965,6 +965,7 @@ void TImageWrapper::ReadOpenglPixels()
 
 void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
 {
+	Soy::TScopeTimerPrint Timer(__func__,5);
 	if ( GetLatestVersion() != mOpenglTextureVersion )
 	{
 		std::stringstream Error;
