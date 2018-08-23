@@ -7057,17 +7057,19 @@
   {
 	try
 	{
-  Debug("GetPreReadTexturePromise");
+  //Debug("GetPreReadTexturePromise");
+  let ReadFloats = ENV.get("WEBGL_DOWNLOAD_FLOAT_ENABLED");
+  //Debug("ReadFloats="+ReadFloats);
   let TextureData = this.texData.get(e);
   let Texture = TextureData.texture;
   let x = 0;
   let y = 0;
-  let Width = TextureData.texShape[0];
-  let Height = TextureData.texShape[1];
-  let Format = "FORMAT";
-  let Type = TextureData.dtype;
-  let Output = [];
-  		return this.gpgpu.gl.readPixelsAsync( Texture, x, y, Width, Height, Format, Type, Output );
+  let Width = TextureData.texShape[1];
+  let Height = TextureData.texShape[0];
+  let Format = this.gpgpu.gl.RGBA;
+  let Type = ReadFloats ? this.gpgpu.gl.FLOAT : this.gpgpu.gl.UNSIGNED_BYTE;
+  let Output = ReadFloats ? new Float32Array(Width*Height*4) : new Uint8Array(Width*Height*4);
+  		return this.gpgpu.gl.readPixelsAsync( x, y, Width, Height, Format, Type, Output, Texture );
 	}
 	catch(e)
 	{
@@ -7108,30 +7110,35 @@
 									   Debug("e.prototype.read[0]");
 									   
 									   let This = this;
+									   
+									   let OnComplete = function(Resolve)
+									   {
+									    Debug("OnComplete");
+									    let ReadResult = This.readSync(e);
+									    let PendingReads = This.pendingRead.get(e);
+									    Debug("Doing subresolves x" + PendingReads.length);
+									    let DoResolves = function(subres)
+									    {
+									    subres(ReadResult);
+									    }
+									    PendingReads.forEach(DoResolves);
+									    Resolve(ReadResult);
+									   }//oncomplete
+									   
+									   
 									   let FakePendingReadRunner = function(Resolve)
 									   {
-										let OnComplete = function()
-										{
-									     Debug("OnComplete");
-									   let ReadResult = This.readSync(e);
-										 //Sleep(1000);
-										 let PendingReads = This.pendingRead.get(e);
-										 Debug("Doing subresolves x" + PendingReads.length);
-										 let DoResolves = function(subres)
-										 {
-											subres(ReadResult);
-										 }
-										 PendingReads.forEach(DoResolves);
-										 Resolve(ReadResult);
-									    }//oncomplete
-									    setTimeout( OnComplete, 40 );
+									   Debug("FakePendingReadRunner");
+									   setTimeout( Resolve, 1000 );
 									   }
 									   
-									   //let PreReadPromise = new Promise(FakePendingReadRunner);
-									   let PreReadPromise = This.GetPreReadTexturePromise(e);
+									   
+									   let PreReadPromise = new Promise(FakePendingReadRunner);
+									   //let PreReadPromise = This.GetPreReadTexturePromise(e);
 									   
 									   if ( PreReadPromise )
 									   {
+									   PreReadPromise.then( OnComplete );
 									   Debug("forcing pending read as we have a promise");
 									   if (!this.pendingRead.has(e))
 										this.pendingRead.set(e,[]);

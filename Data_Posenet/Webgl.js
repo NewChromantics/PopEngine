@@ -488,6 +488,8 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	this.readPixels = function(x,y,w,h,format,type,output)
 	{
+		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +")");
+		//Debug("readPixels(" + Array.from(arguments) + ")");
 		try
 		{
 			//	gr: losing arguments somewhere in the chain if we pass it along
@@ -497,6 +499,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 			}
 			else
 			{
+				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 			}
 
@@ -517,18 +520,22 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	//	returns a promise, which executes the command buffer
 	//	this will cache the pixels internally for the next proper (synchronous) read from posenet
-	this.readPixelsAsync = function(Texture,x,y,w,h,format,type,output)
+	this.readPixelsAsync = function(x,y,w,h,format,type,output,Texture)
 	{
+		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
+		//return null;
+		/*
 		Debug("readPixelsAsync( " + GetTypename(Texture) + ")");
 		Debug( Object.keys(Texture) );
 		
 		Debug("readPixelsAsync(" + Array.from(arguments) + ")");
-		/*
+		*/
 		let Async = true;
 		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		let FlushPromise = this.CommandQueue.Flush( this.GetOpenglContext(), Async );
+		if ( FlushPromise.constructor.name != 'Promise' )
+			throw "FlushPromise(" + (FlushPromise.constructor.name) +" not promise";
 		return FlushPromise;
-		 */
 	}
 	
 	
