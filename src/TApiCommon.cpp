@@ -562,6 +562,9 @@ void TImageWrapper::Free()
 	mOpenglTexture.reset();
 	mOpenglTextureVersion = 0;
 	
+	mOpenglLastPixelReadBuffer.reset();
+	mOpenglLastPixelReadBufferVersion = 0;
+	
 	//	clear pixel buffer
 	mPixelBuffer.reset();
 	mPixelBufferMeta = SoyPixelsMeta();
