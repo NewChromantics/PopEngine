@@ -7080,17 +7080,55 @@
                     return __generator(this, function(l) {
                         switch (l.label) {
                             case 0:
+									   Debug("e.prototype.read[0]");
+									   
+									   let This = this;
+									   let FakePendingReadRunner = function(Resolve)
+									   {
+										let OnComplete = function()
+										{
+									     Debug("OnComplete");
+										 //Sleep(1000);
+										 let PendingReads = This.pendingRead.get(e);
+										 Debug("Doing subresolves x" + PendingReads.length);
+										 let DoResolves = function(subres)
+										 {
+											subres("pixel output data?");
+										 }
+										 PendingReads.forEach(DoResolves);
+										 Resolve("fake resolve");
+									    }//oncomplete
+									    setTimeout( OnComplete, 1000 );
+									   }
+									   let FakePendingRead = new Promise(FakePendingReadRunner);
+									   //PreReadPromises.push(FakePendingRead);
+									   
+									   
+									   Debug("forcing pending read");
+									   if ( FakePendingRead )
+									   {
+									   if (!this.pendingRead.has(e))
+										this.pendingRead.set(e,[]);
+									   }
 									   
 									   if ( this.pendingRead.has(e) )
 									   {
-									   Debug("doing pending read for e="+e);
-									    t = this.pendingRead.get(e);
-									   let Runner = function(Resolve,Reject)
-									   {
-									   //	gr: this returns length... why or what uses this?
-										return t.push(Resolve);
-									   }
-									   return [2, new Promise(Runner)];
+											Debug("pending read for e=" + e + " exists, returning promise");
+											t = this.pendingRead.get(e);
+											//	gr: I think the idea here is that we add our command to the list of resolves
+											//	then we can carry onto the next step once the pending read is done
+											let Runner = function(Resolve,Reject)
+											{
+												Debug("Adding resolve to pending list");
+												//	gr: this returns length... why or what uses this?
+												let Result = t.push(Resolve);
+												return Result;
+											}
+									   
+									       let NextTaskPromise = new Promise(Runner);
+									   
+									   
+										   return [2, NextTaskPromise];
 									   }
 									   else
 									   {
@@ -7119,10 +7157,16 @@
 									   
 									   
 									   case 1:
-                                return o = l.sent(), this.cacheOnCPU(e, o), [2, r.values];
-                            case 2:
-                                return 0 === ENV.get("WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION") ? [2, this.readSync(e)] : (this.pendingRead.set(e, []), [4, this.gpgpu.runQuery(function() {})]);
-                            case 3:
+									   Debug("e.prototype.read[1]");
+									   return o = l.sent(), this.cacheOnCPU(e, o), [2, r.values];
+									   
+									   case 2:
+									   Debug("e.prototype.read[2]");
+									   return 0 === ENV.get("WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION") ? [2, this.readSync(e)] : (this.pendingRead.set(e, []), [4, this.gpgpu.runQuery(function() {})]);
+									   
+									   
+									   case 3:
+									   Debug("e.prototype.read[3]");
                                 return l.sent(), s = this.pendingRead.get(e), this.pendingRead.delete(e), u = this.readSync(e), s.forEach(function(e) {
                                     return e(u)
                                 }), this.pendingDisposal.has(e) && (this.pendingDisposal.delete(e), this.disposeData(e)), [2, u]

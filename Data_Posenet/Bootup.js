@@ -50,6 +50,7 @@ var LastFrame = null;	//	completed TFrame
 var EnableKalmanFilter = true;
 
 
+//var PreReadPromises = []
 
 
 //	gr: for some reason, without this... v8 has no jobs?
@@ -57,7 +58,7 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 2;
+var DlibThreadCount = 10;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 3;
