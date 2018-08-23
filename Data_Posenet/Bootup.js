@@ -1081,53 +1081,92 @@ function GetPoseDetectionPromise(Frame)
 			Reject(Error);
 		}
 		
-		//	gr: this TAKES rgba(x4) data, then puts it in x3 int32array I think!
-		//	gr: somewhere in
-		//		Debug("MathBackendWebGL.fromPixels");
-		//	a texture is stored
-		let Tensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
-		
+		//	gr: I've saved the experiment below, I think there's upload time and maybe RGBA->RGB conversion,
+		//		but tensorflow maybe reshaping a little (or splitting planes?)
+		//		and this only takes 0-1ms, so not a bottleneck anyway
+		let NewTensor = null;
+		//let StartTime = Date.now();
+		NewTensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
+		//let Duration = Date.now() - StartTime;
+		//Debug("New tensor took " + Duration + "ms" );
 		/*
-		//	gr: note size is backwards! rows then cols
-		let TensorSize = [ Frame.GetHeight(), Frame.GetWidth(), 3 ];
+		try
+		{
+			let e_prototype_fromPixels = function(e, t)
+			{
+				let FromPixelsProgram = function(e) {
+					this.variableNames = ["A"];
+					var t = e[0];
+					var r = e[1];
+					this.outputShape = e;
+					this.userCode = "\n      void main() {\n        ivec3 coords = getOutputCoords();\n        int texR = coords[0];\n        int texC = coords[1];\n        int depth = coords[2];\n        vec2 uv = (vec2(texC, texR) + halfCR) / vec2(" + r + ".0, " + t + ".0);\n\n        vec4 values = texture2D(A, uv);\n        float value;\n        if (depth == 0) {\n          value = values.r;\n        } else if (depth == 1) {\n          value = values.g;\n        } else if (depth == 2) {\n          value = values.b;\n        } else if (depth == 3) {\n          value = values.a;\n        }\n\n        setOutput(floor(value * 255.0 + 0.5));\n      }\n    "
+				};
 
-		//	gr: here tensor3d fails as it wants RGB data not RGBA (but fitting into int32?)
-		//tensor3d( data, size3, "int32");
-		let Bytes = new Int32Array(Frame.ImageData.data);
-		//let TensorData = {};
-		//	gr: Int32Array would be faster here no conversion!
-		//TensorData.values = new Int32Array( Frame.ImageData.data );
-		//let Tensor = TensorFlow.Tensor.make( TensorSize, TensorData, "int32");
-		//Debug("isTypedArray(BYtes)="+ TensorFlow.isTypedArray(Bytes) );
-		let Tensor = TensorFlow.tensor3d( Bytes, TensorSize, "int32");
-		*/
-		
-		//	gr: here, try and make a new TensorFlow.Tensor, referencing the opengl texture and use it directly without having to read back pixels earlier
-		/*
-		 if (null == e) throw new Error("MathBackendWebGL.writePixels(): pixels can not be null");
-		 var r = [e.height, e.width],
-		 n = [e.height, e.width, t];
-		 if (e instanceof HTMLVideoElement) {
-		 if (null == this.fromPixelsCanvas) {
-		 if (!ENV.get("IS_BROWSER")) throw new Error("Can't read pixels from HTMLImageElement outside the browser.");
-		 if ("complete" !== document.readyState) throw new Error("The DOM is not ready yet. Please call tf.fromPixels() once the DOM is ready. One way to do that is to add an event listener for `DOMContentLoaded` on the document object");
-		 this.fromPixelsCanvas = document.createElement("canvas")
-		 }
-		 this.fromPixelsCanvas.width = e.width, this.fromPixelsCanvas.height = e.height, this.fromPixelsCanvas.getContext("2d").drawImage(e, 0, 0, e.width, e.height), e = this.fromPixelsCanvas
-		 }
-		 var a = Tensor.make(r, {}, "int32");
-		 this.texData.get(a.dataId).usage = TextureUsage.PIXELS, this.gpgpu.uploadPixelDataToTexture(this.getTexture(a.dataId), e);
-		 var i = new FromPixelsProgram(n),
-		 o = this.compileAndRun(i, [a]);
-		 return a.dispose(), o
+				
+				var r = [e.height, e.width];
+				var n = [e.height, e.width, t];
+				
+				var a = TensorFlow.Tensor.make(r, {}, "int32");
+				let TextureUsage_PIXELS = 2;
+				//this.texData.get(a.dataId).usage = TensorFlow.TextureUsage.PIXELS;
+				Debug("Getting texture data for " + a.dataId );
+				this.texData.get(a.dataId).usage = TextureUsage_PIXELS;
+				Debug("Getting texture for " + a.dataId );
+				
+				let Texture = this.getTexture(a.dataId);
+				//let Texture = new Image(1,1);
+				this.texData.get(a.dataId).texture = Texture;
+				
+				this.gpgpu.uploadPixelDataToTexture( Texture, e );
+				var i = new FromPixelsProgram(n);
+				var o = this.compileAndRun(i, [a]);
+				a.dispose();
+				Debug(Object.keys(o));
+				return o;
+			};
+			
+			
+			//	gr: this TAKES rgba(x4) data, then puts it in x3 int32array I think!
+			//	gr: somewhere in
+			//		Debug("MathBackendWebGL.fromPixels");
+			//	a texture is stored
+			
+			let BackendName = TensorFlow.getBackend();
+			let Backend = TensorFlow.ENV.registry[BackendName].backend;
+			
+			Debug("Object.keys(TensorFlow)");
+			Debug(Object.keys(TensorFlow) );
+			Debug("Object.keys(TensorFlow.ENV)");
+			Debug(Object.keys(TensorFlow.ENV));
+			Debug("Object.keys(Backend)");
+			Debug(Object.keys(Backend));
+			//Debug("Object.keys(ENV)");
+			//Debug(Object.keys(ENV));
+			Debug("backend is: " + TensorFlow.getBackend());
+			//let Backend = TensorFlow.findBackend(TensorFlow.getBackend());
+			//Debug("backend is: " + Backend.constructor.name);
+			
+			//let NewTensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
+			NewTensor = e_prototype_fromPixels.call( Backend, Frame.ImageData, 3 );
+			//	make 2d tensor
+			//	get texture with id tensor.dataId
+			//	upload rgba to texture (as RGBA texture)
+			//	make (FromPixelsProgram [h,w,3] )
+			//	runs and returns 3d tensor
+			
+			//let Tensor = Frame.ImageData;
+		}
+		catch(e)
+		{
+			Reject(e);
+		}
 		 */
-		//let Tensor = Frame.ImageData;
 		
-		
-		let EstimatePromise = PoseNet.estimateSinglePose( Tensor, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
+		let EstimatePromise = PoseNet.estimateSinglePose( NewTensor, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
 		EstimatePromise.then( OnPose )
 		.catch( OnPoseError );
 	}
+
 	
 	return new Promise(Runner);
 }

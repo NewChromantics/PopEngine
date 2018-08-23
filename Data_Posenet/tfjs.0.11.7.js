@@ -7015,7 +7015,7 @@
                     usage: TextureUsage.RENDER
                 })
             }, e.prototype.fromPixels = function(e, t) {
-    Debug("MathBackendWebGL.fromPixels");
+    //Debug("MathBackendWebGL.fromPixels");
   if (null == e) throw new Error("MathBackendWebGL.writePixels(): pixels can not be null");
                 var r = [e.height, e.width],
                     n = [e.height, e.width, t];
