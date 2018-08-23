@@ -134,9 +134,22 @@
             var tensorData;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, tensor.data()];
+							   //	4 means continue
+                    case 0:
+							   Debug("toTensorBuffer[0]");
+							   let Runner = function(Resolve,Reject)
+							   {
+							   Debug("toTensorBuffer[0] runner");
+								let Data = tensor.data();
+							   //Resolve( [4,Data] );
+							   Resolve( Data );
+							   };
+							   let Prom = new Promise(Runner);
+							   return [4, Prom];
                     case 1:
+							   Debug("toTensorBuffer[1]");
                         tensorData = _a.sent();
+							  // Debug("step[1]:" +tensorData);
                         return [2, new tf.TensorBuffer(tensor.shape, type, tensorData)];
                 }
             });
