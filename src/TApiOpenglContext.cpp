@@ -1003,6 +1003,38 @@ size_t Opengl::GetPixelDataSize(GLint DataType)
 	throw Error;
 }
 
+
+TImageWrapper* TOpenglImmediateContextWrapper::GetBoundFrameBufferTexture()
+{
+	//	texture we THINK is bound
+	if ( !mLastFrameBufferTexture )
+		return nullptr;
+
+	try
+	{
+		//	check the current texture attached to the frame buffer is this texture
+		GLint BoundTextureName = 0;
+		glGetFramebufferAttachmentParameteriv( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &BoundTextureName );
+		Opengl::IsOkay("glGetFramebufferAttachmentParameteriv( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &BoundTextureName )");
+	
+		auto& Texture = mLastFrameBufferTexture->GetTexture();
+		auto LastFrameBufferTextureName = Texture.mTexture.mName;
+		if ( LastFrameBufferTextureName != BoundTextureName )
+		{
+			std::stringstream Error;
+			Error << "Bound texture is " << BoundTextureName << ", last bound is " << LastFrameBufferTextureName << " so fast read skipped";
+			throw Soy::AssertException(Error.str());
+		}
+		return mLastFrameBufferTexture;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Exception getting BoundFrameBufferTexture: " << e.what();
+		return nullptr;
+	}
+}
+
+
 v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const v8::CallbackInfo& Arguments)
 {
 	/*
@@ -1023,7 +1055,8 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	auto& This = Arguments.GetThis<TOpenglImmediateContextWrapper>();
 	
 	//	we need to alloc a buffer to read into, then push it back to the output
-	Array<uint8_t> PixelBuffer;
+	std::shared_ptr<Array<uint8_t>> pPixelBuffer( new Array<uint8_t>() );
+	auto& PixelBuffer = *pPixelBuffer;
 	auto PixelFormat = Opengl::GetDownloadPixelFormat(format);
 	auto ChannelCount = SoyPixelsFormat::GetChannelCount( PixelFormat );
 	auto TotalComponentCount = ChannelCount * width * height;
@@ -1037,33 +1070,36 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	}
 
 	//	reading an image from the frame buffer
-	bool DirectRead = true;
-	/*
+	bool DataRead = false;
+	
 	bool BigTexture = (width*height) > (4*4);
  
-	if ( BigTexture && This.mLastFrameBufferTexture )
+	auto* LastFrameBufferTexture = This.GetBoundFrameBufferTexture();
+	if ( BigTexture && LastFrameBufferTexture )
 	{
-		//	check the current texture attached to the frame buffer is this texture
-		GLint BoundTextureName = 0;
-		glGetFramebufferAttachmentParameteriv( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &BoundTextureName );
-		Opengl::IsOkay("glGetFramebufferAttachmentParameteriv( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &BoundTextureName )");
-
-		auto& Texture = This.mLastFrameBufferTexture->GetTexture();
-		auto LastFrameBufferTextureName = Texture.mTexture.mName;
-		if ( LastFrameBufferTextureName == BoundTextureName )
+		auto& Texture = *LastFrameBufferTexture;
+		std::Debug << "Known last texture: " << Texture.GetMeta() << std::endl;
+		
+		if ( LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion == LastFrameBufferTexture->GetLatestVersion() )
 		{
-			SoyPixels Pixels;
-			SoyPixelsFormat::Type ForceFormat = SoyPixelsFormat::Invalid;
-			bool Flip = false;
-			Texture.Read( Pixels, ForceFormat, Flip );
-			DirectRead = false;
+			std::Debug << "Using cached pixel buffer in readpixels" << std::endl;
+			PixelBuffer.Copy( *LastFrameBufferTexture->mOpenglLastPixelReadBuffer );
+			DataRead = true;
 		}
 		else
 		{
-			std::Debug << "Bound texture is " << BoundTextureName << ", last bound is " << LastFrameBufferTextureName << " so fast read skipped" << std::endl;
+			std::Debug << "Last known texture pixel buffer (" << LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion << ") is out of date (" << LastFrameBufferTexture->GetLatestVersion() << ")" << std::endl;
 		}
+		
+		/*
+		SoyPixels Pixels;
+		SoyPixelsFormat::Type ForceFormat = SoyPixelsFormat::Invalid;
+		bool Flip = false;
+		Texture.Read( Pixels, ForceFormat, Flip );
+		DirectRead = false;
+		*/
 	}
-	*/
+	
 	
 	
 	auto TimerWarningMs = 10;
@@ -1071,7 +1107,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	if (!PixelBuffer.IsEmpty())
 		TimerWarningMs = 0;
 	
-	static bool PreFlush = true;
+	static bool PreFlush = false;
 	if ( PreFlush && !PixelBuffer.IsEmpty() )
 	{
 		Soy::TScopeTimerPrint Timer("ReadPixels pre flush", 10 );
@@ -1081,7 +1117,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 
 	
 	static bool UsePbo = true;
-	if ( UsePbo && !PixelBuffer.IsEmpty() )
+	if ( !DataRead && UsePbo && !PixelBuffer.IsEmpty() )
 	{
 		try
 		{
@@ -1110,7 +1146,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 				PixelBuffer.Copy(PboArray);
 			}
 			Pbo.UnlockBuffer();
-			DirectRead = false;
+			DataRead = true;
 		}
 		catch(std::exception& e)
 		{
@@ -1119,13 +1155,18 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	}
 
 	
-	if ( DirectRead )
+	if ( !DataRead )
 	{
 		std::stringstream TimerName;
 		TimerName << "glReadPixels( " << x << "," << y << "," << width << "x" << height << ")";
 		Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), TimerWarningMs );
 		glReadPixels( x, y, width, height, format, type, PixelBuffer.GetArray() );
 		Opengl::IsOkay("glReadPixels");
+	}
+	
+	if ( LastFrameBufferTexture )
+	{
+		LastFrameBufferTexture->SetOpenglLastPixelReadBuffer(pPixelBuffer);
 	}
 	
 	//	push data into output

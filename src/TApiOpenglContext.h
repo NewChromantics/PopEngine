@@ -82,6 +82,7 @@ public:
 	virtual std::shared_ptr<Opengl::TContext>		GetOpenglContext() override {	return mContext;	}
 	
 	TImageWrapper*							GetBoundTexture(GLenum Binding);
+	TImageWrapper*							GetBoundFrameBufferTexture();
 	
 public:
 	std::shared_ptr<Opengl::TContext>&		mContext = mObject;

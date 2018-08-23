@@ -35,6 +35,7 @@ public:
 		mPixelsVersion			( 0 ),
 		mOpenglTextureVersion	( 0 ),
 		mPixelBufferVersion		( 0 ),
+		mOpenglLastPixelReadBufferVersion	( 0 ),
 		mPixels					( mObject )
 	{
 	}
@@ -75,7 +76,10 @@ public:
 	void									SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels);
 	SoyPixelsMeta							GetMeta();
 	void									GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback);	//	lock & unlock pixels for processing
-
+	
+	void									SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer);
+	
+	
 protected:
 	void								Free();
 	
@@ -90,6 +94,12 @@ protected:
 	size_t								mOpenglTextureVersion;	//	pixels changed
 	std::shared_ptr<SoyPixels>			mOpenglClientStorage;	//	gr: apple specific client storage for texture. currently kept away from normal pixels for safety, but merge later
 
+public:
+	//	temporary caching system for immediate mode glReadPixels
+	std::shared_ptr<Array<uint8_t>>		mOpenglLastPixelReadBuffer;
+	size_t								mOpenglLastPixelReadBufferVersion;
+
+protected:
 	//	abstracted pixel buffer from media
 	std::shared_ptr<TPixelBuffer>		mPixelBuffer;
 	size_t								mPixelBufferVersion;

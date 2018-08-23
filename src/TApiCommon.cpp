@@ -960,3 +960,18 @@ void TImageWrapper::ReadOpenglPixels()
 	mPixelsVersion = mOpenglTextureVersion;
 }
 
+void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
+{
+	if ( GetLatestVersion() != mOpenglTextureVersion )
+	{
+		std::stringstream Error;
+		Error << __func__ << " expected opengl (" << mOpenglTextureVersion << ") to be latest version (" << GetLatestVersion() << ")";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	mOpenglLastPixelReadBuffer = PixelBuffer;
+	mOpenglLastPixelReadBufferVersion = mOpenglTextureVersion;
+}
+
