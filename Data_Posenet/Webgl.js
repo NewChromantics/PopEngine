@@ -156,7 +156,6 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			Debug("Flush::RunCommands::ExecuteQueue");
 			//Debug("Execute Queue x" + Commands.length );
 			let ExecuteCommand = function(Command)
 			{
@@ -184,12 +183,12 @@ function OpenglCommandQueue()
 		this.Commands = [];
 		let RunCommands = function()
 		{
-			Debug("Flush::RunCommands");
+			//Debug("Flush::RunCommands");
 			ExecuteQueue(Cmds);
 		}
-		Debug("Flush::Context.Execute(Async="+Async+")");
+		//Debug("Flush::Context.Execute(Async="+Async+")");
 		let Prom = Context.Execute( RunCommands, !Async );
-		Debug("Flush::Context return promise(Async="+Async+")");
+		//Debug("Flush::Context return promise(Async="+Async+")");
 		return Prom;
 	}
 }
@@ -488,6 +487,10 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	this.readPixels = function(x,y,w,h,format,type,output)
 	{
+		//	gr: getting a deadlock from media new frame(?!)
+		//	this steals the opengl thread, so we need to unlock breifly
+		Sleep(0);
+		
 		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//Debug("readPixels(" + Array.from(arguments) + ")");
 		try
@@ -499,7 +502,6 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 			}
 			else
 			{
-				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 			}
 
@@ -522,6 +524,8 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	//	this will cache the pixels internally for the next proper (synchronous) read from posenet
 	this.readPixelsAsync = function(x,y,w,h,format,type,output,Texture)
 	{
+		Sleep(0);
+		return null;
 		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 		/*

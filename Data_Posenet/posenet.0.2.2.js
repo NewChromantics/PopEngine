@@ -137,10 +137,10 @@
 							   //	4 means continue
                     case 0:
 							   
-							   Debug("toTensorBuffer[0]");
+							   //Debug("toTensorBuffer[0]");
 							   let Runner = function(Resolve,Reject)
 							   {
-							   Debug("toTensorBuffer[0] runner");
+							  // Debug("toTensorBuffer[0] runner");
 								let Data = tensor.data();
 							   //Resolve( [4,Data] );
 							   Resolve( Data );
@@ -148,7 +148,7 @@
 							   let Prom = new Promise(Runner);
 							   return [4, Prom];
                     case 1:
-							   Debug("toTensorBuffer[1]");
+							  // Debug("toTensorBuffer[1]");
                         tensorData = _a.sent();
 							  // Debug("step[1]:" +tensorData);
                         return [2, new tf.TensorBuffer(tensor.shape, type, tensorData)];
@@ -772,7 +772,7 @@
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-							   Debug("decodeSinglePose 0");
+							  // Debug("decodeSinglePose 0");
                         totalScore = 0.0;
                         heatmapValues = argmax2d(heatmapScores);
                         return [4, Promise.all([
@@ -780,12 +780,12 @@
                                 toTensorBuffer(heatmapValues, 'int32')
                             ])];
                     case 1:
-							   Debug("decodeSinglePose 1");
+							   //Debug("decodeSinglePose 1");
                         _a = _b.sent(), scoresBuffer = _a[0], offsetsBuffer = _a[1], heatmapValuesBuffer = _a[2];
                         offsetPoints = getOffsetPoints(heatmapValuesBuffer, outputStride, offsetsBuffer);
                         return [4, toTensorBuffer(offsetPoints)];
                     case 2:
-							   Debug("decodeSinglePose 2");
+							   //Debug("decodeSinglePose 2");
 							offsetPointsBuffer = _b.sent();
                         keypointConfidence = Array.from(getPointsConfidence(scoresBuffer, heatmapValuesBuffer));
                         keypoints = keypointConfidence.map(function (score, keypointId) {
@@ -866,20 +866,20 @@
                                 [input.height, input.width], height = _a[0], width = _a[1];
                             resizedHeight = getValidResolution(imageScaleFactor, height, outputStride);
                             resizedWidth = getValidResolution(imageScaleFactor, width, outputStride);
-								   Debug("Hello");
+								//   Debug("Hello");
                             _b = tf.tidy(function () {
                                 var inputTensor = toInputTensor(input, resizedHeight, resizedWidth, flipHorizontal);
 										 
-										   Debug("predictForSinglePose");
+										//   Debug("predictForSinglePose");
 										 return _this.predictForSinglePose(inputTensor, outputStride);
                             }), heatmapScores = _b.heatmapScores, offsets = _b.offsets;
-								   Debug("decodeSinglePose");
+								  // Debug("decodeSinglePose");
 
                             return [4, decodeSinglePose(heatmapScores, offsets, outputStride)];
                         case 1:
-								   Debug("phase2 _c.sent()");
+								//   Debug("phase2 _c.sent()");
                             pose = _c.sent();
-								    Debug("phase2 done");
+								//    Debug("phase2 done");
                             heatmapScores.dispose();
                             offsets.dispose();
                             scaleY = height / resizedHeight;

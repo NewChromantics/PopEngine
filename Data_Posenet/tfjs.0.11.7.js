@@ -7113,10 +7113,11 @@
 									   
 									   let OnComplete = function(Resolve)
 									   {
-									    Debug("OnComplete");
+									    //Debug("OnComplete");
 									    let ReadResult = This.readSync(e);
+									   //Debug("This.readSync result=" + ReadResult);
 									    let PendingReads = This.pendingRead.get(e);
-									    Debug("Doing subresolves x" + PendingReads.length);
+									    //Debug("Doing subresolves x" + PendingReads.length);
 									    let DoResolves = function(subres)
 									    {
 									    subres(ReadResult);
@@ -7133,26 +7134,26 @@
 									   }
 									   
 									   
-									   let PreReadPromise = new Promise(FakePendingReadRunner);
-									   //let PreReadPromise = This.GetPreReadTexturePromise(e);
+									   //let PreReadPromise = new Promise(FakePendingReadRunner);
+									   let PreReadPromise = This.GetPreReadTexturePromise(e);
 									   
 									   if ( PreReadPromise )
 									   {
 									   PreReadPromise.then( OnComplete );
-									   Debug("forcing pending read as we have a promise");
+									   //Debug("forcing pending read as we have a promise");
 									   if (!this.pendingRead.has(e))
 										this.pendingRead.set(e,[]);
 									   }
 									   
 									   if ( this.pendingRead.has(e) )
 									   {
-											Debug("pending read for e=" + e + " exists, returning promise");
+											//Debug("pending read for e=" + e + " exists, returning promise");
 											t = this.pendingRead.get(e);
 											//	gr: I think the idea here is that we add our command to the list of resolves
 											//	then we can carry onto the next step once the pending read is done
 											let Runner = function(Resolve,Reject)
 											{
-												Debug("Adding resolve to pending list");
+												//Debug("Adding resolve to pending list");
 												//	gr: this returns length... why or what uses this?
 												let Result = t.push(Resolve);
 												return Result;
@@ -7165,7 +7166,7 @@
 									   }
 									   else
 									   {
-										   Debug("No pending read for e="+e);
+										   //Debug("No pending read for e="+e);
 										   this.throwIfNoData(e);
 										   r = this.texData.get(e);
 										   n = r.texture;
@@ -7190,16 +7191,16 @@
 									   
 									   
 									   case 1:
-									   Debug("e.prototype.read[1]");
+									  // Debug("e.prototype.read[1]");
 									   return o = l.sent(), this.cacheOnCPU(e, o), [2, r.values];
 									   
 									   case 2:
-									   Debug("e.prototype.read[2]");
+									   //Debug("e.prototype.read[2]");
 									   return 0 === ENV.get("WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION") ? [2, this.readSync(e)] : (this.pendingRead.set(e, []), [4, this.gpgpu.runQuery(function() {})]);
 									   
 									   
 									   case 3:
-									   Debug("e.prototype.read[3]");
+									  // Debug("e.prototype.read[3]");
                                 return l.sent(), s = this.pendingRead.get(e), this.pendingRead.delete(e), u = this.readSync(e), s.forEach(function(e) {
                                     return e(u)
                                 }), this.pendingDisposal.has(e) && (this.pendingDisposal.delete(e), this.disposeData(e)), [2, u]

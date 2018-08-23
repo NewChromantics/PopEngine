@@ -1,3 +1,4 @@
+
 //	gr: include is not a generic thing (or a wrapper yet) so we can change
 //	LoadFileAsString to a file-handle to detect file changes to auto reload things
 function include(Filename)
@@ -1322,10 +1323,13 @@ function OnNewVideoFrame(FrameImage)
 {
 	if ( !IsIdle() )
 	{
+		Debug("Clearing skipped frame");
 		FrameImage.Clear();
 		//Debug("Skipped webcam image");
 		return;
 	}
+
+	//Debug("Setting up new frame");
 
 	//	make a new frame
 	let OpenglContext = window.OpenglContext;
@@ -1334,12 +1338,16 @@ function OnNewVideoFrame(FrameImage)
 	
 	Frame.Image = FrameImage;
 
+	//	gr: we can't do opengl stuff here as this
 	SetupForPoseDetection( Frame )
 	.then( function()			{	return GetPoseDetectionPromise(Frame);	}	)
 	.then( SetupForFaceDetection )
 	.then( function()			{	return GetFaceDetectionPromise(Frame);		}	)
 	.then( function(NewFace)	{	return GetHandleNewFaceLandmarksPromise(Frame,NewFace);		}	)
 	.catch( function(Error)		{	OnFrameError(Frame,Error);	}	);
+
+	//Debug("Done setting up new frame");
+
 }
 
 

@@ -130,12 +130,10 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 	
 	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
 	{
-		std::Debug << __func__ << " on completed" << std::endl;
 		//	gr: can't do this unless we're in the javascript thread...
 		auto ResolverLocal = ResolverPersistent->GetLocal( *Isolate );
 		auto Message = String::NewFromUtf8( Isolate, "Yay!");
 		ResolverLocal->Resolve( Message );
-		std::Debug << __func__ << " on completed - resolved" << std::endl;
 	};
 	
 	auto OpenglRender = [Isolate,ResolverPersistent,Container,OnCompleted,ExecuteRenderCallback]
