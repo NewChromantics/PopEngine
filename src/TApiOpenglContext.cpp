@@ -130,10 +130,12 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 	
 	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
 	{
+		std::Debug << __func__ << " on completed" << std::endl;
 		//	gr: can't do this unless we're in the javascript thread...
 		auto ResolverLocal = ResolverPersistent->GetLocal( *Isolate );
 		auto Message = String::NewFromUtf8( Isolate, "Yay!");
 		ResolverLocal->Resolve( Message );
+		std::Debug << __func__ << " on completed - resolved" << std::endl;
 	};
 	
 	auto OpenglRender = [Isolate,ResolverPersistent,Container,OnCompleted,ExecuteRenderCallback]
@@ -1078,13 +1080,22 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	if ( BigTexture && LastFrameBufferTexture )
 	{
 		auto& Texture = *LastFrameBufferTexture;
-		std::Debug << "Known last texture: " << Texture.GetMeta() << std::endl;
+		auto ReadMeta = SoyPixelsMeta(width,height,PixelFormat);
+		std::Debug << "Known last texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << std::endl;
 		
 		if ( LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion == LastFrameBufferTexture->GetLatestVersion() )
 		{
-			std::Debug << "Using cached pixel buffer in readpixels" << std::endl;
-			PixelBuffer.Copy( *LastFrameBufferTexture->mOpenglLastPixelReadBuffer );
-			DataRead = true;
+			auto& LastBuffer = *LastFrameBufferTexture->mOpenglLastPixelReadBuffer;
+			if ( LastBuffer.GetDataSize() == PixelBuffer.GetDataSize() )
+			{
+				std::Debug << "Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+				PixelBuffer.Copy( LastBuffer );
+				DataRead = true;
+			}
+			else
+			{
+				std::Debug << "Skipping cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) vs PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+			}
 		}
 		else
 		{
@@ -1175,8 +1186,11 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	}
 	else if ( OutputHandle->IsFloat32Array() )
 	{
+		std::Debug << "Writing out Float32Array... from PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+		
+		//	gr: for our hacky readpixelsasync, we're passing the texture as the 7th arg
 		auto OffsetHandle = Arguments.mParams[7];
-		if ( !OffsetHandle->IsUndefined() )
+		if ( !OffsetHandle->IsUndefined() && !OffsetHandle->IsObject() )
 		{
 			throw Soy::AssertException("Need to handle offset of readpixels output");
 		}
