@@ -905,6 +905,7 @@ void TImageWrapper::OnOpenglTextureChanged()
 	//	is now latest version
 	auto LatestVersion = GetLatestVersion();
 	mOpenglTextureVersion = LatestVersion+1;
+	mOpenglTexture->RefreshMeta();
 }
 
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
