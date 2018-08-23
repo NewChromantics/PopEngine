@@ -58,7 +58,7 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 10;
+var DlibThreadCount = 4;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 3;

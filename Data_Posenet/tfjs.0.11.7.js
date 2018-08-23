@@ -7088,17 +7088,18 @@
 										let OnComplete = function()
 										{
 									     Debug("OnComplete");
+									   let ReadResult = This.readSync(e);
 										 //Sleep(1000);
 										 let PendingReads = This.pendingRead.get(e);
 										 Debug("Doing subresolves x" + PendingReads.length);
 										 let DoResolves = function(subres)
 										 {
-											subres("pixel output data?");
+											subres(ReadResult);
 										 }
 										 PendingReads.forEach(DoResolves);
-										 Resolve("fake resolve");
+										 Resolve(ReadResult);
 									    }//oncomplete
-									    setTimeout( OnComplete, 1000 );
+									    setTimeout( OnComplete, 200 );
 									   }
 									   let FakePendingRead = new Promise(FakePendingReadRunner);
 									   //PreReadPromises.push(FakePendingRead);
