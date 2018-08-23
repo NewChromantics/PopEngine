@@ -7051,7 +7051,32 @@
                     a = r.texShape,
                     i = r.usage;
                 null != n && (this.releaseTexture(e, n, a, i), r.texture = null, r.texShape = null), r.usage = TextureUsage.UPLOAD, r.values = t, this.delayedStorage || this.uploadToGPU(e)
-            }, e.prototype.readSync = function(e) {
+            },
+  
+  e.prototype.GetPreReadTexturePromise = function(e)
+  {
+	try
+	{
+  Debug("GetPreReadTexturePromise");
+  let TextureData = this.texData.get(e);
+  let Texture = TextureData.texture;
+  let x = 0;
+  let y = 0;
+  let Width = TextureData.texShape[0];
+  let Height = TextureData.texShape[1];
+  let Format = "FORMAT";
+  let Type = TextureData.dtype;
+  let Output = [];
+  		return this.gpgpu.gl.readPixelsAsync( Texture, x, y, Width, Height, Format, Type, Output );
+	}
+	catch(e)
+	{
+ 		Debug("No this.gpgpu.readPixelsAsync: " + e);
+		return null;
+	}
+  },
+  
+  e.prototype.readSync = function(e) {
                 this.throwIfNoData(e);
                 var t = this.texData.get(e),
                     r = t.shape,
@@ -7099,15 +7124,15 @@
 										 PendingReads.forEach(DoResolves);
 										 Resolve(ReadResult);
 									    }//oncomplete
-									    setTimeout( OnComplete, 200 );
+									    setTimeout( OnComplete, 40 );
 									   }
-									   let FakePendingRead = new Promise(FakePendingReadRunner);
-									   //PreReadPromises.push(FakePendingRead);
 									   
+									   //let PreReadPromise = new Promise(FakePendingReadRunner);
+									   let PreReadPromise = This.GetPreReadTexturePromise(e);
 									   
-									   Debug("forcing pending read");
-									   if ( FakePendingRead )
+									   if ( PreReadPromise )
 									   {
+									   Debug("forcing pending read as we have a promise");
 									   if (!this.pendingRead.has(e))
 										this.pendingRead.set(e,[]);
 									   }
