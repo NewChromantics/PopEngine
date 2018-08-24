@@ -13,7 +13,6 @@ const char SetViewport_FunctionName[] = "SetViewport";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
-const char Execute_FunctionName[] = "Execute";
 
 
 
@@ -438,106 +437,6 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TWindowWrapper::Execute(const v8::CallbackInfo& Params)
-{
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
-	auto* Isolate = Params.mIsolate;
-	
-	auto Window = Arguments.This();
-	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
-	
-	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
-
-	bool StealThread = false;
-	if ( Arguments[1]->IsBoolean() )
-		StealThread = v8::SafeCast<Boolean>(Arguments[1])->BooleanValue();
-	else if ( !Arguments[1]->IsUndefined() )
-		throw Soy::AssertException("2nd argument(StealThread) must be bool or undefined (default to false).");
-
-	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
-	auto* Container = &Params.mContainer;
-	
-	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
-	{
-		Soy::TScopeTimerPrint Timer("Opengl.Execute callback",30);
-		auto* Isolate = Container->mIsolate;
-		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
-		auto WindowLocal = WindowPersistent->GetLocal(*Isolate);
-		CallbackParams.PushBack( WindowLocal );
-		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
-		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
-		auto FunctionThis = Context->Global();
-		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
-	};
-	
-	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
-	{
-		//	gr: can't do this unless we're in the javascript thread...
-		auto ResolverLocal = ResolverPersistent->GetLocal( *Isolate );
-		auto Message = String::NewFromUtf8( Isolate, "Yay!");
-		ResolverLocal->Resolve( Message );
-	};
-	
-	auto OpenglRender = [Isolate,ResolverPersistent,Container,OnCompleted,ExecuteRenderCallback]
-	{
-		try
-		{
-			//	immediately call the javascript callback
-			Container->RunScoped( ExecuteRenderCallback );
-			
-			//	queue the completion, doesn't need to be done instantly
-			Container->QueueScoped( OnCompleted );
-		}
-		catch(std::exception& e)
-		{
-			//	queue the error callback
-			std::string ExceptionString(e.what());
-			auto OnError = [=](Local<Context> Context)
-			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				//	gr: does this need to be an exception? string?
-				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
-				//ResolverLocal->Reject( Exception );
-				ResolverLocal->Reject( Error );
-			};
-			Container->QueueScoped( OnError );
-		}
-	};
-	auto& OpenglContext = *This.mWindow->GetContext();
-	
-	if ( StealThread )
-	{
-		OpenglContext.Lock();
-		
-		try
-		{
-			//	immediately call the javascript callback
-			Container->RunScoped( ExecuteRenderCallback );
-			OpenglContext.Unlock();
-		}
-		catch(...)
-		{
-			OpenglContext.Unlock();
-			throw;
-		}
-		return v8::Undefined(Params.mIsolate);
-	}
-	else
-	{
-		OpenglContext.PushJob( OpenglRender );
-	
-		//	return the promise
-		auto Promise = Resolver->GetPromise();
-		return Promise;
-	}
-}
-
-
-
 
 Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 {
@@ -566,7 +465,6 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
 	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
 	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
-	Container.BindFunction<Execute_FunctionName>( InstanceTemplate, Execute );
 	
 	
 	return ConstructorFunc;

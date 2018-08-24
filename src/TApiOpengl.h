@@ -72,9 +72,6 @@ public:
 	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
 
-	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);
-
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
 public:
