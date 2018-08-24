@@ -114,7 +114,9 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* Container = &Params.mContainer;
-	
+	auto OpenglContext = This.GetOpenglContext();
+
+
 	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
 	{
 		Soy::TScopeTimerPrint Timer("Opengl.Execute callback",30);
@@ -126,6 +128,21 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
 		auto FunctionThis = Context->Global();
 		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
+	};
+	
+	auto ExecuteRenderCallbackWithLock = [=](Local<v8::Context> Context)
+	{
+		OpenglContext->Lock();
+		try
+		{
+			ExecuteRenderCallback(Context);
+			OpenglContext->Unlock();
+		}
+		catch(...)
+		{
+			OpenglContext->Unlock();
+			throw;
+		}
 	};
 	
 	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
@@ -162,28 +179,21 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 			Container->QueueScoped( OnError );
 		}
 	};
-	auto& OpenglContext = *This.GetOpenglContext();
+	//auto& OpenglContext = *This.GetOpenglContext();
 	
 	if ( StealThread )
 	{
-		OpenglContext.Lock();
-		
-		try
-		{
-			//	immediately call the javascript callback
-			Container->RunScoped( ExecuteRenderCallback );
-			OpenglContext.Unlock();
-		}
-		catch(...)
-		{
-			OpenglContext.Unlock();
-			throw;
-		}
+		std::Debug << "Running gl execute on thread..." << std::endl;
+		//	gr: we want to lock after we've gone into javascript, otherwise we get deadlocks
+		//	immediately call the javascript callback
+		Container->RunScoped( ExecuteRenderCallbackWithLock );
+		std::Debug << "Running gl execute on thread... done" << std::endl;
 		return v8::Undefined(Params.mIsolate);
 	}
 	else
 	{
-		OpenglContext.PushJob( OpenglRender );
+		std::Debug << "Queued gl execute..." << std::endl;
+		OpenglContext->PushJob( OpenglRender );
 	
 		//	return the promise
 		auto Promise = Resolver->GetPromise();
