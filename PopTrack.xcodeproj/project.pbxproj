@@ -48,11 +48,6 @@
 		BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */; };
 		BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */; };
 		BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
-		BF8EEA6C20E688CA00D8D5C8 /* libv8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF220D6E89E000BC812 /* libv8.dylib */; };
-		BF8EEA6D20E689E200D8D5C8 /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF620D6E8D3000BC812 /* libv8_base.a */; };
-		BF8EEA6E20E689E400D8D5C8 /* libv8_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */; };
-		BF8EEA6F20E689EA00D8D5C8 /* libv8_libplatform.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */; };
-		BF8EEA7020E689ED00D8D5C8 /* libv8_libbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AF820D6E8D6000BC812 /* libv8_libbase.a */; };
 		BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF97592520E9611A0093B296 /* TApiOpencl.cpp */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
@@ -66,7 +61,6 @@
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
-		BFEB0A6E211A45CA00FDAA93 /* libv8.dylib in Resources */ = {isa = PBXBuildFile; fileRef = BFEB0A6D211A45CA00FDAA93 /* libv8.dylib */; };
 		EB0EA5632110AAF9008D6DAA /* Data_dlib in Resources */ = {isa = PBXBuildFile; fileRef = EB0EA5622110AAF9008D6DAA /* Data_dlib */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
@@ -78,6 +72,8 @@
 		EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA66211333020014E998 /* SoySocket.cpp */; };
 		EBC8FA6B2113501F0014E998 /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA692113501F0014E998 /* SoyWebSocket.cpp */; };
 		EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */; };
+		EBF68C2D2130716E00FCB582 /* libv8_libbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF68C292130711B00FCB582 /* libv8_libbase.a */; };
+		EBF68C2E2130717000FCB582 /* libv8_libplatform.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF68C2A2130711B00FCB582 /* libv8_libplatform.a */; };
 		FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
 		FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
@@ -152,8 +148,6 @@
 		BF689AE820D6DEB3000BC812 /* PopMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopMain.cpp; path = src/PopMain.cpp; sourceTree = "<group>"; };
 		BF689AE920D6DEB4000BC812 /* PopMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopMain.h; path = src/PopMain.h; sourceTree = "<group>"; };
 		BF689AEA20D6DEB4000BC812 /* PopMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopMain.mm; path = src/PopMain.mm; sourceTree = "<group>"; };
-		BF689AEE20D6E015000BC812 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
-		BF689AEF20D6E015000BC812 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
 		BF689AF220D6E89E000BC812 /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8.dylib; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8.dylib; sourceTree = "<absolute>"; };
 		BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libplatform.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_libplatform.a; sourceTree = "<absolute>"; };
 		BF689AF620D6E8D3000BC812 /* libv8_base.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_base.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_base.a; sourceTree = "<absolute>"; };
@@ -222,7 +216,6 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
-		BFEB0A6D211A45CA00FDAA93 /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8.dylib; path = ../../../usr/local/Cellar/v8/5.1.281.47/lib/libv8.dylib; sourceTree = "<group>"; };
 		EB0EA5622110AAF9008D6DAA /* Data_dlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_dlib; sourceTree = "<group>"; };
 		EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDlib.cpp; path = src/TApiDlib.cpp; sourceTree = "<group>"; };
 		EB0EA5652110AB53008D6DAA /* TApiDlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDlib.h; path = src/TApiDlib.h; sourceTree = "<group>"; };
@@ -248,6 +241,9 @@
 		EBC8FA6A2113501F0014E998 /* SoyWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyWebSocket.h; path = src/SoyWebSocket.h; sourceTree = "<group>"; };
 		EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHttp.cpp; path = src/SoyHttp.cpp; sourceTree = "<group>"; };
 		EBC8FA6D2113514B0014E998 /* SoyHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHttp.h; path = src/SoyHttp.h; sourceTree = "<group>"; };
+		EBF68C022130672000FCB582 /* v8 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = v8; path = src/v8; sourceTree = "<group>"; };
+		EBF68C292130711B00FCB582 /* libv8_libbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libbase.a; path = src/v8/lib/libv8_libbase.a; sourceTree = "<group>"; };
+		EBF68C2A2130711B00FCB582 /* libv8_libplatform.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libplatform.a; path = src/v8/lib/libv8_libplatform.a; sourceTree = "<group>"; };
 		FB50C04A1A6ABD480011A9D9 /* array.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = array.hpp; path = src/array.hpp; sourceTree = "<group>"; };
 		FB50C04B1A6ABD480011A9D9 /* bufferarray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = bufferarray.hpp; path = src/bufferarray.hpp; sourceTree = "<group>"; };
 		FB50C04C1A6ABD480011A9D9 /* HeapArray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = HeapArray.hpp; path = src/HeapArray.hpp; sourceTree = "<group>"; };
@@ -310,13 +306,10 @@
 				BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */,
 				BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */,
 				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
+				EBF68C2E2130717000FCB582 /* libv8_libplatform.a in Frameworks */,
+				EBF68C2D2130716E00FCB582 /* libv8_libbase.a in Frameworks */,
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
-				BF8EEA6C20E688CA00D8D5C8 /* libv8.dylib in Frameworks */,
-				BF8EEA6D20E689E200D8D5C8 /* libv8_base.a in Frameworks */,
-				BF8EEA6E20E689E400D8D5C8 /* libv8_snapshot.a in Frameworks */,
-				BF8EEA7020E689ED00D8D5C8 /* libv8_libbase.a in Frameworks */,
-				BF8EEA6F20E689EA00D8D5C8 /* libv8_libplatform.a in Frameworks */,
 				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
 				EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */,
 			);
@@ -349,15 +342,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		BF689AED20D6DFB3000BC812 /* V8 */ = {
-			isa = PBXGroup;
-			children = (
-				BF689AEE20D6E015000BC812 /* include */,
-				BF689AEF20D6E015000BC812 /* lib */,
-			);
-			name = V8;
-			sourceTree = V8_PATH;
-		};
 		BFA8A5D92111151200F12534 /* PopMovie */ = {
 			isa = PBXGroup;
 			children = (
@@ -379,6 +363,16 @@
 			path = ./;
 			sourceTree = DLIB_PATH;
 		};
+		EBF68C042130672500FCB582 /* V8 */ = {
+			isa = PBXGroup;
+			children = (
+				EBF68C292130711B00FCB582 /* libv8_libbase.a */,
+				EBF68C2A2130711B00FCB582 /* libv8_libplatform.a */,
+				EBF68C022130672000FCB582 /* v8 */,
+			);
+			name = V8;
+			sourceTree = "<group>";
+		};
 		FB5702CA1A5FDC8800449FF3 /* stb */ = {
 			isa = PBXGroup;
 			children = (
@@ -390,9 +384,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
-				BFEB0A6D211A45CA00FDAA93 /* libv8.dylib */,
 				EB0EA5672110B8D6008D6DAA /* Dlib */,
-				BF689AED20D6DFB3000BC812 /* V8 */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
 				BF321B041B67AD990016E903 /* CoreVideo.framework */,
 				BFE5727F1B541B3400B17528 /* CoreServices.framework */,
@@ -417,6 +409,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				EBF68C042130672500FCB582 /* V8 */,
 				BF377320211F8BC5008EB5F7 /* App.xcassets */,
 				BF30550A1B56F553002B0892 /* Data */,
 				EB0EA5622110AAF9008D6DAA /* Data_dlib */,
@@ -649,7 +642,6 @@
 				EB0EA5632110AAF9008D6DAA /* Data_dlib in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF377321211F8BC5008EB5F7 /* App.xcassets in Resources */,
-				BFEB0A6E211A45CA00FDAA93 /* libv8.dylib in Resources */,
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -817,11 +809,6 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/v8/5.1.281.47/lib,
-					/usr/local/Cellar/dlib/19.15/lib,
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
 				VALID_ARCHS = x86_64;
@@ -841,11 +828,6 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/v8/5.1.281.47/lib,
-					/usr/local/Cellar/dlib/19.15/lib,
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
 				VALID_ARCHS = x86_64;

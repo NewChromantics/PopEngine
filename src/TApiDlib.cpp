@@ -94,7 +94,8 @@ Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
 	auto* Isolate = Container.mIsolate;
 	
 	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
+	auto ContainerHandle = External::New( Isolate, &Container ).As<Value>();
+									   
 	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
 	
 	//	https://github.com/v8/v8/wiki/Embedder's-Guide

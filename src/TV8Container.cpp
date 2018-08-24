@@ -12,7 +12,6 @@ bool ReportDefinedReturns = false;
 
 
 //	gr: in 6, allocator type is missing??
-#if V8_VERSION==5
 class PopV8Allocator : public v8::ArrayBuffer::Allocator
 {
 public:
@@ -20,7 +19,6 @@ public:
 	virtual void* AllocateUninitialized(size_t length) override;
 	virtual void Free(void* data, size_t length) override;
 };
-#endif
 
 
 V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
@@ -65,7 +63,6 @@ V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
 }
 
 
-#if V8_VERSION==5
 void* PopV8Allocator::Allocate(size_t length)
 {
 	auto* Bytes = new uint8_t[length];
@@ -84,7 +81,6 @@ void PopV8Allocator::Free(void* data, size_t length)
 	auto* Bytes = static_cast<uint8_t*>( data );
 	delete[] Bytes;
 }
-#endif
 
 
 const std::string& v8::CallbackInfo::GetRootDirectory() const
@@ -96,12 +92,7 @@ const std::string& v8::CallbackInfo::GetRootDirectory() const
 TV8Container::TV8Container(const std::string& RootDirectory) :
 	mImageHeap		( true, true, "Image Heap", 0 , false ),
 	mRootDirectory	( RootDirectory ),
-#if V8_VERSION==5
-	mAllocator	( new PopV8Allocator )
-#elif V8_VERSION==6
-	mAllocator	( v8::ArrayBuffer::Allocator::NewDefaultAllocator() )
-#endif
-
+	mAllocator		( new PopV8Allocator )
 {
 	auto& Allocator = *mAllocator;
 	
@@ -109,6 +100,9 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	std::string Flags = "--expose_gc";
 	//v8::internal::FLAG_expose_gc = true;
 	V8::SetFlagsFromString( Flags.c_str(), static_cast<int>(Flags.length()) );
+	
+	
+	v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 	
 	auto& ExePath = ::Platform::ExePath;
 #if V8_VERSION==6

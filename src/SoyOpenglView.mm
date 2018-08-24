@@ -1,4 +1,4 @@
-#import "SoyOpenGLView.h"
+#import "SoyOpenglView.h"
 #import "SoyOpenGLWindow.h"
 #include <SoyMath.h>
 

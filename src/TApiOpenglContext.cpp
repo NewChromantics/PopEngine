@@ -727,7 +727,8 @@ void GetPixelData(const char* Context,Local<Value> DataHandle,ArrayBridge<uint8_
 		auto widthstring = String::NewFromUtf8(Isolate,"width");
 		auto heightstring = String::NewFromUtf8(Isolate,"height");
 		auto datastring = String::NewFromUtf8(Isolate,"data");
-		if ( ObjectHandle->HasOwnProperty(widthstring) && ObjectHandle->HasOwnProperty(heightstring) && ObjectHandle->HasOwnProperty(datastring) )
+
+		if ( ObjectHandle->HasRealNamedCallbackProperty(widthstring) && ObjectHandle->HasRealNamedCallbackProperty(heightstring) && ObjectHandle->HasRealNamedCallbackProperty(datastring) )
 		{
 			auto DataDataHandle = ObjectHandle->Get(datastring);
 			if ( DataDataHandle->IsUint8ClampedArray() )

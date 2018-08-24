@@ -5,11 +5,11 @@
 #include <SoyTypes.h>
 #include <SoyAssert.h>
 #include <Array.hpp>
-#include <HeapArray.hpp>
+#include <heaparray.hpp>
 
 //	gr: the diffs are external vs internal as well as API changes
-#define V8_VERSION	5
-//#define V8_VERSION	6
+//#define V8_VERSION	5
+#define V8_VERSION	6
 
 #if !defined(V8_VERSION)
 #error need V8_VERSION 5 or 6
