@@ -510,9 +510,12 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 			if ( output == null )
 				return;
 			
-			//Sleep(0);
+			Sleep(0);
 			let Async = false;
+			let ReadPixelsFlushStart = Date.now();
 			this.CommandQueue.Flush( this.GetOpenglContext(), Async );
+			let ReadPixelsFlushDuration = Date.now() - ReadPixelsFlushStart;
+			Debug("ReadPixelsFlushDuration="+ReadPixelsFlushDuration+"ms");
 		}
 		catch(e)
 		{

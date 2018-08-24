@@ -57,7 +57,7 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 1;
+var DlibThreadCount = 10;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 3;
@@ -871,6 +871,8 @@ function WindowRender(RenderTarget)
 		
 		let FrameRate = GetFrameCounter('FrameCompleted');
 		Shader.SetUniform("FrameRateNormalised", FrameRate/30 );
+		let CameraFrameRate = GetFrameCounter('CameraFrames');
+		Shader.SetUniform("CameraFrameRateNormalised", CameraFrameRate/30 );
 	}
 	
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -1311,9 +1313,15 @@ function GetFaceDetectionPromise(Frame)
 
 function OnNewVideoFrameFilter()
 {
-	UpdateFrameCounter('Webcam');
+	UpdateFrameCounter('CameraFrames');
+	
 	//	filter if busy here
-	return IsIdle();
+	if ( !IsIdle() )
+	{
+		Debug("Skipping frame");
+		return false;
+	}
+	return true;
 }
 
 
@@ -1350,6 +1358,7 @@ function GetSetupForFaceDetectionPromise(Frame)
 
 function OnNewVideoFrame(FrameImage)
 {
+	/*
 	if ( !IsIdle() )
 	{
 		Debug("Clearing skipped frame");
@@ -1357,7 +1366,7 @@ function OnNewVideoFrame(FrameImage)
 		//Debug("Skipped webcam image");
 		return;
 	}
-
+	 */
 	//Debug("Setting up new frame");
 
 	//	make a new frame
