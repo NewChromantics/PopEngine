@@ -868,6 +868,9 @@ function WindowRender(RenderTarget)
 		Scores.length = Math.min( Scores.length, LINE_COUNT );
 		Shader.SetUniform("Lines", Lines );
 		Shader.SetUniform("LineScores", Scores );
+		
+		let FrameRate = GetFrameCounter('FrameCompleted');
+		Shader.SetUniform("FrameRateNormalised", FrameRate/30 );
 	}
 	
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );

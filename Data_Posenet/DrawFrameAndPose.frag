@@ -9,6 +9,9 @@ uniform vec4		UnClipRect;
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 
+const float FrameRateHeight = 0.02;
+uniform float		FrameRateNormalised;
+
 float TimeAlongLine2(vec2 Position,vec2 Start,vec2 End)
 {
 	vec2 Direction = End - Start;
@@ -86,6 +89,14 @@ vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
 
 void main()
 {
+	//	draw frame rate
+	if ( (1-uv.y) < FrameRateHeight && uv.x <= FrameRateNormalised )
+	{
+		gl_FragColor.xyz = NormalToRedGreen( FrameRateNormalised );
+		gl_FragColor.w = 1;
+		return;
+	}
+	
 	vec2 FrameUv = vec2( uv.x, 1-uv.y );
 	//vec2 FrameUv = uv;
 	//FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
