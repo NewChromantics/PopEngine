@@ -40,7 +40,7 @@ DEFINE_IMMEDIATE(drawElements);
 
 
 static bool ShowImmediateFunctionCalls = false;
-
+static bool FinishAfterTextureWrite = false;
 
 
 template<typename TYPE>
@@ -852,8 +852,11 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const 
 	Opengl::IsOkay("glTexImage2D");
 	
 	//	see if the flush is slow!
-	//glFinish();
-	//Opengl::IsOkay("glFinish");
+	if ( FinishAfterTextureWrite )
+	{
+		glFinish();
+		Opengl::IsOkay("glFinish");
+	}
 	
 	if ( BoundTexture )
 	{
@@ -980,9 +983,12 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texSubImage2D(con
 	Opengl::IsOkay("glTexSubImage2D");
 
 	//	see if the flush is slow!
-	glFinish();
-	Opengl::IsOkay("glFinish");
-
+	if ( FinishAfterTextureWrite )
+	{
+		glFinish();
+		Opengl::IsOkay("glFinish");
+	}
+	
 	return v8::Undefined( Arguments.mIsolate );
 }
 
