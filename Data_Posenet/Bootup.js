@@ -750,20 +750,17 @@ var TFrame = function(OpenglContext)
 		
 	}
 	
-	this.NormaliseImagePosition = function(xy)
-	{
-		xy[0] /= this.GetWidth();
-		xy[1] /= this.GetHeight();
-		return xy;
-	}
-	
-	this.CopyFace = function(LastFrame)
+	this.CopyFace = function(LastFrame,CopiedFaceScore)
 	{
 		if ( !LastFrame )
 			throw "No last frame to copy face from";
 		
 		this.FaceFeatures = LastFrame.FaceFeatures;
 		this.FaceRect = LastFrame.FaceRect;
+		if ( !LastFrame.FaceFeatures )
+			throw "No last frame face-features to copy from";
+	
+		this.FaceScore = CopiedFaceScore || 0;
 		
 		//	get a delta where we need to move all the features so they attach to the skeleton
 		let TrackJoint = 'nose';
@@ -774,8 +771,7 @@ var TFrame = function(OpenglContext)
 			
 			//	put skeleton point into face(normalised) space
 			let Delta = [ NewJointPos.x - OldJointPos.x, NewJointPos.y - OldJointPos.y ];
-			Delta = this.NormaliseImagePosition(Delta);
-			
+			//Debug("Apply delta " + Delta);
 			let ApplyDelta = function(FaceFeaturePos)
 			{
 				FaceFeaturePos.x += Delta[0];
@@ -894,7 +890,8 @@ function OnFrameCompleted(Frame)
 	{
 		if ( NoFaceSendLast )
 		{
-			Frame.CopyFace(LastFrame);
+			//	gr: if we set new face score at zero then it gets sent through kalman filter, so big score visualises but doesnt alter
+			Frame.CopyFace(LastFrame,99);
 		}
 	}
 	
