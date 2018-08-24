@@ -6274,13 +6274,13 @@
         })
     }
 
-    function downloadFloat32MatrixFromOutputTexture(e, t, r, n) {
+    function downloadFloat32MatrixFromOutputTexture(e, t, r, n, TheTexture ) {
         var a = getUnpackedMatrixTextureShapeWidthHeight(t, r),
             i = a[0],
             o = a[1],
             s = new Float32Array(getUnpackedArraySizeFromMatrixSize(t * r, n.downloadUnpackNumChannels));
         callAndCheck(e, function() {
-            return e.readPixels(0, 0, i, o, n.downloadTextureFormat, e.FLOAT, s)
+            return e.readPixels(0, 0, i, o, n.downloadTextureFormat, e.FLOAT, s, TheTexture )
         });
         var u = new Float32Array(t * r);
         return decodeMatrixFromUnpackedArray(s, u, n.downloadUnpackNumChannels), u
@@ -6375,10 +6375,10 @@
                 return uploadMatrixToTexture(this.gl, e, t, r, n, a, this.textureConfig)
             }, e.prototype.uploadMatrixToPackedTexture = function(e, t, r, n) {
                 return this.throwIfDisposed(), uploadMatrixToPackedTexture(this.gl, e, t, r, n, this.textureConfig)
-            }, e.prototype.downloadFloat32MatrixFromOutputTexture = function(e, t, r) {
+            }, e.prototype.downloadFloat32MatrixFromOutputTexture = function(e, t, r, TheTexture ) {
                 var n = this;
                 return this.downloadMatrixDriver(e, function() {
-                    return downloadFloat32MatrixFromOutputTexture(n.gl, t, r, n.textureConfig)
+                    return downloadFloat32MatrixFromOutputTexture(n.gl, t, r, n.textureConfig, TheTexture )
                 })
             }, e.prototype.downloadByteEncodedFloatMatrixFromOutputTexture = function(e, t, r) {
                 var n = this;
@@ -7088,7 +7088,7 @@
                     o = t.dtype;
                 if (null != a) return this.cacheOnCPU(e), a;
                 var s, u, l = null != this.activeTimers;
-                if (l && (s = performance.now()), ENV.get("WEBGL_DOWNLOAD_FLOAT_ENABLED")) u = this.gpgpu.downloadFloat32MatrixFromOutputTexture(n, i[0], i[1]);
+                if (l && (s = performance.now()), ENV.get("WEBGL_DOWNLOAD_FLOAT_ENABLED")) u = this.gpgpu.downloadFloat32MatrixFromOutputTexture(n, i[0], i[1], n );
                 else {
                     var c = Tensor.make(r, {});
                     this.texData.get(c.dataId).usage = TextureUsage.DOWNLOAD;

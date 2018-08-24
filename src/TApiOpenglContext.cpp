@@ -1035,6 +1035,29 @@ TImageWrapper* TOpenglImmediateContextWrapper::GetBoundFrameBufferTexture()
 }
 
 
+namespace Opengl
+{
+	SoyPixelsFormat::Type GetDownloadPixelFormat(GLsizei Format,GLsizei Type)
+	{
+		auto NaiveType = Opengl::GetDownloadPixelFormat(Format);
+		if ( Type == GL_FLOAT )
+		{
+			auto FloatType = SoyPixelsFormat::GetFloatFormat(NaiveType);
+			return FloatType;
+		}
+		else if ( Type == GL_UNSIGNED_BYTE )
+		{
+			return NaiveType;
+		}
+		else
+		{
+			std::stringstream Error;
+			Error << "Trying to get proper type for pixel format(" << Format << ") with type " << Type << ". naive format: " << NaiveType;
+			throw Soy::AssertException(Error.str());
+		}
+	}
+}
+
 v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const v8::CallbackInfo& Arguments)
 {
 	/*
@@ -1051,24 +1074,21 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	auto height = GetGlValue<GLsizei>( Arguments.mParams[3] );
 	auto format = GetGlValue<GLsizei>( Arguments.mParams[4] );
 	auto type = GetGlValue<GLint>( Arguments.mParams[5] );
-	
+	auto ComponentSize = Opengl::GetPixelDataSize(type);
+
 	auto& This = Arguments.GetThis<TOpenglImmediateContextWrapper>();
 	
 	//	we need to alloc a buffer to read into, then push it back to the output
-	std::shared_ptr<Array<uint8_t>> pPixelBuffer( new Array<uint8_t>() );
-	auto& PixelBuffer = *pPixelBuffer;
-	auto PixelFormat = Opengl::GetDownloadPixelFormat(format);
-	auto ChannelCount = SoyPixelsFormat::GetChannelCount( PixelFormat );
-	auto TotalComponentCount = ChannelCount * width * height;
-
-	auto OutputHandle = Arguments.mParams[6];
-	if ( !OutputHandle->IsNull() )
-	{
-		//	alloc buffer to read into
-		auto ComponentSize = Opengl::GetPixelDataSize(type);
-		PixelBuffer.SetSize( TotalComponentCount * ComponentSize );
-	}
+	std::shared_ptr<Array<uint8_t>> pPixelBuffer;
 	
+	//	gr: fix this so float+GL_RGBA = float4
+	auto ReadPixelFormat = Opengl::GetDownloadPixelFormat( format, type );
+	auto ChannelCount = SoyPixelsFormat::GetChannelCount( ReadPixelFormat );
+	auto TotalComponentCount = ChannelCount * width * height;
+	auto ReadMeta = SoyPixelsMeta(width,height,ReadPixelFormat);
+	auto OutputHandle = Arguments.mParams[6];
+	auto PixelBufferDataSize = OutputHandle->IsNull() ? 0 : TotalComponentCount * ComponentSize;
+
 	
 	auto AsyncTextureHandle = Arguments.mParams[7];
 	TImageWrapper* AsyncTexture = nullptr;
@@ -1081,9 +1101,10 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	
 	//bool BigTexture = (width*height) > (4*4);
 	bool BigTexture = true;
- 
-	auto* LastFrameBufferTexture = This.GetBoundFrameBufferTexture();
 
+	//	gr: getting mismatch here, but now passing texture directly from tensorflow... so... that's okay?
+	/*
+	auto* LastFrameBufferTexture = This.GetBoundFrameBufferTexture();
 	if ( AsyncTexture && LastFrameBufferTexture )
 	{
 		if ( AsyncTexture != LastFrameBufferTexture )
@@ -1093,13 +1114,12 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		else
 			std::Debug << "Async texture and LastFrameBufferTexture are SAME" << std::endl;
 	}
-
-	
+*/
+	/*
 	if ( !DataRead && BigTexture && LastFrameBufferTexture )
 	{
 		auto& Texture = *LastFrameBufferTexture;
-		auto ReadMeta = SoyPixelsMeta(width,height,PixelFormat);
-		std::Debug << "Known last texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << std::endl;
+		std::Debug << "Known last texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << " read componentsize: " << ComponentSize << std::endl;
 		
 		if ( Texture.mOpenglLastPixelReadBufferVersion == Texture.GetLatestVersion() )
 		{
@@ -1119,53 +1139,59 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		{
 			std::Debug << "Last known texture pixel buffer (" << Texture.mOpenglLastPixelReadBufferVersion << ") is out of date (" << Texture.GetLatestVersion() << ")" << std::endl;
 		}
-		
-		/*
-		SoyPixels Pixels;
-		SoyPixelsFormat::Type ForceFormat = SoyPixelsFormat::Invalid;
-		bool Flip = false;
-		Texture.Read( Pixels, ForceFormat, Flip );
-		DirectRead = false;
-		*/
 	}
+	*/
 	
-	//	gr: we should never be reading this?
-	/*
+	static bool DebugAsyncUsage = false;
+	
+	
+	//	gr: we now pass the texture manually into readpixels in tensorflow so I know exactly which one I'm looking at
+	//	gr: but we technically might not know if it's actually bound.... maybe safety check will still be needed when we re-use this context
+	//	gr: if it's out of data, this is probably the async read.
 	if ( !DataRead && BigTexture && AsyncTexture )
 	{
 		auto& Texture = *AsyncTexture;
-		auto ReadMeta = SoyPixelsMeta(width,height,PixelFormat);
-		std::Debug << "Known last texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << std::endl;
+		
+		//	gr: formats seem to be wrong here (texture says its float1, but reading float4, maybe reading internal meta wrong??)
+		//		BUT on the plus side, we cached data at float4. so the cache matches!
+		//		maybe store a meta with the pixel buffer for what was read rather than what opengl says.
+		//		maybe tensorflow is reading 4 channels of a 1 channel image??
+		if ( DebugAsyncUsage )
+			std::Debug << "AsyncTexture texture: " << Texture.GetMeta() << " vs readmeta " << ReadMeta << "(componentsize: " << ComponentSize << ")" << std::endl;
 		
 		if ( Texture.mOpenglLastPixelReadBufferVersion == Texture.GetLatestVersion() )
 		{
 			auto& LastBuffer = *Texture.mOpenglLastPixelReadBuffer;
-			if ( LastBuffer.GetDataSize() == PixelBuffer.GetDataSize() )
+			if ( LastBuffer.GetDataSize() == PixelBufferDataSize )
 			{
-				std::Debug << "(ASYNC) Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
-				PixelBuffer.Copy( LastBuffer );
+				if ( DebugAsyncUsage )
+					std::Debug << "(ASYNC) Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBufferDataSize << " bytes)" << std::endl;
+				Soy::TScopeTimerPrint Timer("Copying cached AsyncTexture pixel buffer", 10);
+				pPixelBuffer = Texture.mOpenglLastPixelReadBuffer;
 				DataRead = true;
 			}
 			else
 			{
-				std::Debug << "(ASYNC) Skipping cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) vs PixelBuffer(" << PixelBuffer.GetDataSize() << " bytes)" << std::endl;
+				if ( DebugAsyncUsage )
+					std::Debug << "(ASYNC) Skipping cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) vs PixelBuffer(" << PixelBufferDataSize << " bytes)" << std::endl;
 			}
 		}
 		else
 		{
-			std::Debug << "ASYNC texture pixel buffer (" << LastFrameBufferTexture->mOpenglLastPixelReadBufferVersion << ") is out of date (" << LastFrameBufferTexture->GetLatestVersion() << ")" << std::endl;
+			if ( DebugAsyncUsage )
+				std::Debug << "ASYNC texture pixel buffer (" << Texture.mOpenglLastPixelReadBufferVersion << ") is out of date (" << Texture.GetLatestVersion() << ")" << std::endl;
 		}
 
 	}
-	*/
+	
 	
 	auto TimerWarningMs = 10;
 	//	always show timing if we're outputting to a buffer
-	if (!PixelBuffer.IsEmpty())
+	if ( PixelBufferDataSize > 0 )
 		TimerWarningMs = 0;
 	
 	static bool PreFlush = false;
-	if ( PreFlush && !PixelBuffer.IsEmpty() )
+	if ( PreFlush && PixelBufferDataSize>0 )
 	{
 		Soy::TScopeTimerPrint Timer("ReadPixels pre flush", 10 );
 		glFinish();
@@ -1174,11 +1200,10 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 
 	
 	static bool UsePbo = true;
-	if ( !DataRead && UsePbo && !PixelBuffer.IsEmpty() )
+	if ( !DataRead && UsePbo && PixelBufferDataSize>0 )
 	{
 		try
 		{
-			auto ReadPixelFormat = ( type == GL_UNSIGNED_BYTE ) ? PixelFormat : SoyPixelsFormat::Float4;
 			SoyPixelsMeta PboMeta( width, height, ReadPixelFormat );
 			
 			Opengl::TPbo Pbo( PboMeta );
@@ -1200,7 +1225,9 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 				std::stringstream TimerName;
 				TimerName << "PBO Copy( " << PboMeta << ")";
 				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), TimerWarningMs );
-				PixelBuffer.Copy(PboArray);
+				
+				pPixelBuffer.reset( new Array<uint8_t>() );
+				pPixelBuffer->Copy(PboArray);
 			}
 			Pbo.UnlockBuffer();
 			DataRead = true;
@@ -1217,7 +1244,17 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 		std::stringstream TimerName;
 		TimerName << "glReadPixels( " << x << "," << y << "," << width << "x" << height << ")";
 		Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), TimerWarningMs );
-		glReadPixels( x, y, width, height, format, type, PixelBuffer.GetArray() );
+		
+		if ( PixelBufferDataSize > 0 )
+		{
+			if ( pPixelBuffer != nullptr )
+				throw Soy::AssertException("shouldn't this not be allocated yet?");
+			
+			pPixelBuffer.reset( new Array<uint8_t>() );
+			pPixelBuffer->SetSize(PixelBufferDataSize);
+		}
+		
+		glReadPixels( x, y, width, height, format, type, pPixelBuffer->GetArray() );
 		Opengl::IsOkay("glReadPixels");
 	}
 	
@@ -1225,11 +1262,12 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	{
 		AsyncTexture->SetOpenglLastPixelReadBuffer(pPixelBuffer);
 	}
-	else if ( LastFrameBufferTexture )
+	/*
+	if ( LastFrameBufferTexture )
 	{
 		LastFrameBufferTexture->SetOpenglLastPixelReadBuffer(pPixelBuffer);
 	}
-	
+	*/
 	//	push data into output
 	if ( OutputHandle->IsNull() )
 	{
@@ -1258,12 +1296,12 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 			}
 			auto OutputBufferContents = OutputArray->Buffer()->GetContents();
 			auto OutputContentsArray = GetRemoteArray( static_cast<uint8_t*>( OutputBufferContents.Data() ), OutputBufferContents.ByteLength() );
-			OutputContentsArray.Copy( PixelBuffer );
+			OutputContentsArray.Copy( *pPixelBuffer );
 		}
 		else
 		{
 			std::stringstream Error;
-			Error << "Need to convert from " << PixelFormat << " pixels to float32 array output";
+			Error << "Need to convert from " << ReadPixelFormat << " pixels to float32 array output";
 			throw Soy::AssertException(Error.str());
 		}
 	}

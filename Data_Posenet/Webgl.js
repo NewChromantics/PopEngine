@@ -485,13 +485,13 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	}
 
 	
-	this.readPixels = function(x,y,w,h,format,type,output)
+	this.readPixels = function(x,y,w,h,format,type,output,AsyncTexture)
 	{
 		//	gr: getting a deadlock from media new frame(?!)
 		//	this steals the opengl thread, so we need to unlock breifly
 		Sleep(0);
 		
-		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +")");
+		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
 		//Debug("readPixels(" + Array.from(arguments) + ")");
 		try
 		{
