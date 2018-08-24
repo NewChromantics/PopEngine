@@ -356,7 +356,11 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 	
 		auto FuncHandle = v8::GetFunction( context, This, "OnNewFrame" );
 		
+		std::Debug << "Starting Media::OnNewFrame Javascript" << std::endl;
+		//	this func should be fast really and setup promises to defer processing
+		Soy::TScopeTimerPrint Timer("Media::OnNewFrame Javascript callback",5);
 		mContainer->ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
+		Timer.Stop();
 	};
 	mContainer->QueueScoped( Runner );
 }

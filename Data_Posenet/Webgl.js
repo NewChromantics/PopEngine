@@ -528,21 +528,23 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	//	this will cache the pixels internally for the next proper (synchronous) read from posenet
 	this.readPixelsAsync = function(x,y,w,h,format,type,output,Texture)
 	{
-		Sleep(0);
-		return null;
+		//	don't need this as we're not blocking thread?
+		//Sleep(0);
+		
+		//	gr: currently getting a deadlock with the async flush
+		return new Promise( function(Resolve){Resolve();} );
+		//	no async wait
+		//return null;
+		
 		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
-		/*
-		Debug("readPixelsAsync( " + GetTypename(Texture) + ")");
-		Debug( Object.keys(Texture) );
-		
-		Debug("readPixelsAsync(" + Array.from(arguments) + ")");
-		*/
+
 		let Async = true;
-		this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		let FlushPromise = this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		if ( FlushPromise.constructor.name != 'Promise' )
 			throw "FlushPromise(" + (FlushPromise.constructor.name) +" not promise";
+		
 		return FlushPromise;
 	}
 	

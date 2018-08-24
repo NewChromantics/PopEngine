@@ -561,6 +561,7 @@ function GetRectLines(Rect,Lines,Scores,Score)
 
 
 var TempSharedImageData = null;
+var FrameCounter = 0;
 
 var TFrame = function(OpenglContext)
 {
@@ -572,6 +573,7 @@ var TFrame = function(OpenglContext)
 	this.SkeletonPose = null;	//	image space(px)
 	this.ImageData = null;
 	this.OpenglContext = OpenglContext;
+	this.FrameNumber = FrameCounter++;
 	
 	//	rects are in Image space(px)
 	this.HeadRect = [0,0,1,1];	//	head area on skeleton (normalised)
@@ -1047,6 +1049,7 @@ function SetupForPoseDetection(Frame)
 		//	gr: here we can do some custom filtering! up the contrast, greenscreen etc
 		let ResizeRender = function(RenderTarget,RenderTargetTexture)
 		{
+			//Debug("Resizing frame " + Frame.FrameNumber);
 			if ( !ResizeFragShader )
 			{
 				ResizeFragShader = new OpenglShader( RenderTarget, VertShaderSource, ResizeFragShaderSource );
@@ -1205,6 +1208,7 @@ function GetPoseDetectionPromise(Frame)
 
 function SetupForFaceDetection(Frame)
 {
+	Debug("SetupForFaceDetection " + Frame.FrameNumber);
 	//	work out where to search
 	Frame.SetupHeadRect();
 	let ClipRectPx = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
@@ -1337,25 +1341,6 @@ function GetHandleNewFaceLandmarksPromise(Frame,Face)
 	return new Promise(Handle);
 }
 
-function GetSetupForFaceDetectionPromise(Frame)
-{
-	let Runner = function(Resolve,Reject)
-	{
-		throw "xxx";
-		try
-		{
-			let FaceDetectionSetupPromise = SetupForFaceDetection(Frame);
-			Resolve(FaceDetectionSetupPromise);
-		}
-		catch(e)
-		{
-			Debug("GetSetupForFaceDetectionPromise exception "+e);
-			Reject(e);
-		}
-	}
-	return new Promise( Runner );
-}
-
 function OnNewVideoFrame(FrameImage)
 {
 	/*
@@ -1367,7 +1352,8 @@ function OnNewVideoFrame(FrameImage)
 		return;
 	}
 	 */
-	//Debug("Setting up new frame");
+
+	let InitTime = Date.now();
 
 	//	make a new frame
 	let OpenglContext = window.OpenglContext;
@@ -1376,9 +1362,11 @@ function OnNewVideoFrame(FrameImage)
 	
 	Frame.Image = FrameImage;
 
+	//Debug("Setting up new frame("+ Frame.FrameNumber +")");
+
 	//	gr: we can't do opengl stuff here as this can cause a deadlock
 	//	gr: inside SetupForPoseDetection we call an opengl.render, but its not on the immediate context...
-	
+	//	gr: this function is taking aaaages, but measuring inside function is fine... its as if some promises are called on exit??
 	SetupForPoseDetection( Frame )
 	.then( function()			{	return GetPoseDetectionPromise(Frame);	}	)
 	.then( SetupForFaceDetection )
@@ -1386,8 +1374,8 @@ function OnNewVideoFrame(FrameImage)
 	.then( function(NewFace)	{	return GetHandleNewFaceLandmarksPromise(Frame,NewFace);		}	)
 	.catch( function(Error)		{	OnFrameError(Frame,Error);	}	);
 
-	//Debug("Done setting up new frame");
-
+	//let DoneTime = Date.now();
+	//Debug("Done setting up new frame("+ Frame.FrameNumber +"):" + (DoneTime-InitTime) + "ms ");
 }
 
 

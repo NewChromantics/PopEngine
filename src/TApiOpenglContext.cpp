@@ -1164,7 +1164,8 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	//	gr: we now pass the texture manually into readpixels in tensorflow so I know exactly which one I'm looking at
 	//	gr: but we technically might not know if it's actually bound.... maybe safety check will still be needed when we re-use this context
 	//	gr: if it's out of data, this is probably the async read.
-	if ( !DataRead && BigTexture && AsyncTexture )
+	auto AllowCacheUsage = false;
+	if ( AllowCacheUsage && !DataRead && BigTexture && AsyncTexture )
 	{
 		auto& Texture = *AsyncTexture;
 		
@@ -1180,7 +1181,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 			auto& LastBuffer = *Texture.mOpenglLastPixelReadBuffer;
 			if ( LastBuffer.GetDataSize() == PixelBufferDataSize )
 			{
-				if ( DebugAsyncUsage )
+				//if ( DebugAsyncUsage )
 					std::Debug << "(ASYNC) Using cached pixel buffer(" << LastBuffer.GetDataSize() <<" bytes) in readpixels into PixelBuffer(" << PixelBufferDataSize << " bytes)" << std::endl;
 				Soy::TScopeTimerPrint Timer("Copying cached AsyncTexture pixel buffer", 10);
 				pPixelBuffer = Texture.mOpenglLastPixelReadBuffer;

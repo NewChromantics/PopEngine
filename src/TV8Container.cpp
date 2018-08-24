@@ -386,7 +386,9 @@ v8::Local<v8::Value> TV8Container::ExecuteFunc(v8::Local<v8::Context> ContextHan
 	
 	//	run, and catch any v8 exceptions and throw them back to C
 	TryCatch trycatch(isolate);
+	Soy::TScopeTimerPrint Timer("JS ExecuteFunc",50);
 	auto ResultMaybe = Func->Call( ContextHandle, This, size_cast<int>(ArgCount), Args );
+	Timer.Stop();
 	if ( ResultMaybe.IsEmpty() )
 	{
 		throw V8Exception( trycatch, "ExecuteFunc(???)");
