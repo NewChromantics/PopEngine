@@ -548,10 +548,10 @@ void TImageWrapper::Free()
 	mPixelsVersion = 0;
 	
 
-	/*
-	if ( mOpenglTexture )
-		mOpenglTexture->mAutoRelease = false;
-	*/
+	
+	//if ( mOpenglTexture )
+	//	mOpenglTexture->mAutoRelease = false;
+	
 
 	//	clear gl
 	if ( mOpenglTextureDealloc )
@@ -729,6 +729,8 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 					//this->mOpenglClientStorage.reset( new SoyPixels );
 					//mOpenglTexture->mClientBuffer = this->mOpenglClientStorage;
 				
+					//mOpenglTexture->mAutoRelease = false;
+					
 					//	alloc the deffered delete func
 					mOpenglTextureDealloc = [this,pContext]
 					{

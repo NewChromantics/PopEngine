@@ -972,8 +972,8 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texSubImage2D(con
 	Array<uint8_t> PixelData;
 	GetPixelData( "glTexSubImage2D", DataHandle, GetArrayBridge(PixelData), &Arguments.GetIsolate() );
 	
-	glFinish();
-	Opengl::IsOkay("pre glFinish");
+	//glFinish();
+	//Opengl::IsOkay("pre glFinish");
 	
 	Soy::TScopeTimerPrint Timer(__func__,10);
 	glTexSubImage2D( binding, level, xoffset, yoffset, width, height, externalformat, externaltype, PixelData.GetArray() );

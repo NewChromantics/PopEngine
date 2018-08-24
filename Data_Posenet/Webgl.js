@@ -156,7 +156,7 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			Debug("Execute Queue x" + Commands.length + (Async?" (async)":"") );
+			Debug("Execute Queue x" + Commands.length + (Async?" (async)":"(blocking)") );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
@@ -327,6 +327,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	if ( !ParentCanvas.WebWindow.SharedOpenglContext )
 		ParentCanvas.WebWindow.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
 	this.SharedOpenglContext = ParentCanvas.WebWindow.SharedOpenglContext;
+	//this.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
 	
 	//  setup enums
 	let Enums = GetAllEnums( this.SharedOpenglContext.GetEnums() );
@@ -509,7 +510,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 			if ( output == null )
 				return;
 			
-			Sleep(0);
+			//Sleep(0);
 			let Async = false;
 			this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		}
@@ -525,7 +526,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.readPixelsAsync = function(x,y,w,h,format,type,output,Texture)
 	{
 		Sleep(0);
-		//return null;
+		return null;
 		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 		/*

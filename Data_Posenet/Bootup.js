@@ -31,7 +31,7 @@ var PoseNetMirror = false;
 //var ClipToSquare = true;
 var ClipToSquare = PoseNetOutputStride * 32;
 var EnableGpuClip = true;
-var ClipToGreyscale = true;	//	GPU only! shader option
+var ClipToGreyscale = false;	//	GPU only! shader option
 var ApplyBlurInClip = false;
 
 var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
@@ -43,8 +43,8 @@ var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
 var DrawRects = false;
-var DrawSkeletonMinScore = 0.0;
 var IgnoreJointMaxScore = 0.5;
+var DrawSkeletonMinScore = IgnoreJointMaxScore;//0.0;
 
 var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
@@ -216,6 +216,21 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise,MaxError)
 }
 
 
+function GetKalmanError(Name,NewValue,TightNoise)
+{
+	if ( !EnableKalmanFilter )
+		return 0;
+	
+	TightNoise = TightNoise === true;
+	let Noise = TightNoise ? [0.10,0.99] : [0.20,0.20];
+	
+	if ( KalmanFilters[Name] === undefined )
+		return 0;
+	
+	let Filter = KalmanFilters[Name];
+	let Error = Filter.Peek( NewValue );
+	return Error;
+}
 
 function Range(Min,Max,Value)
 {
@@ -732,7 +747,9 @@ var TFrame = function(OpenglContext)
 		let EnumKeypoint = function(Keypoint)
 		{
 			//	gr: sending pos here is mutable!
-			EnumNamePosScore( Keypoint.part, Keypoint.position, Keypoint.score );
+			let Score = [Keypoint.score];
+			EnumNamePosScore( Keypoint.part, Keypoint.position, Score );
+			Keypoint.score = Score[0];
 		}
 		this.SkeletonPose.keypoints.forEach( EnumKeypoint );
 		
@@ -742,8 +759,10 @@ var TFrame = function(OpenglContext)
 			{
 				let Name = FaceLandMarkNames[ff];
 				let Pos = this.FaceFeatures[ff];
-				let Score = this.FaceScore;
+				let Score = [this.FaceScore];
+				
 				EnumNamePosScore( Name, Pos, Score );
+				this.FaceScore = Score[0];
 			}
 			
 		}
@@ -901,7 +920,7 @@ function OnFrameCompleted(Frame)
 	{
 		let Namex = Name+"_x";
 		let Namey = Name+"_y";
-		if ( Score < IgnoreJointMaxScore )
+		if ( Score[0] < IgnoreJointMaxScore )
 		{
 			//Position.x = 0;
 			//Position.y = 0;
@@ -917,14 +936,24 @@ function OnFrameCompleted(Frame)
 			return;
 		}
 		
-		let TightNoise = false;
-		let MaxError = 0.9;
+		let TightNoise = true;
+		let MaxError = 0.5;
+		let WarningError = 0.25;
 		let x = Position.x;
 		let y = Position.y;
-		x = UpdateKalmanFilter( Namex, x, TightNoise, MaxError );
-		y = UpdateKalmanFilter( Namey, y, TightNoise, MaxError );
-		//Position.x = x;
-		//Position.y = y;
+		
+		let xerror = GetKalmanError( Namex, x, TightNoise );
+		let yerror = GetKalmanError( Namey, y, TightNoise );
+		
+		UpdateKalmanFilter( Namex, x, TightNoise, MaxError );
+		UpdateKalmanFilter( Namey, y, TightNoise, MaxError );
+
+		//	if error was high, show in score
+		if ( xerror > WarningError )
+			Score[0]=9;
+		if ( yerror > WarningError )
+			Score[0]=9;
+		
 	}
 	Frame.EnumKeypoints( UpdateKeypointPosition );
 	
@@ -1335,7 +1364,9 @@ function OnNewVideoFrame(FrameImage)
 	
 	Frame.Image = FrameImage;
 
-	//	gr: we can't do opengl stuff here as this
+	//	gr: we can't do opengl stuff here as this can cause a deadlock
+	//	gr: inside SetupForPoseDetection we call an opengl.render, but its not on the immediate context...
+	
 	SetupForPoseDetection( Frame )
 	.then( function()			{	return GetPoseDetectionPromise(Frame);	}	)
 	.then( SetupForFaceDetection )
@@ -1467,7 +1498,7 @@ function GetSkeletonJson(Frame,Pretty)
 		let Keypoint = {};
 		Keypoint.part = Name;
 		Keypoint.position = { x:px, y:py };
-		Keypoint.score = Score;
+		Keypoint.score = Score[0];
 		
 		KeypointSkeleton.keypoints.push( Keypoint );
 	}

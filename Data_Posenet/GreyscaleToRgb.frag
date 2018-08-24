@@ -76,6 +76,6 @@ void main()
 	//	convert any greyscale (one red channel) to full greyscale
 	if ( OutputGreyscale )
 		gl_FragColor.xyz = gl_FragColor.xxx;
-	else
-		gl_FragColor.xyz = gl_FragColor.zyx;
+	//else
+	//	gl_FragColor.xyz = gl_FragColor.zyx;
 }
