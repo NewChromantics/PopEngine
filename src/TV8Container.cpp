@@ -278,10 +278,8 @@ void TV8Container::BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char
 		auto* Isolate = Context->GetIsolate();
 		
 		v8::Local<v8::FunctionTemplate> FuncWrapper = v8::FunctionTemplate::New( Isolate, RawFunction );
-		auto FuncWrapperValue = FuncWrapper->GetFunction();
-		auto* FunctionNameCstr = FunctionName;
-
-		This->Set( Isolate, FunctionNameCstr, FuncWrapperValue);
+		
+		This->Set( Isolate, FunctionName, FuncWrapper);
 	};
 	RunScoped(Bind);
 }
