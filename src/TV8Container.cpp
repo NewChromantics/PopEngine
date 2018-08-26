@@ -106,13 +106,10 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	
 	auto& ExePath = ::Platform::ExePath;
 #if V8_VERSION==6
-	std::string IcuPath = mRootDirectory + "../icudtl.dat";
-	std::string NativesBlobPath = mRootDirectory + "../natives_blob.bin";
-	std::string SnapshotBlobPath = mRootDirectory + "../snapshot_blob.bin";
+	std::string IcuPath = mRootDirectory + "../v8Runtime/icudtl.dat";
+	std::string NativesBlobPath = mRootDirectory + "../v8Runtime/natives_blob.bin";
+	std::string SnapshotBlobPath = mRootDirectory + "../v8Runtime/snapshot_blob.bin";
 
-	//	gr: 6.X build doesn't include just-null version, perhaps when there IS an ICU, the function disapears?
-	//::Platform::ShowFileExplorer( IcuPath );
-	//if ( !V8::InitializeICUDefaultLocation( ExePath.c_str(), IcuPath.c_str() ) )
 	if ( !V8::InitializeICUDefaultLocation( nullptr, IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
 

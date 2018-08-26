@@ -5,7 +5,7 @@
 #include <SoyTypes.h>
 #include <SoyAssert.h>
 #include <Array.hpp>
-#include <heaparray.hpp>
+#include <HeapArray.hpp>
 
 //	gr: the diffs are external vs internal as well as API changes
 //#define V8_VERSION	5

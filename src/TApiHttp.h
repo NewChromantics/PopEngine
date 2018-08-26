@@ -5,7 +5,7 @@
 //#include "TPopServerThread.h"
 #include <SoyRef.h>
 #include <SoyStream.h>
-#include "SoyWebsocket.h"
+#include "SoyWebSocket.h"
 #include "SoyHttp.h"
 #include "SoySocketStream.h"
 #include "TApiSocket.h"
