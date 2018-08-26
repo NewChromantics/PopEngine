@@ -104,7 +104,6 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	
 	v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 	
-	auto& ExePath = ::Platform::ExePath;
 #if V8_VERSION==6
 	std::string IcuPath = mRootDirectory + "../v8Runtime/icudtl.dat";
 	std::string NativesBlobPath = mRootDirectory + "../v8Runtime/natives_blob.bin";
@@ -112,20 +111,24 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 
 	if ( !V8::InitializeICUDefaultLocation( nullptr, IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
-
+/*
 	Array<char> NativesBlob;
 	Array<char> SnapshotBlob;
+	StartupData NativesBlobData;
+	StartupData SnapshotBlobData;
 	Soy::FileToArray( GetArrayBridge(NativesBlob), NativesBlobPath );
 	Soy::FileToArray( GetArrayBridge(SnapshotBlob), SnapshotBlobPath );
-	StartupData NativesBlobData{	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
-	StartupData SnapshotBlobData{	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
+
+	NativesBlobData={	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
+	SnapshotBlobData={	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
 	V8::SetNativesDataBlob(&NativesBlobData);
 	V8::SetSnapshotDataBlob(&SnapshotBlobData);
-
+*/
 	//V8::InitializeExternalStartupData( mRootDirectory.c_str() );
-	//V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
+	V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
 	
 #elif V8_VERSION==5
+	auto& ExePath = ::Platform::ExePath;
 	V8::InitializeICU(nullptr);
 	//v8::V8::InitializeExternalStartupData(argv[0]);
 	//V8::InitializeExternalStartupData(nullptr);
@@ -141,6 +144,7 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	//	gr: current??
 	v8::Isolate::CreateParams create_params;
 	create_params.array_buffer_allocator = &Allocator;
+	//create_params.snapshot_blob = &SnapshotBlobData;
 
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
