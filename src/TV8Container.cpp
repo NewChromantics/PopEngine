@@ -106,20 +106,34 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	
 	auto& ExePath = ::Platform::ExePath;
 #if V8_VERSION==6
-	auto* IcuFilename = "icudtl.dat";
-	std::string IcuPath = mRootDirectory + IcuFilename;
+	std::string IcuPath = mRootDirectory + "../icudtl.dat";
+	std::string NativesBlobPath = mRootDirectory + "../natives_blob.bin";
+	std::string SnapshotBlobPath = mRootDirectory + "../snapshot_blob.bin";
 
 	//	gr: 6.X build doesn't include just-null version, perhaps when there IS an ICU, the function disapears?
-	::Platform::ShowFileExplorer( IcuPath );
-	if ( !V8::InitializeICUDefaultLocation( ExePath.c_str(), IcuPath.c_str() ) )
+	//::Platform::ShowFileExplorer( IcuPath );
+	//if ( !V8::InitializeICUDefaultLocation( ExePath.c_str(), IcuPath.c_str() ) )
+	if ( !V8::InitializeICUDefaultLocation( nullptr, IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
+
+	Array<char> NativesBlob;
+	Array<char> SnapshotBlob;
+	Soy::FileToArray( GetArrayBridge(NativesBlob), NativesBlobPath );
+	Soy::FileToArray( GetArrayBridge(SnapshotBlob), SnapshotBlobPath );
+	StartupData NativesBlobData{	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
+	StartupData SnapshotBlobData{	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
+	V8::SetNativesDataBlob(&NativesBlobData);
+	V8::SetSnapshotDataBlob(&SnapshotBlobData);
+
+	//V8::InitializeExternalStartupData( mRootDirectory.c_str() );
+	//V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
+	
 #elif V8_VERSION==5
 	V8::InitializeICU(nullptr);
-#endif
-	
 	//v8::V8::InitializeExternalStartupData(argv[0]);
 	//V8::InitializeExternalStartupData(nullptr);
 	V8::InitializeExternalStartupData( ExePath.c_str() );
+#endif
 	
 	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
 	mPlatform.reset( v8::platform::CreateDefaultPlatform() );
