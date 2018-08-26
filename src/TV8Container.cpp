@@ -155,11 +155,11 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
 	
-	CreateInspector();
-	
 	//  for now, single context per isolate
 	//	todo: abstract context to be per-script
 	CreateContext();
+
+	CreateInspector();
 }
 
 void TV8Container::ProcessJobs(std::function<bool()> IsRunning)
@@ -199,8 +199,14 @@ void TV8Container::CreateContext()
 
 void TV8Container::CreateInspector()
 {
-	auto ContextLocal = mContext->GetLocal(*mIsolate);
-	mInspector.reset( new TV8Inspector(*mIsolate, ContextLocal) );
+	v8::Locker locker(mIsolate);
+	auto* isolate = mIsolate;
+	v8::Isolate::Scope isolate_scope(isolate);
+	
+	//  always need a handle scope to collect locals
+	v8::HandleScope handle_scope(isolate);
+
+	mInspector.reset( new TV8Inspector(*this) );
 }
 
 

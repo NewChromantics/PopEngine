@@ -5,7 +5,7 @@
 //#include "TPopServerThread.h"
 #include <SoyRef.h>
 #include <SoyStream.h>
-#include "SoyWebsocket.h"
+#include "SoyWebSocket.h"
 #include "SoyHttp.h"
 #include "SoySocketStream.h"
 #include "TApiSocket.h"
@@ -24,7 +24,7 @@ namespace ApiWebsocket
 class TWebsocketServerPeer : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
 {
 public:
-	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket,SoyRef ConnectionRef,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
+	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket,SoyRef ConnectionRef,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
 		TSocketReadThread_Impl	( Socket, ConnectionRef ),
 		TSocketWriteThread		( Socket, ConnectionRef ),
 		mOnTextMessage			( OnTextMessage ),
@@ -44,8 +44,8 @@ public:
 	
 public:
 	SoyRef										mConnectionRef;
-	std::function<void(const std::string&)>		mOnTextMessage;
-	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
+	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
 	WebSocket::THandshakeMeta					mHandshake;				//	handshake probably doesn't need a lock as its only modified by packets
 	//	current message gets reset & used & allocated on different threads though
 	//	I think it may need an id so it doesnt get passed along to a packet WHILST we finish decoding the last one? (recv is serial though...)
@@ -57,7 +57,7 @@ public:
 class TWebsocketServer : public SoyWorkerThread
 {
 public:
-	TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage);
+	TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
 
 	void						Send(SoyRef ClientRef,const std::string& Message);
 	void						Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message);
@@ -78,8 +78,8 @@ protected:
 	std::recursive_mutex			mClientsLock;
 	Array<std::shared_ptr<TWebsocketServerPeer>>	mClients;
 	
-	std::function<void(const std::string&)>		mOnTextMessage;
-	std::function<void(const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
+	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
 };
 
 

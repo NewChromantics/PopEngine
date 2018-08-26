@@ -89,12 +89,12 @@ Local<FunctionTemplate> TWebsocketServerWrapper::CreateTemplate(TV8Container& Co
 TWebsocketServerWrapper::TWebsocketServerWrapper(uint16_t ListenPort) :
 	mContainer		( nullptr )
 {
-	auto OnTextMessage = [this](const std::string& Message)
+	auto OnTextMessage = [this](SoyRef Connection,const std::string& Message)
 	{
 		this->OnMessage(Message);
 	};
 	
-	auto OnBinaryMessage = [this](const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Connection,const Array<uint8_t>& Message)
 	{
 		this->OnMessage(Message);
 	};
@@ -180,7 +180,7 @@ v8::Local<v8::Value> TWebsocketServerWrapper::Send(const v8::CallbackInfo& Param
 
 
 
-TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage) :
+TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"WebsocketServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
 	mOnTextMessage		( OnTextMessage ),
 	mOnBinaryMessage	( OnBinaryMessage )
@@ -294,7 +294,7 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 		auto& Packet = *pData->mMessage;
 		if ( Packet.IsCompleteTextMessage() )
 		{
-			mOnTextMessage( Packet.mTextData );
+			mOnTextMessage( this->mConnectionRef, Packet.mTextData );
 			//	gr: there's a bit of a disconnect here between Some-reponse-packet data and our persistent data
 			//		should probbaly change this to like
 			//	pData->PopTextMessage()
@@ -304,7 +304,7 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 		}
 		if ( Packet.IsCompleteBinaryMessage() )
 		{
-			mOnBinaryMessage( Packet.mBinaryData );
+			mOnBinaryMessage( this->mConnectionRef, Packet.mBinaryData );
 			//	see above
 			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
 			mCurrentMessage.reset();
