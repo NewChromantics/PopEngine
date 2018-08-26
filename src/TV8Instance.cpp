@@ -42,9 +42,7 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 			Container->LoadScript( Context, BootupSource );
 		};
 		
-		//	gr: running on another thread causes crash...
 		mV8Container->QueueScoped( LoadScript );
-		//mV8Container->RunScoped( LoadScript );
 	}
 	catch(std::exception& e)
 	{

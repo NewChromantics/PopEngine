@@ -1,4 +1,5 @@
 #include "TV8Container.h"
+#include "TV8Inspector.h"
 
 #include <SoyDebug.h>
 #include <SoyFilesystem.h>
@@ -37,10 +38,15 @@ V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
 	String::Utf8Value ExceptionStr(Exception);
 	auto ExceptionCStr = *ExceptionStr;
 	if ( ExceptionCStr == nullptr )
-		ExceptionCStr = "<null> possibly not an exception";
-	mError += ": ";
-	mError += ExceptionCStr;
-
+	{
+		mError += ": <null> possibly not an exception";
+	}
+	else
+	{
+		mError += ": ";
+		mError += ExceptionCStr;
+	}
+	
 	//	get stack trace
 	auto StackTrace = v8::Exception::GetStackTrace( Exception );
 	if ( StackTrace.IsEmpty() )
@@ -149,6 +155,8 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
 	
+	CreateInspector();
+	
 	//  for now, single context per isolate
 	//	todo: abstract context to be per-script
 	CreateContext();
@@ -187,6 +195,11 @@ void TV8Container::CreateContext()
     
 	//  save the persistent	handle
 	mContext.Reset( isolate, ContextLocal );
+}
+
+void TV8Container::CreateInspector()
+{
+	mInspector.reset( new TV8Inspector(*mIsolate) );
 }
 
 

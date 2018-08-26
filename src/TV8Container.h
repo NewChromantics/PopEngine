@@ -17,6 +17,7 @@
 
 class PopV8Allocator;
 class TV8Container;
+class TV8Inspector;
 
 template<typename TYPE>
 class V8Storage;
@@ -249,16 +250,14 @@ class TV8Container
 public:
 	TV8Container(const std::string& RootDirectory);
 	
-    void     	   CreateContext();
 	v8::Isolate&	GetIsolate()	{	return *mIsolate;	}
-	
+	void		ProcessJobs(std::function<bool()> IsRunning);	//	run all the queued jobs then return
+
 	void		RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 	void		QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
 	void		QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> Lambda,size_t DelayMs);
 
 	void		Yield(size_t SleepMilliseconds);
-	
-	void		ProcessJobs(std::function<bool()> IsRunning);	//	run all the queued jobs then return
 	
 	//	run these with RunScoped (internal) or QueueJob (external)
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
@@ -308,8 +307,13 @@ private:
 	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 
+	void     	CreateContext();
+	void     	CreateInspector();
+	
+
 public:
-	v8::Persist<v8::Context>		mContext;		//	our "document", keep adding scripts toit
+	v8::Persist<v8::Context>		mContext;		//	our "document", keep adding scripts to it
+	std::shared_ptr<TV8Inspector>	mInspector;		//	the remote debugger!
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;
 	std::shared_ptr<v8::ArrayBuffer::Allocator>	mAllocator;

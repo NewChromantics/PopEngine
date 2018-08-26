@@ -59,10 +59,10 @@ class TWebsocketServer : public SoyWorkerThread
 public:
 	TWebsocketServer(uint16_t ListenPort,std::function<void(const std::string&)> OnTextMessage,std::function<void(const Array<uint8_t>&)> OnBinaryMessage);
 
-	std::string					GetAddress() const;
-
 	void						Send(SoyRef ClientRef,const std::string& Message);
 	void						Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message);
+
+	SoySocket&					GetSocket()		{	return *mSocket;	}
 
 protected:
 	virtual bool				Iteration() override;
