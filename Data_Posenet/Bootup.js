@@ -50,14 +50,14 @@ var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
 var EnableKalmanFilter = true;
 
-
+var WebcamTest = true;
 
 //	gr: for some reason, without this... v8 has no jobs?
 var EnableWindowRender = true;
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 10;
+var DlibThreadCount = 1;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 3;
@@ -885,8 +885,9 @@ function WindowRender(RenderTarget)
 
 function IsReady()
 {
-	if ( PoseNet == null )
-		return false;
+	if ( !WebcamTest )
+		if ( PoseNet == null )
+			return false;
 	
 	return true;
 }
@@ -898,7 +899,7 @@ function IsIdle()
 	
 	if ( CurrentFrames.length >= MaxConcurrentFrames )
 	{
-		//Debug("Waiting on " + CurrentFrames.length + " frames");
+		Debug("Waiting on " + CurrentFrames.length + " frames");
 		return false;
 	}
 	
@@ -1341,8 +1342,25 @@ function GetHandleNewFaceLandmarksPromise(Frame,Face)
 	return new Promise(Handle);
 }
 
+function ShowTestFrame(FrameImage)
+{
+	let NewFrame = new TFrame();
+	NewFrame.Image = FrameImage;
+	
+	if ( LastFrame != null )
+		LastFrame.Clear();
+	LastFrame = NewFrame;
+
+}
+
+
 function OnNewVideoFrame(FrameImage)
 {
+	if ( WebcamTest )
+	{
+		ShowTestFrame(FrameImage);
+		return;
+	}
 	/*
 	if ( !IsIdle() )
 	{
@@ -1617,10 +1635,13 @@ function Main()
 	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;
 	
-	LoadDlib();
-	LoadPosenet();
+	if ( !WebcamTest )
+	{
+		LoadDlib();
+		LoadPosenet();
+		LoadSockets();
+	}
 	LoadVideo();
-	LoadSockets();
 }
 
 //	main
