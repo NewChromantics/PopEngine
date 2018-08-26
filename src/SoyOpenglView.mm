@@ -1,5 +1,5 @@
 #import "SoyOpenglView.h"
-#import "SoyOpenGLWindow.h"
+#import "SoyOpenglWindow.h"
 #include <SoyMath.h>
 
 
