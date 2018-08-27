@@ -285,6 +285,7 @@ void TV8Inspector::OnDiscoveryRequest(const std::string& Url,Http::TResponseProt
 	 "webSocketDebuggerUrl": "ws://127.0.0.1:9229/0f2c936f-b1cd-4ac9-aab3-f63b0f33d55e"
 	 }
 	 */
+	//	https://github.com/hsharsha/v8inspector/blob/master/inspector_socket_server.cc#L377
 	if ( Url == "json" )
 	{
 		std::string WebsocketAddress;
@@ -318,8 +319,8 @@ void TV8Inspector::OnDiscoveryRequest(const std::string& Url,Http::TResponseProt
 	{
 		TJsonWriter Json;
 		Json.Open();
-		Json.Push("major", 1);
-		Json.Push("minor", 0 );
+		Json.Push("Browser", "v8inspector");
+		Json.Push("Protocol-Version", "1.1" );
 		Json.Close();
 		Response.SetContent( Json.GetString(), SoyMediaFormat::Json );
 		return;
@@ -330,6 +331,7 @@ void TV8Inspector::OnDiscoveryRequest(const std::string& Url,Http::TResponseProt
 
 void TV8Inspector::runMessageLoopOnPause(int contextGroupId)
 {
+	//	https://github.com/hsharsha/v8inspector/blob/master/inspector_agent.cc#L147
 	//	https://medium.com/@hyperandroid/v8-inspector-from-an-embedder-standpoint-7f9c0472e2b7
 	/*
 	 While runMessageLoopOnPause is being called, you must
@@ -349,5 +351,12 @@ void TV8Inspector::runMessageLoopOnPause(int contextGroupId)
 void TV8Inspector::quitMessageLoopOnPause()
 {
 	std::Debug << __func__ << std::endl;
+}
+
+v8::Local<v8::Context> TV8Inspector::ensureDefaultContextInGroup(int contextGroupId)
+{
+	auto& Isolate = mContainer.GetIsolate();
+	auto LocalContext = mContainer.mContext->GetLocal(Isolate);
+	return LocalContext;
 }
 

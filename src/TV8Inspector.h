@@ -42,9 +42,11 @@ protected:
 	
 	void 	OnDiscoveryRequest(const std::string& Url,Http::TResponseProtocol& Request);
 	
+	//	inspector client overrides
 	virtual void runMessageLoopOnPause(int contextGroupId) override;
 	virtual void quitMessageLoopOnPause() override;
-
+	virtual v8::Local<v8::Context> ensureDefaultContextInGroup(int contextGroupId) override;
+	
 	
 private:
 	TV8Container&	mContainer;
