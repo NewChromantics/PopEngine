@@ -77,10 +77,142 @@ std::ostream& operator<<(std::ostream &out,const AVAssetReaderStatus& in)
 
 std::shared_ptr<TMediaExtractor> Platform::AllocVideoDecoder(TMediaExtractorParams Params,std::shared_ptr<Opengl::TContext> OpenglContext)
 {
-	return std::shared_ptr<TMediaExtractor>( new AvfDecoderPlayer( Params, OpenglContext ) );
+	//return std::shared_ptr<TMediaExtractor>( new AvfDecoderPlayer( Params, OpenglContext ) );
+	return std::shared_ptr<TMediaExtractor>( new AvfMovieDecoder( Params, OpenglContext ) );
 }
 
 
+
+
+AvfAsset::AvfAsset(const std::string& Filename,std::function<bool(const TStreamMeta&)> FilterTrack)
+{
+	//	alloc asset
+	auto Url = ::Platform::GetUrl( Filename );
+	
+	NSDictionary *Options = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:AVURLAssetPreferPreciseDurationAndTimingKey];
+	AVURLAsset* Asset = [[AVURLAsset alloc] initWithURL:Url options:Options];
+	
+	if ( !Asset )
+		throw Soy::AssertException("Failed to create asset");
+	
+	if ( !Asset.readable )
+		std::Debug << "Warning: Asset " << Filename << " reported as not-readable" << std::endl;
+	
+	mAsset.Retain( Asset );
+	
+	if ( !FilterTrack )
+		FilterTrack = [](const TStreamMeta&){	return true;	};
+	
+	LoadTracks( FilterTrack );
+}
+
+
+AVAssetTrack* AvfAsset::GetTrack(size_t StreamIndex)
+{
+	AVAsset* Asset = mAsset.mObject;
+	NSArray* Tracks = [Asset tracks];
+	if ( StreamIndex >= [Tracks count] )
+		return nullptr;
+	
+	AVAssetTrack* Track = [Tracks objectAtIndex:StreamIndex];
+	return Track;
+}
+
+void AvfAsset::LoadTracks(const std::function<bool(const TStreamMeta&)>& FilterTrack)
+{
+	AVAsset* Asset = mAsset.mObject;
+	Soy::Assert( Asset, "Asset expected" );
+	
+	Soy::TSemaphore LoadTracksSemaphore;
+	__block Soy::TSemaphore& Semaphore = LoadTracksSemaphore;
+	
+	auto OnCompleted = ^
+	{
+		NSError* err = nil;
+		auto Status = [Asset statusOfValueForKey:@"tracks" error:&err];
+		if ( Status != AVKeyValueStatusLoaded)
+		{
+			std::stringstream Error;
+			Error << "Error loading tracks: " << Soy::NSErrorToString(err);
+			Semaphore.OnFailed( Error.str().c_str() );
+			return;
+		}
+		
+		Semaphore.OnCompleted();
+	};
+	
+	//	load tracks
+	NSArray* Keys = [NSArray arrayWithObjects:@"tracks",@"playable",@"hasProtectedContent",@"duration",@"preferredTransform",nil];
+	[Asset loadValuesAsynchronouslyForKeys:Keys completionHandler:OnCompleted];
+	
+	LoadTracksSemaphore.Wait();
+	
+	//	grab duration
+	//	gr: not valid here with AVPlayer!
+	//	http://stackoverflow.com/a/7052147/355753
+	auto Duration = Soy::Platform::GetTime( Asset.duration );
+	
+	//	get meta for each track
+	NSArray* Tracks = [Asset tracks];
+	for ( int t=0;	t<[Tracks count];	t++ )
+	{
+		//	get and retain track
+		AVAssetTrack* Track = [Tracks objectAtIndex:t];
+		if ( !Track )
+			continue;
+		
+		TStreamMeta TrackMeta;
+		
+		//	extract meta from track
+		NSArray* FormatDescriptions = [Track formatDescriptions];
+		std::shared_ptr<Platform::TMediaFormat> PlatformFormat;
+		
+		std::stringstream MetaDebug;
+		if ( !FormatDescriptions )
+		{
+			MetaDebug << "Format descriptions missing";
+		}
+		else if ( FormatDescriptions.count == 0 )
+		{
+			MetaDebug << "Format description count=0";
+		}
+		else
+		{
+			//	use first description, warn if more
+			if ( FormatDescriptions.count > 1 )
+			{
+				MetaDebug << "Found mulitple(" << FormatDescriptions.count << ") format descriptions. ";
+			}
+			
+			id DescElement = FormatDescriptions[0];
+			CMFormatDescriptionRef Desc = (__bridge CMFormatDescriptionRef)DescElement;
+			
+			
+			TrackMeta = Avf::GetStreamMeta( Desc );
+			
+			//	save format
+			PlatformFormat.reset( new Platform::TMediaFormat( Desc ) );
+		}
+		
+		TrackMeta.mStreamIndex = t;
+		TrackMeta.mEncodingBitRate = Track.estimatedDataRate;
+		
+		//	grab the transform from the video track
+		TrackMeta.mPixelMeta.DumbSetWidth( Track.naturalSize.width );
+		TrackMeta.mPixelMeta.DumbSetHeight( Track.naturalSize.height );
+		TrackMeta.mTransform = Soy::MatrixToVector( Track.preferredTransform, vec2f(TrackMeta.mPixelMeta.GetWidth(),TrackMeta.mPixelMeta.GetHeight()) );
+		
+		TrackMeta.mDuration = Duration;
+		
+		//	skip tracks
+		if ( !FilterTrack(TrackMeta) )
+			continue;
+		
+		mStreamFormats[t] = PlatformFormat;
+		mStreams.PushBack( TrackMeta );
+	}
+	
+}
 
 AvfDecoder::AvfDecoder(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext>& OpenglContext) :
 	AvfMediaExtractor	( Params, OpenglContext )
@@ -100,9 +232,11 @@ void AvfDecoder::Shutdown()
 	//	no longer need the context
 	mOpenglContext.reset();
 }
-/*
-AvfMovieDecoder::AvfMovieDecoder(const TVideoDecoderParams& Params,std::map<size_t,std::shared_ptr<TPixelBufferManager>>& PixelBufferManagers,std::map<size_t,std::shared_ptr<TAudioBufferManager>>& AudioBufferManagers,std::shared_ptr<Opengl::TContext>& OpenglContext) :
-	AvfAssetDecoder		( Params, PixelBufferManagers, AudioBufferManagers, OpenglContext )
+
+AvfMovieDecoder::AvfMovieDecoder(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext>& OpenglContext) :
+	AvfAssetDecoder		( Params, OpenglContext ),
+	mAvfCopyBuffer		( true ),
+	mCopyBuffer			( true )
 {
 }
 
@@ -115,25 +249,6 @@ AvfMovieDecoder::~AvfMovieDecoder()
 	DeleteAsset();
 }
 
-bool AvfMovieDecoder::HasFatalError(std::string& Error)
-{
-	if ( !mCaughtDecodingException.empty() )
-	{
-		Error = mCaughtDecodingException;
-		return true;
-	}
-	
-	return TVideoDecoder::HasFatalError( Error );
-}
-
-void AvfMovieDecoder::GetStreamMeta(ArrayBridge<TStreamMeta>&& StreamMetas)
-{
-	if ( !mAsset )
-		return;
-	
-	StreamMetas.Copy( mAsset->mStreams );
-}
-*/
 
 bool AvfAssetDecoder::Iteration()
 {
@@ -178,7 +293,7 @@ bool AvfAssetDecoder::Iteration()
 	
 	return true;
 }
-/*
+
 void AvfMovieDecoder::CreateAsset()
 {
 	if ( mAsset )
@@ -264,7 +379,8 @@ bool AvfMovieDecoder::CreateReader(id PixelFormat,bool OpenglCompatibility)
 	//	start reading, if this fails we need to destroy the reader
 	//	initial seek
 	//	gr: cannot do this once we've started!
-	SoyTime InitialSeekTime( GetPlayerTime() + mParams.mPixelBufferParams.mPreSeek );
+	//SoyTime InitialSeekTime( GetPlayerTime() + mParams.mPixelBufferParams.mPreSeek );
+	SoyTime InitialSeekTime(false);
 	std::Debug << "Reader initial seek to " << InitialSeekTime << std::endl;
 	auto StartTime = Soy::Platform::GetTime( InitialSeekTime );
 	CMTimeRange TimeRange = CMTimeRangeMake( StartTime, kCMTimePositiveInfinity );
@@ -360,7 +476,7 @@ void AvfMovieDecoder::CreateVideoTrack(id PixelFormat,bool OpenglCompatibility)
 		return;
 	
 	auto* Reader = mReader.mObject;
-	auto* VideoTrack = mVideoTrack.mObject;
+	auto* VideoTrack = mAsset->GetTrack(0);
 
 	//	create track output
 	BOOL OpenglCompatibilityObj = OpenglCompatibility ? YES : NO;
@@ -391,7 +507,7 @@ void AvfMovieDecoder::CreateVideoTrack(id PixelFormat,bool OpenglCompatibility)
 	@try
 	{
 		if( [VideoTrackOutput respondsToSelector:@selector(alwaysCopiesSampleData)] )
-			VideoTrackOutput.alwaysCopiesSampleData = (mParams.mAvfCopyBuffer) ? YES : NO;
+			VideoTrackOutput.alwaysCopiesSampleData = (mAvfCopyBuffer) ? YES : NO;
 	}
 	@catch(NSException* e)
 	{
@@ -489,7 +605,7 @@ bool AvfMovieDecoder::WaitForReaderNextFrame()
 	}
 }
 
-
+/*
 bool AvfMovieDecoder::CopyBuffer(CMSampleBufferRef Buffer,std::stringstream& Error)
 {
 	//	gr: same as popcapture's sample handler;
@@ -504,7 +620,7 @@ bool AvfMovieDecoder::CopyBuffer(CMSampleBufferRef Buffer,std::stringstream& Err
 	CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
 	
 	// Upload to texture
-	bool LockBuffer = !mParams.mCopyBuffer;
+	bool LockBuffer = !mCopyBuffer;
 	if ( LockBuffer && CVPixelBufferLockBaseAddress(movieFrame, 0) != kCVReturnSuccess )
 	{
 		Error << "failed to lock new sample buffer";

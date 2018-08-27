@@ -71,9 +71,10 @@ public:
 	AvfAsset(const std::string& Filename,std::function<bool(const TStreamMeta&)> FilterTrack=nullptr);
 	
 	void				LoadTracks(const std::function<bool(const TStreamMeta&)>& FilterTrack);	//	blocking & throwing load of desired track[s]
+	AVAssetTrack*		GetTrack(size_t TrackIndex);
 
 	std::shared_ptr<Platform::TMediaFormat>		GetStreamFormat(size_t StreamIndex)	{	return mStreamFormats[StreamIndex];	}
-	
+
 public:
 	Array<TStreamMeta>	mStreams;
 	ObjcPtr<AVAsset>	mAsset;
@@ -101,8 +102,43 @@ protected:
 
 public:
 	std::string				mCaughtDecodingException;		//	any exceptions caught during iteration
-	ObjcPtr<AVAssetTrack>	mVideoTrack;
 	float3x3				mAffineTransform;
+};
+#endif
+
+
+
+#if defined(__OBJC__)
+class AvfMovieDecoder : public AvfAssetDecoder
+{
+public:
+	AvfMovieDecoder(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext>& OpenglContext);
+	~AvfMovieDecoder();
+	
+	bool		HasError();			//	check this to see if it's failed
+	
+	void		CreateAsset();
+	
+	//	because creating the video track can fail at startReading, we need to delete the whole AvAssetReader and start again, we wrap the whole thing
+	virtual void	CreateReader() override;
+	bool			CreateReader(id PixelFormat,bool OpenglCompatibility);
+	void			CreateReaderObject();
+	void			CreateVideoTrack(id PixelFormat,bool OpenglCompatibility);
+	virtual void	DeleteReader() override;
+	void			DeleteAsset();
+	
+	virtual bool	WaitForReaderNextFrame() override;
+	
+	bool				CopyBuffer(CMSampleBufferRef Buffer,std::stringstream& Error);
+	
+public:
+	std::shared_ptr<AvfAsset>	mAsset;
+	bool						mAvfCopyBuffer;
+	bool						mCopyBuffer;
+	
+	ObjcPtr<AVAssetReader>	mReader;
+	ObjcPtr<AVAssetReaderTrackOutput>	mVideoTrackOutput;
+	std::mutex				mVideoTrackOutputLock;		//	lock during the blocking CopySample so we don't cancel reading until this has passed and vice versa
 };
 #endif
 
