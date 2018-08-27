@@ -9,10 +9,6 @@
 
 using namespace v8_inspector;
 
-class ClientImpl : public V8InspectorClient
-{
-	
-};
 
 class ChannelImpl : public V8Inspector::Channel
 {
@@ -30,7 +26,7 @@ public:
 };
 
 
-class TV8Inspector
+class TV8Inspector : public V8InspectorClient
 {
 public:
 	TV8Inspector(TV8Container& Container);
@@ -45,6 +41,10 @@ protected:
 	void	SendResponse(const std::string& Message);
 	
 	void 	OnDiscoveryRequest(const std::string& Url,Http::TResponseProtocol& Request);
+	
+	virtual void runMessageLoopOnPause(int contextGroupId) override;
+	virtual void quitMessageLoopOnPause() override;
+
 	
 private:
 	TV8Container&	mContainer;

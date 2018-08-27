@@ -4,6 +4,24 @@
 
 using namespace v8_inspector;
 
+class TStringViewContainer
+{
+public:
+	TStringViewContainer(const std::string& Text) :
+		mString	( Text )
+	{
+	}
+	
+	StringView	GetStringView()
+	{
+		auto* CStr8 = reinterpret_cast<const uint8_t*>(mString.c_str());
+		return StringView( CStr8, mString.length() );
+	}
+	
+	std::string	mString;
+	StringView	mView;
+};
+
 std::string GetString(const StringView& String)
 {
 	std::stringstream StringOut;
@@ -110,8 +128,7 @@ TV8Inspector::TV8Inspector(TV8Container& Container) :
 	auto Context = mContainer.mContext->GetLocal(Isolate);
 
 	//	https://medium.com/@hyperandroid/v8-inspector-from-an-embedder-standpoint-7f9c0472e2b7
-	auto* Client = new ClientImpl();
-	mInspector = V8Inspector::create( &Isolate, Client );
+	mInspector = V8Inspector::create( &Isolate, this );
 	
 	auto DoSendResponse = [this](const std::string& Message)
 	{
@@ -122,25 +139,27 @@ TV8Inspector::TV8Inspector(TV8Container& Container) :
 	// ChannelImpl : public v8_inspector::V8Inspector::Channel
 	mChannel.reset( new ChannelImpl(DoSendResponse) );
 	
-	char ViewNameBuffer[100];
-	Soy::StringToBuffer("ViewName",ViewNameBuffer);
-	StringView ViewName( (uint8_t*)ViewNameBuffer, sizeof(ViewNameBuffer) );
+	TStringViewContainer State("State");
 
 	// Create a debugging session by connecting the V8Inspector
 	// instance to the channel
-	auto One = 1;
-	mSession = mInspector->connect( One, mChannel.get(), ViewName );
+	auto ContextGroupId = 1;
+	mSession = mInspector->connect( ContextGroupId, mChannel.get(), State.GetStringView() );
 	
-	char ContextNameBuffer[100];
-	Soy::StringToBuffer("PopEngineContextName",ContextNameBuffer);
-	StringView ContextName( (uint8_t*)ContextNameBuffer, sizeof(ContextNameBuffer) );
 	
 	// make sure you register Context objects in the V8Inspector.
 	// ctx_name will be shown in CDT/console. Call this for each context
 	// your app creates.
-	V8ContextInfo ContextInfo( Context, 1, ContextName );
+	TStringViewContainer ContextName("PopEngineContextName");
+	V8ContextInfo ContextInfo( Context, ContextGroupId, ContextName.GetStringView() );
 	mInspector->contextCreated(ContextInfo);
-							   
+	
+	auto BreakOnStart = true;
+	if ( BreakOnStart )
+	{
+		mSession->schedulePauseOnNextStatement(TStringViewContainer("Break on start").GetStringView(),TStringViewContainer("Just do it").GetStringView());
+	}
+
 							   
 	/*
 	auto ChromeDevToolsPort = 9229;
@@ -161,10 +180,22 @@ TV8Inspector::TV8Inspector(TV8Container& Container) :
 	{
 		this->OnMessage( Connection, Message );
 	};
-								
-	auto InspectorPort = 0;
-	mWebsocketServer.reset( new TWebsocketServer(InspectorPort,OnTextMessage,OnBinaryMessage) );
 	
+	auto InspectorPorts = {8008,0};
+	for ( auto InspectorPort : InspectorPorts )
+	{
+		try
+		{
+			mWebsocketServer.reset( new TWebsocketServer(InspectorPort,OnTextMessage,OnBinaryMessage) );
+			break;
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << e.what() << std::endl;
+		}
+	}
+	if ( !mWebsocketServer )
+		throw Soy::AssertException("Failed to open websocket server");
 
 	std::stringstream OpenUrl;
 	OpenUrl << "http://" << GetChromeDebuggerUrl();
@@ -177,12 +208,7 @@ TV8Inspector::TV8Inspector(TV8Container& Container) :
 	system( OpenUrl.str().c_str() );
 	Platform::ShellExecute(OpenUrl.str());
 	*/
-/*
-	9229
-	9229
-	agent->Start(isolate, platform, argv[1]);
-	agent->PauseOnNextJavascriptStatement("Break on start");
- */
+
 }
 
 std::string TV8Inspector::GetChromeDebuggerUrl()
@@ -191,7 +217,7 @@ std::string TV8Inspector::GetChromeDebuggerUrl()
 	//	chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:14549
 	auto WebsocketAddress = GetWebsocketAddress();
 	std::stringstream ChromeUrl;
-	ChromeUrl << "chrome-devtools%3A//devtools/bundled/inspector.html?experiments=true&v8only=true&ws=" << WebsocketAddress;
+	ChromeUrl << "chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=" << WebsocketAddress;
 	return ChromeUrl.str();
 }
 
@@ -221,9 +247,13 @@ void TV8Inspector::OnMessage(SoyRef Connection,const std::string& Message)
 	//	send message to session
 	Array<uint8_t> MessageBuffer;
 	Soy::StringToArray( Message, GetArrayBridge(MessageBuffer) );
-	v8_inspector::StringView MessageString( MessageBuffer.GetArray(), MessageBuffer.GetSize() );
 	
-	mSession->dispatchProtocolMessage(MessageString);
+	auto DispatchMessage = [=](v8::Local<v8::Context> Context)
+	{
+		v8_inspector::StringView MessageString( MessageBuffer.GetArray(), MessageBuffer.GetSize() );
+		this->mSession->dispatchProtocolMessage(MessageString);
+	};
+	mContainer.QueueScoped(DispatchMessage);
 }
 
 void TV8Inspector::OnMessage(SoyRef Connection,const Array<uint8_t>& Message)
@@ -297,3 +327,27 @@ void TV8Inspector::OnDiscoveryRequest(const std::string& Url,Http::TResponseProt
 	
 	std::Debug << "Unhandled chrome tools request: " << Url << std::endl;
 }
+
+void TV8Inspector::runMessageLoopOnPause(int contextGroupId)
+{
+	//	https://medium.com/@hyperandroid/v8-inspector-from-an-embedder-standpoint-7f9c0472e2b7
+	/*
+	 While runMessageLoopOnPause is being called, you must
+	 synchronously consume all front end (Dev Tools) debugging
+	 messages. If not, you will not get all context information
+	 of the code you are debugging. Once V8 knows it has no more
+	 inspector messages pending, it will call quitMessageLoopOnPause
+	 automatically.
+	 */
+	std::Debug << __func__ << std::endl;
+
+	//	run all the contexts in this group
+	auto ThreadIsRunning = []{	return true;	};
+	mContainer.ProcessJobs(ThreadIsRunning);
+}
+
+void TV8Inspector::quitMessageLoopOnPause()
+{
+	std::Debug << __func__ << std::endl;
+}
+
