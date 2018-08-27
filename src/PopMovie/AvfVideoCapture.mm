@@ -222,10 +222,8 @@ void AvfCapture::EnumDevices(ArrayBridge<TDeviceMeta>&& DeviceMetas,std::functio
 
 
 AvfVideoCapture::AvfVideoCapture(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext> OpenglContext) :
-	TMediaExtractor			( Params ),
+	AvfMediaExtractor		( Params, OpenglContext ),
 	mQueue					( nullptr ),
-	mRenderer				( new AvfDecoderRenderer() ),
-	mOpenglContext			( OpenglContext ),
 	mDiscardOldFrames		( Params.mDiscardOldFrames ),
 	mForceNonPlanarOutput	( Params.mForceNonPlanarOutput )
 {
@@ -645,7 +643,7 @@ void AvfVideoCapture::StopStream()
 }
 
 
-void AvfVideoCapture::GetStreams(ArrayBridge<TStreamMeta>&& StreamMetas)
+void AvfMediaExtractor::GetStreams(ArrayBridge<TStreamMeta>&& StreamMetas)
 {
 	for ( auto& Meta : mStreamMeta )
 	{
@@ -654,7 +652,7 @@ void AvfVideoCapture::GetStreams(ArrayBridge<TStreamMeta>&& StreamMetas)
 }
 
 
-TStreamMeta AvfVideoCapture::GetFrameMeta(CMSampleBufferRef SampleBuffer,size_t StreamIndex)
+TStreamMeta AvfMediaExtractor::GetFrameMeta(CMSampleBufferRef SampleBuffer,size_t StreamIndex)
 {
 	auto Desc = CMSampleBufferGetFormatDescription( SampleBuffer );
 	auto Meta = Avf::GetStreamMeta( Desc );
@@ -681,7 +679,35 @@ TStreamMeta AvfVideoCapture::GetFrameMeta(CMSampleBufferRef SampleBuffer,size_t 
 	return Meta;
 }
 
-void AvfVideoCapture::QueuePacket(std::shared_ptr<TMediaPacket>& Packet)
+
+TStreamMeta AvfMediaExtractor::GetFrameMeta(CVPixelBufferRef SampleBuffer,size_t StreamIndex)
+{
+	TStreamMeta Meta;
+	Meta.mStreamIndex = StreamIndex;
+	
+	//CMTime CmTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBufferRef);
+	//SoyTime Timestamp = Soy::Platform::GetTime(CmTimestamp);
+	
+	//	new stream!
+	if ( mStreamMeta.find(StreamIndex) == mStreamMeta.end() )
+	{
+		try
+		{
+			mStreamMeta[StreamIndex] = Meta;
+			OnStreamsChanged();
+		}
+		catch(...)
+		{
+			mStreamMeta.erase( mStreamMeta.find(StreamIndex) );
+			throw;
+		}
+	}
+	
+	return Meta;
+}
+
+
+void AvfMediaExtractor::QueuePacket(std::shared_ptr<TMediaPacket>& Packet)
 {
 	OnPacketExtracted( Packet->mTimecode, Packet->mMeta.mStreamIndex );
 	
@@ -690,7 +716,7 @@ void AvfVideoCapture::QueuePacket(std::shared_ptr<TMediaPacket>& Packet)
 	
 		//	only save latest
 		//	gr: check in case this causes too much stuttering and maybe keep 2
-		if ( mDiscardOldFrames )
+		if ( mParams.mDiscardOldFrames )
 			mPacketQueue.Clear();
 
 		mPacketQueue.PushBack( Packet );
@@ -700,7 +726,7 @@ void AvfVideoCapture::QueuePacket(std::shared_ptr<TMediaPacket>& Packet)
 	Wake();
 }
 
-std::shared_ptr<TMediaPacket> AvfVideoCapture::ReadNextPacket()
+std::shared_ptr<TMediaPacket> AvfMediaExtractor::ReadNextPacket()
 {
 	if ( mPacketQueue.IsEmpty() )
 		return nullptr;
@@ -709,8 +735,15 @@ std::shared_ptr<TMediaPacket> AvfVideoCapture::ReadNextPacket()
 	return mPacketQueue.PopAt(0);
 }
 
+AvfMediaExtractor::AvfMediaExtractor(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext>& OpenglContext) :
+	TMediaExtractor	( Params ),
+	mOpenglContext	( OpenglContext ),
+	mRenderer		( new AvfDecoderRenderer() )
+{
+	
+}
 
-void AvfVideoCapture::OnSampleBuffer(CMSampleBufferRef sampleBufferRef,size_t StreamIndex,bool DoRetain)
+void AvfMediaExtractor::OnSampleBuffer(CMSampleBufferRef sampleBufferRef,size_t StreamIndex,bool DoRetain)
 {
 	//Soy::Assert( sampleBufferRef != nullptr, "Expected sample buffer ref");
 	if ( !sampleBufferRef )
@@ -736,6 +769,32 @@ void AvfVideoCapture::OnSampleBuffer(CMSampleBufferRef sampleBufferRef,size_t St
 		CFPixelBuffer StackRelease(sampleBufferRef,false,mRenderer,float3x3());
 		return;
 	}
+}
+
+
+void AvfMediaExtractor::OnSampleBuffer(CVPixelBufferRef sampleBufferRef,SoyTime Timestamp,size_t StreamIndex,bool DoRetain)
+{
+	if ( !sampleBufferRef )
+		return;
+	
+	//	callback on another thread, so need to catch exceptions
+	try
+	{
+		auto pPacket = std::make_shared<TMediaPacket>();
+		auto& Packet = *pPacket;
+		Packet.mMeta = GetFrameMeta( sampleBufferRef, StreamIndex );
+		Packet.mTimecode = Timestamp;
+		Packet.mPixelBuffer = std::make_shared<CVPixelBuffer>( sampleBufferRef, DoRetain, mRenderer, Packet.mMeta.mTransform );
+		
+		QueuePacket( pPacket );
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __func__ << " exception; " << e.what() << std::endl;
+		CVPixelBuffer StackRelease(sampleBufferRef,false,mRenderer,float3x3());
+		return;
+	}
+
 }
 
 /*

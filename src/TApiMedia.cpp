@@ -1,8 +1,10 @@
 #include "TApiMedia.h"
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
+#include <SoyFilesystem.h>
 
 #include "PopMovie/AvfVideoCapture.h"
+#include "PopMovie/AvfMovieDecoder.h"
 
 
 using namespace v8;
@@ -213,7 +215,18 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 		TMediaExtractorParams Params( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
 		Params.mForceNonPlanarOutput = SinglePlaneOutput;
 		Params.mDiscardOldFrames = true;
-		NewWrapper->mExtractor = ::Platform::AllocCaptureExtractor( Params, nullptr );
+		
+		//	video extractor if it's a filename
+		if ( ::Platform::FileExists(DeviceName) )
+		{
+			std::shared_ptr<Opengl::TContext> OpenglContext;
+
+			NewWrapper->mExtractor = ::Platform::AllocVideoDecoder( Params, OpenglContext );
+		}
+		else
+		{
+			NewWrapper->mExtractor = ::Platform::AllocCaptureExtractor( Params, nullptr );
+		}
 		NewWrapper->mExtractor->AllocStreamBuffer(0);
 		NewWrapper->mExtractor->Start(false);
 

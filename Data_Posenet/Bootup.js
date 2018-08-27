@@ -51,6 +51,7 @@ var LastFrame = null;	//	completed TFrame
 var EnableKalmanFilter = true;
 
 var WebcamTest = true;
+var VideoTest = "/Users/graham/Desktop/Anchorman.mp4";
 
 //	gr: for some reason, without this... v8 has no jobs?
 var EnableWindowRender = true;
@@ -885,7 +886,7 @@ function WindowRender(RenderTarget)
 
 function IsReady()
 {
-	if ( !WebcamTest )
+	if ( !WebcamTest && !VideoTest )
 		if ( PoseNet == null )
 			return false;
 	
@@ -1356,7 +1357,7 @@ function ShowTestFrame(FrameImage)
 
 function OnNewVideoFrame(FrameImage)
 {
-	if ( WebcamTest )
+	if ( WebcamTest || VideoTest )
 	{
 		ShowTestFrame(FrameImage);
 		return;
@@ -1404,6 +1405,13 @@ function OnNewVideoFrame(FrameImage)
 
 function LoadVideo()
 {
+	if ( VideoTest )
+	{
+		let VideoCapture = new MediaSource(VideoTest,RGBAFromCamera,OnNewVideoFrameFilter);
+		VideoCapture.OnNewFrame = OnNewVideoFrame;
+		return;
+	}
+	
 	let GetDeviceNameMatch = function(DeviceNames,MatchName)
 	{
 		let MatchDeviceName = function(DeviceName)
@@ -1635,7 +1643,7 @@ function Main()
 	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;
 	
-	if ( !WebcamTest )
+	if ( !WebcamTest && !VideoTest )
 	{
 		LoadDlib();
 		LoadPosenet();
