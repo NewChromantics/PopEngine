@@ -32,3 +32,6 @@ iosbuild/
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
+
+# ignore libs, too big for lfs
+src/v8/lib/*.a
