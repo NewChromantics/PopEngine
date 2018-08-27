@@ -35,3 +35,5 @@ sysinfo.txt
 
 # ignore libs, too big for lfs
 src/v8/lib/*.a
+src/v8/v8Runtime/*.bin
+src/v8/v8Runtime/*.dat
