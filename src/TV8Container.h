@@ -312,7 +312,7 @@ private:
 	
 
 public:
-	v8::Persist<v8::Context>		mContext;		//	our "document", keep adding scripts to it
+	std::shared_ptr<V8Storage<v8::Context>>		mContext;		//	our "document", keep adding scripts to it
 	std::shared_ptr<TV8Inspector>	mInspector;		//	the remote debugger!
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;

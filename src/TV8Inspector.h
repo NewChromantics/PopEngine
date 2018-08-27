@@ -9,7 +9,7 @@
 class TV8Inspector //: public v8_inspector::V8Inspector::Channel
 {
 public:
-	TV8Inspector(v8::Isolate& Isolate);
+	TV8Inspector(v8::Isolate& Isolate,v8::Local<v8::Context> Context);
 	
 protected:
 	void	OnMessage(const std::string& Message);

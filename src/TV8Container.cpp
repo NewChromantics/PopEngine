@@ -194,12 +194,13 @@ void TV8Container::CreateContext()
     Context::Scope context_scope( ContextLocal );
     
 	//  save the persistent	handle
-	mContext.Reset( isolate, ContextLocal );
+	mContext = v8::GetPersistent( *isolate, ContextLocal );
 }
 
 void TV8Container::CreateInspector()
 {
-	mInspector.reset( new TV8Inspector(*mIsolate) );
+	auto ContextLocal = mContext->GetLocal(*mIsolate);
+	mInspector.reset( new TV8Inspector(*mIsolate, ContextLocal) );
 }
 
 
@@ -349,12 +350,12 @@ void TV8Container::RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda)
 		Isolate::Scope isolate_scope(isolate);
 		HandleScope handle_scope(isolate);
 		//	grab a local
-		Local<Context> context = Local<Context>::New( isolate, mContext );
-		Context::Scope context_scope( context );
+		auto Context = mContext->GetLocal(*isolate);
+		Context::Scope context_scope( Context );
 
 		//	gr: auto catch and turn into a c++ exception
 		TryCatch trycatch(isolate);
-		Lambda( context );
+		Lambda( Context );
 		if ( trycatch.HasCaught() )
 			throw V8Exception( trycatch, "Running Javascript func" );
 		mIsolate->Exit();
