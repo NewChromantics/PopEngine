@@ -260,8 +260,8 @@ public:
 	void		Yield(size_t SleepMilliseconds);
 	
 	//	run these with RunScoped (internal) or QueueJob (external)
-	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source);
-	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source);
+	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source,const std::string& SourceFilename);
+	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source,const std::string& SourceFilename);
 
 	TV8ObjectTemplate::ALLOCATOR	GetAllocator(const char* TYPENAME);
 	//	deprecated for object

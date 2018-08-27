@@ -39,7 +39,7 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 		auto* Container = mV8Container.get();
 		auto LoadScript = [=](v8::Local<v8::Context> Context)
 		{
-			Container->LoadScript( Context, BootupSource );
+			Container->LoadScript( Context, BootupSource, ScriptFilename );
 		};
 		
 		mV8Container->QueueScoped( LoadScript );

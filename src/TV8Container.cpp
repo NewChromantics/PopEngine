@@ -210,7 +210,7 @@ void TV8Container::CreateInspector()
 }
 
 
-Local<Value> TV8Container::LoadScript(Local<Context> context,const std::string& Source)
+Local<Value> TV8Container::LoadScript(Local<Context> context,const std::string& Source,const std::string& SourceFilename)
 {
 	auto* CStr = Source.c_str();
 	if ( CStr == nullptr )
@@ -218,11 +218,11 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,const std::string& 
 	
 	auto* Isolate = context->GetIsolate();
 	auto StringHandle = String::NewFromUtf8( Isolate, CStr );
-	return LoadScript( context, StringHandle );
+	return LoadScript( context, StringHandle, SourceFilename );
 }
 
 
-Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Source)
+Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Source,const std::string& SourceFilename)
 {
 	auto* Isolate = context->GetIsolate();
 	
@@ -230,7 +230,14 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Sourc
 	Local<Script> NewScript;
 	{
 		TryCatch trycatch(Isolate);
-		auto NewScriptMaybe = Script::Compile(context, Source);
+		
+		auto OriginStr = v8::GetString(*Isolate, std::string("file://")+SourceFilename );
+		auto OriginRow = v8::Integer::New( Isolate, 0 );
+		auto OriginCol = v8::Integer::New( Isolate, 0 );
+		auto Cors = v8::Boolean::New( Isolate, true );
+		v8::ScriptOrigin Origin( OriginStr, OriginRow, OriginCol, Cors );
+		
+		auto NewScriptMaybe = Script::Compile(context, Source, &Origin );
 		if ( NewScriptMaybe.IsEmpty() )
 			throw V8Exception( trycatch, "Compiling script" );
 		NewScript = NewScriptMaybe.ToLocalChecked();

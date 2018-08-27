@@ -149,7 +149,7 @@ static Local<Value> CompileAndRun(CallbackInfo& Params)
 	
 	auto Source = Local<String>::Cast( args[0] );
 
-	return Params.mContainer.LoadScript( Params.mContext, Source );
+	return Params.mContainer.LoadScript( Params.mContext, Source, "RuntimeFile" );
 }
 
 
