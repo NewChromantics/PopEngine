@@ -173,6 +173,9 @@ bool AvfAssetDecoder::Iteration()
 		std::this_thread::sleep_for( std::chrono::milliseconds( SleepMs ) );
 	}
 	
+	if ( !AvfDecoder::Iteration() )
+		return false;
+	
 	return true;
 }
 /*
@@ -566,6 +569,11 @@ AvfDecoderPlayer::~AvfDecoderPlayer()
 	
 }
 
+void AvfDecoderPlayer::ReAddOutput()
+{
+	[mPlayerItem.mObject removeOutput:mPlayerVideoOutput.mObject];
+	[mPlayerItem.mObject addOutput:mPlayerVideoOutput.mObject];
+}
 
 void AvfDecoderPlayer::CreateReader()
 {
@@ -711,21 +719,20 @@ SoyTime AvfDecoderPlayer::GetCurrentTime()
 	return Time;
 }
 
-std::shared_ptr<TMediaPacket> AvfDecoderPlayer::ReadNextPacket()
-{
-	throw Soy::AssertException("Implement this");
-}
+#include <SoyTime.h>
 
 bool AvfDecoderPlayer::WaitForReaderNextFrame()
 {
 	Soy::Assert( mPlayer!=nullptr, "Expected video player" );
 	Soy::Assert( mPlayerVideoOutput!=nullptr, "Expected video player output" );
 	
-
-	//auto RequestTime = Platform::GetTimeInterval(mPlayerTime);
-	auto RequestTime = 0;//CACurrentMediaTime();	//	quartz!
-	//auto RequestTime = Platform::GetTimeInterval( Platform::GetTime( mPlayer.mObject.currentTime ) );
+	auto PlayerTime = GetCurrentTime();
+	PlayerTime.mTime += 60;
 	
+	//auto RequestTime = 0;//CACurrentMediaTime();	//	quartz!
+	//auto RequestTime = Platform::GetTimeInterval( Platform::GetTime( mPlayer.mObject.currentTime ) );
+	CFTimeInterval RequestTime = static_cast<double>(PlayerTime.GetSecondsf());
+
 	//	resolve the nearest frame to the time we want
 	auto FrameTime = [mPlayerVideoOutput.mObject itemTimeForHostTime:RequestTime];
 	//FrameTime = Platform::GetTime( mPlayerTime );
@@ -812,6 +819,7 @@ void CVPixelBuffer::UnlockImageBuffer()
 - (void)outputMediaDataWillChange:(AVPlayerItemOutput *)sender
 {
 	std::Debug << "outputMediaDataWillChange" << std::endl;
+	mParent->ReAddOutput();
 }
 
 - (void)outputSequenceWasFlushed:(AVPlayerItemOutput *)output

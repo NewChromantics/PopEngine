@@ -120,11 +120,12 @@ public:
 	AvfDecoderPlayer(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext>& OpenglContext);
 	~AvfDecoderPlayer();
 	
+	void					ReAddOutput();
+	
 protected:
 	virtual void			CreateReader() override;
 	virtual void			DeleteReader() override;
 	virtual bool			WaitForReaderNextFrame() override;
-	virtual std::shared_ptr<TMediaPacket>	ReadNextPacket() override;
 	SoyTime					GetCurrentTime();
 	
 	void					OnSeekCompleted(SoyTime RequestedSeekTime,bool Finished);
