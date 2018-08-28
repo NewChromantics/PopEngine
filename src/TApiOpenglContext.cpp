@@ -728,7 +728,7 @@ void GetPixelData(const char* Context,Local<Value> DataHandle,ArrayBridge<uint8_
 		auto heightstring = String::NewFromUtf8(Isolate,"height");
 		auto datastring = String::NewFromUtf8(Isolate,"data");
 
-		if ( ObjectHandle->HasRealNamedCallbackProperty(widthstring) && ObjectHandle->HasRealNamedCallbackProperty(heightstring) && ObjectHandle->HasRealNamedCallbackProperty(datastring) )
+		if ( ObjectHandle->Has(widthstring) && ObjectHandle->Has(heightstring) && ObjectHandle->Has(datastring) )
 		{
 			auto DataDataHandle = ObjectHandle->Get(datastring);
 			if ( DataDataHandle->IsUint8ClampedArray() )
@@ -736,6 +736,10 @@ void GetPixelData(const char* Context,Local<Value> DataHandle,ArrayBridge<uint8_
 				v8::EnumArray<Uint8ClampedArray>(DataDataHandle, PixelData8 );
 				return;
 			}
+		}
+		else
+		{
+			std::Debug << "Object doesn't have width/height/data members, so not ImageData" << std::endl;
 		}
 	}
 
