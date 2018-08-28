@@ -13,11 +13,11 @@ include('Webgl.js');
 include('FrameCounter.js');
 
 
-var RGBAFromCamera = true;
+var RGBAFromCamera = false;
 var FlipCameraInput = false;
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["c920","facetime","c920","isight"];
-var VideoFilename = "/Users/greeves/Desktop/Noodle_test1.MOV";
+var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 
 
 var WebServer = null;
@@ -25,26 +25,26 @@ var WebServerPort = 8000;
 
 
 var AllowBgraAsRgba = true;
-var PoseNetScale = 0.40;
+var PoseNetScale = 0.80;
 var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = PoseNetOutputStride * 32;
+var ClipToSquare = PoseNetOutputStride * 20;
 var EnableGpuClip = true;
-var ClipToGreyscale = false;	//	GPU only! shader option
+var ClipToGreyscale = !RGBAFromCamera;	//	GPU only! shader option
 var ApplyBlurInClip = false;
 
-var FindFaceAroundLastHeadRectScale = 1.1;	//	make this expand more width ways
-var ShoulderToHeadWidthRatio = 0.8;
-var HeadWidthToHeightRatio = 2.4;
+var FindFaceAroundLastHeadRectScale = 1.0;	//	make this expand more width ways
+var ShoulderToHeadWidthRatio = 1.0;
+var HeadWidthToHeightRatio = 1.0;
 var NoseHeightInHead = 0.5;
 
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
-var DrawRects = false;
+var DrawRects = true;
 var IgnoreJointMaxScore = 0.5;
 var DrawSkeletonMinScore = IgnoreJointMaxScore;//0.0;
 
@@ -62,9 +62,9 @@ var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.
 var DlibThreadCount = 1;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
-var SmallImageSize = 80 * 3;
+var SmallImageSize = 80 * 1;
 var SmallImageSquare = true;
-var NoFaceSendLast = true;
+var NoFaceSendLast = false;
 var FailIfNoFace = false;
 var BlurLandmarkSearch = false;
 
@@ -1310,6 +1310,15 @@ function SetupForFaceDetection(Frame)
 
 function GetFaceDetectionPromise(Frame)
 {
+	if ( FaceProcessor == null )
+	{
+		let Runner = function(Resolve,Reject)
+		{
+			Resolve( [] );
+		}
+		return new Promise( Runner );
+	}
+	
 	//Debug("GetFaceDetectionPromise on " + Frame.SmallImage );
 	return FaceProcessor.FindFaces( Frame.SmallImage );
 }
@@ -1465,6 +1474,8 @@ function LoadVideo()
 
 function LoadDlib()
 {
+	if ( DlibThreadCount == 0 )
+		return null;
 	FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 }
 
