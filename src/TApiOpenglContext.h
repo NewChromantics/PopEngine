@@ -54,7 +54,8 @@ public:
 	//	run javascript on gl thread for immediate mode stuff
 	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				ExecuteCompiledQueue(const v8::CallbackInfo& Arguments);
-	
+	static v8::Local<v8::Value>				FlushAsync(const v8::CallbackInfo& Arguments);	//	returns promise for when flush has finished
+
 	//	return a named array of immediate-use GL enum values
 	static v8::Local<v8::Value>				GetEnums(const v8::CallbackInfo& Arguments);
 	

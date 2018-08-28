@@ -529,10 +529,10 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	
 	//	returns a promise, which executes the command buffer
 	//	this will cache the pixels internally for the next proper (synchronous) read from posenet
-	this.readPixelsAsync = function(x,y,w,h,format,type,output,Texture)
+	this.readPixelsAsync = async function(x,y,w,h,format,type,output,Texture)
 	{
 		//	don't need this as we're not blocking thread?
-		//Sleep(0);
+		Sleep(0);
 		
 		//	gr: currently getting a deadlock with the async flush
 		//return new Promise( function(Resolve){Resolve();} );
@@ -542,15 +542,16 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 
-		this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );
-		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
-		
+
 		let Async = true;
-		let FlushPromise = this.CommandQueue.Flush( this.GetOpenglContext(), Async );
-		if ( FlushPromise.constructor.name != 'Promise' )
-			throw "FlushPromise(" + (FlushPromise.constructor.name) +" not promise";
+		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		//this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );
+		await this.CommandQueue.Flush( this.GetOpenglContext(), Async );
+		//Debug("this.GetOpenglContext().FlushAsync() = " + (typeof this.GetOpenglContext().FlushAsync ));
+		await this.GetOpenglContext().FlushAsync();
 		
-		return FlushPromise;
+		
+		return true;
 	}
 	
 	

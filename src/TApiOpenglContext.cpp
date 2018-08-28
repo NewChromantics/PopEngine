@@ -11,6 +11,7 @@ const char OpenglImmediateContext_TypeName[] = "OpenglImmediateContext";
 
 const char Execute_FunctionName[] = "Execute";
 const char ExecuteCompiledQueue_FunctionName[] = "ExecuteCompiledQueue";
+const char FlushAsync_FunctionName[] = "FlushAsync";
 const char GetEnums_FunctionName[] = "GetEnums";
 
 #define DECLARE_IMMEDIATE_FUNC_NAME(NAME)	\
@@ -227,6 +228,63 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(const 
 }
 
 
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::FlushAsync(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<this_type>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	auto Window = Arguments.This();
+	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
+	
+	auto* Container = &Params.mContainer;
+	
+	
+	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
+	{
+		//	gr: can't do this unless we're in the javascript thread...
+		auto ResolverLocal = ResolverPersistent->GetLocal( *Isolate );
+		auto Message = String::NewFromUtf8( Isolate, __func__ );
+		ResolverLocal->Resolve( Message );
+	};
+	
+	auto OpenglRender = [Isolate,ResolverPersistent,Container,OnCompleted]
+	{
+		try
+		{
+			glFlush();
+			Opengl::IsOkay("Flush");
+			//	queue the completion, doesn't need to be done instantly
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
+				auto Error = v8::GetString( *Isolate, ExceptionString );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
+	
+	auto& OpenglContext = *This.GetOpenglContext();
+	OpenglContext.PushJob( OpenglRender );
+		
+	//	return the promise
+	auto Promise = Resolver->GetPromise();
+	return Promise;
+}
+
+
+
 v8::Local<v8::Value> TOpenglImmediateContextWrapper::GetEnums(const v8::CallbackInfo& Params)
 {
 	auto* Isolate = &Params.GetIsolate();
@@ -323,6 +381,7 @@ Local<FunctionTemplate> TOpenglImmediateContextWrapper::CreateTemplate(TV8Contai
 	//	add members
 	Container.BindFunction<Execute_FunctionName>( InstanceTemplate, Execute );
 	Container.BindFunction<ExecuteCompiledQueue_FunctionName>( InstanceTemplate, ExecuteCompiledQueue );
+	Container.BindFunction<FlushAsync_FunctionName>( InstanceTemplate, FlushAsync );
 
 #define BIND_IMMEDIATE(NAME)	\
 	Container.BindFunction<Immediate_## NAME ##_FunctionName>( InstanceTemplate, Immediate_ ## NAME );{}
