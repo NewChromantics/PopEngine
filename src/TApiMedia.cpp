@@ -316,7 +316,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 			auto FuncHandle = mOnFrameFilter->GetLocal(Isolate);
 			auto ThisHandle = v8::Local<v8::Object>();
 			
-			auto AllowHandle = mContainer->ExecuteFuncAndCatch( context, FuncHandle, ThisHandle, GetArrayBridge(Args) );
+			auto AllowHandle = mContainer->ExecuteFunc( context, FuncHandle, ThisHandle, GetArrayBridge(Args) );
 			auto AllowBoolHandle = v8::SafeCast<v8::Boolean>(AllowHandle);
 			AllowFrame = AllowBoolHandle->BooleanValue();
 		};
