@@ -17,6 +17,8 @@ var RGBAFromCamera = true;
 var FlipCameraInput = false;
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["c920","facetime","c920","isight"];
+var VideoFilename = "/Users/greeves/Desktop/Noodle_test1.MOV";
+
 
 var WebServer = null;
 var WebServerPort = 8000;
@@ -50,8 +52,7 @@ var CurrentFrames = [];
 var LastFrame = null;	//	completed TFrame
 var EnableKalmanFilter = true;
 
-var WebcamTest = true;
-var VideoTest = "/Users/graham/Desktop/Anchorman.mp4";
+var ProcessVideoFrames = true;	//	false to just act as a video player
 
 //	gr: for some reason, without this... v8 has no jobs?
 var EnableWindowRender = true;
@@ -886,7 +887,7 @@ function WindowRender(RenderTarget)
 
 function IsReady()
 {
-	if ( !WebcamTest && !VideoTest )
+	if ( ProcessVideoFrames )
 		if ( PoseNet == null )
 			return false;
 	
@@ -1357,7 +1358,7 @@ function ShowTestFrame(FrameImage)
 
 function OnNewVideoFrame(FrameImage)
 {
-	if ( WebcamTest || VideoTest )
+	if ( !ProcessVideoFrames )
 	{
 		ShowTestFrame(FrameImage);
 		return;
@@ -1405,9 +1406,9 @@ function OnNewVideoFrame(FrameImage)
 
 function LoadVideo()
 {
-	if ( VideoTest )
+	if ( VideoFilename )
 	{
-		let VideoCapture = new MediaSource(VideoTest,RGBAFromCamera,OnNewVideoFrameFilter);
+		let VideoCapture = new MediaSource(VideoFilename,RGBAFromCamera,OnNewVideoFrameFilter);
 		VideoCapture.OnNewFrame = OnNewVideoFrame;
 		return;
 	}
@@ -1643,7 +1644,7 @@ function Main()
 	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;
 	
-	if ( !WebcamTest && !VideoTest )
+	if ( ProcessVideoFrames )
 	{
 		LoadDlib();
 		LoadPosenet();
