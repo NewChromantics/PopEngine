@@ -154,12 +154,13 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
+	mIsolate->SetMicrotasksPolicy( v8::MicrotasksPolicy::kExplicit );
 	
 	//  for now, single context per isolate
 	//	todo: abstract context to be per-script
 	CreateContext();
 
-	CreateInspector();
+	//CreateInspector();
 }
 
 void TV8Container::ProcessJobs(std::function<bool()> IsRunning)
@@ -177,6 +178,13 @@ void TV8Container::ProcessJobs(std::function<bool()> IsRunning)
 	}
 	while ( IsRunning() );
 	//std::Debug << "EOF messages" << std::endl;
+	
+	
+	auto RunMicroTasks = [this](v8::Local<v8::Context>)
+	{
+		mIsolate->RunMicrotasks();
+	};
+	RunScoped(RunMicroTasks);
 }
 
 
