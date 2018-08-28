@@ -184,16 +184,16 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 	
 	if ( StealThread )
 	{
-		std::Debug << "Running gl execute on thread..." << std::endl;
+		//std::Debug << "Running gl execute on thread..." << std::endl;
 		//	gr: we want to lock after we've gone into javascript, otherwise we get deadlocks
 		//	immediately call the javascript callback
 		Container->RunScoped( ExecuteRenderCallbackWithLock );
-		std::Debug << "Running gl execute on thread... done" << std::endl;
+		//std::Debug << "Running gl execute on thread... done" << std::endl;
 		return v8::Undefined(Params.mIsolate);
 	}
 	else
 	{
-		std::Debug << "Queued gl execute..." << std::endl;
+		//std::Debug << "Queued gl execute..." << std::endl;
 		OpenglContext->PushJob( OpenglRender );
 	
 		//	return the promise

@@ -156,7 +156,7 @@ function OpenglCommandQueue()
 	{
 		let ExecuteQueue = function(Commands)
 		{
-			Debug("Execute Queue x" + Commands.length + (Async?" (async)":"(blocking)") );
+			//Debug("Execute Queue x" + Commands.length + (Async?" (async)":"(blocking)") );
 			let ExecuteCommand = function(Command)
 			{
 				//	first arg is the function, then pass arguments
@@ -494,7 +494,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//	this steals the opengl thread, so we need to unlock breifly
 		Sleep(0);
 		
-		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
+		//Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
 		//Debug("readPixels(" + Array.from(arguments) + ")");
 		try
 		{
@@ -517,7 +517,8 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 			let ReadPixelsFlushStart = Date.now();
 			this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 			let ReadPixelsFlushDuration = Date.now() - ReadPixelsFlushStart;
-			Debug("ReadPixelsFlushDuration="+ReadPixelsFlushDuration+"ms");
+			if ( ReadPixelsFlushDuration > 10 )
+				Debug("ReadPixelsFlushDuration="+ReadPixelsFlushDuration+"ms");
 		}
 		catch(e)
 		{
@@ -538,7 +539,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//	no async wait
 		//return null;
 		
-		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
+		//Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 
 		this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );

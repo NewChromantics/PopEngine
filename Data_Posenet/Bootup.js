@@ -909,7 +909,7 @@ function IsIdle()
 	
 	if ( CurrentFrames.length >= MaxConcurrentFrames )
 	{
-		Debug("Waiting on " + CurrentFrames.length + " frames");
+		//Debug("Waiting on " + CurrentFrames.length + " frames");
 		return false;
 	}
 	
@@ -1219,7 +1219,7 @@ function GetPoseDetectionPromise(Frame)
 
 function SetupForFaceDetection(Frame)
 {
-	Debug("SetupForFaceDetection " + Frame.FrameNumber);
+	//Debug("SetupForFaceDetection " + Frame.FrameNumber);
 	//	work out where to search
 	Frame.SetupHeadRect();
 	let ClipRectPx = GetScaledRect( Frame.HeadRect, FindFaceAroundLastHeadRectScale );
@@ -1341,7 +1341,7 @@ function OnNewVideoFrameFilter()
 	//	filter if busy here
 	if ( !IsIdle() )
 	{
-		Debug("Skipping frame");
+		//Debug("Skipping frame");
 		return false;
 	}
 	return true;
