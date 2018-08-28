@@ -390,6 +390,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		this.activeTexture = function()			{	this.CommandQueue.Push( 'at', arguments );		}
 		this.drawElements = function()			{	this.CommandQueue.Push( 'drw', arguments );		}
 		this.RealReadPixels = function()		{	this.CommandQueue.Push( 'rp', arguments );		}
+		this.flush = function()					{	this.CommandQueue.Push( 'fin', arguments );		}
 	}
 	else
 	{
@@ -414,6 +415,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		this.activeTexture = function()			{	this.CommandQueue.Push( this.GetOpenglContext().activeTexture, arguments );		}
 		this.drawElements = function()			{	this.CommandQueue.Push( this.GetOpenglContext().drawElements, arguments );		}
 		this.RealReadPixels = function()		{	this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );		}
+		this.flush = function()					{	this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );		}
 	}
 
 		
@@ -532,15 +534,17 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//Sleep(0);
 		
 		//	gr: currently getting a deadlock with the async flush
-		return new Promise( function(Resolve){Resolve();} );
+		//return new Promise( function(Resolve){Resolve();} );
 		//	no async wait
 		//return null;
 		
 		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 
-		let Async = true;
+		this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );
 		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		
+		let Async = true;
 		let FlushPromise = this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		if ( FlushPromise.constructor.name != 'Promise' )
 			throw "FlushPromise(" + (FlushPromise.constructor.name) +" not promise";

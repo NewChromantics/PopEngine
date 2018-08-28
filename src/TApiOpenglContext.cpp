@@ -36,6 +36,7 @@ DEFINE_IMMEDIATE(viewport);
 DEFINE_IMMEDIATE(scissor);
 DEFINE_IMMEDIATE(activeTexture);
 DEFINE_IMMEDIATE(drawElements);
+DEFINE_IMMEDIATE(flush);
 #undef DEFINE_IMMEDIATE
 
 
@@ -346,6 +347,7 @@ Local<FunctionTemplate> TOpenglImmediateContextWrapper::CreateTemplate(TV8Contai
 	DEFINE_IMMEDIATE(scissor);
 	DEFINE_IMMEDIATE(activeTexture);
 	DEFINE_IMMEDIATE(drawElements);
+	DEFINE_IMMEDIATE(flush);
 #undef DEFINE_IMMEDIATE
 	
 	Container.BindFunction<GetEnums_FunctionName>( InstanceTemplate, GetEnums );
@@ -1169,7 +1171,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	//	gr: we now pass the texture manually into readpixels in tensorflow so I know exactly which one I'm looking at
 	//	gr: but we technically might not know if it's actually bound.... maybe safety check will still be needed when we re-use this context
 	//	gr: if it's out of data, this is probably the async read.
-	auto AllowCacheUsage = false;
+	auto AllowCacheUsage = true;
 	if ( AllowCacheUsage && !DataRead && BigTexture && AsyncTexture )
 	{
 		auto& Texture = *AsyncTexture;
@@ -1210,7 +1212,9 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	auto TimerWarningMs = 10;
 	//	always show timing if we're outputting to a buffer
 	if ( PixelBufferDataSize > 0 )
-		TimerWarningMs = 0;
+	{
+		//TimerWarningMs = 0;
+	}
 	
 	static bool PreFlush = false;
 	if ( PreFlush && PixelBufferDataSize>0 )
@@ -1500,6 +1504,17 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(cons
 		return Immediate_Func( "glDrawArrays", glDrawArrays, GlArguments, &Arguments.GetIsolate() );
 		*/
 	}
+}
+
+
+
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_flush(const v8::CallbackInfo& Arguments)
+{
+	//	wait for commands to finish;
+	Soy::TScopeTimerPrint Timer(__func__,10);
+	glFinish();
+	Opengl::IsOkay("glFinish");
+	return v8::Undefined(&Arguments.GetIsolate());
 }
 
 

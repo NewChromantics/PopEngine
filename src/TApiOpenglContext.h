@@ -78,6 +78,7 @@ public:
 	static v8::Local<v8::Value>				Immediate_scissor(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_flush(const v8::CallbackInfo& Arguments);
 	
 	virtual std::shared_ptr<Opengl::TContext>		GetOpenglContext() override {	return mContext;	}
 	
