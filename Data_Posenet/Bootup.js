@@ -1348,18 +1348,6 @@ function OnNewVideoFrameFilter()
 }
 
 
-function GetHandleNewFaceLandmarksPromise(Frame,Face)
-{
-	let Handle = function(Resolve,Reject)
-	{
-		Frame.SetFaceLandmarks(Face);
-		OnFrameCompleted(Frame);
-		Resolve();
-	}
-	
-	return new Promise(Handle);
-}
-
 function ShowTestFrame(FrameImage)
 {
 	let NewFrame = new TFrame();
@@ -1372,7 +1360,7 @@ function ShowTestFrame(FrameImage)
 }
 
 
-function OnNewVideoFrame(FrameImage)
+async function OnNewVideoFrame(FrameImage)
 {
 	if ( !ProcessVideoFrames )
 	{
@@ -1403,12 +1391,19 @@ function OnNewVideoFrame(FrameImage)
 	//	gr: we can't do opengl stuff here as this can cause a deadlock
 	//	gr: inside SetupForPoseDetection we call an opengl.render, but its not on the immediate context...
 	//	gr: this function is taking aaaages, but measuring inside function is fine... its as if some promises are called on exit??
-	SetupForPoseDetection( Frame )
-	.then( function()			{	return GetPoseDetectionPromise(Frame);	}	)
-	.then( SetupForFaceDetection )
-	.then( function()			{	return GetFaceDetectionPromise(Frame);		}	)
-	.then( function(NewFace)	{	return GetHandleNewFaceLandmarksPromise(Frame,NewFace);		}	)
-	.catch( function(Error)		{	OnFrameError(Frame,Error);	}	);
+    try
+    {
+		await SetupForPoseDetection( Frame );
+		await GetPoseDetectionPromise( Frame );
+		await SetupForFaceDetection( Frame );
+		let NewFace = await GetFaceDetectionPromise( Frame );
+		Frame.SetFaceLandmarks( NewFace );
+		OnFrameCompleted(Frame);
+	}
+	catch (Error)
+	{
+		OnFrameError(Frame,Error);
+	}
 
 	//let DoneTime = Date.now();
 	//Debug("Done setting up new frame("+ Frame.FrameNumber +"):" + (DoneTime-InitTime) + "ms ");
