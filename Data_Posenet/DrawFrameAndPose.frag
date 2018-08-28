@@ -6,9 +6,10 @@ uniform bool		HasFrame;
 uniform vec4		UnClipRect;
 
 #define LINE_COUNT	100
+#if defined(LINE_COUNT)
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
-
+#endif
 const float FrameRateBarWidth = 0.02;
 uniform float		FrameRateNormalised;
 uniform float		CameraFrameRateNormalised;
@@ -108,10 +109,11 @@ void main()
 	//vec2 FrameUv = uv;
 	//FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
 
-	float Distances[LINE_COUNT];
-
 	float NearestDistance = 999;
 	float LineScore = 0;
+#if defined(LINE_COUNT)
+	float Distances[LINE_COUNT];
+
 	for ( int i=0;	i<LINE_COUNT;	i++)
 	{
 		vec4 Line = Lines[i];
@@ -122,7 +124,8 @@ void main()
 			NearestDistance = min( NearestDistance, Distances[i] );
 		}
 	}
-
+#endif
+	
 	if ( NearestDistance <= LineWidth )
 	{
 		float3 LineColour = NormalToRedGreen(LineScore);

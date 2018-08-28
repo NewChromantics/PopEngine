@@ -45,6 +45,7 @@ var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
 var DrawRects = true;
+var DrawSkeleton = true;
 var IgnoreJointMaxScore = 0.5;
 var DrawSkeletonMinScore = IgnoreJointMaxScore;//0.0;
 
@@ -630,8 +631,11 @@ var TFrame = function(OpenglContext)
 			GetRectLines( this.ClipRect, Lines, Scores, 1.5 );
 			GetRectLines( this.FaceRect, Lines, Scores, 0.5 );
 		}
-		GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores );
-		GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, this.FaceScore );
+		if ( DrawSkeleton )
+		{
+			GetPoseLinesAndScores( this.SkeletonPose, Lines, Scores );
+			GetPointLinesAndScores( this.FaceFeatures, Lines, Scores, this.FaceScore );
+		}
 	}
 	
 	
@@ -869,11 +873,14 @@ function WindowRender(RenderTarget)
 			LastFrame.GetLinesAndScores( Lines, Scores );
 		}
 		
-		Lines.length = Math.min( Lines.length, LINE_COUNT );
-		Scores.length = Math.min( Scores.length, LINE_COUNT );
-		Shader.SetUniform("Lines", Lines );
-		Shader.SetUniform("LineScores", Scores );
-		
+		try
+		{
+			Lines.length = Math.min( Lines.length, LINE_COUNT );
+			Scores.length = Math.min( Scores.length, LINE_COUNT );
+			Shader.SetUniform("Lines", Lines );
+			Shader.SetUniform("LineScores", Scores );
+		}
+		catch{};
 		let FrameRate = GetFrameCounter('FrameCompleted');
 		Shader.SetUniform("FrameRateNormalised", FrameRate/30 );
 		let CameraFrameRate = GetFrameCounter('CameraFrames');
