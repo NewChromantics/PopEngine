@@ -13,7 +13,7 @@ include('Webgl.js');
 include('FrameCounter.js');
 
 
-var RGBAFromCamera = false;
+var RGBAFromCamera = true;
 var FlipCameraInput = false;
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["c920","facetime","c920","isight"];
@@ -25,16 +25,16 @@ var WebServerPort = 8000;
 
 
 var AllowBgraAsRgba = true;
-var PoseNetScale = 0.80;
+var PoseNetScale = 0.60;
 var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = PoseNetOutputStride * 20;
+var ClipToSquare = PoseNetOutputStride * 24;
 var EnableGpuClip = true;
 var ClipToGreyscale = !RGBAFromCamera;	//	GPU only! shader option
-var ApplyBlurInClip = false;
+var ApplyBlurInClip = true;
 
 var FindFaceAroundLastHeadRectScale = 1.0;	//	make this expand more width ways
 var ShoulderToHeadWidthRatio = 1.0;
@@ -59,7 +59,8 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 1;
+var DlibThreadCount = 4;
+var EnableFaceProcessor = false;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
 var SmallImageSize = 80 * 1;
@@ -1319,7 +1320,6 @@ function GetFaceDetectionPromise(Frame)
 		return new Promise( Runner );
 	}
 	
-	//Debug("GetFaceDetectionPromise on " + Frame.SmallImage );
 	return FaceProcessor.FindFaces( Frame.SmallImage );
 }
 
@@ -1474,7 +1474,7 @@ function LoadVideo()
 
 function LoadDlib()
 {
-	if ( DlibThreadCount == 0 )
+	if ( !EnableFaceProcessor )
 		return null;
 	FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 }
