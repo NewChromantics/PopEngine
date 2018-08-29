@@ -19,6 +19,7 @@ var FlipCameraInput = false;
 var VideoDeviceNames = ["c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 
+var VideoFrameSkip = 1;
 
 var WebServer = null;
 var WebServerPort = 8000;
@@ -1333,9 +1334,15 @@ function GetFaceDetectionPromise(Frame)
 
 
 
-
+var VideoFrameCounter = 0;
 function OnNewVideoFrameFilter()
 {
+	//	skip N frames
+	VideoFrameCounter++;
+	if ( VideoFrameSkip > 0 )
+		if ( (VideoFrameCounter % VideoFrameSkip) != 0 )
+			return false;
+	
 	UpdateFrameCounter('CameraFrames');
 	
 	//	filter if busy here
