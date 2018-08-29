@@ -649,6 +649,14 @@ var TFrame = function(OpenglContext)
 		if ( !(this.Image instanceof Image) )
 			throw "Expecting frame image to be an Image";
 		
+		if ( TempSharedImageData )
+		{
+			if ( TempSharedImageData.width != this.Image.GetWidth() || TempSharedImageData.height != this.Image.GetHeight() )
+			{
+				TempSharedImageData = null;
+			}
+		}
+		
 		if ( TempSharedImageData == null )
 		//if ( true )
 		{
@@ -857,6 +865,7 @@ var Gui = new TGui( [0,0,1,1] );
 
 Gui.Add( new TGuiElement('ClipToSquare', function(){	return ClipToSquare;	}, function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
 Gui.Add( new TGuiElement('PoseNetScale', function(){	return PoseNetScale;	}, function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
+Gui.Add( new TGuiElement('ThreadCount', function(){		return MaxConcurrentFrames;	}, function(v){	MaxConcurrentFrames = v;	}, 1, 10 ) );
 
 
 function WindowRender(RenderTarget)
