@@ -59,8 +59,8 @@ var ProcessVideoFrames = true;	//	false to just act as a video player
 var EnableWindowRender = true;
 
 
-var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 4;
+var DlibLandMarksdatFilename = 'shape_predictor_68_face_landmarks.dat';
+var DlibThreadCount = 1;
 var EnableFaceProcessor = false;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
@@ -1487,6 +1487,7 @@ function LoadDlib()
 {
 	if ( !EnableFaceProcessor )
 		return null;
+	var DlibLandMarksdat = LoadFileAsArrayBuffer(DlibLandMarksdatFilename);
 	FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 }
 
