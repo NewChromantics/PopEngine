@@ -1061,7 +1061,7 @@ function LoadPosenet()
 	
 	//	load posenet
 	Debug("Loading posenet...");
-	posenet.load().then( OnPoseNetLoaded ).catch( OnPoseNetFailed );
+	posenet.load(0.75).then( OnPoseNetLoaded ).catch( OnPoseNetFailed );
 }
 
 
