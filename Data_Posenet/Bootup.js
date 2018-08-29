@@ -19,22 +19,22 @@ var RGBAFromCamera = false;
 var VideoDeviceNames = ["c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 
-var VideoFrameSkip = 1;
+var VideoFrameSkip = 0;
 
 var WebServer = null;
 var WebServerPort = 8000;
 
 
 var AllowBgraAsRgba = true;
-var PoseNetScale = 0.50;
+var PoseNetScale = 1.00;
 var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare_Min = 64;
+var ClipToSquare_Min = 32;
 var ClipToSquare_Max = 512;
-var ClipToSquare = 512;
+var ClipToSquare = 256;
 var EnableGpuClip = true;
 var ClipToGreyscale = !RGBAFromCamera;	//	GPU only! shader option
 var ApplyBlurInClip = false;
@@ -63,11 +63,11 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdatFilename = 'shape_predictor_68_face_landmarks.dat';
-var DlibThreadCount = 1;
+var DlibThreadCount = 5;
 var EnableFaceProcessor = false;
 var FaceProcessor = null;
-var MaxConcurrentFrames = DlibThreadCount;
-var SmallImageSize = 80 * 1;
+var MaxConcurrentFrames = 1;
+var SmallImageSize = 80 * 3;
 var SmallImageSquare = true;
 var NoFaceSendLast = false;
 var FailIfNoFace = false;
@@ -865,7 +865,11 @@ var Gui = new TGui( [0,0,1,1] );
 
 Gui.Add( new TGuiElement('ClipToSquare', function(){	return ClipToSquare;	}, function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
 Gui.Add( new TGuiElement('PoseNetScale', function(){	return PoseNetScale;	}, function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
-Gui.Add( new TGuiElement('ThreadCount', function(){		return MaxConcurrentFrames;	}, function(v){	MaxConcurrentFrames = v;	}, 1, 10 ) );
+Gui.Add( new TGuiElement('ThreadCount', function(){		return MaxConcurrentFrames;	}, function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
+Gui.Add( new TGuiElement('Blur',		function(){		return ApplyBlurInClip?1:0;	}, function(v){	ApplyBlurInClip = !ApplyBlurInClip;	}, 0, 1 ) );
+Gui.Add( new TGuiElement('ProcessVideoFrames',		function(){		return ProcessVideoFrames?1:0;	}, function(v){	ProcessVideoFrames = !ProcessVideoFrames;	}, 0, 1 ) );
+Gui.Add( new TGuiElement('EnableFaceProcessor',		function(){		return EnableFaceProcessor?1:0;	}, function(v){	EnableFaceProcessor = !EnableFaceProcessor;	}, 0, 1 ) );
+Gui.Add( new TGuiElement('DrawRects',		function(){		return DrawRects?1:0;	}, function(v){	DrawRects = !DrawRects;	}, 0, 1 ) );
 
 
 function WindowRender(RenderTarget)
@@ -1354,7 +1358,7 @@ function SetupForFaceDetection(Frame)
 
 function GetFaceDetectionPromise(Frame)
 {
-	if ( FaceProcessor == null )
+	if ( !EnableFaceProcessor || !FaceProcessor )
 	{
 		let Runner = function(Resolve,Reject)
 		{
@@ -1523,8 +1527,6 @@ function LoadVideo()
 
 function LoadDlib()
 {
-	if ( !EnableFaceProcessor )
-		return null;
 	var DlibLandMarksdat = LoadFileAsArrayBuffer(DlibLandMarksdatFilename);
 	FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 }

@@ -5,6 +5,7 @@ uniform sampler2D	Frame;
 uniform bool		HasFrame;
 uniform vec4		UnClipRect;
 
+//	gr: this is mega slow on intel machines. speed up the distance check code!
 #define LINE_COUNT	30
 #if defined(LINE_COUNT)
 uniform vec4		Lines[LINE_COUNT];
