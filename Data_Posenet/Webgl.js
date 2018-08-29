@@ -213,36 +213,12 @@ function OpenglCompiledCommandQueue()
 	
 	this.Flush = function(Context)
 	{
-		//Debug("flush");
-		let ExecuteQueue = function(Commands)
-		{
-			let ExecuteCommand = function(Command)
-			{
-				//Debug("cmd " + Command[0] + " (x" + (Command.length-1) + " args)");
-			}
-			try
-			{
-				Commands.forEach( ExecuteCommand );
-			}
-			catch(e)
-			{
-				Debug("exception in queue: ");
-				Debug(e);
-				throw e;
-			}
-		}
-		
 		//	run these commands on the opengl thread
 		//Debug("Running opengl command queue");
 		//	capture commands and remove from our list
 		let Cmds = this.Commands;
 		this.Commands = [];
-		let RunCommands = function(Resolve,Reject)
-		{
-			ExecuteQueue(Cmds);
-			Resolve();
-		}
-		let Prom = new Promise(RunCommands);
+		let Prom = Context.ExecuteCompiledQueue( Cmds );
 		return Prom;
 	}
 }
@@ -421,25 +397,14 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		
 	this.useProgram = function()
 	{
-		if ( this.CommandQueue.IsCompiledMode )
+		let GetProgramShader = function(OpenglContext,Program)
 		{
-			this.CommandQueue.Push( 'up', arguments );
-			return;
-		}
-		
-		//	this should be executed on the immediate thread inside Execute()
-		let AllocAndUseProgram = function()
-		{
-			let Context = this;
-			if ( arguments[0] === null )
+			if ( Program === null )
 			{
-				//Debug( GetTypename(Context) + ".Use program(null)");
-				Context.useProgram( null );
-				Context.LastProgram = null;
+				return null;
 			}
 			else
 			{
-				let Program = arguments[0];
 				//Debug( GetTypename(this) + ".UseProgram( " + GetTypename(Program) + ")" );
 				if ( Program.Shader == null )
 				{
@@ -454,12 +419,39 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 					//		and we get int x = float errors, so work around it
 					VertShaderSource = VertShaderSource.replaceAll(" round(", " roundToInt(");
 					FragShaderSource = FragShaderSource.replaceAll(" round(", " roundToInt(");
-
-					let RenderTarget = Context;
+					
 					//Debug("VertShaderSource="+VertShaderSource);
 					//Debug("FragShaderSource="+FragShaderSource);
-					Program.Shader = new OpenglShader( RenderTarget, VertShaderSource, FragShaderSource );
+					Program.Shader = new OpenglShader( OpenglContext, VertShaderSource, FragShaderSource );
 				}
+				return Program.Shader;
+			}
+		}
+		
+		if ( this.CommandQueue.IsCompiledMode )
+		{
+			let OpenglContext = this.GetOpenglContext();
+			let Program = arguments[0];
+			//let Shader = GetProgramShader( OpenglContext, Program );
+			//this.CommandQueue.Push( 'up', Shader );
+			this.CommandQueue.Push( 'up', Program );
+			return;
+		}
+		
+		//	this should be executed on the immediate thread inside Execute()
+		let AllocAndUseProgram = function()
+		{
+			let Context = this;
+			let Program = arguments[0];
+			let Shader = GetProgramShader( Context, Program);
+			if ( Shader === null )
+			{
+				//Debug( GetTypename(Context) + ".Use program(null)");
+				Context.useProgram( null );
+				Context.LastProgram = null;
+			}
+			else
+			{
 				this.useProgram( Program.Shader );
 				Context.LastProgram = Program;
 			}
@@ -494,20 +486,13 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//	this steals the opengl thread, so we need to unlock breifly
 		Sleep(0);
 		
-		//Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
+		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
 		//Debug("readPixels(" + Array.from(arguments) + ")");
 		try
 		{
-			//	gr: losing arguments somewhere in the chain if we pass it along
-			if ( this.CommandQueue.IsCompiledMode )
-			{
-				this.RealReadPixels( arguments );
-			}
-			else
-			{
-				this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
-			}
-
+			//this.RealReadPixels( arguments );
+			this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+			
 			//	don't need to return immediately
 			if ( output == null )
 				return;
@@ -537,18 +522,22 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//	gr: currently getting a deadlock with the async flush
 		//return new Promise( function(Resolve){Resolve();} );
 		//	no async wait
-		//return null;
+		return null;
 		
-		//Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
+		Debug("readPixelsAsync("+w+"x"+h+"=" + output.length + ", format=" + format +")");
 		//return null;
 
 
 		let Async = true;
-		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		//this.RealReadPixels( arguments );
 		//this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );
 		await this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		//Debug("this.GetOpenglContext().FlushAsync() = " + (typeof this.GetOpenglContext().FlushAsync ));
-		await this.GetOpenglContext().FlushAsync();
+		//await this.GetOpenglContext().FlushAsync();
+		
+		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
+		//this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );
+		//await this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		
 		
 		return true;
