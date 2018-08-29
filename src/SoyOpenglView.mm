@@ -23,6 +23,24 @@ vec2f ViewPointToVector(NSView* View,const NSPoint& Point)
 	return Position;
 }
 
+vec2f ViewPointToVectorNormalised(NSView* View,const NSPoint& Point)
+{
+	vec2f Position( Point.x, Point.y );
+	auto Rect = NSRectToRect( View.bounds );
+	
+	//	invert y - osx is bottom-left/0,0 so flipped would be what we want. hence wierd flipping when not flipped
+	if ( !View.isFlipped )
+	{
+		auto Rect = NSRectToRect( View.bounds );
+		Position.y = Rect.h - Position.y;
+	}
+
+	Position.x /= Rect.w;
+	Position.y /= Rect.h;
+	
+	return Position;
+}
+
 
 TOpenglView::TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params) :
 	mView			( nullptr ),
@@ -128,7 +146,10 @@ bool TOpenglView::IsDoubleBuffered() const
 		return;
 
 	Soy::Platform::PushCursor(SoyCursor::Hand);
-	auto Pos = ViewPointToVector( self, event.locationInWindow );
+	
+	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
+	auto Pos = ViewPointToVectorNormalised( self, event.locationInWindow );
+	
 	if ( mParent->mOnMouseDown )
 		mParent->mOnMouseDown( Pos );
 	mLastPos = event.locationInWindow;
@@ -139,7 +160,8 @@ bool TOpenglView::IsDoubleBuffered() const
 	if ( !Soy::Assert(mParent,"Parent expected") )
 		return;
 
-	auto Pos = ViewPointToVector( self, event.locationInWindow );
+	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
+	auto Pos = ViewPointToVectorNormalised( self, event.locationInWindow );
 	if ( mParent->mOnMouseMove )
 		mParent->mOnMouseMove( Pos );
 	mLastPos = event.locationInWindow;
@@ -150,7 +172,8 @@ bool TOpenglView::IsDoubleBuffered() const
 	if ( !Soy::Assert(mParent,"Parent expected") )
 		return;
 
-	auto Pos = ViewPointToVector( self, mLastPos );
+	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
+	auto Pos = ViewPointToVectorNormalised( self, mLastPos );
 	if ( mParent->mOnMouseUp )
 		mParent->mOnMouseUp( Pos );
 	Soy::Platform::PopCursor();

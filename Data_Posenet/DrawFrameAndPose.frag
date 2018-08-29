@@ -5,7 +5,7 @@ uniform sampler2D	Frame;
 uniform bool		HasFrame;
 uniform vec4		UnClipRect;
 
-#define LINE_COUNT	100
+#define LINE_COUNT	30
 #if defined(LINE_COUNT)
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
@@ -92,21 +92,20 @@ vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
 void main()
 {
 	//	draw frame rate
-	if ( uv.x < FrameRateBarWidth && uv.y <= CameraFrameRateNormalised )
+	if ( uv.x < FrameRateBarWidth && (1-uv.y) <= CameraFrameRateNormalised )
 	{
 		gl_FragColor.xyz = NormalToRedGreen( CameraFrameRateNormalised );
 		gl_FragColor.w = 1;
 		return;
 	}
-	if ( uv.x > FrameRateBarWidth && uv.x < FrameRateBarWidth*2 && uv.y <= FrameRateNormalised )
+	if ( uv.x > FrameRateBarWidth && uv.x < FrameRateBarWidth*2 && (1-uv.y) <= FrameRateNormalised )
 	{
 		gl_FragColor.xyz = NormalToRedGreen( FrameRateNormalised );
 		gl_FragColor.w = 1;
 		return;
 	}
 	
-	vec2 FrameUv = vec2( uv.x, 1-uv.y );
-	//vec2 FrameUv = uv;
+	vec2 FrameUv = uv;
 	//FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
 
 	float NearestDistance = 999;

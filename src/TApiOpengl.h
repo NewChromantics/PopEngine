@@ -58,8 +58,9 @@ public:
 	}
 	~TWindowWrapper();
 	
-	//	gr: removing this!
+
 	void		OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext);
+	void		OnMouseFunc(const TMousePos& MousePos,const std::string& MouseFuncName);
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 

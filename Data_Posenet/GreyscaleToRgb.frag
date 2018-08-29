@@ -59,9 +59,14 @@ float Range(float Min,float Max,float Value)
 
 void main()
 {
-	float2 Sampleuv;
-	Sampleuv.x = mix( ClipRect.x, ClipRect.x+ClipRect.z, uv.x );
-	Sampleuv.y = mix( ClipRect.y, ClipRect.y+ClipRect.w, uv.y );
+	//	our camera data is upside down
+	//	and we render VertShaderSource upside down for opengl geometry
+	//	so uv=0,0 is top left
+	//	and when we send the data to posenet its upside down again
+	float2 Sampleuv = uv;
+	Sampleuv.y = 1-Sampleuv.y;
+	Sampleuv.x = mix( ClipRect.x, ClipRect.x+ClipRect.z, Sampleuv.x );
+	Sampleuv.y = mix( ClipRect.y, ClipRect.y+ClipRect.w, Sampleuv.y );
 	
 	if ( ApplyBlur )
 	{

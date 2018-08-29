@@ -194,6 +194,34 @@ function OpenglCommandQueue()
 }
 
 
+function OpenglImmediateCommandQueue(OpenglContext)
+{
+	this.Commands = [];
+	this.IsCompiledMode = false;
+	Debug("OpenglImmediateCommandQueue()");
+	
+	this.Push = function(Function,Arguments)
+	{
+		if ( typeof Function != 'function' )
+			throw Function + " is not a function. From " + this.Push.caller;
+		
+		let ExecuteCommand = function(Context)
+		{
+			//	first arg is the function, then pass arguments
+			Function.apply( Context, Arguments );
+		}
+		
+		let Async = false;
+		OpenglContext.Execute( ExecuteCommand, !Async );
+	}
+	
+	this.Flush = function(Context,Async)
+	{
+	}
+}
+
+
+
 
 function OpenglCompiledCommandQueue()
 {
@@ -289,9 +317,6 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	Debug("FakeOpenglContext(" + ContextType + ", " + ContextsType +")");
 	this.ParentCanvas = ParentCanvas;
 	
-	//this.CommandQueue = new OpenglCompiledCommandQueue();
-	this.CommandQueue = new OpenglCommandQueue();
-
 	//	make a new context
 	let ParentContext = ParentCanvas.WebWindow.OpenglContext;
 	//Debug("Parent Context is " + GetTypename(ParentContext) );
@@ -305,6 +330,11 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.SharedOpenglContext = ParentCanvas.WebWindow.SharedOpenglContext;
 	//this.SharedOpenglContext = new OpenglImmediateContext( ParentCanvas.WebWindow.OpenglContext );
 	
+	//this.CommandQueue = new OpenglCompiledCommandQueue();
+	//this.CommandQueue = new OpenglCommandQueue();
+	this.CommandQueue = new OpenglImmediateCommandQueue(this.SharedOpenglContext);
+	
+
 	//  setup enums
 	let Enums = GetAllEnums( this.SharedOpenglContext.GetEnums() );
 	
@@ -486,7 +516,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		//	this steals the opengl thread, so we need to unlock breifly
 		Sleep(0);
 		
-		Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
+		//Debug("readPixels("+w+"x"+h+"=" + output.length + ", format=" + format +") AsyncTexture=" + AsyncTexture );
 		//Debug("readPixels(" + Array.from(arguments) + ")");
 		try
 		{
@@ -517,7 +547,7 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.readPixelsAsync = async function(x,y,w,h,format,type,output,Texture)
 	{
 		//	don't need this as we're not blocking thread?
-		Sleep(0);
+		//Sleep(0);
 		
 		//	gr: currently getting a deadlock with the async flush
 		//return new Promise( function(Resolve){Resolve();} );
@@ -531,9 +561,9 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 		let Async = true;
 		//this.RealReadPixels( arguments );
 		//this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );
-		await this.CommandQueue.Flush( this.GetOpenglContext(), Async );
+		//await this.CommandQueue.Flush( this.GetOpenglContext(), Async );
 		//Debug("this.GetOpenglContext().FlushAsync() = " + (typeof this.GetOpenglContext().FlushAsync ));
-		//await this.GetOpenglContext().FlushAsync();
+		await this.GetOpenglContext().FlushAsync();
 		
 		//this.CommandQueue.Push( this.GetOpenglContext().readPixels, arguments );
 		//this.CommandQueue.Push( this.GetOpenglContext().flush, arguments );

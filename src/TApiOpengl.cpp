@@ -65,6 +65,23 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 	mContainer.RunScoped( Runner );
 }
 
+void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,const std::string& MouseFuncName)
+{
+	//  call javascript
+	auto Runner = [=](Local<Context> Context)
+	{
+		auto This = this->GetHandle();
+		auto Func = v8::GetFunction( Context, This, MouseFuncName );
+		BufferArray<Local<Value>,2> Args;
+		
+		Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.x ) );
+		Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.y ) );
+		mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+	};
+	mContainer.QueueScoped( Runner );
+}
+
+
 
 void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
@@ -88,7 +105,11 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	{
 		this->OnRender( RenderTarget, LockContext );
 	};
+
 	mWindow->mOnRender = OnRender;
+	mWindow->mOnMouseDown = [this](const TMousePos& MousePos)	{	this->OnMouseFunc(MousePos,"OnMouseDown");	};
+	mWindow->mOnMouseUp = [this](const TMousePos& MousePos)		{	this->OnMouseFunc(MousePos,"OnMouseUp");	};
+	mWindow->mOnMouseMove = [this](const TMousePos& MousePos)	{	this->OnMouseFunc(MousePos,"OnMouseMove");	};
 }
 
 v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
@@ -550,14 +571,14 @@ void TRenderWindow::DrawQuad()
 		auto VertShader =
 		"#version 410\n"
 		//"uniform vec4 Rect;\n"
-		"const vec4 Rect = vec4(0,0,1,1);\n"
+		"uniform vec4 VertexRect = vec4(0,0,1,1);\n"
 		"in vec2 TexCoord;\n"
 		"out vec2 uv;\n"
 		"void main()\n"
 		"{\n"
 		"   gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);\n"
-		"   gl_Position.xy *= Rect.zw;\n"
-		"   gl_Position.xy += Rect.xy;\n"
+		"   gl_Position.xy *= VertexRect.zw;\n"
+		"   gl_Position.xy += VertexRect.xy;\n"
 		//	move to view space 0..1 to -1..1
 		"	gl_Position.xy *= vec2(2,2);\n"
 		"	gl_Position.xy -= vec2(1,1);\n"

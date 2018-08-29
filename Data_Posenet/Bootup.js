@@ -13,8 +13,8 @@ include('Webgl.js');
 include('FrameCounter.js');
 
 
-var RGBAFromCamera = true;
-var FlipCameraInput = false;
+var RGBAFromCamera = false;
+
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
@@ -26,16 +26,18 @@ var WebServerPort = 8000;
 
 
 var AllowBgraAsRgba = true;
-var PoseNetScale = 0.60;
+var PoseNetScale = 0.50;
 var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
 //var outputStride = 32;
 //var ClipToSquare = false;
 //var ClipToSquare = true;
-var ClipToSquare = PoseNetOutputStride * 24;
+var ClipToSquare_Min = 64;
+var ClipToSquare_Max = 512;
+var ClipToSquare = 512;
 var EnableGpuClip = true;
 var ClipToGreyscale = !RGBAFromCamera;	//	GPU only! shader option
-var ApplyBlurInClip = true;
+var ApplyBlurInClip = false;
 
 var FindFaceAroundLastHeadRectScale = 1.0;	//	make this expand more width ways
 var ShoulderToHeadWidthRatio = 1.0;
@@ -45,7 +47,7 @@ var NoseHeightInHead = 0.5;
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
-var DrawRects = true;
+var DrawRects = false;
 var DrawSkeleton = true;
 var IgnoreJointMaxScore = 0.5;
 var DrawSkeletonMinScore = IgnoreJointMaxScore;//0.0;
@@ -821,24 +823,40 @@ var TFrame = function(OpenglContext)
 
 let VertShaderSource = `
 #version 410
-const vec4 Rect = vec4(0,0,1,1);
+uniform vec4 VertexRect = vec4(0,0,1,1);
 in vec2 TexCoord;
 out vec2 uv;
 void main()
 {
 	gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);
-	gl_Position.xy *= Rect.zw;
-	gl_Position.xy += Rect.xy;
-	//	move to view space 0..1 to -1..1
-	gl_Position.xy *= vec2(2,2);
-	gl_Position.xy -= vec2(1,1);
-	uv = vec2(TexCoord.x,TexCoord.y);
+	
+	float l = VertexRect[0];
+	float t = VertexRect[1];
+	float r = l+VertexRect[2];
+	float b = t+VertexRect[3];
+
+	l = mix( -1, 1, l );
+	r = mix( -1, 1, r );
+	t = mix( 1, -1, t );
+	b = mix( 1, -1, b );
+	
+	gl_Position.x = mix( l, r, TexCoord.x );
+	gl_Position.y = mix( t, b, TexCoord.y );
+
+	uv = vec2( TexCoord.x, TexCoord.y );
 }
 `;
 
 let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
-const LINE_COUNT = 100;
+const LINE_COUNT = 30;
+
+
+include('Gui.js');
+var Gui = new TGui( [0,0,1,1] );
+
+Gui.Add( new TGuiElement('ClipToSquare', function(){	return ClipToSquare;	}, function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+Gui.Add( new TGuiElement('PoseNetScale', function(){	return PoseNetScale;	}, function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
 
 
 function WindowRender(RenderTarget)
@@ -890,6 +908,8 @@ function WindowRender(RenderTarget)
 	}
 	
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );
+	
+	Gui.Render(RenderTarget);
 }
 
 
@@ -1127,6 +1147,8 @@ function GetPoseDetectionPromise(Frame)
 		{
 			Reject(Error);
 		}
+		
+		Debug("Sending image " + Frame.ImageData.width + "x" + Frame.ImageData.height + " to posenet");
 		
 		//	gr: I've saved the experiment below, I think there's upload time and maybe RGBA->RGB conversion,
 		//		but tensorflow maybe reshaping a little (or splitting planes?)
@@ -1669,7 +1691,12 @@ function Main()
 	//Debug("log is working!", "2nd param");
 	let Window1 = new OpenglWindow("PopTrack5",true);
 	if ( EnableWindowRender )
+	{
 		Window1.OnRender = function(){	WindowRender( Window1 );	};
+		Window1.OnMouseDown = function(x,y){	Gui.OnMouseDown(x,y);	};
+		Window1.OnMouseUp = function(x,y){		Gui.OnMouseUp(x,y);	};
+		Window1.OnMouseMove = function(x,y){	Gui.OnMouseMove(x,y);	};
+	}
 	
 	//	navigator global window is setup earlier
 	window.OpenglContext = Window1;

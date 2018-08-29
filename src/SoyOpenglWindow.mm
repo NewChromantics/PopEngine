@@ -137,10 +137,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		
 		//	mouse callbacks
 		[mWindow setAcceptsMouseMovedEvents:TRUE];
-		mView->mOnMouseDown = mOnMouseDown;
-		mView->mOnMouseMove = mOnMouseMove;
-		mView->mOnMouseUp = mOnMouseUp;
-
+		mView->mOnMouseDown = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos);	};
+		mView->mOnMouseMove = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos);	};
+		mView->mOnMouseUp = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos);	};
 	};
 	Soy::TSemaphore Semaphore;
 	Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
