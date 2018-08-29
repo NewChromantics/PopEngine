@@ -612,6 +612,14 @@ void v8::CopyToTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& Values,Loc
 }
 
 
+void v8::EnumArray(Local<Array> ArrayHandle,std::function<void(size_t,Local<Value>)> EnumElement)
+{
+	for ( auto i=0;	i<ArrayHandle->Length();	i++ )
+	{
+		auto ElementHandle = ArrayHandle->Get(i);
+		EnumElement( i, ElementHandle );
+	}
+}
 
 
 void v8::EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray,const std::string& Context)
