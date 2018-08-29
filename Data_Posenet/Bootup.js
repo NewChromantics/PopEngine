@@ -60,8 +60,8 @@ var ProcessVideoFrames = true;	//	false to just act as a video player
 var EnableWindowRender = true;
 
 
-var DlibLandMarksdat = LoadFileAsArrayBuffer('shape_predictor_68_face_landmarks.dat');
-var DlibThreadCount = 4;
+var DlibLandMarksdatFilename = 'shape_predictor_68_face_landmarks.dat';
+var DlibThreadCount = 1;
 var EnableFaceProcessor = false;
 var FaceProcessor = null;
 var MaxConcurrentFrames = DlibThreadCount;
@@ -761,7 +761,8 @@ var TFrame = function(OpenglContext)
 			EnumNamePosScore( Keypoint.part, Keypoint.position, Score );
 			Keypoint.score = Score[0];
 		}
-		this.SkeletonPose.keypoints.forEach( EnumKeypoint );
+		if ( this.SkeletonPose )
+			this.SkeletonPose.keypoints.forEach( EnumKeypoint );
 		
 		if ( this.FaceFeatures != null )
 		{
@@ -1131,10 +1132,13 @@ function GetPoseDetectionPromise(Frame)
 		//		but tensorflow maybe reshaping a little (or splitting planes?)
 		//		and this only takes 0-1ms, so not a bottleneck anyway
 		let NewTensor = null;
-		//let StartTime = Date.now();
+		
+		let MakeTensor_StartTime = Date.now();
 		NewTensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
-		//let Duration = Date.now() - StartTime;
-		//Debug("New tensor took " + Duration + "ms" );
+		let MakeTensor_Duration = Date.now() - MakeTensor_StartTime;
+		if ( MakeTensor_Duration > 5 )
+			Debug("New tensor took " + MakeTensor_Duration + "ms" );
+		
 		/*
 		try
 		{
@@ -1401,7 +1405,12 @@ async function OnNewVideoFrame(FrameImage)
     try
     {
 		await SetupForPoseDetection( Frame );
+		//	test speed of resize
+		//OnFrameCompleted(Frame);	return;
+
 		await GetPoseDetectionPromise( Frame );
+		//OnFrameCompleted(Frame);	return;
+		
 		await SetupForFaceDetection( Frame );
 		let NewFace = await GetFaceDetectionPromise( Frame );
 		Frame.SetFaceLandmarks( NewFace );
@@ -1485,6 +1494,7 @@ function LoadDlib()
 {
 	if ( !EnableFaceProcessor )
 		return null;
+	var DlibLandMarksdat = LoadFileAsArrayBuffer(DlibLandMarksdatFilename);
 	FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 }
 

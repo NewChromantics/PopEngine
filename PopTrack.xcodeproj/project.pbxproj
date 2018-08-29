@@ -106,7 +106,6 @@
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
-		EB0EA5632110AAF9008D6DAA /* Data_dlib in Resources */ = {isa = PBXBuildFile; fileRef = EB0EA5622110AAF9008D6DAA /* Data_dlib */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
@@ -863,7 +862,6 @@
 				BF6554062132C4D9003E4241 /* PRESUBMIT.py in Resources */,
 				BF6554052132C4D9003E4241 /* OWNERS in Resources */,
 				BF6554042132C4D9003E4241 /* DEPS in Resources */,
-				EB0EA5632110AAF9008D6DAA /* Data_dlib in Resources */,
 				BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF6554022132C4D9003E4241 /* APIDesign.md in Resources */,
@@ -1032,7 +1030,7 @@
 					"$(POPCAST_PATH)/build",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",

@@ -7140,6 +7140,7 @@
 									   if ( PreReadPromise )
 									   {
 									   PreReadPromise.then( OnComplete );
+									   PreReadPromise.catch( Debug );
 									   //Debug("forcing pending read as we have a promise");
 									   if (!this.pendingRead.has(e))
 										this.pendingRead.set(e,[]);

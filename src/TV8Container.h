@@ -99,6 +99,8 @@ namespace v8
 	template<typename ARRAYTYPE,typename ELEMENTTYPE>
 	void	EnumArray(Local<Value> ValueArrayHandle,ArrayBridge<ELEMENTTYPE>& IntArray);
 	
+	void	EnumArray(Local<Array> ArrayHandle,std::function<void(size_t,Local<Value>)> EnumElement);
+
 	
 	//	our own type caster which throws if cast fails.
 	//	needed because my v8 built doesnt have cast checks, and I can't determine if they're enabled or not
@@ -534,6 +536,7 @@ ISTYPE_DEFINITION(Float32Array);
 ISTYPE_DEFINITION(Number);
 ISTYPE_DEFINITION(Function);
 ISTYPE_DEFINITION(Boolean);
+ISTYPE_DEFINITION(Array);
 
 
 

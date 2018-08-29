@@ -11,6 +11,7 @@ const char OpenglImmediateContext_TypeName[] = "OpenglImmediateContext";
 
 const char Execute_FunctionName[] = "Execute";
 const char ExecuteCompiledQueue_FunctionName[] = "ExecuteCompiledQueue";
+const char FlushAsync_FunctionName[] = "FlushAsync";
 const char GetEnums_FunctionName[] = "GetEnums";
 
 #define DECLARE_IMMEDIATE_FUNC_NAME(NAME)	\
@@ -203,6 +204,43 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackI
 }
 
 
+class GlCommand
+{
+public:
+	std::string				mName;
+	std::function<void()>	mJob;
+};
+
+
+std::function<void()> GetImmediateCommandJob(const std::string& Command,Local<v8::Array> Arguments)
+{
+	if ( Command == "ds" )	{	return []{	/*glDisable(GL_CW);*/	};	};
+	if ( Command == "en" )	{	return []{	/*enable(GL_CW);*/	};	};
+	if ( Command == "cf" )	{	return []{	/*cullFace(GL_CW);*/	};	};
+	if ( Command == "bb" )	{	return []{	/*bindBuffer(GL_CW);*/	};	};
+	if ( Command == "bd" )	{	return []{	/*bufferData(GL_CW);*/	};	};
+	if ( Command == "bfb" )	{	return []{	/*bindFramebuffer(GL_CW);*/	};	};
+	if ( Command == "fbt" )	{	return []{	/*framebufferTexture2D(GL_CW);*/	};	};
+	if ( Command == "bt" )	{	return []{	/*bindTexture(GL_CW);*/	};	};
+	if ( Command == "ti" )	{	return []{	/*texImage2D(GL_CW);*/	};	};
+	if ( Command == "tp" )	{	return []{	/*texParameteri(GL_CW);*/	};	};
+	if ( Command == "vap" )	{	return []{	/*vertexAttribPointer(GL_CW);*/	};	};
+	if ( Command == "eva" )	{	return []{	/*enableVertexAttribArray(GL_CW);*/	};	};
+	if ( Command == "tsi" )	{	return []{	/*texSubImage2D(GL_CW);*/	};	};
+	if ( Command == "vp" )	{	return []{	/*viewport(GL_CW);*/	};	};
+	if ( Command == "sc" )	{	return []{	/*scissor(GL_CW);*/	};	};
+	if ( Command == "at" )	{	return []{	/*activeTexture(GL_CW);*/	};	};
+	if ( Command == "drw" )	{	return []{	/*drawElements(GL_CW);*/	};	};
+	if ( Command == "rp" )	{	return []{	/*RealReadPixels(GL_CW);*/	};	};
+	if ( Command == "fin" )	{	return []{	/*flush(GL_CW);*/	};	};
+	if ( Command == "up" )	{	return []{	/*useprogram;*/	};	};
+	if ( Command == "su" )	{	return []{	/*setuniform;*/	};	};
+	
+	std::stringstream Error;
+	Error << "Unknown gl command " << Command;
+	throw Soy::AssertException(Error.str());
+}
+	
 
 
 v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(const v8::CallbackInfo& Params)
@@ -218,13 +256,130 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(const 
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
 	
+	auto CommandQueueHandle = Arguments[0];
+	auto CommandQueueArray = v8::SafeCast<v8::Array>(CommandQueueHandle);
+	auto* Container = &Params.mContainer;
+
+	
+	Array<GlCommand> Commands;
+	//	decode the queue now so we don't have to keep entering a v8 context
+	auto HandleCommand = [&](size_t Index,Local<v8::Value> CompliedCommand)
+	{
+		//	expecting first arg to be a commmand string
+		auto CommandArray = v8::SafeCast<v8::Array>(CompliedCommand);
+		auto CommandString = v8::GetString( CommandArray->Get(0) );
+		GlCommand Command;
+		Command.mName = CommandString;
+		Command.mJob = GetImmediateCommandJob( CommandString, CommandArray );
+		Commands.PushBack( Command );
+	};
+	v8::EnumArray( CommandQueueArray, HandleCommand );
 	
 	
-	//
+	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
+	{
+		auto ResolverLocal = ResolverPersistent->GetLocal( *Isolate );
+		ResolverLocal->Resolve( v8::Undefined(Isolate) );
+	};
 	
-	throw Soy::AssertException("Todo");
-	
+	auto OpenglRender = [Isolate,ResolverPersistent,Container,OnCompleted,Commands]
+	{
+		try
+		{
+			//	gr: this introduces lag, as expected, but when it gets high, the whole thing gets stuck...
+			//		this should be laggy but system should cope...
+			auto SleepMs = Commands.GetSize();
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			/*
+			//	run commands
+			std::Debug << "Execute immediate commands x" << Commands.GetSize() << std::endl;
+			for ( int j=0;	j<Commands.GetSize();	j++ )
+			{
+				std::Debug << Commands[j].mName << " ";
+			}
+			std::Debug << std::endl;
+			*/
+			//	queue the completion, doesn't need to be done instantly
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
+				auto Error = v8::GetString( *Isolate, ExceptionString );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
+
+	auto& OpenglContext = *This.GetOpenglContext();
+	OpenglContext.PushJob( OpenglRender );
+		
+	//	return the promise
+	auto Promise = Resolver->GetPromise();
+	return Promise;
 }
+
+
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::FlushAsync(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<this_type>( Arguments.This() );
+	auto* Isolate = Params.mIsolate;
+	
+	auto Window = Arguments.This();
+	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	
+	//	make a promise resolver (persistent to copy to thread)
+	auto Resolver = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
+	
+	auto* Container = &Params.mContainer;
+	
+	
+	auto OnCompleted = [ResolverPersistent,Isolate](Local<Context> Context)
+	{
+		//	gr: can't do this unless we're in the javascript thread...
+		auto ResolverLocal = ResolverPersistent->GetLocal( *Isolate );
+		auto Message = String::NewFromUtf8( Isolate, __func__ );
+		ResolverLocal->Resolve( Message );
+	};
+	
+	auto OpenglRender = [Isolate,ResolverPersistent,Container,OnCompleted]
+	{
+		try
+		{
+			glFlush();
+			Opengl::IsOkay("Flush");
+			//	queue the completion, doesn't need to be done instantly
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
+				auto Error = v8::GetString( *Isolate, ExceptionString );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
+	
+	auto& OpenglContext = *This.GetOpenglContext();
+	OpenglContext.PushJob( OpenglRender );
+		
+	//	return the promise
+	auto Promise = Resolver->GetPromise();
+	return Promise;
+}
+
 
 
 v8::Local<v8::Value> TOpenglImmediateContextWrapper::GetEnums(const v8::CallbackInfo& Params)
@@ -323,6 +478,7 @@ Local<FunctionTemplate> TOpenglImmediateContextWrapper::CreateTemplate(TV8Contai
 	//	add members
 	Container.BindFunction<Execute_FunctionName>( InstanceTemplate, Execute );
 	Container.BindFunction<ExecuteCompiledQueue_FunctionName>( InstanceTemplate, ExecuteCompiledQueue );
+	Container.BindFunction<FlushAsync_FunctionName>( InstanceTemplate, FlushAsync );
 
 #define BIND_IMMEDIATE(NAME)	\
 	Container.BindFunction<Immediate_## NAME ##_FunctionName>( InstanceTemplate, Immediate_ ## NAME );{}
