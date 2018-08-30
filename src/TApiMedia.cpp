@@ -171,9 +171,16 @@ std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMedi
 	
 	//	try decklink devices
 	{
-		auto Extractor = Decklink::AllocExtractor(Params);
-		if ( Extractor )
-			return Extractor;
+		try
+		{
+			auto Extractor = Decklink::AllocExtractor(Params);
+			if ( Extractor )
+				return Extractor;
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << e.what() << std::endl;
+		}
 	}
 	
 	//	try platforms capture devices

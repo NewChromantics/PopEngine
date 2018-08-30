@@ -13,10 +13,14 @@ include('Webgl.js');
 include('FrameCounter.js');
 
 
+
+//	gr: get computer name here?
+var ComputerName = GetComputerName();
+
 var RGBAFromCamera = false;
 
 //	tries to find these in order, then grabs any
-var VideoDeviceNames = ["UltraStudio","c920","facetime","c920","isight"];
+var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 
 var VideoFrameSkip = 0;
@@ -1527,6 +1531,9 @@ function LoadVideo()
 
 function LoadDlib()
 {
+	if ( DlibThreadCount == 0 )
+		return;
+
 	var DlibLandMarksdat = LoadFileAsArrayBuffer(DlibLandMarksdatFilename);
 	FaceProcessor = new Dlib( DlibLandMarksdat, DlibThreadCount );
 }
@@ -1543,7 +1550,7 @@ function OnBroadcastMessage(PacketBytes,Sender,Socket)
 	Debug(PacketString);
 	
 	//	reply
-	if ( ServerSkeletonSender && PacketString == "whereisobserverserver" )
+	if ( ServerSkeletonSender && PacketString == ComputerName )
 	{
 		//	get all addresses and filter best one (ie, ignore local host)
 		let Addresses = ServerSkeletonSender.GetAddress().split(',');
@@ -1671,6 +1678,7 @@ function LoadSockets()
 	{
 		BroadcastServer = new UdpBroadcastServer(BroadcastServerPort);
 		BroadcastServer.OnMessage = function(Data,Sender)	{	OnBroadcastMessage(Data,Sender,BroadcastServer);	}
+		Debug("Discoverable as " + ComputerName);
 	}
 	
 	

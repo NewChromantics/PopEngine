@@ -17,7 +17,7 @@ const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 const char GarbageCollect_FunctionName[] = "GarbageCollect";
 const char SetTimeout_FunctionName[] = "setTimeout";
 const char Sleep_FunctionName[] = "Sleep";
-
+const char GetComputerName_FunctionName[] = "GetComputerName";
 
 
 
@@ -47,6 +47,7 @@ static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -60,6 +61,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
 	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
 	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
+	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
 
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
@@ -134,6 +136,16 @@ static Local<Value> Sleep(CallbackInfo& Params)
 	Params.mContainer.Yield( TimeoutMs );
 	
 	return Undefined(Params.mIsolate);
+}
+
+
+
+static Local<Value> GetComputerName(CallbackInfo& Params)
+{
+	auto Name = ::Platform::GetComputerName();
+	auto NameHandle = v8::GetString( Params.GetIsolate(), Name );
+
+	return NameHandle;
 }
 
 
