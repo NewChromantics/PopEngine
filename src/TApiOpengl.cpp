@@ -76,7 +76,15 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,const std::string& Mo
 		
 		Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.x ) );
 		Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.y ) );
-		mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+		
+		try
+		{
+			mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception in " << MouseFuncName << ": " << e.what() << std::endl;
+		}
 	};
 	mContainer.QueueScoped( Runner );
 }

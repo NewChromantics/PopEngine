@@ -84,6 +84,7 @@ var ServerSkeletonSenderPort = 8007;
 var BroadcastServer = null;
 var BroadcastServerPort = 8009;
 var OutputFilename = "../../../../SkeletonOutputFrames.json";
+var EnableFileOutput = false;
 //var OutputFilename = null;
 var FlipOutputSkeleton = true;
 var MirrorOutputSkeleton = false;
@@ -185,6 +186,31 @@ if ( EnableKalmanFilter )
 	var KalmanFilters = {};
 }
 
+
+function OnFileOutputEnabled()
+{
+	let Retry = function(RetryFunc,Timeout,RetryCount)
+	{
+		if ( RetryCount == 0 )
+			return;
+		let RetryAgain = function(){	Retry(RetryFunc,Timeout,RetryCount-1);	};
+		try
+		{
+			RetryFunc();
+		}
+		catch(e)
+		{
+			Debug(e+"... retrying in " + Timeout);
+			setTimeout( RetryAgain, Timeout );
+		}
+	}
+	
+	let ShowFile = function()
+	{
+		ShowFileInFinder( OutputFilename );
+	}
+	Retry( ShowFile, 200, 5 );
+}
 
 function GetCurrentFilteredPosition(Name)
 {
@@ -867,13 +893,14 @@ const LINE_COUNT = 30;
 include('Gui.js');
 var Gui = new TGui( [0,0,1,1] );
 
-Gui.Add( new TGuiElement('ClipToSquare', function(){	return ClipToSquare;	}, function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
-Gui.Add( new TGuiElement('PoseNetScale', function(){	return PoseNetScale;	}, function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
-Gui.Add( new TGuiElement('ThreadCount', function(){		return MaxConcurrentFrames;	}, function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
-Gui.Add( new TGuiElement('Blur',		function(){		return ApplyBlurInClip?1:0;	}, function(v){	ApplyBlurInClip = !ApplyBlurInClip;	}, 0, 1 ) );
-Gui.Add( new TGuiElement('ProcessVideoFrames',		function(){		return ProcessVideoFrames?1:0;	}, function(v){	ProcessVideoFrames = !ProcessVideoFrames;	}, 0, 1 ) );
-Gui.Add( new TGuiElement('EnableFaceProcessor',		function(){		return EnableFaceProcessor?1:0;	}, function(v){	EnableFaceProcessor = !EnableFaceProcessor;	}, 0, 1 ) );
-Gui.Add( new TGuiElement('DrawRects',		function(){		return DrawRects?1:0;	}, function(v){	DrawRects = !DrawRects;	}, 0, 1 ) );
+Gui.Add( new TGuiSlider('ClipToSquare',			function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+Gui.Add( new TGuiSlider('PoseNetScale',			function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
+Gui.Add( new TGuiSlider('ThreadCount',			function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
+Gui.Add( new TGuiToggle('Blur',					function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
+Gui.Add( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
+Gui.Add( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
+Gui.Add( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
+Gui.Add( new TGuiToggle('EnableFileOutput',		function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
 
 
 function WindowRender(RenderTarget)
@@ -1615,19 +1642,21 @@ function GetSkeletonJson(Frame,Pretty)
 
 function OutputFrame(Frame)
 {
+	let Filename = EnableFileOutput ? OutputFilename : null;
+	
 	//	nowhere to output
-	if ( !ServerSkeletonSender && !OutputFilename )
+	if ( !ServerSkeletonSender && !Filename )
 		return;
 
 	//	need one line output if going to file
-	let Pretty = OutputFilename ? false : true;
+	let Pretty = Filename ? false : true;
 	let Json = GetSkeletonJson(Frame,Pretty) + "\n";
 
-	if ( OutputFilename )
+	if ( Filename )
 	{
 		try
 		{
-			WriteStringToFile( OutputFilename, Json, true );
+			WriteStringToFile( Filename, Json, true );
 		}
 		catch(e)
 		{

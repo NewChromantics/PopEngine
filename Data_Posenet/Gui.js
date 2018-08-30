@@ -58,10 +58,10 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 		
 	}
 	
-	this.OnClick = function(x,y)
+	this.OnClick = function(x,y,FirstClick)
 	{
 		x = Math.min( 1, Math.max( 0, x ) );
-		this.SetNormalised(x);
+		this.SetNormalised(x,FirstClick);
 	}
 	
 	this.Render = function(RenderTarget,Rect)
@@ -82,6 +82,30 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 	}
 }
 
+function TGuiSlider()
+{
+	TGuiElement.apply(this,arguments);
+}
+
+function TGuiToggle()
+{
+	TGuiElement.apply(this,arguments);
+	
+	this.GetNormalised = function()
+	{
+		return this.Getter() ? 1 : 0;
+	}
+	
+	this.OnClick = function(x,y,FirstClick)
+	{
+		let Value = this.Getter();
+		Value = !Value;
+		if ( FirstClick )
+			this.Setter(Value);
+	}
+
+}
+
 
 function TGui(GuiRect)
 {
@@ -98,12 +122,12 @@ function TGui(GuiRect)
 	{
 		this.MouseDown = true;
 		this.LockedElementIndex = this.GetElementIndexAt( x,y );
-		this.OnClick( x, y );
+		this.OnClick( x, y, true );
 	}
 	
 	this.OnMouseMove = function(x,y)
 	{
-		this.OnClick( x,y );
+		this.OnClick( x,y, false );
 	}
 	
 	this.OnMouseUp = function(x,y)
@@ -111,7 +135,7 @@ function TGui(GuiRect)
 		this.LockedElementIndex = null;
 	}
 	
-	this.OnClick = function(x,y)
+	this.OnClick = function(x,y,FirstClick)
 	{
 		if ( this.LockedElementIndex === null )
 		{
@@ -123,7 +147,7 @@ function TGui(GuiRect)
 		let Element = this.Elements[this.LockedElementIndex];
 		let ElementRect = this.GetElementRect(this.LockedElementIndex);
 		let RectXy = GetRectNormalisedCoord(x,y,ElementRect);
-		Element.OnClick( RectXy[0], RectXy[1] );
+		Element.OnClick( RectXy[0], RectXy[1], FirstClick );
 	}
 	
 	this.OnHover = function(x,y)
