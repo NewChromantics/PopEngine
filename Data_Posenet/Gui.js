@@ -3,6 +3,77 @@ var GuiSliderShader_FragSource = LoadFileAsString("GuiSlider.frag");
 var GuiSliderShader = null;
 
 
+var SdfTexture = "SdfFont_SansSerif.png";
+var SdfShader_FragSource = "SdfFont.frag";
+//	from https://mapbox.github.io/tiny-sdf/
+//	open console and change chars= to this line (gr: broken up for font layout)
+var SdfChars = [
+				'ABCDEFGHIJKLMNOPQRST',
+				'UVWXYZabcdefghijklmn',
+				'opqrstuvwxyz01234567',
+				'89 !%.:,()/\"*^&-=_+\''
+				];
+
+
+function TGuiFont(SdfFontFilename,FontMap,FragSource)
+{
+	this.SdfTexture = new Image(SdfFontFilename);
+	this.FragSource = LoadFileAsString(FragSource);
+	this.Shader = null;
+	this.FontMap = FontMap;
+	
+	
+	this.GetFontMapCharacterRect = function(Char)
+	{
+		let RowAndIndex = false;
+		for ( let row=0;	row<this.FontMap.length;	row++)
+		{
+			let Index = this.FontMap[row].indexOf(Char);
+			if ( Index == -1 )
+				continue;
+			RowAndIndex = [row,Index];
+		}
+		if ( RowAndIndex === false )
+			RowAndIndex = [3,3];	//	!
+		let h = this.FontMap.length;
+		let w = this.FontMap[0].length;
+		let y = RowAndIndex[0] / h;
+		let x = RowAndIndex[1] / w;
+		return [x,y,1/w,1/h];
+	}
+	
+	
+	this.Render = function(RenderTarget,String,RenderRect)
+	{
+		if ( !this.Shader )
+		{
+			this.Shader = new OpenglShader( RenderTarget, VertShaderSource, this.FragSource );
+		}
+		
+		//	get font size
+		let FontWidth = Math.min( RenderRect[3], 10/100 );
+		let FontHeight = FontWidth;
+		let FontKerning = FontWidth * 0.2;
+		RenderRect[2] = FontWidth;
+		RenderRect[3] = FontHeight;
+		let FontTexture = this.SdfTexture;
+		for ( let c=0;	c<String.length;	c++ )
+		{
+			let Char = String[c];
+			
+			let FontRect = this.GetFontMapCharacterRect(Char);
+			let SetUniforms = function(Shader)
+			{
+				Shader.SetUniform("SdfTexture", FontTexture, 0 );
+				Shader.SetUniform("SdfRect", FontRect );
+				Shader.SetUniform("VertexRect", RenderRect );
+			}
+			RenderTarget.DrawQuad( this.Shader, SetUniforms );
+			RenderRect[0] += RenderRect[2] - FontKerning;
+		}
+	}
+}
+
 function GetRectNormalisedCoord(x,y,Rect)
 {
 	x = Range( Rect[0], Rect[0]+Rect[2], x );
@@ -64,21 +135,24 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 		this.SetNormalised(x,FirstClick);
 	}
 	
-	this.Render = function(RenderTarget,Rect)
+	this.Render = function(RenderTarget,Rect,Font)
 	{
 		if ( !GuiSliderShader )
 		{
 			GuiSliderShader = new OpenglShader( RenderTarget, VertShaderSource, GuiSliderShader_FragSource );
 		}
 		
-		let This = this;
+		let Value = this.Getter();
+		let ValueNorm = this.GetNormalised();
 		let SetUniforms = function(Shader)
 		{
-			let ValueNorm = This.GetNormalised();
 			Shader.SetUniform("Value", ValueNorm );
 			Shader.SetUniform("VertexRect", Rect );
 		}
 		RenderTarget.DrawQuad( GuiSliderShader, SetUniforms );
+		
+		let String = this.Name + ": " + Value;
+		Font.Render( RenderTarget, String, Rect );
 	}
 }
 
@@ -112,7 +186,8 @@ function TGui(GuiRect)
 	this.Elements = [];
 	this.LockedElementIndex = null;
 	this.GuiRect = GuiRect;
-	
+	this.Font = new TGuiFont(SdfTexture,SdfChars,SdfShader_FragSource);
+
 	this.Add = function(Element)
 	{
 		this.Elements.push(Element);
@@ -195,7 +270,7 @@ function TGui(GuiRect)
 		{
 			let Element = this.Elements[e];
 			let ElementRect = this.GetElementRect(e);
-			Element.Render(RenderTarget,ElementRect);
+			Element.Render(RenderTarget,ElementRect,this.Font);
 		}
 	}
 	
