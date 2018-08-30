@@ -16,7 +16,7 @@ include('FrameCounter.js');
 var RGBAFromCamera = false;
 
 //	tries to find these in order, then grabs any
-var VideoDeviceNames = ["c920","facetime","c920","isight"];
+var VideoDeviceNames = ["UltraStudio","c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 
 var VideoFrameSkip = 0;

@@ -5,6 +5,7 @@
 
 #include "PopMovie/AvfVideoCapture.h"
 #include "PopMovie/AvfMovieDecoder.h"
+#include "SoyDecklink/SoyDecklink.h"
 
 
 using namespace v8;
@@ -112,6 +113,7 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 				DeviceNames.PushBack(Name);
 			};
 			::Platform::EnumCaptureDevices(EnumDevice);
+			Decklink::EnumDevices(EnumDevice);
 			
 			auto OnCompleted = [=](Local<Context> Context)
 			{
@@ -154,6 +156,37 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 	return Promise;
 }
 
+
+std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMediaExtractorParams& Params)
+{
+	//	video extractor if it's a filename
+	if ( ::Platform::FileExists(Params.mFilename) )
+	{
+		std::shared_ptr<Opengl::TContext> OpenglContext;
+		
+		auto Extractor = ::Platform::AllocVideoDecoder( Params, OpenglContext );
+		if ( Extractor )
+			return Extractor;
+	}
+	
+	//	try decklink devices
+	{
+		auto Extractor = Decklink::AllocExtractor(Params);
+		if ( Extractor )
+			return Extractor;
+	}
+	
+	//	try platforms capture devices
+	{
+		auto Extractor = ::Platform::AllocCaptureExtractor( Params, nullptr );
+		if ( Extractor )
+			return Extractor;
+	}
+	
+	std::stringstream Error;
+	Error << "Failed to allocate a device matching " << Params.mFilename;
+	throw Soy::AssertException(Error.str());
+}
 
 
 void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
@@ -216,19 +249,10 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 		Params.mForceNonPlanarOutput = SinglePlaneOutput;
 		Params.mDiscardOldFrames = true;
 		
-		//	video extractor if it's a filename
-		if ( ::Platform::FileExists(DeviceName) )
-		{
-			std::shared_ptr<Opengl::TContext> OpenglContext;
-
-			NewWrapper->mExtractor = ::Platform::AllocVideoDecoder( Params, OpenglContext );
-		}
-		else
-		{
-			NewWrapper->mExtractor = ::Platform::AllocCaptureExtractor( Params, nullptr );
-		}
+		NewWrapper->mExtractor = AllocExtractor(Params);
 		NewWrapper->mExtractor->AllocStreamBuffer(0);
 		NewWrapper->mExtractor->Start(false);
+
 
 		//	set fields
 		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );

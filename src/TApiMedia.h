@@ -5,6 +5,7 @@
 
 class TMediaPacket;
 class TMediaExtractor;
+class TMediaExtractorParams;
 
 
 
@@ -47,6 +48,8 @@ public:
 	
 	void									OnNewFrame(size_t StreamIndex);
 	void									OnNewFrame(const TMediaPacket& FramePacket);
+	
+	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
 
 public:
 	v8::Persistent<v8::Object>			mHandle;
