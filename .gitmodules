@@ -1,3 +1,6 @@
 [submodule "src/SoyLib"]
 	path = src/SoyLib
 	url = https://github.com/SoylentGraham/SoyLib.git
+[submodule "src/SoyDecklink"]
+	path = src/SoyDecklink
+	url = https://github.com/SoylentGraham/SoyDecklink.git
