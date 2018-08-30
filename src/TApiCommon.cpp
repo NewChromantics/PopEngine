@@ -18,6 +18,7 @@ const char GarbageCollect_FunctionName[] = "GarbageCollect";
 const char SetTimeout_FunctionName[] = "setTimeout";
 const char Sleep_FunctionName[] = "Sleep";
 const char GetComputerName_FunctionName[] = "GetComputerName";
+const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
 
 
 
@@ -48,6 +49,7 @@ static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -62,6 +64,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
 	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
 	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
+	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
 
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
@@ -117,7 +120,14 @@ static Local<Value> SetTimeout(CallbackInfo& Params)
 		//auto CallbackLocal = v8::GetLocal( Isolate, CallbackPersistent->mPersistent );
 		BufferArray<v8::Local<v8::Value>,1> Args;
 		Local<Object> This;
-		Container->ExecuteFunc( Context, CallbackPersistent->GetLocal(Isolate), This, GetArrayBridge(Args) );
+		try
+		{
+			Container->ExecuteFunc( Context, CallbackPersistent->GetLocal(Isolate), This, GetArrayBridge(Args) );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception in SetTimeout(" << TimeoutMs << ") callback: " << e.what() << std::endl;
+		}
 	};
 	//	need a persistent handle to the callback?
 	Params.mContainer.QueueDelayScoped( OnRun, TimeoutMs );
@@ -146,6 +156,18 @@ static Local<Value> GetComputerName(CallbackInfo& Params)
 	auto NameHandle = v8::GetString( Params.GetIsolate(), Name );
 
 	return NameHandle;
+}
+
+
+
+static Local<Value> ShowFileInFinder(CallbackInfo& Params)
+{
+	auto FilenameHandle = Params.mParams[0];
+	auto Filename = Params.GetRootDirectory() + v8::GetString(FilenameHandle);
+	
+	::Platform::ShowFileExplorer(Filename);
+
+	return Undefined(Params.mIsolate);
 }
 
 
