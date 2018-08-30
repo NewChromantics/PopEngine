@@ -1,14 +1,17 @@
 {
-  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE",
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++F59D8A5",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++22D2EB2" : 0,
     "869C8B911CF328D50CA81E17EFFE779905E187BC+++3046BE9" : 0,
+    "D0D04D72EB88E251648A501FE1C527B9F34F7D57+++8EF0F53" : 9223372036854775807,
     "87907EAD08F9AC05484849759EAC4E8AE0659685+++ADB7D6F" : 0,
-    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE" : 0,
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++2D60C2B" : 0,
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++F59D8A5" : 9223372036854775807,
     "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1D07DBE" : 0,
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE" : 0,
     "3EA6B5380D894491ED38119B2315A466F1D92D0C+++E15A741" : 0,
     "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++2093AAB" : 0,
     "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++9C0E33A" : 0
@@ -17,9 +20,12 @@
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "A1B27E6B8F772148E08EA67ACB7B7AB0FCE14441+++22D2EB2" : "Remotery\/",
     "869C8B911CF328D50CA81E17EFFE779905E187BC+++3046BE9" : "RwdMovieTexture\/",
+    "D0D04D72EB88E251648A501FE1C527B9F34F7D57+++8EF0F53" : "PopEngine\/src\/SoyDecklink\/",
     "87907EAD08F9AC05484849759EAC4E8AE0659685+++ADB7D6F" : "SoyLib",
-    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE" : "PopTrack",
+    "87907EAD08F9AC05484849759EAC4E8AE0659685+++2D60C2B" : "PopEngine\/src\/SoyLib\/",
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++F59D8A5" : "PopEngine\/",
     "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++1D07DBE" : "PopLib\/",
+    "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE" : "PopTrack",
     "3EA6B5380D894491ED38119B2315A466F1D92D0C+++E15A741" : "PopCast\/",
     "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++2093AAB" : "NewChromantics\/PopTrack",
     "37417DDE19D70CE3CEE3CDEC3DF7735FC2972C83+++9C0E33A" : "NewChromantics\/PopTrack"
@@ -56,6 +62,11 @@
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/SoyLib.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++2D60C2B"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/SoyLib.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "87907EAD08F9AC05484849759EAC4E8AE0659685+++ADB7D6F"
     },
     {
@@ -67,6 +78,16 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NewChromantics\/PopTrack.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++3F5F1AE"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/gitlab.com\/NewChromantics\/PopEngine.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0ABAA5C2C728963D20BCAC2836172F9597E7880+++F59D8A5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SoylentGraham\/SoyDecklink.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D0D04D72EB88E251648A501FE1C527B9F34F7D57+++8EF0F53"
     }
   ]
 }
