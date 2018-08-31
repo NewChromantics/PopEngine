@@ -500,31 +500,7 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	//	loop through formats for ones we can handle that are accepted
 	//	https://developer.apple.com/library/mac/documentation/AVFoundation/Reference/AVCaptureVideoDataOutput_Class/#//apple_ref/occ/instp/AVCaptureVideoDataOutput/availableVideoCVPixelFormatTypes
 	//	The first format in the returned list is the most efficient output format.
-	auto GetPixelFormatPriority = [](const OSType& Format)->int
-	{
-		static std::map<OSType,int> FormatPrioritys;
-		if ( FormatPrioritys.empty() )
-		{
-			FormatPrioritys[kCVPixelFormatType_32ARGB] = -1;
-		}
-		auto it = FormatPrioritys.find( Format );
-		if ( it == FormatPrioritys.end() )
-			return 0;
-		return it->second;
-	};
-	auto SortFormats = [&](const OSType& a,const OSType& b)
-	{
-		auto aPriority = GetPixelFormatPriority(a);
-		auto bPriority = GetPixelFormatPriority(b);
-		
-		//	descending
-		if ( aPriority < bPriority )	return 1;
-		if ( aPriority > bPriority )	return -1;
-		return 0;
-	};
-	Array<OSType> _TryPixelFormats;
-	auto _TryPixelFormatsBridge = GetArrayBridge(_TryPixelFormats);
-	SortArrayLambda<OSType> TryPixelFormats( _TryPixelFormatsBridge, SortFormats );
+	Array<OSType> TryPixelFormats;
 	{
 		NSArray* AvailibleFormats = [Output availableVideoCVPixelFormatTypes];
 		Soy::Assert( AvailibleFormats != nullptr, "availableVideoCVPixelFormatTypes returned null array" );
@@ -561,7 +537,7 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 			}
 			
 			Debug << ", ";
-			TryPixelFormats.Push( Format );
+			TryPixelFormats.PushBack( Format );
 		}
 		std::Debug << Debug.str() << std::endl;
 	}
