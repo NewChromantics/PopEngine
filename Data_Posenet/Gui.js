@@ -244,9 +244,13 @@ function TGuiToggle()
 function TGui(GuiRect)
 {
 	this.Elements = [];
-	this.LockedElementIndex = null;
+	this.LockedLayoutElement = null;
 	this.GuiRect = GuiRect;
 	this.Font = new TGuiFont(SdfTexture,SdfChars,SdfShader_FragSource);
+	
+	//	to make a good immediate mode, we cache the layout of what we renderered and refer back to it
+	this.LastLayout = [];
+	
 
 	this.Add = function(Element)
 	{
@@ -256,7 +260,7 @@ function TGui(GuiRect)
 	this.OnMouseDown = function(x,y)
 	{
 		this.MouseDown = true;
-		this.LockedElementIndex = this.GetElementIndexAt( x,y );
+		this.LockedLayoutElement = this.GetLayoutElement( x,y );
 		this.OnClick( x, y, true );
 	}
 	
@@ -267,71 +271,81 @@ function TGui(GuiRect)
 	
 	this.OnMouseUp = function(x,y)
 	{
-		this.LockedElementIndex = null;
+		this.LockedLayoutElement = null;
 	}
 	
 	this.OnClick = function(x,y,FirstClick)
 	{
-		if ( this.LockedElementIndex === null )
+		if ( this.LockedLayoutElement === null )
 		{
 			this.OnHover(x,y);
 			return;
 		}
 		
 		//	get local xy
-		let Element = this.Elements[this.LockedElementIndex];
-		let ElementRect = this.GetElementRect(this.LockedElementIndex);
-		let RectXy = GetRectNormalisedCoord(x,y,ElementRect);
-		Element.OnClick( RectXy[0], RectXy[1], FirstClick );
+		let Element = this.LockedLayoutElement;
+		let RectXy = GetRectNormalisedCoord(x,y,Element.Rect);
+		Element.Element.OnClick( RectXy[0], RectXy[1], FirstClick );
 	}
 	
 	this.OnHover = function(x,y)
 	{
-		let ElementIndex = this.GetElementIndexAt(x,y);
-		if ( ElementIndex === null )
+		let Element = this.GetLayoutElement(x,y);
+		if ( Element === null )
 			return;
 		
 		//	get local xy
-		let Element = this.Elements[this.LockedElementIndex];
-		let ElementRect = this.GetElementRect(ElementIndex);
-		let RectXy = GetRectNormalisedCoord(x,y,ElementRect);
-		Element.OnHover( RectXy[0], RectXy[1] );
+		let RectXy = GetRectNormalisedCoord(x,y,Element.Rect);
+		Element.Element.OnHover( RectXy[0], RectXy[1] );
 	}
 	
-	this.GetElementRect = function(ElementIndex)
-	{
-		let ElementBoxSpacing = 5/500;
-		let MaxElementBoxWidth = 100/500;
-		let MaxElementBoxHeight = 20/500;
-		let ElementBoxHeight = Math.min( MaxElementBoxHeight, this.GuiRect[3] / this.Elements.length );
-		
-		let x = ElementBoxSpacing + this.GuiRect[0];
-		let y = ElementBoxSpacing + this.GuiRect[1] + ( ElementBoxHeight * ElementIndex );
-		let w = MaxElementBoxWidth - ElementBoxSpacing;
-		let h = ElementBoxHeight - ElementBoxSpacing;
-		
-		return [x,y,w,h];
-	}
-	
-	this.GetElementIndexAt = function(x,y)
-	{
-		for ( let e=0;	e<this.Elements.length;	e++ )
-		{
-			let ElementRect = this.GetElementRect(e);
-			if ( InsideRect(x,y,ElementRect) )
-				return e;
-		}
-		return null;
-	}
 	
 	this.Render = function(RenderTarget)
 	{
+		this.ClearLayout();
+		
+		//	more "immediate mode"
+		let MaxElementBoxWidth = 100/500;
+		let MaxElementBoxHeight = 20/500;
+		let ElementBoxSpacing = 5/500;
+		let ElementRect = [ this.GuiRect[0], this.GuiRect[1], MaxElementBoxWidth, MaxElementBoxHeight ];
+		ElementRect[0] += ElementBoxSpacing;
+		ElementRect[1] += ElementBoxSpacing;
+		
 		for ( let e=0;	e<this.Elements.length;	e++ )
 		{
 			let Element = this.Elements[e];
-			let ElementRect = this.GetElementRect(e);
-			Element.Render(RenderTarget,ElementRect,this.Font);
+			//	make copy of the array as stuff in scope will probably modify it
+			let er = ElementRect.slice(0);
+			this.CacheLayout( er, Element );
+			Element.Render(RenderTarget,er,this.Font);
+
+			ElementRect[1] += ElementRect[3] + ElementBoxSpacing;
 		}
+	}
+	
+	this.ClearLayout = function()
+	{
+		this.LastLayout = [];
+	}
+	
+	this.CacheLayout = function(ElementRect,TheElement)
+	{
+		let LayoutElement = { Rect:ElementRect.slice(0), Element:TheElement };
+		this.LastLayout.push(LayoutElement);
+	}
+	
+	this.GetLayoutElement = function(x,y)
+	{
+		let FoundElement = null;
+		let FindElement = function(LayoutElement)
+		{
+			let ElementRect = LayoutElement.Rect;
+			if ( InsideRect(x,y,ElementRect) )
+				FoundElement = LayoutElement;
+		}
+		this.LastLayout.forEach( FindElement );
+		return FoundElement;
 	}
 	
 }
