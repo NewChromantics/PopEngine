@@ -895,14 +895,20 @@ const LINE_COUNT = 30;
 include('Gui.js');
 var Gui = new TGui( [0,0,1,1] );
 
-Gui.Add( new TGuiSliderInt('Resolution',			function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+Gui.Add( new TGuiSliderInt('Resolution',		function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
 Gui.Add( new TGuiSlider('PoseNetScale',			function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
-Gui.Add( new TGuiSliderInt('ThreadCount',			function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
+Gui.Add( new TGuiSliderInt('ThreadCount',		function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
 Gui.Add( new TGuiToggle('Blur',					function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
 Gui.Add( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
 Gui.Add( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFileOutput',		function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
+
+/*	debug tweak font
+Gui.Add( new TGuiSlider('Font.InnerDistance',		function(){	return Gui.Font.InnerDistance;	},	function(v){	Gui.Font.InnerDistance = v;	}, 0.0, 1.0 ) );
+Gui.Add( new TGuiSlider('Font.OuterDistance',		function(){	return Gui.Font.OuterDistance;	},	function(v){	Gui.Font.OuterDistance = v;	}, 0.0, 1.0 ) );
+Gui.Add( new TGuiSlider('Font.NullDistance',		function(){	return Gui.Font.NullDistance;	},	function(v){	Gui.Font.NullDistance = v;	}, 0.0, 1.0 ) );
+*/
 
 
 function WindowRender(RenderTarget)
@@ -958,10 +964,20 @@ function WindowRender(RenderTarget)
 	Gui.Render(RenderTarget);
 	
 	
+	let DebugStrings = [];
+	
 	let OutputFrameRate = GetFrameCounter('FrameCompleted');
-	let OutputFps = "Output " + OutputFrameRate.toFixed(2) + "fps";
+	DebugStrings.push(GetComputerName());
+	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
+
 	let FpsSize = 0.03;
-	Gui.Font.Render( RenderTarget, OutputFps, [0,1-FpsSize,0.4,FpsSize]);
+	let y = 1 - (FpsSize*DebugStrings.length);
+	let DrawString = function(String)
+	{
+		Gui.Font.Render( RenderTarget, String, [0,y,0.4,FpsSize]);
+		y += FpsSize;
+	}
+	DebugStrings.forEach(DrawString);
 }
 
 

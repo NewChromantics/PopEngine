@@ -24,6 +24,12 @@ function TGuiFont(SdfFontFilename,FontMap,FragSource)
 	this.Shader = null;
 	this.FontMap = FontMap;
 	
+	//	sdf render settings
+	this.InnerDistance = 0.9;
+	this.OuterDistance = 0.7;
+	this.NullDistance = 0.4;
+	
+
 	
 	this.GetFontMapCharacterRect = function(Char)
 	{
@@ -75,11 +81,21 @@ function TGuiFont(SdfFontFilename,FontMap,FragSource)
 			let Char = String[c];
 			
 			let FontRect = this.GetFontMapCharacterRect(Char);
+			let This = this;
 			let SetUniforms = function(Shader)
 			{
-				Shader.SetUniform("SdfTexture", FontTexture, 0 );
-				Shader.SetUniform("SdfRect", FontRect );
+				if ( c == 0 )
+				{
+					Shader.SetUniform("SdfTexture", FontTexture, 0 );
+					if ( This.InnerDistance )
+					{
+						Shader.SetUniform("InnerDistance", This.InnerDistance );
+						Shader.SetUniform("OuterDistance", This.OuterDistance );
+						Shader.SetUniform("NullDistance", This.NullDistance );
+					}
+				}
 				Shader.SetUniform("VertexRect", RenderRect );
+				Shader.SetUniform("SdfRect", FontRect );
 			}
 			RenderTarget.EnableBlend(true);
 			RenderTarget.DrawQuad( this.Shader, SetUniforms );
