@@ -19,6 +19,7 @@ public:
 	
 protected:
 	virtual bool	Iteration() override;
+	virtual std::chrono::milliseconds	GetSleepDuration() override;
 	
 public:
 	std::string		mRootDirectory;

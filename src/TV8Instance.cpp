@@ -59,6 +59,11 @@ TV8Instance::~TV8Instance()
 	
 }
 
+std::chrono::milliseconds TV8Instance::GetSleepDuration()
+{
+	return std::chrono::milliseconds(1);
+}
+
 bool TV8Instance::Iteration()
 {
 	if ( !mV8Container )
