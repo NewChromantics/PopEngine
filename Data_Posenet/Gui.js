@@ -149,6 +149,17 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 		this.SetNormalised(x,FirstClick);
 	}
 	
+	this.GetLabel = function()
+	{
+		let Value = this.Getter();
+		let Label = this.Name + ": ";
+		if (typeof Value == 'number')
+			Label += Value.toFixed(2);
+		else
+			Label += Value;
+		return Label;
+	}
+	
 	this.Render = function(RenderTarget,Rect,Font)
 	{
 		if ( !GuiSliderShader )
@@ -156,7 +167,6 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 			GuiSliderShader = new OpenglShader( RenderTarget, VertShaderSource, GuiSliderShader_FragSource );
 		}
 		
-		let Value = this.Getter();
 		let ValueNorm = this.GetNormalised();
 		let SetUniforms = function(Shader)
 		{
@@ -165,14 +175,26 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 		}
 		RenderTarget.DrawQuad( GuiSliderShader, SetUniforms );
 		
-		let String = this.Name + ": " + Value;
-		Font.Render( RenderTarget, String, Rect );
+		let Label = this.GetLabel();
+		Font.Render( RenderTarget, Label, Rect );
 	}
 }
 
 function TGuiSlider()
 {
 	TGuiElement.apply(this,arguments);
+}
+
+function TGuiSliderInt()
+{
+	TGuiElement.apply(this,arguments);
+	
+	this.GetLabel = function()
+	{
+		let Value = this.Getter();
+		let Label = this.Name + ": " + Value.toFixed(0);
+		return Label;
+	}
 }
 
 function TGuiToggle()
@@ -192,6 +214,13 @@ function TGuiToggle()
 			this.Setter(Value);
 	}
 
+	this.GetLabel = function()
+	{
+		let Value = this.Getter();
+		let Label = Value ? "(X)" : "( )";
+		Label += " " + this.Name;
+		return Label;
+	}
 }
 
 
