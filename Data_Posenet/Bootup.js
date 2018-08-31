@@ -611,6 +611,7 @@ var TFrame = function(OpenglContext)
 	this.ImageData = null;
 	this.OpenglContext = OpenglContext;
 	this.FrameNumber = FrameCounter++;
+	this.Time = Date.now();
 	
 	//	rects are in Image space(px)
 	this.HeadRect = [0,0,1,1];	//	head area on skeleton (normalised)
@@ -684,6 +685,7 @@ var TFrame = function(OpenglContext)
 			if ( TempSharedImageData.width != this.Image.GetWidth() || TempSharedImageData.height != this.Image.GetHeight() )
 			{
 				TempSharedImageData = null;
+				GarbageCollect();
 			}
 		}
 		
@@ -1631,6 +1633,7 @@ function GetSkeletonJson(Frame,Pretty)
 	KeypointSkeleton.FaceRect = Frame.FaceRect;
 	KeypointSkeleton.score = 0.4567;
 	KeypointSkeleton.keypoints = [];
+	KeypointSkeleton.Time = Frame.Time;
 
 	//	get keypoints
 	Frame.EnumKeypoints( EnumKeypoint );
