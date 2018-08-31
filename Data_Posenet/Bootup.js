@@ -956,6 +956,12 @@ function WindowRender(RenderTarget)
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );
 	
 	Gui.Render(RenderTarget);
+	
+	
+	let OutputFrameRate = GetFrameCounter('FrameCompleted');
+	let OutputFps = "Output " + OutputFrameRate.toFixed(2) + "fps";
+	let FpsSize = 0.03;
+	Gui.Font.Render( RenderTarget, OutputFps, [0,1-FpsSize,0.4,FpsSize]);
 }
 
 

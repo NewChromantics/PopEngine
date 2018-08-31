@@ -173,6 +173,7 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 			Shader.SetUniform("Value", ValueNorm );
 			Shader.SetUniform("VertexRect", Rect );
 		}
+		RenderTarget.EnableBlend(true);
 		RenderTarget.DrawQuad( GuiSliderShader, SetUniforms );
 		
 		let Label = this.GetLabel();
