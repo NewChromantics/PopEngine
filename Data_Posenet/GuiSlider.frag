@@ -2,6 +2,7 @@ in vec2 uv;
 
 uniform float		Value;
 const float3		ExactColour = float3(1,1,1);
+uniform float		Alpha = 0.6;
 
 float3 NormalToRedGreen(float Normal)
 {
@@ -28,14 +29,14 @@ float3 NormalToRedGreen(float Normal)
 
 void main()
 {
-	gl_FragColor = float4(0,0,0,0);
+	gl_FragColor = float4(0,0,0,Alpha);
 	
 	if ( uv.x < Value )
 	{
-		gl_FragColor = float4( NormalToRedGreen(Value), 1 );
+		gl_FragColor.xyz = NormalToRedGreen(Value);
 	}
 	else if ( uv.x == Value )
 	{
-		gl_FragColor = float4( ExactColour, 1 );
+		gl_FragColor.xyz = ExactColour;
 	}
 }

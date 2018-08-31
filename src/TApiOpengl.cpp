@@ -9,6 +9,7 @@ const char Window_TypeName[] = "OpenglWindow";
 
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
+const char EnableBlend_FunctionName[] = "EnableBlend";
 const char SetViewport_FunctionName[] = "SetViewport";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
@@ -171,6 +172,22 @@ v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 	Soy::TRgb Colour( Red->Value(), Green->Value(), Blue->Value() );
 		
 	This.mWindow->ClearColour( Colour );
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+v8::Local<v8::Value> TWindowWrapper::EnableBlend(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	
+	auto EnableHandle = Arguments[0];
+	bool Enable = true;
+	if ( !EnableHandle->IsUndefined() )
+		Enable = v8::SafeCast<Boolean>(EnableHandle)->BooleanValue();
+	
+	This.mWindow->EnableBlend( Enable );
+	
 	return v8::Undefined(Params.mIsolate);
 }
 
@@ -492,6 +509,7 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
 	Container.BindFunction<SetViewport_FunctionName>( InstanceTemplate, SetViewport );
 	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
+	Container.BindFunction<EnableBlend_FunctionName>( InstanceTemplate, EnableBlend );
 	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
 	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
 	
@@ -508,10 +526,9 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	
 	//Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
 	Opengl::ClearDepth();
+	EnableBlend(false);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
-	
 	
 	auto OpenglContext = this->GetContext();
 	Opengl_IsOkay();
@@ -523,6 +540,19 @@ void TRenderWindow::ClearColour(Soy::TRgb Colour)
 	Opengl::ClearColour( Colour );
 }
 
+
+void TRenderWindow::EnableBlend(bool Enable)
+{
+	if ( Enable )
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+	else
+	{
+		glDisable(GL_BLEND);
+	}
+}
 
 Opengl::TGeometry& TRenderWindow::GetBlitQuad()
 {

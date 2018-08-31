@@ -22,6 +22,8 @@ public:
 	
 	void	Clear(Opengl::TRenderTarget& RenderTarget);
 	void	ClearColour(Soy::TRgb Colour);
+	void	EnableBlend(bool Enable);
+	
 	void	DrawQuad();
 	void	DrawQuad(Opengl::TShader& Shader,std::function<void()> OnShaderBind);
 	
@@ -67,8 +69,10 @@ public:
 	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
 
 	//	these are context things
+	//	immediate calls, so... maybe try and mix the context settings
 	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				EnableBlend(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				SetViewport(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);

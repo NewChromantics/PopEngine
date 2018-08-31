@@ -18,6 +18,8 @@ var SdfChars = [
 function TGuiFont(SdfFontFilename,FontMap,FragSource)
 {
 	this.SdfTexture = new Image(SdfFontFilename);
+	this.SdfTexture.SetLinearFilter(true);
+	
 	this.FragSource = LoadFileAsString(FragSource);
 	this.Shader = null;
 	this.FontMap = FontMap;
@@ -35,7 +37,7 @@ function TGuiFont(SdfFontFilename,FontMap,FragSource)
 		}
 		if ( RowAndIndex === false )
 			RowAndIndex = [3,3];	//	!
-		let h = this.FontMap.length;
+		let h = this.FontMap.length*2;	//	<----- wrong!
 		let w = this.FontMap[0].length;
 		let y = RowAndIndex[0] / h;
 		let x = RowAndIndex[1] / w;
@@ -50,12 +52,23 @@ function TGuiFont(SdfFontFilename,FontMap,FragSource)
 			this.Shader = new OpenglShader( RenderTarget, VertShaderSource, this.FragSource );
 		}
 		
+		let FontWidthRatio = 0.6;
+		let FontMargin = 0.1;
+		let FontKerning = 0.4;
+		
 		//	get font size
-		let FontWidth = Math.min( RenderRect[3], 10/100 );
-		let FontHeight = FontWidth;
-		let FontKerning = FontWidth * 0.2;
+		let FontHeight = Math.min( RenderRect[3], 10/100 );
+		FontHeight *= 1;
+		let FontWidth = FontHeight * FontWidthRatio;
+		let Kerning = FontWidth * FontKerning;
 		RenderRect[2] = FontWidth;
 		RenderRect[3] = FontHeight;
+		
+		//	pad from rect
+		let Margin = FontHeight * FontMargin;
+		RenderRect[1] += Margin;
+		RenderRect[3] -= Margin*2;
+		
 		let FontTexture = this.SdfTexture;
 		for ( let c=0;	c<String.length;	c++ )
 		{
@@ -68,8 +81,9 @@ function TGuiFont(SdfFontFilename,FontMap,FragSource)
 				Shader.SetUniform("SdfRect", FontRect );
 				Shader.SetUniform("VertexRect", RenderRect );
 			}
+			RenderTarget.EnableBlend(true);
 			RenderTarget.DrawQuad( this.Shader, SetUniforms );
-			RenderRect[0] += RenderRect[2] - FontKerning;
+			RenderRect[0] += RenderRect[2] - Kerning;
 		}
 	}
 }
