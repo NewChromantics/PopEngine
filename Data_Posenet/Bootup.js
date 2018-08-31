@@ -895,9 +895,9 @@ const LINE_COUNT = 30;
 include('Gui.js');
 var Gui = new TGui( [0,0,1,1] );
 
-Gui.Add( new TGuiSlider('Resolution',			function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+Gui.Add( new TGuiSliderInt('Resolution',			function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
 Gui.Add( new TGuiSlider('PoseNetScale',			function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
-Gui.Add( new TGuiSlider('ThreadCount',			function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
+Gui.Add( new TGuiSliderInt('ThreadCount',			function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 10 ) );
 Gui.Add( new TGuiToggle('Blur',					function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
 Gui.Add( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
