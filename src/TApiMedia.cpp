@@ -112,8 +112,24 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 			{
 				DeviceNames.PushBack(Name);
 			};
-			::Platform::EnumCaptureDevices(EnumDevice);
-			Decklink::EnumDevices(EnumDevice);
+			
+			try
+			{
+				::Platform::EnumCaptureDevices(EnumDevice);
+			}
+			catch(std::exception& e)
+			{
+				std::Debug << e.what() << std::endl;
+			}
+			
+			try
+			{
+				Decklink::EnumDevices(EnumDevice);
+			}
+			catch(std::exception& e)
+			{
+				std::Debug << e.what() << std::endl;
+			}
 			
 			auto OnCompleted = [=](Local<Context> Context)
 			{
@@ -134,6 +150,8 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 		}
 		catch(std::exception& e)
 		{
+			std::Debug << e.what() << std::endl;
+			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
