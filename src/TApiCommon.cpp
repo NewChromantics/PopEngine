@@ -19,6 +19,8 @@ const char SetTimeout_FunctionName[] = "setTimeout";
 const char Sleep_FunctionName[] = "Sleep";
 const char GetComputerName_FunctionName[] = "GetComputerName";
 const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
+const char GetImageHeapSize_FunctionName[] = "GetImageHeapSize";
+const char GetImageHeapCount_FunctionName[] = "GetImageHeapCount";
 
 
 
@@ -50,6 +52,8 @@ static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GetImageHeapSize(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GetImageHeapCount(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -65,6 +69,8 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
 	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
 	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
+	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
+	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
 
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
@@ -166,9 +172,28 @@ static Local<Value> ShowFileInFinder(CallbackInfo& Params)
 	auto Filename = Params.GetRootDirectory() + v8::GetString(FilenameHandle);
 	
 	::Platform::ShowFileExplorer(Filename);
-
+	
 	return Undefined(Params.mIsolate);
 }
+
+
+static Local<Value> GetImageHeapSize(CallbackInfo& Params)
+{
+	auto& Heap = Params.mContainer.GetImageHeap();
+	auto Value = Heap.mAllocBytes;
+	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
+	return ValueHandle;
+}
+
+static Local<Value> GetImageHeapCount(CallbackInfo& Params)
+{
+	auto& Heap = Params.mContainer.GetImageHeap();
+	auto Value = Heap.mAllocCount;
+	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
+	return ValueHandle;
+}
+
+
 
 
 

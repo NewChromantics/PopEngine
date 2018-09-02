@@ -973,6 +973,10 @@ function WindowRender(RenderTarget)
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
 	DebugStrings.push("Processing x" + CurrentFrames.length );
 	
+	let HeapMb = GetImageHeapSize() / 1024 / 1024;
+	DebugStrings.push("Image Heap " + HeapMb.toFixed(2) + "mb x" + GetImageHeapCount() );
+	
+	
 	let FpsSize = 0.03;
 	let y = 1 - (FpsSize*DebugStrings.length);
 	let DrawString = function(String)
