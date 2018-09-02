@@ -11,9 +11,10 @@ uniform vec4		UnClipRect;
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];
 #endif
-const float FrameRateBarWidth = 0.02;
+const float FrameRateBarWidth = 0.015;
 uniform float		FrameRateNormalised;
 uniform float		CameraFrameRateNormalised;
+uniform float		ConcurrencyRateNormalised;
 
 float TimeAlongLine2(vec2 Position,vec2 Start,vec2 End)
 {
@@ -93,19 +94,22 @@ vec2 Range2(vec2 Min,vec2 Max,vec2 Value)
 void main()
 {
 	//	draw frame rate
-	if ( uv.x < FrameRateBarWidth && (1-uv.y) <= CameraFrameRateNormalised )
+	float BarHeights[3];
+	BarHeights[0] = CameraFrameRateNormalised;
+	BarHeights[1] = FrameRateNormalised;
+	BarHeights[2] = ConcurrencyRateNormalised;
+	int BarX = int(uv.x / FrameRateBarWidth);
+	if ( BarX < 3 )
 	{
-		gl_FragColor.xyz = NormalToRedGreen( CameraFrameRateNormalised );
-		gl_FragColor.w = 1;
-		return;
+		float BarHeight = BarHeights[BarX];
+		if ( (1-uv.y) <= BarHeight )
+		{
+			gl_FragColor.xyz = NormalToRedGreen( BarHeight );
+			gl_FragColor.w = 1;
+			return;
+		}
 	}
-	if ( uv.x > FrameRateBarWidth && uv.x < FrameRateBarWidth*2 && (1-uv.y) <= FrameRateNormalised )
-	{
-		gl_FragColor.xyz = NormalToRedGreen( FrameRateNormalised );
-		gl_FragColor.w = 1;
-		return;
-	}
-	
+
 	vec2 FrameUv = uv;
 	//FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
 
