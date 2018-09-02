@@ -137,9 +137,9 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 		std::function<void()> OnShaderBind = []{};
 		if ( !OnShaderBindHandle->IsUndefined() )
 		{
-			auto OnShaderBindHandleFunc = v8::Local<Function>::Cast( OnShaderBindHandle );
 			OnShaderBind = [&]
 			{
+				auto OnShaderBindHandleFunc = v8::Local<Function>::Cast( OnShaderBindHandle );
 				auto OnShaderBindThis = Params.mContext->Global();
 				BufferArray<Local<Value>,1> Args;
 				Args.PushBack( ShaderHandle );
