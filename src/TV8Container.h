@@ -394,7 +394,8 @@ inline T& v8::GetInternalFieldObject(v8::Local<v8::Value> Value,size_t InternalF
 		Error << "Object missing internal field " << InternalFieldIndex << "/" << FieldCount;
 		throw Soy::AssertException(Error.str());
 	}
-	auto WindowHandle = Obj->GetInternalField(InternalFieldIndex);
+	auto InternalFieldIndexi = static_cast<int>(InternalFieldIndex);
+	auto WindowHandle = Obj->GetInternalField( InternalFieldIndexi );
 	return GetObject<T>( WindowHandle );
 }
 

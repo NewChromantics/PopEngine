@@ -125,7 +125,6 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
 	
 	if ( Arguments.Length() >= 1 )
@@ -791,7 +790,7 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 		{
 			if ( Uniform.GetArraySize() > 1 )
 			{
-				for ( int i=Floats.GetSize();	i<UniformFloatCount;	i++ )
+				for ( auto i=Floats.GetSize();	i<UniformFloatCount;	i++ )
 					Floats.PushBack(0);
 			}
 		}
