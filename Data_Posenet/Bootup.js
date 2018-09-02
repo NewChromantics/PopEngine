@@ -957,6 +957,8 @@ function WindowRender(RenderTarget)
 		Shader.SetUniform("FrameRateNormalised", FrameRate/30 );
 		let CameraFrameRate = GetFrameCounter('CameraFrames');
 		Shader.SetUniform("CameraFrameRateNormalised", CameraFrameRate/30 );
+		let ConcurrencyRate = CurrentFrames.length;
+		Shader.SetUniform("ConcurrencyRateNormalised", ConcurrencyRate/30 );
 	}
 	
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -969,7 +971,8 @@ function WindowRender(RenderTarget)
 	let OutputFrameRate = GetFrameCounter('FrameCompleted');
 	DebugStrings.push(GetComputerName());
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
-
+	DebugStrings.push("Processing x" + CurrentFrames.length );
+	
 	let FpsSize = 0.03;
 	let y = 1 - (FpsSize*DebugStrings.length);
 	let DrawString = function(String)
@@ -1216,7 +1219,7 @@ function GetPoseDetectionPromise(Frame)
 			Reject(Error);
 		}
 		
-		Debug("Sending image " + Frame.ImageData.width + "x" + Frame.ImageData.height + " to posenet");
+		//Debug("Sending image " + Frame.ImageData.width + "x" + Frame.ImageData.height + " to posenet");
 		
 		//	gr: I've saved the experiment below, I think there's upload time and maybe RGBA->RGB conversion,
 		//		but tensorflow maybe reshaping a little (or splitting planes?)
