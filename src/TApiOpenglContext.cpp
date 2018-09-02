@@ -45,16 +45,6 @@ static bool ShowImmediateFunctionCalls = false;
 static bool FinishAfterTextureWrite = false;
 
 
-template<typename TYPE>
-v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isolate,Local<TYPE> LocalHandle)
-{
-	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
-	PersistentHandle.Reset( Isolate, LocalHandle );
-	return PersistentHandle;
-}
-
-
-
 
 
 TOpenglImmediateContextWrapper::~TOpenglImmediateContextWrapper()

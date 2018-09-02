@@ -42,7 +42,7 @@ void TMediaWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 	auto* NewWrapper = new TMediaWrapper();
 	
 	//	store persistent handle to the javascript object
-	NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
+	NewWrapper->mHandle = v8::GetPersistent( *Isolate, Arguments.This() );
 	NewWrapper->mContainer = &Container;
 	
 	//	set fields
@@ -79,15 +79,6 @@ Local<FunctionTemplate> TMediaWrapper::CreateTemplate(TV8Container& Container)
 	return ConstructorFunc;
 }
 
-
-
-template<typename TYPE>
-v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isolate,Local<TYPE> LocalHandle)
-{
-	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
-	PersistentHandle.Reset( Isolate, LocalHandle );
-	return PersistentHandle;
-}
 
 v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 {
@@ -253,7 +244,7 @@ void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>&
 		auto* NewWrapper = new TMediaSourceWrapper();
 		
 		//	store persistent handle to the javascript object
-		NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
+		NewWrapper->mHandle = v8::GetPersistent( *Isolate, Arguments.This() );
 		NewWrapper->mContainer = &Container;
 		NewWrapper->mOnFrameFilter = mOnFrameFilter;
 
@@ -404,7 +395,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 	auto Runner = [this,Pixels,PixelBuffer](Local<Context> context)
 	{
 		auto* isolate = context->GetIsolate();
-		auto This = Local<Object>::New( isolate, this->mHandle );
+		auto This = this->mHandle->GetLocal(*isolate);
 		
 		auto* pImage = new TImageWrapper( *this->mContainer );
 		auto& Image = *pImage;

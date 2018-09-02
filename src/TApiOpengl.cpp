@@ -209,14 +209,6 @@ v8::Local<v8::Value> TWindowWrapper::SetViewport(const v8::CallbackInfo& Params)
 }
 
 
-template<typename TYPE>
-v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isolate,Local<TYPE> LocalHandle)
-{
-	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
-	PersistentHandle.Reset( Isolate, LocalHandle );
-	return PersistentHandle;
-}
-
 v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -233,13 +225,17 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
 	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
 
-	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
-	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
-	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
+	auto TargetHandle = Arguments[0];
+	auto CallbackHandle = v8::SafeCast<Function>(Arguments[1]);
+	auto ReadbackHandle = Arguments[2];
+	
+	auto TargetPersistent = v8::GetPersistent( *Isolate, TargetHandle );
+	auto* TargetImage = &v8::GetObject<TImageWrapper>(TargetHandle);
+	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, CallbackHandle );
 	bool ReadBackPixelsAfterwards = false;
-	if ( Arguments[2]->IsBoolean() )
-		ReadBackPixelsAfterwards = Local<Number>::Cast(Arguments[2])->BooleanValue();
-	else if ( !Arguments[2]->IsUndefined() )
+	if ( ReadbackHandle->IsBoolean() )
+		ReadBackPixelsAfterwards = Local<Number>::Cast(ReadbackHandle)->BooleanValue();
+	else if ( !ReadbackHandle->IsUndefined() )
 		throw Soy::AssertException("3rd argument(ReadBackPixels) must be bool or undefined.");
 	auto* Container = &Params.mContainer;
 	
@@ -252,9 +248,8 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 		CallbackParams.PushBack( WindowLocal );
 		CallbackParams.PushBack( TargetLocal );
 		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
-		auto CallbackFunctionLocalFunc = v8::Local<Function>::Cast( CallbackFunctionLocal );
 		auto FunctionThis = Context->Global();
-		Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
+		Container->ExecuteFunc( Context, CallbackFunctionLocal, FunctionThis, GetArrayBridge(CallbackParams) );
 	};
 	
 	auto OnCompleted = [=](Local<Context> Context)
@@ -696,7 +691,7 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 		//		but it also needs to know of the V8container to run stuff
 		//		cyclic hell!
 		auto* NewShader = new TShaderWrapper();
-		NewShader->mHandle.Reset( Isolate, Arguments.This() );
+		NewShader->mHandle = v8::GetPersistent( *Isolate, Arguments.This() );
 		NewShader->mContainer = &Container;
 
 		NewShader->CreateShader( OpenglContext, VertSource.c_str(), FragSource.c_str() );

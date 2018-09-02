@@ -108,7 +108,7 @@ public:
 	
 public:
 	Opengl::TContext*					mContext;
-	v8::Persistent<v8::Object>			mHandle;
+	std::shared_ptr<V8Storage<v8::Object>>	mHandle;
 	std::shared_ptr<Opengl::TShader>	mShader;
 	std::shared_ptr<Opengl::TContext>	mOpenglContext;
 	std::function<void()>				mShaderDealloc;

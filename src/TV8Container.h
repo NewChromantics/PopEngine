@@ -151,6 +151,8 @@ public:
 	}
 	~V8Storage()
 	{
+		//	gotta release persistents, or we end up running out of handles
+		//mPersistent.Reset();
 		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
 	}
 	
@@ -158,7 +160,7 @@ public:
 	{
 		return v8::Local<TYPE>::New( &Isolate, mPersistent );
 	}
-	v8::Persist<TYPE>	mPersistent;
+	v8::Persistent<TYPE>	mPersistent;
 };
 
 template<typename TYPE>

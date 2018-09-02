@@ -29,7 +29,7 @@ public:
 	static v8::Local<v8::Value>				EnumDevices(const v8::CallbackInfo& Arguments);
 	
 public:
-	v8::Persistent<v8::Object>	mHandle;
+	std::shared_ptr<V8Storage<v8::Object>>	mHandle;
 	TV8Container*				mContainer;
 };
 
@@ -52,7 +52,7 @@ public:
 	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
 
 public:
-	v8::Persistent<v8::Object>			mHandle;
+	std::shared_ptr<V8Storage<v8::Object>>		mHandle;
 	std::shared_ptr<V8Storage<v8::Function>>	mOnFrameFilter;
 	TV8Container*						mContainer;
 	
