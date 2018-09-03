@@ -806,6 +806,12 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 		auto Bool = ValueBool->Value();
 		Shader.SetUniform( Uniform, Bool );
 	}
+	else if ( Uniform.mType == SoyGraphics::TElementType::Int32 )
+	{
+		auto ValueNumber = Local<Number>::Cast( ValueHandle );
+		auto Integer = ValueNumber->Int32Value();
+		Shader.SetUniform( Uniform, Integer );
+	}
 	else
 	{
 		throw Soy::AssertException("Currently only image & float uniform supported");
