@@ -56,6 +56,7 @@ var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
 var DrawRects = false;
+var DrawLegs = false;
 var DrawSkeleton = true;
 var IgnoreJointMaxScore = 0.5;
 var DrawSkeletonMinScore = IgnoreJointMaxScore;//0.0;
@@ -571,15 +572,24 @@ function GetPoseLinesAndScores(Pose,Lines,Scores)
 				 ["leftShoulder", "leftElbow"],
 				 ["leftElbow", "leftWrist"],
 				 ["leftShoulder", "leftHip"],
-				 ["leftHip", "leftKnee"],
-				 ["leftKnee", "leftAnkle"],
 				 ["nose", "rightShoulder"],
 				 ["rightShoulder", "rightElbow"],
 				 ["rightElbow", "rightWrist"],
 				 ["rightShoulder", "rightHip"],
-				 ["rightHip", "rightKnee"],
-				 ["rightKnee", "rightAnkle"]
 				 ];
+	
+	let LegBones = [
+					["leftHip", "leftKnee"],
+					["leftKnee", "leftAnkle"],
+					["rightHip", "rightKnee"],
+					["rightKnee", "rightAnkle"]
+					];
+	
+	if ( DrawLegs )
+	{
+		Bones.push(...LegBones);
+	}
+				 
 	Bones.forEach( PushBone );
 }
 
@@ -929,6 +939,7 @@ Gui.Add( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFra
 Gui.Add( new TGuiToggle('RunPoseDetection',		function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
 Gui.Add( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
+Gui.Add( new TGuiToggle('DrawLegs',				function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFileOutput',		function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
 
 /*	debug tweak font
