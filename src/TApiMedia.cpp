@@ -395,6 +395,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		auto This = this->mHandle->GetLocal(*isolate);
 		
 		auto* pImage = new TImageWrapper( *this->mContainer );
+		pImage->mName = "MediaSource Frame";
 		auto& Image = *pImage;
 		if ( Pixels )
 			Image.SetPixels(Pixels);
