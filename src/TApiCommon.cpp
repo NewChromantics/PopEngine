@@ -39,6 +39,7 @@ const char Resize_FunctionName[] = "Resize";
 const char Clip_FunctionName[] = "Clip";
 const char Clear_FunctionName[] = "Clear";
 const char SetFormat_FunctionName[] = "SetFormat";
+const char GetFormat_FunctionName[] = "GetFormat";
 
 
 
@@ -345,6 +346,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Clip_FunctionName>( InstanceTemplate, TImageWrapper::Clip );
 	Container.BindFunction<Clear_FunctionName>( InstanceTemplate, TImageWrapper::Clear );
 	Container.BindFunction<SetFormat_FunctionName>( InstanceTemplate, TImageWrapper::SetFormat );
+	Container.BindFunction<GetFormat_FunctionName>( InstanceTemplate, TImageWrapper::GetFormat );
 
 	return ConstructorFunc;
 }
@@ -590,12 +592,32 @@ v8::Local<v8::Value> TImageWrapper::SetFormat(const v8::CallbackInfo& Params)
 	
 	//	gr: currently only handling pixels
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
+	if ( This.mPixelsVersion != This.GetLatestVersion() )
+		throw Soy::AssertException("Image.SetFormat only works on pixels at the moment, and that's not the latest version");
+
 	auto& Pixels = This.GetPixels();
 	Pixels.SetFormat(NewFormat);
 	This.mPixelsVersion++;
 	
 	return v8::Undefined(Params.mIsolate);
 }
+
+v8::Local<v8::Value> TImageWrapper::GetFormat(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+
+
+	auto Meta = This.GetMeta();
+
+	auto Format = Meta.GetFormat();
+	auto FormatString = SoyPixelsFormat::ToString(Format);
+	auto FormatStr = v8::GetString( Params.GetIsolate(), FormatString );
+	return FormatStr;
+}
+
 
 
 void TImageWrapper::Free()

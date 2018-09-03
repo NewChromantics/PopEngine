@@ -57,6 +57,7 @@ public:
 	static v8::Local<v8::Value>				Clip(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Clear(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				SetFormat(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				GetFormat(const v8::CallbackInfo& Arguments);
 	
 	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
 	
