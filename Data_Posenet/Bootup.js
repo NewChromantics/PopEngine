@@ -1268,14 +1268,16 @@ function GetPoseDetectionPromise(Frame)
 		//	gr: I've saved the experiment below, I think there's upload time and maybe RGBA->RGB conversion,
 		//		but tensorflow maybe reshaping a little (or splitting planes?)
 		//		and this only takes 0-1ms, so not a bottleneck anyway
-		let NewTensor = null;
 		
+		//	gr: creating a tensor directly causes a leak in tensorflow where textures aren't being re-used...
+		Frame.Tensor = Frame.ImageData;
+		/*
 		let MakeTensor_StartTime = Date.now();
-		NewTensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
+		Frame.Tensor = TensorFlow.fromPixels( Frame.ImageData, 3 );
 		let MakeTensor_Duration = Date.now() - MakeTensor_StartTime;
 		if ( MakeTensor_Duration > 5 )
 			Debug("New tensor took " + MakeTensor_Duration + "ms" );
-		
+		*/
 		/*
 		try
 		{
@@ -1349,7 +1351,7 @@ function GetPoseDetectionPromise(Frame)
 		}
 		 */
 		
-		let EstimatePromise = PoseNet.estimateSinglePose( NewTensor, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
+		let EstimatePromise = PoseNet.estimateSinglePose( Frame.Tensor, PoseNetScale, PoseNetMirror, PoseNetOutputStride );
 		EstimatePromise.then( OnPose )
 		.catch( OnPoseError );
 	}

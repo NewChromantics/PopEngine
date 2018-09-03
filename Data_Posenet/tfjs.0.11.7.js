@@ -6878,7 +6878,7 @@
         },
         TextureManager = function() {
             function e(e) {
-                this.gpgpu = e, this.numUsedTextures = 0, this.numFreeTextures = 0, this.freeTextures = {}, this.logEnabled = !1, this.usedTextures = {}
+                this.gpgpu = e, this.numUsedTextures = 0, this.numFreeTextures = 0, this.freeTextures = {}, this.logEnabled = false, this.usedTextures = {}
             }
             return e.prototype.acquireTexture = function(e, t) {
                 var r, n = getPhysicalFromLogicalTextureType(t),
@@ -6886,16 +6886,27 @@
                 if (a in this.freeTextures || (this.freeTextures[a] = []), a in this.usedTextures || (this.usedTextures[a] = []), this.freeTextures[a].length > 0) {
                     this.numFreeTextures--, this.numUsedTextures++, this.log();
                     var i = this.freeTextures[a].shift();
+  if ( this.logEnabled )	Debug("acquireTexture " + a + " re-using texture");
                     return this.usedTextures[a].push(i), i
                 }
-                return this.numUsedTextures++, this.log(), n === PhysicalTextureType.FLOAT32 ? r = this.gpgpu.createFloat32MatrixTexture(e[0], e[1]) : n === PhysicalTextureType.FLOAT16 ? r = this.gpgpu.createFloat16MatrixTexture(e[0], e[1]) : n === PhysicalTextureType.UNSIGNED_BYTE && (r = this.gpgpu.createUnsignedBytesMatrixTexture(e[0], e[1])), this.usedTextures[a].push(r), r
+  this.numUsedTextures++;
+  this.log();
+  n === PhysicalTextureType.FLOAT32 ? r = this.gpgpu.createFloat32MatrixTexture(e[0], e[1]) : n === PhysicalTextureType.FLOAT16 ? r = this.gpgpu.createFloat16MatrixTexture(e[0], e[1]) : n === PhysicalTextureType.UNSIGNED_BYTE && (r = this.gpgpu.createUnsignedBytesMatrixTexture(e[0], e[1]));
+  this.usedTextures[a].push(r);
+  if ( this.logEnabled )	Debug("allocated new texture " + a);
+  return r;
             }, e.prototype.releaseTexture = function(e, t, r) {
-                var n = getKeyFromTextureShape(t, getPhysicalFromLogicalTextureType(r));
+                 var n = getKeyFromTextureShape(t, getPhysicalFromLogicalTextureType(r));
                 n in this.freeTextures || (this.freeTextures[n] = []), this.freeTextures[n].push(e), this.numFreeTextures++, this.numUsedTextures--;
-                var a = this.usedTextures[n],
+  
+  
+  var a = this.usedTextures[n],
                     i = a.indexOf(e);
                 if (i < 0) throw new Error("Cannot release a texture that was never provided by this texture manager");
-                a.splice(i, 1), this.log()
+  a.splice(i, 1);
+  this.log();
+  if ( this.logEnabled )	Debug("texturemanager releaseTexture(" + n + ") freecount=" + this.getNumFreeTextures() + " used=" + this.getNumUsedTextures() );
+
             }, e.prototype.log = function() {
                 if (this.logEnabled) {
                     var e = this.numFreeTextures + this.numUsedTextures;
@@ -7129,16 +7140,18 @@
 									   
 									   let FakePendingReadRunner = function(Resolve)
 									   {
-									   Debug("FakePendingReadRunner");
-									   setTimeout( Resolve, 1000 );
+										Debug("FakePendingReadRunner");
+										setTimeout( Resolve, 1000 );
 									   }
 									   
 									   
 									   //let PreReadPromise = new Promise(FakePendingReadRunner);
-									   let PreReadPromise = This.GetPreReadTexturePromise(e);
+									   //let PreReadPromise = This.GetPreReadTexturePromise(e);
+									   let PreReadPromise = null;
 									   
 									   if ( PreReadPromise )
 									   {
+									   Debug("Pending read added");
 									   PreReadPromise.then( OnComplete );
 									   PreReadPromise.catch( Debug );
 									   //Debug("forcing pending read as we have a promise");
@@ -7148,7 +7161,7 @@
 									   
 									   if ( this.pendingRead.has(e) )
 									   {
-											//Debug("pending read for e=" + e + " exists, returning promise");
+											Debug("pending read for e=" + e + " exists, returning promise");
 											t = this.pendingRead.get(e);
 											//	gr: I think the idea here is that we add our command to the list of resolves
 											//	then we can carry onto the next step once the pending read is done
