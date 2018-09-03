@@ -1,8 +1,13 @@
 in vec2 uv;
 const float LineWidth = 0.003;
 
+#define FRAME_FORMAT_INVALID	0
+#define FRAME_FORMAT_GREYSCALE	1
+#define FRAME_FORMAT_ARGB		2
+#define FRAME_FORMAT_RGBA		3
+
 uniform sampler2D	Frame;
-uniform bool		HasFrame;
+uniform int			FrameFormat;
 uniform vec4		UnClipRect;
 
 //	gr: this is mega slow on intel machines. speed up the distance check code!
@@ -135,10 +140,17 @@ void main()
 		float3 LineColour = NormalToRedGreen(LineScore);
 		gl_FragColor = float4( LineColour,1);
 	}
-	else if ( HasFrame )
+	else if ( FrameFormat != 0 )
 	{
 		FrameUv.xy = Range2( UnClipRect.xy, UnClipRect.xy+UnClipRect.zw, FrameUv.xy );
-		gl_FragColor = texture( Frame, FrameUv );
+		
+		//	uploaded as ARGB
+		if ( FrameFormat == FRAME_FORMAT_GREYSCALE )
+			gl_FragColor = texture( Frame, FrameUv ).xxxw;
+		if ( FrameFormat == FRAME_FORMAT_ARGB )
+			gl_FragColor = texture( Frame, FrameUv ).yzwx;
+		if ( FrameFormat == FRAME_FORMAT_RGBA )
+			gl_FragColor = texture( Frame, FrameUv ).xyzw;
 	}
 	else
 	{

@@ -92,6 +92,14 @@ var FlipOutputSkeleton = true;
 var MirrorOutputSkeleton = false;
 
 
+
+//	window render shader
+let FRAME_FORMAT_INVALID = 0;
+let FRAME_FORMAT_GREYSCALE = 1;
+let FRAME_FORMAT_ARGB = 2;
+let FRAME_FORMAT_RGBA = 3;
+
+
 //	if it ends with !, we don't bother sending it out
 let FaceLandMarkNames =
 [
@@ -926,26 +934,43 @@ function WindowRender(RenderTarget)
 	{
 		let Lines = [];
 		let Scores = [];
+		let FrameFormat = FRAME_FORMAT_INVALID;
 		
 		if ( LastFrame == null )
 		{
-			Shader.SetUniform("HasFrame", false );
+			Shader.SetUniform("FrameFormat", FrameFormat );
 			GetXLinesAndScores( Lines, Scores );
 			Shader.SetUniform("UnClipRect", [0,0,1,1] );
 		}
 		else
 		{
+			let FrameImage = DrawSmallImage ? LastFrame.SmallImage : LastFrame.Image;
+			FrameFormat = FrameImage.GetFormat();
+			Debug(FrameFormat);
+			
+			if ( FrameFormat == 'RGBA' )
+				FrameFormat = FRAME_FORMAT_RGBA;
+			else if ( FrameFormat == 'ARGB' )
+				FrameFormat = FRAME_FORMAT_ARGB;
+			else if ( FrameFormat == 'Greyscale' )
+				FrameFormat = FRAME_FORMAT_GREYSCALE;
+			else
+			{
+				Debug("Unknown format " + FrameFormat);
+				FrameFormat = FRAME_FORMAT_RGBA;
+			}
+			Shader.SetUniform("Frame", FrameImage, 0 );
+			Shader.SetUniform("FrameFormat", FrameFormat );
+			
+			
 			if ( DrawSmallImage )
 			{
-				Shader.SetUniform("Frame", LastFrame.SmallImage, 0 );
 				Shader.SetUniform("UnClipRect", LastFrame.ClipRect );
 			}
 			else
 			{
-				Shader.SetUniform("Frame", LastFrame.Image, 0 );
 				Shader.SetUniform("UnClipRect", [0,0,1,1] );
 			}
-			Shader.SetUniform("HasFrame", true );
 			LastFrame.GetLinesAndScores( Lines, Scores );
 		}
 		
