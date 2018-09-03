@@ -13,11 +13,13 @@ include('Webgl.js');
 include('FrameCounter.js');
 
 
-
-//	gr: get computer name here?
+//	broadcast name
 var ComputerName = GetComputerName();
 
-var RGBAFromCamera = false;
+//	gr: force camera to output planar/colour
+var RGBAFromCamera = true;
+
+
 
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
@@ -29,7 +31,7 @@ var WebServer = null;
 var WebServerPort = 8000;
 
 
-var AllowBgraAsRgba = true;
+var AllowBgraAsRgba = false;
 var PoseNetScale = 1.00;
 var PoseNetOutputStride = 16;
 var PoseNetMirror = false;
@@ -40,7 +42,7 @@ var ClipToSquare_Min = 32;
 var ClipToSquare_Max = 512;
 var ClipToSquare = 256;
 var EnableGpuClip = true;
-var ClipToGreyscale = !RGBAFromCamera;	//	GPU only! shader option
+var ClipToGreyscale = false;	//	GPU only! shader option
 var ApplyBlurInClip = false;
 var PoseReadBackRgba = true;
 var FaceReadBackRgba = true;
@@ -99,6 +101,18 @@ let FRAME_FORMAT_GREYSCALE = 1;
 let FRAME_FORMAT_ARGB = 2;
 let FRAME_FORMAT_RGBA = 3;
 
+function GetShaderFrameFormat(Image)
+{
+	let Format = Image.GetFormat();
+	//Debug(Format);
+	
+	if ( Format == 'RGBA' )			return FRAME_FORMAT_RGBA;
+	if ( Format == 'ARGB' )			return FRAME_FORMAT_ARGB;
+	if ( Format == 'Greyscale' )	return FRAME_FORMAT_Greyscale;
+	
+	Debug("Unknown format " + FrameFormat);
+	return FRAME_FORMAT_RGBA;
+}
 
 //	if it ends with !, we don't bother sending it out
 let FaceLandMarkNames =
@@ -920,6 +934,7 @@ Gui.Add( new TGuiSlider('Font.OuterDistance',		function(){	return Gui.Font.Outer
 Gui.Add( new TGuiSlider('Font.NullDistance',		function(){	return Gui.Font.NullDistance;	},	function(v){	Gui.Font.NullDistance = v;	}, 0.0, 1.0 ) );
 */
 Gui.Add( new TGuiToggle('PoseReadBackRgba',		function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
+Gui.Add( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},	function(v){	ClipToGreyscale = v;	} ) );
 
 
 
@@ -945,20 +960,7 @@ function WindowRender(RenderTarget)
 		else
 		{
 			let FrameImage = DrawSmallImage ? LastFrame.SmallImage : LastFrame.Image;
-			FrameFormat = FrameImage.GetFormat();
-			Debug(FrameFormat);
-			
-			if ( FrameFormat == 'RGBA' )
-				FrameFormat = FRAME_FORMAT_RGBA;
-			else if ( FrameFormat == 'ARGB' )
-				FrameFormat = FRAME_FORMAT_ARGB;
-			else if ( FrameFormat == 'Greyscale' )
-				FrameFormat = FRAME_FORMAT_GREYSCALE;
-			else
-			{
-				Debug("Unknown format " + FrameFormat);
-				FrameFormat = FRAME_FORMAT_RGBA;
-			}
+			FrameFormat = GetShaderFrameFormat(FrameImage);
 			Shader.SetUniform("Frame", FrameImage, 0 );
 			Shader.SetUniform("FrameFormat", FrameFormat );
 			
@@ -1198,6 +1200,7 @@ function SetupForPoseDetection(Frame)
 				Shader.SetUniform("Source", Frame.OriginalImage, 0 );
 				Shader.SetUniform("ApplyBlur", ApplyBlurInClip );
 				Shader.SetUniform("OutputGreyscale", ClipToGreyscale );
+				Shader.SetUniform("SourceFormat", GetShaderFrameFormat(Frame.OriginalImage) );
 			}
 			RenderTarget.DrawQuad( ResizeFragShader, SetUniforms );
 		}

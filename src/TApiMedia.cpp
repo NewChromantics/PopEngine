@@ -376,7 +376,6 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
 		try
 		{
-			//	convert pixels to RGB for face.
 			Pixels.reset( new SoyPixels( mContainer->GetImageHeap() ) );
 			auto& RgbPixels = *Pixels;
 			RgbPixels.Copy( *Textures[0] );

@@ -4,12 +4,31 @@ uniform sampler2D	Source;
 uniform vec4		ClipRect;
 uniform bool		ApplyBlur;
 uniform bool		OutputGreyscale;
+uniform int			SourceFormat;
+
+#define FRAME_FORMAT_INVALID	0
+#define FRAME_FORMAT_GREYSCALE	1
+#define FRAME_FORMAT_ARGB		2
+#define FRAME_FORMAT_RGBA		3
 
 float normpdf(in float x, in float sigma)
 {
 	return 0.39894*exp(-0.5*x*x/(sigma*sigma))/sigma;
 }
 
+vec3 GetSample(vec2 uv)
+{
+	if ( SourceFormat == FRAME_FORMAT_GREYSCALE )
+		return texture( Source, uv ).xxx;
+	
+	if ( SourceFormat == FRAME_FORMAT_ARGB )
+		return texture( Source, uv ).yzw;
+	
+	if ( SourceFormat == FRAME_FORMAT_RGBA )
+		return texture( Source, uv ).xyz;
+	
+	return vec3(uv,0);
+}
 
 vec3 GetBlurredSample(sampler2D iChannel0, vec2 fragCoord)
 {
@@ -42,8 +61,8 @@ vec3 GetBlurredSample(sampler2D iChannel0, vec2 fragCoord)
 	{
 		for (int j=-kSize; j <= kSize; ++j)
 		{
-			final_colour += kernel[kSize+j]*kernel[kSize+i]*texture(iChannel0, (fragCoord.xy+vec2(float(i),float(j))) / iResolution.xy).rgb;
-			
+			vec3 Sample = GetSample( (fragCoord.xy+vec2(float(i),float(j))) / iResolution.xy);
+			final_colour += kernel[kSize+j] * kernel[kSize+i] * Sample;
 		}
 	}
 	
@@ -74,7 +93,7 @@ void main()
 	}
 	else
 	{
-		gl_FragColor = texture( Source, Sampleuv );
+		gl_FragColor.xyz = GetSample( Sampleuv );
 	}
 	gl_FragColor.w = 1;
 	
