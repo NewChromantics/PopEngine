@@ -151,8 +151,9 @@ public:
 	}
 	~V8Storage()
 	{
+		//	gr: seems like we need this... the persistent policy should mean we don't...
 		//	gotta release persistents, or we end up running out of handles
-		//mPersistent.Reset();
+		mPersistent.Reset();
 		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
 	}
 	
