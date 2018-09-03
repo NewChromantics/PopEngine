@@ -996,7 +996,7 @@ void TImageWrapper::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
 	mPixelBufferVersion = GetLatestVersion()+1;
 }
 
-void TImageWrapper::ReadOpenglPixels()
+void TImageWrapper::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 {
 	//	gr: this needs to be in the opengl thread!
 	//Context.IsInThread
@@ -1013,8 +1013,6 @@ void TImageWrapper::ReadOpenglPixels()
 	if ( mPixels == nullptr )
 		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
 
-	//auto Format = SoyPixelsFormat::RGB;
-	auto Format = SoyPixelsFormat::Greyscale;
 	auto Flip = false;
 	
 	mPixels->GetMeta().DumbSetFormat(Format);

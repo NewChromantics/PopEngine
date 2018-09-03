@@ -209,6 +209,21 @@ v8::Local<v8::Value> TWindowWrapper::SetViewport(const v8::CallbackInfo& Params)
 }
 
 
+SoyPixelsFormat::Type GetPixelFormat(Local<Value> Handle,bool UndefinedIsInvalid=true)
+{
+	if ( Handle->IsString() )
+	{
+		auto ReadBackFormatString = v8::GetString(Handle);
+		auto Format = SoyPixelsFormat::ToType(ReadBackFormatString);
+		return Format;
+	}
+	
+	if ( Handle->IsUndefined() && UndefinedIsInvalid )
+		return SoyPixelsFormat::Invalid;
+	
+	throw Soy::AssertException("Argument must be string(format eg. 'RGBA') or undefined.");
+}
+
 v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -232,11 +247,8 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 	auto TargetPersistent = v8::GetPersistent( *Isolate, TargetHandle );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(TargetHandle);
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, CallbackHandle );
-	bool ReadBackPixelsAfterwards = false;
-	if ( ReadbackHandle->IsBoolean() )
-		ReadBackPixelsAfterwards = Local<Number>::Cast(ReadbackHandle)->BooleanValue();
-	else if ( !ReadbackHandle->IsUndefined() )
-		throw Soy::AssertException("3rd argument(ReadBackPixels) must be bool or undefined.");
+	auto ReadBackPixelsAfterwards = GetPixelFormat( ReadbackHandle );
+	
 	auto* Container = &Params.mContainer;
 	
 	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
@@ -299,9 +311,9 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 			}
 
 			TargetImage->OnOpenglTextureChanged();
-			if ( ReadBackPixelsAfterwards )
+			if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			{
-				TargetImage->ReadOpenglPixels();
+				TargetImage->ReadOpenglPixels(ReadBackPixelsAfterwards);
 			}
 
 			//	queue the completion, doesn't need to be done instantly
@@ -331,7 +343,6 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 }
 
 
-
 v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
@@ -349,11 +360,8 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
 	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
 	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, Arguments[1] );
-	bool ReadBackPixelsAfterwards = false;
-	if ( Arguments[2]->IsBoolean() )
-		ReadBackPixelsAfterwards = Local<Number>::Cast(Arguments[2])->BooleanValue();
-	else if ( !Arguments[2]->IsUndefined() )
-		throw Soy::AssertException("3rd argument(ReadBackPixels) must be bool or undefined.");
+	auto ReadBackHandle = Arguments[2];
+	auto ReadBackPixelsAfterwards = GetPixelFormat( ReadBackHandle );
 	auto TempPersistent = v8::GetPersistent( *Isolate, Arguments[3] );
 	auto* TempImage = &v8::GetObject<TImageWrapper>(Arguments[3]);
 	auto IterationCount = Local<Number>::Cast( Arguments[4] )->Int32Value();
@@ -444,9 +452,9 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 				
 			}
 
-			if ( ReadBackPixelsAfterwards )
+			if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			{
-				TargetImage->ReadOpenglPixels();
+				TargetImage->ReadOpenglPixels(ReadBackPixelsAfterwards);
 			}
 			
 			//	queue the completion, doesn't need to be done instantly

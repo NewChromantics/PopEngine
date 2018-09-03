@@ -42,6 +42,8 @@ var ClipToSquare = 256;
 var EnableGpuClip = true;
 var ClipToGreyscale = !RGBAFromCamera;	//	GPU only! shader option
 var ApplyBlurInClip = false;
+var PoseReadBackRgba = true;
+var FaceReadBackRgba = true;
 
 var FindFaceAroundLastHeadRectScale = 1.0;	//	make this expand more width ways
 var ShoulderToHeadWidthRatio = 1.0;
@@ -67,7 +69,7 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdatFilename = 'shape_predictor_68_face_landmarks.dat';
-var DlibThreadCount = 5;
+var DlibThreadCount = 0;
 var EnableFaceProcessor = false;
 var FaceProcessor = null;
 var MaxConcurrentFrames = 1;
@@ -909,6 +911,8 @@ Gui.Add( new TGuiSlider('Font.InnerDistance',		function(){	return Gui.Font.Inner
 Gui.Add( new TGuiSlider('Font.OuterDistance',		function(){	return Gui.Font.OuterDistance;	},	function(v){	Gui.Font.OuterDistance = v;	}, 0.0, 1.0 ) );
 Gui.Add( new TGuiSlider('Font.NullDistance',		function(){	return Gui.Font.NullDistance;	},	function(v){	Gui.Font.NullDistance = v;	}, 0.0, 1.0 ) );
 */
+Gui.Add( new TGuiToggle('PoseReadBackRgba',		function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
+
 
 
 function WindowRender(RenderTarget)
@@ -1176,7 +1180,7 @@ function SetupForPoseDetection(Frame)
 		Frame.OriginalImage = Frame.Image;
 		Frame.Image = new Image( [Size, Size] );
 		Frame.Image.SetLinearFilter(true);
-		let ReadBackPixels = true;
+		let ReadBackPixels = PoseReadBackRgba ? 'RGBA' : 'Greyscale';
 		
 		let ResizePromise = Frame.OpenglContext.Render( Frame.Image, ResizeRender, ReadBackPixels );
 		return ResizePromise;
@@ -1385,8 +1389,8 @@ function SetupForFaceDetection(Frame)
 		//Debug("allocated");
 		Frame.SmallImage.SetLinearFilter(true);
 		//Debug("searching SmallImage.width=" + Frame.SmallImage.GetWidth() + " SmallImage.height=" + Frame.SmallImage.GetHeight() );
-		let ReadBackPixels = true;
-			
+		let ReadBackPixels = FaceReadBackRgba ? 'RGBA' : 'Greyscale';
+		
 		//	return resizing promise
 		//Debug("Frame.OpenglContext.Render");
 		let ResizePromise = Frame.OpenglContext.Render( Frame.SmallImage, ResizeRender, ReadBackPixels );
