@@ -778,6 +778,15 @@ void AvfPixelBuffer::LockPixels(ArrayBridge<SoyPixelsImpl*>& Planes,void* _Data,
 		Transform = Soy::MatrixToVector( TransformMtx );
 	}
 	
+	
+	//	gr: wierdly... with bjork, RGB data, 2048x2048... there are an extra 32 bytes... the plane split will throw an error on this, so just trim it...
+	if ( DataSize > Meta.GetDataSize() )
+	{
+		//auto Diff = DataSize - Meta.GetDataSize();
+		//std::Debug << "Warning: CVPixelBuffer data has an extra " << Diff << " bytes. Trimming..." << std::endl;
+		DataSize = Meta.GetDataSize();
+	}
+	
 	auto* Pixels = reinterpret_cast<uint8*>(_Data);
 	
 	//	auto calc data size if not provided by caller
@@ -873,27 +882,7 @@ void AvfPixelBuffer::Lock(ArrayBridge<SoyPixelsImpl*>&& Planes,float3x3& Transfo
 			
 			SoyPixelsMeta Meta( Width, Height, SoyFormat );
 			LockPixels( Planes, Pixels, BytesPerRow, Meta, Transform, DataSize );
-
-			/*
-			if ( Meta.GetRowDataSize() != BytesPerRow )
-			{
-				std::stringstream Error;
-				Error << "CVPixelBuffer (" << Meta << ") row mis-aligned, handle this. Expected " << Meta.GetRowDataSize() << " is " << BytesPerRow;
-				throw Soy::AssertException( Error.str() );
-			}
-			 */
 			
-			//	gr: wierdly... with bjork, RGB data, 2048x2048... there are an extra 32 bytes... the plane split will throw an error on this, so just trim it...
-			if ( DataSize > Meta.GetDataSize() )
-			{
-				//auto Diff = DataSize - Meta.GetDataSize();
-				//std::Debug << "Warning: CVPixelBuffer data has an extra " << Diff << " bytes. Trimming..." << std::endl;
-				DataSize = Meta.GetDataSize();
-			}
-			
-			SoyPixelsRemote Temp( reinterpret_cast<uint8*>(Pixels), Width, Height, DataSize, SoyFormat );
-			mLockedPixels[0] = Temp;
-			Planes.PushBack( &mLockedPixels[0] );
 		}
 	}
 	catch(...)
