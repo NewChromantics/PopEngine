@@ -249,6 +249,28 @@ public:
 	std::string						mName;
 };
 
+
+
+
+
+class TV8Allocator : public v8::ArrayBuffer::Allocator
+{
+public:
+	TV8Allocator(const char* Name) :
+		mHeap	( true, true, Name )
+	{
+	}
+	
+	virtual void*	Allocate(size_t length) override;
+	virtual void*	AllocateUninitialized(size_t length) override;
+	virtual void	Free(void* data, size_t length) override;
+	
+public:
+	prmem::Heap		mHeap;
+};
+
+
+
 class TV8Container
 {
 public:
@@ -301,12 +323,11 @@ public:
 	{
 		return ExecuteFunc(ContextHandle,FunctionHandle,This,Params);
 	}
-
-	
 	
 	//	less v8-y stuff
 	prmem::Heap&			GetImageHeap()	{	return mImageHeap;	}
-	
+	prmem::Heap&			GetV8Heap()		{	return mAllocator.mHeap;	}
+		
 private:
 	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
@@ -320,12 +341,12 @@ public:
 	std::shared_ptr<TV8Inspector>	mInspector;		//	the remote debugger!
 	v8::Isolate*					mIsolate;
 	std::shared_ptr<v8::Platform>	mPlatform;
-	std::shared_ptr<v8::ArrayBuffer::Allocator>	mAllocator;
-	
+
 	Array<TV8ObjectTemplate>		mObjectTemplates;
 	std::string						mRootDirectory;
 	
 private:
+	TV8Allocator					mAllocator;
 	prmem::Heap						mImageHeap;
 };
 

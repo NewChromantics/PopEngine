@@ -1004,8 +1004,13 @@ function WindowRender(RenderTarget)
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
 	DebugStrings.push("Processing x" + CurrentFrames.length );
 	
-	let HeapMb = GetImageHeapSize() / 1024 / 1024;
-	DebugStrings.push("Image Heap " + HeapMb.toFixed(2) + "mb x" + GetImageHeapCount() );
+	let ImageHeapMb = GetImageHeapSize() / 1024 / 1024;
+	let ImageHeapCount = GetImageHeapCount();
+	DebugStrings.push("Image Heap " + ImageHeapMb.toFixed(2) + "mb x" + ImageHeapCount );
+	
+	let V8HeapMb = GetV8HeapSize() / 1024 / 1024;
+	let V8HeapCount = GetV8HeapCount();
+	DebugStrings.push("v8 Heap " + V8HeapMb.toFixed(2) + "mb x" + V8HeapCount );
 	
 	
 	let FpsSize = 0.03;

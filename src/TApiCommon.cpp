@@ -21,6 +21,8 @@ const char GetComputerName_FunctionName[] = "GetComputerName";
 const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
 const char GetImageHeapSize_FunctionName[] = "GetImageHeapSize";
 const char GetImageHeapCount_FunctionName[] = "GetImageHeapCount";
+const char GetV8HeapSize_FunctionName[] = "GetV8HeapSize";
+const char GetV8HeapCount_FunctionName[] = "GetV8HeapCount";
 
 
 
@@ -55,6 +57,8 @@ static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetImageHeapSize(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetImageHeapCount(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GetV8HeapSize(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GetV8HeapCount(v8::CallbackInfo& Params);
 
 
 void ApiCommon::Bind(TV8Container& Container)
@@ -72,6 +76,8 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
 	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
 	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
+	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
+	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
 
 	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
 }
@@ -189,6 +195,23 @@ static Local<Value> GetImageHeapSize(CallbackInfo& Params)
 static Local<Value> GetImageHeapCount(CallbackInfo& Params)
 {
 	auto& Heap = Params.mContainer.GetImageHeap();
+	auto Value = Heap.mAllocCount;
+	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
+	return ValueHandle;
+}
+
+
+static Local<Value> GetV8HeapSize(CallbackInfo& Params)
+{
+	auto& Heap = Params.mContainer.GetV8Heap();
+	auto Value = Heap.mAllocBytes;
+	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
+	return ValueHandle;
+}
+
+static Local<Value> GetV8HeapCount(CallbackInfo& Params)
+{
+	auto& Heap = Params.mContainer.GetV8Heap();
 	auto Value = Heap.mAllocCount;
 	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
 	return ValueHandle;

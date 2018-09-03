@@ -12,14 +12,6 @@ using namespace v8;
 bool ReportDefinedReturns = false;
 
 
-//	gr: in 6, allocator type is missing??
-class PopV8Allocator : public v8::ArrayBuffer::Allocator
-{
-public:
-	virtual void* Allocate(size_t length) override;
-	virtual void* AllocateUninitialized(size_t length) override;
-	virtual void Free(void* data, size_t length) override;
-};
 
 
 V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
@@ -69,23 +61,24 @@ V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
 }
 
 
-void* PopV8Allocator::Allocate(size_t length)
+void* TV8Allocator::Allocate(size_t length)
 {
-	auto* Bytes = new uint8_t[length];
+	auto* Bytes = static_cast<uint8_t*>( AllocateUninitialized(length) );
+	
 	for ( auto i=0;	i<length;	i++ )
 		Bytes[i] = 0;
+	
 	return Bytes;
 }
 
-void* PopV8Allocator::AllocateUninitialized(size_t length)
+void* TV8Allocator::AllocateUninitialized(size_t length)
 {
-	return Allocate( length );
+	return mHeap.AllocRaw(length);
 }
 
-void PopV8Allocator::Free(void* data, size_t length)
+void TV8Allocator::Free(void* data, size_t length)
 {
-	auto* Bytes = static_cast<uint8_t*>( data );
-	delete[] Bytes;
+	mHeap.FreeRaw(data, length);
 }
 
 
@@ -98,10 +91,8 @@ const std::string& v8::CallbackInfo::GetRootDirectory() const
 TV8Container::TV8Container(const std::string& RootDirectory) :
 	mImageHeap		( true, true, "Image Heap", 0 , false ),
 	mRootDirectory	( RootDirectory ),
-	mAllocator		( new PopV8Allocator )
+	mAllocator		( "V8Container" )
 {
-	auto& Allocator = *mAllocator;
-	
 	//	well this is an annoying interface
 	std::string Flags = "--expose_gc";
 	//v8::internal::FLAG_expose_gc = true;
@@ -149,11 +140,14 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	// Create a new Isolate and make it the current one.
 	//	gr: current??
 	v8::Isolate::CreateParams create_params;
-	create_params.array_buffer_allocator = &Allocator;
+	create_params.array_buffer_allocator = &mAllocator;
 	//create_params.snapshot_blob = &SnapshotBlobData;
 
 	//	docs say "is owner" but there's no delete...
 	mIsolate = v8::Isolate::New(create_params);
+	
+	//	we run the microtasks manually in our loop. This stops microtasks from occurring
+	//	when we finish (end of stack) running when we call a js function arbritrarily 
 	mIsolate->SetMicrotasksPolicy( v8::MicrotasksPolicy::kExplicit );
 	
 	//  for now, single context per isolate
