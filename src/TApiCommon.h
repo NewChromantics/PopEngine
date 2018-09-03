@@ -84,7 +84,9 @@ public:
 protected:
 	void								Free();
 	
-	
+public:
+	std::string							mName;					//	for debug
+
 protected:
 	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?
 	std::shared_ptr<SoyPixels>&			mPixels = mObject;

@@ -316,11 +316,27 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 
 TImageWrapper::~TImageWrapper()
 {
+	/*
+	try
+	{
+		std::Debug << "~TImageWrapper " << mName << ", " << this->GetMeta() << std::endl;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "~TImageWrapper " << mName << ", unknown meta (" << e.what() << ")" << std::endl;
+	}
+	 */
 	Free();
 }
 
 void TImageWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
+	auto NameHandle = Arguments.mParams[1];
+	if ( NameHandle->IsUndefined() )
+		mName = "undefined";
+	else
+		mName = v8::GetString(NameHandle);
+	
 	//	construct with filename
 	if ( Arguments.mParams[0]->IsString() )
 	{
@@ -335,6 +351,7 @@ void TImageWrapper::Construct(const v8::CallbackInfo& Arguments)
 		return;
 	}
 
+	
 }
 
 Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
@@ -737,9 +754,6 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	}	
 	auto& Pixels = *pPixels;
 	
-	//	we have some more efficient parallel funcs for image conversion, so throw if not rgba for now
-	auto Meta = Pixels.GetMeta();
-	
 	auto& PixelsArray = Pixels.GetPixelsArray();
 	
 	if ( !TargetArrayHandle->IsUndefined() )
@@ -915,19 +929,23 @@ SoyPixelsMeta TImageWrapper::GetMeta()
 
 	auto LatestVersion = GetLatestVersion();
 
-	if ( mOpenglTextureVersion == LatestVersion )
+	//	opengl may have been released!
+	if ( mOpenglTextureVersion == LatestVersion && mOpenglTexture )
 	{
 		return mOpenglTexture->GetMeta();
 	}
 	
-	if ( mPixelsVersion == LatestVersion )
+	if ( mPixelsVersion == LatestVersion && mPixels )
 		return mPixels->GetMeta();
 
 	if ( mPixelBufferVersion == LatestVersion )
 	{
 		if ( mPixelBufferMeta.IsValid() )
 			return mPixelBufferMeta;
-
+	}
+	
+	if ( mPixelBufferVersion == LatestVersion && mPixelBuffer )
+	{	
 		//	need to fetch the pixels to get the meta :/
 		//	so we need to read the pixels, then get the meta from there
 		BufferArray<SoyPixelsImpl*,2> Textures;
@@ -948,7 +966,7 @@ SoyPixelsMeta TImageWrapper::GetMeta()
 		}
 	}
 	
-	if ( mPixelsVersion == LatestVersion )
+	if ( mPixelsVersion == LatestVersion && mPixels )
 		return mPixels->GetMeta();
 	
 	throw Soy::AssertException("Don't know where to get meta from");
