@@ -377,9 +377,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		try
 		{
 			//	convert pixels to RGB for face.
-			//	todo: move to JS call which gives a promise, or more likely, opengl shader for when we want just a rect of the image
 			Pixels.reset( new SoyPixels( mContainer->GetImageHeap() ) );
-			//std::Debug << "Image heap now " << mContainer->GetImageHeap().GetAllocatedMegaBytes() << "mb x" << mContainer->GetImageHeap().GetAllocCount() << std::endl;
 			auto& RgbPixels = *Pixels;
 			RgbPixels.Copy( *Textures[0] );
 			PixelBuffer->Unlock();
