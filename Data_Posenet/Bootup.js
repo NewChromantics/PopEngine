@@ -65,6 +65,8 @@ var LastFrame = null;	//	completed TFrame
 var EnableKalmanFilter = true;
 
 var ProcessVideoFrames = true;	//	false to just act as a video player
+var RunPoseDetection = true;	//	false will setup clip/conversion but not find skeleton
+
 
 //	gr: for some reason, without this... v8 has no jobs?
 var EnableWindowRender = true;
@@ -924,6 +926,7 @@ Gui.Add( new TGuiSlider('PoseNetScale',			function(){	return PoseNetScale;	},		f
 Gui.Add( new TGuiSliderInt('ThreadCount',		function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 30 ) );
 Gui.Add( new TGuiToggle('Blur',					function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
 Gui.Add( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
+Gui.Add( new TGuiToggle('RunPoseDetection',		function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
 Gui.Add( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
 Gui.Add( new TGuiToggle('EnableFileOutput',		function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
@@ -1211,7 +1214,7 @@ function SetupForPoseDetection(Frame)
 		}
 		
 		Frame.OriginalImage = Frame.Image;
-		Frame.Image = new Image( [Size, Size] );
+		Frame.Image = new Image( [Size, Size], "Resized Frame Image" );
 		Frame.Image.SetLinearFilter(true);
 		let ReadBackPixels = PoseReadBackRgba ? 'RGBA' : 'Greyscale';
 		
@@ -1418,7 +1421,7 @@ function SetupForFaceDetection(Frame)
 		}
 		
 		//Debug("SmallImageWidth=" + SmallImageWidth + " SmallImageHeight=" + SmallImageHeight);
-		Frame.SmallImage = new Image( [SmallImageWidth, SmallImageHeight] );
+		Frame.SmallImage = new Image( [SmallImageWidth, SmallImageHeight], "Face clipped" );
 		//Debug("allocated");
 		Frame.SmallImage.SetLinearFilter(true);
 		//Debug("searching SmallImage.width=" + Frame.SmallImage.GetWidth() + " SmallImage.height=" + Frame.SmallImage.GetHeight() );
@@ -1437,7 +1440,7 @@ function SetupForFaceDetection(Frame)
 
 			try
 			{
-				Frame.SmallImage = new Image();
+				Frame.SmallImage = new Image( null, "Face clipped image");
 				Frame.SmallImage.Copy( Frame.Image );
 				Frame.SmallImage.Resize( SmallImageWidth, SmallImageHeight );
 				Resolve();
@@ -1499,7 +1502,9 @@ function ShowTestFrame(FrameImage)
 	NewFrame.Image = FrameImage;
 	
 	if ( LastFrame != null )
+	{
 		LastFrame.Clear();
+	}
 	LastFrame = NewFrame;
 
 }
@@ -1542,9 +1547,12 @@ async function OnNewVideoFrame(FrameImage)
 		//	test speed of resize
 		//OnFrameCompleted(Frame);	return;
 
+		if ( !RunPoseDetection )
+		{
+			OnFrameCompleted(Frame);
+			return;
+		}
 		await GetPoseDetectionPromise( Frame );
-		//OnFrameCompleted(Frame);	return;
-		
 		await SetupForFaceDetection( Frame );
 		let NewFace = await GetFaceDetectionPromise( Frame );
 		Frame.SetFaceLandmarks( NewFace );

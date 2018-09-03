@@ -591,12 +591,18 @@ function FakeOpenglContext(ContextType,ParentCanvas,OnImageCreated)
 	this.createTexture = function()
 	{
 		//	gr: internally the code is currently expecting some pixels
-		let NewImage = new Image([1,1]);
+		let NewImage = new Image([1,1], "gl texture");
 		if ( OnImageCreated )
 		{
 			OnImageCreated(NewImage);
 		}
 		return NewImage;
+	}
+	
+	//	gr: this exists in webgl, but not being called from tensorflow
+	this.deleteTexture = function(Texture)
+	{
+		Debug("gl.Deletetexture");
 	}
 	
 	this.checkFramebufferStatus = function(Binding)
