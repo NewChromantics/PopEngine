@@ -303,7 +303,12 @@ public:
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator);
-
+	template<typename TYPE>
+	void        BindObjectType()
+	{
+		BindObjectType( TYPE::GetObjectTypeName(), TYPE::CreateTemplate, TV8ObjectWrapperBase::Allocate<TYPE> );
+	}
+	
 	template<const char* FunctionName>
 	void					BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
 	template<const char* FunctionName>

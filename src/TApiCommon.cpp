@@ -79,7 +79,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
 	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
 
-	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
+	Container.BindObjectType<TImageWrapper>();
 }
 
 static Local<Value> Debug(CallbackInfo& Params)

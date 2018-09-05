@@ -1,6 +1,12 @@
 
-var GuiSliderShader_FragSource = LoadFileAsString("GuiSlider.frag");
+
 var GuiSliderShader = null;
+var GuiSliderShader_File = new File("GuiSlider.frag");
+GuiSliderShader_File.OnChanged = function(File)
+{
+	GuiSliderShader = null;
+}
+
 
 
 var SdfTexture = "SdfFont_SansSerif.png";
@@ -97,7 +103,9 @@ function TGuiFont(SdfFontFilename,FontMap,FragSource)
 				Shader.SetUniform("VertexRect", RenderRect );
 				Shader.SetUniform("SdfRect", FontRect );
 			}
-			RenderTarget.EnableBlend(true);
+			if ( c == 0 )
+				RenderTarget.EnableBlend(true);
+			//	add option to draw N quads
 			RenderTarget.DrawQuad( this.Shader, SetUniforms );
 			RenderRect[0] += RenderRect[2] - Kerning;
 		}
@@ -180,7 +188,8 @@ function TGuiElement(Name,Getter,Setter,Min,Max)
 	{
 		if ( !GuiSliderShader )
 		{
-			GuiSliderShader = new OpenglShader( RenderTarget, VertShaderSource, GuiSliderShader_FragSource );
+			let Source = GuiSliderShader_File.GetString();
+			GuiSliderShader = new OpenglShader( RenderTarget, VertShaderSource, Source );
 		}
 		
 		let ValueNorm = this.GetNormalised();

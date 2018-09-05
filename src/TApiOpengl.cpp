@@ -19,8 +19,8 @@ const char RenderChain_FunctionName[] = "RenderChain";
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
-	Container.BindObjectType( TWindowWrapper::GetObjectTypeName(), TWindowWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TWindowWrapper> );
-	Container.BindObjectType( TOpenglImmediateContextWrapper::GetObjectTypeName(), TOpenglImmediateContextWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TOpenglImmediateContextWrapper> );
+	Container.BindObjectType<TWindowWrapper>();
+ 	Container.BindObjectType( TOpenglImmediateContextWrapper::GetObjectTypeName(), TOpenglImmediateContextWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TOpenglImmediateContextWrapper> );
 	Container.BindObjectType("OpenglShader", TShaderWrapper::CreateTemplate, nullptr );
 }
 
