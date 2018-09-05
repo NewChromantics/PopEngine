@@ -931,24 +931,35 @@ const LINE_COUNT = 30;
 include('Gui.js');
 var Gui = new TGui( [0,0,1,1] );
 
-Gui.Add( new TGuiSliderInt('Resolution',		function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
-Gui.Add( new TGuiSlider('PoseNetScale',			function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
-Gui.Add( new TGuiSliderInt('ThreadCount',		function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 30 ) );
-Gui.Add( new TGuiToggle('Blur',					function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
-Gui.Add( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
-Gui.Add( new TGuiToggle('RunPoseDetection',		function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
-Gui.Add( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
-Gui.Add( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
-Gui.Add( new TGuiToggle('DrawLegs',				function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
-Gui.Add( new TGuiToggle('EnableFileOutput',		function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
+Gui.OnEnumElements = function(EnumElement)
+{
+	EnumElement( ShowGui_Gui );
+	if ( ShowGui )
+		GuiOptionalElements.forEach( EnumElement );
+}
+
+var GuiOptionalElements = [];
+var ShowGui = false;
+var ShowGui_Gui = new TGuiToggle('Show options',		function(){	return ShowGui;	},	function(v){	ShowGui = v;	});
+
+GuiOptionalElements.push( new TGuiSliderInt('Resolution',		function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+GuiOptionalElements.push( new TGuiSlider('PoseNetScale',		function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
+GuiOptionalElements.push( new TGuiSliderInt('ThreadCount',		function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 30 ) );
+GuiOptionalElements.push( new TGuiToggle('Blur',				function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('RunPoseDetection',	function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('DrawLegs',			function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('EnableFileOutput',	function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
+GuiOptionalElements.push( new TGuiToggle('PoseReadBackRgba',	function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},		function(v){	ClipToGreyscale = v;	} ) );
 
 /*	debug tweak font
-Gui.Add( new TGuiSlider('Font.InnerDistance',		function(){	return Gui.Font.InnerDistance;	},	function(v){	Gui.Font.InnerDistance = v;	}, 0.0, 1.0 ) );
-Gui.Add( new TGuiSlider('Font.OuterDistance',		function(){	return Gui.Font.OuterDistance;	},	function(v){	Gui.Font.OuterDistance = v;	}, 0.0, 1.0 ) );
-Gui.Add( new TGuiSlider('Font.NullDistance',		function(){	return Gui.Font.NullDistance;	},	function(v){	Gui.Font.NullDistance = v;	}, 0.0, 1.0 ) );
+GuiOptionalElements.push( new TGuiSlider('Font.InnerDistance',		function(){	return Gui.Font.InnerDistance;	},	function(v){	Gui.Font.InnerDistance = v;	}, 0.0, 1.0 );
+GuiOptionalElements.push( new TGuiSlider('Font.OuterDistance',		function(){	return Gui.Font.OuterDistance;	},	function(v){	Gui.Font.OuterDistance = v;	}, 0.0, 1.0 );
+GuiOptionalElements.push( new TGuiSlider('Font.NullDistance',		function(){	return Gui.Font.NullDistance;	},	function(v){	Gui.Font.NullDistance = v;	}, 0.0, 1.0 );
 */
-Gui.Add( new TGuiToggle('PoseReadBackRgba',		function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
-Gui.Add( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},	function(v){	ClipToGreyscale = v;	} ) );
 
 
 

@@ -243,19 +243,12 @@ function TGuiToggle()
 
 function TGui(GuiRect)
 {
-	this.Elements = [];
 	this.LockedLayoutElement = null;
 	this.GuiRect = GuiRect;
 	this.Font = new TGuiFont(SdfTexture,SdfChars,SdfShader_FragSource);
 	
 	//	to make a good immediate mode, we cache the layout of what we renderered and refer back to it
 	this.LastLayout = [];
-	
-
-	this.Add = function(Element)
-	{
-		this.Elements.push(Element);
-	}
 	
 	this.OnMouseDown = function(x,y)
 	{
@@ -299,6 +292,10 @@ function TGui(GuiRect)
 		Element.Element.OnHover( RectXy[0], RectXy[1] );
 	}
 	
+	this.OnEnumElements = function(Enum)
+	{
+		Debug("Replace this func to draw your elements.")
+	}
 	
 	this.Render = function(RenderTarget)
 	{
@@ -312,16 +309,18 @@ function TGui(GuiRect)
 		ElementRect[0] += ElementBoxSpacing;
 		ElementRect[1] += ElementBoxSpacing;
 		
-		for ( let e=0;	e<this.Elements.length;	e++ )
+		let This = this;
+		let RenderNextElement = function(Element)
 		{
-			let Element = this.Elements[e];
 			//	make copy of the array as stuff in scope will probably modify it
 			let er = ElementRect.slice(0);
-			this.CacheLayout( er, Element );
-			Element.Render(RenderTarget,er,this.Font);
-
+			This.CacheLayout( er, Element );
+			Element.Render(RenderTarget,er,This.Font);
+			
 			ElementRect[1] += ElementRect[3] + ElementBoxSpacing;
 		}
+		
+		this.OnEnumElements( RenderNextElement );
 	}
 	
 	this.ClearLayout = function()
