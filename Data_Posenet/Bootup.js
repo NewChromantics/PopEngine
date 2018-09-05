@@ -1525,6 +1525,7 @@ function ShowTestFrame(FrameImage)
 
 async function OnNewVideoFrame(FrameImage)
 {
+	FrameImage.SetLinearFilter(true);
 	if ( !ProcessVideoFrames )
 	{
 		ShowTestFrame(FrameImage);
