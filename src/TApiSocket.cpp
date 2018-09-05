@@ -109,7 +109,14 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 		Args.PushBack( MessageHandle );
 		Args.PushBack( RefHandle );
 
-		Container.ExecuteFunc( Context, FunctionHandle, ThisHandle, GetArrayBridge(Args) );
+		try
+		{
+			Container.ExecuteFunc( Context, FunctionHandle, ThisHandle, GetArrayBridge(Args) );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << __func__ << " callback exception: " << e.what() << std::endl;
+		}
 	};
 	
 	mContainer->QueueScoped( SendJsMessage );
