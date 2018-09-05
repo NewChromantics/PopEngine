@@ -44,7 +44,7 @@ DEFINE_IMMEDIATE(flush);
 static bool ShowImmediateFunctionCalls = false;
 static bool FinishAfterTextureWrite = false;
 
-
+const auto PBO_LOCK_WARNING_MS = 30;
 
 
 TOpenglImmediateContextWrapper::~TOpenglImmediateContextWrapper()
@@ -1382,13 +1382,13 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 			{
 				std::stringstream TimerName;
 				TimerName << "PBO glReadPixels( " << PboMeta << ")";
-				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), 10 );
+				Soy::TScopeTimerPrint ReadPixelsTimer( TimerName.str().c_str(), PBO_LOCK_WARNING_MS );
 				Pbo.ReadPixels(type);
 			}
 
 			std::stringstream TimerName_Lock;
 			TimerName_Lock << "PBO Lock( " << PboMeta << ")";
-			Soy::TScopeTimerPrint ReadPixelsTimer_Lock( TimerName_Lock.str().c_str(), 10 );
+			Soy::TScopeTimerPrint ReadPixelsTimer_Lock( TimerName_Lock.str().c_str(), PBO_LOCK_WARNING_MS );
 			auto* pData = Pbo.LockBuffer();
 			auto PboArray = GetRemoteArray<uint8_t>( pData, PboMeta.GetDataSize() );
 			ReadPixelsTimer_Lock.Stop();
