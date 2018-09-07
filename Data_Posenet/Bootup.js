@@ -123,7 +123,7 @@ function GetShaderFrameFormat(Image)
 	
 	if ( Format == 'RGBA' )			return FRAME_FORMAT_RGBA;
 	if ( Format == 'ARGB' )			return FRAME_FORMAT_ARGB;
-	if ( Format == 'Greyscale' )	return FRAME_FORMAT_Greyscale;
+	if ( Format == 'Greyscale' )	return FRAME_FORMAT_GREYSCALE;
 	
 	Debug("Unknown format " + FrameFormat);
 	return FRAME_FORMAT_RGBA;
@@ -1626,10 +1626,16 @@ function LoadVideoByName(Filename)
 	
 	//
 	Debug("Loading video source: " + Filename);
-	CurrentVideoSource = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter);
-	CurrentVideoSourceFilename = Filename;
-	CurrentVideoSource.OnNewFrame = OnNewVideoFrame;
-
+	try
+	{
+		CurrentVideoSource = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter);
+		CurrentVideoSourceFilename = Filename;
+		CurrentVideoSource.OnNewFrame = OnNewVideoFrame;
+	}
+	catch(e)
+	{
+		CurrentVideoSourceFilename = e;
+	}
 }
 
 
@@ -1910,6 +1916,8 @@ function Main()
 		Window1.OnMouseDown = function(x,y){	Gui.OnMouseDown(x,y);	};
 		Window1.OnMouseUp = function(x,y){		Gui.OnMouseUp(x,y);	};
 		Window1.OnMouseMove = function(x,y){	Gui.OnMouseMove(x,y);	};
+		Window1.OnTryDragDrop = function(Filenames)	{	Debug(Filenames);	return true;	}
+		Window1.OnDragDrop = function(Filenames)	{	LoadVideoByName(Filenames[0]);	}
 	}
 	
 	//	navigator global window is setup earlier

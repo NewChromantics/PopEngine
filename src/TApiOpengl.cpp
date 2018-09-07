@@ -91,6 +91,77 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,const std::string& Mo
 }
 
 
+bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
+{
+	//  call javascript
+	bool Result = false;
+	auto Runner = [&](Local<Context> Context)
+	{
+		auto& Isolate = *Context->GetIsolate();
+		auto This = this->GetHandle();
+		auto Func = v8::GetFunction( Context, This, "OnTryDragDrop" );
+		
+		auto GetFilename = [&](size_t Index)
+		{
+			return v8::GetString( Isolate, Filenames[Index] );
+		};
+		auto FilenamesArray = v8::GetArray( Isolate, Filenames.GetSize(), GetFilename );
+		BufferArray<Local<Value>,2> Args;
+		
+		Args.PushBack( FilenamesArray );
+		auto ResultHandle = mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+		auto ResultBoolHandle = v8::SafeCast<Boolean>( ResultHandle );
+		Result = ResultBoolHandle->BooleanValue();
+	};
+	
+	try
+	{
+		mContainer.RunScoped( Runner );
+		return Result;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Exception in OnTryDragDrop: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+
+void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
+{
+	//	copy for queue
+	Array<std::string> Filenames( FilenamesOrig );
+	//  call javascript
+	auto Runner = [=](Local<Context> Context)
+	{
+		auto& Isolate = *Context->GetIsolate();
+		auto This = this->GetHandle();
+		auto Func = v8::GetFunction( Context, This, "OnDragDrop" );
+		
+		auto GetFilename = [&](size_t Index)
+		{
+			return v8::GetString( Isolate, Filenames[Index] );
+		};
+		auto FilenamesArray = v8::GetArray( Isolate, Filenames.GetSize(), GetFilename );
+		BufferArray<Local<Value>,2> Args;
+		
+		Args.PushBack( FilenamesArray );
+		
+		try
+		{
+			mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Exception in OnDragDrop: " << e.what() << std::endl;
+		}
+	};
+	
+	mContainer.QueueScoped( Runner );
+}
+
+
+
 
 void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
@@ -119,6 +190,8 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	mWindow->mOnMouseDown = [this](const TMousePos& MousePos)	{	this->OnMouseFunc(MousePos,"OnMouseDown");	};
 	mWindow->mOnMouseUp = [this](const TMousePos& MousePos)		{	this->OnMouseFunc(MousePos,"OnMouseUp");	};
 	mWindow->mOnMouseMove = [this](const TMousePos& MousePos)	{	this->OnMouseFunc(MousePos,"OnMouseMove");	};
+	mWindow->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->OnTryDragDrop(Filenames);	};
+	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 }
 
 v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)

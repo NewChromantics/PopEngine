@@ -63,6 +63,8 @@ public:
 
 	void		OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext);
 	void		OnMouseFunc(const TMousePos& MousePos,const std::string& MouseFuncName);
+	bool		OnTryDragDrop(ArrayBridge<std::string>& Filenames);
+	void		OnDragDrop(ArrayBridge<std::string>& Filenames);
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 

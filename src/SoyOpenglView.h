@@ -25,6 +25,24 @@ class TOpenglParams;
 -(void)mouseDragged:(NSEvent *)event;
 -(void)mouseUp:(NSEvent *)event;
 
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender;
+/*
+- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender; // if the destination responded to draggingEntered: but not to draggingUpdated: the return value from draggingEntered: is used
+- (void)draggingExited:(nullable id <NSDraggingInfo>)sender;
+ */
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender;
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender;
+/*
+- (void)concludeDragOperation:(nullable id <NSDraggingInfo>)sender;
+// draggingEnded: is implemented as of Mac OS 10.5
+- (void)draggingEnded:(nullable id <NSDraggingInfo>)sender;
+// the receiver of -wantsPeriodicDraggingUpdates should return NO if it does not require periodic -draggingUpdated messages (eg. not autoscrolling or otherwise dependent on draggingUpdated: sent while mouse is stationary)
+- (BOOL)wantsPeriodicDraggingUpdates;
+
+// While a destination may change the dragging images at any time, it is recommended to wait until this method is called before updating the dragging image. This allows the system to delay changing the dragging images until it is likely that the user will drop on this destination. Otherwise, the dragging images will change too often during the drag which would be distracting to the user. The destination may update the dragging images by calling one of the -enumerateDraggingItems methods on the sender.
+ - (void)updateDraggingItemsForDrag:(nullable id <NSDraggingInfo>)sender NS_AVAILABLE_MAC(10_7);
+*/
+
 @end
 #endif
 
@@ -100,6 +118,8 @@ public:
 	std::function<void(const TMousePos&)>		mOnMouseDown;
 	std::function<void(const TMousePos&)>		mOnMouseMove;
 	std::function<void(const TMousePos&)>		mOnMouseUp;
+	std::function<bool(ArrayBridge<std::string>&)>	mOnTryDragDrop;
+	std::function<void(ArrayBridge<std::string>&)>	mOnDragDrop;
 	std::function<void(Opengl::TRenderTarget&,std::function<void()>)>	mOnRender;
 	MacOpenglView*								mView;
 	std::shared_ptr<GlViewContext>				mContext;

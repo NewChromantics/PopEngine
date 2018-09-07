@@ -179,6 +179,64 @@ bool TOpenglView::IsDoubleBuffered() const
 	Soy::Platform::PopCursor();
 }
 
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+	//	return the cursor to dispaly
+	std::Debug << __func__ << std::endl;
+	return NSDragOperationLink;
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+{
+	//	drag released
+	std::Debug << __func__ << std::endl;
+	
+	//	based on https://stackoverflow.com/questions/2604522/registerfordraggedtypes-with-custom-file-formats
+	NSArray* FilenamesArray = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+	
+	Array<std::string> Filenames;
+	
+	for ( int f=0;	f<[FilenamesArray count];	f++ )
+	{
+		NSString* FilenameNs = [FilenamesArray objectAtIndex:f];
+		auto Filename = Soy::NSStringToString(FilenameNs);
+		Filenames.PushBack(Filename);
+	}
+	
+	auto FilenamesBridge = GetArrayBridge(Filenames);
+	std::Debug << "DragDrop( " << Soy::StringJoin( FilenamesBridge,", ") << ")" << std::endl;
+	
+	if ( !mParent->mOnDragDrop )
+		return NO;
+	
+	mParent->mOnDragDrop( FilenamesBridge );
+	return YES;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+	//	based on https://stackoverflow.com/questions/2604522/registerfordraggedtypes-with-custom-file-formats
+	NSArray* FilenamesArray = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+
+	Array<std::string> Filenames;
+	
+	for ( int f=0;	f<[FilenamesArray count];	f++ )
+	{
+		NSString* FilenameNs = [FilenamesArray objectAtIndex:f];
+		auto Filename = Soy::NSStringToString(FilenameNs);
+		Filenames.PushBack(Filename);
+	}
+
+	auto FilenamesBridge = GetArrayBridge(Filenames);
+	std::Debug << "TryDragDrop( " << Soy::StringJoin( FilenamesBridge,", ") << ")" << std::endl;
+	
+	if ( !mParent->mOnTryDragDrop )
+		return NO;
+	
+	auto Allow = mParent->mOnTryDragDrop( FilenamesBridge );
+	return Allow ? YES : NO;
+}
+
 
 - (id)initFrameWithParent:(TOpenglView*)Parent viewRect:(NSRect)viewRect pixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
 {
@@ -187,6 +245,13 @@ bool TOpenglView::IsDoubleBuffered() const
 	{
 		mParent = Parent;
 	}
+	
+	//	https://stackoverflow.com/a/29029456
+	//	https://stackoverflow.com/a/8567836	NSFilenamesPboardType
+	[self registerForDraggedTypes: @[(NSString*)kUTTypeItem]];
+	//[self registerForDraggedTypes:[NSImage imagePasteboardTypes]];
+	//registerForDraggedTypes([NSFilenamesPboardType])
+	
 	return self;
 }
 
