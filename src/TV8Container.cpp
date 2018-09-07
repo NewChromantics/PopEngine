@@ -82,11 +82,10 @@ void TV8Allocator::Free(void* data, size_t length)
 }
 
 
-const std::string& v8::CallbackInfo::GetRootDirectory() const
+std::string v8::CallbackInfo::GetResolvedFilename(const std::string& Filename) const
 {
-	return mContainer.mRootDirectory;
+	return mContainer.GetResolvedFilename(Filename);
 }
-
 
 TV8Container::TV8Container(const std::string& RootDirectory) :
 	mImageHeap		( true, true, "Image Heap", 0 , false ),
@@ -179,6 +178,19 @@ void TV8Container::ProcessJobs(std::function<bool()> IsRunning)
 		mIsolate->RunMicrotasks();
 	};
 	RunScoped(RunMicroTasks);
+}
+
+
+std::string TV8Container::GetResolvedFilename(const std::string& Filename) const
+{
+	//	gr: do this better!
+	//	gr: should be able to use NSUrl to resolve ~/ or / etc
+	if ( Filename[0] == '/' )
+		return Filename;
+	
+	std::stringstream FullFilename;
+	FullFilename << mRootDirectory << Filename;
+	return FullFilename.str();
 }
 
 

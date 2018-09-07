@@ -187,7 +187,7 @@ public:
 	template<typename TYPE>
 	TYPE&			GetThis() const			{	return v8::GetObject<TYPE>( mParams.This() );	}
 	
-	const std::string&	GetRootDirectory() const;
+	std::string		GetResolvedFilename(const std::string& Filename) const;
 	
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
@@ -328,7 +328,8 @@ public:
 	//	less v8-y stuff
 	prmem::Heap&			GetImageHeap()	{	return mImageHeap;	}
 	prmem::Heap&			GetV8Heap()		{	return mAllocator.mHeap;	}
-		
+	std::string				GetResolvedFilename(const std::string& Filename) const;
+
 private:
 	void		BindRawFunction(v8::Local<v8::Object> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
 	void		BindRawFunction(v8::Local<v8::ObjectTemplate> This,const char* FunctionName,void(*RawFunction)(const v8::FunctionCallbackInfo<v8::Value>&));
@@ -344,9 +345,9 @@ public:
 	std::shared_ptr<v8::Platform>	mPlatform;
 
 	Array<TV8ObjectTemplate>		mObjectTemplates;
-	std::string						mRootDirectory;
 	
 private:
+	std::string						mRootDirectory;
 	TV8Allocator					mAllocator;
 	prmem::Heap						mImageHeap;
 };
