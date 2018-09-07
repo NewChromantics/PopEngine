@@ -86,9 +86,9 @@ var FaceProcessor = null;
 var MaxConcurrentFrames = 1;
 var SmallImageSize_Min = 80 * 1;
 var SmallImageSize_Max = 80 * 10;
-var SmallImageSize = SmallImageSize_Min;
+var SmallImageSize = SmallImageSize_Max;
 var SmallImageSquare = true;
-var NoFaceSendLast = false;
+var NoFaceSendLast = true;
 var FailIfNoFace = false;
 var BlurLandmarkSearch = false;
 
@@ -891,7 +891,6 @@ var TFrame = function(OpenglContext)
 				EnumNamePosScore( Name, Pos, Score );
 				this.FaceScore = Score[0];
 			}
-			
 		}
 		
 	}
@@ -989,7 +988,8 @@ GuiOptionalElements.push( new TGuiToggle('Blur',				function(){	return ApplyBlur
 GuiOptionalElements.push( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('RunPoseDetection',	function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
-GuiOptionalElements.push( new TGuiToggle('Draw Face Image',		function(){	return DrawSmallImage;	},			function(v){	DrawSmallImage = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Skip frame if no face',	function(){	return FailIfNoFace;	},		function(v){	FailIfNoFace = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw face-search Image',		function(){	return DrawSmallImage;	},			function(v){	DrawSmallImage = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('Draw Rects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('Draw Legs',			function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('EnableFileOutput',	function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
