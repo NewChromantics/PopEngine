@@ -24,7 +24,7 @@ var RGBAFromCamera = true;
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
-
+var CurrentVideoSource = null;
 var VideoFrameSkip = 0;
 
 var WebServer = null;
@@ -967,6 +967,9 @@ GuiOptionalElements.push( new TGuiToggle('EnableFileOutput',	function(){	return 
 GuiOptionalElements.push( new TGuiToggle('PoseReadBackRgba',	function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},		function(v){	ClipToGreyscale = v;	} ) );
 
+GuiOptionalElements.push( new TGuiButton('Next Camera',			LoadNextVideo ) );
+
+
 /*	debug tweak font
 GuiOptionalElements.push( new TGuiSlider('Font.InnerDistance',		function(){	return Gui.Font.InnerDistance;	},	function(v){	Gui.Font.InnerDistance = v;	}, 0.0, 1.0 );
 GuiOptionalElements.push( new TGuiSlider('Font.OuterDistance',		function(){	return Gui.Font.OuterDistance;	},	function(v){	Gui.Font.OuterDistance = v;	}, 0.0, 1.0 );
@@ -1038,6 +1041,7 @@ function WindowRender(RenderTarget)
 	
 	let OutputFrameRate = GetFrameCounter('FrameCompleted');
 	DebugStrings.push(GetComputerName());
+	DebugStrings.push("Video: " + CurrentVideoSource );
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
 	DebugStrings.push("Processing x" + CurrentFrames.length );
 	
@@ -1607,15 +1611,53 @@ async function OnNewVideoFrame(FrameImage)
 
 
 
+function LoadVideoByName(Filename)
+{
+	Debug("Loading video source: " + Filename);
+	let VideoCapture = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter);
+	CurrentVideoSource = Filename;
+	VideoCapture.OnNewFrame = OnNewVideoFrame;
+}
 
+
+var CurrentVideoIndex = null;
+function LoadNextVideo()
+{
+	let LoadNextDevice = function(DeviceNames)
+	{
+		try
+		{
+			if ( DeviceNames.length == 0 )
+				throw "No devices found";
+			
+			if ( CurrentVideoIndex == null )
+				CurrentVideoIndex = 0;
+			else
+				CurrentVideoIndex++;
+			
+			CurrentVideoIndex = CurrentVideoIndex % DeviceNames.length;
+			let VideoDeviceName = DeviceNames[CurrentVideoIndex];
+			LoadVideoByName( VideoDeviceName );
+		}
+		catch(e)
+		{
+			Debug(e);
+		}
+	}
+	
+	
+	//	load webcam
+	let MediaDevices = new Media();
+	MediaDevices.EnumDevices().then( LoadNextDevice );
+
+}
 
 
 function LoadVideo()
 {
 	if ( VideoFilename )
 	{
-		let VideoCapture = new MediaSource(VideoFilename,RGBAFromCamera,OnNewVideoFrameFilter);
-		VideoCapture.OnNewFrame = OnNewVideoFrame;
+		LoadVideoByName( VideoFilename );
 		return;
 	}
 	
@@ -1631,7 +1673,7 @@ function LoadVideo()
 		return Match;
 	}
 
-	let LoadDevice = function(DeviceNames)
+	let LoadPreferenceDevice = function(DeviceNames)
 	{
 		try
 		{
@@ -1649,10 +1691,7 @@ function LoadVideo()
 				VideoDeviceName = MatchedName;
 				break;
 			}
-			Debug("Loading device: " + VideoDeviceName);
-			
-			let VideoCapture = new MediaSource(VideoDeviceName,RGBAFromCamera,OnNewVideoFrameFilter);
-			VideoCapture.OnNewFrame = OnNewVideoFrame;
+			LoadVideoByName( VideoDeviceName );
 		}
 		catch(e)
 		{
@@ -1663,7 +1702,7 @@ function LoadVideo()
 		
 	//	load webcam
 	let MediaDevices = new Media();
-	MediaDevices.EnumDevices().then( LoadDevice );
+	MediaDevices.EnumDevices().then( LoadPreferenceDevice );
 }
 
 
