@@ -11,7 +11,7 @@ uniform int			FrameFormat;
 uniform vec4		UnClipRect;
 
 //	gr: this is mega slow on intel machines. speed up the distance check code!
-#define LINE_COUNT	30
+#define LINE_COUNT	100
 #if defined(LINE_COUNT)
 uniform vec4		Lines[LINE_COUNT];
 uniform float		LineScores[LINE_COUNT];

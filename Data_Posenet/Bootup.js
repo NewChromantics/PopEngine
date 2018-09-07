@@ -61,7 +61,7 @@ var NoseHeightInHead = 0.5;
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
-var DrawRects = false;
+var DrawRects = true;
 var DrawLegs = false;
 var DrawSkeleton = true;
 var IgnoreJointMaxScore = 0.5;
@@ -80,11 +80,13 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdatFilename = 'shape_predictor_68_face_landmarks.dat';
-var DlibThreadCount = 0;
-var EnableFaceProcessor = false;
+var DlibThreadCount = 1;
+var EnableFaceProcessor = true;
 var FaceProcessor = null;
 var MaxConcurrentFrames = 1;
-var SmallImageSize = 80 * 3;
+var SmallImageSize_Min = 80 * 1;
+var SmallImageSize_Max = 80 * 10;
+var SmallImageSize = SmallImageSize_Min;
 var SmallImageSquare = true;
 var NoFaceSendLast = false;
 var FailIfNoFace = false;
@@ -961,7 +963,7 @@ void main()
 
 let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
-const LINE_COUNT = 30;
+const LINE_COUNT = 100;
 
 
 include('Gui.js');
@@ -978,15 +980,18 @@ var GuiOptionalElements = [];
 var ShowGui = false;
 var ShowGui_Gui = new TGuiToggle('Show options',		function(){	return ShowGui;	},	function(v){	ShowGui = v;	});
 
-GuiOptionalElements.push( new TGuiSliderInt('Resolution',		function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+
+GuiOptionalElements.push( new TGuiSliderInt('Image Resolution',	function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+GuiOptionalElements.push( new TGuiSliderInt('Face Resolution',	function(){	return SmallImageSize;	},		function(v){	SmallImageSize = v;	}, SmallImageSize_Min, SmallImageSize_Max ) );
 GuiOptionalElements.push( new TGuiSlider('PoseNetScale',		function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
 GuiOptionalElements.push( new TGuiSliderInt('ThreadCount',		function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 30 ) );
 GuiOptionalElements.push( new TGuiToggle('Blur',				function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('RunPoseDetection',	function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
-GuiOptionalElements.push( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
-GuiOptionalElements.push( new TGuiToggle('DrawLegs',			function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw Face Image',		function(){	return DrawSmallImage;	},			function(v){	DrawSmallImage = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw Rects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw Legs',			function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('EnableFileOutput',	function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
 GuiOptionalElements.push( new TGuiToggle('PoseReadBackRgba',	function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},		function(v){	ClipToGreyscale = v;	} ) );
