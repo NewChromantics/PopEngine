@@ -90,11 +90,21 @@ var ServerSkeletonSender = null;
 var ServerSkeletonSenderPort = 8007;
 var BroadcastServer = null;
 var BroadcastServerPort = 8009;
-var OutputFilename = "../../../../SkeletonOutputFrames.json";
+
+var OutputFilenamePrefix = "../../../../SkeletonOutputFrames_";
+var OutputFilenameSuffix = ".json";
+var OutputFilename = null;
+
 var EnableFileOutput = false;
-//var OutputFilename = null;
 var FlipOutputSkeleton = true;
 var MirrorOutputSkeleton = false;
+
+
+
+function GetNewOutputFilename()
+{
+	return OutputFilenamePrefix + Date.now() + OutputFilenameSuffix;
+}
 
 
 
@@ -216,6 +226,8 @@ if ( EnableKalmanFilter )
 
 function OnFileOutputEnabled()
 {
+	OutputFilename = GetNewOutputFilename();
+	
 	let Retry = function(RetryFunc,Timeout,RetryCount)
 	{
 		if ( RetryCount == 0 )
