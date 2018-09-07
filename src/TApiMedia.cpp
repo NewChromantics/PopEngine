@@ -14,6 +14,7 @@ const char EnumDevices_FunctionName[] = "EnumDevices";
 
 const char MediaSource_TypeName[] = "MediaSource";
 const char Free_FunctionName[] = "Free";
+const char GetNextFrame_FunctionName[] = "GetNextFrame";
 
 void ApiMedia::Bind(TV8Container& Container)
 {
@@ -230,6 +231,11 @@ void TMediaSourceWrapper::Construct(const v8::CallbackInfo& Params)
 	auto DeviceNameHandle = Arguments[0];
 	auto SinglePlaneOutputHandle = Arguments[1];
 	auto FilterCallbackHandle = Arguments[2];
+	auto MaxBufferSizeHandle = Arguments[3];
+	
+	size_t MaxBufferSize = 10;
+	if ( !MaxBufferSizeHandle->IsUndefined() )
+		MaxBufferSize = v8::SafeCast<v8::Number>(MaxBufferSizeHandle)->Int32Value();
 	
 	bool SinglePlaneOutput = false;
 	if ( !SinglePlaneOutputHandle->IsUndefined() )
@@ -256,10 +262,10 @@ void TMediaSourceWrapper::Construct(const v8::CallbackInfo& Params)
 	auto DeviceName = v8::GetString( DeviceNameHandle );
 	TMediaExtractorParams ExtractorParams( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
 	ExtractorParams.mForceNonPlanarOutput = SinglePlaneOutput;
-	ExtractorParams.mDiscardOldFrames = true;
+	ExtractorParams.mDiscardOldFrames = false;
 	
 	mExtractor = AllocExtractor(ExtractorParams);
-	mExtractor->AllocStreamBuffer(0);
+	mExtractor->AllocStreamBuffer(0,MaxBufferSize);
 	mExtractor->Start(false);
 }
 
@@ -285,8 +291,8 @@ Local<FunctionTemplate> TMediaSourceWrapper::CreateTemplate(TV8Container& Contai
 	InstanceTemplate->SetInternalFieldCount(2);
 	
 	//	add members
-	//Container.BindFunction<EnumDevices_FunctionName>( InstanceTemplate, GetNewFramePromise );
 	Container.BindFunction<Free_FunctionName>( InstanceTemplate, Free );
+	Container.BindFunction<GetNextFrame_FunctionName>( InstanceTemplate, GetNextFrame );
 
 	return ConstructorFunc;
 }
@@ -294,40 +300,14 @@ Local<FunctionTemplate> TMediaSourceWrapper::CreateTemplate(TV8Container& Contai
 
 void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 {
-	//	do a queued callback for OnNewFrame member
-	//	we send the image handle here, because we can always make it have a TPixelBuffer internally and not grab the pixels
-	auto PacketBuffer = this->mExtractor->GetStreamBuffer(StreamIndex);
-	auto FramePacket = PacketBuffer->PopPacket();
-	if ( !FramePacket )
-	{
-		//std::Debug << "Null packet in buffer?" << std::endl;
-		return;
-	}
-	
-	OnNewFrame( *FramePacket );
-}
-
-
-void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
-{
-	//	do a queued callback for OnNewFrame member
-	
-	//	get pixel buffer as pixels
-	//	todo: put this in ImageWrapper so we can get opengl packets etc without conversion
-	auto PixelBuffer = FramePacket.mPixelBuffer;
-	if ( PixelBuffer == nullptr )
-	{
-		std::Debug << "Missing Pixel buffer in frame" << std::endl;
-		return;
-	}
-	
+	//	do filter here
 	if ( mOnFrameFilter )
 	{
 		//	When we're stuck with non-async stuff in js (posenet)
 		//	lets do an immediate "reject frame" option
-		 //	and if the isolate is yeilded (sleep()) then this can execute now
+		//	and if the isolate is yeilded (sleep()) then this can execute now
 		bool AllowFrame = true;
-		auto FilterRunner = [this,PixelBuffer,&AllowFrame](Local<Context> context)
+		auto FilterRunner = [this,&AllowFrame](Local<Context> context)
 		{
 			auto& Isolate = *context->GetIsolate();
 			
@@ -341,10 +321,56 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 			AllowFrame = AllowBoolHandle->BooleanValue();
 		};
 		mContainer.RunScoped( FilterRunner );
+		
 		if ( !AllowFrame )
+		{
+			//	discard the frame by popping it
+			auto PacketBuffer = this->mExtractor->GetStreamBuffer(StreamIndex);
+			auto FramePacket = PacketBuffer->PopPacket();
+			FramePacket.reset();
 			return;
+		}
 	}
 	
+	//	notify that there's a new frame
+	auto Runner = [this](Local<Context> context)
+	{
+		auto* isolate = context->GetIsolate();
+		auto This = this->mHandle.Get(isolate);
+		
+		BufferArray<Local<Value>,2> Args;
+		
+		auto FuncHandle = v8::GetFunction( context, This, "OnNewFrame" );
+	
+		try
+		{
+			mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "OnNewFrame Exception: " << e.what() << std::endl;
+		}
+	};
+	mContainer.QueueScoped( Runner );
+}
+
+
+
+v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(const v8::CallbackInfo& Params)
+{
+	auto& This = Params.GetThis<TMediaSourceWrapper>();
+
+	//	grab frame
+	auto StreamIndex = 0;
+	auto PacketBuffer = This.mExtractor->GetStreamBuffer(StreamIndex);
+	auto FramePacket = PacketBuffer->PopPacket();
+	if ( !FramePacket )
+		throw Soy::AssertException("No frame packet buffered");
+	auto PixelBuffer = FramePacket->mPixelBuffer;
+	if ( PixelBuffer == nullptr )
+		throw Soy::AssertException("Missing Pixel buffer in frame");
+	
+	//	convert to pixels here (for testing if image pixel buffer is/n't working)
 	static bool ReadToPixels = false;
 	std::shared_ptr<SoyPixels> Pixels;
 
@@ -356,7 +382,8 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
 		try
 		{
-			Pixels.reset( new SoyPixels( mContainer.GetImageHeap() ) );
+			auto& Heap = Params.mContainer.GetImageHeap();
+			Pixels.reset( new SoyPixels(Heap) );
 			auto& RgbPixels = *Pixels;
 			RgbPixels.Copy( *Textures[0] );
 			PixelBuffer->Unlock();
@@ -367,33 +394,19 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 			throw;
 		}
 	}
-	
-	
-	auto Runner = [this,Pixels,PixelBuffer](Local<Context> context)
-	{
-		auto* isolate = context->GetIsolate();
-		auto This = this->mHandle.Get(isolate);
-		
-		auto* pImage = new TImageWrapper( this->mContainer );
-		pImage->mName = "MediaSource Frame";
-		auto& Image = *pImage;
-		if ( Pixels )
-			Image.SetPixels(Pixels);
-		else
-			Image.SetPixelBuffer(PixelBuffer);
 
-		BufferArray<Local<Value>,2> Args;
-		Args.PushBack( Image.GetHandle() );
 	
-		auto FuncHandle = v8::GetFunction( context, This, "OnNewFrame" );
-		
-		//std::Debug << "Starting Media::OnNewFrame Javascript" << std::endl;
-		//	this func should be fast really and setup promises to defer processing
-		Soy::TScopeTimerPrint Timer("Media::OnNewFrame Javascript callback",5);
-		mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
-		Timer.Stop();
-	};
-	mContainer.QueueScoped( Runner );
+	auto* pImage = new TImageWrapper( Params.mContainer );
+	pImage->mName = "MediaSource Frame";
+	auto& Image = *pImage;
+	if ( Pixels )
+		Image.SetPixels(Pixels);
+	else
+		Image.SetPixelBuffer(PixelBuffer);
+
+	auto ImageHandle = Image.GetHandle();
+
+	return ImageHandle;
 }
 
 

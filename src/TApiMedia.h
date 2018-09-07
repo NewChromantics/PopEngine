@@ -49,8 +49,8 @@ public:
 	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
 
 	void									OnNewFrame(size_t StreamIndex);
-	void									OnNewFrame(const TMediaPacket& FramePacket);
 	static v8::Local<v8::Value>				Free(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				GetNextFrame(const v8::CallbackInfo& Arguments);
 	
 	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
 

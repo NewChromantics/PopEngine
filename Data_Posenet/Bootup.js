@@ -22,13 +22,16 @@ var RGBAFromCamera = true;
 
 
 //	tries to find these in order, then grabs any
-var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
+//	null means doesnt auto start
+//var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
+var VideoDeviceNames = null;
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 var CurrentVideoSourceFilename = null;
 var CurrentVideoSource = null;
 
 var ProcessEveryFrame = false;
 var VideoFrameSkip = 0;
+var MediaBufferSize = 2;
 
 var WebServer = null;
 var WebServerPort = 8000;
@@ -109,6 +112,19 @@ function GetNewOutputFilename()
 	return OutputFilenamePrefix + Date.now() + OutputFilenameSuffix;
 }
 
+let Retry = function(RetryFunc,Timeout)
+{
+	let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
+	try
+	{
+		RetryFunc();
+	}
+	catch(e)
+	{
+		Debug(e+"... retrying in " + Timeout);
+		setTimeout( RetryAgain, Timeout );
+	}
+}
 
 
 //	window render shader
@@ -1527,6 +1543,9 @@ function GetFaceDetectionPromise(Frame)
 var VideoFrameCounter = 0;
 function OnNewVideoFrameFilter()
 {
+	if ( ProcessEveryFrame )
+		return true;
+	
 	//	skip N frames
 	VideoFrameCounter++;
 	if ( VideoFrameSkip > 0 )
@@ -1558,13 +1577,53 @@ function ShowTestFrame(FrameImage)
 
 }
 
+//	next timeout
+var NextFrameRetryTimeout = null;
+var NextFrameRetryWaitMs = 500;
+function TryNextFrame(Media)
+{
+	//	already waiting
+	if ( NextFrameRetryTimeout )
+		return;
+	
+	let Retry = function()
+	{
+		NextFrameRetryTimeout = null;
+		TryNextFrame(Media);
+	}
+	
+	if ( !IsIdle() )
+	{
+		Debug("Not idle... retry in " + NextFrameRetryWaitMs);
+		setTimeout( Retry, NextFrameRetryWaitMs );
+		NextFrameRetryTimeout = true;
+		return;
+	}
+	
+	let Frame = Media.GetNextFrame();
+	if ( Frame == null )
+	{
+		Debug("Missing frame... retry in " + NextFrameRetryWaitMs);
+		setTimeout( Retry, NextFrameRetryWaitMs );
+		NextFrameRetryTimeout = true;
+		return;
+	}
+	
+	ProcessVideoFrame( Frame, Retry );
+}
 
-async function OnNewVideoFrame(FrameImage)
+function OnNewVideoFrame(Media)
+{
+	TryNextFrame( Media );
+}
+
+async function ProcessVideoFrame(FrameImage,OnCompleted)
 {
 	FrameImage.SetLinearFilter(true);
 	if ( !ProcessVideoFrames )
 	{
 		ShowTestFrame(FrameImage);
+		OnCompleted();
 		return;
 	}
 	/*
@@ -1600,6 +1659,7 @@ async function OnNewVideoFrame(FrameImage)
 		if ( !RunPoseDetection )
 		{
 			OnFrameCompleted(Frame);
+			OnCompleted();
 			return;
 		}
 		await GetPoseDetectionPromise( Frame );
@@ -1607,6 +1667,7 @@ async function OnNewVideoFrame(FrameImage)
 		let NewFace = await GetFaceDetectionPromise( Frame );
 		Frame.SetFaceLandmarks( NewFace );
 		OnFrameCompleted(Frame);
+		OnCompleted();
 	}
 	catch (Error)
 	{
@@ -1643,9 +1704,9 @@ function LoadVideoByName(Filename)
 	Debug("Loading video source: " + Filename);
 	try
 	{
-		CurrentVideoSource = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter);
+		CurrentVideoSource = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter,MediaBufferSize);
 		CurrentVideoSourceFilename = Filename;
-		CurrentVideoSource.OnNewFrame = OnNewVideoFrame;
+		CurrentVideoSource.OnNewFrame = function()	{	OnNewVideoFrame(CurrentVideoSource);	}
 	}
 	catch(e)
 	{
@@ -1733,7 +1794,12 @@ function LoadVideo()
 		}
 	}
 	
-		
+	if ( VideoDeviceNames === null )
+	{
+		Debug("Skipping camera auto-load");
+		return;
+	}
+	
 	//	load webcam
 	let MediaDevices = new Media();
 	MediaDevices.EnumDevices().then( LoadPreferenceDevice );
@@ -1898,19 +1964,6 @@ function LoadSockets()
 	}
 	
 	
-	let Retry = function(RetryFunc,Timeout)
-	{
-		let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
-		try
-		{
-			RetryFunc();
-		}
-		catch(e)
-		{
-			Debug(e+"... retrying in " + Timeout);
-			setTimeout( RetryAgain, Timeout );
-		}
-	}
 	
 	Retry( AllocSkeletonSender, 1000 );
 	Retry( AllocBroadcastServer, 1000 );
@@ -1922,6 +1975,7 @@ function OnFileDragDropped(Filenames)
 	//	auto enable file output and set the filename to be the video
 	let Filename = Filenames[0];
 	let RecordFilename = Filename + "." + Date.now() + ".json";
+	ProcessEveryFrame = true;
 	EnableFileOutput = true;
 	OnFileOutputEnabled( RecordFilename );
 	LoadVideoByName(Filename);
