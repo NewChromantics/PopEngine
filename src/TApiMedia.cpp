@@ -13,6 +13,7 @@ using namespace v8;
 const char EnumDevices_FunctionName[] = "EnumDevices";
 
 const char MediaSource_TypeName[] = "MediaSource";
+const char Free_FunctionName[] = "Free";
 
 void ApiMedia::Bind(TV8Container& Container)
 {
@@ -168,6 +169,18 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 }
 
 
+TMediaSourceWrapper::~TMediaSourceWrapper()
+{
+	std::Debug << __func__ << std::endl;
+	if ( mExtractor )
+	{
+		std::Debug << __func__ << " stopping extractor" << std::endl;
+		mExtractor->Stop();
+		mExtractor.reset();
+	}
+	std::Debug << __func__ << " finished" << std::endl;
+}
+
 std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMediaExtractorParams& Params)
 {
 	//	video extractor if it's a filename
@@ -273,7 +286,8 @@ Local<FunctionTemplate> TMediaSourceWrapper::CreateTemplate(TV8Container& Contai
 	
 	//	add members
 	//Container.BindFunction<EnumDevices_FunctionName>( InstanceTemplate, GetNewFramePromise );
-	
+	Container.BindFunction<Free_FunctionName>( InstanceTemplate, Free );
+
 	return ConstructorFunc;
 }
 
@@ -380,5 +394,14 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		Timer.Stop();
 	};
 	mContainer.QueueScoped( Runner );
+}
+
+
+v8::Local<v8::Value> TMediaSourceWrapper::Free(const v8::CallbackInfo& Params)
+{
+	auto& This = Params.GetThis<TMediaSourceWrapper>();
+	This.mExtractor.reset();
+	
+	return v8::Undefined(Params.mIsolate);
 }
 

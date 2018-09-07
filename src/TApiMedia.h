@@ -42,6 +42,7 @@ public:
 		TObjectWrapper			( Container, This )
 	{
 	}
+	~TMediaSourceWrapper();
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
@@ -49,6 +50,7 @@ public:
 
 	void									OnNewFrame(size_t StreamIndex);
 	void									OnNewFrame(const TMediaPacket& FramePacket);
+	static v8::Local<v8::Value>				Free(const v8::CallbackInfo& Arguments);
 	
 	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
 

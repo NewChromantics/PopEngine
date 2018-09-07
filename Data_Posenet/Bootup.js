@@ -24,7 +24,9 @@ var RGBAFromCamera = true;
 //	tries to find these in order, then grabs any
 var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
+var CurrentVideoSourceFilename = null;
 var CurrentVideoSource = null;
+
 var VideoFrameSkip = 0;
 
 var WebServer = null;
@@ -1041,7 +1043,7 @@ function WindowRender(RenderTarget)
 	
 	let OutputFrameRate = GetFrameCounter('FrameCompleted');
 	DebugStrings.push(GetComputerName());
-	DebugStrings.push("Video: " + CurrentVideoSource );
+	DebugStrings.push("Video: " + CurrentVideoSourceFilename );
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
 	DebugStrings.push("Processing x" + CurrentFrames.length );
 	
@@ -1613,10 +1615,21 @@ async function OnNewVideoFrame(FrameImage)
 
 function LoadVideoByName(Filename)
 {
+	//	delete the old one
+	if ( CurrentVideoSource )
+	{
+		Debug("Deleting old video source " + CurrentVideoSource);
+		CurrentVideoSource.Free();
+		CurrentVideoSource = null;
+		GarbageCollect();
+	}
+	
+	//
 	Debug("Loading video source: " + Filename);
-	let VideoCapture = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter);
-	CurrentVideoSource = Filename;
-	VideoCapture.OnNewFrame = OnNewVideoFrame;
+	CurrentVideoSource = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter);
+	CurrentVideoSourceFilename = Filename;
+	CurrentVideoSource.OnNewFrame = OnNewVideoFrame;
+
 }
 
 
