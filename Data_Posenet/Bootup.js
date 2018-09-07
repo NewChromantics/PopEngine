@@ -27,6 +27,7 @@ var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
 var CurrentVideoSourceFilename = null;
 var CurrentVideoSource = null;
 
+var ProcessEveryFrame = false;
 var VideoFrameSkip = 0;
 
 var WebServer = null;
@@ -226,9 +227,13 @@ if ( EnableKalmanFilter )
 }
 
 
-function OnFileOutputEnabled()
+function OnFileOutputEnabled(NewFilename)
 {
-	OutputFilename = GetNewOutputFilename();
+	//	generate new filename if not provided
+	if ( !NewFilename )
+		NewFilename = GetNewOutputFilename();
+	
+	OutputFilename = NewFilename;
 	
 	let Retry = function(RetryFunc,Timeout,RetryCount)
 	{
@@ -285,9 +290,10 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise,MaxError)
 	
 	if ( Error < MaxError )
 		Error = Filter.Push( NewValue );
+	/*
 	else
 		Debug( Name + " error=" + Error.toFixed(4) + "/" + MaxError.toFixed(4) );
-	
+	*/
 	NewValue = Filter.GetEstimatedPosition(0);
 	//Debug( Name + ": " + v + " -> " + NewValue );
 	return NewValue;
@@ -970,6 +976,7 @@ GuiOptionalElements.push( new TGuiToggle('PoseReadBackRgba',	function(){	return 
 GuiOptionalElements.push( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},		function(v){	ClipToGreyscale = v;	} ) );
 
 GuiOptionalElements.push( new TGuiButton('Next Camera',			LoadNextVideo ) );
+GuiOptionalElements.push( new TGuiButton('Stop',				function(){	LoadVideoByName(null); } ) );
 
 
 /*	debug tweak font
@@ -1621,7 +1628,15 @@ function LoadVideoByName(Filename)
 		Debug("Deleting old video source " + CurrentVideoSource);
 		CurrentVideoSource.Free();
 		CurrentVideoSource = null;
-		GarbageCollect();
+	}
+	LastFrame = null;
+	GarbageCollect();
+	
+	//	stop
+	if ( Filename === null )
+	{
+		CurrentVideoSourceFilename = "Stopped.";
+		return;
 	}
 	
 	//
@@ -1902,7 +1917,15 @@ function LoadSockets()
 }
 
 
-
+function OnFileDragDropped(Filenames)
+{
+	//	auto enable file output and set the filename to be the video
+	let Filename = Filenames[0];
+	let RecordFilename = Filename + "." + Date.now() + ".json";
+	EnableFileOutput = true;
+	OnFileOutputEnabled( RecordFilename );
+	LoadVideoByName(Filename);
+}
 
 
 
@@ -1917,7 +1940,7 @@ function Main()
 		Window1.OnMouseUp = function(x,y){		Gui.OnMouseUp(x,y);	};
 		Window1.OnMouseMove = function(x,y){	Gui.OnMouseMove(x,y);	};
 		Window1.OnTryDragDrop = function(Filenames)	{	Debug(Filenames);	return true;	}
-		Window1.OnDragDrop = function(Filenames)	{	LoadVideoByName(Filenames[0]);	}
+		Window1.OnDragDrop = OnFileDragDropped;
 	}
 	
 	//	navigator global window is setup earlier
