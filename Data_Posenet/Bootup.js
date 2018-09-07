@@ -1578,38 +1578,47 @@ function ShowTestFrame(FrameImage)
 }
 
 //	next timeout
-var NextFrameRetryTimeout = null;
-var NextFrameRetryWaitMs = 500;
+var NextFrameRetryTimeout = 0;
+var NextFrameRetryWaitMs = 10;
 function TryNextFrame(Media)
 {
 	//	already waiting
-	if ( NextFrameRetryTimeout )
-		return;
-	
-	let Retry = function()
+	if ( NextFrameRetryTimeout > 0 )
 	{
-		NextFrameRetryTimeout = null;
+		//Debug("Already waiting x"+ NextFrameRetryTimeout);
+		return;
+	}
+	
+	let TriggerNext = function()
+	{
 		TryNextFrame(Media);
 	}
 	
+	let Retry = function()
+	{
+		NextFrameRetryTimeout--;
+		TriggerNext();
+	}
+	
+	
 	if ( !IsIdle() )
 	{
-		Debug("Not idle... retry in " + NextFrameRetryWaitMs);
+		Debug("Not idle... retry (x"+NextFrameRetryTimeout+") in " + NextFrameRetryWaitMs);
 		setTimeout( Retry, NextFrameRetryWaitMs );
-		NextFrameRetryTimeout = true;
+		NextFrameRetryTimeout++;
 		return;
 	}
 	
 	let Frame = Media.GetNextFrame();
 	if ( Frame == null )
 	{
-		Debug("Missing frame... retry in " + NextFrameRetryWaitMs);
+		Debug("Missing frame... retry (x"+NextFrameRetryTimeout+") in " + NextFrameRetryWaitMs);
 		setTimeout( Retry, NextFrameRetryWaitMs );
-		NextFrameRetryTimeout = true;
+		NextFrameRetryTimeout++
 		return;
 	}
 	
-	ProcessVideoFrame( Frame, Retry );
+	ProcessVideoFrame( Frame, TriggerNext );
 }
 
 function OnNewVideoFrame(Media)
