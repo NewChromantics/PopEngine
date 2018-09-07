@@ -12,11 +12,13 @@ using namespace v8;
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
 
+const char MediaSource_TypeName[] = "MediaSource";
 
 void ApiMedia::Bind(TV8Container& Container)
 {
 	Container.BindObjectType("Media", TMediaWrapper::CreateTemplate, nullptr );
-	Container.BindObjectType("MediaSource", TMediaSourceWrapper::CreateTemplate, nullptr );
+
+	Container.BindObjectType( TMediaSourceWrapper::GetObjectTypeName(), TMediaSourceWrapper::CreateTemplate, TMediaSourceWrapper::Allocate<TMediaSourceWrapper> );
 }
 
 
@@ -205,83 +207,47 @@ std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMedi
 }
 
 
-void TMediaSourceWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TMediaSourceWrapper::Construct(const v8::CallbackInfo& Params)
 {
+	auto& Arguments = Params.mParams;
+
 	using namespace v8;
 	auto* Isolate = Arguments.GetIsolate();
 	
-	if ( !Arguments.IsConstructCall() )
+	auto DeviceNameHandle = Arguments[0];
+	auto SinglePlaneOutputHandle = Arguments[1];
+	auto FilterCallbackHandle = Arguments[2];
+	
+	bool SinglePlaneOutput = false;
+	if ( !SinglePlaneOutputHandle->IsUndefined() )
+		SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
+		
+	if ( !FilterCallbackHandle->IsUndefined() )
 	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
+		auto FilterCallback = v8::SafeCast<v8::Function>(FilterCallbackHandle);
+		mOnFrameFilter = v8::GetPersistent( *Isolate, FilterCallback );
 	}
 	
-	auto This = Arguments.This();
-	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-
-	try
+	auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
 	{
-		auto DeviceNameHandle = Arguments[0];
-		auto SinglePlaneOutputHandle = Arguments[1];
-		auto FilterCallbackHandle = Arguments[2];
-	
-		bool SinglePlaneOutput = false;
-		if ( !SinglePlaneOutputHandle->IsUndefined() )
-			SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
-		
-		std::shared_ptr<V8Storage<v8::Function>> mOnFrameFilter;
-		if ( !FilterCallbackHandle->IsUndefined() )
-		{
-			auto FilterCallback = v8::SafeCast<v8::Function>(FilterCallbackHandle);
-			mOnFrameFilter = v8::GetPersistent( *Isolate, FilterCallback );
-		}
-		
-		//	alloc window
-		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-		//		but it also needs to know of the V8container to run stuff
-		//		cyclic hell!
-		auto* NewWrapper = new TMediaSourceWrapper();
-		
-		//	store persistent handle to the javascript object
-		NewWrapper->mHandle = v8::GetPersistent( *Isolate, Arguments.This() );
-		NewWrapper->mContainer = &Container;
-		NewWrapper->mOnFrameFilter = mOnFrameFilter;
-
-		auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
-		{
-			//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
-			NewWrapper->OnNewFrame(StreamIndex);
-		};
-		auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
-		{
-			//	gr: do filter here!
-			//std::Debug << "OnPrePushFrame" << std::endl;
-		};
-
-		//	create device
-		auto DeviceName = v8::GetString( DeviceNameHandle );
-		TMediaExtractorParams Params( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
-		Params.mForceNonPlanarOutput = SinglePlaneOutput;
-		Params.mDiscardOldFrames = true;
-		
-		NewWrapper->mExtractor = AllocExtractor(Params);
-		NewWrapper->mExtractor->AllocStreamBuffer(0);
-		NewWrapper->mExtractor->Start(false);
-
-
-		//	set fields
-		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
-	}
-	catch(std::exception& e)
+		//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
+		this->OnNewFrame(StreamIndex);
+	};
+	auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
 	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}	
+		//	gr: do filter here!
+		//std::Debug << "OnPrePushFrame" << std::endl;
+	};
+
+	//	create device
+	auto DeviceName = v8::GetString( DeviceNameHandle );
+	TMediaExtractorParams ExtractorParams( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
+	ExtractorParams.mForceNonPlanarOutput = SinglePlaneOutput;
+	ExtractorParams.mDiscardOldFrames = true;
 	
-	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( This );
+	mExtractor = AllocExtractor(ExtractorParams);
+	mExtractor->AllocStreamBuffer(0);
+	mExtractor->Start(false);
 }
 
 
@@ -356,11 +322,11 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 			auto FuncHandle = mOnFrameFilter->GetLocal(Isolate);
 			auto ThisHandle = v8::Local<v8::Object>();
 			
-			auto AllowHandle = mContainer->ExecuteFunc( context, FuncHandle, ThisHandle, GetArrayBridge(Args) );
+			auto AllowHandle = mContainer.ExecuteFunc( context, FuncHandle, ThisHandle, GetArrayBridge(Args) );
 			auto AllowBoolHandle = v8::SafeCast<v8::Boolean>(AllowHandle);
 			AllowFrame = AllowBoolHandle->BooleanValue();
 		};
-		mContainer->RunScoped( FilterRunner );
+		mContainer.RunScoped( FilterRunner );
 		if ( !AllowFrame )
 			return;
 	}
@@ -376,7 +342,7 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
 		try
 		{
-			Pixels.reset( new SoyPixels( mContainer->GetImageHeap() ) );
+			Pixels.reset( new SoyPixels( mContainer.GetImageHeap() ) );
 			auto& RgbPixels = *Pixels;
 			RgbPixels.Copy( *Textures[0] );
 			PixelBuffer->Unlock();
@@ -392,9 +358,9 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 	auto Runner = [this,Pixels,PixelBuffer](Local<Context> context)
 	{
 		auto* isolate = context->GetIsolate();
-		auto This = this->mHandle->GetLocal(*isolate);
+		auto This = this->mHandle.Get(isolate);
 		
-		auto* pImage = new TImageWrapper( *this->mContainer );
+		auto* pImage = new TImageWrapper( this->mContainer );
 		pImage->mName = "MediaSource Frame";
 		auto& Image = *pImage;
 		if ( Pixels )
@@ -410,9 +376,9 @@ void TMediaSourceWrapper::OnNewFrame(const TMediaPacket& FramePacket)
 		//std::Debug << "Starting Media::OnNewFrame Javascript" << std::endl;
 		//	this func should be fast really and setup promises to defer processing
 		Soy::TScopeTimerPrint Timer("Media::OnNewFrame Javascript callback",5);
-		mContainer->ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
+		mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
 		Timer.Stop();
 	};
-	mContainer->QueueScoped( Runner );
+	mContainer.QueueScoped( Runner );
 }
 
