@@ -250,6 +250,28 @@ function TGuiToggle()
 }
 
 
+
+function TGuiButton(Name,OnClick)
+{
+	TGuiElement.apply(this,arguments);
+	this.Getter = function(){	return 0;	};
+	this.Setter = function(v){};
+	this.OnClickCallback = OnClick;
+	
+	this.OnClick = function(x,y,FirstClick)
+	{
+		if ( FirstClick )
+			this.OnClickCallback();
+	}
+	
+	this.GetLabel = function()
+	{
+		let Label = "<" + this.Name + ">";
+		return Label;
+	}
+}
+
+
 function TGui(GuiRect)
 {
 	this.LockedLayoutElement = null;

@@ -22,10 +22,16 @@ var RGBAFromCamera = true;
 
 
 //	tries to find these in order, then grabs any
-var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
+//	null means doesnt auto start
+//var VideoDeviceNames = ["0x1450000005ac8511","UltraStudio","c920","facetime","c920","isight"];
+var VideoDeviceNames = null;
 var VideoFilename = false;//"/Users/greeves/Desktop/Noodle_test1.MOV";
+var CurrentVideoSourceFilename = null;
+var CurrentVideoSource = null;
 
+var ProcessEveryFrame = false;
 var VideoFrameSkip = 0;
+var MediaBufferSize = 2;
 
 var WebServer = null;
 var WebServerPort = 8000;
@@ -55,7 +61,7 @@ var NoseHeightInHead = 0.5;
 var ResizeFragShaderSource = LoadFileAsString("GreyscaleToRgb.frag");
 var ResizeFragShader = null;
 var DrawSmallImage = false;
-var DrawRects = false;
+var DrawRects = true;
 var DrawLegs = false;
 var DrawSkeleton = true;
 var IgnoreJointMaxScore = 0.5;
@@ -74,13 +80,15 @@ var EnableWindowRender = true;
 
 
 var DlibLandMarksdatFilename = 'shape_predictor_68_face_landmarks.dat';
-var DlibThreadCount = 0;
-var EnableFaceProcessor = false;
+var DlibThreadCount = 1;
+var EnableFaceProcessor = true;
 var FaceProcessor = null;
 var MaxConcurrentFrames = 1;
-var SmallImageSize = 80 * 3;
+var SmallImageSize_Min = 80 * 1;
+var SmallImageSize_Max = 80 * 10;
+var SmallImageSize = SmallImageSize_Max;
 var SmallImageSquare = true;
-var NoFaceSendLast = false;
+var NoFaceSendLast = true;
 var FailIfNoFace = false;
 var BlurLandmarkSearch = false;
 
@@ -90,12 +98,35 @@ var ServerSkeletonSender = null;
 var ServerSkeletonSenderPort = 8007;
 var BroadcastServer = null;
 var BroadcastServerPort = 8009;
-var OutputFilename = "../../../../SkeletonOutputFrames.json";
+
+var OutputFilenamePrefix = "../../../../SkeletonOutputFrames_";
+var OutputFilenameSuffix = ".json";
+var OutputFilename = null;
+
 var EnableFileOutput = false;
-//var OutputFilename = null;
 var FlipOutputSkeleton = true;
 var MirrorOutputSkeleton = false;
 
+
+
+function GetNewOutputFilename()
+{
+	return OutputFilenamePrefix + Date.now() + OutputFilenameSuffix;
+}
+
+let Retry = function(RetryFunc,Timeout)
+{
+	let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
+	try
+	{
+		RetryFunc();
+	}
+	catch(e)
+	{
+		Debug(e+"... retrying in " + Timeout);
+		setTimeout( RetryAgain, Timeout );
+	}
+}
 
 
 //	window render shader
@@ -111,7 +142,7 @@ function GetShaderFrameFormat(Image)
 	
 	if ( Format == 'RGBA' )			return FRAME_FORMAT_RGBA;
 	if ( Format == 'ARGB' )			return FRAME_FORMAT_ARGB;
-	if ( Format == 'Greyscale' )	return FRAME_FORMAT_Greyscale;
+	if ( Format == 'Greyscale' )	return FRAME_FORMAT_GREYSCALE;
 	
 	Debug("Unknown format " + FrameFormat);
 	return FRAME_FORMAT_RGBA;
@@ -214,8 +245,14 @@ if ( EnableKalmanFilter )
 }
 
 
-function OnFileOutputEnabled()
+function OnFileOutputEnabled(NewFilename)
 {
+	//	generate new filename if not provided
+	if ( !NewFilename )
+		NewFilename = GetNewOutputFilename();
+	
+	OutputFilename = NewFilename;
+	
 	let Retry = function(RetryFunc,Timeout,RetryCount)
 	{
 		if ( RetryCount == 0 )
@@ -271,9 +308,10 @@ function UpdateKalmanFilter(Name,NewValue,TightNoise,MaxError)
 	
 	if ( Error < MaxError )
 		Error = Filter.Push( NewValue );
+	/*
 	else
 		Debug( Name + " error=" + Error.toFixed(4) + "/" + MaxError.toFixed(4) );
-	
+	*/
 	NewValue = Filter.GetEstimatedPosition(0);
 	//Debug( Name + ": " + v + " -> " + NewValue );
 	return NewValue;
@@ -853,7 +891,6 @@ var TFrame = function(OpenglContext)
 				EnumNamePosScore( Name, Pos, Score );
 				this.FaceScore = Score[0];
 			}
-			
 		}
 		
 	}
@@ -925,7 +962,7 @@ void main()
 
 let FrameFragShaderSource = LoadFileAsString("DrawFrameAndPose.frag");
 var FrameShader = null;
-const LINE_COUNT = 30;
+const LINE_COUNT = 100;
 
 
 include('Gui.js');
@@ -942,18 +979,26 @@ var GuiOptionalElements = [];
 var ShowGui = false;
 var ShowGui_Gui = new TGuiToggle('Show options',		function(){	return ShowGui;	},	function(v){	ShowGui = v;	});
 
-GuiOptionalElements.push( new TGuiSliderInt('Resolution',		function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+
+GuiOptionalElements.push( new TGuiSliderInt('Image Resolution',	function(){	return ClipToSquare;	},		function(v){	ClipToSquare = v;	}, ClipToSquare_Min, ClipToSquare_Max ) );
+GuiOptionalElements.push( new TGuiSliderInt('Face Resolution',	function(){	return SmallImageSize;	},		function(v){	SmallImageSize = v;	}, SmallImageSize_Min, SmallImageSize_Max ) );
 GuiOptionalElements.push( new TGuiSlider('PoseNetScale',		function(){	return PoseNetScale;	},		function(v){	PoseNetScale = v;	}, 0.2, 1.0 ) );
 GuiOptionalElements.push( new TGuiSliderInt('ThreadCount',		function(){	return MaxConcurrentFrames;	},	function(v){	MaxConcurrentFrames = Math.floor(v);	}, 1, 30 ) );
 GuiOptionalElements.push( new TGuiToggle('Blur',				function(){	return ApplyBlurInClip;	},		function(v){	ApplyBlurInClip = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('ProcessVideoFrames',	function(){	return ProcessVideoFrames;	},	function(v){	ProcessVideoFrames = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('RunPoseDetection',	function(){	return RunPoseDetection;	},	function(v){	RunPoseDetection = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('EnableFaceProcessor',	function(){	return EnableFaceProcessor;	},	function(v){	EnableFaceProcessor = v;	} ) );
-GuiOptionalElements.push( new TGuiToggle('DrawRects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
-GuiOptionalElements.push( new TGuiToggle('DrawLegs',			function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Skip frame if no face',	function(){	return FailIfNoFace;	},		function(v){	FailIfNoFace = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw face-search Image',		function(){	return DrawSmallImage;	},			function(v){	DrawSmallImage = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw Rects',			function(){	return DrawRects;	},			function(v){	DrawRects = v;	} ) );
+GuiOptionalElements.push( new TGuiToggle('Draw Legs',			function(){	return DrawLegs;	},			function(v){	DrawLegs = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('EnableFileOutput',	function(){	return EnableFileOutput;	},	function(v){	EnableFileOutput = v;		if(EnableFileOutput) OnFileOutputEnabled();	} ) );
 GuiOptionalElements.push( new TGuiToggle('PoseReadBackRgba',	function(){	return PoseReadBackRgba;	},	function(v){	PoseReadBackRgba = v;	} ) );
 GuiOptionalElements.push( new TGuiToggle('ClipToGreyscale',		function(){	return ClipToGreyscale;	},		function(v){	ClipToGreyscale = v;	} ) );
+
+GuiOptionalElements.push( new TGuiButton('Next Camera',			LoadNextVideo ) );
+GuiOptionalElements.push( new TGuiButton('Stop',				function(){	LoadVideoByName(null); } ) );
+
 
 /*	debug tweak font
 GuiOptionalElements.push( new TGuiSlider('Font.InnerDistance',		function(){	return Gui.Font.InnerDistance;	},	function(v){	Gui.Font.InnerDistance = v;	}, 0.0, 1.0 );
@@ -1026,6 +1071,7 @@ function WindowRender(RenderTarget)
 	
 	let OutputFrameRate = GetFrameCounter('FrameCompleted');
 	DebugStrings.push(GetComputerName());
+	DebugStrings.push("Video: " + CurrentVideoSourceFilename );
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
 	DebugStrings.push("Processing x" + CurrentFrames.length );
 	
@@ -1502,6 +1548,9 @@ function GetFaceDetectionPromise(Frame)
 var VideoFrameCounter = 0;
 function OnNewVideoFrameFilter()
 {
+	if ( ProcessEveryFrame )
+		return true;
+	
 	//	skip N frames
 	VideoFrameCounter++;
 	if ( VideoFrameSkip > 0 )
@@ -1533,13 +1582,62 @@ function ShowTestFrame(FrameImage)
 
 }
 
+//	next timeout
+var NextFrameRetryTimeout = 0;
+var NextFrameRetryWaitMs = 10;
+function TryNextFrame(Media)
+{
+	//	already waiting
+	if ( NextFrameRetryTimeout > 0 )
+	{
+		//Debug("Already waiting x"+ NextFrameRetryTimeout);
+		return;
+	}
+	
+	let TriggerNext = function()
+	{
+		TryNextFrame(Media);
+	}
+	
+	let Retry = function()
+	{
+		NextFrameRetryTimeout--;
+		TriggerNext();
+	}
+	
+	
+	if ( !IsIdle() )
+	{
+		Debug("Not idle... retry (x"+NextFrameRetryTimeout+") in " + NextFrameRetryWaitMs);
+		setTimeout( Retry, NextFrameRetryWaitMs );
+		NextFrameRetryTimeout++;
+		return;
+	}
+	
+	let Frame = Media.GetNextFrame();
+	if ( Frame == null )
+	{
+		Debug("Missing frame... retry (x"+NextFrameRetryTimeout+") in " + NextFrameRetryWaitMs);
+		setTimeout( Retry, NextFrameRetryWaitMs );
+		NextFrameRetryTimeout++
+		return;
+	}
+	
+	ProcessVideoFrame( Frame, TriggerNext );
+}
 
-async function OnNewVideoFrame(FrameImage)
+function OnNewVideoFrame(Media)
+{
+	TryNextFrame( Media );
+}
+
+async function ProcessVideoFrame(FrameImage,OnCompleted)
 {
 	FrameImage.SetLinearFilter(true);
 	if ( !ProcessVideoFrames )
 	{
 		ShowTestFrame(FrameImage);
+		OnCompleted();
 		return;
 	}
 	/*
@@ -1575,6 +1673,7 @@ async function OnNewVideoFrame(FrameImage)
 		if ( !RunPoseDetection )
 		{
 			OnFrameCompleted(Frame);
+			OnCompleted();
 			return;
 		}
 		await GetPoseDetectionPromise( Frame );
@@ -1582,6 +1681,7 @@ async function OnNewVideoFrame(FrameImage)
 		let NewFace = await GetFaceDetectionPromise( Frame );
 		Frame.SetFaceLandmarks( NewFace );
 		OnFrameCompleted(Frame);
+		OnCompleted();
 	}
 	catch (Error)
 	{
@@ -1595,15 +1695,78 @@ async function OnNewVideoFrame(FrameImage)
 
 
 
+function LoadVideoByName(Filename)
+{
+	//	delete the old one
+	if ( CurrentVideoSource )
+	{
+		Debug("Deleting old video source " + CurrentVideoSource);
+		CurrentVideoSource.Free();
+		CurrentVideoSource = null;
+	}
+	LastFrame = null;
+	GarbageCollect();
+	
+	//	stop
+	if ( Filename === null )
+	{
+		CurrentVideoSourceFilename = "Stopped.";
+		return;
+	}
+	
+	//
+	Debug("Loading video source: " + Filename);
+	try
+	{
+		CurrentVideoSource = new MediaSource(Filename,RGBAFromCamera,OnNewVideoFrameFilter,MediaBufferSize);
+		CurrentVideoSourceFilename = Filename;
+		CurrentVideoSource.OnNewFrame = function()	{	OnNewVideoFrame(CurrentVideoSource);	}
+	}
+	catch(e)
+	{
+		CurrentVideoSourceFilename = e;
+	}
+}
 
+
+var CurrentVideoIndex = null;
+function LoadNextVideo()
+{
+	let LoadNextDevice = function(DeviceNames)
+	{
+		try
+		{
+			if ( DeviceNames.length == 0 )
+				throw "No devices found";
+			
+			if ( CurrentVideoIndex == null )
+				CurrentVideoIndex = 0;
+			else
+				CurrentVideoIndex++;
+			
+			CurrentVideoIndex = CurrentVideoIndex % DeviceNames.length;
+			let VideoDeviceName = DeviceNames[CurrentVideoIndex];
+			LoadVideoByName( VideoDeviceName );
+		}
+		catch(e)
+		{
+			Debug(e);
+		}
+	}
+	
+	
+	//	load webcam
+	let MediaDevices = new Media();
+	MediaDevices.EnumDevices().then( LoadNextDevice );
+
+}
 
 
 function LoadVideo()
 {
 	if ( VideoFilename )
 	{
-		let VideoCapture = new MediaSource(VideoFilename,RGBAFromCamera,OnNewVideoFrameFilter);
-		VideoCapture.OnNewFrame = OnNewVideoFrame;
+		LoadVideoByName( VideoFilename );
 		return;
 	}
 	
@@ -1619,7 +1782,7 @@ function LoadVideo()
 		return Match;
 	}
 
-	let LoadDevice = function(DeviceNames)
+	let LoadPreferenceDevice = function(DeviceNames)
 	{
 		try
 		{
@@ -1637,10 +1800,7 @@ function LoadVideo()
 				VideoDeviceName = MatchedName;
 				break;
 			}
-			Debug("Loading device: " + VideoDeviceName);
-			
-			let VideoCapture = new MediaSource(VideoDeviceName,RGBAFromCamera,OnNewVideoFrameFilter);
-			VideoCapture.OnNewFrame = OnNewVideoFrame;
+			LoadVideoByName( VideoDeviceName );
 		}
 		catch(e)
 		{
@@ -1648,10 +1808,15 @@ function LoadVideo()
 		}
 	}
 	
-		
+	if ( VideoDeviceNames === null )
+	{
+		Debug("Skipping camera auto-load");
+		return;
+	}
+	
 	//	load webcam
 	let MediaDevices = new Media();
-	MediaDevices.EnumDevices().then( LoadDevice );
+	MediaDevices.EnumDevices().then( LoadPreferenceDevice );
 }
 
 
@@ -1813,26 +1978,22 @@ function LoadSockets()
 	}
 	
 	
-	let Retry = function(RetryFunc,Timeout)
-	{
-		let RetryAgain = function(){	Retry(RetryFunc,Timeout);	};
-		try
-		{
-			RetryFunc();
-		}
-		catch(e)
-		{
-			Debug(e+"... retrying in " + Timeout);
-			setTimeout( RetryAgain, Timeout );
-		}
-	}
 	
 	Retry( AllocSkeletonSender, 1000 );
 	Retry( AllocBroadcastServer, 1000 );
 }
 
 
-
+function OnFileDragDropped(Filenames)
+{
+	//	auto enable file output and set the filename to be the video
+	let Filename = Filenames[0];
+	let RecordFilename = Filename + "." + Date.now() + ".json";
+	ProcessEveryFrame = true;
+	EnableFileOutput = true;
+	OnFileOutputEnabled( RecordFilename );
+	LoadVideoByName(Filename);
+}
 
 
 
@@ -1846,6 +2007,8 @@ function Main()
 		Window1.OnMouseDown = function(x,y){	Gui.OnMouseDown(x,y);	};
 		Window1.OnMouseUp = function(x,y){		Gui.OnMouseUp(x,y);	};
 		Window1.OnMouseMove = function(x,y){	Gui.OnMouseMove(x,y);	};
+		Window1.OnTryDragDrop = function(Filenames)	{	Debug(Filenames);	return true;	}
+		Window1.OnDragDrop = OnFileDragDropped;
 	}
 	
 	//	navigator global window is setup earlier

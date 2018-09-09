@@ -102,7 +102,7 @@ void THttpServerWrapper::OnRequest(std::string& Url,Http::TResponseProtocol& Res
 {
 	//	todo: make the response a function that we can defer to other threads
 	//	then we can make callbacks for certain urls in javascript for dynamic replies
-	auto Filename = mContainer->mRootDirectory + Url;
+	auto Filename = mContainer->GetResolvedFilename(Url);
 	
 	//	todo: get mime type and do binary vs text properly
 	std::string Contents;

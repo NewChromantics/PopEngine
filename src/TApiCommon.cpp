@@ -176,7 +176,8 @@ static Local<Value> GetComputerName(CallbackInfo& Params)
 static Local<Value> ShowFileInFinder(CallbackInfo& Params)
 {
 	auto FilenameHandle = Params.mParams[0];
-	auto Filename = Params.GetRootDirectory() + v8::GetString(FilenameHandle);
+	auto FilenameString = v8::GetString(FilenameHandle);
+	auto Filename = Params.GetResolvedFilename( FilenameString );
 	
 	::Platform::ShowFileExplorer(Filename);
 	
@@ -244,7 +245,8 @@ static Local<Value> LoadFileAsString(CallbackInfo& Params)
 	if (Arguments.Length() < 1)
 		throw Soy::AssertException("LoadFileAsString(Filename) with no args");
 
-	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
+	auto FilenameString = v8::GetString( Arguments[0] );
+	auto Filename = Params.GetResolvedFilename(FilenameString);
 	std::string Contents;
 	Soy::FileToString( Filename, Contents);
 	
@@ -261,7 +263,7 @@ static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
 		throw Soy::AssertException("LoadFileAsArrayBuffer(Filename) with no args");
 
 	
-	auto Filename = Params.GetRootDirectory() + v8::GetString( Arguments[0] );
+	auto Filename = Params.GetResolvedFilename( v8::GetString( Arguments[0] ) );
 	Array<char> FileContents;
 	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
@@ -302,7 +304,7 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 	auto ContentsHandle = Arguments[1];
 	auto AppendHandle = Arguments[2];
 
-	auto Filename = Params.GetRootDirectory() + v8::GetString( FilenameHandle );
+	auto Filename = Params.GetResolvedFilename( v8::GetString( FilenameHandle ) );
 	auto Contents = v8::GetString( ContentsHandle );
 	bool Append = false;
 	if ( AppendHandle->IsBoolean() )
@@ -447,7 +449,7 @@ v8::Local<v8::Value> TImageWrapper::LoadFile(const v8::CallbackInfo& Params)
 
 	//	if first arg is filename...
 	
-	auto Filename = Params.GetRootDirectory() + v8::GetString(Arguments[0]);
+	auto Filename = Params.GetResolvedFilename( v8::GetString(Arguments[0]) );
 	This.DoLoadFile( Filename );
 	return v8::Undefined(Params.mIsolate);
 }
