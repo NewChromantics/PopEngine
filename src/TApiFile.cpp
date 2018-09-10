@@ -17,6 +17,15 @@ void ApiFile::Bind(TV8Container& Container)
 }
 
 
+void TFileHandle::GetFileContents(std::ostream& Contents)
+{
+	Soy::FileToString( mFilename, Contents );
+}
+
+void TFileHandle::GetFileContents(ArrayBridge<uint8_t>& Contents)
+{
+	Soy::FileToArray( Contents, mFilename );
+}
 
 
 Local<FunctionTemplate> TFileWrapper::CreateTemplate(TV8Container& Container)
@@ -76,6 +85,21 @@ v8::Local<v8::Value> TFileWrapper::GetString(const v8::CallbackInfo& Params)
 	return ContentsHandle;
 }
 
+
+v8::Local<v8::Value> TFileWrapper::GetBytes(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TFileWrapper>( ThisHandle );
+	auto& FileHandle = This.GetFileHandle();
+	
+	Array<uint8_t> Contents;
+	FileHandle.GetFileContents( GetArrayBridge(Contents) );
+	auto ContentsHandle = v8::GetTypedArray( *Arguments.GetIsolate(), GetArrayBridge(Contents) );
+	
+	return ContentsHandle;
+}
 
 void TFileWrapper::OnFileChanged()
 {
