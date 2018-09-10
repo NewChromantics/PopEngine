@@ -57,7 +57,7 @@ void TFileWrapper::Construct(const v8::CallbackInfo& Arguments)
 	{
 		
 	};
-	This.mFileHandle.reset( new TFileHandle(Filename), OnFileChanged );
+	This.mFileHandle.reset( new TFileHandle(Filename, OnFileChanged ) );
 }
 
 
@@ -69,8 +69,9 @@ v8::Local<v8::Value> TFileWrapper::GetString(const v8::CallbackInfo& Params)
 	auto& This = v8::GetObject<TFileWrapper>( ThisHandle );
 	auto& FileHandle = This.GetFileHandle();
 	
-	auto Contents = FileHandle.GetContentsString();
-	auto ContentsHandle = v8::GetString( Arguments.GetIsolate(), Contents );
+	std::stringstream Contents;
+	FileHandle.GetFileContents(Contents);
+	auto ContentsHandle = v8::GetString( *Arguments.GetIsolate(), Contents.str() );
 	
 	return ContentsHandle;
 }
@@ -80,7 +81,7 @@ void TFileWrapper::OnFileChanged()
 {
 	auto Runner = [this](Local<Context> context)
 	{
-		auto This = this->mHandle->GetLocal(*isolate);
+		auto This = this->GetHandle();
 		
 		BufferArray<Local<Value>,2> Args;
 		Args.PushBack( This );
@@ -90,9 +91,9 @@ void TFileWrapper::OnFileChanged()
 		//std::Debug << "Starting Media::OnNewFrame Javascript" << std::endl;
 		//	this func should be fast really and setup promises to defer processing
 		Soy::TScopeTimerPrint Timer("Media::OnNewFrame Javascript callback",5);
-		mContainer->ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
+		mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
 		Timer.Stop();
 	};
-	mContainer->QueueScoped( Runner );
+	mContainer.QueueScoped( Runner );
 }
 

@@ -19,6 +19,10 @@ public:
 	{
 	}
 	
+	void					GetFileContents(std::ostream& Contents);
+	void					GetFileContents(ArrayBridge<uint8_t>& Contents);
+	void					GetFileContents(ArrayBridge<uint8_t>&& Contents)	{	GetFileContents( Contents );	}
+
 	std::string				mFilename;
 	std::function<void()>	mOnChanged;
 };
@@ -41,9 +45,11 @@ public:
 	static v8::Local<v8::Value>				GetString(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				GetBytes(const v8::CallbackInfo& Arguments);
 
-	const std::string						GetFilename()		{	return mFileHandle.mFileName;	}
-	
+	void									OnFileChanged();
+	const std::string						GetFilename()		{	return mFileHandle->mFilename;	}
+	TFileHandle&							GetFileHandle()		{	return *mFileHandle;	}
+
 protected:
-	std::shared_ptr<TFileHandle>&			mFileHandle;
+	std::shared_ptr<TFileHandle>&			mFileHandle = mObject;
 };
 
