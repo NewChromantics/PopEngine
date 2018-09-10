@@ -59,7 +59,8 @@ void TFileWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
 	auto FilenameHandle = Arguments.mParams[0];
 	auto Filename = v8::GetString( FilenameHandle );
-
+	Filename = Arguments.mContainer.GetResolvedFilename(Filename);
+	
 	auto& This = Arguments.GetThis<TFileWrapper>();
 	
 	auto OnFileChanged = [this]
