@@ -62,3 +62,20 @@ private:
 };
 
 
+class TStringViewContainer
+{
+public:
+	TStringViewContainer(const std::string& Text) :
+	mString	( Text )
+	{
+	}
+	
+	StringView	GetStringView()
+	{
+		auto* CStr8 = reinterpret_cast<const uint8_t*>(mString.c_str());
+		return StringView( CStr8, mString.length() );
+	}
+	
+	std::string	mString;
+	StringView	mView;
+};
