@@ -27,8 +27,8 @@ TPopTrack& PopTrack::GetApp()
 		//	proper way would be to use the current working dir. But for now lets force it
 		auto RootDir = Platform::GetAppResourcesDirectory();
 		//RootDir += "Data_dlib/";
-		RootDir += "Data_Posenet/";
-		//RootDir += "Data_HelloWorld/";
+		//RootDir += "Data_Posenet/";
+		RootDir += "Data_HelloWorld/";
 		
 		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
 		Private::gOpenglApp.reset( new TPopTrack( RootDir, "Bootup.js") );
@@ -52,12 +52,13 @@ TPopAppError::Type PopMain()
 
 
 
+#include "v8Minimal.h"
 
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
-	//	todo: watch for when a file changes and recreate instance
-	mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
+	//mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
 
+	v8min_main(RootDirectory);
 }
 
 TPopTrack::~TPopTrack()

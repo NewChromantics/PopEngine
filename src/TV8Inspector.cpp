@@ -135,26 +135,28 @@ TV8Inspector::TV8Inspector(TV8Container& Container) :
 		SendResponse(Message);
 	};
 	
-	// create a v8 channel.
-	// ChannelImpl : public v8_inspector::V8Inspector::Channel
-	mChannel.reset( new ChannelImpl(DoSendResponse) );
-	
-	TStringViewContainer State("State");
-
-	// Create a debugging session by connecting the V8Inspector
-	// instance to the channel
 	auto ContextGroupId = 1;
-	mSession = mInspector->connect( ContextGroupId, mChannel.get(), State.GetStringView() );
-	
-	
+
 	// make sure you register Context objects in the V8Inspector.
 	// ctx_name will be shown in CDT/console. Call this for each context
 	// your app creates.
 	TStringViewContainer ContextName("PopEngineContextName");
 	V8ContextInfo ContextInfo( Context, ContextGroupId, ContextName.GetStringView() );
 	mInspector->contextCreated(ContextInfo);
+
 	
-	auto BreakOnStart = true;
+	// create a v8 channel.
+	// ChannelImpl : public v8_inspector::V8Inspector::Channel
+	mChannel.reset( new ChannelImpl(DoSendResponse) );
+	
+	TStringViewContainer State("{}");
+
+	// Create a debugging session by connecting the V8Inspector
+	// instance to the channel
+	mSession = mInspector->connect( ContextGroupId, mChannel.get(), State.GetStringView() );
+	
+	
+	auto BreakOnStart = false;
 	if ( BreakOnStart )
 	{
 		mSession->schedulePauseOnNextStatement(TStringViewContainer("Break on start").GetStringView(),TStringViewContainer("Just do it").GetStringView());
@@ -245,11 +247,15 @@ void TV8Inspector::OnMessage(SoyRef Connection,const std::string& Message)
 	mClient = Connection;
 
 	//	send message to session
-	Array<uint8_t> MessageBuffer;
-	Soy::StringToArray( Message, GetArrayBridge(MessageBuffer) );
+	//Array<uint8_t> MessageBuffer;
+	//Soy::StringToArray( Message, GetArrayBridge(MessageBuffer) );
+	//std::string TempMessage = Message;
 	
 	auto DispatchMessage = [=](v8::Local<v8::Context> Context)
 	{
+		Array<uint8_t> MessageBuffer;
+		std::Debug << "Message=" << Message << std::endl;
+		Soy::StringToArray( Message, GetArrayBridge(MessageBuffer) );
 		v8_inspector::StringView MessageString( MessageBuffer.GetArray(), MessageBuffer.GetSize() );
 		this->mSession->dispatchProtocolMessage(MessageString);
 	};

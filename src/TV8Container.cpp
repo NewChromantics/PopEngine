@@ -153,7 +153,7 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	//	todo: abstract context to be per-script
 	CreateContext();
 
-	//CreateInspector();
+	CreateInspector();
 }
 
 void TV8Container::ProcessJobs(std::function<bool()> IsRunning)
@@ -203,8 +203,9 @@ void TV8Container::CreateContext()
 
     //  always need a handle scope to collect locals
 	v8::HandleScope handle_scope(isolate);
+	
 	Local<Context> ContextLocal = v8::Context::New(isolate);
-    
+	
     Context::Scope context_scope( ContextLocal );
     
 	//  save the persistent	handle
@@ -245,13 +246,19 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Sourc
 	{
 		TryCatch trycatch(Isolate);
 		
-		auto OriginStr = v8::GetString(*Isolate, std::string("file://")+SourceFilename );
+		auto OriginStr = v8::GetString(*Isolate, /*std::string("file://")+*/SourceFilename );
 		auto OriginRow = v8::Integer::New( Isolate, 0 );
 		auto OriginCol = v8::Integer::New( Isolate, 0 );
 		auto Cors = v8::Boolean::New( Isolate, true );
-		v8::ScriptOrigin Origin( OriginStr, OriginRow, OriginCol, Cors );
+		static int ScriptIdCounter = 1;
+		auto ScriptId = v8::Integer::New( Isolate, ScriptIdCounter++ );
+		auto OriginUrl = v8::GetString(*Isolate, std::string("file://")+SourceFilename );
 		
-		auto NewScriptMaybe = Script::Compile(context, Source, &Origin );
+		v8::ScriptOrigin Origin( OriginStr, OriginRow, OriginCol, Cors, ScriptId, OriginUrl );
+		v8::ScriptOrigin* pOrigin = &Origin;
+		//v8::ScriptOrigin* pOrigin = nullptr;
+		
+		auto NewScriptMaybe = Script::Compile(context, Source, pOrigin );
 		if ( NewScriptMaybe.IsEmpty() )
 			throw V8Exception( trycatch, "Compiling script" );
 		NewScript = NewScriptMaybe.ToLocalChecked();
