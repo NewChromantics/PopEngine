@@ -685,12 +685,22 @@ var TFrame = function(OpenglContext)
 	this.ImageData = null;
 	this.OpenglContext = OpenglContext;
 	this.FrameNumber = FrameCounter++;
-	this.Time = Date.now();
+	this.FrameCreationTime = Date.now();
 	
 	//	rects are in Image space(px)
 	this.HeadRect = [0,0,1,1];	//	head area on skeleton (normalised)
 	this.FaceRect = null;	//	detected face
 	this.ClipRect = [0,0,1,1];	//	small image clip rect. Normalised to image(0..1)
+	
+	this.GetTimeMs = function()
+	{
+		//	if the image has a timestamp, use that
+		if ( this.OriginalImage.Time !== undefined )
+			return this.OriginalImage.Time;
+		if ( this.Image.Time !== undefined )
+			return this.Image.Time;
+		return this.FrameCreationTime;
+	}
 	
 	this.GetWidth = function()
 	{
@@ -1075,6 +1085,9 @@ function WindowRender(RenderTarget)
 	DebugStrings.push("Output " + OutputFrameRate.toFixed(2) + "fps");
 	DebugStrings.push("Processing x" + CurrentFrames.length );
 	
+	let LastFrameTime = LastFrame ? LastFrame.GetTimeMs() : "<no last frame>";
+	DebugStrings.push("Last frame time: " + LastFrameTime );
+	
 	let ImageHeapMb = GetImageHeapSize() / 1024 / 1024;
 	let ImageHeapCount = GetImageHeapCount();
 	DebugStrings.push("Image Heap " + ImageHeapMb.toFixed(2) + "mb x" + ImageHeapCount );
@@ -1131,8 +1144,17 @@ function OnFrameCompleted(Frame)
 	{
 		if ( NoFaceSendLast )
 		{
-			//	gr: if we set new face score at zero then it gets sent through kalman filter, so big score visualises but doesnt alter
-			Frame.CopyFace(LastFrame,99);
+			try
+			{
+				//	gr: if we set new face score at zero then it gets sent through kalman filter, so big score visualises but doesnt alter
+				Frame.CopyFace(LastFrame,99);
+			}
+			catch(e)
+			{
+				if ( FailIfNoFace )
+					throw e;
+				Debug(e);
+			}
 		}
 	}
 	
@@ -1633,6 +1655,8 @@ function OnNewVideoFrame(Media)
 
 async function ProcessVideoFrame(FrameImage,OnCompleted)
 {
+	Debug("Got video frame timestmap: " + FrameImage.Time);
+	
 	FrameImage.SetLinearFilter(true);
 	if ( !ProcessVideoFrames )
 	{
@@ -1897,7 +1921,7 @@ function GetSkeletonJson(Frame,Pretty)
 	KeypointSkeleton.FaceRect = Frame.FaceRect;
 	KeypointSkeleton.score = 0.4567;
 	KeypointSkeleton.keypoints = [];
-	KeypointSkeleton.Time = Frame.Time;
+	KeypointSkeleton.Time = Frame.GetTimeMs();
 
 	//	get keypoints
 	Frame.EnumKeypoints( EnumKeypoint );

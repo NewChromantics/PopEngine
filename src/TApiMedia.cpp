@@ -16,6 +16,8 @@ const char MediaSource_TypeName[] = "MediaSource";
 const char Free_FunctionName[] = "Free";
 const char GetNextFrame_FunctionName[] = "GetNextFrame";
 
+const char FrameTimestampKey[] = "Time";
+
 void ApiMedia::Bind(TV8Container& Container)
 {
 	Container.BindObjectType("Media", TMediaWrapper::CreateTemplate, nullptr );
@@ -405,7 +407,15 @@ v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(const v8::CallbackInfo& P
 		Image.SetPixelBuffer(PixelBuffer);
 
 	auto ImageHandle = Image.GetHandle();
-
+	auto FrameTime = FramePacket->GetStartTime();
+	if ( FrameTime.IsValid() )
+	{
+		auto FrameTimeDouble = FrameTime.mTime;
+		auto FrameTimeKey = v8::GetString( Params.GetIsolate(), FrameTimestampKey );
+		auto FrameTimeValue = v8::Number::New( &Params.GetIsolate(), FrameTimeDouble );
+		ImageHandle->Set( FrameTimeKey, FrameTimeValue );
+	}
+	
 	return ImageHandle;
 }
 
