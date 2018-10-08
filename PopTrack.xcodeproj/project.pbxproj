@@ -109,6 +109,8 @@
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
+		BFEA8EEC2159282B00FA99CF /* duktape.c in Sources */ = {isa = PBXBuildFile; fileRef = BFEA8EEB2159282B00FA99CF /* duktape.c */; };
+		BFEA8EF121592A2E00FA99CF /* Js_Duktape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFEA8EEF21592A2D00FA99CF /* Js_Duktape.cpp */; };
 		BFFFA8142147D88700FA3A8B /* v8Minimal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFFA8132147D88600FA3A8B /* v8Minimal.cpp */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
@@ -332,6 +334,11 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
+		BFEA8EE92159282B00FA99CF /* duktape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = duktape.h; sourceTree = "<group>"; };
+		BFEA8EEA2159282B00FA99CF /* duk_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = duk_config.h; sourceTree = "<group>"; };
+		BFEA8EEB2159282B00FA99CF /* duktape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = duktape.c; sourceTree = "<group>"; };
+		BFEA8EEF21592A2D00FA99CF /* Js_Duktape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Js_Duktape.cpp; path = src/Js_Duktape.cpp; sourceTree = "<group>"; };
+		BFEA8EF021592A2E00FA99CF /* Js_Duktape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Js_Duktape.h; path = src/Js_Duktape.h; sourceTree = "<group>"; };
 		BFFFA8132147D88600FA3A8B /* v8Minimal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v8Minimal.cpp; path = src/v8Minimal.cpp; sourceTree = "<group>"; };
 		BFFFA8152147D8AF00FA3A8B /* v8Minimal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = v8Minimal.h; path = src/v8Minimal.h; sourceTree = "<group>"; };
 		EB0EA5622110AAF9008D6DAA /* Data_dlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_dlib; sourceTree = "<group>"; };
@@ -602,6 +609,17 @@
 			path = src/PopMovie;
 			sourceTree = SOURCE_ROOT;
 		};
+		BFEA8EE82159281200FA99CF /* Duktape */ = {
+			isa = PBXGroup;
+			children = (
+				BFEA8EEA2159282B00FA99CF /* duk_config.h */,
+				BFEA8EEB2159282B00FA99CF /* duktape.c */,
+				BFEA8EE92159282B00FA99CF /* duktape.h */,
+			);
+			name = Duktape;
+			path = "../PopPi/Source/duktape-2.3.0/src";
+			sourceTree = SOURCE_ROOT;
+		};
 		EB0EA5672110B8D6008D6DAA /* Dlib */ = {
 			isa = PBXGroup;
 			children = (
@@ -623,6 +641,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BFEA8EE82159281200FA99CF /* Duktape */,
 				EB0EA5672110B8D6008D6DAA /* Dlib */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
 				BF321B041B67AD990016E903 /* CoreVideo.framework */,
@@ -673,6 +692,8 @@
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
+				BFEA8EEF21592A2D00FA99CF /* Js_Duktape.cpp */,
+				BFEA8EF021592A2E00FA99CF /* Js_Duktape.h */,
 				B7938A8E21402CE600FD8DBE /* TApiFile.cpp */,
 				B7938A8F21402CE600FD8DBE /* TApiFile.h */,
 				BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */,
@@ -919,6 +940,7 @@
 				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
+				BFEA8EEC2159282B00FA99CF /* duktape.c in Sources */,
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
@@ -934,6 +956,7 @@
 				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
 				BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */,
+				BFEA8EF121592A2E00FA99CF /* Js_Duktape.cpp in Sources */,
 				BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */,
 				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,

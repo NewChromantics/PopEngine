@@ -36,10 +36,33 @@ TPopTrack& PopTrack::GetApp()
 	return *Private::gOpenglApp;
 }
 
+#include "Js_Duktape.h"
 
+void Js::OnAssert()
+{
+	std::Debug << "some assert" << std::endl;
+}
 
 TPopAppError::Type PopMain()
 {
+	std::function<void(const char*)> OnError = [&](const char* String)
+	{
+		std::Debug << String << std::endl;
+		return 0;
+	};
+
+	std::function<void(int,int,const char*)> Print = [&](int x,int y,const char* String)
+	{
+		std::Debug << String << std::endl;
+		return 0;
+	};
+	Js::TContext::mPrint = &Print;
+	(*Js::TContext::mPrint)(0,0,"One");
+	Js::TContext Context( OnError );
+	Context.Execute("print('hello!');");
+	
+	return TPopAppError::Success;
+	
 	auto& App = PopTrack::GetApp();
 	
 #if !defined(TARGET_OSX_BUNDLE)

@@ -155,7 +155,7 @@ class FunctionCallbackArguments;
 class GlobalHandles;
 
 namespace wasm {
-class NativeModule;
+class CompilationResultResolver;
 class StreamingDecoder;
 }  // namespace wasm
 
@@ -203,7 +203,7 @@ struct SmiTagging<4> {
   V8_INLINE static internal::Object* IntToSmi(int value) {
     return internal::IntToSmi<kSmiShiftSize>(value);
   }
-  V8_INLINE static constexpr bool IsValidSmi(intptr_t value) {
+  V8_INLINE static bool IsValidSmi(intptr_t value) {
     // To be representable as an tagged small integer, the two
     // most-significant bits of 'value' must be either 00 or 11 due to
     // sign-extension. To check this we add 01 to the two
@@ -233,7 +233,7 @@ struct SmiTagging<8> {
   V8_INLINE static internal::Object* IntToSmi(int value) {
     return internal::IntToSmi<kSmiShiftSize>(value);
   }
-  V8_INLINE static constexpr bool IsValidSmi(intptr_t value) {
+  V8_INLINE static bool IsValidSmi(intptr_t value) {
     // To be representable as a long smi, the value must be a 32-bit integer.
     return (value == static_cast<int32_t>(value));
   }
@@ -1747,11 +1747,6 @@ class V8_EXPORT Message {
  public:
   Local<String> Get() const;
 
-  /**
-   * Return the isolate to which the Message belongs.
-   */
-  Isolate* GetIsolate() const;
-
   V8_DEPRECATED("Use maybe version", Local<String> GetSourceLine() const);
   V8_WARN_UNUSED_RESULT MaybeLocal<String> GetSourceLine(
       Local<Context> context) const;
@@ -3000,11 +2995,6 @@ class V8_EXPORT String : public Name {
   bool CanMakeExternal();
 
   /**
-   * Returns true if the strings values are equal. Same as JS ==/===.
-   */
-  bool StringEquals(Local<String> str);
-
-  /**
    * Converts an object to a UTF-8-encoded character array.  Useful if
    * you want to print the object.  If conversion to a string fails
    * (e.g. due to an exception in the toString() method of the object)
@@ -3058,12 +3048,6 @@ class V8_EXPORT String : public Name {
   void VerifyExternalStringResourceBase(ExternalStringResourceBase* v,
                                         Encoding encoding) const;
   void VerifyExternalStringResource(ExternalStringResource* val) const;
-  ExternalStringResource* GetExternalStringResourceSlow() const;
-  ExternalStringResourceBase* GetExternalStringResourceBaseSlow(
-      String::Encoding* encoding_out) const;
-  const ExternalOneByteStringResource* GetExternalOneByteStringResourceSlow()
-      const;
-
   static void CheckCast(v8::Value* obj);
 };
 
@@ -4391,9 +4375,9 @@ class V8_EXPORT WasmCompiledModule : public Object {
  public:
   typedef std::pair<std::unique_ptr<const uint8_t[]>, size_t> SerializedModule;
 
-// The COMMA macro allows us to use ',' inside of the V8_DEPRECATED macro.
+// The COMMA macro allows us to use ',' inside of the V8_DEPRECATE_SOON macro.
 #define COMMA ,
-  V8_DEPRECATED(
+  V8_DEPRECATE_SOON(
       "Use BufferReference.",
       typedef std::pair<const uint8_t * COMMA size_t> CallerOwnedBuffer);
 #undef COMMA
@@ -4407,10 +4391,10 @@ class V8_EXPORT WasmCompiledModule : public Object {
     BufferReference(const uint8_t* start, size_t size)
         : start(start), size(size) {}
     // Temporarily allow conversion to and from CallerOwnedBuffer.
-    V8_DEPRECATED(
+    V8_DEPRECATE_SOON(
         "Use BufferReference directly.",
         inline BufferReference(CallerOwnedBuffer));  // NOLINT(runtime/explicit)
-    V8_DEPRECATED("Use BufferReference directly.",
+    V8_DEPRECATE_SOON("Use BufferReference directly.",
                       inline operator CallerOwnedBuffer());
   };
 
@@ -4427,17 +4411,13 @@ class V8_EXPORT WasmCompiledModule : public Object {
     TransferrableModule& operator=(const TransferrableModule& src) = delete;
 
    private:
-    typedef std::shared_ptr<internal::wasm::NativeModule> SharedModule;
     typedef std::pair<std::unique_ptr<const uint8_t[]>, size_t> OwnedBuffer;
     friend class WasmCompiledModule;
-    explicit TransferrableModule(SharedModule shared_module)
-        : shared_module_(std::move(shared_module)) {}
-    TransferrableModule(OwnedBuffer serialized, OwnedBuffer bytes)
-        : serialized_(std::move(serialized)), wire_bytes_(std::move(bytes)) {}
+    TransferrableModule(OwnedBuffer code, OwnedBuffer bytes)
+        : compiled_code(std::move(code)), wire_bytes(std::move(bytes)) {}
 
-    SharedModule shared_module_;
-    OwnedBuffer serialized_ = {nullptr, 0};
-    OwnedBuffer wire_bytes_ = {nullptr, 0};
+    OwnedBuffer compiled_code = {nullptr, 0};
+    OwnedBuffer wire_bytes = {nullptr, 0};
   };
 
   /**
@@ -4458,7 +4438,7 @@ class V8_EXPORT WasmCompiledModule : public Object {
    * Get the wasm-encoded bytes that were used to compile this module.
    */
   BufferReference GetWasmWireBytesRef();
-  V8_DEPRECATED("Use GetWasmWireBytesRef version.",
+  V8_DEPRECATE_SOON("Use GetWasmWireBytesRef version.",
                     Local<String> GetWasmWireBytes());
 
   /**
@@ -4492,7 +4472,7 @@ class V8_EXPORT WasmCompiledModule : public Object {
   static void CheckCast(Value* obj);
 };
 
-// TODO(clemensh): Remove after M70 branch.
+// TODO(clemensh): Remove after M69 branch.
 WasmCompiledModule::BufferReference::BufferReference(
     WasmCompiledModule::CallerOwnedBuffer buf)
     : BufferReference(buf.first, buf.second) {}
@@ -6382,8 +6362,9 @@ class V8_EXPORT AccessorSignature : public Data {
 
 
 // --- Extensions ---
-V8_DEPRECATE_SOON("Implementation detail", class)
-V8_EXPORT ExternalOneByteStringResourceImpl
+V8_DEPRECATE_SOON("Implementation detail",
+                  class ExternalOneByteStringResourceImpl);
+class V8_EXPORT ExternalOneByteStringResourceImpl
     : public String::ExternalOneByteStringResource {
  public:
   ExternalOneByteStringResourceImpl() : data_(0), length_(0) {}
@@ -6767,9 +6748,6 @@ typedef void (*ApiImplementationCallback)(const FunctionCallbackInfo<Value>&);
 // --- Callback for WebAssembly.compileStreaming ---
 typedef void (*WasmStreamingCallback)(const FunctionCallbackInfo<Value>&);
 
-// --- Callback for checking if WebAssembly threads are enabled ---
-typedef bool (*WasmThreadsEnabledCallback)(Local<Context> context);
-
 // --- Garbage Collection Callbacks ---
 
 /**
@@ -6842,7 +6820,6 @@ class V8_EXPORT HeapStatistics {
   size_t used_heap_size() { return used_heap_size_; }
   size_t heap_size_limit() { return heap_size_limit_; }
   size_t malloced_memory() { return malloced_memory_; }
-  size_t external_memory() { return external_memory_; }
   size_t peak_malloced_memory() { return peak_malloced_memory_; }
   size_t number_of_native_contexts() { return number_of_native_contexts_; }
   size_t number_of_detached_contexts() { return number_of_detached_contexts_; }
@@ -6861,7 +6838,6 @@ class V8_EXPORT HeapStatistics {
   size_t used_heap_size_;
   size_t heap_size_limit_;
   size_t malloced_memory_;
-  size_t external_memory_;
   size_t peak_malloced_memory_;
   bool does_zap_garbage_;
   size_t number_of_native_contexts_;
@@ -7108,8 +7084,6 @@ class V8_EXPORT EmbedderHeapTracer {
     ForceCompletionAction force_completion;
   };
 
-  virtual ~EmbedderHeapTracer() = default;
-
   /**
    * Called by v8 to register internal fields of found wrappers.
    *
@@ -7141,18 +7115,7 @@ class V8_EXPORT EmbedderHeapTracer {
    * Returns true if there no more tracing work to be done (see AdvanceTracing)
    * and false otherwise.
    */
-  virtual bool IsTracingDone() {
-// TODO(delphick): When NumberOfWrappersToTrace is removed, this should be
-// replaced with: return true;
-#if __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated"
-#endif
-    return NumberOfWrappersToTrace() == 0;
-#if __clang__
-#pragma clang diagnostic pop
-#endif
-  }
+  virtual bool IsTracingDone() { return NumberOfWrappersToTrace() == 0; }
 
   /**
    * Called at the end of a GC cycle.
@@ -7196,11 +7159,11 @@ class V8_EXPORT EmbedderHeapTracer {
    * Returns the number of wrappers that are still to be traced by the embedder.
    */
   V8_DEPRECATE_SOON("Use IsTracingDone",
-                    virtual size_t NumberOfWrappersToTrace()) {
-    return 0;
-  };
+                    virtual size_t NumberOfWrappersToTrace() { return 0; });
 
  protected:
+  virtual ~EmbedderHeapTracer() = default;
+
   v8::Isolate* isolate_ = nullptr;
 
   friend class internal::LocalEmbedderHeapTracer;
@@ -8300,8 +8263,6 @@ class V8_EXPORT Isolate {
   void SetWasmCompileStreamingCallback(ApiImplementationCallback callback);
 
   void SetWasmStreamingCallback(WasmStreamingCallback callback);
-
-  void SetWasmThreadsEnabledCallback(WasmThreadsEnabledCallback callback);
 
   /**
   * Check if V8 is dead and therefore unusable.  This is the case after
@@ -9535,7 +9496,7 @@ class Internals {
     return PlatformSmiTagging::IntToSmi(value);
   }
 
-  V8_INLINE static constexpr bool IsValidSmi(intptr_t value) {
+  V8_INLINE static bool IsValidSmi(intptr_t value) {
     return PlatformSmiTagging::IsValidSmi(value);
   }
 
@@ -10209,13 +10170,12 @@ String::ExternalStringResource* String::GetExternalStringResource() const {
   typedef internal::Object O;
   typedef internal::Internals I;
   O* obj = *reinterpret_cast<O* const*>(this);
-
-  ExternalStringResource* result;
+  String::ExternalStringResource* result;
   if (I::IsExternalTwoByteString(I::GetInstanceType(obj))) {
     void* value = I::ReadField<void*>(obj, I::kStringResourceOffset);
     result = reinterpret_cast<String::ExternalStringResource*>(value);
   } else {
-    result = GetExternalStringResourceSlow();
+    result = NULL;
   }
 #ifdef V8_ENABLE_CHECKS
   VerifyExternalStringResource(result);
@@ -10231,16 +10191,14 @@ String::ExternalStringResourceBase* String::GetExternalStringResourceBase(
   O* obj = *reinterpret_cast<O* const*>(this);
   int type = I::GetInstanceType(obj) & I::kFullStringRepresentationMask;
   *encoding_out = static_cast<Encoding>(type & I::kStringEncodingMask);
-  ExternalStringResourceBase* resource;
+  ExternalStringResourceBase* resource = NULL;
   if (type == I::kExternalOneByteRepresentationTag ||
       type == I::kExternalTwoByteRepresentationTag) {
     void* value = I::ReadField<void*>(obj, I::kStringResourceOffset);
     resource = static_cast<ExternalStringResourceBase*>(value);
-  } else {
-    resource = GetExternalStringResourceBaseSlow(encoding_out);
   }
 #ifdef V8_ENABLE_CHECKS
-  VerifyExternalStringResourceBase(resource, *encoding_out);
+    VerifyExternalStringResourceBase(resource, *encoding_out);
 #endif
   return resource;
 }
