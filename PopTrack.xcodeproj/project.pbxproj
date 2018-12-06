@@ -11,6 +11,7 @@
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611B21B98A46007014EF /* JsCoreInstance.cpp */; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
+		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
 		BF1E05AE2117328300B56DE4 /* TV8ObjectWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */; };
 		BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
@@ -113,7 +114,6 @@
 		EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */; };
 		EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA66211333020014E998 /* SoySocket.cpp */; };
-		EBC8FA6B2113501F0014E998 /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA692113501F0014E998 /* SoyWebSocket.cpp */; };
 		EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */; };
 		FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
@@ -159,6 +159,8 @@
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		BF19611B21B98A46007014EF /* JsCoreInstance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreInstance.cpp; path = src/JsCoreInstance.cpp; sourceTree = "<group>"; };
 		BF19611C21B98A46007014EF /* JsCoreInstance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreInstance.h; path = src/JsCoreInstance.h; sourceTree = "<group>"; };
+		BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyWebSocket.cpp; path = src/SoyWebSocket.cpp; sourceTree = "<group>"; };
+		BF19612021B9ADD9007014EF /* SoyWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyWebSocket.h; path = src/SoyWebSocket.h; sourceTree = "<group>"; };
 		BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8ObjectWrapper.cpp; path = src/TV8ObjectWrapper.cpp; sourceTree = "<group>"; };
 		BF1E05AD2117328300B56DE4 /* TV8ObjectWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8ObjectWrapper.h; path = src/TV8ObjectWrapper.h; sourceTree = "<group>"; };
 		BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpengl.cpp; path = src/TApiOpengl.cpp; sourceTree = "<group>"; };
@@ -348,8 +350,6 @@
 		EBC8FA6321132D300014E998 /* TProtocolWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TProtocolWebSocket.h; path = src/TProtocolWebSocket.h; sourceTree = "<group>"; };
 		EBC8FA66211333020014E998 /* SoySocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySocket.cpp; path = src/SoySocket.cpp; sourceTree = "<group>"; };
 		EBC8FA67211333020014E998 /* SoySocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySocket.h; path = src/SoySocket.h; sourceTree = "<group>"; };
-		EBC8FA692113501F0014E998 /* SoyWebSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyWebSocket.cpp; path = src/SoyWebSocket.cpp; sourceTree = "<group>"; };
-		EBC8FA6A2113501F0014E998 /* SoyWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyWebSocket.h; path = src/SoyWebSocket.h; sourceTree = "<group>"; };
 		EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHttp.cpp; path = src/SoyHttp.cpp; sourceTree = "<group>"; };
 		EBC8FA6D2113514B0014E998 /* SoyHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHttp.h; path = src/SoyHttp.h; sourceTree = "<group>"; };
 		FB50C04A1A6ABD480011A9D9 /* array.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = array.hpp; path = src/array.hpp; sourceTree = "<group>"; };
@@ -665,8 +665,6 @@
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
 				BF689ACC20D6D3AE000BC812 /* SoyOpenglWindow.h */,
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */,
-				EBC8FA692113501F0014E998 /* SoyWebSocket.cpp */,
-				EBC8FA6A2113501F0014E998 /* SoyWebSocket.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
@@ -808,6 +806,8 @@
 				BFAD33DC1B6406D500D3E7A6 /* SoyVideoDevice.h */,
 				BF689ADA20D6DAC0000BC812 /* SoyWave.cpp */,
 				BF689ADB20D6DAC0000BC812 /* SoyWave.h */,
+				BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */,
+				BF19612021B9ADD9007014EF /* SoyWebSocket.h */,
 				BFA297231B80E8DE003B91F6 /* SoyWindow.h */,
 				BFA297241B80EF1C003B91F6 /* SoyWindow.mm */,
 				FB5702CA1A5FDC8800449FF3 /* stb */,
@@ -941,6 +941,7 @@
 				BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */,
 				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
 				BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */,
+				BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */,
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
 				BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */,
@@ -954,7 +955,6 @@
 				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,
 				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
 				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
-				EBC8FA6B2113501F0014E998 /* SoyWebSocket.cpp in Sources */,
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */,
