@@ -6,6 +6,7 @@
 #include "SoyAssert.h"
 #include "Array.hpp"
 #include "HeapArray.hpp"
+#include "TBind.h"
 
 //	gr: the diffs are external vs internal as well as API changes
 //#define V8_VERSION	5
@@ -172,7 +173,7 @@ inline std::shared_ptr<V8Storage<TYPE>> v8::GetPersistent(v8::Isolate& Isolate,L
 }
 
 
-class v8::CallbackInfo
+class v8::CallbackInfo : public Bind::TCallbackInfo
 {
 public:
 	CallbackInfo(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container) :
@@ -189,6 +190,9 @@ public:
 	
 	std::string		GetResolvedFilename(const std::string& Filename) const;
 	
+	virtual size_t		GetArgumentCount() const override	{	return mParams.Length();	}
+	virtual std::string	GetArgumentString(size_t Index) const override;
+
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
 	TV8Container&								mContainer;

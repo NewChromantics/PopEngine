@@ -82,32 +82,20 @@ static Local<Value> Debug(CallbackInfo& Params)
 	return Undefined(Params.mIsolate);
 }
 
-static JSValueRef Debug2(JsCore::TCallbackInfo& Params)
+static JSValueRef Debug2(Bind::TCallbackInfo& Params)
 {
-	/*
-	auto& args = Params.mParams;
-	
-	if (args.Length() < 1)
+	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
+	if (Params.GetArgumentCount() < 1)
 	{
 		throw Soy::AssertException("log() with no args");
 	}
 	
-	HandleScope scope(Params.mIsolate);
-	for ( auto i=0;	i<args.Length();	i++ )
+	for ( auto i=0;	i<Params.GetArgumentCount();	i++ )
 	{
-		auto arg = args[i];
-		String::Utf8Value value(arg);
-		std::Debug << *value << std::endl;
-	}
-	
-	return Undefined(Params.mIsolate);
-	 */
-	for ( auto i=0;	i<Params.mArguments.GetSize();	i++ )
-	{
-		auto Arg = JsCore::HandleToString( Params.mContext, Params.mArguments[i] );
+		auto Arg = Params.GetArgumentString(i);
 		std::Debug << Arg << std::endl;
 	}
-	return JSValueMakeUndefined( Params.mContext );
+	return JSValueMakeUndefined( ParamsJs.mContext );
 }
 
 
@@ -348,7 +336,7 @@ void ApiCommon::Bind(TV8Container& Container)
 void ApiCommon::Bind(JsCore::TContext& Container)
 {
 	//  load api's before script & executions
-	Container.BindGlobalFunction<Debug_FunctionName>(Debug2);
+	Container.BindGlobalFunction<Debug_FunctionName>( Debug2 );
 	/*
 	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
 	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);

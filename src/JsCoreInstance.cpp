@@ -186,3 +186,9 @@ JsCore::TInstance::
 */
 
 
+std::string JsCore::TCallbackInfo::GetArgumentString(size_t Index) const
+{
+	auto Handle = mArguments[Index];
+	auto String = JsCore::HandleToString( mContext, Handle );
+	return String;
+}

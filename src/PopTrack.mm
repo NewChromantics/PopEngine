@@ -48,6 +48,7 @@ TPopAppError::Type PopMain()
 	App.mConsoleApp.WaitForExit();
 #endif
 
+	
 	return TPopAppError::Success;
 }
 

@@ -4,6 +4,7 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <memory>
 #include "HeapArray.hpp"
+#include "TBind.h"
 
 
 //	https://karhm.com/JavaScriptCore_C_API/
@@ -41,7 +42,7 @@ public:
 	void				LoadScript(const std::string& Source,const std::string& Filename);
 	
 	template<const char* FunctionName>
-	void				BindGlobalFunction(std::function<JSValueRef(TCallbackInfo&)> Function);
+	void				BindGlobalFunction(std::function<JSValueRef(Bind::TCallbackInfo&)> Function);
 
 private:
 	void				ThrowException(JSValueRef ExceptionHandle);	//	throws if value is not undefined
@@ -54,8 +55,12 @@ private:
 };
 
 
-class JsCore::TCallbackInfo
+class JsCore::TCallbackInfo : public Bind::TCallbackInfo
 {
+public:
+	virtual size_t		GetArgumentCount() const override	{	return mArguments.GetSize();	}
+	virtual std::string	GetArgumentString(size_t Index) const override;
+
 public:
 	JSValueRef			mThis;
 	Array<JSValueRef>	mArguments;
@@ -65,7 +70,7 @@ public:
 
 
 template<const char* FunctionName>
-inline void JsCore::TContext::BindGlobalFunction(std::function<JSValueRef(TCallbackInfo&)> Function)
+inline void JsCore::TContext::BindGlobalFunction(std::function<JSValueRef(Bind::TCallbackInfo&)> Function)
 {
 	static std::function<JSValueRef(TCallbackInfo&)> FunctionCache = Function;
 	static TContext* ContextCache = nullptr;
