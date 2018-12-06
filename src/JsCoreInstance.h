@@ -17,22 +17,30 @@ namespace JsCore
 class JsCore::TInstance
 {
 public:
-	TInstance(const std::string& RootDirectory,const std::string& BootupFilename);
+	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename);
 	~TInstance();
 	
 	std::shared_ptr<TContext>	CreateContext();
 	
 private:
 	JSContextGroupRef	mContextGroup;
-	Array<std::shared_ptr<TContext>>	mContexts;
+	std::string			mRootDirectory;
+	
+	std::shared_ptr<TContext>	mContext;
 };
 
 class JsCore::TContext
 {
 public:
-	TContext(JSGlobalContextRef Context);
+	TContext(JSGlobalContextRef Context,const std::string& RootDirectory);
 	~TContext();
+	
+	void				LoadScript(const std::string& Source,const std::string& Filename);
+	
+private:
+	void				ThrowException(JSValueRef ExceptionHandle);	//	throws if value is not undefined
 	
 private:
 	JSGlobalContextRef	mContext;
+	std::string			mRootDirectory;
 };
