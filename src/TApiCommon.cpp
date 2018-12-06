@@ -1,11 +1,11 @@
 #include "TApiCommon.h"
-#include <SoyDebug.h>
-#include <SoyImage.h>
-#include <SoyFilesystem.h>
-#include <SoyStream.h>
-#include <SoyOpengl.h>
-#include <SoyOpenglContext.h>
-#include <SoyMedia.h>
+#include "SoyDebug.h"
+#include "SoyImage.h"
+#include "SoyFilesystem.h"
+#include "SoyStream.h"
+#include "SoyOpengl.h"
+#include "SoyOpenglContext.h"
+#include "SoyMedia.h"
 
 using namespace v8;
 

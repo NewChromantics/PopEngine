@@ -1,6 +1,7 @@
 #pragma once
-#include <SoyTypes.h>
-#include <SoyRef.h>
+#include "SoyTypes.h"
+#include "SoyRef.h"
+#include "SoyOpenglContext.h"
 
 
 class TChannel;
@@ -18,7 +19,6 @@ namespace TPopAppError
 }
 
 
-#include <SoyOpenglContext.h>
 
 class PopMainThread : public PopWorker::TJobQueue, public PopWorker::TContext
 {

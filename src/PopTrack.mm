@@ -1,9 +1,9 @@
 #include "PopTrack.h"
-#include <SoyDebug.h>
-#include <SoyApp.h>
-#include <PopMain.h>
+#include "SoyDebug.h"
+#include "SoyApp.h"
+#include "PopMain.h"
 #include "TV8Instance.h"
-#include <SoyFileSystem.h>
+#include "SoyFileSystem.h"
 
 namespace PopTrack
 {

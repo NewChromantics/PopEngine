@@ -1,7 +1,7 @@
 #include "TApiWebsocket.h"
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
-#include <SoySocket.h>
+#include "SoySocket.h"
 
 using namespace v8;
 

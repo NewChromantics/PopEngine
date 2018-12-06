@@ -1,8 +1,8 @@
 #pragma once
 #include "TV8Container.h"
 #include "TV8ObjectWrapper.h"
-#include <SoyPixels.h>
-#include <SoyVector.h>
+#include "SoyPixels.h"
+#include "SoyVector.h"
 
 class SoyPixels;
 class SoyPixelsImpl;

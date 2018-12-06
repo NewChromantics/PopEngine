@@ -1,6 +1,6 @@
 #include "TV8Inspector.h"
-#include <SoyJson.h>
-#include <SoyFilesystem.h>
+#include "SoyJson.h"
+#include "SoyFilesystem.h"
 
 using namespace v8_inspector;
 

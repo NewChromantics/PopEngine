@@ -1,9 +1,9 @@
 #pragma once
 
-#include <SoyTypes.h>
-#include <SoyThread.h>
-#include <SoyOpenglContext.h>
-#include <SoyWindow.h>
+#include "SoyTypes.h"
+#include "SoyThread.h"
+#include "SoyOpenglContext.h"
+#include "SoyWindow.h"
 
 #if __has_feature(objc_arc)
 #error expected ARC off, if we NEED arc, then the NSWindow & view need to go in a pure obj-c wrapper to auto retain the refcounted object

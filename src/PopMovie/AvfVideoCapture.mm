@@ -2,15 +2,15 @@
 #import <CoreVideo/CoreVideo.h>
 #import <AVFoundation/AVFoundation.h>
 //#import <Accelerate/Accelerate.h>
-#include <SoyDebug.h>
-#include <SoyScope.h>
-#include <SoyString.h>
-#include <SortArray.h>
-#include <RemoteArray.h>
-#include <SoyPixels.h>
+#include "SoyDebug.h"
+#include "SoyScope.h"
+#include "SoyString.h"
+#include "SortArray.h"
+#include "RemoteArray.h"
+#include "SoyPixels.h"
 #include "AvfPixelBuffer.h"
 #include "SoyAvf.h"
-#include <SoyOpenglContext.h>
+#include "SoyOpenglContext.h"
 
 namespace AvfCapture
 {

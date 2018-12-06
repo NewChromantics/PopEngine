@@ -6,15 +6,15 @@
 #include <thread>
 #include <map>
 
-#include <SoyEvent.h>
-#include <SoyThread.h>
+#include "SoyEvent.h"
+#include "SoyThread.h"
 
 #if defined(__OBJC__)
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 #endif
 
-#include <SoyMedia.h>
+#include "SoyMedia.h"
 #include "AvfVideoCapture.h"
 
 class AvfMovieDecoder;

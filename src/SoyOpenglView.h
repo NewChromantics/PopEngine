@@ -1,8 +1,8 @@
 #if defined(__OBJC__)
 #import <Cocoa/Cocoa.h>
 #endif
-#include <SoyOpenglContext.h>
-#include <SoyWindow.h>
+#include "SoyOpenglContext.h"
+#include "SoyWindow.h"
 
 class TOpenglView;
 class TOpenglParams;

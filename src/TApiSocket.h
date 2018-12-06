@@ -3,8 +3,8 @@
 #include "SoyOpenglWindow.h"
 
 //#include "TPopServerThread.h"
-#include <SoyRef.h>
-#include <SoyStream.h>
+#include "SoyRef.h"
+#include "SoyStream.h"
 #include "SoySocketStream.h"
 
 

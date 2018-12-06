@@ -8,9 +8,9 @@
 
 //#include "PopUnity.h"
 //#include "PopMovieDecoder.h"
-#include <SoyEvent.h>
-#include <SoyThread.h>
-#include <SoyMedia.h>
+#include "SoyEvent.h"
+#include "SoyThread.h"
+#include "SoyMedia.h"
 
 #include <CoreVideo/CoreVideo.h>
 #include <CoreMedia/CoreMedia.h>

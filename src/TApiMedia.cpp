@@ -1,7 +1,7 @@
 #include "TApiMedia.h"
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
-#include <SoyFilesystem.h>
+#include "SoyFilesystem.h"
 
 #include "PopMovie/AvfVideoCapture.h"
 #include "PopMovie/AvfMovieDecoder.h"

@@ -1,5 +1,5 @@
 #include "PopMain.h"
-#include <SoyDebug.h>
+#include "SoyDebug.h"
 /*
 #include "TProtocolCli.h"
 #include "TProtocolHttp.h"
@@ -12,7 +12,7 @@
 #include "TChannelFork.h"
 #include "UnitTest++/src/UnitTest++.h"
  */
-#include <SoyApp.h>
+#include "SoyApp.h"
 #include <fstream>
 #include <regex>
 
@@ -23,7 +23,7 @@
 //	include SoyEvent unit test
 //	gr: need to improve this
 //#include <SoyEvent.cpp>
-#include <SoyTest.cpp>
+//#include "SoyTest.cpp"
 
 /*
 

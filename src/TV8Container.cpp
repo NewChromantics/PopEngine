@@ -1,8 +1,8 @@
 #include "TV8Container.h"
 #include "TV8Inspector.h"
 
-#include <SoyDebug.h>
-#include <SoyFilesystem.h>
+#include "SoyDebug.h"
+#include "SoyFilesystem.h"
 
 
 //	normally I hate using namespace;'s...

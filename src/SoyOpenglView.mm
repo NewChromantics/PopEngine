@@ -1,6 +1,6 @@
 #import "SoyOpenglView.h"
 #import "SoyOpenglWindow.h"
-#include <SoyMath.h>
+#include "SoyMath.h"
 
 
 //	gr; we don't use the CG lock as we have our own internal checks, which should now be locked with our own mutex

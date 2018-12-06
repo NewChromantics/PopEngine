@@ -2,10 +2,10 @@
 //#include "PopTrack.h"
 #include <memory>
 #include <functional>
-#include <SoyTypes.h>
-#include <SoyAssert.h>
-#include <Array.hpp>
-#include <HeapArray.hpp>
+#include "SoyTypes.h"
+#include "SoyAssert.h"
+#include "Array.hpp"
+#include "HeapArray.hpp"
 
 //	gr: the diffs are external vs internal as well as API changes
 //#define V8_VERSION	5

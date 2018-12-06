@@ -1,9 +1,9 @@
 #include "TApiHttp.h"
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
-#include <SoySocket.h>
-#include <SoyFilesystem.h>
-#include <SoyMediaFormat.h>
+#include "SoySocket.h"
+#include "SoyFilesystem.h"
+#include "SoyMediaFormat.h"
 
 using namespace v8;
 

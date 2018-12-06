@@ -1,7 +1,7 @@
 #pragma once
 #include "TV8Container.h"
 
-#include <SoyThread.h>
+#include "SoyThread.h"
 
 //	gr: easy tear up/down instance per script
 //	should really keep an Isolate and recreate contexts

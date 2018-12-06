@@ -1,6 +1,6 @@
 #pragma once
 #include "TV8Container.h"
-#include <SoyOpenCl.h>
+#include "SoyOpenCl.h"
 
 
 namespace ApiOpencl

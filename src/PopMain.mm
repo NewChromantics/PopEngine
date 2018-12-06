@@ -1,6 +1,6 @@
 #include "PopMain.h"
 #import <Cocoa/Cocoa.h>
-#include <SoyFilesystem.h>
+#include "SoyFilesystem.h"
 
 std::shared_ptr<TJobParams> gParams;
 

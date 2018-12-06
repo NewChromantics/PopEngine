@@ -2,16 +2,16 @@
 #import "AvfVideoCapture.h"
 #import "AvfPixelBuffer.h"
 #include <sstream>
-#include <SoyAvf.h>
-#include <SoyOpenglContext.h>
+#include "SoyAvf.h"
+#include "SoyOpenglContext.h"
 
 #if defined(TARGET_IOS)
 #import <OpenGLES/ES2/gl.h>
 #import <CoreVideo/CVOpenGLESTextureCache.h>
 #endif
 
-#include <SoyFilesystem.h>
-
+#include "SoyFilesystem.h"
+#include "SoyTime.h"
 
 //	resolve the best/compatible formats to use, this changes DecodeAsFormat to reflect the actual format
 void GetAvailiblePixelFormats(ArrayBridge<std::pair<id,bool>>&& PixelFormats)
@@ -835,7 +835,7 @@ SoyTime AvfDecoderPlayer::GetCurrentTime()
 	return Time;
 }
 
-#include <SoyTime.h>
+
 
 bool AvfDecoderPlayer::WaitForReaderNextFrame()
 {

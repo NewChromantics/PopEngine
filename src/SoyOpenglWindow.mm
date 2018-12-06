@@ -1,4 +1,4 @@
-#include <SoyOpengl.h>
+#include "SoyOpengl.h"
 #include <Cocoa/Cocoa.h>
 #include "SoyOpenglWindow.h"
 #include "SoyOpenglView.h"

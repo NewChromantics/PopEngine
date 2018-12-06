@@ -1,6 +1,6 @@
 #import "AvfPixelBuffer.h"
-#include <SoyOpengl.h>
-#include <SoyAvf.h>
+#include "SoyOpengl.h"
+#include "SoyAvf.h"
 
 #if defined(ENABLE_METAL)
 #include <SoyMetal.h>
