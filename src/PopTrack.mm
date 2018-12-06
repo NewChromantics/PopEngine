@@ -4,6 +4,7 @@
 #include "PopMain.h"
 #include "TV8Instance.h"
 #include "SoyFileSystem.h"
+#include "JsCoreInstance.h"
 
 namespace PopTrack
 {
@@ -56,7 +57,8 @@ TPopAppError::Type PopMain()
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
 	//	todo: watch for when a file changes and recreate instance
-	mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
+	//mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
+	mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
 
 }
 

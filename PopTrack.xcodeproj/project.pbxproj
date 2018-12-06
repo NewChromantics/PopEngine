@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
+		BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611B21B98A46007014EF /* JsCoreInstance.cpp */; };
+		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF1E05AE2117328300B56DE4 /* TV8ObjectWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */; };
 		BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
@@ -22,10 +24,6 @@
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */ = {isa = PBXBuildFile; fileRef = BF65537D2132BD6B003E4241 /* Data_HelloWorld */; };
 		BF6554022132C4D9003E4241 /* APIDesign.md in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C52132C4D9003E4241 /* APIDesign.md */; };
-		BF6554032132C4D9003E4241 /* DEPS in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C62132C4D9003E4241 /* DEPS */; };
-		BF6554042132C4D9003E4241 /* DEPS in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C82132C4D9003E4241 /* DEPS */; };
-		BF6554052132C4D9003E4241 /* OWNERS in Resources */ = {isa = PBXBuildFile; fileRef = BF6553CC2132C4D9003E4241 /* OWNERS */; };
-		BF6554062132C4D9003E4241 /* PRESUBMIT.py in Resources */ = {isa = PBXBuildFile; fileRef = BF6553CD2132C4D9003E4241 /* PRESUBMIT.py */; };
 		BF6554072132C4D9003E4241 /* lib_wasm_fuzzer_common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DA2132C4D9003E4241 /* lib_wasm_fuzzer_common.a */; };
 		BF6554082132C4D9003E4241 /* libcctest_sources.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DB2132C4D9003E4241 /* libcctest_sources.a */; };
 		BF6554092132C4D9003E4241 /* libfuzzer_support.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DC2132C4D9003E4241 /* libfuzzer_support.a */; };
@@ -151,13 +149,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B71D7B262137FB4000F29EA0 /* SoyDecklink */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SoyDecklink; sourceTree = "<group>"; };
+		B71D7B262137FB4000F29EA0 /* SoyDecklink */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SoyDecklink; sourceTree = "<group>"; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
 		B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SoyDecklink.cpp; sourceTree = "<group>"; };
 		B71D7B2D2137FE9200F29EA0 /* SoyAutoReleasePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyAutoReleasePtr.h; path = src/SoyAutoReleasePtr.h; sourceTree = "<group>"; };
 		B71D7B3221380D6B00F29EA0 /* SoyCFString.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyCFString.h; path = src/SoyCFString.h; sourceTree = "<group>"; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
+		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		BF19611B21B98A46007014EF /* JsCoreInstance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreInstance.cpp; path = src/JsCoreInstance.cpp; sourceTree = "<group>"; };
+		BF19611C21B98A46007014EF /* JsCoreInstance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreInstance.h; path = src/JsCoreInstance.h; sourceTree = "<group>"; };
 		BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8ObjectWrapper.cpp; path = src/TV8ObjectWrapper.cpp; sourceTree = "<group>"; };
 		BF1E05AD2117328300B56DE4 /* TV8ObjectWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8ObjectWrapper.h; path = src/TV8ObjectWrapper.h; sourceTree = "<group>"; };
 		BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpengl.cpp; path = src/TApiOpengl.cpp; sourceTree = "<group>"; };
@@ -405,6 +406,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
 				BF6554252132C4D9003E4241 /* libwasm_globals_section_fuzzer.a in Frameworks */,
 				BF6554092132C4D9003E4241 /* libfuzzer_support.a in Frameworks */,
 				BF65541D2132C4D9003E4241 /* libv8_libplatform.a in Frameworks */,
@@ -561,6 +563,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BF19611521B988C9007014EF /* JavaScriptCore.framework */,
 				BF6EB33421111D2900FC991B /* VideoToolbox.framework */,
 				BF6EB32C21111C8300FC991B /* CoreMedia.framework */,
 				BF6EB32A21111C6600FC991B /* AVFoundation.framework */,
@@ -694,6 +697,8 @@
 				BF3786EB2132D846008E4350 /* TV8Inspector.h */,
 				BF39256520E51C36005AE288 /* TV8Instance.cpp */,
 				BF39256420E51C36005AE288 /* TV8Instance.h */,
+				BF19611B21B98A46007014EF /* JsCoreInstance.cpp */,
+				BF19611C21B98A46007014EF /* JsCoreInstance.h */,
 			);
 			name = src;
 			sourceTree = SOURCE_ROOT;
@@ -879,14 +884,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF6554062132C4D9003E4241 /* PRESUBMIT.py in Resources */,
-				BF6554052132C4D9003E4241 /* OWNERS in Resources */,
-				BF6554042132C4D9003E4241 /* DEPS in Resources */,
 				BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF6554022132C4D9003E4241 /* APIDesign.md in Resources */,
 				BF377321211F8BC5008EB5F7 /* App.xcassets in Resources */,
-				BF6554032132C4D9003E4241 /* DEPS in Resources */,
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 				BF3786E92132C81D008E4350 /* v8Runtime in Resources */,
 			);
@@ -937,6 +938,7 @@
 				BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */,
 				BF689B0020D9A52E000BC812 /* TV8Container.cpp in Sources */,
 				FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */,
+				BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */,
 				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
 				BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */,
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
