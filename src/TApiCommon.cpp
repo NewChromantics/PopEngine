@@ -6,6 +6,7 @@
 #include "SoyOpengl.h"
 #include "SoyOpenglContext.h"
 #include "SoyMedia.h"
+#include "JsCoreInstance.h"
 
 using namespace v8;
 
@@ -45,7 +46,6 @@ const char GetFormat_FunctionName[] = "GetFormat";
 
 
 
-static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
@@ -61,26 +61,6 @@ static v8::Local<v8::Value> GetV8HeapSize(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetV8HeapCount(v8::CallbackInfo& Params);
 
 
-void ApiCommon::Bind(TV8Container& Container)
-{
-	//  load api's before script & executions
-	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
-	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
-	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
-	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
-	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
-	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
-	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
-	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
-	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
-	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
-	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
-	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
-	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
-	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
-
-	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
-}
 
 static Local<Value> Debug(CallbackInfo& Params)
 {
@@ -100,6 +80,34 @@ static Local<Value> Debug(CallbackInfo& Params)
 	}
 	
 	return Undefined(Params.mIsolate);
+}
+
+static JSValueRef Debug2(JsCore::TCallbackInfo& Params)
+{
+	/*
+	auto& args = Params.mParams;
+	
+	if (args.Length() < 1)
+	{
+		throw Soy::AssertException("log() with no args");
+	}
+	
+	HandleScope scope(Params.mIsolate);
+	for ( auto i=0;	i<args.Length();	i++ )
+	{
+		auto arg = args[i];
+		String::Utf8Value value(arg);
+		std::Debug << *value << std::endl;
+	}
+	
+	return Undefined(Params.mIsolate);
+	 */
+	for ( auto i=0;	i<Params.mArguments.GetSize();	i++ )
+	{
+		auto Arg = JsCore::HandleToString( Params.mContext, Params.mArguments[i] );
+		std::Debug << Arg << std::endl;
+	}
+	return JSValueMakeUndefined( Params.mContext );
 }
 
 
@@ -315,6 +323,50 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 	return v8::Undefined(Params.mIsolate);
 }
 
+
+void ApiCommon::Bind(TV8Container& Container)
+{
+	//  load api's before script & executions
+	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
+	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
+	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
+	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
+	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
+	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
+	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
+	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
+	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
+	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
+	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
+	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
+	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
+	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
+	
+	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
+}
+
+void ApiCommon::Bind(JsCore::TContext& Container)
+{
+	//  load api's before script & executions
+	Container.BindGlobalFunction<Debug_FunctionName>(Debug2);
+	/*
+	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
+	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
+	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
+	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
+	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
+	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
+	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
+	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
+	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
+	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
+	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
+	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
+	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
+	
+	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
+	 */
+}
 
 TImageWrapper::~TImageWrapper()
 {

@@ -8,10 +8,15 @@ class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;
 
+namespace JsCore
+{
+	class TContext;
+}
 
 namespace ApiCommon
 {
 	void	Bind(TV8Container& Container);
+	void	Bind(JsCore::TContext& Context);
 }
 
 namespace Opengl

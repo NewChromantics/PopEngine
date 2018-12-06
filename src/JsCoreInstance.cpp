@@ -1,19 +1,16 @@
 #include "JsCoreInstance.h"
 #include "SoyAssert.h"
-
 #include "SoyFilesystem.h"
+#include "TApiCommon.h"
 
-namespace JsCore
-{
-	std::string	HandleToString(JSGlobalContextRef Context,JSValueRef Handle);
-}
 
-std::string	JsCore::HandleToString(JSGlobalContextRef Context,JSValueRef Handle)
+
+std::string	JsCore::HandleToString(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
-	JSValueRef Exception;
+	JSValueRef Exception = nullptr;
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
-
+	
 	size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize(StringJs);
 	char utf8Buffer[maxBufferSize];
 	size_t bytesWritten = JSStringGetUTF8CString(StringJs, utf8Buffer, maxBufferSize);
@@ -39,8 +36,9 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 	{
 		//	create a context
 		mContext = CreateContext();
+		
+		ApiCommon::Bind( *mContext );
 		/*
-		ApiCommon::Bind( *mV8Container );
 		ApiOpengl::Bind( *mV8Container );
 		ApiOpencl::Bind( *mV8Container );
 		ApiDlib::Bind( *mV8Container );
@@ -107,7 +105,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	auto SourceJs = JSStringCreateWithUTF8CString(Source.c_str());
 	auto FilenameJs = JSStringCreateWithUTF8CString(Filename.c_str());
 	auto LineNumber = 0;
-	JSValueRef Exception;
+	JSValueRef Exception = nullptr;
 	auto ResultHandle = JSEvaluateScript( mContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
 	ThrowException(Exception);
 	
@@ -117,12 +115,47 @@ void JsCore::TContext::ThrowException(JSValueRef ExceptionHandle)
 {
 	auto ExceptionType = JSValueGetType( mContext, ExceptionHandle );
 	//	not an exception
-	if ( ExceptionType == kJSTypeUndefined )
+	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
 		return;
 
 	auto ExceptionString = HandleToString( mContext, ExceptionHandle );
 	throw Soy::AssertException(ExceptionString);
 }
+
+void JsCore::TContext::BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function)
+{
+	auto FunctionNameJs = JSStringCreateWithUTF8CString(FunctionName);
+	JSObjectRef This = JSContextGetGlobalObject( mContext );
+	auto Attributes = kJSPropertyAttributeNone;
+
+	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, Function );
+	JSValueRef Exception = nullptr;
+	JSObjectSetProperty( mContext, This, FunctionNameJs, FunctionHandle, Attributes, &Exception );
+	ThrowException(Exception);
+}
+
+JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception)
+{
+	try
+	{
+		TCallbackInfo CallbackInfo;
+		CallbackInfo.mContext = mContext;//Context;
+		CallbackInfo.mThis = This;
+		for ( auto a=0;	a<ArgumentCount;	a++ )
+		{
+			CallbackInfo.mArguments.PushBack( Arguments[a] );
+		}
+		auto Result = Function( CallbackInfo );
+		return Result;
+	}
+	catch (std::exception& e)
+	{
+		auto ExceptionStr = JSStringCreateWithUTF8CString( e.what() );
+		Exception = JSValueMakeString( Context, ExceptionStr );
+		return JSValueMakeUndefined( Context );
+	}
+}
+
 
 /*
 JSValueRef ObjectCallAsFunctionCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception) {
@@ -151,4 +184,5 @@ JsCore::TInstance::
 	}
 
 */
+
 
