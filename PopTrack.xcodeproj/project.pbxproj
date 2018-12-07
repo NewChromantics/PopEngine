@@ -93,6 +93,7 @@
 		BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */; };
 		BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */; };
 		BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
+		BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */ = {isa = PBXBuildFile; fileRef = BF92C18E21BAB81E00A1DD49 /* Data_Holosports */; };
 		BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF97592520E9611A0093B296 /* TApiOpencl.cpp */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
@@ -303,6 +304,7 @@
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
 		BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiHttp.cpp; path = src/TApiHttp.cpp; sourceTree = "<group>"; };
 		BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiHttp.h; path = src/TApiHttp.h; sourceTree = "<group>"; };
+		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
@@ -652,6 +654,7 @@
 			isa = PBXGroup;
 			children = (
 				BF377320211F8BC5008EB5F7 /* App.xcassets */,
+				BF92C18E21BAB81E00A1DD49 /* Data_Holosports */,
 				BF65537D2132BD6B003E4241 /* Data_HelloWorld */,
 				BF30550A1B56F553002B0892 /* Data */,
 				EB0EA5622110AAF9008D6DAA /* Data_dlib */,
@@ -897,6 +900,7 @@
 				BF377321211F8BC5008EB5F7 /* App.xcassets in Resources */,
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 				BF3786E92132C81D008E4350 /* v8Runtime in Resources */,
+				BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
