@@ -164,6 +164,7 @@
 		BF19612021B9ADD9007014EF /* SoyWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyWebSocket.h; path = src/SoyWebSocket.h; sourceTree = "<group>"; };
 		BF19612221B9D2B8007014EF /* TBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TBind.cpp; path = src/TBind.cpp; sourceTree = "<group>"; };
 		BF19612321B9D2B8007014EF /* TBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TBind.h; path = src/TBind.h; sourceTree = "<group>"; };
+		BF19612521B9DC70007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8ObjectWrapper.cpp; path = src/TV8ObjectWrapper.cpp; sourceTree = "<group>"; };
 		BF1E05AD2117328300B56DE4 /* TV8ObjectWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8ObjectWrapper.h; path = src/TV8ObjectWrapper.h; sourceTree = "<group>"; };
 		BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpengl.cpp; path = src/TApiOpengl.cpp; sourceTree = "<group>"; };
@@ -623,6 +624,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BF19612521B9DC70007014EF /* JavaScriptCore.framework */,
 				EB0EA5672110B8D6008D6DAA /* Dlib */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
 				BF321B041B67AD990016E903 /* CoreVideo.framework */,

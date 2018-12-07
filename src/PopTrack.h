@@ -15,7 +15,7 @@ public:
 	
 private:
 	std::shared_ptr<JsCore::TInstance>	mJsCoreInstance;
-	//std::shared_ptr<TV8Instance>		mV8Instance;
+	std::shared_ptr<TV8Instance>		mV8Instance;
 };
 
 
