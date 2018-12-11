@@ -610,12 +610,11 @@ v8::Local<v8::Value> TImageWrapper::WritePixels(const v8::CallbackInfo& Params)
 	auto Width = v8::SafeCast<Number>( WidthHandle )->Uint32Value();
 	auto Height = v8::SafeCast<Number>( HeightHandle )->Uint32Value();
 	
-	auto& ThisPixels = This.GetPixels();
-
 	auto* Rgba8 = static_cast<uint8_t*>(Rgba.GetArray());
 	auto DataSize = Rgba.GetDataSize();
 	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, SoyPixelsFormat::RGBA );
-	ThisPixels.Copy(NewPixels);
+	This.SetPixels(NewPixels);
+	
 	
 	return v8::Undefined(Params.mIsolate);
 }
