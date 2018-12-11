@@ -14,6 +14,7 @@ const char SetViewport_FunctionName[] = "SetViewport";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char Render_FunctionName[] = "Render";
 const char RenderChain_FunctionName[] = "RenderChain";
+const char GetScreenRect_FunctionName[] = "GetScreenRect";
 
 
 
@@ -279,6 +280,24 @@ v8::Local<v8::Value> TWindowWrapper::SetViewport(const v8::CallbackInfo& Params)
 	This.mActiveRenderTarget->SetViewportNormalised( ViewportRect );
 	
 	return v8::Undefined(Params.mIsolate);
+}
+
+//	window specific
+v8::Local<v8::Value> TWindowWrapper::GetScreenRect(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+
+	auto ScreenRect = This.mWindow->GetScreenRect();
+	
+	BufferArray<int32_t,4> ScreenRect4;
+	ScreenRect4.PushBack(ScreenRect.x);
+	ScreenRect4.PushBack(ScreenRect.y);
+	ScreenRect4.PushBack(ScreenRect.w);
+	ScreenRect4.PushBack(ScreenRect.h);
+	auto ScreenRectArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(ScreenRect4) );
+	
+	return ScreenRectArray;
 }
 
 
@@ -587,6 +606,7 @@ Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<EnableBlend_FunctionName>( InstanceTemplate, EnableBlend );
 	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
 	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
+	Container.BindFunction<GetScreenRect_FunctionName>( InstanceTemplate, GetScreenRect );
 	
 	
 	return ConstructorFunc;

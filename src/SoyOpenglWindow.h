@@ -38,8 +38,8 @@ public:
 	std::shared_ptr<Opengl::TContext>	GetContext();
 
 	virtual std::chrono::milliseconds	GetSleepDuration() override;
+	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
 
-	
 private:
 	void			OnViewRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 	{

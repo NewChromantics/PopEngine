@@ -136,6 +136,15 @@ bool TOpenglView::IsDoubleBuffered() const
 	return IsDoubleBuffered!=0;
 }
 
+Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
+{
+	auto Bounds = [mView bounds];
+	auto Rect = NSRectToRect( Bounds );
+	return Rect;
+}
+
+
+
 
 @implementation MacOpenglView
 
@@ -522,4 +531,3 @@ GlViewSharedContext::~GlViewSharedContext()
 {
 	
 }
-

@@ -244,4 +244,10 @@ std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
 	return std::chrono::milliseconds( 1000/mParams.mRefreshRate );
 }
 
+Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
+{
+	//	this must be called on the main thread, so we use the cache from the render target
+	//return mView->GetScreenRect();
+	return mView->mRenderTarget.GetSize();
+}
 

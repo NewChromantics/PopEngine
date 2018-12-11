@@ -111,9 +111,10 @@ public:
 	TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params);
 	~TOpenglView();
 	
-	bool			IsValid()	{	return mView != nullptr;	}
-	bool			IsDoubleBuffered() const;
-	
+	bool					IsValid()	{	return mView != nullptr;	}
+	bool					IsDoubleBuffered() const;
+	Soy::Rectx<int32_t>		GetScreenRect();
+
 public:
 	std::function<void(const TMousePos&)>		mOnMouseDown;
 	std::function<void(const TMousePos&)>		mOnMouseMove;
