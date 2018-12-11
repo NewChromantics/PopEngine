@@ -813,7 +813,10 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 	{
 		std::stringstream Error;
 		Error << "Shader missing uniform \"" << UniformName << "\"";
-		throw Soy::AssertException(Error.str());
+		//	gr: webgl gives a warning, but doesn't throw. Lets emulate that with debug output
+		//throw Soy::AssertException(Error.str());
+		//std::Debug << Error.str() << std::endl;
+		return v8::Undefined(Params.mIsolate);
 	}
 
 	//	get type from args
