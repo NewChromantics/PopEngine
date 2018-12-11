@@ -58,6 +58,7 @@ public:
 	static v8::Local<v8::Value>				GetRgba8(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				SetLinearFilter(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Copy(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				WritePixels(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Resize(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Clip(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Clear(const v8::CallbackInfo& Arguments);

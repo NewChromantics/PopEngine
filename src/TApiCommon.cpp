@@ -38,6 +38,7 @@ const char GetHeight_FunctionName[] = "GetHeight";
 const char GetRgba8_FunctionName[] = "GetRgba8";
 const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
 const char Copy_FunctionName[] = "Copy";
+const char WritePixels_FunctionName[] = "WritePixels";
 const char Resize_FunctionName[] = "Resize";
 const char Clip_FunctionName[] = "Clip";
 const char Clear_FunctionName[] = "Clear";
@@ -424,6 +425,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<GetRgba8_FunctionName>( InstanceTemplate, TImageWrapper::GetRgba8 );
 	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
 	Container.BindFunction<Copy_FunctionName>( InstanceTemplate, TImageWrapper::Copy );
+	Container.BindFunction<WritePixels_FunctionName>( InstanceTemplate, TImageWrapper::WritePixels );
 	Container.BindFunction<Resize_FunctionName>( InstanceTemplate, TImageWrapper::Resize );
 	Container.BindFunction<Clip_FunctionName>( InstanceTemplate, TImageWrapper::Clip );
 	Container.BindFunction<Clear_FunctionName>( InstanceTemplate, TImageWrapper::Clear );
@@ -589,6 +591,35 @@ v8::Local<v8::Value> TImageWrapper::Copy(const v8::CallbackInfo& Params)
 	
 	return v8::Undefined(Params.mIsolate);
 }
+
+v8::Local<v8::Value> TImageWrapper::WritePixels(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	
+	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
+
+	auto WidthHandle = Arguments[0];
+	auto HeightHandle = Arguments[1];
+	auto BufferHandle = Arguments[2];
+	
+	Array<uint8_t> Rgba;
+	v8::EnumArray<v8::Uint8Array>( BufferHandle, GetArrayBridge(Rgba) );
+	auto Width = v8::SafeCast<Number>( WidthHandle )->Uint32Value();
+	auto Height = v8::SafeCast<Number>( HeightHandle )->Uint32Value();
+	
+	auto& ThisPixels = This.GetPixels();
+
+	auto* Rgba8 = static_cast<uint8_t*>(Rgba.GetArray());
+	auto DataSize = Rgba.GetDataSize();
+	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, SoyPixelsFormat::RGBA );
+	ThisPixels.Copy(NewPixels);
+	
+	return v8::Undefined(Params.mIsolate);
+}
+
 
 
 v8::Local<v8::Value> TImageWrapper::Resize(const v8::CallbackInfo& Params)
