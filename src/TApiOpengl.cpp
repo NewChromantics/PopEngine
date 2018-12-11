@@ -71,15 +71,15 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,const std::string& Mo
 	//  call javascript
 	auto Runner = [=](Local<Context> Context)
 	{
-		auto This = this->GetHandle();
-		auto Func = v8::GetFunction( Context, This, MouseFuncName );
-		BufferArray<Local<Value>,2> Args;
-		
-		Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.x ) );
-		Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.y ) );
-		
 		try
 		{
+			auto This = this->GetHandle();
+			auto Func = v8::GetFunction( Context, This, MouseFuncName );
+			BufferArray<Local<Value>,2> Args;
+		
+			Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.x ) );
+			Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.y ) );
+		
 			mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
 		}
 		catch(std::exception& e)
