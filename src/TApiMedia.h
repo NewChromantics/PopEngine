@@ -80,11 +80,9 @@ public:
 	
 	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
 	
-	void									OnNewFrame(size_t StreamIndex);	//	call onPictureDecoded
+	void									OnNewFrame(const SoyPixelsImpl& Pixels);	//	call onPictureDecoded
 	static v8::Local<v8::Value>				Decode(const v8::CallbackInfo& Arguments);
 	
 public:
-	std::shared_ptr<V8Storage<v8::Function>>	mOnPictureDecoded;
-	
 	std::shared_ptr<Broadway::TDecoder>&		mBroadwayDecoder = mObject;
 };

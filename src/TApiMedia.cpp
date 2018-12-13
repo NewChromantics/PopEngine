@@ -7,6 +7,7 @@
 #include "PopMovie/AvfMovieDecoder.h"
 #include "SoyDecklink/SoyDecklink.h"
 
+#include "SoyBroadway/BroadwayDecoder.h"
 
 using namespace v8;
 
@@ -440,49 +441,13 @@ void TAvcDecoderWrapper::Construct(const v8::CallbackInfo& Params)
 	using namespace v8;
 	auto* Isolate = Arguments.GetIsolate();
 	
-	throw Soy::AssertException("todo");
-/*
-	
-	auto DeviceNameHandle = Arguments[0];
-	auto SinglePlaneOutputHandle = Arguments[1];
-	auto FilterCallbackHandle = Arguments[2];
-	auto MaxBufferSizeHandle = Arguments[3];
-	
-	size_t MaxBufferSize = 10;
-	if ( !MaxBufferSizeHandle->IsUndefined() )
-		MaxBufferSize = v8::SafeCast<v8::Number>(MaxBufferSizeHandle)->Int32Value();
-	
-	bool SinglePlaneOutput = false;
-	if ( !SinglePlaneOutputHandle->IsUndefined() )
-		SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
-	
-	if ( !FilterCallbackHandle->IsUndefined() )
+	auto OnFrameDecoded = [this](const SoyPixelsImpl& Pixels)
 	{
-		auto FilterCallback = v8::SafeCast<v8::Function>(FilterCallbackHandle);
-		mOnFrameFilter = v8::GetPersistent( *Isolate, FilterCallback );
-	}
-	
-	auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
-	{
-		//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
-		this->OnNewFrame(StreamIndex);
-	};
-	auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
-	{
-		//	gr: do filter here!
-		//std::Debug << "OnPrePushFrame" << std::endl;
+		this->OnNewFrame( Pixels );
 	};
 	
-	//	create device
-	auto DeviceName = v8::GetString( DeviceNameHandle );
-	TMediaExtractorParams ExtractorParams( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
-	ExtractorParams.mForceNonPlanarOutput = SinglePlaneOutput;
-	ExtractorParams.mDiscardOldFrames = false;
-	
-	mExtractor = AllocExtractor(ExtractorParams);
-	mExtractor->AllocStreamBuffer(0,MaxBufferSize);
-	mExtractor->Start(false);
- */
+	mBroadwayDecoder.reset( new Broadway::TDecoder(OnFrameDecoded) );
+
 }
 
 Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Container)
@@ -513,12 +478,22 @@ Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Contain
 
 v8::Local<v8::Value> TAvcDecoderWrapper::Decode(const v8::CallbackInfo& Params)
 {
-	throw Soy::AssertException("todo");
+	auto& Arguments = Params.mParams;
+	
+	auto PacketBytesHandle = Arguments[0];
+	auto& This = Params.GetThis<TAvcDecoderWrapper>();
+	
+	//	get array
+	Array<uint8_t> PacketBytes;
+	v8::EnumArray<v8::Uint8Array>( PacketBytesHandle, GetArrayBridge(PacketBytes) );
+	
+	This.mBroadwayDecoder->Decode( GetArrayBridge(PacketBytes) );
+
 	return v8::Undefined(Params.mIsolate);
 }
 
 
-void TAvcDecoderWrapper::OnNewFrame(size_t StreamIndex)
+void TAvcDecoderWrapper::OnNewFrame(const SoyPixelsImpl& Pixels)
 {
 	//	onPictureDecoded to match braodway WASM API
 	

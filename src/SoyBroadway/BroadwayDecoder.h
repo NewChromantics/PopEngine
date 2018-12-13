@@ -1,5 +1,11 @@
 #pragma once
 
+#include <functional>
+#include "Array.hpp"
+#include "HeapArray.hpp"
+
+class SoyPixelsImpl;
+
 extern "C"
 {
 #include "H264SwDecApi.h"
@@ -20,8 +26,19 @@ namespace Broadway
 class Broadway::TDecoder
 {
 public:
-	TDecoder();
+	TDecoder(std::function<void(const SoyPixelsImpl&)> OnFrameDecoded);
 	~TDecoder();
 	
+	void			Decode(ArrayBridge<uint8_t>&& PacketData);
+
+private:
+	void			OnMeta(const H264SwDecInfo& Meta);
+	void			OnPicture(const H264SwDecPicture& Picture,const H264SwDecInfo& Meta);
+	bool			DecodeNextPacket();	//	returns true if more data to proccess
+	
+public:
 	H264SwDecInst	mDecoderInstance;
+	Array<uint8_t>	mPendingData;
+
+	std::function<void(const SoyPixelsImpl&)>	mOnFrameDecoded;
 };
