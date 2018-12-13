@@ -441,13 +441,7 @@ void TAvcDecoderWrapper::Construct(const v8::CallbackInfo& Params)
 	using namespace v8;
 	auto* Isolate = Arguments.GetIsolate();
 	
-	auto OnFrameDecoded = [this](const SoyPixelsImpl& Pixels)
-	{
-		this->OnNewFrame( Pixels );
-	};
-	
-	mBroadwayDecoder.reset( new Broadway::TDecoder(OnFrameDecoded) );
-
+	mBroadwayDecoder.reset( new Broadway::TDecoder );
 }
 
 Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Container)
@@ -481,13 +475,30 @@ v8::Local<v8::Value> TAvcDecoderWrapper::Decode(const v8::CallbackInfo& Params)
 	auto& Arguments = Params.mParams;
 	
 	auto PacketBytesHandle = Arguments[0];
+	auto DecoderMeta = Arguments[1];
+	auto DecodeCallbackHandle = Arguments[2];
 	auto& This = Params.GetThis<TAvcDecoderWrapper>();
 	
 	//	get array
 	Array<uint8_t> PacketBytes;
 	v8::EnumArray<v8::Uint8Array>( PacketBytesHandle, GetArrayBridge(PacketBytes) );
 	
-	This.mBroadwayDecoder->Decode( GetArrayBridge(PacketBytes) );
+	auto OnImage = [&](const SoyPixelsImpl& Frame)
+	{
+		//	create an image
+		This.OnNewFrame( Frame );
+		
+		if ( !DecodeCallbackHandle->IsUndefined() )
+		{
+			auto FrameImageJs = v8::Undefined(Params.mIsolate);
+			auto DecodeCallbackHandleFunc = v8::Local<Function>::Cast( DecodeCallbackHandle );
+			auto DecodeCallbackThis = Params.mContext->Global();
+			BufferArray<Local<Value>,1> Args;
+			Args.PushBack( FrameImageJs );
+			Params.mContainer.ExecuteFunc( Params.mContext, DecodeCallbackHandleFunc, DecodeCallbackThis, GetArrayBridge(Args) );
+		}
+	};
+	This.mBroadwayDecoder->Decode( GetArrayBridge(PacketBytes), OnImage );
 
 	return v8::Undefined(Params.mIsolate);
 }
@@ -505,10 +516,9 @@ void TAvcDecoderWrapper::OnNewFrame(const SoyPixelsImpl& Pixels)
 		
 		BufferArray<Local<Value>,2> Args;
 		
-		auto FuncHandle = v8::GetFunction( context, This, "onPictureDecoded" );
-		
 		try
 		{
+			auto FuncHandle = v8::GetFunction( context, This, "onPictureDecoded" );
 			mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
 		}
 		catch(std::exception& e)

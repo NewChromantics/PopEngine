@@ -9,8 +9,7 @@ namespace Broadway
 	void	IsOkay(H264SwDecRet Result,const char* Context);
 }
 
-Broadway::TDecoder::TDecoder(std::function<void(const SoyPixelsImpl&)> OnFrameDecoded) :
-	mOnFrameDecoded	( OnFrameDecoded )
+Broadway::TDecoder::TDecoder()
 {
 	auto disableOutputReordering = false;
 	auto Result = H264SwDecInit( &mDecoderInstance, disableOutputReordering );
@@ -87,7 +86,7 @@ void Broadway::IsOkay(H264SwDecRet Result,const char* Context)
 }
 
 //	returns true if more data to proccess
-bool Broadway::TDecoder::DecodeNextPacket()
+bool Broadway::TDecoder::DecodeNextPacket(std::function<void(const SoyPixelsImpl&)> OnFrameDecoded)
 {
 	if ( mPendingData.IsEmpty() )
 		return false;
@@ -147,7 +146,9 @@ bool Broadway::TDecoder::DecodeNextPacket()
 				IsOkay( Result, "H264SwDecNextPicture" );
 				if ( DecodeResult != H264SWDEC_PIC_RDY )
 				{
-					std::Debug << "H264SwDecNextPicture result: " << GetDecodeResultString(DecodeResult) << std::endl;
+					//	OK just means it's finished
+					if ( DecodeResult != H264SWDEC_OK )
+						std::Debug << "H264SwDecNextPicture result: " << GetDecodeResultString(DecodeResult) << std::endl;
 					break;
 				}
 				/*
@@ -157,7 +158,7 @@ bool Broadway::TDecoder::DecodeNextPacket()
 					   decPicture.nbrOfErrMBs);
 				*/
 				//	YuvToRgb( decPicture.pOutputPicture, pRgbPicture );
-				OnPicture( Picture, Meta );
+				OnPicture( Picture, Meta, OnFrameDecoded );
 			}
 			return true;
 		}
@@ -172,14 +173,15 @@ bool Broadway::TDecoder::DecodeNextPacket()
 }
 
 
-void Broadway::TDecoder::Decode(ArrayBridge<uint8_t>&& PacketData)
+
+void Broadway::TDecoder::Decode(ArrayBridge<uint8_t>&& PacketData,std::function<void(const SoyPixelsImpl&)> OnFrameDecoded)
 {
 	mPendingData.PushBackArray(PacketData);
 	
 	while ( true )
 	{
 		//	keep decoding until no more data to process
-		if ( !DecodeNextPacket() )
+		if ( !DecodeNextPacket( OnFrameDecoded ) )
 			break;
 	}
 }
@@ -189,7 +191,7 @@ void Broadway::TDecoder::OnMeta(const H264SwDecInfo& Meta)
 	
 }
 
-void Broadway::TDecoder::OnPicture(const H264SwDecPicture& Picture,const H264SwDecInfo& Meta)
+void Broadway::TDecoder::OnPicture(const H264SwDecPicture& Picture,const H264SwDecInfo& Meta,std::function<void(const SoyPixelsImpl&)> OnFrameDecoded)
 {
 	//		headers just say
 	//	u32 *pOutputPicture;    /* Pointer to the picture, YUV format       */
@@ -202,7 +204,7 @@ void Broadway::TDecoder::OnPicture(const H264SwDecPicture& Picture,const H264SwD
 	
 	auto* Pixels8 = reinterpret_cast<uint8_t*>(Picture.pOutputPicture);
 	SoyPixelsRemote Pixels( Pixels8, DataSize, PixelMeta );
-	mOnFrameDecoded( Pixels );
+	OnFrameDecoded( Pixels );
 }
 
 

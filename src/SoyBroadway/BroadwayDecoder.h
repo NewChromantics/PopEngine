@@ -26,19 +26,17 @@ namespace Broadway
 class Broadway::TDecoder
 {
 public:
-	TDecoder(std::function<void(const SoyPixelsImpl&)> OnFrameDecoded);
+	TDecoder();
 	~TDecoder();
 	
-	void			Decode(ArrayBridge<uint8_t>&& PacketData);
+	void			Decode(ArrayBridge<uint8_t>&& PacketData,std::function<void(const SoyPixelsImpl&)> OnFrameDecoded);
 
 private:
 	void			OnMeta(const H264SwDecInfo& Meta);
-	void			OnPicture(const H264SwDecPicture& Picture,const H264SwDecInfo& Meta);
-	bool			DecodeNextPacket();	//	returns true if more data to proccess
+	void			OnPicture(const H264SwDecPicture& Picture,const H264SwDecInfo& Meta,std::function<void(const SoyPixelsImpl&)> OnFrameDecoded);
+	bool			DecodeNextPacket(std::function<void(const SoyPixelsImpl&)> OnFrameDecoded);	//	returns true if more data to proccess
 	
 public:
 	H264SwDecInst	mDecoderInstance;
 	Array<uint8_t>	mPendingData;
-
-	std::function<void(const SoyPixelsImpl&)>	mOnFrameDecoded;
 };
