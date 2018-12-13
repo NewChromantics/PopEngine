@@ -7,7 +7,10 @@ class TMediaPacket;
 class TMediaExtractor;
 class TMediaExtractorParams;
 
-
+namespace Broadway
+{
+	class TDecoder;
+}
 
 namespace ApiMedia
 {
@@ -58,4 +61,30 @@ public:
 	std::shared_ptr<V8Storage<v8::Function>>	mOnFrameFilter;
 	
 	std::shared_ptr<TMediaExtractor>&		mExtractor = mObject;
+};
+
+
+
+
+extern const char AvcDecoder_TypeName[];
+class TAvcDecoderWrapper : public TObjectWrapper<AvcDecoder_TypeName,Broadway::TDecoder>
+{
+public:
+	TAvcDecoderWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
+		TObjectWrapper			( Container, This )
+	{
+	}
+	//~TAvcDecoderWrapper();
+	
+	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+	
+	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	
+	void									OnNewFrame(size_t StreamIndex);	//	call onPictureDecoded
+	static v8::Local<v8::Value>				Decode(const v8::CallbackInfo& Arguments);
+	
+public:
+	std::shared_ptr<V8Storage<v8::Function>>	mOnPictureDecoded;
+	
+	std::shared_ptr<Broadway::TDecoder>&		mBroadwayDecoder = mObject;
 };

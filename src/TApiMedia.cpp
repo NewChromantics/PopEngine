@@ -16,6 +16,9 @@ const char MediaSource_TypeName[] = "MediaSource";
 const char Free_FunctionName[] = "Free";
 const char GetNextFrame_FunctionName[] = "GetNextFrame";
 
+const char AvcDecoder_TypeName[] = "AvcDecoder";
+const char Decode_FunctionName[] = "decode";
+
 const char FrameTimestampKey[] = "Time";
 
 void ApiMedia::Bind(TV8Container& Container)
@@ -23,6 +26,7 @@ void ApiMedia::Bind(TV8Container& Container)
 	Container.BindObjectType("Media", TMediaWrapper::CreateTemplate, nullptr );
 
 	Container.BindObjectType( TMediaSourceWrapper::GetObjectTypeName(), TMediaSourceWrapper::CreateTemplate, TMediaSourceWrapper::Allocate<TMediaSourceWrapper> );
+	Container.BindObjectType( TAvcDecoderWrapper::GetObjectTypeName(), TAvcDecoderWrapper::CreateTemplate, TAvcDecoderWrapper::Allocate<TAvcDecoderWrapper> );
 }
 
 
@@ -428,3 +432,114 @@ v8::Local<v8::Value> TMediaSourceWrapper::Free(const v8::CallbackInfo& Params)
 	return v8::Undefined(Params.mIsolate);
 }
 
+
+void TAvcDecoderWrapper::Construct(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	using namespace v8;
+	auto* Isolate = Arguments.GetIsolate();
+	
+	throw Soy::AssertException("todo");
+/*
+	
+	auto DeviceNameHandle = Arguments[0];
+	auto SinglePlaneOutputHandle = Arguments[1];
+	auto FilterCallbackHandle = Arguments[2];
+	auto MaxBufferSizeHandle = Arguments[3];
+	
+	size_t MaxBufferSize = 10;
+	if ( !MaxBufferSizeHandle->IsUndefined() )
+		MaxBufferSize = v8::SafeCast<v8::Number>(MaxBufferSizeHandle)->Int32Value();
+	
+	bool SinglePlaneOutput = false;
+	if ( !SinglePlaneOutputHandle->IsUndefined() )
+		SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
+	
+	if ( !FilterCallbackHandle->IsUndefined() )
+	{
+		auto FilterCallback = v8::SafeCast<v8::Function>(FilterCallbackHandle);
+		mOnFrameFilter = v8::GetPersistent( *Isolate, FilterCallback );
+	}
+	
+	auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
+	{
+		//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
+		this->OnNewFrame(StreamIndex);
+	};
+	auto OnPrePushFrame = [](TPixelBuffer&,const TMediaExtractorParams&)
+	{
+		//	gr: do filter here!
+		//std::Debug << "OnPrePushFrame" << std::endl;
+	};
+	
+	//	create device
+	auto DeviceName = v8::GetString( DeviceNameHandle );
+	TMediaExtractorParams ExtractorParams( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
+	ExtractorParams.mForceNonPlanarOutput = SinglePlaneOutput;
+	ExtractorParams.mDiscardOldFrames = false;
+	
+	mExtractor = AllocExtractor(ExtractorParams);
+	mExtractor->AllocStreamBuffer(0,MaxBufferSize);
+	mExtractor->Start(false);
+ */
+}
+
+Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Container)
+{
+	auto* Isolate = Container.mIsolate;
+	
+	//	pass the container around
+	auto ContainerHandle = External::New( Isolate, &Container );
+	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
+	
+	//	https://github.com/v8/v8/wiki/Embedder's-Guide
+	//	1 field to 1 c++ object
+	//	gr: we can just use the template that's made automatically and modify that!
+	//	gr: prototypetemplate and instancetemplate are basically the same
+	//		but for inheritance we may want to use prototype
+	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
+	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
+	
+	//	[0] object
+	//	[1] container
+	InstanceTemplate->SetInternalFieldCount(2);
+	
+	//	add members
+	Container.BindFunction<Decode_FunctionName>( InstanceTemplate, Decode );
+	
+	return ConstructorFunc;
+}
+
+v8::Local<v8::Value> TAvcDecoderWrapper::Decode(const v8::CallbackInfo& Params)
+{
+	throw Soy::AssertException("todo");
+	return v8::Undefined(Params.mIsolate);
+}
+
+
+void TAvcDecoderWrapper::OnNewFrame(size_t StreamIndex)
+{
+	//	onPictureDecoded to match braodway WASM API
+	
+	//	notify that there's a new frame
+	auto Runner = [this](Local<Context> context)
+	{
+		auto* isolate = context->GetIsolate();
+		auto This = this->mHandle.Get(isolate);
+		
+		BufferArray<Local<Value>,2> Args;
+		
+		auto FuncHandle = v8::GetFunction( context, This, "onPictureDecoded" );
+		
+		try
+		{
+			mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "onPictureDecoded Exception: " << e.what() << std::endl;
+		}
+	};
+	mContainer.QueueScoped( Runner );
+}
