@@ -490,11 +490,25 @@ v8::Local<v8::Value> TAvcDecoderWrapper::Decode(const v8::CallbackInfo& Params)
 		
 		if ( !DecodeCallbackHandle->IsUndefined() )
 		{
-			auto FrameImageJs = v8::Undefined(Params.mIsolate);
+			//	return each plane as an image arg (maybe return an array?)
+			BufferArray<Local<Value>,4> Args;
+			
+			Array<std::shared_ptr<SoyPixelsImpl>> FramePlanes;
+			Frame.SplitPlanes( GetArrayBridge(FramePlanes) );
+			for ( auto p=0;	p<FramePlanes.GetSize();	p++)
+			{
+				auto& PlanePixels = *FramePlanes[p];
+				//	gr: this looks leaky, but its not, its refcounted by JS
+				auto* pImage = new TImageWrapper( Params.mContainer );
+				pImage->mName = "MediaSource Frame";
+				auto& Image = *pImage;
+				Image.SetPixels(PlanePixels);
+				auto ImageHandle = Image.GetHandle();
+				Args.PushBack(ImageHandle);
+			}
+			
 			auto DecodeCallbackHandleFunc = v8::Local<Function>::Cast( DecodeCallbackHandle );
 			auto DecodeCallbackThis = Params.mContext->Global();
-			BufferArray<Local<Value>,1> Args;
-			Args.PushBack( FrameImageJs );
 			Params.mContainer.ExecuteFunc( Params.mContext, DecodeCallbackHandleFunc, DecodeCallbackThis, GetArrayBridge(Args) );
 		}
 	};
@@ -514,7 +528,7 @@ void TAvcDecoderWrapper::OnNewFrame(const SoyPixelsImpl& Pixels)
 		auto* isolate = context->GetIsolate();
 		auto This = this->mHandle.Get(isolate);
 		
-		BufferArray<Local<Value>,2> Args;
+		BufferArray<Local<Value>,1> Args;
 		
 		try
 		{
