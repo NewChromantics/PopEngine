@@ -195,13 +195,15 @@ void Broadway::TDecoder::OnPicture(const H264SwDecPicture& Picture,const H264SwD
 {
 	//		headers just say
 	//	u32 *pOutputPicture;    /* Pointer to the picture, YUV format       */
-	auto Format = SoyPixelsFormat::Yuv_8_88_Ntsc;
+	auto Format = SoyPixelsFormat::Yuv_8_8_8_Full;
 	SoyPixelsMeta PixelMeta( Meta.picWidth, Meta.picHeight, Format );
 	std::Debug << "Decoded picture " << PixelMeta << std::endl;
-		
-	//	gr: wish we knew exactly how many bytes Picture.pOutputPicture pointed at!
-	auto DataSize = PixelMeta.GetDataSize();
 	
+	//	gr: wish we knew exactly how many bytes Picture.pOutputPicture pointed at!
+	//		but demos all use this measurement
+	//auto DataSize = PixelMeta.GetDataSize();
+	auto DataSize = (3 * Meta.picWidth * Meta.picHeight)/2;
+
 	auto* Pixels8 = reinterpret_cast<uint8_t*>(Picture.pOutputPicture);
 	SoyPixelsRemote Pixels( Pixels8, DataSize, PixelMeta );
 	OnFrameDecoded( Pixels );
