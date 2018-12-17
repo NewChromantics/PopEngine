@@ -103,7 +103,10 @@ bool Broadway::TDecoder::DecodeNextPacket(std::function<void(const SoyPixelsImpl
 	H264SwDecOutput Output;
 	Output.pStrmCurrPos = nullptr;
 	
+	
+	Soy::TScopeTimerPrint Timer("H264 Decode",5);
 	auto Result = H264SwDecDecode( mDecoderInstance, &Input, &Output );
+	Timer.Stop();
 	IsOkay( Result, "H264SwDecDecode" );
 	
 	//	calc what data wasn't used
@@ -136,13 +139,21 @@ bool Broadway::TDecoder::DecodeNextPacket(std::function<void(const SoyPixelsImpl
 		//	android just does both https://android.googlesource.com/platform/frameworks/av/+/2b6f22dc64d456471a1dc6df09d515771d1427c8/media/libstagefright/codecs/on2/h264dec/source/EvaluationTestBench.c#158
 		case H264SWDEC_PIC_RDY:
 		{
+			Soy::TScopeTimerPrint PictureTimer("H264 Picture Decode",5);
+			//	if no callback, just skip image extraction
+			if ( !OnFrameDecoded )
+			{
+				//return true;
+			}
 			auto Meta = GetMeta();
 			H264SwDecPicture Picture;
 			u32 EndOfStream = false;
 			while ( true )
 			{
 				//	decode pictures until we get a non "picture ready" (not sure what we'll get)
+				//	gr: this func is free, image already decoded
 				auto DecodeResult = H264SwDecNextPicture( mDecoderInstance, &Picture, EndOfStream );
+				PictureTimer.Stop();
 				IsOkay( Result, "H264SwDecNextPicture" );
 				if ( DecodeResult != H264SWDEC_PIC_RDY )
 				{
@@ -206,182 +217,8 @@ void Broadway::TDecoder::OnPicture(const H264SwDecPicture& Picture,const H264SwD
 
 	auto* Pixels8 = reinterpret_cast<uint8_t*>(Picture.pOutputPicture);
 	SoyPixelsRemote Pixels( Pixels8, DataSize, PixelMeta );
-	OnFrameDecoded( Pixels );
+	if ( OnFrameDecoded )
+		OnFrameDecoded( Pixels );
 }
 
 
-	/*
-		
-	 
-		
-		case H264SWDEC_STRM_PROCESSED:
-		case H264SWDEC_STRM_ERR:
-		case H264SWDEC_PARAM_ERR:
-		decoder[i]->decInput.dataLen = 0;
-		break;
-		
-		default:
-		DEBUG(("Decoder[%d] FATAL ERROR\n", i));
-		exit(10);
-		break;
-*/
-
-
-
-/*
-typedef struct
-{
-	H264SwDecInst decInst;
-	H264SwDecInput decInput;
-	H264SwDecOutput decOutput;
-	H264SwDecPicture decPicture;
-	H264SwDecInfo decInfo;
-	FILE *foutput;
-	char outFileName[256];
-	u8 *byteStrmStart;
-	u32 picNumber;
-} Decoder;
-
-
-
-ret = H264SwDecInit(&(decoder[i]->decInst), disableOutputReordering);
-
-if (ret != H264SWDEC_OK)
-{
-	DEBUG(("Init failed %d\n", ret));
-	exit(100);
-}
-
-decoder[i]->decInput.pStream = decoder[i]->byteStrmStart;
-decoder[i]->decInput.dataLen = strmLen;
-decoder[i]->decInput.intraConcealmentMethod = 0;
-
-}
-
-// main decoding loop
-do
-{
-	// decode once using each instance
-	for (i = 0; i < instCount; i++)
-	{
-		ret = H264SwDecDecode(decoder[i]->decInst,
-							  &(decoder[i]->decInput),
-							  &(decoder[i]->decOutput));
-		
-		switch(ret)
-		{
-				
-			case H264SWDEC_HDRS_RDY_BUFF_NOT_EMPTY:
-				
-				ret = H264SwDecGetInfo(decoder[i]->decInst,
-									   &(decoder[i]->decInfo));
-				if (ret != H264SWDEC_OK)
-					exit(1);
-					
-					if (cropDisplay && decoder[i]->decInfo.croppingFlag)
-					{
-						DEBUG(("Decoder[%d] Cropping params: (%d, %d) %dx%d\n",
-							   i,
-							   decoder[i]->decInfo.cropParams.cropLeftOffset,
-							   decoder[i]->decInfo.cropParams.cropTopOffset,
-							   decoder[i]->decInfo.cropParams.cropOutWidth,
-							   decoder[i]->decInfo.cropParams.cropOutHeight));
-					}
-				
-				DEBUG(("Decoder[%d] Width %d Height %d\n", i,
-					   decoder[i]->decInfo.picWidth,
-					   decoder[i]->decInfo.picHeight));
-				
-				DEBUG(("Decoder[%d] videoRange %d, matricCoefficients %d\n",
-					   i, decoder[i]->decInfo.videoRange,
-					   decoder[i]->decInfo.matrixCoefficients));
-				decoder[i]->decInput.dataLen -=
-				(u32)(decoder[i]->decOutput.pStrmCurrPos -
-					  decoder[i]->decInput.pStream);
-				decoder[i]->decInput.pStream =
-				decoder[i]->decOutput.pStrmCurrPos;
-				break;
-				
-			case H264SWDEC_PIC_RDY_BUFF_NOT_EMPTY:
-				decoder[i]->decInput.dataLen -=
-				(u32)(decoder[i]->decOutput.pStrmCurrPos -
-					  decoder[i]->decInput.pStream);
-				decoder[i]->decInput.pStream =
-				decoder[i]->decOutput.pStrmCurrPos;
-				///fall through
-			case H264SWDEC_PIC_RDY:
-				if (ret == H264SWDEC_PIC_RDY)
-					decoder[i]->decInput.dataLen = 0;
-					
-					ret = H264SwDecGetInfo(decoder[i]->decInst,
-										   &(decoder[i]->decInfo));
-					if (ret != H264SWDEC_OK)
-						exit(1);
-						
-						while (H264SwDecNextPicture(decoder[i]->decInst,
-													&(decoder[i]->decPicture), 0) == H264SWDEC_PIC_RDY)
-						{
-							decoder[i]->picNumber++;
-							
-							numErrors += decoder[i]->decPicture.nbrOfErrMBs;
-							
-							DEBUG(("Decoder[%d] PIC %d, type %s, concealed %d\n",
-								   i, decoder[i]->picNumber,
-								   decoder[i]->decPicture.isIdrPicture
-								   ? "IDR" : "NON-IDR",
-								   decoder[i]->decPicture.nbrOfErrMBs));
-							fflush(stdout);
-							
-							CropWriteOutput(decoder[i]->foutput,
-											(u8*)decoder[i]->decPicture.pOutputPicture,
-											cropDisplay, &(decoder[i]->decInfo));
-						}
-				
-				if (maxNumPics && decoder[i]->picNumber == maxNumPics)
-					decoder[i]->decInput.dataLen = 0;
-					break;
-				
-			case H264SWDEC_STRM_PROCESSED:
-			case H264SWDEC_STRM_ERR:
-			case H264SWDEC_PARAM_ERR:
-				decoder[i]->decInput.dataLen = 0;
-				break;
-				
-			default:
-				DEBUG(("Decoder[%d] FATAL ERROR\n", i));
-				exit(10);
-				break;
-				
-		}
-	}
-	
-	// check if any of the instances is still running (=has more data) 	instRunning = instCount;
-	for (i = 0; i < instCount; i++)
-	{
-		if (decoder[i]->decInput.dataLen == 0)
-			instRunning--;
-	}
-	
-} while (instRunning);
-
-
-/// get last frames and close each instance
-for (i = 0; i < instCount; i++)
-{
-	while (H264SwDecNextPicture(decoder[i]->decInst,
-								&(decoder[i]->decPicture), 1) == H264SWDEC_PIC_RDY)
-	{
-		decoder[i]->picNumber++;
-		
-		DEBUG(("Decoder[%d] PIC %d, type %s, concealed %d\n",
-			   i, decoder[i]->picNumber,
-			   decoder[i]->decPicture.isIdrPicture
-			   ? "IDR" : "NON-IDR",
-			   decoder[i]->decPicture.nbrOfErrMBs));
-		fflush(stdout);
-		
-		CropWriteOutput(decoder[i]->foutput,
-						(u8*)decoder[i]->decPicture.pOutputPicture,
-						cropDisplay, &(decoder[i]->decInfo));
-	}
-	*/
