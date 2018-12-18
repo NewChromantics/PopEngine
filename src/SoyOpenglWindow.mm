@@ -136,7 +136,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		//[mWindow setTitleWithRepresentedFilename:Title];
 		
 		//	mouse callbacks
-		[mWindow setAcceptsMouseMovedEvents:TRUE];
+		[mWindow setAcceptsMouseMovedEvents:YES];
 		mView->mOnMouseDown = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos);	};
 		mView->mOnMouseMove = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos);	};
 		mView->mOnMouseUp = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos);	};

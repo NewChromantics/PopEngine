@@ -176,6 +176,19 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 	mLastPos = event.locationInWindow;
 }
 
+
+-(void)mouseMoved:(NSEvent *)event
+{
+	if ( !Soy::Assert(mParent,"Parent expected") )
+		return;
+	
+	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
+	auto Pos = ViewPointToVectorNormalised( self, event.locationInWindow );
+	if ( mParent->mOnMouseMove )
+	mParent->mOnMouseMove( Pos );
+	mLastPos = event.locationInWindow;
+}
+
 -(void)mouseUp:(NSEvent *)event
 {
 	if ( !Soy::Assert(mParent,"Parent expected") )
@@ -255,11 +268,23 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 		mParent = Parent;
 	}
 	
+	//	enable drag & drop
 	//	https://stackoverflow.com/a/29029456
 	//	https://stackoverflow.com/a/8567836	NSFilenamesPboardType
 	[self registerForDraggedTypes: @[(NSString*)kUTTypeItem]];
 	//[self registerForDraggedTypes:[NSImage imagePasteboardTypes]];
 	//registerForDraggedTypes([NSFilenamesPboardType])
+	
+	//	enable mouse tracking events (enter, exit, move)
+	//	https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/TrackingAreaObjects/TrackingAreaObjects.html#//apple_ref/doc/uid/10000060i-CH8-SW1
+	NSTrackingAreaOptions options = (NSTrackingActiveAlways | NSTrackingInVisibleRect |
+									 NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved);
+	
+	NSTrackingArea *area = [[NSTrackingArea alloc] initWithRect:[self bounds]
+														options:options
+														  owner:self
+													   userInfo:nil];
+	[self addTrackingArea:area];
 	
 	return self;
 }
