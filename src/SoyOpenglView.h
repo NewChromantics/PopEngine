@@ -117,9 +117,9 @@ public:
 	Soy::Rectx<int32_t>		GetScreenRect();
 
 public:
-	std::function<void(const TMousePos&)>		mOnMouseDown;
-	std::function<void(const TMousePos&)>		mOnMouseMove;
-	std::function<void(const TMousePos&)>		mOnMouseUp;
+	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>		mOnMouseDown;
+	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>		mOnMouseMove;
+	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>		mOnMouseUp;
 	std::function<bool(ArrayBridge<std::string>&)>	mOnTryDragDrop;
 	std::function<void(ArrayBridge<std::string>&)>	mOnDragDrop;
 	std::function<void(Opengl::TRenderTarget&,std::function<void()>)>	mOnRender;

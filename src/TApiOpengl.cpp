@@ -67,7 +67,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 	mContainer.RunScoped( Runner );
 }
 
-void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,const std::string& MouseFuncName)
+void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
 {
 	//  call javascript
 	auto Runner = [=](Local<Context> Context)
@@ -188,9 +188,9 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	};
 
 	mWindow->mOnRender = OnRender;
-	mWindow->mOnMouseDown = [this](const TMousePos& MousePos)	{	this->OnMouseFunc(MousePos,"OnMouseDown");	};
-	mWindow->mOnMouseUp = [this](const TMousePos& MousePos)		{	this->OnMouseFunc(MousePos,"OnMouseUp");	};
-	mWindow->mOnMouseMove = [this](const TMousePos& MousePos)	{	this->OnMouseFunc(MousePos,"OnMouseMove");	};
+	mWindow->mOnMouseDown = [this](const TMousePos& Pos,SoyMouseButton::Type Button)	{	this->OnMouseFunc(Pos,Button,"OnMouseDown");	};
+	mWindow->mOnMouseUp = [this](const TMousePos& Pos,SoyMouseButton::Type Button)		{	this->OnMouseFunc(Pos,Button,"OnMouseUp");	};
+	mWindow->mOnMouseMove = [this](const TMousePos& Pos,SoyMouseButton::Type Button)	{	this->OnMouseFunc(Pos,Button,"OnMouseMove");	};
 	mWindow->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->OnTryDragDrop(Filenames);	};
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 }

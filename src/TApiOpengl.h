@@ -62,7 +62,7 @@ public:
 	
 
 	void		OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext);
-	void		OnMouseFunc(const TMousePos& MousePos,const std::string& MouseFuncName);
+	void		OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName);
 	bool		OnTryDragDrop(ArrayBridge<std::string>& Filenames);
 	void		OnDragDrop(ArrayBridge<std::string>& Filenames);
 	

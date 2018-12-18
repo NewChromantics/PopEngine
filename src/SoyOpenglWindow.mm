@@ -137,9 +137,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		
 		//	mouse callbacks
 		[mWindow setAcceptsMouseMovedEvents:YES];
-		mView->mOnMouseDown = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos);	};
-		mView->mOnMouseMove = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos);	};
-		mView->mOnMouseUp = [this](const TMousePos& MousePos)	{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos);	};
+		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
+		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
+		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
 		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
 		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
 	};

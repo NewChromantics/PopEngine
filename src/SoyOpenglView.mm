@@ -9,9 +9,9 @@
 //	https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_threading/opengl_threading.html#//apple_ref/doc/uid/TP40001987-CH409-SW7
 static bool DoCGLLock = false;
 
-vec2f ViewPointToVector(NSView* View,const NSPoint& Point)
+vec2x<int32_t> ViewPointToVector(NSView* View,const NSPoint& Point)
 {
-	vec2f Position( Point.x, Point.y );
+	vec2x<int32_t> Position( Point.x, Point.y );
 	
 	//	invert y - osx is bottom-left/0,0 so flipped would be what we want. hence wierd flipping when not flipped
 	if ( !View.isFlipped )
@@ -157,10 +157,10 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 	Soy::Platform::PushCursor(SoyCursor::Hand);
 	
 	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVectorNormalised( self, event.locationInWindow );
+	auto Pos = ViewPointToVector( self, event.locationInWindow );
 	
 	if ( mParent->mOnMouseDown )
-		mParent->mOnMouseDown( Pos );
+		mParent->mOnMouseDown( Pos, SoyMouseButton::Left );
 	mLastPos = event.locationInWindow;
 }
 
@@ -170,9 +170,9 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 		return;
 
 	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVectorNormalised( self, event.locationInWindow );
+	auto Pos = ViewPointToVector( self, event.locationInWindow );
 	if ( mParent->mOnMouseMove )
-		mParent->mOnMouseMove( Pos );
+		mParent->mOnMouseMove( Pos, SoyMouseButton::Left );
 	mLastPos = event.locationInWindow;
 }
 
@@ -183,9 +183,9 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 		return;
 	
 	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVectorNormalised( self, event.locationInWindow );
+	auto Pos = ViewPointToVector( self, event.locationInWindow );
 	if ( mParent->mOnMouseMove )
-	mParent->mOnMouseMove( Pos );
+		mParent->mOnMouseMove( Pos, SoyMouseButton::None );
 	mLastPos = event.locationInWindow;
 }
 
@@ -195,9 +195,9 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 		return;
 
 	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVectorNormalised( self, mLastPos );
+	auto Pos = ViewPointToVector( self, mLastPos );
 	if ( mParent->mOnMouseUp )
-		mParent->mOnMouseUp( Pos );
+		mParent->mOnMouseUp( Pos, SoyMouseButton::Left );
 	Soy::Platform::PopCursor();
 }
 
