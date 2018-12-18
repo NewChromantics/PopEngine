@@ -76,11 +76,12 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 		{
 			auto This = this->GetHandle();
 			auto Func = v8::GetFunction( Context, This, MouseFuncName );
-			BufferArray<Local<Value>,2> Args;
+			BufferArray<Local<Value>,3> Args;
 		
 			Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.x ) );
 			Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.y ) );
-		
+			Args.PushBack( v8::Number::New(Context->GetIsolate(), MouseButton ) );
+			
 			mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
 		}
 		catch(std::exception& e)

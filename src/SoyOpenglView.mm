@@ -144,62 +144,79 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 }
 
 
+void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(const TMousePos&,SoyMouseButton::Type)>& EventOut,SoyMouseButton::Type Button,NSPoint& LastPos,MacOpenglView* Self)
+{
+	if ( !Soy::Assert(Parent,"Parent expected") )
+		return;
+	
+	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
+	auto Pos = ViewPointToVector( Self, EventIn.locationInWindow );
+	
+	if ( EventOut )
+		EventOut( Pos, Button );
+	
+	LastPos = EventIn.locationInWindow;
+}
 
 
 @implementation MacOpenglView
 
 
+-(void)mouseMoved:(NSEvent *)event
+{
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::None, mLastPos, self );
+}
+
 -(void)mouseDown:(NSEvent *)event
 {
-	if ( !Soy::Assert(mParent,"Parent expected") )
-		return;
-
 	Soy::Platform::PushCursor(SoyCursor::Hand);
-	
-	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVector( self, event.locationInWindow );
-	
-	if ( mParent->mOnMouseDown )
-		mParent->mOnMouseDown( Pos, SoyMouseButton::Left );
-	mLastPos = event.locationInWindow;
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Left, mLastPos, self );
 }
 
 -(void)mouseDragged:(NSEvent *)event
 {
-	if ( !Soy::Assert(mParent,"Parent expected") )
-		return;
-
-	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVector( self, event.locationInWindow );
-	if ( mParent->mOnMouseMove )
-		mParent->mOnMouseMove( Pos, SoyMouseButton::Left );
-	mLastPos = event.locationInWindow;
-}
-
-
--(void)mouseMoved:(NSEvent *)event
-{
-	if ( !Soy::Assert(mParent,"Parent expected") )
-		return;
-	
-	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVector( self, event.locationInWindow );
-	if ( mParent->mOnMouseMove )
-		mParent->mOnMouseMove( Pos, SoyMouseButton::None );
-	mLastPos = event.locationInWindow;
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::Left, mLastPos, self );
 }
 
 -(void)mouseUp:(NSEvent *)event
 {
-	if ( !Soy::Assert(mParent,"Parent expected") )
-		return;
-
-	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
-	auto Pos = ViewPointToVector( self, mLastPos );
-	if ( mParent->mOnMouseUp )
-		mParent->mOnMouseUp( Pos, SoyMouseButton::Left );
-	Soy::Platform::PopCursor();
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseUp, SoyMouseButton::Left, mLastPos, self );
 }
+
+
+-(void)rightMouseDown:(NSEvent *)event
+{
+	Soy::Platform::PushCursor(SoyCursor::Hand);
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Right, mLastPos, self );
+}
+
+-(void)rightMouseDragged:(NSEvent *)event
+{
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::Right, mLastPos, self );
+}
+
+-(void)rightMouseUp:(NSEvent *)event
+{
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseUp, SoyMouseButton::Right, mLastPos, self );
+}
+
+
+-(void)otherMouseDown:(NSEvent *)event
+{
+	Soy::Platform::PushCursor(SoyCursor::Hand);
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Middle, mLastPos, self );
+}
+
+-(void)otherMouseDragged:(NSEvent *)event
+{
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::Middle, mLastPos, self );
+}
+
+-(void)otherMouseUp:(NSEvent *)event
+{
+	TriggerMouseEvent( event, mParent, mParent->mOnMouseUp, SoyMouseButton::Middle, mLastPos, self );
+}
+
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
