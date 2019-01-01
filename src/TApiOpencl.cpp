@@ -380,11 +380,6 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 	 Container->ExecuteFunc( Context, CallbackFunctionLocalFunc, FunctionThis, GetArrayBridge(CallbackParams) );
 	 };
 	 */
-	auto OnCompleted = [=](Local<Context> Context)
-	{
-		auto ResolverLocal = Resolver->GetLocal(*Isolate);
-		ResolverLocal->Resolve( v8::Undefined( Isolate ) );
-	};
 	
 	auto KernelInit = [IterationCount](Opencl::TKernelState&,ArrayBridge<vec2x<size_t>>& IterationMeta)
 	{
@@ -416,16 +411,25 @@ void TOpenclContext::DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> It
 	
 	auto KernelFinished = [=](Opencl::TKernelState& KernelState)
 	{
-		auto ExecuteFinished = [&](Local<Context> Context)
+		auto ExecuteFinished = [&](Local<Context> JsContext)
 		{
 			auto KernelStateHandle = Container->CreateObjectInstance<TOpenclKernelState>( KernelState);
 			BufferArray<Local<Value>,10> CallbackParams;
 			CallbackParams.PushBack( KernelStateHandle );
 			auto This = v8::Local<Object>();
-			Container->ExecuteFunc( Context, FinishedCallback->GetLocal(*Isolate), This, GetArrayBridge(CallbackParams) );
+			auto OnFinishedResult = Container->ExecuteFunc( JsContext, FinishedCallback->GetLocal(*Isolate), This, GetArrayBridge(CallbackParams) );
+			auto OnFinishedResultPersistent = v8::GetPersistent( *Isolate, OnFinishedResult );
+			
+			auto OnCompleted = [=](Local<Context> JsContext)
+			{
+				auto ResolverLocal = Resolver->GetLocal(*Isolate);
+				auto OnFinishedResultLocal = OnFinishedResultPersistent->GetLocal(*Isolate);
+				ResolverLocal->Resolve( OnFinishedResultLocal );
+			};
+			
+			Container->QueueScoped( OnCompleted );
 		};
 		Container->RunScoped( ExecuteFinished );
-		Container->QueueScoped( OnCompleted );
 	};
 	
 	auto KernelError = [=](std::exception& Exception)
