@@ -623,6 +623,22 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		auto BufferArray = GetFloatXBufferArray<cl_float2,2>( ValueHandle, Context, Uniform.mName, Blocking );
 		KernelState.SetUniform( UniformName, BufferArray );
 	}
+	else if ( Uniform.mType == "float4*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto Blocking = true;
+		auto BufferArray = GetFloatXBufferArray<cl_float4,4>( ValueHandle, Context, Uniform.mName, Blocking );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
+	else if ( Uniform.mType == "float8*" )
+	{
+		//	need to check here for buffer reuse
+		auto& Context = KernelState.GetContext();
+		auto Blocking = true;
+		auto BufferArray = GetFloatXBufferArray<cl_float8,8>( ValueHandle, Context, Uniform.mName, Blocking );
+		KernelState.SetUniform( UniformName, BufferArray );
+	}
 	else if ( Uniform.mType == "float16*" )
 	{
 		//	need to check here for buffer reuse
@@ -726,7 +742,25 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 	auto Uniform = KernelState.GetUniform( UniformName );
 
 	//	work out what to do from type
-	if ( Uniform.mType == "float4*" )
+	if ( Uniform.mType == "float*" )
+	{
+		auto Alignment = 1;
+		Array<cl_float> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
+		return ValuesArray;
+	}
+	else if ( Uniform.mType == "float2*" )
+	{
+		auto Alignment = 2;
+		Array<cl_float2> Values;
+		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
+		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
+		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
+		return ValuesArray;
+	}
+	else if ( Uniform.mType == "float4*" )
 	{
 		auto Alignment = 4;
 		Array<cl_float4> Values;
@@ -735,10 +769,10 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Par
 		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
 		return ValuesArray;
 	}
-	else if ( Uniform.mType == "float*" )
+	else if ( Uniform.mType == "float8*" )
 	{
-		auto Alignment = 1;
-		Array<cl_float> Values;
+		auto Alignment = 8;
+		Array<cl_float8> Values;
 		KernelState.ReadUniform( Uniform.mName.c_str(), GetArrayBridge(Values) );
 		auto Valuesf = GetRemoteArray( reinterpret_cast<float*>(Values.GetArray()), Values.GetSize()*Alignment );
 		auto ValuesArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(Valuesf) );
