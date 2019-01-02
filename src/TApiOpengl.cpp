@@ -354,15 +354,15 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 		CallbackParams.PushBack( TargetLocal );
 		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
 		auto FunctionThis = Context->Global();
-		Container->ExecuteFunc( Context, CallbackFunctionLocal, FunctionThis, GetArrayBridge(CallbackParams) );
+		auto ExecuteResult = Container->ExecuteFunc( Context, CallbackFunctionLocal, FunctionThis, GetArrayBridge(CallbackParams) );
+		//	todo: return this result to the promise
 	};
 	
 	auto OnCompleted = [=](Local<Context> Context)
 	{
-		//	gr: can't do this unless we're in the javascript thread...
 		auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-		auto Message = String::NewFromUtf8( Isolate, "Yay!");
-		ResolverLocal->Resolve( Message );
+		auto TargetLocal = TargetPersistent->GetLocal(*Isolate);
+		ResolverLocal->Resolve( TargetLocal );
 	};
 	
 	auto OpenglContext = This.mWindow->GetContext();
