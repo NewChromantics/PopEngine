@@ -888,11 +888,16 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 		auto UniformFloatCount = Uniform.GetFloatCount();
 		if ( Floats.GetSize() < UniformFloatCount )
 		{
+			//std::Debug << "Warning: Uniform " << Uniform.mName << " only given " << Floats.GetSize() << "/" << UniformFloatCount << " floats" << std::endl;
 			if ( Uniform.GetArraySize() > 1 )
 			{
 				for ( auto i=Floats.GetSize();	i<UniformFloatCount;	i++ )
 					Floats.PushBack(0);
 			}
+		}
+		else if ( Floats.GetSize() > UniformFloatCount )
+		{
+			std::Debug << "Warning: Uniform " << Uniform.mName << " given " << Floats.GetSize() << "/" << UniformFloatCount << " floats" << std::endl;
 		}
 		
 		Shader.SetUniform( Uniform, GetArrayBridge(Floats) );
