@@ -18,6 +18,7 @@ const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 const char GarbageCollect_FunctionName[] = "GarbageCollect";
 const char SetTimeout_FunctionName[] = "setTimeout";
 const char Sleep_FunctionName[] = "Sleep";
+const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
 const char GetComputerName_FunctionName[] = "GetComputerName";
 const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
 const char GetImageHeapSize_FunctionName[] = "GetImageHeapSize";
@@ -54,6 +55,7 @@ static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
+static v8::Local<v8::Value> GetTimeNowMs(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
 static v8::Local<v8::Value> GetImageHeapSize(v8::CallbackInfo& Params);
@@ -148,6 +150,7 @@ static Local<Value> SetTimeout(CallbackInfo& Params)
 
 
 
+
 static Local<Value> Sleep(CallbackInfo& Params)
 {
 	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[0]);
@@ -156,6 +159,18 @@ static Local<Value> Sleep(CallbackInfo& Params)
 	Params.mContainer.Yield( TimeoutMs );
 	
 	return Undefined(Params.mIsolate);
+}
+
+
+static Local<Value> GetTimeNowMs(CallbackInfo& Params)
+{
+	SoyTime Now(true);
+	
+	auto NowMs = Now.GetMilliSeconds();
+	auto NowMsInt = NowMs.count();
+	
+	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), NowMsInt );
+	return ValueHandle;
 }
 
 
@@ -324,6 +339,7 @@ void ApiCommon::Bind(TV8Container& Container)
 	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
 	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
 	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
+	Container.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs);
 	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
 	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
 	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
