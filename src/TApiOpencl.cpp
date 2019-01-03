@@ -101,7 +101,11 @@ void TOpenclRunner::Run()
 	
 	//	get iterations we want
 	Array<vec2x<size_t>> Iterations;
-	Init( Kernel, GetArrayBridge( Iterations ) );
+	{
+		auto TimerName = this->mKernel.mKernelName + std::string(" Kernel initialision");
+		Soy::TScopeTimerPrint FinishedTimer( TimerName.c_str(), 5 );
+		Init( Kernel, GetArrayBridge( Iterations ) );
+	}
 	
 	//	divide up the iterations
 	Array<Opencl::TKernelIteration> IterationSplits;
@@ -130,6 +134,9 @@ void TOpenclRunner::Run()
 			
 			if ( Semaphore )
 			{
+				auto TimerName = this->mKernel.mKernelName + std::string(" Kernel blocking iteration");
+				Soy::TScopeTimerPrint FinishedTimer( TimerName.c_str(), 5 );
+
 				Kernel.QueueIteration( Iteration, *Semaphore );
 				Semaphore->Wait();
 			}
@@ -141,6 +148,8 @@ void TOpenclRunner::Run()
 		
 		LastSemaphore.Wait();
 		
+		auto TimerName = this->mKernel.mKernelName + std::string(" Kernel Finish");
+		Soy::TScopeTimerPrint FinishedTimer( TimerName.c_str(), 5 );
 		OnFinished( Kernel );
 	}
 	catch(std::exception& e)
