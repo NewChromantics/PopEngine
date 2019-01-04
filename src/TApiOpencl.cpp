@@ -612,13 +612,11 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 		EnumArray( ValueHandle, GetArrayBridge(Floats), Uniform.mName );
 		KernelState.SetUniform( UniformName.c_str(), Floats[0] );
 	}
-	else if ( Uniform.mType == "float4*" )
+	else if ( Uniform.mType == "float16" )
 	{
-		//	need to check here for buffer reuse
-		auto& Context = KernelState.GetContext();
-		auto Blocking = true;
-		auto BufferArray = GetFloatXBufferArray<cl_float4,4>( ValueHandle, Context, Uniform.mName, Blocking );
-		KernelState.SetUniform( UniformName, BufferArray );
+		BufferArray<float,16> Floats;
+		EnumArray( ValueHandle, GetArrayBridge(Floats), Uniform.mName );
+		KernelState.SetUniform( UniformName.c_str(), GetArrayBridge(Floats) );
 	}
 	else if ( Uniform.mType == "float*" )
 	{
