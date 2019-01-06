@@ -622,7 +622,13 @@ v8::Local<v8::Value> TImageWrapper::WritePixels(const v8::CallbackInfo& Params)
 	auto BufferHandle = Arguments[2];
 	
 	Array<uint8_t> Rgba;
-	v8::EnumArray<v8::Uint8Array>( BufferHandle, GetArrayBridge(Rgba) );
+	
+	//	todo: handle more array types
+	if ( BufferHandle->IsUint8ClampedArray() )
+		v8::EnumArray<v8::Uint8ClampedArray>( BufferHandle, GetArrayBridge(Rgba) );
+	else
+		v8::EnumArray<v8::Uint8Array>( BufferHandle, GetArrayBridge(Rgba) );
+	
 	auto Width = v8::SafeCast<Number>( WidthHandle )->Uint32Value();
 	auto Height = v8::SafeCast<Number>( HeightHandle )->Uint32Value();
 	
