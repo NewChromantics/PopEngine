@@ -587,15 +587,24 @@ Local<v8::Value> v8::GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& V
 {
 	std::stringstream TimerName;
 	TimerName << "v8::GetTypedArray( " << Values.GetSize() << " )";
-	Soy::TScopeTimerPrint Timer(TimerName.str().c_str(), 10 );
+	Soy::TScopeTimerPrint Timer(TimerName.str().c_str(), 5 );
 	
+	Soy::TScopeTimerPrint Timer3("GetTypedArray<uint8_t> alloc v8 arrays", 5 );
 	auto Size = Values.GetDataSize();
 	auto Rgba8Buffer = v8::ArrayBuffer::New( &Isolate, Size );
 	auto Rgba8BufferContents = Rgba8Buffer->GetContents();
+	Timer3.Stop();
 	auto Rgba8DataArray = GetRemoteArray( static_cast<uint8_t*>( Rgba8BufferContents.Data() ), Rgba8BufferContents.ByteLength() );
-	Rgba8DataArray.Copy( Values );
+
+	{
+		Soy::TScopeTimerPrint Timer2("GetTypedArray<uint8_t> Copy()", 5 );
+		Rgba8DataArray.Copy( Values );
+	}
 	
+	Soy::TScopeTimerPrint Timer3("GetTypedArray<uint8_t> v8::Uint8ClampedArray::New", 5 );
 	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
+	Timer3.Stop();
+	
 	return Rgba8;
 }
 

@@ -842,6 +842,7 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 	}
 	else
 	{
+		Soy::TScopeTimerPrint Timer("GetRgba8 conversion to RGBA", 5 );
 		ConvertedPixels.reset( new SoyPixels(CurrentPixels,mContainer.GetImageHeap()) );
 		ConvertedPixels->SetFormat( SoyPixelsFormat::RGBA );
 		pPixels = ConvertedPixels.get();
