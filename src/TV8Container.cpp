@@ -601,7 +601,7 @@ Local<v8::Value> v8::GetTypedArray(v8::Isolate& Isolate,ArrayBridge<uint8_t>&& V
 		Rgba8DataArray.Copy( Values );
 	}
 	
-	Soy::TScopeTimerPrint Timer3("GetTypedArray<uint8_t> v8::Uint8ClampedArray::New", 5 );
+	Soy::TScopeTimerPrint Timer4("GetTypedArray<uint8_t> v8::Uint8ClampedArray::New", 5 );
 	auto Rgba8 = v8::Uint8ClampedArray::New( Rgba8Buffer, 0, Rgba8Buffer->ByteLength() );
 	Timer3.Stop();
 	
