@@ -7,7 +7,7 @@
 #include "PopMovie/AvfMovieDecoder.h"
 #include "SoyDecklink/SoyDecklink.h"
 
-#include "SoyBroadway/BroadwayDecoder.h"
+#include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
 
 using namespace v8;
 
@@ -441,7 +441,7 @@ void TAvcDecoderWrapper::Construct(const v8::CallbackInfo& Params)
 	using namespace v8;
 	auto* Isolate = Arguments.GetIsolate();
 	
-	mBroadwayDecoder.reset( new Broadway::TDecoder );
+	mDecoder.reset( new TDecoderInstance );
 }
 
 Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Container)
@@ -517,7 +517,19 @@ v8::Local<v8::Value> TAvcDecoderWrapper::Decode(const v8::CallbackInfo& Params)
 	std::function<void(const SoyPixelsImpl&)> OnImageDecoded;
 	if ( DecodeCallbackHandleIsValid )
 		OnImageDecoded = OnImage;
-	This.mBroadwayDecoder->Decode( GetArrayBridge(PacketBytes), OnImageDecoded );
+	
+	//	this function is synchronous, so it should put stuff straight back in the queue
+	//	the callback was handy though, so maybe go back to it
+	This.mDecoder->PushData( PacketBytes.GetArray(), PacketBytes.GetDataSize(), 0 );
+
+	
+	
+	TFrame Frame;
+	while ( This.mDecoder->PopFrame(Frame) )
+	{
+		auto& Pixels = *Frame.mPixels;
+		OnImageDecoded( Pixels );
+	}
 
 	return v8::Undefined(Params.mIsolate);
 }

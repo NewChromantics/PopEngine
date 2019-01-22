@@ -7,7 +7,8 @@ INFOPLIST_FILE = $(SRCROOT)/Info.plist
 
 V8_PATH = $(SRCROOT)/src/v8
 BROADWAY_PATH = $(SRCROOT)/src/SoyBroadway/Broadway/Decoder
-HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(V8_PATH) $(V8_PATH)/include $(DLIB_PATH)/include $(BROADWAY_PATH)/inc
+SOYLIB_PATH = $(SRCROOT)/src/
+HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(V8_PATH) $(V8_PATH)/include $(DLIB_PATH)/include $(BROADWAY_PATH)/inc $(SOYLIB_PATH)
 LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(V8_PATH)/lib $(DLIB_PATH)/lib
 
 OTHER_CFLAGS = -Wno-ambiguous-macro

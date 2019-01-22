@@ -6,6 +6,7 @@
 class TMediaPacket;
 class TMediaExtractor;
 class TMediaExtractorParams;
+class TDecoderInstance;
 
 namespace Broadway
 {
@@ -64,10 +65,8 @@ public:
 };
 
 
-
-
 extern const char AvcDecoder_TypeName[];
-class TAvcDecoderWrapper : public TObjectWrapper<AvcDecoder_TypeName,Broadway::TDecoder>
+class TAvcDecoderWrapper : public TObjectWrapper<AvcDecoder_TypeName,TDecoderInstance>
 {
 public:
 	TAvcDecoderWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
@@ -84,5 +83,5 @@ public:
 	static v8::Local<v8::Value>				Decode(const v8::CallbackInfo& Arguments);
 	
 public:
-	std::shared_ptr<Broadway::TDecoder>&		mBroadwayDecoder = mObject;
+	std::shared_ptr<TDecoderInstance>&		mDecoder = mObject;
 };
