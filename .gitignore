@@ -37,3 +37,5 @@ sysinfo.txt
 src/v8/lib/*.a
 src/v8/v8Runtime/*.bin
 src/v8/v8Runtime/*.dat
+
+src/Libs/PopH264Framework\.framework/
