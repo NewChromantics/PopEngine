@@ -74,13 +74,15 @@ async function RunDetection(InputImage)
 {
 	try
 	{
-		var PeopleDetector = new CoreMl_MobileNet();
-		const DetectedPeople = await PeopleDetector.Detect(FrameImage);
+		var PeopleDetector = new CoreMlMobileNet();
+		const DetectedPeople = await PeopleDetector.DetectObjects(FrameImage);
+		Debug(DetectedPeople);
+		DetectedPeople.forEach(Debug);
 		FrameRect = DetectedPeople[0];
 	}
 	catch(e)
 	{
-		Debug(e);
+		Debug(">>>> Exception: " + e);
 	}
 }
 RunDetection( FrameImage );
