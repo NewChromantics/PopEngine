@@ -98,6 +98,9 @@
 		BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
 		BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */ = {isa = PBXBuildFile; fileRef = BF92C18E21BAB81E00A1DD49 /* Data_Holosports */; };
 		BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF97592520E9611A0093B296 /* TApiOpencl.cpp */; };
+		BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */ = {isa = PBXBuildFile; fileRef = BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */; };
+		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
+		BF99BE2721F8960600E6CE5B /* MobileNet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
 		BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */; };
@@ -312,6 +315,9 @@
 		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
+		BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_PeopleDetector; sourceTree = "<group>"; };
+		BF99BE2221F8946D00E6CE5B /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
+		BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = MobileNet.mlmodel; path = Data_PeopleDetector/MobileNet.mlmodel; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -417,6 +423,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
 				BF6554252132C4D9003E4241 /* libwasm_globals_section_fuzzer.a in Frameworks */,
 				BF6554092132C4D9003E4241 /* libfuzzer_support.a in Frameworks */,
@@ -584,6 +591,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BF99BE2221F8946D00E6CE5B /* CoreML.framework */,
 				BF19611521B988C9007014EF /* JavaScriptCore.framework */,
 				BF6EB33421111D2900FC991B /* VideoToolbox.framework */,
 				BF6EB32C21111C8300FC991B /* CoreMedia.framework */,
@@ -670,6 +678,7 @@
 			isa = PBXGroup;
 			children = (
 				BF377320211F8BC5008EB5F7 /* App.xcassets */,
+				BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */,
 				BF92C18E21BAB81E00A1DD49 /* Data_Holosports */,
 				BF65537D2132BD6B003E4241 /* Data_HelloWorld */,
 				BF30550A1B56F553002B0892 /* Data */,
@@ -677,6 +686,7 @@
 				BFCF8B562107552700EE7307 /* Data_Posenet */,
 				BF51EA4220ED83F6007443D8 /* DataOld */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
+				BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */,
 				BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF6553C32132C4D9003E4241 /* v8 */,
@@ -913,6 +923,7 @@
 				BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF6554022132C4D9003E4241 /* APIDesign.md in Resources */,
+				BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */,
 				BF377321211F8BC5008EB5F7 /* App.xcassets in Resources */,
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 				BF3786E92132C81D008E4350 /* v8Runtime in Resources */,
@@ -977,6 +988,7 @@
 				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
 				BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */,
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
+				BF99BE2721F8960600E6CE5B /* MobileNet.mlmodel in Sources */,
 				BFD4D56321342E310028A647 /* AvfMovieDecoder.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,
 				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,
