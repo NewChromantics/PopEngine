@@ -188,11 +188,11 @@ void CoreMl::TMobileNet::DetectObjectsYolo(const SoyPixelsImpl& Pixels,std::func
 		// the size of an "anchor" box. Here we also transform the width and
 		// height into the original 416x416 image space.
 		//	let anchors: [Float] = [1.08, 1.19, 3.42, 4.41, 6.63, 11.38, 9.42, 5.11, 16.62, 10.52]
-		//float anchors[] = { 1.08, 1.19, 3.42, 4.41, 6.63, 11.38, 9.42, 5.11, 16.62, 10.52 };
-		//auto RectWidth = exp(tw) * anchors[2*b    ] * blockWidth;
-		//auto RectHeight = exp(th) * anchors[2*b + 1] * blockHeight;
-		auto RectWidth = exp(tw) * blockWidth;
-		auto RectHeight = exp(th) * blockHeight;
+		float anchors[] = { 1.08, 1.19, 3.42, 4.41, 6.63, 11.38, 9.42, 5.11, 16.62, 10.52 };
+		auto RectWidth = exp(tw) * anchors[2*b    ] * blockWidth;
+		auto RectHeight = exp(th) * anchors[2*b + 1] * blockHeight;
+		//auto RectWidth = exp(tw) * blockWidth;
+		//auto RectHeight = exp(th) * blockHeight;
 		
 		
 		//	iterate through each class

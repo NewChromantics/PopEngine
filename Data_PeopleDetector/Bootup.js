@@ -53,7 +53,7 @@ void main()
 			Overlap += 1;
 	}
 	//Overlap /= float(RectCount);
-	Overlap /= 2.0;
+	Overlap /= 3.0;
 	gl_FragColor.yz *= float2(Overlap,Overlap);
 }
 `;
@@ -85,7 +85,7 @@ Window1.OnRender = function(){	RenderWindow( Window1 );	};
 Window1.OnMouseMove = function(){};
 
 FrameImage = new Image("1cats.png");
-//FrameImage = new Image("6cats.jpg");
+FrameImage = new Image("6cats.jpg");
 
 async function RunDetection(InputImage)
 {
