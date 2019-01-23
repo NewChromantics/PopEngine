@@ -29,21 +29,37 @@ let Frag_Debug_Source =
 `
 in vec2 uv;
 uniform sampler2D Image;
-uniform float4 Rect;
+const int RectCount = 30;
+uniform float4 Rects[RectCount];
+
+bool InsideRect(float2 uv,float4 Rect)
+{
+	Rect.z += Rect.x;
+	Rect.w += Rect.y;
+	if ( uv.x >= Rect.x && uv.y >= Rect.y && uv.x <= Rect.z && uv.y <= Rect.w )
+		return true;
+	return false;
+}
 
 void main()
 {
 	float4 Sample = texture( Image, uv );
 	gl_FragColor = float4(Sample.xyz,1);
 	
-	if ( uv.x >= Rect.x && uv.y >= Rect.y && uv.x <= Rect.z && uv.y <= Rect.w )
-		gl_FragColor.yz = float2(0,0);
-	
+	float Overlap = 0;
+	for ( int RectIndex=0;	RectIndex<RectCount;	RectIndex++ )
+	{
+		if ( InsideRect( uv, Rects[RectIndex] ) )
+			Overlap += 1;
+	}
+	//Overlap /= float(RectCount);
+	Overlap /= 2.0;
+	gl_FragColor.yz *= float2(Overlap,Overlap);
 }
 `;
 
 
-var FrameRect = [0,0,0.1,0.1];
+var FrameRects = [[0,0,0.1,0.1]];
 var FrameImage = null;
 var FrameShader = null;
 function RenderWindow(RenderTarget)
@@ -56,7 +72,7 @@ function RenderWindow(RenderTarget)
 	let SetUniforms = function(Shader)
 	{
 		Shader.SetUniform("Image", FrameImage, 0 );
-		Shader.SetUniform("Rect", FrameRect );
+		Shader.SetUniform("Rects", FrameRects );
 	}
 	
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -64,11 +80,12 @@ function RenderWindow(RenderTarget)
 }
 
 //	startup
-let Window1 = new OpenglWindow("CoreMl",true);
+let Window1 = new OpenglWindow("meow learning",true);
 Window1.OnRender = function(){	RenderWindow( Window1 );	};
 Window1.OnMouseMove = function(){};
 
-FrameImage = new Image("jazzflute.jpg");
+FrameImage = new Image("1cats.png");
+//FrameImage = new Image("6cats.jpg");
 
 async function RunDetection(InputImage)
 {
@@ -76,9 +93,17 @@ async function RunDetection(InputImage)
 	{
 		var PeopleDetector = new CoreMlMobileNet();
 		const DetectedPeople = await PeopleDetector.DetectObjects(FrameImage);
-		Debug(DetectedPeople);
-		DetectedPeople.forEach(Debug);
-		FrameRect = DetectedPeople[0];
+		Debug("detected x"+DetectedPeople.length);
+		FrameRects = [];
+		let PushRect = function(Object)
+		{
+			let w = 416;
+			let h = 416;
+			let Rect = [Object.x/w,Object.y/h,Object.w/w,Object.h/h];
+			Debug(Rect);
+			FrameRects.push( Rect );
+		}
+		DetectedPeople.forEach(PushRect);
 	}
 	catch(e)
 	{

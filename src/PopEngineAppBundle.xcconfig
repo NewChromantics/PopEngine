@@ -12,3 +12,6 @@ HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(V8_PATH) $(V8_PATH)/
 LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(V8_PATH)/lib $(DLIB_PATH)/lib
 
 OTHER_CFLAGS = -Wno-ambiguous-macro
+
+//	10.13 for coreml
+MACOSX_DEPLOYMENT_TARGET = 10.13

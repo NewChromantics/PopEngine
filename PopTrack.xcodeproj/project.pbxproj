@@ -101,7 +101,11 @@
 		BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */ = {isa = PBXBuildFile; fileRef = BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */; };
 		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
 		BF99BE2721F8960600E6CE5B /* MobileNet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */; };
-		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
+		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */; };
+		BF99BE2D21F8ABA400E6CE5B /* Inceptionv3.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */; };
+		BF99BE2E21F8ABA400E6CE5B /* SqueezeNet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */; };
+		BF99BE3121F8ACD200E6CE5B /* VGG16.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */; };
+		BF99BE3221F8ACD200E6CE5B /* TinyYOLO.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
 		BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */; };
@@ -320,7 +324,11 @@
 		BF99BE2221F8946D00E6CE5B /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = MobileNet.mlmodel; path = Data_PeopleDetector/MobileNet.mlmodel; sourceTree = "<group>"; };
 		BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCoreMl.h; path = src/TApiCoreMl.h; sourceTree = "<group>"; };
-		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCoreMl.cpp; path = src/TApiCoreMl.cpp; sourceTree = "<group>"; };
+		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TApiCoreMl.mm; path = src/TApiCoreMl.mm; sourceTree = "<group>"; };
+		BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = Inceptionv3.mlmodel; path = Data_PeopleDetector/Inceptionv3.mlmodel; sourceTree = "<group>"; };
+		BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = SqueezeNet.mlmodel; path = Data_PeopleDetector/SqueezeNet.mlmodel; sourceTree = "<group>"; };
+		BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = VGG16.mlmodel; path = Data_PeopleDetector/VGG16.mlmodel; sourceTree = "<group>"; };
+		BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = TinyYOLO.mlmodel; path = Data_PeopleDetector/TinyYOLO.mlmodel; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -689,6 +697,10 @@
 				BFCF8B562107552700EE7307 /* Data_Posenet */,
 				BF51EA4220ED83F6007443D8 /* DataOld */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
+				BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */,
+				BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */,
+				BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */,
+				BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */,
 				BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */,
 				BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
@@ -704,7 +716,7 @@
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
-				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */,
+				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */,
 				BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
@@ -950,9 +962,11 @@
 				BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */,
 				BF6EB3262111160500FC991B /* AvfVideoCapture.mm in Sources */,
 				FB2534DE1A974E8200A61590 /* PopTrack.mm in Sources */,
+				BF99BE3221F8ACD200E6CE5B /* TinyYOLO.mlmodel in Sources */,
 				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
+				BF99BE2E21F8ABA400E6CE5B /* SqueezeNet.mlmodel in Sources */,
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
@@ -999,7 +1013,7 @@
 				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,
 				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
 				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
-				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */,
+				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */,
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */,
@@ -1008,6 +1022,7 @@
 				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
 				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
 				EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */,
+				BF99BE2D21F8ABA400E6CE5B /* Inceptionv3.mlmodel in Sources */,
 				BF1E05AE2117328300B56DE4 /* TV8ObjectWrapper.cpp in Sources */,
 				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
 				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
@@ -1015,6 +1030,7 @@
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
+				BF99BE3121F8ACD200E6CE5B /* VGG16.mlmodel in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
 				BF6EB33A21111D7200FC991B /* SoyTime.cpp in Sources */,
 				FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */,
