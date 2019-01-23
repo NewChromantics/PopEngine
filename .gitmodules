@@ -7,6 +7,3 @@
 [submodule "Data_Holosports"]
 	path = Data_Holosports
 	url = https://gitlab.com/NewChromantics/PopFragGui.git
-[submodule "src/SoyBroadway/Broadway"]
-	path = src/SoyBroadway/Broadway
-	url = https://github.com/mbebenita/Broadway.git
