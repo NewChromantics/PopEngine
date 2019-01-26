@@ -31,6 +31,26 @@ in vec2 uv;
 uniform sampler2D Image;
 const int RectCount = 30;
 uniform float4 Rects[RectCount];
+uniform float RectScores[RectCount];
+
+
+float3 NormalToRedGreen(float Normal)
+{
+	if ( Normal < 0.5 )
+	{
+		Normal = Normal / 0.5;
+		return float3( 1, Normal, 0 );
+	}
+	else if ( Normal <= 1 )
+	{
+		Normal = (Normal-0.5) / 0.5;
+		return float3( 1-Normal, 1, 0 );
+	}
+	
+	//	>1
+	return float3( 0,0,1 );
+}
+
 
 bool InsideRect(float2 uv,float4 Rect)
 {
@@ -41,25 +61,36 @@ bool InsideRect(float2 uv,float4 Rect)
 	return false;
 }
 
+float3 BlendColour(float3 a,float3 b,float Alpha)
+{
+	float3 rgb;
+	rgb += a * (1.0-Alpha);
+	rgb += b.xyz * (Alpha);
+	return rgb;
+}
+
 void main()
 {
 	float4 Sample = texture( Image, uv );
 	gl_FragColor = float4(Sample.xyz,1);
+	gl_FragColor.yz = gl_FragColor.xx;
 	
 	float Overlap = 0;
 	for ( int RectIndex=0;	RectIndex<RectCount;	RectIndex++ )
 	{
-		if ( InsideRect( uv, Rects[RectIndex] ) )
-			Overlap += 1;
+		if ( !InsideRect( uv, Rects[RectIndex] ) )
+			continue;
+
+		float BlendAlpha = 0.5 * RectScores[RectIndex];
+		float3 ScoreRgb = NormalToRedGreen( RectScores[RectIndex] );
+		gl_FragColor.xyz = BlendColour( gl_FragColor.xyz, ScoreRgb, BlendAlpha );
 	}
-	//Overlap /= float(RectCount);
-	Overlap /= 3.0;
-	gl_FragColor.yz *= float2(Overlap,Overlap);
 }
 `;
 
 
 var FrameRects = [[0,0,0.1,0.1]];
+var FrameRectScores = [0];
 var FrameImage = null;
 var FrameShader = null;
 function RenderWindow(RenderTarget)
@@ -73,6 +104,7 @@ function RenderWindow(RenderTarget)
 	{
 		Shader.SetUniform("Image", FrameImage, 0 );
 		Shader.SetUniform("Rects", FrameRects );
+		Shader.SetUniform("RectScores", FrameRectScores );
 	}
 	
 	RenderTarget.DrawQuad( FrameShader, SetUniforms );
@@ -86,6 +118,9 @@ Window1.OnMouseMove = function(){};
 
 FrameImage = new Image("1cats.png");
 FrameImage = new Image("6cats.jpg");
+FrameImage = new Image("Motd_baseline.png");
+FrameImage = new Image("Motd_baseline_big.png");
+FrameImage.Resize(416,416);
 
 async function RunDetection(InputImage)
 {
@@ -95,13 +130,27 @@ async function RunDetection(InputImage)
 		const DetectedPeople = await PeopleDetector.DetectObjects(FrameImage);
 		Debug("detected x"+DetectedPeople.length);
 		FrameRects = [];
+		FrameRectScores = [];
 		let PushRect = function(Object)
 		{
+			if ( Object.Label != "person" || Object.Score < 0.10 )
+			{
+				Debug("Skipped " + Object.Label + " at " + ((Object.Score*100).toFixed(2)) + "%");
+				return;
+			}
+			Debug(Object.Label + " at " + ((Object.Score*100).toFixed(2)) + "%");
+			
+			Object.Score /= 0.50;
+			Object.Score = Math.min( 1, Object.Score );
+			
 			let w = 416;
 			let h = 416;
 			let Rect = [Object.x/w,Object.y/h,Object.w/w,Object.h/h];
-			Debug(Rect);
+			let Score = Object.Score;
+			//Debug(Rect);
+			//Debug(Score);
 			FrameRects.push( Rect );
+			FrameRectScores.push( Score );
 		}
 		DetectedPeople.forEach(PushRect);
 	}
