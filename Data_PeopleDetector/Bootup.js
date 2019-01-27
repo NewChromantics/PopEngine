@@ -118,6 +118,9 @@ var FrameRectScores = [0];
 var FrameImage = null;
 var AllRectsShader = null;
 var SingleRectShader = null;
+
+var PersonImages = [];
+
 function RenderWindow(RenderTarget)
 {
 	if ( !AllRectsShader )
@@ -173,8 +176,10 @@ function RenderWindow(RenderTarget)
 			let SetUniforms = function(Shader)
 			{
 				Shader.SetUniform("VertexRect", Rect );
-				Shader.SetUniform("Image", FrameImage, 0 );
-				Shader.SetUniform("Rect", FrameRects[RectIndex] );
+				//Shader.SetUniform("Image", FrameImage, 0 );
+				//Shader.SetUniform("Rect", FrameRects[RectIndex] );
+				Shader.SetUniform("Image", PersonImages[RectIndex], 0 );
+				Shader.SetUniform("Rect", [0,0,1,1] );
 			}
 			RenderTarget.DrawQuad( SingleRectShader, SetUniforms );
 		}
@@ -222,6 +227,15 @@ async function RunDetection(InputImage)
 			//Debug(Score);
 			FrameRects.push( Rect );
 			FrameRectScores.push( Score );
+			
+			//	extract an image to do more processing on
+			let Person = new Image([1,1]);
+			Person.Copy( InputImage );
+			Debug("Made person image: " +Person + " [" + [Object.w,Object.h] + "]");
+			
+			let ClipRect = [ Object.x, Object.y, Object.w, Object.h ];
+			Person.Clip( ClipRect );
+			PersonImages.push( Person );
 		}
 		DetectedPeople.forEach(PushRect);
 	}

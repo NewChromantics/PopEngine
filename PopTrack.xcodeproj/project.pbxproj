@@ -90,6 +90,7 @@
 		BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33C21111D7A00FC991B /* SoyH264.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
+		BF75E86021FE5DB400B8CC33 /* hourglass.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
 		BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */; };
 		BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */; };
@@ -305,6 +306,7 @@
 		BF7225A91BADCB3B00550AD8 /* SoyStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyStream.h; path = src/SoyStream.h; sourceTree = "<group>"; };
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
+		BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = hourglass.mlmodel; sourceTree = "<group>"; };
 		BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyAssert.cpp; path = src/SoyAssert.cpp; sourceTree = "<group>"; };
 		BF89F6B51B4AB9DC00F58561 /* SoyAssert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyAssert.h; path = src/SoyAssert.h; sourceTree = "<group>"; };
 		BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMath.cpp; path = src/SoyMath.cpp; sourceTree = "<group>"; };
@@ -699,6 +701,7 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */,
 				BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */,
+				BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */,
 				BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */,
 				BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */,
 				BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */,
@@ -972,6 +975,7 @@
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
 				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
+				BF75E86021FE5DB400B8CC33 /* hourglass.mlmodel in Sources */,
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
 				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
 				BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */,
