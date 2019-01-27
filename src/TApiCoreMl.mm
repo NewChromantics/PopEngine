@@ -171,7 +171,7 @@ void CoreMl::TMobileNet::DetectObjectsYolo(const SoyPixelsImpl& Pixels,std::func
 		// The confidence value for the bounding box is given by tc. We use
 		// the logistic sigmoid to turn this into a percentage.
 		auto confidence = Sigmoid(tc);
-		if ( confidence < 0.05f )
+		if ( confidence < 0.01f )
 			continue;
 		std::Debug << "Confidence: " << confidence << std::endl;
 		

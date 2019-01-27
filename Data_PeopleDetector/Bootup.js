@@ -1,3 +1,13 @@
+//	gr: include is not a generic thing (or a wrapper yet) so we can change
+//	LoadFileAsString to a file-handle to detect file changes to auto reload things
+function include(Filename)
+{
+	let Source = LoadFileAsString(Filename);
+	return CompileAndRun( Source );
+}
+include("../Data_Holosports/PopDomJs/PopDomJs.js");
+
+
 let Vert_Source =
 `
 	#version 410
@@ -25,11 +35,11 @@ let Vert_Source =
 	}
 `;
 
-let Frag_Debug_Source =
+let Frag_ShowAllRects_Source =
 `
 in vec2 uv;
 uniform sampler2D Image;
-const int RectCount = 30;
+const int RectCount = 40;
 uniform float4 Rects[RectCount];
 uniform float RectScores[RectCount];
 
@@ -89,26 +99,87 @@ void main()
 `;
 
 
+let Frag_SingleRect_Source =
+`
+in vec2 uv;
+uniform sampler2D Image;
+uniform float4 Rect;
+
+void main()
+{
+	float2 SampleUv = mix( Rect.xy, Rect.xy+Rect.zw, uv );
+	float4 Sample = texture( Image, SampleUv );
+	gl_FragColor = float4(Sample.xyz,1);
+}
+`;
+
 var FrameRects = [[0,0,0.1,0.1]];
 var FrameRectScores = [0];
 var FrameImage = null;
-var FrameShader = null;
+var AllRectsShader = null;
+var SingleRectShader = null;
 function RenderWindow(RenderTarget)
 {
-	if ( !FrameShader )
+	if ( !AllRectsShader )
 	{
-		FrameShader = new OpenglShader( RenderTarget, Vert_Source, Frag_Debug_Source );
+		AllRectsShader = new OpenglShader( RenderTarget, Vert_Source, Frag_ShowAllRects_Source );
+	}
+	if ( !SingleRectShader )
+	{
+		SingleRectShader = new OpenglShader( RenderTarget, Vert_Source, Frag_SingleRect_Source );
 	}
 	
-	let SetUniforms = function(Shader)
+	
+	
+	let BoxesWide = Math.max( 1, Math.ceil( Math.sqrt( FrameRects.length + 1 ) ) );
+	let BoxesHigh = BoxesWide;
+	let BoxRects = [];
+	
+	let Lerp = function(Min,Max,Value)
 	{
-		Shader.SetUniform("Image", FrameImage, 0 );
-		Shader.SetUniform("Rects", FrameRects );
-		Shader.SetUniform("RectScores", FrameRectScores );
+		return Min + ( (Max-Min) * Value );
+	}
+	for ( let bx=0;	bx<BoxesWide;	bx++ )
+	{
+		for ( let by=0;	by<BoxesHigh;	by++ )
+		{
+			let bx0 = (bx+0) / BoxesWide;
+			let bw = (1) / BoxesWide;
+			let by0 = (by+0) / BoxesHigh;
+			let bh = (1) / BoxesHigh;
+			let Rect = [bx0,by0,bw,bh];
+			BoxRects.push( Rect );
+		}
 	}
 	
-	RenderTarget.DrawQuad( FrameShader, SetUniforms );
-	
+	let DrawRect = function(Rect,RectIndex)
+	{
+		if ( RectIndex == 0 )
+		{
+			let SetUniforms = function(Shader)
+			{
+				Shader.SetUniform("VertexRect", Rect );
+				Shader.SetUniform("Image", FrameImage, 0 );
+				Shader.SetUniform("Rects", FrameRects );
+				Shader.SetUniform("RectScores", FrameRectScores );
+			}
+			RenderTarget.DrawQuad( AllRectsShader, SetUniforms );
+		}
+		else
+		{
+			RectIndex--;
+			if ( RectIndex >= FrameRects.length )
+				return;
+			let SetUniforms = function(Shader)
+			{
+				Shader.SetUniform("VertexRect", Rect );
+				Shader.SetUniform("Image", FrameImage, 0 );
+				Shader.SetUniform("Rect", FrameRects[RectIndex] );
+			}
+			RenderTarget.DrawQuad( SingleRectShader, SetUniforms );
+		}
+	}
+	BoxRects.forEach( DrawRect );
 }
 
 //	startup
@@ -120,7 +191,7 @@ FrameImage = new Image("1cats.png");
 FrameImage = new Image("6cats.jpg");
 FrameImage = new Image("Motd_baseline.png");
 FrameImage = new Image("Motd_baseline_big.png");
-FrameImage.Resize(416,416);
+//FrameImage.Resize(416,416);
 
 async function RunDetection(InputImage)
 {
@@ -133,7 +204,7 @@ async function RunDetection(InputImage)
 		FrameRectScores = [];
 		let PushRect = function(Object)
 		{
-			if ( Object.Label != "person" || Object.Score < 0.10 )
+			if ( Object.Label != "person" || Object.Score < 0.05 )
 			{
 				Debug("Skipped " + Object.Label + " at " + ((Object.Score*100).toFixed(2)) + "%");
 				return;
