@@ -396,15 +396,33 @@ void TImageWrapper::Construct(const v8::CallbackInfo& Arguments)
 	else
 		mName = v8::GetString(NameHandle);
 	
+	//	try copying from other object
+	const auto& Arg0 = Arguments.mParams[0];
+	/*
+	if ( Arg0->IsObject() )
+	{
+		try
+		{
+			auto& Arg0Image = v8::GetObject<TImageWrapper>( Arg0 );
+			Copy(Arguments);
+			return;
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Trying to construct image from object: " << e.what() << std::endl;
+		}
+	}
+	*/
+	
 	//	construct with filename
-	if ( Arguments.mParams[0]->IsString() )
+	if ( Arg0->IsString() )
 	{
 		LoadFile(Arguments);
 		return;
 	}
 		
 	//	construct with size
-	if ( Arguments.mParams[0]->IsArray() )
+	if ( Arg0->IsArray() )
 	{
 		Alloc(Arguments);
 		return;
@@ -459,6 +477,7 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 
+
 	BufferArray<int,2> IntArray;
 	if ( Arguments[0]->IsArray() )
 	{
@@ -479,6 +498,10 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ), Heap );
 	This.SetPixels(Pixels);
 
+	
+	
+
+	
 	return v8::Undefined(Params.mIsolate);
 }
 
@@ -604,6 +627,7 @@ v8::Local<v8::Value> TImageWrapper::Copy(const v8::CallbackInfo& Params)
 	auto& ThatPixels = That.GetPixels();
 
 	ThisPixels.Copy(ThatPixels);
+	This.mPixelsVersion = This.GetLatestVersion()+1;
 	
 	return v8::Undefined(Params.mIsolate);
 }
@@ -696,18 +720,12 @@ v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
 		throw Soy::AssertException(Error.str());
 	}
 	
-	if ( RectPx[0] != 0 || RectPx[1] != 0 )
-	{
-		std::stringstream Error;
-		Error << "Current Clip() only works on width & height. xy needs to be zero. Clip(" << RectPx[0] << "," << RectPx[1] << "," << RectPx[2] << "," << RectPx[3] << ")";
-		throw Soy::AssertException(Error.str());
-	}
-	
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	
 	auto& ThisPixels = This.GetPixels();
 	
-	ThisPixels.ResizeClip( RectPx[2], RectPx[3] );
+	ThisPixels.Clip( RectPx[0], RectPx[1], RectPx[2], RectPx[3] );
+	This.mPixelsVersion = This.GetLatestVersion()+1;
 	
 	return v8::Undefined(Params.mIsolate);
 }
