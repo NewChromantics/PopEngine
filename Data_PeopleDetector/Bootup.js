@@ -39,7 +39,7 @@ let Frag_ShowAllRects_Source =
 `
 in vec2 uv;
 uniform sampler2D Image;
-const int RectCount = 40;
+const int RectCount = 100;
 uniform float4 Rects[RectCount];
 uniform float RectScores[RectCount];
 
@@ -91,7 +91,7 @@ void main()
 		if ( !InsideRect( uv, Rects[RectIndex] ) )
 			continue;
 
-		float BlendAlpha = 0.5 * RectScores[RectIndex];
+		float BlendAlpha = 0.7 * RectScores[RectIndex];
 		float3 ScoreRgb = NormalToRedGreen( RectScores[RectIndex] );
 		gl_FragColor.xyz = BlendColour( gl_FragColor.xyz, ScoreRgb, BlendAlpha );
 	}
@@ -175,13 +175,24 @@ function RenderWindow(RenderTarget)
 				return;
 			let SetUniforms = function(Shader)
 			{
+				let PersonImage = PersonImages[RectIndex];
+				
 				Shader.SetUniform("VertexRect", Rect );
 				//Shader.SetUniform("Image", FrameImage, 0 );
 				//Shader.SetUniform("Rect", FrameRects[RectIndex] );
-				Shader.SetUniform("Image", PersonImages[RectIndex], 0 );
-				Shader.SetUniform("Rect", [0,0,1,1] );
+				Shader.SetUniform("Image", PersonImage, 0 );
+				//Shader.SetUniform("Rect", [0,0,1,1] );
+				
+				Shader.SetUniform("Rects", PersonImage.Rects );
+				Shader.SetUniform("RectScores", PersonImage.RectScores );
 			}
-			RenderTarget.DrawQuad( SingleRectShader, SetUniforms );
+			try
+			{
+				//RenderTarget.DrawQuad( SingleRectShader, SetUniforms );
+				RenderTarget.DrawQuad( AllRectsShader, SetUniforms );
+			}
+			catch(e)
+			{}
 		}
 	}
 	BoxRects.forEach( DrawRect );
@@ -198,12 +209,36 @@ FrameImage = new Image("Motd_baseline.png");
 FrameImage = new Image("Motd_baseline_big.png");
 //FrameImage.Resize(416,416);
 
+let MakeRectSquareCentered = function(Rect)
+{
+	//	don't modify original rect
+	Rect = Rect.slice();
+	
+	let PadWidth = 0;
+	let PadHeight = 0;
+	let w = Rect[2];
+	let h = Rect[3];
+	if ( w==h )
+		return Rect;
+	
+	if ( w > h )
+		PadHeight = w - h;
+	else
+		PadWidth = h - w;
+	
+	Rect[0] -= PadWidth/2;
+	Rect[1] -= PadHeight/2;
+	Rect[2] += PadWidth;
+	Rect[3] += PadHeight;
+	return Rect;
+}
+
 async function RunDetection(InputImage)
 {
+	let Detector = new CoreMl();
 	try
 	{
-		var PeopleDetector = new CoreMlMobileNet();
-		const DetectedPeople = await PeopleDetector.DetectObjects(FrameImage);
+		const DetectedPeople = await Detector.Yolo(FrameImage);
 		Debug("detected x"+DetectedPeople.length);
 		FrameRects = [];
 		FrameRectScores = [];
@@ -225,10 +260,7 @@ async function RunDetection(InputImage)
 			Object.Score = Math.min( 1, Object.Score );
 			//Object.x = 0;
 			//Object.y = 0;
-			//	processor resizes to 416x416 so normalise rect
-			let w = 416;
-			let h = 416;
-			let Rect = [Object.x/w,Object.y/h,Object.w/w,Object.h/h];
+			let Rect = [Object.x,Object.y,Object.w,Object.h];
 			let Score = Object.Score;
 			//Debug(Rect);
 			//Debug(Score);
@@ -238,16 +270,48 @@ async function RunDetection(InputImage)
 			//	extract an image to do more processing on
 			let Person = new Image([1,1]);
 			Person.Copy( InputImage );
-			//	use normalised coords!
-			let ClipRect = Rect.slice();
+			
+			//	use normalised coords
+			//	gr: clip to square for later processing
+			let ClipRect = MakeRectSquareCentered( Rect );
 			ClipRect[0] *= Person.GetWidth();
 			ClipRect[1] *= Person.GetHeight();
 			ClipRect[2] *= Person.GetWidth();
 			ClipRect[3] *= Person.GetHeight();
+			
 			Person.Clip( ClipRect );
 			PersonImages.push( Person );
 		}
 		DetectedPeople.forEach(PushRect);
+		
+		//	now run body-detection on each person
+		let RunPersonDetection = async function(PersonImage,PersonIndex)
+		{
+			//	resize to fit model requirement
+			PersonImage.Resize(192,192);
+			const DetectedLimbs = await Detector.Hourglass(PersonImage);
+			Debug("detected limbs x"+DetectedLimbs.length);
+
+			//	make rects on each player image to render
+			PersonImage.Rects = [];
+			PersonImage.RectScores = [];
+			let AppendRect = function(Object)
+			{
+				//if ( ["Neck","Top"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
+				if ( ["Neck","Top","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
+					return;
+				let Rect = [Object.x,Object.y,Object.w,Object.h];
+				let Score = Object.Score;
+				PersonImage.Rects.push( Rect );
+				PersonImage.RectScores.push( Math.min( 1, Score / 0.3 ) );
+			};
+			DetectedLimbs.forEach( AppendRect );
+		}
+		for ( let PersonIndex=0;	PersonIndex<PersonImages.length;	PersonIndex++)
+		{
+			const PersonResult = await RunPersonDetection( PersonImages[PersonIndex], PersonIndex );
+			
+		}
 	}
 	catch(e)
 	{

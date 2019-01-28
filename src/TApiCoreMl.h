@@ -13,16 +13,15 @@ namespace ApiCoreMl
 
 namespace CoreMl
 {
-	class TMobileNet;
+	class TInstance;
 }
 
 
-//	an image is a generic accessor for pixels, opengl textures, etc etc
-extern const char CoreMlMobileNet_TypeName[];
-class TCoreMlMobileNetWrapper : public TObjectWrapper<CoreMlMobileNet_TypeName,CoreMl::TMobileNet>
+extern const char CoreMl_TypeName[];
+class TCoreMlWrapper : public TObjectWrapper<CoreMl_TypeName,CoreMl::TInstance>
 {
 public:
-	TCoreMlMobileNetWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
+	TCoreMlWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
 		TObjectWrapper			( Container, This )
 	{
 	}
@@ -31,9 +30,10 @@ public:
 
 	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
 
-	static v8::Local<v8::Value>				DetectObjects(const v8::CallbackInfo& Arguments);
-	
+	static v8::Local<v8::Value>				Yolo(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Hourglass(const v8::CallbackInfo& Arguments);
+
 protected:
-	std::shared_ptr<CoreMl::TMobileNet>&	mMobileNet = mObject;
+	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;
 };
 
