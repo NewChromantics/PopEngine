@@ -32,6 +32,7 @@ public:
 
 	static v8::Local<v8::Value>				Yolo(const v8::CallbackInfo& Arguments);
 	static v8::Local<v8::Value>				Hourglass(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Cpm(const v8::CallbackInfo& Arguments);
 
 protected:
 	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;

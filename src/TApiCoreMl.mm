@@ -5,11 +5,13 @@
 //#import "MobileNet.h"
 #import "TinyYOLO.h"
 #import "Hourglass.h"
+#import "Cpm.h"
 
 using namespace v8;
 
 const char Yolo_FunctionName[] = "Yolo";
 const char Hourglass_FunctionName[] = "Hourglass";
+const char Cpm_FunctionName[] = "Cpm";
 
 const char CoreMl_TypeName[] = "CoreMl";
 
@@ -28,10 +30,16 @@ public:
 	//void		RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 
+private:
+	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+
+private:
 	//MobileNet*	mMobileNet = nullptr;
 	TinyYOLO*	mTinyYolo = nullptr;
 	hourglass*	mHourglass = nullptr;
+	cpm*		mCpm = nullptr;
 };
 
 CoreMl::TInstance::TInstance()
@@ -39,6 +47,7 @@ CoreMl::TInstance::TInstance()
 	//mMobileNet = [[MobileNet alloc] init];
 	mTinyYolo = [[TinyYOLO alloc] init];
 	mHourglass = [[hourglass alloc] init];
+	mCpm = [[cpm alloc] init];
 }
 /*
 void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
@@ -291,6 +300,7 @@ void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dim
 	}
 }
 
+
 void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
@@ -301,16 +311,31 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 	if ( Error )
 		throw Soy::AssertException( Error );
 
+	RunPoseModel( Output.hourglass_out_3__0, Pixels, EnumObject );
+}
+
+void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	
+	NSError* Error = nullptr;
+	
+	auto Output = [mCpm predictionFromImage__0:PixelBuffer error:&Error];
+	if ( Error )
+		throw Soy::AssertException( Error );
+	
+	RunPoseModel( Output.Convolutional_Pose_Machine__stage_5_out__0, Pixels, EnumObject );
+}
+
+
+void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+{
+	if ( !ModelOutput )
+		throw Soy::AssertException("No output from model");
+
 	Array<int> Dim;
 	Array<float> Values;
-	ExtractFloatsFromMultiArray( Output.hourglass_out_3__0, GetArrayBridge(Dim), GetArrayBridge(Values) );
-	
-	if ( Values.GetSize() != 14*48*48 )
-	{
-		std::stringstream Error;
-		Error << "expected 14*48*48(32256) outputs, got " << Values.GetSize();
-		throw Soy::AssertException(Error.str());
-	}
+	ExtractFloatsFromMultiArray( ModelOutput, GetArrayBridge(Dim), GetArrayBridge(Values) );
 	
 	//	parse Hourglass data
 	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L135
@@ -337,7 +362,7 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 		"LeftHip", "LeftKnee", "LeftAnkle",
 	};
 	
-	static bool EnumAllResults = false;
+	static bool EnumAllResults = true;
 	auto MinConfidence = 0.01f;
 	
 	for ( auto k=0;	k<KeypointCount;	k++)
@@ -414,6 +439,7 @@ Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
 	
 	Container.BindFunction<Yolo_FunctionName>( InstanceTemplate, Yolo );
 	Container.BindFunction<Hourglass_FunctionName>( InstanceTemplate, Hourglass );
+	Container.BindFunction<Cpm_FunctionName>( InstanceTemplate, Cpm );
 
 	return ConstructorFunc;
 }
@@ -502,3 +528,44 @@ v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
 	return ObjectsArray;
 }
 
+
+
+v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	
+	auto& CoreMl = *This.mCoreMl;
+	SoyPixels Pixels;
+	Image.GetPixels(Pixels);
+	//	maybe throw and make input correct at high level
+	Pixels.ResizeFastSample(192,192);
+	Pixels.SetFormat( SoyPixelsFormat::RGBA );
+	
+	Array<Local<Value>> Objects;
+	
+	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	{
+		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
+		auto Object = v8::Object::New( Params.mIsolate );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
+		Objects.PushBack(Object);
+	};
+	CoreMl.RunCpm(Pixels,OnDetected);
+	
+	auto GetElement = [&](size_t Index)
+	{
+		return Objects[Index];
+	};
+	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
+	
+	return ObjectsArray;
+}

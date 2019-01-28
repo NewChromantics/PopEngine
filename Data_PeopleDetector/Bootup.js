@@ -39,7 +39,7 @@ let Frag_ShowAllRects_Source =
 `
 in vec2 uv;
 uniform sampler2D Image;
-const int RectCount = 100;
+const int RectCount = 150;
 uniform float4 Rects[RectCount];
 uniform float RectScores[RectCount];
 
@@ -209,7 +209,7 @@ FrameImage = new Image("Motd_baseline.png");
 FrameImage = new Image("Motd_baseline_big.png");
 //FrameImage.Resize(416,416);
 
-let MakeRectSquareCentered = function(Rect)
+function MakeRectSquareCentered(Rect)
 {
 	//	don't modify original rect
 	Rect = Rect.slice();
@@ -233,17 +233,39 @@ let MakeRectSquareCentered = function(Rect)
 	return Rect;
 }
 
+function GrowRect(Rect,Scale)
+{
+	//	don't modify original rect
+	Rect = Rect.slice();
+
+	let LeftChange = Rect[2] * Scale;
+	let TopChange = Rect[3] * Scale;
+	Rect[0] -= LeftChange/2;
+	Rect[1] -= TopChange/2;
+	Rect[2] += LeftChange;
+	Rect[3] += TopChange;
+	return Rect;
+}
+
 async function RunDetection(InputImage)
 {
+	let CompareObject = function(a,b)
+	{
+		if ( a.Score > b.Score )	return -1;
+		if ( a.Score < b.Score )	return 1;
+		return 0;
+	}
+	
 	let Detector = new CoreMl();
 	try
 	{
 		const DetectedPeople = await Detector.Yolo(FrameImage);
+		DetectedPeople.sort(CompareObject);
 		Debug("detected x"+DetectedPeople.length);
 		FrameRects = [];
 		FrameRectScores = [];
-		let MinScore = 0.1;
-		let MaxMatches = 50;
+		let MinScore = 0.05;
+		let MaxMatches = 100;
 		let PushRect = function(Object)
 		{
 			//	limit
@@ -273,7 +295,9 @@ async function RunDetection(InputImage)
 			
 			//	use normalised coords
 			//	gr: clip to square for later processing
-			let ClipRect = MakeRectSquareCentered( Rect );
+			let ClipRect = Rect;
+			ClipRect = GrowRect( ClipRect, 1.05 );
+			ClipRect = MakeRectSquareCentered( ClipRect );
 			ClipRect[0] *= Person.GetWidth();
 			ClipRect[1] *= Person.GetHeight();
 			ClipRect[2] *= Person.GetWidth();
@@ -289,7 +313,8 @@ async function RunDetection(InputImage)
 		{
 			//	resize to fit model requirement
 			PersonImage.Resize(192,192);
-			const DetectedLimbs = await Detector.Hourglass(PersonImage);
+			//const DetectedLimbs = await Detector.Hourglass(PersonImage);
+			const DetectedLimbs = await Detector.Cpm(PersonImage);
 			Debug("detected limbs x"+DetectedLimbs.length);
 
 			//	make rects on each player image to render
@@ -298,13 +323,25 @@ async function RunDetection(InputImage)
 			let AppendRect = function(Object)
 			{
 				//if ( ["Neck","Top"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
-				if ( ["Neck","Top","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
+				//if ( ["Neck","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
+				//	return;
+				if ( PersonImage.Rects.length > 100 )
 					return;
 				let Rect = [Object.x,Object.y,Object.w,Object.h];
 				let Score = Object.Score;
+				if ( Score < 0.01 )
+					return;
+				/*
+				if ( Object.Label == "Neck" )
+					Score = 0.1;
+				else Score = 1;
+				 */
+				//Score = 1;
 				PersonImage.Rects.push( Rect );
-				PersonImage.RectScores.push( Math.min( 1, Score / 0.3 ) );
+				PersonImage.RectScores.push( Math.min( 1, Score / 0.6 ) );
 			};
+			
+			DetectedLimbs.sort( CompareObject );
 			DetectedLimbs.forEach( AppendRect );
 		}
 		for ( let PersonIndex=0;	PersonIndex<PersonImages.length;	PersonIndex++)

@@ -26,6 +26,7 @@
 		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF5749C421FF66A400A7A659 /* cpm.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BFFCACC521FF445200153C4E /* cpm.mlmodel */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */ = {isa = PBXBuildFile; fileRef = BF65537D2132BD6B003E4241 /* Data_HelloWorld */; };
 		BF6554022132C4D9003E4241 /* APIDesign.md in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C52132C4D9003E4241 /* APIDesign.md */; };
@@ -1024,6 +1025,7 @@
 				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
 				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */,
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
+				BF5749C421FF66A400A7A659 /* cpm.mlmodel in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
