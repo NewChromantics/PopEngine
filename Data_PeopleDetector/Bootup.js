@@ -207,9 +207,14 @@ async function RunDetection(InputImage)
 		Debug("detected x"+DetectedPeople.length);
 		FrameRects = [];
 		FrameRectScores = [];
+		let MinScore = 0.1;
+		let MaxMatches = 50;
 		let PushRect = function(Object)
 		{
-			if ( Object.Label != "person" || Object.Score < 0.05 )
+			//	limit
+			if ( FrameRects.length >= MaxMatches )
+				return;
+			if ( Object.Label != "person" || Object.Score < MinScore )
 			{
 				Debug("Skipped " + Object.Label + " at " + ((Object.Score*100).toFixed(2)) + "%");
 				return;
@@ -218,7 +223,9 @@ async function RunDetection(InputImage)
 			
 			Object.Score /= 0.50;
 			Object.Score = Math.min( 1, Object.Score );
-			
+			//Object.x = 0;
+			//Object.y = 0;
+			//	processor resizes to 416x416 so normalise rect
 			let w = 416;
 			let h = 416;
 			let Rect = [Object.x/w,Object.y/h,Object.w/w,Object.h/h];
@@ -231,9 +238,12 @@ async function RunDetection(InputImage)
 			//	extract an image to do more processing on
 			let Person = new Image([1,1]);
 			Person.Copy( InputImage );
-			Debug("Made person image: " +Person + " [" + [Object.w,Object.h] + "]");
-			
-			let ClipRect = [ Object.x, Object.y, Object.w, Object.h ];
+			//	use normalised coords!
+			let ClipRect = Rect.slice();
+			ClipRect[0] *= Person.GetWidth();
+			ClipRect[1] *= Person.GetHeight();
+			ClipRect[2] *= Person.GetWidth();
+			ClipRect[3] *= Person.GetHeight();
 			Person.Clip( ClipRect );
 			PersonImages.push( Person );
 		}
