@@ -27,6 +27,7 @@
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF5749C421FF66A400A7A659 /* cpm.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BFFCACC521FF445200153C4E /* cpm.mlmodel */; };
+		BF5749C621FF73F000A7A659 /* MobileOpenPose.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */ = {isa = PBXBuildFile; fileRef = BF65537D2132BD6B003E4241 /* Data_HelloWorld */; };
 		BF6554022132C4D9003E4241 /* APIDesign.md in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C52132C4D9003E4241 /* APIDesign.md */; };
@@ -198,6 +199,7 @@
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264Framework.framework; path = src/Libs/PopH264Framework.framework; sourceTree = SOURCE_ROOT; };
 		BF51EA4220ED83F6007443D8 /* DataOld */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DataOld; sourceTree = "<group>"; };
+		BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MobileOpenPose.mlmodel; sourceTree = "<group>"; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
@@ -643,6 +645,7 @@
 		BFFCACC721FF63AA00153C4E /* CoreMlModels */ = {
 			isa = PBXGroup;
 			children = (
+				BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */,
 				BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */,
 				BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */,
 				BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */,
@@ -978,6 +981,7 @@
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
+				BF5749C621FF73F000A7A659 /* MobileOpenPose.mlmodel in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,

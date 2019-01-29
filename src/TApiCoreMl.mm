@@ -7,11 +7,16 @@
 #import "Hourglass.h"
 #import "Cpm.h"
 
+//	openpose model from here
+//	https://github.com/infocom-tpo/SwiftOpenPose
+#import "MobileOpenPose.h"
+
 using namespace v8;
 
 const char Yolo_FunctionName[] = "Yolo";
 const char Hourglass_FunctionName[] = "Hourglass";
 const char Cpm_FunctionName[] = "Cpm";
+const char OpenPose_FunctionName[] = "OpenPose";
 
 const char CoreMl_TypeName[] = "CoreMl";
 
@@ -31,15 +36,17 @@ public:
 	void		RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 
 private:
-	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 
 private:
 	//MobileNet*	mMobileNet = nullptr;
-	TinyYOLO*	mTinyYolo = nullptr;
-	hourglass*	mHourglass = nullptr;
-	cpm*		mCpm = nullptr;
+	TinyYOLO*		mTinyYolo = nullptr;
+	hourglass*		mHourglass = nullptr;
+	cpm*			mCpm = nullptr;
+	MobileOpenPose*	mOpenPose = nullptr;
 };
 
 CoreMl::TInstance::TInstance()
@@ -48,6 +55,7 @@ CoreMl::TInstance::TInstance()
 	mTinyYolo = [[TinyYOLO alloc] init];
 	mHourglass = [[hourglass alloc] init];
 	mCpm = [[cpm alloc] init];
+	mOpenPose = [[MobileOpenPose alloc] init];
 }
 /*
 void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
@@ -311,7 +319,22 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 	if ( Error )
 		throw Soy::AssertException( Error );
 
-	RunPoseModel( Output.hourglass_out_3__0, Pixels, EnumObject );
+	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
+	const std::string KeypointLabels[] =
+	{
+		"Top", "Neck",
+		"RightShoulder", "RightElbow", "RightWrist",
+		"LeftShoulder", "LeftElbow", "LeftWrist",
+		"RightHip", "RightKnee", "RightAnkle",
+		"LeftHip", "LeftKnee", "LeftAnkle",
+	};
+
+	auto GetKeypointName = [&](size_t Index)
+	{
+		return KeypointLabels[Index];
+	};
+	
+	RunPoseModel( Output.hourglass_out_3__0, Pixels, GetKeypointName, EnumObject );
 }
 
 void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
@@ -324,11 +347,183 @@ void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(co
 	if ( Error )
 		throw Soy::AssertException( Error );
 	
-	RunPoseModel( Output.Convolutional_Pose_Machine__stage_5_out__0, Pixels, EnumObject );
+	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
+	const std::string KeypointLabels[] =
+	{
+		"Top", "Neck",
+		"RightShoulder", "RightElbow", "RightWrist",
+		"LeftShoulder", "LeftElbow", "LeftWrist",
+		"RightHip", "RightKnee", "RightAnkle",
+		"LeftHip", "LeftKnee", "LeftAnkle",
+	};
+	auto GetKeypointName = [&](size_t Index)
+	{
+		return KeypointLabels[Index];
+	};
+
+	RunPoseModel( Output.Convolutional_Pose_Machine__stage_5_out__0, Pixels, GetKeypointName, EnumObject );
 }
 
 
-void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	
+	NSError* Error = nullptr;
+	
+	auto Output = [mOpenPose predictionFromImage:PixelBuffer error:&Error];
+	if ( Error )
+		throw Soy::AssertException( Error );
+	
+	//	https://github.com/infocom-tpo/SwiftOpenPose/blob/9745c0074dfe7d98265a325e25d2e2bb3d91d3d1/SwiftOpenPose/Sources/Estimator.swift#L122
+	//	heatmap rowsxcols is width/8 and height/8 which is 48, which is dim[1] and dim[2]
+	//	but 19 features? (dim[0] = 3*19)
+	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
+	const std::string KeypointLabels[] =
+	{
+		"Head"
+	};
+	auto GetKeypointName = [&](size_t Index)
+	{
+		if ( Index < sizeofarray(KeypointLabels) )
+			return KeypointLabels[Index];
+		
+		std::stringstream KeypointName;
+		KeypointName << "Label_" << Index;
+		return KeypointName.str();
+	};
+	
+	auto* ModelOutput = Output.net_output;
+	//RunPoseModel( Output.net_output, Pixels, GetKeypointName, EnumObject );
+
+	if ( !ModelOutput )
+		throw Soy::AssertException("No output from model");
+	
+	Array<int> Dim;
+	Array<float> Values;
+	ExtractFloatsFromMultiArray( ModelOutput, GetArrayBridge(Dim), GetArrayBridge(Values) );
+	
+	auto KeypointCount = Dim[0];
+	auto HeatmapWidth = Dim[1];
+	auto HeatmapHeight = Dim[2];
+	auto GetValue = [&](int Keypoint,int HeatmapX,int HeatmapY)
+	{
+		auto Index = Keypoint * (HeatmapWidth*HeatmapHeight);
+		Index += HeatmapX*(HeatmapHeight);
+		Index += HeatmapY;
+		return Values[Index];
+	};
+	
+	//	same as dim
+	//	heatRows = imageWidth / 8
+	//	heatColumns = imageHeight / 8
+	//	KeypointCount is 57 = 19 + 38
+	auto HeatRows = HeatmapWidth;
+	auto HeatColumns = HeatmapHeight;
+
+	//	https://github.com/infocom-tpo/SwiftOpenPose/blob/9745c0074dfe7d98265a325e25d2e2bb3d91d3d1/SwiftOpenPose/Sources/Estimator.swift#L127
+	//	https://github.com/eugenebokhan/iOS-OpenPose/blob/master/iOSOpenPose/iOSOpenPose/CoreML/PoseEstimatior.swift#L72
+	//	code above splits into pafMat and HeatmapMat
+	auto HeatMatRows = 50;	//	gr: row 18 is full of much bigger numbers...
+	auto HeatMatCols = HeatRows*HeatColumns;
+	float heatMat[HeatMatRows * HeatMatCols];//[19*HeatRows*HeatColumns];
+	float pafMat[Values.GetSize() - sizeofarray(heatMat)];//[38*HeatRows*HeatColumns];
+	//let heatMat = Matrix<Double>(rows: 19, columns: heatRows*heatColumns, elements: data )
+	//let separateLen = 19*heatRows*heatColumns
+	//let pafMat = Matrix<Double>(rows: 38, columns: heatRows*heatColumns, elements: Array<Double>(mm[separateLen..<mm.count]))
+	for ( auto i=0;	i<sizeofarray(heatMat);	i++ )
+		heatMat[i] = Values[i];
+	for ( auto i=0;	i<sizeofarray(pafMat);	i++ )
+		pafMat[i] = Values[sizeofarray(heatMat)+i];
+	
+	//	pull coords from heat map
+	using vec2i = vec2x<int32_t>;
+	Array<vec2i> Coords;
+	for ( auto r=0;	r<HeatMatRows;	r++ )
+	{
+		auto nms = GetRemoteArray( &heatMat[r*HeatMatCols], HeatMatCols );
+		
+		std::Debug << "r=" << r << " [ ";
+		for ( int i=0;	i<nms.GetSize();	i++ )
+		{
+			int fi = nms[i] * 100;
+			std::Debug << fi << " ";
+		}
+		std::Debug << " ]" << std::endl;
+		
+		if ( r==18 )
+		continue;
+		//if ( r != 2 )
+		//	continue;
+		//	get biggest in nms
+		//	gr: I think the original code goes through and gets rid of the not-biggest
+		//		or only over the threshold?
+		//		but the swift code is then doing the check twice if that's the case (and doest need the opencv filter at all)
+		/*
+		openCVWrapper.maximum_filter(&data,
+									 data_size: Int32(data.count),
+									 data_rows: dataRows,
+									 mask_size: maskSize,
+									 threshold: threshold)
+		 */
+		
+		auto PushCoord = [&](int Index,float Score)
+		{
+			if ( Score < 0.01f )
+				return;
+			
+			auto y = Index / HeatRows;
+			auto x = Index % HeatRows;
+			Coords.PushBack( vec2i(x,y) );
+			
+			auto KeypointLabel = GetKeypointName(r);
+			auto xf = x / static_cast<float>(HeatRows);
+			auto yf = y / static_cast<float>(HeatColumns);
+			auto wf = 1 / static_cast<float>(HeatRows);
+			auto hf = 1 / static_cast<float>(HeatColumns);
+			auto Rect = Soy::Rectf( xf, yf, wf, hf );
+			EnumObject( KeypointLabel, Score, Rect );
+		};
+		
+		/*
+		auto BiggestCol = 0;
+		auto BiggestVal = -1.0f;
+		for ( auto c=0;	c<nms.GetSize();	c++ )
+		{
+			if ( nms[c] <= BiggestVal )
+				continue;
+			BiggestCol = c;
+			BiggestVal = nms[c];
+		}
+		
+		PushCoord( BiggestCol, BiggestVal );
+	*/
+		for ( auto c=0;	c<nms.GetSize();	c++ )
+		{
+			PushCoord( c, nms[c] );
+		}
+		
+		
+	}
+	/*
+	var coords = [[(Int,Int)]]()
+	for i in 0..<heatMat.rows-1
+	 {
+		 var nms = Array<Double>(heatMat.row(i))
+	 	nonMaxSuppression(&nms, dataRows: Int32(heatColumns), maskSize: 5, threshold: _nmsThreshold)
+	 	 let c = nms.enumerated().filter{ $0.1 > _nmsThreshold }.map
+	 		{
+	 	x in
+			 return ( x.0 / heatRows , x.0 % heatRows )
+	 		}
+	 	coords.append(c)
+	 }
+	*/
+
+}
+
+
+void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
 {
 	if ( !ModelOutput )
 		throw Soy::AssertException("No output from model");
@@ -352,22 +547,13 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 		return Values[Index];
 	};
 
-	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
-	const std::string KeypointLabels[] =
-	{
-		"Top", "Neck",
-		"RightShoulder", "RightElbow", "RightWrist",
-		"LeftShoulder", "LeftElbow", "LeftWrist",
-		"RightHip", "RightKnee", "RightAnkle",
-		"LeftHip", "LeftKnee", "LeftAnkle",
-	};
 	
 	static bool EnumAllResults = true;
 	auto MinConfidence = 0.01f;
 	
 	for ( auto k=0;	k<KeypointCount;	k++)
 	{
-		auto KeypointLabel = KeypointLabels[k];
+		auto KeypointLabel = GetKeypointName(k);
 		Soy::Rectf BestRect;
 		float BestScore = -1;
 		auto EnumKeypoint = [&](const std::string& Label,float Score,const Soy::Rectf& Rect)
@@ -403,7 +589,6 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 		//	if only outputting best, do it
 		if ( !EnumAllResults && BestScore > 0 )
 		{
-			auto KeypointLabel = KeypointLabels[k];
 			EnumObject( KeypointLabel, BestScore, BestRect );
 		}
 		
@@ -440,6 +625,7 @@ Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Yolo_FunctionName>( InstanceTemplate, Yolo );
 	Container.BindFunction<Hourglass_FunctionName>( InstanceTemplate, Hourglass );
 	Container.BindFunction<Cpm_FunctionName>( InstanceTemplate, Cpm );
+	Container.BindFunction<OpenPose_FunctionName>( InstanceTemplate, OpenPose );
 
 	return ConstructorFunc;
 }
@@ -499,8 +685,6 @@ v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
 	auto& CoreMl = *This.mCoreMl;
 	SoyPixels Pixels;
 	Image.GetPixels(Pixels);
-	//	maybe throw and make input correct at high level
-	Pixels.ResizeFastSample(192,192);
 	Pixels.SetFormat( SoyPixelsFormat::RGBA );
 	
 	Array<Local<Value>> Objects;
@@ -541,8 +725,6 @@ v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
 	auto& CoreMl = *This.mCoreMl;
 	SoyPixels Pixels;
 	Image.GetPixels(Pixels);
-	//	maybe throw and make input correct at high level
-	Pixels.ResizeFastSample(192,192);
 	Pixels.SetFormat( SoyPixelsFormat::RGBA );
 	
 	Array<Local<Value>> Objects;
@@ -560,6 +742,46 @@ v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
 		Objects.PushBack(Object);
 	};
 	CoreMl.RunCpm(Pixels,OnDetected);
+	
+	auto GetElement = [&](size_t Index)
+	{
+		return Objects[Index];
+	};
+	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
+	
+	return ObjectsArray;
+}
+
+
+
+v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	
+	auto& CoreMl = *This.mCoreMl;
+	SoyPixels Pixels;
+	Image.GetPixels(Pixels);
+	Pixels.SetFormat( SoyPixelsFormat::RGBA );
+	
+	Array<Local<Value>> Objects;
+	
+	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	{
+		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
+		auto Object = v8::Object::New( Params.mIsolate );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
+		Objects.PushBack(Object);
+	};
+	CoreMl.RunOpenPose(Pixels,OnDetected);
 	
 	auto GetElement = [&](size_t Index)
 	{

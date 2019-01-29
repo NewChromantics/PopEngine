@@ -7,6 +7,19 @@ function include(Filename)
 }
 include("../Data_Holosports/PopDomJs/PopDomJs.js");
 
+Math.clamp = function(min, max,Value)
+{
+	return Math.min( Math.max(Value, min), max);
+}
+Math.range = function(Min,Max,Value)
+{
+	return (Value-Min) / (Max-Min);
+}
+Math.rangeClamped = function(Min,Max,Value)
+{
+	return Math.clamp( 0, 1, Math.range( Min, Max, Value ) );
+}
+
 
 let Vert_Source =
 `
@@ -264,14 +277,14 @@ async function RunDetection(InputImage)
 		Debug("detected x"+DetectedPeople.length);
 		FrameRects = [];
 		FrameRectScores = [];
-		let MinScore = 0.05;
+		let PersonMinScore = 0.10;
 		let MaxMatches = 100;
 		let PushRect = function(Object)
 		{
 			//	limit
 			if ( FrameRects.length >= MaxMatches )
 				return;
-			if ( Object.Label != "person" || Object.Score < MinScore )
+			if ( Object.Label != "person" || Object.Score < PersonMinScore )
 			{
 				Debug("Skipped " + Object.Label + " at " + ((Object.Score*100).toFixed(2)) + "%");
 				return;
@@ -312,9 +325,11 @@ async function RunDetection(InputImage)
 		let RunPersonDetection = async function(PersonImage,PersonIndex)
 		{
 			//	resize to fit model requirement
-			PersonImage.Resize(192,192);
+			PersonImage.Resize(368,368);
+			//PersonImage.Resize(192,192);
 			//const DetectedLimbs = await Detector.Hourglass(PersonImage);
-			const DetectedLimbs = await Detector.Cpm(PersonImage);
+			//const DetectedLimbs = await Detector.Cpm(PersonImage);
+			const DetectedLimbs = await Detector.OpenPose(PersonImage);
 			Debug("detected limbs x"+DetectedLimbs.length);
 
 			//	make rects on each player image to render
@@ -327,18 +342,22 @@ async function RunDetection(InputImage)
 				//	return;
 				if ( PersonImage.Rects.length > 100 )
 					return;
+				
+				let MinScore = 0.01;
+				let MaxScore = 0.5;
 				let Rect = [Object.x,Object.y,Object.w,Object.h];
 				let Score = Object.Score;
-				if ( Score < 0.01 )
+				if ( Score < MinScore )
 					return;
 				/*
 				if ( Object.Label == "Neck" )
 					Score = 0.1;
 				else Score = 1;
 				 */
+				Score = Math.rangeClamped( MinScore, MaxScore, Score );
 				//Score = 1;
 				PersonImage.Rects.push( Rect );
-				PersonImage.RectScores.push( Math.min( 1, Score / 0.6 ) );
+				PersonImage.RectScores.push( Score );
 			};
 			
 			DetectedLimbs.sort( CompareObject );
