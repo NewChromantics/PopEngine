@@ -379,9 +379,19 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	//	heatmap rowsxcols is width/8 and height/8 which is 48, which is dim[1] and dim[2]
 	//	but 19 features? (dim[0] = 3*19)
 	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
+	//	https://github.com/eugenebokhan/iOS-OpenPose/blob/master/iOSOpenPose/iOSOpenPose/CoreML/CocoPairs.swift#L12
 	const std::string KeypointLabels[] =
 	{
-		"Head"
+		"Head", "Neck",
+		"RightShoulder", "RightElbow", "RightWrist",
+		"LeftShoulder", "LeftElbow", "LeftWrist",
+		"RightHip", "RightKnee", "RightAnkle",
+		"LeftHip", "LeftKnee", "LeftAnkle",
+		"RightEye",
+		"LeftEye",
+		"RightEar",
+		"LeftEar",
+		"Background"
 	};
 	auto GetKeypointName = [&](size_t Index)
 	{
@@ -424,8 +434,6 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	//	https://github.com/infocom-tpo/SwiftOpenPose/blob/9745c0074dfe7d98265a325e25d2e2bb3d91d3d1/SwiftOpenPose/Sources/Estimator.swift#L127
 	//	https://github.com/eugenebokhan/iOS-OpenPose/blob/master/iOSOpenPose/iOSOpenPose/CoreML/PoseEstimatior.swift#L72
 	//	code above splits into pafMat and HeatmapMat
-	//	gr: row 18 is full of much bigger numbers...
-	//	0..18 look good though
 	auto HeatMatRows = 19;
 	auto HeatMatCols = HeatRows*HeatColumns;
 	float heatMat[HeatMatRows * HeatMatCols];//[19*HeatRows*HeatColumns];
@@ -444,7 +452,7 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	for ( auto r=0;	r<HeatMatRows;	r++ )
 	{
 		auto nms = GetRemoteArray( &heatMat[r*HeatMatCols], HeatMatCols );
-		
+		/*
 		std::Debug << "r=" << r << " [ ";
 		for ( int i=0;	i<nms.GetSize();	i++ )
 		{
@@ -452,12 +460,7 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 			std::Debug << fi << " ";
 		}
 		std::Debug << " ]" << std::endl;
-		
-		//	row 18 has massive numbers and coords look wrong...
-		if ( r==18 )
-			continue;
-		//if ( r != 18 )
-		//	continue;
+		*/
 		//	get biggest in nms
 		//	gr: I think the original code goes through and gets rid of the not-biggest
 		//		or only over the threshold?
