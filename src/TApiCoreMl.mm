@@ -424,7 +424,9 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	//	https://github.com/infocom-tpo/SwiftOpenPose/blob/9745c0074dfe7d98265a325e25d2e2bb3d91d3d1/SwiftOpenPose/Sources/Estimator.swift#L127
 	//	https://github.com/eugenebokhan/iOS-OpenPose/blob/master/iOSOpenPose/iOSOpenPose/CoreML/PoseEstimatior.swift#L72
 	//	code above splits into pafMat and HeatmapMat
-	auto HeatMatRows = 50;	//	gr: row 18 is full of much bigger numbers...
+	//	gr: row 18 is full of much bigger numbers...
+	//	0..18 look good though
+	auto HeatMatRows = 19;
 	auto HeatMatCols = HeatRows*HeatColumns;
 	float heatMat[HeatMatRows * HeatMatCols];//[19*HeatRows*HeatColumns];
 	float pafMat[Values.GetSize() - sizeofarray(heatMat)];//[38*HeatRows*HeatColumns];
@@ -451,9 +453,10 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 		}
 		std::Debug << " ]" << std::endl;
 		
+		//	row 18 has massive numbers and coords look wrong...
 		if ( r==18 )
-		continue;
-		//if ( r != 2 )
+			continue;
+		//if ( r != 18 )
 		//	continue;
 		//	get biggest in nms
 		//	gr: I think the original code goes through and gets rid of the not-biggest
