@@ -11,12 +11,18 @@
 //	https://github.com/infocom-tpo/SwiftOpenPose
 #import "MobileOpenPose.h"
 
+//	ssd+mobilenet from here (just want ssd!)
+//	https://github.com/vonholst/SSDMobileNet_CoreML/blob/master/SSDMobileNet/SSDMobileNet/ssd_mobilenet_feature_extractor.mlmodel
+#import "SsdMobilenet.h"
+#include "TSsdMobileNetAnchors.h"
+
 using namespace v8;
 
 const char Yolo_FunctionName[] = "Yolo";
 const char Hourglass_FunctionName[] = "Hourglass";
 const char Cpm_FunctionName[] = "Cpm";
 const char OpenPose_FunctionName[] = "OpenPose";
+const char SsdMobileNet_FunctionName[] = "SsdMobileNet";
 
 const char CoreMl_TypeName[] = "CoreMl";
 
@@ -37,25 +43,22 @@ public:
 	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 
 private:
 	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 
 private:
 	//MobileNet*	mMobileNet = nullptr;
-	TinyYOLO*		mTinyYolo = nullptr;
-	hourglass*		mHourglass = nullptr;
-	cpm*			mCpm = nullptr;
-	MobileOpenPose*	mOpenPose = nullptr;
+	TinyYOLO*		mTinyYolo = [[TinyYOLO alloc] init];
+	hourglass*		mHourglass = [[hourglass alloc] init];
+	cpm*			mCpm = [[cpm alloc] init];
+	MobileOpenPose*	mOpenPose = [[MobileOpenPose alloc] init];
+	SsdMobilenet*	mSsdMobileNet = [[SsdMobilenet alloc] init];
 };
 
 CoreMl::TInstance::TInstance()
 {
-	//mMobileNet = [[MobileNet alloc] init];
-	mTinyYolo = [[TinyYOLO alloc] init];
-	mHourglass = [[hourglass alloc] init];
-	mCpm = [[cpm alloc] init];
-	mOpenPose = [[MobileOpenPose alloc] init];
 }
 /*
 void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
@@ -326,7 +329,7 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
 	const std::string KeypointLabels[] =
 	{
-		"Top", "Neck",
+		"Head", "Neck",
 		"RightShoulder", "RightElbow", "RightWrist",
 		"LeftShoulder", "LeftElbow", "LeftWrist",
 		"RightHip", "RightKnee", "RightAnkle",
@@ -356,7 +359,7 @@ void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(co
 	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
 	const std::string KeypointLabels[] =
 	{
-		"Top", "Neck",
+		"Head", "Neck",
 		"RightShoulder", "RightElbow", "RightWrist",
 		"LeftShoulder", "LeftElbow", "LeftWrist",
 		"RightHip", "RightKnee", "RightAnkle",
@@ -611,9 +614,204 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 		}
 		
 	}
-	
-	
+
 }
+
+
+void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSError* Error = nullptr;
+	
+	Soy::TScopeTimerPrint Timer(__func__,0);
+	auto Output = [mSsdMobileNet predictionFromPreprocessor__sub__0:PixelBuffer error:&Error];
+	Timer.Stop();
+	if ( Error )
+		throw Soy::AssertException( Error );
+	
+	//	https://github.com/vonholst/SSDMobileNet_CoreML/tree/master/SSDMobileNet/SSDMobileNet
+	//	https://github.com/vonholst/SSDMobileNet_CoreML/blob/master/SSDMobileNet/SSDMobileNet/coco_labels_list.txt
+	const std::string KeypointLabels[] =
+	{
+		"background","person","bicycle","car","motorcycle","airplane","bus",
+		"train","truck","boat","traffic light","fire hydrant","???","stop sign","parking meter",
+		"bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra",
+		"giraffe","???","backpack","umbrella","???","???","handbag","tie","suitcase",
+		"frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove",
+		"skateboard","surfboard","tennis racket","bottle","???","wine glass","cup",
+		"fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli",
+		"carrot","hot dog","pizza","donut","cake","chair","couch","potted plant",
+		"bed","???","dining table","???","???","toilet","???","tv","laptop","mouse",
+		"remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator",
+		"???","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"
+	};
+	auto GetKeypointName = [&](size_t Index)
+	{
+		if ( Index < sizeofarray(KeypointLabels) )
+		return KeypointLabels[Index];
+		
+		std::stringstream KeypointName;
+		KeypointName << "Label_" << Index;
+		return KeypointName.str();
+	};
+	
+	
+	//	parse SSD Mobilenet data;
+	//	https://github.com/tf-coreml/tf-coreml/issues/107#issuecomment-359675509
+	//	Scores for each class (concat_1__0, a 1 x 1 x 91 x 1 x 1917 MLMultiArray)
+	//	Anchor-encoded Boxes (concat__0, a 1 x 1 x 4 x 1 x 1917 MLMultiArray)
+	Array<int> ClassScores_Dim;
+	Array<float> ClassScores_Values;
+	Array<int> AnchorBoxes_Dim;
+	Array<float> AnchorBoxes_Values;
+	ExtractFloatsFromMultiArray( Output.concat__0, GetArrayBridge(AnchorBoxes_Dim), GetArrayBridge(AnchorBoxes_Values) );
+	ExtractFloatsFromMultiArray( Output.concat_1__0, GetArrayBridge(ClassScores_Dim), GetArrayBridge(ClassScores_Values) );
+
+	std::Debug << "Class Scores: [ ";
+	for ( int i=0;	i<ClassScores_Dim.GetSize();	i++ )
+	std::Debug << ClassScores_Dim[i] << "x";
+	std::Debug << " ]" << std::endl;
+
+	//	Scores for each class (concat_1__0, a 1 x 1 x 91 x 1 x 1917 MLMultiArray)
+	//	1917 bounding boxes, 91 classes
+	int ClassCount = ClassScores_Dim[2];
+	int BoxCount = ClassScores_Dim[4];
+	if ( ClassCount != 91 )		throw Soy::AssertException("Expected 91 classes");
+	if ( BoxCount != 1917 )	throw Soy::AssertException("Expected 1917 boxes");
+	class TClassAndBox
+	{
+	public:
+		float	mScore;
+		size_t	mBoxIndex;
+		size_t	mClassIndex;
+	};
+	auto GetBoxClassScore = [&](size_t BoxIndex,size_t ClassIndex)
+	{
+		auto ValueIndex = (ClassIndex * BoxCount) + BoxIndex;
+		auto Score = ClassScores_Values[ValueIndex];
+		if ( Score < 0.01f )
+			return 0.0f;
+		return Score;
+	};
+	Array<TClassAndBox> Matches;
+	for ( auto b=0;	b<BoxCount;	b++ )
+	{
+		std::Debug << "Box[" << b << "] = [";
+		for ( auto c=0;	c<ClassCount;	c++ )
+		{
+			auto Score = GetBoxClassScore( b, c );
+			std::Debug << " " << int( Score * 100 );
+			if ( Score <= 0 )
+				continue;
+			
+			TClassAndBox Match;
+			Match.mScore = Score;
+			Match.mBoxIndex = b;
+			Match.mClassIndex = c;
+			Matches.PushBack( Match );
+		}
+		std::Debug << " ]" << std::endl;
+	}
+	
+	auto& Anchors = CoreMl::SsdMobileNet_AnchorBounds4;
+	auto GetAnchorRect = [&](size_t AnchorIndex)
+	{
+		//	from here	https://gist.github.com/vincentchu/cf507ed013da0e323d689bd89119c015#file-ssdpostprocessor-swift-L123
+		//	I believe the order is y,x,h,w
+		auto MinX = Anchors[AnchorIndex][1];
+		auto MinY = Anchors[AnchorIndex][0];
+		auto MaxX = Anchors[AnchorIndex][3];
+		auto MaxY = Anchors[AnchorIndex][2];
+		return Soy::Rectf( MinX, MinY, MaxX - MinX, MaxY-MinY );
+	};
+
+	//	Anchor-encoded Boxes (concat__0, a 1 x 1 x 4 x 1 x 1917 MLMultiArray)
+	auto GetAnchorEncodedRect = [&](size_t BoxIndex)
+	{
+		//	https://github.com/tf-coreml/tf-coreml/issues/107#issuecomment-359675509
+		//	The output of the k-th CoreML box is:
+		//	ty, tx, th, tw = boxes[0, 0, :, 0, k]
+		//	https://github.com/tensorflow/models/blob/master/research/object_detection/box_coders/keypoint_box_coder.py#L128
+		//	where x, y, w, h denote the box's center coordinates, width and height
+		//	respectively. Similarly, xa, ya, wa, ha denote the anchor's center
+		auto Index_y = (0 * BoxCount) + BoxIndex;
+		auto Index_x = (1 * BoxCount) + BoxIndex;
+		auto Index_h = (2 * BoxCount) + BoxIndex;
+		auto Index_w = (3 * BoxCount) + BoxIndex;
+		auto x = AnchorBoxes_Values[Index_x];
+		auto y = AnchorBoxes_Values[Index_y];
+		auto w = AnchorBoxes_Values[Index_w];
+		auto h = AnchorBoxes_Values[Index_h];
+		
+		//	center to top left
+		x -= w/2.0f;
+		y -= h/2.0f;
+		return Soy::Rectf( x, y, w, h );
+	};
+
+	auto GetAnchorDecodedRect = [&](size_t BoxIndex)
+	{
+		auto AnchorRect = GetAnchorRect( BoxIndex );
+		auto EncodedRect = GetAnchorEncodedRect( BoxIndex );
+		
+		//	https://github.com/tensorflow/models/blob/master/research/object_detection/box_coders/keypoint_box_coder.py#L128
+		//	^ this is the ENCODING of the values, so we need to reverse it
+		/*
+		 ty = (y - ya) / ha
+		 tx = (x - xa) / wa
+		 th = log(h / ha)
+		 tw = log(w / wa)
+		 tky0 = (ky0 - ya) / ha
+		 tkx0 = (kx0 - xa) / wa
+		 tky1 = (ky1 - ya) / ha
+		 tkx1 = (kx1 - xa) / wa
+		 */
+		//	https://gist.github.com/vincentchu/cf507ed013da0e323d689bd89119c015#file-ssdpostprocessor-swift-L47
+		//	You take these and combine them with the anchor boxes using the same routine as this python code.
+		//	https://github.com/tensorflow/models/blob/master/research/object_detection/box_coders/keypoint_box_coder.py#L128
+		//	Note: You'll need to use the scale_factors of 10.0 and 5.0 here.
+		
+		//	this is the decoding;
+		//	https://gist.github.com/vincentchu/cf507ed013da0e323d689bd89119c015#file-ssdpostprocessor-swift-L47
+		auto axcenter = AnchorRect.GetCenterX();
+		auto aycenter = AnchorRect.GetCenterY();
+		auto ha = AnchorRect.GetHeight();
+		auto wa = AnchorRect.GetWidth();
+		
+		auto ty = EncodedRect.y / 10.0f;
+		auto tx = EncodedRect.x / 10.0f;
+		auto th = EncodedRect.GetHeight() / 5.0f;
+		auto tw = EncodedRect.GetWidth() / 5.0f;
+		
+		auto w = exp(tw) * wa;
+		auto h = exp(th) * ha;
+		auto yCtr = ty * ha + aycenter;
+		auto xCtr = tx * wa + axcenter;
+		auto x = xCtr - (w/2.0f);
+		auto y = yCtr - (h/2.0f);
+		return Soy::Rectf( x, y, w, h );
+	};
+	
+	//	now extract boxes for matches
+	for ( auto i=0;	i<Matches.GetSize();	i++ )
+	{
+		auto& Match = Matches[i];
+		
+		auto BoxIndex = Match.mBoxIndex;
+		auto Box = GetAnchorDecodedRect( BoxIndex );
+		auto ClassName = GetKeypointName( Match.mClassIndex );
+		EnumObject( ClassName, Match.mScore, Box );
+	}
+	/*
+	
+	std::Debug << "Anchor Boxes: [ ";
+	for ( int i=0;	i<AnchorBoxes_Dim.GetSize();	i++ )
+		std::Debug << AnchorBoxes_Dim[i] << "x";
+	std::Debug << " ]" << std::endl;
+	*/
+}
+
+
 
 void TCoreMlWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
@@ -644,6 +842,7 @@ Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Hourglass_FunctionName>( InstanceTemplate, Hourglass );
 	Container.BindFunction<Cpm_FunctionName>( InstanceTemplate, Cpm );
 	Container.BindFunction<OpenPose_FunctionName>( InstanceTemplate, OpenPose );
+	Container.BindFunction<SsdMobileNet_FunctionName>( InstanceTemplate, SsdMobileNet );
 
 	return ConstructorFunc;
 }
@@ -800,6 +999,45 @@ v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
 		Objects.PushBack(Object);
 	};
 	CoreMl.RunOpenPose(Pixels,OnDetected);
+	
+	auto GetElement = [&](size_t Index)
+	{
+		return Objects[Index];
+	};
+	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
+	
+	return ObjectsArray;
+}
+
+
+v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	
+	auto& CoreMl = *This.mCoreMl;
+	SoyPixels Pixels;
+	Image.GetPixels(Pixels);
+	Pixels.SetFormat( SoyPixelsFormat::RGBA );
+	
+	Array<Local<Value>> Objects;
+	
+	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	{
+		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
+		auto Object = v8::Object::New( Params.mIsolate );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
+		Objects.PushBack(Object);
+	};
+	CoreMl.RunSsdMobileNet(Pixels,OnDetected);
 	
 	auto GetElement = [&](size_t Index)
 	{

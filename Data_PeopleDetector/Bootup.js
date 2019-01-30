@@ -98,16 +98,19 @@ void main()
 	gl_FragColor = float4(Sample.xyz,1);
 	gl_FragColor.yz = gl_FragColor.xx;
 	
-	float Overlap = 0;
+	
+	float BestScore = 0;
 	for ( int RectIndex=0;	RectIndex<RectCount;	RectIndex++ )
 	{
 		if ( !InsideRect( uv, Rects[RectIndex] ) )
 			continue;
 
-		float BlendAlpha = 0.7 * RectScores[RectIndex];
-		float3 ScoreRgb = NormalToRedGreen( RectScores[RectIndex] );
-		gl_FragColor.xyz = BlendColour( gl_FragColor.xyz, ScoreRgb, BlendAlpha );
+		BestScore = max( BestScore, RectScores[RectIndex] );
 	}
+
+	float BlendAlpha = (BestScore > 0.0) ? 0.6 : 0.0;
+	float3 ScoreRgb = NormalToRedGreen( BestScore );
+	gl_FragColor.xyz = BlendColour( gl_FragColor.xyz, ScoreRgb, BlendAlpha );
 }
 `;
 
@@ -220,7 +223,12 @@ FrameImage = new Image("1cats.png");
 FrameImage = new Image("6cats.jpg");
 FrameImage = new Image("Motd_baseline.png");
 FrameImage = new Image("Motd_baseline_big.png");
-//FrameImage.Resize(416,416);
+
+let cy = 0;
+let ch = FrameImage.GetHeight();
+let cw = ch;
+let cx = FrameImage.GetWidth() - cw;
+FrameImage.Clip( [cx, cy, cw, ch] );
 
 function MakeRectSquareCentered(Rect)
 {
@@ -272,7 +280,14 @@ async function RunDetection(InputImage)
 	let Detector = new CoreMl();
 	try
 	{
-		const DetectedPeople = await Detector.Yolo(FrameImage);
+		let YoloFrameImage = new Image([1,1]);
+		YoloFrameImage.Copy( FrameImage );
+		
+		YoloFrameImage.Resize(300,300);
+		const DetectedPeople = await Detector.SsdMobileNet(YoloFrameImage);
+		//YoloFrameImage.Resize(416,416);
+		//const DetectedPeople = await Detector.Yolo(YoloFrameImage);
+		
 		DetectedPeople.sort(CompareObject);
 		Debug("detected x"+DetectedPeople.length);
 		FrameRects = [];
@@ -299,8 +314,6 @@ async function RunDetection(InputImage)
 			let Score = Object.Score;
 			//Debug(Rect);
 			//Debug(Score);
-			FrameRects.push( Rect );
-			FrameRectScores.push( Score );
 			
 			//	extract an image to do more processing on
 			let Person = new Image([1,1]);
@@ -309,17 +322,31 @@ async function RunDetection(InputImage)
 			//	use normalised coords
 			//	gr: clip to square for later processing
 			let ClipRect = Rect;
-			ClipRect = GrowRect( ClipRect, 1.05 );
+			ClipRect = GrowRect( ClipRect, 1.00 );
 			ClipRect = MakeRectSquareCentered( ClipRect );
 			ClipRect[0] *= Person.GetWidth();
 			ClipRect[1] *= Person.GetHeight();
 			ClipRect[2] *= Person.GetWidth();
 			ClipRect[3] *= Person.GetHeight();
 			
+			Debug("Clip: " +  ClipRect );
 			Person.Clip( ClipRect );
+			FrameRects.push( Rect );
+			FrameRectScores.push( Score );
 			PersonImages.push( Person );
 		}
-		DetectedPeople.forEach(PushRect);
+		//DetectedPeople.forEach(PushRect);
+		for ( let i=0;	i<DetectedPeople.length;	i++ )
+		{
+			try
+			{
+				PushRect(DetectedPeople[i],i);
+			}
+			catch(e)
+			{
+				Debug("Failed to extract person: " + e);
+			}
+		}
 		
 		//	now run body-detection on each person
 		let RunPersonDetection = async function(PersonImage,PersonIndex)
@@ -338,7 +365,7 @@ async function RunDetection(InputImage)
 			let AppendRect = function(Object)
 			{
 				//if ( ["Neck","Top"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
-				if ( ["LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
+				if ( ["Head","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
 				//if ( ["Background"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
 				{	return;
 				}
