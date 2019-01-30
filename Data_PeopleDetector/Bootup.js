@@ -365,9 +365,11 @@ async function RunDetection(InputImage)
 			let AppendRect = function(Object)
 			{
 				//if ( ["Neck","Top"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
-				if ( ["Head","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
-				//if ( ["Background"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
-				{	return;
+				//if ( ["Head","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
+				if ( ["LeftAnkle","RightAnkle","LeftKnee","RightKnee"].indexOf(Object.Label) == -1 )
+				//if ( Object.Label == "Background" )
+				{
+					return;
 				}
 				if ( PersonImage.Rects.length > 100 )
 					return;
