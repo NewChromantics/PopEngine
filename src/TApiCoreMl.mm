@@ -80,7 +80,9 @@ void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(c
 	CVImageBufferRef ImageBuffer = PixelBuffer;
 	NSError* Error = nullptr;
 	
+	Soy::TScopeTimerPrint Timer(__func__,0);
 	auto Output = [mTinyYolo predictionFromImage:PixelBuffer error:&Error];
+	Timer.Stop();
 	if ( Error )
 		throw Soy::AssertException( Error );
 
@@ -315,7 +317,9 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 	
 	NSError* Error = nullptr;
 	
+	Soy::TScopeTimerPrint Timer(__func__,0);
 	auto Output = [mHourglass predictionFromImage__0:PixelBuffer error:&Error];
+	Timer.Stop();
 	if ( Error )
 		throw Soy::AssertException( Error );
 
@@ -343,7 +347,9 @@ void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(co
 	
 	NSError* Error = nullptr;
 	
+	Soy::TScopeTimerPrint Timer(__func__,0);
 	auto Output = [mCpm predictionFromImage__0:PixelBuffer error:&Error];
+	Timer.Stop();
 	if ( Error )
 		throw Soy::AssertException( Error );
 	
@@ -371,7 +377,9 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	
 	NSError* Error = nullptr;
 	
+	Soy::TScopeTimerPrint Timer(__func__,0);
 	auto Output = [mOpenPose predictionFromImage:PixelBuffer error:&Error];
+	Timer.Stop();
 	if ( Error )
 		throw Soy::AssertException( Error );
 	
@@ -491,24 +499,28 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 			EnumObject( KeypointLabel, Score, Rect );
 		};
 		
-		/*
-		auto BiggestCol = 0;
-		auto BiggestVal = -1.0f;
-		for ( auto c=0;	c<nms.GetSize();	c++ )
+		static bool BestOnly = false;		
+		if ( BestOnly )
 		{
-			if ( nms[c] <= BiggestVal )
-				continue;
-			BiggestCol = c;
-			BiggestVal = nms[c];
+			auto BiggestCol = 0;
+			auto BiggestVal = -1.0f;
+			for ( auto c=0;	c<nms.GetSize();	c++ )
+			{
+				if ( nms[c] <= BiggestVal )
+					continue;
+				BiggestCol = c;
+				BiggestVal = nms[c];
+			}
+			
+			PushCoord( BiggestCol, BiggestVal );
 		}
-		
-		PushCoord( BiggestCol, BiggestVal );
-	*/
-		for ( auto c=0;	c<nms.GetSize();	c++ )
+		else
 		{
-			PushCoord( c, nms[c] );
+			for ( auto c=0;	c<nms.GetSize();	c++ )
+			{
+				PushCoord( c, nms[c] );
+			}
 		}
-		
 		
 	}
 	/*
