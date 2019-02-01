@@ -30,8 +30,8 @@ TPopTrack& PopTrack::GetApp()
 		//RootDir += "Data_dlib/";
 		//RootDir += "Data_Posenet/";
 		//RootDir += "Data_HelloWorld/";
-		//RootDir += "Data_Holosports/";
-		RootDir += "Data_PeopleDetector/";
+		RootDir += "Data_Holosports/";
+		//RootDir += "Data_PeopleDetector/";
 		
 		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
 		Private::gOpenglApp.reset( new TPopTrack( RootDir, "Bootup.js") );
