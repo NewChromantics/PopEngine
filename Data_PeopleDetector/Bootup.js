@@ -224,8 +224,8 @@ FrameImage = new Image("6cats.jpg");
 FrameImage = new Image("Motd_baseline.png");
 FrameImage = new Image("Motd_baseline_big.png");
 
-let cy = 0;
 let ch = FrameImage.GetHeight();
+let cy = FrameImage.GetHeight() - ch;
 let cw = ch;
 let cx = FrameImage.GetWidth() - cw;
 FrameImage.Clip( [cx, cy, cw, ch] );
@@ -322,7 +322,7 @@ async function RunDetection(InputImage)
 			//	use normalised coords
 			//	gr: clip to square for later processing
 			let ClipRect = Rect;
-			ClipRect = GrowRect( ClipRect, 1.00 );
+			ClipRect = GrowRect( ClipRect, 1.05 );
 			ClipRect = MakeRectSquareCentered( ClipRect );
 			ClipRect[0] *= Person.GetWidth();
 			ClipRect[1] *= Person.GetHeight();
@@ -364,17 +364,18 @@ async function RunDetection(InputImage)
 			PersonImage.RectScores = [];
 			let AppendRect = function(Object)
 			{
+				//if ( ["Head"].indexOf(Object.Label) == -1 )
 				//if ( ["Neck","Top"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
 				//if ( ["Head","LeftAnkle","RightAnkle"/*,"RightShoulder","LeftShoulder"*/].indexOf(Object.Label) == -1 )
-				if ( ["LeftAnkle","RightAnkle","LeftKnee","RightKnee"].indexOf(Object.Label) == -1 )
-				//if ( Object.Label == "Background" )
+				//if ( ["LeftAnkle","RightAnkle","LeftKnee","RightKnee"].indexOf(Object.Label) == -1 )
+				if ( Object.Label == "Background" )
 				{
 					return;
 				}
 				if ( PersonImage.Rects.length > 100 )
 					return;
 				
-				let MinScore = 0.01;
+				let MinScore = 0.0;
 				let MaxScore = 0.5;
 				let Rect = [Object.x,Object.y,Object.w,Object.h];
 				let Score = Object.Score;

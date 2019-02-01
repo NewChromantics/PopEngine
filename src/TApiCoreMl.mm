@@ -16,6 +16,9 @@
 #import "SsdMobilenet.h"
 #include "TSsdMobileNetAnchors.h"
 
+//	https://github.com/edouardlp/Mask-RCNN-CoreML
+#import "MaskRCNN_MaskRCNN.h"
+
 using namespace v8;
 
 const char Yolo_FunctionName[] = "Yolo";
@@ -23,6 +26,7 @@ const char Hourglass_FunctionName[] = "Hourglass";
 const char Cpm_FunctionName[] = "Cpm";
 const char OpenPose_FunctionName[] = "OpenPose";
 const char SsdMobileNet_FunctionName[] = "SsdMobileNet";
+const char MaskRcnn_FunctionName[] = "MaskRcnn";
 
 const char CoreMl_TypeName[] = "CoreMl";
 
@@ -36,14 +40,13 @@ void ApiCoreMl::Bind(TV8Container& Container)
 class CoreMl::TInstance
 {
 public:
-	TInstance();
-	
 	//void		RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 	void		RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
 
 private:
 	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
@@ -55,11 +58,10 @@ private:
 	cpm*			mCpm = [[cpm alloc] init];
 	MobileOpenPose*	mOpenPose = [[MobileOpenPose alloc] init];
 	SsdMobilenet*	mSsdMobileNet = [[SsdMobilenet alloc] init];
+	MaskRCNN_MaskRCNN*	mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
 };
 
-CoreMl::TInstance::TInstance()
-{
-}
+
 /*
 void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
 {
@@ -626,6 +628,8 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 	Soy::TScopeTimerPrint Timer(__func__,0);
 	auto Output = [mSsdMobileNet predictionFromPreprocessor__sub__0:PixelBuffer error:&Error];
 	Timer.Stop();
+	if ( !Output )
+		throw Soy::AssertException("No output from CoreMl prediction");
 	if ( Error )
 		throw Soy::AssertException( Error );
 	
@@ -669,7 +673,7 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 
 	std::Debug << "Class Scores: [ ";
 	for ( int i=0;	i<ClassScores_Dim.GetSize();	i++ )
-	std::Debug << ClassScores_Dim[i] << "x";
+		std::Debug << ClassScores_Dim[i] << "x";
 	std::Debug << " ]" << std::endl;
 
 	//	Scores for each class (concat_1__0, a 1 x 1 x 91 x 1 x 1917 MLMultiArray)
@@ -812,6 +816,32 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 }
 
 
+void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSError* Error = nullptr;
+	
+	Soy::TScopeTimerPrint Timer(__func__,0);
+	auto Output = [mMaskRcnn predictionFromImage:PixelBuffer error:&Error];
+		Timer.Stop();
+	if ( Error )
+		throw Soy::AssertException( Error );
+	if ( !Output )
+		throw Soy::AssertException("No output from CoreMl prediction");
+
+	/// Detections (y1,x1,y2,x2,classId,score) as 6 element vector of doubles
+	Array<int> ClassBox_Dim;
+	Array<float> ClassBox_Values;
+	ExtractFloatsFromMultiArray( Output.detections, GetArrayBridge(ClassBox_Dim), GetArrayBridge(ClassBox_Values) );
+
+	std::Debug << "ClassBox_Dim: [ ";
+	for ( int i=0;	i<ClassBox_Dim.GetSize();	i++ )
+		std::Debug << ClassBox_Dim[i] << "x";
+	std::Debug << " ]" << std::endl;
+
+
+	throw Soy::AssertException("Process RCNN output");
+}
 
 void TCoreMlWrapper::Construct(const v8::CallbackInfo& Arguments)
 {
@@ -843,6 +873,7 @@ Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
 	Container.BindFunction<Cpm_FunctionName>( InstanceTemplate, Cpm );
 	Container.BindFunction<OpenPose_FunctionName>( InstanceTemplate, OpenPose );
 	Container.BindFunction<SsdMobileNet_FunctionName>( InstanceTemplate, SsdMobileNet );
+	Container.BindFunction<MaskRcnn_FunctionName>( InstanceTemplate, MaskRcnn );
 
 	return ConstructorFunc;
 }
@@ -1038,6 +1069,45 @@ v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(const v8::CallbackInfo& Params
 		Objects.PushBack(Object);
 	};
 	CoreMl.RunSsdMobileNet(Pixels,OnDetected);
+	
+	auto GetElement = [&](size_t Index)
+	{
+		return Objects[Index];
+	};
+	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
+	
+	return ObjectsArray;
+}
+
+
+v8::Local<v8::Value> TCoreMlWrapper::MaskRcnn(const v8::CallbackInfo& Params)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	
+	auto& CoreMl = *This.mCoreMl;
+	SoyPixels Pixels;
+	Image.GetPixels(Pixels);
+	Pixels.SetFormat( SoyPixelsFormat::RGBA );
+	
+	Array<Local<Value>> Objects;
+	
+	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	{
+		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
+		auto Object = v8::Object::New( Params.mIsolate );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
+		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
+		Objects.PushBack(Object);
+	};
+	CoreMl.RunMaskRcnn(Pixels,OnDetected);
 	
 	auto GetElement = [&](size_t Index)
 	{

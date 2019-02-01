@@ -30,6 +30,10 @@
 		BF5749C621FF73F000A7A659 /* MobileOpenPose.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */; };
 		BF5749C72200C6B100A7A659 /* MobileNet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */; };
 		BF5749C92200C82300A7A659 /* SsdMobilenet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */; };
+		BF5749CF2202170D00A7A659 /* MaskRCNN_Mask.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CB2202170C00A7A659 /* MaskRCNN_Mask.mlmodel */; };
+		BF5749D02202170D00A7A659 /* MaskRCNN_Classifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */; };
+		BF5749D12202170D00A7A659 /* MaskRCNN_anchors.bin in Resources */ = {isa = PBXBuildFile; fileRef = BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */; };
+		BF5749D22202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */ = {isa = PBXBuildFile; fileRef = BF65537D2132BD6B003E4241 /* Data_HelloWorld */; };
 		BF6554022132C4D9003E4241 /* APIDesign.md in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C52132C4D9003E4241 /* APIDesign.md */; };
@@ -204,6 +208,10 @@
 		BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MobileOpenPose.mlmodel; sourceTree = "<group>"; };
 		BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SsdMobilenet.mlmodel; sourceTree = "<group>"; };
 		BF5749CA2201E24000A7A659 /* TSsdMobileNetAnchors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TSsdMobileNetAnchors.h; path = src/TSsdMobileNetAnchors.h; sourceTree = "<group>"; };
+		BF5749CB2202170C00A7A659 /* MaskRCNN_Mask.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_Mask.mlmodel; sourceTree = "<group>"; };
+		BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_Classifier.mlmodel; sourceTree = "<group>"; };
+		BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = MaskRCNN_anchors.bin; sourceTree = "<group>"; };
+		BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_MaskRCNN.mlmodel; sourceTree = "<group>"; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
@@ -649,15 +657,19 @@
 		BFFCACC721FF63AA00153C4E /* CoreMlModels */ = {
 			isa = PBXGroup;
 			children = (
-				BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */,
-				BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */,
-				BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */,
-				BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */,
-				BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */,
 				BFFCACC521FF445200153C4E /* cpm.mlmodel */,
+				BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */,
+				BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */,
+				BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */,
+				BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */,
+				BF5749CB2202170C00A7A659 /* MaskRCNN_Mask.mlmodel */,
+				BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */,
+				BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */,
+				BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */,
+				BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */,
+				BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */,
 				BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */,
 				BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */,
-				BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */,
 			);
 			path = CoreMlModels;
 			sourceTree = "<group>";
@@ -965,6 +977,7 @@
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 				BF3786E92132C81D008E4350 /* v8Runtime in Resources */,
 				BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */,
+				BF5749D12202170D00A7A659 /* MaskRCNN_anchors.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1021,11 +1034,13 @@
 				BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */,
 				BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */,
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
+				BF5749D22202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel in Sources */,
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
 				BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
 				FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */,
 				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
+				BF5749D02202170D00A7A659 /* MaskRCNN_Classifier.mlmodel in Sources */,
 				BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */,
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
 				BFD4D56321342E310028A647 /* AvfMovieDecoder.mm in Sources */,
@@ -1054,6 +1069,7 @@
 				BF99BE3121F8ACD200E6CE5B /* VGG16.mlmodel in Sources */,
 				BF5749C92200C82300A7A659 /* SsdMobilenet.mlmodel in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
+				BF5749CF2202170D00A7A659 /* MaskRCNN_Mask.mlmodel in Sources */,
 				BF6EB33A21111D7200FC991B /* SoyTime.cpp in Sources */,
 				FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */,
 			);
