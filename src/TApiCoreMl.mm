@@ -58,7 +58,8 @@ private:
 	cpm*			mCpm = [[cpm alloc] init];
 	MobileOpenPose*	mOpenPose = [[MobileOpenPose alloc] init];
 	SsdMobilenet*	mSsdMobileNet = [[SsdMobilenet alloc] init];
-	MaskRCNN_MaskRCNN*	mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
+	//MaskRCNN_MaskRCNN*	mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
+	MaskRCNN_MaskRCNN*	mMaskRcnn = nullptr;
 };
 
 
@@ -202,7 +203,7 @@ void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(c
 		auto confidence = Sigmoid(tc);
 		if ( confidence < 0.01f )
 			continue;
-		std::Debug << "Confidence: " << confidence << std::endl;
+		//std::Debug << "Confidence: " << confidence << std::endl;
 		
 		// The predicted tx and ty coordinates are relative to the location
 		// of the grid cell; we use the logistic sigmoid to constrain these
@@ -670,12 +671,12 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 	Array<float> AnchorBoxes_Values;
 	ExtractFloatsFromMultiArray( Output.concat__0, GetArrayBridge(AnchorBoxes_Dim), GetArrayBridge(AnchorBoxes_Values) );
 	ExtractFloatsFromMultiArray( Output.concat_1__0, GetArrayBridge(ClassScores_Dim), GetArrayBridge(ClassScores_Values) );
-
+/*
 	std::Debug << "Class Scores: [ ";
 	for ( int i=0;	i<ClassScores_Dim.GetSize();	i++ )
 		std::Debug << ClassScores_Dim[i] << "x";
 	std::Debug << " ]" << std::endl;
-
+*/
 	//	Scores for each class (concat_1__0, a 1 x 1 x 91 x 1 x 1917 MLMultiArray)
 	//	1917 bounding boxes, 91 classes
 	int ClassCount = ClassScores_Dim[2];
@@ -700,11 +701,11 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 	Array<TClassAndBox> Matches;
 	for ( auto b=0;	b<BoxCount;	b++ )
 	{
-		std::Debug << "Box[" << b << "] = [";
+		//std::Debug << "Box[" << b << "] = [";
 		for ( auto c=0;	c<ClassCount;	c++ )
 		{
 			auto Score = GetBoxClassScore( b, c );
-			std::Debug << " " << int( Score * 100 );
+			//std::Debug << " " << int( Score * 100 );
 			if ( Score <= 0 )
 				continue;
 			
@@ -714,7 +715,7 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 			Match.mClassIndex = c;
 			Matches.PushBack( Match );
 		}
-		std::Debug << " ]" << std::endl;
+		//std::Debug << " ]" << std::endl;
 	}
 	
 	auto& Anchors = CoreMl::SsdMobileNet_AnchorBounds4;
