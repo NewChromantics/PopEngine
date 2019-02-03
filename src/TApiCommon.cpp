@@ -513,8 +513,10 @@ v8::Local<v8::Value> TImageWrapper::Flip(const v8::CallbackInfo& Params)
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
 	
+	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	auto& Pixels = This.GetPixels();
 	Pixels.Flip();
+	This.OnPixelsChanged();
 	
 	return v8::Undefined(Params.mIsolate);
 }
@@ -550,7 +552,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Png::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
-		mPixelsVersion = GetLatestVersion()+1;
+		OnPixelsChanged();
 		return;
 	}
 	
@@ -558,7 +560,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Jpeg::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
-		mPixelsVersion = GetLatestVersion()+1;
+		OnPixelsChanged();
 		return;
 	}
 	
@@ -566,7 +568,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Gif::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
-		mPixelsVersion = GetLatestVersion()+1;
+		OnPixelsChanged();
 		return;
 	}
 	
@@ -574,7 +576,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Tga::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
-		mPixelsVersion = GetLatestVersion()+1;
+		OnPixelsChanged();
 		return;
 	}
 	
@@ -582,7 +584,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Bmp::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
-		mPixelsVersion = GetLatestVersion()+1;
+		OnPixelsChanged();
 		return;
 	}
 	
@@ -590,7 +592,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	{
 		Psd::Read( *NewPixels, BytesBuffer );
 		mPixels = NewPixels;
-		mPixelsVersion = GetLatestVersion()+1;
+		OnPixelsChanged();
 		return;
 	}
 
@@ -627,7 +629,7 @@ v8::Local<v8::Value> TImageWrapper::Copy(const v8::CallbackInfo& Params)
 	auto& ThatPixels = That.GetPixels();
 
 	ThisPixels.Copy(ThatPixels);
-	This.mPixelsVersion = This.GetLatestVersion()+1;
+	This.OnPixelsChanged();
 	
 	return v8::Undefined(Params.mIsolate);
 }
@@ -681,6 +683,7 @@ v8::Local<v8::Value> TImageWrapper::Resize(const v8::CallbackInfo& Params)
 	auto& ThisPixels = This.GetPixels();
 	
 	ThisPixels.ResizeFastSample( NewWidth, NewHeight );
+	This.OnPixelsChanged();
 	
 	return v8::Undefined(Params.mIsolate);
 }
@@ -725,7 +728,7 @@ v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
 	auto& ThisPixels = This.GetPixels();
 	
 	ThisPixels.Clip( RectPx[0], RectPx[1], RectPx[2], RectPx[3] );
-	This.mPixelsVersion = This.GetLatestVersion()+1;
+	This.OnPixelsChanged();
 	
 	return v8::Undefined(Params.mIsolate);
 }
@@ -749,7 +752,7 @@ v8::Local<v8::Value> TImageWrapper::SetFormat(const v8::CallbackInfo& Params)
 
 	auto& Pixels = This.GetPixels();
 	Pixels.SetFormat(NewFormat);
-	This.mPixelsVersion++;
+	This.OnPixelsChanged();
 	
 	return v8::Undefined(Params.mIsolate);
 }
@@ -1148,11 +1151,19 @@ void TImageWrapper::OnOpenglTextureChanged()
 	mOpenglTexture->RefreshMeta();
 }
 
+
+
+void TImageWrapper::OnPixelsChanged()
+{
+	auto LatestVersion = GetLatestVersion();
+	mPixelsVersion = LatestVersion+1;
+}
+
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels.reset( new SoyPixels(NewPixels,mContainer.GetImageHeap()) );
-	mPixelsVersion = GetLatestVersion()+1;
+	OnPixelsChanged();
 }
 
 void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
@@ -1162,7 +1173,7 @@ void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
 	
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixels = NewPixels;
-	mPixelsVersion = GetLatestVersion()+1;
+	OnPixelsChanged();
 }
 
 void TImageWrapper::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)

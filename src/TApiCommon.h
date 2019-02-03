@@ -83,7 +83,8 @@ public:
 	void									SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels);
 	SoyPixelsMeta							GetMeta();
 	void									GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback);	//	lock & unlock pixels for processing
-	
+	void									OnPixelsChanged();	//	increase version
+
 	void									SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer);
 	
 	
