@@ -37,19 +37,40 @@ void ApiCoreMl::Bind(TV8Container& Container)
 }
 
 
-class CoreMl::TInstance
+namespace CoreMl
+{
+	class TObject;
+}
+
+class CoreMl::TObject
 {
 public:
+	float		mScore = 0;
+	std::string	mLabel;
+	Soy::Rectf	mRect = Soy::Rectf(0,0,0,0);
+};
+
+
+class CoreMl::TInstance : public SoyWorkerJobThread
+{
+public:
+	TInstance();
+	
+	//	jobs
+	void		RunAsync(std::shared_ptr<SoyPixelsImpl> Pixels,void(TInstance::* RunModel)(const SoyPixelsImpl&,std::function<void(const std::string&,float,Soy::Rectf)>),std::function<void()> OnFinished);
+	
+	
+	//	synchronous funcs
 	//void		RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
-	void		RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
-	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
-	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
-	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
-	void		RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
-	void		RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 
 private:
-	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject);
+	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const TObject&)> EnumObject);
 
 private:
 	//MobileNet*	mMobileNet = nullptr;
@@ -62,6 +83,11 @@ private:
 	MaskRCNN_MaskRCNN*	mMaskRcnn = nullptr;
 };
 
+CoreMl::TInstance::TInstance() :
+	SoyWorkerJobThread	("CoreMl::TInstance")
+{
+	Start();
+}
 
 /*
 void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
@@ -79,7 +105,7 @@ void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<v
 }
 */
 
-void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const TObject& Object)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
 	
@@ -250,8 +276,12 @@ void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(c
 		y /= Pixels.GetHeight();
 		w /= Pixels.GetWidth();
 		h /= Pixels.GetHeight();
-		EnumObject( Label, Score, Soy::Rectf( x,y,w,h ) );
 		
+		TObject Object;
+		Object.mLabel = Label;
+		Object.mScore = Score;
+		Object.mRect = Soy::Rectf( x,y,w,h );
+		EnumObject( Object );
 	}
 }
 
@@ -317,7 +347,7 @@ void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dim
 }
 
 
-void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
 	
@@ -347,7 +377,7 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 	RunPoseModel( Output.hourglass_out_3__0, Pixels, GetKeypointName, EnumObject );
 }
 
-void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
 	
@@ -377,7 +407,7 @@ void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(co
 }
 
 
-void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
 	
@@ -496,13 +526,18 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 			auto x = Index % HeatRows;
 			Coords.PushBack( vec2i(x,y) );
 			
-			auto KeypointLabel = GetKeypointName(r);
+			auto Label = GetKeypointName(r);
 			auto xf = x / static_cast<float>(HeatRows);
 			auto yf = y / static_cast<float>(HeatColumns);
 			auto wf = 1 / static_cast<float>(HeatRows);
 			auto hf = 1 / static_cast<float>(HeatColumns);
 			auto Rect = Soy::Rectf( xf, yf, wf, hf );
-			EnumObject( KeypointLabel, Score, Rect );
+			
+			TObject Object;
+			Object.mLabel = Label;
+			Object.mScore = Score;
+			Object.mRect = Rect;
+			EnumObject( Object );
 		};
 		
 		static bool BestOnly = false;		
@@ -547,7 +582,7 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 }
 
 
-void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const TObject&)> EnumObject)
 {
 	if ( !ModelOutput )
 		throw Soy::AssertException("No output from model");
@@ -584,7 +619,11 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 		{
 			if ( EnumAllResults )
 			{
-				EnumObject( Label, Score, Rect );
+				TObject Object;
+				Object.mLabel = Label;
+				Object.mScore = Score;
+				Object.mRect = Rect;
+				EnumObject( Object );
 				return;
 			}
 			if ( Score < BestScore )
@@ -613,7 +652,11 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 		//	if only outputting best, do it
 		if ( !EnumAllResults && BestScore > 0 )
 		{
-			EnumObject( KeypointLabel, BestScore, BestRect );
+			TObject Object;
+			Object.mLabel = KeypointLabel;
+			Object.mScore = BestScore;
+			Object.mRect = BestRect;
+			EnumObject( Object );
 		}
 		
 	}
@@ -621,7 +664,7 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 }
 
 
-void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
 	NSError* Error = nullptr;
@@ -805,7 +848,12 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 		auto BoxIndex = Match.mBoxIndex;
 		auto Box = GetAnchorDecodedRect( BoxIndex );
 		auto ClassName = GetKeypointName( Match.mClassIndex );
-		EnumObject( ClassName, Match.mScore, Box );
+		
+		TObject Object;
+		Object.mLabel = ClassName;
+		Object.mScore = Match.mScore;
+		Object.mRect = Box;
+		EnumObject( Object );
 	}
 	/*
 	
@@ -817,7 +865,7 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 }
 
 
-void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const std::string&,float,Soy::Rectf)> EnumObject)
+void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
 	NSError* Error = nullptr;
@@ -880,6 +928,81 @@ Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
 }
 
 
+template<typename COREML_FUNC>
+v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
+{
+	auto& Arguments = Params.mParams;
+	
+	auto ThisHandle = Arguments.This()->GetInternalField(0);
+	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto* pImage = &v8::GetObject<TImageWrapper>( Arguments[0] );
+	auto* Isolate = Params.mIsolate;
+	auto* Container = &Params.mContainer;
+	
+	//	make a promise resolver (persistent to copy to thread)
+	auto ResolverLocal = v8::Promise::Resolver::New( Isolate );
+	auto ResolverPersistent = v8::GetPersistent( *Isolate, ResolverLocal );
+	
+	
+	auto RunModel = [=]
+	{
+		try
+		{
+			//	do all the work on the thread
+			SoyPixels Pixels;
+			pImage->GetPixels(Pixels);
+			Pixels.SetFormat( SoyPixelsFormat::RGBA );
+			Array<CoreMl::TObject> Objects;
+			
+			auto PushObject = [&](const CoreMl::TObject& Object)
+			{
+				Objects.PushBack(Object);
+			};
+			CoreMlFunc( *CoreMl, Pixels, PushObject );
+			
+			auto OnCompleted = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
+				auto GetElement = [&](size_t Index)
+				{
+					auto& Object = Objects[Index];
+					auto ObjectJs = v8::Object::New( Params.mIsolate );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+					return ObjectJs;
+				};
+				auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
+				ResolverLocal->Resolve( ObjectsArray );
+			};
+			
+			Container->QueueScoped( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			auto OnError = [=](Local<Context> Context)
+			{
+				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
+				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
+				ResolverLocal->Reject( Error );
+			};
+			Container->QueueScoped( OnError );
+		}
+	};
+	
+	CoreMl->PushJob(RunModel);
+	
+	
+	//	return the promise
+	auto Promise = ResolverLocal->GetPromise();
+	return Promise;
+}
+
 
 v8::Local<v8::Value> TCoreMlWrapper::Yolo(const v8::CallbackInfo& Params)
 {
@@ -897,17 +1020,17 @@ v8::Local<v8::Value> TCoreMlWrapper::Yolo(const v8::CallbackInfo& Params)
 
 	Array<Local<Value>> Objects;
 	
-	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	auto OnDetected = [&](const CoreMl::TObject& Object)
 	{
 		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto Object = v8::Object::New( Params.mIsolate );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
-		Objects.PushBack(Object);
+		auto ObjectJs = v8::Object::New( Params.mIsolate );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+		Objects.PushBack(ObjectJs);
 	};
 	CoreMl.RunYolo(Pixels,OnDetected);
 	
@@ -938,17 +1061,17 @@ v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
 	
 	Array<Local<Value>> Objects;
 	
-	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	auto OnDetected = [&](const CoreMl::TObject& Object)
 	{
 		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto Object = v8::Object::New( Params.mIsolate );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
-		Objects.PushBack(Object);
+		auto ObjectJs = v8::Object::New( Params.mIsolate );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+		Objects.PushBack(ObjectJs);
 	};
 	CoreMl.RunHourglass(Pixels,OnDetected);
 	
@@ -978,17 +1101,17 @@ v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
 	
 	Array<Local<Value>> Objects;
 	
-	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	auto OnDetected = [&](const CoreMl::TObject& Object)
 	{
 		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto Object = v8::Object::New( Params.mIsolate );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
-		Objects.PushBack(Object);
+		auto ObjectJs = v8::Object::New( Params.mIsolate );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+		Objects.PushBack(ObjectJs);
 	};
 	CoreMl.RunCpm(Pixels,OnDetected);
 	
@@ -1018,17 +1141,17 @@ v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
 	
 	Array<Local<Value>> Objects;
 	
-	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	auto OnDetected = [&](const CoreMl::TObject& Object)
 	{
 		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto Object = v8::Object::New( Params.mIsolate );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
-		Objects.PushBack(Object);
+		auto ObjectJs = v8::Object::New( Params.mIsolate );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+		Objects.PushBack(ObjectJs);
 	};
 	CoreMl.RunOpenPose(Pixels,OnDetected);
 	
@@ -1042,42 +1165,16 @@ v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
 }
 
 
+
 v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
-	
-	auto& CoreMl = *This.mCoreMl;
-	SoyPixels Pixels;
-	Image.GetPixels(Pixels);
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
-	
-	Array<Local<Value>> Objects;
-	
-	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
-	{
-		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto Object = v8::Object::New( Params.mIsolate );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
-		Objects.PushBack(Object);
-	};
-	CoreMl.RunSsdMobileNet(Pixels,OnDetected);
-	
-	auto GetElement = [&](size_t Index)
-	{
-		return Objects[Index];
-	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-	
-	return ObjectsArray;
+	auto& CoreMl = This.mCoreMl;
+
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunSsdMobileNet );
+	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
@@ -1096,17 +1193,17 @@ v8::Local<v8::Value> TCoreMlWrapper::MaskRcnn(const v8::CallbackInfo& Params)
 	
 	Array<Local<Value>> Objects;
 	
-	auto OnDetected = [&](const std::string& Label,float Score,Soy::Rectf Rect)
+	auto OnDetected = [&](const CoreMl::TObject& Object)
 	{
 		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto Object = v8::Object::New( Params.mIsolate );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Label.c_str() ) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Score) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Rect.x) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Rect.y) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Rect.w) );
-		Object->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Rect.h) );
-		Objects.PushBack(Object);
+		auto ObjectJs = v8::Object::New( Params.mIsolate );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
+		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+		Objects.PushBack(ObjectJs);
 	};
 	CoreMl.RunMaskRcnn(Pixels,OnDetected);
 	
