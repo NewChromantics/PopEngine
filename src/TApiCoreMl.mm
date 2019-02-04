@@ -933,8 +933,6 @@ v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Par
 {
 	auto& Arguments = Params.mParams;
 	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
 	auto* pImage = &v8::GetObject<TImageWrapper>( Arguments[0] );
 	auto* Isolate = Params.mIsolate;
 	auto* Container = &Params.mContainer;
@@ -1007,40 +1005,12 @@ v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Par
 v8::Local<v8::Value> TCoreMlWrapper::Yolo(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
-
-	auto& CoreMl = *This.mCoreMl;
-	SoyPixels Pixels;
-	Image.GetPixels(Pixels);
-	Pixels.ResizeFastSample(416,416);
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
-
-	Array<Local<Value>> Objects;
+	auto& CoreMl = This.mCoreMl;
 	
-	auto OnDetected = [&](const CoreMl::TObject& Object)
-	{
-		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto ObjectJs = v8::Object::New( Params.mIsolate );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
-		Objects.PushBack(ObjectJs);
-	};
-	CoreMl.RunYolo(Pixels,OnDetected);
-	
-	auto GetElement = [&](size_t Index)
-	{
-		return Objects[Index];
-	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-
-	return ObjectsArray;
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunYolo );
+	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
@@ -1049,39 +1019,12 @@ v8::Local<v8::Value> TCoreMlWrapper::Yolo(const v8::CallbackInfo& Params)
 v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	auto& CoreMl = This.mCoreMl;
 	
-	auto& CoreMl = *This.mCoreMl;
-	SoyPixels Pixels;
-	Image.GetPixels(Pixels);
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
-	
-	Array<Local<Value>> Objects;
-	
-	auto OnDetected = [&](const CoreMl::TObject& Object)
-	{
-		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto ObjectJs = v8::Object::New( Params.mIsolate );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
-		Objects.PushBack(ObjectJs);
-	};
-	CoreMl.RunHourglass(Pixels,OnDetected);
-	
-	auto GetElement = [&](size_t Index)
-	{
-		return Objects[Index];
-	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-	
-	return ObjectsArray;
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunHourglass );
+	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
@@ -1089,39 +1032,12 @@ v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
 v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	auto& CoreMl = This.mCoreMl;
 	
-	auto& CoreMl = *This.mCoreMl;
-	SoyPixels Pixels;
-	Image.GetPixels(Pixels);
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
-	
-	Array<Local<Value>> Objects;
-	
-	auto OnDetected = [&](const CoreMl::TObject& Object)
-	{
-		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto ObjectJs = v8::Object::New( Params.mIsolate );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
-		Objects.PushBack(ObjectJs);
-	};
-	CoreMl.RunCpm(Pixels,OnDetected);
-	
-	auto GetElement = [&](size_t Index)
-	{
-		return Objects[Index];
-	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-	
-	return ObjectsArray;
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunCpm );
+	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
@@ -1129,39 +1045,12 @@ v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
 v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	auto& CoreMl = This.mCoreMl;
 	
-	auto& CoreMl = *This.mCoreMl;
-	SoyPixels Pixels;
-	Image.GetPixels(Pixels);
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
-	
-	Array<Local<Value>> Objects;
-	
-	auto OnDetected = [&](const CoreMl::TObject& Object)
-	{
-		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto ObjectJs = v8::Object::New( Params.mIsolate );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
-		Objects.PushBack(ObjectJs);
-	};
-	CoreMl.RunOpenPose(Pixels,OnDetected);
-	
-	auto GetElement = [&](size_t Index)
-	{
-		return Objects[Index];
-	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-	
-	return ObjectsArray;
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
+	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
@@ -1181,37 +1070,10 @@ v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(const v8::CallbackInfo& Params
 v8::Local<v8::Value> TCoreMlWrapper::MaskRcnn(const v8::CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
-	
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
-	auto& Image = v8::GetObject<TImageWrapper>( Arguments[0] );
+	auto& CoreMl = This.mCoreMl;
 	
-	auto& CoreMl = *This.mCoreMl;
-	SoyPixels Pixels;
-	Image.GetPixels(Pixels);
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
-	
-	Array<Local<Value>> Objects;
-	
-	auto OnDetected = [&](const CoreMl::TObject& Object)
-	{
-		//std::Debug << "Detected rect " << Label << " " << static_cast<int>(Score*100.0f) << "% " << Rect << std::endl;
-		auto ObjectJs = v8::Object::New( Params.mIsolate );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
-		Objects.PushBack(ObjectJs);
-	};
-	CoreMl.RunMaskRcnn(Pixels,OnDetected);
-	
-	auto GetElement = [&](size_t Index)
-	{
-		return Objects[Index];
-	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-	
-	return ObjectsArray;
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunMaskRcnn );
+	return RunModel( CoreMlFunc, Params, CoreMl );
 }

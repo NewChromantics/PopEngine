@@ -110,7 +110,6 @@
 		BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */ = {isa = PBXBuildFile; fileRef = BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */; };
 		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
 		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */; };
-		BF99BE3121F8ACD200E6CE5B /* VGG16.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */; };
 		BF99BE3221F8ACD200E6CE5B /* TinyYOLO.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
@@ -339,9 +338,7 @@
 		BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MobileNet.mlmodel; sourceTree = "<group>"; };
 		BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCoreMl.h; path = src/TApiCoreMl.h; sourceTree = "<group>"; };
 		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TApiCoreMl.mm; path = src/TApiCoreMl.mm; sourceTree = "<group>"; };
-		BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = Inceptionv3.mlmodel; sourceTree = "<group>"; };
 		BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SqueezeNet.mlmodel; sourceTree = "<group>"; };
-		BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = VGG16.mlmodel; sourceTree = "<group>"; };
 		BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = TinyYOLO.mlmodel; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
@@ -659,7 +656,6 @@
 			children = (
 				BFFCACC521FF445200153C4E /* cpm.mlmodel */,
 				BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */,
-				BF99BE2B21F8ABA300E6CE5B /* Inceptionv3.mlmodel */,
 				BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */,
 				BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */,
 				BF5749CB2202170C00A7A659 /* MaskRCNN_Mask.mlmodel */,
@@ -669,7 +665,6 @@
 				BF99BE2C21F8ABA400E6CE5B /* SqueezeNet.mlmodel */,
 				BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */,
 				BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */,
-				BF99BE2F21F8ACD100E6CE5B /* VGG16.mlmodel */,
 			);
 			path = CoreMlModels;
 			sourceTree = "<group>";
@@ -1066,7 +1061,6 @@
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
-				BF99BE3121F8ACD200E6CE5B /* VGG16.mlmodel in Sources */,
 				BF5749C92200C82300A7A659 /* SsdMobilenet.mlmodel in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
 				BF5749CF2202170D00A7A659 /* MaskRCNN_Mask.mlmodel in Sources */,
