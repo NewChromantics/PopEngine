@@ -947,9 +947,21 @@ v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Par
 		try
 		{
 			//	do all the work on the thread
-			SoyPixels Pixels;
-			pImage->GetPixels(Pixels);
-			Pixels.SetFormat( SoyPixelsFormat::RGBA );
+			auto& CurrentPixels = pImage->GetPixels();
+			SoyPixels TempPixels;
+			auto* pPixels = &TempPixels;
+			if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
+			{
+				pPixels = &CurrentPixels;
+			}
+			else
+			{
+				pImage->GetPixels(TempPixels);
+				TempPixels.SetFormat( SoyPixelsFormat::RGBA );
+				pPixels = &TempPixels;
+			}
+			auto& Pixels = *pPixels;
+			
 			Array<CoreMl::TObject> Objects;
 			
 			auto PushObject = [&](const CoreMl::TObject& Object)
