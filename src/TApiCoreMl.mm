@@ -45,9 +45,10 @@ namespace CoreMl
 class CoreMl::TObject
 {
 public:
-	float		mScore = 0;
-	std::string	mLabel;
-	Soy::Rectf	mRect = Soy::Rectf(0,0,0,0);
+	float			mScore = 0;
+	std::string		mLabel;
+	Soy::Rectf		mRect = Soy::Rectf(0,0,0,0);
+	vec2x<size_t>	mGridPos;
 };
 
 
@@ -537,6 +538,8 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 			Object.mLabel = Label;
 			Object.mScore = Score;
 			Object.mRect = Rect;
+			Object.mGridPos.x = x;
+			Object.mGridPos.y = y;
 			EnumObject( Object );
 		};
 		
@@ -613,23 +616,26 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 	for ( auto k=0;	k<KeypointCount;	k++)
 	{
 		auto KeypointLabel = GetKeypointName(k);
-		Soy::Rectf BestRect;
-		float BestScore = -1;
-		auto EnumKeypoint = [&](const std::string& Label,float Score,const Soy::Rectf& Rect)
+		TObject BestObject;
+		BestObject.mScore = -1;
+		
+		auto EnumKeypoint = [&](const std::string& Label,float Score,const Soy::Rectf& Rect,size_t GridX,size_t GridY)
 		{
+			TObject Object;
+			Object.mLabel = Label;
+			Object.mScore = Score;
+			Object.mRect = Rect;
+			Object.mGridPos.x = GridX;
+			Object.mGridPos.y = GridY;
+			
 			if ( EnumAllResults )
 			{
-				TObject Object;
-				Object.mLabel = Label;
-				Object.mScore = Score;
-				Object.mRect = Rect;
 				EnumObject( Object );
 				return;
 			}
-			if ( Score < BestScore )
+			if ( Score < BestObject.mScore )
 				return;
-			BestRect = Rect;
-			BestScore = Score;
+			BestObject = Object;
 		};
 
 		for ( auto x=0;	x<HeatmapWidth;	x++)
@@ -645,18 +651,14 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 				auto wf = 1 / static_cast<float>(HeatmapWidth);
 				auto hf = 1 / static_cast<float>(HeatmapHeight);
 				auto Rect = Soy::Rectf( xf, yf, wf, hf );
-				EnumKeypoint( KeypointLabel, Confidence, Rect );
+				EnumKeypoint( KeypointLabel, Confidence, Rect, x, y );
 			}
 		}
 		
 		//	if only outputting best, do it
-		if ( !EnumAllResults && BestScore > 0 )
+		if ( !EnumAllResults && BestObject.mScore > 0 )
 		{
-			TObject Object;
-			Object.mLabel = KeypointLabel;
-			Object.mScore = BestScore;
-			Object.mRect = BestRect;
-			EnumObject( Object );
+			EnumObject( BestObject );
 		}
 		
 	}
@@ -983,6 +985,8 @@ v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Par
 					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
 					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
 					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "GridX"), v8::Number::New(Params.mIsolate, Object.mGridPos.x) );
+					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "GridY"), v8::Number::New(Params.mIsolate, Object.mGridPos.y) );
 					return ObjectJs;
 				};
 				auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
