@@ -313,10 +313,12 @@ void CopyValuesFromVoid(ArrayBridge<float>& Dest,void* Source,size_t Count)
 	auto* SourceValues = reinterpret_cast<SOURCETYPE*>( Source );
 	Dest.SetSize( Count );
 	
+	//	for speed
+	auto* DestPtr = Dest.GetArray();
 	for ( auto i=0;	i<Count;	i++ )
 	{
 		auto Sourcef = static_cast<float>( SourceValues[i] );
-		Dest[i] = Sourcef;
+		DestPtr[i] = Sourcef;
 	}
 
 }
