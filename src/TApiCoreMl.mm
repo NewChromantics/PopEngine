@@ -307,52 +307,55 @@ void NSArray_NSNumber_ForEach(NSArray<NSNumber*>* Numbers,std::function<void(int
 	}
 }
 
+template<typename SOURCETYPE>
+void CopyValuesFromVoid(ArrayBridge<float>& Dest,void* Source,size_t Count)
+{
+	auto* SourceValues = reinterpret_cast<SOURCETYPE*>( Source );
+	Dest.SetSize( Count );
+	
+	for ( auto i=0;	i<Count;	i++ )
+	{
+		auto Sourcef = static_cast<float>( SourceValues[i] );
+		Dest[i] = Sourcef;
+	}
+
+}
+
 void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dimensions,ArrayBridge<float>&& Values)
 {
-	//	get dimensions
-	NSArray_NSNumber_ForEach( MultiArray.shape, [&](int64_t DimSize)	{	Dimensions.PushBack(DimSize);	} );
+	Soy::TScopeTimerPrint Timer("ExtractFloatsFromMultiArray", 4);
 	
+	
+	//	get dimensions
+	auto PushDim = [&](int64_t DimSize)
+	{
+		Dimensions.PushBack( static_cast<int>(DimSize) );
+	};
+	NSArray_NSNumber_ForEach( MultiArray.shape, PushDim );
+
+	//	todo: this should match dim
+	auto ValueCount = MultiArray.count;
+
 	//	convert all values now
-	//	get a functor for the different types
-	std::function<float(int)> GetGridIndexValue;
+	void* MultiArray_DataPointer = MultiArray.dataPointer;
 	switch ( MultiArray.dataType )
 	{
 		case MLMultiArrayDataTypeDouble:
-			GetGridIndexValue = [&](int Index)
-		{
-			auto* GridValues = reinterpret_cast<double*>( MultiArray.dataPointer );
-			return static_cast<float>( GridValues[Index] );
-		};
+			CopyValuesFromVoid<double>( Values, MultiArray_DataPointer, ValueCount );
 			break;
 			
 		case MLMultiArrayDataTypeFloat32:
-			GetGridIndexValue = [&](int Index)
-		{
-			auto* GridValues = reinterpret_cast<float*>( MultiArray.dataPointer );
-			return static_cast<float>( GridValues[Index] );
-		};
+			CopyValuesFromVoid<float>( Values, MultiArray_DataPointer, ValueCount );
 			break;
 			
 		case MLMultiArrayDataTypeInt32:
-			GetGridIndexValue = [&](int Index)
-		{
-			auto* GridValues = reinterpret_cast<int32_t*>( MultiArray.dataPointer );
-			return static_cast<float>( GridValues[Index] );
-		};
+			CopyValuesFromVoid<int32_t>( Values, MultiArray_DataPointer, ValueCount );
 			break;
 			
 		default:
 			throw Soy::AssertException("Unhandled grid data type");
 	}
 	
-	//	todo: this should match dim
-	auto ValueCount = MultiArray.count;
-	for ( auto i=0;	i<ValueCount;	i++ )
-	{
-		//	this could probably be faster than using the functor
-		auto Valuef = GetGridIndexValue(i);
-		Values.PushBack(Valuef);
-	}
 }
 
 
@@ -483,7 +486,7 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	if ( !ModelOutput )
 		throw Soy::AssertException("No output from model");
 	
-	Array<int> Dim;
+	BufferArray<int,10> Dim;
 	Array<float> Values;
 	ExtractFloatsFromMultiArray( ModelOutput, GetArrayBridge(Dim), GetArrayBridge(Values) );
 	
@@ -619,7 +622,7 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 	if ( !ModelOutput )
 		throw Soy::AssertException("No output from model");
 
-	Array<int> Dim;
+	BufferArray<int,10> Dim;
 	Array<float> Values;
 	ExtractFloatsFromMultiArray( ModelOutput, GetArrayBridge(Dim), GetArrayBridge(Values) );
 	
@@ -747,9 +750,9 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 	//	https://github.com/tf-coreml/tf-coreml/issues/107#issuecomment-359675509
 	//	Scores for each class (concat_1__0, a 1 x 1 x 91 x 1 x 1917 MLMultiArray)
 	//	Anchor-encoded Boxes (concat__0, a 1 x 1 x 4 x 1 x 1917 MLMultiArray)
-	Array<int> ClassScores_Dim;
+	BufferArray<int,10> ClassScores_Dim;
 	Array<float> ClassScores_Values;
-	Array<int> AnchorBoxes_Dim;
+	BufferArray<int,10> AnchorBoxes_Dim;
 	Array<float> AnchorBoxes_Values;
 	ExtractFloatsFromMultiArray( Output.concat__0, GetArrayBridge(AnchorBoxes_Dim), GetArrayBridge(AnchorBoxes_Values) );
 	ExtractFloatsFromMultiArray( Output.concat_1__0, GetArrayBridge(ClassScores_Dim), GetArrayBridge(ClassScores_Values) );
@@ -923,7 +926,7 @@ void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<vo
 		throw Soy::AssertException("No output from CoreMl prediction");
 
 	/// Detections (y1,x1,y2,x2,classId,score) as 6 element vector of doubles
-	Array<int> ClassBox_Dim;
+	BufferArray<int,10> ClassBox_Dim;
 	Array<float> ClassBox_Values;
 	ExtractFloatsFromMultiArray( Output.detections, GetArrayBridge(ClassBox_Dim), GetArrayBridge(ClassBox_Values) );
 
