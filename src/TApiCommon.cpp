@@ -723,6 +723,13 @@ v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
 		throw Soy::AssertException(Error.str());
 	}
 	
+	if ( RectPx[0] < 0 || RectPx[1] < 0 || RectPx[2] <= 0 || RectPx[3] <= 0 )
+	{
+		std::stringstream Error;
+		Error << "Clip( " << RectPx[0] << ", " << RectPx[1] << ", " << RectPx[2] << ", " << RectPx[3] << ") out of bounds";
+		throw Soy::AssertException(Error.str());
+	}
+
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	
 	auto& ThisPixels = This.GetPixels();
