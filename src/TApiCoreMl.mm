@@ -307,12 +307,15 @@ void NSArray_NSNumber_ForEach(NSArray<NSNumber*>* Numbers,std::function<void(int
 	}
 }
 
-template<typename SOURCETYPE>
-void CopyValuesFromVoid(ArrayBridge<float>& Dest,void* Source,size_t Count)
+template<typename SOURCETYPE,typename NUMBERTYPE>
+void CopyValuesFromVoid(ArrayBridge<NUMBERTYPE>& Dest,void* Source,size_t Count)
 {
 	auto* SourceValues = reinterpret_cast<SOURCETYPE*>( Source );
-	Dest.SetSize( Count );
+	//Dest.SetSize( Count );
 	
+	auto SourceArray = GetRemoteArray( SourceValues, Count );
+	Dest.Copy( SourceArray );
+	/*
 	//	for speed
 	auto* DestPtr = Dest.GetArray();
 	for ( auto i=0;	i<Count;	i++ )
@@ -320,10 +323,11 @@ void CopyValuesFromVoid(ArrayBridge<float>& Dest,void* Source,size_t Count)
 		auto Sourcef = static_cast<float>( SourceValues[i] );
 		DestPtr[i] = Sourcef;
 	}
-
+*/
 }
 
-void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dimensions,ArrayBridge<float>&& Values)
+template<typename NUMBER>
+void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dimensions,ArrayBridge<NUMBER>&& Values)
 {
 	Soy::TScopeTimerPrint Timer("ExtractFloatsFromMultiArray", 4);
 	
@@ -472,6 +476,7 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 		"LeftEar",
 		"Background"
 	};
+	auto BackgroundLabelIndex = 18;
 	auto GetKeypointName = [&](size_t Index)
 	{
 		if ( Index < sizeofarray(KeypointLabels) )
@@ -488,8 +493,9 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	if ( !ModelOutput )
 		throw Soy::AssertException("No output from model");
 	
+	using NUMBER = double;
 	BufferArray<int,10> Dim;
-	Array<float> Values;
+	Array<NUMBER> Values;
 	ExtractFloatsFromMultiArray( ModelOutput, GetArrayBridge(Dim), GetArrayBridge(Values) );
 	
 	auto KeypointCount = Dim[0];
@@ -515,21 +521,57 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 	//	code above splits into pafMat and HeatmapMat
 	auto HeatMatRows = 19;
 	auto HeatMatCols = HeatRows*HeatColumns;
-	float heatMat[HeatMatRows * HeatMatCols];//[19*HeatRows*HeatColumns];
-	float pafMat[Values.GetSize() - sizeofarray(heatMat)];//[38*HeatRows*HeatColumns];
+	auto heatMat_count = HeatMatRows * HeatMatCols;
+	/*
+	NUMBER heatMat[HeatMatRows * HeatMatCols];//[19*HeatRows*HeatColumns];
+	NUMBER pafMat[Values.GetSize() - sizeofarray(heatMat)];//[38*HeatRows*HeatColumns];
 	//let heatMat = Matrix<Double>(rows: 19, columns: heatRows*heatColumns, elements: data )
 	//let separateLen = 19*heatRows*heatColumns
 	//let pafMat = Matrix<Double>(rows: 38, columns: heatRows*heatColumns, elements: Array<Double>(mm[separateLen..<mm.count]))
-	for ( auto i=0;	i<sizeofarray(heatMat);	i++ )
+	auto heatMat_count = sizeofarray(heatMat);
+	for ( auto i=0;	i<heatMat_count;	i++ )
 		heatMat[i] = Values[i];
-	for ( auto i=0;	i<sizeofarray(pafMat);	i++ )
-		pafMat[i] = Values[sizeofarray(heatMat)+i];
+	auto pafMat_count = sizeofarray(pafMat);
+	for ( auto i=0;	i<pafMat_count;	i++ )
+		pafMat[i] = Values[heatMat_count+i];
+	*/
+	auto* heatMat = Values.GetArray();
+	auto* pafMat = &heatMat[heatMat_count];
 	
 	//	pull coords from heat map
 	using vec2i = vec2x<int32_t>;
 	Array<vec2i> Coords;
+	auto PushCoord = [&](int KeypointIndex,int Index,float Score)
+	{
+		if ( Score < 0.01f )
+			return;
+		
+		auto y = Index / HeatRows;
+		auto x = Index % HeatRows;
+		Coords.PushBack( vec2i(x,y) );
+		
+		auto Label = GetKeypointName(KeypointIndex);
+		auto xf = x / static_cast<float>(HeatRows);
+		auto yf = y / static_cast<float>(HeatColumns);
+		auto wf = 1 / static_cast<float>(HeatRows);
+		auto hf = 1 / static_cast<float>(HeatColumns);
+		auto Rect = Soy::Rectf( xf, yf, wf, hf );
+		
+		TObject Object;
+		Object.mLabel = Label;
+		Object.mScore = Score;
+		Object.mRect = Rect;
+		Object.mGridPos.x = x;
+		Object.mGridPos.y = y;
+		EnumObject( Object );
+	};
+	
 	for ( auto r=0;	r<HeatMatRows;	r++ )
 	{
+		auto KeypointIndex = r;
+		static bool SkipBackground = true;
+		if ( SkipBackground && KeypointIndex == BackgroundLabelIndex )
+			continue;
 		auto nms = GetRemoteArray( &heatMat[r*HeatMatCols], HeatMatCols );
 		/*
 		std::Debug << "r=" << r << " [ ";
@@ -552,30 +594,7 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 									 threshold: threshold)
 		 */
 		
-		auto PushCoord = [&](int Index,float Score)
-		{
-			if ( Score < 0.01f )
-				return;
-			
-			auto y = Index / HeatRows;
-			auto x = Index % HeatRows;
-			Coords.PushBack( vec2i(x,y) );
-			
-			auto Label = GetKeypointName(r);
-			auto xf = x / static_cast<float>(HeatRows);
-			auto yf = y / static_cast<float>(HeatColumns);
-			auto wf = 1 / static_cast<float>(HeatRows);
-			auto hf = 1 / static_cast<float>(HeatColumns);
-			auto Rect = Soy::Rectf( xf, yf, wf, hf );
-			
-			TObject Object;
-			Object.mLabel = Label;
-			Object.mScore = Score;
-			Object.mRect = Rect;
-			Object.mGridPos.x = x;
-			Object.mGridPos.y = y;
-			EnumObject( Object );
-		};
+		
 		
 		static bool BestOnly = false;		
 		if ( BestOnly )
@@ -590,13 +609,13 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 				BiggestVal = nms[c];
 			}
 			
-			PushCoord( BiggestCol, BiggestVal );
+			PushCoord( KeypointIndex, BiggestCol, BiggestVal );
 		}
 		else
 		{
 			for ( auto c=0;	c<nms.GetSize();	c++ )
 			{
-				PushCoord( c, nms[c] );
+				PushCoord( KeypointIndex, c, nms[c] );
 			}
 		}
 		
@@ -737,6 +756,7 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 		"remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator",
 		"???","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"
 	};
+	auto BackgroundClassIndex = 0;
 	auto GetKeypointName = [&](size_t Index)
 	{
 		if ( Index < sizeofarray(KeypointLabels) )
@@ -752,10 +772,11 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 	//	https://github.com/tf-coreml/tf-coreml/issues/107#issuecomment-359675509
 	//	Scores for each class (concat_1__0, a 1 x 1 x 91 x 1 x 1917 MLMultiArray)
 	//	Anchor-encoded Boxes (concat__0, a 1 x 1 x 4 x 1 x 1917 MLMultiArray)
+	using NUMBER = double;
 	BufferArray<int,10> ClassScores_Dim;
-	Array<float> ClassScores_Values;
+	Array<NUMBER> ClassScores_Values;
 	BufferArray<int,10> AnchorBoxes_Dim;
-	Array<float> AnchorBoxes_Values;
+	Array<NUMBER> AnchorBoxes_Values;
 	ExtractFloatsFromMultiArray( Output.concat__0, GetArrayBridge(AnchorBoxes_Dim), GetArrayBridge(AnchorBoxes_Values) );
 	ExtractFloatsFromMultiArray( Output.concat_1__0, GetArrayBridge(ClassScores_Dim), GetArrayBridge(ClassScores_Values) );
 /*
@@ -781,8 +802,8 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 	{
 		auto ValueIndex = (ClassIndex * BoxCount) + BoxIndex;
 		auto Score = ClassScores_Values[ValueIndex];
-		if ( Score < 0.01f )
-			return 0.0f;
+		if ( Score < static_cast<NUMBER>(0.01f) )
+			return static_cast<NUMBER>(0.0f);
 		return Score;
 	};
 	Array<TClassAndBox> Matches;
@@ -791,6 +812,10 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 		//std::Debug << "Box[" << b << "] = [";
 		for ( auto c=0;	c<ClassCount;	c++ )
 		{
+			bool SkipBackground = true;
+			if ( SkipBackground && c == BackgroundClassIndex )
+				continue;
+			
 			auto Score = GetBoxClassScore( b, c );
 			//std::Debug << " " << int( Score * 100 );
 			if ( Score <= 0 )
