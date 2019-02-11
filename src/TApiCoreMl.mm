@@ -106,11 +106,17 @@ void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<v
 }
 */
 
+#include "SoyLib/src/SoyScope.h"
+
 void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const TObject& Object)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 	
-	CVImageBufferRef ImageBuffer = PixelBuffer;
 	NSError* Error = nullptr;
 	
 	Soy::TScopeTimerPrint Timer(__func__,0);
@@ -351,7 +357,12 @@ void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dim
 void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
-	
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+
 	NSError* Error = nullptr;
 	
 	Soy::TScopeTimerPrint Timer(__func__,0);
@@ -381,7 +392,12 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
-	
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+
 	NSError* Error = nullptr;
 	
 	Soy::TScopeTimerPrint Timer(__func__,0);
@@ -411,7 +427,12 @@ void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(co
 void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
-	
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+
 	NSError* Error = nullptr;
 	
 	Soy::TScopeTimerPrint Timer(__func__,0);
@@ -669,6 +690,12 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+
 	NSError* Error = nullptr;
 	
 	Soy::TScopeTimerPrint Timer(__func__,0);
@@ -870,6 +897,11 @@ void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::functio
 void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 	NSError* Error = nullptr;
 	
 	Soy::TScopeTimerPrint Timer(__func__,0);
