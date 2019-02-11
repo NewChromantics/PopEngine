@@ -1,6 +1,7 @@
 #include "TApiCoreMl.h"
 #include "TApiCommon.h"
 #include "SoyAvf.h"
+#include "SoyLib/src/SoyScope.h"
 
 //#import "MobileNet.h"
 #import "TinyYOLO.h"
@@ -106,14 +107,15 @@ void CoreMl::TInstance::RunMobileNet(const SoyPixelsImpl& Pixels,std::function<v
 }
 */
 
-#include "SoyLib/src/SoyScope.h"
 
 void CoreMl::TInstance::RunYolo(const SoyPixelsImpl& Pixels,std::function<void(const TObject& Object)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc]init];
 	auto ReleasePixelBuffer = [&]()
 	{
 		CVPixelBufferRelease(PixelBuffer);
+		[pool drain];
 	};
 	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 	
@@ -357,9 +359,11 @@ void ExtractFloatsFromMultiArray(MLMultiArray* MultiArray,ArrayBridge<int>&& Dim
 void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc]init];
 	auto ReleasePixelBuffer = [&]()
 	{
 		CVPixelBufferRelease(PixelBuffer);
+		[pool drain];
 	};
 	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 
@@ -392,9 +396,11 @@ void CoreMl::TInstance::RunHourglass(const SoyPixelsImpl& Pixels,std::function<v
 void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc]init];
 	auto ReleasePixelBuffer = [&]()
 	{
 		CVPixelBufferRelease(PixelBuffer);
+		[pool drain];
 	};
 	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 
@@ -427,9 +433,11 @@ void CoreMl::TInstance::RunCpm(const SoyPixelsImpl& Pixels,std::function<void(co
 void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc]init];
 	auto ReleasePixelBuffer = [&]()
 	{
 		CVPixelBufferRelease(PixelBuffer);
+		[pool drain];
 	};
 	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 
@@ -690,9 +698,11 @@ void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsIm
 void CoreMl::TInstance::RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
 {
 	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc]init];
 	auto ReleasePixelBuffer = [&]()
 	{
 		CVPixelBufferRelease(PixelBuffer);
+		[pool drain];
 	};
 	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
 
