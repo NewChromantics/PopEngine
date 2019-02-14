@@ -7,3 +7,6 @@
 [submodule "Data_Holosports"]
 	path = Data_Holosports
 	url = https://gitlab.com/NewChromantics/PopFragGui.git
+[submodule "src/Ezsift"]
+	path = src/Ezsift
+	url = https://github.com/SoylentGraham/ezSIFT.git
