@@ -9,6 +9,7 @@
 #include "TApiSocket.h"
 #include "TApiHttp.h"
 #include "TApiCoreMl.h"
+#include "TApiEzsift.h"
 
 #include "SoyFilesystem.h"
 
@@ -31,6 +32,7 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 		ApiHttp::Bind( *mV8Container );
 		ApiSocket::Bind( *mV8Container );
 		ApiCoreMl::Bind( *mV8Container );
+		ApiEzsift::Bind( *mV8Container );
 
 		//	gr: start the thread immediately, there should be no problems having the thread running before queueing a job
 		this->Start();

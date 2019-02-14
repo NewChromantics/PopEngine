@@ -105,6 +105,10 @@
 		BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */; };
 		BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */; };
 		BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
+		BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
+		BF91D97D221584E500E91671 /* Ezsift in Resources */ = {isa = PBXBuildFile; fileRef = BF91D97C221584E500E91671 /* Ezsift */; };
+		BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
+		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
 		BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */ = {isa = PBXBuildFile; fileRef = BF92C18E21BAB81E00A1DD49 /* Data_Holosports */; };
 		BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF97592520E9611A0093B296 /* TApiOpencl.cpp */; };
 		BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */ = {isa = PBXBuildFile; fileRef = BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */; };
@@ -330,6 +334,17 @@
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
 		BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiHttp.cpp; path = src/TApiHttp.cpp; sourceTree = "<group>"; };
 		BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiHttp.h; path = src/TApiHttp.h; sourceTree = "<group>"; };
+		BF91D9792215839F00E91671 /* TApiEzsift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiEzsift.h; path = src/TApiEzsift.h; sourceTree = "<group>"; };
+		BF91D97A2215839F00E91671 /* TApiEzsift.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiEzsift.cpp; path = src/TApiEzsift.cpp; sourceTree = "<group>"; };
+		BF91D97C221584E500E91671 /* Ezsift */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Ezsift; path = src/Ezsift; sourceTree = "<group>"; };
+		BF91D98E221584F100E91671 /* ezsift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ezsift.h; sourceTree = "<group>"; };
+		BF91D98F221584F100E91671 /* image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = image.h; sourceTree = "<group>"; };
+		BF91D990221584F100E91671 /* image_utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = image_utility.h; sourceTree = "<group>"; };
+		BF91D9A8221584F200E91671 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		BF91D9A9221584F200E91671 /* ezsift.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ezsift.cpp; sourceTree = "<group>"; };
+		BF91D9AA221584F200E91671 /* image_utility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = image_utility.cpp; sourceTree = "<group>"; };
+		BF91D9AB221584F200E91671 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
+		BF91D9AC221584F200E91671 /* vvector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vvector.h; sourceTree = "<group>"; };
 		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
@@ -637,6 +652,38 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		BF91D97E221584F100E91671 /* Ezsift */ = {
+			isa = PBXGroup;
+			children = (
+				BF91D98D221584F100E91671 /* include */,
+				BF91D9A7221584F200E91671 /* src */,
+			);
+			name = Ezsift;
+			path = src/Ezsift;
+			sourceTree = "<group>";
+		};
+		BF91D98D221584F100E91671 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				BF91D98E221584F100E91671 /* ezsift.h */,
+				BF91D98F221584F100E91671 /* image.h */,
+				BF91D990221584F100E91671 /* image_utility.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		BF91D9A7221584F200E91671 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				BF91D9A8221584F200E91671 /* common.h */,
+				BF91D9A9221584F200E91671 /* ezsift.cpp */,
+				BF91D9AA221584F200E91671 /* image_utility.cpp */,
+				BF91D9AB221584F200E91671 /* timer.h */,
+				BF91D9AC221584F200E91671 /* vvector.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
 		BFA8A5D92111151200F12534 /* PopMovie */ = {
 			isa = PBXGroup;
 			children = (
@@ -718,6 +765,8 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF91D97C221584E500E91671 /* Ezsift */,
+				BF91D97E221584F100E91671 /* Ezsift */,
 				BFFCACC721FF63AA00153C4E /* CoreMlModels */,
 				BF377320211F8BC5008EB5F7 /* App.xcassets */,
 				BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */,
@@ -745,6 +794,8 @@
 				BF5749CA2201E24000A7A659 /* TSsdMobileNetAnchors.h */,
 				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */,
 				BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */,
+				BF91D9792215839F00E91671 /* TApiEzsift.h */,
+				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF6EB3272111167800FC991B /* TApiMedia.cpp */,
@@ -969,6 +1020,7 @@
 				BF6554022132C4D9003E4241 /* APIDesign.md in Resources */,
 				BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */,
 				BF377321211F8BC5008EB5F7 /* App.xcassets in Resources */,
+				BF91D97D221584E500E91671 /* Ezsift in Resources */,
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 				BF3786E92132C81D008E4350 /* v8Runtime in Resources */,
 				BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */,
@@ -999,6 +1051,7 @@
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
+				BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */,
 				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
 				BF75E86021FE5DB400B8CC33 /* hourglass.mlmodel in Sources */,
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
@@ -1014,6 +1067,7 @@
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
 				EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */,
+				BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */,
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
 				BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */,
 				BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */,
@@ -1048,6 +1102,7 @@
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
 				BF5749C421FF66A400A7A659 /* cpm.mlmodel in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
+				BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */,
 				BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
 				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
