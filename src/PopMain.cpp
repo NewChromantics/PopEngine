@@ -59,11 +59,18 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc,const char* argv[])
 #endif
 {
+	Array<std::string> Arguments;
+	for ( auto a=1;	a<argc;	a++ )
+	{
+		Arguments.PushBack( argv[a] );
+	}
+	auto ArgumentsBridge = GetArrayBridge(Arguments);
+	
 	//SoyThread::SetThreadName("Pop Main Thread", SoyThread::GetCurrentThreadNativeHandle() );
 #if defined(TARGET_OSX_BUNDLE)
 	return Soy::Platform::BundleAppMain( argc, argv );
 #endif
 	
-	return PopMain();
+	return PopMain(ArgumentsBridge);
 }
 

@@ -63,6 +63,12 @@
             ReferencedContainer = "container:PopTrack.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Volumes/Code/TrainStop"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "MALLOC_PERMIT_INSANE_REQUESTS"

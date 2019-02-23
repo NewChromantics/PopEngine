@@ -17,33 +17,39 @@ namespace PopTrack
 		
 	}
 	
-	TPopTrack&	GetApp();
+	TPopTrack&	GetApp(std::string DataPath);
 }
 
 
-TPopTrack& PopTrack::GetApp()
+TPopTrack& PopTrack::GetApp(std::string DataPath)
 {
 	if ( !Private::gOpenglApp )
 	{
-		//	proper way would be to use the current working dir. But for now lets force it
-		auto RootDir = Platform::GetAppResourcesDirectory();
-		//RootDir += "Data_dlib/";
-		//RootDir += "Data_Posenet/";
-		//RootDir += "Data_HelloWorld/";
-		RootDir += "Data_Holosports/";
-		//RootDir += "Data_PeopleDetector/";
+		if ( DataPath.length() == 0 )
+		{
+			//	proper way would be to use the current working dir. But for now lets force it
+			auto RootDir = Platform::GetAppResourcesDirectory();
+			//RootDir += "Data_dlib/";
+			//RootDir += "Data_Posenet/";
+			//RootDir += "Data_HelloWorld/";
+			RootDir += "Data_Holosports/";
+			//RootDir += "Data_PeopleDetector/";
+			DataPath = RootDir;
+		}
+		DataPath += "/";
 		
 		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
-		Private::gOpenglApp.reset( new TPopTrack( RootDir, "Bootup.js") );
+		Private::gOpenglApp.reset( new TPopTrack( DataPath, "Bootup.js") );
 	}
 	return *Private::gOpenglApp;
 }
 
 
 
-TPopAppError::Type PopMain()
+TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 {
-	auto& App = PopTrack::GetApp();
+	std::string DataPath = Arguments.GetSize() > 0 ? Arguments[0] : "";
+	auto& App = PopTrack::GetApp(DataPath);
 	
 #if !defined(TARGET_OSX_BUNDLE)
 	//	run

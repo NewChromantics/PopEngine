@@ -106,10 +106,13 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	
 	v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 	
+	auto V8RuntimePath = ::Platform::GetAppResourcesDirectory() + "v8Runtime/";
+
+	
 #if V8_VERSION==6
-	std::string IcuPath = mRootDirectory + "../v8Runtime/icudtl.dat";
-	std::string NativesBlobPath = mRootDirectory + "../v8Runtime/natives_blob.bin";
-	std::string SnapshotBlobPath = mRootDirectory + "../v8Runtime/snapshot_blob.bin";
+	std::string IcuPath = V8RuntimePath + "icudtl.dat";
+	std::string NativesBlobPath = V8RuntimePath + "natives_blob.bin";
+	std::string SnapshotBlobPath = V8RuntimePath + "snapshot_blob.bin";
 
 	if ( !V8::InitializeICUDefaultLocation( nullptr, IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
