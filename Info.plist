@@ -26,6 +26,8 @@
 	<string>Copyright © 2015 NewChromantics. All rights reserved.</string>
 	<key>NSMainNibFile</key>
 	<string>PopTrack</string>
+	<key>CFBundleIconFile</key>
+	<string>Lollypop.icns</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
