@@ -35,6 +35,7 @@
 		BF5749D12202170D00A7A659 /* MaskRCNN_anchors.bin in Resources */ = {isa = PBXBuildFile; fileRef = BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */; };
 		BF5749D22202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
+		BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6314A2221DD3D4008D1C0F /* Vision.framework */; };
 		BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */ = {isa = PBXBuildFile; fileRef = BF65537D2132BD6B003E4241 /* Data_HelloWorld */; };
 		BF6554022132C4D9003E4241 /* APIDesign.md in Resources */ = {isa = PBXBuildFile; fileRef = BF6553C52132C4D9003E4241 /* APIDesign.md */; };
 		BF6554072132C4D9003E4241 /* lib_wasm_fuzzer_common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DA2132C4D9003E4241 /* lib_wasm_fuzzer_common.a */; };
@@ -218,6 +219,7 @@
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
+		BF6314A2221DD3D4008D1C0F /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
 		BF65537D2132BD6B003E4241 /* Data_HelloWorld */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_HelloWorld; sourceTree = "<group>"; };
 		BF6553C52132C4D9003E4241 /* APIDesign.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = APIDesign.md; sourceTree = "<group>"; };
 		BF6553C62132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
@@ -461,6 +463,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
 				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
 				BF6554252132C4D9003E4241 /* libwasm_globals_section_fuzzer.a in Frameworks */,
@@ -629,6 +632,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BF6314A2221DD3D4008D1C0F /* Vision.framework */,
 				BF99BE2221F8946D00E6CE5B /* CoreML.framework */,
 				BF19611521B988C9007014EF /* JavaScriptCore.framework */,
 				BF6EB33421111D2900FC991B /* VideoToolbox.framework */,
