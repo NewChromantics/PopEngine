@@ -90,18 +90,18 @@ void PopMainThread::TriggerIteration()
 
 //@synthesize window = _window;
 
-	
-	void NSArray_String_ForEach(NSArray<NSString*>* Array,std::function<void(std::string&)> Enum)
+
+void NSArray_String_ForEach(NSArray<NSString*>* Array,std::function<void(std::string&)> Enum)
+{
+	auto Size = [Array count];
+	for ( auto i=0;	i<Size;	i++ )
 	{
-		auto Size = [Array count];
-		for ( auto i=0;	i<Size;	i++ )
-		{
-			auto Element = [Array objectAtIndex:i];
-			//auto StringNs = [Element stringValue];
-			auto String = Soy::NSStringToString(Element);
-			Enum( String );
-		}
+		auto Element = [Array objectAtIndex:i];
+		//auto StringNs = [Element stringValue];
+		auto String = Soy::NSStringToString(Element);
+		Enum( String );
 	}
+}
 	
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	//GameScene *scene = [GameScene unarchiveFromFile:@"GameScene"];

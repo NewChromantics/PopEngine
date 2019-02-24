@@ -10,3 +10,6 @@
 [submodule "src/Ezsift"]
 	path = src/Ezsift
 	url = https://github.com/SoylentGraham/ezSIFT.git
+[submodule "src/HidApi"]
+	path = src/HidApi
+	url = https://github.com/signal11/hidapi.git

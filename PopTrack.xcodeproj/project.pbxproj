@@ -34,6 +34,10 @@
 		BF5749D12202170D00A7A659 /* MaskRCNN_anchors.bin in Resources */ = {isa = PBXBuildFile; fileRef = BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */; };
 		BF5749D22202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */; };
 		BF59A2502222039900AE9926 /* Lollypop.icns in Resources */ = {isa = PBXBuildFile; fileRef = BF59A24F2222039900AE9926 /* Lollypop.icns */; };
+		BF59A2522222057200AE9926 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF59A2512222057200AE9926 /* GameController.framework */; };
+		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
+		BF59A258222208CA00AE9926 /* SoyInput.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF59A256222208CA00AE9926 /* SoyInput.mm */; };
+		BF59A25D222216FC00AE9926 /* hid.c in Sources */ = {isa = PBXBuildFile; fileRef = BF59A25C222216FC00AE9926 /* hid.c */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6314A2221DD3D4008D1C0F /* Vision.framework */; };
 		BF65537E2132BD6B003E4241 /* Data_HelloWorld in Resources */ = {isa = PBXBuildFile; fileRef = BF65537D2132BD6B003E4241 /* Data_HelloWorld */; };
@@ -216,6 +220,13 @@
 		BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = MaskRCNN_anchors.bin; sourceTree = "<group>"; };
 		BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_MaskRCNN.mlmodel; sourceTree = "<group>"; };
 		BF59A24F2222039900AE9926 /* Lollypop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Lollypop.icns; sourceTree = "<group>"; };
+		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
+		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
+		BF59A256222208CA00AE9926 /* SoyInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyInput.mm; path = src/SoyInput.mm; sourceTree = "<group>"; };
+		BF59A257222208CA00AE9926 /* SoyInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyInput.h; path = src/SoyInput.h; sourceTree = "<group>"; };
+		BF59A25C222216FC00AE9926 /* hid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hid.c; path = src/HidApi/mac/hid.c; sourceTree = SOURCE_ROOT; };
+		BF59A25E2222174900AE9926 /* hidapi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = hidapi.h; path = src/HidApi/hidapi/hidapi.h; sourceTree = SOURCE_ROOT; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
@@ -464,6 +475,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF59A2522222057200AE9926 /* GameController.framework in Frameworks */,
 				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
 				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
@@ -540,6 +552,15 @@
 				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
 			);
 			path = Libraries;
+			sourceTree = "<group>";
+		};
+		BF59A259222216D500AE9926 /* HidApi */ = {
+			isa = PBXGroup;
+			children = (
+				BF59A25C222216FC00AE9926 /* hid.c */,
+				BF59A25E2222174900AE9926 /* hidapi.h */,
+			);
+			path = HidApi;
 			sourceTree = "<group>";
 		};
 		BF6553C32132C4D9003E4241 /* v8 */ = {
@@ -633,6 +654,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BF59A2512222057200AE9926 /* GameController.framework */,
 				BF6314A2221DD3D4008D1C0F /* Vision.framework */,
 				BF99BE2221F8946D00E6CE5B /* CoreML.framework */,
 				BF19611521B988C9007014EF /* JavaScriptCore.framework */,
@@ -770,6 +792,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF59A259222216D500AE9926 /* HidApi */,
 				BFEDFC6C2221F9B5009E5F5E /* TrainStop */,
 				BF91D97C221584E500E91671 /* Ezsift */,
 				BF91D97E221584F100E91671 /* Ezsift */,
@@ -804,6 +827,10 @@
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
+				BF59A256222208CA00AE9926 /* SoyInput.mm */,
+				BF59A257222208CA00AE9926 /* SoyInput.h */,
+				BF59A253222206B400AE9926 /* TApiInput.cpp */,
+				BF59A254222206B400AE9926 /* TApiInput.h */,
 				BF6EB3272111167800FC991B /* TApiMedia.cpp */,
 				BF6EB3282111167800FC991B /* TApiMedia.h */,
 				BF97592520E9611A0093B296 /* TApiOpencl.cpp */,
@@ -1078,6 +1105,7 @@
 				BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */,
 				BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */,
 				BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */,
+				BF59A25D222216FC00AE9926 /* hid.c in Sources */,
 				BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */,
 				EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */,
 				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
@@ -1110,8 +1138,10 @@
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */,
 				BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */,
+				BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
 				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
+				BF59A258222208CA00AE9926 /* SoyInput.mm in Sources */,
 				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
 				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
 				EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */,
