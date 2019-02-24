@@ -36,7 +36,7 @@
 		BF59A2502222039900AE9926 /* Lollypop.icns in Resources */ = {isa = PBXBuildFile; fileRef = BF59A24F2222039900AE9926 /* Lollypop.icns */; };
 		BF59A2522222057200AE9926 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF59A2512222057200AE9926 /* GameController.framework */; };
 		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
-		BF59A258222208CA00AE9926 /* SoyInput.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF59A256222208CA00AE9926 /* SoyInput.mm */; };
+		BF59A258222208CA00AE9926 /* SoyHidApi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A256222208CA00AE9926 /* SoyHidApi.cpp */; };
 		BF59A25D222216FC00AE9926 /* hid.c in Sources */ = {isa = PBXBuildFile; fileRef = BF59A25C222216FC00AE9926 /* hid.c */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6314A2221DD3D4008D1C0F /* Vision.framework */; };
@@ -223,8 +223,8 @@
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
-		BF59A256222208CA00AE9926 /* SoyInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyInput.mm; path = src/SoyInput.mm; sourceTree = "<group>"; };
-		BF59A257222208CA00AE9926 /* SoyInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyInput.h; path = src/SoyInput.h; sourceTree = "<group>"; };
+		BF59A256222208CA00AE9926 /* SoyHidApi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHidApi.cpp; path = src/SoyHidApi.cpp; sourceTree = "<group>"; };
+		BF59A257222208CA00AE9926 /* SoyHidApi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHidApi.h; path = src/SoyHidApi.h; sourceTree = "<group>"; };
 		BF59A25C222216FC00AE9926 /* hid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hid.c; path = src/HidApi/mac/hid.c; sourceTree = SOURCE_ROOT; };
 		BF59A25E2222174900AE9926 /* hidapi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = hidapi.h; path = src/HidApi/hidapi/hidapi.h; sourceTree = SOURCE_ROOT; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
@@ -827,8 +827,8 @@
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
-				BF59A256222208CA00AE9926 /* SoyInput.mm */,
-				BF59A257222208CA00AE9926 /* SoyInput.h */,
+				BF59A256222208CA00AE9926 /* SoyHidApi.cpp */,
+				BF59A257222208CA00AE9926 /* SoyHidApi.h */,
 				BF59A253222206B400AE9926 /* TApiInput.cpp */,
 				BF59A254222206B400AE9926 /* TApiInput.h */,
 				BF6EB3272111167800FC991B /* TApiMedia.cpp */,
@@ -1141,7 +1141,7 @@
 				BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
 				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
-				BF59A258222208CA00AE9926 /* SoyInput.mm in Sources */,
+				BF59A258222208CA00AE9926 /* SoyHidApi.cpp in Sources */,
 				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
 				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
 				EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */,
