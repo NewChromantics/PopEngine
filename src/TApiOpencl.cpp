@@ -4,21 +4,25 @@
 
 using namespace v8;
 
-const char OpenclEnumDevices_FunctionName[] = "OpenclEnumDevices";
+const char EnumDevices_FunctionName[] = "EnumDevices";
 const char ExecuteKernel_FunctionName[] = "ExecuteKernel";
 const char SetUniform_FunctionName[] = "SetUniform";
 const char ReadUniform_FunctionName[] = "ReadUniform";
 
-
-static v8::Local<v8::Value> OpenclEnumDevices(v8::CallbackInfo& Params);
-
+namespace ApiOpencl
+{
+	const char Namespace[] = "Pop.Opencl";
+	static v8::Local<v8::Value> EnumDevices(v8::CallbackInfo& Params);
+}
 
 void ApiOpencl::Bind(TV8Container& Container)
 {
+	Container.CreateGlobalObjectInstance("", Namespace);
+
 	Container.BindObjectType("OpenclContext", TOpenclContext::CreateTemplate, nullptr );
 	Container.BindObjectType("OpenclKernel", TOpenclKernel::CreateTemplate, nullptr );
 	Container.BindObjectType( TOpenclKernelState::GetObjectTypeName(), TOpenclKernelState::CreateTemplate, nullptr );
-	Container.BindGlobalFunction<OpenclEnumDevices_FunctionName>( OpenclEnumDevices );
+	Container.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
 }
 
 
@@ -160,7 +164,7 @@ void TOpenclRunner::Run()
 
 
 
-static Local<Value> OpenclEnumDevices(CallbackInfo& Params)
+static Local<Value> ApiOpencl::EnumDevices(CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 

@@ -37,7 +37,7 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 		//	create a context
 		mContext = CreateContext();
 		
-		ApiCommon::Bind( *mContext );
+		ApiPop::Bind( *mContext );
 		/*
 		ApiOpengl::Bind( *mV8Container );
 		ApiOpencl::Bind( *mV8Container );

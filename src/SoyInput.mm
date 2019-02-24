@@ -1,6 +1,7 @@
 #include "SoyInput.h"
 
 #include "HidApi/hidapi/hidapi.h"
+#include "SoyLib/src/SoyDebug.h"
 
 class THidApi
 {
@@ -57,5 +58,7 @@ void Soy::EnumInputDevices(std::function<void(const TInputDeviceMeta&)> Enum)
 
 Soy::TInputDevice::TInputDevice(const std::string& DeviceName)
 {
-	
+	std::stringstream Error;
+	Error << "Todo: create device from name " << DeviceName;
+	throw Soy::AssertException(Error.str());
 }

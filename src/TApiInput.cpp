@@ -5,19 +5,25 @@ using namespace v8;
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
 
-const char InputDevice_TypeName[] = "InputDevice";
+const char InputDevice_TypeName[] = "Device";
 const char GetState_FunctionName[] = "GetState";
 
 namespace ApiInput
 {
-	const char Namespace[] = "Input";
+	const char ApiType[] = "ApiInput";
+	const char Namespace[] = "Pop.Input";
 }
 
 void ApiInput::Bind(TV8Container& Container)
 {
-	Container.BindObjectType( Namespace, TInputWrapper::CreateTemplate, nullptr );
+	Container.CreateGlobalObjectInstance("", Namespace);
 
-	Container.BindObjectType( TInputDeviceWrapper::GetObjectTypeName(), TInputDeviceWrapper::CreateTemplate, TInputDeviceWrapper::Allocate<TInputDeviceWrapper> );
+	//Container.BindObjectType( ApiType, TInputWrapper::CreateTemplate, nullptr );
+	//Container.CreateGlobalObjectInstance( ApiType, Namespace );
+
+	Container.BindGlobalFunction<EnumDevices_FunctionName>( TInputWrapper::EnumDevices, Namespace );
+
+	Container.BindObjectType( TInputDeviceWrapper::GetObjectTypeName(), TInputDeviceWrapper::CreateTemplate, TInputDeviceWrapper::Allocate<TInputDeviceWrapper>, Namespace );
 }
 
 

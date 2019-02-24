@@ -303,10 +303,12 @@ public:
 	}
 	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName,void* Object);
 	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName);
+	void					CreateGlobalObjectInstance(const std::string& ObjectTypeName,const std::string& ObjectName);
+	v8::Local<v8::Object>	GetGlobalObject(v8::Local<v8::Context>& Context,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
 	template<const char* FunctionName>
-	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
-	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator);
+	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const std::string& ParentName);
+	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator,const std::string& ParentObject=std::string());
 
 	template<const char* FunctionName>
 	void					BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
@@ -401,11 +403,11 @@ inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::f
 }
 
 template<const char* FunctionName>
-inline void TV8Container::BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
+inline void TV8Container::BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const std::string& ParentName)
 {
 	auto Bind = [&](v8::Local<v8::Context> Context)
 	{
-		auto This = Context->Global();
+		auto This = GetGlobalObject( Context, ParentName );
 		BindFunction<FunctionName>(This,Function);
 	};
 	RunScoped(Bind);

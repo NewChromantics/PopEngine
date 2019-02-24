@@ -13,11 +13,13 @@ namespace JsCore
 	class TContext;
 }
 
-namespace ApiCommon
+//	engine stuff under the Pop namespace
+namespace ApiPop
 {
 	void	Bind(TV8Container& Container);
 	void	Bind(JsCore::TContext& Context);
 }
+
 
 namespace Opengl
 {

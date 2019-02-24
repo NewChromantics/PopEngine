@@ -24,7 +24,7 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 	try
 	{
 		mV8Container.reset( new TV8Container(mRootDirectory) );
-		ApiCommon::Bind( *mV8Container );
+		ApiPop::Bind( *mV8Container );
 		ApiOpengl::Bind( *mV8Container );
 		ApiOpencl::Bind( *mV8Container );
 		ApiDlib::Bind( *mV8Container );

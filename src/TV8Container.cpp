@@ -284,18 +284,48 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Sourc
 }
 
 
-void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator)
+v8::Local<v8::Object> TV8Container::GetGlobalObject(Local<Context>& Context,const std::string& Name)
+{
+	auto This = Context->Global();
+	auto& Isolate = *Context->GetIsolate();
+
+	//	keep splitting the name so we can get Pop.Input.Cat
+	auto LeafName = Name;
+	while ( LeafName.length() > 0 )
+	{
+		auto ParentName = Soy::StringPopUntil( LeafName, '.', false, false );
+		auto ParentObjectValue = This->Get( Context, v8::GetString( Isolate, ParentName ) );
+		if ( ParentObjectValue.IsEmpty() )
+		{
+			std::stringstream Error;
+			Error << "No parent object named " << ParentName << " in global, for " << Name;
+			throw Soy::AssertException(Error.str());
+		}
+		auto ParentObject = Local<Object>::Cast( ParentObjectValue.ToLocalChecked() );
+		This = ParentObject;
+	}
+
+	return This;
+}
+
+void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator,const std::string& ParentObjectName)
 {
 	auto Bind = [&](Local<v8::Context> Context)
 	{
 		auto* Isolate = Context->GetIsolate();
-	    auto Global = Context->Global();
-
+		auto Global = GetGlobalObject( Context, ParentObjectName );
+		
     	//	create new function
     	auto Template = GetTemplate(*this);
-    	auto OpenglWindowFuncWrapperValue = Template->GetFunction();
+    	auto FuncWrapperValue = Template->GetFunction();
 		auto ObjectNameStr = v8::GetString( *Isolate, ObjectName);
-    	auto SetResult = Global->Set( Context, ObjectNameStr, OpenglWindowFuncWrapperValue);
+    	auto SetResult = Global->Set( Context, ObjectNameStr, FuncWrapperValue );
+		if ( SetResult.IsNothing() || !SetResult.ToChecked() )
+		{
+			std::stringstream Error;
+			Error << "Failed to set " << ObjectName << " on Global." << ParentObjectName;
+			throw Soy::AssertException(Error.str());
+		}
 		
 		//	store the template so we can reference it later
 		auto ObjectTemplate = Template->InstanceTemplate();
@@ -319,6 +349,12 @@ void TV8Container::BindRawFunction(v8::Local<v8::Object> This,const char* Functi
 		auto LogFuncWrapperValue = LogFuncWrapper->GetFunction();
 		auto* FunctionNameCstr = FunctionName;
 		auto SetResult = This->Set( Context, v8::String::NewFromUtf8(Isolate, FunctionNameCstr), LogFuncWrapperValue);
+		if ( !SetResult.ToChecked() )
+		{
+			std::stringstream Error;
+			Error << "Failed to set function " << FunctionName << " on object (" << v8::GetTypeName(This) << ")";
+			throw Soy::AssertException( Error.str() );
+		}
 	};
 	RunScoped(Bind);
 	
@@ -503,6 +539,15 @@ TV8ObjectTemplate::ALLOCATOR TV8Container::GetAllocator(const char* TYPENAME)
 
 v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName)
 {
+	auto& Isolate = GetIsolate();
+
+	//	create basic object
+	if ( ObjectTypeName.length() == 0 || ObjectTypeName == "Object" )
+	{
+		auto NewObject = v8::Object::New( &Isolate );
+		return NewObject;
+	}
+	
 	//	find template
 	auto* pObjectTemplate = mObjectTemplates.Find( ObjectTypeName );
 	if ( !pObjectTemplate )
@@ -515,7 +560,6 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 	}
 	
 	//	instance new one
-	auto& Isolate = GetIsolate();
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto ObjectTemplateLocal = ObjectTemplate.mTemplate->GetLocal(Isolate);
 	auto NewObject = ObjectTemplateLocal->NewInstance();
@@ -555,6 +599,29 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 
 	return NewObject;
 }
+
+void TV8Container::CreateGlobalObjectInstance(const std::string& ObjectTypeName,const std::string& FullObjectName)
+{
+	auto Allocate = [&](v8::Local<v8::Context> Context)
+	{
+		auto ParentName = FullObjectName;
+		auto ObjectName = Soy::StringPopRight( ParentName, '.' );
+		
+		auto& Isolate = *Context->GetIsolate();
+		auto Global = GetGlobalObject( Context, ParentName );
+		auto NewObject = CreateObjectInstance( ObjectTypeName );
+		auto ObjectNameStr = v8::GetString( Isolate, ObjectName );
+		auto SetResult = Global->Set( Context, ObjectNameStr, NewObject );
+		if ( !SetResult.ToChecked() )
+		{
+			std::stringstream Error;
+			Error << "Failed to set " << ObjectName << "(" << ObjectTypeName << ") on Global." << ParentName;
+			throw Soy::AssertException(Error.str());
+		}
+	};
+	RunScoped( Allocate );
+}
+
 
 
 std::string v8::GetTypeName(v8::Local<v8::Value> Handle)

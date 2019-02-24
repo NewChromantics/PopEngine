@@ -47,25 +47,30 @@ const char SetFormat_FunctionName[] = "SetFormat";
 const char GetFormat_FunctionName[] = "GetFormat";
 
 
+namespace ApiPop
+{
+	const char Namespace[] = "Pop";
+	
+	static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
+	static JSValueRef Debug2(Bind::TCallbackInfo& Params);
+	static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GetTimeNowMs(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GetImageHeapSize(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GetImageHeapCount(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GetV8HeapSize(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> GetV8HeapCount(v8::CallbackInfo& Params);
+}
 
-static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GetTimeNowMs(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GetImageHeapSize(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GetImageHeapCount(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GetV8HeapSize(v8::CallbackInfo& Params);
-static v8::Local<v8::Value> GetV8HeapCount(v8::CallbackInfo& Params);
 
-
-
-static Local<Value> Debug(CallbackInfo& Params)
+static Local<Value> ApiPop::Debug(CallbackInfo& Params)
 {
 	auto& args = Params.mParams;
 	
@@ -85,7 +90,7 @@ static Local<Value> Debug(CallbackInfo& Params)
 	return Undefined(Params.mIsolate);
 }
 
-static JSValueRef Debug2(Bind::TCallbackInfo& Params)
+static JSValueRef ApiPop::Debug2(Bind::TCallbackInfo& Params)
 {
 	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
 	if (Params.GetArgumentCount() < 1)
@@ -102,7 +107,7 @@ static JSValueRef Debug2(Bind::TCallbackInfo& Params)
 }
 
 
-static Local<Value> GarbageCollect(CallbackInfo& Params)
+static Local<Value> ApiPop::GarbageCollect(CallbackInfo& Params)
 {
 	//auto& args = Params.mParams;
 	
@@ -117,7 +122,7 @@ static Local<Value> GarbageCollect(CallbackInfo& Params)
 }
 
 
-static Local<Value> SetTimeout(CallbackInfo& Params)
+static Local<Value> ApiPop::SetTimeout(CallbackInfo& Params)
 {
 	auto Callback = v8::SafeCast<Function>(Params.mParams[0]);
 	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[1]);
@@ -151,7 +156,7 @@ static Local<Value> SetTimeout(CallbackInfo& Params)
 
 
 
-static Local<Value> Sleep(CallbackInfo& Params)
+static Local<Value> ApiPop::Sleep(CallbackInfo& Params)
 {
 	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[0]);
 	auto TimeoutMs = TimeoutMsHandle->Uint32Value();
@@ -162,7 +167,7 @@ static Local<Value> Sleep(CallbackInfo& Params)
 }
 
 
-static Local<Value> GetTimeNowMs(CallbackInfo& Params)
+static Local<Value> ApiPop::GetTimeNowMs(CallbackInfo& Params)
 {
 	SoyTime Now(true);
 	
@@ -175,7 +180,7 @@ static Local<Value> GetTimeNowMs(CallbackInfo& Params)
 
 
 
-static Local<Value> GetComputerName(CallbackInfo& Params)
+static Local<Value> ApiPop::GetComputerName(CallbackInfo& Params)
 {
 	auto Name = ::Platform::GetComputerName();
 	auto NameHandle = v8::GetString( Params.GetIsolate(), Name );
@@ -185,7 +190,7 @@ static Local<Value> GetComputerName(CallbackInfo& Params)
 
 
 
-static Local<Value> ShowFileInFinder(CallbackInfo& Params)
+static Local<Value> ApiPop::ShowFileInFinder(CallbackInfo& Params)
 {
 	auto FilenameHandle = Params.mParams[0];
 	auto FilenameString = v8::GetString(FilenameHandle);
@@ -197,7 +202,7 @@ static Local<Value> ShowFileInFinder(CallbackInfo& Params)
 }
 
 
-static Local<Value> GetImageHeapSize(CallbackInfo& Params)
+static Local<Value> ApiPop::GetImageHeapSize(CallbackInfo& Params)
 {
 	auto& Heap = Params.mContainer.GetImageHeap();
 	auto Value = Heap.mAllocBytes;
@@ -205,7 +210,7 @@ static Local<Value> GetImageHeapSize(CallbackInfo& Params)
 	return ValueHandle;
 }
 
-static Local<Value> GetImageHeapCount(CallbackInfo& Params)
+static Local<Value> ApiPop::GetImageHeapCount(CallbackInfo& Params)
 {
 	auto& Heap = Params.mContainer.GetImageHeap();
 	auto Value = Heap.mAllocCount;
@@ -214,7 +219,7 @@ static Local<Value> GetImageHeapCount(CallbackInfo& Params)
 }
 
 
-static Local<Value> GetV8HeapSize(CallbackInfo& Params)
+static Local<Value> ApiPop::GetV8HeapSize(CallbackInfo& Params)
 {
 	auto& Heap = Params.mContainer.GetV8Heap();
 	auto Value = Heap.mAllocBytes;
@@ -222,7 +227,7 @@ static Local<Value> GetV8HeapSize(CallbackInfo& Params)
 	return ValueHandle;
 }
 
-static Local<Value> GetV8HeapCount(CallbackInfo& Params)
+static Local<Value> ApiPop::GetV8HeapCount(CallbackInfo& Params)
 {
 	auto& Heap = Params.mContainer.GetV8Heap();
 	auto Value = Heap.mAllocCount;
@@ -234,7 +239,7 @@ static Local<Value> GetV8HeapCount(CallbackInfo& Params)
 
 
 
-static Local<Value> CompileAndRun(CallbackInfo& Params)
+static Local<Value> ApiPop::CompileAndRun(CallbackInfo& Params)
 {
 	auto& args = Params.mParams;
 	
@@ -250,7 +255,7 @@ static Local<Value> CompileAndRun(CallbackInfo& Params)
 
 
 
-static Local<Value> LoadFileAsString(CallbackInfo& Params)
+static Local<Value> ApiPop::LoadFileAsString(CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -267,7 +272,7 @@ static Local<Value> LoadFileAsString(CallbackInfo& Params)
 }
 
 
-static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
+static Local<Value> ApiPop::LoadFileAsArrayBuffer(CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -302,7 +307,7 @@ static Local<Value> LoadFileAsArrayBuffer(CallbackInfo& Params)
 
 
 
-static Local<Value> WriteStringToFile(CallbackInfo& Params)
+static Local<Value> ApiPop::WriteStringToFile(CallbackInfo& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -328,29 +333,33 @@ static Local<Value> WriteStringToFile(CallbackInfo& Params)
 }
 
 
-void ApiCommon::Bind(TV8Container& Container)
+void ApiPop::Bind(TV8Container& Container)
 {
-	//  load api's before script & executions
-	Container.BindGlobalFunction<Debug_FunctionName>(Debug);
-	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
-	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
-	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
-	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
-	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
-	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
-	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
-	Container.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs);
-	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
-	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
-	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
-	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
-	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
-	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
+	Container.CreateGlobalObjectInstance("", Namespace);
 	
-	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
+	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper>, Namespace );
+
+	//  load api's before script & executions
+	Container.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
+	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
+	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
+	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
+	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile, Namespace );
+	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
+	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
+	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
+	Container.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs, Namespace );
+	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName, Namespace );
+	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder, Namespace );
+	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize, Namespace );
+	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
+	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize, Namespace );
+	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount, Namespace );
+
+
 }
 
-void ApiCommon::Bind(JsCore::TContext& Container)
+void ApiPop::Bind(JsCore::TContext& Container)
 {
 	//  load api's before script & executions
 	Container.BindGlobalFunction<Debug_FunctionName>( Debug2 );
