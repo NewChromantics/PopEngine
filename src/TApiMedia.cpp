@@ -322,49 +322,77 @@ v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(const v8::CallbackInfo& P
 	if ( PixelBuffer == nullptr )
 		throw Soy::AssertException("Missing Pixel buffer in frame");
 	
-	//	convert to pixels here (for testing if image pixel buffer is/n't working)
-	static bool ReadToPixels = false;
-	std::shared_ptr<SoyPixels> Pixels;
-
-	if ( ReadToPixels )
+	
+	//	if the user provides an array, split planes now
+	//	todo: switch this to a promise, but we also what to make use of pixelbuffers...
+	//		but that [needs to] output multiple textures too...
+	auto& Arguments = Params.mParams;
+	auto PlaneArrayHandle = Arguments[0];
+	
+	//	todo: add this for transform
+	auto SetTime = [&](v8::Local<v8::Object> ObjectHandle)
 	{
-		//	may get 2 planes
-		BufferArray<SoyPixelsImpl*,2> Textures;
+		auto FrameTime = FramePacket->GetStartTime();
+		if ( FrameTime.IsValid() )
+		{
+			auto FrameTimeDouble = FrameTime.mTime;
+			auto FrameTimeKey = v8::GetString( Params.GetIsolate(), FrameTimestampKey );
+			auto FrameTimeValue = v8::Number::New( &Params.GetIsolate(), FrameTimeDouble );
+			ObjectHandle->Set( FrameTimeKey, FrameTimeValue );
+		}
+	};
+	
+	
+	if ( PlaneArrayHandle->IsArray() )
+	{
+		BufferArray<SoyPixelsImpl*,5> Planes;
+		//	ref counted by js, but need to cleanup if we throw...
+		BufferArray<TImageWrapper*,5> Images;
 		float3x3 Transform;
-		PixelBuffer->Lock( GetArrayBridge(Textures), Transform );
+		PixelBuffer->Lock( GetArrayBridge(Planes), Transform );
 		try
 		{
-			auto& Heap = Params.mContainer.GetImageHeap();
-			Pixels.reset( new SoyPixels(Heap) );
-			auto& RgbPixels = *Pixels;
-			RgbPixels.Copy( *Textures[0] );
+			//	make an image for every plane
+			for ( auto p=0;	p<Planes.GetSize();	p++ )
+			{
+				auto* Plane = Planes[p];
+				auto* pImage = new TImageWrapper( Params.mContainer );
+				pImage->SetPixels( *Plane );
+				Images.PushBack( pImage );
+			}
 			PixelBuffer->Unlock();
 		}
 		catch(std::exception& e)
 		{
+			std::Debug << "Possible memleak with plane images x" << Images.GetSize() << "..." << std::endl;
 			PixelBuffer->Unlock();
 			throw;
 		}
+		
+		auto PlaneArray = v8::Local<v8::Array>::Cast( PlaneArrayHandle );
+		for ( auto i=0;	i<Images.GetSize();	i++ )
+		{
+			auto& Image = *Images[i];
+			auto ImageHandle = Image.GetHandle();
+			PlaneArray->Set( i, ImageHandle );
+		}
+		
+		//	create a dumb object with meta to return
+		auto FrameHandle = v8::Object::New( &Params.GetIsolate() );
+		FrameHandle->Set( v8::GetString( Params.GetIsolate(), "Planes"), PlaneArray );
+		SetTime( FrameHandle );
+		
+		return FrameHandle;
 	}
 
 	
 	auto* pImage = new TImageWrapper( Params.mContainer );
 	pImage->mName = "MediaSource Frame";
 	auto& Image = *pImage;
-	if ( Pixels )
-		Image.SetPixels(Pixels);
-	else
-		Image.SetPixelBuffer(PixelBuffer);
+	Image.SetPixelBuffer(PixelBuffer);
 
 	auto ImageHandle = Image.GetHandle();
-	auto FrameTime = FramePacket->GetStartTime();
-	if ( FrameTime.IsValid() )
-	{
-		auto FrameTimeDouble = FrameTime.mTime;
-		auto FrameTimeKey = v8::GetString( Params.GetIsolate(), FrameTimestampKey );
-		auto FrameTimeValue = v8::Number::New( &Params.GetIsolate(), FrameTimeDouble );
-		ImageHandle->Set( FrameTimeKey, FrameTimeValue );
-	}
+	SetTime( ImageHandle );
 	
 	return ImageHandle;
 }
