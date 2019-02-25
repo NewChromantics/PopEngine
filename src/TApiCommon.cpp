@@ -969,14 +969,13 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 		try
 		{
 			std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-			Soy::TScopeTimerPrint Timer("TImageWrapper::GetTexture::Alloc/Upload", 5 );
+			Soy::TScopeTimerPrint Timer("TImageWrapper::GetTexture::Alloc/Upload", 10 );
 
 			auto AllocTexture = [&](const SoyPixelsMeta& Meta)
 			{
+				auto TextureSlot = pContext->mCurrentTextureSlot++;
 				if ( mOpenglTexture == nullptr )
 				{
-					auto TextureSlot = pContext->mCurrentTextureSlot++;
-					
 					//std::Debug << "Creating new opengl texture " << Meta << " in slot " << TextureSlot << std::endl;
 					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D, TextureSlot ) );
 					//std::Debug << "<<< " << mOpenglTexture->mTexture.mName << std::endl;
@@ -992,6 +991,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 						pContext->QueueDelete(mOpenglTexture);
 					};
 				}
+				mOpenglTexture->Bind(TextureSlot);
 				mOpenglTexture->SetFilter( mLinearFilter );
 				mOpenglTexture->SetRepeat( mRepeating );
 			};
@@ -1168,6 +1168,8 @@ void TImageWrapper::OnOpenglTextureChanged()
 	//	is now latest version
 	auto LatestVersion = GetLatestVersion();
 	mOpenglTextureVersion = LatestVersion+1;
+	size_t TextureSlot = 0;
+	mOpenglTexture->Bind(TextureSlot);
 	mOpenglTexture->RefreshMeta();
 }
 
