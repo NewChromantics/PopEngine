@@ -159,9 +159,16 @@ v8::Local<v8::Value> TInputDeviceWrapper::GetState(const v8::CallbackInfo& Param
 {
 	auto& This = Params.GetThis<TInputDeviceWrapper>();
 
+	auto State = This.mDevice->GetState();
 	//	output an object with name, different axis', buttons
-	throw Soy::AssertException("todo: GetState()");
 	
-	return v8::Undefined(Params.mIsolate);
+	auto GetElement = [&](size_t Index)
+	{
+		auto Number = v8::Number::New( &Params.GetIsolate(), State.mButtons[Index] );
+		return Local<Value>::Cast( Number );
+	};
+	auto Array = v8::GetArray( Params.GetIsolate(), State.mButtons.GetSize(), GetElement );
+	
+	return Array;
 }
 

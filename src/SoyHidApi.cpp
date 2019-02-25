@@ -54,6 +54,13 @@ HidApi::TDevice::TDevice(TContext& Context,const std::string& DeviceName)
 	OpenDevice( Context, DeviceName );
 }
 
+
+HidApi::TDevice::~TDevice()
+{
+	hid_close( mDevice );
+	mDevice = nullptr;
+}
+
 void HidApi::TDevice::OpenDevice(TContext& Context,const std::string& Reference)
 {
 	auto OpenPath = [&](const std::string& Path)
@@ -89,4 +96,46 @@ void HidApi::TDevice::OpenDevice(TContext& Context,const std::string& Reference)
 		Error << "Didn't find a device matching " << Reference;
 		throw Soy::AssertException(Error.str());
 	}
+	
+	//	setup device
+	hid_set_nonblocking( mDevice, 1 );
+	
 }
+
+Soy::TInputDeviceState HidApi::TDevice::GetState()
+{
+	if ( !mDevice )
+		throw Soy::AssertException("Missing device");
+	
+	uint8_t Buffer[17];
+	
+	// Request state (cmd 0x81). The first byte is the report number (0x1).
+	Buffer[0] = 0x1;
+	Buffer[1] = 0x81;
+	auto Result = hid_write( mDevice, Buffer, sizeofarray(Buffer) );
+	if ( Result < 0 )
+	{
+		std::Debug << "Failed to write to HidApi device: " << Result << std::endl;
+		return mLastState;
+	}
+	
+	Result = hid_read( mDevice, Buffer, sizeofarray(Buffer) );
+	if ( Result == 0 )
+	{
+		std::Debug << "Waiting for HidApi device: " << Result << std::endl;
+		return mLastState;
+	}
+	if ( Result < 0 )
+	{
+		std::Debug << "Failed to read HidApi device: " << Result << std::endl;
+		return mLastState;
+	}
+
+	//	result is length;
+	size_t ByteCount = Result;
+	auto BufferData = GetRemoteArray( &Buffer[0], ByteCount );
+	mLastState.mButtons.Copy(BufferData);
+
+	return mLastState;
+}
+
