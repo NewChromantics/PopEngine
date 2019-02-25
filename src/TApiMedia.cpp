@@ -11,9 +11,16 @@
 
 using namespace v8;
 
+namespace ApiMedia
+{
+	const char Namespace[] = "Pop.Media";
+	
+	v8::Local<v8::Value>	EnumDevices(const v8::CallbackInfo& Params);
+}
+
 const char EnumDevices_FunctionName[] = "EnumDevices";
 
-const char MediaSource_TypeName[] = "MediaSource";
+const char MediaSource_TypeName[] = "Source";
 const char Free_FunctionName[] = "Free";
 const char GetNextFrame_FunctionName[] = "GetNextFrame";
 
@@ -24,80 +31,19 @@ const char FrameTimestampKey[] = "Time";
 
 void ApiMedia::Bind(TV8Container& Container)
 {
-	Container.BindObjectType("Media", TMediaWrapper::CreateTemplate, nullptr );
+	Container.CreateGlobalObjectInstance("", Namespace);
 
-	Container.BindObjectType( TMediaSourceWrapper::GetObjectTypeName(), TMediaSourceWrapper::CreateTemplate, TMediaSourceWrapper::Allocate<TMediaSourceWrapper> );
-	Container.BindObjectType( TAvcDecoderWrapper::GetObjectTypeName(), TAvcDecoderWrapper::CreateTemplate, TAvcDecoderWrapper::Allocate<TAvcDecoderWrapper> );
+	Container.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
+
+	Container.BindObjectType( TMediaSourceWrapper::GetObjectTypeName(), TMediaSourceWrapper::CreateTemplate, TMediaSourceWrapper::Allocate<TMediaSourceWrapper>, Namespace );
+	Container.BindObjectType( TAvcDecoderWrapper::GetObjectTypeName(), TAvcDecoderWrapper::CreateTemplate, TAvcDecoderWrapper::Allocate<TAvcDecoderWrapper>, Namespace );
 }
 
 
-void TMediaWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+
+v8::Local<v8::Value> ApiMedia::EnumDevices(const v8::CallbackInfo& Params)
 {
-	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
-	
-	if ( !Arguments.IsConstructCall() )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	auto This = Arguments.This();
-	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-	
-	//	alloc window
-	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-	//		but it also needs to know of the V8container to run stuff
-	//		cyclic hell!
-	auto* NewWrapper = new TMediaWrapper();
-	
-	//	store persistent handle to the javascript object
-	NewWrapper->mHandle = v8::GetPersistent( *Isolate, Arguments.This() );
-	NewWrapper->mContainer = &Container;
-	
-	//	set fields
-	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
-	
-	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( This );
-}
-
-
-Local<FunctionTemplate> TMediaWrapper::CreateTemplate(TV8Container& Container)
-{
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	//	add members
-	Container.BindFunction<EnumDevices_FunctionName>( InstanceTemplate, EnumDevices );
-	
-	return ConstructorFunc;
-}
-
-
-v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
-{
-	auto& Arguments = Params.mParams;
-	//auto& This = v8::GetObject<TMediaWrapper>( Arguments.This() );
 	auto* Isolate = Params.mIsolate;
-
-	//auto* pThis = &This;
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
@@ -167,10 +113,9 @@ v8::Local<v8::Value> TMediaWrapper::EnumDevices(const v8::CallbackInfo& Params)
 		}
 	};
 	
+	//	immediate... if this is slow, put it on a thread
 	DoEnumDevices();
-	//auto& Dlib = This.mDlibJobQueue;
-	//Dlib.PushJob( RunFaceDetector );
-
+	
 	//	return the promise
 	auto Promise = Resolver->GetPromise();
 	return Promise;
