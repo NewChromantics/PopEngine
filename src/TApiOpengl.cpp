@@ -5,7 +5,13 @@
 
 using namespace v8;
 
-const char Window_TypeName[] = "OpenglWindow";
+namespace ApiOpengl
+{
+	const char Namespace[] = "Pop.Opengl";
+}
+
+const char Window_TypeName[] = "Window";
+const char Shader_TypeName[] = "Shader";
 
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";
@@ -20,9 +26,11 @@ const char GetScreenRect_FunctionName[] = "GetScreenRect";
 
 void ApiOpengl::Bind(TV8Container& Container)
 {
-	Container.BindObjectType( TWindowWrapper::GetObjectTypeName(), TWindowWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TWindowWrapper> );
-	Container.BindObjectType( TOpenglImmediateContextWrapper::GetObjectTypeName(), TOpenglImmediateContextWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TOpenglImmediateContextWrapper> );
-	Container.BindObjectType("OpenglShader", TShaderWrapper::CreateTemplate, nullptr );
+	Container.CreateGlobalObjectInstance("", Namespace);
+
+	Container.BindObjectType( TWindowWrapper::GetObjectTypeName(), TWindowWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TWindowWrapper>, Namespace );
+	Container.BindObjectType( TOpenglImmediateContextWrapper::GetObjectTypeName(), TOpenglImmediateContextWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TOpenglImmediateContextWrapper>, Namespace );
+	Container.BindObjectType( Shader_TypeName, TShaderWrapper::CreateTemplate, nullptr, Namespace );
 }
 
 

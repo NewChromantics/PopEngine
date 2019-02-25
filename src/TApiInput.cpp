@@ -12,7 +12,6 @@ const char GetState_FunctionName[] = "GetState";
 
 namespace ApiInput
 {
-	const char ApiType[] = "ApiInput";
 	const char Namespace[] = "Pop.Input";
 	
 	v8::Local<v8::Value>	EnumDevices(const v8::CallbackInfo& Params);
