@@ -227,6 +227,7 @@
 		BF59A257222208CA00AE9926 /* SoyHidApi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHidApi.h; path = src/SoyHidApi.h; sourceTree = "<group>"; };
 		BF59A25C222216FC00AE9926 /* hid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hid.c; path = src/HidApi/mac/hid.c; sourceTree = SOURCE_ROOT; };
 		BF59A25E2222174900AE9926 /* hidapi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = hidapi.h; path = src/HidApi/hidapi/hidapi.h; sourceTree = SOURCE_ROOT; };
+		BF59A26222240D1E00AE9926 /* GuildhallGildwall */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GuildhallGildwall; path = ../GuildhallGildwall; sourceTree = "<group>"; };
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
@@ -792,6 +793,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF59A26222240D1E00AE9926 /* GuildhallGildwall */,
 				BF59A259222216D500AE9926 /* HidApi */,
 				BFEDFC6C2221F9B5009E5F5E /* TrainStop */,
 				BF91D97C221584E500E91671 /* Ezsift */,
