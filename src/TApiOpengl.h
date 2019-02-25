@@ -118,5 +118,7 @@ public:
 	std::shared_ptr<Opengl::TContext>	mOpenglContext;
 	std::function<void()>				mShaderDealloc;
 	TV8Container*						mContainer;
+	
+	size_t								mCurrentTextureIndex = 0;	//	glActiveTexture
 };
 

@@ -975,7 +975,11 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 			{
 				if ( mOpenglTexture == nullptr )
 				{
-					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D ) );
+					auto TextureSlot = pContext->mCurrentTextureSlot++;
+					
+					//std::Debug << "Creating new opengl texture " << Meta << " in slot " << TextureSlot << std::endl;
+					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D, TextureSlot ) );
+					//std::Debug << "<<< " << mOpenglTexture->mTexture.mName << std::endl;
 					//this->mOpenglClientStorage.reset( new SoyPixels );
 					//mOpenglTexture->mClientBuffer = this->mOpenglClientStorage;
 				

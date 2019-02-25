@@ -213,7 +213,7 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 	if ( Arguments.Length() >= 1 )
 	{
 		auto ShaderHandle = Arguments[0];
-		auto& Shader = TShaderWrapper::Get( Arguments[0] );
+		auto& Shader = TShaderWrapper::Get( ShaderHandle );
 
 		auto OnShaderBindHandle = Arguments[1];
 		std::function<void()> OnShaderBind = []{};
@@ -389,7 +389,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 		
 			//	setup render target
 			auto& TargetTexture = TargetImage->GetTexture();
-			Opengl::TRenderTargetFbo RenderTarget( TargetTexture );
+			Opengl::TRenderTargetFbo RenderTarget( "Window::Render", TargetTexture );
 			RenderTarget.mGenerateMipMaps = false;
 			RenderTarget.Bind();
 			
@@ -513,7 +513,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
 				auto* PreviousBuffer = Targets[ (it+0) % Targets.GetSize() ];
 				auto* CurrentBuffer = Targets[ (it+1) % Targets.GetSize() ];
 				
-				Opengl::TRenderTargetFbo RenderTarget( CurrentBuffer->GetTexture() );
+				Opengl::TRenderTargetFbo RenderTarget( "Window::RenderChain", CurrentBuffer->GetTexture() );
 				RenderTarget.mGenerateMipMaps = false;
 				RenderTarget.Bind();
 				pThis->mActiveRenderTarget = &RenderTarget;
@@ -865,18 +865,16 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params
 		}
 		else
 		{
-			//	gr: we're not using the shader state, so we currently need to manually track bind count at high level
-			auto BindIndexHandle = Arguments[2];
-			if ( !BindIndexHandle->IsNumber() )
-				throw Soy::AssertException("Currently need to pass texture bind index (increment from 0). SetUniform(Name,Image,BindIndex)");
-			auto BindIndex = BindIndexHandle.As<Number>()->Int32Value();
+			auto BindIndex = this->mCurrentTextureIndex++;
 			
 			//	get the image
 			auto* Image = &v8::GetObject<TImageWrapper>(ValueHandle);
 			//	gr: planning ahead
 			auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
 			{
-				pShader->SetUniform( Uniform, Image->GetTexture(), BindIndex );
+				auto& Texture = Image->GetTexture();
+				//std::Debug << "Binding " << Texture.mTexture.mName << " to " << BindIndex << std::endl;
+				pShader->SetUniform( Uniform, Texture, BindIndex );
 			};
 			auto OnTextureError = [](const std::string& Error)
 			{
