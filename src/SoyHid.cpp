@@ -351,18 +351,16 @@ void Hid::TDevice::Bind(TDeviceMeta& Device)
 	IsOkay(Result, "IOHIDDeviceOpen");
 	mDevice = Device;
 	
-	auto OnInput = [](void* context,IOReturn result,void* sender,IOHIDValueRef Value)
+	InitButtons();
+	
+	auto OnInput = [](void* context,IOReturn result,void* sender,IOHIDValueRef State)
 	{
 		auto* This = reinterpret_cast<TDevice*>(context);
-		
-		IOHIDElementRef Element = IOHIDValueGetElement(Value);
-		IOHIDElementType Type = IOHIDElementGetType(Element);
-		auto Usage = IOHIDElementGetUsage(Element);
-		auto UsageValue = IOHIDValueGetIntegerValue(Value);
-		auto Page = IOHIDElementGetUsagePage(Element);
-		
-		This->OnButton( Type, Page, Usage, UsageValue );
+		auto Value = IOHIDValueGetIntegerValue(State);
+		auto Element = IOHIDValueGetElement(State);
+		This->UpdateButton( Element, Value );
 	};
+	
 	IOHIDDeviceRegisterInputValueCallback( Device.mDevice, OnInput, this );
 	IOHIDDeviceScheduleWithRunLoop( Device.mDevice, CFRunLoopGetCurrent(), kCFRunLoopCommonModes );
 }
@@ -373,9 +371,202 @@ void Hid::TDevice::Unbind()
 	IsOkay(Result, "IOHIDDeviceOpen");
 }
 
-void Hid::TDevice::OnButton(IOHIDElementType Type,uint32_t Page,uint32_t Usage,uint32_t Value)
+const char* GetDesktopUsageName(uint32_t Usage)
 {
-	//	dpad on joycod
+	switch(Usage)
+	{
+		case kHIDUsage_GD_Pointer:	return "Pointer";
+		case kHIDUsage_GD_Mouse:	return "Mouse";
+		case kHIDUsage_GD_Joystick:	return "Joystick";
+		case kHIDUsage_GD_GamePad:	return "GamePad";
+		case kHIDUsage_GD_Keyboard:	return "Keyboard";
+		case kHIDUsage_GD_Keypad:	return "Keypad";
+		case kHIDUsage_GD_MultiAxisController:	return "MultiAxisController";
+		case kHIDUsage_GD_TabletPCSystemControls:	return "TabletPCSystemControls";
+		case kHIDUsage_GD_AssistiveControl:	return "AssistiveControl";
+		case kHIDUsage_GD_X:	return "X";
+		case kHIDUsage_GD_Y:	return "Y";
+		case kHIDUsage_GD_Z:	return "Z";
+		case kHIDUsage_GD_Rx:	return "Rx";
+		case kHIDUsage_GD_Ry:	return "Ry";
+		case kHIDUsage_GD_Rz:	return "Rz";
+		case kHIDUsage_GD_Slider:	return "Slider";
+		case kHIDUsage_GD_Dial:	return "Dial";
+		case kHIDUsage_GD_Wheel:	return "Wheel";
+		case kHIDUsage_GD_Hatswitch:	return "Hatswitch";
+		case kHIDUsage_GD_CountedBuffer:	return "CountedBuffer";
+		case kHIDUsage_GD_ByteCount:	return "ByteCount";
+		case kHIDUsage_GD_MotionWakeup:	return "MotionWakeup";
+		case kHIDUsage_GD_Start:	return "Start";
+		case kHIDUsage_GD_Select:	return "Select";
+		case kHIDUsage_GD_Vx:	return "Vx";
+		case kHIDUsage_GD_Vy:	return "Vy";
+		case kHIDUsage_GD_Vz:	return "Vz";
+		case kHIDUsage_GD_Vbrx:	return "Vbrx";
+		case kHIDUsage_GD_Vbry:	return "Vbry";
+		case kHIDUsage_GD_Vbrz:	return "Vbrz";
+		case kHIDUsage_GD_Vno:	return "Vno";
+		case kHIDUsage_GD_SystemControl:	return "SystemControl";
+		case kHIDUsage_GD_SystemPowerDown:	return "SystemPowerDown";
+		case kHIDUsage_GD_SystemSleep:	return "SystemSleep";
+		case kHIDUsage_GD_SystemWakeUp:	return "SystemWakeUp";
+		case kHIDUsage_GD_SystemContextMenu:	return "SystemContextMenu";
+		case kHIDUsage_GD_SystemMainMenu:	return "SystemMainMenu";
+		case kHIDUsage_GD_SystemAppMenu:	return "SystemAppMenu";
+		case kHIDUsage_GD_SystemMenuHelp:	return "SystemMenuHelp";
+		case kHIDUsage_GD_SystemMenuExit:	return "SystemMenuExit";
+		case kHIDUsage_GD_SystemMenuSelect:	return "SystemMenuSelect";
+		//case kHIDUsage_GD_SystemMenu:	return "SystemMenu";
+		case kHIDUsage_GD_SystemMenuRight:	return "SystemMenuRight";
+		case kHIDUsage_GD_SystemMenuLeft:	return "SystemMenuLeft";
+		case kHIDUsage_GD_SystemMenuUp:	return "SystemMenuUp";
+		case kHIDUsage_GD_SystemMenuDown:	return "SystemMenuDown";
+		case kHIDUsage_GD_DPadUp:	return "DPadUp";
+		case kHIDUsage_GD_DPadDown:	return "DPadDown";
+		case kHIDUsage_GD_DPadRight:	return "DPadRight";
+		case kHIDUsage_GD_DPadLeft:	return "DPadLeft";
+		default:	return "Reserved";
+	}
+}
+
+Soy::TInputDeviceButtonMeta GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex)
+{
+	IOHIDElementType Type = IOHIDElementGetType(Button);
+	auto Usage = IOHIDElementGetUsage(Button);
+	auto Page = IOHIDElementGetUsagePage(Button);
+	auto Name = Platform::GetString( IOHIDElementGetName(Button) );
+	auto Virtual = IOHIDElementIsVirtual( Button )!=0;
+	auto ReportId = IOHIDElementGetReportID(Button);
+	// As a physical element can appear in the device twice (in different collections) and can be
+	// represented by different IOHIDElementRef objects, we look at the IOHIDElementCookie which
+	// is meant to be unique for each physical element.
+	IOHIDElementCookie Cookie = IOHIDElementGetCookie(Button);
+	
+	if ( Name.length() == 0 )
+	{
+		std::stringstream NewName;
+		if ( Type == kIOHIDElementTypeInput_Button )
+		{
+			NewName << "Button" << Usage;
+		}
+		else if ( Page == kHIDPage_GenericDesktop )
+		{
+			NewName << GetDesktopUsageName(Usage);
+		}
+		else
+		{
+			NewName << GetElementType(Type) << Cookie;
+		}
+		
+		//	always indicate fake name with a *
+		NewName << '*';
+		Name = NewName.str();
+	}
+	
+	
+	Soy::TInputDeviceButtonMeta Meta;
+	Meta.mName = Name;
+	Meta.mCookie = Cookie;
+
+	if ( Type == kIOHIDElementTypeInput_Button )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Button;
+		if ( Usage == 0 )
+			throw Soy::AssertException("Not expecting button usage to be zero");
+		Meta.mIndex = Usage-1;
+	}
+	else if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_Hatswitch )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Axis;
+		Meta.mIndex = UnknownAxisIndex;
+	}
+	else if ( Page >= kHIDPage_VendorDefinedStart )
+	{
+		//	ignore vendor specific
+		Meta.mType = Soy::TInputDeviceButtonType::Invalid;
+	}
+	else if ( Type == kIOHIDElementTypeInput_Axis )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Axis;
+		throw Soy::AssertException("Todo: handle axis!");
+	}
+	
+	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << std::endl;
+	return Meta;
+}
+
+void Hid::TDevice::AddButton(IOHIDElementRef Button)
+{
+	size_t UnknownAxisIndex = mLastState.mAxis.GetSize();
+	auto Meta = GetMeta( Button, UnknownAxisIndex );
+	
+	auto SetButton = [&](size_t Index,bool ButtonState)
+	{
+		while ( Index >= mLastState.mButton.GetSize() )
+			mLastState.mButton.PushBack( false );
+		mLastState.mButton[Index] = ButtonState;
+	};
+	
+	auto SetAxis = [&](size_t Index,vec2f AxisState)
+	{
+		while ( Index >= mLastState.mAxis.GetSize() )
+			mLastState.mAxis.PushBack( vec2f() );
+		mLastState.mAxis[Index] = AxisState;
+	};
+	
+	//	setup state
+	if ( Meta.mType == Soy::TInputDeviceButtonType::Button )
+	{
+		SetButton( Meta.mIndex, false );
+	}
+	else if ( Meta.mType == Soy::TInputDeviceButtonType::Axis )
+	{
+		SetAxis( Meta.mIndex, vec2f() );
+	}
+	else
+	{
+		//	ignoring others
+		return;
+	}
+	
+	std::Debug << "Adding button: " << Meta.mName << " #" << Meta.mIndex << std::endl;
+	mStateMetas.PushBack( Meta );
+	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << " initialvalue=" << InitialValue << std::endl;
+}
+
+void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
+{
+	auto Cookie = IOHIDElementGetCookie(Button);
+	//auto Meta = GetMeta( Button );
+	auto* pMeta = mStateMetas.Find( Cookie );
+	if ( !pMeta )
+	{
+		size_t UnknownAxisIndex = 9999;
+		auto Meta = GetMeta( Button, UnknownAxisIndex );
+		std::Debug << "Igoring button " << Meta.mName << " as not in state meta list" << std::endl;
+		return;
+	}
+	
+	auto& Meta = *pMeta;
+	auto& OutputState = mLastState;
+	
+	auto SetButton = [&](size_t ButtonIndex,bool ButtonState)
+	{
+		while ( ButtonIndex >= OutputState.mButton.GetSize() )
+			OutputState.mButton.PushBack( false );
+		OutputState.mButton[ButtonIndex] = ButtonState;
+		
+	};
+	auto SetAxis = [&](size_t AxisIndex,vec2f AxisState)
+	{
+		while ( AxisIndex >= OutputState.mAxis.GetSize() )
+			OutputState.mAxis.PushBack( vec2f() );
+		OutputState.mAxis[AxisIndex] = AxisState;
+	};
+	
+	//	special case
+	auto Usage = IOHIDElementGetUsage(Button);
+	auto Page = IOHIDElementGetUsagePage(Button);
 	if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_Hatswitch )
 	{
 		vec2f _ValueAxises[] =
@@ -392,16 +583,51 @@ void Hid::TDevice::OnButton(IOHIDElementType Type,uint32_t Page,uint32_t Usage,u
 		};
 		auto ValueAxises = GetRemoteArray(_ValueAxises);
 		auto Axis = ValueAxises[Value];
-		//	update hat axis
-		std::Debug << "Hat Axis: " << Axis << std::endl;
+		SetAxis( Meta.mIndex, Axis );
 	}
-	else if ( Type == kIOHIDElementTypeInput_Button )
+	else if ( Meta.mType == Soy::TInputDeviceButtonType::Button )
 	{
-		auto Button = Usage;
-		mLastState.mButtons[Button] = Value;
+		SetButton( Meta.mIndex, Value );
+	}
+	else if ( Meta.mType == Soy::TInputDeviceButtonType::Axis )
+	{
+		throw Soy::AssertException("Todo: handle axis input");
+	}
+	else
+	{
+		throw Soy::AssertException("unhandled input");
 	}
 
-	std::Debug << "Input: " << GetElementType(Type) << " page=" << Page << " usage=" << Usage << " value=" << Value << std::endl;
+	//std::Debug << "Input cookie=" << Cookie << ": " << GetElementType(Type) << " page=" << Page << " usage=" << Usage << " value=" << Value << std::endl;
+}
+
+
+void Hid::TDevice::InitButtons()
+{
+	CFArrayRef Elements = IOHIDDeviceCopyMatchingElements( mDevice.mDevice, nullptr, kIOHIDOptionsTypeNone );
+	try
+	{
+		auto Count = CFArrayGetCount(Elements);
+		for ( auto i=0;	i<Count;	i++ )
+		{
+			auto ArrayElement = const_cast<void*>( CFArrayGetValueAtIndex( Elements, i ) );
+			auto Element = static_cast<IOHIDElementRef>(ArrayElement);
+			if ( CFGetTypeID(Element) != IOHIDElementGetTypeID() )
+			{
+				std::Debug << "Hid::TDevice::InitButtons got button #" << i << " that is not IOHIDElementType" << std::endl;
+				continue;
+			}
+			
+			AddButton( Element );
+		}
+		CFRelease(Elements);
+	}
+	catch (...)
+	{
+		CFRelease(Elements);
+		throw;
+	}
+	
 }
 
 

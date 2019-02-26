@@ -163,10 +163,10 @@ v8::Local<v8::Value> TInputDeviceWrapper::GetState(const v8::CallbackInfo& Param
 	
 	auto GetElement = [&](size_t Index)
 	{
-		auto Number = v8::Number::New( &Params.GetIsolate(), State.mButtons[Index] );
+		auto Number = v8::Number::New( &Params.GetIsolate(), State.mButton[Index] );
 		return Local<Value>::Cast( Number );
 	};
-	auto Array = v8::GetArray( Params.GetIsolate(), State.mButtons.GetSize(), GetElement );
+	auto Array = v8::GetArray( Params.GetIsolate(), State.mButton.GetSize(), GetElement );
 	
 	return Array;
 }

@@ -12,6 +12,18 @@ namespace Soy
 {
 	class TInputDeviceMeta;
 	class TInputDeviceState;
+	class TInputDeviceButtonMeta;
+	
+	namespace TInputDeviceButtonType
+	{
+		enum TYPE
+		{
+			Button,
+			Axis,	//	+dpad/Hatswitch
+			Other,
+			Invalid,
+		};
+	}
 }
 
 namespace Hid
@@ -21,6 +33,17 @@ namespace Hid
 	class TDeviceMeta;
 }
 
+class Soy::TInputDeviceButtonMeta
+{
+public:
+	bool		operator==(const uint32_t& Cookie) const	{	return mCookie == Cookie;	}
+
+public:
+	std::string					mName;
+	size_t						mIndex = 0;		//	axis index, or button index
+	uint32_t					mCookie = 0;	//	unique identifier... I like the term cookie
+	TInputDeviceButtonType::TYPE	mType = TInputDeviceButtonType::Invalid;
+};
 
 class Soy::TInputDeviceMeta
 {
@@ -57,8 +80,8 @@ public:
 class Soy::TInputDeviceState
 {
 public:
-	BufferArray<uint8_t,32>	mButtons;
-	BufferArray<float,32>	mAxises;
+	BufferArray<bool,32>	mButton;
+	BufferArray<vec2f,32>	mAxis;
 };
 
 
@@ -98,11 +121,15 @@ public:
 	
 private:
 	void			OpenDevice(TContext& Context,const std::string& Reference);
+	void			InitButtons();
+
 	void			Bind(TDeviceMeta& Device);
 	void			Unbind();
 	
-	void			OnButton(IOHIDElementType Type,uint32_t Page,uint32_t Usage,uint32_t Value);
+	void			AddButton(IOHIDElementRef Button);
+	void			UpdateButton(IOHIDElementRef Button,int64_t Value);
 
 	Hid::TDeviceMeta		mDevice;
 	Soy::TInputDeviceState	mLastState;
+	Array<Soy::TInputDeviceButtonMeta>	mStateMetas;
 };
