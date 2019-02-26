@@ -5,7 +5,7 @@
 
 
 
-namespace HidApi
+namespace Hid
 {
 	class TDevice;
 }
@@ -18,7 +18,7 @@ namespace ApiInput
 
 
 extern const char InputDevice_TypeName[];
-class TInputDeviceWrapper : public TObjectWrapper<InputDevice_TypeName,HidApi::TDevice>
+class TInputDeviceWrapper : public TObjectWrapper<InputDevice_TypeName,Hid::TDevice>
 {
 public:
 	TInputDeviceWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
@@ -35,6 +35,6 @@ public:
 	
 
 public:
-	std::shared_ptr<HidApi::TDevice>&		mDevice = mObject;
+	std::shared_ptr<Hid::TDevice>&			mDevice = mObject;
 };
 

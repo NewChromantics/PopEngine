@@ -1,9 +1,9 @@
 #include "TApiInput.h"
-#include "SoyHidApi.h"
+#include "SoyHid.h"
 
 using namespace v8;
 
-HidApi::TContext HidApiContext;
+Hid::TContext HidApiContext;
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
 
@@ -122,7 +122,7 @@ void TInputDeviceWrapper::Construct(const v8::CallbackInfo& Params)
 	//	create device
 	auto DeviceName = v8::GetString( DeviceNameHandle );
 	
-	mDevice.reset( new HidApi::TDevice( HidApiContext, DeviceName) );
+	mDevice.reset( new Hid::TDevice( HidApiContext, DeviceName) );
 }
 
 
