@@ -202,10 +202,8 @@ ssize_t IOHIDDeviceGetProperty_AsNumber(IOHIDDeviceRef Device,CFStringRef Key)
 	return Number;
 }
 
-Soy::TInputDeviceMeta GetMeta(IOHIDDeviceRef Device)
+Hid::TDeviceMeta GetMeta(IOHIDDeviceRef Device)
 {
-	Soy::TInputDeviceMeta Meta;
-	
 	auto Transport = IOHIDDeviceGetProperty_AsString( Device, CFSTR(kIOHIDTransportKey) );
 	auto Product = IOHIDDeviceGetProperty_AsString( Device, CFSTR(kIOHIDProductKey) );
 	auto Manufacturer = IOHIDDeviceGetProperty_AsString( Device, CFSTR(kIOHIDManufacturerKey) );
@@ -224,6 +222,8 @@ Soy::TInputDeviceMeta GetMeta(IOHIDDeviceRef Device)
 	auto UniqueId = IOHIDDeviceGetProperty_AsString( Device, CFSTR(kIOHIDUniqueIDKey) );
 
 	
+	Hid::TDeviceMeta Meta(Device);
+
 	Meta.mName = Product;
 	Meta.mConnected = true;
 	
@@ -292,45 +292,118 @@ Hid::TDevice::~TDevice()
 
 void Hid::TDevice::OpenDevice(TContext& Context,const std::string& Reference)
 {
-	/*
-	auto OpenPath = [&](const std::string& Path)
-	{
-		//	could bail out early, but we don't want to hide ambiguity
-		auto* NewDevice = hid_open_path( Path.c_str() );
-		if ( mDevice && NewDevice )
-		{
-			std::stringstream Error;
-			Error << "Already opened device, ambiguious name/serial/usb path " << Reference;
-			throw Soy::AssertException( Error.str() );
-		}
-		mDevice = NewDevice;
-		return mDevice != nullptr;
-	};
-	
-	//	try path first
-	if ( OpenPath(Reference) )
-		return;
+	//	get the meta, which should contain the device ref
+	TDeviceMeta MatchedMeta(nullptr);
+	bool FoundMatch = false;
 	
 	//	enumerate devices and try and match name/serial
-	auto OnDevice = [&](Soy::TInputDeviceMeta& Meta)
+	auto OnDevice = [&](Soy::TInputDeviceMeta& SoyMeta)
 	{
-		OpenPath( Meta.mName );
-		OpenPath( Meta.mSerial );
-		OpenPath( Meta.mUsbPath );
+		auto& Meta = static_cast<Hid::TDeviceMeta&>(SoyMeta);
+		
+		bool Match = false;
+		Match |= Meta.mSerial == Reference;
+		Match |= Meta.mName == Reference;
+		Match |= Meta.mUsbPath == Reference;
+		if ( !Match )
+			return;
+		
+		if ( FoundMatch )
+		{
+			std::stringstream Error;
+			Error << "Already found matching device, ambiguious name/serial/usb path " << Reference;
+			throw Soy::AssertException( Error.str() );
+		}
+		FoundMatch = true;
+		MatchedMeta = Meta;
 	};
 	Context.EnumDevices( OnDevice );
 	
-	if ( !mDevice )
+	if ( !FoundMatch )
 	{
 		std::stringstream Error;
 		Error << "Didn't find a device matching " << Reference;
 		throw Soy::AssertException(Error.str());
 	}
 	
-	//	setup device
-	hid_set_nonblocking( mDevice, 1 );
-	*/
+	//	open the device
+	Bind(MatchedMeta);
 }
+
+const char* GetElementType(IOHIDElementType Type)
+{
+	switch ( Type )
+	{
+		case kIOHIDElementTypeInput_Misc:		return "Misc";
+		case kIOHIDElementTypeInput_Button:		return "Button";
+		case kIOHIDElementTypeInput_Axis:		return "Axis";
+		case kIOHIDElementTypeInput_ScanCodes:	return "ScanCodes";
+		case kIOHIDElementTypeOutput:			return "Output";
+		case kIOHIDElementTypeFeature:			return "Feature";
+		case kIOHIDElementTypeCollection:		return "Collection";
+		default: return "Unknown IOHIDElementType";
+	};
+}
+
+void Hid::TDevice::Bind(TDeviceMeta& Device)
+{
+	auto Result = IOHIDDeviceOpen( Device.mDevice, kIOHIDOptionsTypeNone);
+	IsOkay(Result, "IOHIDDeviceOpen");
+	mDevice = Device;
+	
+	auto OnInput = [](void* context,IOReturn result,void* sender,IOHIDValueRef Value)
+	{
+		auto* This = reinterpret_cast<TDevice*>(context);
+		
+		IOHIDElementRef Element = IOHIDValueGetElement(Value);
+		IOHIDElementType Type = IOHIDElementGetType(Element);
+		auto Usage = IOHIDElementGetUsage(Element);
+		auto UsageValue = IOHIDValueGetIntegerValue(Value);
+		auto Page = IOHIDElementGetUsagePage(Element);
+		
+		This->OnButton( Type, Page, Usage, UsageValue );
+	};
+	IOHIDDeviceRegisterInputValueCallback( Device.mDevice, OnInput, this );
+	IOHIDDeviceScheduleWithRunLoop( Device.mDevice, CFRunLoopGetCurrent(), kCFRunLoopCommonModes );
+}
+
+void Hid::TDevice::Unbind()
+{
+	auto Result = IOHIDDeviceClose( mDevice.mDevice, kIOHIDOptionsTypeNone);
+	IsOkay(Result, "IOHIDDeviceOpen");
+}
+
+void Hid::TDevice::OnButton(IOHIDElementType Type,uint32_t Page,uint32_t Usage,uint32_t Value)
+{
+	//	dpad on joycod
+	if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_Hatswitch )
+	{
+		vec2f _ValueAxises[] =
+		{
+			vec2f(0,-1),
+			vec2f(1,-1),
+			vec2f(1,0),
+			vec2f(1,1),
+			vec2f(0,1),
+			vec2f(-1,1),
+			vec2f(-1,0),
+			vec2f(-1,-1),
+			vec2f(0,0),	//	none!
+		};
+		auto ValueAxises = GetRemoteArray(_ValueAxises);
+		auto Axis = ValueAxises[Value];
+		//	update hat axis
+		std::Debug << "Hat Axis: " << Axis << std::endl;
+	}
+	else if ( Type == kIOHIDElementTypeInput_Button )
+	{
+		auto Button = Usage;
+		mLastState.mButtons[Button] = Value;
+	}
+
+	std::Debug << "Input: " << GetElementType(Type) << " page=" << Page << " usage=" << Usage << " value=" << Value << std::endl;
+}
+
 
 Soy::TInputDeviceState Hid::TDevice::GetState()
 {

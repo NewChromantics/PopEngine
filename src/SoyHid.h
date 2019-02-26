@@ -18,6 +18,7 @@ namespace Hid
 {
 	class TContext;
 	class TDevice;
+	class TDeviceMeta;
 }
 
 
@@ -34,6 +35,25 @@ public:
 	bool			mConnected = true;
 };
 
+class Hid::TDeviceMeta : public Soy::TInputDeviceMeta
+{
+public:
+	TDeviceMeta(){}
+	TDeviceMeta(IOHIDDeviceRef Device) :
+		mDevice	( Device )
+	{
+	}
+	/*
+	TDeviceMeta(const TDeviceMeta& That) :
+		Soy::TInputDeviceMeta	( That ),
+		mDevice					( That.mDevice )
+	{
+	}
+	*/
+	IOHIDDeviceRef	mDevice = nullptr;
+};
+
+
 class Soy::TInputDeviceState
 {
 public:
@@ -49,16 +69,16 @@ public:
 	TContext();
 	~TContext();
 	
-	void			EnumDevices(std::function<void(Soy::TInputDeviceMeta& Meta)> OnDevice);
+	void				EnumDevices(std::function<void(Soy::TInputDeviceMeta& Meta)> OnDevice);
 	
 private:
-	void			ListenForDevices();
-	void			OnDeviceConnected(IOHIDDeviceRef Device,IOReturn Result);
-	void			OnDeviceDisconnected(IOHIDDeviceRef Device,IOReturn Result);
+	void				ListenForDevices();
+	void				OnDeviceConnected(IOHIDDeviceRef Device,IOReturn Result);
+	void				OnDeviceDisconnected(IOHIDDeviceRef Device,IOReturn Result);
 
-	std::mutex		mDeviceMetasLock;
-	Array<Soy::TInputDeviceMeta>	mDeviceMetas;	//	known devices
-	IOHIDManagerRef	mManager = nullptr;
+	std::mutex			mDeviceMetasLock;
+	Array<TDeviceMeta>	mDeviceMetas;	//	known devices
+	IOHIDManagerRef		mManager = nullptr;
 };
 
 
@@ -78,6 +98,11 @@ public:
 	
 private:
 	void			OpenDevice(TContext& Context,const std::string& Reference);
+	void			Bind(TDeviceMeta& Device);
+	void			Unbind();
 	
+	void			OnButton(IOHIDElementType Type,uint32_t Page,uint32_t Usage,uint32_t Value);
+
+	Hid::TDeviceMeta		mDevice;
 	Soy::TInputDeviceState	mLastState;
 };
