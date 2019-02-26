@@ -158,16 +158,36 @@ v8::Local<v8::Value> TInputDeviceWrapper::GetState(const v8::CallbackInfo& Param
 {
 	auto& This = Params.GetThis<TInputDeviceWrapper>();
 
-	auto State = This.mDevice->GetState();
+	auto InputState = This.mDevice->GetState();
 	//	output an object with name, different axis', buttons
 	
-	auto GetElement = [&](size_t Index)
+	auto State = v8::Object::New( &Params.GetIsolate() );
+	
+	auto GetButtonElement = [&](size_t Index)
 	{
-		auto Number = v8::Number::New( &Params.GetIsolate(), State.mButton[Index] );
+		auto Number = v8::Number::New( &Params.GetIsolate(), InputState.mButton[Index] );
 		return Local<Value>::Cast( Number );
 	};
-	auto Array = v8::GetArray( Params.GetIsolate(), State.mButton.GetSize(), GetElement );
-	
-	return Array;
+	auto ButtonArray = v8::GetArray( Params.GetIsolate(), InputState.mButton.GetSize(), GetButtonElement );
+	auto ButtonsString = v8::GetString( Params.GetIsolate(), "Buttons" );
+
+	auto xString = v8::GetString( Params.GetIsolate(), "x" );
+	auto yString = v8::GetString( Params.GetIsolate(), "y" );
+	auto GetAxisElement = [&](size_t Index)
+	{
+		auto xNumber = v8::Number::New( &Params.GetIsolate(), InputState.mAxis[Index].x );
+		auto yNumber = v8::Number::New( &Params.GetIsolate(), InputState.mAxis[Index].y );
+		auto Axis = v8::Object::New( &Params.GetIsolate() );
+		Axis->Set( xString, xNumber );
+		Axis->Set( yString, yNumber );
+		return Local<Value>::Cast( Axis );
+	};
+	auto AxisArray = v8::GetArray( Params.GetIsolate(), InputState.mAxis.GetSize(), GetAxisElement );
+	auto AxisString = v8::GetString( Params.GetIsolate(), "Axis" );
+
+	State->Set( ButtonsString, ButtonArray );
+	State->Set( AxisString, AxisArray );
+
+	return State;
 }
 
