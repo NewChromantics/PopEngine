@@ -3,7 +3,7 @@
 function include(Filename)
 {
 	let Source = LoadFileAsString(Filename);
-	CompileAndRun( Source );
+	CompileAndRun( Source, Filename );
 }
 
 //Debug = function(){};

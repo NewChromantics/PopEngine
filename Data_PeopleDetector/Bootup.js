@@ -3,7 +3,7 @@
 function include(Filename)
 {
 	let Source = LoadFileAsString(Filename);
-	return CompileAndRun( Source );
+	return CompileAndRun( Source, Filename );
 }
 include("../Data_Holosports/PopDomJs/PopDomJs.js");
 
