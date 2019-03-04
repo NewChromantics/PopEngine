@@ -262,7 +262,11 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Sourc
 		
 		auto NewScriptMaybe = Script::Compile(context, Source, &Origin );
 		if ( NewScriptMaybe.IsEmpty() )
-			throw V8Exception( trycatch, "Compiling script" );
+		{
+			std::stringstream Error;
+			Error << "Compiling script (" << SourceFilename << ")";
+			throw V8Exception( trycatch, Error.str() );
+		}
 		NewScript = NewScriptMaybe.ToLocalChecked();
 	}
 	
@@ -270,14 +274,18 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Sourc
 		TryCatch trycatch(Isolate);
 		auto ScriptResultMaybe = NewScript->Run(context);
 		if ( ScriptResultMaybe.IsEmpty() )
-			throw V8Exception( trycatch, "Running script" );
+		{
+			std::stringstream Error;
+			Error << "Running script (" << SourceFilename << ")";
+			throw V8Exception( trycatch, Error.str() );
+		}
 		
 		//	gr: scripts can never return anything, so this would always be undefined...
 		auto ScriptResult = ScriptResultMaybe.ToLocalChecked();
 		if ( !ScriptResult->IsUndefined() )
 		{
 			v8::String::Utf8Value MainResultStr( ScriptResult );
-			std::Debug << "LoadScript() -> " << *MainResultStr << " (" << v8::GetTypeName(ScriptResult) << ")" << std::endl;
+			std::Debug << "LoadScript( " << SourceFilename << ") -> " << *MainResultStr << " (" << v8::GetTypeName(ScriptResult) << ")" << std::endl;
 		}
 		return ScriptResult;
 	}

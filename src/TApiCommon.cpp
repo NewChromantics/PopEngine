@@ -242,15 +242,16 @@ static Local<Value> ApiPop::GetV8HeapCount(CallbackInfo& Params)
 static Local<Value> ApiPop::CompileAndRun(CallbackInfo& Params)
 {
 	auto& args = Params.mParams;
-	
-	if (args.Length() != 1)
-	{
-		throw Soy::AssertException("Expected source as first argument");
-	}
-	
-	auto Source = Local<String>::Cast( args[0] );
+		
+	auto SourceHandle = args[0];
+	auto FilenameHandle = args[1];
 
-	return Params.mContainer.LoadScript( Params.mContext, Source, "RuntimeFile" );
+	auto Source = v8::GetString( SourceHandle );
+	std::string Filename = "Runtime Source";
+	if ( !FilenameHandle->IsUndefined() )
+		Filename = v8::GetString( FilenameHandle );
+
+	return Params.mContainer.LoadScript( Params.mContext, Source, Filename );
 }
 
 
