@@ -39,9 +39,10 @@ public:
 	bool		operator==(const uint32_t& Cookie) const	{	return mCookie == Cookie;	}
 
 public:
-	std::string					mName;
-	size_t						mIndex = 0;		//	axis index, or button index
-	uint32_t					mCookie = 0;	//	unique identifier... I like the term cookie
+	std::string						mName;
+	size_t							mIndex = 0;		//	axis index, or button index
+	uint32_t						mCookie = 0;	//	unique identifier... I like the term cookie
+	BufferArray<uint32_t,3>			mAxisCookies;	//	if this is an axis, these buttons are the axis'
 	TInputDeviceButtonType::TYPE	mType = TInputDeviceButtonType::Invalid;
 };
 
@@ -127,6 +128,7 @@ private:
 	void			Unbind();
 	
 	void			AddButton(IOHIDElementRef Button);
+	void			AddButton(const Soy::TInputDeviceButtonMeta& Meta);
 	void			UpdateButton(IOHIDElementRef Button,int64_t Value);
 
 	Hid::TDeviceMeta		mDevice;

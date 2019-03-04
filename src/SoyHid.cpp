@@ -429,9 +429,33 @@ const char* GetDesktopUsageName(uint32_t Usage)
 	}
 }
 
-Soy::TInputDeviceButtonMeta GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex)
+
+void GetElementChildren(CFArrayRef Elements,std::function<void(IOHIDElementRef)> EnumElement)
 {
+	if ( Elements == nullptr )
+		return;
+	
+	auto Count = CFArrayGetCount(Elements);
+	for ( auto i=0;	i<Count;	i++ )
+	{
+		auto ArrayElement = const_cast<void*>( CFArrayGetValueAtIndex( Elements, i ) );
+		auto Element = static_cast<IOHIDElementRef>(ArrayElement);
+		if ( CFGetTypeID(Element) != IOHIDElementGetTypeID() )
+		{
+			std::Debug << "Hid::TDevice::InitButtons got button #" << i << " that is not IOHIDElementType" << std::endl;
+			continue;
+		}
+		
+		EnumElement( Element );
+	}
+}
+
+
+void GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex,std::function<void(const Soy::TInputDeviceButtonMeta&)> EnumMeta)
+{
+	Soy::TInputDeviceButtonMeta Meta;
 	IOHIDElementType Type = IOHIDElementGetType(Button);
+	
 	auto Usage = IOHIDElementGetUsage(Button);
 	auto Page = IOHIDElementGetUsagePage(Button);
 	auto Name = Platform::GetString( IOHIDElementGetName(Button) );
@@ -464,10 +488,32 @@ Soy::TInputDeviceButtonMeta GetMeta(IOHIDElementRef Button,size_t UnknownAxisInd
 	}
 	
 	
-	Soy::TInputDeviceButtonMeta Meta;
 	Meta.mName = Name;
 	Meta.mCookie = Cookie;
 
+	//	enum children
+	//if ( Type == kIOHIDElementTypeCollection )
+	Array<Soy::TInputDeviceButtonMeta> ChildMetas;
+	{
+		auto ChildElements = IOHIDElementGetChildren( Button );
+		auto AddChild = [&](const Soy::TInputDeviceButtonMeta& ChildMeta)
+		{
+			ChildMetas.PushBack( ChildMeta );
+		};
+		auto OnChildElement = [&](IOHIDElementRef Child)
+		{
+			GetMeta( Child, UnknownAxisIndex, AddChild );
+			//auto ChildMeta = GetMeta( Child, UnknownAxisIndex, OnChild );
+			//ChildMeta.mName =
+		};
+		GetElementChildren( ChildElements, OnChildElement );
+		if ( ChildMetas.GetSize() > 0 )
+			std::Debug << Meta.mName << " has " << ChildMetas.GetSize() << " children" <<std::endl;
+	}
+	
+
+	
+	
 	if ( Type == kIOHIDElementTypeInput_Button )
 	{
 		Meta.mType = Soy::TInputDeviceButtonType::Button;
@@ -480,6 +526,26 @@ Soy::TInputDeviceButtonMeta GetMeta(IOHIDElementRef Button,size_t UnknownAxisInd
 		Meta.mType = Soy::TInputDeviceButtonType::Axis;
 		Meta.mIndex = UnknownAxisIndex;
 	}
+	else if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_X )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Button;
+		Meta.mIndex = UnknownAxisIndex;
+	}
+	else if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_Y )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Button;
+		Meta.mIndex = UnknownAxisIndex;
+	}
+	else if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_Rx )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Button;
+		Meta.mIndex = UnknownAxisIndex;
+	}
+	else if ( Page == kHIDPage_GenericDesktop && Usage == kHIDUsage_GD_Ry )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Button;
+		Meta.mIndex = UnknownAxisIndex;
+	}
 	else if ( Page >= kHIDPage_VendorDefinedStart )
 	{
 		//	ignore vendor specific
@@ -490,16 +556,51 @@ Soy::TInputDeviceButtonMeta GetMeta(IOHIDElementRef Button,size_t UnknownAxisInd
 		Meta.mType = Soy::TInputDeviceButtonType::Axis;
 		throw Soy::AssertException("Todo: handle axis!");
 	}
+	else if ( Type == kIOHIDElementTypeInput_Misc )
+	{
+		Meta.mType = Soy::TInputDeviceButtonType::Other;
+	}
+	else if ( Type == kIOHIDElementTypeCollection )
+	{
+		//	if this is a collection of two children, hopefully it's an axis
+		//	todo: support 3 with Z
+		if ( ChildMetas.GetSize() == 2 )
+		{
+			Meta.mType = Soy::TInputDeviceButtonType::Axis;
+			for ( auto c=0;	c<ChildMetas.GetSize();	c++ )
+			{
+				auto& ChildMeta = ChildMetas[c];
+				Meta.mAxisCookies.PushBack( ChildMeta.mCookie );
+			}
+		}
+		else
+		{
+			Meta.mType = Soy::TInputDeviceButtonType::Other;
+		}
+	}
+	else
+	{
+		throw Soy::AssertException("Todo: categorise this!");
+	}
 	
 	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << std::endl;
-	return Meta;
+	EnumMeta( Meta );
 }
+
 
 void Hid::TDevice::AddButton(IOHIDElementRef Button)
 {
 	size_t UnknownAxisIndex = mLastState.mAxis.GetSize();
-	auto Meta = GetMeta( Button, UnknownAxisIndex );
-	
+	auto Append = [&](const Soy::TInputDeviceButtonMeta& Meta)
+	{
+		AddButton( Meta );
+	};
+	GetMeta( Button, UnknownAxisIndex, Append );
+}
+
+
+void Hid::TDevice::AddButton(const Soy::TInputDeviceButtonMeta& Meta)
+{
 	auto SetButton = [&](size_t Index,bool ButtonState)
 	{
 		while ( Index >= mLastState.mButton.GetSize() )
@@ -526,6 +627,7 @@ void Hid::TDevice::AddButton(IOHIDElementRef Button)
 	else
 	{
 		//	ignoring others
+		std::Debug << "Ignoring " << Meta.mName << std::endl;
 		return;
 	}
 	
@@ -542,8 +644,9 @@ void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
 	if ( !pMeta )
 	{
 		size_t UnknownAxisIndex = 9999;
-		auto Meta = GetMeta( Button, UnknownAxisIndex );
-		std::Debug << "Igoring button " << Meta.mName << " as not in state meta list" << std::endl;
+		//auto Meta = GetMeta( Button, UnknownAxisIndex );
+		//std::Debug << "Igoring button " << Meta.mName << " as not in state meta list" << std::endl;
+		std::Debug << "Igoring button cookie=" << Cookie << " as not in state meta list" << std::endl;
 		return;
 	}
 	
@@ -601,25 +704,16 @@ void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
 	//std::Debug << "Input cookie=" << Cookie << ": " << GetElementType(Type) << " page=" << Page << " usage=" << Usage << " value=" << Value << std::endl;
 }
 
-
 void Hid::TDevice::InitButtons()
 {
 	CFArrayRef Elements = IOHIDDeviceCopyMatchingElements( mDevice.mDevice, nullptr, kIOHIDOptionsTypeNone );
+	auto OnElement = [&](IOHIDElementRef Element)
+	{
+		AddButton( Element );
+	};
 	try
 	{
-		auto Count = CFArrayGetCount(Elements);
-		for ( auto i=0;	i<Count;	i++ )
-		{
-			auto ArrayElement = const_cast<void*>( CFArrayGetValueAtIndex( Elements, i ) );
-			auto Element = static_cast<IOHIDElementRef>(ArrayElement);
-			if ( CFGetTypeID(Element) != IOHIDElementGetTypeID() )
-			{
-				std::Debug << "Hid::TDevice::InitButtons got button #" << i << " that is not IOHIDElementType" << std::endl;
-				continue;
-			}
-			
-			AddButton( Element );
-		}
+		GetElementChildren( Elements, OnElement );
 		CFRelease(Elements);
 	}
 	catch (...)
@@ -627,7 +721,7 @@ void Hid::TDevice::InitButtons()
 		CFRelease(Elements);
 		throw;
 	}
-	
+
 }
 
 
