@@ -71,7 +71,40 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	if ( !Soy::Platform::BundleInitialised )
 		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
 
-	auto Allocate = [&Name,this,&Rect,&Params]
+	//	doesn't need to be on main thread, but we're not blocking main thread any more
+	auto PostAllocate = [this]()
+	{
+		if ( mParams.mRedrawWithDisplayLink )
+		{
+			//	Synchronize buffer swaps with vertical refresh rate
+			GLint SwapIntervals = 1;
+			auto NSContext = mView->mView.openGLContext;
+			[NSContext setValues:&SwapIntervals forParameter:NSOpenGLCPSwapInterval];
+			
+			auto& mDisplayLink = mMacWindow->mDisplayLink;
+			// Create a display link capable of being used with all active displays
+			CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
+			
+			// Set the renderer output callback function
+			CVDisplayLinkSetOutputCallback(mDisplayLink, &DisplayLinkCallback, this );
+			
+			// Set the display link for the current renderer
+			CGLContextObj cglContext = [NSContext CGLContextObj];
+			CGLPixelFormatObj cglPixelFormat = NSContext.pixelFormat.CGLPixelFormatObj;
+			CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext( mDisplayLink, cglContext, cglPixelFormat);
+			
+			// Activate the display link
+			CVDisplayLinkStart( mDisplayLink );
+		}
+		else
+		{
+			SoyWorkerThread::Start();
+		}
+	};
+	
+	
+	//	actual allocation must be on the main thread.
+	auto Allocate = [=]
 	{
 		mMacWindow.reset( new MacWindow );
 		auto& Wrapper = *mMacWindow;
@@ -142,38 +175,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
 		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
 		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
+
+		//	doesn't need to be on main thread, but is deffered
+		PostAllocate();
 	};
 	Soy::TSemaphore Semaphore;
 	Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
-	Semaphore.Wait();
-
-	
-	if ( mParams.mRedrawWithDisplayLink )
-	{
-		//	Synchronize buffer swaps with vertical refresh rate
-		GLint SwapIntervals = 1;
-		auto NSContext = mView->mView.openGLContext;
-		[NSContext setValues:&SwapIntervals forParameter:NSOpenGLCPSwapInterval];
-		
-		auto& mDisplayLink = mMacWindow->mDisplayLink;
-		// Create a display link capable of being used with all active displays
-		CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
-		
-		// Set the renderer output callback function
-		CVDisplayLinkSetOutputCallback(mDisplayLink, &DisplayLinkCallback, this );
-		
-		// Set the display link for the current renderer
-		CGLContextObj cglContext = [NSContext CGLContextObj];
-		CGLPixelFormatObj cglPixelFormat = NSContext.pixelFormat.CGLPixelFormatObj;
-		CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext( mDisplayLink, cglContext, cglPixelFormat);
-		
-		// Activate the display link
-		CVDisplayLinkStart( mDisplayLink );
-	}
-	else
-	{
-		SoyWorkerThread::Start();
-	}
 }
 
 TOpenglWindow::~TOpenglWindow()
