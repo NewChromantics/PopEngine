@@ -107,6 +107,7 @@
 		BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */; };
 		BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */; };
 		BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */; };
+		BF8AD98F222D573C00217EF3 /* Varjo_TriangleDetect in Resources */ = {isa = PBXBuildFile; fileRef = BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */; };
 		BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
 		BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
 		BF91D97D221584E500E91671 /* Ezsift in Resources */ = {isa = PBXBuildFile; fileRef = BF91D97C221584E500E91671 /* Ezsift */; };
@@ -341,6 +342,7 @@
 		BF89F6C51B4BCB9E00F58561 /* SoyOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpengl.h; path = src/SoyOpengl.h; sourceTree = "<group>"; };
 		BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglContext.cpp; path = src/SoyOpenglContext.cpp; sourceTree = "<group>"; };
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
+		BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Varjo_TriangleDetect; path = ../Varjo_TriangleDetect; sourceTree = "<group>"; };
 		BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiHttp.cpp; path = src/TApiHttp.cpp; sourceTree = "<group>"; };
 		BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiHttp.h; path = src/TApiHttp.h; sourceTree = "<group>"; };
 		BF91D9792215839F00E91671 /* TApiEzsift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiEzsift.h; path = src/TApiEzsift.h; sourceTree = "<group>"; };
@@ -781,6 +783,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
 				BF59A26222240D1E00AE9926 /* GuildhallGildwall */,
 				BFEDFC6C2221F9B5009E5F5E /* TrainStop */,
 				BF91D97C221584E500E91671 /* Ezsift */,
@@ -1042,6 +1045,7 @@
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF6554022132C4D9003E4241 /* APIDesign.md in Resources */,
 				BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */,
+				BF8AD98F222D573C00217EF3 /* Varjo_TriangleDetect in Resources */,
 				BF91D97D221584E500E91671 /* Ezsift in Resources */,
 				BF377319211F066E008EB5F7 /* Data_Posenet in Resources */,
 				BF3786E92132C81D008E4350 /* v8Runtime in Resources */,
