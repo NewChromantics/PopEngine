@@ -199,14 +199,16 @@ static JSValueRef Sleep2(Bind::TCallbackInfo& Params)
 			//auto Context = ParamsJs.mContext;
 			auto Context = gTestContext->mContext;
 			
+			auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
 			{
-				auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
+				/*
 				auto Global = JSContextGetGlobalObject( Context );
-				JSStringRef GlobalNameString = JSStringCreateWithUTF8CString("Global");
+				JSStringRef GlobalNameString = JSStringCreateWithUTF8CString("this");
 				
 				JSValueRef Exception = nullptr;
 				JSPropertyAttributes Attributes = kJSClassAttributeNone;
 				JSObjectSetProperty( Context, Global, GlobalNameString, GlobalOther, Attributes, &Exception );
+				 */
 			}
 			
 			for ( auto i=0;	i<1000;	i++ )
@@ -214,9 +216,9 @@ static JSValueRef Sleep2(Bind::TCallbackInfo& Params)
 				std::this_thread::sleep_for( std::chrono::milliseconds(100) );
 				
 				//	create a promise object
-				JSStringRef NewPromiseScript = JSStringCreateWithUTF8CString("Global.Debug('Thread exec: ' + Global.TestValue );");
+				JSStringRef NewPromiseScript = JSStringCreateWithUTF8CString("Debug('Thread exec: ' + TestValue );");
 				JSValueRef Exception = nullptr;
-				JSEvaluateScript( Context, NewPromiseScript, nullptr, nullptr, 0, &Exception );
+				JSEvaluateScript( Context, NewPromiseScript, GlobalOther, nullptr, 0, &Exception );
 				if ( Exception!=nullptr )
 					std::Debug << "An exception" << JsCore::HandleToString( Context, Exception ) << std::endl;
 			}
