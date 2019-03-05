@@ -37,7 +37,7 @@ TObjectWrapper<TYPENAME,TYPE>::TObjectWrapper(TV8Container& Container,v8::Local<
 {
 	if ( This.IsEmpty() )
 	{
-		This = Container.CreateObjectInstance( TYPENAME );
+		This = Container.CreateObjectInstancev8( TYPENAME );
 	}
 	
 	auto* Isolate = &Container.GetIsolate();

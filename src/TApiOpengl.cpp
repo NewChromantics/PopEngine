@@ -173,23 +173,20 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 
 
 
-void TWindowWrapper::Construct(v8::TCallback& Arguments)
+void TWindowWrapper::Construct(Bind::TCallback& Params)
 {
-	using namespace v8;
+	auto WindowName = Params.GetArgumentString(0);
 	
-	auto WindowNameHandle = Arguments.mParams[0];
-	auto AutoRedrawHandle = Arguments.mParams[1];
+	TOpenglParams WindowParams;
+	WindowParams.mDoubleBuffer = false;
+	WindowParams.mAutoRedraw = true;
 
-	auto WindowName = v8::GetString( WindowNameHandle );
-
-	TOpenglParams Params;
-	Params.mDoubleBuffer = false;
-	Params.mAutoRedraw = true;
-	if ( AutoRedrawHandle->IsBoolean() )
+	if ( Params.IsArgumentBool(1) )
 	{
-		Params.mAutoRedraw = v8::SafeCast<Boolean>(AutoRedrawHandle)->BooleanValue();
+		WindowParams.mAutoRedraw = Params.GetArgumentBool(1);
 	}
-	mWindow.reset( new TRenderWindow( WindowName, Params ) );
+	
+	mWindow.reset( new TRenderWindow( WindowName, WindowParams ) );
 	
 	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 	{

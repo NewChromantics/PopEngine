@@ -26,6 +26,10 @@ class V8Storage;
 //	forward decalrations
 namespace v8
 {
+	//	Bind overloads
+	class TCallback;
+	class TObject;
+	
 	class Array;
 	class Platform;
 	class Isolate;
@@ -52,7 +56,6 @@ namespace v8
 	class FunctionCallbackInfo;
 	
 	//	our wrappers
-	class TCallback;
 	class LambdaTask;
 	
 	template<typename TYPE>
@@ -177,35 +180,36 @@ inline std::shared_ptr<V8Storage<TYPE>> v8::GetPersistent(v8::Isolate& Isolate,L
 class v8::TCallback : public Bind::TCallback
 {
 public:
-	TCallback(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container) :
-		mParams		( Params ),
-		mContainer	( Container ),
-		mIsolate	( mParams.GetIsolate() ),
-		mContext	( mIsolate->GetCurrentContext() )
-	{
-	}
+	TCallback(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container);
 	
-	v8::Isolate&		GetIsolate() const		{	return *mIsolate;	}
+	v8::Isolate&			GetIsolate() const		{	return *mIsolate;	}
 	
-	std::string			GetResolvedFilename(const std::string& Filename) const;
+	std::string				GetResolvedFilename(const std::string& Filename) const;
 	
-	virtual size_t		GetArgumentCount() const override	{	return mParams.Length();	}
-	virtual std::string	GetArgumentString(size_t Index) const override;
-	virtual int32_t		GetArgumentInt(size_t Index) const override;
+	virtual size_t			GetArgumentCount() override	{	return mParams.Length();	}
+	virtual std::string		GetArgumentString(size_t Index) override;
+	virtual int32_t			GetArgumentInt(size_t Index) override;
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) override;
+	virtual Bind::TFunction	GetArgumentFunction(size_t Index) override;
+	virtual Bind::TObject	GetArgumentObject(size_t Index) override;
+
+	virtual bool			IsArgumentString(size_t Index) override;
+	virtual bool			IsArgumentBool(size_t Index) override;
 
 	virtual void		Return() override;
 	virtual void		ReturnNull() override;
 	virtual void		Return(const std::string& Value) override;
-	virtual void		Return(const uint32_t& Value) override;
-	virtual void		Return(const Bind::TObject& Value) override;
+	virtual void		Return(uint32_t Value) override;
+	virtual void		Return(Bind::TObject Value) override;
+	virtual void		Return(Bind::TArray Value) override;
 	virtual void		Return(v8::Local<v8::Value> Value)	{	mReturn = Value;	}
 	
 protected:
-	virtual void*		GetThis() override		{	return v8::GetObject( mParams.This() );	}
+	virtual void*		GetThis() override							{	return v8::GetObject( mParams.This() );	}
+	virtual void*		GetArgumentPointer(size_t Index) override	{	return v8::GetObject( mParams[Index] );	}
 
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
-	TV8Container&								mContainer;
 	v8::Isolate*								mIsolate;
 	v8::Local<v8::Context>						mContext;
 	v8::Local<v8::Value>						mReturn;
@@ -287,7 +291,7 @@ public:
 
 
 
-class TV8Container : public Bind::TContainer
+class TV8Container : public Bind::TContext
 {
 public:
 	TV8Container(const std::string& RootDirectory);
@@ -314,9 +318,10 @@ public:
 		return CreateObjectInstance( WRAPPERTYPE::GetObjectTypeName(), &Object );
 	}
 	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName,void* Object);
-	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName);
+	v8::Local<v8::Object>	CreateObjectInstancev8(const std::string& ObjectTypeName);
+	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectType) override;
 	virtual void			CreateGlobalObjectInstance(const std::string& ObjectTypeName,const std::string& ObjectName) override;
-	v8::Local<v8::Object>	GetGlobalObject(v8::Local<v8::Context>& Context,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+	virtual Bind::TObject	GetRootGlobalObject() override;
 
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName);
@@ -371,6 +376,15 @@ private:
 };
 
 
+class v8::TObject : public Bind::TObject
+{
+public:
+	TObject(TV8Container& Context,v8::Local<v8::Object> Object)
+	{
+		
+	}
+};
+
 inline void v8::CallFunc(std::function<void(Bind::TCallback&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)
 {
 	v8::TCallback Params( Paramsv8, Container );
@@ -419,7 +433,7 @@ inline void TV8Container::BindGlobalFunction(std::function<void(Bind::TCallback&
 {
 	auto Bind = [&](v8::Local<v8::Context> Context)
 	{
-		auto This = GetGlobalObject( Context, ParentName );
+		auto This = GetGlobalObject( ParentName );
 		BindFunction<FunctionName>(This,Function);
 	};
 	RunScoped(Bind);

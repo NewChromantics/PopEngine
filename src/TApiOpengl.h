@@ -68,7 +68,7 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
-	virtual void 							Construct(Bind::TCallback& Arguments) override;
+	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
 	//	these are context things
 	//	immediate calls, so... maybe try and mix the context settings

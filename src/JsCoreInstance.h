@@ -41,7 +41,7 @@ private:
 };
 
 //	functions marked virtual need to become generic
-class JsCore::TContext : public Bind::TContainer
+class JsCore::TContext : public Bind::TContext
 {
 public:
 	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
@@ -52,8 +52,8 @@ public:
 	template<const char* FunctionName>
 	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function);
 
-	virtual void		CreateGlobalObjectInstance(TString ObjectType,TString Name) override;
-	virtual TObject		CreateObjectInstance(const std::string& ObjectTypeName);
+	virtual void			CreateGlobalObjectInstance(TString ObjectType,TString Name) override;
+	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectTypeName);
 	
 	//	api calls with context provided
 	template<typename IN,typename OUT>
@@ -82,26 +82,32 @@ public://	temp
 class JsCore::TCallback : public Bind::TCallback
 {
 public:
-	TCallback(TInstance& Instance) :
-		mInstance	( Instance )
+	TCallback(TContext& Context) :
+		Bind::TCallback	( Context ),
+		mContext		( Context ),
+		mContextRef		( mContext.mContext )
 	{
 	}
-	virtual size_t		GetArgumentCount() const override	{	return mArguments.GetSize();	}
-	virtual std::string	GetArgumentString(size_t Index) const override;
-	virtual int32_t		GetArgumentInt(size_t Index) const override;
+	virtual size_t		GetArgumentCount() override	{	return mArguments.GetSize();	}
+	virtual std::string	GetArgumentString(size_t Index) override;
+	virtual int32_t		GetArgumentInt(size_t Index) override;
+
+	virtual bool		IsArgumentString(size_t Index)override;
+	virtual bool		IsArgumentBool(size_t Index)override;
 
 	virtual void		Return() override;
 	virtual void		ReturnNull() override;
 	virtual void		Return(const std::string& Value) override;
-	virtual void		Return(const uint32_t& Value) override;
-	virtual void		Return(const Bind::TObject& Value) override;
+	virtual void		Return(uint32_t Value) override;
+	virtual void		Return(Bind::TObject Value) override;
+	virtual void		Return(Bind::TArray Value) override;
 	
 public:
-	TInstance&			mInstance;
+	TContext&			mContext;
 	JSValueRef			mThis = nullptr;
 	JSValueRef			mReturn = nullptr;
 	Array<JSValueRef>	mArguments;
-	JSContextRef		mContext = nullptr;
+	JSContextRef		mContextRef = nullptr;
 };
 
 

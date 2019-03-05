@@ -143,39 +143,28 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 }
 
 
-v8::Local<v8::Value> TWebsocketServerWrapper::Send(v8::TCallback& Params)
+void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TWebsocketServerWrapper>( ThisHandle );
+	auto& This = Params.This<TWebsocketServerWrapper>();
 	auto ThisSocket = This.mSocket;
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
-	
-	if ( Arguments.Length() != 2 )
-		throw Soy::AssertException("Expected 2 arguments Send(Sender,Data)");
-	
-	auto PeerHandle = Arguments[0];
-	auto DataHandle = Arguments[1];
-	
-	auto PeerStr = v8::GetString( PeerHandle );
+
+	auto PeerStr = Params.GetArgumentString(0);
 	auto PeerRef = SoyRef( PeerStr );
-	
-	//	get data
-	if ( DataHandle->IsString() )
+
+	if ( Params.IsArgumentString(1) )
 	{
-		auto DataString = v8::GetString( DataHandle );
+		auto DataString = Params.GetArgumentString(0);
 		ThisSocket->Send( PeerRef, DataString );
 	}
 	else
 	{
 		Array<uint8_t> Data;
-		v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
+		Params.GetArgumentArray(1, GetArrayBridge(Data) );
+		//v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
 		ThisSocket->Send( PeerRef, GetArrayBridge(Data) );
 	}
-
-	return v8::Undefined(Params.mIsolate);
 }
 
 

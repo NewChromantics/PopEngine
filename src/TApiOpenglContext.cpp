@@ -61,7 +61,7 @@ TOpenglImmediateContextWrapper::~TOpenglImmediateContextWrapper()
 }
 
 
-void TOpenglImmediateContextWrapper::Construct(v8::TCallback& Arguments)
+void TOpenglImmediateContextWrapper::Construct(Bind::TCallback& Arguments)
 {
 	using namespace v8;
 	auto& Isolate = Arguments.GetIsolate();
@@ -85,10 +85,9 @@ void TOpenglImmediateContextWrapper::Construct(v8::TCallback& Arguments)
 
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(v8::TCallback& Params)
+void TOpenglImmediateContextWrapper::Execute(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<this_type>( Arguments.This() );
+	auto& This = Params.This<this_type>();
 	auto* Isolate = Params.mIsolate;
 	
 	auto Window = Arguments.This();

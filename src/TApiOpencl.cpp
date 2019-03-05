@@ -12,7 +12,7 @@ const char ReadUniform_FunctionName[] = "ReadUniform";
 namespace ApiOpencl
 {
 	const char Namespace[] = "Pop.Opencl";
-	static v8::Local<v8::Value> EnumDevices(v8::CallbackInfo& Params);
+	static v8::Local<v8::Value> EnumDevices(Bind::TCallback& Params);
 }
 
 void ApiOpencl::Bind(TV8Container& Container)
@@ -164,26 +164,22 @@ void TOpenclRunner::Run()
 
 
 
-static Local<Value> ApiOpencl::EnumDevices(CallbackInfo& Params)
+static void ApiOpencl::EnumDevices(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-
 	//	get devices
 	Array<Opencl::TDeviceMeta> Devices;
 	auto Filter = OpenclDevice::Type::GPU;
 	Opencl::GetDevices( GetArrayBridge(Devices), Filter );
 	
-	//	make an array to return
-	//	todo: use v8::GetArray
-	auto DevicesArray = v8::Array::New( &Params.GetIsolate() );
-	for ( auto i=0;	i<Devices.GetSize();	i++ )
-	{
-		auto& Device = Devices[i];
-		auto DeviceName = v8::GetString( Params.GetIsolate(), Device.mName );
-		DevicesArray->Set( i, DeviceName );
-	}
 	
-	return DevicesArray;
+	auto GetDeviceName = [&](size_t Index)
+	{
+		auto& Device = Devices[Index];
+		return Device.mName;
+	};
+	
+	auto Array = Params.mContext.CreateArray( Devices.GetSize(), GetDeviceName );
+	Params.Return(Array);
 }
 
 

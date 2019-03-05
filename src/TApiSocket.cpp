@@ -125,7 +125,7 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 
 void TSocketWrapper::GetAddress(Bind::TCallback& Params)
 {
-	auto* This = Params.This<TSocketWrapper>();
+	auto& This = Params.This<TSocketWrapper>();
 	auto ThisSocket = This.GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
@@ -168,10 +168,7 @@ void TSocketWrapper::Send(Bind::TCallback& Params)
 
 void TSocketWrapper::GetPeers(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TSocketWrapper>( ThisHandle );
+	auto& This = Params.This<TSocketWrapper>();
 	auto ThisSocket = This.GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
@@ -185,14 +182,13 @@ void TSocketWrapper::GetPeers(Bind::TCallback& Params)
 	};
 	Socket.EnumConnections( EnumPeer );
 	
-	//	convert to v8 array
+	//	return array of names
 	auto GetHandle = [&](size_t Index)
 	{
-		return v8::GetString( Params.GetIsolate(), PeerNames[Index] );
+		return PeerNames[Index];
 	};
-	auto PeerNamesHandle = v8::GetArray( Params.GetIsolate(), PeerNames.GetSize(), GetHandle );
-	
-	return PeerNamesHandle;
+	auto PeerNamesArray = Params.mContext.CreateArray( PeerNames.GetSize(), GetHandle );
+	Params.Return( PeerNamesArray );
 }
 
 

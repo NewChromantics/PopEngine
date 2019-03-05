@@ -53,62 +53,34 @@ namespace ApiPop
 {
 	const char Namespace[] = "Pop";
 	
-	static v8::Local<v8::Value> Debug(v8::CallbackInfo& Params);
-	static JSValueRef Debug2(Bind::TCallbackInfo& Params);
-	static v8::Local<v8::Value> CompileAndRun(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> LoadFileAsString(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> LoadFileAsArrayBuffer(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> WriteStringToFile(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GarbageCollect(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> SetTimeout(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> Sleep(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GetTimeNowMs(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GetComputerName(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> ShowFileInFinder(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GetImageHeapSize(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GetImageHeapCount(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GetV8HeapSize(v8::CallbackInfo& Params);
-	static v8::Local<v8::Value> GetV8HeapCount(v8::CallbackInfo& Params);
+	static void 	Debug(Bind::TCallback& Params);
+	static void 	CompileAndRun(Bind::TCallback& Params);
+	static void 	LoadFileAsString(Bind::TCallback& Params);
+	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
+	static void 	WriteStringToFile(Bind::TCallback& Params);
+	static void 	GarbageCollect(Bind::TCallback& Params);
+	static void 	SetTimeout(Bind::TCallback& Params);
+	static void		Sleep(Bind::TCallback& Params);
+	static void		GetTimeNowMs(Bind::TCallback& Params);
+	static void		GetComputerName(Bind::TCallback& Params);
+	static void		ShowFileInFinder(Bind::TCallback& Params);
+	static void		GetImageHeapSize(Bind::TCallback& Params);
+	static void		GetImageHeapCount(Bind::TCallback& Params);
+	static void		GetV8HeapSize(Bind::TCallback& Params);
+	static void		GetV8HeapCount(Bind::TCallback& Params);
 }
 
 
-static Local<Value> ApiPop::Debug(CallbackInfo& Params)
+static void ApiPop::Debug(Bind::TCallback& Params)
 {
-	auto& args = Params.mParams;
-	
-	if (args.Length() < 1)
+	for ( auto a=0;	a<Params.GetArgumentCount();	a++ )
 	{
-		throw Soy::AssertException("log() with no args");
-	}
-	
-	HandleScope scope(Params.mIsolate);
-	for ( auto i=0;	i<args.Length();	i++ )
-	{
-		auto arg = args[i];
-		String::Utf8Value value(arg);
-		std::Debug << *value << std::endl;
-	}
-	
-	return Undefined(Params.mIsolate);
-}
-
-static JSValueRef ApiPop::Debug2(Bind::TCallbackInfo& Params)
-{
-	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
-	if (Params.GetArgumentCount() < 1)
-	{
-		throw Soy::AssertException("log() with no args");
-	}
-	
-	for ( auto i=0;	i<Params.GetArgumentCount();	i++ )
-	{
-		auto Arg = Params.GetArgumentString(i);
+		auto Arg = Params.GetArgumentString(a);
 		std::Debug << Arg << std::endl;
 	}
-	return JSValueMakeUndefined( ParamsJs.mContext );
 }
 
-
+/*
 static JSValueRef CreateTestPromise(Bind::TCallbackInfo& Params)
 {
 	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
@@ -120,30 +92,26 @@ static JSValueRef CreateTestPromise(Bind::TCallbackInfo& Params)
 
 	return PromiseHandle;
 }
+*/
 
-static Local<Value> ApiPop::GarbageCollect(CallbackInfo& Params)
+static void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
-	//auto& args = Params.mParams;
-	
 	//	queue as job?
-	{
-		HandleScope scope(Params.mIsolate);
-		std::Debug << "Invoking garbage collection..." << std::endl;
-		Params.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
-	}
-	
-	return Undefined(Params.mIsolate);
+	std::Debug << "Invoking garbage collection..." << std::endl;
+	auto& Paramsv8 = dynamic_cast<v8::TCallback&>( Params );
+	Paramsv8.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
 }
 
 
-static Local<Value> ApiPop::SetTimeout(CallbackInfo& Params)
+static void ApiPop::SetTimeout(Bind::TCallback& Params)
 {
-	auto Callback = v8::SafeCast<Function>(Params.mParams[0]);
-	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[1]);
-	auto TimeoutMs = TimeoutMsHandle->Uint32Value();
-	auto CallbackPersistent = std::make_shared<V8Storage<Function>>( Params.GetIsolate(), Callback );
+	auto Callback = Params.GetArgumentFunction(0);
+	auto TimeoutMs = Params.GetArgumentInt(1);
 
-	auto* Container = &Params.mContainer;
+	auto& ParamsV8 = dynamic_cast<v8::TCallback&>(Params);
+	auto* Container = &ParamsV8.mContainer;
+	auto CallbackHandle = ParamsV8.mParams[0];
+	auto CallbackPersistent = v8::GetPersistent( ParamsV8.GetIsolate(), CallbackHandle );
 	
 	auto OnRun = [=](Local<v8::Context> Context)
 	{
@@ -160,11 +128,8 @@ static Local<Value> ApiPop::SetTimeout(CallbackInfo& Params)
 			std::Debug << "Exception in SetTimeout(" << TimeoutMs << ") callback: " << e.what() << std::endl;
 		}
 	};
-	//	need a persistent handle to the callback?
-	Params.mContainer.QueueDelayScoped( OnRun, TimeoutMs );
 
-	//	web normally returns a handle that can be cancelled
-	return Undefined(Params.mIsolate);
+	Container->QueueDelayScoped( OnRun, TimeoutMs );
 }
 
 

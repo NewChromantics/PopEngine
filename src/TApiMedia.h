@@ -31,11 +31,11 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
-	virtual void 							Construct(v8::TCallback& Arguments) override;
+	virtual void 							Construct(Bind::TCallback& Arguments) override;
 
 	void									OnNewFrame(size_t StreamIndex);
-	static v8::Local<v8::Value>				Free(v8::TCallback& Arguments);
-	static v8::Local<v8::Value>				GetNextFrame(v8::TCallback& Arguments);
+	static void								Free(Bind::TCallback& Arguments);
+	static void								GetNextFrame(Bind::TCallback& Arguments);
 	
 	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
 
@@ -58,7 +58,7 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
-	virtual void 							Construct(v8::TCallback& Arguments) override;
+	virtual void 							Construct(Bind::TCallback& Arguments) override;
 	
 	void									OnNewFrame(const SoyPixelsImpl& Pixels);	//	call onPictureDecoded
 	static v8::Local<v8::Value>				Decode(v8::TCallback& Arguments);

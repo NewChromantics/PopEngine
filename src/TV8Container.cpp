@@ -81,18 +81,12 @@ void TV8Allocator::Free(void* data, size_t length)
 	mHeap.FreeRaw(data, length);
 }
 
-
-std::string v8::TCallback::GetResolvedFilename(const std::string& Filename) const
-{
-	return mContainer.GetResolvedFilename(Filename);
-}
-
-std::string	v8::TCallback::GetArgumentString(size_t Index) const
+std::string	v8::TCallback::GetArgumentString(size_t Index)
 {
 	throw Soy::AssertException("todo");
 }
 
-int32_t	v8::TCallback::GetArgumentInt(size_t Index) const
+int32_t	v8::TCallback::GetArgumentInt(size_t Index)
 {
 	throw Soy::AssertException("todo");
 }
@@ -308,36 +302,24 @@ Local<Value> TV8Container::LoadScript(Local<Context> context,Local<String> Sourc
 }
 
 
-v8::Local<v8::Object> TV8Container::GetGlobalObject(Local<Context>& Context,const std::string& Name)
+Bind::TObject TV8Container::GetRootGlobalObject()
 {
-	auto This = Context->Global();
-	auto& Isolate = *Context->GetIsolate();
-
-	//	keep splitting the name so we can get Pop.Input.Cat
-	auto LeafName = Name;
-	while ( LeafName.length() > 0 )
-	{
-		auto ParentName = Soy::StringPopUntil( LeafName, '.', false, false );
-		auto ParentObjectValue = This->Get( Context, v8::GetString( Isolate, ParentName ) );
-		if ( ParentObjectValue.IsEmpty() )
-		{
-			std::stringstream Error;
-			Error << "No parent object named " << ParentName << " in global, for " << Name;
-			throw Soy::AssertException(Error.str());
-		}
-		auto ParentObject = Local<Object>::Cast( ParentObjectValue.ToLocalChecked() );
-		This = ParentObject;
-	}
-
-	return This;
+	//	this should be inside a scope...
+	auto Context = mContext->GetLocal( GetIsolate() );
+	auto Global = Context->Global();
+	v8::TObject GlobalObject( *this, Global );
+	return GlobalObject;
 }
 
 void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Local<FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator,const std::string& ParentObjectName)
 {
+	throw Soy::AssertException("Todo: genericify this!");
+	
 	auto Bind = [&](Local<v8::Context> Context)
 	{
+		/*
 		auto* Isolate = Context->GetIsolate();
-		auto Global = GetGlobalObject( Context, ParentObjectName );
+		auto Global = GetGlobalObject( ParentObjectName );
 		
     	//	create new function
     	auto Template = GetTemplate(*this);
@@ -357,6 +339,7 @@ void TV8Container::BindObjectType(const std::string& ObjectName,std::function<Lo
 		TV8ObjectTemplate NewTemplate( ObjectTemplatePersistent, ObjectName );
 		NewTemplate.mAllocator = Allocator;
 		mObjectTemplates.PushBack(NewTemplate);
+		 */
 	};
 	RunScoped(Bind);
 }
@@ -561,7 +544,7 @@ TV8ObjectTemplate::ALLOCATOR TV8Container::GetAllocator(const char* TYPENAME)
 }
 
 
-v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName)
+Bind::TObject TV8Container::CreateObjectInstance(const std::string& ObjectTypeName)
 {
 	auto& Isolate = GetIsolate();
 
@@ -569,7 +552,8 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 	if ( ObjectTypeName.length() == 0 || ObjectTypeName == "Object" )
 	{
 		auto NewObject = v8::Object::New( &Isolate );
-		return NewObject;
+		v8::TObject NewObjectv8( *this, NewObject );
+		return NewObjectv8;
 	}
 	
 	//	find template
@@ -587,7 +571,9 @@ v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& Obje
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto ObjectTemplateLocal = ObjectTemplate.mTemplate->GetLocal(Isolate);
 	auto NewObject = ObjectTemplateLocal->NewInstance();
-	return NewObject;
+	
+	v8::TObject NewObjectv8( *this, NewObject );
+	return NewObjectv8;
 }
 
 v8::Local<v8::Object> TV8Container::CreateObjectInstance(const std::string& ObjectTypeName,void* Object)
@@ -628,6 +614,8 @@ void TV8Container::CreateGlobalObjectInstance(const std::string& ObjectTypeName,
 {
 	auto Allocate = [&](v8::Local<v8::Context> Context)
 	{
+		Bind::TContext::CreateGlobalObjectInstance( ObjectTypeName, FullObjectName );
+		/*
 		auto ParentName = FullObjectName;
 		auto ObjectName = Soy::StringPopRight( ParentName, '.' );
 		
@@ -642,6 +630,7 @@ void TV8Container::CreateGlobalObjectInstance(const std::string& ObjectTypeName,
 			Error << "Failed to set " << ObjectName << "(" << ObjectTypeName << ") on Global." << ParentName;
 			throw Soy::AssertException(Error.str());
 		}
+		 */
 	};
 	RunScoped( Allocate );
 }
@@ -924,4 +913,20 @@ void* v8::GetObject(v8::Local<v8::Value> Handle)
 	if ( VoidPtr == nullptr )
 		throw Soy::AssertException("Internal Field is null");
 	return VoidPtr;
+}
+
+
+v8::TCallback::TCallback(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container) :
+	Bind::TCallback	( static_cast<Bind::TContext&>(Container) ),
+	mParams			( Params ),
+	mIsolate		( mParams.GetIsolate() ),
+	mContext		( mIsolate->GetCurrentContext() )
+{
+}
+	
+
+void v8::TCallback::GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array)
+{
+	auto Handle = mParams[Index];
+	v8::EnumArray<v8::Uint8Array>( Handle, Array );
 }

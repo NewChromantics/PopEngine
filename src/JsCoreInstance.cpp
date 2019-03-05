@@ -286,16 +286,6 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 	return TObject( mContext, NewObject );
 }
 
-void JsCore::TContext::CreateGlobalObjectInstance(TString ObjectType,TString Name)
-{
-	auto NewObject = CreateObjectInstance( ObjectType );
-	auto ParentName = Name;
-	auto ObjectName = Soy::StringPopRight( ParentName, '.' );
-	auto ParentObjectHandle = GetGlobalObject( ParentName );
-	TObject ParentObject( mContext, ParentObjectHandle );
-	ParentObject.SetObject( ObjectName, NewObject );
-}
-
 
 void JsCore::TContext::BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function)
 {

@@ -48,7 +48,7 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
-	virtual void 							Construct(v8::TCallback& Arguments) override;
+	virtual void 							Construct(Bind::TCallback& Arguments) override;
 	
 	
 	//	run javascript on gl thread for immediate mode stuff

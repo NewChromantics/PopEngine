@@ -19,7 +19,7 @@ class Ezsift::TInstance
 {
 };
 
-void TEzsiftWrapper::Construct(v8::TCallback& Arguments)
+void TEzsiftWrapper::Construct(Bind::TCallback& Arguments)
 {
 	mEzsift.reset( new Ezsift::TInstance );
 }
@@ -50,22 +50,12 @@ Local<FunctionTemplate> TEzsiftWrapper::CreateTemplate(TV8Container& Container)
 }
 
 
-v8::Local<v8::Value> TEzsiftWrapper::GetFeatures(v8::TCallback& Params)
+void TEzsiftWrapper::GetFeatures(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	/*
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	
-	auto& This = v8::GetObject<TEzsiftWrapper>( ThisHandle );
-	auto& CoreMl = This.mCoreMl;
-	
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-	*/
-	auto* pImage = &v8::GetObject<TImageWrapper>( Arguments[0] );
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
 	
 	SoyPixels Pixels;
-	pImage->GetPixels(Pixels);
+	Image.GetPixels(Pixels);
 	Pixels.SetFormat( SoyPixelsFormat::Greyscale );
 	Pixels.ResizeFastSample( Pixels.GetWidth()/2, Pixels.GetHeight()/2 );
 	
@@ -120,14 +110,14 @@ v8::Local<v8::Value> TEzsiftWrapper::GetFeatures(v8::TCallback& Params)
 	//	return array for testing
 	auto GetElement = [&](size_t Index)
 	{
-		auto ObjectJs = v8::Object::New( Params.mIsolate );
+		auto ObjectJs = Params.mContainer.CreateObjectInstance();
 		auto x = Features[Index].x;
 		auto y = Features[Index].y;
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, x) );
-		ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, y) );
+		ObjectJs.SetFloat("x",x);
+		ObjectJs.SetFloat("y",y);
 		return ObjectJs;
 	};
-	auto ObjectsArray = v8::GetArray( *Params.mIsolate, Features.GetSize(), GetElement);
+	auto ObjectsArray = Params.mContainer.GetArray( Features.GetSize(), GetElement );
 	return ObjectsArray;
 }
 
