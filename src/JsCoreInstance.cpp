@@ -5,22 +5,27 @@
 
 
 
-std::string	JsCore::HandleToString(JSContextRef Context,JSValueRef Handle)
+
+std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
-	//	convert to string
-	JSValueRef Exception = nullptr;
-	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
-	
-	size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize(StringJs);
+	size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize(Handle);
 	char utf8Buffer[maxBufferSize];
-	size_t bytesWritten = JSStringGetUTF8CString(StringJs, utf8Buffer, maxBufferSize);
+	size_t bytesWritten = JSStringGetUTF8CString(Handle, utf8Buffer, maxBufferSize);
 	//	the last byte is a null \0 which std::string doesn't need.
 	std::string utf_string = std::string(utf8Buffer, bytesWritten -1);
 	return utf_string;
 }
 
+std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
+{
+	//	convert to string
+	JSValueRef Exception = nullptr;
+	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
+	return GetString( Context, StringJs );
+}
 
-int32_t	JsCore::HandleToInt(JSContextRef Context,JSValueRef Handle)
+
+int32_t	JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
 	JSValueRef Exception = nullptr;
@@ -30,7 +35,12 @@ int32_t	JsCore::HandleToInt(JSContextRef Context,JSValueRef Handle)
 	return Int;
 }
 
-	
+JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
+{
+	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
+	return Handle;
+}
+
 	
 	
 
@@ -98,6 +108,19 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext()
 }
 
 
+void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext)
+{
+	auto ExceptionType = JSValueGetType( Context, ExceptionHandle );
+	//	not an exception
+	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
+		return;
+
+	std::stringstream Error;
+	auto ExceptionString = GetString( Context, ExceptionHandle );
+	Error << "Exception in " << ThrowContext << ": " << ExceptionString;
+	throw Soy::AssertException(Error.str());
+}
+
 
 
 
@@ -125,16 +148,154 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	
 }
 
-void JsCore::TContext::ThrowException(JSValueRef ExceptionHandle)
-{
-	auto ExceptionType = JSValueGetType( mContext, ExceptionHandle );
-	//	not an exception
-	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
-		return;
 
-	auto ExceptionString = HandleToString( mContext, ExceptionHandle );
-	throw Soy::AssertException(ExceptionString);
+
+
+JsCore::TObject::TObject(JSContextRef Context,JSObjectRef This) :
+	mContext	( Context )
+{
+	if ( !mContext )
+		throw Soy::AssertException("Null context for TObject");
+
+	if ( This == nullptr )
+		This = JSContextGetGlobalObject( mContext );
+	if ( !mContext )
+		throw Soy::AssertException("This is null for TObject");
 }
+
+
+JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
+{
+	//	keep splitting the name so we can get Pop.Input.Cat
+	TObject This = *this;
+
+	//	leaf = final name
+	auto LeafName = MemberName;
+	while ( MemberName.length() > 0 )
+	{
+		auto ChildName = Soy::StringPopUntil( LeafName, '.', false, false );
+		if ( ChildName.length() == 0 )
+			break;
+
+		auto Child = This.GetObject(ChildName);
+		This = Child;
+	}
+
+	JSValueRef Exception = nullptr;
+	auto PropertyName = JsCore::GetString( mContext, MemberName );
+	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
+	ThrowException( mContext, Exception );
+	return Property;	//	we return null/undefineds
+}
+
+JsCore::TObject JsCore::TObject::GetObject(const std::string& MemberName)
+{
+	auto Value = GetMember( MemberName );
+	JSValueRef Exception = nullptr;
+	auto Object = JSValueToObject( mContext, Value, &Exception );
+	JsCore::ThrowException( mContext, Exception, MemberName );
+	return TObject( mContext, Object );
+}
+
+std::string JsCore::TObject::GetString(const std::string& MemberName)
+{
+	auto Value = GetMember( MemberName );
+	JSValueRef Exception = nullptr;
+	auto StringHandle = JSValueToStringCopy( mContext, Value, &Exception );
+	JsCore::ThrowException( mContext, Exception, MemberName );
+	auto String = JsCore::GetString( mContext, StringHandle );
+	return String;
+}
+
+uint32_t JsCore::TObject::GetInt(const std::string& MemberName)
+{
+	auto Value = GetMember( MemberName );
+	JSValueRef Exception = nullptr;
+	auto Number = JSValueToNumber( mContext, Value, &Exception );
+	JsCore::ThrowException( mContext, Exception, MemberName );
+	
+	//	convert this double to an int!
+	auto ValueInt = static_cast<uint32_t>(Number);
+	return ValueInt;
+}
+
+float JsCore::TObject::GetFloat(const std::string& MemberName)
+{
+	auto Value = GetMember( MemberName );
+	JSValueRef Exception = nullptr;
+	auto Number = JSValueToNumber( mContext, Value, &Exception );
+	JsCore::ThrowException( mContext, Exception, MemberName );
+	
+	//	convert this double to an int!
+	auto Valuef = static_cast<float>(Number);
+	return Valuef;
+}
+
+
+void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
+{
+	SetMember( Name, Object.mThis );
+}
+
+void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
+{
+	auto NameJs = JsCore::GetString( mContext, Name );
+	JSPropertyAttributes Attribs;
+	JSValueRef Exception = nullptr;
+	JSObjectSetProperty( mContext, mThis, NameJs, Value, Attribs, &Exception );
+	ThrowException( mContext, Exception );
+}
+
+
+JSObjectRef JsCore::TContext::GetGlobalObject(const std::string& Name)
+{
+	TObject This( mContext, nullptr );
+	auto Member = This.GetObject( Name );
+	return Member.mThis;
+	
+}
+
+
+JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& ObjectTypeName)
+{
+	throw Soy::AssertException("todo CreateObjectInstance");
+	/*
+	//	create basic object
+	if ( ObjectTypeName.length() == 0 || ObjectTypeName == "Object" )
+	{
+		auto NewObject = v8::Object::New( &Isolate );
+		return NewObject;
+	}
+	
+	//	find template
+	auto* pObjectTemplate = mObjectTemplates.Find( ObjectTypeName );
+	if ( !pObjectTemplate )
+	{
+		std::stringstream Error;
+		Error << "Unknown object typename ";
+		Error << ObjectTypeName;
+		auto ErrorStr = Error.str();
+		throw Soy::AssertException(ErrorStr);
+	}
+	
+	//	instance new one
+	auto& ObjectTemplate = *pObjectTemplate;
+	auto ObjectTemplateLocal = ObjectTemplate.mTemplate->GetLocal(Isolate);
+	auto NewObject = ObjectTemplateLocal->NewInstance();
+	return NewObject;
+	 */
+}
+
+void JsCore::TContext::CreateGlobalObjectInstance(TString ObjectType,TString Name)
+{
+	auto NewObject = CreateObjectInstance( ObjectType );
+	auto ParentName = Name;
+	auto ObjectName = Soy::StringPopRight( ParentName, '.' );
+	auto ParentObjectHandle = GetGlobalObject( ParentName );
+	TObject ParentObject( mContext, ParentObjectHandle );
+	ParentObject.SetObject( ObjectName, NewObject );
+}
+
 
 void JsCore::TContext::BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function)
 {
@@ -203,7 +364,7 @@ JsCore::TInstance::
 std::string JsCore::TCallbackInfo::GetArgumentString(size_t Index) const
 {
 	auto Handle = mArguments[Index];
-	auto String = JsCore::HandleToString( mContext, Handle );
+	auto String = JsCore::GetString( mContext, Handle );
 	return String;
 }
 
@@ -211,6 +372,6 @@ std::string JsCore::TCallbackInfo::GetArgumentString(size_t Index) const
 int32_t JsCore::TCallbackInfo::GetArgumentInt(size_t Index) const
 {
 	auto Handle = mArguments[Index];
-	auto Value = JsCore::HandleToInt( mContext, Handle );
+	auto Value = JsCore::GetInt( mContext, Handle );
 	return Value;
 }

@@ -277,7 +277,7 @@ public:
 
 
 
-class TV8Container
+class TV8Container : public Bind::TContainer
 {
 public:
 	TV8Container(const std::string& RootDirectory);
@@ -304,7 +304,7 @@ public:
 	}
 	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName,void* Object);
 	v8::Local<v8::Object>	CreateObjectInstance(const std::string& ObjectTypeName);
-	void					CreateGlobalObjectInstance(const std::string& ObjectTypeName,const std::string& ObjectName);
+	virtual void			CreateGlobalObjectInstance(const std::string& ObjectTypeName,const std::string& ObjectName) override;
 	v8::Local<v8::Object>	GetGlobalObject(v8::Local<v8::Context>& Context,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
 	template<const char* FunctionName>

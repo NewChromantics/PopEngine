@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <memory>
 #include "HeapArray.hpp"
@@ -13,10 +12,16 @@ namespace JsCore
 	class TInstance;
 	class TContext;
 	class TCallbackInfo;
+	class TObject;
 	
-	std::string	HandleToString(JSContextRef Context,JSValueRef Handle);
-	int32_t		HandleToInt(JSContextRef Context,JSValueRef Handle);
+	std::string	GetString(JSContextRef Context,JSValueRef Handle);
+	std::string	GetString(JSContextRef Context,JSStringRef Handle);
+	int32_t		GetInt(JSContextRef Context,JSValueRef Handle);
+	JSStringRef	GetString(JSContextRef Context,const std::string& String);
+	
+	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
 }
+
 
 //	VM to contain multiple contexts/containers
 class JsCore::TInstance
@@ -34,7 +39,8 @@ private:
 	std::shared_ptr<TContext>	mContext;
 };
 
-class JsCore::TContext
+
+class JsCore::TContext : public Bind::TContainer
 {
 public:
 	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
@@ -45,10 +51,22 @@ public:
 	template<const char* FunctionName>
 	void				BindGlobalFunction(std::function<JSValueRef(Bind::TCallbackInfo&)> Function);
 
+	virtual void		CreateGlobalObjectInstance(TString ObjectType,TString Name) override;
+	TObject				CreateObjectInstance(const std::string& ObjectTypeName);
+	
+	//	api calls with context provided
+	template<typename IN,typename OUT>
+	OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
+	void				ThrowException(JSValueRef ExceptionHandle)	{	JsCore::ThrowException( mContext, ExceptionHandle );	}
+
+	
 private:
-	void				ThrowException(JSValueRef ExceptionHandle);	//	throws if value is not undefined
+	
 	void				BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function);
 	JSValueRef			CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception);
+	
+	JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+
 	
 public://	temp
 	TInstance&			mInstance;
@@ -74,6 +92,37 @@ public:
 	Array<JSValueRef>	mArguments;
 	JSContextRef		mContext;
 };
+
+
+
+//	make this generic for v8 & jscore
+//	it should also be a Soy::TUniform type
+class JsCore::TObject
+{
+public:
+	//	generic
+	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
+	virtual ~TObject()	{}
+	
+	virtual TObject		GetObject(const std::string& MemberName);
+	virtual std::string	GetString(const std::string& MemberName);
+	virtual uint32_t	GetInt(const std::string& MemberName);
+	virtual float		GetFloat(const std::string& MemberName);
+	
+	virtual void		SetObject(const std::string& Name,const TObject& Object);
+	
+	//	Jscore specific
+private:
+	JSValueRef		GetMember(const std::string& MemberName);
+	void			SetMember(const std::string& Name,JSValueRef Value);
+	JSContextRef	mContext = nullptr;
+	
+public:
+	JSObjectRef		mThis = nullptr;
+};
+
+
+
 
 
 

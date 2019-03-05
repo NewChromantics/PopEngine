@@ -9,8 +9,18 @@
 
 namespace Bind
 {
+	class TContainer;
 	class TCallbackInfo;	//	rename to Meta
 }
+
+typedef const std::string &TString;
+
+
+class Bind::TContainer
+{
+public:
+	virtual void	CreateGlobalObjectInstance(TString ObjectType,TString Name)=0;
+};
 
 
 class Bind::TCallbackInfo

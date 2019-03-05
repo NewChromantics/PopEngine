@@ -220,7 +220,7 @@ static JSValueRef Sleep2(Bind::TCallbackInfo& Params)
 				JSValueRef Exception = nullptr;
 				JSEvaluateScript( Context, NewPromiseScript, GlobalOther, nullptr, 0, &Exception );
 				if ( Exception!=nullptr )
-					std::Debug << "An exception" << JsCore::HandleToString( Context, Exception ) << std::endl;
+					std::Debug << "An exception" << JsCore::GetString( Context, Exception ) << std::endl;
 			}
 			
 		};
@@ -432,6 +432,8 @@ void ApiPop::Bind(TV8Container& Container)
 
 void ApiPop::Bind(JsCore::TContext& Container)
 {
+	Container.CreateGlobalObjectInstance("", Namespace);
+
 	//  load api's before script & executions
 	Container.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise );
 	Container.BindGlobalFunction<Debug_FunctionName>( Debug2 );
