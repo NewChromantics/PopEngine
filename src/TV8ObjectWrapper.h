@@ -98,7 +98,7 @@ void TObjectWrapper<TYPENAME,TYPE>::Constructor(const v8::FunctionCallbackInfo<v
 		auto Allocator = Container.GetAllocator(TYPENAME);
 		auto* NewObject = Allocator( Container, This );
 
-		v8::CallbackInfo ArgumentsWrapper( Arguments, Container );
+		v8::TCallback ArgumentsWrapper( Arguments, Container );
 
 		NewObject->Construct( ArgumentsWrapper );
 	}

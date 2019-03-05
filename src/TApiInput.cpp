@@ -14,7 +14,7 @@ namespace ApiInput
 {
 	const char Namespace[] = "Pop.Input";
 	
-	v8::Local<v8::Value>	EnumDevices(const v8::CallbackInfo& Params);
+	v8::Local<v8::Value>	EnumDevices(v8::TCallback& Params);
 }
 
 void ApiInput::Bind(TV8Container& Container)
@@ -28,7 +28,7 @@ void ApiInput::Bind(TV8Container& Container)
 
 
 
-v8::Local<v8::Value> ApiInput::EnumDevices(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> ApiInput::EnumDevices(v8::TCallback& Params)
 {
 	auto* Isolate = Params.mIsolate;
 
@@ -103,7 +103,7 @@ v8::Local<v8::Value> ApiInput::EnumDevices(const v8::CallbackInfo& Params)
 
 
 
-void TInputDeviceWrapper::Construct(const v8::CallbackInfo& Params)
+void TInputDeviceWrapper::Construct(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 
@@ -154,7 +154,7 @@ Local<FunctionTemplate> TInputDeviceWrapper::CreateTemplate(TV8Container& Contai
 
 
 
-v8::Local<v8::Value> TInputDeviceWrapper::GetState(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TInputDeviceWrapper::GetState(v8::TCallback& Params)
 {
 	auto& This = Params.GetThis<TInputDeviceWrapper>();
 

@@ -143,7 +143,7 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 }
 
 
-v8::Local<v8::Value> TWebsocketServerWrapper::Send(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWebsocketServerWrapper::Send(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	

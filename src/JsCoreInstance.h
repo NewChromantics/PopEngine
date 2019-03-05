@@ -11,8 +11,9 @@ namespace JsCore
 {
 	class TInstance;
 	class TContext;
-	class TCallbackInfo;
+	class TCallback;
 	class TObject;
+	class TTemplate;
 	
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
@@ -39,20 +40,20 @@ private:
 	std::shared_ptr<TContext>	mContext;
 };
 
-
+//	functions marked virtual need to become generic
 class JsCore::TContext : public Bind::TContainer
 {
 public:
 	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
 	~TContext();
 	
-	void				LoadScript(const std::string& Source,const std::string& Filename);
+	virtual void		LoadScript(const std::string& Source,const std::string& Filename) override;
 	
 	template<const char* FunctionName>
-	void				BindGlobalFunction(std::function<JSValueRef(Bind::TCallbackInfo&)> Function);
+	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function);
 
 	virtual void		CreateGlobalObjectInstance(TString ObjectType,TString Name) override;
-	TObject				CreateObjectInstance(const std::string& ObjectTypeName);
+	virtual TObject		CreateObjectInstance(const std::string& ObjectTypeName);
 	
 	//	api calls with context provided
 	template<typename IN,typename OUT>
@@ -63,7 +64,7 @@ public:
 private:
 	
 	void				BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function);
-	JSValueRef			CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception);
+	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception);
 	
 	JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
@@ -72,13 +73,16 @@ public://	temp
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
 	std::string			mRootDirectory;
+
+	//	"templates" in v8, "classes" in jscore
+	Array<TTemplate>	mObjectTemplates;
 };
 
 
-class JsCore::TCallbackInfo : public Bind::TCallbackInfo
+class JsCore::TCallback : public Bind::TCallback
 {
 public:
-	TCallbackInfo(TInstance& Instance) :
+	TCallback(TInstance& Instance) :
 		mInstance	( Instance )
 	{
 	}
@@ -86,30 +90,41 @@ public:
 	virtual std::string	GetArgumentString(size_t Index) const override;
 	virtual int32_t		GetArgumentInt(size_t Index) const override;
 
+	virtual void		Return() override;
+	virtual void		ReturnNull() override;
+	virtual void		Return(const std::string& Value) override;
+	virtual void		Return(const uint32_t& Value) override;
+	virtual void		Return(const Bind::TObject& Value) override;
+	
 public:
 	TInstance&			mInstance;
-	JSValueRef			mThis;
+	JSValueRef			mThis = nullptr;
+	JSValueRef			mReturn = nullptr;
 	Array<JSValueRef>	mArguments;
-	JSContextRef		mContext;
+	JSContextRef		mContext = nullptr;
 };
 
 
+class JsCore::TTemplate : public Bind::TTemplate
+{
+public:
+	JSClassRef		mClass = nullptr;
+};
 
 //	make this generic for v8 & jscore
 //	it should also be a Soy::TUniform type
-class JsCore::TObject
+class JsCore::TObject : public Bind::TObject
 {
 public:
 	//	generic
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
-	virtual ~TObject()	{}
 	
-	virtual TObject		GetObject(const std::string& MemberName);
-	virtual std::string	GetString(const std::string& MemberName);
-	virtual uint32_t	GetInt(const std::string& MemberName);
-	virtual float		GetFloat(const std::string& MemberName);
+	virtual Bind::TObject	GetObject(const std::string& MemberName) override;
+	virtual std::string		GetString(const std::string& MemberName) override;
+	virtual uint32_t		GetInt(const std::string& MemberName) override;
+	virtual float			GetFloat(const std::string& MemberName) override;
 	
-	virtual void		SetObject(const std::string& Name,const TObject& Object);
+	virtual void			SetObject(const std::string& Name,const Bind::TObject& Object) override;
 	
 	//	Jscore specific
 private:
@@ -127,9 +142,9 @@ public:
 
 
 template<const char* FunctionName>
-inline void JsCore::TContext::BindGlobalFunction(std::function<JSValueRef(Bind::TCallbackInfo&)> Function)
+inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallback&)> Function)
 {
-	static std::function<JSValueRef(TCallbackInfo&)> FunctionCache = Function;
+	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
 	static TContext* ContextCache = nullptr;
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{

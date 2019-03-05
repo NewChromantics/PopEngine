@@ -173,7 +173,7 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 
 
 
-void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
+void TWindowWrapper::Construct(v8::TCallback& Arguments)
 {
 	using namespace v8;
 	
@@ -204,7 +204,7 @@ void TWindowWrapper::Construct(const v8::CallbackInfo& Arguments)
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 }
 
-v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::DrawQuad(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 
@@ -240,7 +240,7 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::ClearColour(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
@@ -258,7 +258,7 @@ v8::Local<v8::Value> TWindowWrapper::ClearColour(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::EnableBlend(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::EnableBlend(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
@@ -274,7 +274,7 @@ v8::Local<v8::Value> TWindowWrapper::EnableBlend(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::SetViewport(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::SetViewport(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
@@ -292,7 +292,7 @@ v8::Local<v8::Value> TWindowWrapper::SetViewport(const v8::CallbackInfo& Params)
 }
 
 //	window specific
-v8::Local<v8::Value> TWindowWrapper::GetScreenRect(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::GetScreenRect(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
@@ -325,7 +325,7 @@ SoyPixelsFormat::Type GetPixelFormat(Local<Value> Handle,bool UndefinedIsInvalid
 	throw Soy::AssertException("Argument must be string(format eg. 'RGBA') or undefined.");
 }
 
-v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::Render(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
@@ -444,7 +444,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::RenderChain(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TWindowWrapper::RenderChain(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
@@ -821,14 +821,14 @@ void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argu
 }
 
 
-v8::Local<v8::Value> TShaderWrapper::SetUniform(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TShaderWrapper::SetUniform(v8::TCallback& Params)
 {
 	auto ThisHandle = Params.mParams.This()->GetInternalField(0);
 	auto& This = v8::GetObject<TShaderWrapper>( ThisHandle );
 	return This.DoSetUniform( Params );
 }
 
-v8::Local<v8::Value> TShaderWrapper::DoSetUniform(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TShaderWrapper::DoSetUniform(v8::TCallback& Params)
 {
 	auto& This = *this;
 	auto& Arguments = Params.mParams;

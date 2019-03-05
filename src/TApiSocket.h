@@ -40,9 +40,9 @@ private:
 class TSocketWrapper
 {
 public:
-	static v8::Local<v8::Value>			GetAddress(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>			Send(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>			GetPeers(const v8::CallbackInfo& Arguments);
+	static void		GetAddress(Bind::TCallback& Arguments);
+	static void		Send(Bind::TCallback& Arguments);
+	static void		GetPeers(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
 };

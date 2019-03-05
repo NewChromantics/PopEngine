@@ -28,9 +28,9 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
-	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	virtual void 							Construct(v8::TCallback& Arguments) override;
 
-	static v8::Local<v8::Value>				GetFeatures(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				GetFeatures(v8::TCallback& Arguments);
 
 	
 protected:

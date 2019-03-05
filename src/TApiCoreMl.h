@@ -28,14 +28,14 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
-	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	virtual void 							Construct(v8::TCallback& Arguments) override;
 
-	static v8::Local<v8::Value>				Yolo(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Hourglass(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Cpm(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				OpenPose(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				SsdMobileNet(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				MaskRcnn(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Yolo(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Hourglass(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Cpm(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				OpenPose(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				SsdMobileNet(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				MaskRcnn(v8::TCallback& Arguments);
 
 	
 protected:

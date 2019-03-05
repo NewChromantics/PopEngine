@@ -82,17 +82,17 @@ void TV8Allocator::Free(void* data, size_t length)
 }
 
 
-std::string v8::CallbackInfo::GetResolvedFilename(const std::string& Filename) const
+std::string v8::TCallback::GetResolvedFilename(const std::string& Filename) const
 {
 	return mContainer.GetResolvedFilename(Filename);
 }
 
-std::string	v8::CallbackInfo::GetArgumentString(size_t Index) const
+std::string	v8::TCallback::GetArgumentString(size_t Index) const
 {
 	throw Soy::AssertException("todo");
 }
 
-int32_t	v8::CallbackInfo::GetArgumentInt(size_t Index) const
+int32_t	v8::TCallback::GetArgumentInt(size_t Index) const
 {
 	throw Soy::AssertException("todo");
 }
@@ -235,6 +235,17 @@ void TV8Container::CreateInspector()
 	v8::HandleScope handle_scope(isolate);
 
 	mInspector.reset( new TV8Inspector(*this) );
+}
+
+
+void TV8Container::LoadScript(const std::string& Source,const std::string& SourceFilename)
+{
+	auto LoadScript = [=](v8::Local<v8::Context> Context)
+	{
+		this->LoadScript( Context, Source, SourceFilename );
+	};
+	
+	QueueScoped( LoadScript );
 }
 
 
@@ -885,4 +896,32 @@ v8::Local<v8::Array> v8::GetArray(v8::Isolate& Isolate,size_t ElementCount,std::
 		ArrayHandle->Set( i, ValueHandle );
 	}
 	return ArrayHandle;
+}
+
+void* v8::GetObject(v8::Local<v8::Value> Handle)
+{
+	//	if this isn't an external, lets assume it's it's inernal field
+	if ( !Handle->IsExternal())
+	{
+		if ( Handle->IsObject() )
+		{
+			auto HandleObject = v8::Local<v8::Object>::Cast( Handle );
+			Handle = HandleObject->GetInternalField(0);
+		}
+	}
+	
+	if ( !Handle->IsExternal() )
+	{
+		std::stringstream Error;
+		Error << "Getting object from Value(" << v8::GetTypeName(Handle) << ") is not internally backed (!IsExternal)";
+		throw Soy::AssertException(Error.str());
+	}
+	
+	//	gr: this needs to do type checks, and we need to verify the internal type as we're blindly casting!
+	//	gr: also, to deal with multiple inheritence,
+	//		cast this to the base object wrapper, then dynamic cast to T (which'll solve all our problems)
+	auto* VoidPtr = v8::Local<v8::External>::Cast( Handle )->Value();
+	if ( VoidPtr == nullptr )
+		throw Soy::AssertException("Internal Field is null");
+	return VoidPtr;
 }

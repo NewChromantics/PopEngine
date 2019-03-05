@@ -123,12 +123,9 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 }
 
 
-v8::Local<v8::Value> TSocketWrapper::GetAddress(const v8::CallbackInfo& Params)
+void TSocketWrapper::GetAddress(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TSocketWrapper>( ThisHandle );
+	auto* This = Params.This<TSocketWrapper>();
 	auto ThisSocket = This.GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
@@ -144,43 +141,32 @@ v8::Local<v8::Value> TSocketWrapper::GetAddress(const v8::CallbackInfo& Params)
 	auto AddressesStr = Addresses.str();
 	Soy::StringTrimRight( AddressesStr, ',' );
 	
-	auto AddressStrHandle = v8::GetString( Params.GetIsolate(), AddressesStr );
-	return AddressStrHandle;
+	Params.Return( AddressesStr );
 }
 
 
-v8::Local<v8::Value> TSocketWrapper::Send(const v8::CallbackInfo& Params)
+void TSocketWrapper::Send(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TSocketWrapper>( ThisHandle );
+	auto& This = Params.This<TSocketWrapper>();
 	auto ThisSocket = This.GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
-	
-	if ( Arguments.Length() != 2 )
-		throw Soy::AssertException("Expected 2 arguments Send(Sender,Data)");
-	
-	auto SenderHandle = Arguments[0];
-	auto DataHandle = Arguments[1];
 
-	auto SenderStr = v8::GetString( SenderHandle );
+	auto SenderStr = Params.GetArgumentString(0);
 	auto Sender = SoyRef( SenderStr );
-	
+
 	Array<uint8_t> Data;
-	v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
+	//v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
+	Params.GetArgumentArray( 1, GetArrayBridge(Data) );
 
 	auto& Socket = *ThisSocket;
 	auto Connection = Socket.GetConnection( Sender );
 	auto DataChars = GetArrayBridge(Data).GetSubArray<char>(0,Data.GetSize());
 	Connection.Send( GetArrayBridge(DataChars), Socket.IsUdp() );
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-v8::Local<v8::Value> TSocketWrapper::GetPeers(const v8::CallbackInfo& Params)
+void TSocketWrapper::GetPeers(Bind::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	

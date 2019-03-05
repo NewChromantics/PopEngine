@@ -966,7 +966,7 @@ void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<vo
 	throw Soy::AssertException("Process RCNN output");
 }
 
-void TCoreMlWrapper::Construct(const v8::CallbackInfo& Arguments)
+void TCoreMlWrapper::Construct(v8::TCallback& Arguments)
 {
 	mCoreMl.reset( new CoreMl::TInstance );
 }
@@ -1003,7 +1003,7 @@ Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
 
 
 template<typename COREML_FUNC>
-v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
+v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,v8::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -1090,7 +1090,7 @@ v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,const v8::CallbackInfo& Par
 }
 
 
-v8::Local<v8::Value> TCoreMlWrapper::Yolo(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TCoreMlWrapper::Yolo(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
@@ -1104,7 +1104,7 @@ v8::Local<v8::Value> TCoreMlWrapper::Yolo(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TCoreMlWrapper::Hourglass(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
@@ -1117,7 +1117,7 @@ v8::Local<v8::Value> TCoreMlWrapper::Hourglass(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TCoreMlWrapper::Cpm(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
@@ -1130,7 +1130,7 @@ v8::Local<v8::Value> TCoreMlWrapper::Cpm(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TCoreMlWrapper::OpenPose(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
@@ -1143,7 +1143,7 @@ v8::Local<v8::Value> TCoreMlWrapper::OpenPose(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto ThisHandle = Arguments.This()->GetInternalField(0);
@@ -1155,7 +1155,7 @@ v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(const v8::CallbackInfo& Params
 }
 
 
-v8::Local<v8::Value> TCoreMlWrapper::MaskRcnn(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TCoreMlWrapper::MaskRcnn(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto ThisHandle = Arguments.This()->GetInternalField(0);

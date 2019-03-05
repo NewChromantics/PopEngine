@@ -52,7 +52,7 @@ namespace v8
 	class FunctionCallbackInfo;
 	
 	//	our wrappers
-	class CallbackInfo;
+	class TCallback;
 	class LambdaTask;
 	
 	template<typename TYPE>
@@ -60,6 +60,7 @@ namespace v8
 
 	template<typename TYPE>
 	TYPE&			GetObject(Local<Value> Value);
+	void*			GetObject(Local<Value> Value);
 
 	//template<typename TYPE>
 	Local<Value>	GetException(v8::Isolate& Isolate,const std::exception& Exception);
@@ -87,7 +88,7 @@ namespace v8
 	Local<Function>	GetFunction(Local<Context> Context,Local<Object> This,const std::string& FunctionName);
 	std::string		GetTypeName(v8::Local<v8::Value> Handle);
 
-	void	CallFunc(std::function<Local<Value>(CallbackInfo&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
+	void	CallFunc(std::function<void(Bind::TCallback&)> Function,const FunctionCallbackInfo<Value>& Paramsv8,TV8Container& Container);
 
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>& FloatArray,const std::string& Context);
 	void	EnumArray(Local<Value> ValueHandle,ArrayBridge<float>&& FloatArray,const std::string& Context);
@@ -173,10 +174,10 @@ inline std::shared_ptr<V8Storage<TYPE>> v8::GetPersistent(v8::Isolate& Isolate,L
 }
 
 
-class v8::CallbackInfo : public Bind::TCallbackInfo
+class v8::TCallback : public Bind::TCallback
 {
 public:
-	CallbackInfo(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container) :
+	TCallback(const v8::FunctionCallbackInfo<v8::Value>& Params,TV8Container& Container) :
 		mParams		( Params ),
 		mContainer	( Container ),
 		mIsolate	( mParams.GetIsolate() ),
@@ -184,21 +185,30 @@ public:
 	{
 	}
 	
-	v8::Isolate&	GetIsolate() const		{	return *mIsolate;	}
-	template<typename TYPE>
-	TYPE&			GetThis() const			{	return v8::GetObject<TYPE>( mParams.This() );	}
+	v8::Isolate&		GetIsolate() const		{	return *mIsolate;	}
 	
-	std::string		GetResolvedFilename(const std::string& Filename) const;
+	std::string			GetResolvedFilename(const std::string& Filename) const;
 	
 	virtual size_t		GetArgumentCount() const override	{	return mParams.Length();	}
 	virtual std::string	GetArgumentString(size_t Index) const override;
 	virtual int32_t		GetArgumentInt(size_t Index) const override;
+
+	virtual void		Return() override;
+	virtual void		ReturnNull() override;
+	virtual void		Return(const std::string& Value) override;
+	virtual void		Return(const uint32_t& Value) override;
+	virtual void		Return(const Bind::TObject& Value) override;
+	virtual void		Return(v8::Local<v8::Value> Value)	{	mReturn = Value;	}
+	
+protected:
+	virtual void*		GetThis() override		{	return v8::GetObject( mParams.This() );	}
 
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
 	TV8Container&								mContainer;
 	v8::Isolate*								mIsolate;
 	v8::Local<v8::Context>						mContext;
+	v8::Local<v8::Value>						mReturn;
 };
 
 class v8::LambdaTask : public v8::Task
@@ -224,7 +234,7 @@ public:
 	virtual ~TV8ObjectWrapperBase()	{}
 	
 	//	handle actual constructor (arguments etc), throw on error
-	virtual void 	Construct(const v8::CallbackInfo& Arguments)=0;
+	virtual void 	Construct(Bind::TCallback& Arguments)=0;
 	
 	template<typename TYPE>
 	static TV8ObjectWrapperBase*	Allocate(TV8Container& Container,v8::Local<v8::Object> This)
@@ -291,6 +301,7 @@ public:
 
 	void		Yield(size_t SleepMilliseconds);
 	
+	virtual void			LoadScript(const std::string& Source,const std::string& SourceFilename) override;
 	//	run these with RunScoped (internal) or QueueJob (external)
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source,const std::string& SourceFilename);
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source,const std::string& SourceFilename);
@@ -308,13 +319,13 @@ public:
 	v8::Local<v8::Object>	GetGlobalObject(v8::Local<v8::Context>& Context,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
 	template<const char* FunctionName>
-	void		BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const std::string& ParentName);
+	void		BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName);
 	void        BindObjectType(const std::string& ObjectName,std::function<v8::Local<v8::FunctionTemplate>(TV8Container&)> GetTemplate,TV8ObjectTemplate::ALLOCATOR Allocator,const std::string& ParentObject=std::string());
 
 	template<const char* FunctionName>
-	void					BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
+	void					BindFunction(v8::Local<v8::Object> This,std::function<void(Bind::TCallback&)> Function);
 	template<const char* FunctionName>
-	void					BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function);
+	void					BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(Bind::TCallback&)> Function);
 	
 	//	execute, but catch c++ or v8 exceptions and return them at v8 exceptions back to javascript
 	v8::Local<v8::Value>	ExecuteFuncAndCatch(v8::Local<v8::Context> ContextHandle,const std::string& FunctionName,v8::Local<v8::Object> This);
@@ -360,26 +371,26 @@ private:
 };
 
 
-inline void v8::CallFunc(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)
+inline void v8::CallFunc(std::function<void(Bind::TCallback&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)
 {
-	v8::CallbackInfo Params( Paramsv8, Container );
+	v8::TCallback Params( Paramsv8, Container );
 	try
 	{
-		auto ReturnValue = Function( Params );
-		Params.mParams.GetReturnValue().Set(ReturnValue);
+		Function( Params );
+		Params.mParams.GetReturnValue().Set( Params.mReturn );
 	}
 	catch(std::exception& e)
 	{
 		auto Exception = v8::GetException( Container.GetIsolate(), e );
-		Params.mParams.GetReturnValue().Set(Exception);
+		Params.mParams.GetReturnValue().Set( Exception );
 	}
 }
 
 
 template<const char* FunctionName>
-inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
+inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<void(Bind::TCallback&)> Function)
 {
-	static std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> FunctionCache = Function;
+	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
 	static TV8Container* ContainerCache = nullptr;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
@@ -391,9 +402,9 @@ inline void TV8Container::BindFunction(v8::Local<v8::Object> This,std::function<
 
 
 template<const char* FunctionName>
-inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function)
+inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::function<void(Bind::TCallback&)> Function)
 {
-	static std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> FunctionCache = Function;
+	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
 	static TV8Container* ContainerCache = nullptr;
 	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
 	{
@@ -404,7 +415,7 @@ inline void TV8Container::BindFunction(v8::Local<v8::ObjectTemplate> This,std::f
 }
 
 template<const char* FunctionName>
-inline void TV8Container::BindGlobalFunction(std::function<v8::Local<v8::Value>(v8::CallbackInfo&)> Function,const std::string& ParentName)
+inline void TV8Container::BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName)
 {
 	auto Bind = [&](v8::Local<v8::Context> Context)
 	{
@@ -442,32 +453,11 @@ inline v8::Local<v8::Value> v8::GetException(v8::Isolate& Isolate,const std::exc
 template<typename T>
 inline T& v8::GetObject(v8::Local<v8::Value> Handle)
 {
-	//	if this isn't an external, lets assume it's it's inernal field
-	if ( !Handle->IsExternal())
-	{
-		if ( Handle->IsObject() )
-		{
-			auto HandleObject = v8::Local<v8::Object>::Cast( Handle );
-			Handle = HandleObject->GetInternalField(0);
-		}
-	}
-	
-	if ( !Handle->IsExternal() )
-	{
-		std::stringstream Error;
-		Error << "Getting object from Value(" << v8::GetTypeName(Handle) << ") is not internally backed (!IsExternal)";
-		throw Soy::AssertException(Error.str());
-	}
-	
-	//	gr: this needs to do type checks, and we need to verify the internal type as we're blindly casting!
-	//	gr: also, to deal with multiple inheritence,
-	//		cast this to the base object wrapper, then dynamic cast to T (which'll solve all our problems)
-	auto* WindowVoid = v8::Local<v8::External>::Cast( Handle )->Value();
-	if ( WindowVoid == nullptr )
-		throw Soy::AssertException("Internal Field is null");
-	auto* Window = reinterpret_cast<T*>( WindowVoid );
+	auto* VoidObject = GetObject( Handle );
+	auto* Window = reinterpret_cast<T*>( VoidObject );
 	return *Window;
 }
+
 
 
 template<typename TYPE>

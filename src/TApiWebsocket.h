@@ -92,7 +92,7 @@ public:
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static v8::Local<v8::Value>				Send(const v8::CallbackInfo& Arguments);
+	static void								Send(Bind::TCallback& Arguments);
 
 	//	queue up a callback for This handle's OnMessage callback
 	void									OnMessage(const std::string& Message);

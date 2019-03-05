@@ -68,19 +68,19 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
-	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	virtual void 							Construct(Bind::TCallback& Arguments) override;
 
 	//	these are context things
 	//	immediate calls, so... maybe try and mix the context settings
-	static v8::Local<v8::Value>				DrawQuad(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				ClearColour(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				EnableBlend(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				SetViewport(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Render(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				RenderChain(const v8::CallbackInfo& Arguments);
+	static void			DrawQuad(Bind::TCallback& Arguments);
+	static void			ClearColour(Bind::TCallback& Arguments);
+	static void			EnableBlend(Bind::TCallback& Arguments);
+	static void			SetViewport(Bind::TCallback& Arguments);
+	static void			Render(Bind::TCallback& Arguments);
+	static void			RenderChain(Bind::TCallback& Arguments);
 
 	//	window specific
-	static v8::Local<v8::Value>				GetScreenRect(const v8::CallbackInfo& Arguments);
+	static void			GetScreenRect(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
@@ -104,8 +104,8 @@ public:
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
-	v8::Local<v8::Value>					DoSetUniform(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				SetUniform(v8::TCallback& Arguments);
+	v8::Local<v8::Value>					DoSetUniform(v8::TCallback& Arguments);
 
 	static TShaderWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TShaderWrapper>( Value, 0 );	}
 	

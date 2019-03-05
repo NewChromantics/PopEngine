@@ -28,10 +28,10 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
-	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	virtual void 							Construct(v8::TCallback& Arguments) override;
 
 	//void									OnStateChanged();
-	static v8::Local<v8::Value>				GetState(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				GetState(v8::TCallback& Arguments);
 	
 
 public:

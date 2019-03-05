@@ -258,13 +258,13 @@ JSObjectRef JsCore::TContext::GetGlobalObject(const std::string& Name)
 
 JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& ObjectTypeName)
 {
-	throw Soy::AssertException("todo CreateObjectInstance");
-	/*
 	//	create basic object
 	if ( ObjectTypeName.length() == 0 || ObjectTypeName == "Object" )
 	{
-		auto NewObject = v8::Object::New( &Isolate );
-		return NewObject;
+		JSClassRef Default = nullptr;
+		void* Data = nullptr;
+		auto NewObject = JSObjectMake( mContext, Default, Data );
+		return TObject( mContext, NewObject );
 	}
 	
 	//	find template
@@ -280,10 +280,10 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 	
 	//	instance new one
 	auto& ObjectTemplate = *pObjectTemplate;
-	auto ObjectTemplateLocal = ObjectTemplate.mTemplate->GetLocal(Isolate);
-	auto NewObject = ObjectTemplateLocal->NewInstance();
-	return NewObject;
-	 */
+	auto& Class = ObjectTemplate.mClass;
+	void* Data = nullptr;
+	auto NewObject = JSObjectMake( mContext, Class, Data );
+	return TObject( mContext, NewObject );
 }
 
 void JsCore::TContext::CreateGlobalObjectInstance(TString ObjectType,TString Name)

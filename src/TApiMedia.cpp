@@ -15,7 +15,7 @@ namespace ApiMedia
 {
 	const char Namespace[] = "Pop.Media";
 	
-	v8::Local<v8::Value>	EnumDevices(const v8::CallbackInfo& Params);
+	v8::Local<v8::Value>	EnumDevices(v8::TCallback& Params);
 }
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
@@ -41,7 +41,7 @@ void ApiMedia::Bind(TV8Container& Container)
 
 
 
-v8::Local<v8::Value> ApiMedia::EnumDevices(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> ApiMedia::EnumDevices(v8::TCallback& Params)
 {
 	auto* Isolate = Params.mIsolate;
 	
@@ -173,7 +173,7 @@ std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMedi
 }
 
 
-void TMediaSourceWrapper::Construct(const v8::CallbackInfo& Params)
+void TMediaSourceWrapper::Construct(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 
@@ -308,7 +308,7 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 
 
 
-v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(v8::TCallback& Params)
 {
 	auto& This = Params.GetThis<TMediaSourceWrapper>();
 
@@ -398,7 +398,7 @@ v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(const v8::CallbackInfo& P
 }
 
 
-v8::Local<v8::Value> TMediaSourceWrapper::Free(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TMediaSourceWrapper::Free(v8::TCallback& Params)
 {
 	auto& This = Params.GetThis<TMediaSourceWrapper>();
 	This.mExtractor.reset();
@@ -407,7 +407,7 @@ v8::Local<v8::Value> TMediaSourceWrapper::Free(const v8::CallbackInfo& Params)
 }
 
 
-void TAvcDecoderWrapper::Construct(const v8::CallbackInfo& Params)
+void TAvcDecoderWrapper::Construct(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -443,7 +443,7 @@ Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Contain
 	return ConstructorFunc;
 }
 
-v8::Local<v8::Value> TAvcDecoderWrapper::Decode(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TAvcDecoderWrapper::Decode(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	

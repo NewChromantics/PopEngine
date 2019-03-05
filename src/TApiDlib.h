@@ -63,8 +63,8 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	
-	static v8::Local<v8::Value>				FindFaces(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				FindFaceFeatures(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				FindFaces(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				FindFaceFeatures(v8::TCallback& Arguments);
 
 	//	this loads the shape predictors etc and copies to each thread
 	void									SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);

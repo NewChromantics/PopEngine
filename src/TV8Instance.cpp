@@ -42,13 +42,8 @@ TV8Instance::TV8Instance(const std::string& RootDirectory,const std::string& Scr
 		std::string BootupSource;
 		Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
 		
-		auto* Container = mV8Container.get();
-		auto LoadScript = [=](v8::Local<v8::Context> Context)
-		{
-			Container->LoadScript( Context, BootupSource, ScriptFilename );
-		};
+		mV8Container->LoadScript( BootupSource, ScriptFilename );
 		
-		mV8Container->QueueScoped( LoadScript );
 	}
 	catch(std::exception& e)
 	{

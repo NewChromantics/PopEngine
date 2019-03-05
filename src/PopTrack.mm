@@ -66,8 +66,8 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
 	//	todo: watch for when a file changes and recreate instance
-	mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
-	//mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
+	//mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
+	mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
 
 }
 

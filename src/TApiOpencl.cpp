@@ -347,7 +347,7 @@ void TOpenclKernel::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 }
 
 
-v8::Local<v8::Value> TOpenclContext::ExecuteKernel(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenclContext::ExecuteKernel(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TOpenclContext>( Arguments.This() );
@@ -589,7 +589,7 @@ std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Open
 }
 
 
-v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenclKernelState::SetUniform(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -745,7 +745,7 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::CallbackInfo& Para
 
 
 
-v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenclKernelState::ReadUniform(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	

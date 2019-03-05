@@ -61,7 +61,7 @@ TOpenglImmediateContextWrapper::~TOpenglImmediateContextWrapper()
 }
 
 
-void TOpenglImmediateContextWrapper::Construct(const v8::CallbackInfo& Arguments)
+void TOpenglImmediateContextWrapper::Construct(v8::TCallback& Arguments)
 {
 	using namespace v8;
 	auto& Isolate = Arguments.GetIsolate();
@@ -85,7 +85,7 @@ void TOpenglImmediateContextWrapper::Construct(const v8::CallbackInfo& Arguments
 
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Execute(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<this_type>( Arguments.This() );
@@ -233,7 +233,7 @@ std::function<void()> GetImmediateCommandJob(const std::string& Command,Local<v8
 	
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<this_type>( Arguments.This() );
@@ -315,7 +315,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::ExecuteCompiledQueue(const 
 }
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::FlushAsync(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::FlushAsync(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<this_type>( Arguments.This() );
@@ -372,7 +372,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::FlushAsync(const v8::Callba
 
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::GetEnums(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::GetEnums(v8::TCallback& Params)
 {
 	auto* Isolate = &Params.GetIsolate();
 	//	make an associative array of opengl enums for immediate use
@@ -568,7 +568,7 @@ const GLvoid* GetGlValue(Local<Value> Argument)
 
 
 template<typename RETURN,typename ARG0>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments,const ARG0& Arg0)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),v8::TCallback& Arguments,const ARG0& Arg0)
 {
 	if ( ShowImmediateFunctionCalls )
 		std::Debug << Context << std::endl;
@@ -578,7 +578,7 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 }
 
 template<typename RETURN,typename ARG0,typename ARG1>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments,const ARG0& Arg0,const ARG0& Arg1)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),v8::TCallback& Arguments,const ARG0& Arg0,const ARG0& Arg1)
 {
 	if ( ShowImmediateFunctionCalls )
 		std::Debug << Context << std::endl;
@@ -588,7 +588,7 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 }
 
 template<typename RETURN,typename ARG0>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0),v8::TCallback& Arguments)
 {
 	if ( ShowImmediateFunctionCalls )
 		std::Debug << Context << std::endl;
@@ -599,7 +599,7 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 }
 
 template<typename RETURN,typename ARG0,typename ARG1>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1),v8::TCallback& Arguments)
 {
 	auto Arg0 = GetGlValue<ARG0>( Arguments.mParams[0] );
 	auto Arg1 = GetGlValue<ARG1>( Arguments.mParams[1] );
@@ -636,7 +636,7 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 }
 
 template<typename RETURN,typename ARG0,typename ARG1,typename ARG2,typename ARG3,typename ARG4>
-v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4),const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG0,ARG1,ARG2,ARG3,ARG4),v8::TCallback& Arguments)
 {
 	if ( ShowImmediateFunctionCalls )
 		std::Debug << Context << std::endl;
@@ -668,22 +668,22 @@ v8::Local<v8::Value> Immediate_Func(const char* Context,RETURN(*FunctionPtr)(ARG
 }
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_disable(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_disable(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glDisable", glDisable, Arguments );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_enable(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_enable(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glEnable", glEnable, Arguments );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_cullFace(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_cullFace(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glCullFace", glCullFace, Arguments );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindBuffer(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindBuffer(v8::TCallback& Arguments)
 {
 	//	gr; buffers are allocated as-required, high-level they're just an id
 	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
@@ -713,7 +713,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindBuffer(const 
 	return Return;
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bufferData(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bufferData(v8::TCallback& Arguments)
 {
 	auto target = GetGlValue<GLenum>( Arguments.mParams[0] );
 	auto Arg1 = Arguments.mParams[1];
@@ -770,7 +770,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bufferData(const 
 	return v8::Undefined( Arguments.mIsolate );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindFramebuffer(v8::TCallback& Arguments)
 {
 	//	gr; buffers are allocated as-required, high-level they're just an id
 	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
@@ -794,7 +794,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindFramebuffer(c
 	return Return;
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_framebufferTexture2D(v8::TCallback& Arguments)
 {
 	//GLAPI void APIENTRY glFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 	auto target = GetGlValue<GLenum>( Arguments.mParams[0] );
@@ -819,7 +819,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_framebufferTextur
 	return v8::Undefined( Arguments.mIsolate );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindTexture(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_bindTexture(v8::TCallback& Arguments)
 {
 	auto Binding = GetGlValue<GLenum>( Arguments.mParams[0] );
 	auto Arg1 = Arguments.mParams[1];
@@ -897,7 +897,7 @@ void GetPixelData(const char* Context,Local<Value> DataHandle,ArrayBridge<uint8_
 	throw Soy::AssertException(Error.str());
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(v8::TCallback& Arguments)
 {
 	/*
 	 https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
@@ -1021,7 +1021,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texImage2D(const 
 	return v8::Undefined( Arguments.mIsolate );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_useProgram(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_useProgram(v8::TCallback& Arguments)
 {
 	GLuint ShaderName = GL_ASSET_INVALID;
 	auto Arg0 = Arguments.mParams[0];
@@ -1033,12 +1033,12 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_useProgram(const 
 	return Immediate_Func( "glUseProgram", glUseProgram, Arguments, ShaderName );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texParameteri(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texParameteri(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glTexParameteri", glTexParameteri, Arguments.mParams, &Arguments.GetIsolate() );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_vertexAttribPointer(v8::TCallback& Arguments)
 {
 	//	webgl
 	//	void gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
@@ -1066,7 +1066,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_vertexAttribPoint
 	return Immediate_Func( "glVertexAttribPointer", glVertexAttribPointer, NewArguments, &Arguments.GetIsolate() );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_enableVertexAttribArray(v8::TCallback& Arguments)
 {
 	//	our api sends a name instead of an attrib/vert location, so swap itout
 	
@@ -1080,7 +1080,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_enableVertexAttri
 	return Immediate_Func( "glEnableVertexAttribArray", glEnableVertexAttribArray, Arguments, AttribLocation );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texSubImage2D(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_texSubImage2D(v8::TCallback& Arguments)
 {
 	/*
 	 https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
@@ -1227,7 +1227,7 @@ namespace Opengl
 	}
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(v8::TCallback& Arguments)
 {
 	/*
 	// WebGL1:
@@ -1487,22 +1487,22 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_readPixels(const 
 	return v8::Undefined( Arguments.mIsolate );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_viewport(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_viewport(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glViewport", glViewport, Arguments.mParams, &Arguments.GetIsolate() );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_scissor(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_scissor(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glScissor", glScissor, Arguments.mParams, &Arguments.GetIsolate() );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_activeTexture(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_activeTexture(v8::TCallback& Arguments)
 {
 	return Immediate_Func( "glActiveTexture", glActiveTexture, Arguments );
 }
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(v8::TCallback& Arguments)
 {
 	//	webgl doesnt take indexes, they're in a buffer!
 	//	void gl.drawElements(mode, count, type, offset);
@@ -1654,7 +1654,7 @@ v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_drawElements(cons
 
 
 
-v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_flush(const v8::CallbackInfo& Arguments)
+v8::Local<v8::Value> TOpenglImmediateContextWrapper::Immediate_flush(v8::TCallback& Arguments)
 {
 	//	wait for commands to finish;
 	Soy::TScopeTimerPrint Timer(__func__,10);

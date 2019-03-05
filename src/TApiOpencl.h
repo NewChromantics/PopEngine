@@ -24,7 +24,7 @@ public:
 
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 
-	static v8::Local<v8::Value>				ExecuteKernel(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				ExecuteKernel(v8::TCallback& Arguments);
 	void									DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,std::shared_ptr<V8Storage<v8::Function>> IterationCallback,std::shared_ptr<V8Storage<v8::Function>> FinishedCallback,std::shared_ptr<V8Storage<v8::Promise::Resolver>> Resolver);
 
 public:
@@ -49,7 +49,7 @@ public:
 	
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 	
-	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				SetUniform(v8::TCallback& Arguments);
 	
 public:
 	TV8Container&						mContainer;
@@ -70,8 +70,8 @@ public:
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
 
-	static v8::Local<v8::Value>				SetUniform(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				ReadUniform(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				SetUniform(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				ReadUniform(v8::TCallback& Arguments);
 
 public:
 

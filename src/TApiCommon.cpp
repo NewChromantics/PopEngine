@@ -473,7 +473,7 @@ TImageWrapper::~TImageWrapper()
 	Free();
 }
 
-void TImageWrapper::Construct(const v8::CallbackInfo& Arguments)
+void TImageWrapper::Construct(v8::TCallback& Arguments)
 {
 	auto NameHandle = Arguments.mParams[1];
 	if ( NameHandle->IsUndefined() )
@@ -555,7 +555,7 @@ Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::Alloc(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -591,7 +591,7 @@ v8::Local<v8::Value> TImageWrapper::Alloc(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Flip(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::Flip(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -608,7 +608,7 @@ v8::Local<v8::Value> TImageWrapper::Flip(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TImageWrapper::LoadFile(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::LoadFile(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -699,7 +699,7 @@ void TImageWrapper::DoSetLinearFilter(bool LinearFilter)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Copy(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::Copy(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -719,7 +719,7 @@ v8::Local<v8::Value> TImageWrapper::Copy(const v8::CallbackInfo& Params)
 	return v8::Undefined(Params.mIsolate);
 }
 
-v8::Local<v8::Value> TImageWrapper::WritePixels(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::WritePixels(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -754,7 +754,7 @@ v8::Local<v8::Value> TImageWrapper::WritePixels(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TImageWrapper::Resize(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::Resize(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -774,7 +774,7 @@ v8::Local<v8::Value> TImageWrapper::Resize(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Clear(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::Clear(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -788,7 +788,7 @@ v8::Local<v8::Value> TImageWrapper::Clear(const v8::CallbackInfo& Params)
 
 
 
-v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::Clip(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -826,7 +826,7 @@ v8::Local<v8::Value> TImageWrapper::Clip(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::SetFormat(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::SetFormat(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -849,7 +849,7 @@ v8::Local<v8::Value> TImageWrapper::SetFormat(const v8::CallbackInfo& Params)
 	return v8::Undefined(Params.mIsolate);
 }
 
-v8::Local<v8::Value> TImageWrapper::GetFormat(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::GetFormat(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -899,7 +899,7 @@ void TImageWrapper::Free()
 	mPixelBufferVersion = 0;
 }
 
-v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::GetWidth(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -911,7 +911,7 @@ v8::Local<v8::Value> TImageWrapper::GetWidth(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::GetHeight(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -923,7 +923,7 @@ v8::Local<v8::Value> TImageWrapper::GetHeight(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::GetRgba8(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& mContainer = Params.mContainer;
@@ -977,7 +977,7 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::SetLinearFilter(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TImageWrapper::SetLinearFilter(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	

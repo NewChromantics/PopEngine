@@ -50,22 +50,22 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 
-	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
-	static v8::Local<v8::Value>				Alloc(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Flip(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				LoadFile(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				GetWidth(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				GetHeight(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				GetRgba8(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				SetLinearFilter(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Copy(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				WritePixels(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Resize(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Clip(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Clear(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				SetFormat(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				GetFormat(const v8::CallbackInfo& Arguments);
+	static void			Alloc(Bind::TCallback& Arguments);
+	static void			Flip(Bind::TCallback& Arguments);
+	static void			LoadFile(Bind::TCallback& Arguments);
+	static void			GetWidth(Bind::TCallback& Arguments);
+	static void			GetHeight(Bind::TCallback& Arguments);
+	static void			GetRgba8(Bind::TCallback& Arguments);
+	static void			SetLinearFilter(Bind::TCallback& Arguments);
+	static void			Copy(Bind::TCallback& Arguments);
+	static void			WritePixels(Bind::TCallback& Arguments);
+	static void			Resize(Bind::TCallback& Arguments);
+	static void			Clip(Bind::TCallback& Arguments);
+	static void			Clear(Bind::TCallback& Arguments);
+	static void			SetFormat(Bind::TCallback& Arguments);
+	static void			GetFormat(Bind::TCallback& Arguments);
 	
 	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
 	

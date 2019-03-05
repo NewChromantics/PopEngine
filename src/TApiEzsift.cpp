@@ -19,7 +19,7 @@ class Ezsift::TInstance
 {
 };
 
-void TEzsiftWrapper::Construct(const v8::CallbackInfo& Arguments)
+void TEzsiftWrapper::Construct(v8::TCallback& Arguments)
 {
 	mEzsift.reset( new Ezsift::TInstance );
 }
@@ -50,7 +50,7 @@ Local<FunctionTemplate> TEzsiftWrapper::CreateTemplate(TV8Container& Container)
 }
 
 
-v8::Local<v8::Value> TEzsiftWrapper::GetFeatures(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TEzsiftWrapper::GetFeatures(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	/*

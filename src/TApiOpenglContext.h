@@ -48,38 +48,38 @@ public:
 	
 	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
 	
-	virtual void 							Construct(const v8::CallbackInfo& Arguments) override;
+	virtual void 							Construct(v8::TCallback& Arguments) override;
 	
 	
 	//	run javascript on gl thread for immediate mode stuff
-	static v8::Local<v8::Value>				Execute(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				ExecuteCompiledQueue(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				FlushAsync(const v8::CallbackInfo& Arguments);	//	returns promise for when flush has finished
+	static v8::Local<v8::Value>				Execute(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				ExecuteCompiledQueue(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				FlushAsync(v8::TCallback& Arguments);	//	returns promise for when flush has finished
 
 	//	return a named array of immediate-use GL enum values
-	static v8::Local<v8::Value>				GetEnums(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				GetEnums(v8::TCallback& Arguments);
 	
 	//	immediate calls
-	static v8::Local<v8::Value>				Immediate_disable(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_enable(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_cullFace(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bindBuffer(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bufferData(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bindFramebuffer(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_framebufferTexture2D(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_bindTexture(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_texImage2D(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_useProgram(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_texParameteri(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_texSubImage2D(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_readPixels(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_viewport(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_scissor(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_activeTexture(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_drawElements(const v8::CallbackInfo& Arguments);
-	static v8::Local<v8::Value>				Immediate_flush(const v8::CallbackInfo& Arguments);
+	static v8::Local<v8::Value>				Immediate_disable(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_enable(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_cullFace(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_bindBuffer(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_bufferData(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_bindFramebuffer(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_framebufferTexture2D(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_bindTexture(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_texImage2D(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_useProgram(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_texParameteri(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_vertexAttribPointer(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_enableVertexAttribArray(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_texSubImage2D(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_readPixels(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_viewport(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_scissor(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_activeTexture(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_drawElements(v8::TCallback& Arguments);
+	static v8::Local<v8::Value>				Immediate_flush(v8::TCallback& Arguments);
 	
 	virtual std::shared_ptr<Opengl::TContext>		GetOpenglContext() override {	return mContext;	}
 	

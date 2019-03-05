@@ -154,7 +154,7 @@ v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isola
 	return PersistentHandle;
 }
 
-v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TDlibWrapper::FindFaces(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TDlibWrapper>( Arguments.This() );
@@ -239,7 +239,7 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(const v8::CallbackInfo& Params)
 }
 
 
-v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(const v8::CallbackInfo& Params)
+v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	auto& This = v8::GetObject<TDlibWrapper>( Arguments.This() );
