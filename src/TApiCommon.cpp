@@ -10,6 +10,8 @@
 
 using namespace v8;
 
+
+const char CreateTestPromise_FunctionName[] = "CreateTestPromise";
 const char Debug_FunctionName[] = "Debug";
 const char CompileAndRun_FunctionName[] = "CompileAndRun";
 const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
@@ -107,6 +109,18 @@ static JSValueRef ApiPop::Debug2(Bind::TCallbackInfo& Params)
 }
 
 
+static JSValueRef CreateTestPromise(Bind::TCallbackInfo& Params)
+{
+	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
+	
+	//	create a promise object
+	JSStringRef NewPromiseScript = JSStringCreateWithUTF8CString("new Promise( function(res,rej){	Sleep(1000); res('hello');	} )");
+	JSValueRef Exception = nullptr;
+	auto PromiseHandle = JSEvaluateScript( ParamsJs.mContext, NewPromiseScript, nullptr, nullptr, 0, &Exception );
+
+	return PromiseHandle;
+}
+
 static Local<Value> ApiPop::GarbageCollect(CallbackInfo& Params)
 {
 	//auto& args = Params.mParams;
@@ -165,6 +179,60 @@ static Local<Value> ApiPop::Sleep(CallbackInfo& Params)
 	
 	return Undefined(Params.mIsolate);
 }
+
+
+std::shared_ptr<std::thread> gTestThread;
+std::shared_ptr<JsCore::TContext> gTestContext;
+
+static JSValueRef Sleep2(Bind::TCallbackInfo& Params)
+{
+	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
+	auto TimeoutMs = Params.GetArgumentInt(0);
+	
+	if ( !gTestThread )
+	{
+		gTestContext = ParamsJs.mInstance.CreateContext();
+		
+		//	create another context
+		auto ThreadFunc = [&]()
+		{
+			//auto Context = ParamsJs.mContext;
+			auto Context = gTestContext->mContext;
+			
+			{
+				auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
+				auto Global = JSContextGetGlobalObject( Context );
+				JSStringRef GlobalNameString = JSStringCreateWithUTF8CString("Global");
+				
+				JSValueRef Exception = nullptr;
+				JSPropertyAttributes Attributes = kJSClassAttributeNone;
+				JSObjectSetProperty( Context, Global, GlobalNameString, GlobalOther, Attributes, &Exception );
+			}
+			
+			for ( auto i=0;	i<1000;	i++ )
+			{
+				std::this_thread::sleep_for( std::chrono::milliseconds(100) );
+				
+				//	create a promise object
+				JSStringRef NewPromiseScript = JSStringCreateWithUTF8CString("Global.Debug('Thread exec: ' + Global.TestValue );");
+				JSValueRef Exception = nullptr;
+				JSEvaluateScript( Context, NewPromiseScript, nullptr, nullptr, 0, &Exception );
+				if ( Exception!=nullptr )
+					std::Debug << "An exception" << JsCore::HandleToString( Context, Exception ) << std::endl;
+			}
+			
+		};
+		gTestThread.reset( new std::thread(ThreadFunc) );
+		
+	}
+	
+	//	can we interrupt and call arbirtry funcs?
+	//	gr: need to see if we cna do it on other threads
+	std::this_thread::sleep_for( std::chrono::milliseconds(TimeoutMs) );
+	
+	return JSValueMakeUndefined( ParamsJs.mContext );
+}
+
 
 
 static Local<Value> ApiPop::GetTimeNowMs(CallbackInfo& Params)
@@ -363,6 +431,7 @@ void ApiPop::Bind(TV8Container& Container)
 void ApiPop::Bind(JsCore::TContext& Container)
 {
 	//  load api's before script & executions
+	Container.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise );
 	Container.BindGlobalFunction<Debug_FunctionName>( Debug2 );
 	/*
 	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
@@ -371,7 +440,9 @@ void ApiPop::Bind(JsCore::TContext& Container)
 	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
 	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
 	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
-	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep);
+	 */
+	Container.BindGlobalFunction<Sleep_FunctionName>( Sleep2 );
+	/*
 	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
 	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
 	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);

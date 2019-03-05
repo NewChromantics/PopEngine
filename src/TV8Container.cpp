@@ -92,6 +92,11 @@ std::string	v8::CallbackInfo::GetArgumentString(size_t Index) const
 	throw Soy::AssertException("todo");
 }
 
+int32_t	v8::CallbackInfo::GetArgumentInt(size_t Index) const
+{
+	throw Soy::AssertException("todo");
+}
+
 
 TV8Container::TV8Container(const std::string& RootDirectory) :
 	mImageHeap		( true, true, "Image Heap", 0 , false ),

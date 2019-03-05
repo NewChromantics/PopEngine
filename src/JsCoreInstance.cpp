@@ -19,6 +19,17 @@ std::string	JsCore::HandleToString(JSContextRef Context,JSValueRef Handle)
 	return utf_string;
 }
 
+
+int32_t	JsCore::HandleToInt(JSContextRef Context,JSValueRef Handle)
+{
+	//	convert to string
+	JSValueRef Exception = nullptr;
+	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
+
+	auto Int = static_cast<int32_t>( DoubleJs );
+	return Int;
+}
+
 	
 	
 	
@@ -78,8 +89,10 @@ JsCore::TInstance::~TInstance()
 
 std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext()
 {
-	auto Context = JSGlobalContextCreateInGroup( mContextGroup, nullptr);
-	std::shared_ptr<JsCore::TContext> pContext( new TContext( Context, mRootDirectory ) );
+	JSClassRef Global = nullptr;
+	
+	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
+	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
 	//mContexts.PushBack( pContext );
 	return pContext;
 }
@@ -88,7 +101,8 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext()
 
 
 
-JsCore::TContext::TContext(JSGlobalContextRef Context,const std::string& RootDirectory) :
+JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory) :
+	mInstance		( Instance ),
 	mContext		( Context ),
 	mRootDirectory	( RootDirectory )
 {
@@ -138,7 +152,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> 
 {
 	try
 	{
-		TCallbackInfo CallbackInfo;
+		TCallbackInfo CallbackInfo(mInstance);
 		CallbackInfo.mContext = mContext;//Context;
 		CallbackInfo.mThis = This;
 		for ( auto a=0;	a<ArgumentCount;	a++ )
@@ -191,4 +205,12 @@ std::string JsCore::TCallbackInfo::GetArgumentString(size_t Index) const
 	auto Handle = mArguments[Index];
 	auto String = JsCore::HandleToString( mContext, Handle );
 	return String;
+}
+
+
+int32_t JsCore::TCallbackInfo::GetArgumentInt(size_t Index) const
+{
+	auto Handle = mArguments[Index];
+	auto Value = JsCore::HandleToInt( mContext, Handle );
+	return Value;
 }

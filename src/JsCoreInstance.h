@@ -15,6 +15,7 @@ namespace JsCore
 	class TCallbackInfo;
 	
 	std::string	HandleToString(JSContextRef Context,JSValueRef Handle);
+	int32_t		HandleToInt(JSContextRef Context,JSValueRef Handle);
 }
 
 //	VM to contain multiple contexts/containers
@@ -36,7 +37,7 @@ private:
 class JsCore::TContext
 {
 public:
-	TContext(JSGlobalContextRef Context,const std::string& RootDirectory);
+	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
 	~TContext();
 	
 	void				LoadScript(const std::string& Source,const std::string& Filename);
@@ -49,8 +50,9 @@ private:
 	void				BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function);
 	JSValueRef			CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception);
 	
-private:
-	JSGlobalContextRef	mContext;
+public://	temp
+	TInstance&			mInstance;
+	JSGlobalContextRef	mContext = nullptr;
 	std::string			mRootDirectory;
 };
 
@@ -58,10 +60,16 @@ private:
 class JsCore::TCallbackInfo : public Bind::TCallbackInfo
 {
 public:
+	TCallbackInfo(TInstance& Instance) :
+		mInstance	( Instance )
+	{
+	}
 	virtual size_t		GetArgumentCount() const override	{	return mArguments.GetSize();	}
 	virtual std::string	GetArgumentString(size_t Index) const override;
+	virtual int32_t		GetArgumentInt(size_t Index) const override;
 
 public:
+	TInstance&			mInstance;
 	JSValueRef			mThis;
 	Array<JSValueRef>	mArguments;
 	JSContextRef		mContext;

@@ -192,6 +192,7 @@ public:
 	
 	virtual size_t		GetArgumentCount() const override	{	return mParams.Length();	}
 	virtual std::string	GetArgumentString(size_t Index) const override;
+	virtual int32_t		GetArgumentInt(size_t Index) const override;
 
 public:
 	const v8::FunctionCallbackInfo<v8::Value>&	mParams;
