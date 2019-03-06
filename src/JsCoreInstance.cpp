@@ -5,6 +5,129 @@
 
 
 
+
+
+class TFunction
+{
+public:
+	TFunction(JSContextRef Context,JSValueRef Value);
+	
+	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr);
+	
+private:
+	JSContextRef	mContext;
+	JSObjectRef		mFunctionObject = nullptr;
+};
+
+class TPromise
+{
+public:
+	TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc);
+	
+	void			Resolve(JSValueRef Value)	{	mResolve.Call(nullptr,Value);	}
+	void			Reject(JSValueRef Value)	{	mReject.Call(nullptr,Value);	}
+	
+	JSObjectRef		mPromise;
+	TFunction		mResolve;
+	TFunction		mReject;
+};
+
+JSObjectRef GetObject(JSContextRef Context,JSValueRef Value)
+{
+	if ( !JSValueIsObject( Context, Value ) )
+		throw Soy::AssertException("Value is not object");
+	return const_cast<JSObjectRef>( Value );
+}
+
+TPromise::TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc) :
+mPromise	( GetObject(Context,Promise) ),
+mResolve	( Context, ResolveFunc ),
+mReject		( Context, RejectFunc )
+{
+}
+
+
+TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
+mContext	( Context )
+{
+	auto ValueType = JSValueGetType( Context, Value );
+	if ( ValueType != kJSTypeObject )
+		throw Soy::AssertException("Value for TFunciton is not an object");
+	
+	mFunctionObject = const_cast<JSObjectRef>( Value );
+	
+	if ( !JSObjectIsFunction(Context, mFunctionObject) )
+		throw Soy::AssertException("Object should be function");
+	/*
+	 auto ScriptType = JSValueGetType( Context, MakePromiseFunctionValue );
+	 if ( Exception!=nullptr )
+	 std::Debug << "An exception" << JsCore::HandleToString( Context, Exception ) << std::endl;
+	 */
+}
+
+JSValueRef TFunction::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
+{
+	if ( This == nullptr )
+		This = JSContextGetGlobalObject( mContext );
+	
+	JSValueRef Exception = nullptr;
+	auto Result = JSObjectCallAsFunction( mContext, mFunctionObject, This, 1, &Arg0, &Exception );
+	
+	if ( Exception!=nullptr )
+		throw Soy::AssertException( JsCore::HandleToString( mContext, Exception ) );
+	
+	return Result;
+}
+
+
+TPromise JSCreatePromise(JSContextRef Context)
+{
+	static std::shared_ptr<TFunction> MakePromiseFunction;
+	
+	if ( !MakePromiseFunction )
+	{
+		auto* MakePromiseFunctionSource =  R"V0G0N(
+		
+		let MakePromise = function()
+		{
+			var PromData = {};
+			var prom = new Promise( function(Resolve,Reject) { PromData.Resolve = Resolve; PromData.Reject = Reject; } );
+			PromData.Promise = prom;
+			prom.Resolve = PromData.Resolve;
+			prom.Reject = PromData.Reject;
+			return prom;
+		}
+		MakePromise;
+		//MakePromise();
+		)V0G0N";
+		
+		JSStringRef MakePromiseFunctionSourceString = JSStringCreateWithUTF8CString(MakePromiseFunctionSource);
+		JSValueRef Exception = nullptr;
+		
+		auto MakePromiseFunctionValue = JSEvaluateScript( Context, MakePromiseFunctionSourceString, nullptr, nullptr, 0, &Exception );
+		if ( Exception!=nullptr )
+			std::Debug << "An exception" << JsCore::HandleToString( Context, Exception ) << std::endl;
+		
+		MakePromiseFunction.reset( new TFunction( Context, MakePromiseFunctionValue ) );
+	}
+	
+	auto This = JSContextGetGlobalObject( Context );
+	auto NewPromiseHandle = MakePromiseFunction->Call();
+	
+	auto Type = JSValueGetType( Context, NewPromiseHandle );
+	
+	auto NewPromiseObject = const_cast<JSObjectRef>(NewPromiseHandle);
+	JSValueRef Exception = nullptr;
+	auto Resolve = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Resolve"), &Exception ) );
+	auto Reject = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Reject"), &Exception ) );
+	
+	TPromise Promise( Context, NewPromiseObject, Resolve, Reject );
+	
+	return Promise;
+}
+
+
+
 std::string	JsCore::HandleToString(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
