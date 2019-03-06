@@ -29,7 +29,11 @@ namespace v8
 	//	Bind overloads
 	class TCallback;
 	class TObject;
+	class TArray;
+	class TFunction;
+	class TPromise;
 	
+	//	forward declarations
 	class Array;
 	class Platform;
 	class Isolate;
@@ -121,6 +125,19 @@ namespace v8
 #include "include/v8.h"
 
 
+
+class v8::TArray : public Bind::TArray
+{
+public:
+	Local<Array>	mArray;
+};
+
+class v8::TFunction : public Bind::TFunction
+{
+public:
+	Local<Function>	mFunction;
+};
+
 class V8Exception : public std::exception
 {
 public:
@@ -188,13 +205,19 @@ public:
 	
 	virtual size_t			GetArgumentCount() override	{	return mParams.Length();	}
 	virtual std::string		GetArgumentString(size_t Index) override;
+	virtual bool			GetArgumentBool(size_t Index) override;
 	virtual int32_t			GetArgumentInt(size_t Index) override;
+	virtual float			GetArgumentFloat(size_t Index) override;
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) override;
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) override;
 	virtual Bind::TFunction	GetArgumentFunction(size_t Index) override;
 	virtual Bind::TObject	GetArgumentObject(size_t Index) override;
 
 	virtual bool			IsArgumentString(size_t Index) override;
 	virtual bool			IsArgumentBool(size_t Index) override;
+	virtual bool			IsArgumentUndefined(size_t Index)override;
+
+	virtual Bind::TObject	ThisObject() override;
 
 	virtual void		Return() override;
 	virtual void		ReturnNull() override;
@@ -202,8 +225,9 @@ public:
 	virtual void		Return(uint32_t Value) override;
 	virtual void		Return(Bind::TObject Value) override;
 	virtual void		Return(Bind::TArray Value) override;
+	virtual void		Return(Bind::TPromise Value)override;
 	virtual void		Return(v8::Local<v8::Value> Value)	{	mReturn = Value;	}
-	
+
 protected:
 	virtual void*		GetThis() override							{	return v8::GetObject( mParams.This() );	}
 	virtual void*		GetArgumentPointer(size_t Index) override	{	return v8::GetObject( mParams[Index] );	}
@@ -230,7 +254,19 @@ public:
 	std::function<void(v8::Local<v8::Context>)>	mLambda;
 };
 
+class v8::TPromise : public Bind::TPromise
+{
+public:
+	TPromise(v8::Isolate& Isolate);
 
+	virtual void	Resolve(Bind::TObject Value) override;
+	virtual void	Reject(const std::string& Value) override;
+
+public:
+	//	always persistent
+	std::shared_ptr<V8Storage<v8::Promise::Resolver>>	mResolver;
+	v8::Isolate&	mIsolate;
+};
 
 class TV8ObjectWrapperBase
 {
@@ -299,16 +335,21 @@ public:
 	v8::Isolate&	GetIsolate()	{	return *mIsolate;	}
 	void		ProcessJobs(std::function<bool()> IsRunning);	//	run all the queued jobs then return
 
-	void		RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
-	void		QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
-	void		QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> Lambda,size_t DelayMs);
+	void			RunScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
+	void			QueueScoped(std::function<void(v8::Local<v8::Context>)> Lambda);
+	void			QueueDelayScoped(std::function<void(v8::Local<v8::Context>)> Lambda,size_t DelayMs);
+	virtual void	Execute(std::function<void(TContext&)> Function)override;
+	virtual void	Queue(std::function<void(TContext&)> Function)override;
 
+	
 	void		Yield(size_t SleepMilliseconds);
 	
 	virtual void			LoadScript(const std::string& Source,const std::string& SourceFilename) override;
 	//	run these with RunScoped (internal) or QueueJob (external)
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,const std::string& Source,const std::string& SourceFilename);
 	v8::Local<v8::Value>	LoadScript(v8::Local<v8::Context> Context,v8::Local<v8::String> Source,const std::string& SourceFilename);
+	virtual void			Execute(Bind::TFunction Function,Bind::TObject This,ArrayBridge<Bind::TObject>&& Args)override;
+	void					Execute(v8::TFunction Function,v8::TObject This,ArrayBridge<v8::TObject>&& Args);
 
 	TV8ObjectTemplate::ALLOCATOR	GetAllocator(const char* TYPENAME);
 	//	deprecated for object
@@ -322,6 +363,13 @@ public:
 	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectType) override;
 	virtual void			CreateGlobalObjectInstance(const std::string& ObjectTypeName,const std::string& ObjectName) override;
 	virtual Bind::TObject	GetRootGlobalObject() override;
+	virtual std::shared_ptr<Bind::TPersistent>	CreatePersistent(Bind::TObject& Object)override;
+	virtual std::shared_ptr<Bind::TPersistent>	CreatePersistent(Bind::TFunction& Object)override;
+	virtual std::unique_ptr<Bind::TPromise>		CreatePromise()override;
+
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<Bind::TObject(size_t)> GetElement) override;
+	
 
 	template<const char* FunctionName>
 	void		BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName);
@@ -359,7 +407,6 @@ private:
 
 	void     	CreateContext();
 	void     	CreateInspector();
-	
 
 public:
 	std::shared_ptr<V8Storage<v8::Context>>		mContext;		//	our "document", keep adding scripts to it
@@ -379,10 +426,15 @@ private:
 class v8::TObject : public Bind::TObject
 {
 public:
-	TObject(TV8Container& Context,v8::Local<v8::Object> Object)
+	TObject(TV8Container& Context,v8::Local<v8::Object> Object) :
+		mObject	( Object )
 	{
-		
 	}
+	
+	virtual void		Set(const std::string& MemberName,const Bind::TObject& Value) override;
+	virtual void		Set(const std::string& MemberName,const std::string& Value) override;
+
+	v8::Local<v8::Object>	mObject;
 };
 
 inline void v8::CallFunc(std::function<void(Bind::TCallback&)> Function,const v8::FunctionCallbackInfo<v8::Value>& Paramsv8,TV8Container& Container)

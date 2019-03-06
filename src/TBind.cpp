@@ -18,7 +18,7 @@ void Bind::TContext::CreateGlobalObjectInstance(TString ObjectType,TString Name)
 	auto ParentName = Name;
 	auto ObjectName = Soy::StringPopRight( ParentName, '.' );
 	auto ParentObject = GetGlobalObject( ParentName );
-	ParentObject.SetObject( ObjectName, NewObject );
+	ParentObject.Set( ObjectName, NewObject );
 }
 
 

@@ -966,7 +966,7 @@ void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<vo
 	throw Soy::AssertException("Process RCNN output");
 }
 
-void TCoreMlWrapper::Construct(v8::TCallback& Arguments)
+void TCoreMlWrapper::Construct(Bind::TCallback& Arguments)
 {
 	mCoreMl.reset( new CoreMl::TInstance );
 }

@@ -438,7 +438,7 @@ TImageWrapper::~TImageWrapper()
 	Free();
 }
 
-void TImageWrapper::Construct(v8::TCallback& Arguments)
+void TImageWrapper::Construct(Bind::TCallback& Arguments)
 {
 	auto NameHandle = Arguments.mParams[1];
 	if ( NameHandle->IsUndefined() )

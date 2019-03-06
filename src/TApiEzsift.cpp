@@ -110,14 +110,14 @@ void TEzsiftWrapper::GetFeatures(Bind::TCallback& Params)
 	//	return array for testing
 	auto GetElement = [&](size_t Index)
 	{
-		auto ObjectJs = Params.mContainer.CreateObjectInstance();
+		auto ObjectJs = Params.mContext.CreateObjectInstance();
 		auto x = Features[Index].x;
 		auto y = Features[Index].y;
 		ObjectJs.SetFloat("x",x);
 		ObjectJs.SetFloat("y",y);
 		return ObjectJs;
 	};
-	auto ObjectsArray = Params.mContainer.GetArray( Features.GetSize(), GetElement );
+	auto ObjectsArray = Params.mContext.GetArray( Features.GetSize(), GetElement );
 	return ObjectsArray;
 }
 

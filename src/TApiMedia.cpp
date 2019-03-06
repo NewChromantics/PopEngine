@@ -173,7 +173,7 @@ std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMedi
 }
 
 
-void TMediaSourceWrapper::Construct(v8::TCallback& Params)
+void TMediaSourceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 
@@ -407,7 +407,7 @@ v8::Local<v8::Value> TMediaSourceWrapper::Free(v8::TCallback& Params)
 }
 
 
-void TAvcDecoderWrapper::Construct(v8::TCallback& Params)
+void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	

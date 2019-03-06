@@ -35,13 +35,20 @@ int32_t	JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 	return Int;
 }
 
+bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
+{
+	//	convert to string
+	JSValueRef Exception = nullptr;
+	auto Bool = JSValueToBoolean( Context, Handle, &Exception );
+	return Bool;
+}
+
 JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
 {
 	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
 	return Handle;
 }
 
-	
 	
 
 JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename) :
@@ -359,9 +366,24 @@ std::string JsCore::TCallbackInfo::GetArgumentString(size_t Index) const
 }
 
 
+
+bool JsCore::TCallbackInfo::GetArgumentBool(size_t Index) const
+{
+	auto Handle = mArguments[Index];
+	auto Value = JsCore::GetBool( mContext, Handle );
+	return Value;
+}
+
 int32_t JsCore::TCallbackInfo::GetArgumentInt(size_t Index) const
 {
 	auto Handle = mArguments[Index];
 	auto Value = JsCore::GetInt( mContext, Handle );
+	return Value;
+}
+
+float JsCore::TCallbackInfo::GetArgumentFloat(size_t Index) const
+{
+	auto Handle = mArguments[Index];
+	auto Value = JsCore::GetFloat( mContext, Handle );
 	return Value;
 }

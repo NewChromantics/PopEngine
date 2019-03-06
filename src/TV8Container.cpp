@@ -86,7 +86,17 @@ std::string	v8::TCallback::GetArgumentString(size_t Index)
 	throw Soy::AssertException("todo");
 }
 
-int32_t	v8::TCallback::GetArgumentInt(size_t Index)
+int32_t v8::TCallback::GetArgumentInt(size_t Index)
+{
+	throw Soy::AssertException("todo");
+}
+
+bool v8::TCallback::GetArgumentBool(size_t Index)
+{
+	throw Soy::AssertException("todo");
+}
+
+float v8::TCallback::GetArgumentFloat(size_t Index)
 {
 	throw Soy::AssertException("todo");
 }
@@ -929,4 +939,38 @@ void v8::TCallback::GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array)
 {
 	auto Handle = mParams[Index];
 	v8::EnumArray<v8::Uint8Array>( Handle, Array );
+}
+
+void v8::TCallback::GetArgumentArray(size_t Index,ArrayBridge<float>&& Array)
+{
+	auto Handle = mParams[Index];
+	v8::EnumArray( Handle, Array, "GetArgumentArray<float>" );
+}
+
+/*
+Bind::TObject v8::TCallback::ThisObject()
+{
+	return TObject( mParams.This() );
+}
+*/
+
+v8::TPromise::TPromise(v8::Isolate& Isolate) :
+	mIsolate	( Isolate )
+{
+	auto Resolver = v8::Promise::Resolver::New( &mIsolate );
+	mResolver = v8::GetPersistent( mIsolate, Resolver );
+}
+
+void v8::TPromise::Resolve(Bind::TObject Value)
+{
+	auto ResolverLocal = mResolver->GetLocal(mIsolate);
+	auto& Object = dynamic_cast<v8::TObject&>(Value);
+	ResolverLocal->Resolve( Object.mObject );
+}
+
+void v8::TPromise::Reject(const std::string& Value)
+{
+	auto ResolverLocal = mResolver->GetLocal(mIsolate);
+	auto String = v8::GetString( mIsolate, Value );
+	ResolverLocal->Reject( String );
 }

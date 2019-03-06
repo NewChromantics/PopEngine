@@ -12,7 +12,7 @@ const char ReadUniform_FunctionName[] = "ReadUniform";
 namespace ApiOpencl
 {
 	const char Namespace[] = "Pop.Opencl";
-	static v8::Local<v8::Value> EnumDevices(Bind::TCallback& Params);
+	static void	EnumDevices(Bind::TCallback& Params);
 }
 
 void ApiOpencl::Bind(TV8Container& Container)
@@ -226,7 +226,8 @@ Local<FunctionTemplate> TOpenclContext::CreateTemplate(TV8Container& Container)
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
 	
-	Container.BindFunction<ExecuteKernel_FunctionName>( InstanceTemplate, ExecuteKernel );
+	throw Soy::AssertException("Needs refactor to Bind::");
+	//Container.BindFunction<ExecuteKernel_FunctionName>( InstanceTemplate, ExecuteKernel );
 
 	return ConstructorFunc;
 }
@@ -343,12 +344,13 @@ void TOpenclKernel::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Argum
 }
 
 
-v8::Local<v8::Value> TOpenclContext::ExecuteKernel(v8::TCallback& Params)
+v8::Local<v8::Value> TOpenclContext::ExecuteKernel(const v8::TCallback& ParamsConst)
 {
+	auto& Params = const_cast<v8::TCallback&>( ParamsConst );
 	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TOpenclContext>( Arguments.This() );
+	auto& This = Params.This<TOpenclContext>();
 	auto* Isolate = Params.mIsolate;
-	auto* Container = &Params.mContainer;
+	auto* Container = &Params.mContext;
 
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
@@ -482,8 +484,9 @@ Local<FunctionTemplate> TOpenclKernelState::CreateTemplate(TV8Container& Contain
 	//	[0] object
 	//	[1] container
 	InstanceTemplate->SetInternalFieldCount(2);
-	Container.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
-	Container.BindFunction<ReadUniform_FunctionName>( InstanceTemplate, ReadUniform );
+	throw Soy::AssertException("Needs refactor to Bind::");
+	//Container.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
+	//Container.BindFunction<ReadUniform_FunctionName>( InstanceTemplate, ReadUniform );
 
 	return ConstructorFunc;
 }
@@ -585,7 +588,7 @@ std::shared_ptr<Opencl::TBuffer> GetIntBufferArray(Local<Value> ValueHandle,Open
 }
 
 
-v8::Local<v8::Value> TOpenclKernelState::SetUniform(v8::TCallback& Params)
+v8::Local<v8::Value> TOpenclKernelState::SetUniform(const v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -741,7 +744,7 @@ v8::Local<v8::Value> TOpenclKernelState::SetUniform(v8::TCallback& Params)
 
 
 
-v8::Local<v8::Value> TOpenclKernelState::ReadUniform(v8::TCallback& Params)
+v8::Local<v8::Value> TOpenclKernelState::ReadUniform(const v8::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 	
@@ -815,7 +818,7 @@ v8::Local<v8::Value> TOpenclKernelState::ReadUniform(v8::TCallback& Params)
 	else if ( Uniform.mType == "image2d_t" )
 	{
 		//	create a new image
-		auto* ImageWrapper = new TImageWrapper( Params.mContainer );
+		auto* ImageWrapper = new TImageWrapper( Params.mContext );
 		KernelState.ReadUniform( Uniform.mName.c_str(), ImageWrapper->GetPixels() );
 				
 		return ImageWrapper->GetHandle();

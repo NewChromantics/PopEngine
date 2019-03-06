@@ -201,28 +201,27 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 }
 
-v8::Local<v8::Value> TWindowWrapper::DrawQuad(v8::TCallback& Params)
+void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto& This = Params.This<TWindowWrapper>();
 	
-	if ( Arguments.Length() >= 1 )
+	if ( Params.GetArgumentCount() >= 1 )
 	{
-		auto ShaderHandle = Arguments[0];
-		auto& Shader = TShaderWrapper::Get( ShaderHandle );
+		auto& Shader = Params.GetArgumentPointer<TShaderWrapper>(0);
+		auto ShaderObject = Params.GetArgumentObject(0);
 
-		auto OnShaderBindHandle = Arguments[1];
 		std::function<void()> OnShaderBind = []{};
-		if ( !OnShaderBindHandle->IsUndefined() )
+		if ( !Params.IsArgumentUndefined(1) )
 		{
 			OnShaderBind = [&]
 			{
-				auto OnShaderBindHandleFunc = v8::Local<Function>::Cast( OnShaderBindHandle );
-				auto OnShaderBindThis = Params.mContext->Global();
-				BufferArray<Local<Value>,1> Args;
-				Args.PushBack( ShaderHandle );
-				Params.mContainer.ExecuteFunc( Params.mContext, OnShaderBindHandleFunc, OnShaderBindThis, GetArrayBridge(Args) );
+				throw Soy::AssertException("Figure out params to exec()");
+				auto Callback = Params.GetArgumentFunction(1);
+				auto This = Params.mContext.GetGlobalObject();
+				BufferArray<Bind::TObject,1> Args;
+				Args.PushBack( ShaderObject );
+				Params.mContext.Execute( Callback, This, GetArrayBridge(Args) );
+				//Params.mContainer.ExecuteFunc( Params.mContext, OnShaderBindHandleFunc, OnShaderBindThis, GetArrayBridge(Args) );
 			};
 		}
 		
@@ -232,67 +231,53 @@ v8::Local<v8::Value> TWindowWrapper::DrawQuad(v8::TCallback& Params)
 	{
 		This.mWindow->DrawQuad();
 	}
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::ClearColour(v8::TCallback& Params)
+void TWindowWrapper::ClearColour(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto& This = Params.This<TWindowWrapper>();
 	
-	if ( Arguments.Length() != 3 )
+	if ( Params.GetArgumentCount() != 3 )
 		throw Soy::AssertException("Expecting 3 arguments for ClearColour(r,g,b)");
 
-	auto Red = Local<Number>::Cast( Arguments[0] );
-	auto Green = Local<Number>::Cast( Arguments[1] );
-	auto Blue = Local<Number>::Cast( Arguments[2] );
-	Soy::TRgb Colour( Red->Value(), Green->Value(), Blue->Value() );
+	auto Red = Params.GetArgumentFloat(0);
+	auto Green = Params.GetArgumentFloat(1);
+	auto Blue = Params.GetArgumentFloat(2);
+	Soy::TRgb Colour( Red, Green, Blue );
 		
 	This.mWindow->ClearColour( Colour );
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::EnableBlend(v8::TCallback& Params)
+void TWindowWrapper::EnableBlend(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
-	
-	auto EnableHandle = Arguments[0];
-	bool Enable = true;
-	if ( !EnableHandle->IsUndefined() )
-		Enable = v8::SafeCast<Boolean>(EnableHandle)->BooleanValue();
-	
+	auto& This = Params.This<TWindowWrapper>();
+
+	auto Enable = Params.GetArgumentBool(0);
 	This.mWindow->EnableBlend( Enable );
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-v8::Local<v8::Value> TWindowWrapper::SetViewport(v8::TCallback& Params)
+void TWindowWrapper::SetViewport(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto& This = Params.This<TWindowWrapper>();
 
 	BufferArray<float,4> Viewportxywh;
-	v8::EnumArray( Arguments[0], GetArrayBridge(Viewportxywh), "SetViewport" );
+	Params.GetArgumentArray( 0, GetArrayBridge(Viewportxywh) );
+	//v8::EnumArray( Arguments[0], GetArrayBridge(Viewportxywh), "SetViewport" );
 	Soy::Rectf ViewportRect( Viewportxywh[0], Viewportxywh[1], Viewportxywh[2], Viewportxywh[3] );
 	
 	if ( !This.mActiveRenderTarget )
 		throw Soy::AssertException("No active render target");
 	
 	This.mActiveRenderTarget->SetViewportNormalised( ViewportRect );
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 //	window specific
-v8::Local<v8::Value> TWindowWrapper::GetScreenRect(v8::TCallback& Params)
+void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto& This = Params.This<TWindowWrapper>();
 
 	auto ScreenRect = This.mWindow->GetScreenRect();
 	
@@ -301,73 +286,63 @@ v8::Local<v8::Value> TWindowWrapper::GetScreenRect(v8::TCallback& Params)
 	ScreenRect4.PushBack(ScreenRect.y);
 	ScreenRect4.PushBack(ScreenRect.w);
 	ScreenRect4.PushBack(ScreenRect.h);
-	auto ScreenRectArray = v8::GetArray( Params.GetIsolate(), GetArrayBridge(ScreenRect4) );
 	
-	return ScreenRectArray;
+	auto ScreenRectArray = Params.mContext.CreateArray( GetArrayBridge(ScreenRect4) );
+	Params.Return( ScreenRectArray );
 }
 
 
-SoyPixelsFormat::Type GetPixelFormat(Local<Value> Handle,bool UndefinedIsInvalid=true)
+void TWindowWrapper::Render(Bind::TCallback& Params)
 {
-	if ( Handle->IsString() )
-	{
-		auto ReadBackFormatString = v8::GetString(Handle);
-		auto Format = SoyPixelsFormat::ToType(ReadBackFormatString);
-		return Format;
-	}
-	
-	if ( Handle->IsUndefined() && UndefinedIsInvalid )
-		return SoyPixelsFormat::Invalid;
-	
-	throw Soy::AssertException("Argument must be string(format eg. 'RGBA') or undefined.");
-}
-
-v8::Local<v8::Value> TWindowWrapper::Render(v8::TCallback& Params)
-{
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
-	auto* Isolate = Params.mIsolate;
+	auto& This = Params.This<TWindowWrapper>();
 
 	auto* pThis = &This;
-	auto Window = Arguments.This();
-	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	auto WindowHandle = Params.ThisObject();
+	auto WindowPersistent = Params.mContext.CreatePersistent( WindowHandle );
 	
 	//	gr: got a crash here where v8 was writing to 0xaaaaaaaaa
 	//		which is scribbled memory (freshly initialised)
 	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
+	auto Resolver = Params.mContext.CreatePromise();
 
-	auto TargetHandle = Arguments[0];
-	auto CallbackHandle = v8::SafeCast<Function>(Arguments[1]);
-	auto ReadbackHandle = Arguments[2];
+	auto TargetHandle = Params.GetArgumentObject(0);
+	auto CallbackHandle = Params.GetArgumentFunction(1);
+	std::string ReadBack;
+	if ( Params.IsArgumentString(2) )
+		ReadBack = Params.GetArgumentString(2);
 	
-	auto TargetPersistent = v8::GetPersistent( *Isolate, TargetHandle );
-	auto* TargetImage = &v8::GetObject<TImageWrapper>(TargetHandle);
-	auto RenderCallbackPersistent = v8::GetPersistent( *Isolate, CallbackHandle );
-	auto ReadBackPixelsAfterwards = GetPixelFormat( ReadbackHandle );
+	auto TargetPersistent = Params.mContext.CreatePersistent( TargetHandle );
+	auto* TargetImage = &TargetHandle.This<TImageWrapper>();
+	auto RenderCallbackPersistent = Params.mContext.CreatePersistent( CallbackHandle );
+	auto ReadBackPixelsAfterwards = SoyPixelsFormat::ToType( ReadBack );
 	
-	auto* Container = &Params.mContainer;
+	auto* pContext = &Params.mContext;
 	
-	auto ExecuteRenderCallback = [=](Local<v8::Context> Context)
+	auto ExecuteRenderCallback = [=](Bind::TContext& Context)
 	{
-		auto* Isolate = Container->mIsolate;
+		auto& Func = *RenderCallbackPersistent->mFunction;
+		auto This = Context.GetGlobalObject();
+		auto& Window = *WindowPersistent->mObject;
+		auto& Target = *TargetPersistent->mObject;
+		BufferArray<Bind::TObject,2> CallbackParams;
+		CallbackParams.PushBack( Window );
+		CallbackParams.PushBack( Target );
+		Context.Execute( Func, This, GetArrayBridge(CallbackParams) );
+		/*
 		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
-		auto WindowLocal = WindowPersistent->GetLocal(*Isolate);
-		auto TargetLocal = TargetPersistent->GetLocal(*Isolate);
-		CallbackParams.PushBack( WindowLocal );
+		CallbackParams.PushBack( WindowPersistent->mObject.get() );
 		CallbackParams.PushBack( TargetLocal );
 		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
 		auto FunctionThis = Context->Global();
 		auto ExecuteResult = Container->ExecuteFunc( Context, CallbackFunctionLocal, FunctionThis, GetArrayBridge(CallbackParams) );
 		//	todo: return this result to the promise
+		 */
 	};
 	
-	auto OnCompleted = [=](Local<Context> Context)
+	auto OnCompleted = [=](Bind::TContext& Context)
 	{
-		auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-		auto TargetLocal = TargetPersistent->GetLocal(*Isolate);
-		ResolverLocal->Resolve( TargetLocal );
+		auto& Target = *TargetPersistent->mObject;
+		Resolver->Resolve( Target );
 	};
 	
 	auto OpenglContext = This.mWindow->GetContext();
@@ -397,7 +372,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(v8::TCallback& Params)
 			{
 				Soy::TScopeTimerPrint Timer("Opengl.Render callback",10);
 				//	immediately call the javascript callback
-				Container->RunScoped( ExecuteRenderCallback );
+				pContext->Execute( ExecuteRenderCallback );
 				pThis->mActiveRenderTarget = nullptr;
 				RenderTarget.Unbind();
 			}
@@ -415,7 +390,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(v8::TCallback& Params)
 			}
 
 			//	queue the completion, doesn't need to be done instantly
-			Container->QueueScoped( OnCompleted );
+			pContext->Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
@@ -423,12 +398,7 @@ v8::Local<v8::Value> TWindowWrapper::Render(v8::TCallback& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				//	gr: does this need to be an exception? string?
-				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
-				//ResolverLocal->Reject( Exception );
-				ResolverLocal->Reject( Error );
+				Resolver->Reject( ExceptionString );
 			};
 			Container->QueueScoped( OnError );
 		}
@@ -436,20 +406,18 @@ v8::Local<v8::Value> TWindowWrapper::Render(v8::TCallback& Params)
 	OpenglContext->PushJob( OpenglRender );
 
 	//	return the promise
-	auto Promise = Resolver->GetPromise();
-	return Promise;
+	Params.Return( *Resolver );
 }
 
-
-v8::Local<v8::Value> TWindowWrapper::RenderChain(v8::TCallback& Params)
+/*
+void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TWindowWrapper>( Arguments.This() );
+	auto& This = Params.This<TWindowWrapper>();
 	auto* Isolate = Params.mIsolate;
 	
 	auto* pThis = &This;
-	auto Window = Arguments.This();
-	auto WindowPersistent = v8::GetPersistent( *Isolate, Window );
+	auto WindowHandle = Params.ThisObject();
+	auto WindowPersistent = Params.mContext.CreatePersistent( WindowHandle );
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Resolver = v8::Promise::Resolver::New( Isolate );
@@ -580,7 +548,7 @@ v8::Local<v8::Value> TWindowWrapper::RenderChain(v8::TCallback& Params)
 	auto Promise = Resolver->GetPromise();
 	return Promise;
 }
-
+*/
 
 
 

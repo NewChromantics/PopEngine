@@ -18,6 +18,7 @@ namespace JsCore
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
 	int32_t		GetInt(JSContextRef Context,JSValueRef Handle);
+	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	JSStringRef	GetString(JSContextRef Context,const std::string& String);
 	
 	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
@@ -90,7 +91,9 @@ public:
 	}
 	virtual size_t		GetArgumentCount() override	{	return mArguments.GetSize();	}
 	virtual std::string	GetArgumentString(size_t Index) override;
+	virtual bool		GetArgumentBool(size_t Index) override;
 	virtual int32_t		GetArgumentInt(size_t Index) override;
+	virtual float		GetArgumentFloat(size_t Index) override;
 
 	virtual bool		IsArgumentString(size_t Index)override;
 	virtual bool		IsArgumentBool(size_t Index)override;
@@ -124,6 +127,7 @@ class JsCore::TObject : public Bind::TObject
 public:
 	//	generic
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
+	TObject(TObject&& That);
 	
 	virtual Bind::TObject	GetObject(const std::string& MemberName) override;
 	virtual std::string		GetString(const std::string& MemberName) override;

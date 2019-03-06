@@ -14,7 +14,7 @@ namespace ApiInput
 {
 	const char Namespace[] = "Pop.Input";
 	
-	v8::Local<v8::Value>	EnumDevices(v8::TCallback& Params);
+	void	EnumDevices(Bind::TCallback& Params);
 }
 
 void ApiInput::Bind(TV8Container& Container)
@@ -28,16 +28,10 @@ void ApiInput::Bind(TV8Container& Container)
 
 
 
-v8::Local<v8::Value> ApiInput::EnumDevices(v8::TCallback& Params)
+void ApiInput::EnumDevices(Bind::TCallback& Params)
 {
-	auto* Isolate = Params.mIsolate;
+	auto Promise = Params.mContext.CreatePromise();
 
-	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
-
-	auto* Container = &Params.mContainer;
-	
 	auto DoEnumDevices = [=]
 	{
 		try
@@ -50,32 +44,25 @@ v8::Local<v8::Value> ApiInput::EnumDevices(v8::TCallback& Params)
 			
 			HidApiContext.EnumDevices( EnumDevice );
 			
-			auto OnCompleted = [=](Local<Context> Context)
+			auto OnCompleted = [=](Bind::TContext& Context)
 			{
-				auto& Isolate = *Context->GetIsolate();
-				auto GetString = [&](const std::string& String)
-				{
-					return v8::GetString( Isolate, String );
-				};
-
-				auto ResolverLocal = ResolverPersistent->GetLocal(Isolate);
 				//ResolverPersistent.Reset();
 				auto GetValue = [&](size_t Index)
 				{
 					auto& Meta = DeviceMetas[Index];
-					auto Object = v8::Object::New( &Isolate );
-					Object->Set( GetString("Name"), GetString(Meta.mName) );
-					Object->Set( GetString("Serial"), GetString(Meta.mSerial) );
-					Object->Set( GetString("Vendor"), GetString(Meta.mVendor) );
-					Object->Set( GetString("UsbPath"), GetString(Meta.mUsbPath) );
+					auto Object = Context.CreateObjectInstance();
+					Object.Set("Name", Meta.mName );
+					Object->Set("Serial", Meta.mSerial );
+					Object->Set("Vendor", Meta.mVendor );
+					Object->Set("UsbPath", Meta.mUsbPath );
 					return Object;
 				};
-				auto DevicesArray = v8::GetArray( Isolate, DeviceMetas.GetSize(), GetValue );
-				ResolverLocal->Resolve( DevicesArray );
+				auto DevicesArray = Context.CreateArray( DeviceMetas.GetSize(), GetValue );
+				Promise->Resolve( DevicesArray );
 			};
 			
 			//	queue the completion, doesn't need to be done instantly
-			Container->QueueScoped( OnCompleted );
+			Context.Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
@@ -85,25 +72,21 @@ v8::Local<v8::Value> ApiInput::EnumDevices(v8::TCallback& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Local<Context> Context)
 			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				auto Error = v8::GetString( *Isolate, ExceptionString );
-				ResolverLocal->Reject( Error );
+				Resolver->Reject( ExceptionString );
 			};
 			Container->QueueScoped( OnError );
 		}
 	};
 	
-	//	not on job atm
+	//	not on job/thread atm, but that's okay
 	DoEnumDevices();
 
-	//	return the promise
-	auto Promise = Resolver->GetPromise();
-	return Promise;
+	Params.Return( Resolver );
 }
 
 
 
-void TInputDeviceWrapper::Construct(v8::TCallback& Params)
+void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& Arguments = Params.mParams;
 
