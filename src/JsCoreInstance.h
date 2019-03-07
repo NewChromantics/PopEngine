@@ -36,6 +36,7 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
 	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
+	JSValueRef	GetValue(JSContextRef Context,int32_t Value);
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
 	JSValueRef	GetValue(JSContextRef Context,TObject& Value);
@@ -93,7 +94,7 @@ public:
 	void			Call(Bind::TObject& This);
 	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr);
 	
-private:
+public:
 	JSContextRef	mContext = nullptr;
 	JSObjectRef		mThis = nullptr;
 };
@@ -123,7 +124,7 @@ public:
 	~TContext();
 	
 	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
-	virtual void		Execute(TFunction Function,TObject This,ArrayBridge<TObject>&& Args) bind_override;
+	//virtual void		Execute(TFunction Function,TObject This,ArrayBridge<TObject>&& Args) bind_override;
 	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
 	virtual void		Execute(Bind::TCallback& Callback) bind_override;
 	virtual void		Queue(std::function<void(TContext&)> Function) bind_override;
@@ -163,7 +164,7 @@ public:
 private:
 	
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
-	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception);
+	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
 	
 	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
@@ -188,8 +189,7 @@ class JsCore::TCallback //: public Bind::TCallback
 public:
 	TCallback(TContext& Context) :
 		//Bind::TCallback	( Context ),
-		mContext		( Context ),
-		mContextRef		( mContext.mContext )
+		mContext		( Context )
 	{
 	}
 	
@@ -220,12 +220,12 @@ public:
 
 	virtual void			Return() bind_override;
 	virtual void			ReturnNull() bind_override;
-	virtual void			Return(const std::string& Value) bind_override;
-	virtual void			Return(uint32_t Value) bind_override;
-	virtual void			Return(Bind::TObject& Value) bind_override;
-	virtual void			Return(Bind::TArray& Value) bind_override;
+	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(Bind::TArray& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value.mThis );	}
 	virtual void			Return(Bind::TPromise& Value) bind_override;
-	virtual void			Return(ArrayBridge<Bind::TObject>&& Values) bind_override;
+	virtual void			Return(ArrayBridge<Bind::TObject>&& Values) bind_override	{	mReturn = GetArray( mContext.mContext, Values );	}
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(Bind::TObject& This) bind_override;
@@ -237,7 +237,7 @@ public:
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<float>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,Bind::TArray& Value) bind_override;
 
-	virtual bool			GetReturnBool() bind_override;
+	virtual bool			GetReturnBool() bind_override			{	return GetBool( mContext.mContext, mReturn );	}
 	
 protected:
 	virtual void*		GetThis() bind_override;
@@ -248,7 +248,6 @@ public:
 	JSValueRef			mThis = nullptr;
 	JSValueRef			mReturn = nullptr;
 	Array<JSValueRef>	mArguments;
-	JSContextRef		mContextRef = nullptr;
 };
 
 
@@ -433,8 +432,7 @@ inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallb
 	static TContext* ContextCache = nullptr;
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
-		//JSValueRef
-		return ContextCache->CallFunc( FunctionCache, Context, Function, This, ArgumentCount, Arguments, *Exception );
+		return ContextCache->CallFunc( FunctionCache, Context, Function, This, ArgumentCount, Arguments, *Exception, FunctionName );
 	};
 	ContextCache = this;
 	/*

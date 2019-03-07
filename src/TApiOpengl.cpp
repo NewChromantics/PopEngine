@@ -542,7 +542,7 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ClearColour_FunctionName>( ClearColour );
 	Template.BindFunction<EnableBlend_FunctionName>( EnableBlend );
 	Template.BindFunction<Render_FunctionName>( Render );
-	Template.BindFunction<RenderChain_FunctionName>( RenderChain );
+	//Template.BindFunction<RenderChain_FunctionName>( RenderChain );
 	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
 }
 

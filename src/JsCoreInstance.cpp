@@ -111,6 +111,11 @@ JSValueRef JsCore::GetValue(JSContextRef Context,uint32_t Value)
 	return JSValueMakeNumber( Context, Value );
 }
 
+JSValueRef JsCore::GetValue(JSContextRef Context,int32_t Value)
+{
+	return JSValueMakeNumber( Context, Value );
+}
+
 JSValueRef JsCore::GetValue(JSContextRef Context,float Value)
 {
 	return JSValueMakeNumber( Context, Value );
@@ -274,6 +279,11 @@ Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<JsC
 	return JsCore_CreateArray( *this, ElementCount, GetElement );
 }
 
+Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement)
+{
+	return JsCore_CreateArray( *this, ElementCount, GetElement );
+}
+
 
 
 
@@ -373,6 +383,11 @@ void* JsCore::TObject::GetThis()
 void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
 {
 	SetMember( Name, Object.mThis );
+}
+
+void JsCore::TObject::SetFunction(const std::string& Name,Bind::TFunction& Function)
+{
+	SetMember( Name, Function.mThis );
 }
 
 void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
@@ -510,29 +525,34 @@ JsCore::TPromise JsCore::TContext::CreatePromise()
 }
 
 
-/*
-JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception)
+JSValueRef JsCore::TContext::CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
 {
+	//	call our function from
 	try
 	{
-		TCallbackInfo CallbackInfo(mInstance);
-		CallbackInfo.mContext = mContext;//Context;
-		CallbackInfo.mThis = This;
+		TCallback Callback(*this);
+		Callback.mThis = This;
+	
+		if ( Callback.mThis == nullptr )
+			Callback.mThis = JSValueMakeUndefined( mContext );
+
 		for ( auto a=0;	a<ArgumentCount;	a++ )
-		{
-			CallbackInfo.mArguments.PushBack( Arguments[a] );
-		}
-		auto Result = Function( CallbackInfo );
-		return Result;
+			Callback.mArguments.PushBack( Arguments[a] );
+
+		if ( Callback.mReturn == nullptr )
+			Callback.mReturn = JSValueMakeUndefined( mContext );
+		
+		return Callback.mReturn;
 	}
 	catch (std::exception& e)
 	{
-		auto ExceptionStr = JSStringCreateWithUTF8CString( e.what() );
-		Exception = JSValueMakeString( Context, ExceptionStr );
+		std::stringstream Error;
+		Error << FunctionContext << " exception: " << e.what();
+		Exception = GetValue( mContext, Error.str() );
 		return JSValueMakeUndefined( Context );
 	}
 }
-*/
+
 
 /*
 JSValueRef ObjectCallAsFunctionCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception) {
@@ -613,6 +633,29 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 	auto ParentObject = GetGlobalObject( ParentName );
 	ParentObject.SetObject( ObjectName, NewObject );
 }
+
+JsCore::TPersistent JsCore::TContext::CreatePersistent(JsCore::TObject& Object)
+{
+	return JsCore::TPersistent( Object );
+}
+
+JsCore::TPersistent JsCore::TContext::CreatePersistent(JsCore::TFunction& Object)
+{
+	return JsCore::TPersistent( Object );
+}
+
+std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
+{
+	//	gr: do this better!
+	//	gr: should be able to use NSUrl to resolve ~/ or / etc
+	if ( Filename[0] == '/' )
+		return Filename;
+	
+	std::stringstream FullFilename;
+	FullFilename << mRootDirectory << Filename;
+	return FullFilename.str();
+}
+
 
 
 Bind::TPersistent::TPersistent(TObject& Object) :

@@ -3,6 +3,7 @@
 #include "TApiCommon.h"
 #include "SoySocket.h"
 
+const char UdpBroadcastServer_TypeName[] = "UdpBroadcastServer";
 
 const char GetAddress_FunctionName[] = "GetAddress";
 const char Send_FunctionName[] = "Send";
