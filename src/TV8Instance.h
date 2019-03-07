@@ -1,4 +1,5 @@
 #pragma once
+#error don't compile me
 #include "TV8Container.h"
 
 #include "SoyThread.h"

@@ -8,7 +8,6 @@
 #include "SoyMedia.h"
 #include "JsCoreInstance.h"
 
-using namespace v8;
 
 
 const char CreateTestPromise_FunctionName[] = "CreateTestPromise";
@@ -25,8 +24,8 @@ const char GetComputerName_FunctionName[] = "GetComputerName";
 const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
 const char GetImageHeapSize_FunctionName[] = "GetImageHeapSize";
 const char GetImageHeapCount_FunctionName[] = "GetImageHeapCount";
-const char GetV8HeapSize_FunctionName[] = "GetV8HeapSize";
-const char GetV8HeapCount_FunctionName[] = "GetV8HeapCount";
+const char GetHeapSize_FunctionName[] = "GetHeapSize";
+const char GetHeapCount_FunctionName[] = "GetHeapCount";
 
 
 
@@ -66,8 +65,8 @@ namespace ApiPop
 	static void		ShowFileInFinder(Bind::TCallback& Params);
 	static void		GetImageHeapSize(Bind::TCallback& Params);
 	static void		GetImageHeapCount(Bind::TCallback& Params);
-	static void		GetV8HeapSize(Bind::TCallback& Params);
-	static void		GetV8HeapCount(Bind::TCallback& Params);
+	static void		GetHeapSize(Bind::TCallback& Params);
+	static void		GetHeapCount(Bind::TCallback& Params);
 }
 
 
@@ -96,10 +95,13 @@ static JSValueRef CreateTestPromise(Bind::TCallbackInfo& Params)
 
 static void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
+	throw Soy::AssertException("v8 only");
+	/*
 	//	queue as job?
 	std::Debug << "Invoking garbage collection..." << std::endl;
 	auto& Paramsv8 = dynamic_cast<v8::TCallback&>( Params );
 	Paramsv8.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
+	 */
 }
 
 
@@ -107,21 +109,14 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 {
 	auto Callback = Params.GetArgumentFunction(0);
 	auto TimeoutMs = Params.GetArgumentInt(1);
-
-	auto& ParamsV8 = dynamic_cast<v8::TCallback&>(Params);
-	auto* Container = &ParamsV8.mContainer;
-	auto CallbackHandle = ParamsV8.mParams[0];
-	auto CallbackPersistent = v8::GetPersistent( ParamsV8.GetIsolate(), CallbackHandle );
+	auto CallbackPersistent = Params.mContext.GetPersistent(Callback);
 	
-	auto OnRun = [=](Local<v8::Context> Context)
+	auto OnRun = [=](Bind::TContext& Context)
 	{
-		auto& Isolate = *Context->GetIsolate();
-		//auto CallbackLocal = v8::GetLocal( Isolate, CallbackPersistent->mPersistent );
-		BufferArray<v8::Local<v8::Value>,1> Args;
-		Local<Object> This;
 		try
 		{
-			Container->ExecuteFunc( Context, CallbackPersistent->GetLocal(Isolate), This, GetArrayBridge(Args) );
+			auto Func = CallbackPersistent.GetFunction();
+			Func.Call();
 		}
 		catch(std::exception& e)
 		{
@@ -129,13 +124,13 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 		}
 	};
 
-	Container->QueueDelayScoped( OnRun, TimeoutMs );
+	Params.mContext.QueueDelay( OnRun, TimeoutMs );
 }
 
 
 
 
-static Local<Value> ApiPop::Sleep(CallbackInfo& Params)
+static void ApiPop::Sleep(Bind::TCallback& Params)
 {
 	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[0]);
 	auto TimeoutMs = TimeoutMsHandle->Uint32Value();
@@ -149,7 +144,7 @@ static Local<Value> ApiPop::Sleep(CallbackInfo& Params)
 std::shared_ptr<std::thread> gTestThread;
 std::shared_ptr<JsCore::TContext> gTestContext;
 
-static JSValueRef Sleep2(Bind::TCallbackInfo& Params)
+void ApiPop::ThreadTest(Bind::TCallback& Params)
 {
 	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
 	auto TimeoutMs = Params.GetArgumentInt(0);
@@ -196,259 +191,165 @@ static JSValueRef Sleep2(Bind::TCallbackInfo& Params)
 	//	can we interrupt and call arbirtry funcs?
 	//	gr: need to see if we cna do it on other threads
 	std::this_thread::sleep_for( std::chrono::milliseconds(TimeoutMs) );
-	
-	return JSValueMakeUndefined( ParamsJs.mContext );
 }
 
 
 
-static Local<Value> ApiPop::GetTimeNowMs(CallbackInfo& Params)
+void ApiPop::GetTimeNowMs(Bind::TCallback& Params)
 {
 	SoyTime Now(true);
 	
 	auto NowMs = Now.GetMilliSeconds();
 	auto NowMsInt = NowMs.count();
 	
-	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), NowMsInt );
-	return ValueHandle;
+	Params.Return( NowMsInt );
 }
 
 
 
-static Local<Value> ApiPop::GetComputerName(CallbackInfo& Params)
+void ApiPop::GetComputerName(Bind::TCallback& Params)
 {
 	auto Name = ::Platform::GetComputerName();
-	auto NameHandle = v8::GetString( Params.GetIsolate(), Name );
-
-	return NameHandle;
+	Params.Return( Name );
 }
 
 
-
-static Local<Value> ApiPop::ShowFileInFinder(CallbackInfo& Params)
+void ApiPop::ShowFileInFinder(Bind::TCallback& Params)
 {
-	auto FilenameHandle = Params.mParams[0];
-	auto FilenameString = v8::GetString(FilenameHandle);
-	auto Filename = Params.GetResolvedFilename( FilenameString );
-	
+	auto Filename = Params.GetArgumentFilename(0);
 	::Platform::ShowFileExplorer(Filename);
-	
-	return Undefined(Params.mIsolate);
 }
 
 
-static Local<Value> ApiPop::GetImageHeapSize(CallbackInfo& Params)
+void ApiPop::GetImageHeapSize(Bind::TCallback& Params)
 {
-	auto& Heap = Params.mContainer.GetImageHeap();
+	auto& Heap = Params.mContext.GetImageHeap();
 	auto Value = Heap.mAllocBytes;
-	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
-	return ValueHandle;
+	Parmas.Return( Value );
 }
 
-static Local<Value> ApiPop::GetImageHeapCount(CallbackInfo& Params)
+void ApiPop::GetImageHeapCount(Bind::TCallback& Params)
 {
 	auto& Heap = Params.mContainer.GetImageHeap();
 	auto Value = Heap.mAllocCount;
-	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
-	return ValueHandle;
+	Params.Return( Value );
 }
 
 
-static Local<Value> ApiPop::GetV8HeapSize(CallbackInfo& Params)
+void ApiPop::GetV8HeapSize(Bind::TCallback& Params)
 {
 	auto& Heap = Params.mContainer.GetV8Heap();
 	auto Value = Heap.mAllocBytes;
-	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
-	return ValueHandle;
+	Params.Return( Value );
 }
 
-static Local<Value> ApiPop::GetV8HeapCount(CallbackInfo& Params)
+void ApiPop::GetV8HeapCount(Bind::TCallback& Params)
 {
 	auto& Heap = Params.mContainer.GetV8Heap();
 	auto Value = Heap.mAllocCount;
-	auto ValueHandle = v8::Number::New( &Params.GetIsolate(), Value );
-	return ValueHandle;
+	Params.Return( Value );
 }
 
 
 
 
 
-static Local<Value> ApiPop::CompileAndRun(CallbackInfo& Params)
+void ApiPop::CompileAndRun(Bind::TCallback& Params)
 {
 	auto& args = Params.mParams;
-		
-	auto SourceHandle = args[0];
-	auto FilenameHandle = args[1];
+	
+	auto Source = Parmas.GetArgumentString(0);
+	auto Filename = Params.GetArgumentString(1);
 
-	auto Source = v8::GetString( SourceHandle );
-	std::string Filename = "Runtime Source";
-	if ( !FilenameHandle->IsUndefined() )
-		Filename = v8::GetString( FilenameHandle );
-
-	return Params.mContainer.LoadScript( Params.mContext, Source, Filename );
+	//	ignore the return for now
+	Params.mContext.LoadScript( Source, Filename );
 }
 
 
 
-static Local<Value> ApiPop::LoadFileAsString(CallbackInfo& Params)
+void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
+	auto Filename = Params.GetArgumentFilename(0);
 	
-	if (Arguments.Length() < 1)
-		throw Soy::AssertException("LoadFileAsString(Filename) with no args");
-
-	auto FilenameString = v8::GetString( Arguments[0] );
-	auto Filename = Params.GetResolvedFilename(FilenameString);
 	std::string Contents;
 	Soy::FileToString( Filename, Contents);
-	
-	auto ContentsString = v8::GetString( Params.GetIsolate(), Contents );
-	return ContentsString;
+	Params.Return( Contents );
 }
 
 
-static Local<Value> ApiPop::LoadFileAsArrayBuffer(CallbackInfo& Params)
+void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	if (Arguments.Length() < 1)
-		throw Soy::AssertException("LoadFileAsArrayBuffer(Filename) with no args");
+	auto Filename = Params.GetArgumentFilename(0);
 
-	
-	auto Filename = Params.GetResolvedFilename( v8::GetString( Arguments[0] ) );
 	Array<char> FileContents;
 	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
 
-	//	gr: way too slow to set for big files.
-	//	make a typed array
-	auto ArrayBuffer = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(FileContentsu8) );
-/*
-	auto ArrayBuffer = v8::ArrayBuffer::New( Params.mIsolate, FileContents.GetSize() );
-	auto& Isolate = *Params.mIsolate;
-	
-	//	like v8::GetArray
-	auto& Values = FileContents;
-	auto& ArrayHandle = ArrayBuffer;
-	for ( auto i=0;	i<Values.GetSize();	i++ )
-	{
-		double Value = Values[i];
-		auto ValueHandle = Number::New( &Isolate, Value );
-		ArrayHandle->Set( i, ValueHandle );
-	}
-*/
-	return ArrayBuffer;
+	//	want this to be a typed array
+	//auto ArrayBuffer = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(FileContentsu8) );
+	auto Array = Params.mContext.CreateArray( GetArrayBridge(FileContentsu8) );
+	Params.Return( Array );
 }
 
 
 
-static Local<Value> ApiPop::WriteStringToFile(CallbackInfo& Params)
+void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	if (Arguments.Length() < 2)
-	{
-		std::stringstream Error;
-		Error << "WriteStringToFile(Filename,String,[Append]) " << Arguments.Length() << " args";
-		throw Soy::AssertException(Error.str());
-	}
-	auto FilenameHandle = Arguments[0];
-	auto ContentsHandle = Arguments[1];
-	auto AppendHandle = Arguments[2];
+	auto Filename = Params.GetArgumentFilename(0);
+	auto Contents = Params.GetArgumentString(1);
+	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
 
-	auto Filename = Params.GetResolvedFilename( v8::GetString( FilenameHandle ) );
-	auto Contents = v8::GetString( ContentsHandle );
-	bool Append = false;
-	if ( AppendHandle->IsBoolean() )
-		Append = v8::SafeCast<v8::Boolean>(AppendHandle)->BooleanValue();
-	
 	Soy::StringToFile( Filename, Contents, Append );
-
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-void ApiPop::Bind(TV8Container& Container)
+void ApiPop::Bind(Bind::TContext& Context)
 {
-	Container.CreateGlobalObjectInstance("", Namespace);
+	Context.CreateGlobalObjectInstance("", Namespace);
 	
-	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper>, Namespace );
+	Context.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper>, Namespace );
 
+	auto NamespaceObject = Context.GetGlobalObject(Namespace);
 	//  load api's before script & executions
-	Container.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
-	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
-	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
-	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
-	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile, Namespace );
-	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
-	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
-	Container.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
-	Container.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs, Namespace );
-	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName, Namespace );
-	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder, Namespace );
-	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize, Namespace );
-	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
-	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize, Namespace );
-	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount, Namespace );
-
-
-}
-
-void ApiPop::Bind(JsCore::TContext& Container)
-{
-	Container.CreateGlobalObjectInstance("", Namespace);
-
-	//  load api's before script & executions
-	Container.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise );
-	Container.BindGlobalFunction<Debug_FunctionName>( Debug2 );
-	/*
-	Container.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun);
-	Container.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString);
-	Container.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer);
-	Container.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile);
-	Container.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect);
-	Container.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout);
-	 */
-	Container.BindGlobalFunction<Sleep_FunctionName>( Sleep2 );
-	/*
-	Container.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName);
-	Container.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder);
-	Container.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize);
-	Container.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount);
-	Container.BindGlobalFunction<GetV8HeapSize_FunctionName>(GetV8HeapSize);
-	Container.BindGlobalFunction<GetV8HeapCount_FunctionName>(GetV8HeapCount);
-	
-	Container.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper> );
-	 */
+	NamespaceObject.Set<CreateTestPromise_FunctionName>( CreateTestPromise );
+	NamespaceObject.Set<Debug_FunctionName>( Debug );
+	NamespaceObject.Set<CompileAndRun_FunctionName>(CompileAndRun );
+	NamespaceObject.Set<LoadFileAsString_FunctionName>(LoadFileAsString );
+	NamespaceObject.Set<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
+	NamespaceObject.Set<WriteStringToFile_FunctionName>(WriteStringToFile );
+	NamespaceObject.Set<GarbageCollect_FunctionName>(GarbageCollect );
+	NamespaceObject.Set<SetTimeout_FunctionName>(SetTimeout );
+	NamespaceObject.Set<Sleep_FunctionName>(Sleep );
+	NamespaceObject.Set<GetTimeNowMs_FunctionName>(GetTimeNowMs );
+	NamespaceObject.Set<GetComputerName_FunctionName>(GetComputerName );
+	NamespaceObject.Set<ShowFileInFinder_FunctionName>(ShowFileInFinder );
+	NamespaceObject.Set<GetImageHeapSize_FunctionName>(GetImageHeapSize );
+	NamespaceObject.Set<GetImageHeapCount_FunctionName>(GetImageHeapCount );
+	NamespaceObject.Set<GetHeapSize_FunctionName>(GetV8HeapSize );
+	NamespaceObject.Set<GetHeapCount_FunctionName>(GetV8HeapCount );
 }
 
 TImageWrapper::~TImageWrapper()
 {
-	/*
-	try
-	{
-		std::Debug << "~TImageWrapper " << mName << ", " << this->GetMeta() << std::endl;
-	}
-	catch(std::exception& e)
-	{
-		std::Debug << "~TImageWrapper " << mName << ", unknown meta (" << e.what() << ")" << std::endl;
-	}
-	 */
 	Free();
 }
 
-void TImageWrapper::Construct(Bind::TCallback& Arguments)
+void TImageWrapper::Construct(Bind::TCallback& Params)
 {
-	auto NameHandle = Arguments.mParams[1];
-	if ( NameHandle->IsUndefined() )
-		mName = "undefined";
-	else
-		mName = v8::GetString(NameHandle);
+	auto& This = Params.This<TImageWrapper>();
+	auto& Heap = Params.mContainer.GetImageHeap();
+	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ), Heap );
+	This.SetPixels(Pixels);
+
 	
+	if ( Params.IsArgumentString(0) )
+		mName = Params.GetArgumentString(0);
+	else
+		mName = "undefined-name";
+	
+	/*
 	//	try copying from other object
 	const auto& Arg0 = Arguments.mParams[0];
-	/*
 	if ( Arg0->IsObject() )
 	{
 		try
@@ -465,14 +366,14 @@ void TImageWrapper::Construct(Bind::TCallback& Arguments)
 	*/
 	
 	//	construct with filename
-	if ( Arg0->IsString() )
+	if ( Params.IsArgumentString(0) )
 	{
 		LoadFile(Arguments);
 		return;
 	}
 		
 	//	construct with size
-	if ( Arg0->IsArray() )
+	if ( Params.IsArgumentArray(0) )
 	{
 		Alloc(Arguments);
 		return;
@@ -481,110 +382,43 @@ void TImageWrapper::Construct(Bind::TCallback& Arguments)
 	
 }
 
-Local<FunctionTemplate> TImageWrapper::CreateTemplate(TV8Container& Container)
+void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	Container.BindFunction<LoadFile_FunctionName>( InstanceTemplate, TImageWrapper::LoadFile );
-	Container.BindFunction<Alloc_FunctionName>( InstanceTemplate, TImageWrapper::Alloc );
-	Container.BindFunction<Flip_FunctionName>( InstanceTemplate, TImageWrapper::Flip );
-	Container.BindFunction<GetWidth_FunctionName>( InstanceTemplate, TImageWrapper::GetWidth );
-	Container.BindFunction<GetHeight_FunctionName>( InstanceTemplate, TImageWrapper::GetHeight );
-	Container.BindFunction<GetRgba8_FunctionName>( InstanceTemplate, TImageWrapper::GetRgba8 );
-	Container.BindFunction<SetLinearFilter_FunctionName>( InstanceTemplate, TImageWrapper::SetLinearFilter );
-	Container.BindFunction<Copy_FunctionName>( InstanceTemplate, TImageWrapper::Copy );
-	Container.BindFunction<WritePixels_FunctionName>( InstanceTemplate, TImageWrapper::WritePixels );
-	Container.BindFunction<Resize_FunctionName>( InstanceTemplate, TImageWrapper::Resize );
-	Container.BindFunction<Clip_FunctionName>( InstanceTemplate, TImageWrapper::Clip );
-	Container.BindFunction<Clear_FunctionName>( InstanceTemplate, TImageWrapper::Clear );
-	Container.BindFunction<SetFormat_FunctionName>( InstanceTemplate, TImageWrapper::SetFormat );
-	Container.BindFunction<GetFormat_FunctionName>( InstanceTemplate, TImageWrapper::GetFormat );
-
-	return ConstructorFunc;
+	Template.BindFunction<LoadFile_FunctionName>( TImageWrapper::LoadFile );
+	Template.BindFunction<Alloc_FunctionName>( TImageWrapper::Alloc );
+	Template.BindFunction<Flip_FunctionName>( TImageWrapper::Flip );
+	Template.BindFunction<GetWidth_FunctionName>( TImageWrapper::GetWidth );
+	Template.BindFunction<GetHeight_FunctionName>( TImageWrapper::GetHeight );
+	Template.BindFunction<GetRgba8_FunctionName>( TImageWrapper::GetRgba8 );
+	Template.BindFunction<SetLinearFilter_FunctionName>( TImageWrapper::SetLinearFilter );
+	Template.BindFunction<Copy_FunctionName>( TImageWrapper::Copy );
+	Template.BindFunction<WritePixels_FunctionName>( TImageWrapper::WritePixels );
+	Template.BindFunction<Resize_FunctionName>( TImageWrapper::Resize );
+	Template.BindFunction<Clip_FunctionName>( TImageWrapper::Clip );
+	Template.BindFunction<Clear_FunctionName>( TImageWrapper::Clear );
+	Template.BindFunction<SetFormat_FunctionName>( TImageWrapper::SetFormat );
+	Template.BindFunction<GetFormat_FunctionName>( TImageWrapper::GetFormat );
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Alloc(v8::TCallback& Params)
+void TImageWrapper::Flip(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-
-
-	BufferArray<int,2> IntArray;
-	if ( Arguments[0]->IsArray() )
-	{
-		v8::EnumArray( Arguments[0], GetArrayBridge(IntArray), "Image( [w,h] )" );
-	}
-	else if ( Arguments[0]->IsNumber() && Arguments[1]->IsNumber() )
-	{
-		v8::EnumArray( Arguments[0], GetArrayBridge(IntArray), "Image( w*, h )" );
-		v8::EnumArray( Arguments[1], GetArrayBridge(IntArray), "Image( w, h* )" );
-	}
-	else
-		throw Soy::AssertException("Invalid params Alloc(width,height) or Alloc( [width,height] )");
-
-	auto Width = IntArray[0];
-	auto Height = IntArray[1];
-	auto Format = SoyPixelsFormat::Type::RGBA;
-	auto& Heap = Params.mContainer.GetImageHeap();
-	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ), Heap );
-	This.SetPixels(Pixels);
-
-	
-	
-
-	
-	return v8::Undefined(Params.mIsolate);
-}
-
-
-v8::Local<v8::Value> TImageWrapper::Flip(v8::TCallback& Params)
-{
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto& This = Parmas.This<TImageWrapper>();
 	
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	auto& Pixels = This.GetPixels();
 	Pixels.Flip();
 	This.OnPixelsChanged();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-
-v8::Local<v8::Value> TImageWrapper::LoadFile(v8::TCallback& Params)
+void TImageWrapper::LoadFile(TBind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto& This = Params.This<TImageWrapper>();
 
-	//	if first arg is filename...
+	auto Filename = Params.GetArgumentFilename(0);
 	
-	auto Filename = Params.GetResolvedFilename( v8::GetString(Arguments[0]) );
 	This.DoLoadFile( Filename );
-	return v8::Undefined(Params.mIsolate);
 }
 
 void TImageWrapper::DoLoadFile(const std::string& Filename)
@@ -646,8 +480,6 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 		return;
 	}
 
-
-	
 	throw Soy::AssertException( std::string("Unhandled image file extension of ") + Filename );
 }
 
@@ -664,14 +496,11 @@ void TImageWrapper::DoSetLinearFilter(bool LinearFilter)
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Copy(v8::TCallback& Params)
+void TImageWrapper::Copy(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	auto& That = v8::GetObject<TImageWrapper>( Arguments[0] );
-	
+	auto& This = Params.This<TImageWrapper>();
+	auto& That = Params.GetArgumentPointer<TImageWrapper>(0);
+
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	std::lock_guard<std::recursive_mutex> ThatLock(That.mPixelsLock);
 
@@ -680,53 +509,34 @@ v8::Local<v8::Value> TImageWrapper::Copy(v8::TCallback& Params)
 
 	ThisPixels.Copy(ThatPixels);
 	This.OnPixelsChanged();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
-v8::Local<v8::Value> TImageWrapper::WritePixels(v8::TCallback& Params)
+void TImageWrapper::WritePixels(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	
+	auto& This = Params.This<TImageWrapper>();
+
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 
-	auto WidthHandle = Arguments[0];
-	auto HeightHandle = Arguments[1];
-	auto BufferHandle = Arguments[2];
+	auto Width = Params.GetArgumentInt(0);
+	auto Height = Params.GetArgumentInt(1);
 	
 	Array<uint8_t> Rgba;
-	
-	//	todo: handle more array types
-	if ( BufferHandle->IsUint8ClampedArray() )
-		v8::EnumArray<v8::Uint8ClampedArray>( BufferHandle, GetArrayBridge(Rgba) );
-	else
-		v8::EnumArray<v8::Uint8Array>( BufferHandle, GetArrayBridge(Rgba) );
-	
-	auto Width = v8::SafeCast<Number>( WidthHandle )->Uint32Value();
-	auto Height = v8::SafeCast<Number>( HeightHandle )->Uint32Value();
+	Params.GetArgumentArray(2,GetArrayBridge(Rgba) );
 	
 	auto* Rgba8 = static_cast<uint8_t*>(Rgba.GetArray());
 	auto DataSize = Rgba.GetDataSize();
 	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, SoyPixelsFormat::RGBA );
 	This.SetPixels(NewPixels);
-	
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
 
-v8::Local<v8::Value> TImageWrapper::Resize(v8::TCallback& Params)
+void TImageWrapper::Resize(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
+	auto& This = Params.This<TImageWrapper>();
 	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	auto NewWidth = v8::SafeCast<Number>( Arguments[0] )->Uint32Value();
-	auto NewHeight = v8::SafeCast<Number>( Arguments[1] )->Uint32Value();
+	auto NewWidth = Params.GetArgumentInt(0);
+	auto NewHeight = Params.GetArgumentInt(1);
 
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	
@@ -734,37 +544,25 @@ v8::Local<v8::Value> TImageWrapper::Resize(v8::TCallback& Params)
 	
 	ThisPixels.ResizeFastSample( NewWidth, NewHeight );
 	This.OnPixelsChanged();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-v8::Local<v8::Value> TImageWrapper::Clear(v8::TCallback& Params)
+void TImageWrapper::Clear(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	
+	auto& This = Params.This<TImageWrapper>();
 	This.Free();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
 
-v8::Local<v8::Value> TImageWrapper::Clip(v8::TCallback& Params)
+void TImageWrapper::Clip(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	auto RectHandle = Arguments[0];
-	
+	auto& This = Params.This<TImageWrapper>();
 	Soy::TScopeTimerPrint Timer(__func__,5);
 
 	BufferArray<int,4> RectPx;
-	v8::EnumArray( RectHandle, GetArrayBridge(RectPx), __FUNCTION__ );
+
+	Params.GetArgumentArray( 0, GetArrayBridge(RectPx) );
 	
 	if ( RectPx.GetSize() != 4 )
 	{
@@ -786,20 +584,14 @@ v8::Local<v8::Value> TImageWrapper::Clip(v8::TCallback& Params)
 	
 	ThisPixels.Clip( RectPx[0], RectPx[1], RectPx[2], RectPx[3] );
 	This.OnPixelsChanged();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
-v8::Local<v8::Value> TImageWrapper::SetFormat(v8::TCallback& Params)
+void TImageWrapper::SetFormat(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto& This = Params.This<TImageWrapper>();
 
-	auto FormatNameHandle = Arguments[0];
-	auto FormatName = v8::GetString(FormatNameHandle);
+	auto FormatName = Params.GetArgumentString(0);
 	auto NewFormat = SoyPixelsFormat::ToType(FormatName);
 	
 	//	gr: currently only handling pixels
@@ -810,24 +602,17 @@ v8::Local<v8::Value> TImageWrapper::SetFormat(v8::TCallback& Params)
 	auto& Pixels = This.GetPixels();
 	Pixels.SetFormat(NewFormat);
 	This.OnPixelsChanged();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
-v8::Local<v8::Value> TImageWrapper::GetFormat(v8::TCallback& Params)
+void TImageWrapper::GetFormat(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
+	auto& This = Params.This<TImageWrapper>();
 	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-
-
 	auto Meta = This.GetMeta();
 
 	auto Format = Meta.GetFormat();
 	auto FormatString = SoyPixelsFormat::ToString(Format);
-	auto FormatStr = v8::GetString( Params.GetIsolate(), FormatString );
-	return FormatStr;
+	Params.Return( FormatString );
 }
 
 
@@ -864,43 +649,30 @@ void TImageWrapper::Free()
 	mPixelBufferVersion = 0;
 }
 
-v8::Local<v8::Value> TImageWrapper::GetWidth(v8::TCallback& Params)
+void TImageWrapper::GetWidth(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto& This = Params.This<TImageWrapper>();
 
 	auto Meta = This.GetMeta();
-	return Number::New( Params.mIsolate, Meta.GetWidth() );
+	Params.Return( Meta.GetWidth() );
 }
 
 
-v8::Local<v8::Value> TImageWrapper::GetHeight(v8::TCallback& Params)
+void TImageWrapper::GetHeight(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
+	auto& This = Params.This<TImageWrapper>();
 	
 	auto Meta = This.GetMeta();
-	return Number::New( Params.mIsolate, Meta.GetHeight() );
+	Params.Return( Meta.GetHeight() );
 }
 
 
-v8::Local<v8::Value> TImageWrapper::GetRgba8(v8::TCallback& Params)
+void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& mContainer = Params.mContainer;
+	auto& This = Params.This<TImageWrapper>();
 	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	
-	auto AllowBgraAsRgbaHandle = Arguments[0];
-	bool AllowBgraAsRgba = false;
-	if ( AllowBgraAsRgbaHandle->IsBoolean() )
-		AllowBgraAsRgba = v8::SafeCast<v8::Boolean>(AllowBgraAsRgbaHandle)->BooleanValue();
-	auto TargetArrayHandle = Arguments[1];
+	auto AllowBgraAsRgbaHandle = !Params.IsArgumentUndefined(0) ? Params.GetArgumentBool(0) : false;
+	auto IsTargetArray = Params.IsArgumentArray(1);
 	
 	Soy::TScopeTimerPrint Timer(__func__,5);
 	
@@ -929,37 +701,25 @@ v8::Local<v8::Value> TImageWrapper::GetRgba8(v8::TCallback& Params)
 	
 	auto& PixelsArray = Pixels.GetPixelsArray();
 	
-	if ( !TargetArrayHandle->IsUndefined() )
+	if ( IsTargetArray )
 	{
-		v8::CopyToTypedArray( Params.GetIsolate(), GetArrayBridge(PixelsArray), TargetArrayHandle );
-		return TargetArrayHandle;
+		auto TargetArray = Params.GetArgumentArray(1);
+		TargetArray.Copy( GetArrayBridge(PixelsArray) );
+		Params.Return( TargetArray );
 	}
 	else
 	{
-		auto Rgba8 = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(PixelsArray) );
-		return Rgba8;
+		auto TargetArray = Params.mContext.CreateArray( GetArrayBridge(PixelsArray) );
+		Params.Return( TargetArray );
 	}
 }
 
 
-v8::Local<v8::Value> TImageWrapper::SetLinearFilter(v8::TCallback& Params)
+void TImageWrapper::SetLinearFilter(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TImageWrapper>( ThisHandle );
-	
-	if ( Arguments.Length() != 1 )
-		throw Soy::AssertException( "SetLinearFilter(true/false) expected 1 argument");
-	
-	if ( !Arguments[0]->IsBoolean() )
-		throw Soy::AssertException( "SetLinearFilter(true/false) expected boolean argument");
-
-	auto ValueBool = Local<v8::Boolean>::Cast( Arguments[0] );
-	auto LinearFilter = ValueBool->Value();
+	auto& This = Params.This<TImageWrapper>();
+	auto LinearFilter = Params.GetArgumentBool(0);
 	This.DoSetLinearFilter( LinearFilter );
-
-	return v8::Undefined(Params.mIsolate);
 }
 
 

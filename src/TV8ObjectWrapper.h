@@ -1,7 +1,7 @@
 #pragma once
-#include "TV8Container.h"
+#include "TBind.h"
 
-
+#error Dont include me
 
 template<const char* TYPENAME,class TYPE>
 class TObjectWrapper : public TV8ObjectWrapperBase

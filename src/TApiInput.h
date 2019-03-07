@@ -1,7 +1,6 @@
 #pragma once
-#include "TV8Container.h"
+#include "TBind.h"
 #include "SoyOpenglWindow.h"
-#include "TV8ObjectWrapper.h"
 
 
 

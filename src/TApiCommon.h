@@ -1,6 +1,5 @@
 #pragma once
-#include "TV8Container.h"
-#include "TV8ObjectWrapper.h"
+#include "TBind.h"
 #include "SoyPixels.h"
 #include "SoyVector.h"
 
@@ -8,16 +7,11 @@ class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;
 
-namespace JsCore
-{
-	class TContext;
-}
 
 //	engine stuff under the Pop namespace
 namespace ApiPop
 {
-	void	Bind(TV8Container& Container);
-	void	Bind(JsCore::TContext& Context);
+	void	Bind(Bind::TContext& Context);
 }
 
 
@@ -28,27 +22,18 @@ namespace Opengl
 }
 
 
-
-
 //	an image is a generic accessor for pixels, opengl textures, etc etc
 extern const char Image_TypeName[];
-class TImageWrapper : public TObjectWrapper<Image_TypeName,SoyPixels>
+class TImageWrapper : public Bind::TObjectWrapper<Image_TypeName,SoyPixels>
 {
 public:
-	TImageWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
-		TObjectWrapper			( Container, This ),
-		mLinearFilter			( false ),
-		mRepeating				( false ),
-		mPixelsVersion			( 0 ),
-		mOpenglTextureVersion	( 0 ),
-		mPixelBufferVersion		( 0 ),
-		mOpenglLastPixelReadBufferVersion	( 0 ),
-		mPixels					( mObject )
+	TImageWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
 	{
 	}
 	~TImageWrapper();
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+	static void			CreateTemplate(Bind::TTemplate& Template);
 
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
@@ -66,8 +51,6 @@ public:
 	static void			Clear(Bind::TCallback& Arguments);
 	static void			SetFormat(Bind::TCallback& Arguments);
 	static void			GetFormat(Bind::TCallback& Arguments);
-	
-	static TImageWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TImageWrapper>( Value, 0 );	}
 	
 	void									DoLoadFile(const std::string& Filename);
 	void									DoSetLinearFilter(bool LinearFilter);
@@ -94,31 +77,31 @@ protected:
 	void								Free();
 	
 public:
-	std::string							mName;					//	for debug
+	std::string							mName = "UninitialisedName";	//	for debug
 
 protected:
 	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?
 	std::shared_ptr<SoyPixels>&			mPixels = mObject;
-	size_t								mPixelsVersion;			//	opengl texture changed
+	size_t								mPixelsVersion = 0;			//	opengl texture changed
 
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;
 	std::function<void()>				mOpenglTextureDealloc;
-	size_t								mOpenglTextureVersion;	//	pixels changed
+	size_t								mOpenglTextureVersion = 0;	//	pixels changed
 	std::shared_ptr<SoyPixels>			mOpenglClientStorage;	//	gr: apple specific client storage for texture. currently kept away from normal pixels for safety, but merge later
 
 public:
 	//	temporary caching system for immediate mode glReadPixels
 	std::shared_ptr<Array<uint8_t>>		mOpenglLastPixelReadBuffer;
-	size_t								mOpenglLastPixelReadBufferVersion;
+	size_t								mOpenglLastPixelReadBufferVersion = 0;
 
 protected:
 	//	abstracted pixel buffer from media
 	std::shared_ptr<TPixelBuffer>		mPixelBuffer;
-	size_t								mPixelBufferVersion;
+	size_t								mPixelBufferVersion = 0;
 	SoyPixelsMeta						mPixelBufferMeta;
 	
 	//	texture options
-	bool								mLinearFilter;
-	bool								mRepeating;
+	bool								mLinearFilter = false;
+	bool								mRepeating = false;
 };
 

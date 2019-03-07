@@ -1,9 +1,8 @@
 #include "TApiOpengl.h"
-#include "TApiOpenglContext.h"
+//#include "TApiOpenglContext.h"
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 
-using namespace v8;
 
 namespace ApiOpengl
 {
@@ -24,13 +23,12 @@ const char GetScreenRect_FunctionName[] = "GetScreenRect";
 
 
 
-void ApiOpengl::Bind(TV8Container& Container)
+void ApiOpengl::Bind(Bind::TContext& Context)
 {
-	Container.CreateGlobalObjectInstance("", Namespace);
+	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Container.BindObjectType( TWindowWrapper::GetObjectTypeName(), TWindowWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TWindowWrapper>, Namespace );
-	Container.BindObjectType( TOpenglImmediateContextWrapper::GetObjectTypeName(), TOpenglImmediateContextWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TOpenglImmediateContextWrapper>, Namespace );
-	Container.BindObjectType( Shader_TypeName, TShaderWrapper::CreateTemplate, nullptr, Namespace );
+	Context.BindObjectType<TWindowWrapper>( Namespace );
+	Context.BindObjectType<TShaderWrapper>( Namespace );
 }
 
 
@@ -46,7 +44,7 @@ TWindowWrapper::~TWindowWrapper()
 void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 {
 	//  call javascript
-	auto Runner = [&](Local<Context> context)
+	auto Runner = [&](Bind::TContext& Context)
 	{
 		LockContext();
 		
@@ -61,9 +59,8 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 		try
 		{
 			auto This = this->GetHandle();
-			auto Func = v8::GetFunction( context, This, "OnRender" );
-			BufferArray<Local<Value>,1> Args;
-			mContainer.ExecuteFunc( context, Func, This, GetArrayBridge(Args) );
+			auto ThisOnRender = This.GetFunction("OnRender");
+			ThisOnRender.Call( This );
 		}
 		catch(std::exception& e)
 		{
@@ -72,61 +69,59 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 			throw;
 		}
 	};
-	mContainer.RunScoped( Runner );
+	mContext.Execute( Runner );
 }
 
 void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
 {
 	//  call javascript
-	auto Runner = [=](Local<Context> Context)
+	auto Runner = [&](Bind::TContext& Context)
 	{
 		try
 		{
 			auto This = this->GetHandle();
-			auto Func = v8::GetFunction( Context, This, MouseFuncName );
-			BufferArray<Local<Value>,3> Args;
-		
-			Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.x ) );
-			Args.PushBack( v8::Number::New(Context->GetIsolate(), MousePos.y ) );
-			Args.PushBack( v8::Number::New(Context->GetIsolate(), MouseButton ) );
-			
-			mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+			auto ThisOnRender = This.GetFunction("OnRender");
+			Bind::TCallback Params(Context);
+			Params.SetThis( This );
+			Params.SetArgumentInt( 0, MousePos.x );
+			Params.SetArgumentInt( 1, MousePos.y );
+			Params.SetArgumentInt( 2, MouseButton );
+			ThisOnRender.Call( Params );
 		}
 		catch(std::exception& e)
 		{
 			std::Debug << "Exception in " << MouseFuncName << ": " << e.what() << std::endl;
 		}
 	};
-	mContainer.QueueScoped( Runner );
+	mContext.Queue( Runner );
 }
 
 
 bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 {
-	//  call javascript
 	bool Result = false;
-	auto Runner = [&](Local<Context> Context)
+	//  call javascript
+	auto Runner = [&](Bind::TContext& Context)
 	{
-		auto& Isolate = *Context->GetIsolate();
-		auto This = this->GetHandle();
-		auto Func = v8::GetFunction( Context, This, "OnTryDragDrop" );
-		
-		auto GetFilename = [&](size_t Index)
+		try
 		{
-			return v8::GetString( Isolate, Filenames[Index] );
-		};
-		auto FilenamesArray = v8::GetArray( Isolate, Filenames.GetSize(), GetFilename );
-		BufferArray<Local<Value>,2> Args;
-		
-		Args.PushBack( FilenamesArray );
-		auto ResultHandle = mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
-		auto ResultBoolHandle = v8::SafeCast<Boolean>( ResultHandle );
-		Result = ResultBoolHandle->BooleanValue();
+			auto This = this->GetHandle();
+			auto ThisFunc = This.GetFunction("OnTryDragDrop");
+			Bind::TCallback Params(Context);
+			Params.SetThis( This );
+			Params.SetArgumentArray( 0, GetArrayBridge(Filenames) );
+			ThisFunc.Call( Params );
+			Result = Params.GetReturnBool();
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception in OnTryDragDrop: " << e.what() << std::endl;
+		}
 	};
 	
 	try
 	{
-		mContainer.RunScoped( Runner );
+		mContext.Execute( Runner );
 		return Result;
 	}
 	catch(std::exception& e)
@@ -141,33 +136,26 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 {
 	//	copy for queue
 	Array<std::string> Filenames( FilenamesOrig );
+	
 	//  call javascript
-	auto Runner = [=](Local<Context> Context)
+	auto Runner = [=](Bind::TContext& Context)
 	{
-		auto& Isolate = *Context->GetIsolate();
-		auto This = this->GetHandle();
-		auto Func = v8::GetFunction( Context, This, "OnDragDrop" );
-		
-		auto GetFilename = [&](size_t Index)
-		{
-			return v8::GetString( Isolate, Filenames[Index] );
-		};
-		auto FilenamesArray = v8::GetArray( Isolate, Filenames.GetSize(), GetFilename );
-		BufferArray<Local<Value>,2> Args;
-		
-		Args.PushBack( FilenamesArray );
-		
 		try
 		{
-			mContainer.ExecuteFunc( Context, Func, This, GetArrayBridge(Args) );
+			auto This = this->GetHandle();
+			auto ThisFunc = This.GetFunction("OnDragDrop");
+			Bind::TCallback Params(Context);
+			Params.SetThis( This );
+			Params.SetArgumentArray( 0, GetArrayBridge(Filenames) );
+			ThisFunc.Call( Params );
 		}
-		catch (std::exception& e)
+		catch(std::exception& e)
 		{
 			std::Debug << "Exception in OnDragDrop: " << e.what() << std::endl;
 		}
 	};
 	
-	mContainer.QueueScoped( Runner );
+	mContext.Queue( Runner );
 }
 
 
@@ -204,6 +192,7 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWindowWrapper>();
+	auto& Context = Params.mContext;
 	
 	if ( Params.GetArgumentCount() >= 1 )
 	{
@@ -216,12 +205,12 @@ void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 			OnShaderBind = [&]
 			{
 				throw Soy::AssertException("Figure out params to exec()");
-				auto Callback = Params.GetArgumentFunction(1);
-				auto This = Params.mContext.GetGlobalObject();
-				BufferArray<Bind::TObject,1> Args;
-				Args.PushBack( ShaderObject );
-				Params.mContext.Execute( Callback, This, GetArrayBridge(Args) );
-				//Params.mContainer.ExecuteFunc( Params.mContext, OnShaderBindHandleFunc, OnShaderBindThis, GetArrayBridge(Args) );
+				auto CallbackFunc = Params.GetArgumentFunction(1);
+				auto This = Params.ThisObject();
+				Bind::TCallback CallbackParams(Context);
+				CallbackParams.SetThis( This );
+				CallbackParams.SetArgumentObject(0,ShaderObject);
+				Context.Execute( CallbackParams );
 			};
 		}
 		
@@ -303,7 +292,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	//	gr: got a crash here where v8 was writing to 0xaaaaaaaaa
 	//		which is scribbled memory (freshly initialised)
 	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise();
 
 	auto TargetHandle = Params.GetArgumentObject(0);
 	auto CallbackHandle = Params.GetArgumentFunction(1);
@@ -320,29 +309,23 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	
 	auto ExecuteRenderCallback = [=](Bind::TContext& Context)
 	{
-		auto& Func = *RenderCallbackPersistent->mFunction;
+		auto Func = RenderCallbackPersistent.GetFunction();
 		auto This = Context.GetGlobalObject();
-		auto& Window = *WindowPersistent->mObject;
-		auto& Target = *TargetPersistent->mObject;
-		BufferArray<Bind::TObject,2> CallbackParams;
-		CallbackParams.PushBack( Window );
-		CallbackParams.PushBack( Target );
-		Context.Execute( Func, This, GetArrayBridge(CallbackParams) );
-		/*
-		BufferArray<v8::Local<v8::Value>,2> CallbackParams;
-		CallbackParams.PushBack( WindowPersistent->mObject.get() );
-		CallbackParams.PushBack( TargetLocal );
-		auto CallbackFunctionLocal = RenderCallbackPersistent->GetLocal(*Isolate);
-		auto FunctionThis = Context->Global();
-		auto ExecuteResult = Container->ExecuteFunc( Context, CallbackFunctionLocal, FunctionThis, GetArrayBridge(CallbackParams) );
+		auto Window = WindowPersistent.GetObject();
+		auto Target = TargetPersistent.GetObject();
+		
+		Bind::TCallback CallbackParams(Context);
+		CallbackParams.SetThis( This );
+		CallbackParams.SetArgumentObject( 0, Window );
+		CallbackParams.SetArgumentObject( 1, Target );
 		//	todo: return this result to the promise
-		 */
+		Context.Execute( CallbackParams );
 	};
 	
 	auto OnCompleted = [=](Bind::TContext& Context)
 	{
-		auto& Target = *TargetPersistent->mObject;
-		Resolver->Resolve( Target );
+		auto Target = TargetPersistent.GetObject();
+		Promise.Resolve( Target );
 	};
 	
 	auto OpenglContext = This.mWindow->GetContext();
@@ -396,17 +379,17 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Local<Context> Context)
+			auto OnError = [=](Bind::TContext& Context)
 			{
-				Resolver->Reject( ExceptionString );
+				Promise.Reject( ExceptionString );
 			};
-			Container->QueueScoped( OnError );
+			pContext->Queue( OnError );
 		}
 	};
 	OpenglContext->PushJob( OpenglRender );
 
 	//	return the promise
-	Params.Return( *Resolver );
+	Params.Return( Promise );
 }
 
 /*
@@ -552,38 +535,15 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 
 
 
-Local<FunctionTemplate> TWindowWrapper::CreateTemplate(TV8Container& Container)
+void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	
-	//	add members
-	Container.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
-	Container.BindFunction<SetViewport_FunctionName>( InstanceTemplate, SetViewport );
-	Container.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
-	Container.BindFunction<EnableBlend_FunctionName>( InstanceTemplate, EnableBlend );
-	Container.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
-	Container.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
-	Container.BindFunction<GetScreenRect_FunctionName>( InstanceTemplate, GetScreenRect );
-	
-	
-	return ConstructorFunc;
+	Template.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
+	Template.BindFunction<SetViewport_FunctionName>( InstanceTemplate, SetViewport );
+	Template.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
+	Template.BindFunction<EnableBlend_FunctionName>( InstanceTemplate, EnableBlend );
+	Template.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
+	Template.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
+	Template.BindFunction<GetScreenRect_FunctionName>( InstanceTemplate, GetScreenRect );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
@@ -728,80 +688,36 @@ TShaderWrapper::~TShaderWrapper()
 }
 
 
-void TShaderWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TShaderWrapper::Construct(Bind::TCallback& Params)
 {
-	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
+	auto& This = Params.This<TShaderWrapper>();
 	
-	if ( !Arguments.IsConstructCall() )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	if ( Arguments.Length() != 3 )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "missing arguments (Window,FragSource,VertSource)"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	auto This = Arguments.This();
-	
-	//	gr: auto catch this
-	try
-	{
-		auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-		
-		//	access to context!
-		auto RenderTargetHandle = Arguments[0];
-		auto& WindowBase = v8::GetObject<TV8ObjectWrapperBase>(RenderTargetHandle);
-		auto& Window = dynamic_cast<TOpenglContextWrapper&>( WindowBase );
-		auto OpenglContext = Window.GetOpenglContext();
-		auto VertSource = v8::GetString( Arguments[1] );
-		auto FragSource = v8::GetString( Arguments[2] );
+	//	access to context!
+	auto& RenderContext = Params.GetArgumentPointer<TOpenglContextWrapper>(0);
 
-		//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-		//		but it also needs to know of the V8container to run stuff
-		//		cyclic hell!
-		auto* NewShader = new TShaderWrapper();
-		NewShader->mHandle = v8::GetPersistent( *Isolate, Arguments.This() );
-		NewShader->mContainer = &Container;
+	auto VertSoruce = Params.GetArgumentString(1);
+	auto FragSource = Params.GetArgumentString(2);
 
-		NewShader->CreateShader( OpenglContext, VertSource.c_str(), FragSource.c_str() );
-		
-		//	set fields
-		This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewShader ) );
-		
-		// return the new object back to the javascript caller
-		Arguments.GetReturnValue().Set( This );
-	}
-	catch(std::exception& e)
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, e.what() ));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
+	auto OpenglContext = RenderContext.GetOpenglContext();
+
+	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
+	//		but it also needs to know of the V8container to run stuff
+	//		cyclic hell!
+	This.CreateShader( OpenglContext, VertSource.c_str(), FragSource.c_str() );
 }
 
 
-v8::Local<v8::Value> TShaderWrapper::SetUniform(v8::TCallback& Params)
+void TShaderWrapper::SetUniform(Bind::TCallback& Params)
 {
-	auto ThisHandle = Params.mParams.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TShaderWrapper>( ThisHandle );
-	return This.DoSetUniform( Params );
+	auto& This = Params.This<TShaderWrapper>();
+	This.DoSetUniform( Params );
 }
 
-v8::Local<v8::Value> TShaderWrapper::DoSetUniform(v8::TCallback& Params)
+void TShaderWrapper::DoSetUniform(v8::TCallback& Params)
 {
-	auto& This = *this;
-	auto& Arguments = Params.mParams;
+	auto& Shader = *mShader;
 	
-	auto pShader = This.mShader;
-	auto& Shader = *pShader;
-	
-	auto UniformName = v8::GetString(Arguments[0]);
+	auto UniformName = Params.GetArgumentString(0);
 	auto Uniform = Shader.GetUniform( UniformName.c_str() );
 	if ( !Uniform.IsValid() )
 	{
@@ -809,50 +725,33 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(v8::TCallback& Params)
 		Error << "Shader missing uniform \"" << UniformName << "\"";
 		//	gr: webgl gives a warning, but doesn't throw. Lets emulate that with debug output
 		//throw Soy::AssertException(Error.str());
-		//std::Debug << Error.str() << std::endl;
-		return v8::Undefined(Params.mIsolate);
+		std::Debug << Error.str() << std::endl;
+		return;
 	}
 
-	//	get type from args
-	//	gr: we dont have vector types yet, so use arrays
-	auto ValueHandle = Arguments[1];
-	
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
-		//	for immediate mode, glActiveTexture has already been done
-		//	and texture has been bound, so if we just have 1 argument, it's the index for the activetexture
-		//	really we want to grab all that at a high level.
-		//	we could override, but there's a possibility the shader explicitly is picking binding slots
-		if ( Arguments.Length() == 2 && Arguments[1]->IsNumber() )
+		auto BindIndex = this->mCurrentTextureIndex++;
+		auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+
+		//	gr: planning ahead
+		auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
 		{
-			auto BindIndex = Arguments[1].As<Number>()->Int32Value();
-			pShader->SetUniform( Uniform, BindIndex );
-		}
-		else
+			auto& Texture = Image->GetTexture();
+			//std::Debug << "Binding " << Texture.mTexture.mName << " to " << BindIndex << std::endl;
+			pShader->SetUniform( Uniform, Texture, BindIndex );
+		};
+		auto OnTextureError = [](const std::string& Error)
 		{
-			auto BindIndex = this->mCurrentTextureIndex++;
-			
-			//	get the image
-			auto* Image = &v8::GetObject<TImageWrapper>(ValueHandle);
-			//	gr: planning ahead
-			auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
-			{
-				auto& Texture = Image->GetTexture();
-				//std::Debug << "Binding " << Texture.mTexture.mName << " to " << BindIndex << std::endl;
-				pShader->SetUniform( Uniform, Texture, BindIndex );
-			};
-			auto OnTextureError = [](const std::string& Error)
-			{
-				std::Debug << "Error loading texture " << Error << std::endl;
-				std::Debug << "Todo: relay to promise" << std::endl;
-			};
-			Image->GetTexture( *mOpenglContext, OnTextureLoaded, OnTextureError );
-		}
+			std::Debug << "Error loading texture " << Error << std::endl;
+			std::Debug << "Todo: relay to promise" << std::endl;
+		};
+		Image.GetTexture( *mOpenglContext, OnTextureLoaded, OnTextureError );
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
 		BufferArray<float,1024*4> Floats;
-		EnumArray( ValueHandle, GetArrayBridge(Floats), Uniform.mName );
+		Params.GetArgumentArray( 0, GetArrayBridge(Floats) );
 		
 		//	Pad out if the uniform is an array and we're short...
 		//	maybe need more strict alignment when enumerating sub arrays above
@@ -875,46 +774,23 @@ v8::Local<v8::Value> TShaderWrapper::DoSetUniform(v8::TCallback& Params)
 	}
 	else if ( Uniform.mType == SoyGraphics::TElementType::Bool )
 	{
-		auto ValueBool = Local<Boolean>::Cast( ValueHandle );
-		auto Bool = ValueBool->Value();
+		auto Bool =	Params.GetArgumentBool( 0 );
 		Shader.SetUniform( Uniform, Bool );
 	}
 	else if ( Uniform.mType == SoyGraphics::TElementType::Int32 )
 	{
-		auto ValueNumber = Local<Number>::Cast( ValueHandle );
-		auto Integer = ValueNumber->Int32Value();
+		auto Integer =	Params.GetArgumentInt( 0 );
 		Shader.SetUniform( Uniform, Integer );
 	}
 	else
 	{
 		throw Soy::AssertException("Currently only image & float uniform supported");
 	}
-
-	return v8::Undefined(Params.mIsolate);
 }
 
-Local<FunctionTemplate> TShaderWrapper::CreateTemplate(TV8Container& Container)
+void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	Container.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
-
-	return ConstructorFunc;
+	Template.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
 }
 
 void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)

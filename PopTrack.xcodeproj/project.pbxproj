@@ -13,15 +13,12 @@
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
 		BF19612421B9D2B8007014EF /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
-		BF1E05AE2117328300B56DE4 /* TV8ObjectWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */; };
 		BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
 		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF377319211F066E008EB5F7 /* Data_Posenet in Resources */ = {isa = PBXBuildFile; fileRef = BFCF8B562107552700EE7307 /* Data_Posenet */; };
 		BF3786E92132C81D008E4350 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
-		BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3786EA2132D846008E4350 /* TV8Inspector.cpp */; };
-		BF39256620E51C36005AE288 /* TV8Instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF39256520E51C36005AE288 /* TV8Instance.cpp */; };
 		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -87,7 +84,6 @@
 		BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689ADA20D6DAC0000BC812 /* SoyWave.cpp */; };
 		BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
 		BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
-		BF689B0020D9A52E000BC812 /* TV8Container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AFE20D9A52E000BC812 /* TV8Container.cpp */; };
 		BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF691F001C3FEEE90092FC34 /* SoySrt.cpp */; };
 		BF6EB3262111160500FC991B /* AvfVideoCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3242111160500FC991B /* AvfVideoCapture.mm */; };
 		BF6EB3292111167800FC991B /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
@@ -114,7 +110,6 @@
 		BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
 		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
 		BF92C19021BAB82400A1DD49 /* Data_Holosports in Resources */ = {isa = PBXBuildFile; fileRef = BF92C18E21BAB81E00A1DD49 /* Data_Holosports */; };
-		BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF97592520E9611A0093B296 /* TApiOpencl.cpp */; };
 		BF99BE1F21F892F700E6CE5B /* Data_PeopleDetector in Resources */ = {isa = PBXBuildFile; fileRef = BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */; };
 		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
 		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */; };
@@ -136,7 +131,6 @@
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
-		EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */; };
 		EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB6D678121136A4E00687768 /* SoyBase64.cpp */; };
 		EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */; };
@@ -1084,7 +1078,6 @@
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
 				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
 				BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */,
-				BF39256620E51C36005AE288 /* TV8Instance.cpp in Sources */,
 				BF6EB3292111167800FC991B /* TApiMedia.cpp in Sources */,
 				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
@@ -1097,13 +1090,11 @@
 				BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */,
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
 				BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */,
-				BF97592620E9611A0093B296 /* TApiOpencl.cpp in Sources */,
 				BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */,
 				BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */,
 				EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */,
 				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
 				BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */,
-				BF689B0020D9A52E000BC812 /* TV8Container.cpp in Sources */,
 				FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */,
 				BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */,
 				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
@@ -1130,14 +1121,11 @@
 				BF5749C421FF66A400A7A659 /* cpm.mlmodel in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */,
-				BF3786EC2132D846008E4350 /* TV8Inspector.cpp in Sources */,
 				BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
 				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
 				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
 				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
-				EB5253C12124323E00E6FBE1 /* TApiOpenglContext.cpp in Sources */,
-				BF1E05AE2117328300B56DE4 /* TV8ObjectWrapper.cpp in Sources */,
 				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
 				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
 				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,

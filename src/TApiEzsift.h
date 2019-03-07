@@ -1,6 +1,5 @@
 #pragma once
-#include "TV8Container.h"
-#include "TV8ObjectWrapper.h"
+#include "TBind.h"
 
 class SoyPixels;
 class SoyPixelsImpl;
@@ -8,7 +7,7 @@ class TPixelBuffer;
 
 namespace ApiEzsift
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 namespace Ezsift
@@ -18,19 +17,19 @@ namespace Ezsift
 
 
 extern const char Ezsift_TypeName[];
-class TEzsiftWrapper : public TObjectWrapper<Ezsift_TypeName,Ezsift::TInstance>
+class TEzsiftWrapper : public Bind::TObjectWrapper<Ezsift_TypeName,Ezsift::TInstance>
 {
 public:
-	TEzsiftWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
-		TObjectWrapper			( Container, This )
+	TEzsiftWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper		( Context, This )
 	{
 	}
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+	static void			CreateTemplate(Bind::TTemplate& Template);
 
-	virtual void 							Construct(Bind::TCallback& Arguments) override;
+	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
-	static void								GetFeatures(Bind::TCallback& Arguments);
+	static void			GetFeatures(Bind::TCallback& Arguments);
 
 	
 protected:

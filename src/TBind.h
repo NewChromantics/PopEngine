@@ -7,7 +7,11 @@
 */
 #include <string>
 #include "Array.hpp"
+#include "JsCoreInstance.h"
 
+namespace Bind = JsCore;
+
+/*
 namespace Bind
 {
 	class TContext;
@@ -175,36 +179,5 @@ public:
 };
 
 
+*/
 
-template<typename TYPE>
-inline Bind::TArray Bind::TContext::CreateArray(ArrayBridge<TYPE>&& Values)
-{
-	auto GetElement = [&](size_t Index)
-	{
-		return Values[Index];
-	};
-	auto Array = CreateArray( Values.GetSize(), GetElement );
-	return Array;
-}
-
-
-template<typename TYPE>
-inline TYPE& Bind::TCallback::GetArgumentPointer(size_t Index)
-{
-	auto* Ptr = GetArgumentPointer(Index);
-	return *reinterpret_cast<TYPE*>( Ptr );
-}
-
-template<typename TYPE>
-inline TYPE& Bind::TCallback::This()
-{
-	auto* This = GetThis();
-	return *reinterpret_cast<TYPE*>( This );
-}
-
-template<typename TYPE>
-inline TYPE& Bind::TObject::This()
-{
-	auto* This = GetThis();
-	return *reinterpret_cast<TYPE*>( This );
-}

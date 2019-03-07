@@ -2,7 +2,7 @@
 #include "TV8Container.h"
 #include "TApiCommon.h"
 #include "TApiOpengl.h"
-#include "TApiOpencl.h"
+//#include "TApiOpencl.h"
 #include "TApiDlib.h"
 #include "TApiMedia.h"
 #include "TApiWebsocket.h"

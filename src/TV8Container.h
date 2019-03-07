@@ -268,21 +268,6 @@ public:
 	v8::Isolate&	mIsolate;
 };
 
-class TV8ObjectWrapperBase
-{
-public:
-	virtual ~TV8ObjectWrapperBase()	{}
-	
-	//	handle actual constructor (arguments etc), throw on error
-	virtual void 	Construct(Bind::TCallback& Arguments)=0;
-	
-	template<typename TYPE>
-	static TV8ObjectWrapperBase*	Allocate(TV8Container& Container,v8::Local<v8::Object> This)
-	{
-		return new TYPE( Container, This );
-	}
-};
-
 
 class TV8ObjectTemplate
 {

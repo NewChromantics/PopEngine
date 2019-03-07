@@ -7,31 +7,6 @@
 
 
 
-class TFunction
-{
-public:
-	TFunction(JSContextRef Context,JSValueRef Value);
-	
-	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr);
-	
-private:
-	JSContextRef	mContext;
-	JSObjectRef		mFunctionObject = nullptr;
-};
-
-class TPromise
-{
-public:
-	TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc);
-	
-	void			Resolve(JSValueRef Value)	{	mResolve.Call(nullptr,Value);	}
-	void			Reject(JSValueRef Value)	{	mReject.Call(nullptr,Value);	}
-	
-	JSObjectRef		mPromise;
-	TFunction		mResolve;
-	TFunction		mReject;
-};
-
 JSObjectRef GetObject(JSContextRef Context,JSValueRef Value)
 {
 	if ( !JSValueIsObject( Context, Value ) )
@@ -511,3 +486,27 @@ float JsCore::TCallbackInfo::GetArgumentFloat(size_t Index) const
 	auto Value = JsCore::GetFloat( mContext, Handle );
 	return Value;
 }
+
+
+
+JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
+{
+	auto Global = GetRootGlobalObject();
+	if ( ObjectName.length() == 0 )
+		return Global;
+	auto Child = Global.GetObject( ObjectName );
+	return Child;
+}
+
+
+void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,const std::string&  Name)
+{
+	auto NewObject = CreateObjectInstance( ObjectType );
+	auto ParentName = Name;
+	auto ObjectName = Soy::StringPopRight( ParentName, '.' );
+	auto ParentObject = GetGlobalObject( ParentName );
+	ParentObject.Set( ObjectName, NewObject );
+}
+
+
+

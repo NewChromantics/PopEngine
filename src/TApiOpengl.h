@@ -1,13 +1,12 @@
 #pragma once
-#include "TV8Container.h"
+#include "TBind.h"
 #include "SoyOpenglWindow.h"
-#include "TV8ObjectWrapper.h"
 
 
 
 namespace ApiOpengl
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 
@@ -49,25 +48,24 @@ public:
 
 	
 	
-extern const char Window_TypeName[];
-class TWindowWrapper : public TObjectWrapper<Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
+extern const char Opengl_Window_TypeName[];
+class TWindowWrapper : public Bind::TObjectWrapper<Opengl_Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
 {
 public:
-	TWindowWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
-		TObjectWrapper		( Container, This ),
+	TWindowWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper		( Context, This ),
 		mActiveRenderTarget	(nullptr)
 	{
 	}
 	~TWindowWrapper();
 	
 
-	void		OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext);
-	void		OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName);
-	bool		OnTryDragDrop(ArrayBridge<std::string>& Filenames);
-	void		OnDragDrop(ArrayBridge<std::string>& Filenames);
+	void				OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext);
+	void				OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName);
+	bool				OnTryDragDrop(ArrayBridge<std::string>& Filenames);
+	void				OnDragDrop(ArrayBridge<std::string>& Filenames);
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-
+	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
 	//	these are context things
@@ -92,33 +90,37 @@ public:
 
 
 
-class TShaderWrapper
+
+
+	
+extern const char Opengl_Shader_TypeName[];
+class TShaderWrapper: public Bind::TObjectWrapper<Opengl_Shader_TypeName,Opengl::TShader>
 {
 public:
-	TShaderWrapper() :
-		mContainer	( nullptr )
+	TShaderWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper		( Context, This )
 	{
 	}
 	~TShaderWrapper();
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-
-	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	static v8::Local<v8::Value>				SetUniform(v8::TCallback& Arguments);
-	v8::Local<v8::Value>					DoSetUniform(v8::TCallback& Arguments);
-
-	static TShaderWrapper&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TShaderWrapper>( Value, 0 );	}
+	static void			CreateTemplate(Bind::TTemplate& Template);
 	
-	void									CreateShader(std::shared_ptr<Opengl::TContext>& Context,const char* VertSource,const char* FragSource);
+	virtual void 		Construct(Bind::TCallback& Params) override;
+
+	static void			Constructor(Bind::TCallback& Params);
+	static void			SetUniform(Bind::TCallback& Params);
+	void				DoSetUniform(Bind::TCallback& Params);
+
+	void				CreateShader(std::shared_ptr<Opengl::TContext>& Context,const char* VertSource,const char* FragSource);
 	
 public:
-	Opengl::TContext*					mContext;
-	std::shared_ptr<V8Storage<v8::Object>>	mHandle;
-	std::shared_ptr<Opengl::TShader>	mShader;
-	std::shared_ptr<Opengl::TContext>	mOpenglContext;
+	std::shared_ptr<Opengl::TShader>&	mShader = mObject;
 	std::function<void()>				mShaderDealloc;
-	TV8Container*						mContainer;
-	
+
+	//	which is right!
+	Opengl::TContext*					mOpenglContextPtr = nullptr;
+	std::shared_ptr<Opengl::TContext>	mOpenglContext;
+
 	size_t								mCurrentTextureIndex = 0;	//	glActiveTexture
 };
 

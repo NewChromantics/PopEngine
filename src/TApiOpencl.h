@@ -1,11 +1,11 @@
 #pragma once
-#include "TV8Container.h"
+#include "TBind.h"
 #include "SoyOpenCl.h"
 
 
 namespace ApiOpencl
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 class TOpenclKernel;
@@ -13,27 +13,26 @@ class TOpenclContext;
 
 
 //	bindings for an opencl context
-class TOpenclContext
+extern const char Opencl_Context_TypeName[];
+class TOpenclContextWrapper : public Bind::TObjectWrapper<Opencl_Context_TypeName,Opencl::TContextThread>
 {
 public:
-	TOpenclContext(TV8Container& Container,const std::string& DeviceName);
+	TOpenclContextWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper	( Context, This )
+	{
+	}
 	
-	static TOpenclContext&					Get(v8::Local<v8::Value> Value)	{	return v8::GetInternalFieldObject<TOpenclContext>( Value, 0 );	}
+	static void			CreateTemplate(Bind::TTemplate& Template);
+	virtual void 		Construct(Bind::TCallback& Arguments) override;
+	void 				Construct(const std::string& DeviceName);
 
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-
-	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-
-	static v8::Local<v8::Value>				ExecuteKernel(const v8::TCallback& Arguments);
-	void									DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,std::shared_ptr<V8Storage<v8::Function>> IterationCallback,std::shared_ptr<V8Storage<v8::Function>> FinishedCallback,std::shared_ptr<V8Storage<v8::Promise::Resolver>> Resolver);
+	static void			ExecuteKernel(Bind::TCallback& Arguments);
+	void				DoExecuteKernel(TOpenclKernel& Kernel,BufferArray<int,3> IterationCount,std::shared_ptr<V8Storage<v8::Function>> IterationCallback,std::shared_ptr<V8Storage<v8::Function>> FinishedCallback,std::shared_ptr<V8Storage<v8::Promise::Resolver>> Resolver);
 
 public:
-	TV8Container&						mContainer;
-	v8::Persistent<v8::Object>			mHandle;
-	
 	//	gr: we can handle multiple, but lets do that at a high level :)
-	std::shared_ptr<Opencl::TDevice>		mOpenclDevice;
-	std::shared_ptr<Opencl::TContextThread>	mOpenclContext;
+	std::shared_ptr<Opencl::TDevice>			mOpenclDevice;
+	std::shared_ptr<Opencl::TContextThread>&	mOpenclContext = mObject;
 };
 
 
