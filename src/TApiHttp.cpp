@@ -6,6 +6,8 @@
 #include "SoyMediaFormat.h"
 
 
+const char HttpServer_TypeName[] = "Http";
+
 const char GetAddress_FunctionName[] = "GetAddress";
 const char Send_FunctionName[] = "Send";
 const char GetPeers_FunctionName[] = "GetPeers";

@@ -32,11 +32,13 @@ namespace JsCore
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	
-	JSStringRef	GetValue(JSContextRef Context,const std::string& Value);
+	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
+	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
 	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
+	JSValueRef	GetValue(JSContextRef Context,TObject& Value);
 
 	template<typename TYPE>
 	JSObjectRef	GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array);
@@ -91,27 +93,6 @@ public:
 private:
 	JSContextRef	mContext = nullptr;
 	JSObjectRef		mThis = nullptr;
-};
-
-class JsCore::TPromise
-{
-public:
-	TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc);
-	
-	//	const for lambda[=] copy capture
-	void			Resolve(const std::string& Value) const;
-	void			Resolve(Bind::TObject& Value) const;
-	void			Resolve(ArrayBridge<std::string>&& Values) const;
-	void			Resolve(ArrayBridge<float>&& Values) const;
-	void			Resolve(Bind::TArray& Value) const;
-	//void			Resolve(JSValueRef Value) const	{	mResolve.Call(nullptr,Value);	}
-
-	void			Reject(const std::string& Value) const;
-	//void			Reject(JSValueRef Value) const	{	mReject.Call(nullptr,Value);	}
-
-	JSObjectRef		mPromise;
-	TFunction		mResolve;
-	TFunction		mReject;
 };
 
 
@@ -184,7 +165,7 @@ private:
 	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
 	
-public://	temp
+public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
 	
@@ -194,6 +175,8 @@ public://	temp
 
 	//	"templates" in v8, "classes" in jscore
 	Array<TTemplate>	mObjectTemplates;
+	
+	JsCore::TFunction	mMakePromiseFunction;
 };
 
 
@@ -298,6 +281,7 @@ class JsCore::TObject //: public Bind::TObject
 public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
+	TObject(JSContextRef Context,JSValueRef This);	//	if This==null then it's the global
 	
 	template<typename TYPE>
 	TYPE&				This();
@@ -330,6 +314,37 @@ protected:
 public:
 	JSObjectRef		mThis = nullptr;
 };
+
+
+
+class JsCore::TPromise
+{
+public:
+	//TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc);
+	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject) :
+		mPromise	( Promise ),
+		mResolve	( Resolve ),
+		mReject		( Reject )
+	{
+	}
+	
+	//	const for lambda[=] copy capture
+	void			Resolve(const std::string& Value) const;
+	void			Resolve(Bind::TObject& Value) const;
+	void			Resolve(ArrayBridge<std::string>&& Values) const;
+	void			Resolve(ArrayBridge<float>&& Values) const;
+	void			Resolve(Bind::TArray& Value) const;
+	//void			Resolve(JSValueRef Value) const	{	mResolve.Call(nullptr,Value);	}
+	
+	void			Reject(const std::string& Value) const;
+	//void			Reject(JSValueRef Value) const	{	mReject.Call(nullptr,Value);	}
+	
+public:
+	TObject			mPromise;
+	TFunction		mResolve;
+	TFunction		mReject;
+};
+
 
 
 class JsCore::TPersistent

@@ -48,54 +48,6 @@ JSValueRef JsCore::TFunction::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
 	
 	return Result;
 }
-
-
-JsCore::TPromise JSCreatePromise(JSContextRef Context)
-{
-	static std::shared_ptr<JsCore::TFunction> MakePromiseFunction;
-	
-	if ( !MakePromiseFunction )
-	{
-		auto* MakePromiseFunctionSource =  R"V0G0N(
-		
-		let MakePromise = function()
-		{
-			var PromData = {};
-			var prom = new Promise( function(Resolve,Reject) { PromData.Resolve = Resolve; PromData.Reject = Reject; } );
-			PromData.Promise = prom;
-			prom.Resolve = PromData.Resolve;
-			prom.Reject = PromData.Reject;
-			return prom;
-		}
-		MakePromise;
-		//MakePromise();
-		)V0G0N";
-		
-		JSStringRef MakePromiseFunctionSourceString = JSStringCreateWithUTF8CString(MakePromiseFunctionSource);
-		JSValueRef Exception = nullptr;
-		
-		auto MakePromiseFunctionValue = JSEvaluateScript( Context, MakePromiseFunctionSourceString, nullptr, nullptr, 0, &Exception );
-		if ( Exception!=nullptr )
-			std::Debug << "An exception" << JsCore::HandleToString( Context, Exception ) << std::endl;
-		
-		MakePromiseFunction.reset( new JsCore::TFunction( Context, MakePromiseFunctionValue ) );
-	}
-	
-	auto This = JSContextGetGlobalObject( Context );
-	auto NewPromiseHandle = MakePromiseFunction->Call();
-	
-	auto Type = JSValueGetType( Context, NewPromiseHandle );
-	
-	auto NewPromiseObject = const_cast<JSObjectRef>(NewPromiseHandle);
-	JSValueRef Exception = nullptr;
-	auto Resolve = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Resolve"), &Exception ) );
-	auto Reject = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Reject"), &Exception ) );
-	
-	JsCore::TPromise Promise( Context, NewPromiseObject, Resolve, Reject );
-	
-	return Promise;
-}
-
 */
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
@@ -143,10 +95,17 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 	return Bool;
 }
 
-JSStringRef JsCore::GetValue(JSContextRef Context,const std::string& String)
+JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
 {
 	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
 	return Handle;
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
+{
+	auto StringHandle = JSStringCreateWithUTF8CString( String.c_str() );
+	auto ValueHandle = JSValueMakeString( Context, StringHandle );
+	return ValueHandle;
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
@@ -167,6 +126,11 @@ JSValueRef JsCore::GetValue(JSContextRef Context,float Value)
 JSValueRef JsCore::GetValue(JSContextRef Context,uint8_t Value)
 {
 	return JSValueMakeNumber( Context, Value );
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,TObject& Object)
+{
+	return Object.mThis;
 }
 
 
@@ -289,8 +253,11 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
 	throw Soy::AssertException("Queue a task to execute this!");
 }
 
-Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement)
+template<typename TYPE>
+JsCore::TArray CreateArray(JsCore::TContext& Context,size_t ElementCount,std::function<TYPE(size_t)> GetElement)
 {
+	auto& mContext = Context.mContext;
+	
 	JSValueRef Values[ElementCount];
 	for ( auto i=0;	i<ElementCount;	i++ )
 	{
@@ -299,8 +266,19 @@ Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<std
 	}
 	auto ValuesArray = GetRemoteArray( Values, ElementCount );
 	auto ArrayObject = JsCore::GetArray( mContext, GetArrayBridge(ValuesArray) );
-	JSCore::TArray Array( mContext, ArrayObject );
+	JsCore::TArray Array( mContext, ArrayObject );
 	return Array;
+}
+
+
+Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement)
+{
+	return CreateArray( *this, ElementCount, GetElement );
+}
+
+Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<JsCore::TObject(size_t)> GetElement)
+{
+	return CreateArray( *this, ElementCount, GetElement );
 }
 
 
@@ -337,7 +315,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	}
 
 	JSValueRef Exception = nullptr;
-	auto PropertyName = JsCore::GetValue( mContext, MemberName );
+	auto PropertyName = JsCore::GetString( mContext, MemberName );
 	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
@@ -406,7 +384,7 @@ void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
 
 void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 {
-	auto NameJs = JsCore::GetValue( mContext, Name );
+	auto NameJs = JsCore::GetString( mContext, Name );
 	JSPropertyAttributes Attribs;
 	JSValueRef Exception = nullptr;
 	JSObjectSetProperty( mContext, mThis, NameJs, Value, Attribs, &Exception );
@@ -482,13 +460,62 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 {
 	auto This = GetGlobalObject( ParentObjectName );
 
-	auto FunctionNameJs = JsCore::GetValue( mContext, FunctionName );
+	auto FunctionNameJs = JsCore::GetString( mContext, FunctionName );
 	JSValueRef Exception = nullptr;
 	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, FunctionPtr );
 	ThrowException(Exception);
 	TFunction Function( mContext, FunctionHandle );
 	This.SetFunction( FunctionName, Function );
 }
+
+
+JsCore::TPromise JsCore::TContext::CreatePromise()
+{
+	if ( !mMakePromiseFunction )
+	{
+		auto* MakePromiseFunctionSource =  R"V0G0N(
+		
+		let MakePromise = function()
+		{
+			var PromData = {};
+			var prom = new Promise( function(Resolve,Reject) { PromData.Resolve = Resolve; PromData.Reject = Reject; } );
+			PromData.Promise = prom;
+			prom.Resolve = PromData.Resolve;
+			prom.Reject = PromData.Reject;
+			return prom;
+		}
+		MakePromise;
+		//MakePromise();
+		)V0G0N";
+		
+		JSStringRef FunctionSourceString = JsCore::GetString( mContext, MakePromiseFunctionSource );
+		JSValueRef Exception = nullptr;
+		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
+		ThrowException( Exception );
+		
+		mMakePromiseFunction = TFunction( mContext, FunctionValue );
+	}
+	
+	auto NewPromiseHandle = mMakePromiseFunction.Call();
+	TObject NewPromiseObject( mContext, NewPromiseHandle );
+	auto Resolve = NewPromiseObject.GetFunction("Resolve");
+	auto Reject = NewPromiseObject.GetFunction("Reject");
+
+	TPromise Promise( NewPromiseObject, Resolve, Refject );
+/*
+	TObject NewPromiseObject( mContext, NewPromiseHandle );
+	
+	auto NewPromiseObject = const_cast<JSObjectRef>(NewPromiseHandle);
+	JSValueRef Exception = nullptr;
+	auto Resolve = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Resolve"), &Exception ) );
+	auto Reject = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Reject"), &Exception ) );
+	
+	JsCore::TPromise Promise( Context, NewPromiseObject, Resolve, Reject );
+	*/
+	return Promise;
+}
+
+
 /*
 JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception)
 {

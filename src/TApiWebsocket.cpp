@@ -3,6 +3,8 @@
 #include "TApiCommon.h"
 #include "SoySocket.h"
 
+const char WebsocketServer_TypeName[] = "WebsocketServer";
+
 const char GetAddress_FunctionName[] = "GetAddress";
 const char Send_FunctionName[] = "Send";
 const char GetPeers_FunctionName[] = "GetPeers";
