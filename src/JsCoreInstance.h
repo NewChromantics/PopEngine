@@ -31,10 +31,29 @@ namespace JsCore
 	int32_t		GetInt(JSContextRef Context,JSValueRef Handle);
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
-	JSStringRef	GetString(JSContextRef Context,const std::string& String);
 	
+	JSStringRef	GetValue(JSContextRef Context,const std::string& Value);
+	JSValueRef	GetValue(JSContextRef Context,float Value);
+	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
+	JSValueRef	GetValue(JSContextRef Context,bool Value);
+	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
+
+	template<typename TYPE>
+	JSObjectRef	GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array);
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
+
+	template<typename TYPE>
+	TYPE		FromValue(JSContextRef Context,JSValueRef Handle);
+
 	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
 }
+
+#define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
+	template<> TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
+DEFINE_FROM_VALUE( bool, GetBool );
+DEFINE_FROM_VALUE( int32_t, GetInt );
+DEFINE_FROM_VALUE( std::string, GetString );
+DEFINE_FROM_VALUE( float, GetFloat );
 
 namespace Bind = JsCore;
 #define bind_override
@@ -43,13 +62,25 @@ namespace Bind = JsCore;
 class JsCore::TArray
 {
 public:
+	TArray(JSContextRef Context,JSObjectRef Object) :
+		mContext	( Context ),
+		mThis		( Object )
+	{
+	}
+	
 	void		Set(size_t Index,Bind::TObject& Object);
 	void		CopyTo(ArrayBridge<uint8_t>&& Values);
+
+public:
+	JSContextRef	mContext = nullptr;
+	JSObjectRef		mThis = nullptr;
 };
 
 class JsCore::TFunction
 {
+	friend class TPersistent;
 public:
+	TFunction()		{}
 	TFunction(JSContextRef Context,JSValueRef Value);
 	
 	//	would be nice to capture return, but it's contained inside Params for now. Maybe template & error for type mismatch
@@ -58,8 +89,8 @@ public:
 	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr);
 	
 private:
-	JSContextRef	mContext;
-	JSObjectRef		mFunctionObject = nullptr;
+	JSContextRef	mContext = nullptr;
+	JSObjectRef		mThis = nullptr;
 };
 
 class JsCore::TPromise
@@ -187,6 +218,7 @@ public:
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override;
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override;
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override;
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override;
@@ -236,26 +268,33 @@ public:
 
 class JsCore::TTemplate //: public Bind::TTemplate
 {
+	friend JsCore::TContext;
 public:
-	TTemplate(const std::string& Name) :
-		mName	( Name )
+	TTemplate()	{}
+	TTemplate(JSContextRef Context,const std::string& Name) :
+		mName		( Name ),
+		mContext	( Context )
 	{
 	}
 	
-	template<const char* FUNCTIONNAME>
-	void		BindFunction(std::function<void(Bind::TCallback&)> Function);
-	
 	bool			operator==(const std::string& Name) const	{	return mName == Name;	}
+
+
+	template<const char* FUNCTIONNAME>
+	void			BindFunction(std::function<void(Bind::TCallback&)> Function);
+	void			RegisterClassWithContext();
 	
-public:
+private:
 	std::string		mName;
 	JSClassRef		mClass = nullptr;
+	JSContextRef	mContext = nullptr;
 };
 
 //	make this generic for v8 & jscore
 //	it should also be a Soy::TUniform type
 class JsCore::TObject //: public Bind::TObject
 {
+	friend class TPersistent;
 public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
@@ -293,7 +332,7 @@ public:
 };
 
 
-class Bind::TPersistent
+class JsCore::TPersistent
 {
 public:
 	TPersistent()	{}
@@ -306,8 +345,12 @@ public:
 	bool		IsObject() const;
 	
 	//	const for lambda[=] capture
-	TObject		GetObject() const;
-	TFunction	GetFunction() const;
+	TObject		GetObject() const		{	return mObject;	}
+	TFunction	GetFunction() const		{	return mFunction;	}
+	
+private:
+	TObject		mObject;
+	TFunction	mFunction;
 };
 
 
@@ -321,8 +364,7 @@ public:
 	}
 	virtual ~TObjectWrapperBase()	{}
 
-	TObject			GetHandle()	{	return mHandle.GetObject();	}
-
+	TObject						GetHandle()	{	return mHandle.GetObject();	}
 	
 	//	construct and allocate
 	virtual void 	Construct(TCallback& Arguments)=0;
@@ -351,7 +393,7 @@ public:
 public:
 	TObjectWrapper(TContext& Context,TObject& This);
 	
-	static std::string		GetObjectTypeName()	{	return TYPENAME;	}
+	static std::string		GetTypeName()	{	return TYPENAME;	}
 	static void				CreateTemplate(TTemplate& Template);
 	
 	
@@ -424,3 +466,39 @@ inline TYPE& Bind::TObject::This()
 	auto* TypeWrapper = dynamic_cast<TYPE*>( Wrapper );
 	return *TypeWrapper;
 }
+
+
+
+template<typename OBJECTWRAPPERTYPE>
+void JsCore::TContext::BindObjectType(const std::string& ParentName)
+{
+	//	create a template
+	TTemplate Template( mContext, OBJECTWRAPPERTYPE::GetTypeName() );
+	OBJECTWRAPPERTYPE::CreateTemplate( Template );
+	Template.RegisterClassWithContext();
+	mObjectTemplates.PushBack( Template );
+}
+
+template<typename TYPE>
+JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array)
+{
+	JSValueRef Values[Array.GetSize()];
+	for ( auto i=0;	i<Array.GetSize();	i++ )
+		Values[i] = GetValue( Context, Array[i] );
+	
+	size_t Counter = Array.GetSize();
+	auto ValuesRemote = GetRemoteArray( Values, Counter );
+	auto ValuesRemoteBridge = GetArrayBridge( ValuesRemote );
+
+	auto ArrayObject = GetArray( Context, ValuesRemoteBridge );
+	return ArrayObject;
+}
+
+template<>
+JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<uint8_t>& Array)
+{
+	throw Soy::AssertException("Make typed array");
+	//	make typed array
+}
+
+

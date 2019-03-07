@@ -295,7 +295,7 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 			for ( auto p=0;	p<Planes.GetSize();	p++ )
 			{
 				auto* Plane = Planes[p];
-				auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+				auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetTypeName() );
 				auto& Image = ImageObject.This<TImageWrapper>();
 				Image.SetPixels( *Plane );
 				Images.PushBack( &Image );
@@ -326,7 +326,7 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 	}
 
 	
-	auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+	auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetTypeName() );
 	auto& Image = ImageObject.This<TImageWrapper>();
 	Image.mName = "MediaSource Frame";
 	Image.SetPixelBuffer(PixelBuffer);
@@ -376,7 +376,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 		{
 			auto& PlanePixels = *PlanePixelss[p];
 			
-			auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+			auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 			auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
 			
 			std::stringstream PlaneName;
@@ -396,7 +396,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	Array<Bind::TObject> Frames;
 	while ( This.mDecoder->PopFrame(Frame) )
 	{
-		auto FrameImageObject = Context.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+		auto FrameImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 		auto& FrameImage = FrameImageObject.This<TImageWrapper>();
 		FrameImage.SetPixels( Frame.mPixels );
 		FrameImageObject.SetInt("Time", Frame.mFrameNumber);

@@ -29,9 +29,9 @@ JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
 	if ( ValueType != kJSTypeObject )
 		throw Soy::AssertException("Value for TFunciton is not an object");
 	
-	mFunctionObject = const_cast<JSObjectRef>( Value );
+	mThis = const_cast<JSObjectRef>( Value );
 	
-	if ( !JSObjectIsFunction(Context, mFunctionObject) )
+	if ( !JSObjectIsFunction(Context, mThis) )
 		throw Soy::AssertException("Object should be function");
 }
 /*
@@ -41,7 +41,7 @@ JSValueRef JsCore::TFunction::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
 		This = JSContextGetGlobalObject( mContext );
 	
 	JSValueRef Exception = nullptr;
-	auto Result = JSObjectCallAsFunction( mContext, mFunctionObject, This, 1, &Arg0, &Exception );
+	auto Result = JSObjectCallAsFunction( mContext, mThis, This, 1, &Arg0, &Exception );
 	
 	if ( Exception!=nullptr )
 		throw Soy::AssertException( JsCore::HandleToString( mContext, Exception ) );
@@ -143,13 +143,32 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 	return Bool;
 }
 
-JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
+JSStringRef JsCore::GetValue(JSContextRef Context,const std::string& String)
 {
 	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
 	return Handle;
 }
 
-	
+JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
+{
+	return JSValueMakeBoolean( Context, Value );
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,uint32_t Value)
+{
+	return JSValueMakeNumber( Context, Value );
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,float Value)
+{
+	return JSValueMakeNumber( Context, Value );
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,uint8_t Value)
+{
+	return JSValueMakeNumber( Context, Value );
+}
+
 
 JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename) :
 	mContextGroup	( JSContextGroupCreate() ),
@@ -252,7 +271,36 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	JSValueRef Exception = nullptr;
 	auto ResultHandle = JSEvaluateScript( mContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
 	ThrowException(Exception);
-	
+}
+
+
+void JsCore::TContext::QueueDelay(std::function<void(JsCore::TContext&)> Functor,size_t DelayMs)
+{
+	throw Soy::AssertException("Queue a task to execute this!");
+}
+
+void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor)
+{
+	throw Soy::AssertException("Queue a task to execute this!");
+}
+
+void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
+{
+	throw Soy::AssertException("Queue a task to execute this!");
+}
+
+Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement)
+{
+	JSValueRef Values[ElementCount];
+	for ( auto i=0;	i<ElementCount;	i++ )
+	{
+		auto Element = GetElement(i);
+		Values[i] = GetValue( mContext, Element );
+	}
+	auto ValuesArray = GetRemoteArray( Values, ElementCount );
+	auto ArrayObject = JsCore::GetArray( mContext, GetArrayBridge(ValuesArray) );
+	JSCore::TArray Array( mContext, ArrayObject );
+	return Array;
 }
 
 
@@ -289,7 +337,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	}
 
 	JSValueRef Exception = nullptr;
-	auto PropertyName = JsCore::GetString( mContext, MemberName );
+	auto PropertyName = JsCore::GetValue( mContext, MemberName );
 	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
@@ -338,6 +386,18 @@ float JsCore::TObject::GetFloat(const std::string& MemberName)
 	return Valuef;
 }
 
+Bind::TFunction JsCore::TObject::GetFunction(const std::string& MemberName)
+{
+	auto Object = GetObject(MemberName);
+	Bind::TFunction Func( mContext, Object.mThis );
+	return Func;
+}
+
+void* JsCore::TObject::GetThis()
+{
+	return JSObjectGetPrivate( mThis );
+}
+
 
 void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
 {
@@ -346,11 +406,43 @@ void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
 
 void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 {
-	auto NameJs = JsCore::GetString( mContext, Name );
+	auto NameJs = JsCore::GetValue( mContext, Name );
 	JSPropertyAttributes Attribs;
 	JSValueRef Exception = nullptr;
 	JSObjectSetProperty( mContext, mThis, NameJs, Value, Attribs, &Exception );
 	ThrowException( mContext, Exception );
+}
+
+void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<bool>&& Values)
+{
+	auto Array = JsCore::GetArray( mContext, Values );
+	SetMember( Name, Array );
+}
+
+void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<Bind::TObject>&& Values)
+{
+	auto Array = JsCore::GetArray( mContext, Values );
+	SetMember( Name, Array );
+}
+
+void JsCore::TObject::SetArray(const std::string& Name,Bind::TArray& Array)
+{
+	SetMember( Name, Array.mThis );
+}
+
+void JsCore::TObject::SetInt(const std::string& Name,uint32_t Value)
+{
+	SetMember( Name, GetValue( mContext, Value ) );
+}
+
+void JsCore::TObject::SetFloat(const std::string& Name,float Value)
+{
+	SetMember( Name, GetValue( mContext, Value ) );
+}
+
+void JsCore::TObject::SetString(const std::string& Name,const std::string& Value)
+{
+	SetMember( Name, GetValue( mContext, Value ) );
 }
 
 
@@ -390,7 +482,7 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 {
 	auto This = GetGlobalObject( ParentObjectName );
 
-	auto FunctionNameJs = JsCore::GetString( mContext, FunctionName );
+	auto FunctionNameJs = JsCore::GetValue( mContext, FunctionName );
 	JSValueRef Exception = nullptr;
 	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, FunctionPtr );
 	ThrowException(Exception);
@@ -502,4 +594,117 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 }
 
 
+Bind::TPersistent::TPersistent(TObject& Object) :
+	mObject		( Object )
+{
+	JSValueProtect( mObject.mContext, mObject.mThis );
+}
+
+Bind::TPersistent::TPersistent(TFunction& Function) :
+	mFunction		( Function )
+{
+	JSValueProtect( mFunction.mContext, mFunction.mThis );
+}
+
+Bind::TPersistent::~TPersistent()
+{
+	if ( mObject.mThis != nullptr )
+		JSValueUnprotect( mObject.mContext, mObject.mThis );
+
+	if ( mFunction.mThis != nullptr )
+		JSValueUnprotect( mFunction.mContext, mFunction.mThis );
+}
+
+
+JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values)
+{
+	JSValueRef Exception = nullptr;
+	auto ArrayObject = JSObjectMakeArray( Context, Values.GetSize(), Values.GetArray(), &Exception );
+	ThrowException( Context, Exception );
+	return ArrayObject;
+}
+		 
+
+void JsCore::TArray::Set(size_t Index,Bind::TObject& Object)
+{
+	JSValueRef Exception = nullptr;
+	JSObjectSetPropertyAtIndex( mContext, mThis, Index, Object.mThis, &Exception );
+	ThrowException( mContext, Exception );
+}
+
+template<typename SRCTYPE,typename DSTTYPE>
+void CopyArray(void* SrcPtrVoid,size_t SrcCount,ArrayBridge<DSTTYPE>& Dst)
+{
+	auto* SrcPtr = reinterpret_cast<SRCTYPE*>( SrcPtrVoid );
+	auto SrcArray = GetRemoteArray<SRCTYPE>( SrcPtr, SrcCount );
+	Dst.Copy( SrcArray );
+}
+
+template<typename DSTTYPE>
+void CopyTypedArray(JSContextRef Context,JSObjectRef ArrayValue,JSTypedArrayType TypedArrayType,ArrayBridge<DSTTYPE>& DestArray)
+{
+	JSValueRef Exception = nullptr;
+	void* SrcPtr = JSObjectGetTypedArrayBytesPtr( Context, ArrayValue, &Exception );
+	JsCore::ThrowException( Context, Exception );
+	auto SrcCount = JSObjectGetTypedArrayLength( Context, ArrayValue, &Exception );
+	JsCore::ThrowException( Context, Exception );
+	auto SrcBytes = JSObjectGetTypedArrayByteLength( Context, ArrayValue, &Exception );
+	JsCore::ThrowException( Context, Exception );
+
+	switch ( TypedArrayType )
+	{
+		case kJSTypedArrayTypeInt8Array:			CopyArray<int8_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeInt16Array:			CopyArray<int16_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeInt32Array:			CopyArray<int32_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeUint8Array:			CopyArray<uint8_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeUint8ClampedArray:	CopyArray<uint8_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeUint16Array:			CopyArray<uint16_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeUint32Array:			CopyArray<uint32_t>( SrcPtr, SrcCount, DestArray );	return;
+		case kJSTypedArrayTypeFloat32Array:			CopyArray<float>( SrcPtr, SrcCount, DestArray );	return;
+		
+		default:
+		//case kJSTypedArrayTypeFloat64Array:	CopyArray<int8_t>( SrcPtr, SrcCount, DestArray );	return;
+		//case kJSTypedArrayTypeArrayBuffer:	CopyArray<int8_t>( SrcPtr, SrcCount, DestArray );	return;
+			break;
+	}
+	
+	throw Soy::AssertException("Unsupported typed array type");
+}
+
+
+template<typename DESTTYPE>
+void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
+{
+	auto& mContext = This.mContext;
+	auto& mThis = This.mThis;
+
+	//	check for typed array
+	{
+		JSValueRef Exception = nullptr;
+		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		if ( TypedArrayType != kJSTypedArrayTypeNone )
+		{
+			CopyTypedArray( mContext, mThis, TypedArrayType, Values );
+			return;
+		}
+	}
+	
+	//	proper way, but will include "named" indexes...
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		JSValueRef Exception = nullptr;
+		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		Values.PushBack( JsCore::FromValue<DESTTYPE>( mContext, Value ) );
+	}
+}
+
+void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>&& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}
 

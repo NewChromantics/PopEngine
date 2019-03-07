@@ -15,6 +15,7 @@
 const char FindFaces_FunctionName[] = "FindFaces";
 const char FindFaceFeatures_FunctionName[] = "FindFaceFeatures";
 
+const char DlibWrapper_TypeName[] = "Dlib";
 
 void ApiDlib::Bind(Bind::TContext& Context)
 {
@@ -35,6 +36,11 @@ TDlibThreads::TDlibThreads(size_t ThreadCount)
 		this->mThreads.PushBack(Queue);
 		Queue->Start();
 	}
+}
+
+TDlibThreads::~TDlibThreads()
+{
+	//	todo: cleanup threads
 }
 
 

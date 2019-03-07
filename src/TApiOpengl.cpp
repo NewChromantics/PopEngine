@@ -9,8 +9,8 @@ namespace ApiOpengl
 	const char Namespace[] = "Pop.Opengl";
 }
 
-const char Window_TypeName[] = "Window";
-const char Shader_TypeName[] = "Shader";
+const char Opengl_Window_TypeName[] = "Window";
+const char Opengl_Shader_TypeName[] = "Shader";
 
 const char DrawQuad_FunctionName[] = "DrawQuad";
 const char ClearColour_FunctionName[] = "ClearColour";

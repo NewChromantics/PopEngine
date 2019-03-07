@@ -385,20 +385,20 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 
 void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<LoadFile_FunctionName>( TImageWrapper::LoadFile );
-	Template.BindFunction<Alloc_FunctionName>( TImageWrapper::Alloc );
-	Template.BindFunction<Flip_FunctionName>( TImageWrapper::Flip );
-	Template.BindFunction<GetWidth_FunctionName>( TImageWrapper::GetWidth );
-	Template.BindFunction<GetHeight_FunctionName>( TImageWrapper::GetHeight );
-	Template.BindFunction<GetRgba8_FunctionName>( TImageWrapper::GetRgba8 );
-	Template.BindFunction<SetLinearFilter_FunctionName>( TImageWrapper::SetLinearFilter );
-	Template.BindFunction<Copy_FunctionName>( TImageWrapper::Copy );
-	Template.BindFunction<WritePixels_FunctionName>( TImageWrapper::WritePixels );
-	Template.BindFunction<Resize_FunctionName>( TImageWrapper::Resize );
-	Template.BindFunction<Clip_FunctionName>( TImageWrapper::Clip );
-	Template.BindFunction<Clear_FunctionName>( TImageWrapper::Clear );
-	Template.BindFunction<SetFormat_FunctionName>( TImageWrapper::SetFormat );
-	Template.BindFunction<GetFormat_FunctionName>( TImageWrapper::GetFormat );
+	Template.BindFunction<Alloc_FunctionName>( Alloc );
+	Template.BindFunction<LoadFile_FunctionName>( LoadFile );
+	Template.BindFunction<Flip_FunctionName>( Flip );
+	Template.BindFunction<GetWidth_FunctionName>( GetWidth );
+	Template.BindFunction<GetHeight_FunctionName>( GetHeight );
+	Template.BindFunction<GetRgba8_FunctionName>( GetRgba8 );
+	Template.BindFunction<SetLinearFilter_FunctionName>( SetLinearFilter );
+	Template.BindFunction<Copy_FunctionName>( Copy );
+	Template.BindFunction<WritePixels_FunctionName>( WritePixels );
+	Template.BindFunction<Resize_FunctionName>( Resize );
+	Template.BindFunction<Clip_FunctionName>( Clip );
+	Template.BindFunction<Clear_FunctionName>( Clear );
+	Template.BindFunction<SetFormat_FunctionName>( SetFormat );
+	Template.BindFunction<GetFormat_FunctionName>( GetFormat );
 }
 
 
@@ -413,10 +413,46 @@ void TImageWrapper::Flip(Bind::TCallback& Params)
 }
 
 
+void TImageWrapper::Alloc(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TImageWrapper>();
+	SoyPixelsMeta Meta( 1, 1, SoyPixelsFormat::RGBA );
+	
+	if ( Params.IsArgumentArray(0) )
+	{
+		BufferArray<uint32_t,2> Size;
+		Params.GetArgumentArray( 0, GetArrayBridge(Size) );
+		Meta.DumbSetWidth( Size[0] );
+		Meta.DumbSetHeight( Size[1] );
+
+		if ( !Params.IsArgumentUndefined(1) )
+		{
+			auto Format = SoyPixelsFormat::ToType( Params.GetArgumentString(1) );
+			Meta.DumbSetFormat( Format );
+		}
+	}
+	else if ( !Params.IsArgumentUndefined(0) )
+	{
+		auto Width = Params.GetArgumentInt(0);
+		auto Height = Params.GetArgumentInt(1);
+		Meta.DumbSetWidth( Width );
+		Meta.DumbSetHeight( Height );
+		
+		if ( !Params.IsArgumentUndefined(2) )
+		{
+			auto Format = SoyPixelsFormat::ToType( Params.GetArgumentString(2) );
+			Meta.DumbSetFormat( Format );
+		}
+	}
+
+	SoyPixels Temp( Meta );
+	This.SetPixels( Temp );
+}
+
 void TImageWrapper::LoadFile(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TImageWrapper>();
-
+	
 	auto Filename = Params.GetArgumentFilename(0);
 	
 	This.DoLoadFile( Filename );

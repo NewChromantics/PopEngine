@@ -2,7 +2,8 @@
 #include "TApiCommon.h"
 #include "SoyGraphics.h"
 
-using namespace v8;
+
+const char Opencl_Context_TypeName[] = "Context";
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
 const char ExecuteKernel_FunctionName[] = "ExecuteKernel";
