@@ -67,6 +67,7 @@ public:
 	//	const for lambda[=] copy capture
 	void			Resolve(const std::string& Value) const;
 	void			Resolve(Bind::TObject& Value) const;
+	void			Resolve(ArrayBridge<const std::string>&& Values) const;
 	//void			Resolve(JSValueRef Value) const	{	mResolve.Call(nullptr,Value);	}
 
 	void			Reject(const std::string& Value) const;
@@ -109,7 +110,7 @@ public:
 	virtual void		QueueDelay(std::function<void(TContext&)> Function,size_t DelayMs) bind_override;
 
 	template<const char* FunctionName>
-	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function);
+	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName=std::string());
 
 	Bind::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
@@ -135,7 +136,7 @@ public:
 	
 private:
 	
-	void				BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function);
+	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
 	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception);
 	
 	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
@@ -244,7 +245,8 @@ public:
 	virtual Bind::TFunction	GetFunction(const std::string& MemberName) bind_override;
 
 	virtual void			SetObject(const std::string& Name,const Bind::TObject& Object) bind_override;
-	
+	virtual void			SetFunction(const std::string& Name,Bind::TFunction& Function) bind_override;
+
 	//	Jscore specific
 private:
 	JSValueRef		GetMember(const std::string& MemberName);
@@ -330,7 +332,7 @@ protected:
 
 
 template<const char* FunctionName>
-inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallback&)> Function)
+inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName)
 {
 	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
 	static TContext* ContextCache = nullptr;
@@ -347,7 +349,7 @@ inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallb
 	};
 	ContainerCache = this;
 	 */
-	BindRawFunction( FunctionName, CFunc );
+	BindRawFunction( FunctionName, ParentName, CFunc );
 }
 
 

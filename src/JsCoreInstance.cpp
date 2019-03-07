@@ -393,16 +393,15 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 }
 
 
-void JsCore::TContext::BindRawFunction(const char* FunctionName,JSObjectCallAsFunctionCallback Function)
+void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function)
 {
-	auto FunctionNameJs = JSStringCreateWithUTF8CString(FunctionName);
-	JSObjectRef This = JSContextGetGlobalObject( mContext );
-	auto Attributes = kJSPropertyAttributeNone;
+	auto This = GetGlobalObject( ParentObjectName );
 
-	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, Function );
 	JSValueRef Exception = nullptr;
-	JSObjectSetProperty( mContext, This, FunctionNameJs, FunctionHandle, Attributes, &Exception );
+	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, Function );
 	ThrowException(Exception);
+	TFunction Function( mContext, FunctionHandle );
+	This.SetFunction( FunctionName, Function );
 }
 
 JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception)

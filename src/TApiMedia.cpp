@@ -9,13 +9,12 @@
 
 #include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
 
-using namespace v8;
 
 namespace ApiMedia
 {
 	const char Namespace[] = "Pop.Media";
 	
-	v8::Local<v8::Value>	EnumDevices(v8::TCallback& Params);
+	void	EnumDevices(Bind::TCallback& Params);
 }
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
@@ -29,27 +28,21 @@ const char Decode_FunctionName[] = "decode";
 
 const char FrameTimestampKey[] = "Time";
 
-void ApiMedia::Bind(TV8Container& Container)
+void ApiMedia::Bind(Bind::TContext& Context)
 {
-	Container.CreateGlobalObjectInstance("", Namespace);
+	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Container.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
+	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
 
-	Container.BindObjectType( TMediaSourceWrapper::GetObjectTypeName(), TMediaSourceWrapper::CreateTemplate, TMediaSourceWrapper::Allocate<TMediaSourceWrapper>, Namespace );
-	Container.BindObjectType( TAvcDecoderWrapper::GetObjectTypeName(), TAvcDecoderWrapper::CreateTemplate, TAvcDecoderWrapper::Allocate<TAvcDecoderWrapper>, Namespace );
+	Context.BindObjectType<TMediaSourceWrapper>();
+	Context.BindObjectType<TAvcDecoderWrapper>();
 }
 
 
 
-v8::Local<v8::Value> ApiMedia::EnumDevices(v8::TCallback& Params)
+void ApiMedia::EnumDevices(Bind::TCallback& Params)
 {
-	auto* Isolate = Params.mIsolate;
-	
-	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
-
-	auto* Container = &Params.mContainer;
+	auto Promise = Params.mContext.CreatePromise();
 	
 	auto DoEnumDevices = [=]
 	{
@@ -79,22 +72,13 @@ v8::Local<v8::Value> ApiMedia::EnumDevices(v8::TCallback& Params)
 				std::Debug << e.what() << std::endl;
 			}
 			
-			auto OnCompleted = [=](Local<Context> Context)
+			auto OnCompleted = [=](Bind::TContext& Context)
 			{
-				//	return face points here
-				//	gr: can't do this unless we're in the javascript thread...
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				//ResolverPersistent.Reset();
-				auto GetValue = [&](size_t Index)
-				{
-					return v8::GetString(*Context->GetIsolate(), DeviceNames[Index] );
-				};
-				auto DeviceNamesArray = v8::GetArray( *Context->GetIsolate(), DeviceNames.GetSize(), GetValue );
-				ResolverLocal->Resolve( DeviceNamesArray );
+				Promise.Resolve( GetArrayBridge(DeviceNames) );
 			};
 			
 			//	queue the completion, doesn't need to be done instantly
-			Container->QueueScoped( OnCompleted );
+			this->mContext.Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
@@ -102,12 +86,9 @@ v8::Local<v8::Value> ApiMedia::EnumDevices(v8::TCallback& Params)
 			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Local<Context> Context)
+			auto OnError = [=](Bind::TContext& Context)
 			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				//ResolverPersistent.Reset();
-				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-				ResolverLocal->Reject( Error );
+				Promise.Reject( ExceptionString );
 			};
 			Container->QueueScoped( OnError );
 		}
@@ -116,9 +97,7 @@ v8::Local<v8::Value> ApiMedia::EnumDevices(v8::TCallback& Params)
 	//	immediate... if this is slow, put it on a thread
 	DoEnumDevices();
 	
-	//	return the promise
-	auto Promise = Resolver->GetPromise();
-	return Promise;
+	Params.Return(Promise);
 }
 
 

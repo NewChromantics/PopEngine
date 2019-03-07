@@ -695,7 +695,7 @@ void TShaderWrapper::Construct(Bind::TCallback& Params)
 	//	access to context!
 	auto& RenderContext = Params.GetArgumentPointer<TOpenglContextWrapper>(0);
 
-	auto VertSoruce = Params.GetArgumentString(1);
+	auto VertSource = Params.GetArgumentString(1);
 	auto FragSource = Params.GetArgumentString(2);
 
 	auto OpenglContext = RenderContext.GetOpenglContext();

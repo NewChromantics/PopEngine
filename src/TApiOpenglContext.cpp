@@ -5,7 +5,6 @@
 #include "TApiCommon.h"
 
 
-using namespace v8;
 
 const char OpenglImmediateContext_TypeName[] = "OpenglImmediateContext";
 
