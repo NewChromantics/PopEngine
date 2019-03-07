@@ -525,7 +525,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise()
 }
 
 
-JSValueRef JsCore::TContext::CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
+JSValueRef JsCore::TContext::CallFunc(std::function<void(Bind::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
 {
 	//	call our function from
 	try
@@ -539,6 +539,9 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(Bind::TCallback&)> Func
 		for ( auto a=0;	a<ArgumentCount;	a++ )
 			Callback.mArguments.PushBack( Arguments[a] );
 
+		//	actually call!
+		Function( Callback );
+		
 		if ( Callback.mReturn == nullptr )
 			Callback.mReturn = JSValueMakeUndefined( mContext );
 		
@@ -549,7 +552,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(Bind::TCallback&)> Func
 		std::stringstream Error;
 		Error << FunctionContext << " exception: " << e.what();
 		Exception = GetValue( mContext, Error.str() );
-		return JSValueMakeUndefined( Context );
+		return JSValueMakeUndefined( mContext );
 	}
 }
 
@@ -770,5 +773,24 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>&& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );
+}
+
+template<const char* FUNCTIONNAME>
+void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)> Function)
+{
+	JSStaticFunction NewFunction;
+	mFunctions.PushBack(NewFunction);
+}
+
+void JsCore::TTemplate::RegisterClassWithContext()
+{
+	//	add a terminator function
+	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
+	mFunctions.PushBack(NewFunction);
+	mClass = JSClassCreate( &mDefinition );
+	
+	//	gr: this doesn't look right to me...
+	//JSObjectRef filesystemObject = JSObjectMake(globalContext, FilesystemClass(), nullptr);
+	//JSObjectSetProperty(globalContext, globalObject, JSStringCreateWithUTF8CString("Filesystem"), filesystemObject, kJSPropertyAttributeNone, nullptr);
 }
 

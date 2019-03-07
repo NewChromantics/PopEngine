@@ -161,10 +161,13 @@ public:
 	prmem::Heap&		GetV8Heap()		{	return mAllocatorHeap;	}
 	std::string			GetResolvedFilename(const std::string& Filename);
 	
-private:
+	//	this can almost be static, but TCallback needs a few functions of TContext
+	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
+
 	
+private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
-	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
+	
 	
 	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 
@@ -256,23 +259,26 @@ class JsCore::TTemplate //: public Bind::TTemplate
 	friend JsCore::TContext;
 public:
 	TTemplate()	{}
-	TTemplate(JSContextRef Context,const std::string& Name) :
+	TTemplate(TContext& Context,const std::string& Name) :
 		mName		( Name ),
-		mContext	( Context )
+		mContext	( &Context )
 	{
 	}
 	
 	bool			operator==(const std::string& Name) const	{	return mName == Name;	}
 
-
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(Bind::TCallback&)> Function);
 	void			RegisterClassWithContext();
-	
+
+public:
+	JSClassDefinition	mDefinition = kJSClassDefinitionEmpty;
+
 private:
-	std::string		mName;
-	JSClassRef		mClass = nullptr;
-	JSContextRef	mContext = nullptr;
+	std::string			mName;
+	JSClassRef			mClass = nullptr;
+	TContext*			mContext = nullptr;
+	Array<JSStaticFunction>	mFunctions;
 };
 
 //	make this generic for v8 & jscore
@@ -401,7 +407,7 @@ protected:
 //	template name? that's right, need unique references.
 //	still working on getting rid of that, but still allow dynamic->static function binding
 template<const char* TYPENAME,class TYPE>
-class Bind::TObjectWrapper : public TObjectWrapperBase
+class JsCore::TObjectWrapper : public Bind::TObjectWrapperBase
 {
 public:
 	//typedef std::function<TObjectWrapper<TYPENAME,TYPE>*(TV8Container&,v8::Local<v8::Object>)> ALLOCATORFUNC;
@@ -410,17 +416,67 @@ public:
 	TObjectWrapper(TContext& Context,TObject& This);
 	
 	static std::string		GetTypeName()	{	return TYPENAME;	}
-	static void				CreateTemplate(TTemplate& Template);
 	
+	static TTemplate 		AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper);
 	
 protected:
+	static void				Free(JSObjectRef Object)
+	{
+		//	free the void
+	}
 	
 protected:
 	std::shared_ptr<TYPE>			mObject;
-	
-protected:
 };
 
+
+template<const char* TYPENAME,class TYPE>
+JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper)
+{
+	static std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapperCache = AllocWrapper;
+	static TContext* ContextCache = nullptr;
+	
+	//	setup constructor CFunc here
+	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef Context,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
+	{
+		//	formal param is constructor, but it's the new This
+		auto This = constructor;
+		//	alloc wrapper
+		TObjectWrapperBase* pWrapper = AllocWrapperCache(This);	//	need a func here
+		JSObjectSetPrivate( This, pWrapper );
+
+		/*
+		 //	call overloaded construct
+		 Bind::TCallback Params;
+		 Params.SetThis( This );
+		 for ( auto i=0;	i<ArgumentCount;	i++)
+		 Params.mArguments.PushBack( Arguments
+		 pWrapper->Construct();
+*/
+		auto ConstructWrapper = [&](TCallback& Params)
+		{
+			pWrapper->Construct( Params );
+		};
+		std::stringstream FunctionContext;
+		FunctionContext << TYPENAME << " constructor";
+		ContextCache->CallFunc( ConstructWrapper, This, ArgumentCount, Arguments, *Exception, FunctionContext.str() );
+		return This;
+	};
+	
+	ContextCache = &Context;
+	
+	//	https://stackoverflow.com/questions/46943350/how-to-use-jsexport-and-javascriptcore-in-c
+	TTemplate Template( Context, TYPENAME );
+	auto& Definition = Template.mDefinition;
+	Definition = kJSClassDefinitionEmpty;
+
+	Definition.className = TYPENAME;
+	Definition.attributes = kJSClassAttributeNone;
+	Definition.callAsConstructor = CConstructorFunc;
+	Definition.finalize = Free;
+	
+	return Template;
+}
 
 
 
@@ -432,7 +488,7 @@ inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallb
 	static TContext* ContextCache = nullptr;
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
-		return ContextCache->CallFunc( FunctionCache, Context, Function, This, ArgumentCount, Arguments, *Exception, FunctionName );
+		return ContextCache->CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
 	};
 	ContextCache = this;
 	/*
@@ -487,9 +543,19 @@ inline TYPE& Bind::TObject::This()
 template<typename OBJECTWRAPPERTYPE>
 void JsCore::TContext::BindObjectType(const std::string& ParentName)
 {
-	//	create a template
-	TTemplate Template( mContext, OBJECTWRAPPERTYPE::GetTypeName() );
+	auto AllocWrapper = [this](JSObjectRef This)
+	{
+		TObject ThisObject( mContext, This );
+		return new OBJECTWRAPPERTYPE( *this, ThisObject );
+	};
+
+	//	create a template that can be overloaded by the type
+	auto Template = OBJECTWRAPPERTYPE::AllocTemplate( *this, AllocWrapper );
+
+	//	init template with overloaded stuff
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
+	
+	//	finish off
 	Template.RegisterClassWithContext();
 	mObjectTemplates.PushBack( Template );
 }
