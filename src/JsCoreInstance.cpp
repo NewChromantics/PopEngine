@@ -116,7 +116,7 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 }
 
 
-int32_t	JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
+int32_t JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
 	JSValueRef Exception = nullptr;
@@ -124,6 +124,16 @@ int32_t	JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 
 	auto Int = static_cast<int32_t>( DoubleJs );
 	return Int;
+}
+
+
+float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
+{
+	//	convert to string
+	JSValueRef Exception = nullptr;
+	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
+	auto Float = static_cast<float>( DoubleJs );
+	return Float;
 }
 
 bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
@@ -344,14 +354,6 @@ void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 }
 
 
-JSObjectRef JsCore::TContext::GetGlobalObject(const std::string& Name)
-{
-	TObject This( mContext, nullptr );
-	auto Member = This.GetObject( Name );
-	return Member.mThis;
-	
-}
-
 
 JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& ObjectTypeName)
 {
@@ -384,17 +386,18 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 }
 
 
-void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function)
+void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	auto This = GetGlobalObject( ParentObjectName );
 
+	auto FunctionNameJs = JsCore::GetString( mContext, FunctionName );
 	JSValueRef Exception = nullptr;
-	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, Function );
+	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, FunctionPtr );
 	ThrowException(Exception);
 	TFunction Function( mContext, FunctionHandle );
 	This.SetFunction( FunctionName, Function );
 }
-
+/*
 JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> Function,JSContextRef Context,JSObjectRef FunctionJs,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception)
 {
 	try
@@ -416,7 +419,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<JSValueRef(TCallbackInfo&)> 
 		return JSValueMakeUndefined( Context );
 	}
 }
-
+*/
 
 /*
 JSValueRef ObjectCallAsFunctionCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception) {
@@ -447,33 +450,33 @@ JsCore::TInstance::
 */
 
 
-std::string JsCore::TCallbackInfo::GetArgumentString(size_t Index) const
+std::string JsCore::TCallback::GetArgumentString(size_t Index)
 {
 	auto Handle = mArguments[Index];
-	auto String = JsCore::GetString( mContext, Handle );
+	auto String = JsCore::GetString( mContext.mContext, Handle );
 	return String;
 }
 
 
 
-bool JsCore::TCallbackInfo::GetArgumentBool(size_t Index) const
+bool JsCore::TCallback::GetArgumentBool(size_t Index)
 {
 	auto Handle = mArguments[Index];
-	auto Value = JsCore::GetBool( mContext, Handle );
+	auto Value = JsCore::GetBool( mContext.mContext, Handle );
 	return Value;
 }
 
-int32_t JsCore::TCallbackInfo::GetArgumentInt(size_t Index) const
+int32_t JsCore::TCallback::GetArgumentInt(size_t Index)
 {
 	auto Handle = mArguments[Index];
-	auto Value = JsCore::GetInt( mContext, Handle );
+	auto Value = JsCore::GetInt( mContext.mContext, Handle );
 	return Value;
 }
 
-float JsCore::TCallbackInfo::GetArgumentFloat(size_t Index) const
+float JsCore::TCallback::GetArgumentFloat(size_t Index)
 {
 	auto Handle = mArguments[Index];
-	auto Value = JsCore::GetFloat( mContext, Handle );
+	auto Value = JsCore::GetFloat( mContext.mContext, Handle );
 	return Value;
 }
 
@@ -481,7 +484,7 @@ float JsCore::TCallbackInfo::GetArgumentFloat(size_t Index) const
 
 JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
 {
-	auto Global = GetRootGlobalObject();
+	JsCore::TObject Global( mContext, nullptr );
 	if ( ObjectName.length() == 0 )
 		return Global;
 	auto Child = Global.GetObject( ObjectName );
@@ -495,7 +498,7 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 	auto ParentName = Name;
 	auto ObjectName = Soy::StringPopRight( ParentName, '.' );
 	auto ParentObject = GetGlobalObject( ParentName );
-	ParentObject.Set( ObjectName, NewObject );
+	ParentObject.SetObject( ObjectName, NewObject );
 }
 
 

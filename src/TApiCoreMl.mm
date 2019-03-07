@@ -971,59 +971,33 @@ void TCoreMlWrapper::Construct(Bind::TCallback& Arguments)
 	mCoreMl.reset( new CoreMl::TInstance );
 }
 
-Local<FunctionTemplate> TCoreMlWrapper::CreateTemplate(TV8Container& Container)
+void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	Container.BindFunction<Yolo_FunctionName>( InstanceTemplate, Yolo );
-	Container.BindFunction<Hourglass_FunctionName>( InstanceTemplate, Hourglass );
-	Container.BindFunction<Cpm_FunctionName>( InstanceTemplate, Cpm );
-	Container.BindFunction<OpenPose_FunctionName>( InstanceTemplate, OpenPose );
-	Container.BindFunction<SsdMobileNet_FunctionName>( InstanceTemplate, SsdMobileNet );
-	Container.BindFunction<MaskRcnn_FunctionName>( InstanceTemplate, MaskRcnn );
-
-	return ConstructorFunc;
+	Template.BindFunction<Yolo_FunctionName>( Yolo );
+	Template.BindFunction<Hourglass_FunctionName>( Hourglass );
+	Template.BindFunction<Cpm_FunctionName>( Cpm );
+	Template.BindFunction<OpenPose_FunctionName>( OpenPose );
+	Template.BindFunction<SsdMobileNet_FunctionName>( SsdMobileNet );
+	Template.BindFunction<MaskRcnn_FunctionName>( MaskRcnn );
 }
 
 
 template<typename COREML_FUNC>
-v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,v8::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
+void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto* pImage = &v8::GetObject<TImageWrapper>( Arguments[0] );
-	auto* Isolate = Params.mIsolate;
-	auto* Container = &Params.mContainer;
-	
-	//	make a promise resolver (persistent to copy to thread)
-	auto ResolverLocal = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( *Isolate, ResolverLocal );
-	
+	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
+	auto Promise = Params.mContext.CreatePromise();
+	auto* pContext = &Params.mContext;
 	
 	auto RunModel = [=]
 	{
 		try
 		{
 			//	do all the work on the thread
-			auto& CurrentPixels = pImage->GetPixels();
+			auto& Image = *pImage;
+			auto& CurrentPixels = Image.GetPixels();
 			SoyPixels TempPixels;
-			auto* pPixels = &TempPixels;
+			SoyPixelsImpl* pPixels = &TempPixels;
 			if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
 			{
 				pPixels = &CurrentPixels;
@@ -1044,110 +1018,88 @@ v8::Local<v8::Value> RunModel(COREML_FUNC CoreMlFunc,v8::TCallback& Params,std::
 			};
 			CoreMlFunc( *CoreMl, Pixels, PushObject );
 			
-			auto OnCompleted = [=](Local<Context> Context)
+			auto OnCompleted = [=](Bind::TContext& Context)
 			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
 				auto GetElement = [&](size_t Index)
 				{
 					auto& Object = Objects[Index];
-					auto ObjectJs = v8::Object::New( Params.mIsolate );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Label"), v8::String::NewFromUtf8( Params.mIsolate, Object.mLabel.c_str() ) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "Score"), v8::Number::New(Params.mIsolate, Object.mScore) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "x"), v8::Number::New(Params.mIsolate, Object.mRect.x) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "y"), v8::Number::New(Params.mIsolate, Object.mRect.y) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "w"), v8::Number::New(Params.mIsolate, Object.mRect.w) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "h"), v8::Number::New(Params.mIsolate, Object.mRect.h) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "GridX"), v8::Number::New(Params.mIsolate, Object.mGridPos.x) );
-					ObjectJs->Set( v8::String::NewFromUtf8( Params.mIsolate, "GridY"), v8::Number::New(Params.mIsolate, Object.mGridPos.y) );
+					auto ObjectJs = Context.CreateObjectInstance();
+					ObjectJs.SetString("Label", Object.mLabel );
+					ObjectJs.SetFloat("Score", Object.mScore );
+					ObjectJs.SetFloat("x", Object.mRect.x );
+					ObjectJs.SetFloat("y", Object.mRect.y );
+					ObjectJs.SetFloat("w", Object.mRect.w );
+					ObjectJs.SetFloat("h", Object.mRect.h );
+					ObjectJs.SetInt("GridX", Object.mGridPos.x );
+					ObjectJs.SetInt("GridY", Object.mGridPos.y );
 					return ObjectJs;
 				};
-				auto ObjectsArray = v8::GetArray( *Params.mIsolate, Objects.GetSize(), GetElement);
-				ResolverLocal->Resolve( ObjectsArray );
+				auto ObjectsArray = Context.CreateArray( Objects.GetSize(), GetElement );
+				Promise.Resolve( ObjectsArray );
 			};
 			
-			Container->QueueScoped( OnCompleted );
+			pContext->Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Local<Context> Context)
-			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-				ResolverLocal->Reject( Error );
-			};
-			Container->QueueScoped( OnError );
+			Promise.Reject( ExceptionString );
 		}
 	};
 	
 	CoreMl->PushJob(RunModel);
 	
-	
-	//	return the promise
-	auto Promise = ResolverLocal->GetPromise();
-	return Promise;
+	Params.Return( Promise );
 }
 
 
-v8::Local<v8::Value> TCoreMlWrapper::Yolo(v8::TCallback& Params)
+void TCoreMlWrapper::Yolo(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& This = Params.This<TCoreMlWrapper>();
 	auto& CoreMl = This.mCoreMl;
-	
+
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunYolo );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
-
-
-v8::Local<v8::Value> TCoreMlWrapper::Hourglass(v8::TCallback& Params)
+void TCoreMlWrapper::Hourglass(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& This = Params.This<TCoreMlWrapper>();
 	auto& CoreMl = This.mCoreMl;
-	
+
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunHourglass );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::Cpm(v8::TCallback& Params)
+void TCoreMlWrapper::Cpm(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& This = Params.This<TCoreMlWrapper>();
 	auto& CoreMl = This.mCoreMl;
-	
+
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunCpm );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::OpenPose(v8::TCallback& Params)
+void TCoreMlWrapper::OpenPose(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& This = Params.This<TCoreMlWrapper>();
 	auto& CoreMl = This.mCoreMl;
-	
+
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 }
 
 
 
-v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(v8::TCallback& Params)
+void TCoreMlWrapper::SsdMobileNet(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& This = Params.This<TCoreMlWrapper>();
 	auto& CoreMl = This.mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunSsdMobileNet );
@@ -1155,13 +1107,11 @@ v8::Local<v8::Value> TCoreMlWrapper::SsdMobileNet(v8::TCallback& Params)
 }
 
 
-v8::Local<v8::Value> TCoreMlWrapper::MaskRcnn(v8::TCallback& Params)
+void TCoreMlWrapper::MaskRcnn(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto ThisHandle = Arguments.This()->GetInternalField(0);
-	auto& This = v8::GetObject<TCoreMlWrapper>( ThisHandle );
+	auto& This = Params.This<TCoreMlWrapper>();
 	auto& CoreMl = This.mCoreMl;
-	
+
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunMaskRcnn );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 }

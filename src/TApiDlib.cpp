@@ -38,6 +38,21 @@ TDlibThreads::TDlibThreads(size_t ThreadCount)
 }
 
 
+TDlib& TDlibThreads::GetJobQueue()
+{
+	//	get queue with least jobs
+	auto LeastJobQueue = 0;
+	for ( int i=0;	i<mThreads.GetSize();	i++ )
+	{
+		auto& Queue = *mThreads[i];
+		auto& BestQueue = *mThreads[LeastJobQueue];
+		if ( Queue.GetJobCount() < BestQueue.GetJobCount() )
+			LeastJobQueue = i;
+	}
+	
+	return *mThreads[LeastJobQueue];
+}
+
 void TDlibWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TDlibWrapper>();
@@ -49,101 +64,57 @@ void TDlibWrapper::Construct(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(1) )
 		ThreadCount = Params.GetArgumentInt(1);
 	
-	This.mDlibJobQueues.reset( new TDlibThreads(ThreadCount) );
-	This.mDlibJobQueues->SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksData) );
+	This.mDlib.reset( new TDlibThreads(ThreadCount) );
+	This.mDlib->SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksData) );
 }
 
 
-Local<FunctionTemplate> TDlibWrapper::CreateTemplate(TV8Container& Container)
+void TDlibWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container ).As<Value>();
-									   
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	//	add members
-	Container.BindFunction<FindFaces_FunctionName>( InstanceTemplate, FindFaces );
-	Container.BindFunction<FindFaceFeatures_FunctionName>( InstanceTemplate, FindFaceFeatures );
-	
-	return ConstructorFunc;
+	Template.BindFunction<FindFaces_FunctionName>( FindFaces );
+	Template.BindFunction<FindFaceFeatures_FunctionName>( FindFaceFeatures );
 }
 
-TDlib& TDlibWrapper::GetDlibJobQueue()
-{
-	//	get queue with least jobs
-	auto LeastJobQueue = 0;
-	for ( int i=0;	i<mDlibJobQueues.GetSize();	i++ )
-	{
-		auto& Queue = *mDlibJobQueues[i];
-		auto& BestQueue = *mDlibJobQueues[LeastJobQueue];
-		if ( Queue.GetJobCount() < BestQueue.GetJobCount() )
-			LeastJobQueue = i;
-	}
-	
-	return *mDlibJobQueues[LeastJobQueue];
-}
 
 //	this loads the shape predictors etc and copies to each thread
-void TDlibWrapper::SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes)
+void TDlibThreads::SetShapePredictorFaceLandmarks(ArrayBridge<uint8_t>&& LandmarksDatBytes)
 {
 	//	setup first one, then copy to others
-	auto& Dlib0 = *mDlibJobQueues[0];
+	auto& Dlib0 = *mThreads[0];
 	Dlib0.SetShapePredictorFaceLandmarks(LandmarksDatBytes);
-	for ( int i=1;	i<mDlibJobQueues.GetSize();	i++ )
+	
+	
+	for ( int i=1;	i<mThreads.GetSize();	i++ )
 	{
-		auto& DlibN = *mDlibJobQueues[i];
+		auto& DlibN = *mThreads[i];
 		DlibN.SetShapePredictorFaceLandmarks(Dlib0);
 	}
 }
 
 
-template<typename TYPE>
-v8::Persistent<TYPE,CopyablePersistentTraits<TYPE>> MakeLocal(v8::Isolate* Isolate,Local<TYPE> LocalHandle)
+void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 {
-	Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
-	PersistentHandle.Reset( Isolate, LocalHandle );
-	return PersistentHandle;
-}
-
-v8::Local<v8::Value> TDlibWrapper::FindFaces(v8::TCallback& Params)
-{
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TDlibWrapper>( Arguments.This() );
-	auto* Isolate = Params.mIsolate;
-
+	auto& This = Params.This<TDlibWrapper>();
 	auto* pThis = &This;
 	
 	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto ResolverPersistent = v8::GetPersistent( Params.GetIsolate(), Resolver );
+	auto Promise = Params.mContext.CreatePromise();
 
-	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
-	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
-	auto* Container = &Params.mContainer;
+	auto ImageObject = Params.GetArgumentObject(0);
+	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
+	auto* pImage = &ImageObject.This<TImageWrapper>();
+	auto* pContext = &Params.mContext;
 	
 	auto& Dlib = This.GetDlibJobQueue();
 	auto RunFaceDetector = [=,&Dlib]
 	{
 		try
 		{
-			auto PixelsMeta = TargetImage->GetPixels().GetMeta();
-			auto CopyPixels = [TargetImage](SoyPixelsImpl& Pixels)
+			
+			auto PixelsMeta = pImage->GetPixels().GetMeta();
+			auto CopyPixels = [pImage](SoyPixelsImpl& Pixels)
 			{
-				TargetImage->GetPixels(Pixels);
+				pImage->GetPixels(Pixels);
 			};
 			BufferArray<TFace,100> Faces;
 			Dlib.GetFaceLandmarks( PixelsMeta, CopyPixels, GetArrayBridge(Faces) );
@@ -166,62 +137,43 @@ v8::Local<v8::Value> TDlibWrapper::FindFaces(v8::TCallback& Params)
 				}
 			}
 			
-			auto OnCompleted = [=](Local<Context> Context)
+			auto OnCompleted = [=](Bind::TContext& Context)
 			{
-				//	return face points here
-				//	gr: can't do this unless we're in the javascript thread...
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Features) );
-				ResolverLocal->Resolve( LandmarksArray );
-				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
-				//ResolverLocal->Resolve( Message );
+				Promise.Resolve( GetArrayBridge(Features) );
 			};
 
 			//	queue the completion, doesn't need to be done instantly
-			Container->QueueScoped( OnCompleted );
+			pContext->Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Local<Context> Context)
-			{
-				auto ResolverLocal = ResolverPersistent->GetLocal(*Isolate);
-				//	gr: does this need to be an exception? string?
-				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
-				//ResolverLocal->Reject( Exception );
-				ResolverLocal->Reject( Error );
-			};
-			Container->QueueScoped( OnError );
+			Promise.Reject( ExceptionString );
 		}
 	};
 	Dlib.PushJob( RunFaceDetector );
 
 	//	return the promise
-	auto Promise = Resolver->GetPromise();
-	return Promise;
+	Params.Return( Promise );
 }
 
 
-v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(v8::TCallback& Params)
+void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	auto& This = v8::GetObject<TDlibWrapper>( Arguments.This() );
-	auto* Isolate = Params.mIsolate;
-	
+	auto& This = Params.This<TDlibWrapper>();
+
 	auto* pThis = &This;
 	
-	//	make a promise resolver (persistent to copy to thread)
-	auto Resolver = v8::Promise::Resolver::New( Isolate );
-	auto pResolverPersistent = v8::GetPersistent( *Isolate, Resolver );
+	auto Promise = Params.mContext.CreatePromise();
 	
-	auto TargetPersistent = v8::GetPersistent( *Isolate, Arguments[0] );
-	auto* TargetImage = &v8::GetObject<TImageWrapper>(Arguments[0]);
-	auto* Container = &Params.mContainer;
+	auto ImageObject = Params.GetArgumentObject(0);
+	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
+	auto* pImage = &ImageObject.This<TImageWrapper>();
+	auto* pContext = &Params.mContext;
 
 	BufferArray<float,4> RectFloats;
-	v8::EnumArray( Arguments[1], GetArrayBridge(RectFloats), "FindFaceFeatures(img,rect)" );
+	Params.GetArgumentArray(0, GetArrayBridge(RectFloats) );
 	Soy::Rectf TargetRect( RectFloats[0], RectFloats[1], RectFloats[2], RectFloats[3] );
 
 	auto& Dlib = This.GetDlibJobQueue();
@@ -230,10 +182,10 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(v8::TCallback& Params)
 		try
 		{
 			//	gr: copy pixels
-			auto PixelsMeta = TargetImage->GetPixels().GetMeta();
-			auto CopyPixels = [TargetImage](SoyPixelsImpl& Pixels)
+			auto PixelsMeta = pImage->GetPixels().GetMeta();
+			auto CopyPixels = [pImage](SoyPixelsImpl& Pixels)
 			{
-				TargetImage->GetPixels(Pixels);
+				pImage->GetPixels(Pixels);
 			};
 			BufferArray<TFace,100> Faces;
 			auto Face = Dlib.GetFaceLandmarks( PixelsMeta, CopyPixels, TargetRect );
@@ -255,43 +207,24 @@ v8::Local<v8::Value> TDlibWrapper::FindFaceFeatures(v8::TCallback& Params)
 				}
 			}
 			
-			auto OnCompleted = [=](Local<Context> Context)
+			auto OnCompleted = [=](Bind::TContext& Context)
 			{
-				//	return face points here
-				//	gr: can't do this unless we're in the javascript thread...
-				auto ResolverLocal = pResolverPersistent->GetLocal(*Isolate);
-				auto LandmarksArray = v8::GetArray( *Context->GetIsolate(), GetArrayBridge(Features) );
-
-				//	gr: these seem to be getting cleaned up on garbage collect, I think
-				ResolverLocal->Resolve( LandmarksArray );
-				//auto Message = String::NewFromUtf8( Isolate, "Yay!");
-				//ResolverLocal->Resolve( Message );
+				Promise.Resolve( GetArrayBridge(Features) );
 			};
 			
 			//	queue the completion, doesn't need to be done instantly
-			Container->QueueScoped( OnCompleted );
+			pContext->Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Local<Context> Context)
-			{
-				auto ResolverLocal = pResolverPersistent->GetLocal(*Isolate);
-				//	gr: does this need to be an exception? string?
-				auto Error = String::NewFromUtf8( Isolate, ExceptionString.c_str() );
-				//auto Exception = v8::GetException( *Context->GetIsolate(), ExceptionString)
-				//ResolverLocal->Reject( Exception );
-				ResolverLocal->Reject( Error );
-			};
-			Container->QueueScoped( OnError );
+			Promise.Reject( ExceptionString );
 		}
 	};
 	Dlib.PushJob( RunFaceDetector );
 	
-	//	return the promise
-	auto Promise = Resolver->GetPromise();
-	return Promise;
+	Params.Return( Promise );
 }
 
 
@@ -492,14 +425,10 @@ void TDlib::SetShapePredictorFaceLandmarks(TDlib& Copy)
 	sp = *Copy.mShapePredictor;
 }
 
-void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<int>& LandmarksDatBytes)
+void TDlib::SetShapePredictorFaceLandmarks(ArrayBridge<uint8_t>& LandmarksDatBytes)
 {
 	mFaceLandmarksDat.Clear();
-	for ( int i=0;	i<LandmarksDatBytes.GetSize();	i++ )
-	{
-		auto Byte = LandmarksDatBytes[i];
-		mFaceLandmarksDat.PushBack( size_cast<uint8_t>(Byte) );
-	}
+	mFaceLandmarksDat.Copy(LandmarksDatBytes);
 
 	std::Debug << "loading facedetector data..." << std::endl;
 	mFaceDetector.reset( new dlib::frontal_face_detector() );

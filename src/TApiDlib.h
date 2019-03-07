@@ -40,7 +40,7 @@ public:
 	TFace			GetFaceLandmarks(const dlib::array2d<uint8_t>& Image,Soy::Rectf FaceRect);
 
 	void			SetShapePredictorFaceLandmarks(TDlib& Copy);
-	void			SetShapePredictorFaceLandmarks(ArrayBridge<int>& LandmarksDatBytes);
+	void			SetShapePredictorFaceLandmarks(ArrayBridge<uint8_t>& LandmarksDatBytes);
 
 public:
 	Array<uint8_t>		mFaceLandmarksDat;
@@ -58,7 +58,8 @@ public:
 
 	//	this loads the shape predictors etc and copies to each thread
 	void				SetShapePredictorFaceLandmarks(ArrayBridge<uint8_t>&& LandmarksDatBytes);
-
+	TDlib&				GetJobQueue();
+	
 	Array<std::shared_ptr<TDlib>>	mThreads;
 };
 
@@ -83,7 +84,7 @@ public:
 
 
 private:
-	std::shared_ptr<TDlibThreads>&	mDlibJobQueues = mObject;
-	TDlib&				GetDlibJobQueue();
+	std::shared_ptr<TDlibThreads>&	mDlib = mObject;
+	TDlib&				GetDlibJobQueue()	{	return mDlib->GetJobQueue();	}
 };
 

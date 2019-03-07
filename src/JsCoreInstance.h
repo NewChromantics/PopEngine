@@ -29,6 +29,7 @@ namespace JsCore
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
 	int32_t		GetInt(JSContextRef Context,JSValueRef Handle);
+	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	JSStringRef	GetString(JSContextRef Context,const std::string& String);
 	
@@ -70,6 +71,7 @@ public:
 	void			Resolve(const std::string& Value) const;
 	void			Resolve(Bind::TObject& Value) const;
 	void			Resolve(ArrayBridge<std::string>&& Values) const;
+	void			Resolve(ArrayBridge<float>&& Values) const;
 	void			Resolve(Bind::TArray& Value) const;
 	//void			Resolve(JSValueRef Value) const	{	mResolve.Call(nullptr,Value);	}
 
@@ -155,8 +157,8 @@ public://	temp
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
 	
-	prmem::Heap			mAllocatorHeap;
-	prmem::Heap			mImageHeap;
+	prmem::Heap			mAllocatorHeap = prmem::Heap(true,true,"Context Heap");
+	prmem::Heap			mImageHeap = prmem::Heap(true,true,"Context Images");
 	std::string			mRootDirectory;
 
 	//	"templates" in v8, "classes" in jscore
@@ -235,10 +237,18 @@ public:
 class JsCore::TTemplate //: public Bind::TTemplate
 {
 public:
+	TTemplate(const std::string& Name) :
+		mName	( Name )
+	{
+	}
+	
 	template<const char* FUNCTIONNAME>
 	void		BindFunction(std::function<void(Bind::TCallback&)> Function);
 	
+	bool			operator==(const std::string& Name) const	{	return mName == Name;	}
+	
 public:
+	std::string		mName;
 	JSClassRef		mClass = nullptr;
 };
 
