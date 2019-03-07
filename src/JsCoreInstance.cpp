@@ -7,18 +7,11 @@
 
 
 
-JSObjectRef GetObject(JSContextRef Context,JSValueRef Value)
+JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 {
 	if ( !JSValueIsObject( Context, Value ) )
 		throw Soy::AssertException("Value is not object");
 	return const_cast<JSObjectRef>( Value );
-}
-
-JsCore::TPromise::TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc) :
-	mPromise	( GetObject(Context,Promise) ),
-	mResolve	( Context, ResolveFunc ),
-	mReject		( Context, RejectFunc )
-{
 }
 
 
@@ -254,7 +247,7 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
 }
 
 template<typename TYPE>
-JsCore::TArray CreateArray(JsCore::TContext& Context,size_t ElementCount,std::function<TYPE(size_t)> GetElement)
+JsCore::TArray JsCore_CreateArray(JsCore::TContext& Context,size_t ElementCount,std::function<TYPE(size_t)> GetElement)
 {
 	auto& mContext = Context.mContext;
 	
@@ -262,7 +255,7 @@ JsCore::TArray CreateArray(JsCore::TContext& Context,size_t ElementCount,std::fu
 	for ( auto i=0;	i<ElementCount;	i++ )
 	{
 		auto Element = GetElement(i);
-		Values[i] = GetValue( mContext, Element );
+		Values[i] = JsCore::GetValue( mContext, Element );
 	}
 	auto ValuesArray = GetRemoteArray( Values, ElementCount );
 	auto ArrayObject = JsCore::GetArray( mContext, GetArrayBridge(ValuesArray) );
@@ -273,12 +266,12 @@ JsCore::TArray CreateArray(JsCore::TContext& Context,size_t ElementCount,std::fu
 
 Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement)
 {
-	return CreateArray( *this, ElementCount, GetElement );
+	return JsCore_CreateArray( *this, ElementCount, GetElement );
 }
 
 Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<JsCore::TObject(size_t)> GetElement)
 {
-	return CreateArray( *this, ElementCount, GetElement );
+	return JsCore_CreateArray( *this, ElementCount, GetElement );
 }
 
 
@@ -496,12 +489,13 @@ JsCore::TPromise JsCore::TContext::CreatePromise()
 		mMakePromiseFunction = TFunction( mContext, FunctionValue );
 	}
 	
-	auto NewPromiseHandle = mMakePromiseFunction.Call();
+	auto NewPromiseValue = mMakePromiseFunction.Call();
+	auto NewPromiseHandle = JsCore::GetObject( mContext, NewPromiseValue );
 	TObject NewPromiseObject( mContext, NewPromiseHandle );
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
 	auto Reject = NewPromiseObject.GetFunction("Reject");
 
-	TPromise Promise( NewPromiseObject, Resolve, Refject );
+	TPromise Promise( NewPromiseObject, Resolve, Reject );
 /*
 	TObject NewPromiseObject( mContext, NewPromiseHandle );
 	
@@ -603,7 +597,7 @@ float JsCore::TCallback::GetArgumentFloat(size_t Index)
 
 JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
 {
-	JsCore::TObject Global( mContext, nullptr );
+	TObject Global( mContext, nullptr );
 	if ( ObjectName.length() == 0 )
 		return Global;
 	auto Child = Global.GetObject( ObjectName );

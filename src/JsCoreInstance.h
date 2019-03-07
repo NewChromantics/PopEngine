@@ -39,7 +39,8 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
 	JSValueRef	GetValue(JSContextRef Context,TObject& Value);
-
+	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
+	
 	template<typename TYPE>
 	JSObjectRef	GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
@@ -84,6 +85,8 @@ class JsCore::TFunction
 public:
 	TFunction()		{}
 	TFunction(JSContextRef Context,JSValueRef Value);
+	
+	operator		bool() const	{	return mThis != nullptr;	}
 	
 	//	would be nice to capture return, but it's contained inside Params for now. Maybe template & error for type mismatch
 	void			Call(Bind::TCallback& Params);
@@ -281,7 +284,6 @@ class JsCore::TObject //: public Bind::TObject
 public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
-	TObject(JSContextRef Context,JSValueRef This);	//	if This==null then it's the global
 	
 	template<typename TYPE>
 	TYPE&				This();
