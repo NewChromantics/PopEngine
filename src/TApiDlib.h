@@ -6,7 +6,7 @@
 
 namespace ApiDlib
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 
@@ -50,33 +50,40 @@ public:
 	std::shared_ptr<dlib::frontal_face_detector>	mFaceDetector;
 };
 
-
-
-class TDlibWrapper
+class TDlibThreads
 {
 public:
-	TDlibWrapper(size_t ThreadCount);
+	TDlibThreads(size_t ThreadCount);
+	~TDlibThreads();
+
+	//	this loads the shape predictors etc and copies to each thread
+	void				SetShapePredictorFaceLandmarks(ArrayBridge<uint8_t>&& LandmarksDatBytes);
+
+	Array<std::shared_ptr<TDlib>>	mThreads;
+};
+
+
+extern const char DlibWrapper_TypeName[];
+class TDlibWrapper : public Bind::TObjectWrapper<DlibWrapper_TypeName,TDlibThreads>
+{
+public:
+	TDlibWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
+	{
+	}
 	~TDlibWrapper();
 	
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
+	static void			CreateTemplate(Bind::TTemplate& Template);
 
-	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	virtual void		Construct(Bind::TCallback& Params) override;
 	
-	static v8::Local<v8::Value>				FindFaces(v8::TCallback& Arguments);
-	static v8::Local<v8::Value>				FindFaceFeatures(v8::TCallback& Arguments);
+	static void			FindFaces(Bind::TCallback& Params);
+	static void			FindFaceFeatures(Bind::TCallback& Params);
 
-	//	this loads the shape predictors etc and copies to each thread
-	void									SetShapePredictorFaceLandmarks(ArrayBridge<int>&& LandmarksDatBytes);
 
 private:
-	TDlib&									GetDlibJobQueue();
-	
-public:
-	v8::Persistent<v8::Object>	mHandle;
-	TV8Container*				mContainer;
-
-private:
-	Array<std::shared_ptr<TDlib>>	mDlibJobQueues;
+	std::shared_ptr<TDlibThreads>&	mDlibJobQueues = mObject;
+	TDlib&				GetDlibJobQueue();
 };
 

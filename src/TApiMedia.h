@@ -40,6 +40,7 @@ public:
 
 public:
 	std::shared_ptr<TMediaExtractor>&		mExtractor = mObject;
+	Bind::TPersistent						mOnFrameFilter;
 };
 
 
@@ -54,10 +55,8 @@ public:
 	//~TAvcDecoderWrapper();
 	
 	static void					CreateTemplate(Bind::TTemplate& Template);
-	
 	virtual void 				Construct(Bind::TCallback& Arguments) override;
 	
-	void						OnNewFrame(const SoyPixelsImpl& Pixels);	//	call onPictureDecoded
 	static void 				Decode(Bind::TCallback& Arguments);
 	
 public:

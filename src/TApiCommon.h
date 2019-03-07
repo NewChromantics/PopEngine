@@ -24,7 +24,7 @@ namespace Opengl
 
 //	an image is a generic accessor for pixels, opengl textures, etc etc
 extern const char Image_TypeName[];
-class TImageWrapper : public Bind::TObjectWrapper<Image_TypeName,SoyPixels>
+class TImageWrapper : public Bind::TObjectWrapper<Image_TypeName,SoyPixelsImpl>
 {
 public:
 	TImageWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -64,7 +64,7 @@ public:
 	void									OnOpenglTextureChanged();
 	void									ReadOpenglPixels(SoyPixelsFormat::Type Format);
 	void									SetPixels(const SoyPixelsImpl& NewPixels);
-	void									SetPixels(std::shared_ptr<SoyPixels> NewPixels);
+	void									SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels);
 	void									SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels);
 	SoyPixelsMeta							GetMeta();
 	void									GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback);	//	lock & unlock pixels for processing
@@ -81,7 +81,7 @@ public:
 
 protected:
 	std::recursive_mutex				mPixelsLock;			//	not sure if we need it for the others?
-	std::shared_ptr<SoyPixels>&			mPixels = mObject;
+	std::shared_ptr<SoyPixelsImpl>&		mPixels = mObject;
 	size_t								mPixelsVersion = 0;			//	opengl texture changed
 
 	std::shared_ptr<Opengl::TTexture>	mOpenglTexture;

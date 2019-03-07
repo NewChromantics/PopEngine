@@ -12,80 +12,45 @@
 
 #define TIMER_WARNING_MIN_MS	50
 
-using namespace v8;
-
 const char FindFaces_FunctionName[] = "FindFaces";
 const char FindFaceFeatures_FunctionName[] = "FindFaceFeatures";
 
 
-void ApiDlib::Bind(TV8Container& Container)
+void ApiDlib::Bind(Bind::TContext& Context)
 {
-	Container.BindObjectType("Dlib", TDlibWrapper::CreateTemplate, nullptr );
+	Context.BindObjectType<TDlibWrapper>();
 }
 
 
-
-TDlibWrapper::TDlibWrapper(size_t ThreadCount) :
-	mContainer		( nullptr )
+TDlibThreads::TDlibThreads(size_t ThreadCount)
 {
 	if ( ThreadCount < 1 )
 		ThreadCount = 1;
-
+		
 	for ( int i=0;	i<ThreadCount;	i++ )
 	{
 		std::stringstream Name;
 		Name << "Dlib Job Queue " << i;
 		std::shared_ptr<TDlib> Queue( new TDlib(Name.str() ) );
-		mDlibJobQueues.PushBack(Queue);
+		this->mThreads.PushBack(Queue);
 		Queue->Start();
 	}
 }
 
 
-void TDlibWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TDlibWrapper::Construct(Bind::TCallback& Params)
 {
-	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
+	auto& This = Params.This<TDlibWrapper>();
 	
-	if ( !Arguments.IsConstructCall() )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	auto This = Arguments.This();
-	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-	
-	auto ThreadCountArg = Arguments[1];
-	auto LandmarksDatArg = Arguments[0];
-	
-	size_t ThreadCount = 1;
-	if ( ThreadCountArg->IsNumber() )
-		ThreadCount = ThreadCountArg.As<Number>()->Uint32Value();
-	
-	
-	//	alloc window
-	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-	//		but it also needs to know of the V8container to run stuff
-	//		cyclic hell!
-	auto* NewWrapper = new TDlibWrapper(ThreadCount);
-	
-	//	store persistent handle to the javascript object
-	NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
-	NewWrapper->mContainer = &Container;
+	Array<uint8_t> LandmarksData;
+	Params.GetArgumentArray( 0, GetArrayBridge(LandmarksData) );
 
-	//	first argument is the landmarks data as bytes
-	Array<int> LandmarksDatBytes;
-	v8::EnumArray( LandmarksDatArg, GetArrayBridge(LandmarksDatBytes), "DLib arg0 (shape_predictor_68_face_landmarks.dat)" );
-	NewWrapper->SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksDatBytes) );
+	size_t ThreadCount = 1;
+	if ( !Params.IsArgumentUndefined(1) )
+		ThreadCount = Params.GetArgumentInt(1);
 	
-	
-	//	set fields
-	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
-	
-	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( This );
+	This.mDlibJobQueues.reset( new TDlibThreads(ThreadCount) );
+	This.mDlibJobQueues->SetShapePredictorFaceLandmarks( GetArrayBridge(LandmarksData) );
 }
 
 

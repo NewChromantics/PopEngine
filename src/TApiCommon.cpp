@@ -19,6 +19,7 @@ const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
 const char GarbageCollect_FunctionName[] = "GarbageCollect";
 const char SetTimeout_FunctionName[] = "SetTimeout";
 const char Sleep_FunctionName[] = "Sleep";
+const char ThreadTest_FunctionName[] = "ThreadTest";
 const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
 const char GetComputerName_FunctionName[] = "GetComputerName";
 const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
@@ -60,6 +61,7 @@ namespace ApiPop
 	static void 	GarbageCollect(Bind::TCallback& Params);
 	static void 	SetTimeout(Bind::TCallback& Params);
 	static void		Sleep(Bind::TCallback& Params);
+	static void		ThreadTest(Bind::TCallback& Params);
 	static void		GetTimeNowMs(Bind::TCallback& Params);
 	static void		GetComputerName(Bind::TCallback& Params);
 	static void		ShowFileInFinder(Bind::TCallback& Params);
@@ -109,7 +111,7 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 {
 	auto Callback = Params.GetArgumentFunction(0);
 	auto TimeoutMs = Params.GetArgumentInt(1);
-	auto CallbackPersistent = Params.mContext.GetPersistent(Callback);
+	auto CallbackPersistent = Params.mContext.CreatePersistent(Callback);
 	
 	auto OnRun = [=](Bind::TContext& Context)
 	{
@@ -132,12 +134,13 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 
 static void ApiPop::Sleep(Bind::TCallback& Params)
 {
+	throw Soy::AssertException("Not applicable in JavascriptCore");
+	/*
 	auto TimeoutMsHandle = v8::SafeCast<Number>(Params.mParams[0]);
 	auto TimeoutMs = TimeoutMsHandle->Uint32Value();
 	
 	Params.mContainer.Yield( TimeoutMs );
-	
-	return Undefined(Params.mIsolate);
+	 */
 }
 
 
@@ -146,6 +149,7 @@ std::shared_ptr<JsCore::TContext> gTestContext;
 
 void ApiPop::ThreadTest(Bind::TCallback& Params)
 {
+	/*
 	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
 	auto TimeoutMs = Params.GetArgumentInt(0);
 	
@@ -168,7 +172,7 @@ void ApiPop::ThreadTest(Bind::TCallback& Params)
 				JSValueRef Exception = nullptr;
 				JSPropertyAttributes Attributes = kJSClassAttributeNone;
 				JSObjectSetProperty( Context, Global, GlobalNameString, GlobalOther, Attributes, &Exception );
-				 */
+				 *  /
 			}
 			
 			for ( auto i=0;	i<1000;	i++ )
@@ -191,6 +195,7 @@ void ApiPop::ThreadTest(Bind::TCallback& Params)
 	//	can we interrupt and call arbirtry funcs?
 	//	gr: need to see if we cna do it on other threads
 	std::this_thread::sleep_for( std::chrono::milliseconds(TimeoutMs) );
+	*/
 }
 
 
@@ -225,27 +230,27 @@ void ApiPop::GetImageHeapSize(Bind::TCallback& Params)
 {
 	auto& Heap = Params.mContext.GetImageHeap();
 	auto Value = Heap.mAllocBytes;
-	Parmas.Return( Value );
+	Params.Return( Value );
 }
 
 void ApiPop::GetImageHeapCount(Bind::TCallback& Params)
 {
-	auto& Heap = Params.mContainer.GetImageHeap();
+	auto& Heap = Params.mContext.GetImageHeap();
 	auto Value = Heap.mAllocCount;
 	Params.Return( Value );
 }
 
 
-void ApiPop::GetV8HeapSize(Bind::TCallback& Params)
+void ApiPop::GetHeapSize(Bind::TCallback& Params)
 {
-	auto& Heap = Params.mContainer.GetV8Heap();
+	auto& Heap = Params.mContext.GetV8Heap();
 	auto Value = Heap.mAllocBytes;
 	Params.Return( Value );
 }
 
-void ApiPop::GetV8HeapCount(Bind::TCallback& Params)
+void ApiPop::GetHeapCount(Bind::TCallback& Params)
 {
-	auto& Heap = Params.mContainer.GetV8Heap();
+	auto& Heap = Params.mContext.GetV8Heap();
 	auto Value = Heap.mAllocCount;
 	Params.Return( Value );
 }
@@ -256,9 +261,7 @@ void ApiPop::GetV8HeapCount(Bind::TCallback& Params)
 
 void ApiPop::CompileAndRun(Bind::TCallback& Params)
 {
-	auto& args = Params.mParams;
-	
-	auto Source = Parmas.GetArgumentString(0);
+	auto Source = Params.GetArgumentString(0);
 	auto Filename = Params.GetArgumentString(1);
 
 	//	ignore the return for now
@@ -307,26 +310,27 @@ void ApiPop::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 	
-	Context.BindObjectType( TImageWrapper::GetObjectTypeName(), TImageWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TImageWrapper>, Namespace );
-
+	Context.BindObjectType<TImageWrapper>( Namespace );
+	
 	auto NamespaceObject = Context.GetGlobalObject(Namespace);
-	//  load api's before script & executions
-	NamespaceObject.Set<CreateTestPromise_FunctionName>( CreateTestPromise );
-	NamespaceObject.Set<Debug_FunctionName>( Debug );
-	NamespaceObject.Set<CompileAndRun_FunctionName>(CompileAndRun );
-	NamespaceObject.Set<LoadFileAsString_FunctionName>(LoadFileAsString );
-	NamespaceObject.Set<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
-	NamespaceObject.Set<WriteStringToFile_FunctionName>(WriteStringToFile );
-	NamespaceObject.Set<GarbageCollect_FunctionName>(GarbageCollect );
-	NamespaceObject.Set<SetTimeout_FunctionName>(SetTimeout );
-	NamespaceObject.Set<Sleep_FunctionName>(Sleep );
-	NamespaceObject.Set<GetTimeNowMs_FunctionName>(GetTimeNowMs );
-	NamespaceObject.Set<GetComputerName_FunctionName>(GetComputerName );
-	NamespaceObject.Set<ShowFileInFinder_FunctionName>(ShowFileInFinder );
-	NamespaceObject.Set<GetImageHeapSize_FunctionName>(GetImageHeapSize );
-	NamespaceObject.Set<GetImageHeapCount_FunctionName>(GetImageHeapCount );
-	NamespaceObject.Set<GetHeapSize_FunctionName>(GetV8HeapSize );
-	NamespaceObject.Set<GetHeapCount_FunctionName>(GetV8HeapCount );
+	
+	//Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
+	Context.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
+	Context.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
+	Context.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
+	Context.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
+	Context.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile, Namespace );
+	Context.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
+	Context.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
+	Context.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
+	Context.BindGlobalFunction<ThreadTest_FunctionName>( ThreadTest, Namespace );
+	Context.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs, Namespace );
+	Context.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName, Namespace );
+	Context.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder, Namespace );
+	Context.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize, Namespace );
+	Context.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
+	Context.BindGlobalFunction<GetHeapSize_FunctionName>(GetHeapSize, Namespace );
+	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
@@ -337,9 +341,6 @@ TImageWrapper::~TImageWrapper()
 void TImageWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TImageWrapper>();
-	auto& Heap = Params.mContainer.GetImageHeap();
-	auto Pixels = std::make_shared<SoyPixels>( SoyPixelsMeta( Width, Height, Format ), Heap );
-	This.SetPixels(Pixels);
 
 	
 	if ( Params.IsArgumentString(0) )
@@ -671,8 +672,9 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TImageWrapper>();
 	
-	auto AllowBgraAsRgbaHandle = !Params.IsArgumentUndefined(0) ? Params.GetArgumentBool(0) : false;
+	auto AllowBgraAsRgba = !Params.IsArgumentUndefined(0) ? Params.GetArgumentBool(0) : false;
 	auto IsTargetArray = Params.IsArgumentArray(1);
+	auto& Heap = Params.mContext.GetImageHeap();
 	
 	Soy::TScopeTimerPrint Timer(__func__,5);
 	
@@ -693,7 +695,7 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 	else
 	{
 		Soy::TScopeTimerPrint Timer("GetRgba8 conversion to RGBA", 5 );
-		ConvertedPixels.reset( new SoyPixels(CurrentPixels,mContainer.GetImageHeap()) );
+		ConvertedPixels.reset( new SoyPixels(CurrentPixels,Heap) );
 		ConvertedPixels->SetFormat( SoyPixelsFormat::RGBA );
 		pPixels = ConvertedPixels.get();
 	}	
@@ -704,7 +706,7 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 	if ( IsTargetArray )
 	{
 		auto TargetArray = Params.GetArgumentArray(1);
-		TargetArray.Copy( GetArrayBridge(PixelsArray) );
+		TargetArray.CopyTo( GetArrayBridge(PixelsArray) );
 		Params.Return( TargetArray );
 	}
 	else

@@ -11,26 +11,25 @@ namespace Hid
 
 namespace ApiInput
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 
 
 extern const char InputDevice_TypeName[];
-class TInputDeviceWrapper : public TObjectWrapper<InputDevice_TypeName,Hid::TDevice>
+class TInputDeviceWrapper : public Bind::TObjectWrapper<InputDevice_TypeName,Hid::TDevice>
 {
 public:
-	TInputDeviceWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
-		TObjectWrapper			( Container, This )
+	TInputDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
 	{
 	}
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-	
-	virtual void 							Construct(Bind::TCallback& Arguments) override;
+	static void					CreateTemplate(Bind::TTemplate& Template);
+	virtual void 				Construct(Bind::TCallback& Arguments) override;
 
-	//void									OnStateChanged();
-	static void								GetState(Bind::TCallback& Arguments);
+	//void						OnStateChanged();
+	static void					GetState(Bind::TCallback& Arguments);
 	
 
 public:

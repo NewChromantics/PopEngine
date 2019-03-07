@@ -2,7 +2,6 @@
 #include "SoyDebug.h"
 #include "SoyApp.h"
 #include "PopMain.h"
-#include "TV8Instance.h"
 #include "SoyFileSystem.h"
 #include "JsCoreInstance.h"
 

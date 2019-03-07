@@ -3,16 +3,15 @@
 
 #include "Ezsift/include/ezsift.h"
 
-using namespace v8;
 
 const char GetFeatures_FunctionName[] = "GetFeatures";
 
 const char Ezsift_TypeName[] = "Ezsift";
 
 
-void ApiEzsift::Bind(TV8Container& Container)
+void ApiEzsift::Bind(Bind::TContext& Context)
 {
-	Container.BindObjectType( TEzsiftWrapper::GetObjectTypeName(), TEzsiftWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TEzsiftWrapper> );
+	Context.BindObjectType<TEzsiftWrapper>("Pop");
 }
 
 class Ezsift::TInstance
@@ -24,29 +23,9 @@ void TEzsiftWrapper::Construct(Bind::TCallback& Arguments)
 	mEzsift.reset( new Ezsift::TInstance );
 }
 
-Local<FunctionTemplate> TEzsiftWrapper::CreateTemplate(TV8Container& Container)
+void TEzsiftWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	Container.BindFunction<GetFeatures_FunctionName>( InstanceTemplate, GetFeatures );
-	
-	return ConstructorFunc;
+	Template.BindFunction<GetFeatures_FunctionName>(GetFeatures);
 }
 
 
@@ -117,7 +96,7 @@ void TEzsiftWrapper::GetFeatures(Bind::TCallback& Params)
 		ObjectJs.SetFloat("y",y);
 		return ObjectJs;
 	};
-	auto ObjectsArray = Params.mContext.GetArray( Features.GetSize(), GetElement );
-	return ObjectsArray;
+	auto ObjectsArray = Params.mContext.CreateArray( Features.GetSize(), GetElement );
+	Params.Return( ObjectsArray );
 }
 

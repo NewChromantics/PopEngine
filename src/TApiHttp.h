@@ -16,7 +16,7 @@ class SoySocket;
 
 namespace ApiHttp
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 
@@ -68,22 +68,22 @@ protected:
 };
 
 
-
-class THttpServerWrapper : public TSocketWrapper
+extern const char HttpServer_TypeName[];
+class THttpServerWrapper: public Bind::TObjectWrapper<HttpServer_TypeName,THttpServer>, public TSocketWrapper
 {
 public:
-	THttpServerWrapper(uint16_t ListenPort);
+	THttpServerWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
+	{
+	}
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-	
-	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
-	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
+	static void						CreateTemplate(Bind::TTemplate& Template);
+	virtual void 					Construct(Bind::TCallback& Arguments) override;
 
-	void									OnRequest(std::string& Url,Http::TResponseProtocol& Response);
+	virtual std::shared_ptr<SoySocket>	GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
+
+	void							OnRequest(std::string& Url,Http::TResponseProtocol& Response);
 	
 public:
-	v8::Persistent<v8::Object>	mHandle;
-	TV8Container*				mContainer;
-	
-	std::shared_ptr<THttpServer>	mSocket;
+	std::shared_ptr<THttpServer>&	mSocket = mObject;
 };

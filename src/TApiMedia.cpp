@@ -43,8 +43,8 @@ void ApiMedia::Bind(Bind::TContext& Context)
 void ApiMedia::EnumDevices(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise();
-	
-	auto DoEnumDevices = [=]
+
+	auto DoEnumDevices = [&]
 	{
 		try
 		{
@@ -78,7 +78,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			};
 			
 			//	queue the completion, doesn't need to be done instantly
-			this->mContext.Queue( OnCompleted );
+			Params.mContext.Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
@@ -90,7 +90,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			{
 				Promise.Reject( ExceptionString );
 			};
-			Container->QueueScoped( OnError );
+			Params.mContext.Queue( OnError );
 		}
 	};
 	
@@ -154,28 +154,15 @@ std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMedi
 
 void TMediaSourceWrapper::Construct(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-
-	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
+	auto DeviceName = Params.GetArgumentString(0);
+	auto SinglePlaneOutput = !Params.IsArgumentUndefined(1) ? Params.GetArgumentBool(1) : false;
+	auto HasFilterCallback = !Params.IsArgumentUndefined(2);
+	auto MaxBufferSize = !Params.IsArgumentUndefined(3) ? Params.GetArgumentInt(3) : 10;
 	
-	auto DeviceNameHandle = Arguments[0];
-	auto SinglePlaneOutputHandle = Arguments[1];
-	auto FilterCallbackHandle = Arguments[2];
-	auto MaxBufferSizeHandle = Arguments[3];
-	
-	size_t MaxBufferSize = 10;
-	if ( !MaxBufferSizeHandle->IsUndefined() )
-		MaxBufferSize = v8::SafeCast<v8::Number>(MaxBufferSizeHandle)->Int32Value();
-	
-	bool SinglePlaneOutput = false;
-	if ( !SinglePlaneOutputHandle->IsUndefined() )
-		SinglePlaneOutput = v8::SafeCast<v8::Boolean>(SinglePlaneOutputHandle)->BooleanValue();
-		
-	if ( !FilterCallbackHandle->IsUndefined() )
+	if ( HasFilterCallback )
 	{
-		auto FilterCallback = v8::SafeCast<v8::Function>(FilterCallbackHandle);
-		mOnFrameFilter = v8::GetPersistent( *Isolate, FilterCallback );
+		auto FilterCallbackFunc = Params.GetArgumentFunction(2);
+		mOnFrameFilter = Params.mContext.CreatePersistent( FilterCallbackFunc );
 	}
 	
 	auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
@@ -190,7 +177,6 @@ void TMediaSourceWrapper::Construct(Bind::TCallback& Params)
 	};
 
 	//	create device
-	auto DeviceName = v8::GetString( DeviceNameHandle );
 	TMediaExtractorParams ExtractorParams( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
 	ExtractorParams.mForceNonPlanarOutput = SinglePlaneOutput;
 	ExtractorParams.mDiscardOldFrames = false;
@@ -201,31 +187,10 @@ void TMediaSourceWrapper::Construct(Bind::TCallback& Params)
 }
 
 
-Local<FunctionTemplate> TMediaSourceWrapper::CreateTemplate(TV8Container& Container)
+void TMediaSourceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	//	add members
-	Container.BindFunction<Free_FunctionName>( InstanceTemplate, Free );
-	Container.BindFunction<GetNextFrame_FunctionName>( InstanceTemplate, GetNextFrame );
-
-	return ConstructorFunc;
+	Template.BindFunction<Free_FunctionName>( Free );
+	Template.BindFunction<GetNextFrame_FunctionName>( GetNextFrame );
 }
 
 
@@ -234,6 +199,8 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 	//	do filter here
 	if ( mOnFrameFilter )
 	{
+		throw Soy::AssertException("Todo: re-implement frame filter callback");
+		/*
 		//	When we're stuck with non-async stuff in js (posenet)
 		//	lets do an immediate "reject frame" option
 		//	and if the isolate is yeilded (sleep()) then this can execute now
@@ -261,35 +228,33 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 			FramePacket.reset();
 			return;
 		}
+		 */
 	}
 	
 	//	notify that there's a new frame
-	auto Runner = [this](Local<Context> context)
+	auto Runner = [this](Bind::TContext& Context)
 	{
-		auto* isolate = context->GetIsolate();
-		auto This = this->mHandle.Get(isolate);
-		
-		BufferArray<Local<Value>,2> Args;
-		
-		auto FuncHandle = v8::GetFunction( context, This, "OnNewFrame" );
-	
 		try
 		{
-			mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
+			auto This = GetHandle();
+			auto Func = This.GetFunction("OnNewFrame");
+			Bind::TCallback Callback(Context);
+			Callback.SetThis( This );
+			Context.Execute( Callback );
 		}
 		catch(std::exception& e)
 		{
 			std::Debug << "OnNewFrame Exception: " << e.what() << std::endl;
 		}
 	};
-	mContainer.QueueScoped( Runner );
+	mContext.Queue( Runner );
 }
 
 
 
-v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(v8::TCallback& Params)
+void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 {
-	auto& This = Params.GetThis<TMediaSourceWrapper>();
+	auto& This = Params.This<TMediaSourceWrapper>();
 
 	//	grab frame
 	auto StreamIndex = 0;
@@ -305,24 +270,19 @@ v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(v8::TCallback& Params)
 	//	if the user provides an array, split planes now
 	//	todo: switch this to a promise, but we also what to make use of pixelbuffers...
 	//		but that [needs to] output multiple textures too...
-	auto& Arguments = Params.mParams;
-	auto PlaneArrayHandle = Arguments[0];
 	
 	//	todo: add this for transform
-	auto SetTime = [&](v8::Local<v8::Object> ObjectHandle)
+	auto SetTime = [&](Bind::TObject& Object)
 	{
 		auto FrameTime = FramePacket->GetStartTime();
 		if ( FrameTime.IsValid() )
 		{
-			auto FrameTimeDouble = FrameTime.mTime;
-			auto FrameTimeKey = v8::GetString( Params.GetIsolate(), FrameTimestampKey );
-			auto FrameTimeValue = v8::Number::New( &Params.GetIsolate(), FrameTimeDouble );
-			ObjectHandle->Set( FrameTimeKey, FrameTimeValue );
+			Object.SetInt( FrameTimestampKey, FrameTime.mTime );
 		}
 	};
 	
 	
-	if ( PlaneArrayHandle->IsArray() )
+	if ( Params.IsArgumentArray(0) )
 	{
 		BufferArray<SoyPixelsImpl*,5> Planes;
 		//	ref counted by js, but need to cleanup if we throw...
@@ -335,9 +295,10 @@ v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(v8::TCallback& Params)
 			for ( auto p=0;	p<Planes.GetSize();	p++ )
 			{
 				auto* Plane = Planes[p];
-				auto* pImage = new TImageWrapper( Params.mContainer );
-				pImage->SetPixels( *Plane );
-				Images.PushBack( pImage );
+				auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+				auto& Image = ImageObject.This<TImageWrapper>();
+				Image.SetPixels( *Plane );
+				Images.PushBack( &Image );
 			}
 			PixelBuffer->Unlock();
 		}
@@ -348,166 +309,106 @@ v8::Local<v8::Value> TMediaSourceWrapper::GetNextFrame(v8::TCallback& Params)
 			throw;
 		}
 		
-		auto PlaneArray = v8::Local<v8::Array>::Cast( PlaneArrayHandle );
+		auto PlaneArray = Params.GetArgumentArray(0);
 		for ( auto i=0;	i<Images.GetSize();	i++ )
 		{
 			auto& Image = *Images[i];
 			auto ImageHandle = Image.GetHandle();
-			PlaneArray->Set( i, ImageHandle );
+			PlaneArray.Set( i, ImageHandle );
 		}
 		
 		//	create a dumb object with meta to return
-		auto FrameHandle = v8::Object::New( &Params.GetIsolate() );
-		FrameHandle->Set( v8::GetString( Params.GetIsolate(), "Planes"), PlaneArray );
+		auto FrameHandle = Params.mContext.CreateObjectInstance();
+		FrameHandle.SetArray("Planes", PlaneArray );
 		SetTime( FrameHandle );
-		
-		return FrameHandle;
+		Params.Return( FrameHandle );
+		return;
 	}
 
 	
-	auto* pImage = new TImageWrapper( Params.mContainer );
-	pImage->mName = "MediaSource Frame";
-	auto& Image = *pImage;
+	auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+	auto& Image = ImageObject.This<TImageWrapper>();
+	Image.mName = "MediaSource Frame";
 	Image.SetPixelBuffer(PixelBuffer);
 
 	auto ImageHandle = Image.GetHandle();
-	SetTime( ImageHandle );
-	
-	return ImageHandle;
+	SetTime( ImageObject );
+	Params.Return(ImageObject);
 }
 
 
-v8::Local<v8::Value> TMediaSourceWrapper::Free(v8::TCallback& Params)
+void TMediaSourceWrapper::Free(Bind::TCallback& Params)
 {
-	auto& This = Params.GetThis<TMediaSourceWrapper>();
+	auto& This = Params.This<TMediaSourceWrapper>();
 	This.mExtractor.reset();
-	
-	return v8::Undefined(Params.mIsolate);
 }
 
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
-	
 	mDecoder.reset( new TDecoderInstance );
 }
 
-Local<FunctionTemplate> TAvcDecoderWrapper::CreateTemplate(TV8Container& Container)
+void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	//	add members
-	Container.BindFunction<Decode_FunctionName>( InstanceTemplate, Decode );
-	
-	return ConstructorFunc;
+	Template.BindFunction<Decode_FunctionName>( Decode );
 }
 
-v8::Local<v8::Value> TAvcDecoderWrapper::Decode(v8::TCallback& Params)
+void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 {
-	auto& Arguments = Params.mParams;
-	
-	auto PacketBytesHandle = Arguments[0];
-	auto DecoderMeta = Arguments[1];
-	auto DecodeCallbackHandle = Arguments[2];
-	auto& This = Params.GetThis<TAvcDecoderWrapper>();
-	
-	//	check if undefined, if it's defined and not a func, we'll throw so user knows they've made a mistake;
-	auto DecodeCallbackHandleIsValid = !DecodeCallbackHandle->IsUndefined();
-	
-	//	get array
+	auto& This = Params.This<TAvcDecoderWrapper>();
 	Array<uint8_t> PacketBytes;
-	v8::EnumArray<v8::Uint8Array>( PacketBytesHandle, GetArrayBridge(PacketBytes) );
+	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
 	
-	auto OnImage = [&](const SoyPixelsImpl& Frame)
+	bool ExtractPlanes = false;
+	if ( !Params.IsArgumentUndefined(1) )
+		ExtractPlanes = Params.GetArgumentBool(1);
+	
+	auto Promise = Params.mContext.CreatePromise();
+	auto& Context = Params.mContext;
+	
+	auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
 	{
-		//	create an image
-		This.OnNewFrame( Frame );
+		Array<std::shared_ptr<SoyPixelsImpl>> PlanePixelss;
+		Frame->SplitPlanes( GetArrayBridge(PlanePixelss) );
 		
-		//	return each plane as an image arg (maybe return an array?)
-		BufferArray<Local<Value>,4> Args;
-		
-		Array<std::shared_ptr<SoyPixelsImpl>> FramePlanes;
-		Frame.SplitPlanes( GetArrayBridge(FramePlanes) );
-		for ( auto p=0;	p<FramePlanes.GetSize();	p++)
+		for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
 		{
-			auto& PlanePixels = *FramePlanes[p];
-			//	gr: this looks leaky, but its not, its refcounted by JS
-			auto* pImage = new TImageWrapper( Params.mContainer );
-			pImage->mName = "MediaSource Frame";
-			auto& Image = *pImage;
-			Image.SetPixels(PlanePixels);
-			auto ImageHandle = Image.GetHandle();
-			Args.PushBack(ImageHandle);
+			auto& PlanePixels = *PlanePixelss[p];
+			
+			auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+			auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
+			
+			std::stringstream PlaneName;
+			PlaneName << "Frame" << FrameTime << "Plane" << p;
+			PlaneImage.mName = PlaneName.str();
+			PlaneImage.SetPixels( PlanePixels );
+			
+			PlaneImages.PushBack( PlaneImageObject );
 		}
-		
-		auto DecodeCallbackHandleFunc = v8::Local<Function>::Cast( DecodeCallbackHandle );
-		auto DecodeCallbackThis = Params.mContext->Global();
-		Params.mContainer.ExecuteFunc( Params.mContext, DecodeCallbackHandleFunc, DecodeCallbackThis, GetArrayBridge(Args) );
 	};
-	
-	//	send a null callback to skip the picture extraction
-	std::function<void(const SoyPixelsImpl&)> OnImageDecoded;
-	if ( DecodeCallbackHandleIsValid )
-		OnImageDecoded = OnImage;
 	
 	//	this function is synchronous, so it should put stuff straight back in the queue
 	//	the callback was handy though, so maybe go back to it
 	This.mDecoder->PushData( PacketBytes.GetArray(), PacketBytes.GetDataSize(), 0 );
-
-	
 	
 	TFrame Frame;
+	Array<Bind::TObject> Frames;
 	while ( This.mDecoder->PopFrame(Frame) )
 	{
-		auto& Pixels = *Frame.mPixels;
-		OnImageDecoded( Pixels );
+		auto FrameImageObject = Context.CreateObjectInstance( TImageWrapper::GetObjectTypeName() );
+		auto& FrameImage = FrameImageObject.This<TImageWrapper>();
+		FrameImage.SetPixels( Frame.mPixels );
+		FrameImageObject.SetInt("Time", Frame.mFrameNumber);
+
+		Array<Bind::TObject> FramePlanes;
+		if ( ExtractPlanes )
+		{
+			GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
+			FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
+		}
 	}
-
-	return v8::Undefined(Params.mIsolate);
+	Params.Return( GetArrayBridge(Frames) );
 }
 
 
-void TAvcDecoderWrapper::OnNewFrame(const SoyPixelsImpl& Pixels)
-{
-	//	onPictureDecoded to match braodway WASM API
-	
-	//	notify that there's a new frame
-	auto Runner = [this](Local<Context> context)
-	{
-		auto* isolate = context->GetIsolate();
-		auto This = this->mHandle.Get(isolate);
-		
-		BufferArray<Local<Value>,1> Args;
-		
-		try
-		{
-			auto FuncHandle = v8::GetFunction( context, This, "onPictureDecoded" );
-			mContainer.ExecuteFunc( context, FuncHandle, This, GetArrayBridge(Args) );
-		}
-		catch(std::exception& e)
-		{
-			std::Debug << "onPictureDecoded Exception: " << e.what() << std::endl;
-		}
-	};
-	mContainer.QueueScoped( Runner );
-}

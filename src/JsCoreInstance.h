@@ -41,7 +41,9 @@ namespace Bind = JsCore;
 
 class JsCore::TArray
 {
-	
+public:
+	void		Set(size_t Index,Bind::TObject& Object);
+	void		CopyTo(ArrayBridge<uint8_t>&& Values);
 };
 
 class JsCore::TFunction
@@ -67,7 +69,8 @@ public:
 	//	const for lambda[=] copy capture
 	void			Resolve(const std::string& Value) const;
 	void			Resolve(Bind::TObject& Value) const;
-	void			Resolve(ArrayBridge<const std::string>&& Values) const;
+	void			Resolve(ArrayBridge<std::string>&& Values) const;
+	void			Resolve(Bind::TArray& Value) const;
 	//void			Resolve(JSValueRef Value) const	{	mResolve.Call(nullptr,Value);	}
 
 	void			Reject(const std::string& Value) const;
@@ -114,13 +117,14 @@ public:
 
 	Bind::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
-	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectTypeName);
+	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectTypeName=std::string());
 
 	virtual Bind::TPersistent	CreatePersistent(Bind::TObject& Object) bind_override;
 	virtual Bind::TPersistent	CreatePersistent(Bind::TFunction& Object) bind_override;
 	virtual Bind::TPromise		CreatePromise() bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
 	template<typename TYPE>
 	Bind::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
 
@@ -134,6 +138,11 @@ public:
 	void				ThrowException(JSValueRef ExceptionHandle)	{	JsCore::ThrowException( mContext, ExceptionHandle );	}
 
 	
+	
+	prmem::Heap&		GetImageHeap()	{	return mImageHeap;	}
+	prmem::Heap&		GetV8Heap()		{	return mAllocatorHeap;	}
+	std::string			GetResolvedFilename(const std::string& Filename);
+	
 private:
 	
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
@@ -145,6 +154,9 @@ private:
 public://	temp
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
+	
+	prmem::Heap			mAllocatorHeap;
+	prmem::Heap			mImageHeap;
 	std::string			mRootDirectory;
 
 	//	"templates" in v8, "classes" in jscore
@@ -169,6 +181,7 @@ public:
 	virtual int32_t			GetArgumentInt(size_t Index) bind_override;
 	virtual float			GetArgumentFloat(size_t Index) bind_override;
 	virtual Bind::TFunction	GetArgumentFunction(size_t Index) bind_override;
+	virtual Bind::TArray	GetArgumentArray(size_t Index) bind_override;
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
@@ -182,14 +195,16 @@ public:
 	virtual bool			IsArgumentString(size_t Index)bind_override;
 	virtual bool			IsArgumentBool(size_t Index)bind_override;
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override;
+	virtual bool			IsArgumentArray(size_t Index)bind_override;
 
 	virtual void			Return() bind_override;
 	virtual void			ReturnNull() bind_override;
 	virtual void			Return(const std::string& Value) bind_override;
 	virtual void			Return(uint32_t Value) bind_override;
-	virtual void			Return(Bind::TObject Value) bind_override;
-	virtual void			Return(Bind::TArray Value) bind_override;
-	virtual void			Return(Bind::TPromise Value) bind_override;
+	virtual void			Return(Bind::TObject& Value) bind_override;
+	virtual void			Return(Bind::TArray& Value) bind_override;
+	virtual void			Return(Bind::TPromise& Value) bind_override;
+	virtual void			Return(ArrayBridge<Bind::TObject>&& Values) bind_override;
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(Bind::TObject& This) bind_override;
@@ -231,9 +246,8 @@ public:
 class JsCore::TObject //: public Bind::TObject
 {
 public:
-	//	generic
+	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
-	TObject(TObject&& That);
 	
 	template<typename TYPE>
 	TYPE&				This();
@@ -246,6 +260,12 @@ public:
 
 	virtual void			SetObject(const std::string& Name,const Bind::TObject& Object) bind_override;
 	virtual void			SetFunction(const std::string& Name,Bind::TFunction& Function) bind_override;
+	virtual void			SetFloat(const std::string& Name,float Value) bind_override;
+	virtual void			SetString(const std::string& Name,const std::string& Value) bind_override;
+	virtual void			SetArray(const std::string& Name,Bind::TArray& Array) bind_override;
+	virtual void			SetArray(const std::string& Name,ArrayBridge<Bind::TObject>&& Values) bind_override;
+	virtual void			SetArray(const std::string& Name,ArrayBridge<bool>&& Values) bind_override;
+	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
 
 	//	Jscore specific
 private:
@@ -265,9 +285,14 @@ public:
 class Bind::TPersistent
 {
 public:
+	TPersistent()	{}
 	TPersistent(TObject& Object);	//	inc refcount
 	TPersistent(TFunction& Object);	//	inc refcount
 	~TPersistent();					//	dec refound
+	
+	operator	bool() const		{	return IsFunction() || IsObject();	}
+	bool		IsFunction() const;
+	bool		IsObject() const;
 	
 	//	const for lambda[=] capture
 	TObject		GetObject() const;
@@ -384,5 +409,7 @@ template<typename TYPE>
 inline TYPE& Bind::TObject::This()
 {
 	auto* This = GetThis();
-	return *reinterpret_cast<TYPE*>( This );
+	auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>( This );
+	auto* TypeWrapper = dynamic_cast<TYPE*>( Wrapper );
+	return *TypeWrapper;
 }

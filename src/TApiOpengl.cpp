@@ -713,7 +713,7 @@ void TShaderWrapper::SetUniform(Bind::TCallback& Params)
 	This.DoSetUniform( Params );
 }
 
-void TShaderWrapper::DoSetUniform(v8::TCallback& Params)
+void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 {
 	auto& Shader = *mShader;
 	
@@ -734,12 +734,13 @@ void TShaderWrapper::DoSetUniform(v8::TCallback& Params)
 		auto BindIndex = this->mCurrentTextureIndex++;
 		auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
 
+		//	gr: currently this needs to be immediate... but we should be on the render thread anyway?
 		//	gr: planning ahead
-		auto OnTextureLoaded = [Image,pShader,Uniform,BindIndex]()
+		auto OnTextureLoaded = [&]()
 		{
-			auto& Texture = Image->GetTexture();
+			auto& Texture = Image.GetTexture();
 			//std::Debug << "Binding " << Texture.mTexture.mName << " to " << BindIndex << std::endl;
-			pShader->SetUniform( Uniform, Texture, BindIndex );
+			Shader.SetUniform( Uniform, Texture, BindIndex );
 		};
 		auto OnTextureError = [](const std::string& Error)
 		{
@@ -790,7 +791,7 @@ void TShaderWrapper::DoSetUniform(v8::TCallback& Params)
 
 void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetUniform_FunctionName>( InstanceTemplate, SetUniform );
+	Template.BindFunction<SetUniform_FunctionName>( SetUniform );
 }
 
 void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)
