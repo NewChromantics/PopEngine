@@ -185,6 +185,7 @@ public:
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override;
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override;
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override;
 	

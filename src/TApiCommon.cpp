@@ -369,14 +369,14 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 	//	construct with filename
 	if ( Params.IsArgumentString(0) )
 	{
-		LoadFile(Arguments);
+		LoadFile(Params);
 		return;
 	}
 		
 	//	construct with size
 	if ( Params.IsArgumentArray(0) )
 	{
-		Alloc(Arguments);
+		Alloc(Params);
 		return;
 	}
 
@@ -404,7 +404,7 @@ void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void TImageWrapper::Flip(Bind::TCallback& Params)
 {
-	auto& This = Parmas.This<TImageWrapper>();
+	auto& This = Params.This<TImageWrapper>();
 	
 	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
 	auto& Pixels = This.GetPixels();
@@ -413,7 +413,7 @@ void TImageWrapper::Flip(Bind::TCallback& Params)
 }
 
 
-void TImageWrapper::LoadFile(TBind::TCallback& Params)
+void TImageWrapper::LoadFile(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TImageWrapper>();
 
@@ -431,7 +431,8 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	BytesBuffer.Push( GetArrayBridge(Bytes) );
 
 	//	alloc pixels
-	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels(mContainer.GetImageHeap()) );
+	auto& Heap = mContext.GetImageHeap();
+	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels(Heap) );
 	
 	if ( Soy::StringEndsWith( Filename, Png::FileExtensions, false ) )
 	{
@@ -683,7 +684,7 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 	
 	//	convert pixels if they're in the wrong format
 	std::shared_ptr<SoyPixels> ConvertedPixels;
-	SoyPixels* pPixels = nullptr;
+	SoyPixelsImpl* pPixels = nullptr;
 	if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
 	{
 		pPixels = &CurrentPixels;
@@ -911,16 +912,17 @@ SoyPixelsMeta TImageWrapper::GetMeta()
 	throw Soy::AssertException("Don't know where to get meta from");
 }
 
-SoyPixels& TImageWrapper::GetPixels()
+SoyPixelsImpl& TImageWrapper::GetPixels()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+	auto& Heap = mContext.GetImageHeap();
 
 	if ( mPixelsVersion < GetLatestVersion() && mPixelBufferVersion == GetLatestVersion() )
 	{
 		//	grab pixels from image buffer
 		auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Pixels,float3x3& Transform)
 		{
-			mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
+			mPixels.reset( new SoyPixels(Heap) );
 			mPixels->Copy( *Pixels[0] );
 			mPixelsVersion = mPixelBufferVersion;
 		};
@@ -939,7 +941,7 @@ SoyPixels& TImageWrapper::GetPixels()
 	//	is latest and not allocated, this is okay, lets just alloc
 	if ( mPixelsVersion == 0 && mPixels == nullptr )
 	{
-		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
+		mPixels.reset( new SoyPixels(Heap) );
 		mPixelsVersion = 1;
 	}
 	
@@ -987,11 +989,12 @@ void TImageWrapper::OnPixelsChanged()
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	mPixels.reset( new SoyPixels(NewPixels,mContainer.GetImageHeap()) );
+	auto& Heap = mContext.GetImageHeap();
+	mPixels.reset( new SoyPixels(NewPixels,Heap) );
 	OnPixelsChanged();
 }
 
-void TImageWrapper::SetPixels(std::shared_ptr<SoyPixels> NewPixels)
+void TImageWrapper::SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels)
 {
 	//if ( NewPixels->GetFormat() != SoyPixelsFormat::RGB )
 	//	std::Debug << "Setting image to pixels: " << NewPixels->GetMeta() << std::endl;
@@ -1018,12 +1021,14 @@ void TImageWrapper::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
+	auto& Heap = mContext.GetImageHeap();
+
 	//	warning in case we haven't actually updated
 	if ( mPixelsVersion >= mOpenglTextureVersion )
 		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
 	//	if we have no pixels, alloc
 	if ( mPixels == nullptr )
-		mPixels.reset( new SoyPixels(mContainer.GetImageHeap()) );
+		mPixels.reset( new SoyPixels(Heap) );
 
 	auto Flip = false;
 	

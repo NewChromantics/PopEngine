@@ -20,7 +20,7 @@
 //	https://github.com/edouardlp/Mask-RCNN-CoreML
 #import "MaskRCNN_MaskRCNN.h"
 
-using namespace v8;
+
 
 const char Yolo_FunctionName[] = "Yolo";
 const char Hourglass_FunctionName[] = "Hourglass";
@@ -32,9 +32,9 @@ const char MaskRcnn_FunctionName[] = "MaskRcnn";
 const char CoreMl_TypeName[] = "CoreMl";
 
 
-void ApiCoreMl::Bind(TV8Container& Container)
+void ApiCoreMl::Bind(Bind::TContext& Context)
 {
-	Container.BindObjectType( TCoreMlWrapper::GetObjectTypeName(), TCoreMlWrapper::CreateTemplate, TV8ObjectWrapperBase::Allocate<TCoreMlWrapper> );
+	Context.BindObjectType<TCoreMlWrapper>();
 }
 
 

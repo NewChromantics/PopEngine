@@ -7,7 +7,7 @@ class TPixelBuffer;
 
 namespace ApiCoreMl
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 namespace CoreMl
@@ -17,16 +17,15 @@ namespace CoreMl
 
 
 extern const char CoreMl_TypeName[];
-class TCoreMlWrapper : public TObjectWrapper<CoreMl_TypeName,CoreMl::TInstance>
+class TCoreMlWrapper : public Bind::TObjectWrapper<CoreMl_TypeName,CoreMl::TInstance>
 {
 public:
-	TCoreMlWrapper(TV8Container& Container,v8::Local<v8::Object> This=v8::Local<v8::Object>()) :
-		TObjectWrapper			( Container, This )
+	TCoreMlWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper	( Context, This )
 	{
 	}
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-
+	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
 	static void			Yolo(Bind::TCallback& Arguments);
