@@ -3,115 +3,60 @@
 #include "TApiCommon.h"
 #include "SoySocket.h"
 
-using namespace v8;
 
 const char GetAddress_FunctionName[] = "GetAddress";
 const char Send_FunctionName[] = "Send";
 const char GetPeers_FunctionName[] = "GetPeers";
 
 
-
-void ApiSocket::Bind(TV8Container& Container)
+void ApiSocket::Bind(Bind::TContext& Context)
 {
-	Container.BindObjectType("UdpBroadcastServer", TUdpBroadcastServerWrapper::CreateTemplate, nullptr );
+	Context.BindObjectType<TUdpBroadcastServerWrapper>();
 }
 
 
 
-void TUdpBroadcastServerWrapper::Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments)
+void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 {
-	using namespace v8;
-	auto* Isolate = Arguments.GetIsolate();
-	
-	if ( !Arguments.IsConstructCall() )
-	{
-		auto Exception = Isolate->ThrowException(String::NewFromUtf8( Isolate, "Expecting to be used as constructor. new Window(Name);"));
-		Arguments.GetReturnValue().Set(Exception);
-		return;
-	}
-	
-	auto This = Arguments.This();
-	auto& Container = v8::GetObject<TV8Container>( Arguments.Data() );
-	
-	auto ListenPortArg = Arguments[0].As<Number>()->Uint32Value();
-	
-	//	alloc window
-	//	gr: this should be OWNED by the context (so we can destroy all c++ objects with the context)
-	//		but it also needs to know of the V8container to run stuff
-	//		cyclic hell!
-	auto* NewWrapper = new TUdpBroadcastServerWrapper(ListenPortArg);
-	
-	//	store persistent handle to the javascript object
-	NewWrapper->mHandle.Reset( Isolate, Arguments.This() );
-	NewWrapper->mContainer = &Container;
+	auto& This = Params.This<TUdpBroadcastServerWrapper>();
 
-	//	set fields
-	This->SetInternalField( 0, External::New( Arguments.GetIsolate(), NewWrapper ) );
+	auto ListenPort = Params.GetArgumentInt(0);
+
 	
-	// return the new object back to the javascript caller
-	Arguments.GetReturnValue().Set( This );
-}
-
-
-Local<FunctionTemplate> TUdpBroadcastServerWrapper::CreateTemplate(TV8Container& Container)
-{
-	auto* Isolate = Container.mIsolate;
-	
-	//	pass the container around
-	auto ContainerHandle = External::New( Isolate, &Container );
-	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	
-	//	https://github.com/v8/v8/wiki/Embedder's-Guide
-	//	1 field to 1 c++ object
-	//	gr: we can just use the template that's made automatically and modify that!
-	//	gr: prototypetemplate and instancetemplate are basically the same
-	//		but for inheritance we may want to use prototype
-	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
-	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
-	
-	//	[0] object
-	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
-	
-	Container.BindFunction<GetAddress_FunctionName>( InstanceTemplate, GetAddress );
-	Container.BindFunction<Send_FunctionName>( InstanceTemplate, Send );
-	Container.BindFunction<GetPeers_FunctionName>( InstanceTemplate, GetPeers );
-
-	return ConstructorFunc;
-}
-
-
-
-TUdpBroadcastServerWrapper::TUdpBroadcastServerWrapper(uint16_t ListenPort) :
-	mContainer		( nullptr )
-{
 	auto OnBinaryMessage = [this](const Array<uint8_t>& Message,SoyRef Sender)
 	{
 		this->OnMessage( Message, Sender );
 	};
-	
 	mSocket.reset( new TUdpBroadcastServer(ListenPort, OnBinaryMessage ) );
 }
 
 
+void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<GetAddress_FunctionName>( GetAddress );
+	Template.BindFunction<Send_FunctionName>( Send );
+	Template.BindFunction<GetPeers_FunctionName>( GetPeers );
+}
+
+
+
+
 void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef Sender)
 {
-	auto SendJsMessage = [=](Local<Context> Context)
+	//Array<uint8_t> MessageCopy;
+	
+	auto SendJsMessage = [=](Bind::TContext& Context)
 	{
-		auto& Container = *this->mContainer;
-		auto& Isolate = *Context->GetIsolate();
-		auto ThisHandle = Local<Object>::New( &Isolate, this->mHandle );
-		auto FunctionHandle = v8::GetFunction( Context, ThisHandle, "OnMessage" );
-		
-		BufferArray<Local<Value>,2> Args;
-		auto MessageHandle = v8::GetTypedArray( Isolate, GetArrayBridge(Message) );
-		auto RefHandle = v8::GetString( Isolate, Sender.ToString() );
-		Args.PushBack( MessageHandle );
-		Args.PushBack( RefHandle );
+		auto This = GetHandle();
+		auto Func = This.GetFunction("OnMessage");
 
+		Bind::TCallback CallbackParams( Context );
+		CallbackParams.SetThis( This );
+		CallbackParams.SetArgumentArray( 0, GetArrayBridge(Message) );
+		CallbackParams.SetArgumentString( 1, Sender.ToString() );
 		try
 		{
-			Container.ExecuteFunc( Context, FunctionHandle, ThisHandle, GetArrayBridge(Args) );
+			Context.Execute( CallbackParams );
 		}
 		catch(std::exception& e)
 		{
@@ -119,7 +64,7 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 		}
 	};
 	
-	mContainer->QueueScoped( SendJsMessage );
+	mContext.Queue( SendJsMessage );
 }
 
 

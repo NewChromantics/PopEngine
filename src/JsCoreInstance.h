@@ -192,9 +192,12 @@ public:
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(Bind::TObject& This) bind_override;
+	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,Bind::TObject& Value) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values) bind_override;
+	virtual void			SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values) bind_override;
+	virtual void			SetArgumentArray(size_t Index,ArrayBridge<float>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,Bind::TArray& Value) bind_override;
 
 	virtual bool			GetReturnBool() bind_override;
@@ -214,6 +217,10 @@ public:
 
 class JsCore::TTemplate //: public Bind::TTemplate
 {
+public:
+	template<const char* FUNCTIONNAME>
+	void		BindFunction(std::function<void(Bind::TCallback&)> Function);
+	
 public:
 	JSClassRef		mClass = nullptr;
 };

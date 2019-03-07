@@ -537,13 +537,13 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 
 void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<DrawQuad_FunctionName>( InstanceTemplate, DrawQuad );
-	Template.BindFunction<SetViewport_FunctionName>( InstanceTemplate, SetViewport );
-	Template.BindFunction<ClearColour_FunctionName>( InstanceTemplate, ClearColour );
-	Template.BindFunction<EnableBlend_FunctionName>( InstanceTemplate, EnableBlend );
-	Template.BindFunction<Render_FunctionName>( InstanceTemplate, Render );
-	Template.BindFunction<RenderChain_FunctionName>( InstanceTemplate, RenderChain );
-	Template.BindFunction<GetScreenRect_FunctionName>( InstanceTemplate, GetScreenRect );
+	Template.BindFunction<DrawQuad_FunctionName>( DrawQuad );
+	Template.BindFunction<SetViewport_FunctionName>( SetViewport );
+	Template.BindFunction<ClearColour_FunctionName>( ClearColour );
+	Template.BindFunction<EnableBlend_FunctionName>( EnableBlend );
+	Template.BindFunction<Render_FunctionName>( Render );
+	Template.BindFunction<RenderChain_FunctionName>( RenderChain );
+	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)

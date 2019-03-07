@@ -13,7 +13,7 @@ class SoySocket;
 
 namespace ApiSocket
 {
-	void	Bind(TV8Container& Container);
+	void	Bind(Bind::TContext& Context);
 }
 
 
@@ -47,14 +47,18 @@ public:
 	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
 };
 
-class TUdpBroadcastServerWrapper : public TSocketWrapper
+extern const char UdpBroadcastServer_TypeName[];
+class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<UdpBroadcastServer_TypeName,TUdpBroadcastServer>, public TSocketWrapper
 {
 public:
-	TUdpBroadcastServerWrapper(uint16_t ListenPort);
+	TUdpBroadcastServerWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper	( Context, This )
+	{
+	}
+	//TUdpBroadcastServerWrapper(uint16_t ListenPort);
 	
-	static v8::Local<v8::FunctionTemplate>	CreateTemplate(TV8Container& Container);
-	
-	static void								Constructor(const v8::FunctionCallbackInfo<v8::Value>& Arguments);
+	static void			CreateTemplate(Bind::TTemplate& Template);
+	virtual void		Construct(Bind::TCallback& Params) override;
 
 	//	queue up a callback for This handle's OnMessage callback
 	void									OnMessage(const Array<uint8_t>& Message,SoyRef Peer);
@@ -62,9 +66,6 @@ public:
 	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
 
 public:
-	v8::Persistent<v8::Object>	mHandle;
-	TV8Container*				mContainer;
-	
-	std::shared_ptr<TUdpBroadcastServer>	mSocket;
+	std::shared_ptr<TUdpBroadcastServer>	mSocket = mObject;
 };
 
