@@ -216,10 +216,10 @@ public:
 	TYPE&					This();
 	virtual TObject			ThisObject() bind_override;
 
-	virtual bool			IsArgumentString(size_t Index)bind_override;
-	virtual bool			IsArgumentBool(size_t Index)bind_override;
-	virtual bool			IsArgumentUndefined(size_t Index)bind_override;
-	virtual bool			IsArgumentArray(size_t Index)bind_override;
+	virtual bool			IsArgumentString(size_t Index)bind_override		{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeString;	}
+	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeBoolean;	}
+	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeUndefined;	}
+	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return JSValueIsArray(mContext.mContext,mArguments[Index]);	}
 
 	virtual void			Return() bind_override;
 	virtual void			ReturnNull() bind_override;
@@ -363,8 +363,8 @@ public:
 	~TPersistent();					//	dec refound
 	
 	operator	bool() const		{	return IsFunction() || IsObject();	}
-	bool		IsFunction() const;
-	bool		IsObject() const;
+	bool		IsFunction() const	{	return mFunction.mThis != nullptr;	}
+	bool		IsObject() const	{	return mObject.mThis != nullptr;	}
 	
 	//	const for lambda[=] capture
 	TObject		GetObject() const		{	return mObject;	}
@@ -413,7 +413,10 @@ public:
 	//typedef std::function<TObjectWrapper<TYPENAME,TYPE>*(TV8Container&,v8::Local<v8::Object>)> ALLOCATORFUNC;
 	
 public:
-	TObjectWrapper(TContext& Context,TObject& This);
+	TObjectWrapper(TContext& Context,TObject& This) :
+		TObjectWrapperBase	( Context, This )
+	{
+	}
 	
 	static std::string		GetTypeName()	{	return TYPENAME;	}
 	

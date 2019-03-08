@@ -616,6 +616,10 @@ float JsCore::TCallback::GetArgumentFloat(size_t Index)
 	return Value;
 }
 
+void JsCore::TCallback::ReturnNull()
+{
+	mReturn = JSValueMakeNull( mContext.mContext );
+}
 
 
 JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
