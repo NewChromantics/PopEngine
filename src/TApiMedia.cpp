@@ -34,8 +34,8 @@ void ApiMedia::Bind(Bind::TContext& Context)
 
 	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
 
-	Context.BindObjectType<TMediaSourceWrapper>();
-	Context.BindObjectType<TAvcDecoderWrapper>();
+	Context.BindObjectType<TMediaSourceWrapper>( Namespace );
+	Context.BindObjectType<TAvcDecoderWrapper>( Namespace );
 }
 
 
