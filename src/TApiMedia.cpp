@@ -71,14 +71,9 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			{
 				std::Debug << e.what() << std::endl;
 			}
-			
-			auto OnCompleted = [=](Bind::TContext& Context)
-			{
-				Promise.Resolve( GetArrayBridge(DeviceNames) );
-			};
-			
-			//	queue the completion, doesn't need to be done instantly
-			Params.mContext.Queue( OnCompleted );
+						
+			//	gr: don't bother queuing, assume Resolve/Reject is always queued
+			Promise.Resolve( GetArrayBridge(DeviceNames) );
 		}
 		catch(std::exception& e)
 		{
@@ -86,11 +81,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Bind::TContext& Context)
-			{
-				Promise.Reject( ExceptionString );
-			};
-			Params.mContext.Queue( OnError );
+			Promise.Reject( ExceptionString );
 		}
 	};
 	
