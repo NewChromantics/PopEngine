@@ -39,21 +39,21 @@ void JsCore::TFunction::Call(Bind::TObject& This)
 	throw Soy::AssertException("todo JsCore::TFunction::Call");
 }
 
-JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
+JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 {
-	throw Soy::AssertException("todo JsCore::TFunction::Call");
-	/*
 	if ( This == nullptr )
 		This = JSContextGetGlobalObject( mContext );
 	
+	const auto ArgumentCount = 1;
+	JSValueRef Arguments[ArgumentCount] =
+	{
+		Arg0,
+	};
 	JSValueRef Exception = nullptr;
-	auto Result = JSObjectCallAsFunction( mContext, mThis, This, 1, &Arg0, &Exception );
-	
-	if ( Exception!=nullptr )
-		throw Soy::AssertException( JsCore::HandleToString( mContext, Exception ) );
+	auto Result = JSObjectCallAsFunction( mContext, mThis, This, ArgumentCount, Arguments, &Exception );
+	ThrowException( mContext, Exception );
 
 	return Result;
-	*/
 }
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
@@ -916,10 +916,14 @@ void JsCore::TTemplate::RegisterClassWithContext()
 
 void JsCore::TPromise::Resolve(JSValueRef Value) const
 {
-	throw Soy::AssertException("todo JsCore::TPromise::Resolve");
+	//	gr: what is This supposed to be?
+	JSObjectRef This = nullptr;
+	mResolve.Call( This, Value );
 }
 
 void JsCore::TPromise::Reject(JSValueRef Value) const
 {
-	throw Soy::AssertException("todo JsCore::TPromise::Reject");
+	//	gr: what is This supposed to be?
+	JSObjectRef This = nullptr;
+	mReject.Call( This, Value );
 }

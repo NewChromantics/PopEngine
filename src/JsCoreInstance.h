@@ -115,7 +115,7 @@ public:
 	//	would be nice to capture return, but it's contained inside Params for now. Maybe template & error for type mismatch
 	void			Call(Bind::TCallback& Params);
 	void			Call(Bind::TObject& This);
-	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr);
+	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr) const;
 	
 public:
 	JSContextRef	mContext = nullptr;
