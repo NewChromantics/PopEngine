@@ -302,14 +302,13 @@ Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<int
 
 
 JsCore::TObject::TObject(JSContextRef Context,JSObjectRef This) :
-	mContext	( Context )
+	mContext	( Context ),
+	mThis		( This )
 {
 	if ( !mContext )
 		throw Soy::AssertException("Null context for TObject");
 
-	if ( This == nullptr )
-		This = JSContextGetGlobalObject( mContext );
-	if ( !mContext )
+	if ( !mThis )
 		throw Soy::AssertException("This is null for TObject");
 }
 
@@ -324,15 +323,19 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	while ( MemberName.length() > 0 )
 	{
 		auto ChildName = Soy::StringPopUntil( LeafName, '.', false, false );
-		if ( ChildName.length() == 0 )
+		
+		if ( LeafName.length() == 0 )
+		{
+			LeafName = ChildName;
 			break;
+		}
 
 		auto Child = This.GetObject(ChildName);
 		This = Child;
 	}
 
 	JSValueRef Exception = nullptr;
-	auto PropertyName = JsCore::GetString( mContext, MemberName );
+	auto PropertyName = JsCore::GetString( mContext, LeafName );
 	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
@@ -726,7 +729,9 @@ void JsCore::TCallback::SetArgumentArray(size_t Index,Bind::TArray& Value)
 
 JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
 {
-	TObject Global( mContext, nullptr );
+	auto GlobalThis = JSContextGetGlobalObject( mContext );
+	TObject Global( mContext, GlobalThis );
+	
 	if ( ObjectName.length() == 0 )
 		return Global;
 	auto Child = Global.GetObject( ObjectName );
