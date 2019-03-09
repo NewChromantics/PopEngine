@@ -2,6 +2,16 @@
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
 #include "TApiCommon.h"
+#include "TApiOpengl.h"
+//#include "TApiOpencl.h"
+#include "TApiDlib.h"
+#include "TApiMedia.h"
+#include "TApiWebsocket.h"
+#include "TApiSocket.h"
+#include "TApiHttp.h"
+#include "TApiCoreMl.h"
+#include "TApiEzsift.h"
+#include "TApiInput.h"
 
 
 namespace JsCore
@@ -199,29 +209,22 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 		mContext = CreateContext();
 		
 		ApiPop::Bind( *mContext );
-		/*
-		ApiOpengl::Bind( *mV8Container );
-		ApiOpencl::Bind( *mV8Container );
-		ApiDlib::Bind( *mV8Container );
-		ApiMedia::Bind( *mV8Container );
-		ApiWebsocket::Bind( *mV8Container );
-		ApiHttp::Bind( *mV8Container );
-		ApiSocket::Bind( *mV8Container );
-		
+		ApiOpengl::Bind( *mContext );
+		//ApiOpencl::Bind( *mContext );
+		ApiDlib::Bind( *mContext );
+		ApiMedia::Bind( *mContext );
+		ApiWebsocket::Bind( *mContext );
+		ApiHttp::Bind( *mContext );
+		ApiSocket::Bind( *mContext );
+		ApiCoreMl::Bind( *mContext );
+		ApiEzsift::Bind( *mContext );
+		ApiInput::Bind( *mContext );
+
 		//	gr: start the thread immediately, there should be no problems having the thread running before queueing a job
-		this->Start();
-		*/
+		//this->Start();
+		
 		std::string BootupSource;
 		Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
-		/*
-		auto* Container = mV8Container.get();
-		auto LoadScript = [=](v8::Local<v8::Context> Context)
-		{
-			Container->LoadScript( Context, BootupSource, ScriptFilename );
-		};
-		
-		mV8Container->QueueScoped( LoadScript );
-		 */
 		mContext->LoadScript( BootupSource, ScriptFilename );
 	}
 	catch(std::exception& e)
