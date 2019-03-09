@@ -28,10 +28,11 @@ namespace JsCore
 	//	value conversion
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
-	int32_t		GetInt(JSContextRef Context,JSValueRef Handle);
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
-	
+	template<typename INTTYPE>
+	INTTYPE		GetInt(JSContextRef Context,JSValueRef Handle);
+
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
@@ -55,9 +56,21 @@ namespace JsCore
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
 	template<> TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
 DEFINE_FROM_VALUE( bool, GetBool );
-DEFINE_FROM_VALUE( int32_t, GetInt );
+DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
+DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
+DEFINE_FROM_VALUE( uint8_t, GetInt<uint8_t> );
 DEFINE_FROM_VALUE( std::string, GetString );
 DEFINE_FROM_VALUE( float, GetFloat );
+
+template<typename TYPE>
+inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
+{
+	//	if we use static_assert(true), it asserts at definition,
+	//	we need to assert at instantiation (maybe it's because of the use of TYPE?)
+	//	https://stackoverflow.com/a/17679382/355753
+	static_assert( sizeof(TYPE) == -1, "This type needs to be specialised with DEFINE_FROM_VALUE" );
+}
+
 
 namespace Bind = JsCore;
 #define bind_override
@@ -73,7 +86,12 @@ public:
 	}
 	
 	void		Set(size_t Index,Bind::TObject& Object);
-	void		CopyTo(ArrayBridge<uint8_t>&& Values);
+	template<typename TYPE>
+	void		CopyTo(ArrayBridge<TYPE>&& Values)		{	CopyTo( Values );	}
+	void		CopyTo(ArrayBridge<uint32_t>& Values);
+	void		CopyTo(ArrayBridge<int32_t>& Values);
+	void		CopyTo(ArrayBridge<uint8_t>& Values);
+	void		CopyTo(ArrayBridge<float>& Values);
 
 public:
 	JSContextRef	mContext = nullptr;
@@ -200,17 +218,18 @@ public:
 	virtual std::string		GetArgumentString(size_t Index) bind_override;
 	std::string				GetArgumentFilename(size_t Index);
 	virtual bool			GetArgumentBool(size_t Index) bind_override;
-	virtual int32_t			GetArgumentInt(size_t Index) bind_override;
+	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( mContext.mContext, mArguments[Index] );	}
 	virtual float			GetArgumentFloat(size_t Index) bind_override;
 	virtual Bind::TFunction	GetArgumentFunction(size_t Index) bind_override;
 	virtual Bind::TArray	GetArgumentArray(size_t Index) bind_override;
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override;
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override;
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override;
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override;
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override		{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
+	
 	
 	template<typename TYPE>
 	TYPE&					This();
@@ -241,10 +260,6 @@ public:
 	virtual void			SetArgumentArray(size_t Index,Bind::TArray& Value) bind_override;
 
 	virtual bool			GetReturnBool() bind_override			{	return GetBool( mContext.mContext, mReturn );	}
-	
-protected:
-	virtual void*		GetThis() bind_override;
-	virtual void*		GetArgumentPointer(size_t Index) bind_override;
 	
 public:
 	TContext&			mContext;
@@ -315,7 +330,6 @@ private:
 	JSContextRef	mContext = nullptr;
 
 protected:
-	//	gr: not pure so we can still return an instance without rvalue'ing it
 	virtual void*	GetThis() bind_override;
 
 public:
@@ -521,21 +535,23 @@ inline Bind::TArray Bind::TContext::CreateArray(ArrayBridge<TYPE>&& Values)
 template<typename TYPE>
 inline TYPE& Bind::TCallback::GetArgumentPointer(size_t Index)
 {
-	auto* Ptr = GetArgumentPointer(Index);
-	return *reinterpret_cast<TYPE*>( Ptr );
+	auto Object = GetArgumentObject(Index);
+	return Object.This<TYPE>();
 }
 
 template<typename TYPE>
 inline TYPE& Bind::TCallback::This()
 {
-	auto* This = GetThis();
-	return *reinterpret_cast<TYPE*>( This );
+	auto Object = ThisObject();
+	return Object.This<TYPE>();
 }
 
 template<typename TYPE>
 inline TYPE& Bind::TObject::This()
 {
 	auto* This = GetThis();
+	if ( This == nullptr )
+		throw Soy::AssertException("Object::This is null");
 	auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>( This );
 	auto* TypeWrapper = dynamic_cast<TYPE*>( Wrapper );
 	return *TypeWrapper;
@@ -585,4 +601,23 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<uint8_t>& Array)
 	//	make typed array
 }
 
+
+template<typename INTTYPE>
+inline INTTYPE JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
+{
+	//	convert to string
+	JSValueRef Exception = nullptr;
+	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
+	
+	auto Int = static_cast<INTTYPE>( DoubleJs );
+	return Int;
+}
+
+
+template<const char* FUNCTIONNAME>
+inline void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)> Function)
+{
+	JSStaticFunction NewFunction;
+	mFunctions.PushBack(NewFunction);
+}
 

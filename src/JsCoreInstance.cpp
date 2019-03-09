@@ -61,16 +61,6 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 }
 
 
-int32_t JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
-{
-	//	convert to string
-	JSValueRef Exception = nullptr;
-	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
-
-	auto Int = static_cast<int32_t>( DoubleJs );
-	return Int;
-}
-
 
 float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 {
@@ -248,7 +238,12 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor)
 
 void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
 {
-	throw Soy::AssertException("Queue a task to execute this!");
+	throw Soy::AssertException("Run & catch");
+}
+
+void JsCore::TContext::Execute(Bind::TCallback& Callback)
+{
+	throw Soy::AssertException("Run & catch");
 }
 
 template<typename TYPE>
@@ -593,19 +588,39 @@ std::string JsCore::TCallback::GetArgumentString(size_t Index)
 	return String;
 }
 
+std::string JsCore::TCallback::GetArgumentFilename(size_t Index)
+{
+	auto Filename = GetArgumentString(Index);
+	Filename = mContext.GetResolvedFilename( Filename );
+	return Filename;
+}
 
+Bind::TFunction JsCore::TCallback::GetArgumentFunction(size_t Index)
+{
+	auto Handle = mArguments[Index];
+	JsCore::TFunction Function( mContext.mContext, Handle );
+	return Function;
+}
+
+Bind::TArray JsCore::TCallback::GetArgumentArray(size_t Index)
+{
+	auto Handle = mArguments[Index];
+	if ( !JSValueIsArray( mContext.mContext, Handle ) )
+	{
+		std::stringstream Error;
+		Error << "Argument " << Index << " is not array";
+		throw Soy::AssertException( Error.str() );
+	}
+
+	auto HandleObject = JsCore::GetObject( mContext.mContext, Handle );
+	Bind::TArray Array( mContext.mContext, HandleObject );
+	return Array;
+}
 
 bool JsCore::TCallback::GetArgumentBool(size_t Index)
 {
 	auto Handle = mArguments[Index];
 	auto Value = JsCore::GetBool( mContext.mContext, Handle );
-	return Value;
-}
-
-int32_t JsCore::TCallback::GetArgumentInt(size_t Index)
-{
-	auto Handle = mArguments[Index];
-	auto Value = JsCore::GetInt( mContext.mContext, Handle );
 	return Value;
 }
 
@@ -616,9 +631,66 @@ float JsCore::TCallback::GetArgumentFloat(size_t Index)
 	return Value;
 }
 
+Bind::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
+{
+	auto Handle = mArguments[Index];
+	auto HandleObject = JsCore::GetObject( mContext.mContext, Handle );
+	return Bind::TObject( mContext.mContext, HandleObject );
+}
+
+
+
 void JsCore::TCallback::ReturnNull()
 {
 	mReturn = JSValueMakeNull( mContext.mContext );
+}
+
+
+Bind::TObject JsCore::TCallback::ThisObject()
+{
+	auto Object = GetObject( mContext.mContext, mThis );
+	return TObject( mContext.mContext, Object );
+}
+
+
+void JsCore::TCallback::SetThis(Bind::TObject& This)
+{
+	mThis = This.mThis;
+}
+
+void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
+{
+	throw Soy::AssertException("todo");
+}
+
+void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
+{
+	throw Soy::AssertException("todo");
+}
+
+void JsCore::TCallback::SetArgumentObject(size_t Index,Bind::TObject& Value)
+{
+	throw Soy::AssertException("todo");
+}
+
+void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values)
+{
+	throw Soy::AssertException("todo");
+}
+
+void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values)
+{
+	throw Soy::AssertException("todo");
+}
+
+void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<float>&& Values)
+{
+	throw Soy::AssertException("todo");
+}
+
+void JsCore::TCallback::SetArgumentArray(size_t Index,Bind::TArray& Value)
+{
+	throw Soy::AssertException("todo");
 }
 
 
@@ -774,17 +846,26 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 	}
 }
 
-void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>&& Values)
+void JsCore::TArray::CopyTo(ArrayBridge<uint32_t>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );
 }
 
-template<const char* FUNCTIONNAME>
-void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)> Function)
+void JsCore::TArray::CopyTo(ArrayBridge<int32_t>& Values)
 {
-	JSStaticFunction NewFunction;
-	mFunctions.PushBack(NewFunction);
+	JsCore_TArray_CopyTo( *this, Values );
 }
+
+void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}
+
+void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}
+
 
 void JsCore::TTemplate::RegisterClassWithContext()
 {
