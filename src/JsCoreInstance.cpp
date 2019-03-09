@@ -295,17 +295,24 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 
 void JsCore::TContext::QueueDelay(std::function<void(JsCore::TContext&)> Functor,size_t DelayMs)
 {
-	throw Soy::AssertException("Queue a task to execute this!");
+	Queue( Functor );
 }
 
 void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor)
 {
-	throw Soy::AssertException("Queue a task to execute this!");
+	//	todo: make a job queue to queue up jobs so that the caller thread
+	//			doesnt block
+	//	Javascript core is threadsafe, but we don't want to block our own threads
+	//	and caller code is expecting to lose ownership of the functor anyway
+	Execute( Functor );
 }
 
 void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
 {
-	throw Soy::AssertException("Run & catch");
+	//	javascript core is threadsafe, so we can just call
+	//	but maybe we need to set a javascript exception, if this is
+	//	being called from js to relay stuff back
+	Functor( *this );
 }
 
 void JsCore::TContext::Execute(Bind::TCallback& Callback)

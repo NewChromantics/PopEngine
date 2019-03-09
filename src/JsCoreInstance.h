@@ -594,9 +594,9 @@ inline JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Arra
 	
 	size_t Counter = Array.GetSize();
 	auto ValuesRemote = GetRemoteArray( Values, Counter );
-	auto ValuesRemoteBridge = GetArrayBridge( ValuesRemote );
 
-	auto ArrayObject = GetArray( Context, ValuesRemoteBridge );
+	//	call GetArrayBridge() in place so it calls the specialised
+	auto ArrayObject = GetArray( Context, GetArrayBridge( ValuesRemote ) );
 	return ArrayObject;
 }
 
