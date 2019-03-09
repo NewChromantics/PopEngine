@@ -62,9 +62,10 @@ void JsCore::RemoveContextCache(TContext& Context)
 
 JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 {
-	//auto ValueType = JSValueGetType( Context, Value );
-	//if ( ValueType != kJSTypeObject )
-	//	throw Soy::AssertException("Value for TFunciton is not an object");
+	auto ValueType = JSValueGetType( Context, Value );
+	if ( ValueType != kJSTypeObject )
+		throw Soy::AssertException("Value for TFunciton is not an object");
+	
 	if ( !JSValueIsObject( Context, Value ) )
 		throw Soy::AssertException("Value is not object");
 	return const_cast<JSObjectRef>( Value );
@@ -269,7 +270,12 @@ void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,cons
 		JSValueRef Exception = nullptr;
 		auto HandleString = JSValueToStringCopy( Context, Handle, &Exception );
 		if ( Exception )
-			return std::string("Exception->String threw exception");
+		{
+			auto HandleType = JSValueGetType( Context, Handle );
+			std::stringstream Error;
+			Error << "Exception->String threw exception. Exception is type " << HandleType;
+			return Error.str();
+		}
 		
 		size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize( HandleString );
 		char utf8Buffer[maxBufferSize];
@@ -737,7 +743,22 @@ Bind::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
 	return Bind::TObject( mContext.mContext, HandleObject );
 }
 
+bool JsCore::TCallback::IsArgumentArray(size_t Index)
+{
+	if ( Index >= mArguments.GetSize() )
+		return false;
+	
+	return JSValueIsArray( mContext.mContext, mArguments[Index] );
+}
 
+JSType JsCore::TCallback::GetArgumentType(size_t Index)
+{
+	if ( Index >= mArguments.GetSize() )
+		return kJSTypeUndefined;
+	
+	auto Type = JSValueGetType( mContext.mContext, mArguments[Index] );
+	return Type;
+}
 
 
 void JsCore::TCallback::Return(Bind::TPromise& Value)

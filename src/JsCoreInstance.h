@@ -243,10 +243,11 @@ public:
 	TYPE&					This();
 	virtual TObject			ThisObject() bind_override;
 
-	virtual bool			IsArgumentString(size_t Index)bind_override		{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeString;	}
-	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeBoolean;	}
-	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeUndefined;	}
-	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return JSValueIsArray(mContext.mContext,mArguments[Index]);	}
+	virtual bool			IsArgumentString(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeString;	}
+	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeBoolean;	}
+	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
+	virtual bool			IsArgumentArray(size_t Index)bind_override;
+	JSType					GetArgumentType(size_t Index);
 
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;
