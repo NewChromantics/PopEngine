@@ -54,6 +54,7 @@ namespace ApiPop
 	const char Namespace[] = "Pop";
 	
 	static void 	Debug(Bind::TCallback& Params);
+	static void 	CreateTestPromise(Bind::TCallback& Params);
 	static void 	CompileAndRun(Bind::TCallback& Params);
 	static void 	LoadFileAsString(Bind::TCallback& Params);
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
@@ -72,7 +73,7 @@ namespace ApiPop
 }
 
 
-static void ApiPop::Debug(Bind::TCallback& Params)
+void ApiPop::Debug(Bind::TCallback& Params)
 {
 	for ( auto a=0;	a<Params.GetArgumentCount();	a++ )
 	{
@@ -81,21 +82,16 @@ static void ApiPop::Debug(Bind::TCallback& Params)
 	}
 }
 
-/*
-static JSValueRef CreateTestPromise(Bind::TCallbackInfo& Params)
+
+void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 {
-	auto ParamsJs = dynamic_cast<JsCore::TCallbackInfo&>( Params );
+	auto Promise = Params.mContext.CreatePromise();
 	
-	//	create a promise object
-	JSStringRef NewPromiseScript = JSStringCreateWithUTF8CString("new Promise( function(res,rej){	Sleep(1000); res('hello');	} )");
-	JSValueRef Exception = nullptr;
-	auto PromiseHandle = JSEvaluateScript( ParamsJs.mContext, NewPromiseScript, nullptr, nullptr, 0, &Exception );
-
-	return PromiseHandle;
+	Promise.Resolve("Resolved in c++");
+	Params.Return( Promise );
 }
-*/
 
-static void ApiPop::GarbageCollect(Bind::TCallback& Params)
+void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
 	throw Soy::AssertException("v8 only");
 	/*
@@ -314,7 +310,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	
 	auto NamespaceObject = Context.GetGlobalObject(Namespace);
 	
-	//Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
+	Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
 	Context.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
 	Context.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
