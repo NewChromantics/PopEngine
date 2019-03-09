@@ -84,7 +84,7 @@ JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
 
 void JsCore::TFunction::Call(Bind::TObject& This)
 {
-	throw Soy::AssertException("todo JsCore::TFunction::Call");
+	Call( This.mThis, nullptr );
 }
 
  void JsCore::TFunction::Call(Bind::TCallback& Params)
@@ -1005,6 +1005,7 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	//	add a terminator function
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
 	mFunctions.PushBack(NewFunction);
+	mDefinition.staticFunctions = mFunctions.GetArray();
 	mClass = JSClassCreate( &mDefinition );
 	JSClassRetain( mClass );
 	
