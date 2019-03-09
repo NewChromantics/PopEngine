@@ -6,29 +6,29 @@
 
 namespace JsCore
 {
-	std::map<JSContextRef,TContext*> ContextCache;
+	std::map<JSGlobalContextRef,TContext*> ContextCache;
 	
-	void		AddContextCache(TContext& Context,JSContextRef Ref);
+	void		AddContextCache(TContext& Context,JSGlobalContextRef Ref);
 	void		RemoveContextCache(TContext& Context);
 }
 
 
 JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
 {
-	auto Key = ContextRef;
+	auto Key = JSContextGetGlobalContext( ContextRef );
 	//auto Value = &Context;
 
 	//	gr: currently, the contextref from a callback doesn't match
 	//		the GlobalRef, so I think they're not the same, but I cant
 	//		see globalcontext->context conversion
-	auto Entry = ContextCache.begin();
-	//auto Entry = ContextCache.find(Key);
+	//auto Entry = ContextCache.begin();
+	auto Entry = ContextCache.find(Key);
 	if ( Entry == ContextCache.end() )
 		throw Soy::AssertException("Couldn't find context");
 	return *Entry->second;
 }
 
-void JsCore::AddContextCache(TContext& Context,JSContextRef Ref)
+void JsCore::AddContextCache(TContext& Context,JSGlobalContextRef Ref)
 {
 	auto Key = Ref;
 	auto Value = &Context;
@@ -517,6 +517,7 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 		throw Soy::AssertException(ErrorStr);
 	}
 	
+	//	gr: should this create wrapper? or does the constructor do it for us...
 	//	instance new one
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
@@ -947,16 +948,21 @@ void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
 }
 
 
-void JsCore::TTemplate::RegisterClassWithContext()
+void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName)
 {
 	//	add a terminator function
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
 	mFunctions.PushBack(NewFunction);
 	mClass = JSClassCreate( &mDefinition );
+	JSClassRetain( mClass );
 	
 	//	gr: this doesn't look right to me...
-	//JSObjectRef filesystemObject = JSObjectMake(globalContext, FilesystemClass(), nullptr);
-	//JSObjectSetProperty(globalContext, globalObject, JSStringCreateWithUTF8CString("Filesystem"), filesystemObject, kJSPropertyAttributeNone, nullptr);
+	auto PropertyName = GetString( Context.mContext, mDefinition.className );
+	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
+	JSObjectRef ClassObject = JSObjectMake( Context.mContext, mClass, nullptr );
+	JSValueRef Exception = nullptr;
+	JSObjectSetProperty( Context.mContext, ParentObject.mThis, PropertyName, ClassObject, kJSPropertyAttributeNone, &Exception );
+	ThrowException( Context.mContext, Exception );
 }
 
 void JsCore::TPromise::Resolve(JSValueRef Value) const

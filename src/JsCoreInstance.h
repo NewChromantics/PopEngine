@@ -292,7 +292,7 @@ public:
 
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(Bind::TCallback&)> Function);
-	void			RegisterClassWithContext();
+	void			RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName);
 
 public:
 	JSClassDefinition	mDefinition = kJSClassDefinitionEmpty;
@@ -581,7 +581,7 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	
 	//	finish off
-	Template.RegisterClassWithContext();
+	Template.RegisterClassWithContext( *this, ParentName );
 	mObjectTemplates.PushBack( Template );
 }
 
