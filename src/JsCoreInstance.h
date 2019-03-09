@@ -33,7 +33,13 @@ namespace JsCore
 	template<typename INTTYPE>
 	INTTYPE		GetInt(JSContextRef Context,JSValueRef Handle);
 
+	template<typename TYPE>
+	JSObjectRef	GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array);
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
+
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
+	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
+
 	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
 	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
@@ -41,11 +47,10 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
 	JSValueRef	GetValue(JSContextRef Context,TObject& Value);
-	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
-	
+	JSValueRef	GetValue(JSContextRef Context,TArray& Value);
 	template<typename TYPE>
-	JSObjectRef	GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array);
-	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
+	JSValueRef	GetValue(JSContextRef Context,ArrayBridge<TYPE>& Array);
+
 
 	template<typename TYPE>
 	TYPE		FromValue(JSContextRef Context,JSValueRef Handle);
@@ -240,7 +245,8 @@ public:
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return JSValueGetType(mContext.mContext,mArguments[Index]) == kJSTypeUndefined;	}
 	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return JSValueIsArray(mContext.mContext,mArguments[Index]);	}
 
-	virtual void			Return() bind_override;
+	virtual void			Return() bind_override							{	return ReturnUndefined();	}
+	void					ReturnUndefined() bind_override;
 	virtual void			ReturnNull() bind_override;
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
@@ -301,6 +307,7 @@ private:
 class JsCore::TObject //: public Bind::TObject
 {
 	friend class TPersistent;
+	friend class TPromise;
 public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
@@ -350,15 +357,18 @@ public:
 	}
 	
 	//	const for lambda[=] copy capture
-	void			Resolve(const std::string& Value) const;
-	void			Resolve(Bind::TObject& Value) const;
-	void			Resolve(ArrayBridge<std::string>&& Values) const;
-	void			Resolve(ArrayBridge<float>&& Values) const;
-	void			Resolve(Bind::TArray& Value) const;
-	//void			Resolve(JSValueRef Value) const	{	mResolve.Call(nullptr,Value);	}
+	void			Resolve(const std::string& Value) const				{	Resolve( GetValue( GetContext(), Value ) );	}
+	void			Resolve(Bind::TObject& Value) const					{	Resolve( GetValue( GetContext(), Value ) );	}
+	void			Resolve(ArrayBridge<std::string>&& Values) const	{	Resolve( GetValue( GetContext(), Values ) );	}
+	void			Resolve(ArrayBridge<float>&& Values) const			{	Resolve( GetValue( GetContext(), Values ) );	}
+	void			Resolve(Bind::TArray& Value) const					{	Resolve( GetValue( GetContext(), Value ) );	}
+	void			Resolve(JSValueRef Value) const;//					{	mResolve.Call(nullptr,Value);	}
 	
-	void			Reject(const std::string& Value) const;
-	//void			Reject(JSValueRef Value) const	{	mReject.Call(nullptr,Value);	}
+	void			Reject(const std::string& Value) const		{	Reject( GetValue( GetContext(), Value ) );	}
+	void			Reject(JSValueRef Value) const;//			{	mReject.Call(nullptr,Value);	}
+	
+private:
+	JSContextRef	GetContext() const	{	return mPromise.mContext;	}
 	
 public:
 	TObject			mPromise;
@@ -448,7 +458,7 @@ protected:
 
 
 template<const char* TYPENAME,class TYPE>
-JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper)
+inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper)
 {
 	static std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapperCache = AllocWrapper;
 	static TContext* ContextCache = nullptr;
@@ -560,7 +570,7 @@ inline TYPE& Bind::TObject::This()
 
 
 template<typename OBJECTWRAPPERTYPE>
-void JsCore::TContext::BindObjectType(const std::string& ParentName)
+inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 {
 	auto AllocWrapper = [this](JSObjectRef This)
 	{
@@ -580,7 +590,7 @@ void JsCore::TContext::BindObjectType(const std::string& ParentName)
 }
 
 template<typename TYPE>
-JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array)
+inline JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array)
 {
 	JSValueRef Values[Array.GetSize()];
 	for ( auto i=0;	i<Array.GetSize();	i++ )
@@ -595,7 +605,7 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array)
 }
 
 template<>
-JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<uint8_t>& Array)
+inline JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<uint8_t>& Array)
 {
 	throw Soy::AssertException("Make typed array");
 	//	make typed array
@@ -619,5 +629,13 @@ inline void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)
 {
 	JSStaticFunction NewFunction;
 	mFunctions.PushBack(NewFunction);
+}
+
+
+template<typename TYPE>
+inline JSValueRef JsCore::GetValue(JSContextRef Context,ArrayBridge<TYPE>& Values)
+{
+	auto Array = GetArray( Context, Values );
+	return GetValue( Context, Array );
 }
 

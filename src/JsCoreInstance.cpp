@@ -27,9 +27,22 @@ JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
 	if ( !JSObjectIsFunction(Context, mThis) )
 		throw Soy::AssertException("Object should be function");
 }
-/*
-JSValueRef JsCore::TFunction::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
+
+
+void JsCore::TFunction::Call(Bind::TObject& This)
 {
+	throw Soy::AssertException("todo JsCore::TFunction::Call");
+}
+
+ void JsCore::TFunction::Call(Bind::TCallback& Params)
+{
+	throw Soy::AssertException("todo JsCore::TFunction::Call");
+}
+
+JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
+{
+	throw Soy::AssertException("todo JsCore::TFunction::Call");
+	/*
 	if ( This == nullptr )
 		This = JSContextGetGlobalObject( mContext );
 	
@@ -38,10 +51,11 @@ JSValueRef JsCore::TFunction::TFunction::Call(JSObjectRef This,JSValueRef Arg0)
 	
 	if ( Exception!=nullptr )
 		throw Soy::AssertException( JsCore::HandleToString( mContext, Exception ) );
-	
+
 	return Result;
+	*/
 }
-*/
+
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
 	size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize(Handle);
@@ -117,6 +131,11 @@ JSValueRef JsCore::GetValue(JSContextRef Context,uint8_t Value)
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,TObject& Object)
+{
+	return Object.mThis;
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,TArray& Object)
 {
 	return Object.mThis;
 }
@@ -640,9 +659,20 @@ Bind::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
 
 
 
+
+void JsCore::TCallback::Return(Bind::TPromise& Value)
+{
+	mReturn = Value.mPromise.mThis;
+}
+
 void JsCore::TCallback::ReturnNull()
 {
 	mReturn = JSValueMakeNull( mContext.mContext );
+}
+
+void JsCore::TCallback::ReturnUndefined()
+{
+	mReturn = JSValueMakeUndefined( mContext.mContext );
 }
 
 
@@ -879,3 +909,12 @@ void JsCore::TTemplate::RegisterClassWithContext()
 	//JSObjectSetProperty(globalContext, globalObject, JSStringCreateWithUTF8CString("Filesystem"), filesystemObject, kJSPropertyAttributeNone, nullptr);
 }
 
+void JsCore::TPromise::Resolve(JSValueRef Value) const
+{
+	throw Soy::AssertException("todo JsCore::TPromise::Resolve");
+}
+
+void JsCore::TPromise::Reject(JSValueRef Value) const
+{
+	throw Soy::AssertException("todo JsCore::TPromise::Reject");
+}

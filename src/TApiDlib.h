@@ -72,8 +72,6 @@ public:
 		TObjectWrapper			( Context, This )
 	{
 	}
-	~TDlibWrapper();
-	
 	
 	static void			CreateTemplate(Bind::TTemplate& Template);
 
