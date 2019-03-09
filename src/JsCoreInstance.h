@@ -59,7 +59,7 @@ namespace JsCore
 }
 
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
-	template<> TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
+	template<> inline TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
 DEFINE_FROM_VALUE( bool, GetBool );
 DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
 DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
