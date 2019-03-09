@@ -25,6 +25,8 @@ namespace JsCore
 	class TObjectWrapper;
 	class TObjectWrapperBase;
 
+	TContext&	GetContext(JSContextRef ContextRef);
+	
 	//	value conversion
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
@@ -511,20 +513,14 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bi
 template<const char* FunctionName>
 inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName)
 {
+	//	try and remove context cache
 	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
-	static TContext* ContextCache = nullptr;
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
-		return ContextCache->CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
+		auto& ContextPtr = JsCore::GetContext( Context );
+		return ContextPtr.CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
 	};
-	ContextCache = this;
-	/*
-	auto RawFunction = [](const v8::FunctionCallbackInfo<v8::Value>& Paramsv8)
-	{
-		return CallFunc( FunctionCache, Paramsv8, *ContainerCache );
-	};
-	ContainerCache = this;
-	 */
+	
 	BindRawFunction( FunctionName, ParentName, CFunc );
 }
 
@@ -627,7 +623,20 @@ inline INTTYPE JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 template<const char* FUNCTIONNAME>
 inline void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)> Function)
 {
+	//	try and remove context cache
+	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
+
+	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
+	{
+		auto& ContextPtr = JsCore::GetContext( Context );
+		return ContextPtr.CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
+	};
+	
 	JSStaticFunction NewFunction;
+	NewFunction.name = FUNCTIONNAME;
+	NewFunction.callAsFunction = CFunc;
+	NewFunction.attributes = kJSPropertyAttributeNone;
+	
 	mFunctions.PushBack(NewFunction);
 }
 

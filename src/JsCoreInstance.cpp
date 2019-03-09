@@ -4,7 +4,50 @@
 #include "TApiCommon.h"
 
 
+namespace JsCore
+{
+	std::map<JSContextRef,TContext*> ContextCache;
+	
+	void		AddContextCache(TContext& Context,JSContextRef Ref);
+	void		RemoveContextCache(TContext& Context);
+}
 
+
+JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
+{
+	auto Key = ContextRef;
+	//auto Value = &Context;
+
+	//	gr: currently, the contextref from a callback doesn't match
+	//		the GlobalRef, so I think they're not the same, but I cant
+	//		see globalcontext->context conversion
+	auto Entry = ContextCache.begin();
+	//auto Entry = ContextCache.find(Key);
+	if ( Entry == ContextCache.end() )
+		throw Soy::AssertException("Couldn't find context");
+	return *Entry->second;
+}
+
+void JsCore::AddContextCache(TContext& Context,JSContextRef Ref)
+{
+	auto Key = Ref;
+	auto Value = &Context;
+	ContextCache[Key] = Value;
+}
+
+void JsCore::RemoveContextCache(TContext& Context)
+{
+	auto Value = &Context;
+	for ( auto it=ContextCache.begin();	it!=ContextCache.end();	it++ )
+	{
+		if ( it->second != Value )
+			continue;
+		
+		ContextCache.erase( it );
+		return;
+	}
+	throw Soy::AssertException("Couldn't find context");
+}
 
 
 JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
@@ -226,11 +269,13 @@ JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const 
 	mContext		( Context ),
 	mRootDirectory	( RootDirectory )
 {
+	AddContextCache( *this, mContext );
 }
 
 JsCore::TContext::~TContext()
 {
 	JSGlobalContextRelease( mContext );
+	RemoveContextCache( *this );
 }
 
 void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename)
