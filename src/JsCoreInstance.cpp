@@ -62,6 +62,9 @@ void JsCore::RemoveContextCache(TContext& Context)
 
 JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 {
+	//auto ValueType = JSValueGetType( Context, Value );
+	//if ( ValueType != kJSTypeObject )
+	//	throw Soy::AssertException("Value for TFunciton is not an object");
 	if ( !JSValueIsObject( Context, Value ) )
 		throw Soy::AssertException("Value is not object");
 	return const_cast<JSObjectRef>( Value );
@@ -71,11 +74,7 @@ JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
 	mContext	( Context )
 {
-	auto ValueType = JSValueGetType( Context, Value );
-	if ( ValueType != kJSTypeObject )
-		throw Soy::AssertException("Value for TFunciton is not an object");
-	
-	mThis = const_cast<JSObjectRef>( Value );
+	mThis = GetObject( Context, Value );
 	
 	if ( !JSObjectIsFunction(Context, mThis) )
 		throw Soy::AssertException("Object should be function");
@@ -97,6 +96,7 @@ JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 	if ( This == nullptr )
 		This = JSContextGetGlobalObject( mContext );
 	
+	auto Type = JSValueGetType( mContext, Arg0 );
 	const auto ArgumentCount = 1;
 	JSValueRef Arguments[ArgumentCount] =
 	{
@@ -124,6 +124,7 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 	//	convert to string
 	JSValueRef Exception = nullptr;
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
+	ThrowException( Context, Exception );
 	return GetString( Context, StringJs );
 }
 
@@ -156,6 +157,11 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
 	auto StringHandle = JSStringCreateWithUTF8CString( String.c_str() );
 	auto ValueHandle = JSValueMakeString( Context, StringHandle );
 	return ValueHandle;
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,JSObjectRef Value)
+{
+	return Value;
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
@@ -258,8 +264,23 @@ void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,cons
 	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
 		return;
 
+	auto GetString_NoThrow = [](JSContextRef Context,JSValueRef Handle)
+	{
+		JSValueRef Exception = nullptr;
+		auto HandleString = JSValueToStringCopy( Context, Handle, &Exception );
+		if ( Exception )
+			return std::string("Exception->String threw exception");
+		
+		size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize( HandleString );
+		char utf8Buffer[maxBufferSize];
+		size_t bytesWritten = JSStringGetUTF8CString( HandleString, utf8Buffer, maxBufferSize);
+		//	the last byte is a null \0 which std::string doesn't need.
+		std::string utf_string = std::string(utf8Buffer, bytesWritten -1);
+		return utf_string;
+	};
+	
 	std::stringstream Error;
-	auto ExceptionString = GetString( Context, ExceptionHandle );
+	auto ExceptionString = GetString_NoThrow( Context, ExceptionHandle );
 	Error << "Exception in " << ThrowContext << ": " << ExceptionString;
 	throw Soy::AssertException(Error.str());
 }

@@ -48,6 +48,7 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,int32_t Value);
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
+	JSValueRef	GetValue(JSContextRef Context,JSObjectRef Value);
 	JSValueRef	GetValue(JSContextRef Context,TObject& Value);
 	JSValueRef	GetValue(JSContextRef Context,TArray& Value);
 	template<typename TYPE>
