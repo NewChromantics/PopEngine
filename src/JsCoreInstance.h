@@ -490,6 +490,9 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bi
 		auto This = constructor;
 		//	alloc wrapper
 		TObjectWrapperBase* pWrapper = AllocWrapperCache(This);	//	need a func here
+		auto* OldPrivate = JSObjectGetPrivate( This );
+		if ( OldPrivate != nullptr )
+			throw Soy::AssertException("Constructing object, private not null, is already an object");
 		JSObjectSetPrivate( This, pWrapper );
 
 		auto ConstructWrapper = [&](TCallback& Params)
