@@ -691,10 +691,25 @@ JsCore::TInstance::
 
 */
 
+JSType JsCore::TCallback::GetArgumentType(size_t Index)
+{
+	if ( Index >= mArguments.GetSize() )
+		return kJSTypeUndefined;
+		
+	auto Type = JSValueGetType( mContext.mContext, mArguments[Index] );
+	return Type;
+}
+
+JSValueRef JsCore::TCallback::GetArgumentValue(size_t Index)
+{
+	if ( Index >= mArguments.GetSize() )
+		return JSValueMakeUndefined( mContext.mContext );
+	return mArguments[Index];
+}
 
 std::string JsCore::TCallback::GetArgumentString(size_t Index)
 {
-	auto Handle = mArguments[Index];
+	auto Handle = GetArgumentValue( Index );
 	auto String = JsCore::GetString( mContext.mContext, Handle );
 	return String;
 }
@@ -708,14 +723,14 @@ std::string JsCore::TCallback::GetArgumentFilename(size_t Index)
 
 Bind::TFunction JsCore::TCallback::GetArgumentFunction(size_t Index)
 {
-	auto Handle = mArguments[Index];
+	auto Handle = GetArgumentValue( Index );
 	JsCore::TFunction Function( mContext.mContext, Handle );
 	return Function;
 }
 
 Bind::TArray JsCore::TCallback::GetArgumentArray(size_t Index)
 {
-	auto Handle = mArguments[Index];
+	auto Handle = GetArgumentValue( Index );
 	if ( !JSValueIsArray( mContext.mContext, Handle ) )
 	{
 		std::stringstream Error;
@@ -730,21 +745,21 @@ Bind::TArray JsCore::TCallback::GetArgumentArray(size_t Index)
 
 bool JsCore::TCallback::GetArgumentBool(size_t Index)
 {
-	auto Handle = mArguments[Index];
+	auto Handle = GetArgumentValue( Index );
 	auto Value = JsCore::GetBool( mContext.mContext, Handle );
 	return Value;
 }
 
 float JsCore::TCallback::GetArgumentFloat(size_t Index)
 {
-	auto Handle = mArguments[Index];
+	auto Handle = GetArgumentValue( Index );
 	auto Value = JsCore::GetFloat( mContext.mContext, Handle );
 	return Value;
 }
 
 Bind::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
 {
-	auto Handle = mArguments[Index];
+	auto Handle = GetArgumentValue( Index );
 	auto HandleObject = JsCore::GetObject( mContext.mContext, Handle );
 	return Bind::TObject( mContext.mContext, HandleObject );
 }
@@ -755,15 +770,6 @@ bool JsCore::TCallback::IsArgumentArray(size_t Index)
 		return false;
 	
 	return JSValueIsArray( mContext.mContext, mArguments[Index] );
-}
-
-JSType JsCore::TCallback::GetArgumentType(size_t Index)
-{
-	if ( Index >= mArguments.GetSize() )
-		return kJSTypeUndefined;
-	
-	auto Type = JSValueGetType( mContext.mContext, mArguments[Index] );
-	return Type;
 }
 
 
