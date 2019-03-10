@@ -36,7 +36,7 @@ namespace JsCore
 	INTTYPE		GetInt(JSContextRef Context,JSValueRef Handle);
 
 	template<typename TYPE>
-	JSObjectRef	GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array);
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
 
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
@@ -49,10 +49,10 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
 	JSValueRef	GetValue(JSContextRef Context,JSObjectRef Value);
-	JSValueRef	GetValue(JSContextRef Context,TObject& Value);
-	JSValueRef	GetValue(JSContextRef Context,TArray& Value);
+	JSValueRef	GetValue(JSContextRef Context,const TObject& Value);
+	JSValueRef	GetValue(JSContextRef Context,const TArray& Value);
 	template<typename TYPE>
-	JSValueRef	GetValue(JSContextRef Context,ArrayBridge<TYPE>& Array);
+	JSValueRef	GetValue(JSContextRef Context,const ArrayBridge<TYPE>& Array);
 
 
 	template<typename TYPE>
@@ -116,8 +116,8 @@ public:
 	operator		bool() const	{	return mThis != nullptr;	}
 	
 	//	would be nice to capture return, but it's contained inside Params for now. Maybe template & error for type mismatch
-	void			Call(Bind::TCallback& Params);
-	void			Call(Bind::TObject& This);
+	void			Call(Bind::TCallback& Params) const;
+	void			Call(Bind::TObject& This) const;
 	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr) const;
 	
 public:
@@ -588,7 +588,7 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 }
 
 template<typename TYPE>
-inline JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Array)
+inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array)
 {
 	JSValueRef Values[Array.GetSize()];
 	for ( auto i=0;	i<Array.GetSize();	i++ )
@@ -603,7 +603,7 @@ inline JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<TYPE>& Arra
 }
 
 template<>
-inline JSObjectRef JsCore::GetArray(JSContextRef Context,ArrayBridge<uint8_t>& Array)
+inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Array)
 {
 	throw Soy::AssertException("Make typed array");
 	//	make typed array
@@ -644,7 +644,7 @@ inline void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)
 
 
 template<typename TYPE>
-inline JSValueRef JsCore::GetValue(JSContextRef Context,ArrayBridge<TYPE>& Values)
+inline JSValueRef JsCore::GetValue(JSContextRef Context,const ArrayBridge<TYPE>& Values)
 {
 	auto Array = GetArray( Context, Values );
 	return GetValue( Context, Array );

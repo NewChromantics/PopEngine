@@ -82,32 +82,38 @@ JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
 }
 
 
-void JsCore::TFunction::Call(Bind::TObject& This)
+void JsCore::TFunction::Call(Bind::TObject& This) const
 {
 	Call( This.mThis, nullptr );
 }
 
- void JsCore::TFunction::Call(Bind::TCallback& Params)
+void JsCore::TFunction::Call(Bind::TCallback& Params) const
 {
-	throw Soy::AssertException("todo JsCore::TFunction::Call");
+	if ( Params.mThis == nullptr )
+		Params.mThis = JSContextGetGlobalObject( mContext );
+	
+	auto FunctionHandle = mThis;
+	auto This = GetObject( mContext, Params.mThis );
+
+	JSValueRef Exception = nullptr;
+	auto Result = JSObjectCallAsFunction( mContext, FunctionHandle, This, Params.mArguments.GetSize(), Params.mArguments.GetArray(), &Exception );
+
+	ThrowException( mContext, Exception );
+	Params.mReturn = Result;
 }
 
 JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 {
-	if ( This == nullptr )
-		This = JSContextGetGlobalObject( mContext );
+	auto& Context = JsCore::GetContext( mContext );
+	Bind::TCallback Params( Context );
+	Params.mThis = This;
 	
-	auto Type = JSValueGetType( mContext, Arg0 );
-	const auto ArgumentCount = 1;
-	JSValueRef Arguments[ArgumentCount] =
-	{
-		Arg0,
-	};
-	JSValueRef Exception = nullptr;
-	auto Result = JSObjectCallAsFunction( mContext, mThis, This, ArgumentCount, Arguments, &Exception );
-	ThrowException( mContext, Exception );
-
-	return Result;
+	if ( Arg0 != nullptr )
+		Params.mArguments.PushBack( Arg0 );
+	
+	Call( Params );
+	
+	return Params.mReturn;
 }
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
@@ -190,12 +196,12 @@ JSValueRef JsCore::GetValue(JSContextRef Context,uint8_t Value)
 	return JSValueMakeNumber( Context, Value );
 }
 
-JSValueRef JsCore::GetValue(JSContextRef Context,TObject& Object)
+JSValueRef JsCore::GetValue(JSContextRef Context,const TObject& Object)
 {
 	return Object.mThis;
 }
 
-JSValueRef JsCore::GetValue(JSContextRef Context,TArray& Object)
+JSValueRef JsCore::GetValue(JSContextRef Context,const TArray& Object)
 {
 	return Object.mThis;
 }
@@ -789,39 +795,48 @@ void JsCore::TCallback::SetThis(Bind::TObject& This)
 	mThis = This.mThis;
 }
 
+template<typename TYPE>
+void SetArgument(Array<JSValueRef>& mArguments,JsCore::TContext& Context,size_t Index,const TYPE& Value)
+{
+	while ( mArguments.GetSize() <= Index )
+		mArguments.PushBack( JSValueMakeUndefined(Context.mContext) );
+	
+	mArguments[Index] = JsCore::GetValue( Context.mContext, Value );
+}
+
 void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentObject(size_t Index,Bind::TObject& Value)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Values );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Values );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<float>&& Values)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Values );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,Bind::TArray& Value)
 {
-	throw Soy::AssertException("todo");
+	SetArgument( mArguments, mContext, Index, Value );
 }
 
 

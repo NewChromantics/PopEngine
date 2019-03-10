@@ -204,13 +204,12 @@ void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 		{
 			OnShaderBind = [&]
 			{
-				throw Soy::AssertException("Figure out params to exec()");
 				auto CallbackFunc = Params.GetArgumentFunction(1);
 				auto This = Params.ThisObject();
 				Bind::TCallback CallbackParams(Context);
 				CallbackParams.SetThis( This );
 				CallbackParams.SetArgumentObject(0,ShaderObject);
-				Context.Execute( CallbackParams );
+				CallbackFunc.Call( CallbackParams );
 			};
 		}
 		
