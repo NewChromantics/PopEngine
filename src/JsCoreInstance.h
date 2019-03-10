@@ -113,7 +113,7 @@ public:
 	TFunction()		{}
 	TFunction(JSContextRef Context,JSValueRef Value);
 	
-	operator		bool() const	{	return mThis != nullptr;	}
+	//operator		bool() const	{	return mThis != nullptr;	}
 	
 	//	would be nice to capture return, but it's contained inside Params for now. Maybe template & error for type mismatch
 	void			Call(Bind::TCallback& Params) const;
@@ -150,7 +150,6 @@ public:
 	~TContext();
 	
 	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
-	//virtual void		Execute(TFunction Function,TObject This,ArrayBridge<TObject>&& Args) bind_override;
 	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
 	virtual void		Queue(std::function<void(TContext&)> Function) bind_override;
 	virtual void		QueueDelay(std::function<void(TContext&)> Function,size_t DelayMs) bind_override;
@@ -298,6 +297,8 @@ public:
 	void			BindFunction(std::function<void(Bind::TCallback&)> Function);
 	void			RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName);
 
+	Bind::TObjectWrapperBase&	AllocInstance()		{	return mAllocator();	}
+	
 public:
 	JSClassDefinition	mDefinition = kJSClassDefinitionEmpty;
 
@@ -306,6 +307,7 @@ private:
 	JSClassRef			mClass = nullptr;
 	TContext*			mContext = nullptr;
 	Array<JSStaticFunction>	mFunctions;
+	std::function<Bind::TObjectWrapperBase&()>	mAllocator;
 };
 
 //	make this generic for v8 & jscore
@@ -416,7 +418,8 @@ public:
 	}
 	virtual ~TObjectWrapperBase()	{}
 
-	TObject						GetHandle()	{	return mHandle.GetObject();	}
+	TObject			GetHandle();
+	void			SetHandle(TObject& NewHandle);
 	
 	//	construct and allocate
 	virtual void 	Construct(TCallback& Arguments)=0;
@@ -572,6 +575,13 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 	//	create a template that can be overloaded by the type
 	auto Template = OBJECTWRAPPERTYPE::AllocTemplate( *this, AllocWrapper );
 
+	Template.mAllocator = [this]() -> TObjectWrapperBase&
+	{
+		Bind::TObject Null;
+		auto* New = new OBJECTWRAPPERTYPE( *this, Null );
+		return *New;
+	};
+	
 	//	init template with overloaded stuff
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	

@@ -64,7 +64,7 @@ JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 {
 	auto ValueType = JSValueGetType( Context, Value );
 	if ( ValueType != kJSTypeObject )
-		throw Soy::AssertException("Value for TFunciton is not an object");
+		throw Soy::AssertException("Value is not an object");
 	
 	if ( !JSValueIsObject( Context, Value ) )
 		throw Soy::AssertException("Value is not object");
@@ -430,7 +430,7 @@ JsCore::TObject JsCore::TObject::GetObject(const std::string& MemberName)
 	auto Value = GetMember( MemberName );
 	JSValueRef Exception = nullptr;
 	auto Object = JSValueToObject( mContext, Value, &Exception );
-	JsCore::ThrowException( mContext, Exception, MemberName );
+	JsCore::ThrowException( mContext, Exception, std::string("Object.GetObject(") + MemberName + ")" );
 	return TObject( mContext, Object );
 }
 
@@ -557,12 +557,16 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 	}
 	
 	//	gr: should this create wrapper? or does the constructor do it for us...
-	//	instance new one
+	//	gr: this does NOT call the js constructor! maybe I'm calling the wrong thing
+	//		but it means we're creating C++Object then JsObject instead of the other way
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
-	void* Data = nullptr;
-	auto NewObject = JSObjectMake( mContext, Class, Data );
-	return TObject( mContext, NewObject );
+	auto& ObjectPointer = ObjectTemplate.AllocInstance();
+	void* Data = &ObjectPointer;
+	auto NewObjectHandle = JSObjectMake( mContext, Class, Data );
+	TObject NewObject( mContext, NewObjectHandle );
+	ObjectPointer.SetHandle( NewObject );
+	return NewObject;
 }
 
 
@@ -581,7 +585,7 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 
 JsCore::TPromise JsCore::TContext::CreatePromise()
 {
-	if ( !mMakePromiseFunction )
+	if ( !mMakePromiseFunction.mThis )
 	{
 		auto* MakePromiseFunctionSource =  R"V0G0N(
 		
@@ -1026,7 +1030,10 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	mClass = JSClassCreate( &mDefinition );
 	JSClassRetain( mClass );
 	
-	//	gr: this doesn't look right to me...
+	//	gr: this works, but logic seems a little odd to me
+	//		you create an object, representing the class, and set it on the object like
+	//		Parent.YourClass = function()
+	//	but JsObjectMake also creates objects...
 	auto PropertyName = GetString( Context.mContext, mDefinition.className );
 	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
 	JSObjectRef ClassObject = JSObjectMake( Context.mContext, mClass, nullptr );
@@ -1048,3 +1055,23 @@ void JsCore::TPromise::Reject(JSValueRef Value) const
 	JSObjectRef This = nullptr;
 	mReject.Call( This, Value );
 }
+
+
+JsCore::TObject JsCore::TObjectWrapperBase::GetHandle()
+{
+	//	just in case we've created C side, and not vis JS constructor
+	//	make sure the handle has been set before access
+	if ( !mHandle.IsObject() )
+		throw Soy::AssertException("Accessing object handle before proper JS construction");
+	
+	return mHandle.GetObject();
+}
+
+void JsCore::TObjectWrapperBase::SetHandle(Bind::TObject& NewHandle)
+{
+	if ( mHandle.IsObject() )
+		throw Soy::AssertException("Setting handle on object wrapper when it's non-null");
+	
+	mHandle = NewHandle;
+}
+
