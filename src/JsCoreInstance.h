@@ -247,7 +247,6 @@ public:
 	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeBoolean;	}
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
 	virtual bool			IsArgumentArray(size_t Index)bind_override;
-	JSType					GetArgumentType(size_t Index);
 
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;
@@ -271,6 +270,10 @@ public:
 
 	virtual bool			GetReturnBool() bind_override			{	return GetBool( mContext.mContext, mReturn );	}
 	
+private:
+	JSType					GetArgumentType(size_t Index);
+	JSValueRef				GetArgumentValue(size_t Index);
+
 public:
 	TContext&			mContext;
 	JSValueRef			mThis = nullptr;
