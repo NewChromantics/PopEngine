@@ -1008,6 +1008,7 @@
 				TargetAttributes = {
 					FBF67B0C1A974A0900F74C38 = {
 						CreatedOnToolsVersion = 6.1;
+						DevelopmentTeam = X52DR36JY2;
 					};
 				};
 			};
@@ -1211,7 +1212,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X52DR36JY2;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(POPMOVIETEXTURE_PATH)/build",
 					"$(POPCAST_PATH)/build",
