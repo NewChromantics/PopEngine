@@ -49,6 +49,8 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
 	JSValueRef	GetValue(JSContextRef Context,JSObjectRef Value);
+	JSValueRef	GetValue(JSContextRef Context,const TPersistent& Value);
+	JSValueRef	GetValue(JSContextRef Context,const TPromise& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TObject& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TArray& Value);
 	template<typename TYPE>
@@ -254,6 +256,7 @@ public:
 	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(Bind::TArray& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value.mThis );	}
 	virtual void			Return(Bind::TPromise& Value) bind_override;
+	virtual void			Return(Bind::TPersistent& Value) bind_override;
 	virtual void			Return(ArrayBridge<Bind::TObject>&& Values) bind_override	{	mReturn = GetArray( mContext.mContext, Values );	}
 
 	//	functions for c++ calling JS
@@ -353,16 +356,44 @@ public:
 
 
 
+class JsCore::TPersistent
+{
+public:
+	TPersistent()	{}
+	TPersistent(const TPersistent& That)	{	Retain( That );	}
+	TPersistent(const TPersistent&& That)	{	Retain( That );	}
+	TPersistent(const TObject& Object)		{	Retain( Object );	}
+	TPersistent(const TFunction& Object)	{	Retain( Object );	}
+	~TPersistent();							//	dec refound
+	
+	operator		bool() const		{	return IsFunction() || IsObject();	}
+	bool			IsFunction() const	{	return mFunction.mThis != nullptr;	}
+	bool			IsObject() const	{	return mObject.mThis != nullptr;	}
+	
+	//	const for lambda[=] capture
+	TObject			GetObject() const		{	return mObject;	}
+	TFunction		GetFunction() const		{	return mFunction;	}
+	JSContextRef	GetContext() const;
+	
+	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
+	
+private:
+	void		Retain(const TObject& Object);
+	void		Retain(const TFunction& Object);
+	void		Retain(const TPersistent& That);
+	
+public:
+	TObject		mObject;
+	TFunction	mFunction;
+};
+
+
+
 class JsCore::TPromise
 {
 public:
-	//TPromise(JSContextRef Context,JSValueRef Promise,JSValueRef ResolveFunc,JSValueRef RejectFunc);
-	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject) :
-		mPromise	( Promise ),
-		mResolve	( Resolve ),
-		mReject		( Reject )
-	{
-	}
+	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject);
+	~TPromise();
 	
 	//	const for lambda[=] copy capture
 	void			Resolve(const std::string& Value) const				{	Resolve( GetValue( GetContext(), Value ) );	}
@@ -376,36 +407,15 @@ public:
 	void			Reject(JSValueRef Value) const;//			{	mReject.Call(nullptr,Value);	}
 	
 private:
-	JSContextRef	GetContext() const	{	return mPromise.mContext;	}
+	JSContextRef	GetContext() const	{	return mPromise.GetContext();	}
 	
 public:
-	TObject			mPromise;
-	TFunction		mResolve;
-	TFunction		mReject;
+	TPersistent		mPromise;
+	TPersistent		mResolve;
+	TPersistent		mReject;
 };
 
 
-
-class JsCore::TPersistent
-{
-public:
-	TPersistent()	{}
-	TPersistent(TObject& Object);	//	inc refcount
-	TPersistent(TFunction& Object);	//	inc refcount
-	~TPersistent();					//	dec refound
-	
-	operator	bool() const		{	return IsFunction() || IsObject();	}
-	bool		IsFunction() const	{	return mFunction.mThis != nullptr;	}
-	bool		IsObject() const	{	return mObject.mThis != nullptr;	}
-	
-	//	const for lambda[=] capture
-	TObject		GetObject() const		{	return mObject;	}
-	TFunction	GetFunction() const		{	return mFunction;	}
-	
-private:
-	TObject		mObject;
-	TFunction	mFunction;
-};
 
 
 class Bind::TObjectWrapperBase

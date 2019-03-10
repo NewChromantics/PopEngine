@@ -206,6 +206,23 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TArray& Object)
 	return Object.mThis;
 }
 
+JSValueRef JsCore::GetValue(JSContextRef Context,const TPersistent& Object)
+{
+	if ( Object.mFunction.mThis )
+		return Object.mFunction.mThis;
+
+	if ( Object.mObject.mThis )
+		return Object.mObject.mThis;
+	
+	throw Soy::AssertException("return null, or undefined here?");
+	return nullptr;
+}
+
+JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
+{
+	return GetValue( Context, Object.mPromise );
+}
+
 
 JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename) :
 	mContextGroup	( JSContextGroupCreate() ),
@@ -773,9 +790,14 @@ bool JsCore::TCallback::IsArgumentArray(size_t Index)
 }
 
 
+void JsCore::TCallback::Return(Bind::TPersistent& Value)
+{
+	mReturn = GetValue( mContext.mContext, Value );
+}
+
 void JsCore::TCallback::Return(Bind::TPromise& Value)
 {
-	mReturn = Value.mPromise.mThis;
+	mReturn = GetValue( mContext.mContext, Value );
 }
 
 void JsCore::TCallback::ReturnNull()
@@ -890,26 +912,47 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 }
 
 
-
-Bind::TPersistent::TPersistent(TObject& Object) :
-	mObject		( Object )
+Bind::TPersistent::~TPersistent()
 {
+	/*
+	 if ( mObject.mThis != nullptr )
+	 JSValueUnprotect( mObject.mContext, mObject.mThis );
+	 
+	 if ( mFunction.mThis != nullptr )
+	 JSValueUnprotect( mFunction.mContext, mFunction.mThis );
+	 */
+}
+
+JSContextRef Bind::TPersistent::GetContext() const
+{
+	if ( mObject.mContext )
+		return mObject.mContext;
+	
+	if ( mFunction.mContext )
+		return mFunction.mContext;
+
+	throw Soy::AssertException("Trying to get context from persistent with no object");
+}
+
+void Bind::TPersistent::Retain(const TObject& Object)
+{
+	mObject = Object;
 	JSValueProtect( mObject.mContext, mObject.mThis );
 }
 
-Bind::TPersistent::TPersistent(TFunction& Function) :
-	mFunction		( Function )
+void Bind::TPersistent::Retain(const TFunction& Function)
 {
+	mFunction = Function;
 	JSValueProtect( mFunction.mContext, mFunction.mThis );
 }
 
-Bind::TPersistent::~TPersistent()
+void Bind::TPersistent::Retain(const TPersistent& That)
 {
-	if ( mObject.mThis != nullptr )
-		JSValueUnprotect( mObject.mContext, mObject.mThis );
-
-	if ( mFunction.mThis != nullptr )
-		JSValueUnprotect( mFunction.mContext, mFunction.mThis );
+	if ( That.mFunction.mThis != nullptr )
+		Retain( That.mFunction );
+	
+	if ( That.mObject.mThis != nullptr )
+		Retain( That.mObject );
 }
 
 
@@ -1042,18 +1085,32 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	ThrowException( Context.mContext, Exception );
 }
 
+JsCore::TPromise::TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject) :
+	mPromise	( Promise ),
+	mResolve	( Resolve ),
+	mReject		( Reject )
+{
+}
+
+JsCore::TPromise::~TPromise()
+{
+	
+}
+
 void JsCore::TPromise::Resolve(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?
 	JSObjectRef This = nullptr;
-	mResolve.Call( This, Value );
+	auto Resolve = mResolve.GetFunction();
+	Resolve.Call( This, Value );
 }
 
 void JsCore::TPromise::Reject(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?
 	JSObjectRef This = nullptr;
-	mReject.Call( This, Value );
+	auto Reject = mReject.GetFunction();
+	Reject.Call( This, Value );
 }
 
 
