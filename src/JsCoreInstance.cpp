@@ -348,10 +348,6 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
 	Functor( *this );
 }
 
-void JsCore::TContext::Execute(Bind::TCallback& Callback)
-{
-	throw Soy::AssertException("Run & catch");
-}
 
 template<typename TYPE>
 JsCore::TArray JsCore_CreateArray(JsCore::TContext& Context,size_t ElementCount,std::function<TYPE(size_t)> GetElement)

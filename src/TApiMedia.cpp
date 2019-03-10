@@ -231,7 +231,7 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 			auto Func = This.GetFunction("OnNewFrame");
 			Bind::TCallback Callback(Context);
 			Callback.SetThis( This );
-			Context.Execute( Callback );
+			Func.Call( Callback );
 		}
 		catch(std::exception& e)
 		{
@@ -247,6 +247,14 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TMediaSourceWrapper>();
 
+	//	gr: it is possible that we get this callback on another thread before the
+	//		allocator/constructor has finished allocating.
+	//	the AVC capture starts the session in it's constructor
+	//	mExtractor is atomic (shared ptr) so should be fine to just test
+	if ( !This.mExtractor )
+		throw Soy::AssertException("No frame packet buffered");
+		//throw Soy::AssertException("Extractor still allocating");
+	
 	//	grab frame
 	auto StreamIndex = 0;
 	auto PacketBuffer = This.mExtractor->GetStreamBuffer(StreamIndex);

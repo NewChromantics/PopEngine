@@ -318,7 +318,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		CallbackParams.SetArgumentObject( 0, Window );
 		CallbackParams.SetArgumentObject( 1, Target );
 		//	todo: return this result to the promise
-		Context.Execute( CallbackParams );
+		Func.Call( CallbackParams );
 	};
 	
 	auto OnCompleted = [=](Bind::TContext& Context)
@@ -731,7 +731,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
 		auto BindIndex = this->mCurrentTextureIndex++;
-		auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+		auto& Image = Params.GetArgumentPointer<TImageWrapper>(1);
 
 		//	gr: currently this needs to be immediate... but we should be on the render thread anyway?
 		//	gr: planning ahead
@@ -751,7 +751,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
 		BufferArray<float,1024*4> Floats;
-		Params.GetArgumentArray( 0, GetArrayBridge(Floats) );
+		Params.GetArgumentArray( 1, GetArrayBridge(Floats) );
 		
 		//	Pad out if the uniform is an array and we're short...
 		//	maybe need more strict alignment when enumerating sub arrays above
@@ -774,12 +774,12 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 	}
 	else if ( Uniform.mType == SoyGraphics::TElementType::Bool )
 	{
-		auto Bool =	Params.GetArgumentBool( 0 );
+		auto Bool =	Params.GetArgumentBool( 1 );
 		Shader.SetUniform( Uniform, Bool );
 	}
 	else if ( Uniform.mType == SoyGraphics::TElementType::Int32 )
 	{
-		auto Integer =	Params.GetArgumentInt( 0 );
+		auto Integer = Params.GetArgumentInt( 1 );
 		Shader.SetUniform( Uniform, Integer );
 	}
 	else

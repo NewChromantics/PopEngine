@@ -152,7 +152,6 @@ public:
 	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
 	//virtual void		Execute(TFunction Function,TObject This,ArrayBridge<TObject>&& Args) bind_override;
 	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
-	virtual void		Execute(Bind::TCallback& Callback) bind_override;
 	virtual void		Queue(std::function<void(TContext&)> Function) bind_override;
 	virtual void		QueueDelay(std::function<void(TContext&)> Function,size_t DelayMs) bind_override;
 

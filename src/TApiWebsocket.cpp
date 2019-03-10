@@ -54,7 +54,7 @@ void TWebsocketServerWrapper::OnMessage(const std::string& Message)
 		Bind::TCallback Callback(Context);
 		Callback.SetThis( This );
 		Callback.SetArgumentString( 0, Message );
-		Context.Execute( Callback );
+		Func.Call( Callback );
 	};
 	
 	mContext.Queue( SendJsMessage );
@@ -72,7 +72,7 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 		Bind::TCallback Callback(Context);
 		Callback.SetThis( This );
 		Callback.SetArgumentArray( 0, GetArrayBridge(Message) );
-		Context.Execute( Callback );
+		Func.Call( Callback );
 	};
 	
 	mContext.Queue( SendJsMessage );

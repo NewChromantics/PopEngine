@@ -57,7 +57,7 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 		CallbackParams.SetArgumentString( 1, Sender.ToString() );
 		try
 		{
-			Context.Execute( CallbackParams );
+			Func.Call( CallbackParams );
 		}
 		catch(std::exception& e)
 		{
