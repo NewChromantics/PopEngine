@@ -467,36 +467,27 @@ template<const char* TYPENAME,class TYPE>
 inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper)
 {
 	static std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapperCache = AllocWrapper;
-	static TContext* ContextCache = nullptr;
 	
 	//	setup constructor CFunc here
-	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef Context,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
+	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
+		auto& Context = JsCore::GetContext( ContextRef );
+		
 		//	formal param is constructor, but it's the new This
 		auto This = constructor;
 		//	alloc wrapper
 		TObjectWrapperBase* pWrapper = AllocWrapperCache(This);	//	need a func here
 		JSObjectSetPrivate( This, pWrapper );
 
-		/*
-		 //	call overloaded construct
-		 Bind::TCallback Params;
-		 Params.SetThis( This );
-		 for ( auto i=0;	i<ArgumentCount;	i++)
-		 Params.mArguments.PushBack( Arguments
-		 pWrapper->Construct();
-*/
 		auto ConstructWrapper = [&](TCallback& Params)
 		{
 			pWrapper->Construct( Params );
 		};
 		std::stringstream FunctionContext;
 		FunctionContext << TYPENAME << " constructor";
-		ContextCache->CallFunc( ConstructWrapper, This, ArgumentCount, Arguments, *Exception, FunctionContext.str() );
+		Context.CallFunc( ConstructWrapper, This, ArgumentCount, Arguments, *Exception, FunctionContext.str() );
 		return This;
 	};
-	
-	ContextCache = &Context;
 	
 	//	https://stackoverflow.com/questions/46943350/how-to-use-jsexport-and-javascriptcore-in-c
 	TTemplate Template( Context, TYPENAME );
