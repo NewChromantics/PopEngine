@@ -75,7 +75,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
 {
 	//  call javascript
-	auto Runner = [&](Bind::TContext& Context)
+	auto Runner = [=](Bind::TContext& Context)
 	{
 		try
 		{

@@ -4,7 +4,7 @@
 #include <memory>
 #include "HeapArray.hpp"
 //#include "TBind.h"
-
+#include "SoyLib/src/SoyThread.h"
 
 
 //	https://karhm.com/JavaScriptCore_C_API/
@@ -12,6 +12,7 @@ namespace JsCore
 {
 	class TInstance;	//	vm
 	class TContext;
+	class TJobQueue;	//	thread of js-executions
 	class TCallback;	//	function parameters
 	
 	class TObject;
@@ -140,6 +141,18 @@ private:
 	std::shared_ptr<TContext>	mContext;
 };
 
+class JsCore::TJobQueue : public SoyWorkerJobThread
+{
+public:
+	TJobQueue(JsCore::TContext& Context) :
+		SoyWorkerJobThread	( "JsCore::TJobQueue" ),
+		mContext			( Context )
+	{
+	}
+	
+	JsCore::TContext&	mContext;
+};
+
 //	functions marked virtual need to become generic
 class JsCore::TContext //: public Bind::TContext
 {
@@ -206,7 +219,13 @@ public:
 	//	"templates" in v8, "classes" in jscore
 	Array<TTemplate>	mObjectTemplates;
 	
-	JsCore::TFunction	mMakePromiseFunction;
+	//	no promise type, so this is our promise instantiator
+	TFunction			mMakePromiseFunction;
+	
+	//	queue for jobs to try and keep non-js threads free and some kinda organisation
+	//	although jscore IS threadsafe, so we can execute on other threads, it's not
+	//	the same on other systems
+	TJobQueue			mJobQueue;
 };
 
 

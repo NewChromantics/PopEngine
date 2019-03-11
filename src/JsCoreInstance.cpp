@@ -320,9 +320,11 @@ void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,cons
 JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory) :
 	mInstance		( Instance ),
 	mContext		( Context ),
-	mRootDirectory	( RootDirectory )
+	mRootDirectory	( RootDirectory ),
+	mJobQueue		( *this )
 {
 	AddContextCache( *this, mContext );
+	mJobQueue.Start();
 }
 
 JsCore::TContext::~TContext()
@@ -345,16 +347,22 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 
 void JsCore::TContext::QueueDelay(std::function<void(JsCore::TContext&)> Functor,size_t DelayMs)
 {
+	//	make a promise or thread job that skips if time hasn't elapsed?
 	Queue( Functor );
 }
 
 void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor)
 {
+	auto FunctorWrapper = [=]()
+	{
+		//	need to catch this?
+		Execute( Functor );
+	};
+	mJobQueue.PushJob( FunctorWrapper );
 	//	todo: make a job queue to queue up jobs so that the caller thread
 	//			doesnt block
 	//	Javascript core is threadsafe, but we don't want to block our own threads
 	//	and caller code is expecting to lose ownership of the functor anyway
-	Execute( Functor );
 }
 
 void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
