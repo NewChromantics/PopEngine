@@ -162,6 +162,7 @@ public:
 	Bind::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
 	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectTypeName=std::string());
+	Bind::TObject			CreateObjectInstance(const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
 
 	virtual Bind::TPersistent	CreatePersistent(Bind::TObject& Object) bind_override;
 	virtual Bind::TPersistent	CreatePersistent(Bind::TFunction& Object) bind_override;
@@ -484,24 +485,12 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bi
 	//	setup constructor CFunc here
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
+		//	gr: constructor here, is this function.
+		//		we need to create a new object and return it
 		auto& Context = JsCore::GetContext( ContextRef );
-		
-		//	formal param is constructor, but it's the new This
-		auto This = constructor;
-		//	alloc wrapper
-		TObjectWrapperBase* pWrapper = AllocWrapperCache(This);	//	need a func here
-		auto* OldPrivate = JSObjectGetPrivate( This );
-		if ( OldPrivate != nullptr )
-			throw Soy::AssertException("Constructing object, private not null, is already an object");
-		JSObjectSetPrivate( This, pWrapper );
-
-		auto ConstructWrapper = [&](TCallback& Params)
-		{
-			pWrapper->Construct( Params );
-		};
-		std::stringstream FunctionContext;
-		FunctionContext << TYPENAME << " constructor";
-		Context.CallFunc( ConstructWrapper, This, ArgumentCount, Arguments, *Exception, FunctionContext.str() );
+		auto ArgumentsArray = GetRemoteArray( Arguments, ArgumentCount );
+		auto ThisObject = Context.CreateObjectInstance( TYPENAME, GetArrayBridge(ArgumentsArray) );
+		auto This = ThisObject.mThis;
 		return This;
 	};
 	

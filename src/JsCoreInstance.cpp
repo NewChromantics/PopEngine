@@ -550,8 +550,13 @@ void JsCore::TObject::SetString(const std::string& Name,const std::string& Value
 }
 
 
-
 JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& ObjectTypeName)
+{
+	BufferArray<JSValueRef,1> FakeArgs;
+	return CreateObjectInstance( ObjectTypeName, GetArrayBridge(FakeArgs) );
+}
+
+Bind::TObject JsCore::TContext::CreateObjectInstance(const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments)
 {
 	//	create basic object
 	if ( ObjectTypeName.length() == 0 || ObjectTypeName == "Object" )
@@ -576,6 +581,7 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 	//	gr: should this create wrapper? or does the constructor do it for us...
 	//	gr: this does NOT call the js constructor! maybe I'm calling the wrong thing
 	//		but it means we're creating C++Object then JsObject instead of the other way
+	//	JSObjectCallAsConstructor to call the constructor
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
 	auto& ObjectPointer = ObjectTemplate.AllocInstance();
@@ -583,6 +589,15 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& Object
 	auto NewObjectHandle = JSObjectMake( mContext, Class, Data );
 	TObject NewObject( mContext, NewObjectHandle );
 	ObjectPointer.SetHandle( NewObject );
+
+	//	construct
+	TCallback ConstructorParams(*this);
+	ConstructorParams.mThis = NewObject.mThis;
+	ConstructorParams.mArguments.Copy( ConstructorArguments );
+	
+	//	actually call!
+	ObjectPointer.Construct( ConstructorParams );
+	
 	return NewObject;
 }
 
@@ -915,11 +930,11 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 Bind::TPersistent::~TPersistent()
 {
 	/*
-	 if ( mObject.mThis != nullptr )
-	 JSValueUnprotect( mObject.mContext, mObject.mThis );
+	if ( mObject.mThis != nullptr )
+		JSValueUnprotect( mObject.mContext, mObject.mThis );
 	 
-	 if ( mFunction.mThis != nullptr )
-	 JSValueUnprotect( mFunction.mContext, mFunction.mThis );
+	if ( mFunction.mThis != nullptr )
+		JSValueUnprotect( mFunction.mContext, mFunction.mThis );
 	 */
 }
 
