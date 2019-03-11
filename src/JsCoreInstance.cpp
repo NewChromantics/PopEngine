@@ -132,6 +132,7 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
 	JSValueRef Exception = nullptr;
+	auto HandleType = JSValueGetType( Context, Handle );
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
 	ThrowException( Context, Exception );
 	return GetString( Context, StringJs );
@@ -993,6 +994,17 @@ void Bind::TPersistent::Retain(const TPersistent& That)
 
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values)
 {
+	auto Size = Values.GetSize();
+	static auto WarningArraySize = 600;
+	if ( Size > WarningArraySize )
+	{
+		std::stringstream Error;
+		//auto& Error = std::Debug;
+		//Error << "Warning: Javascript core seems to have problems (crashing/corruption) with large arrays; " << Size << "/" << WarningArraySize << std::endl;
+		Error << "Warning: Javascript core seems to have problems (crashing/corruption) with large arrays; " << Size << "/" << WarningArraySize;
+		throw Soy::AssertException( Error.str() );
+	}
+	
 	JSValueRef Exception = nullptr;
 	auto ArrayObject = JSObjectMakeArray( Context, Values.GetSize(), Values.GetArray(), &Exception );
 	ThrowException( Context, Exception );
