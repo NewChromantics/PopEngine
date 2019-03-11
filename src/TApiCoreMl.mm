@@ -1162,6 +1162,12 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 				Array<float> FeatureFloats;
 				Soy::Rectf Bounds;
 				
+				auto FlipNormalisedY = [](float y,float h)
+				{
+					auto Bottom = y + h;
+					return 1 - Bottom;
+				};
+				
 				VNFaceLandmarkRegion2D* Landmarks = Observation.landmarks.allPoints;
 				Bounds.x = Observation.boundingBox.origin.x;
 				Bounds.y = Observation.boundingBox.origin.y;
@@ -1171,6 +1177,7 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 				for( auto l=0;	l<Landmarks.pointCount;	l++ )
 				{
 					auto Point = Landmarks.normalizedPoints[l];
+					//	gr: this may be upside down as bounds are
 					Features.PushBack( vec2f(Point.x,Point.y) );
 					FeatureFloats.PushBack( Point.x );
 					FeatureFloats.PushBack( Point.y );
@@ -1179,10 +1186,10 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 				auto w = Pixels->GetWidth();
 				auto h = Pixels->GetHeight();
 				BufferArray<float,4> RectValues;
-				RectValues.PushBack( Bounds.x / w );
-				RectValues.PushBack( Bounds.y / h );
-				RectValues.PushBack( Bounds.w / w );
-				RectValues.PushBack( Bounds.h / h );
+				RectValues.PushBack( Bounds.x );
+				RectValues.PushBack( FlipNormalisedY(Bounds.y,Bounds.h) );
+				RectValues.PushBack( Bounds.w );
+				RectValues.PushBack( Bounds.h );
 				
 				auto Object = Context.CreateObjectInstance();
 				Object.SetArray("Bounds", GetArrayBridge(RectValues) );
