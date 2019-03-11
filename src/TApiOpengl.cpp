@@ -194,6 +194,11 @@ void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 	auto& This = Params.This<TWindowWrapper>();
 	auto& Context = Params.mContext;
 	
+	auto& OpenglContext = *This.mWindow->GetContext();
+	if ( !OpenglContext.IsLockedToThisThread() )
+		throw Soy::AssertException("Function not being called on opengl thread");
+
+	
 	if ( Params.GetArgumentCount() >= 1 )
 	{
 		auto& Shader = Params.GetArgumentPointer<TShaderWrapper>(0);
@@ -330,6 +335,8 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	auto OpenglContext = This.mWindow->GetContext();
 	auto OpenglRender = [=]
 	{
+		if ( !OpenglContext->IsLockedToThisThread() )
+			throw Soy::AssertException("Function not being called on opengl thread");
 		try
 		{
 			//	get the texture from the image
@@ -628,6 +635,10 @@ Opengl::TGeometry& TRenderWindow::GetBlitQuad()
 
 void TRenderWindow::DrawQuad()
 {
+	auto& OpenglContext = *this->GetContext();
+	if ( !OpenglContext.IsLockedToThisThread() )
+		throw Soy::AssertException("Function not being called on opengl thread");
+
 	//	allocate objects we need!
 	if ( !mDebugShader )
 	{
