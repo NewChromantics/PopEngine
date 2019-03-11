@@ -1122,11 +1122,12 @@ void TCoreMlWrapper::MaskRcnn(Bind::TCallback& Params)
 //	apple's Vision built-in face detection
 void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 {
+	Soy::TScopeTimerPrint FaceDetectTimer("TCoreMlWrapper::FaceDetect", 10);
 	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
-	SoyPixels Pixels;
-	Image.GetPixels( Pixels );
-	Pixels.SetFormat( SoyPixelsFormat::Greyscale );
-	Pixels.SetFormat( SoyPixelsFormat::RGBA );
+	std::shared_ptr<SoyPixels> Pixels( new SoyPixels() );
+	Image.GetPixels( *Pixels );
+	Pixels->SetFormat( SoyPixelsFormat::Greyscale );
+	Pixels->SetFormat( SoyPixelsFormat::RGBA );
 	auto Promise = Params.mContext.CreatePromise();
 
 	auto Run = [=](Bind::TContext& Context)
@@ -1136,7 +1137,7 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 		VNSequenceRequestHandler* Handler = [[VNSequenceRequestHandler alloc] init];
 		NSArray<VNDetectFaceLandmarksRequest*>* Requests = @[Request];
 
-		auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+		auto PixelBuffer = Avf::PixelsToPixelBuffer(*Pixels);
 		CVImageBufferRef ImageBuffer = PixelBuffer;
 
 		auto Orientation = kCGImagePropertyOrientationUp;
@@ -1174,12 +1175,14 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 					FeatureFloats.PushBack( Point.x );
 					FeatureFloats.PushBack( Point.y );
 				}
-				
+			
+				auto w = Pixels->GetWidth();
+				auto h = Pixels->GetHeight();
 				BufferArray<float,4> RectValues;
-				RectValues.PushBack( Bounds.x );
-				RectValues.PushBack( Bounds.y );
-				RectValues.PushBack( Bounds.w );
-				RectValues.PushBack( Bounds.h );
+				RectValues.PushBack( Bounds.x / w );
+				RectValues.PushBack( Bounds.y / h );
+				RectValues.PushBack( Bounds.w / w );
+				RectValues.PushBack( Bounds.h / h );
 				
 				auto Object = Context.CreateObjectInstance();
 				Object.SetArray("Bounds", GetArrayBridge(RectValues) );
