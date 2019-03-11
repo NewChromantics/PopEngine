@@ -12,6 +12,7 @@
 
 #define TIMER_WARNING_MIN_MS	50
 
+
 const char FindFaces_FunctionName[] = "FindFaces";
 const char FindFaceFeatures_FunctionName[] = "FindFaceFeatures";
 
@@ -19,7 +20,7 @@ const char DlibWrapper_TypeName[] = "Dlib";
 
 void ApiDlib::Bind(Bind::TContext& Context)
 {
-	Context.BindObjectType<TDlibWrapper>();
+	Context.BindObjectType<TDlibWrapper>( ApiPop::Namespace );
 }
 
 
@@ -101,7 +102,6 @@ void TDlibThreads::SetShapePredictorFaceLandmarks(ArrayBridge<uint8_t>&& Landmar
 void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TDlibWrapper>();
-	auto* pThis = &This;
 	
 	//	make a promise resolver (persistent to copy to thread)
 	auto Promise = Params.mContext.CreatePromise();

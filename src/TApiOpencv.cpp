@@ -79,8 +79,11 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	auto Method = cv::CHAIN_APPROX_SIMPLE;
 	//auto Mode = cv::RETR_LIST;
 	//auto Method = cv::CHAIN_APPROX_NONE;
-	cv::findContours( InputArray, Contours, Mode, Method );
-	
+	{
+		Soy::TScopeTimerPrint Timer("cv::findContours",0);
+		cv::findContours( InputArray, Contours, Mode, Method );
+	}
+									
 	//	enumerate to arrays of points
 	auto GetPoint = [&](const cv::Point& Point)
 	{

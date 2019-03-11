@@ -11,6 +11,7 @@ class TPixelBuffer;
 //	engine stuff under the Pop namespace
 namespace ApiPop
 {
+	extern const char	Namespace[];
 	void	Bind(Bind::TContext& Context);
 }
 
