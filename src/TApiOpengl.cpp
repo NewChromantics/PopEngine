@@ -80,7 +80,7 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 		try
 		{
 			auto This = this->GetHandle();
-			auto ThisOnRender = This.GetFunction("OnRender");
+			auto ThisOnRender = This.GetFunction(MouseFuncName);
 			Bind::TCallback Params(Context);
 			Params.SetThis( This );
 			Params.SetArgumentInt( 0, MousePos.x );
