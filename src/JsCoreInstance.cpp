@@ -995,14 +995,14 @@ void Bind::TPersistent::Retain(const TPersistent& That)
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values)
 {
 	auto Size = Values.GetSize();
-	static auto WarningArraySize = 600;
+	static auto WarningArraySize = 800;
 	if ( Size > WarningArraySize )
 	{
-		std::stringstream Error;
-		//auto& Error = std::Debug;
-		//Error << "Warning: Javascript core seems to have problems (crashing/corruption) with large arrays; " << Size << "/" << WarningArraySize << std::endl;
-		Error << "Warning: Javascript core seems to have problems (crashing/corruption) with large arrays; " << Size << "/" << WarningArraySize;
-		throw Soy::AssertException( Error.str() );
+		//std::stringstream Error;
+		auto& Error = std::Debug;
+		Error << "Warning: Javascript core seems to have problems (crashing/corruption) with large arrays; " << Size << "/" << WarningArraySize << std::endl;
+		//throw Soy::AssertException( Error.str() );
+		Size = WarningArraySize;
 	}
 	
 	JSValueRef Exception = nullptr;
