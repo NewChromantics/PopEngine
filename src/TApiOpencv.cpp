@@ -52,6 +52,7 @@ cv::Mat GetMatrix(const SoyPixelsImpl& Pixels)
 void ApiOpencv::FindContours(Bind::TCallback &Params)
 {
 	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+	bool MakeRects = Params.IsArgumentBool(1) ? Params.GetArgumentBool(1) : false;
 	
 	SoyPixels PixelsMask;
 	Image.GetPixels( PixelsMask );
@@ -96,11 +97,44 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 		{
 			//	enum giant array
 			Array<float> AllPoints;
+			Soy::Rectf Rect;
 			for ( auto p=0;	p<Points.size();	p++)
 			{
+				if ( p==0 )
+				{
+					Rect.x = Points[p].x;
+					Rect.y = Points[p].y;
+				}
+				Rect.Accumulate( Points[p].x, Points[p].y );
 				AllPoints.PushBack( Points[p].x );
 				AllPoints.PushBack( Points[p].y );
 			}
+			
+			if ( MakeRects )
+			{
+				AllPoints.Clear();
+				AllPoints.PushBack( Rect.Left() );
+				AllPoints.PushBack( Rect.Top() );
+				//AllPoints.PushBack( Rect.Right() );
+				//AllPoints.PushBack( Rect.Top() );
+
+				AllPoints.PushBack( Rect.Right() );
+				AllPoints.PushBack( Rect.Top() );
+				//AllPoints.PushBack( Rect.Right() );
+				//AllPoints.PushBack( Rect.Bottom() );
+
+				AllPoints.PushBack( Rect.Right() );
+				AllPoints.PushBack( Rect.Bottom() );
+				
+				AllPoints.PushBack( Rect.Left() );
+				AllPoints.PushBack( Rect.Bottom() );
+				
+				//AllPoints.PushBack( Rect.Left() );
+				//AllPoints.PushBack( Rect.Bottom() );
+				AllPoints.PushBack( Rect.Left() );
+				AllPoints.PushBack( Rect.Top() );
+			}
+			
 			auto Array = Params.mContext.CreateArray( GetArrayBridge(AllPoints) );
 			return Array;
 		}
