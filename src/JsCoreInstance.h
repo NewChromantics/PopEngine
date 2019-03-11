@@ -43,6 +43,10 @@ namespace JsCore
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
 
+	//	typed arrays
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Values);
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<float>& Values);
+
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
 	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
 
@@ -194,6 +198,8 @@ public:
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
 	template<typename TYPE>
 	Bind::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
+	Bind::TArray			CreateArray(ArrayBridge<uint8_t>&& Values);
+	Bind::TArray			CreateArray(ArrayBridge<float>&& Values);
 
 	
 	template<typename OBJECTWRAPPERTYPE>
@@ -206,8 +212,8 @@ public:
 
 	
 	
-	prmem::Heap&		GetImageHeap()	{	return mImageHeap;	}
-	prmem::Heap&		GetV8Heap()		{	return mAllocatorHeap;	}
+	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
+	prmem::Heap&		GetV8Heap()			{	return mAllocatorHeap;	}
 	std::string			GetResolvedFilename(const std::string& Filename);
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext

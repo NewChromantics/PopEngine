@@ -413,6 +413,20 @@ Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<int
 	return JsCore_CreateArray( *this, ElementCount, GetElement );
 }
 
+Bind::TArray JsCore::TContext::CreateArray(ArrayBridge<uint8_t>&& Values)
+{
+	auto ArrayObject = JsCore::GetArray( mContext, Values );
+	JsCore::TArray Array( mContext, ArrayObject );
+	return Array;
+}
+
+Bind::TArray JsCore::TContext::CreateArray(ArrayBridge<float>&& Values)
+{
+	auto ArrayObject = JsCore::GetArray( mContext, Values );
+	JsCore::TArray Array( mContext, ArrayObject );
+	return Array;
+}
+
 
 
 
@@ -991,6 +1005,48 @@ void Bind::TPersistent::Retain(const TPersistent& That)
 		Retain( That.mObject );
 }
 
+
+template<typename TYPE>
+JSObjectRef JsCore_GetTypedArray(JSContextRef Context,const ArrayBridge<TYPE>& Values,JSTypedArrayType TypedArrayType)
+{
+	//	JSObjectMakeTypedArrayWithBytesNoCopy makes an externally backed array, which has a destruction callback
+	static JSTypedArrayBytesDeallocator Dealloc = [](void* pArrayBuffer,void* DeallocContext)
+	{
+		auto* ArrayBuffer = static_cast<TYPE*>( pArrayBuffer );
+		delete[] ArrayBuffer;
+	};
+	
+	//	allocate an array
+	//	gr: want to do it on a heap, but our heap needs a size, + context + array and we can only pass 1 contextually variable
+	auto* AllocatedBuffer = new TYPE[Values.GetSize()];
+	auto AllocatedBufferSize = sizeof(TYPE) * Values.GetSize();
+	if ( AllocatedBufferSize != Values.GetDataSize() )
+		throw Soy::AssertException("Array size mismatch");
+
+	//	safely copy from values
+	size_t AllocatedArrayCount = 0;
+	auto AllocatedArray = GetRemoteArray( AllocatedBuffer, AllocatedBufferSize, AllocatedArrayCount );
+	AllocatedArray.Copy( Values );
+
+	//	make externally backed array that'll dealloc
+	void* DeallocContext = nullptr;
+	JSValueRef Exception = nullptr;
+	auto ArrayObject = JSObjectMakeTypedArrayWithBytesNoCopy( Context, TypedArrayType, AllocatedBuffer, AllocatedBufferSize, Dealloc, DeallocContext, &Exception );
+	JsCore::ThrowException( Context, Exception );
+	
+	return ArrayObject;
+}
+
+JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Values)
+{
+	return JsCore_GetTypedArray( Context, Values, kJSTypedArrayTypeUint8Array );
+}
+
+JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<float>& Values)
+{
+	static_assert( sizeof(float) == 32/8, "Float is not 32 bit. Could support both here...");
+	return JsCore_GetTypedArray( Context, Values, kJSTypedArrayTypeFloat32Array );
+}
 
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values)
 {
