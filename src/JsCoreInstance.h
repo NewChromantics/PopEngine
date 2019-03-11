@@ -46,6 +46,7 @@ namespace JsCore
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
 	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
 
+	//	gr: consider templating this so that we can static_assert on non-specified implementation to avoid the auto-resolution to bool
 	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
 	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
@@ -53,6 +54,7 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
 	JSValueRef	GetValue(JSContextRef Context,JSObjectRef Value);
+	inline JSValueRef	GetValue(JSContextRef Context,JSValueRef Value)	{	return Value;	}
 	JSValueRef	GetValue(JSContextRef Context,const TPersistent& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TPromise& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TObject& Value);
@@ -188,6 +190,7 @@ public:
 	virtual Bind::TPromise		CreatePromise() bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
 	template<typename TYPE>
 	Bind::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
@@ -280,6 +283,8 @@ public:
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(JSObjectRef Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(Bind::TArray& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value.mThis );	}
 	virtual void			Return(Bind::TPromise& Value) bind_override;
 	virtual void			Return(Bind::TPersistent& Value) bind_override;

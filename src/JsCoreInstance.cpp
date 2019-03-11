@@ -402,6 +402,11 @@ Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<JsC
 	return JsCore_CreateArray( *this, ElementCount, GetElement );
 }
 
+Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<JsCore::TArray(size_t)> GetElement)
+{
+	return JsCore_CreateArray( *this, ElementCount, GetElement );
+}
+
 Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement)
 {
 	return JsCore_CreateArray( *this, ElementCount, GetElement );
@@ -814,6 +819,7 @@ bool JsCore::IsArray(JSContextRef Context,JSValueRef Handle)
 	//	we're a regular array
 	if ( JSValueIsArray( Context, Handle ) )
 	{
+		return true;
 	}
 	
 	return false;
