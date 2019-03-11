@@ -56,6 +56,16 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	SoyPixels PixelsMask;
 	Image.GetPixels( PixelsMask );
 	PixelsMask.SetFormat( SoyPixelsFormat::Greyscale );
+
+	//	threshold the image
+	{
+		auto& PixelsArray = PixelsMask.GetPixelsArray();
+		for ( auto p=0;	p<PixelsArray.GetSize();	p++ )
+		{
+			if ( PixelsArray[p] < 100 )
+				PixelsArray[p] = 0;
+		}
+	}
 	
 	//	https://docs.opencv.org/3.4.2/da/d72/shape_example_8cpp-example.html#a1
 	//cv::InputArray InputArray( GetMatrix(PixelsMask ) );
@@ -64,8 +74,10 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	//cv::OutputArrayOfArrays Contours;
 	//cv::OutputArray Hierarchy;
 	
-	auto Mode = cv::RETR_LIST;
-	auto Method = cv::CHAIN_APPROX_NONE;
+	auto Mode = cv::RETR_EXTERNAL;
+	auto Method = cv::CHAIN_APPROX_SIMPLE;
+	//auto Mode = cv::RETR_LIST;
+	//auto Method = cv::CHAIN_APPROX_NONE;
 	cv::findContours( InputArray, Contours, Mode, Method );
 	
 	//	enumerate to arrays of points
@@ -79,21 +91,46 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	
 	auto GetPoints = [&](const std::vector<cv::Point>& Points)
 	{
-		auto GetPointElement = [&](size_t Index)
+		auto EnumFlatArray = true;
+		if ( EnumFlatArray )
 		{
-			return GetPoint(Points[Index]);
-		};
-		auto Array = Params.mContext.CreateArray( Points.size(), GetPointElement );
-		return Array;
+			//	enum giant array
+			Array<float> AllPoints;
+			for ( auto p=0;	p<Points.size();	p++)
+			{
+				AllPoints.PushBack( Points[p].x );
+				AllPoints.PushBack( Points[p].y );
+			}
+			auto Array = Params.mContext.CreateArray( GetArrayBridge(AllPoints) );
+			return Array;
+		}
+		else
+		{
+			auto GetPointElement = [&](size_t Index)
+			{
+				return GetPoint(Points[Index]);
+			};
+			auto Array = Params.mContext.CreateArray( Points.size(), GetPointElement );
+			return Array;
+		}
 	};
 	
 	Array<JSValueRef> ContourArrays;
 	for ( auto i=0;	i<Contours.size();	i++ )
 	{
-		auto Array = GetPoints(Contours[i]);
-		auto ArrayValue = JsCore::GetValue( Params.mContext.mContext, Array );
-		ContourArrays.PushBack( ArrayValue );
+		try
+		{
+			auto Array = GetPoints(Contours[i]);
+			auto ArrayValue = JsCore::GetValue( Params.mContext.mContext, Array );
+			//Params.Return( ArrayValue );	return;
+			ContourArrays.PushBack( ArrayValue );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << e.what() << " (skipped " << i << ")" << std::endl;
+		}
 	}
+
 	auto ContoursArray = JsCore::GetArray( Params.mContext.mContext, GetArrayBridge(ContourArrays) );
 	Params.Return( ContoursArray );
 }
