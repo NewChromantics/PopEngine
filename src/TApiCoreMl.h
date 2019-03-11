@@ -35,7 +35,9 @@ public:
 	static void			SsdMobileNet(Bind::TCallback& Arguments);
 	static void			MaskRcnn(Bind::TCallback& Arguments);
 
-	
+	//	apple's Vision built-in face detection
+	static void			FaceDetect(Bind::TCallback& Arguments);
+
 protected:
 	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;
 };

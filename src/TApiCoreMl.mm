@@ -20,7 +20,7 @@
 //	https://github.com/edouardlp/Mask-RCNN-CoreML
 #import "MaskRCNN_MaskRCNN.h"
 
-
+#import <Vision/Vision.h>
 
 const char Yolo_FunctionName[] = "Yolo";
 const char Hourglass_FunctionName[] = "Hourglass";
@@ -28,13 +28,14 @@ const char Cpm_FunctionName[] = "Cpm";
 const char OpenPose_FunctionName[] = "OpenPose";
 const char SsdMobileNet_FunctionName[] = "SsdMobileNet";
 const char MaskRcnn_FunctionName[] = "MaskRcnn";
+const char FaceDetect_FunctionName[] = "FaceDetect";
 
 const char CoreMl_TypeName[] = "CoreMl";
 
 
 void ApiCoreMl::Bind(Bind::TContext& Context)
 {
-	Context.BindObjectType<TCoreMlWrapper>();
+	Context.BindObjectType<TCoreMlWrapper>( ApiPop::Namespace );
 }
 
 
@@ -979,6 +980,7 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<OpenPose_FunctionName>( OpenPose );
 	Template.BindFunction<SsdMobileNet_FunctionName>( SsdMobileNet );
 	Template.BindFunction<MaskRcnn_FunctionName>( MaskRcnn );
+	Template.BindFunction<FaceDetect_FunctionName>( FaceDetect );
 }
 
 
@@ -1115,3 +1117,84 @@ void TCoreMlWrapper::MaskRcnn(Bind::TCallback& Params)
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunMaskRcnn );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 }
+
+
+//	apple's Vision built-in face detection
+void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
+{
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+	SoyPixels Pixels;
+	Image.GetPixels( Pixels );
+	Pixels.SetFormat( SoyPixelsFormat::Greyscale );
+	Pixels.SetFormat( SoyPixelsFormat::RGBA );
+	auto Promise = Params.mContext.CreatePromise();
+
+	auto Run = [=](Bind::TContext& Context)
+	{
+		//	make a face request
+		VNDetectFaceLandmarksRequest* Request = [[VNDetectFaceLandmarksRequest alloc] init];
+		VNSequenceRequestHandler* Handler = [[VNSequenceRequestHandler alloc] init];
+		NSArray<VNDetectFaceLandmarksRequest*>* Requests = @[Request];
+
+		auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+		CVImageBufferRef ImageBuffer = PixelBuffer;
+
+		auto Orientation = kCGImagePropertyOrientationUp;
+		NSError* Error = nullptr;
+		{
+			Soy::TScopeTimerPrint Timer("Perform Requests",5);
+			[Handler performRequests:Requests onCVPixelBuffer:ImageBuffer orientation:Orientation error:&Error];
+		}
+		NSArray<VNFaceObservation*>* Results = Request.results;
+		
+		if ( !Results )
+			throw Soy::AssertException("Missing results");
+
+		Array<Bind::TObject> ResultObjects;
+		for ( auto r=0;	r<Results.count;	r++ )
+		{
+			for ( VNFaceObservation* Observation in Results )
+			{
+				std::Debug << "Got observation" << std::endl;
+				//	features are normalised to bounds
+				Array<vec2f> Features;
+				Array<float> FeatureFloats;
+				Soy::Rectf Bounds;
+				
+				VNFaceLandmarkRegion2D* Landmarks = Observation.landmarks.allPoints;
+				Bounds.x = Observation.boundingBox.origin.x;
+				Bounds.y = Observation.boundingBox.origin.y;
+				Bounds.w = Observation.boundingBox.size.width;
+				Bounds.h = Observation.boundingBox.size.height;
+
+				for( auto l=0;	l<Landmarks.pointCount;	l++ )
+				{
+					auto Point = Landmarks.normalizedPoints[l];
+					Features.PushBack( vec2f(Point.x,Point.y) );
+					FeatureFloats.PushBack( Point.x );
+					FeatureFloats.PushBack( Point.y );
+				}
+				
+				BufferArray<float,4> RectValues;
+				RectValues.PushBack( Bounds.x );
+				RectValues.PushBack( Bounds.y );
+				RectValues.PushBack( Bounds.w );
+				RectValues.PushBack( Bounds.h );
+				
+				auto Object = Context.CreateObjectInstance();
+				Object.SetArray("Bounds", GetArrayBridge(RectValues) );
+				Object.SetArray("Features", GetArrayBridge(FeatureFloats) );
+				ResultObjects.PushBack(Object);
+			}
+		}
+		
+		auto Array = Context.CreateArray( GetArrayBridge(ResultObjects) );
+		Promise.Resolve( Array );
+	};
+	
+	Run( Params.mContext );
+	
+	Params.Return( Promise );
+}
+
+

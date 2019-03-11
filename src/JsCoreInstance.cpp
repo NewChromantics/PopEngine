@@ -551,6 +551,12 @@ void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<bool>&& Value
 	SetMember( Name, Array );
 }
 
+void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<float>&& Values)
+{
+	auto Array = JsCore::GetArray( mContext, Values );
+	SetMember( Name, Array );
+}
+
 void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<Bind::TObject>&& Values)
 {
 	auto Array = JsCore::GetArray( mContext, Values );

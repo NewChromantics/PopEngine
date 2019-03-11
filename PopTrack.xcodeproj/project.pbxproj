@@ -347,6 +347,7 @@
 		BF92821D223692BA007E9D6F /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = src/Libs/opencv2.framework; sourceTree = SOURCE_ROOT; };
 		BF92821F22369316007E9D6F /* TApiOpencv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencv.cpp; path = src/TApiOpencv.cpp; sourceTree = "<group>"; };
 		BF92822022369316007E9D6F /* TApiOpencv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencv.h; path = src/TApiOpencv.h; sourceTree = "<group>"; };
+		BF9282222236E1E1007E9D6F /* PopPhotoBlorp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPhotoBlorp; path = ../PopPhotoBlorp; sourceTree = "<group>"; };
 		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
@@ -777,6 +778,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF9282222236E1E1007E9D6F /* PopPhotoBlorp */,
 				BFFCACC721FF63AA00153C4E /* CoreMlModels */,
 				BF30550A1B56F553002B0892 /* Data */,
 				EB0EA5622110AAF9008D6DAA /* Data_dlib */,

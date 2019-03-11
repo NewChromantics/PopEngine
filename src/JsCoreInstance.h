@@ -376,6 +376,7 @@ public:
 	virtual void			SetArray(const std::string& Name,Bind::TArray& Array) bind_override;
 	virtual void			SetArray(const std::string& Name,ArrayBridge<Bind::TObject>&& Values) bind_override;
 	virtual void			SetArray(const std::string& Name,ArrayBridge<bool>&& Values) bind_override;
+	virtual void			SetArray(const std::string& Name,ArrayBridge<float>&& Values) bind_override;
 	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
 
 	//	Jscore specific
