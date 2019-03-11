@@ -12,6 +12,7 @@
 #include "TApiCoreMl.h"
 #include "TApiEzsift.h"
 #include "TApiInput.h"
+#include "TApiOpencv.h"
 
 
 namespace JsCore
@@ -115,6 +116,7 @@ JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 	
 	return Params.mReturn;
 }
+
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
@@ -249,9 +251,7 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 		ApiCoreMl::Bind( *mContext );
 		ApiEzsift::Bind( *mContext );
 		ApiInput::Bind( *mContext );
-
-		//	gr: start the thread immediately, there should be no problems having the thread running before queueing a job
-		//this->Start();
+		ApiOpencv::Bind( *mContext );
 		
 		std::string BootupSource;
 		Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
@@ -797,12 +797,26 @@ Bind::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
 	return Bind::TObject( mContext.mContext, HandleObject );
 }
 
-bool JsCore::TCallback::IsArgumentArray(size_t Index)
+bool JsCore::IsArray(JSContextRef Context,JSValueRef Handle)
 {
-	if ( Index >= mArguments.GetSize() )
-		return false;
+	//	typed array is not an official js array, but is to us
+	JSValueRef Exception = nullptr;
+	auto TypedArrayType = JSValueGetTypedArrayType( Context, Handle, &Exception );
+	JsCore::ThrowException( Context, Exception, "Testing if value is typed array" );
 	
-	return JSValueIsArray( mContext.mContext, mArguments[Index] );
+	//	we're a typed array
+	if ( TypedArrayType != kJSTypedArrayTypeNone )
+	{
+		return true;
+	}
+
+	
+	//	we're a regular array
+	if ( JSValueIsArray( Context, Handle ) )
+	{
+	}
+	
+	return false;
 }
 
 
@@ -984,20 +998,7 @@ JsCore::TArray::TArray(JSContextRef Context,JSObjectRef Object) :
 	mContext	( Context ),
 	mThis		( Object )
 {
-	//	typed array is not an official js array, but is to us
-	JSValueRef Exception = nullptr;
-	auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
-	JsCore::ThrowException( mContext, Exception, "Testing if value is typed array" );
-
-	if ( TypedArrayType != kJSTypedArrayTypeNone )
-	{
-		//	we're a typed array
-	}
-	else if ( JSValueIsArray( Context, mThis ) )
-	{
-		//	we're a regular array
-	}
-	else
+	if ( !IsArray( mContext, Object ) )
 	{
 		std::stringstream Error;
 		Error << "Object is not array";

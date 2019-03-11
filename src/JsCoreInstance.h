@@ -28,7 +28,9 @@ namespace JsCore
 
 	TContext&	GetContext(JSContextRef ContextRef);
 	
-	//	value conversion
+	//	value conversion - maybe should be type orientated instead of named
+	template<typename TYPE>
+	TYPE		FromValue(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
@@ -36,6 +38,7 @@ namespace JsCore
 	template<typename INTTYPE>
 	INTTYPE		GetInt(JSContextRef Context,JSValueRef Handle);
 
+	//	create JS types
 	template<typename TYPE>
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
@@ -57,11 +60,17 @@ namespace JsCore
 	template<typename TYPE>
 	JSValueRef	GetValue(JSContextRef Context,const ArrayBridge<TYPE>& Array);
 
+	
+	//	is something we support as a TArray
+	bool		IsArray(JSContextRef Context,JSValueRef Handle);
 
-	template<typename TYPE>
-	TYPE		FromValue(JSContextRef Context,JSValueRef Handle);
 
+	//	throw c++ exception if the exception object is an exception
 	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
+
+	//	enum array supports single objects as well as arrays, so we can enumerate a single float into an array of one, as well as an array
+	template<typename TYPE>
+	void		EnumArray(JSContextRef Context,JSValueRef Value,ArrayBridge<TYPE>& Array);
 }
 
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
@@ -90,8 +99,9 @@ namespace Bind = JsCore;
 class JsCore::TArray
 {
 public:
+	TArray(JSContextRef Context,JSValueRef Value) : TArray( Context, GetObject( Context, Value ) )	{}
 	TArray(JSContextRef Context,JSObjectRef Object);
-	
+
 	void		Set(size_t Index,Bind::TObject& Object);
 	template<typename TYPE>
 	void		CopyTo(ArrayBridge<TYPE>&& Values)		{	CopyTo( Values );	}
@@ -249,10 +259,10 @@ public:
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override		{	auto ArrayArg = GetArgumentArray(Index);	ArrayArg.CopyTo( Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override		{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
 	
 	
 	template<typename TYPE>
@@ -262,7 +272,7 @@ public:
 	virtual bool			IsArgumentString(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeString;	}
 	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeBoolean;	}
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
-	virtual bool			IsArgumentArray(size_t Index)bind_override;
+	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return IsArray( mContext.mContext, GetArgumentValue(Index) );	}
 
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;
@@ -290,7 +300,7 @@ public:
 private:
 	JSType					GetArgumentType(size_t Index);
 	JSValueRef				GetArgumentValue(size_t Index);
-
+	
 public:
 	TContext&			mContext;
 	JSValueRef			mThis = nullptr;
@@ -670,3 +680,18 @@ inline JSValueRef JsCore::GetValue(JSContextRef Context,const ArrayBridge<TYPE>&
 	return GetValue( Context, Array );
 }
 
+//	enum array supports single objects as well as arrays, so we can enumerate a single float into an array of one, as well as an array
+template<typename TYPE>
+inline void JsCore::EnumArray(JSContextRef Context,JSValueRef Value,ArrayBridge<TYPE>& Array)
+{
+	if ( IsArray( Context, Value ) )
+	{
+		Bind::TArray ArrayHandle( Context, Value );
+		ArrayHandle.CopyTo(Array);
+		return;
+	}
+	
+	//	this needs to support arrays of objects really
+	auto SingleValue = GetInt<TYPE>( Context, Value );
+	Array.PushBack( SingleValue );
+}
