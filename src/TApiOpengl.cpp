@@ -735,7 +735,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 		Error << "Shader missing uniform \"" << UniformName << "\"";
 		//	gr: webgl gives a warning, but doesn't throw. Lets emulate that with debug output
 		//throw Soy::AssertException(Error.str());
-		std::Debug << Error.str() << std::endl;
+		//std::Debug << Error.str() << std::endl;
 		return;
 	}
 
