@@ -929,13 +929,12 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 
 Bind::TPersistent::~TPersistent()
 {
-	/*
 	if ( mObject.mThis != nullptr )
 		JSValueUnprotect( mObject.mContext, mObject.mThis );
 	 
 	if ( mFunction.mThis != nullptr )
 		JSValueUnprotect( mFunction.mContext, mFunction.mThis );
-	 */
+
 }
 
 JSContextRef Bind::TPersistent::GetContext() const
