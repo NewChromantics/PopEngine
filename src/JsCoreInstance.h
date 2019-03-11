@@ -89,11 +89,7 @@ namespace Bind = JsCore;
 class JsCore::TArray
 {
 public:
-	TArray(JSContextRef Context,JSObjectRef Object) :
-		mContext	( Context ),
-		mThis		( Object )
-	{
-	}
+	TArray(JSContextRef Context,JSObjectRef Object);
 	
 	void		Set(size_t Index,Bind::TObject& Object);
 	template<typename TYPE>

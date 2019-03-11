@@ -763,13 +763,6 @@ Bind::TFunction JsCore::TCallback::GetArgumentFunction(size_t Index)
 Bind::TArray JsCore::TCallback::GetArgumentArray(size_t Index)
 {
 	auto Handle = GetArgumentValue( Index );
-	if ( !JSValueIsArray( mContext.mContext, Handle ) )
-	{
-		std::stringstream Error;
-		Error << "Argument " << Index << " is not array";
-		throw Soy::AssertException( Error.str() );
-	}
-
 	auto HandleObject = JsCore::GetObject( mContext.mContext, Handle );
 	Bind::TArray Array( mContext.mContext, HandleObject );
 	return Array;
@@ -977,7 +970,33 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>&
 	ThrowException( Context, Exception );
 	return ArrayObject;
 }
-		 
+
+
+JsCore::TArray::TArray(JSContextRef Context,JSObjectRef Object) :
+	mContext	( Context ),
+	mThis		( Object )
+{
+	//	typed array is not an official js array, but is to us
+	JSValueRef Exception = nullptr;
+	auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
+	JsCore::ThrowException( mContext, Exception, "Testing if value is typed array" );
+
+	if ( TypedArrayType != kJSTypedArrayTypeNone )
+	{
+		//	we're a typed array
+	}
+	else if ( JSValueIsArray( Context, mThis ) )
+	{
+		//	we're a regular array
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "Object is not array";
+		throw Soy::AssertException( Error.str() );
+	}
+}
+
 
 void JsCore::TArray::Set(size_t Index,Bind::TObject& Object)
 {
