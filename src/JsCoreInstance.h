@@ -294,7 +294,8 @@ public:
 	virtual void			Return(Bind::TArray& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value.mThis );	}
 	virtual void			Return(Bind::TPromise& Value) bind_override;
 	virtual void			Return(Bind::TPersistent& Value) bind_override;
-	virtual void			Return(ArrayBridge<Bind::TObject>&& Values) bind_override	{	mReturn = GetArray( mContext.mContext, Values );	}
+	template<typename TYPE>
+	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override	{	mReturn = GetArray( mContext.mContext, Values );	}
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(Bind::TObject& This) bind_override;

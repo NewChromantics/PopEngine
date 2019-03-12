@@ -10,8 +10,12 @@ namespace ApiOpencv
 	const char Namespace[] = "Opencv";
 	
 	void	FindContours(Bind::TCallback& Params);
+	void	GetSaliencyRects(Bind::TCallback& Params);
+	void	GetMoments(Bind::TCallback& Params);
 	
 	const char FindContours_FunctionName[] = "FindContours";
+	const char GetSaliencyRects_FunctionName[] = "GetSaliencyRects";
+	const char GetMoments_FunctionName[] = "GetMoments";
 }
 
 
@@ -20,6 +24,8 @@ void ApiOpencv::Bind(Bind::TContext& Context)
 	Context.CreateGlobalObjectInstance("", Namespace);
 	
 	Context.BindGlobalFunction<FindContours_FunctionName>( FindContours, Namespace );
+	Context.BindGlobalFunction<GetSaliencyRects_FunctionName>( GetSaliencyRects, Namespace );
+	Context.BindGlobalFunction<GetMoments_FunctionName>( GetMoments, Namespace );
 }
 
 int GetMatrixType(SoyPixelsFormat::Type Format)
@@ -47,6 +53,67 @@ cv::Mat GetMatrix(const SoyPixelsImpl& Pixels)
 	cv::Mat Matrix( Rows, Cols, Type, Data );
 	return Matrix;
 }
+
+
+
+void ApiOpencv::GetSaliencyRects(Bind::TCallback &Params)
+{
+	/*
+	 cv::saliency::ObjectnessBING::computeSaliencyImpl	(	InputArray 	image,
+	 OutputArray 	objectnessBoundingBox
+	 )
+	 */
+	throw Soy::AssertException("not implemennted");
+}
+
+
+void ApiOpencv::GetMoments(Bind::TCallback &Params)
+{
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+	
+	SoyPixels PixelsMask;
+	Image.GetPixels( PixelsMask );
+	PixelsMask.SetFormat( SoyPixelsFormat::Greyscale );
+	
+	//	threshold the image
+	{
+		auto& PixelsArray = PixelsMask.GetPixelsArray();
+		for ( auto p=0;	p<PixelsArray.GetSize();	p++ )
+		{
+			if ( PixelsArray[p] < 100 )
+			PixelsArray[p] = 0;
+		}
+	}
+	
+	//	https://docs.opencv.org/3.4.2/da/d72/shape_example_8cpp-example.html#a1
+	//cv::InputArray InputArray( GetMatrix(PixelsMask ) );
+	auto InputArray = GetMatrix(PixelsMask );
+	
+	//cv::Moments ourMoment; //moments variable
+	Soy::TScopeTimerPrint Timer("cv::moments",0);
+	auto Moment = cv::moments( InputArray ); //calculat all the moment of image
+	Timer.Stop();
+	double moment10 = Moment.m10; //extract spatial moment 10
+	double moment01 = Moment.m01; //extract spatial moment 01
+	double area = Moment.m00; //extract central moment 00
+
+	//	normalisation from... somewhere else
+	auto x = Moment.m10 / Moment.m00;
+	auto y = Moment.m01 / Moment.m00;
+	//	size seems like a general matrix scalar, but not actually mappable to pixels...?
+	//auto Size = Moment.m00 / PixelsMask.GetWidth() / 10.0f;
+	auto Size = 50;
+	
+	Soy::Rectf Rect( x-Size/2, y-Size/2, Size, Size );
+	BufferArray<float,4> RectFloats;
+	RectFloats.PushBack( Rect.x );
+	RectFloats.PushBack( Rect.y );
+	RectFloats.PushBack( Rect.w );
+	RectFloats.PushBack( Rect.h );
+
+	Params.Return( GetArrayBridge(RectFloats) );
+}
+
 
 
 void ApiOpencv::FindContours(Bind::TCallback &Params)
