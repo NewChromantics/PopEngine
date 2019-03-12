@@ -118,24 +118,8 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 				AllPoints.Clear();
 				AllPoints.PushBack( Rect.Left() );
 				AllPoints.PushBack( Rect.Top() );
-				//AllPoints.PushBack( Rect.Right() );
-				//AllPoints.PushBack( Rect.Top() );
-
-				AllPoints.PushBack( Rect.Right() );
-				AllPoints.PushBack( Rect.Top() );
-				//AllPoints.PushBack( Rect.Right() );
-				//AllPoints.PushBack( Rect.Bottom() );
-
-				AllPoints.PushBack( Rect.Right() );
-				AllPoints.PushBack( Rect.Bottom() );
-				
-				AllPoints.PushBack( Rect.Left() );
-				AllPoints.PushBack( Rect.Bottom() );
-				
-				//AllPoints.PushBack( Rect.Left() );
-				//AllPoints.PushBack( Rect.Bottom() );
-				AllPoints.PushBack( Rect.Left() );
-				AllPoints.PushBack( Rect.Top() );
+				AllPoints.PushBack( Rect.GetWidth() );
+				AllPoints.PushBack( Rect.GetHeight() );
 			}
 			
 			auto Array = Params.mContext.CreateArray( GetArrayBridge(AllPoints) );
