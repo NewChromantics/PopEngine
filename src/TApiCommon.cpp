@@ -557,9 +557,16 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 	Array<uint8_t> Rgba;
 	Params.GetArgumentArray(2,GetArrayBridge(Rgba) );
 	
+	auto Format = SoyPixelsFormat::RGBA;
+	if ( !Params.IsArgumentUndefined(3) )
+	{
+		auto FormatStr = Params.GetArgumentString(3);
+		Format = SoyPixelsFormat::ToType( FormatStr );
+	}
+	
 	auto* Rgba8 = static_cast<uint8_t*>(Rgba.GetArray());
 	auto DataSize = Rgba.GetDataSize();
-	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, SoyPixelsFormat::RGBA );
+	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, Format );
 	This.SetPixels(NewPixels);
 }
 
