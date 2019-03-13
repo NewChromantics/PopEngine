@@ -12,10 +12,12 @@ namespace ApiOpencv
 	void	FindContours(Bind::TCallback& Params);
 	void	GetSaliencyRects(Bind::TCallback& Params);
 	void	GetMoments(Bind::TCallback& Params);
-	
+	void	GetHogGradientMap(Bind::TCallback& Params);
+
 	const char FindContours_FunctionName[] = "FindContours";
 	const char GetSaliencyRects_FunctionName[] = "GetSaliencyRects";
 	const char GetMoments_FunctionName[] = "GetMoments";
+	const char GetHogGradientMap_FunctionName[] = "GetHogGradientMap";
 }
 
 
@@ -26,6 +28,7 @@ void ApiOpencv::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<FindContours_FunctionName>( FindContours, Namespace );
 	Context.BindGlobalFunction<GetSaliencyRects_FunctionName>( GetSaliencyRects, Namespace );
 	Context.BindGlobalFunction<GetMoments_FunctionName>( GetMoments, Namespace );
+	Context.BindGlobalFunction<GetHogGradientMap_FunctionName>( GetHogGradientMap, Namespace );
 }
 
 int GetMatrixType(SoyPixelsFormat::Type Format)
@@ -52,6 +55,91 @@ cv::Mat GetMatrix(const SoyPixelsImpl& Pixels)
 	
 	cv::Mat Matrix( Rows, Cols, Type, Data );
 	return Matrix;
+}
+
+cv::Mat GetMatrix(Bind::TCallback &Params,size_t ArgumentIndex,uint8_t ThresholdMin)
+{
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(ArgumentIndex);
+	
+	SoyPixels PixelsMask;
+	Image.GetPixels( PixelsMask );
+	PixelsMask.SetFormat( SoyPixelsFormat::Greyscale );
+	
+	//	threshold the image
+	{
+		auto& PixelsArray = PixelsMask.GetPixelsArray();
+		for ( auto p=0;	p<PixelsArray.GetSize();	p++ )
+		{
+			if ( PixelsArray[p] < ThresholdMin )
+				PixelsArray[p] = 0;
+		}
+	}
+	
+	//	https://docs.opencv.org/3.4.2/da/d72/shape_example_8cpp-example.html#a1
+	//cv::InputArray InputArray( GetMatrix(PixelsMask ) );
+	auto InputArray = GetMatrix( PixelsMask );
+	
+	return InputArray;
+}
+
+void ApiOpencv::GetHogGradientMap(Bind::TCallback &Params)
+{
+	auto InputImage = GetMatrix( Params, 0, 10 );
+
+	cv::HOGDescriptor Hog;
+	// Size(128,64), //winSize
+	// Size(16,16), //blocksize
+	// Size(8,8), //blockStride,
+	// Size(8,8), //cellSize,
+	// 9, //nbins,
+	// 0, //derivAper,
+	// -1, //winSigma,
+	// 0, //histogramNormType,
+	// 0.2, //L2HysThresh,
+	// 0 //gammal correction,
+	// //nlevels=64
+	//);
+	
+	// void HOGDescriptor::compute(const Mat& img, vector<float>& descriptors,
+	//                             Size winStride, Size padding,
+	//                             const vector<Point>& locations) const
+	std::vector<float> descriptorsValues;
+	std::vector<cv::Point> locations;
+	locations.push_back( cv::Point(100,100) );
+	locations.push_back( cv::Point(200,200) );
+	cv::Size winStride(8,8);
+	cv::Size padding(0,0);
+	Hog.compute( InputImage, descriptorsValues, winStride, padding, locations);
+
+	auto NonZeroCount = 0;
+	for ( auto i=0;	i<descriptorsValues.size();	i++ )
+	{
+		auto Descriptor = descriptorsValues[i];
+		if ( Descriptor == 0.0f )
+			continue;
+		std::Debug << "Found descriptor: "  << Descriptor << std::endl;
+		NonZeroCount++;
+	}
+	std::Debug << "Found " << NonZeroCount << "/" << descriptorsValues.size() << " non-zero descriptors" << std::endl;
+	
+	Array<float> RectFloats;
+	auto PushRect = [&](Soy::Rectf& Rect)
+	{
+		RectFloats.PushBack( Rect.x );
+		RectFloats.PushBack( Rect.y );
+		RectFloats.PushBack( Rect.w );
+		RectFloats.PushBack( Rect.h );
+	};
+	
+	for ( auto i=0;	i<locations.size();	i++ )
+	{
+		auto& Pos = locations[i];
+		auto Size = 20;
+		Soy::Rectf Rect( Pos.x-Size/2, Pos.y-Size/2, Size, Size );
+		PushRect( Rect );
+	}
+
+	Params.Return( GetArrayBridge(RectFloats) );
 }
 
 
