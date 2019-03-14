@@ -151,7 +151,12 @@ public:
 	std::shared_ptr<TContext>	CreateContext();
 	
 private:
-	JSContextGroupRef	mContextGroup;
+	//	when the group is created it does async jobs on that thread's run loop
+	//	for deadlock reasons we don't want that to be the main thread (opengl calls get stuck)
+	//	so create it on some other thread and it'll use that runloop
+	SoyWorkerJobThread	mContextGroupThread;
+	
+	JSContextGroupRef	mContextGroup = nullptr;
 	std::string			mRootDirectory;
 	
 	std::shared_ptr<TContext>	mContext;

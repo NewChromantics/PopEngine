@@ -228,42 +228,53 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
 
 
 JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename) :
-	mContextGroup	( JSContextGroupCreate() ),
-	mRootDirectory	( RootDirectory )
+	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
+	mRootDirectory		( RootDirectory )
 {
-	if ( !mContextGroup )
-		throw Soy::AssertException("JSContextGroupCreate failed");
-	
-	
-	//	bind first
-	try
+	auto CreateVirtualMachine = [this,ScriptFilename]()
 	{
-		//	create a context
-		mContext = CreateContext();
+		auto ThisRunloop = CFRunLoopGetCurrent();
+		auto MainRunloop = CFRunLoopGetMain();
 		
-		ApiPop::Bind( *mContext );
-		ApiOpengl::Bind( *mContext );
-		//ApiOpencl::Bind( *mContext );
-		ApiDlib::Bind( *mContext );
-		ApiMedia::Bind( *mContext );
-		ApiWebsocket::Bind( *mContext );
-		ApiHttp::Bind( *mContext );
-		ApiSocket::Bind( *mContext );
-		ApiCoreMl::Bind( *mContext );
-		ApiEzsift::Bind( *mContext );
-		ApiInput::Bind( *mContext );
-		ApiOpencv::Bind( *mContext );
+		if ( ThisRunloop == MainRunloop )
+			throw Soy::AssertException("Need to create JS VM on a different thread to main");
 		
-		std::string BootupSource;
-		Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
-		mContext->LoadScript( BootupSource, ScriptFilename );
-	}
-	catch(std::exception& e)
-	{
-		//	clean up
-		mContext.reset();
-		throw;
-	}
+		mContextGroup = JSContextGroupCreate();
+		if ( !mContextGroup )
+			throw Soy::AssertException("JSContextGroupCreate failed");
+		
+		//	bind first
+		try
+		{
+			//	create a context
+			mContext = CreateContext();
+			
+			ApiPop::Bind( *mContext );
+			ApiOpengl::Bind( *mContext );
+			//ApiOpencl::Bind( *mContext );
+			ApiDlib::Bind( *mContext );
+			ApiMedia::Bind( *mContext );
+			ApiWebsocket::Bind( *mContext );
+			ApiHttp::Bind( *mContext );
+			ApiSocket::Bind( *mContext );
+			ApiCoreMl::Bind( *mContext );
+			ApiEzsift::Bind( *mContext );
+			ApiInput::Bind( *mContext );
+			ApiOpencv::Bind( *mContext );
+			
+			std::string BootupSource;
+			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
+			mContext->LoadScript( BootupSource, ScriptFilename );
+		}
+		catch(std::exception& e)
+		{
+			//	clean up
+			mContext.reset();
+			throw;
+		}
+	};
+	mContextGroupThread.PushJob( CreateVirtualMachine );
+	mContextGroupThread.Start();
 }
 
 JsCore::TInstance::~TInstance()
