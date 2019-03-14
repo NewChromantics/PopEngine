@@ -53,6 +53,7 @@ namespace JsCore
 	//	gr: consider templating this so that we can static_assert on non-specified implementation to avoid the auto-resolution to bool
 	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
+	JSValueRef	GetValue(JSContextRef Context,size_t Value);
 	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
 	JSValueRef	GetValue(JSContextRef Context,int32_t Value);
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
@@ -293,6 +294,7 @@ public:
 	void					ReturnUndefined() bind_override;
 	virtual void			ReturnNull() bind_override;
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(size_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}

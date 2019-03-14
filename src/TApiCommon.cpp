@@ -201,7 +201,7 @@ void ApiPop::GetTimeNowMs(Bind::TCallback& Params)
 	SoyTime Now(true);
 	
 	auto NowMs = Now.GetMilliSeconds();
-	auto NowMsInt = NowMs.count();
+	size_t NowMsInt = NowMs.count();
 	
 	Params.Return( NowMsInt );
 }

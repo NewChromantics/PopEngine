@@ -179,6 +179,20 @@ JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
 	return JSValueMakeBoolean( Context, Value );
 }
 
+JSValueRef JsCore::GetValue(JSContextRef Context,size_t Value)
+{
+	//	javascript doesn't support 64bit (kinda), so throw if number goes over 32bit
+	if ( Value > std::numeric_limits<uint32_t>::max() )
+	{
+		std::stringstream Error;
+		Error << "Javascript doesn't support 64bit integers, so this value(" << Value <<") is out of range (max 32bit=" << std::numeric_limits<uint32_t>::max() << ")";
+		throw Soy::AssertException( Error.str() );
+	}
+
+	auto Value32 = static_cast<uint32_t>( Value );
+	return GetValue( Context, Value32 );
+}
+
 JSValueRef JsCore::GetValue(JSContextRef Context,uint32_t Value)
 {
 	return JSValueMakeNumber( Context, Value );
@@ -554,7 +568,7 @@ void JsCore::TObject::SetFunction(const std::string& Name,Bind::TFunction& Funct
 void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 {
 	auto NameJs = JsCore::GetString( mContext, Name );
-	JSPropertyAttributes Attribs;
+	JSPropertyAttributes Attribs = kJSPropertyAttributeNone;
 	JSValueRef Exception = nullptr;
 	JSObjectSetProperty( mContext, mThis, NameJs, Value, Attribs, &Exception );
 	ThrowException( mContext, Exception );

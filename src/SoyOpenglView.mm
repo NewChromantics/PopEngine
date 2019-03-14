@@ -322,7 +322,9 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 	if ( !Context->IsInitialised() )
 		return;
 	
-	Soy::Rectx<size_t> BoundsRect = NSRectToRect( bounds );
+	//	may need to check for negatives here
+	auto BoundsRectf = NSRectToRect( bounds );
+	Soy::Rectx<size_t> BoundsRect(BoundsRectf);
 	auto& Parent = *mParent;
 
 	bool DoneLock = false;
