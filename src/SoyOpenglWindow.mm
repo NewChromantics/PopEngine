@@ -179,8 +179,18 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		//	doesn't need to be on main thread, but is deffered
 		PostAllocate();
 	};
-	Soy::TSemaphore Semaphore;
-	Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+	
+	auto Wait = false;
+	if ( Wait )
+	{
+		Soy::TSemaphore Semaphore;
+		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Soy::Platform::gMainThread->PushJob( Allocate );
+	}
 }
 
 TOpenglWindow::~TOpenglWindow()
