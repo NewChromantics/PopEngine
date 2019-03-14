@@ -368,6 +368,10 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor)
 
 void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)
 {
+	//	gr: lock so only one JS operation happens at a time
+	//		doing this to test stability (this also emulates v8 a lot more)
+	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
+	
 	//	javascript core is threadsafe, so we can just call
 	//	but maybe we need to set a javascript exception, if this is
 	//	being called from js to relay stuff back

@@ -245,6 +245,7 @@ public:
 	//	although jscore IS threadsafe, so we can execute on other threads, it's not
 	//	the same on other systems
 	TJobQueue			mJobQueue;
+	std::recursive_mutex	mExecuteLock;
 };
 
 
