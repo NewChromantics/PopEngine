@@ -288,6 +288,9 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 void TWindowWrapper::Render(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWindowWrapper>();
+	auto OpenglContext = This.mWindow->GetContext();
+	if ( !OpenglContext )
+		throw Soy::AssertException("Opengl context not created yet");
 
 	auto* pThis = &This;
 	auto WindowHandle = Params.ThisObject();
@@ -332,7 +335,6 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		Promise.Resolve( Target );
 	};
 	
-	auto OpenglContext = This.mWindow->GetContext();
 	auto OpenglRender = [=]
 	{
 		if ( !OpenglContext->IsLockedToThisThread() )
