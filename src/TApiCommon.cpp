@@ -202,7 +202,18 @@ void ApiPop::GetTimeNowMs(Bind::TCallback& Params)
 	
 	auto NowMs = Now.GetMilliSeconds();
 	size_t NowMsInt = NowMs.count();
-	
+
+	static size_t FirstTimestamp = 0;
+
+	//	make time start from 1 day ago to get around 64bit issue
+	//	this will lap at 54 days...
+	if ( FirstTimestamp == 0 )
+	{
+		auto OneDayMs = 86400000;
+		FirstTimestamp = NowMsInt - OneDayMs;
+	}
+	NowMsInt -= FirstTimestamp;
+
 	Params.Return( NowMsInt );
 }
 
