@@ -18,6 +18,24 @@ namespace ApiMedia
 }
 
 
+class TFrameRequestParams
+{
+public:
+	bool			mSeperatePlanes = false;
+	size_t			mStreamIndex = 0;
+	bool			mLatestFrame = true;
+};
+
+class TFrameRequest : public TFrameRequestParams
+{
+public:
+	TFrameRequest()	{}
+	TFrameRequest(const TFrameRequestParams& Copy) :	TFrameRequestParams (Copy)	{}
+	
+public:
+	Bind::TPromise	mPromise;
+};
+
 extern const char MediaSource_TypeName[];
 class TMediaSourceWrapper : public Bind::TObjectWrapper<MediaSource_TypeName,TMediaExtractor>
 {
@@ -35,12 +53,18 @@ public:
 	void									OnNewFrame(size_t StreamIndex);
 	static void								Free(Bind::TCallback& Params);
 	static void								GetNextFrame(Bind::TCallback& Params);
-	
+	static void								PopFrame(Bind::TCallback& Params);
+
+	Bind::TPromise							AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params);
+	Bind::TObject							PopFrame(Bind::TContext& Context,const TFrameRequestParams& Params);
+
 	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
 
 public:
 	std::shared_ptr<TMediaExtractor>&		mExtractor = mObject;
-	Bind::TPersistent						mOnFrameFilter;
+	
+	std::mutex								mFrameRequestsLock;
+	Array<TFrameRequest>					mFrameRequests;
 };
 
 

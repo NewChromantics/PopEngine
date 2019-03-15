@@ -147,14 +147,7 @@ void TMediaSourceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto DeviceName = Params.GetArgumentString(0);
 	auto SinglePlaneOutput = !Params.IsArgumentUndefined(1) ? Params.GetArgumentBool(1) : false;
-	auto HasFilterCallback = !Params.IsArgumentUndefined(2);
-	auto MaxBufferSize = !Params.IsArgumentUndefined(3) ? Params.GetArgumentInt(3) : 10;
-	
-	if ( HasFilterCallback )
-	{
-		auto FilterCallbackFunc = Params.GetArgumentFunction(2);
-		mOnFrameFilter = Params.mContext.CreatePersistent( FilterCallbackFunc );
-	}
+	auto MaxBufferSize = !Params.IsArgumentUndefined(2) ? Params.GetArgumentInt(2) : 10;
 	
 	auto OnFrameExtracted = [=](const SoyTime Time,size_t StreamIndex)
 	{
@@ -187,78 +180,120 @@ void TMediaSourceWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 {
-	//	do filter here
-	if ( mOnFrameFilter )
-	{
-		throw Soy::AssertException("Todo: re-implement frame filter callback");
-		/*
-		//	When we're stuck with non-async stuff in js (posenet)
-		//	lets do an immediate "reject frame" option
-		//	and if the isolate is yeilded (sleep()) then this can execute now
-		bool AllowFrame = true;
-		auto FilterRunner = [this,&AllowFrame](Local<Context> context)
-		{
-			auto& Isolate = *context->GetIsolate();
-			
-			BufferArray<Local<Value>,2> Args;
-			
-			auto FuncHandle = mOnFrameFilter->GetLocal(Isolate);
-			auto ThisHandle = v8::Local<v8::Object>();
-			
-			auto AllowHandle = mContainer.ExecuteFunc( context, FuncHandle, ThisHandle, GetArrayBridge(Args) );
-			auto AllowBoolHandle = v8::SafeCast<v8::Boolean>(AllowHandle);
-			AllowFrame = AllowBoolHandle->BooleanValue();
-		};
-		mContainer.RunScoped( FilterRunner );
-		
-		if ( !AllowFrame )
-		{
-			//	discard the frame by popping it
-			auto PacketBuffer = this->mExtractor->GetStreamBuffer(StreamIndex);
-			auto FramePacket = PacketBuffer->PopPacket();
-			FramePacket.reset();
-			return;
-		}
-		 */
-	}
-	
-	//	notify that there's a new frame
+	//	trigger all our requests, no more callback
 	auto Runner = [this](Bind::TContext& Context)
 	{
-		try
+		//	avoid an extended lock by popping the array;
+		//	dont iterate and remove and lock as we could infinitely add more promises
+		Array<TFrameRequest> Promises;
 		{
-			auto This = GetHandle();
-			auto Func = This.GetFunction("OnNewFrame");
-			Bind::TCallback Callback(Context);
-			Callback.SetThis( This );
-			Func.Call( Callback );
+			std::lock_guard<std::mutex> Lock( mFrameRequestsLock );
+			Promises.Copy( mFrameRequests );
+			mFrameRequests.Clear();
 		}
-		catch(std::exception& e)
+		
+		//	gr: this has a problem as this (obviously) pops from the list
+		//		need to squish duplicate requests, or something more clever
+		//		when we have multiple requests
+		//		this current system pops a frame for each request (effectively skipping)
+		for ( auto i=0;	i<Promises.GetSize();	i++ )
 		{
-			std::Debug << "OnNewFrame Exception: " << e.what() << std::endl;
+			auto& Promise = Promises[i];
+			try
+			{
+				auto Frame = PopFrame( Context, Promise );
+				Promise.mPromise.Resolve( Frame );
+			}
+			catch(std::exception& e)
+			{
+				Promise.mPromise.Reject( e.what() );
+			}
 		}
 	};
 	mContext.Queue( Runner );
 }
 
+Bind::TPromise TMediaSourceWrapper::AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params)
+{
+	//	todo: save args as params for popping
+	TFrameRequest Request( Params );
+	Request.mPromise = Context.CreatePromise();
+	
+	std::lock_guard<std::mutex> Lock( mFrameRequestsLock );
+	mFrameRequests.PushBack(Request);
+	return Request.mPromise;
+}
 
-
+//	returns a promise that will be invoked when there's frames in the buffer
 void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TMediaSourceWrapper>();
-
-	//	gr: it is possible that we get this callback on another thread before the
-	//		allocator/constructor has finished allocating.
-	//	the AVC capture starts the session in it's constructor
-	//	mExtractor is atomic (shared ptr) so should be fine to just test
-	if ( !This.mExtractor )
-		throw Soy::AssertException("No frame packet buffered");
-		//throw Soy::AssertException("Extractor still allocating");
 	
+	TFrameRequestParams Request;
+	
+	if ( Params.IsArgumentArray(0) )
+		Request.mSeperatePlanes = true;
+	else if ( !Params.IsArgumentUndefined(0) )
+		Request.mSeperatePlanes = Params.GetArgumentBool(0);
+	
+	if ( !Params.IsArgumentUndefined(1) )
+		Request.mStreamIndex = Params.GetArgumentInt(1);
+	
+	if ( !Params.IsArgumentUndefined(2) )
+		Request.mLatestFrame = Params.GetArgumentBool(2);
+
+	auto Promise = This.AllocFrameRequestPromise( Params.mContext, Request );
+	Params.Return( Promise );
+	
+	//	if there are frames waiting, trigger
+	{
+		auto StreamIndex = Request.mStreamIndex;
+		auto PacketBuffer = This.mExtractor->GetStreamBuffer(StreamIndex);
+		if ( PacketBuffer )
+		{
+			if ( PacketBuffer->HasPackets() )
+			{
+				//std::Debug << "GetNextFrame() frame already queued" << std::endl;
+				This.OnNewFrame(StreamIndex);
+			}
+		}
+	}
+}
+
+void TMediaSourceWrapper::PopFrame(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TMediaSourceWrapper>();
+
+	TFrameRequestParams Request;
+	
+	if ( Params.IsArgumentArray(0) )
+		Request.mSeperatePlanes = true;
+	else if ( !Params.IsArgumentUndefined(0) )
+		Request.mSeperatePlanes = Params.GetArgumentBool(0);
+	
+	if ( !Params.IsArgumentUndefined(1) )
+		Request.mStreamIndex = Params.GetArgumentInt(1);
+	
+	if ( !Params.IsArgumentUndefined(2) )
+		Request.mLatestFrame = Params.GetArgumentBool(2);
+	
+	auto Frame = This.PopFrame( Params.mContext, Request );
+	Params.Return( Frame );
+}
+
+Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrameRequestParams& Params)
+{
 	//	grab frame
-	auto StreamIndex = 0;
-	auto PacketBuffer = This.mExtractor->GetStreamBuffer(StreamIndex);
-	auto FramePacket = PacketBuffer->PopPacket();
+	auto StreamIndex = Params.mStreamIndex;
+	auto PacketBuffer = mExtractor->GetStreamBuffer(StreamIndex);
+	if ( !PacketBuffer )
+	{
+		std::stringstream Error;
+		Error << "No packet buffer for stream " << StreamIndex;
+		throw Soy::AssertException(Error.str());
+	}
+	
+	auto FramePacket = PacketBuffer->PopPacket( Params.mLatestFrame );
 	if ( !FramePacket )
 		throw Soy::AssertException("No frame packet buffered");
 	auto PixelBuffer = FramePacket->mPixelBuffer;
@@ -281,7 +316,7 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 	};
 	
 	
-	if ( Params.IsArgumentArray(0) )
+	if ( Params.mSeperatePlanes )
 	{
 		BufferArray<SoyPixelsImpl*,5> Planes;
 		//	ref counted by js, but need to cleanup if we throw...
@@ -294,7 +329,7 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 			for ( auto p=0;	p<Planes.GetSize();	p++ )
 			{
 				auto* Plane = Planes[p];
-				auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 				auto& Image = ImageObject.This<TImageWrapper>();
 				Image.SetPixels( *Plane );
 				Images.PushBack( &Image );
@@ -308,7 +343,11 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 			throw;
 		}
 		
-		auto PlaneArray = Params.GetArgumentArray(0);
+		//	gr: old setup filled this array. need to really put that back?
+		//		should we just have a split planes() func for the image...
+		auto PlaneArray = Context.CreateArray(0);
+		
+		//auto PlaneArray = Params.GetArgumentArray(0);
 		for ( auto i=0;	i<Images.GetSize();	i++ )
 		{
 			auto& Image = *Images[i];
@@ -317,22 +356,21 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 		}
 		
 		//	create a dumb object with meta to return
-		auto FrameHandle = Params.mContext.CreateObjectInstance();
+		auto FrameHandle = Context.CreateObjectInstance();
 		FrameHandle.SetArray("Planes", PlaneArray );
 		SetTime( FrameHandle );
-		Params.Return( FrameHandle );
-		return;
+		return FrameHandle;
 	}
 
 	
-	auto ImageObject = Params.mContext.CreateObjectInstance( TImageWrapper::GetTypeName() );
+	auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 	auto& Image = ImageObject.This<TImageWrapper>();
 	Image.mName = "MediaSource Frame";
 	Image.SetPixelBuffer(PixelBuffer);
 
 	auto ImageHandle = Image.GetHandle();
 	SetTime( ImageObject );
-	Params.Return(ImageObject);
+	return ImageObject;
 }
 
 
