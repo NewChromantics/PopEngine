@@ -466,6 +466,19 @@ Bind::TArray JsCore::TContext::CreateArray(ArrayBridge<float>&& Values)
 	return Array;
 }
 
+Bind::TArray JsCore::TContext::CreateArray(size_t ElementCount)
+{
+	//	probably a faster approach...
+	Array<JSValueRef> Undefineds;
+	auto Undefined = JSValueMakeUndefined( mContext );
+	for ( auto i=0;	i<ElementCount;	i++ )
+	{
+		Undefineds.PushBack( Undefined );
+	}
+	auto ArrayObject = JsCore::GetArray( mContext, GetArrayBridge(Undefineds) );
+	JsCore::TArray Array( mContext, ArrayObject );
+	return Array;
+}
 
 
 

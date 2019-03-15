@@ -203,6 +203,7 @@ public:
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount);
 	template<typename TYPE>
 	Bind::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
 	Bind::TArray			CreateArray(ArrayBridge<uint8_t>&& Values);
@@ -440,6 +441,7 @@ public:
 class JsCore::TPromise
 {
 public:
+	TPromise()	{}
 	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject);
 	~TPromise();
 	
@@ -517,6 +519,7 @@ protected:
 	static void				Free(JSObjectRef Object)
 	{
 		//	free the void
+		std::Debug << "Free object of type " << TYPENAME << std::endl;
 	}
 	
 protected:
