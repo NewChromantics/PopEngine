@@ -359,6 +359,16 @@ JsCore::TContext::~TContext()
 	RemoveContextCache( *this );
 }
 
+
+void JsCore::TContext::GarbageCollect()
+{
+	//	seems like this would be a good idea...
+	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
+	
+	JSGarbageCollect( mContext );
+}
+
+
 void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename)
 {
 	auto ThisHandle = JSObjectRef(nullptr);

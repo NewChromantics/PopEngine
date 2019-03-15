@@ -186,7 +186,8 @@ public:
 	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
 	virtual void		Queue(std::function<void(TContext&)> Function) bind_override;
 	virtual void		QueueDelay(std::function<void(TContext&)> Function,size_t DelayMs) bind_override;
-
+	virtual void		GarbageCollect();
+	
 	template<const char* FunctionName>
 	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName=std::string());
 

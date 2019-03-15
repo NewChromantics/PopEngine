@@ -93,7 +93,7 @@ void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 
 void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
-	throw Soy::AssertException("v8 only");
+	Params.mContext.GarbageCollect();
 	/*
 	//	queue as job?
 	std::Debug << "Invoking garbage collection..." << std::endl;
