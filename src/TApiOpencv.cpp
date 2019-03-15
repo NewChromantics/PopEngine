@@ -235,7 +235,7 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	//auto Mode = cv::RETR_LIST;
 	//auto Method = cv::CHAIN_APPROX_NONE;
 	{
-		//Soy::TScopeTimerPrint Timer("cv::findContours",0);
+		Soy::TScopeTimerPrint Timer("cv::findContours",5);
 		cv::findContours( InputArray, Contours, Mode, Method );
 	}
 									
