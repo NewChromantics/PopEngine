@@ -292,6 +292,7 @@ public:
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
 	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return IsArray( mContext.mContext, GetArgumentValue(Index) );	}
 	virtual bool			IsArgumentFunction(size_t Index)bind_override	{	return IsFunction( mContext.mContext, GetArgumentValue(Index) );	}
+	virtual bool			IsArgumentObject(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeObject;	}
 
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;
