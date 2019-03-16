@@ -70,7 +70,7 @@ namespace JsCore
 	
 	//	is something we support as a TArray
 	bool		IsArray(JSContextRef Context,JSValueRef Handle);
-
+	bool		IsFunction(JSContextRef Context,JSValueRef Handle);
 
 	//	throw c++ exception if the exception object is an exception
 	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
@@ -291,6 +291,7 @@ public:
 	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeBoolean;	}
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
 	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return IsArray( mContext.mContext, GetArgumentValue(Index) );	}
+	virtual bool			IsArgumentFunction(size_t Index)bind_override	{	return IsFunction( mContext.mContext, GetArgumentValue(Index) );	}
 
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;

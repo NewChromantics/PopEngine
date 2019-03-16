@@ -887,7 +887,6 @@ bool JsCore::IsArray(JSContextRef Context,JSValueRef Handle)
 	{
 		return true;
 	}
-
 	
 	//	we're a regular array
 	if ( JSValueIsArray( Context, Handle ) )
@@ -896,6 +895,20 @@ bool JsCore::IsArray(JSContextRef Context,JSValueRef Handle)
 	}
 	
 	return false;
+}
+
+
+bool JsCore::IsFunction(JSContextRef Context,JSValueRef Handle)
+{
+	if ( !JSValueIsObject( Context, Handle ) )
+		return false;
+	
+	auto Object = GetObject( Context, Handle );
+	
+	if ( !JSObjectIsFunction( Context, Object ) )
+		return false;
+	
+	return true;
 }
 
 
