@@ -19,9 +19,9 @@ class TOpenglParams
 public:
 	bool		mHardwareAccellerationOnly = true;
 	bool		mDoubleBuffer = true;
-	bool		mRedrawWithDisplayLink = false;
-	int			mVsyncSwapInterval = 0;	//	0 = no vsync
-	int			mRefreshRate = 30;		//	will try to skip redraws if vsync on
+	bool		mRedrawWithDisplayLink = true;
+	int			mVsyncSwapInterval = 1;	//	0 = no vsync
+	int			mRefreshRate = 60;		//	will try to skip redraws if vsync on
 	bool		mAutoRedraw = true;
 };
 
