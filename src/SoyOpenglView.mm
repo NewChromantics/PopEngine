@@ -169,7 +169,7 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 
 -(void)mouseDown:(NSEvent *)event
 {
-	Soy::Platform::PushCursor(SoyCursor::Hand);
+	Platform::PushCursor(SoyCursor::Hand);
 	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Left, mLastPos, self );
 }
 
@@ -186,7 +186,7 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 
 -(void)rightMouseDown:(NSEvent *)event
 {
-	Soy::Platform::PushCursor(SoyCursor::Hand);
+	Platform::PushCursor(SoyCursor::Hand);
 	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Right, mLastPos, self );
 }
 
@@ -203,7 +203,7 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 
 -(void)otherMouseDown:(NSEvent *)event
 {
-	Soy::Platform::PushCursor(SoyCursor::Hand);
+	Platform::PushCursor(SoyCursor::Hand);
 	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Middle, mLastPos, self );
 }
 

@@ -7,6 +7,7 @@
 #include "SoyOpenglContext.h"
 #include "SoyMedia.h"
 #include "JsCoreInstance.h"
+#include "SoyWindow.h"
 
 
 //	system stuff
@@ -31,6 +32,7 @@ const char Sleep_FunctionName[] = "Sleep";
 //	platform stuff
 const char GetComputerName_FunctionName[] = "GetComputerName";
 const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
+const char EnumScreens_FunctionName[] = "EnumScreens";
 
 
 
@@ -74,6 +76,7 @@ namespace ApiPop
 	static void		GetImageHeapCount(Bind::TCallback& Params);
 	static void		GetHeapSize(Bind::TCallback& Params);
 	static void		GetHeapCount(Bind::TCallback& Params);
+	static void		EnumScreens(Bind::TCallback& Params);
 }
 
 
@@ -267,6 +270,25 @@ void ApiPop::GetHeapCount(Bind::TCallback& Params)
 }
 
 
+void ApiPop::EnumScreens(Bind::TCallback& Params)
+{
+	BufferArray<Bind::TObject,20> ScreenMetas;
+	auto EnumScreen = [&](const Platform::TScreenMeta& Meta)
+	{
+		auto Screen = Params.mContext.CreateObjectInstance();
+		Screen.SetString("Name", Meta.mName );
+		Screen.SetInt("Left", Meta.mRect.Left() );
+		Screen.SetInt("Top", Meta.mRect.Top() );
+		Screen.SetInt("Width", Meta.mRect.GetWidth() );
+		Screen.SetInt("Height", Meta.mRect.GetHeight() );
+		ScreenMetas.PushBack( Screen );
+	};
+	Platform::EnumScreens( EnumScreen );
+	
+	Params.Return( GetArrayBridge(ScreenMetas) );
+}
+
+
 
 
 
@@ -342,6 +364,8 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
 	Context.BindGlobalFunction<GetHeapSize_FunctionName>(GetHeapSize, Namespace );
 	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
+	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
+	
 }
 
 TImageWrapper::~TImageWrapper()
