@@ -9,24 +9,28 @@
 #include "JsCoreInstance.h"
 
 
-
-const char CreateTestPromise_FunctionName[] = "CreateTestPromise";
-const char Debug_FunctionName[] = "Debug";
-const char CompileAndRun_FunctionName[] = "CompileAndRun";
+//	system stuff
 const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
 const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
 const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
-const char GarbageCollect_FunctionName[] = "GarbageCollect";
 const char SetTimeout_FunctionName[] = "SetTimeout";
-const char Sleep_FunctionName[] = "Sleep";
-const char ThreadTest_FunctionName[] = "ThreadTest";
 const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
-const char GetComputerName_FunctionName[] = "GetComputerName";
-const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
+
+//	engine stuff
+const char CompileAndRun_FunctionName[] = "CompileAndRun";
+const char CreateTestPromise_FunctionName[] = "CreateTestPromise";
+const char Debug_FunctionName[] = "Debug";
+const char ThreadTest_FunctionName[] = "ThreadTest";
 const char GetImageHeapSize_FunctionName[] = "GetImageHeapSize";
 const char GetImageHeapCount_FunctionName[] = "GetImageHeapCount";
 const char GetHeapSize_FunctionName[] = "GetHeapSize";
 const char GetHeapCount_FunctionName[] = "GetHeapCount";
+const char GarbageCollect_FunctionName[] = "GarbageCollect";
+const char Sleep_FunctionName[] = "Sleep";
+
+//	platform stuff
+const char GetComputerName_FunctionName[] = "GetComputerName";
+const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
 
 
 
