@@ -287,6 +287,8 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 
 void TWindowWrapper::Render(Bind::TCallback& Params)
 {
+	Soy::TScopeTimerPrint Timer("Render()", 5);
+	
 	auto& This = Params.This<TWindowWrapper>();
 	auto OpenglContext = This.mWindow->GetContext();
 	if ( !OpenglContext )
