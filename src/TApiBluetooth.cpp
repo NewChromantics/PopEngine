@@ -2,6 +2,7 @@
 
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
+const char Startup_FunctionName[] = "Startup";
 const char BluetoothDevice_TypeName[] = "Device";
 
 
@@ -9,6 +10,7 @@ namespace ApiBluetooth
 {
 	const char Namespace[] = "Pop.Bluetooth";
 	
+	void	Startup(Bind::TCallback& Params);
 	void	EnumDevices(Bind::TCallback& Params);
 }
 
@@ -32,10 +34,51 @@ void ApiBluetooth::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiBluetooth::EnumDevices, Namespace );
+	Context.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
+	Context.BindGlobalFunction<Startup_FunctionName>( Startup, Namespace );
 }
 
 
+void ApiBluetooth::Startup(Bind::TCallback& Params)
+{
+	auto Promise = Params.mContext.CreatePromise();
+	
+	auto WaitForConnected = [=]()
+	{
+		//	todo: timeout
+		while ( true )
+		{
+			auto& Manager = GetBluetoothContext();
+			auto State = Manager.GetState();
+			
+			if ( State == Bluetooth::TState::Connected )
+			{
+				Promise.Resolve("Connected");
+				return;
+			}
+			
+			if ( State == Bluetooth::TState::Disconnected )
+			{
+				Promise.Reject("Disconnected");
+				return;
+			}
+			
+			if ( State == Bluetooth::TState::Invalid )
+			{
+				Promise.Reject("Bluetooth not supported");
+				return;
+			}
+
+			std::Debug << "Waiting on bluetooth state..." << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(500) );
+		}
+	};
+	
+	//	gr: this is super blocking, so need a thread!
+	WaitForConnected();
+	
+	Params.Return( Promise );
+}
 
 void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
@@ -45,7 +88,7 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 	{
 		auto& Manager = GetBluetoothContext();
 		Array<Bind::TObject> Devices;
-		auto OnDevice = [&](Bluetooth::TDeviceMeta& DeviceMeta)
+		auto OnDevice = [&](Bluetooth::TDeviceMeta DeviceMeta)
 		{
 			auto Device = Context.CreateObjectInstance();
 			Device.SetString("Name", DeviceMeta.mName);
@@ -56,6 +99,7 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 	};
 	
 	//	not on job/thread atm, but that's okay
+	//	gr: this is super blocking, so need a thread!
 	DoEnumDevices( Params.mContext );
 
 	Params.Return( Promise );
