@@ -1,10 +1,9 @@
 #include "TApiBluetooth.h"
-#import <CoreBluetooth/CoreBluetooth.h>
 
 
 const char EnumDevices_FunctionName[] = "EnumDevices";
-
 const char BluetoothDevice_TypeName[] = "Device";
+
 
 namespace ApiBluetooth
 {
@@ -18,16 +17,15 @@ namespace Bluetooth
 	class TContext;
 }
 
-
-class Bluetooth::TContext
+Bluetooth::TManager& GetBluetoothContext()
 {
-public:
-	TContext();
+	static std::shared_ptr<Bluetooth::TManager> gContext;
+	if ( gContext )
+		return *gContext;
 	
-	CBCentralManager*	mManager = nullptr;
-};
-
-Bluetooth::TContext BluetoothContext;
+	gContext.reset( new Bluetooth::TManager );
+	return *gContext;
+}
 
 
 void ApiBluetooth::Bind(Bind::TContext& Context)
@@ -43,23 +41,24 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise();
 
-	auto DoEnumDevices = [=]
+	auto DoEnumDevices = [=](Bind::TContext& Context)
 	{
-		Promise.Reject("todo");
+		auto& Manager = GetBluetoothContext();
+		Array<Bind::TObject> Devices;
+		auto OnDevice = [&](Bluetooth::TDeviceMeta& DeviceMeta)
+		{
+			auto Device = Context.CreateObjectInstance();
+			Device.SetString("Name", DeviceMeta.mName);
+			Devices.PushBack(Device);
+		};
+		Manager.EnumDevicesWithService("", OnDevice);
+		Promise.Resolve( GetArrayBridge(Devices) );
 	};
 	
 	//	not on job/thread atm, but that's okay
-	DoEnumDevices();
+	DoEnumDevices( Params.mContext );
 
 	Params.Return( Promise );
 }
 
-
-Bluetooth::TContext::TContext()
-{
-	mManager = [[CBCentralManager alloc] init];
-	mManager.retrievePeripheralsWithIdentifiers
-	- (NSArray<CBPeripheral *> *)retrievePeripheralsWithIdentifiers:(NSArray<NSUUID *> *)identifiers NS_AVAILABLE(10_9, 7_0);
-
-}
 

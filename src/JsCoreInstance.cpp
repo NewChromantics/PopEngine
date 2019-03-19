@@ -13,6 +13,7 @@
 #include "TApiEzsift.h"
 #include "TApiInput.h"
 #include "TApiOpencv.h"
+#include "TApiBluetooth.h"
 
 
 namespace JsCore
@@ -275,7 +276,8 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 			ApiEzsift::Bind( *mContext );
 			ApiInput::Bind( *mContext );
 			ApiOpencv::Bind( *mContext );
-			
+			ApiBluetooth::Bind( *mContext );
+
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
 			mContext->LoadScript( BootupSource, ScriptFilename );

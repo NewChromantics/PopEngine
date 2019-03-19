@@ -1,11 +1,6 @@
 #pragma once
 #include "TBind.h"
-
-
-namespace Bluetooth
-{
-	class TDevice;
-}
+#include "SoyBluetooth.h"
 
 namespace ApiBluetooth
 {
