@@ -149,7 +149,7 @@ public:
 	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename);
 	~TInstance();
 	
-	std::shared_ptr<TContext>	CreateContext();
+	std::shared_ptr<TContext>	CreateContext(const std::string& Name);
 	
 private:
 	//	when the group is created it does async jobs on that thread's run loop

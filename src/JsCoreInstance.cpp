@@ -246,7 +246,7 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
 	mRootDirectory		( RootDirectory )
 {
-	auto CreateVirtualMachine = [this,ScriptFilename]()
+	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
 		auto ThisRunloop = CFRunLoopGetCurrent();
 		auto MainRunloop = CFRunLoopGetMain();
@@ -262,7 +262,7 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 		try
 		{
 			//	create a context
-			mContext = CreateContext();
+			mContext = CreateContext(RootDirectory);
 			
 			ApiPop::Bind( *mContext );
 			ApiOpengl::Bind( *mContext );
@@ -298,11 +298,13 @@ JsCore::TInstance::~TInstance()
 	JSContextGroupRelease(mContextGroup);
 }
 
-std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext()
+std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Name)
 {
 	JSClassRef Global = nullptr;
 	
 	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
+	JSGlobalContextSetName( Context, JsCore::GetString(Context,Name) );
+	
 	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
 	//mContexts.PushBack( pContext );
 	return pContext;

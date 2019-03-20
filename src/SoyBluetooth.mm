@@ -9,7 +9,7 @@
 namespace Bluetooth
 {
 	TDeviceMeta		GetMeta(CBPeripheral* Device);
-	TState::TYPE	GetState(CBPeripheralState CbState);
+	TState::Type	GetState(CBPeripheralState CbState);
 }
 
 //	good example reference
@@ -26,47 +26,23 @@ namespace Bluetooth
 
 @end
 
-@implementation BluetoothManagerDelegate
-
-
-- (id)initWithParent:(Bluetooth::TContext*)parent
-{
-	self = [super init];
-	if (self)
-	{
-		mParent = parent;
-	}
-	return self;
-}
-
-- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI
-{
-	auto Meta = Bluetooth::GetMeta( peripheral );
-	std::Debug << "Found peripheral " << Meta.mName << " (" << Meta.mUuid << ")" << std::endl;
-}
-
-
-- (void)centralManagerDidUpdateState:(nonnull CBCentralManager *)central
-{
-	auto State = central.state;
-	std::Debug << "Bluetooth manager state updated to " << State << std::endl;
-}
-
-@end
 
 class Bluetooth::TContext
 {
 public:
-	TContext();
+	TContext(TManager& Manager);
 	~TContext();
 	
-	Bluetooth::TState::TYPE	GetState();
-
-	CBCentralManager*					mManager = nullptr;
-	ObjcPtr<BluetoothManagerDelegate>	mManagerDelegate;
+	Bluetooth::TState::Type	GetState();
 	
-	//	blocking until finished
+	//	start a scan which operates in the background
 	void	ScanForDevicesWithService(const std::string& ServiceUuid);
+	
+public:
+	TManager&							mManager;
+	CBCentralManager*					mPlatformManager = nullptr;
+	ObjcPtr<BluetoothManagerDelegate>	mPlatformDelegate;
+	
 };
 
 std::ostream& operator<<(std::ostream &out,const CBManagerState &in)
@@ -87,7 +63,7 @@ std::ostream& operator<<(std::ostream &out,const CBManagerState &in)
 }
 
 
-Bluetooth::TState::TYPE Bluetooth::GetState(CBPeripheralState CbState)
+Bluetooth::TState::Type Bluetooth::GetState(CBPeripheralState CbState)
 {
 	switch ( CbState )
 	{
@@ -135,22 +111,23 @@ NSArray<CBUUID*>* GetServices(const std::string& ServiceUuid)
 }
 
 
-Bluetooth::TContext::TContext()
+Bluetooth::TContext::TContext(TManager& Manager) :
+	mManager	( Manager )
 {
-	mManagerDelegate.Retain( [[BluetoothManagerDelegate alloc] initWithParent:this] );
-	mManager = [[CBCentralManager alloc] initWithDelegate:mManagerDelegate.mObject queue:nil];
+	mPlatformDelegate.Retain( [[BluetoothManagerDelegate alloc] initWithParent:this] );
+	mPlatformManager = [[CBCentralManager alloc] initWithDelegate:mPlatformDelegate.mObject queue:nil];
 }
 
 Bluetooth::TContext::~TContext()
 {
-	[mManager release];
-	mManager = nil;
-	mManagerDelegate.Release();
+	[mPlatformManager release];
+	mPlatformManager = nil;
+	mPlatformDelegate.Release();
 }
 
-Bluetooth::TState::TYPE Bluetooth::TContext::GetState()
+Bluetooth::TState::Type Bluetooth::TContext::GetState()
 {
-	auto State = mManager.state;
+	auto State = mPlatformManager.state;
 	
 	switch(State)
 	{
@@ -174,13 +151,20 @@ Bluetooth::TState::TYPE Bluetooth::TContext::GetState()
 
 void Bluetooth::TContext::ScanForDevicesWithService(const std::string& ServiceUuid)
 {
-	auto* Manager = mManager;
+	std::Debug << "Bluetooth scan (" << ServiceUuid << ") started" << std::endl;
+	
+	//	kick off a scan
+	auto* Manager = mPlatformManager;
 	@try
 	{
-		NSArray<CBPeripheral*>* Peripherals = nil;
-
 		auto ManagerState = Manager.state;
-
+		if ( ManagerState != CBManagerStatePoweredOn )
+		{
+			std::stringstream Error;
+			Error << "Cannot start scan as manager is in state " << ManagerState << std::endl;
+			throw Soy::AssertException(Error.str());
+		}
+		
 		auto* Services = GetServices(ServiceUuid);
 		//	gr: this scans for new devices. nil uid will retrieve all devices
 		//		if already scanning the current scan will be replaced with this
@@ -188,22 +172,6 @@ void Bluetooth::TContext::ScanForDevicesWithService(const std::string& ServiceUu
 		//		with callbacks when it's finished etc
 		[Manager stopScan];
 		[Manager scanForPeripheralsWithServices:Services options:nil];
-		//	gr: maybe add our own timeout?
-		while ( true )
-		{
-			if ( ![Manager isScanning] )
-			{
-				std::Debug << "Bluetooth no longer scanning" << std::endl;
-				break;
-			}
-			auto State = Manager.state;
-			if ( State != CBManagerStatePoweredOn )
-			{
-				std::Debug << "State not powered on, aborting scan" << std::endl;
-				break;
-			}
-			std::this_thread::sleep_for( std::chrono::milliseconds(200) );
-		}
 	}
 	@catch (NSException* e)
 	{
@@ -212,18 +180,46 @@ void Bluetooth::TContext::ScanForDevicesWithService(const std::string& ServiceUu
 	}
 }
 
+void Bluetooth::TManager::OnFoundDevice(TDeviceMeta DeviceMeta)
+{
+	auto* ExistingDevice = mKnownDevices.Find( DeviceMeta );
+	if ( ExistingDevice )
+	{
+		//	todo: update missing state/meta of existing device
+		return;
+	}
+	std::Debug << "Found new device: "  << DeviceMeta.mName << " (" << DeviceMeta.mUuid << ")" << std::endl;
+	mKnownDevices.PushBack( DeviceMeta );
+	
+	if ( mOnDevicesChanged )
+		mOnDevicesChanged();
+}
+
+void Bluetooth::TManager::OnStateChanged()
+{
+	auto State = mContext->GetState();
+	
+	//	kick off a scan
+	if ( State == TState::Connected )
+		mContext->ScanForDevicesWithService( std::string() );
+	
+	if ( mOnStateChanged )
+	{
+		mOnStateChanged( State );
+	}
+}
 
 Bluetooth::TManager::TManager()
 {
-	mContext.reset( new TContext() );
+	mContext.reset( new TContext(*this) );
 }
 
-Bluetooth::TState::TYPE Bluetooth::TManager::GetState()
+Bluetooth::TState::Type Bluetooth::TManager::GetState()
 {
 	return mContext->GetState();
 }
 
-
+/*
 void Bluetooth::TManager::EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnFoundDevice)
 {
 	auto* Manager = mContext->mManager;
@@ -253,20 +249,47 @@ void Bluetooth::TManager::EnumConnectedDevicesWithService(const std::string& Ser
 
 void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnFoundDevice)
 {
-	auto* Manager = mContext->mManager;
-	
+	//	kick off a scan (don't stop old ones?)
 	mContext->ScanForDevicesWithService( ServiceUuid );
 
-	//	scan run, now output
-	/*
-	
-	auto EnumDevice = [&](CBPeripheral* Device)
+	//	output everything we know of
+	auto KnownDevices = mContext->mKnownDevices;
+	for ( auto i=0;	i<KnownDevices.GetSize();	i++ )
 	{
-		auto Meta = GetMeta( Device );
-		OnFoundDevice(Meta);
-	};
-	Platform::NSArray_ForEach<CBPeripheral*>( Peripherals, EnumDevice );
-	*/
+		auto& KnownDevice = KnownDevices[i];
+		OnFoundDevice( KnownDevice );
+	}
+
+}
+ */
+
+
+@implementation BluetoothManagerDelegate
+
+
+- (id)initWithParent:(Bluetooth::TContext*)parent
+{
+	self = [super init];
+	if (self)
+	{
+		mParent = parent;
+	}
+	return self;
+}
+
+- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI
+{
+	auto Meta = Bluetooth::GetMeta( peripheral );
+	mParent->mManager.OnFoundDevice( Meta );
+	//std::Debug << "Found peripheral " << Meta.mName << " (" << Meta.mUuid << ")" << std::endl;
 }
 
 
+- (void)centralManagerDidUpdateState:(nonnull CBCentralManager *)central
+{
+	auto State = central.state;
+	std::Debug << "Bluetooth manager state updated to " << State << std::endl;
+	mParent->mManager.OnStateChanged();
+}
+
+@end

@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 #include <functional>
+#include "SoyLib/src/HeapArray.hpp"
+
+
 
 namespace Bluetooth
 {
@@ -11,7 +14,7 @@ namespace Bluetooth
 	
 	namespace TState
 	{
-		enum TYPE
+		enum Type
 		{
 			Invalid,		//	for unsupported things
 			Connecting,
@@ -26,9 +29,12 @@ namespace Bluetooth
 class Bluetooth::TDeviceMeta
 {
 public:
+	inline bool		operator==(const TDeviceMeta& That) const	{	return this->mUuid == That.mUuid;	}
+
+public:
 	std::string		mUuid;
 	std::string		mName;
-	TState::TYPE	mState = TState::Disconnected;
+	TState::Type	mState = TState::Disconnected;
 };
 
 
@@ -37,13 +43,19 @@ class Bluetooth::TManager
 public:
 	TManager();
 
-	//	gr: may need a seperate IsSupported(), or use Invalid
-	Bluetooth::TState::TYPE GetState();
-	
-	//	gr: assume these are both blocking. Maybe have as jobs on a thread... or something cancellable
-	void	EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
-	void	EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
+	//	gr: may need a seperate IsSupported(), currently using Invalid
+	Bluetooth::TState::Type GetState();
+	void					OnFoundDevice(TDeviceMeta DeviceMeta);
+	void					OnStateChanged();
 
+	//void	EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
+	//void	EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
+
+public:
+	std::function<void(Bluetooth::TState::Type)>	mOnStateChanged;
+	std::function<void()>		mOnDevicesChanged;
+	Array<TDeviceMeta>			mKnownDevices;
+	
 private:
 	std::shared_ptr<TContext>	mContext;
 };
