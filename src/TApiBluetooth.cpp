@@ -1,16 +1,21 @@
 #include "TApiBluetooth.h"
 
+const char BluetoothDevice_TypeName[] = "Device";
 
-const char EnumDevices_FunctionName[] = "EnumDevices";
-const char OnDevicesChanged_FunctionName[] = "OnDevicesChanged";
-const char Startup_FunctionName[] = "Startup";
-//const char BluetoothDevice_TypeName[] = "Device";
+const char Connect_FunctionName[] = "Connect";
+const char ReadCharacteristic_FunctionName[] = "ReadCharacteristic";
 
 
 namespace ApiBluetooth
 {
 	const char Namespace[] = "Pop.Bluetooth";
-	
+
+	const char EnumDevices_FunctionName[] = "EnumDevices";
+	const char OnDevicesChanged_FunctionName[] = "OnDevicesChanged";
+	const char Startup_FunctionName[] = "Startup";
+
+
+
 	void	Startup(Bind::TCallback& Params);
 	void	EnumDevices(Bind::TCallback& Params);
 	void	OnDevicesChanged(Bind::TCallback& Params);
@@ -34,10 +39,11 @@ public:
 	void					OnDevicesChanged();
 	void					AddStartupPromise(Bind::TPromise& Promise);
 	void					AddOnDevicesChangedPromise(Bind::TPromise& Promise);
+	std::shared_ptr<Bluetooth::TDevice>	AllocDevice(const std::string& Uuid);
 	
 	std::shared_ptr<Bluetooth::TManager> mManager;
-	Array<Bind::TPromise>		mPendingStartupPromises;
-	Array<Bind::TPromise>		mPendingOnDevicesChangedPromises;
+	Bind::TPromiseQueue		mStartupPromises;
+	Bind::TPromiseQueue		mOnDevicesChangedPromises;
 };
 
 
@@ -65,15 +71,18 @@ void ApiBluetooth::Bind(Bind::TContext& Context)
 
 void ApiBluetooth::Startup(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise();
-	
 	std::string ServiceFilter;
 	if ( !Params.IsArgumentUndefined(0) )
 		ServiceFilter = Params.GetArgumentString(0);
 	
 	auto& Instance = GetBluetoothInstance();
 	Instance.mManager->Scan(ServiceFilter);
-	Instance.AddStartupPromise(Promise);
+	
+	auto Promise = Instance.mStartupPromises.AddPromise( Params.mContext );
+	
+	//	check for immediate resolve
+	auto State = Instance.mManager->GetState();
+	Instance.OnStateChanged( State );
 	
 	Params.Return( Promise );
 }
@@ -114,11 +123,10 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 
 void ApiBluetooth::OnDevicesChanged(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise();
-	
 	auto& Instance = GetBluetoothInstance();
-	Instance.AddOnDevicesChangedPromise(Promise);
-	
+
+	auto Promise = Instance.mOnDevicesChangedPromises.AddPromise( Params.mContext );
+
 	Params.Return( Promise );
 }
 
@@ -140,20 +148,6 @@ ApiBluetooth::TManagerInstance::TManagerInstance()
 }
 
 
-void ApiBluetooth::TManagerInstance::AddStartupPromise(Bind::TPromise &Promise)
-{
-	mPendingStartupPromises.PushBack( Promise );
-	
-	//	check for immediate resolve
-	auto State = this->mManager->GetState();
-	OnStateChanged( State );
-}
-
-void ApiBluetooth::TManagerInstance::AddOnDevicesChangedPromise(Bind::TPromise &Promise)
-{
-	mPendingOnDevicesChangedPromises.PushBack( Promise );
-}
-
 void ApiBluetooth::TManagerInstance::OnStateChanged(Bluetooth::TState::Type NewState)
 {
 	//	only interested in a hard state
@@ -169,42 +163,150 @@ void ApiBluetooth::TManagerInstance::OnStateChanged(Bluetooth::TState::Type NewS
 			return;
 	}
 	
-	
 	//	pop all promises in case they change during callback
-	auto Promises = mPendingStartupPromises;
-	mPendingStartupPromises.Clear();
-	
-	for ( auto p=0;	p<Promises.GetSize();	p++ )
+	if ( NewState == Bluetooth::TState::Connected )
 	{
-		auto& Promise = Promises[p];
-		
-		if ( NewState == Bluetooth::TState::Connected )
-		{
-			Promise.Resolve("Connected");
-		}
-		else if ( NewState == Bluetooth::TState::Disconnected )
-		{
-			Promise.Reject("Disconnected");
-		}
-		else
-		{
-			Promise.Reject("Not Supported");
-		}
+		mStartupPromises.Resolve("Connected");
 	}
+	else if ( NewState == Bluetooth::TState::Disconnected )
+	{
+		mStartupPromises.Reject("Disconnected");
+	}
+	else
+	{
+		mStartupPromises.Reject("Not Supported");
+	}
+
 }
 
 
 void ApiBluetooth::TManagerInstance::OnDevicesChanged()
 {
-	//	pop all promises in case they change during callback
-	auto Promises = mPendingOnDevicesChangedPromises;
-	mPendingOnDevicesChangedPromises.Clear();
+	mOnDevicesChangedPromises.Resolve("Devices changed");
+}
+
+std::shared_ptr<Bluetooth::TDevice> ApiBluetooth::TManagerInstance::AllocDevice(const std::string& Uuid)
+{
+	//	may need to link to the manager in some way...
+	std::shared_ptr<Bluetooth::TDevice> Device( new Bluetooth::TDevice(Uuid) );
+	return Device;
+}
+
+
+void TBluetoothDeviceWrapper::Construct(Bind::TCallback& Params)
+{
+	auto DeviceUuid = Params.GetArgumentString(0);
+	auto& Instance = ApiBluetooth::GetBluetoothInstance();
 	
-	for ( auto p=0;	p<Promises.GetSize();	p++ )
+	mDevice = Instance.AllocDevice( DeviceUuid );
+}
+
+
+void TBluetoothDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<Connect_FunctionName>( Connect );
+	Template.BindFunction<ReadCharacteristic_FunctionName>( ReadCharacteristic );
+}
+
+
+
+void TBluetoothDeviceWrapper::Connect(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TBluetoothDeviceWrapper>();
+	
+	auto Promise = This.mConnectPromises.AddPromise( Params.mContext );
+	
+	//	resolve early
+	This.OnStateChanged();
+	
+	Params.Return( Promise );
+}
+
+void TBluetoothDeviceWrapper::OnStateChanged()
+{
+	auto State = mDevice->GetState();
+	
+	//	only interested in a hard state
+	switch ( State )
 	{
-		auto& Promise = Promises[p];
-		Promise.Resolve("Changed");
+		case Bluetooth::TState::Connected:
+		case Bluetooth::TState::Disconnected:
+		case Bluetooth::TState::Invalid:
+			break;
+		
+		//	in-progress in someway
+		default:
+			return;
+	}
+	
+	//	pop all promises in case they change during callback
+	if ( State == Bluetooth::TState::Connected )
+	{
+		mConnectPromises.Resolve("Connected");
+	}
+	else if ( State == Bluetooth::TState::Disconnected )
+	{
+		mConnectPromises.Reject("Disconnected");
+	}
+	else
+	{
+		mConnectPromises.Reject("Not Supported");
 	}
 }
 
+
+void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TBluetoothDeviceWrapper>();
+	
+	if ( This.mReadCharacteristicUuid.length() != 0 )
+	{
+		std::stringstream Error;
+		Error << "Currently only supporting one characteristic at a time. Currently: " << This.mReadCharacteristicUuid;
+		throw Soy::AssertException( Error.str() );
+	}
+	
+	auto Characteristic = Params.GetArgumentString(0);
+	This.mReadCharacteristicUuid = Characteristic;
+	
+	auto Promise = This.mConnectPromises.AddPromise( Params.mContext );
+
+	//	flush any data that might already be pending
+	BufferArray<uint8_t,1> NewData;
+	This.OnRecvData( Characteristic, GetArrayBridge(NewData) );
+	
+	Params.Return( Promise );
+}
+
+
+void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,ArrayBridge<uint8_t>&& NewData)
+{
+	{
+		std::lock_guard<std::mutex> Lock( mReadCharacteristicBufferLock );
+		mReadCharacteristicBuffer.PushBackArray( NewData );
+	}
+	
+	//	flush data
+	if ( !mReadCharacteristicPromises.HasPromises() )
+		return;
+	
+	auto Flush = [this](Bind::TContext& Context)
+	{
+		//	turn data to an array
+		Array<uint8_t> PoppedData;
+		{
+			std::lock_guard<std::mutex> Lock( mReadCharacteristicBufferLock );
+			PoppedData = mReadCharacteristicBuffer;
+			mReadCharacteristicBuffer.Clear();
+		}
+		auto Data = Context.CreateArray( GetArrayBridge(PoppedData) );
+		auto HandlePromise = [&](Bind::TPromise& Promise)
+		{
+			Promise.Resolve( Data );
+		};
+		mReadCharacteristicPromises.Flush( HandlePromise );
+	};
+	auto& Context = mReadCharacteristicPromises.GetContext();
+	Context.Queue( Flush );
+}
 

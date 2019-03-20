@@ -202,6 +202,17 @@ void Bluetooth::TManager::OnFoundDevice(TDeviceMeta DeviceMeta)
 		mOnDevicesChanged();
 }
 
+void Bluetooth::TManager::Scan(const std::string& SpecificService)
+{
+	mScanService = SpecificService;
+	auto State = this->GetState();
+	if ( State == TState::Connected )
+	{
+		mContext->ScanForDevicesWithService( mScanService );
+	}
+}
+
+
 void Bluetooth::TManager::OnStateChanged()
 {
 	auto State = mContext->GetState();
@@ -269,6 +280,17 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 
 }
  */
+
+
+Bluetooth::TDevice::TDevice(const std::string& Uuid)
+{
+	mMeta.mUuid = Uuid;
+}
+
+Bluetooth::TState::Type Bluetooth::TDevice::GetState()
+{
+	throw Soy::AssertException("todo: GetState");
+}
 
 
 @implementation BluetoothManagerDelegate

@@ -10,7 +10,8 @@ namespace Bluetooth
 	class TDeviceMeta;
 	class TDevice;
 	class TManager;
-	class TContext;	//	platform specific
+	class TContext;			//	platform specific
+	class TPlatformDevice;	//	platform specific
 	
 	namespace TState
 	{
@@ -39,6 +40,18 @@ public:
 };
 
 
+class Bluetooth::TDevice
+{
+public:
+	TDevice(const std::string& Uuid);
+	
+	TState::Type				GetState();
+	
+	TDeviceMeta							mMeta;
+	std::function<void(TState::Type)>	mOnStateChanged;
+	TPlatformDevice*					mPlatformDevice = nullptr;
+};
+
 class Bluetooth::TManager
 {
 public:
@@ -57,6 +70,7 @@ public:
 	std::function<void(Bluetooth::TState::Type)>	mOnStateChanged;
 	std::function<void()>		mOnDevicesChanged;
 	Array<TDeviceMeta>			mKnownDevices;
+	std::string					mScanService;
 	
 private:
 	std::shared_ptr<TContext>	mContext;
