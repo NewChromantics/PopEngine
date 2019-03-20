@@ -31,6 +31,7 @@ class Bluetooth::TDeviceMeta
 {
 public:
 	inline bool		operator==(const TDeviceMeta& That) const	{	return this->mUuid == That.mUuid;	}
+	inline bool		operator==(const std::string& That) const	{	return this->mUuid == That;	}
 
 public:
 	std::string		mUuid;
@@ -43,13 +44,14 @@ public:
 class Bluetooth::TDevice
 {
 public:
-	TDevice(const std::string& Uuid);
+	inline bool		operator==(const TDeviceMeta& That) const	{	return mMeta.mUuid == That.mUuid;	}
+	inline bool		operator==(const std::string& That) const	{	return mMeta.mUuid == That;	}
+
 	
-	TState::Type				GetState();
-	
-	TDeviceMeta							mMeta;
-	std::function<void(TState::Type)>	mOnStateChanged;
-	TPlatformDevice*					mPlatformDevice = nullptr;
+public:
+	TDeviceMeta			mMeta;
+	TState::Type&		mState = mMeta.mState;
+	TPlatformDevice*	mPlatformDevice = nullptr;
 };
 
 class Bluetooth::TManager
@@ -66,11 +68,20 @@ public:
 	//void	EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
 	//void	EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
 
+	void					ConnectDevice(const std::string& Uuid);
+	void					DisconnectDevice(const std::string& Uuid);
+	TDevice&				GetDevice(const std::string& Uuid);
+
+private:
+	void					OnDeviceChanged(TDevice& Device);
+
 public:
 	std::function<void(Bluetooth::TState::Type)>	mOnStateChanged;
-	std::function<void()>		mOnDevicesChanged;
-	Array<TDeviceMeta>			mKnownDevices;
-	std::string					mScanService;
+	std::function<void()>			mOnDevicesChanged;
+	std::function<void(TDevice&)>	mOnDeviceChanged;
+	Array<std::shared_ptr<TDevice>>	mDevices;
+	
+	std::string						mScanService;
 	
 private:
 	std::shared_ptr<TContext>	mContext;

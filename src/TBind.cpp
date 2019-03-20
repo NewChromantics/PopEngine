@@ -15,7 +15,7 @@ Bind::TContext& Bind::TPromiseQueue::GetContext()
 
 Bind::TPromise Bind::TPromiseQueue::AddPromise(Bind::TContext& Context)
 {
-	if ( mContext != &Context )
+	if ( mContext != &Context && mContext != nullptr )
 	{
 		throw Soy::AssertException("Promise queue context has changed");
 	}

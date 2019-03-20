@@ -39,7 +39,9 @@ public:
 	void					OnDevicesChanged();
 	void					AddStartupPromise(Bind::TPromise& Promise);
 	void					AddOnDevicesChangedPromise(Bind::TPromise& Promise);
-	std::shared_ptr<Bluetooth::TDevice>	AllocDevice(const std::string& Uuid);
+	std::shared_ptr<Bluetooth::TDeviceHandle>	AllocDevice(const std::string& Uuid);
+
+	Array<std::shared_ptr<Bluetooth::TDeviceHandle>>	mHandles;	
 	
 	std::shared_ptr<Bluetooth::TManager> mManager;
 	Bind::TPromiseQueue		mStartupPromises;
@@ -104,10 +106,10 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 			Devices.PushBack(Device);
 		};
 		auto& Instance = GetBluetoothInstance();
-		for ( auto i=0;	i<Instance.mManager->mKnownDevices.GetSize();	i++ )
+		for ( auto i=0;	i<Instance.mManager->mDevices.GetSize();	i++ )
 		{
-			auto& Device = Instance.mManager->mKnownDevices[i];
-			OnDevice( Device );
+			auto& Device = Instance.mManager->mDevices[i];
+			OnDevice( Device->mMeta );
 		}
 
 		Promise.Resolve( GetArrayBridge(Devices) );
@@ -185,11 +187,19 @@ void ApiBluetooth::TManagerInstance::OnDevicesChanged()
 	mOnDevicesChangedPromises.Resolve("Devices changed");
 }
 
-std::shared_ptr<Bluetooth::TDevice> ApiBluetooth::TManagerInstance::AllocDevice(const std::string& Uuid)
+std::shared_ptr<Bluetooth::TDeviceHandle> ApiBluetooth::TManagerInstance::AllocDevice(const std::string& Uuid)
 {
-	//	may need to link to the manager in some way...
-	std::shared_ptr<Bluetooth::TDevice> Device( new Bluetooth::TDevice(Uuid) );
-	return Device;
+	std::shared_ptr<Bluetooth::TDeviceHandle> Handle( new Bluetooth::TDeviceHandle );
+	
+	Handle->mUuid = Uuid;
+	Handle->mGetState = [this,Uuid]()
+	{
+		auto& Device = mManager->GetDevice( Uuid );
+		return Device.mState;
+	};
+	
+	mHandles.PushBack( Handle );
+	return Handle;
 }
 
 

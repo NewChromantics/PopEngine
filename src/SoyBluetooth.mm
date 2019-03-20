@@ -36,7 +36,8 @@ public:
 	Bluetooth::TState::Type	GetState();
 	
 	//	start a scan which operates in the background
-	void	ScanForDevicesWithService(const std::string& ServiceUuid);
+	void				ScanForDevicesWithService(const std::string& ServiceUuid);
+	CBPeripheral*		GetPeripheral(const std::string& DeviceUid);
 	
 public:
 	TManager&							mManager;
@@ -118,6 +119,15 @@ NSArray<CBUUID*>* GetServices(const std::string& ServiceUuid)
 }
 
 
+
+CBPeripheral* GetPeripheral(Bluetooth::TDevice& Device)
+{
+	auto* Peripheral = static_cast<CBPeripheral*>( Device.mPlatformDevice );
+	return Peripheral;
+}
+
+
+
 Bluetooth::TContext::TContext(TManager& Manager) :
 	mManager	( Manager )
 {
@@ -187,19 +197,30 @@ void Bluetooth::TContext::ScanForDevicesWithService(const std::string& ServiceUu
 	}
 }
 
+
+
+Bluetooth::TManager::TManager()
+{
+	mContext.reset( new TContext(*this) );
+}
+
+
 void Bluetooth::TManager::OnFoundDevice(TDeviceMeta DeviceMeta)
 {
-	auto* ExistingDevice = mKnownDevices.Find( DeviceMeta );
-	if ( ExistingDevice )
-	{
-		//	todo: update missing state/meta of existing device
-		return;
-	}
+	auto& Device = GetDevice( DeviceMeta.mUuid );
+
+	//	update state
+	
+	OnDeviceChanged( Device );
+	/*
+	std::shared_ptr<TDevice> NewDevice( new TDevice(DeviceMeta.mUuid) );
+	NewDevice->mMeta = DeviceMeta;
 	std::Debug << "Found new device: "  << DeviceMeta.mName << " (" << DeviceMeta.mUuid << ")" << std::endl;
-	mKnownDevices.PushBack( DeviceMeta );
+	mDevices.PushBack( NewDevice );
 	
 	if ( mOnDevicesChanged )
 		mOnDevicesChanged();
+	 */
 }
 
 void Bluetooth::TManager::Scan(const std::string& SpecificService)
@@ -227,15 +248,75 @@ void Bluetooth::TManager::OnStateChanged()
 	}
 }
 
-Bluetooth::TManager::TManager()
+void Bluetooth::TManager::OnDeviceChanged(Bluetooth::TDevice& Device)
 {
-	mContext.reset( new TContext(*this) );
+	if ( mOnDevicesChanged )
+		mOnDevicesChanged();
+	
+	if ( mOnDeviceChanged )
+		mOnDeviceChanged( Device );
 }
 
 Bluetooth::TState::Type Bluetooth::TManager::GetState()
 {
 	return mContext->GetState();
 }
+
+Bluetooth::TDevice& Bluetooth::TManager::GetDevice(const std::string& Uuid)
+{
+	std::shared_ptr<TDevice> pDevice;
+	for ( auto i=0;	i<mDevices.GetSize();	i++ )
+	{
+		auto& Device = *mDevices[i];
+		if ( Device.mMeta == Uuid )
+			pDevice = mDevices[i];
+	}
+	
+	if ( !pDevice )
+	{
+		pDevice.reset( new Bluetooth::TDevice() );
+		pDevice->mMeta.mUuid = Uuid;
+		mDevices.PushBack( pDevice );
+	}
+	
+	return *pDevice;
+}
+
+void Bluetooth::TManager::ConnectDevice(const std::string& Uuid)
+{
+	auto& Device = GetDevice(Uuid);
+	
+	auto* Peripheral = GetPeripheral( Device );
+	if ( Peripheral )
+	{
+		Device.mState = TState::Connecting;
+		OnDeviceChanged( Device );
+		[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
+	}
+	else
+	{
+		throw Soy::AssertException("Couldn't find peripheral");
+	}
+}
+
+
+void Bluetooth::TManager::DisconnectDevice(const std::string& Uuid)
+{
+	auto& Device = GetDevice(Uuid);
+	auto* Peripheral = GetPeripheral(Device);
+	if ( Peripheral )
+	{
+		Device.mState = TState::Disconnecting;
+		OnDeviceChanged(Device);
+		[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
+	}
+	else
+	{
+		Device.mState = TState::Disconnected;
+		OnDeviceChanged(Device);
+	}
+}
+
 
 /*
 void Bluetooth::TManager::EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnFoundDevice)
@@ -282,15 +363,6 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
  */
 
 
-Bluetooth::TDevice::TDevice(const std::string& Uuid)
-{
-	mMeta.mUuid = Uuid;
-}
-
-Bluetooth::TState::Type Bluetooth::TDevice::GetState()
-{
-	throw Soy::AssertException("todo: GetState");
-}
 
 
 @implementation BluetoothManagerDelegate

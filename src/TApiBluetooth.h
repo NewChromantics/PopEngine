@@ -5,12 +5,29 @@
 namespace ApiBluetooth
 {
 	void	Bind(Bind::TContext& Context);
+
 }
 
 
+namespace Bluetooth
+{
+	class TDeviceHandle;
+}
+
+
+class Bluetooth::TDeviceHandle
+{
+public:
+	TState::Type			GetState()	{	return mGetState();	}
+	
+public:
+	std::string				mUuid;
+	std::function<void()>	mOnStateChanged;
+	std::function<TState::Type()>	mGetState;
+};
 
 extern const char BluetoothDevice_TypeName[];
-class TBluetoothDeviceWrapper : public Bind::TObjectWrapper<BluetoothDevice_TypeName,Bluetooth::TDevice>
+class TBluetoothDeviceWrapper : public Bind::TObjectWrapper<BluetoothDevice_TypeName,Bluetooth::TDeviceHandle>
 {
 public:
 	TBluetoothDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -28,7 +45,7 @@ public:
 	void						OnRecvData(const std::string& Characteristic,ArrayBridge<uint8_t>&& NewData);
 	
 public:
-	std::shared_ptr<Bluetooth::TDevice>&	mDevice = mObject;
+	std::shared_ptr<Bluetooth::TDeviceHandle>&	mDevice = mObject;
 	Bind::TPromiseQueue			mConnectPromises;
 	
 	//	currently supporting one
