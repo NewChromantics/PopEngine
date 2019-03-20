@@ -601,24 +601,6 @@ void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 	ThrowException( mContext, Exception );
 }
 
-void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<bool>&& Values)
-{
-	auto Array = JsCore::GetArray( mContext, Values );
-	SetMember( Name, Array );
-}
-
-void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<float>&& Values)
-{
-	auto Array = JsCore::GetArray( mContext, Values );
-	SetMember( Name, Array );
-}
-
-void JsCore::TObject::SetArray(const std::string& Name,ArrayBridge<Bind::TObject>&& Values)
-{
-	auto Array = JsCore::GetArray( mContext, Values );
-	SetMember( Name, Array );
-}
-
 void JsCore::TObject::SetArray(const std::string& Name,Bind::TArray& Array)
 {
 	SetMember( Name, Array.mThis );

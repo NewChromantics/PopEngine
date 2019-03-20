@@ -386,11 +386,14 @@ public:
 	virtual void			SetFunction(const std::string& Name,Bind::TFunction& Function) bind_override;
 	virtual void			SetFloat(const std::string& Name,float Value) bind_override;
 	virtual void			SetString(const std::string& Name,const std::string& Value) bind_override;
-	virtual void			SetArray(const std::string& Name,Bind::TArray& Array) bind_override;
-	virtual void			SetArray(const std::string& Name,ArrayBridge<Bind::TObject>&& Values) bind_override;
-	virtual void			SetArray(const std::string& Name,ArrayBridge<bool>&& Values) bind_override;
-	virtual void			SetArray(const std::string& Name,ArrayBridge<float>&& Values) bind_override;
 	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
+	virtual void			SetArray(const std::string& Name,Bind::TArray& Array) bind_override;
+	template<typename TYPE>
+	inline void				SetArray(const std::string& Name,ArrayBridge<TYPE>&& Values) bind_override
+	{
+		auto Array = JsCore::GetArray( mContext, Values );
+		SetMember( Name, Array );
+	}
 
 	//	Jscore specific
 private:

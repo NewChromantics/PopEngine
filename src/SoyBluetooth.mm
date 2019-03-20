@@ -79,11 +79,11 @@ Bluetooth::TState::Type Bluetooth::GetState(CBPeripheralState CbState)
 Bluetooth::TDeviceMeta Bluetooth::GetMeta(CBPeripheral* Device)
 {
 	Bluetooth::TDeviceMeta Meta;
-	
-	//	get uuid first
+	Meta.mState = GetState( Device.state );
+
+	//	get uuid first and use it for the name if there's no name
 	auto* UuidString = [Device.identifier UUIDString];
 	Meta.mUuid = Soy::NSStringToString( UuidString );
-	
 	if ( !Device.name )
 	{
 		Meta.mName = Meta.mUuid;
@@ -92,8 +92,15 @@ Bluetooth::TDeviceMeta Bluetooth::GetMeta(CBPeripheral* Device)
 	{
 		Meta.mName = Soy::NSStringToString( Device.name );
 	}
+	
+	auto EnumService = [&](CBService* Service)
+	{
+		auto Uuid = [Service.UUID UUIDString];
+		auto UuidString = Soy::NSStringToString( Uuid );
+		Meta.mServices.PushBack( UuidString );
+	};
+	Platform::NSArray_ForEach<CBService*>( Device.services, EnumService );
 
-	Meta.mState = GetState( Device.state );
 	return Meta;
 }
 
@@ -201,7 +208,7 @@ void Bluetooth::TManager::OnStateChanged()
 	
 	//	kick off a scan
 	if ( State == TState::Connected )
-		mContext->ScanForDevicesWithService( std::string() );
+		mContext->ScanForDevicesWithService( mScanService );
 	
 	if ( mOnStateChanged )
 	{
@@ -279,6 +286,15 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI
 {
+	//	tell this to list services (really wanna only do this once)
+	if ( peripheral.services == nil )
+	{
+		/*
+		NSArray<CBUUID *>* ServiceFilter = nil;
+		[peripheral discoverServices:ServiceFilter];
+		*/
+	}
+	
 	auto Meta = Bluetooth::GetMeta( peripheral );
 	mParent->mManager.OnFoundDevice( Meta );
 	//std::Debug << "Found peripheral " << Meta.mName << " (" << Meta.mUuid << ")" << std::endl;

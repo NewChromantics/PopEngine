@@ -34,6 +34,7 @@ public:
 public:
 	std::string		mUuid;
 	std::string		mName;
+	BufferArray<std::string,100>	mServices;
 	TState::Type	mState = TState::Disconnected;
 };
 
@@ -48,6 +49,7 @@ public:
 	void					OnFoundDevice(TDeviceMeta DeviceMeta);
 	void					OnStateChanged();
 
+	void					Scan(const std::string& SpecificService);
 	//void	EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
 	//void	EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
 
