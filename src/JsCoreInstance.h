@@ -457,7 +457,8 @@ public:
 	void			Resolve(ArrayBridge<TYPE>&& Values) const	{	Resolve( GetValue( GetContext(), Values ) );	}
 	void			Resolve(Bind::TArray& Value) const			{	Resolve( GetValue( GetContext(), Value ) );	}
 	void			Resolve(JSValueRef Value) const;//			{	mResolve.Call(nullptr,Value);	}
-	
+	void			ResolveUndefined() const;
+
 	void			Reject(const std::string& Value) const		{	Reject( GetValue( GetContext(), Value ) );	}
 	void			Reject(JSValueRef Value) const;//			{	mReject.Call(nullptr,Value);	}
 	

@@ -1278,6 +1278,12 @@ void JsCore::TPromise::Resolve(JSValueRef Value) const
 	Resolve.Call( This, Value );
 }
 
+void JsCore::TPromise::ResolveUndefined() const
+{
+	auto Value = JSValueMakeUndefined( GetContext() );
+	Resolve( Value );
+}
+
 void JsCore::TPromise::Reject(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?

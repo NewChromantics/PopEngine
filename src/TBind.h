@@ -11,6 +11,34 @@
 
 namespace Bind = JsCore;
 
+namespace JsCore
+{
+	class TPromiseQueue;
+}
+
+
+class Bind::TPromiseQueue
+{
+public:
+	Bind::TContext&	GetContext();
+	
+	TPromise		AddPromise(Bind::TContext& Context);
+	bool			HasPromises() const	{	return !mPending.IsEmpty();	}
+
+	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
+	void			Flush(std::function<void(TPromise&)> HandlePromise);
+
+	void			Resolve();
+	void			Resolve(const std::string& Result);
+	void			Reject(const std::string& Error);
+	
+private:
+	Bind::TContext*	mContext = nullptr;
+	std::mutex		mPendingLock;
+	Array<TPromise>	mPending;
+};
+
+
 /*
 namespace Bind
 {
