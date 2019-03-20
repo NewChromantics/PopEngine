@@ -83,7 +83,11 @@ void ApiBluetooth::Startup(Bind::TCallback& Params)
 void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise();
-
+	
+	std::string Service;
+	if ( !Params.IsArgumentUndefined(0) )
+		Service = Params.GetArgumentString(0);
+	
 	auto DoEnumDevices = [=](Bind::TContext& Context)
 	{
 		auto& Manager = GetBluetoothContext();
@@ -94,7 +98,7 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 			Device.SetString("Name", DeviceMeta.mName);
 			Devices.PushBack(Device);
 		};
-		Manager.EnumDevicesWithService("", OnDevice);
+		Manager.EnumDevicesWithService(Service, OnDevice);
 		Promise.Resolve( GetArrayBridge(Devices) );
 	};
 	
