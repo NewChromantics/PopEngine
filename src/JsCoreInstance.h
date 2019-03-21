@@ -536,7 +536,10 @@ protected:
 template<const char* TYPENAME,class TYPE>
 inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper)
 {
-	static std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapperCache = AllocWrapper;
+	static std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapperCache;
+	if ( AllocWrapperCache != nullptr )
+		throw Soy::AssertException("This allocator is already bound. Duplicate string?");
+	AllocWrapperCache = AllocWrapper;
 	
 	//	setup constructor CFunc here
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
@@ -582,7 +585,12 @@ template<const char* FunctionName>
 inline void JsCore::TContext::BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName)
 {
 	//	try and remove context cache
-	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
+	static std::function<void(Bind::TCallback&)> FunctionCache;
+	if ( FunctionCache != nullptr )
+		throw Soy::AssertException("This function is already bound. Duplicate string?");
+	FunctionCache = Function;
+
+	
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
@@ -699,7 +707,10 @@ template<const char* FUNCTIONNAME>
 inline void JsCore::TTemplate::BindFunction(std::function<void(Bind::TCallback&)> Function)
 {
 	//	try and remove context cache
-	static std::function<void(Bind::TCallback&)> FunctionCache = Function;
+	static std::function<void(Bind::TCallback&)> FunctionCache;
+	if ( FunctionCache != nullptr )
+		throw Soy::AssertException("This function name is already bound. Duplicate string?");
+	FunctionCache = Function;
 
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{

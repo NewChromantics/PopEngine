@@ -17,11 +17,13 @@ namespace Bluetooth
 	{
 		enum Type
 		{
-			Invalid,		//	for unsupported things
+			//	ranked from worst to best
+			Unknown,
+			Unsupported,
 			Connecting,
-			Connected,
 			Disconnecting,
-			Disconnected,			
+			Connected,
+			Disconnected,
 		};
 	}
 }
@@ -63,9 +65,10 @@ public:
 
 	//	gr: may need a seperate IsSupported(), currently using Invalid
 	Bluetooth::TState::Type GetState();
-	void					OnFoundDevice(TDeviceMeta DeviceMeta);
 	void					OnStateChanged();
 
+	void					SetDeviceState(TPlatformDevice* Device,TState::Type NewState);
+	
 	void					Scan(const std::string& SpecificService);
 	//void	EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
 	//void	EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);

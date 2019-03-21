@@ -23,6 +23,9 @@ namespace Bluetooth
 
 - (id)initWithParent:(Bluetooth::TContext*)parent;
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI;
+- (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral;
+- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error;
+- (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error;
 
 @end
 
@@ -120,10 +123,21 @@ NSArray<CBUUID*>* GetServices(const std::string& ServiceUuid)
 
 
 
+CBPeripheral* GetPeripheral(Bluetooth::TPlatformDevice* Device)
+{
+	auto* Peripheral = static_cast<CBPeripheral*>( Device );
+	return Peripheral;
+}
+
 CBPeripheral* GetPeripheral(Bluetooth::TDevice& Device)
 {
-	auto* Peripheral = static_cast<CBPeripheral*>( Device.mPlatformDevice );
-	return Peripheral;
+	return GetPeripheral( Device.mPlatformDevice );
+}
+
+Bluetooth::TPlatformDevice* GetPlatformDevice(CBPeripheral* Peripheral)
+{
+	auto* PlatformDevice = static_cast<Bluetooth::TPlatformDevice*>( Peripheral );
+	return PlatformDevice;
 }
 
 
@@ -149,11 +163,13 @@ Bluetooth::TState::Type Bluetooth::TContext::GetState()
 	switch(State)
 	{
 		case CBManagerStateUnknown:
+			return Bluetooth::TState::Unknown;
+		
 		case CBManagerStateResetting:
 		return Bluetooth::TState::Connecting;
 		
 		case CBManagerStateUnsupported:
-			return Bluetooth::TState::Invalid;
+			return Bluetooth::TState::Unsupported;
 		
 		case CBManagerStateUnauthorized:
 		case CBManagerStatePoweredOff:
@@ -205,11 +221,38 @@ Bluetooth::TManager::TManager()
 }
 
 
-void Bluetooth::TManager::OnFoundDevice(TDeviceMeta DeviceMeta)
+void Bluetooth::TManager::SetDeviceState(TPlatformDevice* PlatformDevice,TState::Type NewState)
 {
-	auto& Device = GetDevice( DeviceMeta.mUuid );
+	auto* Peripheral = GetPeripheral( PlatformDevice );
+	auto Meta = GetMeta( Peripheral );
+	
+	//	here is where we have to see if uuids are duplicated for different devices...
+	auto& Device = GetDevice( Meta.mUuid );
+
+	//	set platform pointer
+	if ( !Device.mPlatformDevice && PlatformDevice )
+	{
+		//	gr: need to retain before connecting
+		//	this will be replaced soon with a proper type
+		Device.mPlatformDevice = PlatformDevice;
+		[Peripheral retain];
+	}
+	
+	//	update name
+	if ( Device.mMeta.mName.length() == 0 )
+		Device.mMeta.mName = Meta.mName;
 
 	//	update state
+	//	todo: when we discover a device, gotta try and not override our connected state
+	if ( Device.mState != NewState )
+	{
+		//	when unknown, we don't overwrite
+		if ( NewState != TState::Unknown )
+		{
+			std::Debug << "Device (" << Device.mMeta.GetName() << ") state changed" << std::endl;
+			Device.mState = NewState;
+		}
+	}
 	
 	OnDeviceChanged( Device );
 	/*
@@ -286,11 +329,13 @@ void Bluetooth::TManager::ConnectDevice(const std::string& Uuid)
 {
 	auto& Device = GetDevice(Uuid);
 	
+	if ( Device.mState == TState::Connected )
+		std::Debug << "Warning, device already connected and trying to-reconnect..." << std::endl;
+	
 	auto* Peripheral = GetPeripheral( Device );
 	if ( Peripheral )
 	{
-		Device.mState = TState::Connecting;
-		OnDeviceChanged( Device );
+		SetDeviceState( Device.mPlatformDevice, TState::Connecting );
 		[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
 	}
 	else
@@ -306,14 +351,12 @@ void Bluetooth::TManager::DisconnectDevice(const std::string& Uuid)
 	auto* Peripheral = GetPeripheral(Device);
 	if ( Peripheral )
 	{
-		Device.mState = TState::Disconnecting;
-		OnDeviceChanged(Device);
+		SetDeviceState( Device.mPlatformDevice, TState::Disconnecting );
 		[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
 	}
 	else
 	{
-		Device.mState = TState::Disconnected;
-		OnDeviceChanged(Device);
+		SetDeviceState( Device.mPlatformDevice, TState::Disconnected );
 	}
 }
 
@@ -389,9 +432,28 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 		*/
 	}
 	
-	auto Meta = Bluetooth::GetMeta( peripheral );
-	mParent->mManager.OnFoundDevice( Meta );
+	auto* PlatformDevice = GetPlatformDevice( peripheral );
+	mParent->mManager.SetDeviceState( PlatformDevice, Bluetooth::TState::Unknown );
 	//std::Debug << "Found peripheral " << Meta.mName << " (" << Meta.mUuid << ")" << std::endl;
+}
+
+- (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
+{
+	auto* PlatformDevice = GetPlatformDevice( peripheral );
+	mParent->mManager.SetDeviceState( PlatformDevice, Bluetooth::TState::Connected );
+}
+
+- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error
+{
+	auto* PlatformDevice = GetPlatformDevice( peripheral );
+	mParent->mManager.SetDeviceState( PlatformDevice, Bluetooth::TState::Disconnected );
+}
+
+- (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error
+{
+	auto* PlatformDevice = GetPlatformDevice( peripheral );
+	mParent->mManager.SetDeviceState( PlatformDevice, Bluetooth::TState::Disconnected );
+
 }
 
 

@@ -12,12 +12,13 @@ namespace Hid
 namespace ApiInput
 {
 	void	Bind(Bind::TContext& Context);
+
+	extern const char InputDevice_TypeName[];
 }
 
 
 
-extern const char InputDevice_TypeName[];
-class TInputDeviceWrapper : public Bind::TObjectWrapper<InputDevice_TypeName,Hid::TDevice>
+class TInputDeviceWrapper : public Bind::TObjectWrapper<ApiInput::InputDevice_TypeName,Hid::TDevice>
 {
 public:
 	TInputDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :

@@ -4,15 +4,16 @@
 
 Hid::TContext HidApiContext;
 
-const char EnumDevices_FunctionName[] = "EnumDevices";
-
-const char InputDevice_TypeName[] = "Device";
-const char GetState_FunctionName[] = "GetState";
 
 namespace ApiInput
 {
 	const char Namespace[] = "Pop.Input";
+
+	const char EnumDevices_FunctionName[] = "EnumDevices";
 	
+	const char InputDevice_TypeName[] = "Device";
+	const char GetState_FunctionName[] = "GetState";
+
 	void	EnumDevices(Bind::TCallback& Params);
 }
 
@@ -94,7 +95,7 @@ void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 
 void TInputDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<GetState_FunctionName>( GetState );
+	Template.BindFunction<ApiInput::GetState_FunctionName>( GetState );
 }
 
 
