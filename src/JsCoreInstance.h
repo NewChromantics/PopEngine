@@ -541,13 +541,25 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Bi
 	//	setup constructor CFunc here
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
-		//	gr: constructor here, is this function.
-		//		we need to create a new object and return it
-		auto& Context = JsCore::GetContext( ContextRef );
-		auto ArgumentsArray = GetRemoteArray( Arguments, ArgumentCount );
-		auto ThisObject = Context.CreateObjectInstance( TYPENAME, GetArrayBridge(ArgumentsArray) );
-		auto This = ThisObject.mThis;
-		return This;
+		try
+		{
+			//	gr: constructor here, is this function.
+			//		we need to create a new object and return it
+			auto& Context = JsCore::GetContext( ContextRef );
+			auto ArgumentsArray = GetRemoteArray( Arguments, ArgumentCount );
+			auto ThisObject = Context.CreateObjectInstance( TYPENAME, GetArrayBridge(ArgumentsArray) );
+			auto This = ThisObject.mThis;
+			return This;
+		}
+		catch(std::exception& e)
+		{
+			std::stringstream Error;
+			Error << TYPENAME << "() constructor exception: " << e.what();
+			*Exception = GetValue( ContextRef, Error.str() );
+			//	we HAVE to return an object, but NULL is a value, not an object :/
+			auto NullObject = JSObjectMake( ContextRef, nullptr, nullptr );
+			return NullObject;
+		}
 	};
 	
 	//	https://stackoverflow.com/questions/46943350/how-to-use-jsexport-and-javascriptcore-in-c
