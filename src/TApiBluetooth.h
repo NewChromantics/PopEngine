@@ -20,10 +20,12 @@ class Bluetooth::TDeviceHandle
 {
 public:
 	TState::Type			GetState()	{	return mGetState();	}
+	void					PopData(ArrayBridge<uint8_t>&& Data);
 	
 public:
 	std::string				mUuid;
 	std::function<void()>	mOnStateChanged;
+	std::function<void()>	mOnRecv;
 	std::function<TState::Type()>	mGetState;
 };
 

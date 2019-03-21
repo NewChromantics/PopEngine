@@ -67,8 +67,6 @@ public:
 	Bluetooth::TState::Type GetState();
 	void					OnStateChanged();
 
-	void					SetDeviceState(TPlatformDevice* Device,TState::Type NewState);
-	
 	void					Scan(const std::string& SpecificService);
 	//void	EnumConnectedDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
 	//void	EnumDevicesWithService(const std::string& ServiceUuid,std::function<void(TDeviceMeta)> OnDeviceFound);
@@ -76,6 +74,9 @@ public:
 	void					ConnectDevice(const std::string& Uuid);
 	void					DisconnectDevice(const std::string& Uuid);
 	TDevice&				GetDevice(const std::string& Uuid);
+	void					SetDeviceState(TPlatformDevice* Device,TState::Type NewState);
+
+	void					DeviceRecv(const std::string& DeviceUuid,const std::string& Service,const std::string& Char);
 
 private:
 	void					OnDeviceChanged(TDevice& Device);
@@ -84,8 +85,11 @@ public:
 	std::function<void(Bluetooth::TState::Type)>	mOnStateChanged;
 	std::function<void()>			mOnDevicesChanged;
 	std::function<void(TDevice&)>	mOnDeviceChanged;
+	std::function<void(TDevice&)>	mOnDeviceRecv;
+	
 	Array<std::shared_ptr<TDevice>>	mDevices;
 	
+	//	service we're currently scanning, or when we wake up, will scan
 	std::string						mScanService;
 	
 private:

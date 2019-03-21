@@ -43,7 +43,8 @@ public:
 
 private:
 	void					OnDeviceChanged(Bluetooth::TDevice& Device);
-	
+	void					OnDeviceRecv(Bluetooth::TDevice& Device);
+
 public:
 	Array<std::shared_ptr<Bluetooth::TDeviceHandle>>	mHandles;	
 	
@@ -159,6 +160,12 @@ ApiBluetooth::TManagerInstance::TManagerInstance()
 		this->OnDeviceChanged(Device);
 	};
 	mManager->mOnDeviceChanged = DeviceChanged;
+	
+	auto DeviceRecv = [this](Bluetooth::TDevice& Device)
+	{
+		this->OnDeviceRecv(Device);
+	};
+	mManager->mOnDeviceRecv = DeviceChanged;
 }
 
 
@@ -288,18 +295,21 @@ void TBluetoothDeviceWrapper::OnStateChanged()
 void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TBluetoothDeviceWrapper>();
-	
+	auto Characteristic = Params.GetArgumentString(0);
+
 	if ( This.mReadCharacteristicUuid.length() != 0 )
 	{
-		std::stringstream Error;
-		Error << "Currently only supporting one characteristic at a time. Currently: " << This.mReadCharacteristicUuid;
-		throw Soy::AssertException( Error.str() );
+		if ( This.mReadCharacteristicUuid != Characteristic )
+		{
+			std::stringstream Error;
+			Error << "Currently only supporting one characteristic at a time. Currently: " << This.mReadCharacteristicUuid << "; requesting: " << Characteristic;
+			throw Soy::AssertException( Error.str() );
+		}
 	}
 	
-	auto Characteristic = Params.GetArgumentString(0);
 	This.mReadCharacteristicUuid = Characteristic;
 	
-	auto Promise = This.mConnectPromises.AddPromise( Params.mContext );
+	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mContext );
 
 	//	flush any data that might already be pending
 	BufferArray<uint8_t,1> NewData;

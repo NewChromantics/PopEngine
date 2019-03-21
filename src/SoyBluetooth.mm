@@ -333,17 +333,52 @@ void Bluetooth::TManager::ConnectDevice(const std::string& Uuid)
 		std::Debug << "Warning, device already connected and trying to-reconnect..." << std::endl;
 	
 	auto* Peripheral = GetPeripheral( Device );
-	if ( Peripheral )
+	if ( !Peripheral )
 	{
-		SetDeviceState( Device.mPlatformDevice, TState::Connecting );
-		[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
+		throw Soy::AssertException("Couldn't find peripheral, currently need to discover before connect");
 	}
-	else
-	{
-		throw Soy::AssertException("Couldn't find peripheral");
-	}
+
+	SetDeviceState( Device.mPlatformDevice, TState::Connecting );
+	[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
 }
 
+void Bluetooth::TManager::DeviceRecv(const std::string& DeviceUuid,const std::string& Service,const std::string& Char)
+{
+	auto& Device = GetDevice(DeviceUuid);
+	auto* peripheral = GetPeripheral( Device );
+	if ( !peripheral )
+	{
+		throw Soy::AssertException("Couldn't find peripheral, currently need to discover before recv");
+	}
+	
+	auto* ServiceUid = [CBUUID UUIDWithString:Soy::StringToNSString(Service)];
+	auto* CharUid = [CBUUID UUIDWithString:Soy::StringToNSString(Char)];
+
+	auto WasSet = 0;
+	
+	if ( peripheral.services == nil )
+		std::Debug << "Warning, looking in services, but not discovered yet" << std::endl;
+	
+	for ( CBService* service in peripheral.services )
+	{
+		if ([service.UUID isEqual:ServiceUid])
+		{
+			for ( CBCharacteristic* characteristic in service.characteristics )
+			{
+				if ([characteristic.UUID isEqual:CharUid])
+				{
+					//	if (characteristic.properties & CBCharacteristicPropertyNotify) return YES;
+					auto enable = YES;
+					[peripheral setNotifyValue:enable forCharacteristic:characteristic];
+					WasSet++;
+				}
+			}
+		}
+	}
+	
+	if ( WasSet == 0 )
+		throw Soy::AssertException("Characteristic not found");
+}
 
 void Bluetooth::TManager::DisconnectDevice(const std::string& Uuid)
 {
@@ -439,6 +474,10 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
+	//	good time to do this apparently
+	//	https://github.com/DFRobot/BlunoBasicDemo/blob/master/IOS/BlunoBasicDemo/BlunoTest/Bluno/DFBlunoManager.m#L187
+	[peripheral discoverServices:nil];
+	
 	auto* PlatformDevice = GetPlatformDevice( peripheral );
 	mParent->mManager.SetDeviceState( PlatformDevice, Bluetooth::TState::Connected );
 }
