@@ -97,10 +97,10 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 	auto DoEnumDevices = [=](Bind::TContext& Context)
 	{
 		Array<Bind::TObject> Devices;
-		auto OnDevice = [&](Bluetooth::TDeviceMeta DeviceMeta)
+		auto OnDevice = [&](Bluetooth::TDeviceMeta& DeviceMeta)
 		{
 			auto Device = Context.CreateObjectInstance();
-			Device.SetString("Name", DeviceMeta.mName);
+			Device.SetString("Name", DeviceMeta.GetName() );
 			Device.SetString("Uuid", DeviceMeta.mUuid);
 			Device.SetArray("Services", GetArrayBridge(DeviceMeta.mServices) );
 			Devices.PushBack(Device);

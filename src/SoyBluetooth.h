@@ -33,6 +33,8 @@ public:
 	inline bool		operator==(const TDeviceMeta& That) const	{	return this->mUuid == That.mUuid;	}
 	inline bool		operator==(const std::string& That) const	{	return this->mUuid == That;	}
 
+	const std::string&	GetName() const	{	return (mName.length() > 0) ? mName : mUuid;	}
+	
 public:
 	std::string		mUuid;
 	std::string		mName;
