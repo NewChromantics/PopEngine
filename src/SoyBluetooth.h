@@ -2,6 +2,7 @@
 #include <string>
 #include <functional>
 #include "SoyLib/src/HeapArray.hpp"
+#include "SoyLib/src/SoyStream.h"
 
 
 
@@ -55,6 +56,8 @@ public:
 	void			SubscribeToCharacteristics(const std::string& NewChracteristic=std::string());
 	
 public:
+	TStreamBuffer		mRecvBuffer;
+	
 	TDeviceMeta			mMeta;
 	TState::Type&		mState = mMeta.mState;
 	//	characteristics we haven't yet subscribed to
@@ -79,14 +82,16 @@ public:
 	void					ConnectDevice(const std::string& Uuid);
 	void					DisconnectDevice(const std::string& Uuid);
 	TDevice&				GetDevice(const std::string& Uuid);
+
+	void					DeviceListen(const std::string& DeviceUuid,const std::string& Char);
+
+//private:
+	void					OnDeviceChanged(TDevice& Device);
+	
 	void					SetDeviceState(TDevice& Device,TState::Type NewState);
 	void					SetDeviceState(TPlatformDevice* Device,TState::Type NewState);
 	void					UpdateDeviceMeta(TDevice& Device);
-
-	void					DeviceRecv(const std::string& DeviceUuid,const std::string& Char);
-
-private:
-	void					OnDeviceChanged(TDevice& Device);
+	void					OnDeviceRecv(TDevice& Device,ArrayBridge<uint8_t>& Data);
 
 public:
 	std::function<void(Bluetooth::TState::Type)>	mOnStateChanged;

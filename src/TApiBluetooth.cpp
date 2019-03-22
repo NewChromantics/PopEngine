@@ -313,7 +313,7 @@ void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
 	
 	//	subscribe in case it hasn't already
 	auto& Instance = ApiBluetooth::GetBluetoothInstance();
-	Instance.mManager->DeviceRecv( This.mDevice->mUuid, Characteristic );
+	Instance.mManager->DeviceListen( This.mDevice->mUuid, Characteristic );
 
 	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mContext );
 

@@ -5,6 +5,22 @@
 #include "SoyLib/src/SoyDebug.h"
 #include <thread>
 
+//	need a better place in SoyLib for this
+namespace Platform
+{
+	void NSDataToArray(NSData* Data,ArrayBridge<uint8>&& Array)
+	{
+		auto DataSize = Data.length;
+		auto DataArray = GetRemoteArray( (uint8*)Data.bytes, DataSize );
+		Array.PushBackArray( DataArray );
+	}
+	
+	NSData* ArrayToNSData(const ArrayBridge<uint8>&& Array)
+	{
+		void* Data = (void*)Array.GetArray();
+		return [[NSData alloc] initWithBytesNoCopy:Data length:Array.GetDataSize() freeWhenDone:false];
+	}
+}
 
 namespace Bluetooth
 {
@@ -42,6 +58,7 @@ namespace Bluetooth
 - (void)peripheralDidUpdateName:(CBPeripheral *)peripheral NS_AVAILABLE(10_9, 6_0);
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error;
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error;
+- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error;
 
 @end
 
@@ -49,22 +66,25 @@ namespace Bluetooth
 class Bluetooth::TPlatformDeviceDelegate
 {
 public:
-	TPlatformDeviceDelegate(CBPeripheral* Peripheral,std::function<void()> OnChanged) :
+	TPlatformDeviceDelegate(CBPeripheral* Peripheral,std::function<void()> OnChanged,std::function<void(ArrayBridge<uint8_t>&)> OnRecv) :
 		mPeripheral	( Peripheral ),
-		mOnChanged	( OnChanged )
+		mOnChanged	( OnChanged ),
+		mOnRecv		( OnRecv )
 	{
 		auto* Delegate = [[BluetoothDeviceDelegate alloc] initWithParent:this ];
 		mDelegate.Retain( Delegate );
 		[mPeripheral.mObject setDelegate:mDelegate.mObject];
 	}
 	
+	void 	OnRecv(ArrayBridge<uint8_t>&& Data)	{	if ( mOnRecv )	mOnRecv( Data );	}
 	void	OnNameChanged()			{	if ( mOnChanged )	mOnChanged();	}
 	void	OnServicesChanged()		{	if ( mOnChanged )	mOnChanged();	}
 	
 public:
-	std::function<void()>				mOnChanged;
-	ObjcPtr<CBPeripheral>				mPeripheral;
-	ObjcPtr<BluetoothDeviceDelegate>	mDelegate;
+	std::function<void()>						mOnChanged;
+	std::function<void(ArrayBridge<uint8_t>&)>	mOnRecv;		//	should probbaly send UUID of characteristic here
+	ObjcPtr<CBPeripheral>						mPeripheral;
+	ObjcPtr<BluetoothDeviceDelegate>			mDelegate;
 };
 
 
@@ -268,6 +288,19 @@ void Bluetooth::TManager::UpdateDeviceMeta(TDevice& Device)
 	SetDeviceState( Device, Device.mState );
 }
 
+void Bluetooth::TManager::OnDeviceRecv(TDevice& Device,ArrayBridge<uint8_t>& Data)
+{
+	if ( !mOnDeviceRecv )
+	{
+		std::Debug << "No device recv() callback, " << Data.GetDataSize() << " bytes lost" << std::endl;
+		return;
+	}
+
+	//	add to buffer & notify
+	Device.mRecvBuffer.Push( Data );
+	mOnDeviceRecv( Device );
+}
+
 
 void Bluetooth::TManager::SetDeviceState(TDevice& Device,TState::Type NewState)
 {
@@ -293,7 +326,11 @@ void Bluetooth::TManager::SetDeviceState(TPlatformDevice* PlatformDevice,TState:
 		{
 			this->UpdateDeviceMeta( Device );
 		};
-		Device.mPlatformDeviceDelegate.reset( new TPlatformDeviceDelegate(Peripheral, OnMetaChanged ) );
+		auto OnRecv = [this,&Device](ArrayBridge<uint8_t>& Data)
+		{
+			this->OnDeviceRecv( Device, Data );
+		};
+		Device.mPlatformDeviceDelegate.reset( new TPlatformDeviceDelegate(Peripheral, OnMetaChanged, OnRecv ) );
 	}
 	
 	//	update name
@@ -414,7 +451,7 @@ void Bluetooth::TManager::ConnectDevice(const std::string& Uuid)
 	[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
 }
 
-void Bluetooth::TManager::DeviceRecv(const std::string& DeviceUuid,const std::string& Char)
+void Bluetooth::TManager::DeviceListen(const std::string& DeviceUuid,const std::string& Char)
 {
 	auto& Device = GetDevice(DeviceUuid);
 	
@@ -486,6 +523,7 @@ void Bluetooth::TDevice::SubscribeToCharacteristics(const std::string& NewChract
 		{
 			for ( CBCharacteristic* characteristic in service.characteristics )
 			{
+				auto CharacteristicString = Soy::NSStringToString( [characteristic.UUID UUIDString] );
 				if ( ![characteristic.UUID isEqual:CharUid])
 					continue;
 				
@@ -594,6 +632,7 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 {
 	//	good time to do this apparently
 	//	https://github.com/DFRobot/BlunoBasicDemo/blob/master/IOS/BlunoBasicDemo/BlunoTest/Bluno/DFBlunoManager.m#L187
+	//	if you subscribe to specific services, it'll find characteristics
 	//auto* ServiceFilter = GetServices("dfb0");
 	//[peripheral discoverServices:ServiceFilter];
 	[peripheral discoverServices:nil];
@@ -648,6 +687,12 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error
 {
+	//	find all characteristics
+	for ( CBService* service in peripheral.services )
+	{
+		[peripheral discoverCharacteristics:nil forService:service];
+	}
+	
 	if ( error )
 		std::Debug << "peripheral didDiscoverServices " << Soy::NSErrorToString(error) << std::endl;
 	mParent->OnServicesChanged();
@@ -659,5 +704,19 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 		std::Debug << "peripheral didDiscoverCharacteristicsForService " << Soy::NSErrorToString(error) << std::endl;
 	mParent->OnServicesChanged();
 }
+
+- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error
+{
+	if ( error )
+		std::Debug << "peripheral didUpdateValueForCharacteristic " << Soy::NSErrorToString(error) << std::endl;
+
+	Array<uint8_t> Data;
+	if ( characteristic.value )
+	{
+		Platform::NSDataToArray( characteristic.value, GetArrayBridge(Data) );
+	}
+	mParent->OnRecv( GetArrayBridge(Data) );
+}
+
 
 @end
