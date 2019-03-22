@@ -15,6 +15,8 @@ namespace Bluetooth
 //	good example reference
 //	https://github.com/DFRobot/BlunoBasicDemo/blob/master/IOS/BlunoBasicDemo/BlunoTest/Bluno/DFBlunoManager.m
 @protocol BluetoothManagerDelegate;
+@protocol BluetoothDeviceDelegate;
+
 
 @interface BluetoothManagerDelegate : NSObject<CBCentralManagerDelegate>
 {
@@ -28,6 +30,42 @@ namespace Bluetooth
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error;
 
 @end
+
+
+@interface BluetoothDeviceDelegate : NSObject<CBPeripheralDelegate>
+{
+	Bluetooth::TPlatformDeviceDelegate*	mParent;
+}
+
+- (id)initWithParent:(Bluetooth::TPlatformDeviceDelegate*)parent;
+
+- (void)peripheralDidUpdateName:(CBPeripheral *)peripheral NS_AVAILABLE(10_9, 6_0);
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error;
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error;
+
+@end
+
+//	keep this class as minimal as possible. High level stuff in TDevice
+class Bluetooth::TPlatformDeviceDelegate
+{
+public:
+	TPlatformDeviceDelegate(CBPeripheral* Peripheral,std::function<void()> OnChanged) :
+		mPeripheral	( Peripheral ),
+		mOnChanged	( OnChanged )
+	{
+		auto* Delegate = [[BluetoothDeviceDelegate alloc] initWithParent:this ];
+		mDelegate.Retain( Delegate );
+		[mPeripheral.mObject setDelegate:mDelegate.mObject];
+	}
+	
+	void	OnNameChanged()			{	if ( mOnChanged )	mOnChanged();	}
+	void	OnServicesChanged()		{	if ( mOnChanged )	mOnChanged();	}
+	
+public:
+	std::function<void()>				mOnChanged;
+	ObjcPtr<CBPeripheral>				mPeripheral;
+	ObjcPtr<BluetoothDeviceDelegate>	mDelegate;
+};
 
 
 class Bluetooth::TContext
@@ -104,7 +142,9 @@ Bluetooth::TDeviceMeta Bluetooth::GetMeta(CBPeripheral* Device)
 		Meta.mServices.PushBack( UuidString );
 	};
 	Platform::NSArray_ForEach<CBService*>( Device.services, EnumService );
-
+	if ( Device.services )
+		std::Debug << Meta.mName << " has services!" << std::endl;
+	
 	return Meta;
 }
 
@@ -131,7 +171,9 @@ CBPeripheral* GetPeripheral(Bluetooth::TPlatformDevice* Device)
 
 CBPeripheral* GetPeripheral(Bluetooth::TDevice& Device)
 {
-	return GetPeripheral( Device.mPlatformDevice );
+	if ( !Device.mPlatformDeviceDelegate )
+		return nullptr;
+	return Device.mPlatformDeviceDelegate->mPeripheral.mObject;
 }
 
 Bluetooth::TPlatformDevice* GetPlatformDevice(CBPeripheral* Peripheral)
@@ -221,6 +263,19 @@ Bluetooth::TManager::TManager()
 }
 
 
+void Bluetooth::TManager::UpdateDeviceMeta(TDevice& Device)
+{
+	SetDeviceState( Device, Device.mState );
+}
+
+
+void Bluetooth::TManager::SetDeviceState(TDevice& Device,TState::Type NewState)
+{
+	auto* Peripheral = GetPeripheral( Device );
+	auto* PlatformDevice = GetPlatformDevice( Peripheral );
+	SetDeviceState( PlatformDevice, NewState );
+}
+
 void Bluetooth::TManager::SetDeviceState(TPlatformDevice* PlatformDevice,TState::Type NewState)
 {
 	auto* Peripheral = GetPeripheral( PlatformDevice );
@@ -230,18 +285,27 @@ void Bluetooth::TManager::SetDeviceState(TPlatformDevice* PlatformDevice,TState:
 	auto& Device = GetDevice( Meta.mUuid );
 
 	//	set platform pointer
-	if ( !Device.mPlatformDevice && PlatformDevice )
+	if ( !Device.mPlatformDeviceDelegate && PlatformDevice )
 	{
 		//	gr: need to retain before connecting
 		//	this will be replaced soon with a proper type
-		Device.mPlatformDevice = PlatformDevice;
-		[Peripheral retain];
+		auto OnMetaChanged = [this,&Device]()
+		{
+			this->UpdateDeviceMeta( Device );
+		};
+		Device.mPlatformDeviceDelegate.reset( new TPlatformDeviceDelegate(Peripheral, OnMetaChanged ) );
 	}
 	
 	//	update name
 	if ( Device.mMeta.mName.length() == 0 )
 		Device.mMeta.mName = Meta.mName;
 
+	//	update services
+	for ( auto i=0;	i<Meta.mServices.GetSize();	i++ )
+		Device.mMeta.mServices.PushBackUnique( Meta.mServices[i] );
+	
+	Device.SubscribeToCharacteristics();
+	
 	//	update state
 	//	todo: when we discover a device, gotta try and not override our connected state
 	if ( Device.mState != NewState )
@@ -332,52 +396,34 @@ void Bluetooth::TManager::ConnectDevice(const std::string& Uuid)
 	if ( Device.mState == TState::Connected )
 		std::Debug << "Warning, device already connected and trying to-reconnect..." << std::endl;
 	
+	if ( Device.mState == TState::Connecting )
+	{
+		std::Debug << "Warning, device already Connecting and trying to-reconnect..." << std::endl;
+		return;
+	}
+
 	auto* Peripheral = GetPeripheral( Device );
 	if ( !Peripheral )
 	{
 		throw Soy::AssertException("Couldn't find peripheral, currently need to discover before connect");
 	}
 
-	SetDeviceState( Device.mPlatformDevice, TState::Connecting );
+	auto* PlatformDevice = GetPlatformDevice(Peripheral);
+	SetDeviceState( PlatformDevice, TState::Connecting );
+	std::Debug << "Connecting to peripheral: " << Uuid << std::endl;
 	[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
 }
 
-void Bluetooth::TManager::DeviceRecv(const std::string& DeviceUuid,const std::string& Service,const std::string& Char)
+void Bluetooth::TManager::DeviceRecv(const std::string& DeviceUuid,const std::string& Char)
 {
 	auto& Device = GetDevice(DeviceUuid);
-	auto* peripheral = GetPeripheral( Device );
-	if ( !peripheral )
+	
+	if ( !Device.mPlatformDeviceDelegate )
 	{
-		throw Soy::AssertException("Couldn't find peripheral, currently need to discover before recv");
+		throw Soy::AssertException("Couldn't find delegate, device needs to connect first.");
 	}
 	
-	auto* ServiceUid = [CBUUID UUIDWithString:Soy::StringToNSString(Service)];
-	auto* CharUid = [CBUUID UUIDWithString:Soy::StringToNSString(Char)];
-
-	auto WasSet = 0;
-	
-	if ( peripheral.services == nil )
-		std::Debug << "Warning, looking in services, but not discovered yet" << std::endl;
-	
-	for ( CBService* service in peripheral.services )
-	{
-		if ([service.UUID isEqual:ServiceUid])
-		{
-			for ( CBCharacteristic* characteristic in service.characteristics )
-			{
-				if ([characteristic.UUID isEqual:CharUid])
-				{
-					//	if (characteristic.properties & CBCharacteristicPropertyNotify) return YES;
-					auto enable = YES;
-					[peripheral setNotifyValue:enable forCharacteristic:characteristic];
-					WasSet++;
-				}
-			}
-		}
-	}
-	
-	if ( WasSet == 0 )
-		throw Soy::AssertException("Characteristic not found");
+	Device.SubscribeToCharacteristics( Char );
 }
 
 void Bluetooth::TManager::DisconnectDevice(const std::string& Uuid)
@@ -386,13 +432,85 @@ void Bluetooth::TManager::DisconnectDevice(const std::string& Uuid)
 	auto* Peripheral = GetPeripheral(Device);
 	if ( Peripheral )
 	{
-		SetDeviceState( Device.mPlatformDevice, TState::Disconnecting );
+		SetDeviceState( Device, TState::Disconnecting );
 		[mContext->mPlatformManager connectPeripheral:Peripheral options:nil];
 	}
 	else
 	{
-		SetDeviceState( Device.mPlatformDevice, TState::Disconnected );
+		SetDeviceState( Device, TState::Disconnected );
 	}
+}
+
+void Bluetooth::TDevice::SubscribeToCharacteristics(const std::string& NewChracteristic)
+{
+	if ( NewChracteristic.length() )
+	{
+		//	validate the UUID
+		@try
+		{
+			/*auto* CharUid =*/ [CBUUID UUIDWithString:Soy::StringToNSString(NewChracteristic)];
+		}
+		@catch(NSException* e)
+		{
+			std::stringstream Error;
+			Error << NewChracteristic << " is not a valid UUID";
+			throw Soy::AssertException(Error.str());
+		}
+		
+		mPendingCharacteristics.PushBackUnique( NewChracteristic );
+	}
+	
+	//	nothing to do
+	if ( mPendingCharacteristics.IsEmpty() )
+		return;
+	
+	if ( !mPlatformDeviceDelegate )
+	{
+		std::Debug << "Cannot subscribe yet, waiting to connect" << std::endl;
+		return;
+	}
+	
+	auto* Peripheral = mPlatformDeviceDelegate->mPeripheral.mObject;
+	if ( !Peripheral )
+		throw Soy::AssertException("Expected peripheral");
+	
+	//	currently we just search all services for this characteristic.
+	//	maybe some devices have multiple characteristics for multiple services...
+	for ( int pc=mPendingCharacteristics.GetSize()-1;	pc>=0;	pc-- )
+	{
+		auto& PendingCharacteristic = mPendingCharacteristics[pc];
+		auto* CharUid = [CBUUID UUIDWithString:Soy::StringToNSString(PendingCharacteristic)];
+		auto WasSet = 0;
+		
+		for ( CBService* service in Peripheral.services )
+		{
+			for ( CBCharacteristic* characteristic in service.characteristics )
+			{
+				if ( ![characteristic.UUID isEqual:CharUid])
+					continue;
+				
+				//	if (characteristic.properties & CBCharacteristicPropertyNotify) return YES;
+				auto enable = YES;
+				[Peripheral setNotifyValue:enable forCharacteristic:characteristic];
+				WasSet++;
+				std::Debug << mMeta.GetName() << " subscribed to " << PendingCharacteristic << std::endl;
+			}
+		}
+		
+		if ( !WasSet )
+			continue;
+		
+		mPendingCharacteristics.RemoveBlock(pc,1);
+	}
+	
+	if ( !mPendingCharacteristics.IsEmpty() )
+	{
+		std::Debug << "Bluetooth device " << mMeta.GetName() << " still waiting to subscribe to ";
+		for ( auto i=0;	i<mPendingCharacteristics.GetSize();	i++ )
+			std::Debug << mPendingCharacteristics[i] << ",";
+		std::Debug << std::endl;
+	}
+	
 }
 
 
@@ -476,6 +594,8 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 {
 	//	good time to do this apparently
 	//	https://github.com/DFRobot/BlunoBasicDemo/blob/master/IOS/BlunoBasicDemo/BlunoTest/Bluno/DFBlunoManager.m#L187
+	//auto* ServiceFilter = GetServices("dfb0");
+	//[peripheral discoverServices:ServiceFilter];
 	[peripheral discoverServices:nil];
 	
 	auto* PlatformDevice = GetPlatformDevice( peripheral );
@@ -501,6 +621,43 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 	auto State = central.state;
 	std::Debug << "Bluetooth manager state updated to " << State << std::endl;
 	mParent->mManager.OnStateChanged();
+}
+
+@end
+
+
+
+
+@implementation BluetoothDeviceDelegate
+
+
+- (id)initWithParent:(Bluetooth::TPlatformDeviceDelegate*)parent
+{
+	self = [super init];
+	if (self)
+	{
+		mParent = parent;
+	}
+	return self;
+}
+
+- (void)peripheralDidUpdateName:(CBPeripheral *)peripheral
+{
+	mParent->OnNameChanged();
+}
+
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error
+{
+	if ( error )
+		std::Debug << "peripheral didDiscoverServices " << Soy::NSErrorToString(error) << std::endl;
+	mParent->OnServicesChanged();
+}
+
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error
+{
+	if ( error )
+		std::Debug << "peripheral didDiscoverCharacteristicsForService " << Soy::NSErrorToString(error) << std::endl;
+	mParent->OnServicesChanged();
 }
 
 @end

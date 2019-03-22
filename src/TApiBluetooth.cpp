@@ -295,6 +295,8 @@ void TBluetoothDeviceWrapper::OnStateChanged()
 void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TBluetoothDeviceWrapper>();
+
+	//	shouldn't need service really
 	auto Characteristic = Params.GetArgumentString(0);
 
 	if ( This.mReadCharacteristicUuid.length() != 0 )
@@ -309,6 +311,10 @@ void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
 	
 	This.mReadCharacteristicUuid = Characteristic;
 	
+	//	subscribe in case it hasn't already
+	auto& Instance = ApiBluetooth::GetBluetoothInstance();
+	Instance.mManager->DeviceRecv( This.mDevice->mUuid, Characteristic );
+
 	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mContext );
 
 	//	flush any data that might already be pending
@@ -328,6 +334,8 @@ void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,Array
 	
 	//	flush data
 	if ( !mReadCharacteristicPromises.HasPromises() )
+		return;
+	if ( mReadCharacteristicBuffer.IsEmpty() )
 		return;
 	
 	auto Flush = [this](Bind::TContext& Context)
