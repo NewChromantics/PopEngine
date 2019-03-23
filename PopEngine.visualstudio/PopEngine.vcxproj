@@ -1,0 +1,356 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Master|Win32">
+      <Configuration>Master</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Master|x64">
+      <Configuration>Master</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Source\BroadwayDecoder.cpp" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\Broadway.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\Broadway\Decoder\src\Decoder.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\Broadway\Decoder\src\DecTestBench.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\Broadway\Decoder\src\EvaluationTestBench.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\Broadway\Decoder\src\extraFlags.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_byte_stream.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_cavlc.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_conceal.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_deblocking.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_decoder.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_dpb.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_image.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_inter_prediction.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_intra_prediction.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_macroblock_layer.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_nal_unit.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_neighbour.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_pic_order_cnt.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_pic_param_set.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_reconstruct.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_sei.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_seq_param_set.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_data.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_group_map.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_header.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_storage.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_stream.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_transform.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_util.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_vlc.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_vui.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\H264SwDecApi.c" />
+    <ClCompile Include="..\Source\Broadway\Decoder\src\TestBenchMultipleInstance.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\PopEngine.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\memheap.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyArray.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyAssert.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyDebug.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyEvent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyH264.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyJson.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyMath.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyMedia.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyMediaFormat.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyMediaFoundation.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyPixels.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyPng.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyString.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyThread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Source\SoyLib\src\SoyTime.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyTypes.cpp" />
+    <ClCompile Include="..\Source\SoyLib\src\SoyWave.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source\BroadwayDecoder.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_byte_stream.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_cavlc.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_cfg.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_conceal.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_container.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_deblocking.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_decoder.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_dpb.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_image.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_inter_prediction.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_intra_prediction.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_macroblock_layer.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_nal_unit.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_neighbour.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_pic_order_cnt.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_pic_param_set.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_reconstruct.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_sei.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_seq_param_set.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_data.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_group_map.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_header.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_storage.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_stream.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_transform.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_util.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_vlc.h" />
+    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_vui.h" />
+    <ClInclude Include="..\Source\PopH264.h" />
+    <ClInclude Include="..\Source\PopH264DecoderInstance.h" />
+    <ClInclude Include="..\Source\PopH264Framework.h" />
+    <ClInclude Include="..\Source\SoyLib\src\Array.hpp" />
+    <ClInclude Include="..\Source\SoyLib\src\BufferArray.hpp" />
+    <ClInclude Include="..\Source\SoyLib\src\HeapArray.hpp" />
+    <ClInclude Include="..\Source\SoyLib\src\MemHeap.hpp" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyArray.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyAssert.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyDebug.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyEvent.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyH264.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyJson.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyMath.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyMedia.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyMediaFormat.h" />
+    <ClInclude Include="..\Source\SoyLib\src\soymediafoundation.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyPixels.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyPng.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyString.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyThread.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyTypes.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyTypes_Windows.h" />
+    <ClInclude Include="..\Source\SoyLib\src\SoyWave.h" />
+    <ClInclude Include="..\Source\SoyLib\src\string.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Source\Broadway\Decoder\src\EvaluationTestBench.x">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\Source\InstanceManager.inc" />
+    <None Include="..\Unity\PopH264\Assets\PopH264\PopH264.cs" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{64811728-CD20-4F2C-899B-E3BF3D4B032E}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>PopEngine</RootNamespace>
+    <TargetPlatformVersion>8.1</TargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>PopEngine</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+    <Import Project="Release.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+    <Import Project="Release.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+    </ClCompile>
+    <Link />
+    <Link />
+    <PostBuildEvent />
+    <Link>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>SET PathDll=$(TargetPath)
+SET PathPdb=%PathDll:dll=pdb%
+copy /y $(TargetPath) $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
+copy /y %PathPdb% $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+    </ClCompile>
+    <Link />
+    <Link />
+    <PostBuildEvent />
+    <Link>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PreprocessorDefinitions>ENABLE_DIRECTX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link />
+    <Link />
+    <PostBuildEvent />
+    <Link>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>SET PathDll=$(TargetPath)
+SET PathPdb=%PathDll:dll=pdb%
+copy /y $(TargetPath) $(ProjectDir)..\Unity\PopH264\Assets\PopH264
+copy /y %PathPdb% $(ProjectDir)..\Unity\PopH264\Assets\PopH264
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PreprocessorDefinitions>ENABLE_DIRECTX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link />
+    <Link />
+    <PostBuildEvent />
+    <Link>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>SET PathDll=$(TargetPath)
+SET PathPdb=%PathDll:dll=pdb%
+copy /y $(TargetPath) $(ProjectDir)..\Unity\PopH264\Assets\PopH264
+copy /y %PathPdb% $(ProjectDir)..\Unity\PopH264\Assets\PopH264
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
