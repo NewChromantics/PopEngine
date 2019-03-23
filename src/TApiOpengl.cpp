@@ -12,14 +12,14 @@ namespace ApiOpengl
 const char Opengl_Window_TypeName[] = "Window";
 const char Opengl_Shader_TypeName[] = "Shader";
 
-const char DrawQuad_FunctionName[] = "DrawQuad";
-const char ClearColour_FunctionName[] = "ClearColour";
-const char EnableBlend_FunctionName[] = "EnableBlend";
-const char SetViewport_FunctionName[] = "SetViewport";
-const char SetUniform_FunctionName[] = "SetUniform";
-const char Render_FunctionName[] = "Render";
-const char RenderChain_FunctionName[] = "RenderChain";
-const char GetScreenRect_FunctionName[] = "GetScreenRect";
+DEFINE_BIND_FUNCTIONNAME(DrawQuad);
+DEFINE_BIND_FUNCTIONNAME(ClearColour);
+DEFINE_BIND_FUNCTIONNAME(EnableBlend);
+DEFINE_BIND_FUNCTIONNAME(SetViewport);
+DEFINE_BIND_FUNCTIONNAME(SetUniform);
+DEFINE_BIND_FUNCTIONNAME(Render);
+DEFINE_BIND_FUNCTIONNAME(RenderChain);
+DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 
 
 

@@ -19,205 +19,276 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Source\BroadwayDecoder.cpp" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\Broadway.c">
+    <ClInclude Include="..\src\JsCoreInstance.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JavaScript.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JavaScriptCore.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackFunction.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackObject.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSContext.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSObjectRef.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSStringRef.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h" />
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h" />
+    <ClInclude Include="..\src\PopMain.h" />
+    <ClInclude Include="..\src\PopTrack.h" />
+    <ClInclude Include="..\src\SoyBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\Decoder.c">
+    </ClInclude>
+    <ClInclude Include="..\src\SoyHid.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\DecTestBench.c">
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Array.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoySocket.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyStream.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyString.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyTime.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Windows.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyUniform.h" />
+    <ClInclude Include="..\src\SoyOpenglView.h" />
+    <ClInclude Include="..\src\SoyOpenglWindow.h" />
+    <ClInclude Include="..\src\TApiBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\EvaluationTestBench.c">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiCommon.h" />
+    <ClInclude Include="..\src\TApiCoreMl.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\extraFlags.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_byte_stream.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_cavlc.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_conceal.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_deblocking.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_decoder.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_dpb.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_image.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_inter_prediction.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_intra_prediction.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_macroblock_layer.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_nal_unit.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_neighbour.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_pic_order_cnt.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_pic_param_set.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_reconstruct.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_sei.c">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDlib.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_seq_param_set.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_data.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_group_map.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_header.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_storage.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_stream.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_transform.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_util.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_vlc.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_vui.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\H264SwDecApi.c" />
-    <ClCompile Include="..\Source\Broadway\Decoder\src\TestBenchMultipleInstance.c">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEzsift.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\PopEngine.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\memheap.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyArray.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyAssert.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyDebug.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyEvent.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiHttp.h" />
+    <ClInclude Include="..\src\TApiInput.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyH264.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiMedia.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyJson.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencl.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMath.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencv.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMedia.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpengl.h" />
+    <ClInclude Include="..\src\TApiOpenglContext.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMediaFormat.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSocket.h" />
+    <ClInclude Include="..\src\TApiWebsocket.h" />
+    <ClInclude Include="..\src\TBind.h" />
+    <ClInclude Include="..\src\TPopServerThread.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMediaFoundation.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TProtocolWebSocket.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyPixels.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyPng.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TSsdMobileNetAnchors.h" />
+    <ClInclude Include="..\src\TV8Container.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyString.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyThread.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Inspector.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyTime.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyTypes.cpp" />
-    <ClCompile Include="..\Source\SoyLib\src\SoyWave.cpp">
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Instance.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8ObjectWrapper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Source\BroadwayDecoder.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_byte_stream.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_cavlc.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_cfg.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_conceal.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_container.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_deblocking.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_decoder.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_dpb.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_image.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_inter_prediction.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_intra_prediction.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_macroblock_layer.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_nal_unit.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_neighbour.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_pic_order_cnt.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_pic_param_set.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_reconstruct.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_sei.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_seq_param_set.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_data.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_group_map.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_header.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_storage.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_stream.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_transform.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_util.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_vlc.h" />
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_vui.h" />
-    <ClInclude Include="..\Source\PopH264.h" />
-    <ClInclude Include="..\Source\PopH264DecoderInstance.h" />
-    <ClInclude Include="..\Source\PopH264Framework.h" />
-    <ClInclude Include="..\Source\SoyLib\src\Array.hpp" />
-    <ClInclude Include="..\Source\SoyLib\src\BufferArray.hpp" />
-    <ClInclude Include="..\Source\SoyLib\src\HeapArray.hpp" />
-    <ClInclude Include="..\Source\SoyLib\src\MemHeap.hpp" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyArray.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyAssert.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyDebug.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyEvent.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyH264.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyJson.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyMath.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyMedia.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyMediaFormat.h" />
-    <ClInclude Include="..\Source\SoyLib\src\soymediafoundation.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyPixels.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyPng.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyString.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyThread.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyTypes.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyTypes_Windows.h" />
-    <ClInclude Include="..\Source\SoyLib\src\SoyWave.h" />
-    <ClInclude Include="..\Source\SoyLib\src\string.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Source\Broadway\Decoder\src\EvaluationTestBench.x">
+    <None Include="..\src\PopEngineAppBundle.xcconfig" />
+    <None Include="..\src\PopMain.mm" />
+    <None Include="..\src\PopTrack.mm" />
+    <None Include="..\src\SoyBluetooth.mm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </None>
-    <None Include="..\Source\InstanceManager.inc" />
-    <None Include="..\Unity\PopH264\Assets\PopH264\PopH264.cs" />
+    <None Include="..\src\SoyOpenglView.mm" />
+    <None Include="..\src\SoyOpenglWindow.mm" />
+    <None Include="..\src\TApiCoreMl.mm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\JsCoreInstance.cpp" />
+    <ClCompile Include="..\src\PopMain.cpp" />
+    <ClCompile Include="..\src\SoyHid.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyOpengl.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyOpenglContext.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyString.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyUniform.cpp" />
+    <ClCompile Include="..\src\TApiBluetooth.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiCommon.cpp" />
+    <ClCompile Include="..\src\TApiDlib.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEzsift.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiHttp.cpp" />
+    <ClCompile Include="..\src\TApiInput.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpengl.cpp" />
+    <ClCompile Include="..\src\TApiOpenglContext.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSocket.cpp" />
+    <ClCompile Include="..\src\TApiWebsocket.cpp" />
+    <ClCompile Include="..\src\TBind.cpp" />
+    <ClCompile Include="..\src\TPopServerThread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Container.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Inspector.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Instance.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64811728-CD20-4F2C-899B-E3BF3D4B032E}</ProjectGuid>
@@ -307,7 +378,7 @@ copy /y %PathPdb% $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
     </Link>
     <PostBuildEvent>
       <Command>
-</Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

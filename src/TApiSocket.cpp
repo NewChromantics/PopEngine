@@ -3,12 +3,13 @@
 #include "TApiCommon.h"
 #include "SoySocket.h"
 
-const char UdpBroadcastServer_TypeName[] = "UdpBroadcastServer";
-
-const char GetAddress_FunctionName[] = "GetAddress";
-const char Send_FunctionName[] = "Send";
-const char GetPeers_FunctionName[] = "GetPeers";
-
+namespace ApiSocket
+{
+	DEFINE_BIND_TYPENAME(UdpBroadcastServer);
+	DEFINE_BIND_FUNCTIONNAME(GetAddress);
+	DEFINE_BIND_FUNCTIONNAME(Send);
+	DEFINE_BIND_FUNCTIONNAME(GetPeers);
+}
 
 void ApiSocket::Bind(Bind::TContext& Context)
 {
@@ -34,9 +35,9 @@ void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 
 void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<GetAddress_FunctionName>( GetAddress );
-	Template.BindFunction<Send_FunctionName>( Send );
-	Template.BindFunction<GetPeers_FunctionName>( GetPeers );
+	Template.BindFunction<ApiSocket::GetAddress_FunctionName>( GetAddress );
+	Template.BindFunction<ApiSocket::Send_FunctionName>( Send );
+	Template.BindFunction<ApiSocket::GetPeers_FunctionName>( GetPeers );
 }
 
 

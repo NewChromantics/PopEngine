@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(TARGET_WINDOWS)
+#error Currently OSX only
+#endif
+
 #include <functional>
 #include <string>
 #include "SoyLib/src/bufferarray.hpp"

@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)..\Source\SoyLib\src;$(ProjectDir)..\Source\Broadway\Decoder\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\Libs;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -23,6 +23,7 @@
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>GLEW_STATIC;PLATFORM_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>

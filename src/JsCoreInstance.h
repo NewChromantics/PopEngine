@@ -214,8 +214,8 @@ public:
 	void				BindObjectType(const std::string& ParentName=std::string());
 	
 	//	api calls with context provided
-	template<typename IN,typename OUT>
-	OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
+	//template<typename IN,typename OUT>
+	//OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
 	void				ThrowException(JSValueRef ExceptionHandle)	{	JsCore::ThrowException( mContext, ExceptionHandle );	}
 
 	
@@ -669,17 +669,17 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 }
 
 template<typename TYPE>
-inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array)
+inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<TYPE>& TypeArray)
 {
-	JSValueRef Values[Array.GetSize()];
-	for ( auto i=0;	i<Array.GetSize();	i++ )
-		Values[i] = GetValue( Context, Array[i] );
+	Array<JSValueRef> Values;
+	for ( auto i = 0;	i <TypeArray.GetSize();	i++ )
+	{
+		auto Value = GetValue(Context, TypeArray[i]);
+		Values.PushBack(Value);
+	}
 	
-	size_t Counter = Array.GetSize();
-	auto ValuesRemote = GetRemoteArray( Values, Counter );
-
 	//	call GetArrayBridge() in place so it calls the specialised
-	auto ArrayObject = GetArray( Context, GetArrayBridge( ValuesRemote ) );
+	auto ArrayObject = GetArray( Context, GetArrayBridge( Values ) );
 	return ArrayObject;
 }
 

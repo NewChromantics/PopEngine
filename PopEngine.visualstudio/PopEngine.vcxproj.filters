@@ -7,347 +7,305 @@
     <Filter Include="SoyLib">
       <UniqueIdentifier>{5fca03a2-531e-4020-b3a7-da724687bfc8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Unity Source">
-      <UniqueIdentifier>{38d16710-35c0-4ee2-89fd-1eed7bd8119e}</UniqueIdentifier>
+    <Filter Include="Libs">
+      <UniqueIdentifier>{a2cd0c1b-63df-4d92-8ed0-0dc87234f314}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Broadway">
-      <UniqueIdentifier>{0c422dd0-e47c-4f51-a2d7-9ff412f56902}</UniqueIdentifier>
+    <Filter Include="Libs\JavascriptCore">
+      <UniqueIdentifier>{3787af57-a192-4d41-a7cb-ff7639a9ee3d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Source\SoyLib\src\memheap.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyDebug.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyPixels.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyString.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyTypes.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyTime.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyPng.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyAssert.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyArray.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyThread.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMediaFormat.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMedia.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMediaFoundation.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyMath.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyJson.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyEvent.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyWave.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\SoyLib\src\SoyH264.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\PopH264.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BroadwayDecoder.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_header.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_storage.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_stream.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_transform.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_util.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_vlc.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_vui.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\H264SwDecApi.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_byte_stream.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_cavlc.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_conceal.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_deblocking.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_decoder.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_dpb.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_image.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_inter_prediction.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_intra_prediction.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_macroblock_layer.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_nal_unit.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_neighbour.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_pic_order_cnt.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_pic_param_set.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_reconstruct.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_sei.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_seq_param_set.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_data.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\h264bsd_slice_group_map.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\Broadway.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\Decoder.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\DecTestBench.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\EvaluationTestBench.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\extraFlags.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Broadway\Decoder\src\TestBenchMultipleInstance.c">
-      <Filter>Broadway</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\Source\SoyLib\src\Array.hpp">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\BufferArray.hpp">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\HeapArray.hpp">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\MemHeap.hpp">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyDebug.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyPixels.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyString.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyTypes.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyTypes_Windows.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\string.hpp">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyPng.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyAssert.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyArray.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyThread.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyMedia.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyMediaFormat.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\soymediafoundation.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyMath.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyJson.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyEvent.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyWave.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\SoyLib\src\SoyH264.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\PopH264.h">
+    <ClInclude Include="..\src\JsCoreInstance.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\PopH264DecoderInstance.h">
+    <ClInclude Include="..\src\PopMain.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\PopH264Framework.h">
+    <ClInclude Include="..\src\PopTrack.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\BroadwayDecoder.h">
+    <ClInclude Include="..\src\SoyBluetooth.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_header.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\SoyHid.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_storage.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\SoyOpenglView.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_stream.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\SoyOpenglWindow.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_transform.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiBluetooth.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_util.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiCommon.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_vlc.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiCoreMl.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_vui.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiDlib.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_byte_stream.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiEzsift.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_cavlc.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiHttp.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_cfg.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiInput.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_conceal.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiMedia.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_container.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiOpencl.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_deblocking.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiOpencv.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_decoder.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiOpengl.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_dpb.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiOpenglContext.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_image.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiSocket.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_inter_prediction.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TApiWebsocket.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_intra_prediction.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TBind.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_macroblock_layer.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TPopServerThread.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_nal_unit.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TProtocolWebSocket.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_neighbour.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TSsdMobileNetAnchors.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_pic_order_cnt.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TV8Container.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_pic_param_set.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TV8Inspector.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_reconstruct.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TV8Instance.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_sei.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\TV8ObjectWrapper.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_seq_param_set.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\SoyLib\src\SoyString.h">
+      <Filter>SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_data.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h">
+      <Filter>SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Broadway\Decoder\src\h264bsd_slice_group_map.h">
-      <Filter>Broadway</Filter>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Windows.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyUniform.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackFunction.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackObject.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSContext.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSObjectRef.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSStringRef.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JavaScript.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\JavascriptCore\JavaScriptCore.h">
+      <Filter>Libs\JavascriptCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTime.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Array.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocket.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyStream.h">
+      <Filter>SoyLib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Unity\PopH264\Assets\PopH264\PopH264.cs">
-      <Filter>Unity Source</Filter>
-    </None>
-    <None Include="..\Source\InstanceManager.inc">
+    <None Include="..\src\PopEngineAppBundle.xcconfig">
       <Filter>Source</Filter>
     </None>
-    <None Include="..\Source\Broadway\Decoder\src\EvaluationTestBench.x">
-      <Filter>Broadway</Filter>
+    <None Include="..\src\PopMain.mm">
+      <Filter>Source</Filter>
     </None>
+    <None Include="..\src\PopTrack.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\SoyBluetooth.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\SoyOpenglView.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\SoyOpenglWindow.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\TApiCoreMl.mm">
+      <Filter>Source</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\PopMain.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyHid.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiBluetooth.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiCommon.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDlib.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEzsift.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiHttp.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiInput.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpengl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenglContext.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiWebsocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TBind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TPopServerThread.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Container.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Inspector.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Instance.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsCoreInstance.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyString.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyOpenglContext.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyUniform.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyOpengl.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\memheap.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -10,49 +10,52 @@
 #include "SoyWindow.h"
 
 
+DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
+
 //	system stuff
-const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
-const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
-const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
-const char SetTimeout_FunctionName[] = "SetTimeout";
-const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
+//extern const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
+extern const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
+extern const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
+extern const char SetTimeout_FunctionName[] = "SetTimeout";
+extern const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
 
 //	engine stuff
-const char CompileAndRun_FunctionName[] = "CompileAndRun";
-const char CreateTestPromise_FunctionName[] = "CreateTestPromise";
-const char Debug_FunctionName[] = "Debug";
-const char ThreadTest_FunctionName[] = "ThreadTest";
-const char GetImageHeapSize_FunctionName[] = "GetImageHeapSize";
-const char GetImageHeapCount_FunctionName[] = "GetImageHeapCount";
-const char GetHeapSize_FunctionName[] = "GetHeapSize";
-const char GetHeapCount_FunctionName[] = "GetHeapCount";
-const char GarbageCollect_FunctionName[] = "GarbageCollect";
-const char Sleep_FunctionName[] = "Sleep";
+DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
+DEFINE_BIND_FUNCTIONNAME(CreateTestPromise);
+DEFINE_BIND_FUNCTIONNAME(Debug);
+DEFINE_BIND_FUNCTIONNAME(ThreadTest);
+DEFINE_BIND_FUNCTIONNAME(GetImageHeapSize);
+DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
+DEFINE_BIND_FUNCTIONNAME(GetHeapSize);
+DEFINE_BIND_FUNCTIONNAME(GetHeapCount);
+DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
+DEFINE_BIND_FUNCTIONNAME(Sleep);
 
 //	platform stuff
-const char GetComputerName_FunctionName[] = "GetComputerName";
-const char ShowFileInFinder_FunctionName[] = "ShowFileInFinder";
-const char EnumScreens_FunctionName[] = "EnumScreens";
+DEFINE_BIND_FUNCTIONNAME(GetComputerName);
+DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
+DEFINE_BIND_FUNCTIONNAME(EnumScreens);
 
 
 
 
 const char Image_TypeName[] = "Image";
 
-const char LoadFile_FunctionName[] = "Load";
-const char Alloc_FunctionName[] = "Create";
-const char Flip_FunctionName[] = "Flip";
-const char GetWidth_FunctionName[] = "GetWidth";
-const char GetHeight_FunctionName[] = "GetHeight";
-const char GetRgba8_FunctionName[] = "GetRgba8";
-const char SetLinearFilter_FunctionName[] = "SetLinearFilter";
-const char Copy_FunctionName[] = "Copy";
-const char WritePixels_FunctionName[] = "WritePixels";
-const char Resize_FunctionName[] = "Resize";
-const char Clip_FunctionName[] = "Clip";
-const char Clear_FunctionName[] = "Clear";
-const char SetFormat_FunctionName[] = "SetFormat";
-const char GetFormat_FunctionName[] = "GetFormat";
+DEFINE_BIND_FUNCTIONNAME(Alloc);
+DEFINE_BIND_FUNCTIONNAME(LoadFile);
+DEFINE_BIND_FUNCTIONNAME(Create);
+DEFINE_BIND_FUNCTIONNAME(Flip);
+DEFINE_BIND_FUNCTIONNAME(GetWidth);
+DEFINE_BIND_FUNCTIONNAME(GetHeight);
+DEFINE_BIND_FUNCTIONNAME(GetRgba8);
+DEFINE_BIND_FUNCTIONNAME(SetLinearFilter);
+DEFINE_BIND_FUNCTIONNAME(Copy);
+DEFINE_BIND_FUNCTIONNAME(WritePixels);
+DEFINE_BIND_FUNCTIONNAME(Resize);
+DEFINE_BIND_FUNCTIONNAME(Clip);
+DEFINE_BIND_FUNCTIONNAME(Clear);
+DEFINE_BIND_FUNCTIONNAME(SetFormat);
+DEFINE_BIND_FUNCTIONNAME(GetFormat);
 
 
 namespace ApiPop
