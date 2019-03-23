@@ -177,6 +177,15 @@
     <ClInclude Include="..\src\SoyLib\src\SoyStream.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyHttp.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -306,6 +315,18 @@
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp">
       <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWebSocket.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyGraphics.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenglWindow.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

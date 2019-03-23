@@ -17,6 +17,7 @@ class SoySocket;
 namespace ApiWebsocket
 {
 	void	Bind(Bind::TContext& Context);
+	DECLARE_BIND_TYPENAME(WebsocketServer);
 }
 
 
@@ -85,8 +86,7 @@ protected:
 
 
 	
-extern const char WebsocketServer_TypeName[];
-class TWebsocketServerWrapper : public Bind::TObjectWrapper<WebsocketServer_TypeName,TWebsocketServer>, public TSocketWrapper
+class TWebsocketServerWrapper : public Bind::TObjectWrapper<ApiWebsocket::WebsocketServer_TypeName,TWebsocketServer>, public TSocketWrapper
 {
 public:
 	TWebsocketServerWrapper(Bind::TContext& Context,Bind::TObject& This) :

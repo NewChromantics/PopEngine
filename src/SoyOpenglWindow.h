@@ -10,7 +10,11 @@
 #endif
 
 
-class MacWindow;
+namespace Platform
+{
+	class TWindow;
+}
+
 class TOpenglView;
 
 
@@ -56,6 +60,6 @@ protected:
 	
 private:
 	std::string		mName;
-	std::shared_ptr<MacWindow>		mMacWindow;
+	std::shared_ptr<Platform::TWindow>		mWindow;
 };
 
