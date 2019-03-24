@@ -97,6 +97,10 @@
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF75E86021FE5DB400B8CC33 /* hourglass.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */; };
+		BF7AB95B2245942D00FAC1CE /* DFBlunoDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB9552245942D00FAC1CE /* DFBlunoDevice.mm */; };
+		BF7AB95C2245942D00FAC1CE /* BLEUtility.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB9562245942D00FAC1CE /* BLEUtility.mm */; };
+		BF7AB95D2245942D00FAC1CE /* DFBlunoManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB9572245942D00FAC1CE /* DFBlunoManager.mm */; };
+		BF7AB95E2245942D00FAC1CE /* BLEDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95A2245942D00FAC1CE /* BLEDevice.mm */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
 		BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */; };
 		BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */; };
@@ -328,6 +332,14 @@
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
 		BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = hourglass.mlmodel; sourceTree = "<group>"; };
+		BF7AB9532245942C00FAC1CE /* DFBlunoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DFBlunoManager.h; path = src/DFBlunoManager.h; sourceTree = "<group>"; };
+		BF7AB9542245942C00FAC1CE /* BLEDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BLEDevice.h; path = src/BLEDevice.h; sourceTree = "<group>"; };
+		BF7AB9552245942D00FAC1CE /* DFBlunoDevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DFBlunoDevice.mm; path = src/DFBlunoDevice.mm; sourceTree = "<group>"; };
+		BF7AB9562245942D00FAC1CE /* BLEUtility.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BLEUtility.mm; path = src/BLEUtility.mm; sourceTree = "<group>"; };
+		BF7AB9572245942D00FAC1CE /* DFBlunoManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DFBlunoManager.mm; path = src/DFBlunoManager.mm; sourceTree = "<group>"; };
+		BF7AB9582245942D00FAC1CE /* DFBlunoDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DFBlunoDevice.h; path = src/DFBlunoDevice.h; sourceTree = "<group>"; };
+		BF7AB9592245942D00FAC1CE /* BLEUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BLEUtility.h; path = src/BLEUtility.h; sourceTree = "<group>"; };
+		BF7AB95A2245942D00FAC1CE /* BLEDevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BLEDevice.mm; path = src/BLEDevice.mm; sourceTree = "<group>"; };
 		BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyAssert.cpp; path = src/SoyAssert.cpp; sourceTree = "<group>"; };
 		BF89F6B51B4AB9DC00F58561 /* SoyAssert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyAssert.h; path = src/SoyAssert.h; sourceTree = "<group>"; };
 		BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMath.cpp; path = src/SoyMath.cpp; sourceTree = "<group>"; };
@@ -806,6 +818,14 @@
 				BF19611B21B98A46007014EF /* JsCoreInstance.cpp */,
 				BF19611C21B98A46007014EF /* JsCoreInstance.h */,
 				BF59A24F2222039900AE9926 /* Lollypop.icns */,
+				BF7AB9542245942C00FAC1CE /* BLEDevice.h */,
+				BF7AB95A2245942D00FAC1CE /* BLEDevice.mm */,
+				BF7AB9592245942D00FAC1CE /* BLEUtility.h */,
+				BF7AB9562245942D00FAC1CE /* BLEUtility.mm */,
+				BF7AB9582245942D00FAC1CE /* DFBlunoDevice.h */,
+				BF7AB9552245942D00FAC1CE /* DFBlunoDevice.mm */,
+				BF7AB9532245942C00FAC1CE /* DFBlunoManager.h */,
+				BF7AB9572245942D00FAC1CE /* DFBlunoManager.mm */,
 				BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
@@ -1080,6 +1100,7 @@
 				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
+				BF7AB95C2245942D00FAC1CE /* BLEUtility.mm in Sources */,
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
 				BF5749C621FF73F000A7A659 /* MobileOpenPose.mlmodel in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
@@ -1099,6 +1120,7 @@
 				BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */,
 				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
+				BF7AB95D2245942D00FAC1CE /* DFBlunoManager.mm in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
 				EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */,
 				BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */,
@@ -1119,6 +1141,7 @@
 				BF5749D22202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel in Sources */,
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
 				BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */,
+				BF7AB95E2245942D00FAC1CE /* BLEDevice.mm in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
 				FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */,
 				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
@@ -1144,6 +1167,7 @@
 				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
 				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
 				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,
+				BF7AB95B2245942D00FAC1CE /* DFBlunoDevice.mm in Sources */,
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,

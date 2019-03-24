@@ -162,8 +162,6 @@ Bluetooth::TDeviceMeta Bluetooth::GetMeta(CBPeripheral* Device)
 		Meta.mServices.PushBack( UuidString );
 	};
 	Platform::NSArray_ForEach<CBService*>( Device.services, EnumService );
-	if ( Device.services )
-		std::Debug << Meta.mName << " has services!" << std::endl;
 	
 	return Meta;
 }
@@ -525,13 +523,24 @@ void Bluetooth::TDevice::SubscribeToCharacteristics(const std::string& NewChract
 			{
 				auto CharacteristicString = Soy::NSStringToString( [characteristic.UUID UUIDString] );
 				if ( ![characteristic.UUID isEqual:CharUid])
+				{
+					std::Debug << "Found characteristic " << CharacteristicString << ", looking for " << PendingCharacteristic << std::endl;
 					continue;
+				}
 				
-				//	if (characteristic.properties & CBCharacteristicPropertyNotify) return YES;
+				auto CanSubscribe = (characteristic.properties & CBCharacteristicPropertyNotify)!=0;
+				if ( !CanSubscribe )
+				{
+					std::Debug << "Not able to subscribe to " << PendingCharacteristic << std::endl;
+				}
+				
 				auto enable = YES;
 				[Peripheral setNotifyValue:enable forCharacteristic:characteristic];
 				WasSet++;
 				std::Debug << mMeta.GetName() << " subscribed to " << PendingCharacteristic << std::endl;
+				
+				//	trigger a read of current data
+				[Peripheral readValueForCharacteristic:characteristic];
 			}
 		}
 		
@@ -633,7 +642,7 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 	//	good time to do this apparently
 	//	https://github.com/DFRobot/BlunoBasicDemo/blob/master/IOS/BlunoBasicDemo/BlunoTest/Bluno/DFBlunoManager.m#L187
 	//	if you subscribe to specific services, it'll find characteristics
-	//auto* ServiceFilter = GetServices("dfb0");
+	auto* ServiceFilter = GetServices("dfb0");
 	//[peripheral discoverServices:ServiceFilter];
 	[peripheral discoverServices:nil];
 	
@@ -716,6 +725,16 @@ void Bluetooth::TManager::EnumDevicesWithService(const std::string& ServiceUuid,
 		Platform::NSDataToArray( characteristic.value, GetArrayBridge(Data) );
 	}
 	mParent->OnRecv( GetArrayBridge(Data) );
+	
+	std::Debug << "recv (x" << Data.GetSize() << "): ";
+	for ( auto i=0;	i<Data.GetSize();	i++ )
+	{
+		std::Debug << (char)Data[i];
+	}
+	std::Debug << std::endl;
+
+	//	read more!
+	//[peripheral readValueForCharacteristic:characteristic];
 }
 
 

@@ -142,7 +142,7 @@ void Hid::TContext::ListenForDevices()
 	{
 		kHIDUsage_GD_Joystick,
 		kHIDUsage_GD_GamePad,
-		//kHIDUsage_GD_Keyboard,
+		kHIDUsage_GD_Keyboard,
 		//kHIDUsage_GD_Mouse
 	};
 	auto FilterUsages = GetRemoteArray(_FilterUsages);
