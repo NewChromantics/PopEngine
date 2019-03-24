@@ -42,15 +42,33 @@ TPopTrack& PopTrack::GetApp(std::string DataPath)
 }
 
 
+namespace Platform
+{
+	void		Loop(bool Blocking,std::function<void()> OnQuit);
+}
+
 
 TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 {
 	std::string DataPath = Arguments.GetSize() > 0 ? Arguments[0] : "";
 	auto& App = PopTrack::GetApp(DataPath);
 	
-#if !defined(TARGET_OSX_BUNDLE) && !defined(TARGET_WINDOWS)
+#if !defined(TARGET_OSX_BUNDLE)
 	//	run
-	App.mConsoleApp.WaitForExit();
+	//Soy::Platform::TConsoleApp app;
+	//app.WaitForExit();
+#endif
+
+#if defined(TARGET_WINDOWS)
+	bool Running = true;
+	while ( Running )
+	{
+		auto OnQuit = [&]()
+		{
+			Running = false;
+		};
+		Platform::Loop(true,OnQuit);
+	}
 #endif
 
 	

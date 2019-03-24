@@ -18,12 +18,61 @@ namespace Platform
 
 	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+
+	void		Loop(bool Blocking,std::function<void()> OnQuit);
 }
 
+void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
+{
+	while ( true )
+	{
+		MSG msg;
+		if ( Blocking )
+		{
+			if ( !GetMessage(&msg, NULL, 0, 0) )
+				break;
+		}
+		else
+		{
+			if ( !PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+				break;
+		}
+		
+		if ( msg.message == WM_QUIT )
+			if ( OnQuit )
+				OnQuit();
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+
+		//	no more messages, and we've got updates to do so break out and let the app loop
+		if ( !PeekMessage(&msg,NULL,0,0,PM_NOREMOVE) )
+		{
+			//	no more messages, break out here
+		}
+	}
+}
 
 
 LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+	switch ( message )
+	{
+		//	gotta allow some things
+	case WM_MOVE:
+	case WM_SIZE:
+	case WM_CREATE:
+	case WM_PAINT:
+	case WM_ERASEBKGND:
+	case WM_SHOWWINDOW:
+		return 0;
+
+		//	*need* to handle these with defwndproc
+	case WM_GETMINMAXINFO:
+	case WM_NCCREATE:
+		break;
+	}
+
 	return DefWindowProc(hwnd, message, wParam, lParam) ;
 }
 
@@ -165,7 +214,7 @@ Platform::TControlClass& GetWindowClass()
 Platform::TWindow::TWindow(const std::string& Name) :
 	TControl	( Name, GetWindowClass(), nullptr )
 {
-
+	ShowWindow(mHwnd, SW_SHOW);
 }
 
 
