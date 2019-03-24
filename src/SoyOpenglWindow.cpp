@@ -80,9 +80,9 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 class Platform::TControl
 {
 public:
-	TControl(const std::string& Name,TControlClass& Class,TControl* Parent);
+	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags);
 
-	HWND		mHwnd;
+	HWND		mHwnd = nullptr;
 	std::string	mName;
 };
 
@@ -107,16 +107,18 @@ public:
 class Platform::TControlClass
 {
 public:
-	TControlClass(const std::string& Name, uint16_t Style);
+	TControlClass(const std::string& Name,UINT Style);
 	~TControlClass();
 
 	const char*	ClassName() const {		return mClassName.c_str();	}
 
 	WNDCLASS	mClass;
 	std::string	mClassName;
+	DWORD		mStyleEx = 0;
+	UINT&		mStyle = mClass.style;
 };
 
-Platform::TControlClass::TControlClass(const std::string& Name, uint16_t Style) :
+Platform::TControlClass::TControlClass(const std::string& Name, UINT ClassStyle) :
 	mClassName	( Name )
 {
 	auto* NameStr = mClassName.c_str();
@@ -125,7 +127,7 @@ Platform::TControlClass::TControlClass(const std::string& Name, uint16_t Style) 
 	
 	auto& wc = mClass;
 	ZeroMemory(&wc,sizeof(wc));
-	wc.style		= Style;
+	wc.style		= ClassStyle;
 	wc.lpfnWndProc	= Win32CallBack; 
 	wc.cbClsExtra	= 0;
 	wc.cbWndExtra	= 0;
@@ -162,13 +164,11 @@ Platform::TControlClass::~TControlClass()
 }
 
 
-Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent) :
+Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags) :
 	mName	( Name )
 {
-	DWORD StyleFlags = 0x0;
 	const char* ClassName = Class.ClassName();
 	const char* WindowName = mName.c_str();
-	uint16_t StyleExFlags = 0;
 	Soy::Rectx<int> Rect(0, 0, 100, 100);
 	void* Data = this;
 	HWND ParentHwnd = Parent ? Parent->mHwnd : nullptr;
@@ -203,18 +203,17 @@ Platform::TControlClass& GetWindowClass()
 	if ( gWindowClass )
 		return *gWindowClass;
 
-	uint16_t Style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-	Style |= WS_OVERLAPPEDWINDOW;
-	Style |= WS_EX_CLIENTEDGE;
+	UINT ClassStyle = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 
-	gWindowClass.reset(new Platform::TControlClass("Window", Style));
+	gWindowClass.reset(new Platform::TControlClass("Window", ClassStyle));
 	return *gWindowClass;
 }
 
 Platform::TWindow::TWindow(const std::string& Name) :
-	TControl	( Name, GetWindowClass(), nullptr )
+	TControl	( Name, GetWindowClass(), nullptr, WS_OVERLAPPEDWINDOW, WS_EX_CLIENTEDGE )
 {
 	ShowWindow(mHwnd, SW_SHOW);
+
 }
 
 
