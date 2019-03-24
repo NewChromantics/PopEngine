@@ -15,6 +15,8 @@ namespace Broadway
 namespace ApiMedia
 {
 	void	Bind(Bind::TContext& Context);
+	
+	DECLARE_BIND_TYPENAME(Source);
 }
 
 
@@ -36,8 +38,8 @@ public:
 	Bind::TPromise	mPromise;
 };
 
-extern const char MediaSource_TypeName[];
-class TMediaSourceWrapper : public Bind::TObjectWrapper<MediaSource_TypeName,TMediaExtractor>
+
+class TMediaSourceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,TMediaExtractor>
 {
 public:
 	TMediaSourceWrapper(Bind::TContext& Context,Bind::TObject& This) :

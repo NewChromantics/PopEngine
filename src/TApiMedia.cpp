@@ -15,6 +15,8 @@ namespace ApiMedia
 {
 	const char Namespace[] = "Pop.Media";
 	
+	DEFINE_BIND_TYPENAME(Source);
+	
 	void	EnumDevices(Bind::TCallback& Params);
 }
 
@@ -389,7 +391,7 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Decode_FunctionName>( Decode );
+	Template.BindFunction<decode_FunctionName>( Decode );
 }
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
