@@ -125,7 +125,9 @@ JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
 	Array<char> Buffer;
+	//	gr: length doesn't include terminator, but JSStringGetUTF8CString writes one
 	Buffer.SetSize(JSStringGetLength(Handle));
+	Buffer.PushBack('\0');
 
 	size_t bytesWritten = JSStringGetUTF8CString(Handle, Buffer.GetArray(), Buffer.GetSize() );
 	Buffer.SetSize(bytesWritten);
