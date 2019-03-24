@@ -13,21 +13,18 @@
     <Filter Include="Libs\JavascriptCore">
       <UniqueIdentifier>{3787af57-a192-4d41-a7cb-ff7639a9ee3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SoyLib\glew">
+      <UniqueIdentifier>{8bffea1e-9552-4a25-ac57-01c8d150778d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SoyLib\sha1">
+      <UniqueIdentifier>{464fd74e-1daa-4809-acd3-55bcee0c119d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Todo">
+      <UniqueIdentifier>{c20b2e8c-e666-4885-9846-0656eb5ada9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\JsCoreInstance.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\PopMain.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PopTrack.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyBluetooth.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyHid.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyOpenglView.h">
@@ -36,40 +33,13 @@
     <ClInclude Include="..\src\SoyOpenglWindow.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TApiBluetooth.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TApiCommon.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiCoreMl.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiDlib.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiEzsift.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiHttp.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TApiInput.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiMedia.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiOpencl.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiOpencv.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TApiOpengl.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiOpenglContext.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiSocket.h">
@@ -79,27 +49,6 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TBind.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TPopServerThread.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TProtocolWebSocket.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TSsdMobileNetAnchors.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8Container.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8Inspector.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8Instance.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8ObjectWrapper.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyString.h">
@@ -186,6 +135,123 @@
     <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyShader.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\glxew.h">
+      <Filter>SoyLib\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\wglew.h">
+      <Filter>SoyLib\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\glew.h">
+      <Filter>SoyLib\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyArray.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyDebug.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyAssert.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMedia.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMediaFormat.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyImage.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRef.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyApp.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyJson.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWave.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyBase64.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h">
+      <Filter>SoyLib\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyBluetooth.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyHid.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiBluetooth.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\JsCoreInstance.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiCoreMl.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDlib.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEzsift.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiInput.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiMedia.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencl.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencv.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TPopServerThread.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TProtocolWebSocket.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TSsdMobileNetAnchors.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Container.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Inspector.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Instance.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8ObjectWrapper.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpenglContext.h">
+      <Filter>Source\Todo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyEvent.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PopEngine.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -194,19 +260,19 @@
     <None Include="..\src\PopMain.mm">
       <Filter>Source</Filter>
     </None>
-    <None Include="..\src\PopTrack.mm">
-      <Filter>Source</Filter>
-    </None>
-    <None Include="..\src\SoyBluetooth.mm">
-      <Filter>Source</Filter>
-    </None>
     <None Include="..\src\SoyOpenglView.mm">
       <Filter>Source</Filter>
     </None>
     <None Include="..\src\SoyOpenglWindow.mm">
       <Filter>Source</Filter>
     </None>
+    <None Include="..\src\SoyBluetooth.mm">
+      <Filter>Source\Todo</Filter>
+    </None>
     <None Include="..\src\TApiCoreMl.mm">
+      <Filter>Source\Todo</Filter>
+    </None>
+    <None Include="..\src\PopEngine.cpp">
       <Filter>Source</Filter>
     </None>
   </ItemGroup>
@@ -214,40 +280,13 @@
     <ClCompile Include="..\src\PopMain.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SoyHid.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiBluetooth.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TApiCommon.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiDlib.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiEzsift.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TApiHttp.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TApiInput.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiMedia.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiOpencl.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiOpencv.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TApiOpengl.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiOpenglContext.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TApiSocket.cpp">
@@ -257,27 +296,6 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TBind.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TPopServerThread.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8Container.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8Inspector.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8Instance.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\JsCoreInstance.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyString.cpp">
@@ -327,6 +345,105 @@
     </ClCompile>
     <ClCompile Include="..\src\SoyOpenglWindow.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyShader.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\GL\glew.c">
+      <Filter>SoyLib\glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyArray.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyMediaFormat.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyMedia.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyApp.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyJson.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWave.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp">
+      <Filter>SoyLib\sha1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyHid.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiBluetooth.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsCoreInstance.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDlib.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEzsift.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiInput.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencl.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TPopServerThread.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Container.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Inspector.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Instance.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenglContext.cpp">
+      <Filter>Source\Todo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyEvent.cpp">
+      <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
