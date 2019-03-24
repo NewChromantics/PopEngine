@@ -53,12 +53,27 @@ TJobParams Private::DecodeArgs(int argc,const char* argv[])
 
 */
 
+namespace Platform
+{
 #if defined(TARGET_WINDOWS)
-int _tmain(int argc, _TCHAR* argv[])
+	namespace Private
+	{
+		extern HINSTANCE InstanceHandle;
+	}
+#endif
+}
+
+#if defined(TARGET_WINDOWS)
+//int _tmain(int argc, _TCHAR* argv[])
+int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
+{
+	Platform::Private::InstanceHandle = hInstance;
+	const char* argv[2] = { "",lpCmdLine };
+	int argc = 2;
 #else
 int main(int argc,const char* argv[])
-#endif
 {
+#endif
 	Array<std::string> Arguments;
 	for ( auto a=1;	a<argc;	a++ )
 	{

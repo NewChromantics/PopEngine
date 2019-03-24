@@ -5,13 +5,13 @@
 #include "SoyFilesystem.h"
 #include "SoyMediaFormat.h"
 
-
-const char HttpServer_TypeName[] = "Http";
-
-const char GetAddress_FunctionName[] = "GetAddress";
-const char Send_FunctionName[] = "Send";
-const char GetPeers_FunctionName[] = "GetPeers";
-
+namespace ApiHttp
+{
+	DEFINE_BIND_TYPENAME(Http);
+	DEFINE_BIND_FUNCTIONNAME(GetAddress);
+	DEFINE_BIND_FUNCTIONNAME(Send);
+	DEFINE_BIND_FUNCTIONNAME(GetPeers);
+}
 
 void ApiHttp::Bind(Bind::TContext& Context)
 {
@@ -35,9 +35,9 @@ void THttpServerWrapper::Construct(Bind::TCallback& Params)
 
 void THttpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<GetAddress_FunctionName>( GetAddress );
-	Template.BindFunction<Send_FunctionName>( Send );
-	Template.BindFunction<GetPeers_FunctionName>( GetPeers );
+	Template.BindFunction<ApiHttp::GetAddress_FunctionName>( GetAddress );
+	Template.BindFunction<ApiHttp::Send_FunctionName>( Send );
+	Template.BindFunction<ApiHttp::GetPeers_FunctionName>( GetPeers );
 }
 
 

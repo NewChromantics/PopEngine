@@ -1,4 +1,4 @@
-#include "PopTrack.h"
+#include "PopEngine.h"
 #include "SoyDebug.h"
 #include "SoyApp.h"
 #include "PopMain.h"
@@ -10,9 +10,7 @@ namespace PopTrack
 	namespace Private
 	{
 		//	keep alive after PopMain()
-#if defined(TARGET_OSX_BUNDLE)
 		std::shared_ptr<TPopTrack> gOpenglApp;
-#endif
 		
 	}
 	
@@ -44,6 +42,11 @@ TPopTrack& PopTrack::GetApp(std::string DataPath)
 }
 
 
+namespace Platform
+{
+	void		Loop(bool Blocking,std::function<void()> OnQuit);
+}
+
 
 TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 {
@@ -52,7 +55,20 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	
 #if !defined(TARGET_OSX_BUNDLE)
 	//	run
-	App.mConsoleApp.WaitForExit();
+	//Soy::Platform::TConsoleApp app;
+	//app.WaitForExit();
+#endif
+
+#if defined(TARGET_WINDOWS)
+	bool Running = true;
+	while ( Running )
+	{
+		auto OnQuit = [&]()
+		{
+			Running = false;
+		};
+		Platform::Loop(true,OnQuit);
+	}
 #endif
 
 	
@@ -61,13 +77,17 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 
 
 
+#include "SoyOpenglWindow.h"
+std::shared_ptr<TOpenglWindow> pWindow;
 
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
 	//	todo: watch for when a file changes and recreate instance
 	//mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
+#if !defined(TARGET_WINDOWS)
 	mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
-
+#endif
+	pWindow.reset(new TOpenglWindow("Test", Soy::Rectf(), TOpenglParams() ));
 }
 
 TPopTrack::~TPopTrack()

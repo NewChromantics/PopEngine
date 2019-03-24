@@ -10,6 +10,12 @@ xcuserdata
 xcuserdata/**/*
 *.xccheckout
 
+
+# visual studio temp files
+*.db
+*.opendb
+*.visualstudio/x64/
+
 # unity
 StreamingAssets/
 Plugins/

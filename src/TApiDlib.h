@@ -2,6 +2,9 @@
 #include "TBind.h"
 #include "SoyOpenglWindow.h"
 
+#if defined(TARGET_WINDOWS)
+#error not supported on this platform
+#endif
 
 
 namespace ApiDlib

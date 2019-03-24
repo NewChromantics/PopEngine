@@ -3,11 +3,12 @@
 #include "TApiCommon.h"
 #include "SoyFilesystem.h"
 
+#if !defined(TARGET_WINDOWS)
 #include "PopMovie/AvfVideoCapture.h"
 #include "PopMovie/AvfMovieDecoder.h"
 #include "SoyDecklink/SoyDecklink.h"
-
 #include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
+#endif
 
 
 namespace ApiMedia
@@ -17,14 +18,14 @@ namespace ApiMedia
 	void	EnumDevices(Bind::TCallback& Params);
 }
 
-const char EnumDevices_FunctionName[] = "EnumDevices";
+DEFINE_BIND_FUNCTIONNAME(EnumDevices);
 
-const char MediaSource_TypeName[] = "Source";
-const char Free_FunctionName[] = "Free";
-const char GetNextFrame_FunctionName[] = "GetNextFrame";
+DEFINE_BIND_TYPENAME(Source);
+DEFINE_BIND_FUNCTIONNAME(Free);
+DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
 
-const char AvcDecoder_TypeName[] = "AvcDecoder";
-const char Decode_FunctionName[] = "decode";
+DEFINE_BIND_TYPENAME(AvcDecoder);
+DEFINE_BIND_FUNCTIONNAME(decode);
 
 const char FrameTimestampKey[] = "Time";
 

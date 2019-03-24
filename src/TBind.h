@@ -9,6 +9,11 @@
 #include "Array.hpp"
 #include "JsCoreInstance.h"
 
+//	gr: to deal with different attributes on different platforms... lets make a macro
+#define DEFINE_BIND_FUNCTIONNAME(Name)	extern const char Name ## _FunctionName[] = #Name
+#define DEFINE_BIND_TYPENAME(Name)		extern const char Name ## _TypeName[] = #Name
+#define DECLARE_BIND_TYPENAME(Name)		extern const char Name ## _TypeName[];
+
 namespace Bind = JsCore;
 
 namespace JsCore

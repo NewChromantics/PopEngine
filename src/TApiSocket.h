@@ -14,6 +14,7 @@ class SoySocket;
 namespace ApiSocket
 {
 	void	Bind(Bind::TContext& Context);
+	DECLARE_BIND_TYPENAME(UdpBroadcastServer);
 }
 
 
@@ -47,8 +48,8 @@ public:
 	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
 };
 
-extern const char UdpBroadcastServer_TypeName[];
-class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<UdpBroadcastServer_TypeName,TUdpBroadcastServer>, public TSocketWrapper
+
+class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<ApiSocket::UdpBroadcastServer_TypeName,TUdpBroadcastServer>, public TSocketWrapper
 {
 public:
 	TUdpBroadcastServerWrapper(Bind::TContext& Context,Bind::TObject& This) :

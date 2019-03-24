@@ -3,12 +3,13 @@
 #include "TApiCommon.h"
 #include "SoySocket.h"
 
-const char WebsocketServer_TypeName[] = "WebsocketServer";
-
-const char GetAddress_FunctionName[] = "GetAddress";
-const char Send_FunctionName[] = "Send";
-const char GetPeers_FunctionName[] = "GetPeers";
-
+namespace ApiWebsocket
+{
+	DEFINE_BIND_TYPENAME(WebsocketServer);
+	DEFINE_BIND_FUNCTIONNAME(GetAddress);
+	DEFINE_BIND_FUNCTIONNAME(Send);
+	DEFINE_BIND_FUNCTIONNAME(GetPeers);
+}
 
 void ApiWebsocket::Bind(Bind::TContext& Context)
 {
@@ -37,9 +38,9 @@ void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 
 void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<GetAddress_FunctionName>( GetAddress );
-	Template.BindFunction<Send_FunctionName>( Send );
-	Template.BindFunction<GetPeers_FunctionName>( GetPeers );
+	Template.BindFunction<ApiWebsocket::GetAddress_FunctionName>( GetAddress );
+	Template.BindFunction<ApiWebsocket::Send_FunctionName>( Send );
+	Template.BindFunction<ApiWebsocket::GetPeers_FunctionName>( GetPeers );
 }
 
 

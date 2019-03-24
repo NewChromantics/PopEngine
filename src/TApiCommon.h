@@ -3,6 +3,10 @@
 #include "SoyPixels.h"
 #include "SoyVector.h"
 
+#if defined(GetComputerName)
+#undef GetComputerName
+#endif
+
 class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;

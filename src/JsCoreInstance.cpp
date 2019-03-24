@@ -3,17 +3,20 @@
 #include "SoyFilesystem.h"
 #include "TApiCommon.h"
 #include "TApiOpengl.h"
-//#include "TApiOpencl.h"
-#include "TApiDlib.h"
 #include "TApiMedia.h"
 #include "TApiWebsocket.h"
 #include "TApiSocket.h"
 #include "TApiHttp.h"
+
+#if !defined(PLATFORM_WINDOWS)
+//#include "TApiOpencl.h"
+#include "TApiDlib.h"
 #include "TApiCoreMl.h"
 #include "TApiEzsift.h"
 #include "TApiInput.h"
 #include "TApiOpencv.h"
 #include "TApiBluetooth.h"
+#endif
 
 
 namespace JsCore
@@ -121,11 +124,16 @@ JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
-	size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize(Handle);
-	char utf8Buffer[maxBufferSize];
-	size_t bytesWritten = JSStringGetUTF8CString(Handle, utf8Buffer, maxBufferSize);
+	Array<char> Buffer;
+	Buffer.SetSize(JSStringGetLength(Handle));
+
+	size_t bytesWritten = JSStringGetUTF8CString(Handle, Buffer.GetArray(), Buffer.GetSize() );
+	Buffer.SetSize(bytesWritten);
+	if ( Buffer.IsEmpty() )
+		return std::string();
+
 	//	the last byte is a null \0 which std::string doesn't need.
-	std::string utf_string = std::string(utf8Buffer, bytesWritten -1);
+	std::string utf_string = std::string( Buffer.GetArray(), bytesWritten -1);
 	return utf_string;
 }
 
@@ -133,7 +141,7 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
 	JSValueRef Exception = nullptr;
-	auto HandleType = JSValueGetType( Context, Handle );
+	auto HandleType = JSValueGetType( Context, Handle );
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
 	ThrowException( Context, Exception );
 	return GetString( Context, StringJs );
@@ -248,12 +256,16 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 {
 	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
-		auto ThisRunloop = CFRunLoopGetCurrent();
-		auto MainRunloop = CFRunLoopGetMain();
-		
-		if ( ThisRunloop == MainRunloop )
-			throw Soy::AssertException("Need to create JS VM on a different thread to main");
-		
+		#if !defined(TARGET_WINDOWS)
+		{
+			auto ThisRunloop = CFRunLoopGetCurrent();
+			auto MainRunloop = CFRunLoopGetMain();
+
+			if ( ThisRunloop == MainRunloop )
+				throw Soy::AssertException("Need to create JS VM on a different thread to main");
+		}
+		#endif
+
 		mContextGroup = JSContextGroupCreate();
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
@@ -266,17 +278,20 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 			
 			ApiPop::Bind( *mContext );
 			ApiOpengl::Bind( *mContext );
+
+		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *mContext );
 			ApiDlib::Bind( *mContext );
-			ApiMedia::Bind( *mContext );
-			ApiWebsocket::Bind( *mContext );
-			ApiHttp::Bind( *mContext );
-			ApiSocket::Bind( *mContext );
 			ApiCoreMl::Bind( *mContext );
 			ApiEzsift::Bind( *mContext );
 			ApiInput::Bind( *mContext );
 			ApiOpencv::Bind( *mContext );
 			ApiBluetooth::Bind( *mContext );
+		#endif
+			ApiMedia::Bind( *mContext );
+			ApiWebsocket::Bind( *mContext );
+			ApiHttp::Bind( *mContext );
+			ApiSocket::Bind( *mContext );
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
@@ -330,12 +345,7 @@ void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,cons
 			return Error.str();
 		}
 		
-		size_t maxBufferSize = JSStringGetMaximumUTF8CStringSize( HandleString );
-		char utf8Buffer[maxBufferSize];
-		size_t bytesWritten = JSStringGetUTF8CString( HandleString, utf8Buffer, maxBufferSize);
-		//	the last byte is a null \0 which std::string doesn't need.
-		std::string utf_string = std::string(utf8Buffer, bytesWritten -1);
-		return utf_string;
+		return JsCore::GetString( Context, HandleString );
 	};
 	
 	std::stringstream Error;
@@ -423,14 +433,15 @@ JsCore::TArray JsCore_CreateArray(JsCore::TContext& Context,size_t ElementCount,
 {
 	auto& mContext = Context.mContext;
 	
-	JSValueRef Values[ElementCount];
+	Array<JSValueRef> Values;
+	//JSValueRef Values[ElementCount];
 	for ( auto i=0;	i<ElementCount;	i++ )
 	{
 		auto Element = GetElement(i);
-		Values[i] = JsCore::GetValue( mContext, Element );
+		auto Value = JsCore::GetValue( mContext, Element );
+		Values.PushBack(Value);
 	}
-	auto ValuesArray = GetRemoteArray( Values, ElementCount );
-	auto ArrayObject = JsCore::GetArray( mContext, GetArrayBridge(ValuesArray) );
+	auto ArrayObject = JsCore::GetArray( mContext, GetArrayBridge(Values) );
 	JsCore::TArray Array( mContext, ArrayObject );
 	return Array;
 }
