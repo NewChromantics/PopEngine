@@ -5,14 +5,14 @@
 #include "PopMain.h"
 
 
-class MacWindow
+class Platform::TWindow
 {
 public:
-	MacWindow() :
+	TWindow() :
 		mWindow	( nullptr )
 	{
 	}
-	~MacWindow()
+	~TWindow()
 	{
 		[mWindow release];
 	}
@@ -81,7 +81,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 			auto NSContext = mView->mView.openGLContext;
 			[NSContext setValues:&SwapIntervals forParameter:NSOpenGLCPSwapInterval];
 			
-			auto& mDisplayLink = mMacWindow->mDisplayLink;
+			auto& mDisplayLink = mWindow->mDisplayLink;
 			// Create a display link capable of being used with all active displays
 			CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
 			
@@ -106,8 +106,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	//	actual allocation must be on the main thread.
 	auto Allocate = [=]
 	{
-		mMacWindow.reset( new MacWindow );
-		auto& Wrapper = *mMacWindow;
+		mWindow.reset( new Platform::TWindow );
+		auto& Wrapper = *mWindow;
 		auto*& mWindow = Wrapper.mWindow;
 
 		
@@ -197,12 +197,12 @@ TOpenglWindow::~TOpenglWindow()
 {
 	std::Debug << __func__ << std::endl;
 	mView.reset();
-	mMacWindow.reset();
+	mWindow.reset();
 }
 	
 bool TOpenglWindow::IsValid()
 {
-	return mMacWindow && mMacWindow->IsValid() && mView && mView->IsValid();
+	return mWindow && mWindow->IsValid() && mView && mView->IsValid();
 }
 
 bool TOpenglWindow::Iteration()
