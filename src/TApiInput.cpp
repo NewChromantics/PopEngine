@@ -23,7 +23,7 @@ void ApiInput::Bind(Bind::TContext& Context)
 
 	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiInput::EnumDevices, Namespace );
 
-	Context.BindObjectType<TInputDeviceWrapper>();
+	Context.BindObjectType<TInputDeviceWrapper>( Namespace );
 }
 
 
