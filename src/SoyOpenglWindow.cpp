@@ -11,8 +11,12 @@ namespace Platform
 	class TWindow;
 	class TOpenglContext;
 
+	namespace Private
+	{
+		HINSTANCE InstanceHandle = nullptr;
+	}
+
 	UINT	g_MouseWheelMsg = 0;
-	HINSTANCE			GetHinstance();
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 }
 
@@ -76,7 +80,7 @@ Platform::TControlClass::TControlClass(const std::string& Name, uint16_t Style) 
 	wc.lpfnWndProc	= Win32CallBack; 
 	wc.cbClsExtra	= 0;
 	wc.cbWndExtra	= 0;
-	wc.hInstance = GetHinstance();
+	wc.hInstance = Platform::Private::InstanceHandle;
 	wc.hIcon		= IconHandle;
 	wc.hCursor		= NULL;//LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = BackgroundBrush;
@@ -94,7 +98,7 @@ Platform::TControlClass::~TControlClass()
 {
 	auto* Name = mClassName.c_str();
 
-	if ( !UnregisterClass( Name, GetHinstance() ) )
+	if ( !UnregisterClass( Name, Platform::Private::InstanceHandle ) )
 	{
 		try
 		{
@@ -119,7 +123,7 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 	Soy::Rectx<int> Rect(0, 0, 100, 100);
 	void* Data = this;
 	HWND ParentHwnd = Parent ? Parent->mHwnd : nullptr;
-	auto Instance = GetHinstance();
+	auto Instance = Platform::Private::InstanceHandle;
 	HMENU Menu = nullptr;
 
 	mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, Data);

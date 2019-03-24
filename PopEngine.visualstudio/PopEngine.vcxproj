@@ -219,7 +219,9 @@
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
     <None Include="..\src\PopMain.mm" />
-    <None Include="..\src\PopEngine.cpp" />
+    <ClCompile Include="..\src\PopEngine.cpp">
+      <FileType>Document</FileType>
+    </ClCompile>
     <None Include="..\src\SoyBluetooth.mm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
@@ -413,22 +415,22 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
@@ -479,13 +481,7 @@
     <Link>
       <Profile>true</Profile>
     </Link>
-    <PostBuildEvent>
-      <Command>SET PathDll=$(TargetPath)
-SET PathPdb=%PathDll:dll=pdb%
-copy /y $(TargetPath) $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
-copy /y %PathPdb% $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
-</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
     <ClCompile>
@@ -498,10 +494,7 @@ copy /y %PathPdb% $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
     <Link>
       <Profile>true</Profile>
     </Link>
-    <PostBuildEvent>
-      <Command>
-      </Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -515,13 +508,7 @@ copy /y %PathPdb% $(ProjectDir)..\Unity\PopEngine\Assets\PopEngine
     <Link>
       <Profile>true</Profile>
     </Link>
-    <PostBuildEvent>
-      <Command>SET PathDll=$(TargetPath)
-SET PathPdb=%PathDll:dll=pdb%
-copy /y $(TargetPath) $(ProjectDir)..\Unity\PopH264\Assets\PopH264
-copy /y %PathPdb% $(ProjectDir)..\Unity\PopH264\Assets\PopH264
-</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">
     <ClCompile>
@@ -535,13 +522,7 @@ copy /y %PathPdb% $(ProjectDir)..\Unity\PopH264\Assets\PopH264
     <Link>
       <Profile>true</Profile>
     </Link>
-    <PostBuildEvent>
-      <Command>SET PathDll=$(TargetPath)
-SET PathPdb=%PathDll:dll=pdb%
-copy /y $(TargetPath) $(ProjectDir)..\Unity\PopH264\Assets\PopH264
-copy /y %PathPdb% $(ProjectDir)..\Unity\PopH264\Assets\PopH264
-</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

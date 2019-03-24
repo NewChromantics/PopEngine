@@ -10,9 +10,7 @@ namespace PopTrack
 	namespace Private
 	{
 		//	keep alive after PopMain()
-#if defined(TARGET_OSX_BUNDLE)
 		std::shared_ptr<TPopTrack> gOpenglApp;
-#endif
 		
 	}
 	
@@ -50,7 +48,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	std::string DataPath = Arguments.GetSize() > 0 ? Arguments[0] : "";
 	auto& App = PopTrack::GetApp(DataPath);
 	
-#if !defined(TARGET_OSX_BUNDLE)
+#if !defined(TARGET_OSX_BUNDLE) && !defined(TARGET_WINDOWS)
 	//	run
 	App.mConsoleApp.WaitForExit();
 #endif
@@ -61,13 +59,17 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 
 
 
+#include "SoyOpenglWindow.h"
+std::shared_ptr<TOpenglWindow> pWindow;
 
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
 	//	todo: watch for when a file changes and recreate instance
 	//mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
+#if !defined(TARGET_WINDOWS)
 	mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
-
+#endif
+	pWindow.reset(new TOpenglWindow("Test", Soy::Rectf(), TOpenglParams() ));
 }
 
 TPopTrack::~TPopTrack()
