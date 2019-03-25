@@ -634,6 +634,11 @@ void JsCore::TObject::SetString(const std::string& Name,const std::string& Value
 	SetMember( Name, GetValue( mContext, Value ) );
 }
 
+void JsCore::TObject::SetBool(const std::string& Name,bool Value)
+{
+	SetMember( Name, GetValue( mContext, Value ) );
+}
+
 
 JsCore::TObject JsCore::TContext::CreateObjectInstance(const std::string& ObjectTypeName)
 {

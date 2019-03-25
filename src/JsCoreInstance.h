@@ -386,6 +386,7 @@ public:
 	virtual void			SetFunction(const std::string& Name,Bind::TFunction& Function) bind_override;
 	virtual void			SetFloat(const std::string& Name,float Value) bind_override;
 	virtual void			SetString(const std::string& Name,const std::string& Value) bind_override;
+	virtual void			SetBool(const std::string& Name,bool Value) bind_override;
 	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
 	virtual void			SetArray(const std::string& Name,Bind::TArray& Array) bind_override;
 	template<typename TYPE>
