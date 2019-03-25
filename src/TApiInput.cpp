@@ -9,9 +9,10 @@ namespace ApiInput
 
 	const char EnumDevices_FunctionName[] = "EnumDevices";
 	DEFINE_BIND_FUNCTIONNAME(OnDevicesChanged);
-	
-	const char InputDevice_TypeName[] = "Device";
-	const char GetState_FunctionName[] = "GetState";
+
+	DEFINE_BIND_TYPENAME(Device);
+	DEFINE_BIND_FUNCTIONNAME(GetState);
+	DEFINE_BIND_FUNCTIONNAME(OnStateChanged);
 
 	void	EnumDevices(Bind::TCallback& Params);
 	void	OnDevicesChanged(Bind::TCallback& Params);
@@ -25,6 +26,8 @@ class ApiInput::TContextManager
 public:
 	TContextManager();
 	
+	void					EnumDevices(Bind::TContext& Context,Bind::TPromise& Promise);	//	return data into promise
+
 	Bind::TPromiseQueue		mOnDevicesChangedPromises;
 	Hid::TContext			mContext;
 };
@@ -37,8 +40,48 @@ ApiInput::TContextManager::TContextManager()
 {
 	mContext.mOnDevicesChanged = [this]()
 	{
-		mOnDevicesChangedPromises.Resolve();
+		if ( !mOnDevicesChangedPromises.HasContext() )
+		{
+			std::Debug << "OnDevicesChanged never requested, lost device-changed callback" << std::endl;
+			return;
+		}
+		
+		auto Flush = [this](Bind::TContext& Context)
+		{
+			auto HandlePromise = [&](Bind::TPromise& Promise)
+			{
+				this->EnumDevices( Context, Promise );
+			};
+			mOnDevicesChangedPromises.Flush( HandlePromise );
+		};
+		auto& BindContext = mOnDevicesChangedPromises.GetContext();
+		BindContext.Queue( Flush );
 	};
+}
+
+void ApiInput::TContextManager::EnumDevices(Bind::TContext& Context,Bind::TPromise& Promise)
+{
+	Array<Soy::TInputDeviceMeta> DeviceMetas;
+	auto EnumDevice = [&](Soy::TInputDeviceMeta& Meta)
+	{
+		DeviceMetas.PushBack( Meta );
+	};
+
+	ContextManager.mContext.EnumDevices( EnumDevice );
+
+	auto GetValue = [&](size_t Index)
+	{
+		auto& Meta = DeviceMetas[Index];
+		auto Object = Context.CreateObjectInstance();
+		Object.SetString("Name", Meta.mName );
+		Object.SetString("Serial", Meta.mSerial );
+		Object.SetString("Vendor", Meta.mVendor );
+		Object.SetString("UsbPath", Meta.mUsbPath );
+		Object.SetBool("Connected", Meta.mConnected );
+		return Object;
+	};
+	auto DevicesArray = Context.CreateArray( DeviceMetas.GetSize(), GetValue );
+	Promise.Resolve( DevicesArray );
 }
 
 void ApiInput::Bind(Bind::TContext& Context)
@@ -55,7 +98,16 @@ void ApiInput::Bind(Bind::TContext& Context)
 
 void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 {
+	bool MissedFlush = ContextManager.mOnDevicesChangedPromises.PopMissedFlushes();
 	auto Promise = ContextManager.mOnDevicesChangedPromises.AddPromise( Params.mContext );
+	
+	//	need to flush here the first time...
+	//	gr: + if there's a change on a thread, and we haven't re-subscribed yet...
+	//		need something better for auto-flushing
+	if ( MissedFlush )
+	{
+		ContextManager.EnumDevices( Params.mContext, Promise );
+	}
 	
 	Params.Return( Promise );
 }
@@ -64,56 +116,7 @@ void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 void ApiInput::EnumDevices(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise();
-
-	auto DoEnumDevices = [=]
-	{
-		try
-		{
-			Array<Soy::TInputDeviceMeta> DeviceMetas;
-			auto EnumDevice = [&](Soy::TInputDeviceMeta& Meta)
-			{
-				DeviceMetas.PushBack( Meta );
-			};
-			
-			ContextManager.mContext.EnumDevices( EnumDevice );
-			
-			auto OnCompleted = [=](Bind::TContext& Context)
-			{
-				//ResolverPersistent.Reset();
-				auto GetValue = [&](size_t Index)
-				{
-					auto& Meta = DeviceMetas[Index];
-					auto Object = Context.CreateObjectInstance();
-					Object.SetString("Name", Meta.mName );
-					Object.SetString("Serial", Meta.mSerial );
-					Object.SetString("Vendor", Meta.mVendor );
-					Object.SetString("UsbPath", Meta.mUsbPath );
-					return Object;
-				};
-				auto DevicesArray = Context.CreateArray( DeviceMetas.GetSize(), GetValue );
-				Promise.Resolve( DevicesArray );
-			};
-			
-			//	queue the completion, doesn't need to be done instantly
-			Params.mContext.Queue( OnCompleted );
-		}
-		catch(std::exception& e)
-		{
-			std::Debug << e.what() << std::endl;
-			
-			//	queue the error callback
-			std::string ExceptionString(e.what());
-			auto OnError = [=](Bind::TContext& Context)
-			{
-				Promise.Reject( ExceptionString );
-			};
-			Params.mContext.Queue( OnError );
-		}
-	};
-	
-	//	not on job/thread atm, but that's okay
-	DoEnumDevices();
-
+	ContextManager.EnumDevices( Params.mContext, Promise );
 	Params.Return( Promise );
 }
 
@@ -123,12 +126,18 @@ void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto DeviceName = Params.GetArgumentString(0);
 	mDevice.reset( new Hid::TDevice( ContextManager.mContext, DeviceName) );
+	mDevice->mOnStateChanged = [this]()
+	{
+		this->mOnStateChangedPromises.Resolve();
+	};
 }
 
 
 void TInputDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiInput::GetState_FunctionName>( GetState );
+	Template.BindFunction<ApiInput::OnStateChanged_FunctionName>( OnStateChanged );
+
 }
 
 
@@ -156,3 +165,15 @@ void TInputDeviceWrapper::GetState(Bind::TCallback& Params)
 	Params.Return( State );
 }
 
+
+void TInputDeviceWrapper::OnStateChanged(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TInputDeviceWrapper>();
+	
+	auto Promise = This.mOnStateChangedPromises.AddPromise( Params.mContext );
+	
+	if ( This.mOnStateChangedPromises.PopMissedFlushes() )
+		This.mDevice->mOnStateChanged();
+	
+	Params.Return( Promise );
+}

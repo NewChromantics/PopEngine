@@ -25,7 +25,15 @@ namespace JsCore
 class Bind::TPromiseQueue
 {
 public:
+	bool			HasContext()	{	return mContext != nullptr;	}	//	if not true, we've never requested
 	Bind::TContext&	GetContext();
+	bool			PopMissedFlushes()
+	{
+		if ( mMissedFlushes == 0 )
+			return false;
+		mMissedFlushes = 0;
+		return true;
+	}
 	
 	TPromise		AddPromise(Bind::TContext& Context);
 	bool			HasPromises() const	{	return !mPending.IsEmpty();	}
@@ -38,6 +46,7 @@ public:
 	void			Reject(const std::string& Error);
 	
 private:
+	size_t			mMissedFlushes = 0;
 	Bind::TContext*	mContext = nullptr;
 	std::mutex		mPendingLock;
 	Array<TPromise>	mPending;

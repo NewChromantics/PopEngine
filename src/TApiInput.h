@@ -13,12 +13,12 @@ namespace ApiInput
 {
 	void	Bind(Bind::TContext& Context);
 
-	extern const char InputDevice_TypeName[];
+	DECLARE_BIND_TYPENAME(Device);
 }
 
 
 
-class TInputDeviceWrapper : public Bind::TObjectWrapper<ApiInput::InputDevice_TypeName,Hid::TDevice>
+class TInputDeviceWrapper : public Bind::TObjectWrapper<ApiInput::Device_TypeName,Hid::TDevice>
 {
 public:
 	TInputDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -31,8 +31,10 @@ public:
 
 	//void						OnStateChanged();
 	static void					GetState(Bind::TCallback& Params);
+	static void					OnStateChanged(Bind::TCallback& Params);
 
 public:
 	std::shared_ptr<Hid::TDevice>&			mDevice = mObject;
+	Bind::TPromiseQueue			mOnStateChangedPromises;
 };
 

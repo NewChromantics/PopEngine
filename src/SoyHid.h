@@ -44,7 +44,7 @@ public:
 
 public:
 	std::string						mName;
-	size_t							mIndex = 0;		//	axis index, or button index
+	uint16_t						mIndex = 0;		//	axis index, or button index
 	uint32_t						mCookie = 0;	//	unique identifier... I like the term cookie
 	BufferArray<uint32_t,3>			mAxisCookies;	//	if this is an axis, these buttons are the axis'
 	TInputDeviceButtonType::TYPE	mType = TInputDeviceButtonType::Invalid;
@@ -81,12 +81,14 @@ public:
 	IOHIDDeviceRef	mDevice = nullptr;
 };
 
-
 class Soy::TInputDeviceState
 {
+	//	keyboard needs lots of buttons
+	//static const int ButtonCount = 300;
+	static constexpr size_t ButtonCount = 300;
 public:
-	BufferArray<bool,32>	mButton;
-	BufferArray<vec2f,32>	mAxis;
+	BufferArray<bool,ButtonCount>	mButton;
+	BufferArray<vec2f,ButtonCount>	mAxis;
 };
 
 
@@ -138,8 +140,13 @@ private:
 	void			AddButton(IOHIDElementRef Button);
 	void			AddButton(const Soy::TInputDeviceButtonMeta& Meta);
 	void			UpdateButton(IOHIDElementRef Button,int64_t Value);
+	
+	void			OnStateChanged();
 
 	Hid::TDeviceMeta		mDevice;
 	Soy::TInputDeviceState	mLastState;
 	Array<Soy::TInputDeviceButtonMeta>	mStateMetas;
+	
+public:
+	std::function<void()>	mOnStateChanged;
 };

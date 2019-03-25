@@ -37,6 +37,9 @@ void Bind::TPromiseQueue::Flush(std::function<void(Bind::TPromise&)> HandlePromi
 		Promises = mPending;
 		mPending.Clear();
 	}
+	
+	if ( Promises.IsEmpty() )
+		mMissedFlushes++;
 
 	for ( auto p=0;	p<Promises.GetSize();	p++ )
 	{

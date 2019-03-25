@@ -486,6 +486,13 @@ void GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex,std::function<void(c
 	// is meant to be unique for each physical element.
 	IOHIDElementCookie Cookie = IOHIDElementGetCookie(Button);
 	
+	if ( Usage == -1 )
+	{
+		std::stringstream Error;
+		Error << "Not expecting HIDElementUsage to be -1. Page=" << Page << " Name=" << Name;
+		throw Soy::AssertException( Error.str() );
+	}
+
 	if ( Name.length() == 0 )
 	{
 		std::stringstream NewName;
@@ -656,6 +663,13 @@ void Hid::TDevice::AddButton(const Soy::TInputDeviceButtonMeta& Meta)
 	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << " initialvalue=" << InitialValue << std::endl;
 }
 
+void Hid::TDevice::OnStateChanged()
+{
+	if ( mOnStateChanged )
+		mOnStateChanged();
+}
+
+
 void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
 {
 	auto Cookie = IOHIDElementGetCookie(Button);
@@ -722,6 +736,7 @@ void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
 	}
 
 	//std::Debug << "Input cookie=" << Cookie << ": " << GetElementType(Type) << " page=" << Page << " usage=" << Usage << " value=" << Value << std::endl;
+	OnStateChanged();
 }
 
 void Hid::TDevice::InitButtons()
@@ -729,7 +744,14 @@ void Hid::TDevice::InitButtons()
 	CFArrayRef Elements = IOHIDDeviceCopyMatchingElements( mDevice.mDevice, nullptr, kIOHIDOptionsTypeNone );
 	auto OnElement = [&](IOHIDElementRef Element)
 	{
-		AddButton( Element );
+		try
+		{
+			AddButton( Element );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Error adding button: " << e.what() << std::endl;
+		}
 	};
 	try
 	{
