@@ -248,35 +248,55 @@ void Hid::TContext::OnDeviceConnected(IOHIDDeviceRef Device,IOReturn Result)
 	//	find existing or add
 	auto Meta = GetMeta( Device );
 
-	std::lock_guard<std::mutex> Lock( mDeviceMetasLock );
-	
-	auto* ExistingMeta = mDeviceMetas.Find( Meta );
-	if ( ExistingMeta )
 	{
-		std::Debug << "Hid device re-connected" << Meta.mName << std::endl;
-		ExistingMeta->mConnected = true;
-		return;
+		std::lock_guard<std::mutex> Lock( mDeviceMetasLock );
+		
+		auto* ExistingMeta = mDeviceMetas.Find( Meta );
+		if ( ExistingMeta )
+		{
+			std::Debug << "Hid device re-connected" << Meta.mName << std::endl;
+			ExistingMeta->mConnected = true;
+			return;
+		}
+		
+		std::Debug << "Hid device connected " << Meta.mName << std::endl;
+		mDeviceMetas.PushBack( Meta );
 	}
-	
-	std::Debug << "Hid device connected " << Meta.mName << std::endl;
-	mDeviceMetas.PushBack( Meta );
+	OnDevicesChanged();
 }
 
 void Hid::TContext::OnDeviceDisconnected(IOHIDDeviceRef Device,IOReturn Result)
 {
 	//	find existing and mark disconnected
 	auto Meta = GetMeta( Device );
-
-	std::lock_guard<std::mutex> Lock( mDeviceMetasLock );
-	auto* ExistingMeta = mDeviceMetas.Find( Meta );
-	if ( !ExistingMeta )
 	{
-		std::Debug << "Didn't know of Hid Device " << Meta.mName << std::endl;
-		return;
+		std::lock_guard<std::mutex> Lock( mDeviceMetasLock );
+		auto* ExistingMeta = mDeviceMetas.Find( Meta );
+		if ( !ExistingMeta )
+		{
+			std::Debug << "Didn't know of Hid Device " << Meta.mName << std::endl;
+			return;
+		}
+		std::Debug << "Hid device disconnected" << Meta.mName << std::endl;
+		ExistingMeta->mConnected = false;
 	}
-	std::Debug << "Hid device disconnected" << Meta.mName << std::endl;
-	ExistingMeta->mConnected = false;
+	OnDevicesChanged();
 }
+
+void Hid::TContext::OnDevicesChanged()
+{
+	//	don't let external stuff bring us down
+	try
+	{
+		if ( mOnDevicesChanged )
+			mOnDevicesChanged();
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "OnDevicesChanged callback exception: " << e.what() << std::endl;
+	}
+}
+
 
 
 Hid::TDevice::TDevice(TContext& Context,const std::string& DeviceName)
@@ -517,7 +537,7 @@ void GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex,std::function<void(c
 	if ( Type == kIOHIDElementTypeInput_Button )
 	{
 		Meta.mType = Soy::TInputDeviceButtonType::Button;
-		if ( Usage == 0 )
+		if ( Usage == kHIDUsage_Undefined )
 			throw Soy::AssertException("Not expecting button usage to be zero");
 		Meta.mIndex = Usage-1;
 	}

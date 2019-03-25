@@ -2,30 +2,63 @@
 #include "SoyHid.h"
 
 
-Hid::TContext HidApiContext;
-
 
 namespace ApiInput
 {
 	const char Namespace[] = "Pop.Input";
 
 	const char EnumDevices_FunctionName[] = "EnumDevices";
+	DEFINE_BIND_FUNCTIONNAME(OnDevicesChanged);
 	
 	const char InputDevice_TypeName[] = "Device";
 	const char GetState_FunctionName[] = "GetState";
 
 	void	EnumDevices(Bind::TCallback& Params);
+	void	OnDevicesChanged(Bind::TCallback& Params);
+	
+	class TContextManager;
+}
+
+
+class ApiInput::TContextManager
+{
+public:
+	TContextManager();
+	
+	Bind::TPromiseQueue		mOnDevicesChangedPromises;
+	Hid::TContext			mContext;
+};
+
+ApiInput::TContextManager ContextManager;
+
+
+
+ApiInput::TContextManager::TContextManager()
+{
+	mContext.mOnDevicesChanged = [this]()
+	{
+		mOnDevicesChangedPromises.Resolve();
+	};
 }
 
 void ApiInput::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiInput::EnumDevices, Namespace );
+	Context.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
+	Context.BindGlobalFunction<OnDevicesChanged_FunctionName>( OnDevicesChanged, Namespace );
 
 	Context.BindObjectType<TInputDeviceWrapper>( Namespace );
 }
 
+
+
+void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
+{
+	auto Promise = ContextManager.mOnDevicesChangedPromises.AddPromise( Params.mContext );
+	
+	Params.Return( Promise );
+}
 
 
 void ApiInput::EnumDevices(Bind::TCallback& Params)
@@ -42,7 +75,7 @@ void ApiInput::EnumDevices(Bind::TCallback& Params)
 				DeviceMetas.PushBack( Meta );
 			};
 			
-			HidApiContext.EnumDevices( EnumDevice );
+			ContextManager.mContext.EnumDevices( EnumDevice );
 			
 			auto OnCompleted = [=](Bind::TContext& Context)
 			{
@@ -89,7 +122,7 @@ void ApiInput::EnumDevices(Bind::TCallback& Params)
 void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto DeviceName = Params.GetArgumentString(0);
-	mDevice.reset( new Hid::TDevice( HidApiContext, DeviceName) );
+	mDevice.reset( new Hid::TDevice( ContextManager.mContext, DeviceName) );
 }
 
 

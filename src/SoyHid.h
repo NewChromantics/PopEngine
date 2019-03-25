@@ -103,10 +103,14 @@ private:
 	void				ListenForDevices();
 	void				OnDeviceConnected(IOHIDDeviceRef Device,IOReturn Result);
 	void				OnDeviceDisconnected(IOHIDDeviceRef Device,IOReturn Result);
+	void				OnDevicesChanged();
 
 	std::mutex			mDeviceMetasLock;
 	Array<TDeviceMeta>	mDeviceMetas;	//	known devices
 	IOHIDManagerRef		mManager = nullptr;
+	
+public:
+	std::function<void()>	mOnDevicesChanged;
 };
 
 

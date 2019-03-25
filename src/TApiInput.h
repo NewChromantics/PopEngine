@@ -27,11 +27,10 @@ public:
 	}
 	
 	static void					CreateTemplate(Bind::TTemplate& Template);
-	virtual void 				Construct(Bind::TCallback& Arguments) override;
+	virtual void 				Construct(Bind::TCallback& Params) override;
 
 	//void						OnStateChanged();
-	static void					GetState(Bind::TCallback& Arguments);
-	
+	static void					GetState(Bind::TCallback& Params);
 
 public:
 	std::shared_ptr<Hid::TDevice>&			mDevice = mObject;
