@@ -30,6 +30,7 @@ DEFINE_BIND_FUNCTIONNAME(GetHeapSize);
 DEFINE_BIND_FUNCTIONNAME(GetHeapCount);
 DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
 DEFINE_BIND_FUNCTIONNAME(Sleep);
+DEFINE_BIND_FUNCTIONNAME(Yield);
 
 //	platform stuff
 DEFINE_BIND_FUNCTIONNAME(GetComputerName);
@@ -71,6 +72,7 @@ namespace ApiPop
 	static void 	GarbageCollect(Bind::TCallback& Params);
 	static void 	SetTimeout(Bind::TCallback& Params);
 	static void		Sleep(Bind::TCallback& Params);
+	static void		Yield(Bind::TCallback& Params);
 	static void		ThreadTest(Bind::TCallback& Params);
 	static void		GetTimeNowMs(Bind::TCallback& Params);
 	static void		GetComputerName(Bind::TCallback& Params);
@@ -136,6 +138,20 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 }
 
 
+
+static void ApiPop::Yield(Bind::TCallback& Params)
+{
+	auto Promise = Params.mContext.CreatePromise();
+
+	auto OnYield = [=](Bind::TContext& Context)
+	{
+		//	don't need to do anything, we have just let the system breath
+		Promise.Resolve("Yield complete");
+	};
+	Params.mContext.Queue( OnYield );
+	
+	Params.Return( Promise );
+}
 
 
 static void ApiPop::Sleep(Bind::TCallback& Params)
@@ -359,6 +375,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
 	Context.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
 	Context.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
+	Context.BindGlobalFunction<Yield_FunctionName>( Yield, Namespace );
 	Context.BindGlobalFunction<ThreadTest_FunctionName>( ThreadTest, Namespace );
 	Context.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs, Namespace );
 	Context.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName, Namespace );

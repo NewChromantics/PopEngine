@@ -1287,6 +1287,8 @@ void JsCore::TPromise::Resolve(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?
 	JSObjectRef This = nullptr;
+	
+	//	gr: this should be a Queue'd call!
 	auto Resolve = mResolve.GetFunction();
 	Resolve.Call( This, Value );
 }
@@ -1301,6 +1303,8 @@ void JsCore::TPromise::Reject(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?
 	JSObjectRef This = nullptr;
+	
+	//	gr: this should be a Queue'd call!
 	auto Reject = mReject.GetFunction();
 	Reject.Call( This, Value );
 }
