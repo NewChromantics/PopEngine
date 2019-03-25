@@ -28,6 +28,8 @@
 	<string>PopTrack</string>
 	<key>CFBundleIconFile</key>
 	<string>Lollypop.icns</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera capture!</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
