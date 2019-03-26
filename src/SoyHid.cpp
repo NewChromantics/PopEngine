@@ -391,7 +391,78 @@ void Hid::TDevice::Unbind()
 	IsOkay(Result, "IOHIDDeviceOpen");
 }
 
-const char* GetDesktopUsageName(uint32_t Usage)
+std::string GetPageName(uint32_t Page)
+{
+	switch ( Page )
+	{
+		case kHIDPage_Undefined:			return "kHIDPage_Undefined";
+		case kHIDPage_GenericDesktop:		return "kHIDPage_GenericDesktop";
+		case kHIDPage_Simulation:			return "kHIDPage_Simulation";
+		case kHIDPage_VR:					return "kHIDPage_VR";
+		case kHIDPage_Sport:				return "kHIDPage_Sport";
+		case kHIDPage_Game:						return "kHIDPage_Game";
+		case kHIDPage_GenericDeviceControls:	return "kHIDPage_GenericDeviceControls";
+		case kHIDPage_KeyboardOrKeypad:			return "kHIDPage_KeyboardOrKeypad";
+		case kHIDPage_LEDs:						return "kHIDPage_LEDs";
+		case kHIDPage_Button:					return "kHIDPage_Button";
+		case kHIDPage_Ordinal:					return "kHIDPage_Ordinal";
+		case kHIDPage_Telephony:				return "kHIDPage_Telephony";
+		case kHIDPage_Consumer:				return "kHIDPage_Consumer";
+		case kHIDPage_Digitizer:			return "kHIDPage_Digitizer";
+		case kHIDPage_PID:					return "kHIDPage_PID";
+		case kHIDPage_Unicode:				return "kHIDPage_Unicode";
+		case kHIDPage_AlphanumericDisplay:	return "kHIDPage_AlphanumericDisplay";
+		case kHIDPage_Sensor:				return "kHIDPage_Sensor";
+		case kHIDPage_Monitor:				return "kHIDPage_Monitor";
+		case kHIDPage_MonitorEnumerated:	return "kHIDPage_MonitorEnumerated";
+		case kHIDPage_MonitorVirtual:		return "kHIDPage_MonitorVirtual";
+		case kHIDPage_MonitorReserved:		return "kHIDPage_MonitorReserved";
+		case kHIDPage_PowerDevice:			return "kHIDPage_PowerDevice";
+		case kHIDPage_BatterySystem:		return "kHIDPage_BatterySystem";
+		case kHIDPage_PowerReserved:				return "kHIDPage_PowerReserved";
+		case kHIDPage_PowerReserved2:				return "kHIDPage_PowerReserved2";
+		case kHIDPage_BarCodeScanner:				return "kHIDPage_BarCodeScanner";
+		case kHIDPage_WeighingDevice:		return "kHIDPage_WeighingDevice";
+		//case kHIDPage_Scale:				return "kHIDPage_Scale";
+		case kHIDPage_MagneticStripeReader:	return "kHIDPage_MagneticStripeReader";
+		case kHIDPage_CameraControl:		return "kHIDPage_CameraControl";
+		case kHIDPage_Arcade:				return "kHIDPage_Arcade";
+		
+		//	handle other cases specially
+		default:
+		break;
+	}
+	
+	std::stringstream Description;
+	if ( Page >= kHIDPage_VendorDefinedStart )
+	{
+		Description << "VendorDefined";
+	}
+	else
+	{
+		Description << "Reserved";
+	}
+	Description << "0x" << std::hex << Page;
+	return Description.str();
+}
+
+std::string GetTypeName(IOHIDElementType Type)
+{
+	switch(Type)
+	{
+		case kIOHIDElementTypeInput_Misc:		return "Misc";
+		case kIOHIDElementTypeInput_Button:		return "Button";
+		case kIOHIDElementTypeInput_Axis:		return "Axis";
+		case kIOHIDElementTypeInput_ScanCodes:	return "ScanCodes";
+		case kIOHIDElementTypeOutput:			return "Output";
+		case kIOHIDElementTypeFeature:			return "Feature";
+		case kIOHIDElementTypeCollection:		return "Collection";
+		default:
+		return "Unhandled";
+	}
+}
+
+std::string GetDesktopUsageName(uint32_t Usage)
 {
 	switch(Usage)
 	{
@@ -445,8 +516,77 @@ const char* GetDesktopUsageName(uint32_t Usage)
 		case kHIDUsage_GD_DPadDown:	return "DPadDown";
 		case kHIDUsage_GD_DPadRight:	return "DPadRight";
 		case kHIDUsage_GD_DPadLeft:	return "DPadLeft";
-		default:	return "Reserved";
+		case kHIDUsage_GD_Reserved:	return "Reserved";
+		
+		default:
+		{
+			std::stringstream UnknownName;
+			UnknownName << "<Usage " << Usage << "/0x" << std::hex << Usage << ">";
+			return UnknownName.str();
+		}
 	}
+}
+
+
+std::string GetKeyboardUsageName(uint32_t Usage)
+{
+	//	these should be standard codes from HID->keyboard code
+	switch ( Usage )
+	{
+		case 30:	return "1";
+		case 31:	return "2";
+		case 32:	return "3";
+		case 33:	return "4";
+		case 34:	return "5";
+		case 35:	return "6";
+		case 36:	return "7";
+		case 37:	return "8";
+		case 38:	return "9";
+		case 39:	return "0";
+
+		case 4:		return "a";
+		case 5:		return "b";
+		case 6:		return "c";
+		case 7:		return "d";
+		case 8:		return "e";
+		case 9:		return "f";
+		case 10:	return "g";
+		case 11:	return "h";
+		case 12:	return "i";
+		case 13:	return "j";
+		case 14:	return "k";
+		case 15:	return "l";
+		case 16:	return "m";
+		case 17:	return "n";
+		case 18:	return "o";
+		case 19:	return "p";
+		case 20:	return "q";
+		case 21:	return "r";
+		case 22:	return "s";
+		case 23:	return "t";
+		case 24:	return "u";
+		case 25:	return "v";
+		case 26:	return "w";
+		case 27:	return "x";
+		case 28:	return "y";
+		case 29:	return "z";
+
+		case 41:	return "esc";
+		case 44:	return "space";
+		case 45:	return "-";
+		case 46:	return "+";
+		case 79:	return "right";
+		case 80:	return "left";
+		case 81:	return "down";
+		case 82:	return "up";
+
+		default:
+		break;
+	}
+	
+	std::stringstream Name;
+	Name << "0x" << std::hex << Usage;
+	return Name.str();
 }
 
 
@@ -473,23 +613,85 @@ void GetElementChildren(CFArrayRef Elements,std::function<void(IOHIDElementRef)>
 
 void GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex,std::function<void(const Soy::TInputDeviceButtonMeta&)> EnumMeta)
 {
-	Soy::TInputDeviceButtonMeta Meta;
 	IOHIDElementType Type = IOHIDElementGetType(Button);
 	
 	auto Usage = IOHIDElementGetUsage(Button);
 	auto Page = IOHIDElementGetUsagePage(Button);
-	auto Name = Platform::GetString( IOHIDElementGetName(Button) );
+	auto HidName = Platform::GetString( IOHIDElementGetName(Button) );
 	auto Virtual = IOHIDElementIsVirtual( Button )!=0;
 	auto ReportId = IOHIDElementGetReportID(Button);
 	// As a physical element can appear in the device twice (in different collections) and can be
 	// represented by different IOHIDElementRef objects, we look at the IOHIDElementCookie which
 	// is meant to be unique for each physical element.
 	IOHIDElementCookie Cookie = IOHIDElementGetCookie(Button);
+	auto PageName = GetPageName( Page );
+	auto TypeName = GetTypeName( Type );
 	
+	//	recurse into collection
+	if ( Type == kIOHIDElementTypeCollection )
+	{
+		std::stringstream Error;
+		Error << "todo: handle collection: " << HidName << " Page=" << PageName;
+		throw Soy::AssertException(Error.str());
+	}
+
+	auto ThrowError = [&](const std::string& ErrorDescription)
+	{
+		std::stringstream Error;
+		Error << ErrorDescription << " " << TypeName;
+		Error << " Page= " << PageName;
+		Error << " Usage=" << Usage;
+		Error << " Cookie=" << Cookie;
+		Error << " HidName=" << HidName;
+		throw Soy::AssertException(Error.str() );
+	};
+	
+	Soy::TInputDeviceButtonMeta Meta;
+	Meta.mCookie = Cookie;
+	Meta.mName = HidName;
+	
+	//	gr: new approach, go via page categorisation first
+	if ( Page == kHIDPage_GenericDesktop )
+	{
+		if ( Meta.mName.length() == 0 )
+			Meta.mName = GetDesktopUsageName( Usage );
+	
+		EnumMeta( Meta );
+		return;
+	}
+	
+	if ( Page == kHIDPage_KeyboardOrKeypad )
+	{
+		if ( Type == kIOHIDElementTypeInput_Button )
+		{
+			//	some cases are not valid for indexes
+			if ( Usage == kHIDUsage_Undefined )
+				ThrowError("Not expecting Undefined(0) usage for keyboard button");
+			if ( Usage == -1 )
+				ThrowError("Not expecting -1 usage for keyboard button");
+
+			Meta.mType = Soy::TInputDeviceButtonType::Button;
+			if ( Meta.mName.length() == 0 )
+				Meta.mName = GetKeyboardUsageName( Usage );
+			Meta.mIndex = Usage;
+			EnumMeta( Meta );
+			return;
+		}
+	}
+
+	ThrowError("Unhandled HID");
+	
+	
+	/*
+	
+	//	0 is "undefined", -1 appears for keyboards, but it shouldn't...
 	if ( Usage == -1 )
 	{
 		std::stringstream Error;
-		Error << "Not expecting HIDElementUsage to be -1. Page=" << Page << " Name=" << Name;
+		Error << "Not expecting HIDElementUsage to be -1. ";
+		Error << " Page=" << Page;
+		Error << " Name=" << Name;
+		Error << " Cookie=" << Cookie;
 		throw Soy::AssertException( Error.str() );
 	}
 
@@ -499,6 +701,7 @@ void GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex,std::function<void(c
 		if ( Type == kIOHIDElementTypeInput_Button )
 		{
 			NewName << "Button" << Usage;
+			std::Debug << "Setting button name to Button+Usage (" << NewName.str() << "). Usagename = " << GetDesktopUsageName(Usage) << " page=" << PageName << std::endl;
 		}
 		else if ( Page == kHIDPage_GenericDesktop )
 		{
@@ -607,11 +810,20 @@ void GetMeta(IOHIDElementRef Button,size_t UnknownAxisIndex,std::function<void(c
 	}
 	else
 	{
-		throw Soy::AssertException("Todo: categorise this!");
+		std::stringstream Error;
+		Error << "Uncategorised HID input; ";
+		Error << "Page=" << Page << ", ";
+		Error << "Usage=" << Usage << ", ";
+		Error << "Name=" << Name << ", ";
+		Error << "Virtual=" << Virtual << ", ";
+		Error << "Cookie=" << Cookie << ", ";
+
+		throw Soy::AssertException( Error.str() );
 	}
 	
 	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << std::endl;
 	EnumMeta( Meta );
+	 */
 }
 
 
@@ -658,7 +870,7 @@ void Hid::TDevice::AddButton(const Soy::TInputDeviceButtonMeta& Meta)
 		return;
 	}
 	
-	std::Debug << "Adding button: " << Meta.mName << " #" << Meta.mIndex << std::endl;
+	std::Debug << "Adding button: " << Meta.mName << " #" << Meta.mIndex << " cookie=" << Meta.mCookie << std::endl;
 	mStateMetas.PushBack( Meta );
 	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << " initialvalue=" << InitialValue << std::endl;
 }
@@ -680,7 +892,7 @@ void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
 		size_t UnknownAxisIndex = 9999;
 		//auto Meta = GetMeta( Button, UnknownAxisIndex );
 		//std::Debug << "Igoring button " << Meta.mName << " as not in state meta list" << std::endl;
-		std::Debug << "Igoring button cookie=" << Cookie << " as not in state meta list" << std::endl;
+		//std::Debug << "Igoring button cookie=" << Cookie << " as not in state meta list" << std::endl;
 		return;
 	}
 	

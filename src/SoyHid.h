@@ -84,7 +84,6 @@ public:
 class Soy::TInputDeviceState
 {
 	//	keyboard needs lots of buttons
-	//static const int ButtonCount = 300;
 	static constexpr size_t ButtonCount = 300;
 public:
 	BufferArray<bool,ButtonCount>	mButton;
