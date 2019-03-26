@@ -216,7 +216,7 @@ public:
 	//	api calls with context provided
 	//template<typename IN,typename OUT>
 	//OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
-	void				ThrowException(JSValueRef ExceptionHandle)	{	JsCore::ThrowException( mContext, ExceptionHandle );	}
+	void				ThrowException(JSValueRef ExceptionHandle,const std::string& ErrorContext="JsCore exception")	{	JsCore::ThrowException( mContext, ExceptionHandle, ErrorContext );	}
 
 	
 	

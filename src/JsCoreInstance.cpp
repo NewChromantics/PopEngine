@@ -393,7 +393,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	auto LineNumber = 0;
 	JSValueRef Exception = nullptr;
 	auto ResultHandle = JSEvaluateScript( mContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
-	ThrowException(Exception);
+	ThrowException(Exception,Filename);
 }
 
 
