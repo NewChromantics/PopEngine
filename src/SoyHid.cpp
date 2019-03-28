@@ -531,6 +531,7 @@ std::string GetDesktopUsageName(uint32_t Usage)
 std::string GetKeyboardUsageName(uint32_t Usage)
 {
 	//	these should be standard codes from HID->keyboard code
+	//	todo: find proper table
 	switch ( Usage )
 	{
 		case 30:	return "1";
@@ -575,6 +576,7 @@ std::string GetKeyboardUsageName(uint32_t Usage)
 		case 44:	return "space";
 		case 45:	return "-";
 		case 46:	return "+";
+		case 53:	return "grave";
 		case 79:	return "right";
 		case 80:	return "left";
 		case 81:	return "down";
