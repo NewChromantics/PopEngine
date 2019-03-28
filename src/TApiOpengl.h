@@ -109,7 +109,7 @@ public:
 
 	static void			Constructor(Bind::TCallback& Params);
 	static void			SetUniform(Bind::TCallback& Params);
-	void				DoSetUniform(Bind::TCallback& Params);
+	void				DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUniform& Uniform);
 
 	void				CreateShader(std::shared_ptr<Opengl::TContext>& Context,const char* VertSource,const char* FragSource);
 	

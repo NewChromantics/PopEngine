@@ -363,7 +363,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 			RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 			try
 			{
-				Soy::TScopeTimerPrint Timer("Opengl.Render callback",10);
+				Soy::TScopeTimerPrint Timer("Opengl.Render callback",30);
 				//	immediately call the javascript callback
 				pContext->Execute( ExecuteRenderCallback );
 				pThis->mActiveRenderTarget = nullptr;
@@ -724,12 +724,8 @@ void TShaderWrapper::Construct(Bind::TCallback& Params)
 void TShaderWrapper::SetUniform(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TShaderWrapper>();
-	This.DoSetUniform( Params );
-}
 
-void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
-{
-	auto& Shader = *mShader;
+	auto& Shader = *This.mShader;
 	
 	auto UniformName = Params.GetArgumentString(0);
 	auto Uniform = Shader.GetUniform( UniformName.c_str() );
@@ -742,6 +738,23 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 		//std::Debug << Error.str() << std::endl;
 		return;
 	}
+
+	try
+	{
+		This.DoSetUniform( Params, Uniform );
+	}
+	catch(std::exception& e)
+	{
+		//	extra context
+		std::stringstream Error;
+		Error << "SetUniform(" << UniformName << ") exception: " << e.what();
+		throw Soy::AssertException(Error.str());
+	}
+}
+
+void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUniform& Uniform)
+{
+	auto& Shader = *mShader;
 
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
@@ -799,7 +812,9 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params)
 	}
 	else
 	{
-		throw Soy::AssertException("Currently only image & float uniform supported");
+		std::stringstream Error;
+		Error << "Unhandled uniform type " << Uniform.mName << " for " << Uniform.mName;
+		throw Soy::AssertException(Error.str());
 	}
 }
 
