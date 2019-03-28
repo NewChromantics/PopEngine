@@ -224,7 +224,6 @@ Hid::TDeviceMeta GetMeta(IOHIDDeviceRef Device)
 	
 	Hid::TDeviceMeta Meta(Device);
 
-	Meta.mName = Product;
 	Meta.mConnected = true;
 	
 	Meta.mVendor = Manufacturer;
@@ -239,6 +238,9 @@ Hid::TDeviceMeta GetMeta(IOHIDDeviceRef Device)
 	if ( !Meta.mSerial.length() )
 		Meta.mSerial = Meta.mUsbPath;
 	
+	Meta.mName = Product;
+	if ( !Meta.mName.length() )
+		Meta.mName = Meta.mUsbPath;//Meta.mSerial;
 
 	return Meta;
 }
@@ -872,9 +874,8 @@ void Hid::TDevice::AddButton(const Soy::TInputDeviceButtonMeta& Meta)
 		return;
 	}
 	
-	std::Debug << "Adding button: " << Meta.mName << " #" << Meta.mIndex << " cookie=" << Meta.mCookie << std::endl;
+	std::Debug << this->mDevice.mName << " adding button: " << Meta.mName << " #" << Meta.mIndex << " cookie=" << Meta.mCookie << std::endl;
 	mStateMetas.PushBack( Meta );
-	//std::Debug << "Found " << Meta.mName << "(" << GetElementType(Type) << ") ReportId=" << ReportId << " virtual=" << Virtual << " cookie=" << Cookie << " page=" << Page << " usage=" << Usage << " initialvalue=" << InitialValue << std::endl;
 }
 
 void Hid::TDevice::OnStateChanged()
@@ -964,7 +965,7 @@ void Hid::TDevice::InitButtons()
 		}
 		catch(std::exception& e)
 		{
-			std::Debug << "Error adding button: " << e.what() << std::endl;
+			std::Debug << this->mDevice.mName << " error adding button: " << e.what() << std::endl;
 		}
 	};
 	try
