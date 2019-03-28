@@ -111,6 +111,10 @@ JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 {
 	auto& Context = JsCore::GetContext( mContext );
 	Bind::TCallback Params( Context );
+	
+	if ( This == nullptr )
+		This = Context.GetGlobalObject().mThis;
+
 	Params.mThis = This;
 	
 	if ( Arg0 != nullptr )
