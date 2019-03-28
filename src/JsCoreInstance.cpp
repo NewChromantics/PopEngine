@@ -397,24 +397,40 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 }
 
 
-void JsCore::TContext::QueueDelay(std::function<void(JsCore::TContext&)> Functor,size_t DelayMs)
-{
-	//	make a promise or thread job that skips if time hasn't elapsed?
-	Queue( Functor );
-}
 
-void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor)
+void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor,size_t DeferMs)
 {
-	auto FunctorWrapper = [=]()
+	//	catch negative params
+	//	assuming nobody will ever defer for more than 24 hours
+	auto TwentyFourHoursMs = 1000*60*60*24;
+	if ( DeferMs > TwentyFourHoursMs )
 	{
-		//	need to catch this?
-		Execute( Functor );
+		std::stringstream Error;
+		Error << "Queued JsCore job for " << DeferMs << " milliseconds. Capped at 24 hours (" << TwentyFourHoursMs << "). Possible negative value? (" << static_cast<ssize_t>(DeferMs) << ")";
+		throw Soy::AssertException( Error.str() );
+	}
+	
+	auto PushJob = [=]()
+	{
+		auto FunctorWrapper = [=]()
+		{
+			//	need to catch this?
+			Execute( Functor );
+		};
+		mJobQueue.PushJob( FunctorWrapper );
 	};
-	mJobQueue.PushJob( FunctorWrapper );
-	//	todo: make a job queue to queue up jobs so that the caller thread
-	//			doesnt block
-	//	Javascript core is threadsafe, but we don't want to block our own threads
-	//	and caller code is expecting to lose ownership of the functor anyway
+	
+	if ( DeferMs > 0 )
+	{
+		//	gr: would be nice to make this part of the SoyJobQueue so we skip jobs until a time is reached
+		auto Now = std::chrono::high_resolution_clock::now();
+		auto FutureTime = Now + std::chrono::milliseconds(DeferMs);
+		Platform::ExecuteDelayed( FutureTime, PushJob );
+	}
+	else
+	{
+		PushJob();
+	}
 }
 
 void JsCore::TContext::Execute(std::function<void(JsCore::TContext&)> Functor)

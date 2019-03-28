@@ -134,7 +134,7 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 		}
 	};
 
-	Params.mContext.QueueDelay( OnRun, TimeoutMs );
+	Params.mContext.Queue( OnRun, TimeoutMs );
 }
 
 
@@ -143,12 +143,17 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise();
 
+	auto DelayMs = 0;
+	if ( !Params.IsArgumentUndefined(0) )
+		DelayMs = Params.GetArgumentInt(0);
+	
 	auto OnYield = [=](Bind::TContext& Context)
 	{
 		//	don't need to do anything, we have just let the system breath
 		Promise.Resolve("Yield complete");
 	};
-	Params.mContext.Queue( OnYield );
+
+	Params.mContext.Queue( OnYield, DelayMs );
 	
 	Params.Return( Promise );
 }
