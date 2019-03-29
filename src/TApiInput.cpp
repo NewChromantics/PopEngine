@@ -32,7 +32,16 @@ public:
 	Hid::TContext			mContext;
 };
 
-ApiInput::TContextManager ContextManager;
+
+ApiInput::TContextManager& GetContextManager()
+{
+	static std::shared_ptr<ApiInput::TContextManager> gContextManager;
+	if ( !gContextManager )
+	{
+		gContextManager.reset( new ApiInput::TContextManager() );
+	}
+	return *gContextManager;
+}
 
 
 
@@ -67,7 +76,7 @@ void ApiInput::TContextManager::EnumDevices(Bind::TContext& Context,Bind::TPromi
 		DeviceMetas.PushBack( Meta );
 	};
 
-	ContextManager.mContext.EnumDevices( EnumDevice );
+	GetContextManager().mContext.EnumDevices( EnumDevice );
 
 	auto GetValue = [&](size_t Index)
 	{
@@ -98,6 +107,7 @@ void ApiInput::Bind(Bind::TContext& Context)
 
 void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 {
+	auto& ContextManager = GetContextManager();
 	bool MissedFlush = ContextManager.mOnDevicesChangedPromises.PopMissedFlushes();
 	auto Promise = ContextManager.mOnDevicesChangedPromises.AddPromise( Params.mContext );
 	
@@ -115,6 +125,7 @@ void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 
 void ApiInput::EnumDevices(Bind::TCallback& Params)
 {
+	auto& ContextManager = GetContextManager();
 	auto Promise = Params.mContext.CreatePromise();
 	ContextManager.EnumDevices( Params.mContext, Promise );
 	Params.Return( Promise );
@@ -125,6 +136,7 @@ void ApiInput::EnumDevices(Bind::TCallback& Params)
 void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto DeviceName = Params.GetArgumentString(0);
+	auto& ContextManager = GetContextManager();
 	mDevice.reset( new Hid::TDevice( ContextManager.mContext, DeviceName) );
 	mDevice->mOnStateChanged = [this]()
 	{
