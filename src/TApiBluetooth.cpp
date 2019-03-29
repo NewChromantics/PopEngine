@@ -5,18 +5,17 @@ namespace ApiBluetooth
 {
 	const char Namespace[] = "Pop.Bluetooth";
 
-	const char EnumDevices_FunctionName[] = "EnumDevices";
-	const char OnDevicesChanged_FunctionName[] = "OnDevicesChanged";
-	const char Startup_FunctionName[] = "Startup";
-
-	//static const char BluetoothDevice_TypeName[] = "Device";
+	DEFINE_BIND_FUNCTIONNAME(EnumDevices);
+	DEFINE_BIND_FUNCTIONNAME(OnDevicesChanged);
+	DEFINE_BIND_FUNCTIONNAME(OnStatusChanged);
+	DEFINE_BIND_FUNCTIONNAME(Startup);
 	
-	const char Connect_FunctionName[] = "Connect";
-	const char ReadCharacteristic_FunctionName[] = "ReadCharacteristic";
-	
+	DEFINE_BIND_FUNCTIONNAME(Connect);
+	DEFINE_BIND_FUNCTIONNAME(ReadCharacteristic);
 
 
 	void	Startup(Bind::TCallback& Params);
+	void	OnStatusChanged(Bind::TCallback& Params);
 	void	EnumDevices(Bind::TCallback& Params);
 	void	OnDevicesChanged(Bind::TCallback& Params);
 
@@ -70,6 +69,7 @@ void ApiBluetooth::Bind(Bind::TContext& Context)
 	Context.CreateGlobalObjectInstance("", Namespace);
 
 	Context.BindGlobalFunction<Startup_FunctionName>( Startup, Namespace );
+	Context.BindGlobalFunction<OnStatusChanged_FunctionName>( OnStatusChanged, Namespace );
 	Context.BindGlobalFunction<OnDevicesChanged_FunctionName>( OnDevicesChanged, Namespace );
 	Context.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
 
@@ -95,6 +95,18 @@ void ApiBluetooth::Startup(Bind::TCallback& Params)
 	
 	Params.Return( Promise );
 }
+
+
+
+
+//	gr: same as Startup() but doesn't resolve instantly if connected
+void ApiBluetooth::OnStatusChanged(Bind::TCallback& Params)
+{
+	auto& Instance = GetBluetoothInstance();
+	auto Promise = Instance.mStartupPromises.AddPromise( Params.mContext );
+	Params.Return( Promise );
+}
+
 
 void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
