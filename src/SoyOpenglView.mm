@@ -144,11 +144,14 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 }
 
 
-void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(const TMousePos&,SoyMouseButton::Type)>& EventOut,SoyMouseButton::Type Button,NSPoint& LastPos,MacOpenglView* Self)
+void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Parent,std::function<void(const TMousePos&,SoyMouseButton::Type)>& EventOut,SoyMouseButton::Type Button,NSPoint& LastPos,MacOpenglView* Self)
 {
 	if ( !Soy::Assert(Parent,"Parent expected") )
 		return;
 	
+	//	gr: finding OS HID problem, don't let this OS callbacks take long
+	Soy::TScopeTimerPrint Timer(EventName, 2);
+
 	//	gr: sending normalised coords as we currently dont have easy acess to a window's clientrect!
 	auto Pos = ViewPointToVector( Self, EventIn.locationInWindow );
 	
@@ -164,57 +167,57 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 
 -(void)mouseMoved:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::None, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseMove, SoyMouseButton::None, mLastPos, self );
 }
 
 -(void)mouseDown:(NSEvent *)event
 {
 	Platform::PushCursor(SoyCursor::Hand);
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Left, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseDown, SoyMouseButton::Left, mLastPos, self );
 }
 
 -(void)mouseDragged:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::Left, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseMove, SoyMouseButton::Left, mLastPos, self );
 }
 
 -(void)mouseUp:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseUp, SoyMouseButton::Left, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseUp, SoyMouseButton::Left, mLastPos, self );
 }
 
 
 -(void)rightMouseDown:(NSEvent *)event
 {
 	Platform::PushCursor(SoyCursor::Hand);
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Right, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseDown, SoyMouseButton::Right, mLastPos, self );
 }
 
 -(void)rightMouseDragged:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::Right, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseMove, SoyMouseButton::Right, mLastPos, self );
 }
 
 -(void)rightMouseUp:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseUp, SoyMouseButton::Right, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseUp, SoyMouseButton::Right, mLastPos, self );
 }
 
 
 -(void)otherMouseDown:(NSEvent *)event
 {
 	Platform::PushCursor(SoyCursor::Hand);
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseDown, SoyMouseButton::Middle, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseDown, SoyMouseButton::Middle, mLastPos, self );
 }
 
 -(void)otherMouseDragged:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseMove, SoyMouseButton::Middle, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseMove, SoyMouseButton::Middle, mLastPos, self );
 }
 
 -(void)otherMouseUp:(NSEvent *)event
 {
-	TriggerMouseEvent( event, mParent, mParent->mOnMouseUp, SoyMouseButton::Middle, mLastPos, self );
+	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseUp, SoyMouseButton::Middle, mLastPos, self );
 }
 
 
@@ -228,6 +231,7 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
 {
 	//	drag released
+	Soy::TScopeTimerPrint Timer( __func__, 1 );
 	std::Debug << __func__ << std::endl;
 	
 	//	based on https://stackoverflow.com/questions/2604522/registerfordraggedtypes-with-custom-file-formats
@@ -254,6 +258,8 @@ void TriggerMouseEvent(NSEvent* EventIn,TOpenglView* Parent,std::function<void(c
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
+	Soy::TScopeTimerPrint Timer( __func__, 1 );
+
 	//	based on https://stackoverflow.com/questions/2604522/registerfordraggedtypes-with-custom-file-formats
 	NSArray* FilenamesArray = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
 

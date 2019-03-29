@@ -721,6 +721,9 @@ AvfMediaExtractor::AvfMediaExtractor(const TMediaExtractorParams& Params,std::sh
 
 void AvfMediaExtractor::OnSampleBuffer(CMSampleBufferRef sampleBufferRef,size_t StreamIndex,bool DoRetain)
 {
+	//	gr: I think stalling too long here can make USB bus crash (killing bluetooth, hid, audio etc)
+	Soy::TScopeTimerPrint Timer("AvfMediaExtractor::OnSampleBuffer",2);
+	
 	//Soy::Assert( sampleBufferRef != nullptr, "Expected sample buffer ref");
 	if ( !sampleBufferRef )
 		return;
