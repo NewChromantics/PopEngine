@@ -166,7 +166,8 @@ void TMediaSourceWrapper::Construct(Bind::TCallback& Params)
 	//	create device
 	TMediaExtractorParams ExtractorParams( DeviceName, DeviceName, OnFrameExtracted, OnPrePushFrame );
 	ExtractorParams.mForceNonPlanarOutput = SinglePlaneOutput;
-	ExtractorParams.mDiscardOldFrames = false;
+	ExtractorParams.mDiscardOldFrames = true;
+	ExtractorParams.mExtractAudioStreams = false;
 	
 	mExtractor = AllocExtractor(ExtractorParams);
 	mExtractor->AllocStreamBuffer(0,MaxBufferSize);
