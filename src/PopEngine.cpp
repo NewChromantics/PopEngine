@@ -76,9 +76,11 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 }
 
 
-
+//	windows test window code
+#if defined(TARGET_WINDOWS)
 #include "SoyOpenglWindow.h"
 std::shared_ptr<TOpenglWindow> pWindow;
+#endif
 
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
@@ -87,7 +89,11 @@ TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupF
 #if !defined(TARGET_WINDOWS)
 	mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
 #endif
+	
+	//	windows test window code
+#if defined(TARGET_WINDOWS)
 	pWindow.reset(new TOpenglWindow("Test", Soy::Rectf(), TOpenglParams() ));
+#endif
 }
 
 TPopTrack::~TPopTrack()
