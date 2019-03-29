@@ -68,17 +68,14 @@ class Hid::TDeviceMeta : public Soy::TInputDeviceMeta
 public:
 	TDeviceMeta(){}
 	TDeviceMeta(IOHIDDeviceRef Device) :
-		mDevice	( Device )
+		mDevice	( Device, true )
 	{
 	}
-	/*
-	TDeviceMeta(const TDeviceMeta& That) :
-		Soy::TInputDeviceMeta	( That ),
-		mDevice					( That.mDevice )
-	{
-	}
-	*/
-	IOHIDDeviceRef	mDevice = nullptr;
+	
+	IOHIDDeviceRef			GetDevice()		{	return mDevice.mObject;	}
+	void					ReleaseDevice()	{	mDevice.Release();	}
+
+	CFPtr<IOHIDDeviceRef>	mDevice;
 };
 
 class Soy::TInputDeviceState

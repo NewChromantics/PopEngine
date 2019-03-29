@@ -156,12 +156,15 @@ void Hid::TContext::ListenForDevices()
 	
 	auto OnConnected = [](void* Context,IOReturn Result,void* Sender,IOHIDDeviceRef Device)
 	{
+		//	gr: I'm wondering if this is causing HIDD errors if it takes too long...
+		Soy::TScopeTimerPrint Timer("Hid Device connected handler",1);
 		auto* This = reinterpret_cast<TContext*>( Context );
 		This->OnDeviceConnected( Device, Result );
 	};
 	
 	auto OnDisconnected = [](void* Context,IOReturn Result,void* Sender,IOHIDDeviceRef Device)
 	{
+		Soy::TScopeTimerPrint Timer("Hid Device disconnected handler",1);
 		auto* This = reinterpret_cast<TContext*>( Context );
 		This->OnDeviceDisconnected( Device, Result );
 	};
@@ -280,6 +283,7 @@ void Hid::TContext::OnDeviceDisconnected(IOHIDDeviceRef Device,IOReturn Result)
 			return;
 		}
 		std::Debug << "Hid device disconnected" << Meta.mName << std::endl;
+		ExistingMeta->ReleaseDevice();
 		ExistingMeta->mConnected = false;
 	}
 	OnDevicesChanged();
@@ -369,7 +373,13 @@ const char* GetElementType(IOHIDElementType Type)
 
 void Hid::TDevice::Bind(TDeviceMeta& Device)
 {
-	auto Result = IOHIDDeviceOpen( Device.mDevice, kIOHIDOptionsTypeNone);
+	//	gr: maybe need to store retained for race conditions and hope API
+	//		errors if it's been disconnected
+	auto DevicePtr = Device.GetDevice();
+	if ( !DevicePtr )
+		throw Soy::AssertException("Trying to bind to device that's been released");
+	
+	auto Result = IOHIDDeviceOpen( DevicePtr, kIOHIDOptionsTypeNone);
 	IsOkay(Result, "IOHIDDeviceOpen");
 	mDevice = Device;
 	
@@ -377,20 +387,26 @@ void Hid::TDevice::Bind(TDeviceMeta& Device)
 	
 	auto OnInput = [](void* context,IOReturn result,void* sender,IOHIDValueRef State)
 	{
+		//	gr: wondering if this is causing problems
+		Soy::TScopeTimerPrint Timer("Hid Device input handler",1);
 		auto* This = reinterpret_cast<TDevice*>(context);
 		auto Value = IOHIDValueGetIntegerValue(State);
 		auto Element = IOHIDValueGetElement(State);
 		This->UpdateButton( Element, Value );
 	};
 	
-	IOHIDDeviceRegisterInputValueCallback( Device.mDevice, OnInput, this );
-	IOHIDDeviceScheduleWithRunLoop( Device.mDevice, CFRunLoopGetCurrent(), kCFRunLoopCommonModes );
+	IOHIDDeviceRegisterInputValueCallback( DevicePtr, OnInput, this );
+	IOHIDDeviceScheduleWithRunLoop( DevicePtr, CFRunLoopGetCurrent(), kCFRunLoopCommonModes );
 }
 
 void Hid::TDevice::Unbind()
 {
-	auto Result = IOHIDDeviceClose( mDevice.mDevice, kIOHIDOptionsTypeNone);
-	IsOkay(Result, "IOHIDDeviceOpen");
+	auto DevicePtr = mDevice.GetDevice();
+	if ( DevicePtr )
+	{
+		auto Result = IOHIDDeviceClose( DevicePtr, kIOHIDOptionsTypeNone);
+		IsOkay(Result, "IOHIDDeviceOpen");
+	}
 }
 
 std::string GetPageName(uint32_t Page)
@@ -874,7 +890,7 @@ void Hid::TDevice::AddButton(const Soy::TInputDeviceButtonMeta& Meta)
 		return;
 	}
 	
-	std::Debug << this->mDevice.mName << " adding button: " << Meta.mName << " #" << Meta.mIndex << " cookie=" << Meta.mCookie << std::endl;
+	//std::Debug << this->mDevice.mName << " adding button: " << Meta.mName << " #" << Meta.mIndex << " cookie=" << Meta.mCookie << std::endl;
 	mStateMetas.PushBack( Meta );
 }
 
@@ -956,7 +972,19 @@ void Hid::TDevice::UpdateButton(IOHIDElementRef Button,int64_t Value)
 
 void Hid::TDevice::InitButtons()
 {
-	CFArrayRef Elements = IOHIDDeviceCopyMatchingElements( mDevice.mDevice, nullptr, kIOHIDOptionsTypeNone );
+	//	gr: watch out for release during call?
+	auto DevicePtr = mDevice.GetDevice();
+	if ( !DevicePtr )
+		throw Soy::AssertException("Hid::TDevice::InitButtons aborted as device released");
+	
+	CFArrayRef ElementsPtr = IOHIDDeviceCopyMatchingElements( DevicePtr, nullptr, kIOHIDOptionsTypeNone );
+	if ( !ElementsPtr )
+	{
+		std::Debug << "Hid::TDevice::InitButtons returned null input elements" << std::endl;
+		return;
+	}
+	CFPtr<CFArrayRef> Elements( ElementsPtr, false );
+	
 	auto OnElement = [&](IOHIDElementRef Element)
 	{
 		try
@@ -965,20 +993,11 @@ void Hid::TDevice::InitButtons()
 		}
 		catch(std::exception& e)
 		{
-			std::Debug << this->mDevice.mName << " error adding button: " << e.what() << std::endl;
+			//std::Debug << this->mDevice.mName << " error adding button: " << e.what() << std::endl;
 		}
 	};
-	try
-	{
-		GetElementChildren( Elements, OnElement );
-		CFRelease(Elements);
-	}
-	catch (...)
-	{
-		CFRelease(Elements);
-		throw;
-	}
 
+	GetElementChildren( Elements.mObject, OnElement );
 }
 
 
