@@ -65,8 +65,9 @@ public:
 public:
 	std::shared_ptr<TMediaExtractor>&		mExtractor = mObject;
 	
-	std::mutex								mFrameRequestsLock;
-	Array<TFrameRequest>					mFrameRequests;
+	//	gr: this should really store params per promise, but I want to use TPromiseQUeue
+	TFrameRequestParams						mFrameRequestParams;
+	Bind::TPromiseQueue						mFrameRequests;
 };
 
 

@@ -187,31 +187,23 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 	//	trigger all our requests, no more callback
 	auto Runner = [this](Bind::TContext& Context)
 	{
-		//	avoid an extended lock by popping the array;
-		//	dont iterate and remove and lock as we could infinitely add more promises
-		Array<TFrameRequest> Promises;
+		if ( !mFrameRequests.HasPromises() )
+			return;
+
+		try
 		{
-			std::lock_guard<std::mutex> Lock( mFrameRequestsLock );
-			Promises.Copy( mFrameRequests );
-			mFrameRequests.Clear();
+			auto Frame = PopFrame( Context, mFrameRequestParams );
+			auto HandlePromise = [&](Bind::TPromise& Promise)
+			{
+				Promise.Resolve( Frame );
+			};
+			mFrameRequests.Flush( HandlePromise );
 		}
-		
-		//	gr: this has a problem as this (obviously) pops from the list
-		//		need to squish duplicate requests, or something more clever
-		//		when we have multiple requests
-		//		this current system pops a frame for each request (effectively skipping)
-		for ( auto i=0;	i<Promises.GetSize();	i++ )
+		catch(std::exception& e)
 		{
-			auto& Promise = Promises[i];
-			try
-			{
-				auto Frame = PopFrame( Context, Promise );
-				Promise.mPromise.Resolve( Frame );
-			}
-			catch(std::exception& e)
-			{
-				Promise.mPromise.Reject( e.what() );
-			}
+			std::stringstream Error;
+			Error << e.what();
+			mFrameRequests.Reject( Error.str() );
 		}
 	};
 	mContext.Queue( Runner );
@@ -219,13 +211,8 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 
 Bind::TPromise TMediaSourceWrapper::AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params)
 {
-	//	todo: save args as params for popping
-	TFrameRequest Request( Params );
-	Request.mPromise = Context.CreatePromise();
-	
-	std::lock_guard<std::mutex> Lock( mFrameRequestsLock );
-	mFrameRequests.PushBack(Request);
-	return Request.mPromise;
+	mFrameRequestParams = Params;
+	return mFrameRequests.AddPromise( Context );
 }
 
 //	returns a promise that will be invoked when there's frames in the buffer
