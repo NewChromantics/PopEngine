@@ -329,6 +329,8 @@ Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrame
 		PixelBuffer->Lock( GetArrayBridge(Planes), Transform );
 		try
 		{
+			//	gr: worried this might be stalling OS/USB bus
+			Soy::TScopeTimerPrint Timer("PixelBuffer->Lock/Unlock duration",2);
 			//	make an image for every plane
 			for ( auto p=0;	p<Planes.GetSize();	p++ )
 			{
