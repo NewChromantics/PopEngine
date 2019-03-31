@@ -21,6 +21,7 @@ class TOpenglView;
 class TOpenglParams
 {
 public:
+	bool		mFullscreen = false;
 	bool		mHardwareAccellerationOnly = true;
 	bool		mDoubleBuffer = true;
 	bool		mRedrawWithDisplayLink = true;

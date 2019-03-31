@@ -89,11 +89,11 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		auto& Wrapper = *mWindow;
 		auto*& mWindow = Wrapper.mWindow;
 
+		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
 		
+		if ( Params.mFullscreen )
+			Style |= NSWindowStyleMaskFullScreen;
 		
-		
-		//NSUInteger styleMask =    NSBorderlessWindowMask;
-		NSUInteger Style = NSTitledWindowMask|NSClosableWindowMask|NSResizableWindowMask;
 		//NSUInteger Style = NSBorderlessWindowMask;
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.h, Rect.w );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];

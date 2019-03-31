@@ -199,6 +199,14 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 		WindowParams.mAutoRedraw = Params.GetArgumentBool(1);
 	}
 	
+	//	named options
+	if ( Params.IsArgumentObject(1) )
+	{
+		auto WindowParamsObject = Params.GetArgumentObject(1);
+		if ( WindowParamsObject.HasMember("Fullscreen") )
+			WindowParams.mFullscreen = WindowParamsObject.GetBool("Fullscreen");
+	}
+	
 	mWindow.reset( new TRenderWindow( WindowName, WindowParams ) );
 	
 	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)

@@ -297,7 +297,8 @@ public:
 	void					ReturnUndefined() bind_override;
 	virtual void			ReturnNull() bind_override;
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(size_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( mContext.mContext, Value );	}
+	virtual void			Return(size_t Value) bind_override				{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value );	}
 	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
@@ -373,13 +374,16 @@ public:
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
 	
 	template<typename TYPE>
-	TYPE&				This();
+	TYPE&					This();
 
+	virtual bool			HasMember(const std::string& MemberName) bind_override;
+	
 	virtual Bind::TObject	GetObject(const std::string& MemberName) bind_override;
 	virtual std::string		GetString(const std::string& MemberName) bind_override;
 	virtual uint32_t		GetInt(const std::string& MemberName) bind_override;
 	virtual float			GetFloat(const std::string& MemberName) bind_override;
 	virtual Bind::TFunction	GetFunction(const std::string& MemberName) bind_override;
+	virtual bool			GetBool(const std::string& MemberName) bind_override;
 
 	virtual void			SetObject(const std::string& Name,const Bind::TObject& Object) bind_override;
 	virtual void			SetFunction(const std::string& Name,Bind::TFunction& Function) bind_override;

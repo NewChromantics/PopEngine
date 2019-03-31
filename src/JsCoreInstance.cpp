@@ -530,6 +530,13 @@ JsCore::TObject::TObject(JSContextRef Context,JSObjectRef This) :
 		throw Soy::AssertException("This is null for TObject");
 }
 
+bool JsCore::TObject::HasMember(const std::string& MemberName)
+{
+	auto Member = GetMember( MemberName );
+	if ( JSValueIsUndefined( mContext, Member ) )
+		return false;
+	return true;	
+}
 
 JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 {
@@ -600,6 +607,14 @@ float JsCore::TObject::GetFloat(const std::string& MemberName)
 	//	convert this double to an int!
 	auto Valuef = static_cast<float>(Number);
 	return Valuef;
+}
+
+bool JsCore::TObject::GetBool(const std::string& MemberName)
+{
+	auto Value = GetMember( MemberName );
+	//	gr: add a type check here as there's no exception
+	auto Bool = JSValueToBoolean( mContext, Value );
+	return Bool;
 }
 
 Bind::TFunction JsCore::TObject::GetFunction(const std::string& MemberName)
