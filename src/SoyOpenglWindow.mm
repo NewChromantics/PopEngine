@@ -90,15 +90,22 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		auto*& mWindow = Wrapper.mWindow;
 
 		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
-		
-		if ( Params.mFullscreen )
-			Style |= NSWindowStyleMaskFullScreen;
-		
-		//NSUInteger Style = NSBorderlessWindowMask;
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.h, Rect.w );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-	//	NSRect WindowRect = NSMakeRect( Pos.x, Pos.y, Size.x, Size.y );
-	//	NSRect WindowRect = [[NSScreen mainScreen] frame];
+
+		if ( Params.mFullscreen )
+		{
+			Style &= ~NSWindowStyleMaskResizable;
+			Style |= NSWindowStyleMaskFullScreen;
+			
+			auto* MainScreen = [NSScreen mainScreen];
+			FrameRect = MainScreen.frame;
+			WindowRect = FrameRect;
+			
+			//	hide dock & menu bar
+			[NSMenu setMenuBarVisible:NO];
+		}
+		
 
 		//	create a view
 		mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
@@ -115,8 +122,17 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		bool Defer = NO;
 		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
 		Soy::Assert(mWindow,"failed to create window");
-
 		[mWindow retain];
+		
+		/*
+		[mWindow
+		 setFrame:[mWindow frameRectForContentRect:[[mWindow screen] frame]]
+		 display:YES
+		 animate:YES];
+		//[mWindow setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+		//[mWindow setFrame:screenFrame display:YES];
+		//[mWindow toggleFullScreen:self];
+		*/
 		
 		
 		//	auto save window location
