@@ -116,6 +116,7 @@ public:
 	void		CopyTo(ArrayBridge<int32_t>& Values);
 	void		CopyTo(ArrayBridge<uint8_t>& Values);
 	void		CopyTo(ArrayBridge<float>& Values);
+	void		CopyTo(ArrayBridge<bool>& Values);
 
 public:
 	JSContextRef	mContext = nullptr;
@@ -276,6 +277,7 @@ public:
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override		{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}

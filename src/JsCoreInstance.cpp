@@ -1269,6 +1269,11 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 	}
 }
 
+void JsCore::TArray::CopyTo(ArrayBridge<bool>& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}
+
 void JsCore::TArray::CopyTo(ArrayBridge<uint32_t>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );

@@ -208,24 +208,60 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 {
 	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
 	bool MakeRects = Params.IsArgumentBool(1) ? Params.GetArgumentBool(1) : false;
+	bool NormaliseUv = Params.IsArgumentBool(2) ? Params.GetArgumentBool(2) : false;
 	
-	SoyPixels PixelsMask;
-	Image.GetPixels( PixelsMask );
-	PixelsMask.SetFormat( SoyPixelsFormat::Greyscale );
-
-	//	threshold the image
+	BufferArray<bool,4> Filter;
+	if ( Params.IsArgumentArray(3) )
 	{
-		auto& PixelsArray = PixelsMask.GetPixelsArray();
-		for ( auto p=0;	p<PixelsArray.GetSize();	p++ )
+		Params.GetArgumentArray( 3, GetArrayBridge(Filter) );
+	}
+	else
+	{
+		Filter.PushBack(true);
+		Filter.PushBack(true);
+		Filter.PushBack(true);
+	}
+	
+	auto& OrigPixels = Image.GetPixels();
+	
+	SoyPixelsMeta PixelsMaskMeta(OrigPixels.GetWidth(), OrigPixels.GetHeight(), SoyPixelsFormat::Greyscale );
+	SoyPixels PixelsMask(PixelsMaskMeta);
+								 
+	if ( OrigPixels.GetFormat() == SoyPixelsFormat::Greyscale )
+	{
+		//	copy
+		PixelsMask.Copy( OrigPixels );
+	}
+	else if ( OrigPixels.GetFormat() == SoyPixelsFormat::RGBA )
+	{
+		bool Filter[3] = { true,false,false };
+		//	filter & threshold
+		auto& Input = OrigPixels.GetPixelsArray();
+		auto& Output = PixelsMask.GetPixelsArray();
+		for ( auto p=0;	p<Input.GetSize();	p+=4 )
 		{
-			if ( PixelsArray[p] < 100 )
-				PixelsArray[p] = 0;
+			auto r = Input[p+0] > 100;
+			auto g = Input[p+1] > 100;
+			auto b = Input[p+2] > 100;
+			/*
+			if ( r || g || b )
+				std::Debug << "r=" << r << " g=" << g << " b=" <<b << std::endl;
+			*/
+			bool Mask = (r==Filter[0]) && (g==Filter[1]) && (b==Filter[2]);
+			Output[p/4] = Mask ? 255 : 0;
 		}
 	}
+	else
+	{
+		std::stringstream Error;
+		Error << "ApiOpencv::FindContours Dont know what to do with " << OrigPixels.GetFormat();
+		throw Soy::AssertException(Error.str());
+	}
+	
 	
 	//	https://docs.opencv.org/3.4.2/da/d72/shape_example_8cpp-example.html#a1
 	//cv::InputArray InputArray( GetMatrix(PixelsMask ) );
-	auto InputArray = GetMatrix(PixelsMask );
+	auto InputArray = GetMatrix( PixelsMask );
 	std::vector<std::vector<cv::Point> > Contours;
 	//cv::OutputArrayOfArrays Contours;
 	//cv::OutputArray Hierarchy;
@@ -240,32 +276,46 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	}
 									
 	//	enumerate to arrays of points
-	auto GetPoint = [&](const cv::Point& Point)
+	auto GetPointf = [&](const cv::Point& Point,float& x,float& y)
+	{
+		x = Point.x;
+		y = Point.y;
+		if ( NormaliseUv )
+		{
+			x /= PixelsMask.GetWidth();
+			y /= PixelsMask.GetHeight();
+		}
+	};
+	auto GetPointObject = [&](const cv::Point& Point)
 	{
 		auto Object = Params.mContext.CreateObjectInstance();
-		Object.SetFloat("x", Point.x);
-		Object.SetFloat("y", Point.y);
+		float x,y;
+		GetPointf( Point, x, y );
+		Object.SetFloat("x", x);
+		Object.SetFloat("y", y);
 		return Object;
 	};
 	
-	auto GetPoints = [&](const std::vector<cv::Point>& Points)
+	auto GetPoints = [&](const std::vector<cv::Point>& Points,Soy::Rectf& Rect)
 	{
 		auto EnumFlatArray = true;
 		if ( EnumFlatArray )
 		{
 			//	enum giant array
 			Array<float> AllPoints;
-			Soy::Rectf Rect;
 			for ( auto p=0;	p<Points.size();	p++)
 			{
+				float x,y;
+				GetPointf( Points[p], x, y );
+				
 				if ( p==0 )
 				{
-					Rect.x = Points[p].x;
-					Rect.y = Points[p].y;
+					Rect.x = x;
+					Rect.y = y;
 				}
-				Rect.Accumulate( Points[p].x, Points[p].y );
-				AllPoints.PushBack( Points[p].x );
-				AllPoints.PushBack( Points[p].y );
+				Rect.Accumulate( x, y );
+				AllPoints.PushBack( x );
+				AllPoints.PushBack( y );
 			}
 			
 			if ( MakeRects )
@@ -284,7 +334,7 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 		{
 			auto GetPointElement = [&](size_t Index)
 			{
-				return GetPoint(Points[Index]);
+				return GetPointObject(Points[Index]);
 			};
 			auto Array = Params.mContext.CreateArray( Points.size(), GetPointElement );
 			return Array;
@@ -296,7 +346,15 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	{
 		try
 		{
-			auto Array = GetPoints(Contours[i]);
+			//	auto discard ones that are too small (size=1 == 1 pixel)
+			auto& ThisContour = Contours[i];
+			//if ( ThisContour.size() < 4 )
+			if ( ThisContour.size() == 1 )
+				continue;
+			
+			Soy::Rectf Rect;
+			auto Array = GetPoints( ThisContour, Rect );
+			
 			auto ArrayValue = JsCore::GetValue( Params.mContext.mContext, Array );
 			//Params.Return( ArrayValue );	return;
 			ContourArrays.PushBack( ArrayValue );
