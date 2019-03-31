@@ -33,28 +33,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 													void *displayLinkContext)
 {
 	auto* Window = reinterpret_cast<TOpenglWindow*>(displayLinkContext);
-	
 	Window->Iteration();
-//	NSRect Bounds = NSMakeRect( 0, 0, 100, 100 );
-//	[Window->mView->mView drawRect:Bounds];
-	/*
-	auto* pContext = Window->GetContext();
-	if ( !pContext )
-		return kCVReturnError;
-	auto& Context = *pContext;
-	
-	Context.Lock();
-	
-	// Add your drawing codes here
-		
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	drawAnObject();
-	glFlush();
-	
-	//[currentContext flushBuffer];
-	Context.Unlock();
-	 */
 	return kCVReturnSuccess;
 }
 
@@ -173,6 +152,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
 		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
 		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
+		mView->mOnKeyDown = [this](SoyKeyButton::Type Button)	{	if ( this->mOnKeyDown )	this->mOnKeyDown(Button);	};
+		mView->mOnKeyUp = [this](SoyKeyButton::Type Button)		{	if ( this->mOnKeyUp )	this->mOnKeyUp(Button);	};
 		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
 		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
 

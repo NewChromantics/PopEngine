@@ -3,6 +3,32 @@
 #include "SoyMath.h"
 
 
+namespace Platform
+{
+	SoyKeyButton::Type	GetKeyButton(uint16_t KeyCode);
+}
+
+//#include <HIToolbox/Events.h>
+
+
+SoyKeyButton::Type Platform::GetKeyButton(uint16_t KeyCode)
+{
+	//	<HIToolbox/Events.h>
+	switch(KeyCode)
+	{
+		//	gr: these will vary by keyboard layout
+		//case kVK_ANSI_A:	return 'a';	//
+		//case kVK_Space:	return ' ';
+		case 0x31:	return ' ';
+	}
+	
+	std::stringstream Error;
+ 	Error << "Unhandled OSX keycode 0x" << std::hex << KeyCode;
+	throw Soy::AssertException(Error.str());
+}
+
+
+
 //	gr; we don't use the CG lock as we have our own internal checks, which should now be locked with our own mutex
 //		this CGLLockContext just implements recursive mutex internally, so redundant if we have our own
 //		we were getting asserts in Opengl::Context::Lock as the thread id was being released at a different time to unlocking the context (race condition)
@@ -220,6 +246,41 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 	TriggerMouseEvent( event, __FUNCTION__, mParent, mParent->mOnMouseUp, SoyMouseButton::Middle, mLastPos, self );
 }
 
+- (BOOL)acceptsFirstResponder
+{
+	//	enable key events
+	return YES;
+}
+
+- (void)keyDown:(NSEvent *)event
+{
+	try
+	{
+		auto Key = Platform::GetKeyButton( event.keyCode );
+		auto& Event = mParent->mOnKeyDown;
+		if ( Event )
+			Event( Key );
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+	try
+	{
+		auto Key = Platform::GetKeyButton( event.keyCode );
+		auto& Event = mParent->mOnKeyUp;
+		if ( Event )
+			Event( Key );
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+}
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {

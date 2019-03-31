@@ -97,6 +97,31 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 }
 
 
+void TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& FuncName)
+{
+	//  call javascript
+	auto Runner = [=](Bind::TContext& Context)
+	{
+		try
+		{
+			std::string KeyString( &Button, 1 );
+			
+			auto This = this->GetHandle();
+			auto ThisOnRender = This.GetFunction(FuncName);
+			Bind::TCallback Params(Context);
+			Params.SetThis( This );
+			Params.SetArgumentString( 0, KeyString );
+			ThisOnRender.Call( Params );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception in " << FuncName << ": " << e.what() << std::endl;
+		}
+	};
+	mContext.Queue( Runner );
+}
+
+
 bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 {
 	bool Result = false;
@@ -185,6 +210,8 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnMouseDown = [this](const TMousePos& Pos,SoyMouseButton::Type Button)	{	this->OnMouseFunc(Pos,Button,"OnMouseDown");	};
 	mWindow->mOnMouseUp = [this](const TMousePos& Pos,SoyMouseButton::Type Button)		{	this->OnMouseFunc(Pos,Button,"OnMouseUp");	};
 	mWindow->mOnMouseMove = [this](const TMousePos& Pos,SoyMouseButton::Type Button)	{	this->OnMouseFunc(Pos,Button,"OnMouseMove");	};
+	mWindow->mOnKeyDown = [this](SoyKeyButton::Type Button)			{	this->OnKeyFunc(Button,"OnKeyDown");	};
+	mWindow->mOnKeyUp = [this](SoyKeyButton::Type Button)			{	this->OnKeyFunc(Button,"OnKeyUp");	};
 	mWindow->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->OnTryDragDrop(Filenames);	};
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 }

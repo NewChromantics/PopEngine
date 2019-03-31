@@ -32,6 +32,10 @@ class TOpenglParams;
 -(void)otherMouseDragged:(NSEvent *)event;
 -(void)otherMouseUp:(NSEvent *)event;
 
+- (void)keyDown:(NSEvent *)event;
+- (void)keyUp:(NSEvent *)event;
+//acceptsFirstResponder
+
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender;
 /*
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender; // if the destination responded to draggingEntered: but not to draggingUpdated: the return value from draggingEntered: is used
@@ -123,9 +127,12 @@ public:
 	Soy::Rectx<int32_t>		GetScreenRect();
 
 public:
-	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>		mOnMouseDown;
-	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>		mOnMouseMove;
-	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>		mOnMouseUp;
+	
+	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>	mOnMouseDown;
+	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>	mOnMouseMove;
+	std::function<void(const TMousePos&,SoyMouseButton::Type MouseButton)>	mOnMouseUp;
+	std::function<void(SoyKeyButton::Type KeyButton)>						mOnKeyDown;
+	std::function<void(SoyKeyButton::Type KeyButton)>						mOnKeyUp;
 	std::function<bool(ArrayBridge<std::string>&)>	mOnTryDragDrop;
 	std::function<void(ArrayBridge<std::string>&)>	mOnDragDrop;
 	std::function<void(Opengl::TRenderTarget&,std::function<void()>)>	mOnRender;
