@@ -45,7 +45,7 @@ void ApiMedia::Bind(Bind::TContext& Context)
 
 void ApiMedia::EnumDevices(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
 	auto DoEnumDevices = [&]
 	{
@@ -403,7 +403,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(1) )
 		ExtractPlanes = Params.GetArgumentBool(1);
 	
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 	auto& Context = Params.mContext;
 	
 	auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)

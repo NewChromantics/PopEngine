@@ -738,7 +738,7 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 }
 
 
-JsCore::TPromise JsCore::TContext::CreatePromise()
+JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 {
 	if ( !mMakePromiseFunction.mThis )
 	{
@@ -771,7 +771,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise()
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
 	auto Reject = NewPromiseObject.GetFunction("Reject");
 
-	TPromise Promise( NewPromiseObject, Resolve, Reject );
+	TPromise Promise( NewPromiseObject, Resolve, Reject, DebugName );
 /*
 	TObject NewPromiseObject( mContext, NewPromiseHandle );
 	
@@ -1317,10 +1317,11 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	ThrowException( Context.mContext, Exception );
 }
 
-JsCore::TPromise::TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject) :
+JsCore::TPromise::TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName) :
 	mPromise	( Promise ),
 	mResolve	( Resolve ),
-	mReject		( Reject )
+	mReject		( Reject ),
+	mDebugName	( DebugName )
 {
 }
 

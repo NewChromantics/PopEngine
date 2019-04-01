@@ -22,7 +22,7 @@ Bind::TPromise Bind::TPromiseQueue::AddPromise(Bind::TContext& Context)
 	mContext = &Context;
 	
 	std::lock_guard<std::mutex> Lock( mPendingLock );
-	auto NewPromise = Context.CreatePromise();
+	auto NewPromise = Context.CreatePromise(__FUNCTION__);
 	mPending.PushBack( NewPromise );
 	return NewPromise;
 }

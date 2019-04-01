@@ -126,7 +126,7 @@ void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 void ApiInput::EnumDevices(Bind::TCallback& Params)
 {
 	auto& ContextManager = GetContextManager();
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 	ContextManager.EnumDevices( Params.mContext, Promise );
 	Params.Return( Promise );
 }

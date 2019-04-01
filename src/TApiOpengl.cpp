@@ -336,7 +336,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	//	gr: got a crash here where v8 was writing to 0xaaaaaaaaa
 	//		which is scribbled memory (freshly initialised)
 	//	make a promise resolver (persistent to copy to thread)
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
 	auto TargetHandle = Params.GetArgumentObject(0);
 	auto CallbackHandle = Params.GetArgumentFunction(1);

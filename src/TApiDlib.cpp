@@ -104,7 +104,7 @@ void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 	auto& This = Params.This<TDlibWrapper>();
 	
 	//	make a promise resolver (persistent to copy to thread)
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
 	auto ImageObject = Params.GetArgumentObject(0);
 	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
@@ -171,7 +171,7 @@ void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 
 	auto* pThis = &This;
 	
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 	
 	auto ImageObject = Params.GetArgumentObject(0);
 	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );

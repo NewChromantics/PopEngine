@@ -198,7 +198,7 @@ public:
 
 	virtual Bind::TPersistent	CreatePersistent(Bind::TObject& Object) bind_override;
 	virtual Bind::TPersistent	CreatePersistent(Bind::TFunction& Object) bind_override;
-	virtual Bind::TPromise		CreatePromise() bind_override;
+	virtual Bind::TPromise		CreatePromise(const std::string& DebugName) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
 	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
@@ -452,7 +452,7 @@ class JsCore::TPromise
 {
 public:
 	TPromise()	{}
-	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject);
+	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
 	~TPromise();
 	
 	//	const for lambda[=] copy capture
@@ -471,6 +471,7 @@ private:
 	JSContextRef	GetContext() const	{	return mPromise.GetContext();	}
 	
 public:
+	std::string		mDebugName;
 	TPersistent		mPromise;
 	TPersistent		mResolve;
 	TPersistent		mReject;

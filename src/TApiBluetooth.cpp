@@ -111,7 +111,7 @@ void ApiBluetooth::OnStatusChanged(Bind::TCallback& Params)
 void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
 	//	future planning
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
 	auto DoEnumDevices = [=](Bind::TContext& Context)
 	{

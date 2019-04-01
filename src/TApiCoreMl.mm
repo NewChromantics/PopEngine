@@ -988,7 +988,7 @@ template<typename COREML_FUNC>
 void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 	auto* pContext = &Params.mContext;
 	
 	auto RunModel = [=]
@@ -1128,7 +1128,7 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 	Image.GetPixels( *Pixels );
 	Pixels->SetFormat( SoyPixelsFormat::Greyscale );
 	Pixels->SetFormat( SoyPixelsFormat::RGBA );
-	auto Promise = Params.mContext.CreatePromise();
+	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
 	auto Run = [=](Bind::TContext& Context)
 	{
