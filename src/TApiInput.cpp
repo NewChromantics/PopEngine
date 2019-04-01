@@ -140,7 +140,11 @@ void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 	mDevice.reset( new Hid::TDevice( ContextManager.mContext, DeviceName) );
 	mDevice->mOnStateChanged = [this]()
 	{
-		this->mOnStateChangedPromises.Resolve();
+		auto Resolve = [this](Bind::TContext& Context)
+		{
+			this->mOnStateChangedPromises.Resolve();
+		};
+		this->mContext.Queue(Resolve);
 	};
 }
 

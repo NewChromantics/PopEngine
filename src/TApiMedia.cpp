@@ -210,9 +210,12 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 		}
 		catch(std::exception& e)
 		{
-			std::stringstream Error;
-			Error << e.what();
-			mFrameRequests.Reject( Error.str() );
+			std::string Error(e.what());
+			auto DoReject = [=](Bind::TContext& Context)
+			{
+				mFrameRequests.Reject( Error );
+			};
+			Context.Queue(DoReject);
 		}
 	};
 	mContext.Queue( Runner );

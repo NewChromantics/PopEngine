@@ -1337,7 +1337,22 @@ void JsCore::TPromise::Resolve(JSValueRef Value) const
 	
 	//	gr: this should be a Queue'd call!
 	auto Resolve = mResolve.GetFunction();
-	Resolve.Call( This, Value );
+	try
+	{
+		Resolve.Call( This, Value );
+	}
+	catch(std::exception& e)
+	{
+		std::stringstream Error;
+		Error << "Error executing promise " << mDebugName << ": " << e.what();
+		throw Soy::AssertException(Error.str());
+	}
+	catch(...)
+	{
+		std::stringstream Error;
+		Error << "Error executing promise " << mDebugName << " (unknown exception)";
+		throw Soy::AssertException(Error.str());
+	}
 }
 
 void JsCore::TPromise::ResolveUndefined() const
