@@ -20,6 +20,16 @@ SoyKeyButton::Type Platform::GetKeyButton(uint16_t KeyCode)
 		//case kVK_ANSI_A:	return 'a';	//
 		//case kVK_Space:	return ' ';
 		case 0x31:	return ' ';
+		case 0x12:	return '1';
+		case 0x13:	return '2';
+		case 0x14:	return '3';
+		case 0x15:	return '4';
+		case 0x16:	return '6';
+		case 0x17:	return '5';
+		case 0x1a:	return '7';
+		case 0x1c:	return '8';
+		case 0x19:	return '9';
+		case 0x1d:	return '0';
 	}
 	
 	std::stringstream Error;
