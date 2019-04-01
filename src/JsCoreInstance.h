@@ -376,7 +376,9 @@ public:
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
 	
 	template<typename TYPE>
-	TYPE&					This();
+	inline TYPE&			This()	{	return This<TYPE>(mThis);	}
+	template<typename TYPE>
+	static TYPE&			This(JSObjectRef Object);
 
 	virtual bool			HasMember(const std::string& MemberName) bind_override;
 	
@@ -406,9 +408,6 @@ private:
 	JSValueRef		GetMember(const std::string& MemberName);
 	void			SetMember(const std::string& Name,JSValueRef Value);
 	JSContextRef	mContext = nullptr;
-
-protected:
-	virtual void*	GetThis() bind_override;
 
 public:
 	JSObjectRef		mThis = nullptr;
@@ -504,7 +503,7 @@ public:
 	}
 
 protected:
-	TPersistent		mHandle;
+	TObject			mHandle;		//	gr: this is a weak reference so the object gets free'd
 	TContext&		mContext;
 };
 
@@ -528,10 +527,16 @@ public:
 	static TTemplate 		AllocTemplate(Bind::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper);
 	
 protected:
-	static void				Free(JSObjectRef Object)
+	static void				Free(JSObjectRef ObjectRef)
 	{
 		//	free the void
-		std::Debug << "Free object of type " << TYPENAME << std::endl;
+		//	cast to TObject and use This to do proper type checks
+		//std::Debug << "Free object of type " << TYPENAME << std::endl;
+		auto& Object = TObject::This<TYPE>( ObjectRef );
+		auto* pObject = &Object;
+		delete pObject;
+		//	reset the void for safety?
+		JSObjectSetPrivate( ObjectRef, nullptr );
 	}
 	
 protected:
@@ -635,9 +640,9 @@ inline TYPE& Bind::TCallback::This()
 }
 
 template<typename TYPE>
-inline TYPE& Bind::TObject::This()
+inline TYPE& Bind::TObject::This(JSObjectRef Object)
 {
-	auto* This = GetThis();
+	auto* This = JSObjectGetPrivate(Object);
 	if ( This == nullptr )
 		throw Soy::AssertException("Object::This is null");
 	auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>( This );

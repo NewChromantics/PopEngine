@@ -98,6 +98,9 @@ void JsCore::TFunction::Call(Bind::TCallback& Params) const
 		Params.mThis = JSContextGetGlobalObject( mContext );
 	
 	auto FunctionHandle = mThis;
+	if ( !JSValueIsObject( mContext, FunctionHandle ) )
+		throw Soy::AssertException("Function's handle is no longer an object");
+	
 	auto This = GetObject( mContext, Params.mThis );
 
 	JSValueRef Exception = nullptr;
@@ -624,11 +627,6 @@ Bind::TFunction JsCore::TObject::GetFunction(const std::string& MemberName)
 	return Func;
 }
 
-void* JsCore::TObject::GetThis()
-{
-	return JSObjectGetPrivate( mThis );
-}
-
 
 void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
 {
@@ -1076,11 +1074,14 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 Bind::TPersistent::~TPersistent()
 {
 	if ( mObject.mThis != nullptr )
+	{
 		JSValueUnprotect( mObject.mContext, mObject.mThis );
+	}
 	 
 	if ( mFunction.mThis != nullptr )
+	{
 		JSValueUnprotect( mFunction.mContext, mFunction.mThis );
-
+	}
 }
 
 JSContextRef Bind::TPersistent::GetContext() const
@@ -1357,19 +1358,11 @@ void JsCore::TPromise::Reject(JSValueRef Value) const
 
 JsCore::TObject JsCore::TObjectWrapperBase::GetHandle()
 {
-	//	just in case we've created C side, and not vis JS constructor
-	//	make sure the handle has been set before access
-	if ( !mHandle.IsObject() )
-		throw Soy::AssertException("Accessing object handle before proper JS construction");
-	
-	return mHandle.GetObject();
+	return mHandle;
 }
 
 void JsCore::TObjectWrapperBase::SetHandle(Bind::TObject& NewHandle)
 {
-	if ( mHandle.IsObject() )
-		throw Soy::AssertException("Setting handle on object wrapper when it's non-null");
-	
 	mHandle = NewHandle;
 }
 
