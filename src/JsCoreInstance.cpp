@@ -94,6 +94,9 @@ void JsCore::TFunction::Call(Bind::TObject& This) const
 
 void JsCore::TFunction::Call(Bind::TCallback& Params) const
 {
+	//	docs say null is okay
+	//		https://developer.apple.com/documentation/javascriptcore/1451407-jsobjectcallasfunction?language=objc
+	//		The object to use as "this," or NULL to use the global object as "this."
 	if ( Params.mThis == nullptr )
 		Params.mThis = JSContextGetGlobalObject( mContext );
 	
