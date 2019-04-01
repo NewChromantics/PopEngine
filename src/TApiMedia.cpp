@@ -193,9 +193,18 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 		try
 		{
 			auto Frame = PopFrame( Context, mFrameRequestParams );
+			Bind::TPersistent FramePersistent( Frame );
+			
 			auto HandlePromise = [&](Bind::TPromise& Promise)
 			{
-				Promise.Resolve( Frame );
+				//	gr: queue these resolves
+				//		they invoke render's which seem to cause some problem, but I'm not sure what
+				auto Resolve = [=](Bind::TContext& Context)
+				{
+					auto FrameObject = FramePersistent.GetObject();
+					Promise.Resolve( FrameObject );
+				};
+				Context.Queue(Resolve);
 			};
 			mFrameRequests.Flush( HandlePromise );
 		}
