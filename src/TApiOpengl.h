@@ -84,6 +84,9 @@ public:
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
 public:
+	Bind::TPersistent		mPersistentHandle;
+	
+public:
 	std::shared_ptr<TRenderWindow>&	mWindow = mObject;
 	
 	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object

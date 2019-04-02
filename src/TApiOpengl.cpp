@@ -188,6 +188,8 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 
 void TWindowWrapper::Construct(Bind::TCallback& Params)
 {
+	mPersistentHandle = Params.ThisObject();
+
 	auto WindowName = Params.GetArgumentString(0);
 	
 	TOpenglParams WindowParams;
