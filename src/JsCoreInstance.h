@@ -104,7 +104,7 @@ inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
 namespace Bind = JsCore;
 #define bind_override
 
-#define RETAIN_FUNCTION
+//#define RETAIN_FUNCTION
 #define RETAIN_WRAPPER_HANDLE
 
 class JsCore::TArray

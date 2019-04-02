@@ -335,30 +335,43 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	auto WindowHandle = Params.ThisObject();
 	auto WindowPersistent = Params.mContext.CreatePersistent( WindowHandle );
 	
-	//	gr: got a crash here where v8 was writing to 0xaaaaaaaaa
-	//		which is scribbled memory (freshly initialised)
-	//	make a promise resolver (persistent to copy to thread)
 	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
-
+	//	return the promise
+	Params.Return( Promise );
+	
+	auto* pContext = &Params.mContext;
+	
+	auto Resolve = [=](Bind::TContext& Context)
+	{
+		//auto Target = TargetPersistent->GetObject();
+		//Promise.Resolve( Target );
+		Promise.ResolveUndefined();
+	};
+	
+	auto OnCompleted = [=]()
+	{
+		pContext->Queue( Resolve );
+	};
+	//OnCompleted();
+	
+	
 	auto TargetHandle = Params.GetArgumentObject(0);
 	auto CallbackHandle = Params.GetArgumentFunction(1);
 	std::string ReadBack;
 	if ( Params.IsArgumentString(2) )
 		ReadBack = Params.GetArgumentString(2);
 	
-	auto TargetPersistent = Params.mContext.CreatePersistent( TargetHandle );
-	auto* TargetImage = &TargetHandle.This<TImageWrapper>();
+	auto TargetPersistent = Params.mContext.CreatePersistentPtr( TargetHandle );
 	auto RenderCallbackPersistent = Params.mContext.CreatePersistent( CallbackHandle );
 	auto ReadBackPixelsAfterwards = SoyPixelsFormat::ToType( ReadBack );
 	
-	auto* pContext = &Params.mContext;
 	
 	auto ExecuteRenderCallback = [=](Bind::TContext& Context)
 	{
 		auto Func = RenderCallbackPersistent.GetFunction();
 		auto This = Context.GetGlobalObject();
 		auto Window = WindowPersistent.GetObject();
-		auto Target = TargetPersistent.GetObject();
+		auto Target = TargetPersistent->GetObject();
 		
 		Bind::TCallback CallbackParams(Context);
 		CallbackParams.SetThis( This );
@@ -368,15 +381,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		Func.Call( CallbackParams );
 	};
 	
-	auto OnCompleted = [=]()
-	{
-		auto Resolve = [=](Bind::TContext& Context)
-		{
-			auto Target = TargetPersistent.GetObject();
-			Promise.Resolve( Target );
-		};
-		pContext->Queue( Resolve );
-	};
+	
 	
 	auto OpenglRender = [=]
 	{
@@ -384,6 +389,11 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 			throw Soy::AssertException("Function not being called on opengl thread");
 		try
 		{
+			//	gr: we were storing this pointer which may be getting deleted
+			//	with V8 we can't access this pointer out of thread, but maybe we can cache both
+			auto TargetImageObject = TargetPersistent->GetObject();
+			auto& TargetImage = TargetImageObject.This<TImageWrapper>();
+			
 			//	get the texture from the image
 			std::string GenerateTextureError;
 			auto OnError = [&](const std::string& Error)
@@ -391,10 +401,12 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 				throw Soy::AssertException(Error);
 			};
 			//	gr: this auto execute automatically
-			TargetImage->GetTexture( *OpenglContext, []{}, OnError );
+			TargetImage.GetTexture( *OpenglContext, []{}, OnError );
 		
 			//	setup render target
-			auto& TargetTexture = TargetImage->GetTexture();
+			auto TargetTexturePtr = TargetImage.GetTexturePtr();
+			auto& TargetTexture = *TargetTexturePtr;
+			
 			Opengl::TRenderTargetFbo RenderTarget( "Window::Render", TargetTexture );
 			RenderTarget.mGenerateMipMaps = false;
 			RenderTarget.Bind();
@@ -417,10 +429,10 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 				throw;
 			}
 
-			TargetImage->OnOpenglTextureChanged();
+			TargetImage.OnOpenglTextureChanged();
 			if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			{
-				TargetImage->ReadOpenglPixels(ReadBackPixelsAfterwards);
+				TargetImage.ReadOpenglPixels(ReadBackPixelsAfterwards);
 			}
 
 			OnCompleted();
@@ -438,8 +450,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	};
 	OpenglContext->PushJob( OpenglRender );
 
-	//	return the promise
-	Params.Return( Promise );
+
 }
 
 /*
