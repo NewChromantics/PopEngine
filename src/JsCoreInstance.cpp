@@ -137,22 +137,24 @@ void JsCore::TFunction::Call(Bind::TObject& This) const
 
 void JsCore::TFunction::Call(Bind::TCallback& Params) const
 {
-	//	docs say null is okay
-	//		https://developer.apple.com/documentation/javascriptcore/1451407-jsobjectcallasfunction?language=objc
-	//		The object to use as "this," or NULL to use the global object as "this."
-	if ( Params.mThis == nullptr )
-		Params.mThis = JSContextGetGlobalObject( mContext );
-	
+	//	make sure function handle is okay
 	auto FunctionHandle = mThis;
 	if ( !JSValueIsObject( mContext, FunctionHandle ) )
 		throw Soy::AssertException("Function's handle is no longer an object");
 	
-	auto This = GetObject( mContext, Params.mThis );
-
+	//	docs say null is okay
+	//		https://developer.apple.com/documentation/javascriptcore/1451407-jsobjectcallasfunction?language=objc
+	//		The object to use as "this," or NULL to use the global object as "this."
+	//if ( Params.mThis == nullptr )
+	//	Params.mThis = JSContextGetGlobalObject( mContext );
+	auto This = Params.mThis ? GetObject( mContext, Params.mThis ) : nullptr;
+	
+	//	call
 	JSValueRef Exception = nullptr;
 	auto Result = JSObjectCallAsFunction( mContext, FunctionHandle, This, Params.mArguments.GetSize(), Params.mArguments.GetArray(), &Exception );
 
 	ThrowException( mContext, Exception );
+	
 	Params.mReturn = Result;
 }
 
@@ -160,9 +162,6 @@ JSValueRef JsCore::TFunction::Call(JSObjectRef This,JSValueRef Arg0) const
 {
 	auto& Context = JsCore::GetContext( mContext );
 	Bind::TCallback Params( Context );
-	
-	if ( This == nullptr )
-		This = Context.GetGlobalObject().mThis;
 
 	Params.mThis = This;
 	
@@ -786,7 +785,7 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 
 JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 {
-	if ( !mMakePromiseFunction.mThis )
+	if ( !mMakePromiseFunction )
 	{
 		auto* MakePromiseFunctionSource =  R"V0G0N(
 		
@@ -808,10 +807,12 @@ JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
 		ThrowException( Exception );
 		
-		mMakePromiseFunction = TFunction( mContext, FunctionValue );
+		TFunction MakePromiseFunction( mContext, FunctionValue );
+		mMakePromiseFunction = MakePromiseFunction;
 	}
 	
-	auto NewPromiseValue = mMakePromiseFunction.Call();
+	auto MakePromiseFunction = mMakePromiseFunction.GetFunction();
+	auto NewPromiseValue = MakePromiseFunction.Call();
 	auto NewPromiseHandle = JsCore::GetObject( mContext, NewPromiseValue );
 	TObject NewPromiseObject( mContext, NewPromiseHandle );
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
@@ -891,6 +892,12 @@ JsCore::TInstance::
 	}
 
 */
+
+
+JSContextRef JsCore::TCallback::GetContextRef()
+{
+	return mContext.mContext;
+}
 
 JSType JsCore::TCallback::GetArgumentType(size_t Index)
 {
@@ -1094,6 +1101,12 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 	ParentObject.SetObject( ObjectName, NewObject );
 }
 
+std::shared_ptr<JsCore::TPersistent> JsCore::TContext::CreatePersistentPtr(JsCore::TObject& Object)
+{
+	std::shared_ptr<JsCore::TPersistent> Ptr( new JsCore::TPersistent( Object ) );
+	return Ptr;
+}
+
 JsCore::TPersistent JsCore::TContext::CreatePersistent(JsCore::TObject& Object)
 {
 	return JsCore::TPersistent( Object );
@@ -1208,7 +1221,7 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<float>& Valu
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values)
 {
 	auto Size = Values.GetSize();
-	static auto WarningArraySize = 800;
+	static auto WarningArraySize = 100;
 	if ( Size > WarningArraySize )
 	{
 		//std::stringstream Error;
@@ -1376,6 +1389,8 @@ JsCore::TPromise::~TPromise()
 	
 }
 
+
+
 void JsCore::TPromise::Resolve(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?
@@ -1420,7 +1435,11 @@ void JsCore::TPromise::Reject(JSValueRef Value) const
 
 JsCore::TObject JsCore::TObjectWrapperBase::GetHandle()
 {
+#if defined(RETAIN_WRAPPER_HANDLE)
+	return mHandle.GetObject();
+#else
 	return mHandle;
+#endif
 }
 
 void JsCore::TObjectWrapperBase::SetHandle(Bind::TObject& NewHandle)

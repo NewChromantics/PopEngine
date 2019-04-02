@@ -186,86 +186,6 @@ public:
 	JsCore::TContext&	mContext;
 };
 
-//	functions marked virtual need to become generic
-class JsCore::TContext //: public Bind::TContext
-{
-public:
-	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
-	~TContext();
-	
-	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
-	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
-	virtual void		Queue(std::function<void(TContext&)> Function,size_t DeferMs=0) bind_override;
-	virtual void		GarbageCollect();
-	
-	template<const char* FunctionName>
-	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName=std::string());
-
-	Bind::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
-	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
-	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectTypeName=std::string());
-	Bind::TObject			CreateObjectInstance(const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
-
-	virtual Bind::TPersistent	CreatePersistent(Bind::TObject& Object) bind_override;
-	virtual Bind::TPersistent	CreatePersistent(Bind::TFunction& Object) bind_override;
-	virtual Bind::TPromise		CreatePromise(const std::string& DebugName) bind_override;
-	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
-	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
-	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
-	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
-	virtual Bind::TArray	CreateArray(size_t ElementCount);
-	template<typename TYPE>
-	Bind::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
-	Bind::TArray			CreateArray(ArrayBridge<uint8_t>&& Values);
-	Bind::TArray			CreateArray(ArrayBridge<float>&& Values);
-
-	
-	template<typename OBJECTWRAPPERTYPE>
-	void				BindObjectType(const std::string& ParentName=std::string());
-	
-	//	api calls with context provided
-	//template<typename IN,typename OUT>
-	//OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
-	void				ThrowException(JSValueRef ExceptionHandle,const std::string& ErrorContext="JsCore exception")	{	JsCore::ThrowException( mContext, ExceptionHandle, ErrorContext );	}
-
-	
-	
-	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
-	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
-	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
-	std::string			GetResolvedFilename(const std::string& Filename);
-	
-	//	this can almost be static, but TCallback needs a few functions of TContext
-	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
-
-	
-private:
-	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
-	
-	
-	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
-
-	
-public:
-	TInstance&			mInstance;
-	JSGlobalContextRef	mContext = nullptr;
-	
-	prmem::Heap			mImageHeap = prmem::Heap(true,true,"Context Images");
-	std::string			mRootDirectory;
-
-	//	"templates" in v8, "classes" in jscore
-	Array<TTemplate>	mObjectTemplates;
-	
-	//	no promise type, so this is our promise instantiator
-	TFunction			mMakePromiseFunction;
-	
-	//	queue for jobs to try and keep non-js threads free and some kinda organisation
-	//	although jscore IS threadsafe, so we can execute on other threads, it's not
-	//	the same on other systems
-	TJobQueue			mJobQueue;
-	std::recursive_mutex	mExecuteLock;
-};
-
 
 class JsCore::TCallback //: public Bind::TCallback
 {
@@ -280,18 +200,18 @@ public:
 	virtual std::string		GetArgumentString(size_t Index) bind_override;
 	std::string				GetArgumentFilename(size_t Index);
 	virtual bool			GetArgumentBool(size_t Index) bind_override;
-	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( mContext.mContext, mArguments[Index] );	}
+	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( GetContextRef(), mArguments[Index] );	}
 	virtual float			GetArgumentFloat(size_t Index) bind_override;
 	virtual Bind::TFunction	GetArgumentFunction(size_t Index) bind_override;
 	virtual Bind::TArray	GetArgumentArray(size_t Index) bind_override;
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override		{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override		{	EnumArray( mContext.mContext, GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
 	
 	
 	template<typename TYPE>
@@ -301,25 +221,25 @@ public:
 	virtual bool			IsArgumentString(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeString;	}
 	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeBoolean;	}
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
-	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return IsArray( mContext.mContext, GetArgumentValue(Index) );	}
-	virtual bool			IsArgumentFunction(size_t Index)bind_override	{	return IsFunction( mContext.mContext, GetArgumentValue(Index) );	}
+	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return IsArray( GetContextRef(), GetArgumentValue(Index) );	}
+	virtual bool			IsArgumentFunction(size_t Index)bind_override	{	return IsFunction( GetContextRef(), GetArgumentValue(Index) );	}
 	virtual bool			IsArgumentObject(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeObject;	}
 
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;
 	virtual void			ReturnNull() bind_override;
-	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(size_t Value) bind_override				{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(JSObjectRef Value) bind_override			{	mReturn = GetValue( mContext.mContext, Value );	}
-	virtual void			Return(Bind::TArray& Value) bind_override		{	mReturn = GetValue( mContext.mContext, Value.mThis );	}
+	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(size_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(Bind::TObject& Value) bind_override		{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(JSObjectRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(Bind::TArray& Value) bind_override		{	mReturn = GetValue( GetContextRef(), Value.mThis );	}
 	virtual void			Return(Bind::TPromise& Value) bind_override;
 	virtual void			Return(Bind::TPersistent& Value) bind_override;
 	template<typename TYPE>
-	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override	{	mReturn = GetArray( mContext.mContext, Values );	}
+	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override	{	mReturn = GetArray( GetContextRef(), Values );	}
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(Bind::TObject& This) bind_override;
@@ -331,9 +251,10 @@ public:
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<float>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,Bind::TArray& Value) bind_override;
 
-	virtual bool			GetReturnBool() bind_override			{	return GetBool( mContext.mContext, mReturn );	}
+	virtual bool			GetReturnBool() bind_override			{	return GetBool( GetContextRef(), mReturn );	}
 	
 private:
+	JSContextRef			GetContextRef();
 	JSType					GetArgumentType(size_t Index);
 	JSValueRef				GetArgumentValue(size_t Index);
 	
@@ -456,6 +377,87 @@ public:
 	TFunction	mFunction;
 };
 
+
+//	functions marked virtual need to become generic
+class JsCore::TContext //: public Bind::TContext
+{
+public:
+	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
+	~TContext();
+	
+	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
+	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
+	virtual void		Queue(std::function<void(TContext&)> Function,size_t DeferMs=0) bind_override;
+	virtual void		GarbageCollect();
+	
+	template<const char* FunctionName>
+	void				BindGlobalFunction(std::function<void(Bind::TCallback&)> Function,const std::string& ParentName=std::string());
+	
+	Bind::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
+	virtual Bind::TObject	CreateObjectInstance(const std::string& ObjectTypeName=std::string());
+	Bind::TObject			CreateObjectInstance(const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
+	
+	virtual Bind::TPersistent	CreatePersistent(Bind::TObject& Object) bind_override;
+	virtual std::shared_ptr<Bind::TPersistent>	CreatePersistentPtr(Bind::TObject& Object) bind_override;
+	virtual Bind::TPersistent	CreatePersistent(Bind::TFunction& Object) bind_override;
+	virtual Bind::TPromise		CreatePromise(const std::string& DebugName) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
+	virtual Bind::TArray	CreateArray(size_t ElementCount);
+	template<typename TYPE>
+	Bind::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
+	Bind::TArray			CreateArray(ArrayBridge<uint8_t>&& Values);
+	Bind::TArray			CreateArray(ArrayBridge<float>&& Values);
+	
+	
+	template<typename OBJECTWRAPPERTYPE>
+	void				BindObjectType(const std::string& ParentName=std::string());
+	
+	//	api calls with context provided
+	//template<typename IN,typename OUT>
+	//OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
+	void				ThrowException(JSValueRef ExceptionHandle,const std::string& ErrorContext="JsCore exception")	{	JsCore::ThrowException( mContext, ExceptionHandle, ErrorContext );	}
+	
+	
+	
+	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
+	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
+	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
+	std::string			GetResolvedFilename(const std::string& Filename);
+	
+	//	this can almost be static, but TCallback needs a few functions of TContext
+	JSValueRef			CallFunc(std::function<void(Bind::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
+	
+	
+private:
+	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
+	
+	
+	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+	
+	
+public:
+	TInstance&			mInstance;
+	JSGlobalContextRef	mContext = nullptr;
+	
+	prmem::Heap			mImageHeap = prmem::Heap(true,true,"Context Images");
+	std::string			mRootDirectory;
+	
+	//	"templates" in v8, "classes" in jscore
+	Array<TTemplate>	mObjectTemplates;
+	
+	//	no promise type, so this is our promise instantiator
+	TPersistent			mMakePromiseFunction;
+	
+	//	queue for jobs to try and keep non-js threads free and some kinda organisation
+	//	although jscore IS threadsafe, so we can execute on other threads, it's not
+	//	the same on other systems
+	TJobQueue			mJobQueue;
+	std::recursive_mutex	mExecuteLock;
+};
 
 
 class JsCore::TPromise
