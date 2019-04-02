@@ -368,10 +368,14 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		Func.Call( CallbackParams );
 	};
 	
-	auto OnCompleted = [=](Bind::TContext& Context)
+	auto OnCompleted = [=]()
 	{
-		auto Target = TargetPersistent.GetObject();
-		Promise.Resolve( Target );
+		auto Resolve = [=](Bind::TContext& Context)
+		{
+			auto Target = TargetPersistent.GetObject();
+			Promise.Resolve( Target );
+		};
+		pContext->Queue( Resolve );
 	};
 	
 	auto OpenglRender = [=]
@@ -419,8 +423,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 				TargetImage->ReadOpenglPixels(ReadBackPixelsAfterwards);
 			}
 
-			//	queue the completion, doesn't need to be done instantly
-			pContext->Queue( OnCompleted );
+			OnCompleted();
 		}
 		catch(std::exception& e)
 		{
