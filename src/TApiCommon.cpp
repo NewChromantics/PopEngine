@@ -289,14 +289,14 @@ void ApiPop::GetImageHeapCount(Bind::TCallback& Params)
 
 void ApiPop::GetHeapSize(Bind::TCallback& Params)
 {
-	auto& Heap = Params.mContext.GetV8Heap();
+	auto& Heap = Params.mContext.GetGeneralHeap();
 	auto Value = Heap.mAllocBytes;
 	Params.Return( Value );
 }
 
 void ApiPop::GetHeapCount(Bind::TCallback& Params)
 {
-	auto& Heap = Params.mContext.GetV8Heap();
+	auto& Heap = Params.mContext.GetGeneralHeap();
 	auto Value = Heap.mAllocCount;
 	Params.Return( Value );
 }

@@ -78,6 +78,8 @@ namespace JsCore
 	//	enum array supports single objects as well as arrays, so we can enumerate a single float into an array of one, as well as an array
 	template<typename TYPE>
 	void		EnumArray(JSContextRef Context,JSValueRef Value,ArrayBridge<TYPE>& Array);
+	
+	prmem::Heap&	GetGlobalObjectHeap();
 }
 
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
@@ -220,8 +222,9 @@ public:
 
 	
 	
+	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
 	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
-	prmem::Heap&		GetV8Heap()			{	return mAllocatorHeap;	}
+	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
 	std::string			GetResolvedFilename(const std::string& Filename);
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext
@@ -239,7 +242,6 @@ public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
 	
-	prmem::Heap			mAllocatorHeap = prmem::Heap(true,true,"Context Heap");
 	prmem::Heap			mImageHeap = prmem::Heap(true,true,"Context Images");
 	std::string			mRootDirectory;
 
@@ -535,7 +537,10 @@ protected:
 		//std::Debug << "Free object of type " << TYPENAME << std::endl;
 		auto& Object = TObject::This<TYPE>( ObjectRef );
 		auto* pObject = &Object;
-		delete pObject;
+		
+		auto& Heap = JsCore::GetGlobalObjectHeap();
+		Heap.Free(pObject);
+		
 		//	reset the void for safety?
 		JSObjectSetPrivate( ObjectRef, nullptr );
 	}
@@ -659,7 +664,9 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 	auto AllocWrapper = [this](JSObjectRef This)
 	{
 		TObject ThisObject( mContext, This );
-		return new OBJECTWRAPPERTYPE( *this, ThisObject );
+		auto& Heap = this->GetObjectHeap();
+		auto* NewObject = Heap.Alloc<OBJECTWRAPPERTYPE>( *this, ThisObject );
+		return NewObject;
 	};
 
 	//	create a template that can be overloaded by the type
