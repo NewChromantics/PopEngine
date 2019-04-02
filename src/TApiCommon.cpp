@@ -862,6 +862,14 @@ void TImageWrapper::GetPixelBufferPixels(std::function<void(const ArrayBridge<So
 	}
 }
 
+
+std::shared_ptr<Opengl::TTexture> TImageWrapper::GetTexturePtr()
+{
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+	auto& Texture = GetTexture();
+	return mOpenglTexture;
+}
+
 void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
 	//	already created & current version
@@ -1082,6 +1090,11 @@ size_t TImageWrapper::GetLatestVersion() const
 
 void TImageWrapper::OnOpenglTextureChanged()
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	if ( !mOpenglTexture )
+		throw Soy::AssertException("OnOpenglChanged with null texture");
+
 	//	is now latest version
 	auto LatestVersion = GetLatestVersion();
 	mOpenglTextureVersion = LatestVersion+1;

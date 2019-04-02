@@ -61,6 +61,7 @@ public:
 	void									DoSetLinearFilter(bool LinearFilter);
 	void									GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
 	Opengl::TTexture&						GetTexture();
+	std::shared_ptr<Opengl::TTexture>		GetTexturePtr();
 	SoyPixelsImpl&							GetPixels();
 	void									GetPixels(SoyPixelsImpl& CopyTarget);	//	safely copy pixels
 
