@@ -18,6 +18,9 @@ public:
 	}
 	
 	bool			IsValid()	{	return mWindow;	}
+	
+	//	gr: this is for mac, really this should be SetFullscreen()
+	void			ToggleFullscreen();
 
 public:
 	NSWindow*			mWindow;
@@ -96,6 +99,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		if ( Params.mFullscreen )
 		{
 			Style &= ~NSWindowStyleMaskResizable;
+			Style &= ~NSWindowStyleMaskTitled;	//	on mojave we can see title
 			Style |= NSWindowStyleMaskFullScreen;
 			
 			auto* MainScreen = [NSScreen mainScreen];
@@ -265,3 +269,18 @@ Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 	return mView->mRenderTarget.GetSize();
 }
 
+void TOpenglWindow::ToggleFullscreen()
+{
+	if ( !mWindow )
+		return;
+	
+	mWindow->ToggleFullscreen();
+}
+
+void Platform::TWindow::ToggleFullscreen()
+{
+	if ( !mWindow )
+		return;
+	
+	[mWindow toggleFullScreen:nil];
+}

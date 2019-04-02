@@ -20,6 +20,7 @@ DEFINE_BIND_FUNCTIONNAME(SetUniform);
 DEFINE_BIND_FUNCTIONNAME(Render);
 DEFINE_BIND_FUNCTIONNAME(RenderChain);
 DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
+DEFINE_BIND_FUNCTIONNAME(ToggleFullscreen);
 
 
 
@@ -322,6 +323,13 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 }
 
 
+void TWindowWrapper::ToggleFullscreen(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TWindowWrapper>();
+	This.mWindow->ToggleFullscreen();
+}
+
+
 void TWindowWrapper::Render(Bind::TCallback& Params)
 {
 	Soy::TScopeTimerPrint Timer("Render()", 5);
@@ -605,6 +613,7 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<Render_FunctionName>( Render );
 	//Template.BindFunction<RenderChain_FunctionName>( RenderChain );
 	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
+	Template.BindFunction<ToggleFullscreen_FunctionName>( ToggleFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)

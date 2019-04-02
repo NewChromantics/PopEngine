@@ -30,6 +30,8 @@ SoyKeyButton::Type Platform::GetKeyButton(uint16_t KeyCode)
 		case 0x1c:	return '8';
 		case 0x19:	return '9';
 		case 0x1d:	return '0';
+			
+		case 0x3:	return 'f';
 	}
 	
 	std::stringstream Error;

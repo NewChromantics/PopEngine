@@ -80,6 +80,7 @@ public:
 
 	//	window specific
 	static void			GetScreenRect(Bind::TCallback& Arguments);
+	static void			ToggleFullscreen(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
