@@ -104,6 +104,8 @@ inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
 namespace Bind = JsCore;
 #define bind_override
 
+#define RETAIN_FUNCTION
+#define RETAIN_WRAPPER_HANDLE
 
 class JsCore::TArray
 {
@@ -131,6 +133,12 @@ class JsCore::TFunction
 public:
 	TFunction()		{}
 	TFunction(JSContextRef Context,JSValueRef Value);
+	~TFunction();
+#if defined(RETAIN_FUNCTION)
+	TFunction(const TFunction& That);
+
+	TFunction&		operator=(const TFunction& That);
+#endif
 	
 	//operator		bool() const	{	return mThis != nullptr;	}
 	
@@ -492,8 +500,8 @@ public:
 	}
 	virtual ~TObjectWrapperBase()	{}
 
-	TObject			GetHandle();
-	void			SetHandle(TObject& NewHandle);
+	virtual TObject	GetHandle();
+	virtual void	SetHandle(TObject& NewHandle);
 	
 	//	construct and allocate
 	virtual void 	Construct(TCallback& Arguments)=0;
@@ -506,7 +514,12 @@ public:
 	}
 
 protected:
-	TObject			mHandle;		//	gr: this is a weak reference so the object gets free'd
+#if defined(RETAIN_WRAPPER_HANDLE)
+	TPersistent		mHandle;
+#else
+	//	gr: this is a weak reference so the object gets free'd
+	TObject			mHandle;
+#endif
 	TContext&		mContext;
 };
 

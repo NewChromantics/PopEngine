@@ -91,7 +91,43 @@ JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
 	
 	if ( !JSObjectIsFunction(Context, mThis) )
 		throw Soy::AssertException("Object should be function");
+	
+#if defined(RETAIN_FUNCTION)
+	JSValueProtect( Context, mThis );
+#endif
 }
+
+JsCore::TFunction::~TFunction()
+{
+#if defined(RETAIN_FUNCTION)
+	if ( mThis )
+	{
+		JSValueUnprotect( mContext, mThis );
+	}
+#endif
+}
+
+#if defined(RETAIN_FUNCTION)
+JsCore::TFunction::TFunction(const TFunction& That)
+{
+	*this = That;
+}
+#endif
+
+#if defined(RETAIN_FUNCTION)
+JsCore::TFunction& JsCore::TFunction::operator=(const TFunction& That)
+{
+	if ( mThis )
+	{
+		JSValueUnprotect( mContext, mThis );
+		mThis = nullptr;
+	}
+	mContext = That.mContext;
+	mThis = That.mThis;
+	JSValueProtect( mContext, mThis );
+	return *this;
+}
+#endif
 
 
 void JsCore::TFunction::Call(Bind::TObject& This) const
