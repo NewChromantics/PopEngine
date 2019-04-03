@@ -15,11 +15,25 @@
 
 #if defined(JSAPI_V8)
 	#include "V8Bind.h"
-
+	//namespace Bind = V8;
 #else
-	#include "JsCoreBind.h"
 
+namespace JsCore
+{
+	//class TInstance;
+}
+namespace Bind
+{
+	using namespace JsCore;
+	//typedef JsCore::TInstance TInstance;
+}
+	#include "JsCoreBind.h"
+	//namespace Bind = JsCore;
 #endif
+
+
+
+
 
 
 //	thsese classes should be pretty agnostic

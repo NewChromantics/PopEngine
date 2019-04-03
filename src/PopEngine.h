@@ -1,7 +1,7 @@
 #pragma once
 #include "SoyApp.h"
 
-class TV8Instance;
+
 namespace Bind
 {
 	class TInstance;
