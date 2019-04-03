@@ -42,6 +42,20 @@ TWindowWrapper::~TWindowWrapper()
 	}
 }
 
+
+Bind::TContext& TWindowWrapper::GetOpenglJsCoreContext()
+{
+	//return this->GetContext();
+	if ( mOpenglJsCoreContext )
+		return *mOpenglJsCoreContext;
+	
+	Bind::TContext& MainContext = this->GetContext();
+	//	auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
+	mOpenglJsCoreContext = MainContext.mInstance.CreateContext("Opengl JsCore Context");
+	return *mOpenglJsCoreContext;
+}
+
+
 void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 {
 	//  call javascript
@@ -70,7 +84,10 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 			throw;
 		}
 	};
-	mContext.Execute( Runner );
+	
+	auto& Context = GetOpenglJsCoreContext();
+	Context.Execute(Runner);
+	//mContext.Execute( Runner );
 }
 
 void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
@@ -348,6 +365,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	Params.Return( Promise );
 	
 	auto* pContext = &Params.mContext;
+	auto* pOpenglBindContext = &This.GetOpenglJsCoreContext();
 	
 	auto Resolve = [=](Bind::TContext& Context)
 	{
@@ -426,7 +444,9 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 			{
 				Soy::TScopeTimerPrint Timer("Opengl.Render callback",30);
 				//	immediately call the javascript callback
-				pContext->Execute( ExecuteRenderCallback );
+				auto& Context = *pOpenglBindContext;
+				Context.Execute( ExecuteRenderCallback );
+				
 				pThis->mActiveRenderTarget = nullptr;
 				RenderTarget.Unbind();
 			}

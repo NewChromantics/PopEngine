@@ -523,6 +523,8 @@ public:
 	{
 		return new TYPE( Context, This );
 	}
+	
+	TContext&		GetContext()	{	return mContext;	}	//	owner
 
 protected:
 #if defined(RETAIN_WRAPPER_HANDLE)

@@ -93,6 +93,9 @@ public:
 		return PersistentHandle;
 	}
 
+protected:
+	Bind::TContext&		GetOpenglJsCoreContext();
+
 public:
 	Bind::TPersistent		mPersistentHandle;
 	
@@ -100,6 +103,8 @@ public:
 	std::shared_ptr<TRenderWindow>&	mWindow = mObject;
 	
 	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object
+	
+	std::shared_ptr<Bind::TContext>	mOpenglJsCoreContext;
 };
 
 
