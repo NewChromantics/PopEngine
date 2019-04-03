@@ -3,7 +3,7 @@
 #include "SoyApp.h"
 #include "PopMain.h"
 #include "SoyFileSystem.h"
-#include "JsCoreInstance.h"
+#include "TBind.h"
 
 namespace PopTrack
 {
@@ -84,11 +84,7 @@ std::shared_ptr<TOpenglWindow> pWindow;
 
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
-	//	todo: watch for when a file changes and recreate instance
-	//mV8Instance.reset( new TV8Instance(RootDirectory,BootupFilename) );
-#if !defined(TARGET_WINDOWS)
-	mJsCoreInstance.reset( new JsCore::TInstance(RootDirectory,BootupFilename) );
-#endif
+	mApiInstance.reset( new Bind::TInstance(RootDirectory,BootupFilename) );
 	
 	//	windows test window code
 #if defined(TARGET_WINDOWS)

@@ -8,8 +8,6 @@ namespace Platform
 	SoyKeyButton::Type	GetKeyButton(uint16_t KeyCode);
 }
 
-//#include <HIToolbox/Events.h>
-
 
 SoyKeyButton::Type Platform::GetKeyButton(uint16_t KeyCode)
 {

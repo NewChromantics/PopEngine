@@ -6,7 +6,7 @@
 #include "SoyOpengl.h"
 #include "SoyOpenglContext.h"
 #include "SoyMedia.h"
-#include "JsCoreInstance.h"
+#include "TBind.h"
 #include "SoyWindow.h"
 
 

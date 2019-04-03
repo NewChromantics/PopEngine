@@ -1,4 +1,4 @@
-#include "JsCoreInstance.h"
+#include "JsCoreBind.h"
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
 #include "TApiCommon.h"
@@ -19,7 +19,7 @@
 #endif
 
 
-namespace JsCore
+namespace Bind
 {
 	std::map<JSGlobalContextRef,TContext*> ContextCache;
 	

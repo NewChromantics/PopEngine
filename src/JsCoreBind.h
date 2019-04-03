@@ -3,12 +3,12 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <memory>
 #include "HeapArray.hpp"
-//#include "TBind.h"
 #include "SoyLib/src/SoyThread.h"
 
 
+
 //	https://karhm.com/JavaScriptCore_C_API/
-namespace JsCore
+namespace Bind
 {
 	class TInstance;	//	vm
 	class TContext;
@@ -82,6 +82,15 @@ namespace JsCore
 	prmem::Heap&	GetGlobalObjectHeap();
 }
 
+namespace JsCore = Bind;
+
+//	preparing for virtuals, anything with this, we expect to overide at some point
+#define bind_override
+
+//#define RETAIN_FUNCTION
+#define RETAIN_WRAPPER_HANDLE
+
+
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
 	template<> inline TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
 DEFINE_FROM_VALUE( bool, GetBool );
@@ -101,11 +110,7 @@ inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
 }
 
 
-namespace Bind = JsCore;
-#define bind_override
 
-//#define RETAIN_FUNCTION
-#define RETAIN_WRAPPER_HANDLE
 
 class JsCore::TArray
 {
