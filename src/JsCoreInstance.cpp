@@ -449,6 +449,27 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 }
 
 
+class TJob_DefferedUntil : public PopWorker::TJob_Function
+{
+public:
+	TJob_DefferedUntil(std::function<void()> Functor,std::chrono::high_resolution_clock::time_point FutureTime) :
+		TJob_Function	( Functor )
+	{
+		mFutureTime = FutureTime;
+	}
+	
+	virtual bool		IsReady() override
+	{
+		auto Now = std::chrono::high_resolution_clock::now();
+		if ( Now < mFutureTime )
+			return false;
+		//	we can measure how late here
+		return true;
+	}
+	
+	std::chrono::high_resolution_clock::time_point	mFutureTime;
+};
+
 
 void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor,size_t DeferMs)
 {
@@ -462,26 +483,27 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor,size
 		throw Soy::AssertException( Error.str() );
 	}
 	
-	auto PushJob = [=]()
+	
+	auto FunctorWrapper = [=]()
 	{
-		auto FunctorWrapper = [=]()
-		{
-			//	need to catch this?
-			Execute( Functor );
-		};
-		mJobQueue.PushJob( FunctorWrapper );
+		//	need to catch this?
+		Execute( Functor );
 	};
 	
 	if ( DeferMs > 0 )
 	{
-		//	gr: would be nice to make this part of the SoyJobQueue so we skip jobs until a time is reached
 		auto Now = std::chrono::high_resolution_clock::now();
 		auto FutureTime = Now + std::chrono::milliseconds(DeferMs);
+		/*	gr: this is deffering everything
+		//	gr: would be nice to make this part of the SoyJobQueue so we skip jobs until a time is reached
 		Platform::ExecuteDelayed( FutureTime, PushJob );
+		*/
+		std::shared_ptr<PopWorker::TJob> Job( new TJob_DefferedUntil( FunctorWrapper, FutureTime ) );
+		mJobQueue.PushJob( Job );
 	}
 	else
 	{
-		PushJob();
+		mJobQueue.PushJob( FunctorWrapper );
 	}
 }
 
