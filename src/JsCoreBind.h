@@ -543,6 +543,7 @@ template<const char* TYPENAME,class TYPE>
 class JsCore::TObjectWrapper : public JsCore::TObjectWrapperBase
 {
 public:
+	typedef JsCore::TObjectWrapper<TYPENAME,TYPE> THISTYPE;
 	//typedef std::function<TObjectWrapper<TYPENAME,TYPE>*(TV8Container&,v8::Local<v8::Object>)> ALLOCATORFUNC;
 	
 public:
@@ -561,11 +562,12 @@ protected:
 		//	free the void
 		//	cast to TObject and use This to do proper type checks
 		//std::Debug << "Free object of type " << TYPENAME << std::endl;
-		auto& Object = TObject::This<TYPE>( ObjectRef );
+		auto& Object = TObject::This<THISTYPE>( ObjectRef );
 		auto* pObject = &Object;
 		
 		auto& Heap = JsCore::GetGlobalObjectHeap();
-		Heap.Free(pObject);
+		if ( !Heap.Free(pObject) )
+			std::Debug << "Global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
 		
 		//	reset the void for safety?
 		JSObjectSetPrivate( ObjectRef, nullptr );
@@ -679,6 +681,8 @@ inline TYPE& JsCore::TObject::This(JSObjectRef Object)
 		throw Soy::AssertException("Object::This is null");
 	auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>( This );
 	auto* TypeWrapper = dynamic_cast<TYPE*>( Wrapper );
+	if ( !TypeWrapper )
+		throw Soy::AssertException("Failed to dynamically object pointer to " + Soy::GetTypeName<TYPE>() );
 	return *TypeWrapper;
 }
 
@@ -700,9 +704,10 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 
 	Template.mAllocator = [this]() -> TObjectWrapperBase&
 	{
-		JsCore::TObject Null;
-		auto* New = new OBJECTWRAPPERTYPE( *this, Null );
-		return *New;
+		JsCore::TObject ThisObject;
+		auto& Heap = this->GetObjectHeap();
+		auto* NewObject = Heap.Alloc<OBJECTWRAPPERTYPE>( *this, ThisObject );
+		return *NewObject;
 	};
 	
 	//	init template with overloaded stuff
