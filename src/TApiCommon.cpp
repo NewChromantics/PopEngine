@@ -50,6 +50,7 @@ DEFINE_BIND_FUNCTIONNAME(Flip);
 DEFINE_BIND_FUNCTIONNAME(GetWidth);
 DEFINE_BIND_FUNCTIONNAME(GetHeight);
 DEFINE_BIND_FUNCTIONNAME(GetRgba8);
+DEFINE_BIND_FUNCTIONNAME(GetPixelBuffer);
 DEFINE_BIND_FUNCTIONNAME(SetLinearFilter);
 DEFINE_BIND_FUNCTIONNAME(Copy);
 DEFINE_BIND_FUNCTIONNAME(WritePixels);
@@ -460,6 +461,7 @@ void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<GetWidth_FunctionName>( GetWidth );
 	Template.BindFunction<GetHeight_FunctionName>( GetHeight );
 	Template.BindFunction<GetRgba8_FunctionName>( GetRgba8 );
+	Template.BindFunction<GetPixelBuffer_FunctionName>( GetPixelBuffer );
 	Template.BindFunction<SetLinearFilter_FunctionName>( SetLinearFilter );
 	Template.BindFunction<Copy_FunctionName>( Copy );
 	Template.BindFunction<WritePixels_FunctionName>( WritePixels );
@@ -814,6 +816,32 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 	}	
 	auto& Pixels = *pPixels;
 	
+	auto& PixelsArray = Pixels.GetPixelsArray();
+	
+	if ( IsTargetArray )
+	{
+		auto TargetArray = Params.GetArgumentArray(1);
+		TargetArray.CopyTo( GetArrayBridge(PixelsArray) );
+		Params.Return( TargetArray );
+	}
+	else
+	{
+		auto TargetArray = Params.mContext.CreateArray( GetArrayBridge(PixelsArray) );
+		Params.Return( TargetArray );
+	}
+}
+
+
+void TImageWrapper::GetPixelBuffer(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TImageWrapper>();
+	
+	auto IsTargetArray = Params.IsArgumentArray(1);
+	auto& Heap = Params.mContext.GetImageHeap();
+	
+	Soy::TScopeTimerPrint Timer(__func__,5);
+	
+	auto& Pixels = This.GetPixels();
 	auto& PixelsArray = Pixels.GetPixelsArray();
 	
 	if ( IsTargetArray )

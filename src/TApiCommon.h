@@ -48,6 +48,7 @@ public:
 	static void			GetWidth(Bind::TCallback& Arguments);
 	static void			GetHeight(Bind::TCallback& Arguments);
 	static void			GetRgba8(Bind::TCallback& Arguments);
+	static void			GetPixelBuffer(Bind::TCallback& Arguments);
 	static void			SetLinearFilter(Bind::TCallback& Arguments);
 	static void			Copy(Bind::TCallback& Arguments);
 	static void			WritePixels(Bind::TCallback& Arguments);
