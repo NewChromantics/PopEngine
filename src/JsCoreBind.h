@@ -92,7 +92,7 @@ namespace JsCore
 #define bind_override
 
 //#define RETAIN_FUNCTION
-#define RETAIN_WRAPPER_HANDLE
+//#define RETAIN_WRAPPER_HANDLE	//	a lot less crashing, but still happens
 
 
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
