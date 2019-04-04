@@ -282,5 +282,11 @@ void Platform::TWindow::ToggleFullscreen()
 	if ( !mWindow )
 		return;
 	
-	[mWindow toggleFullScreen:nil];
+	//	if not done on main thread, this blocks,
+	//	then opengl waits for js context lock to free up and we get a deadlock
+	auto ToggleFullScreen = [this]()
+	{
+		[mWindow toggleFullScreen:nil];
+	};
+	Soy::Platform::gMainThread->PushJob( ToggleFullScreen );
 }
