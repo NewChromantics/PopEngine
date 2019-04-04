@@ -19,6 +19,7 @@ DEFINE_BIND_FUNCTIONNAME(SetViewport);
 DEFINE_BIND_FUNCTIONNAME(SetUniform);
 DEFINE_BIND_FUNCTIONNAME(Render);
 DEFINE_BIND_FUNCTIONNAME(RenderChain);
+DEFINE_BIND_FUNCTIONNAME(RenderToRenderTarget);
 DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 DEFINE_BIND_FUNCTIONNAME(ToggleFullscreen);
 
@@ -45,7 +46,8 @@ TWindowWrapper::~TWindowWrapper()
 
 Bind::TContext& TWindowWrapper::GetOpenglJsCoreContext()
 {
-	//return this->GetContext();
+	return this->GetContext();
+	
 	if ( mOpenglJsCoreContext )
 		return *mOpenglJsCoreContext;
 	
@@ -53,6 +55,72 @@ Bind::TContext& TWindowWrapper::GetOpenglJsCoreContext()
 	//	auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
 	mOpenglJsCoreContext = MainContext.mInstance.CreateContext("Opengl JsCore Context");
 	return *mOpenglJsCoreContext;
+}
+
+
+void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TWindowWrapper>();
+	auto& OpenglContext = *This.GetOpenglContext();
+	if ( !OpenglContext.IsLockedToThisThread() )
+		throw Soy::AssertException("RenderToRenderTarget not being called on opengl thread");
+
+	//	get current rendertarget
+	if ( !This.mActiveRenderTarget )
+		throw Soy::AssertException("Expecting a current render target");
+	auto* CurrentRenderTarget = This.mActiveRenderTarget;
+	auto UnbindCurrent = [&]()
+	{
+		CurrentRenderTarget->Unbind();
+	};
+	auto RebindCurrent = [&]()
+	{
+		CurrentRenderTarget->Bind();
+		This.mActiveRenderTarget = CurrentRenderTarget;
+		//	restore viewport
+		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+	};
+	Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
+	
+	
+	//	render
+	auto ExecuteRenderCallback = [&](Bind::TContext& Context)
+	{
+		//	setup variables
+		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
+		auto RenderCallbackFunc = Params.GetArgumentFunction(1);
+		
+		//	make sure texture is generated for target
+		{
+			std::string TextureException;
+			auto OnError = [&](const std::string& Error)
+			{
+				TextureException = Error;
+			};
+			auto OnLoaded = []{};
+			TargetImage.GetTexture( OpenglContext, OnLoaded, OnError );
+			if ( TextureException.size() != 0 )
+				throw Soy::AssertException(TextureException);
+		}
+		
+		auto& TargetTexture = TargetImage.GetTexture();
+		
+		Opengl::TRenderTargetFbo RenderTarget( "Window::Render", TargetTexture );
+		RenderTarget.mGenerateMipMaps = false;
+		RenderTarget.Bind();
+		RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+
+		//	hack! need to turn render target into it's own javasript object
+		//	that's why the image render target is the render context
+		This.mActiveRenderTarget = &RenderTarget;
+		auto RenderTargetObject = Params.ThisObject();
+		
+		Bind::TCallback CallbackParams(Context);
+		//CallbackParams.SetThis( Params.mThis );
+		CallbackParams.SetArgumentObject( 0, RenderTargetObject );
+		RenderCallbackFunc.Call( CallbackParams );
+	};
+	ExecuteRenderCallback( Params.mContext );
 }
 
 
@@ -64,9 +132,11 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 		LockContext();
 		
 		if ( !mWindow )
-			std::Debug << "Should there be a window here in OnRender?" << std::endl;
+			std::Debug << "Should therealways  be a window here in OnRender?" << std::endl;
 		else
 			mWindow->Clear( RenderTarget );
+
+		mActiveRenderTarget = &RenderTarget;
 		
 		//	gr: allow this to fail silently if the user has assigned nothing
 		//	gr: kinda want a specific "is undefined" exception so we don't miss important things
@@ -293,7 +363,7 @@ void TWindowWrapper::ClearColour(Bind::TCallback& Params)
 	auto Green = Params.GetArgumentFloat(1);
 	auto Blue = Params.GetArgumentFloat(2);
 	Soy::TRgb Colour( Red, Green, Blue );
-		
+	
 	This.mWindow->ClearColour( Colour );
 }
 
@@ -349,6 +419,8 @@ void TWindowWrapper::ToggleFullscreen(Bind::TCallback& Params)
 
 void TWindowWrapper::Render(Bind::TCallback& Params)
 {
+	throw Soy::AssertException("TWindowWrapper::Render is causing JS corruption");
+	
 	Soy::TScopeTimerPrint Timer("Render()", 5);
 	
 	auto& This = Params.This<TWindowWrapper>();
@@ -366,9 +438,11 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	
 	auto* pContext = &Params.mContext;
 	auto* pOpenglBindContext = &This.GetOpenglJsCoreContext();
+	//auto* pOpenglBindContext = pContext;
 	
 	auto Resolve = [=](Bind::TContext& Context)
 	{
+		//	testing to see if the target is at fault
 		//auto Target = TargetPersistent->GetObject();
 		//Promise.Resolve( Target );
 		Promise.ResolveUndefined();
@@ -378,7 +452,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	{
 		pContext->Queue( Resolve );
 	};
-	//OnCompleted();
+	//OnCompleted();	//	testing
 	
 	
 	auto TargetHandle = Params.GetArgumentObject(0);
@@ -476,9 +550,8 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 			pContext->Queue( OnError );
 		}
 	};
+	
 	OpenglContext->PushJob( OpenglRender );
-
-
 }
 
 /*
@@ -632,18 +705,16 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<EnableBlend_FunctionName>( EnableBlend );
 	Template.BindFunction<Render_FunctionName>( Render );
 	//Template.BindFunction<RenderChain_FunctionName>( RenderChain );
+	Template.BindFunction<RenderToRenderTarget_FunctionName>( RenderToRenderTarget );
 	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
 	Template.BindFunction<ToggleFullscreen_FunctionName>( ToggleFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 {
-	auto FrameBufferSize = RenderTarget.GetSize();
-	
 	Soy::Rectf Viewport(0,0,1,1);
 	RenderTarget.SetViewportNormalised( Viewport );
 	
-	//Opengl::ClearColour( Soy::TRgb(51/255.f,204/255.f,255/255.f) );
 	Opengl::ClearDepth();
 	EnableBlend(false);
 	glDisable(GL_CULL_FACE);

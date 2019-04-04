@@ -77,7 +77,8 @@ public:
 	static void			SetViewport(Bind::TCallback& Arguments);
 	static void			Render(Bind::TCallback& Arguments);
 	static void			RenderChain(Bind::TCallback& Arguments);
-
+	static void			RenderToRenderTarget(Bind::TCallback& Params);
+	
 	//	window specific
 	static void			GetScreenRect(Bind::TCallback& Arguments);
 	static void			ToggleFullscreen(Bind::TCallback& Arguments);
@@ -102,7 +103,7 @@ public:
 public:
 	std::shared_ptr<TRenderWindow>&	mWindow = mObject;
 	
-	Opengl::TRenderTarget*			mActiveRenderTarget;	//	hack until render target is it's own [temp?] object
+	Opengl::TRenderTarget*			mActiveRenderTarget = nullptr;	//	hack until render target is it's own [temp?] object
 	
 	std::shared_ptr<Bind::TContext>	mOpenglJsCoreContext;
 };
