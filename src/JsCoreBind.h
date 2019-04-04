@@ -744,6 +744,12 @@ inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint8
 template<typename INTTYPE>
 inline INTTYPE JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 {
+	if ( !JSValueIsNumber( Context,Handle ) )
+	{
+		std::stringstream Error;
+		Error << "Trying to convert value to number, but isn't";
+		throw Soy::AssertException(Error.str());
+	}
 	//	convert to string
 	JSValueRef Exception = nullptr;
 	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
