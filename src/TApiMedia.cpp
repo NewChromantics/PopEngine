@@ -406,7 +406,6 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(1) )
 		ExtractPlanes = Params.GetArgumentBool(1);
 	
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 	auto& Context = Params.mContext;
 	
 	auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
@@ -433,11 +432,13 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	//	this function is synchronous, so it should put stuff straight back in the queue
 	//	the callback was handy though, so maybe go back to it
 	This.mDecoder->PushData( PacketBytes.GetArray(), PacketBytes.GetDataSize(), 0 );
+	//std::Debug << "Decoder meta=" << This.mDecoder->GetMeta() << std::endl;
 	
 	TFrame Frame;
 	Array<Bind::TObject> Frames;
 	while ( This.mDecoder->PopFrame(Frame) )
 	{
+		//std::Debug << "Popping frame" << std::endl;
 		auto FrameImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 		auto& FrameImage = FrameImageObject.This<TImageWrapper>();
 		FrameImage.SetPixels( Frame.mPixels );
@@ -449,6 +450,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
 			FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
 		}
+		Frames.PushBack( FrameImageObject );
 	}
 	Params.Return( GetArrayBridge(Frames) );
 }
