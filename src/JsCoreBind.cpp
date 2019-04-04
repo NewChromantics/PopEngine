@@ -1298,7 +1298,15 @@ void CopyTypedArray(JSContextRef Context,JSObjectRef ArrayValue,JSTypedArrayType
 {
 	JSValueRef Exception = nullptr;
 	void* SrcPtr = JSObjectGetTypedArrayBytesPtr( Context, ArrayValue, &Exception );
+	auto* SrcPtr8 = reinterpret_cast<uint8_t*>( SrcPtr );
 	JsCore::ThrowException( Context, Exception );
+
+	//	offset!
+	auto SrcByteOffset = JSObjectGetTypedArrayByteOffset( Context, ArrayValue, &Exception );
+	JsCore::ThrowException( Context, Exception );
+	SrcPtr8 += SrcByteOffset;
+	SrcPtr = SrcPtr8;
+	
 	auto SrcCount = JSObjectGetTypedArrayLength( Context, ArrayValue, &Exception );
 	JsCore::ThrowException( Context, Exception );
 	auto SrcBytes = JSObjectGetTypedArrayByteLength( Context, ArrayValue, &Exception );
