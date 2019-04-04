@@ -30,6 +30,7 @@ SoyKeyButton::Type Platform::GetKeyButton(uint16_t KeyCode)
 		case 0x1d:	return '0';
 			
 		case 0x3:	return 'f';
+		case 0x1:	return 's';
 	}
 	
 	std::stringstream Error;
@@ -437,7 +438,6 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 			throw Soy::AssertException("No OnRender callback");
 		
 		mParent->mOnRender( mParent->mRenderTarget, LockContext );
-		//Opengl::ClearColour( Soy::TRgb(0,1,0) );
     }
     catch(std::exception& e)
     {
