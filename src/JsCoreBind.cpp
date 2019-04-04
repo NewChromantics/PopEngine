@@ -354,10 +354,12 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 		catch(std::exception& e)
 		{
 			//	clean up
+			std::Debug << "CreateVirtualMachine failed: "  << e.what() << std::endl;
 			mContext.reset();
 			throw;
 		}
 	};
+	//	gr: these exceptions are getting swallowed!
 	mContextGroupThread.PushJob( CreateVirtualMachine );
 	mContextGroupThread.Start();
 }
