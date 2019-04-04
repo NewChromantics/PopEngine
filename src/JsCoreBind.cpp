@@ -1246,7 +1246,7 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<float>& Valu
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values)
 {
 	auto Size = Values.GetSize();
-	static auto WarningArraySize = 100;
+	static auto WarningArraySize = 300;
 	if ( Size > WarningArraySize )
 	{
 		//std::stringstream Error;
