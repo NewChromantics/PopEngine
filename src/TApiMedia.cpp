@@ -27,7 +27,7 @@ DEFINE_BIND_FUNCTIONNAME(Free);
 DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
 
 DEFINE_BIND_TYPENAME(AvcDecoder);
-DEFINE_BIND_FUNCTIONNAME(decode);
+DEFINE_BIND_FUNCTIONNAME(Decode);
 
 const char FrameTimestampKey[] = "Time";
 
@@ -393,7 +393,7 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<decode_FunctionName>( Decode );
+	Template.BindFunction<Decode_FunctionName>( Decode );
 }
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
