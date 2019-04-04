@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
-		BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611B21B98A46007014EF /* JsCoreInstance.cpp */; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
 		BF19612421B9D2B8007014EF /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
@@ -89,10 +88,6 @@
 		BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33C21111D7A00FC991B /* SoyH264.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
-		BF7AB95B2245942D00FAC1CE /* DFBlunoDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB9552245942D00FAC1CE /* DFBlunoDevice.mm */; };
-		BF7AB95C2245942D00FAC1CE /* BLEUtility.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB9562245942D00FAC1CE /* BLEUtility.mm */; };
-		BF7AB95D2245942D00FAC1CE /* DFBlunoManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB9572245942D00FAC1CE /* DFBlunoManager.mm */; };
-		BF7AB95E2245942D00FAC1CE /* BLEDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95A2245942D00FAC1CE /* BLEDevice.mm */; };
 		BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
 		BF7AB9622248426100FAC1CE /* GuildhallGildwall in Resources */ = {isa = PBXBuildFile; fileRef = BF59A26222240D1E00AE9926 /* GuildhallGildwall */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
@@ -122,6 +117,7 @@
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
+		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
@@ -172,8 +168,6 @@
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		BF19611B21B98A46007014EF /* JsCoreInstance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreInstance.cpp; path = src/JsCoreInstance.cpp; sourceTree = "<group>"; };
-		BF19611C21B98A46007014EF /* JsCoreInstance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreInstance.h; path = src/JsCoreInstance.h; sourceTree = "<group>"; };
 		BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyWebSocket.cpp; path = src/SoyWebSocket.cpp; sourceTree = "<group>"; };
 		BF19612021B9ADD9007014EF /* SoyWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyWebSocket.h; path = src/SoyWebSocket.h; sourceTree = "<group>"; };
 		BF19612221B9D2B8007014EF /* TBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TBind.cpp; path = src/TBind.cpp; sourceTree = "<group>"; };
@@ -327,14 +321,6 @@
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
 		BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = hourglass.mlmodel; sourceTree = "<group>"; };
-		BF7AB9532245942C00FAC1CE /* DFBlunoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DFBlunoManager.h; path = src/DFBlunoManager.h; sourceTree = "<group>"; };
-		BF7AB9542245942C00FAC1CE /* BLEDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BLEDevice.h; path = src/BLEDevice.h; sourceTree = "<group>"; };
-		BF7AB9552245942D00FAC1CE /* DFBlunoDevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DFBlunoDevice.mm; path = src/DFBlunoDevice.mm; sourceTree = "<group>"; };
-		BF7AB9562245942D00FAC1CE /* BLEUtility.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BLEUtility.mm; path = src/BLEUtility.mm; sourceTree = "<group>"; };
-		BF7AB9572245942D00FAC1CE /* DFBlunoManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DFBlunoManager.mm; path = src/DFBlunoManager.mm; sourceTree = "<group>"; };
-		BF7AB9582245942D00FAC1CE /* DFBlunoDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DFBlunoDevice.h; path = src/DFBlunoDevice.h; sourceTree = "<group>"; };
-		BF7AB9592245942D00FAC1CE /* BLEUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BLEUtility.h; path = src/BLEUtility.h; sourceTree = "<group>"; };
-		BF7AB95A2245942D00FAC1CE /* BLEDevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BLEDevice.mm; path = src/BLEDevice.mm; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
 		BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyAssert.cpp; path = src/SoyAssert.cpp; sourceTree = "<group>"; };
@@ -407,6 +393,10 @@
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
 		BFEDFC6C2221F9B5009E5F5E /* TrainStop */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TrainStop; path = ../TrainStop; sourceTree = "<group>"; };
+		BFF505E822550F30005A6AC1 /* V8Bind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = V8Bind.cpp; path = src/V8Bind.cpp; sourceTree = "<group>"; };
+		BFF505E922550F30005A6AC1 /* V8Bind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = V8Bind.h; path = src/V8Bind.h; sourceTree = "<group>"; };
+		BFF505EB22550F47005A6AC1 /* JsCoreBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreBind.h; path = src/JsCoreBind.h; sourceTree = "<group>"; };
+		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
 		BFFCACC521FF445200153C4E /* cpm.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = cpm.mlmodel; sourceTree = "<group>"; };
 		EB0EA5622110AAF9008D6DAA /* Data_dlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_dlib; sourceTree = "<group>"; };
 		EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDlib.cpp; path = src/TApiDlib.cpp; sourceTree = "<group>"; };
@@ -812,17 +802,11 @@
 				BF91D97E221584F100E91671 /* Ezsift */,
 				BF59A26222240D1E00AE9926 /* GuildhallGildwall */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
-				BF19611B21B98A46007014EF /* JsCoreInstance.cpp */,
-				BF19611C21B98A46007014EF /* JsCoreInstance.h */,
+				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
+				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
+				BFF505E822550F30005A6AC1 /* V8Bind.cpp */,
+				BFF505E922550F30005A6AC1 /* V8Bind.h */,
 				BF59A24F2222039900AE9926 /* Lollypop.icns */,
-				BF7AB9542245942C00FAC1CE /* BLEDevice.h */,
-				BF7AB95A2245942D00FAC1CE /* BLEDevice.mm */,
-				BF7AB9592245942D00FAC1CE /* BLEUtility.h */,
-				BF7AB9562245942D00FAC1CE /* BLEUtility.mm */,
-				BF7AB9582245942D00FAC1CE /* DFBlunoDevice.h */,
-				BF7AB9552245942D00FAC1CE /* DFBlunoDevice.mm */,
-				BF7AB9532245942C00FAC1CE /* DFBlunoManager.h */,
-				BF7AB9572245942D00FAC1CE /* DFBlunoManager.mm */,
 				BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */,
 				BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
@@ -1097,7 +1081,6 @@
 				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
-				BF7AB95C2245942D00FAC1CE /* BLEUtility.mm in Sources */,
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
@@ -1115,7 +1098,6 @@
 				BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */,
 				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
-				BF7AB95D2245942D00FAC1CE /* DFBlunoManager.mm in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
 				EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */,
 				BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */,
@@ -1127,7 +1109,6 @@
 				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
 				BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */,
 				FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */,
-				BF19611D21B98A46007014EF /* JsCoreInstance.cpp in Sources */,
 				BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */,
 				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
 				BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */,
@@ -1136,7 +1117,6 @@
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
 				BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */,
-				BF7AB95E2245942D00FAC1CE /* BLEDevice.mm in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
 				FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */,
 				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
@@ -1144,6 +1124,7 @@
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
 				BFD4D56321342E310028A647 /* AvfMovieDecoder.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,
+				BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */,
 				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,
 				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
 				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
@@ -1159,7 +1140,6 @@
 				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
 				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
 				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,
-				BF7AB95B2245942D00FAC1CE /* DFBlunoDevice.mm in Sources */,
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
