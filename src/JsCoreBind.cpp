@@ -26,7 +26,7 @@ namespace JsCore
 	void		AddContextCache(TContext& Context,JSGlobalContextRef Ref);
 	void		RemoveContextCache(TContext& Context);
 	
-	prmem::Heap	gGlobalObjectHeap(true, true, "JsCore::GlobalObjectHeap");
+	prmem::Heap	gGlobalObjectHeap(true, true, "JsCore::GlobalObjectHeap",0,true);
 }
 
 prmem::Heap& JsCore::GetGlobalObjectHeap()
