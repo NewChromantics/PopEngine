@@ -303,11 +303,14 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
 	return GetValue( Context, Object.mPromise );
 }
 
-
-JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename) :
+//	gr: windows needs this as Bind::TInstance
+Bind::TInstance::TInstance(
+	const std::string& RootDirectory,
+	const std::string& ScriptFilename) :
 	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
 	mRootDirectory		( RootDirectory )
 {
+	/*
 	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
 		#if !defined(TARGET_WINDOWS)
@@ -362,6 +365,7 @@ JsCore::TInstance::TInstance(const std::string& RootDirectory,const std::string&
 	//	gr: these exceptions are getting swallowed!
 	mContextGroupThread.PushJob( CreateVirtualMachine );
 	mContextGroupThread.Start();
+	*/
 }
 
 JsCore::TInstance::~TInstance()

@@ -252,6 +252,15 @@
     <ClInclude Include="..\src\PopEngine.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\JsCoreBind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\JsCoreDll.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -271,9 +280,6 @@
     </None>
     <None Include="..\src\TApiCoreMl.mm">
       <Filter>Source\Todo</Filter>
-    </None>
-    <None Include="..\src\PopEngine.cpp">
-      <Filter>Source</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -443,6 +449,16 @@
       <Filter>Source\Todo</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyEvent.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopEngine.cpp" />
+    <ClCompile Include="..\src\JsCoreBind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsCoreDll.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyRuntimeLibrary.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>

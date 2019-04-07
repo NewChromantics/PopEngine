@@ -1,6 +1,12 @@
 #pragma once
 
+//	gr: we're binding them ourselves
+#if defined(TARGET_WINDOWS)
+#include "JsCoreDll.h"
+#else
 #include <JavaScriptCore/JavaScriptCore.h>
+#endif
+
 #include <memory>
 #include "HeapArray.hpp"
 #include "SoyLib/src/SoyThread.h"

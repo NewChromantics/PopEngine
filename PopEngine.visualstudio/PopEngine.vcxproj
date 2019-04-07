@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\JsCoreBind.h" />
+    <ClInclude Include="..\src\JsCoreDll.h" />
     <ClInclude Include="..\src\JsCoreInstance.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
@@ -74,6 +76,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyRef.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyShader.h" />
     <ClInclude Include="..\src\SoyLib\src\SoySocket.h" />
     <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h" />
@@ -172,12 +175,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\TBind.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\TBind.h" />
     <ClInclude Include="..\src\TPopServerThread.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
@@ -219,6 +217,8 @@
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
     <None Include="..\src\PopMain.mm" />
+    <ClCompile Include="..\src\JsCoreBind.cpp" />
+    <ClCompile Include="..\src\JsCoreDll.cpp" />
     <ClCompile Include="..\src\PopEngine.cpp">
       <FileType>Document</FileType>
     </ClCompile>
@@ -272,6 +272,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyRuntimeLibrary.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyShader.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp" />
@@ -362,12 +363,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TBind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\TBind.cpp" />
     <ClCompile Include="..\src\TPopServerThread.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
