@@ -21,12 +21,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\JsCoreBind.h" />
     <ClInclude Include="..\src\JsCoreDll.h" />
-    <ClInclude Include="..\src\JsCoreInstance.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\src\Libs\JavascriptCore\JavaScript.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JavaScriptCore.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackFunction.h" />
@@ -238,12 +232,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\JsCoreInstance.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\PopMain.cpp" />
     <ClCompile Include="..\src\SoyHid.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

@@ -198,9 +198,6 @@
     <ClInclude Include="..\src\TApiBluetooth.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\JsCoreInstance.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TApiCoreMl.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
@@ -406,9 +403,6 @@
     <ClCompile Include="..\src\TApiBluetooth.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\JsCoreInstance.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TApiDlib.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
@@ -451,7 +445,6 @@
     <ClCompile Include="..\src\SoyLib\src\SoyEvent.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PopEngine.cpp" />
     <ClCompile Include="..\src\JsCoreBind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -460,6 +453,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyRuntimeLibrary.cpp">
       <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopEngine.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

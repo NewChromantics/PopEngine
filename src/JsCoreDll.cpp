@@ -189,6 +189,7 @@ DEFINE_JS_BRIDGE(JSValueToStringCopy);
 DEFINE_JS_BRIDGE(JSValueToObject);
 DEFINE_JS_BRIDGE(JSValueProtect);
 DEFINE_JS_BRIDGE(JSValueUnprotect);
+DEFINE_JS_BRIDGE(JSContextGroupCreate);
 DEFINE_JS_BRIDGE(JSContextGroupRelease);
 DEFINE_JS_BRIDGE(JSGlobalContextCreateInGroup);
 DEFINE_JS_BRIDGE(JSGlobalContextRelease);

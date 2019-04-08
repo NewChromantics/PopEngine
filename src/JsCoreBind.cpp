@@ -310,7 +310,6 @@ Bind::TInstance::TInstance(
 	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
 	mRootDirectory		( RootDirectory )
 {
-	/*
 	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
 		#if !defined(TARGET_WINDOWS)
@@ -333,8 +332,14 @@ Bind::TInstance::TInstance(
 			//	create a context
 			mContext = CreateContext(RootDirectory);
 			
+		#if !defined(PLATFORM_WINDOWS)
 			ApiPop::Bind( *mContext );
 			ApiOpengl::Bind( *mContext );
+			ApiMedia::Bind( *mContext );
+			ApiWebsocket::Bind( *mContext );
+			ApiHttp::Bind( *mContext );
+			ApiSocket::Bind( *mContext );
+		#endif
 
 		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *mContext );
@@ -344,11 +349,7 @@ Bind::TInstance::TInstance(
 			ApiInput::Bind( *mContext );
 			ApiOpencv::Bind( *mContext );
 			ApiBluetooth::Bind( *mContext );
-		#endif
-			ApiMedia::Bind( *mContext );
-			ApiWebsocket::Bind( *mContext );
-			ApiHttp::Bind( *mContext );
-			ApiSocket::Bind( *mContext );
+		#endif			
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
@@ -362,10 +363,14 @@ Bind::TInstance::TInstance(
 			throw;
 		}
 	};
+
+#if defined(PLATFORM_WINDOWS)
+	CreateVirtualMachine();
+#else
 	//	gr: these exceptions are getting swallowed!
 	mContextGroupThread.PushJob( CreateVirtualMachine );
 	mContextGroupThread.Start();
-	*/
+#endif
 }
 
 JsCore::TInstance::~TInstance()
