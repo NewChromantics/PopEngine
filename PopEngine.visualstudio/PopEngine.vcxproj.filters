@@ -22,6 +22,9 @@
     <Filter Include="Source\Todo">
       <UniqueIdentifier>{c20b2e8c-e666-4885-9846-0656eb5ada9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest.js">
+      <UniqueIdentifier>{17a1cd90-5cf4-4e1b-8c33-e43bf2f25719}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -277,6 +280,9 @@
     </None>
     <None Include="..\src\TApiCoreMl.mm">
       <Filter>Source\Todo</Filter>
+    </None>
+    <None Include="..\UnitTest.js\bootup.js">
+      <Filter>UnitTest.js</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

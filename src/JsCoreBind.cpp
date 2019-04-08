@@ -332,15 +332,13 @@ Bind::TInstance::TInstance(
 			//	create a context
 			mContext = CreateContext(RootDirectory);
 			
-		#if !defined(PLATFORM_WINDOWS)
 			ApiPop::Bind( *mContext );
 			ApiOpengl::Bind( *mContext );
 			ApiMedia::Bind( *mContext );
 			ApiWebsocket::Bind( *mContext );
 			ApiHttp::Bind( *mContext );
 			ApiSocket::Bind( *mContext );
-		#endif
-
+	
 		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *mContext );
 			ApiDlib::Bind( *mContext );

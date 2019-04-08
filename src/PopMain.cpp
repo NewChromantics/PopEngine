@@ -69,7 +69,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 {
 	Platform::Private::InstanceHandle = hInstance;
 	const char* argv[2] = { "",lpCmdLine };
+	
 	int argc = 2;
+	if ( !argv[1] || strlen(argv[1]) == 0 )
+		argc = 1;
+
 #else
 int main(int argc,const char* argv[])
 {

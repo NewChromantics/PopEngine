@@ -40,14 +40,16 @@ namespace Platform
 TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 {
 	std::string DataPath;
-	
+
+	//	use arg0 if provided
+	//	otherwise, we assume there's a bootup.js in the app's resources path
 	if ( Arguments.GetSize() > 0 )
-	{
 		DataPath = Arguments[0];
-	}
-	else
+
+	//	 try to predict full paths vs something embedded in the app
+	if ( !Platform::IsFullPath(DataPath) )
 	{
-		DataPath = Platform::GetAppResourcesDirectory() + "GuildhallGildwall";
+		DataPath = Platform::GetAppResourcesDirectory() + DataPath;
 	}
 	
 	
