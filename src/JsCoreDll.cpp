@@ -96,10 +96,16 @@ template<const char* SymbolName,typename RESULTTYPE, typename... ARGTYPES>
 class Wrapper
 {
 public:
-	static std::function<RESULTTYPE(ARGTYPES...)> WrapperFunc;
+	static std::function<RESULTTYPE(ARGTYPES...)>& GetWrapperFunc()
+	{
+		//	this implements the static
+		static std::function<RESULTTYPE(ARGTYPES...)> WrapperFunc;
+		return WrapperFunc;
+	}
 
 	static RESULTTYPE Invoke(ARGTYPES... args)
 	{
+		auto& WrapperFunc = GetWrapperFunc();
 		return WrapperFunc(args...);
 	}
 
@@ -172,6 +178,31 @@ DEFINE_JS_BRIDGE(JSObjectMakeDate);
 DEFINE_JS_BRIDGE(JSObjectMakeError);
 DEFINE_JS_BRIDGE(JSObjectMakeRegExp);
 DEFINE_JS_BRIDGE(JSObjectMakeFunction);
+DEFINE_JS_BRIDGE(JSValueMakeUndefined);
+DEFINE_JS_BRIDGE(JSValueMakeNull);
+DEFINE_JS_BRIDGE(JSValueMakeBoolean);
+DEFINE_JS_BRIDGE(JSValueMakeNumber);
+DEFINE_JS_BRIDGE(JSValueMakeString);
+DEFINE_JS_BRIDGE(JSValueToBoolean);
+DEFINE_JS_BRIDGE(JSValueToNumber);
+DEFINE_JS_BRIDGE(JSValueToStringCopy);
+DEFINE_JS_BRIDGE(JSValueToObject);
+DEFINE_JS_BRIDGE(JSValueProtect);
+DEFINE_JS_BRIDGE(JSValueUnprotect);
+DEFINE_JS_BRIDGE(JSContextGroupRelease);
+DEFINE_JS_BRIDGE(JSGlobalContextCreateInGroup);
+DEFINE_JS_BRIDGE(JSGlobalContextRelease);
+DEFINE_JS_BRIDGE(JSContextGetGlobalObject);
+DEFINE_JS_BRIDGE(JSContextGetGlobalContext);
+DEFINE_JS_BRIDGE(JSGlobalContextSetName);
+DEFINE_JS_BRIDGE(JSStringCreateWithUTF8CString);
+DEFINE_JS_BRIDGE(JSStringGetLength);
+DEFINE_JS_BRIDGE(JSStringGetUTF8CString);
+DEFINE_JS_BRIDGE(JSObjectMakeTypedArrayWithBytesNoCopy);
+DEFINE_JS_BRIDGE(JSObjectGetTypedArrayBytesPtr);
+DEFINE_JS_BRIDGE(JSObjectGetTypedArrayLength);
+DEFINE_JS_BRIDGE(JSObjectGetTypedArrayByteLength);
+DEFINE_JS_BRIDGE(JSObjectGetTypedArrayByteOffset);
 DEFINE_JS_BRIDGE(JSObjectGetPrototype);
 DEFINE_JS_BRIDGE(JSObjectSetPrototype);
 DEFINE_JS_BRIDGE(JSObjectHasProperty);
