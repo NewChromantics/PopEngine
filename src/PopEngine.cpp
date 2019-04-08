@@ -77,21 +77,9 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	return TPopAppError::Success;
 }
 
-
-//	windows test window code
-#if defined(TARGET_WINDOWS)
-#include "SoyOpenglWindow.h"
-std::shared_ptr<TOpenglWindow> pWindow;
-#endif
-
 TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
 {
 	mApiInstance.reset( new Bind::TInstance(RootDirectory,BootupFilename) );
-	
-	//	windows test window code
-#if defined(TARGET_WINDOWS)
-	pWindow.reset(new TOpenglWindow("Test", Soy::Rectf(), TOpenglParams() ));
-#endif
 }
 
 TPopTrack::~TPopTrack()

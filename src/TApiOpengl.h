@@ -14,8 +14,8 @@ namespace ApiOpengl
 class TRenderWindow : public TOpenglWindow
 {
 public:
-	TRenderWindow(const std::string& Name,const TOpenglParams& Params) :
-		TOpenglWindow	( Name, Soy::Rectf(0,0,100,100), Params)
+	TRenderWindow(const std::string& Name,Soy::Rectf Rect,const TOpenglParams& Params) :
+		TOpenglWindow	( Name, Rect, Params)
 	{
 	}
 	
@@ -81,7 +81,7 @@ public:
 	
 	//	window specific
 	static void			GetScreenRect(Bind::TCallback& Arguments);
-	static void			ToggleFullscreen(Bind::TCallback& Arguments);
+	static void			SetFullscreen(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 

@@ -310,10 +310,15 @@ void ApiPop::EnumScreens(Bind::TCallback& Params)
 	{
 		auto Screen = Params.mContext.CreateObjectInstance();
 		Screen.SetString("Name", Meta.mName );
-		Screen.SetInt("Left", Meta.mRect.Left() );
-		Screen.SetInt("Top", Meta.mRect.Top() );
-		Screen.SetInt("Width", Meta.mRect.GetWidth() );
-		Screen.SetInt("Height", Meta.mRect.GetHeight() );
+		Screen.SetInt("Left", Meta.mWorkRect.Left() );
+		Screen.SetInt("Top", Meta.mWorkRect.Top() );
+		Screen.SetInt("Width", Meta.mWorkRect.GetWidth() );
+		Screen.SetInt("Height", Meta.mWorkRect.GetHeight() );
+
+		//	may need to supply x&y
+		Screen.SetInt("ResolutionWidth", Meta.mFullRect.GetWidth() );
+		Screen.SetInt("ResolutionHieght", Meta.mFullRect.GetHeight() );
+		
 		ScreenMetas.PushBack( Screen );
 	};
 	Platform::EnumScreens( EnumScreen );

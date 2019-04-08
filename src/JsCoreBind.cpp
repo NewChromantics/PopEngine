@@ -333,9 +333,10 @@ Bind::TInstance::TInstance(
 			mContext = CreateContext(RootDirectory);
 			
 			ApiPop::Bind( *mContext );
-		#if !defined(PLATFORM_WINDOWS)
 			ApiOpengl::Bind( *mContext );
+		#if !defined(PLATFORM_WINDOWS)
 			ApiMedia::Bind( *mContext );
+
 			ApiWebsocket::Bind( *mContext );
 			ApiHttp::Bind( *mContext );
 			ApiSocket::Bind( *mContext );

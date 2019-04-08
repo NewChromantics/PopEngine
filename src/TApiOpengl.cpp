@@ -21,7 +21,7 @@ DEFINE_BIND_FUNCTIONNAME(Render);
 DEFINE_BIND_FUNCTIONNAME(RenderChain);
 DEFINE_BIND_FUNCTIONNAME(RenderToRenderTarget);
 DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
-DEFINE_BIND_FUNCTIONNAME(ToggleFullscreen);
+DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 
 
 
@@ -297,7 +297,22 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 			WindowParams.mFullscreen = WindowParamsObject.GetBool("Fullscreen");
 	}
 	
-	mWindow.reset( new TRenderWindow( WindowName, WindowParams ) );
+	//	get first monitor size
+	Soy::Rectf Rect(0, 0, 0, 0);
+	auto SetRect = [&](const Platform::TScreenMeta& Screen)
+	{
+		if ( Rect.w > 0 )
+			return;
+		auto BorderX = Screen.mWorkRect.w / 4;
+		auto BorderY = Screen.mWorkRect.h / 4;
+		Rect.x = Screen.mWorkRect.x + BorderX;
+		Rect.y = Screen.mWorkRect.y + BorderY;
+		Rect.w = Screen.mWorkRect.w - BorderX - BorderX;
+		Rect.h = Screen.mWorkRect.h - BorderY - BorderY;
+	};
+	Platform::EnumScreens(SetRect);
+
+	mWindow.reset( new TRenderWindow( WindowName, Rect, WindowParams ) );
 	
 	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 	{
@@ -410,10 +425,14 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 }
 
 
-void TWindowWrapper::ToggleFullscreen(Bind::TCallback& Params)
+void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWindowWrapper>();
-	This.mWindow->ToggleFullscreen();
+	auto Fullscreen = true;
+	if ( !Params.IsArgumentUndefined(0) )
+		Fullscreen = Params.GetArgumentBool(0);
+
+	This.mWindow->SetFullscreen(Fullscreen);
 }
 
 
@@ -707,7 +726,7 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	//Template.BindFunction<RenderChain_FunctionName>( RenderChain );
 	Template.BindFunction<RenderToRenderTarget_FunctionName>( RenderToRenderTarget );
 	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
-	Template.BindFunction<ToggleFullscreen_FunctionName>( ToggleFullscreen );
+	Template.BindFunction<SetFullscreen_FunctionName>( SetFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)

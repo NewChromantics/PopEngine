@@ -2,7 +2,7 @@
 #include "SoyOpenglWindow.h"
 //#include "SoyOpenglView.h"
 //#include "PopMain.h"
-
+#include "SoyMath.h"
 
 namespace Platform
 {
@@ -20,12 +20,67 @@ namespace Platform
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 	void		Loop(bool Blocking,std::function<void()> OnQuit);
+
+
+	template<typename COORDTYPE>
+	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
 }
 
 
+template<typename COORDTYPE>
+Soy::Rectx<COORDTYPE> Platform::GetRect(RECT Rect)
+{
+	Soy::Rectx<COORDTYPE> SoyRect;
+	SoyRect.x = Rect.left;
+	SoyRect.y = Rect.top;
+	SoyRect.w = Rect.right - Rect.left;
+	SoyRect.h = Rect.bottom - Rect.top;
+	return SoyRect;
+}
+
 void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 {
-	throw Soy::AssertException("todo");
+	//	should lock this
+	static std::function<void(TScreenMeta&)>* pEnumScreen = nullptr;
+	pEnumScreen = &EnumScreen;
+	MONITORENUMPROC EnumWrapper = [](HMONITOR MonitorHandle,HDC hdc,LPRECT Rect,LPARAM Data)->BOOL
+	{
+		MONITORINFOEXA MonitorMetaA;
+		MonitorMetaA.cbSize = sizeof(MonitorMetaA);
+		if ( !GetMonitorInfoA(MonitorHandle, &MonitorMetaA) )
+		{
+			Platform::IsOkay("GetMonitorInfoA");
+			throw Soy::AssertException("Error getting MonitorInfo");
+		}
+		MONITORINFO MonitorMetaB;
+		MonitorMetaB.cbSize = sizeof(MonitorMetaB);
+		if ( !GetMonitorInfoA(MonitorHandle, &MonitorMetaB) )
+		{
+			Platform::IsOkay("GetMonitorInfoA EX");
+			throw Soy::AssertException("Error getting MonitorInfo EX");
+		}
+		
+		TScreenMeta Screen;
+		Screen.mFullRect = GetRect<int32_t>(MonitorMetaA.rcMonitor);
+		Screen.mWorkRect = GetRect<int32_t>(MonitorMetaA.rcWork);
+
+		//	gr: this name is supposed to be unique
+		Screen.mName = std::string(MonitorMetaA.szDevice, sizeof(MonitorMetaA.szDevice));
+		if ( Screen.mName.length() == 0 )
+			throw Soy::AssertException("Platform::EnumScreens has monitor with no name");
+
+		auto& EnumScreen = *pEnumScreen;
+		EnumScreen(Screen);
+		return TRUE;
+	};
+
+	HDC hdc = nullptr;
+	LPCRECT ClipRect = nullptr;
+	LPARAM Data = 0;
+	if ( !EnumDisplayMonitors(hdc, ClipRect, EnumWrapper, Data) )
+	{
+		
+	}
 }
 
 
@@ -88,7 +143,7 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 class Platform::TControl
 {
 public:
-	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags);
+	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
 
 	HWND		mHwnd = nullptr;
 	std::string	mName;
@@ -97,7 +152,7 @@ public:
 class Platform::TWindow : TControl
 {
 public:
-	TWindow(const std::string& Name);
+	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
 };
 
 
@@ -172,12 +227,11 @@ Platform::TControlClass::~TControlClass()
 }
 
 
-Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags) :
+Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect) :
 	mName	( Name )
 {
 	const char* ClassName = Class.ClassName();
 	const char* WindowName = mName.c_str();
-	Soy::Rectx<int> Rect(0, 0, 100, 100);
 	void* Data = this;
 	HWND ParentHwnd = Parent ? Parent->mHwnd : nullptr;
 	auto Instance = Platform::Private::InstanceHandle;
@@ -188,21 +242,6 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 	if ( !mHwnd )
 		throw Soy::AssertException("Failed to create window");
 
-	/*
-	// Force an update/refresh of the window
-	//if ( !SetWindowPos( m_Hwnd, WindowOrder, m_ClientPos.x, m_ClientPos.x, m_ClientSize.x, m_ClientSize.y, SWP_FRAMECHANGED ) )
-	//	TLDebug::Platform::CheckWin32Error();
-
-	// This will reset the window restore information so when the window is created it will *always* be 
-	// at the size we create it at
-	WINDOWPLACEMENT wndpl;
-	if(GetWindowPlacement(ResultHwnd, &wndpl))
-	{
-		wndpl.rcNormalPosition.right = 0;
-		wndpl.rcNormalPosition.bottom = 0;
-		SetWindowPlacement(ResultHwnd, &wndpl);
-	}
-*/
 }
 
 Platform::TControlClass& GetWindowClass()
@@ -217,11 +256,39 @@ Platform::TControlClass& GetWindowClass()
 	return *gWindowClass;
 }
 
-Platform::TWindow::TWindow(const std::string& Name) :
-	TControl	( Name, GetWindowClass(), nullptr, WS_OVERLAPPEDWINDOW, WS_EX_CLIENTEDGE )
+Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
+	TControl	( Name, GetWindowClass(), nullptr, WS_OVERLAPPEDWINDOW, WS_EX_CLIENTEDGE, Rect )
 {
-	ShowWindow(mHwnd, SW_SHOW);
+	auto ShowState = SW_SHOW;
 
+	/*
+	// Force an update/refresh of the window
+	//if ( !SetWindowPos( m_Hwnd, WindowOrder, m_ClientPos.x, m_ClientPos.x, m_ClientSize.x, m_ClientSize.y, SWP_FRAMECHANGED ) )
+	//	TLDebug::Platform::CheckWin32Error();
+	*/
+
+	//	restore saved window position/state
+	WINDOWPLACEMENT WindowPlacement;
+	WindowPlacement.length = sizeof(WindowPlacement);
+
+	// This will reset the window restore information so when the window is created it will *always* be 
+	// at the size we create it at
+	if ( GetWindowPlacement( mHwnd, &WindowPlacement ) )
+	{
+		ShowState = WindowPlacement.showCmd;
+
+		std::Debug << WindowPlacement.rcNormalPosition.left << "," <<
+			WindowPlacement.rcNormalPosition.top << "," <<
+			WindowPlacement.rcNormalPosition.right << "," <<
+			WindowPlacement.rcNormalPosition.bottom << "," << std::endl;
+		//	restore
+		//WindowPlacement.rcNormalPosition.right = 0;
+		//WindowPlacement.rcNormalPosition.bottom = 0;
+		//SetWindowPlacement( mHwnd, &WindowPlacement );
+	}
+
+	//	show window now it's configured
+	ShowWindow(mHwnd, ShowState);
 }
 
 
@@ -231,7 +298,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	mName				( Name ),
 	mParams				( Params )
 {
-	mWindow.reset(new Platform::TWindow(Name));
+	mWindow.reset(new Platform::TWindow(Name,Rect));
 
 }
 
