@@ -44,7 +44,7 @@ public:
 
 	virtual std::chrono::milliseconds	GetSleepDuration() override;
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
-	virtual void						ToggleFullscreen() override;
+	virtual void						SetFullscreen(bool Fullscreen) override;
 
 private:
 	void			OnViewRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)

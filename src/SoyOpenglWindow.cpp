@@ -194,7 +194,7 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 		wndpl.rcNormalPosition.bottom = 0;
 		SetWindowPlacement(ResultHwnd, &wndpl);
 	}
-    */
+*/
 }
 
 Platform::TControlClass& GetWindowClass()
@@ -259,3 +259,7 @@ Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 	//return mView->mRenderTarget.GetSize();
 }
 
+void TOpenglWindow::SetFullscreen(bool Fullscreen)
+{
+	throw Soy::AssertException("todo");
+}
