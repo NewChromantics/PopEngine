@@ -365,6 +365,7 @@ Bind::TInstance::TInstance(
 	};
 
 #if defined(PLATFORM_WINDOWS)
+	JsCore::LoadDll();
 	CreateVirtualMachine();
 #else
 	//	gr: these exceptions are getting swallowed!

@@ -1,7 +1,7 @@
 #pragma once
 
 //	gr: we're binding them ourselves
-#if defined(TARGET_WINDOWS)
+#if defined(PLATFORM_WINDOWS)
 #include "JsCoreDll.h"
 #else
 #include <JavaScriptCore/JavaScriptCore.h>
