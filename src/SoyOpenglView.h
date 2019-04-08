@@ -4,7 +4,11 @@
 #include "SoyOpenglContext.h"
 #include "SoyWindow.h"
 
-class TOpenglView;
+
+namespace Platform
+{
+	class TOpenglView;
+}
 class TOpenglParams;
 
 
@@ -82,7 +86,7 @@ public:
 class GlViewContext : public OsxOpenglContext
 {
 public:
-	GlViewContext(TOpenglView& Parent) :
+	GlViewContext(Platform::TOpenglView& Parent) :
 		mParent		( Parent )
 	{
 	}
@@ -95,7 +99,7 @@ public:
 	virtual std::shared_ptr<Opengl::TContext>	CreateSharedContext() override;
 
 public:
-	TOpenglView&	mParent;
+	Platform::TOpenglView&	mParent;
 };
 
 class GlViewSharedContext : public OsxOpenglContext, public SoyWorkerThread

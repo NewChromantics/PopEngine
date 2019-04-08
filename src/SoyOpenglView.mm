@@ -392,35 +392,37 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 	
 	//	lock the context as we do iteration from the main thread
 	//	gr: maybe have a specific thread for this, as this view-redraw is called from our own thread anyway
-	auto& Context = mParent->mContext;
+	auto& Context = *mParent->mContext;
 	//  gr: oddly (in PopEngine at least) we now get a draw before the opengl deffered init (which is on the main thread)
 	//      so lets wait for the context to initialise... we may be dropping a frame :(
 	//      while this will still render, none of the extensions will be setup...
 	//	gr: does this need a lock?
-	if ( !Context->IsInitialised() )
+	if ( !Context.IsInitialised() )
 		return;
 	
 	//	may need to check for negatives here
 	auto BoundsRectf = NSRectToRect( bounds );
 	Soy::Rectx<size_t> BoundsRect(BoundsRectf);
 	auto& Parent = *mParent;
+	auto& RenderTarget = Parent.mRenderTarget;
+	auto& mOnRender = Parent.mOnRender;
 
 	bool DoneLock = false;
 	auto LockContext = [&]
 	{
 		if ( DoneLock )
 			return;
-		Context->Lock();
+		Context.Lock();
 		DoneLock = true;
 		Opengl::IsOkay("pre drawRect flush",false);
 		//	do parent's minimal render
 		//	gr: reset state here!
-		Parent.mRenderTarget.mRect = BoundsRect;
-		Parent.mRenderTarget.Bind();
+		RenderTarget.mRect = BoundsRect;
+		RenderTarget.Bind();
 	};
 	auto UnlockContext = [&]
 	{
-		Parent.mRenderTarget.Unbind();
+		RenderTarget.Unbind();
 		Opengl::IsOkay("Post drawRect flush",false);
 		Context->Unlock();
 	};
@@ -434,10 +436,10 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 	
     try
     {
-		if ( !mParent->mOnRender )
+		if ( !mOnRender )
 			throw Soy::AssertException("No OnRender callback");
 		
-		mParent->mOnRender( mParent->mRenderTarget, LockContext );
+		mOnRender( RenderTarget, LockContext );
     }
     catch(std::exception& e)
     {

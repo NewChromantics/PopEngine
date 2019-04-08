@@ -13,9 +13,9 @@
 namespace Platform
 {
 	class TWindow;
+	class TOpenglView;		//	on osx it's a view control
+	class TOpenglContext;	//	on windows, its a context that binds to any control
 }
-
-class TOpenglView;
 
 
 class TOpenglParams
@@ -45,18 +45,12 @@ public:
 	virtual std::chrono::milliseconds	GetSleepDuration() override;
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
 	virtual void						SetFullscreen(bool Fullscreen) override;
-
-private:
-	void			OnViewRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
-	{
-		if ( mOnRender )
-			mOnRender(RenderTarget, LockContext );
-	}
 	
 public:
 	std::function<void(Opengl::TRenderTarget&,std::function<void()> LockContext)>	mOnRender;
-	std::shared_ptr<TOpenglView>	mView;
-
+	std::shared_ptr<Platform::TOpenglView>		mView;
+	std::shared_ptr<Platform::TOpenglContext>	mWindowContext;
+	
 protected:
 	TOpenglParams	mParams;
 	

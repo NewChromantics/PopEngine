@@ -9,6 +9,8 @@ namespace Platform
 	class TControlClass;
 	class TControl;
 	class TWindow;
+	class TOpenglView;
+
 	class TOpenglContext;
 
 	namespace Private
@@ -79,9 +81,83 @@ void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 	LPARAM Data = 0;
 	if ( !EnumDisplayMonitors(hdc, ClipRect, EnumWrapper, Data) )
 	{
-		
+		Platform::IsOkay("EnumDisplayMonitors");
+		throw Soy::AssertException("EnumDisplayMonitors failed");
 	}
 }
+
+
+
+class Platform::TControl
+{
+public:
+	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
+
+	Soy::Rectx<int32_t>		GetClientRect();
+
+	std::function<void(TControl&)>	mOnPaint;
+	HWND		mHwnd = nullptr;
+	std::string	mName;
+};
+
+class Platform::TWindow : public TControl
+{
+public:
+	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
+};
+
+
+
+class Platform::TOpenglContext : public Opengl::TContext, public  Opengl::TRenderTarget
+{
+public:
+	TOpenglContext(TControl& Parent);
+	~TOpenglContext();
+
+	//	context
+	virtual void	Lock() override;
+	virtual void	Unlock() override;
+
+	//	render target
+	virtual void				Bind() override;
+	virtual void				Unbind() override;
+	virtual Soy::Rectx<size_t>	GetSize() override {	return mRect;	}
+	
+	//	window stuff
+	void			Repaint();
+	void			OnPaint();
+
+	std::function<void(Opengl::TRenderTarget&, std::function<void()>)>	mOnRender;
+
+	//	context stuff
+	TControl&		mParent;	//	control we're bound to
+	HWND&			mHwnd = mParent.mHwnd;
+	HDC				mHDC = nullptr;		//	DC we've setup for opengl
+	HGLRC			mHGLRC = nullptr;	//	opengl context
+	bool			mHasArbMultiSample = false;	//	is antialiasing supported?
+
+	//	render target
+	Soy::Rectx<size_t>	mRect;
+};
+
+
+
+class Platform::TControlClass
+{
+public:
+	TControlClass(const std::string& Name,UINT Style);
+	~TControlClass();
+
+	const char*	ClassName() const {		return mClassName.c_str();	}
+
+	WNDCLASS	mClass;
+	std::string	mClassName;
+	DWORD		mStyleEx = 0;
+	UINT&		mStyle = mClass.style;
+};
+
+
+
 
 
 
@@ -100,7 +176,7 @@ void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 			if ( !PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
 				break;
 		}
-		
+
 		if ( msg.message == WM_QUIT )
 			if ( OnQuit )
 				OnQuit();
@@ -119,67 +195,66 @@ void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 
 LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+	//	this may be null if it hasn't been setup yet as we will in WM_CREATE
+	auto* pControl = reinterpret_cast<TControl*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+	auto Default = [&]()
+	{
+		return DefWindowProc(hwnd, message, wParam, lParam);
+	};
+
+	//	handle isn't bound to a control of ours
+	if ( !pControl )
+	{
+		//	setup our user data
+		if ( message == WM_NCCREATE )
+		{
+			auto* CreateStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
+			auto* This = CreateStruct->lpCreateParams;
+			auto ThisLong = reinterpret_cast<LONG_PTR>(This);
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, ThisLong );
+			return Default();
+		}
+
+		return Default();
+	}
+
+	//	callbacks
+	TControl& Control = *pControl;
 	switch ( message )
 	{
 		//	gotta allow some things
 	case WM_MOVE:
 	case WM_SIZE:
 	case WM_CREATE:
-	case WM_PAINT:
 	case WM_ERASEBKGND:
 	case WM_SHOWWINDOW:
 		return 0;
 
+	case WM_PAINT:
+		PAINTSTRUCT ps;
+		BeginPaint(hwnd, &ps);
+		if ( Control.mOnPaint )
+		{
+			Control.mOnPaint(Control);
+		}
+		else
+		{
+			//	do default/fallback paint?
+		}
+		EndPaint(hwnd, &ps);
+		return 0;
+
 		//	*need* to handle these with defwndproc
 	case WM_GETMINMAXINFO:
-	case WM_NCCREATE:
 		break;
 	}
 
-	return DefWindowProc(hwnd, message, wParam, lParam) ;
+	return Default();
 }
 
 
-class Platform::TControl
-{
-public:
-	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
 
-	HWND		mHwnd = nullptr;
-	std::string	mName;
-};
-
-class Platform::TWindow : TControl
-{
-public:
-	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
-};
-
-
-class Platform::TOpenglContext : public Opengl::TContext
-{
-public:
-	TOpenglContext(TControl& Parent);
-
-	virtual void	Lock() override;
-	virtual void	Unlock() override;
-};
-
-
-
-class Platform::TControlClass
-{
-public:
-	TControlClass(const std::string& Name,UINT Style);
-	~TControlClass();
-
-	const char*	ClassName() const {		return mClassName.c_str();	}
-
-	WNDCLASS	mClass;
-	std::string	mClassName;
-	DWORD		mStyleEx = 0;
-	UINT&		mStyle = mClass.style;
-};
 
 Platform::TControlClass::TControlClass(const std::string& Name, UINT ClassStyle) :
 	mClassName	( Name )
@@ -232,16 +307,34 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 {
 	const char* ClassName = Class.ClassName();
 	const char* WindowName = mName.c_str();
-	void* Data = this;
+	void* UserData = this;
 	HWND ParentHwnd = Parent ? Parent->mHwnd : nullptr;
 	auto Instance = Platform::Private::InstanceHandle;
 	HMENU Menu = nullptr;
 
-	mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, Data);
+	mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, UserData);
 	Platform::IsOkay("CreateWindow");
 	if ( !mHwnd )
 		throw Soy::AssertException("Failed to create window");
 
+}
+
+Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
+{
+	RECT RectWin;
+	if ( !::GetClientRect(mHwnd, &RectWin) )
+		Platform::IsOkay("GetClientRect");
+
+	if ( RectWin.left < 0 || RectWin.top < 0 )
+	{
+		auto RectSigned = GetRect<int32_t>(RectWin);
+		std::stringstream Error;
+		Error << "Not expected GetClientRect rect to be < 0; " << RectSigned;
+		throw Soy::AssertException(Error.str());
+	}
+
+	auto Rect = GetRect<size_t>(RectWin);
+	return Rect;
 }
 
 Platform::TControlClass& GetWindowClass()
@@ -255,6 +348,19 @@ Platform::TControlClass& GetWindowClass()
 	gWindowClass.reset(new Platform::TControlClass("Window", ClassStyle));
 	return *gWindowClass;
 }
+
+Platform::TControlClass& GetOpenglViewClass()
+{
+	static std::shared_ptr<Platform::TControlClass> gClass;
+	if ( gClass )
+		return *gClass;
+
+	UINT ClassStyle = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+
+	gClass.reset(new Platform::TControlClass("OpenGL", ClassStyle));
+	return *gClass;
+}
+
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 	TControl	( Name, GetWindowClass(), nullptr, WS_OVERLAPPEDWINDOW, WS_EX_CLIENTEDGE, Rect )
@@ -293,13 +399,244 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 
 
 
+Platform::TOpenglContext::TOpenglContext(TControl& Parent) :
+	Opengl::TRenderTarget	( Parent.mName ),
+	mParent					( Parent )
+{
+	//	make the pixel format descriptor
+	PIXELFORMATDESCRIPTOR pfd =				// pfd Tells Windows How We Want Things To Be
+	{
+		sizeof(PIXELFORMATDESCRIPTOR),		// Size Of This Pixel Format Descriptor
+		1,									// Version Number
+		PFD_DRAW_TO_WINDOW |				// Format Must Support Window
+		PFD_SUPPORT_OPENGL |				// Format Must Support OpenGL
+		PFD_DOUBLEBUFFER,					// Must Support Double Buffering
+		PFD_TYPE_RGBA,						// Request An RGBA Format
+											//	16,									// Select Our Color Depth
+		24,									// Select Our Color Depth
+		0, 0, 0, 0, 0, 0,					// Color Bits Ignored
+		0,									// No Alpha Buffer
+		0,									// Shift Bit Ignored
+		0,									// No Accumulation Buffer
+		0, 0, 0, 0,							// Accumulation Bits Ignored
+		16,									// 16Bit Z-Buffer (Depth Buffer)  
+		1,									//	use stencil buffer
+		0,									// No Auxiliary Buffer
+		PFD_MAIN_PLANE,						// Main Drawing Layer
+		0,									// Reserved
+		0, 0, 0								// Layer Masks Ignored
+	};
+
+	uint32_t PixelFormat = 0;
+
+	//	get the existing hdc of the window
+	mHDC = GetDC(mParent.mHwnd);
+	if ( !mHDC )
+		throw Soy::AssertException("Failed to get HDC");
+
+	//	store size
+	//m_Size = Window.m_ClientSize;
+
+	/*
+	//	if multisample is supported, use a multisample pixelformat
+	//	SyncBool MultisampleSupport = OpenglExtensions::IsHardwareSupported(OpenglExtensions::GHardware_ARBMultiSample);
+	SyncBool MultisampleSupport = SyncFalse;
+
+	if ( MultisampleSupport == SyncTrue )
+	{
+	//		PixelFormat = OpenglExtensions::GetArbMultisamplePixelFormat();
+	m_HasArbMultiSample = TRUE;
+	}
+	else*/
+	{
+		//	check we can use this pfd
+		PixelFormat = ChoosePixelFormat(mHDC, &pfd);
+		if ( !PixelFormat )
+			throw Soy::AssertException("Failed to choose pixel format X");//%d\n", PixelFormat));
+		//m_HasArbMultiSample = FALSE;
+	}
+
+	//	set it to the pfd
+	if ( !SetPixelFormat(mHDC, PixelFormat, &pfd) )
+		throw Soy::AssertException("Failed to set pixel format");//%d\n", PixelFormat));
+
+	//	make and get the windows gl context for the hdc
+	//	gr: this should be wrapped in a context
+	mHGLRC = wglCreateContext(mHDC);
+	if ( !mHGLRC )
+		throw Soy::AssertException("Failed to create context");
+
+	/*
+	//	set current context
+	//	gr: unneccesary? done in BeginRender when we *need* it...
+	if ( !wglMakeCurrent(m_HDC, m_HGLRC) )
+	{
+	TLDebug_Break("Failed wglMakeCurrent");
+	return FALSE;
+	}
+
+	//	mark opengl as initialised once we've created a GL wglCreateContext
+	//	context has been initialised (successfully?) so init opengl
+	TLRender::Opengl::Init();
+	*/
+	auto OnPaint = [this](TControl& Control)
+	{
+		this->OnPaint();
+	};
+	mParent.mOnPaint = OnPaint;
+}
+
+Platform::TOpenglContext::~TOpenglContext()
+{
+	mParent.mOnPaint = nullptr;
+	wglDeleteContext(mHGLRC);
+	ReleaseDC(mHwnd, mHDC);
+}
+
+void Platform::TOpenglContext::Lock()
+{
+	if ( !wglMakeCurrent(mHDC, mHGLRC) )
+		throw Soy::AssertException("wglMakeCurrent failed");
+}
+
+void Platform::TOpenglContext::Unlock()
+{
+	if ( !wglMakeCurrent(nullptr, nullptr) )
+		throw Soy::AssertException("wglMakeCurrent unbind failed");
+}
+
+void Platform::TOpenglContext::Repaint()
+{
+	//	tell parent to repaint
+	//	update window triggers a WM_PAINT
+	if ( !UpdateWindow(mParent.mHwnd) )
+		Platform::IsOkay("UpdateWindow failed");
+}
+
+void Platform::TOpenglContext::Bind()
+{
+	throw Soy::AssertException("Bind default render target");
+}
+
+void Platform::TOpenglContext::Unbind()
+{
+	throw Soy::AssertException("Unbind default render target");
+}
+
+
+
+/*
+class GlViewRenderTarget : public Opengl::TRenderTarget
+{
+public:
+	GlViewRenderTarget(const std::string& Name) :
+		TRenderTarget	( Name )
+	{
+	}
+
+	virtual Soy::Rectx<size_t>	GetSize() override	{	return mRect;	}
+	virtual void				Bind() override;
+	virtual void				Unbind() override;
+
+	Soy::Rectx<size_t>			mRect;
+};
+*/
+void Platform::TOpenglContext::OnPaint()
+{
+	auto& Control = mParent;
+	auto& Context = *this;
+	Soy::Rectx<size_t> BoundsRect = Control.GetClientRect();
+	auto& RenderTarget = *this;
+	
+
+	//	render
+	//	much of this code should be copy+pasta from osx as its independent logic
+	bool DoneLock = false;
+	auto LockContext = [&]
+	{
+		if ( DoneLock )
+			return;
+		Context.Lock();
+		DoneLock = true;
+		Opengl::IsOkay("pre drawRect flush",false);
+		//	do parent's minimal render
+		//	gr: reset state here!
+		RenderTarget.mRect = BoundsRect;
+		RenderTarget.Bind();
+	};
+	auto UnlockContext = [&]
+	{
+		RenderTarget.Unbind();
+		Opengl::IsOkay("Post drawRect flush",false);
+		Context.Unlock();
+	};
+
+	/*
+	if ( !mParent )
+	{
+		auto ContextLock = SoyScope( LockContext, UnlockContext );
+		Opengl::ClearColour( Soy::TRgb(1,0,0) );
+		return;
+	}
+	*/
+	try
+	{
+		if ( !mOnRender )
+			throw Soy::AssertException("No OnRender callback");
+
+		mOnRender( RenderTarget, LockContext );
+	}
+	catch(std::exception& e)
+	{
+		LockContext();
+		Opengl::ClearColour( Soy::TRgb(0,0,1) );
+		std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
+	}
+
+	//	in case lock hasn't been done
+	LockContext();
+
+	try
+	{
+		//	flip
+		SwapBuffers(mHDC);
+		/*
+		if ( Context->IsDoubleBuffered() )
+		{
+			//	let OSX flush and flip (probably sync'd better than we ever could)
+			//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
+			//	http://stackoverflow.com/a/13633191/355753
+			[[self openGLContext] flushBuffer];
+		}
+		else
+		{
+			glFlush();
+			Opengl::IsOkay("glFlush");
+		}
+		*/
+		UnlockContext();
+	}
+	catch(std::exception& e)
+	{
+		UnlockContext();
+		std::Debug << e.what() << std::endl;
+	}
+}
+
+
 TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params) :
 	SoyWorkerThread		( Soy::GetTypeName(*this), Params.mAutoRedraw ? SoyWorkerWaitMode::Sleep : SoyWorkerWaitMode::Wake ),
 	mName				( Name ),
 	mParams				( Params )
 {
 	mWindow.reset(new Platform::TWindow(Name,Rect));
+	mWindowContext.reset(new Platform::TOpenglContext(*mWindow));
 
+	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
+	{
+		mOnRender(RenderTarget, LockContext );
+	};
+	mWindowContext->mOnRender = OnRender;
 }
 
 TOpenglWindow::~TOpenglWindow()
@@ -313,12 +650,14 @@ bool TOpenglWindow::IsValid()
 
 bool TOpenglWindow::Iteration()
 {
+	//	repaint!
+	mWindowContext->Repaint();
 	return true;
 }
 
 std::shared_ptr<Opengl::TContext> TOpenglWindow::GetContext()
 {
-	throw Soy::AssertException("todo");
+	return mWindowContext;
 }
 
 std::chrono::milliseconds TOpenglWindow::GetSleepDuration()

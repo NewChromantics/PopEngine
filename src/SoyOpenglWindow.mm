@@ -117,7 +117,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 
 		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 		{
-			OnViewRender( RenderTarget, LockContext );
+			mOnRender(RenderTarget, LockContext );
 		};
 		mView->mOnRender = OnRender;
 
