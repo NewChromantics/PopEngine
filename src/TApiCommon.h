@@ -3,8 +3,10 @@
 #include "SoyPixels.h"
 #include "SoyVector.h"
 
-#if defined(GetComputerName)
-#undef GetComputerName
+//	windows macros!
+#if defined(PLATFORM_WINDOWS)
+	#undef Yield
+	#undef GetComputerName
 #endif
 
 class SoyPixels;

@@ -11,6 +11,10 @@ namespace JsCore
 }
 
 
+//	should match this symbol from the library, but lets just get this done for now
+const JSClassDefinition __JSClassDefinitionEmpty = {};
+extern "C" const JSClassDefinition* __imp_kJSClassDefinitionEmpty = &__JSClassDefinitionEmpty;
+
 
 template<const char* SymbolName,typename RESULTTYPE, typename... ARGTYPES>
 class Wrapper

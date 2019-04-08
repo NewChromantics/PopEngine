@@ -22,6 +22,14 @@ namespace Platform
 	void		Loop(bool Blocking,std::function<void()> OnQuit);
 }
 
+
+void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
+{
+	throw Soy::AssertException("todo");
+}
+
+
+
 void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 {
 	while ( true )
