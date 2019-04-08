@@ -515,12 +515,12 @@ void Platform::TOpenglContext::Repaint()
 
 void Platform::TOpenglContext::Bind()
 {
-	throw Soy::AssertException("Bind default render target");
+	//throw Soy::AssertException("Bind default render target");
 }
 
 void Platform::TOpenglContext::Unbind()
 {
-	throw Soy::AssertException("Unbind default render target");
+	//throw Soy::AssertException("Unbind default render target");
 }
 
 
