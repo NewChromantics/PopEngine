@@ -466,6 +466,8 @@ Platform::TOpenglContext::TOpenglContext(TControl& Parent) :
 	if ( !mHGLRC )
 		throw Soy::AssertException("Failed to create context");
 
+	//	init opengl context
+	this->Init();
 	/*
 	//	set current context
 	//	gr: unneccesary? done in BeginRender when we *need* it...
@@ -495,14 +497,28 @@ Platform::TOpenglContext::~TOpenglContext()
 
 void Platform::TOpenglContext::Lock()
 {
-	if ( !wglMakeCurrent(mHDC, mHGLRC) )
-		throw Soy::AssertException("wglMakeCurrent failed");
+	//	osx does base context lock first
+	TContext::Lock();
+
+	try
+	{
+		//	switch to this thread
+		if ( !wglMakeCurrent(mHDC, mHGLRC) )
+			throw Soy::AssertException("wglMakeCurrent failed");
+	}
+	catch(...)
+	{
+		Unlock();
+		throw;
+	}
 }
 
 void Platform::TOpenglContext::Unlock()
 {
 	if ( !wglMakeCurrent(nullptr, nullptr) )
 		throw Soy::AssertException("wglMakeCurrent unbind failed");
+
+	TContext::Unlock();
 }
 
 void Platform::TOpenglContext::Repaint()
