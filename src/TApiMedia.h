@@ -12,11 +12,17 @@ namespace Broadway
 	class TDecoder;
 }
 
+namespace PopCameraDevice
+{
+	class TDevice;
+}
+
 namespace ApiMedia
 {
 	void	Bind(Bind::TContext& Context);
 	
 	DECLARE_BIND_TYPENAME(Source);
+	DECLARE_BIND_TYPENAME(PopCameraDevice);
 }
 
 
@@ -69,6 +75,38 @@ public:
 	TFrameRequestParams						mFrameRequestParams;
 	Bind::TPromiseQueue						mFrameRequests;
 };
+
+
+
+class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::PopCameraDevice_TypeName,PopCameraDevice::TDevice>
+{
+public:
+	TPopCameraDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
+	{
+	}
+
+	static void								CreateTemplate(Bind::TTemplate& Template);
+
+	virtual void 							Construct(Bind::TCallback& Params) override;
+
+	void									OnNewFrame(size_t StreamIndex);
+	static void								Free(Bind::TCallback& Params);
+	static void								GetNextFrame(Bind::TCallback& Params);
+	static void								PopFrame(Bind::TCallback& Params);
+
+	Bind::TPromise							AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params);
+	Bind::TObject							PopFrame(Bind::TContext& Context,const TFrameRequestParams& Params);
+
+
+public:
+	std::shared_ptr<PopCameraDevice::TDevice>&	mExtractor = mObject;
+
+	//	gr: this should really store params per promise, but I want to use TPromiseQUeue
+	TFrameRequestParams						mFrameRequestParams;
+	Bind::TPromiseQueue						mFrameRequests;
+};
+
 
 
 extern const char AvcDecoder_TypeName[];

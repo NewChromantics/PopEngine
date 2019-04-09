@@ -2,13 +2,31 @@
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 #include "SoyFilesystem.h"
+#include "SoyLib\src\SoyMedia.h"
 
-#if !defined(TARGET_WINDOWS)
+//	video capture
+#if defined(TARGET_OSX)
 #include "PopMovie/AvfVideoCapture.h"
 #include "PopMovie/AvfMovieDecoder.h"
 #include "SoyDecklink/SoyDecklink.h"
+#endif
+
+
+//	video decoding
+#if defined(TARGET_OSX)
 #include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
 #endif
+
+#if defined(TARGET_WINDOWS)
+#include "Soylib/src/SoyRuntimeLibrary.h"
+namespace PopCameraDevice
+{
+	#include "Libs/PopCameraDevice/PopCameraDevice.h"
+	void	EnumDevices(std::function<void(const std::string&)> EnumDevice);
+	void	LoadDll();
+}
+#endif
+
 
 
 namespace ApiMedia
@@ -18,6 +36,7 @@ namespace ApiMedia
 	DEFINE_BIND_TYPENAME(Source);
 	
 	void	EnumDevices(Bind::TCallback& Params);
+	void	EnumPlatformDevices(std::function<void(const std::string& Name)> EnumDevice);
 }
 
 DEFINE_BIND_FUNCTIONNAME(EnumDevices);
@@ -41,6 +60,30 @@ void ApiMedia::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TAvcDecoderWrapper>( Namespace );
 }
 
+void ApiMedia::EnumPlatformDevices(std::function<void(const std::string& Name)> EnumDevice)
+{
+#if defined(TARGET_OSX)
+	try
+	{
+		::Platform::EnumCaptureDevices(EnumDevice);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+
+	try
+	{
+		Decklink::EnumDevices(EnumDevice);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+#endif
+
+	PopCameraDevice::EnumDevices(EnumDevice);
+}
 
 
 void ApiMedia::EnumDevices(Bind::TCallback& Params)
@@ -56,24 +99,8 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			{
 				DeviceNames.PushBack(Name);
 			};
+			EnumPlatformDevices(EnumDevice);
 			
-			try
-			{
-				::Platform::EnumCaptureDevices(EnumDevice);
-			}
-			catch(std::exception& e)
-			{
-				std::Debug << e.what() << std::endl;
-			}
-			
-			try
-			{
-				Decklink::EnumDevices(EnumDevice);
-			}
-			catch(std::exception& e)
-			{
-				std::Debug << e.what() << std::endl;
-			}
 						
 			//	gr: don't bother queuing, assume Resolve/Reject is always queued
 			Promise.Resolve( GetArrayBridge(DeviceNames) );
@@ -109,6 +136,7 @@ TMediaSourceWrapper::~TMediaSourceWrapper()
 
 std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMediaExtractorParams& Params)
 {
+#if defined(TARGET_OSX)
 	//	video extractor if it's a filename
 	if ( ::Platform::FileExists(Params.mFilename) )
 	{
@@ -139,7 +167,8 @@ std::shared_ptr<TMediaExtractor> TMediaSourceWrapper::AllocExtractor(const TMedi
 		if ( Extractor )
 			return Extractor;
 	}
-	
+#endif
+
 	std::stringstream Error;
 	Error << "Failed to allocate a device matching " << Params.mFilename;
 	throw Soy::AssertException(Error.str());
@@ -388,7 +417,12 @@ void TMediaSourceWrapper::Free(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
+	//	need to have TDecoderInstance for C lib
+#if defined(TARGET_OSX)
 	mDecoder.reset( new TDecoderInstance );
+#else
+	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
+#endif
 }
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -398,6 +432,7 @@ void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 {
+#if defined(TARGET_OSX)
 	auto& This = Params.This<TAvcDecoderWrapper>();
 	Array<uint8_t> PacketBytes;
 	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
@@ -453,6 +488,50 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 		Frames.PushBack( FrameImageObject );
 	}
 	Params.Return( GetArrayBridge(Frames) );
+#else
+	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
+#endif
 }
 
 
+void PopCameraDevice::LoadDll()
+{
+	//	current bodge
+#if defined(TARGET_WINDOWS)
+	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
+	if ( Dll )
+		return;
+	const char* Filename = "D:\\PopEngine\\src\\Libs\\PopCameraDevice\\PopCameraDevice.dll";
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+#endif
+}
+
+void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDevice)
+{
+#if defined(TARGET_WINDOWS)
+	LoadDll();
+	char DeviceNamesBuffer[1000];
+	EnumCameraDevices(DeviceNamesBuffer, sizeofarray(DeviceNamesBuffer));
+	//	now split
+	auto SplitChar = DeviceNamesBuffer[0];
+	std::string DeviceNames(&DeviceNamesBuffer[1]);
+	auto EnumMatch = [&](const std::string& Part)
+	{
+		EnumDevice(Part);
+		return true;
+	};
+	Soy::StringSplitByString(EnumMatch, DeviceNames, SplitChar, false);
+#endif
+}
+
+
+//	gr: wrapper for PopCameraDevice's C interface
+class PopCameraDevice::TDevice
+{
+public:
+	TDevice(const std::string& Name);
+	~TDevice();
+
+	std::function<void(SoyPixelsImpl&)>	mOnNewFrame;
+	int32_t		mHandle = 0;
+};

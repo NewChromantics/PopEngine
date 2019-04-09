@@ -25,6 +25,12 @@
     <Filter Include="UnitTest.js">
       <UniqueIdentifier>{17a1cd90-5cf4-4e1b-8c33-e43bf2f25719}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest.js\CameraTest">
+      <UniqueIdentifier>{b88a0514-46b9-40dd-b4f4-24c4eccd9425}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\PopCameraDevice">
+      <UniqueIdentifier>{a0163f97-f105-4cd0-ae57-188257d7a826}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -213,9 +219,6 @@
     <ClInclude Include="..\src\TApiInput.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TApiMedia.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TApiOpencl.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
@@ -261,6 +264,12 @@
     <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiMedia.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -283,6 +292,33 @@
     </None>
     <None Include="..\UnitTest.js\bootup.js">
       <Filter>UnitTest.js</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\CameraTest.js">
+      <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\Quad.vert.glsl">
+      <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\bootup.js">
+      <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll.meta">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb.meta">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs.meta">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
+      <Filter>Libs\PopCameraDevice</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -418,9 +454,6 @@
     <ClCompile Include="..\src\TApiInput.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TApiMedia.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TApiOpencl.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
@@ -463,5 +496,13 @@
     <ClCompile Include="..\src\PopEngine.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
+      <Filter>Libs\PopCameraDevice</Filter>
+    </Library>
   </ItemGroup>
 </Project>

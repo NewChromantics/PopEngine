@@ -30,6 +30,7 @@
     <ClInclude Include="..\src\Libs\JavascriptCore\JSStringRef.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h" />
+    <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
@@ -194,6 +195,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs" />
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs.meta" />
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll" />
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll.meta" />
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb" />
+    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb.meta" />
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
     <None Include="..\src\PopMain.mm" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
@@ -216,6 +223,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="..\UnitTest.js\bootup.js" />
+    <None Include="..\UnitTest.js\CameraTest\bootup.js" />
+    <None Include="..\UnitTest.js\CameraTest\CameraTest.js" />
+    <None Include="..\UnitTest.js\CameraTest\Quad.vert.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp" />
@@ -290,12 +300,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TApiMedia.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp" />
     <ClCompile Include="..\src\TApiOpencl.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
@@ -364,6 +369,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64811728-CD20-4F2C-899B-E3BF3D4B032E}</ProjectGuid>
