@@ -5,7 +5,7 @@
 class TMediaPacket;
 class TMediaExtractor;
 class TMediaExtractorParams;
-class TDecoderInstance;
+class TDecoderInstance;	//	osx framework wrapper in PopH264
 
 namespace Broadway
 {
@@ -78,7 +78,7 @@ public:
 
 
 
-class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::PopCameraDevice_TypeName,PopCameraDevice::TDevice>
+class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,PopCameraDevice::TDevice>
 {
 public:
 	TPopCameraDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -90,7 +90,7 @@ public:
 
 	virtual void 							Construct(Bind::TCallback& Params) override;
 
-	void									OnNewFrame(size_t StreamIndex);
+	void									OnNewFrame();
 	static void								Free(Bind::TCallback& Params);
 	static void								GetNextFrame(Bind::TCallback& Params);
 	static void								PopFrame(Bind::TCallback& Params);

@@ -223,9 +223,17 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="..\UnitTest.js\bootup.js" />
+    <None Include="..\UnitTest.js\CameraTest\Blit.frag.glsl" />
     <None Include="..\UnitTest.js\CameraTest\bootup.js" />
     <None Include="..\UnitTest.js\CameraTest\CameraTest.js" />
     <None Include="..\UnitTest.js\CameraTest\Quad.vert.glsl" />
+    <None Include="..\UnitTest.js\CameraTest\Uvy844.frag.glsl" />
+    <None Include="..\UnitTest.js\CameraTest\Yuv8888.frag.glsl" />
+    <None Include="..\UnitTest.js\CameraTest\Yuv8_88.frag.glsl" />
+    <None Include="..\UnitTest.js\Common\PopEngine.js" />
+    <None Include="..\UnitTest.js\Common\PopShaderCache.js" />
+    <None Include="..\UnitTest.js\Common\TFrameCounter.js" />
+    <None Include="..\UnitTest.js\Readme.md" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp" />

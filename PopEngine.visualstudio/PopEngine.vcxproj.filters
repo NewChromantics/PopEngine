@@ -31,6 +31,9 @@
     <Filter Include="Libs\PopCameraDevice">
       <UniqueIdentifier>{a0163f97-f105-4cd0-ae57-188257d7a826}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest.js\Common">
+      <UniqueIdentifier>{2a35eea7-57f1-4bca-97b0-e079fa091a94}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -319,6 +322,30 @@
     </None>
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
       <Filter>Libs\PopCameraDevice</Filter>
+    </None>
+    <None Include="..\UnitTest.js\Readme.md">
+      <Filter>UnitTest.js</Filter>
+    </None>
+    <None Include="..\UnitTest.js\Common\PopShaderCache.js">
+      <Filter>UnitTest.js\Common</Filter>
+    </None>
+    <None Include="..\UnitTest.js\Common\TFrameCounter.js">
+      <Filter>UnitTest.js\Common</Filter>
+    </None>
+    <None Include="..\UnitTest.js\Common\PopEngine.js">
+      <Filter>UnitTest.js\Common</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\Yuv8_88.frag.glsl">
+      <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\Yuv8888.frag.glsl">
+      <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\Blit.frag.glsl">
+      <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest.js\CameraTest\Uvy844.frag.glsl">
+      <Filter>UnitTest.js\CameraTest</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

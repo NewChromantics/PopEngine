@@ -24,6 +24,32 @@ namespace PopCameraDevice
 	#include "Libs/PopCameraDevice/PopCameraDevice.h"
 	void	EnumDevices(std::function<void(const std::string&)> EnumDevice);
 	void	LoadDll();
+
+	namespace MetaIndex
+	{
+		enum Type
+		{
+			PlaneCount = 0,
+
+			Plane0_Width,
+			Plane0_Height,
+			Plane0_ComponentCount,
+			Plane0_SoyPixelsFormat,
+			Plane0_PixelDataSize,
+
+			Plane1_Width,
+			Plane1_Height,
+			Plane1_ComponentCount,
+			Plane1_SoyPixelsFormat,
+			Plane1_PixelDataSize,
+
+			Plane2_Width,
+			Plane2_Height,
+			Plane2_ComponentCount,
+			Plane2_SoyPixelsFormat,
+			Plane2_PixelDataSize,
+		};
+	};
 }
 #endif
 
@@ -56,7 +82,12 @@ void ApiMedia::Bind(Bind::TContext& Context)
 
 	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
 
+#if defined(TARGET_OSX)
 	Context.BindObjectType<TMediaSourceWrapper>( Namespace );
+#elif defined(TARGET_WINDOWS)
+	Context.BindObjectType<TPopCameraDeviceWrapper>( Namespace );
+#endif
+
 	Context.BindObjectType<TAvcDecoderWrapper>( Namespace );
 }
 
@@ -526,12 +557,308 @@ void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDe
 
 
 //	gr: wrapper for PopCameraDevice's C interface
-class PopCameraDevice::TDevice
+//	gr: until we add a callback in the dll, this just keeps checking for frames
+//	gr: this thread could wait and wake up once the frame is popped
+class PopCameraDevice::TDevice : SoyWorkerThread
 {
 public:
 	TDevice(const std::string& Name);
 	~TDevice();
 
-	std::function<void(SoyPixelsImpl&)>	mOnNewFrame;
+	bool			HasFrame() { return !mLastPlanes.IsEmpty(); }
+	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time);
+
+protected:
+	virtual bool	Iteration() override;
+
+public:
+	std::function<void()>	mOnNewFrame;
+
+protected:
 	int32_t		mHandle = 0;
+
+	std::recursive_mutex	mLastPlanesLock;
+	SoyTime					mLastPlanesTime;
+	//	gr: turn this into a TPixelBuffer
+	Array<std::shared_ptr<SoyPixelsImpl>> mLastPlanes;
 };
+
+
+PopCameraDevice::TDevice::TDevice(const std::string& Name) :
+	SoyWorkerThread	( std::string("PopCameraDevice::TDevice ") + Name,SoyWorkerWaitMode::Sleep )
+{
+	mHandle = CreateCameraDevice(Name.c_str());
+	if ( mHandle <= 0 )
+	{
+		std::stringstream Error;
+		Error << "Failed to create PopCameraDevice named " << Name << ". Error: " << mHandle;
+		throw Soy::AssertException(Error.str());
+	}
+
+	//	start thread
+	Start();
+}
+
+
+PopCameraDevice::TDevice::~TDevice()
+{
+	Stop();
+	FreeCameraDevice(mHandle);
+}
+
+bool PopCameraDevice::TDevice::Iteration()
+{
+	//	get meta so we know what buffers to allocate
+	const int MetaValuesSize = 100;
+	int MetaValues[MetaValuesSize];
+	GetMeta(mHandle, MetaValues, MetaValuesSize);
+	
+	//	dont have meta yet
+	auto PlaneCount = MetaValues[MetaIndex::PlaneCount];
+	if ( PlaneCount == 0 )
+		return true;
+
+	//	reuse temp buffers
+	const int MaxPlaneCount = 3;
+	SoyPixelsMeta PlaneMeta[MaxPlaneCount];
+	PlaneMeta[0] = SoyPixelsMeta(MetaValues[MetaIndex::Plane0_Width], MetaValues[MetaIndex::Plane0_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane0_SoyPixelsFormat]));
+	PlaneMeta[1] = SoyPixelsMeta(MetaValues[MetaIndex::Plane1_Width], MetaValues[MetaIndex::Plane1_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane1_SoyPixelsFormat]));
+	PlaneMeta[2] = SoyPixelsMeta(MetaValues[MetaIndex::Plane2_Width], MetaValues[MetaIndex::Plane2_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane2_SoyPixelsFormat]));
+
+	Array<std::shared_ptr<SoyPixelsImpl>> PlanePixels;
+	Array<uint8_t*> PlanePixelsBytes;
+	Array<size_t> PlanePixelsByteSize;
+	for ( auto i=0;	i<PlaneCount;	i++ )
+	{
+		auto& Meta = PlaneMeta[i];
+		if ( !Meta.IsValid() )
+			continue;
+
+		auto& Plane = PlanePixels.PushBack();
+		Plane.reset(new SoyPixels(Meta));
+		auto& Array = Plane->GetPixelsArray();
+		PlanePixelsBytes.PushBack(Array.GetArray());
+		PlanePixelsByteSize.PushBack(Array.GetDataSize());
+	}
+
+	while ( PlanePixelsBytes.GetSize() < MaxPlaneCount )
+	{
+		PlanePixelsBytes.PushBack(nullptr);
+		PlanePixelsByteSize.PushBack(0);
+	}
+	
+	//	check for a new frame
+	auto Result = PopFrame(mHandle,
+		PlanePixelsBytes[0], PlanePixelsByteSize[0],
+		PlanePixelsBytes[1], PlanePixelsByteSize[1],
+		PlanePixelsBytes[2], PlanePixelsByteSize[2]
+	);
+
+	//	no new frame
+	if ( Result == 0 )
+		return true;
+
+	//	save plane pixels for pop
+	{
+		std::lock_guard<std::recursive_mutex> Lock(mLastPlanesLock);
+		mLastPlanes.Copy(PlanePixels);
+		mLastPlanesTime = SoyTime(true);
+	}
+
+	//	notify
+	this->mOnNewFrame();
+
+	return true;
+}
+
+bool PopCameraDevice::TDevice::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mLastPlanesLock);
+	if ( mLastPlanes.IsEmpty() )
+		return false;
+
+	Pixels.Copy(mLastPlanes);
+	Time = mLastPlanesTime;
+
+	mLastPlanes.Clear();
+	mLastPlanesTime = SoyTime();
+	return true;
+}
+
+
+
+void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
+{
+	auto DeviceName = Params.GetArgumentString(0);
+	//auto SinglePlaneOutput = !Params.IsArgumentUndefined(1) ? Params.GetArgumentBool(1) : false;
+	//auto MaxBufferSize = !Params.IsArgumentUndefined(2) ? Params.GetArgumentInt(2) : 10;
+
+	auto OnFrameExtracted = [=]()
+	{
+		//std::Debug << "Got stream[" << StreamIndex << "] frame at " << Time << std::endl;
+		this->OnNewFrame();
+	};
+
+	mExtractor.reset(new PopCameraDevice::TDevice(DeviceName));
+	mExtractor->mOnNewFrame = OnFrameExtracted;
+}
+
+
+void TPopCameraDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<GetNextFrame_FunctionName>( GetNextFrame );
+}
+
+
+//	returns a promise that will be invoked when there's frames in the buffer
+void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TPopCameraDeviceWrapper>();
+
+	TFrameRequestParams Request;
+
+	if ( Params.IsArgumentArray(0) )
+		Request.mSeperatePlanes = true;
+	else if ( !Params.IsArgumentUndefined(0) )
+		Request.mSeperatePlanes = Params.GetArgumentBool(0);
+
+	if ( !Params.IsArgumentUndefined(1) )
+		Request.mStreamIndex = Params.GetArgumentInt(1);
+
+	if ( !Params.IsArgumentUndefined(2) )
+		Request.mLatestFrame = Params.GetArgumentBool(2);
+
+	auto Promise = This.AllocFrameRequestPromise( Params.mContext, Request );
+	Params.Return( Promise );
+
+	//	if there are frames waiting, trigger
+	if ( This.mExtractor->HasFrame() )
+	{
+		This.OnNewFrame();
+	}
+}
+
+
+void TPopCameraDeviceWrapper::OnNewFrame()
+{
+	//	trigger all our requests, no more callback
+	auto Runner = [this](Bind::TContext& Context)
+	{
+		if ( !mFrameRequests.HasPromises() )
+			return;
+
+		try
+		{
+			auto Frame = PopFrame( Context, mFrameRequestParams );
+			Bind::TPersistent FramePersistent( Frame );
+
+			auto HandlePromise = [&](Bind::TPromise& Promise)
+			{
+				//	gr: queue these resolves
+				//		they invoke render's which seem to cause some problem, but I'm not sure what
+				auto Resolve = [=](Bind::TContext& Context)
+				{
+					auto FrameObject = FramePersistent.GetObject();
+					Promise.Resolve( FrameObject );
+				};
+				Context.Queue(Resolve);
+			};
+			mFrameRequests.Flush( HandlePromise );
+		}
+		catch(std::exception& e)
+		{
+			std::string Error(e.what());
+			auto DoReject = [=](Bind::TContext& Context)
+			{
+				mFrameRequests.Reject( Error );
+			};
+			Context.Queue(DoReject);
+		}
+	};
+	mContext.Queue( Runner );
+}
+
+
+Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TContext& Context,const TFrameRequestParams& Params)
+{
+	Array<std::shared_ptr<SoyPixelsImpl>> Planes;
+	SoyTime FrameTime;
+	if ( !mExtractor->PopLastFrame( GetArrayBridge(Planes), FrameTime ) )
+		throw Soy::AssertException("No frame packet buffered");
+
+	//	todo: add this for transform
+	auto SetTime = [&](Bind::TObject& Object)
+	{
+		if ( FrameTime.IsValid() )
+		{
+			Object.SetInt( FrameTimestampKey, FrameTime.mTime );
+		}
+	};
+	
+	
+	if ( Params.mSeperatePlanes )
+	{
+		//BufferArray<SoyPixelsImpl*,5> Planes;
+		//	ref counted by js, but need to cleanup if we throw...
+		BufferArray<TImageWrapper*,5> Images;
+		float3x3 Transform;
+		//PixelBuffer->Lock(GetArrayBridge(Planes), Transform);
+		try
+		{
+			//	gr: worried this might be stalling OS/USB bus
+			Soy::TScopeTimerPrint Timer("PixelBuffer->Lock/Unlock duration",2);
+			//	make an image for every plane
+			for ( auto p=0;	p<Planes.GetSize();	p++ )
+			{
+				auto& Plane = Planes[p];
+				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto& Image = ImageObject.This<TImageWrapper>();
+				Image.SetPixels( *Plane );
+				Images.PushBack( &Image );
+			}
+			//PixelBuffer->Unlock();
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Possible memleak with plane images x" << Images.GetSize() << "..." << std::endl;
+			//PixelBuffer->Unlock();
+			throw;
+		}
+
+		//	gr: old setup filled this array. need to really put that back?
+		//		should we just have a split planes() func for the image...
+		auto PlaneArray = Context.CreateArray(0);
+
+		//auto PlaneArray = Params.GetArgumentArray(0);
+		for ( auto i=0;	i<Images.GetSize();	i++ )
+		{
+			auto& Image = *Images[i];
+			auto ImageHandle = Image.GetHandle();
+			PlaneArray.Set( i, ImageHandle );
+		}
+
+		//	create a dumb object with meta to return
+		auto FrameHandle = Context.CreateObjectInstance();
+		FrameHandle.SetArray("Planes", PlaneArray );
+		SetTime( FrameHandle );
+		return FrameHandle;
+	}
+
+
+	auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+	auto& Image = ImageObject.This<TImageWrapper>();
+	Image.mName = "MediaSource Frame";
+	Image.SetPixels( Planes[0] );
+
+	auto ImageHandle = Image.GetHandle();
+	SetTime( ImageObject );
+	return ImageObject;
+}
+
+
+Bind::TPromise TPopCameraDeviceWrapper::AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params)
+{
+	mFrameRequestParams = Params;
+	return mFrameRequests.AddPromise( Context );
+}
+
