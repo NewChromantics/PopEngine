@@ -111,7 +111,7 @@ public:
 class Platform::TOpenglContext : public Opengl::TContext, public  Opengl::TRenderTarget
 {
 public:
-	TOpenglContext(TControl& Parent);
+	TOpenglContext(TControl& Parent,TOpenglParams& Params);
 	~TOpenglContext();
 
 	//	context
@@ -399,7 +399,7 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 
 
 
-Platform::TOpenglContext::TOpenglContext(TControl& Parent) :
+Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params) :
 	Opengl::TRenderTarget	( Parent.mName ),
 	mParent					( Parent )
 {
@@ -468,19 +468,7 @@ Platform::TOpenglContext::TOpenglContext(TControl& Parent) :
 
 	//	init opengl context
 	this->Init();
-	/*
-	//	set current context
-	//	gr: unneccesary? done in BeginRender when we *need* it...
-	if ( !wglMakeCurrent(m_HDC, m_HGLRC) )
-	{
-	TLDebug_Break("Failed wglMakeCurrent");
-	return FALSE;
-	}
 
-	//	mark opengl as initialised once we've created a GL wglCreateContext
-	//	context has been initialised (successfully?) so init opengl
-	TLRender::Opengl::Init();
-	*/
 	auto OnPaint = [this](TControl& Control)
 	{
 		this->OnPaint();
@@ -524,9 +512,19 @@ void Platform::TOpenglContext::Unlock()
 void Platform::TOpenglContext::Repaint()
 {
 	//	tell parent to repaint
-	//	update window triggers a WM_PAINT
+	//	update window triggers a WM_PAINT, if we've invalidated rect
+	//	redrawwindow does it for us
+
+	//	https://stackoverflow.com/a/2328013
+	/*
 	if ( !UpdateWindow(mParent.mHwnd) )
 		Platform::IsOkay("UpdateWindow failed");
+	*/
+	const RECT * UpdateRect = nullptr;
+	HRGN UpdateRegion = nullptr;
+	auto Flags = RDW_INTERNALPAINT;//	|RDW_INVALIDATE
+	if ( !RedrawWindow(mParent.mHwnd, UpdateRect, UpdateRegion, Flags ) )
+		Platform::IsOkay("RedrawWindow failed");
 }
 
 void Platform::TOpenglContext::Bind()
@@ -646,17 +644,22 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	mParams				( Params )
 {
 	mWindow.reset(new Platform::TWindow(Name,Rect));
-	mWindowContext.reset(new Platform::TOpenglContext(*mWindow));
+	mWindowContext.reset(new Platform::TOpenglContext(*mWindow,Params));
 
 	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 	{
 		mOnRender(RenderTarget, LockContext );
 	};
 	mWindowContext->mOnRender = OnRender;
+
+	//	start thread so we auto redraw & run jobs
+	Start();
 }
 
 TOpenglWindow::~TOpenglWindow()
 {
+	//	stop thread
+	Stop();
 }
 	
 bool TOpenglWindow::IsValid()
