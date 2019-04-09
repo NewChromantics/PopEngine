@@ -136,7 +136,9 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 		else
 			mWindow->Clear( RenderTarget );
 
+		//	our ol' hack
 		mActiveRenderTarget = &RenderTarget;
+		auto RenderTargetObject = this->GetHandle();
 		
 		//	gr: allow this to fail silently if the user has assigned nothing
 		//	gr: kinda want a specific "is undefined" exception so we don't miss important things
@@ -145,7 +147,9 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 		{
 			auto This = this->GetHandle();
 			auto ThisOnRender = This.GetFunction("OnRender");
-			ThisOnRender.Call( This );
+			JsCore::TCallback Callback(Context);
+			Callback.SetArgumentObject(0, RenderTargetObject);
+			ThisOnRender.Call( Callback );
 		}
 		catch(std::exception& e)
 		{
@@ -157,7 +161,6 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 	
 	auto& Context = GetOpenglJsCoreContext();
 	Context.Execute(Runner);
-	//mContext.Execute( Runner );
 }
 
 void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
