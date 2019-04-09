@@ -10,3 +10,6 @@
 [submodule "src/Ezsift"]
 	path = src/Ezsift
 	url = https://github.com/SoylentGraham/ezSIFT.git
+[submodule "UnitTest.js"]
+	path = UnitTest.js
+	url = https://github.com/NewChromantics/PopEngineUnitTests.git
