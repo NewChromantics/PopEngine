@@ -34,6 +34,9 @@
     <Filter Include="UnitTest.js\Common">
       <UniqueIdentifier>{2a35eea7-57f1-4bca-97b0-e079fa091a94}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest.js\HttpServer">
+      <UniqueIdentifier>{8d226aa7-ead4-422b-9f14-ac3792f4dfc3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -346,6 +349,9 @@
     </None>
     <None Include="..\UnitTest.js\CameraTest\Uvy844.frag.glsl">
       <Filter>UnitTest.js\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest.js\HttpServer\bootup.js">
+      <Filter>UnitTest.js\HttpServer</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
