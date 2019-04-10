@@ -376,6 +376,7 @@
 		BFB647362225593600820612 /* SoyHid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHid.cpp; path = src/SoyHid.cpp; sourceTree = "<group>"; };
 		BFB647372225593600820612 /* SoyHid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHid.h; path = src/SoyHid.h; sourceTree = "<group>"; };
 		BFCF8B562107552700EE7307 /* Data_Posenet */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Posenet; sourceTree = "<group>"; };
+		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
 		BFD4455920E66D31007E2497 /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libv8.dylib"; sourceTree = "<absolute>"; };
 		BFD4455B20E66D34007E2497 /* libv8_libplatform.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8_libplatform.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libv8_libplatform.dylib"; sourceTree = "<absolute>"; };
 		BFD4455D20E66D37007E2497 /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8_libbase.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libv8_libbase.dylib"; sourceTree = "<absolute>"; };
@@ -774,6 +775,7 @@
 				FB8A06221A2E5A280099596C /* soylib */,
 				FB8A05951A2E54730099596C /* src */,
 				FB8A05941A2E54730099596C /* Products */,
+				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
 			);
 			sourceTree = "<group>";
