@@ -215,7 +215,7 @@ public:
 	virtual std::string		GetArgumentString(size_t Index) bind_override;
 	std::string				GetArgumentFilename(size_t Index);
 	virtual bool			GetArgumentBool(size_t Index) bind_override;
-	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( GetContextRef(), mArguments[Index] );	}
+	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( GetContextRef(), GetArgumentValue(Index) );	}
 	virtual float			GetArgumentFloat(size_t Index) bind_override;
 	virtual JsCore::TFunction	GetArgumentFunction(size_t Index) bind_override;
 	virtual JsCore::TArray	GetArgumentArray(size_t Index) bind_override;
