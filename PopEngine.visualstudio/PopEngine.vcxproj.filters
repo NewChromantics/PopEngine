@@ -37,6 +37,9 @@
     <Filter Include="UnitTest.js\HttpServer">
       <UniqueIdentifier>{8d226aa7-ead4-422b-9f14-ac3792f4dfc3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\JavascriptCore\win64">
+      <UniqueIdentifier>{141683a7-9ceb-4290-8050-351a84c1d4c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -352,6 +355,42 @@
     </None>
     <None Include="..\UnitTest.js\HttpServer\bootup.js">
       <Filter>UnitTest.js\HttpServer</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\icuuc63.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.pdb">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.pdb">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\WTF.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\WTF.pdb">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\CFLite.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\CFLite.pdb">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\icudt63.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\icuin63.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\JavascriptCore\win64\icuin63.pdb">
+      <Filter>Libs\JavascriptCore\win64</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

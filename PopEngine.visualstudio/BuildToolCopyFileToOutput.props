@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <CustomBuild>
+      <Command>SET InputPath=%(FullPath)
+SET OutputPath=$(OutDir)
+copy /y %InputPath% %OutputPath% &gt;NUL
+</Command>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <CustomBuild>
+      <Outputs>$(OutDir)%(Filename)%(Extension)</Outputs>
+      <Message>Copying %(Filename)%(Extension) to output</Message>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>
