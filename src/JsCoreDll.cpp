@@ -171,12 +171,13 @@ DEFINE_JS_BRIDGE(JSPropertyNameAccumulatorAddName);
 #define LOAD_FUNCTION(FUNCTIONNAME)		LoadFunction<FUNCTIONNAME ## _FuncName,decltype(FUNCTIONNAME)>(Library)
 
 
+
 void JsCore::LoadDll()
 {
 	if ( JavascriptCoreDll )
 		return;
 
-	const char* Filename = "D:\\PopEngine\\src\\JavascriptCore\\win64\\JavascriptCore.dll";
+	const char* Filename = "JavascriptCore.dll";
 	JavascriptCoreDll.reset(new Soy::TRuntimeLibrary(Filename));
 	auto& Library = *JavascriptCoreDll;
 

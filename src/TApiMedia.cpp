@@ -532,7 +532,7 @@ void PopCameraDevice::LoadDll()
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
 	if ( Dll )
 		return;
-	const char* Filename = "D:\\PopEngine\\src\\Libs\\PopCameraDevice\\PopCameraDevice.dll";
+	const char* Filename = "PopCameraDevice.dll";
 	Dll.reset(new Soy::TRuntimeLibrary(Filename));
 #endif
 }
