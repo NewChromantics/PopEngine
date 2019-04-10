@@ -17,7 +17,7 @@ class SoySocket;
 namespace ApiHttp
 {
 	void	Bind(Bind::TContext& Context);
-	DECLARE_BIND_TYPENAME(Http);
+	DECLARE_BIND_TYPENAME(Server);
 }
 
 
@@ -70,7 +70,7 @@ protected:
 
 
 
-class THttpServerWrapper: public Bind::TObjectWrapper<ApiHttp::Http_TypeName,THttpServer>, public TSocketWrapper
+class THttpServerWrapper: public Bind::TObjectWrapper<ApiHttp::Server_TypeName,THttpServer>, public TSocketWrapper
 {
 public:
 	THttpServerWrapper(Bind::TContext& Context,Bind::TObject& This) :
