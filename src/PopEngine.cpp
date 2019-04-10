@@ -25,7 +25,7 @@ TPopTrack& PopTrack::GetApp(std::string DataPath)
 		DataPath += "/";
 		
 		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
-		Private::gOpenglApp.reset( new TPopTrack( DataPath, "Bootup.js") );
+		Private::gOpenglApp.reset( new TPopTrack( DataPath, "bootup.js") );
 	}
 	return *Private::gOpenglApp;
 }
