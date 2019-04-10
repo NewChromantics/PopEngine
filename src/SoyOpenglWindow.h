@@ -45,7 +45,8 @@ public:
 	virtual std::chrono::milliseconds	GetSleepDuration() override;
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
 	virtual void						SetFullscreen(bool Fullscreen) override;
-	
+	virtual bool						IsFullscreen() override;
+
 public:
 	std::function<void(Opengl::TRenderTarget&,std::function<void()> LockContext)>	mOnRender;
 	std::shared_ptr<Platform::TOpenglView>		mView;

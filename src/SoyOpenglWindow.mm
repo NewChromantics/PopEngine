@@ -96,6 +96,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.h, Rect.w );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
 
+		//	gr: this is unreliable
+		/*
 		if ( Params.mFullscreen )
 		{
 			Style &= ~NSWindowStyleMaskResizable;
@@ -109,6 +111,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 			//	hide dock & menu bar
 			[NSMenu setMenuBarVisible:NO];
 		}
+		*/
+		this->mWindow->SetFullscreen( Params.mFullscreen );
 		
 
 		//	create a view
@@ -277,6 +281,14 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	mWindow->SetFullscreen(Fullscreen);
 }
 
+bool TOpenglWindow::IsFullscreen()
+{
+	if ( !mWindow )
+		return false;
+	
+	return mWindow->IsFullscreen();
+}
+
 bool Platform::TWindow::IsFullscreen()
 {
 	if ( !mWindow )
@@ -295,7 +307,7 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 	
 	//	if not done on main thread, this blocks,
 	//	then opengl waits for js context lock to free up and we get a deadlock
-	auto ToggleFullScreen = [this,Fullscreen]()
+	auto DoSetFullScreen = [this,Fullscreen]()
 	{
 		//	check current state and change if we have to
 		//	toggle seems to be the only approach
@@ -305,5 +317,6 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 		[mWindow toggleFullScreen:nil];
 	};
-	Soy::Platform::gMainThread->PushJob( ToggleFullScreen );
+	Soy::Platform::gMainThread->PushJob( DoSetFullScreen );
 }
+

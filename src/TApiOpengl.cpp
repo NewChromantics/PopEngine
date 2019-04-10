@@ -22,6 +22,7 @@ DEFINE_BIND_FUNCTIONNAME(RenderChain);
 DEFINE_BIND_FUNCTIONNAME(RenderToRenderTarget);
 DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
+DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
 
 
 
@@ -434,8 +435,15 @@ void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 	auto Fullscreen = true;
 	if ( !Params.IsArgumentUndefined(0) )
 		Fullscreen = Params.GetArgumentBool(0);
-
+	
 	This.mWindow->SetFullscreen(Fullscreen);
+}
+
+void TWindowWrapper::IsFullscreen(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TWindowWrapper>();
+	auto Fullscreen = This.mWindow->IsFullscreen();
+	Params.Return( Fullscreen );
 }
 
 
@@ -730,6 +738,7 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<RenderToRenderTarget_FunctionName>( RenderToRenderTarget );
 	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
 	Template.BindFunction<SetFullscreen_FunctionName>( SetFullscreen );
+	Template.BindFunction<IsFullscreen_FunctionName>( IsFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
