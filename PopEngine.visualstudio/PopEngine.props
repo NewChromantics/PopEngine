@@ -4,6 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\Libs;$(IncludePath)</IncludePath>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -29,6 +30,7 @@
     <Link>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <DelayLoadDLLs>PopCameraDevice.dll</DelayLoadDLLs>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

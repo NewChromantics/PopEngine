@@ -502,9 +502,7 @@
     <Link />
     <Link />
     <PostBuildEvent />
-    <Link>
-      <Profile>true</Profile>
-    </Link>
+    <Link />
     <PostBuildEvent />
     <CustomBuildStep />
     <CustomBuildStep />
@@ -519,9 +517,7 @@
     <Link />
     <Link />
     <PostBuildEvent />
-    <Link>
-      <Profile>true</Profile>
-    </Link>
+    <Link />
     <PostBuildEvent />
     <CustomBuildStep />
     <CustomBuildStep />
@@ -537,9 +533,7 @@
     <Link />
     <Link />
     <PostBuildEvent />
-    <Link>
-      <Profile>true</Profile>
-    </Link>
+    <Link />
     <PostBuildEvent />
     <CustomBuildStep />
     <CustomBuildStep />
@@ -555,9 +549,7 @@
     <Link />
     <Link />
     <PostBuildEvent />
-    <Link>
-      <Profile>true</Profile>
-    </Link>
+    <Link />
     <PostBuildEvent />
     <CustomBuildStep />
     <CustomBuildStep />
