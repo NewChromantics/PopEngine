@@ -5,6 +5,8 @@
   <PropertyGroup>
     <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\Libs;$(IncludePath)</IncludePath>
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\Bin\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
