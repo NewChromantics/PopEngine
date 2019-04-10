@@ -15,11 +15,11 @@ class TOpenglParams;
 #if defined(__OBJC__)
 @interface MacOpenglView : NSOpenGLView
 {
-	TOpenglView*	mParent;
-	NSPoint			mLastPos;
+	Platform::TOpenglView*	mParent;
+	NSPoint					mLastPos;
 }
 
-- (id)initFrameWithParent:(TOpenglView*)Parent viewRect:(NSRect)viewRect pixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
+- (id)initFrameWithParent:(Platform::TOpenglView*)Parent viewRect:(NSRect)viewRect pixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
 
 
 //	overloaded
@@ -120,7 +120,7 @@ public:
 
 
 #if defined(__OBJC__)
-class TOpenglView
+class Platform::TOpenglView
 {
 public:
 	TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params);

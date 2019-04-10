@@ -79,7 +79,7 @@ vec2f ViewPointToVectorNormalised(NSView* View,const NSPoint& Point)
 }
 
 
-TOpenglView::TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params) :
+Platform::TOpenglView::TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params) :
 	mView			( nullptr ),
 	mRenderTarget	( "osx gl view" ),
 	mContext		( new GlViewContext(*this) )
@@ -158,12 +158,12 @@ TOpenglView::TOpenglView(vec2f Position,vec2f Size,const TOpenglParams& Params) 
 
 }
 
-TOpenglView::~TOpenglView()
+Platform::TOpenglView::~TOpenglView()
 {
 	[mView release];
 }
 
-bool TOpenglView::IsDoubleBuffered() const
+bool Platform::TOpenglView::IsDoubleBuffered() const
 {
 	if ( !mView )
 		return false;
@@ -173,7 +173,7 @@ bool TOpenglView::IsDoubleBuffered() const
 	return IsDoubleBuffered!=0;
 }
 
-Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
+Soy::Rectx<int32_t> Platform::TOpenglView::GetScreenRect()
 {
 	auto Bounds = [mView bounds];
 	auto Rect = NSRectToRect( Bounds );
@@ -181,7 +181,7 @@ Soy::Rectx<int32_t> TOpenglView::GetScreenRect()
 }
 
 
-void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Parent,std::function<void(const TMousePos&,SoyMouseButton::Type)>& EventOut,SoyMouseButton::Type Button,NSPoint& LastPos,MacOpenglView* Self)
+void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,Platform::TOpenglView* Parent,std::function<void(const TMousePos&,SoyMouseButton::Type)>& EventOut,SoyMouseButton::Type Button,NSPoint& LastPos,MacOpenglView* Self)
 {
 	if ( !Soy::Assert(Parent,"Parent expected") )
 		return;
@@ -355,7 +355,7 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 }
 
 
-- (id)initFrameWithParent:(TOpenglView*)Parent viewRect:(NSRect)viewRect pixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
+- (id)initFrameWithParent:(Platform::TOpenglView*)Parent viewRect:(NSRect)viewRect pixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
 {
 	self = [super initWithFrame:viewRect pixelFormat: pixelFormat];
 	if (self)
@@ -424,7 +424,7 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 	{
 		RenderTarget.Unbind();
 		Opengl::IsOkay("Post drawRect flush",false);
-		Context->Unlock();
+		Context.Unlock();
 	};
 	
 	if ( !mParent )
@@ -453,7 +453,7 @@ void TriggerMouseEvent(NSEvent* EventIn,const char* EventName,TOpenglView* Paren
 	
 	try
 	{
-		if ( Context->IsDoubleBuffered() )
+		if ( Context.IsDoubleBuffered() )
 		{
 			//	let OSX flush and flip (probably sync'd better than we ever could)
 			//	only applies if double buffered (NSOpenGLPFADoubleBuffer)

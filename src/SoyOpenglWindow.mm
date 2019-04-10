@@ -19,8 +19,8 @@ public:
 	
 	bool			IsValid()	{	return mWindow;	}
 	
-	//	gr: this is for mac, really this should be SetFullscreen()
-	void			ToggleFullscreen();
+	bool			IsFullscreen();
+	void			SetFullscreen(bool Fullscreen);
 
 public:
 	NSWindow*			mWindow;
@@ -112,7 +112,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		
 
 		//	create a view
-		mView.reset( new TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
+		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
 		Soy::Assert( mView->IsValid(), "view isn't valid?" );
 
 		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
@@ -269,23 +269,40 @@ Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 	return mView->mRenderTarget.GetSize();
 }
 
-void TOpenglWindow::ToggleFullscreen()
+void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
 		return;
 	
-	mWindow->ToggleFullscreen();
+	mWindow->SetFullscreen(Fullscreen);
 }
 
-void Platform::TWindow::ToggleFullscreen()
+bool Platform::TWindow::IsFullscreen()
+{
+	if ( !mWindow )
+		throw Soy::AssertException("IsFullscreen: no window");
+
+	auto Style = [mWindow styleMask];
+	Style &= NSWindowStyleMaskFullScreen;
+	return Style == NSWindowStyleMaskFullScreen;
+}
+
+
+void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
 		return;
 	
 	//	if not done on main thread, this blocks,
 	//	then opengl waits for js context lock to free up and we get a deadlock
-	auto ToggleFullScreen = [this]()
+	auto ToggleFullScreen = [this,Fullscreen]()
 	{
+		//	check current state and change if we have to
+		//	toggle seems to be the only approach
+		auto OldFullscreen = this->IsFullscreen();
+		if ( Fullscreen == OldFullscreen )
+			return;
+
 		[mWindow toggleFullScreen:nil];
 	};
 	Soy::Platform::gMainThread->PushJob( ToggleFullScreen );
