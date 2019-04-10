@@ -77,18 +77,21 @@ void TSocketWrapper::GetAddress(Bind::TCallback& Params)
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
 
-	//	we return all the addresses with , seperator
-	//	high level can pick the best one
-	std::stringstream Addresses;
+	//	we return all the addresses
+	Array<Bind::TObject> Addresses;
 	auto AppendAddress = [&](std::string& InterfaceName,SoySockAddr& InterfaceAddress)
 	{
-		Addresses << InterfaceAddress << ',';
+		std::stringstream AddressStr;
+		AddressStr << InterfaceAddress;
+
+		auto Address = Params.mContext.CreateObjectInstance();
+		Address.SetString("Address", AddressStr.str());
+		Address.SetString("Name", InterfaceName);
+		Addresses.PushBack(Address);
 	};
 	ThisSocket->GetSocketAddresses( AppendAddress );
-	auto AddressesStr = Addresses.str();
-	Soy::StringTrimRight( AddressesStr, ',' );
 	
-	Params.Return( AddressesStr );
+	Params.Return( GetArrayBridge(Addresses) );
 }
 
 
