@@ -63,10 +63,17 @@ namespace Platform
 #endif
 }
 
+#include "SoyLib\src\SoyFilesystem.h"
 #if defined(TARGET_WINDOWS)
 //int _tmain(int argc, _TCHAR* argv[])
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
 {
+	{
+		char buffer[MAX_PATH];
+		GetModuleFileName( NULL, buffer, MAX_PATH );
+		Platform::SetDllPath(buffer);
+	}
+
 	Platform::Private::InstanceHandle = hInstance;
 	const char* argv[2] = { "",lpCmdLine };
 	

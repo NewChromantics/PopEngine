@@ -142,11 +142,10 @@ TV8Container::TV8Container(const std::string& RootDirectory) :
 	V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
 	
 #elif V8_VERSION==5
-	auto& ExePath = ::Platform::ExePath;
 	V8::InitializeICU(nullptr);
 	//v8::V8::InitializeExternalStartupData(argv[0]);
 	//V8::InitializeExternalStartupData(nullptr);
-	V8::InitializeExternalStartupData( ExePath.c_str() );
+	V8::InitializeExternalStartupData( Platform::GetExePath().c_str() );
 #endif
 	
 	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
