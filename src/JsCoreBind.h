@@ -236,6 +236,7 @@ public:
 	virtual bool			IsArgumentString(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeString;	}
 	virtual bool			IsArgumentBool(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeBoolean;	}
 	virtual bool			IsArgumentUndefined(size_t Index)bind_override	{	return GetArgumentType(Index) == kJSTypeUndefined;	}
+	virtual bool			IsArgumentNull(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeNull;	}
 	virtual bool			IsArgumentArray(size_t Index)bind_override		{	return IsArray( GetContextRef(), GetArgumentValue(Index) );	}
 	virtual bool			IsArgumentFunction(size_t Index)bind_override	{	return IsFunction( GetContextRef(), GetArgumentValue(Index) );	}
 	virtual bool			IsArgumentObject(size_t Index)bind_override		{	return GetArgumentType(Index) == kJSTypeObject;	}

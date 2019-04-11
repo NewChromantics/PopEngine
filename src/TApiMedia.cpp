@@ -2,7 +2,7 @@
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 #include "SoyFilesystem.h"
-#include "SoyLib\src\SoyMedia.h"
+#include "SoyLib/src/SoyMedia.h"
 
 //	video capture
 #if defined(TARGET_OSX)
@@ -19,9 +19,12 @@
 
 #if defined(TARGET_WINDOWS)
 #include "Soylib/src/SoyRuntimeLibrary.h"
+#endif
 namespace PopCameraDevice
 {
-	#include "Libs/PopCameraDevice/PopCameraDevice.h"
+	//	load into this namespace
+#include "Libs/PopCameraDevice/PopCameraDevice.h"
+	
 	void	EnumDevices(std::function<void(const std::string&)> EnumDevice);
 	void	LoadDll();
 
@@ -51,7 +54,6 @@ namespace PopCameraDevice
 		};
 	};
 }
-#endif
 
 
 
@@ -448,9 +450,8 @@ void TMediaSourceWrapper::Free(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
-	//	need to have TDecoderInstance for C lib
 #if defined(TARGET_OSX)
-	mDecoder.reset( new TDecoderInstance );
+	mDecoder.reset( new PopH264::TDecoderInstance );
 #else
 	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
 #endif
@@ -468,9 +469,15 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	Array<uint8_t> PacketBytes;
 	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
 	
+	bool ExtractImage = true;
 	bool ExtractPlanes = false;
 	if ( !Params.IsArgumentUndefined(1) )
-		ExtractPlanes = Params.GetArgumentBool(1);
+	{
+		if ( Params.IsArgumentNull(1) )
+			ExtractImage = false;
+		else
+			ExtractPlanes = Params.GetArgumentBool(1);
+	}
 	
 	auto& Context = Params.mContext;
 	
@@ -505,17 +512,30 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	while ( This.mDecoder->PopFrame(Frame) )
 	{
 		//std::Debug << "Popping frame" << std::endl;
-		auto FrameImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
-		auto& FrameImage = FrameImageObject.This<TImageWrapper>();
-		FrameImage.SetPixels( Frame.mPixels );
-		FrameImageObject.SetInt("Time", Frame.mFrameNumber);
+		auto ObjectTypename = ExtractImage ? TImageWrapper::GetTypeName() : std::string();
+		auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
 
+		//	because YUV_8_8_8 cannot be expressed into a texture properly,
+		//	force plane extraction for this format
 		Array<Bind::TObject> FramePlanes;
-		if ( ExtractPlanes )
+		if ( Frame.mPixels->GetFormat() == SoyPixelsFormat::Yuv_8_8_8_Full )
+			ExtractPlanes = true;
+		
+		if ( ExtractImage && !ExtractPlanes )
+		{
+			auto& FrameImage = FrameImageObject.This<TImageWrapper>();
+			FrameImage.SetPixels( Frame.mPixels );
+		}
+
+		if ( ExtractImage && ExtractPlanes )
 		{
 			GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
 			FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
 		}
+		
+		//	set meta
+		FrameImageObject.SetInt("Time", Frame.mFrameNumber);
+		FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
 		Frames.PushBack( FrameImageObject );
 	}
 	Params.Return( GetArrayBridge(Frames) );
@@ -527,8 +547,8 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 
 void PopCameraDevice::LoadDll()
 {
-	//	current bodge
 #if defined(TARGET_WINDOWS)
+	//	current bodge
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
 	if ( Dll )
 		return;
@@ -539,10 +559,11 @@ void PopCameraDevice::LoadDll()
 
 void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDevice)
 {
-#if defined(TARGET_WINDOWS)
 	LoadDll();
-	char DeviceNamesBuffer[1000];
+	char DeviceNamesBuffer[1000] = {0};
+#if defined(TARGET_WINDOWS)
 	EnumCameraDevices(DeviceNamesBuffer, sizeofarray(DeviceNamesBuffer));
+#endif
 	//	now split
 	auto SplitChar = DeviceNamesBuffer[0];
 	std::string DeviceNames(&DeviceNamesBuffer[1]);
@@ -552,7 +573,6 @@ void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDe
 		return true;
 	};
 	Soy::StringSplitByString(EnumMatch, DeviceNames, SplitChar, false);
-#endif
 }
 
 
@@ -587,6 +607,9 @@ protected:
 PopCameraDevice::TDevice::TDevice(const std::string& Name) :
 	SoyWorkerThread	( std::string("PopCameraDevice::TDevice ") + Name,SoyWorkerWaitMode::Sleep )
 {
+#if !defined(TARGET_WINDOWS)
+	throw Soy::AssertException("PopCameraDevice not currently supported");
+#endif
 	mHandle = CreateCameraDevice(Name.c_str());
 	if ( mHandle <= 0 )
 	{
@@ -603,7 +626,10 @@ PopCameraDevice::TDevice::TDevice(const std::string& Name) :
 PopCameraDevice::TDevice::~TDevice()
 {
 	Stop();
+#if !defined(TARGET_WINDOWS)
+#else
 	FreeCameraDevice(mHandle);
+#endif
 }
 
 bool PopCameraDevice::TDevice::Iteration()

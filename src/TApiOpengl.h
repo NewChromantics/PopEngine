@@ -82,6 +82,7 @@ public:
 	//	window specific
 	static void			GetScreenRect(Bind::TCallback& Arguments);
 	static void			SetFullscreen(Bind::TCallback& Arguments);
+	static void			IsFullscreen(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
