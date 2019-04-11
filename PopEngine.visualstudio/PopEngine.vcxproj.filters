@@ -22,19 +22,19 @@
     <Filter Include="Source\Todo">
       <UniqueIdentifier>{c20b2e8c-e666-4885-9846-0656eb5ada9a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UnitTest.js">
+    <Filter Include="UnitTest">
       <UniqueIdentifier>{17a1cd90-5cf4-4e1b-8c33-e43bf2f25719}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UnitTest.js\CameraTest">
+    <Filter Include="UnitTest\CameraTest">
       <UniqueIdentifier>{b88a0514-46b9-40dd-b4f4-24c4eccd9425}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libs\PopCameraDevice">
       <UniqueIdentifier>{a0163f97-f105-4cd0-ae57-188257d7a826}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UnitTest.js\Common">
+    <Filter Include="UnitTest\Common">
       <UniqueIdentifier>{2a35eea7-57f1-4bca-97b0-e079fa091a94}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UnitTest.js\HttpServer">
+    <Filter Include="UnitTest\HttpServer">
       <UniqueIdentifier>{8d226aa7-ead4-422b-9f14-ac3792f4dfc3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libs\JavascriptCore\win64">
@@ -299,17 +299,17 @@
     <None Include="..\src\TApiCoreMl.mm">
       <Filter>Source\Todo</Filter>
     </None>
-    <None Include="..\UnitTest.js\bootup.js">
-      <Filter>UnitTest.js</Filter>
+    <None Include="..\UnitTest\bootup.js">
+      <Filter>UnitTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\CameraTest.js">
-      <Filter>UnitTest.js\CameraTest</Filter>
+    <None Include="..\UnitTest\CameraTest\CameraTest.js">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\Quad.vert.glsl">
-      <Filter>UnitTest.js\CameraTest</Filter>
+    <None Include="..\UnitTest\CameraTest\Quad.vert.glsl">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\bootup.js">
-      <Filter>UnitTest.js\CameraTest</Filter>
+    <None Include="..\UnitTest\CameraTest\bootup.js">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll.meta">
       <Filter>Libs\PopCameraDevice</Filter>
@@ -326,67 +326,43 @@
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs.meta">
       <Filter>Libs\PopCameraDevice</Filter>
     </None>
-    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
-      <Filter>Libs\PopCameraDevice</Filter>
+    <None Include="..\UnitTest\Readme.md">
+      <Filter>UnitTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\Readme.md">
-      <Filter>UnitTest.js</Filter>
+    <None Include="..\UnitTest\Common\PopShaderCache.js">
+      <Filter>UnitTest\Common</Filter>
     </None>
-    <None Include="..\UnitTest.js\Common\PopShaderCache.js">
-      <Filter>UnitTest.js\Common</Filter>
+    <None Include="..\UnitTest\Common\TFrameCounter.js">
+      <Filter>UnitTest\Common</Filter>
     </None>
-    <None Include="..\UnitTest.js\Common\TFrameCounter.js">
-      <Filter>UnitTest.js\Common</Filter>
+    <None Include="..\UnitTest\Common\PopEngine.js">
+      <Filter>UnitTest\Common</Filter>
     </None>
-    <None Include="..\UnitTest.js\Common\PopEngine.js">
-      <Filter>UnitTest.js\Common</Filter>
+    <None Include="..\UnitTest\CameraTest\Yuv8_88.frag.glsl">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\Yuv8_88.frag.glsl">
-      <Filter>UnitTest.js\CameraTest</Filter>
+    <None Include="..\UnitTest\CameraTest\Yuv8888.frag.glsl">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\Yuv8888.frag.glsl">
-      <Filter>UnitTest.js\CameraTest</Filter>
+    <None Include="..\UnitTest\CameraTest\Blit.frag.glsl">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\Blit.frag.glsl">
-      <Filter>UnitTest.js\CameraTest</Filter>
+    <None Include="..\UnitTest\CameraTest\Uvy844.frag.glsl">
+      <Filter>UnitTest\CameraTest</Filter>
     </None>
-    <None Include="..\UnitTest.js\CameraTest\Uvy844.frag.glsl">
-      <Filter>UnitTest.js\CameraTest</Filter>
-    </None>
-    <None Include="..\UnitTest.js\HttpServer\bootup.js">
-      <Filter>UnitTest.js\HttpServer</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\icuuc63.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
+    <None Include="..\UnitTest\HttpServer\bootup.js">
+      <Filter>UnitTest\HttpServer</Filter>
     </None>
     <None Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.dll">
       <Filter>Libs\JavascriptCore\win64</Filter>
     </None>
     <None Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.pdb">
       <Filter>Libs\JavascriptCore\win64</Filter>
     </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\WTF.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
     <None Include="..\src\Libs\JavascriptCore\win64\WTF.pdb">
       <Filter>Libs\JavascriptCore\win64</Filter>
     </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\CFLite.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
     <None Include="..\src\Libs\JavascriptCore\win64\CFLite.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\icudt63.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\icuin63.dll">
       <Filter>Libs\JavascriptCore\win64</Filter>
     </None>
     <None Include="..\src\Libs\JavascriptCore\win64\icuin63.pdb">
@@ -576,5 +552,31 @@
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
       <Filter>Libs\PopCameraDevice</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\CFLite.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icudt63.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icuin63.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icuuc63.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\WTF.dll">
+      <Filter>Libs\JavascriptCore\win64</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>
