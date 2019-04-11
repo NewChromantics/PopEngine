@@ -50,17 +50,12 @@ void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 		MONITORINFOEXA MonitorMetaA;
 		MonitorMetaA.cbSize = sizeof(MonitorMetaA);
 		if ( !GetMonitorInfoA(MonitorHandle, &MonitorMetaA) )
-		{
-			Platform::IsOkay("GetMonitorInfoA");
-			throw Soy::AssertException("Error getting MonitorInfo");
-		}
+			Platform::ThrowLastError("GetMonitorInfoA(MONITORINFOEXA) failed");
+
 		MONITORINFO MonitorMetaB;
 		MonitorMetaB.cbSize = sizeof(MonitorMetaB);
 		if ( !GetMonitorInfoA(MonitorHandle, &MonitorMetaB) )
-		{
-			Platform::IsOkay("GetMonitorInfoA EX");
-			throw Soy::AssertException("Error getting MonitorInfo EX");
-		}
+			Platform::ThrowLastError("GetMonitorInfoA(MONITORINFO) failed");
 		
 		TScreenMeta Screen;
 		Screen.mFullRect = GetRect<int32_t>(MonitorMetaA.rcMonitor);
@@ -80,10 +75,7 @@ void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 	LPCRECT ClipRect = nullptr;
 	LPARAM Data = 0;
 	if ( !EnumDisplayMonitors(hdc, ClipRect, EnumWrapper, Data) )
-	{
-		Platform::IsOkay("EnumDisplayMonitors");
-		throw Soy::AssertException("EnumDisplayMonitors failed");
-	}
+		Platform::ThrowLastError("EnumDisplayMonitors");
 }
 
 
@@ -104,6 +96,14 @@ class Platform::TWindow : public TControl
 {
 public:
 	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
+	
+	bool		IsFullscreen();
+	void		SetFullscreen(bool Fullscreen);
+
+private:
+	//	for saving/restoring fullscreen mode
+	std::shared_ptr<WINDOWPLACEMENT>	mSavedWindowPlacement;	//	saved state before going fullscreen
+	LONG				mSavedWindowFlags = 0;
 };
 
 
@@ -467,7 +467,9 @@ Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params)
 		throw Soy::AssertException("Failed to create context");
 
 	//	init opengl context
+	Lock();
 	this->Init();
+	Unlock();
 
 	auto OnPaint = [this](TControl& Control)
 	{
@@ -692,7 +694,94 @@ Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 	//return mView->mRenderTarget.GetSize();
 }
 
+
+bool TOpenglWindow::IsFullscreen()
+{
+	if ( !mWindow )
+		throw Soy::AssertException("TOpenglWindow::IsFullscreen missing window");
+
+	return mWindow->IsFullscreen();
+}
+
 void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
-	throw Soy::AssertException("todo");
+	if ( !mWindow )
+		throw Soy::AssertException("TOpenglWindow::SetFullscreen missing window");
+
+	mWindow->SetFullscreen(Fullscreen);
+}
+
+
+void Platform::TWindow::SetFullscreen(bool Fullscreen)
+{
+	//	don't change current setup
+	if ( IsFullscreen() == Fullscreen )
+		return;
+
+	//	if going fullscreen, save placement then go fullscreen
+	if ( Fullscreen )
+	{
+		//	save placement
+		mSavedWindowPlacement.reset(new WINDOWPLACEMENT);
+		auto& Placement = *mSavedWindowPlacement;
+		Placement.length = sizeof(Placement);
+		if ( !GetWindowPlacement( mHwnd, &Placement ) )
+			Platform::ThrowLastError("GetWindowPlacement failed");
+		//	flags is never set, and it's not the style!
+		mSavedWindowFlags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
+		
+		//	get monitor size for window
+		HMONITOR MonitorHandle = MonitorFromWindow(mHwnd, MONITOR_DEFAULTTONEAREST);
+		if ( MonitorHandle == nullptr )
+			Platform::ThrowLastError("SetFullscreen(true) Failed to get monitor for window");
+		MONITORINFOEXA MonitorMeta;
+		MonitorMeta.cbSize = sizeof(MonitorMeta);
+		if ( !GetMonitorInfoA( MonitorHandle, &MonitorMeta) )
+			Platform::ThrowLastError("GetMonitorInfoA failed");
+
+		//	set size
+		auto x = MonitorMeta.rcMonitor.left;
+		auto y = MonitorMeta.rcMonitor.top;
+		auto w = MonitorMeta.rcMonitor.right - x;
+		auto h = MonitorMeta.rcMonitor.bottom - y;
+		bool Repaint = true;
+		if ( !MoveWindow(mHwnd, x, y, w, h, Repaint) )
+		{
+			std::stringstream Error;
+			Error << "Failed to MoveMonitor( " << x << "," << y << "," << w << "," << h << ")";
+			Platform::ThrowLastError(Error.str());
+		}
+
+		//	set flags
+		auto NewFlags = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
+		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags) )
+			Platform::ThrowLastError("Failed to set window flags");
+	}
+	else
+	{
+		//	restore last placement
+		if ( !mSavedWindowPlacement )
+			throw Soy::AssertException("SetFullscreen(false) No saved window placement to restore. Need a backup solution");
+
+		WINDOWPLACEMENT Placement;
+		Placement = *mSavedWindowPlacement;
+		mSavedWindowPlacement.reset();
+
+		if ( !SetWindowPlacement(mHwnd, &Placement) )
+			Platform::ThrowLastError("SetWindowPlacement failed");
+
+		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags) )
+			Platform::ThrowLastError("Failed to set window flags");
+	}
+}
+
+bool Platform::TWindow::IsFullscreen()
+{
+	auto Flags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
+	//	borderless window style
+	//	there's not a more sophisticated approach it seems...
+	if ( Flags & WS_POPUP )
+		return true;
+
+	return false;
 }
