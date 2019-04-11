@@ -28,6 +28,7 @@ DEFINE_BIND_FUNCTIONNAME(GetImageHeapSize);
 DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
 DEFINE_BIND_FUNCTIONNAME(GetHeapSize);
 DEFINE_BIND_FUNCTIONNAME(GetHeapCount);
+DEFINE_BIND_FUNCTIONNAME(GetHeapObjects);
 DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
 DEFINE_BIND_FUNCTIONNAME(Sleep);
 DEFINE_BIND_FUNCTIONNAME(Yield);
@@ -84,6 +85,7 @@ namespace ApiPop
 	static void		GetImageHeapCount(Bind::TCallback& Params);
 	static void		GetHeapSize(Bind::TCallback& Params);
 	static void		GetHeapCount(Bind::TCallback& Params);
+	static void		GetHeapObjects(Bind::TCallback& Params);
 	static void		EnumScreens(Bind::TCallback& Params);
 }
 
@@ -303,6 +305,38 @@ void ApiPop::GetHeapCount(Bind::TCallback& Params)
 }
 
 
+void ApiPop::GetHeapObjects(Bind::TCallback& Params)
+{
+	auto& Heap = Params.mContext.GetGeneralHeap();
+	auto* pHeapDebug = Heap.GetDebug();
+	if ( !pHeapDebug )
+		throw Soy::AssertException("Heap doesn't have debug enabled");
+
+	auto& HeapDebug = *pHeapDebug;
+	//	get object counts
+	std::map<const std::string*,int> TypeCounts;
+
+	auto EnumAlloc = [&](const prmem::HeapDebugItem& Allocation)
+	{
+		auto* Typename = Allocation.mTypename;
+		TypeCounts[Typename] += Allocation.mElements;
+	};
+	HeapDebug.EnumAllocations(EnumAlloc);
+	
+	auto Object = Params.mContext.CreateObjectInstance();
+
+	for ( auto it=TypeCounts.begin();	it!=TypeCounts.end();	it++ )
+	{
+		auto& Name = *it->first;
+		auto Count = it->second;
+		Object.SetInt( Name, Count );
+	}
+
+	Params.Return( Object );
+}
+
+
+
 void ApiPop::EnumScreens(Bind::TCallback& Params)
 {
 	BufferArray<Bind::TObject,20> ScreenMetas;
@@ -404,6 +438,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
 	Context.BindGlobalFunction<GetHeapSize_FunctionName>(GetHeapSize, Namespace );
 	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
+	Context.BindGlobalFunction<GetHeapObjects_FunctionName>(GetHeapObjects, Namespace );
 	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
 	
 }
