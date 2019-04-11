@@ -450,9 +450,8 @@ void TMediaSourceWrapper::Free(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
-	//	need to have TDecoderInstance for C lib
 #if defined(TARGET_OSX)
-	mDecoder.reset( new TDecoderInstance );
+	mDecoder.reset( new PopH264::TDecoderInstance );
 #else
 	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
 #endif
@@ -470,9 +469,15 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	Array<uint8_t> PacketBytes;
 	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
 	
+	bool ExtractImage = true;
 	bool ExtractPlanes = false;
 	if ( !Params.IsArgumentUndefined(1) )
-		ExtractPlanes = Params.GetArgumentBool(1);
+	{
+		if ( Params.IsArgumentNull(1) )
+			ExtractImage = false;
+		else
+			ExtractPlanes = Params.GetArgumentBool(1);
+	}
 	
 	auto& Context = Params.mContext;
 	
@@ -507,17 +512,30 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	while ( This.mDecoder->PopFrame(Frame) )
 	{
 		//std::Debug << "Popping frame" << std::endl;
-		auto FrameImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
-		auto& FrameImage = FrameImageObject.This<TImageWrapper>();
-		FrameImage.SetPixels( Frame.mPixels );
-		FrameImageObject.SetInt("Time", Frame.mFrameNumber);
+		auto ObjectTypename = ExtractImage ? TImageWrapper::GetTypeName() : std::string();
+		auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
 
+		//	because YUV_8_8_8 cannot be expressed into a texture properly,
+		//	force plane extraction for this format
 		Array<Bind::TObject> FramePlanes;
-		if ( ExtractPlanes )
+		if ( Frame.mPixels->GetFormat() == SoyPixelsFormat::Yuv_8_8_8_Full )
+			ExtractPlanes = true;
+		
+		if ( ExtractImage && !ExtractPlanes )
+		{
+			auto& FrameImage = FrameImageObject.This<TImageWrapper>();
+			FrameImage.SetPixels( Frame.mPixels );
+		}
+
+		if ( ExtractImage && ExtractPlanes )
 		{
 			GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
 			FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
 		}
+		
+		//	set meta
+		FrameImageObject.SetInt("Time", Frame.mFrameNumber);
+		FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
 		Frames.PushBack( FrameImageObject );
 	}
 	Params.Return( GetArrayBridge(Frames) );

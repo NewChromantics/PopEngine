@@ -5,7 +5,11 @@
 class TMediaPacket;
 class TMediaExtractor;
 class TMediaExtractorParams;
-class TDecoderInstance;	//	osx framework wrapper in PopH264
+
+namespace PopH264
+{
+	class TDecoderInstance;
+}
 
 namespace Broadway
 {
@@ -110,7 +114,7 @@ public:
 
 
 extern const char AvcDecoder_TypeName[];
-class TAvcDecoderWrapper : public Bind::TObjectWrapper<AvcDecoder_TypeName,TDecoderInstance>
+class TAvcDecoderWrapper : public Bind::TObjectWrapper<AvcDecoder_TypeName,PopH264::TDecoderInstance>
 {
 public:
 	TAvcDecoderWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -125,5 +129,5 @@ public:
 	static void 				Decode(Bind::TCallback& Arguments);
 	
 public:
-	std::shared_ptr<TDecoderInstance>&		mDecoder = mObject;
+	std::shared_ptr<PopH264::TDecoderInstance>&		mDecoder = mObject;
 };
