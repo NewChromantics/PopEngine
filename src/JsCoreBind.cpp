@@ -7,6 +7,7 @@
 #include "TApiWebsocket.h"
 #include "TApiSocket.h"
 #include "TApiHttp.h"
+#include "TApiSerial.h"
 
 #if !defined(PLATFORM_WINDOWS)
 //#include "TApiOpencl.h"
@@ -338,6 +339,7 @@ Bind::TInstance::TInstance(
 			ApiWebsocket::Bind( *mContext );
 			ApiHttp::Bind( *mContext );
 			ApiSocket::Bind( *mContext );
+			ApiSerial::Bind( *mContext );
 
 		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *mContext );
