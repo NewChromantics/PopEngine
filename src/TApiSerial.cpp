@@ -37,6 +37,7 @@ public:
 	~TComPort();
 	
 	bool		IsOpen();
+	void		PopData(ArrayBridge<uint8_t>&& Data);
 	
 	std::function<void()>	mOnDataRecieved;
 	
@@ -157,8 +158,32 @@ void TSerialComPortWrapper::OnDataReceived()
 	//	fail all read promises if closed
 	if ( !mComPort )
 	{
-		
+		mReadPromises.Reject("COM port is closed");
+		return;
 	}
+	
+	//	nothing waiting for data, let com port keep buffering
+	if ( !mReadPromises.HasPromises() )
+		return;
+	
+	//	flush any data
+	Array<uint8_t> Data;
+	mComPort->PopData(GetArrayBridge(Data));
+	
+	//	if there's no data, don't do anything, unless port is closed in which case throw
+	if ( Data.IsEmpty() )
+	{
+		//	todo: get last error
+		if ( !mComPort->IsOpen() )
+			mReadPromises.Reject("COM port is closed");
+		return;
+	}
+	
+	auto SendData = [&](Bind::TPromise& Promise)
+	{
+		Promise.Resolve( GetArrayBridge(Data) );
+	};
+	mReadPromises.Flush(SendData);
 }
 
 
@@ -211,6 +236,7 @@ Serial::TFile::TFile(const std::string& PortName,size_t BaudRate) :
 	
 	//	0 is okay it seems.
 	//auto OpenMode = O_RDWR;
+	//	no control seems to let us open it without blocking
 	auto OpenMode = O_RDONLY| O_NOCTTY;
 	//	nonblocking
 	//OpenMode |= O_NDELAY;
@@ -322,7 +348,12 @@ bool Serial::TComPort::IsOpen()
 		return false;
 	return mFile->IsOpen();
 }
-	
+
+void Serial::TComPort::PopData(ArrayBridge<uint8_t>&& Data)
+{
+	mRecvBuffer.Pop( mRecvBuffer.GetBufferedSize(), Data );
+}
+
 bool Serial::TComPort::Iteration()
 {
 	if ( !mFile )
