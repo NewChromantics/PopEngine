@@ -8,7 +8,7 @@ namespace Serial
 	class TComPort;
 	class TFile;
 	
-	void		EnumPorts(std::function<void(std::string&)> EnumPort);
+	void		EnumPorts(std::function<void(const std::string&)> EnumPort);
 }
 
 
@@ -25,6 +25,7 @@ public:
 	void	Close();
 	
 private:
+	std::string	mFilename;
 	int		mFileDescriptor = 0;
 };
 
@@ -82,7 +83,7 @@ void ApiSerial::Bind(Bind::TContext& Context)
 void ApiSerial::EnumPorts(Bind::TCallback& Params)
 {
 	Array<std::string> PortNames;
-	auto AddPort = [&](std::string& PortName)
+	auto AddPort = [&](const std::string& PortName)
 	{
 		PortNames.PushBack(PortName);
 	};
@@ -163,7 +164,7 @@ void TSerialComPortWrapper::OnDataReceived()
 
 
 
-void Serial::EnumPorts(std::function<void(std::string&)> EnumPort)
+void Serial::EnumPorts(std::function<void(const std::string&)> EnumPort)
 {
 #if defined(TARGET_OSX)
 	//	get a directory listing of /dev/
@@ -176,15 +177,14 @@ void Serial::EnumPorts(std::function<void(std::string&)> EnumPort)
 			return true;
 		
 		auto Filename = OrigFilename;
-		Soy::StringTrimLeft(Filename,"/dev/",true);
-							
-		if ( Soy::StringTrimLeft(Filename, "cu.", true ) )
+		
+		if ( Soy::StringTrimLeft(Filename, "/dev/cu.", true ) )
 		{
-			EnumPort(Filename);
+			EnumPort(OrigFilename);
 		}
-		else if ( Soy::StringTrimLeft(Filename, "tty.", true ) )
+		else if ( Soy::StringTrimLeft(Filename, "/dev/tty.", true ) )
 		{
-			EnumPort(Filename);
+			EnumPort(OrigFilename);
 		}
 		else
 		{
@@ -201,15 +201,21 @@ void Serial::EnumPorts(std::function<void(std::string&)> EnumPort)
 
 #include <fcntl.h>
 #include <termios.h>
-Serial::TFile::TFile(const std::string& PortName,size_t BaudRate)
+Serial::TFile::TFile(const std::string& PortName,size_t BaudRate) :
+	mFilename	( PortName )
 {
 	//char port[20] = “/dev/ttyS0”;
 	if ( BaudRate != 115200 )
 		throw Soy::AssertException("todo: convert baudrate, currently only supporting 115200");
 	speed_t baud = B115200;
 	
-	mFileDescriptor = open( PortName.c_str(), O_RDWR);
-	if ( mFileDescriptor == -1 )
+	//	0 is okay it seems.
+	//auto OpenMode = O_RDWR;
+	auto OpenMode = O_RDONLY| O_NOCTTY;
+	//	nonblocking
+	//OpenMode |= O_NDELAY;
+	mFileDescriptor = open( PortName.c_str(), OpenMode);
+	if ( mFileDescriptor < 0 )
 		Platform::ThrowLastError( std::string("Failed to open ") + PortName );
 
 	auto& fd = mFileDescriptor;
@@ -225,17 +231,27 @@ Serial::TFile::TFile(const std::string& PortName,size_t BaudRate)
 		if ( Error != 0 )
 			Platform::ThrowLastError( std::string("tcgetattr failed on ") + PortName );
 	
-		Error = cfsetospeed(&settings, baud); /* baud rate */
+		Error = cfsetospeed(&settings, baud);
 		if ( Error != 0 )
 			Platform::ThrowLastError( std::string("cfsetospeed failed on ") + PortName );
-		
-		settings.c_cflag &= ~PARENB; /* no parity */
-		settings.c_cflag &= ~CSTOPB; /* 1 stop bit */
+		Error = cfsetispeed(&settings, baud);
+		if ( Error != 0 )
+			Platform::ThrowLastError( std::string("cfsetispeed failed on ") + PortName );
+
+		settings.c_cflag &= ~PARENB;
+		settings.c_cflag &= ~CSTOPB;
 		settings.c_cflag &= ~CSIZE;
-		settings.c_cflag |= CS8 | CLOCAL; /* 8 bits */
-		settings.c_lflag = ICANON; /* canonical mode */
-		settings.c_oflag &= ~OPOST; /* raw output */
+		settings.c_cflag |= CS8;
+		settings.c_cflag |= (CLOCAL | CREAD);
+		/*
+		settings.c_cflag &= ~PARENB; //	no parity
+		settings.c_cflag &= ~CSTOPB; //	1 stop bit
 		
+		settings.c_cflag &= ~CSIZE;
+		settings.c_cflag |= CS8 | CLOCAL; //	8 bits
+		settings.c_lflag = ICANON; //	canonical mode
+		settings.c_oflag &= ~OPOST; //	raw output
+		*/
 		//	apply the settings
 		Error = tcsetattr(fd, TCSANOW, &settings);
 		if ( Error != 0 )
@@ -269,25 +285,19 @@ void Serial::TFile::Close()
 
 void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 {
-	if ( IsOpen() )
+	if ( !IsOpen() )
 		throw Soy::AssertException("Reading serial file that is closed");
 
-	//	we'd like to block, so keep small for small strings
-	uint8_t ReadBuffer[1024];
+	//	this can read forever without exiting, so instead of looping
+	//	just return after one read
+	uint8_t ReadBuffer[1024*52];
 	
-	while ( true )
-	{
-		auto BytesRead = ::read( mFileDescriptor, ReadBuffer, sizeof(ReadBuffer) );
-		if ( BytesRead < 0 )
-			Platform::ThrowLastError("Reading Serial File failed");
-	
-		//	no data pending
-		if ( BytesRead == 0 )
-			break;
-		
-		for ( auto i=0;	i<BytesRead;	i++ )
-			OutputBuffer.PushBackReinterpret( ReadBuffer, BytesRead );
-	}
+	auto BytesRead = ::read( mFileDescriptor, ReadBuffer, sizeof(ReadBuffer) );
+	if ( BytesRead < 0 )
+		Platform::ThrowLastError("Reading Serial File failed");
+
+	auto ReadArray = GetRemoteArray( ReadBuffer, BytesRead, BytesRead );
+	OutputBuffer.PushBackArray(ReadArray);
 }
 
 	
@@ -296,6 +306,7 @@ void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 Serial::TComPort::TComPort(const std::string& PortName,size_t BaudRate) :
 	SoyWorkerThread	( std::string("Com Port ") + PortName, SoyWorkerWaitMode::Sleep )
 {
+	mFile.reset( new TFile(PortName,BaudRate) );
 	Start();
 }
 
@@ -325,16 +336,27 @@ bool Serial::TComPort::Iteration()
 		return false;
 	
 	//	read from file into buffer
-	Array<uint8_t> NewData;
-	File.Read( GetArrayBridge(NewData) );
-	mRecvBuffer.Push( GetArrayBridge(NewData) );
-	
-	//	notify if we have new data
-	if ( !NewData.IsEmpty() )
+	try
 	{
-		if ( mOnDataRecieved )
-			mOnDataRecieved();
+		Array<uint8_t> NewData;
+		File.Read( GetArrayBridge(NewData) );
+		mRecvBuffer.Push( GetArrayBridge(NewData) );
+	
+		//	notify if we have new data
+		if ( !NewData.IsEmpty() )
+		{
+			if ( mOnDataRecieved )
+				mOnDataRecieved();
+		}
+		
 	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+		return false;
+	}
+	
+	
 	
 	return true;
 }
