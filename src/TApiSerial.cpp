@@ -24,8 +24,9 @@ public:
 	bool	IsOpen()		{	return mFileDescriptor != 0;	}
 	void	Close();
 	
-private:
 	std::string	mFilename;
+	
+private:
 	int		mFileDescriptor = 0;
 };
 
@@ -40,7 +41,8 @@ public:
 	void		PopData(ArrayBridge<uint8_t>&& Data);
 	
 	std::function<void()>	mOnDataRecieved;
-	
+	std::function<void()>	mOnClosed;
+
 private:
 	virtual bool	Iteration() override;
 	
@@ -100,10 +102,18 @@ void TSerialComPortWrapper::Construct(Bind::TCallback& Params)
 	auto PortName = Params.GetArgumentString(0);
 	auto BaudRate = Params.GetArgumentInt(1);
 	
+	if ( !Params.IsArgumentUndefined(2) )
+		mDataAsString = Params.GetArgumentBool(2);
+	
 	//	auto open
 	mComPort.reset( new Serial::TComPort(PortName,BaudRate) );
 	
 	mComPort->mOnDataRecieved = [this]()
+	{
+		this->OnDataReceived();
+	};
+	
+	mComPort->mOnClosed = [this]()
 	{
 		this->OnDataReceived();
 	};
@@ -167,6 +177,7 @@ void TSerialComPortWrapper::OnDataReceived()
 		return;
 	
 	//	flush any data
+	//	todo: if data is coming out as a string, split at zeros/termniators
 	Array<uint8_t> Data;
 	mComPort->PopData(GetArrayBridge(Data));
 	
@@ -181,7 +192,16 @@ void TSerialComPortWrapper::OnDataReceived()
 	
 	auto SendData = [&](Bind::TPromise& Promise)
 	{
-		Promise.Resolve( GetArrayBridge(Data) );
+		if ( mDataAsString )
+		{
+			auto* cstr = reinterpret_cast<char*>( Data.GetArray() );
+			std::string DataString( cstr, Data.GetSize() );
+			Promise.Resolve( DataString );
+		}
+		else
+		{
+			Promise.Resolve( GetArrayBridge(Data) );
+		}
 	};
 	mReadPromises.Flush(SendData);
 }
@@ -330,7 +350,7 @@ void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 
 //	todo: nowait, as the file should block the thread
 Serial::TComPort::TComPort(const std::string& PortName,size_t BaudRate) :
-	SoyWorkerThread	( std::string("Com Port ") + PortName, SoyWorkerWaitMode::Sleep )
+	SoyWorkerThread	( std::string("Com Port ") + PortName, SoyWorkerWaitMode::NoWait )
 {
 	mFile.reset( new TFile(PortName,BaudRate) );
 	Start();
@@ -346,6 +366,7 @@ bool Serial::TComPort::IsOpen()
 {
 	if ( !mFile )
 		return false;
+	
 	return mFile->IsOpen();
 }
 
@@ -383,11 +404,13 @@ bool Serial::TComPort::Iteration()
 	}
 	catch(std::exception& e)
 	{
-		std::Debug << e.what() << std::endl;
+		//	close the file on error!
+		std::Debug << File.mFilename << ": " << e.what() << " closing file." << std::endl;
+		mFile.reset();
+		if ( mOnClosed )
+			mOnClosed();
 		return false;
 	}
-	
-	
 	
 	return true;
 }

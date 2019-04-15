@@ -35,5 +35,6 @@ public:
 public:
 	std::shared_ptr<Serial::TComPort>&	mComPort = mObject;
 	Bind::TPromiseQueue			mReadPromises;
+	bool						mDataAsString = false;
 };
 
