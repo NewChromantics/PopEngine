@@ -12,7 +12,7 @@ std::shared_ptr<PopMainThread> Soy::Platform::gMainThread;
 #if defined(TARGET_OSX_BUNDLE)
 int Soy::Platform::BundleAppMain(int argc, const char * argv[])
 {
-	::Platform::ExePath = argv[0];
+	::Platform::SetExePath(argv[0]);
 	/*
 	auto Params = ::Private::DecodeArgs( argc, argv );
 	

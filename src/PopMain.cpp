@@ -15,6 +15,8 @@
 #include "SoyApp.h"
 #include <fstream>
 #include <regex>
+#include "SoyLib/src/SoyFilesystem.h"
+
 
 #if defined(TARGET_WINDOWS)
 	#include <tchar.h>
@@ -63,7 +65,6 @@ namespace Platform
 #endif
 }
 
-#include "SoyLib\src\SoyFilesystem.h"
 #if defined(TARGET_WINDOWS)
 //int _tmain(int argc, _TCHAR* argv[])
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
