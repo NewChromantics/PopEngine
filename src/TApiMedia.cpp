@@ -391,7 +391,7 @@ Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrame
 		try
 		{
 			//	gr: worried this might be stalling OS/USB bus
-			Soy::TScopeTimerPrint Timer("PixelBuffer->Lock/Unlock duration",2);
+			Soy::TScopeTimerPrint Timer("PixelBuffer->Lock/Unlock duration",5);
 			//	make an image for every plane
 			for ( auto p=0;	p<Planes.GetSize();	p++ )
 			{
@@ -452,6 +452,9 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
 #if defined(TARGET_OSX)
 	mDecoder.reset( new PopH264::TDecoderInstance );
+	std::string ThreadName("TAvcDecoderWrapper::DecoderThread");
+	mDecoderThread.reset( new SoyWorkerJobThread(ThreadName) );
+	mDecoderThread->Start();
 #else
 	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
 #endif
@@ -464,84 +467,112 @@ void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 {
-#if defined(TARGET_OSX)
 	auto& This = Params.This<TAvcDecoderWrapper>();
 	Array<uint8_t> PacketBytes;
 	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
 	
 	bool ExtractImage = true;
-	bool ExtractPlanes = false;
+	bool _ExtractPlanes = false;
 	if ( !Params.IsArgumentUndefined(1) )
 	{
 		if ( Params.IsArgumentNull(1) )
 			ExtractImage = false;
 		else
-			ExtractPlanes = Params.GetArgumentBool(1);
+			_ExtractPlanes = Params.GetArgumentBool(1);
 	}
 	
-	auto& Context = Params.mContext;
+	//	process async
+	auto Promise = Params.mContext.CreatePromise(__func__);
+	Params.Return( Promise );
 	
-	auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
+	auto Resolve = [=](Bind::TContext& Context)
 	{
-		Array<std::shared_ptr<SoyPixelsImpl>> PlanePixelss;
-		Frame->SplitPlanes( GetArrayBridge(PlanePixelss) );
-		
-		for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
+		auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
 		{
-			auto& PlanePixels = *PlanePixelss[p];
+			Array<std::shared_ptr<SoyPixelsImpl>> PlanePixelss;
+			Frame->SplitPlanes( GetArrayBridge(PlanePixelss) );
 			
-			auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
-			auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
+			for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
+			{
+				auto& PlanePixels = *PlanePixelss[p];
+				
+				auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
+				
+				std::stringstream PlaneName;
+				PlaneName << "Frame" << FrameTime << "Plane" << p;
+				PlaneImage.mName = PlaneName.str();
+				PlaneImage.SetPixels( PlanePixels );
+				
+				PlaneImages.PushBack( PlaneImageObject );
+			}
+		};
+		
+		
+		TFrame Frame;
+		Array<Bind::TObject> Frames;
+		while ( This.mDecoder->PopFrame(Frame) )
+		{
+			auto ExtractPlanes = _ExtractPlanes;
 			
-			std::stringstream PlaneName;
-			PlaneName << "Frame" << FrameTime << "Plane" << p;
-			PlaneImage.mName = PlaneName.str();
-			PlaneImage.SetPixels( PlanePixels );
+			//std::Debug << "Popping frame" << std::endl;
+			auto ObjectTypename = ExtractImage ? TImageWrapper::GetTypeName() : std::string();
+			auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
 			
-			PlaneImages.PushBack( PlaneImageObject );
+			//	because YUV_8_8_8 cannot be expressed into a texture properly,
+			//	force plane extraction for this format
+			Array<Bind::TObject> FramePlanes;
+			if ( Frame.mPixels->GetFormat() == SoyPixelsFormat::Yuv_8_8_8_Full )
+				ExtractPlanes = true;
+			
+			if ( ExtractImage && !ExtractPlanes )
+			{
+				auto& FrameImage = FrameImageObject.This<TImageWrapper>();
+				FrameImage.SetPixels( Frame.mPixels );
+			}
+			
+			if ( ExtractImage && ExtractPlanes )
+			{
+				GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
+				FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
+			}
+			
+			//	set meta
+			FrameImageObject.SetInt("Time", Frame.mFrameNumber);
+			FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
+			Frames.PushBack( FrameImageObject );
+		}
+		Promise.Resolve( GetArrayBridge(Frames) );
+	};
+
+	auto* pContext = &Params.mContext;
+	auto Decode = [=]()
+	{
+		auto& Context = *pContext;
+		
+		try
+		{
+#if defined(TARGET_OSX)
+			//	push data into queue
+			This.mDecoder->PushData( PacketBytes.GetArray(), PacketBytes.GetDataSize(), 0 );
+			Context.Queue( Resolve );
+#else
+			throw Soy::AssertException("TAvcDecoderWrapper unsupported");
+#endif
+		}
+		catch(std::exception& e)
+		{
+			std::string Error( e.what() );
+			auto DoReject = [=](Bind::TContext& Context)
+			{
+				Promise.Reject( Error );
+			};
+			Context.Queue( DoReject );
 		}
 	};
-	
-	//	this function is synchronous, so it should put stuff straight back in the queue
-	//	the callback was handy though, so maybe go back to it
-	This.mDecoder->PushData( PacketBytes.GetArray(), PacketBytes.GetDataSize(), 0 );
-	//std::Debug << "Decoder meta=" << This.mDecoder->GetMeta() << std::endl;
-	
-	TFrame Frame;
-	Array<Bind::TObject> Frames;
-	while ( This.mDecoder->PopFrame(Frame) )
-	{
-		//std::Debug << "Popping frame" << std::endl;
-		auto ObjectTypename = ExtractImage ? TImageWrapper::GetTypeName() : std::string();
-		auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
 
-		//	because YUV_8_8_8 cannot be expressed into a texture properly,
-		//	force plane extraction for this format
-		Array<Bind::TObject> FramePlanes;
-		if ( Frame.mPixels->GetFormat() == SoyPixelsFormat::Yuv_8_8_8_Full )
-			ExtractPlanes = true;
-		
-		if ( ExtractImage && !ExtractPlanes )
-		{
-			auto& FrameImage = FrameImageObject.This<TImageWrapper>();
-			FrameImage.SetPixels( Frame.mPixels );
-		}
-
-		if ( ExtractImage && ExtractPlanes )
-		{
-			GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
-			FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
-		}
-		
-		//	set meta
-		FrameImageObject.SetInt("Time", Frame.mFrameNumber);
-		FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
-		Frames.PushBack( FrameImageObject );
-	}
-	Params.Return( GetArrayBridge(Frames) );
-#else
-	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
-#endif
+	//	on decoder thread, run decode
+	This.mDecoderThread->PushJob(Decode);
 }
 
 
