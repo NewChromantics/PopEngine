@@ -253,14 +253,16 @@ Serial::TFile::TFile(const std::string& PortName,size_t BaudRate) :
 	if ( BaudRate != 115200 )
 		throw Soy::AssertException("todo: convert baudrate, currently only supporting 115200");
 	speed_t baud = B115200;
-	
-	//	0 is okay it seems.
-	//auto OpenMode = O_RDWR;
+
+	//	gr: when we try and open TTY (write ports) with readonly or readwrite open() blocks...
+	auto OpenMode = O_RDONLY;
 	//	no control seems to let us open it without blocking
-	auto OpenMode = O_RDONLY| O_NOCTTY;
-	//	nonblocking
+	OpenMode |= O_NOCTTY;
+	//	nonblocking, allows us to open write only ports without blocking...
+	//	but we need to re-enable blocking reads
 	//OpenMode |= O_NDELAY;
 	mFileDescriptor = open( PortName.c_str(), OpenMode);
+	//	0 is okay it seems.
 	if ( mFileDescriptor < 0 )
 		Platform::ThrowLastError( std::string("Failed to open ") + PortName );
 
