@@ -360,8 +360,9 @@ Serial::TComPort::TComPort(const std::string& PortName,size_t BaudRate) :
 
 Serial::TComPort::~TComPort()
 {
+	mFile.reset();
 	//	gr: may need to interrupt any blocking reading
-	Stop();
+	WaitToFinish();
 }
 
 bool Serial::TComPort::IsOpen()
