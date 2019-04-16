@@ -117,6 +117,7 @@
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
 		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
+		BFF2B6C32265FB4500232137 /* GuildhallGildwall in Resources */ = {isa = PBXBuildFile; fileRef = BFD0829E225E974D00FD05DC /* GuildhallGildwall */; };
 		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
@@ -1064,6 +1065,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFF2B6C32265FB4500232137 /* GuildhallGildwall in Resources */,
 				BF59A2502222039900AE9926 /* Lollypop.icns in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 			);
