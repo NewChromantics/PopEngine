@@ -298,6 +298,11 @@ void TMediaSourceWrapper::GetNextFrame(Bind::TCallback& Params)
 	
 	if ( Params.IsArgumentArray(0) )
 		Request.mSeperatePlanes = true;
+	else if ( Params.IsArgumentObject(0) )
+	{
+		Request.mDestinationImage = Params.GetArgumentObject(0);
+		auto& IsImageCheck = Request.mDestinationImage.GetObject().This<TImageWrapper>();
+	}
 	else if ( !Params.IsArgumentUndefined(0) )
 		Request.mSeperatePlanes = Params.GetArgumentBool(0);
 	
@@ -381,11 +386,21 @@ Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrame
 	};
 	
 	
-	if ( Params.mSeperatePlanes )
+	if ( Params.mDestinationImage )
+	{
+		auto Object = Params.mDestinationImage.GetObject();
+		SetTime(Object);
+		auto& Image = Object.This<TImageWrapper>();
+		Image.SetPixelBuffer( PixelBuffer );
+		
+		Bind::TObject NullObject;
+		return NullObject;
+	}
+	else if ( Params.mSeperatePlanes )
 	{
 		BufferArray<SoyPixelsImpl*,5> Planes;
 		//	ref counted by js, but need to cleanup if we throw...
-		BufferArray<TImageWrapper*,5> Images;
+		Array<Bind::TObject> Images;
 		float3x3 Transform;
 		PixelBuffer->Lock( GetArrayBridge(Planes), Transform );
 		try
@@ -398,8 +413,11 @@ Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrame
 				auto* Plane = Planes[p];
 				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 				auto& Image = ImageObject.This<TImageWrapper>();
+				std::stringstream Name;
+				Name << "MediaSource Frame Plane #" << p << " @" << FramePacket->GetStartTime();
+				Image.mName = Name.str();
 				Image.SetPixels( *Plane );
-				Images.PushBack( &Image );
+				Images.PushBack( ImageObject );
 			}
 			PixelBuffer->Unlock();
 		}
@@ -417,8 +435,7 @@ Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrame
 		//auto PlaneArray = Params.GetArgumentArray(0);
 		for ( auto i=0;	i<Images.GetSize();	i++ )
 		{
-			auto& Image = *Images[i];
-			auto ImageHandle = Image.GetHandle();
+			auto ImageHandle = Images[i];
 			PlaneArray.Set( i, ImageHandle );
 		}
 		
@@ -432,10 +449,11 @@ Bind::TObject TMediaSourceWrapper::PopFrame(Bind::TContext& Context,const TFrame
 	
 	auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 	auto& Image = ImageObject.This<TImageWrapper>();
-	Image.mName = "MediaSource Frame";
+	std::stringstream Name;
+	Name << "MediaSource Frame <no planes> @" << FramePacket->GetStartTime();
+	Image.mName = Name.str();
 	Image.SetPixelBuffer(PixelBuffer);
 
-	auto ImageHandle = Image.GetHandle();
 	SetTime( ImageObject );
 	return ImageObject;
 }
@@ -776,6 +794,11 @@ void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
 
 	if ( Params.IsArgumentArray(0) )
 		Request.mSeperatePlanes = true;
+	else if ( Params.IsArgumentObject(0) )
+	{
+		Request.mDestinationImage = Params.GetArgumentObject(0);
+		auto& IsImageCheck = Request.mDestinationImage.GetObject().This<TImageWrapper>();
+	}
 	else if ( !Params.IsArgumentUndefined(0) )
 		Request.mSeperatePlanes = Params.GetArgumentBool(0);
 
@@ -852,8 +875,18 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TContext& Context,const TF
 		}
 	};
 	
-	
-	if ( Params.mSeperatePlanes )
+	if ( Params.mDestinationImage )
+	{
+		auto Object = Params.mDestinationImage.GetObject();
+		SetTime(Object);
+		auto& Image = Object.This<TImageWrapper>();
+		auto& Plane = Planes[0];
+		Image.SetPixels( Plane );
+		
+		Bind::TObject NullObject;
+		return NullObject;
+	}
+	else if ( Params.mSeperatePlanes )
 	{
 		//BufferArray<SoyPixelsImpl*,5> Planes;
 		//	ref counted by js, but need to cleanup if we throw...
