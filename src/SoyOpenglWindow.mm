@@ -96,7 +96,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.h, Rect.w );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
 
-		//	gr: this is unreliable
+		//	gr: this is unreliable, so we call our SetFullscreen() later
 		/*
 		if ( Params.mFullscreen )
 		{
@@ -112,8 +112,6 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 			[NSMenu setMenuBarVisible:NO];
 		}
 		*/
-		this->mWindow->SetFullscreen( Params.mFullscreen );
-		
 
 		//	create a view
 		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
@@ -131,7 +129,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
 		Soy::Assert(mWindow,"failed to create window");
 		[mWindow retain];
+
+		//	note: this is deffered, but as flags above don't seem to work right, not much choice
+		//		plus, every other OSX app seems to do the same?
+		this->mWindow->SetFullscreen( Params.mFullscreen );
 		
+
 		/*
 		[mWindow
 		 setFrame:[mWindow frameRectForContentRect:[[mWindow screen] frame]]
@@ -303,7 +306,7 @@ bool Platform::TWindow::IsFullscreen()
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
-		return;
+		throw Soy::AssertException("Platform::TWindow::SetFullscreen() missing platform window");
 	
 	//	if not done on main thread, this blocks,
 	//	then opengl waits for js context lock to free up and we get a deadlock
