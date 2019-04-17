@@ -33,9 +33,10 @@ namespace ApiMedia
 class TFrameRequestParams
 {
 public:
-	bool			mSeperatePlanes = false;
-	size_t			mStreamIndex = 0;
-	bool			mLatestFrame = true;
+	bool				mSeperatePlanes = false;
+	size_t				mStreamIndex = 0;
+	bool				mLatestFrame = true;
+	Bind::TPersistent	mDestinationImage;
 };
 
 class TFrameRequest : public TFrameRequestParams
