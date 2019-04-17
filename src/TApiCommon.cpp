@@ -38,6 +38,8 @@ DEFINE_BIND_FUNCTIONNAME(IsDebuggerAttached);
 DEFINE_BIND_FUNCTIONNAME(GetComputerName);
 DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
 DEFINE_BIND_FUNCTIONNAME(EnumScreens);
+DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
+
 
 
 
@@ -87,6 +89,7 @@ namespace ApiPop
 	static void		GetHeapCount(Bind::TCallback& Params);
 	static void		GetHeapObjects(Bind::TCallback& Params);
 	static void		EnumScreens(Bind::TCallback& Params);
+	static void		GetExeDirectory(Bind::TCallback& Params);
 }
 
 
@@ -363,6 +366,15 @@ void ApiPop::EnumScreens(Bind::TCallback& Params)
 
 
 
+void ApiPop::GetExeDirectory(Bind::TCallback& Params)
+{
+	//	gr: for the API, on OSX we want the dir the .app is in
+	auto Path = Platform::GetExePath();
+	Soy::StringTrimRight(Path,"Contents/MacOS/",false);
+	Params.Return( Path	);
+}
+
+
 
 void ApiPop::CompileAndRun(Bind::TCallback& Params)
 {
@@ -440,7 +452,8 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
 	Context.BindGlobalFunction<GetHeapObjects_FunctionName>(GetHeapObjects, Namespace );
 	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
-	
+	Context.BindGlobalFunction<GetExeDirectory_FunctionName>(GetExeDirectory, Namespace );
+
 }
 
 TImageWrapper::~TImageWrapper()
