@@ -476,8 +476,8 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 	auto& This = Params.This<TImageWrapper>();
 
 	
-	if ( Params.IsArgumentString(0) )
-		mName = Params.GetArgumentString(0);
+	if ( Params.IsArgumentString(1) )
+		mName = Params.GetArgumentString(1);
 	else
 		mName = "undefined-name";
 	
