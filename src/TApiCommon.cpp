@@ -370,7 +370,11 @@ void ApiPop::GetExeDirectory(Bind::TCallback& Params)
 {
 	//	gr: for the API, on OSX we want the dir the .app is in
 	auto Path = Platform::GetExePath();
-	Soy::StringTrimRight(Path,"Contents/MacOS/",false);
+	if ( Soy::StringTrimRight(Path,".app/Contents/MacOS/",false) )
+	{
+		Path = Platform::GetDirectoryFromFilename( Path, true );
+	}
+	
 	Params.Return( Path	);
 }
 
