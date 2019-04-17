@@ -255,6 +255,7 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 		try
 		{
 			auto Frame = PopFrame( Context, mFrameRequestParams );
+			/*
 			Bind::TPersistent FramePersistent( Frame );
 			
 			auto HandlePromise = [&](Bind::TPromise& Promise)
@@ -267,6 +268,11 @@ void TMediaSourceWrapper::OnNewFrame(size_t StreamIndex)
 					Promise.Resolve( FrameObject );
 				};
 				Context.Queue(Resolve);
+			};
+			*/
+			auto HandlePromise = [&](Bind::TPromise& Promise)
+			{
+				Promise.Resolve( Frame );
 			};
 			mFrameRequests.Flush( HandlePromise );
 		}
