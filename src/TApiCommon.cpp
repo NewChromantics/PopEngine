@@ -1008,7 +1008,7 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 			};
 
 			SoyGraphics::TTextureUploadParams UploadParams;
-			UploadParams.mAllowClientStorage = true;
+			UploadParams.mAllowClientStorage = false;
 			
 			if ( GetLatestVersion() == mPixelsVersion )
 			{
