@@ -561,7 +561,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 				throw;
 			}
 
-			TargetImage.OnOpenglTextureChanged();
+			TargetImage.OnOpenglTextureChanged(*OpenglContext);
 			if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			{
 				TargetImage.ReadOpenglPixels(ReadBackPixelsAfterwards);
@@ -940,7 +940,8 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
-		auto BindIndex = this->mCurrentTextureIndex++;
+		auto& Context = *mOpenglContext;
+		auto BindIndex = Context.mCurrentTextureSlot++;
 		auto& Image = Params.GetArgumentPointer<TImageWrapper>(1);
 
 		//	gr: currently this needs to be immediate... but we should be on the render thread anyway?
@@ -956,7 +957,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 			std::Debug << "Error loading texture " << Error << std::endl;
 			std::Debug << "Todo: relay to promise" << std::endl;
 		};
-		Image.GetTexture( *mOpenglContext, OnTextureLoaded, OnTextureError );
+		Image.GetTexture( Context, OnTextureLoaded, OnTextureError );
 	}
 	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{

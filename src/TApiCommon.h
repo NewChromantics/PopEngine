@@ -70,7 +70,7 @@ public:
 
 	//	we consider version 0 uninitisalised
 	size_t									GetLatestVersion() const;
-	void									OnOpenglTextureChanged();
+	void									OnOpenglTextureChanged(Opengl::TContext& Context);
 	void									ReadOpenglPixels(SoyPixelsFormat::Type Format);
 	void									SetPixels(const SoyPixelsImpl& NewPixels);
 	void									SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels);

@@ -957,6 +957,8 @@ std::shared_ptr<Opengl::TTexture> TImageWrapper::GetTexturePtr()
 
 void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
+	//std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
 	//	already created & current version
 	if ( mOpenglTexture != nullptr )
 	{
@@ -1050,6 +1052,8 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 
 Opengl::TTexture& TImageWrapper::GetTexture()
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
 	if ( !mOpenglTexture )
 		throw Soy::AssertException("Image missing opengl texture. Accessing before generating.");
 	
@@ -1173,7 +1177,7 @@ size_t TImageWrapper::GetLatestVersion() const
 }
 
 
-void TImageWrapper::OnOpenglTextureChanged()
+void TImageWrapper::OnOpenglTextureChanged(Opengl::TContext& Context)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
@@ -1183,7 +1187,7 @@ void TImageWrapper::OnOpenglTextureChanged()
 	//	is now latest version
 	auto LatestVersion = GetLatestVersion();
 	mOpenglTextureVersion = LatestVersion+1;
-	size_t TextureSlot = 0;
+	auto TextureSlot = Context.mCurrentTextureSlot++;
 	mOpenglTexture->Bind(TextureSlot);
 	mOpenglTexture->RefreshMeta();
 }
@@ -1192,6 +1196,7 @@ void TImageWrapper::OnOpenglTextureChanged()
 
 void TImageWrapper::OnPixelsChanged()
 {
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	auto LatestVersion = GetLatestVersion();
 	mPixelsVersion = LatestVersion+1;
 }

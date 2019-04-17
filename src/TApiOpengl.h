@@ -141,7 +141,5 @@ public:
 	//	which is right!
 	Opengl::TContext*					mOpenglContextPtr = nullptr;
 	std::shared_ptr<Opengl::TContext>	mOpenglContext;
-
-	size_t								mCurrentTextureIndex = 0;	//	glActiveTexture
 };
 
