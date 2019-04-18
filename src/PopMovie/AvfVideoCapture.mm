@@ -12,11 +12,31 @@
 #include "SoyAvf.h"
 #include "SoyOpenglContext.h"
 
+
+
+class TCaptureFormatMeta
+{
+public:
+	size_t	mMaxFps = 0;
+	size_t	mMinFps = 0;
+	
+	SoyPixelsMeta	mPixelMeta;
+	std::string	mCodec;
+};
+
+
 namespace AvfCapture
 {
 	class TDeviceMeta;
 	void	EnumDevices(ArrayBridge<TDeviceMeta>&& Devices,std::function<bool(const TDeviceMeta&)> Filter=nullptr);
 }
+
+namespace Avf
+{
+	TCaptureFormatMeta GetMeta(AVCaptureDeviceFormat* Format);
+}
+
+
 
 class AvfCapture::TDeviceMeta
 {
@@ -36,6 +56,41 @@ public:
 	bool				mHasAudio = false;
 	bool				mHasVideo = false;
 };
+
+
+
+
+vec2f GetMinMaxFrameRate(AVCaptureDeviceFormat* Format)
+{
+	if ( !Format )
+		throw Soy::AssertException("GetMinMaxFrameRate(): Format null");
+	
+	//	these are in pairs, but seems okay to just get min & max of both
+	Array<float> MinFrameRates;
+	Array<float> MaxFrameRates;
+	auto* FrameRateRanges = Format.videoSupportedFrameRateRanges;
+	auto EnumRange = [&](AVFrameRateRange* Range)
+	{
+		MinFrameRates.PushBack(Range.maxFrameRate);
+		MaxFrameRates.PushBack(Range.minFrameRate);
+	};
+	Platform::NSArray_ForEach<AVFrameRateRange*>(FrameRateRanges,EnumRange);
+	
+	if ( MinFrameRates.IsEmpty() )
+		throw Soy::AssertException("Got no frame rates from camera format");
+	
+	//std::Debug << "Camera fps min: " << Soy::StringJoin(GetArrayBridge(MinFrameRates),",") << " max: " << Soy::StringJoin(GetArrayBridge(MaxFrameRates),",") << std::endl;
+	
+	float Min = MinFrameRates[0];
+	float Max = MaxFrameRates[0];
+	for ( auto i=0;	i<MinFrameRates.GetSize();	i++ )
+	{
+		Min = std::min( Min, MinFrameRates[i] );
+		Max = std::max( Max, MaxFrameRates[i] );
+	}
+	
+	return vec2f( Min, Max );
+}
 
 
 AvfCapture::TDeviceMeta::TDeviceMeta(AVCaptureDevice& Device) :
@@ -426,6 +481,35 @@ std::string FindFullSerial(const std::string& SerialNeedle,ArrayBridge<AvfCaptur
 }
 
 
+std::ostream& operator<<(std::ostream& out,const TCaptureFormatMeta& in)
+{
+	out << "MaxSize=" << in.mPixelMeta << ", ";
+	out << "Fps=" << in.mMinFps << "..." << in.mMaxFps << ", ";
+	
+	return out;
+}
+
+
+TCaptureFormatMeta Avf::GetMeta(AVCaptureDeviceFormat* Format)
+{
+	if ( !Format )
+		throw Soy::AssertException("GetMeta AVCaptureDeviceFormat null format");
+	
+	auto FrameRateRange = GetMinMaxFrameRate( Format );
+
+	//	lots of work already in here
+	auto StreamMeta = Avf::GetStreamMeta( Format.formatDescription );
+
+	
+	TCaptureFormatMeta Meta;
+	Meta.mMinFps = FrameRateRange.x;
+	Meta.mMaxFps = FrameRateRange.y;
+	Meta.mPixelMeta = StreamMeta.mPixelMeta;
+	
+	return Meta;
+}
+
+
 void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQuality,bool KeepOldFrames)
 {
 	Array<AvfCapture::TDeviceMeta> DeviceMetas;
@@ -441,8 +525,44 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	if ( DeviceMetas.IsEmpty() )
 		throw Soy::AssertException("No AVCapture devices found");
 	
+	
 	auto FullSerial = FindFullSerial( Serial, GetArrayBridge(DeviceMetas) );
+	NSError* error = nil;
+
+	
+	//	grab the device and get some meta
+	
+	// Find a suitable AVCaptureDevice
+	auto SerialString = Soy::StringToNSString( FullSerial );
+	mDevice.Retain( [AVCaptureDevice deviceWithUniqueID:SerialString] );
+	if ( !mDevice )
+	{
+		std::stringstream Error;
+		Error << "Failed to get AVCapture Device with serial " << FullSerial;
+		throw Soy::AssertException( Error.str() );
+	}
+	auto& Device = mDevice.mObject;
+
+	
+	//	enum all frame rates
+	{
+		Array<TCaptureFormatMeta> Metas;
+		auto EnumFormat = [&](AVCaptureDeviceFormat* Format)
+		{
+			auto Meta = Avf::GetMeta(Format);
+			Metas.PushBack( Meta );
+			std::Debug << "Camera format: " << Meta << std::endl;
+		};
+		Platform::NSArray_ForEach<AVCaptureDeviceFormat*>( [Device formats], EnumFormat );
+	}
+		
+	//	make proxy
 	mProxy.Retain( [[VideoCaptureProxy alloc] initWithVideoCapturePrivate:this] );
+	
+	
+	
+
+	//	make session
 	mSession.Retain( [[AVCaptureSession alloc] init] );
 	auto& Session = mSession.mObject;
 	auto& Proxy = mProxy.mObject;
@@ -451,6 +571,12 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	if ( MarkBeginConfig )
 		[Session beginConfiguration];
 
+	
+
+	
+	
+	
+	
 	//	try all the qualitys
 	Array<TVideoQuality::Type> Qualitys;
 	Qualitys.PushBack( DesiredQuality );
@@ -461,7 +587,8 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	for ( int i=0;	i<Qualitys.GetSize();	i++ )
 	{
 		auto Quality = Qualitys[i];
-		auto QualityString = GetAVCaptureSessionQuality(Quality);
+		//auto QualityString = GetAVCaptureSessionQuality(Quality);
+		auto QualityString = AVCaptureSessionPreset1280x720;
 		
 		if ( ![mSession canSetSessionPreset:QualityString] )
 			continue;
@@ -473,19 +600,8 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	if ( !Session.sessionPreset )
 		throw Soy::AssertException("Failed to set session quality");
 	
-	NSError* error = nil;
-    
-    // Find a suitable AVCaptureDevice
-	//NSString* SerialString = [NSString stringWithCString:FullSerial.c_str() encoding:[NSString defaultCStringEncoding]];
-	auto SerialString = Soy::StringToNSString( FullSerial );
-	mDevice.Retain( [AVCaptureDevice deviceWithUniqueID:SerialString] );
-	if ( !mDevice )
-	{
-		std::stringstream Error;
-		Error << "Failed to get AVCapture Device with serial " << FullSerial;
-		throw Soy::AssertException( Error.str() );
-	}
-	auto& Device = mDevice.mObject;
+	
+	
 	
 	AVCaptureDeviceInput* _input = [AVCaptureDeviceInput deviceInputWithDevice:Device error:&error];
 	if ( !_input || ![Session canAddInput:_input])
@@ -496,6 +612,13 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	
 	mOutput.Retain( [[AVCaptureVideoDataOutput alloc] init] );
 	auto& Output = mOutput.mObject;
+	
+	
+	
+	//	todo: get output codecs
+	NSArray<AVVideoCodecType>* AvailibleCodecs = [Output availableVideoCodecTypes];
+	
+	
 	
 	//	loop through formats for ones we can handle that are accepted
 	//	https://developer.apple.com/library/mac/documentation/AVFoundation/Reference/AVCaptureVideoDataOutput_Class/#//apple_ref/occ/instp/AVCaptureVideoDataOutput/availableVideoCVPixelFormatTypes
@@ -572,6 +695,23 @@ void AvfVideoCapture::Run(const std::string& Serial,TVideoQuality::Type DesiredQ
 	if ( !AddedOutput )
 		throw Soy::AssertException("Could not find compatible pixel format");
 
+	
+	
+	
+
+	[Session beginConfiguration];
+	auto FrameRate = 60;
+	try
+	{
+		SetFrameRate( FrameRate );
+	}
+	catch (std::exception& e)
+	{
+		std::Debug << "Failed to set frame rate to " << FrameRate << ": " << e.what() << std::endl;
+	}
+	[Session commitConfiguration];
+	
+	
 	//	register for notifications from errors
 	NSNotificationCenter *notify = [NSNotificationCenter defaultCenter];
 	[notify addObserver: Proxy
@@ -772,6 +912,42 @@ void AvfMediaExtractor::OnSampleBuffer(CVPixelBufferRef sampleBufferRef,SoyTime 
 		std::Debug << __func__ << " exception; " << e.what() << std::endl;
 		CVPixelBuffer StackRelease(sampleBufferRef,false,mRenderer,float3x3());
 		return;
+	}
+
+}
+
+
+
+void AvfVideoCapture::SetFrameRate(size_t FramesPerSec)
+{
+	if ( !mDevice )
+		throw Soy::AssertException("Cannot set frame rate without device");
+
+	auto* Device = mDevice.mObject;
+
+	//	get current format range
+	auto ActiveFormat = [Device activeFormat];
+	if ( ActiveFormat )
+	{
+		auto MinMax = GetMinMaxFrameRate(ActiveFormat);
+		std::Debug << "Camera fps range " << MinMax.x << "..." << MinMax.y << std::endl;
+	}
+
+	if ( NO == [Device lockForConfiguration:NULL] )
+		throw Soy::AssertException("Could not lock device for configuration");
+
+	@try
+	{
+		auto Scalar = 10;
+		auto FramesPerSecInt = size_cast<int>(FramesPerSec);
+		auto FrameDuration = CMTimeMake(Scalar,FramesPerSecInt*Scalar);
+		[Device setActiveVideoMinFrameDuration:FrameDuration];
+		[Device setActiveVideoMaxFrameDuration:FrameDuration];
+	}
+	@catch(NSException* e)
+	{
+		[Device unlockForConfiguration];
+		throw Soy::AssertException( Soy::NSErrorToString(e) );
 	}
 
 }

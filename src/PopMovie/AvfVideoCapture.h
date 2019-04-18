@@ -87,6 +87,10 @@ public:
 	AvfVideoCapture(const TMediaExtractorParams& Params,std::shared_ptr<Opengl::TContext> OpenglContext);
 	virtual ~AvfVideoCapture();
 
+	//	configure funcs
+	void 		SetFrameRate(size_t FramesPerSec);
+
+	
 protected:
 	void					StartStream();
 	void					StopStream();
