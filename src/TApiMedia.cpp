@@ -509,18 +509,32 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	auto Promise = Params.mContext.CreatePromise(__func__);
 	Params.Return( Promise );
 	
+	auto* pThis = &This;
+	
 	auto Resolve = [=](Bind::TContext& Context)
 	{
 		auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
 		{
 			Array<std::shared_ptr<SoyPixelsImpl>> PlanePixelss;
 			Frame->SplitPlanes( GetArrayBridge(PlanePixelss) );
+		
+			auto& mFrameBuffers = pThis->mFrameBuffers;
+			while ( mFrameBuffers.GetSize() < PlanePixelss.GetSize() )
+			{
+				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto& Image = ImageObject.This<TImageWrapper>();
+				std::stringstream Name;
+				Name << "AVC buffer image plane #" << mFrameBuffers.GetSize();
+				Image.mName = Name.str();
+				mFrameBuffers.PushBack( ImageObject );
+			}
 			
 			for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
 			{
 				auto& PlanePixels = *PlanePixelss[p];
 				
-				auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				//auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto PlaneImageObject = mFrameBuffers[p].GetObject();
 				auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
 				
 				std::stringstream PlaneName;
@@ -538,16 +552,16 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 		while ( This.mDecoder->PopFrame(Frame) )
 		{
 			auto ExtractPlanes = _ExtractPlanes;
-			
-			//std::Debug << "Popping frame" << std::endl;
-			auto ObjectTypename = ExtractImage ? TImageWrapper::GetTypeName() : std::string();
-			auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
-			
+
 			//	because YUV_8_8_8 cannot be expressed into a texture properly,
 			//	force plane extraction for this format
 			Array<Bind::TObject> FramePlanes;
 			if ( Frame.mPixels->GetFormat() == SoyPixelsFormat::Yuv_8_8_8_Full )
 				ExtractPlanes = true;
+
+			//std::Debug << "Popping frame" << std::endl;
+			auto ObjectTypename = ( ExtractImage && !ExtractPlanes ) ? TImageWrapper::GetTypeName() : std::string();
+			auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
 			
 			if ( ExtractImage && !ExtractPlanes )
 			{

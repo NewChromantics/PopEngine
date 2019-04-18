@@ -132,4 +132,5 @@ public:
 public:
 	std::shared_ptr<PopH264::TDecoderInstance>&		mDecoder = mObject;
 	std::shared_ptr<SoyWorkerJobThread>				mDecoderThread;
+	Array<Bind::TPersistent>			mFrameBuffers;
 };
