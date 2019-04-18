@@ -460,7 +460,7 @@ std::string GetPageName(uint32_t Page)
 	{
 		Description << "Reserved";
 	}
-	Description << "0x" << std::hex << Page;
+	Description << "0x" << std::hex << Page << std::dec;
 	return Description.str();
 }
 
@@ -539,7 +539,7 @@ std::string GetDesktopUsageName(uint32_t Usage)
 		default:
 		{
 			std::stringstream UnknownName;
-			UnknownName << "<Usage " << Usage << "/0x" << std::hex << Usage << ">";
+			UnknownName << "<Usage " << Usage << "/0x" << std::hex << Usage << std::dec << ">";
 			return UnknownName.str();
 		}
 	}
@@ -605,7 +605,7 @@ std::string GetKeyboardUsageName(uint32_t Usage)
 	}
 	
 	std::stringstream Name;
-	Name << "0x" << std::hex << Usage;
+	Name << "0x" << std::hex << Usage << std::dec;
 	return Name.str();
 }
 
