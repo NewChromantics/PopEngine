@@ -86,7 +86,7 @@ std::string GetH264ProfileName(uint8 AtomProfileIdc,uint8 AtomProfileIop,uint8 A
 	else if ( AtomProfileIdc == 0x58 )
 		Name << "High Profile";
 	else
-		Name << std::hex << AtomProfileIdc << "? Profile";
+		Name << std::hex << AtomProfileIdc << std::dec << "? Profile";
 	
 	//	show level
 	//	https://github.com/ford-prefect/gst-plugins-bad/blob/master/sys/applemedia/vtdec.c

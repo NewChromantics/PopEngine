@@ -34,7 +34,7 @@ SoyKeyButton::Type Platform::GetKeyButton(uint16_t KeyCode)
 	}
 	
 	std::stringstream Error;
- 	Error << "Unhandled OSX keycode 0x" << std::hex << KeyCode;
+ 	Error << "Unhandled OSX keycode 0x" << std::hex << KeyCode << std::dec;
 	throw Soy::AssertException(Error.str());
 }
 
