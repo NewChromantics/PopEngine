@@ -302,17 +302,17 @@ void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDe
 //	gr: wrapper for PopCameraDevice's C interface
 //	gr: until we add a callback in the dll, this just keeps checking for frames
 //	gr: this thread could wait and wake up once the frame is popped
-class PopCameraDevice::TInstance : SoyWorkerThread
+class PopCameraDevice::TInstance
 {
 public:
 	TInstance(const std::string& Name);
 	~TInstance();
 
 	bool			HasFrame() { return !mLastPlanes.IsEmpty(); }
-	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time);
+	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time);
 
 protected:
-	virtual bool	Iteration() override;
+	void			OnNewFrame();
 	TDevice&		GetDevice();
 
 public:
@@ -328,8 +328,7 @@ protected:
 };
 
 
-PopCameraDevice::TInstance::TInstance(const std::string& Name) :
-	SoyWorkerThread	( std::string("PopCameraDevice::TInstance ") + Name,SoyWorkerWaitMode::Sleep )
+PopCameraDevice::TInstance::TInstance(const std::string& Name)
 {
 	mHandle = PopCameraDevice_CreateCameraDevice(Name.c_str());
 	if ( mHandle <= 0 )
@@ -342,21 +341,15 @@ PopCameraDevice::TInstance::TInstance(const std::string& Name) :
 
 	auto OnNewFrame = [this]()
 	{
-		std::Debug << "New frame!" << std::endl;
-		//this->OnNewFrame();
+		this->OnNewFrame();
 	};
 	auto& Device = GetDevice();
 	Device.mOnNewFrame = OnNewFrame;
-
-	
-	//	start thread
-	Start();
 }
 
 
 PopCameraDevice::TInstance::~TInstance()
 {
-	Stop();
 	PopCameraDevice_FreeCameraDevice(mHandle);
 }
 
@@ -372,7 +365,8 @@ PopCameraDevice::TDevice& PopCameraDevice::TInstance::GetDevice()
 	return *DevicePointer;
 }
 
-bool PopCameraDevice::TInstance::Iteration()
+
+void PopCameraDevice::TInstance::OnNewFrame()
 {
 	//	get meta so we know what buffers to allocate
 	const int MetaValuesSize = 100;
@@ -382,7 +376,7 @@ bool PopCameraDevice::TInstance::Iteration()
 	//	dont have meta yet
 	auto PlaneCount = MetaValues[MetaIndex::PlaneCount];
 	if ( PlaneCount == 0 )
-		return true;
+		return;
 
 	//	reuse temp buffers
 	const int MaxPlaneCount = 3;
@@ -422,7 +416,7 @@ bool PopCameraDevice::TInstance::Iteration()
 
 	//	no new frame
 	if ( Result == 0 )
-		return true;
+		return;
 
 	//	save plane pixels for pop
 	{
@@ -433,8 +427,6 @@ bool PopCameraDevice::TInstance::Iteration()
 
 	//	notify
 	this->mOnNewFrame();
-
-	return true;
 }
 
 bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time)
