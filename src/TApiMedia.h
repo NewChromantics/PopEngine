@@ -9,12 +9,7 @@ class TMediaExtractorParams;
 
 namespace PopH264
 {
-	class TDecoderInstance;
-}
-
-namespace Broadway
-{
-	class TDecoder;
+	class TInstance;
 }
 
 namespace PopCameraDevice
@@ -84,7 +79,7 @@ public:
 
 
 extern const char AvcDecoder_TypeName[];
-class TAvcDecoderWrapper : public Bind::TObjectWrapper<AvcDecoder_TypeName,PopH264::TDecoderInstance>
+class TAvcDecoderWrapper : public Bind::TObjectWrapper<AvcDecoder_TypeName,PopH264::TInstance>
 {
 public:
 	TAvcDecoderWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -99,7 +94,7 @@ public:
 	static void 				Decode(Bind::TCallback& Arguments);
 	
 public:
-	std::shared_ptr<PopH264::TDecoderInstance>&		mDecoder = mObject;
-	std::shared_ptr<SoyWorkerJobThread>				mDecoderThread;
+	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
+	std::shared_ptr<SoyWorkerJobThread>			mDecoderThread;
 	Array<Bind::TPersistent>			mFrameBuffers;
 };

@@ -31,7 +31,7 @@
     </ClCompile>
     <Link>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
-      <DelayLoadDLLs>PopCameraDevice.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>PopCameraDevice.dll;PopH264.dll</DelayLoadDLLs>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>

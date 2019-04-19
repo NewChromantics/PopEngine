@@ -31,6 +31,7 @@
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h" />
     <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
+    <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
@@ -58,7 +59,6 @@
     <ClInclude Include="..\src\SoyLib\src\SoyAssert.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyBase64.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyDebug.h" />
-    <ClInclude Include="..\src\SoyLib\src\SoyEvent.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyHttp.h" />
@@ -133,6 +133,12 @@
     </ClInclude>
     <ClInclude Include="..\src\TApiOpengl.h" />
     <ClInclude Include="..\src\TApiOpenglContext.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSerial.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -246,6 +252,10 @@
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll.meta" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb.meta" />
+    <None Include="..\src\Libs\PopH264\PopH264.dll" />
+    <None Include="..\src\Libs\PopH264\PopH264.dll.meta" />
+    <None Include="..\src\Libs\PopH264\PopH264.pdb" />
+    <None Include="..\src\Libs\PopH264\PopH264.pdb.meta" />
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
     <None Include="..\src\PopMain.mm" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
@@ -309,7 +319,6 @@
     <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp" />
-    <ClCompile Include="..\src\SoyLib\src\SoyEvent.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyGraphics.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp" />
@@ -381,6 +390,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\TApiSerial.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\TApiSocket.cpp" />
     <ClCompile Include="..\src\TApiWebsocket.cpp" />
     <ClCompile Include="..\src\TBind.cpp" />
@@ -423,6 +438,7 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
+    <Library Include="..\src\Libs\PopH264\PopH264.lib" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64811728-CD20-4F2C-899B-E3BF3D4B032E}</ProjectGuid>

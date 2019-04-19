@@ -40,6 +40,9 @@
     <Filter Include="Libs\JavascriptCore\win64">
       <UniqueIdentifier>{141683a7-9ceb-4290-8050-351a84c1d4c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\PopH264">
+      <UniqueIdentifier>{273f9977-6262-471b-8ac7-9353c46af383}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -258,9 +261,6 @@
     <ClInclude Include="..\src\TApiOpenglContext.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyEvent.h">
-      <Filter>SoyLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\PopEngine.h">
       <Filter>Source</Filter>
     </ClInclude>
@@ -277,6 +277,12 @@
       <Filter>Libs\PopCameraDevice</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiMedia.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\PopH264\PopH264.h">
+      <Filter>Libs\PopH264</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSerial.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
@@ -367,6 +373,18 @@
     </None>
     <None Include="..\src\Libs\JavascriptCore\win64\icuin63.pdb">
       <Filter>Libs\JavascriptCore\win64</Filter>
+    </None>
+    <None Include="..\src\Libs\PopH264\PopH264.pdb">
+      <Filter>Libs\PopH264</Filter>
+    </None>
+    <None Include="..\src\Libs\PopH264\PopH264.pdb.meta">
+      <Filter>Libs\PopH264</Filter>
+    </None>
+    <None Include="..\src\Libs\PopH264\PopH264.dll">
+      <Filter>Libs\PopH264</Filter>
+    </None>
+    <None Include="..\src\Libs\PopH264\PopH264.dll.meta">
+      <Filter>Libs\PopH264</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -529,9 +547,6 @@
     <ClCompile Include="..\src\TApiOpenglContext.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SoyLib\src\SoyEvent.cpp">
-      <Filter>SoyLib</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\JsCoreBind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -547,10 +562,16 @@
     <ClCompile Include="..\src\TApiMedia.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiSerial.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
       <Filter>Libs\PopCameraDevice</Filter>
+    </Library>
+    <Library Include="..\src\Libs\PopH264\PopH264.lib">
+      <Filter>Libs\PopH264</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

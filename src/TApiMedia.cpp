@@ -9,6 +9,10 @@
 #if defined(TARGET_OSX)
 #include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
 #include "Libs/PopH264Framework.framework/Headers/PopH264.h"
+#elif defined(TARGET_WINDOWS)
+#pragma comment(lib,"PopH264.lib")
+#include "Libs/PopH264/PopH264.h"
+#include "Libs/PopH264/PopH264DecoderInstance.h"
 #endif
 
 #if defined(TARGET_WINDOWS)
@@ -19,7 +23,9 @@
 #include "Libs/PopCameraDeviceFramework.framework/Headers/TCameraDevice.h"
 #include "Libs/PopCameraDeviceFramework.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
+#pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
+#include "Libs/PopCameraDevice/TCameraDevice.h"
 #endif
 
 //	video capture
@@ -56,6 +62,49 @@ namespace PopCameraDevice
 	};
 }
 
+
+//	gr: wrapper for PopCameraDevice's C interface
+//	gr: until we add a callback in the dll, this just keeps checking for frames
+//	gr: this thread could wait and wake up once the frame is popped
+class PopCameraDevice::TInstance
+{
+public:
+	TInstance(const std::string& Name);
+	~TInstance();
+
+	bool			HasFrame() { return !mLastPlanes.IsEmpty(); }
+	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time);
+
+protected:
+	void			OnNewFrame();
+	TDevice&		GetDevice();
+
+public:
+	std::function<void()>	mOnNewFrame;
+
+protected:
+	int32_t		mHandle = 0;
+
+	std::recursive_mutex	mLastPlanesLock;
+	SoyTime					mLastPlanesTime;
+	//	gr: turn this into a TPixelBuffer
+	Array<std::shared_ptr<SoyPixelsImpl>> mLastPlanes;
+};
+
+
+
+class PopH264::TInstance
+{
+public:
+	TInstance();
+	~TInstance();
+
+	TDecoderInstance&	GetDecoder();
+	void				PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
+
+protected:
+	int32_t		mHandle = 0;
+};
 
 
 namespace ApiMedia
@@ -129,14 +178,10 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
-#if defined(TARGET_OSX)
-	mDecoder.reset( new PopH264::TDecoderInstance );
+	mDecoder.reset( new PopH264::TInstance );
 	std::string ThreadName("TAvcDecoderWrapper::DecoderThread");
 	mDecoderThread.reset( new SoyWorkerJobThread(ThreadName) );
 	mDecoderThread->Start();
-#else
-	throw Soy::AssertException("TAvcDecoderWrapper unsupported");
-#endif
 }
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -201,10 +246,11 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			}
 		};
 		
-		
-		TFrame Frame;
+		auto& Decoder = This.mDecoder->GetDecoder();
+		PopH264::TFrame Frame;
 		Array<Bind::TObject> Frames;
-		while ( This.mDecoder->PopFrame(Frame) )
+		/*
+		while ( Decoder.PopFrame(Frame) )
 		{
 			auto ExtractPlanes = _ExtractPlanes;
 
@@ -235,6 +281,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
 			Frames.PushBack( FrameImageObject );
 		}
+		*/
 		Promise.Resolve( GetArrayBridge(Frames) );
 	};
 
@@ -245,13 +292,10 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 		
 		try
 		{
-#if defined(TARGET_OSX)
+			auto& Decoder = *This.mDecoder;
 			//	push data into queue
-			This.mDecoder->PushData( PacketBytes.GetArray(), PacketBytes.GetDataSize(), 0 );
+			Decoder.PushData(GetArrayBridge(PacketBytes), 0);
 			Context.Queue( Resolve );
-#else
-			throw Soy::AssertException("TAvcDecoderWrapper unsupported");
-#endif
 		}
 		catch(std::exception& e)
 		{
@@ -298,34 +342,6 @@ void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDe
 	Soy::StringSplitByString(EnumMatch, DeviceNames, SplitChar, false);
 }
 
-
-//	gr: wrapper for PopCameraDevice's C interface
-//	gr: until we add a callback in the dll, this just keeps checking for frames
-//	gr: this thread could wait and wake up once the frame is popped
-class PopCameraDevice::TInstance
-{
-public:
-	TInstance(const std::string& Name);
-	~TInstance();
-
-	bool			HasFrame() { return !mLastPlanes.IsEmpty(); }
-	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time);
-
-protected:
-	void			OnNewFrame();
-	TDevice&		GetDevice();
-
-public:
-	std::function<void()>	mOnNewFrame;
-
-protected:
-	int32_t		mHandle = 0;
-
-	std::recursive_mutex	mLastPlanesLock;
-	SoyTime					mLastPlanesTime;
-	//	gr: turn this into a TPixelBuffer
-	Array<std::shared_ptr<SoyPixelsImpl>> mLastPlanes;
-};
 
 
 PopCameraDevice::TInstance::TInstance(const std::string& Name)
@@ -442,6 +458,8 @@ bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPix
 	mLastPlanesTime = SoyTime();
 	return true;
 }
+
+
 
 
 
@@ -635,3 +653,47 @@ Bind::TPromise TPopCameraDeviceWrapper::AllocFrameRequestPromise(Bind::TContext&
 	return mFrameRequests.AddPromise( Context );
 }
 
+
+PopH264::TInstance::TInstance()
+{
+	mHandle = PopH264_CreateInstance();
+	if ( mHandle <= 0 )
+	{
+		std::stringstream Error;
+		Error << "Failed to create PopH264 instance. Error=" << mHandle;
+		throw Soy::AssertException(Error.str());
+	}
+
+}
+
+
+PopH264::TInstance::~TInstance()
+{
+	PopH264_DestroyInstance(mHandle);
+}
+
+PopH264::TDecoderInstance& PopH264::TInstance::GetDecoder()
+{
+	auto* DecoderPointer = PopH264_GetInstancePtr( mHandle );
+	if ( !DecoderPointer )
+	{
+		std::stringstream Error;
+		Error << "Decoder is null for instance " << mHandle;
+		throw Soy::AssertException(Error.str());
+	}
+	return *DecoderPointer;
+}
+
+
+void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber)
+{
+	auto* DataPtr = Data.GetArray();
+	auto DataSize = Data.GetDataSize();
+	auto Result = PopH264_PushData( mHandle, DataPtr, DataSize, FrameNumber);
+	if ( Result != 0 )
+	{
+		std::stringstream Error;
+		Error << "PopH264_PushData(handle=" << mHandle << ") returned " << Result;
+		throw Soy::AssertException(Error.str());
+	}
+}
