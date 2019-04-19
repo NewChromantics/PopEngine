@@ -6,6 +6,7 @@ class TMediaPacket;
 class TMediaExtractor;
 class TMediaExtractorParams;
 
+
 namespace PopH264
 {
 	class TDecoderInstance;
@@ -18,7 +19,7 @@ namespace Broadway
 
 namespace PopCameraDevice
 {
-	class TDevice;
+	class TInstance;
 }
 
 namespace ApiMedia
@@ -50,40 +51,8 @@ public:
 };
 
 
-class TMediaSourceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,TMediaExtractor>
-{
-public:
-	TMediaSourceWrapper(Bind::TContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
-	{
-	}
-	~TMediaSourceWrapper();
-	
-	static void								CreateTemplate(Bind::TTemplate& Template);
-	
-	virtual void 							Construct(Bind::TCallback& Params) override;
 
-	void									OnNewFrame(size_t StreamIndex);
-	static void								Free(Bind::TCallback& Params);
-	static void								GetNextFrame(Bind::TCallback& Params);
-	static void								PopFrame(Bind::TCallback& Params);
-
-	Bind::TPromise							AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params);
-	Bind::TObject							PopFrame(Bind::TContext& Context,const TFrameRequestParams& Params);
-
-	static std::shared_ptr<TMediaExtractor>	AllocExtractor(const TMediaExtractorParams& Params);
-
-public:
-	std::shared_ptr<TMediaExtractor>&		mExtractor = mObject;
-	
-	//	gr: this should really store params per promise, but I want to use TPromiseQUeue
-	TFrameRequestParams						mFrameRequestParams;
-	Bind::TPromiseQueue						mFrameRequests;
-};
-
-
-
-class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,PopCameraDevice::TDevice>
+class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,PopCameraDevice::TInstance>
 {
 public:
 	TPopCameraDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
@@ -105,7 +74,7 @@ public:
 
 
 public:
-	std::shared_ptr<PopCameraDevice::TDevice>&	mExtractor = mObject;
+	std::shared_ptr<PopCameraDevice::TInstance>&	mExtractor = mObject;
 
 	//	gr: this should really store params per promise, but I want to use TPromiseQUeue
 	TFrameRequestParams						mFrameRequestParams;

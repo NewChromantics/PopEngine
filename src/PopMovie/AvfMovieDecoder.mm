@@ -898,26 +898,6 @@ std::shared_ptr<Platform::TMediaFormat>	GetStreamFormat(size_t StreamIndex)
 }
 
 
-CVPixelBuffer::~CVPixelBuffer()
-{
-	//	release
-	if ( mSample )
-	{
-		//auto RetainCount = CFGetRetainCount( mSample.mObject );
-		CVBufferRelease( mSample.mObject );
-		mSample.Release();
-	}
-}
-
-
-CVImageBufferRef CVPixelBuffer::LockImageBuffer()
-{
-	return mSample.mObject;
-}
-
-void CVPixelBuffer::UnlockImageBuffer()
-{
-}
 
 
 @implementation AvfPlayerDelegate
