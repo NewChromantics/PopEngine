@@ -80,11 +80,9 @@
 		BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
 		BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
 		BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF691F001C3FEEE90092FC34 /* SoySrt.cpp */; };
-		BF6EB3262111160500FC991B /* AvfVideoCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3242111160500FC991B /* AvfVideoCapture.mm */; };
 		BF6EB3292111167800FC991B /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
 		BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB32A21111C6600FC991B /* AVFoundation.framework */; };
 		BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB32C21111C8300FC991B /* CoreMedia.framework */; };
-		BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB32F21111C9E00FC991B /* AvfPixelBuffer.mm */; };
 		BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33121111D0800FC991B /* SoyAvf.mm */; };
 		BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB33421111D2900FC991B /* VideoToolbox.framework */; };
 		BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33721111D7200FC991B /* SoyTime.mm */; };
@@ -115,7 +113,6 @@
 		BFB647382225593600820612 /* SoyHid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFB647362225593600820612 /* SoyHid.cpp */; };
 		BFD4456520E67037007E2497 /* PopTrack.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopTrack.xib */; };
 		BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */; };
-		BFD4D56321342E310028A647 /* AvfMovieDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFD4D56121342E310028A647 /* AvfMovieDecoder.mm */; };
 		BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
@@ -135,7 +132,6 @@
 		FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
 		FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
 		FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06271A2E5A7C0099596C /* SoyDebug.cpp */; };
-		FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A062A1A2E5A7C0099596C /* SoyEvent.cpp */; };
 		FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */; };
 		FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06391A2E5A7C0099596C /* SoyPixels.cpp */; };
 		FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A063B1A2E5A7C0099596C /* SoyPng.cpp */; };
@@ -309,14 +305,10 @@
 		BF689AFF20D9A52E000BC812 /* TV8Container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Container.h; path = src/TV8Container.h; sourceTree = "<group>"; };
 		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
 		BF691F011C3FEEE90092FC34 /* SoySrt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySrt.h; path = src/SoySrt.h; sourceTree = "<group>"; };
-		BF6EB3242111160500FC991B /* AvfVideoCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AvfVideoCapture.mm; sourceTree = "<group>"; };
-		BF6EB3252111160500FC991B /* AvfVideoCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvfVideoCapture.h; sourceTree = "<group>"; };
 		BF6EB3272111167800FC991B /* TApiMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiMedia.cpp; path = src/TApiMedia.cpp; sourceTree = "<group>"; };
 		BF6EB3282111167800FC991B /* TApiMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiMedia.h; path = src/TApiMedia.h; sourceTree = "<group>"; };
 		BF6EB32A21111C6600FC991B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		BF6EB32C21111C8300FC991B /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		BF6EB32E21111C9E00FC991B /* AvfPixelBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvfPixelBuffer.h; sourceTree = "<group>"; };
-		BF6EB32F21111C9E00FC991B /* AvfPixelBuffer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AvfPixelBuffer.mm; sourceTree = "<group>"; };
 		BF6EB33121111D0800FC991B /* SoyAvf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyAvf.mm; path = src/SoyAvf.mm; sourceTree = "<group>"; };
 		BF6EB33221111D0800FC991B /* SoyAvf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyAvf.h; path = src/SoyAvf.h; sourceTree = "<group>"; };
 		BF6EB33421111D2900FC991B /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
@@ -393,8 +385,6 @@
 		BFD4456120E66D3C007E2497 /* libicui18n.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicui18n.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libicui18n.dylib"; sourceTree = "<absolute>"; };
 		BFD4456620E6711A007E2497 /* SoyRuntimeLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyRuntimeLibrary.h; path = src/SoyRuntimeLibrary.h; sourceTree = "<group>"; };
 		BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyRuntimeLibrary.cpp; path = src/SoyRuntimeLibrary.cpp; sourceTree = "<group>"; };
-		BFD4D56121342E310028A647 /* AvfMovieDecoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AvfMovieDecoder.mm; sourceTree = "<group>"; };
-		BFD4D56221342E310028A647 /* AvfMovieDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvfMovieDecoder.h; sourceTree = "<group>"; };
 		BFD4D564213451D20028A647 /* SoyTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTime.h; path = src/SoyTime.h; sourceTree = "<group>"; };
 		BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMedia.cpp; path = src/SoyMedia.cpp; sourceTree = "<group>"; };
 		BFDE37F91C89B20D00D10F02 /* SoyMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMedia.h; path = src/SoyMedia.h; sourceTree = "<group>"; };
@@ -449,8 +439,6 @@
 		FB8A06271A2E5A7C0099596C /* SoyDebug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyDebug.cpp; path = src/SoyDebug.cpp; sourceTree = "<group>"; };
 		FB8A06281A2E5A7C0099596C /* SoyDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyDebug.h; path = src/SoyDebug.h; sourceTree = "<group>"; };
 		FB8A06291A2E5A7C0099596C /* SoyEnum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyEnum.h; path = src/SoyEnum.h; sourceTree = "<group>"; };
-		FB8A062A1A2E5A7C0099596C /* SoyEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyEvent.cpp; path = src/SoyEvent.cpp; sourceTree = "<group>"; };
-		FB8A062B1A2E5A7C0099596C /* SoyEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyEvent.h; path = src/SoyEvent.h; sourceTree = "<group>"; };
 		FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMemFile.cpp; path = src/SoyMemFile.cpp; sourceTree = "<group>"; };
 		FB8A06311A2E5A7C0099596C /* SoyMemFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMemFile.h; path = src/SoyMemFile.h; sourceTree = "<group>"; };
 		FB8A06391A2E5A7C0099596C /* SoyPixels.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyPixels.cpp; path = src/SoyPixels.cpp; sourceTree = "<group>"; };
@@ -722,20 +710,6 @@
 			path = src;
 			sourceTree = "<group>";
 		};
-		BFA8A5D92111151200F12534 /* PopMovie */ = {
-			isa = PBXGroup;
-			children = (
-				BFD4D56221342E310028A647 /* AvfMovieDecoder.h */,
-				BFD4D56121342E310028A647 /* AvfMovieDecoder.mm */,
-				BF6EB32E21111C9E00FC991B /* AvfPixelBuffer.h */,
-				BF6EB32F21111C9E00FC991B /* AvfPixelBuffer.mm */,
-				BF6EB3252111160500FC991B /* AvfVideoCapture.h */,
-				BF6EB3242111160500FC991B /* AvfVideoCapture.mm */,
-			);
-			name = PopMovie;
-			path = src/PopMovie;
-			sourceTree = SOURCE_ROOT;
-		};
 		BFFCACC721FF63AA00153C4E /* CoreMlModels */ = {
 			isa = PBXGroup;
 			children = (
@@ -783,7 +757,6 @@
 				FBF67B071A96B2BE00F74C38 /* Cocoa.framework */,
 				FB9C89991A82DFBA00931EFB /* OpenGL.framework */,
 				B71D7B252137F7EE00F29EA0 /* SoyDeckLink */,
-				BFA8A5D92111151200F12534 /* PopMovie */,
 				BF459C7C21F7C72600CED59D /* Libraries */,
 				FB8A06221A2E5A280099596C /* soylib */,
 				FB8A05951A2E54730099596C /* src */,
@@ -918,8 +891,6 @@
 				FB8A06281A2E5A7C0099596C /* SoyDebug.h */,
 				FB6650CC1A56FD8600DF0A12 /* SoyDebug.mm */,
 				FB8A06291A2E5A7C0099596C /* SoyEnum.h */,
-				FB8A062A1A2E5A7C0099596C /* SoyEvent.cpp */,
-				FB8A062B1A2E5A7C0099596C /* SoyEvent.h */,
 				BFE572831B544E3400B17528 /* SoyFilesystem.cpp */,
 				BFE572841B544E3400B17528 /* SoyFilesystem.h */,
 				BF689AD520D6DA85000BC812 /* SoyFilesystem.mm */,
@@ -980,7 +951,6 @@
 				FB8A064C1A2E5A7C0099596C /* SoyThread.cpp */,
 				FB8A064D1A2E5A7C0099596C /* SoyThread.h */,
 				BF012B70226A3225003AEB55 /* SoyTime.cpp */,
-				BFD4D564213451D20028A647 /* SoyTime.h */,
 				BF012B6F226A3224003AEB55 /* SoyTime.mm */,
 				BFD4D564213451D20028A647 /* SoyTime.h */,
 				BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */,
@@ -1097,7 +1067,6 @@
 				BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */,
 				BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */,
 				BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */,
-				BF6EB3262111160500FC991B /* AvfVideoCapture.mm in Sources */,
 				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
@@ -1137,13 +1106,10 @@
 				BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */,
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
-				BF6EB33021111C9E00FC991B /* AvfPixelBuffer.mm in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
-				FB2534D11A974E7B00A61590 /* SoyEvent.cpp in Sources */,
 				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
 				BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */,
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
-				BFD4D56321342E310028A647 /* AvfMovieDecoder.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,
 				BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */,
 				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,

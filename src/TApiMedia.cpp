@@ -8,24 +8,24 @@
 //	video decoding
 #if defined(TARGET_OSX)
 #include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
+#include "Libs/PopH264Framework.framework/Headers/PopH264.h"
 #endif
 
 #if defined(TARGET_WINDOWS)
 #include "Soylib/src/SoyRuntimeLibrary.h"
 #endif
 
-#include "Libs/PopCameraDeviceFramework.framework/Headers/TCameraDevice.h"
-
-//	video capture
-namespace PopCameraDevice
-{
-	//	put C funcs into namespace
 #if defined(TARGET_OSX)
+#include "Libs/PopCameraDeviceFramework.framework/Headers/TCameraDevice.h"
 #include "Libs/PopCameraDeviceFramework.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
 #endif
 
+//	video capture
+namespace PopCameraDevice
+{
+	//	put C funcs into namespace
 	void	EnumDevices(std::function<void(const std::string&)> EnumDevice);
 	void	LoadDll();
 
@@ -285,7 +285,7 @@ void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDe
 {
 	LoadDll();
 	char DeviceNamesBuffer[2000] = {0};
-	EnumCameraDevices(DeviceNamesBuffer, sizeofarray(DeviceNamesBuffer));
+	PopCameraDevice_EnumCameraDevices(DeviceNamesBuffer, sizeofarray(DeviceNamesBuffer));
 
 	//	now split
 	auto SplitChar = DeviceNamesBuffer[0];
@@ -331,7 +331,7 @@ protected:
 PopCameraDevice::TInstance::TInstance(const std::string& Name) :
 	SoyWorkerThread	( std::string("PopCameraDevice::TInstance ") + Name,SoyWorkerWaitMode::Sleep )
 {
-	mHandle = CreateCameraDevice(Name.c_str());
+	mHandle = PopCameraDevice_CreateCameraDevice(Name.c_str());
 	if ( mHandle <= 0 )
 	{
 		std::stringstream Error;
@@ -357,15 +357,12 @@ PopCameraDevice::TInstance::TInstance(const std::string& Name) :
 PopCameraDevice::TInstance::~TInstance()
 {
 	Stop();
-#if !defined(TARGET_WINDOWS)
-#else
-	FreeCameraDevice(mHandle);
-#endif
+	PopCameraDevice_FreeCameraDevice(mHandle);
 }
 
 PopCameraDevice::TDevice& PopCameraDevice::TInstance::GetDevice()
 {
-	auto* DevicePointer = GetDevicePtr( mHandle );
+	auto* DevicePointer = PopCameraDevice_GetDevicePtr( mHandle );
 	if ( !DevicePointer )
 	{
 		std::stringstream Error;
@@ -380,7 +377,7 @@ bool PopCameraDevice::TInstance::Iteration()
 	//	get meta so we know what buffers to allocate
 	const int MetaValuesSize = 100;
 	int MetaValues[MetaValuesSize];
-	GetMeta(mHandle, MetaValues, MetaValuesSize);
+	PopCameraDevice_GetMeta(mHandle, MetaValues, MetaValuesSize);
 	
 	//	dont have meta yet
 	auto PlaneCount = MetaValues[MetaIndex::PlaneCount];
@@ -417,7 +414,7 @@ bool PopCameraDevice::TInstance::Iteration()
 	}
 	
 	//	check for a new frame
-	auto Result = PopFrame(mHandle,
+	auto Result = PopCameraDevice_PopFrame(mHandle,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
 		PlanePixelsBytes[1], PlanePixelsByteSize[1],
 		PlanePixelsBytes[2], PlanePixelsByteSize[2]
