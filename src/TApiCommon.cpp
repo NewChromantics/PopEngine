@@ -341,6 +341,13 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 		Object.SetInt( Name, Count );
 	}
 
+	//	set persistent info
+	{
+		auto& ContextDebug = Params.mContext.mDebug;
+		Object.SetInt( "PersistentObjects", ContextDebug.mPersistentObjectCount );
+		Object.SetInt( "PersistentFunctions", ContextDebug.mPersistentFunctionCount );
+	}
+	
 	Params.Return( Object );
 }
 

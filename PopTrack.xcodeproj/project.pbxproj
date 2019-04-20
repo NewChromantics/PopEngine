@@ -85,8 +85,6 @@
 		BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB32C21111C8300FC991B /* CoreMedia.framework */; };
 		BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33121111D0800FC991B /* SoyAvf.mm */; };
 		BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB33421111D2900FC991B /* VideoToolbox.framework */; };
-		BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33721111D7200FC991B /* SoyTime.mm */; };
-		BF6EB33A21111D7200FC991B /* SoyTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33821111D7200FC991B /* SoyTime.cpp */; };
 		BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33C21111D7A00FC991B /* SoyH264.cpp */; };
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
@@ -312,8 +310,6 @@
 		BF6EB33121111D0800FC991B /* SoyAvf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyAvf.mm; path = src/SoyAvf.mm; sourceTree = "<group>"; };
 		BF6EB33221111D0800FC991B /* SoyAvf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyAvf.h; path = src/SoyAvf.h; sourceTree = "<group>"; };
 		BF6EB33421111D2900FC991B /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
-		BF6EB33721111D7200FC991B /* SoyTime.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTime.mm; path = src/SoyTime.mm; sourceTree = "<group>"; };
-		BF6EB33821111D7200FC991B /* SoyTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTime.cpp; path = src/SoyTime.cpp; sourceTree = "<group>"; };
 		BF6EB33B21111D7A00FC991B /* SoyH264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyH264.h; path = src/SoyH264.h; sourceTree = "<group>"; };
 		BF6EB33C21111D7A00FC991B /* SoyH264.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyH264.cpp; path = src/SoyH264.cpp; sourceTree = "<group>"; };
 		BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyStream.cpp; path = src/SoyStream.cpp; sourceTree = "<group>"; };
@@ -455,7 +451,6 @@
 		FB8A064D1A2E5A7C0099596C /* SoyThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyThread.h; path = src/SoyThread.h; sourceTree = "<group>"; };
 		FB8A06501A2E5A7C0099596C /* SoyTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTypes.cpp; path = src/SoyTypes.cpp; sourceTree = "<group>"; };
 		FB8A06511A2E5A7C0099596C /* SoyTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyTypes.h; path = src/SoyTypes.h; sourceTree = "<group>"; };
-		FB8A06521A2E5A7C0099596C /* string.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = string.hpp; path = src/string.hpp; sourceTree = "<group>"; };
 		FB8A07151A2E6BBF0099596C /* sha1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha1.cpp; path = src/smallsha1/sha1.cpp; sourceTree = "<group>"; };
 		FB8A07161A2E6BBF0099596C /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sha1.h; path = src/smallsha1/sha1.h; sourceTree = "<group>"; };
 		FB9C89981A82D2A700931EFB /* RemoteArray.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RemoteArray.h; path = src/RemoteArray.h; sourceTree = "<group>"; };
@@ -951,8 +946,8 @@
 				FB8A064C1A2E5A7C0099596C /* SoyThread.cpp */,
 				FB8A064D1A2E5A7C0099596C /* SoyThread.h */,
 				BF012B70226A3225003AEB55 /* SoyTime.cpp */,
-				BF012B6F226A3224003AEB55 /* SoyTime.mm */,
 				BFD4D564213451D20028A647 /* SoyTime.h */,
+				BF012B6F226A3224003AEB55 /* SoyTime.mm */,
 				BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */,
 				BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */,
 				BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */,
@@ -972,9 +967,6 @@
 				BFA297231B80E8DE003B91F6 /* SoyWindow.h */,
 				BFA297241B80EF1C003B91F6 /* SoyWindow.mm */,
 				FB5702CA1A5FDC8800449FF3 /* stb */,
-				FB8A06521A2E5A7C0099596C /* string.hpp */,
-				BF6EB33821111D7200FC991B /* SoyTime.cpp */,
-				BF6EB33721111D7200FC991B /* SoyTime.mm */,
 			);
 			name = soylib;
 			path = src/SoyLib;
@@ -1108,7 +1100,6 @@
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
 				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
-				BF6EB33921111D7200FC991B /* SoyTime.mm in Sources */,
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,
 				BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */,
@@ -1133,7 +1124,6 @@
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
-				BF6EB33A21111D7200FC991B /* SoyTime.cpp in Sources */,
 				BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */,
 				FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */,
 			);

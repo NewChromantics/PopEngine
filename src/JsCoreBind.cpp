@@ -845,7 +845,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 		ThrowException( Exception );
 		
 		TFunction MakePromiseFunction( mContext, FunctionValue );
-		mMakePromiseFunction = MakePromiseFunction;
+		mMakePromiseFunction = TPersistent( MakePromiseFunction, "MakePromiseFunction" );
 	}
 	
 	auto MakePromiseFunction = mMakePromiseFunction.GetFunction();
@@ -1140,18 +1140,18 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 
 std::shared_ptr<JsCore::TPersistent> JsCore::TContext::CreatePersistentPtr(JsCore::TObject& Object)
 {
-	std::shared_ptr<JsCore::TPersistent> Ptr( new JsCore::TPersistent( Object ) );
+	std::shared_ptr<JsCore::TPersistent> Ptr( new JsCore::TPersistent( Object, "CreatePersistentPtr" ) );
 	return Ptr;
 }
 
 JsCore::TPersistent JsCore::TContext::CreatePersistent(JsCore::TObject& Object)
 {
-	return JsCore::TPersistent( Object );
+	return JsCore::TPersistent( Object, "CreatePersistent(Object)" );
 }
 
 JsCore::TPersistent JsCore::TContext::CreatePersistent(JsCore::TFunction& Object)
 {
-	return JsCore::TPersistent( Object );
+	return JsCore::TPersistent( Object, "CreatePersistent(Function)" );
 }
 
 std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
@@ -1169,18 +1169,33 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 
 JsCore::TPersistent::~TPersistent()
 {
+	Release();
+}
+
+void JsCore::TPersistent::Release()
+{
+	//	can only get context if there is an object
+	if ( IsObject() || IsFunction() )
+	{
+		auto& Context = GetContext();
+		Context.OnPersitentReleased(*this);
+	}
+	
 	if ( mObject.mThis != nullptr )
 	{
 		JSValueUnprotect( mObject.mContext, mObject.mThis );
+		mObject = TObject();
 	}
 	 
 	if ( mFunction.mThis != nullptr )
 	{
 		JSValueUnprotect( mFunction.mContext, mFunction.mThis );
+		mFunction = TFunction();
 	}
 }
 
-JSContextRef JsCore::TPersistent::GetContext() const
+
+JSContextRef JsCore::TPersistent::GetContextRef() const
 {
 	if ( mObject.mContext )
 		return mObject.mContext;
@@ -1191,25 +1206,56 @@ JSContextRef JsCore::TPersistent::GetContext() const
 	throw Soy::AssertException("Trying to get context from persistent with no object");
 }
 
-void JsCore::TPersistent::Retain(const TObject& Object)
+
+JsCore::TContext& JsCore::TPersistent::GetContext()
 {
-	mObject = Object;
-	JSValueProtect( mObject.mContext, mObject.mThis );
+	auto ContextRef = GetContextRef();
+	auto& Context = JsCore::GetContext(ContextRef);
+	return Context;
 }
 
-void JsCore::TPersistent::Retain(const TFunction& Function)
+
+void JsCore::TPersistent::Retain(const TObject& Object,const std::string& DebugName)
 {
+	if ( IsObject() || IsFunction() )
+	{
+		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
+		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
+		Release();
+	}
+	
+	mDebugName = DebugName;
+	mObject = Object;
+	JSValueProtect( mObject.mContext, mObject.mThis );
+	
+	//	need an object to get context
+	if ( IsObject() || IsFunction() )
+	{
+		auto& Context = GetContext();
+		Context.OnPersitentRetained(*this);
+	}
+}
+
+void JsCore::TPersistent::Retain(const TFunction& Function,const std::string& DebugName)
+{
+	if ( IsObject() || IsFunction() )
+		throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
+
+	mDebugName = DebugName;
 	mFunction = Function;
 	JSValueProtect( mFunction.mContext, mFunction.mThis );
+	
+	auto& Context = GetContext();
+	Context.OnPersitentRetained(*this);
 }
 
 void JsCore::TPersistent::Retain(const TPersistent& That)
 {
 	if ( That.mFunction.mThis != nullptr )
-		Retain( That.mFunction );
+		Retain( That.mFunction, That.mDebugName );
 	
 	if ( That.mObject.mThis != nullptr )
-		Retain( That.mObject );
+		Retain( That.mObject, That.mDebugName );
 }
 
 
@@ -1422,9 +1468,9 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 }
 
 JsCore::TPromise::TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName) :
-	mPromise	( Promise ),
-	mResolve	( Resolve ),
-	mReject		( Reject ),
+	mPromise	( Promise, DebugName + "(Promise)" ),
+	mResolve	( Resolve, DebugName + "(Resolve)" ),
+	mReject		( Reject, DebugName + "(Reject)" ),
 	mDebugName	( DebugName )
 {
 }
@@ -1492,3 +1538,21 @@ void JsCore::TObjectWrapperBase::SetHandle(JsCore::TObject& NewHandle)
 	mHandle = NewHandle;
 }
 
+
+void JsCore::TContextDebug::OnPersitentRetained(TPersistent& Persistent)
+{
+	if ( Persistent.IsObject() )
+		mPersistentObjectCount++;
+
+	if ( Persistent.IsFunction() )
+		mPersistentFunctionCount++;
+}
+
+void JsCore::TContextDebug::OnPersitentReleased(TPersistent& Persistent)
+{
+	if ( Persistent.IsObject() )
+		mPersistentObjectCount--;
+	
+	if ( Persistent.IsFunction() )
+		mPersistentFunctionCount--;
+}

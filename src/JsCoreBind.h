@@ -21,10 +21,11 @@ namespace Bind
 namespace JsCore
 {
 	typedef Bind::TInstance TInstance;
-	//class TInstance;	//	vm
+	//class TInstance;		//	vm
 	class TContext;
-	class TJobQueue;	//	thread of js-executions
-	class TCallback;	//	function parameters
+	class TJobQueue;		//	thread of js-executions
+	class TCallback;		//	function parameters
+	class TContextDebug;	//	debug meta for a context
 	
 	class TObject;
 	class TFunction;
@@ -368,8 +369,8 @@ public:
 	TPersistent()	{}
 	TPersistent(const TPersistent& That)	{	Retain( That );	}
 	TPersistent(const TPersistent&& That)	{	Retain( That );	}
-	TPersistent(const TObject& Object)		{	Retain( Object );	}
-	TPersistent(const TFunction& Object)	{	Retain( Object );	}
+	TPersistent(const TObject& Object,const std::string& DebugName)		{	Retain( Object, DebugName );	}
+	TPersistent(const TFunction& Object,const std::string& DebugName)	{	Retain( Object, DebugName );	}
 	~TPersistent();							//	dec refound
 	
 	operator		bool() const		{	return IsFunction() || IsObject();	}
@@ -379,20 +380,33 @@ public:
 	//	const for lambda[=] capture
 	TObject			GetObject() const		{	return mObject;	}
 	TFunction		GetFunction() const		{	return mFunction;	}
-	JSContextRef	GetContext() const;
-	
+	JSContextRef	GetContextRef() const;
+	TContext&		GetContext();
+
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
-	void		Retain(const TObject& Object);
-	void		Retain(const TFunction& Object);
+	void		Retain(const TObject& Object,const std::string& DebugName);
+	void		Retain(const TFunction& Object,const std::string& DebugName);
 	void		Retain(const TPersistent& That);
+	void 		Release();
 	
 public:
+	std::string	mDebugName;
 	TObject		mObject;
 	TFunction	mFunction;
 };
 
+
+class JsCore::TContextDebug
+{
+public:
+	void	OnPersitentRetained(TPersistent& Persistent);
+	void	OnPersitentReleased(TPersistent& Persistent);
+
+	int		mPersistentObjectCount=0;
+	int		mPersistentFunctionCount=0;
+};
 
 //	functions marked virtual need to become generic
 class JsCore::TContext //: public JsCore::TContext
@@ -448,6 +462,9 @@ public:
 	JSValueRef			CallFunc(std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
 	
 	
+	void				OnPersitentRetained(TPersistent& Persistent)	{	mDebug.OnPersitentRetained(Persistent);	}
+	void				OnPersitentReleased(TPersistent& Persistent)	{	mDebug.OnPersitentReleased(Persistent);	}
+	
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
 	
@@ -473,6 +490,8 @@ public:
 	//	the same on other systems
 	TJobQueue			mJobQueue;
 	std::recursive_mutex	mExecuteLock;
+	
+	TContextDebug		mDebug;
 };
 
 
@@ -496,7 +515,7 @@ public:
 	void			Reject(JSValueRef Value) const;//			{	mReject.Call(nullptr,Value);	}
 	
 private:
-	JSContextRef	GetContext() const	{	return mPromise.GetContext();	}
+	JSContextRef	GetContext() const	{	return mPromise.GetContextRef();	}
 	
 public:
 	std::string		mDebugName;
