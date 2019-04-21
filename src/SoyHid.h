@@ -6,7 +6,7 @@
 
 #include <functional>
 #include <string>
-#include "SoyLib/src/bufferarray.hpp"
+#include "SoyLib/src/BufferArray.hpp"
 #include "SoyLib/src/HeapArray.hpp"
 
 #include <IOKit/hid/IOHIDManager.h>
