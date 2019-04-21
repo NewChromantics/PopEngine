@@ -1460,14 +1460,14 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	//		Parent.YourClass = function()
 	//	but JsObjectMake also creates objects...
 	auto PropertyName = GetString( Context.mContext, mDefinition.className );
-	auto ParentObject = ParentObjectName.length() ? Context.GetGlobalObject( ParentObjectName ) : TObject();
+	
+	//	gr: if you pass null as the parent object, this "class" gets garbage collected and free'd (with null)
+	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
 	JSObjectRef ClassObject = JSObjectMake( Context.mContext, mClass, nullptr );
-	if ( ParentObject.mThis )
-	{
-		JSValueRef Exception = nullptr;
-		JSObjectSetProperty( Context.mContext, ParentObject.mThis, PropertyName, ClassObject, kJSPropertyAttributeNone, &Exception );
-		ThrowException( Context.mContext, Exception );
-	}
+	
+	JSValueRef Exception = nullptr;
+	JSObjectSetProperty( Context.mContext, ParentObject.mThis, PropertyName, ClassObject, kJSPropertyAttributeNone, &Exception );
+	ThrowException( Context.mContext, Exception );
 }
 
 JsCore::TPromise::TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName) :
