@@ -404,7 +404,7 @@ public:
 	void	OnPersitentRetained(TPersistent& Persistent);
 	void	OnPersitentReleased(TPersistent& Persistent);
 
-	int		mPersistentObjectCount=0;
+	std::map<std::string,int>		mPersistentObjectCount;
 	int		mPersistentFunctionCount=0;
 };
 
@@ -585,6 +585,8 @@ public:
 protected:
 	static void				Free(JSObjectRef ObjectRef)
 	{
+		//	gr: if this fails as it's null, the object being cleaned up may be the class/constructor, if it isn't attached to anything (ie. not attached to the global!)
+		//		we shouldn't really have our own constructors being deleted!
 		//	free the void
 		//	cast to TObject and use This to do proper type checks
 		//std::Debug << "Free object of type " << TYPENAME << std::endl;
@@ -596,6 +598,7 @@ protected:
 			std::Debug << "Global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
 		
 		//	reset the void for safety?
+		std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
 		JSObjectSetPrivate( ObjectRef, nullptr );
 	}
 	

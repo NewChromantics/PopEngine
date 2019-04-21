@@ -1545,7 +1545,9 @@ void JsCore::TObjectWrapperBase::SetHandle(JsCore::TObject& NewHandle)
 void JsCore::TContextDebug::OnPersitentRetained(TPersistent& Persistent)
 {
 	if ( Persistent.IsObject() )
-		mPersistentObjectCount++;
+	{
+		mPersistentObjectCount[Persistent.mDebugName]++;
+	}
 
 	if ( Persistent.IsFunction() )
 		mPersistentFunctionCount++;
@@ -1554,7 +1556,9 @@ void JsCore::TContextDebug::OnPersitentRetained(TPersistent& Persistent)
 void JsCore::TContextDebug::OnPersitentReleased(TPersistent& Persistent)
 {
 	if ( Persistent.IsObject() )
-		mPersistentObjectCount--;
+	{
+		mPersistentObjectCount[Persistent.mDebugName]--;
+	}
 	
 	if ( Persistent.IsFunction() )
 		mPersistentFunctionCount--;
