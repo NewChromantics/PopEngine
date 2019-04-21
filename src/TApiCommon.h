@@ -29,21 +29,49 @@ namespace Opengl
 }
 
 
+namespace ApiPop
+{
+	class TAsyncLoop;
+	DECLARE_BIND_TYPENAME(AsyncLoop);
+}
+
+class TAsyncLoopWrapper : public Bind::TObjectWrapper<ApiPop::AsyncLoop_TypeName,ApiPop::TAsyncLoop>
+{
+public:
+	TAsyncLoopWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
+	{
+	}
+	
+	static void			CreateTemplate(Bind::TTemplate& Template);
+
+	virtual void 		Construct(Bind::TCallback& Params) override;
+	static void			Iteration(Bind::TCallback& Params);
+
+protected:
+	std::shared_ptr<ApiPop::TAsyncLoop>&	mAsyncLoop = mObject;
+	Bind::TPersistent		mFunction;
+	Bind::TPersistent		mIterationBindThisFunction;
+};
+
+
+
+
 //	an image is a generic accessor for pixels, opengl textures, etc etc
 extern const char Image_TypeName[];
 class TImageWrapper : public Bind::TObjectWrapper<Image_TypeName,SoyPixelsImpl>
 {
 public:
 	TImageWrapper(Bind::TContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
+	TObjectWrapper			( Context, This )
 	{
 	}
 	~TImageWrapper();
 	
 	static void			CreateTemplate(Bind::TTemplate& Template);
-
+	
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
-
+	
 	static void			Alloc(Bind::TCallback& Arguments);
 	static void			Flip(Bind::TCallback& Arguments);
 	static void			LoadFile(Bind::TCallback& Arguments);

@@ -296,8 +296,12 @@ int TWebSocketMessageHeader::GetLength() const
 		return Error.str();
 	};
 
-	if ( !Soy::Assert( Length < 127, Error  ) )
-		return -1;
+	if ( Length >= 127 )
+	{
+		std::stringstream Error;
+		Error << "Length (" << this->Length << ") expected < 127";
+		throw Soy::AssertException(Error);
+	}
 	
 //	if ( Length < 127 )
 	{

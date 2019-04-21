@@ -75,6 +75,7 @@ namespace JsCore
 	JSValueRef	GetValue(JSContextRef Context,const TPersistent& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TPromise& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TObject& Value);
+	JSValueRef	GetValue(JSContextRef Context,const TFunction& Value);
 	JSValueRef	GetValue(JSContextRef Context,const TArray& Value);
 	template<typename TYPE>
 	JSValueRef	GetValue(JSContextRef Context,const ArrayBridge<TYPE>& Array);
@@ -263,13 +264,16 @@ public:
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,JsCore::TObject& Value) bind_override;
+	virtual void			SetArgumentFunction(size_t Index,JsCore::TFunction& Value) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<float>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,JsCore::TArray& Value) bind_override;
 
 	virtual bool			GetReturnBool() bind_override			{	return GetBool( GetContextRef(), mReturn );	}
-	
+	virtual TObject			GetReturnObject() bind_override;
+	virtual TFunction		GetReturnFunction() bind_override;
+
 private:
 	JSContextRef			GetContextRef();
 	JSType					GetArgumentType(size_t Index);

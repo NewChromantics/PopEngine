@@ -282,6 +282,11 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TObject& Object)
 	return Object.mThis;
 }
 
+JSValueRef JsCore::GetValue(JSContextRef Context,const TFunction& Object)
+{
+	return Object.mThis;
+}
+
 JSValueRef JsCore::GetValue(JSContextRef Context,const TArray& Object)
 {
 	return Object.mThis;
@@ -930,6 +935,19 @@ JsCore::TInstance::
 
 */
 
+JsCore::TObject JsCore::TCallback::GetReturnObject()
+{
+	auto ContextRef = GetContextRef();
+	auto ObjectRef = GetObject( ContextRef, mReturn );
+	return TObject( ContextRef, ObjectRef );
+}
+
+JsCore::TFunction JsCore::TCallback::GetReturnFunction()
+{
+	auto ContextRef = GetContextRef();
+	//auto FunctionRef = GetFunction( ContextRef, mReturn );
+	return TFunction( ContextRef, mReturn );
+}
 
 JSContextRef JsCore::TCallback::GetContextRef()
 {
@@ -1092,6 +1110,11 @@ void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
 }
 
 void JsCore::TCallback::SetArgumentObject(size_t Index,JsCore::TObject& Value)
+{
+	SetArgument( mArguments, mContext, Index, Value );
+}
+
+void JsCore::TCallback::SetArgumentFunction(size_t Index,JsCore::TFunction& Value)
 {
 	SetArgument( mArguments, mContext, Index, Value );
 }

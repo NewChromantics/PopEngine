@@ -33,6 +33,7 @@ DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
 DEFINE_BIND_FUNCTIONNAME(Sleep);
 DEFINE_BIND_FUNCTIONNAME(Yield);
 DEFINE_BIND_FUNCTIONNAME(IsDebuggerAttached);
+DEFINE_BIND_FUNCTIONNAME(Thread);
 
 //	platform stuff
 DEFINE_BIND_FUNCTIONNAME(GetComputerName);
@@ -63,11 +64,13 @@ DEFINE_BIND_FUNCTIONNAME(Clear);
 DEFINE_BIND_FUNCTIONNAME(SetFormat);
 DEFINE_BIND_FUNCTIONNAME(GetFormat);
 
+DEFINE_BIND_FUNCTIONNAME(Iteration);
 
 namespace ApiPop
 {
 	const char Namespace[] = "Pop";
-	
+	DEFINE_BIND_TYPENAME(AsyncLoop);
+
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
 	static void 	CompileAndRun(Bind::TCallback& Params);
@@ -98,8 +101,9 @@ void ApiPop::Debug(Bind::TCallback& Params)
 	for ( auto a=0;	a<Params.GetArgumentCount();	a++ )
 	{
 		auto Arg = Params.GetArgumentString(a);
-		std::Debug << Arg << std::endl;
+		std::Debug << (a==0?"":",") << Arg;
 	}
+	std::Debug << std::endl;
 }
 
 
@@ -344,8 +348,26 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 	//	set persistent info
 	{
 		auto& ContextDebug = Params.mContext.mDebug;
-		Object.SetInt( "PersistentObjects", ContextDebug.mPersistentObjectCount );
-		Object.SetInt( "PersistentFunctions", ContextDebug.mPersistentFunctionCount );
+		Object.SetInt( "Persistent_Function", ContextDebug.mPersistentFunctionCount );
+		for ( auto it=ContextDebug.mPersistentObjectCount.begin();	it!=ContextDebug.mPersistentObjectCount.end();	it++ )
+		{
+			auto& Name = it->first;
+			auto Count = it->second;
+			Object.SetInt( std::string("Persistent_") + Name, Count );
+		}
+	}
+	
+	try
+	{
+		auto& DebugHeap = Soy::GetDebugStreamHeap();
+		Object.SetInt( "DebugStreamHeapSizeBytes", DebugHeap.GetAllocatedBytes() );
+
+		auto OpenglTextureCount = Opengl::TContext::GetTextureAllocationCount();
+		Object.SetInt( "OpenglTextureCount", OpenglTextureCount );
+
+	}
+	catch (std::exception& e)
+	{
 	}
 	
 	Params.Return( Object );
@@ -390,7 +412,6 @@ void ApiPop::GetExeDirectory(Bind::TCallback& Params)
 	
 	Params.Return( Path	);
 }
-
 
 
 void ApiPop::CompileAndRun(Bind::TCallback& Params)
@@ -445,8 +466,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.CreateGlobalObjectInstance("", Namespace);
 	
 	Context.BindObjectType<TImageWrapper>( Namespace );
-	
-	auto NamespaceObject = Context.GetGlobalObject(Namespace);
+	Context.BindObjectType<TAsyncLoopWrapper>( Namespace );
 	
 	Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
@@ -1281,5 +1301,87 @@ void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>>
 
 	mOpenglLastPixelReadBuffer = PixelBuffer;
 	mOpenglLastPixelReadBufferVersion = mOpenglTextureVersion;
+}
+
+
+
+
+
+void TAsyncLoopWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<Iteration_FunctionName>( Iteration );
+}
+	
+void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
+{
+	auto Function = Params.GetArgumentFunction(0);
+	mFunction = Bind::TPersistent( Function, "TAsyncLoopWrapper function" );
+
+	
+	static Bind::TPersistent MakeIterationBindThisFunction;
+	if ( !MakeIterationBindThisFunction )
+	{
+		auto* FunctionSource =  R"V0G0N(
+			let MakeThisFunction = function(This)
+			{
+				return This.Iteration.bind(This);
+			}
+			MakeThisFunction;
+		)V0G0N";
+
+		auto mContext = Params.mContext.mContext;
+		JSStringRef FunctionSourceString = JsCore::GetString( mContext, FunctionSource );
+		JSValueRef Exception = nullptr;
+		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		
+		Bind::TFunction MakePromiseFunction( mContext, FunctionValue );
+		//mIterationBindThisFunction = Bind::TPersistent( MakePromiseFunction, "MakePromiseFunction" );
+	
+		MakeIterationBindThisFunction = Bind::TPersistent(MakePromiseFunction,"MakeIterationBindThisFunction");
+	}
+	
+	{
+		auto This = GetHandle();
+		Bind::TCallback Call( Params.mContext );
+		Call.SetArgumentObject(0,This);
+		auto MakeFunc = MakeIterationBindThisFunction.GetFunction();
+		MakeFunc.Call(Call);
+		
+		auto IterationBindThisFunction = Call.GetReturnFunction();
+		this->mIterationBindThisFunction = Bind::TPersistent(IterationBindThisFunction,"Iteration Func");
+	}
+	
+	Iteration( Params );
+}
+
+void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
+{
+	//std::Debug << "Iteration()" << std::endl;
+	
+	auto* pThis = &Params.This<TAsyncLoopWrapper>();
+	auto Execute = [=](Bind::TContext& Context)
+	{
+		auto ThisHandle = pThis->GetHandle();
+		auto ThisIterationFunction = pThis->mIterationBindThisFunction.GetFunction();
+		
+		//	run the func, get the promise returned
+		//	append to then() something to run another iteration
+		JsCore::TCallback IterationCall(Context);
+		auto Func = pThis->mFunction.GetFunction();
+		//std::Debug << "AsyncFunc()" << std::endl;
+		Func.Call(IterationCall);
+		auto Promise = IterationCall.GetReturnObject();
+		
+		//	get the then function
+		auto ThenFunc = Promise.GetFunction("then");
+		JsCore::TCallback ThenCall(Context);
+		ThenCall.SetThis( Promise );
+		ThenCall.SetArgumentFunction(0,ThisIterationFunction);
+		//std::Debug << "then()" << std::endl;
+		ThenFunc.Call( ThenCall );
+	};
+	Params.mContext.Queue( Execute );
+	//std::Debug << "Context Queue Size: " << Params.mContext.mJobQueue.GetJobCount() << std::endl;
 }
 
