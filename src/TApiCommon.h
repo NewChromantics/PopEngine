@@ -33,6 +33,8 @@ namespace ApiPop
 {
 	class TAsyncLoop;
 	DECLARE_BIND_TYPENAME(AsyncLoop);
+	class TPromise;
+	DECLARE_BIND_TYPENAME(Promise);
 }
 
 class TAsyncLoopWrapper : public Bind::TObjectWrapper<ApiPop::AsyncLoop_TypeName,ApiPop::TAsyncLoop>
@@ -54,6 +56,37 @@ protected:
 	Bind::TPersistent		mIterationBindThisFunction;
 };
 
+
+
+class TPromiseWrapper : public Bind::TObjectWrapper<ApiPop::Promise_TypeName,ApiPop::TPromise>
+{
+public:
+	TPromiseWrapper(Bind::TContext& Context,Bind::TObject& This) :
+		TObjectWrapper			( Context, This )
+	{
+	}
+	
+	static void			CreateTemplate(Bind::TTemplate& Template);
+	
+	virtual void 		Construct(Bind::TCallback& Params) override;
+	
+	static void			Then(Bind::TCallback& Params);
+	static void			Catch(Bind::TCallback& Params);
+	static void			Resolve(Bind::TCallback& Params);
+	static void			Reject(Bind::TCallback& Params);
+
+	void				Flush();
+	void				Clear();	//	get rid of all references to objects
+
+protected:
+	std::shared_ptr<ApiPop::TPromise>&	mPromise = mObject;
+	//	function next in chain
+	Bind::TPersistent	mOnResolve;
+	Bind::TPersistent	mOnReject;
+	bool				mHasResolvedRejected = false;
+	JSValueRef			mResolvedValue;
+	JSValueRef			mRejectedValue;
+};
 
 
 

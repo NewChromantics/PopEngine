@@ -66,10 +66,16 @@ DEFINE_BIND_FUNCTIONNAME(GetFormat);
 
 DEFINE_BIND_FUNCTIONNAME(Iteration);
 
+DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Then,then);
+DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Catch,catch);
+DEFINE_BIND_FUNCTIONNAME(Resolve);
+DEFINE_BIND_FUNCTIONNAME(Reject);
+
 namespace ApiPop
 {
 	const char Namespace[] = "Pop";
 	DEFINE_BIND_TYPENAME(AsyncLoop);
+	DEFINE_BIND_TYPENAME(Promise);
 
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
@@ -161,8 +167,9 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 	
 	auto OnYield = [=](Bind::TContext& Context)
 	{
+		auto p = Promise;
 		//	don't need to do anything, we have just let the system breath
-		Promise.Resolve("Yield complete");
+		p.Resolve("Yield complete");
 	};
 
 	Params.mContext.Queue( OnYield, DelayMs );
@@ -467,7 +474,8 @@ void ApiPop::Bind(Bind::TContext& Context)
 	
 	Context.BindObjectType<TImageWrapper>( Namespace );
 	Context.BindObjectType<TAsyncLoopWrapper>( Namespace );
-	
+	Context.BindObjectType<TPromiseWrapper>( Namespace );
+
 	Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
 	Context.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
@@ -1383,5 +1391,128 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 	};
 	Params.mContext.Queue( Execute );
 	//std::Debug << "Context Queue Size: " << Params.mContext.mJobQueue.GetJobCount() << std::endl;
+}
+
+
+
+
+void TPromiseWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<Then_FunctionName>( Then );
+	Template.BindFunction<Catch_FunctionName>( Catch );
+	Template.BindFunction<Resolve_FunctionName>( Resolve );
+	Template.BindFunction<Reject_FunctionName>( Reject );
+}
+
+void TPromiseWrapper::Construct(Bind::TCallback& Params)
+{
+	/*
+	auto InitFunction = Params.GetArgumentFunction(0);
+	mFunction = Bind::TPersistent( Function, "TAsyncLoopWrapper function" );
+	*/
+	//	init function is supposed to setup with the resolve/reject funcs
+}
+
+void TPromiseWrapper::Then(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TPromiseWrapper>();
+	
+	//	set next in chain
+	//	if already resolved/rejected, do that
+	if ( !Params.IsArgumentUndefined(0) )
+	{
+		auto OnResolve = Params.GetArgumentFunction(0);
+		This.mOnResolve = Bind::TPersistent(OnResolve,"mOnResolve");
+	}
+	
+	if ( !Params.IsArgumentUndefined(1) )
+	{
+		auto OnReject = Params.GetArgumentFunction(1);
+		This.mOnReject = Bind::TPersistent(OnReject,"mOnReject");
+	}
+	
+	This.Flush();
+}
+
+void TPromiseWrapper::Catch(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TPromiseWrapper>();
+	//	set next in chain
+	//	if already resolved/rejected, do that
+	This.Flush();
+}
+
+
+void TPromiseWrapper::Resolve(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TPromiseWrapper>();
+	//	queue call to Then
+	//	store resolved value
+	This.mHasResolvedRejected = true;
+	This.Flush();
+}
+
+
+void TPromiseWrapper::Reject(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TPromiseWrapper>();
+	//	queue call to Catch
+	//	store rejected value
+	This.mHasResolvedRejected = true;
+	This.Flush();
+}
+
+void TPromiseWrapper::Flush()
+{
+	//	call appropriate function if they've been assigned
+	if ( !mHasResolvedRejected )
+	{
+		//	waiting to resolve or reject
+		return;
+	}
+	
+	bool Resolved = true;
+	if ( Resolved )
+	{
+		//	not assigned yet
+		//	gr: or is undefined...
+		if ( !mOnResolve.IsFunction() )
+			return;
+		
+		auto Flush = [this](Bind::TContext& Context)
+		{
+			auto OnResolve = this->mOnResolve.GetFunction();
+			Bind::TCallback Call( Context );
+			//	gr: send resolved value
+			OnResolve.Call( Call );
+			this->Clear();
+		};
+		GetContext().Queue(Flush);
+		return;
+	}
+	else
+	{
+		//	not assigned yet
+		if ( !mOnReject.IsFunction() )
+			return;
+		
+		auto Flush = [this](Bind::TContext& Context)
+		{
+			auto OnReject = this->mOnReject.GetFunction();
+			Bind::TCallback Call( Context );
+			//	gr: send resolved value
+			OnReject.Call( Call );
+			this->Clear();
+		};
+		GetContext().Queue(Flush);
+		return;
+	}
+
+}
+
+void TPromiseWrapper::Clear()
+{
+	this->mOnReject = Bind::TPersistent();
+	this->mOnResolve = Bind::TPersistent();
 }
 

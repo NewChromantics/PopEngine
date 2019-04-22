@@ -827,17 +827,59 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 
 JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 {
+	auto NewPromiseObject = CreateObjectInstance("Promise");
+	auto Resolve = NewPromiseObject.GetFunction("Resolve");
+	auto Reject = NewPromiseObject.GetFunction("Reject");
+	TPromise Promise( NewPromiseObject, Resolve, Reject, DebugName );
+	return Promise;
+	
+	/*
 	if ( !mMakePromiseFunction )
 	{
 		auto* MakePromiseFunctionSource =  R"V0G0N(
 		
+		function TPromise(Init)
+		{
+			this.OnResolve = null;
+			this.OnReject = null;
+			
+			this.Resolve = function(ResolvedValue)
+			{
+				Pop.Debug("Resolved!");
+				if ( this.OnResolve )
+					this.OnResolve(ResolvedValue);
+			}
+			this.Reject = function(Rejected)
+			{
+				Pop.Debug("Rejected");
+				if ( this.OnReject )
+					this.OnReject(Rejected);
+			}
+			this.then = function(didFulfill, didReject)
+			{
+				Pop.Debug("Then! didFulfill="+didFulfill+ " didReject=" + didReject);
+				this.OnResolve = didFulfill;
+				this.OnReject = didReject;
+			}
+			this.catch = function(Error)
+			{
+				Pop.Debug("Catch!");
+			}
+			Init( this.Resolve.bind(this), this.Reject.bind(this) );
+		}
+		
+		let Bindy = function(Resolve,Reject)
+		{
+			this.resolve = Resolve;
+			this.reject = Reject;
+		};
 		let MakePromise = function()
 		{
-			var PromData = {};
-			var prom = new Promise( function(Resolve,Reject) { PromData.Resolve = Resolve; PromData.Reject = Reject; } );
+			let PromData = {};
+			let prom = new TPromise( Bindy.bind(PromData) );
 			PromData.Promise = prom;
-			prom.Resolve = PromData.Resolve;
-			prom.Reject = PromData.Reject;
+			prom.resolve = PromData.resolve;
+			prom.reject = PromData.reject;
 			return prom;
 		}
 		MakePromise;
@@ -857,21 +899,13 @@ JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 	auto NewPromiseValue = MakePromiseFunction.Call();
 	auto NewPromiseHandle = JsCore::GetObject( mContext, NewPromiseValue );
 	TObject NewPromiseObject( mContext, NewPromiseHandle );
-	auto Resolve = NewPromiseObject.GetFunction("Resolve");
-	auto Reject = NewPromiseObject.GetFunction("Reject");
+	auto Resolve = NewPromiseObject.GetFunction("resolve");
+	auto Reject = NewPromiseObject.GetFunction("reject");
 
 	TPromise Promise( NewPromiseObject, Resolve, Reject, DebugName );
-/*
-	TObject NewPromiseObject( mContext, NewPromiseHandle );
-	
-	auto NewPromiseObject = const_cast<JSObjectRef>(NewPromiseHandle);
-	JSValueRef Exception = nullptr;
-	auto Resolve = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Resolve"), &Exception ) );
-	auto Reject = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Reject"), &Exception ) );
-	
-	JsCore::TPromise Promise( Context, NewPromiseObject, Resolve, Reject );
-	*/
+
 	return Promise;
+	*/
 }
 
 
@@ -901,6 +935,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 	{
 		std::stringstream Error;
 		Error << FunctionContext << " exception: " << e.what();
+		std::Debug << Error.str() << std::endl;
 		Exception = GetValue( mContext, Error.str() );
 		return JSValueMakeUndefined( mContext );
 	}
@@ -1262,8 +1297,12 @@ void JsCore::TPersistent::Retain(const TObject& Object,const std::string& DebugN
 void JsCore::TPersistent::Retain(const TFunction& Function,const std::string& DebugName)
 {
 	if ( IsObject() || IsFunction() )
-		throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
-
+	{
+		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
+		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
+		Release();
+	}
+	
 	mDebugName = DebugName;
 	mFunction = Function;
 	JSValueProtect( mFunction.mContext, mFunction.mThis );
@@ -1274,6 +1313,9 @@ void JsCore::TPersistent::Retain(const TFunction& Function,const std::string& De
 
 void JsCore::TPersistent::Retain(const TPersistent& That)
 {
+	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
+	Release();
+	
 	if ( That.mFunction.mThis != nullptr )
 		Retain( That.mFunction, That.mDebugName );
 	
@@ -1511,7 +1553,8 @@ JsCore::TPromise::~TPromise()
 void JsCore::TPromise::Resolve(JSValueRef Value) const
 {
 	//	gr: what is This supposed to be?
-	JSObjectRef This = nullptr;
+	//JSObjectRef This = nullptr;
+	JSObjectRef This = this->mPromise.GetObject().mThis;
 	
 	//	gr: this should be a Queue'd call!
 	auto Resolve = mResolve.GetFunction();
