@@ -1328,6 +1328,11 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Va
 	return JsCore_GetTypedArray( Context, Values, kJSTypedArrayTypeUint8Array );
 }
 
+JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint32_t>& Values)
+{
+	return JsCore_GetTypedArray( Context, Values, kJSTypedArrayTypeUint32Array );
+}
+
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<float>& Values)
 {
 	static_assert( sizeof(float) == 32/8, "Float is not 32 bit. Could support both here...");

@@ -57,6 +57,7 @@ namespace JsCore
 
 	//	typed arrays
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Values);
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint32_t>& Values);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<float>& Values);
 
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
@@ -764,13 +765,6 @@ inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<TYPE>
 	//	call GetArrayBridge() in place so it calls the specialised
 	auto ArrayObject = GetArray( Context, GetArrayBridge( Values ) );
 	return ArrayObject;
-}
-
-template<>
-inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Array)
-{
-	throw Soy::AssertException("Make typed array");
-	//	make typed array
 }
 
 
