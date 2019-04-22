@@ -33,6 +33,10 @@ struct TParams
 	float		MaxWhiteRatio = 0.90;
 	uint32_t	LumaTolerance = 50;
 	uint32_t	LineStride = 2;
+	
+	//	rescale luma for the dark
+	uint32_t	LumaMin = 10;
+	uint32_t	LumaMax = 200;
 };
 
 

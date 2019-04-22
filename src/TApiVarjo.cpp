@@ -38,6 +38,8 @@ void ApiVarjo::FindScanlines(Bind::TCallback& Params)
 	ScanParams.LumaTolerance = ScanParamsObject.GetInt("LumaTolerance");
 	ScanParams.LineStride = ScanParamsObject.GetInt("LineStride");
 	auto Invert = ScanParamsObject.GetInt("Invert");
+	ScanParams.LumaMin = ScanParamsObject.GetInt("LumaMin");
+	ScanParams.LumaMax = ScanParamsObject.GetInt("LumaMax");
 
 	auto& Pixels = Image.GetPixels();
 	
