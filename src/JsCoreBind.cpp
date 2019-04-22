@@ -8,6 +8,7 @@
 #include "TApiSocket.h"
 #include "TApiHttp.h"
 #include "TApiSerial.h"
+#include "TApiVarjo.h"
 
 #if !defined(PLATFORM_WINDOWS)
 //#include "TApiOpencl.h"
@@ -344,7 +345,8 @@ Bind::TInstance::TInstance(
 			ApiWebsocket::Bind( *mContext );
 			ApiHttp::Bind( *mContext );
 			ApiSocket::Bind( *mContext );
-		
+			ApiVarjo::Bind( *mContext );
+			
 		#if !defined(PLATFORM_WINDOWS)
 			ApiSerial::Bind( *mContext );
 			//ApiOpencl::Bind( *mContext );
