@@ -901,6 +901,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 	{
 		std::stringstream Error;
 		Error << FunctionContext << " exception: " << e.what();
+		std::Debug << Error.str() << std::endl;
 		Exception = GetValue( mContext, Error.str() );
 		return JSValueMakeUndefined( mContext );
 	}
