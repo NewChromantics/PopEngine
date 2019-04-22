@@ -7,9 +7,9 @@ namespace ApiVarjo
 {
 	const char Namespace[] = "Varjo";
 
-	DEFINE_BIND_FUNCTIONNAME(Scanline_SearchForWindows);
+	DEFINE_BIND_FUNCTIONNAME(FindScanlines);
 	
-	void	Scanline_SearchForWindows(Bind::TCallback& Params);
+	void	FindScanlines(Bind::TCallback& Params);
 }
 
 
@@ -18,24 +18,67 @@ namespace ApiVarjo
 void ApiVarjo::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindGlobalFunction<Scanline_SearchForWindows_FunctionName>( Scanline_SearchForWindows, Namespace );
+	Context.BindGlobalFunction<FindScanlines_FunctionName>( FindScanlines, Namespace );
 }
 
 
-void ApiVarjo::Scanline_SearchForWindows(Bind::TCallback& Params)
+void ApiVarjo::FindScanlines(Bind::TCallback& Params)
 {
 	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
 	
-	//	grab pixels
-	SoyPixels Luma;
-	Image.GetPixels( Luma );
-	Luma.SetFormat( SoyPixelsFormat::Greyscale );
+	//	get params
+	auto ScanParamsObject = Params.GetArgumentObject(1);
+	TParams ScanParams;
+	ScanParams.MinWidth = ScanParamsObject.GetInt("MinWidth");
+	ScanParams.MaxWidth = ScanParamsObject.GetInt("MaxWidth");
+	ScanParams.MinHeight = ScanParamsObject.GetInt("MinHeight");
+	ScanParams.MaxHeight = ScanParamsObject.GetInt("MaxHeight");
+	ScanParams.MinWhiteRatio = ScanParamsObject.GetFloat("MinWhiteRatio");
+	ScanParams.MaxWhiteRatio = ScanParamsObject.GetFloat("MaxWhiteRatio");
+	ScanParams.LumaTolerance = ScanParamsObject.GetInt("LumaTolerance");
+	ScanParams.LineStride = ScanParamsObject.GetInt("LineStride");
+	auto Invert = ScanParamsObject.GetInt("Invert");
+
+	auto& Pixels = Image.GetPixels();
 	
+	const int HorzRectBufferCount = 100;
+	TRect HorzRects[HorzRectBufferCount];
+	const int VertRectBufferCount = 100;
+	TRect VertRects[VertRectBufferCount];
 	
-	const int RectBufferCount = 100;
-	TRect Rects[RectBufferCount];
-	auto* Pixels = &Luma.GetPixelPtr(0,0,0);
-	auto RectCount = Scanline_SearchForWindows( Luma.GetWidth(), Luma.GetHeight(), Luma.GetMeta().GetChannels(), Pixels, Rects, RectBufferCount );
+	TPixels PixelsMeta;
+	PixelsMeta.mPixels = &Pixels.GetPixelPtr(0,0,0);
+	PixelsMeta.mPixelStride = Pixels.GetMeta().GetChannels();
+	PixelsMeta.mSize.mLeft = 0;
+	PixelsMeta.mSize.mTop = 0;
+	PixelsMeta.mSize.mWidth = Pixels.GetWidth();
+	PixelsMeta.mSize.mHeight = Pixels.GetHeight();
+	PixelsMeta.mInvert = Invert;
 	
-	Params.Return( RectCount );
+	switch ( Pixels.GetFormat() )
+	{
+		case SoyPixelsFormat::Uvy_844_Full:
+			PixelsMeta.mPixelLumaChannel = 1;
+			break;
+		default:
+			PixelsMeta.mPixelLumaChannel = 0;
+			break;
+	}
+	
+	uint32_t HorzRectCount = HorzRectBufferCount;
+	uint32_t VertRectCount = VertRectBufferCount;
+	{
+		Soy::TScopeTimerPrint Timer("VarjoGlint_FindScanlines",1);
+		VarjoGlint_FindScanlines( PixelsMeta, ScanParams, HorzRects, &HorzRectCount, VertRects, &VertRectCount );
+	}
+	auto* HorzRectsInts = &HorzRects[0].mLeft;
+	auto HorzRectsArray = GetRemoteArray( HorzRectsInts, HorzRectCount*4 );
+
+	auto* VertRectsInts = &VertRects[0].mLeft;
+	auto VertRectsArray = GetRemoteArray( VertRectsInts, VertRectCount*4 );
+
+	auto Result = Params.mContext.CreateObjectInstance();
+	Result.SetArray("HorzRects", GetArrayBridge(HorzRectsArray) );
+	Result.SetArray("VertRects", GetArrayBridge(VertRectsArray) );
+	Params.Return( Result );
 }
