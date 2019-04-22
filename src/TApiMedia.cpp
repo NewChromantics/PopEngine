@@ -385,6 +385,9 @@ PopCameraDevice::TDevice& PopCameraDevice::TInstance::GetDevice()
 
 void PopCameraDevice::TInstance::OnNewFrame()
 {
+	//	this should throw if the device has gone
+	auto& Device = GetDevice();
+
 	//	get meta so we know what buffers to allocate
 	const int MetaValuesSize = 100;
 	int MetaValues[MetaValuesSize];
@@ -397,11 +400,20 @@ void PopCameraDevice::TInstance::OnNewFrame()
 
 	//	reuse temp buffers
 	const int MaxPlaneCount = 3;
+	if ( PlaneCount > MaxPlaneCount )
+	{
+		std::stringstream Error;
+		Error << "Got " << PlaneCount << " when max is " << MaxPlaneCount;
+		throw Soy::AssertException(Error);
+	}
+
+	
 	SoyPixelsMeta PlaneMeta[MaxPlaneCount];
 	PlaneMeta[0] = SoyPixelsMeta(MetaValues[MetaIndex::Plane0_Width], MetaValues[MetaIndex::Plane0_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane0_SoyPixelsFormat]));
 	PlaneMeta[1] = SoyPixelsMeta(MetaValues[MetaIndex::Plane1_Width], MetaValues[MetaIndex::Plane1_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane1_SoyPixelsFormat]));
 	PlaneMeta[2] = SoyPixelsMeta(MetaValues[MetaIndex::Plane2_Width], MetaValues[MetaIndex::Plane2_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane2_SoyPixelsFormat]));
 
+	
 	Array<std::shared_ptr<SoyPixelsImpl>> PlanePixels;
 	Array<uint8_t*> PlanePixelsBytes;
 	Array<size_t> PlanePixelsByteSize;
