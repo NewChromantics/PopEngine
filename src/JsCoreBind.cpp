@@ -670,6 +670,9 @@ JsCore::TObject JsCore::TObject::GetObject(const std::string& MemberName)
 std::string JsCore::TObject::GetString(const std::string& MemberName)
 {
 	auto Value = GetMember( MemberName );
+	if ( JSValueIsUndefined(mContext,Value) )
+		throw Soy::AssertException( MemberName + " is undefined");
+
 	JSValueRef Exception = nullptr;
 	auto StringHandle = JSValueToStringCopy( mContext, Value, &Exception );
 	JsCore::ThrowException( mContext, Exception, MemberName );
@@ -680,6 +683,9 @@ std::string JsCore::TObject::GetString(const std::string& MemberName)
 uint32_t JsCore::TObject::GetInt(const std::string& MemberName)
 {
 	auto Value = GetMember( MemberName );
+	if ( JSValueIsUndefined(mContext,Value) )
+		throw Soy::AssertException( MemberName + " is undefined");
+
 	JSValueRef Exception = nullptr;
 	auto Number = JSValueToNumber( mContext, Value, &Exception );
 	JsCore::ThrowException( mContext, Exception, MemberName );
@@ -692,6 +698,9 @@ uint32_t JsCore::TObject::GetInt(const std::string& MemberName)
 float JsCore::TObject::GetFloat(const std::string& MemberName)
 {
 	auto Value = GetMember( MemberName );
+	if ( JSValueIsUndefined(mContext,Value) )
+		throw Soy::AssertException( MemberName + " is undefined");
+
 	JSValueRef Exception = nullptr;
 	auto Number = JSValueToNumber( mContext, Value, &Exception );
 	JsCore::ThrowException( mContext, Exception, MemberName );
@@ -704,6 +713,9 @@ float JsCore::TObject::GetFloat(const std::string& MemberName)
 bool JsCore::TObject::GetBool(const std::string& MemberName)
 {
 	auto Value = GetMember( MemberName );
+	if ( JSValueIsUndefined(mContext,Value) )
+		throw Soy::AssertException( MemberName + " is undefined");
+
 	//	gr: add a type check here as there's no exception
 	auto Bool = JSValueToBoolean( mContext, Value );
 	return Bool;
