@@ -1262,8 +1262,12 @@ void JsCore::TPersistent::Retain(const TObject& Object,const std::string& DebugN
 void JsCore::TPersistent::Retain(const TFunction& Function,const std::string& DebugName)
 {
 	if ( IsObject() || IsFunction() )
-		throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
-
+	{
+		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
+		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
+		Release();
+	}
+	
 	mDebugName = DebugName;
 	mFunction = Function;
 	JSValueProtect( mFunction.mContext, mFunction.mThis );
@@ -1274,6 +1278,9 @@ void JsCore::TPersistent::Retain(const TFunction& Function,const std::string& De
 
 void JsCore::TPersistent::Retain(const TPersistent& That)
 {
+	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
+	Release();
+	
 	if ( That.mFunction.mThis != nullptr )
 		Retain( That.mFunction, That.mDebugName );
 	
