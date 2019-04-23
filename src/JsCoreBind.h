@@ -303,7 +303,7 @@ public:
 
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(JsCore::TCallback&)> Function);
-	void			RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName);
+	void			RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
 
 	JsCore::TObjectWrapperBase&	AllocInstance()		{	return mAllocator();	}
 	
@@ -449,7 +449,7 @@ public:
 	
 	
 	template<typename OBJECTWRAPPERTYPE>
-	void				BindObjectType(const std::string& ParentName=std::string());
+	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());
 	
 	//	api calls with context provided
 	//template<typename IN,typename OUT>
@@ -723,7 +723,7 @@ inline TYPE& JsCore::TObject::This(JSObjectRef Object)
 
 
 template<typename OBJECTWRAPPERTYPE>
-inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
+inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const std::string& OverrideLeafName)
 {
 	auto AllocWrapper = [this](JSObjectRef This)
 	{
@@ -764,7 +764,7 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	
 	//	finish off
-	Template.RegisterClassWithContext( *this, ParentName );
+	Template.RegisterClassWithContext( *this, ParentName, OverrideLeafName );
 	mObjectTemplates.PushBack( Template );
 }
 

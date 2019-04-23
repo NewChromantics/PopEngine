@@ -1496,7 +1496,7 @@ void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
 }
 
 
-void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName)
+void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName)
 {
 	//	add a terminator function
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
@@ -1509,7 +1509,11 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	//		you create an object, representing the class, and set it on the object like
 	//		Parent.YourClass = function()
 	//	but JsObjectMake also creates objects...
+	
+	//	property of Parent (eg. global or Pop.x) can be overridden in case we want a nicer class name than the unique one
 	auto PropertyName = GetString( Context.mContext, mDefinition.className );
+	if ( OverrideLeafName.length() )
+		PropertyName = GetString( Context.mContext, OverrideLeafName );
 	
 	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
 

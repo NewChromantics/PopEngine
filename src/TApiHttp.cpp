@@ -9,7 +9,7 @@ namespace ApiHttp
 {
 	const char Namespace[] = "Pop.Http";
 
-	DEFINE_BIND_TYPENAME(Server);
+	DEFINE_BIND_TYPENAME(HttpServer);
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
@@ -18,7 +18,7 @@ namespace ApiHttp
 void ApiHttp::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindObjectType<THttpServerWrapper>(Namespace);
+	Context.BindObjectType<THttpServerWrapper>(Namespace,"Server");
 }
 
 

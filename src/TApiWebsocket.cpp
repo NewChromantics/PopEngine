@@ -7,7 +7,7 @@ namespace ApiWebsocket
 {
 	const char Namespace[] = "Pop.Websocket";
 
-	DEFINE_BIND_TYPENAME(Server);
+	DEFINE_BIND_TYPENAME(WebsocketServer);
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
@@ -16,7 +16,7 @@ namespace ApiWebsocket
 void ApiWebsocket::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindObjectType<TWebsocketServerWrapper>(Namespace);
+	Context.BindObjectType<TWebsocketServerWrapper>(Namespace,"Server");
 }
 
 
@@ -95,7 +95,7 @@ void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 
 	if ( Params.IsArgumentString(1) )
 	{
-		auto DataString = Params.GetArgumentString(0);
+		auto DataString = Params.GetArgumentString(1);
 		ThisSocket->Send( PeerRef, DataString );
 	}
 	else
