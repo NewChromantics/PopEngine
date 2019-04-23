@@ -1511,8 +1511,15 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	//	but JsObjectMake also creates objects...
 	auto PropertyName = GetString( Context.mContext, mDefinition.className );
 	
-	//	gr: if you pass null as the parent object, this "class" gets garbage collected and free'd (with null)
 	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
+
+	//	gr: if you pass null as the parent object, this "class" gets garbage collected and free'd (with null)
+	if ( ParentObject.mThis == nullptr )
+	{
+		std::stringstream Error;
+		Error << "Creating class (" << mDefinition.className << ") with null parent(\"" << ParentObjectName << "\") will get auto garbage collected";
+		throw Soy::AssertException(Error);
+	}
 	JSObjectRef ClassObject = JSObjectMake( Context.mContext, mClass, nullptr );
 	
 	JSValueRef Exception = nullptr;
