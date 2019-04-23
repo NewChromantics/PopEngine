@@ -744,6 +744,22 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName)
 		return *NewObject;
 	};
 	
+	//	catch duplicate class names, javascript lets us make them, but they'll just overwrite each other
+	//	gr: can we name them with the heiarchy as part of the name?
+	{
+		for ( auto t=0;	t<mObjectTemplates.GetSize();	t++ )
+		{
+			auto& MatchTemplate = mObjectTemplates[t];
+			if ( std::string(Template.mDefinition.className) != std::string(MatchTemplate.mDefinition.className) )
+				continue;
+			
+			std::stringstream Error;
+			Error << "Trying to bind duplicate class name " << Template.mDefinition.className << " (match: " << MatchTemplate.mDefinition.className << ")";
+			throw Soy::AssertException(Error);
+		}
+	}
+
+	
 	//	init template with overloaded stuff
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	
