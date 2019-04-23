@@ -5,7 +5,9 @@
 
 namespace ApiWebsocket
 {
-	DEFINE_BIND_TYPENAME(WebsocketServer);
+	const char Namespace[] = "Pop.Websocket";
+
+	DEFINE_BIND_TYPENAME(Server);
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
@@ -13,7 +15,8 @@ namespace ApiWebsocket
 
 void ApiWebsocket::Bind(Bind::TContext& Context)
 {
-	Context.BindObjectType<TWebsocketServerWrapper>();
+	Context.CreateGlobalObjectInstance("", Namespace);
+	Context.BindObjectType<TWebsocketServerWrapper>(Namespace);
 }
 
 
