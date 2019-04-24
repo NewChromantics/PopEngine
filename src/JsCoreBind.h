@@ -60,6 +60,8 @@ namespace JsCore
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint32_t>& Values);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<float>& Values);
 
+	//	gr: note: this JSStringRef needs explicit releasing (JSStringRelease) if not sent off to JS land
+	//		todo: auto releasing string!
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
 	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
 
