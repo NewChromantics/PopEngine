@@ -854,8 +854,13 @@ JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 		
 		let MakePromise = function()
 		{
-			var PromData = {};
-			var prom = new Promise( function(Resolve,Reject) { PromData.Resolve = Resolve; PromData.Reject = Reject; } );
+			let PromData = {};
+			const GrabPromData = function(Resolve,Reject)
+			{
+				PromData.Resolve = Resolve;
+				PromData.Reject = Reject;
+			};
+			const prom = new Promise( GrabPromData );
 			PromData.Promise = prom;
 			prom.Resolve = PromData.Resolve;
 			prom.Reject = PromData.Reject;
