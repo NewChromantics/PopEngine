@@ -141,6 +141,7 @@ DEFINE_JS_BRIDGE(JSGlobalContextSetName);
 DEFINE_JS_BRIDGE(JSStringCreateWithUTF8CString);
 DEFINE_JS_BRIDGE(JSStringGetLength);
 DEFINE_JS_BRIDGE(JSStringGetUTF8CString);
+DEFINE_JS_BRIDGE(JSStringRelease);
 DEFINE_JS_BRIDGE(JSObjectMakeTypedArrayWithBytesNoCopy);
 DEFINE_JS_BRIDGE(JSObjectGetTypedArrayBytesPtr);
 DEFINE_JS_BRIDGE(JSObjectGetTypedArrayLength);
@@ -225,6 +226,7 @@ void JsCore::LoadDll()
 	DEFINE_JS_BRIDGE(JSStringCreateWithUTF8CString);
 	DEFINE_JS_BRIDGE(JSStringGetLength);
 	DEFINE_JS_BRIDGE(JSStringGetUTF8CString);
+	DEFINE_JS_BRIDGE(JSStringRelease);
 	DEFINE_JS_BRIDGE(JSObjectMakeTypedArrayWithBytesNoCopy);
 	DEFINE_JS_BRIDGE(JSObjectGetTypedArrayBytesPtr);
 	DEFINE_JS_BRIDGE(JSObjectGetTypedArrayLength);
