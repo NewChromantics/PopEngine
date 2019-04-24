@@ -200,7 +200,9 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 	auto HandleType = JSValueGetType( Context, Handle );
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
 	ThrowException( Context, Exception );
-	return GetString( Context, StringJs );
+	auto Str = GetString( Context, StringJs );
+	JSStringRelease( StringJs );
+	return Str;
 }
 
 
@@ -221,6 +223,7 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 	return Bool;
 }
 
+//	gr: any strings created with this need to be released. Should make a ref-counter type to avoid leaks
 JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
 {
 	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
@@ -231,6 +234,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
 {
 	auto StringHandle = JSStringCreateWithUTF8CString( String.c_str() );
 	auto ValueHandle = JSValueMakeString( Context, StringHandle );
+	JSStringRelease(StringHandle);
 	return ValueHandle;
 }
 
@@ -417,8 +421,9 @@ void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,cons
 			Error << "Exception->String threw exception. Exception is type " << HandleType;
 			return Error.str();
 		}
-		
-		return JsCore::GetString( Context, HandleString );
+		auto Str = JsCore::GetString( Context, HandleString );
+		JSStringRelease(HandleString);
+		return Str;
 	};
 	
 	std::stringstream Error;
@@ -654,6 +659,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	JSValueRef Exception = nullptr;
 	auto PropertyName = JsCore::GetString( mContext, LeafName );
 	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
+	JSStringRelease(PropertyName);
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
 }
@@ -745,6 +751,7 @@ void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 	JSPropertyAttributes Attribs = kJSPropertyAttributeNone;
 	JSValueRef Exception = nullptr;
 	JSObjectSetProperty( mContext, mThis, NameJs, Value, Attribs, &Exception );
+	JSStringRelease( NameJs );
 	ThrowException( mContext, Exception );
 }
 
