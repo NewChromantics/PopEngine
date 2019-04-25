@@ -252,7 +252,13 @@
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll.meta" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb.meta" />
-    <None Include="..\src\Libs\PopH264\PopH264.dll" />
+    <CustomBuild Include="..\src\Libs\PopH264\PopH264.dll">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</DeploymentContent>
+    </CustomBuild>
     <None Include="..\src\Libs\PopH264\PopH264.dll.meta" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb.meta" />
@@ -302,6 +308,19 @@
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>
     </None>
+    <None Include="..\UnitTest\VideoTest\Blit.frag.glsl" />
+    <None Include="..\UnitTest\VideoTest\bootup.js" />
+    <None Include="..\UnitTest\VideoTest\mp4.js" />
+    <None Include="..\UnitTest\VideoTest\PopBrowser.js" />
+    <None Include="..\UnitTest\VideoTest\Quad.vert.glsl" />
+    <None Include="..\UnitTest\VideoTest\Readme.md" />
+    <None Include="..\UnitTest\VideoTest\Uvy844.frag.glsl" />
+    <None Include="..\UnitTest\VideoTest\Video.js" />
+    <None Include="..\UnitTest\VideoTest\VideoTest.js" />
+    <None Include="..\UnitTest\VideoTest\Yuv8888.frag.glsl" />
+    <None Include="..\UnitTest\VideoTest\Yuv8_88.frag.glsl" />
+    <None Include="..\UnitTest\VideoTest\Yuv8_8_8.frag.glsl" />
+    <None Include="..\UnitTest\VideoTest\Yuv8_8_8_MultiImage.frag.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp" />
@@ -439,6 +458,9 @@
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64811728-CD20-4F2C-899B-E3BF3D4B032E}</ProjectGuid>
