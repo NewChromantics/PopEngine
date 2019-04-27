@@ -138,12 +138,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\TApiSerial.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\TApiSerial.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
     <ClInclude Include="..\src\TBind.h" />
@@ -409,12 +404,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TApiSerial.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\TApiSerial.cpp" />
     <ClCompile Include="..\src\TApiSocket.cpp" />
     <ClCompile Include="..\src\TApiWebsocket.cpp" />
     <ClCompile Include="..\src\TBind.cpp" />

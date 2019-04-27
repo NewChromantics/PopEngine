@@ -383,9 +383,6 @@
     <None Include="..\src\Libs\PopH264\PopH264.pdb.meta">
       <Filter>Libs\PopH264</Filter>
     </None>
-    <None Include="..\src\Libs\PopH264\PopH264.dll">
-      <Filter>Libs\PopH264</Filter>
-    </None>
     <None Include="..\src\Libs\PopH264\PopH264.dll.meta">
       <Filter>Libs\PopH264</Filter>
     </None>
@@ -641,6 +638,7 @@
     <CustomBuild Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
       <Filter>Libs\PopCameraDevice</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\src\Libs\PopH264\PopH264.dll" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">
