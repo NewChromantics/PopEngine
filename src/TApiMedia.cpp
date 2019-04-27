@@ -195,6 +195,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	Array<uint8_t> PacketBytes;
 	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
 	
+	bool UseFrameBuffer = false;
 	bool ExtractImage = true;
 	bool _ExtractPlanes = false;
 	if ( !Params.IsArgumentUndefined(1) )
@@ -205,6 +206,11 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			_ExtractPlanes = Params.GetArgumentBool(1);
 	}
 	
+	if ( !Params.IsArgumentUndefined(2) )
+	{
+		UseFrameBuffer = Params.GetArgumentBool(2);
+	}
+
 	//	process async
 	auto Promise = Params.mContext.CreatePromise(__func__);
 	Params.Return( Promise );
@@ -219,7 +225,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			Frame->SplitPlanes( GetArrayBridge(PlanePixelss) );
 		
 			auto& mFrameBuffers = pThis->mFrameBuffers;
-			while ( mFrameBuffers.GetSize() < PlanePixelss.GetSize() )
+			while ( UseFrameBuffer && mFrameBuffers.GetSize() < PlanePixelss.GetSize() )
 			{
 				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
 				auto& Image = ImageObject.This<TImageWrapper>();
@@ -232,15 +238,25 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			
 			for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
 			{
-				auto& PlanePixels = *PlanePixelss[p];
+				//	re-use shared ptr
+				auto& PlanePixels = PlanePixelss[p];
+				//auto& PlanePixels = *PlanePixelss[p];
 				
-				//auto PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
-				auto PlaneImageObject = mFrameBuffers[p].GetObject();
+				Bind::TObject PlaneImageObject;
+				if ( UseFrameBuffer )
+				{
+					PlaneImageObject = mFrameBuffers[p].GetObject();
+				}
+				else
+				{
+					PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+					std::stringstream PlaneName;
+					PlaneName << "Frame" << FrameTime << "Plane" << p;
+					auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
+					PlaneImage.mName = PlaneName.str();
+				}
+
 				auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
-				
-				std::stringstream PlaneName;
-				PlaneName << "Frame" << FrameTime << "Plane" << p;
-				PlaneImage.mName = PlaneName.str();
 				PlaneImage.SetPixels( PlanePixels );
 				
 				PlaneImages.PushBack( PlaneImageObject );
@@ -250,7 +266,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 		auto& Decoder = This.mDecoder->GetDecoder();
 		PopH264::TFrame Frame;
 		Array<Bind::TObject> Frames;
-		/*
+		
 		while ( Decoder.PopFrame(Frame) )
 		{
 			auto ExtractPlanes = _ExtractPlanes;
@@ -271,7 +287,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 				FrameImage.SetPixels( Frame.mPixels );
 			}
 			
-			if ( ExtractImage && ExtractPlanes )
+ 			if ( ExtractImage && ExtractPlanes )
 			{
 				GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
 				FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
@@ -282,7 +298,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
 			Frames.PushBack( FrameImageObject );
 		}
-		*/
+		
 		Promise.Resolve( GetArrayBridge(Frames) );
 	};
 
