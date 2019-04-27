@@ -349,10 +349,10 @@ Bind::TInstance::TInstance(
 			ApiWebsocket::Bind( *mContext );
 			ApiHttp::Bind( *mContext );
 			ApiSocket::Bind( *mContext );
-			
+			ApiSerial::Bind( *mContext );
+
 		#if !defined(PLATFORM_WINDOWS)
 			ApiVarjo::Bind( *mContext );
-			ApiSerial::Bind( *mContext );
 			//ApiOpencl::Bind( *mContext );
 			ApiDlib::Bind( *mContext );
 			ApiCoreMl::Bind( *mContext );

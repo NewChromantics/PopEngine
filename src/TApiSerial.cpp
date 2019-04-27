@@ -240,10 +240,11 @@ void Serial::EnumPorts(std::function<void(const std::string&)> EnumPort)
 	};
 	Platform::EnumDirectory("/dev/", OnFilename );
 #else
-	throw Soy::AssertException("Serial::EnumPorts not implemented on this platform");
+	//throw Soy::AssertException("Serial::EnumPorts not implemented on this platform");
 #endif
 }
 
+#if defined(TARGET_OSX)
 #include <fcntl.h>
 #include <termios.h>
 Serial::TFile::TFile(const std::string& PortName,size_t BaudRate) :
@@ -347,30 +348,36 @@ void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 	auto ReadArray = GetRemoteArray( ReadBuffer, BytesRead, BytesRead );
 	OutputBuffer.PushBackArray(ReadArray);
 }
-
-	
+#endif
 
 //	todo: nowait, as the file should block the thread
 Serial::TComPort::TComPort(const std::string& PortName,size_t BaudRate) :
 	SoyWorkerThread	( std::string("Com Port ") + PortName, SoyWorkerWaitMode::NoWait )
 {
+#if defined(TARGET_OSX)
 	mFile.reset( new TFile(PortName,BaudRate) );
 	Start();
+#endif
 }
 
 Serial::TComPort::~TComPort()
 {
+#if defined(TARGET_OSX)
 	mFile.reset();
 	//	gr: may need to interrupt any blocking reading
 	WaitToFinish();
+#endif
 }
 
 bool Serial::TComPort::IsOpen()
 {
+#if defined(TARGET_OSX)
 	if ( !mFile )
 		return false;
 	
 	return mFile->IsOpen();
+#endif
+	return true;
 }
 
 void Serial::TComPort::PopData(ArrayBridge<uint8_t>&& Data)
@@ -380,6 +387,8 @@ void Serial::TComPort::PopData(ArrayBridge<uint8_t>&& Data)
 
 bool Serial::TComPort::Iteration()
 {
+#if defined(TARGET_OSX)
+
 	if ( !mFile )
 		return false;
 	
@@ -414,6 +423,6 @@ bool Serial::TComPort::Iteration()
 			mOnClosed();
 		return false;
 	}
-	
+#endif
 	return true;
 }
