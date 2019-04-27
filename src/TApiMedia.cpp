@@ -239,8 +239,8 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
 			{
 				//	re-use shared ptr
-				auto& PlanePixels = PlanePixelss[p];
-				//auto& PlanePixels = *PlanePixelss[p];
+				//auto& PlanePixels = PlanePixelss[p];
+				auto& PlanePixels = *PlanePixelss[p];
 				
 				Bind::TObject PlaneImageObject;
 				if ( UseFrameBuffer )
