@@ -688,10 +688,13 @@ std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
 
 Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 {
-	throw Soy::AssertException("todo");
-	//	this must be called on the main thread, so we use the cache from the render target
-	//return mView->GetScreenRect();
-	//return mView->mRenderTarget.GetSize();
+	auto pWindow = mWindow;
+	if ( !pWindow )
+		throw Soy::AssertException("GetScreenRect() No window");
+	auto& Window = *pWindow;
+
+	auto Rect = Window.GetClientRect();
+	return Rect;
 }
 
 
