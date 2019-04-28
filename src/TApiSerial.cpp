@@ -278,13 +278,20 @@ Serial::TFile::TFile(const std::string& PortName) :
 	mFilename	( PortName )
 {
 #if defined(TARGET_WINDOWS)
+	auto Flags = FILE_ATTRIBUTE_NORMAL;
+	//	overlapping is for async read&write capabilities
+	//Flags = FILE_FLAG_OVERLAPPED;
+
+	auto OpenMode = GENERIC_READ;	//	|GENERIC_WRITE
+	DWORD ShareMode = 0;
+	LPSECURITY_ATTRIBUTES Security = nullptr;
 	mFileDescriptor = ::CreateFileA(PortName.c_str(),
-		GENERIC_READ | GENERIC_WRITE,  // access ( read and write)
-		0,                           // (share) 0:cannot share the
+		OpenMode,
+		ShareMode,                           // (share) 0:cannot share the
 									 // COM port
-		0,                           // security  (None)
+		Security,                           // security  (None)
 		OPEN_EXISTING,               // creation : open_existing
-		FILE_FLAG_OVERLAPPED,        // we want overlapped operation
+		Flags,        // we want overlapped operation
 		0                            // no templates file for
 	);
 
@@ -318,8 +325,46 @@ Serial::TFile::TFile(const std::string& PortName, size_t BaudRate) :
 
 void Serial::TFile::SetBaudRate(size_t BaudRate)
 {
+	const auto Parity = false;
+	const auto ByteSize = 8;
+	const auto StopBits = 1;
+
+
 #if defined(TARGET_WINDOWS)
+	COMMTIMEOUTS Timeouts;
+	//	A value of zero indicates that interval time-outs are not used.
+	Timeouts.ReadIntervalTimeout = 20;
+
+	//	return immediately if both dword
+	Timeouts.WriteTotalTimeoutMultiplier = MAXDWORD; // in ms
+	Timeouts.WriteTotalTimeoutConstant = MAXDWORD; // in ms
+	Timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
+	Timeouts.ReadTotalTimeoutConstant = MAXDWORD; // in ms
+
+	if ( !SetCommTimeouts(mFileDescriptor, &Timeouts) )
+		Platform::ThrowLastError("SetCommTimeouts error");
+
+
+	DCB dcb = {0};
+	dcb.DCBlength = sizeof(DCB);
+
+	if (!::GetCommState( mFileDescriptor, &dcb ) )
+		Platform::ThrowLastError(std::string("GetCommState ") + mFilename);
+
+	dcb.BaudRate = BaudRate;
+	dcb.ByteSize = ByteSize;
+	dcb.Parity = Parity ? ODDPARITY : NOPARITY;
+	if ( StopBits == 1 )
+		dcb.StopBits  = ONESTOPBIT;
+	else if (StopBits == 2 )
+		dcb.StopBits  = TWOSTOPBITS;
+	else 
+		dcb.StopBits  = ONE5STOPBITS;
 	
+	if (!::SetCommState( mFileDescriptor, &dcb ) )
+		Platform::ThrowLastError(std::string("SetCommState ") + mFilename);
+
+	mBaudRate = BaudRate;
 #else
 	//char port[20] = “/dev/ttyS0”;
 	if ( BaudRate != 115200 )
@@ -343,6 +388,9 @@ void Serial::TFile::SetBaudRate(size_t BaudRate)
 	Error = cfsetispeed(&settings, baud);
 	if ( Error != 0 )
 		Platform::ThrowLastError( std::string("cfsetispeed failed on ") + PortName );
+
+	if ( ByteSize != 8 )
+		throw Soy::AssertException("COM Currently only supporting 8 bit");
 
 	settings.c_cflag &= ~PARENB;
 	settings.c_cflag &= ~CSTOPB;
@@ -419,12 +467,20 @@ void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 	auto BytesRead = ::read( mFileDescriptor, ReadBuffer, sizeof(ReadBuffer) );
 	if ( BytesRead < 0 )
 		Platform::ThrowLastError("Reading Serial File failed");
+#else
+
+	uint8_t ReadBuffer[1024*52];
+	DWORD BytesRead = 0;
+	LPOVERLAPPED Overlapped = nullptr;
+	auto Success = ::ReadFile(mFileDescriptor, ReadBuffer, sizeof(ReadBuffer), &BytesRead, Overlapped);
+	if ( !Success )
+		Platform::ThrowLastError(std::string("COM port ReadFile ") + mFilename);
+	if ( BytesRead == 0 )
+		return;
+#endif
 
 	auto ReadArray = GetRemoteArray( ReadBuffer, BytesRead, BytesRead );
 	OutputBuffer.PushBackArray(ReadArray);
-#else
-	//	todo: windows
-#endif
 }
 
 
