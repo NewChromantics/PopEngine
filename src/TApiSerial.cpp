@@ -8,6 +8,16 @@ namespace Serial
 	class TComPort;
 	class TFile;
 	
+	namespace TParity
+	{
+		enum Type
+		{
+			None,
+			Odd,
+			Even
+		};
+	}
+	
 	void		EnumPorts(std::function<void(const std::string&)> EnumPort);
 }
 
@@ -325,7 +335,7 @@ Serial::TFile::TFile(const std::string& PortName, size_t BaudRate) :
 
 void Serial::TFile::SetBaudRate(size_t BaudRate)
 {
-	const auto Parity = false;
+	auto Parity = TParity::None;
 	const auto ByteSize = 8;
 	const auto StopBits = 1;
 
@@ -353,7 +363,16 @@ void Serial::TFile::SetBaudRate(size_t BaudRate)
 
 	dcb.BaudRate = BaudRate;
 	dcb.ByteSize = ByteSize;
-	dcb.Parity = Parity ? ODDPARITY : NOPARITY;
+	
+	switch ( Parity )
+	{
+		case TParity::None:	dcb.Parity = NOPARITY;	break;
+		case TParity::Odd:	dcb.Parity = ODDPARITY;	break;
+		case TParity::Even:	dcb.Parity = EVENPARITY;	break;
+		default:
+			throw Soy::AssertException("Unhandled parity type");
+	}
+
 	if ( StopBits == 1 )
 		dcb.StopBits  = ONESTOPBIT;
 	else if (StopBits == 2 )
@@ -380,40 +399,55 @@ void Serial::TFile::SetBaudRate(size_t BaudRate)
 	struct termios settings;
 	auto Error = tcgetattr(fd, &settings);
 	if ( Error != 0 )
-		Platform::ThrowLastError( std::string("tcgetattr failed on ") + PortName );
+		Platform::ThrowLastError( std::string("tcgetattr failed on ") + mFilename );
 
 	Error = cfsetospeed(&settings, baud);
 	if ( Error != 0 )
-		Platform::ThrowLastError( std::string("cfsetospeed failed on ") + PortName );
+		Platform::ThrowLastError( std::string("cfsetospeed failed on ") + mFilename );
 	Error = cfsetispeed(&settings, baud);
 	if ( Error != 0 )
-		Platform::ThrowLastError( std::string("cfsetispeed failed on ") + PortName );
+		Platform::ThrowLastError( std::string("cfsetispeed failed on ") + mFilename );
 
 	if ( ByteSize != 8 )
 		throw Soy::AssertException("COM Currently only supporting 8 bit");
 
+	//	clear settings
 	settings.c_cflag &= ~PARENB;
 	settings.c_cflag &= ~CSTOPB;
 	settings.c_cflag &= ~CSIZE;
-	settings.c_cflag |= CS8;
+	
+	//	apply new settings
+	if ( ByteSize != 8 )
+		throw Soy::AssertException("Currently must be 8bit");
+	if ( ByteSize == 8 )
+		settings.c_cflag |= CS8;
+	
+	//	default 1 stop bit
+	if ( StopBits == 2 )
+		settings.c_cflag |= CSTOPB;
+	else if ( StopBits != 1 )
+		throw Soy::AssertException("Unahdnled stop bits");
+	
+	//	parity defaults off
+	if ( Parity == TParity::Odd )
+		settings.c_cflag |= PARENB | PARODD;	//	enabled + odd
+	if ( Parity == TParity::Even )
+		settings.c_cflag |= PARENB;	//	enabled
+	
 	settings.c_cflag |= (CLOCAL | CREAD);
-	/*
-	settings.c_cflag &= ~PARENB; //	no parity
-	settings.c_cflag &= ~CSTOPB; //	1 stop bit
 
-	settings.c_cflag &= ~CSIZE;
-	settings.c_cflag |= CS8 | CLOCAL; //	8 bits
-	settings.c_lflag = ICANON; //	canonical mode
-	settings.c_oflag &= ~OPOST; //	raw output
-	*/
+	//	todo: set these properly
+	//settings.c_lflag = ICANON; //	canonical mode
+	//settings.c_oflag &= ~OPOST; //	raw output
+
 	//	apply the settings
 	Error = tcsetattr(fd, TCSANOW, &settings);
 	if ( Error != 0 )
-		Platform::ThrowLastError( std::string("tcsetattr failed on ") + PortName );
+		Platform::ThrowLastError( std::string("tcsetattr failed on ") + mFilename );
 
 	Error = tcflush(fd, TCOFLUSH);
 	if ( Error != 0 )
-		Platform::ThrowLastError( std::string("tcflush failed on ") + PortName );
+		Platform::ThrowLastError( std::string("tcflush failed on ") + mFilename );
 
 	mBaudRate = BaudRate;
 #endif
