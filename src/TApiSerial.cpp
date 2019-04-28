@@ -17,17 +17,24 @@ namespace Serial
 class Serial::TFile
 {
 public:
-	TFile(const std::string& PortName,size_t BaudRate);
+	TFile(const std::string& PortName);	//	just open file
+	TFile(const std::string& PortName,size_t BaudRate);	//	open, set rate, and start reading
 	~TFile();
 	
 	void	Read(ArrayBridge<uint8_t>&& Buffer);
 	bool	IsOpen()		{	return mFileDescriptor != 0;	}
 	void	Close();
+	void	SetBaudRate(size_t BaudRate);
 	
 	std::string	mFilename;
 	
 private:
+#if defined(TARGET_WINDOWS)
+	HANDLE	mFileDescriptor = INVALID_HANDLE_VALUE;
+#else
 	int		mFileDescriptor = 0;
+#endif
+	size_t	mBaudRate = 0;
 };
 
 
@@ -240,21 +247,51 @@ void Serial::EnumPorts(std::function<void(const std::string&)> EnumPort)
 	};
 	Platform::EnumDirectory("/dev/", OnFilename );
 #else
-	//throw Soy::AssertException("Serial::EnumPorts not implemented on this platform");
+
+	//	on windows try and open each port
+	for ( auto Com = 0; Com < 256; Com++ )
+	{
+		std::stringstream ComPortFilename;
+		ComPortFilename << "\\\\.\\COM" << Com;
+		auto Filename = ComPortFilename.str();
+
+		try
+		{
+			TFile ComFile(Filename);
+			EnumPort(Filename);
+		} 
+		catch ( std::exception& e )
+		{
+			//	failed, not an existing port
+		}
+	}
+
 #endif
 }
 
 #if defined(TARGET_OSX)
 #include <fcntl.h>
 #include <termios.h>
-Serial::TFile::TFile(const std::string& PortName,size_t BaudRate) :
+#endif
+
+Serial::TFile::TFile(const std::string& PortName) :
 	mFilename	( PortName )
 {
-	//char port[20] = “/dev/ttyS0”;
-	if ( BaudRate != 115200 )
-		throw Soy::AssertException("todo: convert baudrate, currently only supporting 115200");
-	speed_t baud = B115200;
+#if defined(TARGET_WINDOWS)
+	mFileDescriptor = ::CreateFileA(PortName.c_str(),
+		GENERIC_READ | GENERIC_WRITE,  // access ( read and write)
+		0,                           // (share) 0:cannot share the
+									 // COM port
+		0,                           // security  (None)
+		OPEN_EXISTING,               // creation : open_existing
+		FILE_FLAG_OVERLAPPED,        // we want overlapped operation
+		0                            // no templates file for
+	);
 
+	if ( mFileDescriptor == INVALID_HANDLE_VALUE )
+		Platform::ThrowLastError( std::string("Open COM port ") + mFilename);
+
+#else
 	//	gr: when we try and open TTY (write ports) with readonly or readwrite open() blocks...
 	auto OpenMode = O_RDONLY;
 	//	no control seems to let us open it without blocking
@@ -266,77 +303,115 @@ Serial::TFile::TFile(const std::string& PortName,size_t BaudRate) :
 	//	0 is okay it seems.
 	if ( mFileDescriptor < 0 )
 		Platform::ThrowLastError( std::string("Failed to open ") + PortName );
+#endif
+}
+
+
+
+Serial::TFile::TFile(const std::string& PortName, size_t BaudRate) :
+	TFile(PortName)
+{
+	SetBaudRate(BaudRate);
+}
+
+
+
+void Serial::TFile::SetBaudRate(size_t BaudRate)
+{
+#if defined(TARGET_WINDOWS)
+	
+#else
+	//char port[20] = “/dev/ttyS0”;
+	if ( BaudRate != 115200 )
+		throw Soy::AssertException("todo: convert baudrate, currently only supporting 115200");
+	speed_t baud = B115200;
 
 	auto& fd = mFileDescriptor;
-	
-	try
-	{
-		//	cfgetispeed and cfgetospeed return baud rates
-		//	everything else returns 0 on success or -1 on error
-		
-		//	set the other settings (in this case, 9600 8N1)
-		struct termios settings;
-		auto Error = tcgetattr(fd, &settings);
-		if ( Error != 0 )
-			Platform::ThrowLastError( std::string("tcgetattr failed on ") + PortName );
-	
-		Error = cfsetospeed(&settings, baud);
-		if ( Error != 0 )
-			Platform::ThrowLastError( std::string("cfsetospeed failed on ") + PortName );
-		Error = cfsetispeed(&settings, baud);
-		if ( Error != 0 )
-			Platform::ThrowLastError( std::string("cfsetispeed failed on ") + PortName );
 
-		settings.c_cflag &= ~PARENB;
-		settings.c_cflag &= ~CSTOPB;
-		settings.c_cflag &= ~CSIZE;
-		settings.c_cflag |= CS8;
-		settings.c_cflag |= (CLOCAL | CREAD);
-		/*
-		settings.c_cflag &= ~PARENB; //	no parity
-		settings.c_cflag &= ~CSTOPB; //	1 stop bit
-		
-		settings.c_cflag &= ~CSIZE;
-		settings.c_cflag |= CS8 | CLOCAL; //	8 bits
-		settings.c_lflag = ICANON; //	canonical mode
-		settings.c_oflag &= ~OPOST; //	raw output
-		*/
-		//	apply the settings
-		Error = tcsetattr(fd, TCSANOW, &settings);
-		if ( Error != 0 )
-			Platform::ThrowLastError( std::string("tcsetattr failed on ") + PortName );
-		
-		Error = tcflush(fd, TCOFLUSH);
-		if ( Error != 0 )
-			Platform::ThrowLastError( std::string("tcflush failed on ") + PortName );
-	}
-	catch(...)
-	{
-		//	cleanup before throwing
-		Close();
-		throw;
-	}
+	//	cfgetispeed and cfgetospeed return baud rates
+	//	everything else returns 0 on success or -1 on error
+
+	//	set the other settings (in this case, 9600 8N1)
+	struct termios settings;
+	auto Error = tcgetattr(fd, &settings);
+	if ( Error != 0 )
+		Platform::ThrowLastError( std::string("tcgetattr failed on ") + PortName );
+
+	Error = cfsetospeed(&settings, baud);
+	if ( Error != 0 )
+		Platform::ThrowLastError( std::string("cfsetospeed failed on ") + PortName );
+	Error = cfsetispeed(&settings, baud);
+	if ( Error != 0 )
+		Platform::ThrowLastError( std::string("cfsetispeed failed on ") + PortName );
+
+	settings.c_cflag &= ~PARENB;
+	settings.c_cflag &= ~CSTOPB;
+	settings.c_cflag &= ~CSIZE;
+	settings.c_cflag |= CS8;
+	settings.c_cflag |= (CLOCAL | CREAD);
+	/*
+	settings.c_cflag &= ~PARENB; //	no parity
+	settings.c_cflag &= ~CSTOPB; //	1 stop bit
+
+	settings.c_cflag &= ~CSIZE;
+	settings.c_cflag |= CS8 | CLOCAL; //	8 bits
+	settings.c_lflag = ICANON; //	canonical mode
+	settings.c_oflag &= ~OPOST; //	raw output
+	*/
+	//	apply the settings
+	Error = tcsetattr(fd, TCSANOW, &settings);
+	if ( Error != 0 )
+		Platform::ThrowLastError( std::string("tcsetattr failed on ") + PortName );
+
+	Error = tcflush(fd, TCOFLUSH);
+	if ( Error != 0 )
+		Platform::ThrowLastError( std::string("tcflush failed on ") + PortName );
+
+	mBaudRate = BaudRate;
+#endif
 }
 
 Serial::TFile::~TFile()
 {
-	Close();
+	try
+	{
+		Close();
+	}
+	catch ( std::exception& e )
+	{
+		std::Debug << e.what() << std::endl;
+	}
 }
 
 void Serial::TFile::Close()
 {
+#if defined(TARGET_WINDOWS)
+	if ( mFileDescriptor )
+	{
+		if ( !CloseHandle(mFileDescriptor) )
+		{
+			Platform::ThrowLastError(std::string("Closing COM port ") + mFilename);
+		}
+	}
+#else
 	if ( mFileDescriptor != 0 )
 	{
 		close( mFileDescriptor );
 		mFileDescriptor = 0;
 	}
+#endif
 }
 
 void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 {
+	//	throw if baudrate hasn't been set
+	if ( mBaudRate == 0 )
+		throw Soy::AssertException("Trying to read COM port but baudrate not set");
+
 	if ( !IsOpen() )
 		throw Soy::AssertException("Reading serial file that is closed");
 
+#if defined(TARGET_OSX)
 	//	this can read forever without exiting, so instead of looping
 	//	just return after one read
 	uint8_t ReadBuffer[1024*52];
@@ -347,37 +422,33 @@ void Serial::TFile::Read(ArrayBridge<uint8_t>&& OutputBuffer)
 
 	auto ReadArray = GetRemoteArray( ReadBuffer, BytesRead, BytesRead );
 	OutputBuffer.PushBackArray(ReadArray);
-}
+#else
+	//	todo: windows
 #endif
+}
+
 
 //	todo: nowait, as the file should block the thread
 Serial::TComPort::TComPort(const std::string& PortName,size_t BaudRate) :
 	SoyWorkerThread	( std::string("Com Port ") + PortName, SoyWorkerWaitMode::NoWait )
 {
-#if defined(TARGET_OSX)
 	mFile.reset( new TFile(PortName,BaudRate) );
 	Start();
-#endif
 }
 
 Serial::TComPort::~TComPort()
 {
-#if defined(TARGET_OSX)
 	mFile.reset();
 	//	gr: may need to interrupt any blocking reading
 	WaitToFinish();
-#endif
 }
 
 bool Serial::TComPort::IsOpen()
 {
-#if defined(TARGET_OSX)
 	if ( !mFile )
 		return false;
 	
 	return mFile->IsOpen();
-#endif
-	return true;
 }
 
 void Serial::TComPort::PopData(ArrayBridge<uint8_t>&& Data)
@@ -387,8 +458,6 @@ void Serial::TComPort::PopData(ArrayBridge<uint8_t>&& Data)
 
 bool Serial::TComPort::Iteration()
 {
-#if defined(TARGET_OSX)
-
 	if ( !mFile )
 		return false;
 	
@@ -423,6 +492,6 @@ bool Serial::TComPort::Iteration()
 			mOnClosed();
 		return false;
 	}
-#endif
+
 	return true;
 }
