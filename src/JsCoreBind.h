@@ -177,11 +177,13 @@ public:
 class Bind::TInstance
 {
 public:
-	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename);
+	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown);
 	~TInstance();
 	
 	std::shared_ptr<JsCore::TContext>	CreateContext(const std::string& Name);
-	
+	void								DestroyContext(JsCore::TContext& Context);
+	void								Shutdown(int32_t ExitCode);
+
 private:
 	//	when the group is created it does async jobs on that thread's run loop
 	//	for deadlock reasons we don't want that to be the main thread (opengl calls get stuck)
@@ -191,7 +193,9 @@ private:
 	JSContextGroupRef	mContextGroup = nullptr;
 	std::string			mRootDirectory;
 	
-	std::shared_ptr<JsCore::TContext>	mContext;
+	Array<std::shared_ptr<JsCore::TContext>>	mContexts;
+
+	std::function<void(int32_t)>	mOnShutdown;	//	callback when we want to die
 };
 
 class JsCore::TJobQueue : public SoyWorkerJobThread
@@ -418,6 +422,7 @@ public:
 //	functions marked virtual need to become generic
 class JsCore::TContext //: public JsCore::TContext
 {
+	friend class Bind::TInstance;
 public:
 	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
 	~TContext();
@@ -426,7 +431,8 @@ public:
 	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
 	virtual void		Queue(std::function<void(TContext&)> Function,size_t DeferMs=0) bind_override;
 	virtual void		GarbageCollect();
-	
+	virtual void		Shutdown(int32_t ExitCode);	//	tell instance to destroy us
+		
 	template<const char* FunctionName>
 	void				BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName=std::string());
 	
@@ -472,6 +478,10 @@ public:
 	void				OnPersitentRetained(TPersistent& Persistent)	{	mDebug.OnPersitentRetained(Persistent);	}
 	void				OnPersitentReleased(TPersistent& Persistent)	{	mDebug.OnPersitentReleased(Persistent);	}
 	
+protected:
+	void				Cleanup();		//	actual cleanup called by instance & destructor
+	void				ReleaseContext();	//	try and release javascript objects
+
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
 	

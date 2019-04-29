@@ -315,11 +315,10 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
 }
 
 //	gr: windows needs this as Bind::TInstance
-Bind::TInstance::TInstance(
-	const std::string& RootDirectory,
-	const std::string& ScriptFilename) :
+Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown) :
 	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
-	mRootDirectory		( RootDirectory )
+	mRootDirectory		( RootDirectory ),
+	mOnShutdown			( OnShutdown )
 {
 	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
@@ -341,36 +340,36 @@ Bind::TInstance::TInstance(
 		try
 		{
 			//	create a context
-			mContext = CreateContext(RootDirectory);
+			auto Context = CreateContext(RootDirectory);
 			
-			ApiPop::Bind( *mContext );
-			ApiOpengl::Bind( *mContext );
-			ApiMedia::Bind( *mContext );
-			ApiWebsocket::Bind( *mContext );
-			ApiHttp::Bind( *mContext );
-			ApiSocket::Bind( *mContext );
-			ApiSerial::Bind( *mContext );
+			ApiPop::Bind( *Context );
+			ApiOpengl::Bind( *Context );
+			ApiMedia::Bind( *Context );
+			ApiWebsocket::Bind( *Context );
+			ApiHttp::Bind( *Context );
+			ApiSocket::Bind( *Context );
+			ApiSerial::Bind( *Context );
 
 		#if !defined(PLATFORM_WINDOWS)
-			ApiVarjo::Bind( *mContext );
-			//ApiOpencl::Bind( *mContext );
-			ApiDlib::Bind( *mContext );
-			ApiCoreMl::Bind( *mContext );
-			ApiEzsift::Bind( *mContext );
-			ApiInput::Bind( *mContext );
-			ApiOpencv::Bind( *mContext );
-			ApiBluetooth::Bind( *mContext );
+			ApiVarjo::Bind( *Context );
+			//ApiOpencl::Bind( *Context );
+			ApiDlib::Bind( *Context );
+			ApiCoreMl::Bind( *Context );
+			ApiEzsift::Bind( *Context );
+			ApiInput::Bind( *Context );
+			ApiOpencv::Bind( *Context );
+			ApiBluetooth::Bind( *Context );
 		#endif			
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
-			mContext->LoadScript( BootupSource, ScriptFilename );
+			Context->LoadScript( BootupSource, ScriptFilename );
 		}
 		catch(std::exception& e)
 		{
 			//	clean up
 			std::Debug << "CreateVirtualMachine failed: "  << e.what() << std::endl;
-			mContext.reset();
+			//Context.reset();
 			throw;
 		}
 	};
@@ -387,7 +386,42 @@ Bind::TInstance::TInstance(
 
 JsCore::TInstance::~TInstance()
 {
-	JSContextGroupRelease(mContextGroup);
+	mContextGroupThread.WaitToFinish();
+
+	//	this does some of the final releasing in JS land
+	try
+	{
+		JSContextGroupRelease(mContextGroup);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Caught exception in JSContextGroupRelease(): " << e.what() << std::endl;
+	}
+
+	//	try and shutdown all javascript objects first
+	for ( auto c = 0; c < mContexts.GetSize(); c++ )
+	{
+		auto& Context = *mContexts[c];
+		Context.ReleaseContext();
+	}
+
+	//	now cleanup jobs & context
+	while ( mContexts.GetSize() > 0 )
+	{
+		auto pContext = mContexts[0];
+		mContexts.RemoveBlock(0, 1);
+		try
+		{
+			pContext->Cleanup();
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Caught exception in Context->Cleanup(): " << e.what() << std::endl;
+		}
+		pContext.reset();
+	}
+
+	
 }
 
 std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Name)
@@ -398,10 +432,50 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	JSGlobalContextSetName( Context, JsCore::GetString(Context,Name) );
 	
 	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
-	//mContexts.PushBack( pContext );
+	mContexts.PushBack( pContext );
 	return pContext;
 }
 
+
+void JsCore::TInstance::DestroyContext(JsCore::TContext& Context)
+{
+	std::shared_ptr<JsCore::TContext> pContext;
+
+	//	pop context
+	{
+		auto Index = -1;
+		for ( auto i = 0; i < mContexts.GetSize(); i++ )
+		{
+			auto* MatchContext = mContexts[i].get();
+			if ( MatchContext != &Context )
+				continue;
+			Index = i;
+		}
+		if ( Index < 0 )
+			throw Soy::AssertException("Instance doesn't recognise context to destroy");
+		pContext = mContexts[Index];
+		mContexts.RemoveBlock(Index, 1);
+	}
+
+	//	as this is often called from the context, we need to deffer a cleanup
+	auto ShutdownContext = [this,pContext]()
+	{
+		//	incase there's a dangling reference, manually cleanup
+		pContext->Cleanup();
+		//	gr: context will be captured const, so will only release after this job is done
+		//pContext.reset();
+	};
+
+	mContextGroupThread.PushJob(ShutdownContext);
+}
+
+void JsCore::TInstance::Shutdown(int32_t ExitCode)
+{
+	//	gr: does this need to defer?
+	//	do callback
+	if ( mOnShutdown )
+		mOnShutdown(ExitCode);
+}
 
 void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext)
 {
@@ -447,10 +521,52 @@ JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const 
 
 JsCore::TContext::~TContext()
 {
-	JSGlobalContextRelease( mContext );
+	try
+	{
+		Cleanup();
+	}
+	catch ( std::exception& e )
+	{
+		std::Debug << "Exception in TContext destructor: " << e.what() << std::endl;
+	}
+}
+
+
+void JsCore::TContext::ReleaseContext()
+{
+	//Array<TTemplate>	mObjectTemplates;
+	mMakePromiseFunction = Bind::TPersistent();
+
+	//	should instance be doing this?
+	if ( mContext )
+	{
+		JSGlobalContextRelease(mContext);
+		mContext = nullptr;
+	}
+}
+
+void JsCore::TContext::Cleanup()
+{
+	//	should instance be doing this?
+	ReleaseContext();
+
+	mJobQueue.Stop();
+	mJobQueue.QueueDeleteAll();
+	mJobQueue.WaitToFinish();
+
+	//	for safety, do this after jobs have all gone
 	RemoveContextCache( *this );
 }
 
+
+void JsCore::TContext::Shutdown(int32_t ExitCode)
+{
+	mJobQueue.Stop();
+
+	//	tell instance to clean up
+	//mInstance.DestroyContext(*this);
+	mInstance.Shutdown(ExitCode);
+}
 
 void JsCore::TContext::GarbageCollect()
 {
@@ -498,6 +614,9 @@ public:
 
 void JsCore::TContext::Queue(std::function<void(JsCore::TContext&)> Functor,size_t DeferMs)
 {
+	if ( !mJobQueue.IsWorking() )
+		throw Soy::AssertException("Rejecting job as context is shutting down");
+
 	//	catch negative params
 	//	assuming nobody will ever defer for more than 24 hours
 	auto TwentyFourHoursMs = 1000*60*60*24;

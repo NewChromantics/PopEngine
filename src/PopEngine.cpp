@@ -5,31 +5,6 @@
 #include "SoyFileSystem.h"
 #include "TBind.h"
 
-namespace PopTrack
-{
-	namespace Private
-	{
-		//	keep alive after PopMain()
-		std::shared_ptr<TPopTrack> gOpenglApp;
-		
-	}
-	
-	TPopTrack&	GetApp(std::string DataPath);
-}
-
-
-TPopTrack& PopTrack::GetApp(std::string DataPath)
-{
-	if ( !Private::gOpenglApp )
-	{
-		DataPath += "/";
-		
-		//Private::gOpenglApp.reset( new TPopTrack("Data_Posenet/Bootup.js") );
-		Private::gOpenglApp.reset( new TPopTrack( DataPath, "bootup.js") );
-	}
-	return *Private::gOpenglApp;
-}
-
 
 namespace Platform
 {
@@ -59,36 +34,49 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 		DataPath = Platform::GetAppResourcesDirectory() + DataPath;
 	}
 	
-	
-	auto& App = PopTrack::GetApp(DataPath);
-	
-#if !defined(TARGET_OSX_BUNDLE)
-	//	run
-	//Soy::Platform::TConsoleApp app;
-	//app.WaitForExit();
-#endif
+	DataPath += "/";
 
-#if defined(TARGET_WINDOWS)
 	bool Running = true;
-	while ( Running )
-	{
-		auto OnQuit = [&]()
-		{
-			Running = false;
-		};
-		Platform::Loop(true,OnQuit);
-	}
-#endif
+	std::shared_ptr<Bind::TInstance> pInstance;
 
+	auto OnShutdown = [&](int32_t ExitCode)
+	{
+		Running = false;
+		
+	#if defined(TARGET_WINDOWS)
+		//	make sure WM_QUIT comes up
+		PostQuitMessage(ExitCode);
+	#endif
+	};
+
+	{
+		//	run an instance
+		std::string BootupFilename = "bootup.js";
+		pInstance.reset(new Bind::TInstance(DataPath, BootupFilename, OnShutdown));
+
+	#if !defined(TARGET_OSX_BUNDLE)
+		//	run
+		//Soy::Platform::TConsoleApp app;
+		//app.WaitForExit();
+	#endif
+
+	#if defined(TARGET_WINDOWS)
+		while ( Running )
+		{
+			auto OnQuit = [&]()
+			{
+				OnShutdown(0);
+			};
+			auto Blocking = false;
+			Platform::Loop( Blocking, OnQuit );
+
+			//	don't free this immediately in OnShutdown, do it here off the thread that triggered
+			if ( !Running )
+				pInstance.reset();
+		}
+	#endif
+	}
 	
 	return TPopAppError::Success;
 }
 
-TPopTrack::TPopTrack(const std::string& RootDirectory,const std::string& BootupFilename)
-{
-	mApiInstance.reset( new Bind::TInstance(RootDirectory,BootupFilename) );
-}
-
-TPopTrack::~TPopTrack()
-{
-}
