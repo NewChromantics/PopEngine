@@ -401,8 +401,15 @@ JsCore::TInstance::~TInstance()
 	//	try and shutdown all javascript objects first
 	for ( auto c = 0; c < mContexts.GetSize(); c++ )
 	{
-		auto& Context = *mContexts[c];
-		Context.ReleaseContext();
+		try
+		{
+			auto& Context = *mContexts[c];
+			Context.ReleaseContext();
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Caught exception in Context.ReleaseContext(): " << e.what() << std::endl;
+		}
 	}
 
 	//	now cleanup jobs & context
@@ -1025,6 +1032,12 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 	//	call our function from
 	try
 	{
+		//	if context has gone, we might be shutting down
+		if ( mContext == nullptr )
+		{
+			throw Soy::AssertException("CallFunc: Context is null, maybe shutting down");
+		}
+
 		TCallback Callback(*this);
 		Callback.mThis = This;
 	
