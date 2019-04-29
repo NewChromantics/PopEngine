@@ -264,6 +264,12 @@ std::shared_ptr<Opengl::TContext> TOpenglWindow::GetContext()
 	return mView->mContext;
 }
 
+void TOpenglWindow::OnClosed()
+{
+	//	do osx cleanup of view etc
+	SoyWindow::OnClosed();
+}
+
 std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
 {
 	return std::chrono::milliseconds( 1000/mParams.mRefreshRate );
