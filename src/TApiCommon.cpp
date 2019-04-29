@@ -29,6 +29,8 @@ DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
 DEFINE_BIND_FUNCTIONNAME(GetHeapSize);
 DEFINE_BIND_FUNCTIONNAME(GetHeapCount);
 DEFINE_BIND_FUNCTIONNAME(GetHeapObjects);
+DEFINE_BIND_FUNCTIONNAME(GetCrtHeapSize);
+DEFINE_BIND_FUNCTIONNAME(GetCrtHeapCount);
 DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
 DEFINE_BIND_FUNCTIONNAME(Sleep);
 DEFINE_BIND_FUNCTIONNAME(Yield);
@@ -91,6 +93,8 @@ namespace ApiPop
 	static void		GetHeapSize(Bind::TCallback& Params);
 	static void		GetHeapCount(Bind::TCallback& Params);
 	static void		GetHeapObjects(Bind::TCallback& Params);
+	static void		GetCrtHeapSize(Bind::TCallback& Params);
+	static void		GetCrtHeapCount(Bind::TCallback& Params);
 	static void		EnumScreens(Bind::TCallback& Params);
 	static void		GetExeDirectory(Bind::TCallback& Params);
 }
@@ -312,6 +316,23 @@ void ApiPop::GetHeapCount(Bind::TCallback& Params)
 }
 
 
+void ApiPop::GetCrtHeapSize(Bind::TCallback& Params)
+{
+	auto& Heap = prmem::GetCRTHeap();
+	Heap.Update();
+	auto Value = Heap.mAllocBytes;
+	Params.Return( Value );
+}
+
+void ApiPop::GetCrtHeapCount(Bind::TCallback& Params)
+{
+	auto& Heap = prmem::GetCRTHeap();
+	Heap.Update();
+	auto Value = Heap.mAllocCount;
+	Params.Return( Value );
+}
+
+
 void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 {
 	auto& Heap = Params.mContext.GetGeneralHeap();
@@ -488,9 +509,10 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<GetHeapSize_FunctionName>(GetHeapSize, Namespace );
 	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
 	Context.BindGlobalFunction<GetHeapObjects_FunctionName>(GetHeapObjects, Namespace );
+	Context.BindGlobalFunction<GetCrtHeapSize_FunctionName>(GetCrtHeapSize, Namespace );
+	Context.BindGlobalFunction<GetCrtHeapCount_FunctionName>(GetCrtHeapCount, Namespace );
 	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
 	Context.BindGlobalFunction<GetExeDirectory_FunctionName>(GetExeDirectory, Namespace );
-
 }
 
 TImageWrapper::~TImageWrapper()
