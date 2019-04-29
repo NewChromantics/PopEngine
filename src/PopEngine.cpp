@@ -11,6 +11,9 @@ namespace Platform
 	void		Loop(bool Blocking,std::function<void()> OnQuit);
 }
 
+#if !defined(TARGET_WINDOWS)
+std::shared_ptr<Bind::TInstance> pInstance;
+#endif
 
 TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 {
@@ -37,8 +40,11 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	DataPath += "/";
 
 	bool Running = true;
+	
+#if defined(TARGET_WINDOWS)
 	std::shared_ptr<Bind::TInstance> pInstance;
-
+#endif
+	
 	auto OnShutdown = [&](int32_t ExitCode)
 	{
 		Running = false;
