@@ -84,7 +84,10 @@ JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 	if ( !JSValueIsObject( Context, Value ) )
 		throw Soy::AssertException("Value is not object");
 
-	return const_cast<JSObjectRef>( Value );
+	JSValueRef Exception = nullptr;
+	auto Object = JSValueToObject( Context, Value, &Exception );
+	ThrowException( Context, Exception );
+	return Object;
 }
 
 
@@ -1035,15 +1038,13 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 	try
 	{
 		//	if context has gone, we might be shutting down
-		if ( mContext == nullptr )
-		{
+		if ( !mContext )
 			throw Soy::AssertException("CallFunc: Context is null, maybe shutting down");
-		}
 
 		TCallback Callback(*this);
 		Callback.mThis = This;
 	
-		if ( Callback.mThis == nullptr )
+		if ( !Callback.mThis )
 			Callback.mThis = JSValueMakeUndefined( mContext );
 
 		for ( auto a=0;	a<ArgumentCount;	a++ )
@@ -1052,7 +1053,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 		//	actually call!
 		Function( Callback );
 		
-		if ( Callback.mReturn == nullptr )
+		if ( !Callback.mReturn )
 			Callback.mReturn = JSValueMakeUndefined( mContext );
 		
 		return Callback.mReturn;
@@ -1067,34 +1068,6 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 	}
 }
 
-
-/*
-JSValueRef ObjectCallAsFunctionCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception) {
-	cout << "Hello World" << endl;
-	return JSValueMakeUndefined(ctx);
-}
-
-
-JsCore::TInstance::
-{
-	JSObjectRef globalObject = JSContextGetGlobalObject(globalContext);
-	
-	JSStringRef logFunctionName = JSStringCreateWithUTF8CString("log");
-	JSObjectRef functionObject = JSObjectMakeFunctionWithCallback(globalContext, logFunctionName, &ObjectCallAsFunctionCallback);
-	
-	JSObjectSetProperty(globalContext, globalObject, logFunctionName, functionObject, kJSPropertyAttributeNone, nullptr);
-	
-	JSStringRef logCallStatement = JSStringCreateWithUTF8CString("log()");
-	
-	JSEvaluateScript(globalContext, logCallStatement, nullptr, nullptr, 1,nullptr);
-	
- 
-	JSGlobalContextRelease(globalContext);
-	JSStringRelease(logFunctionName);
-	JSStringRelease(logCallStatement);
-	}
-
-*/
 
 JsCore::TObject JsCore::TCallback::GetReturnObject()
 {
@@ -1664,7 +1637,7 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
 
 	//	gr: if you pass null as the parent object, this "class" gets garbage collected and free'd (with null)
-	if ( ParentObject.mThis == nullptr )
+	if ( !ParentObject.mThis )
 	{
 		std::stringstream Error;
 		Error << "Creating class (" << mDefinition.className << ") with null parent(\"" << ParentObjectName << "\") will get auto garbage collected";
