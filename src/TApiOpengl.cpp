@@ -249,6 +249,27 @@ bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 }
 
 
+void TWindowWrapper::OnClosed()
+{
+	auto Runner = [=](Bind::TContext& Context)
+	{
+		try
+		{
+			auto This = this->GetHandle();
+			auto ThisFunc = This.GetFunction("OnClosed");
+			Bind::TCallback Params(Context);
+			Params.SetThis( This );
+			ThisFunc.Call( Params );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception in OnClosed: " << e.what() << std::endl;
+		}
+	};
+
+	mContext.Queue( Runner );
+}
+
 void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 {
 	//	copy for queue
@@ -331,6 +352,7 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnKeyUp = [this](SoyKeyButton::Type Button)			{	this->OnKeyFunc(Button,"OnKeyUp");	};
 	mWindow->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->OnTryDragDrop(Filenames);	};
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
+	mWindow->mOnClosed = [this]()	{	this->OnClosed();	};
 }
 
 void TWindowWrapper::DrawQuad(Bind::TCallback& Params)

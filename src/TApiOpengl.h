@@ -18,6 +18,9 @@ public:
 		TOpenglWindow	( Name, Rect, Params)
 	{
 	}
+	~TRenderWindow()
+	{
+	}
 	
 	void	Clear(Opengl::TRenderTarget& RenderTarget);
 	void	ClearColour(Soy::TRgb Colour);
@@ -65,7 +68,8 @@ public:
 	void				OnKeyFunc(SoyKeyButton::Type Button,const std::string& FuncName);
 	bool				OnTryDragDrop(ArrayBridge<std::string>& Filenames);
 	void				OnDragDrop(ArrayBridge<std::string>& Filenames);
-	
+	void				OnClosed();
+
 	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 

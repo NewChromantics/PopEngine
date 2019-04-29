@@ -86,8 +86,11 @@ public:
 	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
 
 	Soy::Rectx<int32_t>		GetClientRect();
+	virtual void			OnDestroyed();		//	window handle is being destroyed
 
 	std::function<void(TControl&)>	mOnPaint;
+	std::function<void(TControl&)>	mOnDestroy;	//	todo: expand this to OnClose to allow user to stop it from closing
+
 	HWND		mHwnd = nullptr;
 	std::string	mName;
 };
@@ -216,6 +219,11 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 			return Default();
 		}
 
+		if ( message == WM_QUIT )
+		{
+			std::Debug << "Got WM_QUIT on control callback" << std::endl;
+		}
+
 		return Default();
 	}
 
@@ -229,6 +237,10 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 	case WM_CREATE:
 	case WM_ERASEBKGND:
 	case WM_SHOWWINDOW:
+		return 0;
+
+	case WM_DESTROY:
+		Control.OnDestroyed();
 		return 0;
 
 	case WM_PAINT:
@@ -247,6 +259,10 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 
 		//	*need* to handle these with defwndproc
 	case WM_GETMINMAXINFO:
+		break;
+
+	case WM_QUIT:
+		std::Debug << "Got WM_QUIT on control callback, with control" << std::endl;
 		break;
 	}
 
@@ -318,6 +334,26 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 		throw Soy::AssertException("Failed to create window");
 
 }
+
+void Platform::TControl::TControl::OnDestroyed()
+{
+	//	do callback, then cleanup references
+	if ( mOnDestroy )
+	{
+		try
+		{
+			mOnDestroy(*this);
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception OnDestroy of control " << this->mName << ": " << e.what() << std::endl;
+		}
+	}
+
+	//	clear references
+	mHwnd = nullptr;
+}
+
 
 Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
 {
@@ -654,6 +690,11 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	};
 	mWindowContext->mOnRender = OnRender;
 
+	mWindow->mOnDestroy = [this](Platform::TControl& Control)
+	{
+		this->OnClosed();
+	};
+
 	//	start thread so we auto redraw & run jobs
 	Start();
 }
@@ -661,12 +702,20 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 TOpenglWindow::~TOpenglWindow()
 {
 	//	stop thread
-	Stop();
+	WaitToFinish();
 }
-	
+
+void TOpenglWindow::OnClosed()
+{
+	SoyWindow::OnClosed();
+	WaitToFinish();
+	mWindowContext.reset();
+	mWindow.reset();
+}
+
 bool TOpenglWindow::IsValid()
 {
-	throw Soy::AssertException("todo");
+	return mWindow != nullptr;
 }
 
 bool TOpenglWindow::Iteration()
