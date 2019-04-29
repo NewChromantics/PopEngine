@@ -20,6 +20,7 @@
 		BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
 		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
+		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
 		BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3BE7B1226DFD680043DFA5 /* TApiVarjo.cpp */; };
 		BF3BE7B6226E03310043DFA5 /* libVarjo_Glint.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3BE7B4226E03300043DFA5 /* libVarjo_Glint.a */; };
@@ -194,6 +195,7 @@
 		BF3786EE2132FC6C008E4350 /* SoyJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyJson.h; path = src/SoyJson.h; sourceTree = "<group>"; };
 		BF39256420E51C36005AE288 /* TV8Instance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Instance.h; path = src/TV8Instance.h; sourceTree = "<group>"; };
 		BF39256520E51C36005AE288 /* TV8Instance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8Instance.cpp; path = src/TV8Instance.cpp; sourceTree = "<group>"; };
+		BF3965622277378A00A721E8 /* SoyWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyWindow.cpp; path = src/SoyWindow.cpp; sourceTree = "<group>"; };
 		BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_WithCoreMlModels.xcconfig; path = src/PopEngine_WithCoreMlModels.xcconfig; sourceTree = "<group>"; };
 		BF3B018F2253A5B900644E46 /* TApiCoreMlModels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TApiCoreMlModels.mm; path = src/TApiCoreMlModels.mm; sourceTree = "<group>"; };
 		BF3B01912253A80100644E46 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
@@ -984,6 +986,7 @@
 				BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */,
 				BF19612021B9ADD9007014EF /* SoyWebSocket.h */,
 				BFA297231B80E8DE003B91F6 /* SoyWindow.h */,
+				BF3965622277378A00A721E8 /* SoyWindow.cpp */,
 				BFA297241B80EF1C003B91F6 /* SoyWindow.mm */,
 				FB5702CA1A5FDC8800449FF3 /* stb */,
 			);
@@ -1084,6 +1087,7 @@
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
 				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
 				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
+				BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
 				BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */,
 				BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */,
