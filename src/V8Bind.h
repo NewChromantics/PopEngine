@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 class JSContextRef
 {
 public:
@@ -52,6 +54,14 @@ public:
 	void	operator=(std::nullptr_t Null);
 	bool	operator!=(std::nullptr_t Null) const;
 };
+
+
+class JSClassRef
+{
+public:
+	JSClassRef(std::nullptr_t);
+};
+
 
 enum JSType
 {
@@ -110,11 +120,6 @@ public:
 };
 extern const JSClassDefinition kJSClassDefinitionEmpty;
 
-class JSClassRef
-{
-public:
-	JSClassRef(std::nullptr_t);
-};
 
 
 class JSPropertyNameArrayRef
