@@ -1,4 +1,5 @@
-#include "JsCoreBind.h"
+//#include "JsCoreBind.h"
+#include "TBind.h"
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
 #include "TApiCommon.h"
@@ -82,6 +83,7 @@ JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 	
 	if ( !JSValueIsObject( Context, Value ) )
 		throw Soy::AssertException("Value is not object");
+
 	return const_cast<JSObjectRef>( Value );
 }
 

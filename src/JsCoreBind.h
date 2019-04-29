@@ -1,10 +1,15 @@
 #pragma once
 
-//	gr: we're binding them ourselves
-#if defined(PLATFORM_WINDOWS)
-#include "JsCoreDll.h"
+#if defined(JSAPI_V8)
+
+
 #else
-#include <JavaScriptCore/JavaScriptCore.h>
+	//	gr: we're binding them ourselves
+	#if defined(PLATFORM_WINDOWS)
+	#include "JsCoreDll.h"
+	#else
+	#include <JavaScriptCore/JavaScriptCore.h>
+	#endif
 #endif
 
 #include <memory>
@@ -14,6 +19,7 @@
 
 namespace Bind
 {
+	class TInstanceBase;
 	class TInstance;
 }
 
@@ -174,7 +180,7 @@ public:
 
 
 //	VM to contain multiple contexts/containers
-class Bind::TInstance
+class Bind::TInstance : public Bind::TInstanceBase
 {
 public:
 	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown);
@@ -264,7 +270,12 @@ public:
 	virtual void			Return(JsCore::TPromise& Value) bind_override;
 	virtual void			Return(JsCore::TPersistent& Value) bind_override;
 	template<typename TYPE>
-	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override	{	mReturn = GetArray( GetContextRef(), Values );	}
+	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override
+	{
+		auto Array = GetArray( GetContextRef(), Values );
+		auto ArrayValue = GetValue( GetContextRef(), Array );
+		mReturn = ArrayValue;
+	}
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(JsCore::TObject& This) bind_override;
@@ -359,7 +370,8 @@ public:
 	inline void				SetArray(const std::string& Name,ArrayBridge<TYPE>&& Values) bind_override
 	{
 		auto Array = JsCore::GetArray( mContext, Values );
-		SetMember( Name, Array );
+		auto ArrayValue = JsCore::GetValue( mContext, Array );
+		SetMember( Name, ArrayValue );
 	}
 
 	//	Jscore specific
@@ -615,7 +627,7 @@ protected:
 			std::Debug << "Global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
 		
 		//	reset the void for safety?
-		std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
+		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
 		JSObjectSetPrivate( ObjectRef, nullptr );
 	}
 	
