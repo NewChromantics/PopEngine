@@ -684,7 +684,8 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Funct
 	//	being called from js to relay stuff back
 	
 	//	gr: this may be the source of problems, this should be a properly locally scoped context...
-	JSContextRef ContextRef = const_cast<JSContextRef>( mContext );
+	//JSContextRef ContextRef = const_cast<JSContextRef>( mContext );
+	JSContextRef ContextRef = mContext;
 	TLocalContext LocalContext( ContextRef, *this );
 	Functor( LocalContext );
 }
