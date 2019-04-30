@@ -1,5 +1,9 @@
 #pragma once
 
+#if !defined(JSAPI_V8)
+#error This file should not be being built
+#endif
+
 //	gr: see if we can avoid including this everywhere
 //		would need moving the JS* calls from JSBind.h
 //		but JSBind classes still need to be exposed.

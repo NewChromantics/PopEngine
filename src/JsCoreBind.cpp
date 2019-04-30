@@ -22,6 +22,13 @@
 #endif
 
 
+#if !defined(JSAPI_V8)
+JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory)
+{
+	return JSContextGroupCreate();
+}
+#endif
+
 namespace JsCore
 {
 	std::map<JSGlobalContextRef,TContext*> ContextCache;
@@ -217,14 +224,14 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 //	gr: any strings created with this need to be released. Should make a ref-counter type to avoid leaks
 JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
 {
-	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
-	return Handle;
+	//	doesn't actually need a local context
+	return GetString(String);
 }
 
 JSStringRef JsCore::GetString(const std::string& String)
 {
-	//	doesn't actually need a local context
-	return GetString(String);
+	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
+	return Handle;
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
@@ -675,7 +682,7 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Funct
 	//	being called from js to relay stuff back
 	
 	//	gr: this may be the source of problems, this should be a properly locally scoped context...
-	JSContextRef ContextRef = GetContextRef();
+	JSContextRef ContextRef = const_cast<JSContextRef>( mContext );
 	TLocalContext LocalContext( ContextRef, *this );
 	Functor( LocalContext );
 }
@@ -1180,6 +1187,11 @@ void JSCore_SetArgument(Array<JSValueRef>& mArguments,Bind::TLocalContext& Local
 		mArguments.PushBack( JSValueMakeUndefined(LocalContext.mLocalContext) );
 	
 	mArguments[Index] = JsCore::GetValue( LocalContext.mLocalContext, Value );
+}
+
+void JsCore::TCallback::SetArgument(size_t Index,JSValueRef Value)
+{
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)

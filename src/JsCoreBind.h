@@ -515,15 +515,7 @@ protected:
 
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
-	
-	
-	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
-	//	gr: getting convinced that global and local arent the same
-	//	anything that calls this, maybe needs to be passing a local
-	//	gr: anything that references this should be using TLocalContext
-	JSContextRef		GetContextRef() __deprecated;
-	
-	
+		
 public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
