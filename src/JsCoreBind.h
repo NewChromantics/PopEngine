@@ -557,7 +557,7 @@ public:
 	}
 	virtual ~TObjectWrapperBase()	{}
 
-	virtual TObject	GetHandle();
+	virtual TObject	GetHandle(Bind::TLocalContext& Context);
 	virtual void	SetHandle(TObject& NewHandle);
 	
 	//	construct and allocate

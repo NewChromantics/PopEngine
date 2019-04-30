@@ -1640,13 +1640,15 @@ void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) con
 }
 
 
-JsCore::TObject JsCore::TObjectWrapperBase::GetHandle()
+JsCore::TObject JsCore::TObjectWrapperBase::GetHandle(Bind::TLocalContext& Context)
 {
 #if defined(RETAIN_WRAPPER_HANDLE)
-	return mHandle.GetObject();
+	JsCore::TObject TheObject = mHandle.GetObject();
 #else
-	return mHandle;
+	JsCore::TObject TheObject = mHandle;
 #endif
+	//	hack to see if this corrects some things
+	return TObject( Context.mLocalContext, TheObject.mThis );
 }
 
 void JsCore::TObjectWrapperBase::SetHandle(JsCore::TObject& NewHandle)
