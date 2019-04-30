@@ -232,7 +232,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 				std::stringstream Name;
 				Name << "AVC buffer image plane #" << mFrameBuffers.GetSize();
 				Image.mName = Name.str();
-				Bind::TPersistent ImageObjectPersistent( ImageObject, Name.str() );
+				Bind::TPersistent ImageObjectPersistent( Context, ImageObject, Name.str() );
 				mFrameBuffers.PushBack( ImageObjectPersistent );
 			}
 			
@@ -526,7 +526,7 @@ void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
 		Request.mSeperatePlanes = true;
 	else if ( Params.IsArgumentObject(0) )
 	{
-		Request.mDestinationImage = Bind::TPersistent( Params.GetArgumentObject(0), "Destination Image" );
+		Request.mDestinationImage = Bind::TPersistent( Params.mLocalContext, Params.GetArgumentObject(0), "Destination Image" );
 		auto& IsImageCheck = Request.mDestinationImage.GetObject().This<TImageWrapper>();
 	}
 	else if ( !Params.IsArgumentUndefined(0) )
@@ -560,7 +560,7 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 		try
 		{
 			auto Frame = PopFrame( Context, mFrameRequestParams );
-			Bind::TPersistent FramePersistent( Frame, "Frame" );
+			Bind::TPersistent FramePersistent( Context, Frame, "Frame" );
 
 			auto HandlePromise = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
 			{

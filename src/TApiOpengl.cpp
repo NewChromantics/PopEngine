@@ -303,7 +303,7 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 {
 	auto WindowName = Params.GetArgumentString(0);
 
-	mPersistentHandle = Bind::TPersistent( Params.ThisObject(), std::string("Window ") + WindowName );
+	mPersistentHandle = Bind::TPersistent( Params.mLocalContext, Params.ThisObject(), std::string("Window ") + WindowName );
 	
 	TOpenglParams WindowParams;
 	WindowParams.mDoubleBuffer = false;
@@ -480,7 +480,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 
 	auto* pThis = &This;
 	auto WindowHandle = Params.ThisObject();
-	auto WindowPersistent = Params.mContext.CreatePersistent( WindowHandle );
+	auto WindowPersistent = Bind::TPersistent( Params.mLocalContext, WindowHandle, "WindowHandle" );
 	
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	//	return the promise
@@ -511,8 +511,8 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	if ( Params.IsArgumentString(2) )
 		ReadBack = Params.GetArgumentString(2);
 	
-	auto TargetPersistent = Params.mContext.CreatePersistentPtr( TargetHandle );
-	auto RenderCallbackPersistent = Params.mContext.CreatePersistent( CallbackHandle );
+	auto TargetPersistent = Bind::TPersistent( Params.mLocalContext, TargetHandle, "TargetPersistent" );
+	auto RenderCallbackPersistent = Bind::TPersistent( Params.mLocalContext, CallbackHandle, "CallbackHandle" );
 	auto ReadBackPixelsAfterwards = SoyPixelsFormat::ToType( ReadBack );
 	
 	
@@ -520,7 +520,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	{
 		auto Func = RenderCallbackPersistent.GetFunction();
 		auto Window = WindowPersistent.GetObject();
-		auto Target = TargetPersistent->GetObject();
+		auto Target = TargetPersistent.GetObject();
 		
 		Bind::TCallback CallbackParams(Context);
 		CallbackParams.SetArgumentObject( 0, Window );
@@ -539,7 +539,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		{
 			//	gr: we were storing this pointer which may be getting deleted
 			//	with V8 we can't access this pointer out of thread, but maybe we can cache both
-			auto TargetImageObject = TargetPersistent->GetObject();
+			auto TargetImageObject = TargetPersistent.GetObject();
 			auto& TargetImage = TargetImageObject.This<TImageWrapper>();
 			
 			//	get the texture from the image

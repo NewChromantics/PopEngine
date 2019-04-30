@@ -137,7 +137,7 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 {
 	auto Callback = Params.GetArgumentFunction(0);
 	auto TimeoutMs = Params.GetArgumentInt(1);
-	auto CallbackPersistent = Params.mContext.CreatePersistent(Callback);
+	auto CallbackPersistent = Bind::TPersistent( Params.mLocalContext, Callback, "SetTimeout callback");
 	
 	auto OnRun = [=](Bind::TLocalContext& Context)
 	{
@@ -1347,7 +1347,7 @@ void TAsyncLoopWrapper::CreateTemplate(Bind::TTemplate& Template)
 void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Function = Params.GetArgumentFunction(0);
-	mFunction = Bind::TPersistent( Function, "TAsyncLoopWrapper function" );
+	mFunction = Bind::TPersistent( Params.mLocalContext, Function, "TAsyncLoopWrapper function" );
 
 	
 	static Bind::TPersistent MakeIterationBindThisFunction;
@@ -1370,7 +1370,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 		Bind::TFunction MakePromiseFunction( mContext, FunctionValue );
 		//mIterationBindThisFunction = Bind::TPersistent( MakePromiseFunction, "MakePromiseFunction" );
 	
-		MakeIterationBindThisFunction = Bind::TPersistent(MakePromiseFunction,"MakeIterationBindThisFunction");
+		MakeIterationBindThisFunction = Bind::TPersistent(Params.mLocalContext, MakePromiseFunction,"MakeIterationBindThisFunction");
 	}
 	
 	{
@@ -1381,7 +1381,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 		MakeFunc.Call(Call);
 		
 		auto IterationBindThisFunction = Call.GetReturnFunction();
-		this->mIterationBindThisFunction = Bind::TPersistent(IterationBindThisFunction,"Iteration Func");
+		this->mIterationBindThisFunction = Bind::TPersistent(Params.mLocalContext, IterationBindThisFunction,"Iteration Func");
 	}
 	
 	Iteration( Params );

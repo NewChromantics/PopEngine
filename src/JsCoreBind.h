@@ -188,7 +188,7 @@ public:
 	void			Call(JsCore::TCallback& Params) const;
 	
 public:
-	JSContextRef	mContext = nullptr;	//	local context!
+	//JSContextRef	mContext = nullptr;	//	local context!
 	JSObjectRef		mThis = nullptr;
 };
 
@@ -407,10 +407,10 @@ class JsCore::TPersistent
 {
 public:
 	TPersistent()	{}
-	TPersistent(const TPersistent& That)	{	Retain( That );	}
-	TPersistent(const TPersistent&& That)	{	Retain( That );	}
-	TPersistent(const TObject& Object,const std::string& DebugName)		{	Retain( Object, DebugName );	}
-	TPersistent(const TFunction& Object,const std::string& DebugName)	{	Retain( Object, DebugName );	}
+	TPersistent(Bind::TLocalContext& Context,const TPersistent& That)	{	Retain( Context, That );	}
+	TPersistent(Bind::TLocalContext& Context,const TPersistent&& That)	{	Retain( Context, That );	}
+	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
+	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refound
 	
 	operator		bool() const		{	return IsFunction() || IsObject();	}
@@ -420,16 +420,14 @@ public:
 	//	const for lambda[=] capture
 	TObject			GetObject() const		{	return mObject;	}
 	TFunction		GetFunction() const		{	return mFunction;	}
-	JSContextRef	GetContextRef() const;
-	TContext&		GetContext();
 
-	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
+	//TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
-	void		Retain(const TObject& Object,const std::string& DebugName);
-	void		Retain(const TFunction& Object,const std::string& DebugName);
-	void		Retain(const TPersistent& That);
-	void 		Release();
+	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
+	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
+	void		Retain(Bind::TLocalContext& Context,const TPersistent& That);
+	void 		Release(Bind::TLocalContext& Context);
 	
 public:
 	std::string	mDebugName;
@@ -471,32 +469,13 @@ public:
 	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName=std::string());
 	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
 	
-	virtual JsCore::TPersistent	CreatePersistent(JsCore::TObject& Object) bind_override;
-	virtual std::shared_ptr<JsCore::TPersistent>	CreatePersistentPtr(JsCore::TObject& Object) bind_override;
-	virtual JsCore::TPersistent	CreatePersistent(JsCore::TFunction& Object) bind_override;
-	virtual JsCore::TPromise		CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName) bind_override;
-	/*
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount);
-	template<typename TYPE>
-	JsCore::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
-	JsCore::TArray			CreateArray(ArrayBridge<uint8_t>&& Values);
-	JsCore::TArray			CreateArray(ArrayBridge<float>&& Values);
-*/
+	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName) bind_override;
+
 	
 	template<typename OBJECTWRAPPERTYPE>
 	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());
 	
-	//	api calls with context provided
-	//template<typename IN,typename OUT>
-	//OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
-	//void				ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ErrorContext="JsCore exception")	{	JsCore::ThrowException( mContext, ExceptionHandle, ErrorContext );	}
-	
-	
-	
+
 	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
 	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
 	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
@@ -543,7 +522,7 @@ class JsCore::TPromise
 {
 public:
 	TPromise()	{}
-	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
+	TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
 	~TPromise();
 	
 	//	const for lambda[=] copy capture
