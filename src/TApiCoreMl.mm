@@ -304,7 +304,7 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 			}
 		}
 		
-		Promise.Resolve( GetArrayBridge(ResultObjects) );
+		Promise.Resolve( Context, GetArrayBridge(ResultObjects) );
 	};
 	
 	Run( Params.mLocalContext );

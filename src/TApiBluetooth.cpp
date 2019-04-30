@@ -131,7 +131,7 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 			OnDevice( Device->mMeta );
 		}
 
-		Promise.Resolve( GetArrayBridge(Devices) );
+		Promise.Resolve( Context, GetArrayBridge(Devices) );
 	};
 
 	//	currently looking for ones we've already found
@@ -360,9 +360,9 @@ void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,Array
 			mReadCharacteristicBuffer.Clear();
 		}
 		auto Data = Bind::GetArray( Context.mLocalContext, GetArrayBridge(PoppedData) );
-		auto HandlePromise = [&](Bind::TPromise& Promise)
+		auto HandlePromise = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 		{
-			Promise.Resolve( Data );
+			Promise.Resolve( LocalContext, Data );
 		};
 		mReadCharacteristicPromises.Flush( HandlePromise );
 	};

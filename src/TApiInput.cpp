@@ -57,7 +57,7 @@ ApiInput::TContextManager::TContextManager()
 		
 		auto Flush = [this](Bind::TLocalContext& Context)
 		{
-			auto HandlePromise = [&](Bind::TPromise& Promise)
+			auto HandlePromise = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
 			{
 				this->EnumDevices( Context, Promise );
 			};
@@ -91,7 +91,7 @@ void ApiInput::TContextManager::EnumDevices(Bind::TLocalContext& Context,Bind::T
 		Devices.PushBack( Object );
 	};
 	auto DevicesArray = JsCore::GetArray( Context.mLocalContext, GetArrayBridge(Devices) );
-	Promise.Resolve( DevicesArray );
+	Promise.Resolve( Context, DevicesArray );
 }
 
 void ApiInput::Bind(Bind::TContext& Context)

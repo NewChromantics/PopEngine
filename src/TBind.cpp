@@ -28,7 +28,7 @@ Bind::TPromise Bind::TPromiseQueue::AddPromise(Bind::TLocalContext& Context)
 }
 
 
-void Bind::TPromiseQueue::Flush(std::function<void(Bind::TPromise&)> HandlePromise)
+void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,Bind::TPromise&)> HandlePromise)
 {
 	//	grab a copy so the queue never becomes infinite
 	Array<TPromise> Promises;
@@ -41,36 +41,43 @@ void Bind::TPromiseQueue::Flush(std::function<void(Bind::TPromise&)> HandlePromi
 	if ( Promises.IsEmpty() )
 		mMissedFlushes++;
 
-	for ( auto p=0;	p<Promises.GetSize();	p++ )
+	auto& Context = *this->mContext;
+	
+	//	gr: should we block or not...
+	auto DoFlush = [&](Bind::TLocalContext& Context)
 	{
-		auto& Promise = Promises[p];
-		HandlePromise( Promise );
-	}
+		for ( auto p=0;	p<Promises.GetSize();	p++ )
+		{
+			auto& Promise = Promises[p];
+			HandlePromise( Context, Promise );
+		}
+	};
+	Context.Execute( DoFlush );
 }
 
 void Bind::TPromiseQueue::Resolve()
 {
-	auto Handle = [](TPromise& Promise)
+	auto Handle = [](Bind::TLocalContext& Context,TPromise& Promise)
 	{
-		Promise.ResolveUndefined();
+		Promise.ResolveUndefined(Context);
 	};
-	Flush(Handle);
+	Flush( Handle );
 }
 
 void Bind::TPromiseQueue::Resolve(const std::string& Result)
 {
-	auto Handle = [&](TPromise& Promise)
+	auto Handle = [=](Bind::TLocalContext& Context,TPromise& Promise)
 	{
-		Promise.Resolve(Result);
+		Promise.Resolve(Context,Result);
 	};
 	Flush(Handle);
 }
 
 void Bind::TPromiseQueue::Reject(const std::string& Error)
 {
-	auto Handle = [&](TPromise& Promise)
+	auto Handle = [=](Bind::TLocalContext& Context,TPromise& Promise)
 	{
-		Promise.Reject(Error);
+		Promise.Reject( Context, Error );
 	};
 	Flush(Handle);
 }

@@ -586,14 +586,17 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 
 void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename)
 {
-	auto ThisHandle = JSObjectRef(nullptr);
-	auto SourceJs = JSStringCreateWithUTF8CString(Source.c_str());
-	auto FilenameJs = JSStringCreateWithUTF8CString(Filename.c_str());
-	auto LineNumber = 0;
-	JSValueRef Exception = nullptr;
-	auto LocalContext = GetContextRef();
-	auto ResultHandle = JSEvaluateScript( LocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
-	ThrowException(LocalContext,Exception,Filename);
+	auto Exec = [&](Bind::TLocalContext& Context)
+	{
+		auto ThisHandle = JSObjectRef(nullptr);
+		auto SourceJs = JSStringCreateWithUTF8CString(Source.c_str());
+		auto FilenameJs = JSStringCreateWithUTF8CString(Filename.c_str());
+		auto LineNumber = 0;
+		JSValueRef Exception = nullptr;
+		auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
+		ThrowException( Context.mLocalContext, Exception, Filename );
+	};
+	Execute( Exec );
 }
 
 template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
@@ -915,17 +918,18 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 
 void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
 {
-	//	this should be executed in-scope
-	TLocalContext LocalContext( GetContextRef(), *this );
-	
-	auto This = GetGlobalObject( ParentObjectName );
+	auto Exec = [&](Bind::TLocalContext& LocalContext)
+	{
+		auto This = GetGlobalObject( LocalContext, ParentObjectName );
 
-	auto FunctionNameJs = JsCore::GetString( FunctionName );
-	JSValueRef Exception = nullptr;
-	auto FunctionHandle = JSObjectMakeFunctionWithCallback( LocalContext.mLocalContext, FunctionNameJs, FunctionPtr );
-	ThrowException( LocalContext.mLocalContext, Exception );
-	TFunction Function( LocalContext.mLocalContext, FunctionHandle );
-	This.SetFunction( FunctionName, Function );
+		auto FunctionNameJs = JsCore::GetString( FunctionName );
+		JSValueRef Exception = nullptr;
+		auto FunctionHandle = JSObjectMakeFunctionWithCallback( LocalContext.mLocalContext, FunctionNameJs, FunctionPtr );
+		ThrowException( LocalContext.mLocalContext, Exception );
+		TFunction Function( LocalContext.mLocalContext, FunctionHandle );
+		This.SetFunction( FunctionName, Function );
+	};
+	Execute( Exec );
 }
 
 
@@ -955,36 +959,29 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 		
 		JSStringRef FunctionSourceString = JsCore::GetString( LocalContext.mLocalContext, MakePromiseFunctionSource );
 		JSValueRef Exception = nullptr;
-		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
-		ThrowException( Exception );
+		auto FunctionValue = JSEvaluateScript( LocalContext.mLocalContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
+		ThrowException( LocalContext.mLocalContext, Exception );
 		
-		TFunction MakePromiseFunction( mContext, FunctionValue );
+		TFunction MakePromiseFunction( LocalContext.mLocalContext, FunctionValue );
 		mMakePromiseFunction = TPersistent( MakePromiseFunction, "MakePromiseFunction" );
 	}
 	
+	Bind::TCallback CallParams( LocalContext );
 	auto MakePromiseFunction = mMakePromiseFunction.GetFunction();
-	auto NewPromiseValue = MakePromiseFunction.Call();
-	auto NewPromiseHandle = JsCore::GetObject( mContext, NewPromiseValue );
-	TObject NewPromiseObject( mContext, NewPromiseHandle );
+	MakePromiseFunction.Call(CallParams);
+	auto NewPromiseValue = CallParams.mReturn;
+	auto NewPromiseHandle = JsCore::GetObject( LocalContext.mLocalContext, NewPromiseValue );
+	TObject NewPromiseObject( LocalContext.mLocalContext, NewPromiseHandle );
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
 	auto Reject = NewPromiseObject.GetFunction("Reject");
 
 	TPromise Promise( NewPromiseObject, Resolve, Reject, DebugName );
-/*
-	TObject NewPromiseObject( mContext, NewPromiseHandle );
-	
-	auto NewPromiseObject = const_cast<JSObjectRef>(NewPromiseHandle);
-	JSValueRef Exception = nullptr;
-	auto Resolve = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Resolve"), &Exception ) );
-	auto Reject = const_cast<JSObjectRef>(JSObjectGetProperty( Context, NewPromiseObject, JSStringCreateWithUTF8CString("Reject"), &Exception ) );
-	
-	JsCore::TPromise Promise( Context, NewPromiseObject, Resolve, Reject );
-	*/
+
 	return Promise;
 }
 
 
-JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
+JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
 {
 	//	call our function from
 	try
@@ -993,11 +990,11 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 		if ( !mContext )
 			throw Soy::AssertException("CallFunc: Context is null, maybe shutting down");
 
-		TCallback Callback(*this);
+		TCallback Callback(LocalContext);
 		Callback.mThis = This;
 	
 		if ( !Callback.mThis )
-			Callback.mThis = JSValueMakeUndefined( mContext );
+			Callback.mThis = JSValueMakeUndefined( LocalContext.mLocalContext );
 
 		for ( auto a=0;	a<ArgumentCount;	a++ )
 			Callback.mArguments.PushBack( Arguments[a] );
@@ -1006,7 +1003,7 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 		Function( Callback );
 		
 		if ( !Callback.mReturn )
-			Callback.mReturn = JSValueMakeUndefined( mContext );
+			Callback.mReturn = JSValueMakeUndefined( LocalContext.mLocalContext );
 		
 		return Callback.mReturn;
 	}
@@ -1015,8 +1012,8 @@ JSValueRef JsCore::TContext::CallFunc(std::function<void(JsCore::TCallback&)> Fu
 		std::stringstream Error;
 		Error << FunctionContext << " exception: " << e.what();
 		std::Debug << Error.str() << std::endl;
-		Exception = GetValue( mContext, Error.str() );
-		return JSValueMakeUndefined( mContext );
+		Exception = GetValue( LocalContext.mLocalContext, Error.str() );
+		return JSValueMakeUndefined( LocalContext.mLocalContext );
 	}
 }
 
@@ -1037,7 +1034,7 @@ JsCore::TFunction JsCore::TCallback::GetReturnFunction()
 
 JSContextRef JsCore::TCallback::GetContextRef()
 {
-	return mContext.mContext;
+	return mLocalContext.mLocalContext;
 }
 
 JSType JsCore::TCallback::GetArgumentType(size_t Index)
@@ -1177,59 +1174,59 @@ void JsCore::TCallback::SetThis(JsCore::TObject& This)
 }
 
 template<typename TYPE>
-void SetArgument(Array<JSValueRef>& mArguments,JsCore::TContext& Context,size_t Index,const TYPE& Value)
+void JSCore_SetArgument(Array<JSValueRef>& mArguments,Bind::TLocalContext& LocalContext,size_t Index,const TYPE& Value)
 {
 	while ( mArguments.GetSize() <= Index )
-		mArguments.PushBack( JSValueMakeUndefined(Context.mContext) );
+		mArguments.PushBack( JSValueMakeUndefined(LocalContext.mLocalContext) );
 	
-	mArguments[Index] = JsCore::GetValue( Context.mContext, Value );
+	mArguments[Index] = JsCore::GetValue( LocalContext.mLocalContext, Value );
 }
 
 void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
 {
-	SetArgument( mArguments, mContext, Index, Value );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
 {
-	SetArgument( mArguments, mContext, Index, Value );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentObject(size_t Index,JsCore::TObject& Value)
 {
-	SetArgument( mArguments, mContext, Index, Value );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentFunction(size_t Index,JsCore::TFunction& Value)
 {
-	SetArgument( mArguments, mContext, Index, Value );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values)
 {
-	SetArgument( mArguments, mContext, Index, Values );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Values );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values)
 {
-	SetArgument( mArguments, mContext, Index, Values );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Values );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<float>&& Values)
 {
-	SetArgument( mArguments, mContext, Index, Values );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Values );
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,JsCore::TArray& Value)
 {
-	SetArgument( mArguments, mContext, Index, Value );
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
 
-JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
+JsCore::TObject JsCore::TContext::GetGlobalObject(TLocalContext& LocalContext,const std::string& ObjectName)
 {
-	auto GlobalThis = JSContextGetGlobalObject( mContext );
-	TObject Global( mContext, GlobalThis );
+	auto GlobalThis = JSContextGetGlobalObject( LocalContext.mLocalContext );
+	TObject Global( LocalContext.mLocalContext, GlobalThis );
 	
 	if ( ObjectName.length() == 0 )
 		return Global;
@@ -1238,13 +1235,17 @@ JsCore::TObject JsCore::TContext::GetGlobalObject(const std::string& ObjectName)
 }
 
 
-void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,const std::string&  Name)
+void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,const std::string& Name)
 {
-	auto NewObject = CreateObjectInstance( ObjectType );
-	auto ParentName = Name;
-	auto ObjectName = Soy::StringPopRight( ParentName, '.' );
-	auto ParentObject = GetGlobalObject( ParentName );
-	ParentObject.SetObject( ObjectName, NewObject );
+	auto Exec = [=](Bind::TLocalContext& LocalContext)
+	{
+		auto NewObject = CreateObjectInstance( LocalContext, ObjectType );
+		auto ParentName = Name;
+		auto ObjectName = Soy::StringPopRight( ParentName, '.' );
+		auto ParentObject = GetGlobalObject( LocalContext, ParentName );
+		ParentObject.SetObject( ObjectName, NewObject );
+	};
+	Execute( Exec );
 }
 
 std::shared_ptr<JsCore::TPersistent> JsCore::TContext::CreatePersistentPtr(JsCore::TObject& Object)
@@ -1567,7 +1568,7 @@ void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
 }
 
 
-void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName)
+void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName)
 {
 	//	add a terminator function
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
@@ -1582,11 +1583,11 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 	//	but JsObjectMake also creates objects...
 	
 	//	property of Parent (eg. global or Pop.x) can be overridden in case we want a nicer class name than the unique one
-	auto PropertyName = GetString( Context.mContext, mDefinition.className );
+	auto PropertyName = GetString( Context.mLocalContext, mDefinition.className );
 	if ( OverrideLeafName.length() )
-		PropertyName = GetString( Context.mContext, OverrideLeafName );
+		PropertyName = GetString( Context.mLocalContext, OverrideLeafName );
 	
-	auto ParentObject = Context.GetGlobalObject( ParentObjectName );
+	auto ParentObject = Context.mGlobalContext.GetGlobalObject( Context, ParentObjectName );
 
 	//	gr: if you pass null as the parent object, this "class" gets garbage collected and free'd (with null)
 	if ( !ParentObject.mThis )
@@ -1595,11 +1596,11 @@ void JsCore::TTemplate::RegisterClassWithContext(TContext& Context,const std::st
 		Error << "Creating class (" << mDefinition.className << ") with null parent(\"" << ParentObjectName << "\") will get auto garbage collected";
 		throw Soy::AssertException(Error);
 	}
-	JSObjectRef ClassObject = JSObjectMake( Context.mContext, mClass, nullptr );
+	JSObjectRef ClassObject = JSObjectMake( Context.mLocalContext, mClass, nullptr );
 	
 	JSValueRef Exception = nullptr;
-	JSObjectSetProperty( Context.mContext, ParentObject.mThis, PropertyName, ClassObject, kJSPropertyAttributeNone, &Exception );
-	ThrowException( Context.mContext, Exception );
+	JSObjectSetProperty( Context.mLocalContext, ParentObject.mThis, PropertyName, ClassObject, kJSPropertyAttributeNone, &Exception );
+	ThrowException( Context.mLocalContext, Exception );
 }
 
 JsCore::TPromise::TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName) :
@@ -1617,16 +1618,16 @@ JsCore::TPromise::~TPromise()
 
 
 
-void JsCore::TPromise::Resolve(JSValueRef Value) const
+void JsCore::TPromise::Resolve(TLocalContext& LocalContext,JSValueRef Value) const
 {
-	//	gr: what is This supposed to be?
-	JSObjectRef This = nullptr;
-	
 	//	gr: this should be a Queue'd call!
 	auto Resolve = mResolve.GetFunction();
 	try
 	{
-		Resolve.Call( This, Value );
+		//	gr: should This be the promise object?
+		Bind::TCallback Params( LocalContext );
+		Params.SetArgument( 0, Value );
+		Resolve.Call( Params );
 	}
 	catch(std::exception& e)
 	{
@@ -1642,20 +1643,19 @@ void JsCore::TPromise::Resolve(JSValueRef Value) const
 	}
 }
 
-void JsCore::TPromise::ResolveUndefined() const
+void JsCore::TPromise::ResolveUndefined(Bind::TLocalContext& Context) const
 {
-	auto Value = JSValueMakeUndefined( GetContext() );
-	Resolve( Value );
+	auto Value = JSValueMakeUndefined( Context.mLocalContext );
+	Resolve( Context, Value );
 }
 
-void JsCore::TPromise::Reject(JSValueRef Value) const
+void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) const
 {
-	//	gr: what is This supposed to be?
-	JSObjectRef This = nullptr;
-	
-	//	gr: this should be a Queue'd call!
+	Bind::TCallback Params( Context );
+	Params .SetArgument( 0, Value );
+
 	auto Reject = mReject.GetFunction();
-	Reject.Call( This, Value );
+	Reject.Call( Params );
 }
 
 

@@ -117,7 +117,7 @@ void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	
-	Promise.Resolve("Resolved in c++");
+	Promise.Resolve( Params.mLocalContext, "Resolved in c++");
 	Params.Return( Promise );
 }
 
@@ -169,7 +169,7 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 	auto OnYield = [=](Bind::TLocalContext& Context)
 	{
 		//	don't need to do anything, we have just let the system breath
-		Promise.Resolve("Yield complete");
+		Promise.Resolve( Context, "Yield complete");
 	};
 
 	Params.mContext.Queue( OnYield, DelayMs );

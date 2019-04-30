@@ -156,7 +156,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			
 						
 			//	gr: don't bother queuing, assume Resolve/Reject is always queued
-			Promise.Resolve( GetArrayBridge(DeviceNames) );
+			Promise.Resolve( Params.mLocalContext, GetArrayBridge(DeviceNames) );
 		}
 		catch(std::exception& e)
 		{
@@ -164,7 +164,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			Promise.Reject( ExceptionString );
+			Promise.Reject( Params.mLocalContext, ExceptionString );
 		}
 	};
 	
@@ -299,7 +299,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			Frames.PushBack( FrameImageObject );
 		}
 		
-		Promise.Resolve( GetArrayBridge(Frames) );
+		Promise.Resolve( Context, GetArrayBridge(Frames) );
 	};
 
 	auto* pContext = &Params.mContext;
@@ -319,7 +319,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			std::string Error( e.what() );
 			auto DoReject = [=](Bind::TLocalContext& Context)
 			{
-				Promise.Reject( Error );
+				Promise.Reject( Context, Error );
 			};
 			Context.Queue( DoReject );
 		}
@@ -562,14 +562,14 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 			auto Frame = PopFrame( Context, mFrameRequestParams );
 			Bind::TPersistent FramePersistent( Frame, "Frame" );
 
-			auto HandlePromise = [&](Bind::TPromise& Promise)
+			auto HandlePromise = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
 			{
 				//	gr: queue these resolves
 				//		they invoke render's which seem to cause some problem, but I'm not sure what
 				auto Resolve = [=](Bind::TLocalContext& Context)
 				{
 					auto FrameObject = FramePersistent.GetObject();
-					Promise.Resolve( FrameObject );
+					Promise.Resolve( Context, FrameObject );
 				};
 				Context.mGlobalContext.Queue(Resolve);
 			};

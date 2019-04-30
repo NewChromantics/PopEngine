@@ -293,6 +293,7 @@ public:
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(JsCore::TObject& This) bind_override;
+	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,JsCore::TObject& Value) bind_override;
@@ -336,7 +337,7 @@ public:
 
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(JsCore::TCallback&)> Function);
-	void			RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
+	void			RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
 
 	JsCore::TObjectWrapperBase&	AllocInstance()		{	return mAllocator();	}
 	
@@ -465,7 +466,7 @@ public:
 	template<const char* FunctionName>
 	void				BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName=std::string());
 	
-	JsCore::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+	JsCore::TObject			GetGlobalObject(TLocalContext& LocalContext,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
 	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName=std::string());
 	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
@@ -502,7 +503,7 @@ public:
 	std::string			GetResolvedFilename(const std::string& Filename);
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext
-	JSValueRef			CallFunc(std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
+	JSValueRef			CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
 	
 	
 	void				OnPersitentRetained(TPersistent& Persistent)	{	mDebug.OnPersitentRetained(Persistent);	}
@@ -554,19 +555,16 @@ public:
 	~TPromise();
 	
 	//	const for lambda[=] copy capture
-	void			Resolve(const std::string& Value) const		{	Resolve( GetValue( GetContext(), Value ) );	}
-	void			Resolve(JsCore::TObject& Value) const			{	Resolve( GetValue( GetContext(), Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,const std::string& Value) const		{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,JsCore::TObject& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	template<typename TYPE>
-	void			Resolve(ArrayBridge<TYPE>&& Values) const	{	Resolve( GetValue( GetContext(), Values ) );	}
-	void			Resolve(JsCore::TArray& Value) const			{	Resolve( GetValue( GetContext(), Value ) );	}
-	void			Resolve(JSValueRef Value) const;//			{	mResolve.Call(nullptr,Value);	}
-	void			ResolveUndefined() const;
+	void			Resolve(Bind::TLocalContext& Context,ArrayBridge<TYPE>&& Values) const		{	Resolve( Context, GetValue( Context.mLocalContext, Values ) );	}
+	void			Resolve(Bind::TLocalContext& Context,JsCore::TArray& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mResolve.Call(nullptr,Value);	}
+	void			ResolveUndefined(Bind::TLocalContext& Context) const;
 
-	void			Reject(const std::string& Value) const		{	Reject( GetValue( GetContext(), Value ) );	}
-	void			Reject(JSValueRef Value) const;//			{	mReject.Call(nullptr,Value);	}
-	
-private:
-	JSContextRef	GetContext() const	{	return mPromise.GetContextRef();	}
+	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Reject(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mReject.Call(nullptr,Value);	}
 	
 public:
 	std::string		mDebugName;
@@ -715,7 +713,8 @@ inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCal
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
-		return ContextPtr.CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
+		TLocalContext LocalContext( Context, ContextPtr );
+		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
 	};
 	
 	BindRawFunction( FunctionName, ParentName, CFunc );
@@ -785,9 +784,13 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const
 	//	init template with overloaded stuff
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	
-	//	finish off
-	Template.RegisterClassWithContext( *this, ParentName, OverrideLeafName );
-	mObjectTemplates.PushBack( Template );
+	auto Exec = [&](Bind::TLocalContext& LocalContext)
+	{
+		//	finish off
+		Template.RegisterClassWithContext( LocalContext, ParentName, OverrideLeafName );
+		mObjectTemplates.PushBack( Template );
+	};
+	Execute( Exec );
 }
 
 template<typename TYPE>
@@ -836,7 +839,8 @@ inline void JsCore::TTemplate::BindFunction(std::function<void(JsCore::TCallback
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
-		return ContextPtr.CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
+		TLocalContext LocalContext( Context, ContextPtr );
+		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
 	};
 	
 	JSStaticFunction NewFunction;

@@ -495,7 +495,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		//	testing to see if the target is at fault
 		//auto Target = TargetPersistent->GetObject();
 		//Promise.Resolve( Target );
-		Promise.ResolveUndefined();
+		Promise.ResolveUndefined(Context);
 	};
 	
 	auto OnCompleted = [=]()
@@ -593,7 +593,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 			std::string ExceptionString(e.what());
 			auto OnError = [=](Bind::TLocalContext& Context)
 			{
-				Promise.Reject( ExceptionString );
+				Promise.Reject( Context, ExceptionString );
 			};
 			pContext->Queue( OnError );
 		}

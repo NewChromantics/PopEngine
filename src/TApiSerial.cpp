@@ -207,17 +207,17 @@ void TSerialComPortWrapper::OnDataReceived()
 		return;
 	}
 	
-	auto SendData = [&](Bind::TPromise& Promise)
+	auto SendData = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 	{
 		if ( mDataAsString )
 		{
 			auto* cstr = reinterpret_cast<char*>( Data.GetArray() );
 			std::string DataString( cstr, Data.GetSize() );
-			Promise.Resolve( DataString );
+			Promise.Resolve( LocalContext, DataString );
 		}
 		else
 		{
-			Promise.Resolve( GetArrayBridge(Data) );
+			Promise.Resolve( LocalContext, GetArrayBridge(Data) );
 		}
 	};
 	mReadPromises.Flush(SendData);

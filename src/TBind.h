@@ -72,7 +72,7 @@ public:
 	bool			HasPromises() const	{	return !mPending.IsEmpty();	}
 
 	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
-	void			Flush(std::function<void(TPromise&)> HandlePromise);
+	void			Flush(std::function<void(Bind::TLocalContext&,TPromise&)> HandlePromise);
 
 	void			Resolve();
 	void			Resolve(const std::string& Result);
