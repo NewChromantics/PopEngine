@@ -436,22 +436,24 @@ private:
 	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
 	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
 	void		Retain(const TPersistent& That);
-	void 		Release(Bind::TLocalContext& Context);
+	void 		Release();
 
-	void		DefferedRelease();			//	this does a deffered release
 	void		DefferedRetain(const TObject& Object,const std::string& DebugName);
 	void		DefferedRetain(const TFunction& Object,const std::string& DebugName);
 	
-	static void	Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
-	static void	Retain(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
+	static void	Release(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
+	static void	Retain(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
 
 protected:
 	std::string	mDebugName;
-	TContext*	mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
-	
+
+	//	these two make a local context!
+	TContext*		mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
+	JSContextRef	mRetainedContext = nullptr;	//	which context we retained with
+
 public:
-	TObject		mObject;
-	TFunction	mFunction;
+	TObject			mObject;
+	TFunction		mFunction;
 };
 
 

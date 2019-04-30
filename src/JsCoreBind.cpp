@@ -595,7 +595,7 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 
 void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename)
 {
-	auto Exec = [&](Bind::TLocalContext& Context)
+	auto Exec = [=](Bind::TLocalContext& Context)
 	{
 		auto ThisHandle = JSObjectRef(nullptr);
 		auto SourceJs = JSStringCreateWithUTF8CString(Source.c_str());
@@ -605,7 +605,9 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 		auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
 		ThrowException( Context.mLocalContext, Exception, Filename );
 	};
-	Execute( Exec );
+	//	this exec meant the load was taking so long, JS funcs were happening on the queue thread
+	//	and that seemed to cause some crashes
+	Queue( Exec );
 }
 
 template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
@@ -1278,12 +1280,7 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 
 JsCore::TPersistent::~TPersistent()
 {
-	//	can't release out of context now
-	DefferedRelease();
-	if ( IsFunction() || IsObject() )
-	{
-		std::Debug << "TPersistent " << mDebugName << " is leaking" << std::endl;
-	}
+	Release();
 }
 
 JsCore::TObject JsCore::TPersistent::GetObject() const
@@ -1300,8 +1297,17 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 {
 	if ( mObject.mContext != Context.mLocalContext )
 	{
+		//	gr: I think context can change when the context is a lexical (in a promise/await/lambda)
+		//		the object stays the same, but not sure if the global/context matters
+		//		what WILL matter is the protect/release?
 		std::Debug << "Context has changed" << std::endl;
-		return TObject( Context.mLocalContext, mObject.mThis );
+		static bool ChangeObjectContext = false;
+		if ( ChangeObjectContext )
+		{
+			auto& This = *const_cast<JsCore::TPersistent*>(this);
+			This.mObject.mContext = Context.mLocalContext;
+			return TObject( Context.mLocalContext, mObject.mThis );
+		}
 	}
 	
 	return mObject;
@@ -1319,159 +1325,104 @@ JsCore::TFunction JsCore::TPersistent::GetFunction(TLocalContext& Context) const
 	return mFunction;
 }
 
-
-void JsCore::TPersistent::Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc)
+void JsCore::TPersistent::Retain(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
-	JSValueUnprotect( Context.mLocalContext, ObjectOrFunc );
-}
-
-void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc)
-{
-	JSValueProtect( Context.mLocalContext, ObjectOrFunc );
+	std::Debug << "Retain context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
+	JSValueProtect( Context, ObjectOrFunc );
 }
 
 
-void JsCore::TPersistent::DefferedRelease()
+void JsCore::TPersistent::Release(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
-	auto ReleaseFunc = mFunction.mThis;
-	auto ReleaseObject = mObject.mThis;
-	if ( !ReleaseFunc && !ReleaseObject )
-		return;
-	
-	if ( !mContext )
-		throw Soy::AssertException( mDebugName + "; No context for DefferedRelease");
-	
-	//	want to count in the lambda really
-	mContext->OnPersitentReleased(*this);
-	mFunction = TFunction();
-	mObject = TObject();
-
-	auto DoRelease = [=](Bind::TLocalContext& Context)
-	{
-		if ( ReleaseFunc )
-			Release( Context, ReleaseFunc );
-	
-		if ( ReleaseObject )
-			Release( Context, ReleaseObject );
-	};
-	//	immediate would be nice, but probably in the middle of something
-	mContext->Queue( DoRelease );
-}
-
-void JsCore::TPersistent::DefferedRetain(const TObject& Object,const std::string& DebugName)
-{
-	//	set values now
-	mObject = Object;
-	if ( !mContext )
-		throw Soy::AssertException( mDebugName + std::string("/") + DebugName + "); No context for DefferedRetain");
-	
-	mContext->OnPersitentRetained(*this);
-	auto DoRetain = [=](Bind::TLocalContext& Context)
-	{
-		//	this causes a release
-		//Retain( Context, Object, DebugName );
-		Retain( Context, Object.mThis );
-	};
-	//	immediate would be nice, but probably in the middle of something
-	mContext->Queue( DoRetain );
-}
-
-void JsCore::TPersistent::DefferedRetain(const TFunction& Object,const std::string& DebugName)
-{
-	//	set values now
-	mFunction = Object;
-	if ( !mContext )
-		throw Soy::AssertException( mDebugName + "; No context for DefferedRetain");
-	
-	mContext->OnPersitentRetained(*this);
-	auto DoRetain = [=](Bind::TLocalContext& Context)
-	{
-		//	this causes a release
-		//Retain( Context, Object, DebugName );
-		Retain( Context, Object.mThis );
-	};
-	//	immediate would be nice, but probably in the middle of something
-	mContext->Queue( DoRetain );
+	std::Debug << "Release context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
+	JSValueUnprotect( Context, ObjectOrFunc );
 }
 
 
-void JsCore::TPersistent::Release(Bind::TLocalContext& Context)
+void JsCore::TPersistent::Release()
 {
 	//	can only get context if there is an object
 	if ( IsObject() || IsFunction() )
 	{
-		Context.mGlobalContext.OnPersitentReleased(*this);
+		if ( !mContext )
+			throw Soy::AssertException("Has object, but no context");
+		mContext->OnPersitentReleased(*this);
 	}
 	
 	if ( mObject.mThis != nullptr )
 	{
-		Release( Context, mObject.mThis );
+		Release( mRetainedContext, mObject.mThis, mDebugName );
 		mObject = TObject();
+		mRetainedContext = nullptr;
+		mContext = nullptr;
 	}
 	
 	if ( mFunction.mThis != nullptr )
 	{
-		Release( Context, mFunction.mThis );
+		Release( mRetainedContext, mFunction.mThis, mDebugName );
 		mFunction = TFunction();
+		mRetainedContext = nullptr;
+		mContext = nullptr;
 	}
 }
 
 
 
-void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)
+void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,const std::string& DebugName)
 {
 	if ( IsObject() || IsFunction() )
 	{
 		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
 		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
-		Release(Context);
+		Release();
 	}
 	
-	mContext = &Context.mGlobalContext;
 	mDebugName = DebugName;
+	mContext = &Context.mGlobalContext;
+	mRetainedContext = Context.mLocalContext;
 	mObject = Object;
-	Retain( Context, mObject.mThis );
+	Retain( mRetainedContext, mObject.mThis, mDebugName );
 	
-	//	need an object to get context
-	if ( IsObject() || IsFunction() )
-	{
-		Context.mGlobalContext.OnPersitentRetained(*this);
-	}
+	Context.mGlobalContext.OnPersitentRetained(*this);
 }
 
-void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,const TFunction& Function,const std::string& DebugName)
+void JsCore::TPersistent::Retain(TLocalContext& Context,const TFunction& Function,const std::string& DebugName)
 {
 	if ( IsObject() || IsFunction() )
 	{
 		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
 		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
-		Release( Context );
+		Release();
 	}
 	
-	mContext = &Context.mGlobalContext;
 	mDebugName = DebugName;
+	mContext = &Context.mGlobalContext;
+	mRetainedContext = Context.mLocalContext;
 	mFunction = Function;
-	Retain( Context, mFunction.mThis );
-	
+	Retain( mRetainedContext, mFunction.mThis, mDebugName );
+
 	Context.mGlobalContext.OnPersitentRetained(*this);
 }
 
 void JsCore::TPersistent::Retain(const TPersistent& That)
 {
-	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
-	DefferedRelease();
+	if ( this == &That )
+		throw Soy::AssertException("Trying to retain self");
 	
-	//	copy values, then do a deffered retain
-	this->mContext = That.mContext;
+	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
+	Release();
+	
+	TLocalContext LocalContext( That.mRetainedContext, *That.mContext );
+	auto Name = That.mDebugName + " (copy)";
 	
 	if ( That.mFunction.mThis != nullptr )
 	{
-		DefferedRetain( That.mFunction, That.mDebugName );
+		Retain( LocalContext, That.mFunction, Name );
 	}
 	
 	if ( That.mObject.mThis != nullptr )
 	{
-		DefferedRetain( That.mObject, That.mDebugName );
+		Retain( LocalContext, That.mObject, Name );
 	}
 }
 
