@@ -612,9 +612,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 		auto& Image = Object.This<TImageWrapper>();
 		auto& Plane = Planes[0];
 		Image.SetPixels( Plane );
-		
-		Bind::TObject NullObject;
-		return NullObject;
+		return Object;
 	}
 	else if ( Params.mSeperatePlanes )
 	{
