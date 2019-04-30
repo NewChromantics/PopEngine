@@ -15,11 +15,6 @@ JSContextGroupRef::JSContextGroupRef(std::nullptr_t) :
 	//	gr: don't throw. Just let this be in an invalid state for initialisation of variables
 }
 
-
-JSObjectRef::JSObjectRef(std::nullptr_t)
-{
-	THROW_TODO;
-}
 	
 void JSObjectRef::operator=(std::nullptr_t Null)
 {
@@ -31,21 +26,13 @@ void JSObjectRef::operator=(JSObjectRef That)
 	THROW_TODO;
 }
 
-JSValueRef::JSValueRef()
-{
-	THROW_TODO;
-}
 
 JSValueRef::JSValueRef(JSObjectRef Object)
 {
 	THROW_TODO;
 }
 
-JSValueRef::JSValueRef(std::nullptr_t)
-{
-	THROW_TODO;
-}
-	
+
 void JSValueRef::operator=(JSObjectRef That)
 {
 	THROW_TODO;
@@ -57,18 +44,7 @@ void JSValueRef::operator=(std::nullptr_t Null)
 }
 
 
-JSStringRef::JSStringRef(std::nullptr_t)
-{
-	THROW_TODO;
-}
-	
 void JSStringRef::operator=(std::nullptr_t Null)
-{
-	THROW_TODO;
-}
-
-
-JSClassRef::JSClassRef(std::nullptr_t)
 {
 	THROW_TODO;
 }
@@ -293,17 +269,18 @@ void JSContextGroupRelease(JSContextGroupRef ContextGroup)
 	//	try and release all members here and maybe check for dangling refcounts
 }
 
-JSContextRef		JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
+JSGlobalContextRef		JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
 {
-	THROW_TODO;
+	return ContextGroup.CreateContext();
 }
 
-void				JSGlobalContextSetName(JSContextRef Context,JSStringRef Name)
+void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name)
 {
-	THROW_TODO;
+	//	todo: get name from string and set
+	Context.mName = "New Name";
 }
 
-void				JSGlobalContextRelease(JSContextRef Context)
+void				JSGlobalContextRelease(JSGlobalContextRef Context)
 {
 	THROW_TODO;
 }
@@ -446,3 +423,34 @@ void V8::TAllocator::Free(void* data, size_t length)
 {
 	mHeap.FreeRaw(data, length);
 }
+
+
+
+JSGlobalContextRef JSContextGroupRef::CreateContext()
+{
+	JSGlobalContextRef NewContext(nullptr);
+	auto Exec = [&](v8::Isolate& Isolate)
+	{
+		//	v8::Local<v8::Context>
+		auto ContextLocal = v8::Context::New(&Isolate);
+		//Context::Scope context_scope( ContextLocal );
+		
+		NewContext.mContext = V8::GetPersistent( Isolate, ContextLocal );
+	};
+	ExecuteInIsolate( Exec );
+	return NewContext;
+}
+
+
+void V8::TVirtualMachine::ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor)
+{
+	//#error check https://stackoverflow.com/questions/33168903/c-scope-and-google-v8-script-context
+	v8::Locker locker(mIsolate);
+	v8::Isolate::Scope isolate_scope(mIsolate);
+	
+	//  always need a handle scope to collect locals
+	v8::HandleScope handle_scope(mIsolate);
+	
+	Functor( *mIsolate );
+}
+

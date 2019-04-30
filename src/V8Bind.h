@@ -24,7 +24,53 @@ namespace V8
 {
 	class TAllocator;
 	class TVirtualMachine;
+	
+	template<typename V8TYPE>
+	class TPersistent;		//	this should turn into the JS persistent after some refactoring
+
+	template<typename V8TYPE>
+	std::shared_ptr<TPersistent<V8TYPE>>	GetPersistent(v8::Isolate& Isolate,v8::Local<V8TYPE> Local);
 }
+
+
+
+//	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
+//	gr: I think in the use case (a lambda) it becomes const so won't get freed anyway?
+template<typename TYPE>
+class V8::TPersistent
+{
+public:
+	TPersistent(v8::Isolate& Isolate,v8::Local<TYPE>& Local)
+	{
+		/*
+		 Persistent<TYPE,CopyablePersistentTraits<TYPE>> PersistentHandle;
+		 PersistentHandle.Reset( &Isolate, LocalHandle );
+		 return PersistentHandle;
+		 */
+		mPersistent.Reset( &Isolate, Local );
+	}
+	~TPersistent()
+	{
+		//	gr: seems like we need this... the persistent policy should mean we don't...
+		//	gotta release persistents, or we end up running out of handles
+		mPersistent.Reset();
+		//std::Debug << "V8Storage<" << Soy::GetTypeName<TYPE>() << " released" << std::endl;
+	}
+	
+	v8::Local<TYPE>		GetLocal(v8::Isolate& Isolate)
+	{
+		return v8::Local<TYPE>::New( &Isolate, mPersistent );
+	}
+	v8::Persistent<TYPE>	mPersistent;
+};
+
+template<typename TYPE>
+inline std::shared_ptr<V8::TPersistent<TYPE>> V8::GetPersistent(v8::Isolate& Isolate,v8::Local<TYPE> LocalHandle)
+{
+	auto ResolverPersistent = std::make_shared<V8::TPersistent<TYPE>>( Isolate, LocalHandle );
+	return ResolverPersistent;
+}
+
 
 
 class V8::TAllocator: public v8::ArrayBuffer::Allocator
@@ -49,6 +95,9 @@ class V8::TVirtualMachine
 public:
 	TVirtualMachine(std::nullptr_t Null)	{};
 	TVirtualMachine(const std::string& RuntimePath);
+
+protected:
+	void	ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor);
 
 public:
 	std::shared_ptr<v8::Platform>	mPlatform;
@@ -79,7 +128,19 @@ public:
 	
 	//void	operator=(std::nullptr_t Null);
 };
-typedef JSContextRef JSGlobalContextRef;
+
+//	actual persistent context
+class JSGlobalContextRef
+{
+public:
+	JSGlobalContextRef(std::nullptr_t)	{}
+	
+	operator bool() const			{	return mContext!=nullptr;	}
+
+	std::shared_ptr<V8::TPersistent<v8::Context>>	mContext;
+
+	std::string		mName;
+};
 
 
 //	this is the virtual machine
@@ -94,6 +155,9 @@ public:
 	}
 
 	operator bool() const	{	return mIsolate!=nullptr;	}
+	
+	JSGlobalContextRef		CreateContext();
+	V8::TVirtualMachine&	GetVirtualMachine()	{	return *this;	}
 };
 
 
@@ -101,7 +165,7 @@ public:
 class JSObjectRef : public LocalRef<v8::Object>
 {
 public:
-	JSObjectRef(std::nullptr_t);
+	JSObjectRef(std::nullptr_t)	{}
 	
 	void	operator=(std::nullptr_t Null);
 	void	operator=(JSObjectRef That);
@@ -115,9 +179,9 @@ public:
 class JSValueRef : public LocalRef<v8::Value>
 {
 public:
-	JSValueRef();
+	JSValueRef()	{}
+	JSValueRef(std::nullptr_t)	{}
 	JSValueRef(JSObjectRef Object);
-	JSValueRef(std::nullptr_t);
 	
 	void	operator=(JSObjectRef That);
 	void	operator=(std::nullptr_t Null);
@@ -130,7 +194,7 @@ public:
 class JSStringRef : LocalRef<v8::String>
 {
 public:
-	JSStringRef(std::nullptr_t);
+	JSStringRef(std::nullptr_t)	{}
 	
 	void	operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;
@@ -140,7 +204,7 @@ public:
 class JSClassRef
 {
 public:
-	JSClassRef(std::nullptr_t);
+	JSClassRef(std::nullptr_t)	{}
 };
 
 
@@ -262,9 +326,9 @@ JSObjectRef			JSContextGetGlobalObject(JSContextRef Context);
 JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory);
 JSContextGroupRef	JSContextGroupCreate();
 void				JSContextGroupRelease(JSContextGroupRef ContextGroup);
-JSContextRef		JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass);
-void				JSGlobalContextSetName(JSContextRef Context,JSStringRef Name);
-void				JSGlobalContextRelease(JSContextRef Context);
+JSGlobalContextRef	JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass);
+void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name);
+void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
 JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
