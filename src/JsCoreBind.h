@@ -144,7 +144,7 @@ public:
 		mGlobalContext	( Global )
 	{
 	}
-		
+	
 	JSContextRef	mLocalContext;
 	TContext&		mGlobalContext;
 };
@@ -188,7 +188,7 @@ public:
 	void			Call(JsCore::TCallback& Params) const;
 	
 public:
-	JSContextRef	mContext = nullptr;	//	local context! 
+	JSContextRef	mContext = nullptr;	//	local context!
 	JSObjectRef		mThis = nullptr;
 };
 
@@ -473,7 +473,7 @@ public:
 	virtual JsCore::TPersistent	CreatePersistent(JsCore::TObject& Object) bind_override;
 	virtual std::shared_ptr<JsCore::TPersistent>	CreatePersistentPtr(JsCore::TObject& Object) bind_override;
 	virtual JsCore::TPersistent	CreatePersistent(JsCore::TFunction& Object) bind_override;
-	virtual JsCore::TPromise		CreatePromise(const std::string& DebugName) bind_override;
+	virtual JsCore::TPromise		CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName) bind_override;
 	/*
 	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
 	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;

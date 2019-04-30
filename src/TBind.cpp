@@ -13,16 +13,16 @@ Bind::TContext& Bind::TPromiseQueue::GetContext()
 }
 
 
-Bind::TPromise Bind::TPromiseQueue::AddPromise(Bind::TContext& Context)
+Bind::TPromise Bind::TPromiseQueue::AddPromise(Bind::TLocalContext& Context)
 {
-	if ( mContext != &Context && mContext != nullptr )
+	if ( mContext != &Context.mGlobalContext && mContext != nullptr )
 	{
 		throw Soy::AssertException("Promise queue context has changed");
 	}
-	mContext = &Context;
+	mContext = &Context.mGlobalContext;
 	
 	std::lock_guard<std::mutex> Lock( mPendingLock );
-	auto NewPromise = Context.CreatePromise(__FUNCTION__);
+	auto NewPromise = Context.mGlobalContext.CreatePromise( Context, __FUNCTION__ );
 	mPending.PushBack( NewPromise );
 	return NewPromise;
 }

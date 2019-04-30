@@ -68,7 +68,7 @@ public:
 		return true;
 	}
 	
-	TPromise		AddPromise(Bind::TContext& Context);
+	TPromise		AddPromise(Bind::TLocalContext& Context);
 	bool			HasPromises() const	{	return !mPending.IsEmpty();	}
 
 	//	callback so you can handle how to resolve the promise rather than have tons of overloads here

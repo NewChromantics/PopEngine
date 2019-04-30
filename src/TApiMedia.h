@@ -64,7 +64,7 @@ public:
 	static void								GetNextFrame(Bind::TCallback& Params);
 	static void								PopFrame(Bind::TCallback& Params);
 
-	Bind::TPromise							AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params);
+	Bind::TPromise							AllocFrameRequestPromise(Bind::TLocalContext& Context,const TFrameRequestParams& Params);
 	Bind::TObject							PopFrame(Bind::TLocalContext& Context,const TFrameRequestParams& Params);
 
 

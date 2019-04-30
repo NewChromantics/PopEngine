@@ -144,7 +144,8 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 		try
 		{
 			auto Func = CallbackPersistent.GetFunction();
-			Func.Call(Context);
+			Bind::TCallback Call( Context );
+			Func.Call(Call);
 		}
 		catch(std::exception& e)
 		{

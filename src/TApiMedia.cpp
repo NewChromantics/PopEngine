@@ -141,7 +141,7 @@ void ApiMedia::Bind(Bind::TContext& Context)
 
 void ApiMedia::EnumDevices(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
 	auto DoEnumDevices = [&]
 	{
@@ -212,7 +212,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	}
 
 	//	process async
-	auto Promise = Params.mContext.CreatePromise(__func__);
+	auto Promise = Params.mContext.CreatePromise(Params.mLocalContext, __func__);
 	Params.Return( Promise );
 	
 	auto* pThis = &This;
@@ -538,7 +538,7 @@ void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(2) )
 		Request.mLatestFrame = Params.GetArgumentBool(2);
 
-	auto Promise = This.AllocFrameRequestPromise( Params.mContext, Request );
+	auto Promise = This.AllocFrameRequestPromise( Params.mLocalContext, Request );
 	Params.Return( Promise );
 
 	//	if there are frames waiting, trigger
@@ -676,7 +676,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 }
 
 
-Bind::TPromise TPopCameraDeviceWrapper::AllocFrameRequestPromise(Bind::TContext& Context,const TFrameRequestParams& Params)
+Bind::TPromise TPopCameraDeviceWrapper::AllocFrameRequestPromise(Bind::TLocalContext& Context,const TFrameRequestParams& Params)
 {
 	mFrameRequestParams = Params;
 	return mFrameRequests.AddPromise( Context );

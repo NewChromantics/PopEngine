@@ -168,7 +168,7 @@ void TSerialComPortWrapper::Read(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TSerialComPortWrapper>();
 	
-	auto Promise = This.mReadPromises.AddPromise(Params.mContext);
+	auto Promise = This.mReadPromises.AddPromise( Params.mLocalContext );
 	
 	//	auto flush if we have data, or if the port is closed
 	This.OnDataReceived();

@@ -436,7 +436,7 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	JSClassRef Global = nullptr;
 	
 	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
-	JSGlobalContextSetName( mContext, JsCore::GetString(Name) );
+	JSGlobalContextSetName( Context, JsCore::GetString(Name) );
 	
 	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
 	mContexts.PushBack( pContext );
@@ -670,7 +670,11 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Funct
 	//	javascript core is threadsafe, so we can just call
 	//	but maybe we need to set a javascript exception, if this is
 	//	being called from js to relay stuff back
-	Functor( *this );
+	
+	//	gr: this may be the source of problems, this should be a properly locally scoped context...
+	JSContextRef ContextRef = GetContextRef();
+	TLocalContext LocalContext( ContextRef, *this );
+	Functor( LocalContext );
 }
 
 
@@ -682,11 +686,11 @@ JsCore::TArray JsCore_CreateArray(JsCore::TLocalContext& Context,size_t ElementC
 	for ( auto i=0;	i<ElementCount;	i++ )
 	{
 		auto Element = GetElement(i);
-		auto Value = JsCore::GetValue( mContext, Element );
+		auto Value = JsCore::GetValue( Context.mLocalContext, Element );
 		Values.PushBack(Value);
 	}
 	auto ArrayObject = JsCore::GetArray( Context.mLocalContext, GetArrayBridge(Values) );
-	JsCore::TArray Array( mContext, ArrayObject );
+	JsCore::TArray Array( Context.mLocalContext, ArrayObject );
 	return Array;
 }
 
@@ -870,8 +874,8 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	{
 		JSClassRef Default = nullptr;
 		void* Data = nullptr;
-		auto NewObject = JSObjectMake( mContext, Default, Data );
-		return TObject( mContext, NewObject );
+		auto NewObject = JSObjectMake( LocalContext.mLocalContext, Default, Data );
+		return TObject( LocalContext.mLocalContext, NewObject );
 	}
 	
 	//	find template
@@ -893,12 +897,12 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	auto& Class = ObjectTemplate.mClass;
 	auto& ObjectPointer = ObjectTemplate.AllocInstance();
 	void* Data = &ObjectPointer;
-	auto NewObjectHandle = JSObjectMake( mContext, Class, Data );
-	TObject NewObject( mContext, NewObjectHandle );
+	auto NewObjectHandle = JSObjectMake( LocalContext.mLocalContext, Class, Data );
+	TObject NewObject( LocalContext.mLocalContext, NewObjectHandle );
 	ObjectPointer.SetHandle( NewObject );
 
 	//	construct
-	TCallback ConstructorParams(*this);
+	TCallback ConstructorParams(LocalContext);
 	ConstructorParams.mThis = NewObject.mThis;
 	ConstructorParams.mArguments.Copy( ConstructorArguments );
 	
@@ -911,18 +915,21 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 
 void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
 {
+	//	this should be executed in-scope
+	TLocalContext LocalContext( *this, GetContextRef() );
+	
 	auto This = GetGlobalObject( ParentObjectName );
 
-	auto FunctionNameJs = JsCore::GetString( mContext, FunctionName );
+	auto FunctionNameJs = JsCore::GetString( FunctionName );
 	JSValueRef Exception = nullptr;
-	auto FunctionHandle = JSObjectMakeFunctionWithCallback( mContext, FunctionNameJs, FunctionPtr );
-	ThrowException(Exception);
+	auto FunctionHandle = JSObjectMakeFunctionWithCallback( LocalContext.mLocalContext, FunctionNameJs, FunctionPtr );
+	ThrowException( LocalContext.mLocalContext, Exception );
 	TFunction Function( mContext, FunctionHandle );
 	This.SetFunction( FunctionName, Function );
 }
 
 
-JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
+JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName)
 {
 	if ( !mMakePromiseFunction )
 	{
@@ -946,7 +953,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise(const std::string& DebugName)
 		//MakePromise();
 		)V0G0N";
 		
-		JSStringRef FunctionSourceString = JsCore::GetString( mContext, MakePromiseFunctionSource );
+		JSStringRef FunctionSourceString = JsCore::GetString( LocalContext.mLocalContext, MakePromiseFunctionSource );
 		JSValueRef Exception = nullptr;
 		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
 		ThrowException( Exception );
