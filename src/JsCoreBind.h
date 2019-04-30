@@ -406,9 +406,12 @@ public:
 class JsCore::TPersistent
 {
 public:
+	//	gr: can't use && as we need = operator to work
+	//TPersistent(const TPersistent&& That)	{	Steal( That );	}
+	
 	TPersistent()	{}
-	TPersistent(Bind::TLocalContext& Context,const TPersistent& That)	{	Retain( Context, That );	}
-	TPersistent(Bind::TLocalContext& Context,const TPersistent&& That)	{	Retain( Context, That );	}
+	TPersistent(const TPersistent& That)	{	Retain( That );	}
+	//TPersistent(Bind::TLocalContext& Context,const TPersistent&& That)	{	Retain( Context, That );	}
 	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refound
@@ -421,18 +424,26 @@ public:
 	TObject			GetObject() const		{	return mObject;	}
 	TFunction		GetFunction() const		{	return mFunction;	}
 
-	//TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
+	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
 	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
 	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
-	void		Retain(Bind::TLocalContext& Context,const TPersistent& That);
+	void		Retain(const TPersistent& That);
 	void 		Release(Bind::TLocalContext& Context);
+
+	void		DefferedRelease();			//	this does a deffered release
+	void		DefferedRetain(const TObject& Object,const std::string& DebugName);
+	void		DefferedRetain(const TFunction& Object,const std::string& DebugName);
 	
+	static void	Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
+	static void	Retain(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
+
 public:
 	std::string	mDebugName;
 	TObject		mObject;
 	TFunction	mFunction;
+	TContext*	mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
 };
 
 

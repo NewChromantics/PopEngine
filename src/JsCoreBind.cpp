@@ -1278,12 +1278,87 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 JsCore::TPersistent::~TPersistent()
 {
 	//	can't release out of context now
-	//Release();
+	DefferedRelease();
 	if ( IsFunction() || IsObject() )
 	{
 		std::Debug << "TPersistent " << mDebugName << " is leaking" << std::endl;
 	}
 }
+
+void JsCore::TPersistent::Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc)
+{
+	JSValueUnprotect( Context.mLocalContext, ObjectOrFunc );
+}
+
+void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc)
+{
+	JSValueProtect( Context.mLocalContext, ObjectOrFunc );
+}
+
+
+void JsCore::TPersistent::DefferedRelease()
+{
+	auto ReleaseFunc = mFunction.mThis;
+	auto ReleaseObject = mObject.mThis;
+	if ( !ReleaseFunc && !ReleaseObject )
+		return;
+	
+	if ( !mContext )
+		throw Soy::AssertException( mDebugName + "; No context for DefferedRelease");
+	
+	//	want to count in the lambda really
+	mContext->OnPersitentReleased(*this);
+	mFunction = TFunction();
+	mObject = TObject();
+
+	auto DoRelease = [=](Bind::TLocalContext& Context)
+	{
+		if ( ReleaseFunc )
+			Release( Context, ReleaseFunc );
+	
+		if ( ReleaseObject )
+			Release( Context, ReleaseObject );
+	};
+	//	immediate would be nice, but probably in the middle of something
+	mContext->Queue( DoRelease );
+}
+
+void JsCore::TPersistent::DefferedRetain(const TObject& Object,const std::string& DebugName)
+{
+	//	set values now
+	mObject = Object;
+	if ( !mContext )
+		throw Soy::AssertException( mDebugName + std::string("/") + DebugName + "); No context for DefferedRetain");
+	
+	mContext->OnPersitentRetained(*this);
+	auto DoRetain = [=](Bind::TLocalContext& Context)
+	{
+		//	this causes a release
+		//Retain( Context, Object, DebugName );
+		Retain( Context, Object.mThis );
+	};
+	//	immediate would be nice, but probably in the middle of something
+	mContext->Queue( DoRetain );
+}
+
+void JsCore::TPersistent::DefferedRetain(const TFunction& Object,const std::string& DebugName)
+{
+	//	set values now
+	mFunction = Object;
+	if ( !mContext )
+		throw Soy::AssertException( mDebugName + "; No context for DefferedRetain");
+	
+	mContext->OnPersitentRetained(*this);
+	auto DoRetain = [=](Bind::TLocalContext& Context)
+	{
+		//	this causes a release
+		//Retain( Context, Object, DebugName );
+		Retain( Context, Object.mThis );
+	};
+	//	immediate would be nice, but probably in the middle of something
+	mContext->Queue( DoRetain );
+}
+
 
 void JsCore::TPersistent::Release(Bind::TLocalContext& Context)
 {
@@ -1295,13 +1370,13 @@ void JsCore::TPersistent::Release(Bind::TLocalContext& Context)
 	
 	if ( mObject.mThis != nullptr )
 	{
-		JSValueUnprotect( Context.mLocalContext, mObject.mThis );
+		Release( Context, mObject.mThis );
 		mObject = TObject();
 	}
-	 
+	
 	if ( mFunction.mThis != nullptr )
 	{
-		JSValueUnprotect( Context.mLocalContext, mFunction.mThis );
+		Release( Context, mFunction.mThis );
 		mFunction = TFunction();
 	}
 }
@@ -1317,9 +1392,10 @@ void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,const TObject& Obj
 		Release(Context);
 	}
 	
+	mContext = &Context.mGlobalContext;
 	mDebugName = DebugName;
 	mObject = Object;
-	JSValueProtect( Context.mLocalContext, mObject.mThis );
+	Retain( Context, mObject.mThis );
 	
 	//	need an object to get context
 	if ( IsObject() || IsFunction() )
@@ -1337,23 +1413,31 @@ void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,const TFunction& F
 		Release( Context );
 	}
 	
+	mContext = &Context.mGlobalContext;
 	mDebugName = DebugName;
 	mFunction = Function;
-	JSValueProtect( Context.mLocalContext, mFunction.mThis );
+	Retain( Context, mFunction.mThis );
 	
 	Context.mGlobalContext.OnPersitentRetained(*this);
 }
 
-void JsCore::TPersistent::Retain(Bind::TLocalContext& Context,const TPersistent& That)
+void JsCore::TPersistent::Retain(const TPersistent& That)
 {
 	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
-	Release(Context);
+	DefferedRelease();
+	
+	//	copy values, then do a deffered retain
+	this->mContext = That.mContext;
 	
 	if ( That.mFunction.mThis != nullptr )
-		Retain( Context, That.mFunction, That.mDebugName );
+	{
+		DefferedRetain( That.mFunction, That.mDebugName );
+	}
 	
 	if ( That.mObject.mThis != nullptr )
-		Retain( Context, That.mObject, That.mDebugName );
+	{
+		DefferedRetain( That.mObject, That.mDebugName );
+	}
 }
 
 
