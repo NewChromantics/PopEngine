@@ -107,7 +107,7 @@ void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
 	auto ImageObject = Params.GetArgumentObject(0);
-	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
+	auto ImagePersistent = Bind::TPersistent( Params.mLocalContext, ImageObject, "ImageObject" );
 	auto* pImage = &ImageObject.This<TImageWrapper>();
 	auto* pContext = &Params.mContext;
 	
@@ -178,7 +178,7 @@ void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	
 	auto ImageObject = Params.GetArgumentObject(0);
-	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
+	auto ImagePersistent = Bind::TPersistent( Params.mLocalContext, ImageObject, "FindFaceFeatures" );
 	auto* pImage = &ImageObject.This<TImageWrapper>();
 	auto* pContext = &Params.mContext;
 
