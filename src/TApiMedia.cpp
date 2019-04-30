@@ -608,6 +608,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 	if ( Params.mDestinationImage )
 	{
 		auto Object = Params.mDestinationImage.GetObject();
+		Object.mContext = Context.mLocalContext;
 		SetTime(Object);
 		auto& Image = Object.This<TImageWrapper>();
 		auto& Plane = Planes[0];
@@ -653,7 +654,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 		for ( auto i=0;	i<Images.GetSize();	i++ )
 		{
 			auto& Image = *Images[i];
-			auto ImageHandle = Image.GetHandle();
+			auto ImageHandle = Image.GetHandle(Context);
 			ImageHandles.PushBack( ImageHandle );
 		}
 
@@ -670,7 +671,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 	Image.mName = "MediaSource Frame";
 	Image.SetPixels( Planes[0] );
 
-	auto ImageHandle = Image.GetHandle();
+	auto ImageHandle = Image.GetHandle( Context );
 	SetTime( ImageObject );
 	return ImageObject;
 }

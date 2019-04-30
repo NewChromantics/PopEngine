@@ -1374,7 +1374,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 	}
 	
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Params.mLocalContext);
 		Bind::TCallback Call( Params.mLocalContext );
 		Call.SetArgumentObject(0,This);
 		auto MakeFunc = MakeIterationBindThisFunction.GetFunction();
@@ -1394,7 +1394,7 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 	auto* pThis = &Params.This<TAsyncLoopWrapper>();
 	auto Execute = [=](Bind::TLocalContext& Context)
 	{
-		auto ThisHandle = pThis->GetHandle();
+		auto ThisHandle = pThis->GetHandle(Context);
 		auto ThisIterationFunction = pThis->mIterationBindThisFunction.GetFunction();
 		
 		//	run the func, get the promise returned

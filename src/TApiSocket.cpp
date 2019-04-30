@@ -49,7 +49,7 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 	
 	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 
 		Bind::TCallback CallbackParams( Context );

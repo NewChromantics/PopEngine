@@ -52,7 +52,7 @@ void TWebsocketServerWrapper::OnMessage(const std::string& Message)
 {
 	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 		
 		Bind::TCallback Callback(Context);
@@ -70,7 +70,7 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 	
 	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 		
 		Bind::TCallback Callback(Context);

@@ -139,14 +139,14 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 
 		//	our ol' hack
 		mActiveRenderTarget = &RenderTarget;
-		auto RenderTargetObject = this->GetHandle();
+		auto RenderTargetObject = this->GetHandle(Context);
 		
 		//	gr: allow this to fail silently if the user has assigned nothing
 		//	gr: kinda want a specific "is undefined" exception so we don't miss important things
 		static bool SwallowException = false;
 		try
 		{
-			auto This = this->GetHandle();
+			auto This = this->GetHandle(Context);
 			auto ThisOnRender = This.GetFunction("OnRender");
 			JsCore::TCallback Callback(Context);
 			Callback.SetArgumentObject(0, RenderTargetObject);
@@ -171,7 +171,7 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 	{
 		try
 		{
-			auto This = this->GetHandle();
+			auto This = this->GetHandle(Context);
 			auto ThisOnRender = This.GetFunction(MouseFuncName);
 			Bind::TCallback Params(Context);
 			Params.SetThis( This );
@@ -198,7 +198,7 @@ void TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& Func
 		{
 			std::string KeyString( &Button, 1 );
 			
-			auto This = this->GetHandle();
+			auto This = this->GetHandle(Context);
 			auto ThisOnRender = This.GetFunction(FuncName);
 			Bind::TCallback Params(Context);
 			Params.SetThis( This );
@@ -222,7 +222,7 @@ bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 	{
 		try
 		{
-			auto This = this->GetHandle();
+			auto This = this->GetHandle(Context);
 			auto ThisFunc = This.GetFunction("OnTryDragDrop");
 			Bind::TCallback Params(Context);
 			Params.SetThis( This );
@@ -255,7 +255,7 @@ void TWindowWrapper::OnClosed()
 	{
 		try
 		{
-			auto This = this->GetHandle();
+			auto This = this->GetHandle(Context);
 			auto ThisFunc = This.GetFunction("OnClosed");
 			Bind::TCallback Params(Context);
 			Params.SetThis( This );
@@ -280,7 +280,7 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 	{
 		try
 		{
-			auto This = this->GetHandle();
+			auto This = this->GetHandle(Context);
 			auto ThisFunc = This.GetFunction("OnDragDrop");
 			Bind::TCallback Params(Context);
 			Params.SetThis( This );

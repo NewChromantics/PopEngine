@@ -395,9 +395,9 @@ public:
 private:
 	JSValueRef		GetMember(const std::string& MemberName);
 	void			SetMember(const std::string& Name,JSValueRef Value);
-	JSContextRef	mContext = nullptr;
 
 public:
+	JSContextRef	mContext = nullptr;	//	exposing so we can test local vs global
 	JSObjectRef		mThis = nullptr;
 };
 
@@ -547,6 +547,8 @@ public:
 
 	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Reject(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mReject.Call(nullptr,Value);	}
+	
+protected:
 	
 public:
 	std::string		mDebugName;
