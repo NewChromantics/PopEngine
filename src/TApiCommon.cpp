@@ -123,7 +123,7 @@ void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 
 void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
-	Params.mContext.GarbageCollect();
+	Params.mContext.GarbageCollect( Params.GetContextRef() );
 	/*
 	//	queue as job?
 	std::Debug << "Invoking garbage collection..." << std::endl;
@@ -139,12 +139,12 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 	auto TimeoutMs = Params.GetArgumentInt(1);
 	auto CallbackPersistent = Params.mContext.CreatePersistent(Callback);
 	
-	auto OnRun = [=](Bind::TContext& Context)
+	auto OnRun = [=](Bind::TLocalContext& Context)
 	{
 		try
 		{
 			auto Func = CallbackPersistent.GetFunction();
-			Func.Call();
+			Func.Call(Context);
 		}
 		catch(std::exception& e)
 		{
@@ -165,7 +165,7 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(0) )
 		DelayMs = Params.GetArgumentInt(0);
 	
-	auto OnYield = [=](Bind::TContext& Context)
+	auto OnYield = [=](Bind::TLocalContext& Context)
 	{
 		//	don't need to do anything, we have just let the system breath
 		Promise.Resolve("Yield complete");
@@ -368,7 +368,7 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 	};
 	HeapDebug.EnumAllocations(EnumAlloc);
 	
-	auto Object = Params.mContext.CreateObjectInstance();
+	auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 
 	for ( auto it=TypeCounts.begin();	it!=TypeCounts.end();	it++ )
 	{
@@ -412,7 +412,7 @@ void ApiPop::EnumScreens(Bind::TCallback& Params)
 	BufferArray<Bind::TObject,20> ScreenMetas;
 	auto EnumScreen = [&](const Platform::TScreenMeta& Meta)
 	{
-		auto Screen = Params.mContext.CreateObjectInstance();
+		auto Screen = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 		Screen.SetString("Name", Meta.mName );
 		Screen.SetInt("Left", Meta.mWorkRect.Left() );
 		Screen.SetInt("Top", Meta.mWorkRect.Top() );
@@ -477,8 +477,7 @@ void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 
 	//	want this to be a typed array
 	//auto ArrayBuffer = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(FileContentsu8) );
-	auto Array = Params.mContext.CreateArray( GetArrayBridge(FileContentsu8) );
-	Params.Return( Array );
+	Params.Return( GetArrayBridge(FileContents) );
 }
 
 
@@ -950,8 +949,7 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 	}
 	else
 	{
-		auto TargetArray = Params.mContext.CreateArray( GetArrayBridge(PixelsArray) );
-		Params.Return( TargetArray );
+		Params.Return( GetArrayBridge(PixelsArray) );
 	}
 }
 
@@ -976,8 +974,7 @@ void TImageWrapper::GetPixelBuffer(Bind::TCallback& Params)
 	}
 	else
 	{
-		auto TargetArray = Params.mContext.CreateArray( GetArrayBridge(PixelsArray) );
-		Params.Return( TargetArray );
+		Params.Return( GetArrayBridge(PixelsArray) );
 	}
 }
 
@@ -1363,7 +1360,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 			MakeThisFunction;
 		)V0G0N";
 
-		auto mContext = Params.mContext.mContext;
+		auto mContext = Params.GetContextRef();
 		JSStringRef FunctionSourceString = JsCore::GetString( mContext, FunctionSource );
 		JSValueRef Exception = nullptr;
 		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
@@ -1377,7 +1374,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 	
 	{
 		auto This = GetHandle();
-		Bind::TCallback Call( Params.mContext );
+		Bind::TCallback Call( Params.mLocalContext );
 		Call.SetArgumentObject(0,This);
 		auto MakeFunc = MakeIterationBindThisFunction.GetFunction();
 		MakeFunc.Call(Call);
@@ -1394,7 +1391,7 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 	//std::Debug << "Iteration()" << std::endl;
 	
 	auto* pThis = &Params.This<TAsyncLoopWrapper>();
-	auto Execute = [=](Bind::TContext& Context)
+	auto Execute = [=](Bind::TLocalContext& Context)
 	{
 		auto ThisHandle = pThis->GetHandle();
 		auto ThisIterationFunction = pThis->mIterationBindThisFunction.GetFunction();

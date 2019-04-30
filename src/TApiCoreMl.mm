@@ -106,12 +106,13 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 			};
 			CoreMlFunc( *CoreMl, Pixels, PushObject );
 			
-			auto OnCompleted = [=](Bind::TContext& Context)
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
-				auto GetElement = [&](size_t Index)
+				Array<Bind::TObject> Elements;
+				for ( auto i=0;	i<Objects.GetSize();	i++)
 				{
-					auto& Object = Objects[Index];
-					auto ObjectJs = Context.CreateObjectInstance();
+					auto& Object = Objects[i];
+					auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
 					ObjectJs.SetString("Label", Object.mLabel );
 					ObjectJs.SetFloat("Score", Object.mScore );
 					ObjectJs.SetFloat("x", Object.mRect.x );
@@ -120,10 +121,9 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 					ObjectJs.SetFloat("h", Object.mRect.h );
 					ObjectJs.SetInt("GridX", Object.mGridPos.x );
 					ObjectJs.SetInt("GridY", Object.mGridPos.y );
-					return ObjectJs;
+					Elements.PushBack( ObjectJs );
 				};
-				auto ObjectsArray = Context.CreateArray( Objects.GetSize(), GetElement );
-				Promise.Resolve( ObjectsArray );
+				Promise.Resolve( GetArrayBridge(Elements) );
 			};
 			
 			pContext->Queue( OnCompleted );
@@ -236,7 +236,7 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 	Pixels->SetFormat( SoyPixelsFormat::RGBA );
 	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
-	auto Run = [=](Bind::TContext& Context)
+	auto Run = [=](Bind::TLocalContext& Context)
 	{
 		//	make a face request
 		VNDetectFaceLandmarksRequest* Request = [[VNDetectFaceLandmarksRequest alloc] init];
@@ -297,18 +297,17 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 				RectValues.PushBack( Bounds.w );
 				RectValues.PushBack( Bounds.h );
 				
-				auto Object = Context.CreateObjectInstance();
+				auto Object = Context.mGlobalContext.CreateObjectInstance( Context );
 				Object.SetArray("Bounds", GetArrayBridge(RectValues) );
 				Object.SetArray("Features", GetArrayBridge(FeatureFloats) );
 				ResultObjects.PushBack(Object);
 			}
 		}
 		
-		auto Array = Context.CreateArray( GetArrayBridge(ResultObjects) );
-		Promise.Resolve( Array );
+		Promise.Resolve( GetArrayBridge(ResultObjects) );
 	};
 	
-	Run( Params.mContext );
+	Run( Params.mLocalContext );
 	
 	Params.Return( Promise );
 }

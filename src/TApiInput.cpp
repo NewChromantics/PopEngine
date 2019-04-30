@@ -26,7 +26,7 @@ class ApiInput::TContextManager
 public:
 	TContextManager();
 	
-	void					EnumDevices(Bind::TContext& Context,Bind::TPromise& Promise);	//	return data into promise
+	void					EnumDevices(Bind::TLocalContext& Context,Bind::TPromise& Promise);	//	return data into promise
 
 	Bind::TPromiseQueue		mOnDevicesChangedPromises;
 	Hid::TContext			mContext;
@@ -55,7 +55,7 @@ ApiInput::TContextManager::TContextManager()
 			return;
 		}
 		
-		auto Flush = [this](Bind::TContext& Context)
+		auto Flush = [this](Bind::TLocalContext& Context)
 		{
 			auto HandlePromise = [&](Bind::TPromise& Promise)
 			{
@@ -68,7 +68,7 @@ ApiInput::TContextManager::TContextManager()
 	};
 }
 
-void ApiInput::TContextManager::EnumDevices(Bind::TContext& Context,Bind::TPromise& Promise)
+void ApiInput::TContextManager::EnumDevices(Bind::TLocalContext& Context,Bind::TPromise& Promise)
 {
 	Array<Soy::TInputDeviceMeta> DeviceMetas;
 	auto EnumDevice = [&](Soy::TInputDeviceMeta& Meta)
@@ -78,18 +78,19 @@ void ApiInput::TContextManager::EnumDevices(Bind::TContext& Context,Bind::TPromi
 
 	GetContextManager().mContext.EnumDevices( EnumDevice );
 
-	auto GetValue = [&](size_t Index)
+	Array<JsCore::TObject> Devices;
+	for ( auto i=0;	i<DeviceMetas.GetSize();	i++ )
 	{
-		auto& Meta = DeviceMetas[Index];
-		auto Object = Context.CreateObjectInstance();
+		auto& Meta = DeviceMetas[i];
+		auto Object = Context.mGlobalContext.CreateObjectInstance( Context );
 		Object.SetString("Name", Meta.mName );
 		Object.SetString("Serial", Meta.mSerial );
 		Object.SetString("Vendor", Meta.mVendor );
 		Object.SetString("UsbPath", Meta.mUsbPath );
 		Object.SetBool("Connected", Meta.mConnected );
-		return Object;
+		Devices.PushBack( Object );
 	};
-	auto DevicesArray = Context.CreateArray( DeviceMetas.GetSize(), GetValue );
+	auto DevicesArray = JsCore::GetArray( Context.mLocalContext, GetArrayBridge(Devices) );
 	Promise.Resolve( DevicesArray );
 }
 
@@ -116,7 +117,7 @@ void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 	//		need something better for auto-flushing
 	if ( MissedFlush )
 	{
-		ContextManager.EnumDevices( Params.mContext, Promise );
+		ContextManager.EnumDevices( Params.mLocalContext, Promise );
 	}
 	
 	Params.Return( Promise );
@@ -127,7 +128,7 @@ void ApiInput::EnumDevices(Bind::TCallback& Params)
 {
 	auto& ContextManager = GetContextManager();
 	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
-	ContextManager.EnumDevices( Params.mContext, Promise );
+	ContextManager.EnumDevices( Params.mLocalContext, Promise );
 	Params.Return( Promise );
 }
 
@@ -140,7 +141,7 @@ void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 	mDevice.reset( new Hid::TDevice( ContextManager.mContext, DeviceName) );
 	mDevice->mOnStateChanged = [this]()
 	{
-		auto Resolve = [this](Bind::TContext& Context)
+		auto Resolve = [this](Bind::TLocalContext& Context)
 		{
 			this->mOnStateChangedPromises.Resolve();
 		};
@@ -164,19 +165,19 @@ void TInputDeviceWrapper::GetState(Bind::TCallback& Params)
 
 	auto InputState = This.mDevice->GetState();
 	
-	auto State = Params.mContext.CreateObjectInstance();
+	auto State = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 	State.SetArray("Buttons", GetArrayBridge(InputState.mButton) );
 
-	auto GetAxisElement = [&](size_t Index)
+	Array<Bind::TObject> AxisObjects;
+	for ( auto i=0;	i<InputState.mAxis.GetSize();	i++ )
 	{
-		auto& Axis = InputState.mAxis[Index];
-		auto AxisObject = Params.mContext.CreateObjectInstance();
+		auto& Axis = InputState.mAxis[i];
+		auto AxisObject = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 		AxisObject.SetFloat("x", Axis.x );
 		AxisObject.SetFloat("y", Axis.y );
-		return AxisObject;
+		AxisObjects.PushBack( AxisObject );
 	};
-	auto AxisArray = Params.mContext.CreateArray( InputState.mAxis.GetSize(), GetAxisElement );
-	State.SetArray("Axis", AxisArray );
+	State.SetArray("Axis", GetArrayBridge(AxisObjects) );
 
 	Params.Return( State );
 }

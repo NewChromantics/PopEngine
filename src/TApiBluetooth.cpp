@@ -113,12 +113,12 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 	//	future planning
 	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
 
-	auto DoEnumDevices = [=](Bind::TContext& Context)
+	auto DoEnumDevices = [=](Bind::TLocalContext& Context)
 	{
 		Array<Bind::TObject> Devices;
 		auto OnDevice = [&](Bluetooth::TDeviceMeta& DeviceMeta)
 		{
-			auto Device = Context.CreateObjectInstance();
+			auto Device = Context.mGlobalContext.CreateObjectInstance( Context );
 			Device.SetString("Name", DeviceMeta.GetName() );
 			Device.SetString("Uuid", DeviceMeta.mUuid);
 			Device.SetArray("Services", GetArrayBridge(DeviceMeta.mServices) );
@@ -135,7 +135,7 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 	};
 
 	//	currently looking for ones we've already found
-	DoEnumDevices( Params.mContext );
+	DoEnumDevices( Params.mLocalContext );
 
 	Params.Return( Promise );
 }
@@ -350,7 +350,7 @@ void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,Array
 	if ( mReadCharacteristicBuffer.IsEmpty() )
 		return;
 	
-	auto Flush = [this](Bind::TContext& Context)
+	auto Flush = [this](Bind::TLocalContext& Context)
 	{
 		//	turn data to an array
 		Array<uint8_t> PoppedData;
@@ -359,7 +359,7 @@ void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,Array
 			PoppedData = mReadCharacteristicBuffer;
 			mReadCharacteristicBuffer.Clear();
 		}
-		auto Data = Context.CreateArray( GetArrayBridge(PoppedData) );
+		auto Data = Bind::GetArray( Context.mLocalContext, GetArrayBridge(PoppedData) );
 		auto HandlePromise = [&](Bind::TPromise& Promise)
 		{
 			Promise.Resolve( Data );

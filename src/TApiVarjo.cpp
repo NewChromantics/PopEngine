@@ -79,7 +79,7 @@ void ApiVarjo::FindScanlines(Bind::TCallback& Params)
 	auto* VertRectsInts = &VertRects[0].mLeft;
 	auto VertRectsArray = GetRemoteArray( VertRectsInts, VertRectCount*4 );
 
-	auto Result = Params.mContext.CreateObjectInstance();
+	auto Result = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 	Result.SetArray("HorzRects", GetArrayBridge(HorzRectsArray) );
 	Result.SetArray("VertRects", GetArrayBridge(VertRectsArray) );
 	Params.Return( Result );

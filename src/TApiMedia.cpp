@@ -217,7 +217,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	
 	auto* pThis = &This;
 	
-	auto Resolve = [=](Bind::TContext& Context)
+	auto Resolve = [=](Bind::TLocalContext& Context)
 	{
 		auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
 		{
@@ -227,7 +227,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			auto& mFrameBuffers = pThis->mFrameBuffers;
 			while ( UseFrameBuffer && mFrameBuffers.GetSize() < PlanePixelss.GetSize() )
 			{
-				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto ImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
 				auto& Image = ImageObject.This<TImageWrapper>();
 				std::stringstream Name;
 				Name << "AVC buffer image plane #" << mFrameBuffers.GetSize();
@@ -249,7 +249,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 				}
 				else
 				{
-					PlaneImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+					PlaneImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
 					std::stringstream PlaneName;
 					PlaneName << "Frame" << FrameTime << "Plane" << p;
 					auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
@@ -279,7 +279,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 
 			//std::Debug << "Popping frame" << std::endl;
 			auto ObjectTypename = ( ExtractImage && !ExtractPlanes ) ? TImageWrapper::GetTypeName() : std::string();
-			auto FrameImageObject = Context.CreateObjectInstance( ObjectTypename );
+			auto FrameImageObject = Context.mGlobalContext.CreateObjectInstance( Context, ObjectTypename );
 			
 			if ( ExtractImage && !ExtractPlanes )
 			{
@@ -317,7 +317,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 		catch(std::exception& e)
 		{
 			std::string Error( e.what() );
-			auto DoReject = [=](Bind::TContext& Context)
+			auto DoReject = [=](Bind::TLocalContext& Context)
 			{
 				Promise.Reject( Error );
 			};
@@ -552,7 +552,7 @@ void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
 void TPopCameraDeviceWrapper::OnNewFrame()
 {
 	//	trigger all our requests, no more callback
-	auto Runner = [this](Bind::TContext& Context)
+	auto Runner = [this](Bind::TLocalContext& Context)
 	{
 		if ( !mFrameRequests.HasPromises() )
 			return;
@@ -566,30 +566,30 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 			{
 				//	gr: queue these resolves
 				//		they invoke render's which seem to cause some problem, but I'm not sure what
-				auto Resolve = [=](Bind::TContext& Context)
+				auto Resolve = [=](Bind::TLocalContext& Context)
 				{
 					auto FrameObject = FramePersistent.GetObject();
 					Promise.Resolve( FrameObject );
 				};
-				Context.Queue(Resolve);
+				Context.mGlobalContext.Queue(Resolve);
 			};
 			mFrameRequests.Flush( HandlePromise );
 		}
 		catch(std::exception& e)
 		{
 			std::string Error(e.what());
-			auto DoReject = [=](Bind::TContext& Context)
+			auto DoReject = [=](Bind::TLocalContext& Context)
 			{
 				mFrameRequests.Reject( Error );
 			};
-			Context.Queue(DoReject);
+			Context.mGlobalContext.Queue(DoReject);
 		}
 	};
 	mContext.Queue( Runner );
 }
 
 
-Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TContext& Context,const TFrameRequestParams& Params)
+Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,const TFrameRequestParams& Params)
 {
 	Array<std::shared_ptr<SoyPixelsImpl>> Planes;
 	SoyTime FrameTime;
@@ -631,7 +631,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TContext& Context,const TF
 			for ( auto p=0;	p<Planes.GetSize();	p++ )
 			{
 				auto& Plane = Planes[p];
-				auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+				auto ImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
 				auto& Image = ImageObject.This<TImageWrapper>();
 				Image.SetPixels( *Plane );
 				Images.PushBack( &Image );
@@ -647,25 +647,25 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TContext& Context,const TF
 
 		//	gr: old setup filled this array. need to really put that back?
 		//		should we just have a split planes() func for the image...
-		auto PlaneArray = Context.CreateArray(0);
-
+		Array<Bind::TObject> ImageHandles;
+		
 		//auto PlaneArray = Params.GetArgumentArray(0);
 		for ( auto i=0;	i<Images.GetSize();	i++ )
 		{
 			auto& Image = *Images[i];
 			auto ImageHandle = Image.GetHandle();
-			PlaneArray.Set( i, ImageHandle );
+			ImageHandles.PushBack( ImageHandle );
 		}
 
 		//	create a dumb object with meta to return
-		auto FrameHandle = Context.CreateObjectInstance();
-		FrameHandle.SetArray("Planes", PlaneArray );
+		auto FrameHandle = Context.mGlobalContext.CreateObjectInstance( Context );
+		FrameHandle.SetArray("Planes", GetArrayBridge(ImageHandles) );
 		SetTime( FrameHandle );
 		return FrameHandle;
 	}
 
 
-	auto ImageObject = Context.CreateObjectInstance( TImageWrapper::GetTypeName() );
+	auto ImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
 	auto& Image = ImageObject.This<TImageWrapper>();
 	Image.mName = "MediaSource Frame";
 	Image.SetPixels( Planes[0] );

@@ -85,7 +85,7 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 	
 	
 	//	render
-	auto ExecuteRenderCallback = [&](Bind::TContext& Context)
+	auto ExecuteRenderCallback = [&](Bind::TLocalContext& Context)
 	{
 		//	setup variables
 		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
@@ -121,14 +121,14 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		CallbackParams.SetArgumentObject( 0, RenderTargetObject );
 		RenderCallbackFunc.Call( CallbackParams );
 	};
-	ExecuteRenderCallback( Params.mContext );
+	ExecuteRenderCallback( Params.mLocalContext );
 }
 
 
 void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 {
 	//  call javascript
-	auto Runner = [&](Bind::TContext& Context)
+	auto Runner = [&](Bind::TLocalContext& Context)
 	{
 		LockContext();
 		
@@ -167,7 +167,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
 {
 	//  call javascript
-	auto Runner = [=](Bind::TContext& Context)
+	auto Runner = [=](Bind::TLocalContext& Context)
 	{
 		try
 		{
@@ -192,7 +192,7 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 void TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& FuncName)
 {
 	//  call javascript
-	auto Runner = [=](Bind::TContext& Context)
+	auto Runner = [=](Bind::TLocalContext& Context)
 	{
 		try
 		{
@@ -218,7 +218,7 @@ bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 {
 	bool Result = false;
 	//  call javascript
-	auto Runner = [&](Bind::TContext& Context)
+	auto Runner = [&](Bind::TLocalContext& Context)
 	{
 		try
 		{
@@ -251,7 +251,7 @@ bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 
 void TWindowWrapper::OnClosed()
 {
-	auto Runner = [=](Bind::TContext& Context)
+	auto Runner = [=](Bind::TLocalContext& Context)
 	{
 		try
 		{
@@ -276,7 +276,7 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 	Array<std::string> Filenames( FilenamesOrig );
 	
 	//  call javascript
-	auto Runner = [=](Bind::TContext& Context)
+	auto Runner = [=](Bind::TLocalContext& Context)
 	{
 		try
 		{
@@ -358,7 +358,6 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWindowWrapper>();
-	auto& Context = Params.mContext;
 	
 	auto& OpenglContext = *This.mWindow->GetContext();
 	if ( !OpenglContext.IsLockedToThisThread() )
@@ -377,7 +376,7 @@ void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 			{
 				auto CallbackFunc = Params.GetArgumentFunction(1);
 				auto This = Params.ThisObject();
-				Bind::TCallback CallbackParams(Context);
+				Bind::TCallback CallbackParams( Params.mLocalContext );
 				CallbackParams.SetThis( This );
 				CallbackParams.SetArgumentObject(0,ShaderObject);
 				CallbackFunc.Call( CallbackParams );
@@ -446,8 +445,7 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 	ScreenRect4.PushBack(ScreenRect.w);
 	ScreenRect4.PushBack(ScreenRect.h);
 	
-	auto ScreenRectArray = Params.mContext.CreateArray( GetArrayBridge(ScreenRect4) );
-	Params.Return( ScreenRectArray );
+	Params.Return( GetArrayBridge(ScreenRect4) );
 }
 
 
@@ -492,7 +490,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	auto* pOpenglBindContext = &This.GetOpenglJsCoreContext();
 	//auto* pOpenglBindContext = pContext;
 	
-	auto Resolve = [=](Bind::TContext& Context)
+	auto Resolve = [=](Bind::TLocalContext& Context)
 	{
 		//	testing to see if the target is at fault
 		//auto Target = TargetPersistent->GetObject();
@@ -518,15 +516,13 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	auto ReadBackPixelsAfterwards = SoyPixelsFormat::ToType( ReadBack );
 	
 	
-	auto ExecuteRenderCallback = [=](Bind::TContext& Context)
+	auto ExecuteRenderCallback = [=](Bind::TLocalContext& Context)
 	{
 		auto Func = RenderCallbackPersistent.GetFunction();
-		auto This = Context.GetGlobalObject();
 		auto Window = WindowPersistent.GetObject();
 		auto Target = TargetPersistent->GetObject();
 		
 		Bind::TCallback CallbackParams(Context);
-		CallbackParams.SetThis( This );
 		CallbackParams.SetArgumentObject( 0, Window );
 		CallbackParams.SetArgumentObject( 1, Target );
 		//	todo: return this result to the promise
@@ -595,7 +591,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			auto OnError = [=](Bind::TContext& Context)
+			auto OnError = [=](Bind::TLocalContext& Context)
 			{
 				Promise.Reject( ExceptionString );
 			};

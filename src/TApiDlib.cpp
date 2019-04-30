@@ -143,7 +143,7 @@ void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 				}
 			}
 			
-			auto OnCompleted = [=](Bind::TContext& Context)
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
 				Promise.Resolve( GetArrayBridge(Features) );
 			};
@@ -213,7 +213,7 @@ void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 				}
 			}
 			
-			auto OnCompleted = [=](Bind::TContext& Context)
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
 				Promise.Resolve( GetArrayBridge(Features) );
 			};
