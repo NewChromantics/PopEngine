@@ -87,7 +87,7 @@ void ApiBluetooth::Startup(Bind::TCallback& Params)
 	auto& Instance = GetBluetoothInstance();
 	Instance.mManager->Scan(ServiceFilter);
 	
-	auto Promise = Instance.mStartupPromises.AddPromise( Params.mContext );
+	auto Promise = Instance.mStartupPromises.AddPromise( Params.mLocalContext );
 	
 	//	check for immediate resolve
 	auto State = Instance.mManager->GetState();
@@ -103,7 +103,7 @@ void ApiBluetooth::Startup(Bind::TCallback& Params)
 void ApiBluetooth::OnStatusChanged(Bind::TCallback& Params)
 {
 	auto& Instance = GetBluetoothInstance();
-	auto Promise = Instance.mStartupPromises.AddPromise( Params.mContext );
+	auto Promise = Instance.mStartupPromises.AddPromise( Params.mLocalContext );
 	Params.Return( Promise );
 }
 
@@ -111,14 +111,14 @@ void ApiBluetooth::OnStatusChanged(Bind::TCallback& Params)
 void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
 	//	future planning
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
-	auto DoEnumDevices = [=](Bind::TContext& Context)
+	auto DoEnumDevices = [=](Bind::TLocalContext& Context)
 	{
 		Array<Bind::TObject> Devices;
 		auto OnDevice = [&](Bluetooth::TDeviceMeta& DeviceMeta)
 		{
-			auto Device = Context.CreateObjectInstance();
+			auto Device = Context.mGlobalContext.CreateObjectInstance( Context );
 			Device.SetString("Name", DeviceMeta.GetName() );
 			Device.SetString("Uuid", DeviceMeta.mUuid);
 			Device.SetArray("Services", GetArrayBridge(DeviceMeta.mServices) );
@@ -131,11 +131,11 @@ void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 			OnDevice( Device->mMeta );
 		}
 
-		Promise.Resolve( GetArrayBridge(Devices) );
+		Promise.Resolve( Context, GetArrayBridge(Devices) );
 	};
 
 	//	currently looking for ones we've already found
-	DoEnumDevices( Params.mContext );
+	DoEnumDevices( Params.mLocalContext );
 
 	Params.Return( Promise );
 }
@@ -146,7 +146,7 @@ void ApiBluetooth::OnDevicesChanged(Bind::TCallback& Params)
 {
 	auto& Instance = GetBluetoothInstance();
 
-	auto Promise = Instance.mOnDevicesChangedPromises.AddPromise( Params.mContext );
+	auto Promise = Instance.mOnDevicesChangedPromises.AddPromise( Params.mLocalContext );
 
 	Params.Return( Promise );
 }
@@ -262,7 +262,7 @@ void TBluetoothDeviceWrapper::Connect(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TBluetoothDeviceWrapper>();
 
-	auto Promise = This.mConnectPromises.AddPromise( Params.mContext );
+	auto Promise = This.mConnectPromises.AddPromise( Params.mLocalContext );
 
 	//	connect if not already connected
 	if ( This.mDevice->GetState() == Bluetooth::TState::Connected )
@@ -327,7 +327,7 @@ void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
 	auto& Instance = ApiBluetooth::GetBluetoothInstance();
 	Instance.mManager->DeviceListen( This.mDevice->mUuid, Characteristic );
 
-	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mContext );
+	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mLocalContext );
 
 	//	flush any data that might already be pending
 	BufferArray<uint8_t,1> NewData;
@@ -350,7 +350,7 @@ void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,Array
 	if ( mReadCharacteristicBuffer.IsEmpty() )
 		return;
 	
-	auto Flush = [this](Bind::TContext& Context)
+	auto Flush = [this](Bind::TLocalContext& Context)
 	{
 		//	turn data to an array
 		Array<uint8_t> PoppedData;
@@ -359,10 +359,10 @@ void TBluetoothDeviceWrapper::OnRecvData(const std::string& Characteristic,Array
 			PoppedData = mReadCharacteristicBuffer;
 			mReadCharacteristicBuffer.Clear();
 		}
-		auto Data = Context.CreateArray( GetArrayBridge(PoppedData) );
-		auto HandlePromise = [&](Bind::TPromise& Promise)
+		auto Data = Bind::GetArray( Context.mLocalContext, GetArrayBridge(PoppedData) );
+		auto HandlePromise = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 		{
-			Promise.Resolve( Data );
+			Promise.Resolve( LocalContext, Data );
 		};
 		mReadCharacteristicPromises.Flush( HandlePromise );
 	};

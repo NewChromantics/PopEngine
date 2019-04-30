@@ -21,6 +21,7 @@
 		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
+		BF3965652278587600A721E8 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
 		BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3BE7B1226DFD680043DFA5 /* TApiVarjo.cpp */; };
 		BF3BE7B6226E03310043DFA5 /* libVarjo_Glint.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3BE7B4226E03300043DFA5 /* libVarjo_Glint.a */; };
@@ -1062,6 +1063,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF3965652278587600A721E8 /* v8Runtime in Resources */,
 				BFF2B6C32265FB4500232137 /* GuildhallGildwall in Resources */,
 				BF59A2502222039900AE9926 /* Lollypop.icns in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,

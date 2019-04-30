@@ -90,13 +90,16 @@ public:
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
-	virtual Bind::TObject	GetHandle() override
+	virtual Bind::TObject	GetHandle(Bind::TLocalContext& Context) override
 	{
-		auto BaseObject = TObjectWrapper::GetHandle();
+		auto BaseObject = TObjectWrapper::GetHandle(Context);
 		auto PersistentHandle = mPersistentHandle.GetObject();
 		if ( BaseObject.mThis != PersistentHandle.mThis )
 			std::Debug << "Handle is different!" << std::endl;
-		return PersistentHandle;
+		
+		//	hack to see if some problems go away
+		return Bind::TObject( Context.mLocalContext, BaseObject.mThis );
+		//return PersistentHandle;
 	}
 
 protected:

@@ -274,6 +274,8 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 		Soy::TScopeTimerPrint Timer("cv::findContours",5);
 		cv::findContours( InputArray, Contours, Mode, Method );
 	}
+	
+	auto LocalContext = Params.mLocalContext.mLocalContext;
 									
 	//	enumerate to arrays of points
 	auto GetPointf = [&](const cv::Point& Point,float& x,float& y)
@@ -288,7 +290,7 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	};
 	auto GetPointObject = [&](const cv::Point& Point)
 	{
-		auto Object = Params.mContext.CreateObjectInstance();
+		auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 		float x,y;
 		GetPointf( Point, x, y );
 		Object.SetFloat("x", x);
@@ -327,16 +329,18 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 				AllPoints.PushBack( Rect.GetHeight() );
 			}
 			
-			auto Array = Params.mContext.CreateArray( GetArrayBridge(AllPoints) );
+			auto Array = Bind::GetArray( LocalContext, GetArrayBridge(AllPoints) );
 			return Array;
 		}
 		else
 		{
-			auto GetPointElement = [&](size_t Index)
+			Array<Bind::TObject> PointObjects;
+			for ( auto i=0;	i<Points.size();	i++ )
 			{
-				return GetPointObject(Points[Index]);
-			};
-			auto Array = Params.mContext.CreateArray( Points.size(), GetPointElement );
+				auto Obj = GetPointObject(Points[i]);
+				PointObjects.PushBack(Obj);
+			}
+			auto Array = Bind::GetArray( LocalContext, GetArrayBridge( PointObjects ) );
 			return Array;
 		}
 	};
@@ -355,7 +359,7 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 			Soy::Rectf Rect;
 			auto Array = GetPoints( ThisContour, Rect );
 			
-			auto ArrayValue = JsCore::GetValue( Params.mContext.mContext, Array );
+			auto ArrayValue = JsCore::GetValue( Params.GetContextRef(), Array );
 			//Params.Return( ArrayValue );	return;
 			ContourArrays.PushBack( ArrayValue );
 		}
@@ -365,6 +369,6 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 		}
 	}
 
-	auto ContoursArray = JsCore::GetArray( Params.mContext.mContext, GetArrayBridge(ContourArrays) );
+	auto ContoursArray = JsCore::GetArray( Params.GetContextRef(), GetArrayBridge(ContourArrays) );
 	Params.Return( ContoursArray );
 }

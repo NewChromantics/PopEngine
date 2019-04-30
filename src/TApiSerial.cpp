@@ -168,7 +168,7 @@ void TSerialComPortWrapper::Read(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TSerialComPortWrapper>();
 	
-	auto Promise = This.mReadPromises.AddPromise(Params.mContext);
+	auto Promise = This.mReadPromises.AddPromise( Params.mLocalContext );
 	
 	//	auto flush if we have data, or if the port is closed
 	This.OnDataReceived();
@@ -207,17 +207,17 @@ void TSerialComPortWrapper::OnDataReceived()
 		return;
 	}
 	
-	auto SendData = [&](Bind::TPromise& Promise)
+	auto SendData = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 	{
 		if ( mDataAsString )
 		{
 			auto* cstr = reinterpret_cast<char*>( Data.GetArray() );
 			std::string DataString( cstr, Data.GetSize() );
-			Promise.Resolve( DataString );
+			Promise.Resolve( LocalContext, DataString );
 		}
 		else
 		{
-			Promise.Resolve( GetArrayBridge(Data) );
+			Promise.Resolve( LocalContext, GetArrayBridge(Data) );
 		}
 	};
 	mReadPromises.Flush(SendData);

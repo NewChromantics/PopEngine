@@ -50,9 +50,9 @@ void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void TWebsocketServerWrapper::OnMessage(const std::string& Message)
 {
-	auto SendJsMessage = [=](Bind::TContext& Context)
+	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 		
 		Bind::TCallback Callback(Context);
@@ -68,9 +68,9 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 {
 	Array<uint8_t> MessageCopy( Message );
 	
-	auto SendJsMessage = [=](Bind::TContext& Context)
+	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 		
 		Bind::TCallback Callback(Context);

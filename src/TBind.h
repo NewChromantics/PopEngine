@@ -14,10 +14,31 @@
 #define DEFINE_BIND_TYPENAME(Name)		extern const char Name ## _TypeName[] = #Name
 #define DECLARE_BIND_TYPENAME(Name)		extern const char Name ## _TypeName[];
 
+
+
+
+
+//	these classes should be pretty agnostic
+namespace Bind
+{
+	class TInstanceBase;
+	class TPromiseQueue;
+}
+
+
+
+class Bind::TInstanceBase
+{
+protected:
+	std::string						mRootDirectory;
+	std::function<void(int32_t)>	mOnShutdown;	//	callback when we want to die
+};
+
+
+
 #if defined(JSAPI_V8)
-	#include "V8Bind.h"
-	//namespace Bind = V8;
-#else
+#include "V8Bind.h"
+#endif
 
 namespace JsCore
 {
@@ -28,20 +49,10 @@ namespace Bind
 	using namespace JsCore;
 	//typedef JsCore::TInstance TInstance;
 }
-	#include "JsCoreBind.h"
-	//namespace Bind = JsCore;
-#endif
+#include "JsCoreBind.h"
+//namespace Bind = JsCore;
 
 
-
-
-
-
-//	thsese classes should be pretty agnostic
-namespace Bind
-{
-	class TPromiseQueue;
-}
 
 
 class Bind::TPromiseQueue
@@ -57,11 +68,11 @@ public:
 		return true;
 	}
 	
-	TPromise		AddPromise(Bind::TContext& Context);
+	TPromise		AddPromise(Bind::TLocalContext& Context);
 	bool			HasPromises() const	{	return !mPending.IsEmpty();	}
 
 	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
-	void			Flush(std::function<void(TPromise&)> HandlePromise);
+	void			Flush(std::function<void(Bind::TLocalContext&,TPromise&)> HandlePromise);
 
 	void			Resolve();
 	void			Resolve(const std::string& Result);

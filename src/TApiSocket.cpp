@@ -47,9 +47,9 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 {
 	//Array<uint8_t> MessageCopy;
 	
-	auto SendJsMessage = [=](Bind::TContext& Context)
+	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
-		auto This = GetHandle();
+		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 
 		Bind::TCallback CallbackParams( Context );
@@ -84,7 +84,7 @@ void TSocketWrapper::GetAddress(Bind::TCallback& Params)
 		std::stringstream AddressStr;
 		AddressStr << InterfaceAddress;
 
-		auto Address = Params.mContext.CreateObjectInstance();
+		auto Address = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 		Address.SetString("Address", AddressStr.str());
 		Address.SetString("Name", InterfaceName);
 		Addresses.PushBack(Address);
@@ -132,13 +132,7 @@ void TSocketWrapper::GetPeers(Bind::TCallback& Params)
 	};
 	Socket.EnumConnections( EnumPeer );
 	
-	//	return array of names
-	auto GetHandle = [&](size_t Index)
-	{
-		return PeerNames[Index];
-	};
-	auto PeerNamesArray = Params.mContext.CreateArray( PeerNames.GetSize(), GetHandle );
-	Params.Return( PeerNamesArray );
+	Params.Return( GetArrayBridge(PeerNames) );
 }
 
 

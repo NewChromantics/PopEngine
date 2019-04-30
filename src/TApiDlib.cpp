@@ -104,10 +104,10 @@ void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 	auto& This = Params.This<TDlibWrapper>();
 	
 	//	make a promise resolver (persistent to copy to thread)
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
 	auto ImageObject = Params.GetArgumentObject(0);
-	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
+	auto ImagePersistent = Bind::TPersistent( Params.mLocalContext, ImageObject, "ImageObject" );
 	auto* pImage = &ImageObject.This<TImageWrapper>();
 	auto* pContext = &Params.mContext;
 	
@@ -143,9 +143,9 @@ void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 				}
 			}
 			
-			auto OnCompleted = [=](Bind::TContext& Context)
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
-				Promise.Resolve( GetArrayBridge(Features) );
+				Promise.Resolve( Context, GetArrayBridge(Features) );
 			};
 
 			//	queue the completion, doesn't need to be done instantly
@@ -155,7 +155,11 @@ void TDlibWrapper::FindFaces(Bind::TCallback& Params)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			Promise.Reject( ExceptionString );
+			auto DoReject = [=](Bind::TLocalContext& Context)
+			{
+				Promise.Reject( Context, ExceptionString );
+			};
+			pContext->Queue( DoReject );
 		}
 	};
 	Dlib.PushJob( RunFaceDetector );
@@ -171,10 +175,10 @@ void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 
 	auto* pThis = &This;
 	
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	
 	auto ImageObject = Params.GetArgumentObject(0);
-	auto ImagePersistent = Params.mContext.CreatePersistent( ImageObject );
+	auto ImagePersistent = Bind::TPersistent( Params.mLocalContext, ImageObject, "FindFaceFeatures" );
 	auto* pImage = &ImageObject.This<TImageWrapper>();
 	auto* pContext = &Params.mContext;
 
@@ -213,9 +217,9 @@ void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 				}
 			}
 			
-			auto OnCompleted = [=](Bind::TContext& Context)
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
-				Promise.Resolve( GetArrayBridge(Features) );
+				Promise.Resolve( Context, GetArrayBridge(Features) );
 			};
 			
 			//	queue the completion, doesn't need to be done instantly
@@ -225,7 +229,11 @@ void TDlibWrapper::FindFaceFeatures(Bind::TCallback& Params)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			Promise.Reject( ExceptionString );
+			auto DoReject = [=](Bind::TLocalContext& Context)
+			{
+				Promise.Reject( Context, ExceptionString );
+			};
+			pContext->Queue( DoReject );
 		}
 	};
 	Dlib.PushJob( RunFaceDetector );

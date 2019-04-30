@@ -1,10 +1,15 @@
 #pragma once
 
-//	gr: we're binding them ourselves
-#if defined(PLATFORM_WINDOWS)
-#include "JsCoreDll.h"
+#if defined(JSAPI_V8)
+
+
 #else
-#include <JavaScriptCore/JavaScriptCore.h>
+	//	gr: we're binding them ourselves
+	#if defined(PLATFORM_WINDOWS)
+	#include "JsCoreDll.h"
+	#else
+	#include <JavaScriptCore/JavaScriptCore.h>
+	#endif
 #endif
 
 #include <memory>
@@ -14,6 +19,7 @@
 
 namespace Bind
 {
+	class TInstanceBase;
 	class TInstance;
 }
 
@@ -22,7 +28,8 @@ namespace JsCore
 {
 	typedef Bind::TInstance TInstance;
 	//class TInstance;		//	vm
-	class TContext;
+	class TLocalContext;	//	limited lifetime/temp context
+	class TContext;			//	global context
 	class TJobQueue;		//	thread of js-executions
 	class TCallback;		//	function parameters
 	class TContextDebug;	//	debug meta for a context
@@ -45,6 +52,7 @@ namespace JsCore
 	TYPE		FromValue(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
+	std::string	GetString(JSStringRef Handle);
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	template<typename INTTYPE>
@@ -54,7 +62,8 @@ namespace JsCore
 	template<typename TYPE>
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>& Values);
-
+	JSObjectRef	GetArray(JSContextRef Context,size_t Size);	//	create array of undefineds
+	
 	//	typed arrays
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Values);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint32_t>& Values);
@@ -63,6 +72,7 @@ namespace JsCore
 	//	gr: note: this JSStringRef needs explicit releasing (JSStringRelease) if not sent off to JS land
 	//		todo: auto releasing string!
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
+	JSStringRef	GetString(const std::string& Value);
 	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
 
 	//	gr: consider templating this so that we can static_assert on non-specified implementation to avoid the auto-resolution to bool
@@ -126,6 +136,18 @@ inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
 
 
 
+class JsCore::TLocalContext
+{
+public:
+	TLocalContext(JSContextRef Local,TContext& Global) :
+		mLocalContext	( Local ),
+		mGlobalContext	( Global )
+	{
+	}
+	
+	JSContextRef	mLocalContext;
+	TContext&		mGlobalContext;
+};
 
 class JsCore::TArray
 {
@@ -164,17 +186,15 @@ public:
 	
 	//	would be nice to capture return, but it's contained inside Params for now. Maybe template & error for type mismatch
 	void			Call(JsCore::TCallback& Params) const;
-	void			Call(JsCore::TObject& This) const;
-	JSValueRef		Call(JSObjectRef This=nullptr,JSValueRef Value=nullptr) const;
 	
 public:
-	JSContextRef	mContext = nullptr;
+	//JSContextRef	mContext = nullptr;	//	local context!
 	JSObjectRef		mThis = nullptr;
 };
 
 
 //	VM to contain multiple contexts/containers
-class Bind::TInstance
+class Bind::TInstance : public Bind::TInstanceBase
 {
 public:
 	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown);
@@ -214,9 +234,9 @@ public:
 class JsCore::TCallback //: public JsCore::TCallback
 {
 public:
-	TCallback(TContext& Context) :
+	TCallback(TLocalContext& Context) :
 		//JsCore::TCallback	( Context ),
-		mContext		( Context )
+		mLocalContext	( Context )
 	{
 	}
 	
@@ -264,10 +284,16 @@ public:
 	virtual void			Return(JsCore::TPromise& Value) bind_override;
 	virtual void			Return(JsCore::TPersistent& Value) bind_override;
 	template<typename TYPE>
-	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override	{	mReturn = GetArray( GetContextRef(), Values );	}
+	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override
+	{
+		auto Array = GetArray( GetContextRef(), Values );
+		auto ArrayValue = GetValue( GetContextRef(), Array );
+		mReturn = ArrayValue;
+	}
 
 	//	functions for c++ calling JS
 	virtual void			SetThis(JsCore::TObject& This) bind_override;
+	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,JsCore::TObject& Value) bind_override;
@@ -281,13 +307,15 @@ public:
 	virtual TObject			GetReturnObject() bind_override;
 	virtual TFunction		GetReturnFunction() bind_override;
 
-private:
 	JSContextRef			GetContextRef();
+
+private:
 	JSType					GetArgumentType(size_t Index);
 	JSValueRef				GetArgumentValue(size_t Index);
 	
 public:
-	TContext&			mContext;
+	TLocalContext&		mLocalContext;
+	TContext&			mContext = mLocalContext.mGlobalContext;
 	JSValueRef			mThis = nullptr;
 	JSValueRef			mReturn = nullptr;
 	Array<JSValueRef>	mArguments;
@@ -309,7 +337,7 @@ public:
 
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(JsCore::TCallback&)> Function);
-	void			RegisterClassWithContext(TContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
+	void			RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
 
 	JsCore::TObjectWrapperBase&	AllocInstance()		{	return mAllocator();	}
 	
@@ -359,16 +387,17 @@ public:
 	inline void				SetArray(const std::string& Name,ArrayBridge<TYPE>&& Values) bind_override
 	{
 		auto Array = JsCore::GetArray( mContext, Values );
-		SetMember( Name, Array );
+		auto ArrayValue = JsCore::GetValue( mContext, Array );
+		SetMember( Name, ArrayValue );
 	}
 
 	//	Jscore specific
 private:
 	JSValueRef		GetMember(const std::string& MemberName);
 	void			SetMember(const std::string& Name,JSValueRef Value);
-	JSContextRef	mContext = nullptr;
 
 public:
+	JSContextRef	mContext = nullptr;	//	exposing so we can test local vs global
 	JSObjectRef		mThis = nullptr;
 };
 
@@ -377,11 +406,14 @@ public:
 class JsCore::TPersistent
 {
 public:
+	//	gr: can't use && as we need = operator to work
+	//TPersistent(const TPersistent&& That)	{	Steal( That );	}
+	
 	TPersistent()	{}
 	TPersistent(const TPersistent& That)	{	Retain( That );	}
-	TPersistent(const TPersistent&& That)	{	Retain( That );	}
-	TPersistent(const TObject& Object,const std::string& DebugName)		{	Retain( Object, DebugName );	}
-	TPersistent(const TFunction& Object,const std::string& DebugName)	{	Retain( Object, DebugName );	}
+	//TPersistent(Bind::TLocalContext& Context,const TPersistent&& That)	{	Retain( Context, That );	}
+	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
+	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refound
 	
 	operator		bool() const		{	return IsFunction() || IsObject();	}
@@ -391,21 +423,27 @@ public:
 	//	const for lambda[=] capture
 	TObject			GetObject() const		{	return mObject;	}
 	TFunction		GetFunction() const		{	return mFunction;	}
-	JSContextRef	GetContextRef() const;
-	TContext&		GetContext();
 
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
-	void		Retain(const TObject& Object,const std::string& DebugName);
-	void		Retain(const TFunction& Object,const std::string& DebugName);
+	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
+	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
 	void		Retain(const TPersistent& That);
-	void 		Release();
+	void 		Release(Bind::TLocalContext& Context);
+
+	void		DefferedRelease();			//	this does a deffered release
+	void		DefferedRetain(const TObject& Object,const std::string& DebugName);
+	void		DefferedRetain(const TFunction& Object,const std::string& DebugName);
 	
+	static void	Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
+	static void	Retain(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
+
 public:
 	std::string	mDebugName;
 	TObject		mObject;
 	TFunction	mFunction;
+	TContext*	mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
 };
 
 
@@ -419,6 +457,7 @@ public:
 	int		mPersistentFunctionCount=0;
 };
 
+
 //	functions marked virtual need to become generic
 class JsCore::TContext //: public JsCore::TContext
 {
@@ -428,51 +467,33 @@ public:
 	~TContext();
 	
 	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
-	virtual void		Execute(std::function<void(TContext&)> Function) bind_override;
-	virtual void		Queue(std::function<void(TContext&)> Function,size_t DeferMs=0) bind_override;
-	virtual void		GarbageCollect();
+	virtual void		Execute(std::function<void(TLocalContext&)> Function) bind_override;
+	virtual void		Queue(std::function<void(TLocalContext&)> Function,size_t DeferMs=0) bind_override;
+	virtual void		GarbageCollect(JSContextRef LocalContext);
 	virtual void		Shutdown(int32_t ExitCode);	//	tell instance to destroy us
 		
 	template<const char* FunctionName>
 	void				BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName=std::string());
 	
-	JsCore::TObject			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+	JsCore::TObject			GetGlobalObject(TLocalContext& LocalContext,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
 	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
-	virtual JsCore::TObject	CreateObjectInstance(const std::string& ObjectTypeName=std::string());
-	JsCore::TObject			CreateObjectInstance(const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
+	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName=std::string());
+	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
 	
-	virtual JsCore::TPersistent	CreatePersistent(JsCore::TObject& Object) bind_override;
-	virtual std::shared_ptr<JsCore::TPersistent>	CreatePersistentPtr(JsCore::TObject& Object) bind_override;
-	virtual JsCore::TPersistent	CreatePersistent(JsCore::TFunction& Object) bind_override;
-	virtual JsCore::TPromise		CreatePromise(const std::string& DebugName) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<std::string(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<TObject(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<TArray(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount,std::function<int32_t(size_t)> GetElement) bind_override;
-	virtual JsCore::TArray	CreateArray(size_t ElementCount);
-	template<typename TYPE>
-	JsCore::TArray			CreateArray(ArrayBridge<TYPE>&& Values);
-	JsCore::TArray			CreateArray(ArrayBridge<uint8_t>&& Values);
-	JsCore::TArray			CreateArray(ArrayBridge<float>&& Values);
-	
+	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName) bind_override;
+
 	
 	template<typename OBJECTWRAPPERTYPE>
 	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());
 	
-	//	api calls with context provided
-	//template<typename IN,typename OUT>
-	//OUT					GetString(IN Handle)			{	return JsCore::GetString(mContext,Handle);	}
-	void				ThrowException(JSValueRef ExceptionHandle,const std::string& ErrorContext="JsCore exception")	{	JsCore::ThrowException( mContext, ExceptionHandle, ErrorContext );	}
-	
-	
-	
+
 	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
 	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
 	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
 	std::string			GetResolvedFilename(const std::string& Filename);
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext
-	JSValueRef			CallFunc(std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
+	JSValueRef			CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
 	
 	
 	void				OnPersitentRetained(TPersistent& Persistent)	{	mDebug.OnPersitentRetained(Persistent);	}
@@ -484,11 +505,7 @@ protected:
 
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
-	
-	
-	//JSObjectRef			GetGlobalObject(const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
-	
-	
+		
 public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
@@ -516,23 +533,22 @@ class JsCore::TPromise
 {
 public:
 	TPromise()	{}
-	TPromise(TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
+	TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
 	~TPromise();
 	
 	//	const for lambda[=] copy capture
-	void			Resolve(const std::string& Value) const		{	Resolve( GetValue( GetContext(), Value ) );	}
-	void			Resolve(JsCore::TObject& Value) const			{	Resolve( GetValue( GetContext(), Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,const std::string& Value) const		{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,JsCore::TObject& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	template<typename TYPE>
-	void			Resolve(ArrayBridge<TYPE>&& Values) const	{	Resolve( GetValue( GetContext(), Values ) );	}
-	void			Resolve(JsCore::TArray& Value) const			{	Resolve( GetValue( GetContext(), Value ) );	}
-	void			Resolve(JSValueRef Value) const;//			{	mResolve.Call(nullptr,Value);	}
-	void			ResolveUndefined() const;
+	void			Resolve(Bind::TLocalContext& Context,ArrayBridge<TYPE>&& Values) const		{	Resolve( Context, GetValue( Context.mLocalContext, Values ) );	}
+	void			Resolve(Bind::TLocalContext& Context,JsCore::TArray& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mResolve.Call(nullptr,Value);	}
+	void			ResolveUndefined(Bind::TLocalContext& Context) const;
 
-	void			Reject(const std::string& Value) const		{	Reject( GetValue( GetContext(), Value ) );	}
-	void			Reject(JSValueRef Value) const;//			{	mReject.Call(nullptr,Value);	}
+	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Reject(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mReject.Call(nullptr,Value);	}
 	
-private:
-	JSContextRef	GetContext() const	{	return mPromise.GetContextRef();	}
+protected:
 	
 public:
 	std::string		mDebugName;
@@ -554,7 +570,7 @@ public:
 	}
 	virtual ~TObjectWrapperBase()	{}
 
-	virtual TObject	GetHandle();
+	virtual TObject	GetHandle(Bind::TLocalContext& Context);
 	virtual void	SetHandle(TObject& NewHandle);
 	
 	//	construct and allocate
@@ -597,7 +613,7 @@ public:
 	
 	static std::string		GetTypeName()	{	return TYPENAME;	}
 	
-	static TTemplate 		AllocTemplate(JsCore::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper);
+	static TTemplate 		AllocTemplate(JsCore::TContext& Context);
 	
 protected:
 	static void				Free(JSObjectRef ObjectRef)
@@ -615,7 +631,7 @@ protected:
 			std::Debug << "Global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
 		
 		//	reset the void for safety?
-		std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
+		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
 		JSObjectSetPrivate( ObjectRef, nullptr );
 	}
 	
@@ -625,13 +641,8 @@ protected:
 
 
 template<const char* TYPENAME,class TYPE>
-inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(JsCore::TContext& Context,std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapper)
+inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(JsCore::TContext& Context)
 {
-	static std::function<TObjectWrapperBase*(JSObjectRef)> AllocWrapperCache;
-	if ( AllocWrapperCache != nullptr )
-		throw Soy::AssertException("This allocator is already bound. Duplicate string?");
-	AllocWrapperCache = AllocWrapper;
-	
 	//	setup constructor CFunc here
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
@@ -640,8 +651,9 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 			//	gr: constructor here, is this function.
 			//		we need to create a new object and return it
 			auto& Context = JsCore::GetContext( ContextRef );
+			TLocalContext LocalContext( ContextRef, Context );
 			auto ArgumentsArray = GetRemoteArray( Arguments, ArgumentCount );
-			auto ThisObject = Context.CreateObjectInstance( TYPENAME, GetArrayBridge(ArgumentsArray) );
+			auto ThisObject = Context.CreateObjectInstance( LocalContext, TYPENAME, GetArrayBridge(ArgumentsArray) );
 			auto This = ThisObject.mThis;
 			return This;
 		}
@@ -685,24 +697,13 @@ inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCal
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
-		return ContextPtr.CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
+		TLocalContext LocalContext( Context, ContextPtr );
+		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
 	};
 	
 	BindRawFunction( FunctionName, ParentName, CFunc );
 }
 
-
-
-template<typename TYPE>
-inline JsCore::TArray JsCore::TContext::CreateArray(ArrayBridge<TYPE>&& Values)
-{
-	auto GetElement = [&](size_t Index)
-	{
-		return Values[Index];
-	};
-	auto Array = CreateArray( Values.GetSize(), GetElement );
-	return Array;
-}
 
 
 template<typename TYPE>
@@ -737,16 +738,8 @@ inline TYPE& JsCore::TObject::This(JSObjectRef Object)
 template<typename OBJECTWRAPPERTYPE>
 inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const std::string& OverrideLeafName)
 {
-	auto AllocWrapper = [this](JSObjectRef This)
-	{
-		TObject ThisObject( mContext, This );
-		auto& Heap = this->GetObjectHeap();
-		auto* NewObject = Heap.Alloc<OBJECTWRAPPERTYPE>( *this, ThisObject );
-		return NewObject;
-	};
-
 	//	create a template that can be overloaded by the type
-	auto Template = OBJECTWRAPPERTYPE::AllocTemplate( *this, AllocWrapper );
+	auto Template = OBJECTWRAPPERTYPE::AllocTemplate( *this );
 
 	Template.mAllocator = [this]() -> TObjectWrapperBase&
 	{
@@ -775,9 +768,13 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const
 	//	init template with overloaded stuff
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	
-	//	finish off
-	Template.RegisterClassWithContext( *this, ParentName, OverrideLeafName );
-	mObjectTemplates.PushBack( Template );
+	auto Exec = [&](Bind::TLocalContext& LocalContext)
+	{
+		//	finish off
+		Template.RegisterClassWithContext( LocalContext, ParentName, OverrideLeafName );
+		mObjectTemplates.PushBack( Template );
+	};
+	Execute( Exec );
 }
 
 template<typename TYPE>
@@ -826,7 +823,8 @@ inline void JsCore::TTemplate::BindFunction(std::function<void(JsCore::TCallback
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
-		return ContextPtr.CallFunc( FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
+		TLocalContext LocalContext( Context, ContextPtr );
+		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
 	};
 	
 	JSStaticFunction NewFunction;

@@ -115,15 +115,15 @@ void ApiPop::Debug(Bind::TCallback& Params)
 
 void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	
-	Promise.Resolve("Resolved in c++");
+	Promise.Resolve( Params.mLocalContext, "Resolved in c++");
 	Params.Return( Promise );
 }
 
 void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
-	Params.mContext.GarbageCollect();
+	Params.mContext.GarbageCollect( Params.GetContextRef() );
 	/*
 	//	queue as job?
 	std::Debug << "Invoking garbage collection..." << std::endl;
@@ -137,14 +137,15 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 {
 	auto Callback = Params.GetArgumentFunction(0);
 	auto TimeoutMs = Params.GetArgumentInt(1);
-	auto CallbackPersistent = Params.mContext.CreatePersistent(Callback);
+	auto CallbackPersistent = Bind::TPersistent( Params.mLocalContext, Callback, "SetTimeout callback");
 	
-	auto OnRun = [=](Bind::TContext& Context)
+	auto OnRun = [=](Bind::TLocalContext& Context)
 	{
 		try
 		{
 			auto Func = CallbackPersistent.GetFunction();
-			Func.Call();
+			Bind::TCallback Call( Context );
+			Func.Call(Call);
 		}
 		catch(std::exception& e)
 		{
@@ -159,16 +160,16 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 
 static void ApiPop::Yield(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
 	auto DelayMs = 0;
 	if ( !Params.IsArgumentUndefined(0) )
 		DelayMs = Params.GetArgumentInt(0);
 	
-	auto OnYield = [=](Bind::TContext& Context)
+	auto OnYield = [=](Bind::TLocalContext& Context)
 	{
 		//	don't need to do anything, we have just let the system breath
-		Promise.Resolve("Yield complete");
+		Promise.Resolve( Context, "Yield complete");
 	};
 
 	Params.mContext.Queue( OnYield, DelayMs );
@@ -368,7 +369,7 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 	};
 	HeapDebug.EnumAllocations(EnumAlloc);
 	
-	auto Object = Params.mContext.CreateObjectInstance();
+	auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 
 	for ( auto it=TypeCounts.begin();	it!=TypeCounts.end();	it++ )
 	{
@@ -412,7 +413,7 @@ void ApiPop::EnumScreens(Bind::TCallback& Params)
 	BufferArray<Bind::TObject,20> ScreenMetas;
 	auto EnumScreen = [&](const Platform::TScreenMeta& Meta)
 	{
-		auto Screen = Params.mContext.CreateObjectInstance();
+		auto Screen = Params.mContext.CreateObjectInstance( Params.mLocalContext );
 		Screen.SetString("Name", Meta.mName );
 		Screen.SetInt("Left", Meta.mWorkRect.Left() );
 		Screen.SetInt("Top", Meta.mWorkRect.Top() );
@@ -473,12 +474,11 @@ void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 
 	Array<char> FileContents;
 	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
+
+	//	can't do typed arrays of signed ints, so convert
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
 
-	//	want this to be a typed array
-	//auto ArrayBuffer = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(FileContentsu8) );
-	auto Array = Params.mContext.CreateArray( GetArrayBridge(FileContentsu8) );
-	Params.Return( Array );
+	Params.Return( GetArrayBridge(FileContentsu8) );
 }
 
 
@@ -950,8 +950,7 @@ void TImageWrapper::GetRgba8(Bind::TCallback& Params)
 	}
 	else
 	{
-		auto TargetArray = Params.mContext.CreateArray( GetArrayBridge(PixelsArray) );
-		Params.Return( TargetArray );
+		Params.Return( GetArrayBridge(PixelsArray) );
 	}
 }
 
@@ -976,8 +975,7 @@ void TImageWrapper::GetPixelBuffer(Bind::TCallback& Params)
 	}
 	else
 	{
-		auto TargetArray = Params.mContext.CreateArray( GetArrayBridge(PixelsArray) );
-		Params.Return( TargetArray );
+		Params.Return( GetArrayBridge(PixelsArray) );
 	}
 }
 
@@ -1349,7 +1347,7 @@ void TAsyncLoopWrapper::CreateTemplate(Bind::TTemplate& Template)
 void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Function = Params.GetArgumentFunction(0);
-	mFunction = Bind::TPersistent( Function, "TAsyncLoopWrapper function" );
+	mFunction = Bind::TPersistent( Params.mLocalContext, Function, "TAsyncLoopWrapper function" );
 
 	
 	static Bind::TPersistent MakeIterationBindThisFunction;
@@ -1363,7 +1361,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 			MakeThisFunction;
 		)V0G0N";
 
-		auto mContext = Params.mContext.mContext;
+		auto mContext = Params.GetContextRef();
 		JSStringRef FunctionSourceString = JsCore::GetString( mContext, FunctionSource );
 		JSValueRef Exception = nullptr;
 		auto FunctionValue = JSEvaluateScript( mContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
@@ -1372,18 +1370,18 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 		Bind::TFunction MakePromiseFunction( mContext, FunctionValue );
 		//mIterationBindThisFunction = Bind::TPersistent( MakePromiseFunction, "MakePromiseFunction" );
 	
-		MakeIterationBindThisFunction = Bind::TPersistent(MakePromiseFunction,"MakeIterationBindThisFunction");
+		MakeIterationBindThisFunction = Bind::TPersistent(Params.mLocalContext, MakePromiseFunction,"MakeIterationBindThisFunction");
 	}
 	
 	{
-		auto This = GetHandle();
-		Bind::TCallback Call( Params.mContext );
+		auto This = GetHandle(Params.mLocalContext);
+		Bind::TCallback Call( Params.mLocalContext );
 		Call.SetArgumentObject(0,This);
 		auto MakeFunc = MakeIterationBindThisFunction.GetFunction();
 		MakeFunc.Call(Call);
 		
 		auto IterationBindThisFunction = Call.GetReturnFunction();
-		this->mIterationBindThisFunction = Bind::TPersistent(IterationBindThisFunction,"Iteration Func");
+		this->mIterationBindThisFunction = Bind::TPersistent(Params.mLocalContext, IterationBindThisFunction,"Iteration Func");
 	}
 	
 	Iteration( Params );
@@ -1394,9 +1392,9 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 	//std::Debug << "Iteration()" << std::endl;
 	
 	auto* pThis = &Params.This<TAsyncLoopWrapper>();
-	auto Execute = [=](Bind::TContext& Context)
+	auto Execute = [=](Bind::TLocalContext& Context)
 	{
-		auto ThisHandle = pThis->GetHandle();
+		auto ThisHandle = pThis->GetHandle(Context);
 		auto ThisIterationFunction = pThis->mIterationBindThisFunction.GetFunction();
 		
 		//	run the func, get the promise returned
