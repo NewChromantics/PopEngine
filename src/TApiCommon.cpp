@@ -474,11 +474,11 @@ void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 
 	Array<char> FileContents;
 	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
+
+	//	can't do typed arrays of signed ints, so convert
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
 
-	//	want this to be a typed array
-	//auto ArrayBuffer = v8::GetTypedArray( Params.GetIsolate(), GetArrayBridge(FileContentsu8) );
-	Params.Return( GetArrayBridge(FileContents) );
+	Params.Return( GetArrayBridge(FileContentsu8) );
 }
 
 
