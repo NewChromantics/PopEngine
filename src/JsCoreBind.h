@@ -358,6 +358,7 @@ class JsCore::TObject //: public JsCore::TObject
 {
 	friend class TPersistent;
 	friend class TPromise;
+	friend class TObjectWrapperBase;
 public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
@@ -396,8 +397,10 @@ private:
 	JSValueRef		GetMember(const std::string& MemberName);
 	void			SetMember(const std::string& Name,JSValueRef Value);
 
-public:
+protected:
 	JSContextRef	mContext = nullptr;	//	exposing so we can test local vs global
+
+public:
 	JSObjectRef		mThis = nullptr;
 };
 
@@ -419,11 +422,14 @@ public:
 	operator		bool() const		{	return IsFunction() || IsObject();	}
 	bool			IsFunction() const	{	return mFunction.mThis != nullptr;	}
 	bool			IsObject() const	{	return mObject.mThis != nullptr;	}
+	const std::string&	GetDebugName() const	{	return mDebugName;	}
 	
 	//	const for lambda[=] capture
-	TObject			GetObject() const		{	return mObject;	}
-	TFunction		GetFunction() const		{	return mFunction;	}
-
+	TObject			GetObject() const;
+	TFunction		GetFunction() const;
+	TObject			GetObject(TLocalContext& Context) const;
+	TFunction		GetFunction(TLocalContext& Context) const;
+	
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
@@ -439,11 +445,13 @@ private:
 	static void	Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
 	static void	Retain(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc);
 
-public:
+protected:
 	std::string	mDebugName;
+	TContext*	mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
+	
+public:
 	TObject		mObject;
 	TFunction	mFunction;
-	TContext*	mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
 };
 
 

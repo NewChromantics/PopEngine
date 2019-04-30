@@ -607,8 +607,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 	
 	if ( Params.mDestinationImage )
 	{
-		auto Object = Params.mDestinationImage.GetObject();
-		Object.mContext = Context.mLocalContext;
+		auto Object = Params.mDestinationImage.GetObject( Context );
 		SetTime(Object);
 		auto& Image = Object.This<TImageWrapper>();
 		auto& Plane = Planes[0];

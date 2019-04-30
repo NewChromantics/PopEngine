@@ -360,12 +360,13 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 	{
 		auto* Typename = Allocation.mTypename;
 		TypeCounts[Typename] += Allocation.mElements;
-		
+		/*
 		if ( *Typename == "TImageWrapper" )
 		{
 			auto* pImage = (TImageWrapper*)(Allocation.mObject);
 			std::Debug << pImage->mName << std::endl;
 		}
+		*/
 	};
 	HeapDebug.EnumAllocations(EnumAlloc);
 	

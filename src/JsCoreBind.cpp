@@ -1286,6 +1286,40 @@ JsCore::TPersistent::~TPersistent()
 	}
 }
 
+JsCore::TObject JsCore::TPersistent::GetObject() const
+{
+	return mObject;
+}
+
+JsCore::TFunction JsCore::TPersistent::GetFunction() const
+{
+	return mFunction;
+}
+
+JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
+{
+	if ( mObject.mContext != Context.mLocalContext )
+	{
+		std::Debug << "Context has changed" << std::endl;
+		return TObject( Context.mLocalContext, mObject.mThis );
+	}
+	
+	return mObject;
+}
+
+JsCore::TFunction JsCore::TPersistent::GetFunction(TLocalContext& Context) const
+{
+	/*	gr: function no longer has a context
+	if ( mFunction.mContext != Context.mLocalContext )
+	{
+		std::Debug << "Context has changed" << std::endl;
+		return TFunction( Context.mLocalContext, mFunction.mThis );
+	}
+	*/
+	return mFunction;
+}
+
+
 void JsCore::TPersistent::Release(Bind::TLocalContext& Context,JSObjectRef ObjectOrFunc)
 {
 	JSValueUnprotect( Context.mLocalContext, ObjectOrFunc );
@@ -1732,6 +1766,10 @@ JsCore::TObject JsCore::TObjectWrapperBase::GetHandle(Bind::TLocalContext& Conte
 #else
 	JsCore::TObject TheObject = mHandle;
 #endif
+	
+	if ( Context.mLocalContext != TheObject.mContext )
+		std::Debug << "Context has changed" << std::endl;
+	
 	//	hack to see if this corrects some things
 	return TObject( Context.mLocalContext, TheObject.mThis );
 }
@@ -1746,7 +1784,7 @@ void JsCore::TContextDebug::OnPersitentRetained(TPersistent& Persistent)
 {
 	if ( Persistent.IsObject() )
 	{
-		mPersistentObjectCount[Persistent.mDebugName]++;
+		mPersistentObjectCount[Persistent.GetDebugName()]++;
 	}
 
 	if ( Persistent.IsFunction() )
@@ -1757,7 +1795,7 @@ void JsCore::TContextDebug::OnPersitentReleased(TPersistent& Persistent)
 {
 	if ( Persistent.IsObject() )
 	{
-		mPersistentObjectCount[Persistent.mDebugName]--;
+		mPersistentObjectCount[Persistent.GetDebugName()]--;
 	}
 	
 	if ( Persistent.IsFunction() )
