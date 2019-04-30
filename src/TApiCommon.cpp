@@ -115,7 +115,7 @@ void ApiPop::Debug(Bind::TCallback& Params)
 
 void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	
 	Promise.Resolve("Resolved in c++");
 	Params.Return( Promise );
@@ -160,7 +160,7 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 
 static void ApiPop::Yield(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
 	auto DelayMs = 0;
 	if ( !Params.IsArgumentUndefined(0) )

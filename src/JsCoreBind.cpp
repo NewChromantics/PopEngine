@@ -916,7 +916,7 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	//	this should be executed in-scope
-	TLocalContext LocalContext( *this, GetContextRef() );
+	TLocalContext LocalContext( GetContextRef(), *this );
 	
 	auto This = GetGlobalObject( ParentObjectName );
 
@@ -924,7 +924,7 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 	JSValueRef Exception = nullptr;
 	auto FunctionHandle = JSObjectMakeFunctionWithCallback( LocalContext.mLocalContext, FunctionNameJs, FunctionPtr );
 	ThrowException( LocalContext.mLocalContext, Exception );
-	TFunction Function( mContext, FunctionHandle );
+	TFunction Function( LocalContext.mLocalContext, FunctionHandle );
 	This.SetFunction( FunctionName, Function );
 }
 

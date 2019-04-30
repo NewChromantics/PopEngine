@@ -87,7 +87,7 @@ void ApiBluetooth::Startup(Bind::TCallback& Params)
 	auto& Instance = GetBluetoothInstance();
 	Instance.mManager->Scan(ServiceFilter);
 	
-	auto Promise = Instance.mStartupPromises.AddPromise( Params.mContext );
+	auto Promise = Instance.mStartupPromises.AddPromise( Params.mLocalContext );
 	
 	//	check for immediate resolve
 	auto State = Instance.mManager->GetState();
@@ -103,7 +103,7 @@ void ApiBluetooth::Startup(Bind::TCallback& Params)
 void ApiBluetooth::OnStatusChanged(Bind::TCallback& Params)
 {
 	auto& Instance = GetBluetoothInstance();
-	auto Promise = Instance.mStartupPromises.AddPromise( Params.mContext );
+	auto Promise = Instance.mStartupPromises.AddPromise( Params.mLocalContext );
 	Params.Return( Promise );
 }
 
@@ -111,7 +111,7 @@ void ApiBluetooth::OnStatusChanged(Bind::TCallback& Params)
 void ApiBluetooth::EnumDevices(Bind::TCallback& Params)
 {
 	//	future planning
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
 	auto DoEnumDevices = [=](Bind::TLocalContext& Context)
 	{
@@ -146,7 +146,7 @@ void ApiBluetooth::OnDevicesChanged(Bind::TCallback& Params)
 {
 	auto& Instance = GetBluetoothInstance();
 
-	auto Promise = Instance.mOnDevicesChangedPromises.AddPromise( Params.mContext );
+	auto Promise = Instance.mOnDevicesChangedPromises.AddPromise( Params.mLocalContext );
 
 	Params.Return( Promise );
 }
@@ -262,7 +262,7 @@ void TBluetoothDeviceWrapper::Connect(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TBluetoothDeviceWrapper>();
 
-	auto Promise = This.mConnectPromises.AddPromise( Params.mContext );
+	auto Promise = This.mConnectPromises.AddPromise( Params.mLocalContext );
 
 	//	connect if not already connected
 	if ( This.mDevice->GetState() == Bluetooth::TState::Connected )
@@ -327,7 +327,7 @@ void TBluetoothDeviceWrapper::ReadCharacteristic(Bind::TCallback& Params)
 	auto& Instance = ApiBluetooth::GetBluetoothInstance();
 	Instance.mManager->DeviceListen( This.mDevice->mUuid, Characteristic );
 
-	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mContext );
+	auto Promise = This.mReadCharacteristicPromises.AddPromise( Params.mLocalContext );
 
 	//	flush any data that might already be pending
 	BufferArray<uint8_t,1> NewData;

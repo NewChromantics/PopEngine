@@ -110,7 +110,7 @@ void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 {
 	auto& ContextManager = GetContextManager();
 	bool MissedFlush = ContextManager.mOnDevicesChangedPromises.PopMissedFlushes();
-	auto Promise = ContextManager.mOnDevicesChangedPromises.AddPromise( Params.mContext );
+	auto Promise = ContextManager.mOnDevicesChangedPromises.AddPromise( Params.mLocalContext );
 	
 	//	need to flush here the first time...
 	//	gr: + if there's a change on a thread, and we haven't re-subscribed yet...
@@ -127,7 +127,7 @@ void ApiInput::OnDevicesChanged(Bind::TCallback& Params)
 void ApiInput::EnumDevices(Bind::TCallback& Params)
 {
 	auto& ContextManager = GetContextManager();
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	ContextManager.EnumDevices( Params.mLocalContext, Promise );
 	Params.Return( Promise );
 }
@@ -187,7 +187,7 @@ void TInputDeviceWrapper::OnStateChanged(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TInputDeviceWrapper>();
 	
-	auto Promise = This.mOnStateChangedPromises.AddPromise( Params.mContext );
+	auto Promise = This.mOnStateChangedPromises.AddPromise( Params.mLocalContext );
 	
 	if ( This.mOnStateChangedPromises.PopMissedFlushes() )
 		This.mDevice->mOnStateChanged();

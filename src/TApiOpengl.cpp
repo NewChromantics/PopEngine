@@ -482,7 +482,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	auto WindowHandle = Params.ThisObject();
 	auto WindowPersistent = Params.mContext.CreatePersistent( WindowHandle );
 	
-	auto Promise = Params.mContext.CreatePromise(__FUNCTION__);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	//	return the promise
 	Params.Return( Promise );
 	
