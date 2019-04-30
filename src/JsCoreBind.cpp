@@ -337,7 +337,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		}
 		#endif
 
-		mContextGroup = JSContextGroupCreate();
+		//	for v8
+		std::string RuntimePath = Platform::GetAppResourcesDirectory() + "/v8Runtime/";
+		
+		mContextGroup = JSContextGroupCreate( RuntimePath );
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
 		

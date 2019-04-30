@@ -1,39 +1,18 @@
 #include "V8Bind.h"
 #include "SoyDebug.h"
 
+#include "libplatform/libplatform.h"
+#include "include/v8.h"
+
+#include "SoyFileSystem.h"
 
 #define THROW_TODO	throw Soy::AssertException( __FUNCTION__ )
 
 
-
-JSContextRef::JSContextRef(std::nullptr_t)
+JSContextGroupRef::JSContextGroupRef(std::nullptr_t) :
+	V8::TVirtualMachine	(nullptr)
 {
-	THROW_TODO;
-}
-	
-void JSContextRef::operator=(std::nullptr_t Null)
-{
-	THROW_TODO;
-}
-
-bool JSContextRef::operator!=(std::nullptr_t Null) const
-{
-	THROW_TODO;
-}
-
-JSContextRef::operator bool() const
-{
-	THROW_TODO;
-}
-
-JSContextGroupRef::JSContextGroupRef(std::nullptr_t)
-{
-	THROW_TODO;
-}
-	
-JSContextGroupRef::operator bool() const
-{
-	THROW_TODO;
+	//	gr: don't throw. Just let this be in an invalid state for initialisation of variables
 }
 
 
@@ -48,21 +27,6 @@ void JSObjectRef::operator=(std::nullptr_t Null)
 }
 
 void JSObjectRef::operator=(JSObjectRef That)
-{
-	THROW_TODO;
-}
-
-bool JSObjectRef::operator!=(std::nullptr_t Null) const
-{
-	THROW_TODO;
-}
-
-bool JSObjectRef::operator!=(const JSObjectRef& That) const
-{
-	THROW_TODO;
-}
-
-JSObjectRef::operator bool() const
 {
 	THROW_TODO;
 }
@@ -92,16 +56,6 @@ void JSValueRef::operator=(std::nullptr_t Null)
 	THROW_TODO;
 }
 
-bool JSValueRef::operator!=(std::nullptr_t Null) const
-{
-	THROW_TODO;
-}
-
-JSValueRef::operator bool() const
-{
-	THROW_TODO;
-}
-
 
 JSStringRef::JSStringRef(std::nullptr_t)
 {
@@ -113,10 +67,6 @@ void JSStringRef::operator=(std::nullptr_t Null)
 	THROW_TODO;
 }
 
-bool JSStringRef::operator!=(std::nullptr_t Null) const
-{
-	THROW_TODO;
-}
 
 JSClassRef::JSClassRef(std::nullptr_t)
 {
@@ -329,12 +279,18 @@ JSObjectRef			JSContextGetGlobalObject(JSContextRef Context)
 
 JSContextGroupRef	JSContextGroupCreate()
 {
-	THROW_TODO;
+	throw Soy::AssertException("In v8 implementation we need the runtime directory, use overloaded version");
 }
 
-void				JSContextGroupRelease(JSContextGroupRef ContextGroup)
+JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory)
 {
-	THROW_TODO;
+	JSContextGroupRef NewVirtualMachine( RuntimeDirectory );
+	return NewVirtualMachine;
+}
+
+void JSContextGroupRelease(JSContextGroupRef ContextGroup)
+{
+	//	try and release all members here and maybe check for dangling refcounts
 }
 
 JSContextRef		JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
@@ -400,3 +356,93 @@ void		JSClassRetain(JSClassRef Class)
 }
 
 
+V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
+{
+	//	gr: isolate crashes if runtime dir is wrong
+	//	gr: FileExists currently works for OSX, maybe need an explicit func
+	if ( !Platform::FileExists(RuntimePath) )
+		throw Soy::AssertException( std::string("V8 Runtime path doesn't exist: ") + RuntimePath );
+
+	//	well this is an annoying interface
+	std::string Flags = "--expose_gc";
+	//v8::internal::FLAG_expose_gc = true;
+	v8::V8::SetFlagsFromString( Flags.c_str(), static_cast<int>(Flags.length()) );
+
+	v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+	
+	
+	
+#if V8_VERSION==6
+	std::string IcuPath = RuntimePath + "icudtl.dat";
+	std::string NativesBlobPath = RuntimePath + "natives_blob.bin";
+	std::string SnapshotBlobPath = RuntimePath + "snapshot_blob.bin";
+	
+	if ( !v8::V8::InitializeICUDefaultLocation( nullptr, IcuPath.c_str() ) )
+		throw Soy::AssertException("Failed to load ICU");
+	/*
+	 Array<char> NativesBlob;
+	 Array<char> SnapshotBlob;
+	 StartupData NativesBlobData;
+	 StartupData SnapshotBlobData;
+	 Soy::FileToArray( GetArrayBridge(NativesBlob), NativesBlobPath );
+	 Soy::FileToArray( GetArrayBridge(SnapshotBlob), SnapshotBlobPath );
+	 
+	 NativesBlobData={	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
+	 SnapshotBlobData={	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
+	 V8::SetNativesDataBlob(&NativesBlobData);
+	 V8::SetSnapshotDataBlob(&SnapshotBlobData);
+	 */
+	//v8::V8::InitializeExternalStartupData( mRootDirectory.c_str() );
+	v8::V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
+	
+#elif V8_VERSION==5
+	V8::InitializeICU(nullptr);
+	//v8::V8::InitializeExternalStartupData(argv[0]);
+	//V8::InitializeExternalStartupData(nullptr);
+	V8::InitializeExternalStartupData( Platform::GetExePath().c_str() );
+#endif
+	
+	//	create allocator
+	mAllocator.reset( new V8::TAllocator() );
+	
+	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
+	mPlatform.reset( v8::platform::CreateDefaultPlatform() );
+	v8::V8::InitializePlatform( mPlatform.get() );
+	v8::V8::Initialize();
+	
+	// Create a new Isolate and make it the current one.
+	//	gr: current??
+	v8::Isolate::CreateParams create_params;
+	create_params.array_buffer_allocator = mAllocator.get();
+	//create_params.snapshot_blob = &SnapshotBlobData;
+	
+	//	docs say "is owner" but there's no delete...
+	mIsolate = v8::Isolate::New(create_params);
+	
+	//	we run the microtasks manually in our loop. This stops microtasks from occurring
+	//	when we finish (end of stack) running when we call a js function arbritrarily
+	mIsolate->SetMicrotasksPolicy( v8::MicrotasksPolicy::kExplicit );
+};
+
+
+
+
+void* V8::TAllocator::Allocate(size_t length)
+{
+	auto* Bytes = static_cast<uint8_t*>( AllocateUninitialized(length) );
+	
+	for ( auto i=0;	i<length;	i++ )
+	Bytes[i] = 0;
+	
+	return Bytes;
+}
+
+void* V8::TAllocator::AllocateUninitialized(size_t length)
+{
+	return mHeap.AllocRaw(length);
+}
+
+void V8::TAllocator::Free(void* data, size_t length)
+{
+	mHeap.FreeRaw(data, length);
+}
