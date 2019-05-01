@@ -1300,14 +1300,14 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 		//	gr: I think context can change when the context is a lexical (in a promise/await/lambda)
 		//		the object stays the same, but not sure if the global/context matters
 		//		what WILL matter is the protect/release?
-		std::Debug << "Context has changed" << std::endl;
+		//std::Debug << "Context has changed" << std::endl;
 		static bool ChangeObjectContext = false;
 		if ( ChangeObjectContext )
 		{
 			auto& This = *const_cast<JsCore::TPersistent*>(this);
 			This.mObject.mContext = Context.mLocalContext;
-			return TObject( Context.mLocalContext, mObject.mThis );
 		}
+		return TObject( Context.mLocalContext, mObject.mThis );
 	}
 	
 	return mObject;
