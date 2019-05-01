@@ -53,21 +53,25 @@ v8::Local<v8::Value> ToValue(v8::Local<TYPE>& Value)
 	return Value.template As<v8::Value>();
 }
 
-JSContextGroupRef::JSContextGroupRef(std::nullptr_t) :
-	V8::TVirtualMachine	(nullptr)
+JSContextGroupRef::JSContextGroupRef(std::nullptr_t)
 {
 	//	gr: don't throw. Just let this be in an invalid state for initialisation of variables
+}
+
+JSContextGroupRef::JSContextGroupRef(const std::string& RuntimePath)
+{
+	mVirtualMachine.reset( new V8::TVirtualMachine(RuntimePath));
 }
 
 	
 void JSObjectRef::operator=(std::nullptr_t Null)
 {
-	THROW_TODO;
+	this->mThis.Clear();
 }
 
 void JSObjectRef::operator=(JSObjectRef That)
 {
-	THROW_TODO;
+	this->mThis = That.mThis;
 }
 
 
@@ -83,18 +87,18 @@ JSValueRef::JSValueRef(v8::Local<v8::Value>& Local) :
 
 void JSValueRef::operator=(JSObjectRef That)
 {
-	THROW_TODO;
+	this->mThis = That.mThis;
 }
 
 void JSValueRef::operator=(std::nullptr_t Null)
 {
-	THROW_TODO;
+	this->mThis.Clear();
 }
 
 
 void JSStringRef::operator=(std::nullptr_t Null)
 {
-	THROW_TODO;
+	this->mThis.Clear();
 }
 
 
@@ -130,7 +134,12 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*)
 
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto ValueMaybe = This.mThis->Get( Context.mThis, Name.mThis );
+	if ( ValueMaybe.IsEmpty() )
+		throw Soy::AssertException("No property");
+	
+	auto Value = ValueMaybe.ToLocalChecked();
+	return JSValueRef( Value );
 }
 
 void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception )
@@ -183,12 +192,18 @@ bool		JSValueIsObject(JSContextRef Context,JSValueRef Value)
 
 bool		JSValueIsObject(JSContextRef Context,JSObjectRef Value)
 {
-	THROW_TODO;
+	return Value.mThis->IsObject();
 }
 
 JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	if ( !Value )
+		throw Soy::AssertException("Value is nullptr, not object");
+	if ( !Value.mThis->IsObject() )
+		throw Soy::AssertException("Value is not an object");
+	
+	auto ObjectLocal = Value.mThis.As<v8::Object>();
+	return JSObjectRef( ObjectLocal );
 }
 
 void		JSValueProtect(JSContextRef Context,JSValueRef Value)
@@ -246,7 +261,13 @@ JSValueRef	JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObje
 
 JSValueRef	JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
 {
-	THROW_TODO;
+	auto FunctionMaybe = v8::Function::New( Context.mThis, FunctionPtr );
+	if ( FunctionMaybe.IsEmpty() )
+		throw Soy::AssertException("Failed to create function");
+	
+	auto FunctionHandle = FunctionMaybe.ToLocalChecked();
+	auto FunctionValue = ToValue( FunctionHandle );
+	return JSValueRef( FunctionValue );
 }
 
 
@@ -361,9 +382,11 @@ void JSContextGroupRelease(JSContextGroupRef ContextGroup)
 	//	try and release all members here and maybe check for dangling refcounts
 }
 
-JSGlobalContextRef		JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
+JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
 {
-	return ContextGroup.CreateContext();
+	JSGlobalContextRef NewContext(nullptr);
+	ContextGroup.CreateContext(NewContext);
+	return NewContext;
 }
 
 void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name)
@@ -598,7 +621,7 @@ V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 	
 	// Create a new Isolate and make it the current one.
 	//	gr: current??
-	v8::Isolate::CreateParams create_params;
+	static v8::Isolate::CreateParams create_params;
 	create_params.array_buffer_allocator = mAllocator.get();
 	//create_params.snapshot_blob = &SnapshotBlobData;
 	
@@ -635,20 +658,20 @@ void V8::TAllocator::Free(void* data, size_t length)
 
 
 
-JSGlobalContextRef JSContextGroupRef::CreateContext()
+void JSContextGroupRef::CreateContext(JSGlobalContextRef& NewContext)
 {
-	JSGlobalContextRef NewContext(nullptr);
-	NewContext.mParent = this;
+	//JSGlobalContextRef NewContext(nullptr);
+	NewContext.mParent = *this;
 	std::function<void(v8::Isolate&)> Exec = [&](v8::Isolate& Isolate)
 	{
-		//	v8::Local<v8::Context>
 		auto ContextLocal = v8::Context::New(&Isolate);
-		//Context::Scope context_scope( ContextLocal );
+		v8::Context::Scope context_scope( ContextLocal );
 		
 		NewContext.mContext = V8::GetPersistent( Isolate, ContextLocal );
 	};
-	ExecuteInIsolate( Exec );
-	return NewContext;
+	auto& vm = GetVirtualMachine();
+	vm.ExecuteInIsolate( Exec );
+	//return NewContext;
 }
 
 
@@ -673,7 +696,7 @@ void JSValueUnprotect(JSGlobalContextRef Context,JSValueRef Value)
 
 V8::TVirtualMachine& JSGlobalContextRef::GetVirtualMachine()
 {
-	return mParent->GetVirtualMachine();
+	return mParent.GetVirtualMachine();
 }
 
 

@@ -100,7 +100,10 @@ class V8::TVirtualMachine
 public:
 	TVirtualMachine(std::nullptr_t Null)	{};
 	TVirtualMachine(const std::string& RuntimePath);
-
+	~TVirtualMachine()
+	{
+	}
+	
 	void	ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor);
 
 public:
@@ -146,6 +149,25 @@ public:
 	v8::Isolate&	GetIsolate();
 };
 
+class JSGlobalContextRef;
+
+//	this is the virtual machine
+//	if we use shared ptr's i think we're okay just passing it around
+class JSContextGroupRef
+{
+public:
+	JSContextGroupRef(std::nullptr_t);
+	JSContextGroupRef(const std::string& RuntimePath);
+	
+	operator bool() const	{	return mVirtualMachine!=nullptr;	}
+	
+	void					CreateContext(JSGlobalContextRef& NewContext);
+	V8::TVirtualMachine&	GetVirtualMachine()	{	return *mVirtualMachine;	}
+	
+	std::shared_ptr<V8::TVirtualMachine>	mVirtualMachine;
+};
+
+
 //	actual persistent context
 class JSGlobalContextRef
 {
@@ -159,29 +181,10 @@ public:
 	void					ExecuteInContext(std::function<void(JSContextRef&)> Functor);
 	
 public:
-	JSContextGroupRef*	mParent = nullptr;
+	JSContextGroupRef	mParent = nullptr;
 	std::string			mName;
 };
 
-
-//	this is the virtual machine
-//	if we use shared ptr's i think we're okay just passing it around
-class JSContextGroupRef : public V8::TVirtualMachine
-{
-public:
-	JSContextGroupRef(std::nullptr_t);
-	JSContextGroupRef(const std::string& RuntimePath) :
-		TVirtualMachine	( RuntimePath )
-	{
-	}
-
-	operator bool() const	{	return mIsolate!=nullptr;	}
-	
-	JSGlobalContextRef		CreateContext();
-	V8::TVirtualMachine&	GetVirtualMachine()	{	return *this;	}
-	
-	void*	BindTContext = nullptr;	//	hack
-};
 
 
 
