@@ -607,7 +607,13 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	};
 	//	this exec meant the load was taking so long, JS funcs were happening on the queue thread
 	//	and that seemed to cause some crashes
-	Queue( Exec );
+	//	gr: on windows, this... has some problem where the main thread seems to get stuck? maybe to do with creating windows on non-main threads?
+	//		GetMessage blocks and we never get wm_paints, even though JS vm is running in the background
+#if defined(TARGET_WINDOWS)
+	Execute( Exec );
+#else
+	Queue(Exec);
+#endif
 }
 
 template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
