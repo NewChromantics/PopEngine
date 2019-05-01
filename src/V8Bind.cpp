@@ -85,6 +85,11 @@ JSValueRef::JSValueRef(v8::Local<v8::Value>& Local) :
 {
 }
 
+JSValueRef::JSValueRef(v8::Local<v8::Value>&& Local) :
+	LocalRef	( Local )
+{
+}
+
 void JSValueRef::operator=(JSObjectRef That)
 {
 	this->mThis = That.mThis;
@@ -185,13 +190,15 @@ JSType		JSValueGetType(JSContextRef Context,JSValueRef Value)
 	throw Soy::AssertException("v8 value didn't match any type");
 }
 
-bool		JSValueIsObject(JSContextRef Context,JSValueRef Value)
+bool JSValueIsObject(JSContextRef Context,JSValueRef Value)
 {
 	return Value.mThis->IsObject();
 }
 
-bool		JSValueIsObject(JSContextRef Context,JSObjectRef Value)
+bool JSValueIsObject(JSContextRef Context,JSObjectRef Value)
 {
+	if ( !Value )
+		return false;
 	return Value.mThis->IsObject();
 }
 
@@ -233,33 +240,34 @@ JSStringRef	JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t
 }
 
 
-bool		JSValueIsNumber(JSContextRef Context,JSValueRef Value)
+bool JSValueIsNumber(JSContextRef Context,JSValueRef Value)
 {
 	return Value.mThis->IsNumber();
 }
 
-double		JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
+double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
 	THROW_TODO;
 }
 
-JSValueRef	JSValueMakeNumber(JSContextRef Context,int Value)
+JSValueRef JSValueMakeNumber(JSContextRef Context,int Value)
 {
-	THROW_TODO;
+	auto Number = v8::Number::New( &Context.GetIsolate(), Value );
+	return JSValueRef( Number );
 }
 
 
-bool		JSObjectIsFunction(JSContextRef Context,JSObjectRef Value)
+bool JSObjectIsFunction(JSContextRef Context,JSObjectRef Value)
 {
 	return Value.mThis->IsFunction();
 }
 
-JSValueRef	JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception)
+JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception)
 {
 	THROW_TODO;
 }
 
-JSValueRef	JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
+JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	auto FunctionMaybe = v8::Function::New( Context.mThis, FunctionPtr );
 	if ( FunctionMaybe.IsEmpty() )
@@ -271,15 +279,16 @@ JSValueRef	JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Nam
 }
 
 
-bool		JSValueToBoolean(JSContextRef Context,JSValueRef Value)
+bool JSValueToBoolean(JSContextRef Context,JSValueRef Value)
 {
 	auto Bool = Value.mThis.As<v8::Boolean>();
 	return Bool->Value();
 }
 
-JSValueRef	JSValueMakeBoolean(JSContextRef Context,bool Value)
+JSValueRef JSValueMakeBoolean(JSContextRef Context,bool Value)
 {
-	THROW_TODO;
+	auto Boolean = v8::Boolean::New( &Context.GetIsolate(), Value );
+	return JSValueRef( Boolean );
 }
 
 
@@ -311,7 +320,14 @@ bool		JSValueIsNull(JSContextRef Context,JSValueRef Value)
 
 JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSValueRef* Elements,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto ArrayHandle = v8::Array::New( &Context.GetIsolate() );
+	for ( auto i=0;	i<ElementCount;	i++ )
+	{
+		auto ValueHandle = Elements[i];
+		ArrayHandle->Set( i, ValueHandle.mThis );
+	}
+	
+	return JSObjectRef( ArrayHandle );
 }
 
 bool		JSValueIsArray(JSContextRef Context,JSValueRef Value)
@@ -350,28 +366,49 @@ size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,J
 }
 
 
-JSValueRef			JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception)
+JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception)
 {
-	THROW_TODO;
+	//	compile into script
+	std::string UrlFilename = std::string("file://") + Bind::GetString( Context, Filename );
+	JSStringRef OriginStr( Context, UrlFilename );
+	auto OriginRow = v8::Integer::New( &Context.GetIsolate(), 0 );
+	auto OriginCol = v8::Integer::New( &Context.GetIsolate(), 0 );
+	auto Cors = v8::Boolean::New( &Context.GetIsolate(), true );
+	v8::ScriptOrigin Origin( OriginStr.mThis, OriginRow, OriginCol, Cors );
+
+	auto NewScriptReturn = v8::Script::Compile( Context.mThis, Source.mThis, &Origin );
+	if ( NewScriptReturn.IsEmpty() )
+		throw Soy::AssertException("Script failed to compile");
+	auto NewScript = NewScriptReturn.ToLocalChecked();
+	
+	
+	//	now run it
+	auto ResultMaybe = NewScript->Run( Context.mThis );
+	if ( ResultMaybe.IsEmpty() )
+		throw Soy::AssertException("Script failed to run");
+	auto ResultValue = ResultMaybe.ToLocalChecked();
+	
+	return JSValueRef( ResultValue );
 }
 
-JSGlobalContextRef	JSContextGetGlobalContext(JSContextRef Context)
+JSGlobalContextRef JSContextGetGlobalContext(JSContextRef Context)
 {
-	THROW_TODO;
+	auto& ContextInstance = Context.GetContext();
+	return ContextInstance.mContext;
 }
 
-JSObjectRef			JSContextGetGlobalObject(JSContextRef Context)
+JSObjectRef JSContextGetGlobalObject(JSContextRef Context)
 {
 	auto Global = Context.mThis->Global();
 	return JSObjectRef( Global );
 }
 
-JSContextGroupRef	JSContextGroupCreate()
+JSContextGroupRef JSContextGroupCreate()
 {
 	throw Soy::AssertException("In v8 implementation we need the runtime directory, use overloaded version");
 }
 
-JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory)
+JSContextGroupRef JSContextGroupCreate(const std::string& RuntimeDirectory)
 {
 	JSContextGroupRef NewVirtualMachine( RuntimeDirectory );
 	return NewVirtualMachine;
@@ -413,27 +450,60 @@ JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffe
 	return JSStringRef( Handle );
 }
 
-size_t		JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize)
+size_t JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize)
 {
-	THROW_TODO;
+	if ( BufferSize == 0 )
+		return 0;
+	
+	v8::String::Utf8Value ExceptionStr( String.mThis );
+	
+	//	+1 to add terminator
+	auto Length = ExceptionStr.length()+1;
+	const auto* Chars = *ExceptionStr;
+
+	if ( Length == 0 )
+		return 0;
+	if ( Length < 0 )
+		throw Soy::AssertException("String has negative length");
+	
+	Length = std::min<int>( Length-1, BufferSize-1 );
+	
+	for ( auto i=0;	i<Length;	i++ )
+	{
+		Buffer[i] = Chars[i];
+	}
+	Buffer[Length] = 0;
+	return Length+1;
 }
 
-size_t		JSStringGetLength(JSStringRef String)
+size_t JSStringGetLength(JSStringRef String)
 {
-	THROW_TODO;
+	if ( !String )
+		return 0;
+	return String.mThis->Length();
 }
 
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	if ( !Value.mThis->IsString() )
+		throw Soy::AssertException("Value is not string");
+	
+	//	this is supposed to copy
+	auto ValueString = Value.mThis.As<v8::String>();
+	JSStringRef ValueStringRef( ValueString );
+	auto NewString = Bind::GetString( Context, ValueStringRef );
+	JSStringRef NewStringRef( Context, NewString );
+	return NewStringRef;
 }
 
-JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String)
+JSValueRef JSValueMakeString(JSContextRef Context,JSStringRef String)
 {
-	THROW_TODO;
+	//	normally copies string
+	auto Value = ToValue( String.mThis );
+	return JSValueRef( Value );
 }
 
-void		JSStringRelease(JSStringRef String)
+void JSStringRelease(JSStringRef String)
 {
 	//	can just let this go out of scope for now
 }
@@ -666,7 +736,7 @@ void JSContextGroupRef::CreateContext(JSGlobalContextRef& NewContext)
 	{
 		auto ContextLocal = v8::Context::New(&Isolate);
 		v8::Context::Scope context_scope( ContextLocal );
-		
+
 		NewContext.mContext = V8::GetPersistent( Isolate, ContextLocal );
 	};
 	auto& vm = GetVirtualMachine();
@@ -752,13 +822,38 @@ JSContextRef::JSContextRef(v8::Local<v8::Context>& Local) :
 {
 }
 
+JSContextRef::JSContextRef(v8::Local<v8::Context>&& Local) :
+	LocalRef	( Local )
+{
+}
+
 v8::Isolate& JSContextRef::GetIsolate()
 {
 	auto* Isolate = this->mThis->GetIsolate();
 	return *Isolate;
 }
 
+JsCore::TContext& JSContextRef::GetContext()
+{
+	auto* pContextVoid = mThis->GetAlignedPointerFromEmbedderData(0);
+	if ( !pContextVoid )
+		throw Soy::AssertException("Aligned data not set");
+	auto* pContext = reinterpret_cast<JsCore::TContext*>(pContextVoid);
+	return *pContext;
+}
+
+void JSContextRef::SetContext(JsCore::TContext& Context)
+{
+	mThis->SetAlignedPointerInEmbedderData(0, &Context);
+}
+
+
 JSObjectRef::JSObjectRef(v8::Local<v8::Object>& Local) :
+	LocalRef	( Local )
+{
+}
+
+JSObjectRef::JSObjectRef(v8::Local<v8::Object>&& Local) :
 	LocalRef	( Local )
 {
 }
@@ -766,6 +861,17 @@ JSObjectRef::JSObjectRef(v8::Local<v8::Object>& Local) :
 JSStringRef::JSStringRef(v8::Local<v8::String>& Local) :
 	LocalRef	( Local )
 {
+}
+/*
+JSStringRef::JSStringRef(v8::Local<v8::String>&& Local) :
+	LocalRef	( Local )
+{
+}
+*/
+JSStringRef::JSStringRef(JSContextRef Context,const std::string& String)
+{
+	auto NewString = JSStringCreateWithUTF8CString( Context, String.c_str() );
+	mThis = NewString.mThis;
 }
 
 

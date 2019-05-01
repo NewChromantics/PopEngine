@@ -304,7 +304,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		//	for v8
 		std::string RuntimePath = Platform::GetAppResourcesDirectory() + "/v8Runtime/";
 		
-		mContextGroup = JSContextGroupCreate( RuntimePath );
+		this->mContextGroup = std::move(JSContextGroupCreate( RuntimePath ));
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
 		
@@ -411,9 +411,17 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 #if !defined(JSAPI_V8)
 	JSGlobalContextSetName( Context, JsCore::GetString( Context, Name ) );
 #endif
-	
+
 	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
 	mContexts.PushBack( pContext );
+
+	//	set pointer
+	auto SetContext = [&](Bind::TLocalContext& LocalContext)
+	{
+		LocalContext.mLocalContext.SetContext( *pContext );
+	};
+	pContext->Execute( SetContext );
+	
 	return pContext;
 }
 

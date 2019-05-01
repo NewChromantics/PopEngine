@@ -24,6 +24,10 @@
 
 #include "MemHeap.hpp"
 
+namespace JsCore
+{
+	class TContext;
+}
 
 namespace V8
 {
@@ -144,9 +148,12 @@ class JSContextRef : public LocalRef<v8::Context>
 public:
 	JSContextRef(std::nullptr_t)	{}
 	JSContextRef(v8::Local<v8::Context>& Local);
+	JSContextRef(v8::Local<v8::Context>&& Local);
 
 	//void	operator=(std::nullptr_t Null);
-	v8::Isolate&	GetIsolate();
+	v8::Isolate&		GetIsolate();
+	JsCore::TContext&	GetContext();
+	void				SetContext(JsCore::TContext& Context);
 };
 
 class JSGlobalContextRef;
@@ -193,12 +200,14 @@ class JSObjectRef : public LocalRef<v8::Object>
 public:
 	JSObjectRef(std::nullptr_t)	{}
 	JSObjectRef(v8::Local<v8::Object>& Local);
+	JSObjectRef(v8::Local<v8::Object>&& Local);
 
 	void	operator=(std::nullptr_t Null);
 	void	operator=(JSObjectRef That);
 	//bool	operator!=(std::nullptr_t Null) const;
 	//bool	operator!=(const JSObjectRef& That) const;
-	//operator bool() const;
+	operator bool() const						{	return !mThis.IsEmpty();	}
+
 };
 
 
@@ -210,11 +219,13 @@ public:
 	JSValueRef(std::nullptr_t)	{}
 	JSValueRef(JSObjectRef Object);
 	JSValueRef(v8::Local<v8::Value>& Local);
+	JSValueRef(v8::Local<v8::Value>&& Local);
 
 	void	operator=(JSObjectRef That);
 	void	operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;
-	//operator bool() const;
+	operator bool() const						{	return !mThis.IsEmpty();	}
+
 };
 
 
@@ -224,9 +235,12 @@ class JSStringRef : public LocalRef<v8::String>
 public:
 	JSStringRef(std::nullptr_t)	{}
 	JSStringRef(v8::Local<v8::String>& Local);
+	JSStringRef(v8::Local<v8::String>&& Local) : JSStringRef	( Local )	{}
+	JSStringRef(JSContextRef Context,const std::string& String);
 
 	void	operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;
+	operator bool() const					{	return !mThis.IsEmpty();	}
 };
 
 

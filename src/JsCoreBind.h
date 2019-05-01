@@ -729,12 +729,22 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 #if defined(JSAPI_V8)
 	JSObjectCallAsFunctionCallback CFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
 	{
-		throw Soy::AssertException("Convert func");
-		/*
-		 auto& ContextPtr = JsCore::GetContext( Context );
-		 TLocalContext LocalContext( Context, ContextPtr );
-		 return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
-		 */
+		Array<JSValueRef> Arguments;
+		for ( auto i=0;	i<Meta.Length();	i++ )
+		{
+			JSValueRef Value = JSValueRef(Meta[i]);
+			Arguments.PushBack(Value);
+		}
+		JSObjectRef ThisObject( Meta.This() );
+
+		JSContextRef ContextRef( Meta.GetIsolate()->GetCurrentContext() );
+		auto& Context = GetContext( ContextRef );
+		TLocalContext LocalContext( ContextRef, Context );
+		
+		JSValueRef Exception;
+		auto ReturnValue = Context.CallFunc( LocalContext, FunctionCache, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME );
+		
+		Meta.GetReturnValue().Set( ReturnValue.mThis );
 	};
 #else
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
