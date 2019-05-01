@@ -145,7 +145,7 @@ void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 		{
 			this->mOnStateChangedPromises.Resolve();
 		};
-		this->mContext.Queue(Resolve);
+		this->GetContext().Queue(Resolve);
 	};
 }
 

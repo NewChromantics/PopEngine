@@ -112,9 +112,6 @@ namespace JsCore
 //	preparing for virtuals, anything with this, we expect to overide at some point
 #define bind_override
 
-//#define RETAIN_FUNCTION
-//#define RETAIN_WRAPPER_HANDLE	//	a lot less crashing, but still happens
-
 
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
 	template<> inline TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
@@ -176,11 +173,6 @@ public:
 	TFunction()		{}
 	TFunction(JSContextRef Context,JSValueRef Value);
 	~TFunction();
-#if defined(RETAIN_FUNCTION)
-	TFunction(const TFunction& That);
-
-	TFunction&		operator=(const TFunction& That);
-#endif
 	
 	//operator		bool() const	{	return mThis != nullptr;	}
 	
@@ -595,13 +587,9 @@ public:
 	
 	TContext&		GetContext()	{	return mContext;	}	//	owner
 
-protected:
-#if defined(RETAIN_WRAPPER_HANDLE)
-	TPersistent		mHandle;
-#else
+private:
 	//	gr: this is a weak reference so the object gets free'd
 	TObject			mHandle;
-#endif
 	TContext&		mContext;
 };
 

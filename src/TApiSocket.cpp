@@ -66,7 +66,7 @@ void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef 
 		}
 	};
 	
-	mContext.Queue( SendJsMessage );
+	GetContext().Queue( SendJsMessage );
 }
 
 

@@ -61,7 +61,7 @@ void TWebsocketServerWrapper::OnMessage(const std::string& Message)
 		Func.Call( Callback );
 	};
 	
-	mContext.Queue( SendJsMessage );
+	GetContext().Queue( SendJsMessage );
 }
 
 void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
@@ -79,7 +79,7 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 		Func.Call( Callback );
 	};
 	
-	mContext.Queue( SendJsMessage );
+	GetContext().Queue( SendJsMessage );
 }
 
 

@@ -586,7 +586,7 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 			Context.mGlobalContext.Queue(DoReject);
 		}
 	};
-	mContext.Queue( Runner );
+	GetContext().Queue( Runner );
 }
 
 

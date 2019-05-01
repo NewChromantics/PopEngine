@@ -663,7 +663,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	BytesBuffer.Push( GetArrayBridge(Bytes) );
 
 	//	alloc pixels
-	auto& Heap = mContext.GetImageHeap();
+	auto& Heap = GetContext().GetImageHeap();
 	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels(Heap) );
 	
 	if ( Soy::StringEndsWith( Filename, Png::FileExtensions, false ) )
@@ -1190,7 +1190,7 @@ SoyPixelsMeta TImageWrapper::GetMeta()
 SoyPixelsImpl& TImageWrapper::GetPixels()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Heap = mContext.GetImageHeap();
+	auto& Heap = GetContext().GetImageHeap();
 
 	if ( mPixelsVersion < GetLatestVersion() && mPixelBufferVersion == GetLatestVersion() )
 	{
@@ -1270,7 +1270,7 @@ void TImageWrapper::OnPixelsChanged()
 void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Heap = mContext.GetImageHeap();
+	auto& Heap = GetContext().GetImageHeap();
 	mPixels.reset( new SoyPixels(NewPixels,Heap) );
 	OnPixelsChanged();
 }
@@ -1302,7 +1302,7 @@ void TImageWrapper::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
-	auto& Heap = mContext.GetImageHeap();
+	auto& Heap = GetContext().GetImageHeap();
 
 	//	warning in case we haven't actually updated
 	if ( mPixelsVersion >= mOpenglTextureVersion )

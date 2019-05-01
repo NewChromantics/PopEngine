@@ -105,43 +105,11 @@ JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value)// :
 	
 	if ( !JSObjectIsFunction(Context, mThis) )
 		throw Soy::AssertException("Object should be function");
-	
-#if defined(RETAIN_FUNCTION)
-	JSValueProtect( Context, mThis );
-#endif
 }
 
 JsCore::TFunction::~TFunction()
 {
-#if defined(RETAIN_FUNCTION)
-	if ( mThis )
-	{
-		JSValueUnprotect( mContext, mThis );
-	}
-#endif
 }
-
-#if defined(RETAIN_FUNCTION)
-JsCore::TFunction::TFunction(const TFunction& That)
-{
-	*this = That;
-}
-#endif
-
-#if defined(RETAIN_FUNCTION)
-JsCore::TFunction& JsCore::TFunction::operator=(const TFunction& That)
-{
-	if ( mThis )
-	{
-		JSValueUnprotect( mContext, mThis );
-		mThis = nullptr;
-	}
-	mContext = That.mContext;
-	mThis = That.mThis;
-	JSValueProtect( mContext, mThis );
-	return *this;
-}
-#endif
 
 
 void JsCore::TFunction::Call(JsCore::TCallback& Params) const
@@ -1708,17 +1676,8 @@ void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) con
 
 JsCore::TObject JsCore::TObjectWrapperBase::GetHandle(Bind::TLocalContext& Context)
 {
-#if defined(RETAIN_WRAPPER_HANDLE)
-	JsCore::TObject TheObject = mHandle.GetObject();
-#else
-	JsCore::TObject TheObject = mHandle;
-#endif
-	
-	if ( Context.mLocalContext != TheObject.mContext )
-		std::Debug << "Context has changed" << std::endl;
-	
-	//	hack to see if this corrects some things
-	return TObject( Context.mLocalContext, TheObject.mThis );
+	//	gr: always correct context, like persistent, but this cant be persistent or it won't get garbage collected
+	return TObject( Context.mLocalContext, mHandle.mThis );
 }
 
 void JsCore::TObjectWrapperBase::SetHandle(JsCore::TObject& NewHandle)

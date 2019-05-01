@@ -185,7 +185,7 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 			std::Debug << "Exception in " << MouseFuncName << ": " << e.what() << std::endl;
 		}
 	};
-	mContext.Queue( Runner );
+	GetContext().Queue( Runner );
 }
 
 
@@ -210,7 +210,7 @@ void TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& Func
 			std::Debug << "Exception in " << FuncName << ": " << e.what() << std::endl;
 		}
 	};
-	mContext.Queue( Runner );
+	GetContext().Queue( Runner );
 }
 
 
@@ -238,7 +238,7 @@ bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 	
 	try
 	{
-		mContext.Execute( Runner );
+		GetContext().Execute( Runner );
 		return Result;
 	}
 	catch(std::exception& e)
@@ -267,7 +267,7 @@ void TWindowWrapper::OnClosed()
 		}
 	};
 
-	mContext.Queue( Runner );
+	GetContext().Queue( Runner );
 }
 
 void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
@@ -293,7 +293,7 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 		}
 	};
 	
-	mContext.Queue( Runner );
+	GetContext().Queue( Runner );
 }
 
 
