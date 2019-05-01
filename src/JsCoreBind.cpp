@@ -1265,6 +1265,10 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 
 std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 {
+	//	gr: expecting this to succeed even if the file doesn't exist
+	if ( Platform::IsFullPath(Filename) )
+		return Filename;
+
 	//	gr: do this better!
 	//	gr: should be able to use NSUrl to resolve ~/ or / etc
 	if ( Filename[0] == '/' )
