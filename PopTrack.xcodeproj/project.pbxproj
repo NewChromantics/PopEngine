@@ -22,6 +22,7 @@
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
 		BF3965652278587600A721E8 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
+		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
 		BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3BE7B1226DFD680043DFA5 /* TApiVarjo.cpp */; };
 		BF3BE7B6226E03310043DFA5 /* libVarjo_Glint.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3BE7B4226E03300043DFA5 /* libVarjo_Glint.a */; };
@@ -1095,6 +1096,7 @@
 				BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */,
 				BFB647382225593600820612 /* SoyHid.cpp in Sources */,
 				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
+				BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */,
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
 				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
 				BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */,
