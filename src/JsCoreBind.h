@@ -17,6 +17,7 @@
 #include "SoyLib/src/SoyThread.h"
 
 
+
 namespace Bind
 {
 	class TInstanceBase;
@@ -72,7 +73,6 @@ namespace JsCore
 	//	gr: note: this JSStringRef needs explicit releasing (JSStringRelease) if not sent off to JS land
 	//		todo: auto releasing string!
 	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
-	JSStringRef	GetString(const std::string& Value);
 	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
 
 	//	gr: consider templating this so that we can static_assert on non-specified implementation to avoid the auto-resolution to bool
@@ -107,6 +107,11 @@ namespace JsCore
 	
 	prmem::Heap&	GetGlobalObjectHeap();
 }
+
+
+//	major abstraction from V8 to JSCore
+//	JSCore has no global->local (maybe it should execute a run-next-in-queue func)
+void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor);
 
 
 //	preparing for virtuals, anything with this, we expect to overide at some point
@@ -429,19 +434,17 @@ private:
 	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
 	void		Retain(const TPersistent& That);
 	void 		Release();
-
-	void		DefferedRetain(const TObject& Object,const std::string& DebugName);
-	void		DefferedRetain(const TFunction& Object,const std::string& DebugName);
 	
-	static void	Release(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
-	static void	Retain(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
+	static void	Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
+	static void	Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
 
 protected:
 	std::string	mDebugName;
 
 	//	these two make a local context!
-	TContext*		mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
-	JSContextRef	mRetainedContext = nullptr;	//	which context we retained with
+	TContext*			mContext = nullptr;	//	hacky atm, storing this for = and deferred release in destructor
+	//	gr: funcs actually take a JSContext, but we're explictly using global
+	JSGlobalContextRef	mRetainedContext = nullptr;	//	which context we retained with
 
 public:
 	TObject			mObject;
@@ -501,13 +504,17 @@ public:
 	void				OnPersitentRetained(TPersistent& Persistent)	{	mDebug.OnPersitentRetained(Persistent);	}
 	void				OnPersitentReleased(TPersistent& Persistent)	{	mDebug.OnPersitentReleased(Persistent);	}
 	
+	template<const char* FUNCTIONNAME>
+	static JSObjectCallAsFunctionCallback	GetRawFunction(std::function<void(JsCore::TCallback&)> Function);
+
+	
 protected:
 	void				Cleanup();		//	actual cleanup called by instance & destructor
 	void				ReleaseContext();	//	try and release javascript objects
 
 private:
-	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
-		
+	void							BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
+
 public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
@@ -642,6 +649,34 @@ template<const char* TYPENAME,class TYPE>
 inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(JsCore::TContext& Context)
 {
 	//	setup constructor CFunc here
+#if defined(JSAPI_V8)
+	static JSObjectCallAsConstructorCallback CConstructorFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
+	{
+		throw Soy::AssertException("Construct me");
+		/*
+		try
+		{
+			//	gr: constructor here, is this function.
+			//		we need to create a new object and return it
+			auto& Context = JsCore::GetContext( ContextRef );
+			TLocalContext LocalContext( ContextRef, Context );
+			auto ArgumentsArray = GetRemoteArray( Arguments, ArgumentCount );
+			auto ThisObject = Context.CreateObjectInstance( LocalContext, TYPENAME, GetArrayBridge(ArgumentsArray) );
+			auto This = ThisObject.mThis;
+			return This;
+		}
+		catch(std::exception& e)
+		{
+			std::stringstream Error;
+			Error << TYPENAME << "() constructor exception: " << e.what();
+			*Exception = GetValue( ContextRef, Error.str() );
+			//	we HAVE to return an object, but NULL is a value, not an object :/
+			auto NullObject = JSObjectMake( ContextRef, nullptr, nullptr );
+			return NullObject;
+		}
+		 */
+	};
+#else
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		try
@@ -665,6 +700,7 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 			return NullObject;
 		}
 	};
+#endif
 	
 	//	https://stackoverflow.com/questions/46943350/how-to-use-jsexport-and-javascriptcore-in-c
 	TTemplate Template( Context, TYPENAME );
@@ -681,25 +717,42 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 
 
 
-
-template<const char* FunctionName>
-inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName)
+template<const char* FUNCTIONNAME>
+inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::function<void(JsCore::TCallback&)> Function)
 {
 	//	try and remove context cache
 	static std::function<void(JsCore::TCallback&)> FunctionCache;
 	if ( FunctionCache != nullptr )
 		throw Soy::AssertException("This function is already bound. Duplicate string?");
 	FunctionCache = Function;
-
 	
+#if defined(JSAPI_V8)
+	JSObjectCallAsFunctionCallback CFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
+	{
+		throw Soy::AssertException("Convert func");
+		/*
+		 auto& ContextPtr = JsCore::GetContext( Context );
+		 TLocalContext LocalContext( Context, ContextPtr );
+		 return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
+		 */
+	};
+#else
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
 		TLocalContext LocalContext( Context, ContextPtr );
-		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FunctionName );
+		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
 	};
+#endif
 	
-	BindRawFunction( FunctionName, ParentName, CFunc );
+	return CFunc;
+}
+
+template<const char* FUNCTIONNAME>
+inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName)
+{
+	auto FunctionPointer = GetRawFunction<FUNCTIONNAME>( Function );
+	BindRawFunction( FUNCTIONNAME, ParentName, FunctionPointer );
 }
 
 
@@ -812,22 +865,11 @@ inline INTTYPE JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 template<const char* FUNCTIONNAME>
 inline void JsCore::TTemplate::BindFunction(std::function<void(JsCore::TCallback&)> Function)
 {
-	//	try and remove context cache
-	static std::function<void(JsCore::TCallback&)> FunctionCache;
-	if ( FunctionCache != nullptr )
-		throw Soy::AssertException("This function name is already bound. Duplicate string?");
-	FunctionCache = Function;
-
-	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
-	{
-		auto& ContextPtr = JsCore::GetContext( Context );
-		TLocalContext LocalContext( Context, ContextPtr );
-		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
-	};
+	auto FunctionPointer = JsCore::TContext::GetRawFunction<FUNCTIONNAME>( Function );
 	
 	JSStaticFunction NewFunction;
 	NewFunction.name = FUNCTIONNAME;
-	NewFunction.callAsFunction = CFunc;
+	NewFunction.callAsFunction = FunctionPointer;
 	NewFunction.attributes = kJSPropertyAttributeNone;
 	
 	mFunctions.PushBack(NewFunction);

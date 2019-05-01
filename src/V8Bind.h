@@ -24,6 +24,7 @@
 
 #include "MemHeap.hpp"
 
+
 namespace V8
 {
 	class TAllocator;
@@ -100,7 +101,6 @@ public:
 	TVirtualMachine(std::nullptr_t Null)	{};
 	TVirtualMachine(const std::string& RuntimePath);
 
-protected:
 	void	ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor);
 
 public:
@@ -115,22 +115,35 @@ template<typename V8TYPE>
 class LocalRef
 {
 public:
+	LocalRef()	{}
+	LocalRef(v8::Local<V8TYPE>& Local) :
+		mThis	( Local )
+	{
+	}
+	LocalRef(v8::Local<V8TYPE>&& Local) :
+		mThis	( Local )
+	{
+	}
+
 	bool	operator!=(const LocalRef<V8TYPE>& That) const	{	return mThis != That.mThis;	}
 	bool	operator!=(std::nullptr_t Null) const			{	return !mThis.IsEmpty();	}
 	operator bool() const									{	return !mThis.IsEmpty();	}
 
-protected:
+public:
 	v8::Local<V8TYPE>	mThis;
 };
 
+class JSContextGroupRef;
 
 
 class JSContextRef : public LocalRef<v8::Context>
 {
 public:
 	JSContextRef(std::nullptr_t)	{}
-	
+	JSContextRef(v8::Local<v8::Context>& Local);
+
 	//void	operator=(std::nullptr_t Null);
+	v8::Isolate&	GetIsolate();
 };
 
 //	actual persistent context
@@ -142,8 +155,12 @@ public:
 	operator bool() const			{	return mContext!=nullptr;	}
 
 	std::shared_ptr<V8::TPersistent<v8::Context>>	mContext;
-
-	std::string		mName;
+	V8::TVirtualMachine&	GetVirtualMachine();
+	void					ExecuteInContext(std::function<void(JSContextRef&)> Functor);
+	
+public:
+	JSContextGroupRef*	mParent = nullptr;
+	std::string			mName;
 };
 
 
@@ -162,6 +179,8 @@ public:
 	
 	JSGlobalContextRef		CreateContext();
 	V8::TVirtualMachine&	GetVirtualMachine()	{	return *this;	}
+	
+	void*	BindTContext = nullptr;	//	hack
 };
 
 
@@ -170,7 +189,8 @@ class JSObjectRef : public LocalRef<v8::Object>
 {
 public:
 	JSObjectRef(std::nullptr_t)	{}
-	
+	JSObjectRef(v8::Local<v8::Object>& Local);
+
 	void	operator=(std::nullptr_t Null);
 	void	operator=(JSObjectRef That);
 	//bool	operator!=(std::nullptr_t Null) const;
@@ -186,7 +206,8 @@ public:
 	JSValueRef()	{}
 	JSValueRef(std::nullptr_t)	{}
 	JSValueRef(JSObjectRef Object);
-	
+	JSValueRef(v8::Local<v8::Value>& Local);
+
 	void	operator=(JSObjectRef That);
 	void	operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;
@@ -195,11 +216,12 @@ public:
 
 
 
-class JSStringRef : LocalRef<v8::String>
+class JSStringRef : public LocalRef<v8::String>
 {
 public:
 	JSStringRef(std::nullptr_t)	{}
-	
+	JSStringRef(v8::Local<v8::String>& Local);
+
 	void	operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;
 };
@@ -209,6 +231,10 @@ class JSClassRef
 {
 public:
 	JSClassRef(std::nullptr_t)	{}
+	
+	operator bool	() const	{	return mTemplate != nullptr;	}
+	
+	std::shared_ptr<V8::TPersistent<v8::ObjectTemplate>>	mTemplate;
 };
 
 
@@ -219,6 +245,7 @@ enum JSType
 	kJSTypeUndefined,
 	kJSTypeNull,
 	kJSTypeObject,
+	kJSTypeNumber,
 };
 
 enum JSClassAttributes
@@ -240,8 +267,10 @@ enum JSTypedArrayType
 };
 
 typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);
-typedef JSObjectRef(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef JSValueRef(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+//typedef JSObjectRef(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+typedef v8::FunctionCallback JSObjectCallAsConstructorCallback;
+//typedef JSValueRef(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+typedef v8::FunctionCallback JSObjectCallAsFunctionCallback;
 typedef void(*JSObjectFinalizeCallback) (JSObjectRef object);
 
 
@@ -291,8 +320,10 @@ JSType		JSValueGetType(JSContextRef Context,JSValueRef Value);
 bool		JSValueIsObject(JSContextRef Context,JSValueRef Value);
 bool		JSValueIsObject(JSContextRef Context,JSObjectRef Value);
 JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
-void		JSValueProtect(JSContextRef Context,JSValueRef Value);
-void		JSValueUnprotect(JSContextRef Context,JSValueRef Value);
+
+//	gr: these actually take a normal context, but that's causing issues in JScore and we use globals instead
+void		JSValueProtect(JSGlobalContextRef Context,JSValueRef Value);
+void		JSValueUnprotect(JSGlobalContextRef Context,JSValueRef Value);
 
 JSPropertyNameArrayRef	JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRef This);
 size_t		JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys);
@@ -335,13 +366,14 @@ void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name);
 void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
-JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
+//JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
 size_t		JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
 JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String);
 void		JSStringRelease(JSStringRef String);
 
-JSClassRef	JSClassCreate(JSClassDefinition* Definition);
+JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition);
 void		JSClassRetain(JSClassRef Class);
 

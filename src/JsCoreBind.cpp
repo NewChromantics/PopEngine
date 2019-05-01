@@ -191,22 +191,17 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 	return Bool;
 }
 
-//	gr: any strings created with this need to be released. Should make a ref-counter type to avoid leaks
+
 JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
 {
-	//	doesn't actually need a local context
-	return GetString(String);
-}
-
-JSStringRef JsCore::GetString(const std::string& String)
-{
-	auto Handle = JSStringCreateWithUTF8CString( String.c_str() );
+	//	JSCore doesn't need a context, but v8 does
+	auto Handle = JSStringCreateWithUTF8CString( Context, String.c_str() );
 	return Handle;
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
 {
-	auto StringHandle = JSStringCreateWithUTF8CString( String.c_str() );
+	auto StringHandle = JSStringCreateWithUTF8CString( Context, String.c_str() );
 	auto ValueHandle = JSValueMakeString( Context, StringHandle );
 	JSStringRelease(StringHandle);
 	return ValueHandle;
@@ -413,7 +408,9 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	JSClassRef Global = nullptr;
 	
 	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
-	JSGlobalContextSetName( Context, JsCore::GetString(Name) );
+#if !defined(JSAPI_V8)
+	JSGlobalContextSetName( Context, JsCore::GetString( Context, Name ) );
+#endif
 	
 	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
 	mContexts.PushBack( pContext );
@@ -566,8 +563,8 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	auto Exec = [=](Bind::TLocalContext& Context)
 	{
 		auto ThisHandle = JSObjectRef(nullptr);
-		auto SourceJs = JSStringCreateWithUTF8CString(Source.c_str());
-		auto FilenameJs = JSStringCreateWithUTF8CString(Filename.c_str());
+		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source.c_str() );
+		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename.c_str() );
 		auto LineNumber = 0;
 		JSValueRef Exception = nullptr;
 		auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
@@ -649,6 +646,18 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 }
 
+
+#if !defined(JSAPI_V8)
+void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)
+{
+	//	gr: this may be the source of problems, this should be a properly locally scoped context...
+	std::function<void(JsCore::TLocalContext&)> Functor
+	JSContextRef ContextRef = mContext;
+	TLocalContext LocalContext( ContextRef, *this );
+	Functor( LocalContext );
+}
+#endif
+
 void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Functor)
 {
 	//	gr: lock so only one JS operation happens at a time
@@ -658,11 +667,12 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Funct
 	//	javascript core is threadsafe, so we can just call
 	//	but maybe we need to set a javascript exception, if this is
 	//	being called from js to relay stuff back
-	
-	//	gr: this may be the source of problems, this should be a properly locally scoped context...
-	JSContextRef ContextRef = mContext;
-	TLocalContext LocalContext( ContextRef, *this );
-	Functor( LocalContext );
+	auto Redirect = [&](JSContextRef& Context)
+	{
+		JsCore::TLocalContext LocalContext( Context, *this );
+		Functor( LocalContext );
+	};
+	JSLockAndRun( mContext, Redirect );
 }
 
 
@@ -907,7 +917,7 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 	{
 		auto This = GetGlobalObject( LocalContext, ParentObjectName );
 
-		auto FunctionNameJs = JsCore::GetString( FunctionName );
+		auto FunctionNameJs = JsCore::GetString( LocalContext.mLocalContext, FunctionName );
 		JSValueRef Exception = nullptr;
 		auto FunctionHandle = JSObjectMakeFunctionWithCallback( LocalContext.mLocalContext, FunctionNameJs, FunctionPtr );
 		ThrowException( LocalContext.mLocalContext, Exception );
@@ -1288,14 +1298,14 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 	 */
 }
 
-void JsCore::TPersistent::Retain(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
+void JsCore::TPersistent::Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
 	//std::Debug << "Retain context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
 	JSValueProtect( Context, ObjectOrFunc );
 }
 
 
-void JsCore::TPersistent::Release(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
+void JsCore::TPersistent::Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
 	//std::Debug << "Release context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
 	JSValueUnprotect( Context, ObjectOrFunc );
@@ -1376,6 +1386,9 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
 	Release();
 	
+#if defined(JSAPI_V8)
+#warning deal with this later
+#else
 	TLocalContext LocalContext( That.mRetainedContext, *That.mContext );
 	auto Name = That.mDebugName + " (copy)";
 	
@@ -1388,6 +1401,7 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	{
 		Retain( LocalContext, That.mObject, Name );
 	}
+#endif
 }
 
 
@@ -1589,7 +1603,7 @@ void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const st
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
 	mFunctions.PushBack(NewFunction);
 	mDefinition.staticFunctions = mFunctions.GetArray();
-	mClass = JSClassCreate( &mDefinition );
+	mClass = JSClassCreate( Context.mLocalContext, &mDefinition );
 	JSClassRetain( mClass );
 	
 	//	gr: this works, but logic seems a little odd to me

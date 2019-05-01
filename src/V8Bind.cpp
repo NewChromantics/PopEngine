@@ -1,13 +1,57 @@
 #include "V8Bind.h"
 #include "SoyDebug.h"
+#include "SoyFileSystem.h"
 
 #include "libplatform/libplatform.h"
 #include "include/v8.h"
 
-#include "SoyFileSystem.h"
+#include "TBind.h"
 
 #define THROW_TODO	throw Soy::AssertException( __FUNCTION__ )
 
+/*
+template<typename TYPE>
+bool		IsType(Local<Value>& ValueHandle);
+
+#define ISTYPE_DEFINITION(TYPE)	\
+template<> inline bool v8::IsType<v8::TYPE>(Local<Value>& ValueHandle)	{	return ValueHandle->Is##TYPE();	}
+
+ISTYPE_DEFINITION(Int8Array);
+ISTYPE_DEFINITION(Uint8Array);
+ISTYPE_DEFINITION(Uint8ClampedArray);
+ISTYPE_DEFINITION(Int16Array);
+ISTYPE_DEFINITION(Uint16Array);
+ISTYPE_DEFINITION(Int32Array);
+ISTYPE_DEFINITION(Uint32Array);
+ISTYPE_DEFINITION(Float32Array);
+ISTYPE_DEFINITION(Number);
+ISTYPE_DEFINITION(Function);
+ISTYPE_DEFINITION(Boolean);
+ISTYPE_DEFINITION(Array);
+*/
+
+
+/*
+//	our own type caster which throws if cast fails.
+//	needed because my v8 built doesnt have cast checks, and I can't determine if they're enabled or not
+template<typename TYPE>
+inline v8::Local<TYPE> v8::SafeCast(v8::Local<v8::Value> ValueHandle)
+{
+	if ( !IsType<TYPE>(ValueHandle) )
+	{
+		std::stringstream Error;
+		Error << "Trying to cast " << GetTypeName(ValueHandle) << " to other type " << Soy::GetTypeName<TYPE>();
+		throw Soy::AssertException(Error.str());
+	}
+	return ValueHandle.As<TYPE>();
+}
+*/
+
+template<typename TYPE>
+v8::Local<v8::Value> ToValue(v8::Local<TYPE>& Value)
+{
+	return Value.template As<v8::Value>();
+}
 
 JSContextGroupRef::JSContextGroupRef(std::nullptr_t) :
 	V8::TVirtualMachine	(nullptr)
@@ -27,11 +71,15 @@ void JSObjectRef::operator=(JSObjectRef That)
 }
 
 
-JSValueRef::JSValueRef(JSObjectRef Object)
+JSValueRef::JSValueRef(JSObjectRef Object) :
+	LocalRef	( ToValue(Object.mThis) )
 {
-	THROW_TODO;
 }
 
+JSValueRef::JSValueRef(v8::Local<v8::Value>& Local) :
+	LocalRef	( Local )
+{
+}
 
 void JSValueRef::operator=(JSObjectRef That)
 {
@@ -66,7 +114,18 @@ void*		JSObjectGetPrivate(JSObjectRef Object)
 
 JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*)
 {
-	THROW_TODO;
+	if ( !Class )
+	{
+		auto NewObject = v8::Object::New( &Context.GetIsolate() );
+		return JSObjectRef( NewObject );
+	}
+
+	if ( !Class.mTemplate )
+		throw Soy::AssertException("Expected template in class");
+
+	auto ObjectTemplate = Class.mTemplate->GetLocal( Context.GetIsolate() );
+	auto NewObjectLocal = ObjectTemplate->NewInstance();
+	return JSObjectRef( NewObjectLocal );
 }
 
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
@@ -74,9 +133,13 @@ JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef
 	THROW_TODO;
 }
 
-void		JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception )
+void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception )
 {
-	THROW_TODO;
+	auto NameHandle = ToValue( Name.mThis );
+	auto Result = This.mThis->Set( Context.mThis, NameHandle, Value.mThis );
+
+	if ( Result.IsNothing() || !Result.ToChecked() )
+		throw Soy::AssertException("Failed to set member");
 }
 
 void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception)
@@ -87,12 +150,35 @@ void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t In
 
 JSType		JSValueGetType(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	if ( !Value )
+		return kJSTypeUndefined;
+#define TEST_IS(TYPE,JSTYPE)	if ( Value.mThis->Is##TYPE() )	return JSTYPE
+	TEST_IS( Undefined, kJSTypeUndefined );
+	TEST_IS( Null, kJSTypeNull );
+	TEST_IS( String, kJSTypeString );
+	
+	TEST_IS( Object, kJSTypeObject );
+	TEST_IS( ArgumentsObject, kJSTypeObject );
+	TEST_IS( Promise, kJSTypeObject );
+	TEST_IS( Function, kJSTypeObject );
+	TEST_IS( Array, kJSTypeObject );
+	TEST_IS( ArrayBufferView, kJSTypeObject );
+	TEST_IS( TypedArray, kJSTypeObject );
+	TEST_IS( Uint8Array, kJSTypeObject );
+	TEST_IS( Array, kJSTypeObject );
+
+	TEST_IS( Boolean, kJSTypeBoolean );
+	
+	TEST_IS( Number, kJSTypeNumber );
+	TEST_IS( Int32, kJSTypeNumber );
+	TEST_IS( Uint32, kJSTypeNumber );
+	
+	throw Soy::AssertException("v8 value didn't match any type");
 }
 
 bool		JSValueIsObject(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	return Value.mThis->IsObject();
 }
 
 bool		JSValueIsObject(JSContextRef Context,JSObjectRef Value)
@@ -134,7 +220,7 @@ JSStringRef	JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t
 
 bool		JSValueIsNumber(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	return Value.mThis->IsNumber();
 }
 
 double		JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
@@ -150,7 +236,7 @@ JSValueRef	JSValueMakeNumber(JSContextRef Context,int Value)
 
 bool		JSObjectIsFunction(JSContextRef Context,JSObjectRef Value)
 {
-	THROW_TODO;
+	return Value.mThis->IsFunction();
 }
 
 JSValueRef	JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception)
@@ -166,7 +252,8 @@ JSValueRef	JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Nam
 
 bool		JSValueToBoolean(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	auto Bool = Value.mThis.As<v8::Boolean>();
+	return Bool->Value();
 }
 
 JSValueRef	JSValueMakeBoolean(JSContextRef Context,bool Value)
@@ -177,23 +264,27 @@ JSValueRef	JSValueMakeBoolean(JSContextRef Context,bool Value)
 
 JSValueRef	JSValueMakeUndefined(JSContextRef Context)
 {
-	THROW_TODO;
+	auto Undefined = v8::Undefined( &Context.GetIsolate() );
+	auto Value = ToValue( Undefined );
+	return JSValueRef( Value );
 }
 
 bool		JSValueIsUndefined(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	return Value.mThis->IsUndefined();
 }
 
 
 JSValueRef	JSValueMakeNull(JSContextRef Context)
 {
-	THROW_TODO;
+	auto Null = v8::Null( &Context.GetIsolate() );
+	auto Value = ToValue( Null );
+	return JSValueRef( Value );
 }
 
 bool		JSValueIsNull(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	return Value.mThis->IsNull();
 }
 
 
@@ -250,7 +341,8 @@ JSGlobalContextRef	JSContextGetGlobalContext(JSContextRef Context)
 
 JSObjectRef			JSContextGetGlobalObject(JSContextRef Context)
 {
-	THROW_TODO;
+	auto Global = Context.mThis->Global();
+	return JSObjectRef( Global );
 }
 
 JSContextGroupRef	JSContextGroupCreate()
@@ -291,9 +383,11 @@ void				JSGarbageCollect(JSContextRef Context)
 }
 
 
-JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer)
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer)
 {
-	THROW_TODO;
+	auto& Isolate = Context.GetIsolate();
+	auto Handle = v8::String::NewFromUtf8( &Isolate, Buffer );
+	return JSStringRef( Handle );
 }
 
 size_t		JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize)
@@ -318,18 +412,133 @@ JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String)
 
 void		JSStringRelease(JSStringRef String)
 {
-	THROW_TODO;
+	//	can just let this go out of scope for now
 }
 
 
-JSClassRef	JSClassCreate(JSClassDefinition* Definition)
+void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Meta)
 {
+	std::Debug << "Constructor" << std::endl;
+};
+
+
+JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
+{
+	auto* Isolate = &Context.GetIsolate();
+
+	//	make constructor
+	//auto* Pointer = nullptr;
+	//auto PointerHandle = External::New( Isolate, Pointer ).As<Value>();
+	//auto ConstructorFunc = v8::FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
+	auto ConstructorFunc = v8::FunctionTemplate::New( Isolate, Definition->callAsConstructor );
+
+	//	gr: from v8::Local<v8::FunctionTemplate> TObjectWrapper<TYPENAME,TYPE>::CreateTemplate(TV8Container& Container)
+	//	https://github.com/v8/v8/wiki/Embedder's-Guide
+	//	1 field to 1 c++ object
+	//	gr: we can just use the template that's made automatically and modify that!
+	//	gr: prototypetemplate and instancetemplate are basically the same
+	//		but for inheritance we may want to use prototype
+	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
+	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
+	//	[0] object
+	//	[1] container
+	InstanceTemplate->SetInternalFieldCount(2);
+
+	//	bind the static funcs
+	{
+		int i=0;
+		while ( true )
+		{
+			auto& FunctionDefinition = Definition->staticFunctions[i];
+			i++;
+			if ( FunctionDefinition.name == nullptr )
+				break;
+			
+			//	bind function to template
+			auto This = InstanceTemplate;
+			v8::Local<v8::FunctionTemplate> FunctionTemplateLocal = v8::FunctionTemplate::New( Isolate, FunctionDefinition.callAsFunction );
+			auto FunctionLocal = FunctionTemplateLocal->GetFunction();
+			//auto FunctionNameStr = JSStringCreateWithUTF8CString( Context, FunctionDefinition.name );
+			This->Set( Isolate, FunctionDefinition.name, FunctionTemplateLocal);
+			/*auto SetResult = This->Set( Isolate, FunctionDefinition.name, FunctionLocal);
+			if ( !SetResult.ToChecked() || SetResult.IsNothing() )
+			{
+				std::stringstream Error;
+				Error << "Failed to set function " << FunctionDefinition.name << " on class ";
+				throw Soy::AssertException( Error );
+			}
+			*/
+		}
+	}
+	
+	
+	auto Template = V8::GetPersistent( *Isolate, InstanceTemplate );
+
+	JSClassRef NewClass( nullptr );
+	NewClass.mTemplate = Template;
+	return NewClass;
+
+	
+/*
+	//	need a v8 version of whatever func
+	typedef JSObjectRef(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+
+	typedef void (*FunctionCallback)(const FunctionCallbackInfo<Value>& info);
+*/
+
+	/*
+	//	pass the container around
+	auto ContainerHandle = External::New( Isolate, &Container );
+	auto ConstructorFunc = FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
+	
+	//	https://github.com/v8/v8/wiki/Embedder's-Guide
+	//	1 field to 1 c++ object
+	//	gr: we can just use the template that's made automatically and modify that!
+	//	gr: prototypetemplate and instancetemplate are basically the same
+	//		but for inheritance we may want to use prototype
+	//		https://groups.google.com/forum/#!topic/v8-users/_i-3mgG5z-c
+	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
+	
+	//	[0] object
+	//	[1] container
+	InstanceTemplate->SetInternalFieldCount(2);
+	
+	throw Soy::AssertException("Needs refactor to Bind::");
+	//Container.BindFunction<ExecuteKernel_FunctionName>( InstanceTemplate, ExecuteKernel );
+	
+	return ConstructorFunc;
+	
+	
+	
+	auto ObjectTemplateLocal = v8::ObjectTemplate::New( &Context.GetIsolate() );
+	
+	//v8::Local<v8::FunctionTemplate> LogFuncWrapper = v8::FunctionTemplate::New( Isolate, RawFunction );
+	
+	//	create new function
+	auto Template = GetTemplate(*this);
+	auto FuncWrapperValue = Template->GetFunction();
+	auto ObjectNameStr = v8::GetString( *Isolate, ObjectName);
+	auto SetResult = Global->Set( Context, ObjectNameStr, FuncWrapperValue );
+	if ( SetResult.IsNothing() || !SetResult.ToChecked() )
+	{
+		std::stringstream Error;
+		Error << "Failed to set " << ObjectName << " on Global." << ParentObjectName;
+		throw Soy::AssertException(Error.str());
+	}
+	
+	//	store the template so we can reference it later
+	auto ObjectTemplate = Template->InstanceTemplate();
+	auto ObjectTemplatePersistent = v8::GetPersistent( *Isolate, ObjectTemplate );
+	TV8ObjectTemplate NewTemplate( ObjectTemplatePersistent, ObjectName );
+	NewTemplate.mAllocator = Allocator;
+	mObjectTemplates.PushBack(NewTemplate);
 	THROW_TODO;
+	*/
 }
 
 void		JSClassRetain(JSClassRef Class)
 {
-	THROW_TODO;
+	//	already retained
 }
 
 
@@ -429,7 +638,8 @@ void V8::TAllocator::Free(void* data, size_t length)
 JSGlobalContextRef JSContextGroupRef::CreateContext()
 {
 	JSGlobalContextRef NewContext(nullptr);
-	auto Exec = [&](v8::Isolate& Isolate)
+	NewContext.mParent = this;
+	std::function<void(v8::Isolate&)> Exec = [&](v8::Isolate& Isolate)
 	{
 		//	v8::Local<v8::Context>
 		auto ContextLocal = v8::Context::New(&Isolate);
@@ -442,15 +652,97 @@ JSGlobalContextRef JSContextGroupRef::CreateContext()
 }
 
 
+//	major abstraction from V8 to JSCore
+//	JSCore has no global->local (maybe it should execute a run-next-in-queue func)
+void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)
+{
+	GlobalContext.ExecuteInContext( Functor );
+}
+
+void JSValueProtect(JSGlobalContextRef Context,JSValueRef Value)
+{
+	//	gr: deal with this later
+	//	mght need an explicit TPersistent to store an object and not just inc/dec a ref count
+}
+
+void JSValueUnprotect(JSGlobalContextRef Context,JSValueRef Value)
+{
+	//	gr: deal with this later
+	//	mght need an explicit TPersistent to store an object and not just inc/dec a ref count
+}
+
+V8::TVirtualMachine& JSGlobalContextRef::GetVirtualMachine()
+{
+	return mParent->GetVirtualMachine();
+}
+
+
 void V8::TVirtualMachine::ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor)
 {
-	//#error check https://stackoverflow.com/questions/33168903/c-scope-and-google-v8-script-context
+	//	gr: we're supposed to lock the isolate here, but the setup we have,
+	//	this should only ever be called on the JS thread[s] anyway
+	//	maybe have a recursive mutex and throw if already locked
 	v8::Locker locker(mIsolate);
-	v8::Isolate::Scope isolate_scope(mIsolate);
-	
-	//  always need a handle scope to collect locals
-	v8::HandleScope handle_scope(mIsolate);
-	
-	Functor( *mIsolate );
+	mIsolate->Enter();
+	try
+	{
+		//  setup scope. handle scope always required to GC locals
+		v8::Isolate::Scope isolate_scope(mIsolate);
+		v8::HandleScope handle_scope(mIsolate);
+		
+		//	gr: auto catch and turn into a c++ exception
+		{
+			v8::TryCatch trycatch(mIsolate);
+			Functor( *mIsolate );
+			if ( trycatch.HasCaught() )
+				throw Soy::AssertException("Some v8 exception");
+				//throw V8Exception( trycatch, "Running Javascript func" );
+		}
+		mIsolate->Exit();
+	}
+	catch(...)
+	{
+		mIsolate->Exit();
+		throw;
+	}
 }
+
+	
+void JSGlobalContextRef::ExecuteInContext(std::function<void(JSContextRef&)> Functor)
+{
+	std::function<void(v8::Isolate&)> Exec = [&](v8::Isolate& Isolate)
+	{
+		//	grab a local
+		auto LocalContext = mContext->GetLocal(Isolate);
+		JSContextRef LocalContextRef(LocalContext);
+		v8::Context::Scope context_scope( LocalContext );
+		Functor( LocalContextRef );
+	};
+	
+	auto& vm = GetVirtualMachine();
+	vm.ExecuteInIsolate( Exec );
+}
+
+
+JSContextRef::JSContextRef(v8::Local<v8::Context>& Local) :
+	LocalRef	( Local )
+{
+}
+
+v8::Isolate& JSContextRef::GetIsolate()
+{
+	auto* Isolate = this->mThis->GetIsolate();
+	return *Isolate;
+}
+
+JSObjectRef::JSObjectRef(v8::Local<v8::Object>& Local) :
+	LocalRef	( Local )
+{
+}
+
+JSStringRef::JSStringRef(v8::Local<v8::String>& Local) :
+	LocalRef	( Local )
+{
+}
+
 
