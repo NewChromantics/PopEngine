@@ -245,7 +245,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 				Bind::TObject PlaneImageObject;
 				if ( UseFrameBuffer )
 				{
-					PlaneImageObject = mFrameBuffers[p].GetObject();
+					PlaneImageObject = mFrameBuffers[p].GetObject( Context );
 				}
 				else
 				{
@@ -526,7 +526,8 @@ void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
 		Request.mSeperatePlanes = true;
 	else if ( Params.IsArgumentObject(0) )
 	{
-		Request.mDestinationImage = Bind::TPersistent( Params.mLocalContext, Params.GetArgumentObject(0), "Destination Image" );
+		auto DestinationImage = Params.GetArgumentObject(0);
+		Request.mDestinationImage = Bind::TPersistent( Params.mLocalContext, DestinationImage, "Destination Image" );
 		auto& IsImageCheck = Request.mDestinationImage.GetObject().This<TImageWrapper>();
 	}
 	else if ( !Params.IsArgumentUndefined(0) )
