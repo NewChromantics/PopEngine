@@ -1327,14 +1327,14 @@ JsCore::TFunction JsCore::TPersistent::GetFunction(TLocalContext& Context) const
 
 void JsCore::TPersistent::Retain(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
-	std::Debug << "Retain context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
+	//std::Debug << "Retain context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
 	JSValueProtect( Context, ObjectOrFunc );
 }
 
 
 void JsCore::TPersistent::Release(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
-	std::Debug << "Release context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
+	//std::Debug << "Release context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
 	JSValueUnprotect( Context, ObjectOrFunc );
 }
 
@@ -1346,12 +1346,12 @@ void JsCore::TPersistent::Release()
 	{
 		if ( !mContext )
 			throw Soy::AssertException("Has object, but no context");
-		mContext->OnPersitentReleased(*this);
 	}
 	
 	if ( mObject.mThis != nullptr )
 	{
 		Release( mRetainedContext, mObject.mThis, mDebugName );
+		mContext->OnPersitentReleased(*this);
 		mObject = TObject();
 		mRetainedContext = nullptr;
 		mContext = nullptr;
@@ -1360,6 +1360,7 @@ void JsCore::TPersistent::Release()
 	if ( mFunction.mThis != nullptr )
 	{
 		Release( mRetainedContext, mFunction.mThis, mDebugName );
+		mContext->OnPersitentReleased(*this);
 		mFunction = TFunction();
 		mRetainedContext = nullptr;
 		mContext = nullptr;
@@ -1379,7 +1380,7 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,co
 	
 	mDebugName = DebugName;
 	mContext = &Context.mGlobalContext;
-	mRetainedContext = Context.mLocalContext;
+	mRetainedContext = JSContextGetGlobalContext(Context.mLocalContext);
 	mObject = Object;
 	Retain( mRetainedContext, mObject.mThis, mDebugName );
 	
@@ -1397,7 +1398,7 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TFunction& Functio
 	
 	mDebugName = DebugName;
 	mContext = &Context.mGlobalContext;
-	mRetainedContext = Context.mLocalContext;
+	mRetainedContext = JSContextGetGlobalContext(Context.mLocalContext);
 	mFunction = Function;
 	Retain( mRetainedContext, mFunction.mThis, mDebugName );
 
