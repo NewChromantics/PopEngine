@@ -84,6 +84,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyUniform.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWave.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyWindow.h" />
     <ClInclude Include="..\src\SoyOpenglView.h" />
     <ClInclude Include="..\src\SoyOpenglWindow.h" />
     <ClInclude Include="..\src\TApiBluetooth.h">
@@ -270,6 +271,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </None>
+    <None Include="..\src\SoyLib\src\SoyWindow.mm" />
     <None Include="..\src\SoyOpenglView.mm" />
     <None Include="..\src\SoyOpenglWindow.mm" />
     <None Include="..\src\TApiCoreMl.mm">
@@ -357,6 +359,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyUniform.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyWave.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyWebSocket.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp" />
     <ClCompile Include="..\src\SoyOpenglWindow.cpp" />
     <ClCompile Include="..\src\TApiBluetooth.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

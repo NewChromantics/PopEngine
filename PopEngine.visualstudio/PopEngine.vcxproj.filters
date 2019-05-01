@@ -288,6 +288,9 @@
     <ClInclude Include="..\src\TApiSerial.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWindow.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -424,6 +427,9 @@
     </None>
     <None Include="..\UnitTest\VideoTest\Readme.md">
       <Filter>UnitTest\VideoTest</Filter>
+    </None>
+    <None Include="..\src\SoyLib\src\SoyWindow.mm">
+      <Filter>SoyLib</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -603,6 +609,9 @@
     </ClCompile>
     <ClCompile Include="..\src\TApiSerial.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp">
+      <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
