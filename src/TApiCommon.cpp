@@ -161,7 +161,7 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 static void ApiPop::Yield(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
-#error this promise = in the lambda is crashing as it immediately causes a retain.... but on a very old context???
+//#error this promise = in the lambda is crashing as it immediately causes a retain.... but on a very old context???
 	auto DelayMs = 0;
 	if ( !Params.IsArgumentUndefined(0) )
 		DelayMs = Params.GetArgumentInt(0);
