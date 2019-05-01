@@ -692,7 +692,6 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Funct
 	//	being called from js to relay stuff back
 	
 	//	gr: this may be the source of problems, this should be a properly locally scoped context...
-	//JSContextRef ContextRef = const_cast<JSContextRef>( mContext );
 	JSContextRef ContextRef = mContext;
 	TLocalContext LocalContext( ContextRef, *this );
 	Functor( LocalContext );
@@ -1293,11 +1292,6 @@ JsCore::TPersistent::~TPersistent()
 	Release();
 }
 
-JsCore::TObject JsCore::TPersistent::GetObject() const
-{
-	return mObject;
-}
-
 JsCore::TFunction JsCore::TPersistent::GetFunction() const
 {
 	return mFunction;
@@ -1305,6 +1299,9 @@ JsCore::TFunction JsCore::TPersistent::GetFunction() const
 
 JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 {
+	//	we should ignore the object's context and always use it in a current context
+	return TObject( Context.mLocalContext, mObject.mThis );
+	/*
 	if ( mObject.mContext != Context.mLocalContext )
 	{
 		//	gr: I think context can change when the context is a lexical (in a promise/await/lambda)
@@ -1314,25 +1311,13 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 		static bool ChangeObjectContext = false;
 		if ( ChangeObjectContext )
 		{
-			auto& This = *const_cast<JsCore::TPersistent*>(this);
-			This.mObject.mContext = Context.mLocalContext;
+			mObject.mContext = Context.mLocalContext;
 		}
 		return TObject( Context.mLocalContext, mObject.mThis );
 	}
 	
 	return mObject;
-}
-
-JsCore::TFunction JsCore::TPersistent::GetFunction(TLocalContext& Context) const
-{
-	/*	gr: function no longer has a context
-	if ( mFunction.mContext != Context.mLocalContext )
-	{
-		std::Debug << "Context has changed" << std::endl;
-		return TFunction( Context.mLocalContext, mFunction.mThis );
-	}
-	*/
-	return mFunction;
+	 */
 }
 
 void JsCore::TPersistent::Retain(JSContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)

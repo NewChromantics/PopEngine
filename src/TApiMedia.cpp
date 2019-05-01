@@ -528,7 +528,7 @@ void TPopCameraDeviceWrapper::GetNextFrame(Bind::TCallback& Params)
 	{
 		auto DestinationImage = Params.GetArgumentObject(0);
 		Request.mDestinationImage = Bind::TPersistent( Params.mLocalContext, DestinationImage, "Destination Image" );
-		auto& IsImageCheck = Request.mDestinationImage.GetObject().This<TImageWrapper>();
+		auto& IsImageCheck = Request.mDestinationImage.GetObject( Params.mLocalContext ).This<TImageWrapper>();
 	}
 	else if ( !Params.IsArgumentUndefined(0) )
 		Request.mSeperatePlanes = Params.GetArgumentBool(0);
@@ -569,7 +569,7 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 				//		they invoke render's which seem to cause some problem, but I'm not sure what
 				auto Resolve = [=](Bind::TLocalContext& Context)
 				{
-					auto FrameObject = FramePersistent.GetObject();
+					auto FrameObject = FramePersistent.GetObject( Context );
 					Promise.Resolve( Context, FrameObject );
 				};
 				Context.mGlobalContext.Queue(Resolve);
@@ -590,7 +590,7 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 }
 
 
-Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,const TFrameRequestParams& Params)
+Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFrameRequestParams& Params)
 {
 	Array<std::shared_ptr<SoyPixelsImpl>> Planes;
 	SoyTime FrameTime;
@@ -608,7 +608,8 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,con
 	
 	if ( Params.mDestinationImage )
 	{
-		auto Object = Params.mDestinationImage.GetObject( Context );
+		auto& Dest = Params.mDestinationImage;
+		auto Object = Dest.GetObject( Context );
 		SetTime(Object);
 		auto& Image = Object.This<TImageWrapper>();
 		auto& Plane = Planes[0];

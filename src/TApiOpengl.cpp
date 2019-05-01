@@ -509,6 +509,8 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	if ( Params.IsArgumentString(2) )
 		ReadBack = Params.GetArgumentString(2);
 	
+	//	can't fetch object from persistent in non-js func, but we just want the image
+	auto* pTargetImage = &TargetHandle.This<TImageWrapper>();
 	auto TargetPersistent = Bind::TPersistent( Params.mLocalContext, TargetHandle, "TargetPersistent" );
 	auto RenderCallbackPersistent = Bind::TPersistent( Params.mLocalContext, CallbackHandle, "CallbackHandle" );
 	auto ReadBackPixelsAfterwards = SoyPixelsFormat::ToType( ReadBack );
@@ -517,8 +519,8 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	auto ExecuteRenderCallback = [=](Bind::TLocalContext& Context)
 	{
 		auto Func = RenderCallbackPersistent.GetFunction();
-		auto Window = WindowPersistent.GetObject();
-		auto Target = TargetPersistent.GetObject();
+		auto Window = WindowPersistent.GetObject(Context);
+		auto Target = TargetPersistent.GetObject(Context);
 		
 		Bind::TCallback CallbackParams(Context);
 		CallbackParams.SetArgumentObject( 0, Window );
@@ -537,8 +539,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 		{
 			//	gr: we were storing this pointer which may be getting deleted
 			//	with V8 we can't access this pointer out of thread, but maybe we can cache both
-			auto TargetImageObject = TargetPersistent.GetObject();
-			auto& TargetImage = TargetImageObject.This<TImageWrapper>();
+			auto& TargetImage = *pTargetImage;
 			
 			//	get the texture from the image
 			std::string GenerateTextureError;

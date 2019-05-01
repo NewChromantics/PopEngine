@@ -188,7 +188,6 @@ public:
 	void			Call(JsCore::TCallback& Params) const;
 	
 public:
-	//JSContextRef	mContext = nullptr;	//	local context!
 	JSObjectRef		mThis = nullptr;
 };
 
@@ -362,6 +361,7 @@ class JsCore::TObject //: public JsCore::TObject
 public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
+	//	should probbaly block = operator so any copy of an object always has a new Context
 	
 	template<typename TYPE>
 	inline TYPE&			This()	{	return This<TYPE>(mThis);	}
@@ -398,7 +398,9 @@ private:
 	void			SetMember(const std::string& Name,JSValueRef Value);
 
 protected:
-	JSContextRef	mContext = nullptr;	//	exposing so we can test local vs global
+	//	this should go, but requiring the param for every func is a pain,
+	//	so this context should be updated any time TObject is fetched from somewhere
+	JSContextRef	mContext = nullptr;
 
 public:
 	JSObjectRef		mThis = nullptr;
@@ -425,10 +427,8 @@ public:
 	const std::string&	GetDebugName() const	{	return mDebugName;	}
 	
 	//	const for lambda[=] capture
-	TObject			GetObject() const;
-	TFunction		GetFunction() const;
 	TObject			GetObject(TLocalContext& Context) const;
-	TFunction		GetFunction(TLocalContext& Context) const;
+	TFunction		GetFunction() const;
 	
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
