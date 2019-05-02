@@ -571,8 +571,9 @@ Platform::TControlClass& GetOpenglViewClass()
 }
 
 //	gr: without an edge/border, we get a flicker argh
-const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
-//const DWORD WindowStyleExFlags = 0;;
+//	gr: only occcurs with double buffering
+//const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
+const DWORD WindowStyleExFlags = 0;
 const DWORD WindowStyleFlags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
@@ -628,17 +629,25 @@ Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params)
 	Opengl::TRenderTarget	( Parent.mName ),
 	mParent					( Parent )
 {
+	auto ColorDepth = 24;
+	DWORD Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+
+	//	gr: no double buffering stops flicker
+	//	none of these flags help
+	/*
+	#define PFD_SWAP_EXCHANGE           0x00000200
+	#define PFD_SWAP_COPY               0x00000400
+	#define PFD_SWAP_LAYER_BUFFERS      0x00000800
+	Flags |= PFD_DOUBLEBUFFER;
+	*/
+
 	//	make the pixel format descriptor
 	PIXELFORMATDESCRIPTOR pfd =				// pfd Tells Windows How We Want Things To Be
 	{
 		sizeof(PIXELFORMATDESCRIPTOR),		// Size Of This Pixel Format Descriptor
 		1,									// Version Number
-		PFD_DRAW_TO_WINDOW |				// Format Must Support Window
-		PFD_SUPPORT_OPENGL |				// Format Must Support OpenGL
-		PFD_DOUBLEBUFFER,					// Must Support Double Buffering
-		PFD_TYPE_RGBA,						// Request An RGBA Format
-											//	16,									// Select Our Color Depth
-		24,									// Select Our Color Depth
+		Flags,					// Must Support Double Buffering
+		ColorDepth,									// Select Our Color Depth
 		0, 0, 0, 0, 0, 0,					// Color Bits Ignored
 		0,									// No Alpha Buffer
 		0,									// Shift Bit Ignored
