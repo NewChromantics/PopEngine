@@ -839,20 +839,8 @@ void Platform::TOpenglContext::OnPaint()
 	{
 		//	flip
 		if ( !SwapBuffers(mHDC) )
-		/*
-		if ( Context->IsDoubleBuffered() )
-		{
-			//	let OSX flush and flip (probably sync'd better than we ever could)
-			//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
-			//	http://stackoverflow.com/a/13633191/355753
-			[[self openGLContext] flushBuffer];
-		}
-		else
-		{
-			glFlush();
-			Opengl::IsOkay("glFlush");
-		}
-		*/
+			std::Debug << "Failed to SwapBuffers(): " << Platform::GetLastErrorString() <<  std::endl;
+		
 		UnlockContext();
 	}
 	catch(std::exception& e)
