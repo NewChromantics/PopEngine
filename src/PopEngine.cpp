@@ -73,7 +73,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 			{
 				OnShutdown(0);
 			};
-			auto Blocking = false;
+			auto Blocking = true;
 			Platform::Loop( Blocking, OnQuit );
 
 			//	don't free this immediately in OnShutdown, do it here off the thread that triggered
