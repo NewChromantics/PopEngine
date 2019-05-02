@@ -158,6 +158,7 @@ private:
 	//	for saving/restoring fullscreen mode
 	std::shared_ptr<WINDOWPLACEMENT>	mSavedWindowPlacement;	//	saved state before going fullscreen
 	LONG				mSavedWindowFlags = 0;
+	LONG				mSavedWindowExFlags = 0;
 };
 
 
@@ -562,9 +563,12 @@ Platform::TControlClass& GetOpenglViewClass()
 	return *gClass;
 }
 
+//const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
+const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
+const DWORD WindowStyleFlags = WS_OVERLAPPEDWINDOW;
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
-	TControl	( Name, GetWindowClass(), nullptr, WS_OVERLAPPEDWINDOW, WS_EX_CLIENTEDGE, Rect )
+	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect )
 {
 	auto ShowState = SW_SHOW;
 
@@ -976,7 +980,8 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 			Platform::ThrowLastError("GetWindowPlacement failed");
 		//	flags is never set, and it's not the style!
 		mSavedWindowFlags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
-		
+		mSavedWindowExFlags = GetWindowLongPtrA(mHwnd, GWL_EXSTYLE);
+				
 		//	get monitor size for window
 		HMONITOR MonitorHandle = MonitorFromWindow(mHwnd, MONITOR_DEFAULTTONEAREST);
 		if ( MonitorHandle == nullptr )
@@ -1003,6 +1008,11 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 		auto NewFlags = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
 		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags) )
 			Platform::ThrowLastError("Failed to set window flags");
+		
+		//auto NewExFlags = mSavedWindowExFlags & ~(WS_EX_CLIENTEDGE);
+		auto NewExFlags = mSavedWindowExFlags;
+		if ( !SetWindowLongPtr(mHwnd, GWL_EXSTYLE, NewExFlags) )
+			Platform::ThrowLastError("Failed to set window exflags");
 	}
 	else
 	{
@@ -1019,6 +1029,9 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags) )
 			Platform::ThrowLastError("Failed to set window flags");
+
+		if ( !SetWindowLongPtr(mHwnd, GWL_EXSTYLE, mSavedWindowExFlags) )
+			Platform::ThrowLastError("Failed to set window exflags");
 	}
 }
 
