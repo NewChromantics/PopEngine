@@ -302,7 +302,14 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		BeginPaint(hwnd, &ps);
 		if ( Control.mOnPaint )
 		{
-			Control.mOnPaint(Control);
+			try
+			{
+				Control.mOnPaint(Control);
+			}
+			catch ( std::exception& e)
+			{
+				std::Debug << "Exception OnPaint: " << e.what() << std::endl;
+			}
 		}
 		else
 		{
