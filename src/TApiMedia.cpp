@@ -232,6 +232,10 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 				std::stringstream Name;
 				Name << "AVC buffer image plane #" << mFrameBuffers.GetSize();
 				Image.mName = Name.str();
+
+				//	gr: make this an option somewhere! really we should pass in the target
+				Image.DoSetLinearFilter(true);
+
 				Bind::TPersistent ImageObjectPersistent( Context, ImageObject, Name.str() );
 				mFrameBuffers.PushBack( ImageObjectPersistent );
 			}
