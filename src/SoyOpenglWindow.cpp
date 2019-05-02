@@ -629,7 +629,7 @@ Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params)
 	Opengl::TRenderTarget	( Parent.mName ),
 	mParent					( Parent )
 {
-	auto ColorDepth = 24;
+	BYTE ColorDepth = 24;
 	DWORD Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
 
 	//	gr: no double buffering stops flicker
