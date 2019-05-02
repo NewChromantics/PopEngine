@@ -32,6 +32,31 @@ namespace Platform
 }
 
 
+SoyKeyButton::Type KeyCodeToSoyButton(WPARAM KeyCode)
+{
+	if ( KeyCode >= 0x41 && KeyCode <= 0x5A )
+	{
+		auto Index = KeyCode - 0x41;
+		return 'a' + Index;
+	}
+
+	if ( KeyCode >= 0x30 && KeyCode <= 0x39 )
+	{
+		auto Index = KeyCode - 0x30;
+		return '0' + Index;
+	}
+
+	//	https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
+	switch ( KeyCode )
+	{
+	case VK_SPACE:	return ' ';
+	}
+
+	std::stringstream Error;
+	Error << "Unhandled VK_KEYCODE 0x" << std::hex << KeyCode << std::dec;
+	throw Soy::AssertException(Error);
+}
+
 template<typename COORDTYPE>
 Soy::Rectx<COORDTYPE> Platform::GetRect(RECT Rect)
 {
@@ -90,6 +115,11 @@ public:
 
 	Soy::Rectx<int32_t>		GetClientRect();
 	virtual void			OnDestroyed();		//	window handle is being destroyed
+
+	//	return true if handled, or false to return default behavouir
+	bool			OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage);
+	bool			OnKeyDown(WPARAM KeyCode, LPARAM Flags);
+	bool			OnKeyUp(WPARAM KeyCode, LPARAM Flags);
 
 	std::function<void(TControl&)>	mOnPaint;
 	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseDown;
@@ -282,47 +312,31 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 	case WM_MBUTTONUP:
 	case WM_MOUSEMOVE:
 	{
-		auto LeftDown = (wParam & MK_LBUTTON) != 0;
-		auto MiddleDown = (wParam & MK_LBUTTON) != 0;
-		auto RightDown = (wParam & MK_LBUTTON) != 0;
-		auto* pMouseEvent = &Control.mOnMouseMove;
-		switch(message)
-		{
-		case WM_LBUTTONDOWN:
-		case WM_RBUTTONDOWN:	
-		case WM_MBUTTONDOWN:
-			pMouseEvent = &Control.mOnMouseDown;	
-			break;
-
-		case WM_LBUTTONUP:
-		case WM_RBUTTONUP:
-		case WM_MBUTTONUP:
-			pMouseEvent = &Control.mOnMouseUp;
-			break;
-
-		case WM_MOUSEMOVE:	
-			pMouseEvent = &Control.mOnMouseMove;	
-			break;
-		}
-
-		auto Button = SoyMouseButton::None;
-		if ( LeftDown )			Button = SoyMouseButton::Left;
-		else if ( RightDown )	Button = SoyMouseButton::Right;
-		else if ( MiddleDown )	Button = SoyMouseButton::Middle;
-
-		//	x/y relateive to client area
 		auto x = GET_X_LPARAM(lParam);
 		auto y = GET_Y_LPARAM(lParam);
-		//std::Debug << "mouse event: " << x << "," << y << std::endl;
-		TMousePos MousePos(x, y);
-		if ( pMouseEvent )
-		{
-			auto& Event = *pMouseEvent;
-			if ( Event )
-				Event(Control, MousePos, Button);
-		}
+		if ( Control.OnMouseEvent(x, y, wParam, message) )
+			return 0;
 		return Default();
 	}
+
+	case WM_KEYDOWN:
+	{
+		auto KeyCode = wParam;
+		auto Flags = lParam;
+		if ( Control.OnKeyDown(KeyCode, Flags) )
+			return 0;
+		return Default();
+	}
+
+	case WM_KEYUP:
+	{
+		auto KeyCode = wParam;
+		auto Flags = lParam;
+		if ( Control.OnKeyUp(KeyCode, Flags) )
+			return 0;
+		return Default();
+	}
+
 	}
 
 	return Default();
@@ -393,6 +407,84 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 		throw Soy::AssertException("Failed to create window");
 
 }
+
+
+bool Platform::TControl::TControl::OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage)
+{
+	auto LeftDown = (Flags & MK_LBUTTON) != 0;
+	auto MiddleDown = (Flags & MK_LBUTTON) != 0;
+	auto RightDown = (Flags & MK_LBUTTON) != 0;
+	auto* pMouseEvent = &mOnMouseMove;
+	switch(EventMessage)
+	{
+	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:	
+	case WM_MBUTTONDOWN:
+		pMouseEvent = &mOnMouseDown;	
+		break;
+
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONUP:
+		pMouseEvent = &mOnMouseUp;
+		break;
+
+	case WM_MOUSEMOVE:	
+		pMouseEvent = &mOnMouseMove;	
+		break;
+	}
+
+	auto Button = SoyMouseButton::None;
+	if ( LeftDown )			Button = SoyMouseButton::Left;
+	else if ( RightDown )	Button = SoyMouseButton::Right;
+	else if ( MiddleDown )	Button = SoyMouseButton::Middle;
+
+	//	x/y relateive to client area
+	//std::Debug << "mouse event: " << x << "," << y << std::endl;
+	TMousePos MousePos(x, y);
+	if ( pMouseEvent )
+	{
+		auto& Event = *pMouseEvent;
+		if ( Event )
+			Event( *this, MousePos, Button);
+	}
+
+	//	carry on with default behaviour
+	return false;
+}
+
+bool Platform::TControl::TControl::OnKeyDown(WPARAM KeyCode, LPARAM Flags)
+{
+	try
+	{
+		auto KeyButton = KeyCodeToSoyButton(KeyCode);
+		if ( mOnKeyDown )
+			mOnKeyDown(*this, KeyButton);
+	}
+	catch ( std::exception& e )
+	{
+		std::Debug << "OnKeyDown error: " << e.what() << std::endl;
+	}
+	return false;
+}
+
+bool Platform::TControl::TControl::OnKeyUp(WPARAM KeyCode, LPARAM Flags)
+{
+	try
+	{
+		auto KeyButton = KeyCodeToSoyButton(KeyCode);
+		if ( mOnKeyUp )
+			mOnKeyUp(*this, KeyButton);
+	}
+	catch ( std::exception& e )
+	{
+		std::Debug << "OnKeyUp error: " << e.what() << std::endl;
+	}
+	return false;
+}
+
+
+
 
 void Platform::TControl::TControl::OnDestroyed()
 {
