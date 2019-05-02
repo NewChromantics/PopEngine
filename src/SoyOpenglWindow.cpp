@@ -563,9 +563,10 @@ Platform::TControlClass& GetOpenglViewClass()
 	return *gClass;
 }
 
-//const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
+//	gr: without an edge/border, we get a flicker argh
 const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
-const DWORD WindowStyleFlags = WS_OVERLAPPEDWINDOW;
+//const DWORD WindowStyleExFlags = 0;;
+const DWORD WindowStyleFlags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect )
@@ -969,6 +970,31 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 	if ( IsFullscreen() == Fullscreen )
 		return;
 
+	//	wierd error:
+	//	If the previous value is zero and the function succeeds,
+	//	the return value is zero, but the function does not clear the last error information. 
+	//	To determine success or failure, clear the last error information by calling SetLastError with 0, 
+	//	then call SetWindowLongPtr. Function failure will be indicated by a return value of zero and a 
+	//	GetLastError result that is nonzero.
+	auto DoSetWindowLongPtr = [](HWND hWnd,int nIndex,LONG_PTR dwNewLong)
+	{
+		::SetLastError(0);
+		auto Result = SetWindowLongPtrA(hWnd, nIndex, dwNewLong);
+		//	last setting, 0 might be last state or error
+		if ( Result != 0 )
+			return;
+
+		auto LastError = ::GetLastError();
+		//	no error
+		if ( LastError == 0 )
+			return;
+		
+		//	is error
+		::SetLastError(LastError);
+		Platform::ThrowLastError("SetWindowLong");
+	};
+
+
 	//	if going fullscreen, save placement then go fullscreen
 	if ( Fullscreen )
 	{
@@ -992,11 +1018,14 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 			Platform::ThrowLastError("GetMonitorInfoA failed");
 
 		//	set size
+		//	if any border, doesnt go fullscreen
+		//	if no border, flicker!
+		auto Border = 0;
 		auto x = MonitorMeta.rcMonitor.left;
 		auto y = MonitorMeta.rcMonitor.top;
 		auto w = MonitorMeta.rcMonitor.right - x;
-		auto h = MonitorMeta.rcMonitor.bottom - y;
-		bool Repaint = true;
+		auto h = MonitorMeta.rcMonitor.bottom - y - Border;
+		bool Repaint = false;
 		if ( !MoveWindow(mHwnd, x, y, w, h, Repaint) )
 		{
 			std::stringstream Error;
@@ -1004,15 +1033,16 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 			Platform::ThrowLastError(Error.str());
 		}
 
-		//	set flags
-		auto NewFlags = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
-		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags) )
-			Platform::ThrowLastError("Failed to set window flags");
 		
+		//	set flags
+		auto NewFlags = WS_VISIBLE | WS_POPUP;
+		//	WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags);
+
 		//auto NewExFlags = mSavedWindowExFlags & ~(WS_EX_CLIENTEDGE);
 		auto NewExFlags = mSavedWindowExFlags;
-		if ( !SetWindowLongPtr(mHwnd, GWL_EXSTYLE, NewExFlags) )
-			Platform::ThrowLastError("Failed to set window exflags");
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, NewExFlags);
+
 	}
 	else
 	{
@@ -1027,11 +1057,8 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 		if ( !SetWindowPlacement(mHwnd, &Placement) )
 			Platform::ThrowLastError("SetWindowPlacement failed");
 
-		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags) )
-			Platform::ThrowLastError("Failed to set window flags");
-
-		if ( !SetWindowLongPtr(mHwnd, GWL_EXSTYLE, mSavedWindowExFlags) )
-			Platform::ThrowLastError("Failed to set window exflags");
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags);
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, mSavedWindowExFlags);
 	}
 }
 
