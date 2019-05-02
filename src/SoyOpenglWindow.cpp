@@ -6,6 +6,7 @@
 
 #include <windowsx.h>
 #include "SoyWindow.h"
+#include "SoyThread.h"
 
 namespace Platform
 {
@@ -113,8 +114,15 @@ class Platform::TControl
 public:
 	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
 
+	//	trigger actions
+	void					Repaint();
+
+	//	reflection
 	Soy::Rectx<int32_t>		GetClientRect();
+
+	//	callbacks from windows message loop
 	virtual void			OnDestroyed();		//	window handle is being destroyed
+	virtual void			OnWindowMessage(UINT EventMessage) {}	//	called from window thread which means we can flush jobs
 
 	//	return true if handled, or false to return default behavouir
 	bool			OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage);
@@ -139,8 +147,12 @@ class Platform::TWindow : public TControl
 public:
 	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
 	
-	bool		IsFullscreen();
-	void		SetFullscreen(bool Fullscreen);
+	bool			IsFullscreen();
+	void			SetFullscreen(bool Fullscreen);
+	virtual void	OnWindowMessage(UINT EventMessage) override;
+
+public:
+	PopWorker::TJobQueue	mJobQueue;
 
 private:
 	//	for saving/restoring fullscreen mode
@@ -268,6 +280,8 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 
 	//	callbacks
 	TControl& Control = *pControl;
+	Control.OnWindowMessage(message);
+
 	switch ( message )
 	{
 		//	gotta allow some things
@@ -585,6 +599,18 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 }
 
 
+class DummyContext : public PopWorker::TContext
+{
+	virtual void	Lock() override {};
+	virtual void	Unlock() override {};
+};
+DummyContext gDummyContext;
+
+void Platform::TWindow::OnWindowMessage(UINT Message)
+{
+	mJobQueue.Flush(gDummyContext);
+}
+
 
 Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params) :
 	Opengl::TRenderTarget	( Parent.mName ),
@@ -699,6 +725,11 @@ void Platform::TOpenglContext::Unlock()
 }
 
 void Platform::TOpenglContext::Repaint()
+{
+	mParent.Repaint();
+}
+
+void Platform::TControl::Repaint()
 {
 	//	tell parent to repaint
 	//	update window triggers a WM_PAINT, if we've invalidated rect
@@ -918,7 +949,13 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	if ( !mWindow )
 		throw Soy::AssertException("TOpenglWindow::SetFullscreen missing window");
 
-	mWindow->SetFullscreen(Fullscreen);
+	//	this needs to be done on the main thread
+	auto DoFullScreen = [=]()
+	{
+		this->mWindow->SetFullscreen(Fullscreen);
+	};
+	mWindow->mJobQueue.PushJob(DoFullScreen);
+	mWindow->Repaint();
 }
 
 
