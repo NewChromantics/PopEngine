@@ -309,7 +309,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		//	for v8
 		std::string RuntimePath = Platform::GetAppResourcesDirectory() + "/v8Runtime/";
 		
-		mContextGroup = JSContextGroupCreate( RuntimePath );
+		if ( &JSContextGroupCreate == nullptr )
+			throw Soy::AssertException("If this function pointer is null, we may have manually loaded symbols, but they've been stripped. Turn OFF whole program optimisation!");
+
 		mContextGroup = JSContextGroupCreateWithRuntime( RuntimePath );
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
