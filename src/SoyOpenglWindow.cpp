@@ -743,7 +743,7 @@ void Platform::TControl::Repaint()
 	const RECT * UpdateRect = nullptr;
 	HRGN UpdateRegion = nullptr;
 	auto Flags = RDW_INTERNALPAINT;//	|RDW_INVALIDATE
-	if ( !RedrawWindow(mParent.mHwnd, UpdateRect, UpdateRegion, Flags ) )
+	if ( !RedrawWindow(mHwnd, UpdateRect, UpdateRegion, Flags ) )
 		Platform::IsOkay("RedrawWindow failed");
 }
 
