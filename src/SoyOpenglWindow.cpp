@@ -838,7 +838,7 @@ void Platform::TOpenglContext::OnPaint()
 	try
 	{
 		//	flip
-		SwapBuffers(mHDC);
+		if ( !SwapBuffers(mHDC) )
 		/*
 		if ( Context->IsDoubleBuffered() )
 		{
