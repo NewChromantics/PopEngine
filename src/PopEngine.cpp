@@ -28,7 +28,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	else
 	{
 		//	gr: need a better default here
-		DataPath = "GuildhallGildWall";
+		DataPath = "";
 	}
 
 	//	 try to predict full paths vs something embedded in the app
