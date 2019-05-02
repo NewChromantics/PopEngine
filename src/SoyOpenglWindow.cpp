@@ -4,6 +4,9 @@
 //#include "PopMain.h"
 #include "SoyMath.h"
 
+#include <windowsx.h>
+#include "SoyWindow.h"
+
 namespace Platform
 {
 	class TControlClass;
@@ -89,6 +92,12 @@ public:
 	virtual void			OnDestroyed();		//	window handle is being destroyed
 
 	std::function<void(TControl&)>	mOnPaint;
+	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseDown;
+	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseMove;
+	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseUp;
+	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyDown;
+	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyUp;
+
 	std::function<void(TControl&)>	mOnDestroy;	//	todo: expand this to OnClose to allow user to stop it from closing
 
 	HWND		mHwnd = nullptr;
@@ -264,6 +273,56 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 	case WM_QUIT:
 		std::Debug << "Got WM_QUIT on control callback, with control" << std::endl;
 		break;
+
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEMOVE:
+	{
+		auto LeftDown = (wParam & MK_LBUTTON) != 0;
+		auto MiddleDown = (wParam & MK_LBUTTON) != 0;
+		auto RightDown = (wParam & MK_LBUTTON) != 0;
+		auto* pMouseEvent = &Control.mOnMouseMove;
+		switch(message)
+		{
+		case WM_LBUTTONDOWN:
+		case WM_RBUTTONDOWN:	
+		case WM_MBUTTONDOWN:
+			pMouseEvent = &Control.mOnMouseDown;	
+			break;
+
+		case WM_LBUTTONUP:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONUP:
+			pMouseEvent = &Control.mOnMouseUp;
+			break;
+
+		case WM_MOUSEMOVE:	
+			pMouseEvent = &Control.mOnMouseMove;	
+			break;
+		}
+
+		auto Button = SoyMouseButton::None;
+		if ( LeftDown )			Button = SoyMouseButton::Left;
+		else if ( RightDown )	Button = SoyMouseButton::Right;
+		else if ( MiddleDown )	Button = SoyMouseButton::Middle;
+
+		//	x/y relateive to client area
+		auto x = GET_X_LPARAM(lParam);
+		auto y = GET_Y_LPARAM(lParam);
+		//std::Debug << "mouse event: " << x << "," << y << std::endl;
+		TMousePos MousePos(x, y);
+		if ( pMouseEvent )
+		{
+			auto& Event = *pMouseEvent;
+			if ( Event )
+				Event(Control, MousePos, Button);
+		}
+		return Default();
+	}
 	}
 
 	return Default();
@@ -694,6 +753,13 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	{
 		this->OnClosed();
 	};
+
+
+	mWindow->mOnMouseDown	= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
+	mWindow->mOnMouseUp		= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
+	mWindow->mOnMouseMove	= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
+	mWindow->mOnKeyDown		= [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
+	mWindow->mOnKeyUp		= [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
 
 	//	start thread so we auto redraw & run jobs
 	Start();
