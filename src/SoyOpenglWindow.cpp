@@ -739,7 +739,7 @@ void Platform::TOpenglContext::Lock()
 
 void Platform::TOpenglContext::Unlock()
 {
-	if ( !wglMakeCurrent(nullptr, nullptr) )
+	if ( !wglMakeCurrent(mHDC, nullptr) )
 		throw Soy::AssertException("wglMakeCurrent unbind failed");
 
 	TContext::Unlock();
