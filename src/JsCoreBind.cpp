@@ -23,7 +23,7 @@
 
 
 #if !defined(JSAPI_V8)
-JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory)
+JSContextGroupRef	JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
 {
 	return JSContextGroupCreate();
 }
@@ -310,6 +310,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		std::string RuntimePath = Platform::GetAppResourcesDirectory() + "/v8Runtime/";
 		
 		mContextGroup = JSContextGroupCreate( RuntimePath );
+		mContextGroup = JSContextGroupCreateWithRuntime( RuntimePath );
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
 		
