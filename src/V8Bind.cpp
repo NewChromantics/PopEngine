@@ -209,6 +209,7 @@ JSType JSValueGetType(JSValueRef Value)
 {
 	if ( !Value )
 		return kJSTypeUndefined;
+	
 #define TEST_IS(TYPE,JSTYPE)	if ( Value.mThis->Is##TYPE() )	return JSTYPE
 	TEST_IS( Undefined, kJSTypeUndefined );
 	TEST_IS( Null, kJSTypeNull );
@@ -218,12 +219,25 @@ JSType JSValueGetType(JSValueRef Value)
 	TEST_IS( ArgumentsObject, kJSTypeObject );
 	TEST_IS( Promise, kJSTypeObject );
 	TEST_IS( Function, kJSTypeObject );
+	TEST_IS( DataView, kJSTypeObject );
+
 	TEST_IS( Array, kJSTypeObject );
+	TEST_IS( ArrayBuffer, kJSTypeObject );
 	TEST_IS( ArrayBufferView, kJSTypeObject );
 	TEST_IS( TypedArray, kJSTypeObject );
 	TEST_IS( Uint8Array, kJSTypeObject );
-	TEST_IS( Array, kJSTypeObject );
-
+	TEST_IS( Uint8ClampedArray, kJSTypeObject );
+	TEST_IS( Int8Array, kJSTypeObject );
+	TEST_IS( Uint16Array, kJSTypeObject );
+	TEST_IS( Int16Array, kJSTypeObject );
+	TEST_IS( Uint32Array, kJSTypeObject );
+	TEST_IS( Int32Array, kJSTypeObject );
+	TEST_IS( Float32Array, kJSTypeObject );
+	TEST_IS( Float64Array, kJSTypeObject );
+	TEST_IS( BigInt64Array, kJSTypeObject );
+	TEST_IS( BigUint64Array, kJSTypeObject );
+	TEST_IS( SharedArrayBuffer, kJSTypeObject );
+	
 	TEST_IS( Boolean, kJSTypeBoolean );
 	
 	TEST_IS( Number, kJSTypeNumber );
@@ -380,14 +394,51 @@ JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSV
 	return JSObjectRef( ArrayHandle );
 }
 
-bool		JSValueIsArray(JSContextRef Context,JSValueRef Value)
+bool JSValueIsArray(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	if ( !Value )
+		return false;
+	
+	if ( Value.mThis->IsArray() )	return true;
+	if ( Value.mThis->IsArrayBuffer() )	return true;
+	if ( Value.mThis->IsArrayBufferView() )	return true;
+	if ( Value.mThis->IsTypedArray() )	return true;
+	if ( Value.mThis->IsUint8Array() )	return true;
+	if ( Value.mThis->IsUint8ClampedArray() )	return true;
+	if ( Value.mThis->IsInt8Array() )	return true;
+	if ( Value.mThis->IsUint16Array() )	return true;
+	if ( Value.mThis->IsInt16Array() )	return true;
+	if ( Value.mThis->IsUint32Array() )	return true;
+	if ( Value.mThis->IsInt32Array() )	return true;
+	if ( Value.mThis->IsFloat32Array() )	return true;
+	if ( Value.mThis->IsFloat64Array() )	return true;
+	if ( Value.mThis->IsBigInt64Array() )	return true;
+	if ( Value.mThis->IsBigUint64Array() )	return true;
+	if ( Value.mThis->IsSharedArrayBuffer() )	return true;
+	
+	return false;
 }
 
-JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
+JSTypedArrayType JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	if ( Value.mThis->IsUint8Array() )	return kJSTypedArrayTypeUint8Array;
+	if ( Value.mThis->IsUint8ClampedArray() )	return kJSTypedArrayTypeUint8ClampedArray;
+	if ( Value.mThis->IsInt8Array() )	return kJSTypedArrayTypeInt8Array;
+	if ( Value.mThis->IsUint16Array() )	return kJSTypedArrayTypeUint16Array;
+	if ( Value.mThis->IsInt16Array() )	return kJSTypedArrayTypeInt16Array;
+	if ( Value.mThis->IsUint32Array() )	return kJSTypedArrayTypeUint32Array;
+	if ( Value.mThis->IsInt32Array() )	return kJSTypedArrayTypeInt32Array;
+	if ( Value.mThis->IsFloat32Array() )	return kJSTypedArrayTypeFloat32Array;
+	
+	if ( Value.mThis->IsFloat64Array() )
+		throw Soy::AssertException("Currently not supporting Float64 array (missing from JavaScriptCore)");
+	if ( Value.mThis->IsBigInt64Array() )
+		throw Soy::AssertException("Currently not supporting BigInt64 array (missing from JavaScriptCore)");
+	if ( Value.mThis->IsBigUint64Array() )
+		throw Soy::AssertException("Currently not supporting BigUint64 array (missing from JavaScriptCore)");
+
+	
+	return kJSTypedArrayTypeNone;
 }
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* Buffer,size_t BufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception)
