@@ -39,8 +39,27 @@ namespace V8
 
 	template<typename V8TYPE>
 	std::shared_ptr<TPersistent<V8TYPE>>	GetPersistent(v8::Isolate& Isolate,v8::Local<V8TYPE> Local);
+	
+	class TException;
+	template<typename V8TYPE>
+	void	IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::TryCatch& TryCatch,const std::string& Context);
 }
 
+
+
+class V8::TException : public std::exception
+{
+public:
+	TException(v8::TryCatch& TryCatch,const std::string& Context);
+	
+	virtual const char* what() const __noexcept
+	{
+		return mError.c_str();
+	}
+	
+public:
+	std::string		mError;
+};
 
 
 //	temp class to see that if we manually control life time of persistent if it doesnt get deallocated on garbage cleanup
@@ -154,6 +173,9 @@ public:
 	v8::Isolate&		GetIsolate();
 	JsCore::TContext&	GetContext();
 	void				SetContext(JsCore::TContext& Context);
+	v8::TryCatch&		GetTryCatch();
+	
+	v8::TryCatch*		mTryCatch = nullptr;
 };
 
 class JSGlobalContextRef;
@@ -238,9 +260,11 @@ public:
 	JSStringRef(v8::Local<v8::String>&& Local) : JSStringRef	( Local )	{}
 	JSStringRef(JSContextRef Context,const std::string& String);
 
-	void	operator=(std::nullptr_t Null);
+	void			operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;
-	operator bool() const					{	return !mThis.IsEmpty();	}
+	operator		bool() const					{	return !mThis.IsEmpty();	}
+	
+	std::string		GetString(JSContextRef Context);
 };
 
 
@@ -394,3 +418,15 @@ void		JSStringRelease(JSStringRef String);
 JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition);
 void		JSClassRetain(JSClassRef Class);
 
+
+
+
+template<typename V8TYPE>
+inline void V8::IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::TryCatch& TryCatch,const std::string& Context)
+{
+	//	valid result
+	if ( !Result.IsEmpty() )
+		return;
+
+	throw V8::TException( TryCatch, Context );
+}

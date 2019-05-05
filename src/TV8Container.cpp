@@ -14,51 +14,6 @@ bool ReportDefinedReturns = false;
 
 
 
-V8Exception::V8Exception(v8::TryCatch& TryCatch,const std::string& Context) :
-	mError	( Context )
-{
-	//	get the exception from v8
-	auto Exception = TryCatch.Exception();
-
-	if ( Exception.IsEmpty() )
-	{
-		mError += "<Empty Exception>";
-		return;
-	}
-
-	//	get the description
-	String::Utf8Value ExceptionStr(Exception);
-	auto ExceptionCStr = *ExceptionStr;
-	if ( ExceptionCStr == nullptr )
-	{
-		mError += ": <null> possibly not an exception";
-	}
-	else
-	{
-		mError += ": ";
-		mError += ExceptionCStr;
-	}
-	
-	//	get stack trace
-	auto StackTrace = v8::Exception::GetStackTrace( Exception );
-	if ( StackTrace.IsEmpty() )
-	{
-		mError += "\n<missing stacktrace>";
-	}
-	else
-	{
-		for ( int fi=0;	fi<StackTrace->GetFrameCount();	fi++ )
-		{
-			auto Frame = StackTrace->GetFrame(fi);
-			String::Utf8Value FuncName( Frame->GetFunctionName() );
-			mError += "\n";
-			mError += "in ";
-			mError += *FuncName;
-		}
-	}
-	
-
-}
 
 
 void* TV8Allocator::Allocate(size_t length)

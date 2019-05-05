@@ -140,8 +140,7 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*)
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
 {
 	auto ValueMaybe = This.mThis->Get( Context.mThis, Name.mThis );
-	if ( ValueMaybe.IsEmpty() )
-		throw Soy::AssertException("No property");
+	V8::IsOkay( ValueMaybe, Context.GetTryCatch(), std::string("GetProperty ") + Name.GetString(Context) );
 	
 	auto Value = ValueMaybe.ToLocalChecked();
 	return JSValueRef( Value );
@@ -368,26 +367,23 @@ size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,J
 
 JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception)
 {
+	auto* Isolate = &Context.GetIsolate();
 	//	compile into script
 	std::string UrlFilename = std::string("file://") + Bind::GetString( Context, Filename );
 	JSStringRef OriginStr( Context, UrlFilename );
-	auto OriginRow = v8::Integer::New( &Context.GetIsolate(), 0 );
-	auto OriginCol = v8::Integer::New( &Context.GetIsolate(), 0 );
-	auto Cors = v8::Boolean::New( &Context.GetIsolate(), true );
+	auto OriginRow = v8::Integer::New( Isolate, 0 );
+	auto OriginCol = v8::Integer::New( Isolate, 0 );
+	auto Cors = v8::Boolean::New( Isolate, true );
 	v8::ScriptOrigin Origin( OriginStr.mThis, OriginRow, OriginCol, Cors );
 
 	auto NewScriptReturn = v8::Script::Compile( Context.mThis, Source.mThis, &Origin );
-	if ( NewScriptReturn.IsEmpty() )
-		throw Soy::AssertException("Script failed to compile");
+	V8::IsOkay( NewScriptReturn, Context.GetTryCatch(), "Script failed to compile");
 	auto NewScript = NewScriptReturn.ToLocalChecked();
-	
 	
 	//	now run it
 	auto ResultMaybe = NewScript->Run( Context.mThis );
-	if ( ResultMaybe.IsEmpty() )
-		throw Soy::AssertException("Script failed to run");
+	V8::IsOkay( ResultMaybe, Context.GetTryCatch(), "Script failed to run");
 	auto ResultValue = ResultMaybe.ToLocalChecked();
-	
 	return JSValueRef( ResultValue );
 }
 
@@ -485,9 +481,10 @@ size_t JSStringGetLength(JSStringRef String)
 
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
+	/*
 	if ( !Value.mThis->IsString() )
 		throw Soy::AssertException("Value is not string");
-	
+	*/
 	//	this is supposed to copy
 	auto ValueString = Value.mThis.As<v8::String>();
 	JSStringRef ValueStringRef( ValueString );
@@ -785,11 +782,10 @@ void V8::TVirtualMachine::ExecuteInIsolate(std::function<void(v8::Isolate&)> Fun
 		
 		//	gr: auto catch and turn into a c++ exception
 		{
-			v8::TryCatch trycatch(mIsolate);
+			v8::TryCatch TryCatch(mIsolate);
 			Functor( *mIsolate );
-			if ( trycatch.HasCaught() )
-				throw Soy::AssertException("Some v8 exception");
-				//throw V8Exception( trycatch, "Running Javascript func" );
+			if ( TryCatch.HasCaught() )
+				throw V8::TException( TryCatch, "Some v8 exception");
 		}
 		mIsolate->Exit();
 	}
@@ -805,11 +801,18 @@ void JSGlobalContextRef::ExecuteInContext(std::function<void(JSContextRef&)> Fun
 {
 	std::function<void(v8::Isolate&)> Exec = [&](v8::Isolate& Isolate)
 	{
+		v8::TryCatch TryCatch( &Isolate );
+		
 		//	grab a local
 		auto LocalContext = mContext->GetLocal(Isolate);
 		JSContextRef LocalContextRef(LocalContext);
+		LocalContextRef.mTryCatch = &TryCatch;
+		
 		v8::Context::Scope context_scope( LocalContext );
 		Functor( LocalContextRef );
+		
+		if ( TryCatch.HasCaught() )
+			throw V8::TException( TryCatch, "Executing Context");
 	};
 	
 	auto& vm = GetVirtualMachine();
@@ -847,6 +850,10 @@ void JSContextRef::SetContext(JsCore::TContext& Context)
 	mThis->SetAlignedPointerInEmbedderData(0, &Context);
 }
 
+v8::TryCatch& JSContextRef::GetTryCatch()
+{
+	return *mTryCatch;
+}
 
 JSObjectRef::JSObjectRef(v8::Local<v8::Object>& Local) :
 	LocalRef	( Local )
@@ -874,4 +881,55 @@ JSStringRef::JSStringRef(JSContextRef Context,const std::string& String)
 	mThis = NewString.mThis;
 }
 
+std::string JSStringRef::GetString(JSContextRef Context)
+{
+	auto Str = Bind::GetString( Context, mThis );
+	return Str;
+}
+
+
+V8::TException::TException(v8::TryCatch& TryCatch,const std::string& Context) :
+	mError	( Context )
+{
+	//	get the exception from v8
+	auto Exception = TryCatch.Exception();
+	
+	if ( Exception.IsEmpty() )
+	{
+		mError += "<Empty Exception>";
+		return;
+	}
+	
+	//	get the description
+	v8::String::Utf8Value ExceptionStr(Exception);
+	auto ExceptionCStr = *ExceptionStr;
+	if ( ExceptionCStr == nullptr )
+	{
+		mError += ": <null> possibly not an exception";
+	}
+	else
+	{
+		mError += ": ";
+		mError += ExceptionCStr;
+	}
+	
+	//	get stack trace
+	auto StackTrace = v8::Exception::GetStackTrace( Exception );
+	if ( StackTrace.IsEmpty() )
+	{
+		mError += "\n<missing stacktrace>";
+	}
+	else
+	{
+		for ( int fi=0;	fi<StackTrace->GetFrameCount();	fi++ )
+		{
+			auto Frame = StackTrace->GetFrame(fi);
+			v8::String::Utf8Value FuncName( Frame->GetFunctionName() );
+			mError += "\n";
+			mError += "in ";
+			mError += *FuncName;
+		}
+	}
+	
+}
 
