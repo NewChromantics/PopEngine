@@ -9,6 +9,13 @@
 
 #define THROW_TODO	throw Soy::AssertException( std::string("todo: ") + std::string(__FUNCTION__) )
 
+namespace V8
+{
+	const int InternalFieldDataIndex = 0;
+}
+
+JSType JSValueGetType(JSValueRef Value);
+
 /*
 template<typename TYPE>
 bool		IsType(Local<Value>& ValueHandle);
@@ -113,12 +120,36 @@ void JSStringRef::operator=(std::nullptr_t Null)
 
 void JSObjectSetPrivate(JSObjectRef Object,void* Data)
 {
-	THROW_TODO;
+	//	should already be null
+	auto* PrevData = JSObjectGetPrivate( Object );
+	if ( PrevData )
+		throw Soy::AssertException("Private data non-null, expected to be unset");
+
+	auto& Isolate = Object.GetIsolate();
+	auto External = v8::External::New( &Isolate, Data );
+	
+	Object.mThis->SetInternalField( V8::InternalFieldDataIndex, External );
 }
 
 void* JSObjectGetPrivate(JSObjectRef Object)
 {
-	THROW_TODO;
+	if ( !Object )
+		return nullptr;
+	
+	auto Handle = Object.mThis->GetInternalField( V8::InternalFieldDataIndex );
+	
+	//	if undefined, we treat as not set (null)
+	if ( Handle->IsUndefined() )
+		return nullptr;
+	
+	//	but if it is set, should be an external
+	auto Type = JSValueGetType( JSValueRef(Handle) );
+	if ( !Handle->IsExternal() )
+		throw Soy::AssertException("Private field of object is not an external");
+	auto External = Handle.As<v8::External>();
+	auto* VoidPtr = External->Value();
+
+	return VoidPtr;
 }
 
 JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
@@ -174,8 +205,7 @@ void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t In
 	THROW_TODO;
 }
 
-
-JSType		JSValueGetType(JSContextRef Context,JSValueRef Value)
+JSType JSValueGetType(JSValueRef Value)
 {
 	if ( !Value )
 		return kJSTypeUndefined;
@@ -202,6 +232,13 @@ JSType		JSValueGetType(JSContextRef Context,JSValueRef Value)
 	
 	throw Soy::AssertException("v8 value didn't match any type");
 }
+
+
+JSType JSValueGetType(JSContextRef Context,JSValueRef Value)
+{
+	return JSValueGetType( Value );
+}
+
 
 bool JSValueIsObject(JSContextRef Context,JSValueRef Value)
 {

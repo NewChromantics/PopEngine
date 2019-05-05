@@ -155,6 +155,8 @@ public:
 	bool	operator!=(std::nullptr_t Null) const			{	return !mThis.IsEmpty();	}
 	operator bool() const									{	return !mThis.IsEmpty();	}
 
+	v8::Isolate&	GetIsolate()	{	return *mThis->GetIsolate();	}
+
 public:
 	v8::Local<V8TYPE>	mThis;
 };
@@ -224,12 +226,11 @@ public:
 	JSObjectRef(v8::Local<v8::Object>& Local);
 	JSObjectRef(v8::Local<v8::Object>&& Local);
 
-	void	operator=(std::nullptr_t Null);
-	void	operator=(JSObjectRef That);
-	//bool	operator!=(std::nullptr_t Null) const;
-	//bool	operator!=(const JSObjectRef& That) const;
-	operator bool() const						{	return !mThis.IsEmpty();	}
-
+	void		operator=(std::nullptr_t Null);
+	void		operator=(JSObjectRef That);
+	//bool		operator!=(std::nullptr_t Null) const;
+	//bool		operator!=(const JSObjectRef& That) const;
+	operator 	bool() const						{	return !mThis.IsEmpty();	}
 };
 
 

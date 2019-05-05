@@ -941,6 +941,18 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 	JSObjectSetPrivate( NewObject, Data );
 	ObjectPointer.SetHandle( ObjectHandle );
 	
+	//	for V8, to get a free() callback, we need a persistent to be marked weak
+#if defined(JSAPI_V8)
+	/*
+	//	gr: make it weak so it will be collected
+	//		anything persistent will be in a TPersistent
+	//	https://itnext.io/v8-wrapped-objects-lifecycle-42272de712e0
+	 mHandle = v8::Persist
+	mHandle.SetWeak( this, OnFree, v8::WeakCallbackType::kInternalFields );
+	*/
+#endif
+	
+	
 	//	construct
 	TCallback ConstructorParams(LocalContext);
 	ConstructorParams.mThis = NewObject.mThis;
