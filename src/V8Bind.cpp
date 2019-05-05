@@ -121,10 +121,13 @@ void*		JSObjectGetPrivate(JSObjectRef Object)
 	THROW_TODO;
 }
 
-JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*)
+JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 {
 	if ( !Class )
 	{
+		if ( Data )
+			throw Soy::AssertException("JSObjectMake without class, with data, excepting null data if no class");
+		
 		auto NewObject = v8::Object::New( &Context.GetIsolate() );
 		return JSObjectRef( NewObject );
 	}
@@ -132,8 +135,19 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*)
 	if ( !Class.mTemplate )
 		throw Soy::AssertException("Expected template in class");
 
+	//	if there is data, it's an instance, if not, we're probably setting up the constructor for the namespace
+	//	that's how we use the logic in JavascriptCore anyway
+	if ( !Data )
+	{
+		auto ConstructorTemplate = Class.mConstructor->GetLocal( Context.GetIsolate() );
+		auto Constructor = ConstructorTemplate->GetFunction();
+		return JSObjectRef( Constructor );
+	}
+	
+	//	create instance
 	auto ObjectTemplate = Class.mTemplate->GetLocal( Context.GetIsolate() );
 	auto NewObjectLocal = ObjectTemplate->NewInstance();
+	//	todo: need to assign internal data
 	return JSObjectRef( NewObjectLocal );
 }
 
@@ -512,7 +526,7 @@ void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Meta)
 };
 
 
-JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
+JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
 {
 	auto* Isolate = &Context.GetIsolate();
 
@@ -563,9 +577,11 @@ JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
 	
 	
 	auto Template = V8::GetPersistent( *Isolate, InstanceTemplate );
-
+	auto Constructor = V8::GetPersistent( *Isolate, ConstructorFunc );
+	
 	JSClassRef NewClass( nullptr );
 	NewClass.mTemplate = Template;
+	NewClass.mConstructor = Constructor;
 	return NewClass;
 
 	

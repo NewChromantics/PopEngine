@@ -275,6 +275,7 @@ public:
 	
 	operator bool	() const	{	return mTemplate != nullptr;	}
 	
+	std::shared_ptr<V8::TPersistent<v8::FunctionTemplate>>	mConstructor;
 	std::shared_ptr<V8::TPersistent<v8::ObjectTemplate>>	mTemplate;
 };
 
