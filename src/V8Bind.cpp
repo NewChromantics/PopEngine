@@ -270,7 +270,10 @@ JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Ex
 {
 	if ( !Value )
 		throw Soy::AssertException("Value is nullptr, not object");
-	if ( !Value.mThis->IsObject() )
+	
+	//	gr: for JavascriptCore compatibility, we consider multiple things as objects
+	auto Type = JSValueGetType( Context, Value );
+	if ( Type != kJSTypeObject )
 		throw Soy::AssertException("Value is not an object");
 	
 	auto ObjectLocal = Value.mThis.As<v8::Object>();
