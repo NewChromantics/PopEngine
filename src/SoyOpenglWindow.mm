@@ -93,7 +93,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		auto*& mWindow = Wrapper.mWindow;
 
 		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
-		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.h, Rect.w );
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
 
 		//	gr: this is unreliable, so we call our SetFullscreen() later
