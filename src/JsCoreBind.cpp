@@ -919,6 +919,37 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 }
 
 
+void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::string& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments)
+{
+	//	find template
+	auto* pObjectTemplate = mObjectTemplates.Find( ObjectTypeName );
+	if ( !pObjectTemplate )
+	{
+		std::stringstream Error;
+		Error << "Unknown object typename ";
+		Error << ObjectTypeName;
+		auto ErrorStr = Error.str();
+		throw Soy::AssertException(ErrorStr);
+	}
+	
+	auto& ObjectTemplate = *pObjectTemplate;
+	auto& Class = ObjectTemplate.mClass;
+	auto& ObjectPointer = ObjectTemplate.AllocInstance();
+	void* Data = &ObjectPointer;
+	
+	Bind::TObject ObjectHandle( LocalContext.mLocalContext, NewObject );
+	JSObjectSetPrivate( NewObject, Data );
+	ObjectPointer.SetHandle( ObjectHandle );
+	
+	//	construct
+	TCallback ConstructorParams(LocalContext);
+	ConstructorParams.mThis = NewObject.mThis;
+	ConstructorParams.mArguments.Copy( ConstructorArguments );
+	
+	//	actually call!
+	ObjectPointer.Construct( ConstructorParams );
+}
+
 void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	auto Exec = [&](Bind::TLocalContext& LocalContext)

@@ -259,6 +259,7 @@ public:
 	JSStringRef(v8::Local<v8::String>& Local);
 	JSStringRef(v8::Local<v8::String>&& Local) : JSStringRef	( Local )	{}
 	JSStringRef(JSContextRef Context,const std::string& String);
+	JSStringRef(v8::Isolate& Isolate,const std::string& String);
 
 	void			operator=(std::nullptr_t Null);
 	//bool	operator!=(std::nullptr_t Null) const;

@@ -484,7 +484,8 @@ public:
 	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
 	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName=std::string());
 	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
-	
+	void					ConstructObject(TLocalContext& LocalContext,const std::string& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments);
+
 	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName) bind_override;
 
 	
@@ -652,29 +653,39 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 #if defined(JSAPI_V8)
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
 	{
-		throw Soy::AssertException("Construct me");
-		/*
+		auto& Isolate = *Meta.GetIsolate();
 		try
 		{
-			//	gr: constructor here, is this function.
-			//		we need to create a new object and return it
+			if ( !Meta.IsConstructCall() )
+				throw Soy::AssertException("Calling constructor callback, but is not constructing");
+	
+			Array<JSValueRef> Arguments;
+			for ( auto i=0;	i<Meta.Length();	i++ )
+			{
+				JSValueRef Value = JSValueRef(Meta[i]);
+				Arguments.PushBack(Value);
+			}
+			
+			//	in V8, the object is already made, we need to construct it
+			JSObjectRef ThisObject( Meta.This() );
+			
+			JSContextRef ContextRef( Isolate.GetCurrentContext() );
 			auto& Context = JsCore::GetContext( ContextRef );
 			TLocalContext LocalContext( ContextRef, Context );
-			auto ArgumentsArray = GetRemoteArray( Arguments, ArgumentCount );
-			auto ThisObject = Context.CreateObjectInstance( LocalContext, TYPENAME, GetArrayBridge(ArgumentsArray) );
-			auto This = ThisObject.mThis;
-			return This;
+		
+			JSValueRef Exception;
+			Context.ConstructObject( LocalContext, TYPENAME, ThisObject, GetArrayBridge(Arguments) );
+		
+			Meta.GetReturnValue().Set( ThisObject );
 		}
 		catch(std::exception& e)
 		{
 			std::stringstream Error;
 			Error << TYPENAME << "() constructor exception: " << e.what();
-			*Exception = GetValue( ContextRef, Error.str() );
-			//	we HAVE to return an object, but NULL is a value, not an object :/
-			auto NullObject = JSObjectMake( ContextRef, nullptr, nullptr );
-			return NullObject;
+			auto ErrorString = JSStringRef( Isolate, Error.str() );
+			auto Exception = Isolate.ThrowException( ErrorString.mThis );
+			Meta.GetReturnValue().Set(Exception);
 		}
-		 */
 	};
 #else
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)

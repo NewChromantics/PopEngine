@@ -7,7 +7,7 @@
 
 #include "TBind.h"
 
-#define THROW_TODO	throw Soy::AssertException( __FUNCTION__ )
+#define THROW_TODO	throw Soy::AssertException( std::string("todo: ") + std::string(__FUNCTION__) )
 
 /*
 template<typename TYPE>
@@ -111,12 +111,12 @@ void JSStringRef::operator=(std::nullptr_t Null)
 
 
 
-void		JSObjectSetPrivate(JSObjectRef Object,void* Data)
+void JSObjectSetPrivate(JSObjectRef Object,void* Data)
 {
 	THROW_TODO;
 }
 
-void*		JSObjectGetPrivate(JSObjectRef Object)
+void* JSObjectGetPrivate(JSObjectRef Object)
 {
 	THROW_TODO;
 }
@@ -455,9 +455,7 @@ void				JSGarbageCollect(JSContextRef Context)
 
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer)
 {
-	auto& Isolate = Context.GetIsolate();
-	auto Handle = v8::String::NewFromUtf8( &Isolate, Buffer );
-	return JSStringRef( Handle );
+	return JSStringRef( Context, Buffer );
 }
 
 size_t JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize)
@@ -885,16 +883,16 @@ JSStringRef::JSStringRef(v8::Local<v8::String>& Local) :
 	LocalRef	( Local )
 {
 }
-/*
-JSStringRef::JSStringRef(v8::Local<v8::String>&& Local) :
-	LocalRef	( Local )
+
+JSStringRef::JSStringRef(JSContextRef Context,const std::string& String) :
+	JSStringRef	( Context.GetIsolate(), String )
 {
 }
-*/
-JSStringRef::JSStringRef(JSContextRef Context,const std::string& String)
+
+JSStringRef::JSStringRef(v8::Isolate& Isolate,const std::string& String)
 {
-	auto NewString = JSStringCreateWithUTF8CString( Context, String.c_str() );
-	mThis = NewString.mThis;
+	auto Handle = v8::String::NewFromUtf8( &Isolate, String.c_str() );
+	mThis = Handle;
 }
 
 std::string JSStringRef::GetString(JSContextRef Context)
