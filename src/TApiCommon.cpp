@@ -143,7 +143,7 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 	{
 		try
 		{
-			auto Func = CallbackPersistent.GetFunction();
+			auto Func = CallbackPersistent.GetFunction(Context);
 			Bind::TCallback Call( Context );
 			Func.Call(Call);
 		}
@@ -1377,7 +1377,7 @@ void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
 		auto This = GetHandle(Params.mLocalContext);
 		Bind::TCallback Call( Params.mLocalContext );
 		Call.SetArgumentObject(0,This);
-		auto MakeFunc = MakeIterationBindThisFunction.GetFunction();
+		auto MakeFunc = MakeIterationBindThisFunction.GetFunction(Params.mLocalContext);
 		MakeFunc.Call(Call);
 		
 		auto IterationBindThisFunction = Call.GetReturnFunction();
@@ -1395,12 +1395,12 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 	auto Execute = [=](Bind::TLocalContext& Context)
 	{
 		auto ThisHandle = pThis->GetHandle(Context);
-		auto ThisIterationFunction = pThis->mIterationBindThisFunction.GetFunction();
+		auto ThisIterationFunction = pThis->mIterationBindThisFunction.GetFunction(Context);
 		
 		//	run the func, get the promise returned
 		//	append to then() something to run another iteration
 		JsCore::TCallback IterationCall(Context);
-		auto Func = pThis->mFunction.GetFunction();
+		auto Func = pThis->mFunction.GetFunction(Context);
 		//std::Debug << "AsyncFunc()" << std::endl;
 		Func.Call(IterationCall);
 		auto Promise = IterationCall.GetReturnObject();

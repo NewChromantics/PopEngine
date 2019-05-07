@@ -1333,10 +1333,6 @@ JsCore::TFunction JsCore::TPersistent::GetFunction(Bind::TLocalContext& Context)
 	return Bind::TFunction( Context.mLocalContext, Object.mThis );
 }
 
-JsCore::TFunction JsCore::TPersistent::GetFunction() const
-{
-	throw Soy::AssertException("todo");
-}
 
 JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 {
@@ -1738,7 +1734,7 @@ void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) con
 	Bind::TCallback Params( Context );
 	Params .SetArgument( 0, Value );
 
-	auto Reject = mReject.GetFunction();
+	auto Reject = mReject.GetFunction(Context);
 	Reject.Call( Params );
 }
 

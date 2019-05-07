@@ -518,7 +518,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	
 	auto ExecuteRenderCallback = [=](Bind::TLocalContext& Context)
 	{
-		auto Func = RenderCallbackPersistent.GetFunction();
+		auto Func = RenderCallbackPersistent.GetFunction(Context);
 		auto Window = WindowPersistent.GetObject(Context);
 		auto Target = TargetPersistent.GetObject(Context);
 		

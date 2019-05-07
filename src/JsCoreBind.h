@@ -422,7 +422,6 @@ public:
 	const std::string&	GetDebugName() const	{	return mDebugName;	}
 	TObject				GetObject(TLocalContext& Context) const;
 	TFunction			GetFunction(TLocalContext& Context) const;
-	TFunction			GetFunction() const;
 
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
