@@ -71,7 +71,7 @@ extern const char DlibWrapper_TypeName[];
 class TDlibWrapper : public Bind::TObjectWrapper<DlibWrapper_TypeName,TDlibThreads>
 {
 public:
-	TDlibWrapper(Bind::TContext& Context,Bind::TObject& This) :
+	TDlibWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
 		TObjectWrapper			( Context, This )
 	{
 	}

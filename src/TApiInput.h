@@ -21,7 +21,7 @@ namespace ApiInput
 class TInputDeviceWrapper : public Bind::TObjectWrapper<ApiInput::Device_TypeName,Hid::TDevice>
 {
 public:
-	TInputDeviceWrapper(Bind::TContext& Context,Bind::TObject& This) :
+	TInputDeviceWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
 		TObjectWrapper			( Context, This )
 	{
 	}

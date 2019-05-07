@@ -142,12 +142,16 @@ class LocalRef
 {
 public:
 	LocalRef()	{}
-	LocalRef(v8::Local<V8TYPE>& Local) :
+	LocalRef(const v8::Local<V8TYPE>& Local) :
 		mThis	( Local )
 	{
 	}
-	LocalRef(v8::Local<V8TYPE>&& Local) :
+	LocalRef(const v8::Local<V8TYPE>&& Local) :
 		mThis	( Local )
+	{
+	}
+	LocalRef(const LocalRef& That) :
+		mThis	( That.mThis )
 	{
 	}
 
@@ -225,9 +229,14 @@ public:
 	JSObjectRef(std::nullptr_t)	{}
 	JSObjectRef(v8::Local<v8::Object>& Local);
 	JSObjectRef(v8::Local<v8::Object>&& Local);
-
-	void		operator=(std::nullptr_t Null);
-	void		operator=(JSObjectRef That);
+	/*
+	JSObjectRef(const JSObjectRef& That) :
+		LocalRef	( That.mThis )
+	{
+	}
+*/
+	//void		operator=(std::nullptr_t Null);
+	//void		operator=(JSObjectRef That);
 	//bool		operator!=(std::nullptr_t Null) const;
 	//bool		operator!=(const JSObjectRef& That) const;
 	operator 	bool() const						{	return !mThis.IsEmpty();	}

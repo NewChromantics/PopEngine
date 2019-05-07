@@ -901,11 +901,14 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	//	JSObjectCallAsConstructor to call the constructor
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
-	auto& ObjectPointer = ObjectTemplate.AllocInstance();
+
+	Bind::TObject NullObject;
+	auto& ObjectPointer = ObjectTemplate.AllocInstance( LocalContext, NullObject );
 	void* Data = &ObjectPointer;
+
 	auto NewObjectHandle = JSObjectMake( LocalContext.mLocalContext, Class, Data );
 	TObject NewObject( LocalContext.mLocalContext, NewObjectHandle );
-	ObjectPointer.SetHandle( NewObject );
+	ObjectPointer.SetHandle( LocalContext, NewObject );
 
 	//	construct
 	TCallback ConstructorParams(LocalContext);
@@ -932,14 +935,16 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 		throw Soy::AssertException(ErrorStr);
 	}
 	
+	Bind::TObject NewObjectBind( LocalContext.mLocalContext, NewObject );
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
-	auto& ObjectPointer = ObjectTemplate.AllocInstance();
+	auto& ObjectPointer = ObjectTemplate.AllocInstance(LocalContext, NewObjectBind );
 	void* Data = &ObjectPointer;
 	
-	Bind::TObject ObjectHandle( LocalContext.mLocalContext, NewObject );
+	//	v8 needs to manually set the private data
+	//Bind::TObject ObjectHandle( LocalContext.mLocalContext, NewObject );
 	JSObjectSetPrivate( NewObject, Data );
-	ObjectPointer.SetHandle( ObjectHandle );
+	//ObjectPointer.SetHandle( LocalContext, ObjectHandle );
 	
 	//	for V8, to get a free() callback, we need a persistent to be marked weak
 #if defined(JSAPI_V8)
@@ -1741,13 +1746,21 @@ void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) con
 
 JsCore::TObject JsCore::TObjectWrapperBase::GetHandle(Bind::TLocalContext& Context)
 {
+#if defined(PERSISTENT_OBJECT_HANDLE)
+	return mHandle.GetObject( Context );
+#else
 	//	gr: always correct context, like persistent, but this cant be persistent or it won't get garbage collected
 	return TObject( Context.mLocalContext, mHandle.mThis );
+#endif
 }
 
-void JsCore::TObjectWrapperBase::SetHandle(JsCore::TObject& NewHandle)
+void JsCore::TObjectWrapperBase::SetHandle(Bind::TLocalContext& Context,JsCore::TObject& NewHandle)
 {
-	mHandle = NewHandle;
+#if defined(PERSISTENT_OBJECT_HANDLE)
+	mHandle = Bind::TPersistent( Context, NewHandle, "This/SetHandle" );
+#else
+	mHandle = mObject;
+#endif
 }
 
 

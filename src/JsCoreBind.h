@@ -2,6 +2,7 @@
 
 #if defined(JSAPI_V8)
 
+#define PERSISTENT_OBJECT_HANDLE
 
 #else
 	//	gr: we're binding them ourselves
@@ -335,7 +336,7 @@ public:
 	void			BindFunction(std::function<void(JsCore::TCallback&)> Function);
 	void			RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
 
-	JsCore::TObjectWrapperBase&	AllocInstance()		{	return mAllocator();	}
+	JsCore::TObjectWrapperBase&	AllocInstance(TLocalContext& Context,TObject& This)		{	return mAllocator(Context,This);	}
 	
 public:
 	JSClassDefinition	mDefinition = kJSClassDefinitionEmpty;
@@ -345,7 +346,7 @@ private:
 	JSClassRef			mClass = nullptr;
 	TContext*			mContext = nullptr;
 	Array<JSStaticFunction>	mFunctions;
-	std::function<JsCore::TObjectWrapperBase&()>	mAllocator;
+	std::function<JsCore::TObjectWrapperBase&(TLocalContext&,TObject&)>	mAllocator;
 };
 
 //	make this generic for v8 & jscore
@@ -573,15 +574,19 @@ public:
 class JsCore::TObjectWrapperBase
 {
 public:
-	TObjectWrapperBase(TContext& Context,TObject& This) :
+	TObjectWrapperBase(TLocalContext& Context,TObject& This) :
+#if defined(PERSISTENT_OBJECT_HANDLE)
+		mHandle		( Context, This, "This" ),
+#else
 		mHandle		( This ),
-		mContext	( Context )
+#endif
+		mContext	( Context.mGlobalContext )
 	{
 	}
 	virtual ~TObjectWrapperBase()	{}
 
 	virtual TObject	GetHandle(Bind::TLocalContext& Context);
-	virtual void	SetHandle(TObject& NewHandle);
+	virtual void	SetHandle(Bind::TLocalContext& Context,TObject& NewHandle);
 	
 	//	construct and allocate
 	virtual void 	Construct(TCallback& Arguments)=0;
@@ -597,7 +602,13 @@ public:
 
 private:
 	//	gr: this is a weak reference so the object gets free'd
+	//	gr;
+#if defined(PERSISTENT_OBJECT_HANDLE)
+	TPersistent		mHandle;
+#else
 	TObject			mHandle;
+#endif
+	
 	TContext&		mContext;
 };
 
@@ -612,7 +623,7 @@ public:
 	//typedef std::function<TObjectWrapper<TYPENAME,TYPE>*(TV8Container&,v8::Local<v8::Object>)> ALLOCATORFUNC;
 	
 public:
-	TObjectWrapper(TContext& Context,TObject& This) :
+	TObjectWrapper(TLocalContext& Context,TObject& This) :
 		TObjectWrapperBase	( Context, This )
 	{
 	}
@@ -813,11 +824,10 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const
 	//	create a template that can be overloaded by the type
 	auto Template = OBJECTWRAPPERTYPE::AllocTemplate( *this );
 
-	Template.mAllocator = [this]() -> TObjectWrapperBase&
+	Template.mAllocator = [this](Bind::TLocalContext& Context,Bind::TObject& This) -> TObjectWrapperBase&
 	{
-		JsCore::TObject ThisObject;
 		auto& Heap = this->GetObjectHeap();
-		auto* NewObject = Heap.Alloc<OBJECTWRAPPERTYPE>( *this, ThisObject );
+		auto* NewObject = Heap.Alloc<OBJECTWRAPPERTYPE>( Context, This );
 		return *NewObject;
 	};
 	

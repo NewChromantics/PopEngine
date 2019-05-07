@@ -55,7 +55,7 @@ extern const char Opengl_Window_TypeName[];
 class TWindowWrapper : public Bind::TObjectWrapper<Opengl_Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
 {
 public:
-	TWindowWrapper(Bind::TContext& Context,Bind::TObject& This) :
+	TWindowWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
 		TObjectWrapper		( Context, This ),
 		mActiveRenderTarget	(nullptr)
 	{
@@ -110,7 +110,7 @@ extern const char Opengl_Shader_TypeName[];
 class TShaderWrapper: public Bind::TObjectWrapper<Opengl_Shader_TypeName,Opengl::TShader>
 {
 public:
-	TShaderWrapper(Bind::TContext& Context,Bind::TObject& This) :
+	TShaderWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
 		TObjectWrapper		( Context, This )
 	{
 	}

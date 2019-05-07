@@ -70,7 +70,7 @@ JSContextGroupRef::JSContextGroupRef(const std::string& RuntimePath)
 	mVirtualMachine.reset( new V8::TVirtualMachine(RuntimePath));
 }
 
-	
+	/*
 void JSObjectRef::operator=(std::nullptr_t Null)
 {
 	this->mThis.Clear();
@@ -80,7 +80,7 @@ void JSObjectRef::operator=(JSObjectRef That)
 {
 	this->mThis = That.mThis;
 }
-
+*/
 
 JSValueRef::JSValueRef(JSObjectRef Object) :
 	LocalRef	( ToValue(Object.mThis) )

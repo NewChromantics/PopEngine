@@ -20,7 +20,7 @@ extern const char Ezsift_TypeName[];
 class TEzsiftWrapper : public Bind::TObjectWrapper<Ezsift_TypeName,Ezsift::TInstance>
 {
 public:
-	TEzsiftWrapper(Bind::TContext& Context,Bind::TObject& This) :
+	TEzsiftWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
 		TObjectWrapper		( Context, This )
 	{
 	}
