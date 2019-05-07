@@ -124,12 +124,7 @@ void ApiPop::CreateTestPromise(Bind::TCallback& Params)
 void ApiPop::GarbageCollect(Bind::TCallback& Params)
 {
 	Params.mContext.GarbageCollect( Params.GetContextRef() );
-	/*
-	//	queue as job?
-	std::Debug << "Invoking garbage collection..." << std::endl;
-	auto& Paramsv8 = dynamic_cast<v8::TCallback&>( Params );
-	Paramsv8.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
-	 */
+
 }
 
 

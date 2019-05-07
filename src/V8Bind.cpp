@@ -178,7 +178,7 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 
 	//	auto assign private data like JsCore does
 	JSObjectSetPrivate( NewObjectRef, Data );
-
+	
 	return NewObjectRef;
 }
 
@@ -557,9 +557,9 @@ void				JSGlobalContextRelease(JSGlobalContextRef Context)
 	THROW_TODO;
 }
 
-void				JSGarbageCollect(JSContextRef Context)
+void JSGarbageCollect(JSContextRef Context)
 {
-	THROW_TODO;
+	Context.GetIsolate().RequestGarbageCollectionForTesting( v8::Isolate::kFullGarbageCollection );
 }
 
 
