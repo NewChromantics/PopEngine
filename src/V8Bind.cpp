@@ -331,7 +331,25 @@ bool JSObjectIsFunction(JSContextRef Context,JSObjectRef Value)
 
 JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception)
 {
-	THROW_TODO;
+	//	cast object to function & call
+	if ( !Object )
+		throw Soy::AssertException("Trying to call object/function which is null");
+	
+	auto Function = Object.mThis.As<v8::Function>();
+
+	Array<v8::Local<v8::Value>> ArgumentValues;
+	for ( auto a=0;	a<ArgumentCount;	a++ )
+		ArgumentValues.PushBack( Arguments[a].mThis );
+	
+	//	v8 needs a non-null for this. JSCore accepts null
+	if ( !This )
+		This = JSContextGetGlobalObject(Context);
+	
+	auto ResultMaybe = Function->Call( Context.mThis, This.mThis, ArgumentValues.GetSize(), ArgumentValues.GetArray() );
+	V8::IsOkay( ResultMaybe, Context.GetTryCatch(), "JSObjectCallAsFunction" );
+	
+	auto Result = ResultMaybe.ToLocalChecked();
+	return JSValueRef( Result );
 }
 
 JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
