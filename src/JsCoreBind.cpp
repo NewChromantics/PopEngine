@@ -268,14 +268,24 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TArray& Object)
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TPersistent& Object)
 {
+#if defined(JSAPI_V8)
+	if ( Object.IsFunction() )
+		return JSValueRef( Object.GetFunction().mThis.GetValue() );
+	
+	if ( Object.IsObject() )
+	{
+		auto Local = Object.mObject->GetLocal( Context.GetIsolate() );
+		auto LocalValue = Local.As<v8::Value>();
+		return JSValueRef( LocalValue );
+	}
+#else
 	if ( Object.mFunction.mThis )
 		return Object.mFunction.mThis;
 
 	if ( Object.mObject.mThis )
 		return Object.mObject.mThis;
-	
+#endif
 	throw Soy::AssertException("return null, or undefined here?");
-	return nullptr;
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
@@ -1326,13 +1336,25 @@ JsCore::TPersistent::~TPersistent()
 
 JsCore::TFunction JsCore::TPersistent::GetFunction() const
 {
+#if defined(JSAPI_V8)
+	throw Soy::AssertException("todo");
+#else
 	return mFunction;
+#endif
 }
 
 JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 {
+#if defined(JSAPI_V8)
+	if ( !mObject )
+		return TObject();
+	auto Local = this->mObject->GetLocal( Context.mLocalContext.GetIsolate() );
+	JSObjectRef LocalValue( Local );
+	return Bind::TObject( Context.mLocalContext, LocalValue );
+#else
 	//	we should ignore the object's context and always use it in a current context
 	return TObject( Context.mLocalContext, mObject.mThis );
+#endif
 	/*
 	if ( mObject.mContext != Context.mLocalContext )
 	{
@@ -1375,20 +1397,34 @@ void JsCore::TPersistent::Release()
 			throw Soy::AssertException("Has object, but no context");
 	}
 	
+#if defined(JSAPI_V8)
+	if ( mObject )
+	{
+		mContext->OnPersitentReleased(*this);
+		mObject.reset();
+#else
 	if ( mObject.mThis != nullptr )
 	{
 		Release( mRetainedContext, mObject.mThis, mDebugName );
 		mContext->OnPersitentReleased(*this);
 		mObject = TObject();
+#endif
 		mRetainedContext = nullptr;
 		mContext = nullptr;
 	}
 	
+#if defined(JSAPI_V8)
+	if ( mFunction )
+	{
+		mContext->OnPersitentReleased(*this);
+		mFunction.reset();
+#else
 	if ( mFunction.mThis != nullptr )
 	{
 		Release( mRetainedContext, mFunction.mThis, mDebugName );
 		mContext->OnPersitentReleased(*this);
 		mFunction = TFunction();
+#endif
 		mRetainedContext = nullptr;
 		mContext = nullptr;
 	}
@@ -1408,8 +1444,12 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,co
 	mDebugName = DebugName;
 	mContext = &Context.mGlobalContext;
 	mRetainedContext = JSContextGetGlobalContext(Context.mLocalContext);
+#if defined(JSAPI_V8)
+	mObject = V8::GetPersistent( Context.mLocalContext.GetIsolate(), Object.mThis.mThis );
+#else
 	mObject = Object;
 	Retain( mRetainedContext, mObject.mThis, mDebugName );
+#endif
 	
 	Context.mGlobalContext.OnPersitentRetained(*this);
 }
@@ -1426,9 +1466,14 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TFunction& Functio
 	mDebugName = DebugName;
 	mContext = &Context.mGlobalContext;
 	mRetainedContext = JSContextGetGlobalContext(Context.mLocalContext);
+#if defined(JSAPI_V8)
+	auto LocalFunc = Function.mThis.mThis.As<v8::Function>();
+	mFunction = V8::GetPersistent( Context.mLocalContext.GetIsolate(), LocalFunc );
+#else
 	mFunction = Function;
 	Retain( mRetainedContext, mFunction.mThis, mDebugName );
-
+#endif
+	
 	Context.mGlobalContext.OnPersitentRetained(*this);
 }
 
@@ -1441,7 +1486,11 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	Release();
 	
 #if defined(JSAPI_V8)
-#warning deal with this later
+#pragma warning More to do here
+	this->mObject = That.mObject;
+	this->mFunction = That.mFunction;
+	this->mContext = That.mContext;
+	mDebugName = That.mDebugName + " (copy)";
 #else
 	TLocalContext LocalContext( That.mRetainedContext, *That.mContext );
 	auto Name = That.mDebugName + " (copy)";

@@ -38,6 +38,9 @@ namespace V8
 	class TPersistent;		//	this should turn into the JS persistent after some refactoring
 
 	template<typename V8TYPE>
+	class TLocalRef;
+
+	template<typename V8TYPE>
 	std::shared_ptr<TPersistent<V8TYPE>>	GetPersistent(v8::Isolate& Isolate,v8::Local<V8TYPE> Local);
 	
 	class TException;
@@ -138,28 +141,29 @@ public:
 
 //	common wrapper for Local<>
 template<typename V8TYPE>
-class LocalRef
+class V8::TLocalRef
 {
 public:
-	LocalRef()	{}
-	LocalRef(const v8::Local<V8TYPE>& Local) :
+	TLocalRef()	{}
+	TLocalRef(const v8::Local<V8TYPE>& Local) :
 		mThis	( Local )
 	{
 	}
-	LocalRef(const v8::Local<V8TYPE>&& Local) :
+	TLocalRef(const v8::Local<V8TYPE>&& Local) :
 		mThis	( Local )
 	{
 	}
-	LocalRef(const LocalRef& That) :
+	TLocalRef(const TLocalRef& That) :
 		mThis	( That.mThis )
 	{
 	}
 
-	bool	operator!=(const LocalRef<V8TYPE>& That) const	{	return mThis != That.mThis;	}
+	bool	operator!=(const V8::TLocalRef<V8TYPE>& That) const	{	return mThis != That.mThis;	}
 	bool	operator!=(std::nullptr_t Null) const			{	return !mThis.IsEmpty();	}
 	operator bool() const									{	return !mThis.IsEmpty();	}
 
-	v8::Isolate&	GetIsolate()	{	return *mThis->GetIsolate();	}
+	v8::Isolate&			GetIsolate()	{	return *mThis->GetIsolate();	}
+	v8::Local<v8::Value>	GetValue()		{	return mThis.template As<v8::Value>();	}
 
 public:
 	v8::Local<V8TYPE>	mThis;
@@ -168,7 +172,7 @@ public:
 class JSContextGroupRef;
 
 
-class JSContextRef : public LocalRef<v8::Context>
+class JSContextRef : public V8::TLocalRef<v8::Context>
 {
 public:
 	JSContextRef(std::nullptr_t)	{}
@@ -223,7 +227,7 @@ public:
 
 
 
-class JSObjectRef : public LocalRef<v8::Object>
+class JSObjectRef : public V8::TLocalRef<v8::Object>
 {
 public:
 	JSObjectRef(std::nullptr_t)	{}
@@ -244,7 +248,7 @@ public:
 
 
 
-class JSValueRef : public LocalRef<v8::Value>
+class JSValueRef : public V8::TLocalRef<v8::Value>
 {
 public:
 	JSValueRef()	{}
@@ -262,7 +266,7 @@ public:
 
 
 
-class JSStringRef : public LocalRef<v8::String>
+class JSStringRef : public V8::TLocalRef<v8::String>
 {
 public:
 	JSStringRef(std::nullptr_t)	{}

@@ -2,6 +2,7 @@
 
 #if defined(JSAPI_V8)
 
+//	this should always be a persistent now, but need a "make it weak" approach
 #define PERSISTENT_OBJECT_HANDLE
 
 #else
@@ -420,13 +421,18 @@ public:
 	~TPersistent();							//	dec refound
 	
 	operator		bool() const		{	return IsFunction() || IsObject();	}
+		
+#if defined(JSAPI_V8)
+	bool			IsFunction() const	{	return mFunction != nullptr;	}
+	bool			IsObject() const	{	return mObject != nullptr;	}
+#else
 	bool			IsFunction() const	{	return mFunction.mThis != nullptr;	}
 	bool			IsObject() const	{	return mObject.mThis != nullptr;	}
-	const std::string&	GetDebugName() const	{	return mDebugName;	}
+#endif
 	
-	//	const for lambda[=] capture
-	TObject			GetObject(TLocalContext& Context) const;
-	TFunction		GetFunction() const;
+	const std::string&	GetDebugName() const	{	return mDebugName;	}
+	TObject				GetObject(TLocalContext& Context) const;
+	TFunction			GetFunction() const;
 	
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
@@ -448,8 +454,13 @@ protected:
 	JSGlobalContextRef	mRetainedContext = nullptr;	//	which context we retained with
 
 public:
-	TObject			mObject;
+#if defined(JSAPI_V8)
+	std::shared_ptr<V8::TPersistent<v8::Object>>	mObject;
+	std::shared_ptr<V8::TPersistent<v8::Function>>	mFunction;
+#else
+	JSObjectRef		mObject;
 	TFunction		mFunction;
+#endif
 };
 
 

@@ -83,17 +83,17 @@ void JSObjectRef::operator=(JSObjectRef That)
 */
 
 JSValueRef::JSValueRef(JSObjectRef Object) :
-	LocalRef	( ToValue(Object.mThis) )
+	TLocalRef	( ToValue(Object.mThis) )
 {
 }
 
 JSValueRef::JSValueRef(v8::Local<v8::Value>& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
 JSValueRef::JSValueRef(v8::Local<v8::Value>&& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
@@ -856,12 +856,14 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 
 void JSValueProtect(JSGlobalContextRef Context,JSValueRef Value)
 {
+	THROW_TODO;
 	//	gr: deal with this later
 	//	mght need an explicit TPersistent to store an object and not just inc/dec a ref count
 }
 
 void JSValueUnprotect(JSGlobalContextRef Context,JSValueRef Value)
 {
+	THROW_TODO;
 	//	gr: deal with this later
 	//	mght need an explicit TPersistent to store an object and not just inc/dec a ref count
 }
@@ -926,12 +928,12 @@ void JSGlobalContextRef::ExecuteInContext(std::function<void(JSContextRef&)> Fun
 
 
 JSContextRef::JSContextRef(v8::Local<v8::Context>& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
 JSContextRef::JSContextRef(v8::Local<v8::Context>&& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
@@ -961,17 +963,17 @@ v8::TryCatch& JSContextRef::GetTryCatch()
 }
 
 JSObjectRef::JSObjectRef(v8::Local<v8::Object>& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
 JSObjectRef::JSObjectRef(v8::Local<v8::Object>&& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
 JSStringRef::JSStringRef(v8::Local<v8::String>& Local) :
-	LocalRef	( Local )
+	TLocalRef	( Local )
 {
 }
 
