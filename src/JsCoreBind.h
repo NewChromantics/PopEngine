@@ -202,6 +202,8 @@ public:
 	void								DestroyContext(JsCore::TContext& Context);
 	void								Shutdown(int32_t ExitCode);
 
+	bool								OnJobQueueIteration(std::function<void(std::chrono::milliseconds)>& Sleep);
+	
 private:
 	//	when the group is created it does async jobs on that thread's run loop
 	//	for deadlock reasons we don't want that to be the main thread (opengl calls get stuck)
@@ -219,13 +221,23 @@ private:
 class JsCore::TJobQueue : public SoyWorkerJobThread
 {
 public:
-	TJobQueue(JsCore::TContext& Context) :
+	TJobQueue(JsCore::TContext& Context,std::function<bool(std::function<void(std::chrono::milliseconds)>&)> OnIteration) :
 		SoyWorkerJobThread	( "JsCore::TJobQueue" ),
-		mContext			( Context )
+		mContext			( Context ),
+		mOnIteration		( OnIteration )
 	{
 	}
-	
-	JsCore::TContext&	mContext;
+
+	virtual bool		Iteration(std::function<void(std::chrono::milliseconds)> Sleep) override
+	{
+		if ( !mOnIteration(Sleep) )
+			return false;
+		
+		return SoyWorkerJobThread::Iteration( Sleep );
+	}
+
+	JsCore::TContext&		mContext;
+	std::function<bool(std::function<void(std::chrono::milliseconds)>&)> mOnIteration;
 };
 
 

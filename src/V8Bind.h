@@ -131,6 +131,7 @@ public:
 	}
 	
 	void	ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor);
+	bool	ProcessJobQueue(std::function<void(std::chrono::milliseconds)>& Sleep);
 
 public:
 	std::shared_ptr<v8::Platform>	mPlatform;

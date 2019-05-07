@@ -310,6 +310,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		this->mContextGroup = std::move(JSContextGroupCreate( RuntimePath ));
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
+	
 		
 		//	bind first
 		try
@@ -404,6 +405,19 @@ JsCore::TInstance::~TInstance()
 	}
 
 	
+}
+
+bool JsCore::TInstance::OnJobQueueIteration(std::function<void (std::chrono::milliseconds)> &Sleep)
+{
+	if ( !mContextGroup )
+		return true;
+	
+#if defined(JSAPI_V8)
+	auto& vm = mContextGroup.GetVirtualMachine();
+	return vm.ProcessJobQueue( Sleep );
+#else
+	return true;
+#endif
 }
 
 std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Name)
@@ -505,7 +519,7 @@ JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const 
 	mInstance		( Instance ),
 	mContext		( Context ),
 	mRootDirectory	( RootDirectory ),
-	mJobQueue		( *this )
+	mJobQueue		( *this, [&Instance](std::function<void(std::chrono::milliseconds)>& Sleep)	{	return Instance.OnJobQueueIteration(Sleep);	} )
 {
 	AddContextCache( *this, mContext );
 	mJobQueue.Start();

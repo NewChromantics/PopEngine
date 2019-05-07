@@ -892,6 +892,30 @@ V8::TVirtualMachine& JSGlobalContextRef::GetVirtualMachine()
 	return mParent.GetVirtualMachine();
 }
 
+bool V8::TVirtualMachine::ProcessJobQueue(std::function<void(std::chrono::milliseconds)>& Sleep)
+{
+	//	gr: if no jobs, force a sleep here?
+
+	bool MoreTasks = true;
+	auto PumpMessageLoop = [&](v8::Isolate& Isolate)
+	{
+		MoreTasks = v8::platform::PumpMessageLoop( mPlatform.get(), &Isolate );
+	};
+
+	while( MoreTasks )
+	{
+		ExecuteInIsolate(PumpMessageLoop);
+	}
+	
+	auto RunMicroTasks = [&](v8::Isolate& Isolate)
+	{
+		Isolate.RunMicrotasks();
+	};
+	ExecuteInIsolate(RunMicroTasks);
+	
+	return true;
+}
+
 
 void V8::TVirtualMachine::ExecuteInIsolate(std::function<void(v8::Isolate&)> Functor)
 {
