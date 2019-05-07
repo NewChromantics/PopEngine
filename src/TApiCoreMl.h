@@ -20,8 +20,8 @@ extern const char CoreMl_TypeName[];
 class TCoreMlWrapper : public Bind::TObjectWrapper<CoreMl_TypeName,CoreMl::TInstance>
 {
 public:
-	TCoreMlWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper	( Context, This )
+	TCoreMlWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
 	{
 	}
 	

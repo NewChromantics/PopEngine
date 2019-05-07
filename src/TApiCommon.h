@@ -38,8 +38,8 @@ namespace ApiPop
 class TAsyncLoopWrapper : public Bind::TObjectWrapper<ApiPop::AsyncLoop_TypeName,ApiPop::TAsyncLoop>
 {
 public:
-	TAsyncLoopWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
+	TAsyncLoopWrapper(Bind::TContext& Context) :
+		TObjectWrapper			( Context )
 	{
 	}
 	
@@ -62,8 +62,8 @@ extern const char Image_TypeName[];
 class TImageWrapper : public Bind::TObjectWrapper<Image_TypeName,SoyPixelsImpl>
 {
 public:
-	TImageWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-	TObjectWrapper			( Context, This )
+	TImageWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
 	{
 	}
 	~TImageWrapper();

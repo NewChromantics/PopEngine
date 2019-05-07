@@ -52,11 +52,10 @@ public:
 class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<ApiSocket::UdpBroadcastServer_TypeName,TUdpBroadcastServer>, public TSocketWrapper
 {
 public:
-	TUdpBroadcastServerWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper	( Context, This )
+	TUdpBroadcastServerWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
 	{
 	}
-	//TUdpBroadcastServerWrapper(uint16_t ListenPort);
 	
 	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void		Construct(Bind::TCallback& Params) override;

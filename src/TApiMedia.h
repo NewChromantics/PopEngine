@@ -50,8 +50,8 @@ public:
 class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,PopCameraDevice::TInstance>
 {
 public:
-	TPopCameraDeviceWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
+	TPopCameraDeviceWrapper(Bind::TContext& Context) :
+		TObjectWrapper		( Context )
 	{
 	}
 
@@ -82,8 +82,8 @@ extern const char AvcDecoder_TypeName[];
 class TAvcDecoderWrapper : public Bind::TObjectWrapper<AvcDecoder_TypeName,PopH264::TInstance>
 {
 public:
-	TAvcDecoderWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
+	TAvcDecoderWrapper(Bind::TContext& Context) :
+		TObjectWrapper		( Context )
 	{
 	}
 	//~TAvcDecoderWrapper();

@@ -73,8 +73,8 @@ protected:
 class THttpServerWrapper: public Bind::TObjectWrapper<ApiHttp::HttpServer_TypeName,THttpServer>, public TSocketWrapper
 {
 public:
-	THttpServerWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
+	THttpServerWrapper(Bind::TContext& Context) :
+		TObjectWrapper		( Context )
 	{
 	}
 	

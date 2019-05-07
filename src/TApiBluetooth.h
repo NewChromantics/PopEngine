@@ -32,8 +32,8 @@ public:
 class TBluetoothDeviceWrapper : public Bind::TObjectWrapper<ApiBluetooth::BluetoothDevice_TypeName,Bluetooth::TDeviceHandle>
 {
 public:
-	TBluetoothDeviceWrapper(Bind::TLocalContext& Context,Bind::TObject& This) :
-		TObjectWrapper			( Context, This )
+	TBluetoothDeviceWrapper(Bind::TContext& Context) :
+		TObjectWrapper			( Context )
 	{
 	}
 	

@@ -17,8 +17,8 @@ extern const char Opencl_Context_TypeName[];
 class TOpenclContextWrapper : public Bind::TObjectWrapper<Opencl_Context_TypeName,Opencl::TContextThread>
 {
 public:
-	TOpenclContextWrapper(Bind::TContext& Context,Bind::TObject& This) :
-		TObjectWrapper	( Context, This )
+	TOpenclContextWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
 	{
 	}
 	

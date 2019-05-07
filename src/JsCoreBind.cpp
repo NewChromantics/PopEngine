@@ -902,8 +902,7 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
 
-	Bind::TObject NullObject;
-	auto& ObjectPointer = ObjectTemplate.AllocInstance( LocalContext, NullObject );
+	auto& ObjectPointer = ObjectTemplate.AllocInstance( LocalContext.mGlobalContext );
 	void* Data = &ObjectPointer;
 
 	auto NewObjectHandle = JSObjectMake( LocalContext.mLocalContext, Class, Data );
@@ -935,16 +934,15 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 		throw Soy::AssertException(ErrorStr);
 	}
 	
-	Bind::TObject NewObjectBind( LocalContext.mLocalContext, NewObject );
 	auto& ObjectTemplate = *pObjectTemplate;
 	auto& Class = ObjectTemplate.mClass;
-	auto& ObjectPointer = ObjectTemplate.AllocInstance(LocalContext, NewObjectBind );
+	auto& ObjectPointer = ObjectTemplate.AllocInstance( LocalContext.mGlobalContext );
 	void* Data = &ObjectPointer;
 	
 	//	v8 needs to manually set the private data
-	//Bind::TObject ObjectHandle( LocalContext.mLocalContext, NewObject );
 	JSObjectSetPrivate( NewObject, Data );
-	//ObjectPointer.SetHandle( LocalContext, ObjectHandle );
+	Bind::TObject ObjectHandle( LocalContext.mLocalContext, NewObject );
+	ObjectPointer.SetHandle( LocalContext, ObjectHandle );
 	
 	//	for V8, to get a free() callback, we need a persistent to be marked weak
 #if defined(JSAPI_V8)
