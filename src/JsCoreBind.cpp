@@ -24,7 +24,7 @@
 
 #if !defined(JSAPI_V8)
 //	wrapper as v8 needs to setup the runtime files
-JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory)
+JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
 {
 	return JSContextGroupCreate();
 }
@@ -311,8 +311,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		//	for v8
 		std::string RuntimePath = Platform::GetAppResourcesDirectory() + "/v8Runtime/";
 		
+#if defined(TARGET_WINDOWS)
 		if ( &JSContextGroupCreate == nullptr )
 			throw Soy::AssertException("If this function pointer is null, we may have manually loaded symbols, but they've been stripped. Turn OFF whole program optimisation!");
+#endif
 
 		mContextGroup = JSContextGroupCreateWithRuntime( RuntimePath );
 		if ( !mContextGroup )

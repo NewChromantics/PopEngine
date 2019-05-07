@@ -421,7 +421,7 @@ size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,J
 JSValueRef			JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception);
 JSGlobalContextRef	JSContextGetGlobalContext(JSContextRef Context);
 JSObjectRef			JSContextGetGlobalObject(JSContextRef Context);
-JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory);
+JSContextGroupRef	JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory);
 JSContextGroupRef	JSContextGroupCreate();
 void				JSContextGroupRelease(JSContextGroupRef ContextGroup);
 JSGlobalContextRef	JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass);

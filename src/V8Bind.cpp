@@ -532,7 +532,7 @@ JSContextGroupRef JSContextGroupCreate()
 	throw Soy::AssertException("In v8 implementation we need the runtime directory, use overloaded version");
 }
 
-JSContextGroupRef JSContextGroupCreate(const std::string& RuntimeDirectory)
+JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
 {
 	JSContextGroupRef NewVirtualMachine( RuntimeDirectory );
 	return NewVirtualMachine;
