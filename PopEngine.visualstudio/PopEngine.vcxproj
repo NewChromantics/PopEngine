@@ -376,6 +376,15 @@
     <CustomBuild Include="..\src\v8\lib\icuuc.dll">
       <FileType>Document</FileType>
     </CustomBuild>
+    <CustomBuild Include="..\src\v8\v8Runtime\icudtl.dat">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\v8Runtime\natives_blob.bin">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\v8Runtime\snapshot_blob_win64.bin">
+      <FileType>Document</FileType>
+    </CustomBuild>
     <None Include="..\UnitTest\bootup.js" />
     <None Include="..\UnitTest\CameraTest\Blit.frag.glsl">
       <FileType>Document</FileType>

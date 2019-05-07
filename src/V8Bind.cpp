@@ -788,8 +788,12 @@ V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 #if (V8_VERSION==6) || (V8_VERSION==7)
 	std::string IcuPath = RuntimePath + "icudtl.dat";
 	std::string NativesBlobPath = RuntimePath + "natives_blob.bin";
-	std::string SnapshotBlobPath = RuntimePath + "snapshot_blob.bin";
-	
+#if defined(TARGET_WINDOWS)
+	std::string SnapshotBlobPath = RuntimePath + "snapshot_blob_win64.bin";
+#else
+		std::string SnapshotBlobPath = RuntimePath + "snapshot_blob_osx.bin";
+#endif
+
 	if ( !v8::V8::InitializeICU( IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
 
@@ -802,9 +806,9 @@ V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 
 	NativesBlobData={	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
 	SnapshotBlobData={	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
-	v8::V8::SetNativesDataBlob(&NativesBlobData);
-	v8::V8::SetSnapshotDataBlob(&SnapshotBlobData);
-	//v8::V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
+	//v8::V8::SetNativesDataBlob(&NativesBlobData);
+	//v8::V8::SetSnapshotDataBlob(&SnapshotBlobData);
+	v8::V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
 	
 #elif V8_VERSION==5
 	V8::InitializeICU(nullptr);
