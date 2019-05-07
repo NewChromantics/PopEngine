@@ -55,7 +55,6 @@ namespace JsCore
 	TYPE		FromValue(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
-	std::string	GetString(JSStringRef Handle);
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	template<typename INTTYPE>

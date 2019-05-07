@@ -166,13 +166,17 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 	if ( !Data )
 	{
 		auto ConstructorTemplate = Class.mConstructor->GetLocal( Context.GetIsolate() );
-		auto Constructor = ConstructorTemplate->GetFunction();
+		auto ConstructorMaybe = ConstructorTemplate->GetFunction( Context.mThis );
+		V8::IsOkay( ConstructorMaybe, Context.GetIsolate(), Context.GetTryCatch(), "Getting function from constructor template");
+		auto Constructor = ConstructorMaybe.ToLocalChecked();
 		return JSObjectRef( Constructor );
 	}
 	
 	//	create instance
 	auto ObjectTemplate = Class.mTemplate->GetLocal( Context.GetIsolate() );
-	auto NewObjectLocal = ObjectTemplate->NewInstance();
+	auto NewObjectMaybe = ObjectTemplate->NewInstance( Context.mThis );
+	V8::IsOkay( NewObjectMaybe, Context.GetIsolate(), Context.GetTryCatch(), "ObjectTemplate->NewInstance");
+	auto NewObjectLocal = NewObjectMaybe.ToLocalChecked();
 	
 	JSObjectRef NewObjectRef( NewObjectLocal );
 
@@ -185,7 +189,7 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
 {
 	auto ValueMaybe = This.mThis->Get( Context.mThis, Name.mThis );
-	V8::IsOkay( ValueMaybe, Context.GetTryCatch(), std::string("GetProperty ") + Name.GetString(Context) );
+	V8::IsOkay( ValueMaybe, Context.GetIsolate(), Context.GetTryCatch(), std::string("GetProperty ") + Name.GetString(Context) );
 	
 	auto Value = ValueMaybe.ToLocalChecked();
 	return JSValueRef( Value );
@@ -347,7 +351,7 @@ JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObje
 		This = JSContextGetGlobalObject(Context);
 	
 	auto ResultMaybe = Function->Call( Context.mThis, This.mThis, ArgumentValues.GetSize(), ArgumentValues.GetArray() );
-	V8::IsOkay( ResultMaybe, Context.GetTryCatch(), "JSObjectCallAsFunction" );
+	V8::IsOkay( ResultMaybe, Context.GetIsolate(), Context.GetTryCatch(), "JSObjectCallAsFunction" );
 	
 	auto Result = ResultMaybe.ToLocalChecked();
 	return JSValueRef( Result );
@@ -501,12 +505,12 @@ JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef 
 	v8::ScriptOrigin Origin( OriginStr.mThis, OriginRow, OriginCol, Cors );
 
 	auto NewScriptReturn = v8::Script::Compile( Context.mThis, Source.mThis, &Origin );
-	V8::IsOkay( NewScriptReturn, Context.GetTryCatch(), "Script failed to compile");
+	V8::IsOkay( NewScriptReturn, Context.GetIsolate(), Context.GetTryCatch(), "Script failed to compile");
 	auto NewScript = NewScriptReturn.ToLocalChecked();
 	
 	//	now run it
 	auto ResultMaybe = NewScript->Run( Context.mThis );
-	V8::IsOkay( ResultMaybe, Context.GetTryCatch(), "Script failed to run");
+	V8::IsOkay( ResultMaybe, Context.GetIsolate(), Context.GetTryCatch(), "Script failed to run");
 	auto ResultValue = ResultMaybe.ToLocalChecked();
 	return JSValueRef( ResultValue );
 }
@@ -568,13 +572,17 @@ JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffe
 	return JSStringRef( Context, Buffer );
 }
 
-size_t JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize)
+size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize)
 {
 	if ( BufferSize == 0 )
 		return 0;
 	
+#if V8_VERSION==7
+	v8::String::Utf8Value ExceptionStr( &Context.GetIsolate(), String.mThis );
+#else
 	v8::String::Utf8Value ExceptionStr( String.mThis );
-	
+#endif
+
 	//	+1 to add terminator
 	auto Length = ExceptionStr.length()+1;
 	const auto* Chars = *ExceptionStr;
@@ -669,7 +677,7 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
 			//	bind function to template
 			auto This = InstanceTemplate;
 			v8::Local<v8::FunctionTemplate> FunctionTemplateLocal = v8::FunctionTemplate::New( Isolate, FunctionDefinition.callAsFunction );
-			auto FunctionLocal = FunctionTemplateLocal->GetFunction();
+			auto FunctionLocal = FunctionTemplateLocal->GetFunction( Context.mThis );
 			//auto FunctionNameStr = JSStringCreateWithUTF8CString( Context, FunctionDefinition.name );
 			This->Set( Isolate, FunctionDefinition.name, FunctionTemplateLocal);
 			/*auto SetResult = This->Set( Isolate, FunctionDefinition.name, FunctionLocal);
@@ -774,7 +782,7 @@ V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 	
 	
 	
-#if V8_VERSION==6
+#if (V8_VERSION==6) || (V8_VERSION==7)
 	std::string IcuPath = RuntimePath + "icudtl.dat";
 	std::string NativesBlobPath = RuntimePath + "natives_blob.bin";
 	std::string SnapshotBlobPath = RuntimePath + "snapshot_blob.bin";
@@ -807,8 +815,12 @@ V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 	//	create allocator
 	mAllocator.reset( new V8::TAllocator() );
 	
+#if (V8_VERSION==7)
+	mPlatform = v8::platform::NewDefaultPlatform();
+#else
 	//std::unique_ptr<v8::Platform> platform = v8::platform::CreateDefaultPlatform();
 	mPlatform.reset( v8::platform::CreateDefaultPlatform() );
+#endif
 	v8::V8::InitializePlatform( mPlatform.get() );
 	v8::V8::Initialize();
 	
@@ -937,7 +949,7 @@ void V8::TVirtualMachine::ExecuteInIsolate(std::function<void(v8::Isolate&)> Fun
 			v8::TryCatch TryCatch(mIsolate);
 			Functor( *mIsolate );
 			if ( TryCatch.HasCaught() )
-				throw V8::TException( TryCatch, "Some v8 exception");
+				throw V8::TException( *mIsolate, TryCatch, "Some v8 exception");
 		}
 		mIsolate->Exit();
 	}
@@ -964,7 +976,7 @@ void JSGlobalContextRef::ExecuteInContext(std::function<void(JSContextRef&)> Fun
 		Functor( LocalContextRef );
 		
 		if ( TryCatch.HasCaught() )
-			throw V8::TException( TryCatch, "Executing Context");
+			throw V8::TException( Isolate, TryCatch, "Executing Context");
 	};
 	
 	auto& vm = GetVirtualMachine();
@@ -1040,7 +1052,7 @@ std::string JSStringRef::GetString(JSContextRef Context)
 }
 
 
-V8::TException::TException(v8::TryCatch& TryCatch,const std::string& Context) :
+V8::TException::TException(v8::Isolate& Isolate,v8::TryCatch& TryCatch,const std::string& Context) :
 	mError	( Context )
 {
 	//	get the exception from v8
@@ -1053,7 +1065,7 @@ V8::TException::TException(v8::TryCatch& TryCatch,const std::string& Context) :
 	}
 	
 	//	get the description
-	v8::String::Utf8Value ExceptionStr(Exception);
+	v8::String::Utf8Value ExceptionStr( &Isolate, Exception );
 	auto ExceptionCStr = *ExceptionStr;
 	if ( ExceptionCStr == nullptr )
 	{
@@ -1075,8 +1087,8 @@ V8::TException::TException(v8::TryCatch& TryCatch,const std::string& Context) :
 	{
 		for ( int fi=0;	fi<StackTrace->GetFrameCount();	fi++ )
 		{
-			auto Frame = StackTrace->GetFrame(fi);
-			v8::String::Utf8Value FuncName( Frame->GetFunctionName() );
+			auto Frame = StackTrace->GetFrame( &Isolate, fi );
+			v8::String::Utf8Value FuncName( &Isolate, Frame->GetFunctionName() );
 			mError += "\n";
 			mError += "in ";
 			mError += *FuncName;

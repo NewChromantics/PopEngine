@@ -29,6 +29,21 @@
 		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF509159228217AC00DCBB4B /* libencoding.a */; };
+		BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; };
+		BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; };
+		BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; };
+		BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; };
+		BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; };
+		BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; };
+		BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; };
+		BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF5091952282197A00DCBB4B /* libv8_for_testing.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF5091962282197A00DCBB4B /* libv8_libbase.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF5091972282197A00DCBB4B /* libv8_libplatform.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF59A2502222039900AE9926 /* Lollypop.icns in Resources */ = {isa = PBXBuildFile; fileRef = BF59A24F2222039900AE9926 /* Lollypop.icns */; };
 		BF59A2522222057200AE9926 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF59A2512222057200AE9926 /* GameController.framework */; };
 		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
@@ -37,42 +52,6 @@
 		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
 		BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6314A2221DD3D4008D1C0F /* Vision.framework */; };
-		BF6554072132C4D9003E4241 /* lib_wasm_fuzzer_common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DA2132C4D9003E4241 /* lib_wasm_fuzzer_common.a */; };
-		BF6554082132C4D9003E4241 /* libcctest_sources.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DB2132C4D9003E4241 /* libcctest_sources.a */; };
-		BF6554092132C4D9003E4241 /* libfuzzer_support.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DC2132C4D9003E4241 /* libfuzzer_support.a */; };
-		BF65540A2132C4D9003E4241 /* libgmock_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DD2132C4D9003E4241 /* libgmock_main.a */; };
-		BF65540B2132C4D9003E4241 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DE2132C4D9003E4241 /* libgtest.a */; };
-		BF65540C2132C4D9003E4241 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553DF2132C4D9003E4241 /* libicui18n.a */; };
-		BF65540D2132C4D9003E4241 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E02132C4D9003E4241 /* libicuuc.a */; };
-		BF65540E2132C4D9003E4241 /* libinspector.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E12132C4D9003E4241 /* libinspector.a */; };
-		BF65540F2132C4D9003E4241 /* libjson_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E22132C4D9003E4241 /* libjson_fuzzer.a */; };
-		BF6554102132C4D9003E4241 /* libmulti_return_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E32132C4D9003E4241 /* libmulti_return_fuzzer.a */; };
-		BF6554112132C4D9003E4241 /* liboptions_sources.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E42132C4D9003E4241 /* liboptions_sources.a */; };
-		BF6554122132C4D9003E4241 /* libparser_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E52132C4D9003E4241 /* libparser_fuzzer.a */; };
-		BF6554132132C4D9003E4241 /* libregexp_builtins_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E62132C4D9003E4241 /* libregexp_builtins_fuzzer.a */; };
-		BF6554142132C4D9003E4241 /* libregexp_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E72132C4D9003E4241 /* libregexp_fuzzer.a */; };
-		BF6554152132C4D9003E4241 /* libtorque_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E82132C4D9003E4241 /* libtorque_base.a */; };
-		BF6554162132C4D9003E4241 /* libtorque_generated_initializers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553E92132C4D9003E4241 /* libtorque_generated_initializers.a */; };
-		BF6554172132C4D9003E4241 /* libunittests_sources.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553EA2132C4D9003E4241 /* libunittests_sources.a */; };
-		BF6554182132C4D9003E4241 /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553EB2132C4D9003E4241 /* libv8_base.a */; };
-		BF6554192132C4D9003E4241 /* libv8_external_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553EC2132C4D9003E4241 /* libv8_external_snapshot.a */; };
-		BF65541A2132C4D9003E4241 /* libv8_init.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553ED2132C4D9003E4241 /* libv8_init.a */; };
-		BF65541B2132C4D9003E4241 /* libv8_initializers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553EE2132C4D9003E4241 /* libv8_initializers.a */; };
-		BF65541C2132C4D9003E4241 /* libv8_libbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553EF2132C4D9003E4241 /* libv8_libbase.a */; };
-		BF65541D2132C4D9003E4241 /* libv8_libplatform.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F02132C4D9003E4241 /* libv8_libplatform.a */; };
-		BF65541E2132C4D9003E4241 /* libv8_libsampler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F12132C4D9003E4241 /* libv8_libsampler.a */; };
-		BF65541F2132C4D9003E4241 /* libwasm_async_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F22132C4D9003E4241 /* libwasm_async_fuzzer.a */; };
-		BF6554202132C4D9003E4241 /* libwasm_code_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F32132C4D9003E4241 /* libwasm_code_fuzzer.a */; };
-		BF6554212132C4D9003E4241 /* libwasm_compile_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F42132C4D9003E4241 /* libwasm_compile_fuzzer.a */; };
-		BF6554222132C4D9003E4241 /* libwasm_data_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F52132C4D9003E4241 /* libwasm_data_section_fuzzer.a */; };
-		BF6554232132C4D9003E4241 /* libwasm_function_sigs_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F62132C4D9003E4241 /* libwasm_function_sigs_section_fuzzer.a */; };
-		BF6554242132C4D9003E4241 /* libwasm_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F72132C4D9003E4241 /* libwasm_fuzzer.a */; };
-		BF6554252132C4D9003E4241 /* libwasm_globals_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F82132C4D9003E4241 /* libwasm_globals_section_fuzzer.a */; };
-		BF6554262132C4D9003E4241 /* libwasm_imports_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553F92132C4D9003E4241 /* libwasm_imports_section_fuzzer.a */; };
-		BF6554272132C4D9003E4241 /* libwasm_memory_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553FA2132C4D9003E4241 /* libwasm_memory_section_fuzzer.a */; };
-		BF6554282132C4D9003E4241 /* libwasm_module_runner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553FB2132C4D9003E4241 /* libwasm_module_runner.a */; };
-		BF6554292132C4D9003E4241 /* libwasm_names_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553FC2132C4D9003E4241 /* libwasm_names_section_fuzzer.a */; };
-		BF65542A2132C4D9003E4241 /* libwasm_types_section_fuzzer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6553FD2132C4D9003E4241 /* libwasm_types_section_fuzzer.a */; };
 		BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC520D6C80D000BC812 /* CoreGraphics.framework */; };
 		BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC720D6C811000BC812 /* ApplicationServices.framework */; };
 		BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */; };
@@ -157,6 +136,13 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */,
+				BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */,
+				BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */,
+				BF5091952282197A00DCBB4B /* libv8_for_testing.dylib in CopyFiles */,
+				BF5091962282197A00DCBB4B /* libv8_libbase.dylib in CopyFiles */,
+				BF5091972282197A00DCBB4B /* libv8_libplatform.dylib in CopyFiles */,
+				BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */,
 				BF012B0E226A1102003AEB55 /* PopCameraDeviceFramework.framework in CopyFiles */,
 				BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */,
 			);
@@ -208,6 +194,14 @@
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264Framework.framework; path = src/Libs/PopH264Framework.framework; sourceTree = SOURCE_ROOT; };
+		BF509159228217AC00DCBB4B /* libencoding.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libencoding.a; path = obj/third_party/inspector_protocol/libencoding.a; sourceTree = "<group>"; };
+		BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_for_testing.dylib; sourceTree = "<group>"; };
+		BF50917F2282194700DCBB4B /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libc++.dylib"; sourceTree = "<group>"; };
+		BF5091802282194700DCBB4B /* libv8_libplatform.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_libplatform.dylib; sourceTree = "<group>"; };
+		BF5091812282194700DCBB4B /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8.dylib; sourceTree = "<group>"; };
+		BF5091822282194700DCBB4B /* libicuuc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicuuc.dylib; sourceTree = "<group>"; };
+		BF5091832282194700DCBB4B /* libicui18n.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicui18n.dylib; sourceTree = "<group>"; };
+		BF5091842282194700DCBB4B /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_libbase.dylib; sourceTree = "<group>"; };
 		BF51EA4220ED83F6007443D8 /* DataOld */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DataOld; sourceTree = "<group>"; };
 		BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MobileOpenPose.mlmodel; sourceTree = "<group>"; };
 		BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SsdMobilenet.mlmodel; sourceTree = "<group>"; };
@@ -249,42 +243,6 @@
 		BF6553D62132C4D9003E4241 /* v8-version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "v8-version.h"; sourceTree = "<group>"; };
 		BF6553D72132C4D9003E4241 /* v8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = v8.h; sourceTree = "<group>"; };
 		BF6553D82132C4D9003E4241 /* v8config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = v8config.h; sourceTree = "<group>"; };
-		BF6553DA2132C4D9003E4241 /* lib_wasm_fuzzer_common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = lib_wasm_fuzzer_common.a; sourceTree = "<group>"; };
-		BF6553DB2132C4D9003E4241 /* libcctest_sources.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcctest_sources.a; sourceTree = "<group>"; };
-		BF6553DC2132C4D9003E4241 /* libfuzzer_support.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfuzzer_support.a; sourceTree = "<group>"; };
-		BF6553DD2132C4D9003E4241 /* libgmock_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libgmock_main.a; sourceTree = "<group>"; };
-		BF6553DE2132C4D9003E4241 /* libgtest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libgtest.a; sourceTree = "<group>"; };
-		BF6553DF2132C4D9003E4241 /* libicui18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libicui18n.a; sourceTree = "<group>"; };
-		BF6553E02132C4D9003E4241 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libicuuc.a; sourceTree = "<group>"; };
-		BF6553E12132C4D9003E4241 /* libinspector.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libinspector.a; sourceTree = "<group>"; };
-		BF6553E22132C4D9003E4241 /* libjson_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjson_fuzzer.a; sourceTree = "<group>"; };
-		BF6553E32132C4D9003E4241 /* libmulti_return_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmulti_return_fuzzer.a; sourceTree = "<group>"; };
-		BF6553E42132C4D9003E4241 /* liboptions_sources.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = liboptions_sources.a; sourceTree = "<group>"; };
-		BF6553E52132C4D9003E4241 /* libparser_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libparser_fuzzer.a; sourceTree = "<group>"; };
-		BF6553E62132C4D9003E4241 /* libregexp_builtins_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libregexp_builtins_fuzzer.a; sourceTree = "<group>"; };
-		BF6553E72132C4D9003E4241 /* libregexp_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libregexp_fuzzer.a; sourceTree = "<group>"; };
-		BF6553E82132C4D9003E4241 /* libtorque_base.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libtorque_base.a; sourceTree = "<group>"; };
-		BF6553E92132C4D9003E4241 /* libtorque_generated_initializers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libtorque_generated_initializers.a; sourceTree = "<group>"; };
-		BF6553EA2132C4D9003E4241 /* libunittests_sources.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libunittests_sources.a; sourceTree = "<group>"; };
-		BF6553EB2132C4D9003E4241 /* libv8_base.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_base.a; sourceTree = "<group>"; };
-		BF6553EC2132C4D9003E4241 /* libv8_external_snapshot.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_external_snapshot.a; sourceTree = "<group>"; };
-		BF6553ED2132C4D9003E4241 /* libv8_init.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_init.a; sourceTree = "<group>"; };
-		BF6553EE2132C4D9003E4241 /* libv8_initializers.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_initializers.a; sourceTree = "<group>"; };
-		BF6553EF2132C4D9003E4241 /* libv8_libbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_libbase.a; sourceTree = "<group>"; };
-		BF6553F02132C4D9003E4241 /* libv8_libplatform.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_libplatform.a; sourceTree = "<group>"; };
-		BF6553F12132C4D9003E4241 /* libv8_libsampler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libv8_libsampler.a; sourceTree = "<group>"; };
-		BF6553F22132C4D9003E4241 /* libwasm_async_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_async_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F32132C4D9003E4241 /* libwasm_code_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_code_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F42132C4D9003E4241 /* libwasm_compile_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_compile_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F52132C4D9003E4241 /* libwasm_data_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_data_section_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F62132C4D9003E4241 /* libwasm_function_sigs_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_function_sigs_section_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F72132C4D9003E4241 /* libwasm_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F82132C4D9003E4241 /* libwasm_globals_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_globals_section_fuzzer.a; sourceTree = "<group>"; };
-		BF6553F92132C4D9003E4241 /* libwasm_imports_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_imports_section_fuzzer.a; sourceTree = "<group>"; };
-		BF6553FA2132C4D9003E4241 /* libwasm_memory_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_memory_section_fuzzer.a; sourceTree = "<group>"; };
-		BF6553FB2132C4D9003E4241 /* libwasm_module_runner.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_module_runner.a; sourceTree = "<group>"; };
-		BF6553FC2132C4D9003E4241 /* libwasm_names_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_names_section_fuzzer.a; sourceTree = "<group>"; };
-		BF6553FD2132C4D9003E4241 /* libwasm_types_section_fuzzer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libwasm_types_section_fuzzer.a; sourceTree = "<group>"; };
 		BF680CBC1B582356009F6E1C /* SoyTypes_CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_CoreFoundation.h; path = src/SoyTypes_CoreFoundation.h; sourceTree = "<group>"; };
 		BF689AC520D6C80D000BC812 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		BF689AC720D6C811000BC812 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
@@ -303,11 +261,6 @@
 		BF689AE820D6DEB3000BC812 /* PopMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopMain.cpp; path = src/PopMain.cpp; sourceTree = "<group>"; };
 		BF689AE920D6DEB4000BC812 /* PopMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopMain.h; path = src/PopMain.h; sourceTree = "<group>"; };
 		BF689AEA20D6DEB4000BC812 /* PopMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopMain.mm; path = src/PopMain.mm; sourceTree = "<group>"; };
-		BF689AF220D6E89E000BC812 /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8.dylib; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8.dylib; sourceTree = "<absolute>"; };
-		BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libplatform.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_libplatform.a; sourceTree = "<absolute>"; };
-		BF689AF620D6E8D3000BC812 /* libv8_base.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_base.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_base.a; sourceTree = "<absolute>"; };
-		BF689AF820D6E8D6000BC812 /* libv8_libbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_libbase.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_libbase.a; sourceTree = "<absolute>"; };
-		BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_snapshot.a; path = /usr/local/Cellar/v8/5.1.281.47/lib/libv8_snapshot.a; sourceTree = "<absolute>"; };
 		BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngineAppBundle.xcconfig; path = src/PopEngineAppBundle.xcconfig; sourceTree = "<group>"; };
 		BF689AFE20D9A52E000BC812 /* TV8Container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8Container.cpp; path = src/TV8Container.cpp; sourceTree = "<group>"; };
 		BF689AFF20D9A52E000BC812 /* TV8Container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Container.h; path = src/TV8Container.h; sourceTree = "<group>"; };
@@ -384,11 +337,6 @@
 		BFCF8B562107552700EE7307 /* Data_Posenet */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Posenet; sourceTree = "<group>"; };
 		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
 		BFD0829E225E974D00FD05DC /* GuildhallGildwall */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GuildhallGildwall; path = ../GuildhallGildwall; sourceTree = "<group>"; };
-		BFD4455920E66D31007E2497 /* libv8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libv8.dylib"; sourceTree = "<absolute>"; };
-		BFD4455B20E66D34007E2497 /* libv8_libplatform.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8_libplatform.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libv8_libplatform.dylib"; sourceTree = "<absolute>"; };
-		BFD4455D20E66D37007E2497 /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libv8_libbase.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libv8_libbase.dylib"; sourceTree = "<absolute>"; };
-		BFD4455F20E66D3A007E2497 /* libicuuc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicuuc.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libicuuc.dylib"; sourceTree = "<absolute>"; };
-		BFD4456120E66D3C007E2497 /* libicui18n.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicui18n.dylib; path = "/usr/local/Cellar/v8@6.6/6.6.313/lib/libicui18n.dylib"; sourceTree = "<absolute>"; };
 		BFD4456620E6711A007E2497 /* SoyRuntimeLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyRuntimeLibrary.h; path = src/SoyRuntimeLibrary.h; sourceTree = "<group>"; };
 		BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyRuntimeLibrary.cpp; path = src/SoyRuntimeLibrary.cpp; sourceTree = "<group>"; };
 		BFD4D564213451D20028A647 /* SoyTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTime.h; path = src/SoyTime.h; sourceTree = "<group>"; };
@@ -481,62 +429,34 @@
 				BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */,
 				BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */,
 				BF59A2522222057200AE9926 /* GameController.framework in Frameworks */,
+				BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */,
 				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
 				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
-				BF6554252132C4D9003E4241 /* libwasm_globals_section_fuzzer.a in Frameworks */,
-				BF6554092132C4D9003E4241 /* libfuzzer_support.a in Frameworks */,
-				BF65541D2132C4D9003E4241 /* libv8_libplatform.a in Frameworks */,
-				BF6554102132C4D9003E4241 /* libmulti_return_fuzzer.a in Frameworks */,
 				BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */,
+				BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */,
 				BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */,
-				BF65540D2132C4D9003E4241 /* libicuuc.a in Frameworks */,
 				BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */,
-				BF6554192132C4D9003E4241 /* libv8_external_snapshot.a in Frameworks */,
-				BF65542A2132C4D9003E4241 /* libwasm_types_section_fuzzer.a in Frameworks */,
-				BF6554282132C4D9003E4241 /* libwasm_module_runner.a in Frameworks */,
+				BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */,
+				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
 				BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */,
-				BF6554202132C4D9003E4241 /* libwasm_code_fuzzer.a in Frameworks */,
-				BF65541E2132C4D9003E4241 /* libv8_libsampler.a in Frameworks */,
+				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
 				EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */,
 				BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */,
-				BF65541F2132C4D9003E4241 /* libwasm_async_fuzzer.a in Frameworks */,
-				BF6554152132C4D9003E4241 /* libtorque_base.a in Frameworks */,
+				BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */,
 				BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */,
 				BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */,
-				BF6554292132C4D9003E4241 /* libwasm_names_section_fuzzer.a in Frameworks */,
-				BF6554122132C4D9003E4241 /* libparser_fuzzer.a in Frameworks */,
 				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
-				BF65540F2132C4D9003E4241 /* libjson_fuzzer.a in Frameworks */,
-				BF6554082132C4D9003E4241 /* libcctest_sources.a in Frameworks */,
-				BF65540E2132C4D9003E4241 /* libinspector.a in Frameworks */,
-				BF6554162132C4D9003E4241 /* libtorque_generated_initializers.a in Frameworks */,
-				BF6554112132C4D9003E4241 /* liboptions_sources.a in Frameworks */,
-				BF6554242132C4D9003E4241 /* libwasm_fuzzer.a in Frameworks */,
-				BF6554272132C4D9003E4241 /* libwasm_memory_section_fuzzer.a in Frameworks */,
-				BF65541B2132C4D9003E4241 /* libv8_initializers.a in Frameworks */,
-				BF65541A2132C4D9003E4241 /* libv8_init.a in Frameworks */,
-				BF65540A2132C4D9003E4241 /* libgmock_main.a in Frameworks */,
-				BF65541C2132C4D9003E4241 /* libv8_libbase.a in Frameworks */,
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
+				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
 				BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */,
-				BF65540B2132C4D9003E4241 /* libgtest.a in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
-				BF6554072132C4D9003E4241 /* lib_wasm_fuzzer_common.a in Frameworks */,
+				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
 				BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */,
-				BF65540C2132C4D9003E4241 /* libicui18n.a in Frameworks */,
-				BF6554142132C4D9003E4241 /* libregexp_fuzzer.a in Frameworks */,
 				BF3BE7B6226E03310043DFA5 /* libVarjo_Glint.a in Frameworks */,
-				BF6554132132C4D9003E4241 /* libregexp_builtins_fuzzer.a in Frameworks */,
-				BF6554262132C4D9003E4241 /* libwasm_imports_section_fuzzer.a in Frameworks */,
-				BF6554182132C4D9003E4241 /* libv8_base.a in Frameworks */,
 				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
 				EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */,
-				BF6554232132C4D9003E4241 /* libwasm_function_sigs_section_fuzzer.a in Frameworks */,
 				BF012B0D226A102D003AEB55 /* PopCameraDeviceFramework.framework in Frameworks */,
-				BF6554222132C4D9003E4241 /* libwasm_data_section_fuzzer.a in Frameworks */,
-				BF6554212132C4D9003E4241 /* libwasm_compile_fuzzer.a in Frameworks */,
-				BF6554172132C4D9003E4241 /* libunittests_sources.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -623,42 +543,14 @@
 		BF6553D92132C4D9003E4241 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				BF6553DA2132C4D9003E4241 /* lib_wasm_fuzzer_common.a */,
-				BF6553DB2132C4D9003E4241 /* libcctest_sources.a */,
-				BF6553DC2132C4D9003E4241 /* libfuzzer_support.a */,
-				BF6553DD2132C4D9003E4241 /* libgmock_main.a */,
-				BF6553DE2132C4D9003E4241 /* libgtest.a */,
-				BF6553DF2132C4D9003E4241 /* libicui18n.a */,
-				BF6553E02132C4D9003E4241 /* libicuuc.a */,
-				BF6553E12132C4D9003E4241 /* libinspector.a */,
-				BF6553E22132C4D9003E4241 /* libjson_fuzzer.a */,
-				BF6553E32132C4D9003E4241 /* libmulti_return_fuzzer.a */,
-				BF6553E42132C4D9003E4241 /* liboptions_sources.a */,
-				BF6553E52132C4D9003E4241 /* libparser_fuzzer.a */,
-				BF6553E62132C4D9003E4241 /* libregexp_builtins_fuzzer.a */,
-				BF6553E72132C4D9003E4241 /* libregexp_fuzzer.a */,
-				BF6553E82132C4D9003E4241 /* libtorque_base.a */,
-				BF6553E92132C4D9003E4241 /* libtorque_generated_initializers.a */,
-				BF6553EA2132C4D9003E4241 /* libunittests_sources.a */,
-				BF6553EB2132C4D9003E4241 /* libv8_base.a */,
-				BF6553EC2132C4D9003E4241 /* libv8_external_snapshot.a */,
-				BF6553ED2132C4D9003E4241 /* libv8_init.a */,
-				BF6553EE2132C4D9003E4241 /* libv8_initializers.a */,
-				BF6553EF2132C4D9003E4241 /* libv8_libbase.a */,
-				BF6553F02132C4D9003E4241 /* libv8_libplatform.a */,
-				BF6553F12132C4D9003E4241 /* libv8_libsampler.a */,
-				BF6553F22132C4D9003E4241 /* libwasm_async_fuzzer.a */,
-				BF6553F32132C4D9003E4241 /* libwasm_code_fuzzer.a */,
-				BF6553F42132C4D9003E4241 /* libwasm_compile_fuzzer.a */,
-				BF6553F52132C4D9003E4241 /* libwasm_data_section_fuzzer.a */,
-				BF6553F62132C4D9003E4241 /* libwasm_function_sigs_section_fuzzer.a */,
-				BF6553F72132C4D9003E4241 /* libwasm_fuzzer.a */,
-				BF6553F82132C4D9003E4241 /* libwasm_globals_section_fuzzer.a */,
-				BF6553F92132C4D9003E4241 /* libwasm_imports_section_fuzzer.a */,
-				BF6553FA2132C4D9003E4241 /* libwasm_memory_section_fuzzer.a */,
-				BF6553FB2132C4D9003E4241 /* libwasm_module_runner.a */,
-				BF6553FC2132C4D9003E4241 /* libwasm_names_section_fuzzer.a */,
-				BF6553FD2132C4D9003E4241 /* libwasm_types_section_fuzzer.a */,
+				BF50917F2282194700DCBB4B /* libc++.dylib */,
+				BF5091832282194700DCBB4B /* libicui18n.dylib */,
+				BF5091822282194700DCBB4B /* libicuuc.dylib */,
+				BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */,
+				BF5091842282194700DCBB4B /* libv8_libbase.dylib */,
+				BF5091802282194700DCBB4B /* libv8_libplatform.dylib */,
+				BF5091812282194700DCBB4B /* libv8.dylib */,
+				BF509159228217AC00DCBB4B /* libencoding.a */,
 			);
 			path = lib;
 			sourceTree = "<group>";
@@ -679,16 +571,6 @@
 				EB0EA56E2110BA27008D6DAA /* libdlib.a */,
 				BF689AC720D6C811000BC812 /* ApplicationServices.framework */,
 				BF689AC520D6C80D000BC812 /* CoreGraphics.framework */,
-				BF689AF220D6E89E000BC812 /* libv8.dylib */,
-				BF689AF420D6E8C2000BC812 /* libv8_libplatform.a */,
-				BF689AF620D6E8D3000BC812 /* libv8_base.a */,
-				BF689AF820D6E8D6000BC812 /* libv8_libbase.a */,
-				BF689AFA20D6E8DD000BC812 /* libv8_snapshot.a */,
-				BFD4455B20E66D34007E2497 /* libv8_libplatform.dylib */,
-				BFD4455D20E66D37007E2497 /* libv8_libbase.dylib */,
-				BFD4455F20E66D3A007E2497 /* libicuuc.dylib */,
-				BFD4456120E66D3C007E2497 /* libicui18n.dylib */,
-				BFD4455920E66D31007E2497 /* libv8.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1250,6 +1132,8 @@
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
 					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
+					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
+					"$(PROJECT_DIR)/src/v8/v8Runtime",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1276,6 +1160,8 @@
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
 					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
+					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
+					"$(PROJECT_DIR)/src/v8/v8Runtime",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;

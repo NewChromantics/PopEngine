@@ -23,11 +23,21 @@
 
 
 #if !defined(JSAPI_V8)
+//	wrapper as v8 needs to setup the runtime files
 JSContextGroupRef	JSContextGroupCreate(const std::string& RuntimeDirectory)
 {
 	return JSContextGroupCreate();
 }
 #endif
+
+#if !defined(JSAPI_V8)
+//	wrapper as v8 needs a context
+size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef string, char* buffer, size_t bufferSize)
+{
+	return JSStringGetUTF8CString(JSStringRef string, char* buffer, size_t bufferSize)
+}
+#endif
+
 
 namespace JsCore
 {
@@ -139,19 +149,13 @@ void JsCore::TFunction::Call(JsCore::TCallback& Params) const
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
-	//	don't actually need a local context
-	return GetString( Handle );
-}
-
-
-std::string	JsCore::GetString(JSStringRef Handle)
-{
 	Array<char> Buffer;
 	//	gr: length doesn't include terminator, but JSStringGetUTF8CString writes one
 	Buffer.SetSize(JSStringGetLength(Handle));
 	Buffer.PushBack('\0');
 
-	size_t bytesWritten = JSStringGetUTF8CString(Handle, Buffer.GetArray(), Buffer.GetSize() );
+	//	we need a context for v8 from version 7 up.
+	size_t bytesWritten = JSStringGetUTF8CString( Context, Handle, Buffer.GetArray(), Buffer.GetSize() );
 	Buffer.SetSize(bytesWritten);
 	if ( Buffer.IsEmpty() )
 		return std::string();

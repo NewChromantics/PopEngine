@@ -11,11 +11,12 @@
 
 #include <cstddef>
 #include "v8/include/v8.h"
+#include "v8/include/v8-platform.h"
 
 
 //	gr: the diffs are external vs internal as well as API changes
 //#define V8_VERSION	5
-#define V8_VERSION	6
+#define V8_VERSION	V8_MAJOR_VERSION
 
 #if !defined(V8_VERSION)
 #error need V8_VERSION 5 or 6
@@ -47,7 +48,7 @@ namespace V8
 	
 	class TException;
 	template<typename V8TYPE>
-	void	IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::TryCatch& TryCatch,const std::string& Context);
+	void	IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::Isolate& Isolate,v8::TryCatch& TryCatch,const std::string& Context);
 }
 
 
@@ -104,7 +105,7 @@ typedef struct {
 class V8::TException : public std::exception
 {
 public:
-	TException(v8::TryCatch& TryCatch,const std::string& Context);
+	TException(v8::Isolate& Isolate,v8::TryCatch& TryCatch,const std::string& Context);
 	
 	virtual const char* what() const __noexcept
 	{
@@ -185,7 +186,7 @@ public:
 	bool	ProcessJobQueue(std::function<void(std::chrono::milliseconds)>& Sleep);
 
 public:
-	std::shared_ptr<v8::Platform>	mPlatform;
+	std::unique_ptr<v8::Platform>	mPlatform;
 	//std::shared_ptr<TV8Inspector>	mInspector;
 	v8::Isolate*					mIsolate = nullptr;		//	there is no delete for an isolate, so it's a naked pointer
 	std::shared_ptr<V8::TAllocator>	mAllocator;
@@ -214,7 +215,6 @@ public:
 	bool	operator!=(std::nullptr_t Null) const			{	return !mThis.IsEmpty();	}
 	operator bool() const									{	return !mThis.IsEmpty();	}
 
-	v8::Isolate&			GetIsolate()	{	return *mThis->GetIsolate();	}
 	v8::Local<v8::Value>	GetValue()		{	return mThis.template As<v8::Value>();	}
 
 public:
@@ -291,11 +291,12 @@ public:
 	{
 	}
 */
-	//void		operator=(std::nullptr_t Null);
-	//void		operator=(JSObjectRef That);
-	//bool		operator!=(std::nullptr_t Null) const;
-	//bool		operator!=(const JSObjectRef& That) const;
-	operator 	bool() const						{	return !mThis.IsEmpty();	}
+	//void			operator=(std::nullptr_t Null);
+	//void			operator=(JSObjectRef That);
+	//bool			operator!=(std::nullptr_t Null) const;
+	//bool			operator!=(const JSObjectRef& That) const;
+	operator 		bool() const						{	return !mThis.IsEmpty();	}
+	v8::Isolate&	GetIsolate()	{	return *mThis->GetIsolate();	}
 };
 
 
@@ -430,7 +431,7 @@ void				JSGarbageCollect(JSContextRef Context);
 
 //JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
-size_t		JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize);
+size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
 JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String);
@@ -443,11 +444,11 @@ void		JSClassRetain(JSClassRef Class);
 
 
 template<typename V8TYPE>
-inline void V8::IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::TryCatch& TryCatch,const std::string& Context)
+inline void V8::IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::Isolate& Isolate,v8::TryCatch& TryCatch,const std::string& Context)
 {
 	//	valid result
 	if ( !Result.IsEmpty() )
 		return;
 
-	throw V8::TException( TryCatch, Context );
+	throw V8::TException( Isolate, TryCatch, Context );
 }
