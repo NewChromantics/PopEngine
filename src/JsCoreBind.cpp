@@ -268,24 +268,17 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TArray& Object)
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TPersistent& Object)
 {
-#if defined(JSAPI_V8)
-	if ( Object.IsFunction() )
-		return JSValueRef( Object.GetFunction().mThis.GetValue() );
-	
-	if ( Object.IsObject() )
-	{
-		auto Local = Object.mObject->GetLocal( Context.GetIsolate() );
-		auto LocalValue = Local.As<v8::Value>();
-		return JSValueRef( LocalValue );
-	}
-#else
-	if ( Object.mFunction.mThis )
-		return Object.mFunction.mThis;
+	if ( !Object )
+		throw Soy::AssertException("return null, or undefined here?");
 
-	if ( Object.mObject.mThis )
-		return Object.mObject.mThis;
+#if defined(JSAPI_V8)
+	auto Local = Object.mObject->GetLocal( Context.GetIsolate() );
+	auto LocalValue = Local.As<v8::Value>();
+	return JSValueRef( LocalValue );
+#else
+	return Object.mThis;
 #endif
-	throw Soy::AssertException("return null, or undefined here?");
+	
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
@@ -1026,7 +1019,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 	}
 	
 	Bind::TCallback CallParams( LocalContext );
-	auto MakePromiseFunction = mMakePromiseFunction.GetFunction();
+	auto MakePromiseFunction = mMakePromiseFunction.GetFunction(LocalContext);
 	MakePromiseFunction.Call(CallParams);
 	auto NewPromiseValue = CallParams.mReturn;
 	auto NewPromiseHandle = JsCore::GetObject( LocalContext.mLocalContext, NewPromiseValue );
@@ -1334,13 +1327,15 @@ JsCore::TPersistent::~TPersistent()
 	Release();
 }
 
+JsCore::TFunction JsCore::TPersistent::GetFunction(Bind::TLocalContext& Context) const
+{
+	auto Object = GetObject( Context );
+	return Bind::TFunction( Context.mLocalContext, Object.mThis );
+}
+
 JsCore::TFunction JsCore::TPersistent::GetFunction() const
 {
-#if defined(JSAPI_V8)
 	throw Soy::AssertException("todo");
-#else
-	return mFunction;
-#endif
 }
 
 JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
@@ -1391,50 +1386,33 @@ void JsCore::TPersistent::Release(JSGlobalContextRef Context,JSObjectRef ObjectO
 void JsCore::TPersistent::Release()
 {
 	//	can only get context if there is an object
-	if ( IsObject() || IsFunction() )
+	if ( mObject )
 	{
 		if ( !mContext )
 			throw Soy::AssertException("Has object, but no context");
 	}
 	
-#if defined(JSAPI_V8)
 	if ( mObject )
 	{
+#if defined(JSAPI_V8)
 		mContext->OnPersitentReleased(*this);
 		mObject.reset();
 #else
-	if ( mObject.mThis != nullptr )
-	{
 		Release( mRetainedContext, mObject.mThis, mDebugName );
 		mContext->OnPersitentReleased(*this);
-		mObject = TObject();
+		mObject = nullptr;
 #endif
 		mRetainedContext = nullptr;
 		mContext = nullptr;
 	}
 	
-#if defined(JSAPI_V8)
-	if ( mFunction )
-	{
-		mContext->OnPersitentReleased(*this);
-		mFunction.reset();
-#else
-	if ( mFunction.mThis != nullptr )
-	{
-		Release( mRetainedContext, mFunction.mThis, mDebugName );
-		mContext->OnPersitentReleased(*this);
-		mFunction = TFunction();
-#endif
-		mRetainedContext = nullptr;
-		mContext = nullptr;
-	}
 }
 
 
 
 void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,const std::string& DebugName)
 {
-	if ( IsObject() || IsFunction() )
+	if ( mObject )
 	{
 		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
 		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
@@ -1450,31 +1428,14 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,co
 	mObject = Object;
 	Retain( mRetainedContext, mObject.mThis, mDebugName );
 #endif
-	
+
 	Context.mGlobalContext.OnPersitentRetained(*this);
 }
 
 void JsCore::TPersistent::Retain(TLocalContext& Context,const TFunction& Function,const std::string& DebugName)
 {
-	if ( IsObject() || IsFunction() )
-	{
-		//std::Debug << std::string("Overwriting existing retain ") << mDebugName << std::string(" to ") << DebugName << std::endl;
-		//	throw Soy::AssertException( std::string("Overwriting existing retain ") + mDebugName + std::string(" to ") + DebugName );
-		Release();
-	}
-	
-	mDebugName = DebugName;
-	mContext = &Context.mGlobalContext;
-	mRetainedContext = JSContextGetGlobalContext(Context.mLocalContext);
-#if defined(JSAPI_V8)
-	auto LocalFunc = Function.mThis.mThis.As<v8::Function>();
-	mFunction = V8::GetPersistent( Context.mLocalContext.GetIsolate(), LocalFunc );
-#else
-	mFunction = Function;
-	Retain( mRetainedContext, mFunction.mThis, mDebugName );
-#endif
-	
-	Context.mGlobalContext.OnPersitentRetained(*this);
+	Bind::TObject FunctionObject( Context.mLocalContext, Function.mThis );
+	Retain( Context, FunctionObject, DebugName );
 }
 
 void JsCore::TPersistent::Retain(const TPersistent& That)
@@ -1485,26 +1446,17 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
 	Release();
 	
-#if defined(JSAPI_V8)
-#pragma warning More to do here
-	this->mObject = That.mObject;
-	this->mFunction = That.mFunction;
-	this->mContext = That.mContext;
+	
 	mDebugName = That.mDebugName + " (copy)";
+	mContext = That.mContext;
+	mRetainedContext = That.mRetainedContext;
+#if defined(JSAPI_V8)
+	mObject = That.mObject;
 #else
-	TLocalContext LocalContext( That.mRetainedContext, *That.mContext );
-	auto Name = That.mDebugName + " (copy)";
-	
-	if ( That.mFunction.mThis != nullptr )
-	{
-		Retain( LocalContext, That.mFunction, Name );
-	}
-	
-	if ( That.mObject.mThis != nullptr )
-	{
-		Retain( LocalContext, That.mObject, Name );
-	}
+	Retain( mRetainedContext, That.mObject, mDebugName );
 #endif
+	
+	mContext->OnPersitentRetained(*this);
 }
 
 
@@ -1753,7 +1705,7 @@ JsCore::TPromise::~TPromise()
 void JsCore::TPromise::Resolve(TLocalContext& LocalContext,JSValueRef Value) const
 {
 	//	gr: this should be a Queue'd call!
-	auto Resolve = mResolve.GetFunction();
+	auto Resolve = mResolve.GetFunction(LocalContext);
 	try
 	{
 		//	gr: should This be the promise object?
@@ -1813,22 +1765,10 @@ void JsCore::TObjectWrapperBase::SetHandle(Bind::TLocalContext& Context,JsCore::
 
 void JsCore::TContextDebug::OnPersitentRetained(TPersistent& Persistent)
 {
-	if ( Persistent.IsObject() )
-	{
-		mPersistentObjectCount[Persistent.GetDebugName()]++;
-	}
-
-	if ( Persistent.IsFunction() )
-		mPersistentFunctionCount++;
+	mPersistentObjectCount[Persistent.GetDebugName()]++;
 }
 
 void JsCore::TContextDebug::OnPersitentReleased(TPersistent& Persistent)
 {
-	if ( Persistent.IsObject() )
-	{
-		mPersistentObjectCount[Persistent.GetDebugName()]--;
-	}
-	
-	if ( Persistent.IsFunction() )
-		mPersistentFunctionCount--;
+	mPersistentObjectCount[Persistent.GetDebugName()]--;
 }

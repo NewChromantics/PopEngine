@@ -350,8 +350,9 @@ private:
 	std::function<Bind::TObjectWrapperBase&(Bind::TContext&)>	mAllocator;
 };
 
-//	make this generic for v8 & jscore
+
 //	it should also be a Soy::TUniform type
+//	this represents a LOCAL object, do not store!
 class JsCore::TObject //: public JsCore::TObject
 {
 	friend class TPersistent;
@@ -410,30 +411,19 @@ public:
 class JsCore::TPersistent
 {
 public:
-	//	gr: can't use && as we need = operator to work
-	//TPersistent(const TPersistent&& That)	{	Steal( That );	}
-	
 	TPersistent()	{}
 	TPersistent(const TPersistent& That)	{	Retain( That );	}
-	//TPersistent(Bind::TLocalContext& Context,const TPersistent&& That)	{	Retain( Context, That );	}
 	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
-	~TPersistent();							//	dec refound
+	~TPersistent();							//	dec refcount
 	
-	operator		bool() const		{	return IsFunction() || IsObject();	}
-		
-#if defined(JSAPI_V8)
-	bool			IsFunction() const	{	return mFunction != nullptr;	}
-	bool			IsObject() const	{	return mObject != nullptr;	}
-#else
-	bool			IsFunction() const	{	return mFunction.mThis != nullptr;	}
-	bool			IsObject() const	{	return mObject.mThis != nullptr;	}
-#endif
+	operator		bool() const				{	return mObject != nullptr;	}
 	
 	const std::string&	GetDebugName() const	{	return mDebugName;	}
 	TObject				GetObject(TLocalContext& Context) const;
+	TFunction			GetFunction(TLocalContext& Context) const;
 	TFunction			GetFunction() const;
-	
+
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
@@ -456,10 +446,8 @@ protected:
 public:
 #if defined(JSAPI_V8)
 	std::shared_ptr<V8::TPersistent<v8::Object>>	mObject;
-	std::shared_ptr<V8::TPersistent<v8::Function>>	mFunction;
 #else
 	JSObjectRef		mObject;
-	TFunction		mFunction;
 #endif
 };
 
@@ -471,7 +459,6 @@ public:
 	void	OnPersitentReleased(TPersistent& Persistent);
 
 	std::map<std::string,int>		mPersistentObjectCount;
-	int		mPersistentFunctionCount=0;
 };
 
 

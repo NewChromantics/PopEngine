@@ -218,7 +218,7 @@ public:
 	std::shared_ptr<V8::TPersistent<v8::Context>>	mContext;
 	V8::TVirtualMachine&	GetVirtualMachine();
 	void					ExecuteInContext(std::function<void(JSContextRef&)> Functor);
-	
+	v8::Isolate&			GetIsolate()	{	return *GetVirtualMachine().mIsolate;	}
 public:
 	JSContextGroupRef	mParent = nullptr;
 	std::string			mName;
