@@ -314,7 +314,8 @@ bool JSValueIsNumber(JSContextRef Context,JSValueRef Value)
 
 double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto Number = Value.mThis.As<v8::Number>();
+	return Number->Value();
 }
 
 JSValueRef JSValueMakeNumber(JSContextRef Context,int Value)
