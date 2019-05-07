@@ -178,8 +178,13 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 	//	create instance
 	auto ObjectTemplate = Class.mTemplate->GetLocal( Context.GetIsolate() );
 	auto NewObjectLocal = ObjectTemplate->NewInstance();
-	//	todo: need to assign internal data
-	return JSObjectRef( NewObjectLocal );
+	
+	JSObjectRef NewObjectRef( NewObjectLocal );
+
+	//	auto assign private data like JsCore does
+	JSObjectSetPrivate( NewObjectRef, Data );
+
+	return NewObjectRef;
 }
 
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
