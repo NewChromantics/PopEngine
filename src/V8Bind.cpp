@@ -787,23 +787,21 @@ V8::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 	std::string NativesBlobPath = RuntimePath + "natives_blob.bin";
 	std::string SnapshotBlobPath = RuntimePath + "snapshot_blob.bin";
 	
-	if ( !v8::V8::InitializeICUDefaultLocation( nullptr, IcuPath.c_str() ) )
+	if ( !v8::V8::InitializeICU( IcuPath.c_str() ) )
 		throw Soy::AssertException("Failed to load ICU");
-	/*
-	 Array<char> NativesBlob;
-	 Array<char> SnapshotBlob;
-	 StartupData NativesBlobData;
-	 StartupData SnapshotBlobData;
-	 Soy::FileToArray( GetArrayBridge(NativesBlob), NativesBlobPath );
-	 Soy::FileToArray( GetArrayBridge(SnapshotBlob), SnapshotBlobPath );
-	 
-	 NativesBlobData={	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
-	 SnapshotBlobData={	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
-	 V8::SetNativesDataBlob(&NativesBlobData);
-	 V8::SetSnapshotDataBlob(&SnapshotBlobData);
-	 */
-	//v8::V8::InitializeExternalStartupData( mRootDirectory.c_str() );
-	v8::V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
+
+	Array<char> NativesBlob;
+	Array<char> SnapshotBlob;
+	v8::StartupData NativesBlobData;
+	v8::StartupData SnapshotBlobData;
+	Soy::FileToArray( GetArrayBridge(NativesBlob), NativesBlobPath );
+	Soy::FileToArray( GetArrayBridge(SnapshotBlob), SnapshotBlobPath );
+
+	NativesBlobData={	NativesBlob.GetArray(), static_cast<int>(NativesBlob.GetDataSize())	};
+	SnapshotBlobData={	SnapshotBlob.GetArray(), static_cast<int>(SnapshotBlob.GetDataSize())	};
+	v8::V8::SetNativesDataBlob(&NativesBlobData);
+	v8::V8::SetSnapshotDataBlob(&SnapshotBlobData);
+	//v8::V8::InitializeExternalStartupData( NativesBlobPath.c_str(), SnapshotBlobPath.c_str() );
 	
 #elif V8_VERSION==5
 	V8::InitializeICU(nullptr);
