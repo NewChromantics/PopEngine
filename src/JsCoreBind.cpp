@@ -577,7 +577,10 @@ void JsCore::TContext::Shutdown(int32_t ExitCode)
 void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 {
 	//	seems like this would be a good idea...
+#if defined(JSAPI_V8)
+#else
 	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
+#endif
 	
 	JSGarbageCollect( LocalContext );
 }
@@ -687,7 +690,12 @@ void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Funct
 {
 	//	gr: lock so only one JS operation happens at a time
 	//		doing this to test stability (this also emulates v8 a lot more)
+	//	gr: v8 has an isolate locker, so an extra one here causes deadlock
+	//		todo: move it into JSLockAndRun for JSCore side?
+#if defined(JSAPI_V8)
+#else
 	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
+#endif
 	
 	//	javascript core is threadsafe, so we can just call
 	//	but maybe we need to set a javascript exception, if this is
