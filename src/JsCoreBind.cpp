@@ -1474,7 +1474,8 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	Retain( mRetainedContext, That.mObject, mDebugName );
 #endif
 	
-	mContext->OnPersitentRetained(*this);
+	if ( mContext && mObject )
+		mContext->OnPersitentRetained(*this);
 }
 
 
