@@ -46,6 +46,18 @@
     <Filter Include="UnitTest\VideoTest">
       <UniqueIdentifier>{25602702-08b3-4195-adff-9693cd729153}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\v8">
+      <UniqueIdentifier>{b52aa19e-20ce-4391-9cd8-b8ed0244aa28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\v8\Include">
+      <UniqueIdentifier>{cf1b1091-e316-4bfb-9334-008b16eae1ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\v8\Lib">
+      <UniqueIdentifier>{74009a96-9aa0-40fa-93fd-24d37fcf7692}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\v8\Runtime">
+      <UniqueIdentifier>{e586ec67-254a-4f92-a16d-b012b649bc3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -291,6 +303,60 @@
     <ClInclude Include="..\src\SoyLib\src\SoyWindow.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8config.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-inspector.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-inspector-protocol.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-internal.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-platform.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-profiler.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-testing.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-util.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-value-serializer-version.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-version.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-version-string.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-wasm-trap-handler-posix.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\v8-wasm-trap-handler-win.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\libplatform\libplatform.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\libplatform\libplatform-export.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\v8\include\libplatform\v8-tracing.h">
+      <Filter>Libs\v8\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\V8Bind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -430,6 +496,21 @@
     </None>
     <None Include="..\src\SoyLib\src\SoyWindow.mm">
       <Filter>SoyLib</Filter>
+    </None>
+    <None Include="..\src\v8\lib\v8.dll">
+      <Filter>Libs\v8\Lib</Filter>
+    </None>
+    <None Include="..\src\v8\lib\v8_libbase.dll">
+      <Filter>Libs\v8\Lib</Filter>
+    </None>
+    <None Include="..\src\v8\lib\v8_libplatform.dll">
+      <Filter>Libs\v8\Lib</Filter>
+    </None>
+    <None Include="..\src\v8\lib\icui18n.dll">
+      <Filter>Libs\v8\Lib</Filter>
+    </None>
+    <None Include="..\src\v8\lib\icuuc.dll">
+      <Filter>Libs\v8\Lib</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -613,6 +694,9 @@
     <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\V8Bind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -620,6 +704,21 @@
     </Library>
     <Library Include="..\src\Libs\PopH264\PopH264.lib">
       <Filter>Libs\PopH264</Filter>
+    </Library>
+    <Library Include="..\src\v8\lib\icui18n.dll.lib">
+      <Filter>Libs\v8\Lib</Filter>
+    </Library>
+    <Library Include="..\src\v8\lib\icuuc.dll.lib">
+      <Filter>Libs\v8\Lib</Filter>
+    </Library>
+    <Library Include="..\src\v8\lib\v8.dll.lib">
+      <Filter>Libs\v8\Lib</Filter>
+    </Library>
+    <Library Include="..\src\v8\lib\v8_libbase.dll.lib">
+      <Filter>Libs\v8\Lib</Filter>
+    </Library>
+    <Library Include="..\src\v8\lib\v8_libplatform.dll.lib">
+      <Filter>Libs\v8\Lib</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

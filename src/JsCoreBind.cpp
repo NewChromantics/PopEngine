@@ -309,8 +309,11 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		#endif
 
 		//	for v8
-		std::string RuntimePath = Platform::GetAppResourcesDirectory() + "/v8Runtime/";
-		
+		std::string RuntimePath = Platform::GetAppResourcesDirectory();
+	#if defined(TARGET_OSX)
+		RuntimePath += "/v8Runtime/";
+	#endif
+
 #if defined(TARGET_WINDOWS)
 		if ( &JSContextGroupCreate == nullptr )
 			throw Soy::AssertException("If this function pointer is null, we may have manually loaded symbols, but they've been stripped. Turn OFF whole program optimisation!");
@@ -360,7 +363,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 	};
 
 #if defined(PLATFORM_WINDOWS)
+#if defined(JSAPI_V8)
+#else
 	JsCore::LoadDll();
+#endif
 	CreateVirtualMachine();
 #else
 	//	gr: these exceptions are getting swallowed!

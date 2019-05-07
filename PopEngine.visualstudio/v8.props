@@ -2,14 +2,14 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup>
+    <IncludePath>$(ProjectDir)..\src\v8\include;$(ProjectDir)..\src\v8\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+    <ClCompile>
+      <PreprocessorDefinitions>JSAPI_V8;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

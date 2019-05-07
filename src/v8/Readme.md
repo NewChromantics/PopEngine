@@ -10,4 +10,5 @@ Official build-bot urls. JSVU helps with this.
 - `mac64` for osx
 - https://storage.googleapis.com/chromium-v8/official/canary/v8-mac64-rel-7.6.115.zip
 - https://storage.googleapis.com/chromium-v8/official/canary/v8-mac64-dbg-7.6.115.zip <--- has libs!
+- https://storage.googleapis.com/chromium-v8/official/canary/v8-win64-dbg-7.6.115.zip
 - Get headers from github releases

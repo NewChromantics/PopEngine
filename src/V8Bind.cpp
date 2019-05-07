@@ -9,6 +9,9 @@
 
 #define THROW_TODO	throw Soy::AssertException( std::string("todo: ") + std::string(__FUNCTION__) )
 
+const JSClassDefinition kJSClassDefinitionEmpty = {};
+
+
 JSType JSValueGetType(JSValueRef Value);
 
 /*
