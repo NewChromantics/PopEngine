@@ -31,6 +31,8 @@ namespace JsCore
 
 namespace V8
 {
+	const int InternalFieldDataIndex = 0;
+
 	class TAllocator;
 	class TVirtualMachine;
 	
@@ -47,6 +49,55 @@ namespace V8
 	template<typename V8TYPE>
 	void	IsOkay(v8::MaybeLocal<V8TYPE> Result,v8::TryCatch& TryCatch,const std::string& Context);
 }
+
+
+enum JSType
+{
+	kJSTypeString,
+	kJSTypeBoolean,
+	kJSTypeUndefined,
+	kJSTypeNull,
+	kJSTypeObject,
+	kJSTypeNumber,
+};
+
+enum JSClassAttributes
+{
+	kJSClassAttributeNone
+};
+
+enum JSTypedArrayType
+{
+	kJSTypedArrayTypeNone,
+	kJSTypedArrayTypeInt8Array,
+	kJSTypedArrayTypeInt16Array,
+	kJSTypedArrayTypeInt32Array,
+	kJSTypedArrayTypeUint8Array,
+	kJSTypedArrayTypeUint8ClampedArray,
+	kJSTypedArrayTypeUint16Array,
+	kJSTypedArrayTypeUint32Array,
+	kJSTypedArrayTypeFloat32Array,
+};
+
+typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);
+//typedef JSObjectRef(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+typedef v8::FunctionCallback JSObjectCallAsConstructorCallback;
+//typedef JSValueRef(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
+typedef v8::FunctionCallback JSObjectCallAsFunctionCallback;
+typedef void(*JSObjectFinalizeCallback)(const v8::WeakCallbackInfo<void>& Meta);
+
+
+enum JSPropertyAttributes
+{
+	kJSPropertyAttributeNone
+};
+
+
+typedef struct {
+	const char* name;
+	JSObjectCallAsFunctionCallback callAsFunction;
+	JSPropertyAttributes attributes;
+} JSStaticFunction;
 
 
 
@@ -291,68 +342,21 @@ public:
 	
 	operator bool	() const	{	return mTemplate != nullptr;	}
 	
+	JSObjectFinalizeCallback								mDestructor = nullptr;
 	std::shared_ptr<V8::TPersistent<v8::FunctionTemplate>>	mConstructor;
 	std::shared_ptr<V8::TPersistent<v8::ObjectTemplate>>	mTemplate;
 };
 
 
-enum JSType
-{
-	kJSTypeString,
-	kJSTypeBoolean,
-	kJSTypeUndefined,
-	kJSTypeNull,
-	kJSTypeObject,
-	kJSTypeNumber,
-};
-
-enum JSClassAttributes
-{
-	kJSClassAttributeNone
-};
-
-enum JSTypedArrayType
-{
-	kJSTypedArrayTypeNone,
-	kJSTypedArrayTypeInt8Array,
-	kJSTypedArrayTypeInt16Array,
-	kJSTypedArrayTypeInt32Array,
-	kJSTypedArrayTypeUint8Array,
-	kJSTypedArrayTypeUint8ClampedArray,
-	kJSTypedArrayTypeUint16Array,
-	kJSTypedArrayTypeUint32Array,
-	kJSTypedArrayTypeFloat32Array,
-};
-
-typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);
-//typedef JSObjectRef(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef v8::FunctionCallback JSObjectCallAsConstructorCallback;
-//typedef JSValueRef(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef v8::FunctionCallback JSObjectCallAsFunctionCallback;
-typedef void(*JSObjectFinalizeCallback) (JSObjectRef object);
-
-
-enum JSPropertyAttributes
-{
-	kJSPropertyAttributeNone
-};
-
-
-typedef struct {
-	const char* name;
-	JSObjectCallAsFunctionCallback callAsFunction;
-	JSPropertyAttributes attributes;
-} JSStaticFunction;
-
 
 class JSClassDefinition
 {
 public:
-	const char*			className = nullptr;	//	emulate JScore instability with raw pointers
-	JSClassAttributes	attributes;
+	const char*							className = nullptr;	//	emulate JScore instability with raw pointers
+	JSClassAttributes					attributes;
 	JSObjectCallAsConstructorCallback	callAsConstructor = nullptr;
 	JSObjectFinalizeCallback			finalize = nullptr;
-	JSStaticFunction*		staticFunctions = nullptr;
+	JSStaticFunction*					staticFunctions = nullptr;
 };
 extern const JSClassDefinition kJSClassDefinitionEmpty;
 

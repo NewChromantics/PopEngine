@@ -429,11 +429,12 @@ public:
 	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refcount
 	
-	operator		bool() const				{	return mObject != nullptr;	}
+	operator		bool() const						{	return mObject != nullptr;	}
 	
-	const std::string&	GetDebugName() const	{	return mDebugName;	}
+	const std::string&	GetDebugName() const			{	return mDebugName;	}
 	TObject				GetObject(TLocalContext& Context) const;
 	TFunction			GetFunction(TLocalContext& Context) const;
+	void				SetWeak(TObjectWrapperBase& Object,JSClassRef Class);		//	this is for v8, we pass the class as it has the destructor function pointer
 
 	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
@@ -603,7 +604,7 @@ public:
 	*/
 	TContext&		GetContext()	{	return mContext;	}	//	owner
 
-private:
+public:
 	//	gr: this is a weak reference so the object gets free'd
 	//	gr;
 #if defined(PERSISTENT_OBJECT_HANDLE)
@@ -635,6 +636,22 @@ public:
 	static TTemplate 		AllocTemplate(JsCore::TContext& Context);
 	
 protected:
+#if defined(JSAPI_V8)
+	static void				Free(const v8::WeakCallbackInfo<void>& Meta)
+	{
+		//	gr: this should be null, see TPersistent::SetWeak
+		auto* Param = Meta.GetParameter();
+		auto* This = Param;
+		//auto* This = Meta.GetInternalField( V8::InternalFieldDataIndex );
+		if ( !This )
+			throw Soy::AssertException("Free/Weak callback from v8 has null internal field");
+		auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>( This );
+		auto* TypeWrapper = dynamic_cast<THISTYPE*>( Wrapper );
+		if ( !TypeWrapper )
+			throw Soy::AssertException("Failed to dynamically object pointer to " + Soy::GetTypeName<THISTYPE>() );
+		FreeObject( *TypeWrapper );
+	}
+#else
 	static void				Free(JSObjectRef ObjectRef)
 	{
 		//	gr: if this fails as it's null, the object being cleaned up may be the class/constructor, if it isn't attached to anything (ie. not attached to the global!)
@@ -643,15 +660,22 @@ protected:
 		//	cast to TObject and use This to do proper type checks
 		//std::Debug << "Free object of type " << TYPENAME << std::endl;
 		auto& Object = TObject::This<THISTYPE>( ObjectRef );
+		Free( Object );
+	
+		//	reset the void for safety?
+		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
+		JSObjectSetPrivate( ObjectRef, nullptr );
+	}
+#endif
+	
+	static void				FreeObject(THISTYPE& Object)
+	{
 		auto* pObject = &Object;
 		
 		auto& Heap = JsCore::GetGlobalObjectHeap();
 		if ( !Heap.Free(pObject) )
 			std::Debug << "Global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
 		
-		//	reset the void for safety?
-		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
-		JSObjectSetPrivate( ObjectRef, nullptr );
 	}
 	
 protected:

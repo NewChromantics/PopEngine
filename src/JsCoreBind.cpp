@@ -934,6 +934,9 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	TObject NewObject( LocalContext.mLocalContext, NewObjectHandle );
 	ObjectPointer.SetHandle( LocalContext, NewObject );
 
+	//	this should already be setup in jscore...
+	ObjectPointer.mHandle.SetWeak( ObjectPointer, Class );
+	
 	//	construct
 	TCallback ConstructorParams(LocalContext);
 	ConstructorParams.mThis = NewObject.mThis;
@@ -1349,6 +1352,27 @@ JsCore::TPersistent::~TPersistent()
 	Release();
 }
 
+void JsCore::TPersistent::SetWeak(TObjectWrapperBase& Object,JSClassRef Class)
+{
+#if defined(JSAPI_V8)
+	if ( !mObject )
+		throw Soy::AssertException("Trying to make a null persistent weak. Currently this is only used at instantiate time");
+
+	if ( !Class.mDestructor )
+		throw Soy::AssertException("Trying to make persistent weak, but no destructor callback");
+	
+	//	we're using the internal fields for storage, so we don't pass any data around
+	//	perhaps we need to change this to pass the explicitly allocated object from the construction, but this SHOULD all sync
+	//void* Param = nullptr;
+	//auto CallbackParam = v8::WeakCallbackType::kInternalFields;
+	//	gr: internal field approach just gave nulls, so pass the object
+	void* Param = &Object;
+	auto CallbackParam = v8::WeakCallbackType::kParameter;
+	mObject->mPersistent.SetWeak( Param, Class.mDestructor, CallbackParam );
+#endif
+}
+	
+	
 JsCore::TFunction JsCore::TPersistent::GetFunction(Bind::TLocalContext& Context) const
 {
 	auto Object = GetObject( Context );

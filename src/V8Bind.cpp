@@ -9,11 +9,6 @@
 
 #define THROW_TODO	throw Soy::AssertException( std::string("todo: ") + std::string(__FUNCTION__) )
 
-namespace V8
-{
-	const int InternalFieldDataIndex = 0;
-}
-
 JSType JSValueGetType(JSValueRef Value);
 
 /*
@@ -695,6 +690,8 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
 	JSClassRef NewClass( nullptr );
 	NewClass.mTemplate = Template;
 	NewClass.mConstructor = Constructor;
+	NewClass.mDestructor = Definition->finalize;
+	
 	return NewClass;
 
 	
