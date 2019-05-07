@@ -28,7 +28,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	else
 	{
 		//	gr: need a better default here
-		DataPath = "GuildhallGildWall";
+		DataPath = "";
 	}
 
 	//	 try to predict full paths vs something embedded in the app
@@ -73,7 +73,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 			{
 				OnShutdown(0);
 			};
-			auto Blocking = false;
+			auto Blocking = true;
 			Platform::Loop( Blocking, OnQuit );
 
 			//	don't free this immediately in OnShutdown, do it here off the thread that triggered

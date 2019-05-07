@@ -4,6 +4,10 @@
 //#include "PopMain.h"
 #include "SoyMath.h"
 
+#include <windowsx.h>
+#include "SoyWindow.h"
+#include "SoyThread.h"
+
 namespace Platform
 {
 	class TControlClass;
@@ -28,6 +32,31 @@ namespace Platform
 	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
 }
 
+
+SoyKeyButton::Type KeyCodeToSoyButton(WPARAM KeyCode)
+{
+	if ( KeyCode >= 0x41 && KeyCode <= 0x5A )
+	{
+		auto Index = KeyCode - 0x41;
+		return 'a' + Index;
+	}
+
+	if ( KeyCode >= 0x30 && KeyCode <= 0x39 )
+	{
+		auto Index = KeyCode - 0x30;
+		return '0' + Index;
+	}
+
+	//	https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
+	switch ( KeyCode )
+	{
+	case VK_SPACE:	return ' ';
+	}
+
+	std::stringstream Error;
+	Error << "Unhandled VK_KEYCODE 0x" << std::hex << KeyCode << std::dec;
+	throw Soy::AssertException(Error);
+}
 
 template<typename COORDTYPE>
 Soy::Rectx<COORDTYPE> Platform::GetRect(RECT Rect)
@@ -85,10 +114,28 @@ class Platform::TControl
 public:
 	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
 
+	//	trigger actions
+	void					Repaint();
+
+	//	reflection
 	Soy::Rectx<int32_t>		GetClientRect();
+
+	//	callbacks from windows message loop
 	virtual void			OnDestroyed();		//	window handle is being destroyed
+	virtual void			OnWindowMessage(UINT EventMessage) {}	//	called from window thread which means we can flush jobs
+
+	//	return true if handled, or false to return default behavouir
+	bool			OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage);
+	bool			OnKeyDown(WPARAM KeyCode, LPARAM Flags);
+	bool			OnKeyUp(WPARAM KeyCode, LPARAM Flags);
 
 	std::function<void(TControl&)>	mOnPaint;
+	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseDown;
+	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseMove;
+	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseUp;
+	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyDown;
+	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyUp;
+
 	std::function<void(TControl&)>	mOnDestroy;	//	todo: expand this to OnClose to allow user to stop it from closing
 
 	HWND		mHwnd = nullptr;
@@ -100,13 +147,18 @@ class Platform::TWindow : public TControl
 public:
 	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
 	
-	bool		IsFullscreen();
-	void		SetFullscreen(bool Fullscreen);
+	bool			IsFullscreen();
+	void			SetFullscreen(bool Fullscreen);
+	virtual void	OnWindowMessage(UINT EventMessage) override;
+
+public:
+	PopWorker::TJobQueue	mJobQueue;
 
 private:
 	//	for saving/restoring fullscreen mode
 	std::shared_ptr<WINDOWPLACEMENT>	mSavedWindowPlacement;	//	saved state before going fullscreen
 	LONG				mSavedWindowFlags = 0;
+	LONG				mSavedWindowExFlags = 0;
 };
 
 
@@ -229,6 +281,8 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 
 	//	callbacks
 	TControl& Control = *pControl;
+	Control.OnWindowMessage(message);
+
 	switch ( message )
 	{
 		//	gotta allow some things
@@ -248,7 +302,14 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		BeginPaint(hwnd, &ps);
 		if ( Control.mOnPaint )
 		{
-			Control.mOnPaint(Control);
+			try
+			{
+				Control.mOnPaint(Control);
+			}
+			catch ( std::exception& e)
+			{
+				std::Debug << "Exception OnPaint: " << e.what() << std::endl;
+			}
 		}
 		else
 		{
@@ -264,6 +325,40 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 	case WM_QUIT:
 		std::Debug << "Got WM_QUIT on control callback, with control" << std::endl;
 		break;
+
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEMOVE:
+	{
+		auto x = GET_X_LPARAM(lParam);
+		auto y = GET_Y_LPARAM(lParam);
+		if ( Control.OnMouseEvent(x, y, wParam, message) )
+			return 0;
+		return Default();
+	}
+
+	case WM_KEYDOWN:
+	{
+		auto KeyCode = wParam;
+		auto Flags = lParam;
+		if ( Control.OnKeyDown(KeyCode, Flags) )
+			return 0;
+		return Default();
+	}
+
+	case WM_KEYUP:
+	{
+		auto KeyCode = wParam;
+		auto Flags = lParam;
+		if ( Control.OnKeyUp(KeyCode, Flags) )
+			return 0;
+		return Default();
+	}
+
 	}
 
 	return Default();
@@ -335,6 +430,84 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 
 }
 
+
+bool Platform::TControl::TControl::OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage)
+{
+	auto LeftDown = (Flags & MK_LBUTTON) != 0;
+	auto MiddleDown = (Flags & MK_LBUTTON) != 0;
+	auto RightDown = (Flags & MK_LBUTTON) != 0;
+	auto* pMouseEvent = &mOnMouseMove;
+	switch(EventMessage)
+	{
+	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:	
+	case WM_MBUTTONDOWN:
+		pMouseEvent = &mOnMouseDown;	
+		break;
+
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONUP:
+		pMouseEvent = &mOnMouseUp;
+		break;
+
+	case WM_MOUSEMOVE:	
+		pMouseEvent = &mOnMouseMove;	
+		break;
+	}
+
+	auto Button = SoyMouseButton::None;
+	if ( LeftDown )			Button = SoyMouseButton::Left;
+	else if ( RightDown )	Button = SoyMouseButton::Right;
+	else if ( MiddleDown )	Button = SoyMouseButton::Middle;
+
+	//	x/y relateive to client area
+	//std::Debug << "mouse event: " << x << "," << y << std::endl;
+	TMousePos MousePos(x, y);
+	if ( pMouseEvent )
+	{
+		auto& Event = *pMouseEvent;
+		if ( Event )
+			Event( *this, MousePos, Button);
+	}
+
+	//	carry on with default behaviour
+	return false;
+}
+
+bool Platform::TControl::TControl::OnKeyDown(WPARAM KeyCode, LPARAM Flags)
+{
+	try
+	{
+		auto KeyButton = KeyCodeToSoyButton(KeyCode);
+		if ( mOnKeyDown )
+			mOnKeyDown(*this, KeyButton);
+	}
+	catch ( std::exception& e )
+	{
+		std::Debug << "OnKeyDown error: " << e.what() << std::endl;
+	}
+	return false;
+}
+
+bool Platform::TControl::TControl::OnKeyUp(WPARAM KeyCode, LPARAM Flags)
+{
+	try
+	{
+		auto KeyButton = KeyCodeToSoyButton(KeyCode);
+		if ( mOnKeyUp )
+			mOnKeyUp(*this, KeyButton);
+	}
+	catch ( std::exception& e )
+	{
+		std::Debug << "OnKeyUp error: " << e.what() << std::endl;
+	}
+	return false;
+}
+
+
+
+
 void Platform::TControl::TControl::OnDestroyed()
 {
 	//	do callback, then cleanup references
@@ -397,9 +570,14 @@ Platform::TControlClass& GetOpenglViewClass()
 	return *gClass;
 }
 
+//	gr: without an edge/border, we get a flicker argh
+//	gr: only occcurs with double buffering
+//const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
+const DWORD WindowStyleExFlags = 0;
+const DWORD WindowStyleFlags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
-	TControl	( Name, GetWindowClass(), nullptr, WS_OVERLAPPEDWINDOW, WS_EX_CLIENTEDGE, Rect )
+	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect )
 {
 	auto ShowState = SW_SHOW;
 
@@ -434,22 +612,42 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 }
 
 
+class DummyContext : public PopWorker::TContext
+{
+	virtual void	Lock() override {};
+	virtual void	Unlock() override {};
+};
+DummyContext gDummyContext;
+
+void Platform::TWindow::OnWindowMessage(UINT Message)
+{
+	mJobQueue.Flush(gDummyContext);
+}
+
 
 Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params) :
 	Opengl::TRenderTarget	( Parent.mName ),
 	mParent					( Parent )
 {
+	BYTE ColorDepth = 24;
+	DWORD Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+
+	//	gr: no double buffering stops flicker
+	//	none of these flags help
+	/*
+	#define PFD_SWAP_EXCHANGE           0x00000200
+	#define PFD_SWAP_COPY               0x00000400
+	#define PFD_SWAP_LAYER_BUFFERS      0x00000800
+	Flags |= PFD_DOUBLEBUFFER;
+	*/
+
 	//	make the pixel format descriptor
 	PIXELFORMATDESCRIPTOR pfd =				// pfd Tells Windows How We Want Things To Be
 	{
 		sizeof(PIXELFORMATDESCRIPTOR),		// Size Of This Pixel Format Descriptor
 		1,									// Version Number
-		PFD_DRAW_TO_WINDOW |				// Format Must Support Window
-		PFD_SUPPORT_OPENGL |				// Format Must Support OpenGL
-		PFD_DOUBLEBUFFER,					// Must Support Double Buffering
-		PFD_TYPE_RGBA,						// Request An RGBA Format
-											//	16,									// Select Our Color Depth
-		24,									// Select Our Color Depth
+		Flags,					// Must Support Double Buffering
+		ColorDepth,									// Select Our Color Depth
 		0, 0, 0, 0, 0, 0,					// Color Bits Ignored
 		0,									// No Alpha Buffer
 		0,									// Shift Bit Ignored
@@ -541,13 +739,18 @@ void Platform::TOpenglContext::Lock()
 
 void Platform::TOpenglContext::Unlock()
 {
-	if ( !wglMakeCurrent(nullptr, nullptr) )
+	if ( !wglMakeCurrent(mHDC, nullptr) )
 		throw Soy::AssertException("wglMakeCurrent unbind failed");
 
 	TContext::Unlock();
 }
 
 void Platform::TOpenglContext::Repaint()
+{
+	mParent.Repaint();
+}
+
+void Platform::TControl::Repaint()
 {
 	//	tell parent to repaint
 	//	update window triggers a WM_PAINT, if we've invalidated rect
@@ -561,7 +764,7 @@ void Platform::TOpenglContext::Repaint()
 	const RECT * UpdateRect = nullptr;
 	HRGN UpdateRegion = nullptr;
 	auto Flags = RDW_INTERNALPAINT;//	|RDW_INVALIDATE
-	if ( !RedrawWindow(mParent.mHwnd, UpdateRect, UpdateRegion, Flags ) )
+	if ( !RedrawWindow(mHwnd, UpdateRect, UpdateRegion, Flags ) )
 		Platform::IsOkay("RedrawWindow failed");
 }
 
@@ -651,21 +854,9 @@ void Platform::TOpenglContext::OnPaint()
 	try
 	{
 		//	flip
-		SwapBuffers(mHDC);
-		/*
-		if ( Context->IsDoubleBuffered() )
-		{
-			//	let OSX flush and flip (probably sync'd better than we ever could)
-			//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
-			//	http://stackoverflow.com/a/13633191/355753
-			[[self openGLContext] flushBuffer];
-		}
-		else
-		{
-			glFlush();
-			Opengl::IsOkay("glFlush");
-		}
-		*/
+		if ( !SwapBuffers(mHDC) )
+			std::Debug << "Failed to SwapBuffers(): " << Platform::GetLastErrorString() <<  std::endl;
+		
 		UnlockContext();
 	}
 	catch(std::exception& e)
@@ -694,6 +885,13 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	{
 		this->OnClosed();
 	};
+
+
+	mWindow->mOnMouseDown	= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
+	mWindow->mOnMouseUp		= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
+	mWindow->mOnMouseMove	= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
+	mWindow->mOnKeyDown		= [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
+	mWindow->mOnKeyUp		= [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
 
 	//	start thread so we auto redraw & run jobs
 	Start();
@@ -760,7 +958,13 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	if ( !mWindow )
 		throw Soy::AssertException("TOpenglWindow::SetFullscreen missing window");
 
-	mWindow->SetFullscreen(Fullscreen);
+	//	this needs to be done on the main thread
+	auto DoFullScreen = [=]()
+	{
+		this->mWindow->SetFullscreen(Fullscreen);
+	};
+	mWindow->mJobQueue.PushJob(DoFullScreen);
+	mWindow->Repaint();
 }
 
 
@@ -769,6 +973,31 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 	//	don't change current setup
 	if ( IsFullscreen() == Fullscreen )
 		return;
+
+	//	wierd error:
+	//	If the previous value is zero and the function succeeds,
+	//	the return value is zero, but the function does not clear the last error information. 
+	//	To determine success or failure, clear the last error information by calling SetLastError with 0, 
+	//	then call SetWindowLongPtr. Function failure will be indicated by a return value of zero and a 
+	//	GetLastError result that is nonzero.
+	auto DoSetWindowLongPtr = [](HWND hWnd,int nIndex,LONG_PTR dwNewLong)
+	{
+		::SetLastError(0);
+		auto Result = SetWindowLongPtrA(hWnd, nIndex, dwNewLong);
+		//	last setting, 0 might be last state or error
+		if ( Result != 0 )
+			return;
+
+		auto LastError = ::GetLastError();
+		//	no error
+		if ( LastError == 0 )
+			return;
+		
+		//	is error
+		::SetLastError(LastError);
+		Platform::ThrowLastError("SetWindowLong");
+	};
+
 
 	//	if going fullscreen, save placement then go fullscreen
 	if ( Fullscreen )
@@ -781,7 +1010,8 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 			Platform::ThrowLastError("GetWindowPlacement failed");
 		//	flags is never set, and it's not the style!
 		mSavedWindowFlags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
-		
+		mSavedWindowExFlags = GetWindowLongPtrA(mHwnd, GWL_EXSTYLE);
+				
 		//	get monitor size for window
 		HMONITOR MonitorHandle = MonitorFromWindow(mHwnd, MONITOR_DEFAULTTONEAREST);
 		if ( MonitorHandle == nullptr )
@@ -792,11 +1022,14 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 			Platform::ThrowLastError("GetMonitorInfoA failed");
 
 		//	set size
+		//	if any border, doesnt go fullscreen
+		//	if no border, flicker!
+		auto Border = 0;
 		auto x = MonitorMeta.rcMonitor.left;
 		auto y = MonitorMeta.rcMonitor.top;
 		auto w = MonitorMeta.rcMonitor.right - x;
-		auto h = MonitorMeta.rcMonitor.bottom - y;
-		bool Repaint = true;
+		auto h = MonitorMeta.rcMonitor.bottom - y - Border;
+		bool Repaint = false;
 		if ( !MoveWindow(mHwnd, x, y, w, h, Repaint) )
 		{
 			std::stringstream Error;
@@ -804,10 +1037,16 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 			Platform::ThrowLastError(Error.str());
 		}
 
+		
 		//	set flags
-		auto NewFlags = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
-		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags) )
-			Platform::ThrowLastError("Failed to set window flags");
+		auto NewFlags = WS_VISIBLE | WS_POPUP;
+		//	WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags);
+
+		//auto NewExFlags = mSavedWindowExFlags & ~(WS_EX_CLIENTEDGE);
+		auto NewExFlags = mSavedWindowExFlags;
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, NewExFlags);
+
 	}
 	else
 	{
@@ -822,8 +1061,8 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 		if ( !SetWindowPlacement(mHwnd, &Placement) )
 			Platform::ThrowLastError("SetWindowPlacement failed");
 
-		if ( !SetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags) )
-			Platform::ThrowLastError("Failed to set window flags");
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags);
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, mSavedWindowExFlags);
 	}
 }
 

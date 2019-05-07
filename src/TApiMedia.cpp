@@ -232,6 +232,10 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 				std::stringstream Name;
 				Name << "AVC buffer image plane #" << mFrameBuffers.GetSize();
 				Image.mName = Name.str();
+
+				//	gr: make this an option somewhere! really we should pass in the target
+				Image.DoSetLinearFilter(true);
+
 				Bind::TPersistent ImageObjectPersistent( Context, ImageObject, Name.str() );
 				mFrameBuffers.PushBack( ImageObjectPersistent );
 			}
@@ -555,12 +559,34 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 	//	trigger all our requests, no more callback
 	auto Runner = [this](Bind::TLocalContext& Context)
 	{
+		Bind::TObject Frame;
+
+		//	call immedate callback if there is one
+		auto Device = this->GetHandle(Context);
+		if ( Device.HasMember("OnNewFrame") )
+		{
+			try
+			{
+				auto OnNewFrameFunc = Device.GetFunction("OnNewFrame");
+				if ( !Frame.mThis )
+					Frame = PopFrame(Context, mFrameRequestParams);
+
+				Bind::TCallback Call(Context);
+				Call.SetArgumentObject(0, Frame);
+				OnNewFrameFunc.Call(Call);
+			} catch ( std::exception& e )
+			{
+				std::Debug << "Calling OnNewFrame exception: " << e.what() << std::endl;
+			}
+		}
+
 		if ( !mFrameRequests.HasPromises() )
 			return;
 
 		try
 		{
-			auto Frame = PopFrame( Context, mFrameRequestParams );
+			if ( !Frame.mThis )
+				Frame = PopFrame( Context, mFrameRequestParams );
 			Bind::TPersistent FramePersistent( Context, Frame, "Frame" );
 
 			auto HandlePromise = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
