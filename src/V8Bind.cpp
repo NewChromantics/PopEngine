@@ -321,7 +321,10 @@ bool JSValueIsNumber(JSContextRef Context,JSValueRef Value)
 
 double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	auto Number = Value.mThis.As<v8::Number>();
+	//	reinterpret as number
+	auto NumberHandle = Value.mThis->ToNumber(Context.mThis);
+	V8::IsOkay(NumberHandle, Context.GetIsolate(), Context.GetTryCatch(), "JSValueToNumber");
+	auto Number = NumberHandle.ToLocalChecked();
 	return Number->Value();
 }
 
@@ -374,8 +377,9 @@ JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Nam
 
 bool JSValueToBoolean(JSContextRef Context,JSValueRef Value)
 {
-	auto Bool = Value.mThis.As<v8::Boolean>();
-	return Bool->Value();
+	//	reinterpret as boolean
+	auto BooleanHandle = Value.mThis->ToBoolean(&Context.GetIsolate());
+	return BooleanHandle->Value();
 }
 
 JSValueRef JSValueMakeBoolean(JSContextRef Context,bool Value)
@@ -618,8 +622,10 @@ JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef
 	if ( !Value.mThis->IsString() )
 		throw Soy::AssertException("Value is not string");
 	*/
-	//	this is supposed to copy
-	auto ValueString = Value.mThis.As<v8::String>();
+	//	ToString converts, As is a cast
+	auto ValueStringMaybe = Value.mThis->ToString(Context.mThis);
+	V8::IsOkay(ValueStringMaybe, Context.GetIsolate(), Context.GetTryCatch(), "JSValueToStringCopy");
+	auto ValueString = ValueStringMaybe.ToLocalChecked();
 	JSStringRef ValueStringRef( ValueString );
 	auto NewString = Bind::GetString( Context, ValueStringRef );
 	JSStringRef NewStringRef( Context, NewString );
