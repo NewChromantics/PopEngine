@@ -924,7 +924,10 @@ bool V8::TVirtualMachine::ProcessJobQueue(std::function<void(std::chrono::millis
 	bool MoreTasks = true;
 	auto PumpMessageLoop = [&](v8::Isolate& Isolate)
 	{
-		MoreTasks = v8::platform::PumpMessageLoop( mPlatform.get(), &Isolate );
+		auto Blocking = false;
+		auto Behavior = Blocking ? v8::platform::MessageLoopBehavior::kWaitForWork : v8::platform::MessageLoopBehavior::kDoNotWait;
+		//	this returns true if a task was processed
+		MoreTasks = v8::platform::PumpMessageLoop( mPlatform.get(), &Isolate, Behavior );
 	};
 
 	while( MoreTasks )

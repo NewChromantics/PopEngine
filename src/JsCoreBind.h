@@ -229,10 +229,24 @@ public:
 
 	virtual bool		Iteration(std::function<void(std::chrono::milliseconds)> Sleep) override
 	{
-		if ( !mOnIteration(Sleep) )
+		auto IterationResult = true;
+
+		//	if the main job queue sleeps, lets flush any microtasks first
+		auto JobSleep = [&](std::chrono::milliseconds Ms)
+		{
+			//if ( !mOnIteration(Sleep) )
+			//	IterationResult = false;
+			Sleep( Ms );
+		};
+
+		if ( !SoyWorkerJobThread::Iteration(JobSleep) )
 			return false;
+
+		//	gr: run microtasks last
+		if ( !mOnIteration(Sleep) )
+			IterationResult = false;
 		
-		return SoyWorkerJobThread::Iteration( Sleep );
+		return IterationResult;
 	}
 
 	JsCore::TContext&		mContext;
