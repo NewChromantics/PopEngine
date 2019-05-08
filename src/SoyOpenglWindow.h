@@ -15,7 +15,9 @@ namespace Platform
 	class TWindow;
 	class TOpenglView;		//	on osx it's a view control
 	class TOpenglContext;	//	on windows, its a context that binds to any control
+	class TWin32Thread;		//	windows needs to make calls on a specific thread (just as OSX needs it to be on the main dispatcher)
 }
+
 
 
 class TOpenglParams
@@ -53,7 +55,8 @@ public:
 	std::function<void(Opengl::TRenderTarget&,std::function<void()> LockContext)>	mOnRender;
 	std::shared_ptr<Platform::TOpenglView>		mView;
 	std::shared_ptr<Platform::TOpenglContext>	mWindowContext;
-	
+	std::shared_ptr<Platform::TWin32Thread>		mWindowThread;
+
 protected:
 	TOpenglParams	mParams;
 	

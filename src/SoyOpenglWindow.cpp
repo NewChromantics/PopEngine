@@ -17,6 +17,9 @@ namespace Platform
 
 	class TOpenglContext;
 
+	class TWin32Thread;	//	A window(control?) is associated with a thread so must pump messages in the same thread https://docs.microsoft.com/en-us/windows/desktop/procthread/creating-windows-in-threads
+
+
 	namespace Private
 	{
 		HINSTANCE InstanceHandle = nullptr;
@@ -109,10 +112,43 @@ void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 
 
 
+class Platform::TWin32Thread : public SoyWorkerJobThread
+{
+public:
+	TWin32Thread(const std::string& Name, bool Win32Blocking=false) :
+		mWin32Blocking(Win32Blocking),
+		//SoyWorkerJobThread(Name, Win32Blocking ? SoyWorkerWaitMode::NoWait : SoyWorkerWaitMode::Wake)
+		SoyWorkerJobThread(Name, SoyWorkerWaitMode::NoWait )
+	{
+		Start();
+	}
+
+	bool	mWin32Blocking = true;
+
+	virtual bool Iteration(std::function<void(std::chrono::milliseconds)> Sleep)
+	{
+		if ( !SoyWorkerJobThread::Iteration(Sleep) )
+			return false;
+
+		//	pump jobs
+		//	pump windows queue & block
+		bool Continue = true;
+		auto OnQuit = [&]()
+		{
+			Continue = false;
+		};
+		Platform::Loop(mWin32Blocking, OnQuit);
+		return Continue;
+	}
+};
+
+
+
 class Platform::TControl
 {
 public:
-	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect);
+	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect,TWin32Thread& Thread);
+	virtual ~TControl();
 
 	//	trigger actions
 	void					Repaint();
@@ -129,6 +165,12 @@ public:
 	bool			OnKeyDown(WPARAM KeyCode, LPARAM Flags);
 	bool			OnKeyUp(WPARAM KeyCode, LPARAM Flags);
 
+	virtual TWin32Thread&	GetJobQueue()
+	{
+		return mThread;
+	}
+
+public:
 	std::function<void(TControl&)>	mOnPaint;
 	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseDown;
 	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseMove;
@@ -137,22 +179,21 @@ public:
 	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyUp;
 
 	std::function<void(TControl&)>	mOnDestroy;	//	todo: expand this to OnClose to allow user to stop it from closing
-
-	HWND		mHwnd = nullptr;
-	std::string	mName;
+	
+	HWND			mHwnd = nullptr;
+	std::string		mName;
+	TWin32Thread&	mThread;
 };
 
 class Platform::TWindow : public TControl
 {
 public:
-	TWindow(const std::string& Name,Soy::Rectx<int> Rect);
+	TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread);
 	
 	bool			IsFullscreen();
 	void			SetFullscreen(bool Fullscreen);
 	virtual void	OnWindowMessage(UINT EventMessage) override;
 
-public:
-	PopWorker::TJobQueue	mJobQueue;
 
 private:
 	//	for saving/restoring fullscreen mode
@@ -420,8 +461,9 @@ Platform::TControlClass::~TControlClass()
 }
 
 
-Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect) :
-	mName	( Name )
+Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect,TWin32Thread& Thread) :
+	mName	( Name ),
+	mThread	( Thread )
 {
 	const char* ClassName = Class.ClassName();
 	const char* WindowName = mName.c_str();
@@ -430,11 +472,18 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 	auto Instance = Platform::Private::InstanceHandle;
 	HMENU Menu = nullptr;
 
+	if ( !mThread.IsLockedToThisThread() )
+		throw Soy::AssertException("Should be creating control on our thread");
+
 	mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, UserData);
 	Platform::IsOkay("CreateWindow");
 	if ( !mHwnd )
 		throw Soy::AssertException("Failed to create window");
 
+}
+
+Platform::TControl::~TControl()
+{
 }
 
 
@@ -583,8 +632,8 @@ Platform::TControlClass& GetOpenglViewClass()
 const DWORD WindowStyleExFlags = 0;
 const DWORD WindowStyleFlags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 
-Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
-	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect )
+Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread) :
+	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect, Thread )
 {
 	auto ShowState = SW_SHOW;
 
@@ -618,17 +667,8 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect) :
 	ShowWindow(mHwnd, ShowState);
 }
 
-
-class DummyContext : public PopWorker::TContext
-{
-	virtual void	Lock() override {};
-	virtual void	Unlock() override {};
-};
-DummyContext gDummyContext;
-
 void Platform::TWindow::OnWindowMessage(UINT Message)
 {
-	mJobQueue.Flush(gDummyContext);
 }
 
 
@@ -771,8 +811,14 @@ void Platform::TControl::Repaint()
 	const RECT * UpdateRect = nullptr;
 	HRGN UpdateRegion = nullptr;
 	auto Flags = RDW_INTERNALPAINT;//	|RDW_INVALIDATE
-	if ( !RedrawWindow(mHwnd, UpdateRect, UpdateRegion, Flags ) )
-		Platform::IsOkay("RedrawWindow failed");
+	//	gr: not sure if this is threadsafe
+	auto DoPaint = [=]()
+	{
+		if ( !RedrawWindow(mHwnd, UpdateRect, UpdateRegion, Flags) )
+			Platform::IsOkay("RedrawWindow failed");
+	};
+	//GetJobQueue().PushJob(DoPaint);
+	DoPaint();
 }
 
 void Platform::TOpenglContext::Bind()
@@ -879,26 +925,35 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	mName				( Name ),
 	mParams				( Params )
 {
-	mWindow.reset(new Platform::TWindow(Name,Rect));
-	mWindowContext.reset(new Platform::TOpenglContext(*mWindow,Params));
-
-	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
+	mWindowThread.reset(new Platform::TWin32Thread(std::string("OpenWindow::") + Name));
+	
+	//	need to create on the correct thread
+	auto CreateControls = [&]()
 	{
-		mOnRender(RenderTarget, LockContext );
+		mWindow.reset(new Platform::TWindow(Name, Rect, *mWindowThread));
+		mWindowContext.reset(new Platform::TOpenglContext(*mWindow, Params));
+
+		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget, std::function<void()> LockContext)
+		{
+			mOnRender(RenderTarget, LockContext);
+		};
+		mWindowContext->mOnRender = OnRender;
+
+		mWindow->mOnDestroy = [this](Platform::TControl& Control)
+		{
+			this->OnClosed();
+		};
+
+
+		mWindow->mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
+		mWindow->mOnMouseUp = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
+		mWindow->mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
+		mWindow->mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
+		mWindow->mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
 	};
-	mWindowContext->mOnRender = OnRender;
-
-	mWindow->mOnDestroy = [this](Platform::TControl& Control)
-	{
-		this->OnClosed();
-	};
-
-
-	mWindow->mOnMouseDown	= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
-	mWindow->mOnMouseUp		= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
-	mWindow->mOnMouseMove	= [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
-	mWindow->mOnKeyDown		= [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
-	mWindow->mOnKeyUp		= [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
+	Soy::TSemaphore Wait;
+	mWindowThread->PushJob(CreateControls, Wait);
+	Wait.Wait("Win32 thread");
 
 	//	start thread so we auto redraw & run jobs
 	Start();
@@ -926,7 +981,8 @@ bool TOpenglWindow::IsValid()
 bool TOpenglWindow::Iteration()
 {
 	//	repaint!
-	mWindowContext->Repaint();
+	if ( mWindowContext )
+		mWindowContext->Repaint();
 	return true;
 }
 
@@ -970,7 +1026,7 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	{
 		this->mWindow->SetFullscreen(Fullscreen);
 	};
-	mWindow->mJobQueue.PushJob(DoFullScreen);
+	mWindow->GetJobQueue().PushJob(DoFullScreen);
 	mWindow->Repaint();
 }
 
