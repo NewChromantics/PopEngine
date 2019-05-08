@@ -1830,3 +1830,28 @@ void JsCore::TContextDebug::OnPersitentReleased(TPersistent& Persistent)
 {
 	mPersistentObjectCount[Persistent.GetDebugName()]--;
 }
+
+
+bool JsCore::TJobQueue::Iteration(std::function<void(std::chrono::milliseconds)> Sleep)
+{
+	auto IterationResult = true;
+
+	//	if the main job queue sleeps, lets flush any microtasks first
+	auto JobSleep = [&](std::chrono::milliseconds Ms)
+	{
+		//	gr: don't seem to need to
+		//if ( !mOnIteration(Sleep) )
+		//	IterationResult = false;
+		Sleep( Ms );
+	};
+
+	if ( !SoyWorkerJobThread::Iteration(JobSleep) )
+		return false;
+
+	//	gr: run microtasks last
+	if ( !mOnIteration(Sleep) )
+		IterationResult = false;
+
+	return IterationResult;
+}
+

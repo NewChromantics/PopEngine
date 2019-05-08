@@ -227,28 +227,8 @@ public:
 	{
 	}
 
-	virtual bool		Iteration(std::function<void(std::chrono::milliseconds)> Sleep) override
-	{
-		auto IterationResult = true;
-
-		//	if the main job queue sleeps, lets flush any microtasks first
-		auto JobSleep = [&](std::chrono::milliseconds Ms)
-		{
-			//if ( !mOnIteration(Sleep) )
-			//	IterationResult = false;
-			Sleep( Ms );
-		};
-
-		if ( !SoyWorkerJobThread::Iteration(JobSleep) )
-			return false;
-
-		//	gr: run microtasks last
-		if ( !mOnIteration(Sleep) )
-			IterationResult = false;
-		
-		return IterationResult;
-	}
-
+	virtual bool		Iteration(std::function<void(std::chrono::milliseconds)> Sleep) override;
+	
 	JsCore::TContext&		mContext;
 	std::function<bool(std::function<void(std::chrono::milliseconds)>&)> mOnIteration;
 };
