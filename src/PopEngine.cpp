@@ -67,6 +67,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	#endif
 
 	#if defined(TARGET_WINDOWS)
+		//	gr: this thread should just spin, and not get win32 messages...
 		while ( Running )
 		{
 			auto OnQuit = [&]()

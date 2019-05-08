@@ -258,110 +258,117 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	};
 
-	//	handle isn't bound to a control of ours
-	if ( !pControl )
+	try
 	{
-		//	setup our user data
-		if ( message == WM_NCCREATE )
+		//	handle isn't bound to a control of ours
+		if ( !pControl )
 		{
-			auto* CreateStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-			auto* This = CreateStruct->lpCreateParams;
-			auto ThisLong = reinterpret_cast<LONG_PTR>(This);
-			SetWindowLongPtr(hwnd, GWLP_USERDATA, ThisLong );
+			//	setup our user data
+			if ( message == WM_NCCREATE )
+			{
+				auto* CreateStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
+				auto* This = CreateStruct->lpCreateParams;
+				auto ThisLong = reinterpret_cast<LONG_PTR>(This);
+				SetWindowLongPtr(hwnd, GWLP_USERDATA, ThisLong);
+				return Default();
+			}
+
+			if ( message == WM_QUIT )
+			{
+				std::Debug << "Got WM_QUIT on control callback" << std::endl;
+			}
+
 			return Default();
 		}
 
-		if ( message == WM_QUIT )
+		//	callbacks
+		TControl& Control = *pControl;
+		Control.OnWindowMessage(message);
+
+		switch ( message )
 		{
-			std::Debug << "Got WM_QUIT on control callback" << std::endl;
-		}
+			//	gotta allow some things
+		case WM_MOVE:
+		case WM_SIZE:
+		case WM_CREATE:
+		case WM_ERASEBKGND:
+		case WM_SHOWWINDOW:
+			return 0;
 
-		return Default();
-	}
+		case WM_DESTROY:
+			Control.OnDestroyed();
+			return 0;
 
-	//	callbacks
-	TControl& Control = *pControl;
-	Control.OnWindowMessage(message);
-
-	switch ( message )
-	{
-		//	gotta allow some things
-	case WM_MOVE:
-	case WM_SIZE:
-	case WM_CREATE:
-	case WM_ERASEBKGND:
-	case WM_SHOWWINDOW:
-		return 0;
-
-	case WM_DESTROY:
-		Control.OnDestroyed();
-		return 0;
-
-	case WM_PAINT:
-		PAINTSTRUCT ps;
-		BeginPaint(hwnd, &ps);
-		if ( Control.mOnPaint )
-		{
-			try
+		case WM_PAINT:
+			PAINTSTRUCT ps;
+			BeginPaint(hwnd, &ps);
+			if ( Control.mOnPaint )
 			{
-				Control.mOnPaint(Control);
+				try
+				{
+					Control.mOnPaint(Control);
+				} catch ( std::exception& e )
+				{
+					std::Debug << "Exception OnPaint: " << e.what() << std::endl;
+				}
 			}
-			catch ( std::exception& e)
+			else
 			{
-				std::Debug << "Exception OnPaint: " << e.what() << std::endl;
+				//	do default/fallback paint?
 			}
-		}
-		else
+			EndPaint(hwnd, &ps);
+			return 0;
+
+			//	*need* to handle these with defwndproc
+		case WM_GETMINMAXINFO:
+			break;
+
+		case WM_QUIT:
+			std::Debug << "Got WM_QUIT on control callback, with control" << std::endl;
+			break;
+
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:
+		case WM_MOUSEMOVE:
 		{
-			//	do default/fallback paint?
+			auto x = GET_X_LPARAM(lParam);
+			auto y = GET_Y_LPARAM(lParam);
+			if ( Control.OnMouseEvent(x, y, wParam, message) )
+				return 0;
+			return Default();
 		}
-		EndPaint(hwnd, &ps);
-		return 0;
 
-		//	*need* to handle these with defwndproc
-	case WM_GETMINMAXINFO:
-		break;
+		case WM_KEYDOWN:
+		{
+			auto KeyCode = wParam;
+			auto Flags = lParam;
+			if ( Control.OnKeyDown(KeyCode, Flags) )
+				return 0;
+			return Default();
+		}
 
-	case WM_QUIT:
-		std::Debug << "Got WM_QUIT on control callback, with control" << std::endl;
-		break;
+		case WM_KEYUP:
+		{
+			auto KeyCode = wParam;
+			auto Flags = lParam;
+			if ( Control.OnKeyUp(KeyCode, Flags) )
+				return 0;
+			return Default();
+		}
 
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_MOUSEMOVE:
-	{
-		auto x = GET_X_LPARAM(lParam);
-		auto y = GET_Y_LPARAM(lParam);
-		if ( Control.OnMouseEvent(x, y, wParam, message) )
-			return 0;
+		}
+
 		return Default();
 	}
-
-	case WM_KEYDOWN:
+	catch(std::exception& e)
 	{
-		auto KeyCode = wParam;
-		auto Flags = lParam;
-		if ( Control.OnKeyDown(KeyCode, Flags) )
-			return 0;
+		std::Debug << "Exception in win32 callback: " << e.what() << std::endl;
 		return Default();
 	}
-
-	case WM_KEYUP:
-	{
-		auto KeyCode = wParam;
-		auto Flags = lParam;
-		if ( Control.OnKeyUp(KeyCode, Flags) )
-			return 0;
-		return Default();
-	}
-
-	}
-
-	return Default();
 }
 
 
