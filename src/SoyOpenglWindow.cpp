@@ -1144,6 +1144,7 @@ void Platform::TWin32Thread::Wake()
 	//	need to send a message to unblock windows message queue (if its blocking)
 	//	post message to the thread
 	//	if thread id is 0, we haven't done an iteration yet
+	//	if we get the "invalid thread" error, there's a chance we've started the thread, and set the value, but GetMessage() or PeekMessage() hasn't been called yet
 	UINT WakeMessage = WM_USER;
 	WPARAM WakeWParam = 0;
 	LPARAM WakeLParam = 0;
