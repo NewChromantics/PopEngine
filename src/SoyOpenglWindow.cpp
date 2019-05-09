@@ -1148,10 +1148,16 @@ void Platform::TWin32Thread::Wake()
 	UINT WakeMessage = WM_USER;
 	WPARAM WakeWParam = 0;
 	LPARAM WakeLParam = 0;
-	if ( !PostThreadMessageA(mThreadId, WakeMessage, WakeWParam, WakeLParam) )
+	auto ThreadId = mThreadId;
+
+	if ( ThreadId == 0 )
+	{
+		std::Debug << "Thread hasn't iterated yet" << std::endl;
+	}
+	else if ( !PostThreadMessageA(ThreadId, WakeMessage, WakeWParam, WakeLParam) )
 	{
 		auto Error = Platform::GetLastErrorString();
-		std::Debug << "PostThreadMessageA Wake() to " << mThreadId << " error: " << Error << std::endl;
+		std::Debug << "PostThreadMessageA Wake() to " << ThreadId << "/" << mThreadId << " error: " << Error << std::endl;
 	}
 
 	SoyWorkerJobThread::Wake();
@@ -1162,9 +1168,6 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 	if ( !SoyWorkerJobThread::Iteration(Sleep) )
 		return false;
 
-	//	in order to wake the thread, we need the thread id windows uses to pass messages
-	this->mThreadId = ::GetCurrentThreadId();
-
 	//	pump jobs
 	//	pump windows queue & block
 	bool Continue = true;
@@ -1174,10 +1177,19 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 	};
 	auto CanBlock = [this]()
 	{
+		//	if we haven't set the thread id yet, we haven't called Get/PeekMessage, so let it run through and setup the message loop thread id
+		if ( mThreadId == 0 )
+			return false;
+
 		if ( this->HasJobs() )
 			return false;
 		return true;
 	};
 	Platform::Loop( CanBlock, OnQuit );
+
+	//	in order to wake the thread, we need the thread id windows uses to pass messages
+	if ( mThreadId == 0 )
+		mThreadId = ::GetCurrentThreadId();
+
 	return Continue;
 }
