@@ -29,7 +29,7 @@ namespace Platform
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 	void		Loop(bool Blocking,std::function<void()> OnQuit);
-
+	void		Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit);	
 
 	template<typename COORDTYPE>
 	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
@@ -115,31 +115,18 @@ void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 class Platform::TWin32Thread : public SoyWorkerJobThread
 {
 public:
-	TWin32Thread(const std::string& Name, bool Win32Blocking=false) :
+	TWin32Thread(const std::string& Name, bool Win32Blocking=true) :
 		mWin32Blocking(Win32Blocking),
-		//SoyWorkerJobThread(Name, Win32Blocking ? SoyWorkerWaitMode::NoWait : SoyWorkerWaitMode::Wake)
-		SoyWorkerJobThread(Name, SoyWorkerWaitMode::NoWait )
+		SoyWorkerJobThread(Name, Win32Blocking ? SoyWorkerWaitMode::NoWait : SoyWorkerWaitMode::Wake)
 	{
 		Start();
 	}
 
+	virtual void	Wake() override;
+	virtual bool	Iteration(std::function<void(std::chrono::milliseconds)> Sleep);
+
 	bool	mWin32Blocking = true;
-
-	virtual bool Iteration(std::function<void(std::chrono::milliseconds)> Sleep)
-	{
-		if ( !SoyWorkerJobThread::Iteration(Sleep) )
-			return false;
-
-		//	pump jobs
-		//	pump windows queue & block
-		bool Continue = true;
-		auto OnQuit = [&]()
-		{
-			Continue = false;
-		};
-		Platform::Loop(mWin32Blocking, OnQuit);
-		return Continue;
-	}
+	DWORD	mThreadId = 0;
 };
 
 
@@ -255,14 +242,21 @@ public:
 
 
 
-
-
 void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 {
-	while ( true )
+	auto CanBlock = [=]()
+	{
+		return Blocking;
+	};
+	Loop(CanBlock, OnQuit);
+}
+
+void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
+{
+	while ( CanBlock() )
 	{
 		MSG msg;
-		if ( Blocking )
+		if ( CanBlock() )
 		{
 			if ( !GetMessage(&msg, NULL, 0, 0) )
 				break;
@@ -1138,4 +1132,51 @@ bool Platform::TWindow::IsFullscreen()
 		return true;
 
 	return false;
+}
+
+
+
+
+
+
+void Platform::TWin32Thread::Wake()
+{
+	//	need to send a message to unblock windows message queue (if its blocking)
+	//	post message to the thread
+	//	if thread id is 0, we haven't done an iteration yet
+	UINT WakeMessage = WM_USER;
+	WPARAM WakeWParam = 0;
+	LPARAM WakeLParam = 0;
+	if ( !PostThreadMessageA(mThreadId, WakeMessage, WakeWParam, WakeLParam) )
+	{
+		auto Error = Platform::GetLastErrorString();
+		std::Debug << "PostThreadMessageA Wake() to " << mThreadId << " error: " << Error << std::endl;
+	}
+
+	SoyWorkerJobThread::Wake();
+}
+
+bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseconds)> Sleep)
+{
+	if ( !SoyWorkerJobThread::Iteration(Sleep) )
+		return false;
+
+	//	in order to wake the thread, we need the thread id windows uses to pass messages
+	this->mThreadId = ::GetCurrentThreadId();
+
+	//	pump jobs
+	//	pump windows queue & block
+	bool Continue = true;
+	auto OnQuit = [&]()
+	{
+		Continue = false;
+	};
+	auto CanBlock = [this]()
+	{
+		if ( this->HasJobs() )
+			return false;
+		return true;
+	};
+	Platform::Loop( CanBlock, OnQuit );
+	return Continue;
 }
