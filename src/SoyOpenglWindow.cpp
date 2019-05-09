@@ -253,7 +253,8 @@ void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 
 void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
 {
-	while ( CanBlock() )
+	//	gr: always do one iteration
+	do
 	{
 		MSG msg;
 		if ( CanBlock() )
@@ -279,7 +280,8 @@ void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
 		{
 			//	no more messages, break out here
 		}
-	}
+	} 
+	while ( CanBlock() );
 }
 
 
