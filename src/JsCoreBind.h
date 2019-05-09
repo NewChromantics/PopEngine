@@ -402,9 +402,10 @@ private:
 	JSValueRef		GetMember(const std::string& MemberName);
 	void			SetMember(const std::string& Name,JSValueRef Value);
 
-protected:
+private:
 	//	this should go, but requiring the param for every func is a pain,
 	//	so this context should be updated any time TObject is fetched from somewhere
+	//	gr: TObject should never be stored, so this shouldn't be a problem!
 	JSContextRef	mContext = nullptr;
 
 public:
@@ -599,7 +600,8 @@ public:
 
 public:
 	//	gr: this is a weak reference so the object gets free'd
-	//	gr;
+	//	gr: javascript core should also switch to a persistent (so context definitely isn't stored), but also
+	//		a weak (non retained) reference for the main one, just as v8 does
 #if defined(PERSISTENT_OBJECT_HANDLE)
 	TPersistent		mHandle;
 #else
