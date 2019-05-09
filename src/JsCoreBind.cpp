@@ -628,7 +628,7 @@ template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
 class TJob_DefferedUntil : public PopWorker::TJob_Function
 {
 public:
-	TJob_DefferedUntil(std::function<void()> Functor,typename CLOCKTYPE::time_point FutureTime) :
+	TJob_DefferedUntil(std::function<void()>& Functor,typename CLOCKTYPE::time_point FutureTime) :
 		TJob_Function	( Functor )
 	{
 		mFutureTime = FutureTime;
@@ -664,7 +664,7 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 	
 	
-	auto FunctorWrapper = [=]()
+	std::function<void()> FunctorWrapper = [=]()
 	{
 		//	need to catch this?
 		Execute( Functor );
