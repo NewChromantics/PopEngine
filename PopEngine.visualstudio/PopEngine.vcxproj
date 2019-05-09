@@ -220,7 +220,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\V8Bind.h" />
+    <ClInclude Include="..\src\V8Bind.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\v8\include\libplatform\libplatform-export.h" />
     <ClInclude Include="..\src\v8\include\libplatform\libplatform.h" />
     <ClInclude Include="..\src\v8\include\libplatform\v8-tracing.h" />
@@ -240,7 +242,9 @@
     <ClInclude Include="..\src\v8\include\v8config.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\V8Bind.cpp" />
+    <ClCompile Include="..\src\V8Bind.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <CustomBuild Include="..\src\Libs\JavascriptCore\win64\CFLite.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_V8|Win32'">true</DeploymentContent>

@@ -34,7 +34,22 @@ JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDire
 //	wrapper as v8 needs a context
 size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef string, char* buffer, size_t bufferSize)
 {
-	return JSStringGetUTF8CString(JSStringRef string, char* buffer, size_t bufferSize)
+	return JSStringGetUTF8CString(string, buffer, bufferSize);
+}
+#endif
+
+#if !defined(JSAPI_V8)
+//	wrapper as v8 needs a context
+JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* string)
+{
+	return JSStringCreateWithUTF8CString(string);
+}
+#endif
+
+#if !defined(JSAPI_V8)
+JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition* Definition)
+{
+	return JSClassCreate(Definition);
 }
 #endif
 
@@ -280,7 +295,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPersistent& Object)
 	auto LocalValue = Local.As<v8::Value>();
 	return JSValueRef( LocalValue );
 #else
-	return Object.mThis;
+	return Object.mObject;
 #endif
 	
 }
@@ -450,7 +465,9 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	//	set pointer
 	auto SetContext = [&](Bind::TLocalContext& LocalContext)
 	{
+	#if defined(JSAPI_V8)
 		LocalContext.mLocalContext.SetContext( *pContext );
+	#endif
 	};
 	pContext->Execute( SetContext );
 	
@@ -694,10 +711,8 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)
 {
 	//	gr: this may be the source of problems, this should be a properly locally scoped context...
-	std::function<void(JsCore::TLocalContext&)> Functor
-	JSContextRef ContextRef = mContext;
-	TLocalContext LocalContext( ContextRef, *this );
-	Functor( LocalContext );
+	JSContextRef ContextRef = GlobalContext;
+	Functor( ContextRef );
 }
 #endif
 
@@ -950,7 +965,9 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	ObjectPointer.SetHandle( LocalContext, NewObject );
 
 	//	this should already be setup in jscore...
+#if defined(PERSISTENT_OBJECT_HANDLE)
 	ObjectPointer.mHandle.SetWeak( ObjectPointer, Class );
+#endif
 	
 	//	construct
 	TCallback ConstructorParams(LocalContext);
@@ -1001,7 +1018,7 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 	
 	//	construct
 	TCallback ConstructorParams(LocalContext);
-	ConstructorParams.mThis = NewObject.mThis;
+	ConstructorParams.mThis = Bind::GetValue(LocalContext.mLocalContext, ObjectHandle);
 	ConstructorParams.mArguments.Copy( ConstructorArguments );
 	
 	//	actually call!
@@ -1405,7 +1422,7 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 	return Bind::TObject( Context.mLocalContext, LocalValue );
 #else
 	//	we should ignore the object's context and always use it in a current context
-	return TObject( Context.mLocalContext, mObject.mThis );
+	return TObject( Context.mLocalContext, mObject );
 #endif
 	/*
 	if ( mObject.mContext != Context.mLocalContext )
@@ -1455,7 +1472,7 @@ void JsCore::TPersistent::Release()
 		mContext->OnPersitentReleased(*this);
 		mObject.reset();
 #else
-		Release( mRetainedContext, mObject.mThis, mDebugName );
+		Release( mRetainedContext, mObject, mDebugName );
 		mContext->OnPersitentReleased(*this);
 		mObject = nullptr;
 #endif
@@ -1482,8 +1499,8 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,co
 #if defined(JSAPI_V8)
 	mObject = V8::GetPersistent( Context.mLocalContext.GetIsolate(), Object.mThis.mThis );
 #else
-	mObject = Object;
-	Retain( mRetainedContext, mObject.mThis, mDebugName );
+	mObject = Object.mThis;
+	Retain( mRetainedContext, mObject, mDebugName );
 #endif
 
 	Context.mGlobalContext.OnPersitentRetained(*this);
@@ -1507,10 +1524,9 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	mDebugName = That.mDebugName + " (copy)";
 	mContext = That.mContext;
 	mRetainedContext = That.mRetainedContext;
-#if defined(JSAPI_V8)
 	mObject = That.mObject;
-#else
-	Retain( mRetainedContext, That.mObject, mDebugName );
+#if !defined(JSAPI_V8)
+	Retain( mRetainedContext, mObject, mDebugName );
 #endif
 	
 	if ( mContext && mObject )
@@ -1816,7 +1832,7 @@ void JsCore::TObjectWrapperBase::SetHandle(Bind::TLocalContext& Context,JsCore::
 #if defined(PERSISTENT_OBJECT_HANDLE)
 	mHandle = Bind::TPersistent( Context, NewHandle, "This/SetHandle" );
 #else
-	mHandle = mObject;
+	mHandle = NewHandle;
 #endif
 }
 

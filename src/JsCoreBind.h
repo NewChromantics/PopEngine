@@ -452,7 +452,7 @@ public:
 #if defined(JSAPI_V8)
 	std::shared_ptr<V8::TPersistent<v8::Object>>	mObject;
 #else
-	JSObjectRef		mObject;
+	JSObjectRef		mObject = nullptr;
 #endif
 };
 
@@ -653,7 +653,7 @@ protected:
 		//	cast to TObject and use This to do proper type checks
 		//std::Debug << "Free object of type " << TYPENAME << std::endl;
 		auto& Object = TObject::This<THISTYPE>( ObjectRef );
-		Free( Object );
+		FreeObject( Object );
 	
 		//	reset the void for safety?
 		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
