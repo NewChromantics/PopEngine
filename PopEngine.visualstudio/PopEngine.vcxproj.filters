@@ -497,30 +497,6 @@
     <None Include="..\src\SoyLib\src\SoyWindow.mm">
       <Filter>SoyLib</Filter>
     </None>
-    <None Include="..\src\v8\lib\v8.dll">
-      <Filter>Libs\v8\Lib</Filter>
-    </None>
-    <None Include="..\src\v8\lib\v8_libbase.dll">
-      <Filter>Libs\v8\Lib</Filter>
-    </None>
-    <None Include="..\src\v8\lib\v8_libplatform.dll">
-      <Filter>Libs\v8\Lib</Filter>
-    </None>
-    <None Include="..\src\v8\lib\icui18n.dll">
-      <Filter>Libs\v8\Lib</Filter>
-    </None>
-    <None Include="..\src\v8\lib\icuuc.dll">
-      <Filter>Libs\v8\Lib</Filter>
-    </None>
-    <None Include="..\src\v8\v8Runtime\natives_blob.bin">
-      <Filter>Libs\v8\Runtime</Filter>
-    </None>
-    <None Include="..\src\v8\v8Runtime\icudtl.dat">
-      <Filter>Libs\v8\Runtime</Filter>
-    </None>
-    <None Include="..\src\v8\v8Runtime\snapshot_blob_win64.bin">
-      <Filter>Libs\v8\Runtime</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -757,6 +733,30 @@
     </CustomBuild>
     <CustomBuild Include="..\src\Libs\PopH264\PopH264.dll">
       <Filter>Libs\PopH264</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\v8Runtime\icudtl.dat">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\lib\icui18n.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\lib\icuuc.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\v8Runtime\natives_blob.bin">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\v8Runtime\snapshot_blob_win64.bin">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\lib\v8.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\lib\v8_libbase.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\v8\lib\v8_libplatform.dll">
+      <Filter>Libs\v8\Runtime</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
