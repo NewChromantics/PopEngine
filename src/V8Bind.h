@@ -24,6 +24,7 @@
 
 
 #include "MemHeap.hpp"
+#include "HeapArray.hpp"
 
 namespace JsCore
 {
@@ -365,7 +366,9 @@ extern const JSClassDefinition kJSClassDefinitionEmpty;
 
 class JSPropertyNameArrayRef
 {
-	
+public:
+	Array<std::string>	mNames;
+	v8::Isolate*		mIsolate = nullptr;	//	gah
 };
 
 
@@ -409,14 +412,14 @@ bool		JSValueIsUndefined(JSContextRef Context,JSValueRef Value);
 JSValueRef	JSValueMakeNull(JSContextRef Context);
 bool		JSValueIsNull(JSContextRef Context,JSValueRef Value);
 
-JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSValueRef* Elements,JSValueRef* Exception);
+JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSValueRef* Elements,JSValueRef* Exception=nullptr);
 bool		JSValueIsArray(JSContextRef Context,JSValueRef Value);
-JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
-JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* Buffer,size_t BufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception);
-void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception);
-size_t		JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception);
-size_t		JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception);
-size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception);
+JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);
+JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* Buffer,size_t BufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception=nullptr);
+void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
+size_t		JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
+size_t		JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
+size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
 
 JSValueRef			JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception);
 JSGlobalContextRef	JSContextGetGlobalContext(JSContextRef Context);
@@ -433,7 +436,7 @@ void				JSGarbageCollect(JSContextRef Context);
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
 size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
-JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
+JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);
 JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String);
 void		JSStringRelease(JSStringRef String);
 

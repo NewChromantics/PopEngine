@@ -298,19 +298,45 @@ void		JSValueUnprotect(JSContextRef Context,JSValueRef Value)
 }
 
 
-JSPropertyNameArrayRef	JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRef This)
+JSPropertyNameArrayRef JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRef This)
 {
-	THROW_TODO;
+	if ( !This )
+		throw Soy::AssertException("JSObjectCopyPropertyNames on null");
+
+	//	gr: use OwnPropertyNames?
+	auto PropertyNamesMaybe = This.mThis->GetPropertyNames(Context.mThis);
+	V8::IsOkay(PropertyNamesMaybe, Context.GetIsolate(), Context.GetTryCatch(), __FUNCTION__);
+	auto PropertyNames = PropertyNamesMaybe.ToLocalChecked();
+
+	JSPropertyNameArrayRef Names;
+	Names.mIsolate = &Context.GetIsolate();
+	for ( auto i=0;	i<PropertyNames->Length();	i++ )
+	{
+		auto& Element = PropertyNames->Get(i);
+		auto StringRef = JSValueToStringCopy(Context, Element);
+		auto String = StringRef.GetString(Context);
+		Names.mNames.PushBack(String);
+	}
+
+	return Names;
 }
 
-size_t		JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
+size_t JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
 {
-	THROW_TODO;
+	return Keys.mNames.GetSize();
 }
 
-JSStringRef	JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t Index)
+JSStringRef JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t Index)
 {
-	THROW_TODO;
+	if ( Index >= Keys.mNames.GetSize() )
+	{
+		std::stringstream Error;
+		Error << "JSPropertyNameArrayGetNameAtIndex " << Index << "/" << Keys.mNames.GetSize() << " out of bounds";
+		throw Soy::AssertException(Error);
+	}
+
+	auto& Name = Keys.mNames[Index];
+	return JSStringRef( *Keys.mIsolate, Name );
 }
 
 
@@ -474,9 +500,49 @@ JSTypedArrayType JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,
 	return kJSTypedArrayTypeNone;
 }
 
-JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* Buffer,size_t BufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception)
+template<typename ArrayType,typename RealType>
+JSObjectRef MakeTypedArrayView(JSContextRef Context,v8::Local<v8::ArrayBuffer>& ArrayBuffer)
 {
-	THROW_TODO;
+	auto ByteOffset = 0;
+	auto Length = ArrayBuffer->ByteLength() / sizeof(RealType);
+	auto Array = ArrayType::New(ArrayBuffer, ByteOffset, Length);
+	auto Object = Array.As<v8::Object>();
+	JSObjectRef ArrayObject(Object);
+	return ArrayObject;
+}
+
+JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* ExternalBuffer,size_t ExternalBufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception)
+{
+	//	gr: for V8, we need to make a pool of auto releasing objects, or an objectwrapper that manages the array or something...
+	//		but for now, we'll just copy the bytes.
+	auto ExternalBufferArray = GetRemoteArray( static_cast<uint8_t*>( ExternalBuffer ), ExternalBufferSize );
+
+	//	make an array buffer
+	auto ArrayBuffer = v8::ArrayBuffer::New( &Context.GetIsolate(), ExternalBufferSize );
+	auto ArrayBufferContents = ArrayBuffer->GetContents();
+	auto ArrayBufferArray = GetRemoteArray( static_cast<uint8_t*>( ArrayBufferContents.Data() ), ArrayBufferContents.ByteLength() );
+
+	ArrayBufferArray.Copy( ExternalBufferArray );
+
+	JSObjectRef ArrayObject(nullptr);
+
+	//	make view of that array buffer
+	switch (ArrayType)
+	{
+		case kJSTypedArrayTypeInt8Array:			return MakeTypedArrayView<v8::Int8Array,int8_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeInt16Array:			return MakeTypedArrayView<v8::Int16Array,int16_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeInt32Array:			return MakeTypedArrayView<v8::Int32Array,int32_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeUint8Array:			return MakeTypedArrayView<v8::Uint8Array,uint8_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeUint8ClampedArray:	return MakeTypedArrayView<v8::Uint8ClampedArray,uint8_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeUint16Array:			return MakeTypedArrayView<v8::Uint16Array,uint16_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeUint32Array:			return MakeTypedArrayView<v8::Uint32Array,uint32_t>(Context, ArrayBuffer);
+		case kJSTypedArrayTypeFloat32Array:			return MakeTypedArrayView<v8::Float32Array,float>(Context, ArrayBuffer);
+		default:break;
+	}
+
+	std::stringstream Error;
+	Error << "Unhandled ArrayType " << ArrayType << " in " << __FUNCTION__;
+	throw Soy::AssertException(Error);
 }
 
 void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
