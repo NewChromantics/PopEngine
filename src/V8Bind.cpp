@@ -312,7 +312,7 @@ JSPropertyNameArrayRef JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRe
 	Names.mIsolate = &Context.GetIsolate();
 	for ( auto i=0;	i<PropertyNames->Length();	i++ )
 	{
-		auto& Element = PropertyNames->Get(i);
+		auto Element = PropertyNames->Get(i);
 		auto StringRef = JSValueToStringCopy(Context, Element);
 		auto String = StringRef.GetString(Context);
 		Names.mNames.PushBack(String);
@@ -506,7 +506,7 @@ JSObjectRef MakeTypedArrayView(JSContextRef Context,v8::Local<v8::ArrayBuffer>& 
 	auto ByteOffset = 0;
 	auto Length = ArrayBuffer->ByteLength() / sizeof(RealType);
 	auto Array = ArrayType::New(ArrayBuffer, ByteOffset, Length);
-	auto Object = Array.As<v8::Object>();
+	auto Object = Array.template As<v8::Object>();
 	JSObjectRef ArrayObject(Object);
 	return ArrayObject;
 }
