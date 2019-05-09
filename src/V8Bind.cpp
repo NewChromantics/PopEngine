@@ -545,24 +545,57 @@ JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedAr
 	throw Soy::AssertException(Error);
 }
 
-void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
+v8::Local<v8::TypedArray> GetTypedArray(JSObjectRef& ArrayObject)
 {
-	THROW_TODO;
+	auto Array = ArrayObject.mThis.As<v8::TypedArray>();
+	if ( Array.IsEmpty() )
+		throw Soy::AssertException("JSObjectGetTypedArrayBytesPtr on object that isn't a typed array");
+
+	return Array;
 }
 
-size_t		JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
+void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject,JSValueRef* Exception)
 {
-	THROW_TODO;
+	//	hack, but we don't get a pointer
+	//	the contents should only be used in a small scope, but we can't really control that
+	//	and REALLY it'll only be on one thread, but we can make sure of that with ThreadLocalStorage
+	//	obviously a big penalty for calling this more than once
+	__thread static Array<uint8_t>* pBytesCopy = nullptr;
+	if ( !pBytesCopy )
+		pBytesCopy = new Array<uint8_t>();
+	auto& BytesCopy = *pBytesCopy;
+
+	auto TypedArray = GetTypedArray(ArrayObject);
+	auto TypedArraySize = TypedArray->ByteLength();
+	BytesCopy.SetSize(TypedArraySize);
+	auto BytesWritten = TypedArray->CopyContents(BytesCopy.GetArray(), BytesCopy.GetDataSize());
+	if ( BytesWritten != TypedArraySize )
+	{
+		std::stringstream Error;
+		Error << "Typed array extracted " << BytesWritten << "/" << TypedArraySize << " bytes";
+		throw Soy::AssertException(Error);
+	}
+
+	return BytesCopy.GetArray();
 }
 
-size_t		JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
+size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	THROW_TODO;
+	//	gr: because in JSObjectGetTypedArrayBytesPtr we always copy out the contents
+	//		the byte offset will always be zero to the caller as its relative to that
+	return 0;
 }
 
-size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
+size_t JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto TypedArray = GetTypedArray(Array);
+	return TypedArray->Length();
+}
+
+size_t JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
+{
+	auto TypedArray = GetTypedArray(Array);
+	return TypedArray->ByteLength();
 }
 
 
