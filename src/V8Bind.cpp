@@ -1,3 +1,5 @@
+//	gr: can't exclude file per-configuration in xcode grr
+#if defined(JSAPI_V8)
 #include "V8Bind.h"
 #include "SoyDebug.h"
 #include "SoyFileSystem.h"
@@ -1210,3 +1212,4 @@ V8::TException::TException(v8::Isolate& Isolate,v8::TryCatch& TryCatch,const std
 	
 }
 
+#endif //JSAPI_V8

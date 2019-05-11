@@ -12,6 +12,7 @@
 		BF012B0E226A1102003AEB55 /* PopCameraDeviceFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF012B6F226A3224003AEB55 /* SoyTime.mm */; };
 		BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF012B70226A3225003AEB55 /* SoyTime.cpp */; };
+		BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
@@ -159,6 +160,8 @@
 		BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopCameraDeviceFramework.framework; path = src/Libs/PopCameraDeviceFramework.framework; sourceTree = SOURCE_ROOT; };
 		BF012B6F226A3224003AEB55 /* SoyTime.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTime.mm; path = src/SoyTime.mm; sourceTree = "<group>"; };
 		BF012B70226A3225003AEB55 /* SoyTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTime.cpp; path = src/SoyTime.cpp; sourceTree = "<group>"; };
+		BF0F9E602286F9C200AEA7DC /* PopRayTrace */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopRayTrace; path = ../PopRayTrace; sourceTree = "<group>"; };
+		BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_V8_App.xcconfig; path = src/PopEngine_V8_App.xcconfig; sourceTree = "<group>"; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -261,7 +264,7 @@
 		BF689AE820D6DEB3000BC812 /* PopMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopMain.cpp; path = src/PopMain.cpp; sourceTree = "<group>"; };
 		BF689AE920D6DEB4000BC812 /* PopMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopMain.h; path = src/PopMain.h; sourceTree = "<group>"; };
 		BF689AEA20D6DEB4000BC812 /* PopMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopMain.mm; path = src/PopMain.mm; sourceTree = "<group>"; };
-		BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngineAppBundle.xcconfig; path = src/PopEngineAppBundle.xcconfig; sourceTree = "<group>"; };
+		BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_Jsc_App.xcconfig; path = src/PopEngine_Jsc_App.xcconfig; sourceTree = "<group>"; };
 		BF689AFE20D9A52E000BC812 /* TV8Container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8Container.cpp; path = src/TV8Container.cpp; sourceTree = "<group>"; };
 		BF689AFF20D9A52E000BC812 /* TV8Container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Container.h; path = src/TV8Container.h; sourceTree = "<group>"; };
 		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
@@ -660,6 +663,7 @@
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BFD0829E225E974D00FD05DC /* GuildhallGildwall */,
+				BF0F9E602286F9C200AEA7DC /* PopRayTrace */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -693,7 +697,8 @@
 				BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
-				BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */,
+				BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */,
+				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
@@ -950,6 +955,7 @@
 				BFF2B6C32265FB4500232137 /* GuildhallGildwall in Resources */,
 				BF59A2502222039900AE9926 /* Lollypop.icns in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
+				BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1042,7 +1048,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		FB8A05981A2E54730099596C /* Debug */ = {
+		BF0F9E6122870BD000AEA7DC /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */;
 			buildSettings = {
@@ -1072,7 +1078,74 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
-			name = Debug;
+			name = Debug_V8;
+		};
+		BF0F9E6222870BD000AEA7DC /* Debug_V8 */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X52DR36JY2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(POPMOVIETEXTURE_PATH)/build",
+					"$(POPCAST_PATH)/build",
+					"$(PROJECT_DIR)/src/Libs",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/src/v8/lib",
+					"$(PROJECT_DIR)/src/Libs",
+					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
+					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
+					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
+					"$(PROJECT_DIR)/src/v8/v8Runtime",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = PopTrackMac;
+				VALID_ARCHS = x86_64;
+			};
+			name = Debug_V8;
+		};
+		FB8A05981A2E54730099596C /* Debug_JavascriptCore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(POPMOVIETEXTURE_PATH)",
+					"$(POPCAST_PATH)",
+				);
+				MTL_ENABLE_DEBUG_INFO = YES;
+			};
+			name = Debug_JavascriptCore;
 		};
 		FB8A05991A2E54730099596C /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1106,9 +1179,9 @@
 			};
 			name = Release;
 		};
-		FBF67B2D1A974A0900F74C38 /* Debug */ = {
+		FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */;
+			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -1139,11 +1212,11 @@
 				PRODUCT_NAME = PopTrackMac;
 				VALID_ARCHS = x86_64;
 			};
-			name = Debug;
+			name = Debug_JavascriptCore;
 		};
 		FBF67B2E1A974A0900F74C38 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngineAppBundle.xcconfig */;
+			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1175,7 +1248,8 @@
 		FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopTrack" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				FB8A05981A2E54730099596C /* Debug */,
+				FB8A05981A2E54730099596C /* Debug_JavascriptCore */,
+				BF0F9E6122870BD000AEA7DC /* Debug_V8 */,
 				FB8A05991A2E54730099596C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1184,7 +1258,8 @@
 		FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopTrackMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				FBF67B2D1A974A0900F74C38 /* Debug */,
+				FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */,
+				BF0F9E6222870BD000AEA7DC /* Debug_V8 */,
 				FBF67B2E1A974A0900F74C38 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
