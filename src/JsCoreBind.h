@@ -772,22 +772,39 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 #if defined(JSAPI_V8)
 	JSObjectCallAsFunctionCallback CFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
 	{
-		Array<JSValueRef> Arguments;
-		for ( auto i=0;	i<Meta.Length();	i++ )
+		auto& Isolate = *Meta.GetIsolate();
+		try
 		{
-			JSValueRef Value = JSValueRef(Meta[i]);
-			Arguments.PushBack(Value);
-		}
-		JSObjectRef ThisObject( Meta.This() );
+			Array<JSValueRef> Arguments;
+			for ( auto i=0;	i<Meta.Length();	i++ )
+			{
+				JSValueRef Value = JSValueRef(Meta[i]);
+				Arguments.PushBack(Value);
+			}
+			JSObjectRef ThisObject( Meta.This() );
 
-		JSContextRef ContextRef( Meta.GetIsolate()->GetCurrentContext() );
-		auto& Context = GetContext( ContextRef );
-		TLocalContext LocalContext( ContextRef, Context );
+			JSContextRef ContextRef( Isolate.GetCurrentContext() );
+			//	need local context, needs a new scope, but doesn't need a lock? or local scope I dont think
+			//	for our funcs we just need an exception catcher
+			v8::TryCatch TryCatch( &Isolate );
+			ContextRef.mTryCatch = &TryCatch;
+
+			auto& Context = GetContext( ContextRef );
+			TLocalContext LocalContext( ContextRef, Context );
+
+			JSValueRef Exception;
+			auto ReturnValue = Context.CallFunc( LocalContext, FunctionCache, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME );
 		
-		JSValueRef Exception;
-		auto ReturnValue = Context.CallFunc( LocalContext, FunctionCache, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME );
-		
-		Meta.GetReturnValue().Set( ReturnValue.mThis );
+			if ( TryCatch.HasCaught() )
+				throw V8::TException( Isolate, TryCatch, FUNCTIONNAME);
+			
+			Meta.GetReturnValue().Set( ReturnValue.mThis );
+		}
+		catch(std::exception& e)
+		{
+			auto Exception = Isolate.ThrowException( v8::String::NewFromUtf8( &Isolate, e.what() ));
+			Meta.GetReturnValue().Set( Exception );
+		}
 	};
 #else
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
