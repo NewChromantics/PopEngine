@@ -122,9 +122,12 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
 	template<> inline TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
 DEFINE_FROM_VALUE( bool, GetBool );
-DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
-DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
 DEFINE_FROM_VALUE( uint8_t, GetInt<uint8_t> );
+DEFINE_FROM_VALUE( uint16_t, GetInt<uint16_t> );
+DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
+DEFINE_FROM_VALUE( int8_t, GetInt<int8_t> );
+DEFINE_FROM_VALUE( int16_t, GetInt<int16_t> );
+DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
 DEFINE_FROM_VALUE( std::string, GetString );
 DEFINE_FROM_VALUE( float, GetFloat );
 
@@ -166,6 +169,7 @@ public:
 	void		CopyTo(ArrayBridge<uint8_t>& Values);
 	void		CopyTo(ArrayBridge<float>& Values);
 	void		CopyTo(ArrayBridge<bool>& Values);
+	void		CopyTo(ArrayBridge<std::string>& Values);
 
 public:
 	JSContextRef	mContext = nullptr;
@@ -254,12 +258,13 @@ public:
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<std::string>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+
 	
 	template<typename TYPE>
 	TYPE&					This();
@@ -279,8 +284,13 @@ public:
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(size_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(uint8_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(uint16_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
-	virtual void			Return(JsCore::TObject& Value) bind_override		{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(int8_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(int16_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(int32_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(JsCore::TObject& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JSObjectRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JsCore::TArray& Value) bind_override		{	mReturn = GetValue( GetContextRef(), Value.mThis );	}
@@ -314,6 +324,7 @@ public:
 
 private:
 	JSType					GetArgumentType(size_t Index);
+public:	//	gr: exposed for Bind::FromValue() but maybe GetArgument() could be templated safely
 	JSValueRef				GetArgumentValue(size_t Index);
 	
 public:
@@ -964,6 +975,6 @@ inline void JsCore::EnumArray(JSContextRef Context,JSValueRef Value,ArrayBridge<
 	}
 	
 	//	this needs to support arrays of objects really
-	auto SingleValue = GetInt<TYPE>( Context, Value );
+	auto SingleValue = FromValue<TYPE>( Context, Value );
 	Array.PushBack( SingleValue );
 }

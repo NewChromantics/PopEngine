@@ -10,6 +10,7 @@
 #include "TApiHttp.h"
 #include "TApiSerial.h"
 #include "TApiVarjo.h"
+#include "TApiDll.h"
 
 #if !defined(PLATFORM_WINDOWS)
 //#include "TApiOpencl.h"
@@ -352,6 +353,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiHttp::Bind( *Context );
 			ApiSocket::Bind( *Context );
 			ApiSerial::Bind( *Context );
+			ApiDll::Bind( *Context );
 
 		#if !defined(PLATFORM_WINDOWS)
 			ApiVarjo::Bind( *Context );
@@ -1721,6 +1723,11 @@ void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>& Values)
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}
+
+void JsCore::TArray::CopyTo(ArrayBridge<std::string>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );
 }
