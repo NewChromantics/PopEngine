@@ -38,8 +38,9 @@ public:
 	static void					BindFunction(Bind::TCallback& Params);
 	static void					CallFunction(Bind::TCallback& Params);
 
+	ApiDll::TFunctionBase&		GetFunction(const std::string& FunctionName);
+
 public:
-	
 	std::shared_ptr<Soy::TRuntimeLibrary>&	mLibrary = mObject;
 	std::map<std::string,std::shared_ptr<ApiDll::TFunctionBase>>	mFunctions;
 };
