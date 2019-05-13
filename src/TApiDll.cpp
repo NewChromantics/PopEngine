@@ -151,13 +151,91 @@ public:
 };
 
 
+template<typename RETURNTYPE,typename A,typename B,typename C,typename D>
+class TFunction_ABCD : public TFunction_N<RETURNTYPE>
+{
+public:
+	TFunction_ABCD(void* FunctionAddress)
+	{
+		SetFunction( mFunctor, FunctionAddress );
+	}
+	
+	virtual void 	Call(Bind::TCallback& Params)
+	{
+		auto a = Bind::FromValue<A>( Params.GetContextRef(), Params.GetArgumentValue(0) );
+		auto b = Bind::FromValue<B>( Params.GetContextRef(), Params.GetArgumentValue(1) );
+		auto c = Bind::FromValue<C>( Params.GetContextRef(), Params.GetArgumentValue(2) );
+		auto d = Bind::FromValue<D>( Params.GetContextRef(), Params.GetArgumentValue(3) );
+		
+		TFunction_N<RETURNTYPE>::CallImpl( mFunctor, Params, a, b, c, d );
+	}
+	
+public:
+	std::function<RETURNTYPE(A,B,C,D)>	mFunctor;
+};
+
+
+template<typename RETURNTYPE,typename A,typename B,typename C,typename D,typename E>
+class TFunction_ABCDE : public TFunction_N<RETURNTYPE>
+{
+public:
+	TFunction_ABCDE(void* FunctionAddress)
+	{
+		SetFunction( mFunctor, FunctionAddress );
+	}
+	
+	virtual void 	Call(Bind::TCallback& Params)
+	{
+		auto a = Bind::FromValue<A>( Params.GetContextRef(), Params.GetArgumentValue(0) );
+		auto b = Bind::FromValue<B>( Params.GetContextRef(), Params.GetArgumentValue(1) );
+		auto c = Bind::FromValue<C>( Params.GetContextRef(), Params.GetArgumentValue(2) );
+		auto d = Bind::FromValue<D>( Params.GetContextRef(), Params.GetArgumentValue(3) );
+		auto e = Bind::FromValue<E>( Params.GetContextRef(), Params.GetArgumentValue(4) );
+		
+		TFunction_N<RETURNTYPE>::CallImpl( mFunctor, Params, a, b, c, d, e );
+	}
+	
+public:
+	std::function<RETURNTYPE(A,B,C,D,E)>	mFunctor;
+};
+
+
+/*
+
+
+
+template<typename RETURNTYPE,typename A,typename B,typename C,typename D>
+std::shared_ptr<ApiDll::TFunctionBase> AllocFunction_ABCD(void* FunctionAddress,ArrayBridge<std::string>& TypeStack)
+{
+	if ( TypeStack.GetSize() == 0 )
+		return std::shared_ptr<ApiDll::TFunctionBase>( new TFunction_ABCD<RETURNTYPE,A,B,C,D>( FunctionAddress ) );
+	
+	auto NextType = TypeStack.PopAt(0);
+	
+	throw Soy::AssertException("too many args");
+}
+
 template<typename RETURNTYPE,typename A,typename B,typename C>
 std::shared_ptr<ApiDll::TFunctionBase> AllocFunction_ABC(void* FunctionAddress,ArrayBridge<std::string>& TypeStack)
 {
 	if ( TypeStack.GetSize() == 0 )
-		return std::shared_ptr<ApiDll::TFunctionBase>( new TFunction_ABC<RETURNTYPE,A,B,C>(FunctionAddress) );
+		return std::shared_ptr<ApiDll::TFunctionBase>( new TFunction_ABC<RETURNTYPE,A,B,C>( FunctionAddress ) );
 	
-	throw Soy::AssertException("Need to handle more args");
+	auto NextType = TypeStack.PopAt(0);
+	
+	
+#define DEFINE_IF_TYPE(TYPE)	\
+if ( NextType == #TYPE )	{	return AllocFunction_ABCD<RETURNTYPE,A,B,C,TYPE>( FunctionAddress, TypeStack );	}
+	
+	DEFINE_IF_TYPE(uint8_t);
+	DEFINE_IF_TYPE(uint16_t);
+	DEFINE_IF_TYPE(uint32_t);
+	DEFINE_IF_TYPE(void*);
+#undef DEFINE_IF_TYPE
+	
+	std::stringstream Error;
+	Error << "Unhandled type " << NextType;
+	throw Soy::AssertException(Error);
 }
 
 
@@ -169,27 +247,36 @@ std::shared_ptr<ApiDll::TFunctionBase> AllocFunction_AB(void* FunctionAddress,Ar
 	
 	auto NextType = TypeStack.PopAt(0);
 	
-	if ( NextType == "uint8_t" )	{	return AllocFunction_ABC<RETURNTYPE,A,B,uint8_t>( FunctionAddress, TypeStack );	}
-	if ( NextType == "uint16_t" )	{	return AllocFunction_ABC<RETURNTYPE,A,B,uint16_t>( FunctionAddress, TypeStack );	}
-	if ( NextType == "uint32_t" )	{	return AllocFunction_ABC<RETURNTYPE,A,B,uint32_t>( FunctionAddress, TypeStack );	}
+
+#define DEFINE_IF_TYPE(TYPE)	\
+if ( NextType == #TYPE )	{	return AllocFunction_ABC<RETURNTYPE,A,B,TYPE>( FunctionAddress, TypeStack );	}
+	
+	DEFINE_IF_TYPE(uint8_t);
+	DEFINE_IF_TYPE(uint16_t);
+	DEFINE_IF_TYPE(uint32_t);
+	DEFINE_IF_TYPE(void*);
+#undef DEFINE_IF_TYPE
 	
 	std::stringstream Error;
 	Error << "Unhandled type " << NextType;
 	throw Soy::AssertException(Error);
 }
 
+#define DEFINE_IF_TYPE(TYPE,NEXTFUNC)	\
+if ( NextType == #TYPE )	{	return NEXTFUNC<RETURNTYPE,ABC...,TYPE>( FunctionAddress, TypeStack );	}
 
-template<typename RETURNTYPE,typename A>
+template<typename RETURNTYPE,typename ...ABC>
 std::shared_ptr<ApiDll::TFunctionBase> AllocFunction_A(void* FunctionAddress,ArrayBridge<std::string>& TypeStack)
 {
 	if ( TypeStack.GetSize() == 0 )
-		return std::shared_ptr<ApiDll::TFunctionBase>( new TFunction_A<RETURNTYPE,A>( FunctionAddress ) );
+		return std::shared_ptr<ApiDll::TFunctionBase>( new TFunction_A<RETURNTYPE,ABC...>( FunctionAddress ) );
 	
 	auto NextType = TypeStack.PopAt(0);
-	
-	if ( NextType == "uint8_t" )	{	return AllocFunction_AB<RETURNTYPE,A,uint8_t>( FunctionAddress, TypeStack );	}
-	if ( NextType == "uint16_t" )	{	return AllocFunction_AB<RETURNTYPE,A,uint16_t>( FunctionAddress, TypeStack );	}
-	if ( NextType == "uint32_t" )	{	return AllocFunction_AB<RETURNTYPE,A,uint32_t>( FunctionAddress, TypeStack );	}
+
+	DEFINE_IF_TYPE(uint8_t,AllocFunction_AB);
+	DEFINE_IF_TYPE(uint16_t,AllocFunction_AB);
+	DEFINE_IF_TYPE(uint32_t,AllocFunction_AB);
+	DEFINE_IF_TYPE(void*,AllocFunction_AB);
 	
 	std::stringstream Error;
 	Error << "Unhandled type " << NextType;
@@ -203,28 +290,40 @@ std::shared_ptr<ApiDll::TFunctionBase> AllocFunction_ReturnType(void* FunctionAd
 		return std::shared_ptr<ApiDll::TFunctionBase>( new TFunction_0<RETURNTYPE>( FunctionAddress ) );
 	
 	auto NextType = TypeStack.PopAt(0);
-	
-	if ( NextType == "uint8_t" )	{	return AllocFunction_A<RETURNTYPE,uint8_t>( FunctionAddress, TypeStack );	}
-	if ( NextType == "uint16_t" )	{	return AllocFunction_A<RETURNTYPE,uint16_t>( FunctionAddress, TypeStack );	}
-	if ( NextType == "uint32_t" )	{	return AllocFunction_A<RETURNTYPE,uint32_t>( FunctionAddress, TypeStack );	}
-	
+
+#define DEFINE_IF_TYPE(TYPE)	\
+if ( NextType == #TYPE )	{	return AllocFunction_A<RETURNTYPE,TYPE>( FunctionAddress, TypeStack );	}
+
+	DEFINE_IF_TYPE(uint8_t);
+	DEFINE_IF_TYPE(uint16_t);
+	DEFINE_IF_TYPE(uint32_t);
+	DEFINE_IF_TYPE(void*);
+#undef DEFINE_IF_TYPE
+
 	std::stringstream Error;
 	Error << "Unhandled type " << NextType;
 	throw Soy::AssertException(Error);
 }
-
+*/
 std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const std::string& ReturnType,ArrayBridge<std::string>& TypeStack)
 {
+ /*
 	if ( ReturnType == "" )			{	return AllocFunction_ReturnType<void>( FunctionAddress, TypeStack );	}
 	if ( ReturnType == "void" )		{	return AllocFunction_ReturnType<void>( FunctionAddress, TypeStack );	}
 	if ( ReturnType == "uint8_t" )	{	return AllocFunction_ReturnType<uint8_t>( FunctionAddress, TypeStack );	}
 	if ( ReturnType == "uint16_t" )	{	return AllocFunction_ReturnType<uint16_t>( FunctionAddress, TypeStack );	}
 	if ( ReturnType == "uint32_t" )	{	return AllocFunction_ReturnType<uint32_t>( FunctionAddress, TypeStack );	}
-
+	//if ( ReturnType == "uint8_t*" )	{	return AllocFunction_ReturnType<uint8_t*>( FunctionAddress, TypeStack );	}
+	//if ( ReturnType == "uint16_t*" )	{	return AllocFunction_ReturnType<uint16_t*>( FunctionAddress, TypeStack );	}
+	//if ( ReturnType == "uint32_t*" )	{	return AllocFunction_ReturnType<uint32_t*>( FunctionAddress, TypeStack );	}
+*/
 	std::stringstream Error;
 	Error << "Unhandled return type " << ReturnType;
 	throw Soy::AssertException(Error);
 }
+
+
+
 
 void TDllWrapper::BindFunction(Bind::TCallback& Params)
 {
@@ -278,16 +377,9 @@ void TDllWrapper::CallFunction(Bind::TCallback& Params)
 	//	but for now, as a hack, we pop off argument 0 which is the function name
 	//	need a nicer bridge for this as mArguments should be private
 	Params.mArguments.RemoveBlock(0,1);
-	
-	try
-	{
-		Function.Call( Params );
-	}
-	catch(std::exception& e)
-	{
-		std::Debug << e.what() << std::endl;
-		throw;
-	}
+
+	//	this call sets the return value internally
+	Function.Call( Params );
 }
 
 ApiDll::TFunctionBase& TDllWrapper::GetFunction(const std::string& FunctionName)

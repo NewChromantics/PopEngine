@@ -59,7 +59,11 @@ namespace JsCore
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	template<typename INTTYPE>
 	INTTYPE		GetInt(JSContextRef Context,JSValueRef Handle);
-
+	uint8_t*	GetPointer_u8(JSContextRef Context,JSValueRef Handle);
+	uint16_t*	GetPointer_u16(JSContextRef Context,JSValueRef Handle);
+	uint32_t*	GetPointer_u32(JSContextRef Context,JSValueRef Handle);
+	float*		GetPointer_float(JSContextRef Context,JSValueRef Handle);
+	
 	//	create JS types
 	template<typename TYPE>
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<TYPE>& Array);
@@ -118,7 +122,7 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 //	preparing for virtuals, anything with this, we expect to overide at some point
 #define bind_override
 
-
+//	stricter type conversion to avoid implicit conversions, so static_assert if a type conversion hasn't been implemented
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
 	template<> inline TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
 DEFINE_FROM_VALUE( bool, GetBool );
@@ -130,6 +134,10 @@ DEFINE_FROM_VALUE( int16_t, GetInt<int16_t> );
 DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
 DEFINE_FROM_VALUE( std::string, GetString );
 DEFINE_FROM_VALUE( float, GetFloat );
+DEFINE_FROM_VALUE( uint8_t*, GetPointer_u8 );
+DEFINE_FROM_VALUE( uint16_t*, GetPointer_u16 );
+DEFINE_FROM_VALUE( uint32_t*, GetPointer_u32 );
+DEFINE_FROM_VALUE( float*, GetPointer_float );
 
 template<typename TYPE>
 inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)

@@ -23,6 +23,7 @@
 #endif
 
 
+
 #if !defined(JSAPI_V8)
 //	wrapper as v8 needs to setup the runtime files
 JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
@@ -63,12 +64,30 @@ namespace JsCore
 	void		RemoveContextCache(TContext& Context);
 	
 	prmem::Heap	gGlobalObjectHeap(true, true, "JsCore::GlobalObjectHeap",0,true);
+
+
+	template<typename TYPE>
+	TYPE*	GetPointer(JSContextRef Context,JSValueRef Handle);
 }
 
 prmem::Heap& JsCore::GetGlobalObjectHeap()
 {
 	return gGlobalObjectHeap;
 }
+
+
+
+template<typename TYPE>
+JSTypedArrayType GetTypedArrayType()
+{
+	static_assert( sizeof(TYPE) == -1, "GetTypedArrayType not implemented for type" );
+}
+
+template<> JSTypedArrayType GetTypedArrayType<uint8_t>()	{	return kJSTypedArrayTypeUint8Array;	}
+template<> JSTypedArrayType GetTypedArrayType<uint16_t>()	{	return kJSTypedArrayTypeUint16Array;	}
+template<> JSTypedArrayType GetTypedArrayType<uint32_t>()	{	return kJSTypedArrayTypeUint32Array;	}
+template<> JSTypedArrayType GetTypedArrayType<float>()		{	return kJSTypedArrayTypeFloat32Array;	}
+
 
 
 JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
@@ -1878,3 +1897,57 @@ bool JsCore::TJobQueue::Iteration(std::function<void(std::chrono::milliseconds)>
 	return IterationResult;
 }
 
+
+
+template<typename TYPE>
+TYPE* JsCore::GetPointer(JSContextRef Context,JSValueRef Handle)
+{
+	//	type check!
+	JSValueRef Exception = nullptr;
+	auto ArrayType = JSValueGetTypedArrayType( Context, Handle, &Exception );
+	Bind::ThrowException( Context, Exception, __FUNCTION__ );
+	auto ExpectedArrayType = GetTypedArrayType<TYPE>();
+	
+	if ( ArrayType != ExpectedArrayType )
+	{
+		std::stringstream Error;
+		Error << "Expected typed array of " << ExpectedArrayType << " but is " << ArrayType;
+		throw Soy::AssertException(Error);
+	}
+	
+	auto ArrayValue = JsCore::GetObject(Context,Handle);
+	
+	//	unsafe land!
+	//	get pointer
+	void* SrcPtr = JSObjectGetTypedArrayBytesPtr( Context, ArrayValue, &Exception );
+	auto* SrcPtr8 = reinterpret_cast<uint8_t*>( SrcPtr );
+	JsCore::ThrowException( Context, Exception );
+	
+	//	offset!
+	auto SrcByteOffset = JSObjectGetTypedArrayByteOffset( Context, ArrayValue, &Exception );
+	JsCore::ThrowException( Context, Exception );
+	SrcPtr8 += SrcByteOffset;
+	SrcPtr = SrcPtr8;
+	
+	return reinterpret_cast<TYPE*>(SrcPtr);
+}
+
+uint8_t* JsCore::GetPointer_u8(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<uint8_t>( Context, Handle );
+}
+
+uint16_t* JsCore::GetPointer_u16(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<uint16_t>( Context, Handle );
+}
+
+uint32_t* JsCore::GetPointer_u32(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<uint32_t>( Context, Handle );
+}
+
+float* JsCore::GetPointer_float(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<float>( Context, Handle );
+}
