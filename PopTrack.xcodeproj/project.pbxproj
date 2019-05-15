@@ -14,6 +14,10 @@
 		BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF012B70226A3225003AEB55 /* SoyTime.cpp */; };
 		BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */; };
 		BF0F9E712288892F00AEA7DC /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
+		BF0F9E882289EB5F00AEA7DC /* build.log in Resources */ = {isa = PBXBuildFile; fileRef = BF0F9E772289EB5F00AEA7DC /* build.log */; };
+		BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */; };
+		BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */; };
+		BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
@@ -165,6 +169,21 @@
 		BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_V8_App.xcconfig; path = src/PopEngine_V8_App.xcconfig; sourceTree = "<group>"; };
 		BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDll.cpp; path = src/TApiDll.cpp; sourceTree = "<group>"; };
 		BF0F9E702288892F00AEA7DC /* TApiDll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDll.h; path = src/TApiDll.h; sourceTree = "<group>"; };
+		BF0F9E772289EB5F00AEA7DC /* build.log */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = build.log; sourceTree = "<group>"; };
+		BF0F9E792289EB5F00AEA7DC /* dyncall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall.h; sourceTree = "<group>"; };
+		BF0F9E7A2289EB5F00AEA7DC /* dyncall_alloc_wx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_alloc_wx.h; sourceTree = "<group>"; };
+		BF0F9E7B2289EB5F00AEA7DC /* dyncall_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_args.h; sourceTree = "<group>"; };
+		BF0F9E7C2289EB5F00AEA7DC /* dyncall_callback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_callback.h; sourceTree = "<group>"; };
+		BF0F9E7D2289EB5F00AEA7DC /* dyncall_callf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_callf.h; sourceTree = "<group>"; };
+		BF0F9E7E2289EB5F00AEA7DC /* dyncall_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_config.h; sourceTree = "<group>"; };
+		BF0F9E7F2289EB5F00AEA7DC /* dyncall_macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_macros.h; sourceTree = "<group>"; };
+		BF0F9E802289EB5F00AEA7DC /* dyncall_signature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_signature.h; sourceTree = "<group>"; };
+		BF0F9E812289EB5F00AEA7DC /* dyncall_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_types.h; sourceTree = "<group>"; };
+		BF0F9E822289EB5F00AEA7DC /* dyncall_value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dyncall_value.h; sourceTree = "<group>"; };
+		BF0F9E832289EB5F00AEA7DC /* dynload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dynload.h; sourceTree = "<group>"; };
+		BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdyncall_s.a; sourceTree = "<group>"; };
+		BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdyncallback_s.a; sourceTree = "<group>"; };
+		BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdynload_s.a; sourceTree = "<group>"; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -445,6 +464,7 @@
 				BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */,
 				BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */,
 				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
+				BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */,
 				BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */,
 				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
 				EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */,
@@ -452,6 +472,7 @@
 				BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */,
 				BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */,
 				BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */,
+				BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */,
 				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
@@ -463,6 +484,7 @@
 				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
 				EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */,
 				BF012B0D226A102D003AEB55 /* PopCameraDeviceFramework.framework in Frameworks */,
+				BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,6 +502,44 @@
 			path = src/SoyDecklink;
 			sourceTree = SOURCE_ROOT;
 		};
+		BF0F9E762289EB5F00AEA7DC /* dyncall */ = {
+			isa = PBXGroup;
+			children = (
+				BF0F9E772289EB5F00AEA7DC /* build.log */,
+				BF0F9E782289EB5F00AEA7DC /* include */,
+				BF0F9E842289EB5F00AEA7DC /* lib */,
+			);
+			path = dyncall;
+			sourceTree = "<group>";
+		};
+		BF0F9E782289EB5F00AEA7DC /* include */ = {
+			isa = PBXGroup;
+			children = (
+				BF0F9E792289EB5F00AEA7DC /* dyncall.h */,
+				BF0F9E7A2289EB5F00AEA7DC /* dyncall_alloc_wx.h */,
+				BF0F9E7B2289EB5F00AEA7DC /* dyncall_args.h */,
+				BF0F9E7C2289EB5F00AEA7DC /* dyncall_callback.h */,
+				BF0F9E7D2289EB5F00AEA7DC /* dyncall_callf.h */,
+				BF0F9E7E2289EB5F00AEA7DC /* dyncall_config.h */,
+				BF0F9E7F2289EB5F00AEA7DC /* dyncall_macros.h */,
+				BF0F9E802289EB5F00AEA7DC /* dyncall_signature.h */,
+				BF0F9E812289EB5F00AEA7DC /* dyncall_types.h */,
+				BF0F9E822289EB5F00AEA7DC /* dyncall_value.h */,
+				BF0F9E832289EB5F00AEA7DC /* dynload.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		BF0F9E842289EB5F00AEA7DC /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */,
+				BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */,
+				BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
 		BF3BE7B3226E03220043DFA5 /* Varjo */ = {
 			isa = PBXGroup;
 			children = (
@@ -492,6 +552,7 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BF0F9E762289EB5F00AEA7DC /* dyncall */,
 				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
 				BF9282242237DB18007E9D6F /* Headers */,
 				BF92821D223692BA007E9D6F /* opencv2.framework */,
@@ -961,6 +1022,7 @@
 				BF59A2502222039900AE9926 /* Lollypop.icns in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */,
+				BF0F9E882289EB5F00AEA7DC /* build.log in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1114,6 +1176,7 @@
 					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
 					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
 					"$(PROJECT_DIR)/src/v8/v8Runtime",
+					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1213,6 +1276,7 @@
 					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
 					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
 					"$(PROJECT_DIR)/src/v8/v8Runtime",
+					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1241,6 +1305,7 @@
 					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
 					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
 					"$(PROJECT_DIR)/src/v8/v8Runtime",
+					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;

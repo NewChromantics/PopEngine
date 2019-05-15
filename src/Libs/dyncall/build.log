@@ -1,0 +1,130 @@
+cd dyncall && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386   -c -o dyncall_vector.o dyncall_vector.c
+cc -arch x86_64 -arch i386   -c -o dyncall_api.o dyncall_api.c
+cc -arch x86_64 -arch i386   -c -o dyncall_callvm.o dyncall_callvm.c
+cc -arch x86_64 -arch i386   -c -o dyncall_callvm_base.o dyncall_callvm_base.c
+cc -arch x86_64 -arch i386   -c -o dyncall_call.o dyncall_call.S
+cc -arch x86_64 -arch i386   -c -o dyncall_callf.o dyncall_callf.c
+cc -arch x86_64 -arch i386   -c -o dyncall_struct.o dyncall_struct.c
+libtool -static -o libdyncall_s.a dyncall_vector.o dyncall_api.o dyncall_callvm.o dyncall_callvm_base.o dyncall_call.o dyncall_callf.o dyncall_struct.o
+cd dyncallback && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./dyncallback/../dyncall    -c -o dyncall_alloc_wx.o dyncall_alloc_wx.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./dyncallback/../dyncall    -c -o dyncall_args.o dyncall_args.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./dyncallback/../dyncall    -c -o dyncall_callback.o dyncall_callback.c
+cc -arch x86_64 -arch i386   -c -o dyncall_callback_arch.o dyncall_callback_arch.S
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./dyncallback/../dyncall    -c -o dyncall_thunk.o dyncall_thunk.c
+libtool -static -o libdyncallback_s.a dyncall_alloc_wx.o dyncall_args.o dyncall_callback.o dyncall_callback_arch.o dyncall_thunk.o
+cd dynload && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386   -c -o dynload.o dynload.c
+cc -arch x86_64 -arch i386   -c -o dynload_syms.o dynload_syms.c
+libtool -static -o libdynload_s.a dynload.o dynload_syms.o
+cd test && /Applications/Xcode.app/Contents/Developer/usr/bin/make run-tests
+/Applications/Xcode.app/Contents/Developer/usr/bin/make TARGET=all call_suite callback_suite plain plain_c++ suite suite2 suite3 suite_floats ellipsis callf syscall nm dynload_plain resolve_self thunk malloc_wx callback_plain
+cd call_suite && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/call_suite/../../dyncall   -c -o globals.o globals.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/call_suite/../../dyncall   -c -o invoke.o invoke.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/call_suite/../../dyncall   -c -o cases.o cases.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/call_suite/../../dyncall   -c -o main.o main.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/call_suite/../../dyncall  globals.o invoke.o cases.o main.o -L../../dyncall -ldyncall_s  -o call_suite 
+cd callback_suite && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o env.o env.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o handler.o handler.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o sigstrings.o sigstrings.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o invokers.o invokers.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o do_test.o do_test.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o main.o main.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o print.o print.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback   -c -o signature_utils.o signature_utils.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncall -I/Users/tphillip/dyncall-1.0/./test/callback_suite/../../dyncallback  env.o handler.o sigstrings.o invokers.o do_test.o main.o print.o signature_utils.o -L../../dyncall -ldyncall_s -L../../dyncallback -ldyncallback_s -o callback_suite
+cd plain && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/plain/../../dyncall   -c -o test_main.o test_main.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/plain/../../dyncall   -c -o test_structs.o test_structs.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/plain/../../dyncall  test_main.o test_structs.o -L../../dyncall -ldyncall_s -o plain 
+cd plain_c++ && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/plain_c++/../../dyncall   -c -o test_main.o test_main.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/plain_c++/../../dyncall  test_main.o -L../../dyncall -ldyncall_s  -o plain_c++
+cd suite && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite/../../dyncall   -c -o case.o case.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite/../../dyncall   -c -o main.o main.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite/../../dyncall  case.o main.o -L../../dyncall -ldyncall_s  -o suite
+cd suite2 && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite2/../../dyncall   -c -o case.o case.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite2/../../dyncall   -c -o main.o main.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite2/../../dyncall  case.o main.o -L../../dyncall -ldyncall_s -o suite2 
+cd suite3 && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite3/../../dyncall  -c -o case.o case.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite3/../../dyncall  -c -o main.o main.cc
+c++ -arch x86_64 -arch i386  case.o main.o -L../../dyncall -ldyncall_s -o suite3
+cd suite_floats && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite_floats/../../dyncall   -c -o case.o case.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite_floats/../../dyncall   -c -o main.o main.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/suite_floats/../../dyncall  case.o main.o -L../../dyncall -ldyncall_s -o suite_floats
+cd ellipsis && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/ellipsis/../../dyncall   -c -o ellipsis.o ellipsis.cc
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/ellipsis/../../dyncall   -c -o main.o main.cc
+main.cc:66:24: warning: cast to 'void *' from smaller integer type 'int' [-Wint-to-void-pointer-cast]
+    valuePointer [i] = DCpointer (i);
+                       ^
+1 warning generated.
+c++ -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/ellipsis/../../dyncall  ellipsis.o main.o -L../../dyncall -ldyncall_s -o ellipsis 
+cd callf && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callf/../../dyncall   -c -o main.o main.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callf/../../dyncall  main.o -L../../dyncall -ldyncall_s -o callf
+cd syscall && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/syscall/../../dyncall   -c -o syscall.o syscall.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/syscall/../../dyncall  syscall.o -L../../dyncall -ldyncall_s -o syscall 
+cd nm && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/nm/../../dynload   -c -o nm.o nm.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/nm/../../dynload  nm.o -L../../dynload -ldynload_s  -o nm
+cd dynload_plain && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/dynload_plain/../../dynload -DDEF_C_DYLIB=\"\"   -c -o dynload_plain.o dynload_plain.c
+dynload_plain.c:97:78: warning: format specifies type 'int' but the argument has type 'unsigned long long' [-Wformat]
+        printf("lib (inode:%d) and looked up lib (inode:%d) are same: %d\n", b?st0.st_ino:-1, b?st1.st_ino:-1, b && (st0.st_ino == st1.st_ino)); //@@@ on windows, inode numbers returned here are always 0
+                           ~~                                                ^~~~~~~~~~~~~~~
+                           %llu
+dynload_plain.c:97:95: warning: format specifies type 'int' but the argument has type 'unsigned long long' [-Wformat]
+        printf("lib (inode:%d) and looked up lib (inode:%d) are same: %d\n", b?st0.st_ino:-1, b?st1.st_ino:-1, b && (st0.st_ino == st1.st_ino)); //@@@ on windows, inode numbers returned here are always 0
+                                                        ~~                                    ^~~~~~~~~~~~~~~
+                                                        %llu
+2 warnings generated.
+dynload_plain.c:97:78: warning: format specifies type 'int' but the argument has type 'unsigned long long' [-Wformat]
+        printf("lib (inode:%d) and looked up lib (inode:%d) are same: %d\n", b?st0.st_ino:-1, b?st1.st_ino:-1, b && (st0.st_ino == st1.st_ino)); //@@@ on windows, inode numbers returned here are always 0
+                           ~~                                                ^~~~~~~~~~~~~~~
+                           %llu
+dynload_plain.c:97:95: warning: format specifies type 'int' but the argument has type 'unsigned long long' [-Wformat]
+        printf("lib (inode:%d) and looked up lib (inode:%d) are same: %d\n", b?st0.st_ino:-1, b?st1.st_ino:-1, b && (st0.st_ino == st1.st_ino)); //@@@ on windows, inode numbers returned here are always 0
+                                                        ~~                                    ^~~~~~~~~~~~~~~
+                                                        %llu
+2 warnings generated.
+cc  dynload_plain.o -L../../dynload -ldynload_s  -o dynload_plain
+cd resolve_self && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/resolve_self/../../dynload   -c -o main.o main.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/resolve_self/../../dynload -rdynamic main.o -L../../dynload -ldynload_s   -o resolve_self
+cd thunk && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/thunk/../../dyncallback -I/Users/tphillip/dyncall-1.0/./test/thunk/../../dyncall   -c -o test_thunk.o test_thunk.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/thunk/../../dyncallback -I/Users/tphillip/dyncall-1.0/./test/thunk/../../dyncall  test_thunk.o -L../../dyncallback -ldyncallback_s -o thunk 
+cd malloc_wx && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/malloc_wx/../../dyncallback -I/Users/tphillip/dyncall-1.0/./test/malloc_wx/../../dyncall   -c -o test_wx.o test_wx.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/malloc_wx/../../dyncallback -I/Users/tphillip/dyncall-1.0/./test/malloc_wx/../../dyncall  test_wx.o -L../../dyncallback -ldyncallback_s -o malloc_wx 
+cd callback_plain && /Applications/Xcode.app/Contents/Developer/usr/bin/make all
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_plain/../../dyncall   -c -o callback_plain.o callback_plain.c
+cc -arch x86_64 -arch i386 -I/Users/tphillip/dyncall-1.0/./test/callback_plain/../../dyncall  callback_plain.o -L../../dyncallback -ldyncallback_s -o callback_plain
+/Users/tphillip/dyncall-1.0/./test/run-build.sh call_suite callback_suite plain plain_c++ suite suite2 suite3 suite_floats ellipsis callf syscall nm dynload_plain resolve_self thunk malloc_wx callback_plain | grep "result:"
+Assertion failed: (dcGetError(callvm) == DC_ERROR_NONE), function syscallvm_init, file syscall.c, line 35.
+/Users/tphillip/dyncall-1.0/./test/run-build.sh: line 2: 96659 Abort trap: 6           $i/$i
+usage : nm/nm <dllpath>
+/Users/tphillip/dyncall-1.0/./test/run-build.sh: line 2: 96663 Bus error: 10           $i/$i
+result: call_suite: 1
+result: callback_suite: 1
+result: plain: 1
+result: plain_cpp: 1
+result: suite: 1
+result: suite2: 1
+result: suite3: 1
+result: suite_floats: 1
+result: ellipsis: 1
+result: callf: 1
+result: dynload_plain: 1
+result: resolve_self: 1
+result: test_alloc_wx: 1
+result: callback_plain: 1
