@@ -13,3 +13,6 @@
 [submodule "UnitTest"]
 	path = UnitTest
 	url = https://github.com/NewChromantics/PopEngineUnitTests.git
+[submodule "src/Libs/OpenVr"]
+	path = src/Libs/OpenVr
+	url = https://github.com/ValveSoftware/openvr.git
