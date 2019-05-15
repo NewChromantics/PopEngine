@@ -86,6 +86,9 @@ JSTypedArrayType GetTypedArrayType()
 template<> JSTypedArrayType GetTypedArrayType<uint8_t>()	{	return kJSTypedArrayTypeUint8Array;	}
 template<> JSTypedArrayType GetTypedArrayType<uint16_t>()	{	return kJSTypedArrayTypeUint16Array;	}
 template<> JSTypedArrayType GetTypedArrayType<uint32_t>()	{	return kJSTypedArrayTypeUint32Array;	}
+template<> JSTypedArrayType GetTypedArrayType<int8_t>()		{	return kJSTypedArrayTypeInt8Array;	}
+template<> JSTypedArrayType GetTypedArrayType<int16_t>()	{	return kJSTypedArrayTypeInt16Array;	}
+template<> JSTypedArrayType GetTypedArrayType<int32_t>()	{	return kJSTypedArrayTypeInt32Array;	}
 template<> JSTypedArrayType GetTypedArrayType<float>()		{	return kJSTypedArrayTypeFloat32Array;	}
 
 
@@ -1946,6 +1949,23 @@ uint32_t* JsCore::GetPointer_u32(JSContextRef Context,JSValueRef Handle)
 {
 	return GetPointer<uint32_t>( Context, Handle );
 }
+
+
+int8_t* JsCore::GetPointer_s8(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<int8_t>( Context, Handle );
+}
+
+int16_t* JsCore::GetPointer_s16(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<int16_t>( Context, Handle );
+}
+
+int32_t* JsCore::GetPointer_s32(JSContextRef Context,JSValueRef Handle)
+{
+	return GetPointer<int32_t>( Context, Handle );
+}
+
 
 float* JsCore::GetPointer_float(JSContextRef Context,JSValueRef Handle)
 {

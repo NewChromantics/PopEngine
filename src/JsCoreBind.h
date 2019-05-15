@@ -62,6 +62,9 @@ namespace JsCore
 	uint8_t*	GetPointer_u8(JSContextRef Context,JSValueRef Handle);
 	uint16_t*	GetPointer_u16(JSContextRef Context,JSValueRef Handle);
 	uint32_t*	GetPointer_u32(JSContextRef Context,JSValueRef Handle);
+	int8_t*		GetPointer_s8(JSContextRef Context,JSValueRef Handle);
+	int16_t*	GetPointer_s16(JSContextRef Context,JSValueRef Handle);
+	int32_t*	GetPointer_s32(JSContextRef Context,JSValueRef Handle);
 	float*		GetPointer_float(JSContextRef Context,JSValueRef Handle);
 	
 	//	create JS types
@@ -137,6 +140,9 @@ DEFINE_FROM_VALUE( float, GetFloat );
 DEFINE_FROM_VALUE( uint8_t*, GetPointer_u8 );
 DEFINE_FROM_VALUE( uint16_t*, GetPointer_u16 );
 DEFINE_FROM_VALUE( uint32_t*, GetPointer_u32 );
+DEFINE_FROM_VALUE( int8_t*, GetPointer_s8 );
+DEFINE_FROM_VALUE( int16_t*, GetPointer_s16 );
+DEFINE_FROM_VALUE( int32_t*, GetPointer_s32 );
 DEFINE_FROM_VALUE( float*, GetPointer_float );
 
 template<typename TYPE>

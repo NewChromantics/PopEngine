@@ -1,5 +1,7 @@
 #include "TApiDll.h"
 #include "SoyRuntimeLibrary.h"
+#include "Libs/dyncall/include/dyncall.h"
+
 
 namespace ApiDll
 {
@@ -310,68 +312,204 @@ if ( NextType == #TYPE )	{	return AllocFunction_A<RETURNTYPE,TYPE>( FunctionAddr
 class TDcFunction : public ApiDll::TFunctionBase
 {
 public:
-	TDcFunction(ArrayBridge<std::string>& ArgumentTypes);
-	~TDcFunction()
-	{
-		dcFree( mVm );
-	}
+	TDcFunction(const std::string& ReturnType,ArrayBridge<std::string>& ArgumentTypes,void* FunctionAddress);
+	~TDcFunction();
 	
+	virtual void 	Call(Bind::TCallback& Params) override;
+	void*			GetFunctionPointer()		{	return mFunctionAddress;	}
+
+public:
 	Array<std::function<void(Bind::TCallback&,size_t)>>	mSetArguments;
-	Array<std::function<void(Bind::TCallback&)>>		mCall;
-	
-	virtual void 	Call(Bind::TCallback& Params) override
-	{
-		dcReset(mVm);
-		
-		for ( auto i=0;	i<Params.GetArgumentCount();	i++ )
-		{
-			auto& SetArgFunc = mSetArguments[i];
-			SetArgFunc( Params, i );
-		}
-		
-		mCall( Params );
-		
-		testCallValue<Value>(pc);
-		
-	}
+	std::function<void(Bind::TCallback&)>	mCall;
+	void*									mFunctionAddress = nullptr;
+	DCCallVM*								mVm = nullptr;
 };
 
 
-std::function<void(Bind::TCallback&,size_t)>> GetSetArgumentFunction_uint8_t(TDcFunction* This)
+
+template<typename TYPE>
+void dcbArg_TYPE(DCCallVM& Vm,TYPE Value);
+
+template<> void dcbArg_TYPE<int8_t>(DCCallVM& Vm,int8_t Value)		{	dcArgChar( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint8_t>(DCCallVM& Vm,uint8_t Value)	{	dcArgChar( &Vm, Value );	}
+template<> void dcbArg_TYPE<int16_t>(DCCallVM& Vm,int16_t Value)	{	dcArgShort( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint16_t>(DCCallVM& Vm,uint16_t Value)	{	dcArgShort( &Vm, Value );	}
+template<> void dcbArg_TYPE<int32_t>(DCCallVM& Vm,int32_t Value)	{	dcArgLong( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint32_t>(DCCallVM& Vm,uint32_t Value)	{	dcArgLong( &Vm, Value );	}
+template<> void dcbArg_TYPE<float*>(DCCallVM& Vm,float* Value)		{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<void*>(DCCallVM& Vm,void* Value)		{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint8_t*>(DCCallVM& Vm,uint8_t* Value)	{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint16_t*>(DCCallVM& Vm,uint16_t* Value)	{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint32_t*>(DCCallVM& Vm,uint32_t* Value)	{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<int8_t*>(DCCallVM& Vm,int8_t* Value)	{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<int16_t*>(DCCallVM& Vm,int16_t* Value)	{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<int32_t*>(DCCallVM& Vm,int32_t* Value)	{	dcArgPointer( &Vm, Value );	}
+
+
+template<typename TYPE>
+void dcbCall_TYPE(DCCallVM& Vm,void* FunctionAddress,TYPE& ReturnValue)
 {
-	return [This](Bind::TCallback& Params,size_t ParamIndex)
+	static_assert( sizeof(TYPE) == -1, "Specialise this" );
+}
+
+template<> void dcbCall_TYPE<int8_t>(DCCallVM& Vm,void* FunctionAddress,int8_t& ReturnValue)		{	ReturnValue = dcCallChar( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<int16_t>(DCCallVM& Vm,void* FunctionAddress,int16_t& ReturnValue)		{	ReturnValue = dcCallShort( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<int32_t>(DCCallVM& Vm,void* FunctionAddress,int32_t& ReturnValue)		{	ReturnValue = dcCallLong( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<int64_t>(DCCallVM& Vm,void* FunctionAddress,int64_t& ReturnValue)		{	ReturnValue = dcCallLongLong( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<uint8_t>(DCCallVM& Vm,void* FunctionAddress,uint8_t& ReturnValue)		{	ReturnValue = dcCallChar( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<uint16_t>(DCCallVM& Vm,void* FunctionAddress,uint16_t& ReturnValue)	{	ReturnValue = dcCallShort( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<uint32_t>(DCCallVM& Vm,void* FunctionAddress,uint32_t& ReturnValue)	{	ReturnValue = dcCallLong( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<uint64_t>(DCCallVM& Vm,void* FunctionAddress,uint64_t& ReturnValue)	{	ReturnValue = dcCallLongLong( &Vm, FunctionAddress );	}
+
+
+template<typename TYPE>
+std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction(TDcFunction& This)
+{
+	return [&This](Bind::TCallback& Params,size_t ParamIndex)
 	{
 		auto ValueRef = Params.GetArgumentValue( ParamIndex );
-		auto Value = JsCore::FromValue<uint8_t>( ValueRef );
-		dcbArgUChar( This->mVm, Value );
+		auto Value = JsCore::FromValue<TYPE>( Params.GetContextRef(), ValueRef );
+		dcbArg_TYPE( *This.mVm, Value );
 	};
 }
 
 
-std::function<void(Bind::TCallback&,size_t)>> GetSetArgumentFunction(TDcFunction* This,const std::string& TypeName)
+template<>
+std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction<uint8_t*>(TDcFunction& This)
 {
-	if ( TypeName == "uint8_t" )	return GetSetArgumentFunction_uint8_t(This);
+	return [&This](Bind::TCallback& Params,size_t ParamIndex)
+	{
+		auto ValueRef = Params.GetArgumentValue( ParamIndex );
+		//	get pointer from typed array
+		auto* Value = JsCore::GetPointer_u8( Params.GetContextRef(), ValueRef );
+		dcbArg_TYPE( *This.mVm, Value );
+	};
 }
 
-TDcFunction::TDcFunction()
+template<>
+std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction<uint32_t*>(TDcFunction& This)
+{
+	return [&This](Bind::TCallback& Params,size_t ParamIndex)
+	{
+		auto ValueRef = Params.GetArgumentValue( ParamIndex );
+		//	get pointer from typed array
+		auto* Value = JsCore::GetPointer_u32( Params.GetContextRef(), ValueRef );
+		dcbArg_TYPE( *This.mVm, Value );
+	};
+}
+
+
+std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction(TDcFunction& This,const std::string& TypeName)
+{
+	if ( TypeName == "int8_t" )		return GetSetArgumentFunction<int8_t>(This);
+	if ( TypeName == "uint8_t" )	return GetSetArgumentFunction<uint8_t>(This);
+	if ( TypeName == "int16_t" )	return GetSetArgumentFunction<int16_t>(This);
+	if ( TypeName == "uint16_t" )	return GetSetArgumentFunction<uint32_t>(This);
+	if ( TypeName == "int32_t" )	return GetSetArgumentFunction<int32_t>(This);
+	if ( TypeName == "uint32_t" )	return GetSetArgumentFunction<uint32_t>(This);
+	
+	if ( TypeName == "uint8_t*" )	return GetSetArgumentFunction<uint8_t*>(This);
+	if ( TypeName == "uint16_t*" )	return GetSetArgumentFunction<uint16_t*>(This);
+	if ( TypeName == "uint32_t*" )	return GetSetArgumentFunction<uint32_t*>(This);
+	if ( TypeName == "int8_t*" )	return GetSetArgumentFunction<int8_t*>(This);
+	if ( TypeName == "int16_t*" )	return GetSetArgumentFunction<int16_t*>(This);
+	if ( TypeName == "int32_t*" )	return GetSetArgumentFunction<int32_t*>(This);
+
+	std::stringstream Error;
+	Error << "Unhandled argument type " << TypeName;
+	throw Soy::AssertException(Error);
+}
+
+
+template<typename TYPE>
+std::function<void(Bind::TCallback&)> GetDyn_CallFunction(TDcFunction& This)
+{
+	return [&This](Bind::TCallback& Params)
+	{
+		TYPE ReturnValue = 0;
+		dcbCall_TYPE<TYPE>( *This.mVm, This.GetFunctionPointer(), ReturnValue );
+		Params.Return( ReturnValue );
+	};
+}
+
+template<>
+std::function<void(Bind::TCallback&)> GetDyn_CallFunction<void>(TDcFunction& This)
+{
+	return [&This](Bind::TCallback& Params)
+	{
+		dcCallVoid( This.mVm, This.GetFunctionPointer() );
+	};
+}
+
+template<>
+std::function<void(Bind::TCallback&)> GetDyn_CallFunction<void*>(TDcFunction& This)
+{
+	return [&This](Bind::TCallback& Params)
+	{
+		//	gr: need to work out how to encapsulate this into an array pointer with an unknown length
+		auto Result = dcCallPointer( This.mVm, This.GetFunctionPointer() );
+		throw Soy::AssertException("How should we sent this pointer back to Javascript?");
+		Params.Return( Result );
+	};
+}
+
+
+std::function<void(Bind::TCallback&)> GetDyn_CallFunction(TDcFunction& This,const std::string& ReturnType)
+{
+	if ( ReturnType == "" )			return GetDyn_CallFunction<void>(This);
+	if ( ReturnType == "void" )		return GetDyn_CallFunction<void>(This);
+	if ( ReturnType == "int" )		return GetDyn_CallFunction<int>(This);
+	if ( ReturnType == "uint8_t" )	return GetDyn_CallFunction<uint8_t>(This);
+	if ( ReturnType == "uint16_t" )	return GetDyn_CallFunction<uint16_t>(This);
+	if ( ReturnType == "uint32_t" )	return GetDyn_CallFunction<uint32_t>(This);
+	//if ( ReturnType == "void*" )	return GetDyn_CallFunction<void*>(This);
+	//if ( ReturnType == "uint8_t*" )	return GetDyn_CallFunction<uint8_t*>(This);
+	
+	std::stringstream Error;
+	Error << "Unhandled return type " << ReturnType;
+	throw Soy::AssertException(Error);
+}
+
+
+
+TDcFunction::TDcFunction(const std::string& ReturnType,ArrayBridge<std::string>& ArgumentTypes,void* FunctionAddress) :
+	mFunctionAddress	( FunctionAddress )
 {
 	mVm = dcNewCallVM(4096);
 	
 	//	make functions
-	mCall = [this](Bind::TCallback& Params)
-	{
-		dcCallVoid( mVm );
-	};
+	mCall = GetDyn_CallFunction( *this, ReturnType );
 	
 	for ( auto i=0;	i<ArgumentTypes.GetSize();	i++ )
 	{
-		auto Func = GetSetArgumentFunction(ArgumentTypes[i]);
+		auto& ArgumentType = ArgumentTypes[i];
+		auto Func = GetSetArgumentFunction( *this, ArgumentType );
 		mSetArguments.PushBack( Func );
 	}
 }
 
+TDcFunction::~TDcFunction()
+{
+	dcFree( mVm );
+}
+
+void TDcFunction::Call(Bind::TCallback& Params)
+{
+	dcReset(mVm);
+	
+	for ( auto i=0;	i<Params.GetArgumentCount();	i++ )
+	{
+		auto& SetArgFunc = mSetArguments[i];
+		SetArgFunc( Params, i );
+	}
+	
+	mCall( Params );
+}
+
 std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const std::string& ReturnType,ArrayBridge<std::string>& TypeStack)
 {
+	auto* pFunction = new TDcFunction( ReturnType, TypeStack, FunctionAddress );
+	return std::shared_ptr<ApiDll::TFunctionBase>(pFunction);
 /*
 	if ( ReturnType == "uint32_t" )
 	{
@@ -397,7 +535,6 @@ std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const
 	throw Soy::AssertException(Error);
 }
 
-#include "Libs/dyncall/include/dyncall.h"
 
 
 
