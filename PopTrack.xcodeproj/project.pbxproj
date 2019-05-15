@@ -90,6 +90,7 @@
 		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
 		BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF92821D223692BA007E9D6F /* opencv2.framework */; };
 		BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92821F22369316007E9D6F /* TApiOpencv.cpp */; };
+		BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
 		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
 		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
@@ -336,6 +337,8 @@
 		BF92822022369316007E9D6F /* TApiOpencv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencv.h; path = src/TApiOpencv.h; sourceTree = "<group>"; };
 		BF9282222236E1E1007E9D6F /* PopPhotoBlorp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPhotoBlorp; path = ../PopPhotoBlorp; sourceTree = "<group>"; };
 		BF9282242237DB18007E9D6F /* Headers */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Headers; path = opencv2.framework/Versions/A/Headers; sourceTree = "<group>"; };
+		BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenvr.cpp; path = src/TApiOpenvr.cpp; sourceTree = "<group>"; };
+		BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenvr.h; path = src/TApiOpenvr.h; sourceTree = "<group>"; };
 		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
@@ -786,6 +789,8 @@
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
 				BF0F9E702288892F00AEA7DC /* TApiDll.h */,
+				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
+				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				BF91D9792215839F00E91671 /* TApiEzsift.h */,
 				BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */,
@@ -1080,6 +1085,7 @@
 				BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */,
 				BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */,
 				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
+				BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */,
 				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
 				BF0F9E712288892F00AEA7DC /* TApiDll.cpp in Sources */,
 				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
