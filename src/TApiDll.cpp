@@ -305,8 +305,83 @@ if ( NextType == #TYPE )	{	return AllocFunction_A<RETURNTYPE,TYPE>( FunctionAddr
 	throw Soy::AssertException(Error);
 }
 */
+
+
+class TDcFunction : public ApiDll::TFunctionBase
+{
+public:
+	TDcFunction(ArrayBridge<std::string>& ArgumentTypes);
+	~TDcFunction()
+	{
+		dcFree( mVm );
+	}
+	
+	Array<std::function<void(Bind::TCallback&,size_t)>>	mSetArguments;
+	Array<std::function<void(Bind::TCallback&)>>		mCall;
+	
+	virtual void 	Call(Bind::TCallback& Params) override
+	{
+		dcReset(mVm);
+		
+		for ( auto i=0;	i<Params.GetArgumentCount();	i++ )
+		{
+			auto& SetArgFunc = mSetArguments[i];
+			SetArgFunc( Params, i );
+		}
+		
+		mCall( Params );
+		
+		testCallValue<Value>(pc);
+		
+	}
+};
+
+
+std::function<void(Bind::TCallback&,size_t)>> GetSetArgumentFunction_uint8_t(TDcFunction* This)
+{
+	return [This](Bind::TCallback& Params,size_t ParamIndex)
+	{
+		auto ValueRef = Params.GetArgumentValue( ParamIndex );
+		auto Value = JsCore::FromValue<uint8_t>( ValueRef );
+		dcbArgUChar( This->mVm, Value );
+	};
+}
+
+
+std::function<void(Bind::TCallback&,size_t)>> GetSetArgumentFunction(TDcFunction* This,const std::string& TypeName)
+{
+	if ( TypeName == "uint8_t" )	return GetSetArgumentFunction_uint8_t(This);
+}
+
+TDcFunction::TDcFunction()
+{
+	mVm = dcNewCallVM(4096);
+	
+	//	make functions
+	mCall = [this](Bind::TCallback& Params)
+	{
+		dcCallVoid( mVm );
+	};
+	
+	for ( auto i=0;	i<ArgumentTypes.GetSize();	i++ )
+	{
+		auto Func = GetSetArgumentFunction(ArgumentTypes[i]);
+		mSetArguments.PushBack( Func );
+	}
+}
+
 std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const std::string& ReturnType,ArrayBridge<std::string>& TypeStack)
 {
+/*
+	if ( ReturnType == "uint32_t" )
+	{
+		
+		auto Func = AllocFunction_ReturnType<void>( nullptr, TypeStack );
+		Func.mFunctor = Function;
+	}
+
+	
+	
  /*
 	if ( ReturnType == "" )			{	return AllocFunction_ReturnType<void>( FunctionAddress, TypeStack );	}
 	if ( ReturnType == "void" )		{	return AllocFunction_ReturnType<void>( FunctionAddress, TypeStack );	}
@@ -322,6 +397,7 @@ std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const
 	throw Soy::AssertException(Error);
 }
 
+#include "Libs/dyncall/include/dyncall.h"
 
 
 
