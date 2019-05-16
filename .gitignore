@@ -1,4 +1,3 @@
-DevSnapshots/
 
 # osx
 .DS_Store
@@ -22,7 +21,6 @@ Plugins/
 
 [Ll]ibrary/
 [Tt]emp/
-[Oo]bj/
 [Bb]uild/
 iosbuild/
 
@@ -40,4 +38,3 @@ iosbuild/
 sysinfo.txt
 
 # ignore libs, too big for lfs
-src/Libs/*.framework/
