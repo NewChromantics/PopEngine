@@ -38,3 +38,5 @@ iosbuild/
 sysinfo.txt
 
 # ignore libs, too big for lfs
+
+BuildData/
