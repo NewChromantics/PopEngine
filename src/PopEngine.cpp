@@ -34,6 +34,7 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	//	 try to predict full paths vs something embedded in the app
 	if ( !Platform::IsFullPath(DataPath) )
 	{
+		std::Debug << "<" << DataPath << "> is not full path, prefixing with resources path." << std::endl;
 		DataPath = Platform::GetAppResourcesDirectory() + DataPath;
 	}
 	
