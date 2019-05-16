@@ -11,6 +11,7 @@
 #include "TApiSerial.h"
 #include "TApiVarjo.h"
 #include "TApiDll.h"
+#include "TApiOpenvr.h"
 
 #if !defined(PLATFORM_WINDOWS)
 //#include "TApiOpencl.h"
@@ -376,6 +377,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiSocket::Bind( *Context );
 			ApiSerial::Bind( *Context );
 			ApiDll::Bind( *Context );
+			ApiOpenvr::Bind( *Context );
 
 		#if !defined(PLATFORM_WINDOWS)
 			ApiVarjo::Bind( *Context );
