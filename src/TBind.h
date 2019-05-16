@@ -6,7 +6,7 @@
  	Need a better name
 */
 #include <string>
-#include "Array.hpp"
+#include "HeapArray.hpp"
 
 //	gr: to deal with different attributes on different platforms... lets make a macro
 #define DEFINE_BIND_FUNCTIONNAME(Name)	extern const char Name ## _FunctionName[] = #Name
@@ -29,8 +29,11 @@ namespace Bind
 
 class Bind::TInstanceBase
 {
-protected:
+public:
 	std::string						mRootDirectory;
+	Array<std::string>				mExeArguments;
+	
+protected:
 	std::function<void(int32_t)>	mOnShutdown;	//	callback when we want to die
 };
 

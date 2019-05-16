@@ -353,11 +353,13 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
 }
 
 //	gr: windows needs this as Bind::TInstance
-Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown) :
+Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<std::string>&& ExeArguments,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown) :
 	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
-	mRootDirectory		( RootDirectory ),
 	mOnShutdown			( OnShutdown )
 {
+	mRootDirectory = RootDirectory;
+	mExeArguments.Copy( ExeArguments );
+	
 	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
 		#if !defined(TARGET_WINDOWS)
@@ -1409,6 +1411,12 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 	};
 	Execute( Exec );
 }
+
+void JsCore::TContext::GetExeArguments(ArrayBridge<std::string>&& Arguments)
+{
+	Arguments.Copy( mExeArguments );
+}
+
 
 std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 {

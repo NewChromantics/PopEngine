@@ -15,7 +15,7 @@ namespace Platform
 std::shared_ptr<Bind::TInstance> pInstance;
 #endif
 
-TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
+TPopAppError::Type PopMain(ArrayBridge<std::string>& Arguments)
 {
 	std::string DataPath;
 
@@ -57,9 +57,16 @@ TPopAppError::Type PopMain(const ArrayBridge<std::string>& Arguments)
 	};
 
 	{
+		Array<std::string> ExeArguments;
+		if ( Arguments.GetSize() > 1 )
+		{
+			auto RestOfArgs = Arguments.GetSubArray( 1, Arguments.GetSize()-1 );
+			ExeArguments.Copy( RestOfArgs );
+		}
+		
 		//	run an instance
 		std::string BootupFilename = "bootup.js";
-		pInstance.reset(new Bind::TInstance(DataPath, BootupFilename, OnShutdown));
+		pInstance.reset(new Bind::TInstance(DataPath, GetArrayBridge(ExeArguments), BootupFilename, OnShutdown));
 
 	#if !defined(TARGET_OSX_BUNDLE)
 		//	run

@@ -48,7 +48,7 @@ namespace Soy
 };
 #endif
 
-TPopAppError::Type	PopMain(const ArrayBridge<std::string>& Arguments);
+TPopAppError::Type	PopMain(ArrayBridge<std::string>& Arguments);
 
 
 

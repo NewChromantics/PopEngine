@@ -43,6 +43,7 @@ DEFINE_BIND_FUNCTIONNAME(GetComputerName);
 DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
 DEFINE_BIND_FUNCTIONNAME(EnumScreens);
 DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
+DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
 
 
 
@@ -99,6 +100,7 @@ namespace ApiPop
 	static void		GetCrtHeapCount(Bind::TCallback& Params);
 	static void		EnumScreens(Bind::TCallback& Params);
 	static void		GetExeDirectory(Bind::TCallback& Params);
+	static void		GetExeArguments(Bind::TCallback& Params);
 }
 
 
@@ -442,6 +444,15 @@ void ApiPop::GetExeDirectory(Bind::TCallback& Params)
 }
 
 
+void ApiPop::GetExeArguments(Bind::TCallback& Params)
+{
+	Array<std::string> Arguments;
+	Params.mContext.GetExeArguments( GetArrayBridge(Arguments) );
+	Params.Return( GetArrayBridge(Arguments) );
+}
+
+
+
 void ApiPop::CompileAndRun(Bind::TCallback& Params)
 {
 	auto Source = Params.GetArgumentString(0);
@@ -520,6 +531,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<GetCrtHeapCount_FunctionName>(GetCrtHeapCount, Namespace );
 	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
 	Context.BindGlobalFunction<GetExeDirectory_FunctionName>(GetExeDirectory, Namespace );
+	Context.BindGlobalFunction<GetExeArguments_FunctionName>(GetExeArguments, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()

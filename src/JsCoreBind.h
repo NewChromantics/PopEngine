@@ -215,7 +215,7 @@ public:
 class Bind::TInstance : public Bind::TInstanceBase
 {
 public:
-	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown);
+	TInstance(const std::string& RootDirectory,const ArrayBridge<std::string>&& ExeArguments,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown);
 	~TInstance();
 	
 	std::shared_ptr<JsCore::TContext>	CreateContext(const std::string& Name);
@@ -231,7 +231,6 @@ private:
 	SoyWorkerJobThread	mContextGroupThread;
 	
 	JSContextGroupRef	mContextGroup = nullptr;
-	std::string			mRootDirectory;
 	
 	Array<std::shared_ptr<JsCore::TContext>>	mContexts;
 
@@ -530,6 +529,7 @@ public:
 	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
 	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
 	std::string			GetResolvedFilename(const std::string& Filename);
+	void				GetExeArguments(ArrayBridge<std::string>&& Arguments);
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext
 	JSValueRef			CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
@@ -547,15 +547,16 @@ protected:
 	void				ReleaseContext();	//	try and release javascript objects
 
 private:
-	void							BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
+	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
 
 public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
 	
 	prmem::Heap			mImageHeap = prmem::Heap(true,true,"Context Images");
-	std::string			mRootDirectory;
-	
+	std::string			mRootDirectory = mInstance.mRootDirectory;
+	Array<std::string>&	mExeArguments = mInstance.mExeArguments;
+
 	//	"templates" in v8, "classes" in jscore
 	Array<TTemplate>	mObjectTemplates;
 	
