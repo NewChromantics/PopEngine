@@ -117,6 +117,9 @@ namespace JsCore
 }
 
 
+std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in);
+
+
 //	major abstraction from V8 to JSCore
 //	JSCore has no global->local (maybe it should execute a run-next-in-queue func)
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor);
