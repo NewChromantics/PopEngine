@@ -30,8 +30,6 @@
 		BF3965652278587600A721E8 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
 		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
-		BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3BE7B1226DFD680043DFA5 /* TApiVarjo.cpp */; };
-		BF3BE7B6226E03310043DFA5 /* libVarjo_Glint.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3BE7B4226E03300043DFA5 /* libVarjo_Glint.a */; };
 		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -213,10 +211,6 @@
 		BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_WithCoreMlModels.xcconfig; path = src/PopEngine_WithCoreMlModels.xcconfig; sourceTree = "<group>"; };
 		BF3B018F2253A5B900644E46 /* TApiCoreMlModels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TApiCoreMlModels.mm; path = src/TApiCoreMlModels.mm; sourceTree = "<group>"; };
 		BF3B01912253A80100644E46 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		BF3BE7B0226DFD670043DFA5 /* TApiVarjo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiVarjo.h; path = src/TApiVarjo.h; sourceTree = "<group>"; };
-		BF3BE7B1226DFD680043DFA5 /* TApiVarjo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiVarjo.cpp; path = src/TApiVarjo.cpp; sourceTree = "<group>"; };
-		BF3BE7B4226E03300043DFA5 /* libVarjo_Glint.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libVarjo_Glint.a; path = src/Libs/VarjoGlint/libVarjo_Glint.a; sourceTree = SOURCE_ROOT; };
-		BF3BE7B5226E03300043DFA5 /* Glint_ScanlineSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Glint_ScanlineSearch.h; path = src/Libs/VarjoGlint/Glint_ScanlineSearch.h; sourceTree = SOURCE_ROOT; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264Framework.framework; path = src/Libs/PopH264Framework.framework; sourceTree = SOURCE_ROOT; };
@@ -483,7 +477,6 @@
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
 				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
 				BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */,
-				BF3BE7B6226E03310043DFA5 /* libVarjo_Glint.a in Frameworks */,
 				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
 				EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */,
 				BF012B0D226A102D003AEB55 /* PopCameraDeviceFramework.framework in Frameworks */,
@@ -541,15 +534,6 @@
 				BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */,
 			);
 			path = lib;
-			sourceTree = "<group>";
-		};
-		BF3BE7B3226E03220043DFA5 /* Varjo */ = {
-			isa = PBXGroup;
-			children = (
-				BF3BE7B5226E03300043DFA5 /* Glint_ScanlineSearch.h */,
-				BF3BE7B4226E03300043DFA5 /* libVarjo_Glint.a */,
-			);
-			path = Varjo;
 			sourceTree = "<group>";
 		};
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
@@ -811,8 +795,6 @@
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
-				BF3BE7B1226DFD680043DFA5 /* TApiVarjo.cpp */,
-				BF3BE7B0226DFD670043DFA5 /* TApiVarjo.h */,
 				EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */,
 				EBC8FA5B21131E9F0014E998 /* TApiWebsocket.h */,
 				BF19612221B9D2B8007014EF /* TBind.cpp */,
@@ -834,7 +816,6 @@
 				BF6553C32132C4D9003E4241 /* v8 */,
 				BFF505E822550F30005A6AC1 /* V8Bind.cpp */,
 				BFF505E922550F30005A6AC1 /* V8Bind.h */,
-				BF3BE7B3226E03220043DFA5 /* Varjo */,
 				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
 			);
 			name = src;
@@ -1004,6 +985,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -1053,7 +1035,6 @@
 				BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */,
 				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
 				BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */,
-				BF3BE7B2226DFD680043DFA5 /* TApiVarjo.cpp in Sources */,
 				BFB647382225593600820612 /* SoyHid.cpp in Sources */,
 				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
 				BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */,
