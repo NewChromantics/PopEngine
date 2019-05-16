@@ -9,7 +9,6 @@
 #include "TApiSocket.h"
 #include "TApiHttp.h"
 #include "TApiSerial.h"
-#include "TApiVarjo.h"
 #include "TApiDll.h"
 #include "TApiOpenvr.h"
 
@@ -92,6 +91,30 @@ template<> JSTypedArrayType GetTypedArrayType<int16_t>()	{	return kJSTypedArrayT
 template<> JSTypedArrayType GetTypedArrayType<int32_t>()	{	return kJSTypedArrayTypeInt32Array;	}
 template<> JSTypedArrayType GetTypedArrayType<float>()		{	return kJSTypedArrayTypeFloat32Array;	}
 
+
+std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in)
+{
+#define CASE_VALUE_STRING(Value)	case Value:	out << static_cast<const char*>(#Value);	break
+	switch ( in )
+	{
+			CASE_VALUE_STRING(kJSTypedArrayTypeNone);
+			CASE_VALUE_STRING(kJSTypedArrayTypeArrayBuffer);
+			CASE_VALUE_STRING(kJSTypedArrayTypeUint8Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeUint8ClampedArray);
+			CASE_VALUE_STRING(kJSTypedArrayTypeUint16Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeUint32Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeInt8Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeInt16Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeInt32Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeFloat32Array);
+			CASE_VALUE_STRING(kJSTypedArrayTypeFloat64Array);
+		default:
+			out << "kJSTypedArrayType<unhandled=" << static_cast<int>(in) << ">";
+			break;
+	}
+	
+	return out;
+}
 
 
 JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
@@ -380,7 +403,6 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiOpenvr::Bind( *Context );
 
 		#if !defined(PLATFORM_WINDOWS)
-			ApiVarjo::Bind( *Context );
 			//ApiOpencl::Bind( *Context );
 			ApiDlib::Bind( *Context );
 			ApiCoreMl::Bind( *Context );
