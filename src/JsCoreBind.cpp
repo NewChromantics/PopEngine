@@ -684,11 +684,9 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	//	and that seemed to cause some crashes
 	//	gr: on windows, this... has some problem where the main thread seems to get stuck? maybe to do with creating windows on non-main threads?
 	//		GetMessage blocks and we never get wm_paints, even though JS vm is running in the background
-#if defined(TARGET_WINDOWS)
+	//	gr: this was queueing on OSX. (the main thread stuff on windows has been fixed),
+	//		but queueing meant we didn't process include()'s in JS synchronously, which we needed to
 	Execute( Exec );
-#else
-	Queue(Exec);
-#endif
 }
 
 template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
