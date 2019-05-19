@@ -29,6 +29,17 @@
   <ItemGroup>
     <ClInclude Include="..\src\JsCoreBind.h" />
     <ClInclude Include="..\src\JsCoreDll.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_alloc_wx.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_args.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_callback.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_callf.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_config.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_macros.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_signature.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_types.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_value.h" />
+    <ClInclude Include="..\src\Libs\dyncall\include\dynload.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JavaScript.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JavaScriptCore.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackFunction.h" />
@@ -38,6 +49,9 @@
     <ClInclude Include="..\src\Libs\JavascriptCore\JSStringRef.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h" />
+    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr.h" />
+    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_capi.h" />
+    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h" />
     <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
     <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
     <ClInclude Include="..\src\PopMain.h" />
@@ -124,6 +138,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\TApiDll.h" />
     <ClInclude Include="..\src\TApiEzsift.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|Win32'">true</ExcludedFromBuild>
@@ -167,6 +182,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\TApiOpenvr.h" />
     <ClInclude Include="..\src\TApiSerial.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
@@ -242,6 +258,8 @@
     <ClInclude Include="..\src\v8\include\v8config.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\TApiDll.cpp" />
+    <ClCompile Include="..\src\TApiOpenvr.cpp" />
     <ClCompile Include="..\src\V8Bind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -313,6 +331,10 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</DeploymentContent>
     </CustomBuild>
     <None Include="..\src\Libs\JavascriptCore\win64\WTF.pdb" />
+    <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs.meta" />
     <CustomBuild Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
@@ -594,6 +616,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\src\Libs\dyncall\lib\libdyncallback_s.lib" />
+    <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib" />
+    <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib" />
+    <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib" />
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
     <Library Include="..\src\v8\lib\icui18n.dll.lib">
