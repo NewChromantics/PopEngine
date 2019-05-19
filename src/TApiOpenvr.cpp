@@ -8,12 +8,17 @@ namespace ApiOpenvr
 	const char Namespace[] = "Pop.Openvr";
 
 	DEFINE_BIND_TYPENAME(Hmd);
+
+	DEFINE_BIND_FUNCTIONNAME(SubmitEyeTexture);
+	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
+	DEFINE_BIND_FUNCTIONNAME(BeginFrame);
 }
 
 namespace Openvr
 {
 	const std::string	EyeName_Left = "Left";
 	const std::string	EyeName_Right = "Right";
+
 	void	IsOkay(vr::EVRInitError Error,const std::string& Context);
 	void	IsOkay(vr::EVRCompositorError Error,const std::string& Context);
 }
@@ -39,8 +44,10 @@ public:
 	THmd();
 	~THmd();
 	
-	void	SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Image);
-	void	EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
+	void		SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Image);
+	void		EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
+	TEyeMatrix	GetEyeMatrix(const std::string& EyeName);
+	void		WaitForFrameStart();
 
 	vr::IVRSystem*	mHmd = nullptr;
 	float			mNearClip = 0.1f;
@@ -69,8 +76,37 @@ void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 
 void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-//	Template.BindFunction<ApiDll::BindFunction_FunctionName>( BindFunction );
-//	Template.BindFunction<ApiDll::CallFunction_FunctionName>( CallFunction );
+	Template.BindFunction<SubmitEyeTexture_FunctionName>( SubmitEyeTexture );
+	Template.BindFunction<GetEyeMatrix_FunctionName>( GetEyeMatrix );
+	Template.BindFunction<BeginFrame_FunctionName>( BeginFrame );
+}
+
+
+void ApiOpenvr::THmdWrapper::SubmitEyeTexture(Bind::TCallback& Params)
+{
+	auto& This = Params.This<ApiOpenvr::THmdWrapper>();
+	auto EyeName = Params.GetArgumentString(0);
+	auto& EyeTexture = Params.GetArgumentPointer<TImageWrapper>(1);
+	This.mHmd->SubmitEyeFrame(EyeName, EyeTexture);
+}
+
+void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
+{
+	auto& This = Params.This<ApiOpenvr::THmdWrapper>();
+	auto EyeName = Params.GetArgumentString(0);
+
+	auto EyeMatrix = This.mHmd->GetEyeMatrix(EyeName);
+
+	auto Obj = Params.mContext.CreateObjectInstance(Params.mLocalContext);
+	//Obj.SetArray("
+	Params.Return(Obj);
+}
+
+void ApiOpenvr::THmdWrapper::BeginFrame(Bind::TCallback& Params)
+{
+	auto& This = Params.This<ApiOpenvr::THmdWrapper>();
+	auto& Hmd = *This.mHmd;
+	Hmd.WaitForFrameStart();
 }
 
 
@@ -145,34 +181,6 @@ Openvr::THmd::THmd()
 	//m_strDisplay = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String );
 }
 
-void Openvr::THmd::EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum)
-{
-	auto& Hmd = *mHmd;
-	
-	auto EnumEye = [&](vr::Hmd_Eye Eye,const std::string& EyeName)
-	{
-		TEyeMatrix EyeMatrix;
-		EyeMatrix.mName = EyeName;
-		
-		//	demo for opengl transposes this, maybe
-		EyeMatrix.mProjection = Hmd.GetProjectionMatrix( Eye, mNearClip, mFarClip );
-		
-		//	3x4 matrix eye pose
-		//vr::HmdMatrix34_t
-		auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
-		//EyeMatrix.mPose = EyeToHeadMatrix.invert();
-		
-		Hmd.GetRecommendedRenderTargetSize( &EyeMatrix.mRenderTargetWidth, &EyeMatrix.mRenderTargetHeight );
-
-		
-		Enum( EyeMatrix );
-	};
-	
-	EnumEye( vr::Eye_Left, Openvr::EyeName_Left );
-	EnumEye( vr::Eye_Right, Openvr::EyeName_Right );
-}
-
-
 Openvr::THmd::~THmd()
 {
 	if ( mHmd )
@@ -180,6 +188,60 @@ Openvr::THmd::~THmd()
 		vr::VR_Shutdown();
 		mHmd = nullptr;
 	}
+}
+
+void Openvr::THmd::EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum)
+{
+	auto& Hmd = *mHmd;
+	
+	auto Left = GetEyeMatrix(EyeName_Left);
+	Enum(Left);
+	auto Right = GetEyeMatrix(EyeName_Right);
+	Enum(Right);
+}
+
+vr::Hmd_Eye GetHmdEye(const std::string& EyeName)
+{
+	if ( EyeName == Openvr::EyeName_Left )
+		return vr::Hmd_Eye::Eye_Left;
+	if ( EyeName == Openvr::EyeName_Right )
+		return vr::Hmd_Eye::Eye_Right;
+
+	std::stringstream Error;
+	Error << "Unknown eye name " << EyeName;
+	throw Soy::AssertException(Error);
+}
+
+TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
+{
+	auto& Hmd = *mHmd;
+	auto Eye = GetHmdEye(EyeName);
+
+	TEyeMatrix EyeMatrix;
+	EyeMatrix.mName = EyeName;
+
+	//	demo for opengl transposes this, maybe
+	EyeMatrix.mProjection = Hmd.GetProjectionMatrix( Eye, mNearClip, mFarClip );
+
+	//	3x4 matrix eye pose
+	//vr::HmdMatrix34_t
+	auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
+	//EyeMatrix.mPose = EyeToHeadMatrix.invert();
+
+	Hmd.GetRecommendedRenderTargetSize( &EyeMatrix.mRenderTargetWidth, &EyeMatrix.mRenderTargetHeight );
+
+	return EyeMatrix;
+}
+
+
+void Openvr::THmd::WaitForFrameStart()
+{
+	auto& Compositor = *vr::VRCompositor();
+	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
+	vr::TrackedDevicePose_t* GamePoseArray = nullptr;
+	size_t GamePoseArraySize = 0;
+	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses, vr::k_unMaxTrackedDeviceCount, GamePoseArray, GamePoseArraySize);
+	Openvr::IsOkay(Error, "WaitGetPoses");
 }
 
 void Openvr::THmd::SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Image)
@@ -196,15 +258,33 @@ void Openvr::THmd::SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Imag
 		Error << "Unhandled eye name " << EyeName;
 		throw Soy::AssertException(Error);
 	}
+	
+	auto& Compositor = *vr::VRCompositor();
 
 	vr::Texture_t EyeTexture;
 	auto& Texture = Image.GetTexture();
 	EyeTexture.handle = reinterpret_cast<void*>( static_cast<uintptr_t>(Texture.mTexture.mName) );
 	EyeTexture.eType = vr::TextureType_OpenGL;
 	EyeTexture.eColorSpace = vr::ColorSpace_Gamma;
+
+	auto Error = Compositor.Submit( Eye, &EyeTexture );
+	if ( Error == vr::VRCompositorError_TextureUsesUnsupportedFormat )
+	{
+		std::stringstream ErrorString;
+		ErrorString << "Eye Texture Submit (" << Texture.mMeta << ")";
+		Openvr::IsOkay(Error, ErrorString.str());
+	}
+	if ( Error == vr::VRCompositorError_DoNotHaveFocus )
+	{
+		WaitForFrameStart();
 	
-	auto Error = vr::VRCompositor()->Submit( Eye, &EyeTexture );
-	Openvr::IsOkay( Error, "Eye Texture Submit");
+		//	submit again
+		Error = Compositor.Submit( Eye, &EyeTexture );
+		Openvr::IsOkay(Error, "Eye Texture Submit B");
+	}
+	Openvr::IsOkay( Error, "Eye Texture Submit A");
+
+
 }
 
 /*

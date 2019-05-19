@@ -64,6 +64,12 @@
     <Filter Include="Libs\Dyncall">
       <UniqueIdentifier>{83bc45f4-1304-400f-9e90-a4723c02aeb1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Projects">
+      <UniqueIdentifier>{1076b2d8-5ee6-499f-9b4f-0d0848152173}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projects\PopRayTrace">
+      <UniqueIdentifier>{6042ffc5-5108-4c72-a98c-0e4d19b0c55d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -553,6 +559,21 @@
     </None>
     <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb">
       <Filter>Libs\Openvr</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\PopShaderCache.js">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\Quad.vert.glsl">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\bootup.js">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\PathTrace.frag.glsl">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\BlitLeftRight.frag.glsl">
+      <Filter>Projects\PopRayTrace</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
