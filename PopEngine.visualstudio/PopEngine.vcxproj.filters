@@ -58,6 +58,18 @@
     <Filter Include="Libs\v8\Runtime">
       <UniqueIdentifier>{e586ec67-254a-4f92-a16d-b012b649bc3f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\Openvr">
+      <UniqueIdentifier>{2fbd07b4-8621-42a6-b499-b3e6b9616d68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\Dyncall">
+      <UniqueIdentifier>{83bc45f4-1304-400f-9e90-a4723c02aeb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projects">
+      <UniqueIdentifier>{1076b2d8-5ee6-499f-9b4f-0d0848152173}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projects\PopRayTrace">
+      <UniqueIdentifier>{6042ffc5-5108-4c72-a98c-0e4d19b0c55d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -357,6 +369,54 @@
     <ClInclude Include="..\src\V8Bind.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiOpenvr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr.h">
+      <Filter>Libs\Openvr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_capi.h">
+      <Filter>Libs\Openvr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h">
+      <Filter>Libs\Openvr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDll.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_callback.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_callf.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_config.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_macros.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_signature.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_types.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_value.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dynload.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_alloc_wx.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_args.h">
+      <Filter>Libs\Dyncall</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -496,6 +556,24 @@
     </None>
     <None Include="..\src\SoyLib\src\SoyWindow.mm">
       <Filter>SoyLib</Filter>
+    </None>
+    <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb">
+      <Filter>Libs\Openvr</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\PopShaderCache.js">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\Quad.vert.glsl">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\bootup.js">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\PathTrace.frag.glsl">
+      <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\..\PopRayTrace\BlitLeftRight.frag.glsl">
+      <Filter>Projects\PopRayTrace</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -682,6 +760,12 @@
     <ClCompile Include="..\src\V8Bind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiOpenvr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDll.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -704,6 +788,18 @@
     </Library>
     <Library Include="..\src\v8\lib\v8_libplatform.dll.lib">
       <Filter>Libs\v8\Lib</Filter>
+    </Library>
+    <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib">
+      <Filter>Libs\Openvr</Filter>
+    </Library>
+    <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib">
+      <Filter>Libs\Dyncall</Filter>
+    </Library>
+    <Library Include="..\src\Libs\dyncall\lib\libdyncallback_s.lib">
+      <Filter>Libs\Dyncall</Filter>
+    </Library>
+    <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib">
+      <Filter>Libs\Dyncall</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>
@@ -757,6 +853,9 @@
     </CustomBuild>
     <CustomBuild Include="..\src\v8\lib\v8_libplatform.dll">
       <Filter>Libs\v8\Runtime</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
+      <Filter>Libs\Openvr</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
