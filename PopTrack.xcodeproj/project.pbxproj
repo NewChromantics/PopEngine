@@ -185,6 +185,7 @@
 		BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdyncall_s.a; sourceTree = "<group>"; };
 		BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdyncallback_s.a; sourceTree = "<group>"; };
 		BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdynload_s.a; sourceTree = "<group>"; };
+		BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglWindow.cpp; path = src/SoyOpenglWindow.cpp; sourceTree = "<group>"; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -813,6 +814,7 @@
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
 				BF689ACC20D6D3AE000BC812 /* SoyOpenglWindow.h */,
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */,
+				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
 				BF607EA42240588300A78C00 /* TApiBluetooth.cpp */,
 				BF607EA32240588300A78C00 /* TApiBluetooth.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,

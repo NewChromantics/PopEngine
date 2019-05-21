@@ -5,26 +5,21 @@
 #include "PopMain.h"
 
 
-class Platform::TWindow
+class Platform::TWindow : public SoyWindow
 {
 public:
-	TWindow() :
-		mWindow	( nullptr )
-	{
-	}
 	~TWindow()
 	{
 		[mWindow release];
 	}
 	
-	bool			IsValid()	{	return mWindow;	}
+	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
+	virtual void					SetFullscreen(bool Fullscreen) override;
+	virtual bool					IsFullscreen() override;
 	
-	bool			IsFullscreen();
-	void			SetFullscreen(bool Fullscreen);
-
 public:
-	NSWindow*			mWindow;
-	CVDisplayLinkRef	mDisplayLink;
+	NSWindow*			mWindow = nullptr;
+	CVDisplayLinkRef	mDisplayLink = nullptr;
 };
 
 
@@ -210,7 +205,7 @@ TOpenglWindow::~TOpenglWindow()
 	
 bool TOpenglWindow::IsValid()
 {
-	return mWindow && mWindow->IsValid() && mView && mView->IsValid();
+	return mWindow && mWindow->mWindow&& mView && mView->IsValid();
 }
 
 bool TOpenglWindow::Iteration()
@@ -275,12 +270,19 @@ std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
 	return std::chrono::milliseconds( 1000/mParams.mRefreshRate );
 }
 
+
+Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
+{
+	throw Soy::AssertException(__FUNCTION__);
+}
+
 Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 {
 	//	this must be called on the main thread, so we use the cache from the render target
 	//return mView->GetScreenRect();
 	return mView->mRenderTarget.GetSize();
 }
+
 
 void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
@@ -289,6 +291,7 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	
 	mWindow->SetFullscreen(Fullscreen);
 }
+
 
 bool TOpenglWindow::IsFullscreen()
 {
@@ -329,3 +332,67 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 	Soy::Platform::gMainThread->PushJob( DoSetFullScreen );
 }
 
+
+
+
+std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect)
+{
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow );
+	
+	//	actual allocation must be on the main thread.
+	auto Allocate = [=]
+	{
+		auto& Wrapper = *dynamic_cast<Platform::TWindow*>( pWindow.get() );
+		auto*& mWindow = Wrapper.mWindow;
+		
+		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
+		
+		bool Defer = NO;
+		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
+		Soy::Assert(mWindow,"failed to create window");
+		[mWindow retain];
+		
+		/*
+		//	note: this is deffered, but as flags above don't seem to work right, not much choice
+		//		plus, every other OSX app seems to do the same?
+		pWindow->SetFullscreen( Params.mFullscreen );
+		*/
+		
+		//	auto save window location
+		auto AutoSaveName = Soy::StringToNSString( Name );
+		[mWindow setFrameAutosaveName:AutoSaveName];
+		
+		id Sender = NSApp;
+		[mWindow setBackgroundColor:[NSColor blueColor]];
+		[mWindow makeKeyAndOrderFront:Sender];
+		
+		auto Title = Soy::StringToNSString( Name );
+		[mWindow setTitle:Title];
+		//[mWindow setMiniwindowTitle:Title];
+		//[mWindow setTitleWithRepresentedFilename:Title];
+		
+		//	mouse callbacks
+		[mWindow setAcceptsMouseMovedEvents:YES];
+	};
+	
+	static auto Wait = false;
+	if ( Wait )
+	{
+		Soy::TSemaphore Semaphore;
+		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Soy::Platform::gMainThread->PushJob( Allocate );
+	}
+	
+	return pWindow;
+}
+
+std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent)
+{
+	throw Soy::AssertException("Todo: Make slider");
+}

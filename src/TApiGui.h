@@ -2,11 +2,9 @@
 #include "TBind.h"
 
 
-namespace Platform
-{
-	class TWindow;
-	class TSlider;
-}
+class SoyWindow;
+class SoySlider;
+
 
 namespace ApiGui
 {
@@ -21,7 +19,7 @@ namespace ApiGui
 
 
 
-class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::Gui_Window_TypeName,Platform::TWindow>
+class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::Gui_Window_TypeName,SoyWindow>
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -33,11 +31,11 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 public:
-	std::shared_ptr<Platform::TWindow>&	mWindow = mObject;
+	std::shared_ptr<SoyWindow>&	mWindow = mObject;
 };
 
 
-class ApiGui::TSliderWrapper : public Bind::TObjectWrapper<ApiGui::Slider_TypeName,Platform::TSlider>
+class ApiGui::TSliderWrapper : public Bind::TObjectWrapper<ApiGui::Slider_TypeName,SoySlider>
 {
 public:
 	TSliderWrapper(Bind::TContext& Context) :
@@ -52,7 +50,7 @@ public:
 	void			SetValue(Bind::TCallback& Params);
 
 public:
-	std::shared_ptr<Platform::TSlider>&	mSlider = mObject;
+	std::shared_ptr<SoySlider>&	mSlider = mObject;
 };
 
 
