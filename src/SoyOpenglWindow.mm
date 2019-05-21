@@ -23,6 +23,24 @@ public:
 };
 
 
+class Platform::TSlider : public SoySlider
+{
+public:
+	~TSlider()
+	{
+		[mSlider release];
+	}
+
+	void			Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+
+	virtual void	SetMinMax(uint16_t Min,uint16_t Max) override;
+	virtual void	SetValue(uint16_t Value) override;
+	
+public:
+	NSSlider*		mSlider = nullptr;
+};
+
+
 CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 													const CVTimeStamp *inNow,
 													const CVTimeStamp *inOutputTime,
@@ -161,7 +179,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		[mWindow setContentView: mView->mView];
 
 		id Sender = NSApp;
-		[mWindow setBackgroundColor:[NSColor blueColor]];
+		//[mWindow setBackgroundColor:[NSColor blueColor]];
 		[mWindow makeKeyAndOrderFront:Sender];
 
 		auto Title = Soy::StringToNSString( Name );
@@ -365,7 +383,6 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 		[mWindow setFrameAutosaveName:AutoSaveName];
 		
 		id Sender = NSApp;
-		[mWindow setBackgroundColor:[NSColor blueColor]];
 		[mWindow makeKeyAndOrderFront:Sender];
 		
 		auto Title = Soy::StringToNSString( Name );
@@ -392,7 +409,53 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 	return pWindow;
 }
 
-std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent)
+std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
-	throw Soy::AssertException("Todo: Make slider");
+	std::shared_ptr<SoySlider> pSlider( new Platform::TSlider );
+
+	auto Allocate = [Rect,&Parent,pSlider]()mutable
+	{
+		auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
+		auto& PlatformSlider = dynamic_cast<Platform::TSlider&>(*pSlider);
+		PlatformSlider.Create(PlatformParent,Rect);
+	};
+
+	//	because the window stuff is deffered, we need to also deffer this so it happens after the window is made
+	static auto Wait = false;
+	if ( Wait )
+	{
+		Soy::TSemaphore Semaphore;
+		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Soy::Platform::gMainThread->PushJob( Allocate );
+	}
+	
+	return pSlider;
 }
+
+
+void Platform::TSlider::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	//	todo: remember rect is upside in osx!
+	auto RectNs = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	
+	mSlider = [[NSSlider alloc] initWithFrame:RectNs];
+	[mSlider retain];
+
+	[[Parent.mWindow contentView] addSubview:mSlider];
+}
+
+void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
+{
+	mSlider.minValue = Min;
+	mSlider.maxValue = Max;
+}
+
+void Platform::TSlider:: SetValue(uint16_t Value)
+{
+	mSlider.intValue = Value;
+}
+

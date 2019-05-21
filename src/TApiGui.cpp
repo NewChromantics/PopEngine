@@ -35,8 +35,9 @@ void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 
 	BufferArray<int32_t,4> Rect4;
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
 	
-	mSlider = Platform::CreateSlider( *ParentWindow.mWindow );
+	mSlider = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
 }
 
 void ApiGui::TSliderWrapper::SetMinMax(Bind::TCallback& Params)
