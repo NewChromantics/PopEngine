@@ -439,8 +439,16 @@ std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<i
 
 void Platform::TSlider::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
-	//	todo: remember rect is upside in osx!
-	auto RectNs = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	auto ParentRect = [Parent.mWindow contentView].visibleRect;
+
+	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
+	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+	//	rect is upside in osx!
+	//	todo: incorporate origin
+	auto Top = ParentRect.size.height - Rect.Bottom();
+	auto Bottom = ParentRect.size.height - Rect.Top();
+
+	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
 	
 	mSlider = [[NSSlider alloc] initWithFrame:RectNs];
 	[mSlider retain];
