@@ -677,6 +677,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename.c_str() );
 		auto LineNumber = 0;
 		JSValueRef Exception = nullptr;
+		//	gr: to capture this result, probably need to store it persistently
 		auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
 		ThrowException( Context.mLocalContext, Exception, Filename );
 	};
