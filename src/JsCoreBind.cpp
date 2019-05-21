@@ -11,6 +11,7 @@
 #include "TApiSerial.h"
 #include "TApiDll.h"
 #include "TApiOpenvr.h"
+#include "TApiGui.h"
 
 #if !defined(PLATFORM_WINDOWS)
 //#include "TApiOpencl.h"
@@ -403,6 +404,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiSerial::Bind( *Context );
 			ApiDll::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
+			ApiGui::Bind( *Context );
 
 		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *Context );

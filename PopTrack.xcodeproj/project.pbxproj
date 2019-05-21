@@ -78,6 +78,7 @@
 		BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
 		BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; };
 		BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
 		BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */; };
 		BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */; };
@@ -310,6 +311,8 @@
 		BF89CF68228DD3F700A187D5 /* openvr_capi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr_capi.h; sourceTree = "<group>"; };
 		BF89CF69228DD3F700A187D5 /* openvr_driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr_driver.h; sourceTree = "<group>"; };
 		BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libopenvr_api.dylib; sourceTree = "<group>"; };
+		BF89D4822294646100A187D5 /* TApiGui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiGui.h; path = src/TApiGui.h; sourceTree = "<group>"; };
+		BF89D4832294646100A187D5 /* TApiGui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiGui.cpp; path = src/TApiGui.cpp; sourceTree = "<group>"; };
 		BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyAssert.cpp; path = src/SoyAssert.cpp; sourceTree = "<group>"; };
 		BF89F6B51B4AB9DC00F58561 /* SoyAssert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyAssert.h; path = src/SoyAssert.h; sourceTree = "<group>"; };
 		BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMath.cpp; path = src/SoyMath.cpp; sourceTree = "<group>"; };
@@ -821,10 +824,10 @@
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
 				BF0F9E702288892F00AEA7DC /* TApiDll.h */,
-				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
-				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				BF91D9792215839F00E91671 /* TApiEzsift.h */,
+				BF89D4832294646100A187D5 /* TApiGui.cpp */,
+				BF89D4822294646100A187D5 /* TApiGui.h */,
 				BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */,
 				BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */,
 				BF59A253222206B400AE9926 /* TApiInput.cpp */,
@@ -839,6 +842,8 @@
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
 				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
 				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
+				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
+				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BFF2B6C12264F9A700232137 /* TApiSerial.cpp */,
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
@@ -1139,6 +1144,7 @@
 				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
+				BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
 				BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */,
