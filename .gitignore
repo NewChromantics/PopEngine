@@ -40,3 +40,7 @@ sysinfo.txt
 # ignore libs, too big for lfs
 
 BuildData/
+
+
+# framework symbolic links are playing havoc with gitkraken
+*.framework
