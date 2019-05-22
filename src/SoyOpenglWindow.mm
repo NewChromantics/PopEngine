@@ -5,6 +5,21 @@
 #include "PopMain.h"
 
 
+@interface TLambda : NSResponder
+
+	-(void) OnAction;
+
+@end
+
+@implementation TLambda
+
+	-(void) OnAction
+	{
+		//	call lambda
+	}
+
+@end
+
 class Platform::TWindow : public SoyWindow
 {
 public:
@@ -37,6 +52,7 @@ public:
 	virtual void	SetValue(uint16_t Value) override;
 	
 public:
+	TLambda*		mLambda = [TLambda alloc];
 	NSSlider*		mSlider = nullptr;
 };
 
@@ -453,6 +469,10 @@ void Platform::TSlider::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 	mSlider = [[NSSlider alloc] initWithFrame:RectNs];
 	[mSlider retain];
 
+	mSlider.target = mLambda;
+	mSlider.action = @selector(OnAction);
+	//mSlider.action = NSSelectorFromString(@"OnAction");
+	
 	[[Parent.mWindow contentView] addSubview:mSlider];
 }
 
