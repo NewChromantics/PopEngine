@@ -8,6 +8,8 @@ namespace ApiGui
 
 	DEFINE_BIND_TYPENAME(Gui_Window);
 	DEFINE_BIND_TYPENAME(Slider);
+	DEFINE_BIND_TYPENAME(Label);
+	DEFINE_BIND_TYPENAME(TextBox);
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
 }
@@ -19,6 +21,9 @@ void ApiGui::Bind(Bind::TContext& Context)
 
 	Context.BindObjectType<TWindowWrapper>( Namespace, "Window" );
 	Context.BindObjectType<TSliderWrapper>( Namespace );
+	//Context.BindObjectType<TLabelWrapper>( Namespace );
+	Context.BindObjectType<TTextBoxWrapper>( Namespace );
+	//Context.BindObjectType<TTextBoxWrapper>( Namespace, "Label" );
 }
 
 
@@ -26,7 +31,6 @@ void ApiGui::TSliderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<SetMinMax_FunctionName>( &TSliderWrapper::SetMinMax );
 	Template.BindFunction<SetValue_FunctionName>( &TSliderWrapper::SetValue );
-
 }
 
 void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
@@ -66,6 +70,8 @@ void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
 	};
 	this->mContext.Queue( Callback );
 }
+
+
 
 
 
@@ -131,4 +137,69 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 	mWindow->mOnClosed = [this]()	{	this->OnClosed();	};
 	*/
+}
+
+
+
+
+void ApiGui::TLabelWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<SetValue_FunctionName>( &TLabelWrapper::SetValue );
+}
+
+void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
+{
+	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	
+	BufferArray<int32_t,4> Rect4;
+	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+	
+	throw Soy_AssertException("Todo proper label");
+	//mLabel = Platform::CreateLabel( *ParentWindow.mWindow, Rect );
+}
+
+void ApiGui::TLabelWrapper::SetValue(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentString(0);
+	mLabel->SetValue( Value );
+}
+
+
+
+
+void ApiGui::TTextBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<SetValue_FunctionName>( &TTextBoxWrapper::SetValue );
+}
+
+void ApiGui::TTextBoxWrapper::Construct(Bind::TCallback& Params)
+{
+	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	
+	BufferArray<int32_t,4> Rect4;
+	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+	
+	mTextBox = Platform::CreateTextBox( *ParentWindow.mWindow, Rect );
+	mTextBox->mOnValueChanged = std::bind( &TTextBoxWrapper::OnChanged, this, std::placeholders::_1 );
+}
+
+void ApiGui::TTextBoxWrapper::SetValue(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentString(0);
+	mTextBox->SetValue( Value );
+}
+
+void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
+{
+	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		Callback.SetArgumentString(0, NewValue);
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
 }

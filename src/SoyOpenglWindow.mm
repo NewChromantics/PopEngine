@@ -61,7 +61,7 @@ public:
 	}
 	~TSlider()
 	{
-		[mSlider release];
+		[mControl release];
 	}
 
 	void				Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
@@ -85,8 +85,49 @@ public:
 	uint16_t				mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
 	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
 	TResponder*				mResponder = [TResponder alloc];
-	NSSlider*				mSlider = nullptr;
+	NSSlider*				mControl = nullptr;
 };
+
+
+
+//	on OSX there is no label, so use a TextField
+//	todo: lets just do a text box for now and make it readonly later
+//	https://stackoverflow.com/a/20169310/355753
+class Platform::TTextBox : public SoyTextBox
+{
+public:
+	TTextBox(PopWorker::TJobQueue& Thread) :
+		mThread	( Thread )
+	{
+	}
+	~TTextBox()
+	{
+		[mControl release];
+	}
+	
+	void					Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect)override;
+	
+	virtual void			SetValue(const std::string& Value) override;
+	virtual std::string		GetValue() override	{	return mLastValue;	}
+	
+	virtual void			OnChanged() override
+	{
+		CacheValue();
+		SoyTextBox::OnChanged();
+	}
+	
+protected:
+	void					CacheValue();		//	call from UI thread
+	
+public:
+	std::string				mLastValue;		//	as all UI is on the main thread, we have to cache value for reading
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+	TResponder*				mResponder = [TResponder alloc];
+	NSTextField*			mControl = nullptr;
+};
+
 
 
 CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
@@ -504,26 +545,26 @@ void Platform::TSlider::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 
 	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
 	
-	mSlider = [[NSSlider alloc] initWithFrame:RectNs];
-	[mSlider retain];
+	mControl = [[NSSlider alloc] initWithFrame:RectNs];
+	[mControl retain];
 
 	//	setup callback
 	mResponder->mCallback = [this]()	{	this->OnChanged();	};
-	mSlider.target = mResponder;
-	mSlider.action = @selector(OnAction);
+	mControl.target = mResponder;
+	mControl.action = @selector(OnAction);
 	
-	[[Parent.mWindow contentView] addSubview:mSlider];
+	[[Parent.mWindow contentView] addSubview:mControl];
 }
 
 void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 {
 	auto Exec = [=]
 	{
-		if ( !mSlider )
+		if ( !mControl )
 			throw Soy_AssertException("before slider created");
 		
-		mSlider.minValue = Min;
-		mSlider.maxValue = Max;
+		mControl.minValue = Min;
+		mControl.maxValue = Max;
 		CacheValue();
 	};
 	
@@ -537,9 +578,9 @@ void Platform::TSlider::SetValue(uint16_t Value)
 	
 	auto Exec = [=]
 	{
-		if ( !mSlider )
+		if ( !mControl )
 			throw Soy_AssertException("before slider created");
-		mSlider.intValue = Value;
+		mControl.intValue = Value;
 		CacheValue();
 	};
 	mThread.PushJob( Exec );
@@ -548,11 +589,11 @@ void Platform::TSlider::SetValue(uint16_t Value)
 void Platform::TSlider::CacheValue()
 {
 	//	todo: check is on mThread
-	if ( !mSlider )
+	if ( !mControl )
 		throw Soy_AssertException("before slider created");
 
 	//	shouldn't let OSX slider get into this state
-	auto Value = mSlider.intValue;
+	auto Value = mControl.intValue;
 	if ( Value < 0 || Value > std::numeric_limits<uint16_t>::max() )
 	{
 		std::stringstream Error;
@@ -569,12 +610,112 @@ void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
 
 	auto Exec = [=]
 	{
-		if ( !mSlider )
+		if ( !mControl )
 			throw Soy_AssertException("before slider created");
 		
-		mSlider.frame = NewRect;
+		mControl.frame = NewRect;
 	};
 
 	mThread.PushJob(Exec);
 }
 
+
+
+
+std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	std::shared_ptr<SoyTextBox> pControl( new Platform::TTextBox(Thread) );
+	
+	//	move this to constrctor
+	auto Allocate = [Rect,&Parent,pControl]()mutable
+	{
+		auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
+		auto& PlatformControl = dynamic_cast<Platform::TTextBox&>(*pControl);
+		PlatformControl.Create(PlatformParent,Rect);
+	};
+	
+	//	because the window stuff is deffered, we need to also deffer this so it happens after the window is made
+	static auto Wait = false;
+	if ( Wait )
+	{
+		Soy::TSemaphore Semaphore;
+		Thread.PushJob( Allocate, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Thread.PushJob( Allocate );
+	}
+	
+	return pControl;
+}
+
+
+void Platform::TTextBox::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto ParentRect = [Parent.mWindow contentView].visibleRect;
+	
+	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
+	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+	//	rect is upside in osx!
+	//	todo: incorporate origin
+	auto Top = ParentRect.size.height - Rect.Bottom();
+	auto Bottom = ParentRect.size.height - Rect.Top();
+	
+	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
+	
+	
+	
+	
+	mControl = [[NSTextField alloc] initWithFrame:RectNs];
+	[mControl retain];
+	
+	//	setup callback
+	mResponder->mCallback = [this]()	{	this->OnChanged();	};
+	mControl.target = mResponder;
+	mControl.action = @selector(OnAction);
+	
+	[[Parent.mWindow contentView] addSubview:mControl];
+}
+
+void Platform::TTextBox::SetValue(const std::string& Value)
+{
+	//	assuming success for immediate retrieval
+	mLastValue = Value;
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before control created");
+		
+		mControl.stringValue = Soy::StringToNSString( Value );
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+void Platform::TTextBox::CacheValue()
+{
+	//	todo: check is on mThread
+	if ( !mControl )
+		throw Soy_AssertException("before control created");
+	
+	auto Value = mControl.stringValue;
+	mLastValue = Soy::NSStringToString( Value );
+}
+
+void Platform::TTextBox::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before control created");
+		
+		mControl.frame = NewRect;
+	};
+	
+	mThread.PushJob(Exec);
+}

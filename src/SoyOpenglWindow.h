@@ -14,6 +14,9 @@ namespace Platform
 {
 	class TWindow;
 	class TSlider;
+	class TTextBox;
+	class TLabel;
+
 	class TOpenglView;		//	on osx it's a view control
 	class TOpenglContext;	//	on windows, its a context that binds to any control
 	class TWin32Thread;		//	windows needs to make calls on a specific thread (just as OSX needs it to be on the main dispatcher)
@@ -21,6 +24,8 @@ namespace Platform
 	
 	std::shared_ptr<SoyWindow>	CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoySlider>	CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	std::shared_ptr<SoyTextBox>	CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	std::shared_ptr<SoyLabel>	CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 }
 
 
