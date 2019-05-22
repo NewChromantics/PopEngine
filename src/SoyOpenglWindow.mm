@@ -5,17 +5,26 @@
 #include "PopMain.h"
 
 
-@interface TLambda : NSResponder
+@interface TResponder : NSResponder
+{
+@public std::function<void()>	mCallback;
+}
 
-	-(void) OnAction;
+-(void) OnAction;
 
 @end
 
-@implementation TLambda
+@implementation TResponder
 
 	-(void) OnAction
 	{
 		//	call lambda
+		if ( !mCallback )
+		{
+			std::Debug << "TResponderCallback unhandled callback" << std::endl;
+			return;
+		}
+		mCallback();
 	}
 
 @end
@@ -23,6 +32,10 @@
 class Platform::TWindow : public SoyWindow
 {
 public:
+	TWindow(PopWorker::TJobQueue& Thread) :
+		mThread	( Thread )
+	{
+	}
 	~TWindow()
 	{
 		[mWindow release];
@@ -33,27 +46,46 @@ public:
 	virtual bool					IsFullscreen() override;
 	
 public:
-	NSWindow*			mWindow = nullptr;
-	CVDisplayLinkRef	mDisplayLink = nullptr;
+	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
+	NSWindow*						mWindow = nullptr;
+	CVDisplayLinkRef				mDisplayLink = nullptr;
 };
 
 
 class Platform::TSlider : public SoySlider
 {
 public:
+	TSlider(PopWorker::TJobQueue& Thread) :
+		mThread	( Thread )
+	{
+	}
 	~TSlider()
 	{
 		[mSlider release];
 	}
 
-	void			Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	void				Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
 
-	virtual void	SetMinMax(uint16_t Min,uint16_t Max) override;
-	virtual void	SetValue(uint16_t Value) override;
+	virtual void		SetMinMax(uint16_t Min,uint16_t Max) override;
+	virtual void		SetValue(uint16_t Value) override;
+	virtual uint16_t	GetValue() override	{	return mLastValue;	}
+
+	virtual void		OnChanged() override
+	{
+		CacheValue();
+		SoySlider::OnChanged();
+	}
+	
+protected:
+	void				CacheValue();		//	call from UI thread
 	
 public:
-	TLambda*		mLambda = [TLambda alloc];
-	NSSlider*		mSlider = nullptr;
+	uint16_t				mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+	TResponder*				mResponder = [TResponder alloc];
+	NSSlider*				mSlider = nullptr;
 };
 
 
@@ -114,10 +146,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	};
 	
 	
+	auto& MainThread = *Soy::Platform::gMainThread;
+	
 	//	actual allocation must be on the main thread.
-	auto Allocate = [=]
+	auto Allocate = [=,&MainThread]
 	{
-		mWindow.reset( new Platform::TWindow );
+		mWindow.reset( new Platform::TWindow(MainThread) );
 		auto& Wrapper = *mWindow;
 		auto*& mWindow = Wrapper.mWindow;
 
@@ -221,12 +255,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	if ( Wait )
 	{
 		Soy::TSemaphore Semaphore;
-		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+		MainThread.PushJob( Allocate, Semaphore );
 		Semaphore.Wait();
 	}
 	else
 	{
-		Soy::Platform::gMainThread->PushJob( Allocate );
+		MainThread.PushJob( Allocate );
 	}
 }
 
@@ -371,7 +405,8 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect)
 {
-	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow );
+	auto& Thread = *Soy::Platform::gMainThread;
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread) );
 	
 	//	actual allocation must be on the main thread.
 	auto Allocate = [=]
@@ -410,16 +445,17 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 		[mWindow setAcceptsMouseMovedEvents:YES];
 	};
 	
+	//	move this to constructor
 	static auto Wait = false;
 	if ( Wait )
 	{
 		Soy::TSemaphore Semaphore;
-		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+		Thread.PushJob( Allocate, Semaphore );
 		Semaphore.Wait();
 	}
 	else
 	{
-		Soy::Platform::gMainThread->PushJob( Allocate );
+		Thread.PushJob( Allocate );
 	}
 	
 	return pWindow;
@@ -427,8 +463,10 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 
 std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
-	std::shared_ptr<SoySlider> pSlider( new Platform::TSlider );
+	auto& Thread = *Soy::Platform::gMainThread;
+	std::shared_ptr<SoySlider> pSlider( new Platform::TSlider(Thread) );
 
+	//	move this to constrctor
 	auto Allocate = [Rect,&Parent,pSlider]()mutable
 	{
 		auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
@@ -469,21 +507,74 @@ void Platform::TSlider::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 	mSlider = [[NSSlider alloc] initWithFrame:RectNs];
 	[mSlider retain];
 
-	mSlider.target = mLambda;
+	//	setup callback
+	mResponder->mCallback = [this]()	{	this->OnChanged();	};
+	mSlider.target = mResponder;
 	mSlider.action = @selector(OnAction);
-	//mSlider.action = NSSelectorFromString(@"OnAction");
 	
 	[[Parent.mWindow contentView] addSubview:mSlider];
 }
 
 void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 {
-	mSlider.minValue = Min;
-	mSlider.maxValue = Max;
+	auto Exec = [=]
+	{
+		if ( !mSlider )
+			throw Soy_AssertException("before slider created");
+		
+		mSlider.minValue = Min;
+		mSlider.maxValue = Max;
+		CacheValue();
+	};
+	
+	mThread.PushJob(Exec);
 }
 
-void Platform::TSlider:: SetValue(uint16_t Value)
+void Platform::TSlider::SetValue(uint16_t Value)
 {
-	mSlider.intValue = Value;
+	//	assuming success for immediate retrieval
+	mLastValue = Value;
+	
+	auto Exec = [=]
+	{
+		if ( !mSlider )
+			throw Soy_AssertException("before slider created");
+		mSlider.intValue = Value;
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+void Platform::TSlider::CacheValue()
+{
+	//	todo: check is on mThread
+	if ( !mSlider )
+		throw Soy_AssertException("before slider created");
+
+	//	shouldn't let OSX slider get into this state
+	auto Value = mSlider.intValue;
+	if ( Value < 0 || Value > std::numeric_limits<uint16_t>::max() )
+	{
+		std::stringstream Error;
+		Error << "slider int value " << Value << " out of 16bit range";
+		throw Soy_AssertException(Error);
+	}
+	
+	mLastValue = Value;
+}
+
+void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+
+	auto Exec = [=]
+	{
+		if ( !mSlider )
+			throw Soy_AssertException("before slider created");
+		
+		mSlider.frame = NewRect;
+	};
+
+	mThread.PushJob(Exec);
 }
 
