@@ -49,6 +49,8 @@ public:
 	void			SetMinMax(Bind::TCallback& Params);
 	void			SetValue(Bind::TCallback& Params);
 
+	void			OnChanged(uint16_t& NewValue);
+	
 public:
 	std::shared_ptr<SoySlider>&	mSlider = mObject;
 };

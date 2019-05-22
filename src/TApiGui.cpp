@@ -38,6 +38,7 @@ void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
 	
 	mSlider = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
+	mSlider->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1 );
 }
 
 void ApiGui::TSliderWrapper::SetMinMax(Bind::TCallback& Params)
@@ -51,6 +52,19 @@ void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentInt(0);
 	mSlider->SetValue( Value );
+}
+
+void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
+{
+	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		Callback.SetArgumentInt(0, NewValue);
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
 }
 
 
