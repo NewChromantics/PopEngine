@@ -22,14 +22,12 @@
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera capture!</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2015 NewChromantics. All rights reserved.</string>
 	<key>NSMainNibFile</key>
 	<string>PopTrack</string>
-	<key>CFBundleIconFile</key>
-	<string>Lollypop.icns</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Camera capture!</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
