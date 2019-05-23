@@ -21,9 +21,8 @@ void ApiGui::Bind(Bind::TContext& Context)
 
 	Context.BindObjectType<TWindowWrapper>( Namespace, "Window" );
 	Context.BindObjectType<TSliderWrapper>( Namespace );
-	//Context.BindObjectType<TLabelWrapper>( Namespace );
+	Context.BindObjectType<TLabelWrapper>( Namespace );
 	Context.BindObjectType<TTextBoxWrapper>( Namespace );
-	//Context.BindObjectType<TTextBoxWrapper>( Namespace, "Label" );
 }
 
 
@@ -155,8 +154,7 @@ void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
 	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
 	
-	throw Soy_AssertException("Todo proper label");
-	//mLabel = Platform::CreateLabel( *ParentWindow.mWindow, Rect );
+	mLabel = Platform::CreateLabel( *ParentWindow.mWindow, Rect );
 }
 
 void ApiGui::TLabelWrapper::SetValue(Bind::TCallback& Params)

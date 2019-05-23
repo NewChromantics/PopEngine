@@ -5,6 +5,13 @@
 #include "PopMain.h"
 
 
+namespace Platform
+{
+	//	Osx doesn't have labels, so it's a kind of text box
+	template<typename BASETYPE>
+	class TTextBox_Base;
+}
+
 @interface TResponder : NSResponder
 {
 @public std::function<void()>	mCallback;
@@ -45,6 +52,8 @@ public:
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
 	
+	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
+	
 public:
 	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
 	NSWindow*						mWindow = nullptr;
@@ -55,16 +64,11 @@ public:
 class Platform::TSlider : public SoySlider
 {
 public:
-	TSlider(PopWorker::TJobQueue& Thread) :
-		mThread	( Thread )
-	{
-	}
+	TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
 	~TSlider()
 	{
 		[mControl release];
 	}
-
-	void				Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
 
@@ -93,32 +97,28 @@ public:
 //	on OSX there is no label, so use a TextField
 //	todo: lets just do a text box for now and make it readonly later
 //	https://stackoverflow.com/a/20169310/355753
-class Platform::TTextBox : public SoyTextBox
+template<typename BASETYPE=SoyTextBox>
+class Platform::TTextBox_Base : public BASETYPE
 {
 public:
-	TTextBox(PopWorker::TJobQueue& Thread) :
-		mThread	( Thread )
-	{
-	}
-	~TTextBox()
+	TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	~TTextBox_Base()
 	{
 		[mControl release];
 	}
 	
-	void					Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	void					Create();
 	
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect)override;
 	
 	virtual void			SetValue(const std::string& Value) override;
 	virtual std::string		GetValue() override	{	return mLastValue;	}
 	
-	virtual void			OnChanged() override
-	{
-		CacheValue();
-		SoyTextBox::OnChanged();
-	}
+	
+	virtual void 			OnChanged()=0;
 	
 protected:
+	virtual void			ApplyStyle()	{}
 	void					CacheValue();		//	call from UI thread
 	
 public:
@@ -128,6 +128,52 @@ public:
 	NSTextField*			mControl = nullptr;
 };
 
+class Platform::TTextBox : public Platform::TTextBox_Base<SoyTextBox>
+{
+public:
+	TTextBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+		TTextBox_Base( Thread, Parent, Rect )
+	{
+	}
+	
+	virtual void			OnChanged() override
+	{
+		CacheValue();
+		SoyTextBox::OnChanged();
+	}
+};
+
+class Platform::TLabel : public Platform::TTextBox_Base<SoyLabel>
+{
+public:
+	TLabel(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+		TTextBox_Base( Thread, Parent, Rect )
+	{
+	}
+	
+
+	virtual void 	OnChanged() override
+	{
+	}
+	
+	virtual void	ApplyStyle() override;
+};
+
+NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
+{
+	//	todo: make sure this is called on mThread
+	auto ParentRect = [mWindow contentView].visibleRect;
+
+	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
+	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+	//	rect is upside in osx!
+	//	todo: incorporate origin
+	auto Top = ParentRect.size.height - Rect.Bottom();
+	auto Bottom = ParentRect.size.height - Rect.Top();
+
+	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
+	return RectNs;
+}
 
 
 CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
@@ -505,55 +551,31 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
-	std::shared_ptr<SoySlider> pSlider( new Platform::TSlider(Thread) );
-
-	//	move this to constrctor
-	auto Allocate = [Rect,&Parent,pSlider]()mutable
-	{
-		auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
-		auto& PlatformSlider = dynamic_cast<Platform::TSlider&>(*pSlider);
-		PlatformSlider.Create(PlatformParent,Rect);
-	};
-
-	//	because the window stuff is deffered, we need to also deffer this so it happens after the window is made
-	static auto Wait = false;
-	if ( Wait )
-	{
-		Soy::TSemaphore Semaphore;
-		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
-		Semaphore.Wait();
-	}
-	else
-	{
-		Soy::Platform::gMainThread->PushJob( Allocate );
-	}
-	
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoySlider> pSlider( new Platform::TSlider(Thread,ParentWindow,Rect) );
 	return pSlider;
 }
 
 
-void Platform::TSlider::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+
+Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
+	mThread		( Thread )
 {
-	auto ParentRect = [Parent.mWindow contentView].visibleRect;
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()
+	{
+		auto ChildRect = Parent.GetChildRect( Rect );
+		mControl = [[NSSlider alloc] initWithFrame:ChildRect];
+		[mControl retain];
 
-	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
-	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
-	//	rect is upside in osx!
-	//	todo: incorporate origin
-	auto Top = ParentRect.size.height - Rect.Bottom();
-	auto Bottom = ParentRect.size.height - Rect.Top();
-
-	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
 	
-	mControl = [[NSSlider alloc] initWithFrame:RectNs];
-	[mControl retain];
-
-	//	setup callback
-	mResponder->mCallback = [this]()	{	this->OnChanged();	};
-	mControl.target = mResponder;
-	mControl.action = @selector(OnAction);
-	
-	[[Parent.mWindow contentView] addSubview:mControl];
+		[[Parent.mWindow contentView] addSubview:mControl];
+	};
+	mThread.PushJob( Allocate );
 }
 
 void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
@@ -625,61 +647,46 @@ void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
 std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
-	std::shared_ptr<SoyTextBox> pControl( new Platform::TTextBox(Thread) );
-	
-	//	move this to constrctor
-	auto Allocate = [Rect,&Parent,pControl]()mutable
-	{
-		auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
-		auto& PlatformControl = dynamic_cast<Platform::TTextBox&>(*pControl);
-		PlatformControl.Create(PlatformParent,Rect);
-	};
-	
-	//	because the window stuff is deffered, we need to also deffer this so it happens after the window is made
-	static auto Wait = false;
-	if ( Wait )
-	{
-		Soy::TSemaphore Semaphore;
-		Thread.PushJob( Allocate, Semaphore );
-		Semaphore.Wait();
-	}
-	else
-	{
-		Thread.PushJob( Allocate );
-	}
-	
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyTextBox> pControl( new Platform::TTextBox(Thread, ParentWindow, Rect ) );
+	return pControl;
+}
+
+std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyLabel> pControl( new Platform::TLabel(Thread, ParentWindow, Rect ) );
 	return pControl;
 }
 
 
-void Platform::TTextBox::Create(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+template<typename BASETYPE>
+Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+	mThread		( Thread )
 {
-	auto ParentRect = [Parent.mWindow contentView].visibleRect;
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()mutable
+	{
+		auto RectNs = Parent.GetChildRect(Rect);
 	
-	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
-	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
-	//	rect is upside in osx!
-	//	todo: incorporate origin
-	auto Top = ParentRect.size.height - Rect.Bottom();
-	auto Bottom = ParentRect.size.height - Rect.Top();
+		mControl = [[NSTextField alloc] initWithFrame:RectNs];
+		[mControl retain];
 	
-	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
 	
-	
-	
-	
-	mControl = [[NSTextField alloc] initWithFrame:RectNs];
-	[mControl retain];
-	
-	//	setup callback
-	mResponder->mCallback = [this]()	{	this->OnChanged();	};
-	mControl.target = mResponder;
-	mControl.action = @selector(OnAction);
-	
-	[[Parent.mWindow contentView] addSubview:mControl];
+		ApplyStyle();
+		
+		[[Parent.mWindow contentView] addSubview:mControl];
+	};
+	mThread.PushJob( Allocate );
 }
 
-void Platform::TTextBox::SetValue(const std::string& Value)
+template<typename BASETYPE>
+void Platform::TTextBox_Base<BASETYPE>::SetValue(const std::string& Value)
 {
 	//	assuming success for immediate retrieval
 	mLastValue = Value;
@@ -695,7 +702,8 @@ void Platform::TTextBox::SetValue(const std::string& Value)
 	mThread.PushJob( Exec );
 }
 
-void Platform::TTextBox::CacheValue()
+template<typename BASETYPE>
+void Platform::TTextBox_Base<BASETYPE>::CacheValue()
 {
 	//	todo: check is on mThread
 	if ( !mControl )
@@ -705,7 +713,8 @@ void Platform::TTextBox::CacheValue()
 	mLastValue = Soy::NSStringToString( Value );
 }
 
-void Platform::TTextBox::SetRect(const Soy::Rectx<int32_t>& Rect)
+template<typename BASETYPE>
+void Platform::TTextBox_Base<BASETYPE>::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
 	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
 	
@@ -719,3 +728,14 @@ void Platform::TTextBox::SetRect(const Soy::Rectx<int32_t>& Rect)
 	
 	mThread.PushJob(Exec);
 }
+
+
+void Platform::TLabel::ApplyStyle()
+{
+	//	todo: check in thread
+	[mControl setBezeled:NO];
+	[mControl setDrawsBackground:NO];
+	[mControl setEditable:NO];
+	[mControl setSelectable:NO];
+}
+
