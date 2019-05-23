@@ -234,7 +234,6 @@
 		BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_Classifier.mlmodel; sourceTree = "<group>"; };
 		BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = MaskRCNN_anchors.bin; sourceTree = "<group>"; };
 		BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_MaskRCNN.mlmodel; sourceTree = "<group>"; };
-		BF59A24F2222039900AE9926 /* Lollypop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Lollypop.icns; sourceTree = "<group>"; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
@@ -797,7 +796,6 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
-				BF59A24F2222039900AE9926 /* Lollypop.icns */,
 				BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */,
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */,
