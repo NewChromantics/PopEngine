@@ -10,6 +10,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Slider);
 	DEFINE_BIND_TYPENAME(Label);
 	DEFINE_BIND_TYPENAME(TextBox);
+	DEFINE_BIND_TYPENAME(TickBox);
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
 }
@@ -23,6 +24,7 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TSliderWrapper>( Namespace );
 	Context.BindObjectType<TLabelWrapper>( Namespace );
 	Context.BindObjectType<TTextBoxWrapper>( Namespace );
+	Context.BindObjectType<TTickBoxWrapper>( Namespace );
 }
 
 
@@ -201,3 +203,46 @@ void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
 	};
 	this->mContext.Queue( Callback );
 }
+
+
+
+void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<SetValue_FunctionName>( &TTickBoxWrapper::SetValue );
+}
+
+void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
+{
+	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	
+	BufferArray<int32_t,4> Rect4;
+	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+	
+	mControl = Platform::CreateTickBox( *ParentWindow.mWindow, Rect );
+	mControl->mOnValueChanged = std::bind( &TTickBoxWrapper::OnChanged, this, std::placeholders::_1 );
+}
+
+
+void ApiGui::TTickBoxWrapper::SetValue(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetValue( Value );
+}
+
+void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
+{
+	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		Callback.SetArgumentBool(0, NewValue);
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
+}
+
+
+
+

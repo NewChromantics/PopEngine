@@ -16,6 +16,7 @@ namespace Platform
 	class TSlider;
 	class TTextBox;
 	class TLabel;
+	class TTickBox;
 
 	class TOpenglView;		//	on osx it's a view control
 	class TOpenglContext;	//	on windows, its a context that binds to any control
@@ -26,6 +27,7 @@ namespace Platform
 	std::shared_ptr<SoySlider>	CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyTextBox>	CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyLabel>	CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	std::shared_ptr<SoyTickBox>	CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 }
 
 

@@ -7,6 +7,7 @@ class SoyWindow;
 class SoySlider;
 class SoyLabel;
 class SoyTextBox;
+class SoyTickBox;
 
 
 namespace ApiGui
@@ -17,11 +18,13 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(Slider);
 	DECLARE_BIND_TYPENAME(Label);
 	DECLARE_BIND_TYPENAME(TextBox);
+	DECLARE_BIND_TYPENAME(TickBox);
 
 	class TWindowWrapper;
 	class TSliderWrapper;
 	class TLabelWrapper;
 	class TTextBoxWrapper;
+	class TTickBoxWrapper;
 }
 
 
@@ -63,6 +66,8 @@ public:
 };
 
 
+
+
 class ApiGui::TLabelWrapper : public Bind::TObjectWrapper<ApiGui::Label_TypeName,SoyLabel>
 {
 public:
@@ -99,3 +104,25 @@ public:
 public:
 	std::shared_ptr<SoyTextBox>&	mTextBox = mObject;
 };
+
+
+
+class ApiGui::TTickBoxWrapper : public Bind::TObjectWrapper<ApiGui::TickBox_TypeName,SoyTickBox>
+{
+public:
+	TTickBoxWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+	{
+	}
+	
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+	
+	void			SetValue(Bind::TCallback& Params);
+	
+	void			OnChanged(bool& NewValue);
+	
+public:
+	std::shared_ptr<SoyTickBox>&	mControl = mObject;
+};
+

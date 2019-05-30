@@ -325,6 +325,7 @@ public:
 	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
+	virtual void			SetArgumentBool(size_t Index,bool Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,JsCore::TObject& Value) bind_override;
 	virtual void			SetArgumentFunction(size_t Index,JsCore::TFunction& Value) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values) bind_override;

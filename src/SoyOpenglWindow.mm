@@ -159,6 +159,47 @@ public:
 	virtual void	ApplyStyle() override;
 };
 
+
+class Platform::TTickBox : public SoyTickBox
+{
+public:
+	TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
+	~TTickBox()
+	{
+		[mControl release];
+	}
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
+	
+	virtual void		SetValue(bool Value) override;
+	virtual bool		GetValue() override	{	return mLastValue;	}
+	
+	virtual void		OnChanged() override
+	{
+		CacheValue();
+		SoyTickBox::OnChanged();
+	}
+	
+protected:
+	void				CacheValue();		//	call from UI thread
+	
+public:
+	bool					mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+	TResponder*				mResponder = [TResponder alloc];
+	NSButton*				mControl = nullptr;
+};
+
+
+
+
+
+
+
+
+
+
+
 NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 {
 	//	todo: make sure this is called on mThread
@@ -638,6 +679,86 @@ void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
 		mControl.frame = NewRect;
 	};
 
+	mThread.PushJob(Exec);
+}
+
+
+
+
+std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyTickBox> pControl( new Platform::TTickBox(Thread,ParentWindow,Rect) );
+	return pControl;
+}
+
+
+
+Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
+	mThread		( Thread )
+{
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()
+	{
+		auto ChildRect = Parent.GetChildRect( Rect );
+		mControl = [[NSButton alloc] initWithFrame:ChildRect];
+		[mControl retain];
+		
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
+		
+		[mControl setButtonType:NSSwitchButton];
+		//[mControl setBezelStyle:0];
+		
+		//	all buttons have labels, but windows doesn't? so our API doesnt
+		mControl.title = @"";
+		
+		[[Parent.mWindow contentView] addSubview:mControl];
+	};
+	mThread.PushJob( Allocate );
+}
+
+void Platform::TTickBox::SetValue(bool Value)
+{
+	//	assuming success for immediate retrieval
+	mLastValue = Value;
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+		throw Soy_AssertException("before slider created");
+		mControl.state = Value ? NSControlStateValueOn : NSControlStateValueOff;
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+void Platform::TTickBox::CacheValue()
+{
+	//	todo: check is on mThread
+	if ( !mControl )
+		throw Soy_AssertException("before tickbox created");
+	
+	auto Value = mControl.state == NSControlStateValueOn;
+
+	mLastValue = Value;
+}
+
+void Platform::TTickBox::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+		throw Soy_AssertException("before slider created");
+		
+		mControl.frame = NewRect;
+	};
+	
 	mThread.PushJob(Exec);
 }
 
