@@ -1303,28 +1303,68 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::
 std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
-	std::shared_ptr<SoySlider> Control(new Platform::TSlider(ParentControl, Rect));
+	auto& Thread = ParentControl.mThread;
+	std::shared_ptr<SoySlider> Control;
+
+	auto Create = [&]()
+	{
+		Control.reset(new Platform::TSlider(ParentControl, Rect));
+	};
+	Soy::TSemaphore Wait;
+	Thread.PushJob(Create, Wait);
+	Wait.Wait();
+
 	return Control;
 }
 
 std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
-	std::shared_ptr<SoyTextBox> Control(new Platform::TTextBox(ParentControl, Rect));
+	auto& Thread = ParentControl.mThread;
+	std::shared_ptr<SoyTextBox> Control;
+
+	auto Create = [&]()
+	{
+		Control.reset(new Platform::TTextBox(ParentControl, Rect));
+	};
+	Soy::TSemaphore Wait;
+	Thread.PushJob(Create, Wait);
+	Wait.Wait();
+
 	return Control;
 }
 
 std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
-	std::shared_ptr<SoyLabel> Control(new Platform::TLabel(ParentControl, Rect));
+	auto& Thread = ParentControl.mThread;
+	std::shared_ptr<SoyLabel> Control;
+
+	auto Create = [&]()
+	{
+		Control.reset(new Platform::TLabel(ParentControl, Rect));
+	};
+	Soy::TSemaphore Wait;
+	Thread.PushJob(Create, Wait);
+	Wait.Wait();
+
 	return Control;
 }
 
 std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
-	std::shared_ptr<SoyTickBox> Control(new Platform::TTickBox(ParentControl, Rect));
+	auto& Thread = ParentControl.mThread;
+	std::shared_ptr<SoyTickBox> Control;
+
+	auto Create = [&]()
+	{
+		Control.reset(new Platform::TTickBox(ParentControl, Rect));
+	};
+	Soy::TSemaphore Wait;
+	Thread.PushJob(Create, Wait);
+	Wait.Wait();
+
 	return Control;
 }
 
