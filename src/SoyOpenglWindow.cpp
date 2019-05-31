@@ -148,7 +148,10 @@ public:
 
 	//	reflection
 	Soy::Rectx<int32_t>		GetClientRect();
-	void					SetClientRect(const Soy::Rectx<int32_t>& Rect);
+	void					SetClientRect(const Soy::Rectx<int32_t>& Rect)
+	{
+		std::Debug << "todo SetClientRect(" << Rect << ")" << std::endl;
+	}
 
 	//	callbacks from windows message loop
 	virtual void			OnDestroyed();		//	window handle is being destroyed
@@ -1282,9 +1285,17 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 {
 	std::shared_ptr<TWin32Thread> Thread(new TWin32Thread(Name));
-	std::shared_ptr<SoyWindow> Window(new Platform::TWindow(Name, Rect, *Thread));
-	auto& PlatformWindow = *dynamic_cast<Platform::TWindow*>(Window.get());
-	PlatformWindow.mOwnThread = Thread;
+	std::shared_ptr<SoyWindow> Window;
+
+	auto Create = [&]()
+	{
+		Window.reset(new Platform::TWindow(Name, Rect, *Thread));
+		auto& PlatformWindow = *dynamic_cast<Platform::TWindow*>(Window.get());
+		PlatformWindow.mOwnThread = Thread;
+	};
+	Soy::TSemaphore Wait;
+	Thread->PushJob(Create, Wait);
+	Wait.Wait();
 
 	return Window;
 }
@@ -1355,3 +1366,66 @@ uint16_t Platform::TSlider::GetValue()
 	return Pos;
 }
 
+
+const DWORD Label_StyleExFlags = 0;
+const DWORD Label_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | SS_SIMPLE;
+
+
+Platform::TLabel::TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	TControl("Label", "STATIC", Parent, Label_StyleFlags, Label_StyleExFlags, Rect)
+{
+}
+
+void Platform::TLabel::SetValue(const std::string& Value)
+{
+	SetWindowTextA(mHwnd, Value.c_str());
+}
+
+std::string Platform::TLabel::GetValue()
+{
+	throw Soy_AssertException("todo");
+}
+
+
+
+const DWORD TextBox_StyleExFlags = 0;
+const DWORD TextBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
+
+
+Platform::TTextBox::TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	TControl("TextBox", "EDIT", Parent, TextBox_StyleFlags, TextBox_StyleExFlags, Rect)
+{
+}
+
+void Platform::TTextBox::SetValue(const std::string& Value)
+{
+	SetWindowTextA(mHwnd, Value.c_str());
+}
+
+std::string Platform::TTextBox::GetValue()
+{
+	throw Soy_AssertException("todo");
+}
+
+
+
+const DWORD TickBox_StyleExFlags = 0;
+const DWORD TickBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX;
+
+
+Platform::TTickBox::TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	TControl("TickBox", "BUTTON", Parent, TickBox_StyleFlags, TickBox_StyleExFlags, Rect)
+{
+}
+
+void Platform::TTickBox::SetValue(bool Value)
+{
+	auto Checked = Value ? BST_CHECKED : BST_UNCHECKED;	//	BST_INDETERMINATE
+	Button_SetCheck(mHwnd, Checked);
+}
+
+bool Platform::TTickBox::GetValue()
+{
+	auto Checked = Button_GetCheck(mHwnd);
+	return Checked == BST_CHECKED;
+}
