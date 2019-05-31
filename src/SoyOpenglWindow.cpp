@@ -398,9 +398,11 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		case WM_MOVE:
 		case WM_SIZE:
 		case WM_CREATE:
-		case WM_ERASEBKGND:
 		case WM_SHOWWINDOW:
 			return 0;
+
+		case WM_ERASEBKGND:
+			return Default();
 
 		case WM_DESTROY:
 			Control.OnDestroyed();
@@ -508,7 +510,7 @@ Platform::TControlClass::TControlClass(const std::string& Name, UINT ClassStyle)
 {
 	auto* NameStr = mClassName.c_str();
 	HICON IconHandle = LoadIcon(NULL, IDI_APPLICATION);
-	HBRUSH BackgroundBrush = GetSysColorBrush(COLOR_WINDOW);
+	HBRUSH BackgroundBrush = GetSysColorBrush(COLOR_3DFACE);
 	
 	auto& wc = mClass;
 	ZeroMemory(&wc,sizeof(wc));
