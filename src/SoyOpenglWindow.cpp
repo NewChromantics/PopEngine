@@ -8,6 +8,9 @@
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
+#include <commctrl.h>
+#pragma comment(lib, "Comctl32.lib")
+
 namespace Platform
 {
 	class TControlClass;
@@ -119,6 +122,8 @@ public:
 		mWin32Blocking(Win32Blocking),
 		SoyWorkerJobThread(Name, Win32Blocking ? SoyWorkerWaitMode::NoWait : SoyWorkerWaitMode::Wake)
 	{
+		//	gotta do this somewhere, this is typically before any extra controls get created
+		InitCommonControls();
 		Start();
 	}
 
@@ -134,7 +139,8 @@ public:
 class Platform::TControl
 {
 public:
-	TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect,TWin32Thread& Thread);
+	TControl(const std::string& Name, TControlClass& Class, TControl* Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect, TWin32Thread& Thread);
+	TControl(const std::string& Name,const char* ClassName,TControl& Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect);
 	virtual ~TControl();
 
 	//	trigger actions
@@ -142,6 +148,7 @@ public:
 
 	//	reflection
 	Soy::Rectx<int32_t>		GetClientRect();
+	void					SetClientRect(const Soy::Rectx<int32_t>& Rect);
 
 	//	callbacks from windows message loop
 	virtual void			OnDestroyed();		//	window handle is being destroyed
@@ -170,23 +177,32 @@ public:
 	HWND			mHwnd = nullptr;
 	std::string		mName;
 	TWin32Thread&	mThread;
+	uint64_t		mChildIdentifier = 0;
+	static uint64_t	gChildIdentifier;
 };
 
-class Platform::TWindow : public TControl
+uint64_t Platform::TControl::gChildIdentifier = 9000;
+
+
+class Platform::TWindow : public TControl, public SoyWindow
 {
 public:
-	TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread);
-	
-	bool			IsFullscreen();
-	void			SetFullscreen(bool Fullscreen);
+	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread);
+
 	virtual void	OnWindowMessage(UINT EventMessage) override;
 
+	virtual Soy::Rectx<int32_t>		GetScreenRect() override	{	return GetClientRect();	}
+	virtual void					SetFullscreen(bool Fullscreen) override;
+	virtual bool					IsFullscreen() override;
 
 private:
 	//	for saving/restoring fullscreen mode
 	std::shared_ptr<WINDOWPLACEMENT>	mSavedWindowPlacement;	//	saved state before going fullscreen
 	LONG				mSavedWindowFlags = 0;
 	LONG				mSavedWindowExFlags = 0;
+
+public:
+	std::shared_ptr<TWin32Thread>		mOwnThread;
 };
 
 
@@ -224,6 +240,48 @@ public:
 };
 
 
+class Platform::TSlider : public TControl, public SoySlider
+{
+public:
+	TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetMinMax(uint16_t Min, uint16_t Max) override;
+	virtual void		SetValue(uint16_t Value) override;
+	virtual uint16_t	GetValue() override;
+};
+
+class Platform::TLabel : public TControl, public SoyLabel
+{
+public:
+	TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetValue(const std::string& Value) override;
+	virtual std::string	GetValue() override;
+};
+
+
+class Platform::TTextBox : public TControl, public SoyTextBox
+{
+public:
+	TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetValue(const std::string& Value) override;
+	virtual std::string	GetValue() override;
+};
+
+
+class Platform::TTickBox : public TControl, public SoyTickBox
+{
+public:
+	TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetValue(bool Value) override;
+	virtual bool		GetValue() override;
+};
 
 class Platform::TControlClass
 {
@@ -475,7 +533,29 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 	Platform::IsOkay("CreateWindow");
 	if ( !mHwnd )
 		throw Soy::AssertException("Failed to create window");
+}
 
+
+Platform::TControl::TControl(const std::string& Name,const char* ClassName,TControl& Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect) :
+	mName				( Name ),
+	mThread				( Parent.mThread ),
+	mChildIdentifier	( gChildIdentifier++ )
+{
+	const char* WindowName = mName.c_str();
+	void* UserData = this;
+	HWND ParentHwnd = Parent.mHwnd;
+	auto Instance = Platform::Private::InstanceHandle;
+	
+	//	id for children controls
+	HMENU Menu = reinterpret_cast<HMENU>(mChildIdentifier);
+
+	if (!mThread.IsLockedToThisThread())
+		throw Soy::AssertException("Should be creating control on our thread");
+
+	mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, UserData);
+	Platform::IsOkay("CreateWindow");
+	if (!mHwnd)
+		throw Soy::AssertException("Failed to create window");
 }
 
 Platform::TControl::~TControl()
@@ -627,6 +707,7 @@ Platform::TControlClass& GetOpenglViewClass()
 //const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
 const DWORD WindowStyleExFlags = 0;
 const DWORD WindowStyleFlags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
+
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread) :
 	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect, Thread )
@@ -940,12 +1021,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 			this->OnClosed();
 		};
 
-
-		mWindow->mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
-		mWindow->mOnMouseUp = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
-		mWindow->mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
-		mWindow->mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
-		mWindow->mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
+		auto& Win = static_cast<Platform::TControl&>(*mWindow);
+		Win.mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
+		Win.mOnMouseUp = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
+		Win.mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
+		Win.mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
+		Win.mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
 	};
 	Soy::TSemaphore Wait;
 	mWindowThread->PushJob(CreateControls, Wait);
@@ -1195,3 +1276,82 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 
 	return Continue;
 }
+
+
+
+std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
+{
+	std::shared_ptr<TWin32Thread> Thread(new TWin32Thread(Name));
+	std::shared_ptr<SoyWindow> Window(new Platform::TWindow(Name, Rect, *Thread));
+	auto& PlatformWindow = *dynamic_cast<Platform::TWindow*>(Window.get());
+	PlatformWindow.mOwnThread = Thread;
+
+	return Window;
+}
+
+std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<SoySlider> Control(new Platform::TSlider(ParentControl, Rect));
+	return Control;
+}
+
+std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<SoyTextBox> Control(new Platform::TTextBox(ParentControl, Rect));
+	return Control;
+}
+
+std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<SoyLabel> Control(new Platform::TLabel(ParentControl, Rect));
+	return Control;
+}
+
+std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<SoyTickBox> Control(new Platform::TTickBox(ParentControl, Rect));
+	return Control;
+}
+
+
+
+const DWORD Slider_StyleExFlags = 0;
+const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_ENABLESELRANGE;
+
+
+Platform::TSlider::TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	TControl("Slider", TRACKBAR_CLASS, Parent, Slider_StyleFlags, Slider_StyleExFlags, Rect)
+{
+}
+
+void Platform::TSlider::SetMinMax(uint16_t Min, uint16_t Max)
+{
+	WPARAM Redraw = true;
+	auto Result = SendMessage(mHwnd, TBM_SETRANGE, Redraw, MAKELONG(Min, Max));
+	//Platform::IsOkay(Result, "TBM_SETRANGE");
+
+	LPARAM PageSize = std::max<LPARAM>(1, (Max - Min) / 10);
+	Result = SendMessage(mHwnd, TBM_SETPAGESIZE, 0, PageSize);
+	//Platform::IsOkay(Result, "TBM_SETPAGESIZE");
+}
+
+
+void Platform::TSlider::SetValue(uint16_t Value)
+{
+	WPARAM Redraw = true;
+	//auto Result = SendMessage(mHwnd, TBM_SETSEL, Redraw, MAKELONG(iMin, iMax));
+	auto Result = SendMessage(mHwnd, TBM_SETPOS, Redraw, Value);
+	//Platform::IsOkay(Result, "TBM_SETPOS");
+}
+
+
+uint16_t Platform::TSlider::GetValue()
+{
+	auto Pos = SendMessage(mHwnd, TBM_GETPOS, 0, 0);
+	return Pos;
+}
+

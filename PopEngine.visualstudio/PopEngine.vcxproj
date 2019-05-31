@@ -147,6 +147,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\TApiGui.h" />
     <ClInclude Include="..\src\TApiHttp.h" />
     <ClInclude Include="..\src\TApiInput.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -259,6 +260,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\TApiDll.cpp" />
+    <ClCompile Include="..\src\TApiGui.cpp" />
     <ClCompile Include="..\src\TApiOpenvr.cpp" />
     <ClCompile Include="..\src\V8Bind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -445,6 +447,7 @@
     <None Include="..\UnitTest\Common\PopEngine.js" />
     <None Include="..\UnitTest\Common\PopShaderCache.js" />
     <None Include="..\UnitTest\Common\TFrameCounter.js" />
+    <None Include="..\UnitTest\Gui\bootup.js" />
     <None Include="..\UnitTest\HttpServer\bootup.js" />
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>

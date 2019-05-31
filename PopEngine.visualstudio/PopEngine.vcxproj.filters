@@ -70,6 +70,9 @@
     <Filter Include="Projects\PopRayTrace">
       <UniqueIdentifier>{6042ffc5-5108-4c72-a98c-0e4d19b0c55d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\Gui">
+      <UniqueIdentifier>{a2bc4afd-3781-4e66-890f-d079dde1f027}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -417,6 +420,9 @@
     <ClInclude Include="..\src\Libs\dyncall\include\dyncall_args.h">
       <Filter>Libs\Dyncall</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiGui.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -574,6 +580,9 @@
     </None>
     <None Include="..\..\PopRayTrace\BlitLeftRight.frag.glsl">
       <Filter>Projects\PopRayTrace</Filter>
+    </None>
+    <None Include="..\UnitTest\Gui\bootup.js">
+      <Filter>UnitTest\Gui</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -764,6 +773,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TApiDll.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiGui.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
