@@ -167,6 +167,9 @@ public:
 		return mThread;
 	}
 
+	TControl&		GetChild(HWND Handle);
+	void			AddChild(TControl& Child);
+
 public:
 	std::function<void(TControl&)>	mOnPaint;
 	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseDown;
@@ -182,6 +185,8 @@ public:
 	TWin32Thread&	mThread;
 	uint64_t		mChildIdentifier = 0;
 	static uint64_t	gChildIdentifier;
+
+	Array<TControl*>	mChildren;
 };
 
 uint64_t Platform::TControl::gChildIdentifier = 9000;
@@ -252,6 +257,8 @@ public:
 	virtual void		SetMinMax(uint16_t Min, uint16_t Max) override;
 	virtual void		SetValue(uint16_t Value) override;
 	virtual uint16_t	GetValue() override;
+
+	virtual void		OnWindowMessage(UINT EventMessage) override;
 };
 
 class Platform::TLabel : public TControl, public SoyLabel
@@ -458,6 +465,16 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 			return Default();
 		}
 
+		case WM_HSCROLL:
+		case WM_VSCROLL:
+			//	lparam is hwnd to child control
+			if (lParam != 0)
+			{
+				auto ChildHandle = reinterpret_cast<HWND>(lParam);
+				auto& Child = Control.GetChild(ChildHandle);
+				Child.OnWindowMessage(message);
+			}
+			return Default();
 		}
 
 		return Default();
@@ -559,6 +576,8 @@ Platform::TControl::TControl(const std::string& Name,const char* ClassName,TCont
 	Platform::IsOkay("CreateWindow");
 	if (!mHwnd)
 		throw Soy::AssertException("Failed to create window");
+
+	Parent.AddChild(*this);
 }
 
 Platform::TControl::~TControl()
@@ -680,6 +699,29 @@ Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
 	auto Rect = GetRect<size_t>(RectWin);
 	return Rect;
 }
+
+Platform::TControl& Platform::TControl::GetChild(HWND Handle)
+{
+	for (auto c = 0; c < mChildren.GetSize(); c++)
+	{
+		auto& Child = *mChildren[c];
+		if (Child.mHwnd != Handle)
+			continue;
+		return Child;
+	}
+
+	std::stringstream Error;
+	Error << "No child with handle " << Handle;
+	throw Soy::AssertException(Error);
+}
+
+void Platform::TControl::AddChild(TControl& Child)
+{
+	mChildren.PushBack(&Child);
+}
+
+
+
 
 Platform::TControlClass& GetWindowClass()
 {
@@ -1371,8 +1413,8 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent, Soy::Rect
 
 
 const DWORD Slider_StyleExFlags = 0;
-const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_ENABLESELRANGE;
-
+const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_AUTOTICKS;
+//const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | /*TBS_AUTOTICKS |*/ TBS_ENABLESELRANGE;
 
 Platform::TSlider::TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("Slider", TRACKBAR_CLASS, Parent, Slider_StyleFlags, Slider_StyleExFlags, Rect)
@@ -1405,6 +1447,18 @@ uint16_t Platform::TSlider::GetValue()
 	auto Pos = SendMessage(mHwnd, TBM_GETPOS, 0, 0);
 	return Pos;
 }
+
+void Platform::TSlider::OnWindowMessage(UINT EventMessage)
+{
+	if (EventMessage == WM_HSCROLL || EventMessage == WM_VSCROLL)
+	{
+		this->OnChanged();
+	}
+	//	A trackbar notifies its parent window of user actions by sending the parent a WM_HSCROLL or WM_VSCROLL message. A trackbar with the TBS_HORZ style sends WM_HSCROLL messages. A trackbar with the TBS_VERT style sends WM_VSCROLL messages. The low-order word of the wParam parameter of WM_HSCROLL or WM_VSCROLL contains the notification code. For the TB_THUMBPOSITION and TB_THUMBTRACK notification codes, the high-order word of the wParam parameter specifies the position of the slider. For all other notification codes, the high-order word is zero; send the TBM_GETPOS message to determine the slider position. The lParam parameter is the handle to the trackbar.
+
+	TControl::OnWindowMessage(EventMessage);
+}
+
 
 
 const DWORD Label_StyleExFlags = 0;
