@@ -432,6 +432,7 @@
     </None>
     <None Include="..\UnitTest\CameraTest\bootup.js" />
     <None Include="..\UnitTest\CameraTest\CameraTest.js" />
+    <None Include="..\UnitTest\CameraTest\KinectDepth.frag.glsl" />
     <None Include="..\UnitTest\CameraTest\Quad.vert.glsl">
       <FileType>Document</FileType>
     </None>

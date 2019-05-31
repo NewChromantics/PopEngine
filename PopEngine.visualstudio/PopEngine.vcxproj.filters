@@ -584,6 +584,9 @@
     <None Include="..\UnitTest\Gui\bootup.js">
       <Filter>UnitTest\Gui</Filter>
     </None>
+    <None Include="..\UnitTest\CameraTest\KinectDepth.frag.glsl">
+      <Filter>UnitTest\CameraTest</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
