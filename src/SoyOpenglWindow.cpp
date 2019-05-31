@@ -291,6 +291,8 @@ public:
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override;
+
+	virtual void		OnWindowMessage(UINT EventMessage) override;
 };
 
 class Platform::TControlClass
@@ -464,6 +466,18 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 				return 0;
 			return Default();
 		}
+
+		case WM_COMMAND:
+			//	lparam is hwnd to child control
+			if (lParam != 0)
+			{
+				auto SubMessage = HIWORD(wParam);
+				auto ControlIdentifier = LOWORD(wParam);
+				auto ChildHandle = reinterpret_cast<HWND>(lParam);
+				auto& Child = Control.GetChild(ChildHandle);
+				Child.OnWindowMessage(SubMessage);
+			}
+			return Default();
 
 		case WM_HSCROLL:
 		case WM_VSCROLL:
@@ -1450,11 +1464,11 @@ uint16_t Platform::TSlider::GetValue()
 
 void Platform::TSlider::OnWindowMessage(UINT EventMessage)
 {
+	//	A trackbar notifies its parent window of user actions by sending the parent a WM_HSCROLL or WM_VSCROLL message. A trackbar with the TBS_HORZ style sends WM_HSCROLL messages. A trackbar with the TBS_VERT style sends WM_VSCROLL messages. The low-order word of the wParam parameter of WM_HSCROLL or WM_VSCROLL contains the notification code. For the TB_THUMBPOSITION and TB_THUMBTRACK notification codes, the high-order word of the wParam parameter specifies the position of the slider. For all other notification codes, the high-order word is zero; send the TBM_GETPOS message to determine the slider position. The lParam parameter is the handle to the trackbar.
 	if (EventMessage == WM_HSCROLL || EventMessage == WM_VSCROLL)
 	{
 		this->OnChanged();
 	}
-	//	A trackbar notifies its parent window of user actions by sending the parent a WM_HSCROLL or WM_VSCROLL message. A trackbar with the TBS_HORZ style sends WM_HSCROLL messages. A trackbar with the TBS_VERT style sends WM_VSCROLL messages. The low-order word of the wParam parameter of WM_HSCROLL or WM_VSCROLL contains the notification code. For the TB_THUMBPOSITION and TB_THUMBTRACK notification codes, the high-order word of the wParam parameter specifies the position of the slider. For all other notification codes, the high-order word is zero; send the TBM_GETPOS message to determine the slider position. The lParam parameter is the handle to the trackbar.
 
 	TControl::OnWindowMessage(EventMessage);
 }
@@ -1504,8 +1518,11 @@ std::string Platform::TTextBox::GetValue()
 
 
 const DWORD TickBox_StyleExFlags = 0;
-const DWORD TickBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX;
-
+const DWORD TickBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
+//BS_3STATE
+//BS_AUTO3STATE
+//BS_CHECKBOX
+//BS_AUTOCHECKBOX
 
 Platform::TTickBox::TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("TickBox", "BUTTON", Parent, TickBox_StyleFlags, TickBox_StyleExFlags, Rect)
@@ -1522,4 +1539,15 @@ bool Platform::TTickBox::GetValue()
 {
 	auto Checked = Button_GetCheck(mHwnd);
 	return Checked == BST_CHECKED;
+}
+
+
+void Platform::TTickBox::OnWindowMessage(UINT EventMessage)
+{
+	if (EventMessage == BN_CLICKED)
+	{
+		this->OnChanged();
+	}
+
+	TControl::OnWindowMessage(EventMessage);
 }
