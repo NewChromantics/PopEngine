@@ -11,6 +11,7 @@
 #include "TApiSerial.h"
 #include "TApiDll.h"
 #include "TApiOpenvr.h"
+#include "TApiGui.h"
 
 #if !defined(PLATFORM_WINDOWS)
 //#include "TApiOpencl.h"
@@ -403,6 +404,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiSerial::Bind( *Context );
 			ApiDll::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
+			ApiGui::Bind( *Context );
 
 		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *Context );
@@ -677,6 +679,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename.c_str() );
 		auto LineNumber = 0;
 		JSValueRef Exception = nullptr;
+		//	gr: to capture this result, probably need to store it persistently
 		auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
 		ThrowException( Context.mLocalContext, Exception, Filename );
 	};
@@ -684,11 +687,9 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	//	and that seemed to cause some crashes
 	//	gr: on windows, this... has some problem where the main thread seems to get stuck? maybe to do with creating windows on non-main threads?
 	//		GetMessage blocks and we never get wm_paints, even though JS vm is running in the background
-#if defined(TARGET_WINDOWS)
+	//	gr: this was queueing on OSX. (the main thread stuff on windows has been fixed),
+	//		but queueing meant we didn't process include()'s in JS synchronously, which we needed to
 	Execute( Exec );
-#else
-	Queue(Exec);
-#endif
 }
 
 template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
@@ -1352,6 +1353,11 @@ void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
 }
 
 void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
+{
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
+}
+
+void JsCore::TCallback::SetArgumentBool(size_t Index,bool Value)
 {
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }

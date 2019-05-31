@@ -325,6 +325,7 @@ public:
 	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
+	virtual void			SetArgumentBool(size_t Index,bool Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,JsCore::TObject& Value) bind_override;
 	virtual void			SetArgumentFunction(size_t Index,JsCore::TFunction& Value) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values) bind_override;
@@ -367,6 +368,8 @@ public:
 
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(JsCore::TCallback&)> Function);
+	template<const char* FUNCTIONNAME,typename TYPE>
+	void			BindFunction(void(TYPE::* Function)(JsCore::TCallback&) );
 	void			RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
 
 	JsCore::TObjectWrapperBase&	AllocInstance(Bind::TContext& Context)		{	return mAllocator(Context);	}
@@ -540,6 +543,9 @@ public:
 	
 	template<const char* FUNCTIONNAME>
 	static JSObjectCallAsFunctionCallback	GetRawFunction(std::function<void(JsCore::TCallback&)> Function);
+
+	template<const char* FUNCTIONNAME,typename TYPE>
+	static JSObjectCallAsFunctionCallback	GetRawFunction(void(TYPE::* Function)(JsCore::TCallback&));
 
 	
 protected:
@@ -847,6 +853,40 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 	return CFunc;
 }
 
+
+template<const char* FUNCTIONNAME,typename TYPE>
+inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE::* Function)(JsCore::TCallback&))
+{
+	//	try and remove context cache
+	static void(TYPE::* FunctionCache)(JsCore::TCallback&)  = nullptr;
+	if ( FunctionCache != nullptr )
+		throw Soy::AssertException("This function is already bound. Duplicate string?");
+	FunctionCache = Function;
+	
+#if defined(JSAPI_V8)
+	JSObjectCallAsFunctionCallback CFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
+	{
+#error todo: V8 member function implementation
+	};
+#else
+	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
+	{
+		auto& ContextPtr = JsCore::GetContext( Context );
+		
+		Bind::TObject ThisObject( Context, This );
+		auto& pThis = ThisObject.This<TYPE>();
+		std::function<void(JsCore::TCallback&)> BoundFunction = [&](JsCore::TCallback& Params)
+		{
+			(pThis.*FunctionCache)( Params );
+		};
+		TLocalContext LocalContext( Context, ContextPtr );
+		return ContextPtr.CallFunc( LocalContext, BoundFunction, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
+	};
+#endif
+	
+	return CFunc;
+}
+
 template<const char* FUNCTIONNAME>
 inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName)
 {
@@ -962,6 +1002,19 @@ inline INTTYPE JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 
 template<const char* FUNCTIONNAME>
 inline void JsCore::TTemplate::BindFunction(std::function<void(JsCore::TCallback&)> Function)
+{
+	auto FunctionPointer = JsCore::TContext::GetRawFunction<FUNCTIONNAME>( Function );
+	
+	JSStaticFunction NewFunction;
+	NewFunction.name = FUNCTIONNAME;
+	NewFunction.callAsFunction = FunctionPointer;
+	NewFunction.attributes = kJSPropertyAttributeNone;
+	
+	mFunctions.PushBack(NewFunction);
+}
+
+template<const char* FUNCTIONNAME,typename TYPE>
+inline void JsCore::TTemplate::BindFunction(void(TYPE::* Function)(JsCore::TCallback&))
 {
 	auto FunctionPointer = JsCore::TContext::GetRawFunction<FUNCTIONNAME>( Function );
 	

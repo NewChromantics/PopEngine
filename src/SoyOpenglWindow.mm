@@ -5,11 +5,42 @@
 #include "PopMain.h"
 
 
-class Platform::TWindow
+namespace Platform
+{
+	//	Osx doesn't have labels, so it's a kind of text box
+	template<typename BASETYPE>
+	class TTextBox_Base;
+}
+
+@interface TResponder : NSResponder
+{
+@public std::function<void()>	mCallback;
+}
+
+-(void) OnAction;
+
+@end
+
+@implementation TResponder
+
+	-(void) OnAction
+	{
+		//	call lambda
+		if ( !mCallback )
+		{
+			std::Debug << "TResponderCallback unhandled callback" << std::endl;
+			return;
+		}
+		mCallback();
+	}
+
+@end
+
+class Platform::TWindow : public SoyWindow
 {
 public:
-	TWindow() :
-		mWindow	( nullptr )
+	TWindow(PopWorker::TJobQueue& Thread) :
+		mThread	( Thread )
 	{
 	}
 	~TWindow()
@@ -17,15 +48,173 @@ public:
 		[mWindow release];
 	}
 	
-	bool			IsValid()	{	return mWindow;	}
+	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
+	virtual void					SetFullscreen(bool Fullscreen) override;
+	virtual bool					IsFullscreen() override;
 	
-	bool			IsFullscreen();
-	void			SetFullscreen(bool Fullscreen);
-
+	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
+	
 public:
-	NSWindow*			mWindow;
-	CVDisplayLinkRef	mDisplayLink;
+	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
+	NSWindow*						mWindow = nullptr;
+	CVDisplayLinkRef				mDisplayLink = nullptr;
 };
+
+
+class Platform::TSlider : public SoySlider
+{
+public:
+	TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
+	~TSlider()
+	{
+		[mControl release];
+	}
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
+
+	virtual void		SetMinMax(uint16_t Min,uint16_t Max) override;
+	virtual void		SetValue(uint16_t Value) override;
+	virtual uint16_t	GetValue() override	{	return mLastValue;	}
+
+	virtual void		OnChanged() override
+	{
+		CacheValue();
+		SoySlider::OnChanged();
+	}
+	
+protected:
+	void				CacheValue();		//	call from UI thread
+	
+public:
+	uint16_t				mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+	TResponder*				mResponder = [TResponder alloc];
+	NSSlider*				mControl = nullptr;
+};
+
+
+
+//	on OSX there is no label, so use a TextField
+//	todo: lets just do a text box for now and make it readonly later
+//	https://stackoverflow.com/a/20169310/355753
+template<typename BASETYPE=SoyTextBox>
+class Platform::TTextBox_Base : public BASETYPE
+{
+public:
+	TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	~TTextBox_Base()
+	{
+		[mControl release];
+	}
+	
+	void					Create();
+	
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect)override;
+	
+	virtual void			SetValue(const std::string& Value) override;
+	virtual std::string		GetValue() override	{	return mLastValue;	}
+	
+	
+	virtual void 			OnChanged()=0;
+	
+protected:
+	virtual void			ApplyStyle()	{}
+	void					CacheValue();		//	call from UI thread
+	
+public:
+	std::string				mLastValue;		//	as all UI is on the main thread, we have to cache value for reading
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+	TResponder*				mResponder = [TResponder alloc];
+	NSTextField*			mControl = nullptr;
+};
+
+class Platform::TTextBox : public Platform::TTextBox_Base<SoyTextBox>
+{
+public:
+	TTextBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+		TTextBox_Base( Thread, Parent, Rect )
+	{
+	}
+	
+	virtual void			OnChanged() override
+	{
+		CacheValue();
+		SoyTextBox::OnChanged();
+	}
+};
+
+class Platform::TLabel : public Platform::TTextBox_Base<SoyLabel>
+{
+public:
+	TLabel(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+		TTextBox_Base( Thread, Parent, Rect )
+	{
+	}
+	
+
+	virtual void 	OnChanged() override
+	{
+	}
+	
+	virtual void	ApplyStyle() override;
+};
+
+
+class Platform::TTickBox : public SoyTickBox
+{
+public:
+	TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
+	~TTickBox()
+	{
+		[mControl release];
+	}
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
+	
+	virtual void		SetValue(bool Value) override;
+	virtual bool		GetValue() override	{	return mLastValue;	}
+	
+	virtual void		OnChanged() override
+	{
+		CacheValue();
+		SoyTickBox::OnChanged();
+	}
+	
+protected:
+	void				CacheValue();		//	call from UI thread
+	
+public:
+	bool					mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+	TResponder*				mResponder = [TResponder alloc];
+	NSButton*				mControl = nullptr;
+};
+
+
+
+
+
+
+
+
+
+
+
+NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
+{
+	//	todo: make sure this is called on mThread
+	auto ParentRect = [mWindow contentView].visibleRect;
+
+	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
+	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+	//	rect is upside in osx!
+	//	todo: incorporate origin
+	auto Top = ParentRect.size.height - Rect.Bottom();
+	auto Bottom = ParentRect.size.height - Rect.Top();
+
+	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
+	return RectNs;
+}
 
 
 CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
@@ -85,10 +274,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	};
 	
 	
+	auto& MainThread = *Soy::Platform::gMainThread;
+	
 	//	actual allocation must be on the main thread.
-	auto Allocate = [=]
+	auto Allocate = [=,&MainThread]
 	{
-		mWindow.reset( new Platform::TWindow );
+		mWindow.reset( new Platform::TWindow(MainThread) );
 		auto& Wrapper = *mWindow;
 		auto*& mWindow = Wrapper.mWindow;
 
@@ -166,7 +357,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		[mWindow setContentView: mView->mView];
 
 		id Sender = NSApp;
-		[mWindow setBackgroundColor:[NSColor blueColor]];
+		//[mWindow setBackgroundColor:[NSColor blueColor]];
 		[mWindow makeKeyAndOrderFront:Sender];
 
 		auto Title = Soy::StringToNSString( Name );
@@ -192,12 +383,12 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	if ( Wait )
 	{
 		Soy::TSemaphore Semaphore;
-		Soy::Platform::gMainThread->PushJob( Allocate, Semaphore );
+		MainThread.PushJob( Allocate, Semaphore );
 		Semaphore.Wait();
 	}
 	else
 	{
-		Soy::Platform::gMainThread->PushJob( Allocate );
+		MainThread.PushJob( Allocate );
 	}
 }
 
@@ -210,7 +401,7 @@ TOpenglWindow::~TOpenglWindow()
 	
 bool TOpenglWindow::IsValid()
 {
-	return mWindow && mWindow->IsValid() && mView && mView->IsValid();
+	return mWindow && mWindow->mWindow&& mView && mView->IsValid();
 }
 
 bool TOpenglWindow::Iteration()
@@ -275,12 +466,19 @@ std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
 	return std::chrono::milliseconds( 1000/mParams.mRefreshRate );
 }
 
+
+Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
+{
+	throw Soy::AssertException(__FUNCTION__);
+}
+
 Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 {
 	//	this must be called on the main thread, so we use the cache from the render target
 	//return mView->GetScreenRect();
 	return mView->mRenderTarget.GetSize();
 }
+
 
 void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
@@ -289,6 +487,7 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	
 	mWindow->SetFullscreen(Fullscreen);
 }
+
 
 bool TOpenglWindow::IsFullscreen()
 {
@@ -327,5 +526,337 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 		[mWindow toggleFullScreen:nil];
 	};
 	Soy::Platform::gMainThread->PushJob( DoSetFullScreen );
+}
+
+
+
+
+std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread) );
+	
+	//	actual allocation must be on the main thread.
+	auto Allocate = [=]
+	{
+		auto& Wrapper = *dynamic_cast<Platform::TWindow*>( pWindow.get() );
+		auto*& mWindow = Wrapper.mWindow;
+		
+		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
+		
+		bool Defer = NO;
+		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
+		Soy::Assert(mWindow,"failed to create window");
+		[mWindow retain];
+		
+		/*
+		//	note: this is deffered, but as flags above don't seem to work right, not much choice
+		//		plus, every other OSX app seems to do the same?
+		pWindow->SetFullscreen( Params.mFullscreen );
+		*/
+		
+		//	auto save window location
+		auto AutoSaveName = Soy::StringToNSString( Name );
+		[mWindow setFrameAutosaveName:AutoSaveName];
+		
+		id Sender = NSApp;
+		[mWindow makeKeyAndOrderFront:Sender];
+		
+		auto Title = Soy::StringToNSString( Name );
+		[mWindow setTitle:Title];
+		//[mWindow setMiniwindowTitle:Title];
+		//[mWindow setTitleWithRepresentedFilename:Title];
+		
+		//	mouse callbacks
+		[mWindow setAcceptsMouseMovedEvents:YES];
+	};
+	
+	//	move this to constructor
+	static auto Wait = false;
+	if ( Wait )
+	{
+		Soy::TSemaphore Semaphore;
+		Thread.PushJob( Allocate, Semaphore );
+		Semaphore.Wait();
+	}
+	else
+	{
+		Thread.PushJob( Allocate );
+	}
+	
+	return pWindow;
+}
+
+std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoySlider> pSlider( new Platform::TSlider(Thread,ParentWindow,Rect) );
+	return pSlider;
+}
+
+
+
+Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
+	mThread		( Thread )
+{
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()
+	{
+		auto ChildRect = Parent.GetChildRect( Rect );
+		mControl = [[NSSlider alloc] initWithFrame:ChildRect];
+		[mControl retain];
+
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
+	
+		[[Parent.mWindow contentView] addSubview:mControl];
+	};
+	mThread.PushJob( Allocate );
+}
+
+void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
+{
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before slider created");
+		
+		mControl.minValue = Min;
+		mControl.maxValue = Max;
+		CacheValue();
+	};
+	
+	mThread.PushJob(Exec);
+}
+
+void Platform::TSlider::SetValue(uint16_t Value)
+{
+	//	assuming success for immediate retrieval
+	mLastValue = Value;
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before slider created");
+		mControl.intValue = Value;
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+void Platform::TSlider::CacheValue()
+{
+	//	todo: check is on mThread
+	if ( !mControl )
+		throw Soy_AssertException("before slider created");
+
+	//	shouldn't let OSX slider get into this state
+	auto Value = mControl.intValue;
+	if ( Value < 0 || Value > std::numeric_limits<uint16_t>::max() )
+	{
+		std::stringstream Error;
+		Error << "slider int value " << Value << " out of 16bit range";
+		throw Soy_AssertException(Error);
+	}
+	
+	mLastValue = Value;
+}
+
+void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before slider created");
+		
+		mControl.frame = NewRect;
+	};
+
+	mThread.PushJob(Exec);
+}
+
+
+
+
+std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyTickBox> pControl( new Platform::TTickBox(Thread,ParentWindow,Rect) );
+	return pControl;
+}
+
+
+
+Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
+	mThread		( Thread )
+{
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()
+	{
+		auto ChildRect = Parent.GetChildRect( Rect );
+		mControl = [[NSButton alloc] initWithFrame:ChildRect];
+		[mControl retain];
+		
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
+		
+		[mControl setButtonType:NSSwitchButton];
+		//[mControl setBezelStyle:0];
+		
+		//	all buttons have labels, but windows doesn't? so our API doesnt
+		mControl.title = @"";
+		
+		[[Parent.mWindow contentView] addSubview:mControl];
+	};
+	mThread.PushJob( Allocate );
+}
+
+void Platform::TTickBox::SetValue(bool Value)
+{
+	//	assuming success for immediate retrieval
+	mLastValue = Value;
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+		throw Soy_AssertException("before slider created");
+		mControl.state = Value ? NSControlStateValueOn : NSControlStateValueOff;
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+void Platform::TTickBox::CacheValue()
+{
+	//	todo: check is on mThread
+	if ( !mControl )
+		throw Soy_AssertException("before tickbox created");
+	
+	auto Value = mControl.state == NSControlStateValueOn;
+
+	mLastValue = Value;
+}
+
+void Platform::TTickBox::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+		throw Soy_AssertException("before slider created");
+		
+		mControl.frame = NewRect;
+	};
+	
+	mThread.PushJob(Exec);
+}
+
+
+
+
+std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyTextBox> pControl( new Platform::TTextBox(Thread, ParentWindow, Rect ) );
+	return pControl;
+}
+
+std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyLabel> pControl( new Platform::TLabel(Thread, ParentWindow, Rect ) );
+	return pControl;
+}
+
+
+template<typename BASETYPE>
+Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+	mThread		( Thread )
+{
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()mutable
+	{
+		auto RectNs = Parent.GetChildRect(Rect);
+	
+		mControl = [[NSTextField alloc] initWithFrame:RectNs];
+		[mControl retain];
+	
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
+	
+		ApplyStyle();
+		
+		[[Parent.mWindow contentView] addSubview:mControl];
+	};
+	mThread.PushJob( Allocate );
+}
+
+template<typename BASETYPE>
+void Platform::TTextBox_Base<BASETYPE>::SetValue(const std::string& Value)
+{
+	//	assuming success for immediate retrieval
+	mLastValue = Value;
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before control created");
+		
+		mControl.stringValue = Soy::StringToNSString( Value );
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+template<typename BASETYPE>
+void Platform::TTextBox_Base<BASETYPE>::CacheValue()
+{
+	//	todo: check is on mThread
+	if ( !mControl )
+		throw Soy_AssertException("before control created");
+	
+	auto Value = mControl.stringValue;
+	mLastValue = Soy::NSStringToString( Value );
+}
+
+template<typename BASETYPE>
+void Platform::TTextBox_Base<BASETYPE>::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before control created");
+		
+		mControl.frame = NewRect;
+	};
+	
+	mThread.PushJob(Exec);
+}
+
+
+void Platform::TLabel::ApplyStyle()
+{
+	//	todo: check in thread
+	[mControl setBezeled:NO];
+	[mControl setDrawsBackground:NO];
+	[mControl setEditable:NO];
+	[mControl setSelectable:NO];
 }
 

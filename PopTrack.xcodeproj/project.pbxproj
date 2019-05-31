@@ -14,10 +14,10 @@
 		BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF012B70226A3225003AEB55 /* SoyTime.cpp */; };
 		BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */; };
 		BF0F9E712288892F00AEA7DC /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
-		BF0F9E882289EB5F00AEA7DC /* build.log in Resources */ = {isa = PBXBuildFile; fileRef = BF0F9E772289EB5F00AEA7DC /* build.log */; };
 		BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */; };
 		BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */; };
 		BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */; };
+		BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
@@ -48,7 +48,6 @@
 		BF5091962282197A00DCBB4B /* libv8_libbase.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF5091972282197A00DCBB4B /* libv8_libplatform.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF59A2502222039900AE9926 /* Lollypop.icns in Resources */ = {isa = PBXBuildFile; fileRef = BF59A24F2222039900AE9926 /* Lollypop.icns */; };
 		BF59A2522222057200AE9926 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF59A2512222057200AE9926 /* GameController.framework */; };
 		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
@@ -77,6 +76,9 @@
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
+		BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; };
+		BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
 		BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */; };
 		BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */; };
@@ -105,7 +107,6 @@
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
 		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
-		BFF2B6C32265FB4500232137 /* GuildhallGildwall in Resources */ = {isa = PBXBuildFile; fileRef = BFD0829E225E974D00FD05DC /* GuildhallGildwall */; };
 		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
@@ -141,6 +142,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */,
 				BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */,
 				BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */,
 				BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */,
@@ -183,6 +185,8 @@
 		BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdyncall_s.a; sourceTree = "<group>"; };
 		BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdyncallback_s.a; sourceTree = "<group>"; };
 		BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libdynload_s.a; sourceTree = "<group>"; };
+		BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglWindow.cpp; path = src/SoyOpenglWindow.cpp; sourceTree = "<group>"; };
+		BF108A842296B7BE003DDC5F /* PopEngine.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = PopEngine.xcassets; sourceTree = "<group>"; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -230,7 +234,6 @@
 		BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_Classifier.mlmodel; sourceTree = "<group>"; };
 		BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = MaskRCNN_anchors.bin; sourceTree = "<group>"; };
 		BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = MaskRCNN_MaskRCNN.mlmodel; sourceTree = "<group>"; };
-		BF59A24F2222039900AE9926 /* Lollypop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Lollypop.icns; sourceTree = "<group>"; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
@@ -302,6 +305,15 @@
 		BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = hourglass.mlmodel; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
+		BF89CF49228DD3EB00A187D5 /* OpenVr */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OpenVr; sourceTree = "<group>"; };
+		BF89CF65228DD3F700A187D5 /* openvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr.h; sourceTree = "<group>"; };
+		BF89CF66228DD3F700A187D5 /* openvr_api.cs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openvr_api.cs; sourceTree = "<group>"; };
+		BF89CF67228DD3F700A187D5 /* openvr_api.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = openvr_api.json; sourceTree = "<group>"; };
+		BF89CF68228DD3F700A187D5 /* openvr_capi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr_capi.h; sourceTree = "<group>"; };
+		BF89CF69228DD3F700A187D5 /* openvr_driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr_driver.h; sourceTree = "<group>"; };
+		BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libopenvr_api.dylib; sourceTree = "<group>"; };
+		BF89D4822294646100A187D5 /* TApiGui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiGui.h; path = src/TApiGui.h; sourceTree = "<group>"; };
+		BF89D4832294646100A187D5 /* TApiGui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiGui.cpp; path = src/TApiGui.cpp; sourceTree = "<group>"; };
 		BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyAssert.cpp; path = src/SoyAssert.cpp; sourceTree = "<group>"; };
 		BF89F6B51B4AB9DC00F58561 /* SoyAssert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyAssert.h; path = src/SoyAssert.h; sourceTree = "<group>"; };
 		BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMath.cpp; path = src/SoyMath.cpp; sourceTree = "<group>"; };
@@ -474,6 +486,7 @@
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
 				BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */,
+				BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
 				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
 				BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */,
@@ -539,6 +552,8 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BF89CF49228DD3EB00A187D5 /* OpenVr */,
+				BF89CF4B228DD3F700A187D5 /* OpenVr */,
 				BF0F9E762289EB5F00AEA7DC /* dyncall */,
 				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
 				BF9282242237DB18007E9D6F /* Headers */,
@@ -629,6 +644,43 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		BF89CF4B228DD3F700A187D5 /* OpenVr */ = {
+			isa = PBXGroup;
+			children = (
+				BF89CF64228DD3F700A187D5 /* headers */,
+				BF89CF6A228DD3F700A187D5 /* lib */,
+			);
+			path = OpenVr;
+			sourceTree = "<group>";
+		};
+		BF89CF64228DD3F700A187D5 /* headers */ = {
+			isa = PBXGroup;
+			children = (
+				BF89CF65228DD3F700A187D5 /* openvr.h */,
+				BF89CF66228DD3F700A187D5 /* openvr_api.cs */,
+				BF89CF67228DD3F700A187D5 /* openvr_api.json */,
+				BF89CF68228DD3F700A187D5 /* openvr_capi.h */,
+				BF89CF69228DD3F700A187D5 /* openvr_driver.h */,
+			);
+			path = headers;
+			sourceTree = "<group>";
+		};
+		BF89CF6A228DD3F700A187D5 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				BF89CF6F228DD3F700A187D5 /* osx32 */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		BF89CF6F228DD3F700A187D5 /* osx32 */ = {
+			isa = PBXGroup;
+			children = (
+				BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */,
+			);
+			path = osx32;
+			sourceTree = "<group>";
+		};
 		BF91D97E221584F100E91671 /* Ezsift */ = {
 			isa = PBXGroup;
 			children = (
@@ -700,6 +752,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BF108A842296B7BE003DDC5F /* PopEngine.xcassets */,
 				BF19612521B9DC70007014EF /* JavaScriptCore.framework */,
 				EB0EA5672110B8D6008D6DAA /* Dlib */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
@@ -743,7 +796,6 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
-				BF59A24F2222039900AE9926 /* Lollypop.icns */,
 				BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */,
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */,
@@ -762,6 +814,7 @@
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
 				BF689ACC20D6D3AE000BC812 /* SoyOpenglWindow.h */,
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */,
+				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
 				BF607EA42240588300A78C00 /* TApiBluetooth.cpp */,
 				BF607EA32240588300A78C00 /* TApiBluetooth.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
@@ -773,10 +826,10 @@
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
 				BF0F9E702288892F00AEA7DC /* TApiDll.h */,
-				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
-				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				BF91D9792215839F00E91671 /* TApiEzsift.h */,
+				BF89D4832294646100A187D5 /* TApiGui.cpp */,
+				BF89D4822294646100A187D5 /* TApiGui.h */,
 				BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */,
 				BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */,
 				BF59A253222206B400AE9926 /* TApiInput.cpp */,
@@ -791,6 +844,8 @@
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
 				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
 				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
+				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
+				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BFF2B6C12264F9A700232137 /* TApiSerial.cpp */,
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
@@ -1005,11 +1060,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF3965652278587600A721E8 /* v8Runtime in Resources */,
-				BFF2B6C32265FB4500232137 /* GuildhallGildwall in Resources */,
-				BF59A2502222039900AE9926 /* Lollypop.icns in Resources */,
+				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 				BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */,
-				BF0F9E882289EB5F00AEA7DC /* build.log in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1093,6 +1146,7 @@
 				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
+				BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
 				BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */,
@@ -1139,6 +1193,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = X52DR36JY2;
@@ -1146,6 +1201,7 @@
 					"$(POPMOVIETEXTURE_PATH)/build",
 					"$(POPCAST_PATH)/build",
 					"$(PROJECT_DIR)/src/Libs",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1164,6 +1220,25 @@
 					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
 					"$(PROJECT_DIR)/src/v8/v8Runtime",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1239,6 +1314,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = X52DR36JY2;
@@ -1246,6 +1322,7 @@
 					"$(POPMOVIETEXTURE_PATH)/build",
 					"$(POPCAST_PATH)/build",
 					"$(PROJECT_DIR)/src/Libs",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1264,6 +1341,25 @@
 					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
 					"$(PROJECT_DIR)/src/v8/v8Runtime",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1275,11 +1371,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(POPMOVIETEXTURE_PATH)/build",
 					"$(POPCAST_PATH)/build",
 					"$(PROJECT_DIR)/src/Libs",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
@@ -1293,6 +1391,25 @@
 					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
 					"$(PROJECT_DIR)/src/v8/v8Runtime",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
