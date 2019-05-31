@@ -593,6 +593,10 @@ Platform::TControl::TControl(const std::string& Name,const char* ClassName,TCont
 	if (!mHwnd)
 		throw Soy::AssertException("Failed to create window");
 
+	//	set the default gui font
+	auto Font = reinterpret_cast<WPARAM>(GetStockObject(DEFAULT_GUI_FONT));
+	SendMessage(mHwnd, WM_SETFONT, Font, 0);
+
 	Parent.AddChild(*this);
 }
 
