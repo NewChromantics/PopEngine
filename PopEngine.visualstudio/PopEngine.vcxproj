@@ -449,6 +449,7 @@
     <None Include="..\UnitTest\Common\PopShaderCache.js" />
     <None Include="..\UnitTest\Common\TFrameCounter.js" />
     <None Include="..\UnitTest\Gui\bootup.js" />
+    <None Include="..\UnitTest\H264Encode\bootup.js" />
     <None Include="..\UnitTest\HttpServer\bootup.js" />
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>

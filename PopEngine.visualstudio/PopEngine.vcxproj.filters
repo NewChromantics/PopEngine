@@ -73,6 +73,9 @@
     <Filter Include="UnitTest\Gui">
       <UniqueIdentifier>{a2bc4afd-3781-4e66-890f-d079dde1f027}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\H264Encode">
+      <UniqueIdentifier>{cf36e15b-11fa-464a-85a2-27504367a834}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -586,6 +589,9 @@
     </None>
     <None Include="..\UnitTest\CameraTest\KinectDepth.frag.glsl">
       <Filter>UnitTest\CameraTest</Filter>
+    </None>
+    <None Include="..\UnitTest\H264Encode\bootup.js">
+      <Filter>UnitTest\H264Encode</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -125,6 +125,9 @@ DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
 DEFINE_BIND_TYPENAME(AvcDecoder);
 DEFINE_BIND_FUNCTIONNAME(Decode);
 
+DEFINE_BIND_TYPENAME(H264Encoder);
+DEFINE_BIND_FUNCTIONNAME(Encode);
+
 const char FrameTimestampKey[] = "Time";
 
 void ApiMedia::Bind(Bind::TContext& Context)

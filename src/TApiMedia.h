@@ -12,6 +12,11 @@ namespace PopH264
 	class TInstance;
 }
 
+namespace X264
+{
+	class TInstance;
+}
+
 namespace PopCameraDevice
 {
 	class TInstance;
@@ -23,6 +28,7 @@ namespace ApiMedia
 	
 	DECLARE_BIND_TYPENAME(Source);
 	DECLARE_BIND_TYPENAME(PopCameraDevice);
+	DECLARE_BIND_TYPENAME(H264Encoder);
 }
 
 
@@ -97,4 +103,23 @@ public:
 	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
 	std::shared_ptr<SoyWorkerJobThread>			mDecoderThread;
 	Array<Bind::TPersistent>			mFrameBuffers;
+};
+
+
+
+class TH264EncoderWrapper : public Bind::TObjectWrapper<ApiMedia::H264Encoder_TypeName,X264::TInstance>
+{
+public:
+	TH264EncoderWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void					CreateTemplate(Bind::TTemplate& Template);
+	virtual void 				Construct(Bind::TCallback& Arguments) override;
+
+	static void 				Encode(Bind::TCallback& Arguments);
+
+public:
+	std::shared_ptr<X264::TInstance>&		mEncoder = mObject;
 };
