@@ -75,6 +75,7 @@ namespace JsCore
 	
 	//	typed arrays
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Values);
+	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint16_t>& Values);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<uint32_t>& Values);
 	JSObjectRef	GetArray(JSContextRef Context,const ArrayBridge<float>& Values);
 

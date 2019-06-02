@@ -1632,6 +1632,12 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint8_t>& Va
 	return JsCore_GetTypedArray( Context, Values, kJSTypedArrayTypeUint8Array );
 }
 
+
+JSObjectRef JsCore::GetArray(JSContextRef Context, const ArrayBridge<uint16_t>& Values)
+{
+	return JsCore_GetTypedArray(Context, Values, kJSTypedArrayTypeUint16Array);
+}
+
 JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<uint32_t>& Values)
 {
 	return JsCore_GetTypedArray( Context, Values, kJSTypedArrayTypeUint32Array );

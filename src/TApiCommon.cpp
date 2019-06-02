@@ -982,7 +982,17 @@ void TImageWrapper::GetPixelBuffer(Bind::TCallback& Params)
 	}
 	else
 	{
-		Params.Return( GetArrayBridge(PixelsArray) );
+		//	for float & 16 bit formats, convert to their proper javascript type
+		auto ComponentSize = SoyPixelsFormat::GetBytesPerChannel(Pixels.GetFormat());
+		if (ComponentSize == 2)
+		{
+			auto Pixels16 = GetArrayBridge(PixelsArray).GetSubArray<uint16_t>(0, PixelsArray.GetSize() / 2);
+			Params.Return(GetArrayBridge(Pixels16));
+		}
+		else
+		{
+			Params.Return(GetArrayBridge(PixelsArray));
+		}
 	}
 }
 
