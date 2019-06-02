@@ -605,6 +605,12 @@
     <None Include="..\src\Libs\x264\bin\x64\x264.dll">
       <Filter>Libs\X264</Filter>
     </None>
+    <None Include="..\UnitTest\H264Encode\Quad.vert.glsl">
+      <Filter>UnitTest\H264Encode</Filter>
+    </None>
+    <None Include="..\UnitTest\H264Encode\Blit.frag.glsl">
+      <Filter>UnitTest\H264Encode</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -901,5 +907,10 @@
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">
       <Filter>UnitTest\VideoTest</Filter>
     </Media>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\UnitTest\H264Encode\cat.jpeg">
+      <Filter>UnitTest\H264Encode</Filter>
+    </Image>
   </ItemGroup>
 </Project>
