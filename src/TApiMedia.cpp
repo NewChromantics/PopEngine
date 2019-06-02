@@ -847,13 +847,13 @@ void TH264EncoderWrapper::OnPacketOutput()
 		return;
 
 	auto NextPacket = mEncoder->PopPacket();
+	//	no packets yet!
+	if (!NextPacket)
+		return;
 
 	auto Resolve = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
 	{
-		if (NextPacket)
-			Promise.Resolve(Context, GetArrayBridge(*NextPacket));
-		else
-			Promise.Resolve(Context, false);
+		Promise.Resolve(Context, GetArrayBridge(*NextPacket));
 	};
 	mNextPacketPromises.Flush(Resolve);
 }
