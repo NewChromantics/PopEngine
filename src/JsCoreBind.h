@@ -593,6 +593,7 @@ public:
 	void			Resolve(Bind::TLocalContext& Context,ArrayBridge<TYPE>&& Values) const		{	Resolve( Context, GetValue( Context.mLocalContext, Values ) );	}
 	void			Resolve(Bind::TLocalContext& Context,JsCore::TArray& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Resolve(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mResolve.Call(nullptr,Value);	}
+	void			Resolve(Bind::TLocalContext& Context,bool Value) const						{	Resolve(Context, GetValue(Context.mLocalContext, Value));	}
 	void			ResolveUndefined(Bind::TLocalContext& Context) const;
 
 	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
@@ -987,8 +988,9 @@ inline INTTYPE JsCore::GetInt(JSContextRef Context,JSValueRef Handle)
 {
 	if ( !JSValueIsNumber( Context,Handle ) )
 	{
+		auto Type = JSValueGetType(Context, Handle);
 		std::stringstream Error;
-		Error << "Trying to convert value to number, but isn't";
+		Error << "Trying to convert value to number, but is " << Type;
 		throw Soy::AssertException(Error.str());
 	}
 	//	convert to string
