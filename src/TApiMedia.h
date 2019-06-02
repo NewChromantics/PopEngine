@@ -126,4 +126,5 @@ public:
 public:
 	Bind::TPromiseQueue	mNextPacketPromises;
 	std::shared_ptr<X264::TInstance>&	mEncoder = mObject;
+	std::shared_ptr<SoyWorkerJobThread>	mEncoderThread;
 };

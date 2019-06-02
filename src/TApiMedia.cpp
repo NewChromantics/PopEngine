@@ -812,8 +812,9 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 	{
 		this->OnPacketOutput();
 	};
-	//mDecoderThread.reset(new SoyWorkerJobThread(ThreadName));
-	//mDecoderThread->Start();
+
+	mEncoderThread.reset(new SoyWorkerJobThread("H264 encoder"));
+	mEncoderThread->Start();
 }
 
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -827,8 +828,24 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 	auto& Frame = Params.GetArgumentPointer<TImageWrapper>(0);
 	auto FrameTime = Params.GetArgumentInt(1);
 
-	auto& Pixels = Frame.GetPixels();
-	mEncoder->PushFrame(Pixels, FrameTime);
+	if (mEncoderThread)
+	{
+		std::shared_ptr<SoyPixels> PixelCopy( new SoyPixels() );
+		{
+			Soy::TScopeTimerPrint Timer("Copy pixels for thread", 1);
+			Frame.GetPixels(*PixelCopy);
+		}
+		auto Encode = [=]()mutable
+		{
+			mEncoder->PushFrame(*PixelCopy, FrameTime);
+		};
+		mEncoderThread->PushJob(Encode);
+	}
+	else
+	{
+		auto& Pixels = Frame.GetPixels();
+		mEncoder->PushFrame(Pixels, FrameTime);
+	}
 }
 
 void TH264EncoderWrapper::GetNextPacket(Bind::TCallback& Params)
@@ -945,6 +962,8 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 	mHandle = x264_encoder_open(&mParam);
 	if (!mHandle)
 		throw Soy::AssertException("Failed to open x264 encoder");
+
+	mPixelMeta = Meta;
 }
 
 void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
@@ -1021,6 +1040,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
+	/*
 	while (true)
 	{
 		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
@@ -1029,6 +1049,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 
 		Encode(nullptr);
 	}
+	*/
 }
 
 void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
