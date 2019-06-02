@@ -76,6 +76,9 @@
     <Filter Include="UnitTest\H264Encode">
       <UniqueIdentifier>{cf36e15b-11fa-464a-85a2-27504367a834}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\X264">
+      <UniqueIdentifier>{7ee17235-1cd3-43d0-b654-e1d65e89becf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -426,6 +429,12 @@
     <ClInclude Include="..\src\TApiGui.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Libs\x264\include\x264.h">
+      <Filter>Libs\X264</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\x264\include\x264_config.h">
+      <Filter>Libs\X264</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -592,6 +601,9 @@
     </None>
     <None Include="..\UnitTest\H264Encode\bootup.js">
       <Filter>UnitTest\H264Encode</Filter>
+    </None>
+    <None Include="..\src\Libs\x264\bin\x64\x264.dll">
+      <Filter>Libs\X264</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -821,6 +833,12 @@
     </Library>
     <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib">
       <Filter>Libs\Dyncall</Filter>
+    </Library>
+    <Library Include="..\src\Libs\x264\lib\x64\libx264.lib">
+      <Filter>Libs\X264</Filter>
+    </Library>
+    <Library Include="..\src\Libs\x264\lib\x64\x264.lib">
+      <Filter>Libs\X264</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

@@ -28,6 +28,7 @@ namespace ApiMedia
 	
 	DECLARE_BIND_TYPENAME(Source);
 	DECLARE_BIND_TYPENAME(PopCameraDevice);
+	DECLARE_BIND_TYPENAME(AvcDecoder);
 	DECLARE_BIND_TYPENAME(H264Encoder);
 }
 
@@ -84,8 +85,7 @@ public:
 
 
 
-extern const char AvcDecoder_TypeName[];
-class TAvcDecoderWrapper : public Bind::TObjectWrapper<AvcDecoder_TypeName,PopH264::TInstance>
+class TAvcDecoderWrapper : public Bind::TObjectWrapper<ApiMedia::AvcDecoder_TypeName,PopH264::TInstance>
 {
 public:
 	TAvcDecoderWrapper(Bind::TContext& Context) :
@@ -115,11 +115,15 @@ public:
 	{
 	}
 
-	static void					CreateTemplate(Bind::TTemplate& Template);
-	virtual void 				Construct(Bind::TCallback& Arguments) override;
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
 
-	static void 				Encode(Bind::TCallback& Arguments);
+	void 			Encode(Bind::TCallback& Params);
+	void 			GetNextPacket(Bind::TCallback& Params);
+
+	void			OnPacketOutput();
 
 public:
-	std::shared_ptr<X264::TInstance>&		mEncoder = mObject;
+	Bind::TPromiseQueue	mNextPacketPromises;
+	std::shared_ptr<X264::TInstance>&	mEncoder = mObject;
 };
