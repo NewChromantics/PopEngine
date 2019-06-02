@@ -79,6 +79,10 @@ enum JSTypedArrayType
 	kJSTypedArrayTypeUint16Array,
 	kJSTypedArrayTypeUint32Array,
 	kJSTypedArrayTypeFloat32Array,
+
+	//	not in v8
+	kJSTypedArrayTypeArrayBuffer,
+	kJSTypedArrayTypeFloat64Array,
 };
 
 typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);

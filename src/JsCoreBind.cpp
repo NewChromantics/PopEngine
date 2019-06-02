@@ -23,6 +23,7 @@
 #include "TApiBluetooth.h"
 #endif
 
+JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 
 
 #if !defined(JSAPI_V8)
@@ -1595,33 +1596,49 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 		mContext->OnPersitentRetained(*this);
 }
 
-
-template<typename TYPE>
-JSObjectRef JsCore_GetTypedArray(JSContextRef Context,const ArrayBridge<TYPE>& Values,JSTypedArrayType TypedArrayType)
+#if !defined(JSAPI_V8)
+JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType, const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception)
 {
 	//	JSObjectMakeTypedArrayWithBytesNoCopy makes an externally backed array, which has a destruction callback
-	static JSTypedArrayBytesDeallocator Dealloc = [](void* pArrayBuffer,void* DeallocContext)
+	static JSTypedArrayBytesDeallocator Dealloc = [](void* pArrayBuffer, void* DeallocContext)
 	{
-		auto* ArrayBuffer = static_cast<TYPE*>( pArrayBuffer );
+		auto* ArrayBuffer = static_cast<uint8_t*>(pArrayBuffer);
 		delete[] ArrayBuffer;
 	};
-	
+
 	//	allocate an array
 	//	gr: want to do it on a heap, but our heap needs a size, + context + array and we can only pass 1 contextually variable
-	auto* AllocatedBuffer = new TYPE[Values.GetSize()];
-	auto AllocatedBufferSize = sizeof(TYPE) * Values.GetSize();
-	if ( AllocatedBufferSize != Values.GetDataSize() )
+	auto* AllocatedBuffer = ExternalBuffer;
+	auto AllocatedBufferSize = ExternalBufferSize;
+	if (AllocatedBufferSize != Values.GetDataSize())
 		throw Soy::AssertException("Array size mismatch");
 
 	//	safely copy from values
 	size_t AllocatedArrayCount = 0;
-	auto AllocatedArray = GetRemoteArray( AllocatedBuffer, AllocatedBufferSize, AllocatedArrayCount );
-	AllocatedArray.Copy( Values );
+	auto AllocatedArray = GetRemoteArray(AllocatedBuffer, AllocatedBufferSize, AllocatedArrayCount);
+	//AllocatedArray.Copy(Values);
 
 	//	make externally backed array that'll dealloc
 	void* DeallocContext = nullptr;
 	JSValueRef Exception = nullptr;
-	auto ArrayObject = JSObjectMakeTypedArrayWithBytesNoCopy( Context, TypedArrayType, AllocatedBuffer, AllocatedBufferSize, Dealloc, DeallocContext, &Exception );
+	auto ArrayObject = JSObjectMakeTypedArrayWithBytesNoCopy(Context, TypedArrayType, AllocatedBuffer, AllocatedBufferSize, Dealloc, DeallocContext, &Exception);
+	JsCore::ThrowException(Context, Exception);
+
+	return ArrayObject;
+}
+#endif
+
+
+
+template<typename TYPE>
+JSObjectRef JsCore_GetTypedArray(JSContextRef Context,const ArrayBridge<TYPE>& Values,JSTypedArrayType TypedArrayType)
+{
+	auto* ExternalBuffer = reinterpret_cast<const uint8_t*>(Values.GetArray());
+	auto ExternalBufferSize = Values.GetDataSize();
+
+	//	make externally backed array that'll dealloc itself
+	JSValueRef Exception = nullptr;
+	auto ArrayObject = JSObjectMakeTypedArrayWithBytesWithCopy( Context, TypedArrayType, ExternalBuffer, ExternalBufferSize, &Exception );
 	JsCore::ThrowException( Context, Exception );
 	
 	return ArrayObject;

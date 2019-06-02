@@ -868,7 +868,47 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 #if defined(JSAPI_V8)
 	JSObjectCallAsFunctionCallback CFunc = [](const v8::FunctionCallbackInfo<v8::Value>& Meta)
 	{
-#error todo: V8 member function implementation
+		auto& Isolate = *Meta.GetIsolate();
+		try
+		{
+			Array<JSValueRef> Arguments;
+			for (auto i = 0; i<Meta.Length(); i++)
+			{
+				JSValueRef Value = JSValueRef(Meta[i]);
+				Arguments.PushBack(Value);
+			}
+			JSObjectRef ThisObject(Meta.This());
+			
+			JSContextRef ContextRef(Isolate.GetCurrentContext());
+			//	need local context, needs a new scope, but doesn't need a lock? or local scope I dont think
+			//	for our funcs we just need an exception catcher
+			v8::TryCatch TryCatch(&Isolate);
+			ContextRef.mTryCatch = &TryCatch;
+
+			auto& Context = GetContext(ContextRef);
+			TLocalContext LocalContext(ContextRef, Context);
+
+			Bind::TObject ThisObjectObject(ContextRef, ThisObject);
+			auto& pThis = ThisObjectObject.This<TYPE>();
+
+			std::function<void(JsCore::TCallback&)> BoundFunction = [&](JsCore::TCallback& Params)
+			{
+				(pThis.*FunctionCache)(Params);
+			};
+
+			JSValueRef Exception;
+			auto ReturnValue = Context.CallFunc(LocalContext, BoundFunction, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME);
+
+			if (TryCatch.HasCaught())
+				throw V8::TException(Isolate, TryCatch, FUNCTIONNAME);
+
+			Meta.GetReturnValue().Set(ReturnValue.mThis);
+		}
+		catch (std::exception& e)
+		{
+			auto Exception = Isolate.ThrowException(v8::String::NewFromUtf8(&Isolate, e.what()));
+			Meta.GetReturnValue().Set(Exception);
+		}
 	};
 #else
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)

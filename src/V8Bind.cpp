@@ -513,11 +513,13 @@ JSObjectRef MakeTypedArrayView(JSContextRef Context,v8::Local<v8::ArrayBuffer>& 
 	return ArrayObject;
 }
 
-JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* ExternalBuffer,size_t ExternalBufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception)
+
+
+JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context,JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer,size_t ExternalBufferSize,JSValueRef* Exception)
 {
 	//	gr: for V8, we need to make a pool of auto releasing objects, or an objectwrapper that manages the array or something...
 	//		but for now, we'll just copy the bytes.
-	auto ExternalBufferArray = GetRemoteArray( static_cast<uint8_t*>( ExternalBuffer ), ExternalBufferSize );
+	auto ExternalBufferArray = GetRemoteArray( const_cast<uint8_t*>( ExternalBuffer ), ExternalBufferSize );
 
 	//	make an array buffer
 	auto ArrayBuffer = v8::ArrayBuffer::New( &Context.GetIsolate(), ExternalBufferSize );
@@ -545,6 +547,11 @@ JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedAr
 	std::stringstream Error;
 	Error << "Unhandled ArrayType " << ArrayType << " in " << __FUNCTION__;
 	throw Soy::AssertException(Error);
+}
+
+JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context, JSTypedArrayType ArrayType, void* ExternalBuffer, size_t ExternalBufferSize, JSTypedArrayBytesDeallocator Dealloc, void* DeallocContext, JSValueRef* Exception)
+{
+	throw Soy::AssertException("v8 cannot use JSObjectMakeTypedArrayWithBytesNoCopy as we dont do the dealloc");
 }
 
 v8::Local<v8::TypedArray> GetTypedArray(JSObjectRef& ArrayObject)
