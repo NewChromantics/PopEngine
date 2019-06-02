@@ -161,6 +161,7 @@ namespace ApiMedia
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
 	DEFINE_BIND_FUNCTIONNAME(Decode);
 	DEFINE_BIND_FUNCTIONNAME(Encode);
+	DEFINE_BIND_FUNCTIONNAME(GetNextPacket);
 
 	const char FrameTimestampKey[] = "Time";
 
@@ -807,13 +808,18 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 
 	mEncoder.reset(new X264::TInstance(PresetName));
 
+	mEncoder->mOnOutputPacket = [&]()
+	{
+		this->OnPacketOutput();
+	};
 	//mDecoderThread.reset(new SoyWorkerJobThread(ThreadName));
 	//mDecoderThread->Start();
 }
 
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::Encode_FunctionName>( &TH264EncoderWrapper::Encode);
+	Template.BindFunction<ApiMedia::Encode_FunctionName>(&TH264EncoderWrapper::Encode);
+	Template.BindFunction<ApiMedia::GetNextPacket_FunctionName>(&TH264EncoderWrapper::GetNextPacket);
 }
 
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
@@ -839,8 +845,17 @@ void TH264EncoderWrapper::OnPacketOutput()
 	//	no promises
 	if (!mNextPacketPromises.HasPromises())
 		return;
-	if (!mEncoder->HasPackets())
-		return;
+
+	auto NextPacket = mEncoder->PopPacket();
+
+	auto Resolve = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
+	{
+		if (NextPacket)
+			Promise.Resolve(Context, GetArrayBridge(*NextPacket));
+		else
+			Promise.Resolve(Context, false);
+	};
+	mNextPacketPromises.Flush(Resolve);
 }
 
 
@@ -978,7 +993,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 		x264_nal_t* Nals = nullptr;
 		int NalCount = 0;
 
-		auto FrameSize = x264_encoder_encode(mHandle, &Nals, &NalCount, &mPicture, &OutputPicture);
+		auto FrameSize = x264_encoder_encode(mHandle, &Nals, &NalCount, InputPicture, &OutputPicture);
 		if (FrameSize < 0)
 			throw Soy::AssertException("x264_encoder_encode error");
 
@@ -1002,8 +1017,16 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	Encode(&mPicture);
 
 	//	flush any other frames
-	while (x264_encoder_delayed_frames(mHandle))
+	//	gr: this is supposed to only be called at the end of the stream...
+	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
+	//		so just keep calling until we get 0
+	//	maybe add a safety iteration check
+	while (true)
 	{
+		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
+		if (DelayedFrameCount == 0)
+			break;
+
 		Encode(nullptr);
 	}
 }
@@ -1020,3 +1043,15 @@ void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
 	if (mOnOutputPacket)
 		mOnOutputPacket();
 }
+
+
+std::shared_ptr<Array<uint8_t>> X264::TInstance::PopPacket()
+{
+	std::lock_guard<std::mutex> Lock(mPacketsLock);
+	if (mPackets.IsEmpty())
+		return nullptr;
+
+	auto Packet = mPackets.PopAt(0);
+	return Packet;
+}
+
