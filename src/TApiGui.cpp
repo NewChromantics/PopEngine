@@ -13,6 +13,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(TickBox);
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
+	DEFINE_BIND_FUNCTIONNAME(SetLabel);
 }
 
 
@@ -58,6 +59,7 @@ void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
 	auto Value = Params.GetArgumentInt(0);
 	mSlider->SetValue( Value );
 }
+
 
 void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
 {
@@ -209,6 +211,7 @@ void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
 void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<SetValue_FunctionName>( &TTickBoxWrapper::SetValue );
+	Template.BindFunction<SetLabel_FunctionName>( &TTickBoxWrapper::SetLabel );
 }
 
 void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
@@ -228,6 +231,12 @@ void ApiGui::TTickBoxWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentBool(0);
 	mControl->SetValue( Value );
+}
+
+void ApiGui::TTickBoxWrapper::SetLabel(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentString(0);
+	mControl->SetLabel( Value );
 }
 
 void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
