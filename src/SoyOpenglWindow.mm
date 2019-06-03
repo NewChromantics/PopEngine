@@ -629,6 +629,7 @@ void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 		
 		mControl.minValue = Min;
 		mControl.maxValue = Max;
+		mControl.numberOfTickMarks = Max-Min;
 		CacheValue();
 	};
 	
