@@ -106,8 +106,23 @@ void TSocketWrapper::Send(Bind::TCallback& Params)
 	auto Sender = SoyRef( SenderStr );
 
 	Array<uint8_t> Data;
-	//v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
-	Params.GetArgumentArray( 1, GetArrayBridge(Data) );
+	if (Params.IsArgumentString(1))
+	{
+		//	string to buffer
+		auto DataString = Params.GetArgumentString(1);
+		Data.Alloc(DataString.length());
+		for (auto i = 0; i < DataString.length(); i++)
+		{
+			auto Char = DataString[i];
+			auto Byte = *reinterpret_cast<uint8_t*>(&Char);
+			Data.PushBack(Byte);
+		}
+	}
+	else
+	{
+		//	gr: maybe we need to handle other types too?
+		Params.GetArgumentArray(1, GetArrayBridge(Data));
+	}
 
 	auto& Socket = *ThisSocket;
 	auto Connection = Socket.GetConnection( Sender );
