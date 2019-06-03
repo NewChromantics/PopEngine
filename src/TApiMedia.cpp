@@ -990,7 +990,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 
 	for (auto i = 0; i < 3; i++)
 	{
-		auto* OutPlane = mPicture.img.plane[0];
+		auto* OutPlane = mPicture.img.plane[i];
 		auto& InPlane = *Planes[i];
 		auto& InPlaneArray = InPlane.GetPixelsArray();
 		auto OutSize = ExpectedBufferSizes[i];
