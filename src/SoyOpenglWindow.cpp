@@ -291,6 +291,7 @@ public:
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override;
+	virtual void		SetLabel(const std::string& Label) override;
 
 	virtual void		OnWindowMessage(UINT EventMessage) override;
 };
@@ -1546,6 +1547,14 @@ bool Platform::TTickBox::GetValue()
 	auto Checked = Button_GetCheck(mHwnd);
 	return Checked == BST_CHECKED;
 }
+
+void Platform::TTickBox::SetLabel(const std::string& Label)
+{
+	//	is this blocking? safe to use stack variable?
+	auto* LabelStr = Label.c_str();
+	Button_SetText(mHwnd, LabelStr);
+}
+
 
 
 void Platform::TTickBox::OnWindowMessage(UINT EventMessage)
