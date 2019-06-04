@@ -602,14 +602,23 @@
     <None Include="..\UnitTest\H264Encode\bootup.js">
       <Filter>UnitTest\H264Encode</Filter>
     </None>
-    <None Include="..\src\Libs\x264\bin\x64\x264.dll">
-      <Filter>Libs\X264</Filter>
-    </None>
     <None Include="..\UnitTest\H264Encode\Quad.vert.glsl">
       <Filter>UnitTest\H264Encode</Filter>
     </None>
     <None Include="..\UnitTest\H264Encode\Blit.frag.glsl">
       <Filter>UnitTest\H264Encode</Filter>
+    </None>
+    <None Include="..\src\v8\lib\vccorlib140d.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </None>
+    <None Include="..\src\v8\lib\vcruntime140d.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </None>
+    <None Include="..\src\v8\lib\ucrtbased.dll">
+      <Filter>Libs\v8\Runtime</Filter>
+    </None>
+    <None Include="..\src\v8\lib\msvcp140d.dll">
+      <Filter>Libs\v8\Runtime</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -902,6 +911,7 @@
     <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
       <Filter>Libs\Openvr</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\src\Libs\x264\bin\x64\x264.dll" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">

@@ -12,3 +12,6 @@ Official build-bot urls. JSVU helps with this.
 - https://storage.googleapis.com/chromium-v8/official/canary/v8-mac64-dbg-7.6.115.zip <--- has libs!
 - https://storage.googleapis.com/chromium-v8/official/canary/v8-win64-dbg-7.6.115.zip
 - Get headers from github releases
+
+win64-rel only has binary files, no DLL's or libs...
+win64-dbg only has DLL's/libs linked to debug CRT grrrr
