@@ -1606,12 +1606,12 @@ JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSType
 		delete[] ArrayBuffer;
 	};
 
-	//	allocate an array
+	//	allocate an array to dealloc
+
 	//	gr: want to do it on a heap, but our heap needs a size, + context + array and we can only pass 1 contextually variable
-	auto* AllocatedBuffer = ExternalBuffer;
+	auto* AllocatedBuffer = new uint8_t[ExternalBufferSize];
 	auto AllocatedBufferSize = ExternalBufferSize;
-	if (AllocatedBufferSize != Values.GetDataSize())
-		throw Soy::AssertException("Array size mismatch");
+	memcpy(AllocatedBuffer, ExternalBuffer, ExternalBufferSize);
 
 	//	safely copy from values
 	size_t AllocatedArrayCount = 0;
@@ -1620,9 +1620,10 @@ JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSType
 
 	//	make externally backed array that'll dealloc
 	void* DeallocContext = nullptr;
-	JSValueRef Exception = nullptr;
-	auto ArrayObject = JSObjectMakeTypedArrayWithBytesNoCopy(Context, TypedArrayType, AllocatedBuffer, AllocatedBufferSize, Dealloc, DeallocContext, &Exception);
-	JsCore::ThrowException(Context, Exception);
+	void* AllocatedBufferMutable = const_cast<uint8_t*>(AllocatedBuffer);
+	auto ArrayObject = JSObjectMakeTypedArrayWithBytesNoCopy(Context, ArrayType, AllocatedBufferMutable, AllocatedBufferSize, Dealloc, DeallocContext, Exception);
+	if(Exception )
+		JsCore::ThrowException(Context, *Exception);
 
 	return ArrayObject;
 }
