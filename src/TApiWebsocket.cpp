@@ -293,7 +293,12 @@ void TWebsocketServerPeer::Send(const std::string& Message)
 
 void TWebsocketServerPeer::Send(const ArrayBridge<uint8_t>& Message)
 {
-	throw Soy::AssertException("Encode to websocket protocol");
-	
+	//	gr: cannot send if handshake hasn't completed
+	if (!this->mHandshake.IsCompleted())
+	{
+		throw Soy::AssertException("Sending message before handshake complete");
+	}
+	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TMessageProtocol(this->mHandshake, Message));
+	Push(Packet);
 }
 
