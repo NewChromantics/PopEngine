@@ -119,7 +119,8 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 	void			SetValue(Bind::TCallback& Params);
-	
+	void			SetLabel(Bind::TCallback& Params);
+
 	void			OnChanged(bool& NewValue);
 	
 public:

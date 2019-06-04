@@ -173,6 +173,7 @@ public:
 	
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override	{	return mLastValue;	}
+	virtual void		SetLabel(const std::string& Label) override;
 	
 	virtual void		OnChanged() override
 	{
@@ -628,6 +629,7 @@ void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 		
 		mControl.minValue = Min;
 		mControl.maxValue = Max;
+		mControl.numberOfTickMarks = Max-Min;
 		CacheValue();
 	};
 	
@@ -713,7 +715,7 @@ Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::R
 		[mControl setButtonType:NSSwitchButton];
 		//[mControl setBezelStyle:0];
 		
-		//	all buttons have labels, but windows doesn't? so our API doesnt
+		//	windows & osx both have labels for tickbox, but our current api is that this isn't setup at construction
 		mControl.title = @"";
 		
 		[[Parent.mWindow contentView] addSubview:mControl];
@@ -746,6 +748,21 @@ void Platform::TTickBox::CacheValue()
 
 	mLastValue = Value;
 }
+
+void Platform::TTickBox::SetLabel(const std::string& Label)
+{
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before TTickBox created");
+		mControl.title = Soy::StringToNSString(Label);
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+
+
 
 void Platform::TTickBox::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
