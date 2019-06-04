@@ -106,6 +106,7 @@
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
 		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
 		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
+		BFE9513222A70B9700B83061 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE9513122A70B9700B83061 /* libx264.a */; };
 		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
@@ -380,6 +381,9 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
+		BFE9512F22A70B9700B83061 /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = x264/osx/x264.h; sourceTree = "<group>"; };
+		BFE9513022A70B9700B83061 /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = x264/osx/x264_config.h; sourceTree = "<group>"; };
+		BFE9513122A70B9700B83061 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libx264.a; path = x264/osx/libx264.a; sourceTree = "<group>"; };
 		BFEDFC6C2221F9B5009E5F5E /* TrainStop */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TrainStop; path = ../TrainStop; sourceTree = "<group>"; };
 		BFF2B6C02264F9A700232137 /* TApiSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSerial.h; path = src/TApiSerial.h; sourceTree = "<group>"; };
 		BFF2B6C12264F9A700232137 /* TApiSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSerial.cpp; path = src/TApiSerial.cpp; sourceTree = "<group>"; };
@@ -467,6 +471,7 @@
 				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
 				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
+				BFE9513222A70B9700B83061 /* libx264.a in Frameworks */,
 				BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */,
 				BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */,
 				BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */,
@@ -552,6 +557,7 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BFE9512E22A70B8400B83061 /* x264 */,
 				BF89CF49228DD3EB00A187D5 /* OpenVr */,
 				BF89CF4B228DD3F700A187D5 /* OpenVr */,
 				BF0F9E762289EB5F00AEA7DC /* dyncall */,
@@ -711,6 +717,16 @@
 				BF91D9AC221584F200E91671 /* vvector.h */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		BFE9512E22A70B8400B83061 /* x264 */ = {
+			isa = PBXGroup;
+			children = (
+				BFE9513122A70B9700B83061 /* libx264.a */,
+				BFE9513022A70B9700B83061 /* x264_config.h */,
+				BFE9512F22A70B9700B83061 /* x264.h */,
+			);
+			name = x264;
 			sourceTree = "<group>";
 		};
 		BFFCACC721FF63AA00153C4E /* CoreMlModels */ = {
@@ -1239,6 +1255,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/x264/osx",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1360,6 +1377,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/x264/osx",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1410,6 +1428,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/x264/osx",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;

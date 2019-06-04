@@ -65,9 +65,11 @@ namespace PopCameraDevice
 
 
 
-#include "Libs/x264/include/x264.h"
 #if defined(TARGET_WINDOWS)
+#include "Libs/x264/include/x264.h"
 //#pragma comment(lib,"libx264.lib")
+#elif defined(TARGET_OSX)
+#include "Libs/x264/osx/x264.h"
 #endif
 namespace X264
 {
@@ -944,12 +946,12 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 
 	//	do final configuration & alloc encoder
 	mParam.i_csp = X264_CSP_I420;
-	mParam.i_width = Meta.GetWidth();
-	mParam.i_height = Meta.GetHeight();
+	mParam.i_width = size_cast<int>(Meta.GetWidth());
+	mParam.i_height = size_cast<int>(Meta.GetHeight());
 	mParam.b_vfr_input = 0;
 	mParam.b_repeat_headers = 1;
 	mParam.b_annexb = 1;
-	mParam.p_log_private = X264::Log;
+	mParam.p_log_private = reinterpret_cast<void*>(&X264::Log);
 	mParam.i_log_level = X264_LOG_INFO;
 
 	auto Profile = "baseline";
