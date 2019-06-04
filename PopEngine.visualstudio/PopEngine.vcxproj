@@ -400,6 +400,7 @@
     <None Include="..\UnitTest\CameraTest\Yuv8_88.frag.glsl">
       <FileType>Document</FileType>
     </None>
+    <None Include="..\UnitTest\Common\MemCheckLoop.js" />
     <None Include="..\UnitTest\Common\PopEngine.js" />
     <None Include="..\UnitTest\Common\PopShaderCache.js" />
     <None Include="..\UnitTest\Common\TFrameCounter.js" />
