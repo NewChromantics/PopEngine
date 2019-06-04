@@ -1042,7 +1042,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
-	/*
+	
 	while (true)
 	{
 		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
@@ -1051,7 +1051,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 
 		Encode(nullptr);
 	}
-	*/
+	
 }
 
 void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
