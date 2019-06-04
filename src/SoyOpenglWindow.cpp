@@ -994,6 +994,9 @@ public:
 */
 void Platform::TOpenglContext::OnPaint()
 {
+	//	better place to flush the queue?
+	this->Flush(*this);
+
 	auto& Control = mParent;
 	auto& Context = *this;
 	Soy::Rectx<size_t> BoundsRect = Control.GetClientRect();
