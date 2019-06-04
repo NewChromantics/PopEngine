@@ -65,27 +65,9 @@ namespace Platform
 #endif
 }
 
-#if defined(TARGET_WINDOWS)
-//int _tmain(int argc, _TCHAR* argv[])
-int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
-{
-	{
-		char buffer[MAX_PATH];
-		GetModuleFileName( NULL, buffer, MAX_PATH );
-		Platform::SetDllPath(buffer);
-	}
 
-	Platform::Private::InstanceHandle = hInstance;
-	const char* argv[2] = { "",lpCmdLine };
-	
-	int argc = 2;
-	if ( !argv[1] || strlen(argv[1]) == 0 )
-		argc = 1;
-
-#else
 int main(int argc,const char* argv[])
 {
-#endif
 	Array<std::string> Arguments;
 	for ( auto a=1;	a<argc;	a++ )
 	{
@@ -100,4 +82,21 @@ int main(int argc,const char* argv[])
 	
 	return PopMain(ArgumentsBridge);
 }
+
+//	define winmain AND main for gui & console subsystem builds
+#if defined(TARGET_WINDOWS)
+//int _tmain(int argc, _TCHAR* argv[])
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	char ExePath[MAX_PATH];
+	GetModuleFileName(NULL, ExePath, MAX_PATH);
+	Platform::SetDllPath(ExePath);
+
+	Platform::Private::InstanceHandle = hInstance;
+	const char* argv[2] = { ExePath, lpCmdLine };
+	int argc = 2;
+
+	return main(argc, argv);
+}
+#endif
 

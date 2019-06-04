@@ -33,6 +33,7 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <DelayLoadDLLs>PopCameraDevice.dll;PopH264.dll</DelayLoadDLLs>
       <Profile>true</Profile>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
