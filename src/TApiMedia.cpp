@@ -127,7 +127,7 @@ protected:
 class X264::TInstance
 {
 public:
-	TInstance(const std::string& PresetName);
+	TInstance(size_t PresetValue);
 	~TInstance();
 
 	void							PushFrame(const SoyPixelsImpl& Pixels, int64_t FrameTime);
@@ -804,11 +804,24 @@ void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumb
 
 void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 {
-	std::string PresetName = "Medium";
-	if (!Params.IsArgumentUndefined(0))
-		PresetName = Params.GetArgumentString(0);
-
-	mEncoder.reset(new X264::TInstance(PresetName));
+	int PresetValue = 5;
+	try
+	{
+		PresetValue = Params.GetArgumentInt(0);
+		if ( PresetValue < 0 || PresetValue	> 9 )
+		{
+			std::stringstream Error;
+			Error << "Preset " << PresetValue << " out of range";
+			throw Soy::AssertException(Error);
+		}
+	}
+	catch(std::exception& e)
+	{
+		std::stringstream Error;
+		Error << "Expected arg0 as preset between 0..9 (ultrafast...placebo); " << e.what();
+		throw Soy::AssertException(Error);
+	}
+	mEncoder.reset(new X264::TInstance(PresetValue));
 
 	mEncoder->mOnOutputPacket = [&]()
 	{
@@ -888,10 +901,16 @@ void X264::IsOkay(int Result, const char* Context)
 	throw Soy::AssertException(Error);
 }
 
-X264::TInstance::TInstance(const std::string& PresetName)
+
+X264::TInstance::TInstance(size_t PresetValue)
 {
+	if ( PresetValue > 9 )
+		throw Soy_AssertException("Expecting preset value <= 9");
+	
+	//	todo: tune options. takes , seperated values
 	const char* Tune = nullptr;
-	auto Result = x264_param_default_preset(&mParam, PresetName.c_str(), Tune);
+	auto* PresetName = x264_preset_names[PresetValue];
+	auto Result = x264_param_default_preset(&mParam, PresetName, Tune);
 	IsOkay(Result,"x264_param_default_preset");
 }
 
