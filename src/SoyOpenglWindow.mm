@@ -12,6 +12,25 @@ namespace Platform
 	class TTextBox_Base;
 }
 
+
+@interface Platform_View: NSView
+
+- (BOOL) isFlipped;
+
+@end
+
+@implementation Platform_View
+
+- (BOOL) isFlipped
+{
+	return YES;
+}
+
+@end
+
+
+
+
 @interface TResponder : NSResponder
 {
 @public std::function<void()>	mCallback;
@@ -208,11 +227,18 @@ NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 
 	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
 	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+
+	auto Top = Rect.Top();
+	auto Bottom = Rect.Bottom();
+
 	//	rect is upside in osx!
 	//	todo: incorporate origin
-	auto Top = ParentRect.size.height - Rect.Bottom();
-	auto Bottom = ParentRect.size.height - Rect.Top();
-
+	if ( !mWindow.contentView.isFlipped )
+	{
+		Top = ParentRect.size.height - Rect.Bottom();
+		Bottom = ParentRect.size.height - Rect.Top();
+	}
+						
 	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
 	return RectNs;
 }
@@ -572,6 +598,10 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 		
 		//	mouse callbacks
 		[mWindow setAcceptsMouseMovedEvents:YES];
+		
+		auto* View = [[Platform_View alloc] initWithFrame:FrameRect];
+		mWindow.contentView = View;
+		
 	};
 	
 	//	move this to constructor
