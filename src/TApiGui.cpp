@@ -11,9 +11,13 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Label);
 	DEFINE_BIND_TYPENAME(TextBox);
 	DEFINE_BIND_TYPENAME(TickBox);
+
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
 	DEFINE_BIND_FUNCTIONNAME(SetLabel);
+
+	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
+	DEFINE_BIND_FUNCTIONNAME(EnableScrollbars);
 }
 
 
@@ -80,6 +84,8 @@ void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
 
 void ApiGui::TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
+	Template.BindFunction<SetFullscreen_FunctionName>( &TWindowWrapper::SetFullscreen );
+	Template.BindFunction<EnableScrollbars_FunctionName>( &TWindowWrapper::EnableScrollbars );
 }
 
 void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
@@ -142,6 +148,19 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	*/
 }
 
+void ApiGui::TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
+{
+	auto Fullscreen = Params.GetArgumentBool(0);
+	mWindow->SetFullscreen(Fullscreen);
+}
+
+void ApiGui::TWindowWrapper::EnableScrollbars(Bind::TCallback& Params)
+{
+	//	order is xy
+	auto Horz = Params.GetArgumentBool(0);
+	auto Vert = Params.GetArgumentBool(1);
+	mWindow->EnableScrollBars( Horz, Vert );
+}
 
 
 

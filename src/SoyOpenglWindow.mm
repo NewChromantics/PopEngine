@@ -58,7 +58,7 @@ namespace Platform
 class Platform::TWindow : public SoyWindow
 {
 public:
-	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,Soy::Rectx<int32_t>& Rect);
+	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,std::function<void()> OnAllocated=nullptr);
 	~TWindow()
 	{
 		[mWindow release];
@@ -67,7 +67,8 @@ public:
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
-	
+	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
+
 	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
 	NSView*							GetContentView();
 	
@@ -262,7 +263,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 	return kCVReturnSuccess;
 }
 
-TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params) :
+TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params) :
 	SoyWorkerThread		( Soy::GetTypeName(*this), Params.mAutoRedraw ? SoyWorkerWaitMode::Sleep : SoyWorkerWaitMode::Wake ),
 	mName				( Name ),
 	mParams				( Params )
@@ -275,9 +276,42 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	if ( !Soy::Platform::BundleInitialised )
 		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
 
-	//	doesn't need to be on main thread, but we're not blocking main thread any more
-	auto PostAllocate = [this]()
+	auto& Thread = *Soy::Platform::gMainThread;
+	
+	auto PostAllocate = [=]()
 	{
+		auto* Window = mWindow->mWindow;
+		
+		//	create a view
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
+		if ( !mView->IsValid() )
+			throw Soy::AssertException("Opengl view isn't valid");
+		
+		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
+		{
+			mOnRender(RenderTarget, LockContext );
+		};
+		mView->mOnRender = OnRender;
+
+		//	note: this is deffered, but as flags above don't seem to work right, not much choice
+		//		plus, every other OSX app seems to do the same?
+		mWindow->SetFullscreen( Params.mFullscreen );
+		
+		//	gr: todo: this should be replaced with a proper OpenglView control anyway
+		//		but we should lose the content view allocated in platform this way
+		//	assign view to window
+		[Window setContentView: mView->mView];
+
+		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
+		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
+		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
+		mView->mOnKeyDown = [this](SoyKeyButton::Type Button)	{	if ( this->mOnKeyDown )	this->mOnKeyDown(Button);	};
+		mView->mOnKeyUp = [this](SoyKeyButton::Type Button)		{	if ( this->mOnKeyUp )	this->mOnKeyUp(Button);	};
+		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
+		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
+
+		//	setup display link
 		if ( mParams.mRedrawWithDisplayLink )
 		{
 			//	Synchronize buffer swaps with vertical refresh rate
@@ -305,61 +339,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 			SoyWorkerThread::Start();
 		}
 	};
-	
-	
-	auto& MainThread = *Soy::Platform::gMainThread;
-	
-	//	actual allocation must be on the main thread.
-	auto Allocate = [=,&MainThread]
-	{
-		Soy::Rectx<int32_t> Rect32( Rect );
-		mWindow.reset( new Platform::TWindow(MainThread,Name,Rect32) );
-		auto& Wrapper = *mWindow;
-		auto*& mWindow = Wrapper.mWindow;
-
-		//	create a view
-		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
-		Soy::Assert( mView->IsValid(), "view isn't valid?" );
-
-		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
-		{
-			mOnRender(RenderTarget, LockContext );
-		};
-		mView->mOnRender = OnRender;
-
-		//	note: this is deffered, but as flags above don't seem to work right, not much choice
-		//		plus, every other OSX app seems to do the same?
-		this->mWindow->SetFullscreen( Params.mFullscreen );
-		
-		//	gr: todo: this should be replaced with a proper OpenglView control anyway
-		//		but we should lose the content view allocated in platform this way
-		//	assign view to window
-		[mWindow setContentView: mView->mView];
-
-		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
-		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
-		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
-		mView->mOnKeyDown = [this](SoyKeyButton::Type Button)	{	if ( this->mOnKeyDown )	this->mOnKeyDown(Button);	};
-		mView->mOnKeyUp = [this](SoyKeyButton::Type Button)		{	if ( this->mOnKeyUp )	this->mOnKeyUp(Button);	};
-		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
-		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
-
-		//	doesn't need to be on main thread, but is deffered
-		PostAllocate();
-	};
-	
-	auto Wait = false;
-	if ( Wait )
-	{
-		Soy::TSemaphore Semaphore;
-		MainThread.PushJob( Allocate, Semaphore );
-		Semaphore.Wait();
-	}
-	else
-	{
-		MainThread.PushJob( Allocate );
-	}
+	mWindow.reset( new Platform::TWindow( Thread, Name, Rect, PostAllocate) );
 }
 
 TOpenglWindow::~TOpenglWindow()
@@ -450,6 +430,16 @@ Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 }
 
 
+void TOpenglWindow::EnableScrollBars(bool Horz,bool Vert)
+{
+	if ( !mWindow )
+		return;
+	
+	mWindow->EnableScrollBars( Horz, Vert );
+}
+
+
+
 void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
@@ -468,7 +458,7 @@ bool TOpenglWindow::IsFullscreen()
 }
 
 
-Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,Soy::Rectx<int32_t>& Rect) :
+Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,std::function<void()> OnAllocated) :
 	mThread	( Thread )
 {
 	//	actual allocation must be on the main thread.
@@ -542,6 +532,9 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 		{
 			mWindow.contentView = mContentView;
 		}
+		
+		if ( OnAllocated )
+			OnAllocated();
 	};
 	
 	mThread.PushJob( Allocate );
@@ -575,9 +568,19 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 		[mWindow toggleFullScreen:nil];
 	};
-	Soy::Platform::gMainThread->PushJob( DoSetFullScreen );
+	mThread.PushJob( DoSetFullScreen );
 }
 
+void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
+{
+	auto Exec = [=]()
+	{
+		NSScrollView* ScrollView = mWindow.contentView;
+		[ScrollView setHasVerticalScroller:Vert?YES:NO];
+		[ScrollView setHasHorizontalScroller:Horz?YES:NO];
+	};
+	mThread.PushJob(Exec);
+}
 
 
 

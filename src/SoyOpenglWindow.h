@@ -46,7 +46,7 @@ public:
 class TOpenglWindow : public SoyWindow, public SoyWorkerThread
 {
 public:
-	TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params);
+	TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params);
 	~TOpenglWindow();
 	
 	bool			IsValid();
@@ -59,6 +59,7 @@ public:
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
 	virtual void						SetFullscreen(bool Fullscreen) override;
 	virtual bool						IsFullscreen() override;
+	virtual void						EnableScrollBars(bool Horz,bool Vert) override;
 
 	virtual void						OnClosed() override;
 

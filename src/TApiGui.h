@@ -40,6 +40,9 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
+	void			SetFullscreen(Bind::TCallback& Params);
+	void			EnableScrollbars(Bind::TCallback& Params);
+	
 public:
 	std::shared_ptr<SoyWindow>&	mWindow = mObject;
 };
