@@ -71,6 +71,7 @@ public:
 
 	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
 	NSView*							GetContentView();
+	void							OnChildAdded(const Soy::Rectx<int32_t>& ChildRect);
 	
 public:
 	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
@@ -223,6 +224,22 @@ NSView* Platform::TWindow::GetContentView()
 	return mContentView;
 	//NSScrollView* ScrollView = [mWindow contentView];
 	//return ScrollView.contentView.documentView;
+}
+
+void Platform::TWindow::OnChildAdded(const Soy::Rectx<int32_t>& ChildRect)
+{
+	//	expand scroll space to match child rect min/max
+	auto Right = ChildRect.Right();
+	auto Bottom = ChildRect.Bottom();
+	
+	auto NewSize = mContentView.frame.size;
+	NewSize.width = std::max<CGFloat>( NewSize.width, Right );
+	NewSize.height = std::max<CGFloat>( NewSize.height, Bottom );
+
+	NSScrollView* ScrollView = [mWindow contentView];
+	auto* ClipView = ScrollView.contentView;
+	ClipView.documentView.frameSize = NewSize;
+
 }
 
 
@@ -618,6 +635,7 @@ Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rec
 	
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
 	};
 	mThread.PushJob( Allocate );
 }
@@ -723,6 +741,7 @@ Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::R
 		
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
 	};
 	mThread.PushJob( Allocate );
 }
@@ -824,6 +843,7 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 		
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
 	};
 	mThread.PushJob( Allocate );
 }
