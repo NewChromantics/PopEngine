@@ -58,10 +58,7 @@ namespace Platform
 class Platform::TWindow : public SoyWindow
 {
 public:
-	TWindow(PopWorker::TJobQueue& Thread) :
-		mThread	( Thread )
-	{
-	}
+	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,Soy::Rectx<int32_t>& Rect);
 	~TWindow()
 	{
 		[mWindow release];
@@ -315,32 +312,13 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	//	actual allocation must be on the main thread.
 	auto Allocate = [=,&MainThread]
 	{
-		mWindow.reset( new Platform::TWindow(MainThread) );
+		Soy::Rectx<int32_t> Rect32( Rect );
+		mWindow.reset( new Platform::TWindow(MainThread,Name,Rect32) );
 		auto& Wrapper = *mWindow;
 		auto*& mWindow = Wrapper.mWindow;
 
-		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
-		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-
-		//	gr: this is unreliable, so we call our SetFullscreen() later
-		/*
-		if ( Params.mFullscreen )
-		{
-			Style &= ~NSWindowStyleMaskResizable;
-			Style &= ~NSWindowStyleMaskTitled;	//	on mojave we can see title
-			Style |= NSWindowStyleMaskFullScreen;
-			
-			auto* MainScreen = [NSScreen mainScreen];
-			FrameRect = MainScreen.frame;
-			WindowRect = FrameRect;
-			
-			//	hide dock & menu bar
-			[NSMenu setMenuBarVisible:NO];
-		}
-		*/
-
 		//	create a view
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
 		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
 		Soy::Assert( mView->IsValid(), "view isn't valid?" );
 
@@ -350,59 +328,15 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		};
 		mView->mOnRender = OnRender;
 
-		//[[NSAutoreleasePool alloc] init];
-		
-		bool Defer = NO;
-		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
-		Soy::Assert(mWindow,"failed to create window");
-		[mWindow retain];
-
 		//	note: this is deffered, but as flags above don't seem to work right, not much choice
 		//		plus, every other OSX app seems to do the same?
 		this->mWindow->SetFullscreen( Params.mFullscreen );
 		
-
-		/*
-		[mWindow
-		 setFrame:[mWindow frameRectForContentRect:[[mWindow screen] frame]]
-		 display:YES
-		 animate:YES];
-		//[mWindow setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-		//[mWindow setFrame:screenFrame display:YES];
-		//[mWindow toggleFullScreen:self];
-		*/
-		
-		
-		//	auto save window location
-		auto AutoSaveName = Soy::StringToNSString( Name );
-		[mWindow setFrameAutosaveName:AutoSaveName];
-		
-
-		//[mWindow setDelegate:[NSApp delegate]];
-		//[mWindow setIsVisible:TRUE];
-		//[mWindow makeKeyAndOrderFront:nil];
-		//[mWindow setStyleMask:NSTitledWindowMask|NSClosableWindowMask];
-		
-		//	setup window
-	//	[Window setLevel:NSMainMenuWindowLevel+1];
-	//	[Window setOpaque:YES];
-	//	[Window setHidesOnDeactivate:YES];
-
-		
+		//	gr: todo: this should be replaced with a proper OpenglView control anyway
+		//		but we should lose the content view allocated in platform this way
 		//	assign view to window
 		[mWindow setContentView: mView->mView];
 
-		id Sender = NSApp;
-		//[mWindow setBackgroundColor:[NSColor blueColor]];
-		[mWindow makeKeyAndOrderFront:Sender];
-
-		auto Title = Soy::StringToNSString( Name );
-		[mWindow setTitle:Title];
-		//[mWindow setMiniwindowTitle:Title];
-		//[mWindow setTitleWithRepresentedFilename:Title];
-		
-		//	mouse callbacks
-		[mWindow setAcceptsMouseMovedEvents:YES];
 		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
 		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
 		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
@@ -533,6 +467,86 @@ bool TOpenglWindow::IsFullscreen()
 	return mWindow->IsFullscreen();
 }
 
+
+Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,Soy::Rectx<int32_t>& Rect) :
+	mThread	( Thread )
+{
+	//	actual allocation must be on the main thread.
+	auto Allocate = [=]
+	{
+		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
+		
+		bool Defer = NO;
+		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
+		Soy::Assert(mWindow,"failed to create window");
+		[mWindow retain];
+		
+		/*
+		 //	note: this is deffered, but as flags above don't seem to work right, not much choice
+		 //		plus, every other OSX app seems to do the same?
+		 pWindow->SetFullscreen( Params.mFullscreen );
+		 */
+		
+		//	auto save window location
+		auto AutoSaveName = Soy::StringToNSString( Name );
+		[mWindow setFrameAutosaveName:AutoSaveName];
+		
+		id Sender = NSApp;
+		[mWindow makeKeyAndOrderFront:Sender];
+		
+		auto Title = Soy::StringToNSString( Name );
+		[mWindow setTitle:Title];
+		//[mWindow setMiniwindowTitle:Title];
+		//[mWindow setTitleWithRepresentedFilename:Title];
+		
+		//	mouse callbacks
+		[mWindow setAcceptsMouseMovedEvents:YES];
+		
+		mContentView = [[Platform_View alloc] initWithFrame:FrameRect];
+		
+		//	gr: on windows, a window can be scrollable
+		//		on osx we need a view. In both cases, we can just hide the scrollbars, so lets always put it in a scrollview
+		bool ScrollMode = true;
+		if ( ScrollMode )
+		{
+			//	setup scroll view
+			auto* ScrollView = [[NSScrollView alloc] initWithFrame:FrameRect];
+			[ScrollView setBorderType:NSNoBorder];
+			[ScrollView setHasVerticalScroller:NO];
+			[ScrollView setHasHorizontalScroller:NO];
+			//[ScrollView setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
+			
+			//	the scrollview colour is different, lets make it look like a window
+			ScrollView.backgroundColor = mWindow.backgroundColor;
+			
+			//	put scroll view on window
+			[mWindow setContentView:ScrollView];
+			
+			//auto* ClipView = ScrollView.contentView;
+			//ClipView.documentView = Wrapper.mContentView;
+			//	custom scroll size...
+			//ClipView.documentView.frameSize = NSMakeSize(800,8000);
+			//ClipView.documentView = Wrapper.mContentView;
+			
+			//	assign document view
+			[ScrollView setDocumentView:mContentView];
+			
+			//	gr: maybe we need to change first responder?
+			//[theWindow makeKeyAndOrderFront:nil];
+			//[theWindow makeFirstResponder:theTextView];
+			
+		}
+		else
+		{
+			mWindow.contentView = mContentView;
+		}
+	};
+	
+	mThread.PushJob( Allocate );
+}
+
 bool Platform::TWindow::IsFullscreen()
 {
 	if ( !mWindow )
@@ -570,97 +584,7 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
-	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread) );
-	
-	//	actual allocation must be on the main thread.
-	auto Allocate = [=]
-	{
-		auto& Wrapper = *dynamic_cast<Platform::TWindow*>( pWindow.get() );
-		auto*& mWindow = Wrapper.mWindow;
-		
-		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
-		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-		
-		bool Defer = NO;
-		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
-		Soy::Assert(mWindow,"failed to create window");
-		[mWindow retain];
-		
-		/*
-		//	note: this is deffered, but as flags above don't seem to work right, not much choice
-		//		plus, every other OSX app seems to do the same?
-		pWindow->SetFullscreen( Params.mFullscreen );
-		*/
-		
-		//	auto save window location
-		auto AutoSaveName = Soy::StringToNSString( Name );
-		[mWindow setFrameAutosaveName:AutoSaveName];
-		
-		id Sender = NSApp;
-		[mWindow makeKeyAndOrderFront:Sender];
-		
-		auto Title = Soy::StringToNSString( Name );
-		[mWindow setTitle:Title];
-		//[mWindow setMiniwindowTitle:Title];
-		//[mWindow setTitleWithRepresentedFilename:Title];
-		
-		//	mouse callbacks
-		[mWindow setAcceptsMouseMovedEvents:YES];
-		
-		Wrapper.mContentView = [[Platform_View alloc] initWithFrame:FrameRect];
-		
-		//	gr: on windows, a window can be scrollable
-		//		on osx we need a view. In both cases, we can just hide the scrollbars, so lets always put it in a scrollview
-		bool ScrollMode = true;
-		if ( ScrollMode )
-		{
-			//	setup scroll view
-			auto* ScrollView = [[NSScrollView alloc] initWithFrame:FrameRect];
-			[ScrollView setBorderType:NSNoBorder];
-			[ScrollView setHasVerticalScroller:NO];
-			[ScrollView setHasHorizontalScroller:NO];
-			//[ScrollView setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
-
-			//	the scrollview colour is different, lets make it look like a window
-			ScrollView.backgroundColor = mWindow.backgroundColor;
-			
-			//	put scroll view on window
-			[mWindow setContentView:ScrollView];
-			
-			//auto* ClipView = ScrollView.contentView;
-			//ClipView.documentView = Wrapper.mContentView;
-			//	custom scroll size...
-			//ClipView.documentView.frameSize = NSMakeSize(800,8000);
-			//ClipView.documentView = Wrapper.mContentView;
-		
-			//	assign document view
-			[ScrollView setDocumentView:Wrapper.mContentView];
-			
-			//	gr: maybe we need to change first responder?
-			//[theWindow makeKeyAndOrderFront:nil];
-			//[theWindow makeFirstResponder:theTextView];
-
-		}
-		else
-		{
-			mWindow.contentView = Wrapper.mContentView;
-		}
-	};
-	
-	//	move this to constructor
-	static auto Wait = false;
-	if ( Wait )
-	{
-		Soy::TSemaphore Semaphore;
-		Thread.PushJob( Allocate, Semaphore );
-		Semaphore.Wait();
-	}
-	else
-	{
-		Thread.PushJob( Allocate );
-	}
-	
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect) );
 	return pWindow;
 }
 
