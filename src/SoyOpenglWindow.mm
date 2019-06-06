@@ -72,10 +72,12 @@ public:
 	virtual bool					IsFullscreen() override;
 	
 	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
+	NSView*							GetContentView();
 	
 public:
 	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
 	NSWindow*						mWindow = nullptr;
+	Platform_View*					mContentView = nullptr;	//	where controls go
 	CVDisplayLinkRef				mDisplayLink = nullptr;
 };
 
@@ -218,12 +220,19 @@ public:
 
 
 
+NSView* Platform::TWindow::GetContentView()
+{
+	return mContentView;
+	//NSScrollView* ScrollView = [mWindow contentView];
+	//return ScrollView.contentView.documentView;
+}
 
 
 NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 {
 	//	todo: make sure this is called on mThread
-	auto ParentRect = [mWindow contentView].visibleRect;
+	auto* ContentView = GetContentView();
+	auto ParentRect = ContentView.visibleRect;
 
 	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
 	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
@@ -233,7 +242,7 @@ NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 
 	//	rect is upside in osx!
 	//	todo: incorporate origin
-	if ( !mWindow.contentView.isFlipped )
+	if ( !ContentView.isFlipped )
 	{
 		Top = ParentRect.size.height - Rect.Bottom();
 		Bottom = ParentRect.size.height - Rect.Top();
@@ -599,9 +608,44 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 		//	mouse callbacks
 		[mWindow setAcceptsMouseMovedEvents:YES];
 		
-		auto* View = [[Platform_View alloc] initWithFrame:FrameRect];
-		mWindow.contentView = View;
+		Wrapper.mContentView = [[Platform_View alloc] initWithFrame:FrameRect];
 		
+		//	gr: on windows, a window can be scrollable
+		//		on osx we need a view. In both cases, we can just hide the scrollbars, so lets always put it in a scrollview
+		bool ScrollMode = true;
+		if ( ScrollMode )
+		{
+			//	setup scroll view
+			auto* ScrollView = [[NSScrollView alloc] initWithFrame:FrameRect];
+			[ScrollView setBorderType:NSNoBorder];
+			[ScrollView setHasVerticalScroller:NO];
+			[ScrollView setHasHorizontalScroller:NO];
+			//[ScrollView setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
+
+			//	the scrollview colour is different, lets make it look like a window
+			ScrollView.backgroundColor = mWindow.backgroundColor;
+			
+			//	put scroll view on window
+			[mWindow setContentView:ScrollView];
+			
+			//auto* ClipView = ScrollView.contentView;
+			//ClipView.documentView = Wrapper.mContentView;
+			//	custom scroll size...
+			//ClipView.documentView.frameSize = NSMakeSize(800,8000);
+			//ClipView.documentView = Wrapper.mContentView;
+		
+			//	assign document view
+			[ScrollView setDocumentView:Wrapper.mContentView];
+			
+			//	gr: maybe we need to change first responder?
+			//[theWindow makeKeyAndOrderFront:nil];
+			//[theWindow makeFirstResponder:theTextView];
+
+		}
+		else
+		{
+			mWindow.contentView = Wrapper.mContentView;
+		}
 	};
 	
 	//	move this to constructor
@@ -645,7 +689,8 @@ Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rec
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
 	
-		[[Parent.mWindow contentView] addSubview:mControl];
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
 	};
 	mThread.PushJob( Allocate );
 }
@@ -659,7 +704,8 @@ void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 		
 		mControl.minValue = Min;
 		mControl.maxValue = Max;
-		mControl.numberOfTickMarks = Max-Min;
+		auto TickMarks = std::min( Max-Min, 10 );
+		mControl.numberOfTickMarks = TickMarks;
 		CacheValue();
 	};
 	
@@ -748,7 +794,8 @@ Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::R
 		//	windows & osx both have labels for tickbox, but our current api is that this isn't setup at construction
 		mControl.title = @"";
 		
-		[[Parent.mWindow contentView] addSubview:mControl];
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
 	};
 	mThread.PushJob( Allocate );
 }
@@ -848,7 +895,8 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 	
 		ApplyStyle();
 		
-		[[Parent.mWindow contentView] addSubview:mControl];
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
 	};
 	mThread.PushJob( Allocate );
 }
