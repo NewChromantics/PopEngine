@@ -23,7 +23,7 @@ namespace Platform
 	class TWin32Thread;		//	windows needs to make calls on a specific thread (just as OSX needs it to be on the main dispatcher)
 	
 	
-	std::shared_ptr<SoyWindow>	CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect);
+	std::shared_ptr<SoyWindow>	CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable);
 	std::shared_ptr<SoySlider>	CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyTextBox>	CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyLabel>	CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
@@ -46,7 +46,7 @@ public:
 class TOpenglWindow : public SoyWindow, public SoyWorkerThread
 {
 public:
-	TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params);
+	TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params);
 	~TOpenglWindow();
 	
 	bool			IsValid();
@@ -59,6 +59,7 @@ public:
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
 	virtual void						SetFullscreen(bool Fullscreen) override;
 	virtual bool						IsFullscreen() override;
+	virtual void						EnableScrollBars(bool Horz,bool Vert) override;
 
 	virtual void						OnClosed() override;
 

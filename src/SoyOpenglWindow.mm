@@ -12,6 +12,25 @@ namespace Platform
 	class TTextBox_Base;
 }
 
+
+@interface Platform_View: NSView
+
+- (BOOL) isFlipped;
+
+@end
+
+@implementation Platform_View
+
+- (BOOL) isFlipped
+{
+	return YES;
+}
+
+@end
+
+
+
+
 @interface TResponder : NSResponder
 {
 @public std::function<void()>	mCallback;
@@ -39,10 +58,7 @@ namespace Platform
 class Platform::TWindow : public SoyWindow
 {
 public:
-	TWindow(PopWorker::TJobQueue& Thread) :
-		mThread	( Thread )
-	{
-	}
+	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated=nullptr);
 	~TWindow()
 	{
 		[mWindow release];
@@ -51,12 +67,16 @@ public:
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
-	
+	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
+
 	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
+	NSView*							GetContentView();
+	void							OnChildAdded(const Soy::Rectx<int32_t>& ChildRect);
 	
 public:
 	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
 	NSWindow*						mWindow = nullptr;
+	Platform_View*					mContentView = nullptr;	//	where controls go
 	CVDisplayLinkRef				mDisplayLink = nullptr;
 };
 
@@ -173,6 +193,7 @@ public:
 	
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override	{	return mLastValue;	}
+	virtual void		SetLabel(const std::string& Label) override;
 	
 	virtual void		OnChanged() override
 	{
@@ -198,20 +219,50 @@ public:
 
 
 
+NSView* Platform::TWindow::GetContentView()
+{
+	return mContentView;
+	//NSScrollView* ScrollView = [mWindow contentView];
+	//return ScrollView.contentView.documentView;
+}
+
+void Platform::TWindow::OnChildAdded(const Soy::Rectx<int32_t>& ChildRect)
+{
+	//	expand scroll space to match child rect min/max
+	auto Right = ChildRect.Right();
+	auto Bottom = ChildRect.Bottom();
+	
+	auto NewSize = mContentView.frame.size;
+	NewSize.width = std::max<CGFloat>( NewSize.width, Right );
+	NewSize.height = std::max<CGFloat>( NewSize.height, Bottom );
+
+	NSScrollView* ScrollView = [mWindow contentView];
+	auto* ClipView = ScrollView.contentView;
+	ClipView.documentView.frameSize = NewSize;
+
+}
 
 
 NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 {
 	//	todo: make sure this is called on mThread
-	auto ParentRect = [mWindow contentView].visibleRect;
+	auto* ContentView = GetContentView();
+	auto ParentRect = ContentView.visibleRect;
 
 	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
 	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+
+	auto Top = Rect.Top();
+	auto Bottom = Rect.Bottom();
+
 	//	rect is upside in osx!
 	//	todo: incorporate origin
-	auto Top = ParentRect.size.height - Rect.Bottom();
-	auto Bottom = ParentRect.size.height - Rect.Top();
-
+	if ( !ContentView.isFlipped )
+	{
+		Top = ParentRect.size.height - Rect.Bottom();
+		Bottom = ParentRect.size.height - Rect.Top();
+	}
+						
 	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
 	return RectNs;
 }
@@ -229,7 +280,7 @@ CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 	return kCVReturnSuccess;
 }
 
-TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params) :
+TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params) :
 	SoyWorkerThread		( Soy::GetTypeName(*this), Params.mAutoRedraw ? SoyWorkerWaitMode::Sleep : SoyWorkerWaitMode::Wake ),
 	mName				( Name ),
 	mParams				( Params )
@@ -242,9 +293,42 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	if ( !Soy::Platform::BundleInitialised )
 		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
 
-	//	doesn't need to be on main thread, but we're not blocking main thread any more
-	auto PostAllocate = [this]()
+	auto& Thread = *Soy::Platform::gMainThread;
+	
+	auto PostAllocate = [=]()
 	{
+		auto* Window = mWindow->mWindow;
+		
+		//	create a view
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
+		if ( !mView->IsValid() )
+			throw Soy::AssertException("Opengl view isn't valid");
+		
+		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
+		{
+			mOnRender(RenderTarget, LockContext );
+		};
+		mView->mOnRender = OnRender;
+
+		//	note: this is deffered, but as flags above don't seem to work right, not much choice
+		//		plus, every other OSX app seems to do the same?
+		mWindow->SetFullscreen( Params.mFullscreen );
+		
+		//	gr: todo: this should be replaced with a proper OpenglView control anyway
+		//		but we should lose the content view allocated in platform this way
+		//	assign view to window
+		[Window setContentView: mView->mView];
+
+		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
+		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
+		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
+		mView->mOnKeyDown = [this](SoyKeyButton::Type Button)	{	if ( this->mOnKeyDown )	this->mOnKeyDown(Button);	};
+		mView->mOnKeyUp = [this](SoyKeyButton::Type Button)		{	if ( this->mOnKeyUp )	this->mOnKeyUp(Button);	};
+		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
+		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
+
+		//	setup display link
 		if ( mParams.mRedrawWithDisplayLink )
 		{
 			//	Synchronize buffer swaps with vertical refresh rate
@@ -273,123 +357,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 		}
 	};
 	
-	
-	auto& MainThread = *Soy::Platform::gMainThread;
-	
-	//	actual allocation must be on the main thread.
-	auto Allocate = [=,&MainThread]
-	{
-		mWindow.reset( new Platform::TWindow(MainThread) );
-		auto& Wrapper = *mWindow;
-		auto*& mWindow = Wrapper.mWindow;
-
-		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
-		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-
-		//	gr: this is unreliable, so we call our SetFullscreen() later
-		/*
-		if ( Params.mFullscreen )
-		{
-			Style &= ~NSWindowStyleMaskResizable;
-			Style &= ~NSWindowStyleMaskTitled;	//	on mojave we can see title
-			Style |= NSWindowStyleMaskFullScreen;
-			
-			auto* MainScreen = [NSScreen mainScreen];
-			FrameRect = MainScreen.frame;
-			WindowRect = FrameRect;
-			
-			//	hide dock & menu bar
-			[NSMenu setMenuBarVisible:NO];
-		}
-		*/
-
-		//	create a view
-		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
-		Soy::Assert( mView->IsValid(), "view isn't valid?" );
-
-		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
-		{
-			mOnRender(RenderTarget, LockContext );
-		};
-		mView->mOnRender = OnRender;
-
-		//[[NSAutoreleasePool alloc] init];
-		
-		bool Defer = NO;
-		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
-		Soy::Assert(mWindow,"failed to create window");
-		[mWindow retain];
-
-		//	note: this is deffered, but as flags above don't seem to work right, not much choice
-		//		plus, every other OSX app seems to do the same?
-		this->mWindow->SetFullscreen( Params.mFullscreen );
-		
-
-		/*
-		[mWindow
-		 setFrame:[mWindow frameRectForContentRect:[[mWindow screen] frame]]
-		 display:YES
-		 animate:YES];
-		//[mWindow setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-		//[mWindow setFrame:screenFrame display:YES];
-		//[mWindow toggleFullScreen:self];
-		*/
-		
-		
-		//	auto save window location
-		auto AutoSaveName = Soy::StringToNSString( Name );
-		[mWindow setFrameAutosaveName:AutoSaveName];
-		
-
-		//[mWindow setDelegate:[NSApp delegate]];
-		//[mWindow setIsVisible:TRUE];
-		//[mWindow makeKeyAndOrderFront:nil];
-		//[mWindow setStyleMask:NSTitledWindowMask|NSClosableWindowMask];
-		
-		//	setup window
-	//	[Window setLevel:NSMainMenuWindowLevel+1];
-	//	[Window setOpaque:YES];
-	//	[Window setHidesOnDeactivate:YES];
-
-		
-		//	assign view to window
-		[mWindow setContentView: mView->mView];
-
-		id Sender = NSApp;
-		//[mWindow setBackgroundColor:[NSColor blueColor]];
-		[mWindow makeKeyAndOrderFront:Sender];
-
-		auto Title = Soy::StringToNSString( Name );
-		[mWindow setTitle:Title];
-		//[mWindow setMiniwindowTitle:Title];
-		//[mWindow setTitleWithRepresentedFilename:Title];
-		
-		//	mouse callbacks
-		[mWindow setAcceptsMouseMovedEvents:YES];
-		mView->mOnMouseDown = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseDown )	this->mOnMouseDown(MousePos,MouseButton);	};
-		mView->mOnMouseMove = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)	{	if ( this->mOnMouseMove )	this->mOnMouseMove(MousePos,MouseButton);	};
-		mView->mOnMouseUp = [this](const TMousePos& MousePos,SoyMouseButton::Type MouseButton)		{	if ( this->mOnMouseUp )	this->mOnMouseUp(MousePos,MouseButton);	};
-		mView->mOnKeyDown = [this](SoyKeyButton::Type Button)	{	if ( this->mOnKeyDown )	this->mOnKeyDown(Button);	};
-		mView->mOnKeyUp = [this](SoyKeyButton::Type Button)		{	if ( this->mOnKeyUp )	this->mOnKeyUp(Button);	};
-		mView->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->mOnTryDragDrop ? this->mOnTryDragDrop(Filenames) : false;	};
-		mView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	if ( this->mOnDragDrop ) this->mOnDragDrop(Filenames);	};
-
-		//	doesn't need to be on main thread, but is deffered
-		PostAllocate();
-	};
-	
-	auto Wait = false;
-	if ( Wait )
-	{
-		Soy::TSemaphore Semaphore;
-		MainThread.PushJob( Allocate, Semaphore );
-		Semaphore.Wait();
-	}
-	else
-	{
-		MainThread.PushJob( Allocate );
-	}
+	bool Resizable = true;
+	mWindow.reset( new Platform::TWindow( Thread, Name, Rect, Resizable, PostAllocate) );
 }
 
 TOpenglWindow::~TOpenglWindow()
@@ -480,6 +449,16 @@ Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 }
 
 
+void TOpenglWindow::EnableScrollBars(bool Horz,bool Vert)
+{
+	if ( !mWindow )
+		return;
+	
+	mWindow->EnableScrollBars( Horz, Vert );
+}
+
+
+
 void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
@@ -495,6 +474,93 @@ bool TOpenglWindow::IsFullscreen()
 		return false;
 	
 	return mWindow->IsFullscreen();
+}
+
+
+Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated) :
+	mThread	( Thread )
+{
+	//	actual allocation must be on the main thread.
+	auto Allocate = [=]
+	{
+		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable;
+		if ( Resizable )
+			Style |= NSWindowStyleMaskResizable;
+		
+		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
+		
+		bool Defer = NO;
+		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
+		Soy::Assert(mWindow,"failed to create window");
+		[mWindow retain];
+		
+		/*
+		 //	note: this is deffered, but as flags above don't seem to work right, not much choice
+		 //		plus, every other OSX app seems to do the same?
+		 pWindow->SetFullscreen( Params.mFullscreen );
+		 */
+		
+		//	auto save window location
+		auto AutoSaveName = Soy::StringToNSString( Name );
+		if ( Resizable )
+			[mWindow setFrameAutosaveName:AutoSaveName];
+		
+		id Sender = NSApp;
+		[mWindow makeKeyAndOrderFront:Sender];
+		
+		auto Title = Soy::StringToNSString( Name );
+		[mWindow setTitle:Title];
+		//[mWindow setMiniwindowTitle:Title];
+		//[mWindow setTitleWithRepresentedFilename:Title];
+		
+		//	mouse callbacks
+		[mWindow setAcceptsMouseMovedEvents:YES];
+		
+		mContentView = [[Platform_View alloc] initWithFrame:FrameRect];
+		
+		//	gr: on windows, a window can be scrollable
+		//		on osx we need a view. In both cases, we can just hide the scrollbars, so lets always put it in a scrollview
+		bool ScrollMode = true;
+		if ( ScrollMode )
+		{
+			//	setup scroll view
+			auto* ScrollView = [[NSScrollView alloc] initWithFrame:FrameRect];
+			[ScrollView setBorderType:NSNoBorder];
+			[ScrollView setHasVerticalScroller:NO];
+			[ScrollView setHasHorizontalScroller:NO];
+			//[ScrollView setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
+			
+			//	the scrollview colour is different, lets make it look like a window
+			ScrollView.backgroundColor = mWindow.backgroundColor;
+			
+			//	put scroll view on window
+			[mWindow setContentView:ScrollView];
+			
+			//auto* ClipView = ScrollView.contentView;
+			//ClipView.documentView = Wrapper.mContentView;
+			//	custom scroll size...
+			//ClipView.documentView.frameSize = NSMakeSize(800,8000);
+			//ClipView.documentView = Wrapper.mContentView;
+			
+			//	assign document view
+			[ScrollView setDocumentView:mContentView];
+			
+			//	gr: maybe we need to change first responder?
+			//[theWindow makeKeyAndOrderFront:nil];
+			//[theWindow makeFirstResponder:theTextView];
+			
+		}
+		else
+		{
+			mWindow.contentView = mContentView;
+		}
+		
+		if ( OnAllocated )
+			OnAllocated();
+	};
+	
+	mThread.PushJob( Allocate );
 }
 
 bool Platform::TWindow::IsFullscreen()
@@ -525,67 +591,26 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 		[mWindow toggleFullScreen:nil];
 	};
-	Soy::Platform::gMainThread->PushJob( DoSetFullScreen );
+	mThread.PushJob( DoSetFullScreen );
+}
+
+void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
+{
+	auto Exec = [=]()
+	{
+		NSScrollView* ScrollView = mWindow.contentView;
+		[ScrollView setHasVerticalScroller:Vert?YES:NO];
+		[ScrollView setHasHorizontalScroller:Horz?YES:NO];
+	};
+	mThread.PushJob(Exec);
 }
 
 
 
-
-std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect)
+std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
-	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread) );
-	
-	//	actual allocation must be on the main thread.
-	auto Allocate = [=]
-	{
-		auto& Wrapper = *dynamic_cast<Platform::TWindow*>( pWindow.get() );
-		auto*& mWindow = Wrapper.mWindow;
-		
-		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
-		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-		
-		bool Defer = NO;
-		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
-		Soy::Assert(mWindow,"failed to create window");
-		[mWindow retain];
-		
-		/*
-		//	note: this is deffered, but as flags above don't seem to work right, not much choice
-		//		plus, every other OSX app seems to do the same?
-		pWindow->SetFullscreen( Params.mFullscreen );
-		*/
-		
-		//	auto save window location
-		auto AutoSaveName = Soy::StringToNSString( Name );
-		[mWindow setFrameAutosaveName:AutoSaveName];
-		
-		id Sender = NSApp;
-		[mWindow makeKeyAndOrderFront:Sender];
-		
-		auto Title = Soy::StringToNSString( Name );
-		[mWindow setTitle:Title];
-		//[mWindow setMiniwindowTitle:Title];
-		//[mWindow setTitleWithRepresentedFilename:Title];
-		
-		//	mouse callbacks
-		[mWindow setAcceptsMouseMovedEvents:YES];
-	};
-	
-	//	move this to constructor
-	static auto Wait = false;
-	if ( Wait )
-	{
-		Soy::TSemaphore Semaphore;
-		Thread.PushJob( Allocate, Semaphore );
-		Semaphore.Wait();
-	}
-	else
-	{
-		Thread.PushJob( Allocate );
-	}
-	
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect,Resizable) );
 	return pWindow;
 }
 
@@ -614,7 +639,9 @@ Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rec
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
 	
-		[[Parent.mWindow contentView] addSubview:mControl];
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
 	};
 	mThread.PushJob( Allocate );
 }
@@ -628,6 +655,8 @@ void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 		
 		mControl.minValue = Min;
 		mControl.maxValue = Max;
+		auto TickMarks = std::min( Max-Min, 10 );
+		mControl.numberOfTickMarks = TickMarks;
 		CacheValue();
 	};
 	
@@ -713,10 +742,12 @@ Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::R
 		[mControl setButtonType:NSSwitchButton];
 		//[mControl setBezelStyle:0];
 		
-		//	all buttons have labels, but windows doesn't? so our API doesnt
+		//	windows & osx both have labels for tickbox, but our current api is that this isn't setup at construction
 		mControl.title = @"";
 		
-		[[Parent.mWindow contentView] addSubview:mControl];
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
 	};
 	mThread.PushJob( Allocate );
 }
@@ -746,6 +777,21 @@ void Platform::TTickBox::CacheValue()
 
 	mLastValue = Value;
 }
+
+void Platform::TTickBox::SetLabel(const std::string& Label)
+{
+	auto Exec = [=]
+	{
+		if ( !mControl )
+			throw Soy_AssertException("before TTickBox created");
+		mControl.title = Soy::StringToNSString(Label);
+		CacheValue();
+	};
+	mThread.PushJob( Exec );
+}
+
+
+
 
 void Platform::TTickBox::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
@@ -801,7 +847,9 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 	
 		ApplyStyle();
 		
-		[[Parent.mWindow contentView] addSubview:mControl];
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
 	};
 	mThread.PushJob( Allocate );
 }

@@ -11,8 +11,13 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Label);
 	DEFINE_BIND_TYPENAME(TextBox);
 	DEFINE_BIND_TYPENAME(TickBox);
+
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
+	DEFINE_BIND_FUNCTIONNAME(SetLabel);
+
+	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
+	DEFINE_BIND_FUNCTIONNAME(EnableScrollbars);
 }
 
 
@@ -59,6 +64,7 @@ void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
 	mSlider->SetValue( Value );
 }
 
+
 void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
 {
 	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
@@ -78,6 +84,8 @@ void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
 
 void ApiGui::TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
+	Template.BindFunction<SetFullscreen_FunctionName>( &TWindowWrapper::SetFullscreen );
+	Template.BindFunction<EnableScrollbars_FunctionName>( &TWindowWrapper::EnableScrollbars );
 }
 
 void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
@@ -85,24 +93,14 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	std::string WindowName = GetTypeName();
 	if ( !Params.IsArgumentUndefined(0) )
 		WindowName = Params.GetArgumentString(0);
-
-	//	named options
-	if ( Params.IsArgumentObject(1) )
-	{
-		/*
-		auto WindowParamsObject = Params.GetArgumentObject(1);
-		if ( WindowParamsObject.HasMember("Fullscreen") )
-			WindowParams.mFullscreen = WindowParamsObject.GetBool("Fullscreen");
-		*/
-	}
 	
 	Soy::Rectx<int32_t> Rect(0, 0, 0, 0);
 	
 	//	if no rect, get rect from screen
-	if ( !Params.IsArgumentUndefined(2) )
+	if ( !Params.IsArgumentUndefined(1) )
 	{
 		BufferArray<int32_t,4> Rect4;
-		Params.GetArgumentArray(2, GetArrayBridge(Rect4) );
+		Params.GetArgumentArray(1, GetArrayBridge(Rect4) );
 		Rect.x = Rect4[0];
 		Rect.y = Rect4[1];
 		Rect.w = Rect4[2];
@@ -125,7 +123,13 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 		Platform::EnumScreens(SetRect);
 	}
 	
-	mWindow = Platform::CreateWindow( WindowName, Rect );
+	bool Resizable = true;
+	if ( !Params.IsArgumentUndefined(2))
+	{
+		Resizable = Params.GetArgumentBool(2);
+	}
+	
+	mWindow = Platform::CreateWindow( WindowName, Rect, Resizable );
 	
 	/*
 	mWindow->mOnRender = OnRender;
@@ -140,6 +144,19 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	*/
 }
 
+void ApiGui::TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
+{
+	auto Fullscreen = Params.GetArgumentBool(0);
+	mWindow->SetFullscreen(Fullscreen);
+}
+
+void ApiGui::TWindowWrapper::EnableScrollbars(Bind::TCallback& Params)
+{
+	//	order is xy
+	auto Horz = Params.GetArgumentBool(0);
+	auto Vert = Params.GetArgumentBool(1);
+	mWindow->EnableScrollBars( Horz, Vert );
+}
 
 
 
@@ -209,6 +226,7 @@ void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
 void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<SetValue_FunctionName>( &TTickBoxWrapper::SetValue );
+	Template.BindFunction<SetLabel_FunctionName>( &TTickBoxWrapper::SetLabel );
 }
 
 void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
@@ -228,6 +246,12 @@ void ApiGui::TTickBoxWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentBool(0);
 	mControl->SetValue( Value );
+}
+
+void ApiGui::TTickBoxWrapper::SetLabel(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentString(0);
+	mControl->SetLabel( Value );
 }
 
 void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)

@@ -65,9 +65,11 @@ namespace PopCameraDevice
 
 
 
-#include "Libs/x264/include/x264.h"
 #if defined(TARGET_WINDOWS)
+#include "Libs/x264/include/x264.h"
 //#pragma comment(lib,"libx264.lib")
+#elif defined(TARGET_OSX)
+#include "Libs/x264/osx/x264.h"
 #endif
 namespace X264
 {
@@ -125,7 +127,7 @@ protected:
 class X264::TInstance
 {
 public:
-	TInstance(const std::string& PresetName);
+	TInstance(size_t PresetValue);
 	~TInstance();
 
 	void							PushFrame(const SoyPixelsImpl& Pixels, int64_t FrameTime);
@@ -802,11 +804,24 @@ void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumb
 
 void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 {
-	std::string PresetName = "Medium";
-	if (!Params.IsArgumentUndefined(0))
-		PresetName = Params.GetArgumentString(0);
-
-	mEncoder.reset(new X264::TInstance(PresetName));
+	int PresetValue = 5;
+	try
+	{
+		PresetValue = Params.GetArgumentInt(0);
+		if ( PresetValue < 0 || PresetValue	> 9 )
+		{
+			std::stringstream Error;
+			Error << "Preset " << PresetValue << " out of range";
+			throw Soy::AssertException(Error);
+		}
+	}
+	catch(std::exception& e)
+	{
+		std::stringstream Error;
+		Error << "Expected arg0 as preset between 0..9 (ultrafast...placebo); " << e.what();
+		throw Soy::AssertException(Error);
+	}
+	mEncoder.reset(new X264::TInstance(PresetValue));
 
 	mEncoder->mOnOutputPacket = [&]()
 	{
@@ -886,10 +901,16 @@ void X264::IsOkay(int Result, const char* Context)
 	throw Soy::AssertException(Error);
 }
 
-X264::TInstance::TInstance(const std::string& PresetName)
+
+X264::TInstance::TInstance(size_t PresetValue)
 {
+	if ( PresetValue > 9 )
+		throw Soy_AssertException("Expecting preset value <= 9");
+	
+	//	todo: tune options. takes , seperated values
 	const char* Tune = nullptr;
-	auto Result = x264_param_default_preset(&mParam, PresetName.c_str(), Tune);
+	auto* PresetName = x264_preset_names[PresetValue];
+	auto Result = x264_param_default_preset(&mParam, PresetName, Tune);
 	IsOkay(Result,"x264_param_default_preset");
 }
 
@@ -944,12 +965,12 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 
 	//	do final configuration & alloc encoder
 	mParam.i_csp = X264_CSP_I420;
-	mParam.i_width = Meta.GetWidth();
-	mParam.i_height = Meta.GetHeight();
+	mParam.i_width = size_cast<int>(Meta.GetWidth());
+	mParam.i_height = size_cast<int>(Meta.GetHeight());
 	mParam.b_vfr_input = 0;
 	mParam.b_repeat_headers = 1;
 	mParam.b_annexb = 1;
-	mParam.p_log_private = X264::Log;
+	mParam.p_log_private = reinterpret_cast<void*>(&X264::Log);
 	mParam.i_log_level = X264_LOG_INFO;
 
 	auto Profile = "baseline";
@@ -1040,7 +1061,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
-	/*
+	
 	while (true)
 	{
 		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
@@ -1049,7 +1070,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 
 		Encode(nullptr);
 	}
-	*/
+	
 }
 
 void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
