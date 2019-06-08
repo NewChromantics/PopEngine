@@ -23,7 +23,7 @@ namespace Platform
 	class TWin32Thread;		//	windows needs to make calls on a specific thread (just as OSX needs it to be on the main dispatcher)
 	
 	
-	std::shared_ptr<SoyWindow>	CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect);
+	std::shared_ptr<SoyWindow>	CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable);
 	std::shared_ptr<SoySlider>	CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyTextBox>	CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyLabel>	CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);

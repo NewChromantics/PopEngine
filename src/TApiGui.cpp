@@ -93,24 +93,14 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	std::string WindowName = GetTypeName();
 	if ( !Params.IsArgumentUndefined(0) )
 		WindowName = Params.GetArgumentString(0);
-
-	//	named options
-	if ( Params.IsArgumentObject(1) )
-	{
-		/*
-		auto WindowParamsObject = Params.GetArgumentObject(1);
-		if ( WindowParamsObject.HasMember("Fullscreen") )
-			WindowParams.mFullscreen = WindowParamsObject.GetBool("Fullscreen");
-		*/
-	}
 	
 	Soy::Rectx<int32_t> Rect(0, 0, 0, 0);
 	
 	//	if no rect, get rect from screen
-	if ( !Params.IsArgumentUndefined(2) )
+	if ( !Params.IsArgumentUndefined(1) )
 	{
 		BufferArray<int32_t,4> Rect4;
-		Params.GetArgumentArray(2, GetArrayBridge(Rect4) );
+		Params.GetArgumentArray(1, GetArrayBridge(Rect4) );
 		Rect.x = Rect4[0];
 		Rect.y = Rect4[1];
 		Rect.w = Rect4[2];
@@ -133,7 +123,13 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 		Platform::EnumScreens(SetRect);
 	}
 	
-	mWindow = Platform::CreateWindow( WindowName, Rect );
+	bool Resizable = true;
+	if ( !Params.IsArgumentUndefined(2))
+	{
+		Resizable = Params.GetArgumentBool(2);
+	}
+	
+	mWindow = Platform::CreateWindow( WindowName, Rect, Resizable );
 	
 	/*
 	mWindow->mOnRender = OnRender;

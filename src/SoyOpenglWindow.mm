@@ -58,7 +58,7 @@ namespace Platform
 class Platform::TWindow : public SoyWindow
 {
 public:
-	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,std::function<void()> OnAllocated=nullptr);
+	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated=nullptr);
 	~TWindow()
 	{
 		[mWindow release];
@@ -356,7 +356,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 			SoyWorkerThread::Start();
 		}
 	};
-	mWindow.reset( new Platform::TWindow( Thread, Name, Rect, PostAllocate) );
+	
+	bool Resizable = true;
+	mWindow.reset( new Platform::TWindow( Thread, Name, Rect, Resizable, PostAllocate) );
 }
 
 TOpenglWindow::~TOpenglWindow()
@@ -475,13 +477,16 @@ bool TOpenglWindow::IsFullscreen()
 }
 
 
-Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,std::function<void()> OnAllocated) :
+Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated) :
 	mThread	( Thread )
 {
 	//	actual allocation must be on the main thread.
 	auto Allocate = [=]
 	{
-		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable;
+		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable;
+		if ( Resizable )
+			Style |= NSWindowStyleMaskResizable;
+		
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
 		
@@ -498,7 +503,8 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 		
 		//	auto save window location
 		auto AutoSaveName = Soy::StringToNSString( Name );
-		[mWindow setFrameAutosaveName:AutoSaveName];
+		if ( Resizable )
+			[mWindow setFrameAutosaveName:AutoSaveName];
 		
 		id Sender = NSApp;
 		[mWindow makeKeyAndOrderFront:Sender];
@@ -601,10 +607,10 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 
 
 
-std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect)
+std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
-	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect) );
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect,Resizable) );
 	return pWindow;
 }
 
