@@ -503,8 +503,7 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 		
 		//	auto save window location
 		auto AutoSaveName = Soy::StringToNSString( Name );
-		if ( Resizable )
-			[mWindow setFrameAutosaveName:AutoSaveName];
+		[mWindow setFrameAutosaveName:AutoSaveName];
 		
 		id Sender = NSApp;
 		[mWindow makeKeyAndOrderFront:Sender];
