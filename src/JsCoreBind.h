@@ -107,6 +107,9 @@ namespace JsCore
 	bool		IsArray(JSContextRef Context,JSValueRef Handle);
 	bool		IsFunction(JSContextRef Context,JSValueRef Handle);
 
+	//	JSON to object
+	TObject		ParseObjectString(JSContextRef Context,const std::string& JsonString);
+
 	//	throw c++ exception if the exception object is an exception
 	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
 
@@ -414,7 +417,8 @@ public:
 	virtual JsCore::TFunction	GetFunction(const std::string& MemberName) bind_override;
 	virtual bool			GetBool(const std::string& MemberName) bind_override;
 
-	virtual void			SetObject(const std::string& Name,const JsCore::TObject& Object) bind_override;
+	virtual void			SetObject(const std::string& Name, const JsCore::TObject& Object) bind_override;
+	virtual void			SetObjectFromString(const std::string& Name, const std::string& JsonString) bind_override;
 	virtual void			SetFunction(const std::string& Name,JsCore::TFunction& Function) bind_override;
 	virtual void			SetFloat(const std::string& Name,float Value) bind_override;
 	virtual void			SetString(const std::string& Name,const std::string& Value) bind_override;

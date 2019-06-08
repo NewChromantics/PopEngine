@@ -125,6 +125,7 @@ DEFINE_JS_BRIDGE(JSValueMakeNull);
 DEFINE_JS_BRIDGE(JSValueMakeBoolean);
 DEFINE_JS_BRIDGE(JSValueMakeNumber);
 DEFINE_JS_BRIDGE(JSValueMakeString);
+DEFINE_JS_BRIDGE(JSValueMakeFromJSONString);
 DEFINE_JS_BRIDGE(JSValueToBoolean);
 DEFINE_JS_BRIDGE(JSValueToNumber);
 DEFINE_JS_BRIDGE(JSValueToStringCopy);
@@ -210,6 +211,7 @@ void JsCore::LoadDll()
 	DEFINE_JS_BRIDGE(JSValueMakeBoolean);
 	DEFINE_JS_BRIDGE(JSValueMakeNumber);
 	DEFINE_JS_BRIDGE(JSValueMakeString);
+	DEFINE_JS_BRIDGE(JSValueMakeFromJSONString);	
 	DEFINE_JS_BRIDGE(JSValueToBoolean);
 	DEFINE_JS_BRIDGE(JSValueToNumber);
 	DEFINE_JS_BRIDGE(JSValueToStringCopy);
