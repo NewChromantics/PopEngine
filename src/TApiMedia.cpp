@@ -1061,16 +1061,18 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
-	
-	while (true)
+	//	gr: need this on OSX (latest x264) but on windows (old build) every subsequent frame fails
+	if (X264_REV > 2969)
 	{
-		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
-		if (DelayedFrameCount == 0)
-			break;
+		while (true)
+		{
+			auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
+			if (DelayedFrameCount == 0)
+				break;
 
-		Encode(nullptr);
+			Encode(nullptr);
+		}
 	}
-	
 }
 
 void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
