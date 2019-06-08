@@ -90,7 +90,7 @@ public:
 	~TInstance();
 
 	bool			HasFrame() { return !mLastPlanes.IsEmpty(); }
-	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time);
+	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time,std::string& Meta);
 
 protected:
 	void			OnNewFrame();
@@ -104,6 +104,7 @@ protected:
 
 	std::recursive_mutex	mLastPlanesLock;
 	SoyTime					mLastPlanesTime;
+	std::string				mLastFrameMeta;
 	//	gr: turn this into a TPixelBuffer
 	Array<std::shared_ptr<SoyPixelsImpl>> mLastPlanes;
 };
@@ -502,11 +503,15 @@ void PopCameraDevice::TInstance::OnNewFrame()
 		PlanePixelsByteSize.PushBack(0);
 	}
 	
+	char FrameMeta[1000] = { 0 };
+
 	//	check for a new frame
-	auto Result = PopCameraDevice_PopFrame(mHandle,
+	auto Result = PopCameraDevice_PopFrameAndMeta(mHandle,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
 		PlanePixelsBytes[1], PlanePixelsByteSize[1],
-		PlanePixelsBytes[2], PlanePixelsByteSize[2]
+		PlanePixelsBytes[2], PlanePixelsByteSize[2],
+		FrameMeta,
+		sizeofarray(FrameMeta)
 	);
 
 	//	no new frame
@@ -518,13 +523,14 @@ void PopCameraDevice::TInstance::OnNewFrame()
 		std::lock_guard<std::recursive_mutex> Lock(mLastPlanesLock);
 		mLastPlanes.Copy(PlanePixels);
 		mLastPlanesTime = SoyTime(true);
+		mLastFrameMeta = FrameMeta;
 	}
 
 	//	notify
 	this->mOnNewFrame();
 }
 
-bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time)
+bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time,std::string& Meta)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mLastPlanesLock);
 	if ( mLastPlanes.IsEmpty() )
@@ -532,9 +538,11 @@ bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPix
 
 	Pixels.Copy(mLastPlanes);
 	Time = mLastPlanesTime;
+	Meta = mLastFrameMeta;
 
 	mLastPlanes.Clear();
 	mLastPlanesTime = SoyTime();
+	mLastFrameMeta.clear();
 	return true;
 }
 
@@ -666,15 +674,29 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 {
 	Array<std::shared_ptr<SoyPixelsImpl>> Planes;
 	SoyTime FrameTime;
-	if ( !mExtractor->PopLastFrame( GetArrayBridge(Planes), FrameTime ) )
+	std::string FrameMeta;
+	if ( !mExtractor->PopLastFrame( GetArrayBridge(Planes), FrameTime, FrameMeta) )
 		throw Soy::AssertException("No frame packet buffered");
 
-	//	todo: add this for transform
-	auto SetTime = [&](Bind::TObject& Object)
+	//	set all metas
+	auto SetMeta = [&](Bind::TObject& Object)
 	{
 		if ( FrameTime.IsValid() )
 		{
 			Object.SetInt( ApiMedia::FrameTimestampKey, FrameTime.mTime );
+		}
+
+		if (FrameMeta.length())
+		{
+			if (FrameMeta[0] == '{')
+			{
+				//	turn string into json object
+				Object.SetObjectFromString("Meta", FrameMeta);
+			}
+			else
+			{
+				Object.SetString("Meta", FrameMeta);
+			}
 		}
 	};
 	
@@ -682,7 +704,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 	{
 		auto& Dest = Params.mDestinationImage;
 		auto Object = Dest.GetObject( Context );
-		SetTime(Object);
+		SetMeta(Object);
 		auto& Image = Object.This<TImageWrapper>();
 		auto& Plane = Planes[0];
 		Image.SetPixels( Plane );
@@ -732,7 +754,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 		//	create a dumb object with meta to return
 		auto FrameHandle = Context.mGlobalContext.CreateObjectInstance( Context );
 		FrameHandle.SetArray("Planes", GetArrayBridge(ImageHandles) );
-		SetTime( FrameHandle );
+		SetMeta( FrameHandle );
 		return FrameHandle;
 	}
 
@@ -743,7 +765,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 	Image.SetPixels( Planes[0] );
 
 	auto ImageHandle = Image.GetHandle( Context );
-	SetTime( ImageObject );
+	SetMeta( ImageObject );
 	return ImageObject;
 }
 
