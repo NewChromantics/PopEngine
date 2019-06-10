@@ -399,6 +399,8 @@ JSPropertyNameArrayRef	JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRe
 size_t		JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys);
 JSStringRef	JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t Index);
 
+JSValueRef	JSValueMakeFromJSONString(JSContextRef Context, JSStringRef String);
+
 bool		JSValueIsNumber(JSContextRef Context,JSValueRef Value);
 double		JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
 JSValueRef	JSValueMakeNumber(JSContextRef Context,int Value);
