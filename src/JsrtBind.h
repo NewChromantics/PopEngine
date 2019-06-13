@@ -9,6 +9,8 @@
 
 #define USE_EDGEMODE_JSRT
 #include <jsrt.h>
+#undef min
+#undef max
 
 
 #include "MemHeap.hpp"
