@@ -44,3 +44,5 @@ BuildData/
 
 # framework symbolic links are playing havoc with gitkraken
 *.framework
+
+PopEngine\.visualstudio/\.vs/PopEngine/v15/ipch/
