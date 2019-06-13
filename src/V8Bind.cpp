@@ -1219,4 +1219,13 @@ V8::TException::TException(v8::Isolate& Isolate,v8::TryCatch& TryCatch,const std
 	
 }
 
+JSValueRef JSValueMakeFromJSONString(JSContextRef Context, JSStringRef String)
+{
+	auto LocalMaybe = v8::JSON::Parse(Context.mThis, String.mThis);
+	V8::IsOkay(LocalMaybe, Context.GetIsolate(), Context.GetTryCatch(), "JSValueMakeFromJSONString");
+	auto Local = LocalMaybe.ToLocalChecked();
+	return JSValueRef(Local);
+}
+
+
 #endif //JSAPI_V8

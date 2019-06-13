@@ -47,8 +47,24 @@ void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
 	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
 	
+	int NotchCount = 0;
+	if (Params.IsArgumentBool(2))
+	{
+		if (Params.GetArgumentBool(2))
+			throw Soy::AssertException("Slider notches parameter can either be false, or a number.");
+		NotchCount = 0;
+	}
+	else if (Params.IsArgumentNumber(2))
+	{
+		NotchCount = Params.GetArgumentInt(2);
+	}
+
 	mSlider = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
 	mSlider->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1 );
+	/*
+	if (NotchCount != 0)
+		mSlider->SetNotchCount(NotchCount);
+		*/
 }
 
 void ApiGui::TSliderWrapper::SetMinMax(Bind::TCallback& Params)

@@ -75,6 +75,8 @@ namespace X264
 {
 	void	IsOkay(int Result, const char* Context);
 	void	Log(void *data, int i_level, const char *psz, va_list args);
+
+	class TPacket;
 }
 
 
@@ -90,7 +92,7 @@ public:
 	~TInstance();
 
 	bool			HasFrame() { return !mLastPlanes.IsEmpty(); }
-	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time);
+	bool			PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl>>&& Pixels, SoyTime& Time,std::string& Meta);
 
 protected:
 	void			OnNewFrame();
@@ -104,6 +106,7 @@ protected:
 
 	std::recursive_mutex	mLastPlanesLock;
 	SoyTime					mLastPlanesTime;
+	std::string				mLastFrameMeta;
 	//	gr: turn this into a TPixelBuffer
 	Array<std::shared_ptr<SoyPixelsImpl>> mLastPlanes;
 };
@@ -124,26 +127,33 @@ protected:
 };
 
 
+class X264::TPacket
+{
+public:
+	std::shared_ptr<Array<uint8_t>>	mData;
+	uint32_t						mTime = 0;
+};
+
 class X264::TInstance
 {
 public:
 	TInstance(size_t PresetValue);
 	~TInstance();
 
-	void							PushFrame(const SoyPixelsImpl& Pixels, int64_t FrameTime);
-	std::shared_ptr<Array<uint8_t>>	PopPacket();
-	bool							HasPackets() {	return !mPackets.IsEmpty();	}
+	void			PushFrame(const SoyPixelsImpl& Pixels, int32_t FrameTime);
+	TPacket			PopPacket();
+	bool			HasPackets() {	return !mPackets.IsEmpty();	}
 
 private:
 	void			AllocEncoder(const SoyPixelsMeta& Meta);
-	void			OnOutputPacket(const ArrayBridge<uint8_t>&& Packet);
+	void			OnOutputPacket(const TPacket& Packet);
 
 protected:
 	SoyPixelsMeta	mPixelMeta;	//	invalid until we've pushed first frame
 	x264_t*			mHandle = nullptr;
 	x264_param_t	mParam;
 	x264_picture_t	mPicture;
-	Array<std::shared_ptr<Array<uint8_t>>>	mPackets;
+	Array<TPacket>	mPackets;
 	std::mutex		mPacketsLock;
 
 public:
@@ -502,11 +512,15 @@ void PopCameraDevice::TInstance::OnNewFrame()
 		PlanePixelsByteSize.PushBack(0);
 	}
 	
+	char FrameMeta[1000] = { 0 };
+
 	//	check for a new frame
-	auto Result = PopCameraDevice_PopFrame(mHandle,
+	auto Result = PopCameraDevice_PopFrameAndMeta(mHandle,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
 		PlanePixelsBytes[1], PlanePixelsByteSize[1],
-		PlanePixelsBytes[2], PlanePixelsByteSize[2]
+		PlanePixelsBytes[2], PlanePixelsByteSize[2],
+		FrameMeta,
+		sizeofarray(FrameMeta)
 	);
 
 	//	no new frame
@@ -518,13 +532,14 @@ void PopCameraDevice::TInstance::OnNewFrame()
 		std::lock_guard<std::recursive_mutex> Lock(mLastPlanesLock);
 		mLastPlanes.Copy(PlanePixels);
 		mLastPlanesTime = SoyTime(true);
+		mLastFrameMeta = FrameMeta;
 	}
 
 	//	notify
 	this->mOnNewFrame();
 }
 
-bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time)
+bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPixelsImpl> >&& Pixels, SoyTime& Time,std::string& Meta)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mLastPlanesLock);
 	if ( mLastPlanes.IsEmpty() )
@@ -532,9 +547,11 @@ bool PopCameraDevice::TInstance::PopLastFrame(ArrayBridge<std::shared_ptr<SoyPix
 
 	Pixels.Copy(mLastPlanes);
 	Time = mLastPlanesTime;
+	Meta = mLastFrameMeta;
 
 	mLastPlanes.Clear();
 	mLastPlanesTime = SoyTime();
+	mLastFrameMeta.clear();
 	return true;
 }
 
@@ -666,15 +683,29 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 {
 	Array<std::shared_ptr<SoyPixelsImpl>> Planes;
 	SoyTime FrameTime;
-	if ( !mExtractor->PopLastFrame( GetArrayBridge(Planes), FrameTime ) )
+	std::string FrameMeta;
+	if ( !mExtractor->PopLastFrame( GetArrayBridge(Planes), FrameTime, FrameMeta) )
 		throw Soy::AssertException("No frame packet buffered");
 
-	//	todo: add this for transform
-	auto SetTime = [&](Bind::TObject& Object)
+	//	set all metas
+	auto SetMeta = [&](Bind::TObject& Object)
 	{
 		if ( FrameTime.IsValid() )
 		{
 			Object.SetInt( ApiMedia::FrameTimestampKey, FrameTime.mTime );
+		}
+
+		if (FrameMeta.length())
+		{
+			if (FrameMeta[0] == '{')
+			{
+				//	turn string into json object
+				Object.SetObjectFromString("Meta", FrameMeta);
+			}
+			else
+			{
+				Object.SetString("Meta", FrameMeta);
+			}
 		}
 	};
 	
@@ -682,7 +713,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 	{
 		auto& Dest = Params.mDestinationImage;
 		auto Object = Dest.GetObject( Context );
-		SetTime(Object);
+		SetMeta(Object);
 		auto& Image = Object.This<TImageWrapper>();
 		auto& Plane = Planes[0];
 		Image.SetPixels( Plane );
@@ -732,7 +763,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 		//	create a dumb object with meta to return
 		auto FrameHandle = Context.mGlobalContext.CreateObjectInstance( Context );
 		FrameHandle.SetArray("Planes", GetArrayBridge(ImageHandles) );
-		SetTime( FrameHandle );
+		SetMeta( FrameHandle );
 		return FrameHandle;
 	}
 
@@ -743,7 +774,7 @@ Bind::TObject TPopCameraDeviceWrapper::PopFrame(Bind::TLocalContext& Context,TFr
 	Image.SetPixels( Planes[0] );
 
 	auto ImageHandle = Image.GetHandle( Context );
-	SetTime( ImageObject );
+	SetMeta( ImageObject );
 	return ImageObject;
 }
 
@@ -880,12 +911,18 @@ void TH264EncoderWrapper::OnPacketOutput()
 
 	auto NextPacket = mEncoder->PopPacket();
 	//	no packets yet!
-	if (!NextPacket)
+	if (!NextPacket.mData)
 		return;
+
+	auto& PacketData = *NextPacket.mData;
 
 	auto Resolve = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
 	{
-		Promise.Resolve(Context, GetArrayBridge(*NextPacket));
+		auto Packet = Context.mGlobalContext.CreateObjectInstance(Context);
+		Packet.SetInt("Time", NextPacket.mTime);
+		Packet.SetArray("Data", GetArrayBridge(PacketData));
+
+		Promise.Resolve(Context, Packet);
 	};
 	mNextPacketPromises.Flush(Resolve);
 }
@@ -987,7 +1024,7 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 	mPixelMeta = Meta;
 }
 
-void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
+void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 {
 	AllocEncoder(Pixels.GetMeta());
 
@@ -1028,6 +1065,16 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	mPicture.i_pts = FrameTime;
 	x264_picture_t OutputPicture;
 
+	//	gr: currently, decoder needs to have nal packets split
+	auto OnNalPacket = [&](FixedRemoteArray<uint8_t>& Data)
+	{
+		TPacket OutputPacket;
+		OutputPacket.mData.reset(new Array<uint8_t>());
+		OutputPacket.mTime = FrameTime;
+		OutputPacket.mData->PushBackArray(Data);
+		OnOutputPacket(OutputPacket);
+	};
+
 	auto Encode = [&](x264_picture_t* InputPicture)
 	{
 		x264_nal_t* Nals = nullptr;
@@ -1048,7 +1095,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 			auto& Nal = Nals[n];
 			auto NalSize = Nal.i_payload;
 			auto PacketArray = GetRemoteArray(Nal.p_payload, NalSize);
-			OnOutputPacket(GetArrayBridge(PacketArray));
+			OnNalPacket(PacketArray);
 			TotalNalSize += NalSize;
 		}
 		if (TotalNalSize != FrameSize)
@@ -1061,25 +1108,29 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int64_t FrameTime)
 	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
-	
-	while (true)
+	//	gr: need this on OSX (latest x264) but on windows (old build) every subsequent frame fails
+	if (X264_REV > 2969)
 	{
-		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
-		if (DelayedFrameCount == 0)
-			break;
+		while (true)
+		{
+			auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
+			if (DelayedFrameCount == 0)
+				break;
 
-		Encode(nullptr);
+			Encode(nullptr);
+		}
 	}
-	
+
+	//	output the final part as one packet for the time
+	//OnOutputPacket(OutputPacket);
 }
 
-void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
+
+void X264::TInstance::OnOutputPacket(const TPacket& Packet)
 {
 	{
 		std::lock_guard<std::mutex> Lock(mPacketsLock);
-		std::shared_ptr<Array<uint8_t>> NewPacket(new Array<uint8_t>);
-		NewPacket->Copy(Packet);
-		mPackets.PushBack(NewPacket);
+		mPackets.PushBack(Packet);
 	}
 
 	if (mOnOutputPacket)
@@ -1087,11 +1138,11 @@ void X264::TInstance::OnOutputPacket(const ArrayBridge<uint8_t>&& Packet)
 }
 
 
-std::shared_ptr<Array<uint8_t>> X264::TInstance::PopPacket()
+X264::TPacket X264::TInstance::PopPacket()
 {
 	std::lock_guard<std::mutex> Lock(mPacketsLock);
 	if (mPackets.IsEmpty())
-		return nullptr;
+		return TPacket();
 
 	auto Packet = mPackets.PopAt(0);
 	return Packet;

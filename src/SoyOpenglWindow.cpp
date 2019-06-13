@@ -195,13 +195,14 @@ uint64_t Platform::TControl::gChildIdentifier = 9000;
 class Platform::TWindow : public TControl, public SoyWindow
 {
 public:
-	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread);
+	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread,bool Resizable);
 
 	virtual void	OnWindowMessage(UINT EventMessage) override;
 
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override	{	return GetClientRect();	}
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
+	virtual void					EnableScrollBars(bool Horz, bool Vert) override;
 
 private:
 	//	for saving/restoring fullscreen mode
@@ -772,11 +773,12 @@ Platform::TControlClass& GetOpenglViewClass()
 //	gr: only occcurs with double buffering
 //const DWORD WindowStyleExFlags = WS_EX_CLIENTEDGE;
 const DWORD WindowStyleExFlags = 0;
-const DWORD WindowStyleFlags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
+const DWORD WindowStyleFlags_Resizable = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
+const DWORD WindowStyleFlags = WindowStyleFlags_Resizable & ~WS_THICKFRAME;
 
 
-Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread) :
-	TControl	( Name, GetWindowClass(), nullptr, WindowStyleFlags, WindowStyleExFlags, Rect, Thread )
+Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread, bool Resizable) :
+	TControl	( Name, GetWindowClass(), nullptr, Resizable ? WindowStyleFlags_Resizable : WindowStyleFlags, WindowStyleExFlags, Rect, Thread )
 {
 	auto ShowState = SW_SHOW;
 
@@ -1066,7 +1068,7 @@ void Platform::TOpenglContext::OnPaint()
 }
 
 
-TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglParams Params) :
+TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params) :
 	SoyWorkerThread		( Soy::GetTypeName(*this), Params.mAutoRedraw ? SoyWorkerWaitMode::Sleep : SoyWorkerWaitMode::Wake ),
 	mName				( Name ),
 	mParams				( Params )
@@ -1076,7 +1078,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,Soy::Rectf Rect,TOpenglPara
 	//	need to create on the correct thread
 	auto CreateControls = [&]()
 	{
-		mWindow.reset(new Platform::TWindow(Name, Rect, *mWindowThread));
+		bool Resizable = true;
+		mWindow.reset(new Platform::TWindow(Name, Rect, *mWindowThread, Resizable ));
 		mWindowContext.reset(new Platform::TOpenglContext(*mWindow, Params));
 
 		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget, std::function<void()> LockContext)
@@ -1161,6 +1164,15 @@ bool TOpenglWindow::IsFullscreen()
 
 	return mWindow->IsFullscreen();
 }
+
+
+void TOpenglWindow::EnableScrollBars(bool Horz,bool Vert)
+{
+	if (!mWindow)
+		throw Soy::AssertException("TOpenglWindow::SetFullscreen missing window");
+	mWindow->EnableScrollBars(Horz, Vert);
+}
+
 
 void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
@@ -1287,6 +1299,20 @@ bool Platform::TWindow::IsFullscreen()
 }
 
 
+void Platform::TWindow::EnableScrollBars(bool Horz, bool Vert)
+{
+	//	https://stackoverflow.com/a/285757/355753
+	//	gr: setwindowlong doesn't apply to scrollbars
+
+	//	should we se SB_BOTH?
+
+	if (!ShowScrollBar(mHwnd, SB_HORZ, Horz))
+		Platform::ThrowLastError("ShowScrollBar SB_HORZ");
+
+	if (!ShowScrollBar(mHwnd, SB_VERT, Vert))
+		Platform::ThrowLastError("ShowScrollBar SB_VERT");
+	
+}
 
 
 
@@ -1348,14 +1374,14 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 
 
 
-std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
+std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	std::shared_ptr<TWin32Thread> Thread(new TWin32Thread(Name));
 	std::shared_ptr<SoyWindow> Window;
 
 	auto Create = [&]()
 	{
-		Window.reset(new Platform::TWindow(Name, Rect, *Thread));
+		Window.reset(new Platform::TWindow(Name, Rect, *Thread, Resizable ));
 		auto& PlatformWindow = *dynamic_cast<Platform::TWindow*>(Window.get());
 		PlatformWindow.mOwnThread = Thread;
 	};
