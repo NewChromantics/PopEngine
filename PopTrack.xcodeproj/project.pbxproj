@@ -76,6 +76,10 @@
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
+		BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; };
+		BF8534F722B6DA610049C01B /* include in Resources */ = {isa = PBXBuildFile; fileRef = BF8534F622B6DA610049C01B /* include */; };
+		BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */; };
+		BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8534FC22B6DB270049C01B /* ChakraBind.cpp */; };
 		BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; };
 		BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
@@ -306,6 +310,11 @@
 		BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = hourglass.mlmodel; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
+		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
+		BF8534F622B6DA610049C01B /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
+		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_Chakra_App.xcconfig; path = src/PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
+		BF8534FC22B6DB270049C01B /* ChakraBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChakraBind.cpp; path = src/ChakraBind.cpp; sourceTree = "<group>"; };
+		BF8534FD22B6DB270049C01B /* ChakraBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChakraBind.h; path = src/ChakraBind.h; sourceTree = "<group>"; };
 		BF89CF49228DD3EB00A187D5 /* OpenVr */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OpenVr; sourceTree = "<group>"; };
 		BF89CF65228DD3F700A187D5 /* openvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr.h; sourceTree = "<group>"; };
 		BF89CF66228DD3F700A187D5 /* openvr_api.cs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openvr_api.cs; sourceTree = "<group>"; };
@@ -491,6 +500,7 @@
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
 				BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */,
+				BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */,
 				BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
 				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
@@ -557,6 +567,7 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BF8534F322B6DA1C0049C01B /* ChakraCore */,
 				BF92821D223692BA007E9D6F /* opencv2.framework */,
 				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
 				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
@@ -654,6 +665,15 @@
 				BF689AC520D6C80D000BC812 /* CoreGraphics.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		BF8534F322B6DA1C0049C01B /* ChakraCore */ = {
+			isa = PBXGroup;
+			children = (
+				BF8534F622B6DA610049C01B /* include */,
+				BF8534F422B6DA450049C01B /* libChakraCore.dylib */,
+			);
+			path = ChakraCore;
 			sourceTree = "<group>";
 		};
 		BF89CF4B228DD3F700A187D5 /* OpenVr */ = {
@@ -812,6 +832,7 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
+				BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */,
 				BF689AFC20D6EA21000BC812 /* PopEngine_Jsc_App.xcconfig */,
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF3B018822539D4000644E46 /* PopEngine_WithCoreMlModels.xcconfig */,
@@ -828,9 +849,9 @@
 				BFB647372225593600820612 /* SoyHid.h */,
 				BF689ACA20D6D3AE000BC812 /* SoyOpenglView.h */,
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
+				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
 				BF689ACC20D6D3AE000BC812 /* SoyOpenglWindow.h */,
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */,
-				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
 				BF607EA42240588300A78C00 /* TApiBluetooth.cpp */,
 				BF607EA32240588300A78C00 /* TApiBluetooth.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
@@ -887,6 +908,8 @@
 				BF6553C32132C4D9003E4241 /* v8 */,
 				BFF505E822550F30005A6AC1 /* V8Bind.cpp */,
 				BFF505E922550F30005A6AC1 /* V8Bind.h */,
+				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
+				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
 				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
 			);
 			name = src;
@@ -1078,6 +1101,8 @@
 				BF3965652278587600A721E8 /* v8Runtime in Resources */,
 				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
+				BF8534F722B6DA610049C01B /* include in Resources */,
+				BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */,
 				BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1106,6 +1131,7 @@
 				BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */,
 				BFB647382225593600820612 /* SoyHid.cpp in Sources */,
 				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
+				BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */,
 				BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */,
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
 				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
@@ -1256,12 +1282,104 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
+					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_V8;
+		};
+		BF8534F822B6DA830049C01B /* Debug_Chakra */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(POPMOVIETEXTURE_PATH)",
+					"$(POPCAST_PATH)",
+				);
+				MTL_ENABLE_DEBUG_INFO = YES;
+			};
+			name = Debug_Chakra;
+		};
+		BF8534F922B6DA830049C01B /* Debug_Chakra */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X52DR36JY2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(POPMOVIETEXTURE_PATH)/build",
+					"$(POPCAST_PATH)/build",
+					"$(PROJECT_DIR)/src/Libs",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/src/v8/lib",
+					"$(PROJECT_DIR)/src/Libs",
+					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
+					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
+					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
+					"$(PROJECT_DIR)/src/v8/v8Runtime",
+					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
+					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
+					"$(PROJECT_DIR)/src/Libs/x264/osx",
+					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = PopTrackMac;
+				VALID_ARCHS = x86_64;
+			};
+			name = Debug_Chakra;
 		};
 		FB8A05981A2E54730099596C /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
@@ -1378,6 +1496,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
+					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1429,6 +1548,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
+					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1444,6 +1564,7 @@
 			buildConfigurations = (
 				FB8A05981A2E54730099596C /* Debug_JavascriptCore */,
 				BF0F9E6122870BD000AEA7DC /* Debug_V8 */,
+				BF8534F822B6DA830049C01B /* Debug_Chakra */,
 				FB8A05991A2E54730099596C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1454,6 +1575,7 @@
 			buildConfigurations = (
 				FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */,
 				BF0F9E6222870BD000AEA7DC /* Debug_V8 */,
+				BF8534F922B6DA830049C01B /* Debug_Chakra */,
 				FBF67B2E1A974A0900F74C38 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
