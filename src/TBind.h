@@ -41,6 +41,15 @@ protected:
 
 #if defined(JSAPI_V8)
 #include "V8Bind.h"
+
+#elif defined(JSAPI_CHAKRA)
+#include "ChakraBind.h"
+
+#elif defined(JSAPI_JSCORE)
+//	nothing to include atm
+
+#else
+#error No Javascript API defined
 #endif
 
 namespace JsCore

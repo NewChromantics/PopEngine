@@ -6,7 +6,7 @@
 //	this should always be a persistent now, but need a "make it weak" approach
 #define PERSISTENT_OBJECT_HANDLE
 
-#elif defined(JSAPI_JSRT)
+#elif defined(JSAPI_CHAKRA)
 
 
 
@@ -18,7 +18,9 @@
 	#include <JavaScriptCore/JavaScriptCore.h>
 	#endif
 #else
+
 #error No Javascript API defined
+
 #endif
 
 #include <memory>
@@ -112,6 +114,7 @@ namespace JsCore
 	
 	//	is something we support as a TArray
 	bool		IsArray(JSContextRef Context,JSValueRef Handle);
+	bool		IsArray(JSContextRef Context,JSObjectRef Handle);
 	bool		IsFunction(JSContextRef Context,JSValueRef Handle);
 
 	//	JSON to object
@@ -210,6 +213,7 @@ class JsCore::TFunction
 public:
 	TFunction()		{}
 	TFunction(JSContextRef Context,JSValueRef Value);
+	TFunction(JSContextRef Context,JSObjectRef Value);
 	~TFunction();
 	
 	//operator		bool() const	{	return mThis != nullptr;	}
@@ -768,7 +772,7 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 			Meta.GetReturnValue().Set(Exception);
 		}
 	};
-#else
+#elif defined(JSAPI_JSCORE)
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JSContextRef ContextRef,JSObjectRef constructor,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		try
@@ -792,6 +796,11 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 			return NullObject;
 		}
 	};
+#elif defined(JSAPI_CHAKRA)
+	static JSObjectCallAsConstructorCallback CConstructorFunc = []()
+	{
+	};
+	throw Soy::AssertException("Todo");
 #endif
 	
 	//	https://stackoverflow.com/questions/46943350/how-to-use-jsexport-and-javascriptcore-in-c
@@ -855,13 +864,18 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 			Meta.GetReturnValue().Set( Exception );
 		}
 	};
-#else
+#elif defined(JSAPI_JSCORE)
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
 		TLocalContext LocalContext( Context, ContextPtr );
 		return ContextPtr.CallFunc( LocalContext, FunctionCache, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
 	};
+#elif defined(JSAPI_CHAKRA)
+	JSObjectCallAsFunctionCallback CFunc = []()
+	{
+	};
+	throw Soy::AssertException("Todo");
 #endif
 	
 	return CFunc;
@@ -922,7 +936,7 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 			Meta.GetReturnValue().Set(Exception);
 		}
 	};
-#else
+#elif defined(JSAPI_JSCORE)
 	JSObjectCallAsFunctionCallback CFunc = [](JSContextRef Context,JSObjectRef Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef* Exception)
 	{
 		auto& ContextPtr = JsCore::GetContext( Context );
@@ -936,6 +950,11 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 		TLocalContext LocalContext( Context, ContextPtr );
 		return ContextPtr.CallFunc( LocalContext, BoundFunction, This, ArgumentCount, Arguments, *Exception, FUNCTIONNAME );
 	};
+#elif defined(JSAPI_CHAKRA)
+	JSObjectCallAsFunctionCallback CFunc = []()
+	{
+	};
+	throw Soy::AssertException("todo");
 #endif
 	
 	return CFunc;

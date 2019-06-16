@@ -24,7 +24,7 @@
 #endif
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
-
+JSValueRef JSObjectToValue(JSObjectRef Object);
 
 #if !defined(JSAPI_V8)
 //	wrapper as v8 needs to setup the runtime files
@@ -56,6 +56,14 @@ JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition* Definition)
 	return JSClassCreate(Definition);
 }
 #endif
+
+#if defined(JSAPI_JSCORE)
+JSValueRef JSObjectToValue(JSObjectRef Object)
+{
+	return Object;
+}
+#endif
+
 
 
 namespace JsCore
@@ -286,7 +294,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
 
 JSValueRef JsCore::GetValue(JSContextRef Context,JSObjectRef Value)
 {
-	return Value;
+	return JSObjectToValue( Value );
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
@@ -330,17 +338,17 @@ JSValueRef JsCore::GetValue(JSContextRef Context,uint8_t Value)
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TObject& Object)
 {
-	return Object.mThis;
+	return JSObjectToValue( Object.mThis );
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TFunction& Object)
 {
-	return Object.mThis;
+	return JSObjectToValue( Object.mThis );
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TArray& Object)
 {
-	return Object.mThis;
+	return JSObjectToValue( Object.mThis );
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const TPersistent& Object)
@@ -353,7 +361,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPersistent& Object)
 	auto LocalValue = Local.As<v8::Value>();
 	return JSValueRef( LocalValue );
 #else
-	return Object.mObject;
+	return JSObjectToValue( Object.mObject );
 #endif
 	
 }
@@ -932,7 +940,7 @@ bool JsCore::TObject::GetBool(const std::string& MemberName)
 JsCore::TFunction JsCore::TObject::GetFunction(const std::string& MemberName)
 {
 	auto Object = GetObject(MemberName);
-	JsCore::TFunction Func( mContext, Object.mThis );
+	JsCore::TFunction Func( mContext, JSObjectToValue(Object.mThis) );
 	return Func;
 }
 
@@ -945,12 +953,12 @@ void JsCore::TObject::SetObjectFromString(const std::string& Name, const std::st
 
 void JsCore::TObject::SetObject(const std::string& Name,const TObject& Object)
 {
-	SetMember( Name, Object.mThis );
+	SetMember( Name, JSObjectToValue(Object.mThis) );
 }
 
 void JsCore::TObject::SetFunction(const std::string& Name,JsCore::TFunction& Function)
 {
-	SetMember( Name, Function.mThis );
+	SetMember( Name, JSObjectToValue(Function.mThis) );
 }
 
 void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
@@ -965,7 +973,7 @@ void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 
 void JsCore::TObject::SetArray(const std::string& Name,JsCore::TArray& Array)
 {
-	SetMember( Name, Array.mThis );
+	SetMember( Name, JSObjectToValue(Array.mThis) );
 }
 
 void JsCore::TObject::SetInt(const std::string& Name,uint32_t Value)
@@ -1038,7 +1046,7 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 	
 	//	construct
 	TCallback ConstructorParams(LocalContext);
-	ConstructorParams.mThis = NewObject.mThis;
+	ConstructorParams.mThis = JSObjectToValue( NewObject.mThis );
 	ConstructorParams.mArguments.Copy( ConstructorArguments );
 	
 	//	actually call!
@@ -1167,7 +1175,7 @@ JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<
 			throw Soy::AssertException("CallFunc: Context is null, maybe shutting down");
 
 		TCallback Callback(LocalContext);
-		Callback.mThis = This;
+		Callback.mThis = JSObjectToValue(This);
 	
 		if ( !Callback.mThis )
 			Callback.mThis = JSValueMakeUndefined( LocalContext.mLocalContext );
@@ -1279,6 +1287,11 @@ JsCore::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
 	return JsCore::TObject( GetContextRef(), HandleObject );
 }
 
+bool JsCore::IsArray(JSContextRef Context,JSObjectRef Handle)
+{
+	return IsArray( Context, JSObjectToValue(Handle) );
+}
+
 bool JsCore::IsArray(JSContextRef Context,JSValueRef Handle)
 {
 	//	typed array is not an official js array, but is to us
@@ -1346,7 +1359,7 @@ JsCore::TObject JsCore::TCallback::ThisObject()
 
 void JsCore::TCallback::SetThis(JsCore::TObject& This)
 {
-	mThis = This.mThis;
+	mThis = JSObjectToValue(This.mThis);
 }
 
 template<typename TYPE>
@@ -1524,14 +1537,14 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 void JsCore::TPersistent::Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
 	//std::Debug << "Retain context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
-	JSValueProtect( Context, ObjectOrFunc );
+	JSValueProtect( Context, JSObjectToValue(ObjectOrFunc) );
 }
 
 
 void JsCore::TPersistent::Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName)
 {
 	//std::Debug << "Release context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
-	JSValueUnprotect( Context, ObjectOrFunc );
+	JSValueUnprotect( Context, JSObjectToValue(ObjectOrFunc) );
 }
 
 
@@ -1718,7 +1731,7 @@ JsCore::TArray::TArray(JSContextRef Context,JSObjectRef Object) :
 void JsCore::TArray::Set(size_t Index,JsCore::TObject& Object)
 {
 	JSValueRef Exception = nullptr;
-	JSObjectSetPropertyAtIndex( mContext, mThis, Index, Object.mThis, &Exception );
+	JSObjectSetPropertyAtIndex( mContext, mThis, Index, JSObjectToValue(Object.mThis), &Exception );
 	ThrowException( mContext, Exception );
 }
 
@@ -1863,7 +1876,7 @@ void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const st
 	JSObjectRef ClassObject = JSObjectMake( Context.mLocalContext, mClass, nullptr );
 	
 	JSValueRef Exception = nullptr;
-	JSObjectSetProperty( Context.mLocalContext, ParentObject.mThis, PropertyName, ClassObject, kJSPropertyAttributeNone, &Exception );
+	JSObjectSetProperty( Context.mLocalContext, ParentObject.mThis, PropertyName, JSObjectToValue(ClassObject), kJSPropertyAttributeNone, &Exception );
 	ThrowException( Context.mLocalContext, Exception );
 }
 

@@ -1,17 +1,20 @@
 #pragma once
 
-#if !defined(JSAPI_JSRT)
+#if !defined(JSAPI_CHAKRA)
 #error This file should not be being built
 #endif
 
 //	gr: most comprehensive sample
 //	https://github.com/microsoft/Chakra-Samples/blob/master/Chakra%20Samples/JSRT%20Win32%20Hosting%20Samples/Edge%20JSRT%20Samples/C%2B%2B/ChakraHost.cpp#L411
 
-#define USE_EDGEMODE_JSRT
-#include <jsrt.h>
-#undef min
-#undef max
-
+#if defined(TARGET_WINDOWS)
+	#define USE_EDGEMODE_JSRT
+	#include <jsrt.h>
+	#undef min
+	#undef max
+#else
+	#include <ChakraCore.h>
+#endif
 
 #include "MemHeap.hpp"
 #include "HeapArray.hpp"
@@ -21,7 +24,7 @@ namespace JsCore
 	class TContext;
 }
 
-namespace Jsrt
+namespace Chakra
 {
 	const int InternalFieldDataIndex = 0;
 
@@ -30,6 +33,12 @@ namespace Jsrt
 	
 
 }
+
+
+//	todo:
+class JSContextGroupRef;
+typedef JsContextRef JSContextRef;
+typedef JsValueRef JSValueRef;
 
 
 enum JSType
@@ -50,7 +59,6 @@ enum JSClassAttributes
 //	_JsTypedArrayType in chakra
 enum JSTypedArrayType
 {
-	kJSTypedArrayTypeNone,
 	kJSTypedArrayTypeInt8Array = JsArrayTypeInt8,
 	kJSTypedArrayTypeInt16Array = JsArrayTypeInt16,
 	kJSTypedArrayTypeInt32Array = JsArrayTypeInt32,
@@ -61,6 +69,8 @@ enum JSTypedArrayType
 	kJSTypedArrayTypeFloat32Array = JsArrayTypeFloat32,
 	kJSTypedArrayTypeFloat64Array = JsArrayTypeFloat64,
 
+	//	not in chakra
+	kJSTypedArrayTypeNone,
 	kJSTypedArrayTypeArrayBuffer,
 };
 
@@ -71,19 +81,7 @@ enum JSPropertyAttributes
 };
 
 
-typedef struct {
-	const char* name;
-	JSObjectCallAsFunctionCallback callAsFunction;
-	JSPropertyAttributes attributes;
-} JSStaticFunction;
 
-
-
-
-class JSContextGroupRef;
-
-typedef JsContextRef JSContextRef;
-typedef JsValueRef JSValueRef;
 
 /*
 class JSContextRef
@@ -95,7 +93,7 @@ public:
 
 };
 */
-class JSGlobalContextRef;
+typedef JSContextRef JSGlobalContextRef;
 
 //	this is the virtual machine
 //	if we use shared ptr's i think we're okay just passing it around
@@ -104,10 +102,10 @@ class JSContextGroupRef
 public:
 	JSContextGroupRef(std::nullptr_t);
 	JSContextGroupRef(const std::string& RuntimePath);
+	
+	
+	operator bool() const;
 	/*
-	
-	operator bool() const	{	return mVirtualMachine!=nullptr;	}
-	
 	void					CreateContext(JSGlobalContextRef& NewContext);
 	V8::TVirtualMachine&	GetVirtualMachine()	{	return *mVirtualMachine;	}
 	
@@ -115,17 +113,17 @@ public:
 	*/
 };
 
-
+/*
 //	actual persistent context
 class JSGlobalContextRef
 {
 public:
 	JSGlobalContextRef(std::nullptr_t)	{}
 	
-	operator bool() const			{	return mContext!=nullptr;	}
+	//operator bool() const			{	return mContext!=nullptr;	}
 
 };
-
+*/
 
 
 
@@ -133,15 +131,15 @@ class JSObjectRef
 {
 public:
 	JSObjectRef(std::nullptr_t)	{}
-	JSObjectRef(v8::Local<v8::Object>& Local);
-	JSObjectRef(v8::Local<v8::Object>&& Local);
+	//JSObjectRef(v8::Local<v8::Object>& Local);
+	//JSObjectRef(v8::Local<v8::Object>&& Local);
 
-	//void			operator=(std::nullptr_t Null);
-	//void			operator=(JSObjectRef That);
-	//bool			operator!=(std::nullptr_t Null) const;
-	//bool			operator!=(const JSObjectRef& That) const;
-	operator 		bool() const						{	return !mThis.IsEmpty();	}
-	v8::Isolate&	GetIsolate()	{	return *mThis->GetIsolate();	}
+	void			operator=(std::nullptr_t Null);
+	void			operator=(JSObjectRef That);
+	bool			operator!=(std::nullptr_t Null) const;
+	bool			operator!=(const JSObjectRef& That) const;
+	operator 		bool() const;
+	//v8::Isolate&	GetIsolate()	{	return *mThis->GetIsolate();	}
 };
 
 /*
@@ -166,7 +164,7 @@ public:
 class JSStringRef 
 {
 public:
-
+	JSStringRef(std::nullptr_t)	{}
 };
 
 
@@ -180,10 +178,21 @@ public:
 
 typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);
 //typedef JSObjectRef(*JSObjectCallAsConstructorCallback) (JSContextRef ctx, JSObjectRef constructor, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef v8::FunctionCallback JSObjectCallAsConstructorCallback;
+//typedef v8::FunctionCallback JSObjectCallAsConstructorCallback;
 //typedef JSValueRef(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-typedef v8::FunctionCallback JSObjectCallAsFunctionCallback;
-typedef void(*JSObjectFinalizeCallback)(const v8::WeakCallbackInfo<void>& Meta);
+//typedef v8::FunctionCallback JSObjectCallAsFunctionCallback;
+//typedef void(*JSObjectFinalizeCallback)(const v8::WeakCallbackInfo<void>& Meta);
+typedef void(*JSObjectCallAsFunctionCallback)(void);
+typedef void(*JSObjectCallAsConstructorCallback)(void);
+typedef void(*JSObjectCallAsFunctionCallback)(void);
+typedef void(*JSObjectFinalizeCallback)(JSObjectRef);
+
+
+typedef struct {
+	const char* name;
+	JSObjectCallAsFunctionCallback callAsFunction;
+	JSPropertyAttributes attributes;
+} JSStaticFunction;
 
 
 
@@ -216,6 +225,7 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*);
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception);
 void		JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception );
 void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception);
+JSValueRef	JSObjectToValue(JSObjectRef Object);
 
 JSType		JSValueGetType(JSContextRef Context,JSValueRef Value);
 bool		JSValueIsObject(JSContextRef Context,JSValueRef Value);
@@ -251,6 +261,7 @@ bool		JSValueIsNull(JSContextRef Context,JSValueRef Value);
 
 JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSValueRef* Elements,JSValueRef* Exception=nullptr);
 bool		JSValueIsArray(JSContextRef Context,JSValueRef Value);
+JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSObjectRef Value,JSValueRef* Exception=nullptr);
 JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);
 JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* Buffer,size_t BufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception=nullptr);
 void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
@@ -270,14 +281,14 @@ void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
 //JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
-JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
-size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
+JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
+size_t		JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);
 JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String);
 void		JSStringRelease(JSStringRef String);
 
-JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition);
+JSClassRef	JSClassCreate(JSClassDefinition* Definition);
 void		JSClassRetain(JSClassRef Class);
 
 
