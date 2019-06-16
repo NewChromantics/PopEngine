@@ -435,6 +435,9 @@
     <ClInclude Include="..\src\Libs\x264\include\x264_config.h">
       <Filter>Libs\X264</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\JsrtBind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -803,6 +806,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TApiGui.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsrtBind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

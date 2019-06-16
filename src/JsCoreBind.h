@@ -1,17 +1,24 @@
 #pragma once
 
+
 #if defined(JSAPI_V8)
 
 //	this should always be a persistent now, but need a "make it weak" approach
 #define PERSISTENT_OBJECT_HANDLE
 
-#else
+#elif defined(JSAPI_JSRT)
+
+
+
+#elif defined(JSAPI_JSCORE)
 	//	gr: we're binding them ourselves
 	#if defined(PLATFORM_WINDOWS)
 	#include "JsCoreDll.h"
 	#else
 	#include <JavaScriptCore/JavaScriptCore.h>
 	#endif
+#else
+#error No Javascript API defined
 #endif
 
 #include <memory>
