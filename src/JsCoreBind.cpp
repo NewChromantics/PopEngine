@@ -263,7 +263,9 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
 	JSValueRef Exception = nullptr;
-	auto HandleType = JSValueGetType( Context, Handle );
+	//auto HandleType = JSValueGetType( Context, Handle );
+	JsValueType HandleType;
+	auto HandleTypeError = JsGetValueType( Handle, &HandleType );
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
 	ThrowException( Context, Exception );
 	auto Str = GetString( Context, StringJs );

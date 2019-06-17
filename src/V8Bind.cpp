@@ -726,6 +726,7 @@ size_t JSStringGetLength(JSStringRef String)
 
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
+	//	this function gets a value in a string representation
 	/*
 	if ( !Value.mThis->IsString() )
 		throw Soy::AssertException("Value is not string");

@@ -81,15 +81,161 @@ const char* Chakra::GetErrorString(JsErrorCode Error)
 	}
 }
 
+std::string JSGetStringNoThrow(JsValueRef Value,bool& IsError)
+{
+	JsValueType ValueType;
+	auto Error = JsGetValueType( Value, &ValueType );
+	if ( Error != JsNoError )
+	{
+		IsError = true;
+		std::stringstream ErrorString;
+		ErrorString << "<JsGetValueType " << Chakra::GetErrorString( Error ) << ">";
+		return ErrorString.str();
+	}
+	
+	//	gr: cannot convert object to string? (during exception)
+	JsValueRef String = nullptr;
+	Error = JsConvertValueToString( Value, &String );
+	if ( Error != JsNoError )
+	{
+		IsError = true;
+		std::stringstream ErrorString;
+		ErrorString << "<JsConvertValueToString " << Chakra::GetErrorString( Error ) << ">";
+		return ErrorString.str();
+	}
 
+	char Buffer[1000];
+	size_t StringLength = 0;
+	Error = JsCopyString( String, Buffer, sizeof(Buffer), &StringLength );
+	if ( Error != JsNoError )
+	{
+		IsError = true;
+		std::stringstream ErrorString;
+		ErrorString << "<JsCopyString " << Chakra::GetErrorString( Error ) << ">";
+		return ErrorString.str();
+	}
+	
+	IsError = false;
+	std::string StringString( Buffer, StringLength );
+	return StringString;
+}
+
+
+JsPropertyIdRef GetProperty(JSStringRef Name)
+{
+	Array<char> NameString;
+	Bind::GetString( nullptr, Name, GetArrayBridge(NameString) );
+	
+	//	property id's are context specific
+	JsPropertyIdRef Property = nullptr;
+	auto Error = JsCreatePropertyId( NameString.GetArray(), NameString.GetSize(), &Property );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Property;
+}
+
+std::string ExceptionToString(JsValueRef ExceptionValue)
+{
+	JSContextRef Context = nullptr;
+	
+	auto ExceptionObject = JSValueToObject( Context, ExceptionValue, nullptr );
+	
+	
+	//	our only reference!
+	//	https://chromium.googlesource.com/external/github.com/Microsoft/ChakraCore/+/refs/heads/master/bin/NativeTests/MemoryPolicyTest.cpp#126
+	//	gr: no property named message!
+	 //	gr: searching propertys shows
+	///0=exception	1=source	2=line	3=column	4=length	5=url	6=undefined
+	//auto MessagePropertyString = Bind::GetString(nullptr,"message");
+	auto MessagePropertyString = Bind::GetString(nullptr,"exception");
+	auto MessageProperty = GetProperty( MessagePropertyString );
+	auto MessageValue = JSObjectGetProperty( Context, ExceptionObject, MessagePropertyString, nullptr );
+	bool IsError = false;
+	auto MessageString = JSGetStringNoThrow( MessageValue, IsError );
+	return MessageString;
+	
+	JsValueRef PropertyNamesArray = nullptr;
+	auto Error = JsGetOwnPropertyNames( ExceptionValue, &PropertyNamesArray );
+	Chakra::IsOkay( Error, "JsGetOwnPropertyNames" );
+	
+	//	argh: can't see how to get array length
+	
+	int Index = 0;
+	for ( int Index=0;	Index<99999;	Index++ )
+	{
+		JSValueRef IndexValue = nullptr;
+		auto Error = JsIntToNumber( Index, &IndexValue );
+		JSValueRef NameValue = nullptr;
+		Error = JsGetIndexedProperty( PropertyNamesArray, IndexValue, &NameValue );
+		
+		bool HasError = true;
+		auto NameString = JSGetStringNoThrow( NameValue, HasError );
+		if ( HasError )
+			break;
+		std::Debug << Index << "=" << NameString << std::endl;
+	}
+	
+	return "hello";
+
+}
+
+__thread bool IsThrowing = false;
 
 void Chakra::IsOkay(JsErrorCode Error,const std::string& Context)
 {
 	if ( Error == JsNoError )
 		return;
 	
+	if ( IsThrowing )
+		return;
+	
+	IsThrowing = true;
+	
+	//	grab exception
+	JsValueRef ExceptionMeta = nullptr;
+	std::stringstream ExceptionString;
+	bool HasException = false;
+	JsHasException(&HasException);
+	
+	if ( HasException )
+	{
+		auto GetExceptionError = JsGetAndClearExceptionWithMetadata( &ExceptionMeta );
+		try
+		{
+			std::stringstream ExceptionException;
+			
+			if ( GetExceptionError != JsNoError )
+			{
+				ExceptionException << "JsGetAndClearExceptionWithMetadata error " << GetExceptionError;
+				throw Soy::AssertException(ExceptionException);
+			}
+			
+			auto ExceptionAsString = ExceptionToString( ExceptionMeta );
+			ExceptionString << ExceptionAsString;
+			
+			/*	gr: this wasn't working as object didn't want to convert to a string
+			bool IsError = false;
+			ExceptionException << JSGetStringNoThrow( ExceptionMeta, IsError );
+			if ( IsError )
+				throw Soy::AssertException(ExceptionException);
+
+			ExceptionString << ExceptionException.str();
+			*/
+		}
+		catch(std::exception& e)
+		{
+			ExceptionString << "<Error getting exception: " << e.what() << ">";
+		}
+	}
+	
 	std::stringstream ErrorStr;
 	ErrorStr << "Chakra Error " << GetErrorString(Error) << " in " << Context;
+	if ( HasException )
+		ErrorStr << "; Exception: " << ExceptionString.str();
+	else
+		ErrorStr << "(No exception)";
+	
+	IsThrowing = false;
+	
 	throw Soy::AssertException( ErrorStr );
 }
 
@@ -104,6 +250,11 @@ Chakra::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 	JsThreadServiceCallback ThreadCallback = nullptr;
 	auto Error = JsCreateRuntime( Attributes, ThreadCallback, &mRuntime );
 	IsOkay( Error, "JsCreateRuntime" );
+	
+	bool IsRuntimeExecutionDisabled = false;
+	JsIsRuntimeExecutionDisabled( mRuntime, &IsRuntimeExecutionDisabled );
+	if ( IsRuntimeExecutionDisabled )
+		throw Soy::AssertException("Expecting runtime enabled");
 }
 
 Chakra::TVirtualMachine::~TVirtualMachine()
@@ -171,17 +322,6 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 }
 
 
-JsPropertyIdRef GetProperty(JSStringRef Name)
-{
-	Array<char> NameString;
-	Bind::GetString( nullptr, Name, GetArrayBridge(NameString) );
-	
-	//	property id's are context specific
-	JsPropertyIdRef Property = nullptr;
-	auto Error = JsCreatePropertyId( NameString.GetArray(), NameString.GetSize(), &Property );
-	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
-	return Property;
-}
 
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
 {
@@ -202,16 +342,9 @@ void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,
 	auto Property = GetProperty(Name);
 	auto Error = JsSetProperty( This.mValue, Property, Value, StrictRules );
 	Chakra::IsOkay( Error, "JsSetProperty" );
-	
-	//	test result
-	{
-		auto SameValue = JSObjectGetProperty( Context, This, Name, nullptr );
-		auto SameType = JSValueGetType( SameValue );
-		std::Debug << "Set type is " << SameType << std::endl;
-	}
 }
 
-void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception)
+void JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception)
 {
 	THROW_TODO;
 }
@@ -452,10 +585,27 @@ size_t JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JS
 
 JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception)
 {
+	if ( !This )
+		This = JSContextGetGlobalObject(Context);
+	
 	auto ParseAttributes = JsParseScriptAttributeNone;
 	JsSourceContext ScriptCookie = Chakra::GetNewScriptContext();
 	JsValueRef Result = nullptr;
-	auto Error = JsRun( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
+
+	//	parse it and turn into a script
+	auto Error = JsParse( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
+	Chakra::IsOkay( Error, "JsParse");
+	JsValueType ResultType;
+	JsGetValueType( Result, &ResultType );
+	
+	//	call the result
+	//	gr: fatal when using global
+	JsValueRef Arguments[1] = {This.mValue};
+	Error = JsCallFunction( Result, Arguments, 1, &Result );
+	Chakra::IsOkay( Error, "Calling parsed script");
+	
+	//	fatal
+	Error = JsRun( Result, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
 	Chakra::IsOkay( Error, "JSEvaluateScript/JsRun");
 	return Result;
 }
@@ -551,12 +701,17 @@ size_t JSStringGetLength(JSStringRef String)
 
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	//	this function gets a value in a string representation
+	JsValueRef String = nullptr;
+	auto Error = JsConvertValueToString( Value, &String );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return String;
 }
 
 JSValueRef JSValueMakeString(JSContextRef Context,JSStringRef String)
 {
-	THROW_TODO;
+	//	should this be a copy?
+	return String.mValue;
 }
 
 void JSStringRelease(JSStringRef String)
@@ -589,11 +744,18 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 {
 	//	todo: lock
 	//	todo: set exception capture
+
 	try
 	{
 		auto Result = JsSetCurrentContext( GlobalContext );
 		Chakra::IsOkay( Result, "JsSetCurrentContext" );
 		Functor( GlobalContext );
+
+		bool HasException = false;
+		JsHasException( &HasException );
+		if ( HasException )
+			throw Soy::AssertException("Exception after executing");
+
 		Result = JsSetCurrentContext(JS_INVALID_REFERENCE);
 		Chakra::IsOkay( Result, "JsSetCurrentContext(Invalid)" );
 	}
@@ -602,6 +764,7 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 		JsSetCurrentContext(JS_INVALID_REFERENCE);
 		throw;
 	}
+	
 }
 
 
