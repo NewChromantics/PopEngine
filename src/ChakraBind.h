@@ -132,27 +132,43 @@ public:
 */
 
 //	to appease generic binding, Object's are typed to be different from dumb values
+//	gr: any JsValueRef's off the stack could be cleaned up, so we need to increment inside this class (erk!)
 class JSValueWrapper
 {
 public:
 	JSValueWrapper(std::nullptr_t)	{}
-	JSValueWrapper(const JSValueWrapper& That) :	mValue	( That.mValue )	{}
-	//	todo: do IsObject() test
-	JSValueWrapper(JSValueRef That) : 			mValue	( That )	{}
+	JSValueWrapper(const JSValueWrapper& That)
+	{
+		Set( That.mValue );
+	}
+	JSValueWrapper(JSValueRef Value)
+	{
+		Set( Value );
+	}
+	~JSValueWrapper()
+	{
+		Release();
+	}
 	
-	void			operator=(std::nullptr_t Null)				{	mValue = Null;	}
-	void			operator=(JSValueWrapper That)					{	mValue = That.mValue;	}
+	void			operator=(std::nullptr_t Null)				{	Release();	}
+	void			operator=(JSValueWrapper That)				{	Set( That.mValue );	}
 	bool			operator!=(std::nullptr_t Null) const		{	return mValue != Null;	}
 	bool			operator!=(const JSValueWrapper& That) const	{	return mValue != That.mValue;	}
 	operator 		bool() const								{	return mValue != nullptr;	}
-	operator		JSValueRef() const							{	return mValue;	}
 	
+	//	gr: for some reason this was getting nulled after being used to construct another object...
+	//operator		JSValueRef() const							{	return mValue;	}
+	
+private:
+	void			Set(JSValueRef Value);
+	void			Release();
+
+public:
 	JSValueRef		mValue = nullptr;
 };
 
 typedef JSValueWrapper JSObjectRef;
 typedef JSValueWrapper JSStringRef;
-typedef JSValueWrapper JSClassRef;
 
 
 
@@ -162,9 +178,8 @@ typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContex
 //typedef JSValueRef(*JSObjectCallAsFunctionCallback) (JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
 //typedef v8::FunctionCallback JSObjectCallAsFunctionCallback;
 //typedef void(*JSObjectFinalizeCallback)(const v8::WeakCallbackInfo<void>& Meta);
-typedef void(*JSObjectCallAsFunctionCallback)(void);
-typedef void(*JSObjectCallAsConstructorCallback)(void);
-typedef void(*JSObjectCallAsFunctionCallback)(void);
+typedef JsNativeFunction JSObjectCallAsFunctionCallback;
+typedef JsNativeFunction JSObjectCallAsConstructorCallback;
 typedef JsFinalizeCallback JSObjectFinalizeCallback;
 
 
@@ -188,6 +203,19 @@ public:
 extern const JSClassDefinition kJSClassDefinitionEmpty;
 
 
+class JSClassRef
+{
+public:
+	JSClassRef(std::nullptr_t)	{}
+	
+	operator bool	() const	{	return mConstructor;	}
+	
+	JSObjectFinalizeCallback	mDestructor = nullptr;
+	
+	//	probably needs to be persistent or something
+	JSValueRef			mConstructor = nullptr;
+};
+
 
 class JSPropertyNameArrayRef
 {
@@ -207,6 +235,7 @@ void		JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name
 void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception);
 JSValueRef	JSObjectToValue(JSObjectRef Object);
 
+JSType		JSValueGetType(JSValueRef Value);
 JSType		JSValueGetType(JSContextRef Context,JSValueRef Value);
 bool		JSValueIsObject(JSContextRef Context,JSValueRef Value);
 bool		JSValueIsObject(JSContextRef Context,JSObjectRef Value);

@@ -233,21 +233,29 @@ void JsCore::TFunction::Call(JsCore::TCallback& Params) const
 	Params.mReturn = Result;
 }
 
-std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
+
+void JsCore::GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>&& Buffer)
 {
-	Array<char> Buffer;
 	//	gr: length doesn't include terminator, but JSStringGetUTF8CString writes one
 	Buffer.SetSize(JSStringGetLength(Handle));
 	Buffer.PushBack('\0');
-
+	
 	//	we need a context for v8 from version 7 up.
 	size_t bytesWritten = JSStringGetUTF8CString( Context, Handle, Buffer.GetArray(), Buffer.GetSize() );
 	Buffer.SetSize(bytesWritten);
+	if ( Buffer.GetBack() == '\0' )
+		Buffer.SetSize( bytesWritten-1 );
+}
+
+std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
+{
+	Array<char> Buffer;
+	GetString( Context, Handle, GetArrayBridge(Buffer) );
+
 	if ( Buffer.IsEmpty() )
 		return std::string();
 
-	//	the last byte is a null \0 which std::string doesn't need.
-	std::string utf_string = std::string( Buffer.GetArray(), bytesWritten -1);
+	std::string utf_string = std::string( Buffer.GetArray(), Buffer.GetSize() );
 	return utf_string;
 }
 
@@ -877,6 +885,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	auto PropertyName = JsCore::GetString( mContext, LeafName );
 	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
 	JSStringRelease(PropertyName);
+	auto PropertyType = JSValueGetType( Property );
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
 }

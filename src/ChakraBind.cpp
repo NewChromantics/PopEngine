@@ -127,18 +127,18 @@ JSContextGroupRef::operator bool() const
 	return mVirtualMachine!=nullptr;
 }
 
-	
+
 
 void JSObjectSetPrivate(JSObjectRef Object,void* Data)
 {
-	auto Error = JsSetExternalData( Object, Data );
+	auto Error = JsSetExternalData( Object.mValue, Data );
 	Chakra::IsOkay( Error, "JsSetExternalData" );
 }
 
 void* JSObjectGetPrivate(JSObjectRef Object)
 {
 	void* Data = nullptr;
-	auto Error = JsGetExternalData( Object, &Data );
+	auto Error = JsGetExternalData( Object.mValue, &Data );
 	Chakra::IsOkay( Error, "JsGetExternalData" );
 	return Data;
 }
@@ -170,22 +170,45 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 	return NewObject;
 }
 
+
+JsPropertyIdRef GetProperty(JSStringRef Name)
+{
+	Array<char> NameString;
+	Bind::GetString( nullptr, Name, GetArrayBridge(NameString) );
+	
+	//	property id's are context specific
+	JsPropertyIdRef Property = nullptr;
+	auto Error = JsCreatePropertyId( NameString.GetArray(), NameString.GetSize(), &Property );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Property;
+}
+
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
 {
 	JSValueRef Value = nullptr;
-	auto Error = JsGetProperty( This, Name, &Value );
-	Chakra::IsOkay( Error, "JsGetProperty" );
+	auto Property = GetProperty(Name);
+	auto Error = JsGetProperty( This.mValue, Property, &Value );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
 	if ( !Value )
 		throw Soy::AssertException("JsGetProperty got null value");
 	
 	return Value;
 }
 
+
 void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
 	bool StrictRules = true;
-	auto Error = JsSetProperty( This, Name, Value, StrictRules );
+	auto Property = GetProperty(Name);
+	auto Error = JsSetProperty( This.mValue, Property, Value, StrictRules );
 	Chakra::IsOkay( Error, "JsSetProperty" );
+	
+	//	test result
+	{
+		auto SameValue = JSObjectGetProperty( Context, This, Name, nullptr );
+		auto SameType = JSValueGetType( SameValue );
+		std::Debug << "Set type is " << SameType << std::endl;
+	}
 }
 
 void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception)
@@ -241,17 +264,26 @@ JSType JSValueGetType(JSContextRef Context,JSValueRef Value)
 
 bool JSValueIsObject(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	auto Type = JSValueGetType( Value );
+	return Type == kJSTypeObject;
 }
 
 bool JSValueIsObject(JSContextRef Context,JSObjectRef Value)
 {
-	THROW_TODO;
+	auto Type = JSValueGetType( Value.mValue );
+	return Type == kJSTypeObject;
 }
 
 JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto Type = JSValueGetType( Value );
+	if ( Type != kJSTypeObject )
+	{
+		std::stringstream Error;
+		Error << "JSValueToObject() value is not an object (is " << Type << ")";
+		throw Soy::AssertException( Error );
+	}
+	return Value;
 }
 
 void		JSValueProtect(JSContextRef Context,JSValueRef Value)
@@ -287,7 +319,8 @@ JSStringRef JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t
 
 bool JSValueIsNumber(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	auto Type = JSValueGetType( Value );
+	return Type == kJSTypeNumber;
 }
 
 double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
@@ -303,7 +336,10 @@ JSValueRef JSValueMakeNumber(JSContextRef Context,int Value)
 
 bool JSObjectIsFunction(JSContextRef Context,JSObjectRef Value)
 {
-	THROW_TODO;
+	JsValueType Type = JsUndefined;
+	auto Error = JsGetValueType( Value.mValue, &Type );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return (Type == JsFunction);
 }
 
 JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception)
@@ -313,7 +349,11 @@ JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObje
 
 JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
 {
-	THROW_TODO;
+	JSValueRef Function = nullptr;
+	void* UserData = nullptr;
+	auto Result = JsCreateFunction( FunctionPtr, UserData, &Function );
+	Chakra::IsOkay( Result, __PRETTY_FUNCTION__ );
+	return Function;
 }
 
 
@@ -335,7 +375,10 @@ JSValueRef	JSValueMakeUndefined(JSContextRef Context)
 
 bool		JSValueIsUndefined(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	JsValueType Type = JsUndefined;
+	auto Error = JsGetValueType( Value, &Type );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return (Type == JsUndefined);
 }
 
 
@@ -346,7 +389,10 @@ JSValueRef	JSValueMakeNull(JSContextRef Context)
 
 bool		JSValueIsNull(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	JsValueType Type = JsUndefined;
+	auto Error = JsGetValueType( Value, &Type );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return (Type == JsUndefined);
 }
 
 
@@ -357,7 +403,10 @@ JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSV
 
 bool JSValueIsArray(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	JsValueType Type = JsUndefined;
+	auto Error = JsGetValueType( Value, &Type );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return (Type == JsArray);
 }
 
 JSTypedArrayType JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
@@ -480,7 +529,7 @@ JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffe
 size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize)
 {
 	size_t CopyLength = 0;
-	auto Result = JsCopyString( String, Buffer, BufferSize, &CopyLength );
+	auto Result = JsCopyString( String.mValue, Buffer, BufferSize, &CopyLength );
 	Chakra::IsOkay( Result, "JsCopyString");
 	return CopyLength;
 }
@@ -488,7 +537,7 @@ size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buff
 size_t JSStringGetLength(JSStringRef String)
 {
 	int Length = 0;
-	auto Error = JsGetStringLength( String, &Length );
+	auto Error = JsGetStringLength( String.mValue, &Length );
 	Chakra::IsOkay( Error, "JsGetStringLength" );
 
 	if ( Length < 0 )
@@ -517,18 +566,21 @@ void JSStringRelease(JSStringRef String)
 
 JSValueRef JSObjectToValue(JSObjectRef Object)
 {
-	return Object;
+	return Object.mValue;
 }
 
 
 JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
 {
-	THROW_TODO;
+	JSClassRef Class(nullptr);
+	
+	//	JsCreateFunction
+	
+	return Class;
 }
 
 void		JSClassRetain(JSClassRef Class)
 {
-	THROW_TODO;
 }
 
 
@@ -560,3 +612,20 @@ JSValueRef JSValueMakeFromJSONString(JSContextRef Context, JSStringRef String)
 	THROW_TODO;
 }
 
+void JSValueWrapper::Set(JSValueRef Value)
+{
+	Release();
+	if ( !Value )
+		return;
+	
+	mValue = Value;
+	JSValueProtect(nullptr, mValue);
+}
+
+void JSValueWrapper::Release()
+{
+	if ( !mValue )
+		return;
+	JSValueUnprotect(nullptr, mValue);
+	mValue = nullptr;
+}
