@@ -9,7 +9,16 @@
 namespace Chakra
 {
 	const char*	GetErrorString(JsErrorCode Error);
+	JsSourceContext		GetNewScriptContext();
+	
+	std::atomic<ChakraCookie>	gScriptContextCounter(1000);
 }
+
+JsSourceContext Chakra::GetNewScriptContext()
+{
+	return gScriptContextCounter++;
+}
+
 
 const char* Chakra::GetErrorString(JsErrorCode Error)
 {
@@ -118,58 +127,65 @@ JSContextGroupRef::operator bool() const
 	return mVirtualMachine!=nullptr;
 }
 
-
-
-
-void JSObjectRef::operator=(std::nullptr_t Null)
-{
-	THROW_TODO;
-}
-
-void JSObjectRef::operator=(JSObjectRef That)
-{
-	THROW_TODO;
-}
-
-bool JSObjectRef::operator!=(std::nullptr_t Null) const
-{
-	THROW_TODO;
-}
-
-bool JSObjectRef::operator!=(const JSObjectRef& That) const
-{
-	THROW_TODO;
-}
-
-JSObjectRef::operator bool() const
-{
-	THROW_TODO;
-}
 	
 
 void JSObjectSetPrivate(JSObjectRef Object,void* Data)
 {
-	THROW_TODO;
+	auto Error = JsSetExternalData( Object, Data );
+	Chakra::IsOkay( Error, "JsSetExternalData" );
 }
 
 void* JSObjectGetPrivate(JSObjectRef Object)
 {
-	THROW_TODO;
+	void* Data = nullptr;
+	auto Error = JsGetExternalData( Object, &Data );
+	Chakra::IsOkay( Error, "JsGetExternalData" );
+	return Data;
 }
 
 JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 {
-	THROW_TODO;
+	//	dumb object
+	if ( !Class )
+	{
+		if ( Data )
+			throw Soy::AssertException("JSObjectMake without class, with data, excepting null data if no class");
+		
+		JSValueRef NewObject = nullptr;
+		auto Error = JsCreateObject( &NewObject );
+		Chakra::IsOkay( Error, "JsCreateObject" );
+		if ( !NewObject )
+			throw Soy::AssertException("JsCreateObject created null object");
+		return NewObject;
+	}
+
+	//auto FreeFunc = Class.Finalise;
+	JSValueRef NewObject = nullptr;
+	JsFinalizeCallback FreeFunc = nullptr;
+	auto Error = JsCreateExternalObject( Data, FreeFunc, &NewObject );
+	Chakra::IsOkay( Error, "JsCreateExternalObject" );
+	if ( !NewObject )
+		throw Soy::AssertException("JsCreateExternalObject created null object");
+
+	return NewObject;
 }
 
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
 {
-	THROW_TODO;
+	JSValueRef Value = nullptr;
+	auto Error = JsGetProperty( This, Name, &Value );
+	Chakra::IsOkay( Error, "JsGetProperty" );
+	if ( !Value )
+		throw Soy::AssertException("JsGetProperty got null value");
+	
+	return Value;
 }
 
-void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception )
+void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
-	THROW_TODO;
+	bool StrictRules = true;
+	auto Error = JsSetProperty( This, Name, Value, StrictRules );
+	Chakra::IsOkay( Error, "JsSetProperty" );
 }
 
 void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception)
@@ -206,12 +222,16 @@ JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Ex
 
 void		JSValueProtect(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	unsigned int NewCount = 0;
+	auto Error = JsAddRef( Value, &NewCount );
+	Chakra::IsOkay( Error, "JSValueProtect");
 }
 
 void		JSValueUnprotect(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	unsigned int NewCount = 0;
+	auto Error = JsRelease( Value, &NewCount );
+	Chakra::IsOkay( Error, "JSValueUnprotect");
 }
 
 
@@ -349,17 +369,25 @@ size_t JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JS
 
 JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto ParseAttributes = JsParseScriptAttributeNone;
+	JsSourceContext ScriptCookie = Chakra::GetNewScriptContext();
+	JsValueRef Result = nullptr;
+	auto Error = JsRun( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
+	Chakra::IsOkay( Error, "JSEvaluateScript/JsRun");
+	return Result;
 }
 
 JSGlobalContextRef JSContextGetGlobalContext(JSContextRef Context)
 {
-	THROW_TODO;
+	return Context;
 }
 
 JSObjectRef JSContextGetGlobalObject(JSContextRef Context)
 {
-	THROW_TODO;
+	JSValueRef Object = nullptr;
+	auto Error = JsGetGlobalObject( &Object );
+	Chakra::IsOkay( Error, "JsCreateObject" );
+	return Object;
 }
 
 JSContextGroupRef JSContextGroupCreate()
@@ -380,7 +408,13 @@ void JSContextGroupRelease(JSContextGroupRef ContextGroup)
 
 JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
 {
-	THROW_TODO;
+	if ( GlobalClass )
+		throw Soy::AssertException("Not currently supporting creating context with a global class");
+	
+	JsContextRef NewContext = nullptr;
+	auto Error = JsCreateContext( ContextGroup.mVirtualMachine->mRuntime, &NewContext );
+	Chakra::IsOkay( Error, "JsCreateContext" );
+	return NewContext;
 }
 
 void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name)
@@ -399,14 +433,22 @@ void JSGarbageCollect(JSContextRef Context)
 }
 
 
+
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer)
 {
-	THROW_TODO;
+	JsValueRef String = nullptr;
+	auto Length = strlen(Buffer);
+	auto Error = JsCreateString( Buffer, Length, &String );
+	Chakra::IsOkay( Error, std::string("JSStringCreateWithUTF8CString") + std::string(" with ") + Buffer );
+	return String;
 }
 
 size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize)
 {
-	THROW_TODO;
+	size_t CopyLength = 0;
+	auto Result = JsCopyString( String, Buffer, BufferSize, &CopyLength );
+	Chakra::IsOkay( Result, "JsCopyString");
+	return CopyLength;
 }
 
 size_t JSStringGetLength(JSStringRef String)
@@ -447,11 +489,23 @@ void		JSClassRetain(JSClassRef Class)
 
 
 
-//	major abstraction from V8 to JSCore
-//	JSCore has no global->local (maybe it should execute a run-next-in-queue func)
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)
 {
-	THROW_TODO;
+	//	todo: lock
+	//	todo: set exception capture
+	try
+	{
+		auto Result = JsSetCurrentContext( GlobalContext );
+		Chakra::IsOkay( Result, "JsSetCurrentContext" );
+		Functor( GlobalContext );
+		Result = JsSetCurrentContext(JS_INVALID_REFERENCE);
+		Chakra::IsOkay( Result, "JsSetCurrentContext(Invalid)" );
+	}
+	catch(std::exception& e)
+	{
+		JsSetCurrentContext(JS_INVALID_REFERENCE);
+		throw;
+	}
 }
 
 

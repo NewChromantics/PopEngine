@@ -37,7 +37,7 @@ namespace Chakra
 
 //	todo:
 class JSContextGroupRef;
-typedef JsContextRef JSContextRef;
+typedef JsContextRef JSContextRef;	//	void* pointer
 typedef JsValueRef JSValueRef;
 
 
@@ -131,52 +131,29 @@ public:
 };
 */
 
-
-
-class JSObjectRef
+//	to appease generic binding, Object's are typed to be different from dumb values
+class JSValueWrapper
 {
 public:
-	JSObjectRef(std::nullptr_t)	{}
+	JSValueWrapper(std::nullptr_t)	{}
+	JSValueWrapper(const JSValueWrapper& That) :	mValue	( That.mValue )	{}
+	//	todo: do IsObject() test
+	JSValueWrapper(JSValueRef That) : 			mValue	( That )	{}
 	
-	void			operator=(std::nullptr_t Null);
-	void			operator=(JSObjectRef That);
-	bool			operator!=(std::nullptr_t Null) const;
-	bool			operator!=(const JSObjectRef& That) const;
-	operator 		bool() const;
+	void			operator=(std::nullptr_t Null)				{	mValue = Null;	}
+	void			operator=(JSValueWrapper That)					{	mValue = That.mValue;	}
+	bool			operator!=(std::nullptr_t Null) const		{	return mValue != Null;	}
+	bool			operator!=(const JSValueWrapper& That) const	{	return mValue != That.mValue;	}
+	operator 		bool() const								{	return mValue != nullptr;	}
+	operator		JSValueRef() const							{	return mValue;	}
+	
+	JSValueRef		mValue = nullptr;
 };
 
-/*
-class JSValueRef
-{
-public:
-	JSValueRef()	{}
-	JSValueRef(std::nullptr_t)	{}
-	JSValueRef(JSObjectRef Object);
-	JSValueRef(v8::Local<v8::Value>& Local);
-	JSValueRef(v8::Local<v8::Value>&& Local);
+typedef JSValueWrapper JSObjectRef;
+typedef JSValueWrapper JSStringRef;
+typedef JSValueWrapper JSClassRef;
 
-	void	operator=(JSObjectRef That);
-	void	operator=(std::nullptr_t Null);
-	//bool	operator!=(std::nullptr_t Null) const;
-	operator bool() const						{	return !mThis.IsEmpty();	}
-
-};
-
-*/
-
-class JSStringRef 
-{
-public:
-	JSStringRef(std::nullptr_t)	{}
-};
-
-
-class JSClassRef
-{
-public:
-	JSClassRef(std::nullptr_t)	{}
-
-};
 
 
 typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);
@@ -188,7 +165,7 @@ typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContex
 typedef void(*JSObjectCallAsFunctionCallback)(void);
 typedef void(*JSObjectCallAsConstructorCallback)(void);
 typedef void(*JSObjectCallAsFunctionCallback)(void);
-typedef void(*JSObjectFinalizeCallback)(JSObjectRef);
+typedef JsFinalizeCallback JSObjectFinalizeCallback;
 
 
 typedef struct {
@@ -265,7 +242,6 @@ bool		JSValueIsNull(JSContextRef Context,JSValueRef Value);
 JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSValueRef* Elements,JSValueRef* Exception=nullptr);
 bool		JSValueIsArray(JSContextRef Context,JSValueRef Value);
 JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSObjectRef Value,JSValueRef* Exception=nullptr);
-JSTypedArrayType	JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);
 JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context,JSTypedArrayType ArrayType,void* Buffer,size_t BufferSize,JSTypedArrayBytesDeallocator Dealloc,void* DeallocContext,JSValueRef* Exception=nullptr);
 void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
 size_t		JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
@@ -283,7 +259,6 @@ void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name);
 void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
-//JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
 size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);

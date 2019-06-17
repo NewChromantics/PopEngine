@@ -609,7 +609,8 @@ public:
 	template<typename TYPE>
 	void			Resolve(Bind::TLocalContext& Context,ArrayBridge<TYPE>&& Values) const		{	Resolve( Context, GetValue( Context.mLocalContext, Values ) );	}
 	void			Resolve(Bind::TLocalContext& Context,JsCore::TArray& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
-	void			Resolve(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mResolve.Call(nullptr,Value);	}
+	void			Resolve(Bind::TLocalContext& Context,JSValueRef Value) const;
+	void			Resolve(Bind::TLocalContext& Context,JSObjectRef Value) const;
 	void			Resolve(Bind::TLocalContext& Context,bool Value) const						{	Resolve(Context, GetValue(Context.mLocalContext, Value));	}
 	void			ResolveUndefined(Bind::TLocalContext& Context) const;
 
@@ -699,7 +700,7 @@ protected:
 			throw Soy::AssertException("Failed to dynamically object pointer to " + Soy::GetTypeName<THISTYPE>() );
 		FreeObject( *TypeWrapper );
 	}
-#else
+#elif defined(JSAPI_JSCORE)
 	static void				Free(JSObjectRef ObjectRef)
 	{
 		//	gr: if this fails as it's null, the object being cleaned up may be the class/constructor, if it isn't attached to anything (ie. not attached to the global!)
@@ -713,6 +714,11 @@ protected:
 		//	reset the void for safety?
 		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
 		JSObjectSetPrivate( ObjectRef, nullptr );
+	}
+#elif defined(JSAPI_CHAKRA)
+	static void				Free(void* ObjectPtr)
+	{
+		throw Soy::AssertException("todo: free external data");
 	}
 #endif
 	

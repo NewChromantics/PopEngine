@@ -530,7 +530,9 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	JSClassRef Global = nullptr;
 	
 	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
-#if !defined(JSAPI_V8)
+	
+	//	no name in v8. and in chakra GetString needs to be inside a local context
+#if defined(JSAPI_JSCORE)
 	JSGlobalContextSetName( Context, JsCore::GetString( Context, Name ) );
 #endif
 
@@ -1899,6 +1901,10 @@ JsCore::TPromise::~TPromise()
 }
 
 
+void JsCore::TPromise::Resolve(TLocalContext& LocalContext,JSObjectRef Value) const
+{
+	Resolve( LocalContext, JSObjectToValue(Value) );
+}
 
 void JsCore::TPromise::Resolve(TLocalContext& LocalContext,JSValueRef Value) const
 {
