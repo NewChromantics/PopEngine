@@ -26,7 +26,7 @@
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
 
-#if !defined(JSAPI_V8)
+#if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs to setup the runtime files
 JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
 {
@@ -34,7 +34,7 @@ JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDire
 }
 #endif
 
-#if !defined(JSAPI_V8)
+#if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs a context
 size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef string, char* buffer, size_t bufferSize)
 {
@@ -42,7 +42,7 @@ size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef string, char* buf
 }
 #endif
 
-#if !defined(JSAPI_V8)
+#if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs a context
 JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* string)
 {
@@ -50,7 +50,7 @@ JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* stri
 }
 #endif
 
-#if !defined(JSAPI_V8)
+#if defined(JSAPI_JSCORE)
 JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition* Definition)
 {
 	return JSClassCreate(Definition);
@@ -189,14 +189,19 @@ Bind::TObject JsCore::ParseObjectString(JSContextRef Context, const std::string&
 }
 
 
-JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value)// :
-	//mContext	( Context )
+JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
+	TFunction	( Context, GetObject( Context, Value ) )
 {
-	mThis = GetObject( Context, Value );
+}
+
+JsCore::TFunction::TFunction(JSContextRef Context,JSObjectRef Value)
+{
+	mThis = Value;
 	
 	if ( !JSObjectIsFunction(Context, mThis) )
 		throw Soy::AssertException("Object should be function");
 }
+
 
 JsCore::TFunction::~TFunction()
 {
@@ -776,7 +781,7 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 }
 
 
-#if !defined(JSAPI_V8)
+#if defined(JSAPI_JSCORE)
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)
 {
 	//	gr: this may be the source of problems, this should be a properly locally scoped context...
@@ -1624,7 +1629,7 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 		mContext->OnPersitentRetained(*this);
 }
 
-#if !defined(JSAPI_V8)
+#if defined(JSAPI_JSCORE)
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType, const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception)
 {
 	//	JSObjectMakeTypedArrayWithBytesNoCopy makes an externally backed array, which has a destruction callback

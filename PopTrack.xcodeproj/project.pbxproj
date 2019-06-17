@@ -80,6 +80,7 @@
 		BF8534F722B6DA610049C01B /* include in Resources */ = {isa = PBXBuildFile; fileRef = BF8534F622B6DA610049C01B /* include */; };
 		BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */; };
 		BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8534FC22B6DB270049C01B /* ChakraBind.cpp */; };
+		BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; };
 		BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
@@ -147,6 +148,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */,
 				BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */,
 				BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */,
 				BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */,

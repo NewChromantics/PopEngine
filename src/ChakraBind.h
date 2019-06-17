@@ -31,7 +31,7 @@ namespace Chakra
 	class TAllocator;
 	class TVirtualMachine;
 	
-
+	void	IsOkay(JsErrorCode Error,const std::string& Context);
 }
 
 
@@ -81,7 +81,14 @@ enum JSPropertyAttributes
 };
 
 
-
+class Chakra::TVirtualMachine
+{
+public:
+	TVirtualMachine(const std::string& RuntimePath);
+	~TVirtualMachine();
+	
+	JsRuntimeHandle	mRuntime;
+};
 
 /*
 class JSContextRef
@@ -108,9 +115,8 @@ public:
 	/*
 	void					CreateContext(JSGlobalContextRef& NewContext);
 	V8::TVirtualMachine&	GetVirtualMachine()	{	return *mVirtualMachine;	}
-	
-	std::shared_ptr<V8::TVirtualMachine>	mVirtualMachine;
 	*/
+	std::shared_ptr<Chakra::TVirtualMachine>	mVirtualMachine;
 };
 
 /*
@@ -131,15 +137,12 @@ class JSObjectRef
 {
 public:
 	JSObjectRef(std::nullptr_t)	{}
-	//JSObjectRef(v8::Local<v8::Object>& Local);
-	//JSObjectRef(v8::Local<v8::Object>&& Local);
-
+	
 	void			operator=(std::nullptr_t Null);
 	void			operator=(JSObjectRef That);
 	bool			operator!=(std::nullptr_t Null) const;
 	bool			operator!=(const JSObjectRef& That) const;
 	operator 		bool() const;
-	//v8::Isolate&	GetIsolate()	{	return *mThis->GetIsolate();	}
 };
 
 /*
@@ -281,14 +284,14 @@ void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
 //JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
-JSStringRef	JSStringCreateWithUTF8CString(const char* Buffer);
-size_t		JSStringGetUTF8CString(JSStringRef String,char* Buffer,size_t BufferSize);
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
+size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);
 JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String);
 void		JSStringRelease(JSStringRef String);
 
-JSClassRef	JSClassCreate(JSClassDefinition* Definition);
+JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition);
 void		JSClassRetain(JSClassRef Class);
 
 
