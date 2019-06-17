@@ -806,7 +806,7 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 	static JSObjectCallAsConstructorCallback CConstructorFunc = []()
 	{
 	};
-	throw Soy::AssertException("Todo");
+	throw Soy::AssertException("Todo AllocTemplate cosntructor func");
 #endif
 	
 	//	https://stackoverflow.com/questions/46943350/how-to-use-jsexport-and-javascriptcore-in-c
@@ -881,7 +881,7 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 	JSObjectCallAsFunctionCallback CFunc = []()
 	{
 	};
-	throw Soy::AssertException("Todo");
+	throw Soy::AssertException("todo JsCore::TContext::GetRawFunction");
 #endif
 	
 	return CFunc;
@@ -960,7 +960,7 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 	JSObjectCallAsFunctionCallback CFunc = []()
 	{
 	};
-	throw Soy::AssertException("todo");
+	throw Soy::AssertException("todo JsCore::TContext::GetRawFunction");
 #endif
 	
 	return CFunc;

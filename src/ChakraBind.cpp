@@ -195,13 +195,47 @@ void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t In
 
 JSType JSValueGetType(JSValueRef Value)
 {
-	THROW_TODO;
+	if ( Value == nullptr )
+		return kJSTypeUndefined;
+	
+	JsValueType Type = JsUndefined;
+	auto Error = JsGetValueType( Value, &Type );
+	Chakra::IsOkay( Error, "JsGetValueType" );
+	
+	switch ( Type )
+	{
+		//	not sure what to do with symbol... object or string?
+		case JsSymbol:
+			throw Soy::AssertException("todo: handle chakra JS type symbol. Is it a string or an object?");
+		
+		case JsUndefined:	return kJSTypeUndefined;
+		case JsNull:		return kJSTypeNull;
+		case JsNumber:		return kJSTypeNumber;
+		case JsString:		return kJSTypeString;
+		case JsBoolean:		return kJSTypeBoolean;
+		
+		case JsObject:
+		//	gr: we treat arrays, functions as objects, then delve deeper, to match jscore
+		case JsFunction:
+		case JsError:
+		case JsArray:
+		case JsArrayBuffer:
+		case JsTypedArray:
+		case JsDataView:
+			return kJSTypeObject;
+		
+		default:break;
+	}
+	
+	std::stringstream ErrorStr;
+	ErrorStr << "Unhandled Chakra JS type " << Type;
+	throw Soy::AssertException(ErrorStr);
 }
 
 
 JSType JSValueGetType(JSContextRef Context,JSValueRef Value)
 {
-	THROW_TODO;
+	return JSValueGetType( Value );
 }
 
 
@@ -453,7 +487,17 @@ size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buff
 
 size_t JSStringGetLength(JSStringRef String)
 {
-	THROW_TODO;
+	int Length = 0;
+	auto Error = JsGetStringLength( String, &Length );
+	Chakra::IsOkay( Error, "JsGetStringLength" );
+
+	if ( Length < 0 )
+	{
+		std::stringstream ErrorStr;
+		ErrorStr << "JsGetStringLength gave negative length " << Length;
+		throw Soy::AssertException( ErrorStr );
+	}
+	return Length;
 }
 
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
@@ -468,12 +512,12 @@ JSValueRef JSValueMakeString(JSContextRef Context,JSStringRef String)
 
 void JSStringRelease(JSStringRef String)
 {
-	THROW_TODO;
+	//	doesn't seem to be a function for this
 }
 
 JSValueRef JSObjectToValue(JSObjectRef Object)
 {
-	THROW_TODO;
+	return Object;
 }
 
 
