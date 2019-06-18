@@ -767,11 +767,18 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 	
 	//	copy the function whilst still in callers thread
-	std::function<void(Bind::TLocalContext&)> LocalCopy = Functor;
-	std::function<void()> FunctorWrapper = [=]() mutable
+	std::shared_ptr<std::function<void(Bind::TLocalContext&)>> LocalCopy( new std::function<void(Bind::TLocalContext&)>(Functor) );
+	std::function<void()> FunctorWrapper = [=]()mutable
 	{
 		//	need to catch this?
-		Execute_Reference( LocalCopy );
+		auto& Local = *LocalCopy;
+		std::function<void(Bind::TLocalContext&)> WrapperWrapper = [&](Bind::TLocalContext& Context)
+		{
+			Local( Context );
+			LocalCopy.reset();
+		};
+		Execute_Reference( WrapperWrapper );
+		
 	};
 	
 	if ( DeferMs > 0 )
