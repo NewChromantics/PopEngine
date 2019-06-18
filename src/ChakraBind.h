@@ -80,6 +80,10 @@ enum JSPropertyAttributes
 	kJSPropertyAttributeNone
 };
 
+typedef JSContextRef JSGlobalContextRef;
+
+
+
 
 class Chakra::TVirtualMachine
 {
@@ -87,20 +91,15 @@ public:
 	TVirtualMachine(const std::string& RuntimePath);
 	~TVirtualMachine();
 	
+	//	lock & run & unlock
+	void			Execute(JSGlobalContextRef Context,std::function<void(JSContextRef&)>& Execute);
+	
+	//	the runtime can only execute one context at once, AND (on osx at least) the runtime
+	//	falls over if you try and set the same context twice
+	std::mutex		mCurrentContextLock;
+	JSContextRef	mCurrentContext = nullptr;
 	JsRuntimeHandle	mRuntime;
 };
-
-/*
-class JSContextRef
-{
-public:
-	JSContextRef(std::nullptr_t)	{}
-	JSContextRef(v8::Local<v8::Context>& Local);
-	JSContextRef(v8::Local<v8::Context>&& Local);
-
-};
-*/
-typedef JSContextRef JSGlobalContextRef;
 
 //	this is the virtual machine
 //	if we use shared ptr's i think we're okay just passing it around
