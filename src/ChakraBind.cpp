@@ -299,6 +299,7 @@ Chakra::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 	JsIsRuntimeExecutionDisabled( mRuntime, &IsRuntimeExecutionDisabled );
 	if ( IsRuntimeExecutionDisabled )
 		throw Soy::AssertException("Expecting runtime enabled");
+
 }
 
 Chakra::TVirtualMachine::~TVirtualMachine()
@@ -830,6 +831,21 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 	Chakra::IsOkay( Error, "JsCreateContext" );
 	
 	Chakra::SetVirtualMachine( NewContext, ContextGroup );
+	
+	auto SetupPromiseCallback = [&](JSContextRef Context)
+	{
+		//	promise callback handling
+		JsPromiseContinuationCallback PromiseCallback = [](JsValueRef Task,void* UserData)
+		{
+			auto ContextRef = reinterpret_cast<JsContextRef>( UserData );
+			std::Debug << "todo: JsPromiseContinuationCallback" << std::endl;
+		};
+		Error = JsSetPromiseContinuationCallback( PromiseCallback, NewContext );
+		Chakra::IsOkay( Error, "JsSetPromiseContinuationCallback" );
+	};
+	
+	//	needs to be setup in-context
+	JSLockAndRun( NewContext, SetupPromiseCallback );
 	
 	return NewContext;
 }
