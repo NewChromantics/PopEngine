@@ -9,9 +9,12 @@
 namespace Chakra
 {
 	const char*	GetErrorString(JsErrorCode Error);
+
 	JsSourceContext		GetNewScriptContext();
-	
 	std::atomic<ChakraCookie>	gScriptContextCounter(1000);
+
+	void				SetVirtualMachine(JSGlobalContextRef Context,JSContextGroupRef ContextGroup);
+	TVirtualMachine&	GetVirtualMachine(JSGlobalContextRef Context);
 }
 
 JsSourceContext Chakra::GetNewScriptContext()
@@ -244,6 +247,26 @@ const JSClassDefinition kJSClassDefinitionEmpty = {};
 
 
 
+void Chakra::SetVirtualMachine(JSGlobalContextRef Context,JSContextGroupRef ContextGroup)
+{
+	auto* Vm = ContextGroup.mVirtualMachine.get();
+	auto Error = JsSetContextData( Context, Vm );
+	IsOkay( Error, "SetVirtualMachine/JsSetContextData");
+}
+
+Chakra::TVirtualMachine& Chakra::GetVirtualMachine(JSGlobalContextRef Context)
+{
+	void* Vm = nullptr;
+	auto Error = JsGetContextData( Context, &Vm );
+	IsOkay( Error, "GetVirtualMachine/JsGetContextData");
+
+	if ( !Vm )
+		throw Soy::AssertException("User data on context is null");
+	auto* RealVm = static_cast<Chakra::TVirtualMachine*>(Vm);
+	return *RealVm;
+}
+
+
 Chakra::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 {
 	JsRuntimeAttributes Attributes = JsRuntimeAttributeNone;
@@ -261,6 +284,59 @@ Chakra::TVirtualMachine::~TVirtualMachine()
 {
 	auto Error = JsDisposeRuntime( mRuntime );
 	IsOkay( Error, "JsDisposeRuntime" );
+}
+
+//	lock & run & unlock
+void Chakra::TVirtualMachine::Execute(JSGlobalContextRef Context,std::function<void(JSContextRef&)>& Execute)
+{
+	if ( !Context )
+		throw Soy::AssertException("Trying to execte on null context");
+	
+	//	default sets new context and unlocks the lock
+	std::function<void()> Lock = [&]
+	{
+		mCurrentContext = Context;
+		auto Result = JsSetCurrentContext( mCurrentContext );
+		Chakra::IsOkay( Result, "JsSetCurrentContext" );
+	};
+	
+	std::function<void()> Unlock = [&]
+	{
+		auto Result = JsSetCurrentContext( nullptr );
+		Chakra::IsOkay( Result, "JsSetCurrentContext (unset)" );
+		
+		mCurrentContextLock.unlock();
+		mCurrentContext = nullptr;
+	};
+
+	//	get lock
+	if ( !mCurrentContextLock.try_lock() )
+	{
+		//	failed, but if we're trying to re-lock same context, don't do anything
+		if ( mCurrentContext == Context )
+		{
+			Lock = []{};
+			Unlock = []{};
+		}
+		else
+		{
+			//	wait to lock to new context
+			mCurrentContextLock.lock();
+		}
+	}
+	
+	//	lock, run, unlock
+	try
+	{
+		Lock();
+		Execute( mCurrentContext );
+		Unlock();
+	}
+	catch(std::exception& e)
+	{
+		Unlock();
+		throw;
+	}
 }
 
 JSContextGroupRef::JSContextGroupRef(std::nullptr_t)
@@ -483,7 +559,7 @@ JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObje
 JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	JSValueRef Function = nullptr;
-	//	this is user data, we
+	//	this is user data, we dont get a context in the callback, so we send it ourselves
 	void* CallbackState = Context;
 	auto Result = JsCreateFunction( FunctionPtr, CallbackState, &Function );
 	Chakra::IsOkay( Result, __PRETTY_FUNCTION__ );
@@ -660,6 +736,9 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 	JsContextRef NewContext = nullptr;
 	auto Error = JsCreateContext( ContextGroup.mVirtualMachine->mRuntime, &NewContext );
 	Chakra::IsOkay( Error, "JsCreateContext" );
+	
+	Chakra::SetVirtualMachine( NewContext, ContextGroup );
+	
 	return NewContext;
 }
 
@@ -755,29 +834,9 @@ void		JSClassRetain(JSClassRef Class)
 
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)
 {
-	//	todo: lock
-	//	todo: set exception capture
-
-	try
-	{
-		auto Result = JsSetCurrentContext( GlobalContext );
-		Chakra::IsOkay( Result, "JsSetCurrentContext" );
-		Functor( GlobalContext );
-
-		bool HasException = false;
-		JsHasException( &HasException );
-		if ( HasException )
-			throw Soy::AssertException("Exception after executing");
-
-		Result = JsSetCurrentContext(JS_INVALID_REFERENCE);
-		Chakra::IsOkay( Result, "JsSetCurrentContext(Invalid)" );
-	}
-	catch(std::exception& e)
-	{
-		JsSetCurrentContext(JS_INVALID_REFERENCE);
-		throw;
-	}
-	
+	//	run via vm which handles locking
+	auto& vm = Chakra::GetVirtualMachine(GlobalContext);
+	vm.Execute( GlobalContext, Functor );
 }
 
 
