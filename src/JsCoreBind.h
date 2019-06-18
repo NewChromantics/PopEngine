@@ -806,21 +806,32 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 #elif defined(JSAPI_CHAKRA)
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JsValueRef Function,bool ConstructorCall,JsValueRef* ArgumentValues,uint16_t ArgumentValuesCount,void* CallbackState) ->JsValueRef
 	{
-		if ( !ConstructorCall )
-			throw Soy::AssertException("Function callback expected to be constructor");
-		
-		//	argument 0 is this
-		//	https://github.com/Microsoft/ChakraCore/wiki/JsNativeFunction
-		JsValueRef This = ArgumentValues[0];
-		for ( auto a=0;	a<ArgumentValuesCount;	a++ )
+		JSContextRef Context = reinterpret_cast<JSContextRef>(CallbackState);
+		try
 		{
-			auto Value = ArgumentValues[a];
-			auto Type = JSValueGetType(Value);
-			std::Debug << "Argument[" << a << "] is " << Type << std::endl;
+			if ( !ConstructorCall )
+				throw Soy::AssertException("Function callback expected to be constructor");
+			
+			//	argument 0 is this
+			//	https://github.com/Microsoft/ChakraCore/wiki/JsNativeFunction
+			JsValueRef This = ArgumentValues[0];
+			for ( auto a=0;	a<ArgumentValuesCount;	a++ )
+			{
+				auto Value = ArgumentValues[a];
+				auto Type = JSValueGetType(Value);
+				std::Debug << "Argument[" << a << "] is " << Type << std::endl;
+			}
+
+			//	CallbackState is callback state passed to JsCreateFunction
+			throw Soy::AssertException("Todo AllocTemplate cosntructor func");
+		}
+		catch(std::exception& e)
+		{
+			auto StringValue = Bind::GetString( Context, e.what() );
+			JsSetException( StringValue.mValue );
+			return JSValueMakeUndefined(Context);
 		}
 
-		//	CallbackState is callback state passed to JsCreateFunction
-		throw Soy::AssertException("Todo AllocTemplate cosntructor func");
 	};
 #endif
 	
@@ -895,7 +906,34 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 #elif defined(JSAPI_CHAKRA)
 	JSObjectCallAsConstructorCallback CFunc = [](JsValueRef Function,bool ConstructorCall,JsValueRef* ArgumentValues,uint16_t ArgumentValuesCount,void* CallbackState) ->JsValueRef
 	{
-		throw Soy::AssertException("todo JsCore::TContext::GetRawFunction");
+		//	gr: turn callback state into context
+		JSContextRef ContextRef = reinterpret_cast<JSContextRef>(CallbackState);
+		auto& Context = JsCore::GetContext( ContextRef );
+		try
+		{
+			JsValueRef ThisValue = ArgumentValues[0];
+			JSObjectRef ThisObject( ThisValue );
+
+			Array<JSValueRef> Arguments;
+			for ( auto i=1;	i<ArgumentValuesCount;	i++ )
+			{
+				JSValueRef Value = ArgumentValues[i];
+				Arguments.PushBack(Value);
+			}
+			
+			TLocalContext LocalContext( ContextRef, Context );
+			
+			JSValueRef Exception = nullptr;
+			auto ReturnValue = Context.CallFunc( LocalContext, FunctionCache, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME );
+			
+			return ReturnValue;
+		}
+		catch(std::exception& e)
+		{
+			auto StringValue = Bind::GetString( ContextRef, e.what() );
+			JsSetException( StringValue.mValue );
+			return JSValueMakeUndefined(ContextRef);
+		}
 	};
 #endif
 	
@@ -974,7 +1012,17 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 #elif defined(JSAPI_CHAKRA)
 	JSObjectCallAsConstructorCallback CFunc = [](JsValueRef Function,bool ConstructorCall,JsValueRef* ArgumentValues,uint16_t ArgumentValuesCount,void* CallbackState) ->JsValueRef
 	{
-		throw Soy::AssertException("todo JsCore::TContext::GetRawFunction");
+		JSContextRef Context = reinterpret_cast<JSContextRef>(CallbackState);
+		try
+		{
+			throw Soy::AssertException("todo JsCore::TContext::GetRawFunction");
+		}
+		catch(std::exception& e)
+		{
+			auto StringValue = Bind::GetString( Context, e.what() );
+			JsSetException( StringValue.mValue );
+			return JSValueMakeUndefined(Context);
+		}
 	};
 #endif
 	

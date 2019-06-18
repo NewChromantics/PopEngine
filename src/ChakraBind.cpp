@@ -483,27 +483,37 @@ JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObje
 JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	JSValueRef Function = nullptr;
-	void* UserData = nullptr;
-	auto Result = JsCreateFunction( FunctionPtr, UserData, &Function );
+	//	this is user data, we
+	void* CallbackState = Context;
+	auto Result = JsCreateFunction( FunctionPtr, CallbackState, &Function );
 	Chakra::IsOkay( Result, __PRETTY_FUNCTION__ );
 	return Function;
 }
 
 
-bool JSValueToBoolean(JSContextRef Context,JSValueRef Value)
+bool JSValueToBoolean(JSContextRef Context,JSValueRef ThatValue)
 {
-	THROW_TODO;
+	JSValueRef Value = nullptr;
+	auto Error = JsConvertValueToBoolean(ThatValue,&Value);
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Value;
 }
 
-JSValueRef JSValueMakeBoolean(JSContextRef Context,bool Value)
+JSValueRef JSValueMakeBoolean(JSContextRef Context,bool Boolean)
 {
-	THROW_TODO;
+	JSValueRef Value = nullptr;
+	auto Error = JsBoolToBoolean(Boolean,&Value);
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Value;
 }
 
 
 JSValueRef	JSValueMakeUndefined(JSContextRef Context)
 {
-	THROW_TODO;
+	JSValueRef Value = nullptr;
+	auto Error = JsGetUndefinedValue(&Value);
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Value;
 }
 
 bool		JSValueIsUndefined(JSContextRef Context,JSValueRef Value)
@@ -517,7 +527,10 @@ bool		JSValueIsUndefined(JSContextRef Context,JSValueRef Value)
 
 JSValueRef	JSValueMakeNull(JSContextRef Context)
 {
-	THROW_TODO;
+	JSValueRef Value = nullptr;
+	auto Error = JsGetNullValue(&Value);
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Value;
 }
 
 bool		JSValueIsNull(JSContextRef Context,JSValueRef Value)
@@ -591,7 +604,7 @@ JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef 
 	auto ParseAttributes = JsParseScriptAttributeNone;
 	JsSourceContext ScriptCookie = Chakra::GetNewScriptContext();
 	JsValueRef Result = nullptr;
-
+/*
 	//	parse it and turn into a script
 	auto Error = JsParse( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
 	Chakra::IsOkay( Error, "JsParse");
@@ -603,9 +616,9 @@ JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef 
 	JsValueRef Arguments[1] = {This.mValue};
 	Error = JsCallFunction( Result, Arguments, 1, &Result );
 	Chakra::IsOkay( Error, "Calling parsed script");
-	
+	*/
 	//	fatal
-	Error = JsRun( Result, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
+	auto Error = JsRun( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
 	Chakra::IsOkay( Error, "JSEvaluateScript/JsRun");
 	return Result;
 }
