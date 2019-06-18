@@ -572,6 +572,7 @@ protected:
 
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
+	void				Execute_Reference(std::function<void(TLocalContext&)>& Function);
 
 public:
 	TInstance&			mInstance;
@@ -1113,7 +1114,7 @@ inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const
 	//	init template with overloaded stuff
 	OBJECTWRAPPERTYPE::CreateTemplate( Template );
 	
-	auto Exec = [&](Bind::TLocalContext& LocalContext)
+	std::function<void(Bind::TLocalContext&)> Exec = [&](Bind::TLocalContext& LocalContext)
 	{
 		//	finish off
 		Template.RegisterClassWithContext( LocalContext, ParentName, OverrideLeafName );

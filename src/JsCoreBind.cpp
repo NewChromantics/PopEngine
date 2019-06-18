@@ -766,11 +766,12 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 		throw Soy::AssertException( Error.str() );
 	}
 	
-	
-	std::function<void()> FunctorWrapper = [=]()
+	//	copy the function whilst still in callers thread
+	std::function<void(Bind::TLocalContext&)> LocalCopy = Functor;
+	std::function<void()> FunctorWrapper = [=]() mutable
 	{
 		//	need to catch this?
-		Execute( Functor );
+		Execute_Reference( LocalCopy );
 	};
 	
 	if ( DeferMs > 0 )
@@ -803,6 +804,12 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 #endif
 
 void JsCore::TContext::Execute(std::function<void(JsCore::TLocalContext&)> Functor)
+{
+	//	calling this func will have caused a copy, and now we have one.
+	Execute_Reference( Functor );
+}
+
+void JsCore::TContext::Execute_Reference(std::function<void(JsCore::TLocalContext&)>& Functor)
 {
 	//	gr: lock so only one JS operation happens at a time
 	//		doing this to test stability (this also emulates v8 a lot more)
