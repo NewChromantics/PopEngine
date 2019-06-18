@@ -662,14 +662,47 @@ bool JSValueIsArray(JSContextRef Context,JSValueRef Value)
 	return (Type == JsArray);
 }
 
+class TTypedArrayMeta
+{
+public:
+	uint32_t			ByteOffset = 0;
+	uint32_t			ByteLength = 0;
+	JsValueRef			ArrayBuffer = nullptr;
+	JsTypedArrayType	ChakraType = JsArrayTypeFloat64;	//	obscure case for initialisation
+	JSTypedArrayType	BindType = kJSTypedArrayTypeNone;
+};
+
+TTypedArrayMeta GetTypedArrayMeta(JSValueRef Array)
+{
+	TTypedArrayMeta Meta;
+	auto Error = JsGetTypedArrayInfo( Array, &Meta.ChakraType, &Meta.ArrayBuffer, &Meta.ByteOffset, &Meta.ByteLength );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+
+	//	chakra has no unhandled types
+	Meta.BindType = static_cast<JSTypedArrayType>( Meta.ChakraType );
+	
+	//	do other verification
+	
+	return Meta;
+}
+
 JSTypedArrayType JSValueGetTypedArrayType(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto Meta = GetTypedArrayMeta( Value );
+	return Meta.BindType;
 }
 
 JSTypedArrayType JSValueGetTypedArrayType(JSContextRef Context,JSObjectRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	//	caller doesn't call any "is typed array" first, so we check here, but throw in the meta code
+	JsValueType ValueType = JsUndefined;
+	auto Error = JsGetValueType( Value.mValue, &ValueType );
+	Chakra::IsOkay( Error, "JsGetValueType" );
+	if ( ValueType != JsTypedArray )
+		return kJSTypedArrayTypeNone;
+
+	auto Meta = GetTypedArrayMeta( Value.mValue );
+	return Meta.BindType;
 }
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context,JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer,size_t ExternalBufferSize,JSValueRef* Exception)
@@ -689,17 +722,20 @@ void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject
 
 size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto Meta = GetTypedArrayMeta( Array.mValue );
+	return Meta.ByteOffset;
 }
 
 size_t JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
+	//	todo: convert byte length to typed length!
 	THROW_TODO;
 }
 
 size_t JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto Meta = GetTypedArrayMeta( Array.mValue );
+	return Meta.ByteLength;
 }
 
 
