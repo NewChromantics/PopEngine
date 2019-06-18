@@ -1870,6 +1870,10 @@ void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const st
 	mFunctions.PushBack(NewFunction);
 	mDefinition.staticFunctions = mFunctions.GetArray();
 	mClass = JSClassCreate( Context.mLocalContext, &mDefinition );
+
+	//	catch this failing, if this isn't "valid" then JsObjectMake will just make a dumb object and it won't be obvious that it's not a constructor
+	if ( !mClass )
+		throw Soy::AssertException("Registering class failed, invalid class object");
 	JSClassRetain( mClass );
 	
 	//	gr: this works, but logic seems a little odd to me
