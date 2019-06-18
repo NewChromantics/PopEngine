@@ -575,9 +575,12 @@ double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Excepti
 	return Double;
 }
 
-JSValueRef JSValueMakeNumber(JSContextRef Context,int Value)
+JSValueRef JSValueMakeNumber(JSContextRef Context,int IntValue)
 {
-	THROW_TODO;
+	JsValueRef Value = nullptr;
+	auto Error = JsIntToNumber( IntValue, &Value );
+	Chakra::IsOkay( Error, "JsIntToNumber" );
+	return Value;
 }
 
 
