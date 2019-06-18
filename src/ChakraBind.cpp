@@ -423,6 +423,9 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 	if ( !NewObject )
 		throw Soy::AssertException("JsCreateExternalObject created null object");
 
+	Error = JsSetPrototype( NewObject, Class.mPrototype );
+	Chakra::IsOkay( Error, "JsSetPrototype" );
+
 	return NewObject;
 }
 
@@ -934,6 +937,42 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 	auto FunctionNameValue = Bind::GetString( Context, FunctionName );
 	Class.mConstructor = JSObjectMakeFunctionWithCallback( Context, FunctionNameValue, Definition.callAsConstructor );
 	Class.mDestructor = Definition.finalize;
+	
+	//	bind functions to a prototype, then set that ON the constructor
+	//	https://github.com/microsoft/Chakra-Samples/blob/master/ChakraCore%20Samples/OpenGL%20Engine/OpenGLEngine/ChakraCoreHost.cpp#L480
+	auto Error = JsCreateObject( &Class.mPrototype );
+	Chakra::IsOkay( Error, "JsCreateObject(Prototype)" );
+
+	{
+		int i=0;
+		while ( true )
+		{
+			auto& FunctionDefinition = Definition.staticFunctions[i];
+			i++;
+			if ( FunctionDefinition.name == nullptr )
+				break;
+	
+			auto NameValue = Bind::GetString( Context, FunctionDefinition.name );
+			auto Function = JSObjectMakeFunctionWithCallback( Context, NameValue, FunctionDefinition.callAsFunction );
+			
+			auto Attributes = kJSPropertyAttributeNone;
+			JSObjectSetProperty( Context, Class.mPrototype, NameValue, Function, Attributes, nullptr );
+		}
+	}
+	
+	//	example code does this, but there's a specific function...
+	//	gr: set prototype after construction
+	//		we/example code cheats but setting it up by default
+	{
+		//	gr: this does nothing
+		//auto Attributes = kJSPropertyAttributeNone;
+		//auto PrototypeString = Bind::GetString( Context, "prototype" );
+		//JSObjectSetProperty( Context, Class.mConstructor, PrototypeString, Class.mPrototype, Attributes, nullptr );
+		
+		//	this does nothing, needs to be called post construct
+		//Error = JsSetPrototype( Class.mConstructor, Prototype );
+		//Chakra::IsOkay( Error, "JsSetPrototype");
+	}
 	
 	return Class;
 }
