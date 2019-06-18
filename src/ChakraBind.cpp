@@ -581,7 +581,23 @@ bool JSObjectIsFunction(JSContextRef Context,JSObjectRef Value)
 
 JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception)
 {
-	THROW_TODO;
+	if ( !JSObjectIsFunction( Context, Object ) )
+		throw Soy::AssertException("Trying to call non-function");
+	
+	//	cannot provide null this
+	if ( !This )
+		This = JSContextGetGlobalObject(Context);
+	
+	//	there must ALWAYS be arguments, [0] is this
+	BufferArray<JSValueRef,20> ArgumentsArray;
+	ArgumentsArray.PushBack( This.mValue );
+	for ( auto a=0;	a<ArgumentCount;	a++ )
+		ArgumentsArray.PushBack( Arguments[a] );
+	
+	JsValueRef Result = nullptr;
+	auto Error = JsCallFunction( Object.mValue, ArgumentsArray.GetArray(), ArgumentsArray.GetSize(), &Result );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Result;
 }
 
 JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
