@@ -136,6 +136,17 @@ JsPropertyIdRef GetProperty(JSStringRef Name)
 	return Property;
 }
 
+std::string GetPropertyString(JSObjectRef Object,const char* PropertyName)
+{
+	JsContextRef Context = nullptr;
+	auto PropertyNameString = Bind::GetString(Context,PropertyName);
+	auto Property = GetProperty( PropertyNameString );
+	auto PropertyValue = JSObjectGetProperty( Context, Object, PropertyNameString, nullptr );
+	bool IsError = false;
+	auto String = JSGetStringNoThrow( PropertyValue, IsError );
+	return String;
+}
+
 std::string ExceptionToString(JsValueRef ExceptionValue)
 {
 	JSContextRef Context = nullptr;
@@ -148,20 +159,30 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 	//	gr: no property named message!
 	 //	gr: searching propertys shows
 	///0=exception	1=source	2=line	3=column	4=length	5=url	6=undefined
-	//auto MessagePropertyString = Bind::GetString(nullptr,"message");
-	auto MessagePropertyString = Bind::GetString(nullptr,"exception");
-	auto MessageProperty = GetProperty( MessagePropertyString );
-	auto MessageValue = JSObjectGetProperty( Context, ExceptionObject, MessagePropertyString, nullptr );
-	bool IsError = false;
-	auto MessageString = JSGetStringNoThrow( MessageValue, IsError );
-	return MessageString;
+	//auto Message = GetPropertyString( ExceptionObject, "message" );
+	auto Message = GetPropertyString( ExceptionObject, "exception" );
+	auto Url = GetPropertyString( ExceptionObject, "url" );
+	auto Line = GetPropertyString( ExceptionObject, "line" );
+
+	//	code that failed
+	auto Source = GetPropertyString( ExceptionObject, "source" );
+
+	//	gr: is array length?
+	//	length = 0....
+	auto Length = GetPropertyString( ExceptionObject, "length" );
 	
+	std::stringstream ExceptionString;
+	ExceptionString << "> " << Source << std::endl;
+	ExceptionString << Url << ":" << Line << ": " << Message;
+	return ExceptionString.str();
+	
+		/*
 	JsValueRef PropertyNamesArray = nullptr;
 	auto Error = JsGetOwnPropertyNames( ExceptionValue, &PropertyNamesArray );
 	Chakra::IsOkay( Error, "JsGetOwnPropertyNames" );
 	
 	//	argh: can't see how to get array length
-	
+
 	int Index = 0;
 	for ( int Index=0;	Index<99999;	Index++ )
 	{
@@ -178,7 +199,7 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 	}
 	
 	return "hello";
-
+*/
 }
 
 __thread bool IsThrowing = false;
