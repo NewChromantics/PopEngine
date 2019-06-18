@@ -211,8 +211,9 @@ public:
 	
 	JSObjectFinalizeCallback	mDestructor = nullptr;
 	
-	//	probably needs to be persistent or something
+	//	these need to be persistent!
 	JSValueRef			mConstructor = nullptr;
+	JsValueRef			mPrototype = nullptr;
 };
 
 
