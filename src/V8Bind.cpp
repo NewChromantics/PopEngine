@@ -760,7 +760,7 @@ void Constructor(const v8::FunctionCallbackInfo<v8::Value>& Meta)
 };
 
 
-JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
+JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 {
 	auto* Isolate = &Context.GetIsolate();
 

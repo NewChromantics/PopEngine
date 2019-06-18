@@ -806,32 +806,46 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 #elif defined(JSAPI_CHAKRA)
 	static JSObjectCallAsConstructorCallback CConstructorFunc = [](JsValueRef Function,bool ConstructorCall,JsValueRef* ArgumentValues,uint16_t ArgumentValuesCount,void* CallbackState) ->JsValueRef
 	{
-		JSContextRef Context = reinterpret_cast<JSContextRef>(CallbackState);
+		JSContextRef ContextRef = reinterpret_cast<JSContextRef>(CallbackState);
 		try
 		{
 			if ( !ConstructorCall )
 				throw Soy::AssertException("Function callback expected to be constructor");
 			
+			auto& Context = JsCore::GetContext( ContextRef );
+			
 			//	argument 0 is this
 			//	https://github.com/Microsoft/ChakraCore/wiki/JsNativeFunction
-			JsValueRef This = ArgumentValues[0];
-			for ( auto a=0;	a<ArgumentValuesCount;	a++ )
+			//	but.... that's the parent (so assume is global for constructor)
+			//	from this example https://github.com/microsoft/Chakra-Samples/blob/master/ChakraCore%20Samples/OpenGL%20Engine/OpenGLEngine/ChakraCoreHost.cpp#L270
+			//	so we need to create a new one
+			JsValueRef ParentValue = ArgumentValues[0];
+	
+			//	gr: we can remote-array this
+			Array<JSValueRef> Arguments;
+			for ( auto a=1;	a<ArgumentValuesCount;	a++ )
 			{
+				Arguments.PushBack( ArgumentValues[a] );
+				/*
 				auto Value = ArgumentValues[a];
 				auto Type = JSValueGetType(Value);
 				std::Debug << "Argument[" << a << "] is " << Type << std::endl;
+				 */
 			}
-
-			//	CallbackState is callback state passed to JsCreateFunction
-			throw Soy::AssertException("Todo AllocTemplate cosntructor func");
+			
+			TLocalContext LocalContext( ContextRef, Context );
+			auto ThisObject = Context.CreateObjectInstance( LocalContext, TYPENAME, GetArrayBridge(Arguments) );
+			auto ThisValue = ThisObject.mThis;
+			
+			//	retrn the new external object
+			return ThisValue.mValue;
 		}
 		catch(std::exception& e)
 		{
-			auto StringValue = Bind::GetString( Context, e.what() );
+			auto StringValue = Bind::GetString( ContextRef, e.what() );
 			JsSetException( StringValue.mValue );
-			return JSValueMakeUndefined(Context);
+			return JSValueMakeUndefined( ContextRef );
 		}
-
 	};
 #endif
 	

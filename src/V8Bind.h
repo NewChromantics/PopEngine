@@ -446,7 +446,7 @@ JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef
 JSValueRef	JSValueMakeString(JSContextRef Context,JSStringRef String);
 void		JSStringRelease(JSStringRef String);
 
-JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition* Definition);
+JSClassRef	JSClassCreate(JSContextRef Context,JSClassDefinition& Definition);
 void		JSClassRetain(JSClassRef Class);
 
 

@@ -51,7 +51,7 @@ JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* stri
 #endif
 
 #if defined(JSAPI_JSCORE)
-JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition* Definition)
+JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition& Definition)
 {
 	return JSClassCreate(Definition);
 }
@@ -1869,7 +1869,7 @@ void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const st
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
 	mFunctions.PushBack(NewFunction);
 	mDefinition.staticFunctions = mFunctions.GetArray();
-	mClass = JSClassCreate( Context.mLocalContext, &mDefinition );
+	mClass = JSClassCreate( Context.mLocalContext, mDefinition );
 
 	//	catch this failing, if this isn't "valid" then JsObjectMake will just make a dumb object and it won't be obvious that it's not a constructor
 	if ( !mClass )

@@ -407,9 +407,16 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 		return NewObject;
 	}
 
+	//	gr: for chakra, when we want the prototype object (class but no data)
+	//		it's excepting the constructor
+	if ( !Data )
+	{
+		return Class.mConstructor;
+	}
+	
 	//auto FreeFunc = Class.Finalise;
 	JSValueRef NewObject = nullptr;
-	JsFinalizeCallback FreeFunc = nullptr;
+	JsFinalizeCallback FreeFunc = Class.mDestructor;
 	auto Error = JsCreateExternalObject( Data, FreeFunc, &NewObject );
 	Chakra::IsOkay( Error, "JsCreateExternalObject" );
 	if ( !NewObject )
@@ -582,7 +589,10 @@ JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Nam
 	JSValueRef Function = nullptr;
 	//	this is user data, we dont get a context in the callback, so we send it ourselves
 	void* CallbackState = Context;
-	auto Result = JsCreateFunction( FunctionPtr, CallbackState, &Function );
+
+	//	named just makes it easier to debug
+	//auto Result = JsCreateFunction( FunctionPtr, CallbackState, &Function );
+	auto Result = JsCreateNamedFunction( Name.mValue, FunctionPtr, CallbackState, &Function );
 	Chakra::IsOkay( Result, __PRETTY_FUNCTION__ );
 	return Function;
 }
@@ -838,11 +848,15 @@ JSValueRef JSObjectToValue(JSObjectRef Object)
 }
 
 
-JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition* Definition)
+JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 {
 	JSClassRef Class(nullptr);
 	
-	//	JsCreateFunction
+	//	gr: doesn't seem to be a specific constructor function creator
+	std::string FunctionName = std::string( Definition.className )+" constructor";
+	auto FunctionNameValue = Bind::GetString( Context, FunctionName );
+	Class.mConstructor = JSObjectMakeFunctionWithCallback( Context, FunctionNameValue, Definition.callAsConstructor );
+	Class.mDestructor = Definition.finalize;
 	
 	return Class;
 }
