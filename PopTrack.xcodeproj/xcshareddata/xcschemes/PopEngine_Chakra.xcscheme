@@ -45,7 +45,8 @@
       buildConfiguration = "Debug_Chakra"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      disableMainThreadChecker = "YES"
+      enableAddressSanitizer = "YES"
+      enableASanStackUseAfterReturn = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       customWorkingDirectory = "$PROJECT_DIR/"
@@ -66,15 +67,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "/Volumes/Code/PopEngine/UnitTest/"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "/Volumes/Code/Varjo_TriangleDetect/Pop"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Volumes/Code/PopRayTrace/"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/PopEngine/UnitTest/CameraTest"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -98,6 +99,11 @@
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>
+         <AdditionalOption
+            key = "MallocScribble"
+            value = ""
+            isEnabled = "YES">
+         </AdditionalOption>
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction

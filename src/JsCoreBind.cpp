@@ -53,7 +53,7 @@ JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* stri
 #if defined(JSAPI_JSCORE)
 JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition& Definition)
 {
-	return JSClassCreate(Definition);
+	return JSClassCreate(&Definition);
 }
 #endif
 
@@ -263,9 +263,6 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 {
 	//	convert to string
 	JSValueRef Exception = nullptr;
-	//auto HandleType = JSValueGetType( Context, Handle );
-	JsValueType HandleType;
-	auto HandleTypeError = JsGetValueType( Handle, &HandleType );
 	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
 	ThrowException( Context, Exception );
 	auto Str = GetString( Context, StringJs );
@@ -901,7 +898,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	auto PropertyName = JsCore::GetString( mContext, LeafName );
 	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
 	JSStringRelease(PropertyName);
-	auto PropertyType = JSValueGetType( Property );
+	//auto PropertyType = JSValueGetType( mContext, Property );
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
 }

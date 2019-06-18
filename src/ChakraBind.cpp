@@ -1,3 +1,5 @@
+//	gr: can't exclude file per-configuration in xcode grr
+#if defined(JSAPI_CHAKRA)
 #include "ChakraBind.h"
 #include "SoyDebug.h"
 #include "SoyFileSystem.h"
@@ -1018,3 +1020,6 @@ void JSValueWrapper::Release()
 	JSValueUnprotect(nullptr, mValue);
 	mValue = nullptr;
 }
+
+#endif//JSAPI_CHAKRA
+
