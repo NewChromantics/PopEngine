@@ -760,6 +760,9 @@ JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef 
 	if ( !This )
 		This = JSContextGetGlobalObject(Context);
 	
+	if ( !Filename )
+		Filename = Bind::GetString( Context, "<null filename>" );
+	
 	auto ParseAttributes = JsParseScriptAttributeNone;
 	JsSourceContext ScriptCookie = Chakra::GetNewScriptContext();
 	JsValueRef Result = nullptr;
