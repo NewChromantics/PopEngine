@@ -562,7 +562,13 @@ bool JSValueIsNumber(JSContextRef Context,JSValueRef Value)
 
 double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception)
 {
-	THROW_TODO;
+	JsValueRef NumberValue = nullptr;
+	auto Error = JsConvertValueToNumber( Value, &NumberValue );
+	Chakra::IsOkay( Error, "JsConvertValueToNumber" );
+	double Double = 0;
+	Error = JsNumberToDouble( NumberValue, &Double );
+	Chakra::IsOkay( Error, "JsNumberToDouble" );
+	return Double;
 }
 
 JSValueRef JSValueMakeNumber(JSContextRef Context,int Value)
