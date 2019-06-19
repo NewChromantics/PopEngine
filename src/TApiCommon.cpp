@@ -16,6 +16,7 @@ DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
 //extern const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
 extern const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
 extern const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
+extern const char WriteToFile_FunctionName[] = "WriteToFile";
 extern const char SetTimeout_FunctionName[] = "SetTimeout";
 extern const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
 
@@ -81,6 +82,7 @@ namespace ApiPop
 	static void 	LoadFileAsString(Bind::TCallback& Params);
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
+	static void 	WriteToFile(Bind::TCallback& Params);
 	static void 	GarbageCollect(Bind::TCallback& Params);
 	static void 	SetTimeout(Bind::TCallback& Params);
 	static void		Sleep(Bind::TCallback& Params);
@@ -494,10 +496,33 @@ void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 	auto Filename = Params.GetArgumentFilename(0);
 	auto Contents = Params.GetArgumentString(1);
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
-
+		
 	Soy::StringToFile( Filename, Contents, Append );
 }
 
+void ApiPop::WriteToFile(Bind::TCallback& Params)
+{
+	//	write as a string if not a specific binary array
+	if ( !Params.IsArgumentArray(1) )
+	{
+		WriteStringToFile(Params);
+		return;
+	}
+	
+	auto Filename = Params.GetArgumentFilename(0);
+
+	//	need to have some generic interface here I think
+	//	we dont have the type exposed in Bind yet
+	Array<uint8_t> Contents;
+	Params.GetArgumentArray( 1, GetArrayBridge(Contents) );
+
+	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
+	if ( Append )
+		throw Soy::AssertException("Currently not supporting binary append in WriteToFile()");
+	
+	auto ContentsChar = GetArrayBridge(Contents).GetSubArray<char>(0,Contents.GetSize());
+	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename );
+}
 
 void ApiPop::Bind(Bind::TContext& Context)
 {
@@ -512,6 +537,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
 	Context.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
 	Context.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile, Namespace );
+	Context.BindGlobalFunction<WriteToFile_FunctionName>(WriteToFile, Namespace );
 	Context.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
 	Context.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
 	Context.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
