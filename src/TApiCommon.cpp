@@ -914,8 +914,22 @@ void TImageWrapper::GetPngData(Bind::TCallback& Params)
 	
 	Array<char> PngDataChar;
 	auto PngDataCharBridge = GetArrayBridge(PngDataChar);
-	TPng::GetPng( Pixels, PngDataCharBridge );
+	Array<uint8_t> ExifData;
+	if ( Params.IsArgumentArray(0) )
+	{
+		Params.GetArgumentArray( 0, GetArrayBridge(ExifData) );
+	}
+	else if ( !Params.IsArgumentUndefined(0) )
+	{
+		auto ExifString = Params.GetArgumentString(0);
+		Soy::StringToArray( ExifString, GetArrayBridge(ExifData) );
+	}
 	
+	if ( ExifData.IsEmpty() )
+		TPng::GetPng( Pixels, PngDataCharBridge );
+	else
+		TPng::GetPng( Pixels, PngDataCharBridge, GetArrayBridge(ExifData) );
+
 	auto PngData8 = PngDataCharBridge.GetSubArray<uint8_t>(0,PngDataChar.GetSize());
 	
 	Params.Return( GetArrayBridge(PngData8) );
