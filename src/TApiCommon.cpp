@@ -893,6 +893,11 @@ void TImageWrapper::GetFormat(Bind::TCallback& Params)
 
 void TImageWrapper::GetPngData(Bind::TCallback& Params)
 {
+	//	todo: do this async, but we don't want a generic thread, or one just for this object
+	//		(I don't think so anyway)
+	//		lets create a worker/job thread/pool in JS and make the user pass it in, then use
+	//		has control over which jobs are on which threads, monitoring, load balancing and
+	//		how many. Maybe whenever a thread is passed in, you get a promise back as a general API rule
 	auto& CurrentPixels = this->GetPixels();
 	std::shared_ptr<SoyPixelsImpl> pPixels;
 	if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGB || CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
