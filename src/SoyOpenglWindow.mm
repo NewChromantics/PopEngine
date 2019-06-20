@@ -61,6 +61,7 @@ public:
 	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated=nullptr);
 	~TWindow()
 	{
+		//	gr: this also isn't destroying the window
 		[mWindow release];
 	}
 	
@@ -87,7 +88,21 @@ public:
 	TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
 	~TSlider()
 	{
-		[mControl release];
+		//	gr: this isn't deleting the control from the window, and so responder still exists, but callback doesn't fire
+		if ( mResponder )
+		{
+			mResponder->mCallback = []
+			{
+				std::Debug << "Responder owner deleted" << std::endl;
+				
+			};
+			[mResponder release];
+		}
+		
+		if ( mControl )
+		{
+			[mControl release];
+		}
 	}
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
