@@ -80,6 +80,12 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		This.mActiveRenderTarget = CurrentRenderTarget;
 		//	restore viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+		
+		//	mark that texture has changed
+		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
+		TargetImage.OnOpenglTextureChanged(OpenglContext);
+		
+		//	gr: maybe can read back texture here
 	};
 	Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
