@@ -1734,7 +1734,7 @@ JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<JSValueRef>&
 		auto& Error = std::Debug;
 		Error << "Warning: Javascript core seems to have problems (crashing/corruption) with large arrays; " << Size << "/" << WarningArraySize << std::endl;
 		//throw Soy::AssertException( Error.str() );
-		Size = WarningArraySize;
+		//Size = WarningArraySize;
 	}
 	
 	JSValueRef Exception = nullptr;
