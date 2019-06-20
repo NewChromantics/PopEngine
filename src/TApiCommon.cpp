@@ -68,6 +68,7 @@ DEFINE_BIND_FUNCTIONNAME(Clip);
 DEFINE_BIND_FUNCTIONNAME(Clear);
 DEFINE_BIND_FUNCTIONNAME(SetFormat);
 DEFINE_BIND_FUNCTIONNAME(GetFormat);
+DEFINE_BIND_FUNCTIONNAME(GetPngData);
 
 DEFINE_BIND_FUNCTIONNAME(Iteration);
 
@@ -627,6 +628,7 @@ void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<Clear_FunctionName>( Clear );
 	Template.BindFunction<SetFormat_FunctionName>( SetFormat );
 	Template.BindFunction<GetFormat_FunctionName>( GetFormat );
+	Template.BindFunction<GetPngData_FunctionName>( &TImageWrapper::GetPngData );
 }
 
 
@@ -886,6 +888,32 @@ void TImageWrapper::GetFormat(Bind::TCallback& Params)
 	auto Format = Meta.GetFormat();
 	auto FormatString = SoyPixelsFormat::ToString(Format);
 	Params.Return( FormatString );
+}
+
+#include "SoyPng.h"
+void TImageWrapper::GetPngData(Bind::TCallback& Params)
+{
+	auto& CurrentPixels = this->GetPixels();
+	std::shared_ptr<SoyPixelsImpl> pPixels;
+	if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGB || CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
+	{
+		pPixels.reset( new SoyPixelsRemote(CurrentPixels) );
+	}
+	else
+	{
+		//	copy & change format
+		pPixels.reset( new SoyPixels(CurrentPixels) );
+		pPixels->SetFormat( SoyPixelsFormat::RGBA );
+	}
+	auto& Pixels = *pPixels;
+	
+	Array<char> PngDataChar;
+	auto PngDataCharBridge = GetArrayBridge(PngDataChar);
+	TPng::GetPng( Pixels, PngDataCharBridge );
+	
+	auto PngData8 = PngDataCharBridge.GetSubArray(0,PngDataChar.GetSize());
+	
+	Params.Return( GetArrayBridge(PngData8) );
 }
 
 

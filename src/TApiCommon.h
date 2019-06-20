@@ -87,6 +87,7 @@ public:
 	static void			Clear(Bind::TCallback& Arguments);
 	static void			SetFormat(Bind::TCallback& Arguments);
 	static void			GetFormat(Bind::TCallback& Arguments);
+	void				GetPngData(Bind::TCallback& Params);
 	
 	void									DoLoadFile(const std::string& Filename);
 	void									DoSetLinearFilter(bool LinearFilter);
