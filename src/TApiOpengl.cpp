@@ -85,8 +85,6 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 	{
 		CurrentRenderTarget->Bind();
 		This.mActiveRenderTarget = CurrentRenderTarget;
-		//	restore viewport
-		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 		
 		//	mark that texture has changed
 		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
@@ -95,6 +93,9 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		//	read back pixels if requested
 		if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			TargetImage.ReadOpenglPixels(ReadBackPixelsAfterwards);
+
+		//	restore state after functions above, which might still mess around with things like viewport
+		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 	};
 	Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
