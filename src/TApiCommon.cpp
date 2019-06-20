@@ -8,6 +8,7 @@
 #include "SoyMedia.h"
 #include "TBind.h"
 #include "SoyWindow.h"
+#include "SoyPng.h"
 
 
 DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
@@ -890,7 +891,6 @@ void TImageWrapper::GetFormat(Bind::TCallback& Params)
 	Params.Return( FormatString );
 }
 
-#include "SoyPng.h"
 void TImageWrapper::GetPngData(Bind::TCallback& Params)
 {
 	auto& CurrentPixels = this->GetPixels();

@@ -66,6 +66,13 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 	if ( !OpenglContext.IsLockedToThisThread() )
 		throw Soy::AssertException("RenderToRenderTarget not being called on opengl thread");
 
+	std::string ReadBack;
+	if ( Params.IsArgumentString(2) )
+		ReadBack = Params.GetArgumentString(2);
+	auto ReadBackPixelsAfterwards = SoyPixelsFormat::ToType( ReadBack );
+
+	
+	
 	//	get current rendertarget
 	if ( !This.mActiveRenderTarget )
 		throw Soy::AssertException("Expecting a current render target");
@@ -84,8 +91,10 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		//	mark that texture has changed
 		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
 		TargetImage.OnOpenglTextureChanged(OpenglContext);
-		
-		//	gr: maybe can read back texture here
+
+		//	read back pixels if requested
+		if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
+			TargetImage.ReadOpenglPixels(ReadBackPixelsAfterwards);
 	};
 	Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
