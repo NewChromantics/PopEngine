@@ -911,7 +911,7 @@ void TImageWrapper::GetPngData(Bind::TCallback& Params)
 	auto PngDataCharBridge = GetArrayBridge(PngDataChar);
 	TPng::GetPng( Pixels, PngDataCharBridge );
 	
-	auto PngData8 = PngDataCharBridge.GetSubArray(0,PngDataChar.GetSize());
+	auto PngData8 = PngDataCharBridge.GetSubArray<uint8_t>(0,PngDataChar.GetSize());
 	
 	Params.Return( GetArrayBridge(PngData8) );
 }
