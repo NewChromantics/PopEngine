@@ -3,13 +3,14 @@
 #include "TApiCommon.h"
 #include "SoyOpengl.h"
 
+//	on OSX, make sure you link to the bin/osx32/dylib NOT the one in /lib/
+
 namespace ApiOpenvr
 {
 	const char Namespace[] = "Pop.Openvr";
 
 	DEFINE_BIND_TYPENAME(Hmd);
 
-	DEFINE_BIND_FUNCTIONNAME(SubmitEyeTexture);
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
 	DEFINE_BIND_FUNCTIONNAME(BeginFrame);
 }
@@ -37,18 +38,28 @@ public:
 };
 
 
-
-class Openvr::THmd
+class Openvr::THmdFrame
 {
 public:
-	THmd();
-	~THmd();
-	
-	void		SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Image);
-	void		EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
-	TEyeMatrix	GetEyeMatrix(const std::string& EyeName);
-	void		WaitForFrameStart();
+	TEyeMatrix		mEye;
+	Opengl::TAsset	mEyeTexture;
+};
 
+class Openvr::THmd : public SoyThread
+{
+public:
+	THmd(bool OverlayApp);
+	~THmd();
+
+	virtual void	Thread() override;
+	
+	void			SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture);
+	void			EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
+	TEyeMatrix		GetEyeMatrix(const std::string& EyeName);
+	void			WaitForFrameStart();
+
+public:
+	std::function<void(THmdFrame&,THmdFrame&)>	mOnRender;
 	vr::IVRSystem*	mHmd = nullptr;
 	float			mNearClip = 0.1f;
 	float			mFarClip = 40.0f;
@@ -68,26 +79,30 @@ void ApiOpenvr::Bind(Bind::TContext& Context)
 
 void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 {
-	//auto Filename = Params.GetArgumentFilename(0);
-	mHmd.reset( new Openvr::THmd() );
+	//auto Device = Params.GetArgumentFilename(0);
+	bool IsOverlay = false;
+	if ( !Params.IsArgumentUndefined(1) )
+		IsOverlay = Params.GetArgumentBool(1);
+	
+	mHmd.reset( new Openvr::THmd(IsOverlay) );
 
+	auto OnRender = [this](Openvr::THmdFrame& Left,Openvr::THmdFrame& Right)
+	{
+		this->OnRender( Left, Right );
+	};
+	mHmd->mOnRender = OnRender;
 }
 
 
 void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SubmitEyeTexture_FunctionName>( SubmitEyeTexture );
-	Template.BindFunction<GetEyeMatrix_FunctionName>( GetEyeMatrix );
-	Template.BindFunction<BeginFrame_FunctionName>( BeginFrame );
+	Template.BindFunction<GetEyeMatrix_FunctionName>( &THmdWrapper::GetEyeMatrix );
+	Template.BindFunction<BeginFrame_FunctionName>( &THmdWrapper::BeginFrame );
 }
 
-
-void ApiOpenvr::THmdWrapper::SubmitEyeTexture(Bind::TCallback& Params)
+void ApiOpenvr::THmdWrapper::OnRender(Openvr::THmdFrame& Left,Openvr::THmdFrame& Right)
 {
-	auto& This = Params.This<ApiOpenvr::THmdWrapper>();
-	auto EyeName = Params.GetArgumentString(0);
-	auto& EyeTexture = Params.GetArgumentPointer<TImageWrapper>(1);
-	This.mHmd->SubmitEyeFrame(EyeName, EyeTexture);
+	//	call javascript
 }
 
 void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
@@ -170,25 +185,59 @@ void Openvr::IsOkay(vr::EVRCompositorError Error,const std::string& Context)
 }
 
 
-Openvr::THmd::THmd()
+Openvr::THmd::THmd(bool OverlayApp) :
+	SoyThread	( "Openvr::THmd" )
 {
 	vr::EVRInitError Error = vr::VRInitError_None;
-	mHmd = vr::VR_Init( &Error, vr::VRApplication_Scene );
+	auto AppType = OverlayApp ? vr::VRApplication_Overlay : vr::VRApplication_Scene;
+	mHmd = vr::VR_Init( &Error, AppType );
 	IsOkay( Error, "VR_Init" );
 	
-	
+	Start();
 	//m_strDriver = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_TrackingSystemName_String );
 	//m_strDisplay = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String );
 }
 
 Openvr::THmd::~THmd()
 {
+	Stop(true);
+	
 	if ( mHmd )
 	{
 		vr::VR_Shutdown();
 		mHmd = nullptr;
 	}
 }
+
+
+void Openvr::THmd::Thread()
+{
+	//	loop
+	while ( IsThreadRunning() )
+	{
+		//	block until time for a frame
+		//	update frames
+		WaitForFrameStart();
+		
+		try
+		{
+			THmdFrame Left;
+			THmdFrame Right;
+
+			mOnRender( Left, Right );
+			
+			SubmitEyeFrame( vr::Eye_Left, Left.mEyeTexture );
+			SubmitEyeFrame( vr::Eye_Right, Right.mEyeTexture );
+		}
+		catch(std::exception& e)
+		{
+			//	gr: need to force a submission here
+			std::Debug << "HMD render exception " << e.what() << std::endl;
+		}
+
+	}
+}
+
 
 void Openvr::THmd::EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum)
 {
@@ -244,26 +293,12 @@ void Openvr::THmd::WaitForFrameStart()
 	Openvr::IsOkay(Error, "WaitGetPoses");
 }
 
-void Openvr::THmd::SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Image)
+void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
 {
-	vr::EVREye Eye;
-	
-	if ( EyeName == Openvr::EyeName_Left )
-		Eye = vr::Eye_Left;
-	else if ( EyeName == Openvr::EyeName_Right )
-		Eye = vr::Eye_Right;
-	else
-	{
-		std::stringstream Error;
-		Error << "Unhandled eye name " << EyeName;
-		throw Soy::AssertException(Error);
-	}
-	
 	auto& Compositor = *vr::VRCompositor();
 
 	vr::Texture_t EyeTexture;
-	auto& Texture = Image.GetTexture();
-	EyeTexture.handle = reinterpret_cast<void*>( static_cast<uintptr_t>(Texture.mTexture.mName) );
+	EyeTexture.handle = reinterpret_cast<void*>( static_cast<uintptr_t>(Texture.mName) );
 	EyeTexture.eType = vr::TextureType_OpenGL;
 	EyeTexture.eColorSpace = vr::ColorSpace_Gamma;
 
@@ -271,7 +306,9 @@ void Openvr::THmd::SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Imag
 	if ( Error == vr::VRCompositorError_TextureUsesUnsupportedFormat )
 	{
 		std::stringstream ErrorString;
-		ErrorString << "Eye Texture Submit (" << Texture.mMeta << ")";
+		//	gr: this meta was useful!
+		//ErrorString << "Eye Texture Submit (" << Texture.mMeta << ")";
+		ErrorString << "Eye Texture Submit (" << Texture.mName << ")";
 		Openvr::IsOkay(Error, ErrorString.str());
 	}
 	if ( Error == vr::VRCompositorError_DoNotHaveFocus )
@@ -283,7 +320,6 @@ void Openvr::THmd::SubmitEyeFrame(const std::string& EyeName,TImageWrapper& Imag
 		Openvr::IsOkay(Error, "Eye Texture Submit B");
 	}
 	Openvr::IsOkay( Error, "Eye Texture Submit A");
-
 
 }
 

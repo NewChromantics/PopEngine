@@ -81,8 +81,9 @@
 		BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */; };
 		BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8534FC22B6DB270049C01B /* ChakraBind.cpp */; };
 		BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; };
-		BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		BF85350922BEDD040049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
+		BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; };
+		BF85351222BEDEE10049C01B /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
 		BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */; };
@@ -148,8 +149,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				BF85351222BEDEE10049C01B /* libopenvr_api.dylib in CopyFiles */,
 				BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */,
-				BF89D47F228EDA2100A187D5 /* libopenvr_api.dylib in CopyFiles */,
 				BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */,
 				BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */,
 				BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */,
@@ -320,6 +321,8 @@
 		BF85350022BEB6960049C01B /* SoyMagicLeap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMagicLeap.h; path = src/SoyMagicLeap.h; sourceTree = "<group>"; };
 		BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMagicLeap.cpp; path = src/SoyMagicLeap.cpp; sourceTree = "<group>"; };
 		BF85350322BEB8110049C01B /* PopEngineLumin.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngineLumin.cpp; path = ../PopEngineLumin/src/PopEngineLumin.cpp; sourceTree = "<group>"; };
+		BF85350622BEDBF80049C01B /* OpenVR.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenVR.framework; path = bin/osx64/OpenVR.framework; sourceTree = "<group>"; };
+		BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopenvr_api.dylib; path = bin/osx32/libopenvr_api.dylib; sourceTree = "<group>"; };
 		BF89CF49228DD3EB00A187D5 /* OpenVr */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OpenVr; sourceTree = "<group>"; };
 		BF89CF65228DD3F700A187D5 /* openvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr.h; sourceTree = "<group>"; };
 		BF89CF66228DD3F700A187D5 /* openvr_api.cs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openvr_api.cs; sourceTree = "<group>"; };
@@ -495,6 +498,7 @@
 				BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */,
 				BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */,
 				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
+				BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */,
 				EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */,
 				BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */,
 				BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */,
@@ -505,8 +509,8 @@
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
 				BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */,
+				BF85350922BEDD040049C01B /* libopenvr_api.dylib in Frameworks */,
 				BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */,
-				BF89D26A228DD3F900A187D5 /* libopenvr_api.dylib in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
 				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
 				BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */,
@@ -681,9 +685,27 @@
 			path = ChakraCore;
 			sourceTree = "<group>";
 		};
+		BF85350D22BEDE9C0049C01B /* bin */ = {
+			isa = PBXGroup;
+			children = (
+				BF85350F22BEDEB00049C01B /* osx32 */,
+			);
+			name = bin;
+			sourceTree = "<group>";
+		};
+		BF85350F22BEDEB00049C01B /* osx32 */ = {
+			isa = PBXGroup;
+			children = (
+				BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */,
+			);
+			name = osx32;
+			sourceTree = "<group>";
+		};
 		BF89CF4B228DD3F700A187D5 /* OpenVr */ = {
 			isa = PBXGroup;
 			children = (
+				BF85350D22BEDE9C0049C01B /* bin */,
+				BF85350622BEDBF80049C01B /* OpenVR.framework */,
 				BF89CF64228DD3F700A187D5 /* headers */,
 				BF89CF6A228DD3F700A187D5 /* lib */,
 			);
