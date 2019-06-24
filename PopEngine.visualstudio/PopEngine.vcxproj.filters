@@ -79,6 +79,9 @@
     <Filter Include="Libs\X264">
       <UniqueIdentifier>{7ee17235-1cd3-43d0-b654-e1d65e89becf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\VirtualReality">
+      <UniqueIdentifier>{943c0583-d3f6-4001-b2ad-2f6805a37612}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -435,7 +438,7 @@
     <ClInclude Include="..\src\Libs\x264\include\x264_config.h">
       <Filter>Libs\X264</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\JsrtBind.h">
+    <ClInclude Include="..\src\ChakraBind.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
@@ -613,6 +616,9 @@
     </None>
     <None Include="..\UnitTest\Common\MemCheckLoop.js">
       <Filter>UnitTest\Common</Filter>
+    </None>
+    <None Include="..\UnitTest\VirtualReality\bootup.js">
+      <Filter>UnitTest\VirtualReality</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -808,7 +814,7 @@
     <ClCompile Include="..\src\TApiGui.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\JsrtBind.cpp">
+    <ClCompile Include="..\src\ChakraBind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

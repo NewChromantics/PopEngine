@@ -9,7 +9,7 @@
     <ClCompile>
     </ClCompile>
     <ClCompile>
-      <PreprocessorDefinitions>JSAPI_JSRT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>JSAPI_CHAKRA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
