@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SoyTypes.h>
+
 #if !defined(JSAPI_CHAKRA)
 #error This file should not be being built
 #endif

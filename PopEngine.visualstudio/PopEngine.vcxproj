@@ -94,6 +94,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyPng.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyRef.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h" />
@@ -246,6 +247,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />
     <ClCompile Include="..\src\TApiOpenvr.cpp" />

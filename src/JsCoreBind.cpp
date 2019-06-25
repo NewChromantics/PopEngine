@@ -460,8 +460,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 	};
 
 #if defined(PLATFORM_WINDOWS)
-#if defined(JSAPI_V8)
-#else
+#if defined(JSAPI_JSCORE)
 	JsCore::LoadDll();
 #endif
 	CreateVirtualMachine();

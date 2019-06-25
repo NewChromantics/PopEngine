@@ -3,8 +3,10 @@
 #include "ChakraBind.h"
 #include "SoyDebug.h"
 #include "SoyFileSystem.h"
-
 #include "TBind.h"
+#include <atomic>
+
+
 
 #define THROW_TODO	throw Soy::AssertException( std::string("todo: ") + __PRETTY_FUNCTION__ )
 
@@ -13,7 +15,7 @@ namespace Chakra
 	const char*	GetErrorString(JsErrorCode Error);
 
 	JsSourceContext		GetNewScriptContext();
-	std::atomic<ChakraCookie>	gScriptContextCounter(1000);
+	std::atomic<JsSourceContext>	gScriptContextCounter(1000);
 
 	void				SetVirtualMachine(JSGlobalContextRef Context,JSContextGroupRef ContextGroup);
 	TVirtualMachine&	GetVirtualMachine(JSGlobalContextRef Context);
@@ -56,6 +58,7 @@ const char* Chakra::GetErrorString(JsErrorCode Error)
 		CASE_ERROR( JsErrorObjectNotInspectable );
 		CASE_ERROR( JsErrorPropertyNotSymbol );
 		CASE_ERROR( JsErrorPropertyNotString );
+#if defined(TARGET_OSX)
 		CASE_ERROR( JsErrorInvalidContext );
 		CASE_ERROR( JsInvalidModuleHostInfoKind );
 		CASE_ERROR( JsErrorModuleParsed );
@@ -63,8 +66,11 @@ const char* Chakra::GetErrorString(JsErrorCode Error)
 		CASE_ERROR( JsErrorPromisePending );
 		CASE_ERROR( JsErrorModuleNotEvaluated );
 		//CASE_ERROR( JsErrorCategoryEngine );
+#endif
 		CASE_ERROR( JsErrorOutOfMemory );
+#if defined(TARGET_OSX)
 		CASE_ERROR( JsErrorBadFPUState );
+#endif
 		//CASE_ERROR( JsErrorCategoryScript );
 		CASE_ERROR( JsErrorScriptException );
 		CASE_ERROR( JsErrorScriptCompile );
@@ -74,17 +80,46 @@ const char* Chakra::GetErrorString(JsErrorCode Error)
 		CASE_ERROR( JsErrorFatal );
 		CASE_ERROR( JsErrorWrongRuntime );
 		//CASE_ERROR( JsErrorCategoryDiagError );
+
+#if defined(TARGET_OSX)
 		CASE_ERROR( JsErrorDiagAlreadyInDebugMode );
 		CASE_ERROR( JsErrorDiagNotInDebugMode );
 		CASE_ERROR( JsErrorDiagNotAtBreak );
 		CASE_ERROR( JsErrorDiagInvalidHandle );
 		CASE_ERROR( JsErrorDiagObjectNotFound );
 		CASE_ERROR( JsErrorDiagUnableToPerformAction );
+#endif
 #undef CASE_ERROR
 	
 		default:	return "Unhandled Chakra Error";
 	}
 }
+
+
+#if defined(TARGET_WINDOWS)
+//	missing API wrapper
+JsErrorCode JsCreateString(const char* Buffer, size_t Length, JsValueRef* Result)
+{
+	auto StringW = Soy::StringToWString(Buffer);
+
+	return JsPointerToString(StringW.c_str(), Length, Result);
+}
+#endif
+
+#if defined(TARGET_WINDOWS)
+//	missing API wrapper
+JsErrorCode JsCopyString(JsValueRef String, char* Buffer, size_t BufferSize, size_t* Length)
+{
+	*Length = 0;
+	const wchar_t* BufferW = nullptr;
+	auto Error = JsStringToPointer(String, &BufferW, Length);
+	std::wstring StringW(BufferW, *Length);
+	auto StringC = Soy::WStringToString(StringW);
+	Soy::StringToBuffer(StringC, Buffer, BufferSize);
+	return Error;
+}
+#endif
+
 
 std::string JSGetStringNoThrow(JsValueRef Value,bool& IsError)
 {
@@ -109,9 +144,11 @@ std::string JSGetStringNoThrow(JsValueRef Value,bool& IsError)
 		return ErrorString.str();
 	}
 
-	char Buffer[1000];
 	size_t StringLength = 0;
+
+	char Buffer[1000];
 	Error = JsCopyString( String, Buffer, sizeof(Buffer), &StringLength );
+
 	if ( Error != JsNoError )
 	{
 		IsError = true;
@@ -125,6 +162,15 @@ std::string JSGetStringNoThrow(JsValueRef Value,bool& IsError)
 	return StringString;
 }
 
+
+#if defined(TARGET_WINDOWS)
+//	API difference
+JsErrorCode JsCreatePropertyId(const char* Name, size_t Length, JsPropertyIdRef* Property)
+{
+	auto NameW = Soy::StringToWString(Name);
+	return JsGetPropertyIdFromName(NameW.c_str(), Property);
+}
+#endif
 
 JsPropertyIdRef GetProperty(JSStringRef Name)
 {
@@ -149,28 +195,72 @@ std::string GetPropertyString(JSObjectRef Object,const char* PropertyName)
 	return String;
 }
 
+
+void DebugPropertyName(JsValueRef ExceptionValue)
+{
+	JsValueRef PropertyNamesArray = nullptr;
+	auto Error = JsGetOwnPropertyNames(ExceptionValue, &PropertyNamesArray);
+	Chakra::IsOkay(Error, "JsGetOwnPropertyNames");
+
+	//	argh: can't see how to get array length
+
+	int Index = 0;
+	for (int Index = 0; Index < 100; Index++)
+	{
+		JSValueRef IndexValue = nullptr;
+		auto Error = JsIntToNumber(Index, &IndexValue);
+		JSValueRef NameValue = nullptr;
+		Error = JsGetIndexedProperty(PropertyNamesArray, IndexValue, &NameValue);
+
+		bool HasError = true;
+		auto NameString = JSGetStringNoThrow(NameValue, HasError);
+		if (HasError)
+			break;
+		std::Debug << Index << "=" << NameString << std::endl;
+	}
+
+}
+
 std::string ExceptionToString(JsValueRef ExceptionValue)
 {
 	JSContextRef Context = nullptr;
 	
 	auto ExceptionObject = JSValueToObject( Context, ExceptionValue, nullptr );
 	
+
+	DebugPropertyName(ExceptionValue);
 	
 	//	our only reference!
 	//	https://chromium.googlesource.com/external/github.com/Microsoft/ChakraCore/+/refs/heads/master/bin/NativeTests/MemoryPolicyTest.cpp#126
 	//	gr: no property named message!
 	 //	gr: searching propertys shows
 	///0=exception	1=source	2=line	3=column	4=length	5=url	6=undefined
+	//	gr: ^^^ but on windows[sdk], they're different :)
+#if defined(TARGET_WINDOWS)
+	auto MessageKey = "message";
+	//auto LineKey = "number";
+	auto LineKey = "line";
+	auto FilenameKey = "stack";
+	//auto SourceKey = "description";
+	auto SourceKey = "source";
+#else
+	auto MessageKey = "exception";
+	auto LineKey = "line";
+	auto FilenameKey = "url";
+	auto SourceKey = "source";
+#endif
+
 	//auto Message = GetPropertyString( ExceptionObject, "message" );
-	auto Message = GetPropertyString( ExceptionObject, "exception" );
-	auto Url = GetPropertyString( ExceptionObject, "url" );
-	auto Line = GetPropertyString( ExceptionObject, "line" );
+	auto Message = GetPropertyString( ExceptionObject, MessageKey);
+	auto Url = GetPropertyString( ExceptionObject, FilenameKey );
+	auto Line = GetPropertyString( ExceptionObject, LineKey);
 
 	//	code that failed
-	auto Source = GetPropertyString( ExceptionObject, "source" );
+	auto Source = GetPropertyString( ExceptionObject, SourceKey);
 
 	//	gr: is array length?
 	//	length = 0....
+	//	gr: no length in winsdk
 	auto Length = GetPropertyString( ExceptionObject, "length" );
 	
 	std::stringstream ExceptionString;
@@ -203,6 +293,15 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 	return "hello";
 */
 }
+
+
+#if defined(TARGET_WINDOWS)
+JsErrorCode JsGetAndClearExceptionWithMetadata(JsValueRef *exception)
+{
+	return JsGetAndClearException(exception);
+}
+#endif
+
 
 __thread bool IsThrowing = false;
 
@@ -770,19 +869,46 @@ size_t JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JS
 }
 
 
+#if defined(TARGET_WINDOWS)
+enum JsParseScriptAttributes
+{
+	JsParseScriptAttributeNone
+};
+#endif
+
+#if defined(TARGET_WINDOWS)
+JsErrorCode JsRun(JSValueRef Source, JsSourceContext ScriptCookie, JSValueRef Filename,JsParseScriptAttributes ParseAttributes,JSValueRef* Result)
+{
+	//	gr: this is a bit redundant, we make a string, then go back again.
+	//		lets make a higher level JS func
+	JSContextRef Context = nullptr;
+	auto SourceString = Bind::GetString(Context, Source);
+	auto SourceStringW = Soy::StringToWString(SourceString);
+	auto FilenameString = Bind::GetString(Context, Filename);
+	auto FilenameStringW = Soy::StringToWString(FilenameString);
+
+	return JsRunScript(SourceStringW.c_str(), ScriptCookie, FilenameStringW.c_str(), Result);
+}
+#endif
+
+
 JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception)
 {
 	if ( !This )
 		This = JSContextGetGlobalObject(Context);
 	
 	if ( !Filename )
-		Filename = Bind::GetString( Context, "<null filename>" );
+		Filename = Bind::GetString( Context, std::string("<null filename>") );
 	
 	auto ParseAttributes = JsParseScriptAttributeNone;
 	JsSourceContext ScriptCookie = Chakra::GetNewScriptContext();
 	JsValueRef Result = nullptr;
-/*
+
+	//	winsdk doesn't have JSrun
+	//	JsRunScript
+	/*
 	//	parse it and turn into a script
+	JsParseScript
 	auto Error = JsParse( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
 	Chakra::IsOkay( Error, "JsParse");
 	JsValueType ResultType;
@@ -793,10 +919,10 @@ JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef 
 	JsValueRef Arguments[1] = {This.mValue};
 	Error = JsCallFunction( Result, Arguments, 1, &Result );
 	Chakra::IsOkay( Error, "Calling parsed script");
-	*/
-	//	fatal
+*/
 	auto Error = JsRun( Source.mValue, ScriptCookie, Filename.mValue, ParseAttributes, &Result );
 	Chakra::IsOkay( Error, "JSEvaluateScript/JsRun");
+	
 	return Result;
 }
 
@@ -872,7 +998,6 @@ void JSGarbageCollect(JSContextRef Context)
 {
 	THROW_TODO;
 }
-
 
 
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer)
