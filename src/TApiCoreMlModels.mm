@@ -8,6 +8,7 @@
 #import "TinyYOLO.h"
 #import "Hourglass.h"
 #import "Cpm.h"
+#import "DeepLabV3.h"
 
 //	openpose model from here
 //	https://github.com/infocom-tpo/SwiftOpenPose
@@ -20,7 +21,7 @@
 
 //	https://github.com/edouardlp/Mask-RCNN-CoreML
 #import "MaskRCNN_MaskRCNN.h"
-#endif
+
 
 
 class CoreMl::TInstance : public SoyWorkerJobThread
@@ -40,6 +41,7 @@ public:
 	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 	void		RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 	void		RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunDeepLab(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 
 private:
 	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const TObject&)> EnumObject);
@@ -51,13 +53,27 @@ private:
 	cpm*			mCpm = [[cpm alloc] init];
 	MobileOpenPose*	mOpenPose = [[MobileOpenPose alloc] init];
 	SsdMobilenet*	mSsdMobileNet = [[SsdMobilenet alloc] init];
-	//MaskRCNN_MaskRCNN*	mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
-	MaskRCNN_MaskRCNN*	mMaskRcnn = nullptr;
+	MaskRCNN_MaskRCNN*	mMaskRcnn = nullptr;	//	min osx versions
+	DeepLabV3*		mDeepLabv3 = nullptr;
 };
+
+
+
 
 CoreMl::TInstance::TInstance() :
 	SoyWorkerJobThread	("CoreMl::TInstance")
 {
+	auto OsVersion = Platform::GetOsVersion();
+	if ( OsVersion >= Soy::TVersion(10,13,2) )
+	{
+		mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
+	}
+	
+	if ( OsVersion >= Soy::TVersion(10,14,2) )
+	{
+		mDeepLabv3  = [[DeepLabV3 alloc]init];
+	}
+	
 	Start();
 }
 
@@ -936,3 +952,35 @@ void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<vo
 	throw Soy::AssertException("Process RCNN output");
 }
 
+
+void CoreMl::TInstance::RunDeepLab(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+	NSError* Error = nullptr;
+	
+	Soy::TScopeTimerPrint Timer(__func__,0);
+	auto Output = [mDeepLabv3 predictionFromImage:PixelBuffer error:&Error];
+	Timer.Stop();
+	if ( Error )
+		throw Soy::AssertException( Error );
+	if ( !Output )
+		throw Soy::AssertException("No output from CoreMl prediction");
+	
+	/// Detections (y1,x1,y2,x2,classId,score) as 6 element vector of doubles
+	BufferArray<int,10> ClassBox_Dim;
+	Array<float> ClassBox_Values;
+	ExtractFloatsFromMultiArray( Output.semanticPredictions, GetArrayBridge(ClassBox_Dim), GetArrayBridge(ClassBox_Values) );
+	
+	std::Debug << "ClassBox_Dim: [ ";
+	for ( int i=0;	i<ClassBox_Dim.GetSize();	i++ )
+		std::Debug << ClassBox_Dim[i] << "x";
+	std::Debug << " ]" << std::endl;
+	
+	
+	throw Soy::AssertException("Process RCNN output");
+}

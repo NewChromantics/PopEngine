@@ -8,7 +8,7 @@
 #import "TApiCoreMlModels.mm"
 
 #else
-
+#error coreml not supported
 class CoreMl::TInstance
 {
 };
@@ -25,6 +25,7 @@ const char OpenPose_FunctionName[] = "OpenPose";
 const char SsdMobileNet_FunctionName[] = "SsdMobileNet";
 const char MaskRcnn_FunctionName[] = "MaskRcnn";
 const char FaceDetect_FunctionName[] = "FaceDetect";
+DEFINE_BIND_FUNCTIONNAME(DeepLab);
 
 const char CoreMl_TypeName[] = "CoreMl";
 
@@ -33,22 +34,6 @@ void ApiCoreMl::Bind(Bind::TContext& Context)
 {
 	Context.BindObjectType<TCoreMlWrapper>( ApiPop::Namespace );
 }
-
-
-namespace CoreMl
-{
-	class TObject;
-}
-
-class CoreMl::TObject
-{
-public:
-	float			mScore = 0;
-	std::string		mLabel;
-	Soy::Rectf		mRect = Soy::Rectf(0,0,0,0);
-	vec2x<size_t>	mGridPos;
-};
-
 
 
 void TCoreMlWrapper::Construct(Bind::TCallback& Arguments)
@@ -60,13 +45,15 @@ void TCoreMlWrapper::Construct(Bind::TCallback& Arguments)
 
 void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Yolo_FunctionName>( Yolo );
-	Template.BindFunction<Hourglass_FunctionName>( Hourglass );
-	Template.BindFunction<Cpm_FunctionName>( Cpm );
-	Template.BindFunction<OpenPose_FunctionName>( OpenPose );
-	Template.BindFunction<SsdMobileNet_FunctionName>( SsdMobileNet );
-	Template.BindFunction<MaskRcnn_FunctionName>( MaskRcnn );
-	Template.BindFunction<FaceDetect_FunctionName>( FaceDetect );
+	Template.BindFunction<Yolo_FunctionName>( &TCoreMlWrapper::Yolo );
+	Template.BindFunction<Hourglass_FunctionName>( &TCoreMlWrapper::Hourglass );
+	Template.BindFunction<Cpm_FunctionName>( &TCoreMlWrapper::Cpm );
+	Template.BindFunction<OpenPose_FunctionName>( &TCoreMlWrapper::OpenPose );
+	Template.BindFunction<SsdMobileNet_FunctionName>( &TCoreMlWrapper::SsdMobileNet );
+	Template.BindFunction<MaskRcnn_FunctionName>( &TCoreMlWrapper::MaskRcnn );
+	Template.BindFunction<FaceDetect_FunctionName>( &TCoreMlWrapper::FaceDetect );
+	Template.BindFunction<DeepLab_FunctionName>( &TCoreMlWrapper::DeepLab );
+	
 }
 
 
@@ -123,7 +110,7 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 					ObjectJs.SetInt("GridY", Object.mGridPos.y );
 					Elements.PushBack( ObjectJs );
 				};
-				Promise.Resolve( GetArrayBridge(Elements) );
+				Promise.Resolve( Context, GetArrayBridge(Elements) );
 			};
 			
 			pContext->Queue( OnCompleted );
@@ -132,7 +119,12 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			Promise.Reject( ExceptionString );
+			
+			auto OnError = [=](Bind::TLocalContext& Context)
+			{
+				Promise.Reject( Context, ExceptionString );
+			};
+			pContext->Queue( OnError );
 		}
 	};
 	
@@ -146,8 +138,7 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 void TCoreMlWrapper::Yolo(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
-	auto& This = Params.This<TCoreMlWrapper>();
-	auto& CoreMl = This.mCoreMl;
+	auto& CoreMl = mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunYolo );
 	RunModel( CoreMlFunc, Params, CoreMl );
@@ -159,8 +150,7 @@ void TCoreMlWrapper::Yolo(Bind::TCallback& Params)
 void TCoreMlWrapper::Hourglass(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
-	auto& This = Params.This<TCoreMlWrapper>();
-	auto& CoreMl = This.mCoreMl;
+	auto& CoreMl = mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunHourglass );
 	return RunModel( CoreMlFunc, Params, CoreMl );
@@ -173,8 +163,7 @@ void TCoreMlWrapper::Hourglass(Bind::TCallback& Params)
 void TCoreMlWrapper::Cpm(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
-	auto& This = Params.This<TCoreMlWrapper>();
-	auto& CoreMl = This.mCoreMl;
+	auto& CoreMl = mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunCpm );
 	return RunModel( CoreMlFunc, Params, CoreMl );
@@ -187,8 +176,7 @@ void TCoreMlWrapper::Cpm(Bind::TCallback& Params)
 void TCoreMlWrapper::OpenPose(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
-	auto& This = Params.This<TCoreMlWrapper>();
-	auto& CoreMl = This.mCoreMl;
+	auto& CoreMl = mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
 	return RunModel( CoreMlFunc, Params, CoreMl );
@@ -202,8 +190,7 @@ void TCoreMlWrapper::OpenPose(Bind::TCallback& Params)
 void TCoreMlWrapper::SsdMobileNet(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
-	auto& This = Params.This<TCoreMlWrapper>();
-	auto& CoreMl = This.mCoreMl;
+	auto& CoreMl = mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunSsdMobileNet );
 	return RunModel( CoreMlFunc, Params, CoreMl );
@@ -215,14 +202,26 @@ void TCoreMlWrapper::SsdMobileNet(Bind::TCallback& Params)
 void TCoreMlWrapper::MaskRcnn(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
-	auto& This = Params.This<TCoreMlWrapper>();
-	auto& CoreMl = This.mCoreMl;
+	auto& CoreMl = mCoreMl;
 
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunMaskRcnn );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 #endif
 	throw Soy::AssertException("CoreML Models not built");
 }
+
+
+void TCoreMlWrapper::DeepLab(Bind::TCallback& Params)
+{
+#if defined(ENABLE_COREML_MODELS)
+	auto& CoreMl = mCoreMl;
+	
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunDeepLab );
+	return RunModel( CoreMlFunc, Params, CoreMl );
+#endif
+	throw Soy::AssertException("CoreML Models not built");
+}
+
 
 
 //	apple's Vision built-in face detection
