@@ -1064,10 +1064,12 @@ void ApiOpengl::TTriangleBufferWrapper::Construct(Bind::TCallback& Params)
 	//	access to context!
 	auto& RenderContext = Params.GetArgumentPointer<TOpenglContextWrapper>(0);
 	
+	auto VertexName = Params.GetArgumentString(1);
+
 	Array<float> VertexData;
-	Params.GetArgumentArray(1, GetArrayBridge(VertexData) );
+	Params.GetArgumentArray(2, GetArrayBridge(VertexData) );
 	
-	auto VertexSize = Params.GetArgumentInt(2);
+	auto VertexSize = Params.GetArgumentInt(3);
 
 	auto VertexCount = VertexData.GetSize() / VertexSize;
 	auto VertexDataOverflow = VertexData.GetSize() % VertexSize;
@@ -1085,10 +1087,10 @@ void ApiOpengl::TTriangleBufferWrapper::Construct(Bind::TCallback& Params)
 	}
 
 	Array<uint32_t> IndexData;
-	Params.GetArgumentArray(3, GetArrayBridge(IndexData) );
+	Params.GetArgumentArray(4, GetArrayBridge(IndexData) );
 
 	//	gr: we could save this data and defer it to opengl-thread access
-	CreateGeometry( GetArrayBridge(VertexData), VertexSize, GetArrayBridge(IndexData) );
+	CreateGeometry( VertexName, GetArrayBridge(VertexData), VertexSize, GetArrayBridge(IndexData) );
 }
 
 
@@ -1100,6 +1102,20 @@ vec2f GetVertex<vec2f>(ArrayBridge<float>& VertexFloats,int Index)
 {
 	Index *= 2;
 	return vec2f( VertexFloats[Index+0], VertexFloats[Index+1] );
+}
+
+template<>
+vec3f GetVertex<vec3f>(ArrayBridge<float>& VertexFloats,int Index)
+{
+	Index *= 3;
+	return vec3f( VertexFloats[Index+0], VertexFloats[Index+1], VertexFloats[Index+2] );
+}
+
+template<>
+vec4f GetVertex<vec4f>(ArrayBridge<float>& VertexFloats,int Index)
+{
+	Index *= 4;
+	return vec4f( VertexFloats[Index+0], VertexFloats[Index+1], VertexFloats[Index+2], VertexFloats[Index+3] );
 }
 
 template<typename VERTEXTYPE,size_t VERTEXSIZE>
@@ -1125,26 +1141,25 @@ Opengl::TGeometry* CreateGeometry(const std::string& VertexAttribName,ArrayBridg
 }
 
 
-void ApiOpengl::TTriangleBufferWrapper::CreateGeometry(ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes)
+void ApiOpengl::TTriangleBufferWrapper::CreateGeometry(const std::string& VertexName,ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes)
 {
 	if ( VertexSize == 2 )
 	{
-		mGeometry.reset( ::CreateGeometry<vec2f,2>( "TexCoord", VertexFloats, Indexes ) );
+		mGeometry.reset( ::CreateGeometry<vec2f,2>( VertexName, VertexFloats, Indexes ) );
 		return;
 	}
-	/*
+	
 	if ( VertexSize == 3 )
 	{
-		mGeometry.reset( CreateGeometry<vec3f>( "Vertex", VertexFloats, VertexSize, Indexes ) );
+		mGeometry.reset( ::CreateGeometry<vec3f,3>( VertexName, VertexFloats, Indexes ) );
 		return;
 	}
 	
 	if ( VertexSize == 4 )
 	{
-		mGeometry.reset( CreateGeometry<vec4f>( "Vertex", VertexFloats, VertexSize, Indexes ) );
+		mGeometry.reset( ::CreateGeometry<vec4f,4>( VertexName, VertexFloats, Indexes ) );
 		return;
 	}
-	 */
 	
 	throw Soy::AssertException("Currently only supporting 2,3,4 vertex sizes");
 }

@@ -153,7 +153,7 @@ public:
 	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 	
-	void				CreateGeometry(ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes);
+	void				CreateGeometry(const std::string& VertexName,ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes);
 
 public:
 	std::shared_ptr<Opengl::TGeometry>&		mGeometry = mObject;
