@@ -1414,6 +1414,11 @@ void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
+void JsCore::TCallback::SetArgumentInt(size_t Index,int32_t Value)
+{
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
+}
+
 void JsCore::TCallback::SetArgumentBool(size_t Index,bool Value)
 {
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
