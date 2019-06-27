@@ -274,7 +274,7 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 
 float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 {
-	//	convert to string
+	//	gr: this should do a type check I think
 	JSValueRef Exception = nullptr;
 	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
 	auto Float = static_cast<float>( DoubleJs );
@@ -283,7 +283,6 @@ float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 
 bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 {
-	//	convert to string
 	auto Bool = JSValueToBoolean( Context, Handle );
 	return Bool;
 }
@@ -1411,6 +1410,11 @@ void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
 }
 
 void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
+{
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
+}
+
+void JsCore::TCallback::SetArgumentInt(size_t Index,int32_t Value)
 {
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
