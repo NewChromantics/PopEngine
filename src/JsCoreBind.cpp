@@ -23,6 +23,11 @@
 #include "TApiBluetooth.h"
 #endif
 
+#if !defined(PLATFORM_OSX)
+#include "TApiOpenhmd.h"
+#endif
+
+
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
 
@@ -434,6 +439,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiDll::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
 			ApiGui::Bind( *Context );
+
+		#if !defined(PLATFORM_OSX)
+			ApiOpenhmd::Bind( *Context );
+		#endif
 
 		#if !defined(PLATFORM_WINDOWS)
 			//ApiOpencl::Bind( *Context );

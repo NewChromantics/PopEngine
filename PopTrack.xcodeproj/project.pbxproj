@@ -30,6 +30,9 @@
 		BF3965652278587600A721E8 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
 		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
+		BF42AAC122C548000048C712 /* libopenhmd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF42AAC022C548000048C712 /* libopenhmd.a */; };
+		BF42AAC422C549B10048C712 /* TApiOpenhmd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF42AAC222C549B10048C712 /* TApiOpenhmd.cpp */; };
+		BF42AAC622C562050048C712 /* libhidapi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF42AAC522C562040048C712 /* libhidapi.a */; };
 		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -115,6 +118,7 @@
 		BFE9513222A70B9700B83061 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE9513122A70B9700B83061 /* libx264.a */; };
 		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
+		BFF8A59D22C3BB55002AD145 /* Tarquini_AcidSea in Resources */ = {isa = PBXBuildFile; fileRef = BFF8A59C22C3BB55002AD145 /* Tarquini_AcidSea */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
@@ -225,6 +229,11 @@
 		BF3B01912253A80100644E46 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
+		BF42AABF22C548000048C712 /* openhmd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = openhmd.h; path = OpenHmd/openhmd.h; sourceTree = "<group>"; };
+		BF42AAC022C548000048C712 /* libopenhmd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopenhmd.a; path = OpenHmd/libopenhmd.a; sourceTree = "<group>"; };
+		BF42AAC222C549B10048C712 /* TApiOpenhmd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenhmd.cpp; path = src/TApiOpenhmd.cpp; sourceTree = "<group>"; };
+		BF42AAC322C549B10048C712 /* TApiOpenhmd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenhmd.h; path = src/TApiOpenhmd.h; sourceTree = "<group>"; };
+		BF42AAC522C562040048C712 /* libhidapi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhidapi.a; path = OpenHmd/libhidapi.a; sourceTree = "<group>"; };
 		BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopH264Framework.framework; sourceTree = "<group>"; };
 		BF509159228217AC00DCBB4B /* libencoding.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libencoding.a; path = obj/third_party/inspector_protocol/libencoding.a; sourceTree = "<group>"; };
 		BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_for_testing.dylib; sourceTree = "<group>"; };
@@ -408,6 +417,7 @@
 		BFF505E922550F30005A6AC1 /* V8Bind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = V8Bind.h; path = src/V8Bind.h; sourceTree = "<group>"; };
 		BFF505EB22550F47005A6AC1 /* JsCoreBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreBind.h; path = src/JsCoreBind.h; sourceTree = "<group>"; };
 		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
+		BFF8A59C22C3BB55002AD145 /* Tarquini_AcidSea */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Tarquini_AcidSea; path = ../Tarquini_AcidSea; sourceTree = "<group>"; };
 		BFFCACC521FF445200153C4E /* cpm.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = cpm.mlmodel; sourceTree = "<group>"; };
 		EB0EA5622110AAF9008D6DAA /* Data_dlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_dlib; sourceTree = "<group>"; };
 		EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDlib.cpp; path = src/TApiDlib.cpp; sourceTree = "<group>"; };
@@ -494,12 +504,14 @@
 				BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */,
 				BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */,
 				BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */,
+				BF42AAC122C548000048C712 /* libopenhmd.a in Frameworks */,
 				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
 				BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */,
 				BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */,
 				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
 				BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */,
 				EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */,
+				BF42AAC622C562050048C712 /* libhidapi.a in Frameworks */,
 				BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */,
 				BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */,
 				BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */,
@@ -573,9 +585,20 @@
 			path = lib;
 			sourceTree = "<group>";
 		};
+		BF42AABE22C547F40048C712 /* OpenHmd */ = {
+			isa = PBXGroup;
+			children = (
+				BF42AAC022C548000048C712 /* libopenhmd.a */,
+				BF42AAC522C562040048C712 /* libhidapi.a */,
+				BF42AABF22C548000048C712 /* openhmd.h */,
+			);
+			name = OpenHmd;
+			sourceTree = "<group>";
+		};
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BF42AABE22C547F40048C712 /* OpenHmd */,
 				BF8534F322B6DA1C0049C01B /* ChakraCore */,
 				BF92821D223692BA007E9D6F /* opencv2.framework */,
 				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
@@ -830,6 +853,7 @@
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BFD0829E225E974D00FD05DC /* GuildhallGildwall */,
+				BFF8A59C22C3BB55002AD145 /* Tarquini_AcidSea */,
 				BF0F9E602286F9C200AEA7DC /* PopRayTrace */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
 			);
@@ -911,6 +935,8 @@
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
 				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
 				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
+				BF42AAC222C549B10048C712 /* TApiOpenhmd.cpp */,
+				BF42AAC322C549B10048C712 /* TApiOpenhmd.h */,
 				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
 				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BFF2B6C12264F9A700232137 /* TApiSerial.cpp */,
@@ -1134,6 +1160,7 @@
 				BF8534F722B6DA610049C01B /* include in Resources */,
 				BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */,
 				BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */,
+				BFF8A59D22C3BB55002AD145 /* Tarquini_AcidSea in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1185,6 +1212,7 @@
 				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
 				BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */,
 				FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */,
+				BF42AAC422C549B10048C712 /* TApiOpenhmd.cpp in Sources */,
 				BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */,
 				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
 				BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */,
@@ -1313,6 +1341,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenHmd",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1404,6 +1433,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenHmd",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1527,6 +1557,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenHmd",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1579,6 +1610,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/OpenHmd",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
