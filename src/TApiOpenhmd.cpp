@@ -22,9 +22,13 @@ namespace Openhmd
 {
 	const std::string	EyeName_Left = "Left";
 	const std::string	EyeName_Right = "Right";
-
+	const std::string	DeviceName_Prefix = "Openhmd_";
+	
 	class TContext;
 	TContext& 			GetContext();
+	
+	void 				ThrowError(ohmd_context* Context,const std::string& ErrorContext);
+	void 				ThrowError(TContext& Context,const std::string& ErrorContext);
 }
 
 
@@ -34,22 +38,24 @@ public:
 	TContext();
 	~TContext();
 	
+	int				GetDeviceIndex(std::string DeviceName);
+	
 public:
 	ohmd_context*	mContext = nullptr;
 };
 
-/*
+
 //	maybe rename to camera
 class TEyeMatrix
 {
 public:
 	std::string			mName;
-	vr::HmdMatrix44_t	mProjection;
-	vr::HmdMatrix44_t	mPose;
+	float4x4			mProjection;
 	uint32_t			mRenderTargetWidth = 0;		//	"recommended"
 	uint32_t			mRenderTargetHeight = 0;	//	"recommended"
 };
 
+/*
 
 class Openhmd::THmdFrame
 {
@@ -57,27 +63,21 @@ public:
 	TEyeMatrix		mEye;
 	Opengl::TAsset	mEyeTexture;
 };
+*/
 
-class Openhmd::THmd : public SoyThread
+class Openhmd::THmd
 {
 public:
-	THmd(bool OverlayApp);
+	THmd(TContext& Context,const std::string& DeviceName);
 	~THmd();
 
-	virtual void	Thread() override;
-	
-	void			SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture);
-	void			EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
 	TEyeMatrix		GetEyeMatrix(const std::string& EyeName);
-	void			WaitForFrameStart();
-
+	
 public:
-	std::function<void(THmdFrame&,THmdFrame&)>	mOnRender;
-	vr::IVRSystem*	mHmd = nullptr;
-	float			mNearClip = 0.1f;
-	float			mFarClip = 40.0f;
+	TContext&		mContext;
+	ohmd_device*	mDevice = nullptr;
 };
-*/
+
 
 
 Openhmd::TContext::TContext()
@@ -91,7 +91,20 @@ Openhmd::TContext::~TContext()
 {
 	ohmd_ctx_destroy( mContext );
 }
+
+int Openhmd::TContext::GetDeviceIndex(std::string DeviceName)
+{
+	if ( !Soy::StringTrimLeft( DeviceName, DeviceName_Prefix, true ) )
+	{
+		std::stringstream Error;
+		Error << "Device name not prefixed with " << DeviceName_Prefix;
+		throw Soy::AssertException( Error );
+	}
 	
+	auto Index = DeviceName[0] - '0';
+	return Index;
+}
+
 
 std::shared_ptr<Openhmd::TContext> gContext;
 
@@ -113,23 +126,9 @@ void ApiOpenhmd::Bind(Bind::TContext& Context)
 	Context.CreateGlobalObjectInstance("", Namespace);
 
 	Context.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
-	//Context.BindObjectType<THmdWrapper>( Namespace );
+	Context.BindObjectType<THmdWrapper>( Namespace );
 }
 
-void ApiOpenhmd::THmdWrapper::Construct(Bind::TCallback& Params)
-{
-	/*
-	auto Device = Params.GetArgumentFilename(0);
-	
-	mHmd.reset( new Openhmd::THmd(IsOverlay) );
-
-	auto OnRender = [this](Openhmd::THmdFrame& Left,Openhmd::THmdFrame& Right)
-	{
-		this->OnRender( Left, Right );
-	};
-	mHmd->mOnRender = OnRender;
-	 */
-}
 
 void ApiOpenhmd::EnumDevices(Bind::TCallback &Params)
 {
@@ -137,6 +136,8 @@ void ApiOpenhmd::EnumDevices(Bind::TCallback &Params)
 	auto* Context = TheContext.mContext;
 	
 	auto DeviceCount = ohmd_ctx_probe( Context );
+	if ( DeviceCount < 0 )
+		Openhmd::ThrowError(Context,"ohmd_ctx_probe");
 	
 	Array<Bind::TObject> Hmds;
 	for ( auto d=0;	d<DeviceCount;	d++ )
@@ -146,9 +147,14 @@ void ApiOpenhmd::EnumDevices(Bind::TCallback &Params)
 		auto Path = ohmd_list_gets( Context, d, OHMD_PATH );
 		
 		auto Hmd = Params.mContext.CreateObjectInstance(Params.mLocalContext);
+		
 		//	todo: need a unique identifier for serial!
+		//	gr: see if this order is persistent
+		std::stringstream Serial;
+		Serial << Openhmd::DeviceName_Prefix << d;
+		
 		Hmd.SetString("Vendor", Vendor );
-		Hmd.SetString("Serial", Product );
+		Hmd.SetString("Serial", Serial.str() );
 		Hmd.SetString("Product", Product );
 		Hmd.SetString("Path", Path );
 		Hmds.PushBack(Hmd);
@@ -157,277 +163,146 @@ void ApiOpenhmd::EnumDevices(Bind::TCallback &Params)
 	Params.Return( GetArrayBridge(Hmds ) );
 }
 
-/*
+void ApiOpenhmd::THmdWrapper::Construct(Bind::TCallback& Params)
+{
+	auto DeviceName = Params.GetArgumentFilename(0);
+	
+	mHmd.reset( new Openhmd::THmd(DeviceName) );
+
+	/*
+	auto OnRender = [this](Openhmd::THmdFrame& Left,Openhmd::THmdFrame& Right)
+	{
+		this->OnRender( Left, Right );
+	};
+	mHmd->mOnRender = OnRender;
+	*/
+}
+
+
 void ApiOpenhmd::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<GetEyeMatrix_FunctionName>( &THmdWrapper::GetEyeMatrix );
-	Template.BindFunction<BeginFrame_FunctionName>( &THmdWrapper::BeginFrame );
-}
-
-void ApiOpenhmd::THmdWrapper::OnRender(Openhmd::THmdFrame& Left,Openhmd::THmdFrame& Right)
-{
-	//	call javascript
+	//Template.BindFunction<BeginFrame_FunctionName>( &THmdWrapper::BeginFrame );
 }
 
 void ApiOpenhmd::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
 {
-	auto& This = Params.This<ApiOpenhmd::THmdWrapper>();
 	auto EyeName = Params.GetArgumentString(0);
 
-	auto EyeMatrix = This.mHmd->GetEyeMatrix(EyeName);
+	auto EyeMatrix = mHmd->GetEyeMatrix(EyeName);
 
 	auto Obj = Params.mContext.CreateObjectInstance(Params.mLocalContext);
 	//Obj.SetArray("
 	Params.Return(Obj);
 }
 
-void ApiOpenhmd::THmdWrapper::BeginFrame(Bind::TCallback& Params)
+
+Openhmd::THmd::THmd(TContext& Context,const std::string& DeviceName) :
+	mContext	( Context )
 {
-	auto& This = Params.This<ApiOpenhmd::THmdWrapper>();
-	auto& Hmd = *This.mHmd;
-	Hmd.WaitForFrameStart();
-}
-
-
-
-
-std::ostream& operator<<(std::ostream &out,const vr::EVRInitError& in)
-{
-	auto* ErrorString = vr::VR_GetVRInitErrorAsEnglishDescription(in);
-	if ( !ErrorString )
-	{
-		out << "<vr::EVRInitError=" << static_cast<int>(in) << ">";
-		return out;
-	}
+	auto* settings = ohmd_device_settings_create(Context.mContext);
 	
-	out << ErrorString;
-	return out;
-}
-
-
-std::ostream& operator<<(std::ostream &out,const vr::EVRCompositorError& in)
-{
-	switch(in)
-	{
-		case vr::VRCompositorError_None:					out << "VRCompositorError_None";	break;
-		case vr::VRCompositorError_RequestFailed:			out << "VRCompositorError_RequestFailed";	break;
-		case vr::VRCompositorError_IncompatibleVersion:		out << "VRCompositorError_IncompatibleVersion";	break;
-		case vr::VRCompositorError_DoNotHaveFocus:			out << "VRCompositorError_DoNotHaveFocus";	break;
-		case vr::VRCompositorError_InvalidTexture:			out << "VRCompositorError_InvalidTexture";	break;
-		case vr::VRCompositorError_IsNotSceneApplication:	out << "VRCompositorError_IsNotSceneApplication";	break;
-		case vr::VRCompositorError_TextureIsOnWrongDevice:	out << "VRCompositorError_TextureIsOnWrongDevice";	break;
-		case vr::VRCompositorError_TextureUsesUnsupportedFormat:	out << "VRCompositorError_TextureUsesUnsupportedFormat";	break;
-		case vr::VRCompositorError_SharedTexturesNotSupported:	out << "VRCompositorError_SharedTexturesNotSupported";	break;
-		case vr::VRCompositorError_IndexOutOfRange:			out << "VRCompositorError_IndexOutOfRange";	break;
-		case vr::VRCompositorError_AlreadySubmitted:		out << "VRCompositorError_AlreadySubmitted";	break;
-		case vr::VRCompositorError_InvalidBounds:			out << "VRCompositorError_InvalidBounds";	break;
-		default:
-			out << "VRCompositorError_" << static_cast<int>(in);
-			break;
-	}
-	return out;
-}
-
-void Openhmd::IsOkay(vr::EVRInitError Error,const std::string& Context)
-{
-	if ( Error == vr::VRInitError_None )
-		return;
-
-	std::stringstream Exception;
-	Exception << Context << " Openhmd error: " << Error;
-	throw Soy::AssertException(Exception);
-}
-
-void Openhmd::IsOkay(vr::EVRCompositorError Error,const std::string& Context)
-{
-	if ( Error == vr::VRCompositorError_None )
-		return;
+	// If OHMD_IDS_AUTOMATIC_UPDATE is set to 0, ohmd_ctx_update() must be called at least 10 times per second.
+	// It is enabled by default.
+	int auto_update = 1;
+	ohmd_device_settings_seti( settings, OHMD_IDS_AUTOMATIC_UPDATE, &auto_update );
 	
-	std::stringstream Exception;
-	Exception << Context << " Openhmd error: " << Error;
-	throw Soy::AssertException(Exception);
-}
-
-
-Openhmd::THmd::THmd(bool OverlayApp) :
-	SoyThread	( "Openhmd::THmd" )
-{
-	vr::EVRInitError Error = vr::VRInitError_None;
-	auto AppType = OverlayApp ? vr::VRApplication_Overlay : vr::VRApplication_Scene;
-	mHmd = vr::VR_Init( &Error, AppType );
-	IsOkay( Error, "VR_Init" );
+	auto DeviceIndex = Context.GetDeviceIndex( DeviceName );
+	mDevice = ohmd_list_open_device_s( Context.mContext, DeviceIndex, settings );
+	if ( !mDevice )
+		ThrowError(Context,"ohmd_list_open_device_s");
 	
-	Start();
-	//m_strDriver = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_TrackingSystemName_String );
-	//m_strDisplay = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String );
+	ohmd_device_settings_destroy(settings);
+	
+	UpdateMeta();
 }
 
 Openhmd::THmd::~THmd()
 {
-	Stop(true);
 	
-	if ( mHmd )
-	{
-		vr::VR_Shutdown();
-		mHmd = nullptr;
-	}
 }
 
-
-void Openhmd::THmd::Thread()
+void Openhmd::THmd::UpdateMeta()
 {
-	//	loop
-	while ( IsThreadRunning() )
-	{
-		//	block until time for a frame
-		//	update frames
-		WaitForFrameStart();
-		
-		try
-		{
-			THmdFrame Left;
-			THmdFrame Right;
-
-			mOnRender( Left, Right );
-			
-			SubmitEyeFrame( vr::Eye_Left, Left.mEyeTexture );
-			SubmitEyeFrame( vr::Eye_Right, Right.mEyeTexture );
-		}
-		catch(std::exception& e)
-		{
-			//	gr: need to force a submission here
-			std::Debug << "HMD render exception " << e.what() << std::endl;
-		}
-
-	}
-}
-
-
-void Openhmd::THmd::EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum)
-{
-	auto& Hmd = *mHmd;
+	/*
+	int mResolutionWidth;
+	int mResolutionHeight;
+	float mScreenPhysicalWidthMetres;
+	float mScreenPhysicalHeightMetres
+	float mIpd;
+	float distortion_coeffs[6];
 	
-	auto Left = GetEyeMatrix(EyeName_Left);
-	Enum(Left);
-	auto Right = GetEyeMatrix(EyeName_Right);
-	Enum(Right);
-}
+	auto GetInt = [&](ohmd_int_value Key,int& Value)
+	{
+		auto Result = ohmd_device_geti( mDevice, Key, &Value );
+		if ( Result < 0 )
+			ThrowError( mContext.mContext, "ohmd_device_geti");
+	};
+	
+	auto GetFloat = [&](ohmd_int_value Key,float& Value)
+	{
+		auto Result = ohmd_device_getf( mDevice, Key, &Value );
+		if ( Result < 0 )
+			ThrowError( mContext.mContext, "ohmd_device_getf");
+	};
+	
+	auto GetFloats = [&](ohmd_int_value Key,float[16]& Value)
+	{
+		auto Result = ohmd_device_getf( mDevice, Key, &Value[0] );
+		if ( Result < 0 )
+			ThrowError( mContext.mContext, "ohmd_device_getf");
+	};
+	
+	GetInt( OHMD_SCREEN_HORIZONTAL_RESOLUTION, mResolutionWidth );
+	GetInt( OHMD_SCREEN_VERTICAL_RESOLUTION, mResolutionHeight );
 
-vr::Hmd_Eye GetHmdEye(const std::string& EyeName)
-{
-	if ( EyeName == Openhmd::EyeName_Left )
-		return vr::Hmd_Eye::Eye_Left;
-	if ( EyeName == Openhmd::EyeName_Right )
-		return vr::Hmd_Eye::Eye_Right;
-
-	std::stringstream Error;
-	Error << "Unknown eye name " << EyeName;
-	throw Soy::AssertException(Error);
+	GetFloat( OHMD_EYE_IPD, mIpd );
+	float viewport_scale[2];
+	float distortion_coeffs[4];
+	float aberr_scale[3];
+	float sep;
+	float left_lens_center[2];
+	float right_lens_center[2];
+	//viewport is half the screen
+	GetFloat( OHMD_SCREEN_HORIZONTAL_SIZE, mScreenPhysicalWidthMetres );
+	mScreenPhysicalWidthMetres /= 2.0f;
+	GetFloat( OHMD_SCREEN_VERTICAL_SIZE, mScreenPhysicalHeightMetres );
+	
+	//distortion coefficients
+	GetFloats( OHMD_UNIVERSAL_DISTORTION_K, distortion_coeffs );
+	ohmd_device_getf(hmd, OHMD_UNIVERSAL_ABERRATION_K, &(aberr_scale[0]));
+	//calculate lens centers (assuming the eye separation is the distance between the lens centers)
+	ohmd_device_getf(hmd, OHMD_LENS_HORIZONTAL_SEPARATION, &sep);
+	ohmd_device_getf(hmd, OHMD_LENS_VERTICAL_POSITION, &(left_lens_center[1]));
+	ohmd_device_getf(hmd, OHMD_LENS_VERTICAL_POSITION, &(right_lens_center[1]));
+	left_lens_center[0] = viewport_scale[0] - sep/2.0f;
+	right_lens_center[0] = sep/2.0f;
+	//assume calibration was for lens view to which ever edge of screen is further away from lens center
+	float warp_scale = (left_lens_center[0] > right_lens_center[0]) ? left_lens_center[0] : right_lens_center[0];
+	float warp_adj = 1.0f;
+	
+	const char* vertex;
+	ohmd_gets(OHMD_GLSL_DISTORTION_VERT_SRC, &vertex);
+	const char* fragment;
+	ohmd_gets(OHMD_GLSL_DISTORTION_FRAG_SRC, &fragment);
+	
+	float mat[16];
+	ohmd_device_getf(hmd, OHMD_LEFT_EYE_GL_PROJECTION_MATRIX, mat);
+	printf("Projection L: ");
+	print_matrix(mat);
+	printf("\n");
+	ohmd_device_getf(hmd, OHMD_RIGHT_EYE_GL_PROJECTION_MATRIX, mat);
+	printf("Projection R: ");
+	print_matrix(mat);
+	printf("\n");
+	ohmd_device_getf(hmd, OHMD_LEFT_EYE_GL_MODELVIEW_MATRIX, mat);
+	printf("View: ");
+	print_matrix(mat);
+	 */
 }
 
 TEyeMatrix Openhmd::THmd::GetEyeMatrix(const std::string& EyeName)
 {
-	auto& Hmd = *mHmd;
-	auto Eye = GetHmdEye(EyeName);
-
-	TEyeMatrix EyeMatrix;
-	EyeMatrix.mName = EyeName;
-
-	//	demo for opengl transposes this, maybe
-	EyeMatrix.mProjection = Hmd.GetProjectionMatrix( Eye, mNearClip, mFarClip );
-
-	//	3x4 matrix eye pose
-	//vr::HmdMatrix34_t
-	auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
-	//EyeMatrix.mPose = EyeToHeadMatrix.invert();
-
-	Hmd.GetRecommendedRenderTargetSize( &EyeMatrix.mRenderTargetWidth, &EyeMatrix.mRenderTargetHeight );
-
-	return EyeMatrix;
-}
-
-
-void Openhmd::THmd::WaitForFrameStart()
-{
-	auto& Compositor = *vr::VRCompositor();
-	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
-	vr::TrackedDevicePose_t* GamePoseArray = nullptr;
-	size_t GamePoseArraySize = 0;
-	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses, vr::k_unMaxTrackedDeviceCount, GamePoseArray, GamePoseArraySize);
-	Openhmd::IsOkay(Error, "WaitGetPoses");
-}
-
-void Openhmd::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
-{
-	auto& Compositor = *vr::VRCompositor();
-
-	vr::Texture_t EyeTexture;
-	EyeTexture.handle = reinterpret_cast<void*>( static_cast<uintptr_t>(Texture.mName) );
-	EyeTexture.eType = vr::TextureType_OpenGL;
-	EyeTexture.eColorSpace = vr::ColorSpace_Gamma;
-
-	auto Error = Compositor.Submit( Eye, &EyeTexture );
-	if ( Error == vr::VRCompositorError_TextureUsesUnsupportedFormat )
-	{
-		std::stringstream ErrorString;
-		//	gr: this meta was useful!
-		//ErrorString << "Eye Texture Submit (" << Texture.mMeta << ")";
-		ErrorString << "Eye Texture Submit (" << Texture.mName << ")";
-		Openhmd::IsOkay(Error, ErrorString.str());
-	}
-	if ( Error == vr::VRCompositorError_DoNotHaveFocus )
-	{
-		WaitForFrameStart();
 	
-		//	submit again
-		Error = Compositor.Submit( Eye, &EyeTexture );
-		Openhmd::IsOkay(Error, "Eye Texture Submit B");
-	}
-	Openhmd::IsOkay( Error, "Eye Texture Submit A");
-
 }
 
-/*
- 
- //-----------------------------------------------------------------------------
- // Purpose:
- //-----------------------------------------------------------------------------
- void CMainApplication::UpdateHMDMatrixPose()
- {
- if ( !m_pHMD )
- return;
- 
- vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
- 
- m_iValidPoseCount = 0;
- m_strPoseClasses = "";
- for ( int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice )
- {
- if ( m_rTrackedDevicePose[nDevice].bPoseIsValid )
- {
- m_iValidPoseCount++;
- m_rmat4DevicePose[nDevice] = ConvertSteamVRMatrixToMatrix4( m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking );
- if (m_rDevClassChar[nDevice]==0)
- {
- switch (m_pHMD->GetTrackedDeviceClass(nDevice))
- {
- case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
- case vr::TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
- case vr::TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
- case vr::TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
- case vr::TrackedDeviceClass_TrackingReference: m_rDevClassChar[nDevice] = 'T'; break;
- default:                                       m_rDevClassChar[nDevice] = '?'; break;
- }
- }
- m_strPoseClasses += m_rDevClassChar[nDevice];
- }
- }
- 
- if ( m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
- {
- m_mat4HMDPose = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd];
- m_mat4HMDPose.invert();
- }
- }
-
- */
