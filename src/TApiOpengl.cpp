@@ -105,9 +105,9 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		//	restore state after functions above, which might still mess around with things like viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 	};
-	Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
+	//Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
-	
+
 	//	render
 	auto ExecuteRenderCallback = [&](Bind::TLocalContext& Context)
 	{
@@ -145,7 +145,19 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		CallbackParams.SetArgumentObject( 0, RenderTargetObject );
 		RenderCallbackFunc.Call( CallbackParams );
 	};
-	ExecuteRenderCallback( Params.mLocalContext );
+	
+	try
+	{
+		UnbindCurrent();
+		ExecuteRenderCallback( Params.mLocalContext );
+		RebindCurrent();
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
+		RebindCurrent();
+		throw;
+	}
 }
 
 
