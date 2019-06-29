@@ -789,9 +789,6 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 	auto Width = Params.GetArgumentInt(0);
 	auto Height = Params.GetArgumentInt(1);
 	
-	Array<uint8_t> Rgba;
-	Params.GetArgumentArray(2,GetArrayBridge(Rgba) );
-	
 	auto Format = SoyPixelsFormat::RGBA;
 	if ( !Params.IsArgumentUndefined(3) )
 	{
@@ -799,9 +796,28 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 		Format = SoyPixelsFormat::ToType( FormatStr );
 	}
 	
-	auto* Rgba8 = static_cast<uint8_t*>(Rgba.GetArray());
-	auto DataSize = Rgba.GetDataSize();
-	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, Format );
+	Array<uint8_t> PixelBuffer8;
+	if ( SoyPixelsFormat::IsFloatChannel(Format) )
+	{
+		Array<float> Floats;
+		Params.GetArgumentArray(2, GetArrayBridge(Floats) );
+		auto Floats8 = GetArrayBridge(Floats).GetSubArray<uint8_t>( 0, Floats.GetDataSize() );
+		PixelBuffer8.Copy( Floats8 );
+	}
+	else if ( SoyPixelsFormat::GetBytesPerChannel(Format) == sizeof(uint8_t) )
+	{
+		Params.GetArgumentArray(2,GetArrayBridge(PixelBuffer8) );
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "Format for pixels which is not float or 8bit, not handled";
+		throw Soy_AssertException(Error);
+	}
+	
+	auto DataSize = PixelBuffer8.GetDataSize();
+	auto* Pixels = PixelBuffer8.GetArray();
+	SoyPixelsRemote NewPixels( Pixels, Width, Height, DataSize, Format );
 	This.SetPixels(NewPixels);
 }
 
