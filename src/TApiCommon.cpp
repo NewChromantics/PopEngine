@@ -474,7 +474,7 @@ void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 	
 	std::string Contents;
 	{
-		Soy::TScopeTimerPrint Timer( (std::string("Loading file ") + Filename).c_str(),5);
+		Soy::TScopeTimerPrint Timer( (std::string("Loading file[string] ") + Filename).c_str(),5);
 		Soy::FileToString( Filename, Contents);
 	}
 	Params.Return( Contents );
@@ -486,8 +486,11 @@ void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 	auto Filename = Params.GetArgumentFilename(0);
 
 	Array<char> FileContents;
-	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
-
+	{
+		Soy::TScopeTimerPrint Timer( (std::string("Loading file[binary] ") + Filename).c_str(),5);
+		Soy::FileToArray( GetArrayBridge(FileContents), Filename );
+	}
+	
 	//	can't do typed arrays of signed ints, so convert
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
 
