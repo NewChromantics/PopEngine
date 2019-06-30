@@ -1079,8 +1079,10 @@ void ApiOpengl::TTriangleBufferWrapper::Construct(Bind::TCallback& Params)
 	auto VertexName = Params.GetArgumentString(1);
 
 	Array<float> VertexData;
-	Params.GetArgumentArray(2, GetArrayBridge(VertexData) );
-	
+	{
+		Soy::TScopeTimerPrint Timer("Getting vertex data",1);
+		Params.GetArgumentArray(2, GetArrayBridge(VertexData) );
+	}
 	auto VertexSize = Params.GetArgumentInt(3);
 
 	auto VertexCount = VertexData.GetSize() / VertexSize;
@@ -1099,8 +1101,11 @@ void ApiOpengl::TTriangleBufferWrapper::Construct(Bind::TCallback& Params)
 	}
 
 	Array<uint32_t> IndexData;
-	Params.GetArgumentArray(4, GetArrayBridge(IndexData) );
-
+	{
+		Soy::TScopeTimerPrint Timer("Getting index data",1);
+		Params.GetArgumentArray(4, GetArrayBridge(IndexData) );
+	}
+	
 	//	gr: we could save this data and defer it to opengl-thread access
 	CreateGeometry( VertexName, GetArrayBridge(VertexData), VertexSize, GetArrayBridge(IndexData) );
 }
@@ -1155,6 +1160,8 @@ Opengl::TGeometry* CreateGeometry(const std::string& VertexAttribName,ArrayBridg
 
 void ApiOpengl::TTriangleBufferWrapper::CreateGeometry(const std::string& VertexName,ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes)
 {
+	Soy::TScopeTimerPrint Timer("CreateGeometry",1);
+
 	if ( VertexSize == 2 )
 	{
 		mGeometry.reset( ::CreateGeometry<vec2f,2>( VertexName, VertexFloats, Indexes ) );
