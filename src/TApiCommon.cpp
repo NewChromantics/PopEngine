@@ -473,7 +473,10 @@ void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 	auto Filename = Params.GetArgumentFilename(0);
 	
 	std::string Contents;
-	Soy::FileToString( Filename, Contents);
+	{
+		Soy::TScopeTimerPrint Timer( (std::string("Loading file ") + Filename).c_str(),5);
+		Soy::FileToString( Filename, Contents);
+	}
 	Params.Return( Contents );
 }
 
