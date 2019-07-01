@@ -1122,7 +1122,8 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
 	//	gr: need this on OSX (latest x264) but on windows (old build) every subsequent frame fails
-	if (X264_REV > 2969)
+	//	gr: this was backwards? brew (old 2917) DID need to flush?
+	if (X264_REV < 2969)
 	{
 		while (true)
 		{
