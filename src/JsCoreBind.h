@@ -133,6 +133,7 @@ namespace JsCore
 
 
 std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in);
+std::ostream& operator<<(std::ostream &out,const JSType& in);
 
 
 //	major abstraction from V8 to JSCore

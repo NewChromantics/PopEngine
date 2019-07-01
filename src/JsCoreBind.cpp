@@ -122,10 +122,32 @@ std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in)
 			out << "kJSTypedArrayType<unhandled=" << static_cast<int>(in) << ">";
 			break;
 	}
+#undef CASE_VALUE_STRING
 	
 	return out;
 }
 
+
+
+std::ostream& operator<<(std::ostream &out,const JSType& in)
+{
+#define CASE_VALUE_STRING(Value)	case Value:	out << static_cast<const char*>(#Value);	break
+	switch ( in )
+	{
+			CASE_VALUE_STRING(kJSTypeUndefined);
+			CASE_VALUE_STRING(kJSTypeNull);
+			CASE_VALUE_STRING(kJSTypeBoolean);
+			CASE_VALUE_STRING(kJSTypeNumber);
+			CASE_VALUE_STRING(kJSTypeString);
+			CASE_VALUE_STRING(kJSTypeObject);
+		default:
+			out << "JSType<unhandled=" << static_cast<int>(in) << ">";
+			break;
+	}
+#undef CASE_VALUE_STRING
+	
+	return out;
+}
 
 JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
 {
