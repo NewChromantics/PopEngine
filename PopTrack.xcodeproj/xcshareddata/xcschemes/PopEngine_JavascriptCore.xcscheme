@@ -66,6 +66,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "/Volumes/Code/PopEngine/UnitTest/CoremlPersonDetection"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "/Volumes/Code/PopRayTrace/"
             isEnabled = "YES">
          </CommandLineArgument>

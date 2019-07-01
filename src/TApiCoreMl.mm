@@ -142,6 +142,83 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 }
 
 
+
+template<typename COREML_FUNC>
+void RunModelMap(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
+{
+	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
+	auto* pContext = &Params.mContext;
+	
+	std::string LabelFilter;
+	if ( !Params.IsArgumentUndefined(1) )
+		LabelFilter = Params.GetArgumentString(1);
+	
+	auto RunModel = [=]
+	{
+		try
+		{
+			//	do all the work on the thread
+			auto& Image = *pImage;
+			auto& CurrentPixels = Image.GetPixels();
+			SoyPixels TempPixels;
+			SoyPixelsImpl* pPixels = &TempPixels;
+			if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
+			{
+				pPixels = &CurrentPixels;
+			}
+			else
+			{
+				pImage->GetPixels(TempPixels);
+				TempPixels.SetFormat( SoyPixelsFormat::RGBA );
+				pPixels = &TempPixels;
+			}
+			auto& Pixels = *pPixels;
+			
+			//	pixels we're writing into
+			std::shared_ptr<SoyPixelsImpl> MapPixels;
+			
+			auto FilterLabel = [&](const std::string& Label)
+			{
+				if ( LabelFilter.length() == 0 )
+					return true;
+				if ( Label != LabelFilter )
+					return false;
+				return true;
+			};
+			
+			CoreMlFunc( *CoreMl, Pixels, MapPixels, FilterLabel );
+			
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
+			{
+				auto MapImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
+				auto& MapImage = MapImageObject.This<TImageWrapper>();
+				MapImage.SetPixels( MapPixels );
+				Promise.Resolve( Context, MapImageObject );
+			};
+			
+			pContext->Queue( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			
+			auto OnError = [=](Bind::TLocalContext& Context)
+			{
+				Promise.Reject( Context, ExceptionString );
+			};
+			pContext->Queue( OnError );
+		}
+	};
+	
+#if defined(ENABLE_COREML_MODELS)
+	CoreMl->PushJob(RunModel);
+#endif
+	Params.Return( Promise );
+}
+
+
 void TCoreMlWrapper::Yolo(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
@@ -195,17 +272,13 @@ void TCoreMlWrapper::OpenPose(Bind::TCallback& Params)
 
 void TCoreMlWrapper::OpenPoseMap(Bind::TCallback& Params)
 {
-	throw Soy_AssertException("todo");
-	/*
 #if defined(ENABLE_COREML_MODELS)
 	auto& CoreMl = mCoreMl;
 	
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
-	return RunModel( CoreMlFunc, Params, CoreMl );
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPoseMap );
+	return RunModelMap( CoreMlFunc, Params, CoreMl );
 #endif
 	throw Soy::AssertException("CoreML Models not built");
-	 */
-	
 }
 
 
