@@ -143,6 +143,7 @@ public:
 	void			PushFrame(const SoyPixelsImpl& Pixels, int32_t FrameTime);
 	TPacket			PopPacket();
 	bool			HasPackets() {	return !mPackets.IsEmpty();	}
+	std::string		GetVersion() const;
 
 private:
 	void			AllocEncoder(const SoyPixelsMeta& Meta);
@@ -861,6 +862,10 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 
 	mEncoderThread.reset(new SoyWorkerJobThread("H264 encoder"));
 	mEncoderThread->Start();
+	
+	
+	//	set meta (can we do this on the static object/constructor?)
+	Params.ThisObject().SetString("Version", mEncoder->GetVersion() );
 }
 
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -954,6 +959,14 @@ X264::TInstance::TInstance(size_t PresetValue)
 X264::TInstance::~TInstance()
 {
 
+}
+
+
+std::string X264::TInstance::GetVersion() const
+{
+	std::stringstream Version;
+	Version << "x264 " << X264_POINTVER;
+	return Version.str();
 }
 
 void X264::Log(void *data, int i_level, const char *psz, va_list args)
