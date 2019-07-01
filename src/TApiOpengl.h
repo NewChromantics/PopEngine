@@ -7,6 +7,13 @@
 namespace ApiOpengl
 {
 	void	Bind(Bind::TContext& Context);
+
+	//	gr: this will evolve into a generic structured buffer type
+	class TTriangleBufferWrapper;
+	
+	DECLARE_BIND_TYPENAME(Window);
+	DECLARE_BIND_TYPENAME(Shader);
+	DECLARE_BIND_TYPENAME(TriangleBuffer);
 }
 
 
@@ -26,9 +33,8 @@ public:
 	void	ClearColour(Soy::TRgb Colour);
 	void	EnableBlend(bool Enable);
 	
-	void	DrawQuad();
-	void	DrawQuad(Opengl::TShader& Shader,std::function<void()> OnShaderBind);
-	
+	void	DrawGeometry(Opengl::TGeometry& Geometry,Opengl::TShader& Shader,std::function<void()>& OnShaderBind);
+
 	Opengl::TGeometry&	GetBlitQuad();
 	
 public:
@@ -50,9 +56,8 @@ public:
 
 
 	
-	
-extern const char Opengl_Window_TypeName[];
-class TWindowWrapper : public Bind::TObjectWrapper<Opengl_Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
+
+class TWindowWrapper : public Bind::TObjectWrapper<ApiOpengl::Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -75,7 +80,8 @@ public:
 
 	//	these are context things
 	//	immediate calls, so... maybe try and mix the context settings
-	static void			DrawQuad(Bind::TCallback& Arguments);
+	void				DrawQuad(Bind::TCallback& Arguments);
+	void				DrawGeometry(Bind::TCallback& Arguments);
 	static void			ClearColour(Bind::TCallback& Arguments);
 	static void			EnableBlend(Bind::TCallback& Arguments);
 	static void			SetViewport(Bind::TCallback& Arguments);
@@ -105,9 +111,7 @@ public:
 
 
 
-	
-extern const char Opengl_Shader_TypeName[];
-class TShaderWrapper: public Bind::TObjectWrapper<Opengl_Shader_TypeName,Opengl::TShader>
+class TShaderWrapper: public Bind::TObjectWrapper<ApiOpengl::Shader_TypeName,Opengl::TShader>
 {
 public:
 	TShaderWrapper(Bind::TContext& Context) :
@@ -134,4 +138,25 @@ public:
 	Opengl::TContext*					mOpenglContextPtr = nullptr;
 	std::shared_ptr<Opengl::TContext>	mOpenglContext;
 };
+
+
+
+class ApiOpengl::TTriangleBufferWrapper : public Bind::TObjectWrapper<ApiOpengl::TriangleBuffer_TypeName,Opengl::TGeometry>
+{
+public:
+	TTriangleBufferWrapper(Bind::TContext& Context) :
+		TObjectWrapper		( Context )
+	{
+	}
+	~TTriangleBufferWrapper();
+	
+	static void			CreateTemplate(Bind::TTemplate& Template);
+	virtual void 		Construct(Bind::TCallback& Arguments) override;
+	
+	void				CreateGeometry(const std::string& VertexName,ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes);
+
+public:
+	std::shared_ptr<Opengl::TGeometry>&		mGeometry = mObject;
+};
+
 

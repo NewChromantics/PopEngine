@@ -122,10 +122,32 @@ std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in)
 			out << "kJSTypedArrayType<unhandled=" << static_cast<int>(in) << ">";
 			break;
 	}
+#undef CASE_VALUE_STRING
 	
 	return out;
 }
 
+
+
+std::ostream& operator<<(std::ostream &out,const JSType& in)
+{
+#define CASE_VALUE_STRING(Value)	case Value:	out << static_cast<const char*>(#Value);	break
+	switch ( in )
+	{
+			CASE_VALUE_STRING(kJSTypeUndefined);
+			CASE_VALUE_STRING(kJSTypeNull);
+			CASE_VALUE_STRING(kJSTypeBoolean);
+			CASE_VALUE_STRING(kJSTypeNumber);
+			CASE_VALUE_STRING(kJSTypeString);
+			CASE_VALUE_STRING(kJSTypeObject);
+		default:
+			out << "JSType<unhandled=" << static_cast<int>(in) << ">";
+			break;
+	}
+#undef CASE_VALUE_STRING
+	
+	return out;
+}
 
 JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
 {
@@ -274,7 +296,7 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 
 float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 {
-	//	convert to string
+	//	gr: this should do a type check I think
 	JSValueRef Exception = nullptr;
 	auto DoubleJs = JSValueToNumber( Context, Handle, &Exception );
 	auto Float = static_cast<float>( DoubleJs );
@@ -283,7 +305,6 @@ float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 
 bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 {
-	//	convert to string
 	auto Bool = JSValueToBoolean( Context, Handle );
 	return Bool;
 }
@@ -1411,6 +1432,11 @@ void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
 }
 
 void JsCore::TCallback::SetArgumentInt(size_t Index,uint32_t Value)
+{
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
+}
+
+void JsCore::TCallback::SetArgumentInt(size_t Index,int32_t Value)
 {
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
