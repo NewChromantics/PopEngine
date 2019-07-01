@@ -8,11 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */; };
-		BF012B0D226A102D003AEB55 /* PopCameraDeviceFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; };
+		BF012B0D226A102D003AEB55 /* PopCameraDeviceFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF012B0E226A1102003AEB55 /* PopCameraDeviceFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF012B6F226A3224003AEB55 /* SoyTime.mm */; };
 		BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF012B70226A3225003AEB55 /* SoyTime.cpp */; };
-		BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */; };
 		BF0F9E712288892F00AEA7DC /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
 		BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */; };
 		BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */; };
@@ -30,17 +29,17 @@
 		BF3965652278587600A721E8 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
 		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
-		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
+		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
 		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF509159228217AC00DCBB4B /* libencoding.a */; };
-		BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; };
-		BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; };
-		BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; };
-		BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; };
-		BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; };
-		BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; };
-		BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; };
+		BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -76,13 +75,11 @@
 		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
 		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
 		BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
-		BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; };
-		BF8534F722B6DA610049C01B /* include in Resources */ = {isa = PBXBuildFile; fileRef = BF8534F622B6DA610049C01B /* include */; };
-		BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */; };
+		BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8534FC22B6DB270049C01B /* ChakraBind.cpp */; };
 		BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF85350922BEDD040049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
-		BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; };
+		BF85350922BEDD040049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF89CF70228DD3F700A187D5 /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF85351222BEDEE10049C01B /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
@@ -94,7 +91,7 @@
 		BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
 		BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
 		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
-		BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF92821D223692BA007E9D6F /* opencv2.framework */; };
+		BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF92821D223692BA007E9D6F /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92821F22369316007E9D6F /* TApiOpencv.cpp */; };
 		BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
 		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
@@ -115,17 +112,6 @@
 		BFE9513222A70B9700B83061 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE9513122A70B9700B83061 /* libx264.a */; };
 		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
-		BFF8A58322C277EF002AD145 /* DeepLabV3.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BFF8A58222C277EF002AD145 /* DeepLabV3.mlmodel */; };
-		BFF8A58422C2790C002AD145 /* TinyYOLO.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE3021F8ACD200E6CE5B /* TinyYOLO.mlmodel */; };
-		BFF8A58522C27910002AD145 /* cpm.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BFFCACC521FF445200153C4E /* cpm.mlmodel */; };
-		BFF8A58622C27910002AD145 /* hourglass.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF75E85F21FE5DB200B8CC33 /* hourglass.mlmodel */; };
-		BFF8A58722C27910002AD145 /* MaskRCNN_anchors.bin in Resources */ = {isa = PBXBuildFile; fileRef = BF5749CD2202170D00A7A659 /* MaskRCNN_anchors.bin */; };
-		BFF8A58822C27910002AD145 /* MaskRCNN_Classifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CC2202170D00A7A659 /* MaskRCNN_Classifier.mlmodel */; };
-		BFF8A58922C27910002AD145 /* MaskRCNN_Mask.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CB2202170C00A7A659 /* MaskRCNN_Mask.mlmodel */; };
-		BFF8A58A22C27910002AD145 /* MaskRCNN_MaskRCNN.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749CE2202170D00A7A659 /* MaskRCNN_MaskRCNN.mlmodel */; };
-		BFF8A58B22C27910002AD145 /* MobileNet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2621F8960500E6CE5B /* MobileNet.mlmodel */; };
-		BFF8A58C22C27910002AD145 /* MobileOpenPose.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749C521FF73F000A7A659 /* MobileOpenPose.mlmodel */; };
-		BFF8A58E22C27910002AD145 /* SsdMobilenet.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BF5749C82200C82300A7A659 /* SsdMobilenet.mlmodel */; };
 		BFF8A59122C2961C002AD145 /* SoyTypes.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF8A59022C2961C002AD145 /* SoyTypes.mm */; };
 		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
@@ -237,6 +223,7 @@
 		BF3B01912253A80100644E46 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
+		BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Tarquini_AcidSea; path = ../Tarquini_AcidSea; sourceTree = "<group>"; };
 		BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopH264Framework.framework; sourceTree = "<group>"; };
 		BF509159228217AC00DCBB4B /* libencoding.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libencoding.a; path = obj/third_party/inspector_protocol/libencoding.a; sourceTree = "<group>"; };
 		BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_for_testing.dylib; sourceTree = "<group>"; };
@@ -846,6 +833,7 @@
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BFD0829E225E974D00FD05DC /* GuildhallGildwall */,
 				BF0F9E602286F9C200AEA7DC /* PopRayTrace */,
+				BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -1144,13 +1132,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BFF8A58722C27910002AD145 /* MaskRCNN_anchors.bin in Resources */,
 				BF3965652278587600A721E8 /* v8Runtime in Resources */,
 				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
-				BF8534F722B6DA610049C01B /* include in Resources */,
-				BF8534FB22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig in Resources */,
-				BF0F9E6422870C1700AEA7DC /* PopEngine_V8_App.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1178,7 +1162,6 @@
 				BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */,
 				BFB647382225593600820612 /* SoyHid.cpp in Sources */,
 				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
-				BFF8A58B22C27910002AD145 /* MobileNet.mlmodel in Sources */,
 				BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */,
 				BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */,
 				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
@@ -1192,15 +1175,12 @@
 				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
-				BFF8A58622C27910002AD145 /* hourglass.mlmodel in Sources */,
 				EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */,
 				BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */,
 				BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */,
 				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
 				BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */,
-				BFF8A58922C27910002AD145 /* MaskRCNN_Mask.mlmodel in Sources */,
 				BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */,
-				BFF8A58A22C27910002AD145 /* MaskRCNN_MaskRCNN.mlmodel in Sources */,
 				BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */,
 				EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */,
 				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
@@ -1224,21 +1204,16 @@
 				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
 				BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */,
 				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
-				BFF8A58822C27910002AD145 /* MaskRCNN_Classifier.mlmodel in Sources */,
 				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */,
-				BFF8A58422C2790C002AD145 /* TinyYOLO.mlmodel in Sources */,
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */,
-				BFF8A58322C277EF002AD145 /* DeepLabV3.mlmodel in Sources */,
 				BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */,
 				BFF8A59122C2961C002AD145 /* SoyTypes.mm in Sources */,
 				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
-				BFF8A58522C27910002AD145 /* cpm.mlmodel in Sources */,
 				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
 				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
 				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
-				BFF8A58E22C27910002AD145 /* SsdMobilenet.mlmodel in Sources */,
 				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
 				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
 				BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */,
@@ -1250,7 +1225,6 @@
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
 				BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */,
 				FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */,
-				BFF8A58C22C27910002AD145 /* MobileOpenPose.mlmodel in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

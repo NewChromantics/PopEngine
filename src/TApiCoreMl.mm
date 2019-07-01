@@ -8,7 +8,7 @@
 #import "TApiCoreMlModels.mm"
 
 #else
-#error coreml not supported
+//#error coreml not supported
 class CoreMl::TInstance
 {
 };
