@@ -11,15 +11,13 @@
 #include "SoyPng.h"
 
 
-DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
-
 //	system stuff
-//extern const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
-extern const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
-extern const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
-extern const char WriteToFile_FunctionName[] = "WriteToFile";
-extern const char SetTimeout_FunctionName[] = "SetTimeout";
-extern const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
+DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
+DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
+DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
+DEFINE_BIND_FUNCTIONNAME(WriteToFile);
+DEFINE_BIND_FUNCTIONNAME(SetTimeout);
+DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);
 
 //	engine stuff
 DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
@@ -49,10 +47,6 @@ DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
 
 
 
-
-
-const char Image_TypeName[] = "Image";
-
 DEFINE_BIND_FUNCTIONNAME(Alloc);
 DEFINE_BIND_FUNCTIONNAME(LoadFile);
 DEFINE_BIND_FUNCTIONNAME(Create);
@@ -77,6 +71,7 @@ namespace ApiPop
 {
 	const char Namespace[] = "Pop";
 	DEFINE_BIND_TYPENAME(AsyncLoop);
+	DEFINE_BIND_TYPENAME(Image);
 
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
@@ -539,33 +534,33 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TImageWrapper>( Namespace );
 	Context.BindObjectType<TAsyncLoopWrapper>( Namespace );
 	
-	Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
-	Context.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
-	Context.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
-	Context.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
-	Context.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
-	Context.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile, Namespace );
-	Context.BindGlobalFunction<WriteToFile_FunctionName>(WriteToFile, Namespace );
-	Context.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
-	Context.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
-	Context.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
-	Context.BindGlobalFunction<Yield_FunctionName>( Yield, Namespace );
-	Context.BindGlobalFunction<IsDebuggerAttached_FunctionName>( IsDebuggerAttached, Namespace );
-	Context.BindGlobalFunction<ThreadTest_FunctionName>( ThreadTest, Namespace );
-	Context.BindGlobalFunction<ExitApplication_FunctionName>( ExitApplication, Namespace );
-	Context.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs, Namespace );
-	Context.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName, Namespace );
-	Context.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder, Namespace );
-	Context.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize, Namespace );
-	Context.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
-	Context.BindGlobalFunction<GetHeapSize_FunctionName>(GetHeapSize, Namespace );
-	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
-	Context.BindGlobalFunction<GetHeapObjects_FunctionName>(GetHeapObjects, Namespace );
-	Context.BindGlobalFunction<GetCrtHeapSize_FunctionName>(GetCrtHeapSize, Namespace );
-	Context.BindGlobalFunction<GetCrtHeapCount_FunctionName>(GetCrtHeapCount, Namespace );
-	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
-	Context.BindGlobalFunction<GetExeDirectory_FunctionName>(GetExeDirectory, Namespace );
-	Context.BindGlobalFunction<GetExeArguments_FunctionName>(GetExeArguments, Namespace );
+	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
+	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
+	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBuffer>(LoadFileAsArrayBuffer, Namespace );
+	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
+	Context.BindGlobalFunction<BindFunction::WriteToFile>(WriteToFile, Namespace );
+	Context.BindGlobalFunction<BindFunction::GarbageCollect>(GarbageCollect, Namespace );
+	Context.BindGlobalFunction<BindFunction::SetTimeout>(SetTimeout, Namespace );
+	Context.BindGlobalFunction<BindFunction::Sleep>(Sleep, Namespace );
+	Context.BindGlobalFunction<BindFunction::Yield>( Yield, Namespace );
+	Context.BindGlobalFunction<BindFunction::IsDebuggerAttached>( IsDebuggerAttached, Namespace );
+	Context.BindGlobalFunction<BindFunction::ThreadTest>( ThreadTest, Namespace );
+	Context.BindGlobalFunction<BindFunction::ExitApplication>( ExitApplication, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetTimeNowMs>(GetTimeNowMs, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetComputerName>(GetComputerName, Namespace );
+	Context.BindGlobalFunction<BindFunction::ShowFileInFinder>(ShowFileInFinder, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetImageHeapSize>(GetImageHeapSize, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetImageHeapCount>(GetImageHeapCount, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHeapSize>(GetHeapSize, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHeapCount>(GetHeapCount, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHeapObjects>(GetHeapObjects, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetCrtHeapSize>(GetCrtHeapSize, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetCrtHeapCount>(GetCrtHeapCount, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumScreens>(EnumScreens, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetExeDirectory>(GetExeDirectory, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetExeArguments>(GetExeArguments, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
@@ -620,22 +615,22 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 
 void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Alloc_FunctionName>( Alloc );
-	Template.BindFunction<LoadFile_FunctionName>( LoadFile );
-	Template.BindFunction<Flip_FunctionName>( Flip );
-	Template.BindFunction<GetWidth_FunctionName>( GetWidth );
-	Template.BindFunction<GetHeight_FunctionName>( GetHeight );
-	Template.BindFunction<GetRgba8_FunctionName>( GetRgba8 );
-	Template.BindFunction<GetPixelBuffer_FunctionName>( GetPixelBuffer );
-	Template.BindFunction<SetLinearFilter_FunctionName>( SetLinearFilter );
-	Template.BindFunction<Copy_FunctionName>( Copy );
-	Template.BindFunction<WritePixels_FunctionName>( WritePixels );
-	Template.BindFunction<Resize_FunctionName>( Resize );
-	Template.BindFunction<Clip_FunctionName>( Clip );
-	Template.BindFunction<Clear_FunctionName>( Clear );
-	Template.BindFunction<SetFormat_FunctionName>( SetFormat );
-	Template.BindFunction<GetFormat_FunctionName>( GetFormat );
-	Template.BindFunction<GetPngData_FunctionName>( &TImageWrapper::GetPngData );
+	Template.BindFunction<BindFunction::Alloc>( Alloc );
+	Template.BindFunction<BindFunction::LoadFile>( LoadFile );
+	Template.BindFunction<BindFunction::Flip>( Flip );
+	Template.BindFunction<BindFunction::GetWidth>( GetWidth );
+	Template.BindFunction<BindFunction::GetHeight>( GetHeight );
+	Template.BindFunction<BindFunction::GetRgba8>( GetRgba8 );
+	Template.BindFunction<BindFunction::GetPixelBuffer>( GetPixelBuffer );
+	Template.BindFunction<BindFunction::SetLinearFilter>( SetLinearFilter );
+	Template.BindFunction<BindFunction::Copy>( Copy );
+	Template.BindFunction<BindFunction::WritePixels>( WritePixels );
+	Template.BindFunction<BindFunction::Resize>( Resize );
+	Template.BindFunction<BindFunction::Clip>( Clip );
+	Template.BindFunction<BindFunction::Clear>( Clear );
+	Template.BindFunction<BindFunction::SetFormat>( SetFormat );
+	Template.BindFunction<BindFunction::GetFormat>( GetFormat );
+	Template.BindFunction<BindFunction::GetPngData>( &TImageWrapper::GetPngData );
 }
 
 
@@ -1453,7 +1448,7 @@ void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>>
 
 void TAsyncLoopWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Iteration_FunctionName>( Iteration );
+	Template.BindFunction<BindFunction::Iteration>( Iteration );
 }
 	
 void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)

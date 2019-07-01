@@ -57,7 +57,7 @@ public:
 
 	
 
-class TWindowWrapper : public Bind::TObjectWrapper<ApiOpengl::Window_TypeName,TRenderWindow>, public TOpenglContextWrapper
+class TWindowWrapper : public Bind::TObjectWrapper<ApiOpengl::BindType::Window,TRenderWindow>, public TOpenglContextWrapper
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -111,7 +111,7 @@ public:
 
 
 
-class TShaderWrapper: public Bind::TObjectWrapper<ApiOpengl::Shader_TypeName,Opengl::TShader>
+class TShaderWrapper: public Bind::TObjectWrapper<ApiOpengl::BindType::Shader,Opengl::TShader>
 {
 public:
 	TShaderWrapper(Bind::TContext& Context) :
@@ -141,7 +141,7 @@ public:
 
 
 
-class ApiOpengl::TTriangleBufferWrapper : public Bind::TObjectWrapper<ApiOpengl::TriangleBuffer_TypeName,Opengl::TGeometry>
+class ApiOpengl::TTriangleBufferWrapper : public Bind::TObjectWrapper<ApiOpengl::BindType::TriangleBuffer,Opengl::TGeometry>
 {
 public:
 	TTriangleBufferWrapper(Bind::TContext& Context) :

@@ -15,7 +15,7 @@ namespace ApiSerial
 
 
 
-class TSerialComPortWrapper : public Bind::TObjectWrapper<ApiSerial::ComPort_TypeName,Serial::TComPort>
+class TSerialComPortWrapper : public Bind::TObjectWrapper<ApiSerial::BindType::ComPort,Serial::TComPort>
 {
 public:
 	TSerialComPortWrapper(Bind::TContext& Context) :

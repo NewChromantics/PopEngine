@@ -96,8 +96,8 @@ void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 
 void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<GetEyeMatrix_FunctionName>( &THmdWrapper::GetEyeMatrix );
-	Template.BindFunction<BeginFrame_FunctionName>( &THmdWrapper::BeginFrame );
+	Template.BindFunction<BindFunction::GetEyeMatrix>( &THmdWrapper::GetEyeMatrix );
+	Template.BindFunction<BindFunction::BeginFrame>( &THmdWrapper::BeginFrame );
 }
 
 void ApiOpenvr::THmdWrapper::OnRender(Openvr::THmdFrame& Left,Openvr::THmdFrame& Right)

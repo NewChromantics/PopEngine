@@ -18,16 +18,22 @@ class CoreMl::TInstance
 
 #import <Vision/Vision.h>
 
-const char Yolo_FunctionName[] = "Yolo";
-const char Hourglass_FunctionName[] = "Hourglass";
-const char Cpm_FunctionName[] = "Cpm";
-const char OpenPose_FunctionName[] = "OpenPose";
-const char SsdMobileNet_FunctionName[] = "SsdMobileNet";
-const char MaskRcnn_FunctionName[] = "MaskRcnn";
-const char FaceDetect_FunctionName[] = "FaceDetect";
-DEFINE_BIND_FUNCTIONNAME(DeepLab);
 
-const char CoreMl_TypeName[] = "CoreMl";
+
+namespace ApiCoreMl
+{
+	DEFINE_BIND_TYPENAME(CoreMl);
+
+	DEFINE_BIND_FUNCTIONNAME(Yolo);
+	DEFINE_BIND_FUNCTIONNAME(Hourglass);
+	DEFINE_BIND_FUNCTIONNAME(Cpm);
+	DEFINE_BIND_FUNCTIONNAME(OpenPose);
+	DEFINE_BIND_FUNCTIONNAME(OpenPoseMap);
+	DEFINE_BIND_FUNCTIONNAME(SsdMobileNet);
+	DEFINE_BIND_FUNCTIONNAME(MaskRcnn);
+	DEFINE_BIND_FUNCTIONNAME(FaceDetect);
+	DEFINE_BIND_FUNCTIONNAME(DeepLab);
+}
 
 
 void ApiCoreMl::Bind(Bind::TContext& Context)
@@ -45,15 +51,16 @@ void TCoreMlWrapper::Construct(Bind::TCallback& Arguments)
 
 void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Yolo_FunctionName>( &TCoreMlWrapper::Yolo );
-	Template.BindFunction<Hourglass_FunctionName>( &TCoreMlWrapper::Hourglass );
-	Template.BindFunction<Cpm_FunctionName>( &TCoreMlWrapper::Cpm );
-	Template.BindFunction<OpenPose_FunctionName>( &TCoreMlWrapper::OpenPose );
-	Template.BindFunction<SsdMobileNet_FunctionName>( &TCoreMlWrapper::SsdMobileNet );
-	Template.BindFunction<MaskRcnn_FunctionName>( &TCoreMlWrapper::MaskRcnn );
-	Template.BindFunction<FaceDetect_FunctionName>( &TCoreMlWrapper::FaceDetect );
-	Template.BindFunction<DeepLab_FunctionName>( &TCoreMlWrapper::DeepLab );
-	
+	using namespace ApiCoreMl;
+	Template.BindFunction<BindFunction::Yolo>( &TCoreMlWrapper::Yolo );
+	Template.BindFunction<BindFunction::Hourglass>( &TCoreMlWrapper::Hourglass );
+	Template.BindFunction<BindFunction::Cpm>( &TCoreMlWrapper::Cpm );
+	Template.BindFunction<BindFunction::OpenPose>( &TCoreMlWrapper::OpenPose );
+	Template.BindFunction<BindFunction::OpenPoseMap>( &TCoreMlWrapper::OpenPoseMap );
+	Template.BindFunction<BindFunction::SsdMobileNet>( &TCoreMlWrapper::SsdMobileNet );
+	Template.BindFunction<BindFunction::MaskRcnn>( &TCoreMlWrapper::MaskRcnn );
+	Template.BindFunction<BindFunction::FaceDetect>( &TCoreMlWrapper::FaceDetect );
+	Template.BindFunction<BindFunction::DeepLab>( &TCoreMlWrapper::DeepLab );
 }
 
 
@@ -177,11 +184,27 @@ void TCoreMlWrapper::OpenPose(Bind::TCallback& Params)
 {
 #if defined(ENABLE_COREML_MODELS)
 	auto& CoreMl = mCoreMl;
-
+	
 	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
 	return RunModel( CoreMlFunc, Params, CoreMl );
 #endif
 	throw Soy::AssertException("CoreML Models not built");
+	
+}
+
+
+void TCoreMlWrapper::OpenPoseMap(Bind::TCallback& Params)
+{
+	throw Soy_AssertException("todo");
+	/*
+#if defined(ENABLE_COREML_MODELS)
+	auto& CoreMl = mCoreMl;
+	
+	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
+	return RunModel( CoreMlFunc, Params, CoreMl );
+#endif
+	throw Soy::AssertException("CoreML Models not built");
+	 */
 	
 }
 

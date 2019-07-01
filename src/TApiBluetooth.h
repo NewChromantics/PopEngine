@@ -6,7 +6,7 @@ namespace ApiBluetooth
 {
 	void	Bind(Bind::TContext& Context);
 
-	static const char BluetoothDevice_TypeName[] = "BluetoothDevice";
+	DECLARE_BIND_TYPENAME(BluetoothDevice);
 }
 
 
@@ -29,7 +29,7 @@ public:
 	std::function<TState::Type()>	mGetState;
 };
 
-class TBluetoothDeviceWrapper : public Bind::TObjectWrapper<ApiBluetooth::BluetoothDevice_TypeName,Bluetooth::TDeviceHandle>
+class TBluetoothDeviceWrapper : public Bind::TObjectWrapper<ApiBluetooth::BindType::BluetoothDevice,Bluetooth::TDeviceHandle>
 {
 public:
 	TBluetoothDeviceWrapper(Bind::TContext& Context) :

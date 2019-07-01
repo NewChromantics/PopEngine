@@ -41,9 +41,9 @@ void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 
 void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiWebsocket::GetAddress_FunctionName>( GetAddress );
-	Template.BindFunction<ApiWebsocket::Send_FunctionName>( Send );
-	Template.BindFunction<ApiWebsocket::GetPeers_FunctionName>( GetPeers );
+	Template.BindFunction<ApiWebsocket::BindFunction::GetAddress>( GetAddress );
+	Template.BindFunction<ApiWebsocket::BindFunction::Send>( Send );
+	Template.BindFunction<ApiWebsocket::BindFunction::GetPeers>( GetPeers );
 }
 
 

@@ -7,7 +7,7 @@ namespace ApiInput
 {
 	const char Namespace[] = "Pop.Input";
 
-	const char EnumDevices_FunctionName[] = "EnumDevices";
+	DEFINE_BIND_FUNCTIONNAME(EnumDevices);
 	DEFINE_BIND_FUNCTIONNAME(OnDevicesChanged);
 
 	DEFINE_BIND_TYPENAME(Device);
@@ -98,8 +98,8 @@ void ApiInput::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
-	Context.BindGlobalFunction<OnDevicesChanged_FunctionName>( OnDevicesChanged, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumDevices>( EnumDevices, Namespace );
+	Context.BindGlobalFunction<BindFunction::OnDevicesChanged>( OnDevicesChanged, Namespace );
 
 	Context.BindObjectType<TInputDeviceWrapper>( Namespace );
 }
@@ -152,8 +152,8 @@ void TInputDeviceWrapper::Construct(Bind::TCallback& Params)
 
 void TInputDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiInput::GetState_FunctionName>( GetState );
-	Template.BindFunction<ApiInput::OnStateChanged_FunctionName>( OnStateChanged );
+	Template.BindFunction<ApiInput::BindFunction::GetState>( GetState );
+	Template.BindFunction<ApiInput::BindFunction::OnStateChanged>( OnStateChanged );
 
 }
 

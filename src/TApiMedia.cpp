@@ -187,7 +187,7 @@ void ApiMedia::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumDevices>( ApiMedia::EnumDevices, Namespace );
 
 	Context.BindObjectType<TPopCameraDeviceWrapper>( Namespace );
 
@@ -243,7 +243,7 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::Decode_FunctionName>( Decode );
+	Template.BindFunction<ApiMedia::BindFunction::Decode>( Decode );
 }
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
@@ -579,7 +579,7 @@ void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 
 void TPopCameraDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::GetNextFrame_FunctionName>( GetNextFrame );
+	Template.BindFunction<ApiMedia::BindFunction::GetNextFrame>( GetNextFrame );
 }
 
 
@@ -870,8 +870,8 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::Encode_FunctionName>(&TH264EncoderWrapper::Encode);
-	Template.BindFunction<ApiMedia::GetNextPacket_FunctionName>(&TH264EncoderWrapper::GetNextPacket);
+	Template.BindFunction<ApiMedia::BindFunction::Encode>(&TH264EncoderWrapper::Encode);
+	Template.BindFunction<ApiMedia::BindFunction::GetNextPacket>(&TH264EncoderWrapper::GetNextPacket);
 }
 
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)

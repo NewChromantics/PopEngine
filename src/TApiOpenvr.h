@@ -17,7 +17,7 @@ namespace ApiOpenvr
 }
 
 
-class ApiOpenvr::THmdWrapper : public Bind::TObjectWrapper<ApiOpenvr::Hmd_TypeName,Openvr::THmd>
+class ApiOpenvr::THmdWrapper : public Bind::TObjectWrapper<ApiOpenvr::BindType::Hmd,Openvr::THmd>
 {
 public:
 	THmdWrapper(Bind::TContext& Context) :

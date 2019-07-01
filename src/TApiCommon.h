@@ -33,9 +33,10 @@ namespace ApiPop
 {
 	class TAsyncLoop;
 	DECLARE_BIND_TYPENAME(AsyncLoop);
+	DECLARE_BIND_TYPENAME(Image);
 }
 
-class TAsyncLoopWrapper : public Bind::TObjectWrapper<ApiPop::AsyncLoop_TypeName,ApiPop::TAsyncLoop>
+class TAsyncLoopWrapper : public Bind::TObjectWrapper<ApiPop::BindType::AsyncLoop,ApiPop::TAsyncLoop>
 {
 public:
 	TAsyncLoopWrapper(Bind::TContext& Context) :
@@ -58,8 +59,7 @@ protected:
 
 
 //	an image is a generic accessor for pixels, opengl textures, etc etc
-extern const char Image_TypeName[];
-class TImageWrapper : public Bind::TObjectWrapper<Image_TypeName,SoyPixelsImpl>
+class TImageWrapper : public Bind::TObjectWrapper<ApiPop::BindType::Image,SoyPixelsImpl>
 {
 public:
 	TImageWrapper(Bind::TContext& Context) :

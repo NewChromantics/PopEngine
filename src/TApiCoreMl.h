@@ -8,6 +8,7 @@ class TPixelBuffer;
 namespace ApiCoreMl
 {
 	void	Bind(Bind::TContext& Context);
+	DECLARE_BIND_TYPENAME(CoreMl);
 }
 
 namespace CoreMl
@@ -17,8 +18,7 @@ namespace CoreMl
 }
 
 
-extern const char CoreMl_TypeName[];
-class TCoreMlWrapper : public Bind::TObjectWrapper<CoreMl_TypeName,CoreMl::TInstance>
+class TCoreMlWrapper : public Bind::TObjectWrapper<ApiCoreMl::BindType::CoreMl,CoreMl::TInstance>
 {
 public:
 	TCoreMlWrapper(Bind::TContext& Context) :
@@ -33,6 +33,7 @@ public:
 	void				Hourglass(Bind::TCallback& Arguments);
 	void				Cpm(Bind::TCallback& Arguments);
 	void				OpenPose(Bind::TCallback& Arguments);
+	void				OpenPoseMap(Bind::TCallback& Arguments);
 	void				SsdMobileNet(Bind::TCallback& Arguments);
 	void				MaskRcnn(Bind::TCallback& Arguments);
 	void				DeepLab(Bind::TCallback& Arguments);

@@ -35,8 +35,8 @@ void ApiGui::Bind(Bind::TContext& Context)
 
 void ApiGui::TSliderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetMinMax_FunctionName>( &TSliderWrapper::SetMinMax );
-	Template.BindFunction<SetValue_FunctionName>( &TSliderWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetMinMax>( &TSliderWrapper::SetMinMax );
+	Template.BindFunction<BindFunction::SetValue>( &TSliderWrapper::SetValue );
 }
 
 void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
@@ -100,8 +100,8 @@ void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
 
 void ApiGui::TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetFullscreen_FunctionName>( &TWindowWrapper::SetFullscreen );
-	Template.BindFunction<EnableScrollbars_FunctionName>( &TWindowWrapper::EnableScrollbars );
+	Template.BindFunction<BindFunction::SetFullscreen>( &TWindowWrapper::SetFullscreen );
+	Template.BindFunction<BindFunction::EnableScrollbars>( &TWindowWrapper::EnableScrollbars );
 }
 
 void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
@@ -178,7 +178,7 @@ void ApiGui::TWindowWrapper::EnableScrollbars(Bind::TCallback& Params)
 
 void ApiGui::TLabelWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetValue_FunctionName>( &TLabelWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetValue>( &TLabelWrapper::SetValue );
 }
 
 void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
@@ -203,7 +203,7 @@ void ApiGui::TLabelWrapper::SetValue(Bind::TCallback& Params)
 
 void ApiGui::TTextBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetValue_FunctionName>( &TTextBoxWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetValue>( &TTextBoxWrapper::SetValue );
 }
 
 void ApiGui::TTextBoxWrapper::Construct(Bind::TCallback& Params)
@@ -241,8 +241,8 @@ void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
 
 void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetValue_FunctionName>( &TTickBoxWrapper::SetValue );
-	Template.BindFunction<SetLabel_FunctionName>( &TTickBoxWrapper::SetLabel );
+	Template.BindFunction<BindFunction::SetValue>( &TTickBoxWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetLabel>( &TTickBoxWrapper::SetLabel );
 }
 
 void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)

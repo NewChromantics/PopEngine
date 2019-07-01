@@ -807,17 +807,17 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 
 void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<DrawQuad_FunctionName>( &TWindowWrapper::DrawQuad );
-	Template.BindFunction<DrawGeometry_FunctionName>( &TWindowWrapper::DrawGeometry );
-	Template.BindFunction<SetViewport_FunctionName>( SetViewport );
-	Template.BindFunction<ClearColour_FunctionName>( ClearColour );
-	Template.BindFunction<EnableBlend_FunctionName>( EnableBlend );
-	Template.BindFunction<Render_FunctionName>( Render );
-	//Template.BindFunction<RenderChain_FunctionName>( RenderChain );
-	Template.BindFunction<RenderToRenderTarget_FunctionName>( RenderToRenderTarget );
-	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
-	Template.BindFunction<SetFullscreen_FunctionName>( SetFullscreen );
-	Template.BindFunction<IsFullscreen_FunctionName>( IsFullscreen );
+	Template.BindFunction<BindFunction::DrawQuad>( &TWindowWrapper::DrawQuad );
+	Template.BindFunction<BindFunction::DrawGeometry>( &TWindowWrapper::DrawGeometry );
+	Template.BindFunction<BindFunction::SetViewport>( SetViewport );
+	Template.BindFunction<BindFunction::ClearColour>( ClearColour );
+	Template.BindFunction<BindFunction::EnableBlend>( EnableBlend );
+	Template.BindFunction<BindFunction::Render>( Render );
+	//Template.BindFunction<BindFunction::RenderChain>( RenderChain );
+	Template.BindFunction<BindFunction::RenderToRenderTarget>( RenderToRenderTarget );
+	Template.BindFunction<BindFunction::GetScreenRect>( GetScreenRect );
+	Template.BindFunction<BindFunction::SetFullscreen>( SetFullscreen );
+	Template.BindFunction<BindFunction::IsFullscreen>( IsFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
@@ -1036,7 +1036,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 
 void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetUniform_FunctionName>( SetUniform );
+	Template.BindFunction<BindFunction::SetUniform>( SetUniform );
 }
 
 void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)

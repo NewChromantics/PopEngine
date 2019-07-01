@@ -38,9 +38,9 @@ void THttpServerWrapper::Construct(Bind::TCallback& Params)
 
 void THttpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiHttp::GetAddress_FunctionName>( GetAddress );
-	Template.BindFunction<ApiHttp::Send_FunctionName>( Send );
-	Template.BindFunction<ApiHttp::GetPeers_FunctionName>( GetPeers );
+	Template.BindFunction<ApiHttp::BindFunction::GetAddress>( GetAddress );
+	Template.BindFunction<ApiHttp::BindFunction::Send>( Send );
+	Template.BindFunction<ApiHttp::BindFunction::GetPeers>( GetPeers );
 }
 
 
