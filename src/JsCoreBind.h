@@ -440,13 +440,20 @@ public:
 	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
 	virtual void			SetArray(const std::string& Name,JsCore::TArray& Array) bind_override;
 	template<typename TYPE>
-	inline void				SetArray(const std::string& Name,ArrayBridge<TYPE>&& Values) bind_override
+	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>&& Values) bind_override
 	{
 		auto Array = JsCore::GetArray( mContext, Values );
 		auto ArrayValue = JsCore::GetValue( mContext, Array );
 		SetMember( Name, ArrayValue );
 	}
-
+	template<typename TYPE>
+	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>& Values) bind_override
+	{
+		auto Array = JsCore::GetArray( mContext, Values );
+		auto ArrayValue = JsCore::GetValue( mContext, Array );
+		SetMember( Name, ArrayValue );
+	}
+	
 	//	Jscore specific
 private:
 	JSValueRef		GetMember(const std::string& MemberName);

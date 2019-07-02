@@ -597,9 +597,6 @@ TImageWrapper::~TImageWrapper()
 
 void TImageWrapper::Construct(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TImageWrapper>();
-
-	
 	if ( Params.IsArgumentString(1) )
 		mName = Params.GetArgumentString(1);
 	else
@@ -643,7 +640,7 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::Alloc>( Alloc );
-	Template.BindFunction<BindFunction::LoadFile>( LoadFile );
+	Template.BindFunction<BindFunction::LoadFile>( &TImageWrapper::LoadFile );
 	Template.BindFunction<BindFunction::Flip>( Flip );
 	Template.BindFunction<BindFunction::GetWidth>( GetWidth );
 	Template.BindFunction<BindFunction::GetHeight>( GetHeight );
@@ -710,15 +707,31 @@ void TImageWrapper::Alloc(Bind::TCallback& Params)
 
 void TImageWrapper::LoadFile(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TImageWrapper>();
-	
 	auto Filename = Params.GetArgumentFilename(0);
+
+	auto OnMetaFound = [&](const std::string& Section,const ArrayBridge<uint8_t>& Data)
+	{
+		auto This = Params.ThisObject();
+		
+		//	add meta if it's not there
+		if ( !This.HasMember("Meta") )
+			This.SetObjectFromString("Meta","{}");
+		
+		//	set this section as a meta
+		auto ThisMeta = This.GetObject("Meta");
+		if ( This.HasMember(Section) )
+			std::Debug << "Overwriting image meta section " << Section << std::endl;
 	
-	This.DoLoadFile( Filename );
+		ThisMeta.SetArray( Section, Data );
+	};
+	
+	DoLoadFile( Filename, OnMetaFound );
 }
 
-void TImageWrapper::DoLoadFile(const std::string& Filename)
+void TImageWrapper::DoLoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound)
 {
+	//	gr: feels like this function should be a generic soy thing
+	
 	//	load file
 	Array<char> Bytes;
 	Soy::FileToArray( GetArrayBridge(Bytes), Filename );
@@ -731,7 +744,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	
 	if ( Soy::StringEndsWith( Filename, Png::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Png::Read( *NewPixels, BytesBuffer, OnMetaFound );
 		mPixels = NewPixels;
 		OnPixelsChanged();
 		return;

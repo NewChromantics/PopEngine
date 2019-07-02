@@ -74,7 +74,7 @@ public:
 	
 	static void			Alloc(Bind::TCallback& Arguments);
 	static void			Flip(Bind::TCallback& Arguments);
-	static void			LoadFile(Bind::TCallback& Arguments);
+	void				LoadFile(Bind::TCallback& Arguments);
 	static void			GetWidth(Bind::TCallback& Arguments);
 	static void			GetHeight(Bind::TCallback& Arguments);
 	static void			GetRgba8(Bind::TCallback& Arguments);
@@ -89,7 +89,7 @@ public:
 	static void			GetFormat(Bind::TCallback& Arguments);
 	void				GetPngData(Bind::TCallback& Params);
 	
-	void									DoLoadFile(const std::string& Filename);
+	void									DoLoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound);
 	void									DoSetLinearFilter(bool LinearFilter);
 	void									GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
 	Opengl::TTexture&						GetTexture();
