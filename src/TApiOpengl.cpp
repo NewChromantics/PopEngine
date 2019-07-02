@@ -32,6 +32,13 @@ DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
 
 
+void ResetOpenglState()
+{
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+
+}
+
 
 void ApiOpengl::Bind(Bind::TContext& Context)
 {
@@ -104,6 +111,7 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 
 		//	restore state after functions above, which might still mess around with things like viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+		ResetOpenglState();
 	};
 	//Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
@@ -135,6 +143,8 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		RenderTarget.Bind();
 		RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 
+		ResetOpenglState();
+		
 		//	hack! need to turn render target into it's own javasript object
 		//	that's why the image render target is the render context
 		This.mActiveRenderTarget = &RenderTarget;
@@ -827,8 +837,7 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	
 	Opengl::ClearDepth();
 	EnableBlend(false);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
+	ResetOpenglState();
 	
 	auto OpenglContext = this->GetContext();
 	Opengl_IsOkay();
