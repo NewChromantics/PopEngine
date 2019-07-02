@@ -16,6 +16,7 @@ DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
 DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
 DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
 DEFINE_BIND_FUNCTIONNAME(WriteToFile);
+DEFINE_BIND_FUNCTIONNAME(GetFilenames);
 DEFINE_BIND_FUNCTIONNAME(SetTimeout);
 DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);
 
@@ -80,6 +81,7 @@ namespace ApiPop
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
 	static void 	WriteToFile(Bind::TCallback& Params);
+	static void 	GetFilenames(Bind::TCallback& Params);
 	static void 	GarbageCollect(Bind::TCallback& Params);
 	static void 	SetTimeout(Bind::TCallback& Params);
 	static void		Sleep(Bind::TCallback& Params);
@@ -527,6 +529,30 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename );
 }
 
+
+void ApiPop::GetFilenames(Bind::TCallback& Params)
+{
+	//	if no directory, list all files
+	std::string Directory = Params.mContext.GetResolvedFilename("");
+	if ( !Params.IsArgumentUndefined(0) )
+		Directory = Params.GetArgumentFilename(0);
+	
+	//	recurse
+	Directory += "/**";
+	
+	//	os list all files
+	Array<std::string> Filenames;
+	auto EnumFile = [&](const std::string& Filename)
+	{
+		//	todo: make filename an api-relative filename
+		Filenames.PushBack(Filename);
+	};
+	
+	Platform::EnumFiles( Directory, EnumFile );
+
+	Params.Return( GetArrayBridge(Filenames) );
+}
+	
 void ApiPop::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
@@ -541,6 +567,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBuffer>(LoadFileAsArrayBuffer, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteToFile>(WriteToFile, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetFilenames>(GetFilenames, Namespace );
 	Context.BindGlobalFunction<BindFunction::GarbageCollect>(GarbageCollect, Namespace );
 	Context.BindGlobalFunction<BindFunction::SetTimeout>(SetTimeout, Namespace );
 	Context.BindGlobalFunction<BindFunction::Sleep>(Sleep, Namespace );
