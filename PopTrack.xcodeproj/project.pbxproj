@@ -104,6 +104,8 @@
 		BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DB1B6406D500D3E7A6 /* SoyVideoDevice.cpp */; };
 		BFB647382225593600820612 /* SoyHid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFB647362225593600820612 /* SoyHid.cpp */; };
 		BFD399F822CBC964009E2FD3 /* SoyFourcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */; };
+		BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; };
+		BFD39A0722CD44E8009E2FD3 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
 		BFD4456520E67037007E2497 /* PopTrack.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopTrack.xib */; };
 		BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */; };
 		BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
@@ -391,6 +393,15 @@
 		BFD0829E225E974D00FD05DC /* GuildhallGildwall */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GuildhallGildwall; path = ../GuildhallGildwall; sourceTree = "<group>"; };
 		BFD399F622CBC964009E2FD3 /* SoyFourcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFourcc.h; path = src/SoyFourcc.h; sourceTree = "<group>"; };
 		BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFourcc.cpp; path = src/SoyFourcc.cpp; sourceTree = "<group>"; };
+		BFD399FA22CD42B1009E2FD3 /* version.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = version.txt; path = LeapMotion/Leapv2/version.txt; sourceTree = "<group>"; };
+		BFD399FB22CD42B1009E2FD3 /* Leap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Leap.h; path = LeapMotion/Leapv2/Leap.h; sourceTree = "<group>"; };
+		BFD399FC22CD42B1009E2FD3 /* LeapObjectiveC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LeapObjectiveC.h; path = LeapMotion/Leapv2/LeapObjectiveC.h; sourceTree = "<group>"; };
+		BFD399FD22CD42B1009E2FD3 /* LeapMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LeapMath.h; path = LeapMotion/Leapv2/LeapMath.h; sourceTree = "<group>"; };
+		BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libLeap.dylib; path = LeapMotion/Leapv2/libLeap.dylib; sourceTree = "<group>"; };
+		BFD399FF22CD42B1009E2FD3 /* Leap.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Leap.i; path = LeapMotion/Leapv2/Leap.i; sourceTree = "<group>"; };
+		BFD39A0022CD42B1009E2FD3 /* LeapObjectiveC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = LeapObjectiveC.mm; path = LeapMotion/Leapv2/LeapObjectiveC.mm; sourceTree = "<group>"; };
+		BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiLeapMotion.cpp; path = src/TApiLeapMotion.cpp; sourceTree = "<group>"; };
+		BFD39A0622CD44E7009E2FD3 /* TApiLeapMotion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiLeapMotion.h; path = src/TApiLeapMotion.h; sourceTree = "<group>"; };
 		BFD4456620E6711A007E2497 /* SoyRuntimeLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyRuntimeLibrary.h; path = src/SoyRuntimeLibrary.h; sourceTree = "<group>"; };
 		BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyRuntimeLibrary.cpp; path = src/SoyRuntimeLibrary.cpp; sourceTree = "<group>"; };
 		BFD4D564213451D20028A647 /* SoyTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTime.h; path = src/SoyTime.h; sourceTree = "<group>"; };
@@ -491,6 +502,7 @@
 				BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */,
 				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
 				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
+				BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
 				BFE9513222A70B9700B83061 /* libx264.a in Frameworks */,
 				BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */,
@@ -580,6 +592,7 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BFD399F922CD427D009E2FD3 /* LeapMotion */,
 				BF8534F322B6DA1C0049C01B /* ChakraCore */,
 				BF92821D223692BA007E9D6F /* opencv2.framework */,
 				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
@@ -776,6 +789,20 @@
 			path = src;
 			sourceTree = "<group>";
 		};
+		BFD399F922CD427D009E2FD3 /* LeapMotion */ = {
+			isa = PBXGroup;
+			children = (
+				BFD399FB22CD42B1009E2FD3 /* Leap.h */,
+				BFD399FF22CD42B1009E2FD3 /* Leap.i */,
+				BFD399FD22CD42B1009E2FD3 /* LeapMath.h */,
+				BFD399FC22CD42B1009E2FD3 /* LeapObjectiveC.h */,
+				BFD39A0022CD42B1009E2FD3 /* LeapObjectiveC.mm */,
+				BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */,
+				BFD399FA22CD42B1009E2FD3 /* version.txt */,
+			);
+			name = LeapMotion;
+			sourceTree = "<group>";
+		};
 		BFE9512E22A70B8400B83061 /* x264 */ = {
 			isa = PBXGroup;
 			children = (
@@ -913,6 +940,8 @@
 				BF97592420E961190093B296 /* TApiOpencl.h */,
 				BF92821F22369316007E9D6F /* TApiOpencv.cpp */,
 				BF92822022369316007E9D6F /* TApiOpencv.h */,
+				BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */,
+				BFD39A0622CD44E7009E2FD3 /* TApiLeapMotion.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
 				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
@@ -1177,6 +1206,7 @@
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
 				BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */,
 				BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */,
+				BFD39A0722CD44E8009E2FD3 /* TApiLeapMotion.cpp in Sources */,
 				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
 				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
 				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
@@ -1321,6 +1351,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1412,6 +1443,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1535,6 +1567,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
@@ -1587,6 +1620,7 @@
 					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
 					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
+					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PopTrackMac;
