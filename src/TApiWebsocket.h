@@ -86,7 +86,7 @@ protected:
 
 
 	
-class TWebsocketServerWrapper : public Bind::TObjectWrapper<ApiWebsocket::WebsocketServer_TypeName,TWebsocketServer>, public TSocketWrapper
+class TWebsocketServerWrapper : public Bind::TObjectWrapper<ApiWebsocket::BindType::WebsocketServer,TWebsocketServer>, public TSocketWrapper
 {
 public:
 	TWebsocketServerWrapper(Bind::TContext& Context) :

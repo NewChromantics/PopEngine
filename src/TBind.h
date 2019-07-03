@@ -9,10 +9,14 @@
 #include "HeapArray.hpp"
 
 //	gr: to deal with different attributes on different platforms... lets make a macro
-#define DEFINE_BIND_FUNCTIONNAME(Name)	extern const char Name ## _FunctionName[] = #Name
-#define DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Name,ApiName)	extern const char Name ## _FunctionName[] = #ApiName
-#define DEFINE_BIND_TYPENAME(Name)		extern const char Name ## _TypeName[] = #Name
-#define DECLARE_BIND_TYPENAME(Name)		extern const char Name ## _TypeName[];
+//	gr: now to aid auto complete, declarations are
+//		BindFunction::YourName
+//	and
+//		BindType::YourName
+#define DEFINE_BIND_FUNCTIONNAME(Name)					namespace BindFunction	{	extern const char Name [] = #Name ;	}
+#define DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Name,ApiName)	namespace BindFunction	{	extern const char Name [] = #ApiName ;	}
+#define DEFINE_BIND_TYPENAME(Name)						namespace BindType		{	extern const char Name [] = #Name ;	}
+#define DECLARE_BIND_TYPENAME(Name)						namespace BindType		{	extern const char Name [] ;	}
 
 
 

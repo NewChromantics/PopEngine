@@ -94,7 +94,7 @@ void ApiSerial::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<EnumPorts_FunctionName>( EnumPorts, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumPorts>( EnumPorts, Namespace );
 
 	Context.BindObjectType<TSerialComPortWrapper>( Namespace );
 }
@@ -139,9 +139,9 @@ void TSerialComPortWrapper::Construct(Bind::TCallback& Params)
 
 void TSerialComPortWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiSerial::Open_FunctionName>( Open );
-	Template.BindFunction<ApiSerial::Close_FunctionName>( Close );
-	Template.BindFunction<ApiSerial::Read_FunctionName>( Read );
+	Template.BindFunction<ApiSerial::BindFunction::Open>( Open );
+	Template.BindFunction<ApiSerial::BindFunction::Close>( Close );
+	Template.BindFunction<ApiSerial::BindFunction::Read>( Read );
 }
 
 

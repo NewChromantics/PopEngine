@@ -49,7 +49,7 @@ public:
 };
 
 
-class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<ApiSocket::UdpBroadcastServer_TypeName,TUdpBroadcastServer>, public TSocketWrapper
+class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpBroadcastServer,TUdpBroadcastServer>, public TSocketWrapper
 {
 public:
 	TUdpBroadcastServerWrapper(Bind::TContext& Context) :

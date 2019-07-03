@@ -8,6 +8,7 @@
 #import "TinyYOLO.h"
 #import "Hourglass.h"
 #import "Cpm.h"
+#import "DeepLabV3.h"
 
 //	openpose model from here
 //	https://github.com/infocom-tpo/SwiftOpenPose
@@ -20,7 +21,7 @@
 
 //	https://github.com/edouardlp/Mask-RCNN-CoreML
 #import "MaskRCNN_MaskRCNN.h"
-#endif
+
 
 
 class CoreMl::TInstance : public SoyWorkerJobThread
@@ -38,8 +39,10 @@ public:
 	void		RunHourglass(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 	void		RunCpm(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 	void		RunOpenPose(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunOpenPoseMap(const SoyPixelsImpl& Pixels,std::shared_ptr<SoyPixelsImpl>& MapOutput,std::function<bool(const std::string&)> FilterLabel);
 	void		RunSsdMobileNet(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 	void		RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
+	void		RunDeepLab(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject);
 
 private:
 	void		RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const TObject&)> EnumObject);
@@ -51,13 +54,27 @@ private:
 	cpm*			mCpm = [[cpm alloc] init];
 	MobileOpenPose*	mOpenPose = [[MobileOpenPose alloc] init];
 	SsdMobilenet*	mSsdMobileNet = [[SsdMobilenet alloc] init];
-	//MaskRCNN_MaskRCNN*	mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
-	MaskRCNN_MaskRCNN*	mMaskRcnn = nullptr;
+	MaskRCNN_MaskRCNN*	mMaskRcnn = nullptr;	//	min osx versions
+	DeepLabV3*		mDeepLabv3 = nullptr;
 };
+
+
+
 
 CoreMl::TInstance::TInstance() :
 	SoyWorkerJobThread	("CoreMl::TInstance")
 {
+	auto OsVersion = Platform::GetOsVersion();
+	if ( OsVersion >= Soy::TVersion(10,13,2) )
+	{
+		mMaskRcnn = [[MaskRCNN_MaskRCNN alloc] init];
+	}
+	
+	if ( OsVersion >= Soy::TVersion(10,14,2) )
+	{
+		mDeepLabv3  = [[DeepLabV3 alloc]init];
+	}
+	
 	Start();
 }
 
@@ -608,6 +625,141 @@ void CoreMl::TInstance::RunOpenPose(const SoyPixelsImpl& Pixels,std::function<vo
 }
 
 
+//	todo: reuse other func but reformat output (then we can make a generic func)
+void CoreMl::TInstance::RunOpenPoseMap(const SoyPixelsImpl& Pixels,std::shared_ptr<SoyPixelsImpl>& MapOutput,std::function<bool(const std::string&)> FilterLabel)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc]init];
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+		[pool drain];
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+	
+	NSError* Error = nullptr;
+	
+	Soy::TScopeTimerPrint Timer(__func__,0);
+	auto Output = [mOpenPose predictionFromImage:PixelBuffer error:&Error];
+	Timer.Stop();
+	if ( Error )
+		throw Soy::AssertException( Error );
+	
+	//	https://github.com/infocom-tpo/SwiftOpenPose/blob/9745c0074dfe7d98265a325e25d2e2bb3d91d3d1/SwiftOpenPose/Sources/Estimator.swift#L122
+	//	heatmap rowsxcols is width/8 and height/8 which is 48, which is dim[1] and dim[2]
+	//	but 19 features? (dim[0] = 3*19)
+	//	https://github.com/tucan9389/PoseEstimation-CoreML/blob/master/PoseEstimation-CoreML/JointViewController.swift#L230
+	//	https://github.com/eugenebokhan/iOS-OpenPose/blob/master/iOSOpenPose/iOSOpenPose/CoreML/CocoPairs.swift#L12
+	const std::string KeypointLabels[] =
+	{
+		"Head", "Neck",
+		"RightShoulder", "RightElbow", "RightWrist",
+		"LeftShoulder", "LeftElbow", "LeftWrist",
+		"RightHip", "RightKnee", "RightAnkle",
+		"LeftHip", "LeftKnee", "LeftAnkle",
+		"RightEye",
+		"LeftEye",
+		"RightEar",
+		"LeftEar",
+		"Background"
+	};
+	auto BackgroundLabelIndex = 18;
+	auto GetKeypointName = [&](size_t Index)
+	{
+		if ( Index < sizeofarray(KeypointLabels) )
+			return KeypointLabels[Index];
+		
+		std::stringstream KeypointName;
+		KeypointName << "Label_" << Index;
+		return KeypointName.str();
+	};
+	
+	auto* ModelOutput = Output.net_output;
+	//RunPoseModel( Output.net_output, Pixels, GetKeypointName, EnumObject );
+	
+	if ( !ModelOutput )
+		throw Soy::AssertException("No output from model");
+	
+	using NUMBER = double;
+	BufferArray<int,10> Dim;
+	Array<NUMBER> Values;
+	ExtractFloatsFromMultiArray( ModelOutput, GetArrayBridge(Dim), GetArrayBridge(Values) );
+	
+	auto KeypointCount = Dim[0];
+	auto HeatmapWidth = Dim[1];
+	auto HeatmapHeight = Dim[2];
+	auto GetValue = [&](int Keypoint,int HeatmapX,int HeatmapY)
+	{
+		auto Index = Keypoint * (HeatmapWidth*HeatmapHeight);
+		Index += HeatmapX*(HeatmapHeight);
+		Index += HeatmapY;
+		return Values[Index];
+	};
+	
+	//	same as dim
+	//	heatRows = imageWidth / 8
+	//	heatColumns = imageHeight / 8
+	//	KeypointCount is 57 = 19 + 38
+	auto HeatRows = HeatmapWidth;
+	auto HeatColumns = HeatmapHeight;
+	
+	//	https://github.com/infocom-tpo/SwiftOpenPose/blob/9745c0074dfe7d98265a325e25d2e2bb3d91d3d1/SwiftOpenPose/Sources/Estimator.swift#L127
+	//	https://github.com/eugenebokhan/iOS-OpenPose/blob/master/iOSOpenPose/iOSOpenPose/CoreML/PoseEstimatior.swift#L72
+	//	code above splits into pafMat and HeatmapMat
+	auto HeatMatRows = 19;
+	auto HeatMatCols = HeatRows*HeatColumns;
+	auto heatMat_count = HeatMatRows * HeatMatCols;
+	auto* heatMat = Values.GetArray();
+	auto* pafMat = &heatMat[heatMat_count];
+	
+	
+	//	generate heat map
+	//	gr: make this a float texture!
+	Array<uint8_t> MapScores( HeatRows * HeatColumns );
+	auto PixelFormat = SoyPixelsFormat::Greyscale;
+	MapScores.SetAll(0);
+	auto SetMapScore = [&](int x,int y,float Score)
+	{
+		auto Score8 = static_cast<uint8_t>( Score * 255.f );
+		auto Index = x + (y*HeatColumns);
+		Score = std::max( MapScores[Index], Score8 );
+		MapScores[Index] = Score;
+	};
+	
+	
+	//	pull coords from heat map
+	using vec2i = vec2x<int32_t>;
+	Array<vec2i> Coords;
+	auto PushCoord = [&](int KeypointIndex,int Index,float Score)
+	{
+		auto y = Index / HeatRows;
+		auto x = Index % HeatRows;
+		SetMapScore( x, y, Score );
+	};
+	
+	for ( auto r=0;	r<HeatMatRows;	r++ )
+	{
+		auto KeypointIndex = r;
+		auto Label = GetKeypointName(KeypointIndex);
+		if ( !FilterLabel( Label ) )
+			continue;
+
+		auto nms = GetRemoteArray( &heatMat[r*HeatMatCols], HeatMatCols );
+		
+		for ( auto c=0;	c<nms.GetSize();	c++ )
+		{
+			PushCoord( KeypointIndex, c, nms[c] );
+		}
+	}
+
+	//	write output pixels
+	if ( !MapOutput )
+		MapOutput.reset( new SoyPixels() );
+
+	SoyPixelsRemote MapScoresAsPixels( MapScores.GetArray(), HeatColumns, HeatRows, MapScores.GetDataSize(), PixelFormat );
+	MapOutput->Copy( MapScoresAsPixels );
+}
+
 void CoreMl::TInstance::RunPoseModel(MLMultiArray* ModelOutput,const SoyPixelsImpl& Pixels,std::function<std::string(size_t)> GetKeypointName,std::function<void(const TObject&)> EnumObject)
 {
 	if ( !ModelOutput )
@@ -936,3 +1088,35 @@ void CoreMl::TInstance::RunMaskRcnn(const SoyPixelsImpl& Pixels,std::function<vo
 	throw Soy::AssertException("Process RCNN output");
 }
 
+
+void CoreMl::TInstance::RunDeepLab(const SoyPixelsImpl& Pixels,std::function<void(const TObject&)> EnumObject)
+{
+	auto PixelBuffer = Avf::PixelsToPixelBuffer(Pixels);
+	auto ReleasePixelBuffer = [&]()
+	{
+		CVPixelBufferRelease(PixelBuffer);
+	};
+	Soy::TScopeCall ReleasePixels( nullptr, ReleasePixelBuffer );
+	NSError* Error = nullptr;
+	
+	Soy::TScopeTimerPrint Timer(__func__,0);
+	auto Output = [mDeepLabv3 predictionFromImage:PixelBuffer error:&Error];
+	Timer.Stop();
+	if ( Error )
+		throw Soy::AssertException( Error );
+	if ( !Output )
+		throw Soy::AssertException("No output from CoreMl prediction");
+	
+	/// Detections (y1,x1,y2,x2,classId,score) as 6 element vector of doubles
+	BufferArray<int,10> ClassBox_Dim;
+	Array<float> ClassBox_Values;
+	ExtractFloatsFromMultiArray( Output.semanticPredictions, GetArrayBridge(ClassBox_Dim), GetArrayBridge(ClassBox_Values) );
+	
+	std::Debug << "ClassBox_Dim: [ ";
+	for ( int i=0;	i<ClassBox_Dim.GetSize();	i++ )
+		std::Debug << ClassBox_Dim[i] << "x";
+	std::Debug << " ]" << std::endl;
+	
+	
+	throw Soy::AssertException("Process RCNN output");
+}

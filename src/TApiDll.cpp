@@ -31,8 +31,8 @@ void TDllWrapper::Construct(Bind::TCallback& Params)
 
 void TDllWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiDll::BindFunction_FunctionName>( BindFunction );
-	Template.BindFunction<ApiDll::CallFunction_FunctionName>( CallFunction );
+	Template.BindFunction<ApiDll::BindFunction::BindFunction>( BindFunction );
+	Template.BindFunction<ApiDll::BindFunction::CallFunction>( CallFunction );
 }
 
 

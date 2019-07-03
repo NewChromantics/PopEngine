@@ -13,6 +13,7 @@ namespace ApiBluetooth
 	DEFINE_BIND_FUNCTIONNAME(Connect);
 	DEFINE_BIND_FUNCTIONNAME(ReadCharacteristic);
 
+	DEFINE_BIND_TYPENAME(BluetoothDevice);
 
 	void	Startup(Bind::TCallback& Params);
 	void	OnStatusChanged(Bind::TCallback& Params);
@@ -68,10 +69,10 @@ void ApiBluetooth::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<Startup_FunctionName>( Startup, Namespace );
-	Context.BindGlobalFunction<OnStatusChanged_FunctionName>( OnStatusChanged, Namespace );
-	Context.BindGlobalFunction<OnDevicesChanged_FunctionName>( OnDevicesChanged, Namespace );
-	Context.BindGlobalFunction<EnumDevices_FunctionName>( EnumDevices, Namespace );
+	Context.BindGlobalFunction<BindFunction::Startup>( Startup, Namespace );
+	Context.BindGlobalFunction<BindFunction::OnStatusChanged>( OnStatusChanged, Namespace );
+	Context.BindGlobalFunction<BindFunction::OnDevicesChanged>( OnDevicesChanged, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumDevices>( EnumDevices, Namespace );
 
 	Context.BindObjectType<TBluetoothDeviceWrapper>( Namespace );
 }
@@ -252,8 +253,8 @@ void TBluetoothDeviceWrapper::Construct(Bind::TCallback& Params)
 
 void TBluetoothDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiBluetooth::Connect_FunctionName>( Connect );
-	Template.BindFunction<ApiBluetooth::ReadCharacteristic_FunctionName>( ReadCharacteristic );
+	Template.BindFunction<ApiBluetooth::BindFunction::Connect>( Connect );
+	Template.BindFunction<ApiBluetooth::BindFunction::ReadCharacteristic>( ReadCharacteristic );
 }
 
 

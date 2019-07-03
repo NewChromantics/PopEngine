@@ -35,9 +35,9 @@ void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 
 void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiSocket::GetAddress_FunctionName>( GetAddress );
-	Template.BindFunction<ApiSocket::Send_FunctionName>( Send );
-	Template.BindFunction<ApiSocket::GetPeers_FunctionName>( GetPeers );
+	Template.BindFunction<ApiSocket::BindFunction::GetAddress>( GetAddress );
+	Template.BindFunction<ApiSocket::BindFunction::Send>( Send );
+	Template.BindFunction<ApiSocket::BindFunction::GetPeers>( GetPeers );
 }
 
 

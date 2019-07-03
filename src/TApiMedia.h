@@ -54,7 +54,7 @@ public:
 
 
 
-class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::Source_TypeName,PopCameraDevice::TInstance>
+class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::Source,PopCameraDevice::TInstance>
 {
 public:
 	TPopCameraDeviceWrapper(Bind::TContext& Context) :
@@ -85,7 +85,7 @@ public:
 
 
 
-class TAvcDecoderWrapper : public Bind::TObjectWrapper<ApiMedia::AvcDecoder_TypeName,PopH264::TInstance>
+class TAvcDecoderWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::AvcDecoder,PopH264::TInstance>
 {
 public:
 	TAvcDecoderWrapper(Bind::TContext& Context) :
@@ -107,7 +107,7 @@ public:
 
 
 
-class TH264EncoderWrapper : public Bind::TObjectWrapper<ApiMedia::H264Encoder_TypeName,X264::TInstance>
+class TH264EncoderWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::H264Encoder,X264::TInstance>
 {
 public:
 	TH264EncoderWrapper(Bind::TContext& Context) :

@@ -24,7 +24,7 @@ public:
 };
 
 
-class TDllWrapper : public Bind::TObjectWrapper<ApiDll::Library_TypeName,Soy::TRuntimeLibrary>
+class TDllWrapper : public Bind::TObjectWrapper<ApiDll::BindType::Library,Soy::TRuntimeLibrary>
 {
 public:
 	TDllWrapper(Bind::TContext& Context) :

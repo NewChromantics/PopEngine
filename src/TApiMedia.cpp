@@ -143,6 +143,7 @@ public:
 	void			PushFrame(const SoyPixelsImpl& Pixels, int32_t FrameTime);
 	TPacket			PopPacket();
 	bool			HasPackets() {	return !mPackets.IsEmpty();	}
+	std::string		GetVersion() const;
 
 private:
 	void			AllocEncoder(const SoyPixelsMeta& Meta);
@@ -186,7 +187,7 @@ void ApiMedia::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindGlobalFunction<EnumDevices_FunctionName>( ApiMedia::EnumDevices, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumDevices>( ApiMedia::EnumDevices, Namespace );
 
 	Context.BindObjectType<TPopCameraDeviceWrapper>( Namespace );
 
@@ -242,7 +243,7 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::Decode_FunctionName>( Decode );
+	Template.BindFunction<ApiMedia::BindFunction::Decode>( Decode );
 }
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
@@ -578,7 +579,7 @@ void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 
 void TPopCameraDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::GetNextFrame_FunctionName>( GetNextFrame );
+	Template.BindFunction<ApiMedia::BindFunction::GetNextFrame>( GetNextFrame );
 }
 
 
@@ -861,12 +862,16 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 
 	mEncoderThread.reset(new SoyWorkerJobThread("H264 encoder"));
 	mEncoderThread->Start();
+	
+	
+	//	set meta (can we do this on the static object/constructor?)
+	Params.ThisObject().SetString("Version", mEncoder->GetVersion() );
 }
 
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::Encode_FunctionName>(&TH264EncoderWrapper::Encode);
-	Template.BindFunction<ApiMedia::GetNextPacket_FunctionName>(&TH264EncoderWrapper::GetNextPacket);
+	Template.BindFunction<ApiMedia::BindFunction::Encode>(&TH264EncoderWrapper::Encode);
+	Template.BindFunction<ApiMedia::BindFunction::GetNextPacket>(&TH264EncoderWrapper::GetNextPacket);
 }
 
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
@@ -954,6 +959,14 @@ X264::TInstance::TInstance(size_t PresetValue)
 X264::TInstance::~TInstance()
 {
 
+}
+
+
+std::string X264::TInstance::GetVersion() const
+{
+	std::stringstream Version;
+	Version << "x264 " << X264_POINTVER;
+	return Version.str();
 }
 
 void X264::Log(void *data, int i_level, const char *psz, va_list args)
@@ -1109,7 +1122,8 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	//		so just keep calling until we get 0
 	//	maybe add a safety iteration check
 	//	gr: need this on OSX (latest x264) but on windows (old build) every subsequent frame fails
-	if (X264_REV > 2969)
+	//	gr: this was backwards? brew (old 2917) DID need to flush?
+	if (X264_REV < 2969)
 	{
 		while (true)
 		{

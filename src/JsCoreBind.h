@@ -133,6 +133,7 @@ namespace JsCore
 
 
 std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in);
+std::ostream& operator<<(std::ostream &out,const JSType& in);
 
 
 //	major abstraction from V8 to JSCore
@@ -342,6 +343,7 @@ public:
 	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
+	virtual void			SetArgumentInt(size_t Index,int32_t Value) bind_override;
 	virtual void			SetArgumentBool(size_t Index,bool Value) bind_override;
 	virtual void			SetArgumentObject(size_t Index,JsCore::TObject& Value) bind_override;
 	virtual void			SetArgumentFunction(size_t Index,JsCore::TFunction& Value) bind_override;
@@ -438,13 +440,20 @@ public:
 	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
 	virtual void			SetArray(const std::string& Name,JsCore::TArray& Array) bind_override;
 	template<typename TYPE>
-	inline void				SetArray(const std::string& Name,ArrayBridge<TYPE>&& Values) bind_override
+	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>&& Values) bind_override
 	{
 		auto Array = JsCore::GetArray( mContext, Values );
 		auto ArrayValue = JsCore::GetValue( mContext, Array );
 		SetMember( Name, ArrayValue );
 	}
-
+	template<typename TYPE>
+	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>& Values) bind_override
+	{
+		auto Array = JsCore::GetArray( mContext, Values );
+		auto ArrayValue = JsCore::GetValue( mContext, Array );
+		SetMember( Name, ArrayValue );
+	}
+	
 	//	Jscore specific
 private:
 	JSValueRef		GetMember(const std::string& MemberName);

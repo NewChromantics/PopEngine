@@ -11,15 +11,14 @@
 #include "SoyPng.h"
 
 
-DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
-
 //	system stuff
-//extern const char LoadFileAsString_FunctionName[] = "LoadFileAsString";
-extern const char LoadFileAsArrayBuffer_FunctionName[] = "LoadFileAsArrayBuffer";
-extern const char WriteStringToFile_FunctionName[] = "WriteStringToFile";
-extern const char WriteToFile_FunctionName[] = "WriteToFile";
-extern const char SetTimeout_FunctionName[] = "SetTimeout";
-extern const char GetTimeNowMs_FunctionName[] = "GetTimeNowMs";
+DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
+DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
+DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
+DEFINE_BIND_FUNCTIONNAME(WriteToFile);
+DEFINE_BIND_FUNCTIONNAME(GetFilenames);
+DEFINE_BIND_FUNCTIONNAME(SetTimeout);
+DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);
 
 //	engine stuff
 DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
@@ -49,10 +48,6 @@ DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
 
 
 
-
-
-const char Image_TypeName[] = "Image";
-
 DEFINE_BIND_FUNCTIONNAME(Alloc);
 DEFINE_BIND_FUNCTIONNAME(LoadFile);
 DEFINE_BIND_FUNCTIONNAME(Create);
@@ -77,6 +72,7 @@ namespace ApiPop
 {
 	const char Namespace[] = "Pop";
 	DEFINE_BIND_TYPENAME(AsyncLoop);
+	DEFINE_BIND_TYPENAME(Image);
 
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
@@ -85,6 +81,7 @@ namespace ApiPop
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
 	static void 	WriteToFile(Bind::TCallback& Params);
+	static void 	GetFilenames(Bind::TCallback& Params);
 	static void 	GarbageCollect(Bind::TCallback& Params);
 	static void 	SetTimeout(Bind::TCallback& Params);
 	static void		Sleep(Bind::TCallback& Params);
@@ -473,7 +470,10 @@ void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 	auto Filename = Params.GetArgumentFilename(0);
 	
 	std::string Contents;
-	Soy::FileToString( Filename, Contents);
+	{
+		Soy::TScopeTimerPrint Timer( (std::string("Loading file[string] ") + Filename).c_str(),5);
+		Soy::FileToString( Filename, Contents);
+	}
 	Params.Return( Contents );
 }
 
@@ -483,8 +483,11 @@ void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 	auto Filename = Params.GetArgumentFilename(0);
 
 	Array<char> FileContents;
-	Soy::FileToArray( GetArrayBridge(FileContents), Filename );
-
+	{
+		Soy::TScopeTimerPrint Timer( (std::string("Loading file[binary] ") + Filename).c_str(),5);
+		Soy::FileToArray( GetArrayBridge(FileContents), Filename );
+	}
+	
 	//	can't do typed arrays of signed ints, so convert
 	auto FileContentsu8 = GetArrayBridge(FileContents).GetSubArray<uint8_t>(0,FileContents.GetDataSize());
 
@@ -526,6 +529,30 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename );
 }
 
+
+void ApiPop::GetFilenames(Bind::TCallback& Params)
+{
+	//	if no directory, list all files
+	std::string Directory = Params.mContext.GetResolvedFilename("");
+	if ( !Params.IsArgumentUndefined(0) )
+		Directory = Params.GetArgumentFilename(0);
+	
+	//	recurse
+	Directory += "/**";
+	
+	//	os list all files
+	Array<std::string> Filenames;
+	auto EnumFile = [&](const std::string& Filename)
+	{
+		//	todo: make filename an api-relative filename
+		Filenames.PushBack(Filename);
+	};
+	
+	Platform::EnumFiles( Directory, EnumFile );
+
+	Params.Return( GetArrayBridge(Filenames) );
+}
+	
 void ApiPop::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
@@ -533,33 +560,34 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TImageWrapper>( Namespace );
 	Context.BindObjectType<TAsyncLoopWrapper>( Namespace );
 	
-	Context.BindGlobalFunction<CreateTestPromise_FunctionName>( CreateTestPromise, Namespace );
-	Context.BindGlobalFunction<Debug_FunctionName>( Debug, Namespace );
-	Context.BindGlobalFunction<CompileAndRun_FunctionName>(CompileAndRun, Namespace );
-	Context.BindGlobalFunction<LoadFileAsString_FunctionName>(LoadFileAsString, Namespace );
-	Context.BindGlobalFunction<LoadFileAsArrayBuffer_FunctionName>(LoadFileAsArrayBuffer, Namespace );
-	Context.BindGlobalFunction<WriteStringToFile_FunctionName>(WriteStringToFile, Namespace );
-	Context.BindGlobalFunction<WriteToFile_FunctionName>(WriteToFile, Namespace );
-	Context.BindGlobalFunction<GarbageCollect_FunctionName>(GarbageCollect, Namespace );
-	Context.BindGlobalFunction<SetTimeout_FunctionName>(SetTimeout, Namespace );
-	Context.BindGlobalFunction<Sleep_FunctionName>(Sleep, Namespace );
-	Context.BindGlobalFunction<Yield_FunctionName>( Yield, Namespace );
-	Context.BindGlobalFunction<IsDebuggerAttached_FunctionName>( IsDebuggerAttached, Namespace );
-	Context.BindGlobalFunction<ThreadTest_FunctionName>( ThreadTest, Namespace );
-	Context.BindGlobalFunction<ExitApplication_FunctionName>( ExitApplication, Namespace );
-	Context.BindGlobalFunction<GetTimeNowMs_FunctionName>(GetTimeNowMs, Namespace );
-	Context.BindGlobalFunction<GetComputerName_FunctionName>(GetComputerName, Namespace );
-	Context.BindGlobalFunction<ShowFileInFinder_FunctionName>(ShowFileInFinder, Namespace );
-	Context.BindGlobalFunction<GetImageHeapSize_FunctionName>(GetImageHeapSize, Namespace );
-	Context.BindGlobalFunction<GetImageHeapCount_FunctionName>(GetImageHeapCount, Namespace );
-	Context.BindGlobalFunction<GetHeapSize_FunctionName>(GetHeapSize, Namespace );
-	Context.BindGlobalFunction<GetHeapCount_FunctionName>(GetHeapCount, Namespace );
-	Context.BindGlobalFunction<GetHeapObjects_FunctionName>(GetHeapObjects, Namespace );
-	Context.BindGlobalFunction<GetCrtHeapSize_FunctionName>(GetCrtHeapSize, Namespace );
-	Context.BindGlobalFunction<GetCrtHeapCount_FunctionName>(GetCrtHeapCount, Namespace );
-	Context.BindGlobalFunction<EnumScreens_FunctionName>(EnumScreens, Namespace );
-	Context.BindGlobalFunction<GetExeDirectory_FunctionName>(GetExeDirectory, Namespace );
-	Context.BindGlobalFunction<GetExeArguments_FunctionName>(GetExeArguments, Namespace );
+	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
+	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
+	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBuffer>(LoadFileAsArrayBuffer, Namespace );
+	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
+	Context.BindGlobalFunction<BindFunction::WriteToFile>(WriteToFile, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetFilenames>(GetFilenames, Namespace );
+	Context.BindGlobalFunction<BindFunction::GarbageCollect>(GarbageCollect, Namespace );
+	Context.BindGlobalFunction<BindFunction::SetTimeout>(SetTimeout, Namespace );
+	Context.BindGlobalFunction<BindFunction::Sleep>(Sleep, Namespace );
+	Context.BindGlobalFunction<BindFunction::Yield>( Yield, Namespace );
+	Context.BindGlobalFunction<BindFunction::IsDebuggerAttached>( IsDebuggerAttached, Namespace );
+	Context.BindGlobalFunction<BindFunction::ThreadTest>( ThreadTest, Namespace );
+	Context.BindGlobalFunction<BindFunction::ExitApplication>( ExitApplication, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetTimeNowMs>(GetTimeNowMs, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetComputerName>(GetComputerName, Namespace );
+	Context.BindGlobalFunction<BindFunction::ShowFileInFinder>(ShowFileInFinder, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetImageHeapSize>(GetImageHeapSize, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetImageHeapCount>(GetImageHeapCount, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHeapSize>(GetHeapSize, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHeapCount>(GetHeapCount, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHeapObjects>(GetHeapObjects, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetCrtHeapSize>(GetCrtHeapSize, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetCrtHeapCount>(GetCrtHeapCount, Namespace );
+	Context.BindGlobalFunction<BindFunction::EnumScreens>(EnumScreens, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetExeDirectory>(GetExeDirectory, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetExeArguments>(GetExeArguments, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
@@ -569,9 +597,6 @@ TImageWrapper::~TImageWrapper()
 
 void TImageWrapper::Construct(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TImageWrapper>();
-
-	
 	if ( Params.IsArgumentString(1) )
 		mName = Params.GetArgumentString(1);
 	else
@@ -614,22 +639,22 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 
 void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Alloc_FunctionName>( Alloc );
-	Template.BindFunction<LoadFile_FunctionName>( LoadFile );
-	Template.BindFunction<Flip_FunctionName>( Flip );
-	Template.BindFunction<GetWidth_FunctionName>( GetWidth );
-	Template.BindFunction<GetHeight_FunctionName>( GetHeight );
-	Template.BindFunction<GetRgba8_FunctionName>( GetRgba8 );
-	Template.BindFunction<GetPixelBuffer_FunctionName>( GetPixelBuffer );
-	Template.BindFunction<SetLinearFilter_FunctionName>( SetLinearFilter );
-	Template.BindFunction<Copy_FunctionName>( Copy );
-	Template.BindFunction<WritePixels_FunctionName>( WritePixels );
-	Template.BindFunction<Resize_FunctionName>( Resize );
-	Template.BindFunction<Clip_FunctionName>( Clip );
-	Template.BindFunction<Clear_FunctionName>( Clear );
-	Template.BindFunction<SetFormat_FunctionName>( SetFormat );
-	Template.BindFunction<GetFormat_FunctionName>( GetFormat );
-	Template.BindFunction<GetPngData_FunctionName>( &TImageWrapper::GetPngData );
+	Template.BindFunction<BindFunction::Alloc>( Alloc );
+	Template.BindFunction<BindFunction::LoadFile>( &TImageWrapper::LoadFile );
+	Template.BindFunction<BindFunction::Flip>( Flip );
+	Template.BindFunction<BindFunction::GetWidth>( GetWidth );
+	Template.BindFunction<BindFunction::GetHeight>( GetHeight );
+	Template.BindFunction<BindFunction::GetRgba8>( GetRgba8 );
+	Template.BindFunction<BindFunction::GetPixelBuffer>( GetPixelBuffer );
+	Template.BindFunction<BindFunction::SetLinearFilter>( SetLinearFilter );
+	Template.BindFunction<BindFunction::Copy>( Copy );
+	Template.BindFunction<BindFunction::WritePixels>( WritePixels );
+	Template.BindFunction<BindFunction::Resize>( Resize );
+	Template.BindFunction<BindFunction::Clip>( Clip );
+	Template.BindFunction<BindFunction::Clear>( Clear );
+	Template.BindFunction<BindFunction::SetFormat>( SetFormat );
+	Template.BindFunction<BindFunction::GetFormat>( GetFormat );
+	Template.BindFunction<BindFunction::GetPngData>( &TImageWrapper::GetPngData );
 }
 
 
@@ -682,15 +707,31 @@ void TImageWrapper::Alloc(Bind::TCallback& Params)
 
 void TImageWrapper::LoadFile(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TImageWrapper>();
-	
 	auto Filename = Params.GetArgumentFilename(0);
+
+	auto OnMetaFound = [&](const std::string& Section,const ArrayBridge<uint8_t>& Data)
+	{
+		auto This = Params.ThisObject();
+		
+		//	add meta if it's not there
+		if ( !This.HasMember("Meta") )
+			This.SetObjectFromString("Meta","{}");
+		
+		//	set this section as a meta
+		auto ThisMeta = This.GetObject("Meta");
+		if ( This.HasMember(Section) )
+			std::Debug << "Overwriting image meta section " << Section << std::endl;
 	
-	This.DoLoadFile( Filename );
+		ThisMeta.SetArray( Section, Data );
+	};
+	
+	DoLoadFile( Filename, OnMetaFound );
 }
 
-void TImageWrapper::DoLoadFile(const std::string& Filename)
+void TImageWrapper::DoLoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound)
 {
+	//	gr: feels like this function should be a generic soy thing
+	
 	//	load file
 	Array<char> Bytes;
 	Soy::FileToArray( GetArrayBridge(Bytes), Filename );
@@ -703,7 +744,7 @@ void TImageWrapper::DoLoadFile(const std::string& Filename)
 	
 	if ( Soy::StringEndsWith( Filename, Png::FileExtensions, false ) )
 	{
-		Png::Read( *NewPixels, BytesBuffer );
+		Png::Read( *NewPixels, BytesBuffer, OnMetaFound );
 		mPixels = NewPixels;
 		OnPixelsChanged();
 		return;
@@ -789,9 +830,6 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 	auto Width = Params.GetArgumentInt(0);
 	auto Height = Params.GetArgumentInt(1);
 	
-	Array<uint8_t> Rgba;
-	Params.GetArgumentArray(2,GetArrayBridge(Rgba) );
-	
 	auto Format = SoyPixelsFormat::RGBA;
 	if ( !Params.IsArgumentUndefined(3) )
 	{
@@ -799,9 +837,28 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 		Format = SoyPixelsFormat::ToType( FormatStr );
 	}
 	
-	auto* Rgba8 = static_cast<uint8_t*>(Rgba.GetArray());
-	auto DataSize = Rgba.GetDataSize();
-	SoyPixelsRemote NewPixels( Rgba8, Width, Height, DataSize, Format );
+	Array<uint8_t> PixelBuffer8;
+	if ( SoyPixelsFormat::IsFloatChannel(Format) )
+	{
+		Array<float> Floats;
+		Params.GetArgumentArray(2, GetArrayBridge(Floats) );
+		auto Floats8 = GetArrayBridge(Floats).GetSubArray<uint8_t>( 0, Floats.GetDataSize() );
+		PixelBuffer8.Copy( Floats8 );
+	}
+	else if ( SoyPixelsFormat::GetBytesPerChannel(Format) == sizeof(uint8_t) )
+	{
+		Params.GetArgumentArray(2,GetArrayBridge(PixelBuffer8) );
+	}
+	else
+	{
+		std::stringstream Error;
+		Error << "Format for pixels which is not float or 8bit, not handled";
+		throw Soy_AssertException(Error);
+	}
+	
+	auto DataSize = PixelBuffer8.GetDataSize();
+	auto* Pixels = PixelBuffer8.GetArray();
+	SoyPixelsRemote NewPixels( Pixels, Width, Height, DataSize, Format );
 	This.SetPixels(NewPixels);
 }
 
@@ -1431,7 +1488,7 @@ void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>>
 
 void TAsyncLoopWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<Iteration_FunctionName>( Iteration );
+	Template.BindFunction<BindFunction::Iteration>( Iteration );
 }
 	
 void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)

@@ -29,7 +29,7 @@ namespace ApiGui
 
 
 
-class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::Gui_Window_TypeName,SoyWindow>
+class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Gui_Window,SoyWindow>
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -48,7 +48,7 @@ public:
 };
 
 
-class ApiGui::TSliderWrapper : public Bind::TObjectWrapper<ApiGui::Slider_TypeName,SoySlider>
+class ApiGui::TSliderWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Slider,SoySlider>
 {
 public:
 	TSliderWrapper(Bind::TContext& Context) :
@@ -71,7 +71,7 @@ public:
 
 
 
-class ApiGui::TLabelWrapper : public Bind::TObjectWrapper<ApiGui::Label_TypeName,SoyLabel>
+class ApiGui::TLabelWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Label,SoyLabel>
 {
 public:
 	TLabelWrapper(Bind::TContext& Context) :
@@ -89,7 +89,7 @@ public:
 };
 
 
-class ApiGui::TTextBoxWrapper : public Bind::TObjectWrapper<ApiGui::TextBox_TypeName,SoyTextBox>
+class ApiGui::TTextBoxWrapper : public Bind::TObjectWrapper<ApiGui::BindType::TextBox,SoyTextBox>
 {
 public:
 	TTextBoxWrapper(Bind::TContext& Context) :
@@ -110,7 +110,7 @@ public:
 
 
 
-class ApiGui::TTickBoxWrapper : public Bind::TObjectWrapper<ApiGui::TickBox_TypeName,SoyTickBox>
+class ApiGui::TTickBoxWrapper : public Bind::TObjectWrapper<ApiGui::BindType::TickBox,SoyTickBox>
 {
 public:
 	TTickBoxWrapper(Bind::TContext& Context) :

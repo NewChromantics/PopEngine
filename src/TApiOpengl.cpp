@@ -7,12 +7,19 @@
 namespace ApiOpengl
 {
 	const char Namespace[] = "Pop.Opengl";
+
+	
+	DEFINE_BIND_TYPENAME(Window);
+	DEFINE_BIND_TYPENAME(Shader);
+	DEFINE_BIND_TYPENAME(TriangleBuffer);
 }
 
-const char Opengl_Window_TypeName[] = "Window";
-const char Opengl_Shader_TypeName[] = "Shader";
+
+DEFINE_BIND_TYPENAME(Window);
+DEFINE_BIND_TYPENAME(Shader);
 
 DEFINE_BIND_FUNCTIONNAME(DrawQuad);
+DEFINE_BIND_FUNCTIONNAME(DrawGeometry);
 DEFINE_BIND_FUNCTIONNAME(ClearColour);
 DEFINE_BIND_FUNCTIONNAME(EnableBlend);
 DEFINE_BIND_FUNCTIONNAME(SetViewport);
@@ -32,6 +39,7 @@ void ApiOpengl::Bind(Bind::TContext& Context)
 
 	Context.BindObjectType<TWindowWrapper>( Namespace );
 	Context.BindObjectType<TShaderWrapper>( Namespace );
+	Context.BindObjectType<TTriangleBufferWrapper>( Namespace );
 }
 
 
@@ -97,9 +105,9 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		//	restore state after functions above, which might still mess around with things like viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 	};
-	Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
+	//Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
-	
+
 	//	render
 	auto ExecuteRenderCallback = [&](Bind::TLocalContext& Context)
 	{
@@ -137,7 +145,19 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		CallbackParams.SetArgumentObject( 0, RenderTargetObject );
 		RenderCallbackFunc.Call( CallbackParams );
 	};
-	ExecuteRenderCallback( Params.mLocalContext );
+	
+	try
+	{
+		UnbindCurrent();
+		ExecuteRenderCallback( Params.mLocalContext );
+		RebindCurrent();
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
+		RebindCurrent();
+		throw;
+	}
 }
 
 
@@ -371,40 +391,65 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 
 void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWindowWrapper>();
-	
-	auto& OpenglContext = *This.mWindow->GetContext();
+	auto& OpenglContext = *mWindow->GetContext();
 	if ( !OpenglContext.IsLockedToThisThread() )
 		throw Soy::AssertException("Function not being called on opengl thread");
 
+	auto Arg_Shader = 0;
+	auto Arg_OnShaderFunc = 1;
 	
-	if ( Params.GetArgumentCount() >= 1 )
-	{
-		auto& Shader = Params.GetArgumentPointer<TShaderWrapper>(0);
-		auto ShaderObject = Params.GetArgumentObject(0);
+	auto& Shader = Params.GetArgumentPointer<TShaderWrapper>(Arg_Shader);
+	auto ShaderObject = Params.GetArgumentObject(Arg_Shader);
 
-		std::function<void()> OnShaderBind = []{};
-		if ( !Params.IsArgumentUndefined(1) )
-		{
-			OnShaderBind = [&]
-			{
-				auto CallbackFunc = Params.GetArgumentFunction(1);
-				auto This = Params.ThisObject();
-				Bind::TCallback CallbackParams( Params.mLocalContext );
-				CallbackParams.SetThis( This );
-				CallbackParams.SetArgumentObject(0,ShaderObject);
-				CallbackFunc.Call( CallbackParams );
-			};
-		}
-		
-		This.mWindow->DrawQuad( *Shader.mShader, OnShaderBind );
-	}
-	else
+	std::function<void()> OnShaderBind = []{};
+	if ( !Params.IsArgumentUndefined(Arg_OnShaderFunc) )
 	{
-		This.mWindow->DrawQuad();
+		OnShaderBind = [&]
+		{
+			auto CallbackFunc = Params.GetArgumentFunction(Arg_OnShaderFunc);
+			auto This = Params.ThisObject();
+			Bind::TCallback CallbackParams( Params.mLocalContext );
+			CallbackParams.SetThis( This );
+			CallbackParams.SetArgumentObject(0,ShaderObject);
+			CallbackFunc.Call( CallbackParams );
+		};
 	}
+	
+	auto& Geometry = mWindow->GetBlitQuad();
+	mWindow->DrawGeometry( Geometry, *Shader.mShader, OnShaderBind );
 }
 
+
+void TWindowWrapper::DrawGeometry(Bind::TCallback& Params)
+{
+	auto& OpenglContext = *mWindow->GetContext();
+	if ( !OpenglContext.IsLockedToThisThread() )
+		throw Soy::AssertException("Function not being called on opengl thread");
+	
+	auto Arg_Geometry = 0;
+	auto Arg_Shader = 1;
+	auto Arg_OnShaderFunc = 2;
+	
+	auto& Geometry = Params.GetArgumentPointer<ApiOpengl::TTriangleBufferWrapper>(Arg_Geometry);
+	auto& Shader = Params.GetArgumentPointer<TShaderWrapper>(Arg_Shader);
+	auto ShaderObject = Params.GetArgumentObject(Arg_Shader);
+	
+	std::function<void()> OnShaderBind = []{};
+	if ( !Params.IsArgumentUndefined(Arg_OnShaderFunc) )
+	{
+		OnShaderBind = [&]
+		{
+			auto CallbackFunc = Params.GetArgumentFunction(Arg_OnShaderFunc);
+			auto This = Params.ThisObject();
+			Bind::TCallback CallbackParams( Params.mLocalContext );
+			CallbackParams.SetThis( This );
+			CallbackParams.SetArgumentObject(0,ShaderObject);
+			CallbackFunc.Call( CallbackParams );
+		};
+	}
+	
+	mWindow->DrawGeometry( *Geometry.mGeometry, *Shader.mShader, OnShaderBind );
+}
 
 void TWindowWrapper::ClearColour(Bind::TCallback& Params)
 {
@@ -762,16 +807,17 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 
 void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<DrawQuad_FunctionName>( DrawQuad );
-	Template.BindFunction<SetViewport_FunctionName>( SetViewport );
-	Template.BindFunction<ClearColour_FunctionName>( ClearColour );
-	Template.BindFunction<EnableBlend_FunctionName>( EnableBlend );
-	Template.BindFunction<Render_FunctionName>( Render );
-	//Template.BindFunction<RenderChain_FunctionName>( RenderChain );
-	Template.BindFunction<RenderToRenderTarget_FunctionName>( RenderToRenderTarget );
-	Template.BindFunction<GetScreenRect_FunctionName>( GetScreenRect );
-	Template.BindFunction<SetFullscreen_FunctionName>( SetFullscreen );
-	Template.BindFunction<IsFullscreen_FunctionName>( IsFullscreen );
+	Template.BindFunction<BindFunction::DrawQuad>( &TWindowWrapper::DrawQuad );
+	Template.BindFunction<BindFunction::DrawGeometry>( &TWindowWrapper::DrawGeometry );
+	Template.BindFunction<BindFunction::SetViewport>( SetViewport );
+	Template.BindFunction<BindFunction::ClearColour>( ClearColour );
+	Template.BindFunction<BindFunction::EnableBlend>( EnableBlend );
+	Template.BindFunction<BindFunction::Render>( Render );
+	//Template.BindFunction<BindFunction::RenderChain>( RenderChain );
+	Template.BindFunction<BindFunction::RenderToRenderTarget>( RenderToRenderTarget );
+	Template.BindFunction<BindFunction::GetScreenRect>( GetScreenRect );
+	Template.BindFunction<BindFunction::SetFullscreen>( SetFullscreen );
+	Template.BindFunction<BindFunction::IsFullscreen>( IsFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
@@ -827,7 +873,7 @@ Opengl::TGeometry& TRenderWindow::GetBlitQuad()
 		Mesh.mVertexes[1].uv = vec2f( 1, 0);
 		Mesh.mVertexes[2].uv = vec2f( 1, 1);
 		Mesh.mVertexes[3].uv = vec2f( 0, 1);
-		Array<size_t> Indexes;
+		Array<uint32_t> Indexes;
 		
 		Indexes.PushBack( 0 );
 		Indexes.PushBack( 1 );
@@ -852,61 +898,15 @@ Opengl::TGeometry& TRenderWindow::GetBlitQuad()
 	return *mBlitQuad;
 }
 
-void TRenderWindow::DrawQuad()
+
+void TRenderWindow::DrawGeometry(Opengl::TGeometry& Geometry,Opengl::TShader& Shader,std::function<void()>& OnBind)
 {
-	auto& OpenglContext = *this->GetContext();
-	if ( !OpenglContext.IsLockedToThisThread() )
-		throw Soy::AssertException("Function not being called on opengl thread");
-
-	//	allocate objects we need!
-	if ( !mDebugShader )
-	{
-		auto& BlitQuad = GetBlitQuad();
-		auto& Context = *GetContext();
-		
-		auto VertShader =
-		"#version 410\n"
-		//"uniform vec4 Rect;\n"
-		"uniform vec4 VertexRect = vec4(0,0,1,1);\n"
-		"in vec2 TexCoord;\n"
-		"out vec2 uv;\n"
-		"void main()\n"
-		"{\n"
-		"   gl_Position = vec4(TexCoord.x,TexCoord.y,0,1);\n"
-		"   gl_Position.xy *= VertexRect.zw;\n"
-		"   gl_Position.xy += VertexRect.xy;\n"
-		//	move to view space 0..1 to -1..1
-		"	gl_Position.xy *= vec2(2,2);\n"
-		"	gl_Position.xy -= vec2(1,1);\n"
-		"	uv = vec2(TexCoord.x,1-TexCoord.y);\n"
-		"}\n";
-		auto FragShader =
-		"#version 410\n"
-		"in vec2 uv;\n"
-		//"out vec4 FragColor;\n"
-		"void main()\n"
-		"{\n"
-		"	gl_FragColor = vec4(uv.x,uv.y,0,1);\n"
-		"}\n";
-		
-		mDebugShader.reset( new Opengl::TShader( VertShader, FragShader, "Blit shader", Context ) );
-	}
-	
-	DrawQuad( *mDebugShader, []{} );
-}
-
-
-void TRenderWindow::DrawQuad(Opengl::TShader& Shader,std::function<void()> OnBind)
-{
-	auto& BlitQuad = GetBlitQuad();
-	
 	//	do bindings
 	auto ShaderBound = Shader.Bind();
 	OnBind();
-	BlitQuad.Draw();
+	Geometry.Draw();
 	Opengl_IsOkay();
 }
-
 
 
 
@@ -1036,7 +1036,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 
 void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<SetUniform_FunctionName>( SetUniform );
+	Template.BindFunction<BindFunction::SetUniform>( SetUniform );
 }
 
 void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)
@@ -1057,3 +1057,129 @@ void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,co
 		pContext->QueueDelete( mShader );
 	};
 }
+
+
+
+
+ApiOpengl::TTriangleBufferWrapper::~TTriangleBufferWrapper()
+{
+	//	todo: opengl deferrefed delete
+}
+
+
+void ApiOpengl::TTriangleBufferWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+}
+
+void ApiOpengl::TTriangleBufferWrapper::Construct(Bind::TCallback& Params)
+{
+	//	access to context!
+	auto& RenderContext = Params.GetArgumentPointer<TOpenglContextWrapper>(0);
+	
+	auto VertexName = Params.GetArgumentString(1);
+
+	Array<float> VertexData;
+	{
+		Soy::TScopeTimerPrint Timer("Getting vertex data",1);
+		Params.GetArgumentArray(2, GetArrayBridge(VertexData) );
+	}
+	auto VertexSize = Params.GetArgumentInt(3);
+
+	auto VertexCount = VertexData.GetSize() / VertexSize;
+	auto VertexDataOverflow = VertexData.GetSize() % VertexSize;
+	if ( VertexDataOverflow > 0 )
+	{
+		std::stringstream Error;
+		Error << "Vertex data (x" << VertexData.GetSize() << ") misaligned with size (x" << VertexSize << ")";
+		throw Soy_AssertException(Error);
+	}
+	if ( VertexCount < 3 )
+	{
+		std::stringstream Error;
+		Error << "Vertex data (x" << VertexData.GetSize() << ") needs to make at least 3 vertexes (got " << VertexCount << ")";
+		throw Soy_AssertException(Error);
+	}
+
+	Array<uint32_t> IndexData;
+	{
+		Soy::TScopeTimerPrint Timer("Getting index data",1);
+		Params.GetArgumentArray(4, GetArrayBridge(IndexData) );
+	}
+	
+	//	gr: we could save this data and defer it to opengl-thread access
+	CreateGeometry( VertexName, GetArrayBridge(VertexData), VertexSize, GetArrayBridge(IndexData) );
+}
+
+
+template<typename VERTEXTYPE>
+VERTEXTYPE GetVertex(ArrayBridge<float>& VertexFloats,int Index);
+
+template<>
+vec2f GetVertex<vec2f>(ArrayBridge<float>& VertexFloats,int Index)
+{
+	Index *= 2;
+	return vec2f( VertexFloats[Index+0], VertexFloats[Index+1] );
+}
+
+template<>
+vec3f GetVertex<vec3f>(ArrayBridge<float>& VertexFloats,int Index)
+{
+	Index *= 3;
+	return vec3f( VertexFloats[Index+0], VertexFloats[Index+1], VertexFloats[Index+2] );
+}
+
+template<>
+vec4f GetVertex<vec4f>(ArrayBridge<float>& VertexFloats,int Index)
+{
+	Index *= 4;
+	return vec4f( VertexFloats[Index+0], VertexFloats[Index+1], VertexFloats[Index+2], VertexFloats[Index+3] );
+}
+
+template<typename VERTEXTYPE,size_t VERTEXSIZE>
+Opengl::TGeometry* CreateGeometry(const std::string& VertexAttribName,ArrayBridge<float>& VertexFloats,ArrayBridge<uint32_t>& Indexes)
+{
+	//	make mesh
+	const int VertexCount = VertexFloats.GetSize() / VERTEXSIZE;
+	
+	Array<VERTEXTYPE> Vertexes;
+	for ( int i=0;	i<VertexCount;	i++ )
+		Vertexes.PushBack( GetVertex<VERTEXTYPE>( VertexFloats, i ) );
+	
+	//	for each part of the vertex, add an attribute to describe the overall vertex
+	SoyGraphics::TGeometryVertex Vertex;
+	auto& UvAttrib = Vertex.mElements.PushBack();
+	UvAttrib.mName = VertexAttribName;
+	UvAttrib.SetType<VERTEXTYPE>();
+	UvAttrib.mIndex = 0;	//	gr: does this matter?
+	
+	auto MeshData = GetArrayBridge(Vertexes).template GetSubArray<uint8_t>( 0, Vertexes.GetDataSize() );
+
+	return new Opengl::TGeometry( GetArrayBridge(MeshData), GetArrayBridge(Indexes), Vertex );
+}
+
+
+void ApiOpengl::TTriangleBufferWrapper::CreateGeometry(const std::string& VertexName,ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes)
+{
+	Soy::TScopeTimerPrint Timer("CreateGeometry",1);
+
+	if ( VertexSize == 2 )
+	{
+		mGeometry.reset( ::CreateGeometry<vec2f,2>( VertexName, VertexFloats, Indexes ) );
+		return;
+	}
+	
+	if ( VertexSize == 3 )
+	{
+		mGeometry.reset( ::CreateGeometry<vec3f,3>( VertexName, VertexFloats, Indexes ) );
+		return;
+	}
+	
+	if ( VertexSize == 4 )
+	{
+		mGeometry.reset( ::CreateGeometry<vec4f,4>( VertexName, VertexFloats, Indexes ) );
+		return;
+	}
+	
+	throw Soy::AssertException("Currently only supporting 2,3,4 vertex sizes");
+}
+
