@@ -444,6 +444,9 @@
     <ClInclude Include="..\src\SoyLib\src\SoyPng.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -821,6 +824,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>

@@ -391,6 +391,17 @@ Chakra::TVirtualMachine& Chakra::GetVirtualMachine(JSGlobalContextRef Context)
 
 Chakra::TVirtualMachine::TVirtualMachine(const std::string& RuntimePath)
 {
+	//	if windows 10 is lower than a certain version, the edge chakra doesn't support async/ES8
+	//	we should abort? or warn?
+#if defined(TARGET_WINDOWS)
+	auto WinVersion = Platform::GetOsVersion();
+	//if (WinVersion < Soy::TVersion(10, 0, 17134))	//	this version definitely okay
+	if (WinVersion <= Soy::TVersion(10, 0, 14393))	//	this version definitely too old
+	{
+		throw Soy::AssertException("Windows version too old for ES8 features");
+	}
+#endif
+
 	JsRuntimeAttributes Attributes = JsRuntimeAttributeNone;
 	JsThreadServiceCallback ThreadCallback = nullptr;
 	auto Error = JsCreateRuntime( Attributes, ThreadCallback, &mRuntime );

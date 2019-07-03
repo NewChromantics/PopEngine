@@ -85,6 +85,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyBase64.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyDebug.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyHttp.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyImage.h" />
@@ -247,6 +248,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />
@@ -778,6 +780,7 @@
     <CustomBuildStep />
     <CustomBuildStep />
     <CustomBuild />
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
     <ClCompile>
