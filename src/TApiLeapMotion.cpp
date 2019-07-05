@@ -10,11 +10,36 @@ namespace ApiLeapMotion
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
 }
 
+
+namespace Soy
+{
+	constexpr uint64_t	StringToEightcc(const char String[]);
+	std::string			EightccToString(uint64_t Eightcc);
+}
+
+
+//	needs to be defined before use
+constexpr uint64_t Soy::StringToEightcc(const char String[])
+{
+	uint64_t Value64 = 0;
+	for ( auto i=0;	i<8;	i++ )
+	{
+		auto Char = String[i];
+		if ( Char == 0 )
+		break;
+		auto Char64 = static_cast<uint64_t>(Char);
+		auto Shift = i;
+		Value64 |= Char64 << (8*Shift);
+	}
+	return Value64;
+}
+
+
 namespace LeapMotion
 {
 	class TFrame;
 	class THand;
-	class TJoint;
+	class TJointPosition;
 	
 	//	named to be like an XR state
 	namespace TState
@@ -27,14 +52,57 @@ namespace LeapMotion
 			NotTracking,	//	not in focus
 		};
 	}
+	
+	
+	//	get rid of string potential problems
+	namespace TJoint
+	{
+		enum Type : uint64_t
+		{
+#define DEFINE_ENUM(Name)	Name = Soy::StringToEightcc( #Name )
+			Invalid = Soy::StringToEightcc("null"),
+			DEFINE_ENUM(Palm),
+			DEFINE_ENUM(Wrist),
+			DEFINE_ENUM(Elbow),
+			DEFINE_ENUM(Thumb0),
+			DEFINE_ENUM(Thumb1),
+			DEFINE_ENUM(Thumb2),
+			DEFINE_ENUM(Thumb3),
+			DEFINE_ENUM(Index0),
+			DEFINE_ENUM(Index1),
+			DEFINE_ENUM(Index2),
+			DEFINE_ENUM(Index3),
+			DEFINE_ENUM(Middle0),
+			DEFINE_ENUM(Middle1),
+			DEFINE_ENUM(Middle2),
+			DEFINE_ENUM(Middle3),
+			DEFINE_ENUM(Ring0),
+			DEFINE_ENUM(Ring1),
+			DEFINE_ENUM(Ring2),
+			DEFINE_ENUM(Ring3),
+			DEFINE_ENUM(Pinky0),
+			DEFINE_ENUM(Pinky1),
+			DEFINE_ENUM(Pinky2),
+			DEFINE_ENUM(Pinky3),
+		};
+	}
+	
+	const std::string	GetJointName(TJoint::Type Joint);
+	TJoint::Type		GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType);
 }
 
 
-class LeapMotion::TJoint
+std::string Soy::EightccToString(const uint64_t Eightcc)
+{
+	auto* Char = reinterpret_cast<const char*>( &Eightcc );
+	return Char;
+}
+
+class LeapMotion::TJointPosition
 {
 public:
-	const char*	mName = nullptr;
-	vec3f		mPosition;
+	TJoint::Type	mJoint = TJoint::Invalid;
+	vec3f			mPosition;
 };
 
 class LeapMotion::THand
@@ -43,12 +111,12 @@ public:
 	THand(){};
 	THand(Leap::Hand& Hand);
 
-	void		AddJoint(const char* Name,const Leap::Vector& Positon);
+	void		AddJoint(TJoint::Type Joint,const Leap::Vector& Positon);
 	
 	int32_t		mId = 0;
 	std::string	mName;
 	
-	BufferArray<TJoint,40>	mJoints;
+	BufferArray<TJointPosition,40>	mJoints;
 	
 	vec3f		mPalmNormal;
 	vec3f		mHandDirection;
@@ -154,6 +222,34 @@ void ApiLeapMotion::TInputWrapper::OnFramesChanged()
 	if ( !mInput->HasNewFrame() )
 		return;
 	
+	auto GetHandObject = [](Bind::TLocalContext& LocalContext,const LeapMotion::THand& Hand)
+	{
+		auto HandObject = LocalContext.mGlobalContext.CreateObjectInstance(LocalContext);
+
+		HandObject.SetInt("HandId", Hand.mId );
+		for ( auto j=0;	j<Hand.mJoints.GetSize();	j++ )
+		{
+			auto& Joint = Hand.mJoints[j];
+			auto xyz = GetRemoteArray( &Joint.mPosition.x, 3 );
+			auto JointName = LeapMotion::GetJointName(Joint.mJoint);
+			HandObject.SetArray( JointName, GetArrayBridge(xyz) );
+		}
+		return HandObject;
+	};
+	
+	auto GetFrameObject = [&](Bind::TLocalContext& LocalContext,Bind::TObject& FrameObject,const LeapMotion::TFrame& Frame)
+	{
+		FrameObject.SetInt("FrameNumber",Frame.mFrameNumber);
+		//FrameObject.SetInt("FrameTime",Frame.mFrameTime);//	too big for js!
+		
+		for ( auto h=0;	h<Frame.mHands.GetSize();	h++ )
+		{
+			auto& Hand = Frame.mHands[h];
+			auto HandObject = GetHandObject( LocalContext, Hand );
+			FrameObject.SetObject( Hand.mName, HandObject );
+		}
+	};
+	
 	//	grab all the buffered frames?
 	try
 	{
@@ -162,24 +258,8 @@ void ApiLeapMotion::TInputWrapper::OnFramesChanged()
 		auto ReturnFrame = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 		{
 			auto FrameObject = LocalContext.mGlobalContext.CreateObjectInstance(LocalContext);
-			FrameObject.SetInt("FrameNumber",Frame.mFrameNumber);
-			//FrameObject.SetInt("FrameTime",Frame.mFrameTime);//	too big for js!
-
-			for ( auto h=0;	Frame.mHands.GetSize();	h++ )
-			{
-				auto& Hand = Frame.mHands[h];
-				auto HandObject = LocalContext.mGlobalContext.CreateObjectInstance(LocalContext);
-				
-				HandObject.SetInt("HandId", Hand.mId );
-				for ( auto j=0;	j<Hand.mJoints.GetSize();	j++ )
-				{
-					auto& Joint = Hand.mJoints[j];
-					auto xyz = GetRemoteArray( &Joint.mPosition.x, 3 );
-					HandObject.SetArray(Joint.mName, GetArrayBridge(xyz) );
-				}
-				
-				FrameObject.SetObject( Hand.mName, HandObject );
-			}
+			GetFrameObject( LocalContext, FrameObject, Frame );
+			
 			Promise.Resolve( LocalContext, FrameObject );
 		};
 		mOnFramePromises.Flush(ReturnFrame);
@@ -224,17 +304,34 @@ LeapMotion::TFrame LeapMotion::TInput::PopFrame()
 }
 
 
-const char* GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType)
+
+const std::string LeapMotion::GetJointName(TJoint::Type Joint)
 {
-	const char* JointBoneNames[5][4] =
+	return Soy::EightccToString( Joint );
+}
+
+LeapMotion::TJoint::Type LeapMotion::GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType)
+{
+	constexpr auto FingerCount = 5;
+	constexpr auto BoneCount = 4;
+	constexpr TJoint::Type JointBoneNames[FingerCount][BoneCount] =
 	{
-		{	"Thumb0", "Thumb1", "Thumb2", "Thumb3"	},
-		{	"IndexFinger0", "IndexFinger1", "IndexFinger2", "IndexFinger3"	},
-		{	"MiddleFinger0", "MiddleFinger1", "MiddleFinger2", "MiddleFinger3"	},
-		{	"RingFinger0", "RingFinger1", "RingFinger2", "RingFinger3"	},
-		{	"PinkyFinger0", "PinkyFinger1", "PinkyFinger2", "PinkyFinger3"	},
+		{	TJoint::Thumb0, TJoint::Thumb1, TJoint::Thumb2, TJoint::Thumb3	},
+		{	TJoint::Index0, TJoint::Index1, TJoint::Index2, TJoint::Index3	},
+		{	TJoint::Middle0, TJoint::Middle1, TJoint::Middle2, TJoint::Middle3	},
+		{	TJoint::Ring0, TJoint::Ring1, TJoint::Ring2, TJoint::Ring3	},
+		{	TJoint::Pinky0, TJoint::Pinky1, TJoint::Pinky2, TJoint::Pinky3	},
 	};
-	return JointBoneNames[Finger.type()][BoneType];
+	
+	auto FingerIndex = static_cast<int>(Finger.type());
+	auto BoneIndex = static_cast<int>(BoneType);
+
+	if ( FingerIndex < 0 || FingerIndex >= FingerCount )
+		throw Soy::AssertException("Finger index out of range");
+	if ( BoneIndex < 0 || BoneIndex >= BoneCount )
+		throw Soy::AssertException("Bone index out of range");
+	
+	return JointBoneNames[FingerIndex][BoneType];
 }
 
 
@@ -279,7 +376,7 @@ LeapMotion::THand::THand(Leap::Hand& Hand) :
 	mId		( Hand.id() ),
 	mName	( Hand.isLeft() ? "Left":"Right" )
 {
-	AddJoint("Palm", Hand.palmPosition() );
+	AddJoint( TJoint::Palm, Hand.palmPosition() );
 	//mPalmNormal = Hand.palmNormal();
 	//mDirection = Hand.direction();
 /*
@@ -290,8 +387,8 @@ LeapMotion::THand::THand(Leap::Hand& Hand) :
 	*/
 	auto Arm = Hand.arm();
 	//mArmDirection = Arm.direction();
-	AddJoint("Wrist", Arm.wristPosition() );
-	AddJoint("Elbow", Arm.elbowPosition() );
+	AddJoint( TJoint::Wrist, Arm.wristPosition() );
+	AddJoint( TJoint::Elbow, Arm.elbowPosition() );
 	
 	// Get fingers
 	auto FingerList = Hand.fingers();
@@ -318,11 +415,11 @@ LeapMotion::THand::THand(Leap::Hand& Hand) :
 }
 
 
-void LeapMotion::THand::AddJoint(const char* Name,const Leap::Vector& Positon)
+void LeapMotion::THand::AddJoint(TJoint::Type Joint,const Leap::Vector& Positon)
 {
-	auto& Joint = mJoints.PushBack();
-	Joint.mName = Name;
-	Joint.mPosition = vec3f( Positon.x, Positon.y, Positon.z );
+	auto& NewJoint = mJoints.PushBack();
+	NewJoint.mJoint = Joint;
+	NewJoint.mPosition = vec3f( Positon.x, Positon.y, Positon.z );
 }
 	
 	
