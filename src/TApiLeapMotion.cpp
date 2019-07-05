@@ -61,10 +61,10 @@ class LeapMotion::TFrame
 {
 public:
 	TFrame(){};
-	TFrame(Leap::Frame& Frame);
+	TFrame(const Leap::Controller& Controller,Leap::Frame& Frame);
 	
 	int64_t	mFrameNumber = 0;
-	int64_t	mFrameTime = 0;	// Use Controller::now() to calculate the age of the frame.
+	SoyTime	mFrameTime;
 	BufferArray<THand,10>	mHands;
 };
 
@@ -150,6 +150,10 @@ void ApiLeapMotion::TInputWrapper::OnFramesChanged()
 	if ( !mOnFramePromises.HasPromises() )
 		return;
 	
+	//	no data waiting
+	if ( !mInput->HasNewFrame() )
+		return;
+	
 	//	grab all the buffered frames?
 	try
 	{
@@ -233,6 +237,44 @@ const char* GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType)
 	return JointBoneNames[Finger.type()][BoneType];
 }
 
+
+
+LeapMotion::TFrame::TFrame(const Leap::Controller& Controller,Leap::Frame& Frame) :
+	mFrameNumber	( Frame.id() )
+{
+	if ( !Frame.isValid() )
+		throw Soy::AssertException("Trying to construct an invalid Leap::Frame");
+	
+	//	time is in microsecs, convert to ms
+	std::chrono::microseconds FrameTimeMicros( Frame.timestamp() );
+	std::chrono::microseconds LeapTimeMicros( Controller.now() );
+
+	auto AgeMicros = (LeapTimeMicros - FrameTimeMicros);
+	/*
+	std::chrono::milliseconds AgeMs;
+	AgeMs = (AgeMicros);
+	if ( AgeMs < 0 )
+	{
+		std::Debug << "Not expecting leap frame to be in the future: " << AgeMs << "ms" << std::endl;
+		AgeMs = 0;
+	}
+	 */
+	auto AgeMs = 0;
+	SoyTime Now(true);
+	Now.mTime -= AgeMs;
+	mFrameTime = Now;
+	
+	//	get hands
+	auto Hands = Frame.hands();
+	for ( auto it=Hands.begin();	it!=Hands.end();	it++ )
+	{
+		auto LeapHand = *it;
+		LeapMotion::THand Hand( LeapHand );
+		mHands.PushBack( Hand );
+	}
+}
+
+
 LeapMotion::THand::THand(Leap::Hand& Hand) :
 	mId		( Hand.id() ),
 	mName	( Hand.isLeft() ? "Left":"Right" )
@@ -312,7 +354,7 @@ void LeapMotion::TInput::onFrame(const Leap::Controller& Controller)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	auto LeapFrame = Controller.frame();
-	TFrame Frame( LeapFrame );
+	TFrame Frame( Controller, LeapFrame );
 	
 	{
 		std::lock_guard<std::mutex> Lock(mLastFrameLock);
