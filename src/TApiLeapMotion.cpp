@@ -15,6 +15,18 @@ namespace LeapMotion
 	class TFrame;
 	class THand;
 	class TJoint;
+	
+	//	named to be like an XR state
+	namespace TState
+	{
+		enum TYPE
+		{
+			Disconnected,	//	maybe need to differentiate between errored & uninitialised state
+			Connecting,
+			Tracking,		//	in focus
+			NotTracking,	//	not in focus
+		};
+	}
 }
 
 
@@ -56,6 +68,8 @@ public:
 	BufferArray<THand,10>	mHands;
 };
 
+
+
 class LeapMotion::TInput : public Leap::Listener
 {
 public:
@@ -76,12 +90,16 @@ public:
 	
 	bool					HasNewFrame() const	{	return mFrameChanged;	}
 	TFrame					PopFrame();
+	void					SetState(TState::TYPE NewState);
 	
-	Leap::Controller		mController;
-	std::function<void()>	mOnFrame;
 	std::mutex				mLastFrameLock;
 	TFrame					mLastFrame;
 	std::atomic<bool>		mFrameChanged;
+	std::function<void()>	mOnFrame;
+
+	Leap::Controller		mController;
+	TState::TYPE			mState = TState::Disconnected;
+	std::function<void(TState::TYPE)>	mOnStateChanged;
 };
 
 
@@ -183,6 +201,13 @@ LeapMotion::TInput::~TInput()
 	mController.removeListener( *this );
 }
 
+void LeapMotion::TInput::SetState(TState::TYPE NewState)
+{
+	mState = NewState;
+	if ( mOnStateChanged )
+		mOnStateChanged( mState );
+}
+
 
 LeapMotion::TFrame LeapMotion::TInput::PopFrame()
 {
@@ -253,29 +278,34 @@ LeapMotion::THand::THand(Leap::Hand& Hand) :
 
 void LeapMotion::THand::AddJoint(const char* Name,const Leap::Vector& Positon)
 {
-	auto 
-	mJoints.
+	auto& Joint = mJoints.PushBack();
+	Joint.mName = Name;
+	Joint.mPosition = vec3f( Positon.x, Positon.y, Positon.z );
 }
 	
 	
 void LeapMotion::TInput::onInit(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	SetState( TState::Connecting );
 }
 
 void LeapMotion::TInput::onConnect(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	SetState( TState::NotTracking );
 }
 
 void LeapMotion::TInput::onDisconnect(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	SetState( TState::Disconnected );
 }
 
 void LeapMotion::TInput::onExit(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	SetState( TState::Disconnected );
 }
 
 void LeapMotion::TInput::onFrame(const Leap::Controller& Controller)
@@ -298,11 +328,13 @@ void LeapMotion::TInput::onFrame(const Leap::Controller& Controller)
 void LeapMotion::TInput::onFocusGained(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	SetState( TState::Tracking );
 }
 
 void LeapMotion::TInput::onFocusLost(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	SetState( TState::NotTracking );
 }
 
 void LeapMotion::TInput::onDeviceChange(const Leap::Controller&)
@@ -313,6 +345,7 @@ void LeapMotion::TInput::onDeviceChange(const Leap::Controller&)
 void LeapMotion::TInput::onServiceConnect(const Leap::Controller&)
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	//	how is this different from onconnect/disconnect?
 }
 
 void LeapMotion::TInput::onServiceDisconnect(const Leap::Controller&)
