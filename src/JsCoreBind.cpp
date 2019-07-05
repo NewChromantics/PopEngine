@@ -13,7 +13,7 @@
 #include "TApiOpenvr.h"
 #include "TApiGui.h"
 
-#if !defined(PLATFORM_WINDOWS)
+#if defined(TARGET_OSX)
 //#include "TApiOpencl.h"
 #include "TApiDlib.h"
 #include "TApiCoreMl.h"
@@ -21,6 +21,7 @@
 #include "TApiInput.h"
 #include "TApiOpencv.h"
 #include "TApiBluetooth.h"
+#include "TApiLeapMotion.h"
 #endif
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
@@ -457,7 +458,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiOpenvr::Bind( *Context );
 			ApiGui::Bind( *Context );
 
-		#if !defined(PLATFORM_WINDOWS)
+		#if defined(TARGET_OSX)
 			//ApiOpencl::Bind( *Context );
 			ApiDlib::Bind( *Context );
 			ApiCoreMl::Bind( *Context );
@@ -465,7 +466,8 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiInput::Bind( *Context );
 			ApiOpencv::Bind( *Context );
 			ApiBluetooth::Bind( *Context );
-		#endif			
+			ApiLeapMotion::Bind( *Context );
+		#endif
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
