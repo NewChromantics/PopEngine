@@ -103,8 +103,9 @@
 		BFA664731B55AD0A00C33A2A /* SoyString.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA664721B55AD0A00C33A2A /* SoyString.mm */; };
 		BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DB1B6406D500D3E7A6 /* SoyVideoDevice.cpp */; };
 		BFB647382225593600820612 /* SoyHid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFB647362225593600820612 /* SoyHid.cpp */; };
+		BFB835CC22CF785300DB9FD4 /* libLeap.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		BFD399F822CBC964009E2FD3 /* SoyFourcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */; };
-		BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; };
+		BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFD39A0722CD44E8009E2FD3 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
 		BFD4456520E67037007E2497 /* PopTrack.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopTrack.xib */; };
 		BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */; };
@@ -161,6 +162,16 @@
 				BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */,
 				BF012B0E226A1102003AEB55 /* PopCameraDeviceFramework.framework in CopyFiles */,
 				BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BFB835CA22CF783C00DB9FD4 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				BFB835CC22CF785300DB9FD4 /* libLeap.dylib in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1117,6 +1128,7 @@
 				FBF67B0A1A974A0900F74C38 /* Frameworks */,
 				FBF67B0B1A974A0900F74C38 /* Resources */,
 				BF7A8DEC1B65263100A6C403 /* CopyFiles */,
+				BFB835CA22CF783C00DB9FD4 /* CopyFiles */,
 			);
 			buildRules = (
 			);
