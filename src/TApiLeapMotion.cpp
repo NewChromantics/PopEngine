@@ -449,7 +449,7 @@ void LeapMotion::TInput::onExit(const Leap::Controller&)
 
 void LeapMotion::TInput::onFrame(const Leap::Controller& Controller)
 {
-	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	//std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	auto LeapFrame = Controller.frame();
 	TFrame Frame( Controller, LeapFrame );
 	
