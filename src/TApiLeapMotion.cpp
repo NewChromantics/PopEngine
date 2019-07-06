@@ -87,9 +87,12 @@ namespace LeapMotion
 		};
 	}
 	
-	const std::string	GetJointName(TJoint::Type Joint);
-	TJoint::Type		GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType);
-	vec3f				GetPositionMetres(const Leap::Vector& Posmm);	//	leap motion coords are in mm, convert to metres
+	const std::string		GetJointName(TJoint::Type Joint);
+	TJoint::Type			GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType);
+	vec3f					GetPositionMetres(const Leap::Vector& Posmm);	//	leap motion coords are in mm, convert to metres
+	void					GetDistortionPixels(SoyPixelsImpl& DistortionPixels,const Leap::Image& Image);
+	void					GetInfraRedPixels(SoyPixelsImpl& InfraRedPixels,const Leap::Image& Image);
+	SoyPixelsFormat::Type	GetPixelFormat(Leap::Image::FormatType Format,int BytesPerPixel);
 }
 
 
@@ -132,9 +135,11 @@ public:
 	TFrame(){};
 	TFrame(const Leap::Controller& Controller,Leap::Frame& Frame);
 	
-	int64_t	mFrameNumber = 0;
-	SoyTime	mFrameTime;
-	BufferArray<THand,10>	mHands;
+	int64_t							mFrameNumber = 0;
+	SoyTime							mFrameTime;
+	BufferArray<THand,10>			mHands;
+	std::shared_ptr<SoyPixelsImpl>	mInfraRedPixels;
+	std::shared_ptr<SoyPixelsImpl>	mInfraRedDistortion;
 };
 
 
@@ -336,6 +341,38 @@ LeapMotion::TJoint::Type LeapMotion::GetJointName(const Leap::Finger& Finger,Lea
 }
 
 
+SoyPixelsFormat::Type LeapMotion::GetPixelFormat(Leap::Image::FormatType Format,int BytesPerPixel)
+{
+	if ( Format != Leap::Image::INFRARED )
+		throw Soy::AssertException("LeapMotion unknown image type (not infrared)");
+	if ( BytesPerPixel != 1 )
+		throw Soy::AssertException("LeapMotion image BytesPerPixel not 1");
+
+	return SoyPixelsFormat::Greyscale;
+}
+
+
+void LeapMotion::GetInfraRedPixels(SoyPixelsImpl& InfraRedPixels,const Leap::Image& Image)
+{
+	auto PixelFormat = GetPixelFormat( Image.format(), Image.bytesPerPixel() );
+	SoyPixelsMeta Meta( Image.width(), Image.height(), PixelFormat );
+	auto* PixelBuffer = const_cast<uint8_t*>(Image.data());
+	auto PixelBufferSize = Image.width() * Image.height() * Image.bytesPerPixel();
+	SoyPixelsRemote Pixels( PixelBuffer, PixelBufferSize, Meta );
+	InfraRedPixels.Copy(Pixels);
+}
+
+
+void LeapMotion::GetDistortionPixels(SoyPixelsImpl& DistortionPixels,const Leap::Image& Image)
+{
+	auto PixelFormat = SoyPixelsFormat::Float1;
+	SoyPixelsMeta Meta( Image.distortionWidth(), Image.distortionHeight(), PixelFormat );
+	auto* PixelBuffer = reinterpret_cast<uint8_t*>( const_cast<float*>( Image.distortion() ) );
+	auto PixelBufferSize = Meta.GetDataSize();
+	SoyPixelsRemote Pixels( PixelBuffer, PixelBufferSize, Meta );
+	DistortionPixels.Copy(Pixels);
+}
+
 
 LeapMotion::TFrame::TFrame(const Leap::Controller& Controller,Leap::Frame& Frame) :
 	mFrameNumber	( Frame.id() )
@@ -369,6 +406,26 @@ LeapMotion::TFrame::TFrame(const Leap::Controller& Controller,Leap::Frame& Frame
 		auto LeapHand = *it;
 		LeapMotion::THand Hand( LeapHand );
 		mHands.PushBack( Hand );
+	}
+	
+	auto Images = Frame.images();
+	for ( auto it=Images.begin();	it!=Images.end();	it++ )
+	{
+		auto& Image = *it;
+		try
+		{
+			std::shared_ptr<SoyPixelsImpl> InfraRedPixels( new SoyPixels );
+			GetInfraRedPixels( *InfraRedPixels, Image );
+			mInfraRedPixels = InfraRedPixels;
+			
+			std::shared_ptr<SoyPixelsImpl> DistortionPixels( new SoyPixels );
+			GetDistortionPixels( *DistortionPixels, Image );
+			mInfraRedDistortion = DistortionPixels;
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Error getting frame image: " << e.what() << std::endl;
+		}
 	}
 }
 
