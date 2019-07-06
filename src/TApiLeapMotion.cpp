@@ -89,6 +89,7 @@ namespace LeapMotion
 	
 	const std::string	GetJointName(TJoint::Type Joint);
 	TJoint::Type		GetJointName(const Leap::Finger& Finger,Leap::Bone::Type& BoneType);
+	vec3f				GetPositionMetres(const Leap::Vector& Posmm);	//	leap motion coords are in mm, convert to metres
 }
 
 
@@ -419,9 +420,22 @@ void LeapMotion::THand::AddJoint(TJoint::Type Joint,const Leap::Vector& Positon)
 {
 	auto& NewJoint = mJoints.PushBack();
 	NewJoint.mJoint = Joint;
-	NewJoint.mPosition = vec3f( Positon.x, Positon.y, Positon.z );
+	NewJoint.mPosition = GetPositionMetres( Positon );
 }
+
+vec3f LeapMotion::GetPositionMetres(const Leap::Vector& Posmm)
+{
+	vec3f Pos( Posmm.x, Posmm.y, Posmm.z );
+	//	mm to metres
+	Pos.x /= 1000.f;
+	Pos.y /= 1000.f;
+	Pos.z /= 1000.f;
 	
+	//	z is opposite to what we use too
+	//Pos.z = -Pos.z;
+	
+	return Pos;
+}
 	
 void LeapMotion::TInput::onInit(const Leap::Controller&)
 {
@@ -452,6 +466,10 @@ void LeapMotion::TInput::onFrame(const Leap::Controller& Controller)
 	//std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	auto LeapFrame = Controller.frame();
 	TFrame Frame( Controller, LeapFrame );
+	
+	//	if no hands, skip
+	if ( Frame.mHands.IsEmpty() )
+		return;
 	
 	{
 		std::lock_guard<std::mutex> Lock(mLastFrameLock);
