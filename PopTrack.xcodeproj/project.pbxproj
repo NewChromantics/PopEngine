@@ -91,13 +91,14 @@
 		BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
 		BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
 		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
-		BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF92821D223692BA007E9D6F /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92821F22369316007E9D6F /* TApiOpencv.cpp */; };
 		BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
 		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
 		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
+		BFA22A8522DC9CA200D8615C /* PopEngine.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */; };
+		BFA22B2D22DCAD6F00D8615C /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22B2C22DCAD6F00D8615C /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */; };
 		BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
 		BFA664731B55AD0A00C33A2A /* SoyString.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA664721B55AD0A00C33A2A /* SoyString.mm */; };
@@ -369,11 +370,9 @@
 		BF91D9AA221584F200E91671 /* image_utility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = image_utility.cpp; sourceTree = "<group>"; };
 		BF91D9AB221584F200E91671 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
 		BF91D9AC221584F200E91671 /* vvector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vvector.h; sourceTree = "<group>"; };
-		BF92821D223692BA007E9D6F /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		BF92821F22369316007E9D6F /* TApiOpencv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencv.cpp; path = src/TApiOpencv.cpp; sourceTree = "<group>"; };
 		BF92822022369316007E9D6F /* TApiOpencv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencv.h; path = src/TApiOpencv.h; sourceTree = "<group>"; };
 		BF9282222236E1E1007E9D6F /* PopPhotoBlorp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPhotoBlorp; path = ../PopPhotoBlorp; sourceTree = "<group>"; };
-		BF9282242237DB18007E9D6F /* Headers */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Headers; path = opencv2.framework/Versions/A/Headers; sourceTree = "<group>"; };
 		BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenvr.cpp; path = src/TApiOpenvr.cpp; sourceTree = "<group>"; };
 		BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenvr.h; path = src/TApiOpenvr.h; sourceTree = "<group>"; };
 		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
@@ -389,6 +388,9 @@
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
+		BFA2278B22DB728400D8615C /* PopPianoHero */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPianoHero; path = ../PopPianoHero; sourceTree = "<group>"; };
+		BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine.xcconfig; path = src/PopEngine.xcconfig; sourceTree = "<group>"; };
+		BFA22B2C22DCAD6F00D8615C /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyUniform.cpp; path = src/SoyUniform.cpp; sourceTree = "<group>"; };
 		BFA297201B7E9CF7003B91F6 /* SoyUniform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyUniform.h; path = src/SoyUniform.h; sourceTree = "<group>"; };
 		BFA297231B80E8DE003B91F6 /* SoyWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyWindow.h; path = src/SoyWindow.h; sourceTree = "<group>"; };
@@ -513,6 +515,7 @@
 				BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */,
 				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
 				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
+				BFA22B2D22DCAD6F00D8615C /* opencv2.framework in Frameworks */,
 				BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
 				BFE9513222A70B9700B83061 /* libx264.a in Frameworks */,
@@ -540,7 +543,6 @@
 				BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
 				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
-				BF92821E223692BA007E9D6F /* opencv2.framework in Frameworks */,
 				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
 				EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */,
 				BF012B0D226A102D003AEB55 /* PopCameraDeviceFramework.framework in Frameworks */,
@@ -603,16 +605,15 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				BFD399F922CD427D009E2FD3 /* LeapMotion */,
 				BF8534F322B6DA1C0049C01B /* ChakraCore */,
-				BF92821D223692BA007E9D6F /* opencv2.framework */,
-				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
-				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
-				BFE9512E22A70B8400B83061 /* x264 */,
+				BF0F9E762289EB5F00AEA7DC /* dyncall */,
+				BFD399F922CD427D009E2FD3 /* LeapMotion */,
+				BFA22B2C22DCAD6F00D8615C /* opencv2.framework */,
 				BF89CF49228DD3EB00A187D5 /* OpenVr */,
 				BF89CF4B228DD3F700A187D5 /* OpenVr */,
-				BF0F9E762289EB5F00AEA7DC /* dyncall */,
-				BF9282242237DB18007E9D6F /* Headers */,
+				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
+				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
+				BFE9512E22A70B8400B83061 /* x264 */,
 			);
 			name = Libraries;
 			path = src/Libs;
@@ -875,6 +876,7 @@
 				BFD0829E225E974D00FD05DC /* GuildhallGildwall */,
 				BF0F9E602286F9C200AEA7DC /* PopRayTrace */,
 				BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */,
+				BFA2278B22DB728400D8615C /* PopPianoHero */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -903,6 +905,7 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
+				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
 				BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */,
 				BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */,
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
@@ -1179,6 +1182,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF3965652278587600A721E8 /* v8Runtime in Resources */,
+				BFA22A8522DC9CA200D8615C /* PopEngine.xcconfig in Resources */,
 				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 			);
