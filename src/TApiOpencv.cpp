@@ -3,21 +3,23 @@
 
 #include "Libs/opencv2.framework/Headers/opencv.hpp"
 #include "Libs/opencv2.framework/Headers/imgproc.hpp"
-
+#include "Libs/opencv2.framework/Headers/aruco.hpp"
 
 namespace ApiOpencv
 {
-	const char Namespace[] = "Opencv";
+	const char Namespace[] = "Pop.Opencv";
 	
 	void	FindContours(Bind::TCallback& Params);
 	void	GetSaliencyRects(Bind::TCallback& Params);
 	void	GetMoments(Bind::TCallback& Params);
 	void	GetHogGradientMap(Bind::TCallback& Params);
+	void	FindArucoMarkers(Bind::TCallback& Params);
 
-	const char FindContours_FunctionName[] = "FindContours";
-	const char GetSaliencyRects_FunctionName[] = "GetSaliencyRects";
-	const char GetMoments_FunctionName[] = "GetMoments";
-	const char GetHogGradientMap_FunctionName[] = "GetHogGradientMap";
+	DEFINE_BIND_FUNCTIONNAME(FindContours);
+	DEFINE_BIND_FUNCTIONNAME(GetSaliencyRects);
+	DEFINE_BIND_FUNCTIONNAME(GetMoments);
+	DEFINE_BIND_FUNCTIONNAME(GetHogGradientMap);
+	DEFINE_BIND_FUNCTIONNAME(FindArucoMarkers);
 }
 
 
@@ -25,10 +27,11 @@ void ApiOpencv::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 	
-	Context.BindGlobalFunction<FindContours_FunctionName>( FindContours, Namespace );
-	Context.BindGlobalFunction<GetSaliencyRects_FunctionName>( GetSaliencyRects, Namespace );
-	Context.BindGlobalFunction<GetMoments_FunctionName>( GetMoments, Namespace );
-	Context.BindGlobalFunction<GetHogGradientMap_FunctionName>( GetHogGradientMap, Namespace );
+	Context.BindGlobalFunction<BindFunction::FindContours>( FindContours, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetSaliencyRects>( GetSaliencyRects, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetMoments>( GetMoments, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetHogGradientMap>( GetHogGradientMap, Namespace );
+	Context.BindGlobalFunction<BindFunction::FindArucoMarkers>( FindArucoMarkers, Namespace );
 }
 
 int GetMatrixType(SoyPixelsFormat::Type Format)
@@ -372,3 +375,73 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	auto ContoursArray = JsCore::GetArray( Params.GetContextRef(), GetArrayBridge(ContourArrays) );
 	Params.Return( ContoursArray );
 }
+
+
+
+void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
+{
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+	SoyPixels OrigPixels;
+	Image.GetPixels(OrigPixels);
+
+	auto InputArray = GetMatrix( OrigPixels );
+	std::vector<std::vector<cv::Point> > Contours;
+	auto DetectorParams = cv::aruco::DetectorParameters::create();
+	
+	//	what type of marker to search for
+	auto Dictionary = cv::aruco::getPredefinedDictionary( cv::aruco::DICT_4X4_100 );
+
+	std::vector<int> FoundIds;
+	std::vector<std::vector<cv::Point2f>> FoundCorners;
+	std::vector<std::vector<cv::Point2f>> RejectedCorners;
+
+	//	3x3 camera matrix
+	cv::InputArray cameraMatrix = cv::noArray();
+	
+	{
+		Soy::TScopeTimerPrint Timer("cv::aruco::detectMarkers",1);
+		cv::aruco::detectMarkers( InputArray, Dictionary, FoundCorners, FoundIds, DetectorParams, RejectedCorners, cameraMatrix );
+	}
+	
+	auto GetCornerObject = [&](std::vector<cv::Point2f>& Corners,int Id)
+	{
+		Array<float> CornerFloats;
+		for ( auto c=0;	c<Corners.size();	c++ )
+		{
+			CornerFloats.PushBack( Corners[c].x );
+			CornerFloats.PushBack( Corners[c].y );
+		}
+		
+		auto CornerObject = Params.mLocalContext.mGlobalContext.CreateObjectInstance( Params.mLocalContext );
+		CornerObject.SetArray("Points", GetArrayBridge(CornerFloats) );
+		if ( Id >= 0 )
+			CornerObject.SetInt("Id", Id );
+		return CornerObject;
+	};
+	
+	//	output
+	auto Results = Params.mLocalContext.mGlobalContext.CreateObjectInstance( Params.mLocalContext );
+	Array<Bind::TObject> FoundCornerObjects;
+	Array<Bind::TObject> RejectedCornerObjects;
+	for ( auto i=0;	i<FoundCorners.size();	i++ )
+	{
+		auto& Corner = FoundCorners[i];
+		auto Id = FoundIds[i];
+		auto CornerObject = GetCornerObject( Corner, Id );
+		FoundCornerObjects.PushBack(CornerObject);
+	}
+	
+	for ( auto i=0;	i<RejectedCorners.size();	i++ )
+	{
+		auto& Corner = RejectedCorners[i];
+		auto Id = -1;
+		auto CornerObject = GetCornerObject( Corner, Id );
+		RejectedCornerObjects.PushBack(CornerObject);
+	}
+	
+	Results.SetArray("Markers", GetArrayBridge(FoundCornerObjects) );
+	Results.SetArray("Rejects", GetArrayBridge(RejectedCornerObjects) );
+
+	Params.Return(Results);
+}
+
