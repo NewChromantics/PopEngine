@@ -2,21 +2,30 @@
 #include "TApiCommon.h"
 #include "SoyAvf.h"
 #include "SoyLib/src/SoyScope.h"
+#include "SoyAssert.h"
 
-#if defined(ENABLE_COREML_MODELS)
-
-#import "TApiCoreMlModels.mm"
-
-#else
-//#error coreml not supported
-class CoreMl::TInstance
-{
-};
-
-#endif
-
+#include "Libs/PopCoreml.framework/Headers/TCoreMl.h"
+#include "Libs/PopCoreml.framework/Headers/TYolo.h"
 
 #import <Vision/Vision.h>
+
+
+class CoreMl::TInstance : public SoyWorkerJobThread
+{
+public:
+	TInstance();
+
+	TModel&		GetYolo();
+	TModel&		GetHourglass();
+	TModel&		GetCpm();
+	TModel&		GetOpenPose();
+	TModel&		GetSsdMobileNet();
+	TModel&		GetMaskRcnn();
+	TModel&		GetDeepLab();
+
+private:
+	std::shared_ptr<TYolo>	mTinyYolo;
+};
 
 
 
@@ -44,9 +53,7 @@ void ApiCoreMl::Bind(Bind::TContext& Context)
 
 void TCoreMlWrapper::Construct(Bind::TCallback& Arguments)
 {
-#if defined(ENABLE_COREML_MODELS)
 	mCoreMl.reset( new CoreMl::TInstance );
-#endif
 }
 
 void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -64,12 +71,60 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
-template<typename COREML_FUNC>
-void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
+
+CoreMl::TInstance::TInstance() :
+	SoyWorkerJobThread	("CoreMl::TInstance")
+{
+	//	before the other stuff crashes, this should check for the
+	//	PopCoreml.framework here and try and load the dylib
+	Start();
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetYolo()
+{
+	if ( !mTinyYolo )
+		mTinyYolo.reset( new CoreMl::TYolo);
+	return *mTinyYolo;
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetHourglass()
+{
+	Soy_AssertTodo();
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetCpm()
+{
+	Soy_AssertTodo();
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetOpenPose()
+{
+	Soy_AssertTodo();
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetSsdMobileNet()
+{
+	Soy_AssertTodo();
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetMaskRcnn()
+{
+	Soy_AssertTodo();
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetDeepLab()
+{
+	Soy_AssertTodo();
+}
+
+
+
+void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	auto* pContext = &Params.mContext;
+	auto* pModel = &ModelRef;
 	
 	auto RunModel = [=]
 	{
@@ -94,11 +149,12 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 			
 			Array<CoreMl::TObject> Objects;
 			
-			auto PushObject = [&](const CoreMl::TObject& Object)
+			std::function<void(const CoreMl::TObject&)> PushObject = [&](const CoreMl::TObject& Object)
 			{
 				Objects.PushBack(Object);
 			};
-			CoreMlFunc( *CoreMl, Pixels, PushObject );
+			auto& Model = *pModel;
+			Model.GetObjects( Pixels, PushObject );
 			
 			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
@@ -135,21 +191,19 @@ void RunModel(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<Cor
 		}
 	};
 	
-#if defined(ENABLE_COREML_MODELS)
-	CoreMl->PushJob(RunModel);
-#endif
+	CoreMl.PushJob(RunModel);
 	Params.Return( Promise );
 }
 
 
 
-template<typename COREML_FUNC>
-void RunModelMap(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<CoreMl::TInstance> CoreMl)
+void RunModelMap(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	auto* pContext = &Params.mContext;
-	
+	auto* pModel = &ModelRef;
+
 	std::string LabelFilter;
 	if ( !Params.IsArgumentUndefined(1) )
 		LabelFilter = Params.GetArgumentString(1);
@@ -178,7 +232,7 @@ void RunModelMap(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<
 			//	pixels we're writing into
 			std::shared_ptr<SoyPixelsImpl> MapPixels;
 			
-			auto FilterLabel = [&](const std::string& Label)
+			std::function<bool(const std::string&)> FilterLabel = [&](const std::string& Label)
 			{
 				if ( LabelFilter.length() == 0 )
 					return true;
@@ -187,7 +241,8 @@ void RunModelMap(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<
 				return true;
 			};
 			
-			CoreMlFunc( *CoreMl, Pixels, MapPixels, FilterLabel );
+			auto& Model = *pModel;
+			Model.GetLabelMap( Pixels, MapPixels, FilterLabel );
 			
 			auto OnCompleted = [=](Bind::TLocalContext& Context)
 			{
@@ -212,110 +267,83 @@ void RunModelMap(COREML_FUNC CoreMlFunc,Bind::TCallback& Params,std::shared_ptr<
 		}
 	};
 	
-#if defined(ENABLE_COREML_MODELS)
-	CoreMl->PushJob(RunModel);
-#endif
+	CoreMl.PushJob(RunModel);
 	Params.Return( Promise );
 }
 
 
 void TCoreMlWrapper::Yolo(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetYolo();
 
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunYolo );
-	RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
 void TCoreMlWrapper::Hourglass(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
-
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunHourglass );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetHourglass();
+	
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
 
 void TCoreMlWrapper::Cpm(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
-
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunCpm );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetCpm();
+	
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
 
 void TCoreMlWrapper::OpenPose(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetOpenPose();
 	
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPose );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
-	
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
 void TCoreMlWrapper::OpenPoseMap(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetOpenPose();
 	
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunOpenPoseMap );
-	return RunModelMap( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	RunModelMap( Model, Params, CoreMl );
 }
 
 
 
 void TCoreMlWrapper::SsdMobileNet(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
-
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunSsdMobileNet );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetSsdMobileNet();
+	
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
 void TCoreMlWrapper::MaskRcnn(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
-
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunMaskRcnn );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetMaskRcnn();
+	
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
 void TCoreMlWrapper::DeepLab(Bind::TCallback& Params)
 {
-#if defined(ENABLE_COREML_MODELS)
-	auto& CoreMl = mCoreMl;
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetDeepLab();
 	
-	auto CoreMlFunc = std::mem_fn( &CoreMl::TInstance::RunDeepLab );
-	return RunModel( CoreMlFunc, Params, CoreMl );
-#endif
-	throw Soy::AssertException("CoreML Models not built");
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 
@@ -384,8 +412,8 @@ void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
 					FeatureFloats.PushBack( Point.y );
 				}
 			
-				auto w = Pixels->GetWidth();
-				auto h = Pixels->GetHeight();
+				//auto w = Pixels->GetWidth();
+				//auto h = Pixels->GetHeight();
 				BufferArray<float,4> RectValues;
 				RectValues.PushBack( Bounds.x );
 				RectValues.PushBack( FlipNormalisedY(Bounds.y,Bounds.h) );

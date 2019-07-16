@@ -46,12 +46,4 @@ protected:
 };
 
 
-class CoreMl::TObject
-{
-public:
-	float			mScore = 0;
-	std::string		mLabel;
-	Soy::Rectf		mRect = Soy::Rectf(0,0,0,0);
-	vec2x<size_t>	mGridPos;
-};
 
