@@ -53,7 +53,6 @@
 		BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF607EA12240580E00A78C00 /* CoreBluetooth.framework */; };
 		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
-		BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6314A2221DD3D4008D1C0F /* Vision.framework */; };
 		BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC520D6C80D000BC812 /* CoreGraphics.framework */; };
 		BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC720D6C811000BC812 /* ApplicationServices.framework */; };
 		BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */; };
@@ -93,8 +92,7 @@
 		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
 		BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92821F22369316007E9D6F /* TApiOpencv.cpp */; };
 		BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
-		BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF99BE2221F8946D00E6CE5B /* CoreML.framework */; };
-		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */; };
+		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
 		BFA22A8522DC9CA200D8615C /* PopEngine.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */; };
@@ -374,7 +372,7 @@
 		BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_PeopleDetector; sourceTree = "<group>"; };
 		BF99BE2221F8946D00E6CE5B /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCoreMl.h; path = src/TApiCoreMl.h; sourceTree = "<group>"; };
-		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TApiCoreMl.mm; path = src/TApiCoreMl.mm; sourceTree = "<group>"; };
+		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCoreMl.cpp; path = src/TApiCoreMl.cpp; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -501,8 +499,6 @@
 				BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */,
 				BF59A2522222057200AE9926 /* GameController.framework in Frameworks */,
 				BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */,
-				BF6314A3221DD3D4008D1C0F /* Vision.framework in Frameworks */,
-				BF99BE2321F8946D00E6CE5B /* CoreML.framework in Frameworks */,
 				BFA22B2D22DCAD6F00D8615C /* opencv2.framework in Frameworks */,
 				BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */,
 				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
@@ -901,7 +897,7 @@
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
 				BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */,
-				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.mm */,
+				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
@@ -1222,7 +1218,7 @@
 				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
 				BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */,
 				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
-				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.mm in Sources */,
+				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */,
 				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
 				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
 				BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */,

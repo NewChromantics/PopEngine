@@ -6,8 +6,13 @@
 
 #include "Libs/PopCoreml.framework/Headers/TCoreMl.h"
 #include "Libs/PopCoreml.framework/Headers/TYolo.h"
-
-#import <Vision/Vision.h>
+#include "Libs/PopCoreml.framework/Headers/TCpm.h"
+#include "Libs/PopCoreml.framework/Headers/TDeepLab.h"
+#include "Libs/PopCoreml.framework/Headers/THourglass.h"
+#include "Libs/PopCoreml.framework/Headers/TMaskRcnn.h"
+#include "Libs/PopCoreml.framework/Headers/TOpenPose.h"
+#include "Libs/PopCoreml.framework/Headers/TSsdMobileNet.h"
+#include "Libs/PopCoreml.framework/Headers/TAppleVisionFace.h"
 
 
 class CoreMl::TInstance : public SoyWorkerJobThread
@@ -15,16 +20,27 @@ class CoreMl::TInstance : public SoyWorkerJobThread
 public:
 	TInstance();
 
-	TModel&		GetYolo();
-	TModel&		GetHourglass();
-	TModel&		GetCpm();
-	TModel&		GetOpenPose();
-	TModel&		GetSsdMobileNet();
-	TModel&		GetMaskRcnn();
-	TModel&		GetDeepLab();
+	TModel&		GetYolo()				{	return GetModel(mYolo);	}
+	TModel&		GetHourglass()			{	return GetModel(mHourglass);	}
+	TModel&		GetCpm()				{	return GetModel(mCpm);	}
+	TModel&		GetOpenPose()			{	return GetModel(mOpenPose);	}
+	TModel&		GetSsdMobileNet()		{	return GetModel(mSsdMobileNet);	}
+	TModel&		GetMaskRcnn()			{	return GetModel(mMaskRcnn);	}
+	TModel&		GetDeepLab()			{	return GetModel(mDeepLab);	}
+	TModel&		GetAppleVisionFace()	{	return GetModel(mAppleVisionFace);	}
+
+	template<typename TYPE>
+	TModel&		GetModel(std::shared_ptr<TYPE>& mModel);
 
 private:
-	std::shared_ptr<TYolo>	mTinyYolo;
+	std::shared_ptr<TYolo>				mYolo;
+	std::shared_ptr<THourglass>			mHourglass;
+	std::shared_ptr<TCpm>				mCpm;
+	std::shared_ptr<TOpenPose>			mOpenPose;
+	std::shared_ptr<TSsdMobileNet>		mSsdMobileNet;
+	std::shared_ptr<TMaskRcnn>			mMaskRcnn;
+	std::shared_ptr<TDeepLab>			mDeepLab;
+	std::shared_ptr<TAppleVisionFace>	mAppleVisionFace;
 };
 
 
@@ -40,7 +56,7 @@ namespace ApiCoreMl
 	DEFINE_BIND_FUNCTIONNAME(OpenPoseMap);
 	DEFINE_BIND_FUNCTIONNAME(SsdMobileNet);
 	DEFINE_BIND_FUNCTIONNAME(MaskRcnn);
-	DEFINE_BIND_FUNCTIONNAME(FaceDetect);
+	DEFINE_BIND_FUNCTIONNAME(AppleVisionFaceDetect);
 	DEFINE_BIND_FUNCTIONNAME(DeepLab);
 }
 
@@ -66,7 +82,7 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::OpenPoseMap>( &TCoreMlWrapper::OpenPoseMap );
 	Template.BindFunction<BindFunction::SsdMobileNet>( &TCoreMlWrapper::SsdMobileNet );
 	Template.BindFunction<BindFunction::MaskRcnn>( &TCoreMlWrapper::MaskRcnn );
-	Template.BindFunction<BindFunction::FaceDetect>( &TCoreMlWrapper::FaceDetect );
+	Template.BindFunction<BindFunction::AppleVisionFaceDetect>( &TCoreMlWrapper::AppleVisionFaceDetect );
 	Template.BindFunction<BindFunction::DeepLab>( &TCoreMlWrapper::DeepLab );
 }
 
@@ -80,43 +96,15 @@ CoreMl::TInstance::TInstance() :
 	Start();
 }
 
-CoreMl::TModel& CoreMl::TInstance::GetYolo()
+template<typename TYPE>
+CoreMl::TModel& CoreMl::TInstance::GetModel(std::shared_ptr<TYPE>& mModel)
 {
-	if ( !mTinyYolo )
-		mTinyYolo.reset( new CoreMl::TYolo);
-	return *mTinyYolo;
+	if ( !mModel )
+	{
+		mModel.reset( new TYPE );
+	}
+	return *mModel;
 }
-
-CoreMl::TModel& CoreMl::TInstance::GetHourglass()
-{
-	Soy_AssertTodo();
-}
-
-CoreMl::TModel& CoreMl::TInstance::GetCpm()
-{
-	Soy_AssertTodo();
-}
-
-CoreMl::TModel& CoreMl::TInstance::GetOpenPose()
-{
-	Soy_AssertTodo();
-}
-
-CoreMl::TModel& CoreMl::TInstance::GetSsdMobileNet()
-{
-	Soy_AssertTodo();
-}
-
-CoreMl::TModel& CoreMl::TInstance::GetMaskRcnn()
-{
-	Soy_AssertTodo();
-}
-
-CoreMl::TModel& CoreMl::TInstance::GetDeepLab()
-{
-	Soy_AssertTodo();
-}
-
 
 
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
@@ -347,92 +335,12 @@ void TCoreMlWrapper::DeepLab(Bind::TCallback& Params)
 }
 
 
-
-//	apple's Vision built-in face detection
-void TCoreMlWrapper::FaceDetect(Bind::TCallback& Params)
+void TCoreMlWrapper::AppleVisionFaceDetect(Bind::TCallback& Params)
 {
-	Soy::TScopeTimerPrint FaceDetectTimer("TCoreMlWrapper::FaceDetect", 10);
-	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
-	std::shared_ptr<SoyPixels> Pixels( new SoyPixels() );
-	Image.GetPixels( *Pixels );
-	Pixels->SetFormat( SoyPixelsFormat::Greyscale );
-	Pixels->SetFormat( SoyPixelsFormat::RGBA );
-	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
-
-	auto Run = [=](Bind::TLocalContext& Context)
-	{
-		//	make a face request
-		VNDetectFaceLandmarksRequest* Request = [[VNDetectFaceLandmarksRequest alloc] init];
-		VNSequenceRequestHandler* Handler = [[VNSequenceRequestHandler alloc] init];
-		NSArray<VNDetectFaceLandmarksRequest*>* Requests = @[Request];
-
-		auto PixelBuffer = Avf::PixelsToPixelBuffer(*Pixels);
-		CVImageBufferRef ImageBuffer = PixelBuffer;
-
-		auto Orientation = kCGImagePropertyOrientationUp;
-		NSError* Error = nullptr;
-		{
-			Soy::TScopeTimerPrint Timer("Perform Requests",5);
-			[Handler performRequests:Requests onCVPixelBuffer:ImageBuffer orientation:Orientation error:&Error];
-		}
-		NSArray<VNFaceObservation*>* Results = Request.results;
-		
-		if ( !Results )
-			throw Soy::AssertException("Missing results");
-
-		Array<Bind::TObject> ResultObjects;
-		for ( auto r=0;	r<Results.count;	r++ )
-		{
-			for ( VNFaceObservation* Observation in Results )
-			{
-				std::Debug << "Got observation" << std::endl;
-				//	features are normalised to bounds
-				Array<vec2f> Features;
-				Array<float> FeatureFloats;
-				Soy::Rectf Bounds;
-				
-				auto FlipNormalisedY = [](float y,float h)
-				{
-					auto Bottom = y + h;
-					return 1 - Bottom;
-				};
-				
-				VNFaceLandmarkRegion2D* Landmarks = Observation.landmarks.allPoints;
-				Bounds.x = Observation.boundingBox.origin.x;
-				Bounds.y = Observation.boundingBox.origin.y;
-				Bounds.w = Observation.boundingBox.size.width;
-				Bounds.h = Observation.boundingBox.size.height;
-
-				for( auto l=0;	l<Landmarks.pointCount;	l++ )
-				{
-					auto Point = Landmarks.normalizedPoints[l];
-					//	gr: this may be upside down as bounds are
-					Features.PushBack( vec2f(Point.x,Point.y) );
-					FeatureFloats.PushBack( Point.x );
-					FeatureFloats.PushBack( Point.y );
-				}
-			
-				//auto w = Pixels->GetWidth();
-				//auto h = Pixels->GetHeight();
-				BufferArray<float,4> RectValues;
-				RectValues.PushBack( Bounds.x );
-				RectValues.PushBack( FlipNormalisedY(Bounds.y,Bounds.h) );
-				RectValues.PushBack( Bounds.w );
-				RectValues.PushBack( Bounds.h );
-				
-				auto Object = Context.mGlobalContext.CreateObjectInstance( Context );
-				Object.SetArray("Bounds", GetArrayBridge(RectValues) );
-				Object.SetArray("Features", GetArrayBridge(FeatureFloats) );
-				ResultObjects.PushBack(Object);
-			}
-		}
-		
-		Promise.Resolve( Context, GetArrayBridge(ResultObjects) );
-	};
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetAppleVisionFace();
 	
-	Run( Params.mLocalContext );
-	
-	Params.Return( Promise );
+	RunModelGetObjects( Model, Params, CoreMl );
 }
 
 

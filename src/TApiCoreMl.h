@@ -39,7 +39,7 @@ public:
 	void				DeepLab(Bind::TCallback& Arguments);
 
 	//	apple's Vision built-in face detection
-	void				FaceDetect(Bind::TCallback& Arguments);
+	void				AppleVisionFaceDetect(Bind::TCallback& Arguments);
 
 protected:
 	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;
