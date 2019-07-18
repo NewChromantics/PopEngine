@@ -48,6 +48,13 @@
     <ClInclude Include="..\src\Libs\JavascriptCore\JSStringRef.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h" />
     <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.hpp" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\precomp.hpp" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\predefined_dictionaries.hpp" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\predefined_dictionaries_apriltag.hpp" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\unionfind.hpp" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zarray.hpp" />
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.hpp" />
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr.h" />
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_capi.h" />
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h" />
@@ -161,13 +168,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\TApiOpencv.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencv.h" />
     <ClInclude Include="..\src\TApiOpengl.h" />
     <ClInclude Include="..\src\TApiOpenglContext.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -248,6 +249,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.cpp" />
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\aruco.cpp" />
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\charuco.cpp" />
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\dictionary.cpp" />
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
@@ -324,6 +330,16 @@
     </CustomBuild>
     <None Include="..\src\Libs\JavascriptCore\win64\WTF.pdb" />
     <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <None Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410d.dll">
       <FileType>Document</FileType>
     </CustomBuild>
     <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb" />
@@ -460,6 +476,9 @@
     <None Include="..\UnitTest\H264Encode\bootup.js" />
     <None Include="..\UnitTest\H264Encode\Quad.vert.glsl" />
     <None Include="..\UnitTest\HttpServer\bootup.js" />
+    <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl" />
+    <None Include="..\UnitTest\OpencvArucoMarker\bootup.js" />
+    <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>
     </None>
@@ -559,13 +578,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TApiOpencv.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp" />
     <ClCompile Include="..\src\TApiOpengl.cpp" />
     <ClCompile Include="..\src\TApiOpenglContext.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -625,6 +638,14 @@
     <Library Include="..\src\Libs\dyncall\lib\libdyncallback_s.lib" />
     <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib" />
     <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib" />
+    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </Library>
+    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410d.lib" />
     <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib" />
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
@@ -769,7 +790,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link />
     <Link />

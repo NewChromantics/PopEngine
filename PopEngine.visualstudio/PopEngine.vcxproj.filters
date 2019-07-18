@@ -82,6 +82,15 @@
     <Filter Include="UnitTest\VirtualReality">
       <UniqueIdentifier>{943c0583-d3f6-4001-b2ad-2f6805a37612}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\Opencv">
+      <UniqueIdentifier>{13f4d4e9-b52e-42ab-811d-2429050ba1e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\Opencv\Contrib_aruco">
+      <UniqueIdentifier>{ce8e991a-d27e-4136-81d0-0602f49c084f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\OpencvArucoMarker">
+      <UniqueIdentifier>{e8ab2855-f663-4675-ab80-baa7ab8f4384}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -273,9 +282,6 @@
     <ClInclude Include="..\src\TApiOpencl.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TApiOpencv.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TPopServerThread.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
@@ -446,6 +452,30 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
       <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencv.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\precomp.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\predefined_dictionaries.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\predefined_dictionaries_apriltag.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\unionfind.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zarray.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.hpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -626,6 +656,21 @@
     <None Include="..\UnitTest\VirtualReality\bootup.js">
       <Filter>UnitTest\VirtualReality</Filter>
     </None>
+    <None Include="..\UnitTest\OpencvArucoMarker\bootup.js">
+      <Filter>UnitTest\OpencvArucoMarker</Filter>
+    </None>
+    <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl">
+      <Filter>UnitTest\OpencvArucoMarker</Filter>
+    </None>
+    <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl">
+      <Filter>UnitTest\OpencvArucoMarker</Filter>
+    </None>
+    <None Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll">
+      <Filter>Libs\Opencv</Filter>
+    </None>
+    <None Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410d.dll">
+      <Filter>Libs\Opencv</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -763,9 +808,6 @@
     <ClCompile Include="..\src\TApiOpencl.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TApiOpencv.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TPopServerThread.cpp">
       <Filter>Source\Todo</Filter>
     </ClCompile>
@@ -829,6 +871,24 @@
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.cpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\aruco.cpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\charuco.cpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\dictionary.cpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp">
+      <Filter>Libs\Opencv\Contrib_aruco</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -869,6 +929,12 @@
     </Library>
     <Library Include="..\src\Libs\x264\lib\x64\x264.lib">
       <Filter>Libs\X264</Filter>
+    </Library>
+    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410.lib">
+      <Filter>Libs\Opencv</Filter>
+    </Library>
+    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410d.lib">
+      <Filter>Libs\Opencv</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

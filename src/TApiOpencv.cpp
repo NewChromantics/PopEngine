@@ -1,9 +1,17 @@
 #include "TApiOpencv.h"
 #include "TApiCommon.h"
 
+
+#if defined(TARGET_WINDOWS)
+//#include "Libs/Opencv/include/opencv2/opencv.hpp"
+//#include "Libs/Opencv/Contrib/modules/aruco/include/opencv2/aruco.hpp"
+#include "opencv2/opencv.hpp"
+#include "opencv2/aruco.hpp"
+#else
 #include "Libs/opencv2.framework/Headers/opencv.hpp"
 #include "Libs/opencv2.framework/Headers/imgproc.hpp"
 #include "Libs/opencv2.framework/Headers/aruco.hpp"
+#endif
 
 namespace ApiOpencv
 {
@@ -375,6 +383,7 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 	auto ContoursArray = JsCore::GetArray( Params.GetContextRef(), GetArrayBridge(ContourArrays) );
 	Params.Return( ContoursArray );
 }
+
 
 
 
