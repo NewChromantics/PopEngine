@@ -32,6 +32,13 @@ DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
 
 
+void ResetOpenglState()
+{
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+
+}
+
 
 void ApiOpengl::Bind(Bind::TContext& Context)
 {
@@ -104,6 +111,7 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 
 		//	restore state after functions above, which might still mess around with things like viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
+		ResetOpenglState();
 	};
 	//Soy::TScopeCall RestoreRenderTarget( UnbindCurrent, RebindCurrent );
 	
@@ -135,6 +143,8 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		RenderTarget.Bind();
 		RenderTarget.SetViewportNormalised( Soy::Rectf(0,0,1,1) );
 
+		ResetOpenglState();
+		
 		//	hack! need to turn render target into it's own javasript object
 		//	that's why the image render target is the render context
 		This.mActiveRenderTarget = &RenderTarget;
@@ -827,8 +837,7 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	
 	Opengl::ClearDepth();
 	EnableBlend(false);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
+	ResetOpenglState();
 	
 	auto OpenglContext = this->GetContext();
 	Opengl_IsOkay();
@@ -967,15 +976,42 @@ void TShaderWrapper::SetUniform(Bind::TCallback& Params)
 	}
 }
 
+template<typename TYPE>
+void SetUniformArray(Opengl::TShader& Shader,Bind::TCallback& Params,const SoyGraphics::TUniform& Uniform,int ArgumentIndex)
+{
+	BufferArray<TYPE,1024*4> Values;
+	Params.GetArgumentArray( ArgumentIndex, GetArrayBridge(Values) );
+		
+	//	Pad out if the uniform is an array and we're short...
+	//	maybe need more strict alignment when enumerating sub arrays above
+	auto UniformCount = Uniform.GetElementCount();
+	if ( Values.GetSize() < UniformCount )
+	{
+		//std::Debug << "Warning: Uniform " << Uniform.mName << " only given " << Floats.GetSize() << "/" << UniformFloatCount << " floats" << std::endl;
+		if ( Uniform.GetArraySize() > 1 )
+		{
+			for ( auto i=Values.GetSize();	i<UniformCount;	i++ )
+				Values.PushBack(0);
+		}
+	}
+	else if ( Values.GetSize() > UniformCount )
+	{
+		//	pre-warn if too many
+	}
+
+	Shader.SetUniform( Uniform, GetArrayBridge(Values) );
+}
+
 void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUniform& Uniform)
 {
 	auto& Shader = *mShader;
+	const auto ValueArgumentIndex = 1;
 
 	if ( SoyGraphics::TElementType::IsImage(Uniform.mType) )
 	{
 		auto& Context = *mOpenglContext;
 		auto BindIndex = Context.mCurrentTextureSlot++;
-		auto& Image = Params.GetArgumentPointer<TImageWrapper>(1);
+		auto& Image = Params.GetArgumentPointer<TImageWrapper>(ValueArgumentIndex);
 
 		//	gr: currently this needs to be immediate... but we should be on the render thread anyway?
 		//	gr: planning ahead
@@ -991,47 +1027,40 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 			std::Debug << "Todo: relay to promise" << std::endl;
 		};
 		Image.GetTexture( Context, OnTextureLoaded, OnTextureError );
+		return;
 	}
-	else if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
+	
+	//	bool needs to turn into an array too!
+	if ( Uniform.mType == SoyGraphics::TElementType::Bool )
 	{
-		BufferArray<float,1024*4> Floats;
-		Params.GetArgumentArray( 1, GetArrayBridge(Floats) );
-		
-		//	Pad out if the uniform is an array and we're short...
-		//	maybe need more strict alignment when enumerating sub arrays above
-		auto UniformFloatCount = Uniform.GetFloatCount();
-		if ( Floats.GetSize() < UniformFloatCount )
-		{
-			//std::Debug << "Warning: Uniform " << Uniform.mName << " only given " << Floats.GetSize() << "/" << UniformFloatCount << " floats" << std::endl;
-			if ( Uniform.GetArraySize() > 1 )
-			{
-				for ( auto i=Floats.GetSize();	i<UniformFloatCount;	i++ )
-					Floats.PushBack(0);
-			}
-		}
-		else if ( Floats.GetSize() > UniformFloatCount )
-		{
-			std::Debug << "Warning: Uniform " << Uniform.mName << " given " << Floats.GetSize() << "/" << UniformFloatCount << " floats" << std::endl;
-		}
-		
-		Shader.SetUniform( Uniform, GetArrayBridge(Floats) );
-	}
-	else if ( Uniform.mType == SoyGraphics::TElementType::Bool )
-	{
-		auto Bool =	Params.GetArgumentBool( 1 );
+		auto Bool =	Params.GetArgumentBool( ValueArgumentIndex );
 		Shader.SetUniform( Uniform, Bool );
+		return;
 	}
-	else if ( Uniform.mType == SoyGraphics::TElementType::Int32 )
+
+	
+	if ( SoyGraphics::TElementType::IsFloat(Uniform.mType) )
 	{
-		auto Integer = Params.GetArgumentInt( 1 );
-		Shader.SetUniform( Uniform, Integer );
+		SetUniformArray<float>( Shader, Params, Uniform, ValueArgumentIndex );
+		return;
 	}
-	else
+	
+	if ( SoyGraphics::TElementType::IsInt(Uniform.mType) )
 	{
-		std::stringstream Error;
-		Error << "Unhandled uniform type " << Uniform.mName << " for " << Uniform.mName;
-		throw Soy::AssertException(Error.str());
+		SetUniformArray<int32_t>( Shader, Params, Uniform, ValueArgumentIndex );
+		return;
 	}
+	
+	if ( SoyGraphics::TElementType::IsUint(Uniform.mType) )
+	{
+		SetUniformArray<uint32_t>( Shader, Params, Uniform, ValueArgumentIndex );
+		return;
+	}
+	
+	
+	std::stringstream Error;
+	Error << "Unhandled uniform type " << Uniform.mName << " for " << Uniform.mName;
+	throw Soy::AssertException(Error.str());
 }
 
 void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
