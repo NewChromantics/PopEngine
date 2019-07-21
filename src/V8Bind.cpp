@@ -768,7 +768,7 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 	//auto* Pointer = nullptr;
 	//auto PointerHandle = External::New( Isolate, Pointer ).As<Value>();
 	//auto ConstructorFunc = v8::FunctionTemplate::New( Isolate, Constructor, ContainerHandle );
-	auto ConstructorFunc = v8::FunctionTemplate::New( Isolate, Definition->callAsConstructor );
+	auto ConstructorFunc = v8::FunctionTemplate::New( Isolate, Definition.callAsConstructor );
 
 	//	gr: from v8::Local<v8::FunctionTemplate> TObjectWrapper<TYPENAME,TYPE>::CreateTemplate(TV8Container& Container)
 	//	https://github.com/v8/v8/wiki/Embedder's-Guide
@@ -787,7 +787,7 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 		int i=0;
 		while ( true )
 		{
-			auto& FunctionDefinition = Definition->staticFunctions[i];
+			auto& FunctionDefinition = Definition.staticFunctions[i];
 			i++;
 			if ( FunctionDefinition.name == nullptr )
 				break;
@@ -816,7 +816,7 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 	JSClassRef NewClass( nullptr );
 	NewClass.mTemplate = Template;
 	NewClass.mConstructor = Constructor;
-	NewClass.mDestructor = Definition->finalize;
+	NewClass.mDestructor = Definition.finalize;
 	
 	return NewClass;
 
