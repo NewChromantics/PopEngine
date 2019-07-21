@@ -255,7 +255,7 @@ JSValueRef	JSValueMakeFromJSONString(JSContextRef Context, JSStringRef String);
 
 bool		JSValueIsNumber(JSContextRef Context,JSValueRef Value);
 double		JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
-JSValueRef	JSValueMakeNumber(JSContextRef Context,int Value);
+JSValueRef	JSValueMakeNumber(JSContextRef Context,double Value);
 
 bool		JSObjectIsFunction(JSContextRef Context,JSObjectRef Value);
 JSValueRef	JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception);

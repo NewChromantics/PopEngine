@@ -356,7 +356,7 @@ double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Excepti
 	return Number->Value();
 }
 
-JSValueRef JSValueMakeNumber(JSContextRef Context,int Value)
+JSValueRef JSValueMakeNumber(JSContextRef Context,double Value)
 {
 	auto Number = v8::Number::New( &Context.GetIsolate(), Value );
 	return JSValueRef( Number );

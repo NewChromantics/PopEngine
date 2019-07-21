@@ -687,7 +687,7 @@ double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Excepti
 	return Double;
 }
 
-JSValueRef JSValueMakeNumber(JSContextRef Context,int IntValue)
+JSValueRef JSValueMakeNumber(JSContextRef Context,double IntValue)
 {
 	JsValueRef Value = nullptr;
 	auto Error = JsIntToNumber( IntValue, &Value );
