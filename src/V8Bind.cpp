@@ -1229,4 +1229,10 @@ JSValueRef JSValueMakeFromJSONString(JSContextRef Context, JSStringRef String)
 }
 
 
+JSValueRef JSObjectToValue(JSObjectRef Object)
+{
+	auto Value = Object.GetValue();
+	return JSValueRef( Value );
+}
+
 #endif //JSAPI_V8
