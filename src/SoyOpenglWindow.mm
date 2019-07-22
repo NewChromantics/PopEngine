@@ -10,6 +10,9 @@ namespace Platform
 	//	Osx doesn't have labels, so it's a kind of text box
 	template<typename BASETYPE>
 	class TTextBox_Base;
+	
+	NSColor*		GetColour(vec3x<uint8_t> Rgb);
+	vec3x<uint8_t>	GetColour(NSColor* Colour);
 }
 
 
@@ -40,20 +43,92 @@ namespace Platform
 
 @end
 
-@implementation TResponder
 
-	-(void) OnAction
-	{
-		//	call lambda
-		if ( !mCallback )
-		{
-			std::Debug << "TResponderCallback unhandled callback" << std::endl;
-			return;
-		}
-		mCallback();
-	}
+@interface TColourResponder : NSObject
+{
+@public std::function<void(vec3x<uint8_t>)>	mCallback;
+}
+
+-(void) OnAction:(NSColorPanel*)ColourPanel;
 
 @end
+
+
+
+
+@implementation TResponder
+
+-(void) OnAction
+{
+	//	call lambda
+	if ( !mCallback )
+	{
+		std::Debug << "TResponderCallback unhandled callback" << std::endl;
+		return;
+	}
+	mCallback();
+}
+
+@end
+
+
+@implementation TColourResponder
+
+-(void)OnAction:(NSColorPanel*)ColourPanel
+{
+	auto Rgb = Platform::GetColour( ColourPanel.color );
+
+	//	call lambda
+	if ( !mCallback )
+	{
+		std::Debug << "TColourResponder unhandled callback " << Rgb << std::endl;
+		return;
+	}
+	mCallback( Rgb );
+}
+@end
+
+
+NSColor* Platform::GetColour(vec3x<uint8_t> Rgb)
+{
+	auto GetFloat = [](uint8_t Component)
+	{
+		float f = static_cast<float>(Component);
+		f /= 255.0f;
+		return f;
+	};
+
+	auto r = GetFloat( Rgb.x );
+	auto g = GetFloat( Rgb.y );
+	auto b = GetFloat( Rgb.z );
+	auto a = 1.0f;
+	auto* Colour = [NSColor colorWithRed:r green:g blue:b alpha:a];
+
+	return Colour;
+}
+
+vec3x<uint8_t> Platform::GetColour(NSColor* Colour)
+{
+	auto Red = Colour.redComponent;
+	auto Green = Colour.greenComponent;
+	auto Blue = Colour.blueComponent;
+	auto Alpha = Colour.alphaComponent;
+	
+	auto Get8 = [](CGFloat Float)
+	{
+		Float *= 255.0f;
+		if ( Float < 0 )	Float = 0;
+		if ( Float > 255 )	Float = 255;
+		return static_cast<uint8_t>( Float );
+	};
+	
+	auto r8 = Get8(Red);
+	auto g8 = Get8(Green);
+	auto b8 = Get8(Blue);
+	vec3x<uint8_t> Rgb( r8, g8, b8 );
+	return Rgb;
+}
+
 
 class Platform::TWindow : public SoyWindow
 {
@@ -229,6 +304,56 @@ public:
 
 
 
+class Platform::TColourPicker : public Gui::TColourPicker
+{
+public:
+	TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_t> InitialColour);
+	~TColourPicker();
+	
+public:
+	PopWorker::TJobQueue&	mThread;
+	TColourResponder*		mResponder = [TColourResponder alloc];
+};
+
+
+
+Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_t> InitialColour) :
+	mThread		( Thread )
+{
+	auto Allocate = [this,InitialColour]()
+	{
+		//	todo: create a colour panel!
+		auto* Panel = [NSColorPanel sharedColorPanel];
+		[Panel setTarget:mResponder];
+		[Panel setAction:@selector(OnAction:)];
+		Panel.continuous = TRUE;
+		Panel.showsAlpha = FALSE;
+		Panel.color = Platform::GetColour( InitialColour );
+
+		//	show
+		[Panel orderFront:nil];
+
+		mResponder->mCallback = [this](vec3x<uint8_t> Rgb)
+		{
+			if ( this->mOnValueChanged )
+			{
+				this->mOnValueChanged( Rgb );
+			}
+			else
+			{
+				std::Debug << "Colour picker changed (no callback)" << std::endl;
+			}
+			
+		};
+	};
+	mThread.PushJob( Allocate );
+}
+
+Platform::TColourPicker::~TColourPicker()
+{
+	[[NSColorPanel sharedColorPanel] close];
+	mResponder->mCallback = nullptr;
+}
 
 
 
@@ -620,6 +745,14 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 }
 
 
+
+
+std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> InitialColour)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	std::shared_ptr<Gui::TColourPicker> Picker( new Platform::TColourPicker( Thread, InitialColour ) );
+	return Picker;
+}
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {

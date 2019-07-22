@@ -9,6 +9,10 @@ class SoyLabel;
 class SoyTextBox;
 class SoyTickBox;
 
+namespace Gui
+{
+	class TColourPicker;
+}
 
 namespace ApiGui
 {
@@ -19,12 +23,14 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(Label);
 	DECLARE_BIND_TYPENAME(TextBox);
 	DECLARE_BIND_TYPENAME(TickBox);
+	DECLARE_BIND_TYPENAME(ColourPicker);
 
 	class TWindowWrapper;
 	class TSliderWrapper;
 	class TLabelWrapper;
 	class TTextBoxWrapper;
 	class TTickBoxWrapper;
+	class TColourPickerWrapper;
 }
 
 
@@ -128,5 +134,25 @@ public:
 	
 public:
 	std::shared_ptr<SoyTickBox>&	mControl = mObject;
+};
+
+
+class ApiGui::TColourPickerWrapper : public Bind::TObjectWrapper<ApiGui::BindType::ColourPicker,Gui::TColourPicker>
+{
+public:
+	TColourPickerWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+	{
+	}
+	~TColourPickerWrapper();
+	
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+
+	void			OnChanged(vec3x<uint8_t>& NewValue);
+	void			OnClosed(vec3x<uint8_t>& NewValue);
+
+public:
+	std::shared_ptr<Gui::TColourPicker>&	mControl = mObject;
 };
 

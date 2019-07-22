@@ -11,6 +11,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Label);
 	DEFINE_BIND_TYPENAME(TextBox);
 	DEFINE_BIND_TYPENAME(TickBox);
+	DEFINE_BIND_TYPENAME(ColourPicker);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
@@ -30,6 +31,7 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TLabelWrapper>( Namespace );
 	Context.BindObjectType<TTextBoxWrapper>( Namespace );
 	Context.BindObjectType<TTickBoxWrapper>( Namespace );
+	Context.BindObjectType<TColourPickerWrapper>( Namespace );
 }
 
 
@@ -285,4 +287,54 @@ void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
 
 
 
+ApiGui::TColourPickerWrapper::~TColourPickerWrapper()
+{
+	mControl->mOnValueChanged = nullptr;
+	mControl->mOnDialogClosed = nullptr;
+}
+
+void ApiGui::TColourPickerWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+}
+
+void ApiGui::TColourPickerWrapper::Construct(Bind::TCallback& Params)
+{
+	BufferArray<uint8_t,3> Rgb;
+	Params.GetArgumentArray( 0, GetArrayBridge(Rgb) );
+	
+	vec3x<uint8_t> Rgb3( Rgb[0], Rgb[1], Rgb[2] );
+	
+	mControl = Platform::CreateColourPicker( Rgb3 );
+	mControl->mOnValueChanged = std::bind( &TColourPickerWrapper::OnChanged, this, std::placeholders::_1 );
+	//mControl->mOnClosed = std::bind( &TColourPickerWrapper::OnClosed, this, std::placeholders::_1 );
+}
+
+
+void ApiGui::TColourPickerWrapper::OnChanged(vec3x<uint8_t>& NewValue)
+{
+	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	{
+		auto RgbArray = NewValue.GetArray();
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		Callback.SetArgumentArray( 0, GetArrayBridge(RgbArray) );
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
+}
+
+void ApiGui::TColourPickerWrapper::OnClosed(vec3x<uint8_t>& NewValue)
+{
+	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	{
+		auto Rgb = NewValue.GetArray();
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnClosed");
+		JsCore::TCallback Callback(Context);
+		Callback.SetArgumentArray( 0, GetArrayBridge(Rgb) );
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
+}
 
