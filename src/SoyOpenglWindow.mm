@@ -311,6 +311,7 @@ public:
 	~TColourPicker();
 	
 public:
+	NSColorPanel*			mColorPanel = nullptr;
 	PopWorker::TJobQueue&	mThread;
 	TColourResponder*		mResponder = [TColourResponder alloc];
 };
@@ -322,16 +323,15 @@ Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_
 {
 	auto Allocate = [this,InitialColour]()
 	{
-		//	todo: create a colour panel!
-		auto* Panel = [NSColorPanel sharedColorPanel];
-		[Panel setTarget:mResponder];
-		[Panel setAction:@selector(OnAction:)];
-		Panel.continuous = TRUE;
-		Panel.showsAlpha = FALSE;
-		Panel.color = Platform::GetColour( InitialColour );
+		mColorPanel = [[NSColorPanel alloc] init];
+		[mColorPanel setTarget:mResponder];
+		[mColorPanel setAction:@selector(OnAction:)];
+		mColorPanel.continuous = TRUE;
+		mColorPanel.showsAlpha = FALSE;
+		mColorPanel.color = Platform::GetColour( InitialColour );
 
 		//	show
-		[Panel orderFront:nil];
+		[mColorPanel orderFront:nil];
 
 		mResponder->mCallback = [this](vec3x<uint8_t> Rgb)
 		{
@@ -351,7 +351,7 @@ Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_
 
 Platform::TColourPicker::~TColourPicker()
 {
-	[[NSColorPanel sharedColorPanel] close];
+	[mColorPanel close];
 	mResponder->mCallback = nullptr;
 }
 
