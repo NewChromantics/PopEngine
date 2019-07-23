@@ -416,6 +416,7 @@
 		BFE9512F22A70B9700B83061 /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = x264/osx/x264.h; sourceTree = "<group>"; };
 		BFE9513022A70B9700B83061 /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = x264/osx/x264_config.h; sourceTree = "<group>"; };
 		BFE9513122A70B9700B83061 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libx264.a; path = x264/osx/libx264.a; sourceTree = "<group>"; };
+		BFF1C71322E738F100AFDFD5 /* Opencv_contrib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Opencv_contrib; sourceTree = "<group>"; };
 		BFF2B6C02264F9A700232137 /* TApiSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSerial.h; path = src/TApiSerial.h; sourceTree = "<group>"; };
 		BFF2B6C12264F9A700232137 /* TApiSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSerial.cpp; path = src/TApiSerial.cpp; sourceTree = "<group>"; };
 		BFF505E822550F30005A6AC1 /* V8Bind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = V8Bind.cpp; path = src/V8Bind.cpp; sourceTree = "<group>"; };
@@ -590,14 +591,15 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */,
 				BF8534F322B6DA1C0049C01B /* ChakraCore */,
 				BF0F9E762289EB5F00AEA7DC /* dyncall */,
 				BFD399F922CD427D009E2FD3 /* LeapMotion */,
+				BFF1C71322E738F100AFDFD5 /* Opencv_contrib */,
 				BFA22B2C22DCAD6F00D8615C /* opencv2.framework */,
 				BF89CF49228DD3EB00A187D5 /* OpenVr */,
 				BF89CF4B228DD3F700A187D5 /* OpenVr */,
 				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
+				BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */,
 				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
 				BFE9512E22A70B8400B83061 /* x264 */,
 			);
