@@ -22,12 +22,14 @@ namespace ApiOpencv
 	void	GetMoments(Bind::TCallback& Params);
 	void	GetHogGradientMap(Bind::TCallback& Params);
 	void	FindArucoMarkers(Bind::TCallback& Params);
+	void	SolvePnp(Bind::TCallback& Params);
 
 	DEFINE_BIND_FUNCTIONNAME(FindContours);
 	DEFINE_BIND_FUNCTIONNAME(GetSaliencyRects);
 	DEFINE_BIND_FUNCTIONNAME(GetMoments);
 	DEFINE_BIND_FUNCTIONNAME(GetHogGradientMap);
 	DEFINE_BIND_FUNCTIONNAME(FindArucoMarkers);
+	DEFINE_BIND_FUNCTIONNAME(SolvePnp);
 }
 
 
@@ -40,6 +42,7 @@ void ApiOpencv::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetMoments>( GetMoments, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetHogGradientMap>( GetHogGradientMap, Namespace );
 	Context.BindGlobalFunction<BindFunction::FindArucoMarkers>( FindArucoMarkers, Namespace );
+	Context.BindGlobalFunction<BindFunction::SolvePnp>( SolvePnp, Namespace );
 }
 
 int GetMatrixType(SoyPixelsFormat::Type Format)
@@ -65,6 +68,25 @@ cv::Mat GetMatrix(const SoyPixelsImpl& Pixels)
 	auto* Data = const_cast<uint8_t*>(Pixels.GetPixelsArray().GetArray());
 	
 	cv::Mat Matrix( Rows, Cols, Type, Data );
+	return Matrix;
+}
+
+
+cv::Mat GetMatrix(ArrayBridge<float>&& Floats,size_t Columns,const std::string& Context)
+{
+	if ( (Floats.GetSize() % Columns) != 0 )
+	{
+		std::stringstream Error;
+		Error << "Elements(x" << Floats.GetSize() << ") in " << Context << " doesn't align to " << Columns;
+		throw Soy::AssertException( Error );
+	}
+	
+	auto Rows = Floats.GetSize() / Columns;
+	auto Cols = Columns;
+	auto Type = CV_32F;//CV_32FC(Columns);
+	
+	
+	cv::Mat Matrix( Rows, Cols, Type, Floats.GetArray() );
 	return Matrix;
 }
 
@@ -452,5 +474,74 @@ void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 	Results.SetArray("Rejects", GetArrayBridge(RejectedCornerObjects) );
 
 	Params.Return(Results);
+}
+
+
+
+
+void ApiOpencv::SolvePnp(Bind::TCallback& Params)
+{
+	Array<float> Object3;	//	3d points on plane
+	Array<float> Object2;	//	2d points
+	Array<float> CameraProjectionMatrix;	//	3x3
+	Array<float> DistortionCoefs;
+
+	Params.GetArgumentArray( 0, GetArrayBridge(Object3) );
+	Params.GetArgumentArray( 1, GetArrayBridge(Object2) );
+	Params.GetArgumentArray( 2, GetArrayBridge(CameraProjectionMatrix) );
+	if ( !Params.IsArgumentUndefined(3) )
+		Params.GetArgumentArray( 3, GetArrayBridge(DistortionCoefs) );
+	
+	auto Object3Mat = GetMatrix( GetArrayBridge(Object3), 3, "Object 3D points" );
+	auto Object2Mat = GetMatrix( GetArrayBridge(Object2), 2, "Object 2D points" );
+	auto CameraMat = GetMatrix( GetArrayBridge(CameraProjectionMatrix), 3, "Camera projection matrix 3x3" );
+	cv::Mat DistortionMat;
+	if ( !DistortionCoefs.IsEmpty() )
+		DistortionMat = GetMatrix( GetArrayBridge(DistortionCoefs), 7, "Distortion Coeffs" );
+	//cv::noArray();
+	
+	cv::Mat RotationVec( 3, 1, CV_32F );
+	cv::Mat TranslationVec( 3, 1, CV_32F );
+	
+	{
+		Soy::TScopeTimerPrint Timer("cv::aruco::solvePnP",1);
+	
+		//Mat opoints = Object3Mat.getMat();
+		//int npoints = std::max(opoints.checkVector(3, CV_32F), opoints.checkVector(3, CV_64F));
+		
+		try
+		{
+			cv::solvePnP( Object3Mat, Object2Mat, CameraMat, DistortionMat, RotationVec, TranslationVec );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << e.what() << std::endl;
+			throw;
+		}
+	}
+	
+	cv::Mat RotationMtx;
+	cv::Rodrigues(RotationVec, RotationMtx);
+	
+	auto r00 = RotationMtx.at<float>(0,0);
+	auto r10 = RotationMtx.at<float>(1,0);
+	auto r20 = RotationMtx.at<float>(2,0);
+	auto r01 = RotationMtx.at<float>(0,1);
+	auto r11 = RotationMtx.at<float>(1,1);
+	auto r21 = RotationMtx.at<float>(2,1);
+	auto r02 = RotationMtx.at<float>(0,2);
+	auto r12 = RotationMtx.at<float>(1,2);
+	auto r22 = RotationMtx.at<float>(2,2);
+
+	float PoseMatrix[] =
+	{
+		r00, r10, r20, TranslationVec.at<float>(0),
+		r01, r11, r21, TranslationVec.at<float>(1),
+		r02, r12, r22, TranslationVec.at<float>(2),
+		0, 0, 0, 1
+	};
+	auto PoseMatrixArray = GetRemoteArray(PoseMatrix);
+	
+	Params.Return( GetArrayBridge(PoseMatrixArray) );
 }
 
