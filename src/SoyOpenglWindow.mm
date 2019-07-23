@@ -44,9 +44,10 @@ namespace Platform
 @end
 
 
-@interface TColourResponder : NSObject
+@interface TColourResponder : NSObject<NSWindowDelegate>
 {
-@public std::function<void(vec3x<uint8_t>)>	mCallback;
+@public std::function<void(vec3x<uint8_t>)>	mOnChanged;
+@public std::function<void()>				mOnClosed;
 }
 
 -(void) OnAction:(NSColorPanel*)ColourPanel;
@@ -79,13 +80,23 @@ namespace Platform
 	auto Rgb = Platform::GetColour( ColourPanel.color );
 
 	//	call lambda
-	if ( !mCallback )
+	if ( !mOnChanged )
 	{
 		std::Debug << "TColourResponder unhandled callback " << Rgb << std::endl;
 		return;
 	}
-	mCallback( Rgb );
+	mOnChanged( Rgb );
 }
+
+
+- (void)windowWillClose:(NSNotification *)notification
+{
+	std::Debug << "Colour responder window closing" << std::endl;
+
+	if ( mOnClosed )
+		mOnClosed();
+}
+
 @end
 
 
@@ -328,12 +339,12 @@ Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_
 		[mColorPanel setAction:@selector(OnAction:)];
 		mColorPanel.continuous = TRUE;
 		mColorPanel.showsAlpha = FALSE;
+		mColorPanel.delegate = mResponder;
+		
+		//	set colour before setting callback, or we'll immediately get a callback, which I think we don't want because it wasn't instigated by the user
 		mColorPanel.color = Platform::GetColour( InitialColour );
 
-		//	show
-		[mColorPanel orderFront:nil];
-
-		mResponder->mCallback = [this](vec3x<uint8_t> Rgb)
+		mResponder->mOnChanged = [this](vec3x<uint8_t> Rgb)
 		{
 			if ( this->mOnValueChanged )
 			{
@@ -345,14 +356,25 @@ Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_
 			}
 			
 		};
+		
+		mResponder->mOnClosed = [this]()
+		{
+			if ( this->mOnDialogClosed )
+				this->mOnDialogClosed();
+		};
+		
+		//	show
+		[mColorPanel orderFront:nil];
 	};
 	mThread.PushJob( Allocate );
 }
 
 Platform::TColourPicker::~TColourPicker()
 {
+	//	need to make sure OnClosed is called here...
 	[mColorPanel close];
-	mResponder->mCallback = nullptr;
+	mResponder->mOnChanged = nullptr;
+	mResponder->mOnClosed = nullptr;
 }
 
 

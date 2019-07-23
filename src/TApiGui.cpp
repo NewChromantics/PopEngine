@@ -306,7 +306,7 @@ void ApiGui::TColourPickerWrapper::Construct(Bind::TCallback& Params)
 	
 	mControl = Platform::CreateColourPicker( Rgb3 );
 	mControl->mOnValueChanged = std::bind( &TColourPickerWrapper::OnChanged, this, std::placeholders::_1 );
-	//mControl->mOnClosed = std::bind( &TColourPickerWrapper::OnClosed, this, std::placeholders::_1 );
+	mControl->mOnDialogClosed = std::bind( &TColourPickerWrapper::OnClosed, this );
 }
 
 
@@ -324,15 +324,13 @@ void ApiGui::TColourPickerWrapper::OnChanged(vec3x<uint8_t>& NewValue)
 	this->mContext.Queue( Callback );
 }
 
-void ApiGui::TColourPickerWrapper::OnClosed(vec3x<uint8_t>& NewValue)
+void ApiGui::TColourPickerWrapper::OnClosed()
 {
-	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	auto Callback = [this](Bind::TLocalContext& Context)
 	{
-		auto Rgb = NewValue.GetArray();
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnClosed");
 		JsCore::TCallback Callback(Context);
-		Callback.SetArgumentArray( 0, GetArrayBridge(Rgb) );
 		ThisOnChanged.Call( Callback );
 	};
 	this->mContext.Queue( Callback );

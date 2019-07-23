@@ -150,7 +150,7 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
 	void			OnChanged(vec3x<uint8_t>& NewValue);
-	void			OnClosed(vec3x<uint8_t>& NewValue);
+	void			OnClosed();
 
 public:
 	std::shared_ptr<Gui::TColourPicker>&	mControl = mObject;
