@@ -430,7 +430,7 @@ void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 	cv::InputArray cameraMatrix = cv::noArray();
 	
 	{
-		Soy::TScopeTimerPrint Timer("cv::aruco::detectMarkers",1);
+		Soy::TScopeTimerPrint Timer("cv::aruco::detectMarkers",10);
 		cv::aruco::detectMarkers( InputArray, Dictionary, FoundCorners, FoundIds, DetectorParams, RejectedCorners, cameraMatrix );
 	}
 	
@@ -495,6 +495,8 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	auto Object3Mat = GetMatrix( GetArrayBridge(Object3), 3, "Object 3D points" );
 	auto Object2Mat = GetMatrix( GetArrayBridge(Object2), 2, "Object 2D points" );
 	auto CameraMat = GetMatrix( GetArrayBridge(CameraProjectionMatrix), 3, "Camera projection matrix 3x3" );
+	CameraMat.t();
+	
 	cv::Mat DistortionMat;
 	if ( !DistortionCoefs.IsEmpty() )
 		DistortionMat = GetMatrix( GetArrayBridge(DistortionCoefs), 7, "Distortion Coeffs" );
@@ -504,7 +506,7 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	cv::Mat TranslationVec( 3, 1, CV_32F );
 	
 	{
-		Soy::TScopeTimerPrint Timer("cv::aruco::solvePnP",1);
+		Soy::TScopeTimerPrint Timer("cv::aruco::solvePnP",10);
 	
 		//Mat opoints = Object3Mat.getMat();
 		//int npoints = std::max(opoints.checkVector(3, CV_32F), opoints.checkVector(3, CV_64F));
@@ -532,13 +534,16 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	auto r02 = RotationMtx.at<float>(0,2);
 	auto r12 = RotationMtx.at<float>(1,2);
 	auto r22 = RotationMtx.at<float>(2,2);
+	auto tx = TranslationVec.at<float>(0);
+	auto ty = TranslationVec.at<float>(1);
+	auto tz = TranslationVec.at<float>(2);
 
 	float PoseMatrix[] =
 	{
-		r00, r10, r20, TranslationVec.at<float>(0),
-		r01, r11, r21, TranslationVec.at<float>(1),
-		r02, r12, r22, TranslationVec.at<float>(2),
-		0, 0, 0, 1
+		r00, r10, r20, 0,
+		r01, r11, r21, 0,
+		r02, r12, r22, 0,
+		tx, ty, tz, 1
 	};
 	auto PoseMatrixArray = GetRemoteArray(PoseMatrix);
 	
