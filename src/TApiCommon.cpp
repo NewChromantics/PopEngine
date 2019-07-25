@@ -12,6 +12,7 @@
 
 
 //	system stuff
+DEFINE_BIND_FUNCTIONNAME(FileExists);
 DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
 DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
 DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
@@ -77,6 +78,7 @@ namespace ApiPop
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
 	static void 	CompileAndRun(Bind::TCallback& Params);
+	static void		FileExists(Bind::TCallback& Params);
 	static void 	LoadFileAsString(Bind::TCallback& Params);
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
@@ -465,6 +467,16 @@ void ApiPop::CompileAndRun(Bind::TCallback& Params)
 
 
 
+void ApiPop::FileExists(Bind::TCallback& Params)
+{
+	auto Filename = Params.GetArgumentFilename(0);
+	
+	auto Exists = Platform::FileExists( Filename );
+	Params.Return( Exists );
+}
+
+
+
 void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 {
 	auto Filename = Params.GetArgumentFilename(0);
@@ -563,6 +575,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
+	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBuffer>(LoadFileAsArrayBuffer, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
