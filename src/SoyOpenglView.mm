@@ -107,6 +107,11 @@ Platform::TOpenglView::TOpenglView(vec2f Position,vec2f Size,const TOpenglParams
 	Attributes.PushBack( 8 );
 	Attributes.PushBack( NSOpenGLPFAColorSize );
 	Attributes.PushBack( 32 );
+	
+	//	make a depth buffer!
+	Attributes.PushBack( NSOpenGLPFADepthSize );
+	Attributes.PushBack( 32 );
+	
 
 	//	require 3.2 to enable some features without using extensions (eg. glGenVertexArrays)
 	Attributes.PushBack( NSOpenGLPFAOpenGLProfile );
