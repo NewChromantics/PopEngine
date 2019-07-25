@@ -35,8 +35,11 @@ DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
 void ResetOpenglState()
 {
 	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-
+	//glEnable(GL_CULL_FACE);
+	//glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(true);
+	glDepthFunc(GL_LEQUAL);
 }
 
 
