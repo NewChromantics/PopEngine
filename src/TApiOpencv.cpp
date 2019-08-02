@@ -430,7 +430,7 @@ void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 	cv::InputArray cameraMatrix = cv::noArray();
 	
 	{
-		Soy::TScopeTimerPrint Timer("cv::aruco::detectMarkers",10);
+		Soy::TScopeTimerPrint Timer("cv::aruco::detectMarkers",20);
 		cv::aruco::detectMarkers( InputArray, Dictionary, FoundCorners, FoundIds, DetectorParams, RejectedCorners, cameraMatrix );
 	}
 	
@@ -495,11 +495,10 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	auto Object3Mat = GetMatrix( GetArrayBridge(Object3), 3, "Object 3D points" );
 	auto Object2Mat = GetMatrix( GetArrayBridge(Object2), 2, "Object 2D points" );
 	auto CameraMat = GetMatrix( GetArrayBridge(CameraProjectionMatrix), 3, "Camera projection matrix 3x3" );
-	CameraMat.t();
 	
 	cv::Mat DistortionMat;
 	if ( !DistortionCoefs.IsEmpty() )
-		DistortionMat = GetMatrix( GetArrayBridge(DistortionCoefs), 7, "Distortion Coeffs" );
+		DistortionMat = GetMatrix( GetArrayBridge(DistortionCoefs), 5, "Distortion Coeffs" );
 	//cv::noArray();
 	
 	cv::Mat RotationVec( 3, 1, CV_32F );
@@ -522,9 +521,43 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 		}
 	}
 	
+	// Transpose OpenCV to OpenGL coords
+	cv::Mat OpencvToOpengl = cv::Mat::zeros(3, 3, CV_32F);
+	//cv::Mat OpencvToOpengl = cv::Mat::zeros(4, 4, CV_32F);
+	OpencvToOpengl.at<float>(0, 0) = 1.0f;
+	OpencvToOpengl.at<float>(1, 1) = -1.0f; // Invert the y axis
+	OpencvToOpengl.at<float>(2, 2) = -1.0f; // invert the z axis
+	//OpencvToOpengl.at<float>(3, 3) = 1.0f;
+	
 	cv::Mat RotationMtx;
 	cv::Rodrigues(RotationVec, RotationMtx);
 	
+	RotationMtx = OpencvToOpengl * RotationMtx;
+	RotationMtx = RotationMtx.t();
+	
+	//	gr: lets output seperate things instead of one matrix...
+	BufferArray<float,3> PosArray;
+	PosArray.PushBack( TranslationVec.at<float>(0) );
+	PosArray.PushBack( TranslationVec.at<float>(1) );
+	PosArray.PushBack( -TranslationVec.at<float>(2) );
+
+	BufferArray<float,3*3> RotArray;
+	RotArray.PushBack( RotationMtx.at<float>(0,0) );
+	RotArray.PushBack( RotationMtx.at<float>(1,0) );
+	RotArray.PushBack( RotationMtx.at<float>(2,0) );
+	RotArray.PushBack( RotationMtx.at<float>(0,1) );
+	RotArray.PushBack( RotationMtx.at<float>(1,1) );
+	RotArray.PushBack( RotationMtx.at<float>(2,1) );
+	RotArray.PushBack( RotationMtx.at<float>(0,2) );
+	RotArray.PushBack( RotationMtx.at<float>(1,2) );
+	RotArray.PushBack( RotationMtx.at<float>(2,2) );
+
+	auto Output = Params.mLocalContext.mGlobalContext.CreateObjectInstance( Params.mLocalContext );
+	
+	Output.SetArray("Translation", GetArrayBridge(PosArray) );
+	Output.SetArray("Rotation", GetArrayBridge(RotArray) );
+	Params.Return(Output);
+/*
 	auto r00 = RotationMtx.at<float>(0,0);
 	auto r10 = RotationMtx.at<float>(1,0);
 	auto r20 = RotationMtx.at<float>(2,0);
@@ -537,7 +570,7 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	auto tx = TranslationVec.at<float>(0);
 	auto ty = TranslationVec.at<float>(1);
 	auto tz = TranslationVec.at<float>(2);
-
+	
 	float PoseMatrix[] =
 	{
 		r00, r10, r20, 0,
@@ -548,5 +581,6 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	auto PoseMatrixArray = GetRemoteArray(PoseMatrix);
 	
 	Params.Return( GetArrayBridge(PoseMatrixArray) );
+ */
 }
 
