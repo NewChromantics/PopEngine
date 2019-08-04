@@ -23,6 +23,7 @@ namespace ApiOpencv
 	void	GetHogGradientMap(Bind::TCallback& Params);
 	void	FindArucoMarkers(Bind::TCallback& Params);
 	void	SolvePnp(Bind::TCallback& Params);
+	void	Undistort(Bind::TCallback& Params);
 
 	DEFINE_BIND_FUNCTIONNAME(FindContours);
 	DEFINE_BIND_FUNCTIONNAME(GetSaliencyRects);
@@ -30,7 +31,8 @@ namespace ApiOpencv
 	DEFINE_BIND_FUNCTIONNAME(GetHogGradientMap);
 	DEFINE_BIND_FUNCTIONNAME(FindArucoMarkers);
 	DEFINE_BIND_FUNCTIONNAME(SolvePnp);
-	
+	DEFINE_BIND_FUNCTIONNAME(Undistort);
+
 	//	const
 	DEFINE_BIND_FUNCTIONNAME(ArucoMarkerDictionarys);
 	cv::Ptr<cv::aruco::Dictionary>	GetArucoDictionary(const std::string& Name);
@@ -48,6 +50,7 @@ void ApiOpencv::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetHogGradientMap>( GetHogGradientMap, Namespace );
 	Context.BindGlobalFunction<BindFunction::FindArucoMarkers>( FindArucoMarkers, Namespace );
 	Context.BindGlobalFunction<BindFunction::SolvePnp>( SolvePnp, Namespace );
+	Context.BindGlobalFunction<BindFunction::Undistort>( Undistort, Namespace );
 
 	
 	auto BindArucoDictionaryNames = [](Bind::TLocalContext& Context)
@@ -76,6 +79,21 @@ int GetMatrixType(SoyPixelsFormat::Type Format)
 	throw Soy::AssertException( Error.str() );
 }
 
+SoyPixelsFormat::Type GetPixelsType(int MatrixType)
+{
+	switch ( MatrixType )
+	{
+		case CV_8UC1:	return SoyPixelsFormat::Greyscale;
+	
+		default:
+			break;
+	}
+
+	std::stringstream Error;
+	Error << "Unhandled format " << MatrixType << " for conversion from opencv matrix type";
+	throw Soy::AssertException( Error.str() );
+}
+
 cv::Mat GetMatrix(const SoyPixelsImpl& Pixels)
 {
 	auto Rows = Pixels.GetHeight();
@@ -87,6 +105,18 @@ cv::Mat GetMatrix(const SoyPixelsImpl& Pixels)
 	return Matrix;
 }
 
+
+void GetPixels(SoyPixelsImpl& Pixels,cv::Mat& ImageMatrix)
+{
+	auto Height = ImageMatrix.rows;
+	auto Width = ImageMatrix.cols;
+	auto Type = GetPixelsType( ImageMatrix.type() );
+	auto* Data = ImageMatrix.ptr();
+	auto DataSize = Height * Width * 1;
+	
+	SoyPixelsRemote ImageMatrixPixels( Data, Width, Height, DataSize, Type );
+	Pixels.Copy( ImageMatrixPixels );
+}
 
 cv::Mat GetMatrix(ArrayBridge<float>&& Floats,size_t Columns,const std::string& Context)
 {
@@ -640,4 +670,32 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(PoseMatrixArray) );
  */
 }
+
+
+
+void ApiOpencv::Undistort(Bind::TCallback& Params)
+{
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+	SoyPixels OrigPixels;
+	Image.GetPixels(OrigPixels);
+	
+	auto InputImageMat = GetMatrix( OrigPixels );
+
+	Array<float> CameraProjectionMatrix;	//	3x3
+	Array<float> DistortionCoefs;
+	Params.GetArgumentArray( 1, GetArrayBridge(CameraProjectionMatrix) );
+	Params.GetArgumentArray( 2, GetArrayBridge(DistortionCoefs) );
+	
+	auto CameraMat = GetMatrix( GetArrayBridge(CameraProjectionMatrix), 3, "Camera projection matrix 3x3" );
+	auto DistortionMat = GetMatrix( GetArrayBridge(DistortionCoefs), 5, "Distortion Coeffs" );
+	
+	cv::Mat UndistortedImage;
+	cv::undistort( InputImageMat, UndistortedImage, CameraMat, DistortionMat );
+	
+	GetPixels( OrigPixels, UndistortedImage );
+	Image.SetPixels( OrigPixels );
+}
+
+
+
 
