@@ -1,6 +1,6 @@
 #include "TApiOpencv.h"
 #include "TApiCommon.h"
-
+#include "MagicEnum/include/magic_enum.hpp"
 
 #if defined(TARGET_WINDOWS)
 //#include "Libs/Opencv/include/opencv2/opencv.hpp"
@@ -30,6 +30,11 @@ namespace ApiOpencv
 	DEFINE_BIND_FUNCTIONNAME(GetHogGradientMap);
 	DEFINE_BIND_FUNCTIONNAME(FindArucoMarkers);
 	DEFINE_BIND_FUNCTIONNAME(SolvePnp);
+	
+	//	const
+	DEFINE_BIND_FUNCTIONNAME(ArucoMarkerDictionarys);
+	cv::Ptr<cv::aruco::Dictionary>	GetArucoDictionary(const std::string& Name);
+	void							GetArucoDictionarys(ArrayBridge<std::string>&& Names);
 }
 
 
@@ -43,6 +48,17 @@ void ApiOpencv::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetHogGradientMap>( GetHogGradientMap, Namespace );
 	Context.BindGlobalFunction<BindFunction::FindArucoMarkers>( FindArucoMarkers, Namespace );
 	Context.BindGlobalFunction<BindFunction::SolvePnp>( SolvePnp, Namespace );
+
+	
+	auto BindArucoDictionaryNames = [](Bind::TLocalContext& Context)
+	{
+		auto NamespaceObject = Context.mGlobalContext.GetGlobalObject( Context, Namespace );
+		//constexpr auto DictionaryNames = magic_enum::enum_names<cv::aruco::PREDEFINED_DICITONARYNA>();
+		BufferArray<std::string,100> DictionaryNames;
+		GetArucoDictionarys( GetArrayBridge(DictionaryNames) );
+		NamespaceObject.SetArray( BindFunction::ArucoMarkerDictionarys, GetArrayBridge(DictionaryNames) );
+	};
+	Context.Execute( BindArucoDictionaryNames );
 }
 
 int GetMatrixType(SoyPixelsFormat::Type Format)
@@ -407,7 +423,26 @@ void ApiOpencv::FindContours(Bind::TCallback &Params)
 }
 
 
+void ApiOpencv::GetArucoDictionarys(ArrayBridge<std::string>&& Names)
+{
+	constexpr auto EnumNames = magic_enum::enum_names<cv::aruco::PREDEFINED_DICTIONARY_NAME>();
+	for ( auto EnumName : EnumNames )
+	{
+		std::string EnumNameStr( EnumName );
+		Names.PushBack( EnumNameStr );
+	}
+}
 
+cv::Ptr<cv::aruco::Dictionary> ApiOpencv::GetArucoDictionary(const std::string& Name)
+{
+	auto Enum = magic_enum::enum_cast<cv::aruco::PREDEFINED_DICTIONARY_NAME>(Name);
+	if ( !Enum.has_value() )
+		throw Soy::AssertException( std::string("Unknown dictionary ") + Name);
+	
+	auto DictionaryEnum = *Enum;
+	auto Dictionary = cv::aruco::getPredefinedDictionary( DictionaryEnum );
+	return Dictionary;
+}
 
 void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 {
@@ -419,8 +454,8 @@ void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 	std::vector<std::vector<cv::Point> > Contours;
 	auto DetectorParams = cv::aruco::DetectorParameters::create();
 	
-	//	what type of marker to search for
-	auto Dictionary = cv::aruco::getPredefinedDictionary( cv::aruco::DICT_4X4_100 );
+	auto DictionaryName = Params.GetArgumentString(1);
+	auto Dictionary = GetArucoDictionary( DictionaryName );
 
 	std::vector<int> FoundIds;
 	std::vector<std::vector<cv::Point2f>> FoundCorners;

@@ -318,6 +318,8 @@
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
+		BF84732E22F7249500038A3A /* magic_enum.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = magic_enum.hpp; path = src/MagicEnum/include/magic_enum.hpp; sourceTree = "<group>"; };
+		BF84732F22F726C900038A3A /* PopEngine.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PopEngine.xcconfig; path = src/PopEngine.xcconfig; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
 		BF8534F622B6DA610049C01B /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_Chakra_App.xcconfig; path = src/PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
@@ -862,6 +864,8 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
+				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
 				BF30550A1B56F553002B0892 /* Data */,
 				EB0EA5622110AAF9008D6DAA /* Data_dlib */,
 				BF65537D2132BD6B003E4241 /* Data_HelloWorld */,
@@ -874,12 +878,15 @@
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
-				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
+				BF84732E22F7249500038A3A /* magic_enum.hpp */,
 				BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */,
 				BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */,
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
+				BF84732F22F726C900038A3A /* PopEngine.xcconfig */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
+				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
+				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
@@ -889,6 +896,8 @@
 				BF607EA7224107B800A78C00 /* SoyBluetooth.mm */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
 				BFB647372225593600820612 /* SoyHid.h */,
+				BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */,
+				BF85350022BEB6960049C01B /* SoyMagicLeap.h */,
 				BF689ACA20D6D3AE000BC812 /* SoyOpenglView.h */,
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
 				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
@@ -898,14 +907,11 @@
 				BF607EA32240588300A78C00 /* TApiBluetooth.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
-				BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */,
 				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */,
+				BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */,
 				EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */,
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
-				BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */,
-				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
-				BF85350022BEB6960049C01B /* SoyMagicLeap.h */,
 				BF0F9E702288892F00AEA7DC /* TApiDll.h */,
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				BF91D9792215839F00E91671 /* TApiEzsift.h */,
@@ -915,14 +921,14 @@
 				BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */,
 				BF59A253222206B400AE9926 /* TApiInput.cpp */,
 				BF59A254222206B400AE9926 /* TApiInput.h */,
+				BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */,
+				BFD39A0622CD44E7009E2FD3 /* TApiLeapMotion.h */,
 				BF6EB3272111167800FC991B /* TApiMedia.cpp */,
 				BF6EB3282111167800FC991B /* TApiMedia.h */,
 				BF97592520E9611A0093B296 /* TApiOpencl.cpp */,
 				BF97592420E961190093B296 /* TApiOpencl.h */,
 				BF92821F22369316007E9D6F /* TApiOpencv.cpp */,
 				BF92822022369316007E9D6F /* TApiOpencv.h */,
-				BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */,
-				BFD39A0622CD44E7009E2FD3 /* TApiLeapMotion.h */,
 				BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */,
 				BF26EF6020DECFB000A48025 /* TApiOpengl.h */,
 				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
@@ -952,8 +958,6 @@
 				BF6553C32132C4D9003E4241 /* v8 */,
 				BFF505E822550F30005A6AC1 /* V8Bind.cpp */,
 				BFF505E922550F30005A6AC1 /* V8Bind.h */,
-				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
-				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
 			);
 			name = src;
 			sourceTree = SOURCE_ROOT;
