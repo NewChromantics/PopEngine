@@ -451,11 +451,33 @@ void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 	Image.GetPixels(OrigPixels);
 
 	auto InputArray = GetMatrix( OrigPixels );
-	std::vector<std::vector<cv::Point> > Contours;
-	auto DetectorParams = cv::aruco::DetectorParameters::create();
-	
+
 	auto DictionaryName = Params.GetArgumentString(1);
 	auto Dictionary = GetArucoDictionary( DictionaryName );
+	
+	std::vector<std::vector<cv::Point> > Contours;
+	auto DetectorParams = cv::aruco::DetectorParameters::create();
+
+	auto CornerRefinementMethod = static_cast<cv::aruco::CornerRefineMethod>( DetectorParams->cornerRefinementMethod );
+	if ( !Params.IsArgumentUndefined(2) )
+	{
+		auto MethodName = Params.GetArgumentString(2);
+		auto Method = magic_enum::enum_cast<cv::aruco::CornerRefineMethod>(MethodName);
+		if ( !Method.has_value() )
+		{
+			std::stringstream Error;
+			Error << "No CornerRefineMethod named " << MethodName;
+			throw Soy::AssertException(Error);
+		}
+		CornerRefinementMethod = *Method;
+	}
+	else
+	{
+		auto DefaultName = magic_enum::enum_name<cv::aruco::CornerRefineMethod>( CornerRefinementMethod );
+		std::Debug << "Using default corner refinement method: " << DefaultName << std::endl;
+	}
+	DetectorParams->cornerRefinementMethod = CornerRefinementMethod;
+	
 
 	std::vector<int> FoundIds;
 	std::vector<std::vector<cv::Point2f>> FoundCorners;
