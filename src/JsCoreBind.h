@@ -284,19 +284,19 @@ public:
 	virtual std::string		GetArgumentString(size_t Index) bind_override;
 	std::string				GetArgumentFilename(size_t Index);
 	virtual bool			GetArgumentBool(size_t Index) bind_override;
-	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( GetContextRef(), GetArgumentValue(Index) );	}
+	virtual int32_t			GetArgumentInt(size_t Index) bind_override	{	return JsCore::GetInt<int32_t>( GetContextRef(), GetArgumentValueNotUndefined(Index) );	}
 	virtual float			GetArgumentFloat(size_t Index) bind_override;
 	virtual JsCore::TFunction	GetArgumentFunction(size_t Index) bind_override;
 	virtual JsCore::TArray	GetArgumentArray(size_t Index) bind_override;
 	virtual TObject			GetArgumentObject(size_t Index) bind_override;
 	template<typename TYPE>
 	TYPE&					GetArgumentPointer(size_t Index);
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
-	virtual void			GetArgumentArray(size_t Index,ArrayBridge<std::string>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValue(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<std::string>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 
 	
 	template<typename TYPE>
@@ -362,6 +362,7 @@ private:
 	JSType					GetArgumentType(size_t Index);
 public:	//	gr: exposed for Bind::FromValue() but maybe GetArgument() could be templated safely
 	JSValueRef				GetArgumentValue(size_t Index);
+	JSValueRef				GetArgumentValueNotUndefined(size_t Index);	//	throws if undefined
 	
 public:
 	TLocalContext&		mLocalContext;

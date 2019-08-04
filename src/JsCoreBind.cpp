@@ -1288,9 +1288,29 @@ JSValueRef JsCore::TCallback::GetArgumentValue(size_t Index)
 	return mArguments[Index];
 }
 
+JSValueRef JsCore::TCallback::GetArgumentValueNotUndefined(size_t Index)
+{
+	if ( Index >= mArguments.GetSize() )
+	{
+		std::stringstream Error;
+		Error << "Argument " << Index << " is undefined (" << Index << "/" << mArguments.GetSize() << ")";
+		throw Soy::AssertException(Error);
+	}
+	
+	auto Value = mArguments[Index];
+	if ( JSValueIsUndefined( GetContextRef(), Value ) )
+	{
+		std::stringstream Error;
+		Error << "Argument " << Index << " is undefined";
+		throw Soy::AssertException(Error);
+	}
+		
+	return Value;
+}
+
 std::string JsCore::TCallback::GetArgumentString(size_t Index)
 {
-	auto Handle = GetArgumentValue( Index );
+	auto Handle = GetArgumentValueNotUndefined( Index );
 	auto String = JsCore::GetString( GetContextRef(), Handle );
 	return String;
 }
@@ -1304,14 +1324,14 @@ std::string JsCore::TCallback::GetArgumentFilename(size_t Index)
 
 JsCore::TFunction JsCore::TCallback::GetArgumentFunction(size_t Index)
 {
-	auto Handle = GetArgumentValue( Index );
+	auto Handle = GetArgumentValueNotUndefined( Index );
 	JsCore::TFunction Function( GetContextRef(), Handle );
 	return Function;
 }
 
 JsCore::TArray JsCore::TCallback::GetArgumentArray(size_t Index)
 {
-	auto Handle = GetArgumentValue( Index );
+	auto Handle = GetArgumentValueNotUndefined( Index );
 	auto HandleObject = JsCore::GetObject( GetContextRef(), Handle );
 	JsCore::TArray Array( GetContextRef(), HandleObject );
 	return Array;
@@ -1319,21 +1339,21 @@ JsCore::TArray JsCore::TCallback::GetArgumentArray(size_t Index)
 
 bool JsCore::TCallback::GetArgumentBool(size_t Index)
 {
-	auto Handle = GetArgumentValue( Index );
+	auto Handle = GetArgumentValueNotUndefined( Index );
 	auto Value = JsCore::GetBool( GetContextRef(), Handle );
 	return Value;
 }
 
 float JsCore::TCallback::GetArgumentFloat(size_t Index)
 {
-	auto Handle = GetArgumentValue( Index );
+	auto Handle = GetArgumentValueNotUndefined( Index );
 	auto Value = JsCore::GetFloat( GetContextRef(), Handle );
 	return Value;
 }
 
 JsCore::TObject JsCore::TCallback::GetArgumentObject(size_t Index)
 {
-	auto Handle = GetArgumentValue( Index );
+	auto Handle = GetArgumentValueNotUndefined( Index );
 	auto HandleObject = JsCore::GetObject( GetContextRef(), Handle );
 	return JsCore::TObject( GetContextRef(), HandleObject );
 }
