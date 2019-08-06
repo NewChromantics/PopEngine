@@ -563,7 +563,13 @@ void ApiOpencv::FindArucoMarkers(Bind::TCallback &Params)
 	Params.Return(Results);
 }
 
+void GetArray(ArrayBridge<float>&& Values,cv::Mat& Matrix)
+{
+	for ( auto r=0;	r<Matrix.rows;	r++ )
+		for ( auto c=0;	c<Matrix.cols;	c++ )
+			Values.PushBack( Matrix.at<float>(c,r) );
 
+}
 
 
 void ApiOpencv::SolvePnp(Bind::TCallback& Params)
@@ -608,16 +614,20 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 		}
 	}
 	
-	//	objecttocameraspace?
+
 	cv::Mat R;
 	Rodrigues(RotationVec, R);
-	cv::Mat extrinsic = cv::Mat::eye(4, 4, CV_64F);
-	R.copyTo(extrinsic.rowRange(0, 3).colRange(0, 3));
-	TranslationVec.copyTo(extrinsic.rowRange(0, 3).col(3));
+	cv::Mat ObjectToCameraSpace = cv::Mat::eye(4, 4, CV_64F);
+	R.copyTo( ObjectToCameraSpace.rowRange(0, 3).colRange(0, 3) );
+	TranslationVec.copyTo( ObjectToCameraSpace.rowRange(0, 3).col(3) );
 	
 	// Find the inverse of the extrinsic matrix (should be the same as just calling extrinsic.inv())
 	cv::Mat extrinsic_inv_R = R.t(); // inverse of a rotational matrix is its transpose
-	cv::Mat extrinsic_inv_tvec = -extrinsic_inv_R * TranslationVec;
+	
+	//	gr: therefore...
+	auto CameraToObjectSpace = extrinsic_inv_R;
+
+	cv::Mat extrinsic_inv_tvec = CameraToObjectSpace * TranslationVec;
 	cv::Mat extrinsic_inv = cv::Mat::eye(4, 4, CV_64F);
 	extrinsic_inv_R.copyTo(extrinsic_inv.rowRange(0, 3).colRange(0, 3));
 	extrinsic_inv_tvec.copyTo(extrinsic_inv.rowRange(0, 3).col(3));
