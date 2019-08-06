@@ -617,74 +617,61 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 
 	//	the vectors from SolvePnp forms the matrix to place the object in camera space
 	//	therefore the matrix is ObjectToView/ObjectTo[CameraObject] (in -1..1, -1..1 space as SolvePnp takes no projection, it's in the normalised frustum)
-	cv::Mat RotationMtx;
-	Rodrigues(RotationVec, RotationMtx);
-	cv::Mat ObjectToCameraSpace = cv::Mat::eye(4, 4, CV_64F);
-	RotationMtx.copyTo( ObjectToCameraSpace.rowRange(0, 3).colRange(0, 3) );
-	TranslationVec.copyTo( ObjectToCameraSpace.rowRange(0, 3).col(3) );
-	
+	//	object transform in camera space
+	auto ObjectTranslation = TranslationVec;
+	cv::Mat ObjectRotation;
+	Rodrigues(RotationVec, ObjectRotation);
+	cv::Mat ObjectToCamera = cv::Mat::eye(4, 4, CV_64F);
+	ObjectRotation.copyTo( ObjectToCamera.rowRange(0, 3).colRange(0, 3) );
+	ObjectTranslation.copyTo( ObjectToCamera.rowRange(0, 3).col(3) );
+
 	//	we want the inverse, to get Camera position relative to object[space]
 	//	https://github.com/fta2012/WiimotePositionTrackingDemo/blob/master/demo.cpp#L207
 	//	"Find the inverse of the extrinsic matrix (should be the same as just calling extrinsic.inv())"
 	// 	"inverse of a rotational matrix is its transpose"
-	cv::Mat CameraToObject3x3 = RotationMtx.t();
+	cv::Mat CameraRotation = ObjectRotation.inv();
 	
 	//	un-rotate the translation
 	//	gr: DONT do -mtx which just negates everything and makes things more confusing
-	cv::Mat CameraToObjectTranslation = CameraToObject3x3 * TranslationVec;
+	//	camera pos in object space
+	cv::Mat CameraTranslation = CameraRotation * ObjectTranslation;
+	//	camera space to object space (cameralocal->objectlocal)
 	cv::Mat CameraToObject = cv::Mat::eye(4, 4, CV_64F);
-	CameraToObject3x3.copyTo(CameraToObject.rowRange(0, 3).colRange(0, 3));
-	CameraToObjectTranslation.copyTo(CameraToObject.rowRange(0, 3).col(3));
+	CameraRotation.copyTo( CameraToObject.rowRange(0, 3).colRange(0, 3) );
+	CameraTranslation.copyTo( CameraToObject.rowRange(0, 3).col(3) );
+	
+	//	now that we don't negate everything, the X is the only coordinate space that's backwards for our engine
+	float NegateXAxisMatrix[] =
+	{
+		-1,0,0,
+		0,1,0,
+		0,0,1,
+	};
+	cv::Mat NegateXAxisMat( 3, 3, CV_32F, NegateXAxisMatrix );
+	CameraTranslation = NegateXAxisMat * CameraTranslation;
 	
 	//	gr: lets output seperate things instead of one matrix...
 	BufferArray<float,3> PosArray;
-	PosArray.PushBack( CameraToObjectTranslation.at<float>(0) );
-	PosArray.PushBack( CameraToObjectTranslation.at<float>(1) );
-	PosArray.PushBack( CameraToObjectTranslation.at<float>(2) );
-
-	
+	PosArray.PushBack( CameraTranslation.at<float>(0) );
+	PosArray.PushBack( CameraTranslation.at<float>(1) );
+	PosArray.PushBack( CameraTranslation.at<float>(2) );
 	
 	BufferArray<float,3*3> RotArray;
-	RotArray.PushBack( CameraToObject3x3.at<float>(0,0) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(1,0) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(2,0) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(0,1) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(1,1) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(2,1) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(0,2) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(1,2) );
-	RotArray.PushBack( CameraToObject3x3.at<float>(2,2) );
+	RotArray.PushBack( CameraRotation.at<float>(0,0) );
+	RotArray.PushBack( CameraRotation.at<float>(1,0) );
+	RotArray.PushBack( CameraRotation.at<float>(2,0) );
+	RotArray.PushBack( CameraRotation.at<float>(0,1) );
+	RotArray.PushBack( CameraRotation.at<float>(1,1) );
+	RotArray.PushBack( CameraRotation.at<float>(2,1) );
+	RotArray.PushBack( CameraRotation.at<float>(0,2) );
+	RotArray.PushBack( CameraRotation.at<float>(1,2) );
+	RotArray.PushBack( CameraRotation.at<float>(2,2) );
 
 	auto Output = Params.mLocalContext.mGlobalContext.CreateObjectInstance( Params.mLocalContext );
 	
 	Output.SetArray("Translation", GetArrayBridge(PosArray) );
 	Output.SetArray("Rotation", GetArrayBridge(RotArray) );
 	Params.Return(Output);
-/*
-	auto r00 = RotationMtx.at<float>(0,0);
-	auto r10 = RotationMtx.at<float>(1,0);
-	auto r20 = RotationMtx.at<float>(2,0);
-	auto r01 = RotationMtx.at<float>(0,1);
-	auto r11 = RotationMtx.at<float>(1,1);
-	auto r21 = RotationMtx.at<float>(2,1);
-	auto r02 = RotationMtx.at<float>(0,2);
-	auto r12 = RotationMtx.at<float>(1,2);
-	auto r22 = RotationMtx.at<float>(2,2);
-	auto tx = TranslationVec.at<float>(0);
-	auto ty = TranslationVec.at<float>(1);
-	auto tz = TranslationVec.at<float>(2);
-	
-	float PoseMatrix[] =
-	{
-		r00, r10, r20, 0,
-		r01, r11, r21, 0,
-		r02, r12, r22, 0,
-		tx, ty, tz, 1
-	};
-	auto PoseMatrixArray = GetRemoteArray(PoseMatrix);
-	
-	Params.Return( GetArrayBridge(PoseMatrixArray) );
- */
 }
 
 
