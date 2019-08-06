@@ -608,26 +608,60 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 		}
 	}
 	
-	// Transpose OpenCV to OpenGL coords
-	cv::Mat OpencvToOpengl = cv::Mat::zeros(3, 3, CV_32F);
-	//cv::Mat OpencvToOpengl = cv::Mat::zeros(4, 4, CV_32F);
-	OpencvToOpengl.at<float>(0, 0) = 1.0f;
-	OpencvToOpengl.at<float>(1, 1) = -1.0f; // Invert the y axis
-	OpencvToOpengl.at<float>(2, 2) = -1.0f; // invert the z axis
-	//OpencvToOpengl.at<float>(3, 3) = 1.0f;
+	//	objecttocameraspace?
+	cv::Mat R;
+	Rodrigues(RotationVec, R);
+	cv::Mat extrinsic = cv::Mat::eye(4, 4, CV_64F);
+	R.copyTo(extrinsic.rowRange(0, 3).colRange(0, 3));
+	TranslationVec.copyTo(extrinsic.rowRange(0, 3).col(3));
 	
+	// Find the inverse of the extrinsic matrix (should be the same as just calling extrinsic.inv())
+	cv::Mat extrinsic_inv_R = R.t(); // inverse of a rotational matrix is its transpose
+	cv::Mat extrinsic_inv_tvec = -extrinsic_inv_R * TranslationVec;
+	cv::Mat extrinsic_inv = cv::Mat::eye(4, 4, CV_64F);
+	extrinsic_inv_R.copyTo(extrinsic_inv.rowRange(0, 3).colRange(0, 3));
+	extrinsic_inv_tvec.copyTo(extrinsic_inv.rowRange(0, 3).col(3));
+	
+	
+	// Record the position of the camera, which is (extrinsic_inv * [0, 0, 0, 1])
+	//if (IS_PRESSED(wiimote, WIIMOTE_BUTTON_B))
+	{
+		TranslationVec = extrinsic_inv_tvec;
+		//camera_path.push_back(extrinsic_inv_tvec);
+	}
+	
+	
+	//	transpose rows/cols
 	cv::Mat RotationMtx;
-	cv::Rodrigues(RotationVec, RotationMtx);
+	cv::Rodrigues( RotationVec, RotationMtx );
+	/*
+	cv::Mat viewMatrix(4, 4, CV_64F);
+	for(unsigned int row=0; row<3; ++row)
+	{
+		for(unsigned int col=0; col<3; ++col)
+		{
+			viewMatrix.at<double>(row, col) = RotationMtx.at<double>(row, col);
+		}
+		viewMatrix.at<double>(row, 3) = TranslationVec.at<double>(row, 0);
+	}
+	viewMatrix.at<double>(3, 3) = 1.0f;
 	
-	RotationMtx = OpencvToOpengl * RotationMtx;
+	cv::Mat Zero( 4, 1, CV_64F );
+	Zero.at<double>(3) = 1;
+	TranslationVec = viewMatrix * Zero;
+	*/
 	RotationMtx = RotationMtx.t();
-	
+	//TranslationVec = RotationMtx * TranslationVec;
+	//auto CameraPosition = -np.matrix(rotM).T * np.matrix(tvec)
+
 	//	gr: lets output seperate things instead of one matrix...
 	BufferArray<float,3> PosArray;
 	PosArray.PushBack( TranslationVec.at<float>(0) );
 	PosArray.PushBack( TranslationVec.at<float>(1) );
-	PosArray.PushBack( -TranslationVec.at<float>(2) );
+	PosArray.PushBack( TranslationVec.at<float>(2) );
 
+	
+	
 	BufferArray<float,3*3> RotArray;
 	RotArray.PushBack( RotationMtx.at<float>(0,0) );
 	RotArray.PushBack( RotationMtx.at<float>(1,0) );
