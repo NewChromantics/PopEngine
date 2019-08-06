@@ -615,73 +615,45 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	}
 	
 
-	cv::Mat R;
-	Rodrigues(RotationVec, R);
+	//	the vectors from SolvePnp forms the matrix to place the object in camera space
+	//	therefore the matrix is ObjectToView/ObjectTo[CameraObject] (in -1..1, -1..1 space as SolvePnp takes no projection, it's in the normalised frustum)
+	cv::Mat RotationMtx;
+	Rodrigues(RotationVec, RotationMtx);
 	cv::Mat ObjectToCameraSpace = cv::Mat::eye(4, 4, CV_64F);
-	R.copyTo( ObjectToCameraSpace.rowRange(0, 3).colRange(0, 3) );
+	RotationMtx.copyTo( ObjectToCameraSpace.rowRange(0, 3).colRange(0, 3) );
 	TranslationVec.copyTo( ObjectToCameraSpace.rowRange(0, 3).col(3) );
 	
-	// Find the inverse of the extrinsic matrix (should be the same as just calling extrinsic.inv())
-	cv::Mat extrinsic_inv_R = R.t(); // inverse of a rotational matrix is its transpose
+	//	we want the inverse, to get Camera position relative to object[space]
+	//	https://github.com/fta2012/WiimotePositionTrackingDemo/blob/master/demo.cpp#L207
+	//	"Find the inverse of the extrinsic matrix (should be the same as just calling extrinsic.inv())"
+	// 	"inverse of a rotational matrix is its transpose"
+	cv::Mat CameraToObject3x3 = RotationMtx.t();
 	
-	//	gr: therefore...
-	auto CameraToObjectSpace = extrinsic_inv_R;
-
-	cv::Mat extrinsic_inv_tvec = CameraToObjectSpace * TranslationVec;
-	cv::Mat extrinsic_inv = cv::Mat::eye(4, 4, CV_64F);
-	extrinsic_inv_R.copyTo(extrinsic_inv.rowRange(0, 3).colRange(0, 3));
-	extrinsic_inv_tvec.copyTo(extrinsic_inv.rowRange(0, 3).col(3));
+	//	un-rotate the translation
+	//	gr: DONT do -mtx which just negates everything and makes things more confusing
+	cv::Mat CameraToObjectTranslation = CameraToObject3x3 * TranslationVec;
+	cv::Mat CameraToObject = cv::Mat::eye(4, 4, CV_64F);
+	CameraToObject3x3.copyTo(CameraToObject.rowRange(0, 3).colRange(0, 3));
+	CameraToObjectTranslation.copyTo(CameraToObject.rowRange(0, 3).col(3));
 	
-	
-	// Record the position of the camera, which is (extrinsic_inv * [0, 0, 0, 1])
-	//if (IS_PRESSED(wiimote, WIIMOTE_BUTTON_B))
-	{
-		TranslationVec = extrinsic_inv_tvec;
-		//camera_path.push_back(extrinsic_inv_tvec);
-	}
-	
-	
-	//	transpose rows/cols
-	cv::Mat RotationMtx;
-	cv::Rodrigues( RotationVec, RotationMtx );
-	/*
-	cv::Mat viewMatrix(4, 4, CV_64F);
-	for(unsigned int row=0; row<3; ++row)
-	{
-		for(unsigned int col=0; col<3; ++col)
-		{
-			viewMatrix.at<double>(row, col) = RotationMtx.at<double>(row, col);
-		}
-		viewMatrix.at<double>(row, 3) = TranslationVec.at<double>(row, 0);
-	}
-	viewMatrix.at<double>(3, 3) = 1.0f;
-	
-	cv::Mat Zero( 4, 1, CV_64F );
-	Zero.at<double>(3) = 1;
-	TranslationVec = viewMatrix * Zero;
-	*/
-	RotationMtx = RotationMtx.t();
-	//TranslationVec = RotationMtx * TranslationVec;
-	//auto CameraPosition = -np.matrix(rotM).T * np.matrix(tvec)
-
 	//	gr: lets output seperate things instead of one matrix...
 	BufferArray<float,3> PosArray;
-	PosArray.PushBack( TranslationVec.at<float>(0) );
-	PosArray.PushBack( TranslationVec.at<float>(1) );
-	PosArray.PushBack( TranslationVec.at<float>(2) );
+	PosArray.PushBack( CameraToObjectTranslation.at<float>(0) );
+	PosArray.PushBack( CameraToObjectTranslation.at<float>(1) );
+	PosArray.PushBack( CameraToObjectTranslation.at<float>(2) );
 
 	
 	
 	BufferArray<float,3*3> RotArray;
-	RotArray.PushBack( RotationMtx.at<float>(0,0) );
-	RotArray.PushBack( RotationMtx.at<float>(1,0) );
-	RotArray.PushBack( RotationMtx.at<float>(2,0) );
-	RotArray.PushBack( RotationMtx.at<float>(0,1) );
-	RotArray.PushBack( RotationMtx.at<float>(1,1) );
-	RotArray.PushBack( RotationMtx.at<float>(2,1) );
-	RotArray.PushBack( RotationMtx.at<float>(0,2) );
-	RotArray.PushBack( RotationMtx.at<float>(1,2) );
-	RotArray.PushBack( RotationMtx.at<float>(2,2) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(0,0) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(1,0) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(2,0) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(0,1) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(1,1) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(2,1) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(0,2) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(1,2) );
+	RotArray.PushBack( CameraToObject3x3.at<float>(2,2) );
 
 	auto Output = Params.mLocalContext.mGlobalContext.CreateObjectInstance( Params.mLocalContext );
 	
