@@ -1154,6 +1154,12 @@ vec2f GetVertex<vec2f>(ArrayBridge<float>& VertexFloats,int Index)
 }
 
 template<>
+float GetVertex<float>(ArrayBridge<float>& VertexFloats,int Index)
+{
+	return VertexFloats[Index];
+}
+
+template<>
 vec3f GetVertex<vec3f>(ArrayBridge<float>& VertexFloats,int Index)
 {
 	Index *= 3;
@@ -1193,6 +1199,12 @@ Opengl::TGeometry* CreateGeometry(const std::string& VertexAttribName,ArrayBridg
 void ApiOpengl::TTriangleBufferWrapper::CreateGeometry(const std::string& VertexName,ArrayBridge<float>&& VertexFloats,size_t VertexSize,ArrayBridge<uint32_t>&& Indexes)
 {
 	Soy::TScopeTimerPrint Timer("CreateGeometry",1);
+	
+	if ( VertexSize == 1 )
+	{
+		mGeometry.reset( ::CreateGeometry<float,1>( VertexName, VertexFloats, Indexes ) );
+		return;
+	}
 
 	if ( VertexSize == 2 )
 	{
