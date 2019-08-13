@@ -1009,6 +1009,9 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 		mControl = [[NSTextField alloc] initWithFrame:RectNs];
 		[mControl retain];
 	
+		//	don't let overflowing text disapear
+		[[mControl cell]setLineBreakMode:NSLineBreakByTruncatingTail];
+		
 		//	setup callback
 		mResponder->mCallback = [this]()	{	this->OnChanged();	};
 		mControl.target = mResponder;
