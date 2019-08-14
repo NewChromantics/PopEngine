@@ -11,6 +11,9 @@ namespace ApiOpengl
 	//	gr: this will evolve into a generic structured buffer type
 	class TTriangleBufferWrapper;
 	
+	//	this needs to be sorted properly!
+	class TRenderTargetWrapper;
+	
 	DECLARE_BIND_TYPENAME(Window);
 	DECLARE_BIND_TYPENAME(Shader);
 	DECLARE_BIND_TYPENAME(TriangleBuffer);
@@ -55,9 +58,24 @@ public:
 };
 
 
-	
+class ApiOpengl::TRenderTargetWrapper
+{
+public:
+/* todo:	virtual Opengl::TContext&	GetContext()=0;
+	void				DrawQuad(Bind::TCallback& Arguments);
+	void				DrawGeometry(Bind::TCallback& Arguments);
+	void				ClearColour(Bind::TCallback& Arguments);
+	void				EnableBlend(Bind::TCallback& Arguments);
+	void				SetViewport(Bind::TCallback& Arguments);
+	void				Render(Bind::TCallback& Arguments);
+	void				RenderChain(Bind::TCallback& Arguments);
+	void				RenderToRenderTarget(Bind::TCallback& Params);
+	void				GetTargetRect(Bind::TCallback& Arguments);
+ */
+};
+ 
 
-class TWindowWrapper : public Bind::TObjectWrapper<ApiOpengl::BindType::Window,TRenderWindow>, public TOpenglContextWrapper
+class TWindowWrapper : public Bind::TObjectWrapper<ApiOpengl::BindType::Window,TRenderWindow>, public TOpenglContextWrapper, ApiOpengl::TRenderTargetWrapper
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -78,16 +96,15 @@ public:
 	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
-	//	these are context things
-	//	immediate calls, so... maybe try and mix the context settings
 	void				DrawQuad(Bind::TCallback& Arguments);
 	void				DrawGeometry(Bind::TCallback& Arguments);
-	static void			ClearColour(Bind::TCallback& Arguments);
-	static void			EnableBlend(Bind::TCallback& Arguments);
-	static void			SetViewport(Bind::TCallback& Arguments);
-	static void			Render(Bind::TCallback& Arguments);
-	static void			RenderChain(Bind::TCallback& Arguments);
-	static void			RenderToRenderTarget(Bind::TCallback& Params);
+	void				ClearColour(Bind::TCallback& Arguments);
+	void				EnableBlend(Bind::TCallback& Arguments);
+	void				SetViewport(Bind::TCallback& Arguments);
+	void				Render(Bind::TCallback& Arguments);
+	void				RenderChain(Bind::TCallback& Arguments);
+	void				RenderToRenderTarget(Bind::TCallback& Params);
+	void				GetRenderTargetRect(Bind::TCallback& Arguments);
 	
 	//	window specific
 	static void			GetScreenRect(Bind::TCallback& Arguments);

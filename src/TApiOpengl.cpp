@@ -12,24 +12,22 @@ namespace ApiOpengl
 	DEFINE_BIND_TYPENAME(Window);
 	DEFINE_BIND_TYPENAME(Shader);
 	DEFINE_BIND_TYPENAME(TriangleBuffer);
+	
+	DEFINE_BIND_FUNCTIONNAME(DrawQuad);
+	DEFINE_BIND_FUNCTIONNAME(DrawGeometry);
+	DEFINE_BIND_FUNCTIONNAME(ClearColour);
+	DEFINE_BIND_FUNCTIONNAME(EnableBlend);
+	DEFINE_BIND_FUNCTIONNAME(SetViewport);
+	DEFINE_BIND_FUNCTIONNAME(SetUniform);
+	DEFINE_BIND_FUNCTIONNAME(Render);
+	DEFINE_BIND_FUNCTIONNAME(RenderChain);
+	DEFINE_BIND_FUNCTIONNAME(RenderToRenderTarget);
+	DEFINE_BIND_FUNCTIONNAME(GetRenderTargetRect);
+	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
+	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
+	DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
 }
 
-
-DEFINE_BIND_TYPENAME(Window);
-DEFINE_BIND_TYPENAME(Shader);
-
-DEFINE_BIND_FUNCTIONNAME(DrawQuad);
-DEFINE_BIND_FUNCTIONNAME(DrawGeometry);
-DEFINE_BIND_FUNCTIONNAME(ClearColour);
-DEFINE_BIND_FUNCTIONNAME(EnableBlend);
-DEFINE_BIND_FUNCTIONNAME(SetViewport);
-DEFINE_BIND_FUNCTIONNAME(SetUniform);
-DEFINE_BIND_FUNCTIONNAME(Render);
-DEFINE_BIND_FUNCTIONNAME(RenderChain);
-DEFINE_BIND_FUNCTIONNAME(RenderToRenderTarget);
-DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
-DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
-DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
 
 
 void ResetOpenglState()
@@ -520,6 +518,28 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(ScreenRect4) );
 }
 
+void TWindowWrapper::GetRenderTargetRect(Bind::TCallback& Params)
+{
+	BufferArray<int32_t,4> ScreenRect4;
+
+	if ( this->mActiveRenderTarget )
+	{
+		auto Size = this->mActiveRenderTarget->GetSize();
+		ScreenRect4.PushBack( Size.x );
+		ScreenRect4.PushBack( Size.y );
+		ScreenRect4.PushBack( Size.w );
+		ScreenRect4.PushBack( Size.h );
+	}
+	else
+	{
+		auto ScreenRect = mWindow->GetScreenRect();
+		ScreenRect4.PushBack(0);
+		ScreenRect4.PushBack(0);
+		ScreenRect4.PushBack(ScreenRect.w);
+		ScreenRect4.PushBack(ScreenRect.h);
+	}
+	Params.Return( GetArrayBridge(ScreenRect4) );
+}
 
 void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 {
@@ -820,14 +840,17 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 
 void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
+	using namespace ApiOpengl;
 	Template.BindFunction<BindFunction::DrawQuad>( &TWindowWrapper::DrawQuad );
 	Template.BindFunction<BindFunction::DrawGeometry>( &TWindowWrapper::DrawGeometry );
-	Template.BindFunction<BindFunction::SetViewport>( SetViewport );
-	Template.BindFunction<BindFunction::ClearColour>( ClearColour );
-	Template.BindFunction<BindFunction::EnableBlend>( EnableBlend );
-	Template.BindFunction<BindFunction::Render>( Render );
+	Template.BindFunction<BindFunction::SetViewport>( &TWindowWrapper::SetViewport );
+	Template.BindFunction<BindFunction::ClearColour>( &TWindowWrapper::ClearColour );
+	Template.BindFunction<BindFunction::EnableBlend>( &TWindowWrapper::EnableBlend );
+	Template.BindFunction<BindFunction::Render>( &TWindowWrapper::Render );
 	//Template.BindFunction<BindFunction::RenderChain>( RenderChain );
-	Template.BindFunction<BindFunction::RenderToRenderTarget>( RenderToRenderTarget );
+	Template.BindFunction<BindFunction::RenderToRenderTarget>( &TWindowWrapper::RenderToRenderTarget );
+	Template.BindFunction<BindFunction::GetRenderTargetRect>( &TWindowWrapper::GetRenderTargetRect );
+	
 	Template.BindFunction<BindFunction::GetScreenRect>( GetScreenRect );
 	Template.BindFunction<BindFunction::SetFullscreen>( SetFullscreen );
 	Template.BindFunction<BindFunction::IsFullscreen>( IsFullscreen );
@@ -1068,7 +1091,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 
 void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::SetUniform>( SetUniform );
+	Template.BindFunction<ApiOpengl::BindFunction::SetUniform>( SetUniform );
 }
 
 void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)
