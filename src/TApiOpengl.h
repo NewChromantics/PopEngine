@@ -107,9 +107,9 @@ public:
 	void				GetRenderTargetRect(Bind::TCallback& Arguments);
 	
 	//	window specific
-	static void			GetScreenRect(Bind::TCallback& Arguments);
-	static void			SetFullscreen(Bind::TCallback& Arguments);
-	static void			IsFullscreen(Bind::TCallback& Arguments);
+	void				GetScreenRect(Bind::TCallback& Arguments);
+	void				SetFullscreen(Bind::TCallback& Arguments);
+	void				IsFullscreen(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 
@@ -142,7 +142,7 @@ public:
 	virtual void 		Construct(Bind::TCallback& Params) override;
 
 	static void			Constructor(Bind::TCallback& Params);
-	static void			SetUniform(Bind::TCallback& Params);
+	void				SetUniform(Bind::TCallback& Params);
 	void				DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUniform& Uniform);
 
 	void				CreateShader(std::shared_ptr<Opengl::TContext>& Context,const char* VertSource,const char* FragSource);

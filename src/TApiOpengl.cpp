@@ -480,34 +480,28 @@ void TWindowWrapper::ClearColour(Bind::TCallback& Params)
 
 void TWindowWrapper::EnableBlend(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWindowWrapper>();
-
 	auto Enable = Params.GetArgumentBool(0);
-	This.mWindow->EnableBlend( Enable );
+	mWindow->EnableBlend( Enable );
 }
 
 
 void TWindowWrapper::SetViewport(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWindowWrapper>();
-
 	BufferArray<float,4> Viewportxywh;
 	Params.GetArgumentArray( 0, GetArrayBridge(Viewportxywh) );
 	//v8::EnumArray( Arguments[0], GetArrayBridge(Viewportxywh), "SetViewport" );
 	Soy::Rectf ViewportRect( Viewportxywh[0], Viewportxywh[1], Viewportxywh[2], Viewportxywh[3] );
 	
-	if ( !This.mActiveRenderTarget )
+	if ( !mActiveRenderTarget )
 		throw Soy::AssertException("No active render target");
 	
-	This.mActiveRenderTarget->SetViewportNormalised( ViewportRect );
+	mActiveRenderTarget->SetViewportNormalised( ViewportRect );
 }
 
 //	window specific
 void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWindowWrapper>();
-
-	auto ScreenRect = This.mWindow->GetScreenRect();
+	auto ScreenRect = mWindow->GetScreenRect();
 	
 	BufferArray<int32_t,4> ScreenRect4;
 	ScreenRect4.PushBack(ScreenRect.x);
@@ -543,18 +537,16 @@ void TWindowWrapper::GetRenderTargetRect(Bind::TCallback& Params)
 
 void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWindowWrapper>();
 	auto Fullscreen = true;
 	if ( !Params.IsArgumentUndefined(0) )
 		Fullscreen = Params.GetArgumentBool(0);
 	
-	This.mWindow->SetFullscreen(Fullscreen);
+	mWindow->SetFullscreen(Fullscreen);
 }
 
 void TWindowWrapper::IsFullscreen(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWindowWrapper>();
-	auto Fullscreen = This.mWindow->IsFullscreen();
+	auto Fullscreen = mWindow->IsFullscreen();
 	Params.Return( Fullscreen );
 }
 
@@ -565,12 +557,11 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	
 	Soy::TScopeTimerPrint Timer("Render()", 5);
 	
-	auto& This = Params.This<TWindowWrapper>();
-	auto OpenglContext = This.mWindow->GetContext();
+	auto OpenglContext = mWindow->GetContext();
 	if ( !OpenglContext )
 		throw Soy::AssertException("Opengl context not created yet");
 
-	auto* pThis = &This;
+	auto* pThis = this;
 	auto WindowHandle = Params.ThisObject();
 	auto WindowPersistent = Bind::TPersistent( Params.mLocalContext, WindowHandle, "WindowHandle" );
 	
@@ -579,7 +570,7 @@ void TWindowWrapper::Render(Bind::TCallback& Params)
 	Params.Return( Promise );
 	
 	auto* pContext = &Params.mContext;
-	auto* pOpenglBindContext = &This.GetOpenglJsCoreContext();
+	auto* pOpenglBindContext = &GetOpenglJsCoreContext();
 	//auto* pOpenglBindContext = pContext;
 	
 	auto Resolve = [=](Bind::TLocalContext& Context)
@@ -851,9 +842,9 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::RenderToRenderTarget>( &TWindowWrapper::RenderToRenderTarget );
 	Template.BindFunction<BindFunction::GetRenderTargetRect>( &TWindowWrapper::GetRenderTargetRect );
 	
-	Template.BindFunction<BindFunction::GetScreenRect>( GetScreenRect );
-	Template.BindFunction<BindFunction::SetFullscreen>( SetFullscreen );
-	Template.BindFunction<BindFunction::IsFullscreen>( IsFullscreen );
+	Template.BindFunction<BindFunction::GetScreenRect>( &TWindowWrapper::GetScreenRect );
+	Template.BindFunction<BindFunction::SetFullscreen>( &TWindowWrapper::SetFullscreen );
+	Template.BindFunction<BindFunction::IsFullscreen>( &TWindowWrapper::IsFullscreen );
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
@@ -973,9 +964,7 @@ void TShaderWrapper::Construct(Bind::TCallback& Params)
 
 void TShaderWrapper::SetUniform(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TShaderWrapper>();
-
-	auto& Shader = *This.mShader;
+	auto& Shader = *mShader;
 	
 	auto UniformName = Params.GetArgumentString(0);
 	auto Uniform = Shader.GetUniform( UniformName.c_str() );
@@ -991,7 +980,7 @@ void TShaderWrapper::SetUniform(Bind::TCallback& Params)
 
 	try
 	{
-		This.DoSetUniform( Params, Uniform );
+		DoSetUniform( Params, Uniform );
 	}
 	catch(std::exception& e)
 	{
@@ -1091,7 +1080,7 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 
 void TShaderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiOpengl::BindFunction::SetUniform>( SetUniform );
+	Template.BindFunction<ApiOpengl::BindFunction::SetUniform>( &TShaderWrapper::SetUniform );
 }
 
 void TShaderWrapper::CreateShader(std::shared_ptr<Opengl::TContext>& pContext,const char* VertSource,const char* FragSource)
