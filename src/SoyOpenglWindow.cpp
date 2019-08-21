@@ -1374,6 +1374,12 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 
 
 
+std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> InitialColour)
+{
+	throw Soy::AssertException("Colour picker not yet supported on windows");
+}
+
+
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	std::shared_ptr<TWin32Thread> Thread(new TWin32Thread(Name));
