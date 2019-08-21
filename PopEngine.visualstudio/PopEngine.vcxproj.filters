@@ -668,9 +668,6 @@
     <None Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll">
       <Filter>Libs\Opencv</Filter>
     </None>
-    <None Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410d.dll">
-      <Filter>Libs\Opencv</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -997,6 +994,9 @@
     <CustomBuild Include="..\src\v8\lib\ucrtbased.dll" />
     <CustomBuild Include="..\src\v8\lib\vccorlib140d.dll" />
     <CustomBuild Include="..\src\v8\lib\vcruntime140d.dll" />
+    <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410d.dll">
+      <Filter>Libs\Opencv</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">

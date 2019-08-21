@@ -332,15 +332,18 @@
     <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
       <FileType>Document</FileType>
     </CustomBuild>
-    <None Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+    <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </None>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </CustomBuild>
     <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410d.dll">
       <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </CustomBuild>
     <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb" />
     <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs" />
@@ -639,13 +642,16 @@
     <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib" />
     <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib" />
     <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">false</ExcludedFromBuild>
     </Library>
-    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410d.lib" />
+    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410d.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+    </Library>
     <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib" />
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
