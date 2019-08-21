@@ -792,7 +792,18 @@ bool		JSValueIsNull(JSContextRef Context,JSValueRef Value)
 
 JSObjectRef	JSObjectMakeArray(JSContextRef Context,size_t ElementCount,const JSValueRef* Elements,JSValueRef* Exception)
 {
-	THROW_TODO;
+	JsValueRef Array = nullptr;
+	auto Error = JsCreateArray(ElementCount, &Array);
+	Chakra::IsOkay(Error, __PRETTY_FUNCTION__);
+
+	for (auto i = 0; i < ElementCount; i++)
+	{
+		auto Index = JSValueMakeNumber(Context, i);
+		auto Element = Elements ? Elements[i] : nullptr;
+		Error = JsSetIndexedProperty(Array, Index, Element);
+		Chakra::IsOkay(Error, "JSObjectMakeArray set index");
+	}
+	return Array;
 }
 
 bool JSValueIsArray(JSContextRef Context,JSValueRef Value)
