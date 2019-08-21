@@ -225,6 +225,12 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 {
 	JSContextRef Context = nullptr;
 	
+	if (JSValueGetType(ExceptionValue) == kJSTypeString)
+	{
+		auto ExceptionString = Bind::GetString(Context, ExceptionValue);
+		return ExceptionString;
+	}
+
 	auto ExceptionObject = JSValueToObject( Context, ExceptionValue, nullptr );
 	
 
