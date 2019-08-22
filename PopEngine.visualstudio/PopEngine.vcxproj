@@ -482,6 +482,7 @@
     <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl" />
     <None Include="..\UnitTest\OpencvArucoMarker\bootup.js" />
     <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
+    <None Include="..\UnitTest\Pop.d.ts" />
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>
     </None>
