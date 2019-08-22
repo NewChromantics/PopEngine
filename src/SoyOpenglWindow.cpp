@@ -727,6 +727,15 @@ Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
 	if ( !::GetClientRect(mHwnd, &RectWin) )
 		Platform::IsOkay("GetClientRect");
 
+	auto ParentHwnd = GetParent(mHwnd);
+	POINT Position = { 0 };
+	::MapWindowPoints(mHwnd, ParentHwnd, &Position, 1 );
+	RectWin.left += Position.x;
+	RectWin.top += Position.y;
+	RectWin.right += Position.x;
+	RectWin.bottom += Position.y;
+
+
 	if ( RectWin.left < 0 || RectWin.top < 0 )
 	{
 		auto RectSigned = GetRect<int32_t>(RectWin);
@@ -848,17 +857,26 @@ void Platform::TWindow::AddChild(TControl& Child)
 
 void Platform::TWindow::UpdateScrollbars()
 {
-	//	get our client rect with all controls
-	Soy::Rectx<uint32_t> WindowRect(0, 0, 600, 2000);
-
 	//	page is one screen
 	auto ClientRect = GetClientRect();
+	ClientRect.x = 0;
+	ClientRect.y = 0;
 	std::Debug << "UpdateScrollbars( " << ClientRect << ")" << std::endl;
+
+	//	get our client rect with all controls
+	auto WindowRect = ClientRect;
+	for (auto i = 0; i < mChildren.GetSize(); i++)
+	{
+		auto& Child = *mChildren[i];
+		auto ChildRect = Child.GetClientRect();
+		WindowRect.Accumulate(ChildRect.Left(), ChildRect.Top());
+		WindowRect.Accumulate(ChildRect.Right(), ChildRect.Bottom());
+	}
 
 	SCROLLINFO ScrollInfoVert;
 	ScrollInfoVert.cbSize = sizeof(ScrollInfoVert);
 	ScrollInfoVert.fMask = SIF_RANGE | SIF_PAGE;
-	ScrollInfoVert.nPage = ClientRect.GetHeight();
+	ScrollInfoVert.nPage = ClientRect.GetHeight() / 4;	//	full page breaks the scrolling, capping wrong
 	ScrollInfoVert.nMin = WindowRect.Top();
 	ScrollInfoVert.nMax = WindowRect.Bottom();
 	SetScrollInfo(mHwnd, SB_VERT, &ScrollInfoVert, true);
@@ -866,7 +884,7 @@ void Platform::TWindow::UpdateScrollbars()
 	SCROLLINFO ScrollInfoHorz;
 	ScrollInfoHorz.cbSize = sizeof(ScrollInfoHorz);
 	ScrollInfoHorz.fMask = SIF_RANGE | SIF_PAGE;
-	ScrollInfoHorz.nPage = ClientRect.GetWidth();
+	ScrollInfoHorz.nPage = ClientRect.GetWidth() / 4;	//	full page breaks the scrolling, capping wrong
 	ScrollInfoHorz.nMin = WindowRect.Left();
 	ScrollInfoHorz.nMax = WindowRect.Right();
 	SetScrollInfo(mHwnd, SB_HORZ, &ScrollInfoHorz, true);
