@@ -594,8 +594,8 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 		DistortionMat = GetMatrix( GetArrayBridge(DistortionCoefs), 5, "Distortion Coeffs" );
 	//cv::noArray();
 	
-	cv::Mat RotationVec( 3, 1, CV_32F );
-	cv::Mat TranslationVec( 3, 1, CV_32F );
+	cv::Mat RotationVec( 3, 1, CV_32FC1);
+	cv::Mat TranslationVec( 3, 1, CV_32FC1);
 	
 	{
 		Soy::TScopeTimerPrint Timer("cv::aruco::solvePnP",10);
@@ -621,7 +621,10 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	auto ObjectTranslation = TranslationVec;
 	cv::Mat ObjectRotation;
 	Rodrigues(RotationVec, ObjectRotation);
-	cv::Mat ObjectToCamera = cv::Mat::eye(4, 4, CV_64F);
+	ObjectRotation.convertTo(ObjectRotation, CV_32F);
+	ObjectTranslation.convertTo(ObjectTranslation, CV_32F);
+
+	cv::Mat ObjectToCamera = cv::Mat::eye(4, 4, CV_32F);
 	ObjectRotation.copyTo( ObjectToCamera.rowRange(0, 3).colRange(0, 3) );
 	ObjectTranslation.copyTo( ObjectToCamera.rowRange(0, 3).col(3) );
 
@@ -636,7 +639,7 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	//	camera pos in object space
 	cv::Mat CameraTranslation = CameraRotation * ObjectTranslation;
 	//	camera space to object space (cameralocal->objectlocal)
-	cv::Mat CameraToObject = cv::Mat::eye(4, 4, CV_64F);
+	cv::Mat CameraToObject = cv::Mat::eye(4, 4, CV_32F);
 	CameraRotation.copyTo( CameraToObject.rowRange(0, 3).colRange(0, 3) );
 	CameraTranslation.copyTo( CameraToObject.rowRange(0, 3).col(3) );
 	

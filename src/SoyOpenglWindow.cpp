@@ -156,6 +156,7 @@ public:
 	//	callbacks from windows message loop
 	virtual void			OnDestroyed();		//	window handle is being destroyed
 	virtual void			OnWindowMessage(UINT EventMessage) {}	//	called from window thread which means we can flush jobs
+	virtual void			OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16_t CurrentScrollPosition);
 
 	//	return true if handled, or false to return default behavouir
 	bool			OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage);
@@ -168,7 +169,7 @@ public:
 	}
 
 	TControl&		GetChild(HWND Handle);
-	void			AddChild(TControl& Child);
+	virtual void	AddChild(TControl& Child);
 
 public:
 	std::function<void(TControl&)>	mOnPaint;
@@ -198,11 +199,15 @@ public:
 	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread,bool Resizable);
 
 	virtual void	OnWindowMessage(UINT EventMessage) override;
+	virtual void	OnScrolled(bool Horizontal,uint16_t ScrollCommand, uint16_t CurrentScrollPosition) override;
 
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override	{	return GetClientRect();	}
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
 	virtual void					EnableScrollBars(bool Horz, bool Vert) override;
+
+	void			UpdateScrollbars();
+	virtual void	AddChild(TControl& Child) override;
 
 private:
 	//	for saving/restoring fullscreen mode
@@ -492,6 +497,14 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 				auto& Child = Control.GetChild(ChildHandle);
 				Child.OnWindowMessage(message);
 			}
+			else
+			{
+				//	window is being scrolled
+				auto CurrentPosition = HIWORD(wParam);
+				auto Command = LOWORD(wParam);
+				auto Horz = (message == WM_HSCROLL);
+				Control.OnScrolled(Horz, Command, CurrentPosition);
+			}
 			return Default();
 		}
 
@@ -683,6 +696,10 @@ bool Platform::TControl::TControl::OnKeyUp(WPARAM KeyCode, LPARAM Flags)
 
 
 
+void Platform::TControl::TControl::OnScrolled(bool Horizontal,uint16_t ScrollCommand, uint16_t CurrentScrollPosition)
+{
+	std::Debug << "Control OnScrolled(" << ScrollCommand << "," << CurrentScrollPosition << ") ignored" << std::endl;
+}
 
 void Platform::TControl::TControl::OnDestroyed()
 {
@@ -709,6 +726,15 @@ Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
 	RECT RectWin;
 	if ( !::GetClientRect(mHwnd, &RectWin) )
 		Platform::IsOkay("GetClientRect");
+
+	auto ParentHwnd = GetParent(mHwnd);
+	POINT Position = { 0 };
+	::MapWindowPoints(mHwnd, ParentHwnd, &Position, 1 );
+	RectWin.left += Position.x;
+	RectWin.top += Position.y;
+	RectWin.right += Position.x;
+	RectWin.bottom += Position.y;
+
 
 	if ( RectWin.left < 0 || RectWin.top < 0 )
 	{
@@ -814,6 +840,149 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Th
 
 void Platform::TWindow::OnWindowMessage(UINT Message)
 {
+	switch (Message)
+	{
+	case WM_SIZE:	
+		UpdateScrollbars();
+		break;
+	}
+}
+
+
+void Platform::TWindow::AddChild(TControl& Child)
+{
+	TControl::AddChild(Child);
+	UpdateScrollbars();
+}
+
+void Platform::TWindow::UpdateScrollbars()
+{
+	//	page is one screen
+	auto ClientRect = GetClientRect();
+	ClientRect.x = 0;
+	ClientRect.y = 0;
+	std::Debug << "UpdateScrollbars( " << ClientRect << ")" << std::endl;
+
+	//	get our client rect with all controls
+	auto WindowRect = ClientRect;
+	for (auto i = 0; i < mChildren.GetSize(); i++)
+	{
+		auto& Child = *mChildren[i];
+		auto ChildRect = Child.GetClientRect();
+		WindowRect.Accumulate(ChildRect.Left(), ChildRect.Top());
+		WindowRect.Accumulate(ChildRect.Right(), ChildRect.Bottom());
+	}
+
+	SCROLLINFO ScrollInfoVert;
+	ScrollInfoVert.cbSize = sizeof(ScrollInfoVert);
+	ScrollInfoVert.fMask = SIF_RANGE | SIF_PAGE;
+	ScrollInfoVert.nPage = ClientRect.GetHeight() / 4;	//	full page breaks the scrolling, capping wrong
+	ScrollInfoVert.nMin = WindowRect.Top();
+	ScrollInfoVert.nMax = WindowRect.Bottom();
+	SetScrollInfo(mHwnd, SB_VERT, &ScrollInfoVert, true);
+
+	SCROLLINFO ScrollInfoHorz;
+	ScrollInfoHorz.cbSize = sizeof(ScrollInfoHorz);
+	ScrollInfoHorz.fMask = SIF_RANGE | SIF_PAGE;
+	ScrollInfoHorz.nPage = ClientRect.GetWidth() / 4;	//	full page breaks the scrolling, capping wrong
+	ScrollInfoHorz.nMin = WindowRect.Left();
+	ScrollInfoHorz.nMax = WindowRect.Right();
+	SetScrollInfo(mHwnd, SB_HORZ, &ScrollInfoHorz, true);
+	
+}
+
+void Platform::TWindow::OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16_t CurrentScrollPosition)
+{
+	//	init page size
+	SCROLLINFO ScrollInfo;
+	ScrollInfo.cbSize = sizeof(ScrollInfo);
+	/*
+	ScrollInfo.fMask = SIF_PAGE;
+	ScrollInfo.nPage = 50;
+	SetScrollInfo(mHwnd, SB_VERT, &ScrollInfo, true);
+	*/
+
+	auto ScrollBar = Horizontal ? SB_HORZ : SB_VERT;
+
+	//SCROLLINFO ScrollInfo;
+	ScrollInfo.cbSize = sizeof(ScrollInfo);
+	ScrollInfo.fMask = SIF_ALL;
+	GetScrollInfo(mHwnd, ScrollBar, &ScrollInfo);
+
+	auto OldPos = ScrollInfo.nPos;
+
+	//	no page setup, jump 10% by default
+	if (ScrollInfo.nPage == 0 )
+		ScrollInfo.nPage = (ScrollInfo.nMax - ScrollInfo.nMin) / 10;
+
+	//	some commands we'll just reset params
+	switch (ScrollCommand)
+	{
+	case SB_TOP:		ScrollInfo.nPos = ScrollInfo.nMin;	break;
+	case SB_BOTTOM:		ScrollInfo.nPos = ScrollInfo.nMax;	break;
+	case SB_LINEUP:		ScrollInfo.nPos -= 1;	break;
+	case SB_LINEDOWN:	ScrollInfo.nPos += 1;	break;
+	case SB_PAGEUP:		ScrollInfo.nPos -= ScrollInfo.nPage;	break;
+	case SB_PAGEDOWN:	ScrollInfo.nPos += ScrollInfo.nPage;	break;
+	case SB_THUMBTRACK:	ScrollInfo.nPos = ScrollInfo.nTrackPos;	break;
+	}
+	if (ScrollInfo.nPos < ScrollInfo.nMin)
+		ScrollInfo.nPos = ScrollInfo.nMin;
+	if (ScrollInfo.nPos > ScrollInfo.nMax)
+		ScrollInfo.nPos = ScrollInfo.nMax;
+
+
+	std::Debug << "Scroll ";
+	std::Debug << " nMin=" << ScrollInfo.nMin;
+	std::Debug << " nMax=" << ScrollInfo.nMax;
+	std::Debug << " nPage=" << ScrollInfo.nPage;
+	std::Debug << " nPos=" << ScrollInfo.nPos;
+	std::Debug << " nTrackPos=" << ScrollInfo.nTrackPos;
+	std::Debug << std::endl;
+
+	auto Redraw = true;
+	ScrollInfo.fMask = SIF_POS;
+	SetScrollInfo(mHwnd, ScrollBar, &ScrollInfo, Redraw);
+
+	auto DeltaX = Horizontal ? ScrollInfo.nPos - OldPos : 0;
+	auto DeltaY = !Horizontal ? ScrollInfo.nPos - OldPos : 0;
+
+	bool InverseScroll = true;
+	if (InverseScroll)
+	{
+		DeltaX = -DeltaX;
+		DeltaY = -DeltaY;
+	}
+	
+	//	scroll the window
+	auto Flags = SW_ERASE | SW_INVALIDATE;
+	//	gr: using ScrollWindowEx makes controls reset positions on click, resize and smears.
+	//		I think something like the client rect needs to be setup properly...
+	//Result = ScrollWindowEx(mHwnd, DeltaX, DeltaY, nullptr, nullptr, nullptr, nullptr, Flags);
+	auto Result = ScrollWindow(mHwnd, DeltaX, DeltaY, nullptr, nullptr);
+	if (Result == ERROR)
+		Platform::ThrowLastError("ScrollWindowEx");
+		
+	/*
+	{
+		SCROLLINFO ScrollInfoHorz;
+		ScrollInfoHorz.cbSize = sizeof(ScrollInfoHorz);
+		ScrollInfoHorz.fMask = SIF_ALL;
+		GetScrollInfo(mHwnd, SB_HORZ, &ScrollInfoHorz);
+
+		SCROLLINFO ScrollInfoVert;
+		ScrollInfoVert.cbSize = sizeof(ScrollInfoVert);
+		ScrollInfoVert.fMask = SIF_ALL;
+		GetScrollInfo(mHwnd, SB_VERT, &ScrollInfoVert);
+
+		auto Hdc = GetDC(mHwnd);
+		if (!SetWindowOrgEx(Hdc, ScrollInfoHorz.nPos, ScrollInfoVert.nPos, nullptr))
+			Platform::ThrowLastError("SetWindowOrgEx");
+	}
+	*/
+	//	repaint (we want to erase background really)
+	UpdateWindow(mHwnd);
+
 }
 
 
@@ -1372,6 +1541,12 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 	return Continue;
 }
 
+
+
+std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> InitialColour)
+{
+	throw Soy::AssertException("Colour picker not yet supported on windows");
+}
 
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect,bool Resizable)
