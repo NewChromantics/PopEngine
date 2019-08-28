@@ -328,22 +328,32 @@ public:
 
 
 template<typename TYPE>
-void dcbArg_TYPE(DCCallVM& Vm,TYPE Value);
+void dcbArg_TYPE(DCCallVM& Vm,TYPE Value)
+{
+	static_assert( sizeof(TYPE) == -1, "Specialise this" );
+}
 
 template<> void dcbArg_TYPE<int8_t>(DCCallVM& Vm,int8_t Value)		{	dcArgChar( &Vm, Value );	}
-template<> void dcbArg_TYPE<uint8_t>(DCCallVM& Vm,uint8_t Value)	{	dcArgChar( &Vm, Value );	}
 template<> void dcbArg_TYPE<int16_t>(DCCallVM& Vm,int16_t Value)	{	dcArgShort( &Vm, Value );	}
-template<> void dcbArg_TYPE<uint16_t>(DCCallVM& Vm,uint16_t Value)	{	dcArgShort( &Vm, Value );	}
 template<> void dcbArg_TYPE<int32_t>(DCCallVM& Vm,int32_t Value)	{	dcArgLong( &Vm, Value );	}
+template<> void dcbArg_TYPE<int64_t>(DCCallVM& Vm,int64_t Value)	{	dcArgLongLong( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint8_t>(DCCallVM& Vm,uint8_t Value)	{	dcArgChar( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint16_t>(DCCallVM& Vm,uint16_t Value)	{	dcArgShort( &Vm, Value );	}
 template<> void dcbArg_TYPE<uint32_t>(DCCallVM& Vm,uint32_t Value)	{	dcArgLong( &Vm, Value );	}
-template<> void dcbArg_TYPE<float*>(DCCallVM& Vm,float* Value)		{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<uint64_t>(DCCallVM& Vm,uint64_t Value)	{	dcArgLongLong( &Vm, Value );	}
+template<> void dcbArg_TYPE<float>(DCCallVM& Vm,float Value)		{	dcArgFloat( &Vm, Value );	}
+//template<> void dcbArg_TYPE<double>(DCCallVM& Vm,double Value)		{	dcArgDouble( &Vm, Value );	}
 template<> void dcbArg_TYPE<void*>(DCCallVM& Vm,void* Value)		{	dcArgPointer( &Vm, Value );	}
 template<> void dcbArg_TYPE<uint8_t*>(DCCallVM& Vm,uint8_t* Value)	{	dcArgPointer( &Vm, Value );	}
 template<> void dcbArg_TYPE<uint16_t*>(DCCallVM& Vm,uint16_t* Value)	{	dcArgPointer( &Vm, Value );	}
 template<> void dcbArg_TYPE<uint32_t*>(DCCallVM& Vm,uint32_t* Value)	{	dcArgPointer( &Vm, Value );	}
+//utemplate<> void dcbArg_TYPE<uint64_t*>(DCCallVM& Vm,uint64_t* Value)	{	dcArgPointer( &Vm, Value );	}
 template<> void dcbArg_TYPE<int8_t*>(DCCallVM& Vm,int8_t* Value)	{	dcArgPointer( &Vm, Value );	}
 template<> void dcbArg_TYPE<int16_t*>(DCCallVM& Vm,int16_t* Value)	{	dcArgPointer( &Vm, Value );	}
 template<> void dcbArg_TYPE<int32_t*>(DCCallVM& Vm,int32_t* Value)	{	dcArgPointer( &Vm, Value );	}
+//template<> void dcbArg_TYPE<int64_t*>(DCCallVM& Vm,int64_t* Value)	{	dcArgPointer( &Vm, Value );	}
+template<> void dcbArg_TYPE<float*>(DCCallVM& Vm,float* Value)		{	dcArgPointer( &Vm, Value );	}
+//template<> void dcbArg_TYPE<double*>(DCCallVM& Vm,double* Value)	{	dcArgPointer( &Vm, Value );	}
 
 
 template<typename TYPE>
@@ -360,6 +370,8 @@ template<> void dcbCall_TYPE<uint8_t>(DCCallVM& Vm,void* FunctionAddress,uint8_t
 template<> void dcbCall_TYPE<uint16_t>(DCCallVM& Vm,void* FunctionAddress,uint16_t& ReturnValue)	{	ReturnValue = dcCallShort( &Vm, FunctionAddress );	}
 template<> void dcbCall_TYPE<uint32_t>(DCCallVM& Vm,void* FunctionAddress,uint32_t& ReturnValue)	{	ReturnValue = dcCallLong( &Vm, FunctionAddress );	}
 template<> void dcbCall_TYPE<uint64_t>(DCCallVM& Vm,void* FunctionAddress,uint64_t& ReturnValue)	{	ReturnValue = dcCallLongLong( &Vm, FunctionAddress );	}
+template<> void dcbCall_TYPE<float>(DCCallVM& Vm,void* FunctionAddress,float& ReturnValue)			{	ReturnValue = dcCallFloat( &Vm, FunctionAddress );	}
+//template<> void dcbCall_TYPE<double>(DCCallVM& Vm,void* FunctionAddress,double& ReturnValue)		{	ReturnValue = dcCallDouble( &Vm, FunctionAddress );	}
 
 
 template<typename TYPE>
@@ -397,23 +409,43 @@ std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction<uint32_t*>(T
 		dcbArg_TYPE( *This.mVm, Value );
 	};
 }
-
+/*
+template<>
+std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction<int64_t*>(TDcFunction& This)
+{
+	return [&This](Bind::TCallback& Params,size_t ParamIndex)
+	{
+		auto ValueRef = Params.GetArgumentValue( ParamIndex );
+		//	get pointer from typed array
+		auto* Value = JsCore::GetPointer_u64( Params.GetContextRef(), ValueRef );
+		dcbArg_TYPE( *This.mVm, Value );
+	};
+}
+*/
 
 std::function<void(Bind::TCallback&,size_t)> GetSetArgumentFunction(TDcFunction& This,const std::string& TypeName)
 {
 	if ( TypeName == "int8_t" )		return GetSetArgumentFunction<int8_t>(This);
-	if ( TypeName == "uint8_t" )	return GetSetArgumentFunction<uint8_t>(This);
 	if ( TypeName == "int16_t" )	return GetSetArgumentFunction<int16_t>(This);
-	if ( TypeName == "uint16_t" )	return GetSetArgumentFunction<uint32_t>(This);
 	if ( TypeName == "int32_t" )	return GetSetArgumentFunction<int32_t>(This);
+	if ( TypeName == "int64_t" )	return GetSetArgumentFunction<int64_t>(This);
+	if ( TypeName == "uint8_t" )	return GetSetArgumentFunction<uint8_t>(This);
+	if ( TypeName == "uint16_t" )	return GetSetArgumentFunction<uint16_t>(This);
 	if ( TypeName == "uint32_t" )	return GetSetArgumentFunction<uint32_t>(This);
-	
+	if ( TypeName == "uint64_t" )	return GetSetArgumentFunction<uint64_t>(This);
+	if ( TypeName == "float" )		return GetSetArgumentFunction<float>(This);
+	//if ( TypeName == "double" )		return GetSetArgumentFunction<double>(This);
+
 	if ( TypeName == "uint8_t*" )	return GetSetArgumentFunction<uint8_t*>(This);
 	if ( TypeName == "uint16_t*" )	return GetSetArgumentFunction<uint16_t*>(This);
 	if ( TypeName == "uint32_t*" )	return GetSetArgumentFunction<uint32_t*>(This);
+	//if ( TypeName == "uint64_t*" )	return GetSetArgumentFunction<uint64_t*>(This);
 	if ( TypeName == "int8_t*" )	return GetSetArgumentFunction<int8_t*>(This);
 	if ( TypeName == "int16_t*" )	return GetSetArgumentFunction<int16_t*>(This);
 	if ( TypeName == "int32_t*" )	return GetSetArgumentFunction<int32_t*>(This);
+	//if ( TypeName == "int64_t*" )	return GetSetArgumentFunction<int64_t*>(This);
+	if ( TypeName == "float*" )		return GetSetArgumentFunction<float*>(This);
+	//if ( TypeName == "double*" )	return GetSetArgumentFunction<double*>(This);
 
 	std::stringstream Error;
 	Error << "Unhandled argument type " << TypeName;
@@ -441,6 +473,7 @@ std::function<void(Bind::TCallback&)> GetDyn_CallFunction<void>(TDcFunction& Thi
 	};
 }
 
+
 template<>
 std::function<void(Bind::TCallback&)> GetDyn_CallFunction<void*>(TDcFunction& This)
 {
@@ -459,9 +492,14 @@ std::function<void(Bind::TCallback&)> GetDyn_CallFunction(TDcFunction& This,cons
 	if ( ReturnType == "" )			return GetDyn_CallFunction<void>(This);
 	if ( ReturnType == "void" )		return GetDyn_CallFunction<void>(This);
 	if ( ReturnType == "int" )		return GetDyn_CallFunction<int>(This);
+	if ( ReturnType == "int8_t" )	return GetDyn_CallFunction<int8_t>(This);
+	if ( ReturnType == "int16_t" )	return GetDyn_CallFunction<int16_t>(This);
+	if ( ReturnType == "int32_t" )	return GetDyn_CallFunction<int32_t>(This);
+	if ( ReturnType == "int64_t" )	return GetDyn_CallFunction<int64_t>(This);
 	if ( ReturnType == "uint8_t" )	return GetDyn_CallFunction<uint8_t>(This);
 	if ( ReturnType == "uint16_t" )	return GetDyn_CallFunction<uint16_t>(This);
 	if ( ReturnType == "uint32_t" )	return GetDyn_CallFunction<uint32_t>(This);
+	if ( ReturnType == "uint64_t" )	return GetDyn_CallFunction<uint64_t>(This);
 	//if ( ReturnType == "void*" )	return GetDyn_CallFunction<void*>(This);
 	//if ( ReturnType == "uint8_t*" )	return GetDyn_CallFunction<uint8_t*>(This);
 	

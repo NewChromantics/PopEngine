@@ -72,9 +72,11 @@ namespace JsCore
 	uint8_t*	GetPointer_u8(JSContextRef Context,JSValueRef Handle);
 	uint16_t*	GetPointer_u16(JSContextRef Context,JSValueRef Handle);
 	uint32_t*	GetPointer_u32(JSContextRef Context,JSValueRef Handle);
+	uint64_t*	GetPointer_u64(JSContextRef Context,JSValueRef Handle);
 	int8_t*		GetPointer_s8(JSContextRef Context,JSValueRef Handle);
 	int16_t*	GetPointer_s16(JSContextRef Context,JSValueRef Handle);
 	int32_t*	GetPointer_s32(JSContextRef Context,JSValueRef Handle);
+	int64_t*	GetPointer_s64(JSContextRef Context,JSValueRef Handle);
 	float*		GetPointer_float(JSContextRef Context,JSValueRef Handle);
 	
 	//	create JS types
@@ -97,11 +99,16 @@ namespace JsCore
 	//	gr: consider templating this so that we can static_assert on non-specified implementation to avoid the auto-resolution to bool
 	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
-	JSValueRef	GetValue(JSContextRef Context,size_t Value);
-	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
-	JSValueRef	GetValue(JSContextRef Context,int32_t Value);
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
+	JSValueRef	GetValue(JSContextRef Context,uint16_t Value);
+	JSValueRef	GetValue(JSContextRef Context,uint32_t Value);
+	JSValueRef	GetValue(JSContextRef Context,uint64_t Value);
+	JSValueRef	GetValue(JSContextRef Context,size_t Value);
+	JSValueRef	GetValue(JSContextRef Context,int8_t Value);
+	JSValueRef	GetValue(JSContextRef Context,int16_t Value);
+	JSValueRef	GetValue(JSContextRef Context,int32_t Value);
+	JSValueRef	GetValue(JSContextRef Context,int64_t Value);
 	JSValueRef	GetValue(JSContextRef Context,JSObjectRef Value);
 	inline JSValueRef	GetValue(JSContextRef Context,JSValueRef Value)	{	return Value;	}
 	JSValueRef	GetValue(JSContextRef Context,const TPersistent& Value);
@@ -151,17 +158,21 @@ DEFINE_FROM_VALUE( bool, GetBool );
 DEFINE_FROM_VALUE( uint8_t, GetInt<uint8_t> );
 DEFINE_FROM_VALUE( uint16_t, GetInt<uint16_t> );
 DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
+DEFINE_FROM_VALUE( uint64_t, GetInt<uint64_t> );
 DEFINE_FROM_VALUE( int8_t, GetInt<int8_t> );
 DEFINE_FROM_VALUE( int16_t, GetInt<int16_t> );
 DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
+DEFINE_FROM_VALUE( int64_t, GetInt<int64_t> );
 DEFINE_FROM_VALUE( std::string, GetString );
 DEFINE_FROM_VALUE( float, GetFloat );
 DEFINE_FROM_VALUE( uint8_t*, GetPointer_u8 );
 DEFINE_FROM_VALUE( uint16_t*, GetPointer_u16 );
 DEFINE_FROM_VALUE( uint32_t*, GetPointer_u32 );
+//DEFINE_FROM_VALUE( uint64_t*, GetPointer_u64 );
 DEFINE_FROM_VALUE( int8_t*, GetPointer_s8 );
 DEFINE_FROM_VALUE( int16_t*, GetPointer_s16 );
 DEFINE_FROM_VALUE( int32_t*, GetPointer_s32 );
+//DEFINE_FROM_VALUE( int64_t*, GetPointer_s64 );
 DEFINE_FROM_VALUE( float*, GetPointer_float );
 
 template<typename TYPE>
@@ -321,9 +332,11 @@ public:
 	virtual void			Return(uint8_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(uint16_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(uint64_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(int8_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(int16_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(int32_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(int64_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JsCore::TObject& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JSValueRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JSObjectRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
