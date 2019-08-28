@@ -33,8 +33,10 @@ namespace JsCore
 
 namespace V8
 {
+	//	these numbers prove it's correct
+	//	but we used to use 0 & 2
 	const int InternalFieldDataIndex = 3;
-	const int MaxInternalFieldDatas = 5;//2
+	const int MaxInternalFieldDatas = 5;
 
 	class TAllocator;
 	class TVirtualMachine;

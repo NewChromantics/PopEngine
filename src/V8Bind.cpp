@@ -133,12 +133,13 @@ void JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data)
 		//	if there arent enough internal fields, increase for our data
 		//	typedarrays seem to have 2 internal fields that I dont set... but not sure what for
 		auto InternalHandleCount = Object.mThis->InternalFieldCount();
-		if ( InternalHandleCount != V8::InternalFieldDataIndex )
+		if ( InternalHandleCount != V8::MaxInternalFieldDatas )
 		{
 			//	todo: list the handles it does have and their type
-			std::Debug << "Object has " << InternalHandleCount << " internal fields, increasing to our " << V8::MaxInternalFieldDatas << std::endl;
-			//	gr: can't do this!
-			//Object.mThis->SetInternalFieldCount( V8::MaxInternalFieldDatas );
+			//	we cannot change an objects count though
+			std::stringstream Error;
+			Error << "Object has " << InternalHandleCount << " internal fields, expecting our " << V8::MaxInternalFieldDatas << ". May not be our object. V8 doesn't allow resizing" << std::endl;
+			throw Soy::AssertException(Error);
 		}
 	}
 	
