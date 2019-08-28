@@ -14,6 +14,7 @@
 const JSClassDefinition kJSClassDefinitionEmpty = {};
 
 //#define SET_INTERNAL_DATA_AS_POINTER
+//#define USE_SHADOW_BUFFER
 
 JSType JSValueGetType(JSValueRef Value);
 
@@ -611,6 +612,15 @@ bool TypedArrayHasShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
 
 Array<uint8_t>& GetTypedArrayShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
 {
+	//	gr: can't use these internal fields on an object we don't own, argh
+	//	maybe use these?
+	/*
+	Maybe<bool> HasPrivate(Local<Context> context, Local<Private> key);
+	Maybe<bool> SetPrivate(Local<Context> context, Local<Private> key,
+						   Local<Value> value);
+	Maybe<bool> DeletePrivate(Local<Context> context, Local<Private> key);
+	MaybeLocal<Value> GetPrivate(Local<Context> context, Local<Private> key);
+*/
 	//	we should be using TypedArray->ArrayBuffer->Externalise,
 	//	but I'm not sure when we need to delete the contents
 	auto* ShadowArrayPtr = JSObjectGetPrivate( Context, ArrayObject );
@@ -670,11 +680,14 @@ void PushTypedArrayShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
 
 void JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Array)
 {
+#if defined(USE_SHADOW_BUFFER)
 	PushTypedArrayShadowBuffer( Context, Array );
+#endif
 }
 
 void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject,JSValueRef* Exception)
 {
+#if defined(USE_SHADOW_BUFFER)
 	//	for v8 where we don't control the backing buffer, we have a shadow array
 	auto& ShadowArray = GetTypedArrayShadowBuffer( Context, ArrayObject );
 	
@@ -682,6 +695,16 @@ void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject
 	
 	//	danger! here!
 	return ShadowArray.GetArray();
+
+#else
+	//	gr: does this move?
+	//		does it not move if we externalise the contents?
+	auto TypedArray = GetTypedArray(ArrayObject);
+	auto ArrayBuffer = TypedArray->Buffer();
+	auto Contents = ArrayBuffer->GetContents();
+	auto* ContentsData = static_cast<uint8_t*>( Contents.Data() );
+	return ContentsData;
+#endif
 }
 
 size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
