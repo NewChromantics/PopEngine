@@ -135,6 +135,8 @@ namespace JsCore
 	template<typename TYPE>
 	void		EnumArray(JSContextRef Context,JSValueRef Value,ArrayBridge<TYPE>& Array);
 	
+	void		OnValueChangedExternally(JSContextRef Context,JSValueRef Value);
+	
 	prmem::Heap&	GetGlobalObjectHeap();
 }
 
@@ -432,9 +434,9 @@ public:
 	//	should probbaly block = operator so any copy of an object always has a new Context
 	
 	template<typename TYPE>
-	inline TYPE&			This()	{	return This<TYPE>(mThis);	}
+	inline TYPE&			This()	{	return This<TYPE>( mContext, mThis );	}
 	template<typename TYPE>
-	static TYPE&			This(JSObjectRef Object);
+	static TYPE&			This(JSContextRef Context,JSObjectRef Object);
 
 	virtual bool			HasMember(const std::string& MemberName) bind_override;
 	
@@ -738,7 +740,8 @@ protected:
 	
 		//	reset the void for safety?
 		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
-		JSObjectSetPrivate( ObjectRef, nullptr );
+		JSContextRef Context;
+		JSObjectSetPrivate( Context, ObjectRef, nullptr );
 	}
 #elif defined(JSAPI_CHAKRA)
 	static void				Free(void* ObjectPtr)
@@ -1091,9 +1094,9 @@ inline TYPE& JsCore::TCallback::This()
 }
 
 template<typename TYPE>
-inline TYPE& JsCore::TObject::This(JSObjectRef Object)
+inline TYPE& JsCore::TObject::This(JSContextRef Context,JSObjectRef Object)
 {
-	auto* This = JSObjectGetPrivate(Object);
+	auto* This = JSObjectGetPrivate( Context, Object);
 	if ( This == nullptr )
 		throw Soy::AssertException("Object::This is null");
 	auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>( This );

@@ -33,7 +33,8 @@ namespace JsCore
 
 namespace V8
 {
-	const int InternalFieldDataIndex = 0;
+	const int InternalFieldDataIndex = 3;
+	const int MaxInternalFieldDatas = 5;//2
 
 	class TAllocator;
 	class TVirtualMachine;
@@ -379,8 +380,8 @@ public:
 
 
 
-void		JSObjectSetPrivate(JSObjectRef Object,void* Data);
-void*		JSObjectGetPrivate(JSObjectRef Object);
+void		JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data);
+void*		JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object);
 JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*);
 JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception);
 void		JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception );
@@ -426,6 +427,7 @@ void*		JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef Array,JSVa
 size_t		JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
 size_t		JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
 size_t		JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception=nullptr);
+void		JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Array);
 
 JSValueRef			JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef This,JSStringRef Filename,int LineNumber,JSValueRef* Exception);
 JSGlobalContextRef	JSContextGetGlobalContext(JSContextRef Context);

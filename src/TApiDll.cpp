@@ -542,6 +542,15 @@ void TDcFunction::Call(Bind::TCallback& Params)
 	}
 	
 	mCall( Params );
+	
+	//	any pointer objects should update contents if memory was changed externally
+	//	this is a semi-permanent fix I think... might be good to check external libs
+	//	aren't corrupting memory anyway?
+	for ( auto i=0;	i<Params.mArguments.GetSize();	i++ )
+	{
+		auto Argvalue = Params.GetArgumentValue(i);
+		Bind::OnValueChangedExternally( Params.GetContextRef(), Argvalue );
+	}
 }
 
 std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const std::string& ReturnType,ArrayBridge<std::string>& TypeStack)
@@ -631,6 +640,7 @@ void TDllWrapper::CallFunction(Bind::TCallback& Params)
 
 	//	this call sets the return value internally
 	Function.Call( Params );
+
 }
 
 ApiDll::TFunctionBase& TDllWrapper::GetFunction(const std::string& FunctionName)

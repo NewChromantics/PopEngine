@@ -496,13 +496,13 @@ JSContextGroupRef::operator bool() const
 
 
 
-void JSObjectSetPrivate(JSObjectRef Object,void* Data)
+void JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data)
 {
 	auto Error = JsSetExternalData( Object.mValue, Data );
 	Chakra::IsOkay( Error, "JsSetExternalData" );
 }
 
-void* JSObjectGetPrivate(JSObjectRef Object)
+void* JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object)
 {
 	void* Data = nullptr;
 	auto Error = JsGetExternalData( Object.mValue, &Data );

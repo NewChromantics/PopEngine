@@ -1181,7 +1181,7 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 	void* Data = &ObjectPointer;
 	
 	//	v8 needs to manually set the private data
-	JSObjectSetPrivate( NewObject, Data );
+	JSObjectSetPrivate( LocalContext.mLocalContext, NewObject, Data );
 	Bind::TObject ObjectHandle( LocalContext.mLocalContext, NewObject );
 	ObjectPointer.SetHandle( LocalContext, ObjectHandle );
 	
@@ -2201,3 +2201,18 @@ float* JsCore::GetPointer_float(JSContextRef Context,JSValueRef Handle)
 {
 	return GetPointer<float>( Context, Handle );
 }
+
+void JsCore::OnValueChangedExternally(JSContextRef Context,JSValueRef Value)
+{
+	JSValueRef Exception = nullptr;
+	auto TypedArrayType = JSValueGetTypedArrayType( Context, Value, &Exception );
+	JsCore::ThrowException( Context, Exception, "OnValueChangedExternally Testing if value is typed array" );
+	
+	if ( TypedArrayType == kJSTypedArrayTypeNone )
+		return;
+	
+	//	mark typed array as changed
+	auto Object = GetObject( Context, Value );
+	JSObjectTypedArrayDirty( Context, Object );
+}
+

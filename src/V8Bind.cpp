@@ -13,6 +13,7 @@
 
 const JSClassDefinition kJSClassDefinitionEmpty = {};
 
+//#define SET_INTERNAL_DATA_AS_POINTER
 
 JSType JSValueGetType(JSValueRef Value);
 
@@ -118,23 +119,53 @@ void JSStringRef::operator=(std::nullptr_t Null)
 
 
 
-void JSObjectSetPrivate(JSObjectRef Object,void* Data)
+void JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data)
 {
 	//	should already be null
-	auto* PrevData = JSObjectGetPrivate( Object );
+	auto* PrevData = JSObjectGetPrivate( Context, Object );
 	if ( PrevData )
 		throw Soy::AssertException("Private data non-null, expected to be unset");
 
 	auto& Isolate = Object.GetIsolate();
-	auto External = v8::External::New( &Isolate, Data );
 	
+	{
+		//	if there arent enough internal fields, increase for our data
+		//	typedarrays seem to have 2 internal fields that I dont set... but not sure what for
+		auto InternalHandleCount = Object.mThis->InternalFieldCount();
+		if ( InternalHandleCount != V8::InternalFieldDataIndex )
+		{
+			//	todo: list the handles it does have and their type
+			std::Debug << "Object has " << InternalHandleCount << " internal fields, increasing to our " << V8::MaxInternalFieldDatas << std::endl;
+			//	gr: can't do this!
+			//Object.mThis->SetInternalFieldCount( V8::MaxInternalFieldDatas );
+		}
+	}
+	
+#if defined(SET_INTERNAL_DATA_AS_POINTER)
+	Object.mThis->SetAlignedPointerInInternalField( V8::InternalFieldDataIndex, Data );
+#else
+	auto External = v8::External::New( &Isolate, Data );
 	Object.mThis->SetInternalField( V8::InternalFieldDataIndex, External );
+#endif
 }
 
-void* JSObjectGetPrivate(JSObjectRef Object)
+void* JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object)
 {
 	if ( !Object )
 		return nullptr;
+	
+	auto InternalHandleCount = Object.mThis->InternalFieldCount();
+#if defined(SET_INTERNAL_DATA_AS_POINTER)
+	auto* VoidPtr = Object.mThis->GetAlignedPointerFromInternalField( V8::InternalFieldDataIndex );
+#else
+	
+	//	this object doesn't have enough handles, maybe WE haven't setup this object's internal fields
+	if ( InternalHandleCount <= V8::InternalFieldDataIndex )
+	{
+		//	todo: list the handles it does have and their type
+		std::Debug << "Object has " << InternalHandleCount << " internal fields, we're expecting " << V8::MaxInternalFieldDatas << " fields. Maybe WE don't own this object" << std::endl;
+		return nullptr;
+	}
 	
 	auto Handle = Object.mThis->GetInternalField( V8::InternalFieldDataIndex );
 	
@@ -145,10 +176,18 @@ void* JSObjectGetPrivate(JSObjectRef Object)
 	//	but if it is set, should be an external
 	auto Type = JSValueGetType( JSValueRef(Handle) );
 	if ( !Handle->IsExternal() )
+	{
+		if ( Type == kJSTypeNumber )
+		{
+			auto NumberHandle = Handle.As<v8::Number>();
+			auto Number = NumberHandle->Value();
+			std::Debug << "private field is number; " << Number << std::endl;
+		}
 		throw Soy::AssertException("Private field of object is not an external");
+	}
 	auto External = Handle.As<v8::External>();
 	auto* VoidPtr = External->Value();
-
+#endif
 	return VoidPtr;
 }
 
@@ -186,7 +225,7 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 	JSObjectRef NewObjectRef( NewObjectLocal );
 
 	//	auto assign private data like JsCore does
-	JSObjectSetPrivate( NewObjectRef, Data );
+	JSObjectSetPrivate( Context, NewObjectRef, Data );
 	
 	return NewObjectRef;
 }
@@ -519,6 +558,7 @@ JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context,JSTyped
 {
 	//	gr: for V8, we need to make a pool of auto releasing objects, or an objectwrapper that manages the array or something...
 	//		but for now, we'll just copy the bytes.
+	//	gr: this shuld use the shadow array now
 	auto ExternalBufferArray = GetRemoteArray( const_cast<uint8_t*>( ExternalBuffer ), ExternalBufferSize );
 
 	//	make an array buffer
@@ -563,29 +603,85 @@ v8::Local<v8::TypedArray> GetTypedArray(JSObjectRef& ArrayObject)
 	return Array;
 }
 
-void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject,JSValueRef* Exception)
+bool TypedArrayHasShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
 {
-	//	hack, but we don't get a pointer
-	//	the contents should only be used in a small scope, but we can't really control that
-	//	and REALLY it'll only be on one thread, but we can make sure of that with ThreadLocalStorage
-	//	obviously a big penalty for calling this more than once
-	__thread static Array<uint8_t>* pBytesCopy = nullptr;
-	if ( !pBytesCopy )
-		pBytesCopy = new Array<uint8_t>();
-	auto& BytesCopy = *pBytesCopy;
+	auto* ShadowArrayPtr = JSObjectGetPrivate( Context, ArrayObject );
+	return ShadowArrayPtr != nullptr;
+}
 
+Array<uint8_t>& GetTypedArrayShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
+{
+	//	we should be using TypedArray->ArrayBuffer->Externalise,
+	//	but I'm not sure when we need to delete the contents
+	auto* ShadowArrayPtr = JSObjectGetPrivate( Context, ArrayObject );
+	if ( !ShadowArrayPtr )
+	{
+		Array<uint8_t>* NewShadowArray = new Array<uint8_t>();
+		JSObjectSetPrivate( Context, ArrayObject, NewShadowArray );
+		ShadowArrayPtr = JSObjectGetPrivate( Context, ArrayObject );
+	}
+	auto* ShadowArray = reinterpret_cast<Array<uint8_t>*>( ShadowArrayPtr );
+	return *ShadowArray;
+}
+
+void PullTypedArrayShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
+{
+	//	for v8 where we don't control the backing buffer, we have a shadow array
+	auto& ShadowArray = GetTypedArrayShadowBuffer( Context, ArrayObject );
+	
 	auto TypedArray = GetTypedArray(ArrayObject);
+	
+	//auto Contents = TypedArray.GetContents();
+	
+	//	update the shadow
+	//	this is where array pointer may change!
 	auto TypedArraySize = TypedArray->ByteLength();
-	BytesCopy.SetSize(TypedArraySize);
-	auto BytesWritten = TypedArray->CopyContents(BytesCopy.GetArray(), BytesCopy.GetDataSize());
+	ShadowArray.SetSize(TypedArraySize);
+	auto BytesWritten = TypedArray->CopyContents(ShadowArray.GetArray(), ShadowArray.GetDataSize());
 	if ( BytesWritten != TypedArraySize )
 	{
 		std::stringstream Error;
 		Error << "Typed array extracted " << BytesWritten << "/" << TypedArraySize << " bytes";
 		throw Soy::AssertException(Error);
 	}
+}
 
-	return BytesCopy.GetArray();
+
+
+void PushTypedArrayShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
+{
+	//	gr: throw because caller is expecting a change?
+	if ( !TypedArrayHasShadowBuffer( Context, ArrayObject ) )
+	{
+		std::Debug << "Warning, PushTypedArrayShadowBuffer but object has no shadow buffer" << std::endl;
+		return;
+	}
+
+	//	update array with shadow's contents
+	auto& ShadowArray = GetTypedArrayShadowBuffer( Context, ArrayObject );
+	
+	auto TypedArray = GetTypedArray(ArrayObject);
+	auto ArrayBuffer = TypedArray->Buffer();
+	auto Contents = ArrayBuffer->GetContents();
+	auto* ContentsData = static_cast<uint8_t*>( Contents.Data() );
+	auto ContentsArray = GetRemoteArray( ContentsData, Contents.ByteLength() );
+	ContentsArray.Copy( ShadowArray );
+}
+
+void JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Array)
+{
+	PushTypedArrayShadowBuffer( Context, Array );
+}
+
+void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject,JSValueRef* Exception)
+{
+	//	for v8 where we don't control the backing buffer, we have a shadow array
+	auto& ShadowArray = GetTypedArrayShadowBuffer( Context, ArrayObject );
+	
+	PullTypedArrayShadowBuffer( Context, ArrayObject );
+	
+	//	danger! here!
+	return ShadowArray.GetArray();
 }
 
 size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
@@ -780,7 +876,7 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 	auto InstanceTemplate = ConstructorFunc->InstanceTemplate();
 	//	[0] object
 	//	[1] container
-	InstanceTemplate->SetInternalFieldCount(2);
+	InstanceTemplate->SetInternalFieldCount( V8::MaxInternalFieldDatas );
 
 	//	bind the static funcs
 	{
