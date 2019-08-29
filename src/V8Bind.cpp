@@ -708,7 +708,7 @@ void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject
 		auto ArrayBuffer = TypedArray->Buffer();
 		if ( !TypedArray->HasBuffer() )
 			throw Soy::AssertException("Trying to use buffer that doesn't exist");
-		std::Debug << "Typed array now has backing buffer." << std::endl;
+		//std::Debug << "Typed array now has backing buffer." << std::endl;
 	}
 	
 	//	use these like other implementations do
