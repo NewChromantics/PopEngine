@@ -642,17 +642,17 @@ void PullTypedArrayShadowBuffer(JSContextRef Context,JSObjectRef ArrayObject)
 	
 	auto TypedArray = GetTypedArray(ArrayObject);
 	
-	//auto Contents = TypedArray.GetContents();
-	
 	//	update the shadow
 	//	this is where array pointer may change!
+	auto ByteOffset = TypedArray->ByteOffset();
+	auto ByteLength = TypedArray->ByteLength();
 	auto TypedArraySize = TypedArray->ByteLength();
 	ShadowArray.SetSize(TypedArraySize);
 	auto BytesWritten = TypedArray->CopyContents(ShadowArray.GetArray(), ShadowArray.GetDataSize());
 	if ( BytesWritten != TypedArraySize )
 	{
 		std::stringstream Error;
-		Error << "Typed array extracted " << BytesWritten << "/" << TypedArraySize << " bytes";
+		Error << "Typed array extracted " << BytesWritten << "/" << ByteLength << " bytes";
 		throw Soy::AssertException(Error);
 	}
 }
@@ -701,18 +701,56 @@ void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject
 	//	gr: does this move?
 	//		does it not move if we externalise the contents?
 	auto TypedArray = GetTypedArray(ArrayObject);
+	
+	if ( !TypedArray->HasBuffer() )
+	{
+		//	gr: this seems to allocate the buffer
+		auto ArrayBuffer = TypedArray->Buffer();
+		if ( !TypedArray->HasBuffer() )
+			throw Soy::AssertException("Trying to use buffer that doesn't exist");
+		std::Debug << "Typed array now has backing buffer." << std::endl;
+	}
+	
+	//	use these like other implementations do
+	auto ByteOffset = TypedArray->ByteOffset();
+	auto ByteLength = TypedArray->ByteLength();
+	
 	auto ArrayBuffer = TypedArray->Buffer();
 	auto Contents = ArrayBuffer->GetContents();
 	auto* ContentsData = static_cast<uint8_t*>( Contents.Data() );
+	
+	static bool TestContentsData = false;
+	if ( TestContentsData )
+	{
+		//	test data
+		Array<uint8_t> BytesCopy;
+		BytesCopy.SetSize(ByteLength);
+		auto BytesWritten = TypedArray->CopyContents(BytesCopy.GetArray(), BytesCopy.GetDataSize());
+		if ( BytesWritten != ByteLength )
+		{
+			std::stringstream Error;
+			Error << "Typed array extracted " << BytesWritten << "/" << ByteLength << " bytes";
+			throw Soy::AssertException(Error);
+		}
+		
+		auto ContentsArray = GetRemoteArray( ContentsData+ByteOffset, ByteLength );
+		for ( auto i=0;	i<ByteLength;	i++ )
+		{
+			auto ContentByte = ContentsArray[i];
+			auto CopyByte = BytesCopy[i];
+			if ( ContentByte != CopyByte )
+				throw Soy::AssertException("buffers don't match");
+		}
+	}
+	
 	return ContentsData;
 #endif
 }
 
 size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	//	gr: because in JSObjectGetTypedArrayBytesPtr we always copy out the contents
-	//		the byte offset will always be zero to the caller as its relative to that
-	return 0;
+	auto TypedArray = GetTypedArray(Array);
+	return TypedArray->ByteOffset();
 }
 
 size_t JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
