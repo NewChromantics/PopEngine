@@ -565,34 +565,56 @@ v8::Local<v8::TypedArray> GetTypedArray(JSObjectRef& ArrayObject)
 
 void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject,JSValueRef* Exception)
 {
-	//	hack, but we don't get a pointer
-	//	the contents should only be used in a small scope, but we can't really control that
-	//	and REALLY it'll only be on one thread, but we can make sure of that with ThreadLocalStorage
-	//	obviously a big penalty for calling this more than once
-	__thread static Array<uint8_t>* pBytesCopy = nullptr;
-	if ( !pBytesCopy )
-		pBytesCopy = new Array<uint8_t>();
-	auto& BytesCopy = *pBytesCopy;
-
+	//	gr: this breaks H264 decoding? data moves?
 	auto TypedArray = GetTypedArray(ArrayObject);
-	auto TypedArraySize = TypedArray->ByteLength();
-	BytesCopy.SetSize(TypedArraySize);
-	auto BytesWritten = TypedArray->CopyContents(BytesCopy.GetArray(), BytesCopy.GetDataSize());
-	if ( BytesWritten != TypedArraySize )
+	if ( !TypedArray->HasBuffer() )
 	{
-		std::stringstream Error;
-		Error << "Typed array extracted " << BytesWritten << "/" << TypedArraySize << " bytes";
-		throw Soy::AssertException(Error);
+		//	gr: this seems to allocate the buffer
+		auto ArrayBuffer = TypedArray->Buffer();
+		if ( !TypedArray->HasBuffer() )
+			throw Soy::AssertException("Trying to use buffer that doesn't exist");
+		std::Debug << "Typed array now has backing buffer." << std::endl;
 	}
-
-	return BytesCopy.GetArray();
+	
+	//	use these like other implementations do
+	auto ByteOffset = TypedArray->ByteOffset();
+	auto ByteLength = TypedArray->ByteLength();
+	
+	auto ArrayBuffer = TypedArray->Buffer();
+	auto Contents = ArrayBuffer->GetContents();
+	auto* ContentsData = static_cast<uint8_t*>( Contents.Data() );
+	
+	static bool TestContentsData = false;
+	if ( TestContentsData )
+	{
+		//	test data
+		Array<uint8_t> BytesCopy;
+		BytesCopy.SetSize(ByteLength);
+		auto BytesWritten = TypedArray->CopyContents(BytesCopy.GetArray(), BytesCopy.GetDataSize());
+		if ( BytesWritten != ByteLength )
+		{
+			std::stringstream Error;
+			Error << "Typed array extracted " << BytesWritten << "/" << ByteLength << " bytes";
+			throw Soy::AssertException(Error);
+		}
+		
+		auto ContentsArray = GetRemoteArray( ContentsData+ByteOffset, ByteLength );
+		for ( auto i=0;	i<ByteLength;	i++ )
+		{
+			auto ContentByte = ContentsArray[i];
+			auto CopyByte = BytesCopy[i];
+			if ( ContentByte != CopyByte )
+				throw Soy::AssertException("buffers don't match");
+		}
+	}
+	
+	return ContentsData;
 }
 
 size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	//	gr: because in JSObjectGetTypedArrayBytesPtr we always copy out the contents
-	//		the byte offset will always be zero to the caller as its relative to that
-	return 0;
+	auto TypedArray = GetTypedArray(Array);
+	return TypedArray->ByteOffset();
 }
 
 size_t JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
