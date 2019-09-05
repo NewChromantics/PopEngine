@@ -775,6 +775,9 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 		auto& Isolate = *Meta.GetIsolate();
 		try
 		{
+			//	when using .apply() this will throw...
+			//	need a good work around
+			//	but this causes other problems too
 			if ( !Meta.IsConstructCall() )
 				throw Soy::AssertException("Calling constructor callback, but is not constructing");
 	

@@ -46,6 +46,7 @@ DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
 DEFINE_BIND_FUNCTIONNAME(EnumScreens);
 DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
 DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
+DEFINE_BIND_FUNCTIONNAME(GetPlatform);
 
 
 
@@ -104,6 +105,7 @@ namespace ApiPop
 	static void		EnumScreens(Bind::TCallback& Params);
 	static void		GetExeDirectory(Bind::TCallback& Params);
 	static void		GetExeArguments(Bind::TCallback& Params);
+	static void		GetPlatform(Bind::TCallback& Params);
 }
 
 
@@ -454,6 +456,17 @@ void ApiPop::GetExeArguments(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(Arguments) );
 }
 
+void ApiPop::GetPlatform(Bind::TCallback& Params)
+{
+#if defined(TARGET_WINDOWS)
+	Params.Return("Windows");
+#elif defined(TARGET_OSX)
+	Params.Return("Osx");
+#else
+#error Undefined platform
+#endif
+}
+
 
 
 void ApiPop::CompileAndRun(Bind::TCallback& Params)
@@ -601,6 +614,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::EnumScreens>(EnumScreens, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeDirectory>(GetExeDirectory, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeArguments>(GetExeArguments, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
