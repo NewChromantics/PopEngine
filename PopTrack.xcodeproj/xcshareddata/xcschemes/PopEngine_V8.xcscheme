@@ -66,6 +66,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "/Volumes/Code/Tarquini_AcidSea AutoStart ShortOcean"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "/Volumes/Code/Varjo_TriangleDetect/Pop"
             isEnabled = "YES">
          </CommandLineArgument>
