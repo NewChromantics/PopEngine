@@ -492,6 +492,7 @@ std::function<void(Bind::TCallback&)> GetDyn_CallFunction(TDcFunction& This,cons
 	if ( ReturnType == "" )			return GetDyn_CallFunction<void>(This);
 	if ( ReturnType == "void" )		return GetDyn_CallFunction<void>(This);
 	if ( ReturnType == "int" )		return GetDyn_CallFunction<int>(This);
+	if ( ReturnType == "bool" )		return GetDyn_CallFunction<int8_t>(This);
 	if ( ReturnType == "int8_t" )	return GetDyn_CallFunction<int8_t>(This);
 	if ( ReturnType == "int16_t" )	return GetDyn_CallFunction<int16_t>(This);
 	if ( ReturnType == "int32_t" )	return GetDyn_CallFunction<int32_t>(This);
