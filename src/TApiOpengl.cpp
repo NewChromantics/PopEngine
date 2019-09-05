@@ -1145,6 +1145,7 @@ void ApiOpengl::TTriangleBufferWrapper::Construct(Bind::TCallback& Params)
 	}
 
 	Array<uint32_t> IndexData;
+	if ( !Params.IsArgumentUndefined(4) )
 	{
 		Soy::TScopeTimerPrint Timer("Getting index data",1);
 		Params.GetArgumentArray(4, GetArrayBridge(IndexData) );
