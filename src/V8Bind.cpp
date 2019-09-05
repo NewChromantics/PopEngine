@@ -778,12 +778,12 @@ JSValueRef JSEvaluateScript(JSContextRef Context,JSStringRef Source,JSObjectRef 
 	v8::ScriptOrigin Origin( OriginStr.mThis, OriginRow, OriginCol, Cors );
 
 	auto NewScriptReturn = v8::Script::Compile( Context.mThis, Source.mThis, &Origin );
-	V8::IsOkay( NewScriptReturn, Context.GetIsolate(), Context.GetTryCatch(), "Script failed to compile");
+	V8::IsOkay( NewScriptReturn, Context.GetIsolate(), Context.GetTryCatch(), UrlFilename + " script failed to compile");
 	auto NewScript = NewScriptReturn.ToLocalChecked();
 	
 	//	now run it
 	auto ResultMaybe = NewScript->Run( Context.mThis );
-	V8::IsOkay( ResultMaybe, Context.GetIsolate(), Context.GetTryCatch(), "Script failed to run");
+	V8::IsOkay( ResultMaybe, Context.GetIsolate(), Context.GetTryCatch(), UrlFilename + " script failed to run");
 	auto ResultValue = ResultMaybe.ToLocalChecked();
 	return JSValueRef( ResultValue );
 }
