@@ -874,6 +874,26 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 }
 
+#if defined(JSAPI_JSCORE)
+void JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Object)
+{
+	
+}
+#endif
+
+#if defined(JSAPI_JSCORE)
+void JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data)
+{
+	JSObjectSetPrivate( Object, Data );
+}
+#endif
+
+#if defined(JSAPI_JSCORE)
+void* JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object)
+{
+	return JSObjectGetPrivate( Object );
+}
+#endif
 
 #if defined(JSAPI_JSCORE)
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor)

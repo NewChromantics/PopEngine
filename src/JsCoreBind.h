@@ -145,9 +145,15 @@ std::ostream& operator<<(std::ostream &out,const JSTypedArrayType& in);
 std::ostream& operator<<(std::ostream &out,const JSType& in);
 
 
-//	major abstraction from V8 to JSCore
+//	major abstractions from V8 to JSCore
 //	JSCore has no global->local (maybe it should execute a run-next-in-queue func)
 void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextRef&)> Functor);
+void JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data);
+void* JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object);
+
+//	new API. for V8 where we're mirroring data, we need to update the real data;
+//	gr: we might have actually removed that
+void JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Object);
 
 
 //	preparing for virtuals, anything with this, we expect to overide at some point
@@ -730,17 +736,18 @@ protected:
 #elif defined(JSAPI_JSCORE)
 	static void				Free(JSObjectRef ObjectRef)
 	{
+		JSContextRef Context;
+		
 		//	gr: if this fails as it's null, the object being cleaned up may be the class/constructor, if it isn't attached to anything (ie. not attached to the global!)
 		//		we shouldn't really have our own constructors being deleted!
 		//	free the void
 		//	cast to TObject and use This to do proper type checks
 		//std::Debug << "Free object of type " << TYPENAME << std::endl;
-		auto& Object = TObject::This<THISTYPE>( ObjectRef );
+		auto& Object = TObject::This<THISTYPE>( Context, ObjectRef );
 		FreeObject( Object );
 	
 		//	reset the void for safety?
 		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
-		JSContextRef Context;
 		JSObjectSetPrivate( Context, ObjectRef, nullptr );
 	}
 #elif defined(JSAPI_CHAKRA)
