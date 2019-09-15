@@ -996,23 +996,27 @@ void TImageWrapper::GetPngData(Bind::TCallback& Params)
 	}
 	auto& Pixels = *pPixels;
 	
+	//	require compression level
+	float CompressionLevel = Params.GetArgumentFloat(0);
+	
+	//	encode exif data!
 	Array<char> PngDataChar;
 	auto PngDataCharBridge = GetArrayBridge(PngDataChar);
 	Array<uint8_t> ExifData;
-	if ( Params.IsArgumentArray(0) )
+	if ( Params.IsArgumentArray(1) )
 	{
-		Params.GetArgumentArray( 0, GetArrayBridge(ExifData) );
+		Params.GetArgumentArray( 1, GetArrayBridge(ExifData) );
 	}
-	else if ( !Params.IsArgumentUndefined(0) )
+	else if ( !Params.IsArgumentUndefined(1) )
 	{
-		auto ExifString = Params.GetArgumentString(0);
+		auto ExifString = Params.GetArgumentString(1);
 		Soy::StringToArray( ExifString, GetArrayBridge(ExifData) );
 	}
 	
 	if ( ExifData.IsEmpty() )
-		TPng::GetPng( Pixels, PngDataCharBridge );
+		TPng::GetPng( Pixels, PngDataCharBridge, CompressionLevel );
 	else
-		TPng::GetPng( Pixels, PngDataCharBridge, GetArrayBridge(ExifData) );
+		TPng::GetPng( Pixels, PngDataCharBridge, CompressionLevel, GetArrayBridge(ExifData) );
 
 	auto PngData8 = PngDataCharBridge.GetSubArray<uint8_t>(0,PngDataChar.GetSize());
 	
