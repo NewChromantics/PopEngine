@@ -13,14 +13,10 @@ class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;
 
-
-//	engine stuff under the Pop namespace
-namespace ApiPop
+namespace Platform
 {
-	extern const char	Namespace[];
-	void	Bind(Bind::TContext& Context);
+	class TFileMonitor;
 }
-
 
 namespace Opengl
 {
@@ -29,12 +25,20 @@ namespace Opengl
 }
 
 
+//	engine stuff under the Pop namespace
 namespace ApiPop
 {
+	extern const char	Namespace[];
+	void	Bind(Bind::TContext& Context);
+	
+	class TFileMonitor;
 	class TAsyncLoop;
 	DECLARE_BIND_TYPENAME(AsyncLoop);
 	DECLARE_BIND_TYPENAME(Image);
+	DECLARE_BIND_TYPENAME(FileMonitor);
 }
+
+
 
 class TAsyncLoopWrapper : public Bind::TObjectWrapper<ApiPop::BindType::AsyncLoop,ApiPop::TAsyncLoop>
 {
@@ -144,3 +148,21 @@ protected:
 };
 
 
+
+
+class ApiPop::TFileMonitor : public Bind::TObjectWrapper<BindType::FileMonitor,Platform::TFileMonitor>
+{
+public:
+	TFileMonitor(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+	{
+	}
+	
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+	
+	void			OnChanged();
+	
+public:
+	std::shared_ptr<Platform::TFileMonitor>&	mFileMonitor = mObject;
+};

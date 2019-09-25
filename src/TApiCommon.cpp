@@ -15,6 +15,7 @@
 DEFINE_BIND_FUNCTIONNAME(FileExists);
 DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
 DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
+DEFINE_BIND_FUNCTIONNAME(LoadFileAsImage);
 DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
 DEFINE_BIND_FUNCTIONNAME(WriteToFile);
 DEFINE_BIND_FUNCTIONNAME(GetFilenames);
@@ -75,12 +76,14 @@ namespace ApiPop
 	const char Namespace[] = "Pop";
 	DEFINE_BIND_TYPENAME(AsyncLoop);
 	DEFINE_BIND_TYPENAME(Image);
+	DEFINE_BIND_TYPENAME(FileMonitor);
 
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
 	static void 	CompileAndRun(Bind::TCallback& Params);
 	static void		FileExists(Bind::TCallback& Params);
 	static void 	LoadFileAsString(Bind::TCallback& Params);
+	static void 	LoadFileAsImage(Bind::TCallback& Params);
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
 	static void 	WriteToFile(Bind::TCallback& Params);
@@ -503,6 +506,21 @@ void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 }
 
 
+void ApiPop::LoadFileAsImage(Bind::TCallback& Params)
+{
+	auto Filename = Params.GetArgumentFilename(0);
+
+	//	alloc an image and load
+	auto& Context = Params.mContext;
+	auto ImageObject = Context.CreateObjectInstance( Params.mLocalContext, TImageWrapper::GetTypeName() );
+	auto& Image = ImageObject.This<TImageWrapper>();
+	Image.LoadFile( Params );
+
+	Params.Return( ImageObject );
+}
+
+
+
 void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 {
 	auto Filename = Params.GetArgumentFilename(0);
@@ -584,12 +602,14 @@ void ApiPop::Bind(Bind::TContext& Context)
 	
 	Context.BindObjectType<TImageWrapper>( Namespace );
 	Context.BindObjectType<TAsyncLoopWrapper>( Namespace );
-	
+	Context.BindObjectType<TFileMonitor>( Namespace );
+
 	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
 	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsImage>(LoadFileAsImage, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBuffer>(LoadFileAsArrayBuffer, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteToFile>(WriteToFile, Namespace );
@@ -1594,4 +1614,32 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 	Params.mContext.Queue( Execute );
 	//std::Debug << "Context Queue Size: " << Params.mContext.mJobQueue.GetJobCount() << std::endl;
 }
+
+
+
+
+void ApiPop::TFileMonitor::CreateTemplate(Bind::TTemplate& Template)
+{
+}
+
+void ApiPop::TFileMonitor::Construct(Bind::TCallback& Params)
+{
+	auto Filename = Params.GetArgumentFilename(0);
+
+	mFileMonitor.reset( new Platform::TFileMonitor( Filename ) );
+	mFileMonitor->mOnChanged = std::bind( &TFileMonitor::OnChanged, this );
+}
+
+void ApiPop::TFileMonitor::OnChanged()
+{
+	auto Callback = [this](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
+}
+
 
