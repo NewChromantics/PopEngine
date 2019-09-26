@@ -100,8 +100,8 @@ public:
 	static void				Send(Bind::TCallback& Params);
 
 	//	queue up a callback for This handle's OnMessage callback
-	void					OnMessage(const std::string& Message);
-	void					OnMessage(const Array<uint8_t>& Message);
+	void					OnMessage(SoyRef Peer,const std::string& Message);
+	void					OnMessage(SoyRef Peer,const Array<uint8_t>& Message);
 	
 	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
 

@@ -27,12 +27,12 @@ void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 	
 	auto OnTextMessage = [this](SoyRef Connection,const std::string& Message)
 	{
-		this->OnMessage(Message);
+		this->OnMessage( Connection, Message);
 	};
 	
 	auto OnBinaryMessage = [this](SoyRef Connection,const Array<uint8_t>& Message)
 	{
-		this->OnMessage(Message);
+		this->OnMessage( Connection, Message);
 	};
 	
 	mSocket.reset( new TWebsocketServer( ListenPort, OnTextMessage, OnBinaryMessage ) );
@@ -48,23 +48,26 @@ void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 
 
-void TWebsocketServerWrapper::OnMessage(const std::string& Message)
+void TWebsocketServerWrapper::OnMessage(SoyRef Peer,const std::string& Message)
 {
 	auto SendJsMessage = [=](Bind::TLocalContext& Context)
 	{
 		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 		
+		auto PeerStr = Peer.ToString();
+		
 		Bind::TCallback Callback(Context);
 		Callback.SetThis( This );
 		Callback.SetArgumentString( 0, Message );
+		Callback.SetArgumentString( 1, PeerStr );
 		Func.Call( Callback );
 	};
 	
 	GetContext().Queue( SendJsMessage );
 }
 
-void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
+void TWebsocketServerWrapper::OnMessage(SoyRef Peer,const Array<uint8_t>& Message)
 {
 	Array<uint8_t> MessageCopy( Message );
 	
@@ -73,9 +76,12 @@ void TWebsocketServerWrapper::OnMessage(const Array<uint8_t>& Message)
 		auto This = GetHandle(Context);
 		auto Func = This.GetFunction("OnMessage");
 		
+		auto PeerStr = Peer.ToString();
+		
 		Bind::TCallback Callback(Context);
 		Callback.SetThis( This );
 		Callback.SetArgumentArray( 0, GetArrayBridge(Message) );
+		Callback.SetArgumentString( 1, PeerStr );
 		Func.Call( Callback );
 	};
 	
