@@ -738,7 +738,7 @@ protected:
 #elif defined(JSAPI_JSCORE)
 	static void				Free(JSObjectRef ObjectRef)
 	{
-		JSContextRef Context;
+		JSContextRef Context = nullptr;
 		
 		//	gr: if this fails as it's null, the object being cleaned up may be the class/constructor, if it isn't attached to anything (ie. not attached to the global!)
 		//		we shouldn't really have our own constructors being deleted!
