@@ -38,6 +38,33 @@ Vive::THandTracker::~THandTracker()
 
 bool Vive::THandTracker::Iteration()
 {
+	const GestureResult* Poses = nullptr;
+	int FrameIndex = -99;
+	auto PoseCount = GetGestureResult(&Poses, &FrameIndex);
+
+	if (FrameIndex == -1)
+	{
+		//	detection not started or stopped due to error
+		std::Debug << __PRETTY_FUNCTION__ << " got error frame index(" << FrameIndex << ")" << std::endl;
+		return false;
+	}
+
+	if (PoseCount <= 0)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << " pose count is " << PoseCount << std::endl;
+		return true;
+	}
+
+	//	make a new pose from each gesture
+	for (auto p = 0; p < PoseCount; p++)
+	{
+		auto& Pose = Poses[p];
+		PushGesture(Pose, FrameIndex);
+	}
+
+	if (mOnNewGesture)
+		mOnNewGesture();
+
 	return true;
 }
 
@@ -61,6 +88,8 @@ void Vive::THandTracker::PushGesture(const GestureResult& Gesture,int FrameIndex
 		Joint.x = Gesture.points[PointIndex + 0];
 		Joint.y = Gesture.points[PointIndex + 1];
 		Joint.z = Gesture.points[PointIndex + 2];
+
+		//	0,0,0 is invalid
 	}
 
 	std::lock_guard<std::mutex> Lock(mLastGestureLock);
@@ -70,37 +99,33 @@ void Vive::THandTracker::PushGesture(const GestureResult& Gesture,int FrameIndex
 		mLastRightPoses.PushBack(Pose);
 }
 
-bool Vive::THandTracker::PopGesture(THandPose& LeftHand, THandPose& RightHand)
+bool Vive::THandTracker::PopGesture(THandPose& LeftHand, THandPose& RightHand,bool Latest)
 {
-	const GestureResult* Poses = nullptr;
-	int FrameIndex = -99;
-	auto PoseCount = GetGestureResult( &Poses, &FrameIndex );
+	std::lock_guard<std::mutex> Lock(mLastGestureLock);
 
-	if ( FrameIndex == -1 )
+	//	gr: this needs to have a "no pose" thing
+	auto GetPose = [&](Array<THandPose>& Poses, THandPose& Pose)
 	{
-		//	detection not started or stopped due to error
-		std::Debug << __PRETTY_FUNCTION__ << " got error frame index(" << FrameIndex << ")" << std::endl;
-		return false;
-	}
+		if ( Poses.IsEmpty() )
+			return false;
 
-	if (PoseCount <= 0)
-	{
-		std::Debug << __PRETTY_FUNCTION__ << " pose count is " << PoseCount << std::endl;
+		if (!Latest)
+		{
+			Pose = Poses.PopAt(0);
+			return true;
+		}
+
+		Pose = Poses.GetBack();
+		Poses.Clear(false);
 		return true;
-	}
+	};
+	auto ValidPoseCount = 0;
+	ValidPoseCount += GetPose(mLastLeftPoses, LeftHand);
+	ValidPoseCount += GetPose(mLastRightPoses, RightHand);
 
-	//	make a new pose from each gesture
-	for ( auto p=0;	p<PoseCount;	p++ )
-	{
-		auto& Pose = Poses[p];
-		PushGesture( Pose, FrameIndex );
-	}
-
-	if ( mOnNewGesture )
-		mOnNewGesture();
-		
-	return true;
+	return ValidPoseCount > 0;
 }
+
 
 
 void Vive::THandPose::EnumJoints(std::function<void(const vec3f&, const std::string&)> EnumJoint, const std::string& Prefix) const

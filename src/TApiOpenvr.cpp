@@ -403,7 +403,8 @@ void ApiOpenvr::TSkeletonWrapper::OnNewGesture()
 
 	//	grab frame
 	Vive::THandPose LeftHand, RightHand;
-	if (!mHandTracker->PopGesture(LeftHand, RightHand))
+	bool GetLatest = true;
+	if (!mHandTracker->PopGesture(LeftHand, RightHand,GetLatest))
 		return;
 
 	auto Resolve = [=](Bind::TLocalContext& Context,Bind::TPromise& Promise)

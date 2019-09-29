@@ -68,7 +68,7 @@ public:
 	virtual bool	Iteration() override;
 
 	void			PushGesture(const GestureResult& Gesture, int FrameIndex);
-	bool			PopGesture(THandPose& LeftHand, THandPose& RightHand);
+	bool			PopGesture(THandPose& LeftHand, THandPose& RightHand,bool GetLatest);
 
 public:
 	std::function<void()>	mOnNewGesture;
