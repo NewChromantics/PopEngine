@@ -830,11 +830,36 @@ public:
 	JSTypedArrayType	BindType = kJSTypedArrayTypeNone;
 };
 
+
+class TTypedArrayBufferMeta
+{
+public:
+	uint8_t*			Bytes = nullptr;
+	int					ElementSize = 0;
+	unsigned int		ByteLength = 0;
+	JsTypedArrayType	ChakraType = JsArrayTypeFloat64;	//	obscure case for initialisation
+	JSTypedArrayType	BindType = kJSTypedArrayTypeNone;
+};
+
+
+TTypedArrayBufferMeta GetTypedArrayBufferMeta(JSValueRef Array)
+{
+	TTypedArrayBufferMeta Meta;
+
+	//	bytes are valid for as long as ArrayObject, so this is unsafe atm
+	auto Error = JsGetTypedArrayStorage(Array, &Meta.Bytes, &Meta.ByteLength, &Meta.ChakraType, &Meta.ElementSize );
+	Chakra::IsOkay(Error, "JsGetTypedArrayStorage");
+
+	Meta.BindType = static_cast<JSTypedArrayType>(Meta.ChakraType);
+
+	return Meta;
+}
+
 TTypedArrayMeta GetTypedArrayMeta(JSValueRef Array)
 {
 	TTypedArrayMeta Meta;
 	auto Error = JsGetTypedArrayInfo( Array, &Meta.ChakraType, &Meta.ArrayBuffer, &Meta.ByteOffset, &Meta.ByteLength );
-	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	Chakra::IsOkay( Error, "JsGetTypedArrayInfo" );
 
 	//	chakra has no unhandled types
 	Meta.BindType = static_cast<JSTypedArrayType>( Meta.ChakraType );
@@ -875,7 +900,8 @@ JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context, JSTypedA
 
 void* JSObjectGetTypedArrayBytesPtr(JSContextRef Context,JSObjectRef ArrayObject,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto Meta = GetTypedArrayBufferMeta( ArrayObject.mValue );
+	return Meta.Bytes;
 }
 
 size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
@@ -886,8 +912,9 @@ size_t JSObjectGetTypedArrayByteOffset(JSContextRef Context,JSObjectRef Array,JS
 
 size_t JSObjectGetTypedArrayLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)
 {
-	//	todo: convert byte length to typed length!
-	THROW_TODO;
+	auto Meta = GetTypedArrayBufferMeta(Array.mValue);
+	auto ElementCount = Meta.ByteLength / Meta.ElementSize;
+	return ElementCount;
 }
 
 size_t JSObjectGetTypedArrayByteLength(JSContextRef Context,JSObjectRef Array,JSValueRef* Exception)

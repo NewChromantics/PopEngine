@@ -1065,16 +1065,41 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 #elif defined(JSAPI_CHAKRA)
 	JSObjectCallAsConstructorCallback CFunc = [](JsValueRef Function,bool ConstructorCall,JsValueRef* ArgumentValues,uint16_t ArgumentValuesCount,void* CallbackState) ->JsValueRef
 	{
-		JSContextRef Context = reinterpret_cast<JSContextRef>(CallbackState);
+		//	gr: turn callback state into context
+		JSContextRef ContextRef = reinterpret_cast<JSContextRef>(CallbackState);
+		auto& Context = JsCore::GetContext(ContextRef);
 		try
 		{
-			throw Soy::AssertException("todo JsCore::TContext::GetRawFunction");
+			JsValueRef ThisValue = ArgumentValues[0];
+			JSObjectRef ThisObject(ThisValue);
+
+			Array<JSValueRef> Arguments;
+			for (auto i = 1; i < ArgumentValuesCount; i++)
+			{
+				JSValueRef Value = ArgumentValues[i];
+				Arguments.PushBack(Value);
+			}
+
+			TLocalContext LocalContext(ContextRef, Context);
+
+			Bind::TObject ThisObjectObject(ContextRef, ThisObject);
+			auto& pThis = ThisObjectObject.This<TYPE>();
+
+			std::function<void(JsCore::TCallback&)> BoundFunction = [&](JsCore::TCallback& Params)
+			{
+				(pThis.*FunctionCache)(Params);
+			};
+
+			JSValueRef Exception = nullptr;
+			auto ReturnValue = Context.CallFunc(LocalContext, BoundFunction, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME);
+
+			return ReturnValue;
 		}
-		catch(std::exception& e)
+		catch (std::exception& e)
 		{
-			auto StringValue = Bind::GetString( Context, e.what() );
-			JsSetException( StringValue.mValue );
-			return JSValueMakeUndefined(Context);
+			auto StringValue = Bind::GetString(ContextRef, e.what());
+			JsSetException(StringValue.mValue);
+			return JSValueMakeUndefined(ContextRef);
 		}
 	};
 #endif
