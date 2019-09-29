@@ -51,7 +51,7 @@ bool Vive::THandTracker::Iteration()
 
 	if (PoseCount <= 0)
 	{
-		std::Debug << __PRETTY_FUNCTION__ << " pose count is " << PoseCount << std::endl;
+		//std::Debug << __PRETTY_FUNCTION__ << " pose count is " << PoseCount << std::endl;
 		return true;
 	}
 
