@@ -31,6 +31,16 @@ TPopAppError::Type PopMain(ArrayBridge<std::string>& Arguments)
 		DataPath = "";
 	}
 
+	//	need to resolve .. paths early in windows
+	try
+	{
+		DataPath = Platform::GetFullPathFromFilename(DataPath);
+	}
+	catch (std::exception& e)
+	{
+		//std::Debug << "Argument path doesn't exist; " << e.what() << std::endl;
+	}
+
 	//	 try to predict full paths vs something embedded in the app
 	if ( !Platform::IsFullPath(DataPath) )
 	{
