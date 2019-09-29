@@ -234,7 +234,7 @@ public:
 	//	render target
 	virtual void				Bind() override;
 	virtual void				Unbind() override;
-	virtual Soy::Rectx<size_t>	GetSize() override
+	virtual Soy::Rectx<size_t>	GetSize() override;
 
 	//	window stuff
 	void			Repaint();
