@@ -336,7 +336,9 @@ public:
 	virtual void			ReturnNull() bind_override;
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+#if !defined(TARGET_WINDOWS)	//	on windows size_t and u64 are the same... not on osx?
 	virtual void			Return(size_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
+#endif
 	virtual void			Return(uint8_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(uint16_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(uint32_t Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}

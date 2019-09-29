@@ -336,19 +336,14 @@ JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
 	return JSValueMakeBoolean( Context, Value );
 }
 
-JSValueRef JsCore::GetValue(JSContextRef Context,size_t Value)
+//	on windows size_t and u64 are the same, so redundant
+#if !defined(TARGET_WINDOWS)
+JSValueRef JsCore::GetValue(JSContextRef Context, size_t Value)
 {
-	//	javascript doesn't support 64bit (kinda), so throw if number goes over 32bit
-	if ( Value > std::numeric_limits<uint32_t>::max() )
-	{
-		std::stringstream Error;
-		Error << "Javascript doesn't support 64bit integers, so this value(" << Value <<") is out of range (max 32bit=" << std::numeric_limits<uint32_t>::max() << ")";
-		throw Soy::AssertException( Error.str() );
-	}
-
-	auto Value32 = static_cast<uint32_t>( Value );
-	return GetValue( Context, Value32 );
+	auto Value64 = static_cast<uint64_t>(Value);
+	return GetValue<uint64_t>(Value);
 }
+#endif
 
 JSValueRef JsCore::GetValue(JSContextRef Context,int64_t Value)
 {

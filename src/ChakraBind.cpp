@@ -1174,5 +1174,11 @@ void JSValueWrapper::Release()
 	mValue = nullptr;
 }
 
+void JSObjectTypedArrayDirty(JSContextRef Context, JSObjectRef Object)
+{
+
+}
+
+
 #endif//JSAPI_CHAKRA
 
