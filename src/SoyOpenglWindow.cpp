@@ -234,8 +234,8 @@ public:
 	//	render target
 	virtual void				Bind() override;
 	virtual void				Unbind() override;
-	virtual Soy::Rectx<size_t>	GetSize() override {	return mRect;	}
-	
+	virtual Soy::Rectx<size_t>	GetSize() override
+
 	//	window stuff
 	void			Repaint();
 	void			OnPaint();
@@ -1145,6 +1145,15 @@ void Platform::TOpenglContext::Unbind()
 	//throw Soy::AssertException("Unbind default render target");
 }
 
+
+Soy::Rectx<size_t> Platform::TOpenglContext::GetSize()
+{
+	//	rect is now correct for window, but for opengl context, it should still be at 0,0
+	auto Rect = mRect;
+	Rect.x = 0;
+	Rect.y = 0;
+	return Rect;
+}
 
 
 /*
