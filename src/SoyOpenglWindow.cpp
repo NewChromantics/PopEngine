@@ -623,20 +623,24 @@ Platform::TControl::~TControl()
 bool Platform::TControl::TControl::OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage)
 {
 	auto LeftDown = (Flags & MK_LBUTTON) != 0;
-	auto MiddleDown = (Flags & MK_LBUTTON) != 0;
-	auto RightDown = (Flags & MK_LBUTTON) != 0;
+	auto MiddleDown = (Flags & MK_MBUTTON) != 0;
+	auto RightDown = (Flags & MK_RBUTTON) != 0;
+	auto BackDown = (Flags & MK_XBUTTON1) != 0;
+	auto ForwardDown = (Flags & MK_XBUTTON2) != 0;
 	auto* pMouseEvent = &mOnMouseMove;
 	switch(EventMessage)
 	{
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:	
 	case WM_MBUTTONDOWN:
-		pMouseEvent = &mOnMouseDown;	
+	case WM_XBUTTONDOWN:
+		pMouseEvent = &mOnMouseDown;
 		break;
 
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
+	case WM_XBUTTONUP:
 		pMouseEvent = &mOnMouseUp;
 		break;
 
@@ -648,7 +652,9 @@ bool Platform::TControl::TControl::OnMouseEvent(int x, int y, WPARAM Flags,UINT 
 	auto Button = SoyMouseButton::None;
 	if ( LeftDown )			Button = SoyMouseButton::Left;
 	else if ( RightDown )	Button = SoyMouseButton::Right;
-	else if ( MiddleDown )	Button = SoyMouseButton::Middle;
+	else if (MiddleDown)	Button = SoyMouseButton::Middle;
+	else if (BackDown)		Button = SoyMouseButton::Back;
+	else if (ForwardDown)	Button = SoyMouseButton::Forward;
 
 	//	x/y relateive to client area
 	//std::Debug << "mouse event: " << x << "," << y << std::endl;
