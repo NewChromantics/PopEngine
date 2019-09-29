@@ -60,6 +60,7 @@
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h" />
     <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
     <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
+    <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp" />
     <ClInclude Include="..\src\Libs\x264\include\x264.h" />
     <ClInclude Include="..\src\Libs\x264\include\x264_config.h" />
     <ClInclude Include="..\src\PopMain.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="..\src\TApiOpenvr.h" />
     <ClInclude Include="..\src\TApiSerial.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
+    <ClInclude Include="..\src\SoyViveHandTracker.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
     <ClInclude Include="..\src\TBind.h" />
     <ClInclude Include="..\src\TPopServerThread.h">
@@ -259,6 +261,7 @@
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />
     <ClCompile Include="..\src\TApiOpenvr.cpp" />
+    <ClCompile Include="..\src\SoyViveHandTracker.cpp" />
     <ClCompile Include="..\src\V8Bind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -373,6 +376,9 @@
     <CustomBuild Include="..\src\Libs\x264\bin\x64\x264.dll">
       <FileType>Document</FileType>
     </CustomBuild>
+    <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
     <None Include="..\src\PopMain.mm" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
@@ -479,6 +485,9 @@
     <None Include="..\UnitTest\H264Encode\bootup.js" />
     <None Include="..\UnitTest\H264Encode\Quad.vert.glsl" />
     <None Include="..\UnitTest\HttpServer\bootup.js" />
+    <None Include="..\UnitTest\LeapMotion\bootup.js" />
+    <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl" />
+    <None Include="..\UnitTest\LeapMotion\Cube.vert.glsl" />
     <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl" />
     <None Include="..\UnitTest\OpencvArucoMarker\bootup.js" />
     <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
@@ -656,6 +665,7 @@
     <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib" />
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
+    <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib" />
     <Library Include="..\src\Libs\x264\lib\x64\libx264.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>

@@ -8,12 +8,19 @@ namespace Openvr
 	class THmdFrame;
 }
 
+namespace Vive
+{
+	class THandTracker;
+}
+
 namespace ApiOpenvr
 {
 	void	Bind(Bind::TContext& Context);
 
 	class THmdWrapper;
+	class TSkeletonWrapper;
 	DECLARE_BIND_TYPENAME(Hmd);
+	DECLARE_BIND_TYPENAME(Skeleton);
 }
 
 
@@ -41,5 +48,27 @@ public:
 
 public:
 	std::shared_ptr<Openvr::THmd>&	mHmd = mObject;
+};
+
+
+class ApiOpenvr::TSkeletonWrapper : public Bind::TObjectWrapper<ApiOpenvr::BindType::Skeleton, Vive::THandTracker>
+{
+public:
+	TSkeletonWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+
+	//	returns promise for next frame
+	void			GetNextFrame(Bind::TCallback& Params);
+
+	void			OnNewGesture();
+
+public:
+	std::shared_ptr<Vive::THandTracker>&	mHandTracker = mObject;
+	Bind::TPromiseQueue					mNextFramePromiseQueue;
 };
 

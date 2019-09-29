@@ -2,6 +2,8 @@
 #include "Libs/OpenVr/headers/openvr.h"
 #include "TApiCommon.h"
 #include "SoyOpengl.h"
+#include "SoyViveHandTracker.h"
+#include "MagicEnum/include/magic_enum.hpp"
 
 //	on OSX, make sure you link to the bin/osx32/dylib NOT the one in /lib/
 
@@ -10,9 +12,14 @@ namespace ApiOpenvr
 	const char Namespace[] = "Pop.Openvr";
 
 	DEFINE_BIND_TYPENAME(Hmd);
+	DEFINE_BIND_TYPENAME(Skeleton);
 
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
 	DEFINE_BIND_FUNCTIONNAME(BeginFrame);
+	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
+
+	const std::string LeftHandJointPrefix = "Left";
+	const std::string RightHandJointPrefix = "Right";
 }
 
 namespace Openvr
@@ -22,6 +29,11 @@ namespace Openvr
 
 	void	IsOkay(vr::EVRInitError Error,const std::string& Context);
 	void	IsOkay(vr::EVRCompositorError Error,const std::string& Context);
+}
+
+namespace ViveHandTracker
+{
+#include "Libs/ViveHandTracking/include/interface_gesture.hpp"
 }
 
 
@@ -69,11 +81,13 @@ public:
 
 
 
+
 void ApiOpenvr::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 
-	Context.BindObjectType<THmdWrapper>( Namespace );
+	Context.BindObjectType<THmdWrapper>(Namespace);
+	Context.BindObjectType<TSkeletonWrapper>(Namespace);
 }
 
 
@@ -367,3 +381,55 @@ void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
  }
 
  */
+
+void ApiOpenvr::TSkeletonWrapper::Construct(Bind::TCallback& Params)
+{
+	mHandTracker.reset(new Vive::THandTracker());
+
+	mHandTracker->mOnNewGesture = std::bind(&TSkeletonWrapper::OnNewGesture, this);
+}
+
+
+void ApiOpenvr::TSkeletonWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<BindFunction::GetNextFrame>(&TSkeletonWrapper::GetNextFrame);
+}
+
+void ApiOpenvr::TSkeletonWrapper::OnNewGesture()
+{
+	//	flush promises
+	if (!mNextFramePromiseQueue.HasPromises())
+		return;
+
+	//	grab frame
+	Vive::THandPose LeftHand, RightHand;
+	if (!mHandTracker->PopGesture(LeftHand, RightHand))
+		return;
+
+	auto Resolve = [=](Bind::TLocalContext& Context,Bind::TPromise& Promise)
+	{
+		auto ResultObject = Context.mGlobalContext.CreateObjectInstance(Context);
+		
+		auto SetJoint = [&](const vec3f& Position,const std::string& JointName)
+		{
+			auto PositionArray = Position.GetArray();
+			ResultObject.SetArray(JointName, GetArrayBridge(PositionArray));
+		};
+
+		LeftHand.EnumJoints(SetJoint, LeftHandJointPrefix );
+		RightHand.EnumJoints(SetJoint,RightHandJointPrefix);
+
+		Promise.Resolve(Context, ResultObject);
+	};
+
+	mNextFramePromiseQueue.Flush(Resolve);
+}
+
+void ApiOpenvr::TSkeletonWrapper::GetNextFrame(Bind::TCallback& Params)
+{
+	auto Promise = mNextFramePromiseQueue.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
+
+	//	flush any current gestures
+	OnNewGesture();
+}

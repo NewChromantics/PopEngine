@@ -91,6 +91,12 @@
     <Filter Include="UnitTest\OpencvArucoMarker">
       <UniqueIdentifier>{e8ab2855-f663-4675-ab80-baa7ab8f4384}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\ViveHandTracking">
+      <UniqueIdentifier>{a1dc779d-0421-4e92-b393-703aa026bcbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\LeapMotion">
+      <UniqueIdentifier>{f6486979-cab0-4324-8a2b-2bf355f8ecc0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -477,6 +483,12 @@
     <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.hpp">
       <Filter>Libs\Opencv\Contrib_aruco</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp">
+      <Filter>Libs\ViveHandTracking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyViveHandTracker.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -667,6 +679,18 @@
     </None>
     <None Include="..\UnitTest\Pop.d.ts">
       <Filter>UnitTest</Filter>
+    </None>
+    <None Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll">
+      <Filter>Libs\ViveHandTracking</Filter>
+    </None>
+    <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl">
+      <Filter>UnitTest\LeapMotion</Filter>
+    </None>
+    <None Include="..\UnitTest\LeapMotion\Cube.vert.glsl">
+      <Filter>UnitTest\LeapMotion</Filter>
+    </None>
+    <None Include="..\UnitTest\LeapMotion\bootup.js">
+      <Filter>UnitTest\LeapMotion</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -886,6 +910,9 @@
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp">
       <Filter>Libs\Opencv\Contrib_aruco</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyViveHandTracker.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -932,6 +959,9 @@
     </Library>
     <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410d.lib">
       <Filter>Libs\Opencv</Filter>
+    </Library>
+    <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib">
+      <Filter>Libs\ViveHandTracking</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>
