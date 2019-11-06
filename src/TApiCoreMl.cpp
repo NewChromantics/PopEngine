@@ -54,6 +54,7 @@ namespace ApiCoreMl
 	DEFINE_BIND_FUNCTIONNAME(Cpm);
 	DEFINE_BIND_FUNCTIONNAME(OpenPose);
 	DEFINE_BIND_FUNCTIONNAME(OpenPoseMap);
+	DEFINE_BIND_FUNCTIONNAME(OpenPoseLabelMap);
 	DEFINE_BIND_FUNCTIONNAME(SsdMobileNet);
 	DEFINE_BIND_FUNCTIONNAME(MaskRcnn);
 	DEFINE_BIND_FUNCTIONNAME(AppleVisionFaceDetect);
@@ -80,6 +81,7 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::Cpm>( &TCoreMlWrapper::Cpm );
 	Template.BindFunction<BindFunction::OpenPose>( &TCoreMlWrapper::OpenPose );
 	Template.BindFunction<BindFunction::OpenPoseMap>( &TCoreMlWrapper::OpenPoseMap );
+	Template.BindFunction<BindFunction::OpenPoseLabelMap>( &TCoreMlWrapper::OpenPoseLabelMap );
 	Template.BindFunction<BindFunction::SsdMobileNet>( &TCoreMlWrapper::SsdMobileNet );
 	Template.BindFunction<BindFunction::MaskRcnn>( &TCoreMlWrapper::MaskRcnn );
 	Template.BindFunction<BindFunction::AppleVisionFaceDetect>( &TCoreMlWrapper::AppleVisionFaceDetect );
@@ -260,6 +262,116 @@ void RunModelMap(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInsta
 }
 
 
+void RunModelLabelMap(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
+{
+	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
+	auto* pContext = &Params.mContext;
+	auto* pModel = &ModelRef;
+	
+	
+	class TLabelMap
+	{
+	public:
+		BufferArray<float,300*300>	mMapScores;
+		vec2x<size_t>				mMapSize;
+		std::string					mLabel;
+	};
+	
+	std::string LabelFilter;
+	if ( !Params.IsArgumentUndefined(1) )
+		LabelFilter = Params.GetArgumentString(1);
+	
+	auto RunModel = [=]
+	{
+		try
+		{
+			//	do all the work on the thread
+			auto& Image = *pImage;
+			auto& CurrentPixels = Image.GetPixels();
+			SoyPixels TempPixels;
+			SoyPixelsImpl* pPixels = &TempPixels;
+			if ( CurrentPixels.GetFormat() == SoyPixelsFormat::RGBA )
+			{
+				pPixels = &CurrentPixels;
+			}
+			else
+			{
+				pImage->GetPixels(TempPixels);
+				TempPixels.SetFormat( SoyPixelsFormat::RGBA );
+				pPixels = &TempPixels;
+			}
+			auto& Pixels = *pPixels;
+			
+			std::function<bool(const std::string&)> FilterLabel = [&](const std::string& Label)
+			{
+				if ( LabelFilter.length() == 0 )
+					return true;
+				if ( Label != LabelFilter )
+					return false;
+				return true;
+			};
+			
+			//	save maps we output to push to the javascript thread
+			Array<TLabelMap> LabelMaps;
+			auto EnumMap = [&](vec2x<size_t> MetaSize,const std::string& Label,ArrayBridge<float>&& Map)
+			{
+				if ( !FilterLabel( Label ) )
+					return;
+				
+				auto& LabelMap = LabelMaps.PushBack();
+				LabelMap.mMapScores.Copy( Map );
+				LabelMap.mLabel = Label;
+				LabelMap.mMapSize = MetaSize;
+			};
+			
+			//	run
+			auto& Model = *pModel;
+			Model.GetLabelMap( Pixels, EnumMap );
+			
+			auto OnCompleted = [=](Bind::TLocalContext& Context)
+			{
+				auto OutputObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
+				
+				//	set meta
+				{
+					auto MetaObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
+					auto Size = LabelMaps.IsEmpty() ? vec2x<size_t>(0,0) : LabelMaps[0].mMapSize;
+					MetaObject.SetInt("Width", Size.x );
+					MetaObject.SetInt("Height", Size.y );
+					OutputObject.SetObject("Meta",MetaObject);
+				}
+				
+				for ( auto i=0;	i<LabelMaps.GetSize();	i++ )
+				{
+					auto& LabelMap = LabelMaps[i];
+					auto LabelMapObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
+					OutputObject.SetArray( LabelMap.mLabel, GetArrayBridge(LabelMap.mMapScores) );
+				}
+
+				Promise.Resolve( Context, OutputObject );
+			};
+			
+			pContext->Queue( OnCompleted );
+		}
+		catch(std::exception& e)
+		{
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			
+			auto OnError = [=](Bind::TLocalContext& Context)
+			{
+				Promise.Reject( Context, ExceptionString );
+			};
+			pContext->Queue( OnError );
+		}
+	};
+	
+	CoreMl.PushJob(RunModel);
+	Params.Return( Promise );
+}
+
+
 void TCoreMlWrapper::Yolo(Bind::TCallback& Params)
 {
 	auto& CoreMl = *mCoreMl;
@@ -304,6 +416,14 @@ void TCoreMlWrapper::OpenPoseMap(Bind::TCallback& Params)
 	auto& Model = CoreMl.GetOpenPose();
 	
 	RunModelMap( Model, Params, CoreMl );
+}
+
+void TCoreMlWrapper::OpenPoseLabelMap(Bind::TCallback& Params)
+{
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetOpenPose();
+	
+	RunModelLabelMap( Model, Params, CoreMl );
 }
 
 
