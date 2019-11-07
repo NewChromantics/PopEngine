@@ -341,7 +341,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
 JSValueRef JsCore::GetValue(JSContextRef Context, size_t Value)
 {
 	auto Value64 = static_cast<uint64_t>(Value);
-	return GetValue<uint64_t>(Value);
+	return GetValue( Context, Value64 );
 }
 #endif
 
