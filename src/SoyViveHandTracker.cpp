@@ -3,6 +3,28 @@
 #include "MagicEnum/include/magic_enum.hpp"
 
 
+#if defined(TARGET_OSX)
+GestureFailure StartGestureDetection(GestureOption*)
+{
+	throw Soy::AssertException("Vive::StartGestureDetection not supported on this platform");
+}
+#endif
+
+#if defined(TARGET_OSX)
+void StopGestureDetection()
+{
+	throw Soy::AssertException("Vive::StopGestureDetection not supported on this platform");
+}
+#endif
+
+#if defined(TARGET_OSX)
+int GetGestureResult(const GestureResult** points, int* frameIndex)
+{
+	throw Soy::AssertException("Vive::GetGestureResult not supported on this platform");
+}
+#endif
+
+
 namespace Vive
 {
 	void	IsOkay(GestureFailure Error,const char* Context);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SoyVector.h>
-#include <SoyThread.h>
+#include "SoyVector.h"
+#include "SoyThread.h"
 #include "Libs/ViveHandTracking/include/interface_gesture.hpp"
 
 
