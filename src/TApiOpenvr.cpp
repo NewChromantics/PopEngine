@@ -255,7 +255,7 @@ void Openvr::THmd::Thread()
 
 void Openvr::THmd::EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum)
 {
-	auto& Hmd = *mHmd;
+	//auto& Hmd = *mHmd;
 	
 	auto Left = GetEyeMatrix(EyeName_Left);
 	Enum(Left);
@@ -288,7 +288,7 @@ TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
 
 	//	3x4 matrix eye pose
 	//vr::HmdMatrix34_t
-	auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
+	//auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
 	//EyeMatrix.mPose = EyeToHeadMatrix.invert();
 
 	Hmd.GetRecommendedRenderTargetSize( &EyeMatrix.mRenderTargetWidth, &EyeMatrix.mRenderTargetHeight );

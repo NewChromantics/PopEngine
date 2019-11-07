@@ -196,7 +196,7 @@ void TWebsocketServer::RemoveClient(SoyRef ClientRef)
 
 void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
 {
-	auto& Data = *pData;
+	//auto& Data = *pData;
 	
 	//	this was the http request, send the reply
 	if ( pData->mReplyMessage )

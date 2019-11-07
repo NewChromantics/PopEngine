@@ -148,7 +148,7 @@ void TSerialComPortWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void TSerialComPortWrapper::Open(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TSerialComPortWrapper>();
+	//auto& This = Params.This<TSerialComPortWrapper>();
 	//	close and open old com
 	throw Soy::AssertException("todo open");
 }

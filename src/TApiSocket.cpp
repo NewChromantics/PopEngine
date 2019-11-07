@@ -20,7 +20,7 @@ void ApiSocket::Bind(Bind::TContext& Context)
 
 void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TUdpBroadcastServerWrapper>();
+	//auto& This = Params.This<TUdpBroadcastServerWrapper>();
 
 	auto ListenPort = Params.GetArgumentInt(0);
 
