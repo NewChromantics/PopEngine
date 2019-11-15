@@ -108,7 +108,7 @@
 		BFD399F822CBC964009E2FD3 /* SoyFourcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */; };
 		BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFD39A0722CD44E8009E2FD3 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
-		BFD4456520E67037007E2497 /* PopTrack.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopTrack.xib */; };
+		BFD4456520E67037007E2497 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */; };
 		BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
 		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
@@ -257,6 +257,8 @@
 		BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyViveHandTracker.h; path = src/SoyViveHandTracker.h; sourceTree = "<group>"; };
 		BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyViveHandTracker.cpp; path = src/SoyViveHandTracker.cpp; sourceTree = "<group>"; };
 		BF5EAF75237482DD0077BCF5 /* PopCave */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopCave; path = ../PopCave; sourceTree = "<group>"; };
+		BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine.h; sourceTree = "<group>"; };
+		BF5EAF7F237F07ED0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF607EA12240580E00A78C00 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		BF607EA32240588300A78C00 /* TApiBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiBluetooth.h; path = src/TApiBluetooth.h; sourceTree = "<group>"; };
 		BF607EA42240588300A78C00 /* TApiBluetooth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiBluetooth.cpp; path = src/TApiBluetooth.cpp; sourceTree = "<group>"; };
@@ -490,9 +492,9 @@
 		FBC3A0DF1A308648009DA49E /* SoyScope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyScope.cpp; path = src/SoyScope.cpp; sourceTree = "<group>"; };
 		FBC3A0E01A308648009DA49E /* SoyScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyScope.h; path = src/SoyScope.h; sourceTree = "<group>"; };
 		FBF67B071A96B2BE00F74C38 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		FBF67B0D1A974A0900F74C38 /* PopTrackMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopTrackMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngineMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF67B321A974A7B00F74C38 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		FBF67B371A974BF400F74C38 /* PopTrack.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PopTrack.xib; sourceTree = "<group>"; };
+		FBF67B371A974BF400F74C38 /* PopEngine.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PopEngine.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -609,6 +611,15 @@
 			);
 			name = Libraries;
 			path = src/Libs;
+			sourceTree = "<group>";
+		};
+		BF5EAF7D237F07ED0077BCF5 /* PopEngine */ = {
+			isa = PBXGroup;
+			children = (
+				BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */,
+				BF5EAF7F237F07ED0077BCF5 /* Info.plist */,
+			);
+			path = PopEngine;
 			sourceTree = "<group>";
 		};
 		BF6553C32132C4D9003E4241 /* v8 */ = {
@@ -844,6 +855,7 @@
 				BF459C7C21F7C72600CED59D /* Libraries */,
 				FB8A06221A2E5A280099596C /* soylib */,
 				FB8A05951A2E54730099596C /* src */,
+				BF5EAF7D237F07ED0077BCF5 /* PopEngine */,
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
@@ -859,7 +871,7 @@
 		FB8A05941A2E54730099596C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FBF67B0D1A974A0900F74C38 /* PopTrackMac.app */,
+				FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -893,7 +905,7 @@
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
 				BF9282222236E1E1007E9D6F /* PopPhotoBlorp */,
-				FBF67B371A974BF400F74C38 /* PopTrack.xib */,
+				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
 				BF607EA6224107B800A78C00 /* SoyBluetooth.h */,
 				BF607EA7224107B800A78C00 /* SoyBluetooth.mm */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
@@ -1095,9 +1107,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FBF67B0C1A974A0900F74C38 /* PopTrackMac */ = {
+		FBF67B0C1A974A0900F74C38 /* PopEngineMac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopTrackMac" */;
+			buildConfigurationList = FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopEngineMac" */;
 			buildPhases = (
 				FBF67B091A974A0900F74C38 /* Sources */,
 				FBF67B0A1A974A0900F74C38 /* Frameworks */,
@@ -1109,9 +1121,9 @@
 			);
 			dependencies = (
 			);
-			name = PopTrackMac;
+			name = PopEngineMac;
 			productName = PopOpenglMac;
-			productReference = FBF67B0D1A974A0900F74C38 /* PopTrackMac.app */;
+			productReference = FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1129,7 +1141,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopTrack" */;
+			buildConfigurationList = FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopEngine" */;
 			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -1143,7 +1155,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FBF67B0C1A974A0900F74C38 /* PopTrackMac */,
+				FBF67B0C1A974A0900F74C38 /* PopEngineMac */,
 			);
 		};
 /* End PBXProject section */
@@ -1155,7 +1167,7 @@
 			files = (
 				BF5EAF76237482DD0077BCF5 /* PopCave in Resources */,
 				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
-				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
+				BFD4456520E67037007E2497 /* PopEngine.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1342,7 +1354,7 @@
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopTrackMac;
+				PRODUCT_NAME = PopEngineMac;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_V8;
@@ -1434,7 +1446,7 @@
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopTrackMac;
+				PRODUCT_NAME = PopEngineMac;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_Chakra;
@@ -1558,7 +1570,7 @@
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopTrackMac;
+				PRODUCT_NAME = PopEngineMac;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_JavascriptCore;
@@ -1611,7 +1623,7 @@
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopTrackMac;
+				PRODUCT_NAME = PopEngineMac;
 				VALID_ARCHS = x86_64;
 			};
 			name = Release;
@@ -1619,7 +1631,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopTrack" */ = {
+		FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopEngine" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB8A05981A2E54730099596C /* Debug_JavascriptCore */,
@@ -1630,7 +1642,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopTrackMac" */ = {
+		FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopEngineMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */,

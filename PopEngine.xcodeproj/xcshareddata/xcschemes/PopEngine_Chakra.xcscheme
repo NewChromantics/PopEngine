@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-               BuildableName = "PopTrackMac.app"
-               BlueprintName = "PopTrackMac"
-               ReferencedContainer = "container:PopTrack.xcodeproj">
+               BuildableName = "PopEngineMac.app"
+               BlueprintName = "PopEngineMac"
+               ReferencedContainer = "container:PopEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopTrackMac.app"
-            BlueprintName = "PopTrackMac"
-            ReferencedContainer = "container:PopTrack.xcodeproj">
+            BuildableName = "PopEngineMac.app"
+            BlueprintName = "PopEngineMac"
+            ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -60,9 +60,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopTrackMac.app"
-            BlueprintName = "PopTrackMac"
-            ReferencedContainer = "container:PopTrack.xcodeproj">
+            BuildableName = "PopEngineMac.app"
+            BlueprintName = "PopEngineMac"
+            ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -117,9 +117,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopTrackMac.app"
-            BlueprintName = "PopTrackMac"
-            ReferencedContainer = "container:PopTrack.xcodeproj">
+            BuildableName = "PopEngineMac.app"
+            BlueprintName = "PopEngineMac"
+            ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

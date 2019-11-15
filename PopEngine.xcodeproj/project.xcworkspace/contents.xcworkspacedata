@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:/Volumes/Code/PopTrack/PopTrack.xcodeproj">
+      location = "self:/Volumes/Code/PopEngine/PopEngine.xcodeproj">
    </FileRef>
 </Workspace>
