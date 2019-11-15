@@ -7,12 +7,16 @@ OTHER_CFLAGS = -Wno-ambiguous-macro
 
 //	including PopH264 framework is including SoyLib/src/xyz.h
 SOYLIB_PATH = $(SRCROOT)/src/
+OPENCV_PATH = $(SRCROOT)/src/Libs/Opencv
+OPENCV_CONTRIB_PATH = $(SRCROOT)/src/Libs/Opencv_contrib/modules/
 
 //	todo: remove dlib! make it an external dll we can just call
 DLIB_PATH = /usr/local/Cellar/dlib/19.15
 
-HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(DLIB_PATH)/include
+HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(DLIB_PATH)/include $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH)
 LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(DLIB_PATH)/lib
+
+VERSIONING_SYSTEM = apple-generic
 
 
 //	10.13 for coreml

@@ -6,7 +6,7 @@
 //  Copyright © 2019 NewChromantics. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 
 //! Project version number for PopEngine.
 FOUNDATION_EXPORT double PopEngineVersionNumber;
