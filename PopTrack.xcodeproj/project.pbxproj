@@ -26,7 +26,6 @@
 		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
 		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
-		BF3965652278587600A721E8 /* v8Runtime in Resources */ = {isa = PBXBuildFile; fileRef = BF3786E82132C81D008E4350 /* v8Runtime */; };
 		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
 		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -51,6 +50,7 @@
 		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
 		BF5EAF7423744E370077BCF5 /* SoyViveHandTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */; };
+		BF5EAF76237482DD0077BCF5 /* PopCave in Resources */ = {isa = PBXBuildFile; fileRef = BF5EAF75237482DD0077BCF5 /* PopCave */; };
 		BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF607EA12240580E00A78C00 /* CoreBluetooth.framework */; };
 		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
@@ -256,6 +256,7 @@
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
 		BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyViveHandTracker.h; path = src/SoyViveHandTracker.h; sourceTree = "<group>"; };
 		BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyViveHandTracker.cpp; path = src/SoyViveHandTracker.cpp; sourceTree = "<group>"; };
+		BF5EAF75237482DD0077BCF5 /* PopCave */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopCave; path = ../PopCave; sourceTree = "<group>"; };
 		BF607EA12240580E00A78C00 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		BF607EA32240588300A78C00 /* TApiBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiBluetooth.h; path = src/TApiBluetooth.h; sourceTree = "<group>"; };
 		BF607EA42240588300A78C00 /* TApiBluetooth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiBluetooth.cpp; path = src/TApiBluetooth.cpp; sourceTree = "<group>"; };
@@ -847,6 +848,7 @@
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
 				BFD0829E225E974D00FD05DC /* GuildhallGildwall */,
+				BF5EAF75237482DD0077BCF5 /* PopCave */,
 				BF0F9E602286F9C200AEA7DC /* PopRayTrace */,
 				BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */,
 				BFA2278B22DB728400D8615C /* PopPianoHero */,
@@ -1151,7 +1153,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF3965652278587600A721E8 /* v8Runtime in Resources */,
+				BF5EAF76237482DD0077BCF5 /* PopCave in Resources */,
 				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
 				BFD4456520E67037007E2497 /* PopTrack.xib in Resources */,
 			);
