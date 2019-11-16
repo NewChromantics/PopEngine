@@ -22,6 +22,13 @@
 	#include <tchar.h>
 #endif
 
+
+namespace Pop
+{
+	std::string ProjectPath;
+}
+
+
 //	include SoyEvent unit test
 //	gr: need to improve this
 //#include <SoyEvent.cpp>
@@ -66,7 +73,14 @@ namespace Platform
 }
 
 
-int main(int argc,const char* argv[])
+int PopEngine(const char* ProjectPath)
+{
+	Pop::ProjectPath = ProjectPath;
+	return Soy::Platform::BundleAppMain();
+}
+
+
+extern "C" int main(int argc,const char* argv[])
 {
 	Array<std::string> Arguments;
 	for ( auto a=1;	a<argc;	a++ )
@@ -77,11 +91,12 @@ int main(int argc,const char* argv[])
 	
 	//SoyThread::SetThreadName("Pop Main Thread", SoyThread::GetCurrentThreadNativeHandle() );
 #if defined(TARGET_OSX_BUNDLE)
-	return Soy::Platform::BundleAppMain( argc, argv );
+	return Soy::Platform::BundleAppMain();
 #endif
 	
 	return PopMain(ArgumentsBridge);
 }
+
 
 //	define winmain AND main for gui & console subsystem builds
 #if defined(TARGET_WINDOWS)

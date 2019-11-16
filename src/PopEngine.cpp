@@ -17,21 +17,8 @@ std::shared_ptr<Bind::TInstance> pInstance;
 
 TPopAppError::Type PopMain(ArrayBridge<std::string>& Arguments)
 {
-	std::string DataPath;
-
-	//	use arg0 if provided
-	//	otherwise, we assume there's a bootup.js in the app's resources path
-	if ( Arguments.GetSize() > 0 )
-	{
-		DataPath = Arguments[0];
-	}
-	else
-	{
-		//	gr: need a better default here
-		DataPath = "";
-	}
-
 	//	need to resolve .. paths early in windows
+	auto DataPath = Pop::ProjectPath;
 	try
 	{
 		DataPath = Platform::GetFullPathFromFilename(DataPath);

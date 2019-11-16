@@ -2,7 +2,7 @@
 #import <Cocoa/Cocoa.h>
 #include "SoyFilesystem.h"
 
-std::shared_ptr<TJobParams> gParams;
+
 
 #if defined(TARGET_OSX_BUNDLE)
 bool Soy::Platform::BundleInitialised = false;
@@ -10,19 +10,15 @@ std::shared_ptr<PopMainThread> Soy::Platform::gMainThread;
 #endif
 
 #if defined(TARGET_OSX_BUNDLE)
-int Soy::Platform::BundleAppMain(int argc, const char * argv[])
+int Soy::Platform::BundleAppMain()
 {
-	::Platform::SetExePath(argv[0]);
-	/*
-	auto Params = ::Private::DecodeArgs( argc, argv );
-	
-	//	save params for pop main
-	gParams.reset( new TJobParams(Params) );
-	*/
 	Soy::Platform::BundleInitialised = true;
 	gMainThread.reset( new PopMainThread );
 	
 	//	create runloop and delegate
+	//	gr: these args are irrelevent it seems, we get proper args from the delegate
+	const char* argv[] = {"FakeExe"};
+	int argc = 1;
 	return NSApplicationMain(argc, argv);
 }
 #endif
@@ -115,6 +111,7 @@ void NSArray_String_ForEach(NSArray<NSString*>* Array,std::function<void(std::st
 	NSArray_String_ForEach( ArgumentsNs, PushArgument );
 
 	//	remove exe
+	::Platform::SetExePath( Arguments[0] );
 	Arguments.RemoveBlock(0,1);
 
 	auto ArgumentsBridge = GetArrayBridge(Arguments);

@@ -41,12 +41,19 @@ namespace Soy
 	namespace Platform
 	{
 		extern bool	BundleInitialised;
-		int			BundleAppMain(int argc, const char * argv[]);
+		int			BundleAppMain();
 		
 		extern std::shared_ptr<PopMainThread>	gMainThread;
 	};
 };
 #endif
+
+
+namespace Pop
+{
+	//	callers invoking the engine now pass in a project/data path, we no longer grab it from args
+	extern std::string ProjectPath;
+}
 
 TPopAppError::Type	PopMain(ArrayBridge<std::string>& Arguments);
 
