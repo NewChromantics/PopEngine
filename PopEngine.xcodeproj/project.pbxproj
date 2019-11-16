@@ -133,9 +133,6 @@
 		BF5EB00E237F0CD40077BCF5 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF5EB010237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB011237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB012237F11750077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB013237F11750077BCF5 /* PopCoreml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB014237F11750077BCF5 /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		BF5EB016237F118C0077BCF5 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF5EB017237F118F0077BCF5 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
@@ -168,9 +165,9 @@
 		BF5EB06923803A4B0077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
-		BF5EB07023803C520077BCF5 /* PopCameraDeviceFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF5EB07123803C520077BCF5 /* PopCoreml.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF5EB07223803C520077BCF5 /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF5EB07723803E430077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5EB07823803E430077BCF5 /* PopCoreml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5EB07923803E430077BCF5 /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF607EA12240580E00A78C00 /* CoreBluetooth.framework */; };
 		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
@@ -270,9 +267,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BF5EB07023803C520077BCF5 /* PopCameraDeviceFramework.framework in CopyFiles */,
-				BF5EB07123803C520077BCF5 /* PopCoreml.framework in CopyFiles */,
-				BF5EB07223803C520077BCF5 /* PopH264Framework.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -636,6 +630,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB021237F11C10077BCF5 /* Accelerate.framework in Frameworks */,
+				BF5EB07923803E430077BCF5 /* PopH264Framework.framework in Frameworks */,
 				BF5EB02A237F12CC0077BCF5 /* libdynload_s.a in Frameworks */,
 				BF5EB020237F11BF0077BCF5 /* AVFoundation.framework in Frameworks */,
 				BF5EB022237F11C60077BCF5 /* libdlib.a in Frameworks */,
@@ -643,7 +638,6 @@
 				BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */,
 				BF5EB028237F12C80077BCF5 /* libdyncall_s.a in Frameworks */,
 				BF5EB01D237F11A30077BCF5 /* GameController.framework in Frameworks */,
-				BF5EB012237F11750077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */,
 				BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */,
 				BF5EB01A237F119C0077BCF5 /* OpenGL.framework in Frameworks */,
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
@@ -651,13 +645,13 @@
 				BF5EB01E237F11AD0077BCF5 /* JavaScriptCore.framework in Frameworks */,
 				BF5EB011237F11680077BCF5 /* opencv2.framework in Frameworks */,
 				BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */,
-				BF5EB013237F11750077BCF5 /* PopCoreml.framework in Frameworks */,
 				BF5EB029237F12CA0077BCF5 /* libdyncallback_s.a in Frameworks */,
 				BF5EB01F237F11BD0077BCF5 /* CoreMedia.framework in Frameworks */,
 				BF5EB025237F126D0077BCF5 /* libx264.a in Frameworks */,
 				BF5EB019237F119A0077BCF5 /* Cocoa.framework in Frameworks */,
-				BF5EB014237F11750077BCF5 /* PopH264Framework.framework in Frameworks */,
 				BF5EB023237F11C80077BCF5 /* ApplicationServices.framework in Frameworks */,
+				BF5EB07723803E430077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */,
+				BF5EB07823803E430077BCF5 /* PopCoreml.framework in Frameworks */,
 				BF5EB017237F118F0077BCF5 /* CoreServices.framework in Frameworks */,
 				BF5EB01C237F11A10077BCF5 /* CoreBluetooth.framework in Frameworks */,
 				BF5EB016237F118C0077BCF5 /* CoreVideo.framework in Frameworks */,
