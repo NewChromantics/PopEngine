@@ -6,7 +6,7 @@
 
 
 //	video decoding
-#if defined(TARGET_OSX)
+#if defined(TARGET_OSX)||defined(TARGET_IOS)
 #include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
 #include "Libs/PopH264Framework.framework/Headers/PopH264.h"
 #elif defined(TARGET_WINDOWS)
@@ -19,7 +19,7 @@
 #include "Soylib/src/SoyRuntimeLibrary.h"
 #endif
 
-#if defined(TARGET_OSX)
+#if defined(TARGET_OSX)||defined(TARGET_IOS)
 #include "Libs/PopCameraDeviceFramework.framework/Headers/TCameraDevice.h"
 #include "Libs/PopCameraDeviceFramework.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
@@ -68,7 +68,7 @@ namespace PopCameraDevice
 #if defined(TARGET_WINDOWS)
 #include "Libs/x264/include/x264.h"
 //#pragma comment(lib,"libx264.lib")
-#elif defined(TARGET_OSX)
+#elif defined(TARGET_OSX)||defined(TARGET_IOS)
 #include "Libs/x264/osx/x264.h"
 #endif
 namespace X264

@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(TARGET_WINDOWS)
+#if !defined(TARGET_OSX)
 #error Currently OSX only
 #endif
 
