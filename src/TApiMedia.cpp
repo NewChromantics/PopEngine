@@ -7,8 +7,8 @@
 
 //	video decoding
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopH264Framework.framework/Headers/PopH264DecoderInstance.h"
-#include "Libs/PopH264Framework.framework/Headers/PopH264.h"
+#include "Libs/PopH264_Osx.framework/Headers/PopH264DecoderInstance.h"
+#include "Libs/PopH264_Osx.framework/Headers/PopH264.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
 #include "Libs/PopH264/PopH264.h"
@@ -79,6 +79,31 @@ namespace X264
 	class TPacket;
 }
 
+#if defined(TARGET_IOS)
+int     x264_encoder_encode( x264_t *, x264_nal_t **pp_nal, int *pi_nal, x264_picture_t *pic_in, x264_picture_t *pic_out )
+{
+	return 0;
+}
+void    x264_encoder_close( x264_t * )	{}
+int     x264_encoder_delayed_frames( x264_t * ){	return 0;	}
+int     x264_param_default_preset( x264_param_t *, const char *preset, const char *tune )
+{
+	return 0;
+}
+int     x264_param_apply_profile( x264_param_t *, const char *profile )
+{
+	return 0;
+}
+int x264_picture_alloc( x264_picture_t *pic, int i_csp, int i_width, int i_height )
+{
+	return 0;
+}
+x264_t *x264_encoder_open_155( x264_param_t * )
+{
+	return nullptr;
+}
+
+#endif
 
 
 
@@ -948,7 +973,7 @@ X264::TInstance::TInstance(size_t PresetValue)
 {
 	if ( PresetValue > 9 )
 		throw Soy_AssertException("Expecting preset value <= 9");
-	
+
 	//	todo: tune options. takes , seperated values
 	const char* Tune = nullptr;
 	auto* PresetName = x264_preset_names[PresetValue];
@@ -1033,7 +1058,6 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 	mHandle = x264_encoder_open(&mParam);
 	if (!mHandle)
 		throw Soy::AssertException("Failed to open x264 encoder");
-
 	mPixelMeta = Meta;
 }
 

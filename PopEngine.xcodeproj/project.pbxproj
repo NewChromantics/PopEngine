@@ -75,19 +75,30 @@
 		BF151FB423845FD600A70EBF /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
 		BF151FB523845FDB00A70EBF /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
 		BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
-		BF151FB823845FF000A70EBF /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
 		BF151FBA23845FF000A70EBF /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
-		BF151FBB23845FF000A70EBF /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
-		BF151FBC23845FF000A70EBF /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
 		BF151FBD23845FF000A70EBF /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
-		BF151FBE23845FF000A70EBF /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF151FBF2384601300A70EBF /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
-		BF151FC12384601300A70EBF /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
 		BF151FC22384601300A70EBF /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
 		BF151FC32384601300A70EBF /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF151FC42384601300A70EBF /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		BF151FC52384601300A70EBF /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
+		BF151FCD2384704C00A70EBF /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FCC2384704C00A70EBF /* OpenGLES.framework */; };
+		BF151FCF2384707D00A70EBF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FCE2384707D00A70EBF /* JavaScriptCore.framework */; };
+		BF151FD12384708A00A70EBF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FD02384708A00A70EBF /* UIKit.framework */; };
+		BF151FD3238470A800A70EBF /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FD2238470A800A70EBF /* VideoToolbox.framework */; };
+		BF151FF823847BA700A70EBF /* PopH264_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF151FFA23847BAD00A70EBF /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF151FFD23847CAC00A70EBF /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
+		BF151FFE23847CB000A70EBF /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
+		BF151FFF23847CF400A70EBF /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
+		BF15200023847CF500A70EBF /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
+		BF15200223847D6A00A70EBF /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15200123847D6A00A70EBF /* CoreMedia.framework */; };
+		BF15200323847DAB00A70EBF /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
+		BF15200523847F1B00A70EBF /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15200423847F1B00A70EBF /* AVFoundation.framework */; };
+		BF152007238480F600A70EBF /* PopCoreml_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF152006238480F600A70EBF /* PopCoreml_Ios.framework */; };
+		BF152009238482A200A70EBF /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF152008238482A200A70EBF /* CoreVideo.framework */; };
+		BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
@@ -99,9 +110,6 @@
 		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
 		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
-		BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; };
-		BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF509159228217AC00DCBB4B /* libencoding.a */; };
 		BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -186,7 +194,6 @@
 		BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
 		BF5EAFFE237F0CD40077BCF5 /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
-		BF5EAFFF237F0CD40077BCF5 /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		BF5EB000237F0CD40077BCF5 /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
 		BF5EB001237F0CD40077BCF5 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
 		BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
@@ -201,7 +208,6 @@
 		BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		BF5EB00D237F0CD40077BCF5 /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
-		BF5EB00E237F0CD40077BCF5 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF5EB010237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB011237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -238,7 +244,6 @@
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB07723803E430077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB07823803E430077BCF5 /* PopCoreml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB07923803E430077BCF5 /* PopH264Framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF607EA12240580E00A78C00 /* CoreBluetooth.framework */; };
 		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
@@ -304,7 +309,6 @@
 		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		BFF8A59122C2961C002AD145 /* SoyTypes.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF8A59022C2961C002AD145 /* SoyTypes.mm */; };
-		EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
 		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
 		EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB6D678121136A4E00687768 /* SoyBase64.cpp */; };
@@ -371,7 +375,6 @@
 				BF5091972282197A00DCBB4B /* libv8_libplatform.dylib in CopyFiles */,
 				BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */,
 				BF012B0E226A1102003AEB55 /* PopCameraDeviceFramework.framework in CopyFiles */,
-				BF459D1D21F7DC5100CED59D /* PopH264Framework.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -423,6 +426,16 @@
 		BF151F7923845F2F00A70EBF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF151F8023845F5800A70EBF /* SoyLib_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SoyLib_Ios.xcconfig; sourceTree = "<group>"; };
 		BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PopEngine_Ios.xcconfig; path = src/PopEngine_Ios.xcconfig; sourceTree = "<group>"; };
+		BF151FCC2384704C00A70EBF /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/OpenGLES.framework; sourceTree = DEVELOPER_DIR; };
+		BF151FCE2384707D00A70EBF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
+		BF151FD02384708A00A70EBF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		BF151FD2238470A800A70EBF /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/VideoToolbox.framework; sourceTree = DEVELOPER_DIR; };
+		BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopH264_Ios.framework; sourceTree = "<group>"; };
+		BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopH264_Osx.framework; sourceTree = "<group>"; };
+		BF15200123847D6A00A70EBF /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/CoreMedia.framework; sourceTree = DEVELOPER_DIR; };
+		BF15200423847F1B00A70EBF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
+		BF152006238480F600A70EBF /* PopCoreml_Ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopCoreml_Ios.framework; path = src/Libs/PopCoreml_Ios.framework; sourceTree = SOURCE_ROOT; };
+		BF152008238482A200A70EBF /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/CoreVideo.framework; sourceTree = DEVELOPER_DIR; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -451,7 +464,6 @@
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
 		BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Tarquini_AcidSea; path = ../Tarquini_AcidSea; sourceTree = "<group>"; };
-		BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopH264Framework.framework; sourceTree = "<group>"; };
 		BF509159228217AC00DCBB4B /* libencoding.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libencoding.a; path = obj/third_party/inspector_protocol/libencoding.a; sourceTree = "<group>"; };
 		BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_for_testing.dylib; sourceTree = "<group>"; };
 		BF50917F2282194700DCBB4B /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libc++.dylib"; sourceTree = "<group>"; };
@@ -719,6 +731,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF152009238482A200A70EBF /* CoreVideo.framework in Frameworks */,
+				BF15200523847F1B00A70EBF /* AVFoundation.framework in Frameworks */,
+				BF15200223847D6A00A70EBF /* CoreMedia.framework in Frameworks */,
+				BF151FCF2384707D00A70EBF /* JavaScriptCore.framework in Frameworks */,
+				BF151FD3238470A800A70EBF /* VideoToolbox.framework in Frameworks */,
+				BF151FD12384708A00A70EBF /* UIKit.framework in Frameworks */,
+				BF151FCD2384704C00A70EBF /* OpenGLES.framework in Frameworks */,
+				BF152007238480F600A70EBF /* PopCoreml_Ios.framework in Frameworks */,
+				BF151FF823847BA700A70EBF /* PopH264_Ios.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -727,7 +748,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB021237F11C10077BCF5 /* Accelerate.framework in Frameworks */,
-				BF5EB07923803E430077BCF5 /* PopH264Framework.framework in Frameworks */,
 				BF5EB02A237F12CC0077BCF5 /* libdynload_s.a in Frameworks */,
 				BF5EB020237F11BF0077BCF5 /* AVFoundation.framework in Frameworks */,
 				BF5EB022237F11C60077BCF5 /* libdlib.a in Frameworks */,
@@ -744,6 +764,7 @@
 				BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */,
 				BF5EB029237F12CA0077BCF5 /* libdyncallback_s.a in Frameworks */,
 				BF5EB01F237F11BD0077BCF5 /* CoreMedia.framework in Frameworks */,
+				BF151FFA23847BAD00A70EBF /* PopH264_Osx.framework in Frameworks */,
 				BF5EB025237F126D0077BCF5 /* libx264.a in Frameworks */,
 				BF5EB019237F119A0077BCF5 /* Cocoa.framework in Frameworks */,
 				BF5EB023237F11C80077BCF5 /* ApplicationServices.framework in Frameworks */,
@@ -783,7 +804,6 @@
 				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
 				BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */,
 				BFA22BEB22DE7E3700D8615C /* PopCoreml.framework in Frameworks */,
-				BF459D1C21F7DC5100CED59D /* PopH264Framework.framework in Frameworks */,
 				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
 				BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */,
 				BF5EB010237F11680077BCF5 /* opencv2.framework in Frameworks */,
@@ -796,7 +816,6 @@
 				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
 				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
 				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
-				BF459CF121F7D8BE00CED59D /* PopH264Framework.framework in Frameworks */,
 				BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */,
 				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
 				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
@@ -879,8 +898,9 @@
 				BF89CF49228DD3EB00A187D5 /* OpenVr */,
 				BF89CF4B228DD3F700A187D5 /* OpenVr */,
 				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
+				BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */,
+				BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */,
 				BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */,
-				BF459CCD21F7D43A00CED59D /* PopH264Framework.framework */,
 				BFE9512E22A70B8400B83061 /* x264 */,
 			);
 			name = Libraries;
@@ -969,6 +989,13 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BF152008238482A200A70EBF /* CoreVideo.framework */,
+				BF15200423847F1B00A70EBF /* AVFoundation.framework */,
+				BF15200123847D6A00A70EBF /* CoreMedia.framework */,
+				BF151FD2238470A800A70EBF /* VideoToolbox.framework */,
+				BF151FD02384708A00A70EBF /* UIKit.framework */,
+				BF151FCE2384707D00A70EBF /* JavaScriptCore.framework */,
+				BF151FCC2384704C00A70EBF /* OpenGLES.framework */,
 				BF151F0C2382C31200A70EBF /* libc++.tbd */,
 				BF9CCABE1B6E799D000B19EA /* OpenCL.framework */,
 				BF321B041B67AD990016E903 /* CoreVideo.framework */,
@@ -1018,6 +1045,7 @@
 		BF89CF4B228DD3F700A187D5 /* OpenVr */ = {
 			isa = PBXGroup;
 			children = (
+				BF152006238480F600A70EBF /* PopCoreml_Ios.framework */,
 				BF85350D22BEDE9C0049C01B /* bin */,
 				BF85350622BEDBF80049C01B /* OpenVR.framework */,
 				BF89CF64228DD3F700A187D5 /* headers */,
@@ -1597,13 +1625,10 @@
 				BF151FB223845FB700A70EBF /* sha1.cpp in Sources */,
 				BF151F9C23845FAD00A70EBF /* SoyRuntimeLibrary.cpp in Sources */,
 				BF151F8A23845FAD00A70EBF /* SoyFourcc.cpp in Sources */,
-				BF151FC12384601300A70EBF /* TApiLeapMotion.cpp in Sources */,
 				BF151FAF23845FAD00A70EBF /* SoyWebSocket.cpp in Sources */,
 				BF151FC52384601300A70EBF /* TBind.cpp in Sources */,
 				BF151F8923845FAD00A70EBF /* SoyFilesystem.mm in Sources */,
 				BF151FB523845FDB00A70EBF /* PopMain.cpp in Sources */,
-				BF151FB823845FF000A70EBF /* TApiBluetooth.cpp in Sources */,
-				BF151FBE23845FF000A70EBF /* TApiGui.cpp in Sources */,
 				BF151FA923845FAD00A70EBF /* SoyTypes.mm in Sources */,
 				BF151FAC23845FAD00A70EBF /* SoyVector.cpp in Sources */,
 				BF151FBA23845FF000A70EBF /* TApiCoreMl.cpp in Sources */,
@@ -1611,7 +1636,6 @@
 				BF151F9E23845FAD00A70EBF /* SoyShader.cpp in Sources */,
 				BF151F8423845FAD00A70EBF /* SoyAvf.mm in Sources */,
 				BF151FB323845FD200A70EBF /* JsCoreBind.cpp in Sources */,
-				BF151FBC23845FF000A70EBF /* TApiDll.cpp in Sources */,
 				BF151F9123845FAD00A70EBF /* SoyMedia.cpp in Sources */,
 				BF151F8823845FAD00A70EBF /* SoyFilesystem.cpp in Sources */,
 				BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */,
@@ -1619,8 +1643,8 @@
 				BF151FAB23845FAD00A70EBF /* SoyUnity.mm in Sources */,
 				BF151F9523845FAD00A70EBF /* SoyOpengl.cpp in Sources */,
 				BF151FAE23845FAD00A70EBF /* SoyWave.cpp in Sources */,
+				BF151FFE23847CB000A70EBF /* image_utility.cpp in Sources */,
 				BF151F9D23845FAD00A70EBF /* SoyScope.cpp in Sources */,
-				BF151FBB23845FF000A70EBF /* TApiDlib.cpp in Sources */,
 				BF151FBD23845FF000A70EBF /* TApiEzsift.cpp in Sources */,
 				BF151FAD23845FAD00A70EBF /* SoyVideoDevice.cpp in Sources */,
 				BF151F9F23845FAD00A70EBF /* SoySocket.cpp in Sources */,
@@ -1646,6 +1670,8 @@
 				BF151F8723845FAD00A70EBF /* SoyDebug.mm in Sources */,
 				BF151F8E23845FAD00A70EBF /* SoyImage.cpp in Sources */,
 				BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */,
+				BF151FFD23847CAC00A70EBF /* ezsift.cpp in Sources */,
+				BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */,
 				BF151F8623845FAD00A70EBF /* SoyDebug.cpp in Sources */,
 				BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */,
 				BF151F8B23845FAD00A70EBF /* SoyGraphics.cpp in Sources */,
@@ -1664,7 +1690,6 @@
 				BF5EAFE3237F0C6E0077BCF5 /* SoyString.cpp in Sources */,
 				BF5EAFDD237F0C6E0077BCF5 /* SoyScope.cpp in Sources */,
 				BF5EB00A237F0CD40077BCF5 /* TApiSerial.cpp in Sources */,
-				BF5EB00E237F0CD40077BCF5 /* V8Bind.cpp in Sources */,
 				BF5EAFC3237F0C6E0077BCF5 /* SoyAssert.cpp in Sources */,
 				BF5EAFDC237F0C6E0077BCF5 /* SoyRuntimeLibrary.cpp in Sources */,
 				BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */,
@@ -1702,13 +1727,14 @@
 				BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */,
 				BF5EB004237F0CD40077BCF5 /* TApiInput.cpp in Sources */,
 				BF5EAFD8237F0C6E0077BCF5 /* SoyPng.cpp in Sources */,
-				BF5EAFFF237F0CD40077BCF5 /* TApiDlib.cpp in Sources */,
 				BF5EAFDE237F0C6E0077BCF5 /* SoyShader.cpp in Sources */,
 				BF5EAFD7237F0C6E0077BCF5 /* SoyPixels.cpp in Sources */,
+				BF15200023847CF500A70EBF /* TApiDlib.cpp in Sources */,
 				BF5EAFCB237F0C6E0077BCF5 /* SoyGraphics.cpp in Sources */,
 				BF5EAFC9237F0C6E0077BCF5 /* SoyFilesystem.mm in Sources */,
 				BF5EAFF4237F0CD40077BCF5 /* PopEngine.cpp in Sources */,
 				BF5EAFF9237F0CD40077BCF5 /* SoyOpenglView.mm in Sources */,
+				BF15200323847DAB00A70EBF /* V8Bind.cpp in Sources */,
 				BF5EB003237F0CD40077BCF5 /* TApiHttp.cpp in Sources */,
 				BF5EAFBF237F0C290077BCF5 /* memheap.cpp in Sources */,
 				BF5EAFF1237F0C6E0077BCF5 /* SoyWindow.mm in Sources */,
@@ -1761,7 +1787,6 @@
 				BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */,
 				BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */,
 				BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */,
-				EB0EA5662110AB53008D6DAA /* TApiDlib.cpp in Sources */,
 				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
 				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
 				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
@@ -1833,6 +1858,7 @@
 				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,
 				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
 				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
+				BF151FFF23847CF400A70EBF /* TApiDlib.cpp in Sources */,
 				BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */,
 				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
 				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
@@ -1991,6 +2017,10 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/src/Libs",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2066,6 +2096,10 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/src/Libs",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2141,6 +2175,10 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/src/Libs",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2205,6 +2243,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/src/Libs",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				INFOPLIST_FILE = PopEngine_Ios/Info.plist;

@@ -24,7 +24,6 @@ int Soy::Platform::BundleAppMain()
 	
 	//	create runloop and delegate
 	//	gr: these args are irrelevent it seems, we get proper args from the delegate
-	char* argv[] = {"FakeExe"};
 	int argc = 1;
 	
 #if defined(TARGET_IOS)
@@ -32,8 +31,10 @@ int Soy::Platform::BundleAppMain()
 	// NSPrincipalClass key specified, the UIApplication class is used. The delegate class will be instantiated using init.
 //	UIKIT_EXTERN int UIApplicationMain(int argc, char * _Nullable argv[_Nonnull], NSString * _Nullable principalClassName, NSString * _Nullable delegateClassName);
 	//const char *[1]' to 'char * _Nullable *
+	char* argv[] = {"FakeExe"};
 	return UIApplicationMain(argc, argv, nullptr, nullptr );
 #else
+	const char* argv[] = {"FakeExe"};
 	return NSApplicationMain(argc, argv);
 #endif
 }
