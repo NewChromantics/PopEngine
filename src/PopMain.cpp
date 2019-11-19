@@ -82,19 +82,10 @@ int PopEngine(const char* ProjectPath)
 
 extern "C" int main(int argc,const char* argv[])
 {
-	Array<std::string> Arguments;
-	for ( auto a=1;	a<argc;	a++ )
-	{
-		Arguments.PushBack( argv[a] );
-	}
-	auto ArgumentsBridge = GetArrayBridge(Arguments);
+	if ( argc < 2 )
+		return PopEngine(nullptr);
 	
-	//SoyThread::SetThreadName("Pop Main Thread", SoyThread::GetCurrentThreadNativeHandle() );
-#if defined(TARGET_OSX_BUNDLE)
-	return Soy::Platform::BundleAppMain();
-#endif
-	
-	return PopMain(ArgumentsBridge);
+	return PopEngine( argv[1] );
 }
 
 
