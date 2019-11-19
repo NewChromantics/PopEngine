@@ -580,7 +580,7 @@ public:
 	
 
 	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
-	prmem::Heap&		GetImageHeap()		{	return mImageHeap;	}
+	prmem::Heap&		GetImageHeap()		{	return GetGeneralHeap();	}
 	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
 	std::string			GetResolvedFilename(const std::string& Filename);
 	void				GetExeArguments(ArrayBridge<std::string>&& Arguments);
@@ -765,8 +765,7 @@ protected:
 		
 		auto& Heap = JsCore::GetGlobalObjectHeap();
 		if ( !Heap.Free(pObject) )
-			std::Debug << "Global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
-		
+			std::Debug << "Js global Heap failed to Free() " << Soy::GetTypeName<THISTYPE>() << std::endl;
 	}
 	
 protected:

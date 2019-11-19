@@ -74,15 +74,13 @@ namespace JsCore
 	void		AddContextCache(TContext& Context,JSGlobalContextRef Ref);
 	void		RemoveContextCache(TContext& Context);
 	
-	prmem::Heap	gGlobalObjectHeap(true, true, "JsCore::GlobalObjectHeap",0,true);
-
-
 	template<typename TYPE>
 	TYPE*	GetPointer(JSContextRef Context,JSValueRef Handle);
 }
 
 prmem::Heap& JsCore::GetGlobalObjectHeap()
 {
+	static prmem::Heap gGlobalObjectHeap(true, true, "JsCore::GlobalObjectHeap",0,true);
 	return gGlobalObjectHeap;
 }
 
@@ -243,8 +241,8 @@ void JsCore::TFunction::Call(JsCore::TCallback& Params) const
 	//	docs say null is okay
 	//		https://developer.apple.com/documentation/javascriptcore/1451407-jsobjectcallasfunction?language=objc
 	//		The object to use as "this," or NULL to use the global object as "this."
-	//if ( Params.mThis == nullptr )
-	//	Params.mThis = JSContextGetGlobalObject( mContext );
+	if ( Params.mThis == nullptr )
+		Params.mThis = JSContextGetGlobalObject( Context );
 	auto This = Params.mThis ? GetObject( Context, Params.mThis ) : nullptr;
 	
 	//	call
