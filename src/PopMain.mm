@@ -1,15 +1,22 @@
 #include "PopMain.h"
-#import <Cocoa/Cocoa.h>
 #include "SoyFilesystem.h"
 
+#if defined(TARGET_OSX)
+#import <Cocoa/Cocoa.h>
+//#import <SpriteKit/SpriteKit.h>
+#endif
+
+#if defined(TARGET_IOS)
+#import "UIKit/UIApplication.h"
+#endif
 
 
-#if defined(TARGET_OSX_BUNDLE)
+#if defined(TARGET_OSX_BUNDLE)||defined(TARGET_IOS)
 bool Soy::Platform::BundleInitialised = false;
 std::shared_ptr<PopMainThread> Soy::Platform::gMainThread;
 #endif
 
-#if defined(TARGET_OSX_BUNDLE)
+#if defined(TARGET_OSX_BUNDLE)||defined(TARGET_IOS)
 int Soy::Platform::BundleAppMain()
 {
 	Soy::Platform::BundleInitialised = true;
@@ -17,9 +24,18 @@ int Soy::Platform::BundleAppMain()
 	
 	//	create runloop and delegate
 	//	gr: these args are irrelevent it seems, we get proper args from the delegate
-	const char* argv[] = {"FakeExe"};
+	char* argv[] = {"FakeExe"};
 	int argc = 1;
+	
+#if defined(TARGET_IOS)
+	// If nil is specified for principalClassName, the value for NSPrincipalClass from the Info.plist is used. If there is no
+	// NSPrincipalClass key specified, the UIApplication class is used. The delegate class will be instantiated using init.
+//	UIKIT_EXTERN int UIApplicationMain(int argc, char * _Nullable argv[_Nonnull], NSString * _Nullable principalClassName, NSString * _Nullable delegateClassName);
+	//const char *[1]' to 'char * _Nullable *
+	return UIApplicationMain(argc, argv, nullptr, nullptr );
+#else
 	return NSApplicationMain(argc, argv);
+#endif
 }
 #endif
 
@@ -51,10 +67,11 @@ void PopMainThread::TriggerIteration()
 
 
 
-#import <Cocoa/Cocoa.h>
-#import <SpriteKit/SpriteKit.h>
-
+#if defined(TARGET_OSX)
 @interface AppDelegate : NSObject <NSApplicationDelegate>
+#elif defined(TARGET_IOS)
+@interface AppDelegate : NSObject <UIApplicationDelegate>
+#endif
 
 //@property (assign) IBOutlet NSWindow *window;
 //@property (assign) IBOutlet SKView *skView;
@@ -129,9 +146,12 @@ void NSArray_String_ForEach(NSArray<NSString*>* Array,std::function<void(std::st
 //	self.skView.showsNodeCount = YES;
 }
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
+#if defined(TARGET_OSX)
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+{
 	//	gr: make this a no and send the on-quit event
 	return YES;
 }
+#endif
 
 @end

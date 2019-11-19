@@ -241,8 +241,10 @@ void JsCore::TFunction::Call(JsCore::TCallback& Params) const
 	//	docs say null is okay
 	//		https://developer.apple.com/documentation/javascriptcore/1451407-jsobjectcallasfunction?language=objc
 	//		The object to use as "this," or NULL to use the global object as "this."
+#if defined(TARGET_OSX)
 	if ( Params.mThis == nullptr )
 		Params.mThis = JSContextGetGlobalObject( Context );
+#endif
 	auto This = Params.mThis ? GetObject( Context, Params.mThis ) : nullptr;
 	
 	//	call
@@ -463,7 +465,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 	
 	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
 	{
-		#if !defined(TARGET_WINDOWS)
+		#if defined(TARGET_OSX)
 		{
 			auto ThisRunloop = CFRunLoopGetCurrent();
 			auto MainRunloop = CFRunLoopGetMain();

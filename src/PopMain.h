@@ -35,7 +35,7 @@ public:
 
 
 //	in PopMain.mm
-#if defined(TARGET_OSX_BUNDLE)
+#if defined(TARGET_OSX_BUNDLE)||defined(TARGET_IOS)
 namespace Soy
 {
 	namespace Platform

@@ -42,7 +42,6 @@
 		BF151F9123845FAD00A70EBF /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
 		BF151F9223845FAD00A70EBF /* SoyMediaFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD220D6DA52000BC812 /* SoyMediaFormat.cpp */; };
 		BF151F9323845FAD00A70EBF /* SoyMemFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */; };
-		BF151F9423845FAD00A70EBF /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF151F9523845FAD00A70EBF /* SoyOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */; };
 		BF151F9623845FAD00A70EBF /* SoyOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */; };
 		BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06391A2E5A7C0099596C /* SoyPixels.cpp */; };
@@ -76,7 +75,6 @@
 		BF151FB423845FD600A70EBF /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
 		BF151FB523845FDB00A70EBF /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
 		BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
-		BF151FB723845FE300A70EBF /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
 		BF151FB823845FF000A70EBF /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
 		BF151FBA23845FF000A70EBF /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
@@ -1634,12 +1632,10 @@
 				BF151FC42384601300A70EBF /* TApiWebsocket.cpp in Sources */,
 				BF151FB423845FD600A70EBF /* PopEngine.cpp in Sources */,
 				BF151F8523845FAD00A70EBF /* SoyBase64.cpp in Sources */,
-				BF151FB723845FE300A70EBF /* SoyBluetooth.mm in Sources */,
 				BF151FB023845FAD00A70EBF /* SoyWindow.cpp in Sources */,
 				BF151F8223845FAD00A70EBF /* SoyArray.cpp in Sources */,
 				BF151F9323845FAD00A70EBF /* SoyMemFile.cpp in Sources */,
 				BF151FBF2384601300A70EBF /* TApiHttp.cpp in Sources */,
-				BF151F9423845FAD00A70EBF /* SoyOpenCl.cpp in Sources */,
 				BF151FA823845FAD00A70EBF /* SoyTypes.cpp in Sources */,
 				BF151F9A23845FAD00A70EBF /* SoyRef.cpp in Sources */,
 				BF151FC32384601300A70EBF /* TApiSocket.cpp in Sources */,
