@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0710"
+   LastUpgradeVersion = "1010"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-               BuildableName = "PopEngineMac.app"
-               BlueprintName = "PopEngineMac"
+               BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
+               BuildableName = "PopEngineUnitTestApp.app"
+               BlueprintName = "PopEngineUnitTestApp"
                ReferencedContainer = "container:PopEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopEngineMac.app"
-            BlueprintName = "PopEngineMac"
+            BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
+            BuildableName = "PopEngineUnitTestApp.app"
+            BlueprintName = "PopEngineUnitTestApp"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -49,20 +49,17 @@
       disableMainThreadChecker = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
-      customWorkingDirectory = "$PROJECT_DIR/"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
-      stopOnEveryUBSanitizerIssue = "YES"
-      stopOnEveryMainThreadCheckerIssue = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopEngineMac.app"
-            BlueprintName = "PopEngineMac"
+            BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
+            BuildableName = "PopEngineUnitTestApp.app"
+            BlueprintName = "PopEngineUnitTestApp"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -71,62 +68,8 @@
             argument = "/Volumes/Code/PopCave/PopCave"
             isEnabled = "YES">
          </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/Tarquini_AcidSea Debug"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/PopEngine/UnitTest/CoremlPersonDetection"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/PopRayTrace/"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/PopEngine/UnitTest/CameraTest"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/GuildhallGildwall"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/TrainStop"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/Varjo_TriangleDetect"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/Code/PopEngine/Data_Holosports"
-            isEnabled = "YES">
-         </CommandLineArgument>
       </CommandLineArguments>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "MALLOC_PERMIT_INSANE_REQUESTS"
-            value = ""
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
       <AdditionalOptions>
-         <AdditionalOption
-            key = "DYLD_INSERT_LIBRARIES"
-            value = "/usr/lib/libgmalloc.dylib"
-            isEnabled = "YES">
-         </AdditionalOption>
-         <AdditionalOption
-            key = "MallocGuardEdges"
-            value = ""
-            isEnabled = "YES">
-         </AdditionalOption>
-         <AdditionalOption
-            key = "MallocScribble"
-            value = ""
-            isEnabled = "YES">
-         </AdditionalOption>
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
@@ -139,9 +82,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopEngineMac.app"
-            BlueprintName = "PopEngineMac"
+            BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
+            BuildableName = "PopEngineUnitTestApp.app"
+            BlueprintName = "PopEngineUnitTestApp"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

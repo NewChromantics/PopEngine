@@ -27,7 +27,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2015 NewChromantics. All rights reserved.</string>
 	<key>NSMainNibFile</key>
-	<string>PopTrack</string>
+	<string>PopEngine</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
