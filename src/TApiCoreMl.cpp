@@ -11,6 +11,7 @@
 #include "Libs/PopCoreml.framework/Headers/THourglass.h"
 #include "Libs/PopCoreml.framework/Headers/TMaskRcnn.h"
 #include "Libs/PopCoreml.framework/Headers/TOpenPose.h"
+#include "Libs/PopCoreml.framework/Headers/TPosenet.h"
 #include "Libs/PopCoreml.framework/Headers/TSsdMobileNet.h"
 #include "Libs/PopCoreml.framework/Headers/TAppleVisionFace.h"
 
@@ -24,6 +25,7 @@ public:
 	TModel&		GetHourglass()			{	return GetModel(mHourglass);	}
 	TModel&		GetCpm()				{	return GetModel(mCpm);	}
 	TModel&		GetOpenPose()			{	return GetModel(mOpenPose);	}
+	TModel&		GetPosenet()			{	return GetModel(mPosenet);	}
 	TModel&		GetSsdMobileNet()		{	return GetModel(mSsdMobileNet);	}
 	TModel&		GetMaskRcnn()			{	return GetModel(mMaskRcnn);	}
 	TModel&		GetDeepLab()			{	return GetModel(mDeepLab);	}
@@ -37,6 +39,7 @@ private:
 	std::shared_ptr<THourglass>			mHourglass;
 	std::shared_ptr<TCpm>				mCpm;
 	std::shared_ptr<TOpenPose>			mOpenPose;
+	std::shared_ptr<TPosenet>			mPosenet;
 	std::shared_ptr<TSsdMobileNet>		mSsdMobileNet;
 	std::shared_ptr<TMaskRcnn>			mMaskRcnn;
 	std::shared_ptr<TDeepLab>			mDeepLab;
@@ -51,10 +54,13 @@ namespace ApiCoreMl
 
 	DEFINE_BIND_FUNCTIONNAME(Yolo);
 	DEFINE_BIND_FUNCTIONNAME(Hourglass);
+	DEFINE_BIND_FUNCTIONNAME(HourglassLabelMap);
 	DEFINE_BIND_FUNCTIONNAME(Cpm);
+	DEFINE_BIND_FUNCTIONNAME(CpmLabelMap);
 	DEFINE_BIND_FUNCTIONNAME(OpenPose);
 	DEFINE_BIND_FUNCTIONNAME(OpenPoseMap);
 	DEFINE_BIND_FUNCTIONNAME(OpenPoseLabelMap);
+	DEFINE_BIND_FUNCTIONNAME(PosenetLabelMap);
 	DEFINE_BIND_FUNCTIONNAME(SsdMobileNet);
 	DEFINE_BIND_FUNCTIONNAME(MaskRcnn);
 	DEFINE_BIND_FUNCTIONNAME(AppleVisionFaceDetect);
@@ -78,10 +84,13 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 	using namespace ApiCoreMl;
 	Template.BindFunction<BindFunction::Yolo>( &TCoreMlWrapper::Yolo );
 	Template.BindFunction<BindFunction::Hourglass>( &TCoreMlWrapper::Hourglass );
+	Template.BindFunction<BindFunction::HourglassLabelMap>( &TCoreMlWrapper::HourglassLabelMap );
 	Template.BindFunction<BindFunction::Cpm>( &TCoreMlWrapper::Cpm );
+	Template.BindFunction<BindFunction::CpmLabelMap>( &TCoreMlWrapper::CpmLabelMap );
 	Template.BindFunction<BindFunction::OpenPose>( &TCoreMlWrapper::OpenPose );
 	Template.BindFunction<BindFunction::OpenPoseMap>( &TCoreMlWrapper::OpenPoseMap );
 	Template.BindFunction<BindFunction::OpenPoseLabelMap>( &TCoreMlWrapper::OpenPoseLabelMap );
+	Template.BindFunction<BindFunction::PosenetLabelMap>( &TCoreMlWrapper::PosenetLabelMap );
 	Template.BindFunction<BindFunction::SsdMobileNet>( &TCoreMlWrapper::SsdMobileNet );
 	Template.BindFunction<BindFunction::MaskRcnn>( &TCoreMlWrapper::MaskRcnn );
 	Template.BindFunction<BindFunction::AppleVisionFaceDetect>( &TCoreMlWrapper::AppleVisionFaceDetect );
@@ -390,6 +399,13 @@ void TCoreMlWrapper::Hourglass(Bind::TCallback& Params)
 }
 
 
+void TCoreMlWrapper::HourglassLabelMap(Bind::TCallback& Params)
+{
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetHourglass();
+	
+	RunModelLabelMap( Model, Params, CoreMl );
+}
 
 void TCoreMlWrapper::Cpm(Bind::TCallback& Params)
 {
@@ -397,6 +413,15 @@ void TCoreMlWrapper::Cpm(Bind::TCallback& Params)
 	auto& Model = CoreMl.GetCpm();
 	
 	RunModelGetObjects( Model, Params, CoreMl );
+}
+
+
+void TCoreMlWrapper::CpmLabelMap(Bind::TCallback& Params)
+{
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetCpm();
+	
+	RunModelLabelMap( Model, Params, CoreMl );
 }
 
 
@@ -426,7 +451,13 @@ void TCoreMlWrapper::OpenPoseLabelMap(Bind::TCallback& Params)
 	RunModelLabelMap( Model, Params, CoreMl );
 }
 
-
+void TCoreMlWrapper::PosenetLabelMap(Bind::TCallback& Params)
+{
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetPosenet();
+	
+	RunModelLabelMap( Model, Params, CoreMl );
+}
 
 void TCoreMlWrapper::SsdMobileNet(Bind::TCallback& Params)
 {

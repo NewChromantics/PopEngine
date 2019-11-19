@@ -31,10 +31,13 @@ public:
 
 	void				Yolo(Bind::TCallback& Arguments);
 	void				Hourglass(Bind::TCallback& Arguments);
+	void				HourglassLabelMap(Bind::TCallback& Arguments);
 	void				Cpm(Bind::TCallback& Arguments);
+	void				CpmLabelMap(Bind::TCallback& Arguments);
 	void				OpenPose(Bind::TCallback& Arguments);
 	void				OpenPoseMap(Bind::TCallback& Arguments);		//	deprecated for label map
 	void				OpenPoseLabelMap(Bind::TCallback& Arguments);
+	void				PosenetLabelMap(Bind::TCallback& Arguments);
 	void				SsdMobileNet(Bind::TCallback& Arguments);
 	void				MaskRcnn(Bind::TCallback& Arguments);
 	void				DeepLab(Bind::TCallback& Arguments);
