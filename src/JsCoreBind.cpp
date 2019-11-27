@@ -498,7 +498,6 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			auto Context = CreateContext(RootDirectory);
 			
 			ApiPop::Bind( *Context );
-#if defined(TARGET_OSX)
 			ApiOpengl::Bind( *Context );
 			ApiMedia::Bind( *Context );
 			ApiWebsocket::Bind( *Context );
@@ -508,6 +507,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiDll::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
 			ApiGui::Bind( *Context );
+#if defined(TARGET_OSX)
 			ApiOpencv::Bind(*Context);
 
 			//ApiOpencl::Bind( *Context );

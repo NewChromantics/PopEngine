@@ -1,6 +1,7 @@
 #include "TApiOpenvr.h"
 #include "Libs/OpenVr/headers/openvr.h"
 #include "TApiCommon.h"
+#include "TApiOpengl.h"
 #include "SoyOpengl.h"
 #include "SoyViveHandTracker.h"
 #include "MagicEnum/include/magic_enum.hpp"
@@ -71,7 +72,8 @@ public:
 	void			WaitForFrameStart();
 
 public:
-	std::function<void(THmdFrame&,THmdFrame&)>	mOnRender;
+	std::function<void(ArrayBridge<vr::TrackedDevicePose_t>&&)>	mOnNewPoses;
+	std::function<void(TFinishedEyesFunction&)>			mOnRender;
 	vr::IVRSystem*	mHmd = nullptr;
 	float			mNearClip = 0.1f;
 	float			mFarClip = 40.0f;
@@ -94,16 +96,29 @@ void ApiOpenvr::Bind(Bind::TContext& Context)
 void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 {
 	//auto Device = Params.GetArgumentFilename(0);
+
+	//	arg1 needs to be a render context
+	auto RenderContextObject = Params.GetArgumentObject(1);
+	auto& RenderContext = RenderContextObject.This<TWindowWrapper>();
+	mRenderContext = Bind::TPersistent(Params.mLocalContext, RenderContextObject,"HMD RenderContext");
+
 	bool IsOverlay = false;
-	if ( !Params.IsArgumentUndefined(1) )
-		IsOverlay = Params.GetArgumentBool(1);
+	if ( !Params.IsArgumentUndefined(2) )
+		IsOverlay = Params.GetArgumentBool(2);
 	
 	mHmd.reset( new Openvr::THmd(IsOverlay) );
 
-	auto OnRender = [this](Openvr::THmdFrame& Left,Openvr::THmdFrame& Right)
+	auto OnNewPoses = [this](ArrayBridge<vr::TrackedDevicePose_t>&& Poses)
 	{
-		this->OnRender( Left, Right );
+		this->OnNewPoses(Poses);
 	};
+
+	//	get an opengl job, call the js render with last poses, send textures back to openvr
+	auto OnRender = [this](Openvr::TFinishedEyesFunction& RenderEyes)
+	{
+		this->OnRender(RenderEyes);
+	};
+	mHmd->mOnNewPoses = OnNewPoses;
 	mHmd->mOnRender = OnRender;
 }
 
@@ -114,9 +129,18 @@ void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::BeginFrame>( &THmdWrapper::BeginFrame );
 }
 
-void ApiOpenvr::THmdWrapper::OnRender(Openvr::THmdFrame& Left,Openvr::THmdFrame& Right)
+
+void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& Poses)
 {
 	//	call javascript
+	std::Debug << "New poses" << std::endl;
+}
+
+
+void ApiOpenvr::THmdWrapper::OnRender(Openvr::TFinishedEyesFunction& SubmitEyeTextures)
+{
+	//	get an opengl callback, call javascript, submit resulting textures
+	std::Debug << "Render to opengl" << std::endl;
 }
 
 void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
@@ -235,13 +259,13 @@ void Openvr::THmd::Thread()
 		
 		try
 		{
-			THmdFrame Left;
-			THmdFrame Right;
+			Openvr::TFinishedEyesFunction SubmitEyes = [&](Opengl::TContext& Context,Opengl::TTexture& LeftEye, Opengl::TTexture& RightEye)
+			{
+				SubmitEyeFrame(vr::Eye_Left, LeftEye.mTexture);
+				SubmitEyeFrame(vr::Eye_Right, RightEye.mTexture);
+			};
 
-			mOnRender( Left, Right );
-			
-			SubmitEyeFrame( vr::Eye_Left, Left.mEyeTexture );
-			SubmitEyeFrame( vr::Eye_Right, Right.mEyeTexture );
+			mOnRender(SubmitEyes);			
 		}
 		catch(std::exception& e)
 		{
@@ -301,10 +325,16 @@ void Openvr::THmd::WaitForFrameStart()
 {
 	auto& Compositor = *vr::VRCompositor();
 	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
+
+	//	game poses are in the future (I think)
 	vr::TrackedDevicePose_t* GamePoseArray = nullptr;
 	size_t GamePoseArraySize = 0;
-	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses, vr::k_unMaxTrackedDeviceCount, GamePoseArray, GamePoseArraySize);
+
+	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses,std::size(TrackedDevicePoses), GamePoseArray, GamePoseArraySize);
 	Openvr::IsOkay(Error, "WaitGetPoses");
+
+	auto TrackedDevicePosesArray = GetRemoteArray(TrackedDevicePoses);
+	mOnNewPoses(GetArrayBridge(TrackedDevicePosesArray));
 }
 
 void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
@@ -314,7 +344,7 @@ void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
 	vr::Texture_t EyeTexture;
 	EyeTexture.handle = reinterpret_cast<void*>( static_cast<uintptr_t>(Texture.mName) );
 	EyeTexture.eType = vr::TextureType_OpenGL;
-	EyeTexture.eColorSpace = vr::ColorSpace_Gamma;
+	EyeTexture.eColorSpace = vr::ColorSpace_Auto;
 
 	auto Error = Compositor.Submit( Eye, &EyeTexture );
 	if ( Error == vr::VRCompositorError_TextureUsesUnsupportedFormat )
