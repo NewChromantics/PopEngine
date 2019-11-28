@@ -636,8 +636,7 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 		pContext->mJobQueue.Wake();
 	};
 	JSGlobalContextSetQueueJobFunc(mContextGroup, Context, QueueJobFunc);
-	JSGlobalContextSetWakeJobQueueFunc(mContextGroup, Context, WakeJobQueueFunc);
-
+	
 	//	set pointer
 	auto SetContext = [&](Bind::TLocalContext& LocalContext)
 	{

@@ -100,7 +100,6 @@ public:
 	void			FlushTasks(JSContextGroupRef Context);
 
 	void			SetQueueJobFunc(JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
-	void			SetWakeJobQueueFunc(JSGlobalContextRef Context, std::function<void()> WakeJobQueueFunc);
 
 public:
 	//	the runtime can only execute one context at once, AND (on osx at least) the runtime
@@ -109,12 +108,10 @@ public:
 	JSContextRef	mCurrentContext = nullptr;
 	JsRuntimeHandle	mRuntime;
 
-	std::function<void()>	mWakeJobQueue;
 	//	microtasks queued from promises
 	std::mutex			mTasksLock;
 	Array<std::pair<JsValueRef, JSGlobalContextRef>>	mTasks;
 
-	std::map<JSGlobalContextRef, std::function<void()>>	mWakeJobQueueFuncs;
 	std::map<JSGlobalContextRef, std::function<void(std::function<void(JSContextRef)>)>>	mQueueJobFuncs;
 };
 

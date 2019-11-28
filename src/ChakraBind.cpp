@@ -1028,19 +1028,9 @@ void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalCont
 	Vm->SetQueueJobFunc(Context, QueueJobFunc);
 }
 
-void JSGlobalContextSetWakeJobQueueFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void()> WakeJobQueueFunc)
-{
-	auto* Vm = ContextGroup.mVirtualMachine.get();
-	Vm->SetWakeJobQueueFunc(Context, WakeJobQueueFunc);
-}
-
 
 bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep)
 {
-	/*
-	auto* Vm = ContextGroup.mVirtualMachine.get();
-	Vm->FlushTasks(ContextGroup);
-	*/
 	return true;
 }
 
@@ -1049,38 +1039,6 @@ void Chakra::TVirtualMachine::SetQueueJobFunc(JSGlobalContextRef Context, std::f
 	mQueueJobFuncs[Context] = QueueJobFunc;
 }
 
-void Chakra::TVirtualMachine::SetWakeJobQueueFunc(JSGlobalContextRef Context, std::function<void()> WakeJobQueueFunc)
-{
-	mWakeJobQueueFuncs[Context] = WakeJobQueueFunc;
-}
-
-/*
-void Chakra::TVirtualMachine::FlushTasks(JSContextGroupRef Context)
-{
-	auto PopTask = [&]()
-	{
-		std::lock_guard<std::mutex> Lock(mTasksLock);
-		auto Task = mTasks.PopAt(0);
-		return Task;
-	};
-
-	//	limit per iteration?
-	while (!mTasks.IsEmpty())
-	{
-		auto Task = PopTask();
-		
-		std::function<void(JSContextRef&)> RunTask = [&](JsContextRef& Context)
-		{
-			//auto Object = JSValueToObject(Context, Task, &Exception);
-			std::Debug << "Run task" << std::endl;
-		};
-		
-		//	run
-		//auto GlobalContext = JSContextGetGlobalContext(Context);
-		//Execute(GlobalContext, RunTask);
-	}
-}
-*/
 void Chakra::TVirtualMachine::QueueTask(JsValueRef Task,JSGlobalContextRef Context)
 {
 	JsAddRef(Task, nullptr);
@@ -1092,14 +1050,6 @@ void Chakra::TVirtualMachine::QueueTask(JsValueRef Task,JSGlobalContextRef Conte
 	};
 	auto& QueueFunc = mQueueJobFuncs[Context];
 	QueueFunc(Run);
-
-	/*
-	std::lock_guard<std::mutex> Lock(mTasksLock);
-	auto TaskAndContext = std::make_pair(Task, Context);
-	mTasks.PushBack(TaskAndContext);
-
-	mWakeJobQueue();
-*/
 }
 
 
