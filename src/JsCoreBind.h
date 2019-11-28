@@ -373,7 +373,8 @@ public:
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<float>&& Values) bind_override;
-	virtual void			SetArgumentArray(size_t Index,JsCore::TArray& Value) bind_override;
+	virtual void			SetArgumentArray(size_t Index, ArrayBridge<JsCore::TObject>&& Values) bind_override;
+	virtual void			SetArgumentArray(size_t Index, JsCore::TArray& Value) bind_override;
 
 	virtual bool			GetReturnBool() bind_override			{	return GetBool( GetContextRef(), mReturn );	}
 	virtual TObject			GetReturnObject() bind_override;

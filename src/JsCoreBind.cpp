@@ -1557,9 +1557,14 @@ void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Val
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Values );
 }
 
-void JsCore::TCallback::SetArgumentArray(size_t Index,ArrayBridge<float>&& Values)
+void JsCore::TCallback::SetArgumentArray(size_t Index, ArrayBridge<float>&& Values)
 {
-	JSCore_SetArgument( mArguments, mLocalContext, Index, Values );
+	JSCore_SetArgument(mArguments, mLocalContext, Index, Values);
+}
+
+void JsCore::TCallback::SetArgumentArray(size_t Index, ArrayBridge<JsCore::TObject>&& Values)
+{
+	JSCore_SetArgument(mArguments, mLocalContext, Index, Values);
 }
 
 void JsCore::TCallback::SetArgumentArray(size_t Index,JsCore::TArray& Value)

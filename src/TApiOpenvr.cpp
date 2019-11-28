@@ -21,6 +21,9 @@ namespace ApiOpenvr
 
 	const std::string LeftHandJointPrefix = "Left";
 	const std::string RightHandJointPrefix = "Right";
+
+	const std::string Hmd_OnPoses = "OnPoses";
+	const std::string Hmd_OnRender = "OnRender";
 }
 
 namespace Openvr
@@ -130,10 +133,51 @@ void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
-void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& Poses)
+void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& _Poses)
 {
-	//	call javascript
-	std::Debug << "New poses" << std::endl;
+	Array<vr::TrackedDevicePose_t> Poses(_Poses);
+
+	auto SetPoseObject = [](Bind::TObject& Object, vr::TrackedDevicePose_t& Pose)
+	{
+		//	get name from somewhere
+		Object.SetBool("IsValidPose", Pose.bPoseIsValid);
+		Object.SetBool("IsConnected", Pose.bDeviceIsConnected);
+		//HmdMatrix34_t mDeviceToAbsoluteTracking;
+		//HmdVector3_t vVelocity;				// velocity in tracker space in m/s
+		//HmdVector3_t vAngularVelocity;		// angular velocity in radians/s (?)
+		//ETrackingResult eTrackingResult;
+	};
+
+
+	auto Runner = [=](Bind::TLocalContext& Context)
+	{
+		try
+		{
+			BufferArray<Bind::TObject, 64>	PoseObjects;
+			auto EnumPoseObject = [&](vr::TrackedDevicePose_t& Pose)
+			{
+				auto PoseObject = Context.mGlobalContext.CreateObjectInstance(Context);
+				SetPoseObject(PoseObject, Pose);
+				PoseObjects.PushBack(PoseObject);
+				return true;
+			};
+			GetArrayBridge(Poses).ForEach(EnumPoseObject);
+						
+			auto This = this->GetHandle(Context);
+			auto ThisOnRender = This.GetFunction(Hmd_OnPoses);
+			Bind::TCallback Params(Context);
+			Params.SetThis(This);
+			Params.SetArgumentArray(0, GetArrayBridge(PoseObjects) );
+			ThisOnRender.Call(Params);
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Exception in " << Hmd_OnPoses << ": " << e.what() << std::endl;
+		}
+	};
+	//	gr: because this is queued, I guess there's 
+	//		a chance rendering can happen earlier
+	GetContext().Queue(Runner);
 }
 
 
