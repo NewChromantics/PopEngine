@@ -70,7 +70,7 @@ protected:
 
 
 
-class THttpServerWrapper: public Bind::TObjectWrapper<ApiHttp::BindType::HttpServer,THttpServer>, public TSocketWrapper
+class THttpServerWrapper: public Bind::TObjectWrapper<ApiHttp::BindType::HttpServer,THttpServer>, public ApiSocket::TSocketWrapper
 {
 public:
 	THttpServerWrapper(Bind::TContext& Context) :

@@ -5,15 +5,96 @@
 
 namespace ApiSocket
 {
+	const char Namespace[] = "Pop.Socket";
+
 	DEFINE_BIND_TYPENAME(UdpBroadcastServer);
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
+	DEFINE_BIND_FUNCTIONNAME(WaitForMessage);
 }
 
 void ApiSocket::Bind(Bind::TContext& Context)
 {
-	Context.BindObjectType<TUdpBroadcastServerWrapper>();
+	Context.CreateGlobalObjectInstance("", Namespace);
+	Context.BindObjectType<TUdpBroadcastServerWrapper>(Namespace);
+}
+
+
+void ApiSocket::TSocketWrapper::WaitForMessage(Bind::TCallback& Params)
+{
+	auto NewPromise = mOnMessagePromises.AddPromise(Params.mLocalContext);
+	Params.Return(NewPromise);
+
+	FlushPendingMessages();
+}
+
+
+void ApiSocket::TSocketWrapper::OnMessage(const Array<uint8_t>& Message, SoyRef Sender)
+{
+	auto Packet = std::make_shared<TBinaryPacket>();
+	Packet->mData = Message;
+	Packet->mPeer = Sender;
+
+	{
+		std::lock_guard<std::mutex> Lock(mMessagesLock);
+		mMessages.PushBack(Packet);
+	}
+	FlushPendingMessages();
+}
+
+
+void ApiSocket::TSocketWrapper::OnMessage(const std::string& Message, SoyRef Sender)
+{
+	auto Packet = std::make_shared<TStringPacket>();
+	Packet->mData = Message;
+	Packet->mPeer = Sender;
+
+	{
+		std::lock_guard<std::mutex> Lock(mMessagesLock);
+		mMessages.PushBack(Packet);
+	}
+	FlushPendingMessages();
+}
+
+
+void ApiSocket::TSocketWrapper::FlushPendingMessages()
+{
+	//	either no data, or no-one waiting yet
+	if (!mOnMessagePromises.HasPromises())
+		return;
+	if (mMessages.IsEmpty() )
+		return;
+
+
+	auto Flush = [this](Bind::TLocalContext& Context)
+	{
+		auto PopMessageObject = [this](Bind::TLocalContext& Context)
+		{
+			mMessagesLock.lock();
+			auto pMessage = mMessages.PopAt(0);
+			mMessagesLock.unlock();
+
+			auto& Message = *pMessage;
+			auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
+			if (Message.IsBinary())
+				Object.SetArray("Data", GetArrayBridge(Message.GetBinary()));
+			else
+				Object.SetString("Data", Message.GetString());
+			Object.SetString("Peer", Message.mPeer.ToString());
+			return Object;
+		};
+
+		auto MessageObject = PopMessageObject(Context);
+
+		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
+		{
+			Promise.Resolve(LocalContext, MessageObject);
+		};
+		mOnMessagePromises.Flush(HandlePromise);
+	};
+	auto& Context = mOnMessagePromises.GetContext();
+	Context.Queue(Flush);
 }
 
 
@@ -35,42 +116,17 @@ void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 
 void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiSocket::BindFunction::GetAddress>( GetAddress );
-	Template.BindFunction<ApiSocket::BindFunction::Send>( Send );
-	Template.BindFunction<ApiSocket::BindFunction::GetPeers>( GetPeers );
+	Template.BindFunction<ApiSocket::BindFunction::GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
+	Template.BindFunction<ApiSocket::BindFunction::Send>(&ApiSocket::TSocketWrapper::Send );
+	Template.BindFunction<ApiSocket::BindFunction::GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiSocket::BindFunction::WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 }
 
 
 
 
-void TUdpBroadcastServerWrapper::OnMessage(const Array<uint8_t>& Message,SoyRef Sender)
-{
-	//Array<uint8_t> MessageCopy;
-	
-	auto SendJsMessage = [=](Bind::TLocalContext& Context)
-	{
-		auto This = GetHandle(Context);
-		auto Func = This.GetFunction("OnMessage");
 
-		Bind::TCallback CallbackParams( Context );
-		CallbackParams.SetThis( This );
-		CallbackParams.SetArgumentArray( 0, GetArrayBridge(Message) );
-		CallbackParams.SetArgumentString( 1, Sender.ToString() );
-		try
-		{
-			Func.Call( CallbackParams );
-		}
-		catch(std::exception& e)
-		{
-			std::Debug << __func__ << " callback exception: " << e.what() << std::endl;
-		}
-	};
-	
-	GetContext().Queue( SendJsMessage );
-}
-
-
-void TSocketWrapper::GetAddress(Bind::TCallback& Params)
+void ApiSocket::TSocketWrapper::GetAddress(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TSocketWrapper>();
 	auto ThisSocket = This.GetSocket();
@@ -95,10 +151,9 @@ void TSocketWrapper::GetAddress(Bind::TCallback& Params)
 }
 
 
-void TSocketWrapper::Send(Bind::TCallback& Params)
+void ApiSocket::TSocketWrapper::Send(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TSocketWrapper>();
-	auto ThisSocket = This.GetSocket();
+	auto ThisSocket = GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
 
@@ -131,10 +186,9 @@ void TSocketWrapper::Send(Bind::TCallback& Params)
 }
 
 
-void TSocketWrapper::GetPeers(Bind::TCallback& Params)
+void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TSocketWrapper>();
-	auto ThisSocket = This.GetSocket();
+	auto ThisSocket = GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
 
