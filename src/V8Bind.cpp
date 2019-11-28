@@ -1179,6 +1179,14 @@ void JSValueUnprotect(JSGlobalContextRef Context,JSValueRef Value)
 	//	mght need an explicit TPersistent to store an object and not just inc/dec a ref count
 }
 
+
+bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep)
+{
+	auto& vm = mContextGroup.GetVirtualMachine();
+	return vm.ProcessJobQueue(Sleep);
+}
+
+
 V8::TVirtualMachine& JSGlobalContextRef::GetVirtualMachine()
 {
 	return mParent.GetVirtualMachine();

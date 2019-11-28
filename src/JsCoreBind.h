@@ -154,6 +154,8 @@ void* JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object);
 //	new API. for V8 where we're mirroring data, we need to update the real data;
 //	gr: we might have actually removed that
 void JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Object);
+void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
+void JSGlobalContextSetWakeJobQueueFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void()> WakeJobQueueFunc);
 
 
 //	preparing for virtuals, anything with this, we expect to overide at some point

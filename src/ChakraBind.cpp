@@ -731,6 +731,18 @@ JSValueRef JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObje
 	return Result;
 }
 
+
+JSValueRef JSObjectCallAsFunction(JSContextRef Context, JSValueRef FunctorValue)
+{
+	auto FunctorObject = JSValueToObject(Context, FunctorValue, nullptr);
+	
+	JSObjectRef This = nullptr;
+	size_t ArgumentCount = 0;
+	JSValueRef* Arguments = nullptr;
+	JSValueRef* Exception = nullptr;
+	return JSObjectCallAsFunction(Context, FunctorObject, This, ArgumentCount, Arguments, Exception);
+}
+
 JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	JSValueRef Function = nullptr;
@@ -1010,6 +1022,87 @@ void JSContextGroupRelease(JSContextGroupRef ContextGroup)
 	//	try and release all members here and maybe check for dangling refcounts
 }
 
+void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc)
+{
+	auto* Vm = ContextGroup.mVirtualMachine.get();
+	Vm->SetQueueJobFunc(Context, QueueJobFunc);
+}
+
+void JSGlobalContextSetWakeJobQueueFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void()> WakeJobQueueFunc)
+{
+	auto* Vm = ContextGroup.mVirtualMachine.get();
+	Vm->SetWakeJobQueueFunc(Context, WakeJobQueueFunc);
+}
+
+
+bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep)
+{
+	/*
+	auto* Vm = ContextGroup.mVirtualMachine.get();
+	Vm->FlushTasks(ContextGroup);
+	*/
+	return true;
+}
+
+void Chakra::TVirtualMachine::SetQueueJobFunc(JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc)
+{
+	mQueueJobFuncs[Context] = QueueJobFunc;
+}
+
+void Chakra::TVirtualMachine::SetWakeJobQueueFunc(JSGlobalContextRef Context, std::function<void()> WakeJobQueueFunc)
+{
+	mWakeJobQueueFuncs[Context] = WakeJobQueueFunc;
+}
+
+/*
+void Chakra::TVirtualMachine::FlushTasks(JSContextGroupRef Context)
+{
+	auto PopTask = [&]()
+	{
+		std::lock_guard<std::mutex> Lock(mTasksLock);
+		auto Task = mTasks.PopAt(0);
+		return Task;
+	};
+
+	//	limit per iteration?
+	while (!mTasks.IsEmpty())
+	{
+		auto Task = PopTask();
+		
+		std::function<void(JSContextRef&)> RunTask = [&](JsContextRef& Context)
+		{
+			//auto Object = JSValueToObject(Context, Task, &Exception);
+			std::Debug << "Run task" << std::endl;
+		};
+		
+		//	run
+		//auto GlobalContext = JSContextGetGlobalContext(Context);
+		//Execute(GlobalContext, RunTask);
+	}
+}
+*/
+void Chakra::TVirtualMachine::QueueTask(JsValueRef Task,JSGlobalContextRef Context)
+{
+	JsAddRef(Task, nullptr);
+	auto Run = [=](JsContextRef Context)
+	{
+		auto Result = JSObjectCallAsFunction(Context, Task);
+		//	nothing to do with result
+		JsRelease(Task,nullptr);
+	};
+	auto& QueueFunc = mQueueJobFuncs[Context];
+	QueueFunc(Run);
+
+	/*
+	std::lock_guard<std::mutex> Lock(mTasksLock);
+	auto TaskAndContext = std::make_pair(Task, Context);
+	mTasks.PushBack(TaskAndContext);
+
+	mWakeJobQueue();
+*/
+}
+
+
 JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,JSClassRef GlobalClass)
 {
 	if ( GlobalClass )
@@ -1020,22 +1113,33 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 	Chakra::IsOkay( Error, "JsCreateContext" );
 	
 	Chakra::SetVirtualMachine( NewContext, ContextGroup );
-	
+	auto* Vm = ContextGroup.mVirtualMachine.get();
+
 	auto SetupPromiseCallback = [&](JSContextRef Context)
 	{
 		//	promise callback handling
 		JsPromiseContinuationCallback PromiseCallback = [](JsValueRef Task,void* UserData)
 		{
-			auto ContextRef = reinterpret_cast<JsContextRef>( UserData );
-			std::Debug << "todo: JsPromiseContinuationCallback" << std::endl;
+			auto ContextRef = reinterpret_cast<JSGlobalContextRef>(UserData);
+			auto& Vm = Chakra::GetVirtualMachine(ContextRef);
+			std::Debug << "JsPromiseContinuationCallback" << std::endl;
+			Vm.QueueTask(Task, ContextRef);
 		};
-		Error = JsSetPromiseContinuationCallback( PromiseCallback, NewContext );
+		auto GlobalContext = JSContextGetGlobalContext(Context);
+		Error = JsSetPromiseContinuationCallback( PromiseCallback, GlobalContext);
 		Chakra::IsOkay( Error, "JsSetPromiseContinuationCallback" );
 	};
 	
+	auto SetupDebugging = [&](JSContextRef Context)
+	{
+		auto Error = JsStartDebugging();
+		Chakra::IsOkay(Error, "JsStartDebugging");
+	};
+
 	//	needs to be setup in-context
-	JSLockAndRun( NewContext, SetupPromiseCallback );
-	
+	JSLockAndRun(NewContext, SetupPromiseCallback);
+	//JSLockAndRun(NewContext, SetupDebugging);
+
 	return NewContext;
 }
 

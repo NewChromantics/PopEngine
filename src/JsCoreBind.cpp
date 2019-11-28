@@ -26,10 +26,12 @@
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
+bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep);
+void JSGlobalContextSetQueueJobFunc(std::function<void(std::function<void(JSContextRef)>)>);
 
 #if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs to setup the runtime files
-JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
+JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory, std::function<void()> WakeJobQueueFunc))
 {
 	return JSContextGroupCreate();
 }
@@ -485,7 +487,6 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 		if ( &JSContextGroupCreate == nullptr )
 			throw Soy::AssertException("If this function pointer is null, we may have manually loaded symbols, but they've been stripped. Turn OFF whole program optimisation!");
 #endif
-
 		mContextGroup = JSContextGroupCreateWithRuntime( RuntimePath );
 		if ( !mContextGroup )
 			throw Soy::AssertException("JSContextGroupCreate failed");
@@ -591,17 +592,21 @@ JsCore::TInstance::~TInstance()
 	
 }
 
+#if defined(JSAPI_JSCORE)
+bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep)
+{
+	return true;
+}
+#endif
+
+
+
 bool JsCore::TInstance::OnJobQueueIteration(std::function<void (std::chrono::milliseconds)> &Sleep)
 {
 	if ( !mContextGroup )
 		return true;
 	
-#if defined(JSAPI_V8)
-	auto& vm = mContextGroup.GetVirtualMachine();
-	return vm.ProcessJobQueue( Sleep );
-#else
-	return true;
-#endif
+	return JSContextGroupRunVirtualMachineTasks(mContextGroup,Sleep);
 }
 
 std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Name)
@@ -617,6 +622,21 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 
 	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
 	mContexts.PushBack( pContext );
+
+	auto QueueJobFunc = [pContext](std::function<void(JSContextRef)> Job)
+	{
+		auto CallJob = [=](Bind::TLocalContext& LocalContext)
+		{
+			Job(LocalContext.mLocalContext);
+		};
+		pContext->Queue(CallJob);
+	};
+	auto WakeJobQueueFunc = [pContext]()
+	{
+		pContext->mJobQueue.Wake();
+	};
+	JSGlobalContextSetQueueJobFunc(mContextGroup, Context, QueueJobFunc);
+	JSGlobalContextSetWakeJobQueueFunc(mContextGroup, Context, WakeJobQueueFunc);
 
 	//	set pointer
 	auto SetContext = [&](Bind::TLocalContext& LocalContext)
