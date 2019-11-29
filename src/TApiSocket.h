@@ -64,7 +64,7 @@ public:
 class ApiSocket::TStringPacket : public TPacket
 {
 public:
-	virtual bool			IsBinary() override { return true; }
+	virtual bool			IsBinary() override { return false; }
 	virtual std::string&	GetString() override { return mData; }
 
 	std::string		mData;
