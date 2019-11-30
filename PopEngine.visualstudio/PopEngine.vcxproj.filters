@@ -680,9 +680,6 @@
     <None Include="..\UnitTest\Pop.d.ts">
       <Filter>UnitTest</Filter>
     </None>
-    <None Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll">
-      <Filter>Libs\ViveHandTracking</Filter>
-    </None>
     <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl">
       <Filter>UnitTest\LeapMotion</Filter>
     </None>
@@ -1028,6 +1025,7 @@
       <Filter>Libs\Opencv</Filter>
     </CustomBuild>
     <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll" />
+    <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">

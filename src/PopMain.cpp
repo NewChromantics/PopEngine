@@ -26,6 +26,21 @@
 namespace Pop
 {
 	std::string ProjectPath;
+
+#if defined(TARGET_WINDOWS)
+	void				PushAppArguments(std::string CommandLineArgs);
+	Array<std::string>	AppArguments;
+#endif
+}
+
+
+void Pop::PushAppArguments(std::string CommandLineArgs)
+{
+	if (CommandLineArgs.length() == 0)
+		return;
+
+	//	todo: split at space, if not in quotes
+	AppArguments.PushBack(CommandLineArgs);
 }
 
 
@@ -76,8 +91,14 @@ namespace Platform
 int PopEngine(const char* ProjectPath)
 {
 	Pop::ProjectPath = ProjectPath;
+
+#if defined(TARGET_OSX)|| defined(TARGET_IOS)
 	return Soy::Platform::BundleAppMain();
+#else
+	return PopMain(GetArrayBridge(Pop::AppArguments));
+#endif
 }
+
 
 
 extern "C" int main(int argc,const char* argv[])
@@ -97,6 +118,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	char ExePath[MAX_PATH];
 	GetModuleFileName(NULL, ExePath, MAX_PATH);
 	Platform::SetDllPath(ExePath);
+
+	Pop::PushAppArguments(lpCmdLine);
 
 	Platform::Private::InstanceHandle = hInstance;
 	const char* argv[2] = { ExePath, lpCmdLine };

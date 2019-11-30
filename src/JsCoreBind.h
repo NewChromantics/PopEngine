@@ -154,6 +154,7 @@ void* JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object);
 //	new API. for V8 where we're mirroring data, we need to update the real data;
 //	gr: we might have actually removed that
 void JSObjectTypedArrayDirty(JSContextRef Context,JSObjectRef Object);
+void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
 
 
 //	preparing for virtuals, anything with this, we expect to overide at some point
@@ -373,7 +374,8 @@ public:
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<std::string>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Values) bind_override;
 	virtual void			SetArgumentArray(size_t Index,ArrayBridge<float>&& Values) bind_override;
-	virtual void			SetArgumentArray(size_t Index,JsCore::TArray& Value) bind_override;
+	virtual void			SetArgumentArray(size_t Index, ArrayBridge<JsCore::TObject>&& Values) bind_override;
+	virtual void			SetArgumentArray(size_t Index, JsCore::TArray& Value) bind_override;
 
 	virtual bool			GetReturnBool() bind_override			{	return GetBool( GetContextRef(), mReturn );	}
 	virtual TObject			GetReturnObject() bind_override;

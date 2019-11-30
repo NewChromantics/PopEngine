@@ -96,11 +96,23 @@ public:
 	//	lock & run & unlock
 	void			Execute(JSGlobalContextRef Context,std::function<void(JSContextRef&)>& Execute);
 	
+	void			QueueTask(JsValueRef Task, JSGlobalContextRef Context);
+	void			FlushTasks(JSContextGroupRef Context);
+
+	void			SetQueueJobFunc(JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
+
+public:
 	//	the runtime can only execute one context at once, AND (on osx at least) the runtime
 	//	falls over if you try and set the same context twice
 	std::mutex		mCurrentContextLock;
 	JSContextRef	mCurrentContext = nullptr;
 	JsRuntimeHandle	mRuntime;
+
+	//	microtasks queued from promises
+	std::mutex			mTasksLock;
+	Array<std::pair<JsValueRef, JSGlobalContextRef>>	mTasks;
+
+	std::map<JSGlobalContextRef, std::function<void(std::function<void(JSContextRef)>)>>	mQueueJobFuncs;
 };
 
 //	this is the virtual machine
@@ -258,7 +270,8 @@ double		JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Except
 JSValueRef	JSValueMakeNumber(JSContextRef Context,double Value);
 
 bool		JSObjectIsFunction(JSContextRef Context,JSObjectRef Value);
-JSValueRef	JSObjectCallAsFunction(JSContextRef Context,JSObjectRef Object,JSObjectRef This,size_t ArgumentCount,JSValueRef* Arguments,JSValueRef* Exception);
+JSValueRef	JSObjectCallAsFunction(JSContextRef Context, JSValueRef Functor);
+JSValueRef	JSObjectCallAsFunction(JSContextRef Context, JSObjectRef Object, JSObjectRef This, size_t ArgumentCount, JSValueRef* Arguments, JSValueRef* Exception);
 JSValueRef	JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Name,JSObjectCallAsFunctionCallback FunctionPtr);
 
 bool		JSValueToBoolean(JSContextRef Context,JSValueRef Value);

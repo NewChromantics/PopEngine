@@ -86,7 +86,7 @@ protected:
 
 
 	
-class TWebsocketServerWrapper : public Bind::TObjectWrapper<ApiWebsocket::BindType::WebsocketServer,TWebsocketServer>, public TSocketWrapper
+class TWebsocketServerWrapper : public Bind::TObjectWrapper<ApiWebsocket::BindType::WebsocketServer,TWebsocketServer>, public ApiSocket::TSocketWrapper
 {
 public:
 	TWebsocketServerWrapper(Bind::TContext& Context) :
@@ -98,10 +98,6 @@ public:
 
 	virtual void			Construct(Bind::TCallback& Params) override;
 	static void				Send(Bind::TCallback& Params);
-
-	//	queue up a callback for This handle's OnMessage callback
-	void					OnMessage(SoyRef Peer,const std::string& Message);
-	void					OnMessage(SoyRef Peer,const Array<uint8_t>& Message);
 	
 	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
 

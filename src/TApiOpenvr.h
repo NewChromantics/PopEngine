@@ -1,11 +1,20 @@
 #pragma once
 #include "TBind.h"
+#include "Libs/OpenVr/headers/openvr.h"
 
+
+namespace Opengl
+{
+	class TContext;
+	class TTexture;
+}
 
 namespace Openvr
 {
 	class THmd;
 	class THmdFrame;
+
+	typedef std::function<void(Opengl::TContext&,Opengl::TTexture&,Opengl::TTexture)>	TFinishedEyesFunction;
 }
 
 namespace Vive
@@ -35,7 +44,8 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
-	void			OnRender(Openvr::THmdFrame& Left,Openvr::THmdFrame& Right);
+	void			OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& Poses);
+	void			OnRender(Openvr::TFinishedEyesFunction& SubmitEyeTextures);
 	
 	void			SubmitEyeTexture(Bind::TCallback& Params);
 	void			GetEyeMatrix(Bind::TCallback& Params);
@@ -48,6 +58,7 @@ public:
 
 public:
 	std::shared_ptr<Openvr::THmd>&	mHmd = mObject;
+	Bind::TPersistent	mRenderContext;
 };
 
 
