@@ -270,6 +270,9 @@ void Openvr::IsOkay(vr::EVRCompositorError Error,const std::string& Context)
 Openvr::THmd::THmd(bool OverlayApp) :
 	SoyThread	( "Openvr::THmd" )
 {
+#if defined(TARGET_OSX)
+	throw Soy::AssertException("No openvr on osx... can't get library to sign atm");
+#endif
 	vr::EVRInitError Error = vr::VRInitError_None;
 	auto AppType = OverlayApp ? vr::VRApplication_Overlay : vr::VRApplication_Scene;
 	mHmd = vr::VR_Init( &Error, AppType );
