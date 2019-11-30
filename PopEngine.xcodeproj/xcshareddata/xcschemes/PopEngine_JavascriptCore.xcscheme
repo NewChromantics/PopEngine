@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopEngineMac.app"
-            BlueprintName = "PopEngineMac"
+            BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
+            BuildableName = "PopEngineUnitTestApp.app"
+            BlueprintName = "PopEngineUnitTestApp"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -60,13 +60,17 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopEngineMac.app"
-            BlueprintName = "PopEngineMac"
+            BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
+            BuildableName = "PopEngineUnitTestApp.app"
+            BlueprintName = "PopEngineUnitTestApp"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Volumes/Code/PopObserverMonitor/"
+            isEnabled = "YES">
+         </CommandLineArgument>
          <CommandLineArgument
             argument = "/Volumes/Code/PopCave/PopCave"
             isEnabled = "YES">
