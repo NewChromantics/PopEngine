@@ -72,17 +72,18 @@ public:
 
 class ApiSocket::TSocketWrapper
 {
-protected:
+	//	can't be protected when getting member pointers with clang
+public:
 	void		GetAddress(Bind::TCallback& Arguments);
 	void		Send(Bind::TCallback& Arguments);
 	void		GetPeers(Bind::TCallback& Arguments);
 
-	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
-	
-
 	//	get a promise for next message
 	void		WaitForMessage(Bind::TCallback& Params);
-
+	
+protected:
+	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
+	
 	//	queue up a callback for This handle's OnMessage callback
 	void		OnMessage(const Array<uint8_t>& Message, SoyRef Peer);
 	void		OnMessage(const std::string& Message, SoyRef Peer);

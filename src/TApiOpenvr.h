@@ -14,7 +14,7 @@ namespace Openvr
 	class THmd;
 	class THmdFrame;
 
-	typedef std::function<void(Opengl::TContext&,Opengl::TTexture&,Opengl::TTexture)>	TFinishedEyesFunction;
+	typedef std::function<void(Opengl::TContext&,Opengl::TTexture&,Opengl::TTexture&)>	TFinishedEyesFunction;
 }
 
 namespace Vive

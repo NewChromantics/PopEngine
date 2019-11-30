@@ -34,6 +34,8 @@ namespace Pop
 }
 
 
+
+#if defined(TARGET_WINDOWS)
 void Pop::PushAppArguments(std::string CommandLineArgs)
 {
 	if (CommandLineArgs.length() == 0)
@@ -42,7 +44,7 @@ void Pop::PushAppArguments(std::string CommandLineArgs)
 	//	todo: split at space, if not in quotes
 	AppArguments.PushBack(CommandLineArgs);
 }
-
+#endif
 
 //	include SoyEvent unit test
 //	gr: need to improve this

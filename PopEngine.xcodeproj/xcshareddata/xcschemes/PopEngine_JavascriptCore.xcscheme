@@ -68,6 +68,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "/Volumes/Code/PopExposeXr"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "/Volumes/Code/PopObserverMonitor/"
             isEnabled = "YES">
          </CommandLineArgument>

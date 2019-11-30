@@ -27,13 +27,20 @@
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
 bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep);
-void JSGlobalContextSetQueueJobFunc(std::function<void(std::function<void(JSContextRef)>)>);
+void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
 
 #if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs to setup the runtime files
-JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory, std::function<void()> WakeJobQueueFunc))
+JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string& RuntimeDirectory)
 {
 	return JSContextGroupCreate();
+}
+#endif
+
+#if defined(JSAPI_JSCORE)
+void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc)
+{
+	
 }
 #endif
 
