@@ -49,6 +49,16 @@ void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
+void TWebsocketServerWrapper::GetConnectedPeers(ArrayBridge<SoyRef>&& Peers)
+{
+	if ( !mSocket )
+		return;
+	
+	//	get clients who have finished handshaking
+	mSocket->GetConnectedClients( Peers );
+}
+
+
 void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWebsocketServerWrapper>();
@@ -127,6 +137,18 @@ bool TWebsocketServer::Iteration()
 	return true;
 }
 
+void TWebsocketServer::GetConnectedClients(ArrayBridge<SoyRef>& Clients)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
+	for ( int c=0;	c<mClients.GetSize();	c++ )
+	{
+		auto& Client = *mClients[c];
+		if ( !Client.mHandshake.IsCompleted() )
+			continue;
+		
+		Clients.PushBack( Client.mConnectionRef );
+	}
+}
 
 std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetClient(SoyRef ClientRef)
 {

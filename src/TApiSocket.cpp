@@ -196,6 +196,16 @@ void ApiSocket::TSocketWrapper::Send(Bind::TCallback& Params)
 	}
 }
 
+void ApiSocket::TSocketWrapper::GetConnectedPeers(ArrayBridge<SoyRef>&& Peers)
+{
+	auto pSocket = this->GetSocket();
+	auto& Socket = *pSocket;
+	auto EnumPeer = [&](SoyRef ConnectionRef,SoySocketConnection Connection)
+	{
+		Peers.PushBack( ConnectionRef );
+	};
+	Socket.EnumConnections( EnumPeer );
+}
 
 void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 {
@@ -204,13 +214,15 @@ void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 		throw Soy::AssertException("Socket not allocated");
 
 	//	get connection references
+	Array<SoyRef> Peers;
+	GetConnectedPeers( GetArrayBridge(Peers) );
+	
 	Array<std::string> PeerNames;
-	auto& Socket = *ThisSocket;
-	auto EnumPeer = [&](SoyRef ConnectionRef,SoySocketConnection Connection)
+	for ( auto i=0;	i<Peers.GetSize();	i++ )
 	{
-		PeerNames.PushBack( ConnectionRef.ToString() );
-	};
-	Socket.EnumConnections( EnumPeer );
+		auto PeerRef = Peers[i];
+		PeerNames.PushBack( PeerRef.ToString() );
+	}
 	
 	Params.Return( GetArrayBridge(PeerNames) );
 }

@@ -65,6 +65,9 @@ public:
 
 	SoySocket&					GetSocket()		{	return *mSocket;	}
 
+	//	get clients who have finished handshaking
+	void						GetConnectedClients(ArrayBridge<SoyRef>& Clients);
+	
 protected:
 	virtual bool				Iteration() override;
 	
@@ -100,6 +103,7 @@ public:
 	static void				Send(Bind::TCallback& Params);
 	
 	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
+	virtual void			GetConnectedPeers(ArrayBridge<SoyRef>&& Peers) override;
 
 public:
 	std::shared_ptr<TWebsocketServer>	mSocket = mObject;
