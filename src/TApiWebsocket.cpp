@@ -145,6 +145,8 @@ void TWebsocketServer::GetConnectedClients(ArrayBridge<SoyRef>& Clients)
 		auto& Client = *mClients[c];
 		if ( !Client.mHandshake.IsCompleted() )
 			continue;
+		if ( !Client.mHandshake.mHasSentAcceptReply )
+			continue;
 		
 		Clients.PushBack( Client.mConnectionRef );
 	}

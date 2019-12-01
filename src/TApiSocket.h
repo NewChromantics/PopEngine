@@ -75,7 +75,7 @@ class ApiSocket::TSocketWrapper
 	//	can't be protected when getting member pointers with clang
 public:
 	void			GetAddress(Bind::TCallback& Arguments);
-	void			Send(Bind::TCallback& Arguments);
+	virtual void	Send(Bind::TCallback& Arguments);
 	void			GetPeers(Bind::TCallback& Arguments);
 	virtual void	GetConnectedPeers(ArrayBridge<SoyRef>&& Peers);
 

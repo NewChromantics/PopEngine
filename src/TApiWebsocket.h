@@ -100,7 +100,7 @@ public:
 	static void				CreateTemplate(Bind::TTemplate& Template);
 
 	virtual void			Construct(Bind::TCallback& Params) override;
-	static void				Send(Bind::TCallback& Params);
+	virtual void			Send(Bind::TCallback& Params) override;
 	
 	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
 	virtual void			GetConnectedPeers(ArrayBridge<SoyRef>&& Peers) override;
