@@ -61,8 +61,7 @@ void TWebsocketServerWrapper::GetConnectedPeers(ArrayBridge<SoyRef>&& Peers)
 
 void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TWebsocketServerWrapper>();
-	auto ThisSocket = This.mSocket;
+	auto ThisSocket = mSocket;
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
 
@@ -78,7 +77,6 @@ void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 	{
 		Array<uint8_t> Data;
 		Params.GetArgumentArray(1, GetArrayBridge(Data) );
-		//v8::EnumArray<v8::Uint8Array>(DataHandle,GetArrayBridge(Data) );
 		ThisSocket->Send( PeerRef, GetArrayBridge(Data) );
 	}
 }
