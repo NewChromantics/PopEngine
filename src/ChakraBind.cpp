@@ -900,13 +900,55 @@ JSTypedArrayType JSValueGetTypedArrayType(JSContextRef Context,JSObjectRef Value
 	return Meta.BindType;
 }
 
+
+size_t GetElementSize(JSTypedArrayType ArrayType)
+{
+	switch (ArrayType)
+	{
+	case kJSTypedArrayTypeInt8Array:	return sizeof(int8_t);
+	case kJSTypedArrayTypeInt16Array:	return sizeof(int16_t);
+	case kJSTypedArrayTypeInt32Array:	return sizeof(int32_t);
+	case kJSTypedArrayTypeUint8Array:	return sizeof(uint8_t);
+	case kJSTypedArrayTypeUint8ClampedArray:	return sizeof(uint8_t);
+	case kJSTypedArrayTypeUint16Array:	return sizeof(uint16_t);
+	case kJSTypedArrayTypeUint32Array:	return sizeof(uint32_t);
+	case kJSTypedArrayTypeFloat32Array:	return sizeof(float);
+	case kJSTypedArrayTypeFloat64Array:	return sizeof(double);
+	default:break;
+	}
+
+	throw Soy::AssertException("GetElementSize Unhandled type");
+}
+
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context,JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer,size_t ExternalBufferSize,JSValueRef* Exception)
 {
-	THROW_TODO;
+	auto ExternalArray = GetRemoteArray(ExternalBuffer, ExternalBufferSize);
+	JSValueRef ArrayBuffer = nullptr;
+	auto Error = JsCreateArrayBuffer(ExternalBufferSize, &ArrayBuffer);
+	Chakra::IsOkay(Error, "JsCreateArrayBuffer");
+		
+	auto ArrayTypeChakra = static_cast<JsTypedArrayType>(ArrayType);
+	JsValueRef BaseArray = ArrayBuffer;
+	auto ByteOffset = 0;
+	auto ElementSize = GetElementSize(ArrayType);
+	auto ElementCount = ExternalBufferSize / ElementSize;
+	auto Alignment = ExternalBufferSize % ElementSize;
+	if (Alignment != 0)
+		throw Soy::AssertException("Typed array data not aligned to type size");
+	JsValueRef TypedArrayObject = nullptr;
+	Error = JsCreateTypedArray(ArrayTypeChakra, BaseArray, ByteOffset, ElementCount, &TypedArrayObject);
+	Chakra::IsOkay(Error, "JsCreateTypedArray");
+	
+	//	copy data
+	auto Meta = GetTypedArrayBufferMeta(TypedArrayObject);
+	auto TypedArrayArray = GetRemoteArray(Meta.Bytes, Meta.ByteLength);
+	TypedArrayArray.Copy(ExternalArray);
+	return TypedArrayObject;
 }
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesNoCopy(JSContextRef Context, JSTypedArrayType ArrayType, void* ExternalBuffer, size_t ExternalBufferSize, JSTypedArrayBytesDeallocator Dealloc, void* DeallocContext, JSValueRef* Exception)
 {
+	//JsCreateExternalArrayBuffer
 	throw Soy::AssertException("v8 cannot use JSObjectMakeTypedArrayWithBytesNoCopy as we dont do the dealloc");
 }
 

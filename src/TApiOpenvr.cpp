@@ -6,6 +6,7 @@
 #include "SoyViveHandTracker.h"
 #include "MagicEnum/include/magic_enum.hpp"
 
+
 //	on OSX, make sure you link to the bin/osx32/dylib NOT the one in /lib/
 
 namespace ApiOpenvr
@@ -33,6 +34,9 @@ namespace Openvr
 
 	void	IsOkay(vr::EVRInitError Error,const std::string& Context);
 	void	IsOkay(vr::EVRCompositorError Error,const std::string& Context);
+	void	IsOkay(vr::ETrackedPropertyError Error, const std::string& Context);
+
+	class TDeviceState;
 }
 
 namespace ViveHandTracker
@@ -75,7 +79,7 @@ public:
 	void			WaitForFrameStart();
 
 public:
-	std::function<void(ArrayBridge<vr::TrackedDevicePose_t>&&)>	mOnNewPoses;
+	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
 	std::function<void(TFinishedEyesFunction&)>			mOnRender;
 	vr::IVRSystem*	mHmd = nullptr;
 	float			mNearClip = 0.1f;
@@ -111,18 +115,8 @@ void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 	
 	mHmd.reset( new Openvr::THmd(IsOverlay) );
 
-	auto OnNewPoses = [this](ArrayBridge<vr::TrackedDevicePose_t>&& Poses)
-	{
-		this->OnNewPoses(Poses);
-	};
-
-	//	get an opengl job, call the js render with last poses, send textures back to openvr
-	auto OnRender = [this](Openvr::TFinishedEyesFunction& RenderEyes)
-	{
-		this->OnRender(RenderEyes);
-	};
-	mHmd->mOnNewPoses = OnNewPoses;
-	mHmd->mOnRender = OnRender;
+	mHmd->mOnNewPoses = std::bind(&THmdWrapper::OnNewPoses, this, std::placeholders::_1);
+	mHmd->mOnRender = std::bind(&THmdWrapper::OnRender, this, std::placeholders::_1);
 }
 
 
@@ -133,19 +127,33 @@ void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
-void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& _Poses)
+void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& _Poses)
 {
-	Array<vr::TrackedDevicePose_t> Poses(_Poses);
+	Array<Openvr::TDeviceState> Poses(_Poses);
 
-	auto SetPoseObject = [](Bind::TObject& Object, vr::TrackedDevicePose_t& Pose)
+
+	auto SetPoseObject = [](Bind::TObject& Object,Openvr::TDeviceState& Pose)
 	{
 		//	get name from somewhere
-		Object.SetBool("IsValidPose", Pose.bPoseIsValid);
-		Object.SetBool("IsConnected", Pose.bDeviceIsConnected);
-		//HmdMatrix34_t mDeviceToAbsoluteTracking;
-		//HmdVector3_t vVelocity;				// velocity in tracker space in m/s
-		//HmdVector3_t vAngularVelocity;		// angular velocity in radians/s (?)
-		//ETrackingResult eTrackingResult;
+		Object.SetBool("IsValidPose", Pose.mPose.bPoseIsValid);
+		Object.SetBool("IsConnected", Pose.mPose.bDeviceIsConnected);
+
+		auto DeviceToAbsoluteTracking = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
+		Object.SetArray("DeviceToAbsoluteTracking", GetArrayBridge(DeviceToAbsoluteTracking) );
+
+		auto Velocity = GetRemoteArray(Pose.mPose.vVelocity.v);
+		Object.SetArray("Velocity", GetArrayBridge(Velocity) );
+
+		auto AngularVelocity = GetRemoteArray(Pose.mPose.vAngularVelocity.v);
+		Object.SetArray("AngularVelocity", GetArrayBridge(AngularVelocity) );
+
+		auto TrackingState = std::string(magic_enum::enum_name<vr::ETrackingResult>(Pose.mPose.eTrackingResult));
+		Object.SetString("TrackingState", TrackingState);
+
+		Object.SetString("Class", Pose.mClassName);
+		Object.SetString("Name", Pose.mTrackedName);
+		Object.SetInt("DeviceIndex", Pose.mDeviceIndex);
+		
 	};
 
 
@@ -154,7 +162,7 @@ void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& _P
 		try
 		{
 			BufferArray<Bind::TObject, 64>	PoseObjects;
-			auto EnumPoseObject = [&](vr::TrackedDevicePose_t& Pose)
+			auto EnumPoseObject = [&](Openvr::TDeviceState& Pose)
 			{
 				auto PoseObject = Context.mGlobalContext.CreateObjectInstance(Context);
 				SetPoseObject(PoseObject, Pose);
@@ -184,7 +192,7 @@ void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& _P
 void ApiOpenvr::THmdWrapper::OnRender(Openvr::TFinishedEyesFunction& SubmitEyeTextures)
 {
 	//	get an opengl callback, call javascript, submit resulting textures
-	std::Debug << "Render to opengl" << std::endl;
+	//std::Debug << "Render to opengl" << std::endl;
 }
 
 void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
@@ -244,6 +252,17 @@ std::ostream& operator<<(std::ostream &out,const vr::EVRCompositorError& in)
 			break;
 	}
 	return out;
+}
+
+
+void Openvr::IsOkay(vr::ETrackedPropertyError Error, const std::string& Context)
+{
+	if (Error == vr::TrackedProp_Success)
+		return;
+
+	std::stringstream Exception;
+	Exception << Context << " " << magic_enum::enum_name<vr::ETrackedPropertyError>(Error);
+	throw Soy::AssertException(Exception);
 }
 
 void Openvr::IsOkay(vr::EVRInitError Error,const std::string& Context)
@@ -370,6 +389,11 @@ TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
 
 void Openvr::THmd::WaitForFrameStart()
 {
+	//	we're currently flooding JS, too many jobs queued up
+	//	so, change this to a promise system instead of queuing callbacks
+	//	temp fix;
+	std::this_thread::sleep_for(std::chrono::milliseconds(80));
+
 	auto& Compositor = *vr::VRCompositor();
 	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
 
@@ -380,8 +404,39 @@ void Openvr::THmd::WaitForFrameStart()
 	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses,std::size(TrackedDevicePoses), GamePoseArray, GamePoseArraySize);
 	Openvr::IsOkay(Error, "WaitGetPoses");
 
-	auto TrackedDevicePosesArray = GetRemoteArray(TrackedDevicePoses);
-	mOnNewPoses(GetArrayBridge(TrackedDevicePosesArray));
+	auto& System = *mHmd;
+
+	auto GetString = [&](uint32_t DeviceIndex, vr::ETrackedDeviceProperty Property)
+	{
+		char Buffer[256] = { 0 };
+		vr::ETrackedPropertyError Error = vr::TrackedProp_Success;
+		try
+		{
+			auto StringLength = System.GetStringTrackedDeviceProperty(DeviceIndex, Property, Buffer, std::size(Buffer), &Error);
+			Openvr::IsOkay(Error, "GetStringTrackedDeviceProperty");
+			return std::string(Buffer, StringLength);
+		}
+		catch (std::exception& e)
+		{
+			return std::string(e.what());
+		}
+	};
+
+	BufferArray<Openvr::TDeviceState, vr::k_unMaxTrackedDeviceCount> Devices;
+	for (auto i = 0; i < Devices.MaxSize(); i++)
+	{
+		auto& Device = Devices.PushBack();
+		Device.mDeviceIndex = i;
+		Device.mPose = TrackedDevicePoses[i];
+		
+		//	is there a better unique identifier so we can cache this?
+		auto Type = System.GetTrackedDeviceClass(Device.mDeviceIndex);
+		Device.mClassName = magic_enum::enum_name<vr::ETrackedDeviceClass>(Type);
+		
+		Device.mTrackedName = GetString(Device.mDeviceIndex, vr::Prop_TrackingSystemName_String);
+	}
+
+	mOnNewPoses(GetArrayBridge(Devices));
 }
 
 void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)

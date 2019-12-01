@@ -13,6 +13,7 @@ namespace Openvr
 {
 	class THmd;
 	class THmdFrame;
+	class TDeviceState;
 
 	typedef std::function<void(Opengl::TContext&,Opengl::TTexture&,Opengl::TTexture&)>	TFinishedEyesFunction;
 }
@@ -33,6 +34,16 @@ namespace ApiOpenvr
 }
 
 
+class Openvr::TDeviceState
+{
+public:
+	uint32_t				mDeviceIndex = 0;
+	vr::TrackedDevicePose_t	mPose;
+	std::string				mTrackedName;
+	std::string				mClassName;
+};
+
+
 class ApiOpenvr::THmdWrapper : public Bind::TObjectWrapper<ApiOpenvr::BindType::Hmd,Openvr::THmd>
 {
 public:
@@ -44,7 +55,7 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
-	void			OnNewPoses(ArrayBridge<vr::TrackedDevicePose_t>& Poses);
+	void			OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses);
 	void			OnRender(Openvr::TFinishedEyesFunction& SubmitEyeTextures);
 	
 	void			SubmitEyeTexture(Bind::TCallback& Params);
