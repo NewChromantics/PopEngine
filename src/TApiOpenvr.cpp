@@ -389,6 +389,11 @@ TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
 
 void Openvr::THmd::WaitForFrameStart()
 {
+	//	we're currently flooding JS, too many jobs queued up
+	//	so, change this to a promise system instead of queuing callbacks
+	//	temp fix;
+	std::this_thread::sleep_for(std::chrono::milliseconds(80));
+
 	auto& Compositor = *vr::VRCompositor();
 	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
 
