@@ -151,7 +151,6 @@ bool Openvr::TDeviceStates::HasKeyframe()
 
 void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 {
-	//	get name from somewhere
 	Object.SetBool("IsValidPose", Pose.mPose.bPoseIsValid);
 	Object.SetBool("IsConnected", Pose.mPose.bDeviceIsConnected);
 	
@@ -169,7 +168,9 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 	
 	Object.SetString("Class", Pose.mClassName);
 	Object.SetString("Name", Pose.mTrackedName);
+
 	Object.SetInt("DeviceIndex", Pose.mDeviceIndex);
+
 };
 
 Openvr::TDeviceStates ApiOpenvr::THmdWrapper::PopPose()
@@ -207,15 +208,18 @@ void ApiOpenvr::THmdWrapper::FlushPendingPoses()
 	
 	auto Flush = [this](Bind::TLocalContext& Context)
 	{
+		Soy::TScopeTimerPrint Timer("Flush poses",5);
 		auto Poses = PopPose();
 		auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
 
 		//	64bit issue, so make time a string for now
-		Object.SetString("TimeMs", std::to_string(Poses.mTime.GetTime()) );
+		//Object.SetString("TimeMs", std::to_string(Poses.mTime.GetTime()) );
 		
 		BufferArray<Bind::TObject, 64> PoseObjects;
 		auto EnumPoseObject = [&](Openvr::TDeviceState& Pose)
 		{
+			if (!Pose.mPose.bDeviceIsConnected)
+				return true;
 			auto PoseObject = Context.mGlobalContext.CreateObjectInstance(Context);
 			SetPoseObject(PoseObject, Pose);
 			PoseObjects.PushBack(PoseObject);
@@ -384,13 +388,15 @@ void Openvr::THmd::Thread()
 		
 		try
 		{
+			/*
 			Openvr::TFinishedEyesFunction SubmitEyes = [&](Opengl::TContext& Context,Opengl::TTexture& LeftEye, Opengl::TTexture& RightEye)
 			{
 				SubmitEyeFrame(vr::Eye_Left, LeftEye.mTexture);
 				SubmitEyeFrame(vr::Eye_Right, RightEye.mTexture);
 			};
 
-			mOnRender(SubmitEyes);			
+			mOnRender(SubmitEyes);
+			*/
 		}
 		catch(std::exception& e)
 		{
@@ -448,11 +454,6 @@ TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
 
 void Openvr::THmd::WaitForFrameStart()
 {
-	//	we're currently flooding JS, too many jobs queued up
-	//	so, change this to a promise system instead of queuing callbacks
-	//	temp fix;
-	std::this_thread::sleep_for(std::chrono::milliseconds(80));
-
 	auto& Compositor = *vr::VRCompositor();
 	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
 

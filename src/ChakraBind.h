@@ -101,6 +101,8 @@ public:
 
 	void			SetQueueJobFunc(JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
 
+	JSValueRef		GetCachedString(const std::string& Buffer);
+
 public:
 	//	the runtime can only execute one context at once, AND (on osx at least) the runtime
 	//	falls over if you try and set the same context twice
@@ -113,6 +115,8 @@ public:
 	Array<std::pair<JsValueRef, JSGlobalContextRef>>	mTasks;
 
 	std::map<JSGlobalContextRef, std::function<void(std::function<void(JSContextRef)>)>>	mQueueJobFuncs;
+
+	std::map<std::string, JSValueRef>	mCachedStrings;
 };
 
 //	this is the virtual machine
@@ -303,7 +307,8 @@ void				JSGlobalContextSetName(JSGlobalContextRef Context,JSStringRef Name);
 void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
-JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer);
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const char* Buffer);
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& Buffer);
 size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);

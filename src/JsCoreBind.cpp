@@ -61,6 +61,14 @@ JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* stri
 #endif
 
 #if defined(JSAPI_JSCORE)
+//	wrapper as v8 needs a context
+JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& string)
+{
+	return JSStringCreateWithUTF8CString(string.c_str());
+}
+#endif
+
+#if defined(JSAPI_JSCORE)
 JSClassRef JSClassCreate(JSContextRef Context, JSClassDefinition& Definition)
 {
 	return JSClassCreate(&Definition);
@@ -323,13 +331,13 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 JSStringRef JsCore::GetString(JSContextRef Context,const std::string& String)
 {
 	//	JSCore doesn't need a context, but v8 does
-	auto Handle = JSStringCreateWithUTF8CString( Context, String.c_str() );
+	auto Handle = JSStringCreateWithUTF8CString( Context, String );
 	return Handle;
 }
 
 JSValueRef JsCore::GetValue(JSContextRef Context,const std::string& String)
 {
-	auto StringHandle = JSStringCreateWithUTF8CString( Context, String.c_str() );
+	auto StringHandle = JSStringCreateWithUTF8CString( Context, String );
 	auto ValueHandle = JSValueMakeString( Context, StringHandle );
 	JSStringRelease(StringHandle);
 	return ValueHandle;
@@ -805,8 +813,8 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	auto Exec = [=](Bind::TLocalContext& Context)
 	{
 		auto ThisHandle = JSObjectRef(nullptr);
-		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source.c_str() );
-		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename.c_str() );
+		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source );
+		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename );
 		auto LineNumber = 0;
 		JSValueRef Exception = nullptr;
 		//	gr: to capture this result, probably need to store it persistently

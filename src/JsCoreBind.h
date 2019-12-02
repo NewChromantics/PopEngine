@@ -1191,6 +1191,7 @@ template<typename TYPE>
 inline JSObjectRef JsCore::GetArray(JSContextRef Context,const ArrayBridge<TYPE>& TypeArray)
 {
 	Array<JSValueRef> Values;
+	Values.Alloc(TypeArray.GetSize());
 	for ( auto i = 0;	i <TypeArray.GetSize();	i++ )
 	{
 		auto Value = GetValue(Context, TypeArray[i]);

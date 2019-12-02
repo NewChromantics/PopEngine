@@ -426,6 +426,25 @@ Chakra::TVirtualMachine::~TVirtualMachine()
 	IsOkay( Error, "JsDisposeRuntime" );
 }
 
+
+JSValueRef Chakra::TVirtualMachine::GetCachedString(const std::string& Buffer)
+{
+	auto Entry = mCachedStrings.find(Buffer);
+	if (Entry != mCachedStrings.end())
+	{
+		return Entry->second;
+	}
+
+	JsValueRef String = nullptr;
+	auto Error = JsCreateString(Buffer.c_str(), Buffer.length(), &String);
+	Chakra::IsOkay(Error, std::string("JSStringCreateWithUTF8CString") + std::string(" with ") + Buffer);
+
+	//	store string, and protect it to stop it getting garbage collected
+	mCachedStrings[Buffer] = String;
+	JSValueProtect(nullptr,String);
+	return String;
+}
+
 //	lock & run & unlock
 void Chakra::TVirtualMachine::Execute(JSGlobalContextRef Context,std::function<void(JSContextRef&)>& Execute)
 {
@@ -1150,14 +1169,26 @@ void JSGarbageCollect(JSContextRef Context)
 	THROW_TODO;
 }
 
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& Buffer)
+{
+	auto& vm = Chakra::GetVirtualMachine(Context);
+	JsValueRef String = vm.GetCachedString(Buffer);
+	return String;
+}
 
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context,const char* Buffer)
 {
+	//	gr: we can probably do this with each system as strings are global to VM (except in v8)
+	auto& vm = Chakra::GetVirtualMachine(Context);
+	JsValueRef String = vm.GetCachedString(Buffer);
+	return String;
+	/*
 	JsValueRef String = nullptr;
 	auto Length = strlen(Buffer);
 	auto Error = JsCreateString( Buffer, Length, &String );
 	Chakra::IsOkay( Error, std::string("JSStringCreateWithUTF8CString") + std::string(" with ") + Buffer );
 	return String;
+	*/
 }
 
 size_t JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize)
