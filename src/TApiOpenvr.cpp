@@ -208,6 +208,10 @@ void ApiOpenvr::THmdWrapper::FlushPendingPoses()
 	
 	auto Flush = [this](Bind::TLocalContext& Context)
 	{
+		//	gr: not sure how we're getting here, something is flushing out poses?
+		if (mPoses.IsEmpty())
+			return;
+
 		Soy::TScopeTimerPrint Timer("Flush poses",5);
 		auto Poses = PopPose();
 		auto Object = Context.mGlobalContext.CreateObjectInstance(Context);

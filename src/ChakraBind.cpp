@@ -1133,7 +1133,7 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 		{
 			auto ContextRef = reinterpret_cast<JSGlobalContextRef>(UserData);
 			auto& Vm = Chakra::GetVirtualMachine(ContextRef);
-			std::Debug << "JsPromiseContinuationCallback" << std::endl;
+			//std::Debug << "JsPromiseContinuationCallback" << std::endl;
 			Vm.QueueTask(Task, ContextRef);
 		};
 		auto GlobalContext = JSContextGetGlobalContext(Context);
