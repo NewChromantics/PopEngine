@@ -80,7 +80,7 @@ public:
 	virtual void	GetConnectedPeers(ArrayBridge<SoyRef>&& Peers);
 
 	//	get a promise for next message
-	void		WaitForMessage(Bind::TCallback& Params);
+	void			WaitForMessage(Bind::TCallback& Params);
 	
 protected:
 	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
@@ -94,7 +94,6 @@ private:
 	Bind::TPromiseQueue					mOnMessagePromises;
 	//	pending packets
 	std::mutex							mMessagesLock;
-	//	these need ordering!
 	Array<std::shared_ptr<ApiSocket::TPacket>>		mMessages;
 };
 

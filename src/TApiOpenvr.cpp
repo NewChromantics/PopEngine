@@ -19,11 +19,11 @@ namespace ApiOpenvr
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
 	DEFINE_BIND_FUNCTIONNAME(BeginFrame);
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
+	DEFINE_BIND_FUNCTIONNAME(WaitForPoses);
 
 	const std::string LeftHandJointPrefix = "Left";
 	const std::string RightHandJointPrefix = "Right";
 
-	const std::string Hmd_OnPoses = "OnPoses";
 	const std::string Hmd_OnRender = "OnRender";
 }
 
@@ -124,68 +124,127 @@ void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::GetEyeMatrix>( &THmdWrapper::GetEyeMatrix );
 	Template.BindFunction<BindFunction::BeginFrame>( &THmdWrapper::BeginFrame );
+	Template.BindFunction<BindFunction::WaitForPoses>( &THmdWrapper::WaitForPoses );
 }
 
 
-void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& _Poses)
+
+void ApiOpenvr::THmdWrapper::WaitForPoses(Bind::TCallback& Params)
 {
-	Array<Openvr::TDeviceState> Poses(_Poses);
+	auto NewPromise = mOnPosePromises.AddPromise( Params.mLocalContext );
+	Params.Return( NewPromise );
+	
+	FlushPendingPoses();
+}
 
 
-	auto SetPoseObject = [](Bind::TObject& Object,Openvr::TDeviceState& Pose)
+bool Openvr::TDeviceStates::HasKeyframe()
+{
+	for ( auto i=0;	i<mDevices.GetSize();	i++ )
 	{
-		//	get name from somewhere
-		Object.SetBool("IsValidPose", Pose.mPose.bPoseIsValid);
-		Object.SetBool("IsConnected", Pose.mPose.bDeviceIsConnected);
+		auto& Device = mDevices[i];
+		if ( Device.mIsKeyFrame )
+			return true;
+	}
+	return false;
+}
 
-		auto DeviceToAbsoluteTracking = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
-		Object.SetArray("DeviceToAbsoluteTracking", GetArrayBridge(DeviceToAbsoluteTracking) );
+void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
+{
+	//	get name from somewhere
+	Object.SetBool("IsValidPose", Pose.mPose.bPoseIsValid);
+	Object.SetBool("IsConnected", Pose.mPose.bDeviceIsConnected);
+	
+	auto DeviceToAbsoluteTracking = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
+	Object.SetArray("DeviceToAbsoluteTracking", GetArrayBridge(DeviceToAbsoluteTracking) );
+	
+	auto Velocity = GetRemoteArray(Pose.mPose.vVelocity.v);
+	Object.SetArray("Velocity", GetArrayBridge(Velocity) );
+	
+	auto AngularVelocity = GetRemoteArray(Pose.mPose.vAngularVelocity.v);
+	Object.SetArray("AngularVelocity", GetArrayBridge(AngularVelocity) );
+	
+	auto TrackingState = std::string(magic_enum::enum_name<vr::ETrackingResult>(Pose.mPose.eTrackingResult));
+	Object.SetString("TrackingState", TrackingState);
+	
+	Object.SetString("Class", Pose.mClassName);
+	Object.SetString("Name", Pose.mTrackedName);
+	Object.SetInt("DeviceIndex", Pose.mDeviceIndex);
+};
 
-		auto Velocity = GetRemoteArray(Pose.mPose.vVelocity.v);
-		Object.SetArray("Velocity", GetArrayBridge(Velocity) );
-
-		auto AngularVelocity = GetRemoteArray(Pose.mPose.vAngularVelocity.v);
-		Object.SetArray("AngularVelocity", GetArrayBridge(AngularVelocity) );
-
-		auto TrackingState = std::string(magic_enum::enum_name<vr::ETrackingResult>(Pose.mPose.eTrackingResult));
-		Object.SetString("TrackingState", TrackingState);
-
-		Object.SetString("Class", Pose.mClassName);
-		Object.SetString("Name", Pose.mTrackedName);
-		Object.SetInt("DeviceIndex", Pose.mDeviceIndex);
+Openvr::TDeviceStates ApiOpenvr::THmdWrapper::PopPose()
+{
+	if ( mPoses.IsEmpty() )
+		throw Soy::AssertException("PopPose() with none in the queue");
+								   
+	std::lock_guard<std::mutex> Lock(mPosesLock);
+	
+	//	discard non-keyframe states if we've accumulated more poses
+	//	than we've processed
+	while ( mPoses.GetSize() > 1 )
+	{
+		auto& Pose0 = mPoses[0];
+		//	keep keyframe and let that be popped next
+		if ( Pose0.HasKeyframe() )
+			break;
 		
-	};
+		mPoses.RemoveBlock(0,1);
+	}
 
+	//	pop next pose
+	auto Pose0 = mPoses[0];
+	mPoses.RemoveBlock(0,1);
+	return Pose0;
+}
 
-	auto Runner = [=](Bind::TLocalContext& Context)
+void ApiOpenvr::THmdWrapper::FlushPendingPoses()
+{
+	//	either no data, or no-one waiting yet
+	if (!mOnPosePromises.HasPromises())
+		return;
+	if (mPoses.IsEmpty() )
+		return;
+	
+	auto Flush = [this](Bind::TLocalContext& Context)
 	{
-		try
+		auto Poses = PopPose();
+		auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
+
+		//	64bit issue, so make time a string for now
+		Object.SetString("TimeMs", std::to_string(Poses.mTime.GetTime()) );
+		
+		BufferArray<Bind::TObject, 64> PoseObjects;
+		auto EnumPoseObject = [&](Openvr::TDeviceState& Pose)
 		{
-			BufferArray<Bind::TObject, 64>	PoseObjects;
-			auto EnumPoseObject = [&](Openvr::TDeviceState& Pose)
-			{
-				auto PoseObject = Context.mGlobalContext.CreateObjectInstance(Context);
-				SetPoseObject(PoseObject, Pose);
-				PoseObjects.PushBack(PoseObject);
-				return true;
-			};
-			GetArrayBridge(Poses).ForEach(EnumPoseObject);
-						
-			auto This = this->GetHandle(Context);
-			auto ThisOnRender = This.GetFunction(Hmd_OnPoses);
-			Bind::TCallback Params(Context);
-			Params.SetThis(This);
-			Params.SetArgumentArray(0, GetArrayBridge(PoseObjects) );
-			ThisOnRender.Call(Params);
-		}
-		catch (std::exception& e)
+			auto PoseObject = Context.mGlobalContext.CreateObjectInstance(Context);
+			SetPoseObject(PoseObject, Pose);
+			PoseObjects.PushBack(PoseObject);
+			return true;
+		};
+		GetArrayBridge(Poses.mDevices).ForEach(EnumPoseObject);
+		Object.SetArray("Devices",GetArrayBridge(PoseObjects) );
+
+		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
 		{
-			std::Debug << "Exception in " << Hmd_OnPoses << ": " << e.what() << std::endl;
-		}
+			Promise.Resolve(LocalContext, Object);
+		};
+		mOnPosePromises.Flush(HandlePromise);
 	};
-	//	gr: because this is queued, I guess there's 
-	//		a chance rendering can happen earlier
-	GetContext().Queue(Runner);
+	auto& Context = mOnPosePromises.GetContext();
+	Context.Queue(Flush);
+}
+
+void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses)
+{
+	{
+		Openvr::TDeviceStates States;
+		States.mDevices.Copy( Poses );
+		States.mTime = SoyTime(true);
+		std::lock_guard<std::mutex> Lock(mPosesLock);
+		mPoses.PushBack(States);
+	}
+
+	FlushPendingPoses();	
 }
 
 
