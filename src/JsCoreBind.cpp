@@ -727,7 +727,17 @@ void JsCore::TInstance::Shutdown(int32_t ExitCode)
 		mOnShutdown(ExitCode);
 }
 
-void JsCore::ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext)
+void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext)
+{
+	auto ExceptionType = JSValueGetType(Context, ExceptionHandle);
+	//	not an exception
+	if (ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull)
+		return;
+
+	ThrowException(Context, ExceptionHandle, std::string(ThrowContext));
+}
+
+void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string& ThrowContext)
 {
 	auto ExceptionType = JSValueGetType( Context, ExceptionHandle );
 	//	not an exception

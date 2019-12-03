@@ -129,7 +129,8 @@ namespace JsCore
 	TObject		ParseObjectString(JSContextRef Context,const std::string& JsonString);
 
 	//	throw c++ exception if the exception object is an exception
-	void		ThrowException(JSContextRef Context,JSValueRef ExceptionHandle,const std::string& ThrowContext=std::string());
+	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext="");
+	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string& ThrowContext);
 
 	//	enum array supports single objects as well as arrays, so we can enumerate a single float into an array of one, as well as an array
 	template<typename TYPE>

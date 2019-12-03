@@ -104,6 +104,7 @@ public:
 	void			SetQueueJobFunc(JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
 
 	JSValueRef		GetCachedString(const std::string& Buffer);
+	JsPropertyIdRef	GetCachedProperty(const std::string& Buffer);
 
 public:
 	//	the runtime can only execute one context at once, AND (on osx at least) the runtime
@@ -118,7 +119,9 @@ public:
 
 	std::map<JSGlobalContextRef, std::function<void(std::function<void(JSContextRef)>)>>	mQueueJobFuncs;
 
-	std::map<std::string, JSValueRef>	mCachedStrings;
+	std::map<std::string, JSValueRef>		mCachedStrings;
+	std::map<std::string, JsPropertyIdRef>	mCachedPropertys;
+	
 };
 
 //	this is the virtual machine

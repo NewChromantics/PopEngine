@@ -166,10 +166,17 @@ std::string JSGetStringNoThrow(JsValueRef Value,bool& IsError)
 
 #if defined(TARGET_WINDOWS)
 //	API difference
-JsErrorCode JsCreatePropertyId(const std::string& Name, JsPropertyIdRef* Property)
+void JsCreatePropertyId(JSContextRef Context, const std::string& Name, JsPropertyIdRef* Property)
 {
+	if (Context)
+	{
+		auto& vm = Chakra::GetVirtualMachine(Context);
+		*Property = vm.GetCachedProperty(Name);
+		return;
+	}
+
 	auto NameW = Soy::StringToWString(Name);
-	return JsGetPropertyIdFromName(NameW.c_str(), Property);
+	JsGetPropertyIdFromName(NameW.c_str(), Property);
 }
 #endif
 
@@ -187,26 +194,30 @@ JsPropertyIdRef GetProperty(JSStringRef Name)
 }
 */
 
-JsPropertyIdRef GetProperty(const std::string& Name)
+JsPropertyIdRef GetProperty(JSContextRef Context, const std::string& Name)
 {
 	//	property id's are context specific
 	JsPropertyIdRef Property = nullptr;
-	auto Error = JsCreatePropertyId(Name, &Property );
-	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	JsCreatePropertyId(Context,Name, &Property );
 	return Property;
 }
 
 
-std::string GetPropertyString(JSObjectRef Object,const std::string& PropertyName)
+std::string GetPropertyString(JSContextRef Context,JSObjectRef Object,const std::string& PropertyName)
 {
-	JsContextRef Context = nullptr;
-	auto Property = GetProperty(PropertyName);
+	auto Property = GetProperty(Context,PropertyName);
 	auto PropertyValue = JSObjectGetProperty( Context, Object, PropertyName, nullptr );
 	bool IsError = false;
 	auto String = JSGetStringNoThrow( PropertyValue, IsError );
 	return String;
 }
 
+
+std::string GetPropertyString(JSObjectRef Object, const std::string& PropertyName)
+{
+	JSContextRef Context = nullptr;
+	return GetPropertyString(Context, Object, PropertyName);
+}
 
 
 std::string GetPropertyString(JSObjectRef Object,JSStringRef PropertyName)
@@ -461,6 +472,23 @@ Chakra::TVirtualMachine::~TVirtualMachine()
 }
 
 
+JsPropertyIdRef Chakra::TVirtualMachine::GetCachedProperty(const std::string& Name)
+{
+	auto Entry = mCachedPropertys.find(Name);
+	if (Entry != mCachedPropertys.end())
+	{
+		return Entry->second;
+	}
+
+	JsPropertyIdRef Property = nullptr;
+	JsCreatePropertyId(nullptr, Name, &Property);
+	
+	//	store string, and protect it to stop it getting garbage collected
+	mCachedPropertys[Name] = Property;
+	JSValueProtect(nullptr, Property);
+	return Property;
+}
+
 JSValueRef Chakra::TVirtualMachine::GetCachedString(const std::string& Buffer)
 {
 	auto Entry = mCachedStrings.find(Buffer);
@@ -610,7 +638,7 @@ JSValueRef JSObjectGetProperty(JSContextRef Context, JSObjectRef This,JSStringRe
 JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef* Exception)
 {
 	JSValueRef Value = nullptr;
-	auto Property = GetProperty(Name);
+	auto Property = GetProperty( Context, Name );
 	auto Error = JsGetProperty( This.mValue, Property, &Value );
 	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
 	if ( !Value )
@@ -623,7 +651,7 @@ JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::
 void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
 	bool StrictRules = true;
-	auto Property = GetProperty(Name);
+	auto Property = GetProperty(Context,Name);
 	auto Error = JsSetProperty( This.mValue, Property, Value, StrictRules );
 	Chakra::IsOkay( Error, "JsSetProperty" );
 }

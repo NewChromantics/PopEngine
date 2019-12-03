@@ -151,25 +151,37 @@ bool Openvr::TDeviceStates::HasKeyframe()
 
 void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 {
-	Object.SetBool("IsValidPose"s, Pose.mPose.bPoseIsValid);
-	Object.SetBool("IsConnected"s, Pose.mPose.bDeviceIsConnected);
-	
-	auto DeviceToAbsoluteTracking = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
-	Object.SetArray("DeviceToAbsoluteTracking"s, GetArrayBridge(DeviceToAbsoluteTracking) );
-	
-	auto Velocity = GetRemoteArray(Pose.mPose.vVelocity.v);
-	Object.SetArray("Velocity", GetArrayBridge(Velocity) );
-	
-	auto AngularVelocity = GetRemoteArray(Pose.mPose.vAngularVelocity.v);
-	Object.SetArray("AngularVelocity", GetArrayBridge(AngularVelocity) );
-	
-	auto TrackingState = std::string(magic_enum::enum_name<vr::ETrackingResult>(Pose.mPose.eTrackingResult));
-	Object.SetString("TrackingState", TrackingState);
-	
-	Object.SetString("Class", Pose.mClassName);
-	Object.SetString("Name", Pose.mTrackedName);
+	//	this needs to be faster really, v8 exposes that constructing a JSON string
+	//	and evaluting that is faster, and this is probably a good candidate!
+	static const std::string IsValidPose("IsValidPose");
+	static const std::string IsConnected("IsConnected");
+	static const std::string DeviceToAbsoluteTracking("DeviceToAbsoluteTracking");
+	static const std::string Velocity("Velocity");
+	static const std::string AngularVelocity("AngularVelocity");
+	static const std::string TrackingState("TrackingState");
+	static const std::string Class("Class");
+	static const std::string Name("Name");
+	static const std::string DeviceIndex("DeviceIndex");
 
-	Object.SetInt("DeviceIndex", Pose.mDeviceIndex);
+	Object.SetBool(IsValidPose, Pose.mPose.bPoseIsValid);
+	Object.SetBool(IsConnected, Pose.mPose.bDeviceIsConnected);
+	
+	auto DeviceToAbsoluteTrackingMatrix = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
+	Object.SetArray(DeviceToAbsoluteTracking, GetArrayBridge(DeviceToAbsoluteTrackingMatrix) );
+	
+	auto VelocityArray = GetRemoteArray(Pose.mPose.vVelocity.v);
+	Object.SetArray(Velocity, GetArrayBridge(VelocityArray) );
+	
+	auto AngularVelocityArray = GetRemoteArray(Pose.mPose.vAngularVelocity.v);
+	Object.SetArray(AngularVelocity, GetArrayBridge(AngularVelocityArray) );
+	
+	//auto TrackingStateValue = std::string(magic_enum::enum_name<vr::ETrackingResult>(Pose.mPose.eTrackingResult));
+	//Object.SetString(TrackingState, TrackingStateValue);
+	
+	Object.SetString(Class, Pose.mClassName);
+	Object.SetString(Name, Pose.mTrackedName);
+
+	Object.SetInt(DeviceIndex, Pose.mDeviceIndex);
 
 };
 
@@ -212,7 +224,8 @@ void ApiOpenvr::THmdWrapper::FlushPendingPoses()
 		if (mPoses.IsEmpty())
 			return;
 
-		Soy::TScopeTimerPrint Timer("Flush poses",5);
+		//	we want this really fast
+		Soy::TScopeTimerPrint Timer("Flush poses",3);
 		auto Poses = PopPose();
 		auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
 
