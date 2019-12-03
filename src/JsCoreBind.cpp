@@ -82,6 +82,28 @@ JSValueRef JSObjectToValue(JSObjectRef Object)
 }
 #endif
 
+#if defined(JSAPI_JSCORE)
+void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
+{
+	//	some systems have caching or special property types for strings,
+	//	but not in js core, so manage it ourselves
+	auto NameJs = JsCore::GetString( Context, Name );
+	JSObjectSetProperty( Context, This, NameJs, Value, Attribs, Exception );
+	JSStringRelease( NameJs );
+}
+#endif
+
+#if defined(JSAPI_JSCORE)
+JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef* Exception)
+{
+	//	some systems have caching or special property types for strings,
+	//	but not in js core, so manage it ourselves
+	auto NameJs = JsCore::GetString( Context, Name );
+	auto Value = JSObjectGetProperty( Context, This, NameJs, Exception );
+	JSStringRelease( NameJs );
+	return Value;
+}
+#endif
 
 
 namespace JsCore
@@ -1021,9 +1043,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	}
 
 	JSValueRef Exception = nullptr;
-	auto PropertyName = JsCore::GetString( mContext, LeafName );
-	auto Property = JSObjectGetProperty( mContext, This.mThis, PropertyName, &Exception );
-	JSStringRelease(PropertyName);
+	auto Property = JSObjectGetProperty( mContext, This.mThis, LeafName, &Exception );
 	//auto PropertyType = JSValueGetType( mContext, Property );
 	ThrowException( mContext, Exception );
 	return Property;	//	we return null/undefineds
@@ -1118,11 +1138,9 @@ void JsCore::TObject::SetFunction(const std::string& Name,JsCore::TFunction& Fun
 
 void JsCore::TObject::SetMember(const std::string& Name,JSValueRef Value)
 {
-	auto NameJs = JsCore::GetString( mContext, Name );
 	JSPropertyAttributes Attribs = kJSPropertyAttributeNone;
 	JSValueRef Exception = nullptr;
-	JSObjectSetProperty( mContext, mThis, NameJs, Value, Attribs, &Exception );
-	JSStringRelease( NameJs );
+	JSObjectSetProperty( mContext, mThis, Name, Value, Attribs, &Exception );
 	ThrowException( mContext, Exception );
 }
 
@@ -2049,9 +2067,9 @@ void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const st
 	//	but JsObjectMake also creates objects...
 	
 	//	property of Parent (eg. global or Pop.x) can be overridden in case we want a nicer class name than the unique one
-	auto PropertyName = GetString( Context.mLocalContext, mDefinition.className );
+	std::string PropertyName = mDefinition.className;
 	if ( OverrideLeafName.length() )
-		PropertyName = GetString( Context.mLocalContext, OverrideLeafName );
+		PropertyName = OverrideLeafName;
 	
 	auto ParentObject = Context.mGlobalContext.GetGlobalObject( Context, ParentObjectName );
 

@@ -184,6 +184,18 @@ JsPropertyIdRef GetProperty(JSStringRef Name)
 	return Property;
 }
 
+
+JsPropertyIdRef GetProperty(const std::string& Name)
+{
+	//	property id's are context specific
+	//	gr: cache these
+	JsPropertyIdRef Property = nullptr;
+	auto Error = JsCreatePropertyId( NameString.GetArray(), NameString.GetSize(), &Property );
+	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
+	return Property;
+}
+
+
 std::string GetPropertyString(JSObjectRef Object,const char* PropertyName)
 {
 	JsContextRef Context = nullptr;
@@ -568,7 +580,7 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 
 
 
-JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef* Exception)
+JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef* Exception)
 {
 	JSValueRef Value = nullptr;
 	auto Property = GetProperty(Name);
@@ -581,13 +593,14 @@ JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef
 }
 
 
-void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
+void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
 	bool StrictRules = true;
 	auto Property = GetProperty(Name);
 	auto Error = JsSetProperty( This.mValue, Property, Value, StrictRules );
 	Chakra::IsOkay( Error, "JsSetProperty" );
 }
+
 
 void JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception)
 {
@@ -1268,7 +1281,7 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 			auto Function = JSObjectMakeFunctionWithCallback( Context, NameValue, FunctionDefinition.callAsFunction );
 			
 			auto Attributes = kJSPropertyAttributeNone;
-			JSObjectSetProperty( Context, Class.mPrototype, NameValue, Function, Attributes, nullptr );
+			JSObjectSetProperty( Context, Class.mPrototype, FunctionDefinition.name, Function, Attributes, nullptr );
 		}
 	}
 	

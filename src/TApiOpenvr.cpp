@@ -5,8 +5,8 @@
 #include "SoyOpengl.h"
 #include "SoyViveHandTracker.h"
 #include "MagicEnum/include/magic_enum.hpp"
-
-
+#include <string_view>
+using namespace std::literals;
 //	on OSX, make sure you link to the bin/osx32/dylib NOT the one in /lib/
 
 namespace ApiOpenvr
@@ -151,11 +151,11 @@ bool Openvr::TDeviceStates::HasKeyframe()
 
 void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 {
-	Object.SetBool("IsValidPose", Pose.mPose.bPoseIsValid);
-	Object.SetBool("IsConnected", Pose.mPose.bDeviceIsConnected);
+	Object.SetBool("IsValidPose"s, Pose.mPose.bPoseIsValid);
+	Object.SetBool("IsConnected"s, Pose.mPose.bDeviceIsConnected);
 	
 	auto DeviceToAbsoluteTracking = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
-	Object.SetArray("DeviceToAbsoluteTracking", GetArrayBridge(DeviceToAbsoluteTracking) );
+	Object.SetArray("DeviceToAbsoluteTracking"s, GetArrayBridge(DeviceToAbsoluteTracking) );
 	
 	auto Velocity = GetRemoteArray(Pose.mPose.vVelocity.v);
 	Object.SetArray("Velocity", GetArrayBridge(Velocity) );

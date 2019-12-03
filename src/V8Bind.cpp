@@ -243,6 +243,7 @@ JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,JSStringRef
 
 void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,JSStringRef Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception )
 {
+#error Name should now be an std::string
 	auto NameHandle = ToValue( Name.mThis );
 	auto Result = This.mThis->Set( Context.mThis, NameHandle, Value.mThis );
 
