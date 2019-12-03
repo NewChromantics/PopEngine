@@ -248,7 +248,8 @@ public:
 void		JSObjectSetPrivate(JSContextRef Context,JSObjectRef Object,void* Data);
 void*		JSObjectGetPrivate(JSContextRef Context,JSObjectRef Object);
 JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void*);
-JSValueRef	JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef* Exception);
+JSValueRef	JSObjectGetProperty(JSContextRef Context, JSObjectRef This,JSStringRef Name, JSValueRef* Exception);
+JSValueRef	JSObjectGetProperty(JSContextRef Context, JSObjectRef This, const std::string& Name, JSValueRef* Exception);
 void		JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception );
 void		JSObjectSetPropertyAtIndex(JSContextRef Context,JSObjectRef This,size_t Index,JSValueRef Value,JSValueRef* Exception);
 JSValueRef	JSObjectToValue(JSObjectRef Object);

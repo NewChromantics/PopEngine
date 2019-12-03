@@ -5,7 +5,8 @@
 #include "SoyFileSystem.h"
 #include "TBind.h"
 #include <atomic>
-
+//#include <string_view>
+using namespace std::literals;
 
 
 #define THROW_TODO	throw Soy::AssertException( std::string("todo: ") + __PRETTY_FUNCTION__ )
@@ -165,13 +166,14 @@ std::string JSGetStringNoThrow(JsValueRef Value,bool& IsError)
 
 #if defined(TARGET_WINDOWS)
 //	API difference
-JsErrorCode JsCreatePropertyId(const char* Name, size_t Length, JsPropertyIdRef* Property)
+JsErrorCode JsCreatePropertyId(const std::string& Name, JsPropertyIdRef* Property)
 {
 	auto NameW = Soy::StringToWString(Name);
 	return JsGetPropertyIdFromName(NameW.c_str(), Property);
 }
 #endif
 
+/*
 JsPropertyIdRef GetProperty(JSStringRef Name)
 {
 	Array<char> NameString;
@@ -183,30 +185,34 @@ JsPropertyIdRef GetProperty(JSStringRef Name)
 	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
 	return Property;
 }
-
+*/
 
 JsPropertyIdRef GetProperty(const std::string& Name)
 {
 	//	property id's are context specific
-	//	gr: cache these
 	JsPropertyIdRef Property = nullptr;
-	auto Error = JsCreatePropertyId( NameString.GetArray(), NameString.GetSize(), &Property );
+	auto Error = JsCreatePropertyId(Name, &Property );
 	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
 	return Property;
 }
 
 
-std::string GetPropertyString(JSObjectRef Object,const char* PropertyName)
+std::string GetPropertyString(JSObjectRef Object,const std::string& PropertyName)
 {
 	JsContextRef Context = nullptr;
-	auto PropertyNameString = Bind::GetString(Context,PropertyName);
-	auto Property = GetProperty( PropertyNameString );
-	auto PropertyValue = JSObjectGetProperty( Context, Object, PropertyNameString, nullptr );
+	auto Property = GetProperty(PropertyName);
+	auto PropertyValue = JSObjectGetProperty( Context, Object, PropertyName, nullptr );
 	bool IsError = false;
 	auto String = JSGetStringNoThrow( PropertyValue, IsError );
 	return String;
 }
 
+
+
+std::string GetPropertyString(JSObjectRef Object,JSStringRef PropertyName)
+{
+	THROW_TODO;
+}
 
 void DebugPropertyName(JsValueRef ExceptionValue)
 {
@@ -279,7 +285,7 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 	//	gr: is array length?
 	//	length = 0....
 	//	gr: no length in winsdk
-	auto Length = GetPropertyString( ExceptionObject, "length" );
+	auto Length = GetPropertyString( ExceptionObject, "length"s );
 	
 	std::stringstream ExceptionString;
 	ExceptionString << "> " << Source << std::endl;
@@ -579,6 +585,11 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 }
 
 
+
+JSValueRef JSObjectGetProperty(JSContextRef Context, JSObjectRef This,JSStringRef Name, JSValueRef* Exception)
+{
+	THROW_TODO;
+}
 
 JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef* Exception)
 {
