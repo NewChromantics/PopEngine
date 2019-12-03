@@ -5,7 +5,7 @@
 #include "SoyFileSystem.h"
 #include "TBind.h"
 #include <atomic>
-//#include <string_view>
+#include <string_view>
 using namespace std::literals;
 
 
@@ -329,7 +329,23 @@ JsErrorCode JsGetAndClearExceptionWithMetadata(JsValueRef *exception)
 
 __thread bool IsThrowing = false;
 
-void Chakra::IsOkay(JsErrorCode Error,const std::string& Context)
+void Chakra::IsOkay(JsErrorCode Error, const char* Context)
+{
+	if (Error == JsNoError)
+		return;
+
+	IsOkay(Error, std::string(Context));
+}
+
+void Chakra::IsOkay(JsErrorCode Error, const std::string& Context)
+{
+	if (Error == JsNoError)
+		return;
+
+	IsOkay(Error, std::string_view(Context));
+}
+
+void Chakra::IsOkay(JsErrorCode Error,const std::string_view& Context)
 {
 	if ( Error == JsNoError )
 		return;

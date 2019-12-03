@@ -33,7 +33,9 @@ namespace Chakra
 	class TAllocator;
 	class TVirtualMachine;
 	
-	void	IsOkay(JsErrorCode Error,const std::string& Context);
+	void	IsOkay(JsErrorCode Error, const std::string& Context);
+	void	IsOkay(JsErrorCode Error, const std::string_view& Context);
+	void	IsOkay(JsErrorCode Error,const char* Context);
 }
 
 
