@@ -846,10 +846,17 @@ JSValueRef JSObjectMakeFunctionWithCallback(JSContextRef Context,JSStringRef Nam
 
 bool JSValueToBoolean(JSContextRef Context,JSValueRef ThatValue)
 {
-	JSValueRef Value = nullptr;
-	auto Error = JsConvertValueToBoolean(ThatValue,&Value);
-	Chakra::IsOkay( Error, __PRETTY_FUNCTION__ );
-	return Value;
+	//	convert to bool, then read that bool
+	//	gr: is it any more effecient to do a type check first?
+	JSValueRef ValueAsBoolean = nullptr;
+	auto Error = JsConvertValueToBoolean(ThatValue, &ValueAsBoolean);
+	Chakra::IsOkay(Error, "JsConvertValueToBoolean");
+
+	bool ValueBool = false;
+	Error = JsBooleanToBool(ValueAsBoolean, &ValueBool);
+	Chakra::IsOkay(Error, "JsBooleanToBool");
+	
+	return ValueBool;
 }
 
 JSValueRef JSValueMakeBoolean(JSContextRef Context,bool Boolean)
