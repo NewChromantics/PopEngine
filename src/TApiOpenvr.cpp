@@ -16,15 +16,16 @@ namespace ApiOpenvr
 	DEFINE_BIND_TYPENAME(Hmd);
 	DEFINE_BIND_TYPENAME(Skeleton);
 
+	//	deprecate these
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
-	DEFINE_BIND_FUNCTIONNAME(BeginFrame);
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
+
 	DEFINE_BIND_FUNCTIONNAME(WaitForPoses);
+	DEFINE_BIND_FUNCTIONNAME(SubmitFrame);
+
 
 	const std::string LeftHandJointPrefix = "Left";
 	const std::string RightHandJointPrefix = "Right";
-
-	const std::string Hmd_OnRender = "OnRender";
 }
 
 namespace Openvr
@@ -72,15 +73,17 @@ public:
 	~THmd();
 
 	virtual void	Thread() override;
-	
+
+	void			SubmitFrame(Opengl::TTexture& Left, Opengl::TTexture& Right);
+	TEyeMatrix		GetEyeMatrix(const std::string& EyeName);
+
+private:
 	void			SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture);
 	void			EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
-	TEyeMatrix		GetEyeMatrix(const std::string& EyeName);
 	void			WaitForFrameStart();
 
 public:
 	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
-	std::function<void(TFinishedEyesFunction&)>			mOnRender;
 	vr::IVRSystem*	mHmd = nullptr;
 	float			mNearClip = 0.1f;
 	float			mFarClip = 40.0f;
@@ -102,29 +105,22 @@ void ApiOpenvr::Bind(Bind::TContext& Context)
 
 void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 {
-	//auto Device = Params.GetArgumentFilename(0);
-
-	//	arg1 needs to be a render context
-	auto RenderContextObject = Params.GetArgumentObject(1);
-	auto& RenderContext = RenderContextObject.This<TWindowWrapper>();
-	mRenderContext = Bind::TPersistent(Params.mLocalContext, RenderContextObject,"HMD RenderContext");
+	//auto DeviceName = Params.GetArgumentFilename(0);
 
 	bool IsOverlay = false;
-	if ( !Params.IsArgumentUndefined(2) )
-		IsOverlay = Params.GetArgumentBool(2);
+	if ( !Params.IsArgumentUndefined(1) )
+		IsOverlay = Params.GetArgumentBool(1);
 	
 	mHmd.reset( new Openvr::THmd(IsOverlay) );
 
 	mHmd->mOnNewPoses = std::bind(&THmdWrapper::OnNewPoses, this, std::placeholders::_1);
-	mHmd->mOnRender = std::bind(&THmdWrapper::OnRender, this, std::placeholders::_1);
 }
 
 
 void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::GetEyeMatrix>( &THmdWrapper::GetEyeMatrix );
-	Template.BindFunction<BindFunction::BeginFrame>( &THmdWrapper::BeginFrame );
-	Template.BindFunction<BindFunction::WaitForPoses>( &THmdWrapper::WaitForPoses );
+	Template.BindFunction<BindFunction::WaitForPoses>(&THmdWrapper::WaitForPoses);
+	Template.BindFunction<BindFunction::SubmitFrame>(&THmdWrapper::SubmitFrame);
 }
 
 
@@ -137,6 +133,20 @@ void ApiOpenvr::THmdWrapper::WaitForPoses(Bind::TCallback& Params)
 	FlushPendingPoses();
 }
 
+void ApiOpenvr::THmdWrapper::SubmitFrame(Bind::TCallback& Params)
+{
+	//	gr: we're expecting this to be called whilst on a render thread...
+	//		are we? and the JS engine is locked to that thread?
+	//		check this (openvr will fail I guess)
+	auto& ImageLeft = Params.GetArgumentPointer<TImageWrapper>(0);
+	auto& ImageRight = Params.GetArgumentPointer<TImageWrapper>(1);
+	
+	auto& TextureLeft = ImageLeft.GetTexture();
+	auto& TextureRight = ImageRight.GetTexture();
+
+	auto& Hmd = *mHmd;
+	Hmd.SubmitFrame(TextureLeft, TextureRight);
+}
 
 bool Openvr::TDeviceStates::HasKeyframe()
 {
@@ -269,11 +279,6 @@ void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Pose
 }
 
 
-void ApiOpenvr::THmdWrapper::OnRender(Openvr::TFinishedEyesFunction& SubmitEyeTextures)
-{
-	//	get an opengl callback, call javascript, submit resulting textures
-	//std::Debug << "Render to opengl" << std::endl;
-}
 
 void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
 {
@@ -285,13 +290,6 @@ void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
 	auto Obj = Params.mContext.CreateObjectInstance(Params.mLocalContext);
 	//Obj.SetArray("
 	Params.Return(Obj);
-}
-
-void ApiOpenvr::THmdWrapper::BeginFrame(Bind::TCallback& Params)
-{
-	auto& This = Params.This<ApiOpenvr::THmdWrapper>();
-	auto& Hmd = *This.mHmd;
-	Hmd.WaitForFrameStart();
 }
 
 
@@ -399,28 +397,8 @@ void Openvr::THmd::Thread()
 	//	loop
 	while ( IsThreadRunning() )
 	{
-		//	block until time for a frame
-		//	update frames
+		//	this blocks for us
 		WaitForFrameStart();
-		
-		try
-		{
-			/*
-			Openvr::TFinishedEyesFunction SubmitEyes = [&](Opengl::TContext& Context,Opengl::TTexture& LeftEye, Opengl::TTexture& RightEye)
-			{
-				SubmitEyeFrame(vr::Eye_Left, LeftEye.mTexture);
-				SubmitEyeFrame(vr::Eye_Right, RightEye.mTexture);
-			};
-
-			mOnRender(SubmitEyes);
-			*/
-		}
-		catch(std::exception& e)
-		{
-			//	gr: need to force a submission here
-			std::Debug << "HMD render exception " << e.what() << std::endl;
-		}
-
 	}
 }
 
@@ -513,8 +491,19 @@ void Openvr::THmd::WaitForFrameStart()
 		Device.mTrackedName = GetString(Device.mDeviceIndex, vr::Prop_TrackingSystemName_String);
 	}
 
+	//	gr: add eye's to devices using GetEyeMatrix() so each eye has it's own device & extra properties
+
 	mOnNewPoses(GetArrayBridge(Devices));
 }
+
+void Openvr::THmd::SubmitFrame(Opengl::TTexture& Left, Opengl::TTexture& Right)
+{
+	auto& Compositor = *vr::VRCompositor();
+
+	SubmitEyeFrame(vr::Hmd_Eye::Eye_Left, Left.mTexture);
+	SubmitEyeFrame(vr::Hmd_Eye::Eye_Right, Right.mTexture);
+}
+
 
 void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
 {
@@ -536,6 +525,7 @@ void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
 	}
 	if ( Error == vr::VRCompositorError_DoNotHaveFocus )
 	{
+		//	gr: this could cause a deadlock?
 		WaitForFrameStart();
 	
 		//	submit again

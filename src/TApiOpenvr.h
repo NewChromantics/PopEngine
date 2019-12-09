@@ -66,24 +66,15 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
 	void			OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses);
-	void			OnRender(Openvr::TFinishedEyesFunction& SubmitEyeTextures);
 	
 	//	get a promise for new poses, this lets us not clog up JS job queues with callbacks
 	//	todo: send eye matrix's with this
 	void			WaitForPoses(Bind::TCallback& Params);
-
-
-	//	todo: newer; make submit-eye-textures an explicit call, expected inside a render callback
-	//		to immediately send textures to HMD
-	//		this is better than a callback which then needs to find an opengl job from openvr,
-	//		but need to make sure that fits web (which may be a different context)
-	void			SubmitEyeTexture(Bind::TCallback& Params);
 	void			GetEyeMatrix(Bind::TCallback& Params);
-	//	todo: make this a promise, then JS can wait until we know we have a new pose, ready for
-	//		a frame, and render as soon as possible
-	//	currently blocks until ready to draw
-	void			BeginFrame(Bind::TCallback& Params);
 
+	//	this NEEDS to be called from a window render on the opengl thread...
+	void			SubmitFrame(Bind::TCallback& Params);
+	
 protected:
 	void					FlushPendingPoses();
 	Openvr::TDeviceStates	PopPose();				//	get latest keyframe pose, or just last pose if no keyframes
