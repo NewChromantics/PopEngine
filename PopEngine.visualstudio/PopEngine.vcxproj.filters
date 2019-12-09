@@ -97,6 +97,12 @@
     <Filter Include="UnitTest\LeapMotion">
       <UniqueIdentifier>{f6486979-cab0-4324-8a2b-2bf355f8ecc0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\TensorFlow">
+      <UniqueIdentifier>{78312df0-aed9-4e13-9bc6-6df2c811f913}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\TensorFlow">
+      <UniqueIdentifier>{535d788a-178f-4956-87fe-c4be4eb1d8d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -489,6 +495,24 @@
     <ClInclude Include="..\src\SoyViveHandTracker.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiTensorFlow.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\c_api.h">
+      <Filter>Libs\TensorFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_attrtype.h">
+      <Filter>Libs\TensorFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_datatype.h">
+      <Filter>Libs\TensorFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_status.h">
+      <Filter>Libs\TensorFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_tensor.h">
+      <Filter>Libs\TensorFlow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -688,6 +712,12 @@
     </None>
     <None Include="..\UnitTest\LeapMotion\bootup.js">
       <Filter>UnitTest\LeapMotion</Filter>
+    </None>
+    <None Include="..\src\Libs\TensorFlow\1.15\lib_gpu_64\tensorflow.dll">
+      <Filter>Libs\TensorFlow</Filter>
+    </None>
+    <None Include="..\UnitTest\TensorFlow\bootup.js">
+      <Filter>UnitTest\TensorFlow</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -910,6 +940,9 @@
     <ClCompile Include="..\src\SoyViveHandTracker.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiTensorFlow.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -959,6 +992,9 @@
     </Library>
     <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib">
       <Filter>Libs\ViveHandTracking</Filter>
+    </Library>
+    <Library Include="..\src\Libs\TensorFlow\1.15\lib_gpu_64\tensorflow.lib">
+      <Filter>Libs\TensorFlow</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

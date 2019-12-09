@@ -60,6 +60,11 @@
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h" />
     <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
     <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\c_api.h" />
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_attrtype.h" />
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_datatype.h" />
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_status.h" />
+    <ClInclude Include="..\src\Libs\TensorFlow\1.15\include\tensorflow\c\tf_tensor.h" />
     <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp" />
     <ClInclude Include="..\src\Libs\x264\include\x264.h" />
     <ClInclude Include="..\src\Libs\x264\include\x264_config.h" />
@@ -182,6 +187,7 @@
     <ClInclude Include="..\src\TApiSerial.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
     <ClInclude Include="..\src\SoyViveHandTracker.h" />
+    <ClInclude Include="..\src\TApiTensorFlow.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
     <ClInclude Include="..\src\TBind.h" />
     <ClInclude Include="..\src\TPopServerThread.h">
@@ -262,6 +268,7 @@
     <ClCompile Include="..\src\TApiGui.cpp" />
     <ClCompile Include="..\src\TApiOpenvr.cpp" />
     <ClCompile Include="..\src\SoyViveHandTracker.cpp" />
+    <ClCompile Include="..\src\TApiTensorFlow.cpp" />
     <ClCompile Include="..\src\V8Bind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -377,6 +384,9 @@
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\TensorFlow\1.15\lib_gpu_64\tensorflow.dll">
       <FileType>Document</FileType>
     </CustomBuild>
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
@@ -495,6 +505,7 @@
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>
     </None>
+    <None Include="..\UnitTest\TensorFlow\bootup.js" />
     <None Include="..\UnitTest\VideoTest\Blit.frag.glsl" />
     <None Include="..\UnitTest\VideoTest\bootup.js" />
     <None Include="..\UnitTest\VideoTest\mp4.js" />
@@ -665,6 +676,7 @@
     <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib" />
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
+    <Library Include="..\src\Libs\TensorFlow\1.15\lib_gpu_64\tensorflow.lib" />
     <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib" />
     <Library Include="..\src\Libs\x264\lib\x64\libx264.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -772,21 +784,11 @@
     <Import Project="JsApi_V8.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">
-    <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">
-    <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
-    <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">
-    <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">
-    <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">
     <ClCompile>
       <PrecompiledHeader>

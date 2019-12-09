@@ -24,6 +24,10 @@
 #include "TApiLeapMotion.h"
 #endif
 
+#if defined(TARGET_WINDOWS)
+#include "TApiTensorFlow.h"
+#endif
+
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
 bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep);
@@ -556,6 +560,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiBluetooth::Bind( *Context );
 			ApiLeapMotion::Bind( *Context );
 		#endif
+
+#if defined(TARGET_WINDOWS)
+			ApiTensorFlow::Bind(*Context);
+#endif
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );

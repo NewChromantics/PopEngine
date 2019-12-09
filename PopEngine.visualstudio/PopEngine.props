@@ -3,10 +3,11 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\Libs;$(ProjectDir)..\src\Libs\Opencv\include;$(ProjectDir)..\src\Libs\Opencv_contrib\modules\aruco\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\Libs;$(ProjectDir)..\src\Libs\Opencv\include;$(ProjectDir)..\src\Libs\Opencv_contrib\modules\aruco\include;$(ProjectDir)..\src\Libs\TensorFlow\1.15\include;$(IncludePath)</IncludePath>
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\Bin\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\Temp\</IntDir>
+    <LibraryPath>$(ProjectDir)..\src\Libs\TensorFlow\1.15\lib_gpu_64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
