@@ -41,6 +41,7 @@ namespace Openvr
 	void	IsOkay(vr::ETrackedPropertyError Error, const std::string& Context);
 	void	IsOkay(vr::EVROverlayError Error, const std::string& Context);
 
+	class TApp;
 	class TDeviceState;
 }
 
@@ -62,7 +63,23 @@ public:
 	uint32_t			mRenderTargetHeight = 0;	//	"recommended"
 };
 
-class Openvr::THmd : public SoyThread
+
+class Openvr::TApp
+{
+public:
+	~TApp();
+
+protected:
+	vr::IVRSystem&	GetSystem() {	return *mSystem;	}
+
+public:
+	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
+
+protected:
+	vr::IVRSystem*	mSystem = nullptr;
+};
+
+class Openvr::THmd : public SoyThread, public TApp
 {
 public:
 	THmd(bool OverlayApp);
@@ -80,7 +97,6 @@ private:
 
 public:
 	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
-	vr::IVRSystem*	mHmd = nullptr;
 	float			mNearClip = 0.1f;
 	float			mFarClip = 40.0f;
 };
@@ -88,7 +104,7 @@ public:
 
 
 
-class Openvr::TOverlay : public SoyWorkerThread
+class Openvr::TOverlay : public SoyWorkerThread, public TApp
 {
 public:
 	TOverlay(const std::string& Name);
@@ -99,11 +115,12 @@ public:
 
 protected:
 	void			HandleEvent(vr::VREvent_t& Event);
+	void			UpdatePoses();
+	TDeviceState	GetOverlayWindowPose();
 
 public:
 	vr::VROverlayHandle_t	mHandle = vr::k_ulOverlayHandleInvalid;
 	vr::VROverlayHandle_t	mThumbnailHandle = vr::k_ulOverlayHandleInvalid;
-	vr::IVRSystem*			mSystem = nullptr;
 	vr::IVROverlay*			mOverlay = nullptr;
 };
 
@@ -337,39 +354,37 @@ void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
 std::ostream& operator<<(std::ostream &out,const vr::EVRInitError& in)
 {
 	auto* ErrorString = vr::VR_GetVRInitErrorAsEnglishDescription(in);
-	if ( !ErrorString )
+	if (ErrorString)
 	{
-		out << "<vr::EVRInitError=" << static_cast<int>(in) << ">";
+		out << ErrorString;
 		return out;
 	}
 	
-	out << ErrorString;
+	out << magic_enum::enum_name(in);
 	return out;
 }
 
 
-std::ostream& operator<<(std::ostream &out,const vr::EVRCompositorError& in)
+std::ostream& operator<<(std::ostream &out, const vr::EVRCompositorError& in)
 {
-	switch(in)
-	{
-		case vr::VRCompositorError_None:					out << "VRCompositorError_None";	break;
-		case vr::VRCompositorError_RequestFailed:			out << "VRCompositorError_RequestFailed";	break;
-		case vr::VRCompositorError_IncompatibleVersion:		out << "VRCompositorError_IncompatibleVersion";	break;
-		case vr::VRCompositorError_DoNotHaveFocus:			out << "VRCompositorError_DoNotHaveFocus";	break;
-		case vr::VRCompositorError_InvalidTexture:			out << "VRCompositorError_InvalidTexture";	break;
-		case vr::VRCompositorError_IsNotSceneApplication:	out << "VRCompositorError_IsNotSceneApplication";	break;
-		case vr::VRCompositorError_TextureIsOnWrongDevice:	out << "VRCompositorError_TextureIsOnWrongDevice";	break;
-		case vr::VRCompositorError_TextureUsesUnsupportedFormat:	out << "VRCompositorError_TextureUsesUnsupportedFormat";	break;
-		case vr::VRCompositorError_SharedTexturesNotSupported:	out << "VRCompositorError_SharedTexturesNotSupported";	break;
-		case vr::VRCompositorError_IndexOutOfRange:			out << "VRCompositorError_IndexOutOfRange";	break;
-		case vr::VRCompositorError_AlreadySubmitted:		out << "VRCompositorError_AlreadySubmitted";	break;
-		case vr::VRCompositorError_InvalidBounds:			out << "VRCompositorError_InvalidBounds";	break;
-		default:
-			out << "VRCompositorError_" << static_cast<int>(in);
-			break;
-	}
+	out << magic_enum::enum_name(in);
 	return out;
 }
+
+
+std::ostream& operator<<(std::ostream &out, const vr::EVROverlayError& in)
+{
+	out << magic_enum::enum_name(in);
+	return out;
+}
+
+
+std::ostream& operator<<(std::ostream &out, const vr::ETrackedPropertyError& in)
+{
+	out << magic_enum::enum_name(in);
+	return out;
+}
+
 
 
 void Openvr::IsOkay(vr::ETrackedPropertyError Error, const std::string& Context)
@@ -413,6 +428,16 @@ void Openvr::IsOkay(vr::EVROverlayError Error, const std::string& Context)
 }
 
 
+
+Openvr::TApp::~TApp()
+{
+	if (mSystem)
+	{
+		vr::VR_Shutdown();
+		mSystem = nullptr;
+}
+}
+
 Openvr::THmd::THmd(bool OverlayApp) :
 	SoyThread	( "Openvr::THmd" )
 {
@@ -421,7 +446,7 @@ Openvr::THmd::THmd(bool OverlayApp) :
 #endif
 	vr::EVRInitError Error = vr::VRInitError_None;
 	auto AppType = OverlayApp ? vr::VRApplication_Overlay : vr::VRApplication_Scene;
-	mHmd = vr::VR_Init( &Error, AppType );
+	mSystem = vr::VR_Init( &Error, AppType );
 	IsOkay( Error, "VR_Init" );
 	
 	Start();
@@ -432,13 +457,8 @@ Openvr::THmd::THmd(bool OverlayApp) :
 Openvr::THmd::~THmd()
 {
 	Stop(true);
-	
-	if ( mHmd )
-	{
-		vr::VR_Shutdown();
-		mHmd = nullptr;
-	}
 }
+
 
 
 void Openvr::THmd::Thread()
@@ -484,7 +504,7 @@ vr::Hmd_Eye GetHmdEye(const std::string& EyeName)
 
 TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
 {
-	auto& Hmd = *mHmd;
+	auto& Hmd = GetSystem();
 	auto Eye = GetHmdEye(EyeName);
 
 	TEyeMatrix EyeMatrix;
@@ -516,7 +536,7 @@ void Openvr::THmd::WaitForFrameStart()
 	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses,std::size(TrackedDevicePoses), GamePoseArray, GamePoseArraySize);
 	Openvr::IsOkay(Error, "WaitGetPoses");
 
-	auto& System = *mHmd;
+	auto& System = GetSystem();
 
 	auto GetString = [&](uint32_t DeviceIndex, vr::ETrackedDeviceProperty Property)
 	{
@@ -696,6 +716,8 @@ void ApiOpenvr::TOverlayWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Name = Params.GetArgumentString(0);
 	mOverlay.reset(new Openvr::TOverlay(Name));
+
+	mOverlay->mOnNewPoses = std::bind(&THmdWrapper::OnNewPoses, this, std::placeholders::_1);
 }
 
 
@@ -714,14 +736,41 @@ Openvr::TOverlay::TOverlay(const std::string& Name) :
 	if ( !mOverlay )
 		throw Soy::AssertException("Failed to allocate overlay");
 
-	auto OError = mOverlay->CreateDashboardOverlay(Name.c_str(), Name.c_str(), &mHandle, &mThumbnailHandle );
+	//mOverlay->CreateOverlay
+	//auto OError = mOverlay->CreateDhasboardOverlay(Name.c_str(), Name.c_str(), &mHandle, &mThumbnailHandle );
+	auto OError = mOverlay->CreateOverlay(Name.c_str(), Name.c_str(), &mHandle );
 	IsOkay(OError, "CreateDashboardOverlay");
 
-	const float Width = 1.5;
-	mOverlay->SetOverlayWidthInMeters(mHandle, Width);
-	mOverlay->SetOverlayInputMethod(mHandle, vr::VROverlayInputMethod_Mouse);
+	
+	//	dashboard overlay has a default transform, but for a normal one we need to init
+	vec3f Offset(0, 0, -2.0f);
+	const float Width = 1.0f;
+	vr::HmdMatrix34_t InitialTransform =
+	{
+		1.0f, 0.0f, 0.0f, Offset.x,
+		0.0f, 1.0f, 0.0f, Offset.y,
+		0.0f, 0.0f, 1.0f, Offset.z
+	};
 
-	mOverlay->ShowOverlay(mHandle);
+	/*
+	OError = mOverlay->SetOverlayTransformTrackedDeviceRelative(mHandle, vr::k_unTrackedDeviceIndex_Hmd, &InitialTransform);
+	IsOkay(OError, "SetOverlayTransformTrackedDeviceRelative");
+	*/
+	//	then, fix it in space by getting it's absolute, then setting it again (instead of relative)
+	auto TransformOrigin = vr::TrackingUniverseRawAndUncalibrated;
+	OError = mOverlay->SetOverlayTransformAbsolute(mHandle, TransformOrigin, &InitialTransform);
+	IsOkay(OError, "SetOverlayTransformAbsolute");
+
+	//	stereo left/right flag
+	//	VROverlayFlags_SideBySide_Parallel
+
+	OError = mOverlay->SetOverlayWidthInMeters(mHandle, Width);
+	IsOkay(OError, "SetOverlayWidthInMeters");
+	OError = mOverlay->SetOverlayInputMethod(mHandle, vr::VROverlayInputMethod_Mouse);
+	IsOkay(OError, "SetOverlayInputMethod");
+
+	OError = mOverlay->ShowOverlay(mHandle);
+	IsOkay(OError, "ShowOverlay");
 
 	Start();
 }
@@ -738,9 +787,43 @@ Openvr::TOverlay::~TOverlay()
 }
 
 
+Openvr::TDeviceState Openvr::TOverlay::GetOverlayWindowPose()
+{
+	Openvr::TDeviceState Pose;
+	Pose.mClassName = "OverlayWindow";
+	Pose.mDeviceIndex = 0;
+	Pose.mIsKeyFrame = false;
+	Pose.mTrackedName = "OverlayWindow";
+
+	Pose.mPose.bDeviceIsConnected = mOverlay->IsOverlayVisible(mHandle);
+	Pose.mPose.bPoseIsValid = Pose.mPose.bDeviceIsConnected;
+
+	Pose.mPose.vVelocity = vr::HmdVector3_t{ 0,0,0 };
+	Pose.mPose.vAngularVelocity = vr::HmdVector3_t{ 0,0,0 };
+
+	vr::ETrackingUniverseOrigin Origin = vr::TrackingUniverseSeated;
+	auto Error = mOverlay->GetOverlayTransformAbsolute(mHandle, &Origin, &Pose.mPose.mDeviceToAbsoluteTracking);
+
+	return Pose;
+}
+
+void Openvr::TOverlay::UpdatePoses()
+{
+	if (!mOnNewPoses)
+		return;
+
+	//	get a world-space pose for the overlay window
+	Array<TDeviceState> States;
+	auto OverlayPose = GetOverlayWindowPose();
+	States.PushBack(OverlayPose);
+
+	mOnNewPoses( GetArrayBridge(States));
+}
+
 void Openvr::TOverlay::HandleEvent(vr::VREvent_t& Event)
 {
-	std::Debug << "Event " << Event.eventType << std::endl;
+	auto EventName = GetSystem().GetEventTypeNameFromEnum( static_cast<vr::EVREventType>(Event.eventType));
+	std::Debug << "Event " << EventName << std::endl;
 	/*
 	switch (vrEvent.eventType)
 	{
@@ -860,6 +943,8 @@ bool Openvr::TOverlay::Iteration()
 			HandleEvent(Event);
 		}
 	}
+
+	UpdatePoses();
 
 	return true;
 }
