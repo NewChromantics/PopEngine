@@ -82,9 +82,6 @@ protected:
 public:
 	std::shared_ptr<Openvr::THmd>&	mHmd = mObject;
 	
-	//	todo: remove this
-	Bind::TPersistent		mRenderContext;
-	
 	Bind::TPromiseQueue				mOnPosePromises;
 	std::mutex						mPosesLock;
 	Array<Openvr::TDeviceStates>	mPoses;

@@ -397,8 +397,16 @@ void Openvr::THmd::Thread()
 	//	loop
 	while ( IsThreadRunning() )
 	{
-		//	this blocks for us
-		WaitForFrameStart();
+		try
+		{
+			//	this blocks for us
+			WaitForFrameStart();
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Openvr thread exception" << e.what() << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		}
 	}
 }
 
