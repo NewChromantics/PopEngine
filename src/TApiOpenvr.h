@@ -53,7 +53,7 @@ class Openvr::TDeviceStates
 public:
 	bool							HasKeyframe();
 	SoyTime							mTime;
-	BufferArray<TDeviceState,64>	mDevices;
+	BufferArray<TDeviceState,99>	mDevices;
 };
 
 

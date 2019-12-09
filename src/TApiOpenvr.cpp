@@ -71,6 +71,7 @@ public:
 
 protected:
 	vr::IVRSystem&	GetSystem() {	return *mSystem;	}
+	void			GetPoses(ArrayBridge<Openvr::TDeviceState>&& States, bool Blocking);
 
 public:
 	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
@@ -524,17 +525,22 @@ TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
 }
 
 
-void Openvr::THmd::WaitForFrameStart()
+void Openvr::TApp::GetPoses(ArrayBridge<Openvr::TDeviceState>&& States,bool Blocking)
 {
 	auto& Compositor = *vr::VRCompositor();
-	vr::TrackedDevicePose_t TrackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
+	const auto PoseCount = vr::k_unMaxTrackedDeviceCount;
+	vr::TrackedDevicePose_t TrackedDevicePoses[PoseCount];
 
 	//	game poses are in the future (I think)
 	vr::TrackedDevicePose_t* GamePoseArray = nullptr;
 	size_t GamePoseArraySize = 0;
 
-	auto Error = Compositor.WaitGetPoses(TrackedDevicePoses,std::size(TrackedDevicePoses), GamePoseArray, GamePoseArraySize);
-	Openvr::IsOkay(Error, "WaitGetPoses");
+	vr::EVRCompositorError Error;
+	if (Blocking )
+		Error = Compositor.WaitGetPoses(TrackedDevicePoses, PoseCount, GamePoseArray, GamePoseArraySize);
+	else
+		Error = Compositor.GetLastPoses(TrackedDevicePoses, PoseCount, GamePoseArray, GamePoseArraySize);
+	Openvr::IsOkay(Error, Blocking ? "WaitGetPoses":"GetLastPoses");
 
 	auto& System = GetSystem();
 
@@ -554,20 +560,25 @@ void Openvr::THmd::WaitForFrameStart()
 		}
 	};
 
-	BufferArray<Openvr::TDeviceState, vr::k_unMaxTrackedDeviceCount> Devices;
-	for (auto i = 0; i < Devices.MaxSize(); i++)
+	for (auto i = 0; i < PoseCount; i++)
 	{
-		auto& Device = Devices.PushBack();
+		auto& Device = States.PushBack();
 		Device.mDeviceIndex = i;
 		Device.mPose = TrackedDevicePoses[i];
-		
+
 		//	is there a better unique identifier so we can cache this?
 		auto Type = System.GetTrackedDeviceClass(Device.mDeviceIndex);
 		Device.mClassName = magic_enum::enum_name<vr::ETrackedDeviceClass>(Type);
-		
+
 		Device.mTrackedName = GetString(Device.mDeviceIndex, vr::Prop_TrackingSystemName_String);
 	}
+}
 
+void Openvr::THmd::WaitForFrameStart()
+{
+	BufferArray<Openvr::TDeviceState, vr::k_unMaxTrackedDeviceCount> Devices;
+	GetPoses(GetArrayBridge(Devices), true);
+	
 	//	gr: add eye's to devices using GetEyeMatrix() so each eye has it's own device & extra properties
 
 	mOnNewPoses(GetArrayBridge(Devices));
@@ -816,6 +827,9 @@ void Openvr::TOverlay::UpdatePoses()
 	Array<TDeviceState> States;
 	auto OverlayPose = GetOverlayWindowPose();
 	States.PushBack(OverlayPose);
+
+	GetPoses(GetArrayBridge(States), false);
+
 
 	mOnNewPoses( GetArrayBridge(States));
 }
