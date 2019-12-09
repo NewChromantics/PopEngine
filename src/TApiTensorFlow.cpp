@@ -52,12 +52,29 @@ void ApiTensorFlow::TModelWrapper::CreateTemplate(Bind::TTemplate& Template)
 	//Template.BindFunction<BindFunction::WaitForPoses>(&THmdWrapper::WaitForPoses);
 }
 
-TensorFlow::TModel::TModel()
+TensorFlow::TModel::TModel(const std::string& Path)
 {
+	TF_Buffer* RunOptions = nullptr;
+	TF_SessionOptions* SessionOptions = nullptr;
+	const char* const* Tags = nullptr;
+	auto TagCount = 0;
+	TF_Status Error;
+	TF_Graph* Graph = TF_NewGraph();
+	TF_Buffer* MetaGraphDefinition = nullptr;
+
+https://github.com/tensorflow/tensorflow/blob/master/tensorflow/c/c_api_test.cc
+	auto* mSession = TF_LoadSessionFromSavedModel(SessionOptions, RunOptions, Path.c_str(), Tags, TagCount, Graph, MetaGraphDefinition, &Status);
 
 }
 
 TensorFlow::TModel::~TModel()
 {
-
+	/*
+	if (mSession)
+	{
+		TF_Status Error;
+		TF_CloseSession(mSession, &Error);
+		mSession = nullptr;
+	}
+	*/
 }
