@@ -115,6 +115,8 @@ public:
 
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
+	
+	void			SetTransform(Bind::TCallback& Params);
 
 protected:
 	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures) override;

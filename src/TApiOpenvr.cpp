@@ -20,6 +20,7 @@ namespace ApiOpenvr
 	//	deprecate these
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
+	DEFINE_BIND_FUNCTIONNAME(SetTransform);
 
 	DEFINE_BIND_FUNCTIONNAME( WaitForPoses);
 	DEFINE_BIND_FUNCTIONNAME( SubmitFrame);
@@ -113,6 +114,7 @@ public:
 
 	virtual bool	Iteration() override;
 	void			SubmitFrame(Opengl::TTexture& Image);
+	void			SetTransform(vr::HmdMatrix34_t& Transform);
 
 protected:
 	void			HandleEvent(vr::VREvent_t& Event);
@@ -161,6 +163,7 @@ void ApiOpenvr::TOverlayWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::OverlayWaitForPoses>(&TAppWrapper::WaitForPoses);
 	Template.BindFunction<BindFunction::OverlaySubmitFrame>(&TAppWrapper::SubmitFrame);
+	Template.BindFunction<BindFunction::SetTransform>(&TOverlayWrapper::SetTransform);
 }
 
 
@@ -216,6 +219,21 @@ bool Openvr::TDeviceStates::HasKeyframe()
 	return false;
 }
 
+BufferArray<float, 4 * 4> Transpose43To44(const vr::HmdMatrix34_t& Matrix43)
+{
+	auto* m = &Matrix43.m[0][0];
+
+	float m44[] =
+	{
+		m[0],m[4],m[8],0,
+		m[1],m[5],m[9],0,
+		m[2],m[6],m[10],0,
+		m[3],m[7],m[11],1,
+	};
+	return BufferArray<float,16>(m44);
+}
+
+
 void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 {
 	//	this needs to be faster really, v8 exposes that constructing a JSON string
@@ -223,6 +241,7 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 	static const std::string IsValidPose("IsValidPose");
 	static const std::string IsConnected("IsConnected");
 	static const std::string DeviceToAbsoluteTracking("DeviceToAbsoluteTracking");
+	static const std::string LocalToWorld("LocalToWorld");
 	static const std::string Velocity("Velocity");
 	static const std::string AngularVelocity("AngularVelocity");
 	static const std::string TrackingState("TrackingState");
@@ -233,9 +252,12 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 	Object.SetBool(IsValidPose, Pose.mPose.bPoseIsValid);
 	Object.SetBool(IsConnected, Pose.mPose.bDeviceIsConnected);
 	
-	auto DeviceToAbsoluteTrackingMatrix = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
-	Object.SetArray(DeviceToAbsoluteTracking, GetArrayBridge(DeviceToAbsoluteTrackingMatrix) );
+	auto LocalToWorldMatrix = Transpose43To44(Pose.mPose.mDeviceToAbsoluteTracking);
+	Object.SetArray(LocalToWorld, GetArrayBridge(LocalToWorldMatrix) );
+	//auto DeviceToAbsoluteTrackingMatrix = GetRemoteArray( &Pose.mPose.mDeviceToAbsoluteTracking.m[0][0], 3 * 4);
+	//Object.SetArray(DeviceToAbsoluteTracking, GetArrayBridge(DeviceToAbsoluteTrackingMatrix) );
 	
+
 	auto VelocityArray = GetRemoteArray(Pose.mPose.vVelocity.v);
 	Object.SetArray(Velocity, GetArrayBridge(VelocityArray) );
 	
@@ -731,7 +753,42 @@ void ApiOpenvr::TOverlayWrapper::Construct(Bind::TCallback& Params)
 	mOverlay->mOnNewPoses = std::bind(&THmdWrapper::OnNewPoses, this, std::placeholders::_1);
 }
 
+void ApiOpenvr::TOverlayWrapper::SetTransform(Bind::TCallback& Params)
+{
+	BufferArray<float, 4 * 4> Transform;
+	Params.GetArgumentArray(0, GetArrayBridge(Transform));
 
+	auto m00 = Transform[0];
+	auto m01 = Transform[1];
+	auto m02 = Transform[2];
+	auto m03 = Transform[3];
+	auto m10 = Transform[4];
+	auto m11 = Transform[5];
+	auto m12 = Transform[6];
+	auto m13 = Transform[7];
+	auto m20 = Transform[8];
+	auto m21 = Transform[9];
+	auto m22 = Transform[10];
+	auto m23 = Transform[11];
+	auto m30 = Transform[12];
+	auto m31 = Transform[13];
+	auto m32 = Transform[14];
+	auto m33 = Transform[15];
+	//	need to homogenise the other rows too?
+	m30 /= m33;
+	m31 /= m33;
+	m32 /= m33;
+
+	//	transposed and reduced to xyz (no w)
+	vr::HmdMatrix34_t Matrix43 =
+	{
+		m00, m10, m20, m30,
+		m01, m11, m21, m31,
+		m02, m12, m22, m32
+	};
+
+	mOverlay->SetTransform(Matrix43);
+}
 
 Openvr::TOverlay::TOverlay(const std::string& Name) :
 	SoyWorkerThread	("Openvr::Overlay",SoyWorkerWaitMode::Sleep)
@@ -762,15 +819,8 @@ Openvr::TOverlay::TOverlay(const std::string& Name) :
 		0.0f, 1.0f, 0.0f, Offset.y,
 		0.0f, 0.0f, 1.0f, Offset.z
 	};
-
-	/*
-	OError = mOverlay->SetOverlayTransformTrackedDeviceRelative(mHandle, vr::k_unTrackedDeviceIndex_Hmd, &InitialTransform);
-	IsOkay(OError, "SetOverlayTransformTrackedDeviceRelative");
-	*/
-	//	then, fix it in space by getting it's absolute, then setting it again (instead of relative)
-	auto TransformOrigin = vr::TrackingUniverseRawAndUncalibrated;
-	OError = mOverlay->SetOverlayTransformAbsolute(mHandle, TransformOrigin, &InitialTransform);
-	IsOkay(OError, "SetOverlayTransformAbsolute");
+	SetTransform(InitialTransform);
+	
 
 	//	stereo left/right flag
 	//	VROverlayFlags_SideBySide_Parallel
@@ -962,6 +1012,20 @@ bool Openvr::TOverlay::Iteration()
 
 	return true;
 }
+
+void Openvr::TOverlay::SetTransform(vr::HmdMatrix34_t& Transform)
+{
+	//	option to be relative to something
+	/*
+	OError = mOverlay->SetOverlayTransformTrackedDeviceRelative(mHandle, vr::k_unTrackedDeviceIndex_Hmd, &InitialTransform);
+	IsOkay(OError, "SetOverlayTransformTrackedDeviceRelative");
+	*/
+	//	then, fix it in space by getting it's absolute, then setting it again (instead of relative)
+	auto TransformOrigin = vr::TrackingUniverseStanding;
+	auto Error = mOverlay->SetOverlayTransformAbsolute(mHandle, TransformOrigin, &Transform );
+	IsOkay(Error, "SetOverlayTransformAbsolute");
+}
+
 
 void Openvr::TOverlay::SubmitFrame(Opengl::TTexture& OpenglTexture)
 {
