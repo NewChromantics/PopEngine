@@ -14,14 +14,17 @@ namespace ApiOpenvr
 	const char Namespace[] = "Pop.Openvr";
 
 	DEFINE_BIND_TYPENAME(Hmd);
+	DEFINE_BIND_TYPENAME(Overlay);
 	DEFINE_BIND_TYPENAME(Skeleton);
 
 	//	deprecate these
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
 
-	DEFINE_BIND_FUNCTIONNAME(WaitForPoses);
-	DEFINE_BIND_FUNCTIONNAME(SubmitFrame);
+	DEFINE_BIND_FUNCTIONNAME( WaitForPoses);
+	DEFINE_BIND_FUNCTIONNAME( SubmitFrame);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(OverlayWaitForPoses, WaitForPoses);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(OverlaySubmitFrame, SubmitFrame);
 
 
 	const std::string LeftHandJointPrefix = "Left";
@@ -36,6 +39,7 @@ namespace Openvr
 	void	IsOkay(vr::EVRInitError Error,const std::string& Context);
 	void	IsOkay(vr::EVRCompositorError Error,const std::string& Context);
 	void	IsOkay(vr::ETrackedPropertyError Error, const std::string& Context);
+	void	IsOkay(vr::EVROverlayError Error, const std::string& Context);
 
 	class TDeviceState;
 }
@@ -56,14 +60,6 @@ public:
 	vr::HmdMatrix44_t	mPose;
 	uint32_t			mRenderTargetWidth = 0;		//	"recommended"
 	uint32_t			mRenderTargetHeight = 0;	//	"recommended"
-};
-
-
-class Openvr::THmdFrame
-{
-public:
-	TEyeMatrix		mEye;
-	Opengl::TAsset	mEyeTexture;
 };
 
 class Openvr::THmd : public SoyThread
@@ -92,6 +88,25 @@ public:
 
 
 
+class Openvr::TOverlay : public SoyWorkerThread
+{
+public:
+	TOverlay(const std::string& Name);
+	~TOverlay();
+
+	virtual bool	Iteration() override;
+	void			SubmitFrame(Opengl::TTexture& Image);
+
+protected:
+	void			HandleEvent(vr::VREvent_t& Event);
+
+public:
+	vr::VROverlayHandle_t	mHandle = vr::k_ulOverlayHandleInvalid;
+	vr::VROverlayHandle_t	mThumbnailHandle = vr::k_ulOverlayHandleInvalid;
+	vr::IVRSystem*			mSystem = nullptr;
+	vr::IVROverlay*			mOverlay = nullptr;
+};
+
 
 
 void ApiOpenvr::Bind(Bind::TContext& Context)
@@ -99,6 +114,7 @@ void ApiOpenvr::Bind(Bind::TContext& Context)
 	Context.CreateGlobalObjectInstance("", Namespace);
 
 	Context.BindObjectType<THmdWrapper>(Namespace);
+	Context.BindObjectType<TOverlayWrapper>(Namespace);
 	Context.BindObjectType<TSkeletonWrapper>(Namespace);
 }
 
@@ -119,13 +135,19 @@ void ApiOpenvr::THmdWrapper::Construct(Bind::TCallback& Params)
 
 void ApiOpenvr::THmdWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::WaitForPoses>(&THmdWrapper::WaitForPoses);
-	Template.BindFunction<BindFunction::SubmitFrame>(&THmdWrapper::SubmitFrame);
+	Template.BindFunction<BindFunction::WaitForPoses>(&TAppWrapper::WaitForPoses);
+	Template.BindFunction<BindFunction::SubmitFrame>(&TAppWrapper::SubmitFrame);
+}
+
+void ApiOpenvr::TOverlayWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<BindFunction::OverlayWaitForPoses>(&TAppWrapper::WaitForPoses);
+	Template.BindFunction<BindFunction::OverlaySubmitFrame>(&TAppWrapper::SubmitFrame);
 }
 
 
 
-void ApiOpenvr::THmdWrapper::WaitForPoses(Bind::TCallback& Params)
+void ApiOpenvr::TAppWrapper::WaitForPoses(Bind::TCallback& Params)
 {
 	auto NewPromise = mOnPosePromises.AddPromise( Params.mLocalContext );
 	Params.Return( NewPromise );
@@ -133,20 +155,37 @@ void ApiOpenvr::THmdWrapper::WaitForPoses(Bind::TCallback& Params)
 	FlushPendingPoses();
 }
 
-void ApiOpenvr::THmdWrapper::SubmitFrame(Bind::TCallback& Params)
+void ApiOpenvr::TAppWrapper::SubmitFrame(Bind::TCallback& Params)
 {
+	//	either an array of images, or just one image
+	//	support 2 args too
 	//	gr: we're expecting this to be called whilst on a render thread...
 	//		are we? and the JS engine is locked to that thread?
 	//		check this (openvr will fail I guess)
-	auto& ImageLeft = Params.GetArgumentPointer<TImageWrapper>(0);
-	auto& ImageRight = Params.GetArgumentPointer<TImageWrapper>(1);
-	
-	auto& TextureLeft = ImageLeft.GetTexture();
-	auto& TextureRight = ImageRight.GetTexture();
+	BufferArray<Opengl::TTexture*, 2> Textures;
+	for (auto i = 0; i < Params.GetArgumentCount(); i++)
+	{
+		auto& Image = Params.GetArgumentPointer<TImageWrapper>(i);
+		auto& Texture = Image.GetTexture();
+		Textures.PushBack(&Texture);
+	}
 
-	auto& Hmd = *mHmd;
-	Hmd.SubmitFrame(TextureLeft, TextureRight);
+	SubmitFrame(Textures);
 }
+
+void ApiOpenvr::THmdWrapper::SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures)
+{
+	auto& Hmd = *mHmd;
+	Hmd.SubmitFrame(*Textures[0], *Textures[1]);
+}
+
+
+void ApiOpenvr::TOverlayWrapper::SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures)
+{
+	auto& Overlay = *mOverlay;
+	Overlay.SubmitFrame(*Textures[0]);
+}
+
 
 bool Openvr::TDeviceStates::HasKeyframe()
 {
@@ -195,7 +234,7 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 
 };
 
-Openvr::TDeviceStates ApiOpenvr::THmdWrapper::PopPose()
+Openvr::TDeviceStates ApiOpenvr::TAppWrapper::PopPose()
 {
 	if ( mPoses.IsEmpty() )
 		throw Soy::AssertException("PopPose() with none in the queue");
@@ -220,7 +259,7 @@ Openvr::TDeviceStates ApiOpenvr::THmdWrapper::PopPose()
 	return Pose0;
 }
 
-void ApiOpenvr::THmdWrapper::FlushPendingPoses()
+void ApiOpenvr::TAppWrapper::FlushPendingPoses()
 {
 	//	either no data, or no-one waiting yet
 	if (!mOnPosePromises.HasPromises())
@@ -265,7 +304,7 @@ void ApiOpenvr::THmdWrapper::FlushPendingPoses()
 	Context.Queue(Flush);
 }
 
-void ApiOpenvr::THmdWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses)
+void ApiOpenvr::TAppWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses)
 {
 	{
 		Openvr::TDeviceStates States;
@@ -358,6 +397,16 @@ void Openvr::IsOkay(vr::EVRCompositorError Error,const std::string& Context)
 	if ( Error == vr::VRCompositorError_None )
 		return;
 	
+	std::stringstream Exception;
+	Exception << Context << " openvr error: " << Error;
+	throw Soy::AssertException(Exception);
+}
+
+void Openvr::IsOkay(vr::EVROverlayError Error, const std::string& Context)
+{
+	if (Error == vr::VROverlayError_None)
+		return;
+
 	std::stringstream Exception;
 	Exception << Context << " openvr error: " << Error;
 	throw Soy::AssertException(Exception);
@@ -640,4 +689,189 @@ void ApiOpenvr::TSkeletonWrapper::GetNextFrame(Bind::TCallback& Params)
 
 	//	flush any current gestures
 	OnNewGesture();
+}
+
+
+void ApiOpenvr::TOverlayWrapper::Construct(Bind::TCallback& Params)
+{
+	auto Name = Params.GetArgumentString(0);
+	mOverlay.reset(new Openvr::TOverlay(Name));
+}
+
+
+
+Openvr::TOverlay::TOverlay(const std::string& Name) :
+	SoyWorkerThread	("Openvr::Overlay",SoyWorkerWaitMode::Sleep)
+{
+#if defined(TARGET_OSX)
+	throw Soy::AssertException("No openvr on osx... can't get library to sign atm");
+#endif
+	vr::EVRInitError Error = vr::VRInitError_None;
+	mSystem = vr::VR_Init(&Error, vr::VRApplication_Overlay);
+	IsOkay(Error, "VR_Init");
+
+	mOverlay = vr::VROverlay();
+	if ( !mOverlay )
+		throw Soy::AssertException("Failed to allocate overlay");
+
+	auto OError = mOverlay->CreateDashboardOverlay(Name.c_str(), Name.c_str(), &mHandle, &mThumbnailHandle );
+	IsOkay(OError, "CreateDashboardOverlay");
+
+	const float Width = 1.5;
+	mOverlay->SetOverlayWidthInMeters(mHandle, Width);
+	mOverlay->SetOverlayInputMethod(mHandle, vr::VROverlayInputMethod_Mouse);
+
+	mOverlay->ShowOverlay(mHandle);
+
+	Start();
+}
+
+Openvr::TOverlay::~TOverlay()
+{
+	Stop();
+
+	if (mOverlay)
+	{
+		vr::VR_Shutdown();
+		mOverlay = nullptr;
+	}
+}
+
+
+void Openvr::TOverlay::HandleEvent(vr::VREvent_t& Event)
+{
+	std::Debug << "Event " << Event.eventType << std::endl;
+	/*
+	switch (vrEvent.eventType)
+	{
+	case vr::VREvent_MouseMove:
+	{
+		QPointF ptNewMouse(vrEvent.data.mouse.x, vrEvent.data.mouse.y);
+		QPoint ptGlobal = ptNewMouse.toPoint();
+		QGraphicsSceneMouseEvent mouseEvent(QEvent::GraphicsSceneMouseMove);
+		mouseEvent.setWidget(NULL);
+		mouseEvent.setPos(ptNewMouse);
+		mouseEvent.setScenePos(ptGlobal);
+		mouseEvent.setScreenPos(ptGlobal);
+		mouseEvent.setLastPos(m_ptLastMouse);
+		mouseEvent.setLastScenePos(m_pWidget->mapToGlobal(m_ptLastMouse.toPoint()));
+		mouseEvent.setLastScreenPos(m_pWidget->mapToGlobal(m_ptLastMouse.toPoint()));
+		mouseEvent.setButtons(m_lastMouseButtons);
+		mouseEvent.setButton(Qt::NoButton);
+		mouseEvent.setModifiers(0);
+		mouseEvent.setAccepted(false);
+
+		m_ptLastMouse = ptNewMouse;
+		QApplication::sendEvent(m_pScene, &mouseEvent);
+
+		OnSceneChanged(QList<QRectF>());
+	}
+	break;
+
+	case vr::VREvent_MouseButtonDown:
+	{
+		Qt::MouseButton button = vrEvent.data.mouse.button == vr::VRMouseButton_Right ? Qt::RightButton : Qt::LeftButton;
+
+		m_lastMouseButtons |= button;
+
+		QPoint ptGlobal = m_ptLastMouse.toPoint();
+		QGraphicsSceneMouseEvent mouseEvent(QEvent::GraphicsSceneMousePress);
+		mouseEvent.setWidget(NULL);
+		mouseEvent.setPos(m_ptLastMouse);
+		mouseEvent.setButtonDownPos(button, m_ptLastMouse);
+		mouseEvent.setButtonDownScenePos(button, ptGlobal);
+		mouseEvent.setButtonDownScreenPos(button, ptGlobal);
+		mouseEvent.setScenePos(ptGlobal);
+		mouseEvent.setScreenPos(ptGlobal);
+		mouseEvent.setLastPos(m_ptLastMouse);
+		mouseEvent.setLastScenePos(ptGlobal);
+		mouseEvent.setLastScreenPos(ptGlobal);
+		mouseEvent.setButtons(m_lastMouseButtons);
+		mouseEvent.setButton(button);
+		mouseEvent.setModifiers(0);
+		mouseEvent.setAccepted(false);
+
+		QApplication::sendEvent(m_pScene, &mouseEvent);
+	}
+	break;
+
+	case vr::VREvent_MouseButtonUp:
+	{
+		Qt::MouseButton button = vrEvent.data.mouse.button == vr::VRMouseButton_Right ? Qt::RightButton : Qt::LeftButton;
+		m_lastMouseButtons &= ~button;
+
+		QPoint ptGlobal = m_ptLastMouse.toPoint();
+		QGraphicsSceneMouseEvent mouseEvent(QEvent::GraphicsSceneMouseRelease);
+		mouseEvent.setWidget(NULL);
+		mouseEvent.setPos(m_ptLastMouse);
+		mouseEvent.setScenePos(ptGlobal);
+		mouseEvent.setScreenPos(ptGlobal);
+		mouseEvent.setLastPos(m_ptLastMouse);
+		mouseEvent.setLastScenePos(ptGlobal);
+		mouseEvent.setLastScreenPos(ptGlobal);
+		mouseEvent.setButtons(m_lastMouseButtons);
+		mouseEvent.setButton(button);
+		mouseEvent.setModifiers(0);
+		mouseEvent.setAccepted(false);
+
+		QApplication::sendEvent(m_pScene, &mouseEvent);
+	}
+	break;
+
+	case vr::VREvent_OverlayShown:
+	{
+		m_pWidget->repaint();
+	}
+	break;
+
+	case vr::VREvent_Quit:
+		QApplication::exit();
+		break;
+	}
+}
+switch (vrEvent.eventType)
+{
+case vr::VREvent_OverlayShown:
+{
+	m_pWidget->repaint();
+}
+break;
+}
+			}
+			*/
+}
+
+
+bool Openvr::TOverlay::Iteration()
+{
+	auto& Overlay = *mOverlay;
+	
+	vr::VREvent_t Event;
+	while (Overlay.PollNextOverlayEvent(mHandle, &Event, sizeof(Event)))
+	{
+		HandleEvent(Event);
+	}
+
+	//	update thumbnail events
+	if (mThumbnailHandle != vr::k_ulOverlayHandleInvalid)
+	{
+		while (Overlay.PollNextOverlayEvent(mThumbnailHandle, &Event, sizeof(Event)))
+		{
+			HandleEvent(Event);
+		}
+	}
+
+	return true;
+}
+
+void Openvr::TOverlay::SubmitFrame(Opengl::TTexture& OpenglTexture)
+{
+	auto& Overlay = *mOverlay;
+
+	vr::Texture_t Texture;
+	Texture.handle = reinterpret_cast<void*>(static_cast<uintptr_t>(OpenglTexture.mTexture.mName));
+	Texture.eType = vr::TextureType_OpenGL;
+	Texture.eColorSpace = vr::ColorSpace_Auto;
+	
+	Overlay.SetOverlayTexture(mHandle, &Texture);
 }

@@ -11,8 +11,8 @@ namespace Opengl
 
 namespace Openvr
 {
+	class TOverlay;
 	class THmd;
-	class THmdFrame;
 	class TDeviceState;
 	class TDeviceStates;
 
@@ -28,9 +28,12 @@ namespace ApiOpenvr
 {
 	void	Bind(Bind::TContext& Context);
 
+	class TAppWrapper;
 	class THmdWrapper;
 	class TSkeletonWrapper;
+	class TOverlayWrapper;
 	DECLARE_BIND_TYPENAME(Hmd);
+	DECLARE_BIND_TYPENAME(Overlay);
 	DECLARE_BIND_TYPENAME(Skeleton);
 }
 
@@ -54,7 +57,33 @@ public:
 };
 
 
-class ApiOpenvr::THmdWrapper : public Bind::TObjectWrapper<ApiOpenvr::BindType::Hmd,Openvr::THmd>
+
+class ApiOpenvr::TAppWrapper
+{
+public:
+	void			OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses);
+
+	//	get a promise for new poses, this lets us not clog up JS job queues with callbacks
+	void			WaitForPoses(Bind::TCallback& Params);
+
+	//	this NEEDS to be called from a window render on the opengl thread...
+	void			SubmitFrame(Bind::TCallback& Params);
+
+protected:
+	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*,2>& Textures) = 0;
+
+private:
+	void					FlushPendingPoses();
+	Openvr::TDeviceStates	PopPose();				//	get latest keyframe pose, or just last pose if no keyframes
+
+private:
+	Bind::TPromiseQueue				mOnPosePromises;
+	std::mutex						mPosesLock;
+	Array<Openvr::TDeviceStates>	mPoses;
+};
+
+
+class ApiOpenvr::THmdWrapper : public Bind::TObjectWrapper<ApiOpenvr::BindType::Hmd,Openvr::THmd>, public TAppWrapper
 {
 public:
 	THmdWrapper(Bind::TContext& Context) :
@@ -65,26 +94,33 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
-	void			OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses);
-	
-	//	get a promise for new poses, this lets us not clog up JS job queues with callbacks
-	//	todo: send eye matrix's with this
-	void			WaitForPoses(Bind::TCallback& Params);
 	void			GetEyeMatrix(Bind::TCallback& Params);
 
-	//	this NEEDS to be called from a window render on the opengl thread...
-	void			SubmitFrame(Bind::TCallback& Params);
-	
 protected:
-	void					FlushPendingPoses();
-	Openvr::TDeviceStates	PopPose();				//	get latest keyframe pose, or just last pose if no keyframes
+	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures) override;
 
 public:
 	std::shared_ptr<Openvr::THmd>&	mHmd = mObject;
-	
-	Bind::TPromiseQueue				mOnPosePromises;
-	std::mutex						mPosesLock;
-	Array<Openvr::TDeviceStates>	mPoses;
+};
+
+
+
+class ApiOpenvr::TOverlayWrapper : public Bind::TObjectWrapper<ApiOpenvr::BindType::Overlay, Openvr::TOverlay>, public TAppWrapper
+{
+public:
+	TOverlayWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+
+protected:
+	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures) override;
+
+public:
+	std::shared_ptr<Openvr::TOverlay>&	mOverlay = mObject;
 };
 
 
