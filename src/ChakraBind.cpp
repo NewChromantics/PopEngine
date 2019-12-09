@@ -1366,6 +1366,10 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 
 void		JSClassRetain(JSClassRef Class)
 {
+	//	protect values here?
+	JSContextRef Context = nullptr;
+	JSValueProtect(Context, Class.mConstructor);
+	JSValueProtect(Context, Class.mPrototype);
 }
 
 
