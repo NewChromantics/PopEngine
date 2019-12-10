@@ -632,7 +632,19 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 
 JSValueRef JSObjectGetProperty(JSContextRef Context, JSObjectRef This,JSStringRef Name, JSValueRef* Exception)
 {
-	THROW_TODO;
+	JsPropertyIdRef Property = nullptr;
+	auto Error = JsGetPropertyIdFromSymbol(Name.mValue, &Property);
+	Chakra::IsOkay(Error, "JsGetPropertyIdFromSymbol");
+	if (!Property)
+		throw Soy::AssertException("JsGetProperty got null Property");
+
+	JSValueRef Value = nullptr;
+	Error = JsGetProperty(This.mValue, Property, &Value);
+	Chakra::IsOkay(Error, "JsGetProperty");
+	if (!Value)
+		throw Soy::AssertException("JsGetProperty got null value");
+
+	return Value;
 }
 
 JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef* Exception)
@@ -749,17 +761,47 @@ void		JSValueUnprotect(JSContextRef Context,JSValueRef Value)
 
 JSPropertyNameArrayRef JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRef This)
 {
-	THROW_TODO;
+	JsValueRef PropertyNamesArray = nullptr;
+	auto Error = JsGetOwnPropertyNames(This.mValue, &PropertyNamesArray);
+	Chakra::IsOkay(Error, "JsGetOwnPropertyNames");
+	return PropertyNamesArray;
 }
 
 size_t JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
 {
-	THROW_TODO;
+	const int SafeLoop = 9999;
+	//	count indexes 
+	for (auto i = 0; i < SafeLoop; i++)
+	{
+		JsValueRef iValue = nullptr;
+		auto Error = JsIntToNumber(i, &iValue);
+		Chakra::IsOkay(Error, "JsIntToNumber");
+		
+		bool HasIndex = false;
+		Error = JsHasIndexedProperty(Keys.mValue, iValue, &HasIndex);
+		Chakra::IsOkay(Error, "JsHasIndexedProperty");
+		
+		if (!HasIndex)
+			return i;	//	count
+	}
+
+	throw Soy::AssertException("Iterating over properties went over safe loop");
 }
 
 JSStringRef JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t Index)
 {
-	THROW_TODO;
+	//	this is returning a string, but really its a key
+	//	there's a slight mis-match here, JSCore everything is a string, but in others
+	//	keys are seperate properties
+	JsValueRef IndexValue = nullptr;
+	auto Error = JsIntToNumber(Index, &IndexValue);
+	Chakra::IsOkay(Error, "JsIntToNumber");
+	
+	JSValueRef Element = nullptr;
+	Error = JsGetIndexedProperty(Keys.mValue, IndexValue, &Element);
+	Chakra::IsOkay(Error, "JsGetIndexedProperty");
+
+	return Element;
 }
 
 

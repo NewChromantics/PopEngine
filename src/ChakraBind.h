@@ -191,7 +191,7 @@ public:
 
 typedef JSValueWrapper JSObjectRef;
 typedef JSValueWrapper JSStringRef;
-
+typedef JSValueWrapper JSPropertyNameArrayRef;
 
 
 typedef void(*JSTypedArrayBytesDeallocator)(void* bytes, void* deallocatorContext);
@@ -238,14 +238,6 @@ public:
 	JSValueRef			mConstructor = nullptr;
 	JsValueRef			mPrototype = nullptr;
 };
-
-
-class JSPropertyNameArrayRef
-{
-public:
-
-};
-
 
 
 
