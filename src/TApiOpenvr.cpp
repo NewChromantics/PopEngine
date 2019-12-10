@@ -248,6 +248,7 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 	static const std::string Class("Class");
 	static const std::string Name("Name");
 	static const std::string DeviceIndex("DeviceIndex");
+	static const std::string LocalBounds("LocalBounds");
 
 	Object.SetBool(IsValidPose, Pose.mPose.bPoseIsValid);
 	Object.SetBool(IsConnected, Pose.mPose.bDeviceIsConnected);
@@ -272,6 +273,17 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 
 	Object.SetInt(DeviceIndex, Pose.mDeviceIndex);
 
+	if (Pose.HasLocalBounds())
+	{
+		BufferArray<float, 6> LocalBoundsFloats;
+		LocalBoundsFloats.PushBack(Pose.mLocalBounds.min.x);
+		LocalBoundsFloats.PushBack(Pose.mLocalBounds.min.y);
+		LocalBoundsFloats.PushBack(Pose.mLocalBounds.min.z);
+		LocalBoundsFloats.PushBack(Pose.mLocalBounds.max.x);
+		LocalBoundsFloats.PushBack(Pose.mLocalBounds.max.y);
+		LocalBoundsFloats.PushBack(Pose.mLocalBounds.max.z);
+		Object.SetArray(LocalBounds, GetArrayBridge(LocalBoundsFloats));
+	}
 };
 
 Openvr::TDeviceStates ApiOpenvr::TAppWrapper::PopPose()
@@ -852,9 +864,19 @@ Openvr::TDeviceState Openvr::TOverlay::GetOverlayWindowPose()
 {
 	Openvr::TDeviceState Pose;
 	Pose.mClassName = "OverlayWindow";
-	Pose.mDeviceIndex = 0;
 	Pose.mIsKeyFrame = false;
 	Pose.mTrackedName = "OverlayWindow";
+
+	float Width = 0;
+	auto Error = mOverlay->GetOverlayWidthInMeters(mHandle,&Width);
+	IsOkay(Error, "GetOverlayWidthInMeters");
+	Pose.mLocalBounds.min.x = -Width / 2.0f;
+	Pose.mLocalBounds.max.x = Width / 2.0f;
+	Pose.mLocalBounds.min.y = -Width / 2.0f;
+	Pose.mLocalBounds.max.y = Width / 2.0f;
+	Pose.mLocalBounds.min.z = 0;
+	Pose.mLocalBounds.max.z = 0.01f;
+
 
 	Pose.mPose.bDeviceIsConnected = mOverlay->IsOverlayVisible(mHandle);
 	Pose.mPose.bPoseIsValid = Pose.mPose.bDeviceIsConnected;
@@ -863,7 +885,8 @@ Openvr::TDeviceState Openvr::TOverlay::GetOverlayWindowPose()
 	Pose.mPose.vAngularVelocity = vr::HmdVector3_t{ 0,0,0 };
 
 	vr::ETrackingUniverseOrigin Origin = vr::TrackingUniverseSeated;
-	auto Error = mOverlay->GetOverlayTransformAbsolute(mHandle, &Origin, &Pose.mPose.mDeviceToAbsoluteTracking);
+	Error = mOverlay->GetOverlayTransformAbsolute(mHandle, &Origin, &Pose.mPose.mDeviceToAbsoluteTracking);
+	IsOkay(Error, "GetOverlayTransformAbsolute");
 
 	return Pose;
 }

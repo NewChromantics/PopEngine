@@ -40,11 +40,19 @@ namespace ApiOpenvr
 class Openvr::TDeviceState
 {
 public:
-	uint32_t				mDeviceIndex = 0;
+	int32_t					mDeviceIndex = -1;
 	vr::TrackedDevicePose_t	mPose;
 	std::string				mTrackedName;
 	std::string				mClassName;
 	bool					mIsKeyFrame = false;	//	set keyframe for button changes, connect/disconnects
+	Soy::Bounds3f			mLocalBounds;
+	bool					HasLocalBounds() const
+	{
+		float w = mLocalBounds.max.x - mLocalBounds.min.x;
+		float h = mLocalBounds.max.y - mLocalBounds.min.y;
+		float d = mLocalBounds.max.z - mLocalBounds.min.z;
+		return (w*h*d) != 0.f;
+	}
 };
 
 //	fix this naming, poses or devices
