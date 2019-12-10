@@ -1260,6 +1260,9 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 	mWindowThread.reset(new Platform::TWin32Thread(std::string("OpenWindow::") + Name));
 	
 	//	need to create on the correct thread
+	//	this can be called at the same time that JS is assigning events
+	//	so don't assume they're non-null
+	//	do they need a lock?
 	auto CreateControls = [&]()
 	{
 		bool Resizable = true;
@@ -1268,6 +1271,8 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 
 		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget, std::function<void()> LockContext)
 		{
+			if (!mOnRender)
+				return;
 			mOnRender(RenderTarget, LockContext);
 		};
 		mWindowContext->mOnRender = OnRender;
@@ -1277,12 +1282,13 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 			this->OnClosed();
 		};
 
+		//	gr: can I use std::bind?
 		auto& Win = static_cast<Platform::TControl&>(*mWindow);
-		Win.mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseDown(Pos, Button); };
-		Win.mOnMouseUp = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseUp(Pos, Button); };
-		Win.mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	this->mOnMouseMove(Pos, Button); };
-		Win.mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyDown(Key); };
-		Win.mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	this->mOnKeyUp(Key); };
+		Win.mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button)	{	if ( this->mOnMouseDown ) this->mOnMouseDown(Pos, Button); };
+		Win.mOnMouseUp = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button)		{	if ( mOnMouseUp ) this->mOnMouseUp(Pos, Button); };
+		Win.mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button)	{	if ( mOnMouseMove ) this->mOnMouseMove(Pos, Button); };
+		Win.mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key)	{	if (mOnKeyDown )	this->mOnKeyDown(Key); };
+		Win.mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key)		{	if (mOnKeyUp )		this->mOnKeyUp(Key); };
 	};
 	Soy::TSemaphore Wait;
 	mWindowThread->PushJob(CreateControls, Wait);
