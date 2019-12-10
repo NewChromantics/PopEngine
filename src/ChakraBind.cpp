@@ -202,6 +202,23 @@ JsPropertyIdRef GetProperty(JSContextRef Context, const std::string& Name)
 	return Property;
 }
 
+JsPropertyIdRef GetProperty(JSContextRef Context,JSStringRef Name)
+{
+	//	well, this is annoying, gotta go back to string and back again
+
+	//	get a pointer, this exists for the lifetime of the JsValue, 
+	//	so just use it quickly here
+	const wchar_t* NameString = nullptr;
+	size_t NameStringLength = 0;
+	auto Error = JsStringToPointer(Name.mValue, &NameString, &NameStringLength);
+	Chakra::IsOkay(Error, "JsStringToPointer");
+
+	JsPropertyIdRef Property = nullptr;
+	Error = JsGetPropertyIdFromName(NameString, &Property);
+	Chakra::IsOkay(Error, "JsGetPropertyIdFromName");
+
+	return Property;
+}
 
 std::string GetPropertyString(JSContextRef Context,JSObjectRef Object,const std::string& PropertyName)
 {
@@ -632,14 +649,9 @@ JSObjectRef	JSObjectMake(JSContextRef Context,JSClassRef Class,void* Data)
 
 JSValueRef JSObjectGetProperty(JSContextRef Context, JSObjectRef This,JSStringRef Name, JSValueRef* Exception)
 {
-	JsPropertyIdRef Property = nullptr;
-	auto Error = JsGetPropertyIdFromSymbol(Name.mValue, &Property);
-	Chakra::IsOkay(Error, "JsGetPropertyIdFromSymbol");
-	if (!Property)
-		throw Soy::AssertException("JsGetProperty got null Property");
-
 	JSValueRef Value = nullptr;
-	Error = JsGetProperty(This.mValue, Property, &Value);
+	auto Property = GetProperty(Context, Name);
+	auto Error = JsGetProperty(This.mValue, Property, &Value);
 	Chakra::IsOkay(Error, "JsGetProperty");
 	if (!Value)
 		throw Soy::AssertException("JsGetProperty got null value");
@@ -769,6 +781,31 @@ JSPropertyNameArrayRef JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRe
 
 size_t JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
 {
+	//	gr: iirc "length" doesn't appear in OSX build of chakra
+	//		this gives 13 results for a x12 array. 0...12 and then length
+	//	in chakra, all the indexes are propertyid's, we can probbaly cache
+	//	integer propertyids
+	{
+		JsPropertyIdRef Property = nullptr;
+		auto Error = JsGetPropertyIdFromName(L"length", &Property);
+		Chakra::IsOkay(Error, "JsGetPropertyIdFromName(length)");
+
+		JSContextRef Context = nullptr;
+		JsValueRef LengthValue = nullptr;
+		Error = JsGetProperty(Keys.mValue, Property, &LengthValue);
+		Chakra::IsOkay(Error, "JsGetProperty (length)");
+
+		int Length = -1;
+		Error = JsNumberToInt(LengthValue, &Length);
+		Chakra::IsOkay(Error, "JsNumberToInt (length)");
+		if (Length < 1)
+			throw Soy::AssertException("Array length negative (or less than 1, should include length)");
+
+		//	number of elements includes length, argh
+		Length--;
+		return Length;
+	}
+
 	const int SafeLoop = 9999;
 	//	count indexes 
 	for (auto i = 0; i < SafeLoop; i++)
