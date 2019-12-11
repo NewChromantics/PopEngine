@@ -1441,6 +1441,16 @@ size_t TImageWrapper::GetLatestVersion() const
 	return MaxVersion;
 }
 
+void TImageWrapper::SetOpenglTexture(const Opengl::TAsset& Texture)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+
+	//	todo: delete old texture
+	mOpenglTexture.reset(new Opengl::TTexture(Texture.mName, SoyPixelsMeta(), GL_TEXTURE_2D));
+	auto LatestVersion = GetLatestVersion();
+	mOpenglTextureVersion = LatestVersion + 1;
+}
+
 
 void TImageWrapper::OnOpenglTextureChanged(Opengl::TContext& Context)
 {

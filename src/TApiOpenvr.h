@@ -2,6 +2,7 @@
 #include "TBind.h"
 #include "Libs/OpenVr/headers/openvr.h"
 
+class TImageWrapper;
 
 namespace Opengl
 {
@@ -11,6 +12,7 @@ namespace Opengl
 
 namespace Openvr
 {
+	class TApp;		//	common openvr access for hmd+overlay
 	class TOverlay;
 	class THmd;
 	class TDeviceState;
@@ -77,13 +79,29 @@ public:
 	//	this NEEDS to be called from a window render on the opengl thread...
 	void			SubmitFrame(Bind::TCallback& Params);
 
+	//	promise to fetch texture and request pixel-read
+	void			WaitForMirrorImage(Bind::TCallback& Params);
+
 protected:
-	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*,2>& Textures) = 0;
+	virtual Openvr::TApp&	GetApp() = 0;
+	virtual void			SubmitFrame(BufferArray<Opengl::TTexture*,2>& Textures) = 0;
 
 private:
 	void					FlushPendingPoses();
 	Openvr::TDeviceStates	PopPose();				//	get latest keyframe pose, or just last pose if no keyframes
 
+	void					FlushPendingMirrors();
+
+private:
+	void					UpdateMirrorTexture(Opengl::TContext& Context,TImageWrapper& MirrorImage,bool ReadBackPixels);
+	void					SetMirrorError(const char* Error);
+
+protected:
+	Bind::TPersistent				mMirrorImage;
+	Bind::TPromiseQueue				mOnMirrorPromises;
+	bool							mMirrorChanged = false;
+	std::string						mMirrorError;
+	
 private:
 	Bind::TPromiseQueue				mOnPosePromises;
 	std::mutex						mPosesLock;
@@ -106,6 +124,7 @@ public:
 
 protected:
 	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures) override;
+	virtual Openvr::TApp&	GetApp() override;
 
 public:
 	std::shared_ptr<Openvr::THmd>&	mHmd = mObject;
@@ -128,6 +147,7 @@ public:
 
 protected:
 	virtual void	SubmitFrame(BufferArray<Opengl::TTexture*, 2>& Textures) override;
+	virtual Openvr::TApp&	GetApp() override;
 
 public:
 	std::shared_ptr<Openvr::TOverlay>&	mOverlay = mObject;

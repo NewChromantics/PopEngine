@@ -20,7 +20,9 @@ namespace ApiOpenvr
 	//	deprecate these
 	DEFINE_BIND_FUNCTIONNAME(GetEyeMatrix);
 	DEFINE_BIND_FUNCTIONNAME(GetNextFrame);
+
 	DEFINE_BIND_FUNCTIONNAME(SetTransform);
+	DEFINE_BIND_FUNCTIONNAME(WaitForMirrorImage);
 
 	DEFINE_BIND_FUNCTIONNAME( WaitForPoses);
 	DEFINE_BIND_FUNCTIONNAME( SubmitFrame);
@@ -71,14 +73,19 @@ public:
 	~TApp();
 
 protected:
+	vr::IVRCompositor&	GetCompositor() {	return *mCompositor;	}
 	vr::IVRSystem&	GetSystem() {	return *mSystem;	}
 	void			GetPoses(ArrayBridge<Openvr::TDeviceState>&& States, bool Blocking);
 
 public:
 	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
 
+	vr::IVRCompositor*	mCompositor = nullptr;
+	vr::glUInt_t		mMirrorTexture = 0;
+	vr::glSharedTextureHandle_t	mMirrorTextureHandle = nullptr;
+
 protected:
-	vr::IVRSystem*	mSystem = nullptr;
+	vr::IVRSystem*		mSystem = nullptr;
 };
 
 class Openvr::THmd : public SoyThread, public TApp
@@ -164,8 +171,110 @@ void ApiOpenvr::TOverlayWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::OverlayWaitForPoses>(&TAppWrapper::WaitForPoses);
 	Template.BindFunction<BindFunction::OverlaySubmitFrame>(&TAppWrapper::SubmitFrame);
 	Template.BindFunction<BindFunction::SetTransform>(&TOverlayWrapper::SetTransform);
+	Template.BindFunction<BindFunction::WaitForMirrorImage>(&TOverlayWrapper::WaitForMirrorImage);
 }
 
+Openvr::TApp& ApiOpenvr::TOverlayWrapper::GetApp()
+{
+	return *mOverlay;
+}
+
+Openvr::TApp& ApiOpenvr::THmdWrapper::GetApp()
+{
+	return *mHmd;
+}
+
+void ApiOpenvr::TAppWrapper::UpdateMirrorTexture(Opengl::TContext& Context,TImageWrapper& MirrorImage,bool ReadBackPixels)
+{
+	//	setup texture from openvr & assign to image
+	auto& Overlay = GetApp();
+	auto& MirrorTextureName = Overlay.mMirrorTexture;
+	auto& MirrorTextureHandle = Overlay.mMirrorTextureHandle;
+	//	fetching this texture needs to be done from opengl thread
+	if (MirrorTextureName == 0 || !MirrorTextureHandle)
+	{
+		auto CError = Overlay.mCompositor->GetMirrorTextureGL(vr::Eye_Left, &MirrorTextureName, &MirrorTextureHandle);
+		Openvr::IsOkay(CError, "GetMirrorTextureGL");
+
+		//	this makes the texture update!
+		Overlay.mCompositor->LockGLSharedTextureForAccess(MirrorTextureHandle);
+
+		Opengl::TAsset TextureName(MirrorTextureName);
+		MirrorImage.SetOpenglTexture(TextureName);
+	}
+
+	//	copy it to our own texture?
+
+	//	read back pixels
+	MirrorImage.OnOpenglTextureChanged(Context);
+	if (ReadBackPixels)
+	{
+		MirrorImage.ReadOpenglPixels(SoyPixelsFormat::RGBA);
+	}
+
+	//	update state for promises
+	this->mMirrorChanged = true;
+	this->SetMirrorError(nullptr);
+	FlushPendingMirrors();
+}
+
+void ApiOpenvr::TAppWrapper::SetMirrorError(const char* Error)
+{
+	if (!Error)
+	{
+		mMirrorError = std::string();
+		FlushPendingMirrors();
+		return;
+	}
+
+	mMirrorError = Error;
+	FlushPendingMirrors();
+}
+
+void ApiOpenvr::TAppWrapper::WaitForMirrorImage(Bind::TCallback& Params)
+{
+	//	setup a job to fetch & update texture & pixels
+	//	get render context
+	auto& RenderContext = Params.GetArgumentPointer<TWindowWrapper>(0);
+	bool ReadPixels = false;
+	if (!Params.IsArgumentUndefined(1))
+		ReadPixels = Params.GetArgumentBool(1);
+
+	//	setup image object if we don't have one whilst on JS thread
+	if (!mMirrorImage)
+	{
+		auto MirrorImage = Params.mLocalContext.mGlobalContext.CreateObjectInstance(Params.mLocalContext, TImageWrapper::GetTypeName());
+		mMirrorImage = Bind::TPersistent(Params.mLocalContext, MirrorImage, "MirrorImage");
+	}
+	//	gr: we're passing the raw image to the opengl thread
+	//		I think if we passed the persistent object, we should be able to make sure it's not deallocated?
+	//		maybe we should have a queue of objects to release in the js context which all get unprotected in
+	//		next thread iteration and can be added to from any thread
+	auto MirrorImageObject = mMirrorImage.GetObject(Params.mLocalContext);
+	auto& MirrorImage = MirrorImageObject.This<TImageWrapper>();
+
+
+	auto OpenglContext = RenderContext.GetOpenglContext();
+	auto UpdateTextureJob = [=,&MirrorImage]()
+	{
+		if (!OpenglContext->IsLockedToThisThread())
+			throw Soy::AssertException("Function not being called on opengl thread");
+		try
+		{
+			this->UpdateMirrorTexture(*OpenglContext, MirrorImage, ReadPixels);
+		}
+		catch (std::exception& e)
+		{
+			this->SetMirrorError(e.what());
+		}
+	};
+	OpenglContext->PushJob(UpdateTextureJob);
+
+	auto NewPromise = mOnMirrorPromises.AddPromise(Params.mLocalContext);
+	Params.Return(NewPromise);
+
+	FlushPendingMirrors();
+}
 
 
 void ApiOpenvr::TAppWrapper::WaitForPoses(Bind::TCallback& Params)
@@ -355,6 +464,28 @@ void ApiOpenvr::TAppWrapper::FlushPendingPoses()
 	auto& Context = mOnPosePromises.GetContext();
 	Context.Queue(Flush);
 }
+
+
+void ApiOpenvr::TAppWrapper::FlushPendingMirrors()
+{
+	//	either no data, or no-one waiting yet
+	if (!mOnMirrorPromises.HasPromises())
+		return;
+	if (!mMirrorChanged)
+		return;
+
+	auto Flush = [this](Bind::TLocalContext& Context)
+	{
+		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)	
+		{
+			Promise.Resolve(LocalContext, this->mMirrorImage.GetObject(LocalContext) );
+		};
+		mOnMirrorPromises.Flush(HandlePromise);
+	};
+	auto& Context = mOnMirrorPromises.GetContext();
+	Context.Queue(Flush);
+}
+
 
 void ApiOpenvr::TAppWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Poses)
 {
@@ -765,6 +896,7 @@ void ApiOpenvr::TOverlayWrapper::Construct(Bind::TCallback& Params)
 	mOverlay->mOnNewPoses = std::bind(&THmdWrapper::OnNewPoses, this, std::placeholders::_1);
 }
 
+
 void ApiOpenvr::TOverlayWrapper::SetTransform(Bind::TCallback& Params)
 {
 	BufferArray<float, 4 * 4> Transform;
@@ -812,6 +944,10 @@ Openvr::TOverlay::TOverlay(const std::string& Name) :
 	mSystem = vr::VR_Init(&Error, vr::VRApplication_Overlay);
 	IsOkay(Error, "VR_Init");
 
+	mCompositor = vr::VRCompositor();
+	if (!mCompositor)
+		throw Soy::AssertException("Failed to allocate compositor");
+
 	mOverlay = vr::VROverlay();
 	if ( !mOverlay )
 		throw Soy::AssertException("Failed to allocate overlay");
@@ -819,7 +955,7 @@ Openvr::TOverlay::TOverlay(const std::string& Name) :
 	//mOverlay->CreateOverlay
 	//auto OError = mOverlay->CreateDhasboardOverlay(Name.c_str(), Name.c_str(), &mHandle, &mThumbnailHandle );
 	auto OError = mOverlay->CreateOverlay(Name.c_str(), Name.c_str(), &mHandle );
-	IsOkay(OError, "CreateDashboardOverlay");
+	IsOkay(OError, "CreateOverlay");
 
 	
 	//	dashboard overlay has a default transform, but for a normal one we need to init
