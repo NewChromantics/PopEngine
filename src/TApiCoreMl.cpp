@@ -195,12 +195,48 @@ CoreMl::TModel& CoreMl::TInstance::GetWinSkillSkeleton()
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
-	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
+	auto Promisex = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 	auto* pContext = &Params.mContext;
 	auto* pModel = &ModelRef;
+
+	auto pObjects = std::make_shared<Array<CoreMl::TObject >>();
+	std::shared_ptr<Bind::TPromise> pPromise(new Bind::TPromise(Promisex));
 	
-	auto RunModel = [=]
+
+	std::function<void(Bind::TLocalContext&)> OnError = [=](Bind::TLocalContext& Context)
 	{
+		auto& Promise = *pPromise;
+		Promise.Reject(Context, "Some Error");
+	};
+
+	std::function<void(Bind::TLocalContext&)> OnCompleted = [pObjects,pPromise](Bind::TLocalContext& Context)
+	{
+		auto& Objects = *pObjects;
+
+		Array<Bind::TObject> Elements;
+		for (auto i = 0; i < Objects.GetSize(); i++)
+		{
+			auto& Object = Objects[i];
+			auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
+			
+			ObjectJs.SetString("Label", Object.mLabel );
+			ObjectJs.SetFloat("Score", Object.mScore );
+			ObjectJs.SetFloat("x", Object.mRect.x );
+			ObjectJs.SetFloat("y", Object.mRect.y );
+			ObjectJs.SetFloat("w", Object.mRect.w );
+			ObjectJs.SetFloat("h", Object.mRect.h );
+			ObjectJs.SetInt("GridX", Object.mGridPos.x );
+			ObjectJs.SetInt("GridY", Object.mGridPos.y );
+
+			Elements.PushBack(ObjectJs);
+		};
+		auto& Promise = *pPromise;
+		Promise.Resolve(Context, GetArrayBridge(Elements));
+	};
+
+	auto RunModel = [pObjects,pImage,pModel,pContext, OnCompleted,OnError]
+	{
+		auto& Objects = *pObjects;
 		try
 		{
 			//	do all the work on the thread
@@ -220,8 +256,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			}
 			auto& Pixels = *pPixels;
 			
-			Array<CoreMl::TObject> Objects;
-			
+						
 			std::function<void(const CoreMl::TObject&)> PushObject = [&](const CoreMl::TObject& Object)
 			{
 				Objects.PushBack(Object);
@@ -229,44 +264,22 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			auto& Model = *pModel;
 			Model.GetObjects( Pixels, PushObject );
 			
-			auto OnCompleted = [=](Bind::TLocalContext& Context)
-			{
-				Array<Bind::TObject> Elements;
-				for ( auto i=0;	i<Objects.GetSize();	i++)
-				{
-					auto& Object = Objects[i];
-					auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
-				/*
-					ObjectJs.SetString("Label", Object.mLabel );
-					ObjectJs.SetFloat("Score", Object.mScore );
-					ObjectJs.SetFloat("x", Object.mRect.x );
-					ObjectJs.SetFloat("y", Object.mRect.y );
-					ObjectJs.SetFloat("w", Object.mRect.w );
-					ObjectJs.SetFloat("h", Object.mRect.h );
-					ObjectJs.SetInt("GridX", Object.mGridPos.x );
-					ObjectJs.SetInt("GridY", Object.mGridPos.y );*/
-					Elements.PushBack( ObjectJs );
-				};
-				Promise.Resolve( Context, GetArrayBridge(Elements) );
-			};
 			
-			pContext->Queue( OnCompleted );
+			//	gr: there is a race condition here we need to fix properly. The JS queue clears it's promise reference before this thread exits
+			//		and then promise releases on the wrong thread
+			pContext->Queue( OnCompleted, 100 );
 		}
 		catch(std::exception& e)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
 			
-			auto OnError = [=](Bind::TLocalContext& Context)
-			{
-				Promise.Reject( Context, ExceptionString );
-			};
 			pContext->Queue( OnError );
 		}
 	};
 	
 	CoreMl.PushJob(RunModel);
-	Params.Return( Promise );
+	Params.Return( Promisex );
 }
 
 
