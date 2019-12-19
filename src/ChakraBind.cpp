@@ -859,11 +859,20 @@ double JSValueToNumber(JSContextRef Context,JSValueRef Value,JSValueRef* Excepti
 	return Double;
 }
 
-JSValueRef JSValueMakeNumber(JSContextRef Context,double IntValue)
+JSValueRef JSValueMakeNumber(JSContextRef Context, double IntValue)
 {
 	JsValueRef Value = nullptr;
-	auto Error = JsIntToNumber( IntValue, &Value );
-	Chakra::IsOkay( Error, "JsIntToNumber" );
+	auto Error = JsDoubleToNumber(IntValue, &Value);
+	Chakra::IsOkay(Error, "JsDoubleToNumber");
+	return Value;
+}
+
+
+JSValueRef JSValueMakeNumber(JSContextRef Context, int IntValue)
+{
+	JsValueRef Value = nullptr;
+	auto Error = JsIntToNumber(IntValue, &Value);
+	Chakra::IsOkay(Error, "JsIntToNumber");
 	return Value;
 }
 
@@ -1320,7 +1329,7 @@ void				JSGlobalContextRelease(JSGlobalContextRef Context)
 
 void JSGarbageCollect(JSContextRef Context)
 {
-	THROW_TODO;
+	//THROW_TODO;
 }
 
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& Buffer)
