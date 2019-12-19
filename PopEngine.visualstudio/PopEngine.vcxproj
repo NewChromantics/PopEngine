@@ -59,6 +59,7 @@
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_capi.h" />
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h" />
     <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
+    <ClInclude Include="..\src\Libs\PopCoreMl\PopCoreml.h" />
     <ClInclude Include="..\src\Libs\PopCoreMl\TCoreMl.h" />
     <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
     <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp" />
@@ -755,6 +756,7 @@
     <Import Project="PopEngine.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_Chakra.props" />
+    <Import Project="..\src\Libs\PopCoreMl\PopCoreml.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -806,6 +808,7 @@
     <CustomBuildStep />
     <CustomBuildStep />
     <CustomBuild />
+    <Manifest />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">
     <ClCompile>
@@ -822,6 +825,7 @@
     <CustomBuildStep />
     <CustomBuild />
     <Link />
+    <Manifest />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
     <ClCompile>
@@ -837,6 +841,7 @@
     <CustomBuildStep />
     <CustomBuildStep />
     <CustomBuild />
+    <Manifest />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">
     <ClCompile>
@@ -852,6 +857,7 @@
     <CustomBuildStep />
     <CustomBuildStep />
     <CustomBuild />
+    <Manifest />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">
     <ClCompile>
@@ -867,6 +873,7 @@
     <CustomBuildStep />
     <CustomBuildStep />
     <CustomBuild />
+    <Manifest />
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

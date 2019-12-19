@@ -16,8 +16,10 @@ FOUNDATION_EXPORT const unsigned char PopCoremlVersionString[];
 
 #if defined(_MSC_VER) && !defined(TARGET_PS4)
 #define __export			extern "C" __declspec(dllexport)
+#define __exportclass		 __declspec(dllexport)
 #else
 #define __export			extern "C"
+#define __exportclass
 #endif
 
 __export int32_t			PopCoreml_GetVersion();

@@ -495,6 +495,9 @@
     <ClInclude Include="..\src\Libs\PopCoreMl\TCoreMl.h">
       <Filter>Libs\PopCoreMl</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Libs\PopCoreMl\PopCoreml.h">
+      <Filter>Libs\PopCoreMl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -691,15 +694,6 @@
     </None>
     <None Include="..\UnitTest\LeapMotion\bootup.js">
       <Filter>UnitTest\LeapMotion</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCoreMl\PopCoreml.dll">
-      <Filter>Libs\PopCoreMl</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.dll">
-      <Filter>Libs\PopCoreMl</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.SkillInterfacePreview.dll">
-      <Filter>Libs\PopCoreMl</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -1044,6 +1038,9 @@
     </CustomBuild>
     <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll" />
     <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll" />
+    <CustomBuild Include="..\src\Libs\PopCoreMl\PopCoreml.dll" />
+    <CustomBuild Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.SkillInterfacePreview.dll" />
+    <CustomBuild Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.dll" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">

@@ -6,9 +6,10 @@
 
 #if defined(TARGET_WINDOWS)
 #include "Libs/PopCoreMl/PopCoreMl.h"
+#include "Libs/PopCoreMl/TCoreMl.h"
 //#pragma comment(lib,"PopCoreml.lib")
 using namespace CoreMl;
-
+/*
 namespace CoreMl
 {
 	class TObject {};
@@ -31,6 +32,7 @@ namespace CoreMl
 	typedef TModel TDeepLab;
 	typedef TModel TAppleVisionFace;
 }
+*/
 #endif
 
 #if defined(TARGET_OSX)
@@ -184,7 +186,7 @@ CoreMl::TModel& CoreMl::TInstance::GetWinSkillSkeleton()
 	auto Version2 = PopCoreml_GetVersion();
 #endif
 	//	todo: load dll
-	//mWinSkillSkeleton = PopCoreml_AllocModel("WinSkillSkeleton");
+	mWinSkillSkeleton = PopCoreml_AllocModel("WinSkillSkeleton");
 	if (!mWinSkillSkeleton)
 		throw Soy::AssertException("Failed to allocated model WinSkillSkeleton");
 	return *mWinSkillSkeleton;
