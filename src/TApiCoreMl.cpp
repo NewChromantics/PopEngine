@@ -1,9 +1,40 @@
 #include "TApiCoreMl.h"
 #include "TApiCommon.h"
-#include "SoyAvf.h"
 #include "SoyLib/src/SoyScope.h"
 #include "SoyAssert.h"
 
+
+#if defined(TARGET_WINDOWS)
+#include "Libs/PopCoreMl/PopCoreMl.h"
+//#pragma comment(lib,"PopCoreml.lib")
+using namespace CoreMl;
+
+namespace CoreMl
+{
+	class TObject {};
+	class TModel
+	{
+	public:
+		virtual void	GetLabels(ArrayBridge<std::string>&& Labels) {};
+		virtual void	GetObjects(const SoyPixelsImpl& Pixels, std::function<void(const TObject&)>& EnumObject) {}
+		virtual void	GetLabelMap(const SoyPixelsImpl& Pixels, std::shared_ptr<SoyPixelsImpl>& MapOutput, std::function<bool(const std::string&)>& FilterLabel) {}
+		virtual void	GetLabelMap(const SoyPixelsImpl& Pixels, std::function<void(vec2x<size_t>, const std::string&, ArrayBridge<float>&&)> EnumLabelMap) {}
+	};
+
+	typedef TModel TYolo;
+	typedef TModel THourglass;
+	typedef TModel TCpm;
+	typedef TModel TOpenPose;
+	typedef TModel TPosenet;
+	typedef TModel TSsdMobileNet;
+	typedef TModel TMaskRcnn;
+	typedef TModel TDeepLab;
+	typedef TModel TAppleVisionFace;
+}
+#endif
+
+#if defined(TARGET_OSX)
+#include "SoyAvf.h"
 #include "Libs/PopCoreml.framework/Headers/TCoreMl.h"
 #include "Libs/PopCoreml.framework/Headers/TYolo.h"
 #include "Libs/PopCoreml.framework/Headers/TCpm.h"
@@ -14,7 +45,7 @@
 #include "Libs/PopCoreml.framework/Headers/TPosenet.h"
 #include "Libs/PopCoreml.framework/Headers/TSsdMobileNet.h"
 #include "Libs/PopCoreml.framework/Headers/TAppleVisionFace.h"
-
+#endif
 
 class CoreMl::TInstance : public SoyWorkerJobThread
 {
@@ -29,8 +60,9 @@ public:
 	TModel&		GetSsdMobileNet()		{	return GetModel(mSsdMobileNet);	}
 	TModel&		GetMaskRcnn()			{	return GetModel(mMaskRcnn);	}
 	TModel&		GetDeepLab()			{	return GetModel(mDeepLab);	}
-	TModel&		GetAppleVisionFace()	{	return GetModel(mAppleVisionFace);	}
-
+	TModel&		GetAppleVisionFace()	{ return GetModel(mAppleVisionFace); }
+	TModel&		GetWinSkillSkeleton();
+	
 	template<typename TYPE>
 	TModel&		GetModel(std::shared_ptr<TYPE>& mModel);
 
@@ -44,8 +76,11 @@ private:
 	std::shared_ptr<TMaskRcnn>			mMaskRcnn;
 	std::shared_ptr<TDeepLab>			mDeepLab;
 	std::shared_ptr<TAppleVisionFace>	mAppleVisionFace;
-};
 
+	//	dll, currently allocs and stored in the DLL
+	//	should turn into a map with names
+	TModel*								mWinSkillSkeleton = nullptr;
+};
 
 
 namespace ApiCoreMl
@@ -65,6 +100,7 @@ namespace ApiCoreMl
 	DEFINE_BIND_FUNCTIONNAME(MaskRcnn);
 	DEFINE_BIND_FUNCTIONNAME(AppleVisionFaceDetect);
 	DEFINE_BIND_FUNCTIONNAME(DeepLab);
+	DEFINE_BIND_FUNCTIONNAME(WinSkillSkeleton);
 }
 
 
@@ -94,7 +130,8 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::SsdMobileNet>( &TCoreMlWrapper::SsdMobileNet );
 	Template.BindFunction<BindFunction::MaskRcnn>( &TCoreMlWrapper::MaskRcnn );
 	Template.BindFunction<BindFunction::AppleVisionFaceDetect>( &TCoreMlWrapper::AppleVisionFaceDetect );
-	Template.BindFunction<BindFunction::DeepLab>( &TCoreMlWrapper::DeepLab );
+	Template.BindFunction<BindFunction::DeepLab>(&TCoreMlWrapper::DeepLab);
+	Template.BindFunction<BindFunction::WinSkillSkeleton>(&TCoreMlWrapper::WinSkillSkeleton);
 }
 
 
@@ -110,13 +147,48 @@ CoreMl::TInstance::TInstance() :
 template<typename TYPE>
 CoreMl::TModel& CoreMl::TInstance::GetModel(std::shared_ptr<TYPE>& mModel)
 {
+#if defined(TARGET_WINDOWS)
+	throw Soy::AssertException("Unsupported on windows");
+#else
 	if ( !mModel )
 	{
 		mModel.reset( new TYPE );
 	}
 	return *mModel;
+#endif
 }
 
+
+#include "SoyLib/src/SoyRuntimeLibrary.h"
+std::shared_ptr<Soy::TRuntimeLibrary> LoadSomeDll(const char* Filename)
+{
+	std::shared_ptr<Soy::TRuntimeLibrary> Dll;
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+	return Dll;
+}
+
+CoreMl::TModel& CoreMl::TInstance::GetWinSkillSkeleton()
+{
+	if (mWinSkillSkeleton)
+		return *mWinSkillSkeleton;
+
+#if defined(TARGET_WINDOWS)
+	//LoadSomeDll("Microsoft.AI.Skills.SkillInterfacePreview.dll");
+	auto Dll = LoadSomeDll("PopCoreml.dll");
+
+	
+	std::function<int32_t()> GetVersion;
+	Dll->SetFunction(GetVersion, "PopCoreml_GetVersion");
+	auto Version = GetVersion();
+
+	auto Version2 = PopCoreml_GetVersion();
+#endif
+	//	todo: load dll
+	//mWinSkillSkeleton = PopCoreml_AllocModel("WinSkillSkeleton");
+	if (!mWinSkillSkeleton)
+		throw Soy::AssertException("Failed to allocated model WinSkillSkeleton");
+	return *mWinSkillSkeleton;
+}
 
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
@@ -162,6 +234,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 				{
 					auto& Object = Objects[i];
 					auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
+				/*
 					ObjectJs.SetString("Label", Object.mLabel );
 					ObjectJs.SetFloat("Score", Object.mScore );
 					ObjectJs.SetFloat("x", Object.mRect.x );
@@ -169,7 +242,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 					ObjectJs.SetFloat("w", Object.mRect.w );
 					ObjectJs.SetFloat("h", Object.mRect.h );
 					ObjectJs.SetInt("GridX", Object.mGridPos.x );
-					ObjectJs.SetInt("GridY", Object.mGridPos.y );
+					ObjectJs.SetInt("GridY", Object.mGridPos.y );*/
 					Elements.PushBack( ObjectJs );
 				};
 				Promise.Resolve( Context, GetArrayBridge(Elements) );
@@ -490,8 +563,17 @@ void TCoreMlWrapper::AppleVisionFaceDetect(Bind::TCallback& Params)
 {
 	auto& CoreMl = *mCoreMl;
 	auto& Model = CoreMl.GetAppleVisionFace();
-	
-	RunModelGetObjects( Model, Params, CoreMl );
+
+	RunModelGetObjects(Model, Params, CoreMl);
+}
+
+
+void TCoreMlWrapper::WinSkillSkeleton(Bind::TCallback& Params)
+{
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetWinSkillSkeleton();
+
+	RunModelGetObjects(Model, Params, CoreMl);
 }
 
 

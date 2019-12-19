@@ -45,6 +45,8 @@ public:
 	//	apple's Vision built-in face detection
 	void				AppleVisionFaceDetect(Bind::TCallback& Arguments);
 
+	void				WinSkillSkeleton(Bind::TCallback& Arguments);
+
 protected:
 	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;
 };

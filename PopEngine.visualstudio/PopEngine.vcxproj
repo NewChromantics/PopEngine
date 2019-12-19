@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug_Chakra|x64">
@@ -59,6 +59,7 @@
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_capi.h" />
     <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h" />
     <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h" />
+    <ClInclude Include="..\src\Libs\PopCoreMl\TCoreMl.h" />
     <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
     <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp" />
     <ClInclude Include="..\src\Libs\x264\include\x264.h" />
@@ -130,13 +131,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiCommon.h" />
-    <ClInclude Include="..\src\TApiCoreMl.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\TApiCoreMl.h" />
     <ClInclude Include="..\src\TApiDlib.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -258,6 +253,7 @@
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
+    <ClCompile Include="..\src\TApiCoreMl.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />
     <ClCompile Include="..\src\TApiOpenvr.cpp" />
@@ -370,6 +366,15 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
     </CustomBuild>
+    <CustomBuild Include="..\src\Libs\PopCoreMl\PopCoreml.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.SkillInterfacePreview.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
     <None Include="..\src\Libs\PopH264\PopH264.dll.meta" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb.meta" />
@@ -398,13 +403,6 @@
     <None Include="..\src\SoyLib\src\SoyWindow.mm" />
     <None Include="..\src\SoyOpenglView.mm" />
     <None Include="..\src\SoyOpenglWindow.mm" />
-    <None Include="..\src\TApiCoreMl.mm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </None>
     <CustomBuild Include="..\src\v8\lib\v8.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -664,6 +662,13 @@
     </Library>
     <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib" />
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib" />
+    <Library Include="..\src\Libs\PopCoreMl\PopCoreml.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">false</ExcludedFromBuild>
+    </Library>
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
     <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib" />
     <Library Include="..\src\Libs\x264\lib\x64\libx264.lib">

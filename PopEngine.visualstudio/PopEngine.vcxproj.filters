@@ -97,6 +97,9 @@
     <Filter Include="UnitTest\LeapMotion">
       <UniqueIdentifier>{f6486979-cab0-4324-8a2b-2bf355f8ecc0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\PopCoreMl">
+      <UniqueIdentifier>{cbea93f4-7f30-47eb-856c-139d94b59f33}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -271,9 +274,6 @@
       <Filter>Source\Todo</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiBluetooth.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiCoreMl.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiDlib.h">
@@ -489,6 +489,12 @@
     <ClInclude Include="..\src\SoyViveHandTracker.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiCoreMl.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Libs\PopCoreMl\TCoreMl.h">
+      <Filter>Libs\PopCoreMl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -504,9 +510,6 @@
       <Filter>Source</Filter>
     </None>
     <None Include="..\src\SoyBluetooth.mm">
-      <Filter>Source\Todo</Filter>
-    </None>
-    <None Include="..\src\TApiCoreMl.mm">
       <Filter>Source\Todo</Filter>
     </None>
     <None Include="..\UnitTest\bootup.js">
@@ -688,6 +691,15 @@
     </None>
     <None Include="..\UnitTest\LeapMotion\bootup.js">
       <Filter>UnitTest\LeapMotion</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCoreMl\PopCoreml.dll">
+      <Filter>Libs\PopCoreMl</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.dll">
+      <Filter>Libs\PopCoreMl</Filter>
+    </None>
+    <None Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.SkillInterfacePreview.dll">
+      <Filter>Libs\PopCoreMl</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -910,6 +922,9 @@
     <ClCompile Include="..\src\SoyViveHandTracker.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiCoreMl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -959,6 +974,9 @@
     </Library>
     <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib">
       <Filter>Libs\ViveHandTracking</Filter>
+    </Library>
+    <Library Include="..\src\Libs\PopCoreMl\PopCoreml.lib">
+      <Filter>Libs\PopCoreMl</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

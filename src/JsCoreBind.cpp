@@ -13,11 +13,11 @@
 #include "TApiOpenvr.h"
 #include "TApiGui.h"
 #include "TApiOpencv.h"
+#include "TApiCoreMl.h"
 
 #if defined(TARGET_OSX)
 //#include "TApiOpencl.h"
 #include "TApiDlib.h"
-#include "TApiCoreMl.h"
 #include "TApiEzsift.h"
 #include "TApiInput.h"
 #include "TApiBluetooth.h"
@@ -545,12 +545,12 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiDll::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
 			ApiGui::Bind( *Context );
+			ApiCoreMl::Bind(*Context);
 #if defined(TARGET_OSX)
 			ApiOpencv::Bind(*Context);
 
 			//ApiOpencl::Bind( *Context );
 			ApiDlib::Bind( *Context );
-			ApiCoreMl::Bind( *Context );
 			ApiEzsift::Bind( *Context );
 			ApiInput::Bind( *Context );
 			ApiBluetooth::Bind( *Context );
