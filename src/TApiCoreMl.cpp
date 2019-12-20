@@ -273,7 +273,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 				pCoreMl->mPromises.Flush(PromiseRef, Resolve);
 			};
 
-			pContext->Queue( OnCompleted, 100 );
+			pContext->Queue( OnCompleted );
 		}
 		catch(std::exception& e)
 		{
