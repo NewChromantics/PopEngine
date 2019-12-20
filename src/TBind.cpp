@@ -82,3 +82,51 @@ void Bind::TPromiseQueue::Reject(const std::string& Error)
 	Flush(Handle);
 }
 
+
+Bind::TPromise Bind::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,const char* DebugName,size_t& PromiseRef)
+{
+	if (mContext != &Context.mGlobalContext && mContext != nullptr)
+	{
+		throw Soy::AssertException("Promise queue context has changed");
+	}
+	mContext = &Context.mGlobalContext;
+
+	std::lock_guard<std::mutex> Lock(mPromisesLock);
+	PromiseRef = mPromiseCounter++;
+	auto NewPromise = Context.mGlobalContext.CreatePromise(Context, DebugName);
+	auto Pair = std::make_pair(PromiseRef, NewPromise);
+	mPromises.PushBack(Pair);
+	return NewPromise;
+}
+
+
+void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
+{
+	TPromise Promise;
+
+	{
+		//	pop this promise
+		std::lock_guard<std::mutex> Lock(mPromisesLock);
+		for (auto i = 0; i < mPromises.GetSize(); i++)
+		{
+			auto& Element = mPromises[i];
+			auto& MatchRef = Element.first;
+			if (MatchRef != PromiseRef)
+				continue;
+			Promise = Element.second;
+			mPromises.RemoveBlock(i, 1);
+			break;
+		}
+		if (!Promise.mPromise)
+			throw Soy::AssertException("Promise Ref not found");
+	}
+	
+	auto& Context = *this->mContext;
+
+	//	gr: should we block or not...
+	auto DoFlush = [&](Bind::TLocalContext& Context)
+	{
+		HandlePromise(Context, Promise);
+	};
+	Context.Execute(DoFlush);
+}

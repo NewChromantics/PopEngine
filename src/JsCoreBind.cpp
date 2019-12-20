@@ -1824,6 +1824,12 @@ void JsCore::TPersistent::Retain(const TPersistent& That)
 	//	gr: this was not calling ANY retain() with That, so wasn't releasing anything!
 	Release();
 	
+	//	array of promises causes = copies, which means = TPromise() which meant copying null
+	//	bail here rather than send null objects to JS
+	//	this hasn't ocurred for a year or so but did when I added PromiseMap
+	if (!That.mObject)
+		return;
+
 	
 	mDebugName = That.mDebugName + " (copy)";
 	mContext = That.mContext;

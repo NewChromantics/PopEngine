@@ -27,6 +27,7 @@ namespace Bind
 {
 	class TInstanceBase;
 	class TPromiseQueue;
+	class TPromiseMap;
 }
 
 
@@ -99,5 +100,28 @@ private:
 	Bind::TContext*	mContext = nullptr;
 	std::mutex		mPendingLock;
 	Array<TPromise>	mPending;
+};
+
+
+//	bit of a temp class to get around captures in lambdas so we can pass simpler references
+//	case: getting a race condition where JS thread allocs promise, returns it
+//	captured in thread B, which creates a JS callback lambda, copies promise again and
+//	both threads try and release promise
+class Bind::TPromiseMap
+{
+public:
+	bool			HasContext() { return mContext != nullptr; }	//	if not true, we've never requested
+	Bind::TContext&	GetContext();
+	
+	TPromise		CreatePromise(Bind::TLocalContext& Context,const char* DebugName,size_t& PromiseRef);
+
+	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
+	void			Flush(size_t PromiseRef,std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
+	
+private:
+	Bind::TContext*	mContext = nullptr;
+	std::mutex		mPromisesLock;
+	Array<std::pair<size_t,TPromise>>	mPromises;
+	size_t			mPromiseCounter = 0;
 };
 

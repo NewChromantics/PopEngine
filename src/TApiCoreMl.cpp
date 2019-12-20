@@ -68,6 +68,11 @@ public:
 	template<typename TYPE>
 	TModel&		GetModel(std::shared_ptr<TYPE>& mModel);
 
+
+public:
+	//	temp until we fix ownership problems of promises with nested lambdas
+	Bind::TPromiseMap					mPromises;
+
 private:
 	std::shared_ptr<TYolo>				mYolo;
 	std::shared_ptr<THourglass>			mHourglass;
@@ -195,14 +200,25 @@ CoreMl::TModel& CoreMl::TInstance::GetWinSkillSkeleton()
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
-	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
+	size_t PromiseRef = 0;
+	auto Promisex = CoreMl.mPromises.CreatePromise(Params.mLocalContext, __FUNCTION__, PromiseRef);
 	auto* pContext = &Params.mContext;
 	auto* pModel = &ModelRef;
+	auto* pCoreMl = &CoreMl;
+	Params.Return(Promisex);
+
+	auto QueuePromise = [=](std::function<void(Bind::TLocalContext&, Bind::TPromise&)>&& ResolveFunc)
+	{
+		auto RunResolve = [=](Bind::TLocalContext& Context)
+		{
+			pCoreMl->mPromises.Flush(PromiseRef, ResolveFunc);
+		};
+		pContext->Queue(RunResolve);
+	};
+
 
 	auto RunModel = [=]
 	{
-
-
 		try
 		{
 			//	do all the work on the thread
@@ -250,8 +266,11 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 
 					Elements.PushBack(ObjectJs);
 				};
-				
-				Promise.Resolve(Context, GetArrayBridge(Elements));
+				auto Resolve = [&](Bind::TLocalContext& Context, Bind::TPromise& Promise)
+				{
+					Promise.Resolve(Context, GetArrayBridge(Elements));
+				};
+				pCoreMl->mPromises.Flush(PromiseRef, Resolve);
 			};
 
 			pContext->Queue( OnCompleted );
@@ -261,17 +280,16 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			//	queue the error callback
 			std::string ExceptionString(e.what());
 			
-			std::function<void(Bind::TLocalContext&)> OnError = [=](Bind::TLocalContext& Context)
+			auto Reject = [=](Bind::TLocalContext& Context, Bind::TPromise& Promise)
 			{
 				Promise.Reject(Context, ExceptionString);
 			};
-
-			pContext->Queue( OnError );
+			QueuePromise(Reject);
 		}
 	};
 	
 	CoreMl.PushJob(RunModel);
-	Params.Return( Promise );
+
 }
 
 
