@@ -93,16 +93,16 @@ Bind::TPromise Bind::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,con
 
 	std::lock_guard<std::mutex> Lock(mPromisesLock);
 	PromiseRef = mPromiseCounter++;
-	auto NewPromise = Context.mGlobalContext.CreatePromise(Context, DebugName);
+	auto NewPromise = Context.mGlobalContext.CreatePromisePtr(Context, DebugName);
 	auto Pair = std::make_pair(PromiseRef, NewPromise);
 	mPromises.PushBack(Pair);
-	return NewPromise;
+	return *NewPromise;
 }
 
 
 void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
 {
-	TPromise Promise;
+	std::shared_ptr<TPromise> Promise;
 
 	{
 		//	pop this promise
@@ -117,7 +117,7 @@ void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalC
 			mPromises.RemoveBlock(i, 1);
 			break;
 		}
-		if (!Promise.mPromise)
+		if (!Promise)
 			throw Soy::AssertException("Promise Ref not found");
 	}
 	
@@ -126,7 +126,7 @@ void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalC
 	//	gr: should we block or not...
 	auto DoFlush = [&](Bind::TLocalContext& Context)
 	{
-		HandlePromise(Context, Promise);
+		HandlePromise(Context, *Promise);
 	};
 	Context.Execute(DoFlush);
 }

@@ -575,8 +575,8 @@ public:
 	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
 	void					ConstructObject(TLocalContext& LocalContext,const std::string& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments);
 
-	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName) bind_override;
-
+	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
+	virtual std::shared_ptr<JsCore::TPromise>	CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
 	
 	template<typename OBJECTWRAPPERTYPE>
 	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());

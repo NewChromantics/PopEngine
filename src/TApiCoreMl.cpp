@@ -201,11 +201,11 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
 	size_t PromiseRef = 0;
-	auto Promisex = CoreMl.mPromises.CreatePromise(Params.mLocalContext, __FUNCTION__, PromiseRef);
+	auto Promise = CoreMl.mPromises.CreatePromise(Params.mLocalContext, __FUNCTION__, PromiseRef);
 	auto* pContext = &Params.mContext;
 	auto* pModel = &ModelRef;
 	auto* pCoreMl = &CoreMl;
-	Params.Return(Promisex);
+	Params.Return(Promise);
 
 	auto QueuePromise = [=](std::function<void(Bind::TLocalContext&, Bind::TPromise&)>&& ResolveFunc)
 	{
@@ -251,7 +251,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			{
 				Array<Bind::TObject> Elements;
 				for (auto i = 0; i < Objects.GetSize(); i++)
-				{
+				{					
 					auto& Object = Objects[i];
 					auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
 
@@ -263,7 +263,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 					ObjectJs.SetFloat("h", Object.mRect.h);
 					ObjectJs.SetInt("GridX", Object.mGridPos.x);
 					ObjectJs.SetInt("GridY", Object.mGridPos.y);
-
+					
 					Elements.PushBack(ObjectJs);
 				};
 				auto Resolve = [&](Bind::TLocalContext& Context, Bind::TPromise& Promise)
@@ -273,7 +273,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 				pCoreMl->mPromises.Flush(PromiseRef, Resolve);
 			};
 
-			pContext->Queue( OnCompleted );
+			pContext->Queue( OnCompleted, 100 );
 		}
 		catch(std::exception& e)
 		{

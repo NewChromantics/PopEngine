@@ -1348,6 +1348,54 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 }
 
 
+std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName)
+{
+	if (!mMakePromiseFunction)
+	{
+		auto* MakePromiseFunctionSource = R"V0G0N(
+		
+		let MakePromise = function()
+		{
+			let PromData = {};
+			const GrabPromData = function(Resolve,Reject)
+			{
+				PromData.Resolve = Resolve;
+				PromData.Reject = Reject;
+			};
+			const prom = new Promise( GrabPromData );
+			PromData.Promise = prom;
+			prom.Resolve = PromData.Resolve;
+			prom.Reject = PromData.Reject;
+			return prom;
+		}
+		MakePromise;
+		//MakePromise();
+		)V0G0N";
+
+		JSStringRef FunctionSourceString = JsCore::GetString(LocalContext.mLocalContext, MakePromiseFunctionSource);
+		JSValueRef Exception = nullptr;
+		auto FunctionValue = JSEvaluateScript(LocalContext.mLocalContext, FunctionSourceString, nullptr, nullptr, 0, &Exception);
+		ThrowException(LocalContext.mLocalContext, Exception);
+
+		TFunction MakePromiseFunction(LocalContext.mLocalContext, FunctionValue);
+		mMakePromiseFunction = TPersistent(LocalContext, MakePromiseFunction, "MakePromiseFunction");
+	}
+
+	Bind::TCallback CallParams(LocalContext);
+	auto MakePromiseFunction = mMakePromiseFunction.GetFunction(LocalContext);
+	MakePromiseFunction.Call(CallParams);
+	auto NewPromiseValue = CallParams.mReturn;
+	auto NewPromiseHandle = JsCore::GetObject(LocalContext.mLocalContext, NewPromiseValue);
+	TObject NewPromiseObject(LocalContext.mLocalContext, NewPromiseHandle);
+	auto Resolve = NewPromiseObject.GetFunction("Resolve");
+	auto Reject = NewPromiseObject.GetFunction("Reject");
+
+	auto Promise = std::make_shared<TPromise>( LocalContext, NewPromiseObject, Resolve, Reject, DebugName);
+
+	return Promise;
+}
+
+
 JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
 {
 	//	call our function from

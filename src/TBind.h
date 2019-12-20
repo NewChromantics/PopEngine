@@ -121,7 +121,7 @@ public:
 private:
 	Bind::TContext*	mContext = nullptr;
 	std::mutex		mPromisesLock;
-	Array<std::pair<size_t,TPromise>>	mPromises;
+	Array<std::pair<size_t,std::shared_ptr<TPromise>>>	mPromises;
 	size_t			mPromiseCounter = 0;
 };
 
