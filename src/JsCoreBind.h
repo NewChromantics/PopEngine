@@ -502,7 +502,8 @@ class JsCore::TPersistent
 {
 public:
 	TPersistent()	{}
-	TPersistent(const TPersistent& That)	{	Retain( That );	}
+	TPersistent(const TPersistent& That) { Retain(That); }
+	TPersistent(TPersistent&& Move);
 	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refcount
@@ -514,8 +515,9 @@ public:
 	TFunction			GetFunction(TLocalContext& Context) const;
 	void				SetWeak(TObjectWrapperBase& Object,JSClassRef Class);		//	this is for v8, we pass the class as it has the destructor function pointer
 
-	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
-	
+	TPersistent&	operator=(const TPersistent& That)	{ Retain(That);	return *this; }
+	TPersistent&	operator=(TPersistent&& That);
+
 private:
 	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
 	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
@@ -562,7 +564,8 @@ public:
 	
 	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
 	virtual void		Execute(std::function<void(TLocalContext&)> Function) bind_override;
-	virtual void		Queue(std::function<void(TLocalContext&)> Function,size_t DeferMs=0) bind_override;
+	//virtual void		Queue(std::function<void(TLocalContext&)> Function, size_t DeferMs = 0) bind_override;
+	virtual void		Queue(std::function<void(TLocalContext&)>&& Function, size_t DeferMs = 0) bind_override;
 	virtual void		GarbageCollect(JSContextRef LocalContext);
 	virtual void		Shutdown(int32_t ExitCode);	//	tell instance to destroy us
 		
@@ -637,11 +640,17 @@ public:
 class JsCore::TPromise
 {
 public:
-	TPromise()	{}
+	TPromise() {}
+	TPromise(const TPromise& Copy);
+	TPromise(TPromise&& Move);
 	TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
-	~TPromise();
 	
+	TPromise&	operator=(const TPromise& That);
+	TPromise&	operator=(TPromise&& That);
+
 	//	const for lambda[=] copy capture
+	//	gr: ^^ remove this and force lambdas to be mutable where appropriate
+	//			or std::move(Promise)
 	void			Resolve(Bind::TLocalContext& Context,const std::string& Value) const		{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Resolve(Bind::TLocalContext& Context,JsCore::TObject& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	template<typename TYPE>

@@ -170,8 +170,10 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 	auto DelayMs = 0;
 	if ( !Params.IsArgumentUndefined(0) )
 		DelayMs = Params.GetArgumentInt(0);
-	
-	auto OnYield = [=](Bind::TLocalContext& Context)
+
+	Params.Return(Promise);
+
+	auto OnYield = [Promise=std::move(Promise)](Bind::TLocalContext& Context)
 	{
 		//	don't need to do anything, we have just let the system breath
 		Promise.Resolve( Context, "Yield complete");
@@ -179,7 +181,6 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 
 	Params.mContext.Queue( OnYield, DelayMs );
 	
-	Params.Return( Promise );
 }
 
 

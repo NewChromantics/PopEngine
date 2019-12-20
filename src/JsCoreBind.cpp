@@ -886,7 +886,8 @@ public:
 };
 
 
-void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor,size_t DeferMs)
+
+void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)>&& Functor, size_t DeferMs)
 {
 	if ( !mJobQueue.IsWorking() )
 		throw Soy::AssertException("Rejecting job as context is shutting down");
@@ -1682,6 +1683,33 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
 	return FullFilename.str();
 }
 
+JsCore::TPersistent::TPersistent(TPersistent&& Move)
+{
+	this->mContext = Move.mContext;
+	this->mDebugName = Move.mDebugName + " Moved";
+	this->mObject = Move.mObject;
+	this->mRetainedContext = Move.mRetainedContext;
+
+	Move.mContext = nullptr;
+	Move.mDebugName += "Stolen";
+	Move.mObject = nullptr;
+	Move.mRetainedContext = nullptr;
+}
+
+JsCore::TPersistent& JsCore::TPersistent::operator=(TPersistent&& Move)
+{
+	this->mContext = Move.mContext;
+	this->mDebugName = Move.mDebugName + " Moved";
+	this->mObject = Move.mObject;
+	this->mRetainedContext = Move.mRetainedContext;
+
+	Move.mContext = nullptr;
+	Move.mDebugName += "Stolen";
+	Move.mObject = nullptr;
+	Move.mRetainedContext = nullptr;
+
+	return *this;
+}
 
 JsCore::TPersistent::~TPersistent()
 {
@@ -2105,9 +2133,43 @@ JsCore::TPromise::TPromise(Bind::TLocalContext& Context,TObject& Promise,TFuncti
 {
 }
 
-JsCore::TPromise::~TPromise()
+
+JsCore::TPromise::TPromise(TPromise&& Move) :
+	mPromise(std::move(Move.mPromise)),
+	mResolve(std::move(Move.mResolve)),
+	mReject(std::move(Move.mReject)),
+	mDebugName( Move.mDebugName )
 {
-	
+	Move.mDebugName += "Stolen";
+}
+
+
+JsCore::TPromise::TPromise(const TPromise& Copy) :
+	mPromise(Copy.mPromise),
+	mResolve(Copy.mResolve),
+	mReject(Copy.mReject),
+	mDebugName(Copy.mDebugName)
+{
+}
+
+
+JsCore::TPromise& JsCore::TPromise::operator=(const TPromise& That)
+{
+	mPromise = That.mPromise;
+	mResolve = That.mResolve;
+	mReject = That.mReject;
+	mDebugName = That.mDebugName + " Copy";
+	return *this;
+}
+
+JsCore::TPromise& JsCore::TPromise::operator=(TPromise&& Move)
+{
+	mPromise = std::move(Move.mPromise);
+	mResolve = std::move(Move.mResolve);
+	mReject = std::move(Move.mReject);
+	mDebugName = Move.mDebugName + " Moved";
+	Move.mDebugName += "Stolen";
+	return *this;
 }
 
 

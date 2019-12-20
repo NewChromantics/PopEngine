@@ -199,10 +199,10 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 	auto* pContext = &Params.mContext;
 	auto* pModel = &ModelRef;
 
-	auto RunModel = [=]
+	Params.Return(Promise);
+
+	auto RunModel = [=,Promise=std::move(Promise)]
 	{
-
-
 		try
 		{
 			//	do all the work on the thread
@@ -231,7 +231,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			auto& Model = *pModel;
 			Model.GetObjects( Pixels, PushObject );
 			
-			std::function<void(Bind::TLocalContext&)> OnCompleted = [=](Bind::TLocalContext& Context)
+			auto OnCompleted = [=,Prom=std::move(Promise)](Bind::TLocalContext& Context)
 			{
 				Array<Bind::TObject> Elements;
 				for (auto i = 0; i < Objects.GetSize(); i++)
@@ -251,17 +251,17 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 					Elements.PushBack(ObjectJs);
 				};
 				
-				Promise.Resolve(Context, GetArrayBridge(Elements));
+				Prom.Resolve(Context, GetArrayBridge(Elements));
 			};
 
-			pContext->Queue( OnCompleted );
+			pContext->Queue( std::move(OnCompleted) );
 		}
 		catch(std::exception& e)
 		{
 			//	queue the error callback
 			std::string ExceptionString(e.what());
 			
-			std::function<void(Bind::TLocalContext&)> OnError = [=](Bind::TLocalContext& Context)
+			auto OnError = [=](Bind::TLocalContext& Context)
 			{
 				Promise.Reject(Context, ExceptionString);
 			};
@@ -271,7 +271,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 	};
 	
 	CoreMl.PushJob(RunModel);
-	Params.Return( Promise );
+
 }
 
 
