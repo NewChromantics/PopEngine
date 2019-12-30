@@ -814,7 +814,9 @@ Bind::TPromise TPopCameraDeviceWrapper::AllocFrameRequestPromise(Bind::TLocalCon
 
 PopH264::TInstance::TInstance()
 {
-	mHandle = PopH264_CreateInstance();
+	//	decoder now
+	auto Decoder = PopH264::Mode_Software;
+	mHandle = PopH264_CreateInstance(Decoder);
 	if ( mHandle <= 0 )
 	{
 		std::stringstream Error;
