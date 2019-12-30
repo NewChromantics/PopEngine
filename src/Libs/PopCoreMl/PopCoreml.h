@@ -1,15 +1,16 @@
 #pragma once
 
-#if defined(TARGET_OSX)
+#if defined(TARGET_OSX) && defined(__OBJC__)
 #import <Cocoa/Cocoa.h>
 
 //! Project version number for PopCoreml.
-FOUNDATION_EXPORT double PopCoremlVersionNumber;
+//FOUNDATION_EXPORT double PopCoremlVersionNumber;
 
 //! Project version string for PopCoreml.
-FOUNDATION_EXPORT const unsigned char PopCoremlVersionString[];
+//FOUNDATION_EXPORT const unsigned char PopCoremlVersionString[];
 
 #endif
+
 
 #include <stdint.h>
 
