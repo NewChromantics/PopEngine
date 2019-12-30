@@ -8,55 +8,11 @@
 #endif
 
 
-#if defined(TARGET_WINDOWS) || defined(TARGET_OSX)
-#define FACTORY_POPML
-#endif
-
-#if defined(FACTORY_POPML)
 #include "Libs/PopCoreMl/PopCoreml.h"
 #include "Libs/PopCoreMl/TCoreMl.h"
 //#pragma comment(lib,"PopCoreml.lib")
 using namespace CoreMl;
-/*
-namespace CoreMl
-{
-	class TObject {};
-	class TModel
-	{
-	public:
-		virtual void	GetLabels(ArrayBridge<std::string>&& Labels) {};
-		virtual void	GetObjects(const SoyPixelsImpl& Pixels, std::function<void(const TObject&)>& EnumObject) {}
-		virtual void	GetLabelMap(const SoyPixelsImpl& Pixels, std::shared_ptr<SoyPixelsImpl>& MapOutput, std::function<bool(const std::string&)>& FilterLabel) {}
-		virtual void	GetLabelMap(const SoyPixelsImpl& Pixels, std::function<void(vec2x<size_t>, const std::string&, ArrayBridge<float>&&)> EnumLabelMap) {}
-	};
 
-	typedef TModel TYolo;
-	typedef TModel THourglass;
-	typedef TModel TCpm;
-	typedef TModel TOpenPose;
-	typedef TModel TPosenet;
-	typedef TModel TSsdMobileNet;
-	typedef TModel TMaskRcnn;
-	typedef TModel TDeepLab;
-	typedef TModel TAppleVisionFace;
-}
-*/
-#endif
-
-
-#if defined(TARGET_OSX) && !defined(FACTORY_POPML)
-#include "SoyAvf.h"
-#include "Libs/PopCoreml.framework/Headers/TCoreMl.h"
-#include "Libs/PopCoreml.framework/Headers/TYolo.h"
-#include "Libs/PopCoreml.framework/Headers/TCpm.h"
-#include "Libs/PopCoreml.framework/Headers/TDeepLab.h"
-#include "Libs/PopCoreml.framework/Headers/THourglass.h"
-#include "Libs/PopCoreml.framework/Headers/TMaskRcnn.h"
-#include "Libs/PopCoreml.framework/Headers/TOpenPose.h"
-#include "Libs/PopCoreml.framework/Headers/TPosenet.h"
-#include "Libs/PopCoreml.framework/Headers/TSsdMobileNet.h"
-#include "Libs/PopCoreml.framework/Headers/TAppleVisionFace.h"
-#endif
 
 class CoreMl::TInstance : public SoyWorkerJobThread
 {
@@ -149,6 +105,14 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
+#include "SoyLib/src/SoyRuntimeLibrary.h"
+std::shared_ptr<Soy::TRuntimeLibrary> LoadSomeDll(const char* Filename)
+{
+	std::shared_ptr<Soy::TRuntimeLibrary> Dll;
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+	return Dll;
+}
+
 
 CoreMl::TInstance::TInstance() :
 	SoyWorkerJobThread	("CoreMl::TInstance")
@@ -181,14 +145,6 @@ CoreMl::TModel& CoreMl::TInstance::GetModel(TModel*& mModel,const char* Name)
 	return *mModel;
 }
 
-
-#include "SoyLib/src/SoyRuntimeLibrary.h"
-std::shared_ptr<Soy::TRuntimeLibrary> LoadSomeDll(const char* Filename)
-{
-	std::shared_ptr<Soy::TRuntimeLibrary> Dll;
-	Dll.reset(new Soy::TRuntimeLibrary(Filename));
-	return Dll;
-}
 
 
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
