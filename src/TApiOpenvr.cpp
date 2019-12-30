@@ -478,7 +478,8 @@ void ApiOpenvr::TAppWrapper::FlushPendingMirrors()
 	{
 		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)	
 		{
-			Promise.Resolve(LocalContext, this->mMirrorImage.GetObject(LocalContext) );
+			auto MirrorImageObject = this->mMirrorImage.GetObject(LocalContext);
+			Promise.Resolve(LocalContext, MirrorImageObject );
 		};
 		mOnMirrorPromises.Flush(HandlePromise);
 	};

@@ -3,9 +3,17 @@
 #include "SoyLib/src/SoyScope.h"
 #include "SoyAssert.h"
 
+#if defined(TARGET_OSX)
+#include "SoyAvf.h"
+#endif
 
-#if defined(TARGET_WINDOWS)
-#include "Libs/PopCoreMl/PopCoreMl.h"
+
+#if defined(TARGET_WINDOWS) || defined(TARGET_OSX)
+#define FACTORY_POPML
+#endif
+
+#if defined(FACTORY_POPML)
+#include "Libs/PopCoreMl/PopCoreml.h"
 #include "Libs/PopCoreMl/TCoreMl.h"
 //#pragma comment(lib,"PopCoreml.lib")
 using namespace CoreMl;
@@ -35,7 +43,8 @@ namespace CoreMl
 */
 #endif
 
-#if defined(TARGET_OSX)
+
+#if defined(TARGET_OSX) && !defined(FACTORY_POPML)
 #include "SoyAvf.h"
 #include "Libs/PopCoreml.framework/Headers/TCoreMl.h"
 #include "Libs/PopCoreml.framework/Headers/TYolo.h"
@@ -54,39 +63,37 @@ class CoreMl::TInstance : public SoyWorkerJobThread
 public:
 	TInstance();
 
-	TModel&		GetYolo()				{	return GetModel(mYolo);	}
-	TModel&		GetHourglass()			{	return GetModel(mHourglass);	}
-	TModel&		GetCpm()				{	return GetModel(mCpm);	}
-	TModel&		GetOpenPose()			{	return GetModel(mOpenPose);	}
-	TModel&		GetPosenet()			{	return GetModel(mPosenet);	}
-	TModel&		GetSsdMobileNet()		{	return GetModel(mSsdMobileNet);	}
-	TModel&		GetMaskRcnn()			{	return GetModel(mMaskRcnn);	}
-	TModel&		GetDeepLab()			{	return GetModel(mDeepLab);	}
-	TModel&		GetAppleVisionFace()	{ return GetModel(mAppleVisionFace); }
-	TModel&		GetWinSkillSkeleton();
-	
-	template<typename TYPE>
-	TModel&		GetModel(std::shared_ptr<TYPE>& mModel);
+	TModel&		GetYolo()				{	return GetModel(mYolo,"Yolo");	}
+	TModel&		GetHourglass()			{	return GetModel(mHourglass,"Hourglass");	}
+	TModel&		GetCpm()				{	return GetModel(mCpm,"Cpm");	}
+	TModel&		GetOpenPose()			{	return GetModel(mOpenPose,"OpenPose");	}
+	TModel&		GetPosenet()			{	return GetModel(mPosenet,"Posenet");	}
+	TModel&		GetSsdMobileNet()		{	return GetModel(mSsdMobileNet,"SsdMobileNet");	}
+	TModel&		GetMaskRcnn()			{	return GetModel(mMaskRcnn,"MaskRcnn");	}
+	TModel&		GetDeepLab()			{	return GetModel(mDeepLab,"DeepLab");	}
+	TModel&		GetAppleVisionFace()	{	return GetModel(mAppleVisionFace,"AppleVisionFace"); }
+	TModel&		GetWinSkillSkeleton()	{	return GetModel(mWinSkillSkeleton,"WinSkillSkeleton");	}
 
+private:
+	TModel&		GetModel(TModel*& mModel,const char* Name);
 
 public:
 	//	temp until we fix ownership problems of promises with nested lambdas
 	Bind::TPromiseMap					mPromises;
 
 private:
-	std::shared_ptr<TYolo>				mYolo;
-	std::shared_ptr<THourglass>			mHourglass;
-	std::shared_ptr<TCpm>				mCpm;
-	std::shared_ptr<TOpenPose>			mOpenPose;
-	std::shared_ptr<TPosenet>			mPosenet;
-	std::shared_ptr<TSsdMobileNet>		mSsdMobileNet;
-	std::shared_ptr<TMaskRcnn>			mMaskRcnn;
-	std::shared_ptr<TDeepLab>			mDeepLab;
-	std::shared_ptr<TAppleVisionFace>	mAppleVisionFace;
-
 	//	dll, currently allocs and stored in the DLL
 	//	should turn into a map with names
-	TModel*								mWinSkillSkeleton = nullptr;
+	TModel*		mYolo = nullptr;
+	TModel*		mHourglass = nullptr;
+	TModel*		mCpm = nullptr;
+	TModel*		mOpenPose = nullptr;
+	TModel*		mPosenet = nullptr;
+	TModel*		mSsdMobileNet = nullptr;
+	TModel*		mMaskRcnn = nullptr;
+	TModel*		mDeepLab = nullptr;
+	TModel*		mAppleVisionFace = nullptr;
+	TModel*		mWinSkillSkeleton = nullptr;
 };
 
 
@@ -151,18 +158,27 @@ CoreMl::TInstance::TInstance() :
 	Start();
 }
 
-template<typename TYPE>
-CoreMl::TModel& CoreMl::TInstance::GetModel(std::shared_ptr<TYPE>& mModel)
+CoreMl::TModel& CoreMl::TInstance::GetModel(TModel*& mModel,const char* Name)
 {
+	if (mModel)
+		return *mModel;
+	
 #if defined(TARGET_WINDOWS)
-	throw Soy::AssertException("Unsupported on windows");
-#else
-	if ( !mModel )
-	{
-		mModel.reset( new TYPE );
-	}
-	return *mModel;
+	//LoadSomeDll("Microsoft.AI.Skills.SkillInterfacePreview.dll");
+	auto Dll = LoadSomeDll("PopCoreml.dll");
+	
+	std::function<int32_t()> GetVersion;
+	Dll->SetFunction(GetVersion, "PopCoreml_GetVersion");
+	auto Version = GetVersion();
+	
+	auto Version2 = PopCoreml_GetVersion();
 #endif
+
+	mModel = PopCoreml_AllocModel(Name);
+	if (!mModel)
+		throw Soy::AssertException("Failed to allocated model");
+
+	return *mModel;
 }
 
 
@@ -174,28 +190,6 @@ std::shared_ptr<Soy::TRuntimeLibrary> LoadSomeDll(const char* Filename)
 	return Dll;
 }
 
-CoreMl::TModel& CoreMl::TInstance::GetWinSkillSkeleton()
-{
-	if (mWinSkillSkeleton)
-		return *mWinSkillSkeleton;
-
-#if defined(TARGET_WINDOWS)
-	//LoadSomeDll("Microsoft.AI.Skills.SkillInterfacePreview.dll");
-	auto Dll = LoadSomeDll("PopCoreml.dll");
-
-	
-	std::function<int32_t()> GetVersion;
-	Dll->SetFunction(GetVersion, "PopCoreml_GetVersion");
-	auto Version = GetVersion();
-
-	auto Version2 = PopCoreml_GetVersion();
-#endif
-	//	todo: load dll
-	mWinSkillSkeleton = PopCoreml_AllocModel("WinSkillSkeleton");
-	if (!mWinSkillSkeleton)
-		throw Soy::AssertException("Failed to allocated model WinSkillSkeleton");
-	return *mWinSkillSkeleton;
-}
 
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
