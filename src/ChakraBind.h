@@ -258,8 +258,10 @@ bool		JSValueIsObject(JSContextRef Context,JSObjectRef Value);
 JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Exception);
 
 //	gr: these actually take a normal context, but that's causing issues in JScore and we use globals instead
-void		JSValueProtect(JSGlobalContextRef Context,JSValueRef Value);
-void		JSValueUnprotect(JSGlobalContextRef Context,JSValueRef Value);
+void		JSValueProtect(JSGlobalContextRef Context, JSValueRef Value);
+void		JSValueUnprotect(JSGlobalContextRef Context, JSValueRef Value);
+void		JSValueProtect(JSGlobalContextRef Context, JSObjectRef Value);
+void		JSValueUnprotect(JSGlobalContextRef Context, JSObjectRef Value);
 
 JSPropertyNameArrayRef	JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRef This);
 size_t		JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys);

@@ -8,6 +8,7 @@
 
 #elif defined(JSAPI_CHAKRA)
 
+#define PROTECT_OBJECT_THIS
 
 
 #elif defined(JSAPI_JSCORE)
@@ -443,6 +444,7 @@ public:
 	TObject()	{}	//	for arrays
 	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
 	//	should probbaly block = operator so any copy of an object always has a new Context
+	~TObject();
 	
 	template<typename TYPE>
 	inline TYPE&			This()	{	return This<TYPE>( mContext, mThis );	}

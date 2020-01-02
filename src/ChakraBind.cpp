@@ -756,14 +756,24 @@ JSObjectRef JSValueToObject(JSContextRef Context,JSValueRef Value,JSValueRef* Ex
 	return Value;
 }
 
-void		JSValueProtect(JSContextRef Context,JSValueRef Value)
+void JSValueProtect(JSContextRef Context, JSObjectRef Value)
+{
+	JSValueProtect(Context, Value.mValue);
+}
+
+void JSValueUnprotect(JSContextRef Context, JSObjectRef Value)
+{
+	JSValueUnprotect(Context, Value.mValue);
+}
+
+void JSValueProtect(JSContextRef Context,JSValueRef Value)
 {
 	unsigned int NewCount = 0;
 	auto Error = JsAddRef( Value, &NewCount );
 	Chakra::IsOkay( Error, "JSValueProtect");
 }
 
-void		JSValueUnprotect(JSContextRef Context,JSValueRef Value)
+void JSValueUnprotect(JSContextRef Context,JSValueRef Value)
 {
 	unsigned int NewCount = 0;
 	auto Error = JsRelease( Value, &NewCount );

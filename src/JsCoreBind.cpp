@@ -1021,6 +1021,20 @@ JsCore::TObject::TObject(JSContextRef Context,JSObjectRef This) :
 
 	if ( !mThis )
 		throw Soy::AssertException("This is null for TObject");
+
+#if defined(PROTECT_OBJECT_THIS)
+	JSValueProtect(mContext, mThis);
+#endif
+}
+
+JsCore::TObject::~TObject()
+{
+#if defined(PROTECT_OBJECT_THIS)
+	if (mThis)
+	{
+		JSValueUnprotect(mContext, mThis);
+	}
+#endif
 }
 
 bool JsCore::TObject::HasMember(const std::string& MemberName)
