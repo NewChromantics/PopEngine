@@ -1329,7 +1329,11 @@ void				JSGlobalContextRelease(JSGlobalContextRef Context)
 
 void JSGarbageCollect(JSContextRef Context)
 {
-	//THROW_TODO;
+	auto GlobalContext = JSContextGetGlobalContext(Context);
+	auto& vm = Chakra::GetVirtualMachine(GlobalContext);
+
+	auto Error = JsCollectGarbage( vm.mRuntime );
+	Chakra::IsOkay(Error, "JsCollectGarbage");
 }
 
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& Buffer)
