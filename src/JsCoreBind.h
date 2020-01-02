@@ -758,7 +758,14 @@ protected:
 #elif defined(JSAPI_CHAKRA)
 	static void				Free(void* ObjectPtr)
 	{
-		throw Soy::AssertException("todo: free external data");
+		auto* This = ObjectPtr;
+		if (!This)
+			throw Soy::AssertException("Free callback from chakracore has null internal field");
+		auto* Wrapper = reinterpret_cast<TObjectWrapperBase*>(This);
+		auto* TypeWrapper = dynamic_cast<THISTYPE*>(Wrapper);
+		if (!TypeWrapper)
+			throw Soy::AssertException("Failed to dynamically object pointer to " + Soy::GetTypeName<THISTYPE>());
+		FreeObject(*TypeWrapper);
 	}
 #endif
 	
