@@ -37,14 +37,14 @@ public:
 class PopCameraDevice::TDevice
 {
 public:
-	std::shared_ptr<TPixelBuffer>	PopLastFrame();
-	bool							PopLastFrame(ArrayBridge<uint8_t>& Plane0, ArrayBridge<uint8_t>& Plane1, ArrayBridge<uint8_t>& Plane2);
+	std::shared_ptr<TPixelBuffer>	PopLastFrame(std::string& Meta);
+	bool							PopLastFrame(ArrayBridge<uint8_t>& Plane0, ArrayBridge<uint8_t>& Plane1, ArrayBridge<uint8_t>& Plane2,std::string& Meta);
 	SoyPixelsMeta					GetMeta() const { return mLastPixelsMeta; }
 
 	virtual void					EnableFeature(TFeature::Type Feature,bool Enable)=0;	//	throws if unsupported
 	
 protected:
-	virtual void					PushFrame(std::shared_ptr<TPixelBuffer> FramePixelBuffer,const SoyPixelsMeta& Meta);
+	virtual void					PushFrame(std::shared_ptr<TPixelBuffer> FramePixelBuffer,const SoyPixelsMeta& PixelMeta,const std::string& FrameMeta);
 
 public:
 	std::function<void()>			mOnNewFrame;
@@ -53,6 +53,7 @@ private:
 	//	currently storing just last frame
 	std::mutex						mLastPixelBufferLock;
 	std::shared_ptr<TPixelBuffer>	mLastPixelBuffer;
+	std::string						mLastFrameMeta;		//	maybe some key system later, but currently device outputs anything (ideally json)
 	SoyPixelsMeta					mLastPixelsMeta;
 };
 
