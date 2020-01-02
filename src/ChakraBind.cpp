@@ -1306,13 +1306,27 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 	
 	auto SetupDebugging = [&](JSContextRef Context)
 	{
+		//	gr: calling this makes debugging work, but the camera code calls a different mode which fails
+		//	The host should make sure that CoInitializeEx is called with COINIT_MULTITHREADED or COINIT_APARTMENTTHREADED at least once before using this API
+		auto InitResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+		//auto InitResult = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);		
+		Platform::IsOkay(InitResult, "CoInitializeEx(COINIT_MULTITHREADED)");
+
 		auto Error = JsStartDebugging();
 		Chakra::IsOkay(Error, "JsStartDebugging");
 	};
 
 	//	needs to be setup in-context
 	JSLockAndRun(NewContext, SetupPromiseCallback);
-	//JSLockAndRun(NewContext, SetupDebugging);
+
+	try
+	{
+		//JSLockAndRun(NewContext, SetupDebugging);
+	}
+	catch (std::exception& e)
+	{
+		std::Debug << "Failed to enable JS debugging; " << e.what() << std::endl;
+	}
 
 	return NewContext;
 }
