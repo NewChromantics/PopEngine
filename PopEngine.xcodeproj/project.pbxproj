@@ -18,7 +18,7 @@
 		BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */; };
 		BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF151F0A2380734D00A70EBF /* PopCameraDeviceFramework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF151F0B2380734F00A70EBF /* PopCoreml.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF151F0B2380734F00A70EBF /* PopCoreml_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -243,7 +243,7 @@
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB07723803E430077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB07823803E430077BCF5 /* PopCoreml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF5EB07823803E430077BCF5 /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF607EA12240580E00A78C00 /* CoreBluetooth.framework */; };
 		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
@@ -292,8 +292,8 @@
 		BF9C0A1023907BAF00476651 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
-		BFA22BEB22DE7E3700D8615C /* PopCoreml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BFA22BEC22DE863300D8615C /* PopCoreml.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BFA22BEB22DE7E3700D8615C /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BFA22BEC22DE863300D8615C /* PopCoreml_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */; };
 		BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
 		BFA664731B55AD0A00C33A2A /* SoyString.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA664721B55AD0A00C33A2A /* SoyString.mm */; };
@@ -348,7 +348,7 @@
 			files = (
 				BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */,
 				BF151F0A2380734D00A70EBF /* PopCameraDeviceFramework.framework in CopyFiles */,
-				BF151F0B2380734F00A70EBF /* PopCoreml.framework in CopyFiles */,
+				BF151F0B2380734F00A70EBF /* PopCoreml_Osx.framework in CopyFiles */,
 				BF9C0A1023907BAF00476651 /* PopH264_Osx.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -369,7 +369,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BFA22BEC22DE863300D8615C /* PopCoreml.framework in CopyFiles */,
+				BFA22BEC22DE863300D8615C /* PopCoreml_Osx.framework in CopyFiles */,
 				BF85351222BEDEE10049C01B /* libopenvr_api.dylib in CopyFiles */,
 				BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */,
 				BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */,
@@ -621,7 +621,7 @@
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		BFA2278B22DB728400D8615C /* PopPianoHero */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPianoHero; path = ../PopPianoHero; sourceTree = "<group>"; };
 		BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine.xcconfig; path = src/PopEngine.xcconfig; sourceTree = "<group>"; };
-		BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopCoreml.framework; sourceTree = "<group>"; };
+		BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopCoreml_Osx.framework; sourceTree = "<group>"; };
 		BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyUniform.cpp; path = src/SoyUniform.cpp; sourceTree = "<group>"; };
 		BFA297201B7E9CF7003B91F6 /* SoyUniform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyUniform.h; path = src/SoyUniform.h; sourceTree = "<group>"; };
 		BFA297231B80E8DE003B91F6 /* SoyWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyWindow.h; path = src/SoyWindow.h; sourceTree = "<group>"; };
@@ -777,7 +777,7 @@
 				BF5EB019237F119A0077BCF5 /* Cocoa.framework in Frameworks */,
 				BF5EB023237F11C80077BCF5 /* ApplicationServices.framework in Frameworks */,
 				BF5EB07723803E430077BCF5 /* PopCameraDeviceFramework.framework in Frameworks */,
-				BF5EB07823803E430077BCF5 /* PopCoreml.framework in Frameworks */,
+				BF5EB07823803E430077BCF5 /* PopCoreml_Osx.framework in Frameworks */,
 				BF5EB017237F118F0077BCF5 /* CoreServices.framework in Frameworks */,
 				BF5EB01C237F11A10077BCF5 /* CoreBluetooth.framework in Frameworks */,
 				BF5EB016237F118C0077BCF5 /* CoreVideo.framework in Frameworks */,
@@ -812,7 +812,7 @@
 				BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */,
 				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
 				BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */,
-				BFA22BEB22DE7E3700D8615C /* PopCoreml.framework in Frameworks */,
+				BFA22BEB22DE7E3700D8615C /* PopCoreml_Osx.framework in Frameworks */,
 				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
 				BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */,
 				BF5EB010237F11680077BCF5 /* opencv2.framework in Frameworks */,
@@ -911,7 +911,7 @@
 				BF012B0C226A102D003AEB55 /* PopCameraDeviceFramework.framework */,
 				BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */,
 				BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */,
-				BFA22BEA22DE7E3700D8615C /* PopCoreml.framework */,
+				BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */,
 				BFE9512E22A70B8400B83061 /* x264 */,
 			);
 			name = Libraries;
