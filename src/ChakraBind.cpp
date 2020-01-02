@@ -1502,14 +1502,14 @@ void JSValueWrapper::Set(JSValueRef Value)
 		return;
 	
 	mValue = Value;
-	JSValueProtect(nullptr, mValue);
+	//JSValueProtect(nullptr, mValue);
 }
 
 void JSValueWrapper::Release()
 {
 	if ( !mValue )
 		return;
-	JSValueUnprotect(nullptr, mValue);
+	//JSValueUnprotect(nullptr, mValue);
 	mValue = nullptr;
 }
 
