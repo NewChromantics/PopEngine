@@ -46,3 +46,5 @@ BuildData/
 *.framework
 
 PopEngine\.visualstudio/\.vs/PopEngine/v15/ipch/
+
+PopEngine.visualstudio/packages/

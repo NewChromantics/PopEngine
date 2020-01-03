@@ -508,6 +508,7 @@
     <None Include="..\UnitTest\VideoTest\Yuv8_8_8.frag.glsl" />
     <None Include="..\UnitTest\VideoTest\Yuv8_8_8_MultiImage.frag.glsl" />
     <None Include="..\UnitTest\VirtualReality\bootup.js" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp" />
