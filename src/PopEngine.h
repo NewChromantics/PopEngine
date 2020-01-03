@@ -1,3 +1,3 @@
 #pragma once
-#include "SoyApp.h"
 
+extern "C" __declspec(dllexport) int PopEngine(const char* ProjectPath);

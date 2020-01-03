@@ -89,8 +89,7 @@ namespace Platform
 #endif
 }
 
-
-int PopEngine(const char* ProjectPath)
+extern "C" __declspec(dllexport) int PopEngine(const char* ProjectPath)
 {
 	Pop::ProjectPath = ProjectPath;
 
