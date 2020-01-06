@@ -1296,7 +1296,8 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 	ObjectPointer.SetHandle( LocalContext, ObjectHandle );
 	
 	//	for V8, to get a free() callback, we need a persistent to be marked weak
-#if defined(JSAPI_V8)
+#if defined(PERSISTENT_OBJECT_HANDLE)
+	ObjectPointer.mHandle.SetWeak(ObjectPointer, Class);
 	/*
 	//	gr: make it weak so it will be collected
 	//		anything persistent will be in a TPersistent
@@ -1786,6 +1787,12 @@ void JsCore::TPersistent::SetWeak(TObjectWrapperBase& Object,JSClassRef Class)
 	void* Param = &Object;
 	auto CallbackParam = v8::WeakCallbackType::kParameter;
 	mObject->mPersistent.SetWeak( Param, Class.mDestructor, CallbackParam );
+#endif
+#if defined(JSAPI_CHAKRA)
+	JSGlobalContextRef Context = nullptr;
+	//	gr: this seems dangerous, but there's no explicit weak mode...
+	//		just remove one ref count so last use outside the handle deallocs.
+	JSValueUnprotect(Context,mObject);
 #endif
 }
 	

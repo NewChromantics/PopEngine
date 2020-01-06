@@ -9,6 +9,7 @@
 #elif defined(JSAPI_CHAKRA)
 
 #define PROTECT_OBJECT_THIS
+#define PERSISTENT_OBJECT_HANDLE
 
 
 #elif defined(JSAPI_JSCORE)
