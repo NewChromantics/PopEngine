@@ -1037,6 +1037,25 @@ JsCore::TObject::~TObject()
 #endif
 }
 
+
+JsCore::TObject& JsCore::TObject::operator=(const TObject& Copy)
+{
+	//	release self
+#if defined(PROTECT_OBJECT_THIS)
+	if (mThis)
+	{
+		JSValueUnprotect(mContext, mThis);
+		mThis = nullptr;
+	}
+#endif
+	mThis = Copy.mThis;
+	mContext = Copy.mContext;
+#if defined(PROTECT_OBJECT_THIS)
+	JSValueProtect(mContext, mThis);
+#endif
+	return *this;
+}
+
 bool JsCore::TObject::HasMember(const std::string& MemberName)
 {
 	auto Member = GetMember( MemberName );

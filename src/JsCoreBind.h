@@ -442,9 +442,15 @@ class JsCore::TObject //: public JsCore::TObject
 	friend class TObjectWrapperBase;
 public:
 	TObject()	{}	//	for arrays
-	TObject(JSContextRef Context,JSObjectRef This);	//	if This==null then it's the global
+	TObject(JSContextRef Context, JSObjectRef This);	//	if This==null then it's the global
+	TObject(const TObject& Copy) :
+		TObject(Copy.mContext, Copy.mThis)
+	{
+	}
 	//	should probbaly block = operator so any copy of an object always has a new Context
 	~TObject();
+
+	inline TObject&			operator=(const TObject& Copy);
 	
 	template<typename TYPE>
 	inline TYPE&			This()	{	return This<TYPE>( mContext, mThis );	}
