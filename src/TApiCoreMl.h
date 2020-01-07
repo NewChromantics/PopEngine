@@ -46,6 +46,7 @@ public:
 	void				AppleVisionFaceDetect(Bind::TCallback& Arguments);
 
 	void				WinSkillSkeleton(Bind::TCallback& Arguments);
+	void				KinectAzureSkeleton(Bind::TCallback& Arguments);
 
 protected:
 	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;

@@ -28,7 +28,9 @@ public:
 	TModel&		GetMaskRcnn()			{	return GetModel(mMaskRcnn,"MaskRcnn");	}
 	TModel&		GetDeepLab()			{	return GetModel(mDeepLab,"DeepLab");	}
 	TModel&		GetAppleVisionFace()	{	return GetModel(mAppleVisionFace,"AppleVisionFace"); }
-	TModel&		GetWinSkillSkeleton()	{	return GetModel(mWinSkillSkeleton,"WinSkillSkeleton");	}
+	TModel&		GetWinSkillSkeleton()	{	return GetModel(mWinSkillSkeleton, "WinSkillSkeleton"); }
+	TModel&		GetKinectAzureSkeleton()	{	return GetModel(mKinectAzureSkeleton, "KinectAzureSkeleton"); }
+	
 
 private:
 	TModel&		GetModel(TModel*& mModel,const char* Name);
@@ -50,6 +52,7 @@ private:
 	TModel*		mDeepLab = nullptr;
 	TModel*		mAppleVisionFace = nullptr;
 	TModel*		mWinSkillSkeleton = nullptr;
+	TModel*		mKinectAzureSkeleton = nullptr;
 };
 
 
@@ -71,6 +74,7 @@ namespace ApiCoreMl
 	DEFINE_BIND_FUNCTIONNAME(AppleVisionFaceDetect);
 	DEFINE_BIND_FUNCTIONNAME(DeepLab);
 	DEFINE_BIND_FUNCTIONNAME(WinSkillSkeleton);
+	DEFINE_BIND_FUNCTIONNAME(KinectAzureSkeleton);
 }
 
 
@@ -102,6 +106,7 @@ void TCoreMlWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::AppleVisionFaceDetect>( &TCoreMlWrapper::AppleVisionFaceDetect );
 	Template.BindFunction<BindFunction::DeepLab>(&TCoreMlWrapper::DeepLab);
 	Template.BindFunction<BindFunction::WinSkillSkeleton>(&TCoreMlWrapper::WinSkillSkeleton);
+	Template.BindFunction<BindFunction::KinectAzureSkeleton>(&TCoreMlWrapper::KinectAzureSkeleton);
 }
 
 
@@ -146,7 +151,29 @@ CoreMl::TModel& CoreMl::TInstance::GetModel(TModel*& mModel,const char* Name)
 }
 
 
+void ObjectToJs(const CoreMl::TObject& ObjectMl, Bind::TObject& ObjectJs)
+{
+	ObjectJs.SetString("Label", ObjectMl.mLabel);
+	ObjectJs.SetFloat("Score", ObjectMl.mScore);
+	ObjectJs.SetFloat("x", ObjectMl.mRect.x);
+	ObjectJs.SetFloat("y", ObjectMl.mRect.y);
+	ObjectJs.SetFloat("w", ObjectMl.mRect.w);
+	ObjectJs.SetFloat("h", ObjectMl.mRect.h);
+	ObjectJs.SetInt("GridX", ObjectMl.mGridPos.x);
+	ObjectJs.SetInt("GridY", ObjectMl.mGridPos.y);
+}
 
+void ObjectToJs(const CoreMl::TWorldObject& ObjectMl, Bind::TObject& ObjectJs)
+{
+	ObjectJs.SetString("Label", ObjectMl.mLabel);
+	ObjectJs.SetFloat("Score", ObjectMl.mScore);
+	ObjectJs.SetFloat("x", ObjectMl.mWorldPosition.x);
+	ObjectJs.SetFloat("y", ObjectMl.mWorldPosition.y);
+	ObjectJs.SetFloat("z", ObjectMl.mWorldPosition.z);
+}
+
+
+template<typename MLOBJECTYPE=CoreMl::TObject>
 void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl::TInstance& CoreMl)
 {
 	auto* pImage = &Params.GetArgumentPointer<TImageWrapper>(0);
@@ -188,32 +215,24 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			}
 			auto& Pixels = *pPixels;
 			
-			Array<CoreMl::TObject> Objects;
+			Array<MLOBJECTYPE> Objects;
 						
-			std::function<void(const CoreMl::TObject&)> PushObject = [&](const CoreMl::TObject& Object)
+			std::function<void(const MLOBJECTYPE&)> PushObject = [&](const MLOBJECTYPE& Object)
 			{
 				Objects.PushBack(Object);
 			};
 			auto& Model = *pModel;
 			Model.GetObjects( Pixels, PushObject );
 			
+
 			std::function<void(Bind::TLocalContext&)> OnCompleted = [=](Bind::TLocalContext& Context)
 			{
 				Array<Bind::TObject> Elements;
 				for (auto i = 0; i < Objects.GetSize(); i++)
-				{					
+				{
 					auto& Object = Objects[i];
 					auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
-
-					ObjectJs.SetString("Label", Object.mLabel);
-					ObjectJs.SetFloat("Score", Object.mScore);
-					ObjectJs.SetFloat("x", Object.mRect.x);
-					ObjectJs.SetFloat("y", Object.mRect.y);
-					ObjectJs.SetFloat("w", Object.mRect.w);
-					ObjectJs.SetFloat("h", Object.mRect.h);
-					ObjectJs.SetInt("GridX", Object.mGridPos.x);
-					ObjectJs.SetInt("GridY", Object.mGridPos.y);
-					
+					ObjectToJs(Object, ObjectJs);
 					Elements.PushBack(ObjectJs);
 				};
 				auto Resolve = [&](Bind::TLocalContext& Context, Bind::TPromise& Promise)
@@ -239,7 +258,6 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 	};
 	
 	CoreMl.PushJob(RunModel);
-
 }
 
 
@@ -550,5 +568,15 @@ void TCoreMlWrapper::WinSkillSkeleton(Bind::TCallback& Params)
 
 	RunModelGetObjects(Model, Params, CoreMl);
 }
+
+void TCoreMlWrapper::KinectAzureSkeleton(Bind::TCallback& Params)
+{
+	auto& CoreMl = *mCoreMl;
+	auto& Model = CoreMl.GetKinectAzureSkeleton();
+
+	RunModelGetObjects<CoreMl::TWorldObject>(Model, Params, CoreMl);
+}
+
+
 
 
