@@ -18,6 +18,7 @@ namespace ApiWebsocket
 {
 	void	Bind(Bind::TContext& Context);
 	DECLARE_BIND_TYPENAME(WebsocketServer);
+	DECLARE_BIND_TYPENAME(WebsocketClient);
 }
 
 
@@ -66,14 +67,14 @@ public:
 	SoySocket&					GetSocket()		{	return *mSocket;	}
 
 	//	get clients who have finished handshaking
-	void						GetConnectedClients(ArrayBridge<SoyRef>& Clients);
+	void						GetConnectedPeers(ArrayBridge<SoyRef>& Clients);
 	
 protected:
 	virtual bool				Iteration() override;
 	
-	void						AddClient(SoyRef ClientRef);
-	void						RemoveClient(SoyRef ClientRef);
-	std::shared_ptr<TWebsocketServerPeer>	GetClient(SoyRef ClientRef);
+	void						AddPeer(SoyRef ClientRef);
+	void						RemovePeer(SoyRef ClientRef);
+	std::shared_ptr<TWebsocketServerPeer>	GetPeer(SoyRef ClientRef);
 	
 public:
 	std::shared_ptr<SoySocket>		mSocket;
@@ -84,6 +85,38 @@ protected:
 	
 	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+};
+
+
+
+class TWebsocketClient : public SoyWorkerThread
+{
+public:
+	TWebsocketClient(const std::string& Address, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
+
+	void						Send(SoyRef ClientRef, const std::string& Message);
+	void						Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message);
+
+	SoySocket&					GetSocket() { return *mSocket; }
+
+	//	get clients who have finished handshaking
+	void						GetConnectedPeers(ArrayBridge<SoyRef>& Clients);
+
+protected:
+	virtual bool				Iteration() override;
+
+	void						AddPeer(SoyRef ClientRef);
+	void						RemovePeer(SoyRef ClientRef);
+	std::shared_ptr<TWebsocketServerPeer>	GetPeer(SoyRef ClientRef);
+
+public:
+	std::shared_ptr<SoySocket>		mSocket;
+
+protected:
+	std::shared_ptr<TWebsocketServerPeer>	mServerPeer;
+
+	std::function<void(SoyRef, const std::string&)>		mOnTextMessage;
+	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
 };
 
 
@@ -107,6 +140,36 @@ public:
 
 public:
 	std::shared_ptr<TWebsocketServer>	mSocket = mObject;
+};
+
+
+
+
+class TWebsocketClientWrapper : public Bind::TObjectWrapper<ApiWebsocket::BindType::WebsocketClient, TWebsocketClient>, public ApiSocket::TSocketWrapper
+{
+public:
+	TWebsocketClientWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void				CreateTemplate(Bind::TTemplate& Template);
+
+	virtual void			Construct(Bind::TCallback& Params) override;
+	virtual void			Send(Bind::TCallback& Params) override;
+
+	virtual std::shared_ptr<SoySocket>		GetSocket() override { return mSocket ? mSocket->mSocket : nullptr; }
+	virtual void			GetConnectedPeers(ArrayBridge<SoyRef>&& Peers) override;
+
+	void					WaitForConnect(Bind::TCallback& Params);
+
+protected:
+	void					OnConnected();
+	void					FlushPendingConnects();
+
+public:
+	std::shared_ptr<TWebsocketClient>	mSocket = mObject;
+	Bind::TPromiseQueue		mOnConnectPromises;
 };
 
 

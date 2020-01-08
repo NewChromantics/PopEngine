@@ -8,16 +8,24 @@ namespace ApiWebsocket
 	const char Namespace[] = "Pop.Websocket";
 
 	DEFINE_BIND_TYPENAME(WebsocketServer);
+	DEFINE_BIND_TYPENAME(WebsocketClient);
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
 	DEFINE_BIND_FUNCTIONNAME(WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME(WaitForConnect);
+
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_GetAddress, GetAddress);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_Send, Send);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_GetPeers, GetPeers);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_WaitForMessage, WaitForMessage);
 }
 
 void ApiWebsocket::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindObjectType<TWebsocketServerWrapper>(Namespace,"Server");
+	Context.BindObjectType<TWebsocketServerWrapper>(Namespace, "Server");
+	Context.BindObjectType<TWebsocketClientWrapper>(Namespace, "Client");
 }
 
 
@@ -42,10 +50,10 @@ void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 
 void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiWebsocket::BindFunction::GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
-	Template.BindFunction<ApiWebsocket::BindFunction::Send>(&ApiSocket::TSocketWrapper::Send );
-	Template.BindFunction<ApiWebsocket::BindFunction::GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
-	Template.BindFunction<ApiWebsocket::BindFunction::WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiWebsocket::BindFunction::Server_GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
+	Template.BindFunction<ApiWebsocket::BindFunction::Server_Send>(&ApiSocket::TSocketWrapper::Send );
+	Template.BindFunction<ApiWebsocket::BindFunction::Server_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiWebsocket::BindFunction::Server_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 }
 
 
@@ -55,7 +63,7 @@ void TWebsocketServerWrapper::GetConnectedPeers(ArrayBridge<SoyRef>&& Peers)
 		return;
 	
 	//	get clients who have finished handshaking
-	mSocket->GetConnectedClients( Peers );
+	mSocket->GetConnectedPeers( Peers );
 }
 
 
@@ -83,6 +91,144 @@ void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 
 
 
+void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
+{
+	auto Address = Params.GetArgumentString(0);
+
+	auto OnTextMessage = [this](SoyRef Connection, const std::string& Message)
+	{
+		this->OnMessage(Message, Connection);
+	};
+
+	auto OnBinaryMessage = [this](SoyRef Connection, const Array<uint8_t>& Message)
+	{
+		this->OnMessage(Message, Connection);
+	};
+	
+	mSocket.reset(new TWebsocketClient(Address, OnTextMessage, OnBinaryMessage));
+}
+
+
+void TWebsocketClientWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<ApiWebsocket::BindFunction::GetAddress>(&ApiSocket::TSocketWrapper::GetAddress);
+	Template.BindFunction<ApiWebsocket::BindFunction::Send>(&ApiSocket::TSocketWrapper::Send);
+	Template.BindFunction<ApiWebsocket::BindFunction::GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiWebsocket::BindFunction::WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiWebsocket::BindFunction::WaitForConnect>(&TWebsocketClientWrapper::WaitForConnect);
+}
+
+
+void TWebsocketClientWrapper::GetConnectedPeers(ArrayBridge<SoyRef>&& Peers)
+{
+	if (!mSocket)
+		return;
+
+	//	get clients who have finished handshaking
+	mSocket->GetConnectedPeers(Peers);
+}
+
+void TWebsocketClientWrapper::WaitForConnect(Bind::TCallback& Params)
+{
+	auto NewPromise = mOnConnectPromises.AddPromise(Params.mLocalContext);
+	Params.Return(NewPromise);
+
+	FlushPendingConnects();
+}
+
+
+void TWebsocketClientWrapper::FlushPendingConnects()
+{
+	//	either no data, or no-one waiting yet
+	if (!mOnConnectPromises.HasPromises())
+		return;
+
+	//	if connecting... dont resolve yet
+	auto IsConnected = this->mSocket->mSocket->IsConnected();
+	auto IsError = false;
+	if (!IsConnected && !IsError)
+		return;
+	
+	auto Flush = [=](Bind::TLocalContext& Context)
+	{
+		if (IsConnected)
+			mOnConnectPromises.Resolve();
+		else//if IsError
+			mOnConnectPromises.Reject("Error connecting");
+	};
+
+	auto& Context = mOnConnectPromises.GetContext();
+	Context.Queue(Flush);
+}
+
+
+void TWebsocketClientWrapper::Send(Bind::TCallback& Params)
+{
+	auto ThisSocket = mSocket;
+	if (!ThisSocket)
+		throw Soy::AssertException("Socket not allocated");
+
+	auto PeerStr = Params.GetArgumentString(0);
+	auto PeerRef = SoyRef(PeerStr);
+
+	if (Params.IsArgumentString(1))
+	{
+		auto DataString = Params.GetArgumentString(1);
+		ThisSocket->Send(PeerRef, DataString);
+	}
+	else
+	{
+		Array<uint8_t> Data;
+		Params.GetArgumentArray(1, GetArrayBridge(Data));
+		ThisSocket->Send(PeerRef, GetArrayBridge(Data));
+	}
+}
+
+
+
+TWebsocketClient::TWebsocketClient(const std::string& Address, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
+	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Address << ")"), SoyWorkerWaitMode::Sleep),
+	mOnTextMessage(OnTextMessage),
+	mOnBinaryMessage(OnBinaryMessage)
+{
+	mSocket.reset(new SoySocket());
+	mSocket->CreateTcp(true);
+	//mSocket->ListenTcp(ListenPort);
+
+	mSocket->mOnConnect = [=](SoyRef ClientRef)
+	{
+		AddPeer(ClientRef);
+	};
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	{
+		RemovePeer(ClientRef);
+	};
+
+	mSocket->Connect(Address);
+
+	Start();
+}
+
+
+bool TWebsocketClient::Iteration()
+{
+	if (!mSocket)
+		return false;
+
+	if (!mSocket->IsCreated())
+		return true;
+
+	//	gr: does this thread need to do anything?
+/*
+	//	non blocking so lets just do everything in a loop
+	auto NewClient = mSocket->WaitForClient();
+	if (NewClient.IsValid())
+		std::Debug << "new client connected: " << NewClient << std::endl;
+	*/
+	return true;
+}
+
+
 TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"WebsocketServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
 	mOnTextMessage		( OnTextMessage ),
@@ -94,11 +240,11 @@ TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef
 	
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
 	{
-		AddClient(ClientRef);
+		AddPeer(ClientRef);
 	};
 	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
 	{
-		RemoveClient(ClientRef);
+		RemovePeer(ClientRef);
 	};
 	
 	Start();
@@ -135,7 +281,7 @@ bool TWebsocketServer::Iteration()
 	return true;
 }
 
-void TWebsocketServer::GetConnectedClients(ArrayBridge<SoyRef>& Clients)
+void TWebsocketServer::GetConnectedPeers(ArrayBridge<SoyRef>& Clients)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	for ( int c=0;	c<mClients.GetSize();	c++ )
@@ -150,7 +296,7 @@ void TWebsocketServer::GetConnectedClients(ArrayBridge<SoyRef>& Clients)
 	}
 }
 
-std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetClient(SoyRef ClientRef)
+std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetPeer(SoyRef ClientRef)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	for ( int c=0;	c<mClients.GetSize();	c++ )
@@ -163,16 +309,53 @@ std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetClient(SoyRef ClientR
 	throw Soy::AssertException("Client not found");
 }
 
-void TWebsocketServer::AddClient(SoyRef ClientRef)
+void TWebsocketServer::AddPeer(SoyRef ClientRef)
 {
 	std::shared_ptr<TWebsocketServerPeer> Client( new TWebsocketServerPeer( mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
 }
 
-void TWebsocketServer::RemoveClient(SoyRef ClientRef)
+void TWebsocketServer::RemovePeer(SoyRef ClientRef)
 {
 	
+}
+
+
+
+void TWebsocketClient::GetConnectedPeers(ArrayBridge<SoyRef>& Clients)
+{
+	{
+		auto& Client = *mServerPeer;
+		if (!Client.mHandshake.IsCompleted())
+			return;
+		if (!Client.mHandshake.mHasSentAcceptReply)
+			return;
+
+		Clients.PushBack(Client.mConnectionRef);
+	}
+}
+
+std::shared_ptr<TWebsocketServerPeer> TWebsocketClient::GetPeer(SoyRef ClientRef)
+{
+	{
+		auto& pClient = mServerPeer;
+		if (pClient->mConnectionRef == ClientRef)
+			return pClient;
+	}
+
+	throw Soy::AssertException("Peer not found");
+}
+
+void TWebsocketClient::AddPeer(SoyRef ClientRef)
+{
+	std::shared_ptr<TWebsocketServerPeer> Client(new TWebsocketServerPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage));
+	mServerPeer = Client;
+}
+
+void TWebsocketClient::RemovePeer(SoyRef ClientRef)
+{
+	mServerPeer = nullptr;
 }
 
 
@@ -230,9 +413,35 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 }
 
 
+void TWebsocketClient::Send(SoyRef ClientRef, const std::string& Message)
+{
+	auto Peer = GetPeer(ClientRef);
+	if (!Peer)
+	{
+		std::stringstream Error;
+		Error << "No peer matching " << ClientRef;
+		throw Soy::AssertException(Error.str());
+	}
+	Peer->Send(Message);
+}
+
+
+void TWebsocketClient::Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message)
+{
+	auto Peer = GetPeer(ClientRef);
+	if (!Peer)
+	{
+		std::stringstream Error;
+		Error << "No peer matching " << ClientRef;
+		throw Soy::AssertException(Error.str());
+	}
+	Peer->Send(Message);
+}
+
+
 void TWebsocketServer::Send(SoyRef ClientRef,const std::string& Message)
 {
-	auto Peer = GetClient(ClientRef);
+	auto Peer = GetPeer(ClientRef);
 	if ( !Peer )
 	{
 		std::stringstream Error;
@@ -245,7 +454,7 @@ void TWebsocketServer::Send(SoyRef ClientRef,const std::string& Message)
 
 void TWebsocketServer::Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message)
 {
-	auto Peer = GetClient(ClientRef);
+	auto Peer = GetPeer(ClientRef);
 	if ( !Peer )
 	{
 		std::stringstream Error;
