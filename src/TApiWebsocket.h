@@ -37,6 +37,8 @@ public:
 		TSocketWriteThread::Start();
 	}
 
+	void				ClientConnect();
+
 	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
 	
 	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
@@ -101,6 +103,7 @@ public:
 
 	//	get clients who have finished handshaking
 	void						GetConnectedPeers(ArrayBridge<SoyRef>& Clients);
+	std::string					GetConnectionError() {	return std::string();	}
 
 protected:
 	virtual bool				Iteration() override;
@@ -113,8 +116,8 @@ public:
 	std::shared_ptr<SoySocket>		mSocket;
 
 	//	this could be "on peer connected" to be generic
-	std::function<void()>								mOnConnected;
-	std::function<void()>								mOnDisconnected;
+	std::function<void()>			mOnConnected;
+	std::function<void()>			mOnDisconnected;
 
 protected:
 	std::shared_ptr<TWebsocketServerPeer>	mServerPeer;

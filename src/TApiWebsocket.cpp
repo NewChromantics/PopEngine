@@ -145,9 +145,20 @@ void TWebsocketClientWrapper::FlushPendingConnects()
 	if (!mOnConnectPromises.HasPromises())
 		return;
 
-	//	if connecting... dont resolve yet
-	auto IsConnected = this->mSocket->mSocket->IsConnected();
-	auto IsError = false;
+	//	gotta wait for handshake to finish, so check for connected peers
+	//	todo: Check for disconnection/handshake error
+	auto ConnectionError = mSocket->GetConnectionError();
+	bool IsConnected = false;
+	auto IsError = !ConnectionError.empty();
+	if (!IsError)
+	{
+		//	check for connection
+		BufferArray<SoyRef, 1> Peers;
+		mSocket->GetConnectedPeers(GetArrayBridge(Peers));
+		IsConnected = !Peers.IsEmpty();
+	}
+
+	//	resolve when we're either connected or not
 	if (!IsConnected && !IsError)
 		return;
 	
@@ -156,7 +167,7 @@ void TWebsocketClientWrapper::FlushPendingConnects()
 		if (IsConnected)
 			mOnConnectPromises.Resolve();
 		else//if IsError
-			mOnConnectPromises.Reject("Error connecting");
+			mOnConnectPromises.Reject(ConnectionError);
 	};
 
 	auto& Context = mOnConnectPromises.GetContext();
@@ -353,6 +364,7 @@ void TWebsocketClient::AddPeer(SoyRef ClientRef)
 {
 	std::shared_ptr<TWebsocketServerPeer> Client(new TWebsocketServerPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage));
 	mServerPeer = Client;
+	mServerPeer->ClientConnect();
 	if (mOnConnected)
 		mOnConnected();
 }
@@ -364,6 +376,13 @@ void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 		mOnDisconnected();
 }
 
+void TWebsocketServerPeer::ClientConnect()
+{
+	//	send a websocket request
+	std::shared_ptr<WebSocket::TMessageBuffer> MessageBuffer(new WebSocket::TMessageBuffer() );
+	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TRequestProtocol(this->mHandshake, MessageBuffer));
+	Push(Packet);
+}
 
 void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
 {
