@@ -8,16 +8,24 @@ namespace ApiSocket
 	const char Namespace[] = "Pop.Socket";
 
 	DEFINE_BIND_TYPENAME(UdpBroadcastServer);
+	DEFINE_BIND_TYPENAME(UdpClient);
+
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
 	DEFINE_BIND_FUNCTIONNAME(WaitForMessage);
+
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetAddress, GetAddress);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_Send,Send);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetPeers,GetPeers);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForMessage,WaitForMessage);
 }
 
 void ApiSocket::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 	Context.BindObjectType<TUdpBroadcastServerWrapper>(Namespace);
+	Context.BindObjectType<TUdpClientWrapper>(Namespace);
 }
 
 
@@ -122,6 +130,27 @@ void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiSocket::BindFunction::WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 }
 
+
+void TUdpClientWrapper::Construct(Bind::TCallback& Params)
+{
+	auto Hostname = Params.GetArgumentString(0);
+	auto Port = Params.GetArgumentInt(1);
+	
+	auto OnBinaryMessage = [this](const Array<uint8_t>& Message, SoyRef Sender)
+	{
+		this->OnMessage(Message, Sender);
+	};
+	mSocket.reset(new TUdpClient(Hostname, Port, OnBinaryMessage));
+}
+
+
+void TUdpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<ApiSocket::BindFunction::UdpClient_GetAddress>(&ApiSocket::TSocketWrapper::GetAddress);
+	Template.BindFunction<ApiSocket::BindFunction::UdpClient_Send>(&ApiSocket::TSocketWrapper::Send);
+	Template.BindFunction<ApiSocket::BindFunction::UdpClient_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiSocket::BindFunction::UdpClient_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+}
 
 
 
@@ -236,7 +265,7 @@ TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(
 	mSocket.reset( new SoySocket() );
 	auto Broadcast = true;
 	mSocket->CreateUdp(Broadcast);
-	mSocket->ListenUdp(ListenPort);
+	mSocket->ListenUdp(ListenPort,true);
 	/*
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
 	{
@@ -284,3 +313,57 @@ bool TUdpBroadcastServer::Iteration()
 }
 
 
+
+TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage) :
+	SoyWorkerThread		(Soy::StreamToString(std::stringstream() << "UdpClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
+	mOnBinaryMessage	(OnBinaryMessage)
+{
+	mSocket.reset(new SoySocket());
+	auto Broadcast = false;
+	mSocket->CreateUdp(Broadcast);
+	mSocket->UdpConnect(Hostname.c_str(),Port);
+	/*
+	mSocket->mOnConnect = [=](SoyRef ClientRef)
+	{
+		AddClient(ClientRef);
+	};
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	{
+		RemoveClient(ClientRef);
+	};
+	*/
+	Start();
+
+}
+
+
+bool TUdpClient::Iteration()
+{
+	if (!mSocket)
+		return false;
+
+	if (!mSocket->IsCreated())
+		return true;
+
+	//	non blocking so lets just do everything in a loop
+	Array<char> RecvBuffer;
+	Array<uint8_t> RecvBuffer8;
+	auto RecvFromConnection = [&](SoyRef ConnectionRef, SoySocketConnection Connection)
+	{
+		RecvBuffer.Clear();
+
+		//	on udp ConnectionRef is us!
+		auto Sender = Connection.Recieve(GetArrayBridge(RecvBuffer), *mSocket);
+		if (!Sender.IsValid() || RecvBuffer.IsEmpty())
+			return;
+
+		//	cast buffer. Would prefer SoySocket to be uint8
+		auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>(0, RecvBuffer.GetSize());
+		RecvBuffer8.Copy(RecvBufferCastTo8);
+
+		this->mOnBinaryMessage(RecvBuffer8, Sender);
+	};
+	mSocket->EnumConnections(RecvFromConnection);
+
+	return true;
+}

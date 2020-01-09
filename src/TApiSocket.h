@@ -15,6 +15,7 @@ namespace ApiSocket
 {
 	void	Bind(Bind::TContext& Context);
 	DECLARE_BIND_TYPENAME(UdpBroadcastServer);
+	DECLARE_BIND_TYPENAME(UdpClient);
 
 	class TPacket;
 	class TBinaryPacket;
@@ -39,6 +40,24 @@ public:
 	
 private:
 	std::function<void(const Array<uint8_t>&,SoyRef)>	mOnBinaryMessage;
+};
+
+
+class TUdpClient : public SoyWorkerThread
+{
+public:
+	TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage);
+
+	std::string					GetAddress() const;
+
+protected:
+	virtual bool				Iteration() override;
+
+public:
+	std::shared_ptr<SoySocket>		mSocket;
+
+private:
+	std::function<void(const Array<uint8_t>&, SoyRef)>	mOnBinaryMessage;
 };
 
 
@@ -114,6 +133,23 @@ public:
 
 public:
 	std::shared_ptr<TUdpBroadcastServer>	mSocket = mObject;
-
 };
 
+
+
+class TUdpClientWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpClient, TUdpClient>, public ApiSocket::TSocketWrapper
+{
+public:
+	TUdpClientWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void			CreateTemplate(Bind::TTemplate& Template);
+	virtual void		Construct(Bind::TCallback& Params) override;
+
+	virtual std::shared_ptr<SoySocket>		GetSocket() override { return mSocket ? mSocket->mSocket : nullptr; }
+
+public:
+	std::shared_ptr<TUdpClient>	mSocket = mObject;
+};
