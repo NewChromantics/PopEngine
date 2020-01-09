@@ -112,11 +112,16 @@ protected:
 public:
 	std::shared_ptr<SoySocket>		mSocket;
 
+	//	this could be "on peer connected" to be generic
+	std::function<void()>								mOnConnected;
+	std::function<void()>								mOnDisconnected;
+
 protected:
 	std::shared_ptr<TWebsocketServerPeer>	mServerPeer;
 
 	std::function<void(SoyRef, const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
+
 };
 
 
@@ -164,7 +169,6 @@ public:
 	void					WaitForConnect(Bind::TCallback& Params);
 
 protected:
-	void					OnConnected();
 	void					FlushPendingConnects();
 
 public:

@@ -106,6 +106,8 @@ void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 	};
 	
 	mSocket.reset(new TWebsocketClient(Address, OnTextMessage, OnBinaryMessage));
+	mSocket->mOnConnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
+	mSocket->mOnDisconnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
 }
 
 
@@ -351,11 +353,15 @@ void TWebsocketClient::AddPeer(SoyRef ClientRef)
 {
 	std::shared_ptr<TWebsocketServerPeer> Client(new TWebsocketServerPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage));
 	mServerPeer = Client;
+	if (mOnConnected)
+		mOnConnected();
 }
 
 void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 {
 	mServerPeer = nullptr;
+	if (mOnDisconnected)
+		mOnDisconnected();
 }
 
 
