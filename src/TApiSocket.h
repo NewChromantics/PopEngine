@@ -89,6 +89,9 @@ public:
 	std::string		mData;
 };
 
+
+//	gr: this needs a OnDisconnected so a client socket can reject() WaitForMessage when its disconnected from server
+//		this should also implement WaitForConnect() (see websocketclientwrapper)
 class ApiSocket::TSocketWrapper
 {
 	//	can't be protected when getting member pointers with clang

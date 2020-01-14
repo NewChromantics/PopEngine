@@ -352,18 +352,39 @@ bool TUdpClient::Iteration()
 	{
 		RecvBuffer.Clear();
 
-		//	on udp ConnectionRef is us!
-		auto Sender = Connection.Recieve(GetArrayBridge(RecvBuffer), *mSocket);
-		if (!Sender.IsValid() || RecvBuffer.IsEmpty())
-			return;
+		try
+		{
+			//	on udp ConnectionRef is us!
+			auto Sender = Connection.Recieve(GetArrayBridge(RecvBuffer), *mSocket);
+			if (!Sender.IsValid() || RecvBuffer.IsEmpty())
+				return;
+			
+			//	cast buffer. Would prefer SoySocket to be uint8
+			auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>(0, RecvBuffer.GetSize());
+			RecvBuffer8.Copy(RecvBufferCastTo8);
 
-		//	cast buffer. Would prefer SoySocket to be uint8
-		auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>(0, RecvBuffer.GetSize());
-		RecvBuffer8.Copy(RecvBufferCastTo8);
-
-		this->mOnBinaryMessage(RecvBuffer8, Sender);
+			this->mOnBinaryMessage(RecvBuffer8, Sender);
+		}
+		catch (std::exception& e)
+		{
+			mSocket->Disconnect(ConnectionRef, e.what());
+			throw;
+		}
 	};
-	mSocket->EnumConnections(RecvFromConnection);
 
+	//	with udp CLIENT, if we get an error, we should abort the thread (assume disconnected/unreachable)
+	try
+	{
+		mSocket->EnumConnections(RecvFromConnection);
+	}
+	catch (std::exception& e)
+	{
+		//	don't kill this thread on recv error, disconnect and end thread (let thread go until parent kills this?)
+		std::Debug << "UDP enum&recv exception: " << e.what() << ". Killing thread" << std::endl;
+		return false;
+	}
+
+	//	gr: if we recieved nothing, sleep?
+	//		as this is udp client, maybe it should be blocking instead of sleeping
 	return true;
 }
