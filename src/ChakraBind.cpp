@@ -1331,7 +1331,9 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 
 	try
 	{
-		//JSLockAndRun(NewContext, SetupDebugging);
+		//	enable debugging if we're not debugging c++
+		//if ( !Platform::IsDebuggerAttached() )
+		//	JSLockAndRun(NewContext, SetupDebugging);
 	}
 	catch (std::exception& e)
 	{
