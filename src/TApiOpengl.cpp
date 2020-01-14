@@ -381,7 +381,16 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 		Rect.h = Screen.mWorkRect.h - BorderY - BorderY;
 	};
 	Platform::EnumScreens(SetRect);
-
+	
+	if (Params.IsArgumentArray(2))
+	{
+		BufferArray<float, 4> UserRect;
+		Params.GetArgumentArray(2, GetArrayBridge(UserRect));
+		Rect.x = UserRect[0];
+		Rect.y = UserRect[1];
+		Rect.w = UserRect[2];
+		Rect.h = UserRect[3];
+	}
 	mWindow.reset( new TRenderWindow( WindowName, Rect, WindowParams ) );
 	
 	auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
