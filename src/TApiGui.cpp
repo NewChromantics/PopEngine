@@ -289,8 +289,11 @@ void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
 
 ApiGui::TColourPickerWrapper::~TColourPickerWrapper()
 {
-	mControl->mOnValueChanged = nullptr;
-	mControl->mOnDialogClosed = nullptr;
+	if (mControl)
+	{
+		mControl->mOnValueChanged = nullptr;
+		mControl->mOnDialogClosed = nullptr;
+	}
 }
 
 void ApiGui::TColourPickerWrapper::CreateTemplate(Bind::TTemplate& Template)
