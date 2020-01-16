@@ -46,7 +46,7 @@ private:
 class TUdpClient : public SoyWorkerThread
 {
 public:
-	TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage);
+	TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage,std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected);
 
 	std::string					GetAddress() const;
 
@@ -58,6 +58,8 @@ public:
 
 private:
 	std::function<void(const Array<uint8_t>&, SoyRef)>	mOnBinaryMessage;
+	std::function<void(const std::string&)>				mOnDisconnected;
+	std::function<void()>								mOnConnected;
 };
 
 
@@ -110,9 +112,14 @@ protected:
 	//	queue up a callback for This handle's OnMessage callback
 	void		OnMessage(const Array<uint8_t>& Message, SoyRef Peer);
 	void		OnMessage(const std::string& Message, SoyRef Peer);
+
+	void		OnConnected();
+	void		OnSocketClosed(const std::string& Reason);
+
 	void		FlushPendingMessages();
 
 private:
+	std::string							mClosedReason;		//	if this is set, messages/connection promises fail as socket is closed. Even UDP sockets can die!
 	Bind::TPromiseQueue					mOnMessagePromises;
 	//	pending packets
 	std::mutex							mMessagesLock;

@@ -65,39 +65,65 @@ void ApiSocket::TSocketWrapper::OnMessage(const std::string& Message, SoyRef Sen
 	FlushPendingMessages();
 }
 
+void ApiSocket::TSocketWrapper::OnConnected()
+{
+	//	todo: generic connection promises
+}
+
+void ApiSocket::TSocketWrapper::OnSocketClosed(const std::string& Reason)
+{
+	mClosedReason = Reason;
+	if (mClosedReason.length() == 0)
+		mClosedReason = "<Unspecified socket close reason>";
+
+	FlushPendingMessages();
+}
+
+Bind::TObject PacketToObject(Bind::TLocalContext& Context, ApiSocket::TPacket& Packet)
+{
+	auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
+	if (Packet.IsBinary())
+		Object.SetArray("Data", GetArrayBridge(Packet.GetBinary()));
+	else
+		Object.SetString("Data", Packet.GetString());
+	Object.SetString("Peer", Packet.mPeer.ToString());
+	return Object;
+}
+
 
 void ApiSocket::TSocketWrapper::FlushPendingMessages()
 {
 	//	either no data, or no-one waiting yet
 	if (!mOnMessagePromises.HasPromises())
 		return;
-	if (mMessages.IsEmpty() )
-		return;
 
-
-	auto Flush = [this](Bind::TLocalContext& Context)
+	//	pop as many messages as possible before error
+	std::shared_ptr<ApiSocket::TPacket> pMessage;
+	if (!mMessages.IsEmpty())
 	{
-		auto PopMessageObject = [this](Bind::TLocalContext& Context)
-		{
-			mMessagesLock.lock();
-			auto pMessage = mMessages.PopAt(0);
-			mMessagesLock.unlock();
+		std::lock_guard<std::mutex> Lock(mMessagesLock);
+		pMessage = mMessages.PopAt(0);
+	}
 
-			auto& Message = *pMessage;
-			auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
-			if (Message.IsBinary())
-				Object.SetArray("Data", GetArrayBridge(Message.GetBinary()));
-			else
-				Object.SetString("Data", Message.GetString());
-			Object.SetString("Peer", Message.mPeer.ToString());
-			return Object;
-		};
+	//	no message? if no error either, nothing to do
+	if (!pMessage && mClosedReason.empty())
+	{
+		return;
+	}
 
-		auto MessageObject = PopMessageObject(Context);
-
+	auto Flush = [this, pMessage](Bind::TLocalContext& Context) mutable
+	{		
 		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
 		{
-			Promise.Resolve(LocalContext, MessageObject);
+			if (pMessage)
+			{
+				auto MessageObject = PacketToObject(Context,*pMessage);
+				Promise.Resolve(LocalContext, MessageObject);
+			}
+			else
+			{
+				Promise.Reject(LocalContext,mClosedReason);
+			}
 		};
 		mOnMessagePromises.Flush(HandlePromise);
 	};
@@ -140,7 +166,15 @@ void TUdpClientWrapper::Construct(Bind::TCallback& Params)
 	{
 		this->OnMessage(Message, Sender);
 	};
-	mSocket.reset(new TUdpClient(Hostname, Port, OnBinaryMessage));
+	auto OnConnected = [this]()
+	{
+		this->OnConnected();
+	};
+	auto OnDisconnected = [this](const std::string& Reason)
+	{
+		this->OnSocketClosed(Reason);
+	};
+	mSocket.reset(new TUdpClient(Hostname, Port, OnBinaryMessage, OnConnected, OnDisconnected));
 }
 
 
@@ -314,24 +348,30 @@ bool TUdpBroadcastServer::Iteration()
 
 
 
-TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage) :
+TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
 	SoyWorkerThread		(Soy::StreamToString(std::stringstream() << "UdpClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
-	mOnBinaryMessage	(OnBinaryMessage)
+	mOnBinaryMessage	(OnBinaryMessage),
+	mOnConnected		(mOnConnected),
+	mOnDisconnected		(OnDisconnected)
 {
 	mSocket.reset(new SoySocket());
 	auto Broadcast = false;
 	mSocket->CreateUdp(Broadcast);
 	mSocket->UdpConnect(Hostname.c_str(),Port);
-	/*
+	
+	
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
 	{
-		AddClient(ClientRef);
+		//AddClient(ClientRef);
+		if (this->mOnConnected)
+			mOnConnected();
 	};
-	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef,const std::string& Reason)
 	{
-		RemoveClient(ClientRef);
+		if (this->mOnDisconnected)
+			mOnDisconnected(Reason);
 	};
-	*/
 	Start();
 
 }

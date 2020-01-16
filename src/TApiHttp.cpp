@@ -79,8 +79,9 @@ THttpServer::THttpServer(uint16_t ListenPort,std::function<void(std::string&,Htt
 	{
 		AddClient( ClientRef, OnRequest );
 	};
-	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef,const std::string& Reason)
 	{
+		//	need to work out if OUR socket has closed
 		RemoveClient(ClientRef);
 	};
 	

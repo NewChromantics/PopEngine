@@ -212,9 +212,10 @@ TWebsocketClient::TWebsocketClient(const std::string& Address, std::function<voi
 	{
 		AddPeer(ClientRef);
 	};
-	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef,const std::string& Reason)
 	{
 		RemovePeer(ClientRef);
+		//	todo: work out if this is OUR socket and OnSocketClosed on the wrapper
 	};
 
 	mSocket->Connect(Address);
@@ -255,7 +256,7 @@ TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef
 	{
 		AddPeer(ClientRef);
 	};
-	mSocket->mOnDisconnect = [=](SoyRef ClientRef)
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef,const std::string& Reason)
 	{
 		RemovePeer(ClientRef);
 	};
