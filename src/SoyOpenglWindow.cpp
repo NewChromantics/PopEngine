@@ -204,6 +204,7 @@ public:
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override	{	return GetClientRect();	}
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
+	virtual bool					IsMinimised() override;
 	virtual void					EnableScrollBars(bool Horz, bool Vert) override;
 
 	void			UpdateScrollbars();
@@ -1319,9 +1320,14 @@ bool TOpenglWindow::IsValid()
 
 bool TOpenglWindow::Iteration()
 {
+	//	gr: maybe do this at a higher level so the check is cross platform
+	if (IsMinimised())
+		return true;
+
 	//	repaint!
 	if ( mWindowContext )
 		mWindowContext->Repaint();
+
 	return true;
 }
 
@@ -1353,6 +1359,14 @@ bool TOpenglWindow::IsFullscreen()
 		throw Soy::AssertException("TOpenglWindow::IsFullscreen missing window");
 
 	return mWindow->IsFullscreen();
+}
+
+bool TOpenglWindow::IsMinimised()
+{
+	if (!mWindow)
+		throw Soy::AssertException("TOpenglWindow::IsMinimised missing window");
+
+	return mWindow->IsMinimised();
 }
 
 
@@ -1486,6 +1500,12 @@ bool Platform::TWindow::IsFullscreen()
 		return true;
 
 	return false;
+}
+
+
+bool Platform::TWindow::IsMinimised()
+{
+	return IsIconic(mHwnd);
 }
 
 

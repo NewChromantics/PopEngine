@@ -61,6 +61,7 @@ public:
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;
 	virtual void						SetFullscreen(bool Fullscreen) override;
 	virtual bool						IsFullscreen() override;
+	virtual bool						IsMinimised() override;
 	virtual void						EnableScrollBars(bool Horz,bool Vert) override;
 
 	virtual void						OnClosed() override;
