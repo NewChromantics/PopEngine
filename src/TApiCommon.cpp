@@ -11,72 +11,13 @@
 #include "SoyPng.h"
 
 
-//	system stuff
-DEFINE_BIND_FUNCTIONNAME(FileExists);
-DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
-DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
-DEFINE_BIND_FUNCTIONNAME(LoadFileAsImage);
-DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
-DEFINE_BIND_FUNCTIONNAME(WriteToFile);
-DEFINE_BIND_FUNCTIONNAME(GetFilenames);
-DEFINE_BIND_FUNCTIONNAME(SetTimeout);
-DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);
-
-//	engine stuff
-DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
-DEFINE_BIND_FUNCTIONNAME(CreateTestPromise);
-DEFINE_BIND_FUNCTIONNAME(Debug);
-DEFINE_BIND_FUNCTIONNAME(ThreadTest);
-DEFINE_BIND_FUNCTIONNAME(GetImageHeapSize);
-DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
-DEFINE_BIND_FUNCTIONNAME(GetHeapSize);
-DEFINE_BIND_FUNCTIONNAME(GetHeapCount);
-DEFINE_BIND_FUNCTIONNAME(GetHeapObjects);
-DEFINE_BIND_FUNCTIONNAME(GetCrtHeapSize);
-DEFINE_BIND_FUNCTIONNAME(GetCrtHeapCount);
-DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
-DEFINE_BIND_FUNCTIONNAME(Sleep);
-DEFINE_BIND_FUNCTIONNAME(Yield);
-DEFINE_BIND_FUNCTIONNAME(IsDebuggerAttached);
-DEFINE_BIND_FUNCTIONNAME(Thread);
-DEFINE_BIND_FUNCTIONNAME(ExitApplication);
-
-//	platform stuff
-DEFINE_BIND_FUNCTIONNAME(GetComputerName);
-DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
-DEFINE_BIND_FUNCTIONNAME(EnumScreens);
-DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
-DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
-DEFINE_BIND_FUNCTIONNAME(GetPlatform);
-
-
-
-DEFINE_BIND_FUNCTIONNAME(Alloc);
-DEFINE_BIND_FUNCTIONNAME(LoadFile);
-DEFINE_BIND_FUNCTIONNAME(Create);
-DEFINE_BIND_FUNCTIONNAME(Flip);
-DEFINE_BIND_FUNCTIONNAME(GetWidth);
-DEFINE_BIND_FUNCTIONNAME(GetHeight);
-DEFINE_BIND_FUNCTIONNAME(GetRgba8);
-DEFINE_BIND_FUNCTIONNAME(GetPixelBuffer);
-DEFINE_BIND_FUNCTIONNAME(SetLinearFilter);
-DEFINE_BIND_FUNCTIONNAME(Copy);
-DEFINE_BIND_FUNCTIONNAME(WritePixels);
-DEFINE_BIND_FUNCTIONNAME(Resize);
-DEFINE_BIND_FUNCTIONNAME(Clip);
-DEFINE_BIND_FUNCTIONNAME(Clear);
-DEFINE_BIND_FUNCTIONNAME(SetFormat);
-DEFINE_BIND_FUNCTIONNAME(GetFormat);
-DEFINE_BIND_FUNCTIONNAME(GetPngData);
-
-DEFINE_BIND_FUNCTIONNAME(Iteration);
-
 namespace ApiPop
 {
 	const char Namespace[] = "Pop";
 	DEFINE_BIND_TYPENAME(AsyncLoop);
 	DEFINE_BIND_TYPENAME(Image);
 	DEFINE_BIND_TYPENAME(FileMonitor);
+	DEFINE_BIND_TYPENAME(ShellExecute);
 
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
@@ -109,6 +50,69 @@ namespace ApiPop
 	static void		GetExeDirectory(Bind::TCallback& Params);
 	static void		GetExeArguments(Bind::TCallback& Params);
 	static void		GetPlatform(Bind::TCallback& Params);
+
+
+	//	system stuff
+	DEFINE_BIND_FUNCTIONNAME(FileExists);
+	DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
+	DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
+	DEFINE_BIND_FUNCTIONNAME(LoadFileAsImage);
+	DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
+	DEFINE_BIND_FUNCTIONNAME(WriteToFile);
+	DEFINE_BIND_FUNCTIONNAME(GetFilenames);
+	DEFINE_BIND_FUNCTIONNAME(SetTimeout);		//	web-compatible call, should really use await Pop.Yield()
+	DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);
+	DEFINE_BIND_FUNCTIONNAME(GetComputerName);
+	DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
+	DEFINE_BIND_FUNCTIONNAME(EnumScreens);
+	DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
+	DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
+	DEFINE_BIND_FUNCTIONNAME(GetPlatform);
+
+	//	engine stuff
+	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
+	DEFINE_BIND_FUNCTIONNAME(CreateTestPromise);
+	DEFINE_BIND_FUNCTIONNAME(Debug);
+	DEFINE_BIND_FUNCTIONNAME(ThreadTest);
+	DEFINE_BIND_FUNCTIONNAME(GetImageHeapSize);
+	DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
+	DEFINE_BIND_FUNCTIONNAME(GetHeapSize);
+	DEFINE_BIND_FUNCTIONNAME(GetHeapCount);
+	DEFINE_BIND_FUNCTIONNAME(GetHeapObjects);
+	DEFINE_BIND_FUNCTIONNAME(GetCrtHeapSize);
+	DEFINE_BIND_FUNCTIONNAME(GetCrtHeapCount);
+	DEFINE_BIND_FUNCTIONNAME(GarbageCollect);
+	DEFINE_BIND_FUNCTIONNAME(Sleep);
+	DEFINE_BIND_FUNCTIONNAME(Yield);
+	DEFINE_BIND_FUNCTIONNAME(IsDebuggerAttached);
+	DEFINE_BIND_FUNCTIONNAME(Thread);
+	DEFINE_BIND_FUNCTIONNAME(ExitApplication);
+
+	//	TImageWrapper
+	DEFINE_BIND_FUNCTIONNAME(Alloc);
+	DEFINE_BIND_FUNCTIONNAME(LoadFile);
+	DEFINE_BIND_FUNCTIONNAME(Create);
+	DEFINE_BIND_FUNCTIONNAME(Flip);
+	DEFINE_BIND_FUNCTIONNAME(GetWidth);
+	DEFINE_BIND_FUNCTIONNAME(GetHeight);
+	DEFINE_BIND_FUNCTIONNAME(GetRgba8);
+	DEFINE_BIND_FUNCTIONNAME(GetPixelBuffer);
+	DEFINE_BIND_FUNCTIONNAME(SetLinearFilter);
+	DEFINE_BIND_FUNCTIONNAME(Copy);
+	DEFINE_BIND_FUNCTIONNAME(WritePixels);
+	DEFINE_BIND_FUNCTIONNAME(Resize);
+	DEFINE_BIND_FUNCTIONNAME(Clip);
+	DEFINE_BIND_FUNCTIONNAME(Clear);
+	DEFINE_BIND_FUNCTIONNAME(SetFormat);
+	DEFINE_BIND_FUNCTIONNAME(GetFormat);
+	DEFINE_BIND_FUNCTIONNAME(GetPngData);
+
+	//	TAsyncLoop
+	DEFINE_BIND_FUNCTIONNAME(Iteration);
+
+	//	TShellExecute
+	DEFINE_BIND_FUNCTIONNAME(WaitForExit);
+
 }
 
 
@@ -604,7 +608,8 @@ void ApiPop::Bind(Bind::TContext& Context)
 	
 	Context.BindObjectType<TImageWrapper>( Namespace );
 	Context.BindObjectType<TAsyncLoopWrapper>( Namespace );
-	Context.BindObjectType<TFileMonitor>( Namespace );
+	Context.BindObjectType<TFileMonitorWrapper>(Namespace);
+	Context.BindObjectType<TShellExecuteWrapper>(Namespace);
 
 	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
@@ -688,6 +693,8 @@ void TImageWrapper::Construct(Bind::TCallback& Params)
 
 void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
+	using namespace ApiPop;
+
 	Template.BindFunction<BindFunction::Alloc>( Alloc );
 	Template.BindFunction<BindFunction::LoadFile>( &TImageWrapper::LoadFile );
 	Template.BindFunction<BindFunction::Flip>( Flip );
@@ -1551,7 +1558,7 @@ void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>>
 
 void TAsyncLoopWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::Iteration>( Iteration );
+	Template.BindFunction<ApiPop::BindFunction::Iteration>( Iteration );
 }
 	
 void TAsyncLoopWrapper::Construct(Bind::TCallback& Params)
@@ -1630,19 +1637,19 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 
 
 
-void ApiPop::TFileMonitor::CreateTemplate(Bind::TTemplate& Template)
+void ApiPop::TFileMonitorWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 }
 
-void ApiPop::TFileMonitor::Construct(Bind::TCallback& Params)
+void ApiPop::TFileMonitorWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Filename = Params.GetArgumentFilename(0);
 
 	mFileMonitor.reset( new Platform::TFileMonitor( Filename ) );
-	mFileMonitor->mOnChanged = std::bind( &TFileMonitor::OnChanged, this );
+	mFileMonitor->mOnChanged = std::bind( &TFileMonitorWrapper::OnChanged, this );
 }
 
-void ApiPop::TFileMonitor::OnChanged()
+void ApiPop::TFileMonitorWrapper::OnChanged()
 {
 	auto Callback = [this](Bind::TLocalContext& Context)
 	{
@@ -1655,3 +1662,203 @@ void ApiPop::TFileMonitor::OnChanged()
 }
 
 
+//	gr: this might be nice as an RAII wrapper, but for JS, I want the initial creation to throw, 
+//		and if it was RAII, i'd need a thread on the wrapper, which wouldn't immediately throw
+//		unless we have a semaphore or something to indicate it has started
+class Platform::TShellExecute : public SoyThread
+{
+public:
+	TShellExecute(const std::string& RunCommand, std::function<void(int)> OnExit);
+	~TShellExecute();
+
+protected:
+	virtual void				Thread() override;
+	void						CreateProcessHandle(const std::string& Command);
+	void						WaitForProcessHandle();
+
+	std::function<void(int32_t)>	mOnExit;
+	int32_t							mExitCode = 0;
+	PROCESS_INFORMATION				mProcessInfo;
+};
+
+
+Platform::TShellExecute::TShellExecute(const std::string& RunCommand, std::function<void(int)> OnExit) :
+	SoyThread	(std::string("ShellExecute ") + RunCommand ),
+	mOnExit		(OnExit)
+{
+	//	throw here if we can't create the process
+	CreateProcessHandle( RunCommand );
+	Start();
+}
+
+Platform::TShellExecute::~TShellExecute()
+{
+	//	need to add Kill() here to kill any process as we're currently waiting with Infinite timeout
+	Stop(true);
+}
+
+void Platform::TShellExecute::Thread()
+{
+	WaitForProcessHandle();
+	if (mOnExit)
+	{
+		mOnExit(mExitCode);
+	}
+	else
+	{
+		std::Debug << "Process exiteed with " << mExitCode << std::endl;
+	}
+	Stop(false);
+}
+
+void Platform::TShellExecute::CreateProcessHandle(const std::string& RunCommand)
+{
+	// Create a pipe for the redirection of the STDOUT 
+	// of a child process. 
+	HANDLE g_hChildStd_OUT_Rd = NULL;
+	HANDLE g_hChildStd_OUT_Wr = NULL;
+	SECURITY_ATTRIBUTES saAttr;
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
+	saAttr.lpSecurityDescriptor = NULL;
+	/*
+	bSuccess = CreatePipe(&g_hChildStd_OUT_Rd,
+		&g_hChildStd_OUT_Wr, &saAttr, 0);
+	if (!bSuccess) return bSuccess;
+	bSuccess = SetHandleInformation(g_hChildStd_OUT_Rd,
+		HANDLE_FLAG_INHERIT, 0);
+	if (!bSuccess) return bSuccess;
+	*/
+	// Setup the child process to use the STDOUT redirection
+	PROCESS_INFORMATION& piProcInfo = mProcessInfo;
+	STARTUPINFO siStartInfo;
+	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+	siStartInfo.cb = sizeof(STARTUPINFO);
+	/*
+	siStartInfo.hStdError = g_hChildStd_OUT_Wr;
+	siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+	*/
+
+	auto* RunCommandStr = const_cast<char*>(RunCommand.c_str());
+
+	// Execute a synchronous child process & get exit code
+	auto Success = CreateProcessA(nullptr,
+		RunCommandStr,  // command line 
+		nullptr,                 // process security attributes 
+		nullptr,                 // primary thread security attributes 
+		true,                 // handles are inherited 
+		0,                    // creation flags 
+		nullptr,                 // use parent's environment 
+		nullptr,                 // use parent's current directory 
+		&siStartInfo,         // STARTUPINFO pointer 
+		&piProcInfo);        // receives PROCESS_INFORMATION
+	
+	std::Debug << "Started process " << RunCommand << "..." << std::endl;
+	if (Success)
+		return;
+
+	//	get last error
+	Platform::IsOkay("CreateProcess");
+
+	//	if that didn't throw like it should, just throw anyway
+	throw Soy::AssertException("CreateProcess failed (No LastError?)");
+}
+
+
+
+void Platform::TShellExecute::WaitForProcessHandle()
+{
+	auto Timeout = INFINITE;	//	 (DWORD)(-1L)
+	DWORD ExitCode = 0;
+	WaitForSingleObject(mProcessInfo.hProcess, Timeout);
+	GetExitCodeProcess(mProcessInfo.hProcess, &ExitCode);
+	CloseHandle(mProcessInfo.hProcess);
+	CloseHandle(mProcessInfo.hThread);
+	/*
+	// Read the data written to the pipe
+		DWORD bytesInPipe = 0;
+		while (bytesInPipe == 0) {
+			bSuccess = PeekNamedPipe(g_hChildStd_OUT_Rd, NULL, 0, NULL,
+				&bytesInPipe, NULL);
+			if (!bSuccess) return bSuccess;
+		}
+		if (bytesInPipe == 0) return TRUE;
+		DWORD dwRead;
+		CHAR *pipeContents = new CHAR[bytesInPipe];
+		bSuccess = ReadFile(g_hChildStd_OUT_Rd, pipeContents,
+			bytesInPipe, &dwRead, NULL);
+		if (!bSuccess || dwRead == 0) return FALSE;
+
+		// Split the data into lines and add them to the return vector
+		std::stringstream stream(pipeContents);
+		std::string str;
+		while (getline(stream, str))
+			stdOutLines->push_back(CStringW(str.c_str()));
+	*/
+}
+
+
+
+
+void ApiPop::TShellExecuteWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<BindFunction::WaitForExit>(&TShellExecuteWrapper::WaitForExit);
+}
+
+void ApiPop::TShellExecuteWrapper::Construct(Bind::TCallback& Params)
+{
+	auto Filename = Params.GetArgumentString(0);
+
+	auto OnExit = [this](int ExitCode)
+	{
+		this->OnExit(ExitCode);
+	};
+
+	mShellExecute.reset(new Platform::TShellExecute(Filename, OnExit));
+}
+
+void ApiPop::TShellExecuteWrapper::WaitForExit(Bind::TCallback& Params)
+{
+	auto Promise = mWaitForExitPromises.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
+
+	FlushPendingExits();
+}
+
+void ApiPop::TShellExecuteWrapper::FlushPendingExits()
+{
+	//	process still running
+	if (!mHasExited)
+		return;
+
+	//	no pending promises
+	if (!mWaitForExitPromises.HasPromises())
+		return;
+
+	//	process gone, exit code should have been set, so return it	
+	auto Flush = [this](Bind::TLocalContext& Context)
+	{
+		auto HandlePromise = [this](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
+		{
+			Promise.Resolve(LocalContext, mExitedCode);
+		};
+		mWaitForExitPromises.Flush(HandlePromise);
+	};
+	auto& Context = mWaitForExitPromises.GetContext();
+	Context.Queue(Flush);
+}
+
+void ApiPop::TShellExecuteWrapper::OnExit(int32_t ExitCode)
+{
+	mExitedCode = ExitCode;
+
+	//	kill process (should already be gone, but this will set our "state" as, not running
+	//	gr: this is currently being called FROM the thread, so gets locked
+	//		we don't really wanna detatch the thread and could be left with a dangling thread
+	//mShellExecute.reset();
+	mHasExited = true;
+
+	FlushPendingExits();
+}

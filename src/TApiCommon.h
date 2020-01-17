@@ -16,6 +16,7 @@ class TPixelBuffer;
 namespace Platform
 {
 	class TFileMonitor;
+	class TShellExecute;
 }
 
 namespace Opengl
@@ -32,11 +33,14 @@ namespace ApiPop
 	extern const char	Namespace[];
 	void	Bind(Bind::TContext& Context);
 	
-	class TFileMonitor;
+	class TFileMonitorWrapper;
+	class TShellExecuteWrapper;
+
 	class TAsyncLoop;
 	DECLARE_BIND_TYPENAME(AsyncLoop);
 	DECLARE_BIND_TYPENAME(Image);
 	DECLARE_BIND_TYPENAME(FileMonitor);
+	DECLARE_BIND_TYPENAME(ShellExecute);
 }
 
 
@@ -152,10 +156,10 @@ protected:
 
 
 
-class ApiPop::TFileMonitor : public Bind::TObjectWrapper<BindType::FileMonitor,Platform::TFileMonitor>
+class ApiPop::TFileMonitorWrapper : public Bind::TObjectWrapper<BindType::FileMonitor,Platform::TFileMonitor>
 {
 public:
-	TFileMonitor(Bind::TContext& Context) :
+	TFileMonitorWrapper(Bind::TContext& Context) :
 		TObjectWrapper	( Context )
 	{
 	}
@@ -168,3 +172,30 @@ public:
 public:
 	std::shared_ptr<Platform::TFileMonitor>&	mFileMonitor = mObject;
 };
+
+
+
+class ApiPop::TShellExecuteWrapper : public Bind::TObjectWrapper<BindType::ShellExecute, Platform::TShellExecute>
+{
+public:
+	TShellExecuteWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+
+	void			WaitForExit(Bind::TCallback& Params);
+
+private:
+	void			OnExit(int32_t ExitCode);
+	void			FlushPendingExits();
+
+public:
+	bool			mHasExited = false;
+	int32_t			mExitedCode = 0;
+	Bind::TPromiseQueue							mWaitForExitPromises;
+	std::shared_ptr<Platform::TShellExecute>&	mShellExecute = mObject;
+};
+
