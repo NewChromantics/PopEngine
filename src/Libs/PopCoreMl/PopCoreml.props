@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <Link>
-      <DelayLoadDLLs>PopOpenml.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>PopCoreml.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>$(ProjectDir)\..\src\Libs\PopCoreml\PopCoreml.manifest</AdditionalManifestFiles>
