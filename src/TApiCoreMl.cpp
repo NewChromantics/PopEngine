@@ -574,6 +574,12 @@ void TCoreMlWrapper::KinectAzureSkeleton(Bind::TCallback& Params)
 	auto& CoreMl = *mCoreMl;
 	auto& Model = CoreMl.GetKinectAzureSkeleton();
 
+	if (Params.IsArgumentNumber(1))
+	{
+		auto Smoothing = Params.GetArgumentFloat(1);
+		Model.SetKinectSmoothing(Smoothing);
+	}
+
 	RunModelGetObjects<CoreMl::TWorldObject>(Model, Params, CoreMl);
 }
 
