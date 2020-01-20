@@ -101,6 +101,9 @@ public:
 
 	virtual void	GetLabelMap(const SoyPixelsImpl& Pixels,std::function<void(vec2x<size_t>,const std::string&,ArrayBridge<float>&&)> EnumLabelMap);
 	virtual void	GetLabelMap(CVPixelBufferRef Pixels,std::function<void(vec2x<size_t>,const std::string&,ArrayBridge<float>&&)>& EnumLabelMap);
+
+	//	options for kinect, anything else would need a per-request option...
+	virtual void	SetKinectSmoothing(float Smoothing);
 };
 
 //	C++ factory for dll
