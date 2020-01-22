@@ -1727,8 +1727,8 @@ void Platform::TSlider::OnWindowMessage(UINT EventMessage)
 
 
 const DWORD Label_StyleExFlags = 0;
-const DWORD Label_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | SS_SIMPLE;
-
+const DWORD Label_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+//	gr: removed SS_SIMPLE as it doesn't clear the whole box when repainting
 
 Platform::TLabel::TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("Label", "STATIC", Parent, Label_StyleFlags, Label_StyleExFlags, Rect)
@@ -1737,7 +1737,9 @@ Platform::TLabel::TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 
 void Platform::TLabel::SetValue(const std::string& Value)
 {
-	SetWindowTextA(mHwnd, Value.c_str());
+	auto Success = SetWindowTextA(mHwnd, Value.c_str());
+	if (!Success)
+		Platform::ThrowLastError("SetWindowTextA");
 }
 
 std::string Platform::TLabel::GetValue()
