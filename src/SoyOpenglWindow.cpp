@@ -1727,7 +1727,7 @@ void Platform::TSlider::OnWindowMessage(UINT EventMessage)
 
 
 const DWORD Label_StyleExFlags = 0;
-const DWORD Label_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+const DWORD Label_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | SS_LEFTNOWORDWRAP;
 //	gr: removed SS_SIMPLE as it doesn't clear the whole box when repainting
 
 Platform::TLabel::TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
