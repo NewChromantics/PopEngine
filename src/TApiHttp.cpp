@@ -50,6 +50,14 @@ void THttpServerWrapper::OnRequest(std::string& Url,Http::TResponseProtocol& Res
 	//	then we can make callbacks for certain urls in javascript for dynamic replies
 	auto Filename = GetContext().GetResolvedFilename(Url);
 	
+	if (!Platform::FileExists(Filename))
+	{
+		Response.SetContent(Filename);
+		Response.mResponseCode = Http::Response_FileNotFound;
+		Response.mResponseString = "File Not Found";
+		return;
+	}
+
 	//	todo: get mime type and do binary vs text properly
 	std::string Contents;
 	Soy::FileToString( Filename, Contents );
