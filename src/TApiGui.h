@@ -68,7 +68,8 @@ public:
 	void			SetMinMax(Bind::TCallback& Params);
 	void			SetValue(Bind::TCallback& Params);
 
-	void			OnChanged(uint16_t& NewValue);
+	//	FinalValue means say, mouse-up on slider (false if dragging)
+	void			OnChanged(uint16_t& NewValue,bool FinalValue);
 	
 public:
 	std::shared_ptr<SoySlider>&	mSlider = mObject;

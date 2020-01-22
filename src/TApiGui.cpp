@@ -62,7 +62,7 @@ void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 	}
 
 	mSlider = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
-	mSlider->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1 );
+	mSlider->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
 	/*
 	if (NotchCount != 0)
 		mSlider->SetNotchCount(NotchCount);
@@ -83,14 +83,15 @@ void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
 }
 
 
-void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue)
+void ApiGui::TSliderWrapper::OnChanged(uint16_t& NewValue,bool FinalValue)
 {
-	auto Callback = [this,NewValue](Bind::TLocalContext& Context)
+	auto Callback = [this,NewValue, FinalValue](Bind::TLocalContext& Context)
 	{
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnChanged");
 		JsCore::TCallback Callback(Context);
 		Callback.SetArgumentInt(0, NewValue);
+		Callback.SetArgumentBool(1, FinalValue);
 		ThisOnChanged.Call( Callback );
 	};
 	this->mContext.Queue( Callback );
