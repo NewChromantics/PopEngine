@@ -11,6 +11,9 @@
 #include <commctrl.h>
 #pragma comment(lib, "Comctl32.lib")
 
+#include "MagicEnum/include/magic_enum.hpp"
+
+
 namespace Platform
 {
 	class TControlClass;
@@ -155,7 +158,7 @@ public:
 
 	//	callbacks from windows message loop
 	virtual void			OnDestroyed();		//	window handle is being destroyed
-	virtual void			OnWindowMessage(UINT EventMessage) {}	//	called from window thread which means we can flush jobs
+	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) {}	//	called from window thread which means we can flush jobs
 	virtual void			OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16_t CurrentScrollPosition);
 
 	//	return true if handled, or false to return default behavouir
@@ -198,7 +201,7 @@ class Platform::TWindow : public TControl, public SoyWindow
 public:
 	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread,bool Resizable);
 
-	virtual void	OnWindowMessage(UINT EventMessage) override;
+	virtual void	OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 	virtual void	OnScrolled(bool Horizontal,uint16_t ScrollCommand, uint16_t CurrentScrollPosition) override;
 
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override	{	return GetClientRect();	}
@@ -261,11 +264,11 @@ public:
 	TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void		SetMinMax(uint16_t Min, uint16_t Max) override;
+	virtual void		SetMinMax(uint16_t Min, uint16_t Max,uint16_t NotchCount) override;
 	virtual void		SetValue(uint16_t Value) override;
 	virtual uint16_t	GetValue() override;
 
-	virtual void		OnWindowMessage(UINT EventMessage) override;
+	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
 
 class Platform::TLabel : public TControl, public SoyLabel
@@ -300,7 +303,7 @@ public:
 	virtual bool		GetValue() override;
 	virtual void		SetLabel(const std::string& Label) override;
 
-	virtual void		OnWindowMessage(UINT EventMessage) override;
+	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
 
 class Platform::TControlClass
@@ -398,7 +401,7 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 
 		//	callbacks
 		TControl& Control = *pControl;
-		Control.OnWindowMessage(message);
+		Control.OnWindowMessage(message, wParam, lParam);
 
 		switch ( message )
 		{
@@ -484,7 +487,7 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 				auto ControlIdentifier = LOWORD(wParam);
 				auto ChildHandle = reinterpret_cast<HWND>(lParam);
 				auto& Child = Control.GetChild(ChildHandle);
-				Child.OnWindowMessage(SubMessage);
+				Child.OnWindowMessage(SubMessage,wParam,lParam);
 			}
 			return Default();
 
@@ -495,7 +498,7 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 			{
 				auto ChildHandle = reinterpret_cast<HWND>(lParam);
 				auto& Child = Control.GetChild(ChildHandle);
-				Child.OnWindowMessage(message);
+				Child.OnWindowMessage(message,wParam,lParam);
 			}
 			else
 			{
@@ -844,7 +847,7 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Th
 	ShowWindow(mHwnd, ShowState);
 }
 
-void Platform::TWindow::OnWindowMessage(UINT Message)
+void Platform::TWindow::OnWindowMessage(UINT Message, DWORD WParam, DWORD LParam)
 {
 	switch (Message)
 	{
@@ -867,7 +870,7 @@ void Platform::TWindow::UpdateScrollbars()
 	auto ClientRect = GetClientRect();
 	ClientRect.x = 0;
 	ClientRect.y = 0;
-	std::Debug << "UpdateScrollbars( " << ClientRect << ")" << std::endl;
+	//std::Debug << "UpdateScrollbars( " << ClientRect << ")" << std::endl;
 
 	//	get our client rect with all controls
 	auto WindowRect = ClientRect;
@@ -1686,7 +1689,7 @@ Platform::TSlider::TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 {
 }
 
-void Platform::TSlider::SetMinMax(uint16_t Min, uint16_t Max)
+void Platform::TSlider::SetMinMax(uint16_t Min, uint16_t Max,uint16_t NotchCount)
 {
 	WPARAM Redraw = true;
 	auto Result = SendMessage(mHwnd, TBM_SETRANGE, Redraw, MAKELONG(Min, Max));
@@ -1695,6 +1698,16 @@ void Platform::TSlider::SetMinMax(uint16_t Min, uint16_t Max)
 	LPARAM PageSize = std::max<LPARAM>(1, (Max - Min) / 10);
 	Result = SendMessage(mHwnd, TBM_SETPAGESIZE, 0, PageSize);
 	//Platform::IsOkay(Result, "TBM_SETPAGESIZE");
+
+	//	set ticks
+	//	with auto tic's we can set frequency, but TBM_SETTIC  lets us specify exact ones... see what OSX can do!
+	WPARAM Frequency = 0;
+	if (NotchCount != 0)
+	{
+		Frequency = (Max - Min) / NotchCount;
+	}
+	Result = SendMessage(mHwnd, TBM_SETTICFREQ, Frequency, 0);
+	Platform::IsOkay(static_cast<HRESULT>(Result), "TBM_SETTICFREQ");
 }
 
 
@@ -1713,15 +1726,43 @@ uint16_t Platform::TSlider::GetValue()
 	return Pos;
 }
 
-void Platform::TSlider::OnWindowMessage(UINT EventMessage)
+namespace TrackbarNotification
 {
-	//	A trackbar notifies its parent window of user actions by sending the parent a WM_HSCROLL or WM_VSCROLL message. A trackbar with the TBS_HORZ style sends WM_HSCROLL messages. A trackbar with the TBS_VERT style sends WM_VSCROLL messages. The low-order word of the wParam parameter of WM_HSCROLL or WM_VSCROLL contains the notification code. For the TB_THUMBPOSITION and TB_THUMBTRACK notification codes, the high-order word of the wParam parameter specifies the position of the slider. For all other notification codes, the high-order word is zero; send the TBM_GETPOS message to determine the slider position. The lParam parameter is the handle to the trackbar.
+	enum Name
+	{
+		TrackbarNotification_BOTTOM = TB_BOTTOM,
+		TrackbarNotification_ENDTRACK = TB_ENDTRACK,
+		TrackbarNotification_LINEDOWN = TB_LINEDOWN,
+		TrackbarNotification_LINEUP = TB_LINEUP,
+		TrackbarNotification_PAGEDOWN = TB_PAGEDOWN,
+		TrackbarNotification_PAGEUP = TB_PAGEUP,
+		TrackbarNotification_THUMBPOSITION = TB_THUMBPOSITION,
+		TrackbarNotification_THUMBTRACK = TB_THUMBTRACK,
+		TrackbarNotification_TOP = TB_TOP,
+	};
+}
+
+
+void Platform::TSlider::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam)
+{
+	//	A trackbar notifies its parent window of user actions by sending the parent a WM_HSCROLL or WM_VSCROLL message. 
+	//	A trackbar with the TBS_HORZ style sends WM_HSCROLL messages.
+	//	A trackbar with the TBS_VERT style sends WM_VSCROLL messages. 
+	//	The low-order word of the wParam parameter of WM_HSCROLL or WM_VSCROLL contains the notification code.
+	//	For the TB_THUMBPOSITION and TB_THUMBTRACK notification codes,
+	//	the high-order word of the wParam parameter specifies the position of the slider. 
+	//	For all other notification codes, the high-order word is zero; send the TBM_GETPOS message to determine the slider position. 
+	//	The lParam parameter is the handle to the trackbar.
 	if (EventMessage == WM_HSCROLL || EventMessage == WM_VSCROLL)
 	{
-		this->OnChanged();
+		auto Notification = LOWORD(WParam);
+		auto NotifcationName = magic_enum::enum_name(static_cast<TrackbarNotification::Name>(Notification));
+		//std::Debug << "Trackbar notification : " << NotifcationName << std::endl;
+		auto FinalValue = Notification == TB_ENDTRACK;
+		this->OnChanged(FinalValue);
 	}
 
-	TControl::OnWindowMessage(EventMessage);
+	TControl::OnWindowMessage(EventMessage, WParam, LParam);
 }
 
 
@@ -1803,12 +1844,12 @@ void Platform::TTickBox::SetLabel(const std::string& Label)
 
 
 
-void Platform::TTickBox::OnWindowMessage(UINT EventMessage)
+void Platform::TTickBox::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam)
 {
 	if (EventMessage == BN_CLICKED)
 	{
 		this->OnChanged();
 	}
 
-	TControl::OnWindowMessage(EventMessage);
+	TControl::OnWindowMessage(EventMessage,WParam,LParam);
 }
