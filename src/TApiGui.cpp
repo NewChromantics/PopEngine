@@ -63,17 +63,18 @@ void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 
 	mSlider = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
 	mSlider->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
-	/*
-	if (NotchCount != 0)
-		mSlider->SetNotchCount(NotchCount);
-		*/
 }
 
 void ApiGui::TSliderWrapper::SetMinMax(Bind::TCallback& Params)
 {
 	auto Min = Params.GetArgumentInt(0);
 	auto Max = Params.GetArgumentInt(1);
-	mSlider->SetMinMax( Min, Max );
+
+	auto NotchCount = 0;
+	if (!Params.IsArgumentUndefined(2))
+		NotchCount = Params.GetArgumentInt(2);
+
+	mSlider->SetMinMax( Min, Max, NotchCount);
 }
 
 void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
