@@ -417,21 +417,20 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 			return 0;
 
 		case WM_PAINT:
+			if (!Control.mOnPaint)
+				return Default();
+
+			//	setup paint and call overload
+			//	gr: should be checking error returns here
 			PAINTSTRUCT ps;
 			BeginPaint(hwnd, &ps);
-			if ( Control.mOnPaint )
+			try
 			{
-				try
-				{
-					Control.mOnPaint(Control);
-				} catch ( std::exception& e )
-				{
-					std::Debug << "Exception OnPaint: " << e.what() << std::endl;
-				}
-			}
-			else
+				Control.mOnPaint(Control);
+			} 
+			catch ( std::exception& e )
 			{
-				//	do default/fallback paint?
+				std::Debug << "Exception OnPaint: " << e.what() << std::endl;
 			}
 			EndPaint(hwnd, &ps);
 			return 0;
