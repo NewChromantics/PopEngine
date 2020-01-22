@@ -290,6 +290,11 @@ public:
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
+
+	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+
+private:
+	bool				mTextChangedByCode = true;
 };
 
 
@@ -486,8 +491,15 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 				auto SubMessage = HIWORD(wParam);
 				auto ControlIdentifier = LOWORD(wParam);
 				auto ChildHandle = reinterpret_cast<HWND>(lParam);
-				auto& Child = Control.GetChild(ChildHandle);
-				Child.OnWindowMessage(SubMessage,wParam,lParam);
+				try
+				{
+					auto& Child = Control.GetChild(ChildHandle);
+					Child.OnWindowMessage(SubMessage, wParam, lParam);
+				}
+				catch (std::exception& e)
+				{
+					std::Debug << "Exception with WM_COMMAND(0x" << std::hex << SubMessage << std::dec << ")  to child: " << e.what() << std::endl;
+				}
 			}
 			return Default();
 
@@ -1797,17 +1809,59 @@ const DWORD TextBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
 Platform::TTextBox::TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("TextBox", "EDIT", Parent, TextBox_StyleFlags, TextBox_StyleExFlags, Rect)
 {
+	//	SetWindowText is called by the constructor, (we currently miss the cmd)
+	//	but just in case, initialise to true, and after construction turn it off
+	mTextChangedByCode = false;
 }
 
 void Platform::TTextBox::SetValue(const std::string& Value)
 {
+	//	need a flag to say WE have caused this
+	//	this call is synchronous, so we can
+	mTextChangedByCode = true;
 	SetWindowTextA(mHwnd, Value.c_str());
+	mTextChangedByCode = false;
 }
 
 std::string Platform::TTextBox::GetValue()
 {
-	throw Soy_AssertException("todo");
+	//	length... without terminator
+	auto Length = GetWindowTextLengthA(mHwnd);
+	//	gr: this can be an error
+	if (Length == 0)
+		return std::string();
+	if (Length < 0)
+	{
+		std::stringstream Error;
+		Error << "GetWindowTextLengthA() on text box returned < 0 (" << Length << ")";
+		Platform::ThrowLastError(Error.str());
+	}
+
+	//	length + terminator
+	Array<char> StringBuffer(Length+1);
+	Length = GetWindowTextA(mHwnd, StringBuffer.GetArray(), StringBuffer.GetSize());
+	StringBuffer.SetSize(Length, true);
+	StringBuffer.PushBack('\0');
+
+	std::string String(StringBuffer.GetArray(), Length);
+	return String;
 }
+
+void Platform::TTextBox::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam)
+{
+	//	EN_CHANGE value changed (docs say by user, but is being triggered from code)
+	//	EN_UPDATE updated to screen
+	if (EventMessage == EN_CHANGE)
+	{
+		if (!mTextChangedByCode)
+			OnChanged();
+		return;
+	}
+
+	//std::Debug << "Textboxmessage " << std::hex << EventMessage << std::dec << std::endl;
+	TControl::OnWindowMessage(EventMessage, WParam, LParam);
+}
+
 
 
 
