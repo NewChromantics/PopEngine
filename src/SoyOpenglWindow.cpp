@@ -952,7 +952,7 @@ void Platform::TWindow::OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16
 	if (ScrollInfo.nPos > ScrollInfo.nMax)
 		ScrollInfo.nPos = ScrollInfo.nMax;
 
-
+	/*
 	std::Debug << "Scroll ";
 	std::Debug << " nMin=" << ScrollInfo.nMin;
 	std::Debug << " nMax=" << ScrollInfo.nMax;
@@ -960,7 +960,7 @@ void Platform::TWindow::OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16
 	std::Debug << " nPos=" << ScrollInfo.nPos;
 	std::Debug << " nTrackPos=" << ScrollInfo.nTrackPos;
 	std::Debug << std::endl;
-
+	*/
 	auto Redraw = true;
 	ScrollInfo.fMask = SIF_POS;
 	SetScrollInfo(mHwnd, ScrollBar, &ScrollInfo, Redraw);
