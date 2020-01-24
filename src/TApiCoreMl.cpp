@@ -151,7 +151,7 @@ CoreMl::TModel& CoreMl::TInstance::GetModel(TModel*& mModel,const char* Name)
 }
 
 
-void ObjectToJs(const CoreMl::TObject& ObjectMl, Bind::TObject& ObjectJs)
+void ObjectToJs(const CoreMl::TObject& ObjectMl, Bind::TObject& ObjectJs, const SoyTime& ResolveTime)
 {
 	ObjectJs.SetString("Label", ObjectMl.mLabel);
 	ObjectJs.SetFloat("Score", ObjectMl.mScore);
@@ -163,13 +163,24 @@ void ObjectToJs(const CoreMl::TObject& ObjectMl, Bind::TObject& ObjectJs)
 	ObjectJs.SetInt("GridY", ObjectMl.mGridPos.y);
 }
 
-void ObjectToJs(const CoreMl::TWorldObject& ObjectMl, Bind::TObject& ObjectJs)
+void ObjectToJs(const CoreMl::TWorldObject& ObjectMl, Bind::TObject& ObjectJs,const SoyTime& ResolveTime)
 {
-	ObjectJs.SetString("Label", ObjectMl.mLabel);
-	ObjectJs.SetFloat("Score", ObjectMl.mScore);
-	ObjectJs.SetFloat("x", ObjectMl.mWorldPosition.x);
-	ObjectJs.SetFloat("y", ObjectMl.mWorldPosition.y);
-	ObjectJs.SetFloat("z", ObjectMl.mWorldPosition.z);
+	//	prealloc strings
+	static std::string _Label("Label");
+	static std::string _Score("Score");
+	static std::string _x("x");
+	static std::string _y("y");
+	static std::string _z("z");
+	static std::string _TimeMs("TimeMs");
+	static std::string _ResolveTimeMs("ResolveTimeMs");
+
+	ObjectJs.SetString(_Label, ObjectMl.mLabel);
+	ObjectJs.SetFloat(_Score, ObjectMl.mScore);
+	ObjectJs.SetFloat(_x, ObjectMl.mWorldPosition.x);
+	ObjectJs.SetFloat(_y, ObjectMl.mWorldPosition.y);
+	ObjectJs.SetFloat(_z, ObjectMl.mWorldPosition.z);
+	ObjectJs.SetInt(_TimeMs, ObjectMl.mTimeMs);
+	ObjectJs.SetInt(_ResolveTimeMs, ResolveTime.GetTime());
 }
 
 
@@ -216,6 +227,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			auto& Pixels = *pPixels;
 			
 			Array<MLOBJECTYPE> Objects;
+			Objects.Alloc(100);
 						
 			std::function<void(const MLOBJECTYPE&)> PushObject = [&](const MLOBJECTYPE& Object)
 			{
@@ -224,15 +236,17 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			auto& Model = *pModel;
 			Model.GetObjects( Pixels, PushObject );
 			
-
 			std::function<void(Bind::TLocalContext&)> OnCompleted = [=](Bind::TLocalContext& Context)
 			{
+				Soy::TScopeTimerPrint Timer("Flush Coreml Objects", 3);
+				SoyTime ResolveTime(true);
+
 				Array<Bind::TObject> Elements;
 				for (auto i = 0; i < Objects.GetSize(); i++)
 				{
 					auto& Object = Objects[i];
 					auto ObjectJs = Context.mGlobalContext.CreateObjectInstance(Context);
-					ObjectToJs(Object, ObjectJs);
+					ObjectToJs(Object, ObjectJs, ResolveTime);
 					Elements.PushBack(ObjectJs);
 				};
 				auto Resolve = [&](Bind::TLocalContext& Context, Bind::TPromise& Promise)

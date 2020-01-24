@@ -78,6 +78,7 @@ public:
 	float			mScore = 0;
 	std::string		mLabel;
 	vec3f			mWorldPosition;	//	expected to be in metres
+	uint64_t		mTimeMs = 0;
 };
 
 
