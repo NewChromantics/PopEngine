@@ -61,7 +61,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(WriteToFile);
 	DEFINE_BIND_FUNCTIONNAME(GetFilenames);
 	DEFINE_BIND_FUNCTIONNAME(SetTimeout);		//	web-compatible call, should really use await Pop.Yield()
-	DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);
+	DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);		//	returns a relative time, as javascript can't handle 64bit int. Need to rename this to something like GetTimeRelativeMs()
 	DEFINE_BIND_FUNCTIONNAME(GetComputerName);
 	DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
 	DEFINE_BIND_FUNCTIONNAME(EnumScreens);
@@ -284,7 +284,10 @@ void ApiPop::GetTimeNowMs(Bind::TCallback& Params)
 	if ( FirstTimestamp == 0 )
 	{
 		auto OneDayMs = 86400000;
-		FirstTimestamp = NowMsInt - OneDayMs;
+#if !defined(JSAPI_CHAKRA)
+#error Test this without the deduction, chakra seems okay with SoyTime(true)
+#endif
+		//FirstTimestamp = NowMsInt - OneDayMs;
 	}
 	NowMsInt -= FirstTimestamp;
 
