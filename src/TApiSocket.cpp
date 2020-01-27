@@ -243,13 +243,15 @@ void ApiSocket::TSocketWrapper::Send(Bind::TCallback& Params)
 	}
 
 	auto& Socket = *ThisSocket;
-	auto Connection = Socket.GetConnection( Sender );
-	auto DataChars = GetArrayBridge(Data).GetSubArray<char>(0,Data.GetSize());
-
 	//	gr: flaw in the soy socket paradigm perhaps? the connection is away from the owner...
 	//		so we need to manually tell the Socket when a client is error'd
 	try
 	{
+		//	this can now throw if a non-existent connection
+		//	for clients connecting to a server, this suggests the connection is already severed (eg in a recv)
+		auto Connection = Socket.GetConnection( Sender );
+		auto DataChars = GetArrayBridge(Data).GetSubArray<char>(0,Data.GetSize());
+
 		Connection.Send(GetArrayBridge(DataChars), Socket.IsUdp());
 	}
 	catch (std::exception& e)
