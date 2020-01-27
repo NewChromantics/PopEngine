@@ -120,7 +120,8 @@ void ApiPop::Debug(Bind::TCallback& Params)
 {
 	for ( auto a=0;	a<Params.GetArgumentCount();	a++ )
 	{
-		auto Arg = Params.GetArgumentString(a);
+		auto IsUndefined = Params.IsArgumentUndefined(a);
+		auto Arg = IsUndefined ? "Undefined" : Params.GetArgumentString(a);
 		std::Debug << (a==0?"":",") << Arg;
 	}
 	std::Debug << std::endl;
