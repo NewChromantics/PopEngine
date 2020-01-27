@@ -238,7 +238,7 @@ void RunModelGetObjects(CoreMl::TModel& ModelRef,Bind::TCallback& Params,CoreMl:
 			
 			std::function<void(Bind::TLocalContext&)> OnCompleted = [=](Bind::TLocalContext& Context)
 			{
-				Soy::TScopeTimerPrint Timer("Flush Coreml Objects", 3);
+				Soy::TScopeTimerPrint Timer("Flush Coreml Objects", 5);
 				SoyTime ResolveTime(true);
 
 				Array<Bind::TObject> Elements;
