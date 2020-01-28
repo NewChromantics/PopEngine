@@ -24,6 +24,8 @@
 
 __export int32_t			PopCoreml_GetVersion();
 
+//	1.1.2
+//		Added SetKinectGpu() to base class (until we a have better options API)
 //	1.1.1
 //		added uint64_t timestamp (ms) CoreMl::TWorldObject (possibly non-breaking as signatures haven't changed)
 

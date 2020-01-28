@@ -588,10 +588,29 @@ void TCoreMlWrapper::KinectAzureSkeleton(Bind::TCallback& Params)
 	auto& CoreMl = *mCoreMl;
 	auto& Model = CoreMl.GetKinectAzureSkeleton();
 
-	if (Params.IsArgumentNumber(1))
+	//	float for smoothing
+	if (!Params.IsArgumentUndefined(1))
 	{
 		auto Smoothing = Params.GetArgumentFloat(1);
 		Model.SetKinectSmoothing(Smoothing);
+	}
+
+	//	bool to use gpu(or not)
+	//	or intenger for a GPU id (or -1 for cpu)
+	if (!Params.IsArgumentUndefined(2))
+	{
+		int32_t GpuId = 0;
+		if (Params.IsArgumentBool(2))
+		{
+			auto UseGpu = Params.GetArgumentBool(2);
+			GpuId = UseGpu ? 0 : -1;	//	get this const from PopCoreml API
+		}
+		else
+		{
+			GpuId = Params.GetArgumentInt(2);
+		}
+
+		Model.SetKinectGpu(GpuId);
 	}
 
 	RunModelGetObjects<CoreMl::TWorldObject>(Model, Params, CoreMl);
