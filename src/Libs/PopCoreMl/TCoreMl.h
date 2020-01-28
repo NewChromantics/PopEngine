@@ -106,6 +106,7 @@ public:
 	//	options for kinect, anything else would need a per-request option...
 	virtual void	SetKinectSmoothing(float Smoothing);
 	virtual void	SetKinectGpu(int32_t GpuId);
+	virtual void	SetKinectTrackMode(uint32_t Mode);
 };
 
 //	C++ factory for dll

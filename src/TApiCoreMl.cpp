@@ -588,29 +588,31 @@ void TCoreMlWrapper::KinectAzureSkeleton(Bind::TCallback& Params)
 	auto& CoreMl = *mCoreMl;
 	auto& Model = CoreMl.GetKinectAzureSkeleton();
 
-	//	float for smoothing
+	//	lots of options now, so expect an object
 	if (!Params.IsArgumentUndefined(1))
 	{
-		auto Smoothing = Params.GetArgumentFloat(1);
-		Model.SetKinectSmoothing(Smoothing);
-	}
+		auto Options = Params.GetArgumentObject(1);
+		static std::string _Smoothing("Smoothing");
+		static std::string _Gpu("Gpu");
+		static std::string _TrackMode("TrackMode");
 
-	//	bool to use gpu(or not)
-	//	or intenger for a GPU id (or -1 for cpu)
-	if (!Params.IsArgumentUndefined(2))
-	{
-		int32_t GpuId = 0;
-		if (Params.IsArgumentBool(2))
+		if (Options.HasMember(_Smoothing))
 		{
-			auto UseGpu = Params.GetArgumentBool(2);
-			GpuId = UseGpu ? 0 : -1;	//	get this const from PopCoreml API
-		}
-		else
-		{
-			GpuId = Params.GetArgumentInt(2);
+			auto Smoothing = Options.GetFloat(_Smoothing);
+			Model.SetKinectSmoothing(Smoothing);
 		}
 
-		Model.SetKinectGpu(GpuId);
+		if (Options.HasMember(_Gpu))
+		{
+			auto GpuId = Options.GetInt(_Gpu);
+			Model.SetKinectGpu(GpuId);
+		}
+
+		if (Options.HasMember(_TrackMode))
+		{
+			auto TrackMode = Options.GetInt(_TrackMode);
+			Model.SetKinectTrackMode(TrackMode);
+		}
 	}
 
 	RunModelGetObjects<CoreMl::TWorldObject>(Model, Params, CoreMl);

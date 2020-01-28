@@ -24,6 +24,17 @@
 
 __export int32_t			PopCoreml_GetVersion();
 
+#define POPML_KINECT_GPUID_CPU				(-1)
+#define POPML_KINECT_GPUID_DEFAULT			(0)
+#define POPML_KINECT_TRACKMODE_WIDEDEPTH	(0)
+#define POPML_KINECT_TRACKMODE_WIDECAMERA	(1)
+#define POPML_KINECT_TRACKMODE_NARROWDEPTH	(2)
+#define POPML_KINECT_TRACKMODE_NARROWCAMERA	(3)
+#define POPML_KINECT_TRACKMODE_NARROWSMALLDEPTH	(4)
+#define POPML_KINECT_TRACKMODE_NARROWSMALLCAMERA	(5)
+
+//	1.1.3
+//		Added SetKinectTrackMode(), as before.
 //	1.1.2
 //		Added SetKinectGpu() to base class (until we a have better options API)
 //	1.1.1
