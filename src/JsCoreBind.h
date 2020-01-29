@@ -900,8 +900,13 @@ inline JsCore::TTemplate JsCore::TObjectWrapper<TYPENAME,TYPE>::AllocTemplate(Js
 		catch(std::exception& e)
 		{
 			auto StringValue = Bind::GetString( ContextRef, e.what() );
+
+			auto Result = JSValueMakeUndefined(ContextRef);
+			//	make undefined fails if we set exception, so JSValueMakeUndefined()
+			//	then throws and we lose this error
+			//	should this error be returning an exception object?
 			JsSetException( StringValue.mValue );
-			return JSValueMakeUndefined( ContextRef );
+			return Result;
 		}
 	};
 #endif
