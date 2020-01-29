@@ -110,6 +110,10 @@ public:
 	void				GetScreenRect(Bind::TCallback& Arguments);
 	void				SetFullscreen(Bind::TCallback& Arguments);
 	void				IsFullscreen(Bind::TCallback& Arguments);
+	void				IsMinimised(Bind::TCallback& Arguments);
+	void				IsForeground(Bind::TCallback& Arguments);
+	void				EnableRenderMinimised(Bind::TCallback& Arguments);
+	void				EnableRenderBackground(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 

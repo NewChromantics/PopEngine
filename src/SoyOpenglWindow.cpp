@@ -208,6 +208,7 @@ public:
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
 	virtual bool					IsMinimised() override;
+	virtual bool					IsForeground() override;
 	virtual void					EnableScrollBars(bool Horz, bool Vert) override;
 
 	void			UpdateScrollbars();
@@ -1334,13 +1335,24 @@ bool TOpenglWindow::IsValid()
 
 bool TOpenglWindow::Iteration()
 {
-	//	gr: maybe do this at a higher level so the check is cross platform
-	if (IsMinimised())
-		return true;
+	//	gr: do this at a higher(c++) level so the check is cross platform
+	if (!mEnableRenderWhenMinimised)
+	{
+		if (IsMinimised())
+			return true;
+	}
 
-	//	repaint!
-	if ( mWindowContext )
+	if (!mEnableRenderWhenBackground)
+	{
+		if (!IsForeground())
+			return true;
+	}
+
+	//	trigger repaint!
+	if (mWindowContext)
+	{
 		mWindowContext->Repaint();
+	}
 
 	return true;
 }
@@ -1381,6 +1393,14 @@ bool TOpenglWindow::IsMinimised()
 		throw Soy::AssertException("TOpenglWindow::IsMinimised missing window");
 
 	return mWindow->IsMinimised();
+}
+
+bool TOpenglWindow::IsForeground()
+{
+	if (!mWindow)
+		throw Soy::AssertException("TOpenglWindow::IsForeground missing window");
+
+	return mWindow->IsForeground();
 }
 
 
@@ -1522,6 +1542,17 @@ bool Platform::TWindow::IsMinimised()
 	return IsIconic(mHwnd);
 }
 
+bool Platform::TWindow::IsForeground()
+{
+	//	check in case we're invalid AND the foreground window is null (ie, other process)
+	if (!mHwnd)
+		return false;
+
+	//	this post signifies why we use GetForegroundWindow() and not GetActiveWindow() (it will be null from a background thread)
+	//	https://stackoverflow.com/a/28643729/355753
+	auto ForegroundWindow = GetForegroundWindow();
+	return mHwnd == ForegroundWindow;
+}
 
 void Platform::TWindow::EnableScrollBars(bool Horz, bool Vert)
 {

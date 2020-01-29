@@ -26,6 +26,10 @@ namespace ApiOpengl
 	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 	DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
+	DEFINE_BIND_FUNCTIONNAME(IsMinimised);
+	DEFINE_BIND_FUNCTIONNAME(IsForeground);
+	DEFINE_BIND_FUNCTIONNAME(EnableRenderMinimised);
+	DEFINE_BIND_FUNCTIONNAME(EnableRenderBackground);
 }
 
 
@@ -556,7 +560,32 @@ void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 void TWindowWrapper::IsFullscreen(Bind::TCallback& Params)
 {
 	auto Fullscreen = mWindow->IsFullscreen();
-	Params.Return( Fullscreen );
+	Params.Return(Fullscreen);
+}
+
+void TWindowWrapper::IsMinimised(Bind::TCallback& Params)
+{
+	auto IsMinimised = mWindow->IsMinimised();
+	Params.Return(IsMinimised);
+}
+
+void TWindowWrapper::IsForeground(Bind::TCallback& Params)
+{
+	auto IsForeground = mWindow->IsForeground();
+	Params.Return(IsForeground);
+}
+
+void TWindowWrapper::EnableRenderMinimised(Bind::TCallback& Params)
+{
+	auto Enable = Params.GetArgumentBool(0);
+	mWindow->mEnableRenderWhenMinimised = Enable;
+}
+
+void TWindowWrapper::EnableRenderBackground(Bind::TCallback& Params)
+{
+	auto Enable = Params.GetArgumentBool(0);
+	mWindow->mEnableRenderWhenBackground = Enable;
+
 }
 
 
@@ -853,7 +882,11 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	
 	Template.BindFunction<BindFunction::GetScreenRect>( &TWindowWrapper::GetScreenRect );
 	Template.BindFunction<BindFunction::SetFullscreen>( &TWindowWrapper::SetFullscreen );
-	Template.BindFunction<BindFunction::IsFullscreen>( &TWindowWrapper::IsFullscreen );
+	Template.BindFunction<BindFunction::IsFullscreen>(&TWindowWrapper::IsFullscreen);
+	Template.BindFunction<BindFunction::IsMinimised>(&TWindowWrapper::IsMinimised);
+	Template.BindFunction<BindFunction::IsForeground>(&TWindowWrapper::IsForeground);
+	Template.BindFunction<BindFunction::EnableRenderMinimised>(&TWindowWrapper::EnableRenderMinimised);
+	Template.BindFunction<BindFunction::EnableRenderBackground>(&TWindowWrapper::EnableRenderBackground);
 }
 
 void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
