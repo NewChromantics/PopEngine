@@ -751,13 +751,16 @@ Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
 
 	auto ParentHwnd = GetParent(mHwnd);
 	POINT Position = { 0 };
+
+	//	gr: this applies the scroll, which it shouldn't, we're treating client rect like a virtual canvas
 	::MapWindowPoints(mHwnd, ParentHwnd, &Position, 1 );
 	RectWin.left += Position.x;
 	RectWin.top += Position.y;
 	RectWin.right += Position.x;
 	RectWin.bottom += Position.y;
 
-
+	/*	this is bad, but I think we can continue, need to cope with scrolling
+	//	from MapWindowPoints()
 	if ( RectWin.left < 0 || RectWin.top < 0 )
 	{
 		auto RectSigned = GetRect<int32_t>(RectWin);
@@ -765,6 +768,7 @@ Soy::Rectx<int32_t> Platform::TControl::TControl::GetClientRect()
 		Error << "Not expected GetClientRect rect to be < 0; " << RectSigned;
 		throw Soy::AssertException(Error.str());
 	}
+	*/
 
 	auto Rect = GetRect<size_t>(RectWin);
 	return Rect;
