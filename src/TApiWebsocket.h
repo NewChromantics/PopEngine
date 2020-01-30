@@ -102,6 +102,7 @@ public:
 	SoySocket&					GetSocket() { return *mSocket; }
 
 	//	get clients who have finished handshaking
+	void						GetConnectedPeers(ArrayBridge<SoyRef>&& Clients)	{	GetConnectedPeers(Clients);	}
 	void						GetConnectedPeers(ArrayBridge<SoyRef>& Clients);
 	std::string					GetConnectionError() {	return std::string();	}
 

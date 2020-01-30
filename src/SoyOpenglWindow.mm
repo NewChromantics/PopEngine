@@ -154,6 +154,8 @@ public:
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
+	virtual bool					IsMinimised() override;
+	virtual bool					IsForeground() override;
 	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
 
 	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
@@ -193,14 +195,14 @@ public:
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
 
-	virtual void		SetMinMax(uint16_t Min,uint16_t Max) override;
+	virtual void		SetMinMax(uint16_t Min,uint16_t Max,uint16_t NotchCount) override;
 	virtual void		SetValue(uint16_t Value) override;
 	virtual uint16_t	GetValue() override	{	return mLastValue;	}
 
-	virtual void		OnChanged() override
+	virtual void		OnChanged(bool FinalValue) override
 	{
 		CacheValue();
-		SoySlider::OnChanged();
+		SoySlider::OnChanged(FinalValue);
 	}
 	
 protected:
@@ -638,6 +640,22 @@ bool TOpenglWindow::IsFullscreen()
 	return mWindow->IsFullscreen();
 }
 
+bool TOpenglWindow::IsMinimised()
+{
+	if ( !mWindow )
+		return false;
+	
+	return mWindow->IsMinimised();
+}
+
+bool TOpenglWindow::IsForeground()
+{
+	if ( !mWindow )
+		return false;
+	
+	return mWindow->IsForeground();
+}
+
 
 Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated) :
 	mThread	( Thread )
@@ -734,6 +752,24 @@ bool Platform::TWindow::IsFullscreen()
 	return Style == NSWindowStyleMaskFullScreen;
 }
 
+bool Platform::TWindow::IsMinimised()
+{
+	if ( !mWindow )
+		throw Soy::AssertException("IsMinimsed: no window");
+
+	return mWindow.miniaturized;
+}
+
+
+bool Platform::TWindow::IsForeground()
+{
+	if ( !mWindow )
+		throw Soy::AssertException("IsForeground: no window");
+
+	auto IsMainWindow = mWindow.isMainWindow;
+	return IsMainWindow;
+}
+
 
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
@@ -804,7 +840,13 @@ Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rec
 		[mControl retain];
 
 		//	setup callback
-		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mResponder->mCallback = [this]()
+		{
+			//	dont have a built in system atm for detecting end-drag style events
+			//	https://stackoverflow.com/questions/9416903/determine-when-nsslider-knob-is-let-go-in-continuous-mode
+			bool FinalValue = true;
+			this->OnChanged(FinalValue);
+		};
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
 	
@@ -815,7 +857,7 @@ Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rec
 	mThread.PushJob( Allocate );
 }
 
-void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
+void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max,uint16_t NotchCount)
 {
 	auto Exec = [=]
 	{
@@ -824,8 +866,7 @@ void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max)
 		
 		mControl.minValue = Min;
 		mControl.maxValue = Max;
-		auto TickMarks = std::min( Max-Min, 10 );
-		mControl.numberOfTickMarks = TickMarks;
+		mControl.numberOfTickMarks = NotchCount;
 		CacheValue();
 	};
 	

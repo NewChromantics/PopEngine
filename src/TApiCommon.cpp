@@ -1682,7 +1682,9 @@ protected:
 
 	std::function<void(int32_t)>	mOnExit;
 	int32_t							mExitCode = 0;
+#if defined(TARGET_WINDOWS)
 	PROCESS_INFORMATION				mProcessInfo;
+#endif
 };
 
 
@@ -1717,6 +1719,7 @@ void Platform::TShellExecute::Thread()
 
 void Platform::TShellExecute::CreateProcessHandle(const std::string& RunCommand)
 {
+#if defined(TARGET_WINDOWS)
 	// Create a pipe for the redirection of the STDOUT 
 	// of a child process. 
 	HANDLE g_hChildStd_OUT_Rd = NULL;
@@ -1768,12 +1771,16 @@ void Platform::TShellExecute::CreateProcessHandle(const std::string& RunCommand)
 
 	//	if that didn't throw like it should, just throw anyway
 	throw Soy::AssertException("CreateProcess failed (No LastError?)");
+#else
+	Soy_AssertTodo();
+#endif
 }
 
 
 
 void Platform::TShellExecute::WaitForProcessHandle()
 {
+#if defined(TARGET_WINDOWS)
 	auto Timeout = INFINITE;	//	 (DWORD)(-1L)
 	DWORD ExitCode = 0;
 	WaitForSingleObject(mProcessInfo.hProcess, Timeout);
@@ -1801,6 +1808,9 @@ void Platform::TShellExecute::WaitForProcessHandle()
 		while (getline(stream, str))
 			stdOutLines->push_back(CStringW(str.c_str()));
 	*/
+#else
+	Soy_AssertTodo();
+#endif
 }
 
 
