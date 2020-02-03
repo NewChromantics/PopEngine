@@ -16,11 +16,17 @@ namespace ApiSocket
 	void	Bind(Bind::TContext& Context);
 	DECLARE_BIND_TYPENAME(UdpBroadcastServer);
 	DECLARE_BIND_TYPENAME(UdpClient);
+	DECLARE_BIND_TYPENAME(TcpServer);
 
 	class TPacket;
 	class TBinaryPacket;
 	class TStringPacket;
 	class TSocketWrapper;
+
+	class TTcpServer;
+	class TTcpServerPeer;
+
+	class TTcpServerWrapper;
 }
 
 
@@ -28,7 +34,7 @@ namespace ApiSocket
 class TUdpBroadcastServer : public SoyWorkerThread
 {
 public:
-	TUdpBroadcastServer(uint16_t ListenPort,std::function<void(const Array<uint8_t>&,SoyRef)> OnBinaryMessage);
+	TUdpBroadcastServer(uint16_t ListenPort,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
 	
 	std::string					GetAddress() const;
 
@@ -39,14 +45,14 @@ public:
 	std::shared_ptr<SoySocket>		mSocket;
 	
 private:
-	std::function<void(const Array<uint8_t>&,SoyRef)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
 };
 
 
 class TUdpClient : public SoyWorkerThread
 {
 public:
-	TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage,std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected);
+	TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected);
 
 	std::string					GetAddress() const;
 
@@ -57,7 +63,7 @@ public:
 	std::shared_ptr<SoySocket>		mSocket;
 
 private:
-	std::function<void(const Array<uint8_t>&, SoyRef)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
 	std::function<void(const std::string&)>				mOnDisconnected;
 	std::function<void()>								mOnConnected;
 };
@@ -162,4 +168,103 @@ public:
 
 public:
 	std::shared_ptr<TUdpClient>	mSocket = mObject;
+};
+
+
+
+class TAnythingProtocol : public Soy::TReadProtocol, public Soy::TWriteProtocol
+{
+protected:
+	virtual void					Encode(TStreamBuffer& Buffer) override
+	{
+		Buffer.Push(GetArrayBridge(mData));
+	}
+	virtual TProtocolState::Type	Decode(TStreamBuffer& Buffer) override
+	{
+		//	needs to wait for >0 data?
+		auto Length = Buffer.GetBufferedSize();
+		Buffer.Pop(Length, GetArrayBridge(mData));
+		return TProtocolState::Finished;
+	}
+
+public:
+	Array<uint8_t>					mData;
+};
+
+
+class ApiSocket::TTcpServerPeer : public TSocketReadThread_Impl<TAnythingProtocol>, TSocketWriteThread
+{
+public:
+	TTcpServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
+		TSocketReadThread_Impl(Socket, ConnectionRef),
+		TSocketWriteThread(Socket, ConnectionRef),
+		mOnBinaryMessage(OnBinaryMessage),
+		mConnectionRef(ConnectionRef)
+	{
+		TSocketReadThread_Impl::Start();
+		TSocketWriteThread::Start();
+	}
+
+	void				ClientConnect();
+
+	virtual void		OnDataRecieved(std::shared_ptr<TAnythingProtocol>& Data) override;
+
+	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
+
+	void				Send(const std::string& Message);
+	void				Send(const ArrayBridge<uint8_t>& Message);
+
+public:
+	SoyRef										mConnectionRef;
+	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
+
+	std::recursive_mutex						mMessagesLock;
+	Array<Array<uint8_t>>						mMessages;
+};
+
+
+
+class ApiSocket::TTcpServer : public SoyWorkerThread
+{
+public:
+	TTcpServer(uint16_t ListenPort, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
+	void						Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message);
+
+	SoySocket&					GetSocket() { return *mSocket; }
+
+protected:
+	virtual bool				Iteration() override;
+
+	void						AddPeer(SoyRef ClientRef);
+	void						RemovePeer(SoyRef ClientRef);
+	std::shared_ptr<TTcpServerPeer>	GetPeer(SoyRef ClientRef);
+
+public:
+	std::shared_ptr<SoySocket>		mSocket;
+
+protected:
+	std::recursive_mutex			mClientsLock;
+	Array<std::shared_ptr<TTcpServerPeer>>	mClients;
+
+	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+};
+
+
+class ApiSocket::TTcpServerWrapper : public Bind::TObjectWrapper<BindType::TcpServer, TTcpServer>, public ApiSocket::TSocketWrapper
+{
+public:
+	TTcpServerWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void				CreateTemplate(Bind::TTemplate& Template);
+
+	virtual void			Construct(Bind::TCallback& Params) override;
+	virtual void			Send(Bind::TCallback& Params) override;
+
+	virtual std::shared_ptr<SoySocket>		GetSocket() override { return mSocket ? mSocket->mSocket : nullptr; }
+
+public:
+	std::shared_ptr<TTcpServer>	mSocket = mObject;
 };

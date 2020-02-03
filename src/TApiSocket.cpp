@@ -9,6 +9,7 @@ namespace ApiSocket
 
 	DEFINE_BIND_TYPENAME(UdpBroadcastServer);
 	DEFINE_BIND_TYPENAME(UdpClient);
+	DEFINE_BIND_TYPENAME(TcpServer);
 
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
@@ -16,9 +17,14 @@ namespace ApiSocket
 	DEFINE_BIND_FUNCTIONNAME(WaitForMessage);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetAddress, GetAddress);
-	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_Send,Send);
-	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetPeers,GetPeers);
-	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForMessage,WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_Send, Send);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetPeers, GetPeers);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForMessage, WaitForMessage);
+
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetAddress, GetAddress);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_Send, Send);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetPeers, GetPeers);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_WaitForMessage, WaitForMessage);
 }
 
 void ApiSocket::Bind(Bind::TContext& Context)
@@ -26,6 +32,7 @@ void ApiSocket::Bind(Bind::TContext& Context)
 	Context.CreateGlobalObjectInstance("", Namespace);
 	Context.BindObjectType<TUdpBroadcastServerWrapper>(Namespace);
 	Context.BindObjectType<TUdpClientWrapper>(Namespace);
+	Context.BindObjectType<TTcpServerWrapper>(Namespace);
 }
 
 
@@ -140,7 +147,7 @@ void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 	auto ListenPort = Params.GetArgumentInt(0);
 
 	
-	auto OnBinaryMessage = [this](const Array<uint8_t>& Message,SoyRef Sender)
+	auto OnBinaryMessage = [this](SoyRef Sender,const Array<uint8_t>& Message)
 	{
 		this->OnMessage( Message, Sender );
 	};
@@ -162,7 +169,7 @@ void TUdpClientWrapper::Construct(Bind::TCallback& Params)
 	auto Hostname = Params.GetArgumentString(0);
 	auto Port = Params.GetArgumentInt(1);
 	
-	auto OnBinaryMessage = [this](const Array<uint8_t>& Message, SoyRef Sender)
+	auto OnBinaryMessage = [this](SoyRef Sender, const Array<uint8_t>& Message)
 	{
 		this->OnMessage(Message, Sender);
 	};
@@ -294,7 +301,7 @@ void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 
 
 
-TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(const Array<uint8_t>&,SoyRef)> OnBinaryMessage) :
+TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"UdpBroadcastServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
 	mOnBinaryMessage	( OnBinaryMessage )
 {
@@ -341,7 +348,7 @@ bool TUdpBroadcastServer::Iteration()
 		auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>( 0, RecvBuffer.GetSize() );
 		RecvBuffer8.Copy( RecvBufferCastTo8 );
 		
-		this->mOnBinaryMessage( RecvBuffer8, Sender );
+		this->mOnBinaryMessage( Sender, RecvBuffer8 );
 	};
 	mSocket->EnumConnections( RecvFromConnection );
 
@@ -350,7 +357,7 @@ bool TUdpBroadcastServer::Iteration()
 
 
 
-TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(const Array<uint8_t>&, SoyRef)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
+TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
 	SoyWorkerThread		(Soy::StreamToString(std::stringstream() << "UdpClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
 	mOnBinaryMessage	(OnBinaryMessage),
 	mOnConnected		(mOnConnected),
@@ -405,7 +412,7 @@ bool TUdpClient::Iteration()
 			auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>(0, RecvBuffer.GetSize());
 			RecvBuffer8.Copy(RecvBufferCastTo8);
 
-			this->mOnBinaryMessage(RecvBuffer8, Sender);
+			this->mOnBinaryMessage( Sender, RecvBuffer8 );
 		}
 		catch (std::exception& e)
 		{
@@ -430,3 +437,157 @@ bool TUdpClient::Iteration()
 	//		as this is udp client, maybe it should be blocking instead of sleeping
 	return true;
 }
+
+
+void ApiSocket::TTcpServerWrapper::Construct(Bind::TCallback& Params)
+{
+	auto ListenPort = Params.GetArgumentInt(0);
+
+	auto OnBinaryMessage = [this](SoyRef Sender, const Array<uint8_t>& Message)
+	{
+		this->OnMessage(Message, Sender);
+	};
+	mSocket.reset(new TTcpServer(ListenPort, OnBinaryMessage));
+}
+
+void ApiSocket::TTcpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<ApiSocket::BindFunction::TcpServer_GetAddress>(&ApiSocket::TSocketWrapper::GetAddress);
+	Template.BindFunction<ApiSocket::BindFunction::TcpServer_Send>(&ApiSocket::TSocketWrapper::Send);
+	Template.BindFunction<ApiSocket::BindFunction::TcpServer_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiSocket::BindFunction::TcpServer_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+}
+
+
+
+void ApiSocket::TTcpServerWrapper::Send(Bind::TCallback& Params)
+{
+	auto ThisSocket = mSocket;
+	if (!ThisSocket)
+		throw Soy::AssertException("Socket not allocated");
+
+	auto PeerStr = Params.GetArgumentString(0);
+	auto PeerRef = SoyRef(PeerStr);
+
+	Array<uint8_t> Data;
+	Params.GetArgumentArray(1, GetArrayBridge(Data));
+	ThisSocket->Send(PeerRef, GetArrayBridge(Data));
+}
+
+
+
+
+ApiSocket::TTcpServer::TTcpServer(uint16_t ListenPort, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
+	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "TTcpServer(" << ListenPort << ")"), SoyWorkerWaitMode::Sleep),
+	mOnBinaryMessage(OnBinaryMessage)
+{
+	mSocket.reset(new SoySocket());
+	mSocket->CreateTcp(true);
+	mSocket->ListenTcp(ListenPort);
+
+	mSocket->mOnConnect = [=](SoyRef ClientRef)
+	{
+		AddPeer(ClientRef);
+	};
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef, const std::string& Reason)
+	{
+		RemovePeer(ClientRef);
+	};
+
+	Start();
+
+}
+
+
+bool ApiSocket::TTcpServer::Iteration()
+{
+	if (!mSocket)
+		return false;
+
+	if (!mSocket->IsCreated())
+		return true;
+
+	//	non blocking so lets just do everything in a loop
+	auto NewClient = mSocket->WaitForClient();
+	if (NewClient.IsValid())
+		std::Debug << "new client connected: " << NewClient << std::endl;
+	/*
+	Array<char> RecvBuffer;
+	auto RecvFromConnection = [&](SoyRef ClientRef,SoySocketConnection ClientCon)
+	{
+		RecvBuffer.Clear();
+		ClientCon.Recieve( GetArrayBridge(RecvBuffer) );
+		if ( !RecvBuffer.IsEmpty() )
+		{
+			auto Client = GetClient(ClientRef);
+			Client->OnRecvData( GetArrayBridge(RecvBuffer) );
+		}
+	};
+	mSocket->EnumConnections( RecvFromConnection );
+	*/
+	return true;
+}
+
+
+std::shared_ptr<ApiSocket::TTcpServerPeer> ApiSocket::TTcpServer::GetPeer(SoyRef ClientRef)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
+	for (int c = 0; c < mClients.GetSize(); c++)
+	{
+		auto& pClient = mClients[c];
+		if (pClient->mConnectionRef == ClientRef)
+			return pClient;
+	}
+
+	throw Soy::AssertException("Client not found");
+}
+
+void ApiSocket::TTcpServer::AddPeer(SoyRef ClientRef)
+{
+	std::shared_ptr<TTcpServerPeer> Client(new TTcpServerPeer(mSocket, ClientRef, mOnBinaryMessage));
+	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
+	mClients.PushBack(Client);
+}
+
+void ApiSocket::TTcpServer::RemovePeer(SoyRef ClientRef)
+{
+
+}
+
+void ApiSocket::TTcpServer::Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message)
+{
+	auto Peer = GetPeer(ClientRef);
+	if (!Peer)
+	{
+		std::stringstream Error;
+		Error << "No peer matching " << ClientRef;
+		throw Soy::AssertException(Error.str());
+	}
+	Peer->Send(Message);
+}
+
+
+void ApiSocket::TTcpServerPeer::ClientConnect()
+{
+}
+
+void ApiSocket::TTcpServerPeer::OnDataRecieved(std::shared_ptr<TAnythingProtocol>& pData)
+{
+	auto& Data = pData->mData;
+	mOnBinaryMessage(this->mConnectionRef, Data);
+}
+
+
+std::shared_ptr<Soy::TReadProtocol> ApiSocket::TTcpServerPeer::AllocProtocol()
+{
+	return std::make_shared<TAnythingProtocol>();
+}
+
+
+void ApiSocket::TTcpServerPeer::Send(const ArrayBridge<uint8_t>& Message)
+{
+	auto Packet = std::make_shared<TAnythingProtocol>();
+	Packet->mData.Copy(Message);
+	Push(Packet);
+}
+
