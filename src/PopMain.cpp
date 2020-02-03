@@ -1,4 +1,5 @@
 #include "PopMain.h"
+#include "PopEngine.h"
 #include "SoyDebug.h"
 /*
 #include "TProtocolCli.h"
@@ -89,7 +90,7 @@ namespace Platform
 #endif
 }
 
-extern "C" __declspec(dllexport) int PopEngine(const char* ProjectPath)
+extern "C" EXPORT int PopEngine(const char* ProjectPath)
 {
 	Pop::ProjectPath = ProjectPath;
 
