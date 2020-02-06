@@ -11,6 +11,12 @@
 #include <commctrl.h>
 #pragma comment(lib, "Comctl32.lib")
 
+extern "C"
+{
+	//	custom ColourButton win32 control
+#include "SoyLib/src/Win32ColourControl.h"
+}
+
 #include "MagicEnum/include/magic_enum.hpp"
 
 
@@ -127,6 +133,7 @@ public:
 	{
 		//	gotta do this somewhere, this is typically before any extra controls get created
 		InitCommonControls();
+		Win32_Register_ColourButton();
 		Start();
 	}
 
@@ -310,6 +317,19 @@ public:
 	virtual void		SetLabel(const std::string& Label) override;
 
 	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+};
+
+
+class Platform::TColourButton : public TControl, public SoyColourButton
+{
+public:
+	TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void			SetValue(vec3x<uint8_t> Value) override;
+	virtual vec3x<uint8_t>	GetValue() override;
+
+	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
 
 class Platform::TControlClass
@@ -1725,6 +1745,22 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent, Soy::Rect
 	return Control;
 }
 
+std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
+	auto& Thread = ParentControl.mThread;
+	std::shared_ptr<SoyColourButton> Control;
+
+	auto Create = [&]()
+	{
+		Control.reset(new Platform::TColourButton(ParentControl, Rect));
+	};
+	Soy::TSemaphore Wait;
+	Thread.PushJob(Create, Wait);
+	Wait.Wait();
+
+	return Control;
+}
 
 
 const DWORD Slider_StyleExFlags = 0;
@@ -1941,4 +1977,42 @@ void Platform::TTickBox::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD 
 	}
 
 	TControl::OnWindowMessage(EventMessage,WParam,LParam);
+}
+
+
+
+
+
+
+const DWORD ColourButton_StyleExFlags = 0;
+const DWORD ColourButton_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+
+
+Platform::TColourButton::TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	TControl("ColourButton", COLOURBUTTON_CLASSNAME, Parent, ColourButton_StyleFlags, ColourButton_StyleExFlags, Rect)
+{
+}
+
+void Platform::TColourButton::SetValue(vec3x<uint8_t> Value)
+{
+	ColourButton_SetColour(mHwnd, Value.x, Value.y, Value.z);
+}
+
+vec3x<uint8_t> Platform::TColourButton::GetValue()
+{
+	return vec3x<uint8_t>(0, 0, 0);
+}
+
+void Platform::TColourButton::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam)
+{
+	if (EventMessage == COLOURBUTTON_COLOURCHANGED)
+	{
+		this->OnChanged(false);
+	}
+	if (EventMessage == COLOURBUTTON_COLOURDIALOGCLOSED)
+	{
+		this->OnChanged(true);
+	}
+
+	TControl::OnWindowMessage(EventMessage, WParam, LParam);
 }

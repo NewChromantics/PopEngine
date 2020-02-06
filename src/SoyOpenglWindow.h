@@ -17,6 +17,7 @@ namespace Platform
 	class TTextBox;
 	class TLabel;
 	class TTickBox;
+	class TColourButton;
 	class TColourPicker;
 
 	class TOpenglView;		//	on osx it's a view control
@@ -30,6 +31,7 @@ namespace Platform
 	std::shared_ptr<SoyLabel>	CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<SoyTickBox>	CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	std::shared_ptr<Gui::TColourPicker>	CreateColourPicker(vec3x<uint8_t> InitialColour);
+	std::shared_ptr<SoyColourButton>	CreateColourButton(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect);
 }
 
 

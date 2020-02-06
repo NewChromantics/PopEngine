@@ -122,6 +122,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyWave.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWindow.h" />
+    <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h" />
     <ClInclude Include="..\src\SoyOpenglView.h" />
     <ClInclude Include="..\src\SoyOpenglWindow.h" />
     <ClInclude Include="..\src\TApiBluetooth.h">
@@ -254,6 +255,7 @@
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\TApiCoreMl.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />
@@ -842,10 +844,7 @@
     <CustomBuild />
     <Link />
     <Manifest />
-    <Manifest>
-      <AdditionalManifestFiles>
-      </AdditionalManifestFiles>
-    </Manifest>
+    <Manifest />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
     <ClCompile>

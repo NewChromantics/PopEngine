@@ -8,6 +8,7 @@ class SoySlider;
 class SoyLabel;
 class SoyTextBox;
 class SoyTickBox;
+class SoyColourButton;
 
 namespace Gui
 {
@@ -24,12 +25,14 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(TextBox);
 	DECLARE_BIND_TYPENAME(TickBox);
 	DECLARE_BIND_TYPENAME(ColourPicker);
+	DECLARE_BIND_TYPENAME(Colour);
 
 	class TWindowWrapper;
 	class TSliderWrapper;
 	class TLabelWrapper;
 	class TTextBoxWrapper;
 	class TTickBoxWrapper;
+	class TColourButtonWrapper;
 	class TColourPickerWrapper;
 }
 
@@ -157,3 +160,24 @@ public:
 	std::shared_ptr<Gui::TColourPicker>&	mControl = mObject;
 };
 
+
+
+class ApiGui::TColourButtonWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Colour, SoyColourButton>
+{
+public:
+	TColourButtonWrapper(Bind::TContext& Context) :
+		TObjectWrapper(Context)
+	{
+	}
+
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+
+	void			SetValue(Bind::TCallback& Params);
+
+	//	FinalValue means say, mouse-up on slider (false if dragging)
+	void			OnChanged(vec3x<uint8_t>& NewValue, bool FinalValue);
+
+public:
+	std::shared_ptr<SoyColourButton>&	mColourButton = mObject;
+};

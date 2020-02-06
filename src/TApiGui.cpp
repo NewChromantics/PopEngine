@@ -12,6 +12,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(TextBox);
 	DEFINE_BIND_TYPENAME(TickBox);
 	DEFINE_BIND_TYPENAME(ColourPicker);
+	DEFINE_BIND_TYPENAME(Colour);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
@@ -31,7 +32,8 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TLabelWrapper>( Namespace );
 	Context.BindObjectType<TTextBoxWrapper>( Namespace );
 	Context.BindObjectType<TTickBoxWrapper>( Namespace );
-	Context.BindObjectType<TColourPickerWrapper>( Namespace );
+	Context.BindObjectType<TColourPickerWrapper>(Namespace);
+	Context.BindObjectType<TColourButtonWrapper>(Namespace);
 }
 
 
@@ -340,4 +342,57 @@ void ApiGui::TColourPickerWrapper::OnClosed()
 	};
 	this->mContext.Queue( Callback );
 }
+
+
+
+void ApiGui::TColourButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<BindFunction::SetValue>(&TColourButtonWrapper::SetValue);
+}
+
+void ApiGui::TColourButtonWrapper::Construct(Bind::TCallback& Params)
+{
+	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+
+	BufferArray<int32_t, 4> Rect4;
+	Params.GetArgumentArray(1, GetArrayBridge(Rect4));
+	Soy::Rectx<int32_t> Rect(Rect4[0], Rect4[1], Rect4[2], Rect4[3]);
+	
+
+	mColourButton = Platform::CreateColourButton(*ParentWindow.mWindow, Rect);
+	mColourButton->mOnValueChanged = std::bind(&TColourButtonWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
+}
+
+
+void ApiGui::TColourButtonWrapper::SetValue(Bind::TCallback& Params)
+{
+	BufferArray<uint8_t, 3> RgbArray;
+	Params.GetArgumentArray(0,GetArrayBridge(RgbArray));
+
+	vec3x<uint8_t> Rgb;
+	Rgb.x = RgbArray[0];
+	Rgb.y = RgbArray[1];
+	Rgb.z = RgbArray[2];
+
+	mColourButton->SetValue(Rgb);
+}
+
+
+void ApiGui::TColourButtonWrapper::OnChanged(vec3x<uint8_t>& NewValue, bool FinalValue)
+{
+	BufferArray<uint8_t, 3> Rgb;
+	Rgb.Copy(NewValue.GetArray());
+
+	auto Callback = [this, Rgb, FinalValue](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		Callback.SetArgumentArray(0, GetArrayBridge(Rgb));
+		Callback.SetArgumentBool(1, FinalValue);
+		ThisOnChanged.Call(Callback);
+	};
+	this->mContext.Queue(Callback);
+}
+
 

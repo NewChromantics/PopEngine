@@ -498,6 +498,9 @@
     <ClInclude Include="..\src\Libs\PopCoreMl\PopCoreml.h">
       <Filter>Libs\PopCoreMl</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -919,6 +922,9 @@
     </ClCompile>
     <ClCompile Include="..\src\TApiCoreMl.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c">
+      <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
