@@ -112,6 +112,7 @@ namespace ApiPop
 
 	//	TShellExecute
 	DEFINE_BIND_FUNCTIONNAME(WaitForExit);
+	DEFINE_BIND_FUNCTIONNAME(WaitForOutput);
 
 }
 
@@ -1672,7 +1673,7 @@ void ApiPop::TFileMonitorWrapper::OnChanged()
 class Platform::TShellExecute : public SoyThread
 {
 public:
-	TShellExecute(const std::string& RunCommand, std::function<void(int)> OnExit);
+	TShellExecute(const std::string& RunCommand, std::function<void(int)> OnExit, std::function<void(const std::string&)> OnStdOut, std::function<void(const std::string&)> OnStdErr);
 	~TShellExecute();
 
 protected:
@@ -1681,6 +1682,8 @@ protected:
 	void						WaitForProcessHandle();
 
 	std::function<void(int32_t)>	mOnExit;
+	std::function<void(const std::string&)>	mOnStdOut;
+	std::function<void(const std::string&)>	mOnStdErr;
 	int32_t							mExitCode = 0;
 #if defined(TARGET_WINDOWS)
 	PROCESS_INFORMATION				mProcessInfo;
@@ -1688,9 +1691,11 @@ protected:
 };
 
 
-Platform::TShellExecute::TShellExecute(const std::string& RunCommand, std::function<void(int)> OnExit) :
+Platform::TShellExecute::TShellExecute(const std::string& RunCommand, std::function<void(int)> OnExit, std::function<void(const std::string&)> OnStdOut, std::function<void(const std::string&)> OnStdErr) :
 	SoyThread	(std::string("ShellExecute ") + RunCommand ),
-	mOnExit		(OnExit)
+	mOnExit		(OnExit),
+	mOnStdOut	(OnStdOut),
+	mOnStdErr	(OnStdErr)
 {
 	//	throw here if we can't create the process
 	CreateProcessHandle( RunCommand );
@@ -1819,18 +1824,17 @@ void Platform::TShellExecute::WaitForProcessHandle()
 void ApiPop::TShellExecuteWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::WaitForExit>(&TShellExecuteWrapper::WaitForExit);
+	Template.BindFunction<BindFunction::WaitForOutput>(&TShellExecuteWrapper::WaitForOutput);
 }
 
 void ApiPop::TShellExecuteWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Filename = Params.GetArgumentString(0);
 
-	auto OnExit = [this](int ExitCode)
-	{
-		this->OnExit(ExitCode);
-	};
-
-	mShellExecute.reset(new Platform::TShellExecute(Filename, OnExit));
+	auto OnExit = std::bind(&TShellExecuteWrapper::OnExit, this, std::placeholders::_1);
+	auto OnStdOut = std::bind(&TShellExecuteWrapper::OnStdOut, this, std::placeholders::_1);
+	auto OnStdErr = std::bind(&TShellExecuteWrapper::OnStdErr, this, std::placeholders::_1);
+	mShellExecute.reset(new Platform::TShellExecute(Filename, OnExit, OnStdOut, OnStdErr));
 }
 
 void ApiPop::TShellExecuteWrapper::WaitForExit(Bind::TCallback& Params)
@@ -1838,41 +1842,113 @@ void ApiPop::TShellExecuteWrapper::WaitForExit(Bind::TCallback& Params)
 	auto Promise = mWaitForExitPromises.AddPromise(Params.mLocalContext);
 	Params.Return(Promise);
 
-	FlushPendingExits();
+	FlushPending();
 }
 
-void ApiPop::TShellExecuteWrapper::FlushPendingExits()
+
+void ApiPop::TShellExecuteWrapper::WaitForOutput(Bind::TCallback& Params)
 {
+	auto Promise = mWaitForOutputPromises.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
+
+	FlushPending();
+}
+
+void ApiPop::TShellExecuteWrapper::FlushPendingOutput()
+{
+	if (!mWaitForOutputPromises.HasPromises())
+		return;
+
+	//	gr: maybe this should output an array of strings so we can pump out a lot at once
+	std::string NextOutput;
+	{
+		std::lock_guard<std::mutex> Lock(mMetaLock);
+		if (mPendingOutput.IsEmpty())
+			return;
+
+		//	concat?
+		NextOutput = mPendingOutput.PopAt(0);
+	}
+	
+	//	flush with string
+	auto Flush = [this, NextOutput](Bind::TLocalContext& Context)
+	{
+		auto HandlePromise = [this, NextOutput](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
+		{
+			Promise.Resolve(LocalContext, NextOutput);
+		};
+		mWaitForOutputPromises.Flush(HandlePromise);
+	};
+	auto& Context = mWaitForOutputPromises.GetContext();
+	Context.Queue(Flush);
+}
+
+void ApiPop::TShellExecuteWrapper::FlushPending()
+{
+	//	if there is pending output, flush that first so we get outputs done
+	FlushPendingOutput();
+
+	//	ideally we lock, but JS is in single process, so this might be okay...
+	//	the output promises are flushed if there was output,
+	//	so now, if there are any left, they will flush with exit code
+
 	//	process still running
 	if (!mHasExited)
 		return;
 
-	//	no pending promises
-	if (!mWaitForExitPromises.HasPromises())
-		return;
 
-	//	process gone, exit code should have been set, so return it	
-	auto Flush = [this](Bind::TLocalContext& Context)
+	auto FlushWithExit = [&](Bind::TPromiseQueue& Queue)
 	{
-		auto HandlePromise = [this](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
+		//	no pending promises
+		if (!Queue.HasPromises())
+			return;
+
+		auto* pQueue = &Queue;
+		auto Flush = [this, pQueue](Bind::TLocalContext& Context)
 		{
-			Promise.Resolve(LocalContext, mExitedCode);
+			auto HandlePromise = [this](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
+			{
+				Promise.Resolve(LocalContext, mExitedCode);
+			};
+			pQueue->Flush(HandlePromise);
 		};
-		mWaitForExitPromises.Flush(HandlePromise);
+		auto& Context = Queue.GetContext();
+		Context.Queue(Flush);
 	};
-	auto& Context = mWaitForExitPromises.GetContext();
-	Context.Queue(Flush);
+
+	FlushWithExit(mWaitForOutputPromises);
+	FlushWithExit(mWaitForExitPromises);
 }
 
 void ApiPop::TShellExecuteWrapper::OnExit(int32_t ExitCode)
 {
-	mExitedCode = ExitCode;
+	{
+		std::lock_guard<std::mutex> Lock(mMetaLock);
+		mExitedCode = ExitCode;
 
-	//	kill process (should already be gone, but this will set our "state" as, not running
-	//	gr: this is currently being called FROM the thread, so gets locked
-	//		we don't really wanna detatch the thread and could be left with a dangling thread
-	//mShellExecute.reset();
-	mHasExited = true;
+		//	kill process (should already be gone, but this will set our "state" as, not running
+		//	gr: this is currently being called FROM the thread, so gets locked
+		//		we don't really wanna detatch the thread and could be left with a dangling thread
+		//mShellExecute.reset();
+		mHasExited = true;
+	}
+	FlushPending();
+}
 
-	FlushPendingExits();
+void ApiPop::TShellExecuteWrapper::OnStdErr(const std::string& Output)
+{
+	{
+		std::lock_guard<std::mutex> Lock(mMetaLock);
+		mPendingOutput.PushBack(Output);
+	}
+	FlushPendingOutput();
+}
+
+void ApiPop::TShellExecuteWrapper::OnStdOut(const std::string& Output)
+{
+	{
+		std::lock_guard<std::mutex> Lock(mMetaLock);
+		mPendingOutput.PushBack(Output);
+	}
+	FlushPendingOutput();
 }

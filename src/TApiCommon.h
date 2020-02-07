@@ -187,15 +187,24 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
 	void			WaitForExit(Bind::TCallback& Params);
+	void			WaitForOutput(Bind::TCallback& Params);
 
 private:
 	void			OnExit(int32_t ExitCode);
-	void			FlushPendingExits();
+	void			OnStdOut(const std::string& Out);
+	void			OnStdErr(const std::string& Out);
+	void			FlushPending();
+	void			FlushPendingOutput();
 
 public:
-	bool			mHasExited = false;
-	int32_t			mExitedCode = 0;
-	Bind::TPromiseQueue							mWaitForExitPromises;
 	std::shared_ptr<Platform::TShellExecute>&	mShellExecute = mObject;
+
+	Bind::TPromiseQueue		mWaitForExitPromises;
+	Bind::TPromiseQueue		mWaitForOutputPromises;
+
+	std::mutex				mMetaLock;
+	bool					mHasExited = false;
+	int32_t					mExitedCode = 0;
+	Array<std::string>		mPendingOutput;	//	note: no filter between stderr and stdout atm
 };
 

@@ -658,7 +658,8 @@ public:
 	void			Resolve(Bind::TLocalContext& Context,JsCore::TArray& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Resolve(Bind::TLocalContext& Context,JSValueRef Value) const;
 	void			Resolve(Bind::TLocalContext& Context,JSObjectRef Value) const;
-	void			Resolve(Bind::TLocalContext& Context,bool Value) const						{	Resolve(Context, GetValue(Context.mLocalContext, Value));	}
+	template<typename TYPE>
+	void			Resolve(Bind::TLocalContext& Context,const TYPE& Value) const				{	Resolve(Context, GetValue(Context.mLocalContext, Value)); }
 	void			ResolveUndefined(Bind::TLocalContext& Context) const;
 
 	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
