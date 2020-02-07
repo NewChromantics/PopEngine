@@ -366,13 +366,16 @@ void ApiGui::TColourButtonWrapper::Construct(Bind::TCallback& Params)
 
 void ApiGui::TColourButtonWrapper::SetValue(Bind::TCallback& Params)
 {
-	BufferArray<uint8_t, 3> RgbArray;
+	//	HTML colour control is float, so we're accepting them
+	BufferArray<float, 3> RgbArray;
 	Params.GetArgumentArray(0,GetArrayBridge(RgbArray));
 
+	//	todo: throw if outside 0-1
+
 	vec3x<uint8_t> Rgb;
-	Rgb.x = RgbArray[0];
-	Rgb.y = RgbArray[1];
-	Rgb.z = RgbArray[2];
+	Rgb.x = RgbArray[0] * 255.f;
+	Rgb.y = RgbArray[1] * 255.f;
+	Rgb.z = RgbArray[2] * 255.f;
 
 	mColourButton->SetValue(Rgb);
 }
