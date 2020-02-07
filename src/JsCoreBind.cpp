@@ -3,6 +3,7 @@
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
 #include "TApiCommon.h"
+#include "TApiEngine.h"
 #include "TApiOpengl.h"
 #include "TApiMedia.h"
 #include "TApiWebsocket.h"
@@ -536,6 +537,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			auto Context = CreateContext(RootDirectory);
 			
 			ApiPop::Bind( *Context );
+			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
 			ApiMedia::Bind( *Context );
 			ApiWebsocket::Bind( *Context );

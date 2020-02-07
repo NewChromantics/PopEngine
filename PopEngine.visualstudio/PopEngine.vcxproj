@@ -134,6 +134,7 @@
     </ClInclude>
     <ClInclude Include="..\src\TApiCommon.h" />
     <ClInclude Include="..\src\TApiCoreMl.h" />
+    <ClInclude Include="..\src\TApiEngine.h" />
     <ClInclude Include="..\src\TApiDlib.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -257,6 +258,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\TApiCoreMl.cpp" />
+    <ClCompile Include="..\src\TApiEngine.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />
     <ClCompile Include="..\src\TApiOpenvr.cpp" />

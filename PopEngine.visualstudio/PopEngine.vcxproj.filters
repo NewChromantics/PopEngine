@@ -501,6 +501,9 @@
     <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiEngine.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -925,6 +928,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c">
       <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEngine.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
