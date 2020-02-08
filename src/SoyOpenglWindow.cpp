@@ -1995,24 +1995,28 @@ Platform::TColourButton::TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Re
 
 void Platform::TColourButton::SetValue(vec3x<uint8_t> Value)
 {
-	ColourButton_SetColour(mHwnd, Value.x, Value.y, Value.z);
+	ColourButton_SetColour(mHwnd, Value.x, Value.y, Value.z,false);
 }
 
 vec3x<uint8_t> Platform::TColourButton::GetValue()
 {
-	return vec3x<uint8_t>(0, 0, 0);
+	//	get new value
+	uint8_t Rgb[3];
+	ColourButton_GetColour(mHwnd, Rgb);
+	return vec3x<uint8_t>(Rgb[0], Rgb[1], Rgb[2]);
 }
 
 void Platform::TColourButton::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam)
 {
 	if (EventMessage == COLOURBUTTON_COLOURCHANGED)
 	{
-		this->OnChanged(false);
+		this->OnChanged(true);
 	}
+	/*
 	if (EventMessage == COLOURBUTTON_COLOURDIALOGCLOSED)
 	{
 		this->OnChanged(true);
 	}
-
+	*/
 	TControl::OnWindowMessage(EventMessage, WParam, LParam);
 }
