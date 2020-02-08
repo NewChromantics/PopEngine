@@ -1667,6 +1667,21 @@ void ApiPop::TFileMonitorWrapper::OnChanged()
 }
 
 
+#if defined(TARGET_WINDOWS)
+class TReadWritePipe
+{
+public:
+	TReadWritePipe();
+	~TReadWritePipe();
+
+	void	StartReadThread(std::function<void(const std::string&)>& OnRead);
+
+	HANDLE	mReadPipe = nullptr;
+	HANDLE	mWritePipe = nullptr;
+	std::shared_ptr<SoyThreadLambda>	mReadThread;
+};
+#endif
+
 //	gr: this might be nice as an RAII wrapper, but for JS, I want the initial creation to throw, 
 //		and if it was RAII, i'd need a thread on the wrapper, which wouldn't immediately throw
 //		unless we have a semaphore or something to indicate it has started
@@ -1687,6 +1702,8 @@ protected:
 	int32_t							mExitCode = 0;
 #if defined(TARGET_WINDOWS)
 	PROCESS_INFORMATION				mProcessInfo;
+	std::shared_ptr<TReadWritePipe>	mStdOutPipe;
+	std::shared_ptr<TReadWritePipe>	mStdErrPipe;
 #endif
 };
 
@@ -1722,36 +1739,103 @@ void Platform::TShellExecute::Thread()
 	Stop(false);
 }
 
+#if defined(TARGET_WINDOWS)
+TReadWritePipe::TReadWritePipe()
+{
+	// Create a pipe for the redirection of the STDOUT 
+	// of a child process. 
+	SECURITY_ATTRIBUTES saAttr;
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = true;
+	saAttr.lpSecurityDescriptor = nullptr;
+
+	auto bSuccess = CreatePipe(&mReadPipe, &mWritePipe, &saAttr, 0);
+	if (!bSuccess)
+		Platform::ThrowLastError("CreatePipe(StdOut");
+
+	bSuccess = SetHandleInformation(mReadPipe, HANDLE_FLAG_INHERIT, 0);
+	if (!bSuccess)
+		Platform::ThrowLastError("SetHandleInformation(StdOut");
+
+}
+#endif
+
+#if defined(TARGET_WINDOWS)
+TReadWritePipe::~TReadWritePipe()
+{
+	mReadThread->Stop(false);
+
+	//	can't call CloseHandle from a different thread as ReadFile is blocked, 
+	//	all I/O block (expects single threaded)
+	//	so CloseHandle will hang whilst ReadFile hangs
+	//	instead kill anything on that thread (the read) and we should be able to interrupt
+	if (!CancelSynchronousIo(mReadThread->GetThreadNativeHandle()))
+	{
+		//	gr: this will fail if nothing is currently blocking
+		auto Error = Platform::GetLastErrorString();
+		std::Debug << "CancelSynchronousIo TReadWritePipe ReadThread error " << Error << std::endl;
+	}
+	//	gr: we can get a race condition here, where the loop has looped around and ReadFile is blocking again
+	CloseHandle(mReadPipe);
+	CloseHandle(mWritePipe);
+
+	//	wait for thread to end (OnOutput callback might still be executing)
+	mReadThread->WaitToFinish();
+	mReadThread.reset();
+}
+#endif
+
+#if defined(TARGET_WINDOWS)
+void TReadWritePipe::StartReadThread(std::function<void(const std::string&)>& OnRead)
+{
+	auto ReadThread = [this, OnRead]()
+	{
+		DWORD BytesAvailible = 0;
+		DWORD BytesLeft = 0;
+		if (!PeekNamedPipe(mReadPipe, nullptr, 0, nullptr, &BytesAvailible, &BytesLeft))
+			Platform::ThrowLastError("ReadWritePipe PeekNamedPipe");
+
+		CHAR Buffer[1024];
+		DWORD BytesRead = 0;
+		auto Success = ::ReadFile(this->mReadPipe, Buffer, std::size(Buffer), &BytesRead, NULL);
+		//	https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile
+		//	Note  The GetLastError code ERROR_IO_PENDING is not a failure; it designates the read operation is pending completion asynchronously. For more information, see Remarks.
+		if (!Success)
+			Platform::ThrowLastError("ReadWritePipe ReadFile");
+
+		if (BytesRead == 0)
+		{
+			std::Debug << "ReadWritePipe ReadFile returned 0 bytes read" << std::endl;
+			return true;
+		}
+		//std::Debug << "Pipe read " << BytesRead << "/" << BytesAvailible << "/" << BytesLeft << " bytes" << std::endl;
+			
+		//	split by line?
+		std::string Line(Buffer, BytesRead);
+		OnRead(Line);
+	};
+	this->mReadThread.reset(new SoyThreadLambda("ReadPipe",ReadThread));
+}
+#endif
+
 void Platform::TShellExecute::CreateProcessHandle(const std::string& RunCommand)
 {
 #if defined(TARGET_WINDOWS)
-	// Create a pipe for the redirection of the STDOUT 
-	// of a child process. 
-	HANDLE g_hChildStd_OUT_Rd = NULL;
-	HANDLE g_hChildStd_OUT_Wr = NULL;
-	SECURITY_ATTRIBUTES saAttr;
-	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-	saAttr.bInheritHandle = TRUE;
-	saAttr.lpSecurityDescriptor = NULL;
-	/*
-	bSuccess = CreatePipe(&g_hChildStd_OUT_Rd,
-		&g_hChildStd_OUT_Wr, &saAttr, 0);
-	if (!bSuccess) return bSuccess;
-	bSuccess = SetHandleInformation(g_hChildStd_OUT_Rd,
-		HANDLE_FLAG_INHERIT, 0);
-	if (!bSuccess) return bSuccess;
-	*/
+	//	https://docs.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
+	mStdOutPipe.reset(new TReadWritePipe);
+	mStdErrPipe.reset(new TReadWritePipe);
+
 	// Setup the child process to use the STDOUT redirection
 	PROCESS_INFORMATION& piProcInfo = mProcessInfo;
 	STARTUPINFO siStartInfo;
 	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
 	siStartInfo.cb = sizeof(STARTUPINFO);
-	/*
-	siStartInfo.hStdError = g_hChildStd_OUT_Wr;
-	siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
+	
+	siStartInfo.hStdError = mStdErrPipe->mWritePipe;
+	siStartInfo.hStdOutput = mStdOutPipe->mWritePipe;
 	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
-	*/
+	
 
 	auto* RunCommandStr = const_cast<char*>(RunCommand.c_str());
 
@@ -1786,12 +1870,21 @@ void Platform::TShellExecute::CreateProcessHandle(const std::string& RunCommand)
 void Platform::TShellExecute::WaitForProcessHandle()
 {
 #if defined(TARGET_WINDOWS)
+	//	start async read-pipe/file threads
+	mStdOutPipe->StartReadThread(this->mOnStdOut);
+	mStdErrPipe->StartReadThread(this->mOnStdErr);
+
 	auto Timeout = INFINITE;	//	 (DWORD)(-1L)
 	DWORD ExitCode = 0;
 	WaitForSingleObject(mProcessInfo.hProcess, Timeout);
 	GetExitCodeProcess(mProcessInfo.hProcess, &ExitCode);
 	CloseHandle(mProcessInfo.hProcess);
 	CloseHandle(mProcessInfo.hThread);
+
+	//	these should have auto ended by now
+	mStdOutPipe.reset();
+	mStdErrPipe.reset();
+
 	/*
 	// Read the data written to the pipe
 		DWORD bytesInPipe = 0;
