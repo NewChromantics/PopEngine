@@ -370,6 +370,14 @@ void ApiGui::TColourButtonWrapper::SetValue(Bind::TCallback& Params)
 	BufferArray<float, 3> RgbArray;
 	Params.GetArgumentArray(0,GetArrayBridge(RgbArray));
 
+	if (RgbArray.GetSize() != 3)
+	{
+		auto ValueStr = Params.GetArgumentString(0);
+		std::stringstream Error;
+		Error << __PRETTY_FUNCTION__ << " expected rgb as array of 3, given (as string) " << ValueStr;
+		throw Soy::AssertException(Error);
+	}
+
 	//	todo: throw if outside 0-1
 
 	vec3x<uint8_t> Rgb;
@@ -388,10 +396,15 @@ void ApiGui::TColourButtonWrapper::OnChanged(vec3x<uint8_t>& NewValue, bool Fina
 
 	auto Callback = [this, Rgb, FinalValue](Bind::TLocalContext& Context)
 	{
+		//	API has float colours
+		BufferArray<float, 3> Rgbf;
+		Rgbf.PushBack(Rgb[0] / 255.f);
+		Rgbf.PushBack(Rgb[1] / 255.f);
+		Rgbf.PushBack(Rgb[2] / 255.f);
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnChanged");
 		JsCore::TCallback Callback(Context);
-		Callback.SetArgumentArray(0, GetArrayBridge(Rgb));
+		Callback.SetArgumentArray(0, GetArrayBridge(Rgbf));
 		Callback.SetArgumentBool(1, FinalValue);
 		ThisOnChanged.Call(Callback);
 	};
