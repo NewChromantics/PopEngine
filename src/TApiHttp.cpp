@@ -28,6 +28,13 @@ void THttpServerWrapper::Construct(Bind::TCallback& Params)
 	auto& This = Params.This<THttpServerWrapper>();
 
 	auto ListenPort = Params.GetArgumentInt(0);
+
+	if (Params.IsArgumentFunction(1))
+	{
+		auto HandleVirtualFileFunc = Params.GetArgumentFunction(1);
+		mHandleVirtualFile = Bind::TPersistent(Params.mLocalContext, HandleVirtualFileFunc, "HTTP server HandleVirtualFileFunction");
+	}
+
 	auto OnRequest = [this](std::string& Url,Http::TResponseProtocol& Response)
 	{
 		this->OnRequest(Url,Response);
@@ -44,7 +51,81 @@ void THttpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
-void THttpServerWrapper::OnRequest(std::string& Url,Http::TResponseProtocol& Response)
+void THttpServerWrapper::HandleMissingFile(std::string& Url, Http::TResponseProtocol& Response,bool CallOverload)
+{
+	//	init response
+	Response.SetContent(Url);
+	Response.mResponseCode = Http::Response_FileNotFound;
+	Response.mResponseString = "File Not Found";
+
+	//	there's a handler func, call it, and handle the result
+	if (!mHandleVirtualFile )
+		return;
+	if (!CallOverload)
+		return;
+
+	std::string RedirectedFilename;
+
+	//	call overload, wait for it to finish and fill in the response
+	auto CallOverloadResponse = [&](Bind::TLocalContext& Context)
+	{
+		std::string _Content("Content");
+
+		//	make an object with the meta
+		auto ResponseObject = Context.mGlobalContext.CreateObjectInstance(Context);
+		ResponseObject.SetString("Url", Url);
+		ResponseObject.SetString("Mime", Response.mContentMimeType);
+		ResponseObject.SetInt("StatusCode", Response.mResponseCode);
+		ResponseObject.SetNull(_Content);
+
+		//	call func
+		Bind::TCallback Call(Context);
+		auto Func = this->mHandleVirtualFile.GetFunction(Context);
+		Call.SetArgumentObject(0, ResponseObject);
+		Func.Call(Call);
+
+		if (!Call.IsReturnUndefined())
+		{
+			auto ReturnFilename = Call.GetReturnString();
+			RedirectedFilename = Context.mGlobalContext.GetResolvedFilename(ReturnFilename);
+			return;
+		}
+
+		//	read out modified data
+		auto Mime = ResponseObject.GetString("Mime");
+		//Response.mContentMimeType = ResponseObject.GetString("Mime");
+		Response.mResponseCode = ResponseObject.GetInt("StatusCode");
+
+		if (ResponseObject.IsMemberArray(_Content))
+		{
+			Array<uint8_t> Content;
+			ResponseObject.GetArray(_Content, GetArrayBridge(Content));
+			Response.SetContent(GetArrayBridge(Content), Mime);
+		}
+		else
+		{
+			auto Content = ResponseObject.GetString(_Content);
+			Response.SetContent(Content, Mime);
+		}
+	};
+	auto& Context = mHandleVirtualFile.GetContext();
+	try
+	{
+		Context.Execute(CallOverloadResponse);
+		if (!RedirectedFilename.empty())
+		{
+			HandleFile(RedirectedFilename, Response);
+		}
+	}
+	catch (std::exception& Error)
+	{
+		Response.mResponseString = Error.what();
+		Response.mResponseCode = Http::Response_Error;
+	}
+}
+
+
+void THttpServerWrapper::OnRequest(std::string& Url, Http::TResponseProtocol& Response)
 {
 	//	todo: make the response a function that we can defer to other threads
 	//	then we can make callbacks for certain urls in javascript for dynamic replies
@@ -52,27 +133,47 @@ void THttpServerWrapper::OnRequest(std::string& Url,Http::TResponseProtocol& Res
 	
 	if (!Platform::FileExists(Filename))
 	{
-		Response.SetContent(Filename);
-		Response.mResponseCode = Http::Response_FileNotFound;
-		Response.mResponseString = "File Not Found";
+		HandleMissingFile(Url, Response,true);
+		return;
+	}
+
+	HandleFile(Filename, Response);
+
+}
+
+void THttpServerWrapper::HandleFile(std::string& Filename, Http::TResponseProtocol& Response)
+{
+	if (!Platform::FileExists(Filename))
+	{
+		HandleMissingFile(Filename, Response,false);
 		return;
 	}
 
 	//	todo: get mime type and do binary vs text properly
 	std::string Contents;
-	Soy::FileToString( Filename, Contents );
-	
+	Soy::FileToString(Filename, Contents);
+
 	//	get mimetype from extension
 	std::string Extension;
-	auto GetLastPart = [&](const std::string& Part,char SplitChar)
+	auto GetLastPart = [&](const std::string& Part, char SplitChar)
 	{
 		Extension = Part;
 		return true;
 	};
-	Soy::StringSplitByMatches(GetLastPart, Url, "." );
-	auto Format = SoyMediaFormat::FromExtension(Extension);
-	auto MimeType = SoyMediaFormat::ToMime(Format);
-	Response.SetContent( Contents, Format );
+	Soy::StringSplitByMatches(GetLastPart, Filename, ".");
+	std::string MimeType = "application/octet-stream";
+	try
+	{
+		auto Format = SoyMediaFormat::FromExtension(Extension);
+		MimeType = SoyMediaFormat::ToMime(Format);
+	}
+	catch (std::exception& e)
+	{
+		std::Debug << "Error getting mime from extension " << Extension << "; " << e.what() << std::endl;
+	}
+	Response.SetContent(Contents, MimeType);
+	Response.mResponseCode = Http::Response_OK;
+	Response.mResponseString = Http::GetDefaultResponseString(Response.mResponseCode);
 }
 
 

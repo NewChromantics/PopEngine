@@ -85,6 +85,11 @@ public:
 
 	void							OnRequest(std::string& Url,Http::TResponseProtocol& Response);
 	
+protected:
+	void							HandleMissingFile(std::string& Url, Http::TResponseProtocol& Response,bool CallOverload);
+	void							HandleFile(std::string& Filename, Http::TResponseProtocol& Response);
+
 public:
+	Bind::TPersistent				mHandleVirtualFile;
 	std::shared_ptr<THttpServer>&	mSocket = mObject;
 };
