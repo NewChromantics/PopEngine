@@ -1837,6 +1837,7 @@ void TReadWritePipe::StartReadThread(std::function<void(const std::string&)>& On
 		//	split by line?
 		std::string Line(Buffer, BytesRead);
 		OnRead(Line);
+		return true;
 	};
 	this->mReadThread.reset(new SoyThreadLambda("ReadPipe",ReadThread));
 }
