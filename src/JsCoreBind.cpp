@@ -1058,6 +1058,12 @@ JsCore::TObject& JsCore::TObject::operator=(const TObject& Copy)
 	return *this;
 }
 
+bool JsCore::TObject::IsMemberArray(const std::string& MemberName)
+{
+	auto Member = GetMember(MemberName);
+	return JSValueIsArray(mContext, Member);
+}
+
 bool JsCore::TObject::HasMember(const std::string& MemberName)
 {
 	auto Member = GetMember( MemberName );
@@ -1194,9 +1200,19 @@ void JsCore::TObject::SetArray(const std::string& Name,JsCore::TArray& Array)
 	SetMember( Name, JSObjectToValue(Array.mThis) );
 }
 
-void JsCore::TObject::SetInt(const std::string& Name,uint32_t Value)
+void JsCore::TObject::SetInt(const std::string& Name, uint32_t Value)
 {
-	SetMember( Name, GetValue( mContext, Value ) );
+	SetMember(Name, GetValue(mContext, Value));
+}
+
+void JsCore::TObject::SetNull(const std::string& Name)
+{
+	SetMember(Name, JSValueMakeNull(mContext));
+}
+
+void JsCore::TObject::SetUndefined(const std::string& Name)
+{
+	SetMember(Name, JSValueMakeUndefined(mContext));
 }
 
 void JsCore::TObject::SetFloat(const std::string& Name,float Value)
@@ -1467,6 +1483,7 @@ JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<
 		return JSValueMakeUndefined( LocalContext.mLocalContext );
 	}
 }
+
 
 
 JsCore::TObject JsCore::TCallback::GetReturnObject()

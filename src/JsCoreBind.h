@@ -383,6 +383,12 @@ public:
 	virtual bool			GetReturnBool() bind_override			{	return GetBool( GetContextRef(), mReturn );	}
 	virtual TObject			GetReturnObject() bind_override;
 	virtual TFunction		GetReturnFunction() bind_override;
+	virtual std::string		GetReturnString() bind_override			{ return GetString(GetContextRef(), mReturn); }
+	bool					IsReturnUndefined()						{ return JSValueGetType(mReturn) == kJSTypeUndefined; }
+	bool					IsReturnString()						{ return JSValueGetType(mReturn) == kJSTypeString; }
+	bool					IsReturnBool()							{ return JSValueGetType(mReturn) == kJSTypeBoolean; }
+	bool					IsReturnNull()							{ return JSValueGetType(mReturn) == kJSTypeNull; }
+	bool					IsReturnObject()						{ return JSValueGetType(mReturn) == kJSTypeObject; }
 
 	JSContextRef			GetContextRef();
 
@@ -459,13 +465,20 @@ public:
 	static TYPE&			This(JSContextRef Context,JSObjectRef Object);
 
 	virtual bool			HasMember(const std::string& MemberName) bind_override;
-	
+	bool					IsMemberArray(const std::string& MemberName);
+
 	virtual JsCore::TObject	GetObject(const std::string& MemberName) bind_override;
 	virtual std::string		GetString(const std::string& MemberName) bind_override;
 	virtual uint32_t		GetInt(const std::string& MemberName) bind_override;
 	virtual float			GetFloat(const std::string& MemberName) bind_override;
 	virtual JsCore::TFunction	GetFunction(const std::string& MemberName) bind_override;
 	virtual bool			GetBool(const std::string& MemberName) bind_override;
+	template<typename TYPE>
+	void					GetArray(const std::string& MemberName,ArrayBridge<TYPE>&& Values)
+	{
+		auto Member = GetMember(MemberName);
+		JsCore::EnumArray(mContext, Member,Values);
+	}
 
 	virtual void			SetObject(const std::string& Name, const JsCore::TObject& Object) bind_override;
 	virtual void			SetObjectFromString(const std::string& Name, const std::string& JsonString) bind_override;
@@ -473,7 +486,9 @@ public:
 	virtual void			SetFloat(const std::string& Name,float Value) bind_override;
 	virtual void			SetString(const std::string& Name,const std::string& Value) bind_override;
 	virtual void			SetBool(const std::string& Name,bool Value) bind_override;
-	virtual void			SetInt(const std::string& Name,uint32_t Value) bind_override;
+	virtual void			SetInt(const std::string& Name, uint32_t Value) bind_override;
+	virtual void			SetNull(const std::string& Name) bind_override;
+	virtual void			SetUndefined(const std::string& Name) bind_override;
 	virtual void			SetArray(const std::string& Name,JsCore::TArray& Array) bind_override;
 	template<typename TYPE>
 	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>&& Values) bind_override
@@ -516,14 +531,14 @@ public:
 	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refcount
 	
-	operator		bool() const						{	return mObject != nullptr;	}
+	operator			bool() const						{	return mObject != nullptr;	}
 	
 	const std::string&	GetDebugName() const			{	return mDebugName;	}
 	TObject				GetObject(TLocalContext& Context) const;
 	TFunction			GetFunction(TLocalContext& Context) const;
 	void				SetWeak(TObjectWrapperBase& Object,JSClassRef Class);		//	this is for v8, we pass the class as it has the destructor function pointer
-
-	TPersistent&	operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
+	TContext&			GetContext()					{	return *mContext;	}
+	TPersistent&		operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
 	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
