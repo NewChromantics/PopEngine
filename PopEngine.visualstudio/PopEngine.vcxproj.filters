@@ -714,9 +714,6 @@
     <None Include="..\UnitTest\ParamsWindow\Index.html">
       <Filter>UnitTest\ParamsWindow</Filter>
     </None>
-    <None Include="..\UnitTest\ParamsWindow\Params.json">
-      <Filter>UnitTest\ParamsWindow</Filter>
-    </None>
     <None Include="..\UnitTest\ParamsWindow\win95.css">
       <Filter>UnitTest\ParamsWindow</Filter>
     </None>

@@ -496,7 +496,6 @@
     <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
     <None Include="..\UnitTest\ParamsWindow\bootup.js" />
     <None Include="..\UnitTest\ParamsWindow\Index.html" />
-    <None Include="..\UnitTest\ParamsWindow\Params.json" />
     <None Include="..\UnitTest\ParamsWindow\win95.css" />
     <None Include="..\UnitTest\Pop.d.ts" />
     <None Include="..\UnitTest\PopEngineCommon\MemCheckLoop.js" />
