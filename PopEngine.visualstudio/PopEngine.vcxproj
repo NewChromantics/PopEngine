@@ -494,7 +494,35 @@
     <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl" />
     <None Include="..\UnitTest\OpencvArucoMarker\bootup.js" />
     <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
+    <None Include="..\UnitTest\ParamsWindow\bootup.js" />
+    <None Include="..\UnitTest\ParamsWindow\Index.html" />
+    <None Include="..\UnitTest\ParamsWindow\Params.json" />
+    <None Include="..\UnitTest\ParamsWindow\win95.css" />
     <None Include="..\UnitTest\Pop.d.ts" />
+    <None Include="..\UnitTest\PopEngineCommon\MemCheckLoop.js" />
+    <None Include="..\UnitTest\PopEngineCommon\ParamsWindow.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopAruco.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopCamera.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopCinema4d.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopCollada.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopDll.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopFrameCounter.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopMath.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopMedia.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopMp4.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopObj.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopPly.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopShaderCache.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopSvg.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopTexture.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopWebApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopWebGuiApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopWebImageApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopWebOpenglApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopWebSocketApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopWebXrApi.js" />
+    <None Include="..\UnitTest\PopEngineCommon\Readme.md" />
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>
     </None>
@@ -716,6 +744,9 @@
     <Manifest Include="..\src\Libs\PopCoreMl\PopCoreml.manifest">
       <SubType>Designer</SubType>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64811728-CD20-4F2C-899B-E3BF3D4B032E}</ProjectGuid>

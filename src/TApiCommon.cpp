@@ -50,7 +50,8 @@ namespace ApiPop
 	static void		GetExeDirectory(Bind::TCallback& Params);
 	static void		GetExeArguments(Bind::TCallback& Params);
 	static void		GetPlatform(Bind::TCallback& Params);
-
+	static void		ShellOpen(Bind::TCallback& Params);
+	static void		ShowWebPage(Bind::TCallback& Params);
 
 	//	system stuff
 	DEFINE_BIND_FUNCTIONNAME(FileExists);
@@ -68,6 +69,8 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
 	DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
 	DEFINE_BIND_FUNCTIONNAME(GetPlatform);
+	DEFINE_BIND_FUNCTIONNAME(ShellOpen);
+	DEFINE_BIND_FUNCTIONNAME(ShowWebPage);
 
 	//	engine stuff
 	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
@@ -481,6 +484,19 @@ void ApiPop::GetPlatform(Bind::TCallback& Params)
 #endif
 }
 
+void ApiPop::ShellOpen(Bind::TCallback& Params)
+{
+	//	todo: support current working dir, params, verbs etc (depending on what OSX supports)
+	auto Command = Params.GetArgumentString(0);
+	Platform::ShellExecute(Command);
+}
+
+void ApiPop::ShowWebPage(Bind::TCallback& Params)
+{
+	auto Url = Params.GetArgumentString(0);
+	Platform::ShellOpenUrl(Url);
+}
+
 
 
 void ApiPop::CompileAndRun(Bind::TCallback& Params)
@@ -646,7 +662,9 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::EnumScreens>(EnumScreens, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeDirectory>(GetExeDirectory, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeArguments>(GetExeArguments, Namespace );
-	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace);
+	Context.BindGlobalFunction<BindFunction::ShellOpen>(ShellOpen, Namespace);
+	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
 }
 
 TImageWrapper::~TImageWrapper()
@@ -1763,25 +1781,31 @@ TReadWritePipe::TReadWritePipe()
 #if defined(TARGET_WINDOWS)
 TReadWritePipe::~TReadWritePipe()
 {
-	mReadThread->Stop(false);
-
-	//	can't call CloseHandle from a different thread as ReadFile is blocked, 
-	//	all I/O block (expects single threaded)
-	//	so CloseHandle will hang whilst ReadFile hangs
-	//	instead kill anything on that thread (the read) and we should be able to interrupt
-	if (!CancelSynchronousIo(mReadThread->GetThreadNativeHandle()))
+	if (mReadThread)
 	{
-		//	gr: this will fail if nothing is currently blocking
-		auto Error = Platform::GetLastErrorString();
-		std::Debug << "CancelSynchronousIo TReadWritePipe ReadThread error " << Error << std::endl;
+		mReadThread->Stop(false);
+
+		//	can't call CloseHandle from a different thread as ReadFile is blocked, 
+		//	all I/O block (expects single threaded)
+		//	so CloseHandle will hang whilst ReadFile hangs
+		//	instead kill anything on that thread (the read) and we should be able to interrupt
+		if (!CancelSynchronousIo(mReadThread->GetThreadNativeHandle()))
+		{
+			//	gr: this will fail if nothing is currently blocking
+			auto Error = Platform::GetLastErrorString();
+			std::Debug << "CancelSynchronousIo TReadWritePipe ReadThread error " << Error << std::endl;
+		}
+		//	gr: we can get a race condition here, where the loop has looped around and ReadFile is blocking again
+		CloseHandle(mReadPipe);
+		CloseHandle(mWritePipe);
+
+		//	wait for thread to end (OnOutput callback might still be executing)
+		mReadThread->WaitToFinish();
+		mReadThread.reset();
 	}
-	//	gr: we can get a race condition here, where the loop has looped around and ReadFile is blocking again
+	
 	CloseHandle(mReadPipe);
 	CloseHandle(mWritePipe);
-
-	//	wait for thread to end (OnOutput callback might still be executing)
-	mReadThread->WaitToFinish();
-	mReadThread.reset();
 }
 #endif
 

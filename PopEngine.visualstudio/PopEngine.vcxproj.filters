@@ -100,6 +100,12 @@
     <Filter Include="Libs\PopCoreMl">
       <UniqueIdentifier>{cbea93f4-7f30-47eb-856c-139d94b59f33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\ParamsWindow">
+      <UniqueIdentifier>{8539d796-1885-4768-81af-27d4795cd1b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\PopEngineCommon">
+      <UniqueIdentifier>{003d93e2-1da5-43ff-a4ce-055711a38542}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -702,6 +708,90 @@
       <Filter>UnitTest\LeapMotion</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="..\UnitTest\ParamsWindow\bootup.js">
+      <Filter>UnitTest\ParamsWindow</Filter>
+    </None>
+    <None Include="..\UnitTest\ParamsWindow\Index.html">
+      <Filter>UnitTest\ParamsWindow</Filter>
+    </None>
+    <None Include="..\UnitTest\ParamsWindow\Params.json">
+      <Filter>UnitTest\ParamsWindow</Filter>
+    </None>
+    <None Include="..\UnitTest\ParamsWindow\win95.css">
+      <Filter>UnitTest\ParamsWindow</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\MemCheckLoop.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\ParamsWindow.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopAruco.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopCamera.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopCinema4d.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopCollada.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopDll.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopFrameCounter.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopMath.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopMedia.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopMp4.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopObj.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopPly.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopShaderCache.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopSvg.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopTexture.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebGuiApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebImageApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebOpenglApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebSocketApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebXrApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\Readme.md">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -1069,5 +1159,10 @@
     <Manifest Include="..\src\Libs\PopCoreMl\PopCoreml.manifest">
       <Filter>Libs\PopCoreMl</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf">
+      <Filter>UnitTest\ParamsWindow</Filter>
+    </Font>
   </ItemGroup>
 </Project>
