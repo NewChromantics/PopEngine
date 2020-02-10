@@ -94,7 +94,7 @@ protected:
 class TWebsocketClient : public SoyWorkerThread
 {
 public:
-	TWebsocketClient(const std::string& Address, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
+	TWebsocketClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
 
 	void						Send(SoyRef ClientRef, const std::string& Message);
 	void						Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message);

@@ -9,6 +9,7 @@ namespace ApiSocket
 
 	DEFINE_BIND_TYPENAME(UdpBroadcastServer);
 	DEFINE_BIND_TYPENAME(UdpClient);
+	DEFINE_BIND_TYPENAME(TcpClient);
 	DEFINE_BIND_TYPENAME(TcpServer);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_GetAddress, GetAddress);
@@ -22,6 +23,12 @@ namespace ApiSocket
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForMessage, WaitForMessage);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForConnect, WaitForConnect);
 
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_GetAddress, GetAddress);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_Send, Send);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_GetPeers, GetPeers);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_WaitForMessage, WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_WaitForConnect, WaitForConnect);
+
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetPeers, GetPeers);
@@ -34,6 +41,7 @@ void ApiSocket::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TUdpBroadcastServerWrapper>(Namespace);
 	Context.BindObjectType<TUdpClientWrapper>(Namespace);
 	Context.BindObjectType<TTcpServerWrapper>(Namespace);
+	Context.BindObjectType<TTcpClientWrapper>(Namespace);
 }
 
 
@@ -189,7 +197,7 @@ void ApiSocket::TSocketClientWrapper::FlushPendingConnects()
 }
 
 
-void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
+void ApiSocket::TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 {
 	//auto& This = Params.This<TUdpBroadcastServerWrapper>();
 
@@ -204,7 +212,7 @@ void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 }
 
 
-void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiSocket::TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_Send>(&ApiSocket::TSocketWrapper::Send );
@@ -213,7 +221,7 @@ void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
-void TUdpClientWrapper::Construct(Bind::TCallback& Params)
+void ApiSocket::TUdpClientWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Hostname = Params.GetArgumentString(0);
 	auto Port = Params.GetArgumentInt(1);
@@ -230,11 +238,11 @@ void TUdpClientWrapper::Construct(Bind::TCallback& Params)
 	{
 		this->OnSocketClosed(Reason);
 	};
-	mSocket.reset(new TUdpClient(Hostname, Port, OnBinaryMessage, OnConnected, OnDisconnected));
+	mSocket.reset(new TSocketClient( TProtocol::Udp, Hostname, Port, OnBinaryMessage, OnConnected, OnDisconnected));
 }
 
 
-void TUdpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiSocket::TUdpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_GetAddress>(&ApiSocket::TSocketWrapper::GetAddress);
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_Send>(&ApiSocket::TSocketWrapper::Send);
@@ -244,6 +252,35 @@ void TUdpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
 }
 
 
+void ApiSocket::TTcpClientWrapper::Construct(Bind::TCallback& Params)
+{
+	auto Hostname = Params.GetArgumentString(0);
+	auto Port = Params.GetArgumentInt(1);
+
+	auto OnBinaryMessage = [this](SoyRef Sender, const Array<uint8_t>& Message)
+	{
+		this->OnMessage(Message, Sender);
+	};
+	auto OnConnected = [this]()
+	{
+		this->OnConnected();
+	};
+	auto OnDisconnected = [this](const std::string& Reason)
+	{
+		this->OnSocketClosed(Reason);
+	};
+	mSocket.reset(new TSocketClient(TProtocol::Tcp, Hostname, Port, OnBinaryMessage, OnConnected, OnDisconnected));
+}
+
+
+void ApiSocket::TTcpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<ApiSocket::BindFunction::TcpClient_GetAddress>(&ApiSocket::TSocketWrapper::GetAddress);
+	Template.BindFunction<ApiSocket::BindFunction::TcpClient_Send>(&ApiSocket::TSocketWrapper::Send);
+	Template.BindFunction<ApiSocket::BindFunction::TcpClient_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiSocket::BindFunction::TcpClient_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiSocket::BindFunction::TcpClient_WaitForConnect>(&ApiSocket::TSocketClientWrapper::WaitForConnect);
+}
 
 
 void ApiSocket::TSocketWrapper::GetAddress(Bind::TCallback& Params)
@@ -351,7 +388,7 @@ void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 
 
 
-TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
+ApiSocket::TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"UdpBroadcastServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
 	mOnBinaryMessage	( OnBinaryMessage )
 {
@@ -374,7 +411,7 @@ TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(
 }
 	
 
-bool TUdpBroadcastServer::Iteration()
+bool ApiSocket::TUdpBroadcastServer::Iteration()
 {
 	if ( !mSocket )
 		return false;
@@ -407,7 +444,7 @@ bool TUdpBroadcastServer::Iteration()
 
 
 
-TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
+ApiSocket::TSocketClient::TSocketClient(TProtocol::TYPE Protocol,const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
 	SoyWorkerThread		(Soy::StreamToString(std::stringstream() << "UdpClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
 	mOnBinaryMessage	(OnBinaryMessage),
 	mOnConnected		(OnConnected),
@@ -428,16 +465,24 @@ TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<
 			mOnDisconnected(Reason);
 	};
 
-	auto Broadcast = false;
-	mSocket->CreateUdp(Broadcast);
-	mSocket->UdpConnect(Hostname.c_str(),Port);
-	
+	if (Protocol == TProtocol::Tcp)
+	{
+		mSocket->CreateTcp();
+		mSocket->Connect(Hostname.c_str(), Port);
+	}
+	else 
+	{
+		auto Broadcast = (Protocol == TProtocol::UdpBroadcast);
+		mSocket->CreateUdp(Broadcast);
+		mSocket->UdpConnect(Hostname.c_str(), Port);
+	}
+
 	Start();
 
 }
 
 
-bool TUdpClient::Iteration()
+bool ApiSocket::TSocketClient::Iteration()
 {
 	if (!mSocket)
 		return false;

@@ -93,7 +93,8 @@ void TWebsocketServerWrapper::Send(Bind::TCallback& Params)
 
 void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 {
-	auto Address = Params.GetArgumentString(0);
+	auto Hostname = Params.GetArgumentString(0);
+	auto Port = Params.GetArgumentInt(1);
 
 	auto OnTextMessage = [this](SoyRef Connection, const std::string& Message)
 	{
@@ -105,7 +106,7 @@ void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 		this->OnMessage(Message, Connection);
 	};
 	
-	mSocket.reset(new TWebsocketClient(Address, OnTextMessage, OnBinaryMessage));
+	mSocket.reset(new TWebsocketClient(Hostname, Port, OnTextMessage, OnBinaryMessage));
 	mSocket->mOnConnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
 	mSocket->mOnDisconnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
 }
@@ -155,8 +156,8 @@ void TWebsocketClientWrapper::Send(Bind::TCallback& Params)
 
 
 
-TWebsocketClient::TWebsocketClient(const std::string& Address, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
-	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Address << ")"), SoyWorkerWaitMode::Sleep),
+TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
+	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
 	mOnTextMessage(OnTextMessage),
 	mOnBinaryMessage(OnBinaryMessage)
 {
@@ -174,7 +175,7 @@ TWebsocketClient::TWebsocketClient(const std::string& Address, std::function<voi
 		//	todo: work out if this is OUR socket and OnSocketClosed on the wrapper
 	};
 
-	mSocket->Connect(Address);
+	mSocket->Connect(Hostname.c_str(), Port);
 
 	Start();
 }
