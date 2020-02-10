@@ -104,7 +104,6 @@ public:
 	//	get clients who have finished handshaking
 	void						GetConnectedPeers(ArrayBridge<SoyRef>&& Clients)	{	GetConnectedPeers(Clients);	}
 	void						GetConnectedPeers(ArrayBridge<SoyRef>& Clients);
-	std::string					GetConnectionError() {	return std::string();	}
 
 protected:
 	virtual bool				Iteration() override;
@@ -154,7 +153,7 @@ public:
 
 
 
-class TWebsocketClientWrapper : public Bind::TObjectWrapper<ApiWebsocket::BindType::WebsocketClient, TWebsocketClient>, public ApiSocket::TSocketWrapper
+class TWebsocketClientWrapper : public Bind::TObjectWrapper<ApiWebsocket::BindType::WebsocketClient, TWebsocketClient>, public ApiSocket::TSocketClientWrapper
 {
 public:
 	TWebsocketClientWrapper(Bind::TContext& Context) :
@@ -170,14 +169,8 @@ public:
 	virtual std::shared_ptr<SoySocket>		GetSocket() override { return mSocket ? mSocket->mSocket : nullptr; }
 	virtual void			GetConnectedPeers(ArrayBridge<SoyRef>&& Peers) override;
 
-	void					WaitForConnect(Bind::TCallback& Params);
-
-protected:
-	void					FlushPendingConnects();
-
 public:
 	std::shared_ptr<TWebsocketClient>	mSocket = mObject;
-	Bind::TPromiseQueue		mOnConnectPromises;
 };
 
 

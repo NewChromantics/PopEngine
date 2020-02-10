@@ -21,7 +21,9 @@ namespace ApiSocket
 	class TPacket;
 	class TBinaryPacket;
 	class TStringPacket;
+
 	class TSocketWrapper;
+	class TSocketClientWrapper;
 
 	class TTcpServer;
 	class TTcpServerPeer;
@@ -119,20 +121,36 @@ protected:
 	void		OnMessage(const Array<uint8_t>& Message, SoyRef Peer);
 	void		OnMessage(const std::string& Message, SoyRef Peer);
 
-	void		OnConnected();
-	void		OnSocketClosed(const std::string& Reason);
-
 	void		FlushPendingMessages();
 
+	virtual std::string	GetSocketError()  { return std::string(); }	//	if set, then pending messages will error with this
+
 private:
-	std::string							mClosedReason;		//	if this is set, messages/connection promises fail as socket is closed. Even UDP sockets can die!
 	Bind::TPromiseQueue					mOnMessagePromises;
 	//	pending packets
 	std::mutex							mMessagesLock;
 	Array<std::shared_ptr<ApiSocket::TPacket>>		mMessages;
 };
 
+class ApiSocket::TSocketClientWrapper : public TSocketWrapper
+{
+public:
+	//	get a promise for when connected
+	void					WaitForConnect(Bind::TCallback& Params);
+	virtual std::string		GetConnectionError() { return mClosedReason; }
 
+protected:
+	//	gr: these should only be called on client wrappers? as they have no peer refs
+	void		OnConnected();
+	void		OnSocketClosed(const std::string& Reason);
+
+	void					FlushPendingConnects();
+	virtual std::string	GetSocketError() override { return mClosedReason; }	//	if set, then pending messages will error with this
+
+private:
+	std::string				mClosedReason;		//	if this is set, messages/connection promises fail as socket is closed. Even UDP sockets can die!
+	Bind::TPromiseQueue		mOnConnectPromises;
+};
 
 class TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpBroadcastServer,TUdpBroadcastServer>, public ApiSocket::TSocketWrapper
 {
@@ -153,7 +171,7 @@ public:
 
 
 
-class TUdpClientWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpClient, TUdpClient>, public ApiSocket::TSocketWrapper
+class TUdpClientWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpClient, TUdpClient>, public ApiSocket::TSocketClientWrapper
 {
 public:
 	TUdpClientWrapper(Bind::TContext& Context) :

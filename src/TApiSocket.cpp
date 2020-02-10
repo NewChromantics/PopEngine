@@ -11,15 +11,16 @@ namespace ApiSocket
 	DEFINE_BIND_TYPENAME(UdpClient);
 	DEFINE_BIND_TYPENAME(TcpServer);
 
-	DEFINE_BIND_FUNCTIONNAME(GetAddress);
-	DEFINE_BIND_FUNCTIONNAME(Send);
-	DEFINE_BIND_FUNCTIONNAME(GetPeers);
-	DEFINE_BIND_FUNCTIONNAME(WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_GetAddress, GetAddress);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_Send, Send);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_GetPeers, GetPeers);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_WaitForMessage, WaitForMessage);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetPeers, GetPeers);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForMessage, WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForConnect, WaitForConnect);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_Send, Send);
@@ -72,18 +73,19 @@ void ApiSocket::TSocketWrapper::OnMessage(const std::string& Message, SoyRef Sen
 	FlushPendingMessages();
 }
 
-void ApiSocket::TSocketWrapper::OnConnected()
+void ApiSocket::TSocketClientWrapper::OnConnected()
 {
-	//	todo: generic connection promises
+	FlushPendingConnects();
 }
 
-void ApiSocket::TSocketWrapper::OnSocketClosed(const std::string& Reason)
+void ApiSocket::TSocketClientWrapper::OnSocketClosed(const std::string& Reason)
 {
 	mClosedReason = Reason;
 	if (mClosedReason.length() == 0)
 		mClosedReason = "<Unspecified socket close reason>";
 
 	FlushPendingMessages();
+	FlushPendingConnects();
 }
 
 Bind::TObject PacketToObject(Bind::TLocalContext& Context, ApiSocket::TPacket& Packet)
@@ -113,7 +115,8 @@ void ApiSocket::TSocketWrapper::FlushPendingMessages()
 	}
 
 	//	no message? if no error either, nothing to do
-	if (!pMessage && mClosedReason.empty())
+	auto SocketError = GetSocketError();
+	if (!pMessage && SocketError.empty())
 	{
 		return;
 	}
@@ -122,6 +125,7 @@ void ApiSocket::TSocketWrapper::FlushPendingMessages()
 	{		
 		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
 		{
+			//	send messages before errors
 			if (pMessage)
 			{
 				auto MessageObject = PacketToObject(Context,*pMessage);
@@ -129,7 +133,8 @@ void ApiSocket::TSocketWrapper::FlushPendingMessages()
 			}
 			else
 			{
-				Promise.Reject(LocalContext,mClosedReason);
+				auto Error = this->GetSocketError();
+				Promise.Reject(LocalContext, Error);
 			}
 		};
 		mOnMessagePromises.Flush(HandlePromise);
@@ -138,6 +143,50 @@ void ApiSocket::TSocketWrapper::FlushPendingMessages()
 	Context.Queue(Flush);
 }
 
+
+void ApiSocket::TSocketClientWrapper::WaitForConnect(Bind::TCallback& Params)
+{
+	auto NewPromise = mOnConnectPromises.AddPromise(Params.mLocalContext);
+	Params.Return(NewPromise);
+
+	FlushPendingConnects();
+}
+
+void ApiSocket::TSocketClientWrapper::FlushPendingConnects()
+{
+	//	either no data, or no-one waiting yet
+	if (!mOnConnectPromises.HasPromises())
+		return;
+
+	//	gotta wait for handshake to finish, so check for connected peers
+	auto& Socket = GetSocket();
+	//	todo: Check for disconnection/handshake error
+	auto ConnectionError = GetConnectionError();
+	bool IsConnected = false;
+	auto IsError = !ConnectionError.empty();
+	if (!IsError)
+	{
+		//	check for connection
+		BufferArray<SoyRef, 1> Peers;
+		GetConnectedPeers(GetArrayBridge(Peers));
+		IsConnected = !Peers.IsEmpty();
+	}
+
+	//	resolve when we're either connected or not
+	if (!IsConnected && !IsError)
+		return;
+
+	auto Flush = [=](Bind::TLocalContext& Context)
+	{
+		if (IsConnected)
+			mOnConnectPromises.Resolve();
+		else//if IsError
+			mOnConnectPromises.Reject(ConnectionError);
+	};
+
+	auto& Context = mOnConnectPromises.GetContext();
+	Context.Queue(Flush);
+}
 
 
 void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
@@ -157,10 +206,10 @@ void TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
 
 void TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiSocket::BindFunction::GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
-	Template.BindFunction<ApiSocket::BindFunction::Send>(&ApiSocket::TSocketWrapper::Send );
-	Template.BindFunction<ApiSocket::BindFunction::GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
-	Template.BindFunction<ApiSocket::BindFunction::WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiSocket::BindFunction::UdpServer_GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
+	Template.BindFunction<ApiSocket::BindFunction::UdpServer_Send>(&ApiSocket::TSocketWrapper::Send );
+	Template.BindFunction<ApiSocket::BindFunction::UdpServer_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
+	Template.BindFunction<ApiSocket::BindFunction::UdpServer_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 }
 
 
@@ -191,6 +240,7 @@ void TUdpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_Send>(&ApiSocket::TSocketWrapper::Send);
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiSocket::BindFunction::UdpClient_WaitForConnect>(&ApiSocket::TSocketClientWrapper::WaitForConnect);
 }
 
 
@@ -360,27 +410,28 @@ bool TUdpBroadcastServer::Iteration()
 TUdpClient::TUdpClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
 	SoyWorkerThread		(Soy::StreamToString(std::stringstream() << "UdpClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
 	mOnBinaryMessage	(OnBinaryMessage),
-	mOnConnected		(mOnConnected),
+	mOnConnected		(OnConnected),
 	mOnDisconnected		(OnDisconnected)
 {
 	mSocket.reset(new SoySocket());
-	auto Broadcast = false;
-	mSocket->CreateUdp(Broadcast);
-	mSocket->UdpConnect(Hostname.c_str(),Port);
-	
-	
+
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
 	{
 		//AddClient(ClientRef);
 		if (this->mOnConnected)
 			mOnConnected();
 	};
-	
-	mSocket->mOnDisconnect = [=](SoyRef ClientRef,const std::string& Reason)
+
+	mSocket->mOnDisconnect = [=](SoyRef ClientRef, const std::string& Reason)
 	{
 		if (this->mOnDisconnected)
 			mOnDisconnected(Reason);
 	};
+
+	auto Broadcast = false;
+	mSocket->CreateUdp(Broadcast);
+	mSocket->UdpConnect(Hostname.c_str(),Port);
+	
 	Start();
 
 }

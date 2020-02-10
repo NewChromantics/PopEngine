@@ -130,50 +130,6 @@ void TWebsocketClientWrapper::GetConnectedPeers(ArrayBridge<SoyRef>&& Peers)
 	mSocket->GetConnectedPeers(Peers);
 }
 
-void TWebsocketClientWrapper::WaitForConnect(Bind::TCallback& Params)
-{
-	auto NewPromise = mOnConnectPromises.AddPromise(Params.mLocalContext);
-	Params.Return(NewPromise);
-
-	FlushPendingConnects();
-}
-
-
-void TWebsocketClientWrapper::FlushPendingConnects()
-{
-	//	either no data, or no-one waiting yet
-	if (!mOnConnectPromises.HasPromises())
-		return;
-
-	//	gotta wait for handshake to finish, so check for connected peers
-	//	todo: Check for disconnection/handshake error
-	auto ConnectionError = mSocket->GetConnectionError();
-	bool IsConnected = false;
-	auto IsError = !ConnectionError.empty();
-	if (!IsError)
-	{
-		//	check for connection
-		BufferArray<SoyRef, 1> Peers;
-		mSocket->GetConnectedPeers(GetArrayBridge(Peers));
-		IsConnected = !Peers.IsEmpty();
-	}
-
-	//	resolve when we're either connected or not
-	if (!IsConnected && !IsError)
-		return;
-	
-	auto Flush = [=](Bind::TLocalContext& Context)
-	{
-		if (IsConnected)
-			mOnConnectPromises.Resolve();
-		else//if IsError
-			mOnConnectPromises.Reject(ConnectionError);
-	};
-
-	auto& Context = mOnConnectPromises.GetContext();
-	Context.Queue(Flush);
-}
-
 
 void TWebsocketClientWrapper::Send(Bind::TCallback& Params)
 {
