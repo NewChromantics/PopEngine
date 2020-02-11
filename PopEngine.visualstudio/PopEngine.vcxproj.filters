@@ -106,6 +106,9 @@
     <Filter Include="UnitTest\PopEngineCommon">
       <UniqueIdentifier>{003d93e2-1da5-43ff-a4ce-055711a38542}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\Zip">
+      <UniqueIdentifier>{8e667f50-59ee-46a1-876c-2b5024d01ff9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -509,6 +512,15 @@
     </ClInclude>
     <ClInclude Include="..\src\TApiEngine.h">
       <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiZip.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\zip.h">
+      <Filter>Libs\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h">
+      <Filter>SoyLib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1018,6 +1030,12 @@
     </ClCompile>
     <ClCompile Include="..\src\TApiEngine.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiZip.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Zip\src\zip.c">
+      <Filter>Libs\Zip</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
