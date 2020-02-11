@@ -22,3 +22,6 @@
 [submodule "src/MagicEnum"]
 	path = src/MagicEnum
 	url = https://github.com/Neargye/magic_enum.git
+[submodule "src/Zip"]
+	path = src/Zip
+	url = https://github.com/kuba--/zip.git

@@ -15,6 +15,7 @@
 #include "TApiGui.h"
 #include "TApiOpencv.h"
 #include "TApiCoreMl.h"
+#include "TApiZip.h"
 
 #if defined(TARGET_OSX)
 //#include "TApiOpencl.h"
@@ -548,6 +549,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const ArrayBridge<st
 			ApiOpenvr::Bind( *Context );
 			ApiGui::Bind( *Context );
 			ApiCoreMl::Bind(*Context);
+			ApiZip::Bind(*Context);
 #if defined(TARGET_OSX)
 			ApiOpencv::Bind(*Context);
 

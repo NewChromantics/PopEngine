@@ -680,6 +680,9 @@ public:
 	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Reject(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mReject.Call(nullptr,Value);	}
 	
+	//	risky?
+	TContext&		GetContext() { return mPromise.GetContext(); }
+
 protected:
 	
 public:
