@@ -1694,6 +1694,10 @@ public:
 
 	void	StartReadThread(std::function<void(const std::string&)>& OnRead);
 
+protected:
+	void	CloseHandles();
+
+public:
 	HANDLE	mReadPipe = nullptr;
 	HANDLE	mWritePipe = nullptr;
 	std::shared_ptr<SoyThreadLambda>	mReadThread;
@@ -1796,16 +1800,32 @@ TReadWritePipe::~TReadWritePipe()
 			std::Debug << "CancelSynchronousIo TReadWritePipe ReadThread error " << Error << std::endl;
 		}
 		//	gr: we can get a race condition here, where the loop has looped around and ReadFile is blocking again
-		CloseHandle(mReadPipe);
-		CloseHandle(mWritePipe);
+		CloseHandles();
 
 		//	wait for thread to end (OnOutput callback might still be executing)
 		mReadThread->WaitToFinish();
 		mReadThread.reset();
 	}
 	
-	CloseHandle(mReadPipe);
-	CloseHandle(mWritePipe);
+	CloseHandles();
+}
+#endif
+
+#if defined(TARGET_WINDOWS)
+void TReadWritePipe::CloseHandles()
+{
+	//	CloseHandle throws an exception if closed twice, so we have to be safe
+	if (mReadPipe)
+	{
+		CloseHandle(mReadPipe);
+		mReadPipe = nullptr;
+	}
+	
+	if (mWritePipe)
+	{
+		CloseHandle(mWritePipe);
+		mWritePipe = nullptr;
+	}
 }
 #endif
 
