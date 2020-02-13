@@ -1466,13 +1466,10 @@ JSClassRef JSClassCreate(JSContextRef Context,JSClassDefinition& Definition)
 	}
 	
 	//	example code does this, but there's a specific function...
-	//	gr: set prototype after construction
-	//		we/example code cheats but setting it up by default
 	{
-		//	gr: this does nothing
-		//auto Attributes = kJSPropertyAttributeNone;
-		//auto PrototypeString = Bind::GetString( Context, "prototype" );
-		//JSObjectSetProperty( Context, Class.mConstructor, PrototypeString, Class.mPrototype, Attributes, nullptr );
+		//	gr: setting this makes instanceof work
+		auto Attributes = kJSPropertyAttributeNone;
+		JSObjectSetProperty( Context, Class.mConstructor, "prototype", Class.mPrototype, Attributes, nullptr );
 		
 		//	this does nothing, needs to be called post construct
 		//Error = JsSetPrototype( Class.mConstructor, Prototype );
