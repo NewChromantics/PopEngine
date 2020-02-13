@@ -801,6 +801,9 @@
     <None Include="..\UnitTest\PopEngineCommon\Readme.md">
       <Filter>UnitTest\PopEngineCommon</Filter>
     </None>
+    <None Include="..\src\SoyLib\src\SoyFilesystem.mm">
+      <Filter>SoyLib</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">

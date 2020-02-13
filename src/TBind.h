@@ -36,7 +36,6 @@ class Bind::TInstanceBase
 {
 public:
 	std::string						mRootDirectory;
-	Array<std::string>				mExeArguments;
 	
 protected:
 	std::function<void(int32_t)>	mOnShutdown;	//	callback when we want to die

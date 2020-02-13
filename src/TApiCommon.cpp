@@ -467,7 +467,7 @@ void ApiPop::GetExeDirectory(Bind::TCallback& Params)
 void ApiPop::GetExeArguments(Bind::TCallback& Params)
 {
 	Array<std::string> Arguments;
-	Params.mContext.GetExeArguments( GetArrayBridge(Arguments) );
+	Platform::GetExeArguments(GetArrayBridge(Arguments));
 	Params.Return( GetArrayBridge(Arguments) );
 }
 

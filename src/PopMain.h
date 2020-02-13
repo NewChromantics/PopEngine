@@ -55,7 +55,7 @@ namespace Pop
 	extern std::string ProjectPath;
 }
 
-TPopAppError::Type	PopMain(ArrayBridge<std::string>& Arguments);
+TPopAppError::Type	PopMain();
 
 
 

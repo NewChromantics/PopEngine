@@ -410,6 +410,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </None>
+    <None Include="..\src\SoyLib\src\SoyFilesystem.mm" />
     <None Include="..\src\SoyLib\src\SoyWindow.mm" />
     <None Include="..\src\SoyOpenglView.mm" />
     <None Include="..\src\SoyOpenglWindow.mm" />

@@ -27,25 +27,8 @@
 namespace Pop
 {
 	std::string ProjectPath;
-
-#if defined(TARGET_WINDOWS)
-	void				PushAppArguments(std::string CommandLineArgs);
-	Array<std::string>	AppArguments;
-#endif
 }
 
-
-
-#if defined(TARGET_WINDOWS)
-void Pop::PushAppArguments(std::string CommandLineArgs)
-{
-	if (CommandLineArgs.length() == 0)
-		return;
-
-	//	todo: split at space, if not in quotes
-	AppArguments.PushBack(CommandLineArgs);
-}
-#endif
 
 //	include SoyEvent unit test
 //	gr: need to improve this
@@ -97,7 +80,7 @@ extern "C" EXPORT int PopEngine(const char* ProjectPath)
 #if defined(TARGET_OSX)|| defined(TARGET_IOS)
 	return Soy::Platform::BundleAppMain();
 #else
-	return PopMain(GetArrayBridge(Pop::AppArguments));
+	return PopMain();
 #endif
 }
 
@@ -117,15 +100,9 @@ extern "C" int main(int argc,const char* argv[])
 //int _tmain(int argc, _TCHAR* argv[])
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	char ExePath[MAX_PATH];
-	GetModuleFileName(NULL, ExePath, MAX_PATH);
-	Platform::SetDllPath(ExePath);
-
-	Pop::PushAppArguments(lpCmdLine);
-
 	Platform::Private::InstanceHandle = hInstance;
-	const char* argv[2] = { ExePath, lpCmdLine };
-	int argc = 2;
+	const char* argv[1] = { lpCmdLine };
+	int argc = std::size(argv);
 
 	return main(argc, argv);
 }
