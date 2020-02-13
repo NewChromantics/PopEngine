@@ -674,44 +674,53 @@ TImageWrapper::~TImageWrapper()
 
 void TImageWrapper::Construct(Bind::TCallback& Params)
 {
-	if ( Params.IsArgumentString(1) )
-		mName = Params.GetArgumentString(1);
+	//	matching with web api
+	if (Params.IsArgumentString(0))
+	{
+		mName = Params.GetArgumentString(0);
+	}
 	else
-		mName = "undefined-name";
-	
-	/*
-	//	try copying from other object
-	const auto& Arg0 = Arguments.mParams[0];
-	if ( Arg0->IsObject() )
 	{
-		try
-		{
-			auto& Arg0Image = v8::GetObject<TImageWrapper>( Arg0 );
-			Copy(Arguments);
-			return;
-		}
-		catch(std::exception& e)
-		{
-			std::Debug << "Trying to construct image from object: " << e.what() << std::endl;
-		}
-	}
-	*/
-	
-	//	construct with filename
-	if ( Params.IsArgumentString(0) )
-	{
-		LoadFile(Params);
-		return;
-	}
-		
-	//	construct with size
-	if ( Params.IsArgumentArray(0) )
-	{
-		Alloc(Params);
-		return;
+		mName = "Pop.Image";
 	}
 
-	
+	bool IsFilename = false;
+	auto& Filename = mName;
+	if (Params.IsArgumentString(0))
+		if (Soy::StringContains(Filename, ".",true))
+			IsFilename = true;
+
+	if (IsFilename)
+	{
+		//	webapi does 
+		//		HtmlImage = Pop.GetCachedAsset(Filename);
+		//		WritePixels(HtmlImage)
+		//	so we will attempt to load filename
+		LoadFile(Params);
+	}
+	else if (Params.IsArgumentArray(0))
+	{
+		/*
+		Pop.Debug("Init image with size", Filename);
+		const Size = arguments[0];
+		const PixelFormat = arguments[1] || 'RGBA';
+		const Width = Size[0];
+		const Height = Size[1];
+		let PixelData = new Array(Width * Height * 4);
+		PixelData.fill(0);
+		const Pixels = IsFloatFormat(PixelFormat) ? new Float32Array(PixelData) : new Uint8Array(PixelData);
+		this.WritePixels(Width, Height, Pixels, PixelFormat);
+		*/
+		Alloc(Params);
+	}
+	else if (Params.IsArgumentString(0))
+	{
+		//	just a name
+	}
+	else if (!Params.IsArgumentUndefined(0))
+	{
+		throw Soy::AssertException("Unhandled Pop.Image constructor");
+	}	
 }
 
 void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
