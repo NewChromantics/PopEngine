@@ -26,6 +26,7 @@ namespace ApiOpengl
 	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 	DEFINE_BIND_FUNCTIONNAME(IsFullscreen);
+	DEFINE_BIND_FUNCTIONNAME(IsFullscreenSupported);
 	DEFINE_BIND_FUNCTIONNAME(IsMinimised);
 	DEFINE_BIND_FUNCTIONNAME(IsForeground);
 	DEFINE_BIND_FUNCTIONNAME(EnableRenderMinimised);
@@ -563,6 +564,11 @@ void TWindowWrapper::IsFullscreen(Bind::TCallback& Params)
 	Params.Return(Fullscreen);
 }
 
+void TWindowWrapper::IsFullscreenSupported(Bind::TCallback& Params)
+{
+	Params.Return(true);
+}
+
 void TWindowWrapper::IsMinimised(Bind::TCallback& Params)
 {
 	auto IsMinimised = mWindow->IsMinimised();
@@ -883,6 +889,7 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::GetScreenRect>( &TWindowWrapper::GetScreenRect );
 	Template.BindFunction<BindFunction::SetFullscreen>( &TWindowWrapper::SetFullscreen );
 	Template.BindFunction<BindFunction::IsFullscreen>(&TWindowWrapper::IsFullscreen);
+	Template.BindFunction<BindFunction::IsFullscreenSupported>(&TWindowWrapper::IsFullscreenSupported);
 	Template.BindFunction<BindFunction::IsMinimised>(&TWindowWrapper::IsMinimised);
 	Template.BindFunction<BindFunction::IsForeground>(&TWindowWrapper::IsForeground);
 	Template.BindFunction<BindFunction::EnableRenderMinimised>(&TWindowWrapper::EnableRenderMinimised);

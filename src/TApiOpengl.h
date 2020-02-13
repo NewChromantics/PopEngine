@@ -110,6 +110,7 @@ public:
 	void				GetScreenRect(Bind::TCallback& Arguments);
 	void				SetFullscreen(Bind::TCallback& Arguments);
 	void				IsFullscreen(Bind::TCallback& Arguments);
+	void				IsFullscreenSupported(Bind::TCallback& Arguments);
 	void				IsMinimised(Bind::TCallback& Arguments);
 	void				IsForeground(Bind::TCallback& Arguments);
 	void				EnableRenderMinimised(Bind::TCallback& Arguments);
