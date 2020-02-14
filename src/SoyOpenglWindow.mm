@@ -330,6 +330,46 @@ public:
 };
 
 
+class Platform::TColourButton : public SoyColourButton
+{
+public:
+	TColourButton(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+		mTextBox( Thread, Parent, Rect )
+	{
+	}
+	
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override
+	{
+		mTextBox.SetRect(Rect);
+	}
+	
+	virtual void			OnChanged(bool FinalValue) override
+	{
+		mTextBox.OnChanged();
+		SoyColourButton::OnChanged(FinalValue);
+	}
+	
+	virtual void			SetValue(vec3x<uint8_t> Value) override
+	{
+		//	colour to text
+		std::stringstream ValueString;
+		ValueString << Value.x << ',' << Value.y << ',' << Value.z;
+		mTextBox.SetValue(ValueString.str());
+	}
+	
+	virtual vec3x<uint8_t>	GetValue() override
+	{
+		//	text to colour
+		auto ValueString = mTextBox.GetValue();
+		BufferArray<uint8_t,3> Rgb;
+		Soy::StringParseVecNx(ValueString, GetArrayBridge(Rgb) );
+		return vec3x<uint8_t>( Rgb[0], Rgb[1], Rgb[2] );
+	}
+	
+	TTextBox	mTextBox;
+};
+
+
 
 Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_t> InitialColour) :
 	mThread		( Thread )
@@ -827,6 +867,14 @@ std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<i
 	return pSlider;
 }
 
+
+std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<SoyColourButton> pSlider( new Platform::TColourButton(Thread,ParentWindow,Rect) );
+	return pSlider;
+}
 
 
 Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :

@@ -167,7 +167,7 @@ void ApiSocket::TSocketClientWrapper::FlushPendingConnects()
 		return;
 
 	//	gotta wait for handshake to finish, so check for connected peers
-	auto& Socket = GetSocket();
+	auto Socket = GetSocket();
 	//	todo: Check for disconnection/handshake error
 	auto ConnectionError = GetConnectionError();
 	bool IsConnected = false;
