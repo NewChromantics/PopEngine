@@ -63,6 +63,7 @@ public:
 class ApiOpengl::TRenderTargetWrapper
 {
 public:
+	virtual void		GetRenderContext(Bind::TCallback& Params) = 0;
 /* todo:	virtual Opengl::TContext&	GetContext()=0;
 	void				DrawQuad(Bind::TCallback& Arguments);
 	void				DrawGeometry(Bind::TCallback& Arguments);
@@ -98,6 +99,7 @@ public:
 	static void			CreateTemplate(Bind::TTemplate& Template);
 	virtual void 		Construct(Bind::TCallback& Arguments) override;
 
+	virtual void		GetRenderContext(Bind::TCallback& Params) override;
 	void				DrawQuad(Bind::TCallback& Arguments);
 	void				DrawGeometry(Bind::TCallback& Arguments);
 	void				ClearColour(Bind::TCallback& Arguments);

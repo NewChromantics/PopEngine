@@ -13,6 +13,7 @@ namespace ApiOpengl
 	DEFINE_BIND_TYPENAME(Shader);
 	DEFINE_BIND_TYPENAME(TriangleBuffer);
 	
+	DEFINE_BIND_FUNCTIONNAME(GetRenderContext);
 	DEFINE_BIND_FUNCTIONNAME(DrawQuad);
 	DEFINE_BIND_FUNCTIONNAME(DrawGeometry);
 	DEFINE_BIND_FUNCTIONNAME(ClearColour);
@@ -414,6 +415,12 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->OnTryDragDrop(Filenames);	};
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 	mWindow->mOnClosed = [this]()	{	this->OnClosed();	};
+}
+
+void TWindowWrapper::GetRenderContext(Bind::TCallback& Params)
+{
+	auto This = this->GetHandle(Params.mLocalContext);
+	Params.Return(This);
 }
 
 void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
@@ -886,6 +893,7 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	using namespace ApiOpengl;
+	Template.BindFunction<BindFunction::GetRenderContext>(&TWindowWrapper::GetRenderContext);
 	Template.BindFunction<BindFunction::DrawQuad>( &TWindowWrapper::DrawQuad );
 	Template.BindFunction<BindFunction::DrawGeometry>( &TWindowWrapper::DrawGeometry );
 	Template.BindFunction<BindFunction::SetViewport>( &TWindowWrapper::SetViewport );
