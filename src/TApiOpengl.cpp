@@ -16,7 +16,9 @@ namespace ApiOpengl
 	DEFINE_BIND_FUNCTIONNAME(DrawQuad);
 	DEFINE_BIND_FUNCTIONNAME(DrawGeometry);
 	DEFINE_BIND_FUNCTIONNAME(ClearColour);
-	DEFINE_BIND_FUNCTIONNAME(EnableBlend);
+	DEFINE_BIND_FUNCTIONNAME(SetBlendModeBlit);
+	DEFINE_BIND_FUNCTIONNAME(SetBlendModeAlpha);
+	DEFINE_BIND_FUNCTIONNAME(SetBlendModeMax);
 	DEFINE_BIND_FUNCTIONNAME(SetViewport);
 	DEFINE_BIND_FUNCTIONNAME(SetUniform);
 	DEFINE_BIND_FUNCTIONNAME(Render);
@@ -491,11 +493,19 @@ void TWindowWrapper::ClearColour(Bind::TCallback& Params)
 	This.mWindow->ClearColour( Colour );
 }
 
-
-void TWindowWrapper::EnableBlend(Bind::TCallback& Params)
+void TWindowWrapper::SetBlendModeBlit(Bind::TCallback& Params)
 {
-	auto Enable = Params.GetArgumentBool(0);
-	mWindow->EnableBlend( Enable );
+	mWindow->SetBlendModeBlit();
+}
+
+void TWindowWrapper::SetBlendModeAlpha(Bind::TCallback& Params)
+{
+	mWindow->SetBlendModeAlpha();
+}
+
+void TWindowWrapper::SetBlendModeMax(Bind::TCallback& Params)
+{
+	mWindow->SetBlendModeMax();
 }
 
 
@@ -880,7 +890,9 @@ void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::DrawGeometry>( &TWindowWrapper::DrawGeometry );
 	Template.BindFunction<BindFunction::SetViewport>( &TWindowWrapper::SetViewport );
 	Template.BindFunction<BindFunction::ClearColour>( &TWindowWrapper::ClearColour );
-	Template.BindFunction<BindFunction::EnableBlend>( &TWindowWrapper::EnableBlend );
+	Template.BindFunction<BindFunction::SetBlendModeBlit>(&TWindowWrapper::SetBlendModeBlit);
+	Template.BindFunction<BindFunction::SetBlendModeAlpha>(&TWindowWrapper::SetBlendModeAlpha);
+	Template.BindFunction<BindFunction::SetBlendModeMax>( &TWindowWrapper::SetBlendModeMax);
 	Template.BindFunction<BindFunction::Render>( &TWindowWrapper::Render );
 	//Template.BindFunction<BindFunction::RenderChain>( RenderChain );
 	Template.BindFunction<BindFunction::RenderToRenderTarget>( &TWindowWrapper::RenderToRenderTarget );
@@ -902,7 +914,7 @@ void TRenderWindow::Clear(Opengl::TRenderTarget &RenderTarget)
 	RenderTarget.SetViewportNormalised( Viewport );
 	
 	Opengl::ClearDepth();
-	EnableBlend(false);
+	SetBlendModeBlit();
 	ResetOpenglState();
 	
 	auto OpenglContext = this->GetContext();
@@ -916,17 +928,22 @@ void TRenderWindow::ClearColour(Soy::TRgb Colour)
 }
 
 
-void TRenderWindow::EnableBlend(bool Enable)
+void TRenderWindow::SetBlendModeBlit()
 {
-	if ( Enable )
-	{
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
-	else
-	{
-		glDisable(GL_BLEND);
-	}
+	glDisable(GL_BLEND);
+}
+
+void TRenderWindow::SetBlendModeAlpha()
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void TRenderWindow::SetBlendModeMax()
+{
+	//	todo
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 Opengl::TGeometry& TRenderWindow::GetBlitQuad()

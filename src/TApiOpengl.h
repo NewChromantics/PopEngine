@@ -34,7 +34,9 @@ public:
 	
 	void	Clear(Opengl::TRenderTarget& RenderTarget);
 	void	ClearColour(Soy::TRgb Colour);
-	void	EnableBlend(bool Enable);
+	void	SetBlendModeBlit();
+	void	SetBlendModeAlpha();
+	void	SetBlendModeMax();
 	
 	void	DrawGeometry(Opengl::TGeometry& Geometry,Opengl::TShader& Shader,std::function<void()>& OnShaderBind);
 
@@ -99,7 +101,9 @@ public:
 	void				DrawQuad(Bind::TCallback& Arguments);
 	void				DrawGeometry(Bind::TCallback& Arguments);
 	void				ClearColour(Bind::TCallback& Arguments);
-	void				EnableBlend(Bind::TCallback& Arguments);
+	void				SetBlendModeBlit(Bind::TCallback& Arguments);
+	void				SetBlendModeAlpha(Bind::TCallback& Arguments);
+	void				SetBlendModeMax(Bind::TCallback& Arguments);
 	void				SetViewport(Bind::TCallback& Arguments);
 	void				Render(Bind::TCallback& Arguments);
 	void				RenderChain(Bind::TCallback& Arguments);
