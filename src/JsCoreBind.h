@@ -384,11 +384,11 @@ public:
 	virtual TObject			GetReturnObject() bind_override;
 	virtual TFunction		GetReturnFunction() bind_override;
 	virtual std::string		GetReturnString() bind_override			{ return GetString(GetContextRef(), mReturn); }
-	bool					IsReturnUndefined()						{ return JSValueGetType(mReturn) == kJSTypeUndefined; }
-	bool					IsReturnString()						{ return JSValueGetType(mReturn) == kJSTypeString; }
-	bool					IsReturnBool()							{ return JSValueGetType(mReturn) == kJSTypeBoolean; }
-	bool					IsReturnNull()							{ return JSValueGetType(mReturn) == kJSTypeNull; }
-	bool					IsReturnObject()						{ return JSValueGetType(mReturn) == kJSTypeObject; }
+	bool					IsReturnUndefined()						{ return JSValueGetType(GetContextRef(), mReturn) == kJSTypeUndefined; }
+	bool					IsReturnString()						{ return JSValueGetType(GetContextRef(), mReturn) == kJSTypeString; }
+	bool					IsReturnBool()							{ return JSValueGetType(GetContextRef(), mReturn) == kJSTypeBoolean; }
+	bool					IsReturnNull()							{ return JSValueGetType(GetContextRef(), mReturn) == kJSTypeNull; }
+	bool					IsReturnObject()						{ return JSValueGetType(GetContextRef(), mReturn) == kJSTypeObject; }
 
 	JSContextRef			GetContextRef();
 

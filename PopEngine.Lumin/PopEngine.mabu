@@ -1,0 +1,37 @@
+# switch PopEngine back to shared once we're running
+#KIND = $(MABU_KIND)	#gr: these custom variables don't seem to be working
+KIND = program
+
+SRCS = \
+../src/PopMain.cpp \
+../src/SoyLib/src/memheap.cpp \
+../src/SoyLib/src/SoyArray.cpp \
+../src/SoyLib/src/SoyAssert.cpp \
+../src/SoyLib/src/SoyDebug.cpp \
+../src/SoyLib/src/SoyPixels.cpp \
+../src/SoyLib/src/SoyString.cpp \
+../src/SoyLib/src/SoyTime.cpp \
+../src/SoyLib/src/SoyTypes.cpp \
+../src/SoyLib/src/SoyThread.cpp \
+
+
+INCS = \
+$(MLSDK)/include \
+../src/	\
+../src/SoyLib/src/	\
+
+
+DEFS = TARGET_LUMIN
+
+USES = ml_sdk stdc++
+# SHLIBS = ml_privileges
+
+
+OPTIONS = \
+	exceptions/on \
+	standard-c++/14 \
+	warn/on
+	
+# OPTIONS = \
+#	standard-c++/11 \
+#	stl/libgnustl

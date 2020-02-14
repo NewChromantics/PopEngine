@@ -290,7 +290,7 @@ void ApiPop::GetTimeNowMs(Bind::TCallback& Params)
 	{
 		auto OneDayMs = 86400000;
 #if !defined(JSAPI_CHAKRA)
-#error Test this without the deduction, chakra seems okay with SoyTime(true)
+//#error Test this without the deduction, chakra seems okay with SoyTime(true)
 #endif
 		//FirstTimestamp = NowMsInt - OneDayMs;
 	}

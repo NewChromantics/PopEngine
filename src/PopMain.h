@@ -1,7 +1,6 @@
 #pragma once
 #include "SoyTypes.h"
-#include "SoyRef.h"
-#include "SoyOpenglContext.h"
+#include "SoyThread.h"
 
 
 class TChannel;

@@ -128,6 +128,15 @@
 		BF59A2522222057200AE9926 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF59A2512222057200AE9926 /* GameController.framework */; };
 		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
 		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
+		BF5C4AB823F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
+		BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
+		BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
+		BF5C4AC223F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
+		BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
+		BF5C4AC423F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
+		BF5C4AC723F6FE5C007D6393 /* TApiEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */; };
+		BF5C4AC823F6FE5C007D6393 /* TApiEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */; };
+		BF5C4AC923F6FE5C007D6393 /* TApiEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */; };
 		BF5EAF7423744E370077BCF5 /* SoyViveHandTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */; };
 		BF5EAF76237482DD0077BCF5 /* PopCave in Resources */ = {isa = PBXBuildFile; fileRef = BF5EAF75237482DD0077BCF5 /* PopCave */; };
 		BF5EAFBF237F0C290077BCF5 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -485,6 +494,13 @@
 		BF5B07141B5C12E700C489C6 /* SoyShader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShader.cpp; path = src/SoyShader.cpp; sourceTree = "<group>"; };
 		BF5B07161B5C130C00C489C6 /* SoyShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShader.h; path = src/SoyShader.h; sourceTree = "<group>"; };
 		BF5B071B1B5D0B0C00C489C6 /* scope_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = scope_ptr.h; path = src/scope_ptr.h; sourceTree = "<group>"; };
+		BF5C4AB523F6C7F5007D6393 /* PopEngine.Lumin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Lumin; sourceTree = "<group>"; };
+		BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiZip.cpp; path = src/TApiZip.cpp; sourceTree = "<group>"; };
+		BF5C4AB723F6FDF8007D6393 /* TApiZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiZip.h; path = src/TApiZip.h; sourceTree = "<group>"; };
+		BF5C4ABE23F6FE3A007D6393 /* zip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zip.h; path = src/Zip/src/zip.h; sourceTree = SOURCE_ROOT; };
+		BF5C4ABF23F6FE3A007D6393 /* zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zip.c; path = src/Zip/src/zip.c; sourceTree = SOURCE_ROOT; };
+		BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiEngine.cpp; path = src/TApiEngine.cpp; sourceTree = "<group>"; };
+		BF5C4AC623F6FE5B007D6393 /* TApiEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiEngine.h; path = src/TApiEngine.h; sourceTree = "<group>"; };
 		BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyViveHandTracker.h; path = src/SoyViveHandTracker.h; sourceTree = "<group>"; };
 		BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyViveHandTracker.cpp; path = src/SoyViveHandTracker.cpp; sourceTree = "<group>"; };
 		BF5EAF75237482DD0077BCF5 /* PopCave */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopCave; path = ../PopCave; sourceTree = "<group>"; };
@@ -918,6 +934,15 @@
 			path = src/Libs;
 			sourceTree = "<group>";
 		};
+		BF5C4ABD23F6FE2B007D6393 /* Zip */ = {
+			isa = PBXGroup;
+			children = (
+				BF5C4ABF23F6FE3A007D6393 /* zip.c */,
+				BF5C4ABE23F6FE3A007D6393 /* zip.h */,
+			);
+			path = Zip;
+			sourceTree = "<group>";
+		};
 		BF5EAF7D237F07ED0077BCF5 /* PopEngine */ = {
 			isa = PBXGroup;
 			children = (
@@ -1171,6 +1196,7 @@
 			isa = PBXGroup;
 			children = (
 				BF108A842296B7BE003DDC5F /* PopEngine.xcassets */,
+				BF5C4AB523F6C7F5007D6393 /* PopEngine.Lumin */,
 				EB0EA5672110B8D6008D6DAA /* Dlib */,
 				B71D7B252137F7EE00F29EA0 /* SoyDeckLink */,
 				BF459C7C21F7C72600CED59D /* Libraries */,
@@ -1222,18 +1248,19 @@
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BF84732E22F7249500038A3A /* magic_enum.hpp */,
 				BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */,
+				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
 				BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */,
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
+				BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */,
 				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
-				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
+				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
 				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
 				BF9282222236E1E1007E9D6F /* PopPhotoBlorp */,
-				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
 				BF607EA6224107B800A78C00 /* SoyBluetooth.h */,
 				BF607EA7224107B800A78C00 /* SoyBluetooth.mm */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
@@ -1257,6 +1284,8 @@
 				EB0EA5652110AB53008D6DAA /* TApiDlib.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
 				BF0F9E702288892F00AEA7DC /* TApiDll.h */,
+				BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */,
+				BF5C4AC623F6FE5B007D6393 /* TApiEngine.h */,
 				BF91D97A2215839F00E91671 /* TApiEzsift.cpp */,
 				BF91D9792215839F00E91671 /* TApiEzsift.h */,
 				BF89D4832294646100A187D5 /* TApiGui.cpp */,
@@ -1285,13 +1314,14 @@
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
 				EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */,
 				EBC8FA5B21131E9F0014E998 /* TApiWebsocket.h */,
+				BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */,
+				BF5C4AB723F6FDF8007D6393 /* TApiZip.h */,
 				BF19612221B9D2B8007014EF /* TBind.cpp */,
 				BF19612321B9D2B8007014EF /* TBind.h */,
 				EBC8FA6021132D300014E998 /* TPopServerThread.cpp */,
 				EBC8FA6121132D300014E998 /* TPopServerThread.h */,
 				EBC8FA6221132D300014E998 /* TProtocolWebSocket.cpp */,
 				EBC8FA6321132D300014E998 /* TProtocolWebSocket.h */,
-				BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */,
 				BF689AFE20D9A52E000BC812 /* TV8Container.cpp */,
 				BF689AFF20D9A52E000BC812 /* TV8Container.h */,
 				BF3786EA2132D846008E4350 /* TV8Inspector.cpp */,
@@ -1303,6 +1333,7 @@
 				BF6553C32132C4D9003E4241 /* v8 */,
 				BFF505E822550F30005A6AC1 /* V8Bind.cpp */,
 				BFF505E922550F30005A6AC1 /* V8Bind.h */,
+				BF5C4ABD23F6FE2B007D6393 /* Zip */,
 			);
 			name = src;
 			sourceTree = SOURCE_ROOT;
@@ -1455,6 +1486,23 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
+/* Begin PBXLegacyTarget section */
+		BF5C4AAF23F6C73B007D6393 /* PopEngineLumin */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngineLumin" */;
+			buildPhases = (
+			);
+			buildToolPath = PopEngine.Lumin/Build.sh;
+			buildWorkingDirectory = "";
+			dependencies = (
+			);
+			name = PopEngineLumin;
+			passBuildSettingsInEnvironment = 1;
+			productName = PopEngineLumin;
+		};
+/* End PBXLegacyTarget section */
+
 /* Begin PBXNativeTarget section */
 		BF151F7523845F2E00A70EBF /* PopEngine_Ios */ = {
 			isa = PBXNativeTarget;
@@ -1544,6 +1592,10 @@
 						DevelopmentTeam = X52DR36JY2;
 						ProvisioningStyle = Automatic;
 					};
+					BF5C4AAF23F6C73B007D6393 = {
+						CreatedOnToolsVersion = 11.3.1;
+						ProvisioningStyle = Automatic;
+					};
 					BF5EAFB4237F0C100077BCF5 = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
@@ -1578,6 +1630,7 @@
 				BF5EAFB4237F0C100077BCF5 /* PopEngine */,
 				BF5EB0532380335D0077BCF5 /* PopEngineUnitTestApp */,
 				BF151F7523845F2E00A70EBF /* PopEngine_Ios */,
+				BF5C4AAF23F6C73B007D6393 /* PopEngineLumin */,
 			);
 		};
 /* End PBXProject section */
@@ -1649,12 +1702,14 @@
 				BF151F8423845FAD00A70EBF /* SoyAvf.mm in Sources */,
 				BF151FB323845FD200A70EBF /* JsCoreBind.cpp in Sources */,
 				BF151F9123845FAD00A70EBF /* SoyMedia.cpp in Sources */,
+				BF5C4AC423F6FE3A007D6393 /* zip.c in Sources */,
 				BF151F8823845FAD00A70EBF /* SoyFilesystem.cpp in Sources */,
 				BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */,
 				BF151FA723845FAD00A70EBF /* SoyTime.mm in Sources */,
 				BF151FAB23845FAD00A70EBF /* SoyUnity.mm in Sources */,
 				BF151F9523845FAD00A70EBF /* SoyOpengl.cpp in Sources */,
 				BF151FAE23845FAD00A70EBF /* SoyWave.cpp in Sources */,
+				BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */,
 				BF151FFE23847CB000A70EBF /* image_utility.cpp in Sources */,
 				BF151F9D23845FAD00A70EBF /* SoyScope.cpp in Sources */,
 				BF151FBD23845FF000A70EBF /* TApiEzsift.cpp in Sources */,
@@ -1675,6 +1730,7 @@
 				BF151FA823845FAD00A70EBF /* SoyTypes.cpp in Sources */,
 				BF151F9A23845FAD00A70EBF /* SoyRef.cpp in Sources */,
 				BF151FC32384601300A70EBF /* TApiSocket.cpp in Sources */,
+				BF5C4AC923F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
 				BF151F8D23845FAD00A70EBF /* SoyHttp.cpp in Sources */,
 				BF151F9823845FAD00A70EBF /* SoyPng.cpp in Sources */,
 				BF151FA323845FAD00A70EBF /* SoyString.cpp in Sources */,
@@ -1760,6 +1816,8 @@
 				BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */,
 				BF5EAFCF237F0C6E0077BCF5 /* SoyJson.cpp in Sources */,
 				BF5EAFFE237F0CD40077BCF5 /* TApiCoreMl.cpp in Sources */,
+				BF5C4AC823F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
+				BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */,
 				BF5EAFF0237F0C6E0077BCF5 /* SoyWindow.cpp in Sources */,
 				BF5EAFF5237F0CD40077BCF5 /* PopMain.cpp in Sources */,
 				BF5EAFE7237F0C6E0077BCF5 /* SoyTime.mm in Sources */,
@@ -1776,6 +1834,7 @@
 				BF5EAFDB237F0C6E0077BCF5 /* SoyRingArray.cpp in Sources */,
 				BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */,
 				BF5EAFE1237F0C6E0077BCF5 /* SoySrt.cpp in Sources */,
+				BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */,
 				BF5EAFE6237F0C6E0077BCF5 /* SoyTime.cpp in Sources */,
 				BF5EAFCA237F0C6E0077BCF5 /* SoyFourcc.cpp in Sources */,
 			);
@@ -1794,6 +1853,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFA664731B55AD0A00C33A2A /* SoyString.mm in Sources */,
+				BF5C4AC723F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
 				BF689ACE20D6D3AE000BC812 /* SoyOpenglView.mm in Sources */,
 				BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */,
 				BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */,
@@ -1816,6 +1876,7 @@
 				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
 				BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */,
 				BF6EB3292111167800FC991B /* TApiMedia.cpp in Sources */,
+				BF5C4AC223F6FE3A007D6393 /* zip.c in Sources */,
 				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
 				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
 				BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */,
@@ -1850,6 +1911,7 @@
 				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
 				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,
 				BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */,
+				BF5C4AB823F6FDF8007D6393 /* TApiZip.cpp in Sources */,
 				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,
 				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
 				BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */,
@@ -2274,6 +2336,234 @@
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		BF5C4AB023F6C73B007D6393 /* Debug_JavascriptCore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MABU_BUILD_TARGET = release_ml1;
+				MAGIC_LEAP_SDK_PATH = /Volumes/Assets/mlsdk/v0.23.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_JavascriptCore;
+		};
+		BF5C4AB123F6C73B007D6393 /* Debug_V8 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MABU_BUILD_TARGET = release_ml1;
+				MAGIC_LEAP_SDK_PATH = /Volumes/Assets/mlsdk/v0.23.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_V8;
+		};
+		BF5C4AB223F6C73B007D6393 /* Debug_Chakra */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MABU_BUILD_TARGET = release_ml1;
+				MAGIC_LEAP_SDK_PATH = /Volumes/Assets/mlsdk/v0.23.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_Chakra;
+		};
+		BF5C4AB323F6C73B007D6393 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MABU_BUILD_TARGET = release_ml1;
+				MAGIC_LEAP_SDK_PATH = /Volumes/Assets/mlsdk/v0.23.0;
+				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -3087,6 +3377,17 @@
 				BF151F7D23845F2F00A70EBF /* Debug_V8 */,
 				BF151F7E23845F2F00A70EBF /* Debug_Chakra */,
 				BF151F7F23845F2F00A70EBF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngineLumin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF5C4AB023F6C73B007D6393 /* Debug_JavascriptCore */,
+				BF5C4AB123F6C73B007D6393 /* Debug_V8 */,
+				BF5C4AB223F6C73B007D6393 /* Debug_Chakra */,
+				BF5C4AB323F6C73B007D6393 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
