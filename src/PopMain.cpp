@@ -1,23 +1,5 @@
 #include "PopMain.h"
 #include "PopEngine.h"
-#include "SoyDebug.h"
-/*
-#include "TProtocolCli.h"
-#include "TProtocolHttp.h"
-#include "TProtocolWebSocket.h"
-#include "TProtocolJson.h"
-#include "TProtocolRtsp.h"
-#include "TChannelPipe.h"
-#include "TChannelSocket.h"
-#include "TChannelFile.h"
-#include "TChannelFork.h"
-#include "UnitTest++/src/UnitTest++.h"
- */
-#include "SoyApp.h"
-#include <fstream>
-#include <regex>
-#include "SoyLib/src/SoyFilesystem.h"
-
 
 #if defined(TARGET_WINDOWS)
 	#include <tchar.h>
@@ -30,39 +12,6 @@ namespace Pop
 }
 
 
-//	include SoyEvent unit test
-//	gr: need to improve this
-//#include <SoyEvent.cpp>
-//#include "SoyTest.cpp"
-
-/*
-
-#if defined(TARGET_WINDOWS)
-TJobParams Private::DecodeArgs(int argc,_TCHAR* argv[])
-#else
-TJobParams Private::DecodeArgs(int argc,const char* argv[])
-#endif
-{
-	std::stringstream CommandLine;
-	for ( int i=0;	i<argc;	i++ )
-	{
-		std::string Arg = argv[i];
-		
-		//	if it contains spaces we need to put the arg in quotes
-		if ( Arg.find(' ') != std::string::npos )
-			CommandLine << '"' << Arg << '"';
-		else
-			CommandLine << Arg;
-		CommandLine << ' ';
-	}
-	
-	TJob Job;
-	TProtocolCli::DecodeHeader( Job, CommandLine.str() );
-	return Job.mParams;
-}
-
-*/
-
 namespace Platform
 {
 #if defined(TARGET_WINDOWS)
@@ -71,13 +20,22 @@ namespace Platform
 		extern HINSTANCE InstanceHandle;
 	}
 #endif
+
+
+	//	from SoyDebug
+#if defined(TARGET_LUMIN) || defined(TARGET_ANDROID)
+	const char*	LogIdentifer = "PopEngine";
+#endif
 }
 
 extern "C" EXPORT int PopEngine(const char* ProjectPath)
 {
 	Pop::ProjectPath = ProjectPath;
 
-#if defined(TARGET_OSX)|| defined(TARGET_IOS)
+#if defined(TARGET_LUMIN)
+	//	for now
+	return 1;
+#elif defined(TARGET_OSX)|| defined(TARGET_IOS)
 	return Soy::Platform::BundleAppMain();
 #else
 	return PopMain();
