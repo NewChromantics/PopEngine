@@ -619,6 +619,7 @@ Bind::TObject FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame
 			return;
 		auto ImageObject = Context.mGlobalContext.CreateObjectInstance(Context, TImageWrapper::GetTypeName());
 		auto& Image = ImageObject.This<TImageWrapper>();
+		Image.mName = "Media output frame";
 		
 		SoyPixels x(SoyPixelsMeta(1000, 1000, SoyPixelsFormat::RGB));
 		x.Copy(*Pixels);
@@ -656,8 +657,11 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 			PoppedFrame = mFrames.PopAt(0);
 		}
 		auto FrameObject = FrameToObject(Context,PoppedFrame);
-		mFrameRequests.Resolve(FrameObject);
-		
+		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
+		{
+			Promise.Resolve(LocalContext, FrameObject);
+		};
+		mFrameRequests.Flush(HandlePromise);		
 		//mFrameRequests.Resolve("Hello");
 	};
 	auto& Context = mFrameRequests.GetContext();
