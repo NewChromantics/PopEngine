@@ -1723,7 +1723,7 @@ public:
 	~TShellExecute();
 
 protected:
-	virtual void				Thread() override;
+	virtual bool				ThreadIteration() override;
 	void						CreateProcessHandle(const std::string& Command);
 	void						WaitForProcessHandle();
 
@@ -1756,7 +1756,7 @@ Platform::TShellExecute::~TShellExecute()
 	Stop(true);
 }
 
-void Platform::TShellExecute::Thread()
+bool Platform::TShellExecute::ThreadIteration()
 {
 	WaitForProcessHandle();
 	if (mOnExit)
@@ -1767,7 +1767,7 @@ void Platform::TShellExecute::Thread()
 	{
 		std::Debug << "Process exiteed with " << mExitCode << std::endl;
 	}
-	Stop(false);
+	return false;
 }
 
 #if defined(TARGET_WINDOWS)

@@ -94,7 +94,7 @@ public:
 	THmd(bool OverlayApp);
 	~THmd();
 
-	virtual void	Thread() override;
+	virtual bool	ThreadIteration() override;
 
 	void			SubmitFrame(Opengl::TTexture& Left, Opengl::TTexture& Right);
 	TEyeMatrix		GetEyeMatrix(const std::string& EyeName);
@@ -628,22 +628,19 @@ Openvr::THmd::~THmd()
 
 
 
-void Openvr::THmd::Thread()
+bool Openvr::THmd::ThreadIteration()
 {
-	//	loop
-	while ( IsThreadRunning() )
+	try
 	{
-		try
-		{
-			//	this blocks for us
-			WaitForFrameStart();
-		}
-		catch (std::exception& e)
-		{
-			std::Debug << "Openvr thread exception" << e.what() << std::endl;
-			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-		}
+		//	this blocks for us
+		WaitForFrameStart();
 	}
+	catch (std::exception& e)
+	{
+		std::Debug << "Openvr thread exception" << e.what() << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	}
+	return true;
 }
 
 

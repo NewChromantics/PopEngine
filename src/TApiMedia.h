@@ -20,6 +20,7 @@ namespace X264
 namespace PopCameraDevice
 {
 	class TInstance;
+	class TFrame;
 }
 
 namespace ApiMedia
@@ -33,25 +34,18 @@ namespace ApiMedia
 }
 
 
-class TFrameRequestParams
+
+class PopCameraDevice::TFrame
 {
 public:
-	bool				mSeperatePlanes = false;
-	size_t				mStreamIndex = 0;
-	bool				mLatestFrame = true;
-	Bind::TPersistent	mDestinationImage;
+	SoyTime			mTime;
+	std::string		mMeta;	//	other meta
+	//BufferArray<std::shared_ptr<SoyPixelsImpl>,4>	mPlanes;
+	std::shared_ptr<SoyPixelsImpl>	mPlane0;
+	std::shared_ptr<SoyPixelsImpl>	mPlane1;
+	std::shared_ptr<SoyPixelsImpl>	mPlane2;
+	std::shared_ptr<SoyPixelsImpl>	mPlane3;
 };
-
-class TFrameRequest : public TFrameRequestParams
-{
-public:
-	TFrameRequest()	{}
-	TFrameRequest(const TFrameRequestParams& Copy) :	TFrameRequestParams (Copy)	{}
-	
-public:
-	Bind::TPromise	mPromise;
-};
-
 
 
 class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::Source,PopCameraDevice::TInstance>
@@ -62,25 +56,24 @@ public:
 	{
 	}
 
-	static void								CreateTemplate(Bind::TTemplate& Template);
+	static void				CreateTemplate(Bind::TTemplate& Template);
 
-	virtual void 							Construct(Bind::TCallback& Params) override;
+	virtual void 			Construct(Bind::TCallback& Params) override;
 
-	void									OnNewFrame();
-	static void								Free(Bind::TCallback& Params);
-	static void								GetNextFrame(Bind::TCallback& Params);
-	static void								PopFrame(Bind::TCallback& Params);
+	void					Free(Bind::TCallback& Params);
+	void					WaitForNextFrame(Bind::TCallback& Params);
 
-	Bind::TPromise							AllocFrameRequestPromise(Bind::TLocalContext& Context,const TFrameRequestParams& Params);
-	Bind::TObject							PopFrame(Bind::TLocalContext& Context,TFrameRequestParams& Params);
-
+protected:
+	void					FlushPendingFrames();
+	void					PopFrame(Bind::TCallback& Params);
+	void					OnNewFrame();
 
 public:
-	std::shared_ptr<PopCameraDevice::TInstance>&	mExtractor = mObject;
-
-	//	gr: this should really store params per promise, but I want to use TPromiseQUeue
-	TFrameRequestParams						mFrameRequestParams;
-	Bind::TPromiseQueue						mFrameRequests;
+	std::shared_ptr<PopCameraDevice::TInstance>&	mInstance = mObject;
+	bool									mOnlyLatestFrame = true;
+	Bind::TPromiseQueue				mFrameRequests;
+	std::mutex						mFramesLock;
+	Array<PopCameraDevice::TFrame>	mFrames;
 };
 
 
