@@ -66,9 +66,18 @@ void Bind::TPromiseQueue::Resolve()
 
 void Bind::TPromiseQueue::Resolve(const std::string& Result)
 {
-	auto Handle = [=](Bind::TLocalContext& Context,TPromise& Promise)
+	auto Handle = [&](Bind::TLocalContext& Context, TPromise& Promise) mutable
 	{
-		Promise.Resolve(Context,Result);
+		Promise.Resolve(Context, Result);
+	};
+	Flush(Handle);
+}
+
+void Bind::TPromiseQueue::Resolve(Bind::TObject& Result)
+{
+	auto Handle = [&](Bind::TLocalContext& Context, TPromise& Promise)
+	{
+		Promise.Resolve(Context, Result);
 	};
 	Flush(Handle);
 }

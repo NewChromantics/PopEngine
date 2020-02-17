@@ -92,6 +92,7 @@ public:
 
 	void			Resolve();
 	void			Resolve(const std::string& Result);
+	void			Resolve(Bind::TObject& Object);
 	void			Reject(const std::string& Error);
 	
 private:
