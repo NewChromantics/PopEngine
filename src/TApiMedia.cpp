@@ -468,7 +468,6 @@ PopCameraDevice::TDevice& PopCameraDevice::TInstance::GetDevice()
 
 PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 {
-	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,1);
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
 
@@ -620,14 +619,8 @@ Bind::TObject FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame
 		auto ImageObject = Context.mGlobalContext.CreateObjectInstance(Context, TImageWrapper::GetTypeName());
 		auto& Image = ImageObject.This<TImageWrapper>();
 		Image.mName = "Media output frame";
-		
-		SoyPixels x(SoyPixelsMeta(1000, 1000, SoyPixelsFormat::RGB));
-		x.Copy(*Pixels);
-		//Image.SetPixels(*Pixels);
-		//Image.SetPixels(x);
-
-		FrameObject.SetObject("Plane0", ImageObject);
-		//PlaneImages.PushBack(ImageObject);
+		Image.SetPixels(Pixels);
+		PlaneImages.PushBack(ImageObject);
 	};
 	AddImage(Frame.mPlane0);
 	AddImage(Frame.mPlane1);
@@ -647,22 +640,17 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 	if (!mFrameRequests.HasPromises())
 		return;
 
-	//auto PoppedFrame = mFrames.PopAt(0);
-
-	auto Flush = [this](Bind::TLocalContext& Context)
+	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
+		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 3);
+		
 		PopCameraDevice::TFrame PoppedFrame;
 		{
 			std::lock_guard<std::mutex> Lock(mFramesLock);
 			PoppedFrame = mFrames.PopAt(0);
 		}
 		auto FrameObject = FrameToObject(Context,PoppedFrame);
-		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
-		{
-			Promise.Resolve(LocalContext, FrameObject);
-		};
-		mFrameRequests.Flush(HandlePromise);		
-		//mFrameRequests.Resolve("Hello");
+		mFrameRequests.Resolve(FrameObject);
 	};
 	auto& Context = mFrameRequests.GetContext();
 	Context.Queue(Flush);
