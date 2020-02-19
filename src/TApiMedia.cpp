@@ -833,6 +833,11 @@ X264::TInstance::TInstance(size_t PresetValue)
 	if ( PresetValue > 9 )
 		throw Soy_AssertException("Expecting preset value <= 9");
 
+	//	trigger dll load
+#if defined(TARGET_WINDOWS)
+	Soy::TRuntimeLibrary Dll("x264.dll");
+#endif
+
 	//	todo: tune options. takes , seperated values
 	const char* Tune = nullptr;
 	auto* PresetName = x264_preset_names[PresetValue];
