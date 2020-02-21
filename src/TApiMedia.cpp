@@ -561,7 +561,7 @@ void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 	if (!Params.IsArgumentUndefined(1))
 	{
 		auto FormatString = Params.GetArgumentString(1);
-		Format = magic_enum::enum_cast<SoyPixelsFormat::Type>(FormatString).value();
+		Format = *magic_enum::enum_cast<SoyPixelsFormat::Type>(FormatString);
 	}
 
 	bool OnlyLatestFrame = true;
