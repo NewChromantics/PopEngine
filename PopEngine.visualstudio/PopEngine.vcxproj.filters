@@ -109,6 +109,9 @@
     <Filter Include="Libs\Zip">
       <UniqueIdentifier>{8e667f50-59ee-46a1-876c-2b5024d01ff9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\KinectStream">
+      <UniqueIdentifier>{825b87c6-0b8a-48dc-a143-59846452df8c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -803,6 +806,30 @@
     </None>
     <None Include="..\src\SoyLib\src\SoyFilesystem.mm">
       <Filter>SoyLib</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\KinectDepth.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Quad.vert.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Uvy844.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Yuv8_88.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Blit.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\bootup.js">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Yuv8_8_8.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

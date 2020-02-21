@@ -388,9 +388,9 @@
     <None Include="..\src\Libs\PopH264\PopH264.dll.meta" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb.meta" />
-    <CustomBuild Include="..\src\Libs\x264\bin\x64\x264.dll">
+    <CopyFileToFolders Include="..\src\Libs\x264\bin\x64\x264.dll">
       <FileType>Document</FileType>
-    </CustomBuild>
+    </CopyFileToFolders>
     <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll">
       <FileType>Document</FileType>
     </CustomBuild>
@@ -494,6 +494,14 @@
     <None Include="..\UnitTest\H264Encode\bootup.js" />
     <None Include="..\UnitTest\H264Encode\Quad.vert.glsl" />
     <None Include="..\UnitTest\HttpServer\bootup.js" />
+    <None Include="..\UnitTest\KinectStream\Blit.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\bootup.js" />
+    <None Include="..\UnitTest\KinectStream\KinectDepth.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Quad.vert.glsl" />
+    <None Include="..\UnitTest\KinectStream\Uvy844.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Yuv8_88.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Yuv8_8_8.frag.glsl" />
     <None Include="..\UnitTest\LeapMotion\bootup.js" />
     <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl" />
     <None Include="..\UnitTest\LeapMotion\Cube.vert.glsl" />

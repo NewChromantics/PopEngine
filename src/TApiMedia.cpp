@@ -798,22 +798,24 @@ void TH264EncoderWrapper::OnPacketOutput()
 	if (!mNextPacketPromises.HasPromises())
 		return;
 
-	auto NextPacket = mEncoder->PopPacket();
-	//	no packets yet!
-	if (!NextPacket.mData)
+	if ( !mEncoder->HasPackets())
 		return;
 
-	auto& PacketData = *NextPacket.mData;
-
-	auto Resolve = [&](Bind::TLocalContext& Context,Bind::TPromise& Promise)
+	auto Resolve = [this](Bind::TLocalContext& Context)
 	{
+		auto NextPacket = mEncoder->PopPacket();
+
 		auto Packet = Context.mGlobalContext.CreateObjectInstance(Context);
 		Packet.SetInt("Time", NextPacket.mTime);
-		Packet.SetArray("Data", GetArrayBridge(PacketData));
-
-		Promise.Resolve(Context, Packet);
+		auto Data = NextPacket.mData;
+		if (Data)
+		{
+			Packet.SetArray("Data", GetArrayBridge(*Data));
+		}
+		mNextPacketPromises.Resolve(Packet);
 	};
-	mNextPacketPromises.Flush(Resolve);
+	auto& Context = mNextPacketPromises.GetContext();
+	Context.Queue(Resolve);
 }
 
 
@@ -832,6 +834,11 @@ X264::TInstance::TInstance(size_t PresetValue)
 {
 	if ( PresetValue > 9 )
 		throw Soy_AssertException("Expecting preset value <= 9");
+
+	//	trigger dll load
+#if defined(TARGET_WINDOWS)
+	Soy::TRuntimeLibrary Dll("x264.dll");
+#endif
 
 	//	todo: tune options. takes , seperated values
 	const char* Tune = nullptr;
