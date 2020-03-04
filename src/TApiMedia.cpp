@@ -21,12 +21,10 @@
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopCameraDeviceFramework.framework/Headers/TCameraDevice.h"
 #include "Libs/PopCameraDeviceFramework.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
-#include "Libs/PopCameraDevice/TCameraDevice.h"
 #endif
 
 
@@ -34,34 +32,7 @@
 namespace PopCameraDevice
 {
 	//	put C funcs into namespace
-	void	EnumDevices(std::function<void(const std::string&)> EnumDevice);
 	void	LoadDll();
-
-	namespace MetaIndex
-	{
-		enum Type
-		{
-			PlaneCount = 0,
-
-			Plane0_Width,
-			Plane0_Height,
-			Plane0_ComponentCount,
-			Plane0_SoyPixelsFormat,
-			Plane0_PixelDataSize,
-
-			Plane1_Width,
-			Plane1_Height,
-			Plane1_ComponentCount,
-			Plane1_SoyPixelsFormat,
-			Plane1_PixelDataSize,
-
-			Plane2_Width,
-			Plane2_Height,
-			Plane2_ComponentCount,
-			Plane2_SoyPixelsFormat,
-			Plane2_PixelDataSize,
-		};
-	};
 }
 
 
@@ -110,16 +81,14 @@ x264_t *x264_encoder_open_155( x264_param_t * )
 class PopCameraDevice::TInstance
 {
 public:
-	TInstance(const std::string& Name,std::function<void()> OnNewFrame);
+	TInstance(const std::string& Name,const std::string& Format,std::function<void()> OnNewFrame);
 	~TInstance();
 
-	TFrame			PopLastFrame();
+	TFrame					PopLastFrame();
 
 protected:
-	TDevice&		GetDevice();
-
-protected:
-	int32_t			mHandle = 0;
+	int32_t					mHandle = 0;
+	std::function<void()>	mOnNewFrame;
 };
 
 
@@ -211,20 +180,21 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
+	PopCameraDevice::LoadDll();
+
 	auto DoEnumDevices = [&]
 	{
+		auto& LocalContext = Params.mLocalContext;
 		try
 		{
-			Array<std::string> DeviceNames;
-			auto EnumDevice = [&](const std::string& Name)
-			{
-				DeviceNames.PushBack(Name);
-			};
-			PopCameraDevice::EnumDevices(EnumDevice);
-			
-						
-			//	gr: don't bother queuing, assume Resolve/Reject is always queued
-			Promise.Resolve( Params.mLocalContext, GetArrayBridge(DeviceNames) );
+			//	we now return the json directly
+			Array<char> JsonBuffer;
+			JsonBuffer.SetSize(2000);
+			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+
+			std::string Json(JsonBuffer.GetArray());
+			auto Object = Bind::ParseObjectString(LocalContext.mLocalContext, Json);
+			Promise.Resolve( LocalContext, Object);
 		}
 		catch(std::exception& e)
 		{
@@ -232,7 +202,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
-			Promise.Reject( Params.mLocalContext, ExceptionString );
+			Promise.Reject( LocalContext, ExceptionString );
 		}
 	};
 	
@@ -414,37 +384,31 @@ void PopCameraDevice::LoadDll()
 #endif
 }
 
-void PopCameraDevice::EnumDevices(std::function<void(const std::string&)> EnumDevice)
+
+PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& Format, std::function<void()> OnNewFrame)
 {
-	LoadDll();
-	char DeviceNamesBuffer[2000] = {0};
-	PopCameraDevice_EnumCameraDevices(DeviceNamesBuffer, std::size(DeviceNamesBuffer));
+	char ErrorBuffer[1000] = { 0 };
+	mHandle = PopCameraDevice_CreateCameraDeviceWithFormat(Name.c_str(), Format.c_str(), ErrorBuffer, std::size(ErrorBuffer));
 
-	//	now split
-	auto SplitChar = DeviceNamesBuffer[0];
-	std::string DeviceNames(&DeviceNamesBuffer[1]);
-	auto EnumMatch = [&](const std::string& Part)
-	{
-		EnumDevice(Part);
-		return true;
-	};
-	Soy::StringSplitByString(EnumMatch, DeviceNames, SplitChar, false);
-}
-
-
-
-PopCameraDevice::TInstance::TInstance(const std::string& Name, std::function<void()> OnNewFrame)
-{
-	mHandle = PopCameraDevice_CreateCameraDevice(Name.c_str());
 	if ( mHandle <= 0 )
 	{
+		std::string ErrorStr(ErrorBuffer);
 		std::stringstream Error;
-		Error << "Failed to create PopCameraDevice named " << Name << ". Error: " << mHandle;
+		Error << "Failed to create PopCameraDevice named " << Name << " (Handle=" << mHandle << "). Error: " << ErrorStr;
 		throw Soy::AssertException(Error.str());
 	}
 
-	auto& Device = GetDevice();
-	Device.mOnNewFrame = OnNewFrame;
+	PopCameraDevice_OnNewFrame* OnNewFrameCallback = [](void* Meta)
+	{
+		auto* This = static_cast<PopCameraDevice::TInstance*>(Meta);
+		auto OnNewFrame = This->mOnNewFrame;
+		if (OnNewFrame)
+			OnNewFrame();
+		else
+			std::Debug << "New frame ready" << std::endl;
+	};
+
+	//PopCameraDevice_AddOnNewFrameCallback(mHandle, OnNewFrameCallback,this);
 }
 
 
@@ -453,50 +417,29 @@ PopCameraDevice::TInstance::~TInstance()
 	PopCameraDevice_FreeCameraDevice(mHandle);
 }
 
-PopCameraDevice::TDevice& PopCameraDevice::TInstance::GetDevice()
+void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& Metas, const std::string& Json)
 {
-	auto* DevicePointer = PopCameraDevice_GetDevicePtr( mHandle );
-	if ( !DevicePointer )
-	{
-		std::stringstream Error;
-		Error << "Device is null for instance " << mHandle;
-		throw Soy::AssertException(Error.str());
-	}
-	return *DevicePointer;
-}
 
+}
 
 PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 {
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
 
-	//	this should throw if the device has gone
-	auto& Device = GetDevice();
 
-	//	get meta so we know what buffers to allocate
-	const int MetaValuesSize = 100;
-	int MetaValues[MetaValuesSize];
-	PopCameraDevice_GetMeta(mHandle, MetaValues, MetaValuesSize);
-	
-	//	dont have meta yet
-	auto PlaneCount = MetaValues[MetaIndex::PlaneCount];
-	if (PlaneCount == 0)
-		throw Soy::AssertException("PopCameraDevice_GetMeta 0 planes");
+	Array<char> JsonBuffer(2000);
+	//	gr: this is json now, so we need a good way to extract what we need...
+	auto NextFrameNumber = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+	if (NextFrameNumber < 0)
+		throw Soy::AssertException("PopCameraDevice_PeekNextFrame: No new frame");
 
-	//	reuse temp buffers
-	const int MaxPlaneCount = 3;
-	if ( PlaneCount > MaxPlaneCount )
-	{
-		std::stringstream Error;
-		Error << "Got " << PlaneCount << " when max is " << MaxPlaneCount;
-		throw Soy::AssertException(Error);
-	}
-		
-	SoyPixelsMeta PlaneMeta[MaxPlaneCount];
-	PlaneMeta[0] = SoyPixelsMeta(MetaValues[MetaIndex::Plane0_Width], MetaValues[MetaIndex::Plane0_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane0_SoyPixelsFormat]));
-	PlaneMeta[1] = SoyPixelsMeta(MetaValues[MetaIndex::Plane1_Width], MetaValues[MetaIndex::Plane1_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane1_SoyPixelsFormat]));
-	PlaneMeta[2] = SoyPixelsMeta(MetaValues[MetaIndex::Plane2_Width], MetaValues[MetaIndex::Plane2_Height], static_cast<SoyPixelsFormat::Type>(MetaValues[MetaIndex::Plane2_SoyPixelsFormat]));
+	std::string Json(JsonBuffer.GetArray());
+
+	//	get plane count
+	BufferArray<SoyPixelsMeta, 4> PlaneMetas;
+	GetPixelMetasFromJson(GetArrayBridge(PlaneMetas), Json);
+	auto PlaneCount = PlaneMetas.GetSize();
 
 	auto AllocPlane = [&]()->std::shared_ptr<SoyPixelsImpl>&
 	{
@@ -514,7 +457,7 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 	Array<size_t> PlanePixelsByteSize;
 	for ( auto i=0;	i<PlaneCount;	i++ )
 	{
-		auto& Meta = PlaneMeta[i];
+		auto& Meta = PlaneMetas[i];
 		if ( !Meta.IsValid() )
 			continue;
 
@@ -525,7 +468,7 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 		PlanePixelsByteSize.PushBack(Array.GetDataSize());
 	}
 
-	while ( PlanePixelsBytes.GetSize() < MaxPlaneCount )
+	while ( PlanePixelsBytes.GetSize() < 3 )
 	{
 		PlanePixelsBytes.PushBack(nullptr);
 		PlanePixelsByteSize.PushBack(0);
@@ -533,18 +476,18 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 	
 	char FrameMeta[1000] = { 0 };
 
-	//	check for a new frame
-	auto Result = PopCameraDevice_PopFrameAndMeta(mHandle,
+	auto NewFrameTime = PopCameraDevice_PopNextFrame(
+		mHandle,
+		nullptr,	//	json buffer
+		0,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
 		PlanePixelsBytes[1], PlanePixelsByteSize[1],
-		PlanePixelsBytes[2], PlanePixelsByteSize[2],
-		FrameMeta,
-		std::size(FrameMeta)
+		PlanePixelsBytes[2], PlanePixelsByteSize[2]
 	);
 
 	//	no new frame
-	if (Result == 0)
-		throw Soy::AssertException("No new frame");
+	if (NewFrameTime < 0)
+		throw Soy::AssertException("New frame post-peek invalid");
 
 	return Frame;
 }
@@ -555,13 +498,12 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto DeviceName = Params.GetArgumentString(0);
-	
+		
 	//	param 1 is format so we can specify format, streamindex, depth, rgb etc etc
-	auto Format = SoyPixelsFormat::Invalid;
+	std::string Format;
 	if (!Params.IsArgumentUndefined(1))
 	{
-		auto FormatString = Params.GetArgumentString(1);
-		Format = magic_enum::enum_cast<SoyPixelsFormat::Type>(FormatString).value();
+		Format = Params.GetArgumentString(1);
 	}
 
 	bool OnlyLatestFrame = true;
@@ -572,7 +514,7 @@ void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 
 	//	todo: frame buffer [plane]pool
 	auto OnNewFrame = std::bind(&TPopCameraDeviceWrapper::OnNewFrame, this);
-	mInstance.reset(new PopCameraDevice::TInstance(DeviceName,OnNewFrame));
+	mInstance.reset(new PopCameraDevice::TInstance(DeviceName, Format,OnNewFrame));
 }
 
 
