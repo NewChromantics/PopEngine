@@ -1499,9 +1499,33 @@ void JSLockAndRun(JSGlobalContextRef GlobalContext,std::function<void(JSContextR
 
 
 
-JSValueRef JSValueMakeFromJSONString(JSContextRef Context, JSStringRef String)
+JSValueRef JSValueMakeFromJSONString(JSContextRef Context, const std::string& Json)
 {
-	THROW_TODO;
+	//	doesn't work
+	//auto* TestJson = "{\"Devices\":[]};";	//	parse error
+	//auto* TestJson = "const Obj={\"Devices\":[]};";	//	returns undefined
+	//auto* TestJson = "const Obj={\"Devices\":[]};return Obj;";	//	parse error
+	//	works
+	//auto* TestJson = "const Obj={\"Devices\":[]};Obj;\n";
+	std::stringstream JsonWrapper;
+	JsonWrapper << "const JsonObject=" << Json << "; JsonObject;";
+
+	auto JsonStringW = Soy::StringToWString(JsonWrapper.str());
+	auto FilenameW = Soy::StringToWString("<JSON string>");
+
+	JsSourceContext ScriptCookie = Chakra::GetNewScriptContext();
+
+	JSValueRef Result = nullptr;
+	auto Error = JsRunScript(JsonStringW.c_str(), ScriptCookie, FilenameW.c_str(), &Result);
+	Chakra::IsOkay(Error, "JSValueMakeFromJSONString (Json)");
+	//	double check result
+	JsValueType ResultType = JsUndefined;
+	Error = JsGetValueType(Result, &ResultType);
+	Chakra::IsOkay(Error, "JSValueMakeFromJSONString (Json result value)");
+	if (ResultType != JsObject)
+		throw Soy::AssertException("JSValueMakeFromJSONString (result type is not object)");
+
+	return Result;
 }
 
 void JSValueWrapper::Set(JSValueRef Value)

@@ -243,8 +243,7 @@ JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 
 Bind::TObject JsCore::ParseObjectString(JSContextRef Context, const std::string& JsonString)
 {
-	auto String = JsCore::GetString(Context, JsonString);
-	auto Value = JSValueMakeFromJSONString(Context, String);
+	auto Value = JSValueMakeFromJSONString(Context, JsonString);
 	auto ObjectValue = GetObject(Context, Value);
 	Bind::TObject Object(Context, ObjectValue);
 	return Object;
