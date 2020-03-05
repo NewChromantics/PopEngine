@@ -1508,7 +1508,7 @@ JSValueRef JSValueMakeFromJSONString(JSContextRef Context, const std::string& Js
 	//	works
 	//auto* TestJson = "const Obj={\"Devices\":[]};Obj;\n";
 	std::stringstream JsonWrapper;
-	JsonWrapper << "const JsonObject=" << Json << "; JsonObject;";
+	JsonWrapper << "(function(){ return " << Json << "; })();";
 
 	auto JsonStringW = Soy::StringToWString(JsonWrapper.str());
 	auto FilenameW = Soy::StringToWString("<JSON string>");
