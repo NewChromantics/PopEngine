@@ -4,6 +4,7 @@
 #include "SoyFilesystem.h"
 #include "SoyLib/src/SoyMedia.h"
 #include "MagicEnum/include/magic_enum.hpp"
+#include "Json11/json11.hpp"
 
 
 //	video decoding
@@ -385,7 +386,8 @@ void PopCameraDevice::LoadDll()
 }
 
 
-PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& Format, std::function<void()> OnNewFrame)
+PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& Format, std::function<void()> OnNewFrame) :
+	mOnNewFrame	( OnNewFrame )
 {
 	char ErrorBuffer[1000] = { 0 };
 	mHandle = PopCameraDevice_CreateCameraDeviceWithFormat(Name.c_str(), Format.c_str(), ErrorBuffer, std::size(ErrorBuffer));
@@ -408,7 +410,7 @@ PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string&
 			std::Debug << "New frame ready" << std::endl;
 	};
 
-	//PopCameraDevice_AddOnNewFrameCallback(mHandle, OnNewFrameCallback,this);
+	PopCameraDevice_AddOnNewFrameCallback(mHandle, OnNewFrameCallback,this);
 }
 
 
@@ -417,9 +419,42 @@ PopCameraDevice::TInstance::~TInstance()
 	PopCameraDevice_FreeCameraDevice(mHandle);
 }
 
-void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& Metas, const std::string& Json)
-{
 
+void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& Metas, const std::string& JsonString)
+{
+	//std::Debug << __PRETTY_FUNCTION__ << "(" << JsonString << std::endl;
+	std::string Error;
+	auto JsonObject = json11::Json::parse(JsonString, Error);
+	if (JsonObject == json11::Json())
+		throw Soy::AssertException(std::string("JSON parse error: ") + Error);
+
+	auto JsonPlanesNode = JsonObject["Planes"];
+	if (!JsonPlanesNode.is_array())
+		throw Soy::AssertException(std::string("Expecting Frame Meta JSON .Planes to be an array;") + JsonString);
+
+	auto& JsonPlanes = JsonPlanesNode.array_items();
+	auto ParsePlane = [&](const json11::Json& PlaneObject)
+	{
+		auto Width = PlaneObject["Width"].number_value();
+		auto Height = PlaneObject["Height"].number_value();
+		auto Channels = PlaneObject["Channels"].number_value();
+		auto DataSize = PlaneObject["DataSize"].number_value();
+		auto FormatString = PlaneObject["Format"].string_value();
+		auto Format = SoyPixelsFormat::ToType(FormatString);
+		SoyPixelsMeta Meta(Width, Height, Format);
+		auto MetaSize = Meta.GetDataSize();
+		if (MetaSize != DataSize)
+		{
+			std::stringstream Error;
+			Error << "Meta size (" << MetaSize << "; " << Meta << ") doesn't match dictated plane size " << DataSize << ". Change code to pass plane size";
+			throw Soy::AssertException(Error);
+		}
+		Metas.PushBack(Meta);
+	};
+	for (auto& PlaneObject : JsonPlanes)
+	{
+		ParsePlane(PlaneObject);
+	}
 }
 
 PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
