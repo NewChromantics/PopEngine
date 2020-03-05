@@ -25,3 +25,9 @@
 [submodule "src/Zip"]
 	path = src/Zip
 	url = https://github.com/kuba--/zip.git
+[submodule "https://github.com/dropbox/json11.git"]
+	path = https://github.com/dropbox/json11.git
+	url = src/Json11
+[submodule "src/Json11"]
+	path = src/Json11
+	url = https://github.com/dropbox/json11.git
