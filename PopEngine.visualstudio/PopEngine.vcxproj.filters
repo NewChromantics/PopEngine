@@ -112,6 +112,9 @@
     <Filter Include="UnitTest\KinectStream">
       <UniqueIdentifier>{825b87c6-0b8a-48dc-a143-59846452df8c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libs\Json11">
+      <UniqueIdentifier>{193e9ba5-0132-489b-b59b-e5624ca5ccf7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -524,6 +527,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h">
       <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Json11\json11.hpp">
+      <Filter>Libs\Json11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1067,6 +1073,9 @@
     <ClCompile Include="..\src\Zip\src\zip.c">
       <Filter>Libs\Zip</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Json11\json11.cpp">
+      <Filter>Libs\Json11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -1176,7 +1185,6 @@
     <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
       <Filter>Libs\Openvr</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\src\Libs\x264\bin\x64\x264.dll" />
     <CustomBuild Include="..\src\v8\lib\msvcp140d.dll" />
     <CustomBuild Include="..\src\v8\lib\ucrtbased.dll" />
     <CustomBuild Include="..\src\v8\lib\vccorlib140d.dll" />
@@ -1209,5 +1217,8 @@
     <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf">
       <Filter>UnitTest\ParamsWindow</Filter>
     </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\src\Libs\x264\bin\x64\x264.dll" />
   </ItemGroup>
 </Project>

@@ -28,6 +28,7 @@
     <ClInclude Include="..\src\JsCoreDll.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\Json11\json11.hpp" />
     <ClInclude Include="..\src\Libs\dyncall\include\dyncall.h" />
     <ClInclude Include="..\src\Libs\dyncall\include\dyncall_alloc_wx.h" />
     <ClInclude Include="..\src\Libs\dyncall\include\dyncall_args.h" />
@@ -252,6 +253,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
+    <ClCompile Include="..\src\Json11\json11.cpp" />
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.cpp" />
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\aruco.cpp" />
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\charuco.cpp" />
