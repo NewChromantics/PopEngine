@@ -155,7 +155,7 @@ namespace ApiMedia
 	DEFINE_BIND_FUNCTIONNAME(WaitForNextFrame);
 	DEFINE_BIND_FUNCTIONNAME(Decode);
 	DEFINE_BIND_FUNCTIONNAME(Encode);
-	DEFINE_BIND_FUNCTIONNAME(GetNextPacket);
+	DEFINE_BIND_FUNCTIONNAME(WaitForNextPacket);
 
 	const char FrameTimestampKey[] = "Time";
 
@@ -732,7 +732,7 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiMedia::BindFunction::Encode>(&TH264EncoderWrapper::Encode);
-	Template.BindFunction<ApiMedia::BindFunction::GetNextPacket>(&TH264EncoderWrapper::GetNextPacket);
+	Template.BindFunction<ApiMedia::BindFunction::WaitForNextPacket>(&TH264EncoderWrapper::WaitForNextPacket);
 }
 
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
@@ -744,7 +744,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 	{
 		std::shared_ptr<SoyPixels> PixelCopy( new SoyPixels() );
 		{
-			Soy::TScopeTimerPrint Timer("Copy pixels for thread", 1);
+			Soy::TScopeTimerPrint Timer("Copy pixels for thread", 2);
 			Frame.GetPixels(*PixelCopy);
 		}
 		auto Encode = [=]()mutable
@@ -760,7 +760,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 	}
 }
 
-void TH264EncoderWrapper::GetNextPacket(Bind::TCallback& Params)
+void TH264EncoderWrapper::WaitForNextPacket(Bind::TCallback& Params)
 {
 	auto Promise = mNextPacketPromises.AddPromise(Params.mLocalContext);
 	Params.Return(Promise);
