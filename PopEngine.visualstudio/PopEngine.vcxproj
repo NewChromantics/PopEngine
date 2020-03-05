@@ -498,7 +498,7 @@
     <None Include="..\UnitTest\HttpServer\bootup.js" />
     <None Include="..\UnitTest\KinectStream\Blit.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\bootup.js" />
-    <None Include="..\UnitTest\KinectStream\KinectDepth.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Depthmm.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\Quad.vert.glsl" />
     <None Include="..\UnitTest\KinectStream\Uvy844.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl" />

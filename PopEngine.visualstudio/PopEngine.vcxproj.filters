@@ -813,9 +813,6 @@
     <None Include="..\src\SoyLib\src\SoyFilesystem.mm">
       <Filter>SoyLib</Filter>
     </None>
-    <None Include="..\UnitTest\KinectStream\KinectDepth.frag.glsl">
-      <Filter>UnitTest\KinectStream</Filter>
-    </None>
     <None Include="..\UnitTest\KinectStream\Quad.vert.glsl">
       <Filter>UnitTest\KinectStream</Filter>
     </None>
@@ -835,6 +832,9 @@
       <Filter>UnitTest\KinectStream</Filter>
     </None>
     <None Include="..\UnitTest\KinectStream\Yuv8_8_8.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Depthmm.frag.glsl">
       <Filter>UnitTest\KinectStream</Filter>
     </None>
   </ItemGroup>
