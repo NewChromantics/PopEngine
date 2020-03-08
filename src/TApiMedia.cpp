@@ -14,7 +14,6 @@
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
 #include "Libs/PopH264/PopH264.h"
-#include "Libs/PopH264/PopH264DecoderInstance.h"
 #endif
 
 #if defined(TARGET_WINDOWS)
@@ -33,6 +32,11 @@
 namespace PopCameraDevice
 {
 	//	put C funcs into namespace
+	void	LoadDll();
+}
+
+namespace PopH264
+{
 	void	LoadDll();
 }
 
@@ -102,6 +106,7 @@ public:
 
 	TDecoderInstance&	GetDecoder();
 	void				PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
+	PopCameraDevice::TFrame	PopLastFrame();	//	find a way to re-use the camera version
 
 protected:
 	int32_t		mHandle = 0;
@@ -160,6 +165,8 @@ namespace ApiMedia
 	const char FrameTimestampKey[] = "Time";
 
 	void	EnumDevices(Bind::TCallback& Params);
+
+	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame);
 }
 
 
@@ -214,6 +221,18 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 }
 
 
+void PopH264::LoadDll()
+{
+#if defined(TARGET_WINDOWS)
+	//	current bodge
+	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
+	if (Dll)
+		return;
+	const char* Filename = "PopH264.dll";
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+#endif
+}
+
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
@@ -225,151 +244,110 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::BindFunction::Decode>( Decode );
+	Template.BindFunction<ApiMedia::BindFunction::Decode>(&TAvcDecoderWrapper::Decode );
+	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TAvcDecoderWrapper::WaitForNextFrame);
 }
 
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TAvcDecoderWrapper>();
-	Array<uint8_t> PacketBytes;
-	Params.GetArgumentArray( 0, GetArrayBridge(PacketBytes) );
-	
-	bool UseFrameBuffer = false;
-	bool ExtractImage = true;
-	bool _ExtractPlanes = false;
-	if ( !Params.IsArgumentUndefined(1) )
+
+	std::shared_ptr< Array<uint8_t>> pPacketBytes(new Array<uint8_t>());
+	Params.GetArgumentArray(0, GetArrayBridge(*pPacketBytes));
+
+	//	push data onto thread
+	auto Decode = [this, pPacketBytes]() mutable
 	{
-		if ( Params.IsArgumentNull(1) )
-			ExtractImage = false;
-		else
-			_ExtractPlanes = Params.GetArgumentBool(1);
-	}
-	
-	if ( !Params.IsArgumentUndefined(2) )
-	{
-		UseFrameBuffer = Params.GetArgumentBool(2);
-	}
-
-	//	process async
-	auto Promise = Params.mContext.CreatePromise(Params.mLocalContext, __func__);
-	Params.Return( Promise );
-	
-	auto* pThis = &This;
-	
-	auto Resolve = [=](Bind::TLocalContext& Context)
-	{
-		auto GetImageObjects = [&](std::shared_ptr<SoyPixelsImpl>& Frame,int32_t FrameTime,Array<Bind::TObject>& PlaneImages)
-		{
-			Array<std::shared_ptr<SoyPixelsImpl>> PlanePixelss;
-			Frame->SplitPlanes( GetArrayBridge(PlanePixelss) );
-		
-			auto& mFrameBuffers = pThis->mFrameBuffers;
-			while ( UseFrameBuffer && mFrameBuffers.GetSize() < PlanePixelss.GetSize() )
-			{
-				auto ImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
-				auto& Image = ImageObject.This<TImageWrapper>();
-				std::stringstream Name;
-				Name << "AVC buffer image plane #" << mFrameBuffers.GetSize();
-				Image.mName = Name.str();
-
-				//	gr: make this an option somewhere! really we should pass in the target
-				Image.DoSetLinearFilter(true);
-
-				Bind::TPersistent ImageObjectPersistent( Context, ImageObject, Name.str() );
-				mFrameBuffers.PushBack( ImageObjectPersistent );
-			}
-			
-			for ( auto p=0;	p<PlanePixelss.GetSize();	p++)
-			{
-				//	re-use shared ptr
-				//auto& PlanePixels = PlanePixelss[p];
-				auto& PlanePixels = *PlanePixelss[p];
-				
-				Bind::TObject PlaneImageObject;
-				if ( UseFrameBuffer )
-				{
-					PlaneImageObject = mFrameBuffers[p].GetObject( Context );
-				}
-				else
-				{
-					PlaneImageObject = Context.mGlobalContext.CreateObjectInstance( Context, TImageWrapper::GetTypeName() );
-					std::stringstream PlaneName;
-					PlaneName << "Frame" << FrameTime << "Plane" << p;
-					auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
-					PlaneImage.mName = PlaneName.str();
-				}
-
-				auto& PlaneImage = PlaneImageObject.This<TImageWrapper>();
-				PlaneImage.SetPixels( PlanePixels );
-				
-				PlaneImages.PushBack( PlaneImageObject );
-			}
-		};
-		
-		auto& Decoder = This.mDecoder->GetDecoder();
-		PopH264::TFrame Frame;
-		Array<Bind::TObject> Frames;
-		
-		while ( Decoder.PopFrame(Frame) )
-		{
-			auto ExtractPlanes = _ExtractPlanes;
-
-			//	because YUV_8_8_8 cannot be expressed into a texture properly,
-			//	force plane extraction for this format
-			Array<Bind::TObject> FramePlanes;
-			if ( Frame.mPixels->GetFormat() == SoyPixelsFormat::Yuv_8_8_8_Full )
-				ExtractPlanes = true;
-
-			//std::Debug << "Popping frame" << std::endl;
-			auto ObjectTypename = ( ExtractImage && !ExtractPlanes ) ? TImageWrapper::GetTypeName() : std::string();
-			auto FrameImageObject = Context.mGlobalContext.CreateObjectInstance( Context, ObjectTypename );
-			
-			if ( ExtractImage && !ExtractPlanes )
-			{
-				auto& FrameImage = FrameImageObject.This<TImageWrapper>();
-				FrameImage.SetPixels( Frame.mPixels );
-			}
-			
- 			if ( ExtractImage && ExtractPlanes )
-			{
-				GetImageObjects( Frame.mPixels, Frame.mFrameNumber, FramePlanes );
-				FrameImageObject.SetArray("Planes", GetArrayBridge(FramePlanes) );
-			}
-			
-			//	set meta
-			FrameImageObject.SetInt("Time", Frame.mFrameNumber);
-			FrameImageObject.SetInt("DecodeDuration", Frame.mDecodeDuration.count() );
-			Frames.PushBack( FrameImageObject );
-		}
-		
-		Promise.Resolve( Context, GetArrayBridge(Frames) );
-	};
-
-	auto* pContext = &Params.mContext;
-	auto Decode = [=]()
-	{
-		auto& Context = *pContext;
-		
 		try
 		{
-			auto& Decoder = *This.mDecoder;
-			//	push data into queue
+			auto& Decoder = *mDecoder;
+			auto& PacketBytes = *pPacketBytes;
 			Decoder.PushData(GetArrayBridge(PacketBytes), 0);
-			Context.Queue( Resolve );
+			this->OnNewFrame();
 		}
-		catch(std::exception& e)
+		catch (std::exception& e)
 		{
-			std::string Error( e.what() );
-			auto DoReject = [=](Bind::TLocalContext& Context)
-			{
-				Promise.Reject( Context, Error );
-			};
-			Context.Queue( DoReject );
+			this->OnError(e.what());
 		}
 	};
 
 	//	on decoder thread, run decode
 	This.mDecoderThread->PushJob(Decode);
+}
+
+void TAvcDecoderWrapper::FlushPendingFrames()
+{
+	if (mFrames.IsEmpty() && mErrors.IsEmpty())
+		return;
+	if (!mFrameRequests.HasPromises())
+		return;
+
+	auto Flush = [this](Bind::TLocalContext& Context) mutable
+	{
+		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 3);
+
+		//	pop frames before errors
+		PopCameraDevice::TFrame PoppedFrame;
+		std::string PoppedError;
+		{
+			std::lock_guard<std::mutex> Lock(mFramesLock);
+			//	gr: sometimes, probbaly because there's no mutex on mFrames.IsEmpty() above
+			//		we get have an empty mFrames (this lambda is probably executing) and we have zero frames, 
+			//		abort the resolve
+			if (mFrames.IsEmpty() && mErrors.IsEmpty() )
+				return;
+
+			if ( !mFrames.IsEmpty() )
+			{
+				PoppedFrame = mFrames.PopAt(0);
+			}
+			else
+			{
+				PoppedError = mErrors.PopAt(0);
+			}
+		}
+
+		if (PoppedError.empty())
+		{
+			auto FrameObject = ApiMedia::FrameToObject(Context, PoppedFrame);
+			mFrameRequests.Resolve(FrameObject);
+		}
+		else
+		{
+			mFrameRequests.Reject(PoppedError);
+		}
+	};
+	auto& Context = mFrameRequests.GetContext();
+	Context.Queue(Flush);
+}
+
+void TAvcDecoderWrapper::OnNewFrame()
+{
+	//	pop frame out
+	auto Frame = mDecoder->PopLastFrame();
+	{
+		std::lock_guard<std::mutex> Lock(mFramesLock);
+		mFrames.PushBack(Frame);
+		mErrors.Clear();
+	}
+	FlushPendingFrames();
+}
+
+void TAvcDecoderWrapper::OnError(const std::string& Error)
+{
+	{
+		std::lock_guard<std::mutex> Lock(mFramesLock);
+		mErrors.PushBack(Error);
+	}
+	FlushPendingFrames();
+}
+
+void TAvcDecoderWrapper::WaitForNextFrame(Bind::TCallback& Params)
+{
+	auto Promise = mFrameRequests.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
+
+	FlushPendingFrames();
 }
 
 
@@ -541,10 +519,9 @@ void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 		Format = Params.GetArgumentString(1);
 	}
 
-	bool OnlyLatestFrame = true;
 	if (!Params.IsArgumentUndefined(2))
 	{
-		OnlyLatestFrame = Params.GetArgumentBool(2);
+		mOnlyLatestFrame = Params.GetArgumentBool(2);
 	}
 
 	//	todo: frame buffer [plane]pool
@@ -568,7 +545,7 @@ void TPopCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 }
 
 
-Bind::TObject FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame)
+Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame)
 {
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
 	FrameObject.SetInt("TimeMs",Frame.mTime.GetTime());
@@ -624,9 +601,23 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 		PopCameraDevice::TFrame PoppedFrame;
 		{
 			std::lock_guard<std::mutex> Lock(mFramesLock);
-			PoppedFrame = mFrames.PopAt(0);
+			//	gr: sometimes, probbaly because there's no mutex on mFrames.IsEmpty() above
+			//		we get have an empty mFrames (this lambda is probably executing) and we have zero frames, 
+			//		abort the resolve
+			if (mFrames.IsEmpty())
+				return;
+
+			if (mOnlyLatestFrame)
+			{
+				PoppedFrame = mFrames.PopBack();
+				mFrames.Clear(false);
+			}
+			else
+			{
+				PoppedFrame = mFrames.PopAt(0);
+			}
 		}
-		auto FrameObject = FrameToObject(Context,PoppedFrame);
+		auto FrameObject = ApiMedia::FrameToObject(Context,PoppedFrame);
 		mFrameRequests.Resolve(FrameObject);
 	};
 	auto& Context = mFrameRequests.GetContext();
@@ -648,6 +639,8 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 
 PopH264::TInstance::TInstance()
 {
+	PopH264::LoadDll();
+	
 	//	decoder now
 	auto Decoder = PopH264::Mode_Software;
 	mHandle = PopH264_CreateInstance(Decoder);
@@ -692,6 +685,75 @@ void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumb
 	}
 }
 
+PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame()
+{
+	PopCameraDevice::TFrame Frame;
+	Frame.mTime = SoyTime(true);
+
+
+	Array<char> JsonBuffer(2000);
+	//	gr: this is json now, so we need a good way to extract what we need...
+	auto NextFrameNumber = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+	if (NextFrameNumber < 0)
+		throw Soy::AssertException("PopCameraDevice_PeekNextFrame: No new frame");
+
+	std::string Json(JsonBuffer.GetArray());
+
+	//	get plane count
+	BufferArray<SoyPixelsMeta, 4> PlaneMetas;
+	GetPixelMetasFromJson(GetArrayBridge(PlaneMetas), Json);
+	auto PlaneCount = PlaneMetas.GetSize();
+
+	auto AllocPlane = [&]()->std::shared_ptr<SoyPixelsImpl>&
+	{
+		//auto& Plane = Frame.mPlanes.PushBack();
+		if (!Frame.mPlane0)
+			return Frame.mPlane0;
+		if (!Frame.mPlane1)
+			return Frame.mPlane1;
+		if (!Frame.mPlane2)
+			return Frame.mPlane2;
+		return Frame.mPlane3;
+	};
+	//auto& PlanePixels = Frame.mPlanes;
+	Array<uint8_t*> PlanePixelsBytes;
+	Array<size_t> PlanePixelsByteSize;
+	for (auto i = 0; i < PlaneCount; i++)
+	{
+		auto& Meta = PlaneMetas[i];
+		if (!Meta.IsValid())
+			continue;
+
+		auto& Plane = AllocPlane();
+		Plane.reset(new SoyPixels(Meta));
+		auto& Array = Plane->GetPixelsArray();
+		PlanePixelsBytes.PushBack(Array.GetArray());
+		PlanePixelsByteSize.PushBack(Array.GetDataSize());
+	}
+
+	while (PlanePixelsBytes.GetSize() < 3)
+	{
+		PlanePixelsBytes.PushBack(nullptr);
+		PlanePixelsByteSize.PushBack(0);
+	}
+
+	char FrameMeta[1000] = { 0 };
+
+	auto NewFrameTime = PopCameraDevice_PopNextFrame(
+		mHandle,
+		nullptr,	//	json buffer
+		0,
+		PlanePixelsBytes[0], PlanePixelsByteSize[0],
+		PlanePixelsBytes[1], PlanePixelsByteSize[1],
+		PlanePixelsBytes[2], PlanePixelsByteSize[2]
+	);
+
+	//	no new frame
+	if (NewFrameTime < 0)
+		throw Soy::AssertException("New frame post-peek invalid");
+
+	return Frame;
+}
 
 
 
@@ -906,6 +968,7 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 
 void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 {
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__, 2);
 	AllocEncoder(Pixels.GetMeta());
 
 	//	need planes

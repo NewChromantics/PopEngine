@@ -65,7 +65,6 @@ public:
 
 protected:
 	void					FlushPendingFrames();
-	void					PopFrame(Bind::TCallback& Params);
 	void					OnNewFrame();
 
 public:
@@ -90,12 +89,22 @@ public:
 	static void					CreateTemplate(Bind::TTemplate& Template);
 	virtual void 				Construct(Bind::TCallback& Arguments) override;
 	
-	static void 				Decode(Bind::TCallback& Arguments);
-	
+	void 						Decode(Bind::TCallback& Arguments);
+	void						WaitForNextFrame(Bind::TCallback& Params);
+
+protected:
+	void						FlushPendingFrames();
+	void						OnNewFrame();
+	void						OnError(const std::string& Error);
+
 public:
 	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
 	std::shared_ptr<SoyWorkerJobThread>			mDecoderThread;
-	Array<Bind::TPersistent>			mFrameBuffers;
+	
+	Bind::TPromiseQueue				mFrameRequests;
+	std::mutex						mFramesLock;
+	Array<PopCameraDevice::TFrame>	mFrames;
+	Array<std::string>				mErrors;
 };
 
 
