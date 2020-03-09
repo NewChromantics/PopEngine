@@ -59,6 +59,8 @@ namespace X264
 	void	IsOkay(int Result, const char* Context);
 	void	Log(void *data, int i_level, const char *psz, va_list args);
 
+	int		GetColourSpace(SoyPixelsFormat::Type Format);
+
 	class TPacket;
 }
 
@@ -112,7 +114,7 @@ public:
 
 	TDecoderInstance&	GetDecoder();
 	void				PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
-	PopCameraDevice::TFrame	PopLastFrame();	//	find a way to re-use the camera version
+	PopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes);	//	find a way to re-use the camera version
 
 protected:
 	int32_t		mHandle = 0;
@@ -246,6 +248,9 @@ void PopH264::LoadDll()
 
 void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 {
+	if (!Params.IsArgumentUndefined(0))
+		mSplitPlanes = Params.GetArgumentBool(0);
+
 	mDecoder.reset( new PopH264::TInstance );
 	std::string ThreadName("TAvcDecoderWrapper::DecoderThread");
 	mDecoderThread.reset( new SoyWorkerJobThread(ThreadName) );
@@ -339,7 +344,7 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 void TAvcDecoderWrapper::OnNewFrame()
 {
 	//	pop frame out
-	auto Frame = mDecoder->PopLastFrame();
+	auto Frame = mDecoder->PopLastFrame(mSplitPlanes);
 	{
 		std::lock_guard<std::mutex> Lock(mFramesLock);
 		mFrames.PushBack(Frame);
@@ -700,7 +705,7 @@ void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumb
 	}
 }
 
-PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame()
+PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes)
 {
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
@@ -765,6 +770,26 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame()
 	if (NewFrameTime < 0)
 		throw TNoFrameException();
 		//throw Soy::AssertException("New frame post-peek invalid");
+
+	//	rejoin planes when possible
+	//	gr: we should be able to make a joined format before copying from plugin
+	//		and pass SoyPixelRemote buffers
+	if (!SplitPlanes && PlaneCount>1)
+	{
+		try
+		{
+			if (PlaneCount == 2)
+				Frame.mPlane0->AppendPlane(*Frame.mPlane1);
+			else if (PlaneCount == 3)
+				Frame.mPlane0->AppendPlane(*Frame.mPlane1, *Frame.mPlane2);
+			Frame.mPlane1 = nullptr;
+			Frame.mPlane2 = nullptr;
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Failed to get merged format " << e.what() << std::endl;
+		}
+	}
 
 	return Frame;
 }
@@ -971,6 +996,26 @@ void X264::Log(void *data, int i_level, const char *psz, va_list args)
 	std::Debug << Debug.str() << std::endl;
 }
 
+int X264::GetColourSpace(SoyPixelsFormat::Type Format)
+{
+	switch (Format)
+	{
+	case SoyPixelsFormat::Yuv_8_8_8_Ntsc:	return X264_CSP_I420;
+	//case SoyPixelsFormat::Greyscale:		return X264_CSP_I400;
+	//case SoyPixelsFormat::Yuv_8_88_Ntsc:	return X264_CSP_NV12;
+	//case SoyPixelsFormat::Yvu_8_88_Ntsc:	return X264_CSP_NV21;
+	//case SoyPixelsFormat::Yvu_844_Ntsc:		return X264_CSP_NV16;
+	//	these are not supported by x264
+	//case SoyPixelsFormat::BGR:		return X264_CSP_BGR;
+	//case SoyPixelsFormat::BGRA:		return X264_CSP_BGRA;
+	//case SoyPixelsFormat::RGB:		return X264_CSP_BGR;
+	}
+
+	std::stringstream Error;
+	Error << "X264::GetColourSpace unsupported format " << Format;
+	throw Soy::AssertException(Error);
+}
+
 void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 {
 	//	todo: change PPS if content changes
@@ -984,14 +1029,14 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 	}
 
 	//	do final configuration & alloc encoder
-	mParam.i_csp = X264_CSP_I420;
+	mParam.i_csp = GetColourSpace(Meta.GetFormat());
 	mParam.i_width = size_cast<int>(Meta.GetWidth());
 	mParam.i_height = size_cast<int>(Meta.GetHeight());
 	mParam.b_vfr_input = 0;
 	mParam.b_repeat_headers = 1;
 	mParam.b_annexb = 1;
 	mParam.p_log_private = reinterpret_cast<void*>(&X264::Log);
-	mParam.i_log_level = X264_LOG_INFO;
+	mParam.i_log_level = X264_LOG_DEBUG;
 
 	auto Profile = "baseline";
 	auto Result = x264_param_apply_profile(&mParam, Profile);
@@ -1012,14 +1057,14 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	AllocEncoder(Pixels.GetMeta());
 
 	//	need planes
-	SoyPixels YuvPixels(Pixels);
-	YuvPixels.SetFormat(SoyPixelsFormat::Yuv_8_8_8_Ntsc);
+	auto& YuvPixels = Pixels;
+	//YuvPixels.SetFormat(SoyPixelsFormat::Yuv_8_8_8_Ntsc);
 	BufferArray<std::shared_ptr<SoyPixelsImpl>, 3> Planes;
 	YuvPixels.SplitPlanes(GetArrayBridge(Planes));
 
-	auto& LumaPlane = *Planes[0];
-	auto& ChromaUPlane = *Planes[1];
-	auto& ChromaVPlane = *Planes[2];
+	//auto& LumaPlane = *Planes[0];
+	//auto& ChromaUPlane = *Planes[1];
+	//auto& ChromaVPlane = *Planes[2];
 
 	//	checks from example code https://github.com/jesselegg/x264/blob/master/example.c
 	//	gr: look for proper validation funcs
@@ -1029,7 +1074,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	int ChromaSize = LumaSize / 4;
 	int ExpectedBufferSizes[] = { LumaSize, ChromaSize, ChromaSize };
 
-	for (auto i = 0; i < 3; i++)
+	for (auto i = 0; i < Planes.GetSize(); i++)
 	{
 		auto* OutPlane = mPicture.img.plane[i];
 		auto& InPlane = *Planes[i];

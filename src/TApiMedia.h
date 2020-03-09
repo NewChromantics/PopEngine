@@ -101,6 +101,7 @@ public:
 	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
 	std::shared_ptr<SoyWorkerJobThread>			mDecoderThread;
 	
+	bool							mSplitPlanes = true;
 	Bind::TPromiseQueue				mFrameRequests;
 	std::mutex						mFramesLock;
 	Array<PopCameraDevice::TFrame>	mFrames;
