@@ -531,6 +531,9 @@
     <ClInclude Include="..\src\Json11\json11.hpp">
       <Filter>Libs\Json11</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyH264.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -822,9 +825,6 @@
     <None Include="..\UnitTest\KinectStream\Yuv8_88.frag.glsl">
       <Filter>UnitTest\KinectStream</Filter>
     </None>
-    <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl">
-      <Filter>UnitTest\KinectStream</Filter>
-    </None>
     <None Include="..\UnitTest\KinectStream\Blit.frag.glsl">
       <Filter>UnitTest\KinectStream</Filter>
     </None>
@@ -835,6 +835,12 @@
       <Filter>UnitTest\KinectStream</Filter>
     </None>
     <None Include="..\UnitTest\KinectStream\Depthmm.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Yuv8_8_8_OneImage.frag.glsl">
       <Filter>UnitTest\KinectStream</Filter>
     </None>
   </ItemGroup>
@@ -1075,6 +1081,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Json11\json11.cpp">
       <Filter>Libs\Json11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp">
+      <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

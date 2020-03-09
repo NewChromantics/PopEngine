@@ -99,6 +99,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyH264.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyHttp.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyImage.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyJson.h" />
@@ -260,6 +261,7 @@
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\dictionary.cpp" />
     <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\TApiCoreMl.cpp" />
@@ -504,6 +506,7 @@
     <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\Yuv8_88.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\Yuv8_8_8.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Yuv8_8_8_OneImage.frag.glsl" />
     <None Include="..\UnitTest\LeapMotion\bootup.js" />
     <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl" />
     <None Include="..\UnitTest\LeapMotion\Cube.vert.glsl" />

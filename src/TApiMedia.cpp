@@ -41,6 +41,12 @@ namespace PopH264
 }
 
 
+class TNoFrameException : public std::exception
+{
+public:
+	virtual const char* what() const __noexcept { return "No new frame"; }
+};
+
 
 #if defined(TARGET_WINDOWS)
 #include "Libs/x264/include/x264.h"
@@ -127,6 +133,7 @@ public:
 	~TInstance();
 
 	void			PushFrame(const SoyPixelsImpl& Pixels, int32_t FrameTime);
+	void			FlushFrames();
 	TPacket			PopPacket();
 	bool			HasPackets() {	return !mPackets.IsEmpty();	}
 	std::string		GetVersion() const;
@@ -134,6 +141,8 @@ public:
 private:
 	void			AllocEncoder(const SoyPixelsMeta& Meta);
 	void			OnOutputPacket(const TPacket& Packet);
+
+	void			Encode(x264_picture_t* InputPicture);
 
 protected:
 	SoyPixelsMeta	mPixelMeta;	//	invalid until we've pushed first frame
@@ -160,6 +169,7 @@ namespace ApiMedia
 	DEFINE_BIND_FUNCTIONNAME(WaitForNextFrame);
 	DEFINE_BIND_FUNCTIONNAME(Decode);
 	DEFINE_BIND_FUNCTIONNAME(Encode);
+	DEFINE_BIND_FUNCTIONNAME(EncodeFinished);
 	DEFINE_BIND_FUNCTIONNAME(WaitForNextPacket);
 
 	const char FrameTimestampKey[] = "Time";
@@ -264,6 +274,11 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 			auto& PacketBytes = *pPacketBytes;
 			Decoder.PushData(GetArrayBridge(PacketBytes), 0);
 			this->OnNewFrame();
+		}
+		catch (TNoFrameException&e)
+		{
+			//	OnNewFrame doesn't have a frame yet
+			//std::Debug << __PRETTY_FUNCTION__ << " no frame yet" << std::endl;
 		}
 		catch (std::exception& e)
 		{
@@ -445,7 +460,7 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 	//	gr: this is json now, so we need a good way to extract what we need...
 	auto NextFrameNumber = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
 	if (NextFrameNumber < 0)
-		throw Soy::AssertException("PopCameraDevice_PeekNextFrame: No new frame");
+		throw TNoFrameException();
 
 	std::string Json(JsonBuffer.GetArray());
 
@@ -689,13 +704,13 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame()
 {
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
-
+		
 
 	Array<char> JsonBuffer(2000);
 	//	gr: this is json now, so we need a good way to extract what we need...
-	auto NextFrameNumber = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
-	if (NextFrameNumber < 0)
-		throw Soy::AssertException("PopCameraDevice_PeekNextFrame: No new frame");
+	PopH264_PeekFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+	//if (NextFrameNumber < 0)
+	//	throw TNoFrameException();
 
 	std::string Json(JsonBuffer.GetArray());
 
@@ -738,11 +753,9 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame()
 	}
 
 	char FrameMeta[1000] = { 0 };
-
-	auto NewFrameTime = PopCameraDevice_PopNextFrame(
+	
+	auto NewFrameTime = PopH264_PopFrame(
 		mHandle,
-		nullptr,	//	json buffer
-		0,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
 		PlanePixelsBytes[1], PlanePixelsByteSize[1],
 		PlanePixelsBytes[2], PlanePixelsByteSize[2]
@@ -750,7 +763,8 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame()
 
 	//	no new frame
 	if (NewFrameTime < 0)
-		throw Soy::AssertException("New frame post-peek invalid");
+		throw TNoFrameException();
+		//throw Soy::AssertException("New frame post-peek invalid");
 
 	return Frame;
 }
@@ -794,6 +808,7 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiMedia::BindFunction::Encode>(&TH264EncoderWrapper::Encode);
+	Template.BindFunction<ApiMedia::BindFunction::EncodeFinished>(&TH264EncoderWrapper::EncodeFinished);
 	Template.BindFunction<ApiMedia::BindFunction::WaitForNextPacket>(&TH264EncoderWrapper::WaitForNextPacket);
 }
 
@@ -822,6 +837,22 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 	}
 }
 
+void TH264EncoderWrapper::EncodeFinished(Bind::TCallback& Params)
+{
+	if (mEncoderThread)
+	{
+		auto Encode = [=]()mutable
+		{
+			mEncoder->FlushFrames();
+		};
+		mEncoderThread->PushJob(Encode);
+	}
+	else
+	{
+		mEncoder->FlushFrames();
+	}
+}
+
 void TH264EncoderWrapper::WaitForNextPacket(Bind::TCallback& Params)
 {
 	auto Promise = mNextPacketPromises.AddPromise(Params.mLocalContext);
@@ -839,19 +870,28 @@ void TH264EncoderWrapper::OnPacketOutput()
 
 	if ( !mEncoder->HasPackets())
 		return;
-
+	
 	auto Resolve = [this](Bind::TLocalContext& Context)
 	{
-		auto NextPacket = mEncoder->PopPacket();
-
-		auto Packet = Context.mGlobalContext.CreateObjectInstance(Context);
-		Packet.SetInt("Time", NextPacket.mTime);
-		auto Data = NextPacket.mData;
-		if (Data)
+		//	gr: we're hitting race conditions here, pop packets ONLY AS we're resolving
+		auto Flush = [this](Bind::TLocalContext& Context, Bind::TPromise& Promise)
 		{
-			Packet.SetArray("Data", GetArrayBridge(*Data));
-		}
-		mNextPacketPromises.Resolve(Packet);
+			auto NextPacket = mEncoder->PopPacket();
+			auto Packet = Context.mGlobalContext.CreateObjectInstance(Context);
+			Packet.SetInt("Time", NextPacket.mTime);
+			auto Data = NextPacket.mData;
+			if (Data)
+			{
+				Packet.SetArray("Data", GetArrayBridge(*Data));
+				std::Debug << "Resolving packet (" << (Data->GetSize()) << ")" << std::endl;
+			}
+			else
+			{
+				std::Debug << "Resolving packet (null) hit race condition?" << std::endl;
+			}
+			Promise.Resolve(Context,Packet);
+		};
+		mNextPacketPromises.Flush(Flush);
 	};
 	auto& Context = mNextPacketPromises.GetContext();
 	Context.Queue(Resolve);
@@ -1006,44 +1046,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	}
 
 	mPicture.i_pts = FrameTime;
-	x264_picture_t OutputPicture;
-
-	//	gr: currently, decoder needs to have nal packets split
-	auto OnNalPacket = [&](FixedRemoteArray<uint8_t>& Data)
-	{
-		TPacket OutputPacket;
-		OutputPacket.mData.reset(new Array<uint8_t>());
-		OutputPacket.mTime = FrameTime;
-		OutputPacket.mData->PushBackArray(Data);
-		OnOutputPacket(OutputPacket);
-	};
-
-	auto Encode = [&](x264_picture_t* InputPicture)
-	{
-		x264_nal_t* Nals = nullptr;
-		int NalCount = 0;
-
-		auto FrameSize = x264_encoder_encode(mHandle, &Nals, &NalCount, InputPicture, &OutputPicture);
-		if (FrameSize < 0)
-			throw Soy::AssertException("x264_encoder_encode error");
-
-		//	processed, but no data output
-		if (FrameSize == 0)
-			return;
-
-		//	process each nal
-		auto TotalNalSize = 0;
-		for (auto n = 0; n < NalCount; n++)
-		{
-			auto& Nal = Nals[n];
-			auto NalSize = Nal.i_payload;
-			auto PacketArray = GetRemoteArray(Nal.p_payload, NalSize);
-			OnNalPacket(PacketArray);
-			TotalNalSize += NalSize;
-		}
-		if (TotalNalSize != FrameSize)
-			throw Soy::AssertException("NALs output size doesn't match frame size");
-	};
+	
 	Encode(&mPicture);
 
 	//	flush any other frames
@@ -1055,18 +1058,67 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	//	gr: this was backwards? brew (old 2917) DID need to flush?
 	if (X264_REV < 2969)
 	{
-		while (true)
-		{
-			auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
-			if (DelayedFrameCount == 0)
-				break;
-
-			Encode(nullptr);
-		}
+		FlushFrames();
+		
 	}
+}
 
-	//	output the final part as one packet for the time
-	//OnOutputPacket(OutputPacket);
+
+void X264::TInstance::FlushFrames()
+{
+	//	when we're done with frames, we need to make the encoder flush out any more packets
+	int Safety = 1000;
+	while (--Safety > 0)
+	{
+		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
+		if (DelayedFrameCount == 0)
+			break;
+
+		Encode(nullptr);
+	}
+}
+
+
+void X264::TInstance::Encode(x264_picture_t* InputPicture)
+{
+	//	we're assuming here mPicture has been setup, or we're flushing
+
+//	gr: currently, decoder NEEDS to have nal packets split
+	auto OnNalPacket = [&](FixedRemoteArray<uint8_t>& Data)
+	{
+		auto FrameTime = mPicture.i_pts;
+
+		TPacket OutputPacket;
+		OutputPacket.mData.reset(new Array<uint8_t>());
+		OutputPacket.mTime = FrameTime;
+		OutputPacket.mData->PushBackArray(Data);
+		OnOutputPacket(OutputPacket);
+	};
+
+	x264_picture_t OutputPicture;
+	x264_nal_t* Nals = nullptr;
+	int NalCount = 0;
+
+	auto FrameSize = x264_encoder_encode(mHandle, &Nals, &NalCount, InputPicture, &OutputPicture);
+	if (FrameSize < 0)
+		throw Soy::AssertException("x264_encoder_encode error");
+
+	//	processed, but no data output
+	if (FrameSize == 0)
+		return;
+
+	//	process each nal
+	auto TotalNalSize = 0;
+	for (auto n = 0; n < NalCount; n++)
+	{
+		auto& Nal = Nals[n];
+		auto NalSize = Nal.i_payload;
+		auto PacketArray = GetRemoteArray(Nal.p_payload, NalSize);
+		OnNalPacket(PacketArray);
+		TotalNalSize += NalSize;
+	}
+	if (TotalNalSize != FrameSize)
+		throw Soy::AssertException("NALs output size doesn't match frame size");
 }
 
 
@@ -1086,7 +1138,7 @@ X264::TPacket X264::TInstance::PopPacket()
 {
 	std::lock_guard<std::mutex> Lock(mPacketsLock);
 	if (mPackets.IsEmpty())
-		return TPacket();
+		throw TNoFrameException();
 
 	auto Packet = mPackets.PopAt(0);
 	return Packet;

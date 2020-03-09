@@ -121,6 +121,7 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
 	void 			Encode(Bind::TCallback& Params);
+	void 			EncodeFinished(Bind::TCallback& Params);
 	void 			WaitForNextPacket(Bind::TCallback& Params);
 
 	void			OnPacketOutput();
