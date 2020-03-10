@@ -526,6 +526,7 @@
     <None Include="..\UnitTest\PopEngineCommon\PopCollada.js" />
     <None Include="..\UnitTest\PopEngineCommon\PopDll.js" />
     <None Include="..\UnitTest\PopEngineCommon\PopFrameCounter.js" />
+    <None Include="..\UnitTest\PopEngineCommon\PopH264.js" />
     <None Include="..\UnitTest\PopEngineCommon\PopMath.js" />
     <None Include="..\UnitTest\PopEngineCommon\PopMedia.js" />
     <None Include="..\UnitTest\PopEngineCommon\PopMp4.js" />
