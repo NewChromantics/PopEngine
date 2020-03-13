@@ -412,3 +412,28 @@ void ApiGui::TColourButtonWrapper::OnChanged(vec3x<uint8_t>& NewValue, bool Fina
 }
 
 
+
+
+
+	
+void ApiGui::TImageMapWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<BindFunction::SetImage>(&TImageMapWrapper::SetImage);
+	Template.BindFunction<BindFunction::SetCursorMap>(&TImageMapWrapper::SetCursorMap);
+	Template.BindFunction<BindFunction::WaitForMouseEvent>(&TImageMapWrapper::WaitForMouseEvent);
+}
+
+void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
+{
+	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+
+	BufferArray<int32_t, 4> Rect4;
+	Params.GetArgumentArray(1, GetArrayBridge(Rect4));
+	Soy::Rectx<int32_t> Rect(Rect4[0], Rect4[1], Rect4[2], Rect4[3]);
+
+	mControl = Platform::CreateImageMap(*ParentWindow.mWindow, Rect);
+	mControl->mOnMouseDown = std::bind(&TColourButtonWrapper::OnMouseDown, this, std::placeholders::_1, std::placeholders::_2);
+	mControl->mOnMouseMove = std::bind(&TColourButtonWrapper::OnMouseMove, this, std::placeholders::_1, std::placeholders::_2);
+	mControl->mOnMouseUp = std::bind(&TColourButtonWrapper::OnMouseUp, this, std::placeholders::_1, std::placeholders::_2);
+}
+
