@@ -1,5 +1,6 @@
 #include "TApiGui.h"
 #include "SoyOpenglWindow.h"
+#include "TApiCommon.h"
 
 
 namespace ApiGui
@@ -13,10 +14,15 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(TickBox);
 	DEFINE_BIND_TYPENAME(ColourPicker);
 	DEFINE_BIND_TYPENAME(Colour);
+	DEFINE_BIND_TYPENAME(ImageMap);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
 	DEFINE_BIND_FUNCTIONNAME(SetLabel);
+
+	DEFINE_BIND_FUNCTIONNAME(SetImage);
+	DEFINE_BIND_FUNCTIONNAME(SetCursorMap);
+	DEFINE_BIND_FUNCTIONNAME(WaitForMouseEvent);
 
 	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 	DEFINE_BIND_FUNCTIONNAME(EnableScrollbars);
@@ -34,6 +40,7 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TTickBoxWrapper>( Namespace );
 	Context.BindObjectType<TColourPickerWrapper>(Namespace);
 	Context.BindObjectType<TColourButtonWrapper>(Namespace);
+	Context.BindObjectType<TImageMapWrapper>(Namespace);
 }
 
 
@@ -152,7 +159,7 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	}
 	
 	mWindow = Platform::CreateWindow( WindowName, Rect, Resizable );
-	
+	mWindow->EnableScrollBars(false, false);
 	/*
 	mWindow->mOnRender = OnRender;
 	mWindow->mOnMouseDown = [this](const TMousePos& Pos,SoyMouseButton::Type Button)	{	this->OnMouseFunc(Pos,Button,"OnMouseDown");	};
@@ -432,8 +439,60 @@ void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
 	Soy::Rectx<int32_t> Rect(Rect4[0], Rect4[1], Rect4[2], Rect4[3]);
 
 	mControl = Platform::CreateImageMap(*ParentWindow.mWindow, Rect);
-	mControl->mOnMouseDown = std::bind(&TColourButtonWrapper::OnMouseDown, this, std::placeholders::_1, std::placeholders::_2);
-	mControl->mOnMouseMove = std::bind(&TColourButtonWrapper::OnMouseMove, this, std::placeholders::_1, std::placeholders::_2);
-	mControl->mOnMouseUp = std::bind(&TColourButtonWrapper::OnMouseUp, this, std::placeholders::_1, std::placeholders::_2);
+	mControl->mOnMouseEvent = std::bind(&TImageMapWrapper::OnMouseEvent, this, std::placeholders::_1);
 }
+
+
+void ApiGui::TImageMapWrapper::SetImage(Bind::TCallback& Params)
+{
+	auto& Image = Params.GetArgumentPointer<TImageWrapper>(0);
+	auto& Pixels = Image.GetPixels();
+	mControl->SetImage(Pixels);
+}
+
+void ApiGui::TImageMapWrapper::SetCursorMap(Bind::TCallback& Params)
+{
+	auto& CursorMapImage = Params.GetArgumentPointer<TImageWrapper>(0);
+	auto& CursorMapPixels = CursorMapImage.GetPixels();
+
+	Array<std::string> CursorNames;
+	Params.GetArgumentArray(1, GetArrayBridge(CursorNames));
+
+	mControl->SetCursorMap(CursorMapPixels, GetArrayBridge(CursorNames));
+}
+
+void ApiGui::TImageMapWrapper::WaitForMouseEvent(Bind::TCallback& Params)
+{
+	auto& Promise = mMouseEventRequests.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
+
+	FlushMouseEvents();
+}
+
+void ApiGui::TImageMapWrapper::OnMouseEvent(Gui::TMouseEvent& MouseEvent)
+{
+	{
+		std::lock_guard<std::mutex> Lock(mMouseEventsLock);
+		mMouseEvents.PushBack(MouseEvent);
+	}
+	FlushMouseEvents();
+}
+
+void ApiGui::TImageMapWrapper::FlushMouseEvents()
+{
+	if (mMouseEvents.IsEmpty())
+		return;
+	if (!mMouseEventRequests.HasPromises())
+		return;
+
+	auto Resolve = [this](Bind::TLocalContext& Context)
+	{
+		//	pop event
+	};
+	auto& Context = mMouseEventRequests.GetContext();
+	Context.Queue(Resolve);
+}
+
+
+
 

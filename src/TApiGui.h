@@ -9,11 +9,11 @@ class SoyLabel;
 class SoyTextBox;
 class SoyTickBox;
 class SoyColourButton;
-class SoyImageMap;
 
 namespace Gui
 {
 	class TColourPicker;
+	class TImageMap;
 
 	class TMouseEvent;
 }
@@ -41,24 +41,6 @@ namespace ApiGui
 	class TImageMapWrapper;
 }
 
-namespace SoyMouseEvent
-{
-	enum Type
-	{
-		Invalid = 0,
-		Down,
-		Move,
-		Up
-	};
-}
-
-class Gui::TMouseEvent
-{
-public:
-	vec2x<int32_t>			mPosition;
-	SoyMouseButton::Type	mButton = SoyMouseButton::None;
-	SoyMouseEvent::Type		mEvent = SoyMouseEvent::Invalid;
-};
 
 class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Gui_Window,SoyWindow>
 {
@@ -205,7 +187,7 @@ public:
 };
 
 
-class ApiGui::TImageMapWrapper : public Bind::TObjectWrapper<ApiGui::BindType::ImageMap, SoyImageMap>
+class ApiGui::TImageMapWrapper : public Bind::TObjectWrapper<ApiGui::BindType::ImageMap, Gui::TImageMap>
 {
 public:
 	TImageMapWrapper(Bind::TContext& Context) :
@@ -220,9 +202,13 @@ public:
 	void			SetCursorMap(Bind::TCallback& Params);
 	void			WaitForMouseEvent(Bind::TCallback& Params);
 
+protected:
+	void			OnMouseEvent(Gui::TMouseEvent& Event);
+	void			FlushMouseEvents();
+
 public:
-	Bind::TPromiseQueue				mMouseEventRequests;
-	std::mutex						mMouseEventsLock;
-	Array<Gui::TMouseEvent>			mMouseEvents;
-	std::shared_ptr<SoyImageMap>&	mControl = mObject;
+	Bind::TPromiseQueue					mMouseEventRequests;
+	std::mutex							mMouseEventsLock;
+	Array<Gui::TMouseEvent>				mMouseEvents;
+	std::shared_ptr<Gui::TImageMap>&	mControl = mObject;
 };

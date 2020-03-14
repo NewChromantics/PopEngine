@@ -15,6 +15,7 @@ extern "C"
 {
 	//	custom ColourButton win32 control
 #include "SoyLib/src/Win32ColourControl.h"
+#include "SoyLib/src/Win32ImageMapControl.h"
 }
 
 #include "MagicEnum/include/magic_enum.hpp"
@@ -134,6 +135,7 @@ public:
 		//	gotta do this somewhere, this is typically before any extra controls get created
 		InitCommonControls();
 		Win32_Register_ColourButton();
+		Win32_Register_ImageMap();
 		Start();
 	}
 
@@ -331,6 +333,20 @@ public:
 
 	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
+
+
+class Platform::TImageMap : public TControl, public Gui::TImageMap
+{
+public:
+	TImageMap(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void			SetImage(const SoyPixelsImpl& Pixels) override;
+	virtual void			SetCursorMap(const SoyPixelsImpl& CursorMap, const ArrayBridge<std::string>&& CursorIndexes)override;
+
+	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+};
+
 
 class Platform::TControlClass
 {
@@ -571,9 +587,10 @@ Platform::TControlClass::TControlClass(const std::string& Name, UINT ClassStyle)
 	wc.cbWndExtra	= 0;
 	wc.hInstance = Platform::Private::InstanceHandle;
 	wc.hIcon		= IconHandle;
-	wc.hCursor		= NULL;//LoadCursor(NULL, IDC_ARROW);
+	//wc.hCursor		= nullptr;//LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor		=  LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = BackgroundBrush;
-	wc.lpszMenuName	= NULL;
+	wc.lpszMenuName	= nullptr;
 	wc.lpszClassName = NameStr;
 
 	if (!RegisterClass(&wc))
@@ -1763,6 +1780,23 @@ std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent,
 }
 
 
+std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
+	auto& Thread = ParentControl.mThread;
+	std::shared_ptr<Gui::TImageMap> Control;
+
+	auto Create = [&]()
+	{
+		Control.reset(new Platform::TImageMap(ParentControl, Rect));
+	};
+	Soy::TSemaphore Wait;
+	Thread.PushJob(Create, Wait);
+	Wait.Wait();
+
+	return Control;
+}
+
 const DWORD Slider_StyleExFlags = 0;
 const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_AUTOTICKS;
 //const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | /*TBS_AUTOTICKS |*/ TBS_ENABLESELRANGE;
@@ -2019,4 +2053,126 @@ void Platform::TColourButton::OnWindowMessage(UINT EventMessage, DWORD WParam, D
 	}
 	*/
 	TControl::OnWindowMessage(EventMessage, WParam, LParam);
+}
+
+
+
+const DWORD ImageMap_StyleExFlags = 0;
+const DWORD ImageMap_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+
+
+Platform::TImageMap::TImageMap(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	TControl("ImageMap", IMAGEMAP_CLASSNAME, Parent, ImageMap_StyleFlags, ImageMap_StyleExFlags, Rect)
+{
+}
+
+void Platform::TImageMap::OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam)
+{
+	/*
+	if (EventMessage == COLOURBUTTON_COLOURDIALOGCLOSED)
+	{
+		this->OnChanged(true);
+	}
+	*/
+	TControl::OnWindowMessage(EventMessage, WParam, LParam);
+}
+
+
+void Platform::TImageMap::SetImage(const SoyPixelsImpl& Pixels)
+{
+	const SoyPixelsImpl* RgbPixels = &Pixels;
+	SoyPixels ConvertedPixels;
+	if (Pixels.GetFormat() != SoyPixelsFormat::RGB)
+	{
+		ConvertedPixels.Copy(Pixels);
+		ConvertedPixels.SetFormat(SoyPixelsFormat::RGB);
+		RgbPixels = &ConvertedPixels;
+	}
+
+	auto* PixelBuffer = RgbPixels->GetPixelsArray().GetArray();
+	auto Meta = RgbPixels->GetMeta();
+	ImageMap_SetImage(mHwnd, PixelBuffer, Meta.GetWidth(), Meta.GetHeight());
+}
+
+
+LPCSTR GetCursorName(SoyCursor::Type Cursor)
+{
+	switch (Cursor)
+	{
+	case SoyCursor::ArrowAndWait:	return IDC_APPSTARTING;
+	case SoyCursor::Arrow:			return IDC_ARROW;
+	case SoyCursor::Cross:			return IDC_CROSS;
+	case SoyCursor::Hand:			return IDC_HAND;
+	case SoyCursor::Help:			return IDC_HELP;
+	case SoyCursor::TextCursor:		return IDC_IBEAM;
+	case SoyCursor::NotAllowed:		return IDC_NO;
+	case SoyCursor::ResizeAll:		return IDC_SIZEALL;
+	case SoyCursor::ResizeVert:		return IDC_SIZENS;
+	case SoyCursor::ResizeHorz:		return IDC_SIZEWE;
+	case SoyCursor::ResizeNorthEast:return IDC_SIZENESW;
+	case SoyCursor::ResizeNorthWest:return IDC_SIZENWSE;
+	case SoyCursor::UpArrow:		return IDC_UPARROW;
+	case SoyCursor::Wait:			return IDC_WAIT;
+	}
+
+	std::stringstream Error;
+	Error << __PRETTY_FUNCTION__ << " Unhandled cursor type " << Cursor;
+	throw Soy::AssertException(Error);
+}
+
+HCURSOR GetCursor(SoyCursor::Type Cursor)
+{
+	LPCSTR Name = GetCursorName(Cursor);
+	auto Handle = LoadCursorA(nullptr, Name);
+	return Handle;
+}
+
+//	we use strings because cursors can be named in EXE resources
+HCURSOR GetCursor(const std::string& CursorName)
+{
+	//	see if it's predefined
+	auto CursorMaybe = magic_enum::enum_cast<SoyCursor::Type>(CursorName);
+	if (CursorMaybe.has_value())
+	{
+		return GetCursor(CursorMaybe.value());
+	}
+
+	//	try and load from exe resource
+	auto Cursor = LoadCursorA(Platform::Private::InstanceHandle, CursorName.c_str());
+	if (!Cursor)
+		Platform::ThrowLastError(std::string("Failed to LoadCursor(") + CursorName);
+
+	return Cursor;
+}
+
+void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorPixelMap, const ArrayBridge<std::string>&& CursorIndexes)
+{
+	Array<HCURSOR> CursorIndexMap;
+	for (auto i = 0; i < CursorIndexes.GetSize(); i++)
+	{
+		auto CursorName = CursorIndexes[i];
+		auto Cursor = GetCursor(CursorName);
+		CursorIndexMap.PushBack(Cursor);
+	}
+
+	//	for initial effeciency
+	if (CursorPixelMap.GetFormat() != SoyPixelsFormat::Greyscale)
+	{
+		std::stringstream Error;
+		Error << __PRETTY_FUNCTION__ << " requires cursor map in Greyscale, not " << CursorPixelMap.GetFormat();
+		throw Soy::AssertException(Error);
+	}
+	
+	//	turn into a map of cursor handles
+	Array<HCURSOR> CursorMap;
+	auto& Indexes = CursorPixelMap.GetPixelsArray();
+	for (auto i=0;	i< Indexes.GetSize();	i++ )
+	{
+		auto Index = Indexes[i];
+		//	check range
+		auto Cursor = CursorIndexMap[Index];
+		CursorMap.PushBack(Cursor);
+	}
+
+	ImageMap_SetCursorMap(mHwnd, CursorMap.GetArray(), CursorPixelMap.GetWidth(), CursorPixelMap.GetHeight());
 }
