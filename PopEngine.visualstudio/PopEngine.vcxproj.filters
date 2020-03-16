@@ -115,6 +115,15 @@
     <Filter Include="Libs\Json11">
       <UniqueIdentifier>{193e9ba5-0132-489b-b59b-e5624ca5ccf7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\KinectStream\Viewer">
+      <UniqueIdentifier>{52b1050d-ab46-4fbb-b50b-be8b7d2da1dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\Timeline">
+      <UniqueIdentifier>{ba9bb862-7d57-41ad-990e-b295f8e1a816}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\KinectStream\PopDepth16ToYuv">
+      <UniqueIdentifier>{4e99bdec-fc5f-4208-8fb1-ba2f401a88a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -534,6 +543,9 @@
     <ClInclude Include="..\src\SoyLib\src\SoyH264.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Win32ImageMapControl.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -846,6 +858,27 @@
     <None Include="..\UnitTest\PopEngineCommon\PopH264.js">
       <Filter>UnitTest\PopEngineCommon</Filter>
     </None>
+    <None Include="..\UnitTest\KinectStream\Viewer\Viewer.js">
+      <Filter>UnitTest\KinectStream\Viewer</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Viewer\win95.css">
+      <Filter>UnitTest\KinectStream\Viewer</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Viewer\Index.html">
+      <Filter>UnitTest\KinectStream\Viewer</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\Index.html">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\Timeline\bootup.js">
+      <Filter>UnitTest\Timeline</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\libwabt.js">
+      <Filter>UnitTest\KinectStream</Filter>
+    </None>
+    <None Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.wat">
+      <Filter>UnitTest\KinectStream\PopDepth16ToYuv</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -1088,6 +1121,12 @@
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c">
+      <Filter>UnitTest\KinectStream\PopDepth16ToYuv</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
@@ -1228,6 +1267,9 @@
   <ItemGroup>
     <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf">
       <Filter>UnitTest\ParamsWindow</Filter>
+    </Font>
+    <Font Include="..\UnitTest\KinectStream\Viewer\MsSansSerif.ttf">
+      <Filter>UnitTest\KinectStream\Viewer</Filter>
     </Font>
   </ItemGroup>
   <ItemGroup>

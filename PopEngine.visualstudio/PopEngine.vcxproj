@@ -126,6 +126,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWindow.h" />
     <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h" />
+    <ClInclude Include="..\src\SoyLib\src\Win32ImageMapControl.h" />
     <ClInclude Include="..\src\SoyOpenglView.h" />
     <ClInclude Include="..\src\SoyOpenglWindow.h" />
     <ClInclude Include="..\src\TApiBluetooth.h">
@@ -264,6 +265,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
+    <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c" />
     <ClCompile Include="..\src\TApiCoreMl.cpp" />
     <ClCompile Include="..\src\TApiEngine.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
@@ -276,6 +278,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\Zip\src\zip.c" />
+    <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
     <CustomBuild Include="..\src\Libs\JavascriptCore\win64\CFLite.dll">
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</DeploymentContent>
@@ -501,8 +504,14 @@
     <None Include="..\UnitTest\KinectStream\Blit.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\bootup.js" />
     <None Include="..\UnitTest\KinectStream\Depthmm.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Index.html" />
+    <None Include="..\UnitTest\KinectStream\libwabt.js" />
+    <None Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.wat" />
     <None Include="..\UnitTest\KinectStream\Quad.vert.glsl" />
     <None Include="..\UnitTest\KinectStream\Uvy844.frag.glsl" />
+    <None Include="..\UnitTest\KinectStream\Viewer\Index.html" />
+    <None Include="..\UnitTest\KinectStream\Viewer\Viewer.js" />
+    <None Include="..\UnitTest\KinectStream\Viewer\win95.css" />
     <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\Yuv8_88.frag.glsl" />
     <None Include="..\UnitTest\KinectStream\Yuv8_8_8.frag.glsl" />
@@ -545,6 +554,7 @@
     <None Include="..\UnitTest\Readme.md">
       <FileType>Document</FileType>
     </None>
+    <None Include="..\UnitTest\Timeline\bootup.js" />
     <None Include="..\UnitTest\VideoTest\Blit.frag.glsl" />
     <None Include="..\UnitTest\VideoTest\bootup.js" />
     <None Include="..\UnitTest\VideoTest\mp4.js" />
@@ -765,6 +775,7 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
+    <Font Include="..\UnitTest\KinectStream\Viewer\MsSansSerif.ttf" />
     <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
