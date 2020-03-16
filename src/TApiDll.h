@@ -35,8 +35,8 @@ public:
 	static void					CreateTemplate(Bind::TTemplate& Template);
 	virtual void 				Construct(Bind::TCallback& Params) override;
 
-	static void					BindFunction(Bind::TCallback& Params);
-	static void					CallFunction(Bind::TCallback& Params);
+	void						BindFunction(Bind::TCallback& Params);
+	void						CallFunction(Bind::TCallback& Params);
 
 	ApiDll::TFunctionBase&		GetFunction(const std::string& FunctionName);
 

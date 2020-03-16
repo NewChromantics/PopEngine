@@ -31,8 +31,8 @@ void TDllWrapper::Construct(Bind::TCallback& Params)
 
 void TDllWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiDll::BindFunction::BindFunction>( BindFunction );
-	Template.BindFunction<ApiDll::BindFunction::CallFunction>( CallFunction );
+	Template.BindFunction<ApiDll::BindFunction::BindFunction>( &TDllWrapper::BindFunction );
+	Template.BindFunction<ApiDll::BindFunction::CallFunction>(&TDllWrapper::CallFunction );
 }
 
 
@@ -588,8 +588,6 @@ std::shared_ptr<ApiDll::TFunctionBase> AllocFunction(void* FunctionAddress,const
 
 void TDllWrapper::BindFunction(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TDllWrapper>();
-	
 	auto SymbolName = Params.GetArgumentString(0);
 	Array<std::string> ArgTypes;
 	if ( !Params.IsArgumentUndefined(1) )
@@ -599,7 +597,7 @@ void TDllWrapper::BindFunction(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(2) )
 		ReturnType = Params.GetArgumentString( 2 );
 	
-	auto& Library = *This.mLibrary;
+	auto& Library = *mLibrary;
 	
 	//	get symbol
 	auto* SymbolAddress = Library.GetSymbol( SymbolName.c_str() );
@@ -615,7 +613,7 @@ void TDllWrapper::BindFunction(Bind::TCallback& Params)
 	auto Func = AllocFunction( SymbolAddress, ReturnType, ArgTypesBridge );
 
 	//	todo: check function doesn't already exist in map
-	This.mFunctions[SymbolName] = Func;
+	mFunctions[SymbolName] = Func;
 
 	//	now generate a function in javascript, which just calls our wrapper (CallFunction)
 	//	then return that as the function that the user can call
