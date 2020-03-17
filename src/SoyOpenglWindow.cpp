@@ -2082,10 +2082,11 @@ void Platform::TImageMap::SetImage(const SoyPixelsImpl& Pixels)
 {
 	const SoyPixelsImpl* RgbPixels = &Pixels;
 	SoyPixels ConvertedPixels;
-	if (Pixels.GetFormat() != SoyPixelsFormat::RGB)
+	if (Pixels.GetFormat() != SoyPixelsFormat::BGR)
 	{
+		Soy::TScopeTimerPrint Timer("TImageMap::SetImage Conversion to BGR", 1);
 		ConvertedPixels.Copy(Pixels);
-		ConvertedPixels.SetFormat(SoyPixelsFormat::RGB);
+		ConvertedPixels.SetFormat(SoyPixelsFormat::BGR);
 		RgbPixels = &ConvertedPixels;
 	}
 
