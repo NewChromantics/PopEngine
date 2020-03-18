@@ -463,7 +463,7 @@ void ApiGui::TImageMapWrapper::SetCursorMap(Bind::TCallback& Params)
 
 void ApiGui::TImageMapWrapper::WaitForMouseEvent(Bind::TCallback& Params)
 {
-	auto& Promise = mMouseEventRequests.AddPromise(Params.mLocalContext);
+	auto Promise = mMouseEventRequests.AddPromise(Params.mLocalContext);
 	Params.Return(Promise);
 
 	FlushMouseEvents();
