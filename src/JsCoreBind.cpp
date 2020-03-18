@@ -107,6 +107,14 @@ JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::
 }
 #endif
 
+#if defined(JSAPI_JSCORE)
+//	creating a value from JSON in Chakra is much faster without going into a JSstring, so we have a wrapper
+JSValueRef JSValueMakeFromJSONString(JSContextRef Context,const std::string& Json)
+{
+	auto JsonString = JSStringCreateWithUTF8CString( Context, Json );
+	return JSValueMakeFromJSONString( Context, JsonString );
+}
+#endif
 
 namespace JsCore
 {
