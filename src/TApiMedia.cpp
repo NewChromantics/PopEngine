@@ -21,7 +21,8 @@
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopCameraDeviceFramework.framework/Headers/PopCameraDevice.h"
+#include "Libs/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
+//#include "Libs/PopCameraDevice/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
@@ -31,7 +32,6 @@
 //	video capture
 namespace PopCameraDevice
 {
-	//	put C funcs into namespace
 	void	LoadDll();
 }
 
@@ -48,6 +48,7 @@ public:
 };
 
 
+//	move this to its own DLL
 #if defined(TARGET_WINDOWS)
 #include "Libs/x264/include/x264.h"
 //#pragma comment(lib,"libx264.lib")
