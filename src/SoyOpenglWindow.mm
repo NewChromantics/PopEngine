@@ -11,6 +11,8 @@ namespace Platform
 	template<typename BASETYPE>
 	class TTextBox_Base;
 	
+	class TNsView;		//	common NSView control stuff
+	
 	NSColor*		GetColour(vec3x<uint8_t> Rgb);
 	vec3x<uint8_t>	GetColour(NSColor* Colour);
 }
@@ -99,6 +101,21 @@ namespace Platform
 
 @end
 
+
+class Platform::TNsView
+{
+protected:
+	TNsView(PopWorker::TJobQueue& Thread) :
+		mThread	( Thread )
+	{
+	}
+
+	void				SetRect(const Soy::Rectx<int32_t>& Rect);
+	virtual NSControl*	GetControl()=0;
+	
+protected:
+	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
+};
 
 NSColor* Platform::GetColour(vec3x<uint8_t> Rgb)
 {
@@ -221,7 +238,7 @@ public:
 //	todo: lets just do a text box for now and make it readonly later
 //	https://stackoverflow.com/a/20169310/355753
 template<typename BASETYPE=SoyTextBox>
-class Platform::TTextBox_Base : public BASETYPE
+class Platform::TTextBox_Base : public BASETYPE, public TNsView
 {
 public:
 	TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect);
@@ -232,8 +249,9 @@ public:
 	
 	void					Create();
 	
-	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect)override;
-	
+	virtual NSControl*		GetControl() override	{	return mControl;	}
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+
 	virtual void			SetValue(const std::string& Value) override;
 	virtual std::string		GetValue() override	{	return mLastValue;	}
 	
@@ -246,7 +264,6 @@ protected:
 	
 public:
 	std::string				mLastValue;		//	as all UI is on the main thread, we have to cache value for reading
-	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
 	TResponder*				mResponder = [TResponder alloc];
 	NSTextField*			mControl = nullptr;
 };
@@ -283,7 +300,7 @@ public:
 };
 
 
-class Platform::TTickBox : public SoyTickBox
+class Platform::TTickBox : public SoyTickBox, public TNsView
 {
 public:
 	TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
@@ -292,8 +309,9 @@ public:
 		[mControl release];
 	}
 	
-	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
-	
+	virtual NSControl*	GetControl() override	{	return mControl;	}
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override	{	return mLastValue;	}
 	virtual void		SetLabel(const std::string& Label) override;
@@ -309,7 +327,6 @@ protected:
 	
 public:
 	bool					mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
-	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
 	TResponder*				mResponder = [TResponder alloc];
 	NSButton*				mControl = nullptr;
 };
@@ -330,44 +347,55 @@ public:
 };
 
 
-class Platform::TColourButton : public SoyColourButton
+class Platform::TColourButton : public SoyColourButton, public TNsView
 {
 public:
-	TColourButton(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
-		mTextBox( Thread, Parent, Rect )
+	TColourButton(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	~TColourButton()
 	{
+		[mControl release];
 	}
 	
-	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override
-	{
-		mTextBox.SetRect(Rect);
-	}
-	
-	virtual void			OnChanged(bool FinalValue) override
-	{
-		mTextBox.OnChanged();
-		SoyColourButton::OnChanged(FinalValue);
-	}
-	
-	virtual void			SetValue(vec3x<uint8_t> Value) override
-	{
-		//	colour to text
-		std::stringstream ValueString;
-		ValueString << Value.x << ',' << Value.y << ',' << Value.z;
-		mTextBox.SetValue(ValueString.str());
-	}
+	virtual NSControl*		GetControl() override	{	return mControl;	}
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+	virtual void			SetValue(vec3x<uint8_t> Value) override;
 	
 	virtual vec3x<uint8_t>	GetValue() override
 	{
-		//	text to colour
-		auto ValueString = mTextBox.GetValue();
-		BufferArray<uint8_t,3> Rgb;
-		Soy::StringParseVecNx(ValueString, GetArrayBridge(Rgb) );
-		return vec3x<uint8_t>( Rgb[0], Rgb[1], Rgb[2] );
+		return GetColour(mControl.color);
 	}
 	
-	TTextBox	mTextBox;
+	
+private:
+	TResponder*		mResponder = [TResponder alloc];
+	NSColorWell*	mControl = nullptr;
 };
+
+
+
+class Platform::TImageMap : public Gui::TImageMap, public TNsView
+{
+public:
+	TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
+	~TImageMap();
+	
+	virtual NSControl*	GetControl() override	{	return mControl;	}
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
+	virtual void		SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)override;
+
+private:
+	void				FreeImage();
+
+public:
+	TResponder*			mResponder = [TResponder alloc];
+	NSImageView*		mControl = nullptr;
+	CGImageRef			mCgImage = nullptr;
+	NSImage*			mNsImage = nullptr;
+};
+
+
+
 
 
 
@@ -876,6 +904,14 @@ std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent,
 	return pSlider;
 }
 
+std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	auto& Thread = *Soy::Platform::gMainThread;
+	auto& ParentWindow = dynamic_cast<TWindow&>(Parent);
+	std::shared_ptr<Gui::TImageMap> pControl( new Platform::TImageMap(Thread,ParentWindow,Rect) );
+	return pControl;
+}
+
 
 Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
 	mThread		( Thread )
@@ -983,7 +1019,7 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx
 
 
 Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
-	mThread		( Thread )
+	TNsView		( Thread )
 {
 	//	move this to constrctor
 	auto Allocate = [this,Rect,&Parent]()
@@ -1051,23 +1087,6 @@ void Platform::TTickBox::SetLabel(const std::string& Label)
 
 
 
-void Platform::TTickBox::SetRect(const Soy::Rectx<int32_t>& Rect)
-{
-	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-	
-	auto Exec = [=]
-	{
-		if ( !mControl )
-		throw Soy_AssertException("before slider created");
-		
-		mControl.frame = NewRect;
-	};
-	
-	mThread.PushJob(Exec);
-}
-
-
-
 
 std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
@@ -1088,7 +1107,7 @@ std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent,Soy::Rectx<int
 
 template<typename BASETYPE>
 Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
-	mThread		( Thread )
+	TNsView		( Thread )
 {
 	//	move this to constrctor
 	auto Allocate = [this,Rect,&Parent]()mutable
@@ -1143,22 +1162,6 @@ void Platform::TTextBox_Base<BASETYPE>::CacheValue()
 	mLastValue = Soy::NSStringToString( Value );
 }
 
-template<typename BASETYPE>
-void Platform::TTextBox_Base<BASETYPE>::SetRect(const Soy::Rectx<int32_t>& Rect)
-{
-	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-	
-	auto Exec = [=]
-	{
-		if ( !mControl )
-			throw Soy_AssertException("before control created");
-		
-		mControl.frame = NewRect;
-	};
-	
-	mThread.PushJob(Exec);
-}
-
 
 void Platform::TLabel::ApplyStyle()
 {
@@ -1167,5 +1170,139 @@ void Platform::TLabel::ApplyStyle()
 	[mControl setDrawsBackground:NO];
 	[mControl setEditable:NO];
 	[mControl setSelectable:NO];
+}
+
+
+Platform::TColourButton::TColourButton(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect) :
+	TNsView		( Thread )
+{
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()
+	{
+		auto ChildRect = Parent.GetChildRect( Rect );
+		mControl = [[NSColorWell alloc] initWithFrame:ChildRect];
+		[mControl retain];
+		
+		//	setup callback
+		mResponder->mCallback = [this]()	{	this->OnChanged(true);	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
+
+		//[mControl setButtonType:NSSwitchButton];
+		//[mControl setBezelStyle:0];
+		
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
+	};
+	mThread.PushJob( Allocate );
+}
+
+void Platform::TColourButton::SetValue(vec3x<uint8_t> Rgb)
+{
+	auto Exec = [=]
+	{
+		mControl.color = GetColour(Rgb);
+	};
+	mThread.PushJob( Exec );
+}
+
+void Platform::TNsView::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
+	
+	auto Exec = [=]
+	{
+		auto mControl = GetControl();
+		mControl.frame = NewRect;
+	};
+	
+	mThread.PushJob(Exec);
+}
+
+
+
+Platform::TImageMap::TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect) :
+	TNsView		( Thread )
+{
+	//	move this to constrctor
+	auto Allocate = [this,Rect,&Parent]()
+	{
+		auto ChildRect = Parent.GetChildRect( Rect );
+		mControl = [[NSImageView alloc] initWithFrame:ChildRect];
+		[mControl retain];
+		
+		//	setup callback
+		//mResponder->mCallback = [this]()	{	this->OnChanged(true);	};
+		mControl.target = mResponder;
+		mControl.action = @selector(OnAction);
+		
+		//[mControl setButtonType:NSSwitchButton];
+		//[mControl setBezelStyle:0];
+		
+		auto* ParentView = Parent.GetContentView();
+		[ParentView addSubview:mControl];
+		Parent.OnChildAdded( Rect );
+	};
+	mThread.PushJob( Allocate );
+}
+
+Platform::TImageMap::~TImageMap()
+{
+	[mControl release];
+	
+	FreeImage();
+}
+
+
+void Platform::TImageMap::FreeImage()
+{
+	if ( mCgImage )
+	{
+		CGImageRelease(mCgImage);
+		mCgImage = nullptr;
+	}
+	
+	if ( mNsImage )
+	{
+		[mNsImage release];
+		mNsImage = nullptr;
+	}
+}
+
+void Platform::TImageMap::SetImage(const SoyPixelsImpl& Pixels)
+{
+	FreeImage();
+	
+	auto PixelMeta = Pixels.GetMeta();
+	auto& PixelArray = Pixels.GetPixelsArray();
+	CGDataProviderRef provider = CGDataProviderCreateWithData( nullptr, PixelArray.GetArray(), PixelArray.GetDataSize(), nullptr );
+	size_t bitsPerComponent = 8 * PixelMeta.GetBytesPerChannel();
+	size_t bitsPerPixel = 8 * PixelMeta.GetPixelDataSize();
+	size_t bytesPerRow = PixelMeta.GetRowDataSize();
+	CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+	CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+	CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+	
+	mCgImage = CGImageCreate( PixelMeta.GetWidth(),
+									PixelMeta.GetHeight(),
+									bitsPerComponent,
+									bitsPerPixel,
+									bytesPerRow,
+									colorSpaceRef,
+									bitmapInfo,
+									provider,   // data provider
+									NULL,       // decode
+									YES,        // should interpolate
+									renderingIntent);
+	
+	mNsImage = [[NSImage alloc] initWithCGImage:mCgImage size:NSMakeSize( PixelMeta.GetWidth(), PixelMeta.GetHeight() )];
+	
+	mControl.image = mNsImage;
+}
+
+void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)
+{
+	
 }
 
