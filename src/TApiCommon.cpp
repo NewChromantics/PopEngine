@@ -277,24 +277,13 @@ void ApiPop::ThreadTest(Bind::TCallback& Params)
 
 void ApiPop::GetTimeNowMs(Bind::TCallback& Params)
 {
-	SoyTime Now(true);
-	
+	//	this time will always >32bit, so we could either switch to uptime
+	//	or just & 32 bit...
+	//SoyTime Now(true);
+	SoyTime Now = SoyTime::UpTime();
+
 	auto NowMs = Now.GetMilliSeconds();
 	size_t NowMsInt = NowMs.count();
-
-	static size_t FirstTimestamp = 0;
-
-	//	make time start from 1 day ago to get around 64bit issue
-	//	this will lap at 54 days...
-	if ( FirstTimestamp == 0 )
-	{
-		auto OneDayMs = 86400000;
-#if !defined(JSAPI_CHAKRA)
-//#error Test this without the deduction, chakra seems okay with SoyTime(true)
-#endif
-		//FirstTimestamp = NowMsInt - OneDayMs;
-	}
-	NowMsInt -= FirstTimestamp;
 
 	Params.Return( NowMsInt );
 }
