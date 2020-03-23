@@ -49,7 +49,14 @@ void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,
 		for ( auto p=0;	p<Promises.GetSize();	p++ )
 		{
 			auto& Promise = Promises[p];
-			HandlePromise( Context, Promise );
+			try
+			{
+				HandlePromise( Context, Promise );
+			}
+			catch(std::exception& e)
+			{
+				Promise.Reject(Context,e.what());
+			}
 		}
 	};
 	Context.Execute( DoFlush );
