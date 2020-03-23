@@ -19,7 +19,6 @@
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
-		BF151F7A23845F2F00A70EBF /* PopEngine_Ios.h in Headers */ = {isa = PBXBuildFile; fileRef = BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF151F8123845F8400A70EBF /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
 		BF151F8223845FAD00A70EBF /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
 		BF151F8323845FAD00A70EBF /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
@@ -108,6 +107,10 @@
 		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
 		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
 		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
+		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; };
+		BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */ = {isa = PBXBuildFile; fileRef = BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */; };
 		BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF509159228217AC00DCBB4B /* libencoding.a */; };
 		BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -241,7 +244,6 @@
 		BF5EB02C237F131E0077BCF5 /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
 		BF5EB02D237F13200077BCF5 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
 		BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85350622BEDBF80049C01B /* OpenVR.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB034237F16F60077BCF5 /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB0602380335F0077BCF5 /* PopEngineUnitTestMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */; };
 		BF5EB0672380339F0077BCF5 /* PopEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */; };
@@ -499,7 +501,7 @@
 		BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyViveHandTracker.h; path = src/SoyViveHandTracker.h; sourceTree = "<group>"; };
 		BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyViveHandTracker.cpp; path = src/SoyViveHandTracker.cpp; sourceTree = "<group>"; };
 		BF5EAF75237482DD0077BCF5 /* PopCave */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopCave; path = ../PopCave; sourceTree = "<group>"; };
-		BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine.h; sourceTree = "<group>"; };
+		BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine_Osx.h; sourceTree = "<group>"; };
 		BF5EAF7F237F07ED0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PopEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB00F237F11670077BCF5 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
@@ -740,7 +742,7 @@
 		FBC3A0E01A308648009DA49E /* SoyScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyScope.h; path = src/SoyScope.h; sourceTree = "<group>"; };
 		FBF67B071A96B2BE00F74C38 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngineMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FBF67B321A974A7B00F74C38 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FBF67B321A974A7B00F74C38 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FBF67B371A974BF400F74C38 /* PopEngine.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PopEngine.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -898,13 +900,22 @@
 			path = lib;
 			sourceTree = "<group>";
 		};
-		BF151F7723845F2E00A70EBF /* PopEngine_Ios */ = {
+		BF151F7723845F2E00A70EBF /* Source_Ios */ = {
 			isa = PBXGroup;
 			children = (
 				BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */,
 				BF151F7923845F2F00A70EBF /* Info.plist */,
 			);
-			path = PopEngine_Ios;
+			path = Source_Ios;
+			sourceTree = "<group>";
+		};
+		BF40CE182423D90B00F636EF /* Source_Osx */ = {
+			isa = PBXGroup;
+			children = (
+				FBF67B321A974A7B00F74C38 /* Info.plist */,
+				BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */,
+			);
+			path = Source_Osx;
 			sourceTree = "<group>";
 		};
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
@@ -1198,7 +1209,8 @@
 				FB8A05951A2E54730099596C /* src */,
 				BF5EAF7D237F07ED0077BCF5 /* PopEngine */,
 				BF5EB0552380335D0077BCF5 /* PopEngineUnitTestApp */,
-				BF151F7723845F2E00A70EBF /* PopEngine_Ios */,
+				BF40CE182423D90B00F636EF /* Source_Osx */,
+				BF151F7723845F2E00A70EBF /* Source_Ios */,
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
@@ -1237,7 +1249,6 @@
 				BF51EA4220ED83F6007443D8 /* DataOld */,
 				BF91D97C221584E500E91671 /* Ezsift */,
 				BF91D97E221584F100E91671 /* Ezsift */,
-				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BF84732E22F7249500038A3A /* magic_enum.hpp */,
@@ -1247,7 +1258,6 @@
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
-				BF5EAF7E237F07ED0077BCF5 /* PopEngine.h */,
 				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
 				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
 				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
@@ -1466,7 +1476,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF151F7A23845F2F00A70EBF /* PopEngine_Ios.h in Headers */,
+				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
+				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1474,7 +1485,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF5EB034237F16F60077BCF5 /* PopEngine.h in Headers */,
+				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
+				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2631,6 +2643,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = NO;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_JavascriptCore;
@@ -2705,6 +2718,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = NO;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_V8;
@@ -2779,6 +2793,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = NO;
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug_Chakra;
@@ -2833,6 +2848,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = NO;
 				VALID_ARCHS = x86_64;
 			};
 			name = Release;
