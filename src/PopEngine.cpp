@@ -35,8 +35,13 @@ TPopAppError::Type PopMain()
 		DataPath = Platform::GetAppResourcesDirectory() + DataPath;
 	}
 	
-	DataPath += "/";
-
+	if ( DataPath.back() != '/' || Soy::StringEndsWith(DataPath,"//",true) )
+	{
+		std::stringstream Error;
+		Error << "Expected Pop data path (" << DataPath << ") to end with a single /";
+		throw Soy::AssertException(Error);
+	}
+	
 	bool Running = true;
 	
 #if defined(TARGET_WINDOWS)
