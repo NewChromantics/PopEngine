@@ -5,6 +5,7 @@
 #include "SoyLib/src/SoyMedia.h"
 #include "MagicEnum/include/magic_enum.hpp"
 #include "Json11/json11.hpp"
+#include "SoyLib/src/SoyRuntimeLibrary.h"
 
 
 //	video decoding
@@ -16,9 +17,6 @@
 #include "Libs/PopH264/PopH264.h"
 #endif
 
-#if defined(TARGET_WINDOWS)
-#include "Soylib/src/SoyRuntimeLibrary.h"
-#endif
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
 #include "Libs/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
@@ -236,6 +234,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 
 void PopH264::LoadDll()
 {
+	//	on OSX, if the framework is in resources, it should auto resolve symbols
 #if defined(TARGET_WINDOWS)
 	//	current bodge
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
@@ -374,6 +373,7 @@ void TAvcDecoderWrapper::WaitForNextFrame(Bind::TCallback& Params)
 
 void PopCameraDevice::LoadDll()
 {
+	//	on OSX, if the framework is in resources, it should auto resolve symbols
 #if defined(TARGET_WINDOWS)
 	//	current bodge
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
@@ -1104,8 +1104,13 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 	//	gr: this was backwards? brew (old 2917) DID need to flush?
 	if (X264_REV < 2969)
 	{
-		FlushFrames();
-		
+		//	gr: flushing on OSX (X264_REV 2917) causing
+		//	log: x264 [error]: lookahead thread is already stopped
+		#if !defined(TARGET_OSX)
+		{
+			FlushFrames();
+		}
+		#endif
 	}
 }
 
@@ -1151,8 +1156,12 @@ void X264::TInstance::Encode(x264_picture_t* InputPicture)
 
 	//	processed, but no data output
 	if (FrameSize == 0)
+	{
+		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
+		std::Debug << "x264::Encode processed, but no output; DelayedFrameCount=" << DelayedFrameCount << std::endl;
 		return;
-
+	}
+	
 	//	process each nal
 	auto TotalNalSize = 0;
 	for (auto n = 0; n < NalCount; n++)
