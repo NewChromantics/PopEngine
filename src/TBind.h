@@ -28,6 +28,8 @@ namespace Bind
 	class TInstanceBase;
 	class TPromiseQueue;
 	class TPromiseMap;
+	template<typename QUEUETYPE>
+	class TPromiseQueueObjects;
 }
 
 
@@ -125,3 +127,103 @@ private:
 	size_t			mPromiseCounter = 0;
 };
 
+
+template<typename QUEUETYPE>
+class Bind::TPromiseQueueObjects
+{
+public:
+	TPromiseQueueObjects()
+	{
+	}
+	TPromiseQueueObjects(std::function<void(Bind::TPromise&,QUEUETYPE&)> ResolveObject) :
+		mResolveObject	( ResolveObject )
+	{
+	}
+	
+	void				Push(const QUEUETYPE& Object);
+	Bind::TPromise		AddPromise(Bind::TLocalContext& Context);
+	
+protected:
+	//	overload this to do things like returning latest only
+	//	would like to avoid this copy! for now, use smart pointers for large allocs
+	//	set skip to abort resolve
+	virtual QUEUETYPE	Pop(bool& Skip);
+
+public:
+	//	public for now, until there's a nice way to construct
+	std::function<void(Bind::TLocalContext&,Bind::TPromise&,QUEUETYPE&)>	mResolveObject;
+
+private:
+	void				Flush();
+	
+private:
+	Bind::TPromiseQueue		mPromiseQueue;
+	std::mutex				mObjectsLock;
+	Array<QUEUETYPE>		mObjects;
+};
+
+
+template<typename QUEUETYPE>
+inline void Bind::TPromiseQueueObjects<QUEUETYPE>::Push(const QUEUETYPE& Object)
+{
+	{
+		std::lock_guard<std::mutex> Lock(mObjectsLock);
+		mObjects.PushBack(Object);
+	}
+	Flush();
+}
+
+
+template<typename QUEUETYPE>
+inline Bind::TPromise Bind::TPromiseQueueObjects<QUEUETYPE>::AddPromise(Bind::TLocalContext& Context)
+{
+	auto Promise = mPromiseQueue.AddPromise(Context);
+	//	gr: can I do the flush here?
+	Flush();
+	return Promise;
+}
+
+template<typename QUEUETYPE>
+inline void Bind::TPromiseQueueObjects<QUEUETYPE>::Flush()
+{
+	if ( mObjects.IsEmpty() )
+		return;
+	if ( !mPromiseQueue.HasPromises() )
+		return;
+	
+	auto Flush = [this](Bind::TLocalContext& Context) mutable
+	{
+		//	gr: try and avoid this copy without QUEUETYPE resorting to sharedptr
+		bool Skip=false;
+		auto Popped = Pop(Skip);
+
+		//	gr: sometimes, probbaly because there's no mutex on mFrames.IsEmpty() above
+		//		we get have an empty mFrames (this lambda is probably executing) and we have zero frames,
+		//		abort the resolve
+		if ( Skip )
+			return;
+
+		auto ResolveObject = [&](Bind::TLocalContext& Context,TPromise& Promise)
+		{
+			this->mResolveObject( Context, Promise, Popped );
+		};
+		
+		mPromiseQueue.Flush(ResolveObject);
+	};
+	auto& Context = mPromiseQueue.GetContext();
+	Context.Queue(Flush);
+}
+
+template<typename QUEUETYPE>
+inline QUEUETYPE Bind::TPromiseQueueObjects<QUEUETYPE>::Pop(bool& Skip)
+{
+	std::lock_guard<std::mutex> Lock(mObjectsLock);
+	if ( mObjects.IsEmpty() )
+	{
+		Skip = true;
+		return QUEUETYPE();
+	}
+	
+	auto FirstObject = mObjects.PopAt(0);
+	return FirstObject;
+}

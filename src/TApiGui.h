@@ -31,6 +31,8 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(Colour);
 	DECLARE_BIND_TYPENAME(ImageMap);
 
+	class TGuiControlWrapper;
+	
 	class TWindowWrapper;
 	class TSliderWrapper;
 	class TLabelWrapper;
@@ -42,7 +44,26 @@ namespace ApiGui
 }
 
 
-class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Gui_Window,SoyWindow>
+
+class ApiGui::TGuiControlWrapper
+{
+public:
+	TGuiControlWrapper();
+	
+	void			WaitForDragDrop(Bind::TCallback& Arguments);
+
+	bool			OnTryDragDrop(const ArrayBridge<std::string>& Filenames);
+	void			OnDragDrop(const ArrayBridge<std::string>& Filenames);
+	
+protected:
+	virtual Bind::TObjectWrapperBase&	GetObjectWrapper()=0;
+	
+private:
+	Bind::TPromiseQueueObjects<Array<std::string>>	mOnDragDropPromises;
+};
+
+
+class ApiGui::TWindowWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Gui_Window,SoyWindow>, public TGuiControlWrapper
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -53,9 +74,14 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
+	void			GetScreenRect(Bind::TCallback& Params);
 	void			SetFullscreen(Bind::TCallback& Params);
 	void			EnableScrollbars(Bind::TCallback& Params);
-	
+
+protected:
+	//	TGuiControlWrapper
+	virtual Bind::TObjectWrapperBase&	GetObjectWrapper() override	{	return *this;	}
+
 public:
 	std::shared_ptr<SoyWindow>&	mWindow = mObject;
 };

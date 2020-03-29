@@ -26,6 +26,10 @@ namespace ApiGui
 
 	DEFINE_BIND_FUNCTIONNAME(SetFullscreen);
 	DEFINE_BIND_FUNCTIONNAME(EnableScrollbars);
+	
+	DEFINE_BIND_FUNCTIONNAME(WaitForDragDrop);
+	
+	const auto OnTryDragDrop_FunctionName = "OnTryDragDrop";
 }
 
 
@@ -52,7 +56,7 @@ void ApiGui::TSliderWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 {
-	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 
 	BufferArray<int32_t,4> Rect4;
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
@@ -115,6 +119,8 @@ void ApiGui::TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetFullscreen>( &TWindowWrapper::SetFullscreen );
 	Template.BindFunction<BindFunction::EnableScrollbars>( &TWindowWrapper::EnableScrollbars );
+
+	Template.BindFunction<BindFunction::WaitForDragDrop>( &TGuiControlWrapper::WaitForDragDrop );
 }
 
 void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
@@ -171,6 +177,9 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	this->OnDragDrop(Filenames);	};
 	mWindow->mOnClosed = [this]()	{	this->OnClosed();	};
 	*/
+	mWindow->mOnTryDragDrop = [this](ArrayBridge<std::string>& Filenames)	{	return this->OnTryDragDrop(Filenames);	};
+	mWindow->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)		{	this->OnDragDrop(Filenames);	};
+
 }
 
 void ApiGui::TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
@@ -196,7 +205,7 @@ void ApiGui::TLabelWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
 {
-	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 	
 	BufferArray<int32_t,4> Rect4;
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
@@ -221,7 +230,7 @@ void ApiGui::TTextBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TTextBoxWrapper::Construct(Bind::TCallback& Params)
 {
-	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 	
 	BufferArray<int32_t,4> Rect4;
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
@@ -260,7 +269,7 @@ void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
 {
-	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 	
 	BufferArray<int32_t,4> Rect4;
 	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
@@ -359,7 +368,7 @@ void ApiGui::TColourButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TColourButtonWrapper::Construct(Bind::TCallback& Params)
 {
-	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 
 	BufferArray<int32_t, 4> Rect4;
 	Params.GetArgumentArray(1, GetArrayBridge(Rect4));
@@ -432,7 +441,7 @@ void ApiGui::TImageMapWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
 {
-	auto ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 
 	BufferArray<int32_t, 4> Rect4;
 	Params.GetArgumentArray(1, GetArrayBridge(Rect4));
@@ -493,6 +502,70 @@ void ApiGui::TImageMapWrapper::FlushMouseEvents()
 	Context.Queue(Resolve);
 }
 
+
+ApiGui::TGuiControlWrapper::TGuiControlWrapper()
+{
+	this->mOnDragDropPromises.mResolveObject = [this](Bind::TLocalContext& Context,Bind::TPromise& Promise,Array<std::string>& Filenames)
+	{
+		Promise.Resolve( Context, GetArrayBridge(Filenames) );
+	};
+}
+
+void ApiGui::TGuiControlWrapper::WaitForDragDrop(Bind::TCallback& Arguments)
+{
+	//	would be good to accept a filter func here!
+	auto Promise = mOnDragDropPromises.AddPromise( Arguments.mLocalContext );
+	Arguments.Return(Promise);
+}
+	
+bool ApiGui::TGuiControlWrapper::OnTryDragDrop(const ArrayBridge<std::string>& Filenames)
+{
+	bool Result = false;
+	//  call javascript immediately, maybe we can skip this if we can pre-check for a member?
+	auto Runner = [&](Bind::TLocalContext& Context)
+	{
+		//try
+		{
+			auto& ThisObjectWrapper = this->GetObjectWrapper();
+			auto This = ThisObjectWrapper.GetHandle(Context);
+			if ( !This.HasMember( OnTryDragDrop_FunctionName ) )
+			{
+				std::Debug << "Window has not overloaded .OnTryDragDrop; allowing drag&drop" << std::endl;
+				Result = true;
+				return;
+			}
+			auto ThisFunc = This.GetFunction(OnTryDragDrop_FunctionName);
+			Bind::TCallback Params(Context);
+			Params.SetThis( This );
+			Params.SetArgumentArray( 0, GetArrayBridge(Filenames) );
+			ThisFunc.Call( Params );
+			Result = Params.GetReturnBool();
+		}
+		//catch(std::exception& e)
+		{
+			//std::Debug << "Exception in OnTryDragDrop: " << e.what() << std::endl;
+		}
+	};
+	
+	try
+	{
+		auto& This = this->GetObjectWrapper();
+		auto& Context = This.GetContext();
+		Context.Execute( Runner );
+		return Result;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Exception in OnTryDragDrop: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& Filenames)
+{
+	Array<std::string> FilenamesCopy( Filenames );
+	mOnDragDropPromises.Push(FilenamesCopy);
+}
 
 
 

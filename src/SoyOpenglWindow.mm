@@ -17,10 +17,63 @@ namespace Platform
 	vec3x<uint8_t>	GetColour(NSColor* Colour);
 }
 
+bool HandleDragFilenames(id sender,std::function<bool(ArrayBridge<std::string>&)>& Callback)
+{
+	Soy::TScopeTimerPrint Timer( __func__, 1 );
 
+	//	based on https://stackoverflow.com/questions/2604522/registerfordraggedtypes-with-custom-file-formats
+	NSArray* FilenamesArray = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+
+	Array<std::string> Filenames;
+
+	for ( int f=0;	f<[FilenamesArray count];	f++ )
+	{
+		NSString* FilenameNs = [FilenamesArray objectAtIndex:f];
+		auto Filename = Soy::NSStringToString(FilenameNs);
+		Filenames.PushBack(Filename);
+	}
+
+	auto FilenamesBridge = GetArrayBridge(Filenames);
+	std::Debug << "TryDragDrop( " << Soy::StringJoin( FilenamesBridge,", ") << ")" << std::endl;
+
+	if ( !Callback )
+		return false;
+
+	auto Result = Callback(FilenamesBridge);
+	return Result;
+}
+
+//	note: we want to re-use stuff that's in MacOpenglView too
 @interface Platform_View: NSView
+{
+	@public std::function<NSDragOperation()>				mGetDragDropCursor;
+	@public std::function<bool(ArrayBridge<std::string>&)>	mTryDragDrop;
+	@public std::function<bool(ArrayBridge<std::string>&)>	mOnDragDrop;
+}
 
+-(void)RegisterForEvents;
+
+//	overloaded funcs
 - (BOOL) isFlipped;
+/*
+-(void)mouseMoved:(NSEvent *)event;
+-(void)mouseDown:(NSEvent *)event;
+-(void)mouseDragged:(NSEvent *)event;
+-(void)mouseUp:(NSEvent *)event;
+-(void)rightMouseDown:(NSEvent *)event;
+-(void)rightMouseDragged:(NSEvent *)event;
+-(void)rightMouseUp:(NSEvent *)event;
+-(void)otherMouseDown:(NSEvent *)event;
+-(void)otherMouseDragged:(NSEvent *)event;
+-(void)otherMouseUp:(NSEvent *)event;
+
+- (void)keyDown:(NSEvent *)event;
+- (void)keyUp:(NSEvent *)event;
+*/
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender;
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender;
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender;
+
 
 @end
 
@@ -30,6 +83,36 @@ namespace Platform
 {
 	return YES;
 }
+
+-(void)RegisterForEvents
+{
+	//	enable drag & drop
+	//	https://stackoverflow.com/a/29029456
+	//	https://stackoverflow.com/a/8567836	NSFilenamesPboardType
+	[self registerForDraggedTypes: @[(NSString*)kUTTypeItem]];
+	//[self registerForDraggedTypes:[NSImage imagePasteboardTypes]];
+	//registerForDraggedTypes([NSFilenamesPboardType])
+}
+
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+	//	return the cursor to dispaly
+	std::Debug << __func__ << std::endl;
+	if ( mGetDragDropCursor )
+		return mGetDragDropCursor();
+	return NSDragOperationLink;
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+{
+	return HandleDragFilenames( sender, mTryDragDrop ) ? YES : NO;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+	return HandleDragFilenames( sender, mOnDragDrop );
+}
+
 
 @end
 
@@ -765,7 +848,25 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 		[mWindow setAcceptsMouseMovedEvents:YES];
 		
 		mContentView = [[Platform_View alloc] initWithFrame:FrameRect];
-		
+		[mContentView RegisterForEvents];
+		mContentView->mGetDragDropCursor = []
+		{
+			return NSDragOperationLink;
+		};
+		mContentView->mTryDragDrop = [this](ArrayBridge<std::string>& Filenames)
+		{
+			if ( !mOnTryDragDrop )
+				return false;
+			return this->mOnTryDragDrop( Filenames );
+		};
+		mContentView->mOnDragDrop = [this](ArrayBridge<std::string>& Filenames)
+		{
+			if ( !mOnDragDrop )
+				return false;
+			this->mOnDragDrop( Filenames );
+			return true;
+		};
+
 		//	gr: on windows, a window can be scrollable
 		//		on osx we need a view. In both cases, we can just hide the scrollbars, so lets always put it in a scrollview
 		bool ScrollMode = true;
