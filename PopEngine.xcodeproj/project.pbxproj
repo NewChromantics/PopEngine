@@ -253,7 +253,7 @@
 		B71D7B3221380D6B00F29EA0 /* SoyCFString.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyCFString.h; path = src/SoyCFString.h; sourceTree = "<group>"; };
 		BF012B6F226A3224003AEB55 /* SoyTime.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTime.mm; path = src/SoyTime.mm; sourceTree = "<group>"; };
 		BF012B70226A3225003AEB55 /* SoyTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTime.cpp; path = src/SoyTime.cpp; sourceTree = "<group>"; };
-		BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_V8_App.xcconfig; path = src/PopEngine_V8_App.xcconfig; sourceTree = "<group>"; };
+		BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_V8_App.xcconfig; sourceTree = "<group>"; };
 		BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDll.cpp; path = src/TApiDll.cpp; sourceTree = "<group>"; };
 		BF0F9E702288892F00AEA7DC /* TApiDll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDll.h; path = src/TApiDll.h; sourceTree = "<group>"; };
 		BF0F9E772289EB5F00AEA7DC /* build.log */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = build.log; sourceTree = "<group>"; };
@@ -278,7 +278,7 @@
 		BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine_Ios.h; sourceTree = "<group>"; };
 		BF151F7923845F2F00A70EBF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF151F8023845F5800A70EBF /* SoyLib_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SoyLib_Ios.xcconfig; sourceTree = "<group>"; };
-		BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = PopEngine_Ios.xcconfig; path = src/PopEngine_Ios.xcconfig; sourceTree = "<group>"; };
+		BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PopEngine_Ios.xcconfig; sourceTree = "<group>"; };
 		BF151FCC2384704C00A70EBF /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/OpenGLES.framework; sourceTree = DEVELOPER_DIR; };
 		BF151FCE2384707D00A70EBF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		BF151FD02384708A00A70EBF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -346,7 +346,7 @@
 		BF5EAF7F237F07ED0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PopEngine_Osx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB00F237F11670077BCF5 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
-		BF5EB0542380335D0077BCF5 /* PopEngine_App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngine_App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF5EB0542380335D0077BCF5 /* PopEngine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB05C2380335F0077BCF5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		BF5EB05E2380335F0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../PopEngineUnitTestApp/Info.plist; sourceTree = "<group>"; };
 		BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = PopEngineUnitTestMain.mm; sourceTree = "<group>"; };
@@ -394,7 +394,7 @@
 		BF689AE820D6DEB3000BC812 /* PopMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopMain.cpp; path = src/PopMain.cpp; sourceTree = "<group>"; };
 		BF689AE920D6DEB4000BC812 /* PopMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopMain.h; path = src/PopMain.h; sourceTree = "<group>"; };
 		BF689AEA20D6DEB4000BC812 /* PopMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopMain.mm; path = src/PopMain.mm; sourceTree = "<group>"; };
-		BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_JsCore_App.xcconfig; path = src/PopEngine_JsCore_App.xcconfig; sourceTree = "<group>"; };
+		BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_JsCore_App.xcconfig; sourceTree = "<group>"; };
 		BF689AFE20D9A52E000BC812 /* TV8Container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8Container.cpp; path = src/TV8Container.cpp; sourceTree = "<group>"; };
 		BF689AFF20D9A52E000BC812 /* TV8Container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Container.h; path = src/TV8Container.h; sourceTree = "<group>"; };
 		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
@@ -417,7 +417,7 @@
 		BF84732E22F7249500038A3A /* magic_enum.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = magic_enum.hpp; path = src/MagicEnum/include/magic_enum.hpp; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
 		BF8534F622B6DA610049C01B /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
-		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_Chakra_App.xcconfig; path = src/PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
+		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
 		BF8534FC22B6DB270049C01B /* ChakraBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChakraBind.cpp; path = src/ChakraBind.cpp; sourceTree = "<group>"; };
 		BF8534FD22B6DB270049C01B /* ChakraBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChakraBind.h; path = src/ChakraBind.h; sourceTree = "<group>"; };
 		BF85350022BEB6960049C01B /* SoyMagicLeap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMagicLeap.h; path = src/SoyMagicLeap.h; sourceTree = "<group>"; };
@@ -470,7 +470,7 @@
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
-		BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine.xcconfig; path = src/PopEngine.xcconfig; sourceTree = "<group>"; };
+		BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine.xcconfig; sourceTree = "<group>"; };
 		BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopCoreml_Osx.framework; sourceTree = "<group>"; };
 		BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyUniform.cpp; path = src/SoyUniform.cpp; sourceTree = "<group>"; };
 		BFA297201B7E9CF7003B91F6 /* SoyUniform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyUniform.h; path = src/SoyUniform.h; sourceTree = "<group>"; };
@@ -698,6 +698,7 @@
 		BF151F7723845F2E00A70EBF /* Source_Ios */ = {
 			isa = PBXGroup;
 			children = (
+				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
 				BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */,
 				BF151F7923845F2F00A70EBF /* Info.plist */,
 			);
@@ -707,6 +708,11 @@
 		BF40CE182423D90B00F636EF /* Source_Osx */ = {
 			isa = PBXGroup;
 			children = (
+				BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */,
+				BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */,
+				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
+				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
+				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
 				FBF67B321A974A7B00F74C38 /* Info.plist */,
 				BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */,
 			);
@@ -1019,7 +1025,7 @@
 			isa = PBXGroup;
 			children = (
 				BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */,
-				BF5EB0542380335D0077BCF5 /* PopEngine_App.app */,
+				BF5EB0542380335D0077BCF5 /* PopEngine.app */,
 				BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */,
 			);
 			name = Products;
@@ -1043,14 +1049,8 @@
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BF84732E22F7249500038A3A /* magic_enum.hpp */,
-				BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */,
-				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
-				BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */,
-				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
-				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
-				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
 				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
@@ -1337,9 +1337,9 @@
 			productReference = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		BF5EB0532380335D0077BCF5 /* PopEngine_App */ = {
+		BF5EB0532380335D0077BCF5 /* PopEngine */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine_App" */;
+			buildConfigurationList = BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine" */;
 			buildPhases = (
 				BF5EB0502380335D0077BCF5 /* Sources */,
 				BF5EB0512380335D0077BCF5 /* Frameworks */,
@@ -1351,9 +1351,9 @@
 			dependencies = (
 				BFDC03A52430CBB40004512A /* PBXTargetDependency */,
 			);
-			name = PopEngine_App;
+			name = PopEngine;
 			productName = PopEngineUnitTestApp;
-			productReference = BF5EB0542380335D0077BCF5 /* PopEngine_App.app */;
+			productReference = BF5EB0542380335D0077BCF5 /* PopEngine.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1401,7 +1401,7 @@
 			projectRoot = "";
 			targets = (
 				BF5EAFB4237F0C100077BCF5 /* PopEngine_Osx */,
-				BF5EB0532380335D0077BCF5 /* PopEngine_App */,
+				BF5EB0532380335D0077BCF5 /* PopEngine */,
 				BF151F7523845F2E00A70EBF /* PopEngine_Ios */,
 				BF5C4AAF23F6C73B007D6393 /* PopEngine_Lumin */,
 			);
@@ -2846,7 +2846,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug_JavascriptCore;
 		};
-		BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine_App" */ = {
+		BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BF5EB0632380335F0077BCF5 /* Debug_JavascriptCore */,

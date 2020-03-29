@@ -1,4 +1,4 @@
-#include "SoyLib/SoyLib_Osx.xcconfig"
+#include "../src/SoyLib/SoyLib_Osx.xcconfig"
 
 INFOPLIST_FILE = $(SRCROOT)/Info.plist
 
