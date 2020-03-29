@@ -304,7 +304,6 @@
 		BF26EF6020DECFB000A48025 /* TApiOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpengl.h; path = src/TApiOpengl.h; sourceTree = "<group>"; };
 		BF26EF6220DED0F400A48025 /* TApiCommon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCommon.cpp; path = src/TApiCommon.cpp; sourceTree = "<group>"; };
 		BF26EF6320DED0F400A48025 /* TApiCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCommon.h; path = src/TApiCommon.h; sourceTree = "<group>"; };
-		BF30550A1B56F553002B0892 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = "<group>"; };
 		BF31E49D1C56961100AB49AF /* SoyImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyImage.cpp; path = src/SoyImage.cpp; sourceTree = "<group>"; };
 		BF31E49E1C56961100AB49AF /* SoyImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyImage.h; path = src/SoyImage.h; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -326,7 +325,6 @@
 		BF5091822282194700DCBB4B /* libicuuc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicuuc.dylib; sourceTree = "<group>"; };
 		BF5091832282194700DCBB4B /* libicui18n.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicui18n.dylib; sourceTree = "<group>"; };
 		BF5091842282194700DCBB4B /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_libbase.dylib; sourceTree = "<group>"; };
-		BF51EA4220ED83F6007443D8 /* DataOld */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DataOld; sourceTree = "<group>"; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
@@ -356,7 +354,6 @@
 		BF607EA42240588300A78C00 /* TApiBluetooth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiBluetooth.cpp; path = src/TApiBluetooth.cpp; sourceTree = "<group>"; };
 		BF607EA6224107B800A78C00 /* SoyBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyBluetooth.h; path = src/SoyBluetooth.h; sourceTree = "<group>"; };
 		BF607EA7224107B800A78C00 /* SoyBluetooth.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyBluetooth.mm; path = src/SoyBluetooth.mm; sourceTree = "<group>"; };
-		BF65537D2132BD6B003E4241 /* Data_HelloWorld */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_HelloWorld; sourceTree = "<group>"; };
 		BF6553C52132C4D9003E4241 /* APIDesign.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = APIDesign.md; sourceTree = "<group>"; };
 		BF6553C62132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
 		BF6553C82132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
@@ -461,10 +458,8 @@
 		BF92822022369316007E9D6F /* TApiOpencv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencv.h; path = src/TApiOpencv.h; sourceTree = "<group>"; };
 		BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenvr.cpp; path = src/TApiOpenvr.cpp; sourceTree = "<group>"; };
 		BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenvr.h; path = src/TApiOpenvr.h; sourceTree = "<group>"; };
-		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
-		BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_PeopleDetector; sourceTree = "<group>"; };
 		BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCoreMl.h; path = src/TApiCoreMl.h; sourceTree = "<group>"; };
 		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCoreMl.cpp; path = src/TApiCoreMl.cpp; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
@@ -482,7 +477,6 @@
 		BFAD33DC1B6406D500D3E7A6 /* SoyVideoDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyVideoDevice.h; path = src/SoyVideoDevice.h; sourceTree = "<group>"; };
 		BFB647362225593600820612 /* SoyHid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHid.cpp; path = src/SoyHid.cpp; sourceTree = "<group>"; };
 		BFB647372225593600820612 /* SoyHid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHid.h; path = src/SoyHid.h; sourceTree = "<group>"; };
-		BFCF8B562107552700EE7307 /* Data_Posenet */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Posenet; sourceTree = "<group>"; };
 		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
 		BFD399F622CBC964009E2FD3 /* SoyFourcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFourcc.h; path = src/SoyFourcc.h; sourceTree = "<group>"; };
 		BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFourcc.cpp; path = src/SoyFourcc.cpp; sourceTree = "<group>"; };
@@ -517,7 +511,6 @@
 		BFF505EB22550F47005A6AC1 /* JsCoreBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreBind.h; path = src/JsCoreBind.h; sourceTree = "<group>"; };
 		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
 		BFF8A59022C2961C002AD145 /* SoyTypes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTypes.mm; path = src/SoyTypes.mm; sourceTree = "<group>"; };
-		EB0EA5622110AAF9008D6DAA /* Data_dlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_dlib; sourceTree = "<group>"; };
 		EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDlib.cpp; path = src/TApiDlib.cpp; sourceTree = "<group>"; };
 		EB0EA5652110AB53008D6DAA /* TApiDlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDlib.h; path = src/TApiDlib.h; sourceTree = "<group>"; };
 		EB0EA5682110B911008D6DAA /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
@@ -1037,13 +1030,6 @@
 				BFDC03A62430CEC20004512A /* Json11 */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
-				BF30550A1B56F553002B0892 /* Data */,
-				EB0EA5622110AAF9008D6DAA /* Data_dlib */,
-				BF65537D2132BD6B003E4241 /* Data_HelloWorld */,
-				BF92C18E21BAB81E00A1DD49 /* Data_Holosports */,
-				BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */,
-				BFCF8B562107552700EE7307 /* Data_Posenet */,
-				BF51EA4220ED83F6007443D8 /* DataOld */,
 				BF91D97C221584E500E91671 /* Ezsift */,
 				BF91D97E221584F100E91671 /* Ezsift */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
