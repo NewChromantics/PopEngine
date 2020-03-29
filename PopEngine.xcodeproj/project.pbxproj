@@ -7,16 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */; };
-		BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF012B6F226A3224003AEB55 /* SoyTime.mm */; };
-		BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF012B70226A3225003AEB55 /* SoyTime.cpp */; };
-		BF0F9E712288892F00AEA7DC /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
-		BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */; };
-		BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */; };
-		BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */; };
-		BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
-		BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF151F8123845F8400A70EBF /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
 		BF151F8223845FAD00A70EBF /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
@@ -85,7 +77,6 @@
 		BF151FF823847BA700A70EBF /* PopH264_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF151FFD23847CAC00A70EBF /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
 		BF151FFE23847CB000A70EBF /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
-		BF151FFF23847CF400A70EBF /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		BF15200023847CF500A70EBF /* TApiDlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */; };
 		BF15200223847D6A00A70EBF /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15200123847D6A00A70EBF /* CoreMedia.framework */; };
 		BF15200323847DAB00A70EBF /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
@@ -94,52 +85,17 @@
 		BF152009238482A200A70EBF /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF152008238482A200A70EBF /* CoreVideo.framework */; };
 		BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
 		BF15205523855FB600A70EBF /* PopCameraDevice_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF1826B72423C88C006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
-		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
-		BF19612421B9D2B8007014EF /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
-		BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
-		BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
-		BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
-		BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
-		BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3965622277378A00A721E8 /* SoyWindow.cpp */; };
-		BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505E822550F30005A6AC1 /* V8Bind.cpp */; };
-		BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3B01912253A80100644E46 /* IOKit.framework */; };
 		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; };
 		BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */ = {isa = PBXBuildFile; fileRef = BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */; };
-		BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF509159228217AC00DCBB4B /* libencoding.a */; };
-		BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF50917F2282194700DCBB4B /* libc++.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091832282194700DCBB4B /* libicui18n.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091822282194700DCBB4B /* libicuuc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF5091952282197A00DCBB4B /* libv8_for_testing.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF5091962282197A00DCBB4B /* libv8_libbase.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091842282194700DCBB4B /* libv8_libbase.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF5091972282197A00DCBB4B /* libv8_libplatform.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091802282194700DCBB4B /* libv8_libplatform.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5091812282194700DCBB4B /* libv8.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF59A2522222057200AE9926 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF59A2512222057200AE9926 /* GameController.framework */; };
-		BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
-		BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B07141B5C12E700C489C6 /* SoyShader.cpp */; };
-		BF5C4AB823F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
-		BF5C4AC223F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
 		BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
 		BF5C4AC423F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
-		BF5C4AC723F6FE5C007D6393 /* TApiEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */; };
 		BF5C4AC823F6FE5C007D6393 /* TApiEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */; };
 		BF5C4AC923F6FE5C007D6393 /* TApiEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */; };
-		BF5EAF7423744E370077BCF5 /* SoyViveHandTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */; };
-		BF5EAF76237482DD0077BCF5 /* PopCave in Resources */ = {isa = PBXBuildFile; fileRef = BF5EAF75237482DD0077BCF5 /* PopCave */; };
 		BF5EAFBF237F0C290077BCF5 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BF5EAFC0237F0C2F0077BCF5 /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A07151A2E6BBF0099596C /* sha1.cpp */; };
 		BF5EAFC1237F0C320077BCF5 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
@@ -218,7 +174,6 @@
 		BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		BF5EB00D237F0CD40077BCF5 /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
-		BF5EB010237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB011237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		BF5EB016237F118C0077BCF5 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
@@ -246,106 +201,26 @@
 		BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85350622BEDBF80049C01B /* OpenVR.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB0602380335F0077BCF5 /* PopEngineUnitTestMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */; };
-		BF5EB0672380339F0077BCF5 /* PopEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */; };
+		BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; };
 		BF5EB068238034BC0077BCF5 /* UnitTest in Resources */ = {isa = PBXBuildFile; fileRef = BFD08270225E90AC00FD05DC /* UnitTest */; };
 		BF5EB06923803A4B0077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB07823803E430077BCF5 /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF607EA12240580E00A78C00 /* CoreBluetooth.framework */; };
-		BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
-		BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
-		BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC520D6C80D000BC812 /* CoreGraphics.framework */; };
-		BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC720D6C811000BC812 /* ApplicationServices.framework */; };
-		BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindow.mm */; };
-		BF689ACE20D6D3AE000BC812 /* SoyOpenglView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */; };
-		BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689ACF20D6DA42000BC812 /* SoyGraphics.cpp */; };
-		BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD220D6DA52000BC812 /* SoyMediaFormat.cpp */; };
-		BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD520D6DA85000BC812 /* SoyFilesystem.mm */; };
-		BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD720D6DAB8000BC812 /* SoyJson.cpp */; };
-		BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689ADA20D6DAC0000BC812 /* SoyWave.cpp */; };
-		BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
-		BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
-		BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF691F001C3FEEE90092FC34 /* SoySrt.cpp */; };
-		BF6EB3292111167800FC991B /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
-		BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB32A21111C6600FC991B /* AVFoundation.framework */; };
-		BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB32C21111C8300FC991B /* CoreMedia.framework */; };
-		BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33121111D0800FC991B /* SoyAvf.mm */; };
-		BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF6EB33421111D2900FC991B /* VideoToolbox.framework */; };
-		BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33C21111D7A00FC991B /* SoyH264.cpp */; };
-		BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */; };
-		BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
-		BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
-		BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8534FC22B6DB270049C01B /* ChakraBind.cpp */; };
-		BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF8534F422B6DA450049C01B /* libChakraCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF85351222BEDEE10049C01B /* libopenvr_api.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
-		BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B41B4AB9DC00F58561 /* SoyAssert.cpp */; };
-		BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */; };
-		BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6BC1B4B14CD00F58561 /* SoyVector.cpp */; };
-		BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */; };
-		BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */; };
-		BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
-		BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
-		BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9A9221584F200E91671 /* ezsift.cpp */; };
-		BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
-		BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92821F22369316007E9D6F /* TApiOpencv.cpp */; };
-		BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
-		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF9C0A0E23907A9D00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF9C0A0F23907A9E00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; };
-		BF9C0A1023907BAF00476651 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
-		BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; };
-		BFA22BEB22DE7E3700D8615C /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BFA22BEC22DE863300D8615C /* PopCoreml_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */; };
-		BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
-		BFA664731B55AD0A00C33A2A /* SoyString.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA664721B55AD0A00C33A2A /* SoyString.mm */; };
-		BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFAD33DB1B6406D500D3E7A6 /* SoyVideoDevice.cpp */; };
-		BFB647382225593600820612 /* SoyHid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFB647362225593600820612 /* SoyHid.cpp */; };
-		BFB835CC22CF785300DB9FD4 /* libLeap.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		BFD399F822CBC964009E2FD3 /* SoyFourcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */; };
-		BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BFD39A0722CD44E8009E2FD3 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
-		BFD4456520E67037007E2497 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
-		BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */; };
-		BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
-		BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFDE38011C8B446A00D10F02 /* SoyUnity.mm */; };
-		BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
-		BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
-		BFE9513222A70B9700B83061 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE9513122A70B9700B83061 /* libx264.a */; };
-		BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
-		BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
-		BFF8A59122C2961C002AD145 /* SoyTypes.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF8A59022C2961C002AD145 /* SoyTypes.mm */; };
-		EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA56E2110BA27008D6DAA /* libdlib.a */; };
-		EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
-		EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB6D678121136A4E00687768 /* SoyBase64.cpp */; };
-		EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
-		EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */; };
-		EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA66211333020014E998 /* SoySocket.cpp */; };
-		EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */; };
-		FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
-		FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
-		FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06261A2E5A7C0099596C /* SoyArray.cpp */; };
-		FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06271A2E5A7C0099596C /* SoyDebug.cpp */; };
-		FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */; };
-		FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06391A2E5A7C0099596C /* SoyPixels.cpp */; };
-		FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A063B1A2E5A7C0099596C /* SoyPng.cpp */; };
-		FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A063D1A2E5A7C0099596C /* SoyRef.cpp */; };
-		FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB63E5181A71C3E9002C59BE /* SoyRingArray.cpp */; };
-		FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FBC3A0DF1A308648009DA49E /* SoyScope.cpp */; };
-		FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06491A2E5A7C0099596C /* SoyString.cpp */; };
-		FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A064C1A2E5A7C0099596C /* SoyThread.cpp */; };
-		FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06501A2E5A7C0099596C /* SoyTypes.cpp */; };
-		FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB6650CC1A56FD8600DF0A12 /* SoyDebug.mm */; };
-		FB2534F21A974F0600A61590 /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A07151A2E6BBF0099596C /* sha1.cpp */; };
-		FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF67B071A96B2BE00F74C38 /* Cocoa.framework */; };
-		FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB9C89991A82DFBA00931EFB /* OpenGL.framework */; };
+		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
+		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BFDC03A42430CBB40004512A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB8A058B1A2E54730099596C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BF5EAFB4237F0C100077BCF5;
+			remoteInfo = PopEngine_Osx;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		BF151F072380731C00A70EBF /* CopyFiles */ = {
@@ -354,8 +229,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */,
-				BF9C0A1023907BAF00476651 /* PopH264_Osx.framework in CopyFiles */,
+				BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,35 +243,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		BF7A8DEC1B65263100A6C403 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				BFA22BEC22DE863300D8615C /* PopCoreml_Osx.framework in CopyFiles */,
-				BF85351222BEDEE10049C01B /* libopenvr_api.dylib in CopyFiles */,
-				BF8534FF22B7B1A70049C01B /* libChakraCore.dylib in CopyFiles */,
-				BF5091922282197A00DCBB4B /* libc++.dylib in CopyFiles */,
-				BF5091932282197A00DCBB4B /* libicui18n.dylib in CopyFiles */,
-				BF5091942282197A00DCBB4B /* libicuuc.dylib in CopyFiles */,
-				BF5091952282197A00DCBB4B /* libv8_for_testing.dylib in CopyFiles */,
-				BF5091962282197A00DCBB4B /* libv8_libbase.dylib in CopyFiles */,
-				BF5091972282197A00DCBB4B /* libv8_libplatform.dylib in CopyFiles */,
-				BF5091982282197A00DCBB4B /* libv8.dylib in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		BFB835CA22CF783C00DB9FD4 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 6;
-			files = (
-				BFB835CC22CF785300DB9FD4 /* libLeap.dylib in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -408,7 +253,6 @@
 		B71D7B3221380D6B00F29EA0 /* SoyCFString.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyCFString.h; path = src/SoyCFString.h; sourceTree = "<group>"; };
 		BF012B6F226A3224003AEB55 /* SoyTime.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTime.mm; path = src/SoyTime.mm; sourceTree = "<group>"; };
 		BF012B70226A3225003AEB55 /* SoyTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTime.cpp; path = src/SoyTime.cpp; sourceTree = "<group>"; };
-		BF0F9E602286F9C200AEA7DC /* PopRayTrace */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopRayTrace; path = ../PopRayTrace; sourceTree = "<group>"; };
 		BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine_V8_App.xcconfig; path = src/PopEngine_V8_App.xcconfig; sourceTree = "<group>"; };
 		BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDll.cpp; path = src/TApiDll.cpp; sourceTree = "<group>"; };
 		BF0F9E702288892F00AEA7DC /* TApiDll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDll.h; path = src/TApiDll.h; sourceTree = "<group>"; };
@@ -474,7 +318,6 @@
 		BF3B01912253A80100644E46 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		BF41F9BF1B4BD82C0015614A /* SoyTypes_Android.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Android.h; path = src/SoyTypes_Android.h; sourceTree = "<group>"; };
 		BF41F9C21B4BD82C0015614A /* SoyTypes_Windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTypes_Windows.h; path = src/SoyTypes_Windows.h; sourceTree = "<group>"; };
-		BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Tarquini_AcidSea; path = ../Tarquini_AcidSea; sourceTree = "<group>"; };
 		BF509159228217AC00DCBB4B /* libencoding.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libencoding.a; path = obj/third_party/inspector_protocol/libencoding.a; sourceTree = "<group>"; };
 		BF50917E2282194700DCBB4B /* libv8_for_testing.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_for_testing.dylib; sourceTree = "<group>"; };
 		BF50917F2282194700DCBB4B /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libc++.dylib"; sourceTree = "<group>"; };
@@ -499,14 +342,13 @@
 		BF5C4AC623F6FE5B007D6393 /* TApiEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiEngine.h; path = src/TApiEngine.h; sourceTree = "<group>"; };
 		BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyViveHandTracker.h; path = src/SoyViveHandTracker.h; sourceTree = "<group>"; };
 		BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyViveHandTracker.cpp; path = src/SoyViveHandTracker.cpp; sourceTree = "<group>"; };
-		BF5EAF75237482DD0077BCF5 /* PopCave */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopCave; path = ../PopCave; sourceTree = "<group>"; };
 		BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine_Osx.h; sourceTree = "<group>"; };
 		BF5EAF7F237F07ED0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PopEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PopEngine_Osx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB00F237F11670077BCF5 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
-		BF5EB0542380335D0077BCF5 /* PopEngineUnitTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngineUnitTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF5EB0542380335D0077BCF5 /* PopEngine_App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngine_App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB05C2380335F0077BCF5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		BF5EB05E2380335F0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BF5EB05E2380335F0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../PopEngineUnitTestApp/Info.plist; sourceTree = "<group>"; };
 		BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = PopEngineUnitTestMain.mm; sourceTree = "<group>"; };
 		BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PopEngineUnitTestApp.entitlements; sourceTree = "<group>"; };
 		BF607EA12240580E00A78C00 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
@@ -602,7 +444,6 @@
 		BF89F6C51B4BCB9E00F58561 /* SoyOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpengl.h; path = src/SoyOpengl.h; sourceTree = "<group>"; };
 		BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglContext.cpp; path = src/SoyOpenglContext.cpp; sourceTree = "<group>"; };
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
-		BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Varjo_TriangleDetect; path = ../Varjo_TriangleDetect; sourceTree = "<group>"; };
 		BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiHttp.cpp; path = src/TApiHttp.cpp; sourceTree = "<group>"; };
 		BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiHttp.h; path = src/TApiHttp.h; sourceTree = "<group>"; };
 		BF91D9792215839F00E91671 /* TApiEzsift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiEzsift.h; path = src/TApiEzsift.h; sourceTree = "<group>"; };
@@ -618,7 +459,6 @@
 		BF91D9AC221584F200E91671 /* vvector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vvector.h; sourceTree = "<group>"; };
 		BF92821F22369316007E9D6F /* TApiOpencv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencv.cpp; path = src/TApiOpencv.cpp; sourceTree = "<group>"; };
 		BF92822022369316007E9D6F /* TApiOpencv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencv.h; path = src/TApiOpencv.h; sourceTree = "<group>"; };
-		BF9282222236E1E1007E9D6F /* PopPhotoBlorp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPhotoBlorp; path = ../PopPhotoBlorp; sourceTree = "<group>"; };
 		BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenvr.cpp; path = src/TApiOpenvr.cpp; sourceTree = "<group>"; };
 		BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenvr.h; path = src/TApiOpenvr.h; sourceTree = "<group>"; };
 		BF92C18E21BAB81E00A1DD49 /* Data_Holosports */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Holosports; sourceTree = "<group>"; };
@@ -627,11 +467,9 @@
 		BF99BE1E21F892F700E6CE5B /* Data_PeopleDetector */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_PeopleDetector; sourceTree = "<group>"; };
 		BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCoreMl.h; path = src/TApiCoreMl.h; sourceTree = "<group>"; };
 		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCoreMl.cpp; path = src/TApiCoreMl.cpp; sourceTree = "<group>"; };
-		BF9C0A0C238EA1D500476651 /* NewChromantics.com */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NewChromantics.com; path = ../NewChromantics.com; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
-		BFA2278B22DB728400D8615C /* PopPianoHero */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopPianoHero; path = ../PopPianoHero; sourceTree = "<group>"; };
 		BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = PopEngine.xcconfig; path = src/PopEngine.xcconfig; sourceTree = "<group>"; };
 		BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PopCoreml_Osx.framework; sourceTree = "<group>"; };
 		BFA2971F1B7E9CF7003B91F6 /* SoyUniform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyUniform.cpp; path = src/SoyUniform.cpp; sourceTree = "<group>"; };
@@ -646,7 +484,6 @@
 		BFB647372225593600820612 /* SoyHid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHid.h; path = src/SoyHid.h; sourceTree = "<group>"; };
 		BFCF8B562107552700EE7307 /* Data_Posenet */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data_Posenet; sourceTree = "<group>"; };
 		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
-		BFD0829E225E974D00FD05DC /* GuildhallGildwall */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GuildhallGildwall; path = ../GuildhallGildwall; sourceTree = "<group>"; };
 		BFD399F622CBC964009E2FD3 /* SoyFourcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFourcc.h; path = src/SoyFourcc.h; sourceTree = "<group>"; };
 		BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFourcc.cpp; path = src/SoyFourcc.cpp; sourceTree = "<group>"; };
 		BFD399FA22CD42B1009E2FD3 /* version.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = version.txt; path = LeapMotion/Leapv2/version.txt; sourceTree = "<group>"; };
@@ -661,6 +498,8 @@
 		BFD4456620E6711A007E2497 /* SoyRuntimeLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyRuntimeLibrary.h; path = src/SoyRuntimeLibrary.h; sourceTree = "<group>"; };
 		BFD4456720E6711A007E2497 /* SoyRuntimeLibrary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyRuntimeLibrary.cpp; path = src/SoyRuntimeLibrary.cpp; sourceTree = "<group>"; };
 		BFD4D564213451D20028A647 /* SoyTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyTime.h; path = src/SoyTime.h; sourceTree = "<group>"; };
+		BFDC03A92430CEC20004512A /* json11.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = json11.cpp; sourceTree = "<group>"; };
+		BFDC03AA2430CEC20004512A /* json11.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = json11.hpp; sourceTree = "<group>"; };
 		BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMedia.cpp; path = src/SoyMedia.cpp; sourceTree = "<group>"; };
 		BFDE37F91C89B20D00D10F02 /* SoyMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMedia.h; path = src/SoyMedia.h; sourceTree = "<group>"; };
 		BFDE38011C8B446A00D10F02 /* SoyUnity.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyUnity.mm; path = src/SoyUnity.mm; sourceTree = "<group>"; };
@@ -740,7 +579,6 @@
 		FBC3A0DF1A308648009DA49E /* SoyScope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyScope.cpp; path = src/SoyScope.cpp; sourceTree = "<group>"; };
 		FBC3A0E01A308648009DA49E /* SoyScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyScope.h; path = src/SoyScope.h; sourceTree = "<group>"; };
 		FBF67B071A96B2BE00F74C38 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngineMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF67B321A974A7B00F74C38 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FBF67B371A974BF400F74C38 /* PopEngine.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PopEngine.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -800,51 +638,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF9C0A0F23907A9E00476651 /* PopH264_Osx.framework in Frameworks */,
 				BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */,
-				BF5EB0672380339F0077BCF5 /* PopEngine.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FBF67B0A1A974A0900F74C38 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				BF3B01922253A80200644E46 /* IOKit.framework in Frameworks */,
-				BF607EA22240580E00A78C00 /* CoreBluetooth.framework in Frameworks */,
-				BF59A2522222057200AE9926 /* GameController.framework in Frameworks */,
-				BF50918B2282194700DCBB4B /* libv8_libbase.dylib in Frameworks */,
-				BFD39A0222CD42B1009E2FD3 /* libLeap.dylib in Frameworks */,
-				BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */,
-				BFE9513222A70B9700B83061 /* libx264.a in Frameworks */,
-				BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */,
-				BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */,
-				BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */,
-				BF1826B72423C88C006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */,
-				BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */,
-				BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */,
-				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
-				BF0F9E892289EB5F00AEA7DC /* libdyncall_s.a in Frameworks */,
-				BFA22BEB22DE7E3700D8615C /* PopCoreml_Osx.framework in Frameworks */,
-				BF5091852282194700DCBB4B /* libv8_for_testing.dylib in Frameworks */,
-				BF85351122BEDEBE0049C01B /* libopenvr_api.dylib in Frameworks */,
-				BF5EB010237F11680077BCF5 /* opencv2.framework in Frameworks */,
-				EB0EA5712110BAD7008D6DAA /* Accelerate.framework in Frameworks */,
-				BF689AC820D6C811000BC812 /* ApplicationServices.framework in Frameworks */,
-				BF5091882282194700DCBB4B /* libv8.dylib in Frameworks */,
-				BF689AC620D6C80D000BC812 /* CoreGraphics.framework in Frameworks */,
-				BF9CCABF1B6E799D000B19EA /* OpenCL.framework in Frameworks */,
-				BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */,
-				BF321B051B67AD990016E903 /* CoreVideo.framework in Frameworks */,
-				BFE572801B541B3400B17528 /* CoreServices.framework in Frameworks */,
-				BF5091872282194700DCBB4B /* libv8_libplatform.dylib in Frameworks */,
-				BF8534F522B6DA450049C01B /* libChakraCore.dylib in Frameworks */,
-				FB2534F61A975CF300A61590 /* OpenGL.framework in Frameworks */,
-				BF5091862282194700DCBB4B /* libc++.dylib in Frameworks */,
-				FB2534F51A975CED00A61590 /* Cocoa.framework in Frameworks */,
-				EB0EA56F2110BA27008D6DAA /* libdlib.a in Frameworks */,
-				BF9C0A0E23907A9D00476651 /* PopH264_Osx.framework in Frameworks */,
-				BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */,
+				BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -945,26 +740,20 @@
 				BF5C4ABF23F6FE3A007D6393 /* zip.c */,
 				BF5C4ABE23F6FE3A007D6393 /* zip.h */,
 			);
-			path = Zip;
+			name = Zip;
+			path = src/Zip;
 			sourceTree = "<group>";
 		};
-		BF5EAF7D237F07ED0077BCF5 /* PopEngine */ = {
-			isa = PBXGroup;
-			children = (
-				BF5EAF7F237F07ED0077BCF5 /* Info.plist */,
-			);
-			path = PopEngine;
-			sourceTree = "<group>";
-		};
-		BF5EB0552380335D0077BCF5 /* PopEngineUnitTestApp */ = {
+		BF5EAF7D237F07ED0077BCF5 /* Source_App */ = {
 			isa = PBXGroup;
 			children = (
 				BF5EB05B2380335F0077BCF5 /* MainMenu.xib */,
 				BF5EB05E2380335F0077BCF5 /* Info.plist */,
 				BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */,
 				BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */,
+				BF5EAF7F237F07ED0077BCF5 /* Info.plist */,
 			);
-			path = PopEngineUnitTestApp;
+			path = Source_App;
 			sourceTree = "<group>";
 		};
 		BF6553C32132C4D9003E4241 /* v8 */ = {
@@ -1169,6 +958,16 @@
 			name = LeapMotion;
 			sourceTree = "<group>";
 		};
+		BFDC03A62430CEC20004512A /* Json11 */ = {
+			isa = PBXGroup;
+			children = (
+				BFDC03A92430CEC20004512A /* json11.cpp */,
+				BFDC03AA2430CEC20004512A /* json11.hpp */,
+			);
+			name = Json11;
+			path = src/Json11;
+			sourceTree = "<group>";
+		};
 		BFE9512E22A70B8400B83061 /* x264 */ = {
 			isa = PBXGroup;
 			children = (
@@ -1207,19 +1006,11 @@
 				BF459C7C21F7C72600CED59D /* Libraries */,
 				FB8A06221A2E5A280099596C /* soylib */,
 				FB8A05951A2E54730099596C /* src */,
-				BF5EAF7D237F07ED0077BCF5 /* PopEngine */,
-				BF5EB0552380335D0077BCF5 /* PopEngineUnitTestApp */,
+				BF5EAF7D237F07ED0077BCF5 /* Source_App */,
 				BF40CE182423D90B00F636EF /* Source_Osx */,
 				BF151F7723845F2E00A70EBF /* Source_Ios */,
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
-				BF8AD98E222D573C00217EF3 /* Varjo_TriangleDetect */,
-				BFD0829E225E974D00FD05DC /* GuildhallGildwall */,
-				BF9C0A0C238EA1D500476651 /* NewChromantics.com */,
-				BF5EAF75237482DD0077BCF5 /* PopCave */,
-				BF0F9E602286F9C200AEA7DC /* PopRayTrace */,
-				BF42AAC822CAA9DA0048C712 /* Tarquini_AcidSea */,
-				BFA2278B22DB728400D8615C /* PopPianoHero */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -1227,9 +1018,8 @@
 		FB8A05941A2E54730099596C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */,
-				BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */,
-				BF5EB0542380335D0077BCF5 /* PopEngineUnitTestApp.app */,
+				BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */,
+				BF5EB0542380335D0077BCF5 /* PopEngine_App.app */,
 				BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */,
 			);
 			name = Products;
@@ -1238,6 +1028,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BFDC03A62430CEC20004512A /* Json11 */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
 				BF30550A1B56F553002B0892 /* Data */,
@@ -1264,7 +1055,6 @@
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
-				BF9282222236E1E1007E9D6F /* PopPhotoBlorp */,
 				BF607EA6224107B800A78C00 /* SoyBluetooth.h */,
 				BF607EA7224107B800A78C00 /* SoyBluetooth.mm */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
@@ -1493,17 +1283,17 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXLegacyTarget section */
-		BF5C4AAF23F6C73B007D6393 /* PopEngineLumin */ = {
+		BF5C4AAF23F6C73B007D6393 /* PopEngine_Lumin */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION)";
-			buildConfigurationList = BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngineLumin" */;
+			buildConfigurationList = BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngine_Lumin" */;
 			buildPhases = (
 			);
 			buildToolPath = PopEngine.Lumin/Build.sh;
 			buildWorkingDirectory = "";
 			dependencies = (
 			);
-			name = PopEngineLumin;
+			name = PopEngine_Lumin;
 			passBuildSettingsInEnvironment = 1;
 			productName = PopEngineLumin;
 		};
@@ -1528,9 +1318,9 @@
 			productReference = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		BF5EAFB4237F0C100077BCF5 /* PopEngine */ = {
+		BF5EAFB4237F0C100077BCF5 /* PopEngine_Osx */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BF5EAFBA237F0C100077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine" */;
+			buildConfigurationList = BF5EAFBA237F0C100077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine_Osx" */;
 			buildPhases = (
 				BF5EAFB0237F0C100077BCF5 /* Headers */,
 				BF5EAFB1237F0C100077BCF5 /* Sources */,
@@ -1542,14 +1332,14 @@
 			);
 			dependencies = (
 			);
-			name = PopEngine;
+			name = PopEngine_Osx;
 			productName = PopEngine;
-			productReference = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */;
+			productReference = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		BF5EB0532380335D0077BCF5 /* PopEngineUnitTestApp */ = {
+		BF5EB0532380335D0077BCF5 /* PopEngine_App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngineUnitTestApp" */;
+			buildConfigurationList = BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine_App" */;
 			buildPhases = (
 				BF5EB0502380335D0077BCF5 /* Sources */,
 				BF5EB0512380335D0077BCF5 /* Frameworks */,
@@ -1559,29 +1349,11 @@
 			buildRules = (
 			);
 			dependencies = (
+				BFDC03A52430CBB40004512A /* PBXTargetDependency */,
 			);
-			name = PopEngineUnitTestApp;
+			name = PopEngine_App;
 			productName = PopEngineUnitTestApp;
-			productReference = BF5EB0542380335D0077BCF5 /* PopEngineUnitTestApp.app */;
-			productType = "com.apple.product-type.application";
-		};
-		FBF67B0C1A974A0900F74C38 /* PopEngineMac */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopEngineMac" */;
-			buildPhases = (
-				FBF67B091A974A0900F74C38 /* Sources */,
-				FBF67B0A1A974A0900F74C38 /* Frameworks */,
-				FBF67B0B1A974A0900F74C38 /* Resources */,
-				BF7A8DEC1B65263100A6C403 /* CopyFiles */,
-				BFB835CA22CF783C00DB9FD4 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = PopEngineMac;
-			productName = PopOpenglMac;
-			productReference = FBF67B0D1A974A0900F74C38 /* PopEngineMac.app */;
+			productReference = BF5EB0542380335D0077BCF5 /* PopEngine_App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1612,10 +1384,6 @@
 						DevelopmentTeam = 2HGDT7H2KX;
 						ProvisioningStyle = Automatic;
 					};
-					FBF67B0C1A974A0900F74C38 = {
-						CreatedOnToolsVersion = 6.1;
-						DevelopmentTeam = 2HGDT7H2KX;
-					};
 				};
 			};
 			buildConfigurationList = FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopEngine" */;
@@ -1632,11 +1400,10 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FBF67B0C1A974A0900F74C38 /* PopEngineMac */,
-				BF5EAFB4237F0C100077BCF5 /* PopEngine */,
-				BF5EB0532380335D0077BCF5 /* PopEngineUnitTestApp */,
+				BF5EAFB4237F0C100077BCF5 /* PopEngine_Osx */,
+				BF5EB0532380335D0077BCF5 /* PopEngine_App */,
 				BF151F7523845F2E00A70EBF /* PopEngine_Ios */,
-				BF5C4AAF23F6C73B007D6393 /* PopEngineLumin */,
+				BF5C4AAF23F6C73B007D6393 /* PopEngine_Lumin */,
 			);
 		};
 /* End PBXProject section */
@@ -1668,16 +1435,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FBF67B0B1A974A0900F74C38 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				BF5EAF76237482DD0077BCF5 /* PopCave in Resources */,
-				BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */,
-				BFD4456520E67037007E2497 /* PopEngine.xib in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -1693,6 +1450,7 @@
 				BF151F8F23845FAD00A70EBF /* SoyJson.cpp in Sources */,
 				BF151F9923845FAD00A70EBF /* SoyProtocol.cpp in Sources */,
 				BF151FA423845FAD00A70EBF /* SoyString.mm in Sources */,
+				BFDC03B12430CED90004512A /* json11.cpp in Sources */,
 				BF151FB223845FB700A70EBF /* sha1.cpp in Sources */,
 				BF151F9C23845FAD00A70EBF /* SoyRuntimeLibrary.cpp in Sources */,
 				BF151F8A23845FAD00A70EBF /* SoyFourcc.cpp in Sources */,
@@ -1827,6 +1585,7 @@
 				BF5EAFF0237F0C6E0077BCF5 /* SoyWindow.cpp in Sources */,
 				BF5EAFF5237F0CD40077BCF5 /* PopMain.cpp in Sources */,
 				BF5EAFE7237F0C6E0077BCF5 /* SoyTime.mm in Sources */,
+				BFDC03B02430CED80004512A /* json11.cpp in Sources */,
 				BF5EAFD3237F0C6E0077BCF5 /* SoyMemFile.cpp in Sources */,
 				BF5EAFC4237F0C6E0077BCF5 /* SoyAvf.mm in Sources */,
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,
@@ -1854,100 +1613,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FBF67B091A974A0900F74C38 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				BFA664731B55AD0A00C33A2A /* SoyString.mm in Sources */,
-				BF5C4AC723F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
-				BF689ACE20D6D3AE000BC812 /* SoyOpenglView.mm in Sources */,
-				BFD4456820E6711A007E2497 /* SoyRuntimeLibrary.cpp in Sources */,
-				BF607EA8224107B800A78C00 /* SoyBluetooth.mm in Sources */,
-				BF26EF6120DECFB000A48025 /* TApiOpengl.cpp in Sources */,
-				BFAD33DD1B6406D500D3E7A6 /* SoyVideoDevice.cpp in Sources */,
-				BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */,
-				EBC8FA5F21131F000014E998 /* SoySocketStream.cpp in Sources */,
-				B71D7B2C2137FBB400F29EA0 /* SoyDecklink.cpp in Sources */,
-				BF31E49F1C56961100AB49AF /* SoyImage.cpp in Sources */,
-				BF89F6BB1B4AE28F00F58561 /* SoyMath.cpp in Sources */,
-				BF3965632277378B00A721E8 /* SoyWindow.cpp in Sources */,
-				FB2534DD1A974E7B00A61590 /* SoyTypes.cpp in Sources */,
-				BF91D97B2215839F00E91671 /* TApiEzsift.cpp in Sources */,
-				BFB647382225593600820612 /* SoyHid.cpp in Sources */,
-				BF689ACD20D6D3AE000BC812 /* SoyOpenglWindow.mm in Sources */,
-				BF8534FE22B6DB270049C01B /* ChakraBind.cpp in Sources */,
-				BF5EAF7423744E370077BCF5 /* SoyViveHandTracker.cpp in Sources */,
-				BF3965662279C16C00A721E8 /* V8Bind.cpp in Sources */,
-				BFDE38031C8B446A00D10F02 /* SoyUnity.mm in Sources */,
-				BF689AEB20D6DEB4000BC812 /* PopMain.cpp in Sources */,
-				BF5B07151B5C12E700C489C6 /* SoyShader.cpp in Sources */,
-				BF6EB3292111167800FC991B /* TApiMedia.cpp in Sources */,
-				BF5C4AC223F6FE3A007D6393 /* zip.c in Sources */,
-				BF89F6CB1B4BCB9E00F58561 /* SoyOpenglContext.cpp in Sources */,
-				FB2534D31A974E7B00A61590 /* SoyMemFile.cpp in Sources */,
-				BFDE37FA1C89B20D00D10F02 /* SoyMedia.cpp in Sources */,
-				BF8B81B2211B16FB0092F3A2 /* TApiHttp.cpp in Sources */,
-				BFD39A0722CD44E8009E2FD3 /* TApiLeapMotion.cpp in Sources */,
-				BF689AD120D6DA42000BC812 /* SoyGraphics.cpp in Sources */,
-				FB2534D71A974E7B00A61590 /* SoyRingArray.cpp in Sources */,
-				FB2534D51A974E7B00A61590 /* SoyPng.cpp in Sources */,
-				EBC8FA5C21131E9F0014E998 /* TApiWebsocket.cpp in Sources */,
-				BF91D9C8221584F200E91671 /* image_utility.cpp in Sources */,
-				BF012B73226A3225003AEB55 /* SoyTime.cpp in Sources */,
-				FB2534D41A974E7B00A61590 /* SoyPixels.cpp in Sources */,
-				BF6EB33321111D0900FC991B /* SoyAvf.mm in Sources */,
-				BFD399F822CBC964009E2FD3 /* SoyFourcc.cpp in Sources */,
-				BF7225AA1BADCB3B00550AD8 /* SoyStream.cpp in Sources */,
-				BF6EB33D21111D7A00FC991B /* SoyH264.cpp in Sources */,
-				EB6D678321136A4E00687768 /* SoyBase64.cpp in Sources */,
-				FB2534F21A974F0600A61590 /* sha1.cpp in Sources */,
-				BFA297211B7E9CF7003B91F6 /* SoyUniform.cpp in Sources */,
-				FB2534D61A974E7B00A61590 /* SoyRef.cpp in Sources */,
-				BF607EA52240588300A78C00 /* TApiBluetooth.cpp in Sources */,
-				BF691F021C3FEEE90092FC34 /* SoySrt.cpp in Sources */,
-				BF689AD420D6DA52000BC812 /* SoyMediaFormat.cpp in Sources */,
-				BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */,
-				BF7AB9612248223100FAC1CE /* PopEngine.cpp in Sources */,
-				FB2534D01A974E7B00A61590 /* SoyDebug.cpp in Sources */,
-				BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */,
-				EBC8FA6E2113514B0014E998 /* SoyHttp.cpp in Sources */,
-				BF0F9E712288892F00AEA7DC /* TApiDll.cpp in Sources */,
-				BF689ADC20D6DAC0000BC812 /* SoyWave.cpp in Sources */,
-				EBC8FA68211333020014E998 /* SoySocket.cpp in Sources */,
-				BFA297251B80EF1C003B91F6 /* SoyWindow.mm in Sources */,
-				BF89F6B71B4AB9DC00F58561 /* SoyAssert.cpp in Sources */,
-				BFF505ED22550F47005A6AC1 /* JsCoreBind.cpp in Sources */,
-				BF5C4AB823F6FDF8007D6393 /* TApiZip.cpp in Sources */,
-				FB2534D91A974E7B00A61590 /* SoyString.cpp in Sources */,
-				BF7225AD1BADCC3900550AD8 /* SoyProtocol.cpp in Sources */,
-				BF012B72226A3225003AEB55 /* SoyTime.mm in Sources */,
-				BF689AD620D6DA86000BC812 /* SoyFilesystem.mm in Sources */,
-				BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */,
-				FB2534CE1A974E7B00A61590 /* SoyApp.cpp in Sources */,
-				FB2534CD1A974E7B00A61590 /* memheap.cpp in Sources */,
-				BF91D9C7221584F200E91671 /* ezsift.cpp in Sources */,
-				BF59A255222206B400AE9926 /* TApiInput.cpp in Sources */,
-				BFF8A59122C2961C002AD145 /* SoyTypes.mm in Sources */,
-				FB2534E11A974EEC00A61590 /* SoyDebug.mm in Sources */,
-				BF26EF6420DED0F500A48025 /* TApiCommon.cpp in Sources */,
-				BF89F6C91B4BCB9E00F58561 /* SoyOpengl.cpp in Sources */,
-				BF689AEC20D6DEB4000BC812 /* PopMain.mm in Sources */,
-				BF689AD920D6DAB9000BC812 /* SoyJson.cpp in Sources */,
-				BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */,
-				BFF2B6C22264F9A700232137 /* TApiSerial.cpp in Sources */,
-				FB2534D81A974E7B00A61590 /* SoyScope.cpp in Sources */,
-				BFE572851B544E3400B17528 /* SoyFilesystem.cpp in Sources */,
-				BF89F6BF1B4B14CD00F58561 /* SoyVector.cpp in Sources */,
-				BF151FFF23847CF400A70EBF /* TApiDlib.cpp in Sources */,
-				BF89D4842294646200A187D5 /* TApiGui.cpp in Sources */,
-				BF19612421B9D2B8007014EF /* TBind.cpp in Sources */,
-				FB2534DB1A974E7B00A61590 /* SoyThread.cpp in Sources */,
-				BF92822122369317007E9D6F /* TApiOpencv.cpp in Sources */,
-				FB2534CF1A974E7B00A61590 /* SoyArray.cpp in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BFDC03A52430CBB40004512A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BF5EAFB4237F0C100077BCF5 /* PopEngine_Osx */;
+			targetProxy = BFDC03A42430CBB40004512A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		BF5EB05B2380335F0077BCF5 /* MainMenu.xib */ = {
@@ -1964,6 +1638,7 @@
 		BF0F9E6122870BD000AEA7DC /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1992,66 +1667,6 @@
 			};
 			name = Debug_V8;
 		};
-		BF0F9E6222870BD000AEA7DC /* Debug_V8 */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 2HGDT7H2KX;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(POPMOVIETEXTURE_PATH)/build",
-					"$(POPCAST_PATH)/build",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-				);
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/v8/lib",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
-					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
-					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
-					"$(PROJECT_DIR)/src/v8/v8Runtime",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
-					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopEngineMac;
-				VALID_ARCHS = x86_64;
-			};
-			name = Debug_V8;
-		};
 		BF151F7C23845F2F00A70EBF /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */;
@@ -2059,8 +1674,6 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -2115,7 +1728,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngine_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2138,8 +1751,6 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -2194,7 +1805,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngine_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2217,8 +1828,6 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -2273,7 +1882,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngine_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2297,8 +1906,6 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -2329,7 +1936,7 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = PopEngine_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2626,7 +2233,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngine/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2701,7 +2308,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngine/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2776,7 +2383,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngine/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2832,7 +2439,7 @@
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = PopEngine/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2884,7 +2491,6 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_ENTITLEMENTS = PopEngineUnitTestApp/PopEngineUnitTestApp.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -2918,7 +2524,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngineUnitTestApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -2955,7 +2561,6 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_ENTITLEMENTS = PopEngineUnitTestApp/PopEngineUnitTestApp.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -2989,7 +2594,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngineUnitTestApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -3026,7 +2631,6 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_ENTITLEMENTS = PopEngineUnitTestApp/PopEngineUnitTestApp.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -3060,7 +2664,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngineUnitTestApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -3087,7 +2691,6 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = PopEngineUnitTestApp/PopEngineUnitTestApp.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -3105,7 +2708,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngineUnitTestApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -3114,6 +2717,7 @@
 		BF8534F822B6DA830049C01B /* Debug_Chakra */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -3142,69 +2746,10 @@
 			};
 			name = Debug_Chakra;
 		};
-		BF8534F922B6DA830049C01B /* Debug_Chakra */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 2HGDT7H2KX;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(POPMOVIETEXTURE_PATH)/build",
-					"$(POPCAST_PATH)/build",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-				);
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/v8/lib",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
-					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
-					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
-					"$(PROJECT_DIR)/src/v8/v8Runtime",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
-					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopEngineMac;
-				VALID_ARCHS = x86_64;
-			};
-			name = Debug_Chakra;
-		};
 		FB8A05981A2E54730099596C /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -3236,6 +2781,7 @@
 		FB8A05991A2E54730099596C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -3264,118 +2810,6 @@
 			};
 			name = Release;
 		};
-		FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 2HGDT7H2KX;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(POPMOVIETEXTURE_PATH)/build",
-					"$(POPCAST_PATH)/build",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-				);
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/v8/lib",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
-					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
-					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
-					"$(PROJECT_DIR)/src/v8/v8Runtime",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
-					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopEngineMac;
-				VALID_ARCHS = x86_64;
-			};
-			name = Debug_JavascriptCore;
-		};
-		FBF67B2E1A974A0900F74C38 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(POPMOVIETEXTURE_PATH)/build",
-					"$(POPCAST_PATH)/build",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-				);
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/v8/lib",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/PopH264Framework.framework/Versions/A",
-					"$(PROJECT_DIR)/src/Libs/VarjoGlint",
-					"$(PROJECT_DIR)/src/v8/lib/obj/third_party/inspector_protocol",
-					"$(PROJECT_DIR)/src/v8/v8Runtime",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/Win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/glew/glew-1.11.0/lib/Release\\ MX/x64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/linux64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/osx32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/sdl2-2.0.3/bin/win64",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win32",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/samples/thirdparty/vulkan-1.0.49.0/lib/win64",
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
-					"$(PROJECT_DIR)/src/Libs/ChakraCore/lib",
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "NewChromantics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = PopEngineMac;
-				VALID_ARCHS = x86_64;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -3390,7 +2824,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug_JavascriptCore;
 		};
-		BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngineLumin" */ = {
+		BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngine_Lumin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BF5C4AB023F6C73B007D6393 /* Debug_JavascriptCore */,
@@ -3401,7 +2835,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug_JavascriptCore;
 		};
-		BF5EAFBA237F0C100077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine" */ = {
+		BF5EAFBA237F0C100077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine_Osx" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BF5EAFBB237F0C100077BCF5 /* Debug_JavascriptCore */,
@@ -3412,7 +2846,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug_JavascriptCore;
 		};
-		BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngineUnitTestApp" */ = {
+		BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine_App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BF5EB0632380335F0077BCF5 /* Debug_JavascriptCore */,
@@ -3430,17 +2864,6 @@
 				BF0F9E6122870BD000AEA7DC /* Debug_V8 */,
 				BF8534F822B6DA830049C01B /* Debug_Chakra */,
 				FB8A05991A2E54730099596C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug_JavascriptCore;
-		};
-		FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopEngineMac" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */,
-				BF0F9E6222870BD000AEA7DC /* Debug_V8 */,
-				BF8534F922B6DA830049C01B /* Debug_Chakra */,
-				FBF67B2E1A974A0900F74C38 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug_JavascriptCore;

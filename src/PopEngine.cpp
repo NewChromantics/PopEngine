@@ -28,14 +28,24 @@ TPopAppError::Type PopMain()
 		//std::Debug << "Argument path doesn't exist; " << e.what() << std::endl;
 	}
 
+#if defined(TARGET_WINDOWS)
+	const char* DoubleSlash = "\\\\";
+#else
+	const char* DoubleSlash = "//";
+#endif
+
 	//	 try to predict full paths vs something embedded in the app
 	if ( !Platform::IsFullPath(DataPath) )
 	{
 		std::Debug << "<" << DataPath << "> is not full path, prefixing with resources path." << std::endl;
 		DataPath = Platform::GetAppResourcesDirectory() + DataPath;
+		
+		//	make sure this path ends with /
+		if ( DataPath.back() != DoubleSlash[0] )
+			DataPath.push_back(DoubleSlash[0]);
 	}
-	
-	if ( DataPath.back() != '/' || Soy::StringEndsWith(DataPath,"//",true) )
+			
+	if ( DataPath.back() != DoubleSlash[0] || Soy::StringEndsWith(DataPath, DoubleSlash,true) )
 	{
 		std::stringstream Error;
 		Error << "Expected Pop data path (" << DataPath << ") to end with a single /";

@@ -33,8 +33,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-            BuildableName = "PopEngineUnitTestApp.app"
-            BlueprintName = "PopEngineUnitTestApp"
+            BuildableName = "PopEngine_App.app"
+            BlueprintName = "PopEngine_App"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -61,8 +61,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-            BuildableName = "PopEngineUnitTestApp.app"
-            BlueprintName = "PopEngineUnitTestApp"
+            BuildableName = "PopEngine_App.app"
+            BlueprintName = "PopEngine_App"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "BF151F7523845F2E00A70EBF"
-               BuildableName = "PopEngine_Ios.framework"
-               BlueprintName = "PopEngine_Ios"
-               ReferencedContainer = "container:PopEngine.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "BF5EAFB4237F0C100077BCF5"
-               BuildableName = "PopEngine.framework"
-               BlueprintName = "PopEngine"
+               BuildableName = "PopEngine_Osx.framework"
+               BlueprintName = "PopEngine_Osx"
                ReferencedContainer = "container:PopEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -43,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-               BuildableName = "PopEngineUnitTestApp.app"
-               BlueprintName = "PopEngineUnitTestApp"
+               BuildableName = "PopEngine_App.app"
+               BlueprintName = "PopEngine_App"
                ReferencedContainer = "container:PopEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -61,8 +47,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-            BuildableName = "PopEngineUnitTestApp.app"
-            BlueprintName = "PopEngineUnitTestApp"
+            BuildableName = "PopEngine_App.app"
+            BlueprintName = "PopEngine_App"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -86,8 +72,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-            BuildableName = "PopEngineUnitTestApp.app"
-            BlueprintName = "PopEngineUnitTestApp"
+            BuildableName = "PopEngine_App.app"
+            BlueprintName = "PopEngine_App"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -111,8 +97,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-            BuildableName = "PopEngineUnitTestApp.app"
-            BlueprintName = "PopEngineUnitTestApp"
+            BuildableName = "PopEngine_App.app"
+            BlueprintName = "PopEngine_App"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
