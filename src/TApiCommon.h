@@ -16,6 +16,10 @@ class TPixelBuffer;
 namespace Platform
 {
 	class TFileMonitor;
+}
+
+namespace Soy
+{
 	class TShellExecute;
 }
 
@@ -175,7 +179,7 @@ public:
 
 
 
-class ApiPop::TShellExecuteWrapper : public Bind::TObjectWrapper<BindType::ShellExecute, Platform::TShellExecute>
+class ApiPop::TShellExecuteWrapper : public Bind::TObjectWrapper<BindType::ShellExecute, Soy::TShellExecute>
 {
 public:
 	TShellExecuteWrapper(Bind::TContext& Context) :
@@ -197,7 +201,7 @@ private:
 	void			FlushPendingOutput();
 
 public:
-	std::shared_ptr<Platform::TShellExecute>&	mShellExecute = mObject;
+	std::shared_ptr<Soy::TShellExecute>&	mShellExecute = mObject;
 
 	Bind::TPromiseQueue		mWaitForExitPromises;
 	Bind::TPromiseQueue		mWaitForOutputPromises;

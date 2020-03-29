@@ -207,6 +207,9 @@
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB07823803E430077BCF5 /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF67C84E2431303800D7492E /* SoyShellExecute.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F12431207F009930E4 /* SoyShellExecute.mm */; };
+		BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
+		BF67C850243132C700D7492E /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
@@ -477,6 +480,9 @@
 		BFAD33DC1B6406D500D3E7A6 /* SoyVideoDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyVideoDevice.h; path = src/SoyVideoDevice.h; sourceTree = "<group>"; };
 		BFB647362225593600820612 /* SoyHid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHid.cpp; path = src/SoyHid.cpp; sourceTree = "<group>"; };
 		BFB647372225593600820612 /* SoyHid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHid.h; path = src/SoyHid.h; sourceTree = "<group>"; };
+		BFC721F12431207F009930E4 /* SoyShellExecute.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyShellExecute.mm; path = src/SoyShellExecute.mm; sourceTree = "<group>"; };
+		BFC721F224312080009930E4 /* SoyShellExecute.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShellExecute.h; path = src/SoyShellExecute.h; sourceTree = "<group>"; };
+		BFC721F324312101009930E4 /* SoyShellExecute.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShellExecute.cpp; path = src/SoyShellExecute.cpp; sourceTree = "<group>"; };
 		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
 		BFD399F622CBC964009E2FD3 /* SoyFourcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFourcc.h; path = src/SoyFourcc.h; sourceTree = "<group>"; };
 		BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFourcc.cpp; path = src/SoyFourcc.cpp; sourceTree = "<group>"; };
@@ -1225,6 +1231,9 @@
 				BFAD33DC1B6406D500D3E7A6 /* SoyVideoDevice.h */,
 				BF689ADA20D6DAC0000BC812 /* SoyWave.cpp */,
 				BF689ADB20D6DAC0000BC812 /* SoyWave.h */,
+				BFC721F224312080009930E4 /* SoyShellExecute.h */,
+				BFC721F324312101009930E4 /* SoyShellExecute.cpp */,
+				BFC721F12431207F009930E4 /* SoyShellExecute.mm */,
 				BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */,
 				BF19612021B9ADD9007014EF /* SoyWebSocket.h */,
 				BF3965622277378A00A721E8 /* SoyWindow.cpp */,
@@ -1450,6 +1459,7 @@
 				BF151F8C23845FAD00A70EBF /* SoyH264.cpp in Sources */,
 				BF151F9E23845FAD00A70EBF /* SoyShader.cpp in Sources */,
 				BF151F8423845FAD00A70EBF /* SoyAvf.mm in Sources */,
+				BF67C850243132C700D7492E /* SoyShellExecute.cpp in Sources */,
 				BF151FB323845FD200A70EBF /* JsCoreBind.cpp in Sources */,
 				BF151F9123845FAD00A70EBF /* SoyMedia.cpp in Sources */,
 				BF5C4AC423F6FE3A007D6393 /* zip.c in Sources */,
@@ -1550,7 +1560,9 @@
 				BF15200023847CF500A70EBF /* TApiDlib.cpp in Sources */,
 				BF5EAFCB237F0C6E0077BCF5 /* SoyGraphics.cpp in Sources */,
 				BF5EAFC9237F0C6E0077BCF5 /* SoyFilesystem.mm in Sources */,
+				BF67C84E2431303800D7492E /* SoyShellExecute.mm in Sources */,
 				BF5EAFF4237F0CD40077BCF5 /* PopEngine.cpp in Sources */,
+				BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */,
 				BF5EAFF9237F0CD40077BCF5 /* SoyOpenglView.mm in Sources */,
 				BF15200323847DAB00A70EBF /* V8Bind.cpp in Sources */,
 				BF5EB003237F0CD40077BCF5 /* TApiHttp.cpp in Sources */,
