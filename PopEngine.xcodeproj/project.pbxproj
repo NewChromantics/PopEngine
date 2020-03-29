@@ -15,7 +15,6 @@
 		BF0F9E8A2289EB5F00AEA7DC /* libdyncallback_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */; };
 		BF0F9E8B2289EB5F00AEA7DC /* libdynload_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */; };
 		BF108A852296B7BE003DDC5F /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
-		BF151F0B2380734F00A70EBF /* PopCoreml_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -97,6 +96,7 @@
 		BF15205523855FB600A70EBF /* PopCameraDevice_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF17B6B92115C157006940E6 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF1826B72423C88C006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF19611E21B9AA2A007014EF /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF19611521B988C9007014EF /* JavaScriptCore.framework */; };
 		BF19612121B9ADD9007014EF /* SoyWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */; };
 		BF19612421B9D2B8007014EF /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
@@ -295,7 +295,7 @@
 		BF92BAFD228C71C900C9C07C /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
 		BF99BE2A21F89C6200E6CE5B /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF9C0A0E23907A9D00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; };
+		BF9C0A0E23907A9D00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF9C0A0F23907A9E00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; };
 		BF9C0A1023907BAF00476651 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF9CCA9F1B6C1E89000B19EA /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
@@ -355,7 +355,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				BF151F102382CB6500A70EBF /* PopEngine.framework in CopyFiles */,
-				BF151F0B2380734F00A70EBF /* PopCoreml_Osx.framework in CopyFiles */,
 				BF9C0A1023907BAF00476651 /* PopH264_Osx.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -821,6 +820,7 @@
 				BF6EB33521111D2900FC991B /* VideoToolbox.framework in Frameworks */,
 				BF5091892282194700DCBB4B /* libicuuc.dylib in Frameworks */,
 				BF6EB32D21111C8300FC991B /* CoreMedia.framework in Frameworks */,
+				BF1826B72423C88C006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */,
 				BF6EB32B21111C6600FC991B /* AVFoundation.framework in Frameworks */,
 				BF50918A2282194700DCBB4B /* libicui18n.dylib in Frameworks */,
 				BF50915A228217AC00DCBB4B /* libencoding.a in Frameworks */,
@@ -921,18 +921,18 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */,
-				BF5EB00F237F11670077BCF5 /* opencv2.framework */,
 				BF8534F322B6DA1C0049C01B /* ChakraCore */,
 				BF0F9E762289EB5F00AEA7DC /* dyncall */,
 				BFD399F922CD427D009E2FD3 /* LeapMotion */,
 				BFF1C71322E738F100AFDFD5 /* Opencv_contrib */,
+				BF5EB00F237F11670077BCF5 /* opencv2.framework */,
 				BF89CF49228DD3EB00A187D5 /* OpenVr */,
 				BF89CF4B228DD3F700A187D5 /* OpenVr */,
+				BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */,
 				BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */,
+				BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */,
 				BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */,
 				BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */,
-				BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */,
 				BFE9512E22A70B8400B83061 /* x264 */,
 			);
 			name = Libraries;
@@ -1595,7 +1595,7 @@
 				TargetAttributes = {
 					BF151F7523845F2E00A70EBF = {
 						CreatedOnToolsVersion = 10.1;
-						DevelopmentTeam = X52DR36JY2;
+						DevelopmentTeam = 2HGDT7H2KX;
 						ProvisioningStyle = Automatic;
 					};
 					BF5C4AAF23F6C73B007D6393 = {
@@ -2091,7 +2091,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = 2HGDT7H2KX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -2170,7 +2170,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = 2HGDT7H2KX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -2249,7 +2249,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = 2HGDT7H2KX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -2319,7 +2319,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = 2HGDT7H2KX;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -3266,7 +3266,6 @@
 		};
 		FBF67B2D1A974A0900F74C38 /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
@@ -3389,7 +3388,7 @@
 				BF151F7F23845F2F00A70EBF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug_JavascriptCore;
 		};
 		BF5C4AB423F6C73B007D6393 /* Build configuration list for PBXLegacyTarget "PopEngineLumin" */ = {
 			isa = XCConfigurationList;
@@ -3400,7 +3399,7 @@
 				BF5C4AB323F6C73B007D6393 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug_JavascriptCore;
 		};
 		BF5EAFBA237F0C100077BCF5 /* Build configuration list for PBXNativeTarget "PopEngine" */ = {
 			isa = XCConfigurationList;
@@ -3411,7 +3410,7 @@
 				BF5EAFBE237F0C100077BCF5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug_JavascriptCore;
 		};
 		BF5EB0622380335F0077BCF5 /* Build configuration list for PBXNativeTarget "PopEngineUnitTestApp" */ = {
 			isa = XCConfigurationList;
@@ -3422,7 +3421,7 @@
 				BF5EB0662380335F0077BCF5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug_JavascriptCore;
 		};
 		FB8A058E1A2E54730099596C /* Build configuration list for PBXProject "PopEngine" */ = {
 			isa = XCConfigurationList;
@@ -3433,7 +3432,7 @@
 				FB8A05991A2E54730099596C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug_JavascriptCore;
 		};
 		FBF67B2C1A974A0900F74C38 /* Build configuration list for PBXNativeTarget "PopEngineMac" */ = {
 			isa = XCConfigurationList;
@@ -3444,7 +3443,7 @@
 				FBF67B2E1A974A0900F74C38 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug_JavascriptCore;
 		};
 /* End XCConfigurationList section */
 	};

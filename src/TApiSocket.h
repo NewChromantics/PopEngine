@@ -14,7 +14,7 @@ class SoySocket;
 namespace ApiSocket
 {
 	void	Bind(Bind::TContext& Context);
-	DECLARE_BIND_TYPENAME(UdpBroadcastServer);
+	DECLARE_BIND_TYPENAME(UdpServer);
 	DECLARE_BIND_TYPENAME(UdpClient);
 	DECLARE_BIND_TYPENAME(TcpClient);
 	DECLARE_BIND_TYPENAME(TcpServer);
@@ -25,14 +25,14 @@ namespace ApiSocket
 
 	class TSocketWrapper;
 	class TSocketClientWrapper;
-	class TUdpBroadcastServerWrapper;
+	class TUdpServerWrapper;
 	class TUdpClientWrapper;
 	class TTcpClientWrapper;
 	class TTcpServerWrapper;
 
 	//	these could be generic things outside API
 	class TSocketClient;		//	TCP & UDP share code
-	class TUdpBroadcastServer;
+	class TUdpServer;
 	class TTcpServer;
 	class TTcpServerPeer;
 
@@ -48,10 +48,10 @@ namespace ApiSocket
 }
 
 
-class ApiSocket::TUdpBroadcastServer : public SoyWorkerThread
+class ApiSocket::TUdpServer : public SoyWorkerThread
 {
 public:
-	TUdpBroadcastServer(uint16_t ListenPort,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
+	TUdpServer(uint16_t ListenPort,bool IsBroadcast,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
 	
 	std::string					GetAddress() const;
 
@@ -167,10 +167,10 @@ private:
 	Bind::TPromiseQueue		mOnConnectPromises;
 };
 
-class ApiSocket::TUdpBroadcastServerWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpBroadcastServer,TUdpBroadcastServer>, public ApiSocket::TSocketWrapper
+class ApiSocket::TUdpServerWrapper : public Bind::TObjectWrapper<ApiSocket::BindType::UdpServer,TUdpServer>, public ApiSocket::TSocketWrapper
 {
 public:
-	TUdpBroadcastServerWrapper(Bind::TContext& Context) :
+	TUdpServerWrapper(Bind::TContext& Context) :
 		TObjectWrapper	( Context )
 	{
 	}
@@ -181,7 +181,7 @@ public:
 	virtual std::shared_ptr<SoySocket>		GetSocket() override	{	return mSocket ? mSocket->mSocket : nullptr;	}
 
 public:
-	std::shared_ptr<TUdpBroadcastServer>	mSocket = mObject;
+	std::shared_ptr<TUdpServer>	mSocket = mObject;
 };
 
 

@@ -7,7 +7,7 @@ namespace ApiSocket
 {
 	const char Namespace[] = "Pop.Socket";
 
-	DEFINE_BIND_TYPENAME(UdpBroadcastServer);
+	DEFINE_BIND_TYPENAME(UdpServer);
 	DEFINE_BIND_TYPENAME(UdpClient);
 	DEFINE_BIND_TYPENAME(TcpClient);
 	DEFINE_BIND_TYPENAME(TcpServer);
@@ -38,7 +38,7 @@ namespace ApiSocket
 void ApiSocket::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindObjectType<TUdpBroadcastServerWrapper>(Namespace);
+	Context.BindObjectType<TUdpServerWrapper>(Namespace);
 	Context.BindObjectType<TUdpClientWrapper>(Namespace);
 	Context.BindObjectType<TTcpServerWrapper>(Namespace);
 	Context.BindObjectType<TTcpClientWrapper>(Namespace);
@@ -197,22 +197,22 @@ void ApiSocket::TSocketClientWrapper::FlushPendingConnects()
 }
 
 
-void ApiSocket::TUdpBroadcastServerWrapper::Construct(Bind::TCallback& Params)
+void ApiSocket::TUdpServerWrapper::Construct(Bind::TCallback& Params)
 {
-	//auto& This = Params.This<TUdpBroadcastServerWrapper>();
-
 	auto ListenPort = Params.GetArgumentInt(0);
-
+	bool Broadcast = false;
+	if ( !Params.IsArgumentUndefined(1) )
+		Broadcast = Params.GetArgumentBool(1);
 	
 	auto OnBinaryMessage = [this](SoyRef Sender,const Array<uint8_t>& Message)
 	{
 		this->OnMessage( Message, Sender );
 	};
-	mSocket.reset( new TUdpBroadcastServer(ListenPort, OnBinaryMessage ) );
+	mSocket.reset( new TUdpServer(ListenPort, Broadcast, OnBinaryMessage ) );
 }
 
 
-void ApiSocket::TUdpBroadcastServerWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiSocket::TUdpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_Send>(&ApiSocket::TSocketWrapper::Send );
@@ -388,12 +388,11 @@ void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 
 
 
-ApiSocket::TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
-	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"UdpBroadcastServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
+ApiSocket::TUdpServer::TUdpServer(uint16_t ListenPort,bool Broadcast,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
+	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"UdpServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
 	mOnBinaryMessage	( OnBinaryMessage )
 {
 	mSocket.reset( new SoySocket() );
-	auto Broadcast = true;
 	mSocket->CreateUdp(Broadcast);
 	mSocket->ListenUdp(ListenPort,true);
 	/*
@@ -411,7 +410,7 @@ ApiSocket::TUdpBroadcastServer::TUdpBroadcastServer(uint16_t ListenPort,std::fun
 }
 	
 
-bool ApiSocket::TUdpBroadcastServer::Iteration()
+bool ApiSocket::TUdpServer::Iteration()
 {
 	if ( !mSocket )
 		return false;
