@@ -1693,11 +1693,14 @@ void ApiPop::TShellExecuteWrapper::CreateTemplate(Bind::TTemplate& Template)
 void ApiPop::TShellExecuteWrapper::Construct(Bind::TCallback& Params)
 {
 	auto Filename = Params.GetArgumentString(0);
+	Array<std::string> Arguments;
+	if ( !Params.IsArgumentUndefined(1) )
+		Params.GetArgumentArray(1, GetArrayBridge(Arguments));
 
 	auto OnExit = std::bind(&TShellExecuteWrapper::OnExit, this, std::placeholders::_1);
 	auto OnStdOut = std::bind(&TShellExecuteWrapper::OnStdOut, this, std::placeholders::_1);
 	auto OnStdErr = std::bind(&TShellExecuteWrapper::OnStdErr, this, std::placeholders::_1);
-	mShellExecute.reset(new Soy::TShellExecute(Filename, OnExit, OnStdOut, OnStdErr));
+	mShellExecute.reset(new Soy::TShellExecute(Filename, GetArrayBridge(Arguments), OnExit, OnStdOut, OnStdErr));
 }
 
 void ApiPop::TShellExecuteWrapper::WaitForExit(Bind::TCallback& Params)
