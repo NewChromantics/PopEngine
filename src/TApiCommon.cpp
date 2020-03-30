@@ -48,6 +48,7 @@ namespace ApiPop
 	static void		GetCrtHeapSize(Bind::TCallback& Params);
 	static void		GetCrtHeapCount(Bind::TCallback& Params);
 	static void		EnumScreens(Bind::TCallback& Params);
+	static void		GetExeFilename(Bind::TCallback& Params);
 	static void		GetExeDirectory(Bind::TCallback& Params);
 	static void		GetExeArguments(Bind::TCallback& Params);
 	static void		GetPlatform(Bind::TCallback& Params);
@@ -67,6 +68,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(GetComputerName);
 	DEFINE_BIND_FUNCTIONNAME(ShowFileInFinder);
 	DEFINE_BIND_FUNCTIONNAME(EnumScreens);
+	DEFINE_BIND_FUNCTIONNAME(GetExeFilename);
 	DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
 	DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
 	DEFINE_BIND_FUNCTIONNAME(GetPlatform);
@@ -440,6 +442,12 @@ void ApiPop::EnumScreens(Bind::TCallback& Params)
 
 
 
+void ApiPop::GetExeFilename(Bind::TCallback& Params)
+{
+	auto Path = Platform::GetExeFilename();
+	Params.Return( Path	);
+}
+
 
 void ApiPop::GetExeDirectory(Bind::TCallback& Params)
 {
@@ -650,6 +658,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetCrtHeapSize>(GetCrtHeapSize, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetCrtHeapCount>(GetCrtHeapCount, Namespace );
 	Context.BindGlobalFunction<BindFunction::EnumScreens>(EnumScreens, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetExeFilename>(GetExeFilename, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeDirectory>(GetExeDirectory, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeArguments>(GetExeArguments, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace);
