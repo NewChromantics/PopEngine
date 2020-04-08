@@ -217,6 +217,7 @@
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 /* End PBXBuildFile section */
@@ -1517,6 +1518,7 @@
 				BF151FA323845FAD00A70EBF /* SoyString.cpp in Sources */,
 				BF151FA623845FAD00A70EBF /* SoyTime.cpp in Sources */,
 				BF151F8723845FAD00A70EBF /* SoyDebug.mm in Sources */,
+				BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */,
 				BF71CAEC243E633100AEF50F /* TApiOpengl.cpp in Sources */,
 				BF151F8E23845FAD00A70EBF /* SoyImage.cpp in Sources */,
 				BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */,
