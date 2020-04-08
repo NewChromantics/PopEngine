@@ -1,5 +1,7 @@
 #include "SoyOpengl.h"
+#if defined(TARGET_OSX)
 #include <Cocoa/Cocoa.h>
+#endif
 #include "SoyOpenglWindow.h"
 #include "SoyOpenglView.h"
 #include "PopMain.h"

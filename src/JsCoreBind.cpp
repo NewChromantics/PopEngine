@@ -9,9 +9,6 @@
 #include "TApiWebsocket.h"
 #include "TApiSocket.h"
 #include "TApiHttp.h"
-#include "TApiSerial.h"
-#include "TApiDll.h"
-#include "TApiOpenvr.h"
 #include "TApiGui.h"
 #include "TApiOpencv.h"
 #include "TApiCoreMl.h"
@@ -24,6 +21,12 @@
 #include "TApiInput.h"
 #include "TApiBluetooth.h"
 #include "TApiLeapMotion.h"
+#endif
+
+#if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
+#include "TApiDll.h"
+#include "TApiSerial.h"
+#include "TApiOpenvr.h"
 #endif
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
@@ -550,9 +553,11 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
 			ApiSocket::Bind( *Context );
-			ApiSerial::Bind( *Context );
+#if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
 			ApiDll::Bind( *Context );
+			ApiSerial::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
+#endif
 			ApiGui::Bind( *Context );
 			ApiCoreMl::Bind(*Context);
 			ApiZip::Bind(*Context);
