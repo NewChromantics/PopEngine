@@ -1728,6 +1728,13 @@ std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent, Soy::Rect
 	return Control;
 }
 
+std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
+{
+	//	todo: search window for elements with a specific ID so we can create from resource forms
+	Soy_AssertTodo();
+}
+
+
 std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
