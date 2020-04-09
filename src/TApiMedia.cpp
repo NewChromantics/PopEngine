@@ -464,9 +464,10 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 
 	Array<char> JsonBuffer(2000);
 	//	gr: this is json now, so we need a good way to extract what we need...
-	auto NextFrameNumber = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
-	if (NextFrameNumber < 0)
+	auto NextFrameNumberSigned = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+	if (NextFrameNumberSigned == -1 )
 		throw TNoFrameException();
+	auto NextFrameNumber = static_cast<uint32_t>(NextFrameNumberSigned);
 
 	std::string Json(JsonBuffer.GetArray());
 
@@ -520,7 +521,7 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 	);
 
 	//	no new frame
-	if (NewFrameTime < 0)
+	if (NewFrameTime == -1)
 		throw Soy::AssertException("New frame post-peek invalid");
 
 	return Frame;
