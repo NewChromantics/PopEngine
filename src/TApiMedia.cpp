@@ -50,8 +50,10 @@ public:
 #if defined(TARGET_WINDOWS)
 #include "Libs/x264/include/x264.h"
 //#pragma comment(lib,"libx264.lib")
-#elif defined(TARGET_OSX)||defined(TARGET_IOS)
+#elif defined(TARGET_OSX)
 #include "Libs/x264/osx/x264.h"
+#elif defined(TARGET_IOS)
+#include "Libs/x264/Ios/include/x264.h"
 #endif
 namespace X264
 {
@@ -1108,7 +1110,7 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
 		//	log: x264 [error]: lookahead thread is already stopped
 		#if !defined(TARGET_OSX)
 		{
-			FlushFrames();
+			//FlushFrames();
 		}
 		#endif
 	}
