@@ -304,7 +304,7 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 
 	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
-		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 3);
+		Soy::TScopeTimerPrint Timer("TAvcDecoderWrapper::FlushPendingFrames::Flush", 5);
 
 		//	pop frames before errors
 		PopCameraDevice::TFrame PoppedFrame;
@@ -617,7 +617,7 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 
 	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
-		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 3);
+		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 5);
 		
 		PopCameraDevice::TFrame PoppedFrame;
 		{
