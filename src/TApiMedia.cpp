@@ -148,7 +148,7 @@ private:
 protected:
 	SoyPixelsMeta	mPixelMeta;	//	invalid until we've pushed first frame
 	x264_t*			mHandle = nullptr;
-	x264_param_t	mParam;
+	x264_param_t	mParam = {0};
 	x264_picture_t	mPicture;
 	Array<TPacket>	mPackets;
 	std::mutex		mPacketsLock;
