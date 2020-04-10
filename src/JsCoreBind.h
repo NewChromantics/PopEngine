@@ -339,6 +339,7 @@ public:
 	void					ReturnUndefined() bind_override;
 	virtual void			ReturnNull() bind_override;
 	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(const char* Value) bind_override			{	mReturn = GetValue( GetContextRef(), std::string(Value) );	}
 	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 #if !defined(TARGET_WINDOWS)	//	on windows size_t and u64 are the same... not on osx?
 	virtual void			Return(size_t Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
