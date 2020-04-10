@@ -1199,6 +1199,12 @@ std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx
 	return pControl;
 }
 
+
+std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
