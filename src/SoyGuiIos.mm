@@ -6,13 +6,39 @@
 #include "PopMain.h"
 
 
-void RunJobOnMainThread(std::function<void()> Lambda)
+void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 {
 	Soy::TSemaphore Semaphore;
-	auto& Thread = *Soy::Platform::gMainThread;
+
+	//	testing if raw dispatch is faster, results negligable
+	static bool UseNsDispatch = false;
 	
-	Thread.PushJob(Lambda,Semaphore);
-	Semaphore.Wait();
+	if ( UseNsDispatch )
+	{
+		Soy::TSemaphore* pSemaphore = Block ? &Semaphore : nullptr;
+		
+		dispatch_async( dispatch_get_main_queue(), ^(void){
+			Lambda();
+			if ( pSemaphore )
+				pSemaphore->OnCompleted();
+		});
+		
+		if ( pSemaphore )
+			pSemaphore->WaitAndReset();
+	}
+	else
+	{
+		auto& Thread = *Soy::Platform::gMainThread;
+		if ( Block )
+		{
+			Thread.PushJob(Lambda,Semaphore);
+			Semaphore.WaitAndReset();
+		}
+		else
+		{
+			Thread.PushJob(Lambda);
+		}
+	}
 }
 
 
@@ -46,6 +72,7 @@ public:
 	virtual std::string	GetValue() override;
 
 	UITextView*			mView = nullptr;
+	size_t				mValueVersion = 0;
 };
 
 
@@ -80,7 +107,7 @@ std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string
 		auto* View = Window.GetChild(Name);
 		Label.reset( new Platform::TLabel(View) );
 	};
-	RunJobOnMainThread(Run);
+	RunJobOnMainThread( Run, true );
 	return Label;
 }
 
@@ -92,7 +119,7 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 	{
 		Window.reset( new Platform::TWindow(Name) );
 	};
-	RunJobOnMainThread(Job);
+	RunJobOnMainThread( Job, true );
 	return Window;
 }
 
@@ -126,11 +153,22 @@ void Platform::TLabel::SetRect(const Soy::Rectx<int32_t>& Rect)
 
 void Platform::TLabel::SetValue(const std::string& Value)
 {
-	auto Job = [&]()
+	mValueVersion++;
+	auto Version = mValueVersion;
+	
+	auto Job = [=]() mutable
 	{
-		mView.text = Soy::StringToNSString(Value);
+		//	out of date
+		if ( Version != this->mValueVersion )
+			return;
+		
+		//	updating the UI is expensive, and in some cases we're calling it a lot
+		//	sometimes this is 14ms!, so lets only update if we're latest in the queue
+		Soy::TScopeTimerPrint Timer("Set value",1);
+		
+		this->mView.text = Soy::StringToNSString(Value);
 	};
-	RunJobOnMainThread(Job);
+	RunJobOnMainThread( Job, false );
 }
 
 std::string Platform::TLabel::GetValue()
@@ -140,7 +178,7 @@ std::string Platform::TLabel::GetValue()
 	{
 		Value = Soy::NSStringToString( mView.text );
 	};
-	RunJobOnMainThread(Job);
+	RunJobOnMainThread( Job, true );
 	return Value;
 }
 
