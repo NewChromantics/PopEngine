@@ -65,31 +65,6 @@ namespace X264
 	class TPacket;
 }
 
-#if defined(TARGET_IOS)
-int     x264_encoder_encode( x264_t *, x264_nal_t **pp_nal, int *pi_nal, x264_picture_t *pic_in, x264_picture_t *pic_out )
-{
-	return 0;
-}
-void    x264_encoder_close( x264_t * )	{}
-int     x264_encoder_delayed_frames( x264_t * ){	return 0;	}
-int     x264_param_default_preset( x264_param_t *, const char *preset, const char *tune )
-{
-	return 0;
-}
-int     x264_param_apply_profile( x264_param_t *, const char *profile )
-{
-	return 0;
-}
-int x264_picture_alloc( x264_picture_t *pic, int i_csp, int i_width, int i_height )
-{
-	return 0;
-}
-x264_t *x264_encoder_open_155( x264_param_t * )
-{
-	return nullptr;
-}
-
-#endif
 
 
 class PopCameraDevice::TInstance
