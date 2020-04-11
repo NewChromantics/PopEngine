@@ -1016,6 +1016,9 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 	mParam.p_log_private = reinterpret_cast<void*>(&X264::Log);
 	mParam.i_log_level = X264_LOG_DEBUG;
 
+	//	h264 profile level
+	mParam.i_level_idc = 30;//	3.0
+	
 	auto Profile = "baseline";
 	auto Result = x264_param_apply_profile(&mParam, Profile);
 	IsOkay(Result, "x264_param_apply_profile");
