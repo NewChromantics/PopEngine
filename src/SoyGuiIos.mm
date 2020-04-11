@@ -163,8 +163,8 @@ void Platform::TLabel::SetValue(const std::string& Value)
 			return;
 		
 		//	updating the UI is expensive, and in some cases we're calling it a lot
-		//	sometimes this is 14ms!, so lets only update if we're latest in the queue
-		Soy::TScopeTimerPrint Timer("Set value",1);
+		//	sometimes this is 20ms (maybe vsync?), so lets only update if we're latest in the queue
+		//Soy::TScopeTimerPrint Timer("Set value",1);
 		
 		this->mView.text = Soy::StringToNSString(Value);
 	};
