@@ -2,7 +2,8 @@
 
 #include "SoyWindow.h"
 #include "SoyOpenglWindow.h"
-
+#include "SoyOpenglWindow.h"
+#include "TApiGui.h"
 
 namespace ApiEngine
 {
@@ -16,7 +17,8 @@ class ApiEngine::TStatsWindow : public SoyWorkerThread
 {
 public:
 	TStatsWindow(Soy::Rectx<int32_t> Rect, std::function<Bind::TContext&()> GetContext);
-	
+	TStatsWindow(std::shared_ptr<SoyLabel> Label, std::function<Bind::TContext&()> GetContext);
+
 protected:
 	virtual bool	Iteration() override;
 
@@ -43,6 +45,21 @@ void ApiEngine::Bind(Bind::TContext& Context)
 
 void ApiEngine::TStatsWindowWrapper::Construct(Bind::TCallback& Params)
 {
+	auto GetContext = [this]() -> Bind::TContext&
+	{
+		return this->GetContext();
+	};
+
+	
+	//	if user provides a gui label, use that
+	if ( Params.IsArgumentObject(0) )
+	{
+		auto& Label = Params.GetArgumentPointer<ApiGui::TLabelWrapper>(0);
+		auto pLabel = Label.mLabel;
+		mWindow.reset(new TStatsWindow(pLabel, GetContext));
+		return;
+	}
+	
 	Soy::Rectx<int32_t> Rect(0, 0, 200, 200);
 
 	//	if no rect, get rect from screen
@@ -71,12 +88,7 @@ void ApiEngine::TStatsWindowWrapper::Construct(Bind::TCallback& Params)
 		};
 		Platform::EnumScreens(SetRect);
 	}
-
-	auto GetContext = [this]() -> Bind::TContext&
-	{
-		return this->GetContext();
-	};
-
+	
 	mWindow.reset(new TStatsWindow(Rect, GetContext));
 }
 
@@ -103,6 +115,21 @@ ApiEngine::TStatsWindow::TStatsWindow(Soy::Rectx<int32_t> Rect, std::function<Bi
 
 	//	todo: resize label when window resizes
 
+	//	start auto-update thread
+	Start();
+}
+
+
+ApiEngine::TStatsWindow::TStatsWindow(std::shared_ptr<SoyLabel> Label,std::function<Bind::TContext&()> GetContext) :
+	SoyWorkerThread	(__PRETTY_FUNCTION__,SoyWorkerWaitMode::Sleep),
+	mGetContext		( GetContext )
+{
+	if ( !Label )
+		throw Soy::AssertException("Label expected");
+
+	mLabel = Label;
+	mLabel->SetValue("Hello!");
+	
 	//	start auto-update thread
 	Start();
 }
