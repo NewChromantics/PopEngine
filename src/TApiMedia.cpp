@@ -831,6 +831,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 		{
 			mEncoder->PushFrame(*PixelCopy, FrameTime);
 		};
+		std::Debug << "Encoder job queue size " << mEncoderThread->GetJobCount() << std::endl;
 		mEncoderThread->PushJob(Encode);
 	}
 	else
@@ -1016,6 +1017,11 @@ void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
 	mParam.p_log_private = reinterpret_cast<void*>(&X264::Log);
 	mParam.i_log_level = X264_LOG_DEBUG;
 
+	//	reduce mem usage by reducing threads
+	mParam.i_threads = 1;
+	mParam.i_lookahead_threads = 0;
+	mParam.b_sliced_threads = false;
+	
 	//	h264 profile level
 	mParam.i_level_idc = 30;//	3.0
 	
@@ -1113,7 +1119,7 @@ void X264::TInstance::FlushFrames()
 void X264::TInstance::Encode(x264_picture_t* InputPicture)
 {
 	//	we're assuming here mPicture has been setup, or we're flushing
-
+	
 //	gr: currently, decoder NEEDS to have nal packets split
 	auto OnNalPacket = [&](FixedRemoteArray<uint8_t>& Data)
 	{
