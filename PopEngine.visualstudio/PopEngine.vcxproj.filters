@@ -546,6 +546,9 @@
     <ClInclude Include="..\src\SoyLib\src\Win32ImageMapControl.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyShellExecute.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -1126,6 +1129,9 @@
     </ClCompile>
     <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c">
       <Filter>UnitTest\KinectStream\PopDepth16ToYuv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp">
+      <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

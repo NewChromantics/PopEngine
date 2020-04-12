@@ -113,6 +113,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyRef.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyShader.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyShellExecute.h" />
     <ClInclude Include="..\src\SoyLib\src\SoySocket.h" />
     <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyStream.h" />
@@ -264,6 +265,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp" />
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c" />
     <ClCompile Include="..\src\TApiCoreMl.cpp" />
