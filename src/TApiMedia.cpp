@@ -1137,7 +1137,9 @@ void X264::TInstance::Encode(x264_picture_t* InputPicture)
 	x264_nal_t* Nals = nullptr;
 	int NalCount = 0;
 
+	Soy::TScopeTimerPrint Timer("x264_encoder_encode", 1);
 	auto FrameSize = x264_encoder_encode(mHandle, &Nals, &NalCount, InputPicture, &OutputPicture);
+	Timer.Stop();
 	if (FrameSize < 0)
 		throw Soy::AssertException("x264_encoder_encode error");
 
