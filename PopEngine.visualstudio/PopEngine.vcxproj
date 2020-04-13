@@ -67,7 +67,7 @@
     <ClInclude Include="..\src\Libs\x264\include\x264.h" />
     <ClInclude Include="..\src\Libs\x264\include\x264_config.h" />
     <ClInclude Include="..\src\PopMain.h" />
-    <ClInclude Include="..\src\PopEngine.h" />
+    <CopyFileToFolders Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
