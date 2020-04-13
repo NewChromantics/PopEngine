@@ -310,6 +310,8 @@ void ApiSocket::TSocketWrapper::GetAddress(Bind::TCallback& Params)
 
 void ApiSocket::TSocketWrapper::Send(Bind::TCallback& Params)
 {
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__, 2);
+
 	auto ThisSocket = GetSocket();
 	if ( !ThisSocket )
 		throw Soy::AssertException("Socket not allocated");
