@@ -854,27 +854,27 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">
     <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Bin\</OutDir>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">
     <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Bin\</OutDir>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
     <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Bin\</OutDir>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">
     <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Bin\</OutDir>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">
     <IncludePath>D:\JavascriptCore\JavaScriptCore;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Bin\</OutDir>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">
