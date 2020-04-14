@@ -206,12 +206,10 @@
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB07823803E430077BCF5 /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF64976624410DB900D71943 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF64976324410DB900D71943 /* libx264.a */; };
 		BF64976724410DB900D71943 /* x264.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976424410DB900D71943 /* x264.h */; };
 		BF64976824410DB900D71943 /* x264_config.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976524410DB900D71943 /* x264_config.h */; };
 		BF64976F24410DCC00D71943 /* x264.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976B24410DCC00D71943 /* x264.h */; };
 		BF64977024410DCC00D71943 /* x264_config.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976C24410DCC00D71943 /* x264_config.h */; };
-		BF64977124410DCC00D71943 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF64976E24410DCC00D71943 /* libx264.a */; };
 		BF67C84E2431303800D7492E /* SoyShellExecuteOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */; };
 		BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAE4243E5DC000AEF50F /* PopCoreml_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF71CAE3243E5DC000AEF50F /* PopCoreml_Ios.framework */; };
@@ -618,7 +616,6 @@
 				BF151FCD2384704C00A70EBF /* OpenGLES.framework in Frameworks */,
 				BF152007238480F600A70EBF /* PopCoreml_Ios.framework in Frameworks */,
 				BF151FF823847BA700A70EBF /* PopH264_Ios.framework in Frameworks */,
-				BF64977124410DCC00D71943 /* libx264.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -637,7 +634,6 @@
 				BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */,
 				BF5EB01A237F119C0077BCF5 /* OpenGL.framework in Frameworks */,
 				BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */,
-				BF64976624410DB900D71943 /* libx264.a in Frameworks */,
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
 				BF5EB01B237F119F0077BCF5 /* IOKit.framework in Frameworks */,
 				BF5EB01E237F11AD0077BCF5 /* JavaScriptCore.framework in Frameworks */,
@@ -1802,10 +1798,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs/x264/Ios/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1882,10 +1875,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs/x264/Ios/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1962,10 +1952,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs/x264/Ios/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2019,10 +2006,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs/x264/Ios/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngine-Ios";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -2321,7 +2305,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
@@ -2396,7 +2379,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
@@ -2471,7 +2453,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
@@ -2527,7 +2508,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/x264/osx",
 					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
 					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
