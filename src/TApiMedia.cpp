@@ -88,7 +88,6 @@ public:
 	TInstance();
 	~TInstance();
 
-	TDecoderInstance&	GetDecoder();
 	void				PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
 	PopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes);	//	find a way to re-use the camera version
 
@@ -658,17 +657,6 @@ PopH264::TInstance::~TInstance()
 	PopH264_DestroyInstance(mHandle);
 }
 
-PopH264::TDecoderInstance& PopH264::TInstance::GetDecoder()
-{
-	auto* DecoderPointer = PopH264_GetInstancePtr( mHandle );
-	if ( !DecoderPointer )
-	{
-		std::stringstream Error;
-		Error << "Decoder is null for instance " << mHandle;
-		throw Soy::AssertException(Error.str());
-	}
-	return *DecoderPointer;
-}
 
 
 void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber)
