@@ -119,6 +119,20 @@ JSValueRef JSValueMakeFromJSONString(JSContextRef Context,const std::string& Jso
 }
 #endif
 
+#if defined(JSAPI_JSCORE)
+std::string JSJSONStringFromValue(JSContextRef Context,JSValueRef Value)
+{
+	unsigned Indent = 1;
+	JSValueRef Exception = nullptr;
+	auto StringValue = JSValueCreateJSONString( Context, Value, Indent, &Exception );
+	JsCore::ThrowException( Context, Exception, "JSValueCreateJSONString" );
+	auto String = Bind::GetString( Context, StringValue );
+	return String;
+}
+#endif
+
+
+
 namespace JsCore
 {
 	std::map<JSGlobalContextRef,TContext*> ContextCache;
@@ -259,6 +273,19 @@ Bind::TObject JsCore::ParseObjectString(JSContextRef Context, const std::string&
 	Bind::TObject Object(Context, ObjectValue);
 	return Object;
 }
+
+std::string JsCore::StringifyObject(JSContextRef Context,JSValueRef Handle)
+{
+	return JSJSONStringFromValue(Context,Handle);
+}
+
+std::string JsCore::StringifyObject(JSContextRef Context,Bind::TObject& Object)
+{
+	auto Handle = Object.mThis;
+	return StringifyObject( Context, Handle );
+}
+
+
 
 
 JsCore::TFunction::TFunction(JSContextRef Context,JSValueRef Value) :
