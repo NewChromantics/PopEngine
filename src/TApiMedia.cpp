@@ -8,9 +8,8 @@
 #include "SoyLib/src/SoyRuntimeLibrary.h"
 
 
-//	video decoding
+//	video decoding and encoding
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopH264_Osx.framework/Headers/PopH264DecoderInstance.h"
 #include "Libs/PopH264_Osx.framework/Headers/PopH264.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
@@ -20,7 +19,6 @@
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
 #include "Libs/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
-//#include "Libs/PopCameraDevice/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
@@ -38,33 +36,18 @@ namespace PopH264
 	void	LoadDll();
 }
 
+namespace X264
+{
+	class TInstance;
+	class TPacket;
+}
+
 
 class TNoFrameException : public std::exception
 {
 public:
 	virtual const char* what() const __noexcept { return "No new frame"; }
 };
-
-
-//	move this to its own DLL
-#if defined(TARGET_WINDOWS)
-#include "Libs/x264/include/x264.h"
-//#pragma comment(lib,"libx264.lib")
-#elif defined(TARGET_OSX)
-#include "Libs/x264/osx/x264.h"
-#elif defined(TARGET_IOS)
-#include "Libs/x264/Ios/include/x264.h"
-#endif
-namespace X264
-{
-	void	IsOkay(int Result, const char* Context);
-	void	Log(void *data, int i_level, const char *psz, va_list args);
-
-	int		GetColourSpace(SoyPixelsFormat::Type Format);
-
-	class TPacket;
-}
-
 
 
 class PopCameraDevice::TInstance
@@ -88,7 +71,7 @@ public:
 	TInstance();
 	~TInstance();
 
-	void				PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
+	void					PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
 	PopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes);	//	find a way to re-use the camera version
 
 protected:
@@ -96,41 +79,23 @@ protected:
 };
 
 
-class X264::TPacket
-{
-public:
-	std::shared_ptr<Array<uint8_t>>	mData;
-	uint32_t						mTime = 0;
-};
-
+//	now PopH264 encoder instance
 class X264::TInstance
 {
 public:
 	TInstance(size_t PresetValue);
 	~TInstance();
 
-	void			PushFrame(const SoyPixelsImpl& Pixels, int32_t FrameTime);
+	void			PushFrame(const SoyPixelsImpl& Pixels,const std::string& EncodeMetaJson);
 	void			FlushFrames();
-	TPacket			PopPacket();
-	bool			HasPackets() {	return !mPackets.IsEmpty();	}
-	std::string		GetVersion() const;
-
-private:
-	void			AllocEncoder(const SoyPixelsMeta& Meta);
-	void			OnOutputPacket(const TPacket& Packet);
-
-	void			Encode(x264_picture_t* InputPicture);
+	bool			PopPacket(ArrayBridge<uint8_t>&& Data,std::string& MetaJson);
+	bool			HasPackets();
 
 protected:
-	SoyPixelsMeta	mPixelMeta;	//	invalid until we've pushed first frame
-	x264_t*			mHandle = nullptr;
-	x264_param_t	mParam = {0};
-	x264_picture_t	mPicture;
-	Array<TPacket>	mPackets;
-	std::mutex		mPacketsLock;
+	int32_t			mHandle = 0;
 
 public:
-	std::function<void()>	mOnOutputPacket;
+	std::function<void()>	mOnPacketReady;
 };
 
 
@@ -154,6 +119,7 @@ namespace ApiMedia
 	void	EnumDevices(Bind::TCallback& Params);
 
 	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame);
+	Bind::TObject	PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson);
 }
 
 
@@ -542,7 +508,6 @@ void TPopCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 	FlushPendingFrames();
 }
 
-
 Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame)
 {
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
@@ -582,6 +547,19 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 
 	FrameObject.SetArray("Planes", GetArrayBridge(PlaneImages));
 
+	return FrameObject;
+}
+
+Bind::TObject ApiMedia::PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson)
+{
+	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
+	
+	//	convert meta json to an object
+	auto MetaObject = Bind::ParseObjectString( Context.mLocalContext, MetaJson );
+	
+	FrameObject.SetArray("Data",Data);
+	FrameObject.SetObject("Meta", MetaObject);
+	
 	return FrameObject;
 }
 
@@ -639,8 +617,7 @@ PopH264::TInstance::TInstance()
 {
 	PopH264::LoadDll();
 	
-	//	decoder now
-	auto Decoder = PopH264::Mode_Software;
+	auto Decoder = POPH264_DECODERMODE_SOFTWARE;
 	mHandle = PopH264_CreateInstance(Decoder);
 	if ( mHandle <= 0 )
 	{
@@ -784,17 +761,13 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 	}
 	mEncoder.reset(new X264::TInstance(PresetValue));
 
-	mEncoder->mOnOutputPacket = [&]()
+	mEncoder->mOnPacketReady = [&]()
 	{
 		this->OnPacketOutput();
 	};
 
 	mEncoderThread.reset(new SoyWorkerJobThread("H264 encoder"));
 	mEncoderThread->Start();
-	
-	
-	//	set meta (can we do this on the static object/constructor?)
-	Params.ThisObject().SetString("Version", mEncoder->GetVersion() );
 }
 
 void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -807,7 +780,27 @@ void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 {
 	auto& Frame = Params.GetArgumentPointer<TImageWrapper>(0);
-	auto FrameTime = Params.GetArgumentInt(1);
+	
+	std::string EncodeMeta;
+
+	//	 get user-supplied meta
+	if ( !Params.IsArgumentUndefined(1) )
+	{
+		//	backwards compatibility, first param used to be a frame time
+		if ( Params.IsArgumentNumber(1) )
+		{
+			auto FrameTime = Params.GetArgumentInt(1);
+			Bind::TObject Meta;
+			Meta.SetInt("Time",FrameTime);
+			EncodeMeta = Bind::StringifyObject( Params.GetContextRef(), Meta );
+		}
+		else
+		{
+			auto Meta = Params.GetArgumentObject(1);
+			EncodeMeta = Bind::StringifyObject( Params.GetContextRef(), Meta );
+		}
+	}
+	
 
 	if (mEncoderThread)
 	{
@@ -818,7 +811,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 		}
 		auto Encode = [=]()mutable
 		{
-			mEncoder->PushFrame(*PixelCopy, FrameTime);
+			mEncoder->PushFrame(*PixelCopy, EncodeMeta);
 		};
 		std::Debug << "Encoder job queue size " << mEncoderThread->GetJobCount() << std::endl;
 		mEncoderThread->PushJob(Encode);
@@ -826,7 +819,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 	else
 	{
 		auto& Pixels = Frame.GetPixels();
-		mEncoder->PushFrame(Pixels, FrameTime);
+		mEncoder->PushFrame(Pixels, EncodeMeta);
 	}
 }
 
@@ -866,311 +859,141 @@ void TH264EncoderWrapper::OnPacketOutput()
 	
 	auto Resolve = [this](Bind::TLocalContext& Context)
 	{
-		//	gr: we're hitting race conditions here, pop packets ONLY AS we're resolving
-		auto Flush = [this](Bind::TLocalContext& Context, Bind::TPromise& Promise)
-		{
-			auto NextPacket = mEncoder->PopPacket();
-			auto Packet = Context.mGlobalContext.CreateObjectInstance(Context);
-			Packet.SetInt("Time", NextPacket.mTime);
-			auto Data = NextPacket.mData;
-			if (Data)
-			{
-				Packet.SetArray("Data", GetArrayBridge(*Data));
-				std::Debug << "Resolving packet (" << (Data->GetSize()) << ")" << std::endl;
-			}
-			else
-			{
-				std::Debug << "Resolving packet (null) hit race condition?" << std::endl;
-			}
-			Promise.Resolve(Context,Packet);
-		};
-		mNextPacketPromises.Flush(Flush);
+		//	in case of race condition (probbaly because there's no mutex on HasPackets)
+		//	we get a failed pop (this lambda has probably executed since being queued)
+		//	abort the resolve
+		Array<uint8_t> Data;
+		std::string Meta;
+		if ( !mEncoder->PopPacket( GetArrayBridge(Data), Meta ) )
+			return;
+
+		auto PacketObject = ApiMedia::PacketToObject( Context, GetArrayBridge(Data), Meta );
+		mNextPacketPromises.Resolve(PacketObject);
 	};
 	auto& Context = mNextPacketPromises.GetContext();
 	Context.Queue(Resolve);
 }
 
 
-void X264::IsOkay(int Result, const char* Context)
-{
-	if (Result == 0)
-		return;
-
-	std::stringstream Error;
-	Error << "X264 error " << Result << " (" << Context << ")";
-	throw Soy::AssertException(Error);
-}
-
-
 X264::TInstance::TInstance(size_t PresetValue)
 {
-	if ( PresetValue > 9 )
-		throw Soy_AssertException("Expecting preset value <= 9");
-
-	//	trigger dll load
-#if defined(TARGET_WINDOWS)
-	Soy::TRuntimeLibrary Dll("x264.dll");
-#endif
-
-	//	todo: tune options. takes , seperated values
-	const char* Tune = nullptr;
-	auto* PresetName = x264_preset_names[PresetValue];
-	auto Result = x264_param_default_preset(&mParam, PresetName, Tune);
-	IsOkay(Result,"x264_param_default_preset");
+	mOnPacketReady = []()
+	{
+		std::Debug << "Encoded packet ready (no callback assigned)" << std::endl;
+	};
+	
+	char ErrorBuffer[200] = {0};
+	std::stringstream EncoderName;
+	EncoderName << "x264" << PresetValue;
+	mHandle = PopH264_CreateEncoder( EncoderName.str().c_str(), ErrorBuffer, std::size(ErrorBuffer) );
+	if ( mHandle <= 0 )
+	{
+		std::stringstream Error;
+		Error << "Failed to create PopH264 encoder(" << EncoderName.str() << ") instance. Error(" << mHandle << ") " << ErrorBuffer;
+		throw Soy::AssertException(Error.str());
+	}
+	
+	auto OnPacketReady = [](void* pThis)
+	{
+		auto* This = reinterpret_cast<TInstance*>(pThis);
+		This->mOnPacketReady();
+	};
+	PopH264_EncoderAddOnNewPacketCallback( mHandle, OnPacketReady, this );
 }
 
 X264::TInstance::~TInstance()
 {
-
+	PopH264_DestroyEncoder(mHandle);	
 }
-
-
-std::string X264::TInstance::GetVersion() const
+	
+void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& EncodeMetaJson)
 {
-	std::stringstream Version;
-	Version << "x264 " << X264_POINTVER;
-	return Version.str();
-}
-
-void X264::Log(void *data, int i_level, const char *psz, va_list args)
-{
-	std::stringstream Debug;
-	Debug << "x264 ";
-
-	switch (i_level)
+	//	for meta, include the user-meta
+	using namespace json11;
+	Json::object Meta;
+	if ( !EncodeMetaJson.empty() )
 	{
-	case X264_LOG_ERROR:	Debug << "Error: ";	break;
-	case X264_LOG_WARNING:	Debug << "Warning: ";	break;
-	case X264_LOG_INFO:		Debug << "Info: ";	break;
-	case X264_LOG_DEBUG:	Debug << "Debug: ";	break;
-	default:				Debug << "???: ";	break;
+		std::string Error;
+		auto Obj = Json::parse(EncodeMetaJson, Error);
+		if ( !Error.empty() )
+			throw Soy::AssertException( std::string(__PRETTY_FUNCTION__) + Error );
+		Meta = Obj.object_items();
 	}
 	
-	auto temp = std::vector<char>{};
-	auto length = std::size_t{ 63 };
-	while (temp.size() <= length)
-	{
-		temp.resize(length + 1);
-		//va_start(args, psz);
-		const auto status = std::vsnprintf(temp.data(), temp.size(), psz, args);
-		//va_end(args);
-		if (status < 0)
-			throw std::runtime_error{ "string formatting error" };
-		length = static_cast<std::size_t>(status);
-	}
-	auto FormattedString = std::string{ temp.data(), length };
-	Debug << FormattedString;
-	//msg_GenericVa(p_enc, i_level, MODULE_STRING, psz, args);
-	std::Debug << Debug.str() << std::endl;
-}
-
-int X264::GetColourSpace(SoyPixelsFormat::Type Format)
-{
-	switch (Format)
-	{
-	case SoyPixelsFormat::Yuv_8_8_8_Ntsc:	return X264_CSP_I420;
-	//case SoyPixelsFormat::Greyscale:		return X264_CSP_I400;
-	//case SoyPixelsFormat::Yuv_8_88_Ntsc:	return X264_CSP_NV12;
-	//case SoyPixelsFormat::Yvu_8_88_Ntsc:	return X264_CSP_NV21;
-	//case SoyPixelsFormat::Yvu_844_Ntsc:		return X264_CSP_NV16;
-	//	these are not supported by x264
-	//case SoyPixelsFormat::BGR:		return X264_CSP_BGR;
-	//case SoyPixelsFormat::BGRA:		return X264_CSP_BGRA;
-	//case SoyPixelsFormat::RGB:		return X264_CSP_BGR;
-	}
-
-	std::stringstream Error;
-	Error << "X264::GetColourSpace unsupported format " << Format;
-	throw Soy::AssertException(Error);
-}
-
-void X264::TInstance::AllocEncoder(const SoyPixelsMeta& Meta)
-{
-	//	todo: change PPS if content changes
-	if (mPixelMeta.IsValid())
-	{
-		if (mPixelMeta == Meta)
-			return;
-		std::stringstream Error;
-		Error << "H264 encoder pixel format changing from " << mPixelMeta << " to " << Meta << ", currently unsupported";
-		throw Soy_AssertException(Error);
-	}
-
-	//	do final configuration & alloc encoder
-	mParam.i_csp = GetColourSpace(Meta.GetFormat());
-	mParam.i_width = size_cast<int>(Meta.GetWidth());
-	mParam.i_height = size_cast<int>(Meta.GetHeight());
-	mParam.b_vfr_input = 0;
-	mParam.b_repeat_headers = 1;
-	mParam.b_annexb = 1;
-	mParam.p_log_private = reinterpret_cast<void*>(&X264::Log);
-	mParam.i_log_level = X264_LOG_DEBUG;
-
-	//	reduce mem usage by reducing threads
-	mParam.i_threads = 1;
-	mParam.i_lookahead_threads = 0;
-	mParam.b_sliced_threads = false;
+	//	include required meta
+	Meta["Width"] = static_cast<int32_t>(Pixels.GetWidth());
+	Meta["Height"] = static_cast<int32_t>(Pixels.GetHeight());
 	
-	//	h264 profile level
-	mParam.i_level_idc = 30;//	3.0
-	
-	auto Profile = "baseline";
-	auto Result = x264_param_apply_profile(&mParam, Profile);
-	IsOkay(Result, "x264_param_apply_profile");
+	//	try and be as flexible as possible
+	BufferArray<std::shared_ptr<SoyPixelsImpl>,3> Planes;
+	Pixels.SplitPlanes(GetArrayBridge(Planes));
 
-	Result = x264_picture_alloc(&mPicture, mParam.i_csp, mParam.i_width, mParam.i_height);
-	IsOkay(Result, "x264_picture_alloc");
-
-	mHandle = x264_encoder_open(&mParam);
-	if (!mHandle)
-		throw Soy::AssertException("Failed to open x264 encoder");
-	mPixelMeta = Meta;
-}
-
-void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,int32_t FrameTime)
-{
-	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__, 2);
-	AllocEncoder(Pixels.GetMeta());
-
-	//	need planes
-	auto& YuvPixels = Pixels;
-	//YuvPixels.SetFormat(SoyPixelsFormat::Yuv_8_8_8_Ntsc);
-	BufferArray<std::shared_ptr<SoyPixelsImpl>, 3> Planes;
-	YuvPixels.SplitPlanes(GetArrayBridge(Planes));
-
-	//auto& LumaPlane = *Planes[0];
-	//auto& ChromaUPlane = *Planes[1];
-	//auto& ChromaVPlane = *Planes[2];
-
-	//	checks from example code https://github.com/jesselegg/x264/blob/master/example.c
-	//	gr: look for proper validation funcs
-	auto Width = Pixels.GetWidth();
-	auto Height = Pixels.GetHeight();
-	int LumaSize = Width * Height;
-	int ChromaSize = LumaSize / 4;
-	int ExpectedBufferSizes[] = { LumaSize, ChromaSize, ChromaSize };
-
-	for (auto i = 0; i < Planes.GetSize(); i++)
+	BufferArray<const uint8_t*,3> PixelDatas;
+	BufferArray<int32_t,3> PixelSizes;
+	for ( auto i=0;	i<Planes.GetSize();	i++ )
 	{
-		auto* OutPlane = mPicture.img.plane[i];
-		auto& InPlane = *Planes[i];
-		auto& InPlaneArray = InPlane.GetPixelsArray();
-		auto OutSize = ExpectedBufferSizes[i];
-		auto InSize = InPlaneArray.GetDataSize();
-		if (OutSize != InSize)
-		{
-			std::stringstream Error;
-			Error << "Copying plane " << i << " for x264, but plane size mismatch " << InSize << " != " << OutSize;
-			throw Soy_AssertException(Error);
-		}
-		memcpy(OutPlane, InPlaneArray.GetArray(), InSize );
+		auto& Pixels = *Planes[i];
+		PixelSizes.PushBack( Pixels.GetMeta().GetDataSize() );
+		PixelDatas.PushBack( Pixels.GetPixelsArray().GetArray() );
+	}
+	while ( PixelDatas.GetSize() < 3 )
+	{
+		PixelDatas.PushBack(nullptr);
+		PixelSizes.PushBack(0);
 	}
 
-	mPicture.i_pts = FrameTime;
-	
-	Encode(&mPicture);
+	Meta["LumaSize"] = PixelSizes[0];
+	Meta["ChromaUSize"] = PixelSizes[1];
+	Meta["ChromaVSize"] = PixelSizes[2];
 
-	//	flush any other frames
-	//	gr: this is supposed to only be called at the end of the stream...
-	//		if DelayedFrameCount non zero, we may haveto call multiple times before nal size is >0
-	//		so just keep calling until we get 0
-	//	maybe add a safety iteration check
-	//	gr: need this on OSX (latest x264) but on windows (old build) every subsequent frame fails
-	//	gr: this was backwards? brew (old 2917) DID need to flush?
-	if (X264_REV < 2969)
+	Json FinalJson( Meta );
+	auto MetaString = FinalJson.dump();
+	
+	char ErrorBuffer[500] = {0};
+	PopH264_EncoderPushFrame( mHandle, MetaString.c_str(), PixelDatas[0], PixelDatas[1], PixelDatas[2], ErrorBuffer, std::size(ErrorBuffer) );
+	if ( ErrorBuffer[0] != 0 )
 	{
-		//	gr: flushing on OSX (X264_REV 2917) causing
-		//	log: x264 [error]: lookahead thread is already stopped
-		#if !defined(TARGET_OSX)
-		{
-			//FlushFrames();
-		}
-		#endif
+		std::string Error(ErrorBuffer);
+		throw Soy::AssertException(Error);
 	}
 }
-
 
 void X264::TInstance::FlushFrames()
 {
-	//	when we're done with frames, we need to make the encoder flush out any more packets
-	int Safety = 1000;
-	while (--Safety > 0)
-	{
-		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
-		if (DelayedFrameCount == 0)
-			break;
-
-		Encode(nullptr);
-	}
+	//	todo
 }
 
 
-void X264::TInstance::Encode(x264_picture_t* InputPicture)
+bool X264::TInstance::HasPackets()
 {
-	//	we're assuming here mPicture has been setup, or we're flushing
-	
-//	gr: currently, decoder NEEDS to have nal packets split
-	auto OnNalPacket = [&](FixedRemoteArray<uint8_t>& Data)
-	{
-		auto FrameTime = mPicture.i_pts;
-
-		TPacket OutputPacket;
-		OutputPacket.mData.reset(new Array<uint8_t>());
-		OutputPacket.mTime = FrameTime;
-		OutputPacket.mData->PushBackArray(Data);
-		OnOutputPacket(OutputPacket);
-	};
-
-	x264_picture_t OutputPicture;
-	x264_nal_t* Nals = nullptr;
-	int NalCount = 0;
-
-	auto FrameSize = x264_encoder_encode(mHandle, &Nals, &NalCount, InputPicture, &OutputPicture);
-	if (FrameSize < 0)
-		throw Soy::AssertException("x264_encoder_encode error");
-
-	//	processed, but no data output
-	if (FrameSize == 0)
-	{
-		auto DelayedFrameCount = x264_encoder_delayed_frames(mHandle);
-		std::Debug << "x264::Encode processed, but no output; DelayedFrameCount=" << DelayedFrameCount << std::endl;
-		return;
-	}
-	
-	//	process each nal
-	auto TotalNalSize = 0;
-	for (auto n = 0; n < NalCount; n++)
-	{
-		auto& Nal = Nals[n];
-		auto NalSize = Nal.i_payload;
-		auto PacketArray = GetRemoteArray(Nal.p_payload, NalSize);
-		OnNalPacket(PacketArray);
-		TotalNalSize += NalSize;
-	}
-	if (TotalNalSize != FrameSize)
-		throw Soy::AssertException("NALs output size doesn't match frame size");
+	auto NextSize = PopH264_EncoderPopData( mHandle, nullptr, 0 );
+	if ( NextSize <= 0 )
+		return false;
+	return true;
 }
 
-
-void X264::TInstance::OnOutputPacket(const TPacket& Packet)
+bool X264::TInstance::PopPacket(ArrayBridge<uint8_t>&& Data,std::string& MetaJson)
 {
+	//	get size of packet
+	auto NextSize = PopH264_EncoderPopData( mHandle, nullptr, 0 );
+	//	no packet (or error!)
+	if ( NextSize <= 0 )
+		return false;
+
+	//	get the meta
+	char JsonBuffer[1000] = {0};
+	PopH264_EncoderPeekData( mHandle, JsonBuffer, std::size(JsonBuffer) );
+	MetaJson = std::string( JsonBuffer );
+
+	Data.SetSize(NextSize);
+	auto ReadSize = PopH264_EncoderPopData( mHandle, Data.GetArray(), Data.GetDataSize() );
+	if ( ReadSize != NextSize )
 	{
-		std::lock_guard<std::mutex> Lock(mPacketsLock);
-		mPackets.PushBack(Packet);
+		//	error. The meta should contain an error
+		std::stringstream Error;
+		Error << "Error getting next packet (size " << ReadSize << "!=" << NextSize <<") Meta: " << MetaJson;
+		throw Soy::AssertException(Error);
 	}
 
-	if (mOnOutputPacket)
-		mOnOutputPacket();
+	return true;
 }
-
-
-X264::TPacket X264::TInstance::PopPacket()
-{
-	std::lock_guard<std::mutex> Lock(mPacketsLock);
-	if (mPackets.IsEmpty())
-		throw TNoFrameException();
-
-	auto Packet = mPackets.PopAt(0);
-	return Packet;
-}
-
