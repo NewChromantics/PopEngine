@@ -206,10 +206,6 @@
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB07823803E430077BCF5 /* PopCoreml_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF64976724410DB900D71943 /* x264.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976424410DB900D71943 /* x264.h */; };
-		BF64976824410DB900D71943 /* x264_config.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976524410DB900D71943 /* x264_config.h */; };
-		BF64976F24410DCC00D71943 /* x264.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976B24410DCC00D71943 /* x264.h */; };
-		BF64977024410DCC00D71943 /* x264_config.h in Headers */ = {isa = PBXBuildFile; fileRef = BF64976C24410DCC00D71943 /* x264_config.h */; };
 		BF67C84E2431303800D7492E /* SoyShellExecuteOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */; };
 		BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAE4243E5DC000AEF50F /* PopCoreml_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF71CAE3243E5DC000AEF50F /* PopCoreml_Ios.framework */; };
@@ -367,12 +363,6 @@
 		BF607EA42240588300A78C00 /* TApiBluetooth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiBluetooth.cpp; path = src/TApiBluetooth.cpp; sourceTree = "<group>"; };
 		BF607EA6224107B800A78C00 /* SoyBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyBluetooth.h; path = src/SoyBluetooth.h; sourceTree = "<group>"; };
 		BF607EA7224107B800A78C00 /* SoyBluetooth.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyBluetooth.mm; path = src/SoyBluetooth.mm; sourceTree = "<group>"; };
-		BF64976324410DB900D71943 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
-		BF64976424410DB900D71943 /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264.h; sourceTree = "<group>"; };
-		BF64976524410DB900D71943 /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264_config.h; sourceTree = "<group>"; };
-		BF64976B24410DCC00D71943 /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264.h; sourceTree = "<group>"; };
-		BF64976C24410DCC00D71943 /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264_config.h; sourceTree = "<group>"; };
-		BF64976E24410DCC00D71943 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
 		BF6553C52132C4D9003E4241 /* APIDesign.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = APIDesign.md; sourceTree = "<group>"; };
 		BF6553C62132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
 		BF6553C82132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
@@ -752,7 +742,6 @@
 				BFA22BEA22DE7E3700D8615C /* PopCoreml_Osx.framework */,
 				BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */,
 				BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */,
-				BFE9512E22A70B8400B83061 /* x264 */,
 			);
 			name = Libraries;
 			path = src/Libs;
@@ -778,42 +767,6 @@
 				BF5EAF7F237F07ED0077BCF5 /* Info.plist */,
 			);
 			path = Source_App;
-			sourceTree = "<group>";
-		};
-		BF64976224410DB900D71943 /* osx */ = {
-			isa = PBXGroup;
-			children = (
-				BF64976324410DB900D71943 /* libx264.a */,
-				BF64976424410DB900D71943 /* x264.h */,
-				BF64976524410DB900D71943 /* x264_config.h */,
-			);
-			path = osx;
-			sourceTree = "<group>";
-		};
-		BF64976924410DCC00D71943 /* Ios */ = {
-			isa = PBXGroup;
-			children = (
-				BF64976A24410DCC00D71943 /* include */,
-				BF64976D24410DCC00D71943 /* lib */,
-			);
-			path = Ios;
-			sourceTree = "<group>";
-		};
-		BF64976A24410DCC00D71943 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				BF64976B24410DCC00D71943 /* x264.h */,
-				BF64976C24410DCC00D71943 /* x264_config.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		BF64976D24410DCC00D71943 /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				BF64976E24410DCC00D71943 /* libx264.a */,
-			);
-			path = lib;
 			sourceTree = "<group>";
 		};
 		BF6553C32132C4D9003E4241 /* v8 */ = {
@@ -1026,15 +979,6 @@
 			);
 			name = Json11;
 			path = src/Json11;
-			sourceTree = "<group>";
-		};
-		BFE9512E22A70B8400B83061 /* x264 */ = {
-			isa = PBXGroup;
-			children = (
-				BF64976924410DCC00D71943 /* Ios */,
-				BF64976224410DB900D71943 /* osx */,
-			);
-			path = x264;
 			sourceTree = "<group>";
 		};
 		EB0EA5672110B8D6008D6DAA /* Dlib */ = {
@@ -1319,10 +1263,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF64977024410DCC00D71943 /* x264_config.h in Headers */,
 				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
-				BF64976F24410DCC00D71943 /* x264.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1330,10 +1272,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF64976824410DB900D71943 /* x264_config.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
 				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
-				BF64976724410DB900D71943 /* x264.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
