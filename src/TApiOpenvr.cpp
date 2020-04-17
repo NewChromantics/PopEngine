@@ -5,6 +5,7 @@
 #include "SoyOpengl.h"
 #include "SoyViveHandTracker.h"
 #include "MagicEnum/include/magic_enum.hpp"
+#include "SoyRuntimeLibrary.h"
 #include <string_view>
 using namespace std::literals;
 //	on OSX, make sure you link to the bin/osx32/dylib NOT the one in /lib/
@@ -611,6 +612,7 @@ Openvr::THmd::THmd(bool OverlayApp) :
 #if defined(TARGET_OSX)
 	throw Soy::AssertException("No openvr on osx... can't get library to sign atm");
 #endif
+	Soy::TRuntimeLibrary Dll("openvr.dll");
 	vr::EVRInitError Error = vr::VRInitError_None;
 	auto AppType = OverlayApp ? vr::VRApplication_Overlay : vr::VRApplication_Scene;
 	mSystem = vr::VR_Init( &Error, AppType );
