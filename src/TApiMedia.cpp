@@ -76,6 +76,9 @@ public:
 
 protected:
 	int32_t		mHandle = 0;
+	
+public:
+	std::function<void()>	mOnFrameReady;
 };
 
 
@@ -194,6 +197,11 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 		mSplitPlanes = Params.GetArgumentBool(0);
 
 	mDecoder.reset( new PopH264::TInstance );
+	mDecoder->mOnFrameReady = [this]()
+	{
+		this->OnNewFrame();
+	};
+	
 	std::string ThreadName("TAvcDecoderWrapper::DecoderThread");
 	mDecoderThread.reset( new SoyWorkerJobThread(ThreadName) );
 	mDecoderThread->Start();
@@ -633,6 +641,17 @@ PopH264::TInstance::TInstance()
 		throw Soy::AssertException(Error.str());
 	}
 
+	mOnFrameReady = []()
+	{
+		std::Debug << "Decoded frame ready (no callback assigned)" << std::endl;
+	};
+	
+	auto OnFrameReady = [](void* pThis)
+	{
+		auto* This = reinterpret_cast<TInstance*>(pThis);
+		This->mOnFrameReady();
+	};
+	PopH264_DecoderAddOnNewFrameCallback( mHandle, OnFrameReady, this );
 }
 
 
