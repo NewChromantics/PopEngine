@@ -677,7 +677,9 @@ void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string
 	bool StrictRules = true;
 	auto Property = GetProperty(Context,Name);
 	auto Error = JsSetProperty( This.mValue, Property, Value, StrictRules );
-	Chakra::IsOkay( Error, "JsSetProperty" );
+	if ( Error != JsNoError )
+		Chakra::IsOkay(Error, std::string("JsSetProperty;") + Name);
+	Chakra::IsOkay( Error, "JsSetProperty;");
 }
 
 

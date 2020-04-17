@@ -274,15 +274,20 @@ Bind::TObject JsCore::ParseObjectString(JSContextRef Context, const std::string&
 	return Object;
 }
 
-std::string JsCore::StringifyObject(JSContextRef Context,JSValueRef Handle)
+std::string JsCore::StringifyObject(JsCore::TLocalContext& Context,Bind::TObject& Object)
 {
-	return JSJSONStringFromValue(Context,Handle);
-}
-
-std::string JsCore::StringifyObject(JSContextRef Context,Bind::TObject& Object)
-{
-	auto Handle = Object.mThis;
-	return StringifyObject( Context, Handle );
+	auto ContextRef = Context.mLocalContext;
+#if defined(JSAPI_JSCORE)
+	return JSJSONStringFromValue(ContextRef, Object.mThis);
+#else
+	auto& Json = Context.mGlobalContext.GetGlobalObject(Context, "JSON");
+	auto& Stringify = Json.GetFunction("stringify");
+	Bind::TCallback Params(Context);
+	Params.SetArgumentObject(0, Object);
+	Stringify.Call(Params);
+	auto String = Params.GetReturnString();
+	return String;
+#endif
 }
 
 
