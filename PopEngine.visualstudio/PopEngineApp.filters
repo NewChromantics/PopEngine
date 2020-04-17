@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Dlls">
+      <UniqueIdentifier>{00d28bea-7c65-45f8-9136-3e217528d32f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source_Windows">
+      <UniqueIdentifier>{172035e9-29bf-4d87-9f19-109990049c02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="PopEngineApp">
+      <UniqueIdentifier>{7185466c-17ba-4e53-8149-2ba3c4a070d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngineApp\PopEngineCommon">
+      <UniqueIdentifier>{64e01687-e511-4100-935a-225f2dc517b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngineApp\KinectStream">
+      <UniqueIdentifier>{52f9ff36-0a4d-4614-9170-bbf2ae5c5c7f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source_Windows\Resource.h">
+      <Filter>Source_Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source_Windows\TargetVer.h">
+      <Filter>Source_Windows</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Source\Main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\Source_Windows\PopEngineApp.rc">
+      <Filter>Source_Windows</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Source_Windows\PopEngineApp.ico">
+      <Filter>Source_Windows</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Build\PopEngine_Debug_Chakra_x64\PopCameraDevice.dll">
+      <Filter>Dlls</Filter>
+    </None>
+    <None Include="..\Build\PopEngine_Debug_Chakra_x64\PopEngine.dll">
+      <Filter>Dlls</Filter>
+    </None>
+    <None Include="..\Build\PopEngine_Debug_Chakra_x64\PopH264.dll">
+      <Filter>Dlls</Filter>
+    </None>
+    <None Include="..\Build\PopEngine_Debug_Chakra_x64\x264.dll">
+      <Filter>Dlls</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\LICENSE.md">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\MemCheckLoop.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\ParamsWindow.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopAruco.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopCamera.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopCinema4d.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopCollada.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopDll.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopFrameCounter.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopH264.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopMath.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopMedia.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopMp4.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopObj.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopPly.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopShaderCache.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopSvg.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopTexture.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopWebApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopWebGuiApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopWebImageApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopWebOpenglApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopWebSocketApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PopWebXrApi.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\PromiseQueue.js">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\PopEngineCommon\Readme.md">
+      <Filter>PopEngineApp\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Blit.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\bootup.js">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Depthmm.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\libwabt.js">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Quad.vert.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Uvy844.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Yuv8_8_8.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Yuv8_8_8_OneImage.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Yuv8_88.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+    <None Include="..\PopEngineUnitTests\KinectStream\Yuv8888.frag.glsl">
+      <Filter>PopEngineApp\KinectStream</Filter>
+    </None>
+  </ItemGroup>
+</Project>

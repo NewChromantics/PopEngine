@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\Source_App\PopEngineUnitTestMain.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{23851302-dc8f-4f37-9ac4-f584db135620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest">
+      <UniqueIdentifier>{7d707ff0-0d72-4505-9b31-7c2c36d9c688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest\PopEngineCommon">
+      <UniqueIdentifier>{2a532ddf-1b20-4b5d-b2df-7dcaee528819}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Source_App\Info.plist">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\Source_App\PopEngineUnitTestApp.entitlements">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\UnitTest\bootup.js">
+      <Filter>UnitTest</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\LICENSE.md">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\MemCheckLoop.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\ParamsWindow.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopAruco.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopCamera.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopCinema4d.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopCollada.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopDll.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopFrameCounter.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopH264.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopMath.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopMedia.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopMp4.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopObj.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopPly.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopShaderCache.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopSvg.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopTexture.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebGuiApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebImageApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebOpenglApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebSocketApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PopWebXrApi.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\PromiseQueue.js">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+    <None Include="..\UnitTest\PopEngineCommon\Readme.md">
+      <Filter>UnitTest\PopEngineCommon</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Source_App\PopEngine.ico">
+      <Filter>Source</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\Source_App\PopEngine.rc">
+      <Filter>Source</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source_App\Resource.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source_App\TargetVer.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\Build\PopEngine_Debug_Chakra_x64\PopEngine.dll">
+      <Filter>Source</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\Readme.md">
+      <Filter>UnitTest</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+</Project>

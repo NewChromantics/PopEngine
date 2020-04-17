@@ -1240,6 +1240,6 @@
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="..\src\Libs\x264\bin\x64\x264.dll" />
+    <CopyFileToFolders Include="..\src\PopEngine.h" />
   </ItemGroup>
 </Project>
