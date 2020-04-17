@@ -510,24 +510,30 @@ void TPopCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 
 Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame)
 {
+	//	alloc key names once
+	static std::string _TimeMs = "TimeMs";
+	static std::string _Meta = "Meta";
+	static std::string _Planes = "Planes";
+
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,3);
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
-	FrameObject.SetInt("TimeMs",Frame.mTime.GetTime());
+	FrameObject.SetInt(_TimeMs,Frame.mTime.GetTime());
 
 	if ( Frame.mMeta.length() )
 	{
 		if (Frame.mMeta[0] == '{')
 		{
 			//	turn string into json object
-			FrameObject.SetObjectFromString("Meta", Frame.mMeta);
+			FrameObject.SetObjectFromString(_Meta, Frame.mMeta);
 		}
 		else
 		{
-			FrameObject.SetString("Meta", Frame.mMeta);
+			FrameObject.SetString(_Meta, Frame.mMeta);
 		}
 	}
 
 	
-	Array<Bind::TObject> PlaneImages;
+	BufferArray<Bind::TObject,4> PlaneImages;
 	
 	auto AddImage = [&](std::shared_ptr<SoyPixelsImpl>& Pixels)
 	{
@@ -535,7 +541,7 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 			return;
 		auto ImageObject = Context.mGlobalContext.CreateObjectInstance(Context, TImageWrapper::GetTypeName());
 		auto& Image = ImageObject.This<TImageWrapper>();
-		Image.mName = "Media output frame";
+		//Image.mName = "Media output frame";
 		Image.SetPixels(Pixels);
 		PlaneImages.PushBack(ImageObject);
 	};
@@ -545,13 +551,14 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 	AddImage(Frame.mPlane3);
 	
 
-	FrameObject.SetArray("Planes", GetArrayBridge(PlaneImages));
+	FrameObject.SetArray(_Planes, GetArrayBridge(PlaneImages));
 
 	return FrameObject;
 }
 
 Bind::TObject ApiMedia::PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson)
 {
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,3);
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
 	
 	//	convert meta json to an object
