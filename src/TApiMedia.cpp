@@ -653,6 +653,7 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 
 	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
+		//	gr: this flush is expensive because of the work done AFTERwards (encoding!)
 		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 5);
 		
 		PopCameraDevice::TFrame PoppedFrame;
@@ -664,7 +665,6 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 			if (mFrames.IsEmpty())
 				return;
 
-			Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames:: copy frame", 2);
 			if (mOnlyLatestFrame)
 			{
 				PoppedFrame = mFrames.PopBack();
@@ -676,7 +676,6 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 			}
 		}
 		auto FrameObject = ApiMedia::FrameToObject(Context,PoppedFrame);
-		Soy::TScopeTimerPrint Timer2("TPopCameraDeviceWrapper::FlushPendingFrames:: resolve", 2);
 		mFrameRequests.Resolve(Context,FrameObject);
 	};
 	auto& Context = mFrameRequests.GetContext();
