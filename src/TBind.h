@@ -91,12 +91,18 @@ public:
 
 	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
 	void			Flush(std::function<void(Bind::TLocalContext&,TPromise&)> HandlePromise);
+	void			Flush(Bind::TLocalContext& Context,std::function<void(Bind::TLocalContext&,TPromise&)> HandlePromise);
 
 	void			Resolve();
 	void			Resolve(const std::string& Result);
 	void			Resolve(Bind::TObject& Object);
 	void			Reject(const std::string& Error);
 	
+	void			Resolve(Bind::TLocalContext& Context);
+	void			Resolve(Bind::TLocalContext& Context,const std::string& Result);
+	void			Resolve(Bind::TLocalContext& Context,Bind::TObject& Object);
+	void			Reject(Bind::TLocalContext& Context,const std::string& Error);
+
 private:
 	size_t			mMissedFlushes = 0;
 	Bind::TContext*	mContext = nullptr;

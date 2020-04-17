@@ -28,10 +28,10 @@ Bind::TPromise Bind::TPromiseQueue::AddPromise(Bind::TLocalContext& Context)
 }
 
 
-void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,Bind::TPromise&)> HandlePromise)
+void Bind::TPromiseQueue::Flush(Bind::TLocalContext& Context,std::function<void(Bind::TLocalContext& Context,Bind::TPromise&)> HandlePromise)
 {
 	//	grab a copy so the queue never becomes infinite
-	Array<TPromise> Promises;
+	BufferArray<TPromise,10> Promises;
 	{
 		std::lock_guard<std::mutex> Lock(mPendingLock);
 		Promises = mPending;
@@ -40,10 +40,7 @@ void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,
 	
 	if ( Promises.IsEmpty() )
 		mMissedFlushes++;
-
-	auto& Context = *this->mContext;
 	
-	//	gr: should we block or not...
 	auto DoFlush = [&](Bind::TLocalContext& Context)
 	{
 		for ( auto p=0;	p<Promises.GetSize();	p++ )
@@ -59,7 +56,18 @@ void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,
 			}
 		}
 	};
-	Context.Execute( DoFlush );
+	DoFlush(Context);
+}
+
+void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,Bind::TPromise&)> HandlePromise)
+{
+	auto& Context = *this->mContext;
+	
+	auto Run = [&](Bind::TLocalContext& Context)
+	{
+		this->Flush(Context,HandlePromise);
+	};
+	Context.Execute( Run );
 }
 
 void Bind::TPromiseQueue::Resolve()
@@ -89,6 +97,15 @@ void Bind::TPromiseQueue::Resolve(Bind::TObject& Result)
 	Flush(Handle);
 }
 
+void Bind::TPromiseQueue::Resolve(Bind::TLocalContext& Context,Bind::TObject& Result)
+{
+	auto Handle = [&](Bind::TLocalContext& Context, TPromise& Promise)
+	{
+		Promise.Resolve(Context, Result);
+	};
+	Flush(Context,Handle);
+}
+
 void Bind::TPromiseQueue::Reject(const std::string& Error)
 {
 	auto Handle = [=](Bind::TLocalContext& Context,TPromise& Promise)
@@ -96,6 +113,15 @@ void Bind::TPromiseQueue::Reject(const std::string& Error)
 		Promise.Reject( Context, Error );
 	};
 	Flush(Handle);
+}
+
+void Bind::TPromiseQueue::Reject(Bind::TLocalContext& Context,const std::string& Error)
+{
+	auto Handle = [=](Bind::TLocalContext& Context,TPromise& Promise)
+	{
+		Promise.Reject( Context, Error );
+	};
+	Flush( Context, Handle );
 }
 
 
