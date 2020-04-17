@@ -77,6 +77,7 @@ protected:
 	vr::IVRCompositor&	GetCompositor() {	return *mCompositor;	}
 	vr::IVRSystem&	GetSystem() {	return *mSystem;	}
 	void			GetPoses(ArrayBridge<Openvr::TDeviceState>&& States, bool Blocking);
+	void			HandleEvent(vr::VREvent_t& Event);
 
 public:
 	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
@@ -125,7 +126,6 @@ public:
 	void			SetTransform(vr::HmdMatrix34_t& Transform);
 
 protected:
-	void			HandleEvent(vr::VREvent_t& Event);
 	void			UpdatePoses();
 	TDeviceState	GetOverlayWindowPose();
 
@@ -618,7 +618,7 @@ Openvr::THmd::THmd(bool OverlayApp) :
 	mSystem = vr::VR_Init( &Error, AppType );
 	IsOkay( Error, "VR_Init" );
 	
-	Start();
+	//Start();
 	//m_strDriver = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_TrackingSystemName_String );
 	//m_strDisplay = GetTrackedDeviceString( vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String );
 }
@@ -752,9 +752,25 @@ void Openvr::THmd::WaitForFrameStart()
 void Openvr::THmd::SubmitFrame(Opengl::TTexture& Left, Opengl::TTexture& Right)
 {
 	auto& Compositor = *vr::VRCompositor();
+	
+	{
+		vr::VREvent_t event;
+		while (mSystem->PollNextEvent(&event, sizeof(event)))
+		{
+			this->HandleEvent(event);
+		}
+	}
+	WaitForFrameStart();
 
 	SubmitEyeFrame(vr::Hmd_Eye::Eye_Left, Left.mTexture);
 	SubmitEyeFrame(vr::Hmd_Eye::Eye_Right, Right.mTexture);
+
+	//$ HACKHACK. From gpuview profiling, it looks like there is a bug where two renders and a present
+		// happen right before and after the vsync causing all kinds of jittering issues. This glFinish()
+		// appears to clear that up. Temporary fix while I try to get nvidia to investigate this problem.
+		// 1/29/2014 mikesart
+	glFinish();
+	glFlush();
 }
 
 
@@ -765,9 +781,12 @@ void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
 	vr::Texture_t EyeTexture;
 	EyeTexture.handle = reinterpret_cast<void*>( static_cast<uintptr_t>(Texture.mName) );
 	EyeTexture.eType = vr::TextureType_OpenGL;
-	EyeTexture.eColorSpace = vr::ColorSpace_Auto;
+	//EyeTexture.eColorSpace = vr::ColorSpace_Auto;
+	EyeTexture.eColorSpace = vr::ColorSpace_Gamma;
 
+	//std::Debug << "Submit texture " << Eye << " " << EyeTexture.handle << std::endl;
 	auto Error = Compositor.Submit( Eye, &EyeTexture );
+	//std::Debug << "error=" << Error << std::endl;
 	if ( Error == vr::VRCompositorError_TextureUsesUnsupportedFormat )
 	{
 		std::stringstream ErrorString;
@@ -1043,7 +1062,7 @@ void Openvr::TOverlay::UpdatePoses()
 	mOnNewPoses( GetArrayBridge(States));
 }
 
-void Openvr::TOverlay::HandleEvent(vr::VREvent_t& Event)
+void Openvr::TApp::HandleEvent(vr::VREvent_t& Event)
 {
 	auto EventName = GetSystem().GetEventTypeNameFromEnum( static_cast<vr::EVREventType>(Event.eventType));
 	std::Debug << "Event " << EventName << std::endl;
