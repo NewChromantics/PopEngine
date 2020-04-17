@@ -340,9 +340,9 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
     </CustomBuild>
     <None Include="..\src\Libs\JavascriptCore\win64\WTF.pdb" />
-    <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
+    <CopyFileToFolders Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
       <FileType>Document</FileType>
-    </CustomBuild>
+    </CopyFileToFolders>
     <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
