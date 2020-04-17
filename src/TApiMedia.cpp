@@ -913,12 +913,12 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 			auto FrameTime = Params.GetArgumentInt(1);
 			Bind::TObject Meta;
 			Meta.SetInt("Time",FrameTime);
-			EncodeMeta = Bind::StringifyObject( Params.GetContextRef(), Meta );
+			EncodeMeta = Bind::StringifyObject( Params.mLocalContext, Meta );
 		}
 		else
 		{
 			auto Meta = Params.GetArgumentObject(1);
-			EncodeMeta = Bind::StringifyObject( Params.GetContextRef(), Meta );
+			EncodeMeta = Bind::StringifyObject( Params.mLocalContext, Meta );
 		}
 	}
 	
