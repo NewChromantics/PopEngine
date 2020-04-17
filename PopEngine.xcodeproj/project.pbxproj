@@ -215,6 +215,8 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
+		BF8DD669244A6B0E00960703 /* TApiXr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8DD667244A6B0D00960703 /* TApiXr.cpp */; };
+		BF8DD66A244A6B0E00960703 /* TApiXr.h in Headers */ = {isa = PBXBuildFile; fileRef = BF8DD668244A6B0E00960703 /* TApiXr.h */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
@@ -457,6 +459,8 @@
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
 		BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiHttp.cpp; path = src/TApiHttp.cpp; sourceTree = "<group>"; };
 		BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiHttp.h; path = src/TApiHttp.h; sourceTree = "<group>"; };
+		BF8DD667244A6B0D00960703 /* TApiXr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiXr.cpp; path = src/TApiXr.cpp; sourceTree = "<group>"; };
+		BF8DD668244A6B0E00960703 /* TApiXr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiXr.h; path = src/TApiXr.h; sourceTree = "<group>"; };
 		BF91D9792215839F00E91671 /* TApiEzsift.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiEzsift.h; path = src/TApiEzsift.h; sourceTree = "<group>"; };
 		BF91D97A2215839F00E91671 /* TApiEzsift.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiEzsift.cpp; path = src/TApiEzsift.cpp; sourceTree = "<group>"; };
 		BF91D97C221584E500E91671 /* Ezsift */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Ezsift; path = src/Ezsift; sourceTree = "<group>"; };
@@ -1094,6 +1098,8 @@
 				EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */,
 				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
 				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
+				BF8DD667244A6B0D00960703 /* TApiXr.cpp */,
+				BF8DD668244A6B0E00960703 /* TApiXr.h */,
 				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
 				BFF2B6C12264F9A700232137 /* TApiSerial.cpp */,
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
@@ -1265,6 +1271,7 @@
 			files = (
 				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
+				BF8DD66A244A6B0E00960703 /* TApiXr.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1510,6 +1517,7 @@
 				BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */,
 				BF151F8623845FAD00A70EBF /* SoyDebug.cpp in Sources */,
 				BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */,
+				BF8DD669244A6B0E00960703 /* TApiXr.cpp in Sources */,
 				BF151F8B23845FAD00A70EBF /* SoyGraphics.cpp in Sources */,
 				BF151FC22384601300A70EBF /* TApiMedia.cpp in Sources */,
 				BF151FA223845FAD00A70EBF /* SoyStream.cpp in Sources */,
