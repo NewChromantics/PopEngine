@@ -287,11 +287,6 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
     </CustomBuild>
-    <None Include="..\..\PopRayTrace\BlitLeftRight.frag.glsl" />
-    <None Include="..\..\PopRayTrace\bootup.js" />
-    <None Include="..\..\PopRayTrace\PathTrace.frag.glsl" />
-    <None Include="..\..\PopRayTrace\PopShaderCache.js" />
-    <None Include="..\..\PopRayTrace\Quad.vert.glsl" />
     <None Include="..\src\Libs\JavascriptCore\win64\CFLite.pdb" />
     <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icudt63.dll">
       <FileType>Document</FileType>
