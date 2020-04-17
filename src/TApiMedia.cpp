@@ -82,6 +82,29 @@ public:
 };
 
 
+//	thread which calls a lambda when woken
+class TLambdaWakeThread : public SoyWorkerThread
+{
+public:
+	TLambdaWakeThread(const std::string& ThreadName,std::function<void()> Functor) :
+		SoyWorkerThread	( ThreadName, SoyWorkerWaitMode::Wake ),
+		mLambda			( Functor )
+	{
+		
+	}
+	//~TLambdaWakeThread();
+
+	virtual bool	Iteration() override
+	{
+		mLambda();
+		return true;
+	}
+	
+protected:
+	std::function<void()>		mLambda;
+};
+
+
 //	now PopH264 encoder instance
 class X264::TInstance
 {
@@ -202,8 +225,13 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 		this->OnNewFrame();
 	};
 	
+	auto FlushQueuedData = [this]()
+	{
+		this->FlushQueuedData();
+	};
+	
 	std::string ThreadName("TAvcDecoderWrapper::DecoderThread");
-	mDecoderThread.reset( new SoyWorkerJobThread(ThreadName) );
+	mDecoderThread.reset( new TLambdaWakeThread(ThreadName,FlushQueuedData) );
 	mDecoderThread->Start();
 }
 
@@ -213,36 +241,74 @@ void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TAvcDecoderWrapper::WaitForNextFrame);
 }
 
+
+
+void TAvcDecoderWrapper::FlushQueuedData()
+{
+	try
+	{
+		auto pPacketBytes = PopQueuedData();
+		if ( !pPacketBytes )
+			return;
+		
+		std::Debug << "Pushing " << pPacketBytes->GetDataSize() << " bytes to decoder" << std::endl;
+		
+		auto& Decoder = *mDecoder;
+		auto& PacketBytes = *pPacketBytes;
+		Decoder.PushData(GetArrayBridge(PacketBytes), 0);
+			
+		//	gr: there is no callback for the decoder yet, so we call it manually
+		this->OnNewFrame();
+	}
+	catch (TNoFrameException&e)
+	{
+		//	OnNewFrame doesn't have a frame yet
+		//std::Debug << __PRETTY_FUNCTION__ << " no frame yet" << std::endl;
+	}
+	catch (std::exception& e)
+	{
+		this->OnError(e.what());
+	}
+}
+
+std::shared_ptr<Array<uint8_t>> TAvcDecoderWrapper::PopQueuedData()
+{
+	std::lock_guard<std::mutex> Lock(mPushDataLock);
+	auto Data = mPushData;
+	if ( !Data )
+		return nullptr;
+	if ( Data->IsEmpty() )
+		return nullptr;
+	mPushData.reset();
+	return Data;
+}
+
+
+void TAvcDecoderWrapper::PushQueuedData(const ArrayBridge<uint8_t>&& Data)
+{
+	std::lock_guard<std::mutex> Lock(mPushDataLock);
+	if ( !mPushData )
+		mPushData.reset( new Array<uint8_t>() );
+	mPushData->PushBackArray(Data);
+	//std::Debug << "Decoder queue size " << mPushData->GetDataSize() << " bytes" << std::endl;
+}
+	
 void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 {
-	auto& This = Params.This<TAvcDecoderWrapper>();
+	Array<uint8_t> PacketBytes;
+	Params.GetArgumentArray(0, GetArrayBridge(PacketBytes));
 
-	std::shared_ptr< Array<uint8_t>> pPacketBytes(new Array<uint8_t>());
-	Params.GetArgumentArray(0, GetArrayBridge(*pPacketBytes));
+/*
+	auto DecoderJobCount = mDecoderThread->GetJobCount();
+	if ( DecoderJobCount > 0 )
+		std::Debug << "Decoder job queue size " << DecoderJobCount << std::endl;
+*/
+	//	queue up data
+	PushQueuedData(GetArrayBridge(PacketBytes));
 
-	//	push data onto thread
-	auto Decode = [this, pPacketBytes]() mutable
-	{
-		try
-		{
-			auto& Decoder = *mDecoder;
-			auto& PacketBytes = *pPacketBytes;
-			Decoder.PushData(GetArrayBridge(PacketBytes), 0);
-			this->OnNewFrame();
-		}
-		catch (TNoFrameException&e)
-		{
-			//	OnNewFrame doesn't have a frame yet
-			//std::Debug << __PRETTY_FUNCTION__ << " no frame yet" << std::endl;
-		}
-		catch (std::exception& e)
-		{
-			this->OnError(e.what());
-		}
-	};
-
-	//	on decoder thread, run decode
-	This.mDecoderThread->PushJob(Decode);
+	//	queue up a pop&decode
+	mDecoderThread->Wake();
+	//mDecoderThread->PushJob(Decode);
 }
 
 void TAvcDecoderWrapper::FlushPendingFrames()
@@ -280,11 +346,11 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 		if (PoppedError.empty())
 		{
 			auto FrameObject = ApiMedia::FrameToObject(Context, PoppedFrame);
-			mFrameRequests.Resolve(FrameObject);
+			mFrameRequests.Resolve(Context,FrameObject);
 		}
 		else
 		{
-			mFrameRequests.Reject(PoppedError);
+			mFrameRequests.Reject(Context,PoppedError);
 		}
 	};
 	auto& Context = mFrameRequests.GetContext();
@@ -598,6 +664,7 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 			if (mFrames.IsEmpty())
 				return;
 
+			Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames:: copy frame", 2);
 			if (mOnlyLatestFrame)
 			{
 				PoppedFrame = mFrames.PopBack();
@@ -609,7 +676,8 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 			}
 		}
 		auto FrameObject = ApiMedia::FrameToObject(Context,PoppedFrame);
-		mFrameRequests.Resolve(FrameObject);
+		Soy::TScopeTimerPrint Timer2("TPopCameraDeviceWrapper::FlushPendingFrames:: resolve", 2);
+		mFrameRequests.Resolve(Context,FrameObject);
 	};
 	auto& Context = mFrameRequests.GetContext();
 	Context.Queue(Flush);
@@ -787,7 +855,7 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 	}
 	mEncoder.reset(new X264::TInstance(PresetValue));
 
-	mEncoder->mOnPacketReady = [&]()
+	mEncoder->mOnPacketReady = [this]()
 	{
 		this->OnPacketOutput();
 	};
@@ -839,7 +907,9 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 		{
 			mEncoder->PushFrame(*PixelCopy, EncodeMeta);
 		};
-		std::Debug << "Encoder job queue size " << mEncoderThread->GetJobCount() << std::endl;
+		auto EncoderJobCount = mEncoderThread->GetJobCount();
+		if ( EncoderJobCount > 0 )
+			std::Debug << "Encoder job queue size " << EncoderJobCount << std::endl;
 		mEncoderThread->PushJob(Encode);
 	}
 	else
