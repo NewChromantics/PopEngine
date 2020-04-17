@@ -612,7 +612,7 @@ Openvr::THmd::THmd(bool OverlayApp) :
 #if defined(TARGET_OSX)
 	throw Soy::AssertException("No openvr on osx... can't get library to sign atm");
 #endif
-	Soy::TRuntimeLibrary Dll("openvr.dll");
+	Soy::TRuntimeLibrary Dll("openvr_api.dll");
 	vr::EVRInitError Error = vr::VRInitError_None;
 	auto AppType = OverlayApp ? vr::VRApplication_Overlay : vr::VRApplication_Scene;
 	mSystem = vr::VR_Init( &Error, AppType );
