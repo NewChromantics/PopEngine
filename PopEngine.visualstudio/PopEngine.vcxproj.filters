@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source">
@@ -64,20 +64,11 @@
     <Filter Include="Libs\Dyncall">
       <UniqueIdentifier>{83bc45f4-1304-400f-9e90-a4723c02aeb1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Projects">
-      <UniqueIdentifier>{1076b2d8-5ee6-499f-9b4f-0d0848152173}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Projects\PopRayTrace">
-      <UniqueIdentifier>{6042ffc5-5108-4c72-a98c-0e4d19b0c55d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UnitTest\Gui">
       <UniqueIdentifier>{a2bc4afd-3781-4e66-890f-d079dde1f027}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest\H264Encode">
       <UniqueIdentifier>{cf36e15b-11fa-464a-85a2-27504367a834}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\X264">
-      <UniqueIdentifier>{7ee17235-1cd3-43d0-b654-e1d65e89becf}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest\VirtualReality">
       <UniqueIdentifier>{943c0583-d3f6-4001-b2ad-2f6805a37612}</UniqueIdentifier>
@@ -336,9 +327,6 @@
     <ClInclude Include="..\src\TApiOpenglContext.h">
       <Filter>Source\Todo</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PopEngine.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\JsCoreBind.h">
       <Filter>Source</Filter>
     </ClInclude>
@@ -467,12 +455,6 @@
     </ClInclude>
     <ClInclude Include="..\src\TApiGui.h">
       <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\x264\include\x264.h">
-      <Filter>Libs\X264</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\x264\include\x264_config.h">
-      <Filter>Libs\X264</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ChakraBind.h">
       <Filter>Source</Filter>
@@ -688,21 +670,6 @@
     </None>
     <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb">
       <Filter>Libs\Openvr</Filter>
-    </None>
-    <None Include="..\..\PopRayTrace\PopShaderCache.js">
-      <Filter>Projects\PopRayTrace</Filter>
-    </None>
-    <None Include="..\..\PopRayTrace\Quad.vert.glsl">
-      <Filter>Projects\PopRayTrace</Filter>
-    </None>
-    <None Include="..\..\PopRayTrace\bootup.js">
-      <Filter>Projects\PopRayTrace</Filter>
-    </None>
-    <None Include="..\..\PopRayTrace\PathTrace.frag.glsl">
-      <Filter>Projects\PopRayTrace</Filter>
-    </None>
-    <None Include="..\..\PopRayTrace\BlitLeftRight.frag.glsl">
-      <Filter>Projects\PopRayTrace</Filter>
     </None>
     <None Include="..\UnitTest\Gui\bootup.js">
       <Filter>UnitTest\Gui</Filter>
@@ -1167,12 +1134,6 @@
     </Library>
     <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib">
       <Filter>Libs\Dyncall</Filter>
-    </Library>
-    <Library Include="..\src\Libs\x264\lib\x64\libx264.lib">
-      <Filter>Libs\X264</Filter>
-    </Library>
-    <Library Include="..\src\Libs\x264\lib\x64\x264.lib">
-      <Filter>Libs\X264</Filter>
     </Library>
     <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410.lib">
       <Filter>Libs\Opencv</Filter>

@@ -64,8 +64,6 @@
     <ClInclude Include="..\src\Libs\PopCoreMl\TCoreMl.h" />
     <ClInclude Include="..\src\Libs\PopH264\PopH264.h" />
     <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp" />
-    <ClInclude Include="..\src\Libs\x264\include\x264.h" />
-    <ClInclude Include="..\src\Libs\x264\include\x264_config.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <CopyFileToFolders Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
@@ -397,9 +395,6 @@
     <None Include="..\src\Libs\PopH264\PopH264.dll.meta" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb" />
     <None Include="..\src\Libs\PopH264\PopH264.pdb.meta" />
-    <CopyFileToFolders Include="..\src\Libs\x264\bin\x64\x264.dll">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
     <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll">
       <FileType>Document</FileType>
     </CustomBuild>
@@ -736,14 +731,6 @@
     </Library>
     <Library Include="..\src\Libs\PopH264\PopH264.lib" />
     <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib" />
-    <Library Include="..\src\Libs\x264\lib\x64\libx264.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-    </Library>
-    <Library Include="..\src\Libs\x264\lib\x64\x264.lib" />
     <Library Include="..\src\v8\lib\icui18n.dll.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
