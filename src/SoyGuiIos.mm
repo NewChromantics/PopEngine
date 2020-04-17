@@ -158,14 +158,13 @@ void Platform::TLabel::SetValue(const std::string& Value)
 	
 	auto Job = [=]() mutable
 	{
-		//	out of date
-		if ( Version != this->mValueVersion )
-			return;
-		
 		//	updating the UI is expensive, and in some cases we're calling it a lot
 		//	sometimes this is 20ms (maybe vsync?), so lets only update if we're latest in the queue
 		//Soy::TScopeTimerPrint Timer("Set value",1);
-		
+		//	out of date
+		if ( Version != this->mValueVersion )
+			return;
+
 		this->mView.text = Soy::StringToNSString(Value);
 	};
 	RunJobOnMainThread( Job, false );

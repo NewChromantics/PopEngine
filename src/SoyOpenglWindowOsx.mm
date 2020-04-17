@@ -349,6 +349,8 @@ protected:
 	
 public:
 	std::string				mLastValue;		//	as all UI is on the main thread, we have to cache value for reading
+	size_t					mValueVersion = 0;
+	
 	TResponder*				mResponder = [TResponder alloc];
 	NSTextField*			mControl = nullptr;
 };
@@ -1249,8 +1251,18 @@ void Platform::TTextBox_Base<BASETYPE>::SetValue(const std::string& Value)
 	//	assuming success for immediate retrieval
 	mLastValue = Value;
 	
+	mValueVersion++;
+	auto Version = mValueVersion;
+
 	auto Exec = [=]
 	{
+		//	updating the UI is expensive, and in some cases we're calling it a lot
+		//	sometimes this is 20ms (maybe vsync?), so lets only update if we're latest in the queue
+		//	we also want to flush out the queue for callbacks that do JS stuff
+		//	out of date
+		if ( Version != this->mValueVersion )
+			return;
+
 		if ( !mControl )
 			throw Soy_AssertException("before control created");
 		

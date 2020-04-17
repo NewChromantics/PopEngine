@@ -129,6 +129,8 @@ namespace JsCore
 
 	//	JSON to object
 	TObject		ParseObjectString(JSContextRef Context,const std::string& JsonString);
+	std::string	StringifyObject(JSContextRef Context,JSValueRef Handle);
+	std::string	StringifyObject(JSContextRef Context,Bind::TObject& Object);
 
 	//	throw c++ exception if the exception object is an exception
 	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext="");

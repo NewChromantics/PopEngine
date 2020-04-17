@@ -90,6 +90,7 @@ public:
 	virtual void 				Construct(Bind::TCallback& Arguments) override;
 	
 	void 						Decode(Bind::TCallback& Arguments);
+	void 						GetDecodeJobCount(Bind::TCallback& Arguments);
 	void						WaitForNextFrame(Bind::TCallback& Params);
 
 protected:
@@ -97,15 +98,29 @@ protected:
 	void						OnNewFrame();
 	void						OnError(const std::string& Error);
 
+	//	access queue of data for decoder
+	std::shared_ptr<Array<uint8_t>>	PopQueuedData();
+	void 							PushQueuedData(const ArrayBridge<uint8_t>&& Data);
+	void						FlushQueuedData();
+	
 public:
 	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
-	std::shared_ptr<SoyWorkerJobThread>			mDecoderThread;
 	
+	bool							mOnlyLatest = true;
 	bool							mSplitPlanes = true;
 	Bind::TPromiseQueue				mFrameRequests;
 	std::mutex						mFramesLock;
 	Array<PopCameraDevice::TFrame>	mFrames;
 	Array<std::string>				mErrors;
+	
+	//	lots of tiny jobs are expensive, (eg. udp fragmented packets)
+	//	so buffer as much data as possible and let the job queue pump
+	//	as much as it can in each job. Decoder should cope
+	std::mutex						mPushDataLock;
+	//	rather than resize one array and re-copy on pop, push & pop an allocated array
+	//	this would work well as a pool/double buffer
+	std::shared_ptr<Array<uint8_t>>	mPushData;
+	std::shared_ptr<SoyWorkerThread>		mDecoderThread;
 };
 
 
