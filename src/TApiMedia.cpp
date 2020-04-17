@@ -910,7 +910,7 @@ X264::TInstance::TInstance(size_t PresetValue)
 	
 	char ErrorBuffer[200] = {0};
 	std::stringstream EncoderName;
-	EncoderName << "x264" << PresetValue;
+	//EncoderName << "x264" << PresetValue;
 	mHandle = PopH264_CreateEncoder( EncoderName.str().c_str(), ErrorBuffer, std::size(ErrorBuffer) );
 	if ( mHandle <= 0 )
 	{
