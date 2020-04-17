@@ -106,6 +106,7 @@ protected:
 public:
 	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
 	
+	bool							mOnlyLatest = true;
 	bool							mSplitPlanes = true;
 	Bind::TPromiseQueue				mFrameRequests;
 	std::mutex						mFramesLock;

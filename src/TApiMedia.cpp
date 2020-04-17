@@ -72,10 +72,12 @@ public:
 	~TInstance();
 
 	void					PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
-	PopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes);	//	find a way to re-use the camera version
+	PopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes,bool OnlyLatest);	//	find a way to re-use the camera version
+	size_t					GetPendingFrameCount();
 
 protected:
 	int32_t		mHandle = 0;
+	int32_t		mPendingFrameCount = 0;
 	
 public:
 	std::function<void()>	mOnFrameReady;
@@ -258,7 +260,7 @@ void TAvcDecoderWrapper::FlushQueuedData()
 		Decoder.PushData(GetArrayBridge(PacketBytes), 0);
 			
 		//	gr: there is no callback for the decoder yet, so we call it manually
-		this->OnNewFrame();
+		//this->OnNewFrame();
 	}
 	catch (TNoFrameException&e)
 	{
@@ -313,15 +315,33 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 
 void TAvcDecoderWrapper::FlushPendingFrames()
 {
-	if (mFrames.IsEmpty() && mErrors.IsEmpty())
-		return;
 	if (!mFrameRequests.HasPromises())
 		return;
 
+	//auto HasFrames = !mFrames.IsEmpty();
+	auto HasFrames = mDecoder->GetPendingFrameCount() > 0;
+	if (!HasFrames && mErrors.IsEmpty())
+		return;
+
+
+	
 	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
 		Soy::TScopeTimerPrint Timer("TAvcDecoderWrapper::FlushPendingFrames::Flush", 5);
-
+		
+		//	gr: ideally this is on its own thread so as not to block JS or the decoder
+		//	defer this until flush so we can grab latest and not stall decoder's decode thread
+		//	gr: todo: pop all
+		{
+			Soy::TScopeTimerPrint Timer2("TAvcDecoderWrapper::FlushPendingFrames::pop", 5);
+			auto Frame = mDecoder->PopLastFrame(mSplitPlanes,mOnlyLatest);
+			{
+				std::lock_guard<std::mutex> Lock(mFramesLock);
+				mFrames.PushBack(Frame);
+				mErrors.Clear();
+			}
+		}
+		
 		//	pop frames before errors
 		PopCameraDevice::TFrame PoppedFrame;
 		std::string PoppedError;
@@ -359,13 +379,15 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 
 void TAvcDecoderWrapper::OnNewFrame()
 {
+	//	defer this until flush so we can grab latest and not stall decoder's decode thread
+	/*
 	//	pop frame out
 	auto Frame = mDecoder->PopLastFrame(mSplitPlanes);
 	{
 		std::lock_guard<std::mutex> Lock(mFramesLock);
 		mFrames.PushBack(Frame);
 		mErrors.Clear();
-	}
+	}*/
 	FlushPendingFrames();
 }
 
@@ -471,6 +493,7 @@ void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& Metas, const std::string
 		ParsePlane(PlaneObject);
 	}
 }
+
 
 PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 {
@@ -716,6 +739,7 @@ PopH264::TInstance::TInstance()
 	auto OnFrameReady = [](void* pThis)
 	{
 		auto* This = reinterpret_cast<TInstance*>(pThis);
+		This->mPendingFrameCount++;
 		This->mOnFrameReady();
 	};
 	PopH264_DecoderAddOnNewFrameCallback( mHandle, OnFrameReady, this );
@@ -742,19 +766,23 @@ void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumb
 	}
 }
 
-PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes)
+size_t PopH264::TInstance::GetPendingFrameCount()
+{
+	return mPendingFrameCount;
+}
+
+PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes,bool ONlyLatest)
 {
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
 		
 
-	Array<char> JsonBuffer(2000);
+	char JsonBuffer[1000] = {0};
 	//	gr: this is json now, so we need a good way to extract what we need...
-	PopH264_PeekFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+	PopH264_PeekFrame(mHandle, JsonBuffer, std::size(JsonBuffer) );
 	//if (NextFrameNumber < 0)
 	//	throw TNoFrameException();
-
-	std::string Json(JsonBuffer.GetArray());
+	std::string Json(JsonBuffer);
 
 	//	get plane count
 	BufferArray<SoyPixelsMeta, 4> PlaneMetas;
@@ -794,8 +822,6 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes)
 		PlanePixelsByteSize.PushBack(0);
 	}
 
-	char FrameMeta[1000] = { 0 };
-	
 	auto NewFrameTime = PopH264_PopFrame(
 		mHandle,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
@@ -808,6 +834,8 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes)
 		throw TNoFrameException();
 		//throw Soy::AssertException("New frame post-peek invalid");
 
+	mPendingFrameCount--;
+	
 	//	rejoin planes when possible
 	//	gr: we should be able to make a joined format before copying from plugin
 	//		and pass SoyPixelRemote buffers
