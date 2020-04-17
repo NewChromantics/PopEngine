@@ -911,7 +911,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 		if ( Params.IsArgumentNumber(1) )
 		{
 			auto FrameTime = Params.GetArgumentInt(1);
-			Bind::TObject Meta;
+			Bind::TObject Meta = Params.mContext.CreateObjectInstance(Params.mLocalContext);
 			Meta.SetInt("Time",FrameTime);
 			EncodeMeta = Bind::StringifyObject( Params.mLocalContext, Meta );
 		}
