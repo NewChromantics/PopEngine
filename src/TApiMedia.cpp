@@ -111,7 +111,7 @@ protected:
 class X264::TInstance
 {
 public:
-	TInstance(size_t PresetValue);
+	TInstance(const std::string& EncoderOptionsJson);
 	~TInstance();
 
 	void			PushFrame(const SoyPixelsImpl& Pixels,const std::string& EncodeMetaJson);
@@ -253,14 +253,11 @@ void TAvcDecoderWrapper::FlushQueuedData()
 		if ( !pPacketBytes )
 			return;
 		
-		std::Debug << "Pushing " << pPacketBytes->GetDataSize() << " bytes to decoder" << std::endl;
+		//std::Debug << "Pushing " << pPacketBytes->GetDataSize() << " bytes to decoder" << std::endl;
 		
 		auto& Decoder = *mDecoder;
 		auto& PacketBytes = *pPacketBytes;
 		Decoder.PushData(GetArrayBridge(PacketBytes), 0);
-			
-		//	gr: there is no callback for the decoder yet, so we call it manually
-		//this->OnNewFrame();
 	}
 	catch (TNoFrameException&e)
 	{
@@ -863,24 +860,24 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes,bool O
 
 void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 {
-	int PresetValue = 5;
-	try
+	std::string OptionsJson;
+	
+	//	backwards compatibility
+	if ( Params.IsArgumentNumber(0) )
 	{
-		PresetValue = Params.GetArgumentInt(0);
-		if ( PresetValue < 0 || PresetValue	> 9 )
-		{
-			std::stringstream Error;
-			Error << "Preset " << PresetValue << " out of range";
-			throw Soy::AssertException(Error);
-		}
+		auto Preset = Params.GetArgumentInt(0);
+		std::stringstream Json;
+		Json << "{\"Quality\":" << Preset << "}";
+		OptionsJson = Json.str();
+		std::Debug << "H264 encoder deprecated constructor. Param0 should now be " << OptionsJson << std::endl;
 	}
-	catch(std::exception& e)
+	else if ( !Params.IsArgumentUndefined(0) )
 	{
-		std::stringstream Error;
-		Error << "Expected arg0 as preset between 0..9 (ultrafast...placebo); " << e.what();
-		throw Soy::AssertException(Error);
+		auto OptionsObject = Params.GetArgumentObject(0);
+		OptionsJson = Bind::StringifyObject( Params.mLocalContext, OptionsObject );
 	}
-	mEncoder.reset(new X264::TInstance(PresetValue));
+	
+	mEncoder.reset(new X264::TInstance(OptionsJson));
 
 	mEncoder->mOnPacketReady = [this]()
 	{
@@ -998,17 +995,16 @@ void TH264EncoderWrapper::OnPacketOutput()
 }
 
 
-X264::TInstance::TInstance(size_t PresetValue)
+X264::TInstance::TInstance(const std::string& EncoderOptionsJson)
 {
 	mOnPacketReady = []()
 	{
 		std::Debug << "Encoded packet ready (no callback assigned)" << std::endl;
 	};
 	
+	
 	char ErrorBuffer[200] = {0};
-	std::stringstream EncoderName;
-	//EncoderName << "x264" << PresetValue;
-	mHandle = PopH264_CreateEncoder( EncoderName.str().c_str(), ErrorBuffer, std::size(ErrorBuffer) );
+	mHandle = PopH264_CreateEncoder( EncoderOptionsJson.c_str(), ErrorBuffer, std::size(ErrorBuffer) );
 	if ( mHandle <= 0 )
 	{
 		std::stringstream Error;
