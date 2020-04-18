@@ -1008,7 +1008,7 @@ X264::TInstance::TInstance(const std::string& EncoderOptionsJson)
 	if ( mHandle <= 0 )
 	{
 		std::stringstream Error;
-		Error << "Failed to create PopH264 encoder(" << EncoderName.str() << ") instance. Error(" << mHandle << ") " << ErrorBuffer;
+		Error << "Failed to create PopH264 encoder instance. Error(" << mHandle << ") " << ErrorBuffer;
 		throw Soy::AssertException(Error.str());
 	}
 	
