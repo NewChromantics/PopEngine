@@ -48,12 +48,21 @@ public:
 	std::string				mClassName;
 	bool					mIsKeyFrame = false;	//	set keyframe for button changes, connect/disconnects
 	Soy::Bounds3f			mLocalBounds;
+
+	//	eye "devices" and cameras have extra data
+	float4x4				mProjectionMatrix;	//	local to screen
+
 	bool					HasLocalBounds() const
 	{
 		float w = mLocalBounds.max.x - mLocalBounds.min.x;
 		float h = mLocalBounds.max.y - mLocalBounds.min.y;
 		float d = mLocalBounds.max.z - mLocalBounds.min.z;
 		return (w*h*d) != 0.f;
+	}
+
+	bool					HasProjectionMatrix() const
+	{
+		return true;
 	}
 };
 
