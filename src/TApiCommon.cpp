@@ -25,8 +25,11 @@ namespace ApiPop
 	static void 	CompileAndRun(Bind::TCallback& Params);
 	static void		FileExists(Bind::TCallback& Params);
 	static void 	LoadFileAsString(Bind::TCallback& Params);
+	static void 	LoadFileAsStringAsync(Bind::TCallback& Params);
 	static void 	LoadFileAsImage(Bind::TCallback& Params);
+	static void 	LoadFileAsImageAsync(Bind::TCallback& Params);
 	static void 	LoadFileAsArrayBuffer(Bind::TCallback& Params);
+	static void 	LoadFileAsArrayBufferAsync(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
 	static void 	WriteToFile(Bind::TCallback& Params);
 	static void 	GetFilenames(Bind::TCallback& Params);
@@ -58,8 +61,11 @@ namespace ApiPop
 	//	system stuff
 	DEFINE_BIND_FUNCTIONNAME(FileExists);
 	DEFINE_BIND_FUNCTIONNAME(LoadFileAsString);
+	DEFINE_BIND_FUNCTIONNAME(LoadFileAsStringAsync);
 	DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBuffer);
+	DEFINE_BIND_FUNCTIONNAME(LoadFileAsArrayBufferAsync);
 	DEFINE_BIND_FUNCTIONNAME(LoadFileAsImage);
+	DEFINE_BIND_FUNCTIONNAME(LoadFileAsImageAsync);
 	DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
 	DEFINE_BIND_FUNCTIONNAME(WriteToFile);
 	DEFINE_BIND_FUNCTIONNAME(GetFilenames);
@@ -531,6 +537,12 @@ void ApiPop::LoadFileAsString(Bind::TCallback& Params)
 }
 
 
+void ApiPop::LoadFileAsStringAsync(Bind::TCallback& Params)
+{
+	LoadFileAsString(Params);
+}
+
+
 void ApiPop::LoadFileAsImage(Bind::TCallback& Params)
 {
 	auto Filename = Params.GetArgumentFilename(0);
@@ -544,6 +556,11 @@ void ApiPop::LoadFileAsImage(Bind::TCallback& Params)
 	Params.Return( ImageObject );
 }
 
+
+void ApiPop::LoadFileAsImageAsync(Bind::TCallback& Params)
+{
+	LoadFileAsImage(Params);
+}
 
 
 void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
@@ -562,6 +579,11 @@ void ApiPop::LoadFileAsArrayBuffer(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(FileContentsu8) );
 }
 
+
+void ApiPop::LoadFileAsArrayBufferAsync(Bind::TCallback& Params)
+{
+	LoadFileAsArrayBuffer(Params);
+}
 
 
 void ApiPop::WriteStringToFile(Bind::TCallback& Params)
@@ -635,8 +657,11 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
 	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsStringAsync>(LoadFileAsStringAsync, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsImage>(LoadFileAsImage, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsImageAsync>(LoadFileAsImageAsync, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBuffer>(LoadFileAsArrayBuffer, Namespace );
+	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBufferAsync>(LoadFileAsArrayBufferAsync, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteToFile>(WriteToFile, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetFilenames>(GetFilenames, Namespace );
