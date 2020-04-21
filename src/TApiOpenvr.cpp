@@ -47,6 +47,9 @@ namespace Openvr
 
 	class TApp;
 	class TDeviceState;
+
+	vr::HmdMatrix34_t	MultiplyMatrix(const vr::HmdMatrix34_t& a, const vr::HmdMatrix34_t& b);
+	float4x4			GetMatrix(const vr::HmdMatrix44_t& a);
 }
 
 namespace ViveHandTracker
@@ -54,18 +57,6 @@ namespace ViveHandTracker
 #include "Libs/ViveHandTracking/include/interface_gesture.hpp"
 }
 
-
-
-//	maybe rename to camera
-class TEyeMatrix
-{
-public:
-	std::string			mName;
-	vr::HmdMatrix44_t	mProjection;
-	vr::HmdMatrix44_t	mPose;
-	uint32_t			mRenderTargetWidth = 0;		//	"recommended"
-	uint32_t			mRenderTargetHeight = 0;	//	"recommended"
-};
 
 
 class Openvr::TApp
@@ -78,6 +69,8 @@ protected:
 	vr::IVRSystem&	GetSystem() {	return *mSystem;	}
 	void			GetPoses(ArrayBridge<Openvr::TDeviceState>&& States, bool Blocking);
 	void			HandleEvent(vr::VREvent_t& Event);
+
+	virtual void	GetSubDevices(const Openvr::TDeviceState& ParentDevice, vr::ETrackedDeviceClass ParentDeviceType, ArrayBridge<Openvr::TDeviceState>&& SubDevices) {}
 
 public:
 	std::function<void(ArrayBridge<TDeviceState>&&)>	mOnNewPoses;
@@ -99,11 +92,12 @@ public:
 	virtual bool	ThreadIteration() override;
 
 	void			SubmitFrame(Opengl::TTexture& Left, Opengl::TTexture& Right);
-	TEyeMatrix		GetEyeMatrix(const std::string& EyeName);
+
+protected:
+	virtual void	GetSubDevices(const Openvr::TDeviceState& ParentDevice, vr::ETrackedDeviceClass ParentDeviceType, ArrayBridge<Openvr::TDeviceState>&& SubDevices) override;
 
 private:
 	void			SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture);
-	void			EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum);
 	void			WaitForFrameStart();
 
 public:
@@ -135,6 +129,65 @@ public:
 	vr::IVROverlay*			mOverlay = nullptr;
 };
 
+
+vr::HmdMatrix34_t Openvr::MultiplyMatrix(const vr::HmdMatrix34_t& a, const vr::HmdMatrix34_t& b)
+{
+	auto get44 = [](const vr::HmdMatrix34_t& x34)
+	{
+		vr::HmdMatrix44_t x44;
+		auto& X34 = x34.m;
+		auto& X44 = x44.m;
+		std::copy(X34[0], X34[0] + 4, X44[0]);
+		std::copy(X34[1], X34[1] + 4, X44[1]);
+		std::copy(X34[2], X34[2] + 4, X44[2]);
+		X44[3][0] = 0;
+		X44[3][1] = 0;
+		X44[3][2] = 0;
+		X44[3][3] = 1;
+		return x44;
+	};
+	auto get34 = [](const vr::HmdMatrix44_t& x44)
+	{
+		vr::HmdMatrix34_t x34;
+		auto& X34 = x34.m;
+		auto& X44 = x44.m;
+		std::copy(X44[0], X44[0] + 4, X34[0]);
+		std::copy(X44[1], X44[1] + 4, X34[1]);
+		std::copy(X44[2], X44[2] + 4, X34[2]);
+		return x34;
+	};
+	vr::HmdMatrix44_t C;
+	vr::HmdMatrix44_t A = get44(a);
+	vr::HmdMatrix44_t B = get44(b);
+
+	auto Cols = 4;
+	auto Rows = 4;
+
+	for (int i = 0; i < Cols; i++)
+	{
+		for (int j = 0; j <Rows; j++) 
+		{
+			float num = 0;
+			for (int k = 0; k <Cols; k++) 
+			{
+				num += a.m[i][k] * a.m[k][j];
+			}
+			C.m[i][j] = num;
+		}
+	}
+	auto c = get34(C);
+	return c;
+}
+
+float4x4 Openvr::GetMatrix(const vr::HmdMatrix44_t& a)
+{
+	float4x4 b;
+	std::copy(a.m[0], a.m[0] + 4, &b.rows[0].x);
+	std::copy(a.m[1], a.m[1] + 4, &b.rows[1].x);
+	std::copy(a.m[2], a.m[2] + 4, &b.rows[2].x);
+	std::copy(a.m[3], a.m[3] + 4, &b.rows[3].x);
+	return b;
+}
 
 
 void ApiOpenvr::Bind(Bind::TContext& Context)
@@ -343,6 +396,20 @@ BufferArray<float, 4 * 4> Transpose43To44(const vr::HmdMatrix34_t& Matrix43)
 	return BufferArray<float,16>(m44);
 }
 
+BufferArray<float,4*4> Transpose44(const vr::HmdMatrix44_t& Matrix44)
+{
+	auto* m = &Matrix44.m[0][0];
+
+	float m44[] =
+	{
+		m[0],m[4],m[8],m[12],
+		m[1],m[5],m[9],m[13],
+		m[2],m[6],m[10],m[14],
+		m[3],m[7],m[11],m[15],
+	};
+	return BufferArray<float, 16>(m44);
+}
+
 
 void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 {
@@ -359,6 +426,7 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 	static const std::string Name("Name");
 	static const std::string DeviceIndex("DeviceIndex");
 	static const std::string LocalBounds("LocalBounds");
+	static const std::string ProjectionMatrix("ProjectionMatrix");
 
 	Object.SetBool(IsValidPose, Pose.mPose.bPoseIsValid);
 	Object.SetBool(IsConnected, Pose.mPose.bDeviceIsConnected);
@@ -393,6 +461,12 @@ void SetPoseObject(Bind::TObject& Object,Openvr::TDeviceState& Pose)
 		LocalBoundsFloats.PushBack(Pose.mLocalBounds.max.y);
 		LocalBoundsFloats.PushBack(Pose.mLocalBounds.max.z);
 		Object.SetArray(LocalBounds, GetArrayBridge(LocalBoundsFloats));
+	}
+
+	if (Pose.HasProjectionMatrix())
+	{
+		auto Array = Pose.mProjectionMatrix.GetArray();
+		Object.SetArray(ProjectionMatrix, GetArrayBridge(Array));
 	}
 };
 
@@ -501,21 +575,6 @@ void ApiOpenvr::TAppWrapper::OnNewPoses(ArrayBridge<Openvr::TDeviceState>&& Pose
 
 	FlushPendingPoses();	
 }
-
-
-
-void ApiOpenvr::THmdWrapper::GetEyeMatrix(Bind::TCallback& Params)
-{
-	auto& This = Params.This<ApiOpenvr::THmdWrapper>();
-	auto EyeName = Params.GetArgumentString(0);
-
-	auto EyeMatrix = This.mHmd->GetEyeMatrix(EyeName);
-
-	auto Obj = Params.mContext.CreateObjectInstance(Params.mLocalContext);
-	//Obj.SetArray("
-	Params.Return(Obj);
-}
-
 
 
 
@@ -646,50 +705,6 @@ bool Openvr::THmd::ThreadIteration()
 }
 
 
-void Openvr::THmd::EnumEyes(std::function<void(const TEyeMatrix& Eye)>& Enum)
-{
-	//auto& Hmd = *mHmd;
-	
-	auto Left = GetEyeMatrix(EyeName_Left);
-	Enum(Left);
-	auto Right = GetEyeMatrix(EyeName_Right);
-	Enum(Right);
-}
-
-vr::Hmd_Eye GetHmdEye(const std::string& EyeName)
-{
-	if ( EyeName == Openvr::EyeName_Left )
-		return vr::Hmd_Eye::Eye_Left;
-	if ( EyeName == Openvr::EyeName_Right )
-		return vr::Hmd_Eye::Eye_Right;
-
-	std::stringstream Error;
-	Error << "Unknown eye name " << EyeName;
-	throw Soy::AssertException(Error);
-}
-
-TEyeMatrix Openvr::THmd::GetEyeMatrix(const std::string& EyeName)
-{
-	auto& Hmd = GetSystem();
-	auto Eye = GetHmdEye(EyeName);
-
-	TEyeMatrix EyeMatrix;
-	EyeMatrix.mName = EyeName;
-
-	//	demo for opengl transposes this, maybe
-	EyeMatrix.mProjection = Hmd.GetProjectionMatrix( Eye, mNearClip, mFarClip );
-
-	//	3x4 matrix eye pose
-	//vr::HmdMatrix34_t
-	//auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
-	//EyeMatrix.mPose = EyeToHeadMatrix.invert();
-
-	Hmd.GetRecommendedRenderTargetSize( &EyeMatrix.mRenderTargetWidth, &EyeMatrix.mRenderTargetHeight );
-
-	return EyeMatrix;
-}
-
-
 void Openvr::TApp::GetPoses(ArrayBridge<Openvr::TDeviceState>&& States,bool Blocking)
 {
 	auto& Compositor = *vr::VRCompositor();
@@ -725,6 +740,7 @@ void Openvr::TApp::GetPoses(ArrayBridge<Openvr::TDeviceState>&& States,bool Bloc
 		}
 	};
 
+
 	for (auto i = 0; i < PoseCount; i++)
 	{
 		auto& Device = States.PushBack();
@@ -735,17 +751,25 @@ void Openvr::TApp::GetPoses(ArrayBridge<Openvr::TDeviceState>&& States,bool Bloc
 		auto Type = System.GetTrackedDeviceClass(Device.mDeviceIndex);
 		Device.mClassName = magic_enum::enum_name<vr::ETrackedDeviceClass>(Type);
 
-		Device.mTrackedName = GetString(Device.mDeviceIndex, vr::Prop_TrackingSystemName_String);
+		//	tracking SYSTEM name always gives us light house
+		//Device.mTrackedName = GetString(Device.mDeviceIndex, vr::Prop_TrackingSystemName_String);
+		auto TrackingSystemName = GetString(Device.mDeviceIndex, vr::Prop_TrackingSystemName_String);
+		auto RenderModelName = GetString(Device.mDeviceIndex, vr::Prop_RenderModelName_String);
+		auto ManufacturerName = GetString(Device.mDeviceIndex, vr::Prop_ManufacturerName_String);
+		Device.mTrackedName = RenderModelName;
+		
+		BufferArray<TDeviceState, 3> SubDevices;
+		GetSubDevices(Device, Type, GetArrayBridge(SubDevices));
+		States.PushBackArray(SubDevices);
+
 	}
 }
 
 void Openvr::THmd::WaitForFrameStart()
 {
-	BufferArray<Openvr::TDeviceState, vr::k_unMaxTrackedDeviceCount> Devices;
+	BufferArray<Openvr::TDeviceState, vr::k_unMaxTrackedDeviceCount+10> Devices;
 	GetPoses(GetArrayBridge(Devices), true);
 	
-	//	gr: add eye's to devices using GetEyeMatrix() so each eye has it's own device & extra properties
-
 	mOnNewPoses(GetArrayBridge(Devices));
 }
 
@@ -773,6 +797,40 @@ void Openvr::THmd::SubmitFrame(Opengl::TTexture& Left, Opengl::TTexture& Right)
 	glFlush();
 }
 
+void Openvr::THmd::GetSubDevices(const Openvr::TDeviceState& ParentDevice, vr::ETrackedDeviceClass ParentDeviceType, ArrayBridge<Openvr::TDeviceState>&& SubDevices)
+{
+	//	make extra "devices" for the HMD for eyes
+	if (ParentDeviceType != vr::TrackedDeviceClass_HMD)
+		return;
+
+	auto& Hmd = GetSystem();
+
+	auto GetEyeDevice = [&](vr::Hmd_Eye Eye, const char* NameSuffix)
+	{
+		TDeviceState EyeDevice = ParentDevice;
+		EyeDevice.mClassName += NameSuffix;
+		EyeDevice.mTrackedName += NameSuffix;
+		
+		auto ProjectionMatrix = Hmd.GetProjectionMatrix(Eye, mNearClip, mFarClip);
+		EyeDevice.mProjectionMatrix = Transpose44(ProjectionMatrix).GetArray();
+		//Hmd.GetRecommendedRenderTargetSize(&EyeMatrix.mRenderTargetWidth, &EyeMatrix.mRenderTargetHeight);
+
+		//	apply offset to local to world pose
+		auto EyeToHead = Hmd.GetEyeToHeadTransform(Eye);
+		auto HeadToWorld = ParentDevice.mPose.mDeviceToAbsoluteTracking;
+		auto EyeToWorld = Openvr::MultiplyMatrix(EyeToHead, HeadToWorld);
+		EyeDevice.mPose.mDeviceToAbsoluteTracking = EyeToWorld;
+		EyeDevice.mPose.mDeviceToAbsoluteTracking = HeadToWorld;
+		//	3x4 matrix eye pose
+	//vr::HmdMatrix34_t
+	//auto EyeToHeadMatrix = Hmd.GetEyeToHeadTransform( Eye );
+	//EyeMatrix.mPose = EyeToHeadMatrix.invert();
+		SubDevices.PushBack(EyeDevice);
+	};
+
+	GetEyeDevice( vr::Eye_Left, "_LeftEye");
+	GetEyeDevice( vr::Eye_Right, "_RightEye");
+}
 
 void Openvr::THmd::SubmitEyeFrame(vr::Hmd_Eye Eye,Opengl::TAsset Texture)
 {
