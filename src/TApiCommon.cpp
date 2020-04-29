@@ -1085,8 +1085,7 @@ void TImageWrapper::GetPngData(Bind::TCallback& Params)
 	float CompressionLevel = Params.GetArgumentFloat(0);
 	
 	//	encode exif data!
-	Array<char> PngDataChar;
-	auto PngDataCharBridge = GetArrayBridge(PngDataChar);
+	Array<uint8_t> PngData;
 	Array<uint8_t> ExifData;
 	if ( Params.IsArgumentArray(1) )
 	{
@@ -1099,13 +1098,11 @@ void TImageWrapper::GetPngData(Bind::TCallback& Params)
 	}
 	
 	if ( ExifData.IsEmpty() )
-		TPng::GetPng( Pixels, PngDataCharBridge, CompressionLevel );
+		TPng::GetPng( Pixels, GetArrayBridge(PngData), CompressionLevel );
 	else
-		TPng::GetPng( Pixels, PngDataCharBridge, CompressionLevel, GetArrayBridge(ExifData) );
-
-	auto PngData8 = PngDataCharBridge.GetSubArray<uint8_t>(0,PngDataChar.GetSize());
+		TPng::GetPng( Pixels, GetArrayBridge(PngData), CompressionLevel, GetArrayBridge(ExifData) );
 	
-	Params.Return( GetArrayBridge(PngData8) );
+	Params.Return( GetArrayBridge(PngData) );
 }
 
 
