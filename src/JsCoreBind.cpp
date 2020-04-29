@@ -1529,7 +1529,22 @@ JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<
 	}
 }
 
+bool JsCore::TCallback::IsArgumentArrayU8(size_t Index)
+{
+	if (Index >= mArguments.GetSize())
+		return false;
 
+	auto Context = GetContextRef();
+	auto Handle = mArguments[Index];
+	JSValueRef Exception = nullptr;
+	auto TypedArrayType = JSValueGetTypedArrayType(Context, Handle, &Exception);
+	JsCore::ThrowException(Context, Exception, __PRETTY_FUNCTION__);
+
+	if (TypedArrayType != kJSTypedArrayTypeUint8Array)
+		return false;
+
+	return true;
+}
 
 JsCore::TObject JsCore::TCallback::GetReturnObject()
 {

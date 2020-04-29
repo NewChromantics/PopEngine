@@ -334,6 +334,11 @@ void ApiSocket::TSocketWrapper::Send(Bind::TCallback& Params)
 	}
 	else
 	{
+		//	gr: if you provide a u32 array, and we grab as u8,
+		//		this code will re-interpret.
+		//	we need GetArgumentRawArray() ?
+		if (!Params.IsArgumentArrayU8(1))
+			throw Soy::AssertException("Send 2nd argument is not a Uint8Array, this will get recast to bytes and lose data");
 		//	gr: maybe we need to handle other types too?
 		Params.GetArgumentArray(1, GetArrayBridge(Data));
 	}
