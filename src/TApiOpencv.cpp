@@ -724,8 +724,8 @@ void TestDepthToYuv844_Opencv(uint16_t* Depth16,int Width,int Height,cv::Mat& Lu
 	
 	auto WriteYuv = [&](uint32_t x, uint32_t y, uint8_t Luma, uint8_t ChromaU, uint8_t ChromaV)
 	{
-		auto ux = (x / 2) + 0;
-		auto vx = (x / 2) + 1;
+		auto ux = (x / 2) * 2;
+		auto vx = ux + 1;
 		auto uy = y / 2;
 		auto vy = y / 2;
 
