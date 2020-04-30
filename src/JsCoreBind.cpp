@@ -593,8 +593,8 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiGui::Bind( *Context );
 			ApiCoreMl::Bind(*Context);
 			ApiZip::Bind(*Context);
-#if defined(TARGET_OSX)
 			ApiOpencv::Bind(*Context);
+#if defined(TARGET_OSX)
 
 			//ApiOpencl::Bind( *Context );
 			ApiDlib::Bind( *Context );

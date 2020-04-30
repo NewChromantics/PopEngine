@@ -1,6 +1,7 @@
 #include "TApiOpencv.h"
 #include "TApiCommon.h"
 #include "MagicEnum/include/magic_enum.hpp"
+#include "SoyLib/src/SoyRuntimeLibrary.h"
 
 #if defined(TARGET_WINDOWS)
 //#include "Libs/Opencv/include/opencv2/opencv.hpp"
@@ -42,6 +43,22 @@ namespace ApiOpencv
 	DEFINE_BIND_FUNCTIONNAME(ArucoMarkerDictionarys);
 	cv::Ptr<cv::aruco::Dictionary>	GetArucoDictionary(const std::string& Name);
 	void							GetArucoDictionarys(ArrayBridge<std::string>&& Names);
+
+	//	call this before using any opencv functions for more friendly error
+	void		LoadDll();
+	std::shared_ptr<Soy::TRuntimeLibrary> Dll;
+}
+
+void ApiOpencv::LoadDll()
+{
+	if (Dll)
+		return;
+
+#if defined(TARGET_WINDOWS)
+	Dll.reset(new  Soy::TRuntimeLibrary("opencv_world410d.dll"));
+	//Dll.reset(new  Soy::TRuntimeLibrary("opencv_world410.dll"));
+#endif
+
 }
 
 
@@ -687,6 +704,7 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 
 void TestDepthToYuv844_Opencv(uint16_t* Depth16,int Width,int Height,cv::Mat& LumaPlane,cv::Mat& ChromaUvPlane,uint16_t DepthMin,uint16_t DepthMax,int ChromaRanges)
 {
+	ApiOpencv::LoadDll();
 	auto LumaSize = Width * Height;
 	auto ChromaSize = (Width/2) * (Height/2);
 	
