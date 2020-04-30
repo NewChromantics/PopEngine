@@ -705,50 +705,41 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 void TestDepthToYuv844_Opencv(uint16_t* Depth16,int Width,int Height,cv::Mat& LumaPlane,cv::Mat& ChromaUvPlane,uint16_t DepthMin,uint16_t DepthMax,int ChromaRanges)
 {
 	ApiOpencv::LoadDll();
+
+	EncodeParams_t Params;
+	Params.DepthMax = DepthMax;
+	Params.DepthMin = DepthMin;
+	Params.ChromaRangeCount = ChromaRanges;
+
 	auto LumaSize = Width * Height;
 	auto ChromaSize = (Width/2) * (Height/2);
-	
-	//	make YUV_8_8
-	uint8_t* Yuv8_8_8Plane = new uint8_t[LumaSize+ChromaSize+ChromaSize];
-	Depth16ToYuv( Depth16, Yuv8_8_8Plane, Width, Height, DepthMin, DepthMax, ChromaRanges );
 	
 	//	write to opencv matrixes
 	LumaPlane = cv::Mat( Height, Width, CV_8UC1 );
 	ChromaUvPlane = cv::Mat( Height/2, Width, CV_8UC1 );
-	
-	auto* Yuv888_Luma = &Yuv8_8_8Plane[0];
-	auto* Yuv888_ChromaU = &Yuv8_8_8Plane[LumaSize];
-	auto* Yuv888_ChromaV = &Yuv8_8_8Plane[LumaSize+ChromaSize];
-
-	auto ChromaWidth = Width/2;
-	auto ChromaHeight = Height/2;
 	//cv::Mat luminance(Height, Width,CV_8UC1);
 	//cv::Mat uv(ChromaHeight,ChromaWidth*2,CV_8UC1);	//	width*2 as its 2 interleaved values
 	auto& luminance = LumaPlane;
 	auto& uv = ChromaUvPlane;
-	for (int x=0; x<Width; x++)
+	
+	auto WriteYuv = [&](uint32_t x, uint32_t y, uint8_t Luma, uint8_t ChromaU, uint8_t ChromaV)
 	{
-		for (int y=0; y<Height; y++)
-		{
-			auto lw = Width;
-			auto lx = x;
-			auto ly = y;
-			auto cw = ChromaWidth;
-			auto cx = x/2;
-			auto cy = y/2;
-			
-			auto l = Yuv888_Luma[lx + ly*lw];
-			auto u = Yuv888_ChromaU[cx + cy*cw];
-			auto v = Yuv888_ChromaV[cx + cy*cw];
-			auto ux = (x/2)+0;
-			auto vx = (x/2)+1;
-			auto uy = y/2;
-			auto vy = y/2;
-			luminance.at<uint8_t>(y,x) = l;
-			uv.at<uint8_t>(uy,ux) = u;
-			uv.at<uint8_t>(vy,vx) = v;
-		}
-	}
+		auto ux = (x / 2) + 0;
+		auto vx = (x / 2) + 1;
+		auto uy = y / 2;
+		auto vy = y / 2;
+
+		luminance.at<uint8_t>(y, x) = Luma;
+		uv.at<uint8_t>(uy, ux) = ChromaU;
+		uv.at<uint8_t>(vy, vx) = ChromaV;
+	};
+	auto WriteCAPI = [](uint32_t x, uint32_t y, uint8_t Luma, uint8_t ChromaU, uint8_t ChromaV, void* WriteYuvPtr)
+	{
+		auto& Functor = *reinterpret_cast<decltype(WriteYuv)*>(WriteYuvPtr);
+		Functor(x, y, Luma, ChromaU, ChromaV);
+	};
+
+	Depth16ToYuv(Depth16, Width, Height, Params, WriteCAPI, &WriteYuv);
 }
 
 void ApiOpencv::TestDepthToYuv844(Bind::TCallback &Params)
