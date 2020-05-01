@@ -741,8 +741,14 @@ void TestDepthToYuv844_Opencv(uint16_t* Depth16,int Width,int Height,cv::Mat& Lu
 		auto& Functor = *reinterpret_cast<decltype(WriteYuv)*>(WriteYuvPtr);
 		Functor(x, y, Luma, ChromaU, ChromaV);
 	};
+	
+	auto OnErrorCAPI = [](const char* Error,void* This)
+	{
+		//	todo throw exception, but needs a more complicated This for the call
+		std::Debug << "Depth16ToYuv error; " << Error << std::endl;
+	};
 
-	Depth16ToYuv(Depth16, Width, Height, Params, WriteCAPI, &WriteYuv);
+	Depth16ToYuv(Depth16, Width, Height, Params, WriteCAPI, OnErrorCAPI, &WriteYuv);
 }
 
 
@@ -820,8 +826,14 @@ void ApiOpencv::TestDepthToYuv8_8_8(Bind::TCallback &Params)
 		auto& Functor = *reinterpret_cast<decltype(WriteYuv)*>(WriteYuvPtr);
 		Functor(x, y, Luma, ChromaU, ChromaV);
 	};
-
-	Depth16ToYuv(Depth16, Width, Height, EncodeParams, WriteCAPI, &WriteYuv);
+	
+	auto OnErrorCAPI = [](const char* Error,void* This)
+	{
+		//	todo throw exception, but needs a more complicated This for the call
+		std::Debug << "Depth16ToYuv error; " << Error << std::endl;
+	};
+	
+	Depth16ToYuv(Depth16, Width, Height, EncodeParams, WriteCAPI, OnErrorCAPI, &WriteYuv);
 
 	//	return an image
 	auto& Context = Params.mContext;
