@@ -703,6 +703,7 @@ void ApiOpencv::SolvePnp(Bind::TCallback& Params)
 	Params.Return(Output);
 }
 
+//#define TEST_OUTPUT
 #include "PopDepthToYuv/Depth16ToYuv.c"
 
 void TestDepthToYuv844_Opencv(uint16_t* Depth16,int Width,int Height,cv::Mat& LumaPlane,cv::Mat& ChromaUvPlane,uint16_t DepthMin,uint16_t DepthMax,int ChromaRanges)
