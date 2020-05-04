@@ -4,9 +4,6 @@
 [submodule "src/SoyDecklink"]
 	path = src/SoyDecklink
 	url = https://github.com/SoylentGraham/SoyDecklink.git
-[submodule "Data_Holosports"]
-	path = Data_Holosports
-	url = https://gitlab.com/NewChromantics/PopFragGui.git
 [submodule "src/Ezsift"]
 	path = src/Ezsift
 	url = https://github.com/SoylentGraham/ezSIFT.git
