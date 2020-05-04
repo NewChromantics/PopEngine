@@ -1054,8 +1054,8 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& E
 	if (Planes.GetSize() == 2)
 	{
 		auto Format = Pixels.GetFormat();
-		auto FormatName = magic_enum::enum_name(Format);
-		//auto FormatName = SoyPixelsFormat::ToString(Format);
+		//auto FormatName = magic_enum::enum_name(Format);
+		auto FormatName = SoyPixelsFormat::ToString(Format);
 		Meta["Format"] = std::string(FormatName);//	json11 converts string_view to array
 		auto& Array = Pixels.GetPixelsArray();
 		PixelSizes.PushBack(Array.GetDataSize());
