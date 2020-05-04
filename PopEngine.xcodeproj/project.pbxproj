@@ -199,7 +199,6 @@
 		BF5EB02D237F13200077BCF5 /* image_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D9AA221584F200E91671 /* image_utility.cpp */; };
 		BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85350622BEDBF80049C01B /* OpenVR.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
-		BF5EB0602380335F0077BCF5 /* PopEngineUnitTestMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */; };
 		BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; };
 		BF5EB068238034BC0077BCF5 /* UnitTest in Resources */ = {isa = PBXBuildFile; fileRef = BFD08270225E90AC00FD05DC /* UnitTest */; };
 		BF5EB06923803A4B0077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -221,6 +220,7 @@
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
+		BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -358,7 +358,6 @@
 		BF5EB0542380335D0077BCF5 /* PopEngine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB05C2380335F0077BCF5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		BF5EB05E2380335F0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../PopEngineUnitTestApp/Info.plist; sourceTree = "<group>"; };
-		BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = PopEngineUnitTestMain.mm; sourceTree = "<group>"; };
 		BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PopEngineUnitTestApp.entitlements; sourceTree = "<group>"; };
 		BF607EA12240580E00A78C00 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		BF607EA32240588300A78C00 /* TApiBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiBluetooth.h; path = src/TApiBluetooth.h; sourceTree = "<group>"; };
@@ -529,6 +528,7 @@
 		BFF505EB22550F47005A6AC1 /* JsCoreBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JsCoreBind.h; path = src/JsCoreBind.h; sourceTree = "<group>"; };
 		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
 		BFF8A59022C2961C002AD145 /* SoyTypes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTypes.mm; path = src/SoyTypes.mm; sourceTree = "<group>"; };
+		BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PopEngineUnitTestMain.cpp; sourceTree = "<group>"; };
 		EB0EA5642110AB53008D6DAA /* TApiDlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDlib.cpp; path = src/TApiDlib.cpp; sourceTree = "<group>"; };
 		EB0EA5652110AB53008D6DAA /* TApiDlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDlib.h; path = src/TApiDlib.h; sourceTree = "<group>"; };
 		EB0EA5682110B911008D6DAA /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
@@ -764,9 +764,9 @@
 		BF5EAF7D237F07ED0077BCF5 /* Source_App */ = {
 			isa = PBXGroup;
 			children = (
+				BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */,
 				BF5EB05B2380335F0077BCF5 /* MainMenu.xib */,
 				BF5EB05E2380335F0077BCF5 /* Info.plist */,
-				BF5EB05F2380335F0077BCF5 /* PopEngineUnitTestMain.mm */,
 				BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */,
 				BF5EAF7F237F07ED0077BCF5 /* Info.plist */,
 			);
@@ -1623,7 +1623,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF5EB0602380335F0077BCF5 /* PopEngineUnitTestMain.mm in Sources */,
+				BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
