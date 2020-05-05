@@ -1049,12 +1049,28 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& E
 
 	BufferArray<const uint8_t*,3> PixelDatas;
 	BufferArray<int32_t,3> PixelSizes;
-	for ( auto i=0;	i<Planes.GetSize();	i++ )
+
+	//	gr: for now, use one plane instead of 2 for some formats
+	if (Planes.GetSize() == 2)
 	{
-		auto& Pixels = *Planes[i];
-		PixelSizes.PushBack( Pixels.GetMeta().GetDataSize() );
-		PixelDatas.PushBack( Pixels.GetPixelsArray().GetArray() );
+		auto Format = Pixels.GetFormat();
+		//auto FormatName = magic_enum::enum_name(Format);
+		auto FormatName = SoyPixelsFormat::ToString(Format);
+		Meta["Format"] = std::string(FormatName);//	json11 converts string_view to array
+		auto& Array = Pixels.GetPixelsArray();
+		PixelSizes.PushBack(Array.GetDataSize());
+		PixelDatas.PushBack(Array.GetArray());
 	}
+	else
+	{
+		for (auto i = 0; i < Planes.GetSize(); i++)
+		{
+			auto& Pixels = *Planes[i];
+			PixelSizes.PushBack(Pixels.GetMeta().GetDataSize());
+			PixelDatas.PushBack(Pixels.GetPixelsArray().GetArray());
+		}
+	}
+
 	while ( PixelDatas.GetSize() < 3 )
 	{
 		PixelDatas.PushBack(nullptr);
