@@ -679,7 +679,7 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
 		//	gr: this flush is expensive because of the work done AFTERwards (encoding!)
-		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 5);
+		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 60);
 		
 		PopCameraDevice::TFrame PoppedFrame;
 		{
