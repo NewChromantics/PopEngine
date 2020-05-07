@@ -329,6 +329,7 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 		//	gr: ideally this is on its own thread so as not to block JS or the decoder
 		//	defer this until flush so we can grab latest and not stall decoder's decode thread
 		//	gr: todo: pop all
+		try
 		{
 			Soy::TScopeTimerPrint Timer2("TAvcDecoderWrapper::FlushPendingFrames::pop", 5);
 			auto Frame = mDecoder->PopLastFrame(mSplitPlanes,mOnlyLatest);
@@ -337,6 +338,10 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 				mFrames.PushBack(Frame);
 				mErrors.Clear();
 			}
+		}
+		catch(TNoFrameException& e)
+		{
+			//	supress this error
 		}
 		
 		//	pop frames before errors
