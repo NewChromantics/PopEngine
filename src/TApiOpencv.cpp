@@ -834,8 +834,10 @@ void ApiOpencv::TestDepthToYuv8_88(Bind::TCallback &Params)
 		auto& Meta = *reinterpret_cast<Meta_t*>(pMeta);
 		auto cx = x / 2;
 		auto cy = y / 2;
+		auto cw = Meta.Width/2;
 		auto i = x + (y*Meta.Width);
-		auto ci = cx + (cy*Meta.Width);
+		auto ci = cx + (cy*cw);
+		ci *=2;
 		Meta.LumaPixels[i] = Luma;
 		Meta.ChromaUvPixels[ci+0] = ChromaU;
 		Meta.ChromaUvPixels[ci+1] = ChromaV;
