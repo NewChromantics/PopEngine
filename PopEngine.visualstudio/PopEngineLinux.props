@@ -8,6 +8,7 @@
   <ItemDefinitionGroup>
     <Link>
       <LibraryDependencies>javascriptcoregtk-4.0</LibraryDependencies>
+      <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>TARGET_LINUX</PreprocessorDefinitions>

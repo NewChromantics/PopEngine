@@ -14,8 +14,23 @@ bool IsXCodeDebugParam(const std::string& Argument)
 	return false;
 }
 
+
+#if defined(TARGET_LINUX)
+namespace Platform
+{
+	extern std::string	ExeFilename;
+}
+#endif
+
+#include <unistd.h>
 int main(int argc, const char * argv[])
 {
+	char Cwd[200];
+	getcwd(Cwd, 200);
+	printf("%s\n", Cwd);
+#if defined(TARGET_LINUX)
+	Platform::ExeFilename = argv[0];
+#endif
 	//	if first arg is a path, then to make debugging easier in xcode,
 	//	lets load that project instead of unit tests
 	std::string ProjectPath = "UnitTest";

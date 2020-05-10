@@ -65,8 +65,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link />
     <RemotePostBuildEvent>
-      <Command>#gpio export 17 out</Command>
-      <Message>export pin 17 using the gpio utility so that we can execute the blink program without sudo</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -74,19 +76,16 @@
       <LibraryDependencies>wiringPi</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
-      <Command>gpio export 17 out</Command>
-      <Message>export pin 17 using the gpio utility so that we can execute the blink program without sudo</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </RemotePostBuildEvent>
     <ClCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Source_App\PopEngineUnitTestMain.cpp" />
-    <ClCompile Include="..\src\JsCoreBind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\JsCoreBind.cpp" />
     <ClCompile Include="..\src\PopEngine.cpp" />
     <ClCompile Include="..\src\PopMain.cpp" />
     <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
@@ -96,28 +95,13 @@
     <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyString.cpp" />
-    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp" />
-    <ClCompile Include="..\src\TBind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\src\TBind.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\JsCoreBind.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\JsCoreBind.h" />
     <ClInclude Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\SoyLib\src\Array.hpp" />
@@ -133,21 +117,11 @@
     <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyScope.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyString.h" />
-    <ClInclude Include="..\src\SoyLib\src\SoyThread.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTime.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTypes.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTypes_Linux.h" />
-    <ClInclude Include="..\src\TBind.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="..\src\TBind.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\UnitTest\HelloWorld\bootup.js" />

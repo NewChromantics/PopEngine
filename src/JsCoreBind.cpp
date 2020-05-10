@@ -2,6 +2,8 @@
 #include "TBind.h"
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
+
+#if !defined(TARGET_LINUX)
 #include "TApiCommon.h"
 #include "TApiEngine.h"
 #include "TApiOpengl.h"
@@ -13,6 +15,7 @@
 #include "TApiOpencv.h"
 #include "TApiCoreMl.h"
 #include "TApiZip.h"
+#endif
 
 #if defined(TARGET_OSX)
 //#include "TApiOpencl.h"
@@ -420,7 +423,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
 }
 
 //	on windows size_t and u64 are the same, so redundant
-#if !defined(TARGET_WINDOWS)
+#if !defined(TARGET_WINDOWS)&& !defined(TARGET_LINUX)
 JSValueRef JsCore::GetValue(JSContextRef Context, size_t Value)
 {
 	auto Value64 = static_cast<uint64_t>(Value);
@@ -578,6 +581,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			//	create a context
 			auto Context = CreateContext(RootDirectory);
 			
+#if !defined(TARGET_LINUX)
 			ApiPop::Bind( *Context );
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
@@ -585,15 +589,19 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
 			ApiSocket::Bind( *Context );
+#endif
+
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
 #endif
+#if !defined(TARGET_LINUX)
 			ApiGui::Bind( *Context );
 			ApiCoreMl::Bind(*Context);
 			ApiZip::Bind(*Context);
 			ApiOpencv::Bind(*Context);
+#endif
 #if defined(TARGET_OSX)
 
 			//ApiOpencl::Bind( *Context );
