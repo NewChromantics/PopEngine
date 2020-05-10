@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\Source_App\PopEngineUnitTestMain.cpp">
+      <Filter>PopEngineApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsCoreBind.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopEngine.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopMain.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TBind.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\memheap.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyArray.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="PopEngine">
+      <UniqueIdentifier>{3dc92b27-d03d-41ac-ba02-0ee3a2df1724}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngineApp">
+      <UniqueIdentifier>{a35e8a5f-7f4c-426a-bef0-49ffd392583a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib">
+      <UniqueIdentifier>{4e702480-ed40-4024-b8d1-f122c70431b9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\JsCoreBind.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PopEngine.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PopMain.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TBind.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Linux.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Array.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyArray.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyAssert.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyDebug.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\RemoteArray.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTime.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyScope.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyString.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\scope_ptr.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
