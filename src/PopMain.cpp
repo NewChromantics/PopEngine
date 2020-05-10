@@ -43,7 +43,7 @@ extern "C" EXPORT int PopEngine(const char* ProjectPath)
 }
 
 
-
+#if !defined(TARGET_LINUX)	//	temporarily TestApp and engine are built together
 extern "C" int main(int argc,const char* argv[])
 {
 	if ( argc < 2 )
@@ -51,6 +51,7 @@ extern "C" int main(int argc,const char* argv[])
 	
 	return PopEngine( argv[1] );
 }
+#endif
 
 
 //	define winmain AND main for gui & console subsystem builds

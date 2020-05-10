@@ -37,6 +37,9 @@
     <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyString.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -47,6 +50,9 @@
     </Filter>
     <Filter Include="PopEngine\SoyLib">
       <UniqueIdentifier>{4e702480-ed40-4024-b8d1-f122c70431b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTest">
+      <UniqueIdentifier>{faafa76b-42c3-40b4-8afc-b06556466985}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,5 +116,10 @@
     <ClInclude Include="..\src\SoyLib\src\scope_ptr.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\UnitTest\HelloWorld\bootup.js">
+      <Filter>UnitTest</Filter>
+    </None>
   </ItemGroup>
 </Project>
