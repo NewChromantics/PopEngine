@@ -617,7 +617,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		}
 	};
 
-#if defined(PLATFORM_WINDOWS)
+#if defined(TARGET_WINDOWS)
 #if defined(JSAPI_JSCORE)
 	JsCore::LoadDll();
 #endif

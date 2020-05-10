@@ -4,7 +4,7 @@
 #include "SoyVector.h"
 
 //	windows macros!
-#if defined(PLATFORM_WINDOWS)
+#if defined(TARGET_WINDOWS)
 	#undef Yield
 	#undef GetComputerName
 #endif

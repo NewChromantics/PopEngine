@@ -14,10 +14,12 @@
 
 #elif defined(JSAPI_JSCORE)
 	//	gr: we're binding them ourselves
-	#if defined(PLATFORM_WINDOWS)
-	#include "JsCoreDll.h"
+	#if defined(TARGET_WINDOWS)
+		#include "JsCoreDll.h"
+	#elif defined(TARGET_LINUX)
+		#include <JavaScriptCore/JavaScript.h>
 	#else
-	#include <JavaScriptCore/JavaScriptCore.h>
+		#include <JavaScriptCore/JavaScriptCore.h>
 	#endif
 #else
 
