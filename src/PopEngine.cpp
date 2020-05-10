@@ -11,6 +11,7 @@ namespace Platform
 	void		Loop(bool Blocking,std::function<void()> OnQuit);
 }
 
+//	need a global to stop auto destruction
 #if !defined(TARGET_WINDOWS)
 std::shared_ptr<Bind::TInstance> pInstance;
 #endif
@@ -39,19 +40,29 @@ TPopAppError::Type PopMain()
 	//	in case the datapath is a filename, strip back to dir
 	DataPath = Platform::GetDirectoryFromFilename(DataPath,true);
 	
-	bool Running = true;
 	
 #if defined(TARGET_WINDOWS)
+	//	on windows, we pump the win32 thread
+	//	gr: do we NEED to do that on the main thread? I believe every window
+	//		now has it's own message queue/thread so this one will never get a 
+	//		message aside from PostQuitMessage()
 	std::shared_ptr<Bind::TInstance> pInstance;
+	bool Running = true;
+#elif defined(TARGET_LINUX)
+	//	on linux, the main thread has nothing to do
+	std::shared_ptr<Bind::TInstance> pInstance;
+	Soy::TSemaphore RunningLock;
 #endif
 	
 	auto OnShutdown = [&](int32_t ExitCode)
-	{
-		Running = false;
-		
+	{		
 	#if defined(TARGET_WINDOWS)
-		//	make sure WM_QUIT comes up
+		Running = false;
+		//	make sure WM_QUIT comes up by waking the message loop
 		PostQuitMessage(ExitCode);
+	#elif defined(TARGET_LINUX)
+		//	todo: save exit code!
+		RunningLock.OnCompleted();
 	#endif
 	};
 
@@ -81,6 +92,9 @@ TPopAppError::Type PopMain()
 			if ( !Running )
 				pInstance.reset();
 		}
+	#elif defined(TARGET_LINUX)
+		//	wait for shutdown
+		RunningLock.Wait();
 	#endif
 	}
 	

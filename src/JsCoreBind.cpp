@@ -548,7 +548,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 {
 	mRootDirectory = RootDirectory;
 	
-	auto CreateVirtualMachine = [this,ScriptFilename,RootDirectory]()
+	auto CreateVirtualMachine = [this,ScriptFilename]()
 	{
 		#if defined(TARGET_OSX)
 		{
@@ -579,7 +579,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		try
 		{
 			//	create a context
-			auto Context = CreateContext(RootDirectory);
+			auto Context = CreateContext(mRootDirectory);
 			
 #if !defined(TARGET_LINUX)
 			ApiPop::Bind( *Context );
