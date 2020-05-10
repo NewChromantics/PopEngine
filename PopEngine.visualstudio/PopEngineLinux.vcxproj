@@ -94,6 +94,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyString.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
@@ -101,6 +102,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp" />
     <ClCompile Include="..\src\TBind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
@@ -128,6 +130,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyAssert.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyDebug.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyScope.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyString.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyThread.h">

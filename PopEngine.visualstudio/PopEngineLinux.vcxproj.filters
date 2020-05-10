@@ -40,6 +40,12 @@
     <ClCompile Include="..\src\SoyLib\src\SoyString.cpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -114,6 +120,9 @@
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\scope_ptr.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
   </ItemGroup>
