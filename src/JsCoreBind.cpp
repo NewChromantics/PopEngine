@@ -3,8 +3,8 @@
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
 
-#if !defined(TARGET_LINUX)
 #include "TApiCommon.h"
+#if !defined(TARGET_LINUX)
 #include "TApiEngine.h"
 #include "TApiOpengl.h"
 #include "TApiMedia.h"
@@ -581,8 +581,8 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			//	create a context
 			auto Context = CreateContext(mRootDirectory);
 			
+			ApiPop::Bind(*Context);
 #if !defined(TARGET_LINUX)
-			ApiPop::Bind( *Context );
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
 			ApiMedia::Bind( *Context );

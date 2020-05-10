@@ -46,6 +46,21 @@
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiCommon.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEngine.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -123,6 +138,27 @@
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiCommon.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEngine.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyEnum.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyVector.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyImage.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyStream.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
   </ItemGroup>

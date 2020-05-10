@@ -50,18 +50,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>D:\PopEngine\src;$(IncludePath)</IncludePath>
     <LibraryPath>/usr/lib/aarch64-linux-gnu/</LibraryPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <IncludePath>D:\PopEngine\src;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>D:\PopEngine\src;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <IncludePath>D:\PopEngine\src;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link />
     <RemotePostBuildEvent>
@@ -94,10 +87,20 @@
     <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyString.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp" />
+    <ClCompile Include="..\src\TApiCommon.cpp" />
+    <ClCompile Include="..\src\TApiEngine.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\TBind.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -113,14 +116,26 @@
     <ClInclude Include="..\src\SoyLib\src\SoyArray.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyAssert.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyDebug.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyEnum.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyImage.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyScope.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyStream.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyString.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyThread.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTime.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTypes.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTypes_Linux.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyVector.h" />
+    <ClInclude Include="..\src\TApiCommon.h" />
+    <ClInclude Include="..\src\TApiEngine.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\TBind.h" />
   </ItemGroup>
   <ItemGroup>

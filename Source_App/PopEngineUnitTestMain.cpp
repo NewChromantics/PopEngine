@@ -1,5 +1,5 @@
 #include <iostream>
-#include "PopEngine.h"
+#include "../src/PopEngine.h"	//	temp fix for linux
 #include <string>
 
 
