@@ -204,13 +204,20 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 
 void PopH264::LoadDll()
 {
-	//	on OSX, if the framework is in resources, it should auto resolve symbols
-#if defined(TARGET_WINDOWS)
-	//	current bodge
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
 	if (Dll)
 		return;
+
+	//	on OSX, if the framework is in resources, it should auto resolve symbols
+#if defined(TARGET_WINDOWS)
+	//	current bodge
 	const char* Filename = "PopH264.dll";
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+#endif
+	
+#if defined(TARGET_OSX)
+	//	current bodge
+	const char* Filename = "/Volumes/Code/Panopoly3/PopH264_Osx.framework/Versions/A/PopH264_Osx";
 	Dll.reset(new Soy::TRuntimeLibrary(Filename));
 #endif
 }
