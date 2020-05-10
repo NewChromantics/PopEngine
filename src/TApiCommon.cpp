@@ -597,9 +597,13 @@ void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 
 void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
+	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
+
 	//	write as a string if not a specific binary array
 	if ( !Params.IsArgumentArray(1) )
 	{
+		if ( Append )
+			throw Soy::AssertException("Currently cannot append file with string");
 		WriteStringToFile(Params);
 		return;
 	}
@@ -611,12 +615,8 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 	Array<uint8_t> Contents;
 	Params.GetArgumentArray( 1, GetArrayBridge(Contents) );
 
-	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
-	if ( Append )
-		throw Soy::AssertException("Currently not supporting binary append in WriteToFile()");
-	
-	auto ContentsChar = GetArrayBridge(Contents).GetSubArray<char>(0,Contents.GetSize());
-	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename );
+	auto ContentsChar = GetArrayBridge(Contents);
+	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename, Append );
 }
 
 
