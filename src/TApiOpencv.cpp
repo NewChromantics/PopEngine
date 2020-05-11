@@ -773,11 +773,11 @@ void ApiOpencv::TestDepthToYuv8_88_Opencv(Bind::TCallback &Params)
 
 	TestDepthToYuv844_Opencv(Depth16, Width, Height, LumaPlane, ChromaUvPlane, DepthMin, DepthMax, ChromaRanges);
 
-	SoyPixelsRemote LumaPlanePixels(LumaPlane.data, LumaPlane.cols, LumaPlane.rows, LumaPlane.total(), SoyPixelsFormat::Luma_Ntsc);
-	SoyPixelsRemote ChromaUvPlanePixels(ChromaUvPlane.data, ChromaUvPlane.cols / 2, ChromaUvPlane.rows, ChromaUvPlane.total(), SoyPixelsFormat::ChromaUV_44);
+	SoyPixelsRemote LumaPlanePixels(LumaPlane.data, LumaPlane.cols, LumaPlane.rows, LumaPlane.total(), SoyPixelsFormat::Luma);
+	SoyPixelsRemote ChromaUvPlanePixels(ChromaUvPlane.data, ChromaUvPlane.cols / 2, ChromaUvPlane.rows, ChromaUvPlane.total(), SoyPixelsFormat::ChromaUV_88);
 
 	//	merge back to Yuv8_88
-	SoyPixels Yuv8_88Pixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_88_Full));
+	SoyPixels Yuv8_88Pixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_88));
 	BufferArray<std::shared_ptr<SoyPixelsImpl>, 2> Planes;
 	Yuv8_88Pixels.SplitPlanes(GetArrayBridge(Planes));
 	Planes[0]->Copy(LumaPlanePixels);
@@ -810,7 +810,7 @@ void ApiOpencv::TestDepthToYuv8_88(Bind::TCallback &Params)
 	auto Width = DepthPixels.GetWidth();
 	auto Height = DepthPixels.GetHeight();
 
-	std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_88_Full)) );
+	std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_88)) );
 	auto& YuvPixels = *pYuvPixels;
 	BufferArray<std::shared_ptr<SoyPixelsImpl>, 2> Planes;
 	YuvPixels.SplitPlanes(GetArrayBridge(Planes));
@@ -881,7 +881,7 @@ void ApiOpencv::TestDepthToYuv8_8_8(Bind::TCallback &Params)
 	auto Width = DepthPixels.GetWidth();
 	auto Height = DepthPixels.GetHeight();
 
-	std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels(SoyPixelsMeta( Width, Height, SoyPixelsFormat::Yuv_8_8_8_Full)) );
+	std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels(SoyPixelsMeta( Width, Height, SoyPixelsFormat::Yuv_8_8_8)) );
 	auto& YuvPixels = *pYuvPixels;
 	BufferArray<std::shared_ptr<SoyPixelsImpl>, 3> Planes;
 	YuvPixels.SplitPlanes(GetArrayBridge(Planes));

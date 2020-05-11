@@ -10,6 +10,7 @@
 #include "SoyLib/src/HeapArray.hpp"
 
 #include <IOKit/hid/IOHIDManager.h>
+#include "SoyVector.h"
 
 
 namespace Soy
