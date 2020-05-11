@@ -204,13 +204,20 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 
 void PopH264::LoadDll()
 {
-	//	on OSX, if the framework is in resources, it should auto resolve symbols
-#if defined(TARGET_WINDOWS)
-	//	current bodge
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
 	if (Dll)
 		return;
+
+	//	on OSX, if the framework is in resources, it should auto resolve symbols
+#if defined(TARGET_WINDOWS)
+	//	current bodge
 	const char* Filename = "PopH264.dll";
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+#endif
+	
+#if defined(TARGET_OSX)
+	//	current bodge
+	const char* Filename = "/Volumes/Code/Panopoly3/PopH264_Osx.framework/Versions/A/PopH264_Osx";
 	Dll.reset(new Soy::TRuntimeLibrary(Filename));
 #endif
 }
@@ -329,6 +336,7 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 		//	gr: ideally this is on its own thread so as not to block JS or the decoder
 		//	defer this until flush so we can grab latest and not stall decoder's decode thread
 		//	gr: todo: pop all
+		try
 		{
 			Soy::TScopeTimerPrint Timer2("TAvcDecoderWrapper::FlushPendingFrames::pop", 5);
 			auto Frame = mDecoder->PopLastFrame(mSplitPlanes,mOnlyLatest);
@@ -337,6 +345,10 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 				mFrames.PushBack(Frame);
 				mErrors.Clear();
 			}
+		}
+		catch(TNoFrameException& e)
+		{
+			//	supress this error
 		}
 		
 		//	pop frames before errors
@@ -674,7 +686,7 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 	auto Flush = [this](Bind::TLocalContext& Context) mutable
 	{
 		//	gr: this flush is expensive because of the work done AFTERwards (encoding!)
-		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 5);
+		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 60);
 		
 		PopCameraDevice::TFrame PoppedFrame;
 		{

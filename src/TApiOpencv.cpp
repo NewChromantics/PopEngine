@@ -27,6 +27,7 @@ namespace ApiOpencv
 	void	Undistort(Bind::TCallback& Params);
 	
 	//	testing for ER conversion
+	void	TestDepthToYuv8_88_Opencv(Bind::TCallback& Params);
 	void	TestDepthToYuv8_88(Bind::TCallback& Params);
 	void	TestDepthToYuv8_8_8(Bind::TCallback& Params);
 	
@@ -751,8 +752,9 @@ void TestDepthToYuv844_Opencv(uint16_t* Depth16,int Width,int Height,cv::Mat& Lu
 }
 
 
-void ApiOpencv::TestDepthToYuv8_88(Bind::TCallback &Params)
+void ApiOpencv::TestDepthToYuv8_88_Opencv(Bind::TCallback &Params)
 {
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,5);
 	ApiOpencv::LoadDll();
 
 	//	pull out the input depth image
@@ -763,19 +765,19 @@ void ApiOpencv::TestDepthToYuv8_88(Bind::TCallback &Params)
 	auto ChromaRanges = Params.GetArgumentInt(3);
 
 	uint16_t* Depth16 = reinterpret_cast<uint16_t*>(DepthPixels.GetPixelsArray().GetArray());
-	auto w = DepthPixels.GetWidth();
-	auto h = DepthPixels.GetHeight();
+	auto Width = DepthPixels.GetWidth();
+	auto Height = DepthPixels.GetHeight();
 
 	cv::Mat LumaPlane;
 	cv::Mat ChromaUvPlane;
 
-	TestDepthToYuv844_Opencv(Depth16, w, h, LumaPlane, ChromaUvPlane, DepthMin, DepthMax, ChromaRanges);
+	TestDepthToYuv844_Opencv(Depth16, Width, Height, LumaPlane, ChromaUvPlane, DepthMin, DepthMax, ChromaRanges);
 
 	SoyPixelsRemote LumaPlanePixels(LumaPlane.data, LumaPlane.cols, LumaPlane.rows, LumaPlane.total(), SoyPixelsFormat::Luma_Ntsc);
 	SoyPixelsRemote ChromaUvPlanePixels(ChromaUvPlane.data, ChromaUvPlane.cols / 2, ChromaUvPlane.rows, ChromaUvPlane.total(), SoyPixelsFormat::ChromaUV_44);
 
 	//	merge back to Yuv8_88
-	SoyPixels Yuv8_88Pixels(SoyPixelsMeta(w, h, SoyPixelsFormat::Yuv_8_88_Full));
+	SoyPixels Yuv8_88Pixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_88_Full));
 	BufferArray<std::shared_ptr<SoyPixelsImpl>, 2> Planes;
 	Yuv8_88Pixels.SplitPlanes(GetArrayBridge(Planes));
 	Planes[0]->Copy(LumaPlanePixels);
@@ -791,8 +793,81 @@ void ApiOpencv::TestDepthToYuv8_88(Bind::TCallback &Params)
 	Params.Return(ImageObject);
 }
 
+void ApiOpencv::TestDepthToYuv8_88(Bind::TCallback &Params)
+{
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,20);
+	ApiOpencv::LoadDll();
+	
+	//	pull out the input depth image
+	auto& DepthImage = Params.GetArgumentPointer<TImageWrapper>(0);
+	auto& DepthPixels = DepthImage.GetPixels();
+	EncodeParams_t EncodeParams;
+	EncodeParams.DepthMin = Params.GetArgumentInt(1);
+	EncodeParams.DepthMax = Params.GetArgumentInt(2);
+	EncodeParams.ChromaRangeCount = Params.GetArgumentInt(3);
+
+	uint16_t* Depth16 = reinterpret_cast<uint16_t*>(DepthPixels.GetPixelsArray().GetArray());
+	auto Width = DepthPixels.GetWidth();
+	auto Height = DepthPixels.GetHeight();
+
+	std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_88_Full)) );
+	auto& YuvPixels = *pYuvPixels;
+	BufferArray<std::shared_ptr<SoyPixelsImpl>, 2> Planes;
+	YuvPixels.SplitPlanes(GetArrayBridge(Planes));
+
+	auto& LumaPlane = *Planes[0];
+	auto& ChromaUVPlane = *Planes[1];
+	
+	struct Meta_t
+	{
+		uint8_t* LumaPixels;
+		uint8_t* ChromaUvPixels;
+		size_t Width;
+	};
+	Meta_t Meta;
+	Meta.LumaPixels = LumaPlane.GetPixelsArray().GetArray();
+	Meta.ChromaUvPixels = ChromaUVPlane.GetPixelsArray().GetArray();
+	Meta.Width = Width;
+	
+	auto WriteYuv = [](uint32_t x, uint32_t y, uint8_t Luma, uint8_t ChromaU, uint8_t ChromaV, void* pMeta)
+	{
+		auto& Meta = *reinterpret_cast<Meta_t*>(pMeta);
+		auto cx = x / 2;
+		auto cy = y / 2;
+		auto cw = Meta.Width/2;
+		auto i = x + (y*Meta.Width);
+		auto ci = cx + (cy*cw);
+		ci *=2;
+		Meta.LumaPixels[i] = Luma;
+		Meta.ChromaUvPixels[ci+0] = ChromaU;
+		Meta.ChromaUvPixels[ci+1] = ChromaV;
+		//LumaPlane.SetPixel(x, y, 0, Luma);
+		//ChromaUVPlane.SetPixel(cx, cy, 0, ChromaU);
+		//ChromaUVPlane.SetPixel(cx, cy, 1, ChromaV);
+	};
+	
+	auto OnErrorCAPI = [](const char* Error,void* This)
+	{
+		//	todo throw exception, but needs a more complicated This for the call
+		std::Debug << "Depth16ToYuv error; " << Error << std::endl;
+	};
+
+	{
+		//Soy::TScopeTimerPrint Timer("Depth16ToYuv",5);
+		Depth16ToYuv(Depth16, Width, Height, EncodeParams, WriteYuv, OnErrorCAPI, &Meta );
+	}
+	//	return an image
+	auto& Context = Params.mContext;
+	auto ImageObject = Context.CreateObjectInstance(Params.mLocalContext, TImageWrapper::GetTypeName());
+	auto& Image = ImageObject.This<TImageWrapper>();
+	Image.SetPixels(pYuvPixels);
+	Params.Return(ImageObject);
+}
+
+
 void ApiOpencv::TestDepthToYuv8_8_8(Bind::TCallback &Params)
 {
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,5);
 	//	pull out the input depth image
 	auto& DepthImage = Params.GetArgumentPointer<TImageWrapper>(0);
 	auto& DepthPixels = DepthImage.GetPixels();
@@ -806,8 +881,8 @@ void ApiOpencv::TestDepthToYuv8_8_8(Bind::TCallback &Params)
 	auto Width = DepthPixels.GetWidth();
 	auto Height = DepthPixels.GetHeight();
 
-	//	merge back to Yuv844
-	SoyPixels YuvPixels(SoyPixelsMeta(Width, Height, SoyPixelsFormat::Yuv_8_8_8_Full));
+	std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels(SoyPixelsMeta( Width, Height, SoyPixelsFormat::Yuv_8_8_8_Full)) );
+	auto& YuvPixels = *pYuvPixels;
 	BufferArray<std::shared_ptr<SoyPixelsImpl>, 3> Planes;
 	YuvPixels.SplitPlanes(GetArrayBridge(Planes));
 	auto& LumaPlane = *Planes[0];
@@ -840,7 +915,7 @@ void ApiOpencv::TestDepthToYuv8_8_8(Bind::TCallback &Params)
 	auto& Context = Params.mContext;
 	auto ImageObject = Context.CreateObjectInstance(Params.mLocalContext, TImageWrapper::GetTypeName());
 	auto& Image = ImageObject.This<TImageWrapper>();
-	Image.SetPixels(YuvPixels);
+	Image.SetPixels(pYuvPixels);
 	Params.Return(ImageObject);
 }
 
