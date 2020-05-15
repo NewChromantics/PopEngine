@@ -1,6 +1,7 @@
 #pragma once
 #include "TBind.h"
 #include "Libs/OpenVr/headers/openvr.h"
+#include "SoyVector.h"
 
 class TImageWrapper;
 

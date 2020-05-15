@@ -1,6 +1,5 @@
 #pragma once
 #include "TBind.h"
-#include "SoyOpenglWindow.h"
 
 //#include "TPopServerThread.h"
 #include "SoyRef.h"
@@ -317,3 +316,5 @@ public:
 public:
 	std::shared_ptr<TTcpServer>	mSocket = mObject;
 };
+
+
