@@ -70,6 +70,30 @@
     <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSocket.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWebSocket.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiHttp.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiWebsocket.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -367,6 +391,15 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\stb\stb_image.h">
       <Filter>PopEngine\SoyLib\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSocket.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiHttp.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiWebsocket.h">
+      <Filter>PopEngine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
