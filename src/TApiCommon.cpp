@@ -1725,22 +1725,37 @@ void ApiPop::TFileMonitorWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiPop::TFileMonitorWrapper::Construct(Bind::TCallback& Params)
 {
-	auto Filename = Params.GetArgumentFilename(0);
-
-	mFileMonitor.reset( new Platform::TFileMonitor( Filename ) );
-	mFileMonitor->mOnChanged = std::bind( &TFileMonitorWrapper::OnChanged, this );
+	for (auto i = 0; i < Params.GetArgumentCount(); i++)
+	{
+		auto Filename = Params.GetArgumentString(i);
+		Add(Filename);
+	}
 }
 
-void ApiPop::TFileMonitorWrapper::OnChanged()
+void ApiPop::TFileMonitorWrapper::Add(Bind::TCallback& Params)
 {
-	auto Callback = [this](Bind::TLocalContext& Context)
-	{
-		auto This = this->GetHandle(Context);
-		auto ThisOnChanged = This.GetFunction("OnChanged");
-		JsCore::TCallback Callback(Context);
-		ThisOnChanged.Call( Callback );
-	};
-	this->mContext.Queue( Callback );
+	Construct(Params);
+}
+
+
+void ApiPop::TFileMonitorWrapper::Add(const std::string& Filename)
+{
+	//	make monitor
+	auto FileMonitor = std::make_shared<Platform::TFileMonitor>(Filename);
+	FileMonitor->mOnChanged = [=]() {	this->OnChanged(Filename); };
+	mMonitors.PushBack(FileMonitor);
+}
+
+
+void ApiPop::TFileMonitorWrapper::OnChanged(const std::string& Filename)
+{
+	mChangedFileQueue.Push(Filename);
+}
+
+void ApiPop::TFileMonitorWrapper::WaitForChange(Bind::TCallback& Params)
+{
+	auto Promise = mChangedFileQueue.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
 }
 
 
