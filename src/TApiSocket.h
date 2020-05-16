@@ -1,10 +1,5 @@
 #pragma once
 #include "TBind.h"
-<<<<<<< HEAD
-=======
-
-//#include "TPopServerThread.h"
->>>>>>> WindowsProject
 #include "SoyRef.h"
 #include "SoyStream.h"
 #include "SoySocketStream.h"
