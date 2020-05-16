@@ -4,12 +4,12 @@
 #include "SoyFilesystem.h"
 
 #include "TApiCommon.h"
+#include "TApiSocket.h"
 #if !defined(TARGET_LINUX)
 #include "TApiEngine.h"
 #include "TApiOpengl.h"
 #include "TApiMedia.h"
 #include "TApiWebsocket.h"
-#include "TApiSocket.h"
 #include "TApiHttp.h"
 #include "TApiGui.h"
 #include "TApiOpencv.h"
@@ -582,13 +582,13 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			auto Context = CreateContext(mRootDirectory);
 			
 			ApiPop::Bind(*Context);
+			ApiSocket::Bind(*Context);
 #if !defined(TARGET_LINUX)
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
 			ApiMedia::Bind( *Context );
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
-			ApiSocket::Bind( *Context );
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)

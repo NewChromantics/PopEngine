@@ -1,5 +1,10 @@
 #pragma once
 #include "TBind.h"
+<<<<<<< HEAD
+=======
+
+//#include "TPopServerThread.h"
+>>>>>>> WindowsProject
 #include "SoyRef.h"
 #include "SoyStream.h"
 #include "SoySocketStream.h"
@@ -314,3 +319,5 @@ public:
 public:
 	std::shared_ptr<TTcpServer>	mSocket = mObject;
 };
+
+

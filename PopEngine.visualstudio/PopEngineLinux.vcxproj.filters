@@ -61,6 +61,39 @@
     <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSocket.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWebSocket.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiHttp.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiWebsocket.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -74,6 +107,12 @@
     </Filter>
     <Filter Include="UnitTest">
       <UniqueIdentifier>{faafa76b-42c3-40b4-8afc-b06556466985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib\stb">
+      <UniqueIdentifier>{5bf8bdd2-c479-4539-bf3a-14c6e60a8457}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib\miniz">
+      <UniqueIdentifier>{6f6098da-d53d-491e-9190-1a81a28515ca}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -89,16 +128,64 @@
     <ClInclude Include="..\src\TBind.h">
       <Filter>PopEngine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h">
+    <ClInclude Include="..\src\TApiCommon.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEngine.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Android.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_CoreFoundation.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyTypes_Linux.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Lumin.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Ps4.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Windows.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyUniform.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyUnity.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyVector.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyVideoDevice.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWave.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWindow.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\Array.hpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\AvfPixelBuffer.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\chartype.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\configure.hpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp">
@@ -107,59 +194,212 @@
     <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\ofCommandLineArgs.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\ofLine.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\ofPlane.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\ofShape.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\RemoteArray.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\scope_ptr.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SortArray.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyApp.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyArray.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyAssert.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyAutoReleasePtr.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyAvf.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyBase64.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyCFString.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyCuda.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyDebug.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h">
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyThread.h">
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectx9.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\RemoteArray.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyTime.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyScope.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyString.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\scope_ptr.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiCommon.h">
-      <Filter>PopEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiEngine.h">
-      <Filter>PopEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h">
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectxCompiler.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyEnum.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyVector.h">
+    <ClInclude Include="..\src\SoyLib\src\SoyExportManager.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyGnm.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyH264.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyHttp.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyHttpConnection.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyHttpServer.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyImage.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyJava.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyJson.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMath.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMedia.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMediaFormat.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMediaFoundation.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMemFile.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMetal.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMulticast.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenCl.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPng.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPool.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRef.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRender.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRingArray.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyScope.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyShader.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyShellExecute.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocket.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySrt.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyState.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyState.hpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyStream.h">
       <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyStreamBuffer.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyString.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTime.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h">
+      <Filter>PopEngine\SoyLib\miniz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\stb\stb_image.h">
+      <Filter>PopEngine\SoyLib\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSocket.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiHttp.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiWebsocket.h">
+      <Filter>PopEngine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

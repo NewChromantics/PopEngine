@@ -160,7 +160,7 @@ protected:
 
 
 
-class ApiPop::TFileMonitorWrapper : public Bind::TObjectWrapper<BindType::FileMonitor,Platform::TFileMonitor>
+class ApiPop::TFileMonitorWrapper : public Bind::TObjectWrapper<BindType::FileMonitor,int>
 {
 public:
 	TFileMonitorWrapper(Bind::TContext& Context) :
@@ -171,10 +171,15 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
-	void			OnChanged();
+	void			Add(Bind::TCallback& Params);
+	void			Add(const std::string& Filename);
+	void			WaitForChange(Bind::TCallback& Params);
+	void			OnChanged(const std::string& Filename);
 	
 public:
-	std::shared_ptr<Platform::TFileMonitor>&	mFileMonitor = mObject;
+	Bind::TPromiseQueueObjects<std::string>		mChangedFileQueue;
+	//std::shared_ptr<Platform::TFileMonitor>&	mFileMonitor = mObject;
+	Array<std::shared_ptr<Platform::TFileMonitor>>	mMonitors;
 };
 
 

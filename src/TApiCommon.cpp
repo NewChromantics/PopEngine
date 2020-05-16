@@ -3,13 +3,15 @@
 #include "SoyImage.h"
 #include "SoyFilesystem.h"
 #include "SoyStream.h"
+#if defined(ENABLE_OPENGL)
 #include "SoyOpengl.h"
 #include "SoyOpenglContext.h"
-#include "SoyMedia.h"
+#endif
 #include "TBind.h"
 #include "SoyWindow.h"
 #include "SoyPng.h"
 #include "SoyShellExecute.h"
+#include "SoyMedia.h"
 
 
 namespace ApiPop
@@ -410,9 +412,10 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 		auto& DebugHeap = Soy::GetDebugStreamHeap();
 		Object.SetInt( "DebugStreamHeapSizeBytes", DebugHeap.GetAllocatedBytes() );
 
+#if defined(ENABLE_OPENGL)
 		auto OpenglTextureCount = Opengl::TContext::GetTextureAllocationCount();
 		Object.SetInt( "OpenglTextureCount", OpenglTextureCount );
-
+#endif
 	}
 	catch (std::exception& e)
 	{
@@ -483,6 +486,8 @@ void ApiPop::GetPlatform(Bind::TCallback& Params)
 	Params.Return("Osx");
 #elif defined(TARGET_IOS)
 	Params.Return("Ios");
+#elif defined(TARGET_LINUX)
+	Params.Return("Linux");
 #else
 #error Undefined platform
 #endif
@@ -1296,7 +1301,8 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 	
 	if ( !mPixels && !mPixelBuffer )
 		throw Soy::AssertException("Trying to get opengl texture when we have no pixels/pixelbuffer");
-	
+
+#if defined(ENABLE_OPENGL)
 	auto* pContext = &Context;
 	auto AllocAndOrUpload = [=]
 	{
@@ -1373,6 +1379,9 @@ void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> O
 	{
 		Context.PushJob( AllocAndOrUpload );
 	}
+#else
+	throw Soy::AssertException("Opengl not enabled in build");
+#endif
 }
 
 Opengl::TTexture& TImageWrapper::GetTexture()
@@ -1406,7 +1415,11 @@ SoyPixelsMeta TImageWrapper::GetMeta()
 	//	opengl may have been released!
 	if ( mOpenglTextureVersion == LatestVersion && mOpenglTexture )
 	{
+#if defined(ENABLE_OPENGL)
 		return mOpenglTexture->GetMeta();
+#else
+		throw Soy::AssertException("opengl not enabled in build");
+#endif
 	}
 	
 	if ( mPixelsVersion == LatestVersion && mPixels )
@@ -1503,17 +1516,22 @@ size_t TImageWrapper::GetLatestVersion() const
 
 void TImageWrapper::SetOpenglTexture(const Opengl::TAsset& Texture)
 {
+#if defined(ENABLE_OPENGL)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
 	//	todo: delete old texture
 	mOpenglTexture.reset(new Opengl::TTexture(Texture.mName, SoyPixelsMeta(), GL_TEXTURE_2D));
 	auto LatestVersion = GetLatestVersion();
 	mOpenglTextureVersion = LatestVersion + 1;
+#else
+	throw Soy::AssertException("Opengl not supported");
+#endif
 }
 
 
 void TImageWrapper::OnOpenglTextureChanged(Opengl::TContext& Context)
 {
+#if defined(ENABLE_OPENGL)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
 	if ( !mOpenglTexture )
@@ -1525,6 +1543,9 @@ void TImageWrapper::OnOpenglTextureChanged(Opengl::TContext& Context)
 	auto TextureSlot = Context.mCurrentTextureSlot++;
 	mOpenglTexture->Bind(TextureSlot);
 	mOpenglTexture->RefreshMeta();
+#else
+	throw Soy::AssertException("Opengl not enabled");
+#endif
 }
 
 
@@ -1563,10 +1584,11 @@ void TImageWrapper::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
 
 void TImageWrapper::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 {
+#if defined(ENABLE_OPENGL)
 	//	gr: this needs to be in the opengl thread!
 	//Context.IsInThread
-	
-	if ( !mOpenglTexture )
+
+	if (!mOpenglTexture)
 		throw Soy::AssertException("Trying to ReadOpenglPixels with no texture");
 
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
@@ -1574,35 +1596,42 @@ void TImageWrapper::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 	auto& Heap = GetContext().GetImageHeap();
 
 	//	warning in case we haven't actually updated
-	if ( mPixelsVersion >= mOpenglTextureVersion )
+	if (mPixelsVersion >= mOpenglTextureVersion)
 		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
 	//	if we have no pixels, alloc
-	if ( mPixels == nullptr )
-		mPixels.reset( new SoyPixels(Heap) );
+	if (mPixels == nullptr)
+		mPixels.reset(new SoyPixels(Heap));
 
 	auto Flip = false;
-	
+
 	mPixels->GetMeta().DumbSetFormat(Format);
-	mPixels->GetPixelsArray().SetSize( mPixels->GetMeta().GetDataSize() );
-	
-	mOpenglTexture->Read( *mPixels, Format, Flip );
+	mPixels->GetPixelsArray().SetSize(mPixels->GetMeta().GetDataSize());
+
+	mOpenglTexture->Read(*mPixels, Format, Flip);
 	mPixelsVersion = mOpenglTextureVersion;
+#else
+	throw Soy::AssertException("Opengl not enabled");
+#endif
 }
 
 void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
 {
-	Soy::TScopeTimerPrint Timer(__func__,5);
-	if ( GetLatestVersion() != mOpenglTextureVersion )
+#if defined(ENABLE_OPENGL)
+	Soy::TScopeTimerPrint Timer(__func__, 5);
+	if (GetLatestVersion() != mOpenglTextureVersion)
 	{
 		std::stringstream Error;
 		Error << __func__ << " expected opengl (" << mOpenglTextureVersion << ") to be latest version (" << GetLatestVersion() << ")";
 		throw Soy::AssertException(Error.str());
 	}
-	
+
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
 	mOpenglLastPixelReadBuffer = PixelBuffer;
 	mOpenglLastPixelReadBufferVersion = mOpenglTextureVersion;
+#else
+	throw Soy::AssertException("Opengl not enabled");
+#endif
 }
 
 
@@ -1696,22 +1725,37 @@ void ApiPop::TFileMonitorWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiPop::TFileMonitorWrapper::Construct(Bind::TCallback& Params)
 {
-	auto Filename = Params.GetArgumentFilename(0);
-
-	mFileMonitor.reset( new Platform::TFileMonitor( Filename ) );
-	mFileMonitor->mOnChanged = std::bind( &TFileMonitorWrapper::OnChanged, this );
+	for (auto i = 0; i < Params.GetArgumentCount(); i++)
+	{
+		auto Filename = Params.GetArgumentString(i);
+		Add(Filename);
+	}
 }
 
-void ApiPop::TFileMonitorWrapper::OnChanged()
+void ApiPop::TFileMonitorWrapper::Add(Bind::TCallback& Params)
 {
-	auto Callback = [this](Bind::TLocalContext& Context)
-	{
-		auto This = this->GetHandle(Context);
-		auto ThisOnChanged = This.GetFunction("OnChanged");
-		JsCore::TCallback Callback(Context);
-		ThisOnChanged.Call( Callback );
-	};
-	this->mContext.Queue( Callback );
+	Construct(Params);
+}
+
+
+void ApiPop::TFileMonitorWrapper::Add(const std::string& Filename)
+{
+	//	make monitor
+	auto FileMonitor = std::make_shared<Platform::TFileMonitor>(Filename);
+	FileMonitor->mOnChanged = [=]() {	this->OnChanged(Filename); };
+	mMonitors.PushBack(FileMonitor);
+}
+
+
+void ApiPop::TFileMonitorWrapper::OnChanged(const std::string& Filename)
+{
+	mChangedFileQueue.Push(Filename);
+}
+
+void ApiPop::TFileMonitorWrapper::WaitForChange(Bind::TCallback& Params)
+{
+	auto Promise = mChangedFileQueue.AddPromise(Params.mLocalContext);
+	Params.Return(Promise);
 }
 
 
