@@ -140,6 +140,10 @@ class Bind::TPromiseQueueObjects
 public:
 	TPromiseQueueObjects()
 	{
+		mResolveObject = [](...)
+		{
+			std::Debug << __PRETTY_FUNCTION__ << " Resolved (not overloaded)" << std::endl;
+		};
 	}
 	TPromiseQueueObjects(std::function<void(Bind::TPromise&,QUEUETYPE&)> ResolveObject) :
 		mResolveObject	( ResolveObject )

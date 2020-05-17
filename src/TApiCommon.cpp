@@ -127,7 +127,10 @@ namespace ApiPop
 	//	TShellExecute
 	DEFINE_BIND_FUNCTIONNAME(WaitForExit);
 	DEFINE_BIND_FUNCTIONNAME(WaitForOutput);
-
+	
+	//	TFileMonitor
+	DEFINE_BIND_FUNCTIONNAME(Add);
+	DEFINE_BIND_FUNCTIONNAME(WaitForChange);	
 }
 
 
@@ -1721,9 +1724,21 @@ void TAsyncLoopWrapper::Iteration(Bind::TCallback& Params)
 
 void ApiPop::TFileMonitorWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
+	Template.BindFunction<BindFunction::Add>(&TFileMonitorWrapper::Add);
+	Template.BindFunction<BindFunction::WaitForChange>(&TFileMonitorWrapper::WaitForChange);
 }
 
 void ApiPop::TFileMonitorWrapper::Construct(Bind::TCallback& Params)
+{
+	this->mChangedFileQueue.mResolveObject = [this](Bind::TLocalContext& Context,Bind::TPromise& Promise,std::string& Filename)
+	{
+		Promise.Resolve( Context, Filename );
+	};
+	
+	Add(Params);
+}
+
+void ApiPop::TFileMonitorWrapper::Add(Bind::TCallback& Params)
 {
 	for (auto i = 0; i < Params.GetArgumentCount(); i++)
 	{
@@ -1732,17 +1747,12 @@ void ApiPop::TFileMonitorWrapper::Construct(Bind::TCallback& Params)
 	}
 }
 
-void ApiPop::TFileMonitorWrapper::Add(Bind::TCallback& Params)
-{
-	Construct(Params);
-}
-
 
 void ApiPop::TFileMonitorWrapper::Add(const std::string& Filename)
 {
 	//	make monitor
 	auto FileMonitor = std::make_shared<Platform::TFileMonitor>(Filename);
-	FileMonitor->mOnChanged = [=]() {	this->OnChanged(Filename); };
+	FileMonitor->mOnChanged = [=](const std::string& Filename) {	this->OnChanged(Filename); };
 	mMonitors.PushBack(FileMonitor);
 }
 
