@@ -29,11 +29,11 @@ void ApiWebsocket::Bind(Bind::TContext& Context)
 }
 
 
-
 void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 {
 	auto ListenPort = Params.GetArgumentInt(0);
-	
+	auto ListenPort16 = size_cast<uint16_t>(ListenPort);
+
 	auto OnTextMessage = [this](SoyRef Connection,const std::string& Message)
 	{
 		this->OnMessage( Message, Connection);
@@ -44,7 +44,7 @@ void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 		this->OnMessage( Message, Connection);
 	};
 	
-	mSocket.reset( new TWebsocketServer( ListenPort, OnTextMessage, OnBinaryMessage ) );
+	mSocket.reset( new TWebsocketServer( ListenPort16, OnTextMessage, OnBinaryMessage ) );
 }
 
 
@@ -95,6 +95,7 @@ void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 {
 	auto Hostname = Params.GetArgumentString(0);
 	auto Port = Params.GetArgumentInt(1);
+	auto Port16 = size_cast<uint16_t>(Port);
 
 	auto OnTextMessage = [this](SoyRef Connection, const std::string& Message)
 	{
