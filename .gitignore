@@ -52,3 +52,5 @@ PopEngine.visualstudio/packages/
 PopEngine.visualstudio/.vs/PopEngine/v15/
 
 PopEngine.visualstudio/obj/ARM/
+
+PopEngine.visualstudio/bin/
