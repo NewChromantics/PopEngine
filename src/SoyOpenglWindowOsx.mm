@@ -5,6 +5,7 @@
 #include "SoyOpenglWindow.h"
 #include "SoyOpenglView.h"
 #include "PopMain.h"
+#include "magic_enum/include/magic_enum.hpp"
 
 
 namespace Platform
@@ -479,6 +480,7 @@ public:
 	NSImageView*		mControl = nullptr;
 	CGImageRef			mCgImage = nullptr;
 	NSImage*			mNsImage = nullptr;
+	SoyPixels			mPixelsImage;		//	we keep a copy for thread use and CGImage references these bytes
 };
 
 
@@ -1391,35 +1393,101 @@ void Platform::TImageMap::FreeImage()
 	}
 }
 
-void Platform::TImageMap::SetImage(const SoyPixelsImpl& Pixels)
+void GetColourSpace(CGColorSpaceRef& ColourSpace,CGBitmapInfo& Flags,SoyPixelsFormat::Type Format)
 {
-	FreeImage();
+	switch(Format)
+	{
+		case SoyPixelsFormat::Greyscale:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaNone;
+			ColourSpace = CGColorSpaceCreateDeviceGray();
+			return;
+		
+		case SoyPixelsFormat::GreyscaleAlpha:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+			ColourSpace = CGColorSpaceCreateDeviceGray();
+			return;
+		
+		case SoyPixelsFormat::RGB:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaNone;
+			ColourSpace = CGColorSpaceCreateDeviceRGB();
+			return;
+		
+		case SoyPixelsFormat::RGBA:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+			ColourSpace = CGColorSpaceCreateDeviceRGB();
+			return;
+		
+		case SoyPixelsFormat::ARGB:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedFirst;
+			ColourSpace = CGColorSpaceCreateDeviceRGB();
+			return;
+	}
 	
-	auto PixelMeta = Pixels.GetMeta();
-	auto& PixelArray = Pixels.GetPixelsArray();
-	CGDataProviderRef provider = CGDataProviderCreateWithData( nullptr, PixelArray.GetArray(), PixelArray.GetDataSize(), nullptr );
-	size_t bitsPerComponent = 8 * PixelMeta.GetBytesPerChannel();
-	size_t bitsPerPixel = 8 * PixelMeta.GetPixelDataSize();
-	size_t bytesPerRow = PixelMeta.GetRowDataSize();
-	CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-	CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
-	CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+	std::stringstream Error;
+	Error << "Unhandled format(" << magic_enum::enum_name(Format) << ") to convert to CGColour space (options are gray or rgb)";
+	throw Soy::AssertException(Error);
+}
+
+void Platform::TImageMap::SetImage(const SoyPixelsImpl& _Pixels)
+{
+	//	make a copy as we're copying to a thread, and re-using the data for CGDataProviderCreateWithData
+	//	todo: optimise this so we re-use the same buffer and maybe can just refresh the view with new pixels?
+	mPixelsImage.Copy(_Pixels);
 	
-	mCgImage = CGImageCreate( PixelMeta.GetWidth(),
-									PixelMeta.GetHeight(),
-									bitsPerComponent,
-									bitsPerPixel,
-									bytesPerRow,
-									colorSpaceRef,
-									bitmapInfo,
-									provider,   // data provider
-									NULL,       // decode
-									YES,        // should interpolate
-									renderingIntent);
-	
-	mNsImage = [[NSImage alloc] initWithCGImage:mCgImage size:NSMakeSize( PixelMeta.GetWidth(), PixelMeta.GetHeight() )];
-	
-	mControl.image = mNsImage;
+	auto Run = [this]() mutable
+	{
+		if ( !mControl )
+			throw Soy::AssertException("Control hasn't been created yet");
+
+		auto& Pixels = mPixelsImage;
+		FreeImage();
+		
+		auto PixelMeta = Pixels.GetMeta();
+		auto& PixelArray = Pixels.GetPixelsArray();
+		CGDataProviderRef provider = CGDataProviderCreateWithData( nullptr, PixelArray.GetArray(), PixelArray.GetDataSize(), nullptr );
+		size_t bitsPerComponent = 8 * PixelMeta.GetBytesPerChannel();
+		size_t bitsPerPixel = 8 * PixelMeta.GetPixelDataSize();
+		size_t bytesPerRow = PixelMeta.GetRowDataSize();
+		
+		CGBitmapInfo bitmapInfo = 0;
+		CGColorSpaceRef colorSpaceRef = nullptr;
+		GetColourSpace( colorSpaceRef, bitmapInfo, PixelMeta.GetFormat() );
+		CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+		
+		mCgImage = CGImageCreate( PixelMeta.GetWidth(),
+										PixelMeta.GetHeight(),
+										bitsPerComponent,
+										bitsPerPixel,
+										bytesPerRow,
+										colorSpaceRef,
+										bitmapInfo,
+										provider,   // data provider
+										NULL,       // decode
+										YES,        // should interpolate
+										renderingIntent);
+		if ( !mCgImage )
+		{
+			throw Soy::AssertException("Failed to create CGImage");
+		}
+		
+		mNsImage = [[NSImage alloc] initWithCGImage:mCgImage size:NSMakeSize( PixelMeta.GetWidth(), PixelMeta.GetHeight() )];
+		auto ImageValid = [mNsImage isValid];
+		
+		//mControl.frame = NSMakeRect( 0,0,100,100);
+		//mControl.layer.backgroundColor = CGColorCreateGenericRGB(1,0,0,1);
+		//mControl.image = mNsImage;
+		[mControl setImage:mNsImage];
+
+		//	gr: this selector is going missing?? (but succeeds)
+		NSImageView* pControl = mControl;
+		auto ViewIsValid = true;
+		//auto ViewIsValid = [pControl isValid];
+		//ViewIsValid = [pControl isValid];
+		//auto ViewIsValid = [pControl isValid];
+		if ( !ViewIsValid )
+			throw Soy::AssertException("NSViewImage is not valid");
+	};
+	mThread.PushJob( Run );
 }
 
 void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)
