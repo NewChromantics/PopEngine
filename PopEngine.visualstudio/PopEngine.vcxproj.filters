@@ -115,6 +115,9 @@
     <Filter Include="UnitTest\KinectStream\PopDepth16ToYuv">
       <UniqueIdentifier>{4e99bdec-fc5f-4208-8fb1-ba2f401a88a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\Midi">
+      <UniqueIdentifier>{e8f4ec8d-535e-489f-bc8e-3261c442da42}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -849,6 +852,9 @@
     <None Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.wat">
       <Filter>UnitTest\KinectStream\PopDepth16ToYuv</Filter>
     </None>
+    <None Include="..\UnitTest\Midi\bootup.js">
+      <Filter>UnitTest\Midi</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
@@ -1200,9 +1206,6 @@
     <CustomBuild Include="..\src\v8\lib\v8_libplatform.dll">
       <Filter>Libs\v8\Runtime</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll">
-      <Filter>Libs\Openvr</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\src\v8\lib\msvcp140d.dll" />
     <CustomBuild Include="..\src\v8\lib\ucrtbased.dll" />
     <CustomBuild Include="..\src\v8\lib\vccorlib140d.dll" />
@@ -1241,5 +1244,6 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\src\PopEngine.h" />
+    <CopyFileToFolders Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll" />
   </ItemGroup>
 </Project>

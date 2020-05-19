@@ -511,6 +511,7 @@
     <None Include="..\UnitTest\LeapMotion\bootup.js" />
     <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl" />
     <None Include="..\UnitTest\LeapMotion\Cube.vert.glsl" />
+    <None Include="..\UnitTest\Midi\bootup.js" />
     <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl" />
     <None Include="..\UnitTest\OpencvArucoMarker\bootup.js" />
     <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
