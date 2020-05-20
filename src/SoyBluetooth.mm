@@ -15,11 +15,8 @@ namespace Platform
 		Array.PushBackArray( DataArray );
 	}
 	
-	NSData* ArrayToNSData(const ArrayBridge<uint8>&& Array)
-	{
-		void* Data = (void*)Array.GetArray();
-		return [[NSData alloc] initWithBytesNoCopy:Data length:Array.GetDataSize() freeWhenDone:false];
-	}
+	NSData* ArrayToNSData(const ArrayBridge<uint8>& Array);
+	NSData* ArrayToNSData(const ArrayBridge<uint8>&& Array)	{	return ArrayToNSData(Array);	};
 }
 
 namespace Bluetooth
@@ -27,6 +24,13 @@ namespace Bluetooth
 	TDeviceMeta		GetMeta(CBPeripheral* Device);
 	TState::Type	GetState(CBPeripheralState CbState);
 }
+
+NSData* Platform::ArrayToNSData(const ArrayBridge<uint8>& Array)
+{
+	void* Data = (void*)Array.GetArray();
+	return [[NSData alloc] initWithBytesNoCopy:Data length:Array.GetDataSize() freeWhenDone:false];
+}
+
 
 //	good example reference
 //	https://github.com/DFRobot/BlunoBasicDemo/blob/master/IOS/BlunoBasicDemo/BlunoTest/Bluno/DFBlunoManager.m
