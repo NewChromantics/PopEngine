@@ -1355,6 +1355,9 @@ Platform::TImageMap::TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy:
 		mControl = [[NSImageView alloc] initWithFrame:ChildRect];
 		[mControl retain];
 		
+		//	image map stretches
+		[mControl setImageScaling:NSImageScaleAxesIndependently];
+
 		//	setup callback
 		//mResponder->mCallback = [this]()	{	this->OnChanged(true);	};
 		mControl.target = mResponder;
