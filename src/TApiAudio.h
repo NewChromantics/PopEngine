@@ -31,7 +31,6 @@ public:
 	static void			CreateTemplate(Bind::TTemplate& Template);
 
 	virtual void 		Construct(Bind::TCallback& Params) override;
-	void				Seek(Bind::TCallback& Params);
 	void				Play(Bind::TCallback& Params);
 
 protected:

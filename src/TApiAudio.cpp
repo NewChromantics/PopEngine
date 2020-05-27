@@ -7,7 +7,6 @@ namespace ApiAudio
 	const char Namespace[] = "Pop.Audio";
 	DEFINE_BIND_TYPENAME(Sound);
 	
-	DEFINE_BIND_FUNCTIONNAME(Seek);
 	DEFINE_BIND_FUNCTIONNAME(Play);
 }
 
@@ -30,17 +29,11 @@ void ApiAudio::TSoundWrapper::Construct(Bind::TCallback& Params)
 
 void ApiAudio::TSoundWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::Seek>( &TSoundWrapper::Seek );
 	Template.BindFunction<BindFunction::Play>( &TSoundWrapper::Play );
-}
-
-void ApiAudio::TSoundWrapper::Seek(Bind::TCallback& Params)
-{
-	auto TimeMs = Params.GetArgumentInt(0);
-	mSound->Seek(TimeMs);
 }
 
 void ApiAudio::TSoundWrapper::Play(Bind::TCallback& Params)
 {
-	mSound->Play();
+	auto TimeMs = Params.GetArgumentInt(0);
+	mSound->Play(TimeMs);
 }

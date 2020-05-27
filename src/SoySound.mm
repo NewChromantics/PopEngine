@@ -31,9 +31,13 @@ Platform::TSound::~TSound()
 	mSound.reset();
 }
 
-void Platform::TSound::Play()
+void Platform::TSound::Play(uint64_t TimeMs)
 {
 	auto* Sound = mSound->mSound.mObject;
+
+	NSTimeInterval TimeSecs = TimeMs / 1000.0;
+	[Sound setCurrentTime:TimeSecs];
+
 	auto Success = [Sound play];
 	
 	//	returns false if already playing or error
@@ -42,13 +46,5 @@ void Platform::TSound::Play()
 		if ( ![Sound isPlaying] )
 			throw Soy::AssertException("Error playing sound");
 	}
-}
-
-
-void Platform::TSound::Seek(uint64_t TimeMs)
-{
-	auto* Sound = mSound->mSound.mObject;
-	NSTimeInterval TimeSecs = TimeMs / 1000.0;
-	[Sound setCurrentTime:TimeSecs];
 }
 
