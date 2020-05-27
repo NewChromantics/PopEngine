@@ -31,3 +31,6 @@
 [submodule "src/PopDepthToYuv"]
 	path = src/PopDepthToYuv
 	url = https://github.com/SoylentGraham/PopDepthToYuv.git
+[submodule "src/Android/v8"]
+	path = src/Android/v8
+	url = https://github.com/v8/v8.git
