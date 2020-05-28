@@ -10,6 +10,9 @@
 
 #include <commctrl.h>
 #pragma comment(lib, "Comctl32.lib")
+#include <shellapi.h>	//	drag & drop
+#pragma comment(lib, "Shell32.lib")
+
 
 extern "C"
 {
@@ -32,6 +35,8 @@ namespace Platform
 
 	class TWin32Thread;	//	A window(control?) is associated with a thread so must pump messages in the same thread https://docs.microsoft.com/en-us/windows/desktop/procthread/creating-windows-in-threads
 
+	//	COM interfaces
+	class TDragAndDropHandler;
 
 	namespace Private
 	{
@@ -146,9 +151,43 @@ public:
 	DWORD	mThreadId = 0;
 };
 
+/*
+//	abstracted for now in case we don't want it on every object
+class Platform::TDragAndDropHandler : public IDropTarget
+{
+public:
+	std::function<bool(HDROP)>	mOnTryDragDrop;
+	std::function<bool(HDROP)>	mOnDragDrop;
+
+	void	HandleDragDrop(IDataObject *pDataObj, std::function<bool(HDROP)>& CallBack);
+
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
+				REFIID riid,
+	_COM_Outptr_ void __RPC_FAR *__RPC_FAR *ppvObject) override;
 
 
-class Platform::TControl
+	virtual HRESULT STDMETHODCALLTYPE DragEnter(
+		__RPC__in_opt IDataObject *pDataObj,
+		DWORD grfKeyState,
+		POINTL pt,
+		 __RPC__inout DWORD *pdwEffect) override;
+
+	virtual HRESULT STDMETHODCALLTYPE DragOver(
+		DWORD grfKeyState,
+		POINTL pt,
+		 __RPC__inout DWORD *pdwEffect) override;
+
+	virtual HRESULT STDMETHODCALLTYPE DragLeave(void) override;
+
+	virtual HRESULT STDMETHODCALLTYPE Drop(
+		 __RPC__in_opt IDataObject *pDataObj,
+		DWORD grfKeyState,
+		POINTL pt,
+		 __RPC__inout DWORD *pdwEffect) override;
+};
+*/
+
+class Platform::TControl// : public Platform::TDragAndDropHandler
 {
 public:
 	TControl(const std::string& Name, TControlClass& Class, TControl* Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect, TWin32Thread& Thread);
@@ -157,6 +196,7 @@ public:
 
 	//	trigger actions
 	void					Repaint();
+	void					EnableDragAndDrop();
 
 	//	reflection
 	Soy::Rectx<int32_t>		GetClientRect();
@@ -174,6 +214,7 @@ public:
 	bool			OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage);
 	bool			OnKeyDown(WPARAM KeyCode, LPARAM Flags);
 	bool			OnKeyUp(WPARAM KeyCode, LPARAM Flags);
+	bool			OnDragDrop(HDROP DropHandle);
 
 	virtual TWin32Thread&	GetJobQueue()
 	{
@@ -190,6 +231,7 @@ public:
 	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseUp;
 	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyDown;
 	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyUp;
+	std::function<bool(TControl&, ArrayBridge<std::string>&&)>	mOnDragAndDrop;
 
 	std::function<void(TControl&)>	mOnDestroy;	//	todo: expand this to OnClose to allow user to stop it from closing
 	
@@ -445,13 +487,14 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		TControl& Control = *pControl;
 		Control.OnWindowMessage(message, wParam, lParam);
 
-		switch ( message )
+		switch (message)
 		{
 			//	gotta allow some things
 		case WM_MOVE:
 		case WM_SIZE:
 		case WM_CREATE:
 		case WM_SHOWWINDOW:
+			DragAcceptFiles(hwnd, TRUE);
 			return 0;
 
 		case WM_ERASEBKGND:
@@ -472,8 +515,8 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 			try
 			{
 				Control.mOnPaint(Control);
-			} 
-			catch ( std::exception& e )
+			}
+			catch (std::exception& e)
 			{
 				std::Debug << "Exception OnPaint: " << e.what() << std::endl;
 			}
@@ -498,7 +541,7 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		{
 			auto x = GET_X_LPARAM(lParam);
 			auto y = GET_Y_LPARAM(lParam);
-			if ( Control.OnMouseEvent(x, y, wParam, message) )
+			if (Control.OnMouseEvent(x, y, wParam, message))
 				return 0;
 			return Default();
 		}
@@ -507,7 +550,7 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		{
 			auto KeyCode = wParam;
 			auto Flags = lParam;
-			if ( Control.OnKeyDown(KeyCode, Flags) )
+			if (Control.OnKeyDown(KeyCode, Flags))
 				return 0;
 			return Default();
 		}
@@ -516,12 +559,13 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 		{
 			auto KeyCode = wParam;
 			auto Flags = lParam;
-			if ( Control.OnKeyUp(KeyCode, Flags) )
+			if (Control.OnKeyUp(KeyCode, Flags))
 				return 0;
 			return Default();
 		}
 
 		case WM_COMMAND:
+		{
 			//	lparam is hwnd to child control
 			if (lParam != 0)
 			{
@@ -539,15 +583,17 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 				}
 			}
 			return Default();
+		}
 
 		case WM_HSCROLL:
 		case WM_VSCROLL:
+		{
 			//	lparam is hwnd to child control
 			if (lParam != 0)
 			{
 				auto ChildHandle = reinterpret_cast<HWND>(lParam);
 				auto& Child = Control.GetChild(ChildHandle);
-				Child.OnWindowMessage(message,wParam,lParam);
+				Child.OnWindowMessage(message, wParam, lParam);
 			}
 			else
 			{
@@ -560,6 +606,19 @@ LRESULT CALLBACK Platform::Win32CallBack(HWND hwnd, UINT message, WPARAM wParam,
 			return Default();
 		}
 
+		case WM_DROPFILES:
+		{
+			auto DropHandle = reinterpret_cast<HDROP>(wParam);
+			auto Handled = Control.OnDragDrop(DropHandle);
+			if (Handled)
+				return true;
+			return Default();
+		}
+
+		default:
+			//std::Debug << "unhandled message " << std::hex << message << " on "<< Control.mName << std::endl;
+			break;
+		}
 		return Default();
 	}
 	catch(std::exception& e)
@@ -637,6 +696,9 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 	Platform::IsOkay("CreateWindow");
 	if ( !mHwnd )
 		throw Soy::AssertException("Failed to create window");
+
+	//	for now, enable drag & drop on everything
+	EnableDragAndDrop();
 }
 
 
@@ -666,14 +728,52 @@ Platform::TControl::TControl(const std::string& Name,const char* ClassName,TCont
 	SendMessage(mHwnd, WM_SETFONT, Font, 0);
 
 	Parent.AddChild(*this);
+
+	EnableDragAndDrop();
 }
 
 Platform::TControl::~TControl()
 {
 }
 
+void Platform::TControl::EnableDragAndDrop()
+{
+#if defined(ENABLE_DRAGDROP_HANDLER)
+	auto Result = RegisterDragDrop(mHwnd, this);
+	Platform::IsOkay(Result, "RegisterDragDrop");
+#else
+	DragAcceptFiles(mHwnd, true);
+#endif
+}
 
-bool Platform::TControl::TControl::OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage)
+bool Platform::TControl::OnDragDrop(HDROP DropHandle)
+{
+	//	no callback, not handled
+	if (!mOnDragAndDrop)
+		return false;
+
+	//	https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-dragqueryfilea
+	UINT FileCount = 0;
+	{
+		char FilenameBuffer[1024];
+		FileCount = DragQueryFileA(DropHandle, 0xFFFFFFFF, FilenameBuffer, std::size(FilenameBuffer));
+	}
+
+	Array<std::string> Filenames;
+	for (auto i = 0; i < FileCount; i++)
+	{
+		char FilenameBuffer[1024];
+		auto FilenameLength = DragQueryFileA(DropHandle, i, FilenameBuffer, std::size(FilenameBuffer));
+		std::string Filename(FilenameBuffer, FilenameLength);
+		Filenames.PushBack(Filename);
+	}
+
+	auto Handled = mOnDragAndDrop(*this,GetArrayBridge(Filenames));
+	return Handled;
+}
+
+
+bool Platform::TControl::OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage)
 {
 	auto LeftDown = (Flags & MK_LBUTTON) != 0;
 	auto MiddleDown = (Flags & MK_MBUTTON) != 0;
@@ -899,6 +999,18 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Th
 
 	//	show window now it's configured
 	ShowWindow(mHwnd, ShowState);
+
+
+	//	join super class events
+	mOnTryDragDrop = [](ArrayBridge<std::string>&)
+	{
+		return true; 
+	};
+	mOnDragAndDrop = [this](TControl&, ArrayBridge<std::string>&& Filenames)
+	{
+		SoyWindow::mOnDragDrop(Filenames);
+		return true;
+	};
 }
 
 void Platform::TWindow::OnWindowMessage(UINT Message, DWORD WParam, DWORD LParam)
@@ -2184,3 +2296,48 @@ void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorPixelMap, cons
 
 	ImageMap_SetCursorMap(mHwnd, CursorMap.GetArray(), CursorPixelMap.GetWidth(), CursorPixelMap.GetHeight());
 }
+
+
+#if defined(ENABLE_DRAGDROP_HANDLER)
+HRESULT Platform::TDragAndDropHandler::DragEnter(IDataObject *pDataObj,DWORD grfKeyState,POINTL pt,__RPC__inout DWORD *pdwEffect)
+{
+	if (!mOnTryDragDrop)
+	{
+		*pdwEffect = DROPEFFECT_NONE;
+		return E_NOTIMPL;
+	}
+	//	extract drop handle
+	try
+	{
+		if (!HandleDragDrop(pDataObj, mTryDragDrop))
+		{
+			*pdwEffect = DROPEFFECT_NONE;
+			return E_INVALIDARG;
+		}
+		
+		*pdwEffect = DROPEFFECT_COPY;
+		return S_OK;
+	}
+	catch (std::exception& Exception)
+	{
+		*pdwEffect = DROPEFFECT_NONE;
+		return E_INVALIDARG;
+	}
+}
+
+virtual HRESULT Platform::TDragAndDropHandler::DragOver(DWORD grfKeyState,POINTL pt,__RPC__inout DWORD *pdwEffect)
+{
+	return E_NOTIMPL;
+}
+
+virtual HRESULT Platform::TDragAndDropHandler::DragLeave(void)
+{
+	return E_NOTIMPL;
+}
+
+virtual HRESULT  Platform::TDragAndDropHandler::Drop( __RPC__in_opt IDataObject *pDataObj,DWORD grfKeyState,POINTL pt, __RPC__inout DWORD *pdwEffect)
+{
+	*pdwEffect = DROPEFFECT_COPY;
+	return S_OK;
+}
+#endif
