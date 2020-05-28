@@ -18,6 +18,7 @@
 #endif
 
 #if defined(TARGET_OSX)
+#include "TApiAudio.h"
 //#include "TApiOpencl.h"
 #include "TApiDlib.h"
 #include "TApiEzsift.h"
@@ -603,7 +604,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiOpencv::Bind(*Context);
 #endif
 #if defined(TARGET_OSX)
-
+			ApiAudio::Bind(*Context);
 			//ApiOpencl::Bind( *Context );
 			ApiDlib::Bind( *Context );
 			ApiEzsift::Bind( *Context );
