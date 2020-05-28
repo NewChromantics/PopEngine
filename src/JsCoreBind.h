@@ -1024,6 +1024,11 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 			JSValueRef Exception = nullptr;
 			auto ReturnValue = Context.CallFunc( LocalContext, FunctionCache, ThisObject, Arguments.GetSize(), Arguments.GetArray(), Exception, FUNCTIONNAME );
 			
+			//	spot an exception
+			//	gr: maybe Context.CallFunc should just throw
+			if ( Exception )
+				JsSetException(Exception);
+
 			return ReturnValue;
 		}
 		catch(std::exception& e)
