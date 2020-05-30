@@ -290,7 +290,19 @@ void TWebsocketServer::AddPeer(SoyRef ClientRef)
 
 void TWebsocketServer::RemovePeer(SoyRef ClientRef)
 {
-	
+	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
+	for ( int i=mClients.GetSize()-1;	i>=0;	i-- )
+	{
+		auto pClient = mClients[i];
+		if ( pClient->mConnectionRef != ClientRef )
+			continue;
+		
+		//	move client into other list as this func may be called from a disconnection
+		//	we can't block-stop the thread
+		pClient->Stop(false);
+		mClients.RemoveBlock(i,1);
+		mDeadClients.PushBack(pClient);
+	}
 }
 
 
@@ -341,6 +353,20 @@ void TWebsocketServerPeer::ClientConnect()
 	std::shared_ptr<WebSocket::TMessageBuffer> MessageBuffer(new WebSocket::TMessageBuffer() );
 	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TRequestProtocol(this->mHandshake, MessageBuffer));
 	Push(Packet);
+}
+
+void TWebsocketServerPeer::Stop(bool WaitToFinish)
+{
+	if ( WaitToFinish )
+	{
+		TSocketReadThread_Impl::WaitToFinish();
+		TSocketWriteThread::WaitToFinish();
+	}
+	else
+	{
+		TSocketReadThread_Impl::Stop();
+		TSocketWriteThread::Stop();
+	}
 }
 
 void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
