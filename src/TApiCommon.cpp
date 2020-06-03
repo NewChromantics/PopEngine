@@ -634,19 +634,28 @@ void ApiPop::GetFilenames(Bind::TCallback& Params)
 	std::string Directory = Params.mContext.GetResolvedFilename("");
 	if ( !Params.IsArgumentUndefined(0) )
 		Directory = Params.GetArgumentFilename(0);
+
+	//	correct directory name (ie, end with slash
+	Directory = Platform::GetDirectoryFromFilename(Directory);
 	
 	//	recurse
-	Directory += "/**";
+	auto SearchDirectory = Directory + "**";
 	
 	//	os list all files
 	Array<std::string> Filenames;
-	auto EnumFile = [&](const std::string& Filename)
+	auto EnumFile = [&](const std::string& FilePath)
 	{
-		//	todo: make filename an api-relative filename
-		Filenames.PushBack(Filename);
+		//	gr: should this be relative to original dir, or context dir...
+		//		for asset server, we want it relative to input dir.
+		//		if this changes, start adding param options
+		auto& Filename = Filenames.PushBack(FilePath);
+		
+		//	cut directory off if it starts with it
+		if ( !Soy::StringTrimLeft(Filename,Directory,true) )
+			std::Debug << "Warning, FilePath " << FilePath << " was not prefixed with directory(" << Directory << ") as expected, full path returned" << std::endl;
 	};
 	
-	Platform::EnumFiles( Directory, EnumFile );
+	Platform::EnumFiles( SearchDirectory, EnumFile );
 
 	Params.Return( GetArrayBridge(Filenames) );
 }

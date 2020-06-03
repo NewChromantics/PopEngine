@@ -35,6 +35,7 @@ public:
 	}
 
 	void				ClientConnect();
+	void				Stop(bool WaitToFinish);
 
 	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
 	
@@ -81,7 +82,8 @@ public:
 protected:
 	std::recursive_mutex			mClientsLock;
 	Array<std::shared_ptr<TWebsocketServerPeer>>	mClients;
-	
+	Array<std::shared_ptr<TWebsocketServerPeer>>	mDeadClients;
+
 	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
 };

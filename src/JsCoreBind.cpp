@@ -135,6 +135,20 @@ std::string JSJSONStringFromValue(JSContextRef Context,JSValueRef Value)
 }
 #endif
 
+#if defined(JSAPI_JSCORE)
+std::string JSJSONStringFromValue_NoThrow(JSContextRef Context,JSValueRef Value)
+{
+	unsigned Indent = 1;
+	JSValueRef Exception = nullptr;
+	auto StringValue = JSValueCreateJSONString( Context, Value, Indent, &Exception );
+	if ( Exception )
+		return "JSJSONStringFromValue_NoThrow exception";
+	//JsCore::ThrowException( Context, Exception, "JSValueCreateJSONString" );
+	auto String = Bind::GetString( Context, StringValue );
+	return String;
+}
+#endif
+
 
 
 namespace JsCore
@@ -799,6 +813,7 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	//	not an exception
 	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
 		return;
+	JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
 
 	auto GetString_NoThrow = [](JSContextRef Context,JSValueRef Handle)
 	{
@@ -817,8 +832,28 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	};
 	
 	std::stringstream Error;
+	//	gr: object json has meta, but it doesn't show string's exception, so need to convert the error object to a string too
 	auto ExceptionString = GetString_NoThrow( Context, ExceptionHandle );
-	Error << "Exception in " << ThrowContext << ": " << ExceptionString;
+	auto ExceptionMeta = JSJSONStringFromValue_NoThrow(Context,ExceptionHandle);
+	Error << "Exception in " << ThrowContext << ": " << ExceptionString << ExceptionMeta;
+
+	//	try and open xcode at the erroring line
+	{
+		try
+		{
+			auto& TheContext = GetContext(Context);
+			auto LineValue = JSObjectGetProperty(Context,ExceptionObject,"line",nullptr);
+			auto FilenameValue = JSObjectGetProperty(Context,ExceptionObject,"sourceURL",nullptr);
+			auto Line = GetInt<int>(Context,LineValue);
+			auto Filename = TheContext.GetResolvedFilename( GetString(Context,FilenameValue) );
+			Platform::ShellExecute(std::string("xed --launch ")+Filename);
+			Platform::ShellExecute(std::string("xed --launch --line ")+std::to_string(Line));
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Error launching xcode jump-to-file; " << e.what() << std::endl;
+		}
+	}
 	throw Soy::AssertException(Error.str());
 }
 
