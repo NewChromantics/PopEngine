@@ -61,6 +61,8 @@ namespace JsCore
 	class TObjectWrapper;
 	class TObjectWrapperBase;
 
+	class TExceptionMeta;
+
 	TContext&	GetContext(JSContextRef ContextRef);
 	
 	//	value conversion - maybe should be type orientated instead of named
@@ -131,11 +133,13 @@ namespace JsCore
 
 	//	JSON to object
 	TObject		ParseObjectString(JSContextRef Context,const std::string& JsonString);
-	std::string	StringifyObject(TLocalContext& Context,Bind::TObject& Object);
+	std::string	StringifyObject(TLocalContext& Context, Bind::TObject& Object);
+	std::string	StringifyObject_NoThrow(TLocalContext& Context,Bind::TObject& Object) __noexcept;
 
 	//	throw c++ exception if the exception object is an exception
 	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext="");
 	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string& ThrowContext);
+	TExceptionMeta	GetExceptionMeta(JSContextRef Context, JSValueRef ExceptionHandle);// __nothrow;
 
 	//	enum array supports single objects as well as arrays, so we can enumerate a single float into an array of one, as well as an array
 	template<typename TYPE>
@@ -734,6 +738,14 @@ public:
 	TContext&		mContext;
 };
 
+
+class JsCore::TExceptionMeta
+{
+public:
+	std::string		mMessage = "Unexplained Exception";
+	uint32_t		mLine = 0;
+	std::string		mFilename = "UnknownFile";
+};
 
 //	template name? that's right, need unique references.
 //	still working on getting rid of that, but still allow dynamic->static function binding
