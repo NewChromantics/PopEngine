@@ -807,6 +807,44 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	ThrowException(Context, ExceptionHandle, std::string(ThrowContext));
 }
 
+JsCore::TExceptionMeta JsCore::GetExceptionMeta(JSContextRef Context, JSValueRef ExceptionHandle)
+{
+	TExceptionMeta Meta;
+
+
+	auto GetString_NoThrow = [](JSContextRef Context, JSValueRef Handle)
+	{
+		JSValueRef Exception = nullptr;
+		auto HandleString = JSValueToStringCopy(Context, Handle, &Exception);
+		if (Exception)
+		{
+			auto HandleType = JSValueGetType(Context, Handle);
+			std::stringstream Error;
+			Error << "Exception->String threw exception. Exception is type " << HandleType;
+			return Error.str();
+		}
+		auto Str = JsCore::GetString(Context, HandleString);
+		JSStringRelease(HandleString);
+		return Str;
+};
+
+#if defined(JSAPI_JSCORE)
+	auto& TheContext = GetContext(Context);
+	auto LineValue = JSObjectGetProperty(Context, ExceptionObject, "line", nullptr);
+	auto FilenameValue = JSObjectGetProperty(Context, ExceptionObject, "sourceURL", nullptr);
+	Meta.mLine = GetInt<int>(Context, LineValue);
+	Meta.mFilename = TheContext.GetResolvedFilename(GetString(Context, FilenameValue));
+	
+	//	gr: object json has meta, but it doesn't show string's exception, so need to convert the error object to a string too
+	Meta.mMessage = GetString_NoThrow(Context, ExceptionHandle);
+	auto ErrorJson = JSJSONStringFromValue_NoThrow(Context, ExceptionHandle);
+#else
+	
+	Meta.mMessage = GetString_NoThrow(Context, ExceptionHandle);
+#endif
+	return Meta;
+}
+
 void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string& ThrowContext)
 {
 	auto ExceptionType = JSValueGetType( Context, ExceptionHandle );
@@ -815,45 +853,25 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 		return;
 	JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
 
-	auto GetString_NoThrow = [](JSContextRef Context,JSValueRef Handle)
-	{
-		JSValueRef Exception = nullptr;
-		auto HandleString = JSValueToStringCopy( Context, Handle, &Exception );
-		if ( Exception )
-		{
-			auto HandleType = JSValueGetType( Context, Handle );
-			std::stringstream Error;
-			Error << "Exception->String threw exception. Exception is type " << HandleType;
-			return Error.str();
-		}
-		auto Str = JsCore::GetString( Context, HandleString );
-		JSStringRelease(HandleString);
-		return Str;
-	};
 	
 	std::stringstream Error;
-	//	gr: object json has meta, but it doesn't show string's exception, so need to convert the error object to a string too
-	auto ExceptionString = GetString_NoThrow( Context, ExceptionHandle );
-	auto ExceptionMeta = JSJSONStringFromValue_NoThrow(Context,ExceptionHandle);
-	Error << "Exception in " << ThrowContext << ": " << ExceptionString << ExceptionMeta;
+	auto ExceptionMeta = GetExceptionMeta(Context, ExceptionHandle);
+	Error << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
 
-	//	try and open xcode at the erroring line
+	//	try and open xcode at the erroring line (a bit experimental)
+#if defined(JSAPI_JSCORE) && defined(TARGET_OSX)
 	{
 		try
 		{
-			auto& TheContext = GetContext(Context);
-			auto LineValue = JSObjectGetProperty(Context,ExceptionObject,"line",nullptr);
-			auto FilenameValue = JSObjectGetProperty(Context,ExceptionObject,"sourceURL",nullptr);
-			auto Line = GetInt<int>(Context,LineValue);
-			auto Filename = TheContext.GetResolvedFilename( GetString(Context,FilenameValue) );
-			Platform::ShellExecute(std::string("xed --launch ")+Filename);
-			Platform::ShellExecute(std::string("xed --launch --line ")+std::to_string(Line));
+			Platform::ShellExecute(std::string("xed --launch ")+Meta.mFilename);
+			Platform::ShellExecute(std::string("xed --launch --line ")+std::to_string(Meta.mLine));
 		}
 		catch(std::exception& e)
 		{
 			std::Debug << "Error launching xcode jump-to-file; " << e.what() << std::endl;
 		}
 	}
+#endif
 	throw Soy::AssertException(Error.str());
 }
 
