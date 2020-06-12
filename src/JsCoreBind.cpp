@@ -829,6 +829,7 @@ JsCore::TExceptionMeta JsCore::GetExceptionMeta(JSContextRef Context, JSValueRef
 };
 
 #if defined(JSAPI_JSCORE)
+	JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
 	auto& TheContext = GetContext(Context);
 	auto LineValue = JSObjectGetProperty(Context, ExceptionObject, "line", nullptr);
 	auto FilenameValue = JSObjectGetProperty(Context, ExceptionObject, "sourceURL", nullptr);
@@ -863,8 +864,8 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	{
 		try
 		{
-			Platform::ShellExecute(std::string("xed --launch ")+Meta.mFilename);
-			Platform::ShellExecute(std::string("xed --launch --line ")+std::to_string(Meta.mLine));
+			Platform::ShellExecute(std::string("xed --launch ")+ExceptionMeta.mFilename);
+			Platform::ShellExecute(std::string("xed --launch --line ")+std::to_string(ExceptionMeta.mLine));
 		}
 		catch(std::exception& e)
 		{
