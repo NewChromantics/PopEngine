@@ -94,6 +94,9 @@
     <ClCompile Include="..\src\TApiWebsocket.cpp">
       <Filter>PopEngine</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp">
+      <Filter>PopEngine\SoyLib\smallsha1</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -113,6 +116,9 @@
     </Filter>
     <Filter Include="PopEngine\SoyLib\miniz">
       <UniqueIdentifier>{6f6098da-d53d-491e-9190-1a81a28515ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib\smallsha1">
+      <UniqueIdentifier>{342b8abd-b8d0-49c9-8bd8-bbc7017381dd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -400,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="..\src\TApiWebsocket.h">
       <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h">
+      <Filter>PopEngine\SoyLib\smallsha1</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

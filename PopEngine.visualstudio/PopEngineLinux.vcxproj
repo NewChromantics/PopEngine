@@ -82,6 +82,7 @@
     <ClCompile Include="..\src\PopEngine.cpp" />
     <ClCompile Include="..\src\PopMain.cpp" />
     <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyArray.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp" />
@@ -132,6 +133,7 @@
     <ClInclude Include="..\src\SoyLib\src\ofShape.h" />
     <ClInclude Include="..\src\SoyLib\src\RemoteArray.h" />
     <ClInclude Include="..\src\SoyLib\src\scope_ptr.h" />
+    <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h" />
     <ClInclude Include="..\src\SoyLib\src\SortArray.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyApp.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyArray.h" />
