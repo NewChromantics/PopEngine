@@ -1,5 +1,4 @@
 #include "TApiWebsocket.h"
-#include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 #include "SoySocket.h"
 

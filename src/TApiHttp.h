@@ -1,6 +1,5 @@
 #pragma once
 #include "TBind.h"
-#include "SoyOpenglWindow.h"
 
 //#include "TPopServerThread.h"
 #include "SoyRef.h"
