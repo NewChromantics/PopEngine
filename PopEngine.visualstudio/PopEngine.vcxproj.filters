@@ -855,6 +855,7 @@
     <None Include="..\UnitTest\Midi\bootup.js">
       <Filter>UnitTest\Midi</Filter>
     </None>
+    <None Include="..\Readme.md" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
