@@ -610,12 +610,12 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
+			ApiOpencv::Bind(*Context);
 #endif
 #if !defined(TARGET_LINUX)
 			ApiGui::Bind( *Context );
 			ApiCoreMl::Bind(*Context);
 			ApiZip::Bind(*Context);
-			ApiOpencv::Bind(*Context);
 #endif
 #if defined(TARGET_OSX)
 			ApiAudio::Bind(*Context);
