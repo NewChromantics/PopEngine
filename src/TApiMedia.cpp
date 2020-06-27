@@ -178,7 +178,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 		{
 			//	we now return the json directly
 			Array<char> JsonBuffer;
-			JsonBuffer.SetSize(2000);
+			JsonBuffer.SetSize(6000);
 			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
 
 			std::string Json(JsonBuffer.GetArray());
@@ -187,7 +187,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 		}
 		catch(std::exception& e)
 		{
-			std::Debug << e.what() << std::endl;
+			std::Debug << "PopCameraDevice_EnumCameraDevicesJson() " << e.what() << std::endl;
 			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
