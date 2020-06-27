@@ -1,6 +1,9 @@
 #include "SoySound.h"
 #include "SoyTypes.h"
+
+#if defined(TARGET_OSX)
 #include <AppKit/AppKit.h>
+#endif
 
 
 namespace Platform

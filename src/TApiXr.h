@@ -1,5 +1,6 @@
 #pragma once
 #include "TBind.h"
+#include "SoyVector.h"
 
 class TImageWrapper;
 
