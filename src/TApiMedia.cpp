@@ -910,7 +910,7 @@ void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 {
 	auto& Frame = Params.GetArgumentPointer<TImageWrapper>(0);
-	
+		
 	std::string EncodeMeta;
 
 	//	 get user-supplied meta
