@@ -48,6 +48,10 @@
     <Import Project="PopEngineLinux.props" />
     <Import Project="JsApi_JsCore.props" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Import Project="PopEngineLinux.props" />
+    <Import Project="JsApi_JsCore.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LibraryPath>/usr/lib/aarch64-linux-gnu/</LibraryPath>
