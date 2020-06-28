@@ -1,5 +1,4 @@
 #include "TApiHttp.h"
-#include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 #include "SoySocket.h"
 #include "SoyFilesystem.h"

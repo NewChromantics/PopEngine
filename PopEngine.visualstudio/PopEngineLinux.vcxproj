@@ -83,19 +83,35 @@
     <ClCompile Include="..\src\PopMain.cpp" />
     <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
     <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyApp.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyArray.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpConnection.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpServer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyMediaFormat.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyString.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp" />

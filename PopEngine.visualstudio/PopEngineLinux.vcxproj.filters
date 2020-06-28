@@ -97,6 +97,24 @@
     <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp">
       <Filter>PopEngine\SoyLib\smallsha1</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpConnection.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpServer.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyMediaFormat.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyApp.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
