@@ -13,7 +13,9 @@ Javascript Runtimes
 	- chakracore from github repository
 	- JavascriptCore/webkit-jsonly from github repository
 - Raspberry PI
-	- JavascriptCore from `apt-get webkitgtk-4.0-dev`
+	- JavascriptCore from `apt-get install webkitgtk-4.0-dev`
+- Jetson
+	- JavascriptCore from `sudo apt-get install libjavascriptcoregtk-4.0-dev`
 - Android
 	- V8 build from https://github.com/JaneaSystems/nodejs-mobile/releases
 
