@@ -25,3 +25,10 @@ Build Notes
 	- `sudo service ssh start`
 	- `sudo systemctl enable ssh`
 	- Setup Visual studio via `Tools->Options->Cross Platform->Connections`
+	- Magic_enum requires gcc9, jetson (and pi?) have `gcc --version` 7
+		- `sudo apt-get install gcc-9` doesnt exist yet
+		- https://askubuntu.com/a/1140203
+		- `sudo apt-get install software-properties-common`
+		- `sudo add-apt-repository ppa:jonathonf/gcc-9.0`
+		- `sudo apt-get install gcc-9 g++-9`
+		- make gcc/g++ default to new version `sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9`
