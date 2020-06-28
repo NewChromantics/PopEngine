@@ -178,7 +178,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 		{
 			//	we now return the json directly
 			Array<char> JsonBuffer;
-			JsonBuffer.SetSize(2000);
+			JsonBuffer.SetSize(6000);
 			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
 
 			std::string Json(JsonBuffer.GetArray());
@@ -187,7 +187,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 		}
 		catch(std::exception& e)
 		{
-			std::Debug << e.what() << std::endl;
+			std::Debug << "PopCameraDevice_EnumCameraDevicesJson() " << e.what() << std::endl;
 			
 			//	queue the error callback
 			std::string ExceptionString(e.what());
@@ -910,7 +910,7 @@ void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 {
 	auto& Frame = Params.GetArgumentPointer<TImageWrapper>(0);
-	
+		
 	std::string EncodeMeta;
 
 	//	 get user-supplied meta
@@ -1066,7 +1066,6 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& E
 	if (Planes.GetSize() == 2)
 	{
 		auto Format = Pixels.GetFormat();
-		//auto FormatName = magic_enum::enum_name(Format);
 		auto FormatName = SoyPixelsFormat::ToString(Format);
 		Meta["Format"] = std::string(FormatName);//	json11 converts string_view to array
 		auto& Array = Pixels.GetPixelsArray();
@@ -1086,7 +1085,6 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& E
 		{
 			auto& Pixels = *Planes[0];
 			auto Format = Pixels.GetFormat();
-			//auto FormatName = magic_enum::enum_name(Format);
 			auto FormatName = SoyPixelsFormat::ToString(Format);
 			Meta["Format"] = std::string(FormatName);//	json11 converts string_view to array
 		}

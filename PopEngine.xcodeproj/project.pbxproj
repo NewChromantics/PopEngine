@@ -214,16 +214,12 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
-		BF8DD669244A6B0E00960703 /* TApiXr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8DD667244A6B0D00960703 /* TApiXr.cpp */; };
-		BF8DD66A244A6B0E00960703 /* TApiXr.h in Headers */ = {isa = PBXBuildFile; fileRef = BF8DD668244A6B0E00960703 /* TApiXr.h */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFEF6A3A24759406000A1F88 /* SoySound.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3824759401000A1F88 /* SoySound.mm */; };
 		BFEF6A3B2475940E000A1F88 /* TApiAudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3724759168000A1F88 /* TApiAudio.cpp */; };
-		BFEF6A3C24759410000A1F88 /* TApiAudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3724759168000A1F88 /* TApiAudio.cpp */; };
-		BFEF6A3D24759415000A1F88 /* SoySound.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3824759401000A1F88 /* SoySound.mm */; };
 		BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
 /* End PBXBuildFile section */
 
@@ -1287,7 +1283,6 @@
 			files = (
 				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
-				BF8DD66A244A6B0E00960703 /* TApiXr.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1492,7 +1487,6 @@
 				BF151F8F23845FAD00A70EBF /* SoyJson.cpp in Sources */,
 				BF151F9923845FAD00A70EBF /* SoyProtocol.cpp in Sources */,
 				BF151FA423845FAD00A70EBF /* SoyString.mm in Sources */,
-				BFEF6A3C24759410000A1F88 /* TApiAudio.cpp in Sources */,
 				BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */,
 				BFDC03B12430CED90004512A /* json11.cpp in Sources */,
 				BF151FB223845FB700A70EBF /* sha1.cpp in Sources */,
@@ -1507,7 +1501,6 @@
 				BF151FBA23845FF000A70EBF /* TApiCoreMl.cpp in Sources */,
 				BF151F8C23845FAD00A70EBF /* SoyH264.cpp in Sources */,
 				BF151F9E23845FAD00A70EBF /* SoyShader.cpp in Sources */,
-				BFEF6A3D24759415000A1F88 /* SoySound.mm in Sources */,
 				BF151F8423845FAD00A70EBF /* SoyAvf.mm in Sources */,
 				BF151FB323845FD200A70EBF /* JsCoreBind.cpp in Sources */,
 				BF151F9123845FAD00A70EBF /* SoyMedia.cpp in Sources */,
@@ -1555,7 +1548,6 @@
 				BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */,
 				BF151F8623845FAD00A70EBF /* SoyDebug.cpp in Sources */,
 				BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */,
-				BF8DD669244A6B0E00960703 /* TApiXr.cpp in Sources */,
 				BF151F8B23845FAD00A70EBF /* SoyGraphics.cpp in Sources */,
 				BF151FC22384601300A70EBF /* TApiMedia.cpp in Sources */,
 				BF151FA223845FAD00A70EBF /* SoyStream.cpp in Sources */,
