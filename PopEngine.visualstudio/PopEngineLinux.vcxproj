@@ -141,6 +141,7 @@
     <ClInclude Include="..\src\SoyLib\src\chartype.hpp" />
     <ClInclude Include="..\src\SoyLib\src\configure.hpp" />
     <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\magic_enum\include\magic_enum.hpp" />
     <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp" />
     <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h" />
     <ClInclude Include="..\src\SoyLib\src\ofCommandLineArgs.h" />

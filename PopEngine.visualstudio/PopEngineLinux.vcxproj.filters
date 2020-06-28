@@ -138,6 +138,12 @@
     <Filter Include="PopEngine\SoyLib\smallsha1">
       <UniqueIdentifier>{342b8abd-b8d0-49c9-8bd8-bbc7017381dd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PopEngine\SoyLib\magic_enum">
+      <UniqueIdentifier>{50ae0ec1-55cf-4218-be28-69b01bc27fe4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib\magic_enum\include">
+      <UniqueIdentifier>{d72a2c5a-05e0-4809-8d98-45243131b501}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\JsCoreBind.h">
@@ -427,6 +433,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h">
       <Filter>PopEngine\SoyLib\smallsha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\magic_enum\include\magic_enum.hpp">
+      <Filter>PopEngine\SoyLib\magic_enum\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
