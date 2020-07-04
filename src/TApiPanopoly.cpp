@@ -22,17 +22,23 @@ class Panopoly::TContext
 {
 public:
 	TContext() :
-		mJobQueue("Panopoly::JobQueue")
+		mJobQueueA("Panopoly::JobQueueA"),
+		mJobQueueB("Panopoly::JobQueueB")
 	{
-		mJobQueue.Start();
+		mJobQueueA.Start();
+		mJobQueueB.Start();
 	}
 	
 	void				QueueJob(std::function<void()> Job)
 	{
-		mJobQueue.PushJob(Job);
+		mQueueFlip++;
+		auto& Queue = (mQueueFlip&1) ? mJobQueueA : mJobQueueB;
+		Queue.PushJob(Job);
 	}
 
-	SoyWorkerJobThread	mJobQueue;
+	size_t				mQueueFlip = 0;
+	SoyWorkerJobThread	mJobQueueA;
+	SoyWorkerJobThread	mJobQueueB;
 };
 
 
