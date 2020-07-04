@@ -218,6 +218,8 @@
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
+		BFE462B424B1058400D04A4C /* TApiPanopoly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */; };
+		BFE462B524B1058400D04A4C /* TApiPanopoly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */; };
 		BFEF6A3A24759406000A1F88 /* SoySound.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3824759401000A1F88 /* SoySound.mm */; };
 		BFEF6A3B2475940E000A1F88 /* TApiAudio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3724759168000A1F88 /* TApiAudio.cpp */; };
 		BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
@@ -518,6 +520,8 @@
 		BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMedia.cpp; path = src/SoyMedia.cpp; sourceTree = "<group>"; };
 		BFDE37F91C89B20D00D10F02 /* SoyMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMedia.h; path = src/SoyMedia.h; sourceTree = "<group>"; };
 		BFDE38011C8B446A00D10F02 /* SoyUnity.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyUnity.mm; path = src/SoyUnity.mm; sourceTree = "<group>"; };
+		BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiPanopoly.cpp; path = src/TApiPanopoly.cpp; sourceTree = "<group>"; };
+		BFE462B324B1058400D04A4C /* TApiPanopoly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiPanopoly.h; path = src/TApiPanopoly.h; sourceTree = "<group>"; };
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
@@ -1042,7 +1046,6 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
-				BFEF6A462479C603000A1F88 /* Readme.md */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
 				BF91D97C221584E500E91671 /* Ezsift */,
@@ -1057,6 +1060,7 @@
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
+				BFEF6A462479C603000A1F88 /* Readme.md */,
 				BF607EA6224107B800A78C00 /* SoyBluetooth.h */,
 				BF607EA7224107B800A78C00 /* SoyBluetooth.mm */,
 				BF71CAE6243E603500AEF50F /* SoyGuiIos.h */,
@@ -1111,6 +1115,8 @@
 				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
 				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
 				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
+				BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */,
+				BFE462B324B1058400D04A4C /* TApiPanopoly.h */,
 				BFF2B6C12264F9A700232137 /* TApiSerial.cpp */,
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
@@ -1529,6 +1535,7 @@
 				BF151FB023845FAD00A70EBF /* SoyWindow.cpp in Sources */,
 				BF151F8223845FAD00A70EBF /* SoyArray.cpp in Sources */,
 				BF151F9323845FAD00A70EBF /* SoyMemFile.cpp in Sources */,
+				BFE462B524B1058400D04A4C /* TApiPanopoly.cpp in Sources */,
 				BF151FBF2384601300A70EBF /* TApiHttp.cpp in Sources */,
 				BF151FA823845FAD00A70EBF /* SoyTypes.cpp in Sources */,
 				BF151F9A23845FAD00A70EBF /* SoyRef.cpp in Sources */,
@@ -1642,6 +1649,7 @@
 				BF5EAFEA237F0C6E0077BCF5 /* SoyUniform.cpp in Sources */,
 				BF5EAFEE237F0C6E0077BCF5 /* SoyWave.cpp in Sources */,
 				BF5EAFC7237F0C6E0077BCF5 /* SoyDebug.mm in Sources */,
+				BFE462B424B1058400D04A4C /* TApiPanopoly.cpp in Sources */,
 				BF5EAFDB237F0C6E0077BCF5 /* SoyRingArray.cpp in Sources */,
 				BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */,
 				BF5EAFE1237F0C6E0077BCF5 /* SoySrt.cpp in Sources */,

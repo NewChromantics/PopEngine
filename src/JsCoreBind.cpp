@@ -5,6 +5,7 @@
 
 #include "TApiCommon.h"
 #include "TApiSocket.h"
+#include "TApiPanopoly.h"
 #if !defined(TARGET_LINUX)
 #include "TApiEngine.h"
 #include "TApiOpengl.h"
@@ -598,6 +599,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			
 			ApiPop::Bind(*Context);
 			ApiSocket::Bind(*Context);
+			ApiPanopoly::Bind(*Context);
 #if !defined(TARGET_LINUX)
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
