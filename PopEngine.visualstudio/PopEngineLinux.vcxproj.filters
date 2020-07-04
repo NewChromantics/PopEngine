@@ -97,6 +97,24 @@
     <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp">
       <Filter>PopEngine\SoyLib\smallsha1</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpConnection.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpServer.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyMediaFormat.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyApp.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp">
+      <Filter>PopEngine\SoyLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -119,6 +137,12 @@
     </Filter>
     <Filter Include="PopEngine\SoyLib\smallsha1">
       <UniqueIdentifier>{342b8abd-b8d0-49c9-8bd8-bbc7017381dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib\magic_enum">
+      <UniqueIdentifier>{50ae0ec1-55cf-4218-be28-69b01bc27fe4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\SoyLib\magic_enum\include">
+      <UniqueIdentifier>{d72a2c5a-05e0-4809-8d98-45243131b501}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -409,6 +433,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h">
       <Filter>PopEngine\SoyLib\smallsha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\magic_enum\include\magic_enum.hpp">
+      <Filter>PopEngine\SoyLib\magic_enum\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
