@@ -60,6 +60,7 @@ void ApiPanopoly::Bind(Bind::TContext& Context)
 
 void DepthToYuv(SoyPixelsImpl& DepthPixels,SoyPixelsImpl& YuvPixels,EncodeParams_t EncodeParams)
 {
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,20);
 	auto Width = DepthPixels.GetWidth();
 	auto Height = DepthPixels.GetHeight();
 	YuvPixels.Init(SoyPixelsMeta( Width, Height, SoyPixelsFormat::Yuv_8_8_8 ));
@@ -133,7 +134,8 @@ void ApiPanopoly::DepthToYuvAsync(Bind::TCallback& Params)
 	EncodeParams.DepthMin = Params.GetArgumentInt(1);
 	EncodeParams.DepthMax = Params.GetArgumentInt(2);
 	EncodeParams.ChromaRangeCount = Params.GetArgumentInt(3);
-
+	EncodeParams.PingPongLuma = Params.GetArgumentBool(4);
+	
 	//	create a promise to return
 	auto pPromise = Params.mContext.CreatePromisePtr(Params.mLocalContext, __PRETTY_FUNCTION__);
 	Params.Return( *pPromise );

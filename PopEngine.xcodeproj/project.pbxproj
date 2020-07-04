@@ -522,6 +522,7 @@
 		BFDE38011C8B446A00D10F02 /* SoyUnity.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyUnity.mm; path = src/SoyUnity.mm; sourceTree = "<group>"; };
 		BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiPanopoly.cpp; path = src/TApiPanopoly.cpp; sourceTree = "<group>"; };
 		BFE462B324B1058400D04A4C /* TApiPanopoly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiPanopoly.h; path = src/TApiPanopoly.h; sourceTree = "<group>"; };
+		BFE462B824B12D8A00D04A4C /* PopDepthToYuv */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopDepthToYuv; path = src/PopDepthToYuv; sourceTree = "<group>"; };
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
@@ -1016,6 +1017,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BFE462B824B12D8A00D04A4C /* PopDepthToYuv */,
 				BF07E6D32479D94700A38A4B /* PopEngine.Android */,
 				BF108A842296B7BE003DDC5F /* PopEngine.xcassets */,
 				BF5C4AB523F6C7F5007D6393 /* PopEngine.Lumin */,
