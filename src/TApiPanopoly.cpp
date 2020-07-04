@@ -147,7 +147,7 @@ void ApiPanopoly::DepthToYuvAsync(Bind::TCallback& Params)
 			std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels );
 			DepthToYuv(*pDepthPixels,*pYuvPixels,EncodeParams);
 			
-			auto ResolvePromise = [=](Bind::TLocalContext& LocalContext)
+			auto ResolvePromise = [=](Bind::TLocalContext& LocalContext) mutable
 			{
 				//	make an image and return
 				BufferArray<JSValueRef,1> ConstructorArguments;
