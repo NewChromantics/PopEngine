@@ -466,7 +466,7 @@ public:
 	//	should probbaly block = operator so any copy of an object always has a new Context
 	~TObject();
 
-	inline TObject&			operator=(const TObject& Copy);
+	TObject&				operator=(const TObject& Copy);
 	
 	template<typename TYPE>
 	inline TYPE&			This()	{	return This<TYPE>( mContext, mThis );	}
