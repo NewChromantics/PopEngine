@@ -15,6 +15,7 @@ SOY_PATH = $(SRC_PATH)/SoyLib
 LOCAL_C_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
+-I/usr/include/webkitgtk-4.0	\
 
 LOCAL_SRC_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -46,14 +47,16 @@ $(SRC)/Source_App/PopEngineUnitTestMain.cpp	\
 # -g stops symbol stripping
 # -f[lag] PIC position independent code (for dyanmically loaded code)
 # -rpath $ORIGIN makes the shared object runtimepath be same place as executable
-CFLAGS = -c -DTARGET_LINUX $(LOCAL_C_INCLUDES) -std=gnu++17 -fPIC -g
+CFLAGS = -c -DTARGET_LINUX -DJSAPI_JSCORE  $(LOCAL_C_INCLUDES) -std=gnu++17 -fPIC -g
 LDFLAGS = -pthread
 LDFLAGS += '-Wl,-rpath,$$ORIGIN'
 
 LIB_LINK_FLAGS = $(LDFLAGS) -shared
 TEST_APP_LINK_FLAGS = $(LDFLAGS)
 
-LIBRARY_LINK_LIBS =
+LIBRARY_LINK_LIBS = \
+-ljavascriptcoregtk-4.0	\
+-L/usr/lib/aarch64-linux-gnu	\
 #-lPopH264.so
 #-lPopCameraDevice.so
 
@@ -62,8 +65,8 @@ TESTAPP_OBJECTS=$(TESTAPP_SRC_FILES:.cpp=.o)
 
 # ARCHITECTURE=${archTarget}
 # env var MACHTYPE is this systems arch type, eg; aarch64-unknown-linux-gnu
-OUT_LIBRARY=${LIBRARY_NAME}${archTarget}.so
-OUT_EXECUTABLE=${TESTAPP_NAME}${archTarget}
+OUT_LIBRARY=${LIBRARY_NAME}_${archTarget}.so
+OUT_EXECUTABLE=${TESTAPP_NAME}_${archTarget}
 
 GithubWorkflow: $(OUT_EXECUTABLE) $(OUT_LIBRARY) 
 	echo "::set-output name=executable:$(OUT_EXECUTABLE)"
