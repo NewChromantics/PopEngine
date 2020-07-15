@@ -167,14 +167,12 @@
 		BF5EB004237F0CD40077BCF5 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
 		BF5EB005237F0CD40077BCF5 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
 		BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
-		BF5EB007237F0CD40077BCF5 /* TApiOpencv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92821F22369316007E9D6F /* TApiOpencv.cpp */; };
 		BF5EB008237F0CD40077BCF5 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF5EB009237F0CD40077BCF5 /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
 		BF5EB00A237F0CD40077BCF5 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
 		BF5EB00D237F0CD40077BCF5 /* TBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF19612221B9D2B8007014EF /* TBind.cpp */; };
-		BF5EB011237F11680077BCF5 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EB00F237F11670077BCF5 /* opencv2.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF9CCABE1B6E799D000B19EA /* OpenCL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		BF5EB016237F118C0077BCF5 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF321B041B67AD990016E903 /* CoreVideo.framework */; };
 		BF5EB017237F118F0077BCF5 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE5727F1B541B3400B17528 /* CoreServices.framework */; };
@@ -642,7 +640,6 @@
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
 				BF5EB01B237F119F0077BCF5 /* IOKit.framework in Frameworks */,
 				BF5EB01E237F11AD0077BCF5 /* JavaScriptCore.framework in Frameworks */,
-				BF5EB011237F11680077BCF5 /* opencv2.framework in Frameworks */,
 				BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */,
 				BF5EB029237F12CA0077BCF5 /* libdyncallback_s.a in Frameworks */,
 				BF5EB01F237F11BD0077BCF5 /* CoreMedia.framework in Frameworks */,
@@ -1606,7 +1603,6 @@
 				BF5EAFD2237F0C6E0077BCF5 /* SoyMediaFormat.cpp in Sources */,
 				BF5EAFD4237F0C6E0077BCF5 /* SoyOpenCl.cpp in Sources */,
 				BF5EAFE8237F0C6E0077BCF5 /* SoyTypes.cpp in Sources */,
-				BF5EB007237F0CD40077BCF5 /* TApiOpencv.cpp in Sources */,
 				BF5EAFE9237F0C6E0077BCF5 /* SoyTypes.mm in Sources */,
 				BF5EAFE4237F0C6E0077BCF5 /* SoyString.mm in Sources */,
 				BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */,

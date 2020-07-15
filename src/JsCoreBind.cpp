@@ -13,9 +13,12 @@
 #include "TApiWebsocket.h"
 #include "TApiHttp.h"
 #include "TApiGui.h"
-#include "TApiOpencv.h"
 #include "TApiCoreMl.h"
 #include "TApiZip.h"
+#endif
+
+#if !defined(TARGET_OSX)
+#include "TApiOpencv.h"
 #endif
 
 #if defined(TARGET_OSX)
@@ -608,11 +611,14 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiHttp::Bind( *Context );
 #endif
 
+#if !defined(TARGET_OSX)
+			ApiOpencv::Bind(*Context);
+#endif
+			
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
-			ApiOpencv::Bind(*Context);
 #endif
 #if !defined(TARGET_LINUX)
 			ApiGui::Bind( *Context );
