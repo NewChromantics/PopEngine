@@ -95,6 +95,10 @@ TESTAPP_OBJECTS=$(TESTAPP_SRC_FILES:.cpp=.o)
 OUT_LIBRARY=$(BUILD_DIR)/lib${LIBRARY_NAME}.so
 OUT_EXECUTABLE=$(BUILD_DIR)/${TESTAPP_NAME}
 
+# gr: automate this somehow so its a list of sources, then OUT_ is just their name with no directory structire
+OUT_HEADER=$(BUILD_DIR)/PopEngine.h
+OUT_HEADER_SRC=$(SRC_PATH)/PopEngine.h
+
 GithubWorkflow: $(OUT_EXECUTABLE) $(OUT_LIBRARY) 
 	echo "::set-output name=executable:$(OUT_EXECUTABLE)"
 	echo "::set-output name=library:$(OUT_LIBRARY)"
@@ -106,10 +110,15 @@ exec: $(OUT_EXECUTABLE)
 lib: $(OUT_LIBRARY) 
 .PHONY: lib
 
-$(OUT_EXECUTABLE): $(TESTAPP_OBJECTS) $(OUT_LIBRARY)
+# Copy other output files
+$(OUT_HEADER): $(OUT_HEADER_SRC)
+	$(info Copying $(OUT_HEADER))
+	cp $(OUT_HEADER_SRC) $(OUT_HEADER)
+
+$(OUT_EXECUTABLE): $(TESTAPP_OBJECTS) $(OUT_LIBRARY) $(OUT_HEADER)
 	echo "Building test app $(OUT_EXECUTABLE)"
 	mkdir -p $(BUILD_DIR)
-	$(CC) $(TEST_APP_LINK_FLAGS) $(TESTAPP_OBJECTS) -o $@ -L$(BUILD_DIR) -lPopEngine 
+	$(CC) $(TEST_APP_LINK_FLAGS) $(TESTAPP_OBJECTS) -o $@ -L$(BUILD_DIR) -l$(LIBRARY_NAME)
 
 $(OUT_LIBRARY): $(LIB_OBJECTS)
 	echo "Building library $(OUT_LIBRARY)"
