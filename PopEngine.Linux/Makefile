@@ -14,32 +14,54 @@ SOY_PATH = $(SRC_PATH)/SoyLib
 
 LOCAL_C_INCLUDES = \
 -I$(SOY_PATH)/src	\
+-I$(SOY_PATH)/src/magic_enum/include	\
+-I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
 
 LOCAL_SRC_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
+$(SRC_PATH)/JsCoreBind.cpp \
 $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/PopMain.cpp \
-$(SRC_PATH)/JsCoreBind.cpp \
-$(SRC_PATH)/TApiEngine.cpp \
+$(SRC_PATH)/TApiCommon.cpp \
+$(SRC_PATH)/TApiHttp.cpp \
+$(SRC_PATH)/TApiSocket.cpp \
+$(SRC_PATH)/TApiWebsocket.cpp \
+$(SRC_PATH)/TBind.cpp \
+
+#$(SRC_PATH)/TApiEngine.cpp \
 
 
 # soy lib files
 LOCAL_SRC_FILES  += \
-$(SOY_PATH)/src/SoyTypes.cpp \
-$(SOY_PATH)/src/SoyAssert.cpp \
-$(SOY_PATH)/src/SoyDebug.cpp \
-$(SOY_PATH)/src/SoyPixels.cpp \
+$(SOY_PATH)/src/smallsha1/sha1.cpp \
 $(SOY_PATH)/src/memheap.cpp \
+$(SOY_PATH)/src/SoyApp.cpp \
 $(SOY_PATH)/src/SoyArray.cpp \
-$(SOY_PATH)/src/SoyTime.cpp \
-$(SOY_PATH)/src/SoyString.cpp \
-$(SOY_PATH)/src/SoyH264.cpp \
-$(SOY_PATH)/src/SoyPng.cpp \
-$(SOY_PATH)/src/SoyImage.cpp \
-$(SOY_PATH)/src/SoyStreamBuffer.cpp \
+$(SOY_PATH)/src/SoyAssert.cpp \
+$(SOY_PATH)/src/SoyBase64.cpp \
+$(SOY_PATH)/src/SoyDebug.cpp \
+$(SOY_PATH)/src/SoyFilesystem.cpp \
 $(SOY_PATH)/src/SoyFourcc.cpp \
+$(SOY_PATH)/src/SoyHttp.cpp \
+$(SOY_PATH)/src/SoyImage.cpp \
+$(SOY_PATH)/src/SoyMediaFormat.cpp \
+$(SOY_PATH)/src/SoyPixels.cpp \
+$(SOY_PATH)/src/SoyPng.cpp \
+$(SOY_PATH)/src/SoyProtocol.cpp \
+$(SOY_PATH)/src/SoyRef.cpp \
+$(SOY_PATH)/src/SoyShellExecute.cpp \
+$(SOY_PATH)/src/SoySocket.cpp \
+$(SOY_PATH)/src/SoySocketStream.cpp \
+$(SOY_PATH)/src/SoyStream.cpp \
+$(SOY_PATH)/src/SoyString.cpp \
+$(SOY_PATH)/src/SoyThread.cpp \
+$(SOY_PATH)/src/SoyTime.cpp \
+$(SOY_PATH)/src/SoyTypes.cpp \
+$(SOY_PATH)/src/SoyWebSocket.cpp \
+$(SOY_PATH)/src/SoyWindow.cpp \
+
 
 TESTAPP_SRC_FILES =	\
 $(SRC)/Source_App/PopEngineUnitTestMain.cpp	\
