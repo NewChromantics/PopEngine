@@ -4,6 +4,7 @@ CC = ${compiler}
 
 # archTarget is the target architecture
 # archTarget ?= arm7a
+archTarget ?= ${MACHTYPE}
 
 LIBRARY_NAME = PopEngine
 TESTAPP_NAME = PopEngineTestApp
@@ -26,6 +27,7 @@ $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/PopMain.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
+$(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/TBind.cpp \
