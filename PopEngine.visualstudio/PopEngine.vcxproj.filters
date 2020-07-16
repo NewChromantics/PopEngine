@@ -118,6 +118,9 @@
     <Filter Include="UnitTest\Midi">
       <UniqueIdentifier>{e8f4ec8d-535e-489f-bc8e-3261c442da42}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PopEngine.Linux">
+      <UniqueIdentifier>{201be17e-0f19-4066-b85a-7134a522106a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PopMain.h">
@@ -856,6 +859,9 @@
       <Filter>UnitTest\Midi</Filter>
     </None>
     <None Include="..\Readme.md" />
+    <None Include="..\PopEngine.Linux\Makefile">
+      <Filter>PopEngine.Linux</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PopMain.cpp">
