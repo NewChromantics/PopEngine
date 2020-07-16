@@ -1,13 +1,15 @@
+LIBRARY_NAME = PopEngine
+TESTAPP_NAME = PopEngineTestApp
+
+
 # X ?= if X env var isn't set, use this default
 compiler ?= g++
 CC = ${compiler}
 
 # archTarget is the target architecture
-# archTarget ?= arm7a
-archTarget ?= ${MACHTYPE}
-
-LIBRARY_NAME = PopEngine
-TESTAPP_NAME = PopEngineTestApp
+# if unspecified, this becomes Linux_Linux/ pick something better :)
+archTarget ?= Linux
+BUILD_DIR = ../Build/Linux_$(archTarget)
 
 SRC = ..
 SRC_PATH = $(SRC)/src
@@ -74,6 +76,7 @@ $(SRC)/Source_App/PopEngineUnitTestMain.cpp	\
 CFLAGS = -c -DTARGET_LINUX -DJSAPI_JSCORE  $(LOCAL_C_INCLUDES) -std=gnu++17 -fPIC -g
 LDFLAGS = -pthread
 LDFLAGS += '-Wl,-rpath,$$ORIGIN'
+LDFLAGS += '-Wl,-rpath-link=$(BUILD_DIR)'
 
 LIB_LINK_FLAGS = $(LDFLAGS) -shared
 TEST_APP_LINK_FLAGS = $(LDFLAGS)
@@ -89,8 +92,8 @@ TESTAPP_OBJECTS=$(TESTAPP_SRC_FILES:.cpp=.o)
 
 # ARCHITECTURE=${archTarget}
 # env var MACHTYPE is this systems arch type, eg; aarch64-unknown-linux-gnu
-OUT_LIBRARY=${LIBRARY_NAME}_${archTarget}.so
-OUT_EXECUTABLE=${TESTAPP_NAME}_${archTarget}
+OUT_LIBRARY=$(BUILD_DIR)/lib${LIBRARY_NAME}.so
+OUT_EXECUTABLE=$(BUILD_DIR)/${TESTAPP_NAME}
 
 GithubWorkflow: $(OUT_EXECUTABLE) $(OUT_LIBRARY) 
 	echo "::set-output name=executable:$(OUT_EXECUTABLE)"
@@ -105,10 +108,12 @@ lib: $(OUT_LIBRARY)
 
 $(OUT_EXECUTABLE): $(TESTAPP_OBJECTS) $(OUT_LIBRARY)
 	echo "Building test app $(OUT_EXECUTABLE)"
-	$(CC) $(TEST_APP_LINK_FLAGS) $(TESTAPP_OBJECTS) -o $@ $(OUT_LIBRARY)
+	mkdir -p $(BUILD_DIR)
+	$(CC) $(TEST_APP_LINK_FLAGS) $(TESTAPP_OBJECTS) -o $@ -L$(BUILD_DIR) -lPopEngine 
 
 $(OUT_LIBRARY): $(LIB_OBJECTS)
 	echo "Building library $(OUT_LIBRARY)"
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(LIB_LINK_FLAGS) -o $@ $(LIB_OBJECTS) $(LIBRARY_LINK_LIBS)
 	# ar rcs $@ $(LIB_OBJECTS)
 	echo "Listing dependencies"

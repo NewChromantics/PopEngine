@@ -6,12 +6,19 @@
 		{
 			"label": "Build",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make archType=arm64)",
+			"command": "(cd PopEngine.Linux && make)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "Rebuild all",
+			"type": "shell",
+			"command": "(cd PopEngine.Linux && make clean && make)",
+			"problemMatcher": [],
+			"group": "build"	
 		}
 	]
 }
