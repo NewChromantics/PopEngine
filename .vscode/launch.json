@@ -1,0 +1,30 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "vgdb",
+			"request": "launch",
+			"name": "Debug vgdb",
+			"program": "./PopEngine.Linux/PopEngineTestApp",
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"useAbsoluteFilePaths":true,
+			"preLaunchTask": "Build"
+		},
+		{
+			"name": "Debug gdb",
+			"type": "gdb",
+			"request": "launch",
+			"target": "./PopEngine.Linux/PopEngineTestApp",
+			"program": "./PopEngine.Linux/PopEngineTestApp",
+			"cwd": "${workspaceRoot}",
+			"valuesFormatting": "parseText",
+			"printCalls": true,
+			"showDevDebugOutput": true,
+			"preLaunchTask": "Build"
+		}
+	]
+}

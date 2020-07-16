@@ -56,3 +56,5 @@ PopEngine.visualstudio/obj/ARM64/
 
 PopEngine.visualstudio/bin/
 
+# linux build temp files
+*.o
