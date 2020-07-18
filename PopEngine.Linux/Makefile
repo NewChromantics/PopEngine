@@ -25,11 +25,10 @@ LOCAL_C_INCLUDES = \
 LOCAL_SRC_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
 $(SRC_PATH)/JsCoreBind.cpp \
-$(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/PopMain.cpp \
+$(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
-$(SRC_PATH)/TApiEngine.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
 $(SRC_PATH)/TApiMedia.cpp \
 $(SRC_PATH)/TApiPanopoly.cpp \

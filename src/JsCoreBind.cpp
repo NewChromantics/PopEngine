@@ -604,8 +604,8 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiPop::Bind(*Context);
 			ApiSocket::Bind(*Context);
 			ApiPanopoly::Bind(*Context);
-			ApiEngine::Bind(*Context);
 #if !defined(TARGET_LINUX)
+			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
 #endif
 			ApiMedia::Bind( *Context );
