@@ -101,8 +101,14 @@ OUT_LIBRARY=$(BUILD_DIR)/lib${LIBRARY_NAME}.so
 OUT_EXECUTABLE=$(BUILD_DIR)/${TESTAPP_NAME}
 
 # gr: automate this somehow so its a list of sources, then OUT_ is just their name with no directory structire
-OUT_HEADER=$(BUILD_DIR)/PopEngine.h
-OUT_HEADER_SRC=$(SRC_PATH)/PopEngine.h
+OUT_FILE_SOURCES = \
+$(SRC_PATH)/PopEngine.h	\
+$(SRC_PATH)/Libs/PopH264/libPopH264.so \
+$(SRC_PATH)/Libs/PopCameraDevice/libPopCameraDevice.so \
+
+OUT_FILES = $(addprefix ${BUILD_DIR}/,$(notdir ${OUT_FILE_SOURCES}))
+$(info out files...)
+$(info ${OUT_FILES})
 
 GithubWorkflow: $(OUT_EXECUTABLE) $(OUT_LIBRARY)
 	# gr: this prints out the word echo " should it be $(info ::set-output) ?
@@ -117,16 +123,17 @@ lib: $(OUT_LIBRARY)
 .PHONY: lib
 
 # Copy other output files
-$(OUT_HEADER): $(OUT_HEADER_SRC)
-	$(info Copying $(OUT_HEADER))
-	cp $(OUT_HEADER_SRC) $(OUT_HEADER)
+$(OUT_FILES): $(OUT_FILE_SOURCES)
+	mkdir -p $(BUILD_DIR)
+	$(info Copying output files $(OUT_FILES))
+	$(foreach SourceFilename,$(OUT_FILE_SOURCES),'cp $(SourceFilename) ${BUILD_DIR}')
 
 $(OUT_EXECUTABLE): $(TESTAPP_OBJECTS) $(OUT_LIBRARY)
 	$(info Building test app $(OUT_EXECUTABLE))
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(TEST_APP_LINK_FLAGS) $(TESTAPP_OBJECTS) -o $@ -L$(BUILD_DIR) -l$(LIBRARY_NAME)
 
-$(OUT_LIBRARY): $(LIB_OBJECTS) $(OUT_HEADER)
+$(OUT_LIBRARY): $(LIB_OBJECTS) $(OUT_HEADER) $(OUT_FILES)
 	$(info Building library $(OUT_LIBRARY))
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(LIB_LINK_FLAGS) -o $@ $(LIB_OBJECTS) $(LIBRARY_LINK_LIBS)
