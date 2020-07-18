@@ -99,7 +99,8 @@ OUT_EXECUTABLE=$(BUILD_DIR)/${TESTAPP_NAME}
 OUT_HEADER=$(BUILD_DIR)/PopEngine.h
 OUT_HEADER_SRC=$(SRC_PATH)/PopEngine.h
 
-GithubWorkflow: $(OUT_EXECUTABLE) $(OUT_LIBRARY) 
+GithubWorkflow: $(OUT_EXECUTABLE) $(OUT_LIBRARY)
+	# gr: this prints out the word echo " should it be $(info ::set-output) ?
 	echo "::set-output name=executable:$(OUT_EXECUTABLE)"
 	echo "::set-output name=library:$(OUT_LIBRARY)"
 .PHONY: GithubWorkflow
@@ -116,16 +117,16 @@ $(OUT_HEADER): $(OUT_HEADER_SRC)
 	cp $(OUT_HEADER_SRC) $(OUT_HEADER)
 
 $(OUT_EXECUTABLE): $(TESTAPP_OBJECTS) $(OUT_LIBRARY)
-	echo "Building test app $(OUT_EXECUTABLE)"
+	$(info Building test app $(OUT_EXECUTABLE))
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(TEST_APP_LINK_FLAGS) $(TESTAPP_OBJECTS) -o $@ -L$(BUILD_DIR) -l$(LIBRARY_NAME)
 
 $(OUT_LIBRARY): $(LIB_OBJECTS) $(OUT_HEADER)
-	echo "Building library $(OUT_LIBRARY)"
+	$(info Building library $(OUT_LIBRARY))
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(LIB_LINK_FLAGS) -o $@ $(LIB_OBJECTS) $(LIBRARY_LINK_LIBS)
 	# ar rcs $@ $(LIB_OBJECTS)
-	echo "Listing dependencies"
+	$(info Listing dependencies)
 	ldd $(OUT_LIBRARY)
 
 .cpp.o:
@@ -133,9 +134,8 @@ $(OUT_LIBRARY): $(LIB_OBJECTS) $(OUT_HEADER)
 
 clean:
 	# clean build files, anything .o
-	echo "Cleaning files"
+	$(info Cleaning files)
 	rm -f $(TESTAPP_OBJECTS)
 	rm -f $(LIB_OBJECTS)	
-	#find ../ -type f -name '*.o' -delete
 	rm -f $(OUT_LIBRARY)
 	rm -f $(OUT_EXECUTABLE)

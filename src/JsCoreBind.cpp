@@ -6,12 +6,12 @@
 #include "TApiCommon.h"
 #include "TApiSocket.h"
 #include "TApiPanopoly.h"
-#if !defined(TARGET_LINUX)
 #include "TApiEngine.h"
-#include "TApiOpengl.h"
-#include "TApiMedia.h"
 #include "TApiWebsocket.h"
 #include "TApiHttp.h"
+#if !defined(TARGET_LINUX)
+#include "TApiOpengl.h"
+#include "TApiMedia.h"
 #include "TApiGui.h"
 #include "TApiCoreMl.h"
 #include "TApiZip.h"
@@ -607,9 +607,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
 			ApiMedia::Bind( *Context );
+#endif
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
-#endif
 
 #if !defined(TARGET_OSX) && !defined(TARGET_LINUX)
 			ApiOpencv::Bind(*Context);

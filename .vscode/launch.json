@@ -9,7 +9,7 @@
 			"request": "launch",
 			"name": "Debug vgdb",
 			"program": "Build/Linux_Linux/PopEngineTestApp",
-			"args": [],
+			"args": ["UnitTest/HttpServer"],
 			"cwd": "${workspaceRoot}",
 			"useAbsoluteFilePaths":true,
 			"preLaunchTask": "Build"
