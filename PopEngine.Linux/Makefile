@@ -27,12 +27,14 @@ $(SRC_PATH)/Json11/json11.cpp \
 $(SRC_PATH)/JsCoreBind.cpp \
 $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/PopMain.cpp \
+$(SRC_PATH)/TBind.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
+$(SRC_PATH)/TApiEngine.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
+$(SRC_PATH)/TApiMedia.cpp \
 $(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
-$(SRC_PATH)/TBind.cpp \
 
 #$(SRC_PATH)/TApiEngine.cpp \
 
@@ -84,8 +86,11 @@ TEST_APP_LINK_FLAGS = $(LDFLAGS)
 LIBRARY_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
-#-lPopH264.so
-#-lPopCameraDevice.so
+-lPopH264 \
+-L$(SRC_PATH)/Libs/PopH264	\
+-lPopCameraDevice \
+-L$(SRC_PATH)/Libs/PopCameraDevice	\
+
 
 LIB_OBJECTS=$(LOCAL_SRC_FILES:.cpp=.o)
 TESTAPP_OBJECTS=$(TESTAPP_SRC_FILES:.cpp=.o)

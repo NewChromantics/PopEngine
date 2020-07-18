@@ -9,9 +9,9 @@
 #include "TApiEngine.h"
 #include "TApiWebsocket.h"
 #include "TApiHttp.h"
+#include "TApiMedia.h"
 #if !defined(TARGET_LINUX)
 #include "TApiOpengl.h"
-#include "TApiMedia.h"
 #include "TApiGui.h"
 #include "TApiCoreMl.h"
 #include "TApiZip.h"
@@ -178,6 +178,7 @@ template<typename TYPE>
 JSTypedArrayType GetTypedArrayType()
 {
 	static_assert( sizeof(TYPE) == -1, "GetTypedArrayType not implemented for type" );
+	return kJSTypedArrayTypeUint8Array;	//	linux/gcc has a warning with no return
 }
 
 template<> JSTypedArrayType GetTypedArrayType<uint8_t>()	{	return kJSTypedArrayTypeUint8Array;	}
@@ -603,11 +604,11 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiPop::Bind(*Context);
 			ApiSocket::Bind(*Context);
 			ApiPanopoly::Bind(*Context);
-#if !defined(TARGET_LINUX)
 			ApiEngine::Bind(*Context);
+#if !defined(TARGET_LINUX)
 			ApiOpengl::Bind( *Context );
-			ApiMedia::Bind( *Context );
 #endif
+			ApiMedia::Bind( *Context );
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
 

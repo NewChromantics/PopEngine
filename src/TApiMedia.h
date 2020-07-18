@@ -1,6 +1,6 @@
 #pragma once
 #include "TBind.h"
-#include "SoyOpenglWindow.h"
+#include <SoyPixels.h>
 
 class TMediaPacket;
 class TMediaExtractor;

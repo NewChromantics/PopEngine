@@ -1,11 +1,11 @@
 #include "TApiMedia.h"
-#include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
-#include "SoyFilesystem.h"
-#include "SoyLib/src/SoyMedia.h"
-#include "MagicEnum/include/magic_enum.hpp"
+#include <SoyFilesystem.h>
+#include <SoyMedia.h>
+#include <magic_enum.hpp>
 #include "Json11/json11.hpp"
-#include "SoyLib/src/SoyRuntimeLibrary.h"
+#include <SoyRuntimeLibrary.h>
+
 
 
 //	video decoding and encoding
@@ -14,6 +14,8 @@
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
 #include "Libs/PopH264/PopH264.h"
+#elif defined(TARGET_LINUX)
+#include "Libs/PopH264/PopH264.h"
 #endif
 
 
@@ -21,6 +23,8 @@
 #include "Libs/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
+#include "Libs/PopCameraDevice/PopCameraDevice.h"
+#elif defined(TARGET_LINUX)
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
 #endif
 

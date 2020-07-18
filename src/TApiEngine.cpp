@@ -1,8 +1,6 @@
 #include "TApiEngine.h"
 
 #include "SoyWindow.h"
-#include "SoyOpenglWindow.h"
-#include "SoyOpenglWindow.h"
 #include "TApiGui.h"
 
 namespace ApiEngine
