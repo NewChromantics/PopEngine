@@ -963,6 +963,69 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 
 void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename)
 {
+	//	gr: javascript core on OSX failed with this chi 𝑥 character.
+	//		web/v8 is okay.
+	//		javascriptcore ios is okay
+	{
+		auto IsAscii = [](char Char)
+		{
+			//	Source.substr(45107,20).c_str()[0]
+			//	signed, so negative is the valid test!
+			if ( Char > 127 )
+				return false;
+			if ( Char < 0 )
+				return false;
+			return true;
+		};
+
+		Array<int> NonAsciiPositions;
+		for ( auto i=0;	i<Source.length();	i++ )
+		{
+			auto Char = Source[i];
+			if ( IsAscii(Char) )
+				continue;
+			NonAsciiPositions.PushBack(i);
+		}
+		
+		if ( !NonAsciiPositions.IsEmpty() )
+		{
+			auto SubString = [&](int Start,int End)
+			{
+				auto SourceLength = Source.length();
+				Start = std::max(0,Start);
+				End = std::min<int>(SourceLength,End);
+				auto Length = End-Start;
+				auto String = Source.substr( Start, End-Start );
+				std::replace( String.begin(), String.end(), '\r', '\n');
+				Start = std::max<int>(Start,String.find_last_of('\n')+1);
+				String = Source.substr( Start, End-Start );
+				End = std::max<int>(End,String.find_first_of('\n')+1);
+				String = Source.substr( Start, End-Start );
+				return String;
+			};
+
+			std::stringstream Error;
+			for ( auto i=0;	i<NonAsciiPositions.GetSize();	i++ )
+			{
+				//	get the line this character is on
+				auto CharPos = NonAsciiPositions[i];
+				auto Start = std::max<int>(0,Source.rfind('\n',CharPos));
+				auto End = Source.find('\n',CharPos);
+				if ( End == Source.npos )
+					End = Source.length();
+				auto Line = Source.substr( Start, End-Start );
+				std::replace( Line.begin(), Line.end(), '\r', ' ');
+				
+				//	insert >< markers
+				Line.insert( CharPos-Start+1, " <<< ");
+				Line.insert( CharPos-Start, " >>> ");
+				Error << "Non-ascii char in source @" << CharPos << "; " << Line << std::endl;
+			}
+			Error << "Will fail to compile on JavascriptCore OSX";
+			throw Soy::AssertException(Error);
+		}
+	}
+	
 	auto Exec = [=](Bind::TLocalContext& Context)
 	{
 		auto ThisHandle = JSObjectRef(nullptr);
