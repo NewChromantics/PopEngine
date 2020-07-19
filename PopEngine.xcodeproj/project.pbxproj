@@ -257,7 +257,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B71D7B262137FB4000F29EA0 /* SoyDecklink */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SoyDecklink; sourceTree = "<group>"; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
 		B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SoyDecklink.cpp; sourceTree = "<group>"; };
 		B71D7B2D2137FE9200F29EA0 /* SoyAutoReleasePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyAutoReleasePtr.h; path = src/SoyAutoReleasePtr.h; sourceTree = "<group>"; };
@@ -669,7 +668,6 @@
 		B71D7B252137F7EE00F29EA0 /* SoyDeckLink */ = {
 			isa = PBXGroup;
 			children = (
-				B71D7B262137FB4000F29EA0 /* SoyDecklink */,
 				B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */,
 				B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */,
 			);

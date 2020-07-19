@@ -17,7 +17,7 @@
 #include "TApiZip.h"
 #endif
 
-#if !defined(TARGET_OSX) && !defined(TARGET_LINUX)
+#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_IOS)
 #include "TApiOpencv.h"
 #endif
 
@@ -612,7 +612,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
 
-#if !defined(TARGET_OSX) && !defined(TARGET_LINUX)
+#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_IOS)
 			ApiOpencv::Bind(*Context);
 #endif
 			
