@@ -869,6 +869,7 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	Error << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
 
 	//	try and open xcode at the erroring line (a bit experimental)
+	/*	gr: I have a case where this crashes osx, so... disabled
 #if defined(JSAPI_JSCORE) && defined(TARGET_OSX)
 	{
 		try
@@ -882,6 +883,7 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 		}
 	}
 #endif
+	*/
 	throw Soy::AssertException(Error.str());
 }
 
