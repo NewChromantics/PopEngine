@@ -23,6 +23,7 @@ namespace ApiPop
 	DEFINE_BIND_TYPENAME(ShellExecute);
 
 	static void 	Debug(Bind::TCallback& Params);
+	static void 	Warning(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
 	static void 	CompileAndRun(Bind::TCallback& Params);
 	static void		FileExists(Bind::TCallback& Params);
@@ -87,6 +88,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
 	DEFINE_BIND_FUNCTIONNAME(CreateTestPromise);
 	DEFINE_BIND_FUNCTIONNAME(Debug);
+	DEFINE_BIND_FUNCTIONNAME(Warning);
 	DEFINE_BIND_FUNCTIONNAME(ThreadTest);
 	DEFINE_BIND_FUNCTIONNAME(GetImageHeapSize);
 	DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
@@ -143,6 +145,13 @@ void ApiPop::Debug(Bind::TCallback& Params)
 		std::Debug << (a==0?"":",") << Arg;
 	}
 	std::Debug << std::endl;
+}
+
+
+void ApiPop::Warning(Bind::TCallback& Params)
+{
+	std::Debug << "Warning: ";
+	Debug(Params);
 }
 
 
