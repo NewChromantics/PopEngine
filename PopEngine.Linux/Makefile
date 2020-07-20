@@ -11,6 +11,8 @@ CC = ${compiler}
 archTarget ?= Linux
 BUILD_DIR = ../Build/Linux_$(archTarget)
 
+CONFIGURATION ?= Release
+
 PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
@@ -73,12 +75,22 @@ $(PROJECT_PATH)/Source_App/PopEngineUnitTestMain.cpp	\
 
 LIB_DEFINES = \
 -DTARGET_LINUX	\
--DJSAPI_JSCORE	\
+-DJSAPI_JSCORE
+
+
+ifeq ($(CONFIGURATION),Release)
+$(info Building Release)
+CONFIGURATION_FLAGS = -O3
+else
+$(info Building Debug)
+CONFIGURATION_FLAGS = -g
+endif
+
 
 # -g stops symbol stripping
 # -f[lag] PIC position independent code (for dyanmically loaded code)
 # -rpath $ORIGIN makes the shared object runtimepath be same place as executable
-CFLAGS = -c $(LIB_DEFINES) $(LIB_INCLUDES) -std=gnu++17 -fPIC -g
+CFLAGS = -c $(CONFIGURATION_FLAGS) $(LIB_DEFINES) $(LIB_INCLUDES) -std=gnu++17 -fPIC
 LDFLAGS = -pthread
 LDFLAGS += '-Wl,-rpath,$$ORIGIN'
 LDFLAGS += '-Wl,-rpath-link=$(BUILD_DIR)'
