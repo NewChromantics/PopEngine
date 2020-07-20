@@ -740,7 +740,7 @@ PopH264::TInstance::TInstance()
 	if ( mHandle <= 0 )
 	{
 		std::stringstream Error;
-		Error << "Failed to create PopH264 instance. Error=" << mHandle;
+		Error << "Failed to create PopH264 decoder instance. Error=" << mHandle;
 		throw Soy::AssertException(Error.str());
 	}
 
