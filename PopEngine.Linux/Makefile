@@ -7,9 +7,10 @@ compiler ?= g++
 CC = ${compiler}
 
 # archTarget is the target architecture
-# if unspecified, this becomes Linux_Linux/ pick something better :)
+# tsdk: the naming of the build folders are handled by the github actions
+# archTarget could still be used for an if statements in the make file
 archTarget ?= Linux
-BUILD_DIR = ../Build/Linux_$(archTarget)
+BUILD_DIR = ../Build
 
 CONFIGURATION ?= Release
 
@@ -125,12 +126,9 @@ OUT_FILES = $(addprefix ${BUILD_DIR}/,$(notdir ${OUT_FILE_SOURCES}))
 #$(info out files...)
 #$(info ${OUT_FILES})
 
-
-
 GithubWorkflow: $(OUT_APP) $(OUT_LIB)
-	# gr: this prints out the word echo " should it be $(info ::set-output) ?
-	echo "::set-output name=executable:$(OUT_APP)"
-	echo "::set-output name=library:$(OUT_LIB)"
+	$(info ::set-output name=executable:$(OUT_APP))
+	$(info ::set-output name=library:$(OUT_LIB))
 .PHONY: GithubWorkflow
 
 exec: $(OUT_APP)
