@@ -142,6 +142,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12
+          scope: '@newchromantics'
           registry-url: https://npm.pkg.github.com/
 
       # set dry-run if this isn't a tag so npm publish will run, but not do anything (and not fail)
@@ -154,7 +155,7 @@ jobs:
       - name: Publish
         working-directory: ${{ env.project }}.Package/
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
         run: |
           ls
           npm i
