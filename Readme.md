@@ -34,3 +34,7 @@ Build Notes
 		- `sudo add-apt-repository ppa:jonathonf/gcc-9.0`
 		- `sudo apt-get install gcc-9 g++-9`
 		- make gcc/g++ default to new version `sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9`
+
+GitHub Actions Notes
+-------------
+If you are getting git checkout errors on self hosted runners ssh in and manually delete the repo then restart the workflow
