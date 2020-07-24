@@ -16,13 +16,13 @@ jobs:
     strategy:
       matrix:
         config:
-          # - os: ubuntu-latest
-          #   type: linux
-          #   architecture: x86_64
-
-          - os: Nvidia
+          - os: ubuntu-latest
             type: linux
-            architecture: arm64
+            architecture: x86_64
+
+          # - os: Nvidia
+          #   type: linux
+          #   architecture: arm64
 
           # - os: Pi4
           #   type: linux
@@ -52,6 +52,7 @@ jobs:
           mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           cd Libs
           ls -R
+          git config --list
 
       - name: Linux
         uses: NewChromantics/PopAction_BuildLinux@v1
