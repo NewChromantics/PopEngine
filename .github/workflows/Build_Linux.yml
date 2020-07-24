@@ -20,13 +20,13 @@ jobs:
           #   type: linux
           #   architecture: x86_64
 
-          # - os: Nvidia
-          #   type: linux
-          #   architecture: arm64
-
-          - os: Pi4
+          - os: Nvidia
             type: linux
             architecture: arm64
+
+          # - os: Pi4
+          #   type: linux
+          #   architecture: arm64
 
     steps:
       - uses: actions/checkout@v2
