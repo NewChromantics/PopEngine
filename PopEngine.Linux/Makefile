@@ -6,10 +6,10 @@ APP_NAME = PopEngineTestApp
 compiler ?= g++
 CC = ${compiler}
 
-# archTarget is the target architecture eg. Nvidia / Pi4
+# osTarget is the target os eg. Nvidia / Pi4
 # tsdk: the naming of the build folders are handled by the github actions
-# archTarget is still used for if statements in the make file
-archTarget ?= Linux
+# osTarget is still used for if statements in the make file
+osTarget ?= Linux
 BUILD_DIR = ../Build
 
 CONFIGURATION ?= Release
@@ -27,7 +27,8 @@ LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(PROJECT_PATH)/Libs/$(GITHUB_LIB_PATH)	\
+-I$(PROJECT_PATH)/Libs/PopH264/$(GITHUB_LIB_PATH)	\
+-I$(PROJECT_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_PATH)	\
 
 LIB_SRC_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -107,9 +108,9 @@ LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(SRC_PATH)/Libs/PopH264/$(GITHUB_LIB_PATH)	\
+-L$(PROJECT_PATH)/Libs/PopH264/$(GITHUB_LIB_PATH)	\
 -lPopCameraDevice \
--L$(SRC_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_PATH)	\
+-L$(PROJECT_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_PATH)	\
 
 
 LIB_OBJECTS=$(LIB_SRC_FILES:.cpp=.o)
