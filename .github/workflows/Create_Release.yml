@@ -155,7 +155,7 @@ jobs:
       - name: Publish
         working-directory: ${{ env.project }}.Package/
         env:
-          NODE_AUTH_TOKEN: ${{ env.WRITE_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ls
           npm publish $NPM_PACKAGE_DRY_RUN
