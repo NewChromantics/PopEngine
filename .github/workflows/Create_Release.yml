@@ -63,7 +63,7 @@ jobs:
         working-directory: ${{ env.project }}.Package/
         run: npm i
         env:
-          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }
+          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
       - name: Move Package Downloads to Libs
         run: |
