@@ -50,15 +50,14 @@ jobs:
       - name: Move Package Downloads to Libs
         run: |
           mkdir -p Libs
-          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
+          ln ${{ env.project }}.Package/node_modules/@newchromantics/ Libs
           cd Libs
-          echo ${{ matrix.config.os }}-${{ matrix.config.type }}
           ls -R
-          for lib in *;  cp $lib/${{ matrix.config.os }}-${{ matrix.config.type }}/* ./
 
       - name: Linux
         uses: NewChromantics/PopAction_BuildLinux@v1
         with:
-          machine: ${{ matrix.config.os }}
-          architecture: ${{ matrix.config.architecture }}
+          source_dir: ${{ matrix.config.os }}-${{ matrix.config.type }}
+          architecture: ${{ matrix.config.os }}
           project: ${{ env.project }}
+

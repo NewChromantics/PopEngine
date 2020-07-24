@@ -6,9 +6,9 @@ APP_NAME = PopEngineTestApp
 compiler ?= g++
 CC = ${compiler}
 
-# archTarget is the target architecture
+# archTarget is the target architecture eg. Nvidia / Pi4
 # tsdk: the naming of the build folders are handled by the github actions
-# archTarget could still be used for an if statements in the make file
+# archTarget is still used for if statements in the make file
 archTarget ?= Linux
 BUILD_DIR = ../Build
 
@@ -99,13 +99,16 @@ LDFLAGS += '-Wl,-rpath-link=$(BUILD_DIR)'
 LIB_LINK_FLAGS = $(LDFLAGS) -shared
 APP_LINK_FLAGS = $(LDFLAGS)
 
+# tsdk: Env var that is set by the github action
+GITHUB_LIB_DIR = ${github_lib_dir}
+
 LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(SRC_PATH)/Libs/PopH264	\
+-L$(SRC_PATH)/Libs/PopH264/$(GITHUB_LIB_DIR)	\
 -lPopCameraDevice \
--L$(SRC_PATH)/Libs/PopCameraDevice	\
+-L$(SRC_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_DIR)	\
 
 
 LIB_OBJECTS=$(LIB_SRC_FILES:.cpp=.o)
