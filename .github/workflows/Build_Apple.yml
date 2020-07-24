@@ -1,0 +1,53 @@
+name: Build Apple
+
+env:
+  project: PopEngine
+  AUTH_TOKEN: db13663e713fb0ed4dc2041ea44904ae1b41d978
+
+on:
+  push:
+    branches:
+      - master
+      - '*Test*'
+
+jobs:
+  Test:
+    name: ${{ matrix.config.os }}-${{ matrix.config.type }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - os: macOS
+            type: Ios
+
+          - os: macOS
+            type: Osx
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+      
+      - name: Configure Node
+        uses: actions/setup-node@v1
+        with:
+          registry-url: https://npm.pkg.github.com/
+          scope: '@newchromantics'
+          node-version: 12
+  
+      - name: Install Github Packages
+        working-directory: ${{ env.project }}.Package/
+        run: npm i
+        env:
+          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
+
+      - name: Move Package Downloads to Libs
+        run: |
+          mkdir -p Libs
+          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
+          ls -R Libs
+
+      - uses: NewChromantics/PopAction_BuildApple@v1
+        with:
+          BuildScheme: ${{ env.project }}_${{ matrix.config.type }}
+          project: ${{ env.project }}

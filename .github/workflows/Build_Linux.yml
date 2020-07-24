@@ -1,0 +1,64 @@
+name: Build Linux
+
+env:
+  project: PopEngine
+  AUTH_TOKEN: db13663e713fb0ed4dc2041ea44904ae1b41d978
+
+on:
+  push:
+    branches:
+      - master
+      - '*Test*'
+
+jobs:
+  Test:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          # tsdk: Disabled as the kinect dependencies break the build
+          # - os: ubuntu-latest
+          #   type: linux
+          #   architecture: x86_64
+
+          - os: Nvidia
+            type: linux
+            architecture: arm64
+
+          # - os: Pi4
+          #   type: linux
+          #   architecture: arm64
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Configure Node
+        uses: actions/setup-node@v1
+        with:
+          registry-url: https://npm.pkg.github.com/
+          scope: '@newchromantics'
+          node-version: 12
+
+      - name: Install Github Packages
+        working-directory: ${{ env.project }}.Package/
+        run: npm i
+        env:
+          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
+
+      - name: Move Package Downloads to Libs
+        run: |
+          mkdir -p Libs
+          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
+          cd Libs
+          echo ${{ matrix.config.os }}-${{ matrix.config.type }}
+          ls -R
+          for lib in *;  cp $lib/${{ matrix.config.os }}-${{ matrix.config.type }}/* ./
+
+      - name: Linux
+        uses: NewChromantics/PopAction_BuildLinux@v1
+        with:
+          machine: ${{ matrix.config.os }}
+          architecture: ${{ matrix.config.architecture }}
+          project: ${{ env.project }}
