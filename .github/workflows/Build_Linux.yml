@@ -57,7 +57,7 @@ jobs:
       - name: Linux
         uses: NewChromantics/PopAction_BuildLinux@v1
         with:
-          source_dir: ${{ matrix.config.os }}-${{ matrix.config.type }}
+          lib_dir: ${{ matrix.config.os }}-${{ matrix.config.type }}
           architecture: ${{ matrix.config.os }}
           project: ${{ env.project }}
 
