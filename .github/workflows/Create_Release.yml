@@ -3,7 +3,7 @@ name: Create Release
 env:
   project: PopEngine
   AUTH_TOKEN: db13663e713fb0ed4dc2041ea44904ae1b41d978
-  WRITE_TOKEN: b0eab4c5c98cd45f3eb387f9a281955567344238
+  WRITE_TOKEN: 84158c6faf08eaf4d17b7766718be4b4f3cfe7aa
 
 on:
   push:
