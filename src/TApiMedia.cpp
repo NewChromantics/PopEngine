@@ -15,7 +15,7 @@
 #pragma comment(lib,"PopH264.lib")
 #include "Libs/PopH264/PopH264.h"
 #elif defined(TARGET_LINUX)
-#include "PopH264/PopH264.h"
+#include "PopH264.h"
 #endif
 
 
@@ -25,7 +25,7 @@
 #pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
 #elif defined(TARGET_LINUX)
-#include "PopCameraDevice/PopCameraDevice.h"
+#include "PopCameraDevice.h"
 #endif
 
 
