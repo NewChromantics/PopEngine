@@ -50,7 +50,7 @@ jobs:
       - name: Move Package Downloads to Libs
         run: |
           mkdir -p Libs
-          ln ${{ env.project }}.Package/node_modules/@newchromantics/ Libs
+          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           cd Libs
           ls -R
 
