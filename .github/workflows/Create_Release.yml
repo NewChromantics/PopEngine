@@ -3,7 +3,6 @@ name: Create Release
 env:
   project: PopEngine
   AUTH_TOKEN: db13663e713fb0ed4dc2041ea44904ae1b41d978
-  WRITE_TOKEN: 84158c6faf08eaf4d17b7766718be4b4f3cfe7aa
 
 on:
   push:
@@ -150,8 +149,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') != true
         run: echo "::set-env name=NPM_PACKAGE_DRY_RUN::--dry-run"
 
-      # copy files we want to
-      # download github-publish dependencies (ci), then publish from package dir
+      # tsdk: don't need to install anything here and can just ket the GITHUB_TOKEN work 
       - name: Publish
         working-directory: ${{ env.project }}.Package/
         env:
