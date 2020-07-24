@@ -4,7 +4,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "version": "0.0.1",
-  "description": "",
+  "description": "Pop Engine",
   "main": "index.js",
   "dependencies": {
     "@newchromantics/poph264": "1.2.10",
