@@ -27,8 +27,6 @@ LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(PROJECT_PATH)/Libs/PopH264/$(GITHUB_LIB_PATH)	\
--I$(PROJECT_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_PATH)	\
 
 LIB_SRC_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -104,13 +102,14 @@ LDFLAGS += '-Wl,-rpath-link=$(BUILD_DIR)'
 LIB_LINK_FLAGS = $(LDFLAGS) -shared
 APP_LINK_FLAGS = $(LDFLAGS)
 
+# tsdk: the paths have to be lower case as that is how node imports them
 LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(PROJECT_PATH)/Libs/PopH264/$(GITHUB_LIB_PATH)	\
+-L$(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)	\
 -lPopCameraDevice \
--L$(PROJECT_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_PATH)	\
+-L$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)	\
 
 
 LIB_OBJECTS=$(LIB_SRC_FILES:.cpp=.o)
