@@ -1,3 +1,10 @@
+Build Status
+==========================
+![Create Release](https://github.com/NewChromantics/PopEngine/workflows/Create%20Release/badge.svg)
+![Build Apple](https://github.com/NewChromantics/PopEngine/workflows/Build%20Apple/badge.svg)
+![Build Windows](https://github.com/NewChromantics/PopEngine/workflows/Build%20Windows/badge.svg)
+![Build Linux](https://github.com/NewChromantics/PopEngine/workflows/Build%20Linux/badge.svg)
+
 Pop Engine
 ==================================
 
