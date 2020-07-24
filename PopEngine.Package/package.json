@@ -1,0 +1,27 @@
+{
+  "name": "@newchromantics/popcap",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@newchromantics/poph264": "1.2.10",
+    "@newchromantics/popcameradevice": "2.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NewChromantics/PopCap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NewChromantics/PopCap/issues"
+  },
+  "homepage": "https://github.com/NewChromantics/PopCap#readme"
+}

@@ -1,4 +1,4 @@
-name: Build Linux
+name: Build Apple
 
 env:
   project: PopEngine
@@ -12,53 +12,42 @@ on:
 
 jobs:
   Test:
+    name: ${{ matrix.config.os }}-${{ matrix.config.type }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
         config:
-          # tsdk: Disabled as the kinect dependencies break the build
-          # - os: ubuntu-latest
-          #   type: linux
-          #   architecture: x86_64
+          - os: macOS
+            type: Ios
 
-          - os: Nvidia
-            type: linux
-            architecture: arm64
-
-          # - os: Pi4
-          #   type: linux
-          #   architecture: arm64
+          - os: macOS
+            type: Osx
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: "recursive"
-
+      
       - name: Configure Node
         uses: actions/setup-node@v1
         with:
           registry-url: https://npm.pkg.github.com/
           scope: '@newchromantics'
           node-version: 12
-
+  
       - name: Install Github Packages
         working-directory: ${{ env.project }}.Package/
         run: npm i
         env:
-          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }
 
       - name: Move Package Downloads to Libs
         run: |
           mkdir -p Libs
           mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
-          cd Libs
-          echo ${{ matrix.config.os }}-${{ matrix.config.type }}
-          ls -R
-          for lib in *;  cp $lib/${{ matrix.config.os }}-${{ matrix.config.type }}/* ./
+          ls -R Libs
 
-      - name: Linux
-        uses: NewChromantics/PopAction_BuildLinux@v1
+      - uses: NewChromantics/PopAction_BuildApple@v1
         with:
-          machine: ${{ matrix.config.os }}
-          architecture: ${{ matrix.config.architecture }}
+          BuildScheme: ${{ env.project }}_${{ matrix.config.type }}
           project: ${{ env.project }}
