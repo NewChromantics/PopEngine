@@ -17,13 +17,13 @@ jobs:
       matrix:
         config:
           # tsdk: Disabled as the kinect dependencies break the build
-          # - os: ubuntu-latest
-          #   type: linux
-          #   architecture: x86_64
-
-          - os: Nvidia
+          - os: ubuntu-latest
             type: linux
-            architecture: arm64
+            architecture: x86_64
+
+          # - os: Nvidia
+          #   type: linux
+          #   architecture: arm64
 
           # - os: Pi4
           #   type: linux
