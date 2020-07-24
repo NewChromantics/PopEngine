@@ -18,12 +18,16 @@ PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
 
+# tsdk: Env var that is set by the github action
+GITHUB_LIB_PATH = ${github_lib_dir}
+
 LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SOY_PATH)/src/magic_enum/include	\
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
+-I$(PROJECT_PATH)/Libs/$(GITHUB_LIB_PATH)	\
 
 LIB_SRC_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -99,16 +103,13 @@ LDFLAGS += '-Wl,-rpath-link=$(BUILD_DIR)'
 LIB_LINK_FLAGS = $(LDFLAGS) -shared
 APP_LINK_FLAGS = $(LDFLAGS)
 
-# tsdk: Env var that is set by the github action
-GITHUB_LIB_DIR = ${github_lib_dir}
-
 LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(SRC_PATH)/Libs/PopH264/$(GITHUB_LIB_DIR)	\
+-L$(SRC_PATH)/Libs/PopH264/$(GITHUB_LIB_PATH)	\
 -lPopCameraDevice \
--L$(SRC_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_DIR)	\
+-L$(SRC_PATH)/Libs/PopCameraDevice/$(GITHUB_LIB_PATH)	\
 
 
 LIB_OBJECTS=$(LIB_SRC_FILES:.cpp=.o)
