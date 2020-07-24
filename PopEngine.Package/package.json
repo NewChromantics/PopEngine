@@ -1,5 +1,5 @@
 {
-  "name": "@newchromantics/popcap",
+  "name": "@newchromantics/popengine",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
@@ -18,10 +18,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NewChromantics/PopCap.git"
+    "url": "git+https://github.com/NewChromantics/PopEngine.git"
   },
   "bugs": {
-    "url": "https://github.com/NewChromantics/PopCap/issues"
+    "url": "https://github.com/NewChromantics/PopEngine/issues"
   },
-  "homepage": "https://github.com/NewChromantics/PopCap#readme"
+  "homepage": "https://github.com/NewChromantics/PopEngine#readme"
 }
