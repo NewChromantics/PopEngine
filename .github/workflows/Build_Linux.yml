@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         config:
+          # tsdk: Need PopCameraDevice Libs built first
           # - os: ubuntu-latest
           #   type: linux
           #   architecture: x86_64
