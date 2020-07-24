@@ -12,14 +12,14 @@ CC = ${compiler}
 osTarget ?= Linux
 BUILD_DIR = ../Build
 
+# tsdk: Env var that is set by the github action
+GITHUB_LIB_PATH = ${github_lib_dir}
+
 CONFIGURATION ?= Release
 
 PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
-
-# tsdk: Env var that is set by the github action
-GITHUB_LIB_PATH = ${github_lib_dir}
 
 LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\

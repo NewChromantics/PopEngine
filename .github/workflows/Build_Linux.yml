@@ -53,7 +53,6 @@ jobs:
           mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           cd Libs
           ls -R
-          git config --list
 
       - name: Linux
         uses: NewChromantics/PopAction_BuildLinux@v1
