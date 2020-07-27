@@ -11,6 +11,7 @@ APP_ABI 		:= $(ANDROID_ABI)
 #		and as we need to set TARGET_ANDROID, just do it here and two birds.
 #APP_CPPFLAGS += -DTARGET_ANDROID
 GCC_PREPROCESSOR_DEFINITIONS += TARGET_ANDROID
+GCC_PREPROCESSOR_DEFINITIONS += JSAPI_JSCORE
 
 # parse the preprocessor settings from xcode(env var->-DXXX=Y)
 EMPTY :=
@@ -30,7 +31,7 @@ APP_CPPFLAGS += $(GCC_PREPROCESSOR_DEFINITIONS_LIST)$(SPACE)
 # gr: incompatible with unity's build
 #APP_CPPFLAGS += -std=c++11 -pthread -frtti -fexceptions -D__cplusplus11
 # gr: including c++11 is okay, but SOME CODE (not sure what yet), causes "dll not found"..."
-APP_CPPFLAGS += -std=c++17
+APP_CPPFLAGS += -std=c++17 -pthread -frtti 
 APP_CPPFLAGS += -fexceptions
 
 # downgrade some GCC errors to warnings
