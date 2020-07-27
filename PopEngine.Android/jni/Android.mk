@@ -51,15 +51,22 @@ SOY_PATH = $(SRC)/src/SoyLib
 #--------------------------------------------------------
 # Unity plugin
 #--------------------------------------------------------
-include $(CLEAR_VARS)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := jsc
+LOCAL_SRC_FILES := $(LOCAL_PATH)/$(SRC)/src/Android/jscore/libs/$(TARGET_ARCH_ABI)/libjsc.so
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/$(SRC)/src/Android/jscore
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := $(APP_MODULE)
 
 LOCAL_C_INCLUDES += \
-$(LOCAL_PATH)/$(SRC)/Source/Broadway/Decoder	\
-$(LOCAL_PATH)/$(SRC)/Source/Broadway/Decoder/inc	\
 $(LOCAL_PATH)/$(SOY_PATH)/src	\
-$(LOCAL_PATH)/$(SRC)/Source/Json11	\
+$(LOCAL_PATH)/$(SRC)/src/Android/jscore	\
+$(LOCAL_PATH)/$(SRC)/src/Json11	\
+$(LOCAL_PATH)/$(SRC)/src/MagicEnum/include	\
+$(LOCAL_PATH)/$(SRC)/Libs	\
 
 # use warning as echo
 #$(warning $(LOCAL_C_INCLUDES))
@@ -77,25 +84,48 @@ LOCAL_LDLIBS  	+= -llog			# logging
 # project files
 # todo: generate from input from xcode
 LOCAL_SRC_FILES  := \
-$(SRC)/src/PopMain.cpp \
 $(SRC)/src/Json11/json11.cpp \
+$(SRC)/src/JsCoreBind.cpp \
+$(SRC)/src/PopMain.cpp \
+$(SRC)/src/PopEngine.cpp \
+$(SRC)/src/TBind.cpp \
+$(SRC)/src/TApiCommon.cpp \
+$(SRC)/src/TApiHttp.cpp \
+$(SRC)/src/TApiMedia.cpp \
+$(SRC)/src/TApiPanopoly.cpp \
+$(SRC)/src/TApiSocket.cpp \
+$(SRC)/src/TApiWebsocket.cpp 
 
 
 # soy lib files
 LOCAL_SRC_FILES  += \
-$(SOY_PATH)/src/SoyTypes.cpp \
-$(SOY_PATH)/src/SoyAssert.cpp \
-$(SOY_PATH)/src/SoyDebug.cpp \
-$(SOY_PATH)/src/SoyPixels.cpp \
+$(SOY_PATH)/src/smallsha1/sha1.cpp \
 $(SOY_PATH)/src/memheap.cpp \
+$(SOY_PATH)/src/SoyApp.cpp \
 $(SOY_PATH)/src/SoyArray.cpp \
-$(SOY_PATH)/src/SoyTime.cpp \
-$(SOY_PATH)/src/SoyString.cpp \
-$(SOY_PATH)/src/SoyH264.cpp \
-$(SOY_PATH)/src/SoyPng.cpp \
-$(SOY_PATH)/src/SoyImage.cpp \
-$(SOY_PATH)/src/SoyStreamBuffer.cpp \
+$(SOY_PATH)/src/SoyAssert.cpp \
+$(SOY_PATH)/src/SoyBase64.cpp \
+$(SOY_PATH)/src/SoyDebug.cpp \
+$(SOY_PATH)/src/SoyFilesystem.cpp \
 $(SOY_PATH)/src/SoyFourcc.cpp \
+$(SOY_PATH)/src/SoyHttp.cpp \
+$(SOY_PATH)/src/SoyImage.cpp \
+$(SOY_PATH)/src/SoyMediaFormat.cpp \
+$(SOY_PATH)/src/SoyPixels.cpp \
+$(SOY_PATH)/src/SoyPng.cpp \
+$(SOY_PATH)/src/SoyProtocol.cpp \
+$(SOY_PATH)/src/SoyRef.cpp \
+$(SOY_PATH)/src/SoyShellExecute.cpp \
+$(SOY_PATH)/src/SoySocket.cpp \
+$(SOY_PATH)/src/SoySocketStream.cpp \
+$(SOY_PATH)/src/SoyStream.cpp \
+$(SOY_PATH)/src/SoyString.cpp \
+$(SOY_PATH)/src/SoyThread.cpp \
+$(SOY_PATH)/src/SoyTime.cpp \
+$(SOY_PATH)/src/SoyTypes.cpp \
+$(SOY_PATH)/src/SoyWebSocket.cpp \
+$(SOY_PATH)/src/SoyWindow.cpp \
+
 
 #$(SOY_PATH)/src/SoyOpengl.cpp \
 #$(SOY_PATH)/src/SoyOpenglContext.cpp \
@@ -110,7 +140,7 @@ $(SOY_PATH)/src/SoyFourcc.cpp \
 
 
 
-
+LOCAL_SHARED_LIBRARIES := jsc
 include $(BUILD_SHARED_LIBRARY)
 
 
