@@ -14,7 +14,7 @@
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
 #include "Libs/PopH264/PopH264.h"
-#elif defined(TARGET_LINUX)
+#elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
 #include "PopH264.h"
 #endif
 
@@ -24,7 +24,7 @@
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
-#elif defined(TARGET_LINUX)
+#elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
 #include "PopCameraDevice.h"
 #endif
 

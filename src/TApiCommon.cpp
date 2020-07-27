@@ -500,6 +500,8 @@ void ApiPop::GetPlatform(Bind::TCallback& Params)
 	Params.Return("Ios");
 #elif defined(TARGET_LINUX)
 	Params.Return("Linux");
+#elif defined(TARGET_ANDROID)
+	Params.Return("Android");
 #else
 #error Undefined platform
 #endif

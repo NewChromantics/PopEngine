@@ -10,14 +10,14 @@
 #include "TApiWebsocket.h"
 #include "TApiHttp.h"
 #include "TApiMedia.h"
-#if !defined(TARGET_LINUX)
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 #include "TApiOpengl.h"
 #include "TApiGui.h"
 #include "TApiCoreMl.h"
 #include "TApiZip.h"
 #endif
 
-#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_IOS)
+#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_IOS)
 #include "TApiOpencv.h"
 #endif
 
@@ -443,7 +443,7 @@ JSValueRef JsCore::GetValue(JSContextRef Context,bool Value)
 }
 
 //	on windows size_t and u64 are the same, so redundant
-#if !defined(TARGET_WINDOWS)&& !defined(TARGET_LINUX)
+#if !defined(TARGET_WINDOWS)&& !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 JSValueRef JsCore::GetValue(JSContextRef Context, size_t Value)
 {
 	auto Value64 = static_cast<uint64_t>(Value);
@@ -604,7 +604,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiPop::Bind(*Context);
 			ApiSocket::Bind(*Context);
 			ApiPanopoly::Bind(*Context);
-#if !defined(TARGET_LINUX)
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
 #endif
@@ -612,7 +612,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiWebsocket::Bind( *Context );
 			ApiHttp::Bind( *Context );
 
-#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_IOS)
+#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_IOS)
 			ApiOpencv::Bind(*Context);
 #endif
 			
@@ -621,7 +621,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiSerial::Bind( *Context );
 			ApiOpenvr::Bind( *Context );
 #endif
-#if !defined(TARGET_LINUX)
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiGui::Bind( *Context );
 			ApiCoreMl::Bind(*Context);
 			ApiZip::Bind(*Context);
