@@ -1,6 +1,7 @@
 #!/bin/sh
 #export ANDROID_NDK_HOME=/usr/local/Cellar/android-ndk/r11c/
 #ANDROID_NDK_HOME
+export BUILD_TARGET_NAME=PopEngine
 
 #echo "env vars"
 #env
@@ -29,6 +30,11 @@ if [ -z "$ANDROID_API" ]; then
 fi
 
 
+if [ -z "$ANDROID_PLATFORM" ]; then
+# tsdk: Minimum platform that supports ifaddrs
+	ANDROID_PLATFORM="24"
+fi
+
 MAXCONCURRENTBUILDS=1
 BUILD_PROJECT_FOLDER=$BUILD_TARGET_NAME.Android
 
@@ -42,7 +48,7 @@ function BuildAbi()
 {
 	ANDROID_ABI=$1
 	echo "ndk-build $ANDROID_ABI..."
-	$ANDROID_NDK_HOME/ndk-build -j$MAXCONCURRENTBUILDS ANDROID_ABI=$ANDROID_ABI NDK_DEBUG=0 NDK_PROJECT_PATH=/build/$BUILD_PROJECT_FOLDER
+	$ANDROID_NDK_HOME/ndk-build -j$MAXCONCURRENTBUILDS APP_PLATFORM=android-$ANDROID_PLATFORM ANDROID_ABI=$ANDROID_ABI NDK_DEBUG=0 NDK_PROJECT_PATH=/build/$BUILD_PROJECT_FOLDER
 
 	RESULT=$?
 

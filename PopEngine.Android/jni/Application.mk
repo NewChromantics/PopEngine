@@ -10,6 +10,7 @@ APP_ABI 		:= $(ANDROID_ABI)
 # gr: the code below goes wrong if GCC_PREPROCESSOR_DEFINITIONS is empty (ends up with -D-std)
 #		and as we need to set TARGET_ANDROID, just do it here and two birds.
 #APP_CPPFLAGS += -DTARGET_ANDROID
+# tsdk: APP_PLATFORM=android-24 (minimum platform that supports ifaddrs)
 GCC_PREPROCESSOR_DEFINITIONS += TARGET_ANDROID
 GCC_PREPROCESSOR_DEFINITIONS += JSAPI_JSCORE
 
