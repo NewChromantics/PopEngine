@@ -24,7 +24,7 @@ Javascript Runtimes
 - Jetson
 	- JavascriptCore from `sudo apt-get install libjavascriptcoregtk-4.0-dev`
 - Android
-	- V8 build from https://github.com/JaneaSystems/nodejs-mobile/releases
+	- JavascriptCore from https://github.com/react-native-community/jsc-android-buildscripts v236355.1.1
 
 Build Notes
 -------------
