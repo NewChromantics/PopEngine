@@ -58,6 +58,19 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/$(SRC)/src/Android/jscore/libs/$(TARGET_ARCH_AB
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/$(SRC)/src/Android/jscore
 include $(PREBUILT_SHARED_LIBRARY)
 
+# tsdk: need to build these libs first... remember to uncomment the shared libraries as well
+# include $(CLEAR_VARS)
+# LOCAL_MODULE := popH264
+# LOCAL_SRC_FILES := $(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)/$(TARGET_ARCH_ABI)/libPopH264.so
+# LOCAL_EXPORT_C_INCLUDES := $(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)
+# include $(PREBUILT_SHARED_LIBRARY)
+
+# include $(CLEAR_VARS)
+# LOCAL_MODULE := popcameradevice
+# LOCAL_SRC_FILES := $(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)/$(TARGET_ARCH_ABI)/libPopCameraDevice.so
+# LOCAL_EXPORT_C_INCLUDES := $(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)
+# include $(PREBUILT_SHARED_LIBRARY)
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := $(APP_MODULE)
 
@@ -140,7 +153,11 @@ $(SOY_PATH)/src/SoyWindow.cpp \
 
 
 
-LOCAL_SHARED_LIBRARIES := jsc
+LOCAL_SHARED_LIBRARIES := \
+jsc \
+# popcameradevice \
+# popH264 \
+
 include $(BUILD_SHARED_LIBRARY)
 
 
