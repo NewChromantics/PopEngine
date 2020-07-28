@@ -3,12 +3,12 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Pop Engine",
   "main": "index.js",
   "dependencies": {
-    "@newchromantics/poph264": "1.2.10",
-    "@newchromantics/popcameradevice": "2.1.0"
+    "@newchromantics/poph264": "0.0.7",
+    "@newchromantics/popcameradevice": "0.0.4"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
