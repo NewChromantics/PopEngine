@@ -25,9 +25,9 @@ jobs:
     strategy:
       matrix:
         config:
-          # - os: ubuntu-latest
-          #   type: linux
-          #   architecture: x86_64
+          - os: ubuntu-latest
+            type: linux
+            architecture: x86_64
 
           - os: Nvidia
             type: linux
