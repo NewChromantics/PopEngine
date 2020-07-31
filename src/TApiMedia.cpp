@@ -10,7 +10,7 @@
 
 //	video decoding and encoding
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopH264_Osx.framework/Headers/PopH264.h"
+#include "Libs/poph264/PopH264_Osx.framework/Headers/PopH264.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
 #include "Libs/PopH264/PopH264.h"
@@ -20,7 +20,7 @@
 
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
+#include "Libs/popcameradevice/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
 #include "Libs/PopCameraDevice/PopCameraDevice.h"
