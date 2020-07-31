@@ -2,7 +2,7 @@ name: Build Windows
 
 env:
   project: PopEngine
-  AUTH_TOKEN: db13663e713fb0ed4dc2041ea44904ae1b41d978
+  AUTH_TOKEN: ${{ secrets.PACKAGE_KEY_ACTIONS }}
 
 on:
   push:
