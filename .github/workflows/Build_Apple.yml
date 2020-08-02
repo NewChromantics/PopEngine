@@ -34,6 +34,7 @@ jobs:
           node-version: 12
 
       - name: Install Github Packages
+        working-directory: ${{ env.project }}.Package/
         run: npm i
         env:
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_KEY_ACTIONS }}
