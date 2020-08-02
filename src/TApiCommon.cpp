@@ -682,6 +682,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 
 	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
+	Context.BindGlobalFunction<BindFunction::Warning>( Warning, Namespace );
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
 	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
