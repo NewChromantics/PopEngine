@@ -13,7 +13,7 @@ osTarget ?= Linux
 BUILD_DIR = ../Build
 
 # tsdk: Env var that is set by the github action
-GITHUB_LIB_PATH = ${github_lib_dir}
+GITHUB_LIB_PATH = $(osTarget)
 
 CONFIGURATION ?= Release
 

@@ -6,7 +6,7 @@
 		{
 			"label": "Build",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make)",
+			"command": "(cd PopEngine.Linux && make osTarget=Nvidia)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
@@ -16,7 +16,7 @@
 		{
 			"label": "Rebuild all",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make clean && make)",
+			"command": "(cd PopEngine.Linux && make clean && make osTarget=Nvidia-linux)",
 			"problemMatcher": [],
 			"group": "build"	
 		}
