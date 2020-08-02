@@ -58,4 +58,9 @@ PopEngine.visualstudio/bin/
 
 # linux build temp files
 *.o
-Libs/
+
+# ignore package-downloaded-files
+Libs
+.npmrc
+node_modules
+
