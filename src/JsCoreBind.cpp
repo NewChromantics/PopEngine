@@ -4,6 +4,7 @@
 #include "SoyFilesystem.h"
 
 #include "TApiCommon.h"
+#include "TApiPlatform.h"
 #include "TApiSocket.h"
 #include "TApiPanopoly.h"
 #include "TApiEngine.h"
@@ -602,6 +603,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			auto Context = CreateContext(mRootDirectory);
 			
 			ApiPop::Bind(*Context);
+			ApiPlatform::Bind(*Context);
 			ApiSocket::Bind(*Context);
 			ApiPanopoly::Bind(*Context);
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)

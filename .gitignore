@@ -64,3 +64,5 @@ Libs
 .npmrc
 node_modules
 
+
+PopEngine.Package/package-lock.json
