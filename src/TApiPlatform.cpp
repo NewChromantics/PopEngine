@@ -160,14 +160,14 @@ Nvidia::TPlatformStat Nvidia::ParseStat(const std::string& StatString)
 	
 	auto GetInt = [&](int& ValueOut,StatParts PartIndex)
 	{
-		auto& ValueString = Match[1+PartIndex].str();
+		auto ValueString = Match[1+PartIndex].str();
 		Soy::StringToType( ValueOut, ValueString );
 	};
 
 	auto GetFloat = [&](float& ValueOut,StatParts PartMajor,StatParts PartMinor)
 	{
-		auto& MajorString = Match[1+PartMajor].str();
-		auto& MinorString = Match[1+PartMinor].str();
+		auto MajorString = Match[1+PartMajor].str();
+		auto MinorString = Match[1+PartMinor].str();
 		auto FloatString = MajorString + "." + MinorString;
 		Soy::StringToType( ValueOut, FloatString );
 	};
@@ -193,10 +193,10 @@ Nvidia::TPlatformStat Nvidia::ParseStat(const std::string& StatString)
 	Nvidia::TPlatformStat Stat;
 
 	GetInt( Stat.mRamPhysicalUsedMb, RAM_Used );
-	GetInt( Stat.mRamPhysicalMaxMb, RAM_Max );
-	GetInt( Stat.GpuUsage, GR3D_FREQ );
+	GetInt( Stat.mRamPhysicalTotalMb, RAM_Max );
+	GetInt( Stat.mGpuUsage, GR3D_FREQ );
 	GetInt( Stat.mRamSwapUsedMb, swapused );
-	GetInt( Stat.mRamSwapMaxMb, swapmax );
+	GetInt( Stat.mRamSwapTotalMb, swapmax );
 	GetCpuInt( Stat.mCpu0Usage, Stat.mCpu0ClockSpeed, cpu0str );
 	GetCpuInt( Stat.mCpu1Usage, Stat.mCpu1ClockSpeed, cpu1str );
 	GetCpuInt( Stat.mCpu2Usage, Stat.mCpu2ClockSpeed, cpu2str );
@@ -225,11 +225,12 @@ Nvidia::TPlatformStats::~TPlatformStats()
 
 Bind::TPromise Nvidia::TPlatformStats::AddPromise(Bind::TCallback& Params)
 {
-	mStatsQueue.AddPromise( Params.mLocalContext );
+	auto Promise = mStatsQueue.AddPromise( Params.mLocalContext );
+	return Promise;
 }
 
 void Nvidia::TPlatformStats::OnStatOutput(const std::string& Output)
 {
-	auto Stat = ParseStat(OutputCopy);
+	auto Stat = ParseStat(Output);
 	mStatsQueue.Push(Stat);
 }

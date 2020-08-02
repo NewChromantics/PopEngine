@@ -58,7 +58,6 @@ namespace ApiPop
 	static void		GetExeDirectory(Bind::TCallback& Params);
 	static void		GetExeArguments(Bind::TCallback& Params);
 	static void		GetPlatform(Bind::TCallback& Params);
-	static void		WaitForPlatformStats(Bind::TCallback& Params);	//	GetPlatformStats could return latest stats
 	static void		ShellOpen(Bind::TCallback& Params);
 	static void		ShowWebPage(Bind::TCallback& Params);
 	
@@ -82,7 +81,6 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(GetExeDirectory);
 	DEFINE_BIND_FUNCTIONNAME(GetExeArguments);
 	DEFINE_BIND_FUNCTIONNAME(GetPlatform);
-	DEFINE_BIND_FUNCTIONNAME(WaitForPlatformStats);
 	DEFINE_BIND_FUNCTIONNAME(ShellOpen);
 	DEFINE_BIND_FUNCTIONNAME(ShowWebPage);
 
@@ -135,9 +133,6 @@ namespace ApiPop
 	//	TFileMonitor
 	DEFINE_BIND_FUNCTIONNAME(Add);
 	DEFINE_BIND_FUNCTIONNAME(WaitForChange);
-
-
-	std::shared_ptr<Platform::TStatsThread>	gStatsThread;
 }
 
 
@@ -513,18 +508,6 @@ void ApiPop::GetPlatform(Bind::TCallback& Params)
 }
 
 
-void ApiPop::WaitForPlatformStats(Bind::TCallback& Params)
-{
-#if defined(TARGET_LINUX)
-	if ( !gStatsThread )
-		gStatsThread.reset( new Platform::TStatsThread() );
-	auto Promise = gStatsThread->AddPromise(Params.mLocalContext);
-	Params.Return(Promise);
-#else
-	throw Soy::AssertException("PlatformStats not availible on this platform");
-#endif
-}
-
 void ApiPop::ShellOpen(Bind::TCallback& Params)
 {
 	//	todo: support current working dir, params, verbs etc (depending on what OSX supports)
@@ -734,7 +717,6 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetExeDirectory>(GetExeDirectory, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetExeArguments>(GetExeArguments, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace);
-	Context.BindGlobalFunction<BindFunction::WaitForPlatformStats>(WaitForPlatformStats, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShellOpen>(ShellOpen, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
 }
