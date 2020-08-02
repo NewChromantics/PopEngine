@@ -7,6 +7,9 @@ namespace ApiEngine
 {
 	//	gr: oops, can't use Pop.Debug()...
 	const char Namespace[] = "Pop.Engine";
+
+	//	gr: make the stats window report ApiCommon::GetPlatformStats()'s data
+	//		and move these stats into those structs
 	DEFINE_BIND_TYPENAME(StatsWindow);
 }
 
