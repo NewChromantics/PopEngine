@@ -621,10 +621,7 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 	auto Filename = Params.GetArgumentFilename(0);
 
-	if (Filename.find('/') != std::string::npos || Filename.find('\\') != std::string::npos)
-	{
-		Platform::CreateDirectory(Filename);
-	}
+	Platform::CreateDirectory(Platform::GetDirectoryFromFilename(Filename));
 
 	//	write as a string if not a specific binary array
 	if ( !Params.IsArgumentArray(1) )
