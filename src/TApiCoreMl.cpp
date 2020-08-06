@@ -10,7 +10,7 @@
 
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "Libs/PopCoreml_Osx.framework/Headers/TCoreMl.h"
+#include "../Libs/popvision/PopVision_Osx.framework/Headers/TCoreMl.h"
 #elif defined(TARGET_WINDOWS)
 #include "Libs/PopCoreMl/PopCoreml.h"
 #include "Libs/PopCoreMl/TCoreMl.h"
