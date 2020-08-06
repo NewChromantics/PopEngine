@@ -616,7 +616,15 @@ void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 
 void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
+
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
+
+	auto Filename = Params.GetArgumentFilename(0);
+
+	if (Filename.find('/') != std::string::npos || Filename.find('\\') != std::string::npos)
+	{
+		Platform::CreateDirectory(Filename);
+	}
 
 	//	write as a string if not a specific binary array
 	if ( !Params.IsArgumentArray(1) )
@@ -626,9 +634,7 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 		WriteStringToFile(Params);
 		return;
 	}
-	
-	auto Filename = Params.GetArgumentFilename(0);
-
+                                                                
 	//	need to have some generic interface here I think
 	//	we dont have the type exposed in Bind yet
 	Array<uint8_t> Contents;
