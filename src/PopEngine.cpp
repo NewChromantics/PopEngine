@@ -101,3 +101,8 @@ TPopAppError::Type PopMain()
 	return TPopAppError::Success;
 }
 
+namespace Java
+{
+	void	FlushThreadLocals()	{}
+}
+
