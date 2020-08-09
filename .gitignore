@@ -59,8 +59,12 @@ PopEngine.visualstudio/bin/
 # linux build temp files
 *.o
 
+# android build files
+*.Android/obj/
+
 # ignore package-downloaded-files
 Libs
 .npmrc
 node_modules
 *.Package/package-lock.json
+

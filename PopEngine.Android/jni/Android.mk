@@ -4,7 +4,6 @@ $(warning LOCAL_PATH=$(LOCAL_PATH))	#	debug
 
 # extra ../ as jni is always prepended
 SRC_PATH := ../../src
-SRC := ../..
 $(warning SRC_PATH=$(SRC_PATH))	#	debug
 
 # gr: get this from env var
@@ -59,7 +58,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := jsc
 LOCAL_SRC_FILES := $(SRC_PATH)/Android/jscore/libs/$(TARGET_ARCH_ABI)/libjsc.so
 LOCAL_EXPORT_C_INCLUDES := $(SRC_PATH)/Android/jscore
-LOCAL_C_INCLUDES += $(SRC_PATH)/Android/jscore
 include $(PREBUILT_SHARED_LIBRARY)
 
 # tsdk: need to build these libs first... remember to uncomment the shared libraries as well
@@ -82,14 +80,15 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := $(APP_MODULE)
 LOCAL_ARM_MODE  := arm
 
+# src/SoyLib/src works, but try and use paths
 LOCAL_C_INCLUDES += \
-$(SOY_PATH)/src	\
-$(SRC_PATH)/Json11	\
-$(SOY_PATH)/src/MagicEnum/include	\
-$(SRC_PATH)/Libs	\
+$(LOCAL_PATH)/$(SOY_PATH)/src \
+$(LOCAL_PATH)/$(SOY_PATH)/src/magic_enum/include \
+$(LOCAL_PATH)/$(SRC_PATH)/Json11	\
+$(LOCAL_PATH)/$(SRC_PATH)/Libs	\
+$(LOCAL_PATH)/$(SRC_PATH)/Android/jscore	\
 
-# use warning as echo
-#$(warning $(LOCAL_C_INCLUDES))
+
 
 LOCAL_STATIC_LIBRARIES :=
 #LOCAL_STATIC_LIBRARIES += android-ndk-profiler
@@ -104,7 +103,7 @@ LOCAL_LDLIBS  	+= -llog			# logging
 # project files
 # todo: generate from input from xcode
 LOCAL_SRC_FILES  := \
-/Volumes/Code/PopEngine/src/JsCoreBind.cpp \
+$(SRC_PATH)/JsCoreBind.cpp \
 $(SRC_PATH)/PopMain.cpp \
 $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \
