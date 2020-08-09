@@ -3041,8 +3041,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
-				BUILD_TARGET_NAME = PopEngine;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
+				BUILD_TARGET_NAME = "$(PRODUCT_NAME)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -3107,8 +3107,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
-				BUILD_TARGET_NAME = PopEngine;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
+				BUILD_TARGET_NAME = "$(PRODUCT_NAME)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -3173,8 +3173,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
-				BUILD_TARGET_NAME = PopEngine;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
+				BUILD_TARGET_NAME = "$(PRODUCT_NAME)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -3239,8 +3239,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
-				BUILD_TARGET_NAME = PopEngine;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
+				BUILD_TARGET_NAME = "$(PRODUCT_NAME)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
