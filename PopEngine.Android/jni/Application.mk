@@ -14,6 +14,14 @@ APP_ABI 		:= $(ANDROID_ABI)
 GCC_PREPROCESSOR_DEFINITIONS += TARGET_ANDROID
 GCC_PREPROCESSOR_DEFINITIONS += JSAPI_JSCORE
 
+# gr: if < is in the preprocessor definitons, it screws up the makefile (< is an input)
+#	had a case where <Multiple Values> was accidentally put in xcode
+LESSTHAN=<
+LESSTHAN_MATCHES=$(findstring $(LESSTHAN),$(GCC_PREPROCESSOR_DEFINITIONS))
+ifeq ($(LESSTHAN_MATCHES),$(LESSTHAN))
+$(error Found $(LESSTHAN) in GCC_PREPROCESSOR_DEFINITIONS $(GCC_PREPROCESSOR_DEFINITIONS))
+endif
+
 # parse the preprocessor settings from xcode(env var->-DXXX=Y)
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
