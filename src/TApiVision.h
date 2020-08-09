@@ -5,23 +5,25 @@ class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;
 
-namespace ApiCoreMl
+namespace ApiVision
 {
 	void	Bind(Bind::TContext& Context);
-	DECLARE_BIND_TYPENAME(CoreMl);
+	DECLARE_BIND_TYPENAME(Model);
+	
+	class TModelWrapper;
 }
 
-namespace CoreMl
+namespace PopVision
 {
-	class TInstance;
-	class TObject;
+	class TInstance;	//	our-side model manager
+	class TObject;		//	output
 }
 
 
-class TCoreMlWrapper : public Bind::TObjectWrapper<ApiCoreMl::BindType::CoreMl,CoreMl::TInstance>
+class ApiVision::TModelWrapper : public Bind::TObjectWrapper<BindType::Model,PopVision::TInstance>
 {
 public:
-	TCoreMlWrapper(Bind::TContext& Context) :
+	TModelWrapper(Bind::TContext& Context) :
 		TObjectWrapper	( Context )
 	{
 	}
@@ -49,7 +51,7 @@ public:
 	void				KinectAzureSkeleton(Bind::TCallback& Arguments);
 
 protected:
-	std::shared_ptr<CoreMl::TInstance>&		mCoreMl = mObject;
+	std::shared_ptr<PopVision::TInstance>&		mModel = mObject;
 };
 
 

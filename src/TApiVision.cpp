@@ -1,4 +1,4 @@
-#include "TApiCoreMl.h"
+#include "TApiVision.h"
 #include "TApiCommon.h"
 #include "SoyLib/src/SoyScope.h"
 #include "SoyAssert.h"
@@ -10,16 +10,14 @@
 
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
-#include "../Libs/popvision/PopVision_Osx.framework/Headers/TCoreMl.h"
+#include "../Libs/popvision/PopVision_Osx.framework/Headers/PopVision.hpp"
 #elif defined(TARGET_WINDOWS)
 #include "Libs/PopCoreMl/PopCoreml.h"
 #include "Libs/PopCoreMl/TCoreMl.h"
 #endif
 
-using namespace CoreMl;
-
-
-class CoreMl::TInstance : public SoyWorkerJobThread
+//	TModel from PopVision.hpp
+class PopVision::TInstance : public SoyWorkerJobThread
 {
 public:
 	TInstance();
@@ -61,9 +59,9 @@ private:
 };
 
 
-namespace ApiCoreMl
+namespace ApiVision
 {
-	DEFINE_BIND_TYPENAME(CoreMl);
+	DEFINE_BIND_TYPENAME(Model);
 
 	DEFINE_BIND_FUNCTIONNAME(Yolo);
 	DEFINE_BIND_FUNCTIONNAME(Hourglass);
