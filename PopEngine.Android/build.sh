@@ -87,11 +87,10 @@ function BuildAbi()
 if [ $ACTION == "release" ]; then
 	echo "Android/build.sh: $ACTION..."
 
-#BuildAbi armeabi-v7a x86 x86_64 arm64-v8a
-BuildAbi armeabi-v7a
-#BuildAbi x86
-#BuildAbi x86_64
-#BuildAbi arm64-v8a
+	BuildAbi armeabi-v7a
+	BuildAbi x86
+	BuildAbi x86_64
+	BuildAbi arm64-v8a
 	exit 0
 fi
 
