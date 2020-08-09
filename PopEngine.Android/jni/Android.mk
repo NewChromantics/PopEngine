@@ -87,6 +87,8 @@ $(LOCAL_PATH)/$(SOY_PATH)/src/magic_enum/include \
 $(LOCAL_PATH)/$(SRC_PATH)/Json11	\
 $(LOCAL_PATH)/$(SRC_PATH)/Libs	\
 $(LOCAL_PATH)/$(SRC_PATH)/Android/jscore	\
+$(LOCAL_PATH)/Libs/poph264/$(ANDROID_ABI)	\
+$(LOCAL_PATH)/Libs/popcameradevice/$(ANDROID_ABI)	\
 
 
 
@@ -109,11 +111,14 @@ $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
-$(SRC_PATH)/TApiMedia.cpp \
 $(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/Json11/json11.cpp \
+
+# disabled until PopH264 & PopCameraDevice are working
+#$(SRC_PATH)/TApiMedia.cpp \
+
 
 $(warning LOCAL_SRC_FILES=$(LOCAL_SRC_FILES))	#	debug
 
