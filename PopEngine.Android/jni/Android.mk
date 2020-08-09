@@ -1,9 +1,11 @@
 LOCAL_PATH := $(call my-dir)
+$(warning LOCAL_PATH=$(LOCAL_PATH))	#	debug
 
 
 # extra ../ as jni is always prepended
+SRC_PATH := ../../src
 SRC := ../..
-#$(warning $(LOCAL_PATH))	#	debug
+$(warning SRC_PATH=$(SRC_PATH))	#	debug
 
 # gr: get this from env var
 APP_MODULE := $(BUILD_TARGET_NAME)
@@ -46,16 +48,18 @@ LOCAL_CFLAGS     := -Werror -DTARGET_ANDROID
 LOCAL_CFLAGS	+= -O3
 #endif
 
-SOY_PATH = $(SRC)/src/SoyLib
+SOY_PATH = $(SRC_PATH)/SoyLib
 
-#--------------------------------------------------------
-# Unity plugin
+
+
+# Build dependency modules
 #--------------------------------------------------------
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := jsc
-LOCAL_SRC_FILES := $(LOCAL_PATH)/$(SRC)/src/Android/jscore/libs/$(TARGET_ARCH_ABI)/libjsc.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/$(SRC)/src/Android/jscore
+LOCAL_SRC_FILES := $(SRC_PATH)/Android/jscore/libs/$(TARGET_ARCH_ABI)/libjsc.so
+LOCAL_EXPORT_C_INCLUDES := $(SRC_PATH)/Android/jscore
+LOCAL_C_INCLUDES += $(SRC_PATH)/Android/jscore
 include $(PREBUILT_SHARED_LIBRARY)
 
 # tsdk: need to build these libs first... remember to uncomment the shared libraries as well
@@ -71,15 +75,18 @@ include $(PREBUILT_SHARED_LIBRARY)
 # LOCAL_EXPORT_C_INCLUDES := $(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)
 # include $(PREBUILT_SHARED_LIBRARY)
 
+
+# now build main module
+#--------------------------------------------------------
 include $(CLEAR_VARS)
 LOCAL_MODULE := $(APP_MODULE)
+LOCAL_ARM_MODE  := arm
 
 LOCAL_C_INCLUDES += \
-$(LOCAL_PATH)/$(SOY_PATH)/src	\
-$(LOCAL_PATH)/$(SRC)/src/Android/jscore	\
-$(LOCAL_PATH)/$(SRC)/src/Json11	\
-$(LOCAL_PATH)/$(SRC)/src/MagicEnum/include	\
-$(LOCAL_PATH)/$(SRC)/Libs	\
+$(SOY_PATH)/src	\
+$(SRC_PATH)/Json11	\
+$(SOY_PATH)/src/MagicEnum/include	\
+$(SRC_PATH)/Libs	\
 
 # use warning as echo
 #$(warning $(LOCAL_C_INCLUDES))
@@ -97,17 +104,19 @@ LOCAL_LDLIBS  	+= -llog			# logging
 # project files
 # todo: generate from input from xcode
 LOCAL_SRC_FILES  := \
-$(SRC)/src/Json11/json11.cpp \
-$(SRC)/src/JsCoreBind.cpp \
-$(SRC)/src/PopMain.cpp \
-$(SRC)/src/PopEngine.cpp \
-$(SRC)/src/TBind.cpp \
-$(SRC)/src/TApiCommon.cpp \
-$(SRC)/src/TApiHttp.cpp \
-$(SRC)/src/TApiMedia.cpp \
-$(SRC)/src/TApiPanopoly.cpp \
-$(SRC)/src/TApiSocket.cpp \
-$(SRC)/src/TApiWebsocket.cpp 
+/Volumes/Code/PopEngine/src/JsCoreBind.cpp \
+$(SRC_PATH)/PopMain.cpp \
+$(SRC_PATH)/PopEngine.cpp \
+$(SRC_PATH)/TBind.cpp \
+$(SRC_PATH)/TApiCommon.cpp \
+$(SRC_PATH)/TApiHttp.cpp \
+$(SRC_PATH)/TApiMedia.cpp \
+$(SRC_PATH)/TApiPanopoly.cpp \
+$(SRC_PATH)/TApiSocket.cpp \
+$(SRC_PATH)/TApiWebsocket.cpp \
+$(SRC_PATH)/Json11/json11.cpp \
+
+$(warning LOCAL_SRC_FILES=$(LOCAL_SRC_FILES))	#	debug
 
 
 # soy lib files
@@ -159,7 +168,6 @@ jsc \
 # popH264 \
 
 include $(BUILD_SHARED_LIBRARY)
-
 
 
 

@@ -1,7 +1,6 @@
 #!/bin/sh
 #export ANDROID_NDK_HOME=/usr/local/Cellar/android-ndk/r11c/
 #ANDROID_NDK_HOME
-export BUILD_TARGET_NAME=PopEngine
 
 #echo "env vars"
 #env
@@ -57,7 +56,7 @@ function BuildAbi()
 {
 	ANDROID_ABI=$1
 	echo "ndk-build $ANDROID_ABI..."
-	$ANDROID_NDK_HOME/ndk-build -j$MAXCONCURRENTBUILDS APP_PLATFORM=android-$ANDROID_PLATFORM ANDROID_ABI=$ANDROID_ABI NDK_DEBUG=0 NDK_LOG=1
+	$ANDROID_NDK_HOME/ndk-build -j$MAXCONCURRENTBUILDS APP_PLATFORM=android-$ANDROID_PLATFORM ANDROID_ABI=$ANDROID_ABI NDK_DEBUG=1 NDK_LOG=1
 
 	RESULT=$?
 
@@ -89,7 +88,7 @@ if [ $ACTION == "release" ]; then
 	echo "Android/build.sh: $ACTION..."
 
 #BuildAbi armeabi-v7a x86 x86_64 arm64-v8a
-	BuildAbi armeabi-v7a
+BuildAbi armeabi-v7a
 #BuildAbi x86
 #BuildAbi x86_64
 #BuildAbi arm64-v8a
