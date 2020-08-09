@@ -85,8 +85,8 @@ LOCAL_C_INCLUDES += \
 $(LOCAL_PATH)/$(SOY_PATH)/src \
 $(LOCAL_PATH)/$(SOY_PATH)/src/magic_enum/include \
 $(LOCAL_PATH)/$(SRC_PATH)/Json11	\
-$(LOCAL_PATH)/$(SRC_PATH)/Libs	\
 $(LOCAL_PATH)/$(SRC_PATH)/Android/jscore	\
+$(LOCAL_PATH)/$(SRC_PATH)/Libs	\
 $(LOCAL_PATH)/Libs/poph264/$(ANDROID_ABI)	\
 $(LOCAL_PATH)/Libs/popcameradevice/$(ANDROID_ABI)	\
 
