@@ -63,4 +63,4 @@ PopEngine.visualstudio/bin/
 Libs
 .npmrc
 node_modules
-
+*.Package/package-lock.json
