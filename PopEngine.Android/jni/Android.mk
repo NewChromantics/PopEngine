@@ -3,7 +3,8 @@ $(warning LOCAL_PATH=$(LOCAL_PATH))	#	debug
 
 
 # extra ../ as jni is always prepended
-SRC_PATH := ../../src
+PROJECT_PATH := ../..
+SRC_PATH := $(PROJECT_PATH)/src
 $(warning SRC_PATH=$(SRC_PATH))	#	debug
 
 # gr: get this from env var
@@ -56,8 +57,8 @@ SOY_PATH = $(SRC_PATH)/SoyLib
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := jsc
-LOCAL_SRC_FILES := $(SRC_PATH)/Android/jscore/libs/$(TARGET_ARCH_ABI)/libjsc.so
-LOCAL_EXPORT_C_INCLUDES := $(SRC_PATH)/Android/jscore
+LOCAL_SRC_FILES := $(PROJECT_PATH)/Source_Android/jscore/libs/$(TARGET_ARCH_ABI)/libjsc.so
+LOCAL_EXPORT_C_INCLUDES := $(PROJECT_PATH)/Source_Android/jscore
 include $(PREBUILT_SHARED_LIBRARY)
 
 # tsdk: need to build these libs first... remember to uncomment the shared libraries as well
@@ -80,12 +81,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := $(APP_MODULE)
 LOCAL_ARM_MODE  := arm
 
-# src/SoyLib/src works, but try and use paths
+# src/SoyLib/src works, but try and use paths, so we need LOCAL_PATH prefixed
 LOCAL_C_INCLUDES += \
 $(LOCAL_PATH)/$(SOY_PATH)/src \
 $(LOCAL_PATH)/$(SOY_PATH)/src/magic_enum/include \
 $(LOCAL_PATH)/$(SRC_PATH)/Json11	\
-$(LOCAL_PATH)/$(SRC_PATH)/Android/jscore	\
+$(LOCAL_PATH)/$(PROJECT_PATH)/Source_Android/jscore	\
 $(LOCAL_PATH)/$(SRC_PATH)/Libs	\
 $(LOCAL_PATH)/Libs/poph264/$(ANDROID_ABI)	\
 $(LOCAL_PATH)/Libs/popcameradevice/$(ANDROID_ABI)	\
