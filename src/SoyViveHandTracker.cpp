@@ -1,6 +1,6 @@
 #include "SoyViveHandTracker.h"
 #include "Libs/ViveHandTracking/include/interface_gesture.hpp"
-#include "MagicEnum/include/magic_enum.hpp"
+#include <magic_enum.hpp>
 
 
 #if defined(TARGET_OSX)

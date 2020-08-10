@@ -422,7 +422,6 @@
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
-		BF84732E22F7249500038A3A /* magic_enum.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = magic_enum.hpp; path = src/MagicEnum/include/magic_enum.hpp; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
 		BF8534F622B6DA610049C01B /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
@@ -523,6 +522,7 @@
 		BFEDAFE924E01179003B130F /* Libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Libs; sourceTree = "<group>"; };
 		BFEDAFEA24E01183003B130F /* PopEngine.Package */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Package; sourceTree = "<group>"; };
 		BFEDAFEB24E0672E003B130F /* Android */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Android; path = src/Android; sourceTree = "<group>"; };
+		BFEDAFEC24E15128003B130F /* Source_Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Source_Android; sourceTree = "<group>"; };
 		BFEF6A3624759168000A1F88 /* TApiAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TApiAudio.h; path = src/TApiAudio.h; sourceTree = "<group>"; };
 		BFEF6A3724759168000A1F88 /* TApiAudio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = TApiAudio.cpp; path = src/TApiAudio.cpp; sourceTree = "<group>"; };
 		BFEF6A3824759401000A1F88 /* SoySound.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = SoySound.mm; path = src/SoySound.mm; sourceTree = "<group>"; };
@@ -1008,6 +1008,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BFEDAFEC24E15128003B130F /* Source_Android */,
 				BFEDAFEA24E01183003B130F /* PopEngine.Package */,
 				BFEDAFE924E01179003B130F /* Libs */,
 				BF21AEA424D4319B0046A434 /* .github */,
@@ -1051,7 +1052,6 @@
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BFDC03A62430CEC20004512A /* Json11 */,
-				BF84732E22F7249500038A3A /* magic_enum.hpp */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
 				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
