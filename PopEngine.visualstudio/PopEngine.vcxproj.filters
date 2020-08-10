@@ -10,17 +10,11 @@
     <Filter Include="Libs">
       <UniqueIdentifier>{a2cd0c1b-63df-4d92-8ed0-0dc87234f314}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs\JavascriptCore">
-      <UniqueIdentifier>{3787af57-a192-4d41-a7cb-ff7639a9ee3d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SoyLib\glew">
       <UniqueIdentifier>{8bffea1e-9552-4a25-ac57-01c8d150778d}</UniqueIdentifier>
     </Filter>
     <Filter Include="SoyLib\sha1">
       <UniqueIdentifier>{464fd74e-1daa-4809-acd3-55bcee0c119d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Todo">
-      <UniqueIdentifier>{c20b2e8c-e666-4885-9846-0656eb5ada9a}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest">
       <UniqueIdentifier>{17a1cd90-5cf4-4e1b-8c33-e43bf2f25719}</UniqueIdentifier>
@@ -28,41 +22,14 @@
     <Filter Include="UnitTest\CameraTest">
       <UniqueIdentifier>{b88a0514-46b9-40dd-b4f4-24c4eccd9425}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs\PopCameraDevice">
-      <UniqueIdentifier>{a0163f97-f105-4cd0-ae57-188257d7a826}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UnitTest\Common">
       <UniqueIdentifier>{2a35eea7-57f1-4bca-97b0-e079fa091a94}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest\HttpServer">
       <UniqueIdentifier>{8d226aa7-ead4-422b-9f14-ac3792f4dfc3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs\JavascriptCore\win64">
-      <UniqueIdentifier>{141683a7-9ceb-4290-8050-351a84c1d4c1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\PopH264">
-      <UniqueIdentifier>{273f9977-6262-471b-8ac7-9353c46af383}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UnitTest\VideoTest">
       <UniqueIdentifier>{25602702-08b3-4195-adff-9693cd729153}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\v8">
-      <UniqueIdentifier>{b52aa19e-20ce-4391-9cd8-b8ed0244aa28}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\v8\Include">
-      <UniqueIdentifier>{cf1b1091-e316-4bfb-9334-008b16eae1ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\v8\Lib">
-      <UniqueIdentifier>{74009a96-9aa0-40fa-93fd-24d37fcf7692}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\v8\Runtime">
-      <UniqueIdentifier>{e586ec67-254a-4f92-a16d-b012b649bc3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\Openvr">
-      <UniqueIdentifier>{2fbd07b4-8621-42a6-b499-b3e6b9616d68}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\Dyncall">
-      <UniqueIdentifier>{83bc45f4-1304-400f-9e90-a4723c02aeb1}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest\Gui">
       <UniqueIdentifier>{a2bc4afd-3781-4e66-890f-d079dde1f027}</UniqueIdentifier>
@@ -73,23 +40,11 @@
     <Filter Include="UnitTest\VirtualReality">
       <UniqueIdentifier>{943c0583-d3f6-4001-b2ad-2f6805a37612}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs\Opencv">
-      <UniqueIdentifier>{13f4d4e9-b52e-42ab-811d-2429050ba1e6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\Opencv\Contrib_aruco">
-      <UniqueIdentifier>{ce8e991a-d27e-4136-81d0-0602f49c084f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UnitTest\OpencvArucoMarker">
       <UniqueIdentifier>{e8ab2855-f663-4675-ab80-baa7ab8f4384}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs\ViveHandTracking">
-      <UniqueIdentifier>{a1dc779d-0421-4e92-b393-703aa026bcbb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UnitTest\LeapMotion">
       <UniqueIdentifier>{f6486979-cab0-4324-8a2b-2bf355f8ecc0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\PopCoreMl">
-      <UniqueIdentifier>{cbea93f4-7f30-47eb-856c-139d94b59f33}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest\ParamsWindow">
       <UniqueIdentifier>{8539d796-1885-4768-81af-27d4795cd1b7}</UniqueIdentifier>
@@ -97,14 +52,8 @@
     <Filter Include="UnitTest\PopEngineCommon">
       <UniqueIdentifier>{003d93e2-1da5-43ff-a4ce-055711a38542}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libs\Zip">
-      <UniqueIdentifier>{8e667f50-59ee-46a1-876c-2b5024d01ff9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="UnitTest\KinectStream">
       <UniqueIdentifier>{825b87c6-0b8a-48dc-a143-59846452df8c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libs\Json11">
-      <UniqueIdentifier>{193e9ba5-0132-489b-b59b-e5624ca5ccf7}</UniqueIdentifier>
     </Filter>
     <Filter Include="UnitTest\KinectStream\Viewer">
       <UniqueIdentifier>{52b1050d-ab46-4fbb-b50b-be8b7d2da1dc}</UniqueIdentifier>
@@ -118,8 +67,26 @@
     <Filter Include="UnitTest\Midi">
       <UniqueIdentifier>{e8f4ec8d-535e-489f-bc8e-3261c442da42}</UniqueIdentifier>
     </Filter>
-    <Filter Include="PopEngine.Linux">
-      <UniqueIdentifier>{201be17e-0f19-4066-b85a-7134a522106a}</UniqueIdentifier>
+    <Filter Include="SoyLib\MagicEnum">
+      <UniqueIdentifier>{48b6d605-5971-4a7b-94e1-04da06b73223}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\poph264">
+      <UniqueIdentifier>{8dd08643-c91a-4f9a-b4c3-8a4c6242d6e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\popcameradevice">
+      <UniqueIdentifier>{e76b2016-ba07-4d4c-8c0d-2b99861120bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\dyncall">
+      <UniqueIdentifier>{d30bf389-3963-47ac-8266-bfd7d0f220c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\Zip">
+      <UniqueIdentifier>{a09a6012-b5d8-4061-b4b0-0e0623de53cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\ViveHandTracker">
+      <UniqueIdentifier>{3a5f377f-b298-4761-b31b-6f4b014452a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\Json11">
+      <UniqueIdentifier>{6ea58ffa-d646-4d27-bc22-62b4980a1914}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -170,33 +137,6 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyUniform.h">
       <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackFunction.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSCallbackObject.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSContext.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSObjectRef.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSStringRef.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSValue.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JSValueRef.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JavaScript.h">
-      <Filter>Libs\JavascriptCore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\JavascriptCore\JavaScriptCore.h">
-      <Filter>Libs\JavascriptCore</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp">
       <Filter>SoyLib</Filter>
@@ -288,51 +228,6 @@
     <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h">
       <Filter>SoyLib\sha1</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SoyBluetooth.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyHid.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiBluetooth.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiDlib.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiEzsift.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiInput.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiOpencl.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TPopServerThread.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TProtocolWebSocket.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TSsdMobileNetAnchors.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8Container.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8Inspector.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8Instance.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TV8ObjectWrapper.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiOpenglContext.h">
-      <Filter>Source\Todo</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\JsCoreBind.h">
       <Filter>Source</Filter>
     </ClInclude>
@@ -342,14 +237,8 @@
     <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Libs\PopCameraDevice\PopCameraDevice.h">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TApiMedia.h">
       <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\PopH264\PopH264.h">
-      <Filter>Libs\PopH264</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiSerial.h">
       <Filter>Source</Filter>
@@ -357,107 +246,14 @@
     <ClInclude Include="..\src\SoyLib\src\SoyWindow.h">
       <Filter>SoyLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8config.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-inspector.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-inspector-protocol.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-internal.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-platform.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-profiler.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-testing.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-util.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-value-serializer-version.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-version.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-version-string.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-wasm-trap-handler-posix.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\v8-wasm-trap-handler-win.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\libplatform\libplatform.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\libplatform\libplatform-export.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\v8\include\libplatform\v8-tracing.h">
-      <Filter>Libs\v8\Include</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\V8Bind.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiOpenvr.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr.h">
-      <Filter>Libs\Openvr</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_capi.h">
-      <Filter>Libs\Openvr</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\OpenVr\headers\openvr_driver.h">
-      <Filter>Libs\Openvr</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TApiDll.h">
       <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_callback.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_callf.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_config.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_macros.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_signature.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_types.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_value.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dynload.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_alloc_wx.h">
-      <Filter>Libs\Dyncall</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\dyncall\include\dyncall_args.h">
-      <Filter>Libs\Dyncall</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TApiGui.h">
       <Filter>Source</Filter>
@@ -474,41 +270,8 @@
     <ClInclude Include="..\src\TApiOpencv.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\precomp.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\predefined_dictionaries.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\predefined_dictionaries_apriltag.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\unionfind.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zarray.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.hpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\ViveHandTracking\include\interface_gesture.hpp">
-      <Filter>Libs\ViveHandTracking</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SoyViveHandTracker.h">
       <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiCoreMl.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\PopCoreMl\TCoreMl.h">
-      <Filter>Libs\PopCoreMl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Libs\PopCoreMl\PopCoreml.h">
-      <Filter>Libs\PopCoreMl</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h">
       <Filter>SoyLib</Filter>
@@ -519,14 +282,8 @@
     <ClInclude Include="..\src\TApiZip.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Zip\src\zip.h">
-      <Filter>Libs\Zip</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h">
       <Filter>SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Json11\json11.hpp">
-      <Filter>Libs\Json11</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyH264.h">
       <Filter>SoyLib</Filter>
@@ -536,6 +293,72 @@
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyShellExecute.h">
       <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MagicEnum\include\magic_enum.hpp">
+      <Filter>SoyLib\MagicEnum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.h">
+      <Filter>Libs\poph264</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.h">
+      <Filter>Libs\popcameradevice</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\miniz.h">
+      <Filter>Libs\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\zip.h">
+      <Filter>Libs\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyBluetooth.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyHid.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiBluetooth.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDlib.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEzsift.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiInput.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencl.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpenglContext.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TPopServerThread.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TProtocolWebSocket.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TSsdMobileNetAnchors.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Container.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Inspector.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Instance.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8ObjectWrapper.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiPanopoly.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Json11\json11.hpp">
+      <Filter>Libs\Json11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -551,9 +374,6 @@
     <None Include="..\src\SoyOpenglWindow.mm">
       <Filter>Source</Filter>
     </None>
-    <None Include="..\src\SoyBluetooth.mm">
-      <Filter>Source\Todo</Filter>
-    </None>
     <None Include="..\UnitTest\bootup.js">
       <Filter>UnitTest</Filter>
     </None>
@@ -565,21 +385,6 @@
     </None>
     <None Include="..\UnitTest\CameraTest\bootup.js">
       <Filter>UnitTest\CameraTest</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll.meta">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.pdb.meta">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </None>
-    <None Include="..\src\Libs\PopCameraDevice\PopCameraDevice.cs.meta">
-      <Filter>Libs\PopCameraDevice</Filter>
     </None>
     <None Include="..\UnitTest\Readme.md">
       <Filter>UnitTest</Filter>
@@ -607,30 +412,6 @@
     </None>
     <None Include="..\UnitTest\HttpServer\bootup.js">
       <Filter>UnitTest\HttpServer</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\WTF.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\CFLite.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\JavascriptCore\win64\icuin63.pdb">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </None>
-    <None Include="..\src\Libs\PopH264\PopH264.pdb">
-      <Filter>Libs\PopH264</Filter>
-    </None>
-    <None Include="..\src\Libs\PopH264\PopH264.pdb.meta">
-      <Filter>Libs\PopH264</Filter>
-    </None>
-    <None Include="..\src\Libs\PopH264\PopH264.dll.meta">
-      <Filter>Libs\PopH264</Filter>
     </None>
     <None Include="..\UnitTest\VideoTest\Uvy844.frag.glsl">
       <Filter>UnitTest\VideoTest</Filter>
@@ -673,9 +454,6 @@
     </None>
     <None Include="..\src\SoyLib\src\SoyWindow.mm">
       <Filter>SoyLib</Filter>
-    </None>
-    <None Include="..\src\Libs\OpenVr\bin\win64\openvr_api.pdb">
-      <Filter>Libs\Openvr</Filter>
     </None>
     <None Include="..\UnitTest\Gui\bootup.js">
       <Filter>UnitTest\Gui</Filter>
@@ -858,9 +636,66 @@
     <None Include="..\UnitTest\Midi\bootup.js">
       <Filter>UnitTest\Midi</Filter>
     </None>
-    <None Include="..\Readme.md" />
-    <None Include="..\PopEngine.Linux\Makefile">
-      <Filter>PopEngine.Linux</Filter>
+    <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.cs">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.dll">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.exp">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.pdb">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.exe">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.iobj">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.ipdb">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.pdb">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\x264.dll">
+      <Filter>Libs\poph264</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\freenect2.dll">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\k4a.dll">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.cs">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.dll">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.exp">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.pdb">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.exe">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.ilk">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.pdb">
+      <Filter>Libs\popcameradevice</Filter>
+    </None>
+    <None Include="..\src\SoyBluetooth.mm">
+      <Filter>Source</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -981,45 +816,6 @@
     <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp">
       <Filter>SoyLib\sha1</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SoyHid.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiBluetooth.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiDlib.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiEzsift.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiInput.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiOpencl.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TPopServerThread.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8Container.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8Inspector.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8Instance.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiOpenglContext.cpp">
-      <Filter>Source\Todo</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\JsCoreBind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -1065,25 +861,7 @@
     <ClCompile Include="..\src\TApiOpencv.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\apriltag_quad_thresh.cpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\aruco.cpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\charuco.cpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\dictionary.cpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Libs\Opencv_contrib\modules\aruco\src\zmaxheap.cpp">
-      <Filter>Libs\Opencv\Contrib_aruco</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SoyViveHandTracker.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\TApiCoreMl.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c">
@@ -1094,12 +872,6 @@
     </ClCompile>
     <ClCompile Include="..\src\TApiZip.cpp">
       <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Zip\src\zip.c">
-      <Filter>Libs\Zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Json11\json11.cpp">
-      <Filter>Libs\Json11</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp">
       <Filter>SoyLib</Filter>
@@ -1113,118 +885,54 @@
     <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\src\Libs\PopCameraDevice\PopCameraDevice.lib">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </Library>
-    <Library Include="..\src\Libs\PopH264\PopH264.lib">
-      <Filter>Libs\PopH264</Filter>
-    </Library>
-    <Library Include="..\src\v8\lib\icui18n.dll.lib">
-      <Filter>Libs\v8\Lib</Filter>
-    </Library>
-    <Library Include="..\src\v8\lib\icuuc.dll.lib">
-      <Filter>Libs\v8\Lib</Filter>
-    </Library>
-    <Library Include="..\src\v8\lib\v8.dll.lib">
-      <Filter>Libs\v8\Lib</Filter>
-    </Library>
-    <Library Include="..\src\v8\lib\v8_libbase.dll.lib">
-      <Filter>Libs\v8\Lib</Filter>
-    </Library>
-    <Library Include="..\src\v8\lib\v8_libplatform.dll.lib">
-      <Filter>Libs\v8\Lib</Filter>
-    </Library>
-    <Library Include="..\src\Libs\OpenVr\lib\win64\openvr_api.lib">
-      <Filter>Libs\Openvr</Filter>
-    </Library>
-    <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib">
-      <Filter>Libs\Dyncall</Filter>
-    </Library>
-    <Library Include="..\src\Libs\dyncall\lib\libdyncallback_s.lib">
-      <Filter>Libs\Dyncall</Filter>
-    </Library>
-    <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib">
-      <Filter>Libs\Dyncall</Filter>
-    </Library>
-    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410.lib">
-      <Filter>Libs\Opencv</Filter>
-    </Library>
-    <Library Include="..\src\Libs\Opencv\x64\vc15\lib\opencv_world410d.lib">
-      <Filter>Libs\Opencv</Filter>
-    </Library>
-    <Library Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.lib">
-      <Filter>Libs\ViveHandTracking</Filter>
-    </Library>
-    <Library Include="..\src\Libs\PopCoreMl\PopCoreml.lib">
-      <Filter>Libs\PopCoreMl</Filter>
-    </Library>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\CFLite.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icudt63.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icuin63.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\icuuc63.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\JavaScriptCore.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\pthreadsVC2.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\JavascriptCore\win64\WTF.dll">
-      <Filter>Libs\JavascriptCore\win64</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\PopCameraDevice\PopCameraDevice.dll">
-      <Filter>Libs\PopCameraDevice</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\PopH264\PopH264.dll">
-      <Filter>Libs\PopH264</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\v8Runtime\icudtl.dat">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\lib\icui18n.dll">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\lib\icuuc.dll">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\v8Runtime\natives_blob.bin">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\v8Runtime\snapshot_blob_win64.bin">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\lib\v8.dll">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\lib\v8_libbase.dll">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\lib\v8_libplatform.dll">
-      <Filter>Libs\v8\Runtime</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\v8\lib\msvcp140d.dll" />
-    <CustomBuild Include="..\src\v8\lib\ucrtbased.dll" />
-    <CustomBuild Include="..\src\v8\lib\vccorlib140d.dll" />
-    <CustomBuild Include="..\src\v8\lib\vcruntime140d.dll" />
-    <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410d.dll">
-      <Filter>Libs\Opencv</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\src\Libs\Opencv\x64\vc15\bin\opencv_world410.dll" />
-    <CustomBuild Include="..\src\Libs\ViveHandTracking\libs\Windows64\aristo_interface.dll" />
-    <CustomBuild Include="..\src\Libs\PopCoreMl\PopCoreml.dll" />
-    <CustomBuild Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.SkillInterfacePreview.dll" />
-    <CustomBuild Include="..\src\Libs\PopCoreMl\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.dll" />
+    <ClCompile Include="..\src\Zip\src\zip.c">
+      <Filter>Libs\Zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyHid.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiBluetooth.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDlib.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEzsift.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiInput.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenglContext.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TPopServerThread.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Container.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Inspector.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Instance.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiPanopoly.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Json11\json11.cpp">
+      <Filter>Libs\Json11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">
@@ -1237,11 +945,6 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\src\Libs\PopCoreMl\PopCoreml.manifest">
-      <Filter>Libs\PopCoreMl</Filter>
-    </Manifest>
-  </ItemGroup>
-  <ItemGroup>
     <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf">
       <Filter>UnitTest\ParamsWindow</Filter>
     </Font>
@@ -1250,7 +953,20 @@
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="..\src\PopEngine.h" />
-    <CopyFileToFolders Include="..\src\Libs\OpenVr\bin\win64\openvr_api.dll" />
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.lib">
+      <Filter>Libs\poph264</Filter>
+    </Library>
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.lib">
+      <Filter>Libs\popcameradevice</Filter>
+    </Library>
+    <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib">
+      <Filter>Libs\dyncall</Filter>
+    </Library>
+    <Library Include="..\src\Libs\dyncall\lib\libdyncallback_s.lib">
+      <Filter>Libs\dyncall</Filter>
+    </Library>
+    <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib">
+      <Filter>Libs\dyncall</Filter>
+    </Library>
   </ItemGroup>
 </Project>

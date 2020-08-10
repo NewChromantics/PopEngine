@@ -13,7 +13,7 @@
 #include "../Libs/poph264/PopH264_Osx.framework/Headers/PopH264.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
-#include "Libs/PopH264/PopH264.h"
+#include <poph264/windows/Release_x64/PopH264.h>
 #elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
 #include "PopH264.h"
 #endif
@@ -22,7 +22,7 @@
 #include "../Libs/popcameradevice/PopCameraDevice_Osx.framework/Headers/PopCameraDevice.h"
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
-#include ".Libs/PopCameraDevice/PopCameraDevice.h"
+#include <popcameradevice/windows/Debug_x64/PopCameraDevice.h>
 #elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
 #include "PopCameraDevice.h"
 #endif

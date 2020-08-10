@@ -29,7 +29,7 @@
 #include "TApiMedia.h"
 #endif
 
-#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_IOS)
+#if defined(ENABLE_APIOPENCV)
 #include "TApiOpencv.h"
 #endif
 
@@ -41,13 +41,15 @@
 #include "TApiInput.h"
 #include "TApiBluetooth.h"
 #include "TApiLeapMotion.h"
+#include "TApiOpenvr.h"
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
 #include "TApiDll.h"
 #include "TApiSerial.h"
-#include "TApiOpenvr.h"
 #endif
+
+
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
@@ -628,14 +630,13 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiMedia::Bind( *Context );
 #endif
 
-#if !defined(TARGET_OSX) && !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_IOS)
+#if defined(ENABLE_APIOPENCV)
 			ApiOpencv::Bind(*Context);
 #endif
 			
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
-			ApiOpenvr::Bind( *Context );
 #endif
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiGui::Bind( *Context );
@@ -652,7 +653,8 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiInput::Bind( *Context );
 			ApiBluetooth::Bind( *Context );
 			ApiLeapMotion::Bind( *Context );
-		#endif
+			ApiOpenvr::Bind(*Context);
+#endif
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );

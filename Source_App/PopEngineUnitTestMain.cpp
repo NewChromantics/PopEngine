@@ -15,13 +15,8 @@ bool IsXCodeDebugParam(const std::string& Argument)
 }
 
 
-#include <unistd.h>
 int main(int argc, const char * argv[])
 {
-	char Cwd[200];
-	getcwd(Cwd, 200);
-	printf("%s\n", Cwd);
-
 	//	if first arg is a path, then to make debugging easier in xcode,
 	//	lets load that project instead of unit tests
 	std::string ProjectPath = "UnitTest";

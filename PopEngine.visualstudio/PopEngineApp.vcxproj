@@ -213,10 +213,6 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PromiseQueue.js">
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\Readme.md">
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>

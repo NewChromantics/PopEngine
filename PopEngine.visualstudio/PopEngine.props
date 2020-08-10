@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\Libs;$(ProjectDir)..\src\Libs\Opencv\include;$(ProjectDir)..\src\Libs\Opencv_contrib\modules\aruco\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\src\SoyLib\src;$(ProjectDir)..\src\SoyLib\src\magic_enum\include;$(ProjectDir)..\PopEngine.Package\node_modules\@newchromantics;$(ProjectDir)..\src\Libs;$(ProjectDir)..\src\Libs\Opencv\include;$(ProjectDir)..\src\Libs\Opencv_contrib\modules\aruco\include;$(IncludePath)</IncludePath>
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\Bin\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\Temp\</IntDir>
