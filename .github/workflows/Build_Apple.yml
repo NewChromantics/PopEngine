@@ -1,7 +1,7 @@
 name: Build Apple
 env:
   project: PopEngine
-  AUTH_TOKEN: ${{ secrets.PACKAGE_KEY_ACTIONS }}
+  AUTH_TOKEN: da16e44ac000368c4a7bca1e98dcd6660834a33b
 on:
   push:
     branches:
