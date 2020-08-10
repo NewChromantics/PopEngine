@@ -34,3 +34,6 @@
 [submodule "src/Android/v8"]
 	path = src/Android/v8
 	url = https://github.com/v8/v8.git
+[submodule "Source_Web"]
+	path = Source_Web
+	url = https://github.com/NewChromantics/PopEngine_Web.git
