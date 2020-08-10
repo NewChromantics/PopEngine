@@ -621,7 +621,8 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 	auto Filename = Params.GetArgumentFilename(0);
 
-	Platform::CreateDirectory(Platform::GetDirectoryFromFilename(Filename));
+    auto Directory = Platform::GetDirectoryFromFilename(Filename);
+    Platform::CreateDirectory(Directory);
 
 	//	write as a string if not a specific binary array
 	if ( !Params.IsArgumentArray(1) )
