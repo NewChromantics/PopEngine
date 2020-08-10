@@ -1,5 +1,5 @@
 #include "TBind.h"
-#include "SoyLib/src/SoyString.h"
+#include <SoyString.h>
 
 
 

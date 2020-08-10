@@ -28,8 +28,8 @@
 #endif
 
 #include <memory>
-#include "HeapArray.hpp"
-#include "SoyLib/src/SoyThread.h"
+#include <HeapArray.hpp>
+#include <SoyThread.h>
 
 
 

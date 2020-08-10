@@ -16,9 +16,6 @@
 [submodule "src/Libs/Opencv_contrib"]
 	path = src/Libs/Opencv_contrib
 	url = https://github.com/SoylentGraham/opencv_contrib.git
-[submodule "src/MagicEnum"]
-	path = src/MagicEnum
-	url = https://github.com/Neargye/magic_enum.git
 [submodule "src/Zip"]
 	path = src/Zip
 	url = https://github.com/kuba--/zip.git
@@ -32,5 +29,8 @@
 	path = src/PopDepthToYuv
 	url = https://github.com/SoylentGraham/PopDepthToYuv.git
 [submodule "src/Android/v8"]
-	path = src/Android/v8
+	path = Source_Android/v8
 	url = https://github.com/v8/v8.git
+[submodule "Source_Web"]
+	path = Source_Web
+	url = https://github.com/NewChromantics/PopEngine_Web.git

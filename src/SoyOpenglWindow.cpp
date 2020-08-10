@@ -21,7 +21,7 @@ extern "C"
 #include "SoyLib/src/Win32ImageMapControl.h"
 }
 
-#include "MagicEnum/include/magic_enum.hpp"
+#include <magic_enum.hpp>
 
 
 namespace Platform

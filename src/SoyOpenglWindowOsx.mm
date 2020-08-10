@@ -5,7 +5,7 @@
 #include "SoyOpenglWindow.h"
 #include "SoyOpenglView.h"
 #include "PopMain.h"
-#include "magic_enum/include/magic_enum.hpp"
+#include <magic_enum.hpp>
 
 
 namespace Platform

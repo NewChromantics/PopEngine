@@ -4,7 +4,7 @@
 #include "TApiOpengl.h"
 #include "SoyOpengl.h"
 #include "SoyViveHandTracker.h"
-#include "MagicEnum/include/magic_enum.hpp"
+#include <magic_enum.hpp>
 #include "SoyRuntimeLibrary.h"
 #include <string_view>
 using namespace std::literals;

@@ -42,6 +42,13 @@ Build Notes
 		- `sudo apt-get install gcc-9 g++-9`
 		- make gcc/g++ default to new version `sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9`
 
+- Osx
+	- Install engine package dependencies (PopH264, PopCameraDevice, PopVision) via our published packages via npm (with the github repository)
+	- Modify `PopEngine.Package/.npmrc` to change `YOUR_AUTH_TOKEN` into your github auth token with access to NewChromantics packages (ask graham@newchromantics.com). 
+	- Do not commit this token. Github will spot it and revoke the token for security.
+	- run `cd PopEngine.Package && npm install` to download the packages
+	- run `ln -s node_modules/@newchromantics/ ../Libs` to make a symbolic link to the packages in the correct (`/Libs/`) directory
+
 GitHub Actions Notes
 -------------
 If you are getting git checkout errors on self hosted runners ssh in and manually delete the repo then restart the workflow

@@ -65,7 +65,6 @@
 		BF151FB523845FDB00A70EBF /* PopMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AE820D6DEB3000BC812 /* PopMain.cpp */; };
 		BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
 		BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
-		BF151FBA23845FF000A70EBF /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
 		BF151FBD23845FF000A70EBF /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
 		BF151FBF2384601300A70EBF /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
 		BF151FC22384601300A70EBF /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
@@ -159,7 +158,6 @@
 		BF5EAFFB237F0CD40077BCF5 /* SoyViveHandTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */; };
 		BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
-		BF5EAFFE237F0CD40077BCF5 /* TApiCoreMl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */; };
 		BF5EB000237F0CD40077BCF5 /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
 		BF5EB001237F0CD40077BCF5 /* TApiEzsift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF91D97A2215839F00E91671 /* TApiEzsift.cpp */; };
 		BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
@@ -424,7 +422,6 @@
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
-		BF84732E22F7249500038A3A /* magic_enum.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = magic_enum.hpp; path = src/MagicEnum/include/magic_enum.hpp; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
 		BF8534F622B6DA610049C01B /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
@@ -475,8 +472,8 @@
 		BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpenvr.h; path = src/TApiOpenvr.h; sourceTree = "<group>"; };
 		BF97592420E961190093B296 /* TApiOpencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpencl.h; path = src/TApiOpencl.h; sourceTree = "<group>"; };
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
-		BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCoreMl.h; path = src/TApiCoreMl.h; sourceTree = "<group>"; };
-		BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCoreMl.cpp; path = src/TApiCoreMl.cpp; sourceTree = "<group>"; };
+		BF99BE2821F89C6100E6CE5B /* TApiVision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiVision.h; path = src/TApiVision.h; sourceTree = "<group>"; };
+		BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiVision.cpp; path = src/TApiVision.cpp; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -522,6 +519,10 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
+		BFEDAFE924E01179003B130F /* Libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Libs; sourceTree = "<group>"; };
+		BFEDAFEA24E01183003B130F /* PopEngine.Package */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Package; sourceTree = "<group>"; };
+		BFEDAFEB24E0672E003B130F /* Android */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Android; path = src/Android; sourceTree = "<group>"; };
+		BFEDAFEC24E15128003B130F /* Source_Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Source_Android; sourceTree = "<group>"; };
 		BFEF6A3624759168000A1F88 /* TApiAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TApiAudio.h; path = src/TApiAudio.h; sourceTree = "<group>"; };
 		BFEF6A3724759168000A1F88 /* TApiAudio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = TApiAudio.cpp; path = src/TApiAudio.cpp; sourceTree = "<group>"; };
 		BFEF6A3824759401000A1F88 /* SoySound.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = SoySound.mm; path = src/SoySound.mm; sourceTree = "<group>"; };
@@ -1007,6 +1008,9 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BFEDAFEC24E15128003B130F /* Source_Android */,
+				BFEDAFEA24E01183003B130F /* PopEngine.Package */,
+				BFEDAFE924E01179003B130F /* Libs */,
 				BF21AEA424D4319B0046A434 /* .github */,
 				BFDC037A24BFAE4A00182E0B /* PopEngine.Linux */,
 				BFE462B824B12D8A00D04A4C /* PopDepthToYuv */,
@@ -1040,6 +1044,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BFEDAFEB24E0672E003B130F /* Android */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
 				BF91D97C221584E500E91671 /* Ezsift */,
@@ -1047,7 +1052,6 @@
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BFDC03A62430CEC20004512A /* Json11 */,
-				BF84732E22F7249500038A3A /* magic_enum.hpp */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
 				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
@@ -1079,8 +1083,6 @@
 				BF607EA32240588300A78C00 /* TApiBluetooth.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
 				BF26EF6320DED0F400A48025 /* TApiCommon.h */,
-				BF99BE2921F89C6100E6CE5B /* TApiCoreMl.cpp */,
-				BF99BE2821F89C6100E6CE5B /* TApiCoreMl.h */,
 				BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */,
 				BF0F9E702288892F00AEA7DC /* TApiDll.h */,
 				BF5C4AC523F6FE5B007D6393 /* TApiEngine.cpp */,
@@ -1113,6 +1115,8 @@
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
+				BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */,
+				BF99BE2821F89C6100E6CE5B /* TApiVision.h */,
 				EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */,
 				EBC8FA5B21131E9F0014E998 /* TApiWebsocket.h */,
 				BF8DD667244A6B0D00960703 /* TApiXr.cpp */,
@@ -1516,7 +1520,6 @@
 				BF151FB523845FDB00A70EBF /* PopMain.cpp in Sources */,
 				BF151FA923845FAD00A70EBF /* SoyTypes.mm in Sources */,
 				BF151FAC23845FAD00A70EBF /* SoyVector.cpp in Sources */,
-				BF151FBA23845FF000A70EBF /* TApiCoreMl.cpp in Sources */,
 				BF151F8C23845FAD00A70EBF /* SoyH264.cpp in Sources */,
 				BF151F9E23845FAD00A70EBF /* SoyShader.cpp in Sources */,
 				BF151F8423845FAD00A70EBF /* SoyAvf.mm in Sources */,
@@ -1642,7 +1645,6 @@
 				BF5EAFCE237F0C6E0077BCF5 /* SoyImage.cpp in Sources */,
 				BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */,
 				BF5EAFCF237F0C6E0077BCF5 /* SoyJson.cpp in Sources */,
-				BF5EAFFE237F0CD40077BCF5 /* TApiCoreMl.cpp in Sources */,
 				BF5C4AC823F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
 				BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */,
 				BF5EAFF0237F0C6E0077BCF5 /* SoyWindow.cpp in Sources */,
@@ -3041,7 +3043,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
 				BUILD_TARGET_NAME = PopEngine;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -3083,11 +3085,6 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"<Multiple",
-					"values>",
-					JSAPI_V8,
-				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -3107,7 +3104,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
 				BUILD_TARGET_NAME = PopEngine;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -3149,11 +3146,6 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"<Multiple",
-					"values>",
-					JSAPI_V8,
-				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -3173,7 +3165,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
 				BUILD_TARGET_NAME = PopEngine;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -3215,11 +3207,6 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"<Multiple",
-					"values>",
-					JSAPI_V8,
-				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -3239,7 +3226,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ANDROID_NDK = /Volumes/Data256/AndroidSdk29/ndk/21.1.6352462;
+				ANDROID_NDK_HOME = "/usr/local/share/android-ndk";
 				BUILD_TARGET_NAME = PopEngine;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -3265,11 +3252,6 @@
 				DEVELOPMENT_TEAM = 2HGDT7H2KX;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"<Multiple",
-					"values>",
-					JSAPI_V8,
-				);
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
