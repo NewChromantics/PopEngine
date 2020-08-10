@@ -106,3 +106,4 @@ namespace Java
 	void	FlushThreadLocals()	{}
 }
 
+
