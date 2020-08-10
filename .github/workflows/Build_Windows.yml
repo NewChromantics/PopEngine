@@ -2,7 +2,7 @@ name: Build Windows
 
 env:
   project: PopEngine
-  AUTH_TOKEN: db13663e713fb0ed4dc2041ea44904ae1b41d978
+  AUTH_TOKEN: ${{ secrets.PACKAGE_KEY_ACTIONS }}
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
         working-directory: ${{ env.project }}.Package/
         run: npm i
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_KEY_ACTIONS }}
+          NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
       - name: Move Package Downloads to Libs
         run: |
