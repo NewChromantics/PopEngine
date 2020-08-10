@@ -360,6 +360,12 @@
     <ClInclude Include="..\src\Json11\json11.hpp">
       <Filter>Libs\Json11</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiXr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenxr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -932,6 +938,12 @@
     </ClCompile>
     <ClCompile Include="..\src\Json11\json11.cpp">
       <Filter>Libs\Json11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiXr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenxr.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
