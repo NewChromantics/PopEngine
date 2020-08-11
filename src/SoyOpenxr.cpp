@@ -35,6 +35,7 @@ Openxr::TSession::TSession() :
 	//https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/3579c5fcc123524a545e6fd361e76b7f819aa8a3/src/tests/hello_xr/main.cpp
 	CreateInstance();
 	InitializeSystem();
+	CreateDx11Device();
 	InitializeSession();
 	/*
 	std::shared_ptr<IPlatformPlugin> platformPlugin = CreatePlatformPlugin(options, data);
@@ -250,12 +251,10 @@ void Openxr::TSession::InitializeSystem()
 	mEnvironmentBlendMode = EnvironmentBlendModes[0];
 }
 
-void InitializeSession() {
-	CHECK(m_instance.Get() != XR_NULL_HANDLE);
-	CHECK(m_systemId != XR_NULL_SYSTEM_ID);
-	CHECK(m_session.Get() == XR_NULL_HANDLE);
-	
-	// Create the D3D11 device for the adapter associated with the system.
+void Openxr::TSession::CreateDx11Device()
+{
+	/*
+	//	create the D3D11 device for the adapter associated with the system.
 	XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
 	CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
 	
@@ -276,6 +275,12 @@ void InitializeSession() {
 	
 	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
 	graphicsBinding.device = device;
+	*/
+}
+
+void Openxr::TSession::InitializeSession()
+{
+
 	
 	XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
 	createInfo.next = &graphicsBinding;
