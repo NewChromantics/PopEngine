@@ -1,0 +1,22 @@
+name: Clean SelfHosted
+
+on:
+  workflow_dispatch
+
+jobs:
+  Clean:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+
+          - os: Nvidia
+            type: linux
+            architecture: arm64
+
+          - os: Pi4
+            type: linux
+            architecture: arm64
+
+    steps:
+      - uses: AutoModality/action-clean@v1
