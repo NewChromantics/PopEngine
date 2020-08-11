@@ -11,18 +11,25 @@ using namespace std::literals;
 #if defined(TARGET_IOS)
 #include "SoyArkitXr.h"
 #endif
+#if defined(TARGET_OSX)
+#include "SoyOpenxr.h"
+#endif
 
 namespace ApiXr
 {
 	const char Namespace[] = "Pop.Xr";
 
+	//	gr: like EnumDevices in ApiMedia, maybe should be EnumDevices, but
+	//		implementation on web requires some callback, so Create is more appropriate?...
+	DEFINE_BIND_FUNCTIONNAME( CreateDevice );
+
 	DEFINE_BIND_TYPENAME(Session);
 
 	DEFINE_BIND_FUNCTIONNAME( WaitForPoses);
+	
 
+	void	CreateDevice(Bind::TCallback& Params);
 }
-
-
 
 
 
@@ -30,6 +37,8 @@ namespace ApiXr
 void ApiXr::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
+
+	Context.BindGlobalFunction<BindFunction::CreateDevice>( CreateDevice, Namespace );
 
 	Context.BindObjectType<TSessionWrapper>(Namespace);
 }
@@ -1099,3 +1108,51 @@ void Openvr::TOverlay::SubmitFrame(Opengl::TTexture& OpenglTexture)
 	
 	Overlay.SetOverlayTexture(mHandle, &Texture);
 }
+
+std::shared_ptr<Xr::TSession> OpenxrSession;
+std::shared_ptr<Xr::TSession> ArkitSession;
+
+
+void ApiXr::CreateDevice(Bind::TCallback& Params)
+{
+	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
+	Params.Return(Promise);
+	
+	//	try and create a session manager for whatever we support
+	
+	//	no sessions, xr not supported
+	if ( !OpenxrSession && !ArkitSession )
+		throw Soy::AssertException("Failed to create any xr sessions, may not be supported on this platform");
+	
+	auto DoEnumDevices = [&]
+	{
+		auto& LocalContext = Params.mLocalContext;
+		try
+		{
+			//	we now return the json directly
+			Array<char> JsonBuffer;
+			JsonBuffer.SetSize(6000);
+			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+			
+			std::string Json(JsonBuffer.GetArray());
+			auto Object = Bind::ParseObjectString(LocalContext.mLocalContext, Json);
+			Promise.Resolve( LocalContext, Object);
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "PopCameraDevice_EnumCameraDevicesJson() " << e.what() << std::endl;
+			
+			//	queue the error callback
+			std::string ExceptionString(e.what());
+			Promise.Reject( LocalContext, ExceptionString );
+		}
+	};
+	
+	//	immediate... if this is slow, put it on a thread
+	DoEnumDevices();
+	
+	
+}
+
+
+
