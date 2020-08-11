@@ -11,12 +11,13 @@ OTHER_CFLAGS = -Wno-ambiguous-macro
 SOYLIB_PATH = $(SRCROOT)/src/
 OPENCV_PATH = $(SRCROOT)/src/Libs/Opencv
 OPENCV_CONTRIB_PATH = $(SRCROOT)/src/Libs/Opencv_contrib/modules/
+OPENXR_PATH = $(SRCROOT)/src/OpenXR/include
 
-//	todo: remove dlib! make it an external dll we can just call
-DLIB_PATH = /usr/local/Cellar/dlib/19.15
+HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH) $(OPENXR_PATH)
+LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2 $(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32 $(PROJECT_DIR)/src/Libs/dyncall/lib
 
-HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(DLIB_PATH)/include $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH)
-LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(DLIB_PATH)/lib
+//:completeSettings = none
+
 
 VERSIONING_SYSTEM = apple-generic
 
