@@ -29,8 +29,9 @@ LIB_INCLUDES = \
 -I/usr/include/webkitgtk-4.0	\
 -I$(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)	\
 -I$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)	\
+-I$(SRC_PATH)/src/Zip/src
 
-LIB_SRC_FILES  = \
+LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
 $(SRC_PATH)/JsCoreBind.cpp \
 $(SRC_PATH)/PopMain.cpp \
@@ -42,12 +43,16 @@ $(SRC_PATH)/TApiMedia.cpp \
 $(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
+$(SRC_PATH)/TApiZip.cpp \
+
+LIB_C_FILES = \
+$(SRC_PATH)/Zip/src/zip.c	\
 
 #$(SRC_PATH)/TApiEngine.cpp \
 
 
 # soy lib files
-LIB_SRC_FILES  += \
+LIB_CPP_FILES  += \
 $(SOY_PATH)/src/smallsha1/sha1.cpp \
 $(SOY_PATH)/src/memheap.cpp \
 $(SOY_PATH)/src/SoyApp.cpp \
@@ -113,8 +118,7 @@ LIB_LINK_LIBS = \
 -lPopCameraDevice \
 -L$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)	\
 
-
-LIB_OBJECTS=$(LIB_SRC_FILES:.cpp=.o)
+LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
 
 OUT_LIB=$(BUILD_DIR)/lib${LIB_NAME}.so
@@ -159,6 +163,9 @@ $(OUT_LIB): $(LIB_OBJECTS) $(OUT_FILES)
 	$(CC) $(LIB_LINK_FLAGS) -o $@ $(LIB_OBJECTS) $(LIB_LINK_LIBS)
 	$(info Listing dependencies of $(OUT_LIB))
 	ldd $(OUT_LIB)
+
+.c.o:
+	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
