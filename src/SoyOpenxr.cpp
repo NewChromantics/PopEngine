@@ -1,11 +1,19 @@
 #include "SoyOpenxr.h"
 #include <SoyThread.h>
 #include <openxr/openxr.h>
+#include <magic_enum.hpp>
 
 namespace Openxr
 {
 
 	class TSession;
+	
+	void	EnumExtensions(std::function<void(const char*)> OnFoundExtension);
+	void	IsOkay(XrResult Result,const char* Context);
+	void	IsOkay(XrResult Result,const std::string& Context);
+
+	constexpr static uint32_t LeftSide = 0;
+	constexpr static uint32_t RightSide = 1;
 }
 
 
@@ -16,24 +24,123 @@ public:
 	TSession();
 	~TSession();
 	
-	void			CreateInstance();
-	
+private:
 	virtual bool	ThreadIteration() override;
+
+	void			CreateInstance(const std::string& ApplicationName,uint32_t ApplicationVersion,const std::string& EngineName,uint32_t EngineVersion);
+	void			InitializeSystem();
+	void			CreateDx11Device();
+	void			InitializeSession();
+	void			CreateActions();
+	void			CreateSpaces();
+
+	
+	void			EnumEnvironmentBlendModes(ArrayBridge<XrEnvironmentBlendMode>&& Modes);
+
+	XrPath			GetXrPath(const char* PathString);
 	
 private:
 	XrFormFactor	mFormFactor{XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY};
 	XrViewConfigurationType mPrimaryViewConfigType{XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO};
 	uint32_t		mStereoViewCount = 2; // PRIMARY_STEREO view configuration always has 2 views
 
-	XrInstance*		mInstance = XR_NULL_HANDLE;
-	uint32_t		mSystemId = XR_NULL_SYSTEM_ID;
+	XrInstance		mInstance = XR_NULL_HANDLE;
+	XrSystemId		mSystemId = XR_NULL_SYSTEM_ID;
+	XrActionSet		mActionSet = XR_NULL_HANDLE;
+
+	XrSpace			mSceneSpace = XR_NULL_HANDLE;
+	//xr::SpaceHandle m_sceneSpace;
+	XrReferenceSpaceType	mSceneSpaceType{};
+
+	XrSessionState	mSessionState{XR_SESSION_STATE_UNKNOWN};
+
+	//const std::unique_ptr<sample::IGraphicsPluginD3D11> m_graphicsPlugin;
+	//xr::ExtensionDispatchTable m_extensions;
+	/*
+	struct {
+		bool DepthExtensionSupported{false};
+		bool UnboundedRefSpaceSupported{false};
+		bool SpatialAnchorSupported{false};
+	} m_optionalExtensions;
+	
+	
+	struct Hologram {
+		sample::Cube Cube;
+		xr::SpatialAnchorHandle Anchor;
+	};
+	std::vector<Hologram> m_holograms;
+	
+	std::optional<uint32_t> m_mainCubeIndex;
+	std::optional<uint32_t> m_spinningCubeIndex;
+	XrTime m_spinningCubeStartTime;
+	*/
+	/*
+	std::array<XrPath, 2> m_subactionPaths{};
+	std::array<sample::Cube, 2> m_cubesInHand{};
+	
+	xr::ActionSetHandle m_actionSet;
+	xr::ActionHandle m_placeAction;
+	xr::ActionHandle m_exitAction;
+	xr::ActionHandle m_poseAction;
+	xr::ActionHandle m_vibrateAction;
+	
+	XrEnvironmentBlendMode m_environmentBlendMode{};
+	xr::math::NearFar m_nearFar{};
+	
+	struct SwapchainD3D11 {
+		xr::SwapchainHandle Handle;
+		DXGI_FORMAT Format{DXGI_FORMAT_UNKNOWN};
+		uint32_t Width{0};
+		uint32_t Height{0};
+		uint32_t ArraySize{0};
+		std::vector<XrSwapchainImageD3D11KHR> Images;
+	};
+	
+	struct RenderResources {
+		XrViewState ViewState{XR_TYPE_VIEW_STATE};
+		std::vector<XrView> Views;
+		std::vector<XrViewConfigurationView> ConfigViews;
+		SwapchainD3D11 ColorSwapchain;
+		SwapchainD3D11 DepthSwapchain;
+		std::vector<XrCompositionLayerProjectionView> ProjectionLayerViews;
+		std::vector<XrCompositionLayerDepthInfoKHR> DepthInfoViews;
+	};
+	
+	std::unique_ptr<RenderResources> m_renderResources{};
+	*/
 };
+
+
+void Openxr::IsOkay(XrResult Result,const char* Context)
+{
+	if ( Result == XR_SUCCESS )
+		return;
+
+	std::stringstream Error;
+	Error << "Openxr error " << magic_enum::enum_name(Result) << " in " << Context;
+	throw Soy::AssertException(Error);
+}
+
+
+
+
+
+
+
+
 
 Openxr::TSession::TSession() :
 	SoyThread	( "Openxr::TSession" )
 {
+	//	lets add these later
+	//	openvr has it, does anything else?
+	auto ApplicationName = "Pop";
+	auto ApplicationVersion = 1;
+	auto EngineName = "PopEngine";
+	auto EngineVersion = 1;
+
 	//https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/3579c5fcc123524a545e6fd361e76b7f819aa8a3/src/tests/hello_xr/main.cpp
-	CreateInstance();
+	CreateInstance( ApplicationName, ApplicationVersion, EngineName, EngineVersion );
 	InitializeSystem();
 	CreateDx11Device();
 	InitializeSession();
@@ -76,10 +183,10 @@ bool Openxr::TSession::ThreadIteration()
 	return true;
 }
 
-void Openxr::EnumEnvironmentBlendModes(ArrayBridge<XrEnvironmentBlendMode>&& Modes)
+void Openxr::TSession::EnumEnvironmentBlendModes(ArrayBridge<XrEnvironmentBlendMode>&& Modes)
 {
 	uint32_t Count = 0;
-	auto Result = xrEnumerateEnvironmentBlendModes( mInstance, mSystemId, mPrimaryViewConfigType, 0, &Count, nullptr));
+	auto Result = xrEnumerateEnvironmentBlendModes( mInstance, mSystemId, mPrimaryViewConfigType, 0, &Count, nullptr );
 	IsOkay(Result,"xrEnumerateEnvironmentBlendModes (count)");
 
 	Modes.SetSize(Count);
@@ -133,29 +240,29 @@ void Openxr::TSession::CreateInstance(const std::string& ApplicationName,uint32_
 	
 	//	gr: is the pointer the key or is it just a string?
 	BufferArray<const char*,10> EnabledExtensions;
-	XrInstanceCreateInfo createInfo{XR_TYPE_INSTANCE_CREATE_INFO};
-	createInfo.enabledExtensionCount = EnabledExtensions.GetSize();
-	createInfo.enabledExtensionNames = EnabledExtensions.GetArray();
-	createInfo.applicationInfo = { "", ApplicationVersion, "", EngineVersion, EngineVersion,XR_CURRENT_API_VERSION };
-	Soy::StringToBuffer(ApplicationName, CreateInfo.applicationInfo.applicationName);
-	Soy::StringToBuffer(EngineName, CreateInfo.applicationInfo.engineName);
+	XrInstanceCreateInfo CreateInfo{XR_TYPE_INSTANCE_CREATE_INFO};
+	CreateInfo.enabledExtensionCount = EnabledExtensions.GetSize();
+	CreateInfo.enabledExtensionNames = EnabledExtensions.GetArray();
+	CreateInfo.applicationInfo = { "", ApplicationVersion, "", EngineVersion, XR_CURRENT_API_VERSION };
+	Soy::StringToBuffer( ApplicationName, CreateInfo.applicationInfo.applicationName );
+	Soy::StringToBuffer( EngineName, CreateInfo.applicationInfo.engineName );
 
-	auto Result = xrCreateInstance( &createInfo, mInstance );
+	auto Result = xrCreateInstance( &CreateInfo, &mInstance );
 	IsOkay(Result,"xrCreateInstance");
 	
 	//m_extensions.PopulateDispatchTable(m_instance.Get());
 
 }
 
-void CreateActions() {
-	CHECK(m_instance.Get() != XR_NULL_HANDLE);
-	
+void Openxr::TSession::CreateActions()
+{
 	// Create an action set.
 	{
 		XrActionSetCreateInfo actionSetInfo{XR_TYPE_ACTION_SET_CREATE_INFO};
-		strcpy_s(actionSetInfo.actionSetName, "place_hologram_action_set");
-		strcpy_s(actionSetInfo.localizedActionSetName, "Placement");
-		CHECK_XRCMD(xrCreateActionSet(m_instance.Get(), &actionSetInfo, m_actionSet.Put()));
+		Soy::StringToBuffer("place_hologram_action_set",actionSetInfo.actionSetName);
+		Soy::StringToBuffer("Placement",actionSetInfo.localizedActionSetName);
+		auto Result = xrCreateActionSet( mInstance.Get(), &actionSetInfo, &mActionSet );
+		IsOkay( Result, "xrCreateActionSet" );
 	}
 	
 	// Create actions.
@@ -280,49 +387,57 @@ void Openxr::TSession::CreateDx11Device()
 
 void Openxr::TSession::InitializeSession()
 {
-
+	ID3D11Device* GraphicsDevice = GetGraphicsDevice();
+	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
+	graphicsBinding.device = GraphicsDevice;
 	
 	XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
 	createInfo.next = &graphicsBinding;
 	createInfo.systemId = m_systemId;
-	CHECK_XRCMD(xrCreateSession(m_instance.Get(), &createInfo, m_session.Put()));
+	auto Result = xrCreateSession( mInstance, &createInfo, &mSession );
 	
+	//	create action set
 	XrSessionActionSetsAttachInfo attachInfo{XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
-	std::vector<XrActionSet> actionSets = {m_actionSet.Get()};
-	attachInfo.countActionSets = (uint32_t)actionSets.size();
-	attachInfo.actionSets = actionSets.data();
-	CHECK_XRCMD(xrAttachSessionActionSets(m_session.Get(), &attachInfo));
+	attachInfo.countActionSets = 1;
+	attachInfo.actionSets = &mActionSet;
+	Result = xrAttachSessionActionSets(mSession, &attachInfo);
+	IsOkay(Result,"xrAttachSessionActionSets");
 	
 	CreateSpaces();
 	CreateSwapchains();
 }
 
-void CreateSpaces() {
-	CHECK(m_session.Get() != XR_NULL_HANDLE);
-	
+void Openxr::TSession::CreateSpaces()
+{
 	// Create a scene space to bridge interactions and all holograms.
 	{
-		if (m_optionalExtensions.UnboundedRefSpaceSupported) {
+		if ( HasExtension(XR_MSFT_UNBOUNDED_REFERENCE_SPACE_EXTENSION_NAME) )
+		{
 			// Unbounded reference space provides the best scene space for world-scale experiences.
-			m_sceneSpaceType = XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT;
-		} else {
+			mSceneSpaceType = XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT;
+		}
+		else
+		{
 			// If running on a platform that does not support world-scale experiences, fall back to local space.
-			m_sceneSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
+			mSceneSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
 		}
 		
 		XrReferenceSpaceCreateInfo spaceCreateInfo{XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
-		spaceCreateInfo.referenceSpaceType = m_sceneSpaceType;
+		spaceCreateInfo.referenceSpaceType = mSceneSpaceType;
 		spaceCreateInfo.poseInReferenceSpace = xr::math::Pose::Identity();
-		CHECK_XRCMD(xrCreateReferenceSpace(m_session.Get(), &spaceCreateInfo, m_sceneSpace.Put()));
+		auto Result = xrCreateReferenceSpace( mSession, &spaceCreateInfo, mSceneSpace );
+		IsOkay(Result,"xrCreateReferenceSpace");
 	}
 	
 	// Create a space for each hand pointer pose.
-	for (uint32_t side : {LeftSide, RightSide}) {
+	for (uint32_t side : {LeftSide, RightSide})
+	{
 		XrActionSpaceCreateInfo createInfo{XR_TYPE_ACTION_SPACE_CREATE_INFO};
-		createInfo.action = m_poseAction.Get();
+		createInfo.action = mPoseAction;
 		createInfo.poseInActionSpace = xr::math::Pose::Identity();
-		createInfo.subactionPath = m_subactionPaths[side];
-		CHECK_XRCMD(xrCreateActionSpace(m_session.Get(), &createInfo, m_cubesInHand[side].Space.Put()));
+		createInfo.subactionPath = mSubactionPaths[side];
+		auto Result = xrCreateActionSpace( mSession, &createInfo, mCubesInHand[side].Space );
+		IsOkay(Result,"xrCreateActionSpace");
 	}
 }
 
@@ -356,15 +471,14 @@ std::tuple<DXGI_FORMAT, DXGI_FORMAT> SelectSwapchainPixelFormats() {
 	return {colorSwapchainFormat, depthSwapchainFormat};
 }
 
-void CreateSwapchains() {
-	CHECK(m_session.Get() != XR_NULL_HANDLE);
-	CHECK(m_renderResources == nullptr);
-	
-	m_renderResources = std::make_unique<RenderResources>();
+void Openxr::TSession::CreateSwapchains()
+{
+	mRenderResources = std::make_unique<RenderResources>();
 	
 	// Read graphics properties for preferred swapchain length and logging.
 	XrSystemProperties systemProperties{XR_TYPE_SYSTEM_PROPERTIES};
-	CHECK_XRCMD(xrGetSystemProperties(m_instance.Get(), m_systemId, &systemProperties));
+	auto Result = xrGetSystemProperties( mInstance, mSystemId, &systemProperties );
+	IsOkay(Result,"xrGetSystemProperties");
 	
 	// Select color and depth swapchain pixel formats
 	const auto [colorSwapchainFormat, depthSwapchainFormat] = SelectSwapchainPixelFormats();
@@ -459,66 +573,87 @@ SwapchainD3D11 CreateSwapchainD3D11(XrSession session,
 	return swapchain;
 }
 
-void ProcessEvents(bool* exitRenderLoop, bool* requestRestart) {
-	*exitRenderLoop = *requestRestart = false;
-	
-	auto pollEvent = [&](XrEventDataBuffer& eventData) -> bool {
+void Openxr::TSession::ProcessEvents()
+{
+	auto pollEvent = [&](XrEventDataBuffer& eventData)
+	{
 		eventData.type = XR_TYPE_EVENT_DATA_BUFFER;
 		eventData.next = nullptr;
-		return CHECK_XRCMD(xrPollEvent(m_instance.Get(), &eventData)) == XR_SUCCESS;
+		auto Result = xrPollEvent(m_instance.Get(), &eventData);
+		return Result == XR_SUCCESS;
+	};
+
+	auto OnSessionStateChanged = [this](const XrEventDataSessionStateChanged& StateEvent)
+	{
+		
+		mSessionState = stateEvent.state;
+		switch (mSessionState)
+		{
+				/*
+				 case XR_SESSION_STATE_READY: {
+				 CHECK(m_session.Get() != XR_NULL_HANDLE);
+				 XrSessionBeginInfo sessionBeginInfo{XR_TYPE_SESSION_BEGIN_INFO};
+				 sessionBeginInfo.primaryViewConfigurationType = m_primaryViewConfigType;
+				 CHECK_XRCMD(xrBeginSession(m_session.Get(), &sessionBeginInfo));
+				 m_sessionRunning = true;
+				 break;
+				 }
+				 case XR_SESSION_STATE_STOPPING: {
+				 m_sessionRunning = false;
+				 CHECK_XRCMD(xrEndSession(m_session.Get()));
+				 break;
+				 }
+				 case XR_SESSION_STATE_EXITING: {
+				 // Do not attempt to restart because user closed this session.
+				 *exitRenderLoop = true;
+				 *requestRestart = false;
+				 break;
+				 }
+				 case XR_SESSION_STATE_LOSS_PENDING: {
+				 // Poll for a new systemId
+				 *exitRenderLoop = true;
+				 *requestRestart = true;
+				 break;
+				 }
+				 */
+		}
+		break;
 	};
 	
-	XrEventDataBuffer eventData{};
-	while (pollEvent(eventData)) {
-		switch (eventData.type) {
-				case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
-					*exitRenderLoop = true;
-					*requestRestart = false;
-					return;
-				}
-				case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-					const auto stateEvent = *reinterpret_cast<const XrEventDataSessionStateChanged*>(&eventData);
-					CHECK(m_session.Get() != XR_NULL_HANDLE && m_session.Get() == stateEvent.session);
-					m_sessionState = stateEvent.state;
-					switch (m_sessionState) {
-							case XR_SESSION_STATE_READY: {
-								CHECK(m_session.Get() != XR_NULL_HANDLE);
-								XrSessionBeginInfo sessionBeginInfo{XR_TYPE_SESSION_BEGIN_INFO};
-								sessionBeginInfo.primaryViewConfigurationType = m_primaryViewConfigType;
-								CHECK_XRCMD(xrBeginSession(m_session.Get(), &sessionBeginInfo));
-								m_sessionRunning = true;
-								break;
-							}
-							case XR_SESSION_STATE_STOPPING: {
-								m_sessionRunning = false;
-								CHECK_XRCMD(xrEndSession(m_session.Get()));
-								break;
-							}
-							case XR_SESSION_STATE_EXITING: {
-								// Do not attempt to restart because user closed this session.
-								*exitRenderLoop = true;
-								*requestRestart = false;
-								break;
-							}
-							case XR_SESSION_STATE_LOSS_PENDING: {
-								// Poll for a new systemId
-								*exitRenderLoop = true;
-								*requestRestart = true;
-								break;
-							}
-					}
-					break;
-				}
-				case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
-				case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
-			default: {
-				DEBUG_PRINT("Ignoring event type %d", eventData.type);
+	while ( true )
+	{
+		//	no more events
+		XrEventDataBuffer eventData{};
+		if ( !pollEvent(eventData) )
+			return true;
+
+		switch (eventData.type)
+		{
+			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING:
+			{
+				bool RequestRestart = false;
+				return false;
+			}
+
+			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED:
+			{
+				const auto stateEvent = *reinterpret_cast<const XrEventDataSessionStateChanged*>(&eventData);
+				if ( stateEvent.session != mSession )
+					throw Soy::AssertException("Event session different from our session");
+				OnSessionStateChanged(stateEvent);
 				break;
 			}
+				
+			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING:
+			case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
+			default:
+				std::Debug << "Ignoring event " << magic_enum::enum_name(eventData.type) << std::endl;
+				break;
 		}
 	}
+	return true;
 }
-
+/*
 struct Hologram;
 Hologram CreateHologram(const XrPosef& poseInScene, XrTime placementTime) const {
 	Hologram hologram{};
@@ -856,73 +991,11 @@ XrPath GetXrPath(const char* string) const {
 	return xr::StringToPath(m_instance.Get(), string);
 }
 
-private:
-
-const std::string m_applicationName;
-const std::unique_ptr<sample::IGraphicsPluginD3D11> m_graphicsPlugin;
-
-xr::InstanceHandle m_instance;
-xr::SessionHandle m_session;
-uint64_t m_systemId{XR_NULL_SYSTEM_ID};
-xr::ExtensionDispatchTable m_extensions;
-
-struct {
-	bool DepthExtensionSupported{false};
-	bool UnboundedRefSpaceSupported{false};
-	bool SpatialAnchorSupported{false};
-} m_optionalExtensions;
-
-xr::SpaceHandle m_sceneSpace;
-XrReferenceSpaceType m_sceneSpaceType{};
-
-struct Hologram {
-	sample::Cube Cube;
-	xr::SpatialAnchorHandle Anchor;
-};
-std::vector<Hologram> m_holograms;
-
-std::optional<uint32_t> m_mainCubeIndex;
-std::optional<uint32_t> m_spinningCubeIndex;
-XrTime m_spinningCubeStartTime;
-
-constexpr static uint32_t LeftSide = 0;
-constexpr static uint32_t RightSide = 1;
-std::array<XrPath, 2> m_subactionPaths{};
-std::array<sample::Cube, 2> m_cubesInHand{};
-
-xr::ActionSetHandle m_actionSet;
-xr::ActionHandle m_placeAction;
-xr::ActionHandle m_exitAction;
-xr::ActionHandle m_poseAction;
-xr::ActionHandle m_vibrateAction;
-
-XrEnvironmentBlendMode m_environmentBlendMode{};
-xr::math::NearFar m_nearFar{};
-
-struct SwapchainD3D11 {
-	xr::SwapchainHandle Handle;
-	DXGI_FORMAT Format{DXGI_FORMAT_UNKNOWN};
-	uint32_t Width{0};
-	uint32_t Height{0};
-	uint32_t ArraySize{0};
-	std::vector<XrSwapchainImageD3D11KHR> Images;
-};
-
-struct RenderResources {
-	XrViewState ViewState{XR_TYPE_VIEW_STATE};
-	std::vector<XrView> Views;
-	std::vector<XrViewConfigurationView> ConfigViews;
-	SwapchainD3D11 ColorSwapchain;
-	SwapchainD3D11 DepthSwapchain;
-	std::vector<XrCompositionLayerProjectionView> ProjectionLayerViews;
-	std::vector<XrCompositionLayerDepthInfoKHR> DepthInfoViews;
-};
-
-std::unique_ptr<RenderResources> m_renderResources{};
-
-bool m_sessionRunning{false};
-XrSessionState m_sessionState{XR_SESSION_STATE_UNKNOWN};
-};
-} // namespace
-
-
+*/
+XrPath Openxr::TSession::GetXrPath(const char* PathString)
+{
+	XrPath Path = XR_NULL_HANDLE;
+	auto Result = xrStringToPath( mInstance, PathString, &Path );
+	IsOkay(Result, std::string("xrStringToPath ") + PathString );
+	return Path;
+}
