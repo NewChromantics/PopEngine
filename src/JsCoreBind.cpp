@@ -683,6 +683,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 
 JsCore::TInstance::~TInstance()
 {
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	mContextGroupThread.WaitToFinish();
 
 	//	this does some of the final releasing in JS land
@@ -788,6 +789,7 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 
 void JsCore::TInstance::DestroyContext(JsCore::TContext& Context)
 {
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	std::shared_ptr<JsCore::TContext> pContext;
 
 	//	pop context
@@ -820,6 +822,7 @@ void JsCore::TInstance::DestroyContext(JsCore::TContext& Context)
 
 void JsCore::TInstance::Shutdown(int32_t ExitCode)
 {
+	std::Debug << __PRETTY_FUNCTION__ << "(" << ExitCode << ")" << std::endl;
 	//	gr: does this need to defer?
 	//	do callback
 	if ( mOnShutdown )
@@ -948,6 +951,8 @@ void JsCore::TContext::ReleaseContext()
 
 void JsCore::TContext::Cleanup()
 {
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+
 	//	should instance be doing this?
 	ReleaseContext();
 
@@ -962,6 +967,8 @@ void JsCore::TContext::Cleanup()
 
 void JsCore::TContext::Shutdown(int32_t ExitCode)
 {
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+
 	mJobQueue.Stop();
 
 	//	tell instance to clean up
