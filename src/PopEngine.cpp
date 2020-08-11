@@ -56,6 +56,7 @@ TPopAppError::Type PopMain()
 	
 	auto OnShutdown = [&](int32_t ExitCode)
 	{		
+		std::Debug << "PopMain() OnShutdown" << std::endl;
 	#if defined(TARGET_WINDOWS)
 		Running = false;
 		//	make sure WM_QUIT comes up by waking the message loop
@@ -69,6 +70,7 @@ TPopAppError::Type PopMain()
 	{
 		//	run an instance
 		std::string BootupFilename = "bootup.js";
+		std::Debug << "PopMain() Creating instance, DataPath=" << DataPath << " BootupFilename=" << BootupFilename << std::endl;
 		pInstance.reset(new Bind::TInstance(DataPath, BootupFilename, OnShutdown));
 
 	#if !defined(TARGET_OSX_BUNDLE)
@@ -79,6 +81,7 @@ TPopAppError::Type PopMain()
 
 	#if defined(TARGET_WINDOWS)
 		//	gr: this thread should just spin, and not get win32 messages...
+		std::Debug << "PopMain() run loop..." << std::endl;
 		while ( Running )
 		{
 			auto OnQuit = [&]()
@@ -92,9 +95,12 @@ TPopAppError::Type PopMain()
 			if ( !Running )
 				pInstance.reset();
 		}
+		std::Debug << "PopMain() run loop exited." << std::endl;
 	#elif defined(TARGET_LINUX)
 		//	wait for shutdown
+		std::Debug << "PopMain() waiting for RunningLock..." << std::endl;
 		RunningLock.Wait();
+		std::Debug << "PopMain() RunningLock flagged. Exiting." << std::endl;
 	#endif
 	}
 	
