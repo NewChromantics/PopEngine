@@ -32,7 +32,7 @@
     </ClCompile>
     <Link>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
-      <DelayLoadDLLs>PopCoreml.dll;PopCameraDevice.dll;PopH264.dll;openvr_api.dll;x264.dll;opencv_world410.dll;opencv_world410d.dll;aristo_interface.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>PopCoreml.dll;PopCameraDevice.dll;PopH264.dll;openvr_api.dll;x264.dll;opencv_world410.dll;opencv_world410d.dll;aristo_interface.dll;openxr_loader.dll</DelayLoadDLLs>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
     </Link>

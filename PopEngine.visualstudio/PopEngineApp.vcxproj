@@ -108,10 +108,6 @@
     </CopyFileToFolders>
     <None Include="..\Source_App\Info.plist" />
     <None Include="..\Source_App\PopEngineUnitTestApp.entitlements" />
-    <CopyFileToFolders Include="..\UnitTest\bootup.js">
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest</DestinationFolders>
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest</DestinationFolders>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\LICENSE.md">
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
@@ -130,6 +126,10 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopAruco.js">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopAssetServer.js">
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
@@ -153,6 +153,14 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopGuiRenderTimeline.js">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopGuiTimeline.js">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopH264.js">
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
@@ -162,6 +170,10 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopMedia.js">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopMidi.js">
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
@@ -193,6 +205,10 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopWebAudioApi.js">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopWebGuiApi.js">
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
@@ -218,10 +234,13 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\UnitTest\Readme.md">
-      <FileType>Document</FileType>
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest</DestinationFolders>
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest</DestinationFolders>
+    <CopyFileToFolders Include="..\UnitTest\Xr\bootup.js">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\UnitTest\Xr\index.html">
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
