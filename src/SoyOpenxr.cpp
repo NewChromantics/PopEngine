@@ -2,6 +2,7 @@
 #include <SoyThread.h>
 #include <openxr/openxr.h>
 #include <magic_enum.hpp>
+#include <SoyRuntimeLibrary.h>
 
 #if defined(TARGET_WINDOWS)
 #define ENABLE_DIRECTX
@@ -20,10 +21,11 @@ namespace Openxr
 {
 	class TSession;
 	
-	void	EnumExtensions(std::function<void(const char*)> OnFoundExtension);
+	void	LoadDll();
 	void	IsOkay(XrResult Result,const char* Context);
 	void	IsOkay(XrResult Result,const std::string& Context);
 
+	void	EnumExtensions(std::function<void(const char*)> OnFoundExtension);
 
 	namespace Actions
 	{
@@ -157,6 +159,19 @@ std::shared_ptr<Xr::TDevice> Openxr::CreateDevice()
 {
 	std::shared_ptr<Xr::TDevice> Device(new Openxr::TSession());
 	return Device;
+}
+
+void Openxr::LoadDll()
+{
+	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
+	if (Dll)
+		return;
+
+#if defined(TARGET_WINDOWS)
+	//	current bodge
+	const char* Filename = "openxr_loader.dll";
+	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+#endif
 }
 
 

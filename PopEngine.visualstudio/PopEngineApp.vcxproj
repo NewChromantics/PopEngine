@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props" Condition="Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -242,6 +243,9 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
     </CopyFileToFolders>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Source_App\PopEngine.ico" />
@@ -257,6 +261,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\Microsoft.AI.Skills.SkillInterfacePreview.0.6.0\build\native\Microsoft.AI.Skills.SkillInterfacePreview.targets" Condition="Exists('packages\Microsoft.AI.Skills.SkillInterfacePreview.0.6.0\build\native\Microsoft.AI.Skills.SkillInterfacePreview.targets')" />
     <Import Project="packages\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.0.1.0.4\build\native\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.targets" Condition="Exists('packages\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.0.1.0.4\build\native\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.targets')" />
+    <Import Project="packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets" Condition="Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -264,5 +269,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\Microsoft.AI.Skills.SkillInterfacePreview.0.6.0\build\native\Microsoft.AI.Skills.SkillInterfacePreview.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.AI.Skills.SkillInterfacePreview.0.6.0\build\native\Microsoft.AI.Skills.SkillInterfacePreview.targets'))" />
     <Error Condition="!Exists('packages\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.0.1.0.4\build\native\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.0.1.0.4\build\native\Microsoft.AI.Skills.Vision.SkeletalDetectorPreview.targets'))" />
+    <Error Condition="!Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props'))" />
+    <Error Condition="!Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets'))" />
   </Target>
 </Project>
