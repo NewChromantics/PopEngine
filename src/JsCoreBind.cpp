@@ -20,6 +20,10 @@
 #define ENABLE_APIMEDIA
 #endif
 
+#if defined(TARGET_WINDOWS)
+#define ENABLE_APIXR
+#endif
+
 //	gr: todo; rename/rewrite this with new names
 #if defined(ENABLE_APIVISION)
 #include "TApiVision.h"
@@ -31,6 +35,10 @@
 
 #if defined(ENABLE_APIOPENCV)
 #include "TApiOpencv.h"
+#endif
+
+#if defined(ENABLE_APIXR)
+#include "TApiXr.h"
 #endif
 
 #if defined(TARGET_OSX)
@@ -624,6 +632,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
+#endif
+
+#if defined(ENABLE_APIXR)
+			ApiXr::Bind(*Context);
 #endif
 
 #if defined(ENABLE_APIMEDIA)
