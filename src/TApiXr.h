@@ -65,9 +65,6 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
-private: 
-	void			CreateDevice();
-
 public:
 	std::shared_ptr<Xr::TDevice>&	mDevice = mObject;
 };

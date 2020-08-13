@@ -366,6 +366,9 @@
     <ClInclude Include="..\src\SoyOpenxr.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Win32OpenglWindow.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -943,6 +946,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyOpenxr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Win32OpenglWindow.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

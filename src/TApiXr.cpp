@@ -2,6 +2,7 @@
 #include "TApiCommon.h"
 #include "TApiOpengl.h"
 #include "SoyOpengl.h"
+#include "SoyOpenglWindow.h"
 
 #include <magic_enum.hpp>
 #include "SoyRuntimeLibrary.h"
@@ -49,42 +50,7 @@ void ApiXr::Bind(Bind::TContext& Context)
 
 void ApiXr::TDeviceWrapper::Construct(Bind::TCallback& Params)
 {
-	CreateDevice();
 }
-
-void ApiXr::TDeviceWrapper::CreateDevice()
-{
-	std::stringstream CreateErrors;
-
-#if defined(ENABLE_OPENXR)
-	try
-	{
-		mDevice = Openxr::CreateDevice();
-		return;
-	}
-	catch (std::exception& e)
-	{
-		CreateErrors << "Error creating openxr device " << e.what();
-	}
-#endif
-
-#if defined(TARGET_IOS)
-	try
-	{
-		mDevice.reset(new ArkitSession());
-		return;
-	}
-	catch (std::exception& e)
-	{
-		CreateErrors << "Error creating openxr device " << e.what();
-	}
-#endif
-
-	std::stringstream Error;
-	Error << "Failed to create XR device (may not be supported on this platform) errors; " << CreateErrors.str();
-	throw Soy::AssertException(Error);
-}
-
 
 
 void ApiXr::TDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
@@ -93,6 +59,14 @@ void ApiXr::TDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiXr::CreateDevice(Bind::TCallback& Params)
 {
+	//	first param should be a render context
+	//	we wanna work out the type here
+	//	openxr needs the win32 opengl window info (currently inside platform::topenglwindow)
+	//	gr: should we hold onto the js object here? or a sharedptr to the window/context inside...
+	auto& WindowWrapper = Params.GetArgumentPointer<ApiOpengl::TWindowWrapper>(0);
+	Win32::TOpenglContext* pWin32OpenglContext = WindowWrapper.GetWin32OpenglContext();
+	//Directx::TContext* pDirectxContext = WindowWrapper.GetDirectContext();
+
 	auto pPromise = Params.mLocalContext.mGlobalContext.CreatePromisePtr(Params.mLocalContext, __PRETTY_FUNCTION__);
 	Params.Return(*pPromise);
 
@@ -100,9 +74,19 @@ void ApiXr::CreateDevice(Bind::TCallback& Params)
 	{
 		try
 		{
+			//	now try and create a device from differnt systems and with different render contexts
+			std::shared_ptr<Xr::TDevice> Device;
+
+			if (pWin32OpenglContext)
+				Device = Openxr::CreateDevice(*pWin32OpenglContext);
+			//if (pDirectxContext)
+			//	Device = Openxr::CreateDevice(*pDirectxContext);
+
 			//	maybe this is backwards and we should get the OpenXr Device 
 			//	then make an object wrapper
 			auto DeviceObject = Context.mGlobalContext.CreateObjectInstance(Context, TDeviceWrapper::GetTypeName());
+			auto& DeviceWrapper = DeviceObject.This<TDeviceWrapper>();
+			DeviceWrapper.mDevice = Device;
 			pPromise->Resolve( Context, DeviceObject );
 		}
 		catch (std::exception& e)

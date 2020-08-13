@@ -8,6 +8,8 @@
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
+#include "Win32OpenglWindow.h"
+
 #include <commctrl.h>
 #pragma comment(lib, "Comctl32.lib")
 #include <shellapi.h>	//	drag & drop
@@ -277,7 +279,7 @@ public:
 
 
 
-class Platform::TOpenglContext : public Opengl::TContext, public  Opengl::TRenderTarget
+class Platform::TOpenglContext : public Opengl::TContext, public  Opengl::TRenderTarget, public Win32::TOpenglContext
 {
 public:
 	TOpenglContext(TControl& Parent,TOpenglParams& Params);
@@ -297,6 +299,11 @@ public:
 	void			OnPaint();
 
 	std::function<void(Opengl::TRenderTarget&, std::function<void()>)>	mOnRender;
+
+	//	win32::TOpenglContext
+	virtual HDC		GetHdc() override { return mHDC; }
+	virtual HGLRC	GetHglrc() override { return mHGLRC; }
+	virtual HWND	GetHwnd() override { return mHwnd; }
 
 	//	context stuff
 	TControl&		mParent;	//	control we're bound to

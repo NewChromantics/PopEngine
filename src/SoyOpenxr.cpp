@@ -3,9 +3,16 @@
 #include <openxr/openxr.h>
 #include <magic_enum.hpp>
 #include <SoyRuntimeLibrary.h>
+#include <functional>
+
+namespace Win32
+{
+	class TOpenglContext;
+}
 
 #if defined(TARGET_WINDOWS)
 #define ENABLE_DIRECTX
+#include "Win32OpenglWindow.h"
 #endif
 
 #if defined(ENABLE_DIRECTX)
@@ -13,7 +20,25 @@
 #define XR_USE_GRAPHICS_API_D3D11
 #endif
 
+#if defined(ENABLE_OPENGL)
 #define XR_USE_GRAPHICS_API_OPENGL
+#endif
+
+#if defined(TARGET_WINDOWS)
+#define XR_USE_PLATFORM_WIN32
+#endif
+
+
+#if defined(XR_USE_PLATFORM_WIN32) && defined(XR_USE_GRAPHICS_API_OPENGL)
+typedef struct XrGraphicsBindingOpenGLWin32KHR XrGraphicsBindingOpenGL;
+#else
+typedef int XrGraphicsBindingOpenGL;
+#endif
+
+#if defined(XR_USE_GRAPHICS_API_D3D11)
+#else
+typedef int XrGraphicsBindingD3D11KHR;
+#endif
 
 #include <openxr/openxr_platform.h>
 
@@ -21,11 +46,16 @@ namespace Openxr
 {
 	class TSession;
 	
-	void	LoadDll();
+	void					LoadDll();
+	Soy::TRuntimeLibrary&	GetDll();
+
 	void	IsOkay(XrResult Result,const char* Context);
 	void	IsOkay(XrResult Result,const std::string& Context);
 
-	void	EnumExtensions(std::function<void(const char*)> OnFoundExtension);
+	void	EnumExtensions(std::function<void(std::string&,uint32_t)> OnExtension);
+	
+	template<typename FUNCTION>
+	std::function<FUNCTION>		GetFunction(XrInstance mInstance, const char* FunctionName);
 
 	namespace Actions
 	{
@@ -54,7 +84,7 @@ public:
 class Openxr::TSession : public SoyThread, public Xr::TDevice
 {
 public:
-	TSession();
+	TSession(Win32::TOpenglContext& Context);
 	~TSession();
 	
 private:
@@ -63,7 +93,6 @@ private:
 
 	void			CreateInstance(const std::string& ApplicationName,uint32_t ApplicationVersion,const std::string& EngineName,uint32_t EngineVersion);
 	void			InitializeSystem();
-	void			CreateDx11Device();
 	void			InitializeSession();
 	void			CreateActions();
 	void			CreateSpaces();
@@ -74,10 +103,14 @@ private:
 
 	XrPath			GetXrPath(const char* PathString);
 	
-	void*			GetGraphicsDevice();	//	ID3D11Device*
+	void			CreateDx11Device();
+	XrGraphicsBindingOpenGL		InitOpengl();
+	XrGraphicsBindingD3D11KHR	InitDirectx();
 	bool			HasExtension(const char* ExtensionName);
 
 private:
+	Win32::TOpenglContext*	mOpenglContext = nullptr;
+
 	XrFormFactor	mFormFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
 	XrViewConfigurationType mPrimaryViewConfigType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
 	bool			mSessionRunning = false;	//	after begin
@@ -155,25 +188,31 @@ private:
 
 
 
-std::shared_ptr<Xr::TDevice> Openxr::CreateDevice()
+std::shared_ptr<Xr::TDevice> Openxr::CreateDevice(Win32::TOpenglContext& Context)
 {
-	std::shared_ptr<Xr::TDevice> Device(new Openxr::TSession());
+	std::shared_ptr<Xr::TDevice> Device(new Openxr::TSession(Context));
 	return Device;
 }
 
-void Openxr::LoadDll()
+Soy::TRuntimeLibrary& Openxr::GetDll()
 {
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
 	if (Dll)
-		return;
+		return *Dll;
 
 #if defined(TARGET_WINDOWS)
 	//	current bodge
 	const char* Filename = "openxr_loader.dll";
 	Dll.reset(new Soy::TRuntimeLibrary(Filename));
+	return *Dll;
 #endif
 }
 
+
+void Openxr::LoadDll()
+{
+	GetDll();
+}
 
 void Openxr::IsOkay(XrResult Result,const char* Context)
 {
@@ -198,9 +237,11 @@ void Openxr::IsOkay(XrResult Result, const std::string& Context)
 
 
 
-Openxr::TSession::TSession() :
+Openxr::TSession::TSession(Win32::TOpenglContext& Context) :
 	SoyThread	( "Openxr::TSession" )
 {
+	mOpenglContext = &Context;
+
 	//	lets add these later
 	//	openvr has it, does anything else?
 	auto ApplicationName = "Pop";
@@ -270,24 +311,26 @@ void Openxr::TSession::EnumEnvironmentBlendModes(ArrayBridge<XrEnvironmentBlendM
 }
 	
 
-void Openxr::EnumExtensions(std::function<void(const char*)> OnFoundExtension)
+void Openxr::EnumExtensions(std::function<void(std::string&,uint32_t)> OnExtension)
 {
 	// Fetch the list of extensions supported by the runtime.
-	uint32_t extensionCount = 0;
-	auto Result = xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr);
+	uint32_t ExtensionCount = 0;
+	auto Result = xrEnumerateInstanceExtensionProperties(nullptr, 0, &ExtensionCount, nullptr);
 	IsOkay(Result,"xrEnumerateInstanceExtensionProperties(count)");
 
-	std::vector<XrExtensionProperties> extensionProperties(extensionCount, {XR_TYPE_EXTENSION_PROPERTIES});
-	Result = xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensionProperties.data());
+	Array< XrExtensionProperties> ExtensionProperties;
+	ExtensionProperties.SetSize(ExtensionCount);
+	ExtensionProperties.SetAll({ XR_TYPE_EXTENSION_PROPERTIES });
+
+	Result = xrEnumerateInstanceExtensionProperties(nullptr, ExtensionCount, &ExtensionCount, ExtensionProperties.GetArray());
 	IsOkay(Result,"xrEnumerateInstanceExtensionProperties (enum)");
 
-	// Add a specific extension to the list of extensions to be enabled, if it is supported.
-	for (uint32_t i = 0; i < extensionCount; i++)
+	//	report each
+	for (auto i = 0; i < ExtensionProperties.GetSize(); i++)
 	{
-		auto& Property = extensionProperties[i];
-		//	gr: is the pointer the key or is it just a string?
-		auto Name = Property.extensionName;
-		OnFoundExtension(Name);
+		auto& Extension = ExtensionProperties[i];
+		std::string Name(Extension.extensionName);
+		OnExtension(Name, Extension.extensionVersion);
 	}
 }
 
@@ -297,13 +340,23 @@ void Openxr::TSession::CreateInstance(const std::string& ApplicationName,uint32_
 	// Build out the extensions to enable. Some extensions are required and some are optional.
 	//const std::vector<const char*> enabledExtensions = SelectExtensions();
 	
-	auto DebugExtension = [](const char* Extension)
+	//	gr: just enable all the supported extensions
+	Array<std::string> EnabledExtensionStrings;
+	auto EnumExtension = [&](const std::string& Name, uint32_t Version)
 	{
-		std::Debug << "Extension: " << Extension << std::endl;
+		std::Debug << "Openxr Extension: " << Name << " (Version " << Version << ")" << std::endl;
+		EnabledExtensionStrings.PushBack(Name);
 	};
-	EnumExtensions(DebugExtension);
-
+	EnumExtensions(EnumExtension);
 	
+	//	func needs char* pointers
+	Array<const char*> EnabledExtensions;
+	for (auto i = 0; i < EnabledExtensionStrings.GetSize(); i++)
+	{
+		auto* ExtensionName = EnabledExtensionStrings[i].c_str();
+		EnabledExtensions.PushBack(ExtensionName);
+	}
+
 	//	hololens2 sample required these
 	/*
 	 XR_KHR_D3D11_ENABLE_EXTENSION_NAME
@@ -314,7 +367,6 @@ void Openxr::TSession::CreateInstance(const std::string& ApplicationName,uint32_
 */
 	
 	//	gr: is the pointer the key or is it just a string?
-	BufferArray<const char*,10> EnabledExtensions;
 	XrInstanceCreateInfo CreateInfo{XR_TYPE_INSTANCE_CREATE_INFO};
 	CreateInfo.enabledExtensionCount = EnabledExtensions.GetSize();
 	CreateInfo.enabledExtensionNames = EnabledExtensions.GetArray();
@@ -324,9 +376,6 @@ void Openxr::TSession::CreateInstance(const std::string& ApplicationName,uint32_
 
 	auto Result = xrCreateInstance( &CreateInfo, &mInstance );
 	IsOkay(Result,"xrCreateInstance");
-	
-	//m_extensions.PopulateDispatchTable(m_instance.Get());
-
 }
 
 void Openxr::TSession::CreateActions()
@@ -465,22 +514,145 @@ void Openxr::TSession::CreateDx11Device()
 	*/
 }
 
-void Openxr::TSession::InitializeSession()
+XrGraphicsBindingD3D11KHR Openxr::TSession::InitDirectx()
 {
-	auto* GraphicsDevice = GetGraphicsDevice();
+	Soy_AssertTodo();
+}
 
+
+//	GetFunction<decltype(Symbol)>()
+template<typename FUNCTYPE>
+std::function<FUNCTYPE> Openxr::GetFunction(XrInstance mInstance, const char* FunctionName)
+{
+	/*
+	//	https://github.com/microsoft/OpenXR-MixedReality/blob/2117b8b4f522e8322e32277f4480272cbaa34ee6/shared/XrUtility/XrExtensions.h#L36
+#define GET_INSTANCE_PROC_ADDRESS(name) \
+    (void)xrGetInstanceProcAddr(instance, #name, reinterpret_cast<PFN_xrVoidFunction*>(const_cast<PFN_##name*>(&name)));
+#define DEFINE_PROC_MEMBER(name) const PFN_##name name{nullptr};
+*/
+	PFN_xrVoidFunction Symbol = nullptr;
+	auto Result = xrGetInstanceProcAddr(mInstance, FunctionName, &Symbol);
+	IsOkay(Result, std::string("xrGetInstanceProcAddr(") + FunctionName);
+	if (!Symbol)
+	{
+		std::stringstream Error;
+		Error << "Function " << FunctionName << " =null from xrGetInstanceProcAddr";
+		throw Soy::AssertException(Error.str());
+	}
+
+	//	cast & assign
+	std::function<FUNCTYPE> FunctionPtr;
+	FUNCTYPE* ff = reinterpret_cast<FUNCTYPE*>(Symbol);
+	FunctionPtr = ff;
+	return FunctionPtr;
+}
+
+
+XrGraphicsBindingOpenGL Openxr::TSession::InitOpengl()
+{
+	if (!mOpenglContext)
+		throw Soy::AssertException("InitOpengl missing opengl context");
+
+#if defined(XR_USE_GRAPHICS_API_OPENGL)
+	//	gr: this should check for the extension first!
+	auto xrGetOpenGLGraphicsRequirementsKHR_Function = GetFunction<decltype(xrGetOpenGLGraphicsRequirementsKHR)>(mInstance,"xrGetOpenGLGraphicsRequirementsKHR");
+	XrGraphicsRequirementsOpenGLKHR Requirements{ XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR };
+	auto Result = xrGetOpenGLGraphicsRequirementsKHR_Function(mInstance, mSystemId, &Requirements);
+	IsOkay(Result, "xrGetOpenGLGraphicsRequirementsKHR");
+	std::Debug << "Openxr Opengl version min=" << Requirements.minApiVersionSupported << " max=" << Requirements.maxApiVersionSupported << std::endl;
+#endif
+
+#if defined(XR_USE_PLATFORM_WIN32) && defined(XR_USE_GRAPHICS_API_OPENGL)
+	auto& OpenglWindow = *mOpenglContext;
+	XrGraphicsBindingOpenGLWin32KHR Binding{ XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR };
+	Binding.next = nullptr;
+	Binding.hDC = OpenglWindow.GetHdc();
+	Binding.hGLRC = OpenglWindow.GetHglrc();
+	return Binding;
+#endif
+
+	throw Soy::AssertException("Unhandled opengl setup");
+
+	/*
+	//	create the D3D11 device for the adapter associated with the system.
+	XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
+	CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
+
+	// Create a list of feature levels which are both supported by the OpenXR runtime and this application.
+	std::vector<D3D_FEATURE_LEVEL> featureLevels = {D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_10_1,
+		D3D_FEATURE_LEVEL_10_0};
+	featureLevels.erase(std::remove_if(featureLevels.begin(),
+									   featureLevels.end(),
+									   [&](D3D_FEATURE_LEVEL fl) { return fl < graphicsRequirements.minFeatureLevel; }),
+						featureLevels.end());
+	CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
+
+	ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels);
+
+	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
+	graphicsBinding.device = device;
+
+	#if defined(XR_USE_GRAPHICS_API_OPENGL)
+	auto Binding =
 	//	gr: if API_DX?
 #if defined(ENABLE_DIRECTX)
 	auto* Dx11Device = reinterpret_cast<ID3D11Device*>(GraphicsDevice);
 	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
 	graphicsBinding.device = Dx11Device;
 #endif
-	
-	XrSessionCreateInfo createInfo{XR_TYPE_SESSION_CREATE_INFO};
-	createInfo.next = &graphicsBinding;
+
+	*/
+}
+
+void Openxr::TSession::InitializeSession()
+{
+	XrGraphicsBindingD3D11KHR Binding_Directx;
+	XrGraphicsBindingOpenGL Binding_Opengl;
+
+	XrSessionCreateInfo createInfo{ XR_TYPE_SESSION_CREATE_INFO };
 	createInfo.systemId = mSystemId;
-	auto Result = xrCreateSession( mInstance, &createInfo, &mSession );
+	createInfo.next = nullptr;	//	graphics binding
+
+	//	try different bindings
+	if (!createInfo.next)
+	{
+		try
+		{
+			Binding_Opengl = InitOpengl();
+			createInfo.next = &Binding_Opengl;
+			std::Debug << "Using opengl binding" << std::endl;
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Opengl binding failed " << e.what() << std::endl;
+		}
+	}
+
+	if (!createInfo.next)
+	{
+		try
+		{
+			Binding_Directx = InitDirectx();
+			createInfo.next = &Binding_Directx;
+			std::Debug << "Using directx binding" << std::endl;
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "directx binding failed " << e.what() << std::endl;
+		}
+	}
+
+	if (!createInfo.next)
+		throw Soy::AssertException("Failed to setup graphics binding");
+
 	
+	auto Result = xrCreateSession( mInstance, &createInfo, &mSession );
+	IsOkay(Result, "xrCreateSession");
+
 	//	create action set
 	XrSessionActionSetsAttachInfo attachInfo{XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
 	attachInfo.countActionSets = 1;
@@ -1107,10 +1279,12 @@ XrPath Openxr::TSession::GetXrPath(const char* PathString)
 
 bool Openxr::TSession::HasExtension(const char* MatchExtension)
 {
+	std::string MatchExtensionStr(MatchExtension);
+	//	gr: this should check the ones that we explicitly enabled
 	bool Matched = false;
-	auto OnExtension = [&](const char* Extension)
+	auto OnExtension = [&](const std::string& Name,uint32_t Version)
 	{
-		if (std::string(MatchExtension) != std::string(Extension))
+		if (MatchExtensionStr != Name)
 			return;
 		Matched = true;
 	};
@@ -1118,8 +1292,3 @@ bool Openxr::TSession::HasExtension(const char* MatchExtension)
 	return Matched;
 }
 
-void* Openxr::TSession::GetGraphicsDevice()
-{
-	//	ID3D11Device*
-	return nullptr;
-}

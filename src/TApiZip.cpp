@@ -112,19 +112,23 @@ void ApiZip::TArchiveWrapper::OnWriteFinished(const std::string& Error)
 	//	flush the promise
 	auto Flush = [this, Error](Bind::TLocalContext& Context)
 	{
+		auto Promise = mWritePromise;
+
+		//	gr: clear variables now, as some javascript (jsc) runs 
+		//	and might queue another write BEFORE we reach the end of
+		//	this lambda
+		mWritePromise.reset();
+		mWriteThread.reset();
+
 		if (Error.length())
 		{
-			mWritePromise->Reject(Context, Error);
+			Promise->Reject(Context, Error);
 		}
 		else
 		{
 			//	should we send some meta?
-			mWritePromise->ResolveUndefined(Context);
-		}
-
-		//	all done, clean up vars
-		mWritePromise.reset();
-		mWriteThread.reset();
+			Promise->ResolveUndefined(Context);
+		}		
 	};
 	auto& Context = mWritePromise->GetContext();
 	Context.Queue(Flush);

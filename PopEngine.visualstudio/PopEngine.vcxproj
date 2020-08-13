@@ -222,6 +222,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\Win32OpenglWindow.h" />
     <ClInclude Include="..\src\Zip\src\miniz.h" />
     <ClInclude Include="..\src\Zip\src\zip.h" />
   </ItemGroup>
@@ -259,6 +260,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\Win32OpenglWindow.cpp" />
     <ClCompile Include="..\src\Zip\src\zip.c" />
     <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
     <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll" />
@@ -611,6 +613,7 @@
     <Import Project="PopEngine.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_Chakra.props" />
+    <Import Project="packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -686,6 +689,7 @@
     <Link />
     <Manifest />
     <Manifest />
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
     <ClCompile>
