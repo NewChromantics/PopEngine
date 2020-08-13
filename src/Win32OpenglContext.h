@@ -12,6 +12,7 @@ namespace Win32
 class Win32::TOpenglContext
 {
 public:
+	virtual ~TOpenglContext(){}
 	virtual HDC		GetHdc() = 0;
 	virtual HGLRC	GetHglrc() = 0;
 	virtual HWND	GetHwnd() = 0;

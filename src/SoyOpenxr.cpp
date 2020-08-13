@@ -12,7 +12,7 @@ namespace Win32
 
 #if defined(TARGET_WINDOWS)
 #define ENABLE_DIRECTX
-#include "Win32OpenglWindow.h"
+#include "Win32OpenglContext.h"
 #endif
 
 #if defined(ENABLE_DIRECTX)
@@ -103,7 +103,6 @@ private:
 
 	XrPath			GetXrPath(const char* PathString);
 	
-	void			CreateDx11Device();
 	XrGraphicsBindingOpenGL		InitOpengl();
 	XrGraphicsBindingD3D11KHR	InitDirectx();
 	bool			HasExtension(const char* ExtensionName);
@@ -252,7 +251,6 @@ Openxr::TSession::TSession(Win32::TOpenglContext& Context) :
 	//https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/3579c5fcc123524a545e6fd361e76b7f819aa8a3/src/tests/hello_xr/main.cpp
 	CreateInstance( ApplicationName, ApplicationVersion, EngineName, EngineVersion );
 	InitializeSystem();
-	CreateDx11Device();
 	InitializeSession();
 	CreateSpaces();
 	CreateSwapchains();
@@ -287,6 +285,7 @@ Openxr::TSession::TSession(Win32::TOpenglContext& Context) :
 
 Openxr::TSession::~TSession()
 {
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	Stop(true);
 }
 
@@ -487,13 +486,14 @@ void Openxr::TSession::InitializeSystem()
 	mEnvironmentBlendMode = EnvironmentBlendModes[0];
 }
 
-void Openxr::TSession::CreateDx11Device()
+
+XrGraphicsBindingD3D11KHR Openxr::TSession::InitDirectx()
 {
 	/*
 	//	create the D3D11 device for the adapter associated with the system.
 	XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
 	CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
-	
+
 	// Create a list of feature levels which are both supported by the OpenXR runtime and this application.
 	std::vector<D3D_FEATURE_LEVEL> featureLevels = {D3D_FEATURE_LEVEL_12_1,
 		D3D_FEATURE_LEVEL_12_0,
@@ -506,16 +506,12 @@ void Openxr::TSession::CreateDx11Device()
 									   [&](D3D_FEATURE_LEVEL fl) { return fl < graphicsRequirements.minFeatureLevel; }),
 						featureLevels.end());
 	CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
-	
+
 	ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels);
-	
+
 	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
 	graphicsBinding.device = device;
 	*/
-}
-
-XrGraphicsBindingD3D11KHR Openxr::TSession::InitDirectx()
-{
 	Soy_AssertTodo();
 }
 
@@ -548,6 +544,14 @@ std::function<FUNCTYPE> Openxr::GetFunction(XrInstance mInstance, const char* Fu
 }
 
 
+Soy::TVersion GetVersion(XrVersion Version)
+{
+	auto Major = Version >> (32 + 16);
+	auto Minor = (Version >> 32) & 0xfff;
+	auto Patch = Version & 0xffffffff;
+	return Soy::TVersion(Major, Minor, Patch);
+}
+
 XrGraphicsBindingOpenGL Openxr::TSession::InitOpengl()
 {
 	if (!mOpenglContext)
@@ -559,7 +563,9 @@ XrGraphicsBindingOpenGL Openxr::TSession::InitOpengl()
 	XrGraphicsRequirementsOpenGLKHR Requirements{ XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR };
 	auto Result = xrGetOpenGLGraphicsRequirementsKHR_Function(mInstance, mSystemId, &Requirements);
 	IsOkay(Result, "xrGetOpenGLGraphicsRequirementsKHR");
-	std::Debug << "Openxr Opengl version min=" << Requirements.minApiVersionSupported << " max=" << Requirements.maxApiVersionSupported << std::endl;
+	auto MinVersion = GetVersion(Requirements.minApiVersionSupported);
+	auto MaxVersion = GetVersion(Requirements.maxApiVersionSupported);
+	std::Debug << "Openxr Opengl version min=" << MinVersion << " max=" << MaxVersion << std::endl;
 #endif
 
 #if defined(XR_USE_PLATFORM_WIN32) && defined(XR_USE_GRAPHICS_API_OPENGL)
@@ -568,6 +574,10 @@ XrGraphicsBindingOpenGL Openxr::TSession::InitOpengl()
 	Binding.next = nullptr;
 	Binding.hDC = OpenglWindow.GetHdc();
 	Binding.hGLRC = OpenglWindow.GetHglrc();
+	if (!Binding.hDC)
+		throw Soy::AssertException("Openxr Opengl window doesn't have HDC");
+	if (!Binding.hGLRC)
+		throw Soy::AssertException("Openxr Opengl window doesn't have GLRC");
 	return Binding;
 #endif
 
@@ -653,35 +663,56 @@ void Openxr::TSession::InitializeSession()
 	auto Result = xrCreateSession( mInstance, &createInfo, &mSession );
 	IsOkay(Result, "xrCreateSession");
 
+	//	opengl	https://www.khronos.org/registry/OpenXR/specs/1.0/man/html/XrGraphicsBindingOpenGLWin32KHR.html
+	//	the runtime must assume that the application uses the operating systems default GPU.If the GPU used by the runtime does not match the GPU on which the OpenGL context of the application got created, xrCreateSession must return XR_ERROR_GRAPHICS_DEVICE_INVALID.
+
+	/*
 	//	create action set
 	XrSessionActionSetsAttachInfo attachInfo{XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
 	attachInfo.countActionSets = 1;
 	attachInfo.actionSets = &mActionSet;
 	Result = xrAttachSessionActionSets(mSession, &attachInfo);
 	IsOkay(Result,"xrAttachSessionActionSets");
+	*/
 }
 
 void Openxr::TSession::CreateSpaces()
 {
-	// Create a scene space to bridge interactions and all holograms.
+	//	gr: make a space by order of preference
+	XrReferenceSpaceType TrySpaces[] =
 	{
-		if ( HasExtension(XR_MSFT_UNBOUNDED_REFERENCE_SPACE_EXTENSION_NAME) )
+		XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT,	//	HasExtension(XR_MSFT_UNBOUNDED_REFERENCE_SPACE_EXTENSION_NAME)
+		XR_REFERENCE_SPACE_TYPE_STAGE,
+		XR_REFERENCE_SPACE_TYPE_LOCAL,
+		XR_REFERENCE_SPACE_TYPE_VIEW,
+	};
+	
+	auto TryAndMakeSpace = [this](XrReferenceSpaceType Type)
+	{
+		try
 		{
-			// Unbounded reference space provides the best scene space for world-scale experiences.
-			mSceneSpaceType = XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT;
+			XrReferenceSpaceCreateInfo SpaceCreateInfo{ XR_TYPE_REFERENCE_SPACE_CREATE_INFO };
+			SpaceCreateInfo.referenceSpaceType = Type;
+			SpaceCreateInfo.poseInReferenceSpace = PoseIdentity();
+			auto Result = xrCreateReferenceSpace(mSession, &SpaceCreateInfo, &mSceneSpace);
+			IsOkay(Result, "xrCreateReferenceSpace");
 		}
-		else
+		catch (std::exception& e)
 		{
-			// If running on a platform that does not support world-scale experiences, fall back to local space.
-			mSceneSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
+			std::Debug << "Failed to create space type " << magic_enum::enum_name(Type) << " " << e.what() << std::endl;
 		}
-		
-		XrReferenceSpaceCreateInfo spaceCreateInfo{XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
-		spaceCreateInfo.referenceSpaceType = mSceneSpaceType;
-		spaceCreateInfo.poseInReferenceSpace = PoseIdentity();
-		auto Result = xrCreateReferenceSpace( mSession, &spaceCreateInfo, &mSceneSpace );
-		IsOkay(Result,"xrCreateReferenceSpace");
+	};
+
+	for (auto SpaceType : TrySpaces)
+	{
+		TryAndMakeSpace(SpaceType);
+		if (!mSceneSpace)
+			continue;
+
+		std::Debug << "Created scene space type " << magic_enum::enum_name(SpaceType) << std::endl;
+		break;
 	}
+
 	/*
 	// Create a space for each hand pointer pose.
 	for (uint32_t side : {LeftSide, RightSide})
@@ -857,6 +888,7 @@ bool Openxr::TSession::ProcessEvents()
 		return Result == XR_SUCCESS;
 	};
 
+	//	throwin in here ends the thread
 	auto OnSessionStateChanged = [&](const XrEventDataSessionStateChanged& StateEvent)
 	{
 		std::Debug << "Session State changed from " << magic_enum::enum_name(mSessionState) << " to " << magic_enum::enum_name(StateEvent.state) << std::endl;
@@ -880,17 +912,20 @@ bool Openxr::TSession::ProcessEvents()
 			mSessionRunning = false;
 			auto Result = xrEndSession(mSession);
 			IsOkay(Result, "xrEndSession");
-			break;
 		}
+		break;
 
 		case XR_SESSION_STATE_EXITING:
 			// Do not attempt to restart because user closed this session.
 			//*requestRestart = false;
-			return false;
+			throw Soy::AssertException("User exited");
 
 		case XR_SESSION_STATE_LOSS_PENDING:
 			//*requestRestart = true;
-			return false;
+			throw Soy::AssertException("Losing session");
+
+		case XR_SESSION_STATE_IDLE:
+			break;
 
 		default:
 			throw Soy::AssertException( std::string("Unhandled new session state ") + std::string(magic_enum::enum_name(mSessionState)) );

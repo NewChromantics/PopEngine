@@ -260,7 +260,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\Win32OpenglWindow.cpp" />
     <ClCompile Include="..\src\Zip\src\zip.c" />
     <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
     <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll" />

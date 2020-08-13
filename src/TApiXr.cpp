@@ -64,7 +64,7 @@ void ApiXr::CreateDevice(Bind::TCallback& Params)
 	//	openxr needs the win32 opengl window info (currently inside platform::topenglwindow)
 	//	gr: should we hold onto the js object here? or a sharedptr to the window/context inside...
 	auto& WindowWrapper = Params.GetArgumentPointer<ApiOpengl::TWindowWrapper>(0);
-	Win32::TOpenglContext* pWin32OpenglContext = WindowWrapper.GetWin32OpenglContext();
+	auto pWin32OpenglContext = WindowWrapper.GetWin32OpenglContext();
 	//Directx::TContext* pDirectxContext = WindowWrapper.GetDirectContext();
 
 	auto pPromise = Params.mLocalContext.mGlobalContext.CreatePromisePtr(Params.mLocalContext, __PRETTY_FUNCTION__);

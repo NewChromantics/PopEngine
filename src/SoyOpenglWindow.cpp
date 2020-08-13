@@ -8,7 +8,7 @@
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
-#include "Win32OpenglWindow.h"
+#include "Win32OpenglContext.h"
 
 #include <commctrl.h>
 #pragma comment(lib, "Comctl32.lib")
@@ -1584,6 +1584,12 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	};
 	mWindow->GetJobQueue().PushJob(DoFullScreen);
 	mWindow->Repaint();
+}
+
+std::shared_ptr<Win32::TOpenglContext> TOpenglWindow::GetWin32Context()
+{
+	auto Win32Context = std::dynamic_pointer_cast<Win32::TOpenglContext>(mWindowContext);
+	return Win32Context;
 }
 
 

@@ -128,8 +128,8 @@ public:
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
 	
-	//	ideally these would be shared ptrs, quick safe wrappers for openxr atm
-	Win32::TOpenglContext*						GetWin32OpenglContext();
+	//	temp hack for openxr
+	std::shared_ptr<Win32::TOpenglContext>		GetWin32OpenglContext();
 	//Directx::TContext*							GetDirectxContext();
 	
 protected:

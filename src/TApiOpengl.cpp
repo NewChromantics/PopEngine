@@ -68,12 +68,11 @@ ApiOpengl::TWindowWrapper::~TWindowWrapper()
 	}
 }
 
-Win32::TOpenglContext* ApiOpengl::TWindowWrapper::GetWin32OpenglContext()
+std::shared_ptr<Win32::TOpenglContext> ApiOpengl::TWindowWrapper::GetWin32OpenglContext()
 {
 #if defined(TARGET_WINDOWS)
-	Platform::TOpenglContext* PlatformContext = mWindow->mWindowContext.get();
-	auto* Win32Context = reinterpret_cast<Win32::TOpenglContext*>(PlatformContext);
-	return Win32Context;
+	auto Context = mWindow->GetWin32Context();
+	return Context;
 #else
 	return nullptr;
 #endif
