@@ -90,6 +90,8 @@ public:
 private:
 	virtual bool	ThreadIteration() override;
 	bool			ProcessEvents();
+	void			RenderFrame();
+	void			RenderLayer(XrTime predictedDisplayTime, XrCompositionLayerProjection& layer);
 
 	void			CreateInstance(const std::string& ApplicationName,uint32_t ApplicationVersion,const std::string& EngineName,uint32_t EngineVersion);
 	void			InitializeSystem();
@@ -100,6 +102,7 @@ private:
 	
 	void			EnumEnvironmentBlendModes(ArrayBridge<XrEnvironmentBlendMode>&& Modes);
 	void			EnumViewConfigurations(XrViewConfigurationType ViewType, ArrayBridge<XrViewConfigurationView>&& Views);
+	void			EnumSwapChainFormats(ArrayBridge<int64_t>&& Formats);
 
 	XrPath			GetXrPath(const char* PathString);
 	
@@ -123,10 +126,12 @@ private:
 	XrSpace			mSceneSpace = XR_NULL_HANDLE;
 	//xr::SpaceHandle m_sceneSpace;
 	XrReferenceSpaceType	mSceneSpaceType = XR_REFERENCE_SPACE_TYPE_MAX_ENUM;
-
 	XrSessionState	mSessionState{XR_SESSION_STATE_UNKNOWN};
 	
 	XrEnvironmentBlendMode mEnvironmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM;
+
+	//	ms sample keeps these are rendering resources
+	Array<XrView>	mViews;
 
 	//const std::unique_ptr<sample::IGraphicsPluginD3D11> m_graphicsPlugin;
 	//xr::ExtensionDispatchTable m_extensions;
@@ -291,10 +296,25 @@ Openxr::TSession::~TSession()
 
 bool Openxr::TSession::ThreadIteration()
 {
+	//	demo has if ( mSessionRunning)
+	//	https://github.com/microsoft/OpenXR-MixedReality/blob/22bcf0f9e07b3a9e21004c162f49953f8cd1d2f2/samples/BasicXrApp/OpenXrProgram.cpp#L44
 	if (!ProcessEvents())
 		return false;
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	if (mSessionRunning)
+	{
+		if (mSessionState != XR_SESSION_STATE_READY)
+			std::Debug << "Running by state is not ready (" << magic_enum::enum_name(mSessionState) << std::endl;
+		RenderFrame();
+	}
+
+	//	throttle thread
+	if (!mSessionRunning)
+	{
+		std::Debug << "Throttling thread as session isn't running..." << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
+
 	return true;
 }
 
@@ -776,6 +796,19 @@ void Openxr::TSession::EnumViewConfigurations(XrViewConfigurationType ViewType,A
 }
 
 
+void Openxr::TSession::EnumSwapChainFormats(ArrayBridge<int64_t>&& Formats)
+{
+	// Select a swapchain format.
+	uint32_t Count = 0;
+	auto Result = xrEnumerateSwapchainFormats(mSession, 0, &Count, nullptr);
+	IsOkay(Result, "xrEnumerateSwapchainFormats (Count)");
+
+	Formats.SetSize(Count);
+	Formats.SetAll(0);
+	Result = xrEnumerateSwapchainFormats(mSession, Count, &Count, Formats.GetArray());
+	IsOkay(Result, "xrEnumerateSwapchainFormats (Get)");
+}
+
 void Openxr::TSession::CreateSwapchains()
 {
 	//mRenderResources = std::make_unique<RenderResources>();
@@ -787,6 +820,15 @@ void Openxr::TSession::CreateSwapchains()
 	
 	Array< XrViewConfigurationView> Views;
 	EnumViewConfigurations(this->mPrimaryViewConfigType, GetArrayBridge(Views));
+
+	Array<int64_t> SwapChainFormats;
+	EnumSwapChainFormats(GetArrayBridge(SwapChainFormats));
+
+	//	now pick formats and set swapchain format
+	//	then get images
+	//
+	//https://github.com/microsoft/OpenXR-MixedReality/blob/22bcf0f9e07b3a9e21004c162f49953f8cd1d2f2/samples/BasicXrApp/OpenXrProgram.cpp#L401
+
 
 	/*
 
@@ -1069,67 +1111,7 @@ void PollActions() {
 	}
 }
 
-void RenderFrame() {
-	CHECK(m_session.Get() != XR_NULL_HANDLE);
-	
-	XrFrameWaitInfo frameWaitInfo{XR_TYPE_FRAME_WAIT_INFO};
-	XrFrameState frameState{XR_TYPE_FRAME_STATE};
-	CHECK_XRCMD(xrWaitFrame(m_session.Get(), &frameWaitInfo, &frameState));
-	
-	XrFrameBeginInfo frameBeginInfo{XR_TYPE_FRAME_BEGIN_INFO};
-	CHECK_XRCMD(xrBeginFrame(m_session.Get(), &frameBeginInfo));
-	
-	// EndFrame can submit mutiple layers
-	std::vector<XrCompositionLayerBaseHeader*> layers;
-	
-	// The projection layer consists of projection layer views.
-	XrCompositionLayerProjection layer{XR_TYPE_COMPOSITION_LAYER_PROJECTION};
-	
-	// Inform the runtime to consider alpha channel during composition
-	// The primary display on Hololens has additive environment blend mode. It will ignore alpha channel.
-	// But mixed reality capture has alpha blend mode display and use alpha channel to blend content to environment.
-	layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-	
-	// Only render when session is visible. otherwise submit zero layers
-	if (frameState.shouldRender) {
-		// First update the viewState and views using latest predicted display time.
-		{
-			XrViewLocateInfo viewLocateInfo{XR_TYPE_VIEW_LOCATE_INFO};
-			viewLocateInfo.viewConfigurationType = m_primaryViewConfigType;
-			viewLocateInfo.displayTime = frameState.predictedDisplayTime;
-			viewLocateInfo.space = m_sceneSpace.Get();
-			
-			// The output view count of xrLocateViews is always same as xrEnumerateViewConfigurationViews
-			// Therefore Views can be preallocated and avoid two call idiom here.
-			uint32_t viewCapacityInput = (uint32_t)m_renderResources->Views.size();
-			uint32_t viewCountOutput;
-			CHECK_XRCMD(xrLocateViews(m_session.Get(),
-									  &viewLocateInfo,
-									  &m_renderResources->ViewState,
-									  viewCapacityInput,
-									  &viewCountOutput,
-									  m_renderResources->Views.data()));
-			
-			CHECK(viewCountOutput == viewCapacityInput);
-			CHECK(viewCountOutput == m_renderResources->ConfigViews.size());
-			CHECK(viewCountOutput == m_renderResources->ColorSwapchain.ArraySize);
-			CHECK(viewCountOutput == m_renderResources->DepthSwapchain.ArraySize);
-		}
-		
-		// Then render projection layer into each view.
-		if (RenderLayer(frameState.predictedDisplayTime, layer)) {
-			layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer));
-		}
-	}
-	
-	// Submit the composition layers for the predicted display time.
-	XrFrameEndInfo frameEndInfo{XR_TYPE_FRAME_END_INFO};
-	frameEndInfo.displayTime = frameState.predictedDisplayTime;
-	frameEndInfo.environmentBlendMode = m_environmentBlendMode;
-	frameEndInfo.layerCount = (uint32_t)layers.size();
-	frameEndInfo.layers = layers.data();
-	CHECK_XRCMD(xrEndFrame(m_session.Get(), &frameEndInfo));
-}
+
 
 uint32_t AquireAndWaitForSwapchainImage(XrSwapchain handle) {
 	uint32_t swapchainImageIndex;
@@ -1327,3 +1309,186 @@ bool Openxr::TSession::HasExtension(const char* MatchExtension)
 	return Matched;
 }
 
+void Openxr::TSession::RenderFrame()
+{
+	XrFrameWaitInfo frameWaitInfo{ XR_TYPE_FRAME_WAIT_INFO };
+	XrFrameState frameState{ XR_TYPE_FRAME_STATE };
+
+	//	block for frame
+	auto Result = xrWaitFrame(mSession, &frameWaitInfo, &frameState);
+	IsOkay(Result, "xrWaitFrame");
+
+	XrFrameBeginInfo frameBeginInfo{ XR_TYPE_FRAME_BEGIN_INFO };
+	Result = xrBeginFrame(mSession, &frameBeginInfo);
+	IsOkay(Result, "xrBeginFrame");
+
+	// EndFrame can submit mutiple layers
+	std::vector<XrCompositionLayerBaseHeader*> layers;
+
+	// The projection layer consists of projection layer views.
+	XrCompositionLayerProjection layer{ XR_TYPE_COMPOSITION_LAYER_PROJECTION };
+
+	// Inform the runtime to consider alpha channel during composition
+	// The primary display on Hololens has additive environment blend mode. It will ignore alpha channel.
+	// But mixed reality capture has alpha blend mode display and use alpha channel to blend content to environment.
+	layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+
+	// Only render when session is visible. otherwise submit zero layers
+	if (frameState.shouldRender)
+	{
+		std::Debug << "ShouldRender = false, session not visible?" << std::endl;
+		return;
+	}
+
+	// First update the viewState and views using latest predicted display time.
+	{
+		XrViewLocateInfo viewLocateInfo{ XR_TYPE_VIEW_LOCATE_INFO };
+		viewLocateInfo.viewConfigurationType = mPrimaryViewConfigType;
+		viewLocateInfo.displayTime = frameState.predictedDisplayTime;
+		viewLocateInfo.space = mSceneSpace;
+
+		XrViewState ViewState{ XR_TYPE_VIEW_STATE };
+
+		//	gr: could prealloc these
+		uint32_t ViewCount = 0;
+		Result = xrLocateViews(mSession, &viewLocateInfo, &ViewState, 0, &ViewCount, nullptr);
+		IsOkay(Result, "xrLocateViews (count)");
+
+		Array<XrView> mViews;
+		mViews.SetSize(ViewCount);
+		mViews.SetAll({ XR_TYPE_VIEW });
+
+		Result = xrLocateViews(mSession, &viewLocateInfo, &ViewState, mViews.GetSize(), &ViewCount, mViews.GetArray());
+		IsOkay(Result, "xrLocateViews (get)");
+
+		// Then render projection layer into each view.
+		try
+		{
+			RenderLayer(frameState.predictedDisplayTime, layer);
+			layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer));
+		}
+		catch (std::exception&e)
+		{
+			std::Debug << "RenderLayer error; " << e.what() << " layer skipped" << std::endl;
+		}
+	}
+
+	// Submit the composition layers for the predicted display time.
+	XrFrameEndInfo frameEndInfo{ XR_TYPE_FRAME_END_INFO };
+	frameEndInfo.displayTime = frameState.predictedDisplayTime;
+	frameEndInfo.environmentBlendMode = mEnvironmentBlendMode;
+	frameEndInfo.layerCount = (uint32_t)layers.size();
+	frameEndInfo.layers = layers.data();
+	Result = xrEndFrame(mSession, &frameEndInfo);
+	IsOkay(Result, "xrEndFrame");
+}
+
+void Openxr::TSession::RenderLayer(XrTime predictedDisplayTime, XrCompositionLayerProjection& layer) 
+{
+	/*
+	const uint32_t viewCount = (uint32_t)m_renderResources->ConfigViews.size();
+
+	if (!xr::math::Pose::IsPoseValid(m_renderResources->ViewState))
+	{
+		DEBUG_PRINT("xrLocateViews returned an invalid pose.");
+		return false; // Skip rendering layers if view location is invalid
+	}
+
+	std::vector<const sample::Cube*> visibleCubes;
+
+	auto UpdateVisibleCube = [&](sample::Cube& cube) {
+		if (cube.Space.Get() != XR_NULL_HANDLE) {
+			XrSpaceLocation cubeSpaceInScene{ XR_TYPE_SPACE_LOCATION };
+			CHECK_XRCMD(xrLocateSpace(cube.Space.Get(), m_sceneSpace.Get(), predictedDisplayTime, &cubeSpaceInScene));
+
+			// Update cubes location with latest space relation
+			if (xr::math::Pose::IsPoseValid(cubeSpaceInScene)) {
+				if (cube.PoseInSpace.has_value()) {
+					cube.PoseInScene = xr::math::Pose::Multiply(cube.PoseInSpace.value(), cubeSpaceInScene.pose);
+				}
+				else {
+					cube.PoseInScene = cubeSpaceInScene.pose;
+				}
+				visibleCubes.push_back(&cube);
+			}
+		}
+	};
+
+	UpdateSpinningCube(predictedDisplayTime);
+
+	UpdateVisibleCube(m_cubesInHand[LeftSide]);
+	UpdateVisibleCube(m_cubesInHand[RightSide]);
+
+	for (auto& hologram : m_holograms) {
+		UpdateVisibleCube(hologram.Cube);
+	}
+
+	m_renderResources->ProjectionLayerViews.resize(viewCount);
+	if (m_optionalExtensions.DepthExtensionSupported) {
+		m_renderResources->DepthInfoViews.resize(viewCount);
+	}
+
+	// Swapchain is acquired, rendered to, and released together for all views as texture array
+	const SwapchainD3D11& colorSwapchain = m_renderResources->ColorSwapchain;
+	const SwapchainD3D11& depthSwapchain = m_renderResources->DepthSwapchain;
+
+	// Use the full range of recommended image size to achieve optimum resolution
+	const XrRect2Di imageRect = { {0, 0}, {(int32_t)colorSwapchain.Width, (int32_t)colorSwapchain.Height} };
+	CHECK(colorSwapchain.Width == depthSwapchain.Width);
+	CHECK(colorSwapchain.Height == depthSwapchain.Height);
+
+	const uint32_t colorSwapchainImageIndex = AquireAndWaitForSwapchainImage(colorSwapchain.Handle.Get());
+	const uint32_t depthSwapchainImageIndex = AquireAndWaitForSwapchainImage(depthSwapchain.Handle.Get());
+
+	// Prepare rendering parameters of each view for swapchain texture arrays
+	std::vector<xr::math::ViewProjection> viewProjections(viewCount);
+	for (uint32_t i = 0; i < viewCount; i++) {
+		viewProjections[i] = { m_renderResources->Views[i].pose, m_renderResources->Views[i].fov, m_nearFar };
+
+		m_renderResources->ProjectionLayerViews[i] = { XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW };
+		m_renderResources->ProjectionLayerViews[i].pose = m_renderResources->Views[i].pose;
+		m_renderResources->ProjectionLayerViews[i].fov = m_renderResources->Views[i].fov;
+		m_renderResources->ProjectionLayerViews[i].subImage.swapchain = colorSwapchain.Handle.Get();
+		m_renderResources->ProjectionLayerViews[i].subImage.imageRect = imageRect;
+		m_renderResources->ProjectionLayerViews[i].subImage.imageArrayIndex = i;
+
+		if (m_optionalExtensions.DepthExtensionSupported) {
+			m_renderResources->DepthInfoViews[i] = { XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR };
+			m_renderResources->DepthInfoViews[i].minDepth = 0;
+			m_renderResources->DepthInfoViews[i].maxDepth = 1;
+			m_renderResources->DepthInfoViews[i].nearZ = m_nearFar.Near;
+			m_renderResources->DepthInfoViews[i].farZ = m_nearFar.Far;
+			m_renderResources->DepthInfoViews[i].subImage.swapchain = depthSwapchain.Handle.Get();
+			m_renderResources->DepthInfoViews[i].subImage.imageRect = imageRect;
+			m_renderResources->DepthInfoViews[i].subImage.imageArrayIndex = i;
+
+			// Chain depth info struct to the corresponding projection layer views's next
+			m_renderResources->ProjectionLayerViews[i].next = &m_renderResources->DepthInfoViews[i];
+		}
+	}
+
+	// For Hololens additive display, best to clear render target with transparent black color (0,0,0,0)
+	constexpr DirectX::XMVECTORF32 opaqueColor = { 0.184313729f, 0.309803933f, 0.309803933f, 1.000000000f };
+	constexpr DirectX::XMVECTORF32 transparent = { 0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f };
+	const DirectX::XMVECTORF32 renderTargetClearColor =
+		(m_environmentBlendMode == XR_ENVIRONMENT_BLEND_MODE_OPAQUE) ? opaqueColor : transparent;
+
+	m_graphicsPlugin->RenderView(imageRect,
+		renderTargetClearColor,
+		viewProjections,
+		colorSwapchain.Format,
+		colorSwapchain.Images[colorSwapchainImageIndex].texture,
+		depthSwapchain.Format,
+		depthSwapchain.Images[depthSwapchainImageIndex].texture,
+		visibleCubes);
+
+	XrSwapchainImageReleaseInfo releaseInfo{ XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
+	CHECK_XRCMD(xrReleaseSwapchainImage(colorSwapchain.Handle.Get(), &releaseInfo));
+	CHECK_XRCMD(xrReleaseSwapchainImage(depthSwapchain.Handle.Get(), &releaseInfo));
+
+	layer.space = m_sceneSpace.Get();
+	layer.viewCount = (uint32_t)m_renderResources->ProjectionLayerViews.size();
+	layer.views = m_renderResources->ProjectionLayerViews.data();
+	return true;
+	*/
+}
