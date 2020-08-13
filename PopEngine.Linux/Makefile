@@ -29,7 +29,6 @@ LIB_INCLUDES = \
 -I/usr/include/webkitgtk-4.0	\
 -I$(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)	\
 -I$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)	\
--I$(SRC_PATH)/src/Zip/src
 
 LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
