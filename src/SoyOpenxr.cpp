@@ -10,6 +10,11 @@ namespace Win32
 	class TOpenglContext;
 }
 
+namespace Directx
+{
+	class TContext;
+}
+
 #if defined(TARGET_WINDOWS)
 #define ENABLE_DIRECTX
 #include "Win32OpenglContext.h"
@@ -41,6 +46,8 @@ typedef int XrGraphicsBindingD3D11KHR;
 #endif
 
 #include <openxr/openxr_platform.h>
+
+
 
 namespace Openxr
 {
@@ -85,6 +92,7 @@ class Openxr::TSession : public SoyThread, public Xr::TDevice
 {
 public:
 	TSession(Win32::TOpenglContext& Context);
+	TSession(Directx::TContext& Context);
 	~TSession();
 	
 private:
@@ -93,6 +101,7 @@ private:
 	void			RenderFrame();
 	void			RenderLayer(XrTime predictedDisplayTime, XrCompositionLayerProjection& layer);
 
+	void			Init();
 	void			CreateInstance(const std::string& ApplicationName,uint32_t ApplicationVersion,const std::string& EngineName,uint32_t EngineVersion);
 	void			InitializeSystem();
 	void			InitializeSession();
@@ -107,11 +116,12 @@ private:
 	XrPath			GetXrPath(const char* PathString);
 	
 	XrGraphicsBindingOpenGL		InitOpengl();
-	XrGraphicsBindingD3D11KHR	InitDirectx();
+	XrGraphicsBindingD3D11KHR	InitDirectx11();
 	bool			HasExtension(const char* ExtensionName);
 
 private:
 	Win32::TOpenglContext*	mOpenglContext = nullptr;
+	Directx::TContext*		mDirectx11Context = nullptr;
 
 	XrFormFactor	mFormFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
 	XrViewConfigurationType mPrimaryViewConfigType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -242,10 +252,14 @@ void Openxr::IsOkay(XrResult Result, const std::string& Context)
 
 
 Openxr::TSession::TSession(Win32::TOpenglContext& Context) :
-	SoyThread	( "Openxr::TSession" )
+	SoyThread("Openxr::TSession(opengl)")
 {
 	mOpenglContext = &Context;
+	Init();
+}
 
+void Openxr::TSession::Init()
+{
 	//	lets add these later
 	//	openvr has it, does anything else?
 	auto ApplicationName = "Pop";
@@ -515,34 +529,6 @@ void Openxr::TSession::InitializeSystem()
 }
 
 
-XrGraphicsBindingD3D11KHR Openxr::TSession::InitDirectx()
-{
-	/*
-	//	create the D3D11 device for the adapter associated with the system.
-	XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
-	CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
-
-	// Create a list of feature levels which are both supported by the OpenXR runtime and this application.
-	std::vector<D3D_FEATURE_LEVEL> featureLevels = {D3D_FEATURE_LEVEL_12_1,
-		D3D_FEATURE_LEVEL_12_0,
-		D3D_FEATURE_LEVEL_11_1,
-		D3D_FEATURE_LEVEL_11_0,
-		D3D_FEATURE_LEVEL_10_1,
-		D3D_FEATURE_LEVEL_10_0};
-	featureLevels.erase(std::remove_if(featureLevels.begin(),
-									   featureLevels.end(),
-									   [&](D3D_FEATURE_LEVEL fl) { return fl < graphicsRequirements.minFeatureLevel; }),
-						featureLevels.end());
-	CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
-
-	ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels);
-
-	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
-	graphicsBinding.device = device;
-	*/
-	Soy_AssertTodo();
-}
-
 
 //	GetFunction<decltype(Symbol)>()
 template<typename FUNCTYPE>
@@ -578,6 +564,78 @@ Soy::TVersion GetVersion(XrVersion Version)
 	auto Minor = (Version >> 32) & 0xfff;
 	auto Patch = Version & 0xffffffff;
 	return Soy::TVersion(Major, Minor, Patch);
+}
+
+namespace Directx
+{
+	//	gr: magic_enum can't seem to handle D3D_FEATURE_LEVEL so we wrap it
+	enum FeatureLevel
+	{
+		Invalid = 0,
+		FEATURE_LEVEL_1_0_CORE = D3D_FEATURE_LEVEL_1_0_CORE,
+		FEATURE_LEVEL_9_1 = D3D_FEATURE_LEVEL_9_1,
+		FEATURE_LEVEL_9_2 = D3D_FEATURE_LEVEL_9_2,
+		FEATURE_LEVEL_9_3 = D3D_FEATURE_LEVEL_9_3,
+		FEATURE_LEVEL_10_0 = D3D_FEATURE_LEVEL_10_0,
+		FEATURE_LEVEL_10_1 = D3D_FEATURE_LEVEL_10_1,
+		FEATURE_LEVEL_11_0 = D3D_FEATURE_LEVEL_11_0,
+		FEATURE_LEVEL_11_1 = D3D_FEATURE_LEVEL_11_1,
+		FEATURE_LEVEL_12_0 = D3D_FEATURE_LEVEL_12_0,
+		FEATURE_LEVEL_12_1 = D3D_FEATURE_LEVEL_12_1
+	};
+}
+
+XrGraphicsBindingD3D11KHR Openxr::TSession::InitDirectx11()
+{
+	if (!mDirectx11Context)
+		throw Soy::AssertException("InitDirectx missing directx11 context");
+
+#if defined(XR_USE_GRAPHICS_API_D3D11)
+	//	gr: this should check for the extension first!
+	auto xrGetD3D11GraphicsRequirementsKHR_Function = GetFunction<decltype(xrGetD3D11GraphicsRequirementsKHR)>(mInstance, "xrGetD3D11GraphicsRequirementsKHR");
+	XrGraphicsRequirementsD3D11KHR Requirements{ XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR };
+	auto Result = xrGetD3D11GraphicsRequirementsKHR_Function(mInstance, mSystemId, &Requirements);
+	IsOkay(Result, "xrGetD3D11GraphicsRequirementsKHR");
+	auto FeatureLevel = magic_enum::enum_name( static_cast<Directx::FeatureLevel>(Requirements.minFeatureLevel));
+	std::Debug << "Openxr Directx feature level=" << FeatureLevel << std::endl;
+
+	//	now verify adaptor.
+	//	gr: can we re-use the one we made? or just reject if its not the right feature level? :/
+
+	ID3D11Device* Device = &mDirectx11Context->LockGetDevice();
+	mDirectx11Context->Unlock();
+	//	ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels);
+	XrGraphicsBindingD3D11KHR Binding{ XR_TYPE_GRAPHICS_BINDING_D3D11_KHR };
+	Binding.next = nullptr;
+	Binding.device = Device;
+	return Binding;
+
+#endif
+
+	throw Soy::AssertException("Invalid dx11 setup");
+	/*
+	//	create the D3D11 device for the adapter associated with the system.
+	XrGraphicsRequirementsD3D11KHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
+	CHECK_XRCMD(m_extensions.xrGetD3D11GraphicsRequirementsKHR(m_instance.Get(), m_systemId, &graphicsRequirements));
+
+	// Create a list of feature levels which are both supported by the OpenXR runtime and this application.
+	std::vector<D3D_FEATURE_LEVEL> featureLevels = {D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_10_1,
+		D3D_FEATURE_LEVEL_10_0};
+	featureLevels.erase(std::remove_if(featureLevels.begin(),
+									   featureLevels.end(),
+									   [&](D3D_FEATURE_LEVEL fl) { return fl < graphicsRequirements.minFeatureLevel; }),
+						featureLevels.end());
+	CHECK_MSG(featureLevels.size() != 0, "Unsupported minimum feature level!");
+
+	ID3D11Device* device = m_graphicsPlugin->InitializeDevice(graphicsRequirements.adapterLuid, featureLevels);
+
+	XrGraphicsBindingD3D11KHR graphicsBinding{XR_TYPE_GRAPHICS_BINDING_D3D11_KHR};
+	graphicsBinding.device = device;
+	*/
 }
 
 XrGraphicsBindingOpenGL Openxr::TSession::InitOpengl()
@@ -674,7 +732,7 @@ void Openxr::TSession::InitializeSession()
 	{
 		try
 		{
-			Binding_Directx = InitDirectx();
+			Binding_Directx = InitDirectx11();
 			createInfo.next = &Binding_Directx;
 			std::Debug << "Using directx binding" << std::endl;
 		}
@@ -1360,11 +1418,13 @@ void Openxr::TSession::RenderFrame()
 	//	and so does steam, so that might be a problem?)
 	auto Lock = [&]()
 	{
-		mOpenglContext->Lock();
+		if (mOpenglContext)
+			mOpenglContext->Lock();
 	}; 
 	auto Unlock = [&]()
 	{
-		mOpenglContext->Unlock();
+		if (mOpenglContext )
+			mOpenglContext->Unlock();
 	};
 
 	Soy::TScopeCall AutoLockContext(Lock, Unlock);

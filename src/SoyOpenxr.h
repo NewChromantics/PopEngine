@@ -7,6 +7,11 @@ namespace Win32
 	class TOpenglContext;
 }
 
+namespace Directx
+{
+	class TContext;
+}
+
 namespace Xr
 {
 	class TDevice;
@@ -22,4 +27,5 @@ namespace Openxr
 	//	gr: Platform::TOpenglContext contains HLGRC DC etc for windows
 	//		adapt as we go!
 	std::shared_ptr<Xr::TDevice>	CreateDevice(Win32::TOpenglContext& Context);
+	std::shared_ptr<Xr::TDevice>	CreateDevice(Directx::TContext& Context);
 }

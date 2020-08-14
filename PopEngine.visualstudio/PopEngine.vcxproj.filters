@@ -369,6 +369,9 @@
     <ClInclude Include="..\src\Win32OpenglContext.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -949,6 +952,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Win32OpenglContext.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
