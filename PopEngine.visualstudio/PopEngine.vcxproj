@@ -107,6 +107,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiCommon.h" />
+    <ClInclude Include="..\src\TApiDirectx11.h" />
     <ClInclude Include="..\src\TApiEngine.h" />
     <ClInclude Include="..\src\TApiDlib.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -238,6 +239,7 @@
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c" />
     <ClCompile Include="..\src\SoyOpenxr.cpp" />
+    <ClCompile Include="..\src\TApiDirectx11.cpp" />
     <ClCompile Include="..\src\TApiEngine.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />
     <ClCompile Include="..\src\TApiGui.cpp" />

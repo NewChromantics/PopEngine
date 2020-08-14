@@ -15,6 +15,10 @@
 #include "TApiZip.h"
 #endif
 
+#if defined(ENABLE_DIRECTX)
+#include "TApiDirectx11.h"
+#endif
+
 //	gr: maybe make this an actual define
 #if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS)
 #define ENABLE_APIMEDIA
@@ -632,6 +636,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiEngine::Bind(*Context);
 			ApiOpengl::Bind( *Context );
+#endif
+#if defined(ENABLE_DIRECTX)
+			ApiDirectx11::Bind(*Context);
 #endif
 
 #if defined(ENABLE_APIXR)

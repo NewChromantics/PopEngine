@@ -372,6 +372,9 @@
     <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiDirectx11.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -955,6 +958,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDirectx11.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
