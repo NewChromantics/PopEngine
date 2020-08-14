@@ -279,15 +279,11 @@ public:
 
 
 
-class Platform::TOpenglContext : public Opengl::TContext, public  Opengl::TRenderTarget, public Win32::TOpenglContext
+class Platform::TOpenglContext : public  Opengl::TRenderTarget, public Win32::TOpenglContext
 {
 public:
 	TOpenglContext(TControl& Parent,TOpenglParams& Params);
 	~TOpenglContext();
-
-	//	context
-	virtual void	Lock() override;
-	virtual void	Unlock() override;
 
 	//	render target
 	virtual void				Bind() override;
@@ -1262,32 +1258,6 @@ Platform::TOpenglContext::~TOpenglContext()
 	ReleaseDC(mHwnd, mHDC);
 }
 
-void Platform::TOpenglContext::Lock()
-{
-	//	osx does base context lock first
-	TContext::Lock();
-
-	try
-	{
-		//	switch to this thread
-		if ( !wglMakeCurrent(mHDC, mHGLRC) )
-			throw Soy::AssertException("wglMakeCurrent failed");
-	}
-	catch(...)
-	{
-		Unlock();
-		throw;
-	}
-}
-
-void Platform::TOpenglContext::Unlock()
-{
-	if ( !wglMakeCurrent(mHDC, nullptr) )
-		throw Soy::AssertException("wglMakeCurrent unbind failed");
-
-	TContext::Unlock();
-}
-
 void Platform::TOpenglContext::Repaint()
 {
 	mParent.Repaint();
@@ -1382,9 +1352,19 @@ void Platform::TOpenglContext::OnPaint()
 	};
 	auto UnlockContext = [&]
 	{
-		RenderTarget.Unbind();
-		Opengl::IsOkay("Post drawRect flush",false);
-		Context.Unlock();
+		try
+		{
+			RenderTarget.Unbind();
+			Opengl::IsOkay("UnlockContext RenderTarget.Unbind", false);
+			Context.Unlock();
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "UnlockContext unbind failed (" << e.what() << "), hail mary context unlock" << std::endl;
+			Context.Unlock();
+			//	rethrow?
+			//throw;
+		}
 	};
 
 	/*
@@ -1404,9 +1384,25 @@ void Platform::TOpenglContext::OnPaint()
 	}
 	catch(std::exception& e)
 	{
-		LockContext();
-		Opengl::ClearColour( Soy::TRgb(0,0,1) );
 		std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
+		UnlockContext();
+		return;
+		/*
+		//	gr: if there's an exception here, it might be the LockContext, rather than the render...
+		//		so we're just failing again...
+		try
+		{
+			LockContext();
+			Opengl::ClearColour(Soy::TRgb(0, 0, 1));
+			std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
+		}
+		catch (std::exception& e)
+		{
+			//	okay, lock is the problem
+			UnlockContext();
+			return;
+		}
+		*/
 	}
 
 	//	in case lock hasn't been done

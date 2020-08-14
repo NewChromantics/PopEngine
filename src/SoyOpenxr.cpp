@@ -305,7 +305,15 @@ bool Openxr::TSession::ThreadIteration()
 	{
 		if (mSessionState != XR_SESSION_STATE_READY)
 			std::Debug << "Running by state is not ready (" << magic_enum::enum_name(mSessionState) << std::endl;
-		RenderFrame();
+	
+		try
+		{
+			RenderFrame();
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Openxr RenderFrame failed; " << e.what() << std::endl;
+		}
 	}
 
 	//	throttle thread
@@ -809,6 +817,7 @@ void Openxr::TSession::EnumSwapChainFormats(ArrayBridge<int64_t>&& Formats)
 	IsOkay(Result, "xrEnumerateSwapchainFormats (Get)");
 }
 
+
 void Openxr::TSession::CreateSwapchains()
 {
 	//mRenderResources = std::make_unique<RenderResources>();
@@ -818,17 +827,43 @@ void Openxr::TSession::CreateSwapchains()
 	auto Result = xrGetSystemProperties( mInstance, mSystemId, &systemProperties );
 	IsOkay(Result,"xrGetSystemProperties");
 	
-	Array< XrViewConfigurationView> Views;
-	EnumViewConfigurations(this->mPrimaryViewConfigType, GetArrayBridge(Views));
+	Array<XrViewConfigurationView> ConfigViews;
+	EnumViewConfigurations(this->mPrimaryViewConfigType, GetArrayBridge(ConfigViews));
 
 	Array<int64_t> SwapChainFormats;
 	EnumSwapChainFormats(GetArrayBridge(SwapChainFormats));
 
+	for (auto i = 0; i < SwapChainFormats.GetSize(); i++)
+	{
+		std::Debug << "SwapChain format: 0x" << std::hex << SwapChainFormats[i] << std::dec << std::endl;
+	}
 	//	now pick formats and set swapchain format
-	//	then get images
+	//	then get textures
 	//
 	//https://github.com/microsoft/OpenXR-MixedReality/blob/22bcf0f9e07b3a9e21004c162f49953f8cd1d2f2/samples/BasicXrApp/OpenXrProgram.cpp#L401
 
+	//	create the swap chain
+	auto FormatColour = SwapChainFormats[0];
+	auto& ConfigViewColour = ConfigViews[0];
+	XrSwapchainCreateInfo ColourSwapchainCreateInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
+
+	//	steamvr with 
+	//	ColourSwapchainCreateInfo.arraySize = ConfigViews.GetSize();
+	//	Failed to create opengl swapchain image: arrays unsupported
+	ColourSwapchainCreateInfo.arraySize = 1;
+
+	ColourSwapchainCreateInfo.format = FormatColour;
+	ColourSwapchainCreateInfo.width = ConfigViewColour.recommendedImageRectWidth;
+	ColourSwapchainCreateInfo.height = ConfigViewColour.recommendedImageRectHeight;
+	ColourSwapchainCreateInfo.mipCount = 1;
+	ColourSwapchainCreateInfo.faceCount = 1;
+	ColourSwapchainCreateInfo.sampleCount = ConfigViewColour.recommendedSwapchainSampleCount;
+	ColourSwapchainCreateInfo.createFlags = 0;	//	XR_SWAPCHAIN_CREATE_STATIC_IMAGE_BIT
+	ColourSwapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+
+	XrSwapchain mColourSwapChain = XR_NULL_HANDLE;
+	Result = xrCreateSwapchain(mSession, &ColourSwapchainCreateInfo, &mColourSwapChain);
+	IsOkay(Result, "xrCreateSwapchain (colour)");
 
 	/*
 
@@ -1317,6 +1352,22 @@ void Openxr::TSession::RenderFrame()
 	//	block for frame
 	auto Result = xrWaitFrame(mSession, &frameWaitInfo, &frameState);
 	IsOkay(Result, "xrWaitFrame");
+
+	//	gr; we're getting a wglMakeCurrent error in the runtime with steamvr
+	//	probably a clash as the window trys to make current too, so it fails
+	//	we wanna lock to make sure the window thread isn't using it
+	//	using this lock ensures they dont overlap (but it does the wglMakeCurrent... 
+	//	and so does steam, so that might be a problem?)
+	auto Lock = [&]()
+	{
+		mOpenglContext->Lock();
+	}; 
+	auto Unlock = [&]()
+	{
+		mOpenglContext->Unlock();
+	};
+
+	Soy::TScopeCall AutoLockContext(Lock, Unlock);
 
 	XrFrameBeginInfo frameBeginInfo{ XR_TYPE_FRAME_BEGIN_INFO };
 	Result = xrBeginFrame(mSession, &frameBeginInfo);
