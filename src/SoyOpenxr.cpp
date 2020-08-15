@@ -16,7 +16,6 @@ namespace Directx
 }
 
 #if defined(TARGET_WINDOWS)
-#define ENABLE_DIRECTX
 #include "Win32OpenglContext.h"
 #endif
 
