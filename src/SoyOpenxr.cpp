@@ -111,6 +111,7 @@ private:
 	void			EnumEnvironmentBlendModes(ArrayBridge<XrEnvironmentBlendMode>&& Modes);
 	void			EnumViewConfigurations(XrViewConfigurationType ViewType, ArrayBridge<XrViewConfigurationView>&& Views);
 	void			EnumSwapChainFormats(ArrayBridge<int64_t>&& Formats);
+	void			EnumSwapChainImages(XrSwapchain SwapChain, ArrayBridge<XrSwapchainImageOpenGLKHR>&& SwapChainImages);
 
 	XrPath			GetXrPath(const char* PathString);
 	
@@ -207,6 +208,12 @@ std::shared_ptr<Xr::TDevice> Openxr::CreateDevice(Win32::TOpenglContext& Context
 	return Device;
 }
 
+std::shared_ptr<Xr::TDevice> Openxr::CreateDevice(Directx::TContext& Context)
+{
+	std::shared_ptr<Xr::TDevice> Device(new Openxr::TSession(Context));
+	return Device;
+}
+
 Soy::TRuntimeLibrary& Openxr::GetDll()
 {
 	static std::shared_ptr<Soy::TRuntimeLibrary> Dll;
@@ -254,6 +261,13 @@ Openxr::TSession::TSession(Win32::TOpenglContext& Context) :
 	SoyThread("Openxr::TSession(opengl)")
 {
 	mOpenglContext = &Context;
+	Init();
+}
+
+Openxr::TSession::TSession(Directx::TContext& Context) :
+	SoyThread("Openxr::TSession(directx11)")
+{
+	mDirectx11Context = &Context;
 	Init();
 }
 
@@ -874,6 +888,37 @@ void Openxr::TSession::EnumSwapChainFormats(ArrayBridge<int64_t>&& Formats)
 	IsOkay(Result, "xrEnumerateSwapchainFormats (Get)");
 }
 
+void Openxr::TSession::EnumSwapChainImages(XrSwapchain SwapChain, ArrayBridge<XrSwapchainImageOpenGLKHR>&& SwapChainImages)
+{
+	//	get count
+	uint32_t SurfaceCount = 0;
+	auto Result = xrEnumerateSwapchainImages(SwapChain, 0, &SurfaceCount, nullptr);
+	IsOkay(Result, "xrEnumerateSwapchainImages (count)");
+	/*
+	Array<void*> TexturePointers;
+	TexturePointers.SetSize(SurfaceCount * ViewCount);
+	//if (textures == nullptr)
+	//	textures = (void**)malloc(sizeof(void *) * surface_count * xr_view_count);
+
+	// We'll want to track our own information about the swapchain, so we can draw stuff onto it! We'll also create
+	// a depth buffer for each generated texture here as well with make_surfacedata.
+	swapchain_t swapchain = {};
+	swapchain.width = swapchain_info.width;
+	swapchain.height = swapchain_info.height;
+	swapchain.handle = handle;
+	swapchain.surface_images = (XrSwapchainImage *)malloc(sizeof(XrSwapchainImage) * surface_count);
+	memset(swapchain.surface_images, 0, sizeof(XrSwapchainImage) * surface_count);
+	*/
+	
+	//	#define XrSwapchainImage XrSwapchainImageD3D11KHR
+	SwapChainImages.SetSize(SurfaceCount);
+	SwapChainImages.SetAll({ XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR });
+
+	auto* SwapChainImagesPtr = reinterpret_cast<XrSwapchainImageBaseHeader*>(SwapChainImages.GetArray());
+	Result = xrEnumerateSwapchainImages(SwapChain, SurfaceCount, &SurfaceCount, SwapChainImagesPtr);
+	IsOkay(Result, "xrEnumerateSwapchainImages (XrSwapchainImageOpenGLKHR)");
+
+}
 
 void Openxr::TSession::CreateSwapchains()
 {
@@ -921,6 +966,12 @@ void Openxr::TSession::CreateSwapchains()
 	XrSwapchain mColourSwapChain = XR_NULL_HANDLE;
 	Result = xrCreateSwapchain(mSession, &ColourSwapchainCreateInfo, &mColourSwapChain);
 	IsOkay(Result, "xrCreateSwapchain (colour)");
+
+
+	//	find out how many textures were generated for the swapchain
+	//	gr: need to diverge here for opengl, dx etc
+	Array<XrSwapchainImageOpenGLKHR> SwapChainImages;
+	EnumSwapChainImages(mColourSwapChain, GetArrayBridge(SwapChainImages));
 
 	/*
 
@@ -1418,12 +1469,16 @@ void Openxr::TSession::RenderFrame()
 	auto Lock = [&]()
 	{
 		if (mOpenglContext)
-			mOpenglContext->Lock();
+		{
+			//	mOpenglContext->Lock();
+		}
 	}; 
 	auto Unlock = [&]()
 	{
-		if (mOpenglContext )
-			mOpenglContext->Unlock();
+		if (mOpenglContext)
+		{
+		//	mOpenglContext->Unlock();
+		}
 	};
 
 	Soy::TScopeCall AutoLockContext(Lock, Unlock);

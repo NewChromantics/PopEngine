@@ -13,6 +13,9 @@ using namespace std::literals;
 #include "SoyArkitXr.h"
 #endif
 
+#if defined(ENABLE_DIRECTX)
+#include "TApiDirectx11.h"
+#endif
 
 #if defined(TARGET_OSX) || defined(TARGET_WINDOWS)
 #define ENABLE_OPENXR
@@ -64,7 +67,7 @@ void ApiXr::GetRenderContext(std::shared_ptr<Win32::TOpenglContext>& Win32Opengl
 	try
 	{
 		auto& WindowWrapper = Params.GetArgumentPointer<ApiOpengl::TWindowWrapper>(ArgumentIndex);
-		auto Win32OpenglContext = WindowWrapper.GetWin32OpenglContext();
+		Win32OpenglContext = WindowWrapper.GetWin32OpenglContext();
 		if (Win32OpenglContext)
 			return;
 	}
@@ -75,8 +78,8 @@ void ApiXr::GetRenderContext(std::shared_ptr<Win32::TOpenglContext>& Win32Opengl
 		//Directx::TContext* pDirectxContext = WindowWrapper.GetDirectContext();
 	try
 	{
-		auto& WindowWrapper = Params.GetArgumentPointer<ApiOpengl::TWindowWrapper>(ArgumentIndex);
-		auto Win32OpenglContext = WindowWrapper.GetWin32OpenglContext();
+		auto& WindowWrapper = Params.GetArgumentPointer<ApiDirectx11::TContextWrapper>(ArgumentIndex);
+		Win32OpenglContext = WindowWrapper.GetWin32OpenglContext();
 		if (Win32OpenglContext)
 			return;
 	}
