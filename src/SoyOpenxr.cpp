@@ -944,35 +944,56 @@ void Openxr::TSession::CreateSwapchains()
 	//
 	//https://github.com/microsoft/OpenXR-MixedReality/blob/22bcf0f9e07b3a9e21004c162f49953f8cd1d2f2/samples/BasicXrApp/OpenXrProgram.cpp#L401
 
-	//	create the swap chain
-	auto FormatColour = SwapChainFormats[0];
-	auto& ConfigViewColour = ConfigViews[0];
-	XrSwapchainCreateInfo ColourSwapchainCreateInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
+	for (auto ViewIndex = 0; ViewIndex < ConfigViews.GetSize(); ViewIndex++)
+	{
+		//	create the swap chain
+		auto FormatColour = SwapChainFormats[0];
+		auto& ConfigViewColour = ConfigViews[ViewIndex];
+		XrSwapchainCreateInfo ColourSwapchainCreateInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
 
-	//	steamvr with 
-	//	ColourSwapchainCreateInfo.arraySize = ConfigViews.GetSize();
-	//	Failed to create opengl swapchain image: arrays unsupported
-	ColourSwapchainCreateInfo.arraySize = 1;
+		//	steamvr with 
+		//	ColourSwapchainCreateInfo.arraySize = ConfigViews.GetSize();
+		//	Failed to create opengl swapchain image: arrays unsupported
+		ColourSwapchainCreateInfo.arraySize = 1;
 
-	ColourSwapchainCreateInfo.format = FormatColour;
-	ColourSwapchainCreateInfo.width = ConfigViewColour.recommendedImageRectWidth;
-	ColourSwapchainCreateInfo.height = ConfigViewColour.recommendedImageRectHeight;
-	ColourSwapchainCreateInfo.mipCount = 1;
-	ColourSwapchainCreateInfo.faceCount = 1;
-	ColourSwapchainCreateInfo.sampleCount = ConfigViewColour.recommendedSwapchainSampleCount;
-	ColourSwapchainCreateInfo.createFlags = 0;	//	XR_SWAPCHAIN_CREATE_STATIC_IMAGE_BIT
-	ColourSwapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+		ColourSwapchainCreateInfo.format = FormatColour;
+		ColourSwapchainCreateInfo.width = ConfigViewColour.recommendedImageRectWidth;
+		ColourSwapchainCreateInfo.height = ConfigViewColour.recommendedImageRectHeight;
+		ColourSwapchainCreateInfo.mipCount = 1;
+		ColourSwapchainCreateInfo.faceCount = 1;
+		ColourSwapchainCreateInfo.sampleCount = ConfigViewColour.recommendedSwapchainSampleCount;
+		ColourSwapchainCreateInfo.createFlags = 0;	//	XR_SWAPCHAIN_CREATE_STATIC_IMAGE_BIT
+		ColourSwapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
 
-	XrSwapchain mColourSwapChain = XR_NULL_HANDLE;
-	Result = xrCreateSwapchain(mSession, &ColourSwapchainCreateInfo, &mColourSwapChain);
-	IsOkay(Result, "xrCreateSwapchain (colour)");
+		XrSwapchain mColourSwapChain = XR_NULL_HANDLE;
+		Result = xrCreateSwapchain(mSession, &ColourSwapchainCreateInfo, &mColourSwapChain);
+		IsOkay(Result, "xrCreateSwapchain (colour)");
+	
+		//	find out how many textures were generated for the swapchain
+		//	gr: need to diverge here for opengl, dx etc
+		Array<XrSwapchainImageOpenGLKHR> SwapChainImages;
+		EnumSwapChainImages(mColourSwapChain, GetArrayBridge(SwapChainImages));
+	}
 
 
-	//	find out how many textures were generated for the swapchain
-	//	gr: need to diverge here for opengl, dx etc
-	Array<XrSwapchainImageOpenGLKHR> SwapChainImages;
-	EnumSwapChainImages(mColourSwapChain, GetArrayBridge(SwapChainImages));
+	/*
+	settings->init_swapchain(settings->user_data, xr_view_count, surface_count, textures, xr_swapchains[0].width, xr_swapchains[0].height, pixel_fmt);
 
+	bool main_init_swapchain(void *user_data, int32_t view_count, int32_t surface_count, void **textures, int32_t width, int32_t height, int64_t fmt) {
+		app_swapchain.view_count = view_count;
+		app_swapchain.surf_count = surface_count;
+		app_swapchain.surfaces = (swapchain_surfdata_t*)malloc(sizeof(swapchain_surfdata_t) * view_count * surface_count);
+		skr_tex_fmt_ skr_format = skr_tex_fmt_from_native(fmt);
+
+		for (int32_t i = 0; i < view_count*surface_count; i++) {
+			app_swapchain.surfaces[i].render_tex = skr_tex_from_native(textures[i], skr_tex_type_rendertarget, skr_format, width, height);
+			app_swapchain.surfaces[i].depth_tex = skr_tex_create(skr_tex_type_depth, skr_use_static, skr_tex_fmt_depth32, skr_mip_none);
+			skr_tex_set_data(&app_swapchain.surfaces[i].depth_tex, nullptr, 1, width, height);
+			skr_tex_set_depth(&app_swapchain.surfaces[i].render_tex, &app_swapchain.surfaces[i].depth_tex);
+		}
+		return true;
+	}
+	*/
 	/*
 
 	// Select color and depth swapchain pixel formats
@@ -1470,14 +1491,14 @@ void Openxr::TSession::RenderFrame()
 	{
 		if (mOpenglContext)
 		{
-			//	mOpenglContext->Lock();
+			mOpenglContext->Lock();
 		}
 	}; 
 	auto Unlock = [&]()
 	{
 		if (mOpenglContext)
 		{
-		//	mOpenglContext->Unlock();
+			mOpenglContext->Unlock();
 		}
 	};
 
