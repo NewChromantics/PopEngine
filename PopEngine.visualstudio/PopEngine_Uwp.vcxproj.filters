@@ -584,6 +584,7 @@
     <None Include="..\src\SoyLib\src\SoyWindow.mm">
       <Filter>SoyLib</Filter>
     </None>
+    <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\src\PopEngine.h">

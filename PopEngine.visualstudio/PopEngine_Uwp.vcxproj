@@ -443,10 +443,15 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <GenerateManifest>false</GenerateManifest>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">
     <ClCompile>

@@ -64,14 +64,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
-    <IncludePath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\Build\PopEngine_Uwp_Debug_$(Platform)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\Build\PopEngine_Uwp_Debug_$(Platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
-    <IncludePath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\Build\PopEngine_Uwp_Debug_$(Platform)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\Build\PopEngine_Uwp_Debug_$(Platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -90,7 +90,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>OneCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCore.lib;PopEngine_Uwp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -150,6 +150,10 @@
     <AppxManifest Include="..\Source_Uwp\Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="..\Build\PopEngine_Uwp_Debug_ARM64\PopEngine_Uwp.dll">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</DeploymentContent>
+    </None>
     <None Include="..\Source_Uwp\TemporaryKey.pfx" />
     <None Include="packages.config">
       <SubType>Designer</SubType>

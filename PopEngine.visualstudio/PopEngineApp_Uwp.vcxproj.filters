@@ -42,5 +42,6 @@
     <None Include="packages.config" />
     <None Include="..\Source_Uwp\TemporaryKey.pfx" />
     <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
+    <None Include="..\Build\PopEngine_Uwp_Debug_ARM64\PopEngine_Uwp.dll" />
   </ItemGroup>
 </Project>
