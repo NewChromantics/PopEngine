@@ -66,6 +66,7 @@ void ApiXr::TDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiXr::GetRenderContext(std::shared_ptr<Win32::TOpenglContext>& Win32OpenglContext, std::shared_ptr<Directx::TContext>& DirectX11Context, Bind::TCallback& Params, size_t ArgumentIndex)
 {
+#if defined(ENABLE_OPENGL)
 	//	try and get opengl context
 	try
 	{
@@ -78,19 +79,21 @@ void ApiXr::GetRenderContext(std::shared_ptr<Win32::TOpenglContext>& Win32Opengl
 	{
 		std::Debug << __PRETTY_FUNCTION__ << " failed to get opengl context " << e.what() << std::endl;
 	}
-		//Directx::TContext* pDirectxContext = WindowWrapper.GetDirectContext();
+#endif
+
+#if defined(ENABLE_DIRECTX)
 	try
 	{
 		auto& WindowWrapper = Params.GetArgumentPointer<ApiDirectx11::TContextWrapper>(ArgumentIndex);
-		Win32OpenglContext = WindowWrapper.GetWin32OpenglContext();
-		if (Win32OpenglContext)
+		DirectX11Context = WindowWrapper.GetDirectxContext();
+		if (DirectX11Context)
 			return;
 	}
 	catch (std::exception& e)
 	{
 		std::Debug << __PRETTY_FUNCTION__ << " failed to get opengl context " << e.what() << std::endl;
 	}
-
+#endif
 	throw Soy::AssertException("Failed to get opengl or directx context from object");
 }
 

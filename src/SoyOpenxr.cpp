@@ -16,8 +16,16 @@ namespace Directx
 	class TContext;
 }
 
-#if defined(TARGET_WINDOWS)
+#if defined(TARGET_WINDOWS)&&defined(ENABLE_OPENGL)
 #include "Win32OpenglContext.h"
+#endif
+
+#if !defined(ENABLE_OPENGL)
+#define GL_RGBA16		0x805B
+#define GL_RGBA16F		0x881A
+#define GL_RGB16F		0x881B
+#define GL_SRGB8		0x8C41
+#define GL_SRGB8_ALPHA8	0x8C43
 #endif
 
 #if defined(ENABLE_DIRECTX)
@@ -38,6 +46,7 @@ namespace Directx
 typedef struct XrGraphicsBindingOpenGLWin32KHR XrGraphicsBindingOpenGL;
 #else
 typedef int XrGraphicsBindingOpenGL;
+typedef int XrSwapchainImageOpenGLKHR;
 #endif
 
 #if defined(XR_USE_GRAPHICS_API_D3D11)
@@ -1521,17 +1530,21 @@ void Openxr::TSession::RenderFrame()
 	//	and so does steam, so that might be a problem?)
 	auto Lock = [&]()
 	{
+#if defined(ENABLE_OPENGL)
 		if (mOpenglContext)
 		{
 			mOpenglContext->Lock();
 		}
+#endif
 	}; 
 	auto Unlock = [&]()
 	{
+#if defined(ENABLE_OPENGL)
 		if (mOpenglContext)
 		{
 			mOpenglContext->Unlock();
 		}
+#endif
 	};
 
 	Soy::TScopeCall AutoLockContext(Lock, Unlock);

@@ -277,5 +277,6 @@
     <None Include="..\src\SoyOpenglWindow.mm">
       <Filter>Source</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

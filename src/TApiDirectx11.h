@@ -42,7 +42,7 @@ public:
 
 	//	temp hack for openxr
 	std::shared_ptr<Win32::TOpenglContext>		GetWin32OpenglContext() { return nullptr; }
-	Directx::TContext*							GetDirectxContext() {	return mContext.get();}
+	std::shared_ptr < Directx::TContext>		GetDirectxContext() {	return mContext;}
 	
 public:
 	std::shared_ptr<Directx::TContext>&	mContext = mObject;

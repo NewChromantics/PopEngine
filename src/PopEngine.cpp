@@ -57,14 +57,16 @@ TPopAppError::Type PopMain()
 	auto OnShutdown = [&](int32_t ExitCode)
 	{		
 		std::Debug << "PopMain() OnShutdown" << std::endl;
-	#if defined(TARGET_WINDOWS)
+#if defined(TARGET_WINDOWS_UWP)
+		Running = false;
+#elif defined(TARGET_WINDOWS)
 		Running = false;
 		//	make sure WM_QUIT comes up by waking the message loop
 		PostQuitMessage(ExitCode);
-	#elif defined(TARGET_LINUX)
+#elif defined(TARGET_LINUX)
 		//	todo: save exit code!
 		RunningLock.OnCompleted();
-	#endif
+#endif
 	};
 
 	{

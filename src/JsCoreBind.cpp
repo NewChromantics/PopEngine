@@ -9,10 +9,13 @@
 #include "TApiEngine.h"
 #include "TApiWebsocket.h"
 #include "TApiHttp.h"
-#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-#include "TApiOpengl.h"
-#include "TApiGui.h"
 #include "TApiZip.h"
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
+#include "TApiGui.h"
+#endif
+
+#if defined(ENABLE_OPENGL)
+#include "TApiOpengl.h"
 #endif
 
 #if defined(ENABLE_DIRECTX)
@@ -20,8 +23,10 @@
 #endif
 
 //	gr: maybe make this an actual define
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS) 
+#if !defined(TARGET_WINDOWS_UWP)
 #define ENABLE_APIMEDIA
+#endif
 #endif
 
 #if defined(TARGET_WINDOWS)
@@ -635,7 +640,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiEngine::Bind(*Context);
-			ApiOpengl::Bind( *Context );
+#endif
+#if defined(ENABLE_OPENGL)
+			ApiOpengl::Bind(*Context);
 #endif
 #if defined(ENABLE_DIRECTX)
 			ApiDirectx11::Bind(*Context);

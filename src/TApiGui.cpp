@@ -1,5 +1,4 @@
 #include "TApiGui.h"
-#include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 
 
