@@ -1,8 +1,11 @@
 #include "TApiXr.h"
 #include "TApiCommon.h"
+
+#if defined(ENABLE_OPENGL)
 #include "TApiOpengl.h"
 #include "SoyOpengl.h"
 #include "SoyOpenglWindow.h"
+#endif
 
 #include <magic_enum.hpp>
 #include "SoyRuntimeLibrary.h"

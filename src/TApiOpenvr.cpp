@@ -1,8 +1,10 @@
 #include "TApiOpenvr.h"
 #include "Libs/OpenVr/headers/openvr.h"
 #include "TApiCommon.h"
+#if defined(ENABLE_OPENGL)
 #include "TApiOpengl.h"
 #include "SoyOpengl.h"
+#endif
 #include "SoyViveHandTracker.h"
 #include <magic_enum.hpp>
 #include "SoyRuntimeLibrary.h"
