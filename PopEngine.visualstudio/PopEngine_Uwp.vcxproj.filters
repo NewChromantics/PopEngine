@@ -4,6 +4,27 @@
     <Filter Include="Source">
       <UniqueIdentifier>{aa2bdbd0-f21f-4e42-a850-15d89b25dfc6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SoyLib">
+      <UniqueIdentifier>{64b35cc7-218e-4428-b102-bb5d7f4a6866}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SoyLib\glew">
+      <UniqueIdentifier>{4e59f00a-755d-4a86-9735-7999a5418748}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SoyLib\sha1">
+      <UniqueIdentifier>{b1658652-399c-4162-aa2b-9872bb96fba7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SoyLib\MagicEnum">
+      <UniqueIdentifier>{19763bb8-b2ee-4465-ae3c-46d4e7d94862}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs">
+      <UniqueIdentifier>{d9542142-21dc-40bb-9bf1-202c8f9b74e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\Zip">
+      <UniqueIdentifier>{b71fbfa8-09b5-4051-aef8-385ec8f02503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\Json11">
+      <UniqueIdentifier>{b19bee59-7614-4993-9664-f812f374f222}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp">
@@ -127,6 +148,132 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\memheap.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyApp.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyArray.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyGraphics.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyJson.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyMedia.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyMediaFormat.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyOpengl.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyOpenglContext.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyRuntimeLibrary.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyShader.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyString.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyUniform.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWave.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWebSocket.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\GL\glew.c">
+      <Filter>SoyLib\glew</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp">
+      <Filter>SoyLib\sha1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Zip\src\zip.c">
+      <Filter>Libs\Zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Json11\json11.cpp">
+      <Filter>Libs\Json11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyWin32.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -260,6 +407,159 @@
     <ClInclude Include="..\src\Win32OpenglContext.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Array.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyApp.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyArray.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyAssert.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyBase64.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyDebug.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyH264.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyHttp.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyImage.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyJson.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMedia.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyMediaFormat.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPng.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRef.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyShader.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyShellExecute.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocket.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyStream.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyString.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTime.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Windows.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyUniform.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWave.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyWindow.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Win32ImageMapControl.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\glew.h">
+      <Filter>SoyLib\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\glxew.h">
+      <Filter>SoyLib\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\wglew.h">
+      <Filter>SoyLib\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h">
+      <Filter>SoyLib\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MagicEnum\include\magic_enum.hpp">
+      <Filter>SoyLib\MagicEnum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\miniz.h">
+      <Filter>Libs\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\zip.h">
+      <Filter>Libs\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Json11\json11.hpp">
+      <Filter>Libs\Json11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyWin32.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -278,5 +578,11 @@
       <Filter>Source</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="..\src\SoyLib\src\SoyFilesystem.mm">
+      <Filter>SoyLib</Filter>
+    </None>
+    <None Include="..\src\SoyLib\src\SoyWindow.mm">
+      <Filter>SoyLib</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -4,16 +4,13 @@
 //#include "PopMain.h"
 #include "SoyMath.h"
 
-#include <windowsx.h>
+#include "SoyWin32.h"
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
 #include "Win32OpenglContext.h"
 
-#include <commctrl.h>
-#pragma comment(lib, "Comctl32.lib")
-#include <shellapi.h>	//	drag & drop
-#pragma comment(lib, "Shell32.lib")
+
 
 
 extern "C"
@@ -40,10 +37,7 @@ namespace Platform
 	//	COM interfaces
 	class TDragAndDropHandler;
 
-	namespace Private
-	{
-		HINSTANCE InstanceHandle = nullptr;
-	}
+
 
 	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );

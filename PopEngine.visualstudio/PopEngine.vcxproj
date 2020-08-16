@@ -99,6 +99,7 @@
     <ClInclude Include="..\src\SoyOpenglView.h" />
     <ClInclude Include="..\src\SoyOpenglWindow.h" />
     <ClInclude Include="..\src\SoyOpenxr.h" />
+    <ClInclude Include="..\src\SoyWin32.h" />
     <ClInclude Include="..\src\TApiBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -239,6 +240,7 @@
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c" />
     <ClCompile Include="..\src\SoyOpenxr.cpp" />
+    <ClCompile Include="..\src\SoyWin32.cpp" />
     <ClCompile Include="..\src\TApiDirectx11.cpp" />
     <ClCompile Include="..\src\TApiEngine.cpp" />
     <ClCompile Include="..\src\TApiDll.cpp" />

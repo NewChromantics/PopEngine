@@ -23,10 +23,8 @@
 #endif
 
 //	gr: maybe make this an actual define
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS) 
-#if !defined(TARGET_WINDOWS_UWP)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS) &&!defined(TARGET_UWP)
 #define ENABLE_APIMEDIA
-#endif
 #endif
 
 #if defined(TARGET_WINDOWS)
@@ -660,13 +658,13 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiOpencv::Bind(*Context);
 #endif
 			
-#if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
+#if defined(TARGET_OSX)||defined(TARGET_WINDOWS)&&!defined(TARGET_UWP)
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
 #endif
-#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-			ApiGui::Bind( *Context );
 			ApiZip::Bind(*Context);
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_UWP)
+			ApiGui::Bind( *Context );
 #endif
 #if defined(ENABLE_APIVISION)
 			ApiCoreMl::Bind(*Context);
