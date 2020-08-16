@@ -1326,7 +1326,7 @@ public:
 */
 void Platform::TOpenglContext::OnPaint()
 {
-	return;
+	//return;
 
 	//	better place to flush the queue?
 	this->Flush(*this);
@@ -1387,7 +1387,14 @@ void Platform::TOpenglContext::OnPaint()
 	catch(std::exception& e)
 	{
 		std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
-		UnlockContext();
+		try
+		{
+			UnlockContext();
+		}
+		catch (std::exception&e)
+		{
+			//std::Debug << "OnRender UnlockContext exception " << e.what() << std::endl;
+		}
 		return;
 		/*
 		//	gr: if there's an exception here, it might be the LockContext, rather than the render...

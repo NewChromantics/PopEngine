@@ -617,7 +617,6 @@
     <Import Project="PopEngine.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_Chakra.props" />
-    <Import Project="packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props" />
     <Import Project="Directx11.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'" Label="PropertySheets">

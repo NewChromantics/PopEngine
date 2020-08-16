@@ -4,6 +4,7 @@
 #include <magic_enum.hpp>
 #include <SoyRuntimeLibrary.h>
 #include <functional>
+#include <SoyEnum.h>
 
 namespace Win32
 {
@@ -55,11 +56,11 @@ namespace Openxr
 	void					LoadDll();
 	Soy::TRuntimeLibrary&	GetDll();
 
-	void	IsOkay(XrResult Result,const char* Context);
-	void	IsOkay(XrResult Result,const std::string& Context);
+	void			IsOkay(XrResult Result,const char* Context);
+	void			IsOkay(XrResult Result,const std::string& Context);
+	void			EnumExtensions(std::function<void(std::string&,uint32_t)> OnExtension);
+	std::string		GetPixelFormatName(int64_t PixelFormat);
 
-	void	EnumExtensions(std::function<void(std::string&,uint32_t)> OnExtension);
-	
 	template<typename FUNCTION>
 	std::function<FUNCTION>		GetFunction(XrInstance mInstance, const char* FunctionName);
 
@@ -72,10 +73,38 @@ namespace Openxr
 		};
 	}
 
+
 	constexpr XrPosef PoseIdentity() 
 	{
 		return { {0, 0, 0, 1}, {0, 0, 0} };
 	}
+
+}
+/*
+namespace magic_enum
+{
+	template <>
+	struct enum_range<Openxr::PixelFormat::Type> 
+	{
+		static constexpr int min = 0; // Must be greater than `INT16_MIN`.
+		static constexpr int max = 0xfff; // Must be less than `INT16_MAX`.
+	};
+}
+*/
+
+std::string Openxr::GetPixelFormatName(int64_t PixelFormat)
+{
+	switch (PixelFormat)
+	{
+	case GL_RGBA16:			return "GL_RGBA16";
+	case GL_RGBA16F:		return "GL_RGBA16F";
+	case GL_RGB16F:			return "GL_RGB16F";
+	case GL_SRGB8:			return "GL_SRGB8";
+	case GL_SRGB8_ALPHA8:	return "GL_SRGB8_ALPHA8";
+	}
+	std::stringstream Debug;
+	Debug << "Unhandled openxr pixel format 0x" << std::hex << PixelFormat << std::dec;
+	return Debug.str();
 }
 
 
@@ -935,19 +964,21 @@ void Openxr::TSession::CreateSwapchains()
 	Array<int64_t> SwapChainFormats;
 	EnumSwapChainFormats(GetArrayBridge(SwapChainFormats));
 
+	
 	for (auto i = 0; i < SwapChainFormats.GetSize(); i++)
 	{
-		std::Debug << "SwapChain format: 0x" << std::hex << SwapChainFormats[i] << std::dec << std::endl;
+		std::Debug << "SwapChain format: " << GetPixelFormatName(SwapChainFormats[i]) << std::endl;
 	}
 	//	now pick formats and set swapchain format
 	//	then get textures
 	//
 	//https://github.com/microsoft/OpenXR-MixedReality/blob/22bcf0f9e07b3a9e21004c162f49953f8cd1d2f2/samples/BasicXrApp/OpenXrProgram.cpp#L401
 
-	for (auto ViewIndex = 0; ViewIndex < ConfigViews.GetSize(); ViewIndex++)
+	//for (auto ViewIndex = 0; ViewIndex < ConfigViews.GetSize(); ViewIndex++)
+	int ViewIndex = 0;
 	{
 		//	create the swap chain
-		auto FormatColour = SwapChainFormats[0];
+		auto FormatColour = GL_SRGB8;// SwapChainFormats[0];
 		auto& ConfigViewColour = ConfigViews[ViewIndex];
 		XrSwapchainCreateInfo ColourSwapchainCreateInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
 
@@ -1475,6 +1506,7 @@ bool Openxr::TSession::HasExtension(const char* MatchExtension)
 
 void Openxr::TSession::RenderFrame()
 {
+	return;
 	XrFrameWaitInfo frameWaitInfo{ XR_TYPE_FRAME_WAIT_INFO };
 	XrFrameState frameState{ XR_TYPE_FRAME_STATE };
 
