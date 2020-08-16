@@ -585,4 +585,9 @@
       <Filter>SoyLib</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\src\PopEngine.h">
+      <Filter>Source</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
 </Project>

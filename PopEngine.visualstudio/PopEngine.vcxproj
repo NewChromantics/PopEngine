@@ -34,6 +34,7 @@
     </ClInclude>
     <ClInclude Include="..\src\Json11\json11.hpp" />
     <ClInclude Include="..\src\MagicEnum\include\magic_enum.hpp" />
+    <ClInclude Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>

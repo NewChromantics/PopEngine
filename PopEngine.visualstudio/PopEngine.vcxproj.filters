@@ -378,6 +378,9 @@
     <ClInclude Include="..\src\SoyWin32.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PopEngine.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">

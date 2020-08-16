@@ -16,6 +16,7 @@
 
 
 #include "OpenXrProgram.h"
+#include <PopEngine.h>
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 constexpr const char* ProgramName = "BasicXrApp_win32";
@@ -25,6 +26,7 @@ constexpr const char* ProgramName = "BasicXrApp_uwp";
 
 int __stdcall wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
     try {
+		PopEngine("Hello");
         auto graphics = sample::CreateCubeGraphics();
         auto program = sample::CreateOpenXrProgram(ProgramName, std::move(graphics));
         program->Run();

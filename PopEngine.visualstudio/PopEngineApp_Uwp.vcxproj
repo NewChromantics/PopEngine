@@ -61,6 +61,18 @@
     <!-- Enable generating msix package in local build -->
     <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
+    <IncludePath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
+    <IncludePath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\Build\PopEngine_Debug_Chakra_$(Platform)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

@@ -201,6 +201,7 @@
     </ClInclude>
     <ClInclude Include="..\src\Json11\json11.hpp" />
     <ClInclude Include="..\src\MagicEnum\include\magic_enum.hpp" />
+    <CopyFileToFolders Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
