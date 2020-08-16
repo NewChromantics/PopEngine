@@ -41,5 +41,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="..\Source_Uwp\TemporaryKey.pfx" />
+    <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{aa2bdbd0-f21f-4e42-a850-15d89b25dfc6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\ChakraBind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenxr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDirectx11.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEngine.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDll.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiGui.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenvr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyViveHandTracker.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiPanopoly.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiXr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiZip.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\V8Bind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Win32OpenglContext.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsCoreBind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\JsCoreDll.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopEngine.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopMain.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyHid.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenglWindow.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiBluetooth.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiCommon.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDlib.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEzsift.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiHttp.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiInput.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpengl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenglContext.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSerial.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiWebsocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TBind.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TPopServerThread.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Container.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Inspector.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Instance.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ChakraBind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\JsCoreBind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\JsCoreDll.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PopMain.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyBluetooth.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyHid.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenglView.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenglWindow.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenxr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiBluetooth.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiCommon.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDirectx11.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEngine.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDlib.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDll.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEzsift.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiGui.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiHttp.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiInput.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiMedia.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencl.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencv.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpengl.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpenglContext.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpenvr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiPanopoly.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSerial.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSocket.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyViveHandTracker.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiWebsocket.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiXr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiZip.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TBind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TPopServerThread.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TProtocolWebSocket.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TSsdMobileNetAnchors.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Container.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Inspector.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Instance.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8ObjectWrapper.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\V8Bind.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Win32OpenglContext.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\PopEngineAppBundle.xcconfig">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\PopMain.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\SoyBluetooth.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\SoyOpenglView.mm">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\src\SoyOpenglWindow.mm">
+      <Filter>Source</Filter>
+    </None>
+  </ItemGroup>
+</Project>
