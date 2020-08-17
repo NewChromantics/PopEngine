@@ -15,7 +15,7 @@
 #pragma comment(lib,"PopH264.lib")
 #include <poph264/windows/Release_x64/PopH264.h>
 #elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
-#include "PopH264.h"
+#include <PopH264.h>
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_IOS)
@@ -24,7 +24,7 @@
 #pragma comment(lib,"PopCameraDevice.lib")
 #include <popcameradevice/windows/Debug_x64/PopCameraDevice.h>
 #elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
-#include "PopCameraDevice.h"
+#include <PopCameraDevice.h>
 #endif
 
 
