@@ -157,6 +157,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: fnkr/github-action-ghr@v1   
         env:
-         GHR_COMPRESS: xz
+         #gr: don't compress GHR_COMPRESS: xz
          GHR_PATH: ${{ env.project }}.Package/
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
