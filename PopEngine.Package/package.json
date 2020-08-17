@@ -7,8 +7,8 @@
   "description": "Pop Engine",
   "main": "index.js",
   "dependencies": {
-    "@newchromantics/poph264": "1.2.11",
-    "@newchromantics/popcameradevice": "0.0.4"
+    "@newchromantics/poph264": "latest",
+    "@newchromantics/popcameradevice": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
