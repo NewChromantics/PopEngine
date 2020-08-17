@@ -25,7 +25,7 @@ LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(PROJECT_PATH)/Libs/poph264/$(os)	\
+-I$(PROJECT_PATH)/Libs/poph264/$(TargetArch)	\
 -I$(PROJECT_PATH)/Libs/popcameradevice/$(TargetArch)	\
 
 LIB_SRC_FILES  = \
