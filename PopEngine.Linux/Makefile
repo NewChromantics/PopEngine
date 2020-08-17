@@ -9,9 +9,10 @@ CC = ${compiler}
 # TargetArch is the target architecture or OS
 # gr: always prefixed with Linux_
 # 	then add architecture or specific build (nvidia jetson, pi4)
-TargetArch ?= Linux_Unknown
+osTarget ?= Linux_Unknown
 BUILD_DIR = ../Build
 
+TargetArch = $(osTarget)
 CONFIGURATION ?= Release
 
 PROJECT_PATH = ..
