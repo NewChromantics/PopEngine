@@ -39,6 +39,8 @@ public:
 	size_t				mQueueFlip = 0;
 	SoyWorkerJobThread	mJobQueueA;
 	SoyWorkerJobThread	mJobQueueB;
+
+	Bind::TPromiseMap	mPromises;
 };
 
 
@@ -142,12 +144,16 @@ void ApiPanopoly::DepthToYuvAsync(Bind::TCallback& Params)
 	EncodeParams.ChromaRangeCount = Params.GetArgumentInt(3);
 	EncodeParams.PingPongLuma = Params.GetArgumentBool(4);
 	
-	//	create a promise to return
-	auto pPromise = Params.mContext.CreatePromisePtr(Params.mLocalContext, __PRETTY_FUNCTION__);
-	Params.Return( *pPromise );
-	
+	//	create a promise in a promise map so we don't accidentally delete it in the wrong thread
+	auto& PanopolyContext = Panopoly::GetContext();
+	size_t PromiseRef = 0;
+	{
+		auto Promise = PanopolyContext.mPromises.CreatePromise(Params.mLocalContext, __PRETTY_FUNCTION__, PromiseRef);
+		Params.Return(Promise);
+	}
+
 	//	do conversion in a job
-	auto Convert = [=]() mutable
+	auto Convert = [=]()
 	{
 		try
 		{
@@ -155,31 +161,30 @@ void ApiPanopoly::DepthToYuvAsync(Bind::TCallback& Params)
 			std::shared_ptr<SoyPixelsImpl> pYuvPixels( new SoyPixels );
 			DepthToYuv(*pDepthPixels,*pYuvPixels,EncodeParams);
 			
-			auto ResolvePromise = [=](Bind::TLocalContext& LocalContext) mutable
+			auto ResolvePromise = [=](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 			{
 				//	make an image and return
-				BufferArray<JSValueRef,1> ConstructorArguments;
-				auto ImageObject = LocalContext.mGlobalContext.CreateObjectInstance(LocalContext, TImageWrapper::GetTypeName(), GetArrayBridge(ConstructorArguments) );
+				BufferArray<JSValueRef, 1> ConstructorArguments;
+				auto ImageObject = LocalContext.mGlobalContext.CreateObjectInstance(LocalContext, TImageWrapper::GetTypeName(), GetArrayBridge(ConstructorArguments));
 				auto& Image = ImageObject.This<TImageWrapper>();
 				Image.SetPixels(pYuvPixels);
-				pPromise->Resolve(LocalContext, ImageObject);
+				Promise.Resolve(LocalContext, ImageObject);
 			};
-			auto& Context = pPromise->GetContext();
-			Context.Queue(ResolvePromise);
+			auto& PanopolyContext = Panopoly::GetContext();
+			PanopolyContext.mPromises.Flush(PromiseRef, ResolvePromise);
 		}
 		catch(std::exception& e)
 		{
 			std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
 			std::string Error = e.what();
-			auto RejectPromise = [=](Bind::TLocalContext& LocalContext)
+			auto RejectPromise = [=](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
 			{
-				pPromise->Reject(LocalContext,Error);
+				Promise.Reject(LocalContext,Error);
 			};
-			auto& Context = pPromise->GetContext();
-			Context.Queue(RejectPromise);
+			auto& PanopolyContext = Panopoly::GetContext();
+			PanopolyContext.mPromises.Flush(PromiseRef, RejectPromise);
 		}
 	};
-	auto& PanopolyContext = Panopoly::GetContext();
 	PanopolyContext.QueueJob(Convert);
 }
 

@@ -169,6 +169,8 @@ void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalC
 	auto DoFlush = [&](Bind::TLocalContext& Context)
 	{
 		HandlePromise(Context, *Promise);
+		//	clear promise whilst in js thread
+		Promise.reset();
 	};
 	Context.Execute(DoFlush);
 }
