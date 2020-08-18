@@ -38,7 +38,10 @@ jobs:
           mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           ls -R Libs
 
-      - name: Add msbuild to PATH
+      - name: Setup Nuget
+        uses: warrenbuckley/Setup-Nuget@v1
+  
+      - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.0.0
 
       - name: Windows
