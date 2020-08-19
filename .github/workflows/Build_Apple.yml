@@ -49,4 +49,5 @@ jobs:
       - uses: NewChromantics/PopAction_BuildApple@v1
         with:
           BuildScheme: ${{ matrix.config.BuildScheme }}
+          BuildTargetDir: ${{ matrix.config.BuildTargetDir }}
           project: ${{ env.project }}
