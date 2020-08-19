@@ -616,30 +616,39 @@ void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 
 void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
-
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
 
 	auto Filename = Params.GetArgumentFilename(0);
 
-    auto Directory = Platform::GetDirectoryFromFilename(Filename);
-    Platform::CreateDirectory(Directory);
+	auto Directory = Platform::GetDirectoryFromFilename(Filename);
+	Platform::CreateDirectory(Directory);
 
-	//	write as a string if not a specific binary array
-	if ( !Params.IsArgumentArray(1) )
+	Array<uint8_t> Contents;
+	auto ContentsArgumentIndex = 1;
+
+	//	gr: let's allow string as binary
+	if (Params.IsArgumentString(ContentsArgumentIndex))
 	{
+		auto ContentsString = Params.GetArgumentString(ContentsArgumentIndex);
+		auto* ContentsStringData = ContentsString.c_str();
+		auto ContentsStringLength = ContentsString.length();
+		auto ContentsStringArray = GetRemoteArray(reinterpret_cast<const uint8_t*>(ContentsStringData), ContentsStringLength);
+		Contents.PushBackArray(ContentsStringArray);
+	}
+	else if ( !Params.IsArgumentArray(ContentsArgumentIndex) )
+	{
+		//	write as a string if not a specific binary array
 		if ( Append )
 			throw Soy::AssertException("Currently cannot append file with string");
 		WriteStringToFile(Params);
 		return;
 	}
-                                                                
-	//	need to have some generic interface here I think
-	//	we dont have the type exposed in Bind yet
-	Array<uint8_t> Contents;
-	Params.GetArgumentArray( 1, GetArrayBridge(Contents) );
+	else
+	{
+		Params.GetArgumentArray(ContentsArgumentIndex, GetArrayBridge(Contents));
+	}
 
-	auto ContentsChar = GetArrayBridge(Contents);
-	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename, Append );
+	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
 }
 
 
