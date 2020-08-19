@@ -70,7 +70,7 @@ jobs:
       - name: Copy package downloads to Libs
         run: |
           mkdir -p Libs
-          cp ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
+          cp -r ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           ls -R Libs
 
       - name: Setup nuget (Windows)
