@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		581BB74224DC0EEF0042BD6C /* PopVision_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFA22BEA22DE7E3700D8615C /* PopVision_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		581BB74324DC0EF60042BD6C /* PopVision_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF71CAE3243E5DC000AEF50F /* PopVision_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -612,7 +610,6 @@
 				BF151FD3238470A800A70EBF /* VideoToolbox.framework in Frameworks */,
 				BF15205523855FB600A70EBF /* PopCameraDevice_Ios.framework in Frameworks */,
 				BF151FD12384708A00A70EBF /* UIKit.framework in Frameworks */,
-				581BB74324DC0EF60042BD6C /* PopVision_Ios.framework in Frameworks */,
 				BF151FCD2384704C00A70EBF /* OpenGLES.framework in Frameworks */,
 				BF151FF823847BA700A70EBF /* PopH264_Ios.framework in Frameworks */,
 			);
@@ -635,7 +632,6 @@
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
 				BF5EB01B237F119F0077BCF5 /* IOKit.framework in Frameworks */,
 				BF5EB01E237F11AD0077BCF5 /* JavaScriptCore.framework in Frameworks */,
-				581BB74224DC0EEF0042BD6C /* PopVision_Osx.framework in Frameworks */,
 				BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */,
 				BF5EB029237F12CA0077BCF5 /* libdyncallback_s.a in Frameworks */,
 				BF5EB01F237F11BD0077BCF5 /* CoreMedia.framework in Frameworks */,
