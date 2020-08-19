@@ -11,12 +11,15 @@ OTHER_CFLAGS = -Wno-ambiguous-macro
 SOYLIB_PATH = $(SRCROOT)/src/
 OPENCV_PATH = $(SRCROOT)/src/Libs/Opencv
 OPENCV_CONTRIB_PATH = $(SRCROOT)/src/Libs/Opencv_contrib/modules/
+MAGIC_LEAP_PATH = "/Volumes/Code/MagicLeap/mlsdk/v0.21.0/";
 
-//	todo: remove dlib! make it an external dll we can just call
-DLIB_PATH = /usr/local/Cellar/dlib/19.15
+HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH) $(MAGIC_LEAP_PATH)/include
+LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited)
+FRAMEWORK_SEARCH_PATHS = $(inherited) $(PROJECT_DIR)/src/Libs $(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64 $(PROJECT_DIR)/Libs/**
 
-HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(DLIB_PATH)/include $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH)
-LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(DLIB_PATH)/lib
+LIBRARY_SEARCH_PATHS = $(inherited) /usr/local/Cellar/dlib/19.15/lib $(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2 $(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32 $(PROJECT_DIR)/src/Libs/dyncall/lib $(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32
+
+//:completeSettings = none
 
 VERSIONING_SYSTEM = apple-generic
 

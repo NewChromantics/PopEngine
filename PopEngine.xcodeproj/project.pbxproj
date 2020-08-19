@@ -2290,12 +2290,6 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-					"$(PROJECT_DIR)/Libs/**",
-				);
 				FRAMEWORK_VERSION = A;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -2309,14 +2303,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2364,12 +2350,6 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-					"$(PROJECT_DIR)/Libs/**",
-				);
 				FRAMEWORK_VERSION = A;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -2383,14 +2363,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2438,12 +2410,6 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-					"$(PROJECT_DIR)/Libs/**",
-				);
 				FRAMEWORK_VERSION = A;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -2457,14 +2423,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2502,23 +2460,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/src/Libs",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
-				);
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/dlib/19.15/lib,
-					"$(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32",
-					"$(PROJECT_DIR)/src/Libs/dyncall/lib",
-					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32",
-				);
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
