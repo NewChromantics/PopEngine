@@ -47,6 +47,7 @@ jobs:
           - os: macOS
             type: Osx
             BuildScheme: PopEngine_App
+            BuildProductDir: PopEngine_Osx.framework
 
     steps:
       - name: Checkout repo
