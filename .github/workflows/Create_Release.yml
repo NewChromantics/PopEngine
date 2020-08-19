@@ -37,14 +37,16 @@ jobs:
           #   type: linux
           #   architecture: arm64
 
-          # - os: windows
-          #   type: windows
+          - os: windows
+            type: windows
 
-          # - os: macOS
-          #   type: Ios
+          - os: macOS
+            type: Ios
+            BuildScheme:  PopEngine_Ios
 
-          # - os: macOS
-          #   type: Osx
+          - os: macOS
+            type: Osx
+            BuildScheme: PopEngine_App
 
     steps:
       - name: Checkout repo
@@ -65,17 +67,21 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - name: Move Package Downloads to Libs
+      - name: Copy package downloads to Libs
         run: |
           mkdir -p Libs
-          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
+          cp ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           ls -R Libs
 
-      - name: Configure Windows
+      - name: Setup nuget (Windows)
+        if: matrix.config.os == 'windows'
+        uses: warrenbuckley/Setup-Nuget@v1
+        
+      - name: Setup msbuild (Windows)
         if: matrix.config.os == 'windows'
         uses: microsoft/setup-msbuild@v1.0.0
 
-      - name: Windows
+      - name: Build Windows
         if: matrix.config.os == 'windows'
         uses: NewChromantics/PopAction_BuildWindows@v1
         with:
@@ -85,15 +91,15 @@ jobs:
           BuildDirectory: Build\Release_x6
           project: ${{ env.project }}
 
-      - name: Apple
+      - name: Build Apple
         id: Apple
         if: matrix.config.os == 'macOS'
         uses: NewChromantics/PopAction_BuildApple@v1
         with:
-          BuildScheme: ${{ env.project }}_${{ matrix.config.type }}
+          BuildScheme: ${{ matrix.config.BuildScheme }}
           project: ${{ env.project }}
           
-      - name: Linux
+      - name: Build Linux
         if: matrix.config.type == 'linux'
         uses: NewChromantics/PopAction_BuildLinux@v1
         with:
