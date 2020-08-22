@@ -205,6 +205,10 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
+		BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; };
+		BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; };
+		BF7A2CD424F1A83300CD3A32 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
@@ -233,6 +237,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				BF7A2CD424F1A83300CD3A32 /* PopH264_Osx.framework in CopyFiles */,
+				BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */,
 				BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -647,6 +653,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */,
+				BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */,
+				BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */,
 				BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1701,6 +1709,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1709,9 +1721,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
@@ -2502,6 +2513,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2571,6 +2584,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2640,6 +2655,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2697,6 +2714,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2727,6 +2746,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2735,9 +2758,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
@@ -3204,6 +3226,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -3212,9 +3238,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
@@ -3238,6 +3263,10 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -3245,9 +3274,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 			};
