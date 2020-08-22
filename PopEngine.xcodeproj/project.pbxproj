@@ -517,7 +517,6 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
-		BFEDAFE924E01179003B130F /* Libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Libs; sourceTree = "<group>"; };
 		BFEDAFEA24E01183003B130F /* PopEngine.Package */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Package; sourceTree = "<group>"; };
 		BFEDAFEB24E0672E003B130F /* Android */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Android; path = src/Android; sourceTree = "<group>"; };
 		BFEDAFEC24E15128003B130F /* Source_Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Source_Android; sourceTree = "<group>"; };
@@ -535,8 +534,6 @@
 		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
 		BFF8A59022C2961C002AD145 /* SoyTypes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTypes.mm; path = src/SoyTypes.mm; sourceTree = "<group>"; };
 		BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PopEngineUnitTestMain.cpp; sourceTree = "<group>"; };
-		EB0EA5682110B911008D6DAA /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
-		EB0EA56C2110B936008D6DAA /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
 		EB0EA56E2110BA27008D6DAA /* libdlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdlib.a; path = ../../../usr/local/Cellar/dlib/19.15/lib/libdlib.a; sourceTree = "<group>"; };
 		EB0EA5702110BAD7008D6DAA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenglContext.cpp; path = src/TApiOpenglContext.cpp; sourceTree = "<group>"; };
@@ -983,16 +980,6 @@
 			path = src/Json11;
 			sourceTree = "<group>";
 		};
-		EB0EA5672110B8D6008D6DAA /* Dlib */ = {
-			isa = PBXGroup;
-			children = (
-				EB0EA56C2110B936008D6DAA /* lib */,
-				EB0EA5682110B911008D6DAA /* include */,
-			);
-			name = Dlib;
-			path = ./;
-			sourceTree = DLIB_PATH;
-		};
 		FB5702CA1A5FDC8800449FF3 /* stb */ = {
 			isa = PBXGroup;
 			children = (
@@ -1006,14 +993,12 @@
 			children = (
 				BFEDAFEC24E15128003B130F /* Source_Android */,
 				BFEDAFEA24E01183003B130F /* PopEngine.Package */,
-				BFEDAFE924E01179003B130F /* Libs */,
 				BF21AEA424D4319B0046A434 /* .github */,
 				BFDC037A24BFAE4A00182E0B /* PopEngine.Linux */,
 				BFE462B824B12D8A00D04A4C /* PopDepthToYuv */,
 				BF07E6D32479D94700A38A4B /* PopEngine.Android */,
 				BF108A842296B7BE003DDC5F /* PopEngine.xcassets */,
 				BF5C4AB523F6C7F5007D6393 /* PopEngine.Lumin */,
-				EB0EA5672110B8D6008D6DAA /* Dlib */,
 				B71D7B252137F7EE00F29EA0 /* SoyDeckLink */,
 				BF459C7C21F7C72600CED59D /* Libraries */,
 				FB8A06221A2E5A280099596C /* soylib */,
