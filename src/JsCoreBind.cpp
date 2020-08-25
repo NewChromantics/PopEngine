@@ -45,6 +45,7 @@
 #include "TApiBluetooth.h"
 #include "TApiLeapMotion.h"
 #include "TApiOpenvr.h"
+#include "TApiSokol.h"
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
@@ -659,6 +660,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiBluetooth::Bind( *Context );
 			ApiLeapMotion::Bind( *Context );
 			ApiOpenvr::Bind(*Context);
+			ApiSokol::Bind( *Context );
 #endif
 
 			std::string BootupSource;
