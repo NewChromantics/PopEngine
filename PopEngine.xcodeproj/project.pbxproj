@@ -205,6 +205,10 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
+		BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; };
+		BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; };
+		BF7A2CD424F1A83300CD3A32 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
@@ -233,6 +237,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				BF7A2CD424F1A83300CD3A32 /* PopH264_Osx.framework in CopyFiles */,
+				BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */,
 				BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -287,16 +293,16 @@
 		BF151FCE2384707D00A70EBF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		BF151FD02384708A00A70EBF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		BF151FD2238470A800A70EBF /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/VideoToolbox.framework; sourceTree = DEVELOPER_DIR; };
-		BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264_Ios.framework; path = ../../Libs/poph264/PopH264_Ios.framework; sourceTree = "<group>"; };
-		BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264_Osx.framework; path = ../../Libs/poph264/PopH264_Osx.framework; sourceTree = "<group>"; };
+		BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264_Ios.framework; path = "../../PopEngine.Package/node_modules/@newchromantics/poph264/PopH264_Ios.framework"; sourceTree = "<group>"; };
+		BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopH264_Osx.framework; path = "../../PopEngine.Package/node_modules/@newchromantics/poph264/PopH264_Osx.framework"; sourceTree = "<group>"; };
 		BF15200123847D6A00A70EBF /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/CoreMedia.framework; sourceTree = DEVELOPER_DIR; };
 		BF15200423847F1B00A70EBF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		BF152006238480F600A70EBF /* PopVision_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopVision_Osx.framework; path = Libs/popvision/PopVision_Osx.framework; sourceTree = SOURCE_ROOT; };
 		BF152008238482A200A70EBF /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/CoreVideo.framework; sourceTree = DEVELOPER_DIR; };
-		BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopCameraDevice_Ios.framework; path = ../../Libs/popcameradevice/PopCameraDevice_Ios.framework; sourceTree = "<group>"; };
+		BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopCameraDevice_Ios.framework; path = "../../PopEngine.Package/node_modules/@newchromantics/popcameradevice/PopCameraDevice_Ios.framework"; sourceTree = "<group>"; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
-		BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopCameraDevice_Osx.framework; path = ../../Libs/popcameradevice/PopCameraDevice_Osx.framework; sourceTree = "<group>"; };
+		BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopCameraDevice_Osx.framework; path = "../../PopEngine.Package/node_modules/@newchromantics/popcameradevice/PopCameraDevice_Osx.framework"; sourceTree = "<group>"; };
 		BF19611521B988C9007014EF /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyWebSocket.cpp; path = src/SoyWebSocket.cpp; sourceTree = "<group>"; };
 		BF19612021B9ADD9007014EF /* SoyWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyWebSocket.h; path = src/SoyWebSocket.h; sourceTree = "<group>"; };
@@ -418,6 +424,7 @@
 		BF7225A91BADCB3B00550AD8 /* SoyStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyStream.h; path = src/SoyStream.h; sourceTree = "<group>"; };
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
+		BF7A2CD024F1A7B500CD3A32 /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = PopEngine.Package/node_modules; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
@@ -517,7 +524,6 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
-		BFEDAFE924E01179003B130F /* Libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Libs; sourceTree = "<group>"; };
 		BFEDAFEA24E01183003B130F /* PopEngine.Package */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Package; sourceTree = "<group>"; };
 		BFEDAFEB24E0672E003B130F /* Android */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Android; path = src/Android; sourceTree = "<group>"; };
 		BFEDAFEC24E15128003B130F /* Source_Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Source_Android; sourceTree = "<group>"; };
@@ -535,8 +541,6 @@
 		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
 		BFF8A59022C2961C002AD145 /* SoyTypes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTypes.mm; path = src/SoyTypes.mm; sourceTree = "<group>"; };
 		BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PopEngineUnitTestMain.cpp; sourceTree = "<group>"; };
-		EB0EA5682110B911008D6DAA /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
-		EB0EA56C2110B936008D6DAA /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lib; sourceTree = "<group>"; };
 		EB0EA56E2110BA27008D6DAA /* libdlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdlib.a; path = ../../../usr/local/Cellar/dlib/19.15/lib/libdlib.a; sourceTree = "<group>"; };
 		EB0EA5702110BAD7008D6DAA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenglContext.cpp; path = src/TApiOpenglContext.cpp; sourceTree = "<group>"; };
@@ -649,6 +653,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */,
+				BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */,
+				BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */,
 				BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -983,16 +989,6 @@
 			path = src/Json11;
 			sourceTree = "<group>";
 		};
-		EB0EA5672110B8D6008D6DAA /* Dlib */ = {
-			isa = PBXGroup;
-			children = (
-				EB0EA56C2110B936008D6DAA /* lib */,
-				EB0EA5682110B911008D6DAA /* include */,
-			);
-			name = Dlib;
-			path = ./;
-			sourceTree = DLIB_PATH;
-		};
 		FB5702CA1A5FDC8800449FF3 /* stb */ = {
 			isa = PBXGroup;
 			children = (
@@ -1004,16 +1000,15 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BF7A2CD024F1A7B500CD3A32 /* node_modules */,
 				BFEDAFEC24E15128003B130F /* Source_Android */,
 				BFEDAFEA24E01183003B130F /* PopEngine.Package */,
-				BFEDAFE924E01179003B130F /* Libs */,
 				BF21AEA424D4319B0046A434 /* .github */,
 				BFDC037A24BFAE4A00182E0B /* PopEngine.Linux */,
 				BFE462B824B12D8A00D04A4C /* PopDepthToYuv */,
 				BF07E6D32479D94700A38A4B /* PopEngine.Android */,
 				BF108A842296B7BE003DDC5F /* PopEngine.xcassets */,
 				BF5C4AB523F6C7F5007D6393 /* PopEngine.Lumin */,
-				EB0EA5672110B8D6008D6DAA /* Dlib */,
 				B71D7B252137F7EE00F29EA0 /* SoyDeckLink */,
 				BF459C7C21F7C72600CED59D /* Libraries */,
 				FB8A06221A2E5A280099596C /* soylib */,
@@ -1714,6 +1709,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1722,9 +1721,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
@@ -2477,7 +2475,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -2515,6 +2513,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2546,7 +2546,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -2584,6 +2584,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2615,7 +2617,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -2653,6 +2655,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2684,7 +2688,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -2710,6 +2714,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2740,6 +2746,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -2748,9 +2758,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
@@ -3217,6 +3226,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -3225,9 +3238,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 			};
@@ -3251,6 +3263,10 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
+					"$(inherited)",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -3258,9 +3274,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/PopEngine.Package/node_modules/@newchromantics/**",
 					"$(inherited)",
-					"$(POPMOVIETEXTURE_PATH)",
-					"$(POPCAST_PATH)",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 			};

@@ -12,6 +12,9 @@
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 #include "TApiOpengl.h"
 #include "TApiGui.h"
+#endif
+
+#if !defined(TARGET_ANDROID)
 #include "TApiZip.h"
 #endif
 
@@ -640,7 +643,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 #endif
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 			ApiGui::Bind( *Context );
-			ApiZip::Bind(*Context);
+#endif
+#if !defined(TARGET_ANDROID)
+			ApiZip::Bind( *Context );
 #endif
 #if defined(ENABLE_APIVISION)
 			ApiCoreMl::Bind(*Context);
