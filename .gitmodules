@@ -31,3 +31,6 @@
 [submodule "Source_Web"]
 	path = Source_Web
 	url = https://github.com/NewChromantics/PopEngine_Web.git
+[submodule "src/sokol"]
+	path = src/sokol
+	url = https://github.com/floooh/sokol.git
