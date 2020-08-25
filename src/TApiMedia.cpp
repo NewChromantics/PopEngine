@@ -1138,7 +1138,7 @@ bool X264::TInstance::PopPacket(ArrayBridge<uint8_t>&& Data,std::string& MetaJso
 		return false;
 
 	//	get the meta
-	char JsonBuffer[1000] = {0};
+	char JsonBuffer[2000] = {0};
 	PopH264_EncoderPeekData( mHandle, JsonBuffer, std::size(JsonBuffer) );
 	MetaJson = std::string( JsonBuffer );
 
