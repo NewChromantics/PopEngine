@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
+		5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944024F6D32A00FCCCE2 /* TApiSokol.h */; };
+		5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; };
+		5898944524F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		5898944C24F6D47F00FCCCE2 /* flextGL.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944824F6D47F00FCCCE2 /* flextGL.h */; };
+		5898944D24F6D47F00FCCCE2 /* flextgl_profile.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */; };
+		5898944E24F6D47F00FCCCE2 /* flextgl.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5898944A24F6D47F00FCCCE2 /* flextgl.sh */; };
+		5898944F24F6D47F00FCCCE2 /* flextGL.c in Sources */ = {isa = PBXBuildFile; fileRef = 5898944B24F6D47F00FCCCE2 /* flextGL.c */; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -231,6 +239,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		5898944624F6D3FA00FCCCE2 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				5898944524F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BF151F072380731C00A70EBF /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,6 +275,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSokol.cpp; path = src/TApiSokol.cpp; sourceTree = "<group>"; };
+		5898944024F6D32A00FCCCE2 /* TApiSokol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSokol.h; path = src/TApiSokol.h; sourceTree = "<group>"; };
+		5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../../../usr/local/Cellar/glfw/3.3.2/lib/libglfw.3.3.dylib; sourceTree = "<group>"; };
+		5898944824F6D47F00FCCCE2 /* flextGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = flextGL.h; sourceTree = "<group>"; };
+		5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = flextgl_profile.txt; sourceTree = "<group>"; };
+		5898944A24F6D47F00FCCCE2 /* flextgl.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = flextgl.sh; sourceTree = "<group>"; };
+		5898944B24F6D47F00FCCCE2 /* flextGL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = flextGL.c; sourceTree = "<group>"; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
 		B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SoyDecklink.cpp; sourceTree = "<group>"; };
 		B71D7B2D2137FE9200F29EA0 /* SoyAutoReleasePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyAutoReleasePtr.h; path = src/SoyAutoReleasePtr.h; sourceTree = "<group>"; };
@@ -624,6 +650,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB021237F11C10077BCF5 /* Accelerate.framework in Frameworks */,
+				5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */,
 				BF5EB02A237F12CC0077BCF5 /* libdynload_s.a in Frameworks */,
 				BF5EB020237F11BF0077BCF5 /* AVFoundation.framework in Frameworks */,
 				BF5EB018237F11960077BCF5 /* VideoToolbox.framework in Frameworks */,
@@ -662,6 +689,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5898944724F6D47F00FCCCE2 /* flextgl */ = {
+			isa = PBXGroup;
+			children = (
+				5898944824F6D47F00FCCCE2 /* flextGL.h */,
+				5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */,
+				5898944A24F6D47F00FCCCE2 /* flextgl.sh */,
+				5898944B24F6D47F00FCCCE2 /* flextGL.c */,
+			);
+			name = flextgl;
+			path = "src/sokol-samples/glfw/flextgl";
+			sourceTree = "<group>";
+		};
 		B71D7B252137F7EE00F29EA0 /* SoyDeckLink */ = {
 			isa = PBXGroup;
 			children = (
@@ -840,6 +879,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */,
 				BF152008238482A200A70EBF /* CoreVideo.framework */,
 				BF15200423847F1B00A70EBF /* AVFoundation.framework */,
 				BF15200123847D6A00A70EBF /* CoreMedia.framework */,
@@ -1035,6 +1075,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				5898944724F6D47F00FCCCE2 /* flextgl */,
 				BFEDAFEB24E0672E003B130F /* Android */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
@@ -1106,6 +1147,8 @@
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
+				5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */,
+				5898944024F6D32A00FCCCE2 /* TApiSokol.h */,
 				BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */,
 				BF99BE2821F89C6100E6CE5B /* TApiVision.h */,
 				EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */,
@@ -1283,6 +1326,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */,
+				5898944C24F6D47F00FCCCE2 /* flextGL.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
 				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
 			);
@@ -1363,6 +1408,7 @@
 				BF5EAFB2237F0C100077BCF5 /* Frameworks */,
 				BF5EAFB3237F0C100077BCF5 /* Resources */,
 				BF5EB06F23803C420077BCF5 /* CopyFiles */,
+				5898944624F6D3FA00FCCCE2 /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -1469,7 +1515,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */,
+				5898944E24F6D47F00FCCCE2 /* flextgl.sh in Resources */,
 				BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */,
+				5898944D24F6D47F00FCCCE2 /* flextgl_profile.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1637,6 +1685,7 @@
 				BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */,
 				BF5EAFCF237F0C6E0077BCF5 /* SoyJson.cpp in Sources */,
 				BF5C4AC823F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
+				5898944F24F6D47F00FCCCE2 /* flextGL.c in Sources */,
 				BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */,
 				BF5EAFF0237F0C6E0077BCF5 /* SoyWindow.cpp in Sources */,
 				BF5EAFF5237F0CD40077BCF5 /* PopMain.cpp in Sources */,
@@ -1653,6 +1702,7 @@
 				BF5EAFEE237F0C6E0077BCF5 /* SoyWave.cpp in Sources */,
 				BF5EAFC7237F0C6E0077BCF5 /* SoyDebug.mm in Sources */,
 				BFE462B424B1058400D04A4C /* TApiPanopoly.cpp in Sources */,
+				5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */,
 				BF5EAFDB237F0C6E0077BCF5 /* SoyRingArray.cpp in Sources */,
 				BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */,
 				BF5EAFE1237F0C6E0077BCF5 /* SoySrt.cpp in Sources */,
@@ -2301,6 +2351,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/glfw/3.3.2/lib,
+				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2361,6 +2415,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/glfw/3.3.2/lib,
+				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2421,6 +2479,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/glfw/3.3.2/lib,
+				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2462,6 +2524,10 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/glfw/3.3.2/lib,
+				);
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

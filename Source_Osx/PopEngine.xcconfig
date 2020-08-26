@@ -12,8 +12,9 @@ SOYLIB_PATH = $(SRCROOT)/src/
 OPENCV_PATH = $(SRCROOT)/src/Libs/Opencv
 OPENCV_CONTRIB_PATH = $(SRCROOT)/src/Libs/Opencv_contrib/modules/
 MAGIC_LEAP_PATH = "/Volumes/Code/MagicLeap/mlsdk/v0.21.0/";
+GLFW_PATH = /usr/local/Cellar/glfw/3.3.2
 
-HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH) $(MAGIC_LEAP_PATH)/include
+HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH) $(MAGIC_LEAP_PATH)/include $(GLFW_PATH)/include
 FRAMEWORK_SEARCH_PATHS = $(FRAMEWORK_SEARCH_PATHS) $(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64
 LIBRARY_SEARCH_PATHS = $(LIBRARY_SEARCH_PATHS) $(inherited) $(PROJECT_DIR)/src/Libs/LeapMotion/Leapv2 $(PROJECT_DIR)/src/Libs/OpenVr/lib/osx32 $(PROJECT_DIR)/src/Libs/dyncall/lib $(PROJECT_DIR)/src/Libs/OpenVr/bin/osx32
 
