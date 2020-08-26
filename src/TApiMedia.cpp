@@ -477,7 +477,9 @@ void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& PlaneMetas, const std::s
 	if (JsonObject == json11::Json())
 		throw Soy::AssertException(std::string("JSON parse error: ") + Error);
 
-	FrameMeta = JsonObject["Meta"].dump();
+	//	gr: the whole thing is now the meta... do we want the distinction?
+	//FrameMeta = JsonObject["Meta"].dump();
+	FrameMeta = JsonString;
 
 	auto JsonPlanesNode = JsonObject["Planes"];
 	if (!JsonPlanesNode.is_array())
