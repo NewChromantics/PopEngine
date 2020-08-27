@@ -15,6 +15,13 @@
 		5898944D24F6D47F00FCCCE2 /* flextgl_profile.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */; };
 		5898944E24F6D47F00FCCCE2 /* flextgl.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5898944A24F6D47F00FCCCE2 /* flextgl.sh */; };
 		5898944F24F6D47F00FCCCE2 /* flextGL.c in Sources */ = {isa = PBXBuildFile; fileRef = 5898944B24F6D47F00FCCCE2 /* flextGL.c */; };
+		5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945424F6E14600FCCCE2 /* QuartzCore.framework */; };
+		5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945A24F6EB5600FCCCE2 /* Metal.framework */; };
+		5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */; };
+		5898946524F6EE6500FCCCE2 /* osxentry.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898946324F6EE6500FCCCE2 /* osxentry.h */; };
+		5898946624F6EE6500FCCCE2 /* osxentry.m in Sources */ = {isa = PBXBuildFile; fileRef = 5898946424F6EE6500FCCCE2 /* osxentry.m */; };
+		5898946824F7A59000FCCCE2 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898946724F7A59000FCCCE2 /* Quartz.framework */; };
+		5898946A24F7C7F600FCCCE2 /* SoySokol.m in Sources */ = {isa = PBXBuildFile; fileRef = 5898946924F7C7F600FCCCE2 /* SoySokol.m */; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -282,6 +289,13 @@
 		5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = flextgl_profile.txt; sourceTree = "<group>"; };
 		5898944A24F6D47F00FCCCE2 /* flextgl.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = flextgl.sh; sourceTree = "<group>"; };
 		5898944B24F6D47F00FCCCE2 /* flextGL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = flextGL.c; sourceTree = "<group>"; };
+		5898945424F6E14600FCCCE2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		5898945A24F6EB5600FCCCE2 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		5898946324F6EE6500FCCCE2 /* osxentry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osxentry.h; path = "src/sokol-samples/metal/osxentry.h"; sourceTree = "<group>"; };
+		5898946424F6EE6500FCCCE2 /* osxentry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = osxentry.m; path = "src/sokol-samples/metal/osxentry.m"; sourceTree = "<group>"; };
+		5898946724F7A59000FCCCE2 /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = System/Library/Frameworks/Quartz.framework; sourceTree = SDKROOT; };
+		5898946924F7C7F600FCCCE2 /* SoySokol.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SoySokol.m; path = src/SoySokol.m; sourceTree = "<group>"; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
 		B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SoyDecklink.cpp; sourceTree = "<group>"; };
 		B71D7B2D2137FE9200F29EA0 /* SoyAutoReleasePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyAutoReleasePtr.h; path = src/SoyAutoReleasePtr.h; sourceTree = "<group>"; };
@@ -656,7 +670,10 @@
 				BF5EB018237F11960077BCF5 /* VideoToolbox.framework in Frameworks */,
 				BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */,
 				BF5EB028237F12C80077BCF5 /* libdyncall_s.a in Frameworks */,
+				5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */,
 				BF5EB01D237F11A30077BCF5 /* GameController.framework in Frameworks */,
+				5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */,
+				5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */,
 				BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */,
 				BF5EB01A237F119C0077BCF5 /* OpenGL.framework in Frameworks */,
 				BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */,
@@ -670,6 +687,7 @@
 				BF5EB019237F119A0077BCF5 /* Cocoa.framework in Frameworks */,
 				BF5EB023237F11C80077BCF5 /* ApplicationServices.framework in Frameworks */,
 				BF5EB017237F118F0077BCF5 /* CoreServices.framework in Frameworks */,
+				5898946824F7A59000FCCCE2 /* Quartz.framework in Frameworks */,
 				BF5EB01C237F11A10077BCF5 /* CoreBluetooth.framework in Frameworks */,
 				BF5EB016237F118C0077BCF5 /* CoreVideo.framework in Frameworks */,
 			);
@@ -879,6 +897,10 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5898946724F7A59000FCCCE2 /* Quartz.framework */,
+				5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */,
+				5898945A24F6EB5600FCCCE2 /* Metal.framework */,
+				5898945424F6E14600FCCCE2 /* QuartzCore.framework */,
 				5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */,
 				BF152008238482A200A70EBF /* CoreVideo.framework */,
 				BF15200423847F1B00A70EBF /* AVFoundation.framework */,
@@ -1141,6 +1163,8 @@
 				EB5253C02124323E00E6FBE1 /* TApiOpenglContext.h */,
 				BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */,
 				BF92BAFC228C71C900C9C07C /* TApiOpenvr.h */,
+				5898946324F6EE6500FCCCE2 /* osxentry.h */,
+				5898946424F6EE6500FCCCE2 /* osxentry.m */,
 				BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */,
 				BFE462B324B1058400D04A4C /* TApiPanopoly.h */,
 				BFF2B6C12264F9A700232137 /* TApiSerial.cpp */,
@@ -1148,6 +1172,7 @@
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
 				5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */,
+				5898946924F7C7F600FCCCE2 /* SoySokol.m */,
 				5898944024F6D32A00FCCCE2 /* TApiSokol.h */,
 				BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */,
 				BF99BE2821F89C6100E6CE5B /* TApiVision.h */,
@@ -1326,6 +1351,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5898946524F6EE6500FCCCE2 /* osxentry.h in Headers */,
 				5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */,
 				5898944C24F6D47F00FCCCE2 /* flextGL.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
@@ -1648,6 +1674,7 @@
 				BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */,
 				BF5EAFF8237F0CD40077BCF5 /* SoyHid.cpp in Sources */,
 				BF5EAFFA237F0CD40077BCF5 /* SoyOpenglWindowOsx.mm in Sources */,
+				5898946624F6EE6500FCCCE2 /* osxentry.m in Sources */,
 				BF5EAFD5237F0C6E0077BCF5 /* SoyOpengl.cpp in Sources */,
 				BF5EAFC5237F0C6E0077BCF5 /* SoyBase64.cpp in Sources */,
 				BF5EAFF7237F0CD40077BCF5 /* SoyBluetooth.mm in Sources */,
@@ -1692,6 +1719,7 @@
 				BF5EAFE7237F0C6E0077BCF5 /* SoyTime.mm in Sources */,
 				BFDC03B02430CED80004512A /* json11.cpp in Sources */,
 				BF5EAFD3237F0C6E0077BCF5 /* SoyMemFile.cpp in Sources */,
+				5898946A24F7C7F600FCCCE2 /* SoySokol.m in Sources */,
 				BF5EAFC4237F0C6E0077BCF5 /* SoyAvf.mm in Sources */,
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,
 				BF5EB02C237F131E0077BCF5 /* ezsift.cpp in Sources */,
