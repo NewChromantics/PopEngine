@@ -469,13 +469,17 @@ PopCameraDevice::TInstance::~TInstance()
 }
 
 
-void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& Metas, const std::string& JsonString)
+void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& PlaneMetas, const std::string& JsonString,std::string& FrameMeta)
 {
 	//std::Debug << __PRETTY_FUNCTION__ << "(" << JsonString << std::endl;
 	std::string Error;
 	auto JsonObject = json11::Json::parse(JsonString, Error);
 	if (JsonObject == json11::Json())
 		throw Soy::AssertException(std::string("JSON parse error: ") + Error);
+
+	//	gr: the whole thing is now the meta... do we want the distinction?
+	//FrameMeta = JsonObject["Meta"].dump();
+	FrameMeta = JsonString;
 
 	auto JsonPlanesNode = JsonObject["Planes"];
 	if (!JsonPlanesNode.is_array())
@@ -498,7 +502,7 @@ void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& Metas, const std::string
 			Error << "Meta size (" << MetaSize << "; " << Meta << ") doesn't match dictated plane size " << DataSize << ". Change code to pass plane size";
 			throw Soy::AssertException(Error);
 		}
-		Metas.PushBack(Meta);
+		PlaneMetas.PushBack(Meta);
 	};
 	for (auto& PlaneObject : JsonPlanes)
 	{
@@ -524,7 +528,7 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 
 	//	get plane count
 	BufferArray<SoyPixelsMeta, 4> PlaneMetas;
-	GetPixelMetasFromJson(GetArrayBridge(PlaneMetas), Json);
+	GetPixelMetasFromJson(GetArrayBridge(PlaneMetas), Json, Frame.mMeta );
 	auto PlaneCount = PlaneMetas.GetSize();
 
 	auto AllocPlane = [&]()->std::shared_ptr<SoyPixelsImpl>&
@@ -560,11 +564,9 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 		PlanePixelsByteSize.PushBack(0);
 	}
 	
-	char FrameMeta[1000] = { 0 };
-
 	auto NewFrameTime = PopCameraDevice_PopNextFrame(
 		mHandle,
-		nullptr,	//	json buffer
+		nullptr,	//	json buffer, we've already got above
 		0,
 		PlanePixelsBytes[0], PlanePixelsByteSize[0],
 		PlanePixelsBytes[1], PlanePixelsByteSize[1],
@@ -798,7 +800,7 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes,bool O
 
 	//	get plane count
 	BufferArray<SoyPixelsMeta, 4> PlaneMetas;
-	GetPixelMetasFromJson(GetArrayBridge(PlaneMetas), Json);
+	GetPixelMetasFromJson(GetArrayBridge(PlaneMetas), Json, Frame.mMeta );
 	auto PlaneCount = PlaneMetas.GetSize();
 
 	auto AllocPlane = [&]()->std::shared_ptr<SoyPixelsImpl>&
@@ -1138,7 +1140,7 @@ bool X264::TInstance::PopPacket(ArrayBridge<uint8_t>&& Data,std::string& MetaJso
 		return false;
 
 	//	get the meta
-	char JsonBuffer[1000] = {0};
+	char JsonBuffer[2000] = {0};
 	PopH264_EncoderPeekData( mHandle, JsonBuffer, std::size(JsonBuffer) );
 	MetaJson = std::string( JsonBuffer );
 
