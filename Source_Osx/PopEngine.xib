@@ -106,9 +106,10 @@
         <customObject id="494" customClass="AppDelegate"/>
         <customObject id="420" customClass="NSFontManager"/>
         <customView id="1vd-Zr-ZP9" userLabel="MetalView" customClass="MTKView">
-            <rect key="frame" x="0.0" y="0.0" width="212" height="111"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <point key="canvasLocation" x="139" y="268"/>
+            <rect key="frame" x="0.0" y="0.0" width="378" height="256"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES"/>
+            <accessibility identifier="MetalView"/>
+            <point key="canvasLocation" x="222" y="340"/>
         </customView>
     </objects>
 </document>

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5850A42224F920C400145478 /* SoyGuiOsx.mm */; };
-		5850A42524F920E300145478 /* SoyGuiOsx.h in Headers */ = {isa = PBXBuildFile; fileRef = 5850A42424F920E300145478 /* SoyGuiOsx.h */; };
 		5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944024F6D32A00FCCCE2 /* TApiSokol.h */; };
 		5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; };
@@ -318,8 +317,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5850A42224F920C400145478 /* SoyGuiOsx.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiOsx.mm; path = src/SoyGuiOsx.mm; sourceTree = "<group>"; };
-		5850A42424F920E300145478 /* SoyGuiOsx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiOsx.h; path = src/SoyGuiOsx.h; sourceTree = "<group>"; };
+		5850A42224F920C400145478 /* SoyGuiOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiOsx.mm; path = src/SoyGuiOsx.mm; sourceTree = "<group>"; };
 		5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSokol.cpp; path = src/TApiSokol.cpp; sourceTree = "<group>"; };
 		5898944024F6D32A00FCCCE2 /* TApiSokol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSokol.h; path = src/TApiSokol.h; sourceTree = "<group>"; };
 		5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../../../usr/local/Cellar/glfw/3.3.2/lib/libglfw.3.3.dylib; sourceTree = "<group>"; };
@@ -1427,7 +1425,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				5898946524F6EE6500FCCCE2 /* osxentry.h in Headers */,
-				5850A42524F920E300145478 /* SoyGuiOsx.h in Headers */,
 				5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */,
 				5898944C24F6D47F00FCCCE2 /* flextGL.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,

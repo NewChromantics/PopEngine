@@ -1,5 +1,12 @@
-#include "SoyGuiOsx.h"
+/* tsdk:
+	Clone of SoyGuiIos modified to work on Osx... however lots has already been defined in SoyOpenglWindowOsx.mm
+	So the necessary parts for getting a metal view by name have been transfered and this file is left in for reference
+*/
 
+/*
+#include "SoyGui.h"
+
+#import <AppKit/AppKit.h>
 @class AppDelegate;
 
 #include "PopMain.h"
@@ -14,17 +21,17 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 
 	//	testing if raw dispatch is faster, results negligable
 	static bool UseNsDispatch = false;
-	
+
 	if ( UseNsDispatch )
 	{
 		Soy::TSemaphore* pSemaphore = Block ? &Semaphore : nullptr;
-		
+
 		dispatch_async( dispatch_get_main_queue(), ^(void){
 			Lambda();
 			if ( pSemaphore )
 				pSemaphore->OnCompleted();
 		});
-		
+
 		if ( pSemaphore )
 			pSemaphore->WaitAndReset();
 	}
@@ -48,40 +55,40 @@ class Platform::TWindow : public SoyWindow
 {
 public:
 	TWindow(const std::string& Name);
-	
+
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
-	
+
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
 	virtual bool					IsMinimised() override;
 	virtual bool					IsForeground() override;
 	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
-	
-	UIWindow*		GetWindow();
-	UIView*			GetChild(const std::string& Name);
-	void			EnumChildren(std::function<bool(UIView*)> EnumChild);
+
+	NSWindow*		GetWindow();
+	NSView*			GetChild(const std::string& Name);
+	void			EnumChildren(std::function<bool(NSView*)> EnumChild);
 };
 
 
 class Platform::TLabel : public SoyLabel
 {
 public:
-	TLabel(UIView* View);
-	
+	TLabel(NSView* View);
+
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
-	
+
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
 
-	UITextView*			mView = nullptr;
+	NSText*				mView = nullptr;
 	size_t				mValueVersion = 0;
 };
 
 class Platform::TMetalView : public SoyMetalView
 {
 public:
-	TMetalView(UIView* View);
-	
+	TMetalView(NSView* View);
+
 	MTKView*					mMTKView = nullptr;
 	id<MTLDevice>				mtl_device;
 };
@@ -99,13 +106,13 @@ std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const st
 	return MetalView;
 }
 
-Platform::TMetalView::TMetalView(UIView* View)
+Platform::TMetalView::TMetalView(NSView* View)
 {
 	//	todo: check type!
 	mMTKView = View;
 	mtl_device = MTLCreateSystemDefaultDevice();
 	[mMTKView setDevice: mtl_device];
-	
+
 }
 
 std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> InitialColour)
@@ -142,7 +149,7 @@ std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string
 	return Label;
 }
 
-
+// //Defined in SoyOpenglWindowOsx
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	std::shared_ptr<SoyWindow> Window;
@@ -171,7 +178,7 @@ std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy:
 }
 
 
-Platform::TLabel::TLabel(UIView* View)
+Platform::TLabel::TLabel(NSView* View)
 {
 	//	todo: check type!
 	mView = View;
@@ -186,7 +193,7 @@ void Platform::TLabel::SetValue(const std::string& Value)
 {
 	mValueVersion++;
 	auto Version = mValueVersion;
-	
+
 	auto Job = [=]() mutable
 	{
 		//	updating the UI is expensive, and in some cases we're calling it a lot
@@ -196,7 +203,7 @@ void Platform::TLabel::SetValue(const std::string& Value)
 		if ( Version != this->mValueVersion )
 			return;
 
-		this->mView.text = Soy::StringToNSString(Value);
+		this->mView.string = Soy::StringToNSString(Value);
 	};
 	RunJobOnMainThread( Job, false );
 }
@@ -206,7 +213,7 @@ std::string Platform::TLabel::GetValue()
 	std::string Value;
 	auto Job = [&]()
 	{
-		Value = Soy::NSStringToString( mView.text );
+		Value = Soy::NSStringToString( mView.string );
 	};
 	RunJobOnMainThread( Job, true );
 	return Value;
@@ -219,27 +226,28 @@ Platform::TWindow::TWindow(const std::string& Name)
 	auto* Window = GetWindow();
 }
 
-UIWindow* Platform::TWindow::GetWindow()
+NSWindow* Platform::TWindow::GetWindow()
 {
-	auto* App = [UIApplication sharedApplication];
-	auto* Window = App.delegate.window;
+	auto* App = [NSApplication sharedApplication];
+	// tsdk: An App can have multiple windows represented in an array, the first member of this array will always? be the main window
+	auto* Window = [[App windows] objectAtIndex:0];
 	return Window;
 }
 
-UIView* Platform::TWindow::GetChild(const std::string& Name)
+NSView* Platform::TWindow::GetChild(const std::string& Name)
 {
-	UIView* ChildMatch = nullptr;
-	auto TestChild = [&](UIView* Child)
+	NSView* ChildMatch = nullptr;
+	auto TestChild = [&](NSView* Child)
 	{
-		//	gr: this is the only string in the xib that comes through in a generic way :/
-		auto* RestorationIdentifier = Child.restorationIdentifier;
-		if ( RestorationIdentifier == nil )
+		//	tsdk: cannot find way to get view based on name so duplicate the name in the accessibility Identifier in the xib file and then match it here
+		auto* AccessibilityIdentifier = Child.accessibilityIdentifier;
+		if ( AccessibilityIdentifier == nil )
 			return true;
-		
-		auto RestorationIdString = Soy::NSStringToString(RestorationIdentifier);
+
+		auto RestorationIdString = Soy::NSStringToString(AccessibilityIdentifier);
 		if ( RestorationIdString != Name )
 			return true;
-		
+
 		//	found match!
 		ChildMatch = Child;
 		return false;
@@ -248,59 +256,67 @@ UIView* Platform::TWindow::GetChild(const std::string& Name)
 	return ChildMatch;
 }
 
-bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView);
+bool RecurseNSViews(NSView* View,std::function<bool(NSView*)>& EnumView);
 
-bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView)
+bool RecurseNSViews(NSView* View,std::function<bool(NSView*)>& EnumView)
 {
 	if ( !EnumView(View) )
 	return false;
-	
+
 	auto* Array = View.subviews;
 	auto Size = [Array count];
 	for ( auto i=0;	i<Size;	i++ )
 	{
 		auto Element = [Array objectAtIndex:i];
-		if ( !RecurseUIViews( Element, EnumView ) )
+		if ( !RecurseNSViews( Element, EnumView ) )
 		return false;
 	}
-	
+
 	return true;
 }
 
-void Platform::TWindow::EnumChildren(std::function<bool(UIView*)> EnumChild)
+void Platform::TWindow::EnumChildren(std::function<bool(NSView*)> EnumChild)
 {
 	auto* Window = GetWindow();
-	
-	RecurseUIViews( Window, EnumChild );
+	// tsdk: in the ios code UIWindow derives from UIView, this is not the case with NSView and NSWindow
+	// so call contentView from the documentation => "The window’s content view, the highest accessible NSView object in the window’s view hierarchy."
+	RecurseNSViews( [Window contentView], EnumChild );
 }
 
-
+ //Defined in SoyOpenglWindowOsx
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
 	Soy_AssertTodo();
 }
 
+ //Defined in SoyOpenglWindowOsx
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
 	Soy_AssertTodo();
 }
 
+ //Defined in SoyOpenglWindowOsx
 bool Platform::TWindow::IsFullscreen()
 {
 	return true;
 }
 
+ //Defined in SoyOpenglWindowOsx
 bool Platform::TWindow::IsMinimised()
 {
 	Soy_AssertTodo();
 }
 
+ //Defined in SoyOpenglWindowOsx
 bool Platform::TWindow::IsForeground()
 {
 	Soy_AssertTodo();
 }
 
+ //Defined in SoyOpenglWindowOsx
 void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 {
-	//Soy_AssertTodo();
+	Soy_AssertTodo();
 }
+
+*/
