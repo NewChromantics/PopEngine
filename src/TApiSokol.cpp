@@ -87,8 +87,13 @@ void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate& Template)
 void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
-	auto Label = Platform::GetLabel( *ParentWindow.mWindow, "*" );
-
+	auto NameOfMetalView = Params.GetArgumentString(1);
+	
+	auto mMetalView = Platform::GetMetalView( *ParentWindow.mWindow, NameOfMetalView);
+	if(mMetalView == nil)
+	{
+		Soy_AssertTodo();
+	}
 }
 
 void StartSokol()
