@@ -34,3 +34,6 @@
 [submodule "src/sokol"]
 	path = src/sokol
 	url = https://github.com/floooh/sokol.git
+[submodule "src/sokol-samples"]
+	path = src/sokol-samples
+	url = https://github.com/floooh/sokol-samples.git
