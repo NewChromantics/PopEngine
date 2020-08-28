@@ -85,21 +85,8 @@ class Platform::TMetalView : public SoyMetalView
 public:
 	TMetalView(UIView* View);
 	
-//	virtual int			GetWidth(int) override;
-//	virtual int			GetHeight(int) override;
-	
-	MTKView*			mMTKView = nullptr;
-//	id<MTLDevice>		mtl_device;
-	
-//	static const void* osx_mtk_get_render_pass_descriptor(void* user_data) {
-//		assert(user_data == (void*)0xABCDABCD);
-//		return (__bridge const void*) [mtk_view currentRenderPassDescriptor];
-//	}
-//
-//	static const void* osx_mtk_get_drawable(void* user_data) {
-//		assert(user_data == (void*)0xABCDABCD);
-//		return (__bridge const void*) [mtk_view currentDrawable];
-//	}
+	MTKView*					mMTKView = nullptr;
+	id<MTLDevice>				mtl_device;
 };
 
 std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const std::string& Name)
@@ -115,20 +102,13 @@ std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const st
 	return MetalView;
 }
 
-static id<MTLDevice> mtl_device;
-
 Platform::TMetalView::TMetalView(UIView* View)
 {
 	//	todo: check type!
 	mMTKView = View;
-//	mtl_device = MTLCreateSystemDefaultDevice();
-//	[mMTKView setDevice: mtl_device];
+	mtl_device = MTLCreateSystemDefaultDevice();
+	[mMTKView setDevice: mtl_device];
 	
-//	.metal = {
-//		.device = (__bridge const void*) mtl_device,
-//		.renderpass_descriptor_userdata_cb = osx_mtk_get_render_pass_descriptor,
-//		.drawable_userdata_cb = osx_mtk_get_drawable,
-//		.user_data = 0xABCDABCD
 }
 
 std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> InitialColour)
