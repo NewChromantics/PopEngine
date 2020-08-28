@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
+		5813AC9E24F8FA16003178B3 /* sokol_gfx.m in Sources */ = {isa = PBXBuildFile; fileRef = 5813AC9D24F8FA16003178B3 /* sokol_gfx.m */; };
 		5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944024F6D32A00FCCCE2 /* TApiSokol.h */; };
 		5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; };
@@ -21,9 +23,18 @@
 		5898946524F6EE6500FCCCE2 /* osxentry.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898946324F6EE6500FCCCE2 /* osxentry.h */; };
 		5898946624F6EE6500FCCCE2 /* osxentry.m in Sources */ = {isa = PBXBuildFile; fileRef = 5898946424F6EE6500FCCCE2 /* osxentry.m */; };
 		5898946824F7A59000FCCCE2 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898946724F7A59000FCCCE2 /* Quartz.framework */; };
-		5898946A24F7C7F600FCCCE2 /* SoySokol.m in Sources */ = {isa = PBXBuildFile; fileRef = 5898946924F7C7F600FCCCE2 /* SoySokol.m */; };
 		5898946F24F80FB900FCCCE2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898946D24F80FB800FCCCE2 /* Metal.framework */; };
 		5898947024F80FB900FCCCE2 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898946E24F80FB800FCCCE2 /* MetalKit.framework */; };
+		58C2003E24F902ED002DAC99 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58C2003D24F902ED002DAC99 /* PopEngineUnitTestMain.cpp */; };
+		58C2004024F90506002DAC99 /* View.xib in Resources */ = {isa = PBXBuildFile; fileRef = 58C2003F24F90506002DAC99 /* View.xib */; };
+		58C2004124F90506002DAC99 /* View.xib in Resources */ = {isa = PBXBuildFile; fileRef = 58C2003F24F90506002DAC99 /* View.xib */; };
+		58C2004224F9094A002DAC99 /* PopH264_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */; };
+		58C2004324F9094A002DAC99 /* PopH264_Ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		58C2004524F9094D002DAC99 /* PopCameraDevice_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */; };
+		58C2004624F9094D002DAC99 /* PopCameraDevice_Ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		58C2004724F90993002DAC99 /* PopEngine_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */; };
+		58C2004824F90993002DAC99 /* PopEngine_Ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C2004B24F909BC002DAC99 /* libc++.tbd */; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
 		BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
@@ -238,6 +249,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		58C2004924F90993002DAC99 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB8A058B1A2E54730099596C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BF151F7523845F2E00A70EBF;
+			remoteInfo = PopEngine_Ios;
+		};
 		BFDC03A42430CBB40004512A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FB8A058B1A2E54730099596C /* Project object */;
@@ -257,6 +275,19 @@
 				5898944524F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		58C2004424F9094A002DAC99 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				58C2004824F90993002DAC99 /* PopEngine_Ios.framework in Embed Frameworks */,
+				58C2004324F9094A002DAC99 /* PopH264_Ios.framework in Embed Frameworks */,
+				58C2004624F9094D002DAC99 /* PopCameraDevice_Ios.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BF151F072380731C00A70EBF /* CopyFiles */ = {
@@ -284,6 +315,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5813AC9D24F8FA16003178B3 /* sokol_gfx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = sokol_gfx.m; path = "src/sokol-samples/metal/sokol_gfx.m"; sourceTree = "<group>"; };
 		5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSokol.cpp; path = src/TApiSokol.cpp; sourceTree = "<group>"; };
 		5898944024F6D32A00FCCCE2 /* TApiSokol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSokol.h; path = src/TApiSokol.h; sourceTree = "<group>"; };
 		5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../../../usr/local/Cellar/glfw/3.3.2/lib/libglfw.3.3.dylib; sourceTree = "<group>"; };
@@ -297,9 +329,13 @@
 		5898946324F6EE6500FCCCE2 /* osxentry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osxentry.h; path = "src/sokol-samples/metal/osxentry.h"; sourceTree = "<group>"; };
 		5898946424F6EE6500FCCCE2 /* osxentry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = osxentry.m; path = "src/sokol-samples/metal/osxentry.m"; sourceTree = "<group>"; };
 		5898946724F7A59000FCCCE2 /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = System/Library/Frameworks/Quartz.framework; sourceTree = SDKROOT; };
-		5898946924F7C7F600FCCCE2 /* SoySokol.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SoySokol.m; path = src/SoySokol.m; sourceTree = "<group>"; };
 		5898946D24F80FB800FCCCE2 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
 		5898946E24F80FB800FCCCE2 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
+		58C2000224F901B7002DAC99 /* PopEngineTestApp_Ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngineTestApp_Ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		58C2001524F901BC002DAC99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		58C2003D24F902ED002DAC99 /* PopEngineUnitTestMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PopEngineUnitTestMain.cpp; sourceTree = "<group>"; };
+		58C2003F24F90506002DAC99 /* View.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = View.xib; sourceTree = "<group>"; };
+		58C2004B24F909BC002DAC99 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
 		B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SoyDecklink.cpp; sourceTree = "<group>"; };
 		B71D7B2D2137FE9200F29EA0 /* SoyAutoReleasePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyAutoReleasePtr.h; path = src/SoyAutoReleasePtr.h; sourceTree = "<group>"; };
@@ -647,6 +683,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		58C2FFFF24F901B7002DAC99 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58C2004724F90993002DAC99 /* PopEngine_Ios.framework in Frameworks */,
+				58C2004224F9094A002DAC99 /* PopH264_Ios.framework in Frameworks */,
+				58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */,
+				58C2004524F9094D002DAC99 /* PopCameraDevice_Ios.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BF151F7323845F2E00A70EBF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -723,6 +770,16 @@
 			);
 			name = flextgl;
 			path = "src/sokol-samples/glfw/flextgl";
+			sourceTree = "<group>";
+		};
+		58C2000324F901B7002DAC99 /* PopEngineTestApp_Ios */ = {
+			isa = PBXGroup;
+			children = (
+				58C2001524F901BC002DAC99 /* Info.plist */,
+				58C2003D24F902ED002DAC99 /* PopEngineUnitTestMain.cpp */,
+				58C2003F24F90506002DAC99 /* View.xib */,
+			);
+			path = PopEngineTestApp_Ios;
 			sourceTree = "<group>";
 		};
 		B71D7B252137F7EE00F29EA0 /* SoyDeckLink */ = {
@@ -903,6 +960,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				58C2004B24F909BC002DAC99 /* libc++.tbd */,
 				5898946D24F80FB800FCCCE2 /* Metal.framework */,
 				5898946E24F80FB800FCCCE2 /* MetalKit.framework */,
 				5898946724F7A59000FCCCE2 /* Quartz.framework */,
@@ -1086,6 +1144,7 @@
 				BF5EAF7D237F07ED0077BCF5 /* Source_App */,
 				BF40CE182423D90B00F636EF /* Source_Osx */,
 				BF151F7723845F2E00A70EBF /* Source_Ios */,
+				58C2000324F901B7002DAC99 /* PopEngineTestApp_Ios */,
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
@@ -1098,6 +1157,7 @@
 				BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */,
 				BF5EB0542380335D0077BCF5 /* PopEngine.app */,
 				BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */,
+				58C2000224F901B7002DAC99 /* PopEngineTestApp_Ios.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1179,8 +1239,8 @@
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
+				5813AC9D24F8FA16003178B3 /* sokol_gfx.m */,
 				5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */,
-				5898946924F7C7F600FCCCE2 /* SoySokol.m */,
 				5898944024F6D32A00FCCCE2 /* TApiSokol.h */,
 				BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */,
 				BF99BE2821F89C6100E6CE5B /* TApiVision.h */,
@@ -1415,6 +1475,25 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
+		58C2000124F901B7002DAC99 /* PopEngineTestApp_Ios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 58C2002E24F901BD002DAC99 /* Build configuration list for PBXNativeTarget "PopEngineTestApp_Ios" */;
+			buildPhases = (
+				58C2FFFE24F901B7002DAC99 /* Sources */,
+				58C2FFFF24F901B7002DAC99 /* Frameworks */,
+				58C2000024F901B7002DAC99 /* Resources */,
+				58C2004424F9094A002DAC99 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				58C2004A24F90993002DAC99 /* PBXTargetDependency */,
+			);
+			name = PopEngineTestApp_Ios;
+			productName = PopEngineTestApp_Ios;
+			productReference = 58C2000224F901B7002DAC99 /* PopEngineTestApp_Ios.app */;
+			productType = "com.apple.product-type.application";
+		};
 		BF151F7523845F2E00A70EBF /* PopEngine_Ios */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BF151F7B23845F2F00A70EBF /* Build configuration list for PBXNativeTarget "PopEngine_Ios" */;
@@ -1481,6 +1560,11 @@
 				LastUpgradeCheck = 0710;
 				ORGANIZATIONNAME = NewChromantics;
 				TargetAttributes = {
+					58C2000124F901B7002DAC99 = {
+						CreatedOnToolsVersion = 11.5;
+						DevelopmentTeam = X52DR36JY2;
+						ProvisioningStyle = Automatic;
+					};
 					BF151F7523845F2E00A70EBF = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
@@ -1532,15 +1616,25 @@
 				BF5C4AAF23F6C73B007D6393 /* PopEngine_Lumin */,
 				BFEF6A3E2479929A000A1F88 /* PopEngine_Android */,
 				BFDC037B24BFAE8000182E0B /* PopEngine_Linux */,
+				58C2000124F901B7002DAC99 /* PopEngineTestApp_Ios */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		58C2000024F901B7002DAC99 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58C2004124F90506002DAC99 /* View.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BF151F7423845F2E00A70EBF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58C2004024F90506002DAC99 /* View.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1568,6 +1662,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		58C2FFFE24F901B7002DAC99 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58C2003E24F902ED002DAC99 /* PopEngineUnitTestMain.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BF151F7223845F2E00A70EBF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1644,6 +1746,7 @@
 				BF151F8623845FAD00A70EBF /* SoyDebug.cpp in Sources */,
 				BF151FB923845FF000A70EBF /* TApiCommon.cpp in Sources */,
 				BF151F8B23845FAD00A70EBF /* SoyGraphics.cpp in Sources */,
+				5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */,
 				BF151FC22384601300A70EBF /* TApiMedia.cpp in Sources */,
 				BF151FA223845FAD00A70EBF /* SoyStream.cpp in Sources */,
 			);
@@ -1703,6 +1806,7 @@
 				BF5EAFCB237F0C6E0077BCF5 /* SoyGraphics.cpp in Sources */,
 				BF5EAFC9237F0C6E0077BCF5 /* SoyFilesystem.mm in Sources */,
 				BF67C84E2431303800D7492E /* SoyShellExecuteOsx.mm in Sources */,
+				5813AC9E24F8FA16003178B3 /* sokol_gfx.m in Sources */,
 				BF5EAFF4237F0CD40077BCF5 /* PopEngine.cpp in Sources */,
 				BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */,
 				BF5EAFF9237F0CD40077BCF5 /* SoyOpenglView.mm in Sources */,
@@ -1727,7 +1831,6 @@
 				BF5EAFE7237F0C6E0077BCF5 /* SoyTime.mm in Sources */,
 				BFDC03B02430CED80004512A /* json11.cpp in Sources */,
 				BF5EAFD3237F0C6E0077BCF5 /* SoyMemFile.cpp in Sources */,
-				5898946A24F7C7F600FCCCE2 /* SoySokol.m in Sources */,
 				BF5EAFC4237F0C6E0077BCF5 /* SoyAvf.mm in Sources */,
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,
 				BF5EB02C237F131E0077BCF5 /* ezsift.cpp in Sources */,
@@ -1759,6 +1862,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		58C2004A24F90993002DAC99 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BF151F7523845F2E00A70EBF /* PopEngine_Ios */;
+			targetProxy = 58C2004924F90993002DAC99 /* PBXContainerItemProxy */;
+		};
 		BFDC03A52430CBB40004512A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BF5EAFB4237F0C100077BCF5 /* PopEngine_Osx */;
@@ -1778,6 +1886,268 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		58C2002F24F901BD002DAC99 /* Debug_JavascriptCore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X52DR36JY2;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug_JavascriptCore;
+		};
+		58C2003024F901BD002DAC99 /* Debug_V8 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X52DR36JY2;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug_V8;
+		};
+		58C2003124F901BD002DAC99 /* Debug_Chakra */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X52DR36JY2;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug_Chakra;
+		};
+		58C2003224F901BD002DAC99 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = X52DR36JY2;
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		BF0F9E6122870BD000AEA7DC /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3386,6 +3756,17 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		58C2002E24F901BD002DAC99 /* Build configuration list for PBXNativeTarget "PopEngineTestApp_Ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58C2002F24F901BD002DAC99 /* Debug_JavascriptCore */,
+				58C2003024F901BD002DAC99 /* Debug_V8 */,
+				58C2003124F901BD002DAC99 /* Debug_Chakra */,
+				58C2003224F901BD002DAC99 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug_JavascriptCore;
+		};
 		BF151F7B23845F2F00A70EBF /* Build configuration list for PBXNativeTarget "PopEngine_Ios" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
