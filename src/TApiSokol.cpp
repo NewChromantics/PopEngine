@@ -5,6 +5,7 @@
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 
+// tsdk: SOKOL_IMP has to be in an objective c file for metal => sokol_gfx.mm
 #include "sokol/sokol_gfx.h"
 
 //static sg_pass_action pass_action;
