@@ -39,7 +39,7 @@ namespace PopH264
 	void	LoadDll();
 }
 
-namespace X264
+namespace PopH264Encoder
 {
 	class TInstance;
 	class TPacket;
@@ -68,7 +68,7 @@ protected:
 
 
 
-class PopH264::TInstance
+class PopH264Decoder::TInstance
 {
 public:
 	TInstance();
@@ -110,8 +110,7 @@ protected:
 };
 
 
-//	now PopH264 encoder instance
-class X264::TInstance
+class PopH264Encoder::TInstance
 {
 public:
 	TInstance(const std::string& EncoderOptionsJson);
@@ -135,7 +134,7 @@ namespace ApiMedia
 	const char Namespace[] = "Pop.Media";
 	
 	DEFINE_BIND_TYPENAME(Source);
-	DEFINE_BIND_TYPENAME(AvcDecoder);
+	DEFINE_BIND_TYPENAME(H264Decoder);
 	DEFINE_BIND_TYPENAME(H264Encoder);
 	DEFINE_BIND_FUNCTIONNAME(EnumDevices);
 	DEFINE_BIND_FUNCTIONNAME(Free);
@@ -161,9 +160,9 @@ void ApiMedia::Bind(Bind::TContext& Context)
 
 	Context.BindGlobalFunction<BindFunction::EnumDevices>( ApiMedia::EnumDevices, Namespace );
 
-	Context.BindObjectType<TPopCameraDeviceWrapper>( Namespace );
+	Context.BindObjectType<TCameraDeviceWrapper>( Namespace );
 
-	Context.BindObjectType<TAvcDecoderWrapper>(Namespace);
+	Context.BindObjectType<TH264DecoderWrapper>(Namespace);
 	Context.BindObjectType<TH264EncoderWrapper>(Namespace);
 }
 
@@ -182,7 +181,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 			//	we now return the json directly
 			Array<char> JsonBuffer;
 			JsonBuffer.SetSize(6000);
-			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
+			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), size_cast<int>(JsonBuffer.GetDataSize()));
 
 			std::string Json(JsonBuffer.GetArray());
 			auto Object = Bind::ParseObjectString(LocalContext.mLocalContext, Json);
@@ -226,12 +225,12 @@ void PopH264::LoadDll()
 }
 
 
-void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
+void ApiMedia::TH264DecoderWrapper::Construct(Bind::TCallback& Params)
 {
 	if (!Params.IsArgumentUndefined(0))
 		mSplitPlanes = Params.GetArgumentBool(0);
 
-	mDecoder.reset( new PopH264::TInstance );
+	mDecoder.reset( new PopH264Decoder::TInstance );
 	mDecoder->mOnFrameReady = [this]()
 	{
 		this->OnNewFrame();
@@ -247,15 +246,15 @@ void TAvcDecoderWrapper::Construct(Bind::TCallback& Params)
 	mDecoderThread->Start();
 }
 
-void TAvcDecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiMedia::TH264DecoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::BindFunction::Decode>(&TAvcDecoderWrapper::Decode );
-	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TAvcDecoderWrapper::WaitForNextFrame);
+	Template.BindFunction<ApiMedia::BindFunction::Decode>(&TH264DecoderWrapper::Decode );
+	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TH264DecoderWrapper::WaitForNextFrame);
 }
 
 
 
-void TAvcDecoderWrapper::FlushQueuedData()
+void ApiMedia::TH264DecoderWrapper::FlushQueuedData()
 {
 	try
 	{
@@ -280,7 +279,7 @@ void TAvcDecoderWrapper::FlushQueuedData()
 	}
 }
 
-std::shared_ptr<Array<uint8_t>> TAvcDecoderWrapper::PopQueuedData()
+std::shared_ptr<Array<uint8_t>> ApiMedia::TH264DecoderWrapper::PopQueuedData()
 {
 	std::lock_guard<std::mutex> Lock(mPushDataLock);
 	auto Data = mPushData;
@@ -293,7 +292,7 @@ std::shared_ptr<Array<uint8_t>> TAvcDecoderWrapper::PopQueuedData()
 }
 
 
-void TAvcDecoderWrapper::PushQueuedData(const ArrayBridge<uint8_t>&& Data)
+void ApiMedia::TH264DecoderWrapper::PushQueuedData(const ArrayBridge<uint8_t>&& Data)
 {
 	std::lock_guard<std::mutex> Lock(mPushDataLock);
 	if ( !mPushData )
@@ -302,7 +301,7 @@ void TAvcDecoderWrapper::PushQueuedData(const ArrayBridge<uint8_t>&& Data)
 	//std::Debug << "Decoder queue size " << mPushData->GetDataSize() << " bytes" << std::endl;
 }
 	
-void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
+void ApiMedia::TH264DecoderWrapper::Decode(Bind::TCallback& Params)
 {
 	Array<uint8_t> PacketBytes;
 	Params.GetArgumentArray(0, GetArrayBridge(PacketBytes));
@@ -320,7 +319,7 @@ void TAvcDecoderWrapper::Decode(Bind::TCallback& Params)
 	//mDecoderThread->PushJob(Decode);
 }
 
-void TAvcDecoderWrapper::FlushPendingFrames()
+void ApiMedia::TH264DecoderWrapper::FlushPendingFrames()
 {
 	if (!mFrameRequests.HasPromises())
 		return;
@@ -389,7 +388,7 @@ void TAvcDecoderWrapper::FlushPendingFrames()
 	Context.Queue(Flush);
 }
 
-void TAvcDecoderWrapper::OnNewFrame()
+void ApiMedia::TH264DecoderWrapper::OnNewFrame()
 {
 	//	defer this until flush so we can grab latest and not stall decoder's decode thread
 	/*
@@ -403,7 +402,7 @@ void TAvcDecoderWrapper::OnNewFrame()
 	FlushPendingFrames();
 }
 
-void TAvcDecoderWrapper::OnError(const std::string& Error)
+void ApiMedia::TH264DecoderWrapper::OnError(const std::string& Error)
 {
 	{
 		std::lock_guard<std::mutex> Lock(mFramesLock);
@@ -412,7 +411,7 @@ void TAvcDecoderWrapper::OnError(const std::string& Error)
 	FlushPendingFrames();
 }
 
-void TAvcDecoderWrapper::WaitForNextFrame(Bind::TCallback& Params)
+void ApiMedia::TH264DecoderWrapper::WaitForNextFrame(Bind::TCallback& Params)
 {
 	auto Promise = mFrameRequests.AddPromise(Params.mLocalContext);
 	Params.Return(Promise);
@@ -435,11 +434,11 @@ void PopCameraDevice::LoadDll()
 }
 
 
-PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& Format, std::function<void()> OnNewFrame) :
+PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& OptionsJson, std::function<void()> OnNewFrame) :
 	mOnNewFrame	( OnNewFrame )
 {
 	char ErrorBuffer[1000] = { 0 };
-	mHandle = PopCameraDevice_CreateCameraDeviceWithFormat(Name.c_str(), Format.c_str(), ErrorBuffer, std::size(ErrorBuffer));
+	mHandle = PopCameraDevice_CreateCameraDevice(Name.c_str(), OptionsJson.c_str(), ErrorBuffer, std::size(ErrorBuffer));
 
 	if ( mHandle <= 0 )
 	{
@@ -490,7 +489,7 @@ void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& PlaneMetas, const std::s
 	{
 		auto Width = PlaneObject["Width"].number_value();
 		auto Height = PlaneObject["Height"].number_value();
-		auto Channels = PlaneObject["Channels"].number_value();
+		//auto Channels = PlaneObject["Channels"].number_value();
 		auto DataSize = PlaneObject["DataSize"].number_value();
 		auto FormatString = PlaneObject["Format"].string_value();
 		auto Format = SoyPixelsFormat::ToType(FormatString);
@@ -522,7 +521,7 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 	auto NextFrameNumberSigned = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
 	if (NextFrameNumberSigned == -1 )
 		throw TNoFrameException();
-	auto NextFrameNumber = static_cast<uint32_t>(NextFrameNumberSigned);
+	Frame.mFrameNumber = static_cast<uint32_t>(NextFrameNumberSigned);
 
 	std::string Json(JsonBuffer.GetArray());
 
@@ -568,9 +567,9 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 		mHandle,
 		nullptr,	//	json buffer, we've already got above
 		0,
-		PlanePixelsBytes[0], PlanePixelsByteSize[0],
-		PlanePixelsBytes[1], PlanePixelsByteSize[1],
-		PlanePixelsBytes[2], PlanePixelsByteSize[2]
+		PlanePixelsBytes[0], size_cast<int>(PlanePixelsByteSize[0]),
+		PlanePixelsBytes[1], size_cast<int>(PlanePixelsByteSize[1]),
+		PlanePixelsBytes[2], size_cast<int>(PlanePixelsByteSize[2])
 	);
 
 	//	no new frame
@@ -583,35 +582,37 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 
 
 
-void TPopCameraDeviceWrapper::Construct(Bind::TCallback& Params)
+void ApiMedia::TCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 {
 	auto DeviceName = Params.GetArgumentString(0);
 		
-	//	param 1 is format so we can specify format, streamindex, depth, rgb etc etc
-	std::string Format;
+	//	param 1 is now an object of json params
+	std::string OptionsJson;
 	if (!Params.IsArgumentUndefined(1))
 	{
-		Format = Params.GetArgumentString(1);
+		auto OptionsObject = Params.GetArgumentObject(1);
+		OptionsJson = Bind::StringifyObject( Params.mLocalContext, OptionsObject );
 	}
 
 	if (!Params.IsArgumentUndefined(2))
 	{
+		//throw Soy::AssertException("Argument 3(OnlyLatestFrame) for Api.Media.Source should now be in json options");
 		mOnlyLatestFrame = Params.GetArgumentBool(2);
 	}
 
 	//	todo: frame buffer [plane]pool
-	auto OnNewFrame = std::bind(&TPopCameraDeviceWrapper::OnNewFrame, this);
-	mInstance.reset(new PopCameraDevice::TInstance(DeviceName, Format,OnNewFrame));
+	auto OnNewFrame = std::bind(&TCameraDeviceWrapper::OnNewFrame, this);
+	mInstance.reset(new PopCameraDevice::TInstance( DeviceName, OptionsJson, OnNewFrame ));
 }
 
 
-void TPopCameraDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiMedia::TCameraDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TPopCameraDeviceWrapper::WaitForNextFrame);
+	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TCameraDeviceWrapper::WaitForNextFrame);
 }
 
 
-void TPopCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
+void ApiMedia::TCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 {
 	auto Promise = mFrameRequests.AddPromise(Params.mLocalContext);
 	Params.Return(Promise);
@@ -681,7 +682,7 @@ Bind::TObject ApiMedia::PacketToObject(Bind::TLocalContext& Context,const ArrayB
 	return FrameObject;
 }
 
-void TPopCameraDeviceWrapper::FlushPendingFrames()
+void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 {
 	if (mFrames.IsEmpty())
 		return;
@@ -719,7 +720,7 @@ void TPopCameraDeviceWrapper::FlushPendingFrames()
 	Context.Queue(Flush);
 }
 
-void TPopCameraDeviceWrapper::OnNewFrame()
+void ApiMedia::TCameraDeviceWrapper::OnNewFrame()
 {
 	PopCameraDevice::TFrame Frame = mInstance->PopLastFrame();
 
@@ -731,8 +732,7 @@ void TPopCameraDeviceWrapper::OnNewFrame()
 }
 
 
-
-PopH264::TInstance::TInstance()
+PopH264Decoder::TInstance::TInstance()
 {
 	PopH264::LoadDll();
 	
@@ -760,14 +760,14 @@ PopH264::TInstance::TInstance()
 }
 
 
-PopH264::TInstance::~TInstance()
+PopH264Decoder::TInstance::~TInstance()
 {
 	PopH264_DestroyInstance(mHandle);
 }
 
 
 
-void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber)
+void PopH264Decoder::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber)
 {
 	auto* DataPtr = Data.GetArray();
 	auto DataSize = Data.GetDataSize();
@@ -780,12 +780,12 @@ void PopH264::TInstance::PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumb
 	}
 }
 
-size_t PopH264::TInstance::GetPendingFrameCount()
+size_t PopH264Decoder::TInstance::GetPendingFrameCount()
 {
 	return mPendingFrameCount;
 }
 
-PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes,bool ONlyLatest)
+PopCameraDevice::TFrame PopH264Decoder::TInstance::PopLastFrame(bool SplitPlanes,bool ONlyLatest)
 {
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
@@ -875,7 +875,7 @@ PopCameraDevice::TFrame PopH264::TInstance::PopLastFrame(bool SplitPlanes,bool O
 
 
 
-void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
+void ApiMedia::TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 {
 	std::string OptionsJson;
 	
@@ -894,7 +894,7 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 		OptionsJson = Bind::StringifyObject( Params.mLocalContext, OptionsObject );
 	}
 	
-	mEncoder.reset(new X264::TInstance(OptionsJson));
+	mEncoder.reset(new PopH264Encoder::TInstance(OptionsJson));
 
 	mEncoder->mOnPacketReady = [this]()
 	{
@@ -905,14 +905,14 @@ void TH264EncoderWrapper::Construct(Bind::TCallback& Params)
 	mEncoderThread->Start();
 }
 
-void TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiMedia::TH264EncoderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiMedia::BindFunction::Encode>(&TH264EncoderWrapper::Encode);
 	Template.BindFunction<ApiMedia::BindFunction::EncodeFinished>(&TH264EncoderWrapper::EncodeFinished);
 	Template.BindFunction<ApiMedia::BindFunction::WaitForNextPacket>(&TH264EncoderWrapper::WaitForNextPacket);
 }
 
-void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
+void ApiMedia::TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 {
 	auto& Frame = Params.GetArgumentPointer<TImageWrapper>(0);
 		
@@ -960,7 +960,7 @@ void TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 	}
 }
 
-void TH264EncoderWrapper::EncodeFinished(Bind::TCallback& Params)
+void ApiMedia::TH264EncoderWrapper::EncodeFinished(Bind::TCallback& Params)
 {
 	if (mEncoderThread)
 	{
@@ -976,7 +976,7 @@ void TH264EncoderWrapper::EncodeFinished(Bind::TCallback& Params)
 	}
 }
 
-void TH264EncoderWrapper::WaitForNextPacket(Bind::TCallback& Params)
+void ApiMedia::TH264EncoderWrapper::WaitForNextPacket(Bind::TCallback& Params)
 {
 	auto Promise = mNextPacketPromises.AddPromise(Params.mLocalContext);
 	Params.Return(Promise);
@@ -985,7 +985,7 @@ void TH264EncoderWrapper::WaitForNextPacket(Bind::TCallback& Params)
 	OnPacketOutput();
 }
 
-void TH264EncoderWrapper::OnPacketOutput()
+void ApiMedia::TH264EncoderWrapper::OnPacketOutput()
 {
 	//	no promises
 	if (!mNextPacketPromises.HasPromises())
@@ -1012,7 +1012,7 @@ void TH264EncoderWrapper::OnPacketOutput()
 }
 
 
-X264::TInstance::TInstance(const std::string& EncoderOptionsJson)
+PopH264Encoder::TInstance::TInstance(const std::string& EncoderOptionsJson)
 {
 	mOnPacketReady = []()
 	{
@@ -1037,12 +1037,12 @@ X264::TInstance::TInstance(const std::string& EncoderOptionsJson)
 	PopH264_EncoderAddOnNewPacketCallback( mHandle, OnPacketReady, this );
 }
 
-X264::TInstance::~TInstance()
+PopH264Encoder::TInstance::~TInstance()
 {
 	PopH264_DestroyEncoder(mHandle);	
 }
 	
-void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& EncodeMetaJson)
+void PopH264Encoder::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& EncodeMetaJson)
 {
 	//	for meta, include the user-meta
 	using namespace json11;
@@ -1117,13 +1117,13 @@ void X264::TInstance::PushFrame(const SoyPixelsImpl& Pixels,const std::string& E
 	}
 }
 
-void X264::TInstance::FlushFrames()
+void PopH264Encoder::TInstance::FlushFrames()
 {
 	//	todo
 }
 
 
-bool X264::TInstance::HasPackets()
+bool PopH264Encoder::TInstance::HasPackets()
 {
 	auto NextSize = PopH264_EncoderPopData( mHandle, nullptr, 0 );
 	if ( NextSize <= 0 )
@@ -1131,7 +1131,7 @@ bool X264::TInstance::HasPackets()
 	return true;
 }
 
-bool X264::TInstance::PopPacket(ArrayBridge<uint8_t>&& Data,std::string& MetaJson)
+bool PopH264Encoder::TInstance::PopPacket(ArrayBridge<uint8_t>&& Data,std::string& MetaJson)
 {
 	//	get size of packet
 	auto NextSize = PopH264_EncoderPopData( mHandle, nullptr, 0 );
