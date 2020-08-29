@@ -106,7 +106,7 @@ void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 		this->OnMessage(Message, Connection);
 	};
 	
-	mSocket.reset(new TWebsocketClient(Hostname, Port, OnTextMessage, OnBinaryMessage));
+	mSocket.reset(new TWebsocketClient(Hostname, Port16, OnTextMessage, OnBinaryMessage));
 	mSocket->mOnConnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
 	mSocket->mOnDisconnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
 }
@@ -290,7 +290,7 @@ void TWebsocketServer::AddPeer(SoyRef ClientRef)
 void TWebsocketServer::RemovePeer(SoyRef ClientRef)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
-	for ( int i=mClients.GetSize()-1;	i>=0;	i-- )
+	for ( int i=static_cast<int>(mClients.GetSize())-1;	i>=0;	i-- )
 	{
 		auto pClient = mClients[i];
 		if ( pClient->mConnectionRef != ClientRef )
