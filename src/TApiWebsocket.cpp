@@ -346,6 +346,27 @@ void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 		mOnDisconnected();
 }
 
+TWebsocketServerPeer::TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
+	TSocketReadThread_Impl(Socket, ConnectionRef),
+	TSocketWriteThread(Socket, ConnectionRef),
+	mOnTextMessage(OnTextMessage),
+	mOnBinaryMessage(OnBinaryMessage),
+	mConnectionRef(ConnectionRef)
+{
+	TSocketReadThread_Impl::Start();
+	TSocketWriteThread::Start();
+}
+
+TWebsocketServerPeer::~TWebsocketServerPeer()
+{
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	TSocketReadThread_Impl::Stop();
+	TSocketWriteThread::Stop();
+
+	TSocketReadThread_Impl::WaitToFinish();
+	TSocketReadThread_Impl::WaitToFinish();
+}
+
 void TWebsocketServerPeer::ClientConnect()
 {
 	//	send a websocket request
