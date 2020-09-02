@@ -78,6 +78,7 @@ public:
 	void			GetScreenRect(Bind::TCallback& Params);
 	void			SetFullscreen(Bind::TCallback& Params);
 	void			EnableScrollbars(Bind::TCallback& Params);
+	void			Render(Bind::TCallback& Params);
 
 protected:
 	//	TGuiControlWrapper
@@ -239,3 +240,5 @@ public:
 	Array<Gui::TMouseEvent>				mMouseEvents;
 	std::shared_ptr<Gui::TImageMap>&	mControl = mObject;
 };
+
+

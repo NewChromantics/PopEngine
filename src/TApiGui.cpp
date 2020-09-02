@@ -575,5 +575,7 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 	mOnDragDropPromises.Push(FilenamesCopy);
 }
 
-
-
+void ApiGui::TWindowWrapper::Render(Bind::TCallback& Params)
+{
+	Soy_AssertTodo();
+}

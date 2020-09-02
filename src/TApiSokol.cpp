@@ -5,26 +5,22 @@
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 
-// tsdk: SOKOL_IMP has to be in an objective c file for metal => sokol_gfx.mm
+// tsdk: SOKOL_IMP has to be in an objective c file for metal => sokol_gfx.m
 #if defined(TARGET_OSX) || defined(TARGET_IOS)
-#include sokol_gfx.mm
+#include "sokol_gfx.m"
 #elif defined(TARGET_LINUX)
-#include <stdlib.h>
-#include "../../Common/esUtil.h"
 #define SOKOL_IMPL
 #define SOKOL_GLES2
 #endif
 
 #include "sokol/sokol_gfx.h"
 
-static sg_pass_action pass_action;
-
 namespace ApiSokol
 {
     const char Namespace[] = "Pop.Sokol";
 
-    DEFINE_BIND_TYPENAME(Sokol);
-    DEFINE_BIND_FUNCTIONNAME(Test);
+    DEFINE_BIND_TYPENAME(Initialise);
+    DEFINE_BIND_FUNCTIONNAME(Render);
 }
 
 void ApiSokol::Bind(Bind::TContext& Context)
@@ -33,53 +29,23 @@ void ApiSokol::Bind(Bind::TContext& Context)
     Context.BindObjectType<TSokolWrapper>(Namespace);
 }
 
-class SoySokol
-{
-	
-};
-
 void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-    Template.BindFunction<BindFunction::Test>( &TSokolWrapper::Test );
+    Template.BindFunction<BindFunction::Render>( &TSokolWrapper::Render );
 }
 
-void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
+class SoySokol
 {
-#if defined(TARGET_OSX) || defined(TARGET_IOS)
-	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
-	auto NameOfMetalView = Params.GetArgumentString(1);
-	
-	auto mMetalView = Platform::GetMetalView( *ParentWindow.mWindow, NameOfMetalView);
-	if(mMetalView == nil)
-	{
-		Soy_AssertTodo();
-	}
-#elif defined(TARGET_LINUX)
-	
-	
-#endif
-}
+	int Height = 5;
+	int Width = 5;
+};
 
-void ApiSokol::TSokolWrapper::Test(Bind::TCallback& Params)
-{
-	ESContext esContext;
+// SOKOL
 
-	esInitContext(&esContext);
+static sg_pass_action pass_action;
 
-	esCreateWindow(&esContext, "Hello Triangle", 320, 240, ES_WINDOW_ALPHA);
+static void Init(sg_desc desc) {
 
-	init();
-
-	esRegisterDrawFunc(&esContext, frame);
-
-	esMainLoop(&esContext);
-}
-
-/* SOKOL */
-
-static void init(void) {
-
-	sg_desc desc = {0};
 	sg_setup(&desc);
 
 	/* setup pass action to clear to red */
@@ -89,8 +55,7 @@ static void init(void) {
 	};
 }
 
-// This limits it to only the linux platforms, is there a way to use Bind::TCallback& Params?
-static void Frame(ESContext *esContext) {
+static void Frame(void) {
 	/* animate clear colors */
 	float g = pass_action.colors[0].val[1] + 0.01f;
 	if (g > 1.0f)
@@ -100,17 +65,47 @@ static void Frame(ESContext *esContext) {
 	/* draw one frame */
 	sg_begin_default_pass(
 		&pass_action,
-		esContext->height,
-		esContext->width
+		SoySokol.Height,
+		SoySokol.Width
 	);
 
 	sg_end_pass();
 	sg_commit();
 }
 
-static void Shutdown(void) {
-    sg_shutdown();
+
+void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
+{
+	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
+	
+	sg_desc desc;
+#if defined(TARGET_OSX) || defined(TARGET_IOS)
+//    desc = {
+//		.metal = {
+//			.device = ParentWindow.GetMetalDevice(Context),
+//			.renderpass_descriptor_userdata_cb = ParentWindow.GetRenderPassDescriptor(Context),
+//			.drawable_userdata_cb = ParentWindow.GetDrawable(Context),
+//			.user_data = 0xABCDABCD
+//		}
+//	}
+#elif defined(TARGET_LINUX)
+	desc = { 0 }
+#endif
+	
+	// Initialise Sokol
+	Init(desc);
 }
+
+void ApiSokol::TSokolWrapper::Render(Bind::TCallback& Params)
+{
+	// Attach Frame to Draw Function
+	ParentWindow.Render( Frame );
+}
+
+
+
+
+
 
 /*
 //Function to get the necessary metal context for ios/osx
