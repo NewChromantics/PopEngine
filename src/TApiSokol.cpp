@@ -6,59 +6,18 @@
 #include "TApiCommon.h"
 
 // tsdk: SOKOL_IMP has to be in an objective c file for metal => sokol_gfx.mm
+#if defined(TARGET_OSX) || defined(TARGET_IOS)
+#include sokol_gfx.mm
+#elif defined(TARGET_LINUX)
+#include <stdlib.h>
+#include "../../Common/esUtil.h"
+#define SOKOL_IMPL
+#define SOKOL_GLES2
+#endif
+
 #include "sokol/sokol_gfx.h"
 
-//static sg_pass_action pass_action;
-//
-//static void init(void) {
-//
-//	sg_desc desc = {
-//		.context = GetContext(1)
-//	};
-//	sg_setup(&desc);
-//
-//    /* setup pass action to clear to red */
-//    pass_action = (sg_pass_action) {
-//        .colors[0] = { .action = SG_ACTION_CLEAR, .val = { 1.0f, 0.0f, 0.0f, 1.0f } }
-//    };
-//}
-//
-//static void frame(void) {
-//    /* animate clear colors */
-//    float g = pass_action.colors[0].val[1] + 0.01f;
-//    if (g > 1.0f) g = 0.0f;
-//    pass_action.colors[0].val[1] = g;
-//
-//    /* draw one frame */
-//	/* Need to write width and height callbacks! / Do they already exist? */
-//    sg_begin_default_pass(&pass_action, GetWidth(), GetHeight());
-//    sg_end_pass();
-//    sg_commit();
-//}
-//
-//static void shutdown(void) {
-//    sg_shutdown();
-//}
-//
-//int StartRender(sg_context_desc) {
-////    osx_start(640, 480, 1, "Sokol Clear (Metal)", init, frame, shutdown);
-//    return 0;
-//}
-//
-//sg_context_desc GetContext(int sample_count)
-//{
-//	return (sg_context_desc) {
-//        .sample_count = sample_count,
-//#if defined(TARGET_OSX) || defined(TARGET_IOS)
-//        .metal = {
-//            .device = (__bridge const void*) mtl_device,
-//            .renderpass_descriptor_userdata_cb = osx_mtk_get_render_pass_descriptor,
-//            .drawable_userdata_cb = osx_mtk_get_drawable,
-//            .user_data = 0xABCDABCD
-//        }
-//#endif
-//    };
-//}
+static sg_pass_action pass_action;
 
 namespace ApiSokol
 {
@@ -86,6 +45,7 @@ void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 {
+#if defined(TARGET_OSX) || defined(TARGET_IOS)
 	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
 	auto NameOfMetalView = Params.GetArgumentString(1);
 	
@@ -94,22 +54,81 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 	{
 		Soy_AssertTodo();
 	}
-}
-
-void StartSokol()
-{
+#elif defined(TARGET_LINUX)
 	
+	
+#endif
 }
 
 void ApiSokol::TSokolWrapper::Test(Bind::TCallback& Params)
 {
+	ESContext esContext;
 
+	esInitContext(&esContext);
+
+	esCreateWindow(&esContext, "Hello Triangle", 320, 240, ES_WINDOW_ALPHA);
+
+	init();
+
+	esRegisterDrawFunc(&esContext, frame);
+
+	esMainLoop(&esContext);
 }
 
+/* SOKOL */
 
+static void init(void) {
 
+	sg_desc desc = {0};
+	sg_setup(&desc);
 
+	/* setup pass action to clear to red */
+	pass_action = (sg_pass_action)
+	{
+		.colors[0] = { .action = SG_ACTION_CLEAR, .val = { 1.0f, 0.0f, 0.0f, 1.0f } }
+	};
+}
 
+// This limits it to only the linux platforms, is there a way to use Bind::TCallback& Params?
+static void Frame(ESContext *esContext) {
+	/* animate clear colors */
+	float g = pass_action.colors[0].val[1] + 0.01f;
+	if (g > 1.0f)
+		g = 0.0f;
+	pass_action.colors[0].val[1] = g;
+
+	/* draw one frame */
+	sg_begin_default_pass(
+		&pass_action,
+		esContext->height,
+		esContext->width
+	);
+
+	sg_end_pass();
+	sg_commit();
+}
+
+static void Shutdown(void) {
+    sg_shutdown();
+}
+
+/*
+//Function to get the necessary metal context for ios/osx
+sg_context_desc GetContext(int sample_count)
+{
+	return (sg_context_desc) {
+       .sample_count = sample_count,
+#if defined(TARGET_OSX) || defined(TARGET_IOS)
+       .metal = {
+           .device = (__bridge const void*) mtl_device,
+           .renderpass_descriptor_userdata_cb = osx_mtk_get_render_pass_descriptor,
+           .drawable_userdata_cb = osx_mtk_get_drawable,
+           .user_data = 0xABCDABCD
+       }
+#endif
+   };
+}
+*/
 
 /* GLFW SETUP */
 /*
