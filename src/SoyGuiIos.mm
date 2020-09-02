@@ -1,4 +1,4 @@
-#include "SoyGuiIos.h"
+#include "SoyGui.h"
 
 #import <UIKit/UIKit.h>
 @class AppDelegate;
