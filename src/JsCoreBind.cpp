@@ -891,13 +891,25 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	//	not an exception
 	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
 		return;
-	JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
-
 	
-	std::stringstream Error;
-	auto ExceptionMeta = GetExceptionMeta(Context, ExceptionHandle);
-	Error << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
+	std::stringstream ExceptionError;
 
+	//	on some platforms the exception is an error/exception object
+	//	on jscore we may have set a string as the exception object (in our own code)
+	//	this might be a mistake, but just handle multiple cases
+	if ( ExceptionType == kJSTypeObject )
+	{
+		JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
+		auto ExceptionMeta = GetExceptionMeta(Context, ExceptionHandle);
+		ExceptionError << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
+	}
+	else
+	{
+		//	reinterpret whatever the exception value is as a string
+		auto ExceptionString = GetString( Context, ExceptionHandle );
+		ExceptionError << ExceptionString;
+	}
+	
 	//	try and open xcode at the erroring line (a bit experimental)
 	/*	gr: I have a case where this crashes osx, so... disabled
 #if defined(JSAPI_JSCORE) && defined(TARGET_OSX)
@@ -914,7 +926,7 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	}
 #endif
 	*/
-	throw Soy::AssertException(Error.str());
+	throw Soy::AssertException(ExceptionError);
 }
 
 

@@ -382,10 +382,9 @@ public:
 
 	virtual void			SetValue(const std::string& Value) override;
 	virtual std::string		GetValue() override	{	return mLastValue;	}
-
-
-	virtual void 			OnChanged()=0;
-
+	
+	virtual void			OnTextBoxChanged()=0;	//	BASETYPE doesn't always have OnChanged, so override this and fill the gap
+	
 protected:
 	virtual void			ApplyStyle()	{}
 	void					CacheValue();		//	call from UI thread
@@ -405,8 +404,8 @@ public:
 		TTextBox_Base( Thread, Parent, Rect )
 	{
 	}
-
-	virtual void			OnChanged() override
+	
+	virtual void			OnTextBoxChanged() override
 	{
 		CacheValue();
 		SoyTextBox::OnChanged();
@@ -420,13 +419,14 @@ public:
 		TTextBox_Base( Thread, Parent, Rect )
 	{
 	}
-
-
-	virtual void 	OnChanged() override
-	{
-	}
-
+	
 	virtual void	ApplyStyle() override;
+	
+	virtual void	OnTextBoxChanged() override
+	{
+		std::Debug << "Unexpected OnTextBoxChanged for Platform::TLabel (ignored)" << std::endl;
+		CacheValue();
+	}
 };
 
 
@@ -1276,7 +1276,10 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 		[[mControl cell]setLineBreakMode:NSLineBreakByTruncatingTail];
 
 		//	setup callback
-		mResponder->mCallback = [this]()	{	this->OnChanged();	};
+		mResponder->mCallback = [this]()
+		{
+			this->OnTextBoxChanged();
+		};
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
 

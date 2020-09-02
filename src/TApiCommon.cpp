@@ -263,7 +263,7 @@ void ApiPop::ThreadTest(Bind::TCallback& Params)
 			
 			auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
 			{
-				/*
+				/ *
 				auto Global = JSContextGetGlobalObject( Context );
 				JSStringRef GlobalNameString = JSStringCreateWithUTF8CString("this");
 				
@@ -1252,7 +1252,7 @@ void TImageWrapper::GetPixelBuffer(Bind::TCallback& Params)
 	auto& This = Params.This<TImageWrapper>();
 	
 	auto IsTargetArray = Params.IsArgumentArray(1);
-	auto& Heap = Params.mContext.GetImageHeap();
+	//auto& Heap = Params.mContext.GetImageHeap();
 	
 	Soy::TScopeTimerPrint Timer(__func__,5);
 	
@@ -1323,7 +1323,7 @@ void TImageWrapper::GetPixelBufferPixels(std::function<void(const ArrayBridge<So
 std::shared_ptr<Opengl::TTexture> TImageWrapper::GetTexturePtr()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Texture = GetTexture();
+	/*auto& Texture = */GetTexture();
 	return mOpenglTexture;
 }
 

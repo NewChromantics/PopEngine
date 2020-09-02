@@ -515,7 +515,7 @@ void Bluetooth::TDevice::SubscribeToCharacteristics(const std::string& NewChract
 	
 	//	currently we just search all services for this characteristic.
 	//	maybe some devices have multiple characteristics for multiple services...
-	for ( int pc=mPendingCharacteristics.GetSize()-1;	pc>=0;	pc-- )
+	for ( int pc=static_cast<int>(mPendingCharacteristics.GetSize())-1;	pc>=0;	pc-- )
 	{
 		auto& PendingCharacteristic = mPendingCharacteristics[pc];
 		auto* CharUid = [CBUUID UUIDWithString:Soy::StringToNSString(PendingCharacteristic)];

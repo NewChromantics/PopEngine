@@ -23,16 +23,8 @@ namespace ApiWebsocket
 class TWebsocketServerPeer : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
 {
 public:
-	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket,SoyRef ConnectionRef,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
-		TSocketReadThread_Impl	( Socket, ConnectionRef ),
-		TSocketWriteThread		( Socket, ConnectionRef ),
-		mOnTextMessage			( OnTextMessage ),
-		mOnBinaryMessage		( OnBinaryMessage ),
-		mConnectionRef			( ConnectionRef )
-	{
-		TSocketReadThread_Impl::Start();
-		TSocketWriteThread::Start();
-	}
+	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
+	~TWebsocketServerPeer();
 
 	void				ClientConnect();
 	void				Stop(bool WaitToFinish);
