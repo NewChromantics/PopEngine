@@ -121,6 +121,18 @@
     <ClCompile Include="..\src\Json11\json11.cpp">
       <Filter>PopEngine\Json11</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiZip.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Zip\src\zip.c">
+      <Filter>PopEngine\Zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PopDepthToYuv\Depth16ToYuv.c">
+      <Filter>PopEngine\PopDepthToYuv</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -155,6 +167,36 @@
     </Filter>
     <Filter Include="PopEngine\Json11">
       <UniqueIdentifier>{fd7ec777-7e17-4087-9215-886e8ba4cd61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package">
+      <UniqueIdentifier>{5005dff8-6bc4-4037-924e-bb6023f825ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package\node_modules">
+      <UniqueIdentifier>{b61af0f0-026f-4a0f-9594-9be0b08dc122}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package\node_modules\%40newchromantics">
+      <UniqueIdentifier>{772413c6-54ab-4630-8908-ef0e0d88288a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package\node_modules\%40newchromantics\poph264">
+      <UniqueIdentifier>{0e17a64e-1b1a-46c9-851c-608d48f114d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia">
+      <UniqueIdentifier>{734e8c43-4ae8-444b-88f5-3984b8694c70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package\node_modules\%40newchromantics\popcameradevice">
+      <UniqueIdentifier>{f6285f3f-0da4-4c2f-8bbf-77cf92fa2f9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia">
+      <UniqueIdentifier>{814b5d52-a474-4144-b63e-1f55ef8e9595}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\Zip">
+      <UniqueIdentifier>{93a9265d-a81c-4ef2-8997-27b0a3b459df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\Zip\src">
+      <UniqueIdentifier>{6a56d5a7-377e-46df-9908-6b5c628e6f88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\PopDepthToYuv">
+      <UniqueIdentifier>{f90dcfd8-70f0-4561-ad79-fc6bfbfd8e60}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -452,6 +494,24 @@
     <ClInclude Include="..\src\Json11\json11.hpp">
       <Filter>PopEngine\Json11</Filter>
     </ClInclude>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\PopH264.h">
+      <Filter>PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\PopCameraDevice.h">
+      <Filter>PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiZip.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiMedia.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\miniz.h">
+      <Filter>PopEngine\Zip\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\zip.h">
+      <Filter>PopEngine\Zip\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\UnitTest\HelloWorld\bootup.js">
@@ -460,5 +520,13 @@
     <None Include="..\PopEngine.Linux\Makefile">
       <Filter>PopEngine.Linux</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\libPopH264.so">
+      <Filter>PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia</Filter>
+    </Library>
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
+      <Filter>PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia</Filter>
+    </Library>
   </ItemGroup>
 </Project>

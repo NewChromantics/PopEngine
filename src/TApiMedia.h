@@ -152,3 +152,5 @@ public:
 	std::shared_ptr<PopH264Encoder::TInstance>&	mEncoder = mObject;
 	std::shared_ptr<SoyWorkerJobThread>	mEncoderThread;
 };
+
+
