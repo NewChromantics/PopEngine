@@ -126,7 +126,7 @@ LIB_LINK_LIBS = \
 -lEGL \
 -lm \
 -lgbm \
--ldrm
+-ldrm	\
 -L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
