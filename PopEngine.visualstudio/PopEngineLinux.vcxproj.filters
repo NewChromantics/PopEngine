@@ -115,6 +115,12 @@
     <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp">
       <Filter>PopEngine\SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiPanopoly.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Json11\json11.cpp">
+      <Filter>PopEngine\Json11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="PopEngine">
@@ -143,6 +149,12 @@
     </Filter>
     <Filter Include="PopEngine\SoyLib\magic_enum\include">
       <UniqueIdentifier>{d72a2c5a-05e0-4809-8d98-45243131b501}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine.Linux">
+      <UniqueIdentifier>{7b33ef34-5101-4641-bfac-8008b82ced7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PopEngine\Json11">
+      <UniqueIdentifier>{fd7ec777-7e17-4087-9215-886e8ba4cd61}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -189,9 +201,6 @@
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyVector.h">
-      <Filter>PopEngine\SoyLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyVideoDevice.h">
       <Filter>PopEngine\SoyLib</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyWave.h">
@@ -437,10 +446,19 @@
     <ClInclude Include="..\src\SoyLib\src\magic_enum\include\magic_enum.hpp">
       <Filter>PopEngine\SoyLib\magic_enum\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiPanopoly.h">
+      <Filter>PopEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Json11\json11.hpp">
+      <Filter>PopEngine\Json11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\UnitTest\HelloWorld\bootup.js">
       <Filter>UnitTest</Filter>
+    </None>
+    <None Include="..\PopEngine.Linux\Makefile">
+      <Filter>PopEngine.Linux</Filter>
     </None>
   </ItemGroup>
 </Project>
