@@ -27,6 +27,9 @@ LIB_INCLUDES = \
 -I/usr/include/webkitgtk-4.0	\
 -I$(PROJECT_PATH)/Libs/poph264/$(TargetArch)	\
 -I$(PROJECT_PATH)/Libs/popcameradevice/$(TargetArch)	\
+-I$(PROJECT_PATH)/src/sokol	\
+-I$(PROJECT_PATH)/src/LinuxDRM	\
+-I/usr/include/libdrm	\
 
 LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -44,6 +47,10 @@ $(SRC_PATH)/TApiZip.cpp \
 
 LIB_C_FILES = \
 $(SRC_PATH)/Zip/src/zip.c	\
+$(SRC_PATH)/LinuxDRM/common.c	\
+$(SRC_PATH)/LinuxDRM/drm-common.c	\
+$(SRC_PATH)/LinuxDRM/drm-legacy.c	\
+$(SRC_PATH)/LinuxDRM/esUtil.c	\
 
 #$(SRC_PATH)/TApiEngine.cpp \
 
@@ -114,6 +121,11 @@ LIB_LINK_LIBS = \
 -L$(PROJECT_PATH)/Libs/poph264/$(TargetArch)	\
 -lPopCameraDevice \
 -L$(PROJECT_PATH)/Libs/popcameradevice/$(TargetArch)	\
+-lGLESv2 \
+-lEGL \
+-lm \
+-lgbm \
+-ldrm
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
@@ -162,7 +174,7 @@ $(OUT_LIB): $(LIB_OBJECTS) $(OUT_FILES)
 	ldd $(OUT_LIB)
 
 .c.o:
-	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
+	$(CC) -x c $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
