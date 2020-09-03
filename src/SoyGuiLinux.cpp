@@ -1,5 +1,6 @@
 #include "SoyGui.h"
-#include "esUtil.h"
+#include <stdlib.h>
+#include "LinuxDRM/esUtil.h"
 
 class Platform::TWindow : public SoyWindow
 {
@@ -8,23 +9,29 @@ public:
 	
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 
-	ESContext											mESContext;
+	virtual void					SetFullscreen(bool Fullscreen) override;
+	virtual bool					IsFullscreen() override;
+	virtual bool					IsMinimised() override;
+	virtual bool					IsForeground() override;
+	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
 
-	void													Render(ESContext mESContext, auto Frame);
+	ESContext											mESContext;
+	void													Render( std::function<void()> Frame );
 };
 
 Platform::TWindow::TWindow(const std::string& Name)
 {
 	esInitContext( &mESContext );
 
-	esCreateWindow( &mESContext, Name, 320, 240, ES_WINDOW_ALPHA );
+	// tsdk: the width and height are set to the size of the screen in this function, leaving them in here in case that needs to change in future
+	esCreateWindow( &mESContext, Name.c_str(), 0, 0, ES_WINDOW_ALPHA );
 }
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	std::shared_ptr<SoyWindow> Window;
 
-	Window.reset( new Platform::TWindow(Name) );
+	Window.reset( new Platform::TWindow( Name ) );
 
 	return Window;
 }
@@ -34,9 +41,9 @@ Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 	Soy_AssertTodo();
 }
 
-void Platform::TWindow::Render( auto Frame )
+void Platform::TWindow::Render( std::function<void()> Frame )
 {
-	esRegisterDrawFunc(&mESContext, Frame);
+	esRegisterDrawFunc( &mESContext, Frame );
 
-	esMainLoop(&mESContext);
+	esMainLoop( &mESContext );
 }

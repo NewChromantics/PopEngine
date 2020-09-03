@@ -2,10 +2,12 @@
 
 #include "PopMain.h"
 #include "TApiGui.h"
-#include "SoyOpenglWindow.h"
+#include "SoyWindow.h"
 #include "TApiCommon.h"
 
 #if defined(TARGET_LINUX)
+#include <stdlib.h>
+#include "LinuxDRM/esUtil.h"
 #define SOKOL_IMPL
 #define SOKOL_GLES2
 #endif
@@ -14,10 +16,17 @@
 
 namespace ApiSokol
 {
-    const char Namespace[] = "Pop.Sokol";
+	const char Namespace[] = "Pop.Sokol";
 
-    DEFINE_BIND_TYPENAME(Initialise);
-    DEFINE_BIND_FUNCTIONNAME(Render);
+	DEFINE_BIND_TYPENAME(Initialise);
+	DEFINE_BIND_FUNCTIONNAME(Render);
+
+	class Rect
+	{
+		public:
+			int Width;
+			int Height;
+	};
 }
 
 void ApiSokol::Bind(Bind::TContext& Context)
@@ -31,14 +40,6 @@ void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate& Template)
     Template.BindFunction<BindFunction::Render>( &TSokolWrapper::Render );
 }
 
-class SoySokol
-{
-	int Height = 5;
-	int Width = 5;
-};
-
-// SOKOL
-
 static sg_pass_action pass_action;
 
 static void Init(sg_desc desc) {
@@ -46,10 +47,8 @@ static void Init(sg_desc desc) {
 	sg_setup(&desc);
 
 	/* setup pass action to clear to red */
-	pass_action = (sg_pass_action)
-	{
-		.colors[0] = { .action = SG_ACTION_CLEAR, .val = { 1.0f, 0.0f, 0.0f, 1.0f } }
-	};
+	pass_action.colors[0] = { .action = SG_ACTION_CLEAR, .val = { 1.0f, 0.0f, 0.0f, 1.0f } };
+
 }
 
 static void Frame(void) {
@@ -62,10 +61,8 @@ static void Frame(void) {
 	/* draw one frame */
 	sg_begin_default_pass(
 		&pass_action,
-		5,
-		5
-		//SoySokol.Height,
-		//SoySokol.Width
+		Context.Height,
+		Context.Width
 	);
 
 	sg_end_pass();
@@ -88,7 +85,7 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 //		}
 //	}
 #elif defined(TARGET_LINUX)
-	desc = { 0 }
+	desc = { 0 };
 #endif
 	
 	// Initialise Sokol
@@ -97,8 +94,10 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 
 void ApiSokol::TSokolWrapper::Render(Bind::TCallback& Params)
 {
+	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
 	// Attach Frame to Draw Function
-	//ParentWindow.Render( Frame );
+	ApiSokol::DrawContext mContext = ParentWindow.GetContext();
+	ParentWindow.Render( Frame );
 }
 
 
