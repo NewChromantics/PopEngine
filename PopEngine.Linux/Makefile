@@ -19,14 +19,16 @@ PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
 
+LIB_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
+
 LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SOY_PATH)/src/magic_enum/include	\
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(PROJECT_PATH)/Libs/poph264/$(TargetArch)	\
--I$(PROJECT_PATH)/Libs/popcameradevice/$(TargetArch)	\
+-I$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
+-I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 
 LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -111,9 +113,9 @@ LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(PROJECT_PATH)/Libs/poph264/$(TargetArch)	\
+-L$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
 -lPopCameraDevice \
--L$(PROJECT_PATH)/Libs/popcameradevice/$(TargetArch)	\
+-L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
@@ -125,8 +127,8 @@ OUT_APP=$(BUILD_DIR)/${APP_NAME}
 # These files (without directory structure) get copied to build dir
 OUT_FILE_SOURCES = \
 $(SRC_PATH)/PopEngine.h	\
-$(PROJECT_PATH)/Libs/poph264/$(TargetArch)/libPopH264.so 	\
-$(PROJECT_PATH)/Libs/popcameradevice/$(TargetArch)/libPopCameraDevice.so	\
+$(LIB_MODULES_PATH)/poph264/$(TargetArch)/libPopH264.so 	\
+$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)/libPopCameraDevice.so	\
 
 # convert to Build/xxx target files
 OUT_FILES = $(addprefix ${BUILD_DIR}/,$(notdir ${OUT_FILE_SOURCES}))
