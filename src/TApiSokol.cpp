@@ -5,10 +5,7 @@
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
 
-// tsdk: SOKOL_IMP has to be in an objective c file for metal => sokol_gfx.m
-#if defined(TARGET_OSX) || defined(TARGET_IOS)
-#include "sokol_gfx.m"
-#elif defined(TARGET_LINUX)
+#if defined(TARGET_LINUX)
 #define SOKOL_IMPL
 #define SOKOL_GLES2
 #endif
@@ -65,8 +62,10 @@ static void Frame(void) {
 	/* draw one frame */
 	sg_begin_default_pass(
 		&pass_action,
-		SoySokol.Height,
-		SoySokol.Width
+		5,
+		5
+		//SoySokol.Height,
+		//SoySokol.Width
 	);
 
 	sg_end_pass();
@@ -99,7 +98,7 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 void ApiSokol::TSokolWrapper::Render(Bind::TCallback& Params)
 {
 	// Attach Frame to Draw Function
-	ParentWindow.Render( Frame );
+	//ParentWindow.Render( Frame );
 }
 
 

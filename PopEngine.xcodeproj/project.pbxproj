@@ -11,16 +11,10 @@
 		5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5850A42224F920C400145478 /* SoyGuiOsx.mm */; };
 		5873CDBA25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
 		5873CDBB25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
-		5873CDBC25000A79008F73AA /* sokol_gfx.m in Sources */ = {isa = PBXBuildFile; fileRef = 5873CDB925000A78008F73AA /* sokol_gfx.m */; };
-		5873CDBD25000A79008F73AA /* sokol_gfx.m in Sources */ = {isa = PBXBuildFile; fileRef = 5873CDB925000A78008F73AA /* sokol_gfx.m */; };
 		5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944024F6D32A00FCCCE2 /* TApiSokol.h */; };
 		5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; };
 		5898944524F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		5898944C24F6D47F00FCCCE2 /* flextGL.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944824F6D47F00FCCCE2 /* flextGL.h */; };
-		5898944D24F6D47F00FCCCE2 /* flextgl_profile.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */; };
-		5898944E24F6D47F00FCCCE2 /* flextgl.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5898944A24F6D47F00FCCCE2 /* flextgl.sh */; };
-		5898944F24F6D47F00FCCCE2 /* flextGL.c in Sources */ = {isa = PBXBuildFile; fileRef = 5898944B24F6D47F00FCCCE2 /* flextGL.c */; };
 		5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945424F6E14600FCCCE2 /* QuartzCore.framework */; };
 		5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945A24F6EB5600FCCCE2 /* Metal.framework */; };
 		5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */; };
@@ -317,14 +311,9 @@
 /* Begin PBXFileReference section */
 		5850A42224F920C400145478 /* SoyGuiOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiOsx.mm; path = src/SoyGuiOsx.mm; sourceTree = "<group>"; };
 		5873CDB825000A78008F73AA /* SoyGui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyGui.h; path = src/SoyGui.h; sourceTree = "<group>"; };
-		5873CDB925000A78008F73AA /* sokol_gfx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = sokol_gfx.m; path = src/sokol_gfx.m; sourceTree = "<group>"; };
 		5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSokol.cpp; path = src/TApiSokol.cpp; sourceTree = "<group>"; };
 		5898944024F6D32A00FCCCE2 /* TApiSokol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSokol.h; path = src/TApiSokol.h; sourceTree = "<group>"; };
 		5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../../../usr/local/Cellar/glfw/3.3.2/lib/libglfw.3.3.dylib; sourceTree = "<group>"; };
-		5898944824F6D47F00FCCCE2 /* flextGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = flextGL.h; sourceTree = "<group>"; };
-		5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = flextgl_profile.txt; sourceTree = "<group>"; };
-		5898944A24F6D47F00FCCCE2 /* flextgl.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = flextgl.sh; sourceTree = "<group>"; };
-		5898944B24F6D47F00FCCCE2 /* flextGL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = flextGL.c; sourceTree = "<group>"; };
 		5898945424F6E14600FCCCE2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		5898945A24F6EB5600FCCCE2 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -757,18 +746,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5898944724F6D47F00FCCCE2 /* flextgl */ = {
-			isa = PBXGroup;
-			children = (
-				5898944824F6D47F00FCCCE2 /* flextGL.h */,
-				5898944924F6D47F00FCCCE2 /* flextgl_profile.txt */,
-				5898944A24F6D47F00FCCCE2 /* flextgl.sh */,
-				5898944B24F6D47F00FCCCE2 /* flextGL.c */,
-			);
-			name = flextgl;
-			path = "src/sokol-samples/glfw/flextgl";
-			sourceTree = "<group>";
-		};
 		58C2000324F901B7002DAC99 /* PopEngineTestApp_Ios */ = {
 			isa = PBXGroup;
 			children = (
@@ -1162,7 +1139,6 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
-				5898944724F6D47F00FCCCE2 /* flextgl */,
 				BFEDAFEB24E0672E003B130F /* Android */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
@@ -1235,7 +1211,6 @@
 				BFF2B6C02264F9A700232137 /* TApiSerial.h */,
 				BF17B6B72115C157006940E6 /* TApiSocket.cpp */,
 				BF17B6B82115C157006940E6 /* TApiSocket.h */,
-				5873CDB925000A78008F73AA /* sokol_gfx.m */,
 				5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */,
 				5898944024F6D32A00FCCCE2 /* TApiSokol.h */,
 				BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */,
@@ -1415,7 +1390,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */,
-				5898944C24F6D47F00FCCCE2 /* flextGL.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
 				5873CDBA25000A79008F73AA /* SoyGui.h in Headers */,
 				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
@@ -1638,9 +1612,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */,
-				5898944E24F6D47F00FCCCE2 /* flextgl.sh in Resources */,
 				BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */,
-				5898944D24F6D47F00FCCCE2 /* flextgl_profile.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1682,7 +1654,6 @@
 				BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */,
 				BFDC03B12430CED90004512A /* json11.cpp in Sources */,
 				BF151FB223845FB700A70EBF /* sha1.cpp in Sources */,
-				5873CDBD25000A79008F73AA /* sokol_gfx.m in Sources */,
 				BF151F9C23845FAD00A70EBF /* SoyRuntimeLibrary.cpp in Sources */,
 				BF151F8A23845FAD00A70EBF /* SoyFourcc.cpp in Sources */,
 				BF151FAF23845FAD00A70EBF /* SoyWebSocket.cpp in Sources */,
@@ -1761,7 +1732,6 @@
 				BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */,
 				BF5EAFEF237F0C6E0077BCF5 /* SoyWebSocket.cpp in Sources */,
 				BF5EAFD6237F0C6E0077BCF5 /* SoyOpenglContext.cpp in Sources */,
-				5873CDBC25000A79008F73AA /* sokol_gfx.m in Sources */,
 				BF5EAFE5237F0C6E0077BCF5 /* SoyThread.cpp in Sources */,
 				BF5EB000237F0CD40077BCF5 /* TApiDll.cpp in Sources */,
 				BF5EAFDA237F0C6E0077BCF5 /* SoyRef.cpp in Sources */,
@@ -1817,7 +1787,6 @@
 				BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */,
 				BF5EAFCF237F0C6E0077BCF5 /* SoyJson.cpp in Sources */,
 				BF5C4AC823F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
-				5898944F24F6D47F00FCCCE2 /* flextGL.c in Sources */,
 				BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */,
 				BF5EAFF0237F0C6E0077BCF5 /* SoyWindow.cpp in Sources */,
 				BF5EAFF5237F0CD40077BCF5 /* PopMain.cpp in Sources */,

@@ -7,12 +7,12 @@ namespace ApiSokol
     void    Bind(Bind::TContext& Context);
 
     class TSokolWrapper;
-    DECLARE_BIND_TYPENAME(Sokol);
+    DECLARE_BIND_TYPENAME(Initialise);
 }
 
 class SoySokol;
 
-class ApiSokol::TSokolWrapper : public Bind::TObjectWrapper<BindType::Sokol, SoySokol>
+class ApiSokol::TSokolWrapper : public Bind::TObjectWrapper<BindType::Initialise, SoySokol>
 {
 public:
     TSokolWrapper(Bind::TContext& Context) :
