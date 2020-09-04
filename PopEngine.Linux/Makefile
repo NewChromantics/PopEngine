@@ -29,8 +29,8 @@ LIB_INCLUDES = \
 -I/usr/include/webkitgtk-4.0	\
 -I$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
 -I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
--I$(PROJECT_PATH)/src/sokol	\
--I$(PROJECT_PATH)/src/LinuxDRM	\
+-I$(SRC_PATH)/sokol	\
+-I$(SRC_PATH)/LinuxDRM	\
 -I/usr/include/libdrm	\
 
 LIB_CPP_FILES  = \
@@ -46,6 +46,10 @@ $(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/TApiZip.cpp \
+$(SRC_PATH)/TApiGui.cpp	\
+$(SRC_PATH)/TApiSokol.cpp	\
+$(SRC_PATH)/SoyGuiLinux.cpp	\
+$(SRC_PATH)/LinuxDRM/esUtil.cpp	\
 
 LIB_C_FILES = \
 $(SRC_PATH)/Zip/src/zip.c	\
@@ -121,6 +125,7 @@ LIB_LINK_LIBS = \
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
 -L$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
+-L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 -lPopCameraDevice \
 -lGLESv2 \
 -lEGL \

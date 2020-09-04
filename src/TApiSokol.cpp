@@ -20,13 +20,6 @@ namespace ApiSokol
 
 	DEFINE_BIND_TYPENAME(Initialise);
 	DEFINE_BIND_FUNCTIONNAME(Render);
-
-	class Rect
-	{
-		public:
-			int Width;
-			int Height;
-	};
 }
 
 void ApiSokol::Bind(Bind::TContext& Context)
@@ -61,8 +54,8 @@ static void Frame(void) {
 	/* draw one frame */
 	sg_begin_default_pass(
 		&pass_action,
-		Context.Height,
-		Context.Width
+		300,
+		300
 	);
 
 	sg_end_pass();
@@ -72,7 +65,7 @@ static void Frame(void) {
 
 void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 {
-	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
+	auto mWindow = Params.GetArgumentObject(0);
 	
 	sg_desc desc;
 #if defined(TARGET_OSX) || defined(TARGET_IOS)
@@ -94,10 +87,11 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback& Params)
 
 void ApiSokol::TSokolWrapper::Render(Bind::TCallback& Params)
 {
-	auto& ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
+	auto LocalContext = Params.mLocalContext;
+	auto WindowObject = this->mWindow.GetObject(LocalContext);
+	auto& Window = WindowObject.This<ApiGui::TWindowWrapper>();
 	// Attach Frame to Draw Function
-	ApiSokol::DrawContext mContext = ParentWindow.GetContext();
-	ParentWindow.Render( Frame );
+	Window.Render( Frame );
 }
 
 

@@ -190,7 +190,7 @@ void ESUTIL_API esMainLoop ( ESContext *esContext )
 
 	/* set mode: */
 	ret = drmModeSetCrtc(drm->fd, drm->crtc_id, fb->fb_id, 0, 0,
-			&drm->connector_id, 1, drm->mode);
+			const_cast<uint32_t*>(&drm->connector_id), 1, drm->mode);
 	if (ret) {
 		printf("failed to set mode: %s\n", strerror(errno));
 		return;
@@ -209,8 +209,8 @@ void ESUTIL_API esMainLoop ( ESContext *esContext )
 
         if (esContext->updateFunc != NULL)
             esContext->updateFunc(esContext, deltatime);
-        if (esContext->drawFunc != NULL)
-            esContext->drawFunc(esContext);
+        if ( esContext->drawFunc )
+            esContext->drawFunc();
 
 		//egl.draw(i++);
 
@@ -272,11 +272,10 @@ void ESUTIL_API esMainLoop ( ESContext *esContext )
 ///
 //  esRegisterDrawFunc()
 //
-void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, void (ESCALLBACK *drawFunc) (ESContext* ) )
+void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, std::function<void()> drawFunc )
 {
    esContext->drawFunc = drawFunc;
 }
-
 
 ///
 //  esRegisterUpdateFunc()
@@ -350,7 +349,7 @@ char* ESUTIL_API esLoadTGA ( char *fileName, int *width, int *height )
     *width = attributes[1] * 256 + attributes[0];
     *height = attributes[3] * 256 + attributes[2];
     imagesize = attributes[4] / 8 * *width * *height;
-    buffer = malloc(imagesize);
+    buffer = (char*)malloc(imagesize);
     if (buffer == NULL)
     {
         fclose(f);

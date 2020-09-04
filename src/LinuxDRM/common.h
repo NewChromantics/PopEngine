@@ -21,6 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef _COMMON_H
 #define _COMMON_H
 
@@ -173,3 +177,7 @@ init_cube_video(const struct gbm *gbm, const char *video, int samples)
 #endif
 
 #endif /* _COMMON_H */
+
+#ifdef __cplusplus
+}
+#endif

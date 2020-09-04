@@ -20,6 +20,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+ #ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef _DRM_COMMON_H
 #define _DRM_COMMON_H
@@ -78,3 +81,7 @@ const struct drm * init_drm_legacy(const char *device, const char *mode_str, uns
 const struct drm * init_drm_atomic(const char *device, const char *mode_str, unsigned int vrefresh);
 
 #endif /* _DRM_COMMON_H */
+
+#ifdef __cplusplus
+}
+#endif

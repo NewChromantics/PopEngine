@@ -20,12 +20,13 @@ public:
     {
     }
 
-    static void        		CreateTemplate(Bind::TTemplate& Template);
-    virtual void       		Construct(Bind::TCallback& Params) override;
+    static void        						CreateTemplate( Bind::TTemplate& Template );
+    virtual void       						Construct( Bind::TCallback& Params ) override;
 
     // Initial Test
-    void                    Render(Bind::TCallback& Params);
+    void                    			Render(Bind::TCallback& Params);
 
 public:
-    std::shared_ptr<SoySokol>&    mSoySokol = mObject;
+    Bind::TPersistent 						mWindow;
+
 };

@@ -1,6 +1,12 @@
 #include "TApiGui.h"
-#include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
+
+#if !defined(TARGET_LINUX)
+#include "SoyOpenglWindow.h"
+#else
+#include "SoyWindow.h"
+#endif
+
 
 
 namespace ApiGui
@@ -575,7 +581,7 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 	mOnDragDropPromises.Push(FilenamesCopy);
 }
 
-void ApiGui::TWindowWrapper::Render(Bind::TCallback& Params)
+void ApiGui::TWindowWrapper::Render(std::function<void()> Frame)
 {
 	Soy_AssertTodo();
 }

@@ -9,11 +9,11 @@ public:
 	
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 
-	virtual void					SetFullscreen(bool Fullscreen) override;
-	virtual bool					IsFullscreen() override;
-	virtual bool					IsMinimised() override;
-	virtual bool					IsForeground() override;
-	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
+	virtual void									SetFullscreen(bool Fullscreen) override;
+	virtual bool									IsFullscreen() override;
+	virtual bool									IsMinimised() override;
+	virtual bool									IsForeground() override;
+	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
 
 	ESContext											mESContext;
 	void													Render( std::function<void()> Frame );
@@ -46,4 +46,69 @@ void Platform::TWindow::Render( std::function<void()> Frame )
 	esRegisterDrawFunc( &mESContext, Frame );
 
 	esMainLoop( &mESContext );
+}
+
+void Platform::TWindow::SetFullscreen(bool Fullscreen)
+{
+	Soy_AssertTodo();
+}
+
+bool Platform::TWindow::IsFullscreen()
+{
+	return true;
+}
+
+bool Platform::TWindow::IsMinimised()
+{
+	Soy_AssertTodo();
+}
+
+bool Platform::TWindow::IsForeground()
+{
+	Soy_AssertTodo();
+}
+
+void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> InitialColour)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow &Parent, Soy::Rectx<int32_t> &Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
 }
