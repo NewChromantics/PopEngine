@@ -11,10 +11,11 @@
 #include "TApiHttp.h"
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 #include "TApiOpengl.h"
-#include "TApiGui.h"
 #endif
 
 #if !defined(TARGET_ANDROID)
+#include "SoyWindow.h"
+#include "TApiGui.h"
 #include "TApiZip.h"
 #endif
 
@@ -45,6 +46,9 @@
 #include "TApiBluetooth.h"
 #include "TApiLeapMotion.h"
 #include "TApiOpenvr.h"
+#endif
+
+#if defined(TARGET_OSX) || defined(TARGET_OSX)
 #include "TApiSokol.h"
 #endif
 
@@ -643,9 +647,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiSerial::Bind( *Context );
 #endif
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-			ApiGui::Bind( *Context );
+
 #endif
 #if !defined(TARGET_ANDROID)
+			ApiGui::Bind( *Context );
 			ApiZip::Bind( *Context );
 #endif
 #if defined(ENABLE_APIVISION)
@@ -660,6 +665,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiBluetooth::Bind( *Context );
 			ApiLeapMotion::Bind( *Context );
 			ApiOpenvr::Bind(*Context);
+#endif
+
+#if defined(TARGET_OSX) || defined(TARGET_OSX)
 			ApiSokol::Bind( *Context );
 #endif
 

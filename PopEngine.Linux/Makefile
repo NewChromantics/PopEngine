@@ -56,7 +56,6 @@ $(SRC_PATH)/Zip/src/zip.c	\
 $(SRC_PATH)/LinuxDRM/common.c	\
 $(SRC_PATH)/LinuxDRM/drm-common.c	\
 $(SRC_PATH)/LinuxDRM/drm-legacy.c	\
-$(SRC_PATH)/LinuxDRM/esUtil.c	\
 
 #$(SRC_PATH)/TApiEngine.cpp \
 
@@ -132,7 +131,6 @@ LIB_LINK_LIBS = \
 -lm \
 -lgbm \
 -ldrm	\
--L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
