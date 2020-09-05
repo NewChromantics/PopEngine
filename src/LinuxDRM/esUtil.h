@@ -25,7 +25,6 @@
 #include <functional>
 
 #ifdef __cplusplus
-
 extern "C" {
 #endif
 
