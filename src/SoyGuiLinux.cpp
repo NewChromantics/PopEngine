@@ -63,7 +63,7 @@ bool Platform::TWindow::IsForeground()
 
 void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 {
-	Soy_AssertTodo();
+	//Soy_AssertTodo();
 }
 
 std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)

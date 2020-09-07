@@ -43,7 +43,7 @@ static void Init(sg_desc desc)
 	pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 0.0f, 0.0f, 1.0f}};
 }
 
-static void Frame(void)
+static void Frame()
 {
 	/* animate clear colors */
 	float g = pass_action.colors[0].val[1] + 0.01f;
@@ -83,8 +83,10 @@ void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
 	auto LocalContext = Params.mLocalContext;
 	auto WindowObject = this->mWindow.GetObject(LocalContext);
 	auto &Window = WindowObject.This<ApiGui::TWindowWrapper>();
+
 	// Attach Frame to Draw Function
-	Window.StartRender(Frame);
+	std::function<void()> mFrame = Frame;
+	Window.StartRender(&mFrame);
 }
 
 //#if defined(TARGET_OSX) || defined(TARGET_IOS)
