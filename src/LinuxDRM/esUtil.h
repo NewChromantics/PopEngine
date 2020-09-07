@@ -94,7 +94,7 @@ typedef struct _escontext
    EGLSurface  eglSurface;
 
    /// Callbacks
-   std::function<void()> drawFunc;
+   ESCALLBACK std::function<void()> drawFunc;
    void (ESCALLBACK *keyFunc) ( struct _escontext *, unsigned char, int, int );
    void (ESCALLBACK *updateFunc) ( struct _escontext *, float deltaTime );
 } ESContext;
@@ -137,7 +137,7 @@ void ESUTIL_API esMainLoop ( ESContext *esContext );
 /// \param esContext Application context
 /// \param drawFunc Draw callback function that will be used to render the scene
 //
-void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, std::function<void()> drawFunc );
+void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, ESCALLBACK std::function<void()> *drawFunc );
 
 //
 /// \brief Register an update callback function to be used to update on each time step
