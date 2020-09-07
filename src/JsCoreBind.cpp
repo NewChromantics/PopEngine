@@ -48,7 +48,7 @@
 #include "TApiOpenvr.h"
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_OSX)
+#if defined(TARGET_OSX) || defined(TARGET_LINUX)
 #include "TApiSokol.h"
 #endif
 
@@ -667,7 +667,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiOpenvr::Bind(*Context);
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_OSX)
+#if defined(TARGET_OSX) || defined(TARGET_LINUX)
 			ApiSokol::Bind( *Context );
 #endif
 
