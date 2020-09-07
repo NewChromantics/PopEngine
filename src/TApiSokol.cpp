@@ -18,8 +18,8 @@ namespace ApiSokol
 {
 	const char Namespace[] = "Pop.Sokol";
 
-	DEFINE_BIND_TYPENAME(Initialise);
-	DEFINE_BIND_FUNCTIONNAME(Render);
+	DEFINE_BIND_TYPENAME(RenderPipeline);
+	DEFINE_BIND_FUNCTIONNAME(StartRender);
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -30,7 +30,7 @@ void ApiSokol::Bind(Bind::TContext &Context)
 
 void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate &Template)
 {
-	Template.BindFunction<BindFunction::Render>(&TSokolWrapper::Render);
+	Template.BindFunction<BindFunction::StartRender>(&TSokolWrapper::StartRender);
 }
 
 static sg_pass_action pass_action;
@@ -64,10 +64,28 @@ static void Frame(void)
 
 void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 {
+	// Set TPersistent Pointer
 	auto mWindow = Params.GetArgumentObject(0);
 
-	sg_desc desc { 0 };
-#if defined(TARGET_OSX) || defined(TARGET_IOS)
+	//auto WindowObject = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
+
+	// Get Context Desc
+	//sg_desc desc = WindowObject.GetSokolContext();
+
+	// Initialise Sokol
+	//Init(desc);
+}
+
+void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
+{
+	auto LocalContext = Params.mLocalContext;
+	auto WindowObject = this->mWindow.GetObject(LocalContext);
+	auto &Window = WindowObject.This<ApiGui::TWindowWrapper>();
+	// Attach Frame to Draw Function
+	Window.StartRender(Frame);
+}
+
+//#if defined(TARGET_OSX) || defined(TARGET_IOS)
 //	desc = {
 //		.metal = {
 //			.device = ParentWindow.GetMetalDevice(Context),
@@ -76,16 +94,4 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 //			.user_data = 0xABCDABCD
 //		}
 //	}
-#endif
-	// Initialise Sokol
-	Init(desc);
-}
-
-void ApiSokol::TSokolWrapper::Render(Bind::TCallback &Params)
-{
-	auto LocalContext = Params.mLocalContext;
-	auto WindowObject = this->mWindow.GetObject(LocalContext);
-	auto &Window = WindowObject.This<ApiGui::TWindowWrapper>();
-	// Attach Frame to Draw Function
-	Window.Render(Frame);
-}
+//#endif

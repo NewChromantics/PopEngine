@@ -6,12 +6,12 @@ namespace ApiSokol
 	void Bind(Bind::TContext &Context);
 
 	class TSokolWrapper;
-	DECLARE_BIND_TYPENAME(Initialise);
+	DECLARE_BIND_TYPENAME(RenderPipeline);
 }
 
 class SoySokol;
 
-class ApiSokol::TSokolWrapper : public Bind::TObjectWrapper<BindType::Initialise, SoySokol>
+class ApiSokol::TSokolWrapper : public Bind::TObjectWrapper<BindType::RenderPipeline, SoySokol>
 {
 public:
 	TSokolWrapper(Bind::TContext &Context) : TObjectWrapper(Context)
@@ -22,7 +22,7 @@ public:
 	virtual void Construct(Bind::TCallback &Params) override;
 
 	// Initial Test
-	void Render(Bind::TCallback &Params);
+	void StartRender(Bind::TCallback &Params);
 
 public:
 	Bind::TPersistent								mWindow;

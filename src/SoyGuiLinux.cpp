@@ -16,7 +16,7 @@ public:
 	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
 
 	ESContext											mESContext;
-	void													Render( std::function<void()> Frame );
+	void													StartRender( std::function<void()> *Frame );
 };
 
 Platform::TWindow::TWindow(const std::string& Name)
@@ -39,13 +39,6 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
 	Soy_AssertTodo();
-}
-
-void Platform::TWindow::Render( std::function<void()> Frame )
-{
-	esRegisterDrawFunc( &mESContext, Frame );
-
-	esMainLoop( &mESContext );
 }
 
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
@@ -112,3 +105,13 @@ std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string
 {
 	Soy_AssertTodo();
 }
+
+// Sokol
+
+void Platform::TWindow::StartRender( std::function<void()> *Frame )
+{
+	esRegisterDrawFunc( &mESContext, Frame );
+
+	esMainLoop( &mESContext );
+}
+
