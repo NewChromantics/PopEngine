@@ -9,9 +9,9 @@ namespace ApiSokol
 	DECLARE_BIND_TYPENAME(RenderPipeline);
 }
 
-class SoySokol;
+class TApiSokol;
 
-class ApiSokol::TSokolWrapper : public Bind::TObjectWrapper<BindType::RenderPipeline, SoySokol>
+class ApiSokol::TSokolWrapper : public Bind::TObjectWrapper<BindType::RenderPipeline, TApiSokol>
 {
 public:
 	TSokolWrapper(Bind::TContext &Context) : TObjectWrapper(Context)
