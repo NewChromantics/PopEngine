@@ -76,7 +76,7 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 //			.user_data = 0xABCDABCD
 //		}
 //	}
-
+#endif
 	// Initialise Sokol
 	Init(desc);
 }
