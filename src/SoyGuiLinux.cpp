@@ -23,7 +23,7 @@ Platform::TWindow::TWindow(const std::string& Name)
 {
 	esInitContext( &mESContext );
 
-	// tsdk: the width and height are set to the size of the screen in this function, leaving them in here in case that needs to change in future
+	// tsdk: the width and height are set to the size of the screen in this function, leaving them as 0's in case that needs to change in future
 	esCreateWindow( &mESContext, Name.c_str(), 0, 0, ES_WINDOW_ALPHA );
 }
 
@@ -38,7 +38,7 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
-	Soy_AssertTodo();
+	return Soy::Rectx<size_t>( 0, 0, mESContext.screenWidth, mESContext.screenHeight );
 }
 
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
