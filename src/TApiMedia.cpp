@@ -515,8 +515,8 @@ PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
 
-
-	Array<char> JsonBuffer(2000);
+	//	gr: this can get massive now with arkit... might run into some issues
+	Array<char> JsonBuffer(1024*25);
 	//	gr: this is json now, so we need a good way to extract what we need...
 	auto NextFrameNumberSigned = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
 	if (NextFrameNumberSigned == -1 )
