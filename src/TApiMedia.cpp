@@ -179,8 +179,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 		try
 		{
 			//	we now return the json directly
-			Array<char> JsonBuffer;
-			JsonBuffer.SetSize(6000);
+			Array<char> JsonBuffer(6000);
 			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), size_cast<int>(JsonBuffer.GetDataSize()));
 
 			std::string Json(JsonBuffer.GetArray());
@@ -791,12 +790,12 @@ PopCameraDevice::TFrame PopH264Decoder::TInstance::PopLastFrame(bool SplitPlanes
 	Frame.mTime = SoyTime(true);
 		
 
-	char JsonBuffer[1000] = {0};
+	Array<char> JsonBuffer(1024*25);
 	//	gr: this is json now, so we need a good way to extract what we need...
-	PopH264_PeekFrame(mHandle, JsonBuffer, std::size(JsonBuffer) );
+	PopH264_PeekFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetSize() );
 	//if (NextFrameNumber < 0)
 	//	throw TNoFrameException();
-	std::string Json(JsonBuffer);
+	std::string Json(JsonBuffer.GetArray());
 
 	//	get plane count
 	BufferArray<SoyPixelsMeta, 4> PlaneMetas;
@@ -1140,9 +1139,9 @@ bool PopH264Encoder::TInstance::PopPacket(ArrayBridge<uint8_t>&& Data,std::strin
 		return false;
 
 	//	get the meta
-	char JsonBuffer[2000] = {0};
-	PopH264_EncoderPeekData( mHandle, JsonBuffer, std::size(JsonBuffer) );
-	MetaJson = std::string( JsonBuffer );
+	Array<char> JsonBuffer(1024*25);
+	PopH264_EncoderPeekData( mHandle, JsonBuffer.GetArray(), JsonBuffer.GetSize() );
+	MetaJson = std::string( JsonBuffer.GetArray() );
 
 	Data.SetSize(NextSize);
 	auto ReadSize = PopH264_EncoderPopData( mHandle, Data.GetArray(), Data.GetDataSize() );
