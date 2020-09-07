@@ -65,15 +65,17 @@ static void Frame(void)
 void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 {
 	// Set TPersistent Pointer
-	auto mWindow = Params.GetArgumentObject(0);
+	auto Window = Params.GetArgumentObject(0);
+	mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
 
 	//auto WindowObject = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
 
 	// Get Context Desc
-	//sg_desc desc = WindowObject.GetSokolContext();
+	// sg_desc desc = WindowObject.GetSokolContext();
+	sg_desc desc = {0};
 
 	// Initialise Sokol
-	//Init(desc);
+	Init(desc);
 }
 
 void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
