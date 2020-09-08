@@ -66,8 +66,8 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
 		return EGL_FALSE;
     }
 
-    esContext->screenWidth = drm->mode->vdisplay;
-    esContext->screenHeight = drm->mode->hdisplay;
+    esContext->screenWidth = drm->mode->hdisplay;
+    esContext->screenHeight = drm->mode->vdisplay;
     esContext->hWnd = (EGLNativeWindowType)egl.surface;
     esContext->eglDisplay=egl.display;
     esContext->eglContext=egl.context;
