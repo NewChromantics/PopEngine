@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
+		583BC15A2507FF7800AFFF5B /* SoySokolIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 583BC1592507FF7800AFFF5B /* SoySokolIos.mm */; };
 		5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5850A42224F920C400145478 /* SoyGuiOsx.mm */; };
 		5873CDBA25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
 		5873CDBB25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
@@ -309,6 +310,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		583BC1592507FF7800AFFF5B /* SoySokolIos.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoySokolIos.mm; path = src/SoySokolIos.mm; sourceTree = "<group>"; };
 		5850A42224F920C400145478 /* SoyGuiOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiOsx.mm; path = src/SoyGuiOsx.mm; sourceTree = "<group>"; };
 		5873CDB825000A78008F73AA /* SoyGui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyGui.h; path = src/SoyGui.h; sourceTree = "<group>"; };
 		5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSokol.cpp; path = src/TApiSokol.cpp; sourceTree = "<group>"; };
@@ -1154,6 +1156,7 @@
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
 				BFEF6A462479C603000A1F88 /* Readme.md */,
+				583BC1592507FF7800AFFF5B /* SoySokolIos.mm */,
 				BF607EA6224107B800A78C00 /* SoyBluetooth.h */,
 				BF607EA7224107B800A78C00 /* SoyBluetooth.mm */,
 				5873CDB825000A78008F73AA /* SoyGui.h */,
@@ -1667,6 +1670,7 @@
 				BF151F8423845FAD00A70EBF /* SoyAvf.mm in Sources */,
 				BF151FB323845FD200A70EBF /* JsCoreBind.cpp in Sources */,
 				BF151F9123845FAD00A70EBF /* SoyMedia.cpp in Sources */,
+				583BC15A2507FF7800AFFF5B /* SoySokolIos.mm in Sources */,
 				BF5C4AC423F6FE3A007D6393 /* zip.c in Sources */,
 				BF151F8823845FAD00A70EBF /* SoyFilesystem.cpp in Sources */,
 				BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */,
