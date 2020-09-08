@@ -96,14 +96,3 @@ void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
 {
 	
 }
-
-//#if defined(TARGET_OSX) || defined(TARGET_IOS)
-//	desc = {
-//		.metal = {
-//			.device = ParentWindow.GetMetalDevice(Context),
-//			.renderpass_descriptor_userdata_cb = ParentWindow.GetRenderPassDescriptor(Context),
-//			.drawable_userdata_cb = ParentWindow.GetDrawable(Context),
-//			.user_data = 0xABCDABCD
-//		}
-//	}
-//#endif
