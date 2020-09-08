@@ -43,6 +43,7 @@ void ApiSokol::TSokolWrapper::Init(sg_desc desc)
 
 void ApiSokol::TSokolWrapper::RenderFrame()
 {
+	auto ScreenRect = mSoyWindow->GetScreenRect();
 	/* animate clear colors */
 	float g = mPassAction.colors[0].val[1] + 0.01f;
 	if (g > 1.0f)
@@ -52,8 +53,8 @@ void ApiSokol::TSokolWrapper::RenderFrame()
 	/* draw one frame */
 	sg_begin_default_pass(
 		&mPassAction,
-		300,
-		300
+		ScreenRect.w,
+		ScreenRect.h
 	);
 
 	sg_end_pass();
