@@ -8,6 +8,8 @@ namespace ApiSokol
 	void Bind(Bind::TContext &Context);
 
 	class TSokolWrapper;
+	class TSokolContext;
+
 	DECLARE_BIND_TYPENAME(RenderPipeline);
 }
 
@@ -29,8 +31,17 @@ public:
 public:
 	Bind::TPersistent															mWindow;
 	std::shared_ptr<SoyWindow>										mSoyWindow;
-	sg_pass_action				 									mPassAction;
+	sg_pass_action				 												mPassAction;
 
-	void																					RenderFrame();
 	void																					Init(sg_desc desc);
+	void																					RenderFrame();
+};
+
+class ApiSokol::TSokolContext
+{
+public:
+	TSokolContext( std::shared_ptr<SoyWindow> mSoyWindow );
+
+	sg_context_desc								mContextDesc;
+
 };

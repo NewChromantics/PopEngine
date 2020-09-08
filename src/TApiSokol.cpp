@@ -44,6 +44,7 @@ void ApiSokol::TSokolWrapper::Init(sg_desc desc)
 void ApiSokol::TSokolWrapper::RenderFrame()
 {
 	auto ScreenRect = mSoyWindow->GetScreenRect();
+
 	/* animate clear colors */
 	float g = mPassAction.colors[0].val[1] + 0.01f;
 	if (g > 1.0f)
@@ -67,7 +68,6 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	auto Window = Params.GetArgumentObject(0);
 	mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
 
-	// auto ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
 	auto LocalContext = Params.mLocalContext;
 	auto WindowObject = this->mWindow.GetObject(LocalContext);
 	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
@@ -75,10 +75,14 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 
 	// Make sure to zero initialise the Member Variables
 	mPassAction = {0};
-
-	// Get Context Desc
-	// sg_desc desc = WindowObject.GetSokolContext();
 	sg_desc desc = {0};
+
+	// Create Context
+	auto* Context = new ApiSokol::TSokolContext(mSoyWindow);
+
+	desc = {
+		.context = Context->mContextDesc
+	};
 
 	// Initialise Sokol
 	Init(desc);
