@@ -1,5 +1,6 @@
 #pragma once
 #include "TBind.h"
+#include "SoyWindow.h"
 
 namespace ApiSokol
 {
@@ -25,5 +26,8 @@ public:
 	void StartRender(Bind::TCallback &Params);
 
 public:
-	Bind::TPersistent								mWindow;
+	Bind::TPersistent															mWindow;
+	std::shared_ptr<SoyWindow>										mSoyWindow;
+
+	void																					RenderFrame();
 };

@@ -16,7 +16,7 @@ public:
 	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
 
 	ESContext											mESContext;
-	void													StartRender( std::function<void()> *Frame );
+	void													StartRender( std::function<void()> Frame );
 };
 
 Platform::TWindow::TWindow(const std::string& Name)
@@ -108,7 +108,7 @@ std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string
 
 // Sokol
 
-void Platform::TWindow::StartRender( std::function<void()> *Frame )
+void Platform::TWindow::StartRender( std::function<void()> Frame )
 {
 	esRegisterDrawFunc( &mESContext, Frame );
 

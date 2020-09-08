@@ -43,7 +43,7 @@ static void Init(sg_desc desc)
 	pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 0.0f, 0.0f, 1.0f}};
 }
 
-static void Frame()
+void ApiSokol::TSokolWrapper::RenderFrame()
 {
 	/* animate clear colors */
 	float g = pass_action.colors[0].val[1] + 0.01f;
@@ -68,7 +68,11 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	auto Window = Params.GetArgumentObject(0);
 	mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
 
-	//auto WindowObject = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
+	// auto ParentWindow = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
+	auto LocalContext = Params.mLocalContext;
+	auto WindowObject = this->mWindow.GetObject(LocalContext);
+	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
+	mSoyWindow = WindowWrapper.mWindow;
 
 	// Get Context Desc
 	// sg_desc desc = WindowObject.GetSokolContext();
@@ -76,17 +80,13 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 
 	// Initialise Sokol
 	Init(desc);
+	std::function<void()> Frame = [this](){ this->RenderFrame(); };
+	mSoyWindow->StartRender(Frame);
 }
 
 void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
 {
-	auto LocalContext = Params.mLocalContext;
-	auto WindowObject = this->mWindow.GetObject(LocalContext);
-	auto &Window = WindowObject.This<ApiGui::TWindowWrapper>();
 
-	// Attach Frame to Draw Function
-	std::function<void()> mFrame = Frame;
-	Window.StartRender(&mFrame);
 }
 
 //#if defined(TARGET_OSX) || defined(TARGET_IOS)

@@ -78,7 +78,6 @@ public:
 	void			GetScreenRect(Bind::TCallback& Params);
 	void			SetFullscreen(Bind::TCallback& Params);
 	void			EnableScrollbars(Bind::TCallback& Params);
-	void			StartRender( std::function<void()>* );
 
 protected:
 	//	TGuiControlWrapper

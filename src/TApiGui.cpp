@@ -582,8 +582,3 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 	Array<std::string> FilenamesCopy( Filenames );
 	mOnDragDropPromises.Push(FilenamesCopy);
 }
-
-void ApiGui::TWindowWrapper::StartRender(std::function<void()>* Frame)
-{
-	mWindow->StartRender( Frame );
-}

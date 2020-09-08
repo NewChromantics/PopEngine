@@ -272,9 +272,9 @@ void ESUTIL_API esMainLoop ( ESContext *esContext )
 ///
 //  esRegisterDrawFunc()
 //
-void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, ESCALLBACK std::function<void()> *drawFunc )
+void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, ESCALLBACK std::function<void()> drawFunc )
 {
-   esContext->drawFunc = *drawFunc;
+   esContext->drawFunc = drawFunc;
 }
 
 ///
