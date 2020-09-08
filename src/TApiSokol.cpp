@@ -80,8 +80,9 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	// Create Context
 	auto* Context = new ApiSokol::TSokolContext(mSoyWindow);
 
-	desc = {
-		.context = Context->mContextDesc
+	desc = 
+	{
+		.context = Context->GetSokolContext()
 	};
 
 	// Initialise Sokol
