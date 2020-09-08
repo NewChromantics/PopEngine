@@ -33,27 +33,25 @@ void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate &Template)
 	Template.BindFunction<BindFunction::StartRender>(&TSokolWrapper::StartRender);
 }
 
-static sg_pass_action pass_action;
-
-static void Init(sg_desc desc)
+void ApiSokol::TSokolWrapper::Init(sg_desc desc)
 {
 	sg_setup(&desc);
 
 	/* setup pass action to clear to red */
-	pass_action.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 0.0f, 0.0f, 1.0f}};
+	mPassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 0.0f, 0.0f, 1.0f}};
 }
 
 void ApiSokol::TSokolWrapper::RenderFrame()
 {
 	/* animate clear colors */
-	float g = pass_action.colors[0].val[1] + 0.01f;
+	float g = mPassAction.colors[0].val[1] + 0.01f;
 	if (g > 1.0f)
 		g = 0.0f;
-	pass_action.colors[0].val[1] = g;
+	mPassAction.colors[0].val[1] = g;
 
 	/* draw one frame */
 	sg_begin_default_pass(
-		&pass_action,
+		&mPassAction,
 		300,
 		300
 	);
@@ -74,19 +72,23 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
 	mSoyWindow = WindowWrapper.mWindow;
 
+	// Make sure to zero initialise the Member Variables
+	mPassAction = {0};
+
 	// Get Context Desc
 	// sg_desc desc = WindowObject.GetSokolContext();
 	sg_desc desc = {0};
 
 	// Initialise Sokol
 	Init(desc);
+
 	std::function<void()> Frame = [this](){ this->RenderFrame(); };
 	mSoyWindow->StartRender(Frame);
 }
 
 void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
 {
-
+	
 }
 
 //#if defined(TARGET_OSX) || defined(TARGET_IOS)

@@ -1,6 +1,7 @@
 #pragma once
 #include "TBind.h"
 #include "SoyWindow.h"
+#include "sokol/sokol_gfx.h"
 
 namespace ApiSokol
 {
@@ -28,6 +29,8 @@ public:
 public:
 	Bind::TPersistent															mWindow;
 	std::shared_ptr<SoyWindow>										mSoyWindow;
+	sg_pass_action				 									mPassAction;
 
 	void																					RenderFrame();
+	void																					Init(sg_desc desc);
 };
