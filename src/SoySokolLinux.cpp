@@ -7,12 +7,12 @@ class SokolLinuxContext : public ApiSokol::TSokolContext
 public:
 	SokolLinuxContext(std::shared_ptr<SoyWindow> 	mSoyWindow );
 
-	// sg_context_desc								mContextDesc;
+	sg_context_desc								mContextDesc;
 
 	sg_context_desc								GetSokolContext() override;
 };
 
-SokolLinuxContext::SokolLinuxContext(std::shared_ptr<SoyWindow> 	mSoyWindow ) : ApiSokol::TSokolContext(mSoyWindow)
+SokolLinuxContext::SokolLinuxContext(std::shared_ptr<SoyWindow> mSoyWindow ) : ApiSokol::TSokolContext(mSoyWindow)
 {
 	mContextDesc = (sg_context_desc){};
 }
