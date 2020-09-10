@@ -8,18 +8,15 @@
 class SokolMetalContext : public ApiSokol::TSokolContext
 {
 public:
-  SokolMetalContext( std::shared_ptr<SoyWindow> 	mSoyWindow );
+	SokolMetalContext( std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount );
 
-  sg_context_desc					GetSokolContext() override;
+	sg_context_desc					GetSokolContext() override;
 
 public:
-  sg_context_desc         mContextDesc;
-  int                     sample_count;
-  MTKView                 *mMetalView;
-  id<MTLDevice>           mMetalDevice;
-
-  const void*                   GetRenderPassDescriptor(void* user_data);
-  const void*                   GetDrawable(void* user_data);
+	sg_context_desc         		mContextDesc;
+	MTKView*             			mMetalView;
+	id<MTLDevice>         			mMetalDevice;
+	void*							mUserData;
 };
 
 sg_context_desc SokolMetalContext::GetSokolContext()
@@ -27,37 +24,47 @@ sg_context_desc SokolMetalContext::GetSokolContext()
 	return mContextDesc;
 }
 
-const void* SokolMetalContext::GetRenderPassDescriptor(void* user_data)
-{
-  assert(user_data == (void*)0xABCDABCD);
-  return (__bridge const void*) [mMetalView currentRenderPassDescriptor];
-}
 
-const void* SokolMetalContext::GetDrawable(void* user_data)
+SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, SampleCount)
 {
-  assert(user_data == (void*)0xABCDABCD);
-  return (__bridge const void*) [mMetalView currentDrawable];
-}
+	// Needs to be written
+	mMetalView* = mSoyWindow->GetMetalView;
+	
+	// tsdk: Leaving this as a stub for now
+	mUserData = (void*)0xABCDABCD;
 
-SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow ) : ApiSokol::TSokolContext(mSoyWindow)
-{
-  // Needs to be written
-  mMetalView* = mSoyWindow->GetMetalView;
-
-  mMetalDevice = MTLCreateSystemDefaultDevice();
+	mMetalDevice = MTLCreateSystemDefaultDevice();
   
-  [mMetalView setDevice: mMetalDevice];
+	[mMetalView setDevice: mMetalDevice];
+	 
+	auto GetRenderPassDescriptor = [](void* user_data)
+	{
+		auto* This = reinterpret_cast<SokolMetalContext*>(user_data);
+		auto* MetalView = This->mMetalView;
+			
+		assert(This->mUserData == (void*)0xABCDABCD);
+		return (__bridge const void*) [MetalView currentRenderPassDescriptor];
+	};
+	
+	auto GetDrawable = [](void* user_data)
+	{
+		auto* This = reinterpret_cast<SokolMetalContext*>(user_data);
+		auto* MetalView = This->mMetalView;
+		
+		assert(This->mUserData == (void*)0xABCDABCD);
+		return (__bridge const void*) [MetalView currentDrawable];
+	};
 
-  mContextDesc = (sg_context_desc)
-  {
-    .sample_count = 1,
-    .metal =
-    {
-      .device= (__bridge const void*) mMetalDevice,
-	  .renderpass_descriptor_userdata_cb = [this](){ this->GetRenderPassDescriptor(); },
-      .drawable_userdata_cb = [this](){ this->GetDrawable(); },
-      .user_data = 0xABCDABCD
-    }
-  };
+	mContextDesc = (sg_context_desc)
+	{
+		.sample_count = SampleCount,
+		.metal =
+		{
+			.device= (__bridge const void*) mMetalDevice,
+			.renderpass_descriptor_userdata_cb = GetRenderPassDescriptor,
+			.drawable_userdata_cb = GetDrawable,
+			.user_data = this
+		}
+	};
 
 }
