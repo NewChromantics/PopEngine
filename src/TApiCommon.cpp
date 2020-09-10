@@ -263,7 +263,7 @@ void ApiPop::ThreadTest(Bind::TCallback& Params)
 			
 			auto GlobalOther = JSContextGetGlobalObject( ParamsJs.mContext );
 			{
-				/*
+				/ *
 				auto Global = JSContextGetGlobalObject( Context );
 				JSStringRef GlobalNameString = JSStringCreateWithUTF8CString("this");
 				
@@ -621,30 +621,50 @@ void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 
 void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
-
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
 
-	auto Filename = Params.GetArgumentFilename(0);
+	std::string Filename = Params.GetArgumentString(0);
 
-    auto Directory = Platform::GetDirectoryFromFilename(Filename);
-    Platform::CreateDirectory(Directory);
-
-	//	write as a string if not a specific binary array
-	if ( !Params.IsArgumentArray(1) )
+	//	gr; work out a better idea for this
+	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
 	{
+		auto DocsDir = Platform::GetDocumentsDirectory();
+		//std::Debug << "Platform::GetDocumentsDirectory=" << DocsDir << std::endl;
+		Filename = DocsDir + std::string("/") + Filename;
+	}
+	else
+	{
+		Filename = Params.GetArgumentFilename(0);
+		auto Directory = Platform::GetDirectoryFromFilename(Filename);
+		Platform::CreateDirectory(Directory);
+	}
+
+	Array<uint8_t> Contents;
+	auto ContentsArgumentIndex = 1;
+
+	//	gr: let's allow string as binary
+	if (Params.IsArgumentString(ContentsArgumentIndex))
+	{
+		auto ContentsString = Params.GetArgumentString(ContentsArgumentIndex);
+		auto* ContentsStringData = ContentsString.c_str();
+		auto ContentsStringLength = ContentsString.length();
+		auto ContentsStringArray = GetRemoteArray(reinterpret_cast<const uint8_t*>(ContentsStringData), ContentsStringLength);
+		Contents.PushBackArray(ContentsStringArray);
+	}
+	else if ( !Params.IsArgumentArray(ContentsArgumentIndex) )
+	{
+		//	write as a string if not a specific binary array
 		if ( Append )
 			throw Soy::AssertException("Currently cannot append file with string");
 		WriteStringToFile(Params);
 		return;
 	}
-                                                                
-	//	need to have some generic interface here I think
-	//	we dont have the type exposed in Bind yet
-	Array<uint8_t> Contents;
-	Params.GetArgumentArray( 1, GetArrayBridge(Contents) );
+	else
+	{
+		Params.GetArgumentArray(ContentsArgumentIndex, GetArrayBridge(Contents));
+	}
 
-	auto ContentsChar = GetArrayBridge(Contents);
-	Soy::ArrayToFile( GetArrayBridge(ContentsChar), Filename, Append );
+	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
 }
 
 
@@ -1248,7 +1268,7 @@ void TImageWrapper::GetPixelBuffer(Bind::TCallback& Params)
 	auto& This = Params.This<TImageWrapper>();
 	
 	auto IsTargetArray = Params.IsArgumentArray(1);
-	auto& Heap = Params.mContext.GetImageHeap();
+	//auto& Heap = Params.mContext.GetImageHeap();
 	
 	Soy::TScopeTimerPrint Timer(__func__,5);
 	
@@ -1319,7 +1339,7 @@ void TImageWrapper::GetPixelBufferPixels(std::function<void(const ArrayBridge<So
 std::shared_ptr<Opengl::TTexture> TImageWrapper::GetTexturePtr()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Texture = GetTexture();
+	/*auto& Texture = */GetTexture();
 	return mOpenglTexture;
 }
 

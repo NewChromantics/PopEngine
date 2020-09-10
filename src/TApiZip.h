@@ -40,3 +40,4 @@ public:
 	std::shared_ptr<Bind::TPromise>	mWritePromise;
 };
 
+

@@ -28,17 +28,20 @@ jobs:
   
       - name: Install Github Packages
         working-directory: ${{ env.project }}.Package/
-        run: npm i
+        run: npm install
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - name: Move Package Downloads to Libs
+      - name: Copy package downloads to Libs
         run: |
           mkdir -p Libs
-          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
+          cp ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
           ls -R Libs
 
-      - name: Add msbuild to PATH
+      - name: Setup Nuget
+        uses: warrenbuckley/Setup-Nuget@v1
+  
+      - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.0.0
 
       - name: Windows

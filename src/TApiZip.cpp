@@ -113,13 +113,11 @@ void ApiZip::TArchiveWrapper::OnWriteFinished(const std::string& Error)
 	auto Flush = [this, Error](Bind::TLocalContext& Context)
 	{
 		auto Promise = mWritePromise;
-
 		//	gr: clear variables now, as some javascript (jsc) runs 
 		//	and might queue another write BEFORE we reach the end of
 		//	this lambda
 		mWritePromise.reset();
 		mWriteThread.reset();
-
 		if (Error.length())
 		{
 			Promise->Reject(Context, Error);
@@ -207,3 +205,4 @@ void TZipFile::AddFile(const std::string& Filename, const std::string & ZipFilen
 	Error = zip_entry_close(mZip);
 	IsOkay(Error, "zip_entry_close");
 }
+

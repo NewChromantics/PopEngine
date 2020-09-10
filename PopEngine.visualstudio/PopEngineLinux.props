@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>./src/SoyLib/src</IncludePath>
+    <IncludePath>./src/SoyLib/src;./src/SoyLib/src/magic_enum/include;./src/Json11;./PopEngine.Package/node_modules/@newchromantics/popcameradevice/Nvidia;./PopEngine.Package/node_modules/@newchromantics/poph264/Nvidia/</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>

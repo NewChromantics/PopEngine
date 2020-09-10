@@ -7,6 +7,10 @@
       <Configuration>Debug_Chakra</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_NoDependencies|x64">
+      <Configuration>Debug_NoDependencies</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug_V8|x64">
       <Configuration>Debug_V8</Configuration>
       <Platform>x64</Platform>
@@ -25,20 +29,33 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.h" />
-    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.h" />
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\ChakraBind.h" />
     <ClInclude Include="..\src\JsCoreBind.h" />
     <ClInclude Include="..\src\JsCoreDll.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\Json11\json11.hpp" />
     <ClInclude Include="..\src\MagicEnum\include\magic_enum.hpp" />
-    <ClInclude Include="..\src\PopEngine.h" />
+    <CopyFileToFolders Include="..\src\PopEngine.h">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
+    </CopyFileToFolders>
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\SoyBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -46,6 +63,7 @@
     <ClInclude Include="..\src\SoyHid.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -104,6 +122,7 @@
     <ClInclude Include="..\src\TApiBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -114,6 +133,7 @@
     <ClInclude Include="..\src\TApiDlib.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -122,6 +142,7 @@
     <ClInclude Include="..\src\TApiEzsift.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -131,6 +152,7 @@
     <ClInclude Include="..\src\TApiInput.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -139,6 +161,7 @@
     <ClInclude Include="..\src\TApiOpencl.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -148,12 +171,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiOpengl.h" />
     <ClInclude Include="..\src\TApiOpenglContext.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -163,6 +188,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiPanopoly.h" />
@@ -173,6 +199,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiWebsocket.h" />
@@ -182,6 +209,7 @@
     <ClInclude Include="..\src\TPopServerThread.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -189,6 +217,7 @@
     <ClInclude Include="..\src\TProtocolWebSocket.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -197,6 +226,7 @@
     <ClInclude Include="..\src\TV8Container.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -204,6 +234,7 @@
     <ClInclude Include="..\src\TV8Inspector.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -211,6 +242,7 @@
     <ClInclude Include="..\src\TV8Instance.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -218,6 +250,7 @@
     <ClInclude Include="..\src\TV8ObjectWrapper.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -225,6 +258,7 @@
     <ClInclude Include="..\src\V8Bind.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\Win32OpenglContext.h" />
     <ClInclude Include="..\src\Zip\src\miniz.h" />
@@ -251,6 +285,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\SoyViveHandTracker.cpp">
@@ -258,6 +293,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\TApiPanopoly.cpp" />
@@ -266,34 +302,98 @@
     <ClCompile Include="..\src\V8Bind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\Win32OpenglContext.cpp" />
     <ClCompile Include="..\src\Zip\src\zip.c" />
     <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\freenect2.dll" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\k4a.dll" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.cs" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.dll" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.exp" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.pdb" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.exe" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.ilk" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.pdb" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.cs" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.dll" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.exp" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.pdb" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.exe" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.iobj" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.ipdb" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.pdb" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\x264.dll" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\freenect2.dll">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\k4a.dll">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.cs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.dll">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.exp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.pdb">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.exe">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.ilk">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.pdb">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.cs">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.dll">
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.exp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.pdb">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.exe">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.iobj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.ipdb">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.pdb">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </None>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\x264.dll">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
     <None Include="..\src\PopEngineAppBundle.xcconfig" />
     <None Include="..\src\PopMain.mm" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
     <ClCompile Include="..\src\JsCoreDll.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\PopEngine.cpp">
       <FileType>Document</FileType>
@@ -301,6 +401,7 @@
     <None Include="..\src\SoyBluetooth.mm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -408,6 +509,7 @@
     <None Include="..\UnitTest\VirtualReality\bootup.js" />
     <None Include="packages.config">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
@@ -416,6 +518,7 @@
     <ClCompile Include="..\src\SoyHid.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -457,6 +560,7 @@
     <ClCompile Include="..\src\TApiBluetooth.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -465,6 +569,7 @@
     <ClCompile Include="..\src\TApiDlib.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -472,6 +577,7 @@
     <ClCompile Include="..\src\TApiEzsift.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -480,14 +586,18 @@
     <ClCompile Include="..\src\TApiInput.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TApiMedia.cpp" />
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\TApiOpencl.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -497,12 +607,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\TApiOpengl.cpp" />
     <ClCompile Include="..\src\TApiOpenglContext.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -514,6 +626,7 @@
     <ClCompile Include="..\src\TPopServerThread.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -521,6 +634,7 @@
     <ClCompile Include="..\src\TProtocolWebSocket.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -528,6 +642,7 @@
     <ClCompile Include="..\src\TV8Container.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -535,6 +650,7 @@
     <ClCompile Include="..\src\TV8Inspector.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -542,6 +658,7 @@
     <ClCompile Include="..\src\TV8Instance.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -549,6 +666,7 @@
     <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
@@ -565,8 +683,12 @@
     <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.lib" />
-    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.lib" />
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </Library>
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+    </Library>
     <Library Include="..\src\Libs\dyncall\lib\libdyncallback_s.lib" />
     <Library Include="..\src\Libs\dyncall\lib\libdyncall_s.lib" />
     <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib" />
@@ -585,6 +707,11 @@
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -614,6 +741,7 @@
     <Import Project="PopEngine.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_JsCore.props" />
+    <Import Project="PopEngineModules.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -622,12 +750,20 @@
     <Import Project="JsApi_Chakra.props" />
     <Import Project="Directx11.props" />
     <Import Project="Opengl.props" />
+    <Import Project="PopEngineModules.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+    <Import Project="BuildToolCopyFileToOutput.props" />
+    <Import Project="JsApi_Chakra.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="PopEngine.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_V8.props" />
+    <Import Project="PopEngineModules.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -635,6 +771,7 @@
     <Import Project="Release.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_JsCore.props" />
+    <Import Project="PopEngineModules.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -642,6 +779,7 @@
     <Import Project="Release.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_V8.props" />
+    <Import Project="PopEngineModules.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">
@@ -649,6 +787,10 @@
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">
     <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
   </PropertyGroup>
@@ -698,6 +840,24 @@
     <Manifest />
     <Manifest />
     <Link />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+    </ClCompile>
+    <Link />
+    <Link />
+    <PostBuildEvent />
+    <Link />
+    <PostBuildEvent />
+    <CustomBuildStep />
+    <CustomBuildStep />
+    <CustomBuildStep />
+    <CustomBuild />
+    <Link />
+    <Manifest />
+    <Manifest />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">
     <ClCompile>

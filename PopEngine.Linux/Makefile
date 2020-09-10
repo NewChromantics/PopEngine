@@ -6,20 +6,20 @@ APP_NAME = PopEngineTestApp
 compiler ?= g++
 CC = ${compiler}
 
-# osTarget is the target os eg. Nvidia / Pi4
-# tsdk: the naming of the build folders are handled by the github actions
-# osTarget is still used for if statements in the make file
-osTarget ?= Linux
+# TargetArch is the target architecture or OS
+# gr: always prefixed with Linux_
+# 	then add architecture or specific build (nvidia jetson, pi4)
+osTarget ?= Linux_Unknown
 BUILD_DIR = ../Build
 
-# tsdk: Env var that is set by the github action
-GITHUB_LIB_PATH = $(osTarget)
-
+TargetArch = $(osTarget)
 CONFIGURATION ?= Release
 
 PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
+
+LIB_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
 
 LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
@@ -27,10 +27,10 @@ LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)	\
--I$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)	\
+-I$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
+-I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 
-LIB_SRC_FILES  = \
+LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
 $(SRC_PATH)/JsCoreBind.cpp \
 $(SRC_PATH)/PopMain.cpp \
@@ -42,12 +42,16 @@ $(SRC_PATH)/TApiMedia.cpp \
 $(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
+$(SRC_PATH)/TApiZip.cpp \
+
+LIB_C_FILES = \
+$(SRC_PATH)/Zip/src/zip.c	\
 
 #$(SRC_PATH)/TApiEngine.cpp \
 
 
 # soy lib files
-LIB_SRC_FILES  += \
+LIB_CPP_FILES  += \
 $(SOY_PATH)/src/smallsha1/sha1.cpp \
 $(SOY_PATH)/src/memheap.cpp \
 $(SOY_PATH)/src/SoyApp.cpp \
@@ -109,12 +113,11 @@ LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)	\
+-L$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
 -lPopCameraDevice \
--L$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)	\
+-L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 
-
-LIB_OBJECTS=$(LIB_SRC_FILES:.cpp=.o)
+LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
 
 OUT_LIB=$(BUILD_DIR)/lib${LIB_NAME}.so
@@ -124,8 +127,8 @@ OUT_APP=$(BUILD_DIR)/${APP_NAME}
 # These files (without directory structure) get copied to build dir
 OUT_FILE_SOURCES = \
 $(SRC_PATH)/PopEngine.h	\
-$(PROJECT_PATH)/Libs/poph264/$(GITHUB_LIB_PATH)/libPopH264.so 	\
-$(PROJECT_PATH)/Libs/popcameradevice/$(GITHUB_LIB_PATH)/libPopCameraDevice.so	\
+$(LIB_MODULES_PATH)/poph264/$(TargetArch)/libPopH264.so 	\
+$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)/libPopCameraDevice.so	\
 
 # convert to Build/xxx target files
 OUT_FILES = $(addprefix ${BUILD_DIR}/,$(notdir ${OUT_FILE_SOURCES}))
@@ -159,6 +162,9 @@ $(OUT_LIB): $(LIB_OBJECTS) $(OUT_FILES)
 	$(CC) $(LIB_LINK_FLAGS) -o $@ $(LIB_OBJECTS) $(LIB_LINK_LIBS)
 	$(info Listing dependencies of $(OUT_LIB))
 	ldd $(OUT_LIB)
+
+.c.o:
+	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@

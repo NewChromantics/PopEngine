@@ -360,24 +360,6 @@
     <ClInclude Include="..\src\Json11\json11.hpp">
       <Filter>Libs\Json11</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TApiXr.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyOpenxr.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Win32OpenglContext.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\TApiDirectx11.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SoyWin32.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\PopEngine.h">
       <Filter>Source</Filter>
     </ClInclude>

@@ -21,6 +21,7 @@ jobs:
           - os: macOS
             type: Osx
             BuildScheme: PopEngine_App
+            BuildTargetDir: PopEngine_Osx.framework
 
     steps:
       - uses: actions/checkout@v2
@@ -48,4 +49,5 @@ jobs:
       - uses: NewChromantics/PopAction_BuildApple@v1
         with:
           BuildScheme: ${{ matrix.config.BuildScheme }}
+          BuildTargetDir: ${{ matrix.config.BuildTargetDir }}
           project: ${{ env.project }}

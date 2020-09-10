@@ -7,12 +7,12 @@ class TMediaExtractor;
 class TMediaExtractorParams;
 
 
-namespace PopH264
+namespace PopH264Decoder
 {
 	class TInstance;
 }
 
-namespace X264
+namespace PopH264Encoder
 {
 	class TInstance;
 }
@@ -27,9 +27,13 @@ namespace ApiMedia
 {
 	void	Bind(Bind::TContext& Context);
 	
+	class TCameraDeviceWrapper;
 	DECLARE_BIND_TYPENAME(Source);
-	DECLARE_BIND_TYPENAME(PopCameraDevice);
-	DECLARE_BIND_TYPENAME(AvcDecoder);
+	
+	class TH264DecoderWrapper;
+	DECLARE_BIND_TYPENAME(H264Decoder);
+
+	class TH264EncoderWrapper;
 	DECLARE_BIND_TYPENAME(H264Encoder);
 }
 
@@ -38,7 +42,8 @@ namespace ApiMedia
 class PopCameraDevice::TFrame
 {
 public:
-	SoyTime			mTime;
+	SoyTime			mTime;			//	time of packet being popped
+	uint32_t		mFrameNumber = 0;	//	time from device
 	std::string		mMeta;	//	other meta
 	//BufferArray<std::shared_ptr<SoyPixelsImpl>,4>	mPlanes;
 	std::shared_ptr<SoyPixelsImpl>	mPlane0;
@@ -48,10 +53,10 @@ public:
 };
 
 
-class TPopCameraDeviceWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::Source,PopCameraDevice::TInstance>
+class ApiMedia::TCameraDeviceWrapper : public Bind::TObjectWrapper<BindType::Source,PopCameraDevice::TInstance>
 {
 public:
-	TPopCameraDeviceWrapper(Bind::TContext& Context) :
+	TCameraDeviceWrapper(Bind::TContext& Context) :
 		TObjectWrapper		( Context )
 	{
 	}
@@ -77,10 +82,10 @@ public:
 
 
 
-class TAvcDecoderWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::AvcDecoder,PopH264::TInstance>
+class ApiMedia::TH264DecoderWrapper : public Bind::TObjectWrapper<BindType::H264Decoder,PopH264Decoder::TInstance>
 {
 public:
-	TAvcDecoderWrapper(Bind::TContext& Context) :
+	TH264DecoderWrapper(Bind::TContext& Context) :
 		TObjectWrapper		( Context )
 	{
 	}
@@ -104,7 +109,7 @@ protected:
 	void						FlushQueuedData();
 	
 public:
-	std::shared_ptr<PopH264::TInstance>&		mDecoder = mObject;
+	std::shared_ptr<PopH264Decoder::TInstance>&		mDecoder = mObject;
 	
 	bool							mOnlyLatest = true;
 	bool							mSplitPlanes = true;
@@ -125,7 +130,7 @@ public:
 
 
 
-class TH264EncoderWrapper : public Bind::TObjectWrapper<ApiMedia::BindType::H264Encoder,X264::TInstance>
+class ApiMedia::TH264EncoderWrapper : public Bind::TObjectWrapper<BindType::H264Encoder,PopH264Encoder::TInstance>
 {
 public:
 	TH264EncoderWrapper(Bind::TContext& Context) :
@@ -144,6 +149,8 @@ public:
 
 public:
 	Bind::TPromiseQueue	mNextPacketPromises;
-	std::shared_ptr<X264::TInstance>&	mEncoder = mObject;
+	std::shared_ptr<PopH264Encoder::TInstance>&	mEncoder = mObject;
 	std::shared_ptr<SoyWorkerJobThread>	mEncoderThread;
 };
+
+

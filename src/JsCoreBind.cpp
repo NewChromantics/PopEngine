@@ -14,6 +14,10 @@
 #include "TApiGui.h"
 #endif
 
+#if !defined(TARGET_ANDROID)
+#include "TApiZip.h"
+#endif
+
 #if defined(ENABLE_OPENGL)
 #include "TApiOpengl.h"
 #endif
@@ -23,8 +27,15 @@
 #endif
 
 //	gr: maybe make this an actual define
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS) &&!defined(TARGET_UWP)
+//	gr: ^^ this is now in windows
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
 #define ENABLE_APIMEDIA
+#endif
+#if defined(TARGET_WINDOWS)
+	//	gr: kinda stuck together atm
+	#if defined(ENABLE_POPH264) || defined(ENABLE_POPCAMERADEVICE)
+	#define ENABLE_APIMEDIA
+	#endif
 #endif
 
 #if defined(TARGET_WINDOWS)
@@ -152,7 +163,14 @@ JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::
 JSValueRef JSValueMakeFromJSONString(JSContextRef Context,const std::string& Json)
 {
 	auto JsonString = JSStringCreateWithUTF8CString( Context, Json );
-	return JSValueMakeFromJSONString( Context, JsonString );
+	auto JsonObject = JSValueMakeFromJSONString( Context, JsonString );
+	if ( !JsonObject )
+	{
+		std::stringstream Error;
+		Error << "Failed to parse JSON to object " << Json << std::endl;
+		throw Soy::AssertException(Error);
+	}
+	return JsonObject;
 }
 #endif
 
@@ -666,6 +684,9 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_UWP)
 			ApiGui::Bind( *Context );
 #endif
+#if !defined(TARGET_ANDROID)
+			ApiZip::Bind( *Context );
+#endif
 #if defined(ENABLE_APIVISION)
 			ApiCoreMl::Bind(*Context);
 #endif
@@ -908,13 +929,25 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	//	not an exception
 	if ( ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull )
 		return;
-	JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
-
 	
-	std::stringstream Error;
-	auto ExceptionMeta = GetExceptionMeta(Context, ExceptionHandle);
-	Error << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
+	std::stringstream ExceptionError;
 
+	//	on some platforms the exception is an error/exception object
+	//	on jscore we may have set a string as the exception object (in our own code)
+	//	this might be a mistake, but just handle multiple cases
+	if ( ExceptionType == kJSTypeObject )
+	{
+		JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
+		auto ExceptionMeta = GetExceptionMeta(Context, ExceptionHandle);
+		ExceptionError << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
+	}
+	else
+	{
+		//	reinterpret whatever the exception value is as a string
+		auto ExceptionString = GetString( Context, ExceptionHandle );
+		ExceptionError << ExceptionString;
+	}
+	
 	//	try and open xcode at the erroring line (a bit experimental)
 	/*	gr: I have a case where this crashes osx, so... disabled
 #if defined(JSAPI_JSCORE) && defined(TARGET_OSX)
@@ -931,7 +964,7 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	}
 #endif
 	*/
-	throw Soy::AssertException(Error.str());
+	throw Soy::AssertException(ExceptionError);
 }
 
 
