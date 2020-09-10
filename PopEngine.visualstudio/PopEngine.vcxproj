@@ -757,6 +757,8 @@
     <Import Project="PopEngine.props" />
     <Import Project="BuildToolCopyFileToOutput.props" />
     <Import Project="JsApi_Chakra.props" />
+    <Import Project="Opengl.props" />
+    <Import Project="Directx11.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />

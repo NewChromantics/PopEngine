@@ -8,3 +8,12 @@
 #include <shellapi.h>	//	drag & drop
 
 
+namespace Platform
+{
+#if defined(TARGET_WINDOWS)
+	namespace Private
+	{
+		extern HINSTANCE InstanceHandle;
+	}
+#endif
+}
