@@ -960,6 +960,28 @@ void Openxr::TSession::EnumSwapChainImages(XrSwapchain SwapChain, ArrayBridge<Xr
 
 void Openxr::TSession::CreateSwapchains()
 {
+	auto Lock = [&]()
+	{
+#if defined(ENABLE_OPENGL)
+		if (mOpenglContext)
+		{
+			mOpenglContext->Lock();
+		}
+#endif
+	};
+	auto Unlock = [&]()
+	{
+#if defined(ENABLE_OPENGL)
+		if (mOpenglContext)
+		{
+			mOpenglContext->Unlock();
+		}
+#endif
+	};
+
+	Soy::TScopeCall AutoLockContext(Lock, Unlock);
+
+
 	//mRenderResources = std::make_unique<RenderResources>();
 	
 	// Read graphics properties for preferred swapchain length and logging.

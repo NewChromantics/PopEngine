@@ -1320,8 +1320,6 @@ public:
 */
 void Platform::TOpenglContext::OnPaint()
 {
-	//return;
-
 	//	better place to flush the queue?
 	this->Flush(*this);
 
