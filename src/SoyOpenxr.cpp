@@ -1515,7 +1515,6 @@ bool Openxr::TSession::HasExtension(const char* MatchExtension)
 
 void Openxr::TSession::RenderFrame()
 {
-	return;
 	XrFrameWaitInfo frameWaitInfo{ XR_TYPE_FRAME_WAIT_INFO };
 	XrFrameState frameState{ XR_TYPE_FRAME_STATE };
 
