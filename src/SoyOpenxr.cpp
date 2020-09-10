@@ -1564,7 +1564,7 @@ void Openxr::TSession::RenderFrame()
 	layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 
 	// Only render when session is visible. otherwise submit zero layers
-	if (frameState.shouldRender)
+	if (!frameState.shouldRender)
 	{
 		std::Debug << "ShouldRender = false, session not visible?" << std::endl;
 		return;
