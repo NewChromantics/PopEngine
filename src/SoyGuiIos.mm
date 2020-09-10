@@ -1,13 +1,13 @@
 #include "SoyGui.h"
-
-#import <UIKit/UIKit.h>
-@class AppDelegate;
+#include "SoyWindowIos.h"
 
 #include "PopMain.h"
 #include <TargetConditionals.h>
 
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+
+#import <GLKit/GLKit.h>
 
 #define SOKOL_IMPL
 #define SOKOL_METAL
@@ -47,28 +47,6 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 		}
 	}
 }
-
-
-class Platform::TWindow : public SoyWindow
-{
-public:
-	TWindow(const std::string& Name);
-	
-	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
-	
-	virtual void					proto(bool Fullscreen) override;
-	virtual bool					IsFullscreen() override;
-	virtual bool					IsMinimised() override;
-	virtual bool					IsForeground() override;
-	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
-	
-	UIWindow*						GetWindow();
-	UIView*							GetChild(const std::string& Name);
-	void							EnumChildren(std::function<bool(UIView*)> EnumChild);
-	MTKView*						GetMetalView(const std::string& Name);
-	void							StartRender( std::function<void()> Frame ) override;
-};
-
 
 class Platform::TLabel : public SoyLabel
 {
@@ -314,29 +292,53 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 
 // Sokol
 
-void Platform::TWindow::StartRender( std::function<void()> Frame )
-{
-	
+//@interface SokolViewDelegate : NSObject<MTKViewDelegate>
+@interface SokolViewDelegate : NSObject<GLKViewDelegate>
+
+@property std::function<void()> Frame;
+- (instancetype)init:(std::function<void()> )Frame;
+
+@end
+
+@implementation SokolViewDelegate
+
+- (instancetype)init:(std::function<void()> )Frame {
+    self = [super init];
+    if (self) {
+        _Frame = Frame;
+    }
+    return self;
 }
 
-MTKView* Platform::TWindow::GetMetalView(const std::string& Name)
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-	MTKView* ChildMatch = nullptr;
-	auto TestChild = [&](MTKView* Child)
-	{
-		//	gr: this is the only string in the xib that comes through in a generic way :/
-		auto* RestorationIdentifier = Child.restorationIdentifier;
-		if ( RestorationIdentifier == nil )
-			return true;
-		
-		auto RestorationIdString = Soy::NSStringToString(RestorationIdentifier);
-		if ( RestorationIdString != Name )
-			return true;
-		
-		//	found match!
-		ChildMatch = Child;
-		return false;
-	};
-	EnumChildren(TestChild);
-	return ChildMatch;
+	(void)view;
+	_Frame();
 }
+
+//- (void)mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
+//    (void)view;
+//    (void)size;
+//    // FIXME
+//}
+//
+//- (void)drawInMTKView:(nonnull MTKView*)view {
+//    (void)view;
+//    @autoreleasepool {
+//        	auto Frame = *_FramePtr;
+//			_Frame();
+//    }
+//}
+
+@end
+
+
+void Platform::TWindow::StartRender( std::function<void()> Frame, std::string ViewName )
+{
+	//	todo: check type!
+	// MTKView* MetalView = Platform::TWindow::GetChild(ViewName);
+	GLKView* GLView = Platform::TWindow::GetChild(ViewName);
+	auto sokol_view_delegate = [[SokolViewDelegate alloc] init:Frame];
+	[GLView setDelegate:sokol_view_delegate];
+}
+

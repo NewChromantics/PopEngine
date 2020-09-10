@@ -44,6 +44,6 @@ class ApiSokol::TSokolContext
 public:
 	TSokolContext( std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount ) { };
 
-	virtual sg_context_desc					GetSokolContext() { return (sg_context_desc){}; };
+	virtual sg_context_desc					GetSokolContext() { return ( sg_context_desc ) { }; };
 
 };

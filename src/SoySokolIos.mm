@@ -1,11 +1,10 @@
 #include "TApiSokol.h"
+#include "SoyWindowIos.h"
 #include "PopMain.h"
 #include "sokol/sokol_gfx.h"
 
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
-
-#include "SoyGuiIos.mm"
 
 class SokolMetalContext : public ApiSokol::TSokolContext
 {
@@ -30,7 +29,7 @@ sg_context_desc SokolMetalContext::GetSokolContext()
 SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, mViewName, SampleCount)
 {
 	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*mSoyWindow);
-	mMetalView = PlatformWindow.GetMetalView(mViewName);
+	mMetalView = PlatformWindow.GetChild(mViewName);
 	
 	// tsdk: Leaving this as a stub for now
 	mUserData = (void*)0xABCDABCD;

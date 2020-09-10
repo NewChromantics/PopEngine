@@ -98,7 +98,7 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	Init(desc);
 
 	std::function<void()> Frame = [this](){ this->RenderFrame(); };
-	mSoyWindow->StartRender(Frame);
+	mSoyWindow->StartRender(Frame, mViewName);
 }
 
 void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
