@@ -222,6 +222,8 @@ void PopH264::LoadDll()
 	const char* Filename = "/Volumes/Code/Panopoly3/PopH264_Osx.framework/Versions/A/PopH264_Osx";
 	Dll.reset(new Soy::TRuntimeLibrary(Filename));
 #endif
+
+	std::Debug << "PopH264 version " << PopH264_GetVersion() << std::endl;
 }
 
 
@@ -431,6 +433,8 @@ void PopCameraDevice::LoadDll()
 	const char* Filename = "PopCameraDevice.dll";
 	Dll.reset(new Soy::TRuntimeLibrary(Filename));
 #endif
+
+	std::Debug << "PopCameraDevice version " << PopCameraDevice_GetVersion() << std::endl;
 }
 
 
