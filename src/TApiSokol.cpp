@@ -73,13 +73,16 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
 	mSoyWindow = WindowWrapper.mWindow;
 
-	// Make sure to zero initialise the Member Variables
+	// tsdk: Make sure to zero initialise the Member Variables
 	mPassAction = {0};
 	sg_desc desc = {0};
 
+	// tsdk: Set the sample count
+	int SampleCount = 1;
+	
 	// Create Context
-	auto* Context = new ApiSokol::TSokolContext(mSoyWindow);
-
+	auto* Context = new ApiSokol::TSokolContext(mSoyWindow, SampleCount);
+	
 	desc = 
 	{
 		.context = Context->GetSokolContext()

@@ -40,7 +40,7 @@ public:
 class ApiSokol::TSokolContext
 {
 public:
-	TSokolContext( std::shared_ptr<SoyWindow> mSoyWindow ) { };
+	TSokolContext( std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount ) { };
 
 	virtual sg_context_desc												GetSokolContext() { return (sg_context_desc){}; };
 

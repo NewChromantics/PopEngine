@@ -5,24 +5,19 @@
 class SokolLinuxContext : public ApiSokol::TSokolContext
 {
 public:
-	SokolLinuxContext(std::shared_ptr<SoyWindow> 	mSoyWindow );
+	SokolLinuxContext(std::shared_ptr<SoyWindow> 	mSoyWindow, int SampleCount );
 
 	sg_context_desc								mContextDesc;
 
 	sg_context_desc								GetSokolContext() override;
 };
 
-SokolLinuxContext::SokolLinuxContext(std::shared_ptr<SoyWindow> mSoyWindow ) : ApiSokol::TSokolContext(mSoyWindow)
+SokolLinuxContext::SokolLinuxContext(std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, SampleCount)
 {
-	mContextDesc = (sg_context_desc){};
+	mContextDesc = (sg_context_desc){ .sample_count = SampleCount };
 }
 
 sg_context_desc SokolLinuxContext::GetSokolContext()
 {
 	return mContextDesc;
 }
-
-// ApiSokol::TSokolContext::TSokolContext(	std::shared_ptr<SoyWindow> 	mSoyWindow )
-// {
-// 	new SokolLinuxContext( mSoyWindow );
-// }
