@@ -145,7 +145,14 @@ JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::
 JSValueRef JSValueMakeFromJSONString(JSContextRef Context,const std::string& Json)
 {
 	auto JsonString = JSStringCreateWithUTF8CString( Context, Json );
-	return JSValueMakeFromJSONString( Context, JsonString );
+	auto JsonObject = JSValueMakeFromJSONString( Context, JsonString );
+	if ( !JsonObject )
+	{
+		std::stringstream Error;
+		Error << "Failed to parse JSON to object " << Json << std::endl;
+		throw Soy::AssertException(Error);
+	}
+	return JsonObject;
 }
 #endif
 
