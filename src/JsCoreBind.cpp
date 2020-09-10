@@ -19,8 +19,15 @@
 #endif
 
 //	gr: maybe make this an actual define
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) || defined(TARGET_WINDOWS)
+//	gr: ^^ this is now in windows
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
 #define ENABLE_APIMEDIA
+#endif
+#if defined(TARGET_WINDOWS)
+	//	gr: kinda stuck together atm
+	#if defined(ENABLE_POPH264) || defined(ENABLE_POPCAMERADEVICE)
+	#define ENABLE_APIMEDIA
+	#endif
 #endif
 
 //	gr: todo; rename/rewrite this with new names
