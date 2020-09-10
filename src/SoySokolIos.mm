@@ -5,10 +5,12 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
+#include "SoyGuiIos.mm"
+
 class SokolMetalContext : public ApiSokol::TSokolContext
 {
 public:
-	SokolMetalContext( std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount );
+	SokolMetalContext( std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount );
 
 	sg_context_desc					GetSokolContext() override;
 
@@ -25,10 +27,10 @@ sg_context_desc SokolMetalContext::GetSokolContext()
 }
 
 
-SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, SampleCount)
+SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, mViewName, SampleCount)
 {
-	// Needs to be written
-	mMetalView* = mSoyWindow->GetMetalView;
+	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*mSoyWindow);
+	mMetalView = PlatformWindow.GetMetalView(mViewName);
 	
 	// tsdk: Leaving this as a stub for now
 	mUserData = (void*)0xABCDABCD;

@@ -1613,10 +1613,10 @@ public:
 	id<MTLDevice>				mtl_device;
 };
 
-std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const std::string& Name)
+std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& ParentWindow, const std::string& Name)
 {
 	std::shared_ptr<SoyMetalView> MetalView;
-	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
+	auto& Window = dynamic_cast<Platform::TWindow&>(ParentWindow);
 	auto Run = [&]()
 	{
 		auto* View = Window.GetChild(Name);

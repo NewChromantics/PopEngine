@@ -72,6 +72,12 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	auto WindowObject = this->mWindow.GetObject(LocalContext);
 	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
 	mSoyWindow = WindowWrapper.mWindow;
+	
+	// tsdk: If there is a specific view, store its name
+	if ( !Params.IsArgumentUndefined(1) )
+	{
+		auto mViewName = Params.GetArgumentString(1);
+	}
 
 	// tsdk: Make sure to zero initialise the Member Variables
 	mPassAction = {0};
@@ -81,7 +87,7 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	int SampleCount = 1;
 	
 	// Create Context
-	auto* Context = new ApiSokol::TSokolContext(mSoyWindow, SampleCount);
+	auto* Context = new ApiSokol::TSokolContext( mSoyWindow, mViewName, SampleCount );
 	
 	desc = 
 	{

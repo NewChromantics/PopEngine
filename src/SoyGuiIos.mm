@@ -56,15 +56,17 @@ public:
 	
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 	
-	virtual void					SetFullscreen(bool Fullscreen) override;
+	virtual void					proto(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
 	virtual bool					IsMinimised() override;
 	virtual bool					IsForeground() override;
 	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
 	
-	UIWindow*		GetWindow();
-	UIView*			GetChild(const std::string& Name);
-	void			EnumChildren(std::function<bool(UIView*)> EnumChild);
+	UIWindow*						GetWindow();
+	UIView*							GetChild(const std::string& Name);
+	void							EnumChildren(std::function<bool(UIView*)> EnumChild);
+	MTKView*						GetMetalView(const std::string& Name);
+	void							StartRender( std::function<void()> Frame ) override;
 };
 
 
@@ -308,4 +310,33 @@ bool Platform::TWindow::IsForeground()
 void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 {
 	//Soy_AssertTodo();
+}
+
+// Sokol
+
+void Platform::TWindow::StartRender( std::function<void()> Frame )
+{
+	
+}
+
+MTKView* Platform::TWindow::GetMetalView(const std::string& Name)
+{
+	MTKView* ChildMatch = nullptr;
+	auto TestChild = [&](MTKView* Child)
+	{
+		//	gr: this is the only string in the xib that comes through in a generic way :/
+		auto* RestorationIdentifier = Child.restorationIdentifier;
+		if ( RestorationIdentifier == nil )
+			return true;
+		
+		auto RestorationIdString = Soy::NSStringToString(RestorationIdentifier);
+		if ( RestorationIdString != Name )
+			return true;
+		
+		//	found match!
+		ChildMatch = Child;
+		return false;
+	};
+	EnumChildren(TestChild);
+	return ChildMatch;
 }

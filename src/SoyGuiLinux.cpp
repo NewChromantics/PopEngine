@@ -16,7 +16,7 @@ public:
 	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
 
 	ESContext											mESContext;
-	void													StartRender( std::function<void()> Frame );
+	void													StartRender( std::function<void()> Frame ) override;
 };
 
 Platform::TWindow::TWindow(const std::string& Name)

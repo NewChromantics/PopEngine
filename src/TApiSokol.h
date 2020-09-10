@@ -29,19 +29,21 @@ public:
 	void StartRender(Bind::TCallback &Params);
 
 public:
-	Bind::TPersistent															mWindow;
-	std::shared_ptr<SoyWindow>										mSoyWindow;
-	sg_pass_action				 												mPassAction;
+	Bind::TPersistent						mWindow;
+	std::shared_ptr<SoyWindow>				mSoyWindow;
+	std::string								mViewName;
+	sg_pass_action				 			mPassAction;
+	
 
-	void																					Init(sg_desc desc);
-	void																					RenderFrame();
+	void									Init(sg_desc desc);
+	void									RenderFrame();
 };
 
 class ApiSokol::TSokolContext
 {
 public:
-	TSokolContext( std::shared_ptr<SoyWindow> mSoyWindow, int SampleCount ) { };
+	TSokolContext( std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount ) { };
 
-	virtual sg_context_desc												GetSokolContext() { return (sg_context_desc){}; };
+	virtual sg_context_desc					GetSokolContext() { return (sg_context_desc){}; };
 
 };
