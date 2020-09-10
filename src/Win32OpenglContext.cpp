@@ -13,7 +13,7 @@ void Win32::TOpenglContext::Lock()
 
 		//	switch to this thread
 		if (!wglMakeCurrent(mHDC, mHGLRC))
-			throw Soy::AssertException("wglMakeCurrent failed");
+			Platform::ThrowLastError("wglMakeCurrent failed");
 	}
 	catch (...)
 	{
