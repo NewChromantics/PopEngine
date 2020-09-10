@@ -680,7 +680,6 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
 #endif
-			ApiZip::Bind(*Context);
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_UWP)
 			ApiGui::Bind( *Context );
 #endif
