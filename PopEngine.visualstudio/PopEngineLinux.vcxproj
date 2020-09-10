@@ -84,7 +84,9 @@
     <ClCompile Include="..\Source_App\PopEngineUnitTestMain.cpp" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
     <ClCompile Include="..\src\Json11\json11.cpp" />
-    <ClCompile Include="..\src\PopDepthToYuv\Depth16ToYuv.c" />
+    <ClCompile Include="..\src\PopDepthToYuv\Depth16ToYuv.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\PopEngine.cpp" />
     <ClCompile Include="..\src\PopMain.cpp" />
     <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
@@ -257,7 +259,12 @@
     <None Include="..\UnitTest\HelloWorld\bootup.js" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so" />
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</DeploymentContent>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+    </Library>
     <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\libPopH264.so" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
