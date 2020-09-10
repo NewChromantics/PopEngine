@@ -618,10 +618,21 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
 
-	auto Filename = Params.GetArgumentFilename(0);
+	std::string Filename = Params.GetArgumentString(0);
 
-	auto Directory = Platform::GetDirectoryFromFilename(Filename);
-	Platform::CreateDirectory(Directory);
+	//	gr; work out a better idea for this
+	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
+	{
+		auto DocsDir = Platform::GetDocumentsDirectory();
+		//std::Debug << "Platform::GetDocumentsDirectory=" << DocsDir << std::endl;
+		Filename = DocsDir + std::string("/") + Filename;
+	}
+	else
+	{
+		Filename = Params.GetArgumentFilename(0);
+		auto Directory = Platform::GetDirectoryFromFilename(Filename);
+		Platform::CreateDirectory(Directory);
+	}
 
 	Array<uint8_t> Contents;
 	auto ContentsArgumentIndex = 1;
