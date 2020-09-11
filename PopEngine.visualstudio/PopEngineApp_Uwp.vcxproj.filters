@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\Source_Uwp\App.cpp" />
+    <ClCompile Include="..\Source_Uwp\CubeGraphics.cpp" />
+    <ClCompile Include="..\Source_Uwp\DxUtility.cpp" />
+    <ClCompile Include="..\Source_Uwp\OpenXrProgram.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source_Uwp\OpenXrProgram.h" />
+    <ClInclude Include="..\Source_Uwp\CommonInclude.h" />
+    <ClInclude Include="..\Source_Uwp\XrEnumerate.h" />
+    <ClInclude Include="..\Source_Uwp\XrError.h" />
+    <ClInclude Include="..\Source_Uwp\XrExtensionContext.h" />
+    <ClInclude Include="..\Source_Uwp\XrExtensions.h" />
+    <ClInclude Include="..\Source_Uwp\XrGuid.h" />
+    <ClInclude Include="..\Source_Uwp\XrHandle.h" />
+    <ClInclude Include="..\Source_Uwp\XrInstanceContext.h" />
+    <ClInclude Include="..\Source_Uwp\XrMath.h" />
+    <ClInclude Include="..\Source_Uwp\XrSessionContext.h" />
+    <ClInclude Include="..\Source_Uwp\XrStereoView.h" />
+    <ClInclude Include="..\Source_Uwp\XrString.h" />
+    <ClInclude Include="..\Source_Uwp\XrStruct.h" />
+    <ClInclude Include="..\Source_Uwp\XrSystemContext.h" />
+    <ClInclude Include="..\Source_Uwp\XrToString.h" />
+    <ClInclude Include="..\Source_Uwp\XrViewConfiguration.h" />
+    <ClInclude Include="..\Source_Uwp\XrActionContext.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Source_Uwp\LockScreenLogo.scale-200.png" />
+    <Image Include="..\Source_Uwp\SplashScreen.scale-200.png" />
+    <Image Include="..\Source_Uwp\Square150x150Logo.scale-200.png" />
+    <Image Include="..\Source_Uwp\Square44x44Logo.scale-200.png" />
+    <Image Include="..\Source_Uwp\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Image Include="..\Source_Uwp\StoreLogo.png" />
+    <Image Include="..\Source_Uwp\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="..\Source_Uwp\Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="..\Source_Uwp\TemporaryKey.pfx" />
+    <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
+    <None Include="..\Build\PopEngine_Uwp_Debug_ARM64\PopEngine_Uwp.dll" />
+  </ItemGroup>
+</Project>

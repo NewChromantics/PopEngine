@@ -4,14 +4,13 @@
 //#include "PopMain.h"
 #include "SoyMath.h"
 
-#include <windowsx.h>
+#include "SoyWin32.h"
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
-#include <commctrl.h>
-#pragma comment(lib, "Comctl32.lib")
-#include <shellapi.h>	//	drag & drop
-#pragma comment(lib, "Shell32.lib")
+#include "Win32OpenglContext.h"
+
+
 
 
 extern "C"
@@ -38,10 +37,7 @@ namespace Platform
 	//	COM interfaces
 	class TDragAndDropHandler;
 
-	namespace Private
-	{
-		HINSTANCE InstanceHandle = nullptr;
-	}
+
 
 	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -277,15 +273,11 @@ public:
 
 
 
-class Platform::TOpenglContext : public Opengl::TContext, public  Opengl::TRenderTarget
+class Platform::TOpenglContext : public  Opengl::TRenderTarget, public Win32::TOpenglContext
 {
 public:
 	TOpenglContext(TControl& Parent,TOpenglParams& Params);
 	~TOpenglContext();
-
-	//	context
-	virtual void	Lock() override;
-	virtual void	Unlock() override;
 
 	//	render target
 	virtual void				Bind() override;
@@ -297,6 +289,11 @@ public:
 	void			OnPaint();
 
 	std::function<void(Opengl::TRenderTarget&, std::function<void()>)>	mOnRender;
+
+	//	win32::TOpenglContext
+	virtual HDC		GetHdc() override { return mHDC; }
+	virtual HGLRC	GetHglrc() override { return mHGLRC; }
+	virtual HWND	GetHwnd() override { return mHwnd; }
 
 	//	context stuff
 	TControl&		mParent;	//	control we're bound to
@@ -1255,32 +1252,6 @@ Platform::TOpenglContext::~TOpenglContext()
 	ReleaseDC(mHwnd, mHDC);
 }
 
-void Platform::TOpenglContext::Lock()
-{
-	//	osx does base context lock first
-	TContext::Lock();
-
-	try
-	{
-		//	switch to this thread
-		if ( !wglMakeCurrent(mHDC, mHGLRC) )
-			throw Soy::AssertException("wglMakeCurrent failed");
-	}
-	catch(...)
-	{
-		Unlock();
-		throw;
-	}
-}
-
-void Platform::TOpenglContext::Unlock()
-{
-	if ( !wglMakeCurrent(mHDC, nullptr) )
-		throw Soy::AssertException("wglMakeCurrent unbind failed");
-
-	TContext::Unlock();
-}
-
 void Platform::TOpenglContext::Repaint()
 {
 	mParent.Repaint();
@@ -1375,9 +1346,19 @@ void Platform::TOpenglContext::OnPaint()
 	};
 	auto UnlockContext = [&]
 	{
-		RenderTarget.Unbind();
-		Opengl::IsOkay("Post drawRect flush",false);
-		Context.Unlock();
+		try
+		{
+			RenderTarget.Unbind();
+			Opengl::IsOkay("UnlockContext RenderTarget.Unbind", false);
+			Context.Unlock();
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "UnlockContext unbind failed (" << e.what() << "), hail mary context unlock" << std::endl;
+			Context.Unlock();
+			//	rethrow?
+			//throw;
+		}
 	};
 
 	/*
@@ -1397,9 +1378,32 @@ void Platform::TOpenglContext::OnPaint()
 	}
 	catch(std::exception& e)
 	{
-		LockContext();
-		Opengl::ClearColour( Soy::TRgb(0,0,1) );
 		std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
+		try
+		{
+			UnlockContext();
+		}
+		catch (std::exception&e)
+		{
+			//std::Debug << "OnRender UnlockContext exception " << e.what() << std::endl;
+		}
+		return;
+		/*
+		//	gr: if there's an exception here, it might be the LockContext, rather than the render...
+		//		so we're just failing again...
+		try
+		{
+			LockContext();
+			Opengl::ClearColour(Soy::TRgb(0, 0, 1));
+			std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
+		}
+		catch (std::exception& e)
+		{
+			//	okay, lock is the problem
+			UnlockContext();
+			return;
+		}
+		*/
 	}
 
 	//	in case lock hasn't been done
@@ -1577,6 +1581,12 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 	};
 	mWindow->GetJobQueue().PushJob(DoFullScreen);
 	mWindow->Repaint();
+}
+
+std::shared_ptr<Win32::TOpenglContext> TOpenglWindow::GetWin32Context()
+{
+	auto Win32Context = std::dynamic_pointer_cast<Win32::TOpenglContext>(mWindowContext);
+	return Win32Context;
 }
 
 

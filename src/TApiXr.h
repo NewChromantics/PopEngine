@@ -6,25 +6,24 @@ class TImageWrapper;
 
 namespace Xr
 {
-	class TPose;
-	class TSession;
+	class TDevice;
 }
 
 namespace ApiXr
 {
 	void	Bind(Bind::TContext& Context);
+	
 
+	//	gr: this has been renamed to device to match webxr
+	//		but if we ever have a system with multiple devices
+	//		we might want a session
+	//	We may also want an ARKit session with space information, but no device...
 
-	class TPoseWrapper;
-	class TSpatialWrapper;
-	class THmdWrapper;
-
-	//	might be better as device?
-	class TSessionWrapper;
-	DECLARE_BIND_TYPENAME(Session);
+	class TDeviceWrapper;
+	DECLARE_BIND_TYPENAME(Device);
 }
 
-
+/*
 class Xr::TPose
 {
 public:
@@ -53,12 +52,12 @@ class ApiXr::TSpaceWrapper
 class ApiXr::THmdWrapper
 {
 };
+*/
 
-
-class ApiXr::TSessionWrapper : public Bind::TObjectWrapper<BindType::Session,Xr::TSession>, public TPoseWrapper, public TSpaceWrapper, public THmdWrapper
+class ApiXr::TDeviceWrapper : public Bind::TObjectWrapper<BindType::Device,Xr::TDevice>
 {
 public:
-	TSessionWrapper(Bind::TContext& Context) :
+	TDeviceWrapper(Bind::TContext& Context) :
 		TObjectWrapper	( Context )
 	{
 	}
@@ -67,7 +66,6 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
 public:
-	std::shared_ptr<Xr::TSession>&	mSession = mObject;
-	TPoseWrapper	mPoseWrapper;
+	std::shared_ptr<Xr::TDevice>&	mDevice = mObject;
 };
 

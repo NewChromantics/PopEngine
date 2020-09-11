@@ -9,7 +9,11 @@
 #error expected ARC off, if we NEED arc, then the NSWindow & view need to go in a pure obj-c wrapper to auto retain the refcounted object
 #endif
 
-
+//	temp hack to expose this interface class
+namespace Win32
+{
+	class TOpenglContext;
+}
 
 class TOpenglParams
 {
@@ -36,6 +40,9 @@ public:
 	virtual bool	Iteration() override;
 	
 	std::shared_ptr<Opengl::TContext>	GetContext();
+
+	//	temp hack
+	std::shared_ptr<Win32::TOpenglContext>	GetWin32Context();
 
 	virtual std::chrono::milliseconds	GetSleepDuration() override;
 	virtual Soy::Rectx<int32_t>			GetScreenRect() override;

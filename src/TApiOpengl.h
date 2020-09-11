@@ -2,7 +2,10 @@
 #include "TBind.h"
 #include "SoyOpenglWindow.h"
 
-
+namespace Win32
+{
+	class TOpenglContext;
+}
 
 namespace ApiOpengl
 {
@@ -13,6 +16,7 @@ namespace ApiOpengl
 	
 	//	this needs to be sorted properly!
 	class TRenderTargetWrapper;
+	class TWindowWrapper;
 	
 	DECLARE_BIND_TYPENAME(Window);
 	DECLARE_BIND_TYPENAME(Shader);
@@ -78,7 +82,7 @@ public:
 };
  
 
-class TWindowWrapper : public Bind::TObjectWrapper<ApiOpengl::BindType::Window,TRenderWindow>, public TOpenglContextWrapper, ApiOpengl::TRenderTargetWrapper
+class ApiOpengl::TWindowWrapper : public Bind::TObjectWrapper<BindType::Window,TRenderWindow>, public TOpenglContextWrapper, ApiOpengl::TRenderTargetWrapper
 {
 public:
 	TWindowWrapper(Bind::TContext& Context) :
@@ -123,7 +127,11 @@ public:
 	void				EnableRenderBackground(Bind::TCallback& Arguments);
 
 	virtual std::shared_ptr<Opengl::TContext>	GetOpenglContext() override {	return mWindow->GetContext();	}
-
+	
+	//	temp hack for openxr
+	std::shared_ptr<Win32::TOpenglContext>		GetWin32OpenglContext();
+	//Directx::TContext*							GetDirectxContext();
+	
 protected:
 	Bind::TContext&		GetOpenglJsCoreContext();
 

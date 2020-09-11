@@ -77,6 +77,12 @@
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Volumes/Code/PopNotPoker/Server"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

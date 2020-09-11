@@ -83,6 +83,10 @@
   <ItemGroup>
     <ClCompile Include="..\Source_App\PopEngineUnitTestMain.cpp" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
+    <ClCompile Include="..\src\Json11\json11.cpp" />
+    <ClCompile Include="..\src\PopDepthToYuv\Depth16ToYuv.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\PopEngine.cpp" />
     <ClCompile Include="..\src\PopMain.cpp" />
     <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
@@ -131,12 +135,19 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\TApiHttp.cpp" />
+    <ClCompile Include="..\src\TApiMedia.cpp" />
+    <ClCompile Include="..\src\TApiPanopoly.cpp" />
     <ClCompile Include="..\src\TApiSocket.cpp" />
     <ClCompile Include="..\src\TApiWebsocket.cpp" />
+    <ClCompile Include="..\src\TApiZip.cpp" />
     <ClCompile Include="..\src\TBind.cpp" />
+    <ClCompile Include="..\src\Zip\src\zip.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\PopCameraDevice.h" />
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\PopH264.h" />
     <ClInclude Include="..\src\JsCoreBind.h" />
+    <ClInclude Include="..\src\Json11\json11.hpp" />
     <ClInclude Include="..\src\PopEngine.h" />
     <ClInclude Include="..\src\PopMain.h" />
     <ClInclude Include="..\src\SoyLib\src\Array.hpp" />
@@ -222,7 +233,6 @@
     <ClInclude Include="..\src\SoyLib\src\SoyUniform.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyUnity.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyVector.h" />
-    <ClInclude Include="..\src\SoyLib\src\SoyVideoDevice.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWave.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyWindow.h" />
@@ -235,12 +245,27 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiHttp.h" />
+    <ClInclude Include="..\src\TApiMedia.h" />
+    <ClInclude Include="..\src\TApiPanopoly.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
+    <ClInclude Include="..\src\TApiZip.h" />
     <ClInclude Include="..\src\TBind.h" />
+    <ClInclude Include="..\src\Zip\src\miniz.h" />
+    <ClInclude Include="..\src\Zip\src\zip.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\PopEngine.Linux\Makefile" />
     <None Include="..\UnitTest\HelloWorld\bootup.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</DeploymentContent>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+    </Library>
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\libPopH264.so" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile />

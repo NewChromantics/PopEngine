@@ -205,3 +205,4 @@ void TZipFile::AddFile(const std::string& Filename, const std::string & ZipFilen
 	Error = zip_entry_close(mZip);
 	IsOkay(Error, "zip_entry_close");
 }
+

@@ -109,6 +109,8 @@
 		BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
 		BF15205523855FB600A70EBF /* PopCameraDevice_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF2CFA9324E28EAB009238A5 /* SoyOpenxr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */; };
+		BF2CFA9424E28EAB009238A5 /* SoyOpenxr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */; };
 		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; };
@@ -389,6 +391,9 @@
 		BF26EF6020DECFB000A48025 /* TApiOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpengl.h; path = src/TApiOpengl.h; sourceTree = "<group>"; };
 		BF26EF6220DED0F400A48025 /* TApiCommon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCommon.cpp; path = src/TApiCommon.cpp; sourceTree = "<group>"; };
 		BF26EF6320DED0F400A48025 /* TApiCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiCommon.h; path = src/TApiCommon.h; sourceTree = "<group>"; };
+		BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenxr.cpp; path = src/SoyOpenxr.cpp; sourceTree = "<group>"; };
+		BF2CFA9224E28EAA009238A5 /* SoyOpenxr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenxr.h; path = src/SoyOpenxr.h; sourceTree = "<group>"; };
+		BF2CFA9724E2978E009238A5 /* OpenXR */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenXR; path = src/OpenXR; sourceTree = SOURCE_ROOT; };
 		BF31E49D1C56961100AB49AF /* SoyImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyImage.cpp; path = src/SoyImage.cpp; sourceTree = "<group>"; };
 		BF31E49E1C56961100AB49AF /* SoyImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyImage.h; path = src/SoyImage.h; sourceTree = "<group>"; };
 		BF321B041B67AD990016E903 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -835,6 +840,7 @@
 		BF459C7C21F7C72600CED59D /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				BF2CFA9724E2978E009238A5 /* OpenXR */,
 				BF71CAE3243E5DC000AEF50F /* PopVision_Ios.framework */,
 				BF8534F322B6DA1C0049C01B /* ChakraCore */,
 				BF0F9E762289EB5F00AEA7DC /* dyncall */,
@@ -1166,6 +1172,8 @@
 				582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */,
 				5850A42224F920C400145478 /* SoyGuiOsx.mm */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
+				BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */,
+				BF2CFA9224E28EAA009238A5 /* SoyOpenxr.h */,
 				BFB647372225593600820612 /* SoyHid.h */,
 				BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */,
 				BF85350022BEB6960049C01B /* SoyMagicLeap.h */,
@@ -1715,6 +1723,7 @@
 				BF71CAEC243E633100AEF50F /* TApiOpengl.cpp in Sources */,
 				BF151F8E23845FAD00A70EBF /* SoyImage.cpp in Sources */,
 				BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */,
+				BF2CFA9424E28EAB009238A5 /* SoyOpenxr.cpp in Sources */,
 				BF151FFD23847CAC00A70EBF /* ezsift.cpp in Sources */,
 				BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */,
 				BF151F8623845FAD00A70EBF /* SoyDebug.cpp in Sources */,
@@ -1759,6 +1768,7 @@
 				BF5EAFF8237F0CD40077BCF5 /* SoyHid.cpp in Sources */,
 				BF5EAFFA237F0CD40077BCF5 /* SoyOpenglWindowOsx.mm in Sources */,
 				BF5EAFD5237F0C6E0077BCF5 /* SoyOpengl.cpp in Sources */,
+				BF2CFA9324E28EAB009238A5 /* SoyOpenxr.cpp in Sources */,
 				BF5EAFC5237F0C6E0077BCF5 /* SoyBase64.cpp in Sources */,
 				BF5EAFF7237F0CD40077BCF5 /* SoyBluetooth.mm in Sources */,
 				BFEF6A3B2475940E000A1F88 /* TApiAudio.cpp in Sources */,
@@ -2148,6 +2158,7 @@
 					"$(inherited)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug_V8;
 		};
@@ -2658,7 +2669,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -2683,7 +2693,6 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = X52DR36JY2;
@@ -2713,8 +2722,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				STRIP_INSTALLED_PRODUCT = NO;
-				VALID_ARCHS = x86_64;
 			};
 			name = Debug_JavascriptCore;
 		};
@@ -2722,7 +2729,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -2747,7 +2753,6 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = X52DR36JY2;
@@ -2777,8 +2782,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				STRIP_INSTALLED_PRODUCT = NO;
-				VALID_ARCHS = x86_64;
 			};
 			name = Debug_V8;
 		};
@@ -2786,7 +2789,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -2811,7 +2813,6 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = X52DR36JY2;
@@ -2841,8 +2842,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				STRIP_INSTALLED_PRODUCT = NO;
-				VALID_ARCHS = x86_64;
 			};
 			name = Debug_Chakra;
 		};
@@ -2850,7 +2849,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -2866,7 +2864,6 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = X52DR36JY2;
@@ -2885,8 +2882,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				STRIP_INSTALLED_PRODUCT = NO;
-				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};
@@ -3177,6 +3172,7 @@
 					"$(inherited)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug_Chakra;
 		};
@@ -3653,6 +3649,7 @@
 					"$(inherited)",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug_JavascriptCore;
 		};
@@ -3685,6 +3682,7 @@
 					"$(inherited)",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};

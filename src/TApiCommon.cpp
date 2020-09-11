@@ -8,10 +8,10 @@
 #include "SoyOpenglContext.h"
 #endif
 #include "TBind.h"
-#include "SoyWindow.h"
-#include "SoyPng.h"
-#include "SoyShellExecute.h"
-#include "SoyMedia.h"
+#include <SoyWindow.h>
+#include <SoyPng.h>
+#include <SoyShellExecute.h>
+#include <SoyMedia.h>
 
 
 namespace ApiPop
@@ -436,7 +436,12 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 	Params.Return( Object );
 }
 
-
+#if defined(TARGET_UWP)
+//	gr: need to move win32 stuff out of SoyOpenglWindow
+void Platform::EnumScreens(std::function<void(Platform::TScreenMeta&)> EnumScreen)
+{
+}
+#endif
 
 void ApiPop::EnumScreens(Bind::TCallback& Params)
 {

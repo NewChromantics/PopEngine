@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IgnoreImportLibrary>false</IgnoreImportLibrary>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile />
+    <ClCompile>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>TARGET_UWP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <SubSystem>Console</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

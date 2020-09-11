@@ -71,3 +71,7 @@ node_modules
 *.Package/package-lock.json
 
 
+
+PopEngine.visualstudio/AppPackages/
+
+PopEngine.visualstudio/ARM64/

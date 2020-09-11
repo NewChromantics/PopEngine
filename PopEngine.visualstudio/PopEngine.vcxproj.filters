@@ -360,7 +360,18 @@
     <ClInclude Include="..\src\Json11\json11.hpp">
       <Filter>Libs\Json11</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PopEngine.h">
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h" />
+    <ClInclude Include="..\src\Win32OpenglContext.h" />
+    <ClInclude Include="..\src\SoyWin32.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenxr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiXr.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDirectx11.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
@@ -640,12 +651,6 @@
       <Filter>UnitTest\Midi</Filter>
     </None>
     <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.cs">
-      <Filter>Libs\poph264</Filter>
-    </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.dll">
-      <Filter>Libs\poph264</Filter>
-    </None>
     <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.exp">
       <Filter>Libs\poph264</Filter>
     </None>
@@ -664,22 +669,7 @@
     <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264_TestApp.pdb">
       <Filter>Libs\poph264</Filter>
     </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\x264.dll">
-      <Filter>Libs\poph264</Filter>
-    </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll">
-      <Filter>Libs\popcameradevice</Filter>
-    </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\freenect2.dll">
-      <Filter>Libs\popcameradevice</Filter>
-    </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\k4a.dll">
-      <Filter>Libs\popcameradevice</Filter>
-    </None>
     <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.cs">
-      <Filter>Libs\popcameradevice</Filter>
-    </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.dll">
       <Filter>Libs\popcameradevice</Filter>
     </None>
     <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.exp">
@@ -936,6 +926,24 @@
     <ClCompile Include="..\src\Json11\json11.cpp">
       <Filter>Libs\Json11</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TApiXr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenxr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Win32OpenglContext.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDirectx11.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyWin32.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4">
@@ -971,5 +979,15 @@
     <Library Include="..\src\Libs\dyncall\lib\libdynload_s.lib">
       <Filter>Libs\dyncall</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\src\PopEngine.h" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\freenect2.dll" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\k4a.dll" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.dll" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.cs" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\PopH264.dll" />
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\windows\Release_x64\x264.dll" />
   </ItemGroup>
 </Project>

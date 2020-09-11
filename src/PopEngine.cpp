@@ -11,6 +11,18 @@ namespace Platform
 	void		Loop(bool Blocking,std::function<void()> OnQuit);
 }
 
+//	gr: need to move win32 stuff away from opengl (in SoyOpenglWindow.cpp) atm
+#if defined(TARGET_UWP)
+void Platform::Loop(bool Blocking, std::function<void()> OnQuit)
+{
+	while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::minutes(1));
+	}
+}
+
+#endif
+
 //	need a global to stop auto destruction
 #if !defined(TARGET_WINDOWS)
 std::shared_ptr<Bind::TInstance> pInstance;
@@ -57,14 +69,16 @@ TPopAppError::Type PopMain()
 	auto OnShutdown = [&](int32_t ExitCode)
 	{		
 		std::Debug << "PopMain() OnShutdown" << std::endl;
-	#if defined(TARGET_WINDOWS)
+#if defined(TARGET_UWP)
+		Running = false;
+#elif defined(TARGET_WINDOWS)
 		Running = false;
 		//	make sure WM_QUIT comes up by waking the message loop
 		PostQuitMessage(ExitCode);
-	#elif defined(TARGET_LINUX)
+#elif defined(TARGET_LINUX)
 		//	todo: save exit code!
 		RunningLock.OnCompleted();
-	#endif
+#endif
 	};
 
 	{

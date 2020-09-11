@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props" Condition="Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props')" />
+  <Import Project="packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.props" Condition="Exists('packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.props')" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\ChakraBind.cpp" />
+    <ClCompile Include="..\src\JsCoreBind.cpp" />
+    <ClCompile Include="..\src\JsCoreDll.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\Json11\json11.cpp" />
+    <ClCompile Include="..\src\PopEngine.cpp">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="..\src\PopMain.cpp" />
+    <ClCompile Include="..\src\SoyHid.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\GL\glew.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\memheap.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\smallsha1\sha1.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyApp.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyArray.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyAssert.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyBase64.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyDebug.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyGraphics.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyJson.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyMedia.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyMediaFormat.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyOpengl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyOpenglContext.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPixels.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyProtocol.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyRef.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyRuntimeLibrary.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyShader.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoySocket.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoySocketStream.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyStream.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyString.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyThread.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyTime.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyTypes.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyUniform.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyWave.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyWebSocket.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyWindow.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenglWindow.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenxr.cpp" />
+    <ClCompile Include="..\src\SoyViveHandTracker.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyWin32.cpp" />
+    <ClCompile Include="..\src\TApiBluetooth.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiCommon.cpp" />
+    <ClCompile Include="..\src\TApiDirectx11.cpp" />
+    <ClCompile Include="..\src\TApiDlib.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiDll.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiEngine.cpp" />
+    <ClCompile Include="..\src\TApiEzsift.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiGui.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiHttp.cpp" />
+    <ClCompile Include="..\src\TApiInput.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpencv.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpengl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenglContext.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiOpenvr.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiPanopoly.cpp" />
+    <ClCompile Include="..\src\TApiSerial.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSocket.cpp" />
+    <ClCompile Include="..\src\TApiWebsocket.cpp" />
+    <ClCompile Include="..\src\TApiXr.cpp" />
+    <ClCompile Include="..\src\TApiZip.cpp" />
+    <ClCompile Include="..\src\TBind.cpp" />
+    <ClCompile Include="..\src\TPopServerThread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Container.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Inspector.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8Instance.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TV8ObjectWrapper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\V8Bind.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\Win32OpenglContext.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\Zip\src\zip.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ChakraBind.h" />
+    <ClInclude Include="..\src\JsCoreBind.h" />
+    <ClInclude Include="..\src\JsCoreDll.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\Json11\json11.hpp" />
+    <ClInclude Include="..\src\MagicEnum\include\magic_enum.hpp" />
+    <CopyFileToFolders Include="..\src\PopEngine.h" />
+    <ClInclude Include="..\src\PopMain.h" />
+    <ClInclude Include="..\src\SoyBluetooth.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyHid.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Array.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\GL\glew.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\glxew.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\GL\wglew.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\HeapArray.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\MemHeap.hpp" />
+    <ClInclude Include="..\src\SoyLib\src\miniz\miniz.h" />
+    <ClInclude Include="..\src\SoyLib\src\smallsha1\sha1.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyApp.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyArray.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyAssert.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyBase64.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyDebug.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyFilesystem.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyFourcc.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyGraphics.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyH264.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyHttp.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyImage.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyJson.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyMedia.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyMediaFormat.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyPng.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyRef.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyRuntimeLibrary.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyShader.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyShellExecute.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoySocket.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyStream.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyString.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyThread.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyTime.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyTypes_Windows.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyUniform.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyWave.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyWebSocket.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyWindow.h" />
+    <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\Win32ImageMapControl.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenglView.h" />
+    <ClInclude Include="..\src\SoyOpenglWindow.h" />
+    <ClInclude Include="..\src\SoyOpenxr.h" />
+    <ClInclude Include="..\src\SoyViveHandTracker.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyWin32.h" />
+    <ClInclude Include="..\src\TApiBluetooth.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiCommon.h" />
+    <ClInclude Include="..\src\TApiDirectx11.h" />
+    <ClInclude Include="..\src\TApiDlib.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiDll.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiEngine.h" />
+    <ClInclude Include="..\src\TApiEzsift.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiGui.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiHttp.h" />
+    <ClInclude Include="..\src\TApiInput.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiMedia.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencl.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpencv.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpengl.h" />
+    <ClInclude Include="..\src\TApiOpenglContext.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiOpenvr.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiPanopoly.h" />
+    <ClInclude Include="..\src\TApiSerial.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSocket.h" />
+    <ClInclude Include="..\src\TApiWebsocket.h" />
+    <ClInclude Include="..\src\TApiXr.h" />
+    <ClInclude Include="..\src\TApiZip.h" />
+    <ClInclude Include="..\src\TBind.h" />
+    <ClInclude Include="..\src\TPopServerThread.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TProtocolWebSocket.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TSsdMobileNetAnchors.h" />
+    <ClInclude Include="..\src\TV8Container.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Inspector.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8Instance.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\TV8ObjectWrapper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\V8Bind.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\Win32OpenglContext.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\src\miniz.h" />
+    <ClInclude Include="..\src\Zip\src\zip.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\PopEngineAppBundle.xcconfig" />
+    <None Include="..\src\PopMain.mm" />
+    <None Include="..\src\SoyBluetooth.mm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\src\SoyLib\src\SoyFilesystem.mm" />
+    <None Include="..\src\SoyLib\src\SoyWindow.mm" />
+    <None Include="..\src\SoyOpenglView.mm" />
+    <None Include="..\src\SoyOpenglWindow.mm" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{063fef06-3d41-4387-bb6c-79a997523f1e}</ProjectGuid>
+    <Keyword>DynamicLibrary</Keyword>
+    <RootNamespace>PopEngine_Uwp</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.17763.0</WindowsTargetPlatformMinVersion>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+    <Import Project="JsApi_Chakra.props" />
+    <Import Project="Directx11.props" />
+    <Import Project="Target_Uwp.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PopEngine.props" />
+    <Import Project="JsApi_Chakra.props" />
+    <Import Project="Directx11.props" />
+    <Import Project="Target_Uwp.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <GenerateManifest>false</GenerateManifest>
+    <IgnoreImportLibrary>false</IgnoreImportLibrary>
+    <OutDir>$(SolutionDir)..\Build\$(ProjectName)_$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(ProjectName)_$(Platform)_$(Configuration)\Temp\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile />
+    <Link />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile />
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.targets" Condition="Exists('packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.targets')" />
+    <Import Project="packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets" Condition="Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.props'))" />
+    <Error Condition="!Exists('packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenXR.Headers.1.0.10.2\build\native\OpenXR.Headers.targets'))" />
+    <Error Condition="!Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.props'))" />
+    <Error Condition="!Exists('packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenXR.Loader.1.0.10.2\build\native\OpenXR.Loader.targets'))" />
+  </Target>
+</Project>

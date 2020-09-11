@@ -1,7 +1,7 @@
 #pragma once
 #include "TBind.h"
 #include "SoyVector.h"
-
+#include "SoyWindow.h"	//	for Gui::TMouseButton definition
 
 //	base gui control classes
 class SoyWindow;

@@ -59,7 +59,7 @@ void ApiOpengl::Bind(Bind::TContext& Context)
 }
 
 
-TWindowWrapper::~TWindowWrapper()
+ApiOpengl::TWindowWrapper::~TWindowWrapper()
 {
 	if ( mWindow )
 	{
@@ -68,8 +68,17 @@ TWindowWrapper::~TWindowWrapper()
 	}
 }
 
+std::shared_ptr<Win32::TOpenglContext> ApiOpengl::TWindowWrapper::GetWin32OpenglContext()
+{
+#if defined(TARGET_WINDOWS)
+	auto Context = mWindow->GetWin32Context();
+	return Context;
+#else
+	return nullptr;
+#endif
+}
 
-Bind::TContext& TWindowWrapper::GetOpenglJsCoreContext()
+Bind::TContext& ApiOpengl::TWindowWrapper::GetOpenglJsCoreContext()
 {
 	return this->GetContext();
 	
@@ -83,7 +92,7 @@ Bind::TContext& TWindowWrapper::GetOpenglJsCoreContext()
 }
 
 
-void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWindowWrapper>();
 	auto& OpenglContext = *This.GetOpenglContext();
@@ -180,7 +189,7 @@ void TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 }
 
 
-void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
+void ApiOpengl::TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 {
 	//  call javascript
 	auto Runner = [&](Bind::TLocalContext& Context)
@@ -219,7 +228,7 @@ void TWindowWrapper::OnRender(Opengl::TRenderTarget& RenderTarget,std::function<
 	Context.Execute(Runner);
 }
 
-void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
+void ApiOpengl::TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type MouseButton,const std::string& MouseFuncName)
 {
 	//  call javascript
 	auto Runner = [=](Bind::TLocalContext& Context)
@@ -244,7 +253,7 @@ void TWindowWrapper::OnMouseFunc(const TMousePos& MousePos,SoyMouseButton::Type 
 }
 
 
-void TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& FuncName)
+void ApiOpengl::TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& FuncName)
 {
 	//  call javascript
 	auto Runner = [=](Bind::TLocalContext& Context)
@@ -269,7 +278,7 @@ void TWindowWrapper::OnKeyFunc(SoyKeyButton::Type Button,const std::string& Func
 }
 
 
-bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
+bool ApiOpengl::TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 {
 	bool Result = false;
 	//  call javascript
@@ -304,7 +313,7 @@ bool TWindowWrapper::OnTryDragDrop(ArrayBridge<std::string>& Filenames)
 }
 
 
-void TWindowWrapper::OnClosed()
+void ApiOpengl::TWindowWrapper::OnClosed()
 {
 	auto Runner = [=](Bind::TLocalContext& Context)
 	{
@@ -325,7 +334,7 @@ void TWindowWrapper::OnClosed()
 	GetContext().Queue( Runner );
 }
 
-void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
+void ApiOpengl::TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 {
 	//	copy for queue
 	Array<std::string> Filenames( FilenamesOrig );
@@ -354,7 +363,7 @@ void TWindowWrapper::OnDragDrop(ArrayBridge<std::string>& FilenamesOrig)
 
 
 
-void TWindowWrapper::Construct(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::Construct(Bind::TCallback& Params)
 {
 	auto WindowName = Params.GetArgumentString(0);
 	
@@ -417,13 +426,13 @@ void TWindowWrapper::Construct(Bind::TCallback& Params)
 	mWindow->mOnClosed = [this]()	{	this->OnClosed();	};
 }
 
-void TWindowWrapper::GetRenderContext(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::GetRenderContext(Bind::TCallback& Params)
 {
 	auto This = this->GetHandle(Params.mLocalContext);
 	Params.Return(This);
 }
 
-void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 {
 	auto& OpenglContext = *mWindow->GetContext();
 	if ( !OpenglContext.IsLockedToThisThread() )
@@ -454,7 +463,7 @@ void TWindowWrapper::DrawQuad(Bind::TCallback& Params)
 }
 
 
-void TWindowWrapper::DrawGeometry(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::DrawGeometry(Bind::TCallback& Params)
 {
 	auto& OpenglContext = *mWindow->GetContext();
 	if ( !OpenglContext.IsLockedToThisThread() )
@@ -485,7 +494,7 @@ void TWindowWrapper::DrawGeometry(Bind::TCallback& Params)
 	mWindow->DrawGeometry( *Geometry.mGeometry, *Shader.mShader, OnShaderBind );
 }
 
-void TWindowWrapper::ClearColour(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::ClearColour(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TWindowWrapper>();
 	
@@ -500,23 +509,23 @@ void TWindowWrapper::ClearColour(Bind::TCallback& Params)
 	This.mWindow->ClearColour( Colour );
 }
 
-void TWindowWrapper::SetBlendModeBlit(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::SetBlendModeBlit(Bind::TCallback& Params)
 {
 	mWindow->SetBlendModeBlit();
 }
 
-void TWindowWrapper::SetBlendModeAlpha(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::SetBlendModeAlpha(Bind::TCallback& Params)
 {
 	mWindow->SetBlendModeAlpha();
 }
 
-void TWindowWrapper::SetBlendModeMax(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::SetBlendModeMax(Bind::TCallback& Params)
 {
 	mWindow->SetBlendModeMax();
 }
 
 
-void TWindowWrapper::SetViewport(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::SetViewport(Bind::TCallback& Params)
 {
 	BufferArray<float,4> Viewportxywh;
 	Params.GetArgumentArray( 0, GetArrayBridge(Viewportxywh) );
@@ -530,7 +539,7 @@ void TWindowWrapper::SetViewport(Bind::TCallback& Params)
 }
 
 //	window specific
-void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 {
 	auto ScreenRect = mWindow->GetScreenRect();
 	
@@ -543,7 +552,7 @@ void TWindowWrapper::GetScreenRect(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(ScreenRect4) );
 }
 
-void TWindowWrapper::GetRenderTargetRect(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::GetRenderTargetRect(Bind::TCallback& Params)
 {
 	BufferArray<int32_t,4> ScreenRect4;
 
@@ -566,7 +575,7 @@ void TWindowWrapper::GetRenderTargetRect(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(ScreenRect4) );
 }
 
-void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 {
 	auto Fullscreen = true;
 	if ( !Params.IsArgumentUndefined(0) )
@@ -575,36 +584,36 @@ void TWindowWrapper::SetFullscreen(Bind::TCallback& Params)
 	mWindow->SetFullscreen(Fullscreen);
 }
 
-void TWindowWrapper::IsFullscreen(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::IsFullscreen(Bind::TCallback& Params)
 {
 	auto Fullscreen = mWindow->IsFullscreen();
 	Params.Return(Fullscreen);
 }
 
-void TWindowWrapper::IsFullscreenSupported(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::IsFullscreenSupported(Bind::TCallback& Params)
 {
 	Params.Return(true);
 }
 
-void TWindowWrapper::IsMinimised(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::IsMinimised(Bind::TCallback& Params)
 {
 	auto IsMinimised = mWindow->IsMinimised();
 	Params.Return(IsMinimised);
 }
 
-void TWindowWrapper::IsForeground(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::IsForeground(Bind::TCallback& Params)
 {
 	auto IsForeground = mWindow->IsForeground();
 	Params.Return(IsForeground);
 }
 
-void TWindowWrapper::EnableRenderMinimised(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::EnableRenderMinimised(Bind::TCallback& Params)
 {
 	auto Enable = Params.GetArgumentBool(0);
 	mWindow->mEnableRenderWhenMinimised = Enable;
 }
 
-void TWindowWrapper::EnableRenderBackground(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::EnableRenderBackground(Bind::TCallback& Params)
 {
 	auto Enable = Params.GetArgumentBool(0);
 	mWindow->mEnableRenderWhenBackground = Enable;
@@ -612,7 +621,7 @@ void TWindowWrapper::EnableRenderBackground(Bind::TCallback& Params)
 }
 
 
-void TWindowWrapper::Render(Bind::TCallback& Params)
+void ApiOpengl::TWindowWrapper::Render(Bind::TCallback& Params)
 {
 	throw Soy::AssertException("TWindowWrapper::Render is causing JS corruption");
 	
@@ -890,7 +899,7 @@ void TWindowWrapper::RenderChain(Bind::TCallback& Params)
 
 
 
-void TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiOpengl::TWindowWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	using namespace ApiOpengl;
 	Template.BindFunction<BindFunction::GetRenderContext>(&TWindowWrapper::GetRenderContext);
