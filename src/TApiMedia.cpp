@@ -441,7 +441,7 @@ PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string&
 	mOnNewFrame	( OnNewFrame )
 {
 	char ErrorBuffer[1000] = { 0 };
-	mHandle = PopCameraDevice_CreateCameraDeviceWithFormat(Name.c_str(), OptionsJson.c_str(), ErrorBuffer, std::size(ErrorBuffer));
+	mHandle = PopCameraDevice_CreateCameraDevice(Name.c_str(), OptionsJson.c_str(), ErrorBuffer, std::size(ErrorBuffer));
 
 	if ( mHandle <= 0 )
 	{

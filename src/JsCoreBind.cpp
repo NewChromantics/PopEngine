@@ -73,7 +73,7 @@
 #include "TApiOpenvr.h"
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_LINUX)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
 #include "TApiSokol.h"
 #endif
 
@@ -691,7 +691,6 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiGui::Bind( *Context );
 #endif
 #if !defined(TARGET_ANDROID)
-			ApiGui::Bind( *Context );
 			ApiZip::Bind( *Context );
 #endif
 #if defined(ENABLE_APIVISION)
@@ -708,7 +707,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiOpenvr::Bind(*Context);
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_LINUX)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
 			ApiSokol::Bind( *Context );
 #endif
 

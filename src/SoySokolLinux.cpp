@@ -1,5 +1,10 @@
+#include <stdlib.h>
+#include "LinuxDRM/esUtil.h"
 #include "TApiSokol.h"
 #include "PopMain.h"
+
+#define SOKOL_IMPL
+#define SOKOL_GLES2
 #include "sokol/sokol_gfx.h"
 
 class SokolLinuxContext : public ApiSokol::TSokolContext

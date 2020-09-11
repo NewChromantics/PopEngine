@@ -9,9 +9,9 @@
 
 #import <GLKit/GLKit.h>
 
-#define SOKOL_IMPL
-#define SOKOL_METAL
 #include "sokol/sokol_gfx.h"
+
+#define GLES_SILENCE_DEPRECATION
 
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 {
@@ -206,8 +206,13 @@ Platform::TWindow::TWindow(const std::string& Name)
 
 UIWindow* Platform::TWindow::GetWindow()
 {
-	auto* App = [UIApplication sharedApplication];
-	auto* Window = App.delegate.window;
+	UIWindow* Window;
+	auto Job = [&]()
+	{
+		auto* App = [UIApplication sharedApplication];
+		Window = App.delegate.window;
+	};
+	RunJobOnMainThread( Job, true );
 	return Window;
 }
 
@@ -237,19 +242,31 @@ bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView);
 
 bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView)
 {
-	if ( !EnumView(View) )
-	return false;
-	
-	auto* Array = View.subviews;
-	auto Size = [Array count];
-	for ( auto i=0;	i<Size;	i++ )
+	bool FoundView;
+	auto Job = [&]()
 	{
-		auto Element = [Array objectAtIndex:i];
-		if ( !RecurseUIViews( Element, EnumView ) )
-		return false;
-	}
-	
-	return true;
+		if ( !EnumView(View) )
+		{
+			FoundView = false;
+			return;
+		}
+		auto* Array = View.subviews;
+		auto Size = [Array count];
+		for ( auto i=0;	i<Size;	i++ )
+		{
+			auto Element = [Array objectAtIndex:i];
+			if ( !RecurseUIViews( Element, EnumView ) )
+			{
+				FoundView = false;
+				return;
+			}
+		}
+		
+		FoundView = true;
+		return;
+	};
+	RunJobOnMainThread( Job, true );
+	return Job;
 }
 
 void Platform::TWindow::EnumChildren(std::function<bool(UIView*)> EnumChild)
@@ -293,11 +310,40 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 // Sokol
 
 //@interface SokolViewDelegate : NSObject<MTKViewDelegate>
-@interface SokolViewDelegate : NSObject<GLKViewDelegate>
+//
+//@property std::function<void()> Frame;
+//- (instancetype)init:(std::function<void()> )Frame;
+//
+//@end
+//
+//@implementation SokolViewDelegate
+//
+//- (instancetype)init:(std::function<void()> )Frame {
+//    self = [super init];
+//    if (self) {
+//        _Frame = Frame;
+//    }
+//    return self;
+//}
+//
+//- (void)mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
+//    (void)view;
+//    (void)size;
+//    // FIXME
+//}
+//
+//- (void)drawInMTKView:(nonnull MTKView*)view {
+//    (void)view;
+//    @autoreleasepool {
+//			_Frame();
+//    }
+//}
 
+//@end
+
+@interface SokolViewDelegate : UIResponder<UIApplicationDelegate, GLKViewDelegate>
 @property std::function<void()> Frame;
 - (instancetype)init:(std::function<void()> )Frame;
-
 @end
 
 @implementation SokolViewDelegate
@@ -310,35 +356,38 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
     return self;
 }
 
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
-{
-	(void)view;
-	_Frame();
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
+	glClearColor(1.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+//	_Frame();
 }
 
-//- (void)mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
-//    (void)view;
-//    (void)size;
-//    // FIXME
-//}
-//
-//- (void)drawInMTKView:(nonnull MTKView*)view {
-//    (void)view;
-//    @autoreleasepool {
-//        	auto Frame = *_FramePtr;
-//			_Frame();
-//    }
-//}
-
 @end
-
 
 void Platform::TWindow::StartRender( std::function<void()> Frame, std::string ViewName )
 {
 	//	todo: check type!
-	// MTKView* MetalView = Platform::TWindow::GetChild(ViewName);
+//	 MTKView* MetalView = Platform::TWindow::GetChild(ViewName);
 	GLKView* GLView = Platform::TWindow::GetChild(ViewName);
-	auto sokol_view_delegate = [[SokolViewDelegate alloc] init:Frame];
-	[GLView setDelegate:sokol_view_delegate];
+	
+	EAGLContext* context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+	
+	auto delegate = [[SokolViewDelegate alloc] init:Frame];
+	
+	GLView.context = context;
+	
+	GLView.delegate = delegate;
+	
+//	GLKViewController * viewController = [[GLKViewController alloc] initWithNibName:nil bundle:nil];
+//    viewController.view = GLView;
+//    viewController.delegate = delegate;
+    
+	
+//	auto* ViewController = new GLKViewController();
+//	[ViewController setView: GLView];
+//
+//	auto sokol_view_delegate = [[SokolViewDelegate alloc] init:Frame];
+//	[ViewController setDelegate:sokol_view_delegate];
 }
 

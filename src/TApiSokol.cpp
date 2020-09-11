@@ -5,13 +5,6 @@
 #include "SoyWindow.h"
 #include "TApiCommon.h"
 
-#if defined(TARGET_LINUX)
-#include <stdlib.h>
-#include "LinuxDRM/esUtil.h"
-#define SOKOL_IMPL
-#define SOKOL_GLES2
-#endif
-
 #include "sokol/sokol_gfx.h"
 
 namespace ApiSokol
@@ -43,6 +36,7 @@ void ApiSokol::TSokolWrapper::Init(sg_desc desc)
 
 void ApiSokol::TSokolWrapper::RenderFrame()
 {
+	//tsdk: need to get the views width and height -> hardcoding for now
 	auto ScreenRect = mSoyWindow->GetScreenRect();
 
 	/* animate clear colors */
@@ -54,8 +48,10 @@ void ApiSokol::TSokolWrapper::RenderFrame()
 	/* draw one frame */
 	sg_begin_default_pass(
 		&mPassAction,
-		ScreenRect.w,
-		ScreenRect.h
+		100,
+		100
+//		ScreenRect.w,
+//		ScreenRect.h
 	);
 
 	sg_end_pass();
@@ -64,8 +60,9 @@ void ApiSokol::TSokolWrapper::RenderFrame()
 
 void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 {
-	// Set TPersistent Pointer
 	auto Window = Params.GetArgumentObject(0);
+
+	// Set TPersistent Pointer
 	mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
 
 	auto LocalContext = Params.mLocalContext;
@@ -73,12 +70,12 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
 	mSoyWindow = WindowWrapper.mWindow;
 	
-	// tsdk: If there is a specific view, store its name
+	// tsdk: If there is a specific view to target, store its name
 	if ( !Params.IsArgumentUndefined(1) )
 	{
-		auto mViewName = Params.GetArgumentString(1);
+		mViewName = Params.GetArgumentString(1);
 	}
-
+	
 	// tsdk: Make sure to zero initialise the Member Variables
 	mPassAction = {0};
 	sg_desc desc = {0};

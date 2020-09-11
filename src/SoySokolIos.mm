@@ -1,10 +1,16 @@
 #include "TApiSokol.h"
 #include "SoyWindowIos.h"
 #include "PopMain.h"
-#include "sokol/sokol_gfx.h"
 
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+
+#import <GLKit/GLKit.h>
+
+#define SOKOL_IMPL
+#define SOKOL_GLES2
+//#define SOKOL_METAL
+#include "sokol/sokol_gfx.h"
 
 class SokolMetalContext : public ApiSokol::TSokolContext
 {
@@ -28,6 +34,10 @@ sg_context_desc SokolMetalContext::GetSokolContext()
 
 SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, mViewName, SampleCount)
 {
+	// Break with empty context to test GLES setup
+	mContextDesc = (sg_context_desc){ };
+	return;
+	
 	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*mSoyWindow);
 	mMetalView = PlatformWindow.GetChild(mViewName);
 	
