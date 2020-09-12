@@ -12,58 +12,97 @@
 //#define SOKOL_METAL
 #include "sokol/sokol_gfx.h"
 
-class SokolMetalContext : public ApiSokol::TSokolContext
+
+class SokolMetalContext : public Sokol::TContext
 {
 public:
-	SokolMetalContext( std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount );
+	SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,int SampleCount);
 
-	sg_context_desc					GetSokolContext() override;
+	sg_context_desc					GetSokolContext() override	{	return mContextDesc;	}
 
 public:
 	sg_context_desc         		mContextDesc;
-	MTKView*             			mMetalView;
+	MTKView*             			mView = nullptr;
 	id<MTLDevice>         			mMetalDevice;
-	void*							mUserData;
 };
 
-sg_context_desc SokolMetalContext::GetSokolContext()
+class SokolOpenglContext : public Sokol::TContext
 {
-	return mContextDesc;
+public:
+	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount);
+	
+	sg_context_desc					GetSokolContext() override	{	return mContextDesc;	}
+	
+public:
+	sg_context_desc         		mContextDesc;
+	GLKView*             			mView = nullptr;
+};
+
+
+
+std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,const std::string& ViewName,int SampleCount)
+{
+	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
+	
+	//	get the view with matching name, if it's a metal view, make a metal context
+	//	if its gl, make a gl context
+	auto* View = PlatformWindow.GetChild(ViewName);
+	if ( !View )
+	{
+		std::stringstream Error;
+		Error << "Failed to find child view " << ViewName << " (required on ios)";
+		throw Soy::AssertException(Error);
+	}
+	
+	auto ClassName = Soy::NSStringToString(NSStringFromClass([View class]));
+	std::Debug << "View " << ViewName << " class name " << ClassName << std::endl;
+	
+	if ( ClassName == "MTKView" )
+	{
+		//	todo: proper obj-c cast
+		MTKView* MetalView = View;
+		auto* Context = new SokolMetalContext(Window,MetalView,SampleCount);
+		return std::shared_ptr<Sokol::TContext>(Context);
+	}
+	
+	if ( ClassName == "GLKView" )
+	{
+		//	todo: proper obj-c cast
+		GLKView* GlView = View;
+		auto* Context = new SokolOpenglContext(Window,GlView,SampleCount);
+		return std::shared_ptr<Sokol::TContext>(Context);
+	}
+	
+	std::stringstream Error;
+	Error << "Class of view " << ViewName << " is not MTKView or GLKView; " << ClassName;
+	throw Soy::AssertException(Error);
 }
 
 
-SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, std::string mViewName, int SampleCount ) : ApiSokol::TSokolContext(mSoyWindow, mViewName, SampleCount)
-{
-	// Break with empty context to test GLES setup
-	mContextDesc = (sg_context_desc){ };
-	return;
-	
-	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*mSoyWindow);
-	mMetalView = PlatformWindow.GetChild(mViewName);
-	
-	// tsdk: Leaving this as a stub for now
-	mUserData = (void*)0xABCDABCD;
 
+
+
+
+SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,int SampleCount) :
+	mView	( View )
+{
 	mMetalDevice = MTLCreateSystemDefaultDevice();
-  
-	[mMetalView setDevice: mMetalDevice];
+ 	[mView setDevice: mMetalDevice];
 	 
 	auto GetRenderPassDescriptor = [](void* user_data)
 	{
 		auto* This = reinterpret_cast<SokolMetalContext*>(user_data);
-		auto* MetalView = This->mMetalView;
-			
-		assert(This->mUserData == (void*)0xABCDABCD);
-		return (__bridge const void*) [MetalView currentRenderPassDescriptor];
+		auto* MetalView = This->mView;
+		auto* Descriptor = (__bridge const void*) [MetalView currentRenderPassDescriptor];
+		return Descriptor;
 	};
 	
 	auto GetDrawable = [](void* user_data)
 	{
 		auto* This = reinterpret_cast<SokolMetalContext*>(user_data);
-		auto* MetalView = This->mMetalView;
-		
-		assert(This->mUserData == (void*)0xABCDABCD);
-		return (__bridge const void*) [MetalView currentDrawable];
+		auto* MetalView = This->mView;
+		auto* Drawable = (__bridge const void*) [MetalView currentDrawable];
+		return Drawable;
 	};
 
 	mContextDesc = (sg_context_desc)
@@ -78,4 +117,11 @@ SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> mSoyWindow, std:
 		}
 	};
 
+}
+
+
+SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount) :
+	mView	( View )
+{
+	Soy_AssertTodo();
 }
