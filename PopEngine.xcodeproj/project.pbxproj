@@ -30,7 +30,6 @@
 		58AA9DB1250B992B009CC296 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		58AA9DB2250B9932009CC296 /* UnitTest in Resources */ = {isa = PBXBuildFile; fileRef = BFD08270225E90AC00FD05DC /* UnitTest */; };
 		58AA9DB4250BBA12009CC296 /* SoySokolIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 582BE875250A9E9300B341D4 /* SoySokolIos.mm */; };
-		58C2003E24F902ED002DAC99 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58C2003D24F902ED002DAC99 /* PopEngineUnitTestMain.cpp */; };
 		58C2004024F90506002DAC99 /* Main.xib in Resources */ = {isa = PBXBuildFile; fileRef = 58C2003F24F90506002DAC99 /* Main.xib */; };
 		58C2004124F90506002DAC99 /* Main.xib in Resources */ = {isa = PBXBuildFile; fileRef = 58C2003F24F90506002DAC99 /* Main.xib */; };
 		58C2004224F9094A002DAC99 /* PopH264_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF623847B9A00A70EBF /* PopH264_Ios.framework */; };
@@ -335,8 +334,7 @@
 		5898946D24F80FB800FCCCE2 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
 		5898946E24F80FB800FCCCE2 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
 		58C2000224F901B7002DAC99 /* PopEngineTestApp_Ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngineTestApp_Ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		58C2001524F901BC002DAC99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		58C2003D24F902ED002DAC99 /* PopEngineUnitTestMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PopEngineUnitTestMain.cpp; sourceTree = "<group>"; };
+		58C2001524F901BC002DAC99 /* PopEngineApp_Ios_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PopEngineApp_Ios_Info.plist; sourceTree = "<group>"; };
 		58C2003F24F90506002DAC99 /* Main.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Main.xib; sourceTree = "<group>"; };
 		58C2004B24F909BC002DAC99 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
@@ -369,7 +367,7 @@
 		BF151F0C2382C31200A70EBF /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PopEngine_Ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine_Ios.h; sourceTree = "<group>"; };
-		BF151F7923845F2F00A70EBF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BF151F7923845F2F00A70EBF /* PopEngine_Ios_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PopEngine_Ios_Info.plist; sourceTree = "<group>"; };
 		BF151F8023845F5800A70EBF /* SoyLib_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SoyLib_Ios.xcconfig; sourceTree = "<group>"; };
 		BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PopEngine_Ios.xcconfig; sourceTree = "<group>"; };
 		BF151FCC2384704C00A70EBF /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/OpenGLES.framework; sourceTree = DEVELOPER_DIR; };
@@ -438,12 +436,10 @@
 		BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyViveHandTracker.h; path = src/SoyViveHandTracker.h; sourceTree = "<group>"; };
 		BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyViveHandTracker.cpp; path = src/SoyViveHandTracker.cpp; sourceTree = "<group>"; };
 		BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PopEngine_Osx.h; sourceTree = "<group>"; };
-		BF5EAF7F237F07ED0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PopEngine_Osx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5EB00F237F11670077BCF5 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		BF5EB0542380335D0077BCF5 /* PopEngine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PopEngine.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		BF5EB05C2380335F0077BCF5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		BF5EB05E2380335F0077BCF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../PopEngineUnitTestApp/Info.plist; sourceTree = "<group>"; };
+		BF5EB05E2380335F0077BCF5 /* PopEngineApp_Osx_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PopEngineApp_Osx_Info.plist; sourceTree = "<group>"; };
 		BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PopEngineUnitTestApp.entitlements; sourceTree = "<group>"; };
 		BF607EA12240580E00A78C00 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		BF607EA32240588300A78C00 /* TApiBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiBluetooth.h; path = src/TApiBluetooth.h; sourceTree = "<group>"; };
@@ -492,6 +488,7 @@
 		BF689AFF20D9A52E000BC812 /* TV8Container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8Container.h; path = src/TV8Container.h; sourceTree = "<group>"; };
 		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
 		BF691F011C3FEEE90092FC34 /* SoySrt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySrt.h; path = src/SoySrt.h; sourceTree = "<group>"; };
+		BF693A2F250D15BC002E3772 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Version.xcconfig; path = src/Version.xcconfig; sourceTree = "<group>"; };
 		BF6EB3272111167800FC991B /* TApiMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiMedia.cpp; path = src/TApiMedia.cpp; sourceTree = "<group>"; };
 		BF6EB3282111167800FC991B /* TApiMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiMedia.h; path = src/TApiMedia.h; sourceTree = "<group>"; };
 		BF6EB32A21111C6600FC991B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -680,7 +677,7 @@
 		FBC3A0DF1A308648009DA49E /* SoyScope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyScope.cpp; path = src/SoyScope.cpp; sourceTree = "<group>"; };
 		FBC3A0E01A308648009DA49E /* SoyScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyScope.h; path = src/SoyScope.h; sourceTree = "<group>"; };
 		FBF67B071A96B2BE00F74C38 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		FBF67B321A974A7B00F74C38 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FBF67B321A974A7B00F74C38 /* PopEngine_Osx_Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = PopEngine_Osx_Info.plist; sourceTree = "<group>"; };
 		FBF67B371A974BF400F74C38 /* PopEngine.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PopEngine.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -762,18 +759,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		58C2000324F901B7002DAC99 /* PopEngineTestApp_Ios */ = {
-			isa = PBXGroup;
-			children = (
-				58C2001524F901BC002DAC99 /* Info.plist */,
-				58C2003D24F902ED002DAC99 /* PopEngineUnitTestMain.cpp */,
-				58171F1A250BD4A400224082 /* LaunchScreen.storyboard */,
-				58171F1B250BD4A600224082 /* Main.storyboard */,
-				58C2003F24F90506002DAC99 /* Main.xib */,
-			);
-			path = PopEngineTestApp_Ios;
-			sourceTree = "<group>";
-		};
 		B71D7B252137F7EE00F29EA0 /* SoyDeckLink */ = {
 			isa = PBXGroup;
 			children = (
@@ -827,7 +812,7 @@
 			children = (
 				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
 				BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */,
-				BF151F7923845F2F00A70EBF /* Info.plist */,
+				BF151F7923845F2F00A70EBF /* PopEngine_Ios_Info.plist */,
 			);
 			path = Source_Ios;
 			sourceTree = "<group>";
@@ -840,7 +825,7 @@
 				BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */,
 				BFA22A8422DC9CA200D8615C /* PopEngine.xcconfig */,
 				FBF67B371A974BF400F74C38 /* PopEngine.xib */,
-				FBF67B321A974A7B00F74C38 /* Info.plist */,
+				FBF67B321A974A7B00F74C38 /* PopEngine_Osx_Info.plist */,
 				BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */,
 			);
 			path = Source_Osx;
@@ -881,11 +866,13 @@
 		BF5EAF7D237F07ED0077BCF5 /* Source_App */ = {
 			isa = PBXGroup;
 			children = (
+				BF5EB05E2380335F0077BCF5 /* PopEngineApp_Osx_Info.plist */,
+				58C2001524F901BC002DAC99 /* PopEngineApp_Ios_Info.plist */,
+				58171F1A250BD4A400224082 /* LaunchScreen.storyboard */,
+				58171F1B250BD4A600224082 /* Main.storyboard */,
+				58C2003F24F90506002DAC99 /* Main.xib */,
 				BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */,
-				BF5EB05B2380335F0077BCF5 /* MainMenu.xib */,
-				BF5EB05E2380335F0077BCF5 /* Info.plist */,
 				BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */,
-				BF5EAF7F237F07ED0077BCF5 /* Info.plist */,
 			);
 			path = Source_App;
 			sourceTree = "<group>";
@@ -1137,7 +1124,6 @@
 				BF5EAF7D237F07ED0077BCF5 /* Source_App */,
 				BF40CE182423D90B00F636EF /* Source_Osx */,
 				BF151F7723845F2E00A70EBF /* Source_Ios */,
-				58C2000324F901B7002DAC99 /* PopEngineTestApp_Ios */,
 				FB8A05941A2E54730099596C /* Products */,
 				BFD08270225E90AC00FD05DC /* UnitTest */,
 				BF689AC420D6C80D000BC812 /* Frameworks */,
@@ -1170,9 +1156,7 @@
 				BF7AB9602248223100FAC1CE /* PopEngine.h */,
 				BF85350322BEB8110049C01B /* PopEngineLumin.cpp */,
 				BF689AE820D6DEB3000BC812 /* PopMain.cpp */,
-				582BE875250A9E9300B341D4 /* SoySokolIos.mm */,
 				BF689AE920D6DEB4000BC812 /* PopMain.h */,
-				582BE871250A9D1000B341D4 /* SoyWindowIos.h */,
 				BF689AEA20D6DEB4000BC812 /* PopMain.mm */,
 				BFEF6A462479C603000A1F88 /* Readme.md */,
 				BF607EA6224107B800A78C00 /* SoyBluetooth.h */,
@@ -1181,8 +1165,6 @@
 				582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */,
 				5850A42224F920C400145478 /* SoyGuiOsx.mm */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
-				BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */,
-				BF2CFA9224E28EAA009238A5 /* SoyOpenxr.h */,
 				BFB647372225593600820612 /* SoyHid.h */,
 				BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */,
 				BF85350022BEB6960049C01B /* SoyMagicLeap.h */,
@@ -1192,10 +1174,14 @@
 				BF689ACC20D6D3AE000BC812 /* SoyOpenglWindow.h */,
 				BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */,
 				BF689AC920D6D3AD000BC812 /* SoyOpenglWindowOsx.mm */,
+				BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */,
+				BF2CFA9224E28EAA009238A5 /* SoyOpenxr.h */,
+				582BE875250A9E9300B341D4 /* SoySokolIos.mm */,
 				BFEF6A3924759401000A1F88 /* SoySound.h */,
 				BFEF6A3824759401000A1F88 /* SoySound.mm */,
 				BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */,
 				BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */,
+				582BE871250A9D1000B341D4 /* SoyWindowIos.h */,
 				BFEF6A3724759168000A1F88 /* TApiAudio.cpp */,
 				BFEF6A3624759168000A1F88 /* TApiAudio.h */,
 				BF607EA42240588300A78C00 /* TApiBluetooth.cpp */,
@@ -1261,6 +1247,7 @@
 				BF6553C32132C4D9003E4241 /* v8 */,
 				BFF505E822550F30005A6AC1 /* V8Bind.cpp */,
 				BFF505E922550F30005A6AC1 /* V8Bind.h */,
+				BF693A2F250D15BC002E3772 /* Version.xcconfig */,
 				BF5C4ABD23F6FE2B007D6393 /* Zip */,
 			);
 			name = src;
@@ -1663,7 +1650,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				58C2003E24F902ED002DAC99 /* PopEngineUnitTestMain.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1869,17 +1855,6 @@
 		};
 /* End PBXTargetDependency section */
 
-/* Begin PBXVariantGroup section */
-		BF5EB05B2380335F0077BCF5 /* MainMenu.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				BF5EB05C2380335F0077BCF5 /* Base */,
-			);
-			name = MainMenu.xib;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin XCBuildConfiguration section */
 		58C2002F24F901BD002DAC99 /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
@@ -1914,10 +1889,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -1940,7 +1916,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Ios_Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -1948,6 +1924,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1986,10 +1963,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2012,7 +1990,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Ios_Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -2020,6 +1998,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -2058,10 +2037,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2084,7 +2064,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Ios_Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -2092,6 +2072,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -2120,9 +2101,10 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = X52DR36JY2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2131,12 +2113,13 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = PopEngineTestApp_Ios/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Ios_Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NewChromantics.PopEngineTestApp-Ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -2145,6 +2128,7 @@
 		};
 		BF0F9E6122870BD000AEA7DC /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF693A2F250D15BC002E3772 /* Version.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
@@ -2232,7 +2216,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/PopEngine_Ios_Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2306,7 +2290,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/PopEngine_Ios_Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2380,7 +2364,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/PopEngine_Ios_Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2432,7 +2416,7 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Ios/PopEngine_Ios_Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2725,7 +2709,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2785,7 +2769,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2845,7 +2829,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2886,7 +2870,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2958,7 +2942,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngineUnitTestApp/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -3029,7 +3013,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngineUnitTestApp/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -3100,7 +3084,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = PopEngineUnitTestApp/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -3147,7 +3131,7 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = PopEngineUnitTestApp/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Source_App/PopEngineApp_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_FAST_MATH = YES;
@@ -3159,6 +3143,7 @@
 		};
 		BF8534F822B6DA830049C01B /* Debug_Chakra */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF693A2F250D15BC002E3772 /* Version.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
@@ -3636,6 +3621,7 @@
 		};
 		FB8A05981A2E54730099596C /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF693A2F250D15BC002E3772 /* Version.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
@@ -3669,6 +3655,7 @@
 		};
 		FB8A05991A2E54730099596C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BF693A2F250D15BC002E3772 /* Version.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;

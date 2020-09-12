@@ -1,5 +1,5 @@
 #include "../src/SoyLib/SoyLib_Ios.xcconfig"
-
+#include "../src/Version.xcconfig"
 
 
 GCC_PREPROCESSOR_DEFINITIONS = $(GCC_PREPROCESSOR_DEFINITIONS) TARGET_IOS JSAPI_JSCORE
