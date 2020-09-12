@@ -7,26 +7,29 @@
 
 #include "sokol/sokol_gfx.h"
 
+
+
+
 namespace ApiSokol
 {
 	const char Namespace[] = "Pop.Sokol";
 
-	DEFINE_BIND_TYPENAME(RenderPipeline);
+	DEFINE_BIND_TYPENAME(Context);
 	DEFINE_BIND_FUNCTIONNAME(StartRender);
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindObjectType<TSokolWrapper>(Namespace);
+	Context.BindObjectType<TSokolContextWrapper>(Namespace);
 }
 
-void ApiSokol::TSokolWrapper::CreateTemplate(Bind::TTemplate &Template)
+void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 {
-	Template.BindFunction<BindFunction::StartRender>(&TSokolWrapper::StartRender);
+	Template.BindFunction<BindFunction::StartRender>(&TSokolContextWrapper::StartRender);
 }
 
-void ApiSokol::TSokolWrapper::Init(sg_desc desc)
+void ApiSokol::TSokolContextWrapper::Init(sg_desc desc)
 {
 	sg_setup(&desc);
 
@@ -34,7 +37,7 @@ void ApiSokol::TSokolWrapper::Init(sg_desc desc)
 	mPassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 0.0f, 0.0f, 1.0f}};
 }
 
-void ApiSokol::TSokolWrapper::RenderFrame()
+void ApiSokol::TSokolContextWrapper::RenderFrame()
 {
 	//tsdk: need to get the views width and height -> hardcoding for now
 	auto ScreenRect = mSoyWindow->GetScreenRect();
@@ -58,7 +61,7 @@ void ApiSokol::TSokolWrapper::RenderFrame()
 	sg_commit();
 }
 
-void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
+void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 {
 	auto Window = Params.GetArgumentObject(0);
 
@@ -78,17 +81,17 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	
 	// tsdk: Make sure to zero initialise the Member Variables
 	mPassAction = {0};
-	sg_desc desc = {0};
+	//sg_desc desc = {0};
 
 	// tsdk: Set the sample count
 	int SampleCount = 1;
 	
 	// Create Context
-	auto* Context = new ApiSokol::TSokolContext( mSoyWindow, mViewName, SampleCount );
+	mSokolContext = Sokol::Platform_CreateContext(mSoyWindow, mViewName, SampleCount );
 	
-	desc = 
+	sg_desc desc =
 	{
-		.context = Context->GetSokolContext()
+		.context = mSokolContext->GetSokolContext()
 	};
 
 	// Initialise Sokol
@@ -98,7 +101,7 @@ void ApiSokol::TSokolWrapper::Construct(Bind::TCallback &Params)
 	mSoyWindow->StartRender(Frame, mViewName);
 }
 
-void ApiSokol::TSokolWrapper::StartRender(Bind::TCallback &Params)
+void ApiSokol::TSokolContextWrapper::StartRender(Bind::TCallback &Params)
 {
 	
 }
