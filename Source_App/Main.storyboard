@@ -17,11 +17,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mtkView contentMode="scaleToFill" fixedFrame="YES" restorationIdentifier="MTKView" colorPixelFormat="BGRA8Unorm" depthStencilPixelFormat="Depth32Float" translatesAutoresizingMaskIntoConstraints="NO" id="GEb-pD-xtm">
+                            <mtkView contentMode="scaleToFill" fixedFrame="YES" restorationIdentifier="MTKView" colorPixelFormat="BGRA8Unorm" depthStencilPixelFormat="Depth32Float" enableSetNeedsDisplay="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GEb-pD-xtm">
                                 <rect key="frame" x="16" y="377" width="343" height="270"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </mtkView>
-                            <glkView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" fixedFrame="YES" restorationIdentifier="GLView" enableSetNeedsDisplay="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gpy-ba-ZiO" userLabel="GLView" propertyAccessControl="all">
+                            <glkView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" fixedFrame="YES" restorationIdentifier="GLView" translatesAutoresizingMaskIntoConstraints="NO" id="Gpy-ba-ZiO" userLabel="GLView">
                                 <rect key="frame" x="16" y="20" width="343" height="268"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </glkView>

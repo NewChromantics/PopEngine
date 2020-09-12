@@ -307,66 +307,10 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 	//Soy_AssertTodo();
 }
 
-// Sokol
-
-//@interface SokolViewDelegate : NSObject<MTKViewDelegate>
-//
-//@property std::function<void()> Frame;
-//- (instancetype)init:(std::function<void()> )Frame;
-//
-//@end
-//
-//@implementation SokolViewDelegate
-//
-//- (instancetype)init:(std::function<void()> )Frame {
-//    self = [super init];
-//    if (self) {
-//        _Frame = Frame;
-//    }
-//    return self;
-//}
-//
-//- (void)mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
-//    (void)view;
-//    (void)size;
-//    // FIXME
-//}
-//
-//- (void)drawInMTKView:(nonnull MTKView*)view {
-//    (void)view;
-//    @autoreleasepool {
-//			_Frame();
-//    }
-//}
-
-//@end
-
-@interface SokolViewDelegate : UIResponder<UIApplicationDelegate, GLKViewDelegate>
-@property std::function<void()> Frame;
-- (instancetype)init:(std::function<void()> )Frame;
-@end
-
-@implementation SokolViewDelegate
-
-- (instancetype)init:(std::function<void()> )Frame {
-    self = [super init];
-    if (self) {
-        _Frame = Frame;
-    }
-    return self;
-}
-
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
-	glClearColor(1.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	
-//	_Frame();
-}
-
-@end
 
 void Platform::TWindow::StartRender( std::function<void()> Frame, std::string ViewName )
 {
+	/*
 	//	todo: check type!
 //	 MTKView* MetalView = Platform::TWindow::GetChild(ViewName);
 	GLKView* GLView = Platform::TWindow::GetChild(ViewName);
@@ -378,7 +322,7 @@ void Platform::TWindow::StartRender( std::function<void()> Frame, std::string Vi
 	GLView.context = context;
 	
 	GLView.delegate = delegate;
-	
+	*/
 //	GLKViewController * viewController = [[GLKViewController alloc] initWithNibName:nil bundle:nil];
 //    viewController.view = GLView;
 //    viewController.delegate = delegate;

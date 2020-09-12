@@ -13,6 +13,67 @@
 #include "sokol/sokol_gfx.h"
 
 
+
+// Sokol
+
+//@interface SokolViewDelegate : NSObject<MTKViewDelegate>
+//
+//@property std::function<void()> Frame;
+//- (instancetype)init:(std::function<void()> )Frame;
+//
+//@end
+//
+//@implementation SokolViewDelegate
+//
+//- (instancetype)init:(std::function<void()> )Frame {
+//    self = [super init];
+//    if (self) {
+//        _Frame = Frame;
+//    }
+//    return self;
+//}
+//
+//- (void)mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
+//    (void)view;
+//    (void)size;
+//    // FIXME
+//}
+//
+//- (void)drawInMTKView:(nonnull MTKView*)view {
+//    (void)view;
+//    @autoreleasepool {
+//			_Frame();
+//    }
+//}
+
+//@end
+
+//	this could do metal & gl
+@interface SokolViewDelegate : UIResponder<GLKViewDelegate>
+
+	@property std::function<void(CGRect)>	mOnPaint;
+
+- (instancetype)init:(std::function<void(CGRect)> )OnPaint;
+	@end
+
+@implementation SokolViewDelegate
+	
+- (instancetype)init:(std::function<void(CGRect)> )OnPaint
+{
+	self = [super init];
+	self.mOnPaint = OnPaint;
+	return self;
+}
+	
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+{
+	self.mOnPaint(rect);
+}
+	
+@end
+
+
+
 class SokolMetalContext : public Sokol::TContext
 {
 public:
@@ -36,6 +97,9 @@ public:
 public:
 	sg_context_desc         		mContextDesc;
 	GLKView*             			mView = nullptr;
+	EAGLContext*					mOpenglContext = nullptr;
+	SokolViewDelegate*				mDelegate = nullptr;
+	GLKViewController*				mViewController = nullptr;
 };
 
 
@@ -59,16 +123,14 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<S
 	
 	if ( ClassName == "MTKView" )
 	{
-		//	todo: proper obj-c cast
-		MTKView* MetalView = View;
+		MTKView* MetalView = (MTKView*)View;
 		auto* Context = new SokolMetalContext(Window,MetalView,SampleCount);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
 	
 	if ( ClassName == "GLKView" )
 	{
-		//	todo: proper obj-c cast
-		GLKView* GlView = View;
+		GLKView* GlView = (GLKView*)View;
 		auto* Context = new SokolOpenglContext(Window,GlView,SampleCount);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
@@ -119,9 +181,48 @@ SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* 
 
 }
 
+extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount) :
 	mView	( View )
 {
-	Soy_AssertTodo();
+	auto OnFrame = [](CGRect Rect)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
+		glClearColor(1.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+	};
+
+	//	can we get this from sokol impl?
+#if defined(SOKOL_GLES2)
+	auto Api = kEAGLRenderingAPIOpenGLES2;
+#elif defined(SOKOL_GLES3)
+	auto Api = kEAGLRenderingAPIOpenGLES3;
+#else
+#pragma message Unknown GL API selected
+	auto Api = kEAGLRenderingAPIOpenGLES1;
+#endif
+	mOpenglContext = [[EAGLContext alloc] initWithAPI:Api];
+	mView.context = mOpenglContext;
+
+	//	gr: this doesn't do anything, need to call the func
+	mView.enableSetNeedsDisplay = YES;
+	//	must be on UI thread, we should be queuing this up on the main window, maybe?
+	//	gr: this is a single Dirty-Rect call
+	//	a GLViewController will do regular drawing for us
+	auto SetNeedDisplay = [this]()
+	{
+		[mView setNeedsDisplay];
+	};
+	//RunJobOnMainThread(SetNeedDisplay,false);
+
+	mDelegate = [[SokolViewDelegate alloc] init:OnFrame];
+	[mView setDelegate:mDelegate];
+	
+	/*
+	//	built in auto-renderer
+	mViewController = [[GLKViewController alloc] init];
+	mViewController.view = mView;
+	mViewController.preferredFramesPerSecond = 60;
+	 */
 }
