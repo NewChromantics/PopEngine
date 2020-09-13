@@ -11,7 +11,6 @@
 
 #include "sokol/sokol_gfx.h"
 
-#define GLES_SILENCE_DEPRECATION
 
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 {
@@ -279,27 +278,33 @@ void Platform::TWindow::EnumChildren(std::function<bool(UIView*)> EnumChild)
 
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
+	//	get window size
 	Soy_AssertTodo();
 }
 
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
-	Soy_AssertTodo();
+	if ( !Fullscreen )
+		throw Soy::AssertException("IOS window cannot be not-fullscreen");
 }
 
 bool Platform::TWindow::IsFullscreen()
 {
+	//	if we start having multiple windows for storyboards/views
+	//	then maybe these functions have other meanings
 	return true;
 }
 
 bool Platform::TWindow::IsMinimised()
 {
-	Soy_AssertTodo();
+	//	assuming the js code wont be running if app is not foreground
+	return false;
 }
 
 bool Platform::TWindow::IsForeground()
 {
-	Soy_AssertTodo();
+	//	assuming the js code wont be running if app is not foreground
+	return true;
 }
 
 void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
