@@ -5,6 +5,7 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
+//	GLKViewController needs GLKit framework
 #import <GLKit/GLKit.h>
 
 #define SOKOL_IMPL
@@ -49,7 +50,7 @@
 //@end
 
 //	this could do metal & gl
-@interface SokolViewDelegate : UIResponder<GLKViewDelegate>
+@interface SokolViewDelegate : UIResponder<GLKViewDelegate,GLKViewControllerDelegate>
 
 	@property std::function<void(CGRect)>	mOnPaint;
 
@@ -68,6 +69,12 @@
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
 	self.mOnPaint(rect);
+}
+	
+- (void)glkViewControllerUpdate:(nonnull GLKViewController *)controller
+{
+	std::Debug << "glkViewControllerUpdate" << std::endl;
+	
 }
 	
 @end
@@ -91,10 +98,15 @@ class SokolOpenglContext : public Sokol::TContext
 {
 public:
 	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount);
+	~SokolOpenglContext();
 	
 	sg_context_desc					GetSokolContext() override	{	return mContextDesc;	}
 	
+	void							TriggerPaint();
+	
 public:
+	bool							mRunning = true;
+	std::shared_ptr<SoyThread>		mPaintThread;
 	sg_context_desc         		mContextDesc;
 	GLKView*             			mView = nullptr;
 	EAGLContext*					mOpenglContext = nullptr;
@@ -181,15 +193,17 @@ SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* 
 
 }
 
-extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount) :
 	mView	( View )
 {
 	auto OnFrame = [](CGRect Rect)
 	{
+		static int Counter = 0;
+		Counter++;
 		std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
-		glClearColor(1.0, 0.0, 0.0, 1.0);
+		auto Blue = (Counter%60)/60.0f;
+		glClearColor(1.f, 0.f, Blue, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 	};
 
@@ -207,6 +221,52 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 
 	//	gr: this doesn't do anything, need to call the func
 	mView.enableSetNeedsDisplay = YES;
+
+	mDelegate = [[SokolViewDelegate alloc] init:OnFrame];
+	[mView setDelegate:mDelegate];
+
+	auto FrameRate = 60;
+
+	/*gr: this still isn't triggering, I think it needs to be in the view tree
+	 but Interface Builder won't let us add this, and I can't see how (as its not a view)...
+	//	built in auto-renderer
+	mViewController = [[GLKViewController alloc] init];
+	[mViewController setView:mView];
+	mViewController.preferredFramesPerSecond = FrameRate;
+	[mViewController setDelegate:mDelegate];
+*/
+	//	gr: given that TriggerPaint needs to be on the main thread,
+	//		maybe this thread should just something on the main dispath queue
+	//		that could be dangerous for deadlocks on destruction though
+	auto PaintLoop = [this,FrameRate]()
+	{
+		this->TriggerPaint();
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/FrameRate));
+		return mRunning;
+	};
+	
+	//	make render loop
+	mPaintThread.reset( new SoyThreadLambda("SokolOpenglContext Paint Loop", PaintLoop ) );
+}
+
+SokolOpenglContext::~SokolOpenglContext()
+{
+	mRunning = false;
+	try
+	{
+		//	this should block until done
+		mPaintThread.reset();
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Caught " << __PRETTY_FUNCTION__ << " exception " << e.what() << std::endl;
+	}
+}
+
+extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
+
+void SokolOpenglContext::TriggerPaint()
+{
 	//	must be on UI thread, we should be queuing this up on the main window, maybe?
 	//	gr: this is a single Dirty-Rect call
 	//	a GLViewController will do regular drawing for us
@@ -214,15 +274,5 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	{
 		[mView setNeedsDisplay];
 	};
-	//RunJobOnMainThread(SetNeedDisplay,false);
-
-	mDelegate = [[SokolViewDelegate alloc] init:OnFrame];
-	[mView setDelegate:mDelegate];
-	
-	/*
-	//	built in auto-renderer
-	mViewController = [[GLKViewController alloc] init];
-	mViewController.view = mView;
-	mViewController.preferredFramesPerSecond = 60;
-	 */
+	RunJobOnMainThread(SetNeedDisplay,false);
 }
