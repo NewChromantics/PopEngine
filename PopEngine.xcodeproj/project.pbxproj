@@ -230,6 +230,7 @@
 		BF67C84E2431303800D7492E /* SoyShellExecuteOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */; };
 		BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF693A30250D17F9002E3772 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
+		BF693A33250E2243002E3772 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF693A32250E2243002E3772 /* GLKit.framework */; };
 		BF71CAEC243E633100AEF50F /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF71CAED243E639C00AEF50F /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
@@ -489,6 +490,7 @@
 		BF691F001C3FEEE90092FC34 /* SoySrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoySrt.cpp; path = src/SoySrt.cpp; sourceTree = "<group>"; };
 		BF691F011C3FEEE90092FC34 /* SoySrt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySrt.h; path = src/SoySrt.h; sourceTree = "<group>"; };
 		BF693A2F250D15BC002E3772 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Version.xcconfig; path = src/Version.xcconfig; sourceTree = "<group>"; };
+		BF693A32250E2243002E3772 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/GLKit.framework; sourceTree = DEVELOPER_DIR; };
 		BF6EB3272111167800FC991B /* TApiMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiMedia.cpp; path = src/TApiMedia.cpp; sourceTree = "<group>"; };
 		BF6EB3282111167800FC991B /* TApiMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiMedia.h; path = src/TApiMedia.h; sourceTree = "<group>"; };
 		BF6EB32A21111C6600FC991B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -697,6 +699,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF693A33250E2243002E3772 /* GLKit.framework in Frameworks */,
 				BF152009238482A200A70EBF /* CoreVideo.framework in Frameworks */,
 				BF15200523847F1B00A70EBF /* AVFoundation.framework in Frameworks */,
 				5898947024F80FB900FCCCE2 /* MetalKit.framework in Frameworks */,
@@ -940,6 +943,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BF693A32250E2243002E3772 /* GLKit.framework */,
 				58C2004B24F909BC002DAC99 /* libc++.tbd */,
 				5898946D24F80FB800FCCCE2 /* Metal.framework */,
 				5898946E24F80FB800FCCCE2 /* MetalKit.framework */,
