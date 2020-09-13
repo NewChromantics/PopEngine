@@ -9,10 +9,16 @@
 #import <GLKit/GLKit.h>
 
 #define SOKOL_IMPL
-#define SOKOL_GLES2
+//#define SOKOL_GLES2
+#define SOKOL_GLES3
 //#define SOKOL_METAL
-#include "sokol/sokol_gfx.h"
 
+#if defined(SOKOL_GLES3)
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
+#endif
+
+#include "sokol/sokol_gfx.h"
 
 
 // Sokol
