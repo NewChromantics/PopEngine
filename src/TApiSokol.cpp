@@ -29,18 +29,17 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 	//Template.BindFunction<BindFunction::StartRender>(&TSokolContextWrapper::StartRender);
 }
 
-extern int glGetError();
 
-void ApiSokol::TSokolContextWrapper::OnPaint(vec2x<size_t> ViewRect)
+void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> ViewRect)
 {
+	sg_activate_context(Context);
+
 	static int Counter = 0;
 	Counter++;
-	
-	mPassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {1.0f, 0.0f, 0.0f, 1.0f}};
 	auto Blue = (Counter%60)/60.0f;
-	mPassAction.colors[0].val[0] = 1.0f;
-	mPassAction.colors[0].val[1] = 0.0f;
-	mPassAction.colors[0].val[2] = Blue;
+
+	sg_pass_action mPassAction = {0};
+	mPassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.0f, 1.0f, Blue, 1.0f}};
 
 	//	draw one frame
 	sg_begin_default_pass(
@@ -61,12 +60,12 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	auto Window = Params.GetArgumentObject(0);
 
 	// Set TPersistent Pointer
-	mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
+	auto mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
 
 	auto LocalContext = Params.mLocalContext;
-	auto WindowObject = this->mWindow.GetObject(LocalContext);
+	auto WindowObject = mWindow.GetObject(LocalContext);
 	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
-	mSoyWindow = WindowWrapper.mWindow;
+	auto mSoyWindow = WindowWrapper.mWindow;
 	
 	Sokol::TContextParams SokolParams;
 	
@@ -77,16 +76,9 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	}
 	
 	SokolParams.mFramesPerSecond = 60;
-	SokolParams.mOnPaint = [this](vec2x<size_t> Rect)	{	this->OnPaint(Rect);	};
+	SokolParams.mOnPaint = [this](sg_context Context,vec2x<size_t> Rect)	{	this->OnPaint(Context,Rect);	};
 	
+
 	//	create platform-specific context
 	mSokolContext = Sokol::Platform_CreateContext(mSoyWindow,SokolParams);
-	
-	sg_desc desc =
-	{
-		.context = mSokolContext->GetSokolContext()
-	};
-
-	//	Initialise Sokol
-	sg_setup(&desc);
 }

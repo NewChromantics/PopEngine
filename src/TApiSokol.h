@@ -24,7 +24,7 @@ namespace Sokol
 class Sokol::TContextParams
 {
 public:
-	std::function<void(vec2x<size_t>)>	mOnPaint;		//	render callback
+	std::function<void(sg_context,vec2x<size_t>)>	mOnPaint;		//	render callback
 	std::string							mViewName;		//	try to attach to existing views
 	size_t								mFramesPerSecond = 60;
 };
@@ -49,14 +49,13 @@ public:
 	//void			WaitForFrameRendered(Bind::TCallback &Params);
 
 private:
-	void			OnPaint(vec2x<size_t> ViewRect);
+	//	gr: sg_context isnt REQUIRED, but hints to implementations that they should be creating it
+	void			OnPaint(sg_context Context,vec2x<size_t> ViewRect);
 	
 public:
 	std::shared_ptr<Sokol::TContext>&		mSokolContext = mObject;
-	Bind::TPersistent						mWindow;
-	std::shared_ptr<SoyWindow>				mSoyWindow;
-	
-	sg_pass_action				 			mPassAction = {0};	//	gr: dont think these need to be members
+	//Bind::TPersistent						mWindow;
+	//std::shared_ptr<SoyWindow>				mSoyWindow;
 };
 
 

@@ -116,6 +116,7 @@ public:
 	bool							mRunning = true;
 	std::shared_ptr<SoyThread>		mPaintThread;
 	sg_context_desc         		mContextDesc;
+	sg_context						mSokolContext = {0};
 	GLKView*             			mView = nullptr;
 	EAGLContext*					mOpenglContext = nullptr;
 	SokolViewDelegate*				mDelegate = nullptr;
@@ -211,16 +212,24 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 {
 	auto OnFrame = [this](CGRect Rect)
 	{
-		/*
-		static int Counter = 0;
-		Counter++;
-		std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
-		auto Blue = (Counter%60)/60.0f;
-		glClearColor(1.f, 0.f, Blue, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		*/
+		auto* CurrentContext = [EAGLContext currentContext];
+		if ( CurrentContext != mOpenglContext )
+			[EAGLContext setCurrentContext:mOpenglContext];
+
+		if ( mSokolContext.id == 0 )
+		{
+			sg_desc desc={0};
+			sg_setup(&desc);
+			mSokolContext = sg_setup_context();
+		}
+		
+		//std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
+		
+		glClearColor(0,1,1,1);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+		
 		vec2x<size_t> Size( Rect.size.width, Rect.size.height );
-		mParams.mOnPaint(Size);
+		mParams.mOnPaint( mSokolContext, Size );
 	};
 
 	//	can we get this from sokol impl?
@@ -250,6 +259,13 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	mViewController.preferredFramesPerSecond = FrameRate;
 	[mViewController setDelegate:mDelegate];
 */
+	/*
+	mContextDesc.color_format = _SG_PIXELFORMAT_DEFAULT;
+	mContextDesc.depth_format = _SG_PIXELFORMAT_DEFAULT;
+	mContextDesc.sample_count = 1;
+	mContextDesc.gl.force_gles2 = true;
+	*/
+	
 	//	gr: given that TriggerPaint needs to be on the main thread,
 	//		maybe this thread should just something on the main dispath queue
 	//		that could be dangerous for deadlocks on destruction though
