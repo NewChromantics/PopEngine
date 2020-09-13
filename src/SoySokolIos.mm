@@ -84,7 +84,7 @@
 class SokolMetalContext : public Sokol::TContext
 {
 public:
-	SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,int SampleCount);
+	SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,Sokol::TContextParams Params);
 
 	sg_context_desc					GetSokolContext() override	{	return mContextDesc;	}
 
@@ -92,12 +92,14 @@ public:
 	sg_context_desc         		mContextDesc;
 	MTKView*             			mView = nullptr;
 	id<MTLDevice>         			mMetalDevice;
+	
+	Sokol::TContextParams			mParams;
 };
 
 class SokolOpenglContext : public Sokol::TContext
 {
 public:
-	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount);
+	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,Sokol::TContextParams Params);
 	~SokolOpenglContext();
 	
 	sg_context_desc					GetSokolContext() override	{	return mContextDesc;	}
@@ -112,43 +114,45 @@ public:
 	EAGLContext*					mOpenglContext = nullptr;
 	SokolViewDelegate*				mDelegate = nullptr;
 	GLKViewController*				mViewController = nullptr;
+	
+	Sokol::TContextParams			mParams;
 };
 
 
 
-std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,const std::string& ViewName,int SampleCount)
+std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
 {
 	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
 	
 	//	get the view with matching name, if it's a metal view, make a metal context
 	//	if its gl, make a gl context
-	auto* View = PlatformWindow.GetChild(ViewName);
+	auto* View = PlatformWindow.GetChild(Params.mViewName);
 	if ( !View )
 	{
 		std::stringstream Error;
-		Error << "Failed to find child view " << ViewName << " (required on ios)";
+		Error << "Failed to find child view " << Params.mViewName << " (required on ios)";
 		throw Soy::AssertException(Error);
 	}
 	
 	auto ClassName = Soy::NSStringToString(NSStringFromClass([View class]));
-	std::Debug << "View " << ViewName << " class name " << ClassName << std::endl;
+	std::Debug << "View " << Params.mViewName << " class name " << ClassName << std::endl;
 	
 	if ( ClassName == "MTKView" )
 	{
 		MTKView* MetalView = (MTKView*)View;
-		auto* Context = new SokolMetalContext(Window,MetalView,SampleCount);
+		auto* Context = new SokolMetalContext(Window,MetalView,Params);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
 	
 	if ( ClassName == "GLKView" )
 	{
 		GLKView* GlView = (GLKView*)View;
-		auto* Context = new SokolOpenglContext(Window,GlView,SampleCount);
+		auto* Context = new SokolOpenglContext(Window,GlView,Params);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
 	
 	std::stringstream Error;
-	Error << "Class of view " << ViewName << " is not MTKView or GLKView; " << ClassName;
+	Error << "Class of view " << Params.mViewName << " is not MTKView or GLKView; " << ClassName;
 	throw Soy::AssertException(Error);
 }
 
@@ -157,8 +161,9 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<S
 
 
 
-SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,int SampleCount) :
-	mView	( View )
+SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,Sokol::TContextParams Params) :
+	mView	( View ),
+	mParams	( Params )
 {
 	mMetalDevice = MTLCreateSystemDefaultDevice();
  	[mView setDevice: mMetalDevice];
@@ -181,7 +186,7 @@ SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* 
 
 	mContextDesc = (sg_context_desc)
 	{
-		.sample_count = SampleCount,
+		.sample_count = 1,//mParams.mSampleCount,
 		.metal =
 		{
 			.device= (__bridge const void*) mMetalDevice,
@@ -194,17 +199,22 @@ SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* 
 }
 
 
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,int SampleCount) :
-	mView	( View )
+SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,Sokol::TContextParams Params) :
+	mView	( View ),
+	mParams	( Params )
 {
-	auto OnFrame = [](CGRect Rect)
+	auto OnFrame = [this](CGRect Rect)
 	{
+		/*
 		static int Counter = 0;
 		Counter++;
 		std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
 		auto Blue = (Counter%60)/60.0f;
 		glClearColor(1.f, 0.f, Blue, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		*/
+		vec2x<size_t> Size( Rect.size.width, Rect.size.height );
+		mParams.mOnPaint(Size);
 	};
 
 	//	can we get this from sokol impl?
@@ -225,7 +235,6 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	mDelegate = [[SokolViewDelegate alloc] init:OnFrame];
 	[mView setDelegate:mDelegate];
 
-	auto FrameRate = 60;
 
 	/*gr: this still isn't triggering, I think it needs to be in the view tree
 	 but Interface Builder won't let us add this, and I can't see how (as its not a view)...
@@ -238,10 +247,11 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	//	gr: given that TriggerPaint needs to be on the main thread,
 	//		maybe this thread should just something on the main dispath queue
 	//		that could be dangerous for deadlocks on destruction though
-	auto PaintLoop = [this,FrameRate]()
+	auto PaintLoop = [this]()
 	{
+		auto FrameDelayMs = 1000/mParams.mFramesPerSecond;
 		this->TriggerPaint();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000/FrameRate));
+		std::this_thread::sleep_for(std::chrono::milliseconds(FrameDelayMs));
 		return mRunning;
 	};
 	

@@ -16,11 +16,18 @@ namespace ApiSokol
 namespace Sokol
 {
 	class TContext;
+	class TContextParams;	//	or ViewParams?
 	
-	std::shared_ptr<TContext>	Platform_CreateContext(std::shared_ptr<SoyWindow> Window,const std::string& ViewName,int SampleCount);
+	std::shared_ptr<TContext>	Platform_CreateContext(std::shared_ptr<SoyWindow> Window,TContextParams Params);
 }
 
-
+class Sokol::TContextParams
+{
+public:
+	std::function<void(vec2x<size_t>)>	mOnPaint;		//	render callback
+	std::string							mViewName;		//	try to attach to existing views
+	size_t								mFramesPerSecond = 60;
+};
 
 class ApiSokol::TSokolContextWrapper : public Bind::TObjectWrapper<BindType::Context,Sokol::TContext>
 {
@@ -33,19 +40,23 @@ public:
 	static void		CreateTemplate(Bind::TTemplate &Template);
 	virtual void	Construct(Bind::TCallback &Params) override;
 
-	// Initial Test
-	void			StartRender(Bind::TCallback &Params);
+	//	gr: this could be more like SubmitNextFrame with a list of render commands
+	//		that C++ will excute next time the context wants to execute
+	//void			StartRender(Bind::TCallback &Params);
+	
+	//	gr: this could be async, submit render commands then return promise. Resolve promise when those commands are rendered
+	//		this is a bit backwards to normal, we normally want to be signalled when its time to render...
+	//void			WaitForFrameRendered(Bind::TCallback &Params);
 
+private:
+	void			OnPaint(vec2x<size_t> ViewRect);
+	
 public:
 	std::shared_ptr<Sokol::TContext>&		mSokolContext = mObject;
 	Bind::TPersistent						mWindow;
 	std::shared_ptr<SoyWindow>				mSoyWindow;
-	std::string								mViewName;
-	sg_pass_action				 			mPassAction;
 	
-
-	void									Init(sg_desc desc);
-	void									RenderFrame();
+	sg_pass_action				 			mPassAction = {0};	//	gr: dont think these need to be members
 };
 
 
