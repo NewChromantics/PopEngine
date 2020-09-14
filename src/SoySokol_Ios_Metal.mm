@@ -101,41 +101,6 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<S
 
 
 
-//	this could do metal & gl
-@interface SokolViewDelegate : UIResponder<GLKViewDelegate,GLKViewControllerDelegate>
-
-	@property std::function<void(CGRect)>	mOnPaint;
-
-- (instancetype)init:(std::function<void(CGRect)> )OnPaint;
-@end
-
-@implementation SokolViewDelegate
-	
-- (instancetype)init:(std::function<void(CGRect)> )OnPaint
-{
-	self = [super init];
-	self.mOnPaint = OnPaint;
-	return self;
-}
-	
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
-{
-	self.mOnPaint(rect);
-}
-	
-- (void)glkViewControllerUpdate:(nonnull GLKViewController *)controller
-{
-	std::Debug << "glkViewControllerUpdate" << std::endl;
-	
-}
-	
-@end
-
-
-
-
-
-
 SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,Sokol::TContextParams Params) :
 	mView	( View ),
 	mParams	( Params )
