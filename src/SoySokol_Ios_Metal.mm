@@ -20,7 +20,7 @@ namespace MetalSokol
 @interface SokolViewDelegate_Metal : UIResponder<MTKViewDelegate>
 	
 @property std::function<void(CGRect)>	mOnPaint;
-@property CGSize						mSize;// = {100,100};
+@property CGSize						mSize;
 - (instancetype)init:(std::function<void(CGRect)> )OnPaint;
 
 @end
@@ -33,7 +33,7 @@ namespace MetalSokol
 {
 	self = [super init];
 	self.mOnPaint = OnPaint;
-	
+	self.mSize = {123,456};
 	return self;
 }
 	
