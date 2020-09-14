@@ -522,11 +522,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\libPopH264.so">
-      <Filter>PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia</Filter>
-    </Library>
-    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
       <Filter>PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia</Filter>
-    </Library>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\libPopH264.so">
+      <Filter>PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

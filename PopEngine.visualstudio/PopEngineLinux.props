@@ -4,10 +4,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <IncludePath>./src/SoyLib/src;./src/SoyLib/src/magic_enum/include;./src/Json11;./PopEngine.Package/node_modules/@newchromantics/popcameradevice/Nvidia;./PopEngine.Package/node_modules/@newchromantics/poph264/Nvidia/</IncludePath>
+    <LibraryPath>./PopEngine.Package/node_modules/@newchromantics/popcameradevice/Nvidia/;./PopEngine.Package/node_modules/@newchromantics/poph264/Nvidia/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs</LibraryDependencies>
+      <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs;PopCameraDevice;PopH264</LibraryDependencies>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>

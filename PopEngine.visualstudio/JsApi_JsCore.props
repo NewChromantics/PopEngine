@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <IncludePath>/usr/include/webkitgtk-4.0/;$(IncludePath)</IncludePath>
-    <LibraryPath>/usr/lib/aarch64-linux-gnu/</LibraryPath>
+    <LibraryPath>/usr/lib/aarch64-linux-gnu/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
