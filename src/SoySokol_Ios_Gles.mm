@@ -18,6 +18,9 @@
 #include "sokol/sokol_gfx.h"
 
 
+#if !defined(ENABLE_OPENGL)
+#error Compiling ios gles support but ENABLE_OPENGL not defined
+#endif
 
 
 
