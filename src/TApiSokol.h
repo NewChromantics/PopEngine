@@ -63,5 +63,7 @@ public:
 class Sokol::TContext
 {
 public:
-	virtual sg_context_desc		GetSokolContext()=0;	//	gr: pure virtual to stop the base class allocating which doesn't do anything
+	//std::function<void(sg_context,vec2x<size_t>)>	mOnPaint;
 };
+
+

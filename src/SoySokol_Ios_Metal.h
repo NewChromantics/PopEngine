@@ -1,0 +1,24 @@
+#pragma once
+
+#if !defined(__OBJC__)
+#error This should only be included in mm files
+#endif
+
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
+
+//	gr: this should probably be a seperate SoySokol.h
+#include "TApiSokol.h"
+
+
+class SokolMetalContext : public Sokol::TContext
+{
+public:
+	SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,Sokol::TContextParams Params);
+	
+public:
+	MTKView*             			mView = nullptr;
+	id<MTLDevice>         			mMetalDevice;
+	Sokol::TContextParams			mParams;
+};
+
