@@ -37,6 +37,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	get last submitted render command
 	//	fifo
 	Sokol::TRenderCommands RenderCommands = mLastFrame;
+	RenderCommands.mPromiseRef = Sokol::TRenderCommands().mPromiseRef;	//	invalidate promise ref so we don't try and resolve it next time
 	{
 		std::lock_guard<std::mutex> Lock(mPendingFramesLock);
 		if ( !mPendingFrames.IsEmpty() )
@@ -88,7 +89,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	sg_commit();
 	
 	//	save last
-	//mLastFrame = RenderCommands;
+	mLastFrame = RenderCommands;
 	
 	//	we want to resolve the promise NOW, after rendering has been submitted
 	//	but we may want here, some callback to block or glFinish or something before resolving
