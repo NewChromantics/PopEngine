@@ -2455,16 +2455,42 @@ void JsCore::TArray::CopyTo(ArrayBridge<std::string>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );
 }
-/*
+
 void JsCore::TArray::CopyTo(ArrayBridge<JSValueRef>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
-}*/
+	auto& This = *this;
+	auto& mContext = This.mContext;
+	auto& mThis = This.mThis;
+	
+	//	check for typed array
+	{
+		JSValueRef Exception = nullptr;
+		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		if ( TypedArrayType != kJSTypedArrayTypeNone )
+		{
+			//CopyTypedArray( mContext, mThis, TypedArrayType, Values );
+			return;
+		}
+	}
+	
+	//	proper way, but will include "named" indexes...
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		JSValueRef Exception = nullptr;
+		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
+	}
+}
 
 JsCore::TCallback JsCore::TArray::GetAsCallback(TLocalContext& LocalContext)
 {
 	JsCore::TCallback Callback(LocalContext);
-	//CopyTo( GetArrayBridge(Callback.mArguments) );
+	CopyTo( GetArrayBridge(Callback.mArguments) );
 	return Callback;
 }
 

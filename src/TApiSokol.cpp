@@ -15,7 +15,7 @@ namespace ApiSokol
 	const char Namespace[] = "Pop.Sokol";
 
 	DEFINE_BIND_TYPENAME(Context);
-	//DEFINE_BIND_FUNCTIONNAME(StartRender);
+	DEFINE_BIND_FUNCTIONNAME(Render);
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -26,7 +26,7 @@ void ApiSokol::Bind(Bind::TContext &Context)
 
 void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 {
-	//Template.BindFunction<BindFunction::StartRender>(&TSokolContextWrapper::StartRender);
+	Template.BindFunction<BindFunction::Render>(&TSokolContextWrapper::Render);
 }
 
 
@@ -34,25 +34,73 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 {
 	sg_activate_context(Context);
 
-	static int Counter = 0;
-	Counter++;
-	auto Blue = (Counter%60)/60.0f;
+	//	get last submitted render command
+	//	fifo
+	Sokol::TRenderCommands RenderCommands = mLastFrame;
+	{
+		std::lock_guard<std::mutex> Lock(mPendingFramesLock);
+		if ( !mPendingFrames.IsEmpty() )
+			RenderCommands = mPendingFrames.PopAt(0);
+	}
+	
+	bool InsidePass = false;
+	
+	auto NewPass = [&](float r,float g,float b,float a)
+	{
+		if ( InsidePass )
+		{
+			sg_end_pass();
+			InsidePass = false;
+		}
+		
+		sg_pass_action PassAction = {0};
+		PassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {r,g,b,a}};
+		sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
+		InsidePass = true;
+	};
+	
+	for ( auto i=0;	i<RenderCommands.mCommands.GetSize();	i++ )
+	{
+		auto& NextCommand = RenderCommands.mCommands[i];
+		
+		if ( NextCommand->GetName() == Sokol::TRenderCommand_Clear::Name )
+		{
+			auto& ClearCommand = dynamic_cast<Sokol::TRenderCommand_Clear&>( *NextCommand );
+			NewPass( ClearCommand.mColour[0], ClearCommand.mColour[1], ClearCommand.mColour[2], ClearCommand.mColour[3] );
+		}
+		else if ( !InsidePass )
+		{
+			//	starting a pass without a clear, so do one
+			NewPass(1,0,0,1);
+		}
+		
+		//	execute each
+	}
+	
+	//	end pass
+	if ( InsidePass )
+	{
+		sg_end_pass();
+		InsidePass = false;
+	}
 
-	sg_pass_action mPassAction = {0};
-	mPassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {0.0f, 1.0f, Blue, 1.0f}};
-
-	//	draw one frame
-	sg_begin_default_pass(
-		&mPassAction,
-		ViewRect.x,
-		ViewRect.y
-	);
-
-	sg_end_pass();
+	//	commit
 	sg_commit();
-	//auto Error = glGetError();
-	//std::Debug << "error=" << Error << std::endl;
-
+	
+	//	save last
+	//mLastFrame = RenderCommands;
+	
+	//	we want to resolve the promise NOW, after rendering has been submitted
+	//	but we may want here, some callback to block or glFinish or something before resolving
+	//	but really we should be using something like glsync?
+	if ( RenderCommands.mPromiseRef != std::numeric_limits<size_t>::max() )
+	{
+		auto Resolve = [](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+		{
+			Promise.Resolve(LocalContext,0);
+		};
+		mPendingFrameRefs.Flush(RenderCommands.mPromiseRef,Resolve);
+	}
 }
 
 void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
@@ -105,16 +153,21 @@ void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 	//		in that case, generate render command then request
 	mSokolContext->RequestPaint();
 
-	auto Promise = mPendingFrames.AddPromise(Params.mLocalContext);
+	size_t PromiseRef;
+	auto Promise = mPendingFrameRefs.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, PromiseRef );
 	Params.Return(Promise);
-
+	
+	
 	//	parse command
 	try
 	{
 		//	gr: we NEED this to match the promise...
 		auto CommandsArray = Params.GetArgumentArray(0);
 		auto Commands = Sokol::ParseRenderCommands(Params.mLocalContext,CommandsArray);
-		mPendingFrames.Push(Commands);
+		
+		Commands.mPromiseRef = PromiseRef;
+		std::lock_guard<std::mutex> Lock(mPendingFramesLock);
+		mPendingFrames.PushBack(Commands);
 	}
 	catch(std::exception& e)
 	{

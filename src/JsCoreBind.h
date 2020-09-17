@@ -68,7 +68,6 @@ namespace JsCore
 	//	value conversion - maybe should be type orientated instead of named
 	template<typename TYPE>
 	TYPE				FromValue(JSContextRef Context,JSValueRef Handle);
-	inline JSValueRef	FromValue(JSContextRef Context,JSValueRef Handle)	{	return Handle;	};
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
 	void		GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>&& Buffer);
@@ -85,6 +84,7 @@ namespace JsCore
 	int32_t*	GetPointer_s32(JSContextRef Context,JSValueRef Handle);
 	int64_t*	GetPointer_s64(JSContextRef Context,JSValueRef Handle);
 	float*		GetPointer_float(JSContextRef Context,JSValueRef Handle);
+	inline JSValueRef	GetValueRef(JSContextRef Context,JSValueRef Handle)	{	return Handle;	};
 	
 	//	create JS types
 	template<typename TYPE>
@@ -194,6 +194,7 @@ DEFINE_FROM_VALUE( int16_t*, GetPointer_s16 );
 DEFINE_FROM_VALUE( int32_t*, GetPointer_s32 );
 //DEFINE_FROM_VALUE( int64_t*, GetPointer_s64 );
 DEFINE_FROM_VALUE( float*, GetPointer_float );
+DEFINE_FROM_VALUE( JSValueRef, GetValueRef );
 
 template<typename TYPE>
 inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
@@ -234,7 +235,7 @@ public:
 	void		CopyTo(ArrayBridge<float>& Values);
 	void		CopyTo(ArrayBridge<bool>& Values);
 	void		CopyTo(ArrayBridge<std::string>& Values);
-	//void		CopyTo(ArrayBridge<JSValueRef>& Values);
+	void		CopyTo(ArrayBridge<JSValueRef>& Values);
 
 	//	gr: this needs a better name now, but get as a callback so
 	//		we have a common GetArgumentAsXXX(Index) system

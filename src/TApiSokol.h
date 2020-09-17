@@ -57,6 +57,7 @@ public:
 class Sokol::TRenderCommands
 {
 public:
+	size_t		mPromiseRef = std::numeric_limits<size_t>::max();
 	Array<std::shared_ptr<TRenderCommandBase>>	mCommands;
 };
 
@@ -81,7 +82,10 @@ private:
 	void			InitDebugFrame(Sokol::TRenderCommands& Commands);
 
 public:
-	Bind::TPromiseQueueObjects<Sokol::TRenderCommands>	mPendingFrames;
+	Bind::TPromiseMap				mPendingFrameRefs;
+	Array<Sokol::TRenderCommands>	mPendingFrames;
+	std::mutex						mPendingFramesLock;
+	
 	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;
 	//Bind::TPersistent							mWindow;
 	//std::shared_ptr<SoyWindow>				mSoyWindow;
