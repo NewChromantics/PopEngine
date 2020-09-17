@@ -2455,6 +2455,18 @@ void JsCore::TArray::CopyTo(ArrayBridge<std::string>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );
 }
+/*
+void JsCore::TArray::CopyTo(ArrayBridge<JSValueRef>& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}*/
+
+JsCore::TCallback JsCore::TArray::GetAsCallback(TLocalContext& LocalContext)
+{
+	JsCore::TCallback Callback(LocalContext);
+	//CopyTo( GetArrayBridge(Callback.mArguments) );
+	return Callback;
+}
 
 
 void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName)
