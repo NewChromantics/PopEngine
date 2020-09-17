@@ -118,7 +118,7 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	auto PaintLoop = [this]()
 	{
 		auto FrameDelayMs = 1000/mParams.mFramesPerSecond;
-		this->TriggerPaint();
+		this->RequestViewPaint();
 		std::this_thread::sleep_for(std::chrono::milliseconds(FrameDelayMs));
 		return mRunning;
 	};
@@ -143,7 +143,16 @@ SokolOpenglContext::~SokolOpenglContext()
 
 extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
-void SokolOpenglContext::TriggerPaint()
+void SokolOpenglContext::RequestPaint()
+{
+	//	is auto drawing
+	if ( mPaintThread )
+		return;
+	
+	RequestViewPaint();
+}
+
+void SokolOpenglContext::RequestViewPaint()
 {
 	//	must be on UI thread, we should be queuing this up on the main window, maybe?
 	//	gr: this is a single Dirty-Rect call
@@ -152,5 +161,6 @@ void SokolOpenglContext::TriggerPaint()
 	{
 		[mView setNeedsDisplay];
 	};
+	//	gr: this is getting invoked immediately when job is pushed
 	RunJobOnMainThread(SetNeedDisplay,false);
 }

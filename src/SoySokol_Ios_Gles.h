@@ -28,11 +28,15 @@ public:
 	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,Sokol::TContextParams Params);
 	~SokolOpenglContext();
 	
-	void							TriggerPaint();
+	virtual void					RequestPaint() override;
 	
+private:
+	void							RequestViewPaint();
+
 public:
 	bool							mRunning = true;
 	std::shared_ptr<SoyThread>		mPaintThread;
+	bool							mPaintRequested = false;
 	
 	sg_context						mSokolContext = {0};
 	GLKView*             			mView = nullptr;
