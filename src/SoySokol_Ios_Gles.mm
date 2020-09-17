@@ -69,7 +69,12 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 		glClearColor(0,1,1,1);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 		
-		vec2x<size_t> Size( Rect.size.width, Rect.size.height );
+		//auto Width = Rect.size.width;
+		//auto Height = Rect.size.height;
+		auto Width = mView.drawableWidth;
+		auto Height = mView.drawableHeight;
+		
+		vec2x<size_t> Size( Width, Height );
 		mParams.mOnPaint( mSokolContext, Size );
 	};
 
