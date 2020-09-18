@@ -53,6 +53,7 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 {
 	auto OnFrame = [this](CGRect Rect)
 	{
+		std::lock_guard Lock(mOpenglContextLock);
 		auto* CurrentContext = [EAGLContext currentContext];
 		if ( CurrentContext != mOpenglContext )
 			[EAGLContext setCurrentContext:mOpenglContext];
@@ -63,6 +64,8 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 			sg_setup(&desc);
 			mSokolContext = sg_setup_context();
 		}
+		
+		auto FlushedError = glGetError();
 		
 		//std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
 		
@@ -164,3 +167,27 @@ void SokolOpenglContext::RequestViewPaint()
 	//	gr: this is getting invoked immediately when job is pushed
 	RunJobOnMainThread(SetNeedDisplay,false);
 }
+
+
+void SokolOpenglContext::Run(std::function<void(sg_context)> Exec)
+{
+	std::lock_guard Lock(mOpenglContextLock);
+	auto* CurrentContext = [EAGLContext currentContext];
+	if ( CurrentContext != mOpenglContext )
+		[EAGLContext setCurrentContext:mOpenglContext];
+	
+	if ( mSokolContext.id == 0 )
+	{
+		sg_desc desc={0};
+		sg_setup(&desc);
+		mSokolContext = sg_setup_context();
+	}
+
+	Exec(mSokolContext);
+
+	//	sokol can leave things with an error, unsetting current context flushes glGetError
+	//	seems like wrong approach...
+	//[EAGLContext setCurrentContext:nullptr];
+	auto FlushedError = glGetError();
+}
+

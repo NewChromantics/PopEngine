@@ -8,7 +8,10 @@
 #include "sokol/sokol_gfx.h"
 
 
-
+namespace Sokol
+{
+	void	IsOkay(sg_resource_state State,const char* Context);
+}
 
 namespace ApiSokol
 {
@@ -16,6 +19,8 @@ namespace ApiSokol
 
 	DEFINE_BIND_TYPENAME(Context);
 	DEFINE_BIND_FUNCTIONNAME(Render);
+	DEFINE_BIND_FUNCTIONNAME(CreateShader);
+	DEFINE_BIND_FUNCTIONNAME(CreateGeometry);
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -27,6 +32,8 @@ void ApiSokol::Bind(Bind::TContext &Context)
 void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 {
 	Template.BindFunction<BindFunction::Render>(&TSokolContextWrapper::Render);
+	Template.BindFunction<BindFunction::CreateShader>(&TSokolContextWrapper::CreateShader);
+	Template.BindFunction<BindFunction::CreateGeometry>(&TSokolContextWrapper::CreateGeometry);
 }
 
 
@@ -100,7 +107,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		{
 			Promise.Resolve(LocalContext,0);
 		};
-		mPendingFrameRefs.Flush(RenderCommands.mPromiseRef,Resolve);
+		mPendingFramePromises.Flush(RenderCommands.mPromiseRef,Resolve);
 	}
 }
 
@@ -155,7 +162,7 @@ void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 	mSokolContext->RequestPaint();
 
 	size_t PromiseRef;
-	auto Promise = mPendingFrameRefs.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, PromiseRef );
+	auto Promise = mPendingFramePromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, PromiseRef );
 	Params.Return(Promise);
 	
 	
@@ -210,5 +217,122 @@ Sokol::TRenderCommands Sokol::ParseRenderCommands(Bind::TLocalContext& Context,B
 		Commands.mCommands.PushBack(Command);
 	}
 	return Commands;
+}
+
+void Sokol::IsOkay(sg_resource_state State,const char* Context)
+{
+	if ( State == SG_RESOURCESTATE_VALID )
+		return;
+	
+	std::stringstream Error;
+	Error << "Shader state " << magic_enum::enum_name(State) << " in " << Context;
+	throw Soy::AssertException(Error);
+}
+
+void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
+{
+	//	parse js call first
+	Sokol::TCreateShader NewShader;
+	NewShader.mVertSource = Params.GetArgumentString(0);
+	NewShader.mFragSource = Params.GetArgumentString(1);
+
+	//	now make a promise and construct
+	auto Promise = mPendingShaderPromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, NewShader.mPromiseRef );
+	Params.Return(Promise);
+	
+	//	create the object (should be async)
+	try
+	{
+		{
+			std::lock_guard<std::mutex> Lock(mPendingShadersLock);
+			mPendingShaders.PushBack(NewShader);
+		}
+		
+		//	now create it
+		auto PromiseRef = NewShader.mPromiseRef;
+		auto Create = [this,PromiseRef,NewShader](sg_context Context)
+		{
+			try
+			{
+				sg_shader_desc Description = {};// _sg_shader_desc_defaults();
+				Description.vs.source = NewShader.mVertSource.c_str();
+				Description.fs.source = NewShader.mFragSource.c_str();
+				//	gr: when this errors, we lose the error. need to capture via sokol log
+				//	gr: when this errors, it leaves a glGetError I think, need to work out how to flush/reset?
+				sg_shader Shader = sg_make_shader(&Description);
+				
+				sg_resource_state State = sg_query_shader_state(Shader);
+				Sokol::IsOkay(State,"make_shader/sg_query_shader_state");
+				
+				/*
+				sg_shader bg_shd = sg_make_shader(&(sg_shader_desc){
+					.vs.source =
+					"#version 330\n"
+					"layout(location=0) in vec2 position;\n"
+					"void main() {\n"
+					"  gl_Position = vec4(position, 0.5, 1.0);\n"
+					"}\n",
+					.fs = {
+						.uniform_blocks[0] = {
+							.size = sizeof(fs_params_t),
+							.uniforms = {
+								[0] = { .name="tick", .type=SG_UNIFORMTYPE_FLOAT }
+							}
+						},
+						.source =
+						"#version 330\n"
+						"uniform float tick;\n"
+						"out vec4 frag_color;\n"
+						"void main() {\n"
+						"  vec2 xy = fract((gl_FragCoord.xy-vec2(tick)) / 50.0);\n"
+						"  frag_color = vec4(vec3(xy.x*xy.y), 1.0);\n"
+						"}\n"
+					}
+				});
+				 
+				sg_shader_desc desc = {
+					.attrs = {
+						[0] = { .name="position" },
+						[1] = { .name="color1" }
+					}
+				};
+				typedef struct sg_shader_desc {
+					uint32_t _start_canary;
+					sg_shader_attr_desc attrs[SG_MAX_VERTEX_ATTRIBUTES];
+					sg_shader_stage_desc vs;
+					sg_shader_stage_desc fs;
+					const char* label;
+					uint32_t _end_canary;
+				} sg_shader_desc;
+				 */
+				auto ShaderHandle = Shader.id;
+				mShaders[ShaderHandle] = Shader;
+				
+				auto Resolve = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+				{
+					Promise.Resolve(LocalContext,ShaderHandle);
+				};
+				this->mPendingShaderPromises.Flush(PromiseRef,Resolve);
+			}
+			catch(std::exception& e)
+			{
+				auto Reject = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+				{
+					Promise.Reject(LocalContext,e.what());
+				};
+				this->mPendingShaderPromises.Flush(PromiseRef,Reject);
+			}
+		};
+		mSokolContext->Run(Create);
+	}
+	catch(std::exception& e)
+	{
+		Promise.Reject(Params.mLocalContext, e.what());
+	}
+}
+
+void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
+{
+	Soy_AssertTodo();
 }
 

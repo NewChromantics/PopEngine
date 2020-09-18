@@ -138,3 +138,8 @@ SokolMetalContext::SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* 
 
 }
 
+void SokolMetalContext::Run(std::function<void(sg_context)> Exec)
+{
+	Soy_AssertTodo();
+}
+

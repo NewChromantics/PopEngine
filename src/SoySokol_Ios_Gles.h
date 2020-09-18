@@ -29,6 +29,7 @@ public:
 	~SokolOpenglContext();
 	
 	virtual void					RequestPaint() override;
+	virtual void					Run(std::function<void(sg_context)> Exec) override;
 	
 private:
 	void							RequestViewPaint();
@@ -41,6 +42,7 @@ public:
 	sg_context						mSokolContext = {0};
 	GLKView*             			mView = nullptr;
 	EAGLContext*					mOpenglContext = nullptr;
+	std::mutex						mOpenglContextLock;
 	SokolViewDelegate_Gles*			mDelegate = nullptr;
 	
 	Sokol::TContextParams			mParams;
