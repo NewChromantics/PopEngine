@@ -92,10 +92,11 @@ public:
 public:
 	sg_shader_uniform_block_desc	GetUniformBlockDescription() const;
 
-	size_t			mPromiseRef = std::numeric_limits<size_t>::max();
-	std::string		mVertSource;
-	std::string		mFragSource;
-	Array<TUniform>	mUniforms;
+	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
+	std::string			mVertSource;
+	std::string			mFragSource;
+	Array<TUniform>		mUniforms;
+	Array<std::string>	mAttributes;
 };
 
 class Sokol::TCreateGeometry

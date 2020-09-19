@@ -130,7 +130,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			auto VertexCount = Geometry.GetDrawVertexCount();
 			auto VertexFirst = Geometry.GetDrawVertexFirst();
 			auto InstanceCount = Geometry.GetDrawInstanceCount();
-			sg_draw(VertexFirst,VertexCount,InstanceCount);			
+			sg_draw(VertexFirst,VertexCount,InstanceCount);
 		}
 	}
 	
@@ -337,7 +337,10 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 			NewShader.mUniforms.PushBack(Uniform);
 		}
 	}
-	
+	if ( !Params.IsArgumentUndefined(3) )
+	{
+		Params.GetArgumentArray(3, GetArrayBridge(NewShader.mAttributes));
+	}
 	
 	//	now make a promise and construct
 	auto Promise = mPendingShaderPromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, NewShader.mPromiseRef );
@@ -363,8 +366,14 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 				Description.vs.source = NewShader.mVertSource.c_str();
 				Description.fs.source = NewShader.mFragSource.c_str();
 				
-				auto UniformBlock = NewShader.GetUniformBlockDescription();
 				
+				for ( auto a=0;	a<NewShader.mAttributes.GetSize();	a++ )
+				{
+					auto* Name = NewShader.mAttributes[a].c_str();
+					Description.attrs[a].name = Name;
+				}
+
+				auto UniformBlock = NewShader.GetUniformBlockDescription();
 				Description.fs.uniform_blocks[0] = UniformBlock;
 				Description.vs.uniform_blocks[0] = UniformBlock;
 				/*
@@ -523,6 +532,7 @@ void ParseGeometryObject(Sokol::TCreateGeometry& Geometry,Bind::TObject& VertexA
 		//	0 stride and 0 offset means interleaved data
 		//	an offset here is the offset into the buffer for the start if this attribute (for vertexAttribPointer)
 		Geometry.mVertexLayout.attrs[a].offset = DataStart;
+		//Geometry.mVertexLayout.attrs[a].stride = sizeof(float)*ElementSize;
 	}
 }
 
