@@ -75,9 +75,17 @@ public:
 class Sokol::TCreateGeometry
 {
 public:
+	sg_buffer_desc	GetVertexDescription() const;
+	sg_buffer_desc	GetIndexDescription() const;
+
+	//	input
 	size_t			mPromiseRef = std::numeric_limits<size_t>::max();
-	sg_buffer_desc	mBufferDescription;
+	Array<uint32_t>	mTriangleIndexes;
+
+	//	output
 	Array<uint8_t>	mBufferData;
+	sg_layout_desc	mVertexLayout = {0};	//	layout to go in a pipeline/binding
+	sg_buffer		mVertexBuffer = {0};
 };
 
 
@@ -119,6 +127,7 @@ public:
 
 	//	allocated objects and their javascript handle[value]
 	std::map<uint32_t,sg_shader>	mShaders;
+	std::map<uint32_t,Sokol::TCreateGeometry>	mGeometrys;
 
 	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;
 	//Bind::TPersistent							mWindow;
@@ -135,10 +144,8 @@ public:
 	//std::function<void(sg_context,vec2x<size_t>)>	mOnPaint;
 	
 	//	execute something on the context[thread]
-	//	may need a Queue rather than blocking, but makes sense to
-	//	make this blocking and then the sokol wrapper can deal with
-	//	high level queueing
-	virtual void	Run(std::function<void(sg_context)> Callback)=0;
+	//	cannot block (run()) because some JS engines run in a resolve and then hit a Sokol::Run()
+	virtual void	Queue(std::function<void(sg_context)> Callback)=0;
 };
 
 

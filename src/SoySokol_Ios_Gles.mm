@@ -51,35 +51,7 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	mView	( View ),
 	mParams	( Params )
 {
-	auto OnFrame = [this](CGRect Rect)
-	{
-		std::lock_guard Lock(mOpenglContextLock);
-		auto* CurrentContext = [EAGLContext currentContext];
-		if ( CurrentContext != mOpenglContext )
-			[EAGLContext setCurrentContext:mOpenglContext];
-
-		if ( mSokolContext.id == 0 )
-		{
-			sg_desc desc={0};
-			sg_setup(&desc);
-			mSokolContext = sg_setup_context();
-		}
-		
-		auto FlushedError = glGetError();
-		
-		//std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
-		
-		glClearColor(0,1,1,1);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
-		
-		//auto Width = Rect.size.width;
-		//auto Height = Rect.size.height;
-		auto Width = mView.drawableWidth;
-		auto Height = mView.drawableHeight;
-		
-		vec2x<size_t> Size( Width, Height );
-		mParams.mOnPaint( mSokolContext, Size );
-	};
+	
 
 	//	can we get this from sokol impl?
 #if defined(SOKOL_GLES2)
@@ -96,6 +68,10 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView
 	//	gr: this doesn't do anything, need to call the func
 	mView.enableSetNeedsDisplay = YES;
 
+	auto OnFrame = [this](CGRect Rect)
+	{
+		this->OnPaint(Rect);
+	};
 	mDelegate = [[SokolViewDelegate_Gles alloc] init:OnFrame];
 	[mView setDelegate:mDelegate];
 
@@ -144,6 +120,72 @@ SokolOpenglContext::~SokolOpenglContext()
 	}
 }
 
+void SokolOpenglContext::RunGpuJobs()
+{
+	//	to avoid infinite execution, copy the jobs and then run
+	mGpuJobsLock.lock();
+	auto Jobs = mGpuJobs;
+	mGpuJobs.Clear(true);
+	mGpuJobsLock.unlock();
+
+	for ( auto j=0;	j<Jobs.GetSize();	j++ )
+	{
+		auto& Job = Jobs[j];
+		try
+		{
+			Job(mSokolContext);
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Error executing job; " << e.what() << std::endl;
+		}
+	}
+}
+
+
+void SokolOpenglContext::OnPaint(CGRect Rect)
+{
+	std::lock_guard Lock(mOpenglContextLock);
+	auto* CurrentContext = [EAGLContext currentContext];
+	if ( CurrentContext != mOpenglContext )
+		[EAGLContext setCurrentContext:mOpenglContext];
+
+	auto FlushedError = glGetError();
+	if ( FlushedError != 0 )
+		std::Debug << "Pre paint, flushed error=" << FlushedError << std::endl;
+
+	if ( mSokolContext.id == 0 )
+	{
+		sg_desc desc={0};
+		sg_setup(&desc);
+		mSokolContext = sg_setup_context();
+	}
+
+	//	run any jobs
+	RunGpuJobs();
+		
+	//	sokol can leave things with an error, unsetting current context flushes glGetError
+	//	seems like wrong approach...
+	//[EAGLContext setCurrentContext:nullptr];
+	
+	//std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
+		
+	glClearColor(0,1,1,1);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+		
+	//auto Width = Rect.size.width;
+	//auto Height = Rect.size.height;
+	auto Width = mView.drawableWidth;
+	auto Height = mView.drawableHeight;
+		
+	vec2x<size_t> Size( Width, Height );
+	mParams.mOnPaint( mSokolContext, Size );
+		
+	FlushedError = glGetError();
+	if ( FlushedError != 0 )
+		std::Debug << "Post OnPaint, flushed error=" << FlushedError << std::endl;
+}
+
 extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 void SokolOpenglContext::RequestPaint()
@@ -169,25 +211,9 @@ void SokolOpenglContext::RequestViewPaint()
 }
 
 
-void SokolOpenglContext::Run(std::function<void(sg_context)> Exec)
+void SokolOpenglContext::Queue(std::function<void(sg_context)> Exec)
 {
-	std::lock_guard Lock(mOpenglContextLock);
-	auto* CurrentContext = [EAGLContext currentContext];
-	if ( CurrentContext != mOpenglContext )
-		[EAGLContext setCurrentContext:mOpenglContext];
-	
-	if ( mSokolContext.id == 0 )
-	{
-		sg_desc desc={0};
-		sg_setup(&desc);
-		mSokolContext = sg_setup_context();
-	}
-
-	Exec(mSokolContext);
-
-	//	sokol can leave things with an error, unsetting current context flushes glGetError
-	//	seems like wrong approach...
-	//[EAGLContext setCurrentContext:nullptr];
-	//auto FlushedError = glGetError();
+	std::lock_guard<std::mutex> Lock(mGpuJobsLock);
+	mGpuJobs.PushBack(Exec);
 }
 

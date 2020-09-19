@@ -481,6 +481,8 @@ public:
 	template<typename TYPE>
 	static TYPE&			This(JSContextRef Context,JSObjectRef Object);
 
+	//	gr: consider renaming Member to Key?
+	void					GetMemberNames(ArrayBridge<std::string>&& MemberNames);
 	virtual bool			HasMember(const std::string& MemberName) bind_override;
 	bool					IsMemberArray(const std::string& MemberName);
 

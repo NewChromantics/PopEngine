@@ -29,10 +29,12 @@ public:
 	~SokolOpenglContext();
 	
 	virtual void					RequestPaint() override;
-	virtual void					Run(std::function<void(sg_context)> Exec) override;
+	virtual void					Queue(std::function<void(sg_context)> Exec) override;
 	
 private:
 	void							RequestViewPaint();
+	void							OnPaint(CGRect Rect);
+	void							RunGpuJobs();
 
 public:
 	bool							mRunning = true;
@@ -46,4 +48,8 @@ public:
 	SokolViewDelegate_Gles*			mDelegate = nullptr;
 	
 	Sokol::TContextParams			mParams;
+	//	either run these on a thread, or just resolve all at start of next paint
+	Array<std::function<void(sg_context)>>	mGpuJobs;
+	std::mutex							mGpuJobsLock;
+
 };

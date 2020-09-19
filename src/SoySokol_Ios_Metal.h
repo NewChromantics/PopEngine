@@ -16,7 +16,7 @@ class SokolMetalContext : public Sokol::TContext
 public:
 	SokolMetalContext(std::shared_ptr<SoyWindow> Window,MTKView* View,Sokol::TContextParams Params);
 	
-	virtual void					Run(std::function<void(sg_context)> Exec) override;
+	virtual void					Queue(std::function<void(sg_context)> Exec) override;
 
 public:
 	MTKView*             			mView = nullptr;

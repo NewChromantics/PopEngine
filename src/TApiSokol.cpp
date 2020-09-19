@@ -40,6 +40,7 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> ViewRect)
 {
 	sg_activate_context(Context);
+	sg_reset_state_cache();
 
 	//	get last submitted render command
 	//	fifo
@@ -263,7 +264,7 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 				//	gr: when this errors, it leaves a glGetError I think, need to work out how to flush/reset?
 				//	gr: now its not crashing after resetting ipad
 				sg_shader Shader = sg_make_shader(&Description);
-				
+				sg_reset_state_cache();
 				sg_resource_state State = sg_query_shader_state(Shader);
 				Sokol::IsOkay(State,"make_shader/sg_query_shader_state");
 				
@@ -309,8 +310,10 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 				} sg_shader_desc;
 				 */
 				auto ShaderHandle = Shader.id;
-				mShaders[ShaderHandle] = Shader;
-				
+				{
+					std::lock_guard<std::mutex> Lock(mPendingShadersLock);
+					mShaders[ShaderHandle] = Shader;
+				}
 				auto Resolve = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 				{
 					Promise.Resolve(LocalContext,ShaderHandle);
@@ -326,7 +329,7 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 				this->mPendingShaderPromises.Flush(PromiseRef,Reject);
 			}
 		};
-		mSokolContext->Run(Create);
+		mSokolContext->Queue(Create);
 	}
 	catch(std::exception& e)
 	{
@@ -334,8 +337,146 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 	}
 }
 
-void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
+void ParseGeometryObject(Sokol::TCreateGeometry& Geometry,Bind::TObject& VertexAttributesObject)
 {
-	Soy_AssertTodo();
+	/*
+	 // a vertex buffer
+	float vertices[] = {
+		// positions            colors
+		-0.5f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
+		0.5f,  0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 0.0f, 1.0f,
+	};
+	state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
+		.size = sizeof(vertices),
+		.content = vertices,
+		.label = "quad-vertices"
+	});
+	
+	// an index buffer with 2 triangles
+	uint16_t indices[] = { 0, 1, 2,  0, 2, 3 };
+	state.bind.index_buffer = sg_make_buffer(&(sg_buffer_desc){
+		.type = SG_BUFFERTYPE_INDEXBUFFER,
+		.size = sizeof(indices),
+		.content = indices,
+		.label = "quad-indices"
+	});
+	*/
+	//	each key is the name of an attribute
+	Array<std::string> AttribNames;
+	VertexAttributesObject.GetMemberNames(GetArrayBridge(AttribNames));
+	
+	auto GetFloatFormat = [](int ElementSize)
+	{
+		switch (ElementSize)
+		{
+			case 1:	return SG_VERTEXFORMAT_FLOAT;
+			case 2:	return SG_VERTEXFORMAT_FLOAT2;
+			case 3:	return SG_VERTEXFORMAT_FLOAT3;
+			case 4:	return SG_VERTEXFORMAT_FLOAT4;
+		}
+		throw Soy::AssertException(std::string("Invalid float format with element size ") + std::to_string(ElementSize) );
+	};
+	
+	for ( auto a=0;	a<AttribNames.GetSize();	a++ )
+	{
+		auto& AttribName = AttribNames[a];
+		auto AttribObject = VertexAttributesObject.GetObject(AttribName);
+		Array<float> Dataf;
+		AttribObject.GetArray("Data",GetArrayBridge(Dataf));
+		auto ElementSize = AttribObject.GetInt("Size");
+	
+		auto DataStart = Geometry.mBufferData.GetDataSize();
+		auto Data8 = GetArrayBridge(Dataf).GetSubArray<uint8_t>(0,Dataf.GetSize());
+		Geometry.mBufferData.PushBackArray(Data8);
+		
+		//	currently float only
+		auto Format = GetFloatFormat(ElementSize);
+
+		Geometry.mVertexLayout.attrs[a].format = Format;
+		Geometry.mVertexLayout.attrs[a].buffer_index = 0;	//	should be changed on-binding
+
+		//	0 stride and 0 offset means interleaved data
+		//	an offset here is the offset into the buffer for the start if this attribute (for vertexAttribPointer)
+		Geometry.mVertexLayout.attrs[a].offset = DataStart;
+	}
 }
 
+sg_buffer_desc Sokol::TCreateGeometry::GetVertexDescription() const
+{
+	sg_buffer_desc Description = {0};
+	Description.size = mBufferData.GetDataSize();
+	Description.type = SG_BUFFERTYPE_VERTEXBUFFER;
+	Description.usage = SG_USAGE_IMMUTABLE;
+	Description.content = mBufferData.GetArray();
+	return Description;
+}
+	
+
+void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
+{
+	//	parse js call first
+	Sokol::TCreateGeometry NewGeometry;
+	if ( !Params.IsArgumentUndefined(1) )
+		Params.GetArgumentArray(1,GetArrayBridge(NewGeometry.mTriangleIndexes));
+	auto VertexAttributes = Params.GetArgumentObject(0);
+	ParseGeometryObject( NewGeometry, VertexAttributes );
+	
+	//	now make a promise and construct
+	auto Promise = mPendingGeometryPromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, NewGeometry.mPromiseRef );
+	Params.Return(Promise);
+	
+	//	create the object (should be async)
+	try
+	{
+		{
+			std::lock_guard<std::mutex> Lock(mPendingGeometrysLock);
+			mPendingGeometrys.PushBack(NewGeometry);
+		}
+		
+		//	now create it
+		auto PromiseRef = NewGeometry.mPromiseRef;
+		auto Create = [this,PromiseRef,NewGeometry](sg_context Context) mutable
+		{
+			try
+			{
+				sg_activate_context(Context);	//	should be in higher-up code
+				sg_reset_state_cache();			//	seems to stop fatal error when shader fails
+				
+				auto VertexBufferDescription = NewGeometry.GetVertexDescription();
+				sg_buffer VertexBuffer = sg_make_buffer(&VertexBufferDescription);
+				
+				sg_resource_state State = sg_query_buffer_state(VertexBuffer);
+				Sokol::IsOkay(State,"sg_make_buffer/sg_query_buffer_state (vertex)");
+				
+				NewGeometry.mVertexBuffer = VertexBuffer;
+				
+				//	need a more unique id maybe?
+				auto GeometryHandle = NewGeometry.mVertexBuffer.id;
+				{
+					std::lock_guard<std::mutex> Lock(mPendingGeometrysLock);
+					mGeometrys[GeometryHandle] = NewGeometry;
+				}
+				auto Resolve = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+				{
+					Promise.Resolve(LocalContext,GeometryHandle);
+				};
+				this->mPendingGeometryPromises.Flush(PromiseRef,Resolve);
+			}
+			catch(std::exception& e)
+			{
+				auto Reject = [&](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+				{
+					Promise.Reject(LocalContext,e.what());
+				};
+				this->mPendingGeometryPromises.Flush(PromiseRef,Reject);
+			}
+		};
+		mSokolContext->Queue(Create);
+	}
+	catch(std::exception& e)
+	{
+		Promise.Reject(Params.mLocalContext, e.what());
+	}
+}

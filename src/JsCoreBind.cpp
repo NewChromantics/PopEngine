@@ -1348,6 +1348,19 @@ bool JsCore::TObject::HasMember(const std::string& MemberName)
 	return true;	
 }
 
+void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
+{
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		auto KeyString = JsCore::GetString(mContext,Key);
+		MemberNames.PushBack(KeyString);
+	}
+}
+
+
 JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 {
 	//	keep splitting the name so we can get Pop.Input.Cat
@@ -2413,6 +2426,7 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 		}
 	}
 	
+	//	gr: JSObjectGetPropertyAtIndex() will be faster!
 	//	proper way, but will include "named" indexes...
 	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
 	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
