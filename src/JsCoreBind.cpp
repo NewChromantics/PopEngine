@@ -2483,8 +2483,7 @@ void JsCore::TArray::CopyTo(ArrayBridge<JSValueRef>& Values)
 		JsCore::ThrowException( mContext, Exception );
 		if ( TypedArrayType != kJSTypedArrayTypeNone )
 		{
-			//CopyTypedArray( mContext, mThis, TypedArrayType, Values );
-			return;
+			throw Soy::AssertException("Trying to copy typed array into array of values");
 		}
 	}
 	
@@ -2498,6 +2497,39 @@ void JsCore::TArray::CopyTo(ArrayBridge<JSValueRef>& Values)
 		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
 		JsCore::ThrowException( mContext, Exception );
 		Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
+	}
+}
+
+void JsCore::TArray::CopyTo(ArrayBridge<Bind::TObject>& Values)
+{
+	auto& This = *this;
+	auto& mContext = This.mContext;
+	auto& mThis = This.mThis;
+	
+	//	check for typed array
+	{
+		JSValueRef Exception = nullptr;
+		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		if ( TypedArrayType != kJSTypedArrayTypeNone )
+		{
+			throw Soy::AssertException("Trying to copy typed array into array of objects");
+		}
+	}
+	
+	//	proper way, but will include "named" indexes...
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		JSValueRef Exception = nullptr;
+		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		auto ObjectValue = GetObject(mContext,Value);
+		Bind::TObject Object(mContext,ObjectValue);
+		Values.PushBack(Object);
+		//Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
 	}
 }
 
@@ -2734,6 +2766,13 @@ float* JsCore::GetPointer_float(JSContextRef Context,JSValueRef Handle)
 {
 	return GetPointer<float>( Context, Handle );
 }
+
+Bind::TObject JsCore::GetObjectFromValue(JSContextRef Context,JSValueRef Handle)
+{
+	auto ObjectHandle = GetObject(Context,Handle);
+	return Bind::TObject(Context,ObjectHandle);
+}
+
 
 void JsCore::OnValueChangedExternally(JSContextRef Context,JSValueRef Value)
 {

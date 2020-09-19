@@ -85,6 +85,7 @@ namespace JsCore
 	int64_t*	GetPointer_s64(JSContextRef Context,JSValueRef Handle);
 	float*		GetPointer_float(JSContextRef Context,JSValueRef Handle);
 	inline JSValueRef	GetValueRef(JSContextRef Context,JSValueRef Handle)	{	return Handle;	};
+	//Bind::TObject	GetObjectFromValue(JSContextRef Context,JSValueRef Handle);
 	
 	//	create JS types
 	template<typename TYPE>
@@ -174,27 +175,7 @@ void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalCont
 //	stricter type conversion to avoid implicit conversions, so static_assert if a type conversion hasn't been implemented
 #define DEFINE_FROM_VALUE(TYPE,FUNCNAME)	\
 	template<> inline TYPE JsCore::FromValue<TYPE>(JSContextRef Context,JSValueRef Handle)	{	return FUNCNAME( Context, Handle );	}
-DEFINE_FROM_VALUE( bool, GetBool );
-DEFINE_FROM_VALUE( uint8_t, GetInt<uint8_t> );
-DEFINE_FROM_VALUE( uint16_t, GetInt<uint16_t> );
-DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
-DEFINE_FROM_VALUE( uint64_t, GetInt<uint64_t> );
-DEFINE_FROM_VALUE( int8_t, GetInt<int8_t> );
-DEFINE_FROM_VALUE( int16_t, GetInt<int16_t> );
-DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
-DEFINE_FROM_VALUE( int64_t, GetInt<int64_t> );
-DEFINE_FROM_VALUE( std::string, GetString );
-DEFINE_FROM_VALUE( float, GetFloat );
-DEFINE_FROM_VALUE( uint8_t*, GetPointer_u8 );
-DEFINE_FROM_VALUE( uint16_t*, GetPointer_u16 );
-DEFINE_FROM_VALUE( uint32_t*, GetPointer_u32 );
-//DEFINE_FROM_VALUE( uint64_t*, GetPointer_u64 );
-DEFINE_FROM_VALUE( int8_t*, GetPointer_s8 );
-DEFINE_FROM_VALUE( int16_t*, GetPointer_s16 );
-DEFINE_FROM_VALUE( int32_t*, GetPointer_s32 );
-//DEFINE_FROM_VALUE( int64_t*, GetPointer_s64 );
-DEFINE_FROM_VALUE( float*, GetPointer_float );
-DEFINE_FROM_VALUE( JSValueRef, GetValueRef );
+
 
 template<typename TYPE>
 inline TYPE JsCore::FromValue(JSContextRef Context,JSValueRef Handle)
@@ -236,6 +217,7 @@ public:
 	void		CopyTo(ArrayBridge<bool>& Values);
 	void		CopyTo(ArrayBridge<std::string>& Values);
 	void		CopyTo(ArrayBridge<JSValueRef>& Values);
+	void		CopyTo(ArrayBridge<Bind::TObject>& Values);
 
 	//	gr: this needs a better name now, but get as a callback so
 	//		we have a common GetArgumentAsXXX(Index) system
@@ -335,6 +317,8 @@ public:
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<std::string>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	//virtual void			GetArgumentArray(size_t Index,ArrayBridge<JSObjectRef>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<Bind::TObject>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 
 	
 	template<typename TYPE>
@@ -583,6 +567,36 @@ public:
 	JSObjectRef		mObject = nullptr;
 #endif
 };
+
+
+namespace JsCore
+{
+	Bind::TObject	GetObjectFromValue(JSContextRef Context,JSValueRef Handle);
+}
+
+DEFINE_FROM_VALUE( bool, GetBool );
+DEFINE_FROM_VALUE( uint8_t, GetInt<uint8_t> );
+DEFINE_FROM_VALUE( uint16_t, GetInt<uint16_t> );
+DEFINE_FROM_VALUE( uint32_t, GetInt<uint32_t> );
+DEFINE_FROM_VALUE( uint64_t, GetInt<uint64_t> );
+DEFINE_FROM_VALUE( int8_t, GetInt<int8_t> );
+DEFINE_FROM_VALUE( int16_t, GetInt<int16_t> );
+DEFINE_FROM_VALUE( int32_t, GetInt<int32_t> );
+DEFINE_FROM_VALUE( int64_t, GetInt<int64_t> );
+DEFINE_FROM_VALUE( std::string, GetString );
+DEFINE_FROM_VALUE( float, GetFloat );
+DEFINE_FROM_VALUE( uint8_t*, GetPointer_u8 );
+DEFINE_FROM_VALUE( uint16_t*, GetPointer_u16 );
+DEFINE_FROM_VALUE( uint32_t*, GetPointer_u32 );
+//DEFINE_FROM_VALUE( uint64_t*, GetPointer_u64 );
+DEFINE_FROM_VALUE( int8_t*, GetPointer_s8 );
+DEFINE_FROM_VALUE( int16_t*, GetPointer_s16 );
+DEFINE_FROM_VALUE( int32_t*, GetPointer_s32 );
+//DEFINE_FROM_VALUE( int64_t*, GetPointer_s64 );
+DEFINE_FROM_VALUE( float*, GetPointer_float );
+DEFINE_FROM_VALUE( JSValueRef, GetValueRef );
+DEFINE_FROM_VALUE( Bind::TObject, GetObjectFromValue );
+
 
 
 class JsCore::TContextDebug
