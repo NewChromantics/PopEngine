@@ -105,7 +105,7 @@ public:
 	sg_buffer_desc		GetIndexDescription() const;
 	sg_primitive_type	GetPrimitiveType() const	{	return SG_PRIMITIVETYPE_TRIANGLES;	}
 	sg_index_type		GetIndexType() const		{	return mTriangleIndexes.IsEmpty() ? SG_INDEXTYPE_NONE : SG_INDEXTYPE_UINT32;	}
-	int					GetVertexCount() const		{	return mTriangleCount*3;	}
+	int					GetVertexCount() const		{	return mVertexCount;	}
 	int					GetDrawVertexCount() const	{	return GetVertexCount();	}
 	int					GetDrawVertexFirst() const	{	return 0;	}
 	int					GetDrawInstanceCount() const	{	return 1;	}
@@ -115,8 +115,8 @@ public:
 	Array<uint32_t>		mTriangleIndexes;
 
 	//	output
-	size_t				mTriangleCount = 0;
-	Array<uint8_t>		mBufferData;
+	size_t				mVertexCount = 0;
+	Array<float>		mBufferData;
 	sg_layout_desc		mVertexLayout = {0};	//	layout to go in a pipeline/binding
 	sg_buffer			mVertexBuffer = {0};
 	sg_buffer			mIndexBuffer = {0};

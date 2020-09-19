@@ -55,7 +55,11 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	
 	bool InsidePass = false;
 	//	currently we're just flushing out all pipelines after we render
-	Array<sg_pipeline> Pipelines;
+	Array<sg_pipeline> TempPipelines;
+	Array<sg_buffer> TempBuffers;
+
+	
+	sg_reset_state_cache();
 	
 	auto NewPass = [&](float r,float g,float b,float a)
 	{
@@ -96,6 +100,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			//	this is where we might bufferup/batch commands
 			sg_pipeline_desc PipelineDescription = {0};
 			PipelineDescription.layout = Geometry.mVertexLayout;
+			
 			PipelineDescription.shader = Shader;
 			PipelineDescription.primitive_type = Geometry.GetPrimitiveType();
 			PipelineDescription.index_type = Geometry.GetIndexType();
@@ -103,10 +108,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			//PipelineDescription.depth_stencil
 			//PipelineDescription.blend
 			//PipelineDescription.rasterizer
+			PipelineDescription.rasterizer.cull_mode = SG_CULLMODE_NONE;
+			PipelineDescription.blend.enabled = false;
+			
 			sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
 			auto PipelineState = sg_query_pipeline_state(Pipeline);
 			Sokol::IsOkay(PipelineState,"sg_make_pipeline");
-			Pipelines.PushBack(Pipeline);
+			TempPipelines.PushBack(Pipeline);
 			sg_apply_pipeline(Pipeline);
 			
 			sg_bindings Bindings = {0};
@@ -116,14 +124,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			Bindings.vs_images[SG_MAX_SHADERSTAGE_IMAGES];
 			Bindings.fs_images[SG_MAX_SHADERSTAGE_IMAGES];
 			 */
-			/*
+			
 			sg_apply_bindings(&Bindings);
-			sg_apply_uniforms(SG_SHADERSTAGE_VS, int ub_index, const void* data, int num_bytes);
-			auto VertexCount = DrawCommand.GetDrawVertexCount();
-			auto VertexFirst = DrawCommand.GetDrawVertexFirst();
-			auto InstanceCount = DrawCommand.GetDrawInstanceCount();
-			sg_draw(VertexFirst,VertexCount,InstanceCount);
-			 */
+			//sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, const void* data, int num_bytes);
+			auto VertexCount = Geometry.GetDrawVertexCount();
+			auto VertexFirst = Geometry.GetDrawVertexFirst();
+			auto InstanceCount = Geometry.GetDrawInstanceCount();
+			sg_draw(VertexFirst,VertexCount,InstanceCount);			
 		}
 	}
 	
@@ -138,12 +145,17 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	sg_commit();
 
 	//	cleanup resources only used on the frame
-	for ( auto p=0;	p<Pipelines.GetSize();	p++ )
+	for ( auto p=0;	p<TempPipelines.GetSize();	p++ )
 	{
-		auto Pipeline = Pipelines[p];
+		auto Pipeline = TempPipelines[p];
 		sg_destroy_pipeline(Pipeline);
 	}
-	
+	for ( auto p=0;	p<TempBuffers.GetSize();	p++ )
+	{
+		auto Buffer = TempBuffers[p];
+		sg_destroy_buffer(Buffer);
+	}
+
 	//	save last
 	mLastFrame = RenderCommands;
 	
@@ -309,7 +321,7 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 
 	//	arg3 contains uniform descriptions as sokol doesn't automatically resolve these!
 	//	we'll try and remove this
-	if ( Params.IsArgumentUndefined(2) )
+	if ( !Params.IsArgumentUndefined(2) )
 	{
 		Array<Bind::TObject> UniformDescriptions;
 		Params.GetArgumentArray(2, GetArrayBridge(UniformDescriptions));
@@ -488,10 +500,19 @@ void ParseGeometryObject(Sokol::TCreateGeometry& Geometry,Bind::TObject& VertexA
 		Array<float> Dataf;
 		AttribObject.GetArray("Data",GetArrayBridge(Dataf));
 		auto ElementSize = AttribObject.GetInt("Size");
-	
+		auto VertexCount = Dataf.GetSize() / ElementSize;
+		if ( a != 0 )
+		{
+			if ( VertexCount != Geometry.mVertexCount )
+				throw Soy::AssertException("Attribute vertex count mis match to previous vertexcount");
+		}
+		Geometry.mVertexCount = VertexCount;
+
 		auto DataStart = Geometry.mBufferData.GetDataSize();
-		auto Data8 = GetArrayBridge(Dataf).GetSubArray<uint8_t>(0,Dataf.GetSize());
-		Geometry.mBufferData.PushBackArray(Data8);
+		//	todo; support non-float and store dumb bytes, but this seems to corrupt data atm
+		//auto Data8 = GetArrayBridge(Dataf).GetSubArray<uint8_t>(0,Dataf.GetSize());
+		//Geometry.mBufferData.PushBackArray(Data8);
+		Geometry.mBufferData.PushBackArray(Dataf);
 		
 		//	currently float only
 		auto Format = GetFloatFormat(ElementSize);
@@ -505,13 +526,14 @@ void ParseGeometryObject(Sokol::TCreateGeometry& Geometry,Bind::TObject& VertexA
 	}
 }
 
+
 sg_buffer_desc Sokol::TCreateGeometry::GetVertexDescription() const
 {
 	sg_buffer_desc Description = {0};
 	Description.size = mBufferData.GetDataSize();
+	Description.content = mBufferData.GetArray();
 	Description.type = SG_BUFFERTYPE_VERTEXBUFFER;
 	Description.usage = SG_USAGE_IMMUTABLE;
-	Description.content = mBufferData.GetArray();
 	return Description;
 }
 
