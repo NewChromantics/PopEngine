@@ -24,6 +24,7 @@ namespace Sokol
 	//	gr: maybe a better way than objects, but we could pool them
 	class TRenderCommandBase;
 	class TRenderCommand_Clear;
+	class TRenderCommand_Draw;
 	class TRenderCommands;
 
 	class TCreateShader;
@@ -52,8 +53,21 @@ class Sokol::TRenderCommand_Clear : public TRenderCommandBase
 public:
 	static constexpr std::string_view	Name = "Clear";
 	virtual const std::string_view	GetName() override	{	return Name;	};
-
+	
 	float		mColour[4] = {1,0,1,1};
+};
+
+
+class Sokol::TRenderCommand_Draw : public TRenderCommandBase
+{
+public:
+	static constexpr std::string_view	Name = "Draw";
+	virtual const std::string_view	GetName() override	{	return Name;	};
+	
+	uint32_t	mGeometryHandle = {0};
+	uint32_t	mShaderHandle = {0};
+	//	uniforms
+	//	triangle count
 };
 
 
@@ -67,25 +81,45 @@ public:
 class Sokol::TCreateShader
 {
 public:
-	size_t		mPromiseRef = std::numeric_limits<size_t>::max();
-	std::string	mVertSource;
-	std::string	mFragSource;
+	class TUniform
+	{
+	public:
+		size_t			GetDataSize() const;
+		sg_uniform_type	mType = SG_UNIFORMTYPE_INVALID;
+		std::string		mName;
+		size_t			mArraySize = 1;
+	};
+public:
+	sg_shader_uniform_block_desc	GetUniformBlockDescription() const;
+
+	size_t			mPromiseRef = std::numeric_limits<size_t>::max();
+	std::string		mVertSource;
+	std::string		mFragSource;
+	Array<TUniform>	mUniforms;
 };
 
 class Sokol::TCreateGeometry
 {
 public:
-	sg_buffer_desc	GetVertexDescription() const;
-	sg_buffer_desc	GetIndexDescription() const;
-
+	sg_buffer_desc		GetVertexDescription() const;
+	sg_buffer_desc		GetIndexDescription() const;
+	sg_primitive_type	GetPrimitiveType() const	{	return SG_PRIMITIVETYPE_TRIANGLES;	}
+	sg_index_type		GetIndexType() const		{	return mTriangleIndexes.IsEmpty() ? SG_INDEXTYPE_NONE : SG_INDEXTYPE_UINT32;	}
+	int					GetVertexCount() const		{	return mTriangleCount*3;	}
+	int					GetDrawVertexCount() const	{	return GetVertexCount();	}
+	int					GetDrawVertexFirst() const	{	return 0;	}
+	int					GetDrawInstanceCount() const	{	return 1;	}
+	
 	//	input
-	size_t			mPromiseRef = std::numeric_limits<size_t>::max();
-	Array<uint32_t>	mTriangleIndexes;
+	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
+	Array<uint32_t>		mTriangleIndexes;
 
 	//	output
-	Array<uint8_t>	mBufferData;
-	sg_layout_desc	mVertexLayout = {0};	//	layout to go in a pipeline/binding
-	sg_buffer		mVertexBuffer = {0};
+	size_t				mTriangleCount = 0;
+	Array<uint8_t>		mBufferData;
+	sg_layout_desc		mVertexLayout = {0};	//	layout to go in a pipeline/binding
+	sg_buffer			mVertexBuffer = {0};
+	sg_buffer			mIndexBuffer = {0};
 };
 
 

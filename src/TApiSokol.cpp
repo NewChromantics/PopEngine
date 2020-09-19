@@ -10,7 +10,8 @@
 
 namespace Sokol
 {
-	void	IsOkay(sg_resource_state State,const char* Context);
+	void			IsOkay(sg_resource_state State,const char* Context);
+	sg_uniform_type	GetUniformType(const std::string& TypeName);
 }
 
 namespace ApiSokol
@@ -53,6 +54,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	}
 	
 	bool InsidePass = false;
+	//	currently we're just flushing out all pipelines after we render
+	Array<sg_pipeline> Pipelines;
 	
 	auto NewPass = [&](float r,float g,float b,float a)
 	{
@@ -84,6 +87,44 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		}
 		
 		//	execute each
+		if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
+		{
+			auto& DrawCommand = dynamic_cast<Sokol::TRenderCommand_Draw&>( *NextCommand );
+			auto& Geometry = mGeometrys[DrawCommand.mGeometryHandle];
+			auto& Shader = mShaders[DrawCommand.mShaderHandle];
+			
+			//	this is where we might bufferup/batch commands
+			sg_pipeline_desc PipelineDescription = {0};
+			PipelineDescription.layout = Geometry.mVertexLayout;
+			PipelineDescription.shader = Shader;
+			PipelineDescription.primitive_type = Geometry.GetPrimitiveType();
+			PipelineDescription.index_type = Geometry.GetIndexType();
+			//	state stuff
+			//PipelineDescription.depth_stencil
+			//PipelineDescription.blend
+			//PipelineDescription.rasterizer
+			sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
+			auto PipelineState = sg_query_pipeline_state(Pipeline);
+			Sokol::IsOkay(PipelineState,"sg_make_pipeline");
+			Pipelines.PushBack(Pipeline);
+			sg_apply_pipeline(Pipeline);
+			
+			sg_bindings Bindings = {0};
+			Bindings.vertex_buffers[0] = Geometry.mVertexBuffer;
+			Bindings.index_buffer = Geometry.mIndexBuffer;
+			/*	bind image uniforms
+			Bindings.vs_images[SG_MAX_SHADERSTAGE_IMAGES];
+			Bindings.fs_images[SG_MAX_SHADERSTAGE_IMAGES];
+			 */
+			/*
+			sg_apply_bindings(&Bindings);
+			sg_apply_uniforms(SG_SHADERSTAGE_VS, int ub_index, const void* data, int num_bytes);
+			auto VertexCount = DrawCommand.GetDrawVertexCount();
+			auto VertexFirst = DrawCommand.GetDrawVertexFirst();
+			auto InstanceCount = DrawCommand.GetDrawInstanceCount();
+			sg_draw(VertexFirst,VertexCount,InstanceCount);
+			 */
+		}
 	}
 	
 	//	end pass
@@ -95,6 +136,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 
 	//	commit
 	sg_commit();
+
+	//	cleanup resources only used on the frame
+	for ( auto p=0;	p<Pipelines.GetSize();	p++ )
+	{
+		auto Pipeline = Pipelines[p];
+		sg_destroy_pipeline(Pipeline);
+	}
 	
 	//	save last
 	mLastFrame = RenderCommands;
@@ -197,6 +245,14 @@ std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::
 		return pClear;
 	}
 	
+	if ( Name == TRenderCommand_Draw::Name )
+	{
+		auto pDraw = std::make_shared<TRenderCommand_Draw>();
+		pDraw->mGeometryHandle = Params.GetArgumentInt(1);
+		pDraw->mShaderHandle = Params.GetArgumentInt(2);
+		return pDraw;
+	}
+	
 	std::stringstream Error;
 	Error << "Unknown render command " << Name;
 	throw Soy::AssertException(Error);
@@ -230,6 +286,20 @@ void Sokol::IsOkay(sg_resource_state State,const char* Context)
 	throw Soy::AssertException(Error);
 }
 
+sg_uniform_type Sokol::GetUniformType(const std::string& TypeName)
+{
+	if ( TypeName == "float" )	return SG_UNIFORMTYPE_FLOAT;
+	if ( TypeName == "float2" )	return SG_UNIFORMTYPE_FLOAT2;
+	if ( TypeName == "vec2" )	return SG_UNIFORMTYPE_FLOAT2;
+	if ( TypeName == "float3" )	return SG_UNIFORMTYPE_FLOAT3;
+	if ( TypeName == "vec3" )	return SG_UNIFORMTYPE_FLOAT3;
+	if ( TypeName == "float4" )	return SG_UNIFORMTYPE_FLOAT4;
+	if ( TypeName == "vec4" )	return SG_UNIFORMTYPE_FLOAT4;
+	if ( TypeName == "float4x4" )	return SG_UNIFORMTYPE_MAT4;
+	if ( TypeName == "mat4" )	return SG_UNIFORMTYPE_MAT4;
+	throw Soy::AssertException(std::string("Unknown uniform type ") + TypeName);
+}
+
 void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 {
 	//	parse js call first
@@ -237,6 +307,26 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 	NewShader.mVertSource = Params.GetArgumentString(0);
 	NewShader.mFragSource = Params.GetArgumentString(1);
 
+	//	arg3 contains uniform descriptions as sokol doesn't automatically resolve these!
+	//	we'll try and remove this
+	if ( Params.IsArgumentUndefined(2) )
+	{
+		Array<Bind::TObject> UniformDescriptions;
+		Params.GetArgumentArray(2, GetArrayBridge(UniformDescriptions));
+		for ( auto u=0;	u<UniformDescriptions.GetSize();	u++ )
+		{
+			auto& UniformDescription = UniformDescriptions[u];
+			Sokol::TCreateShader::TUniform Uniform;
+			Uniform.mName = UniformDescription.GetString("Name");
+			auto TypeName = UniformDescription.GetString("Type");
+			Uniform.mType = Sokol::GetUniformType(TypeName);
+			if ( UniformDescription.HasMember("ArraySize") )
+				Uniform.mArraySize = UniformDescription.GetInt("ArraySize");
+			NewShader.mUniforms.PushBack(Uniform);
+		}
+	}
+	
+	
 	//	now make a promise and construct
 	auto Promise = mPendingShaderPromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, NewShader.mPromiseRef );
 	Params.Return(Promise);
@@ -260,6 +350,18 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 				sg_shader_desc Description = {};// _sg_shader_desc_defaults();
 				Description.vs.source = NewShader.mVertSource.c_str();
 				Description.fs.source = NewShader.mFragSource.c_str();
+				
+				auto UniformBlock = NewShader.GetUniformBlockDescription();
+				
+				Description.fs.uniform_blocks[0] = UniformBlock;
+				Description.vs.uniform_blocks[0] = UniformBlock;
+				/*
+				Description.vs.uniform_blocks[0].size = 3*sizeof(float);
+				Description.fs.uniform_blocks[0].uniforms[0].name = "Colour";
+				Description.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT3;
+				Description.fs.uniform_blocks[0].uniforms[0].array_count = 0;
+				*/
+
 				//	gr: when this errors, we lose the error. need to capture via sokol log
 				//	gr: when this errors, it leaves a glGetError I think, need to work out how to flush/reset?
 				//	gr: now its not crashing after resetting ipad
@@ -412,7 +514,48 @@ sg_buffer_desc Sokol::TCreateGeometry::GetVertexDescription() const
 	Description.content = mBufferData.GetArray();
 	return Description;
 }
-	
+
+
+/* return the byte size of a shader uniform */
+int _sg_uniform_size(sg_uniform_type type, int count) {
+	switch (type) {
+		case SG_UNIFORMTYPE_INVALID:    return 0;
+		case SG_UNIFORMTYPE_FLOAT:      return 4 * count;
+		case SG_UNIFORMTYPE_FLOAT2:     return 8 * count;
+		case SG_UNIFORMTYPE_FLOAT3:     return 12 * count; /* FIXME: std140??? */
+		case SG_UNIFORMTYPE_FLOAT4:     return 16 * count;
+		case SG_UNIFORMTYPE_MAT4:       return 64 * count;
+		default:
+			throw Soy::AssertException("_sg_uniform_size unhandled type");
+			//SOKOL_UNREACHABLE;
+			return -1;
+	}
+}
+
+size_t Sokol::TCreateShader::TUniform::GetDataSize() const
+{
+	return _sg_uniform_size(mType,mArraySize);
+	//auto ElementSize = GetTypeDataSize(mType);
+	//ElementSize *= mArraySize;
+	//return ElementSize;
+}
+
+sg_shader_uniform_block_desc Sokol::TCreateShader::GetUniformBlockDescription() const
+{
+	//	once this is called, this cannot move because the description is using string pointers!
+	sg_shader_uniform_block_desc Description = {0};
+	Description.size = 0;
+	for ( auto u=0;	u<mUniforms.GetSize();	u++ )
+	{
+		auto& Uniform = mUniforms[u];
+		//	gr: does this need to be 1 for non-arrays?
+		Description.uniforms[u].array_count = Uniform.mArraySize;
+		Description.uniforms[u].name = Uniform.mName.c_str();
+		Description.uniforms[u].type = Uniform.mType;
+		Description.size += Uniform.GetDataSize();
+	}
+	return Description;
+}
 
 void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
 {
