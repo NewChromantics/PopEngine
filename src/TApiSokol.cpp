@@ -254,11 +254,14 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 		{
 			try
 			{
+				sg_activate_context(Context);	//	should be in higher-up code
+				sg_reset_state_cache();			//	seems to stop fatal error when shader fails
 				sg_shader_desc Description = {};// _sg_shader_desc_defaults();
 				Description.vs.source = NewShader.mVertSource.c_str();
 				Description.fs.source = NewShader.mFragSource.c_str();
 				//	gr: when this errors, we lose the error. need to capture via sokol log
 				//	gr: when this errors, it leaves a glGetError I think, need to work out how to flush/reset?
+				//	gr: now its not crashing after resetting ipad
 				sg_shader Shader = sg_make_shader(&Description);
 				
 				sg_resource_state State = sg_query_shader_state(Shader);

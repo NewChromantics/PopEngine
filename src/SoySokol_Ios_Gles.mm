@@ -188,6 +188,6 @@ void SokolOpenglContext::Run(std::function<void(sg_context)> Exec)
 	//	sokol can leave things with an error, unsetting current context flushes glGetError
 	//	seems like wrong approach...
 	//[EAGLContext setCurrentContext:nullptr];
-	auto FlushedError = glGetError();
+	//auto FlushedError = glGetError();
 }
 
