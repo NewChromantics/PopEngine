@@ -1,5 +1,5 @@
 #include "TApiSokol.h"
-#include "SoyWindowIos.h"
+#include "SoyWindowApple.h"
 #include "PopMain.h"
 
 #include "SoySokol_Ios_Gles.h"

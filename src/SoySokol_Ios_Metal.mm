@@ -1,7 +1,7 @@
 #include "TApiSokol.h"
 #include "PopMain.h"
 
-#include "SoyWindowIos.h"
+#include "SoyWindowApple.h"
 #include "SoySokol_Ios_Metal.h"
 #include "SoySokol_Ios_Gles.h"
 

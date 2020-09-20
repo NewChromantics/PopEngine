@@ -1,5 +1,5 @@
 #include "SoyGui.h"
-#include "SoyWindowIos.h"
+#include "SoyWindowApple.h"
 
 #include "PopMain.h"
 #include <TargetConditionals.h>
