@@ -118,7 +118,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			sg_apply_pipeline(Pipeline);
 			
 			sg_bindings Bindings = {0};
-			Bindings.vertex_buffers[0] = Geometry.mVertexBuffer;
+			for ( auto a=0;	a<Geometry.GetVertexLayoutBufferSlots();	a++ )
+				Bindings.vertex_buffers[a] = Geometry.mVertexBuffer;
 			Bindings.index_buffer = Geometry.mIndexBuffer;
 			/*	bind image uniforms
 			Bindings.vs_images[SG_MAX_SHADERSTAGE_IMAGES];
@@ -526,14 +527,27 @@ void ParseGeometryObject(Sokol::TCreateGeometry& Geometry,Bind::TObject& VertexA
 		//	currently float only
 		auto Format = GetFloatFormat(ElementSize);
 
+		//	gr: for non-interlaced buffer data, use multiple buffer slots
+		//		with an offset (stride auto calculated), but just put the same buffer in the slots
+		//	https://github.com/floooh/sokol/issues/382
 		Geometry.mVertexLayout.attrs[a].format = Format;
-		Geometry.mVertexLayout.attrs[a].buffer_index = 0;	//	should be changed on-binding
-
-		//	0 stride and 0 offset means interleaved data
-		//	an offset here is the offset into the buffer for the start if this attribute (for vertexAttribPointer)
-		Geometry.mVertexLayout.attrs[a].offset = DataStart;
-		//Geometry.mVertexLayout.attrs[a].stride = sizeof(float)*ElementSize;
+		Geometry.mVertexLayout.attrs[a].buffer_index = a;
+		Geometry.mVertexLayout.attrs[a].offset = size_cast<int>(DataStart);
 	}
+}
+
+size_t Sokol::TCreateGeometry::GetVertexLayoutBufferSlots() const
+{
+	for ( auto a=0;	a<std::size(mVertexLayout.attrs);	a++ )
+	{
+		auto& Attr = mVertexLayout.attrs[a];
+		if ( Attr.format == SG_VERTEXFORMAT_INVALID )
+			return a;
+	}
+	//	all filled! (unlikely... take out this assert if it happens)
+	//	plus, I think in the pipeline we can't have 16 buffers?
+	throw Soy::AssertException("Unexpectedly filled all vertex layout buffer slots, remove this assert if genuine case is found");
+	return std::size(mVertexLayout.attrs);
 }
 
 

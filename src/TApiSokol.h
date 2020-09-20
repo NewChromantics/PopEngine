@@ -119,6 +119,7 @@ public:
 	size_t				mVertexCount = 0;
 	Array<float>		mBufferData;
 	sg_layout_desc		mVertexLayout = {0};	//	layout to go in a pipeline/binding
+	size_t				GetVertexLayoutBufferSlots() const;
 	sg_buffer			mVertexBuffer = {0};
 	sg_buffer			mIndexBuffer = {0};
 };
