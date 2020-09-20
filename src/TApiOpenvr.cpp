@@ -1,6 +1,7 @@
 #include "TApiOpenvr.h"
 #include "Libs/OpenVr/headers/openvr.h"
 #include "TApiCommon.h"
+#include "TApiGui.h"
 #if defined(ENABLE_OPENGL)
 #include "TApiOpengl.h"
 #include "SoyOpengl.h"
@@ -291,7 +292,7 @@ void ApiOpenvr::TAppWrapper::WaitForMirrorImage(Bind::TCallback& Params)
 {
 	//	setup a job to fetch & update texture & pixels
 	//	get render context
-	auto& RenderContext = Params.GetArgumentPointer<TWindowWrapper>(0);
+	auto& RenderContext = Params.GetArgumentPointer<ApiGui::TWindowWrapper>(0);
 	bool ReadPixels = false;
 	if (!Params.IsArgumentUndefined(1))
 		ReadPixels = Params.GetArgumentBool(1);

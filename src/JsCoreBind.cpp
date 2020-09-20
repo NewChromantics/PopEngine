@@ -704,7 +704,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiInput::Bind( *Context );
 			ApiBluetooth::Bind( *Context );
 			ApiLeapMotion::Bind( *Context );
-			ApiOpenvr::Bind(*Context);
+			//ApiOpenvr::Bind(*Context);
 #endif
 
 #if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)

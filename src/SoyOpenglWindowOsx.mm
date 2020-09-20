@@ -10,9 +10,6 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-#define SOKOL_IMPL
-#define SOKOL_METAL
-#include "sokol/sokol_gfx.h"
 
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 {

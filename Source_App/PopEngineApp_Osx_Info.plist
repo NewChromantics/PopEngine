@@ -26,7 +26,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2019 NewChromantics. All rights reserved.</string>
 	<key>NSMainNibFile</key>
-	<string>PopEngine</string>
+	<string>TestApp_Osx</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

@@ -11,15 +11,12 @@
 		58171F1C250BD4A700224082 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1A250BD4A400224082 /* LaunchScreen.storyboard */; };
 		58171F1D250BD4A700224082 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1A250BD4A400224082 /* LaunchScreen.storyboard */; };
 		58171F1F250BD4A700224082 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1B250BD4A600224082 /* Main.storyboard */; };
-		582BE872250A9D1000B341D4 /* SoyWindowIos.h in Headers */ = {isa = PBXBuildFile; fileRef = 582BE871250A9D1000B341D4 /* SoyWindowIos.h */; };
 		582BE874250A9E7F00B341D4 /* SoyGuiIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */; };
 		5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5850A42224F920C400145478 /* SoyGuiOsx.mm */; };
 		5873CDBA25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
 		5873CDBB25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
 		5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944024F6D32A00FCCCE2 /* TApiSokol.h */; };
-		5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; };
-		5898944524F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5898944324F6D3F900FCCCE2 /* libglfw.3.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945424F6E14600FCCCE2 /* QuartzCore.framework */; };
 		5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945A24F6EB5600FCCCE2 /* Metal.framework */; };
 		5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */; };
@@ -37,7 +34,9 @@
 		58C2004724F90993002DAC99 /* PopEngine_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */; };
 		58C2004824F90993002DAC99 /* PopEngine_Ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C2004B24F909BC002DAC99 /* libc++.tbd */; };
-		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; };
+		BF0D95E82517F367000C4E54 /* SoySokol_Osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */; };
+		BF0D95EB2517F499000C4E54 /* TestApp_Osx.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */; };
+		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF151F24238429DB00A70EBF /* PopEngine.xcassets in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF151F8123845F8400A70EBF /* SoyApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06241A2E5A7C0099596C /* SoyApp.cpp */; };
@@ -112,7 +111,6 @@
 		BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
 		BF15205523855FB600A70EBF /* PopCameraDevice_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15205423855FB600A70EBF /* PopCameraDevice_Ios.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF2CFA9324E28EAB009238A5 /* SoyOpenxr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF2CFA9124E28EAA009238A5 /* SoyOpenxr.cpp */; };
 		BF4013EA250F652300A753A4 /* SoySokol_Ios_Metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF4013E9250F651F00A753A4 /* SoySokol_Ios_Metal.mm */; };
 		BF4013EF250F679800A753A4 /* SoySokol_Ios_Gles.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF4013EC250F679300A753A4 /* SoySokol_Ios_Gles.mm */; };
 		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -195,7 +193,6 @@
 		BF5EB005237F0CD40077BCF5 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
 		BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
 		BF5EB008237F0CD40077BCF5 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
-		BF5EB009237F0CD40077BCF5 /* TApiOpenvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF92BAFB228C71C900C9C07C /* TApiOpenvr.cpp */; };
 		BF5EB00A237F0CD40077BCF5 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
@@ -237,9 +234,9 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
-		BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; };
+		BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; };
+		BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF7A2CD424F1A83300CD3A32 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -276,7 +273,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				5898944524F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -321,7 +317,6 @@
 /* Begin PBXFileReference section */
 		58171F1A250BD4A400224082 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		58171F1B250BD4A600224082 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
-		582BE871250A9D1000B341D4 /* SoyWindowIos.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyWindowIos.h; sourceTree = "<group>"; };
 		582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiIos.mm; path = src/SoyGuiIos.mm; sourceTree = "<group>"; };
 		5850A42224F920C400145478 /* SoyGuiOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiOsx.mm; path = src/SoyGuiOsx.mm; sourceTree = "<group>"; };
 		5873CDB825000A78008F73AA /* SoyGui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyGui.h; path = src/SoyGui.h; sourceTree = "<group>"; };
@@ -345,6 +340,10 @@
 		BF012B6F226A3224003AEB55 /* SoyTime.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTime.mm; path = src/SoyTime.mm; sourceTree = "<group>"; };
 		BF012B70226A3225003AEB55 /* SoyTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTime.cpp; path = src/SoyTime.cpp; sourceTree = "<group>"; };
 		BF07E6D32479D94700A38A4B /* PopEngine.Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Android; sourceTree = "<group>"; };
+		BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoySokol_Osx.mm; path = src/SoySokol_Osx.mm; sourceTree = "<group>"; };
+		BF0D95E72517F367000C4E54 /* SoySokol_Osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySokol_Osx.h; path = src/SoySokol_Osx.h; sourceTree = "<group>"; };
+		BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = TestApp_Osx.xib; sourceTree = "<group>"; };
+		BF0D95EC25180123000C4E54 /* SoyWindowApple.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyWindowApple.h; path = src/SoyWindowApple.h; sourceTree = "<group>"; };
 		BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_V8_App.xcconfig; sourceTree = "<group>"; };
 		BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiDll.cpp; path = src/TApiDll.cpp; sourceTree = "<group>"; };
 		BF0F9E702288892F00AEA7DC /* TApiDll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiDll.h; path = src/TApiDll.h; sourceTree = "<group>"; };
@@ -724,7 +723,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB021237F11C10077BCF5 /* Accelerate.framework in Frameworks */,
-				5898944424F6D3FA00FCCCE2 /* libglfw.3.3.dylib in Frameworks */,
 				BF5EB02A237F12CC0077BCF5 /* libdynload_s.a in Frameworks */,
 				BF5EB020237F11BF0077BCF5 /* AVFoundation.framework in Frameworks */,
 				BF5EB018237F11960077BCF5 /* VideoToolbox.framework in Frameworks */,
@@ -876,6 +874,7 @@
 			children = (
 				BF5EB05E2380335F0077BCF5 /* PopEngineApp_Osx_Info.plist */,
 				58C2001524F901BC002DAC99 /* PopEngineApp_Ios_Info.plist */,
+				BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */,
 				58171F1A250BD4A400224082 /* LaunchScreen.storyboard */,
 				58171F1B250BD4A600224082 /* Main.storyboard */,
 				58C2003F24F90506002DAC99 /* Main.xib */,
@@ -1190,11 +1189,13 @@
 				BF4013EC250F679300A753A4 /* SoySokol_Ios_Gles.mm */,
 				BF4013E8250F651F00A753A4 /* SoySokol_Ios_Metal.h */,
 				BF4013E9250F651F00A753A4 /* SoySokol_Ios_Metal.mm */,
+				BF0D95E72517F367000C4E54 /* SoySokol_Osx.h */,
+				BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */,
 				BFEF6A3924759401000A1F88 /* SoySound.h */,
 				BFEF6A3824759401000A1F88 /* SoySound.mm */,
 				BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */,
 				BF5EAF7223744E370077BCF5 /* SoyViveHandTracker.h */,
-				582BE871250A9D1000B341D4 /* SoyWindowIos.h */,
+				BF0D95EC25180123000C4E54 /* SoyWindowApple.h */,
 				BFEF6A3724759168000A1F88 /* TApiAudio.cpp */,
 				BFEF6A3624759168000A1F88 /* TApiAudio.h */,
 				BF607EA42240588300A78C00 /* TApiBluetooth.cpp */,
@@ -1404,7 +1405,6 @@
 			files = (
 				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
 				5873CDBB25000A79008F73AA /* SoyGui.h in Headers */,
-				582BE872250A9D1000B341D4 /* SoyWindowIos.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1651,6 +1651,7 @@
 			files = (
 				BF5EB06923803A4B0077BCF5 /* PopEngine.xcassets in Resources */,
 				BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */,
+				BF0D95EB2517F499000C4E54 /* TestApp_Osx.xib in Resources */,
 				BF5EB068238034BC0077BCF5 /* UnitTest in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1782,7 +1783,6 @@
 				BF5EAFF8237F0CD40077BCF5 /* SoyHid.cpp in Sources */,
 				BF5EAFFA237F0CD40077BCF5 /* SoyOpenglWindowOsx.mm in Sources */,
 				BF5EAFD5237F0C6E0077BCF5 /* SoyOpengl.cpp in Sources */,
-				BF2CFA9324E28EAB009238A5 /* SoyOpenxr.cpp in Sources */,
 				BF5EAFC5237F0C6E0077BCF5 /* SoyBase64.cpp in Sources */,
 				BF5EAFF7237F0CD40077BCF5 /* SoyBluetooth.mm in Sources */,
 				BFEF6A3B2475940E000A1F88 /* TApiAudio.cpp in Sources */,
@@ -1808,10 +1808,10 @@
 				BF15200323847DAB00A70EBF /* V8Bind.cpp in Sources */,
 				BF5EB003237F0CD40077BCF5 /* TApiHttp.cpp in Sources */,
 				BF5EAFBF237F0C290077BCF5 /* memheap.cpp in Sources */,
+				BF0D95E82517F367000C4E54 /* SoySokol_Osx.mm in Sources */,
 				BF5EAFF1237F0C6E0077BCF5 /* SoyWindow.mm in Sources */,
 				BF5EAFC2237F0C6E0077BCF5 /* SoyArray.cpp in Sources */,
 				BF5EAFC8237F0C6E0077BCF5 /* SoyFilesystem.cpp in Sources */,
-				BF5EB009237F0CD40077BCF5 /* TApiOpenvr.cpp in Sources */,
 				BF5EAFCD237F0C6E0077BCF5 /* SoyHttp.cpp in Sources */,
 				BF5EAFDF237F0C6E0077BCF5 /* SoySocket.cpp in Sources */,
 				BF5EAFE2237F0C6E0077BCF5 /* SoyStream.cpp in Sources */,
@@ -2725,10 +2725,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/glfw/3.3.2/lib,
-				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2785,10 +2781,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/glfw/3.3.2/lib,
-				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2845,10 +2837,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/glfw/3.3.2/lib,
-				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
@@ -2886,10 +2874,6 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INFOPLIST_FILE = "$(SRCROOT)/Source_Osx/PopEngine_Osx_Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/glfw/3.3.2/lib,
-				);
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
