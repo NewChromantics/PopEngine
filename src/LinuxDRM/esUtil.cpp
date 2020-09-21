@@ -156,25 +156,29 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, G
 //
 //    Start the main loop for the OpenGL ES application
 //
-struct gbm_bo *bo;
-struct drm_fb *fb;
+// struct gbm_bo *bo;
+// struct drm_fb *fb;
+
+static struct gbm_bo *previous_bo = NULL;
+static uint32_t previous_fb;
 
 void ESUTIL_API esMainLoop ( ESContext *esContext )
 {
-	struct gbm_bo *next_bo;
-
-	// This causes a segmentation fault at the moment
-	if ( esContext->drawFunc )
-		esContext->drawFunc();
-
 	eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
-
-	bo = gbm_surface_lock_front_buffer(gbm->surface);
+	struct gbm_bo *bo = gbm_surface_lock_front_buffer (gbm->surface);
+	uint32_t handle = gbm_bo_get_handle (bo).u32;
+	uint32_t pitch = gbm_bo_get_stride (bo);
+	uint32_t fb;
+	uint32_t connectorID = reinterpret_cast<uint32_t>(drm->connector_id);
+	drmModeAddFB(drm->fd, esContext->screenWidth, esContext->screenHeight, 24, 32, pitch, handle, &fb);
+	drmModeSetCrtc (drm->fd, drm->crtc_id, fb, 0, 0, &connectorID, 1, drm->mode);
 	
-	// DRM display read the gront buffer
-
-	/* release last buffer to render on again: */
-	gbm_surface_release_buffer(gbm->surface, bo);
+	if (previous_bo) {
+		drmModeRmFB (drm->fd, previous_fb);
+		gbm_surface_release_buffer (gbm->surface, previous_bo);
+	}
+	previous_bo = bo;
+	previous_fb = fb;
 }
 
 // void ESUTIL_API esMainLoop ( ESContext *esContext )
