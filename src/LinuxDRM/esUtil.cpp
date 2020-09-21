@@ -156,117 +156,137 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, G
 //
 //    Start the main loop for the OpenGL ES application
 //
+struct gbm_bo *bo;
+struct drm_fb *fb;
 
 void ESUTIL_API esMainLoop ( ESContext *esContext )
 {
-    struct timeval t1, t2;
-    struct timezone tz;
-    float deltatime;
-    float totaltime = 0.0f;
-    unsigned int frames = 0;
+	struct gbm_bo *next_bo;
 
-	fd_set fds;
-	drmEventContext evctx = {
-			.version = 2,
-			.page_flip_handler = page_flip_handler,
-	};
-	struct gbm_bo *bo;
-	struct drm_fb *fb;
-	uint32_t i = 0;
-	int ret;
+	// This causes a segmentation fault at the moment
+	if ( esContext->drawFunc )
+		esContext->drawFunc();
 
-    eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
+	eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
+
 	bo = gbm_surface_lock_front_buffer(gbm->surface);
-	if (!bo) {
-		fprintf(stderr, "Failed to get a new framebuffer BO\n");
-		return;
-	}
+	
+	// DRM display read the gront buffer
 
-	fb = drm_fb_get_from_bo(bo);
-	if (!fb) {
-		fprintf(stderr, "Failed to get a new framebuffer from BO\n");
-		return;
-	}
-
-	/* set mode: */
-	ret = drmModeSetCrtc(drm->fd, drm->crtc_id, fb->fb_id, 0, 0,
-			const_cast<uint32_t*>(&drm->connector_id), 1, drm->mode);
-	if (ret) {
-		printf("failed to set mode: %s\n", strerror(errno));
-		return;
-	}
-
-    gettimeofday ( &t1 , &tz );
-
-    while(userInterrupt(esContext) == GL_FALSE)
-    {
-        gettimeofday(&t2, &tz);
-        deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);
-        t1 = t2;
-
-		struct gbm_bo *next_bo;
-		int waiting_for_flip = 1;
-
-        if (esContext->updateFunc != NULL)
-            esContext->updateFunc(esContext, deltatime);
-        if ( esContext->drawFunc )
-            esContext->drawFunc();
-
-		//egl.draw(i++);
-
-        eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
-		next_bo = gbm_surface_lock_front_buffer(gbm->surface);
-		fb = drm_fb_get_from_bo(next_bo);
-		if (!fb) {
-			fprintf(stderr, "Failed to get a new framebuffer BO\n");
-			return;
-		}
-
-		/*
-		 * Here you could also update drm plane layers if you want
-		 * hw composition
-		 */
-
-		ret = drmModePageFlip(drm->fd, drm->crtc_id, fb->fb_id,
-				DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
-		if (ret) {
-			printf("failed to queue page flip: %s\n", strerror(errno));
-			return;
-		}
-
-		while (waiting_for_flip) {
-			FD_ZERO(&fds);
-			FD_SET(0, &fds);
-			FD_SET(drm->fd, &fds);
-
-			ret = select(drm->fd + 1, &fds, NULL, NULL, NULL);
-			if (ret < 0) {
-				printf("select err: %s\n", strerror(errno));
-				return;
-			} else if (ret == 0) {
-				printf("select timeout!\n");
-				return;
-			} else if (FD_ISSET(0, &fds)) {
-				printf("user interrupted!\n");
-				return;
-			}
-			drmHandleEvent(drm->fd, &evctx);
-		} 
-
-		/* release last buffer to render on again: */
-		gbm_surface_release_buffer(gbm->surface, bo);
-		bo = next_bo;
-
-        totaltime += deltatime;
-        frames++;
-        if (totaltime >  2.0f)
-        {
-            printf("%4d frames rendered in %1.4f seconds -> FPS=%3.4f\n", frames, totaltime, frames/totaltime);
-            totaltime -= 2.0f;
-            frames = 0;
-        }
-    }
+	/* release last buffer to render on again: */
+	gbm_surface_release_buffer(gbm->surface, bo);
 }
+
+// void ESUTIL_API esMainLoop ( ESContext *esContext )
+// {
+//     struct timeval t1, t2;
+//     struct timezone tz;
+//     float deltatime;
+//     float totaltime = 0.0f;
+//     unsigned int frames = 0;
+
+// 	fd_set fds;
+// 	drmEventContext evctx = {
+// 			.version = 2,
+// 			.page_flip_handler = page_flip_handler,
+// 	};
+// 	struct gbm_bo *bo;
+// 	struct drm_fb *fb;
+// 	uint32_t i = 0;
+// 	int ret;
+
+//     eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
+// 	bo = gbm_surface_lock_front_buffer(gbm->surface);
+// 	if (!bo) {
+// 		fprintf(stderr, "Failed to get a new framebuffer BO\n");
+// 		return;
+// 	}
+
+// 	fb = drm_fb_get_from_bo(bo);
+// 	if (!fb) {
+// 		fprintf(stderr, "Failed to get a new framebuffer from BO\n");
+// 		return;
+// 	}
+
+// 	/* set mode: */
+// 	ret = drmModeSetCrtc(drm->fd, drm->crtc_id, fb->fb_id, 0, 0,
+// 			const_cast<uint32_t*>(&drm->connector_id), 1, drm->mode);
+// 	if (ret) {
+// 		printf("failed to set mode: %s\n", strerror(errno));
+// 		return;
+// 	}
+
+//     gettimeofday ( &t1 , &tz );
+
+//     while(userInterrupt(esContext) == GL_FALSE)
+//     {
+//         gettimeofday(&t2, &tz);
+//         deltatime = (float)(t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec) * 1e-6);
+//         t1 = t2;
+
+// 		struct gbm_bo *next_bo;
+// 		int waiting_for_flip = 1;
+
+//         if (esContext->updateFunc != NULL)
+//             esContext->updateFunc(esContext, deltatime);
+//         if ( esContext->drawFunc )
+//             esContext->drawFunc();
+
+// 		//egl.draw(i++);
+
+//         eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
+// 		next_bo = gbm_surface_lock_front_buffer(gbm->surface);
+// 		fb = drm_fb_get_from_bo(next_bo);
+// 		if (!fb) {
+// 			fprintf(stderr, "Failed to get a new framebuffer BO\n");
+// 			return;
+// 		}
+
+// 		/*
+// 		 * Here you could also update drm plane layers if you want
+// 		 * hw composition
+// 		 */
+
+// 		ret = drmModePageFlip(drm->fd, drm->crtc_id, fb->fb_id,
+// 				DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
+// 		if (ret) {
+// 			printf("failed to queue page flip: %s\n", strerror(errno));
+// 			return;
+// 		}
+
+// 		while (waiting_for_flip) {
+// 			FD_ZERO(&fds);
+// 			FD_SET(0, &fds);
+// 			FD_SET(drm->fd, &fds);
+
+// 			ret = select(drm->fd + 1, &fds, NULL, NULL, NULL);
+// 			if (ret < 0) {
+// 				printf("select err: %s\n", strerror(errno));
+// 				return;
+// 			} else if (ret == 0) {
+// 				printf("select timeout!\n");
+// 				return;
+// 			} else if (FD_ISSET(0, &fds)) {
+// 				printf("user interrupted!\n");
+// 				return;
+// 			}
+// 			drmHandleEvent(drm->fd, &evctx);
+// 		} 
+
+// 		/* release last buffer to render on again: */
+// 		gbm_surface_release_buffer(gbm->surface, bo);
+// 		bo = next_bo;
+
+//         totaltime += deltatime;
+//         frames++;
+//         if (totaltime >  2.0f)
+//         {
+//             printf("%4d frames rendered in %1.4f seconds -> FPS=%3.4f\n", frames, totaltime, frames/totaltime);
+//             totaltime -= 2.0f;
+//             frames = 0;
+//         }
+//     }
+// }
 
 
 ///
