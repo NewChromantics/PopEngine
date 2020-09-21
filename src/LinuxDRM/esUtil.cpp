@@ -164,6 +164,9 @@ static uint32_t previous_fb;
 
 void ESUTIL_API esMainLoop ( ESContext *esContext )
 {
+	if ( esContext->drawFunc )
+		esContext->drawFunc();
+
 	eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
 	struct gbm_bo *bo = gbm_surface_lock_front_buffer (gbm->surface);
 	uint32_t handle = gbm_bo_get_handle (bo).u32;
