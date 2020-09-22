@@ -12,6 +12,8 @@ namespace ApiSokol
 	DECLARE_BIND_TYPENAME(Context);
 }
 
+class TImageWrapper;
+
 //	non-js-api sokol
 namespace Sokol
 {
@@ -27,11 +29,11 @@ namespace Sokol
 	class TRenderCommand_Draw;
 	class TRenderCommands;
 
+	class TShader;
 	class TCreateShader;
 	class TCreateGeometry;
 
-	static std::shared_ptr<Sokol::TRenderCommandBase>	ParseRenderCommand(const std::string_view& Name,Bind::TCallback& Params);
-	static TRenderCommands								ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
+	static std::shared_ptr<Sokol::TRenderCommandBase>	ParseRenderCommand(const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader);
 }
 
 class Sokol::TContextParams
@@ -64,10 +66,15 @@ public:
 	static constexpr std::string_view	Name = "Draw";
 	virtual const std::string_view	GetName() override	{	return Name;	};
 	
-	uint32_t	mGeometryHandle = {0};
-	uint32_t	mShaderHandle = {0};
-	//	uniforms
-	//	triangle count
+	void			ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader);
+	
+	uint32_t		mGeometryHandle = {0};
+	uint32_t		mShaderHandle = {0};
+
+	//	uniforms, parsed and written immediately into a block when parsing
+	Array<uint8_t>	mUniformBlock;
+
+	std::map<std::string,std::shared_ptr<TImageWrapper>>	mImageUniforms;
 };
 
 
@@ -91,12 +98,22 @@ public:
 	};
 public:
 	sg_shader_uniform_block_desc	GetUniformBlockDescription() const;
+	const TUniform*		GetUniform(const std::string& Name,size_t& DataOffset);
+	size_t				GetUniformBlockSize() const;
 
 	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
 	std::string			mVertSource;
 	std::string			mFragSource;
 	Array<TUniform>		mUniforms;
 	Array<std::string>	mAttributes;
+};
+
+
+class Sokol::TShader
+{
+public:
+	TCreateShader		mShaderMeta;	//	currently need to hold onto this for the uniform info
+	sg_shader			mShader = {0};
 };
 
 class Sokol::TCreateGeometry
@@ -148,6 +165,8 @@ private:
 	void			OnPaint(sg_context Context,vec2x<size_t> ViewRect);
 	void			InitDebugFrame(Sokol::TRenderCommands& Commands);
 
+	Sokol::TRenderCommands			ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
+
 public:
 	Bind::TPromiseMap				mPendingFramePromises;
 	Array<Sokol::TRenderCommands>	mPendingFrames;
@@ -162,7 +181,7 @@ public:
 	std::mutex						mPendingGeometrysLock;
 
 	//	allocated objects and their javascript handle[value]
-	std::map<uint32_t,sg_shader>	mShaders;
+	std::map<uint32_t,Sokol::TShader>	mShaders;
 	std::map<uint32_t,Sokol::TCreateGeometry>	mGeometrys;
 
 	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;

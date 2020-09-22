@@ -101,7 +101,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			sg_pipeline_desc PipelineDescription = {0};
 			PipelineDescription.layout = Geometry.mVertexLayout;
 			
-			PipelineDescription.shader = Shader;
+			PipelineDescription.shader = Shader.mShader;
 			PipelineDescription.primitive_type = Geometry.GetPrimitiveType();
 			PipelineDescription.index_type = Geometry.GetIndexType();
 			//	state stuff
@@ -127,7 +127,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			 */
 			
 			sg_apply_bindings(&Bindings);
-			//sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, const void* data, int num_bytes);
+			sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+			sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
 			auto VertexCount = Geometry.GetDrawVertexCount();
 			auto VertexFirst = Geometry.GetDrawVertexFirst();
 			auto InstanceCount = Geometry.GetDrawInstanceCount();
@@ -233,7 +234,7 @@ void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 	{
 		//	gr: we NEED this to match the promise...
 		auto CommandsArray = Params.GetArgumentArray(0);
-		auto Commands = Sokol::ParseRenderCommands(Params.mLocalContext,CommandsArray);
+		auto Commands = ParseRenderCommands(Params.mLocalContext,CommandsArray);
 		
 		Commands.mPromiseRef = PromiseRef;
 		std::lock_guard<std::mutex> Lock(mPendingFramesLock);
@@ -245,7 +246,88 @@ void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 	}
 }
 
-std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::string_view& Name,Bind::TCallback& Params)
+size_t GetFloatCount(sg_uniform_type Type)
+{
+	switch ( Type )
+	{
+		case SG_UNIFORMTYPE_FLOAT:	return 1;
+		case SG_UNIFORMTYPE_FLOAT2:	return 2;
+		case SG_UNIFORMTYPE_FLOAT3: return 3;
+		case SG_UNIFORMTYPE_FLOAT4:	return 4;
+		case SG_UNIFORMTYPE_MAT4:	return 4*4;
+	}
+	throw Soy::AssertException("Not a float type");
+}
+
+void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader)
+{
+	//	gr; for optimisation, maybe allow a block of bytes!
+	
+	Array<std::string> Keys;
+	UniformsObject.GetMemberNames( GetArrayBridge(Keys) );
+	
+	//	need to alloc data
+	mUniformBlock.SetSize(Shader.mShaderMeta.GetUniformBlockSize());
+	mUniformBlock.SetAll(0);
+	
+	for ( auto k=0;	k<Keys.GetSize();	k++ )
+	{
+		//	get slot (may be optimised out or not exist)
+		auto& UniformName = Keys[k];
+		size_t UniformDataPosition;
+		auto* pUniform = Shader.mShaderMeta.GetUniform( UniformName, UniformDataPosition );
+		if ( !pUniform )
+		{
+			std::Debug << "No uniform named " << UniformName << std::endl;
+			continue;
+		}
+
+		//	here we may need to do some conversion where we can
+		auto& Uniform = *pUniform;
+		auto UniformData = GetArrayBridge(mUniformBlock).GetSubArray(UniformDataPosition,Uniform.GetDataSize());
+		
+		//	gr: move this into its own func
+		switch(Uniform.mType)
+		{
+			//	our js code should pull arrays of whatever into floats,
+			//	may need to check it doesnt go wrong on strings, objects
+			case SG_UNIFORMTYPE_FLOAT:
+			case SG_UNIFORMTYPE_FLOAT2:
+			case SG_UNIFORMTYPE_FLOAT3:
+			case SG_UNIFORMTYPE_FLOAT4:
+			case SG_UNIFORMTYPE_MAT4:
+			{
+				Array<float> Floats;
+				//	if !array .GetFloat()
+				UniformsObject.GetArray(UniformName,GetArrayBridge(Floats));
+				//	resize to match target
+				auto FloatCount = GetFloatCount(Uniform.mType) * Uniform.mArraySize;
+				Floats.SetSize(FloatCount);
+				//	copy
+				if ( Floats.GetDataSize() != Uniform.GetDataSize() )
+				{
+					std::stringstream Error;
+					Error << "Uniform (" << magic_enum::enum_name(Uniform.mType) << ") floats x" << Floats.GetSize() << " (data size " << Floats.GetDataSize() << ") doesn't match uniform block size " << Uniform.GetDataSize();
+					throw Soy::AssertException(Error);
+				}
+				UniformData.Copy( Floats );
+				break;
+			}
+			
+			default:
+			{
+				std::stringstream Error;
+				Error << __PRETTY_FUNCTION__ << " Unhandled js uniform->uniform type " << magic_enum::enum_name(Uniform.mType);
+				throw Soy::AssertException(Error);
+			}
+		}
+	}
+	
+	//	did we write to all memory?
+}
+
+
+std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
 {
 	if ( Name == TRenderCommand_Clear::Name )
 	{
@@ -261,8 +343,18 @@ std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::
 	if ( Name == TRenderCommand_Draw::Name )
 	{
 		auto pDraw = std::make_shared<TRenderCommand_Draw>();
+		//	these objects should exist at this point
 		pDraw->mGeometryHandle = Params.GetArgumentInt(1);
 		pDraw->mShaderHandle = Params.GetArgumentInt(2);
+
+		auto& Shader = GetShader(pDraw->mShaderHandle);
+		
+		//	parse uniforms
+		if ( !Params.IsArgumentUndefined(3) )
+		{
+			auto Uniforms = Params.GetArgumentObject(3);
+			pDraw->ParseUniforms(Uniforms,Shader);
+		}
 		return pDraw;
 	}
 	
@@ -271,8 +363,12 @@ std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::
 	throw Soy::AssertException(Error);
 }
 
-Sokol::TRenderCommands Sokol::ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArrayArray)
+Sokol::TRenderCommands ApiSokol::TSokolContextWrapper::ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArrayArray)
 {
+	std::function<Sokol::TShader&(uint32_t)> GetShader = [this](uint32_t ShaderHandle) -> Sokol::TShader&
+	{
+		return mShaders[ShaderHandle];
+	};
 	Sokol::TRenderCommands Commands;
 	//	go through the array of commands
 	//	parse each one. Dont fill gaps here, this system should be generic
@@ -283,7 +379,7 @@ Sokol::TRenderCommands Sokol::ParseRenderCommands(Bind::TLocalContext& Context,B
 		auto CommandAndParams = CommandAndParamsArray.GetAsCallback(Context);
 		auto CommandName = CommandAndParams.GetArgumentString(0);
 		//	now each command should be able to pull the values it needs
-		auto Command = ParseRenderCommand(CommandName,CommandAndParams);
+		auto Command = Sokol::ParseRenderCommand( CommandName, CommandAndParams, GetShader );
 		Commands.mCommands.PushBack(Command);
 	}
 	return Commands;
@@ -361,6 +457,9 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 		{
 			try
 			{
+				Sokol::TShader Shader;
+				Shader.mShaderMeta = NewShader;
+
 				sg_activate_context(Context);	//	should be in higher-up code
 				sg_reset_state_cache();			//	seems to stop fatal error when shader fails
 				sg_shader_desc Description = {};// _sg_shader_desc_defaults();
@@ -387,9 +486,9 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 				//	gr: when this errors, we lose the error. need to capture via sokol log
 				//	gr: when this errors, it leaves a glGetError I think, need to work out how to flush/reset?
 				//	gr: now its not crashing after resetting ipad
-				sg_shader Shader = sg_make_shader(&Description);
+				Shader.mShader = sg_make_shader(&Description);
 				sg_reset_state_cache();
-				sg_resource_state State = sg_query_shader_state(Shader);
+				sg_resource_state State = sg_query_shader_state(Shader.mShader);
 				Sokol::IsOkay(State,"make_shader/sg_query_shader_state");
 				
 				/*
@@ -433,7 +532,7 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 					uint32_t _end_canary;
 				} sg_shader_desc;
 				 */
-				auto ShaderHandle = Shader.id;
+				auto ShaderHandle = Shader.mShader.id;
 				{
 					std::lock_guard<std::mutex> Lock(mPendingShadersLock);
 					mShaders[ShaderHandle] = Shader;
@@ -586,6 +685,18 @@ size_t Sokol::TCreateShader::TUniform::GetDataSize() const
 	//return ElementSize;
 }
 
+size_t Sokol::TCreateShader::GetUniformBlockSize() const
+{
+	//	once this is called, this cannot move because the description is using string pointers!
+	auto Size = 0;
+	for ( auto u=0;	u<mUniforms.GetSize();	u++ )
+	{
+		auto& Uniform = mUniforms[u];
+		Size += Uniform.GetDataSize();
+	}
+	return Size;
+}
+
 sg_shader_uniform_block_desc Sokol::TCreateShader::GetUniformBlockDescription() const
 {
 	//	once this is called, this cannot move because the description is using string pointers!
@@ -598,10 +709,26 @@ sg_shader_uniform_block_desc Sokol::TCreateShader::GetUniformBlockDescription() 
 		Description.uniforms[u].array_count = Uniform.mArraySize;
 		Description.uniforms[u].name = Uniform.mName.c_str();
 		Description.uniforms[u].type = Uniform.mType;
+		//	gr: we're not specifying the position of this data... is it okay in a random order?
 		Description.size += Uniform.GetDataSize();
 	}
 	return Description;
 }
+
+const Sokol::TCreateShader::TUniform* Sokol::TCreateShader::GetUniform(const std::string& Name,size_t& DataOffset)
+{
+	DataOffset = 0;
+	for ( auto u=0;	u<mUniforms.GetSize();	u++ )
+	{
+		auto& Uniform = mUniforms[u];
+		if ( Uniform.mName == Name )
+			return &Uniform;
+		DataOffset += Uniform.GetDataSize();
+	}
+	//	throw here so we can log it?
+	return nullptr;
+}
+
 
 void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
 {
