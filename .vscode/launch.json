@@ -7,12 +7,22 @@
 		{
 			"type": "vgdb",
 			"request": "launch",
-			"name": "Debug vgdb",
+			"name": "Debug vgdb Nvidia",
 			"program": "Build/PopEngineTestApp",
 			"args": ["/home/graham/Code/PopCap/PopCap"],
 			"cwd": "${workspaceRoot}",
 			"useAbsoluteFilePaths":true,
-			"preLaunchTask": "Build"
+			"preLaunchTask": "Build Nvidia"
+		},
+		{
+			"type": "vgdb",
+			"request": "launch",
+			"name": "Vgdb Pi",
+			"program": "Build/PopEngineTestApp",
+			"args": ["UnitTest/Sokol/bootup.js"],
+			"cwd": "${workspaceRoot}",
+			"useAbsoluteFilePaths":false,
+			// "preLaunchTask": "Build Pi"
 		},
 		{
 			"name": "Debug gdb",

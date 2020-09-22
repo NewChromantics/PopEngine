@@ -10,7 +10,7 @@ public:
 	virtual void					Queue(std::function<void(sg_context)> Exec) override;
 	
 private:
-	void							RequestViewPaint();
+	void							DoPaint();
 	void							OnPaint();
 	void							RunGpuJobs();
 

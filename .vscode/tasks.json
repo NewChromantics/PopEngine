@@ -4,9 +4,19 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build",
+			"label": "Build Nvidia",
 			"type": "shell",
 			"command": "(cd PopEngine.Linux && make osTarget=Nvidia)",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "Build Pi",
+			"type": "shell",
+			"command": "(cd PopEngine.Linux && make osTarget=Pi compiler=g++-10.1 CONFIGURATION=Debug)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
