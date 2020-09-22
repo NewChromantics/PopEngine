@@ -15,6 +15,7 @@
       <PreprocessorDefinitions>TARGET_LINUX</PreprocessorDefinitions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <CppAdditionalWarning>no-reorder;no-unused-but-set-variable;no-unused-value;no-nonnull-compare;no-conversion;no-sign-compare;no-address;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <PositionIndependentCode>true</PositionIndependentCode>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
