@@ -1,6 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug_NoDependencies|ARM">
+      <Configuration>Debug_NoDependencies</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_NoDependencies|ARM64">
+      <Configuration>Debug_NoDependencies</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|ARM">
       <Configuration>Debug</Configuration>
       <Platform>ARM</Platform>
@@ -41,14 +49,27 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Import Project="PopEngineLinux.props" />
     <Import Project="JsApi_JsCore.props" />
+    <Import Project="PopEngineModules_Linux.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'" Label="PropertySheets">
+    <Import Project="PopEngineLinux.props" />
+    <Import Project="JsApi_JsCore.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Import Project="PopEngineLinux.props" />
+    <Import Project="JsApi_JsCore.props" />
+    <Import Project="PopEngineModules_Linux.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'" Label="PropertySheets">
     <Import Project="PopEngineLinux.props" />
     <Import Project="JsApi_JsCore.props" />
   </ImportGroup>
@@ -56,10 +77,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LibraryPath>/usr/lib/aarch64-linux-gnu/</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">
+    <LibraryPath>/usr/lib/aarch64-linux-gnu/</LibraryPath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">
+    <MultiProcNumber>2</MultiProcNumber>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Link />
+    <RemotePostBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </RemotePostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">
     <Link />
     <RemotePostBuildEvent>
       <Command>
@@ -86,6 +122,7 @@
     <ClCompile Include="..\src\Json11\json11.cpp" />
     <ClCompile Include="..\src\PopDepthToYuv\Depth16ToYuv.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\PopEngine.cpp" />
     <ClCompile Include="..\src\PopMain.cpp" />
@@ -101,14 +138,18 @@
     <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyHttpConnection.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyHttpServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp" />
@@ -130,12 +171,16 @@
     <ClCompile Include="..\src\TApiCommon.cpp" />
     <ClCompile Include="..\src\TApiEngine.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\TApiHttp.cpp" />
-    <ClCompile Include="..\src\TApiMedia.cpp" />
+    <ClCompile Include="..\src\TApiMedia.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\TApiPanopoly.cpp" />
     <ClCompile Include="..\src\TApiSocket.cpp" />
     <ClCompile Include="..\src\TApiWebsocket.cpp" />
@@ -144,8 +189,12 @@
     <ClCompile Include="..\src\Zip\src\zip.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\PopCameraDevice.h" />
-    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\PopH264.h" />
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\PopCameraDevice.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\PopH264.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\JsCoreBind.h" />
     <ClInclude Include="..\src\Json11\json11.hpp" />
     <ClInclude Include="..\src\PopEngine.h" />
@@ -240,12 +289,16 @@
     <ClInclude Include="..\src\TApiCommon.h" />
     <ClInclude Include="..\src\TApiEngine.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\TApiHttp.h" />
-    <ClInclude Include="..\src\TApiMedia.h" />
+    <ClInclude Include="..\src\TApiMedia.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\TApiPanopoly.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
@@ -261,18 +314,29 @@
   <ItemGroup>
     <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">true</DeploymentContent>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</RemoteCopyFile>
       <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</RemoteCopyFile>
+      <RemoteCopyFile Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">true</RemoteCopyFile>
       <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\poph264\Nvidia\libPopH264.so">
       <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile />
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM'">
+    <ClCompile />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|ARM64'">
     <ClCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
