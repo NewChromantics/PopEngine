@@ -9,6 +9,7 @@
     </ClCompile>
     <Link>
       <LibraryDependencies>PopCameraDevice;PopH264;%(LibraryDependencies)</LibraryDependencies>
+      <AdditionalOptions>-Wl,-rpath,'$ORIGIN/../../../PopEngine.Package/node_modules/@newchromantics/popcameradevice/Nvidia' -Wl,-rpath,'$ORIGIN/../../../PopEngine.Package/node_modules/@newchromantics/poph264/Nvidia' %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

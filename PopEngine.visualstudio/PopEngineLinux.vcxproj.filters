@@ -520,6 +520,9 @@
     <None Include="..\PopEngine.Linux\Makefile">
       <Filter>PopEngine.Linux</Filter>
     </None>
+    <None Include="..\PopEngine.Package\package.json">
+      <Filter>PopEngine.Package</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\Nvidia\libPopCameraDevice.so">
