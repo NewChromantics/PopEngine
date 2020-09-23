@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs;PopCameraDevice;PopH264</LibraryDependencies>
+      <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs</LibraryDependencies>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
