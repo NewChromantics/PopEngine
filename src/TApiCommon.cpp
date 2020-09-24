@@ -1692,6 +1692,36 @@ void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>>
 #endif
 }
 
+void TImageWrapper::SetSokolImage(uint32_t Handle)
+{
+	mSokolImage = Handle;
+	mSokolImageVersion = 0;
+}
+
+void TImageWrapper::OnSokolImageChanged()
+{
+	if ( !HasSokolImage() )
+	throw Soy::AssertException("Sokol image changed, but no handle");
+	mSokolImageVersion = GetLatestVersion()+1;
+}
+
+void TImageWrapper::OnSokolImageUpdated()
+{
+	if ( !HasSokolImage() )
+	throw Soy::AssertException("Sokol image updated, but no handle");
+	mSokolImageVersion = GetLatestVersion();
+}
+
+bool TImageWrapper::HasSokolImage()
+{
+	return mSokolImage != 0;
+}
+
+uint32_t TImageWrapper::GetSokolImage(bool& LatestVersion)
+{
+	LatestVersion = mSokolImageVersion == GetLatestVersion();
+	return mSokolImage;
+}
 
 
 

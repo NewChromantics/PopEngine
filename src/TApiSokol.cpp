@@ -37,6 +37,59 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 	Template.BindFunction<BindFunction::CreateGeometry>(&TSokolContextWrapper::CreateGeometry);
 }
 
+sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
+{
+	switch(Format)
+	{
+		case SoyPixelsFormat::Greyscale:	return SG_PIXELFORMAT_R8;
+		case SoyPixelsFormat::Depth16mm:	return SG_PIXELFORMAT_R16;
+		case SoyPixelsFormat::GreyscaleAlpha:	return SG_PIXELFORMAT_RG8;
+		
+		case SoyPixelsFormat::Float1:		return SG_PIXELFORMAT_R32F;
+		case SoyPixelsFormat::RGBA:			return SG_PIXELFORMAT_RGBA8;
+		case SoyPixelsFormat::BGRA:			return SG_PIXELFORMAT_BGRA8;
+		case SoyPixelsFormat::Float4:		return SG_PIXELFORMAT_RGBA32F;
+	}
+	
+	std::stringstream Error;
+	Error << "No sokol pixel format for " << Format;
+	throw Soy::AssertException(Error);
+}
+
+
+sg_image_desc GetImageDescription(TImageWrapper& Image,SoyPixels& TemporaryPixels)
+{
+	sg_image_desc Description = {0};
+	
+	//	gr: special case
+	//	a bit unsafe! we need to ensure the return isn't held outside stack scope
+	auto& ImagePixels = Image.GetPixels();
+	auto* pPixels = &ImagePixels;
+	if ( ImagePixels.GetFormat() == SoyPixelsFormat::RGB )
+	{
+		Soy::TScopeTimerPrint Timer("Converting RGB image to temporary RGBA for sokol",1);
+		TemporaryPixels.Copy(ImagePixels);
+		TemporaryPixels.SetFormat(SoyPixelsFormat::RGBA);
+		pPixels = &TemporaryPixels;
+	}
+	
+	auto& Pixels = *pPixels;
+	auto ImageMeta = Pixels.GetMeta();
+	Description.width = ImageMeta.GetWidth();
+	Description.height = ImageMeta.GetHeight();
+	//Description.render_target = true;
+	Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
+	
+	
+	auto& PixelsArray = Pixels.GetPixelsArray();
+	auto CubeFace = 0;
+	auto Mip = 0;
+	sg_subimage_content& SubImage = Description.content.subimage[CubeFace][Mip];
+	SubImage.ptr = PixelsArray.GetArray();
+	SubImage.size = PixelsArray.GetDataSize();
+	
+	return Description;
+}
 
 void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> ViewRect)
 {
@@ -90,7 +143,42 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			NewPass(1,0,0,1);
 		}
 		
-		//	execute each
+		//	execute each command
+		if ( NextCommand->GetName() == Sokol::TRenderCommand_UpdateImage::Name )
+		{
+			auto& UpdateImageCommand = dynamic_cast<Sokol::TRenderCommand_UpdateImage&>( *NextCommand );
+			if ( !UpdateImageCommand.mImage )
+				throw Soy::AssertException("UpdateImage command with null image pointer");
+
+			auto& ImageWrapper = *UpdateImageCommand.mImage;
+			SoyPixels TemporaryImage;
+			
+			//	if image has no sg_image, create it
+			if ( !ImageWrapper.HasSokolImage() )
+			{
+				auto ImageDescription = GetImageDescription(ImageWrapper,TemporaryImage);
+				auto NewImage = sg_make_image(&ImageDescription);
+				auto State = sg_query_image_state(NewImage);
+				Sokol::IsOkay(State,"sg_make_image");
+				ImageWrapper.SetSokolImage( NewImage.id );
+				ImageWrapper.OnSokolImageUpdated();
+			}
+			
+			bool LatestVersion = false;
+			sg_image ImageSokol = {0};
+			ImageSokol.id = ImageWrapper.GetSokolImage(LatestVersion);
+			
+			//	if image sokol version is out of date, update texture
+			if ( !LatestVersion )
+			{
+				auto ImageDescription = GetImageDescription(ImageWrapper,TemporaryImage);
+				sg_update_image( ImageSokol, ImageDescription.content );
+				auto State = sg_query_image_state(ImageSokol);
+				Sokol::IsOkay(State,"sg_make_image");
+				ImageWrapper.OnSokolImageUpdated();
+			}
+		}
+		
 		if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
 		{
 			auto& DrawCommand = dynamic_cast<Sokol::TRenderCommand_Draw&>( *NextCommand );
@@ -121,10 +209,22 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			for ( auto a=0;	a<Geometry.GetVertexLayoutBufferSlots();	a++ )
 				Bindings.vertex_buffers[a] = Geometry.mVertexBuffer;
 			Bindings.index_buffer = Geometry.mIndexBuffer;
-			/*	bind image uniforms
-			Bindings.vs_images[SG_MAX_SHADERSTAGE_IMAGES];
-			Bindings.fs_images[SG_MAX_SHADERSTAGE_IMAGES];
-			 */
+			
+			for ( auto i=0;	i<SG_MAX_SHADERSTAGE_IMAGES;	i++ )
+			{
+				//	gr: detect missing slots
+				auto* ImageWrapper = DrawCommand.mImageUniforms[i];
+				sg_image Image = {0};
+				if ( ImageWrapper )
+				{
+					bool LatestVersion = false;
+					Image.id = ImageWrapper->GetSokolImage(LatestVersion);
+					if ( !LatestVersion )
+						std::Debug << "Warning, using sokol image as uniform but out of date" << std::endl;
+				}
+				Bindings.vs_images[i] = Image;
+				Bindings.fs_images[i] = Image;
+			}
 			
 			sg_apply_bindings(&Bindings);
 			sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
@@ -270,21 +370,9 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 	mUniformBlock.SetSize(Shader.mShaderMeta.GetUniformBlockSize());
 	mUniformBlock.SetAll(0);
 	
-	for ( auto k=0;	k<Keys.GetSize();	k++ )
+	
+	auto WriteUniform = [&](const TCreateShader::TUniform& Uniform,size_t UniformDataPosition)
 	{
-		//	get slot (may be optimised out or not exist)
-		auto& UniformName = Keys[k];
-		size_t UniformDataPosition;
-		auto* pUniform = Shader.mShaderMeta.GetUniform( UniformName, UniformDataPosition );
-		if ( !pUniform )
-		{
-			std::Debug << "No uniform named " << UniformName << std::endl;
-			continue;
-		}
-
-		//	here we may need to do some conversion where we can
-		auto& Uniform = *pUniform;
-		
 		//	gr: move this into its own func
 		switch(Uniform.mType)
 		{
@@ -297,18 +385,18 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 			case SG_UNIFORMTYPE_MAT4:
 			{
 				auto UniformFloatCount = GetFloatCount(Uniform.mType) * Uniform.mArraySize;
-
+				
 				//	get data we're going to write to
 				auto UniformData = GetArrayBridge(mUniformBlock).GetSubArray(UniformDataPosition,Uniform.GetDataSize());
 				auto UniformDataf = GetArrayBridge(UniformData).GetSubArray<float>(0,UniformFloatCount);
-
+				
 				Array<float> Floats;
 				//	if !array .GetFloat()
-				UniformsObject.GetArray(UniformName,GetArrayBridge(Floats));
-
+				UniformsObject.GetArray(Uniform.mName,GetArrayBridge(Floats));
+				
 				//	resize to match target
 				Floats.SetSize(UniformFloatCount);
-
+				
 				//	copy
 				if ( Floats.GetDataSize() != Uniform.GetDataSize() )
 				{
@@ -327,13 +415,46 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 				throw Soy::AssertException(Error);
 			}
 		}
+	};
+	
+	auto WriteImageUniform = [&](const TCreateShader::TImageUniform& Uniform,size_t UniformImageIndex)
+	{
+		//	here we don't write to the block, but we need to work out what image is going
+		//	to go in the image slot
+		auto ImageObject = UniformsObject.GetObject( Uniform.mName );
+		auto& ImageWrapper = ImageObject.This<TImageWrapper>();
+		//	todo: add a "update image pixels" render command before draw
+		mImageUniforms[UniformImageIndex] = &ImageWrapper;
+	};
+	
+	for ( auto k=0;	k<Keys.GetSize();	k++ )
+	{
+		//	get slot (may be optimised out or not exist)
+		auto& UniformName = Keys[k];
+		size_t UniformDataPosition;
+		auto* pUniform = Shader.mShaderMeta.GetUniform( UniformName, UniformDataPosition );
+		if ( pUniform )
+		{
+			WriteUniform( *pUniform, UniformDataPosition );
+			continue;
+		}
+
+		size_t UniformImageIndex;
+		auto* pImageUniform = Shader.mShaderMeta.GetImageUniform( UniformName, UniformImageIndex );
+		if ( pImageUniform )
+		{
+			WriteImageUniform( *pImageUniform, UniformImageIndex );
+			continue;
+		}
+
+		std::Debug << "No uniform/image named " << UniformName << std::endl;
 	}
 	
 	//	did we write to all memory?
 }
 
 
-std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
+void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
 {
 	if ( Name == TRenderCommand_Clear::Name )
 	{
@@ -343,7 +464,8 @@ std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::
 		pClear->mColour[1] = Params.GetArgumentFloat(2);
 		pClear->mColour[2]= Params.GetArgumentFloat(3);
 		pClear->mColour[3] = Params.IsArgumentUndefined(4) ? 1 : Params.GetArgumentFloat(4);
-		return pClear;
+		PushCommand(pClear);
+		return;
 	}
 	
 	if ( Name == TRenderCommand_Draw::Name )
@@ -361,7 +483,17 @@ std::shared_ptr<Sokol::TRenderCommandBase> Sokol::ParseRenderCommand(const std::
 			auto Uniforms = Params.GetArgumentObject(3);
 			pDraw->ParseUniforms(Uniforms,Shader);
 		}
-		return pDraw;
+		
+		//	make a update-image command for every image we use
+		for ( auto& [ImageUniformIndex,pImageWrapper] : pDraw->mImageUniforms )
+		{
+			auto pUpdateImage = std::make_shared<TRenderCommand_UpdateImage>();
+			pUpdateImage->mImage = pImageWrapper;
+			PushCommand(pUpdateImage);
+		}
+		
+		PushCommand(pDraw);
+		return;
 	}
 	
 	std::stringstream Error;
@@ -384,9 +516,13 @@ Sokol::TRenderCommands ApiSokol::TSokolContextWrapper::ParseRenderCommands(Bind:
 		auto CommandAndParamsArray = CommandArray.GetArgumentArray(c);
 		auto CommandAndParams = CommandAndParamsArray.GetAsCallback(Context);
 		auto CommandName = CommandAndParams.GetArgumentString(0);
+		
 		//	now each command should be able to pull the values it needs
-		auto Command = Sokol::ParseRenderCommand( CommandName, CommandAndParams, GetShader );
-		Commands.mCommands.PushBack(Command);
+		auto PushCommand = [&](std::shared_ptr<Sokol::TRenderCommandBase> Command)
+		{
+			Commands.mCommands.PushBack(Command);
+		};
+		Sokol::ParseRenderCommand( PushCommand, CommandName, CommandAndParams, GetShader );
 	}
 	return Commands;
 }
@@ -431,13 +567,22 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 		for ( auto u=0;	u<UniformDescriptions.GetSize();	u++ )
 		{
 			auto& UniformDescription = UniformDescriptions[u];
-			Sokol::TCreateShader::TUniform Uniform;
-			Uniform.mName = UniformDescription.GetString("Name");
 			auto TypeName = UniformDescription.GetString("Type");
-			Uniform.mType = Sokol::GetUniformType(TypeName);
-			if ( UniformDescription.HasMember("ArraySize") )
-				Uniform.mArraySize = UniformDescription.GetInt("ArraySize");
-			NewShader.mUniforms.PushBack(Uniform);
+			if ( TypeName == "sampler2D" )
+			{
+				Sokol::TCreateShader::TImageUniform Uniform;
+				Uniform.mName = UniformDescription.GetString("Name");
+				NewShader.mImageUniforms.PushBack(Uniform);
+			}
+			else
+			{
+				Sokol::TCreateShader::TUniform Uniform;
+				Uniform.mName = UniformDescription.GetString("Name");
+				Uniform.mType = Sokol::GetUniformType(TypeName);
+				if ( UniformDescription.HasMember("ArraySize") )
+					Uniform.mArraySize = UniformDescription.GetInt("ArraySize");
+				NewShader.mUniforms.PushBack(Uniform);
+			}
 		}
 	}
 	if ( !Params.IsArgumentUndefined(3) )
@@ -479,16 +624,20 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 					Description.attrs[a].name = Name;
 				}
 
-				auto UniformBlock = NewShader.GetUniformBlockDescription();
-				Description.fs.uniform_blocks[0] = UniformBlock;
-				Description.vs.uniform_blocks[0] = UniformBlock;
-				/*
-				Description.vs.uniform_blocks[0].size = 3*sizeof(float);
-				Description.fs.uniform_blocks[0].uniforms[0].name = "Colour";
-				Description.fs.uniform_blocks[0].uniforms[0].type = SG_UNIFORMTYPE_FLOAT3;
-				Description.fs.uniform_blocks[0].uniforms[0].array_count = 0;
-				*/
-
+				auto SetImageDescription = [&](const sg_shader_image_desc& ImageDescription,size_t Index)
+				{
+					Description.fs.images[Index] = ImageDescription;
+					Description.vs.images[Index] = ImageDescription;
+				};
+				auto SetUniformBlockDescription = [&](const sg_shader_uniform_block_desc& UniformDescription,size_t Index)
+				{
+					Description.fs.uniform_blocks[Index] = UniformDescription;
+					Description.vs.uniform_blocks[Index] = UniformDescription;
+				};
+				
+				NewShader.EnumImageDescriptions(SetImageDescription);
+				NewShader.EnumUniformBlockDescription(SetUniformBlockDescription);
+				
 				//	gr: when this errors, we lose the error. need to capture via sokol log
 				//	gr: when this errors, it leaves a glGetError I think, need to work out how to flush/reset?
 				//	gr: now its not crashing after resetting ipad
@@ -703,7 +852,8 @@ size_t Sokol::TCreateShader::GetUniformBlockSize() const
 	return Size;
 }
 
-sg_shader_uniform_block_desc Sokol::TCreateShader::GetUniformBlockDescription() const
+
+void Sokol::TCreateShader::EnumUniformBlockDescription(std::function<void(const sg_shader_uniform_block_desc&,size_t)> OnDescription) const
 {
 	//	once this is called, this cannot move because the description is using string pointers!
 	sg_shader_uniform_block_desc Description = {0};
@@ -718,8 +868,23 @@ sg_shader_uniform_block_desc Sokol::TCreateShader::GetUniformBlockDescription() 
 		//	gr: we're not specifying the position of this data... is it okay in a random order?
 		Description.size += Uniform.GetDataSize();
 	}
-	return Description;
+	OnDescription(Description,0);
 }
+
+
+void Sokol::TCreateShader::EnumImageDescriptions(std::function<void(const sg_shader_image_desc&,size_t)> OnDescription) const
+{
+	//	once this is called, this cannot move because the description is using string pointers!
+	for ( auto u=0;	u<mImageUniforms.GetSize();	u++ )
+	{
+		auto& Uniform = mImageUniforms[u];
+		sg_shader_image_desc Description = {0};
+		Description.name = Uniform.mName.c_str();
+		Description.type = SG_IMAGETYPE_2D;
+		OnDescription(Description,u);
+	}
+}
+
 
 const Sokol::TCreateShader::TUniform* Sokol::TCreateShader::GetUniform(const std::string& Name,size_t& DataOffset)
 {
@@ -728,8 +893,23 @@ const Sokol::TCreateShader::TUniform* Sokol::TCreateShader::GetUniform(const std
 	{
 		auto& Uniform = mUniforms[u];
 		if ( Uniform.mName == Name )
-			return &Uniform;
+		return &Uniform;
 		DataOffset += Uniform.GetDataSize();
+	}
+	//	throw here so we can log it?
+	return nullptr;
+}
+
+const Sokol::TCreateShader::TImageUniform* Sokol::TCreateShader::GetImageUniform(const std::string& Name,size_t& ImageIndex)
+{
+	for ( auto u=0;	u<mImageUniforms.GetSize();	u++ )
+	{
+		auto& Uniform = mImageUniforms[u];
+		if ( Uniform.mName == Name )
+		{
+			ImageIndex = u;
+			return &Uniform;
+		}
 	}
 	//	throw here so we can log it?
 	return nullptr;

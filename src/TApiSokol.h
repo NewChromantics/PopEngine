@@ -27,13 +27,14 @@ namespace Sokol
 	class TRenderCommandBase;
 	class TRenderCommand_Clear;
 	class TRenderCommand_Draw;
+	class TRenderCommand_UpdateImage;
 	class TRenderCommands;
 
 	class TShader;
 	class TCreateShader;
 	class TCreateGeometry;
 
-	static std::shared_ptr<Sokol::TRenderCommandBase>	ParseRenderCommand(const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader);
+	void	ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader);
 }
 
 class Sokol::TContextParams
@@ -74,8 +75,19 @@ public:
 	//	uniforms, parsed and written immediately into a block when parsing
 	Array<uint8_t>	mUniformBlock;
 
-	std::map<std::string,std::shared_ptr<TImageWrapper>>	mImageUniforms;
+	//	super dangerous, but will do for now
+	std::map<size_t,TImageWrapper*>	mImageUniforms;	//	texture slot -> texture
 };
+
+class Sokol::TRenderCommand_UpdateImage : public TRenderCommandBase
+{
+public:
+	static constexpr std::string_view	Name = "UpdateImage";
+	virtual const std::string_view	GetName() override	{	return Name;	};
+	
+	TImageWrapper*	mImage = nullptr;	//	dangerous!
+};
+
 
 
 class Sokol::TRenderCommands
@@ -96,15 +108,25 @@ public:
 		std::string		mName;
 		size_t			mArraySize = 1;
 	};
+	class TImageUniform
+	{
+	public:
+		std::string		mName;
+		//std::shared_ptr<TImageWrapper>	mImage;
+	};
 public:
-	sg_shader_uniform_block_desc	GetUniformBlockDescription() const;
-	const TUniform*		GetUniform(const std::string& Name,size_t& DataOffset);
+	void				EnumUniformBlockDescription(std::function<void(const sg_shader_uniform_block_desc&,size_t)> OnImageDesc) const;
+	void				EnumImageDescriptions(std::function<void(const sg_shader_image_desc&,size_t)> OnImageDesc) const;
+	
+	const TUniform*			GetUniform(const std::string& Name,size_t& DataOffset);
+	const TImageUniform*	GetImageUniform(const std::string& Name,size_t& ImageIndex);
 	size_t				GetUniformBlockSize() const;
 
 	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
 	std::string			mVertSource;
 	std::string			mFragSource;
 	Array<TUniform>		mUniforms;
+	Array<TImageUniform>		mImageUniforms;
 	Array<std::string>	mAttributes;
 };
 
