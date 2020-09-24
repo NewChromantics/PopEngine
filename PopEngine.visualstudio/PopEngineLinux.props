@@ -9,13 +9,15 @@
   <ItemDefinitionGroup>
     <Link>
       <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs</LibraryDependencies>
-      <AdditionalOptions>-pthread -Wl,-rpath,$$ORIGIN %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-pthread -Wl,-rpath,$$ORIGIN -Wl,-Bsymbolic %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>TARGET_LINUX</PreprocessorDefinitions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <CppAdditionalWarning>no-reorder;no-unused-but-set-variable;no-unused-value;no-nonnull-compare;no-conversion;no-sign-compare;no-address;%(CppAdditionalWarning)</CppAdditionalWarning>
       <PositionIndependentCode>true</PositionIndependentCode>
+      <AdditionalOptions>-Wstack-usage=8388600 %(AdditionalOptions)</AdditionalOptions>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
