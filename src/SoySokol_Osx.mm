@@ -22,6 +22,18 @@
 #error Compiling ios gles support but ENABLE_OPENGL not defined
 #endif
 
+@implementation PopOpenGLView
+
+- (void) drawRect:(NSRect)rect
+{
+	if(mContext)
+	{
+		mContext->OnPaint(rect);
+	}
+}
+	
+@end
+
 
 std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
 {
@@ -50,23 +62,24 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<S
 #endif
 	
 #if defined(ENABLE_OPENGL)
-	if ( ClassName == "GLKView" )
+	if ( ClassName == "PopOpenGLView" )
 	{
-		auto* GlView = (NSOpenGLView*)View;
+		auto* GlView = (PopOpenGLView*)View;
 		auto* Context = new SokolOpenglContext(Window,GlView,Params);
+		GlView->mContext = Context;
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
 #endif
 	
 	std::stringstream Error;
-	Error << "Class of view " << Params.mViewName << " is not MTKView or GLKView; " << ClassName;
+	Error << "Class of view " << Params.mViewName << " is not MTKView or PopOpenGLView; " << ClassName;
 	throw Soy::AssertException(Error);
 }
 
 
 
 
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,NSOpenGLView* View,Sokol::TContextParams Params) :
+SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,PopOpenGLView* View,Sokol::TContextParams Params) :
 	mView	( View ),
 	mParams	( Params )
 {
@@ -90,15 +103,14 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,NSOpenG
 
 
 	//	gr: this doesn't do anything, need to call the func
-	//mView.enableSetNeedsDisplay = YES;
+	mView.needsDisplay = YES;
 
-	auto OnFrame = [this](CGRect Rect)
-	{
-		this->OnPaint(Rect);
-	};
+
+	
 	//mDelegate = [[SokolViewDelegate_Gles alloc] init:OnFrame];
 	//[mView setDelegate:mDelegate];
 
+	
 	//	gr: given that TriggerPaint needs to be on the main thread,
 	//		maybe this thread should just something on the main dispath queue
 	//		that could be dangerous for deadlocks on destruction though
@@ -151,7 +163,7 @@ void SokolOpenglContext::RunGpuJobs()
 }
 
 
-void SokolOpenglContext::OnPaint(CGRect Rect)
+void SokolOpenglContext::OnPaint(NSRect Rect)
 {
 	std::lock_guard Lock(mOpenglContextLock);
 	auto Context = [mOpenglContext CGLContextObj]; 
@@ -198,7 +210,9 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 	///auto Height = mView.drawableHeight;
 		
 	vec2x<size_t> Size( Width, Height );
-	mParams.mOnPaint( mSokolContext, Size );
+//	mParams.mOnPaint( mSokolContext, Size );
+//
+	glFlush();
 		
 	FlushedError = glGetError();
 	if ( FlushedError != 0 )
@@ -223,7 +237,7 @@ void SokolOpenglContext::RequestViewPaint()
 	//	a GLViewController will do regular drawing for us
 	auto SetNeedDisplay = [this]()
 	{
-		[mView setNeedsDisplay];
+		[mView display];
 	};
 	//	gr: this is getting invoked immediately when job is pushed
 	RunJobOnMainThread(SetNeedDisplay,false);

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16097" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097.3"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -108,8 +108,8 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="1440" y="907" width="480" height="270"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
-            <view key="contentView" identifier="MetalView" id="rpg-Ga-5Xw" userLabel="Main View" customClass="NSOpenGLView">
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1177"/>
+            <view key="contentView" id="rpg-Ga-5Xw" userLabel="Main View" customClass="NSOpenGLView">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
@@ -117,12 +117,12 @@
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <subviews>
-                            <customView identifier="GLView" fixedFrame="YES" id="uQZ-TH-ivD" customClass="NSOpenGLView">
-                                <rect key="frame" x="0.0" y="0.0" width="237" height="270"/>
+                            <customView identifier="GLView" fixedFrame="YES" id="uQZ-TH-ivD" customClass="PopOpenGLView">
+                                <rect key="frame" x="0.0" y="0.0" width="242" height="270"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </customView>
-                            <customView fixedFrame="YES" id="UGQ-g8-Y3Q" customClass="MTKView">
-                                <rect key="frame" x="247" y="0.0" width="233" height="270"/>
+                            <customView identifier="MetalView" fixedFrame="YES" id="UGQ-g8-Y3Q" userLabel="Metal View" customClass="MTKView">
+                                <rect key="frame" x="252" y="0.0" width="228" height="270"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </customView>
                         </subviews>
@@ -132,7 +132,6 @@
                         </holdingPriorities>
                     </splitView>
                 </subviews>
-                <accessibility identifier="MetalView"/>
             </view>
             <point key="canvasLocation" x="113" y="51"/>
         </window>

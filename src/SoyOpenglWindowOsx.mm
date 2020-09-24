@@ -1557,12 +1557,12 @@ NSView* Platform::TWindow::GetChild(const std::string& Name)
 	NSView* ChildMatch = nullptr;
 	auto TestChild = [&](NSView* Child)
 	{
-		//	tsdk: cannot find way to get view based on name so duplicate the name in the accessibility Identifier in the xib file and then match it here
-		auto* AccessibilityIdentifier = Child.accessibilityIdentifier;
-		if ( AccessibilityIdentifier == nil )
+		//	tsdk: get the view based on the User Interface Item Identifier
+		auto* UserInterfaceIdentifier = Child.identifier;
+		if ( UserInterfaceIdentifier == nil )
 			return true;
 		
-		auto RestorationIdString = Soy::NSStringToString(AccessibilityIdentifier);
+		auto RestorationIdString = Soy::NSStringToString(UserInterfaceIdentifier);
 		if ( RestorationIdString != Name )
 			return true;
 		

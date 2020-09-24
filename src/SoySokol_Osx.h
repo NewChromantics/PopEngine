@@ -11,22 +11,23 @@
 //	gr: this should probably be a seperate SoySokol.h
 #include "TApiSokol.h"
 
-/*
+class SokolOpenglContext;
 
-//	this could do metal & gl
-@interface SokolViewDelegate_Gles : UIResponder<GLKViewDelegate>
-	
-@property std::function<void(CGRect)>	mOnPaint;
-	
-- (instancetype)init:(std::function<void(CGRect)> )OnPaint;
-	
+@interface PopOpenGLView : NSOpenGLView
+{
+@public
+	SokolOpenglContext*		mContext;
+}
+
+//	overloaded
+- (void)drawRect: (NSRect) bounds;
+
 @end
-*/
 
 class SokolOpenglContext : public Sokol::TContext
 {
 public:
-	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,NSOpenGLView* View,Sokol::TContextParams Params);
+	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,PopOpenGLView* View,Sokol::TContextParams Params);
 	~SokolOpenglContext();
 	
 	virtual void					RequestPaint() override;
@@ -34,16 +35,17 @@ public:
 	
 private:
 	void							RequestViewPaint();
-	void							OnPaint(CGRect Rect);
+
 	void							RunGpuJobs();
 
 public:
+	void							OnPaint(NSRect Rect);
 	bool							mRunning = true;
 	std::shared_ptr<SoyThread>		mPaintThread;
 	bool							mPaintRequested = false;
 	
 	sg_context						mSokolContext = {0};
-	NSOpenGLView*          			mView = nullptr;
+	PopOpenGLView*          			mView = nullptr;
 	NSOpenGLContext*				mOpenglContext = nullptr;
 	std::mutex						mOpenglContextLock;
 	//SokolViewDelegate_Gles*			mDelegate = nullptr;
