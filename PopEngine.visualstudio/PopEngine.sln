@@ -25,6 +25,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PopEngineApp_Uwp", "PopEngi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PopEngine_Uwp", "PopEngine_Uwp.vcxproj", "{063FEF06-3D41-4387-BB6C-79A997523F1E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PopEngine.Linux", "PopEngine.Linux", "{50CB438C-55EE-42C9-AB4E-1DF255C7FB2E}"
+	ProjectSection(SolutionItems) = preProject
+		..\PopEngine.Linux\Makefile = ..\PopEngine.Linux\Makefile
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_NoDependencies|ARM_LInux = Debug_NoDependencies|ARM_LInux
@@ -73,8 +78,8 @@ Global
 		{8A5222A9-A2C4-40EC-B67B-51E60431997C}.Release|x64.Build.0 = Release|x64
 		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM_LInux.ActiveCfg = Debug|ARM
 		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM_LInux.Build.0 = Debug|ARM
-		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM64_Linux.ActiveCfg = Debug|ARM64
-		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM64_Linux.Build.0 = Debug|ARM64
+		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM64_Linux.ActiveCfg = Debug_NoDependencies|ARM64
+		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM64_Linux.Build.0 = Debug_NoDependencies|ARM64
 		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|ARM64_UWP.ActiveCfg = Debug|ARM64
 		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug_NoDependencies|x64.ActiveCfg = Debug|ARM64
 		{802427B1-AEF4-4278-9E68-6D0DE61C0BE6}.Debug|ARM_LInux.ActiveCfg = Debug|ARM

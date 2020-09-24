@@ -30,10 +30,10 @@
 
 //	gr: maybe make this an actual define
 //	gr: ^^ this is now in windows
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+#if defined(TARGET_OSX) || defined(TARGET_IOS)
 #define ENABLE_APIMEDIA
 #endif
-#if defined(TARGET_WINDOWS)
+#if defined(TARGET_WINDOWS)|| defined(TARGET_LINUX)
 	//	gr: kinda stuck together atm
 	#if defined(ENABLE_POPH264) || defined(ENABLE_POPCAMERADEVICE)
 	#define ENABLE_APIMEDIA

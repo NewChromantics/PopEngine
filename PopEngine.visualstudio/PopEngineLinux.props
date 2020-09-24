@@ -4,16 +4,18 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <IncludePath>./src/SoyLib/src;./src/SoyLib/src/magic_enum/include;./src/Json11;./PopEngine.Package/node_modules/@newchromantics/popcameradevice/Nvidia;./PopEngine.Package/node_modules/@newchromantics/poph264/Nvidia/</IncludePath>
+    <LibraryPath>./PopEngine.Package/node_modules/@newchromantics/popcameradevice/Nvidia/;./PopEngine.Package/node_modules/@newchromantics/poph264/Nvidia/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs</LibraryDependencies>
-      <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-pthread -Wl,-rpath,$$ORIGIN %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>TARGET_LINUX</PreprocessorDefinitions>
       <CppLanguageStandard>c++17</CppLanguageStandard>
       <CppAdditionalWarning>no-reorder;no-unused-but-set-variable;no-unused-value;no-nonnull-compare;no-conversion;no-sign-compare;no-address;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <PositionIndependentCode>true</PositionIndependentCode>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
