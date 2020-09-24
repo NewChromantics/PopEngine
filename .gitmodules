@@ -31,6 +31,9 @@
 [submodule "Source_Web"]
 	path = Source_Web
 	url = https://github.com/NewChromantics/PopEngine_Web.git
+[submodule "src/sokol"]
+	path = src/sokol
+	url = https://github.com/SoylentGraham/sokol.git
 [submodule "src/OpenXR"]
 	path = src/OpenXR
 	url = https://github.com/KhronosGroup/OpenXR-SDK.git

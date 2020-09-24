@@ -11,10 +11,12 @@
 #include "TApiHttp.h"
 #include "TApiZip.h"
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-#include "TApiGui.h"
+#include "TApiOpengl.h"
 #endif
 
 #if !defined(TARGET_ANDROID)
+#include "SoyWindow.h"
+#include "TApiGui.h"
 #include "TApiZip.h"
 #endif
 
@@ -68,6 +70,10 @@
 #include "TApiBluetooth.h"
 #include "TApiLeapMotion.h"
 #include "TApiOpenvr.h"
+#endif
+
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+#include "TApiSokol.h"
 #endif
 
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)
@@ -680,10 +686,10 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiDll::Bind( *Context );
 			ApiSerial::Bind( *Context );
 #endif
-#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID) && !defined(TARGET_UWP)
-			ApiGui::Bind( *Context );
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
 #endif
 #if !defined(TARGET_ANDROID)
+			ApiGui::Bind( *Context );
 			ApiZip::Bind( *Context );
 #endif
 #if defined(ENABLE_APIVISION)
@@ -697,7 +703,11 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			ApiInput::Bind( *Context );
 			ApiBluetooth::Bind( *Context );
 			ApiLeapMotion::Bind( *Context );
-			ApiOpenvr::Bind(*Context);
+			//ApiOpenvr::Bind(*Context);
+#endif
+
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+			ApiSokol::Bind( *Context );
 #endif
 
 			std::string BootupSource;
@@ -1336,6 +1346,19 @@ bool JsCore::TObject::HasMember(const std::string& MemberName)
 		return false;
 	return true;	
 }
+
+void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
+{
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		auto KeyString = JsCore::GetString(mContext,Key);
+		MemberNames.PushBack(KeyString);
+	}
+}
+
 
 JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 {
@@ -2402,6 +2425,7 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 		}
 	}
 	
+	//	gr: JSObjectGetPropertyAtIndex() will be faster!
 	//	proper way, but will include "named" indexes...
 	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
 	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
@@ -2443,6 +2467,76 @@ void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
 void JsCore::TArray::CopyTo(ArrayBridge<std::string>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );
+}
+
+void JsCore::TArray::CopyTo(ArrayBridge<JSValueRef>& Values)
+{
+	auto& This = *this;
+	auto& mContext = This.mContext;
+	auto& mThis = This.mThis;
+	
+	//	check for typed array
+	{
+		JSValueRef Exception = nullptr;
+		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		if ( TypedArrayType != kJSTypedArrayTypeNone )
+		{
+			throw Soy::AssertException("Trying to copy typed array into array of values");
+		}
+	}
+	
+	//	proper way, but will include "named" indexes...
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		JSValueRef Exception = nullptr;
+		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
+	}
+}
+
+void JsCore::TArray::CopyTo(ArrayBridge<Bind::TObject>& Values)
+{
+	auto& This = *this;
+	auto& mContext = This.mContext;
+	auto& mThis = This.mThis;
+	
+	//	check for typed array
+	{
+		JSValueRef Exception = nullptr;
+		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		if ( TypedArrayType != kJSTypedArrayTypeNone )
+		{
+			throw Soy::AssertException("Trying to copy typed array into array of objects");
+		}
+	}
+	
+	//	proper way, but will include "named" indexes...
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+	for ( auto k=0;	k<KeyCount;	k++ )
+	{
+		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+		JSValueRef Exception = nullptr;
+		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+		JsCore::ThrowException( mContext, Exception );
+		auto ObjectValue = GetObject(mContext,Value);
+		Bind::TObject Object(mContext,ObjectValue);
+		Values.PushBack(Object);
+		//Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
+	}
+}
+
+JsCore::TCallback JsCore::TArray::GetAsCallback(TLocalContext& LocalContext)
+{
+	JsCore::TCallback Callback(LocalContext);
+	CopyTo( GetArrayBridge(Callback.mArguments) );
+	return Callback;
 }
 
 
@@ -2671,6 +2765,13 @@ float* JsCore::GetPointer_float(JSContextRef Context,JSValueRef Handle)
 {
 	return GetPointer<float>( Context, Handle );
 }
+
+Bind::TObject JsCore::GetObjectFromValue(JSContextRef Context,JSValueRef Handle)
+{
+	auto ObjectHandle = GetObject(Context,Handle);
+	return Bind::TObject(Context,ObjectHandle);
+}
+
 
 void JsCore::OnValueChangedExternally(JSContextRef Context,JSValueRef Value)
 {

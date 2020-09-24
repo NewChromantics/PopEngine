@@ -2,14 +2,22 @@
 
 #include "SoyTypes.h"
 #include "SoyThread.h"
+
+#if !defined(TARGET_LINUX)
 #include "SoyOpenglContext.h"
+#endif
+
 #include "SoyWindow.h"
 
 #if __has_feature(objc_arc)
 #error expected ARC off, if we NEED arc, then the NSWindow & view need to go in a pure obj-c wrapper to auto retain the refcounted object
 #endif
 
-
+namespace Opengl
+{
+	class TContext;
+	class TRenderTarget;
+}
 
 class TOpenglParams
 {

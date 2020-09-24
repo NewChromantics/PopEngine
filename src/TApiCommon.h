@@ -123,7 +123,14 @@ public:
 	void									OnPixelsChanged();	//	increase version
 
 	void									SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer);
+
 	
+	void								SetSokolImage(uint32_t Handle);	//	set handle, no version
+	void								OnSokolImageChanged();	//	increase version
+	void								OnSokolImageUpdated();	//	now matching latest version
+	bool								HasSokolImage();
+	uint32_t							GetSokolImage(bool& LatestVersion);
+
 	
 protected:
 	void								Free();
@@ -140,6 +147,9 @@ protected:
 	std::function<void()>				mOpenglTextureDealloc;
 	size_t								mOpenglTextureVersion = 0;	//	pixels changed
 	std::shared_ptr<SoyPixels>			mOpenglClientStorage;	//	gr: apple specific client storage for texture. currently kept away from normal pixels for safety, but merge later
+
+	uint32_t							mSokolImage = 0;
+	size_t								mSokolImageVersion = 0;	//	pixels changed
 
 public:
 	//	temporary caching system for immediate mode glReadPixels

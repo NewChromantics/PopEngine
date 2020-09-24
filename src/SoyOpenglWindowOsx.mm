@@ -7,6 +7,44 @@
 #include "PopMain.h"
 #include <magic_enum.hpp>
 
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
+
+
+void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
+{
+	Soy::TSemaphore Semaphore;
+
+	//	testing if raw dispatch is faster, results negligable
+	static bool UseNsDispatch = false;
+	
+	if ( UseNsDispatch )
+	{
+		Soy::TSemaphore* pSemaphore = Block ? &Semaphore : nullptr;
+		
+		dispatch_async( dispatch_get_main_queue(), ^(void){
+			Lambda();
+			if ( pSemaphore )
+				pSemaphore->OnCompleted();
+		});
+		
+		if ( pSemaphore )
+			pSemaphore->WaitAndReset();
+	}
+	else
+	{
+		auto& Thread = *Soy::Platform::gMainThread;
+		if ( Block )
+		{
+			Thread.PushJob(Lambda,Semaphore);
+			Semaphore.WaitAndReset();
+		}
+		else
+		{
+			Thread.PushJob(Lambda);
+		}
+	}
+}
 
 namespace Platform
 {
@@ -198,7 +236,7 @@ protected:
 
 	void				SetRect(const Soy::Rectx<int32_t>& Rect);
 	virtual NSControl*	GetControl()=0;
-	
+
 protected:
 	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
 };
@@ -227,7 +265,7 @@ vec3x<uint8_t> Platform::GetColour(NSColor* Colour)
 	auto Green = Colour.greenComponent;
 	auto Blue = Colour.blueComponent;
 	auto Alpha = Colour.alphaComponent;
-	
+
 	auto Get8 = [](CGFloat Float)
 	{
 		Float *= 255.0f;
@@ -235,7 +273,7 @@ vec3x<uint8_t> Platform::GetColour(NSColor* Colour)
 		if ( Float > 255 )	Float = 255;
 		return static_cast<uint8_t>( Float );
 	};
-	
+
 	auto r8 = Get8(Red);
 	auto g8 = Get8(Green);
 	auto b8 = Get8(Blue);
@@ -253,7 +291,7 @@ public:
 		//	gr: this also isn't destroying the window
 		[mWindow release];
 	}
-	
+
 	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 	virtual void					SetFullscreen(bool Fullscreen) override;
 	virtual bool					IsFullscreen() override;
@@ -270,6 +308,11 @@ public:
 	NSWindow*						mWindow = nullptr;
 	Platform_View*					mContentView = nullptr;	//	where controls go
 	CVDisplayLinkRef				mDisplayLink = nullptr;
+	
+//  Added from SoyGuiOsx
+	NSWindow*						GetWindow();
+	NSView*							GetChild(const std::string& Name);
+	void							EnumChildren(std::function<bool(NSView*)> EnumChild);
 };
 
 
@@ -285,17 +328,17 @@ public:
 			mResponder->mCallback = []
 			{
 				std::Debug << "Responder owner deleted" << std::endl;
-				
+
 			};
 			[mResponder release];
 		}
-		
+
 		if ( mControl )
 		{
 			[mControl release];
 		}
 	}
-	
+
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
 
 	virtual void		SetMinMax(uint16_t Min,uint16_t Max,uint16_t NotchCount) override;
@@ -307,10 +350,10 @@ public:
 		CacheValue();
 		SoySlider::OnChanged(FinalValue);
 	}
-	
+
 protected:
 	void				CacheValue();		//	call from UI thread
-	
+
 public:
 	uint16_t				mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
 	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
@@ -332,9 +375,9 @@ public:
 	{
 		[mControl release];
 	}
-	
+
 	void					Create();
-	
+
 	virtual NSControl*		GetControl() override	{	return mControl;	}
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
 
@@ -346,11 +389,11 @@ public:
 protected:
 	virtual void			ApplyStyle()	{}
 	void					CacheValue();		//	call from UI thread
-	
+
 public:
 	std::string				mLastValue;		//	as all UI is on the main thread, we have to cache value for reading
 	size_t					mValueVersion = 0;
-	
+
 	TResponder*				mResponder = [TResponder alloc];
 	NSTextField*			mControl = nullptr;
 };
@@ -396,23 +439,23 @@ public:
 	{
 		[mControl release];
 	}
-	
+
 	virtual NSControl*	GetControl() override	{	return mControl;	}
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
 
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override	{	return mLastValue;	}
 	virtual void		SetLabel(const std::string& Label) override;
-	
+
 	virtual void		OnChanged() override
 	{
 		CacheValue();
 		SoyTickBox::OnChanged();
 	}
-	
+
 protected:
 	void				CacheValue();		//	call from UI thread
-	
+
 public:
 	bool					mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
 	TResponder*				mResponder = [TResponder alloc];
@@ -427,7 +470,7 @@ class Platform::TColourPicker : public Gui::TColourPicker
 public:
 	TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_t> InitialColour);
 	~TColourPicker();
-	
+
 public:
 	NSColorPanel*			mColorPanel = nullptr;
 	PopWorker::TJobQueue&	mThread;
@@ -443,17 +486,17 @@ public:
 	{
 		[mControl release];
 	}
-	
+
 	virtual NSControl*		GetControl() override	{	return mControl;	}
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
 	virtual void			SetValue(vec3x<uint8_t> Value) override;
-	
+
 	virtual vec3x<uint8_t>	GetValue() override
 	{
 		return GetColour(mControl.color);
 	}
-	
-	
+
+
 private:
 	TResponder*		mResponder = [TResponder alloc];
 	NSColorWell*	mControl = nullptr;
@@ -466,7 +509,7 @@ class Platform::TImageMap : public Gui::TImageMap, public TNsView
 public:
 	TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
 	~TImageMap();
-	
+
 	virtual NSControl*	GetControl() override	{	return mControl;	}
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
 	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
@@ -499,7 +542,7 @@ Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_
 		mColorPanel.continuous = TRUE;
 		mColorPanel.showsAlpha = FALSE;
 		mColorPanel.delegate = mResponder;
-		
+
 		//	set colour before setting callback, or we'll immediately get a callback, which I think we don't want because it wasn't instigated by the user
 		mColorPanel.color = Platform::GetColour( InitialColour );
 
@@ -513,15 +556,15 @@ Platform::TColourPicker::TColourPicker(PopWorker::TJobQueue& Thread,vec3x<uint8_
 			{
 				std::Debug << "Colour picker changed (no callback)" << std::endl;
 			}
-			
+
 		};
-		
+
 		mResponder->mOnClosed = [this]()
 		{
 			if ( this->mOnDialogClosed )
 				this->mOnDialogClosed();
 		};
-		
+
 		//	show
 		[mColorPanel orderFront:nil];
 	};
@@ -552,7 +595,7 @@ void Platform::TWindow::OnChildAdded(const Soy::Rectx<int32_t>& ChildRect)
 	//	expand scroll space to match child rect min/max
 	auto Right = ChildRect.Right();
 	auto Bottom = ChildRect.Bottom();
-	
+
 	auto NewSize = mContentView.frame.size;
 	NewSize.width = std::max<CGFloat>( NewSize.width, Right );
 	NewSize.height = std::max<CGFloat>( NewSize.height, Bottom );
@@ -583,7 +626,7 @@ NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 		Top = ParentRect.size.height - Rect.Bottom();
 		Bottom = ParentRect.size.height - Rect.Top();
 	}
-						
+
 	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
 	return RectNs;
 }
@@ -615,17 +658,17 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 		throw Soy::AssertException("NSApplication hasn't been started. Cannot create window");
 
 	auto& Thread = *Soy::Platform::gMainThread;
-	
+
 	auto PostAllocate = [=]()
 	{
 		auto* Window = mWindow->mWindow;
-		
+
 		//	create a view
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
 		mView.reset( new Platform::TOpenglView( vec2f(FrameRect.origin.x,FrameRect.origin.y), vec2f(FrameRect.size.width,FrameRect.size.height), Params ) );
 		if ( !mView->IsValid() )
 			throw Soy::AssertException("Opengl view isn't valid");
-		
+
 		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget,std::function<void()> LockContext)
 		{
 			mOnRender(RenderTarget, LockContext );
@@ -635,7 +678,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 		//	note: this is deffered, but as flags above don't seem to work right, not much choice
 		//		plus, every other OSX app seems to do the same?
 		mWindow->SetFullscreen( Params.mFullscreen );
-		
+
 		//	gr: todo: this should be replaced with a proper OpenglView control anyway
 		//		but we should lose the content view allocated in platform this way
 		//	assign view to window
@@ -656,19 +699,19 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 			GLint SwapIntervals = 1;
 			auto NSContext = mView->mView.openGLContext;
 			[NSContext setValues:&SwapIntervals forParameter:NSOpenGLCPSwapInterval];
-			
+
 			auto& mDisplayLink = mWindow->mDisplayLink;
 			// Create a display link capable of being used with all active displays
 			CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
-			
+
 			// Set the renderer output callback function
 			CVDisplayLinkSetOutputCallback(mDisplayLink, &DisplayLinkCallback, this );
-			
+
 			// Set the display link for the current renderer
 			CGLContextObj cglContext = [NSContext CGLContextObj];
 			CGLPixelFormatObj cglPixelFormat = NSContext.pixelFormat.CGLPixelFormatObj;
 			CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext( mDisplayLink, cglContext, cglPixelFormat);
-			
+
 			// Activate the display link
 			CVDisplayLinkStart( mDisplayLink );
 		}
@@ -677,7 +720,7 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 			SoyWorkerThread::Start();
 		}
 	};
-	
+
 	bool Resizable = true;
 	mWindow.reset( new Platform::TWindow( Thread, Name, Rect, Resizable, PostAllocate) );
 }
@@ -688,7 +731,7 @@ TOpenglWindow::~TOpenglWindow()
 	mView.reset();
 	mWindow.reset();
 }
-	
+
 bool TOpenglWindow::IsValid()
 {
 	return mWindow && mWindow->mWindow&& mView && mView->IsValid();
@@ -701,23 +744,23 @@ bool TOpenglWindow::Iteration()
 		std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
 		return true;
 	}
-	
+
 	//	see if this works, we're interrupting the main thread though
 	dispatch_queue_t q = dispatch_get_main_queue();
 	dispatch_async(q, ^{
 		[mView->mView setNeedsDisplay: YES];
 	});
 	return true;
-	
+
 	static bool RedrawOnMainThread = false;
-	
+
 	auto RedrawImpl = [this]
 	{
 		//	gr: OSX/Xcode will give a warning if this is not called on the main thread
 		[mView->mView setNeedsDisplay:YES];
 		//[mView->mView display];
 	};
-	
+
 	if ( RedrawOnMainThread )
 	{
 		//	if we're drawing on the main thread, wait for it to finish before triggering again
@@ -733,7 +776,7 @@ bool TOpenglWindow::Iteration()
 	{
 		RedrawImpl();
 	}
-	
+
 	return true;
 }
 
@@ -741,7 +784,7 @@ std::shared_ptr<Opengl::TContext> TOpenglWindow::GetContext()
 {
 	if ( !mView )
 		return nullptr;
-	
+
 	return mView->mContext;
 }
 
@@ -774,7 +817,7 @@ void TOpenglWindow::EnableScrollBars(bool Horz,bool Vert)
 {
 	if ( !mWindow )
 		return;
-	
+
 	mWindow->EnableScrollBars( Horz, Vert );
 }
 
@@ -784,7 +827,7 @@ void TOpenglWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
 		return;
-	
+
 	mWindow->SetFullscreen(Fullscreen);
 }
 
@@ -793,7 +836,7 @@ bool TOpenglWindow::IsFullscreen()
 {
 	if ( !mWindow )
 		return false;
-	
+
 	return mWindow->IsFullscreen();
 }
 
@@ -801,7 +844,7 @@ bool TOpenglWindow::IsMinimised()
 {
 	if ( !mWindow )
 		return false;
-	
+
 	return mWindow->IsMinimised();
 }
 
@@ -809,7 +852,7 @@ bool TOpenglWindow::IsForeground()
 {
 	if ( !mWindow )
 		return false;
-	
+
 	return mWindow->IsForeground();
 }
 
@@ -823,36 +866,36 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 		NSUInteger Style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable;
 		if ( Resizable )
 			Style |= NSWindowStyleMaskResizable;
-		
+
 		NSRect FrameRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
 		NSRect WindowRect = [NSWindow contentRectForFrameRect:FrameRect styleMask:Style];
-		
+
 		bool Defer = NO;
 		mWindow = [[NSWindow alloc] initWithContentRect:WindowRect styleMask:Style backing:NSBackingStoreBuffered defer:Defer];
 		Soy::Assert(mWindow,"failed to create window");
 		[mWindow retain];
-		
+
 		/*
 		 //	note: this is deffered, but as flags above don't seem to work right, not much choice
 		 //		plus, every other OSX app seems to do the same?
 		 pWindow->SetFullscreen( Params.mFullscreen );
 		 */
-		
+
 		//	auto save window location
 		auto AutoSaveName = Soy::StringToNSString( Name );
 		[mWindow setFrameAutosaveName:AutoSaveName];
-		
+
 		id Sender = NSApp;
 		[mWindow makeKeyAndOrderFront:Sender];
-		
+
 		auto Title = Soy::StringToNSString( Name );
 		[mWindow setTitle:Title];
 		//[mWindow setMiniwindowTitle:Title];
 		//[mWindow setTitleWithRepresentedFilename:Title];
-		
+
 		//	mouse callbacks
 		[mWindow setAcceptsMouseMovedEvents:YES];
-		
+
 		mContentView = [[Platform_View alloc] initWithFrame:FrameRect];
 		[mContentView RegisterForEvents];
 		mContentView->mGetDragDropCursor = []
@@ -884,36 +927,36 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 			[ScrollView setHasVerticalScroller:NO];
 			[ScrollView setHasHorizontalScroller:NO];
 			//[ScrollView setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
-			
+
 			//	the scrollview colour is different, lets make it look like a window
 			ScrollView.backgroundColor = mWindow.backgroundColor;
-			
+
 			//	put scroll view on window
 			[mWindow setContentView:ScrollView];
-			
+
 			//auto* ClipView = ScrollView.contentView;
 			//ClipView.documentView = Wrapper.mContentView;
 			//	custom scroll size...
 			//ClipView.documentView.frameSize = NSMakeSize(800,8000);
 			//ClipView.documentView = Wrapper.mContentView;
-			
+
 			//	assign document view
 			[ScrollView setDocumentView:mContentView];
-			
+
 			//	gr: maybe we need to change first responder?
 			//[theWindow makeKeyAndOrderFront:nil];
 			//[theWindow makeFirstResponder:theTextView];
-			
+
 		}
 		else
 		{
 			mWindow.contentView = mContentView;
 		}
-		
+
 		if ( OnAllocated )
 			OnAllocated();
 	};
-	
+
 	mThread.PushJob( Allocate );
 }
 
@@ -950,7 +993,7 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
 	if ( !mWindow )
 		throw Soy::AssertException("Platform::TWindow::SetFullscreen() missing platform window");
-	
+
 	//	if not done on main thread, this blocks,
 	//	then opengl waits for js context lock to free up and we get a deadlock
 	auto DoSetFullScreen = [this,Fullscreen]()
@@ -1040,7 +1083,7 @@ Platform::TSlider::TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rec
 		};
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
-	
+
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
 		Parent.OnChildAdded( Rect );
@@ -1054,13 +1097,13 @@ void Platform::TSlider::SetMinMax(uint16_t Min,uint16_t Max,uint16_t NotchCount)
 	{
 		if ( !mControl )
 			throw Soy_AssertException("before slider created");
-		
+
 		mControl.minValue = Min;
 		mControl.maxValue = Max;
 		mControl.numberOfTickMarks = NotchCount;
 		CacheValue();
 	};
-	
+
 	mThread.PushJob(Exec);
 }
 
@@ -1068,7 +1111,7 @@ void Platform::TSlider::SetValue(uint16_t Value)
 {
 	//	assuming success for immediate retrieval
 	mLastValue = Value;
-	
+
 	auto Exec = [=]
 	{
 		if ( !mControl )
@@ -1093,7 +1136,7 @@ void Platform::TSlider::CacheValue()
 		Error << "slider int value " << Value << " out of 16bit range";
 		throw Soy_AssertException(Error);
 	}
-	
+
 	mLastValue = Value;
 }
 
@@ -1105,7 +1148,7 @@ void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
 	{
 		if ( !mControl )
 			throw Soy_AssertException("before slider created");
-		
+
 		mControl.frame = NewRect;
 	};
 
@@ -1134,18 +1177,18 @@ Platform::TTickBox::TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::R
 		auto ChildRect = Parent.GetChildRect( Rect );
 		mControl = [[NSButton alloc] initWithFrame:ChildRect];
 		[mControl retain];
-		
+
 		//	setup callback
 		mResponder->mCallback = [this]()	{	this->OnChanged();	};
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
-		
+
 		[mControl setButtonType:NSSwitchButton];
 		//[mControl setBezelStyle:0];
-		
+
 		//	windows & osx both have labels for tickbox, but our current api is that this isn't setup at construction
 		mControl.title = @"";
-		
+
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
 		Parent.OnChildAdded( Rect );
@@ -1157,7 +1200,7 @@ void Platform::TTickBox::SetValue(bool Value)
 {
 	//	assuming success for immediate retrieval
 	mLastValue = Value;
-	
+
 	auto Exec = [=]
 	{
 		if ( !mControl )
@@ -1173,7 +1216,7 @@ void Platform::TTickBox::CacheValue()
 	//	todo: check is on mThread
 	if ( !mControl )
 		throw Soy_AssertException("before tickbox created");
-	
+
 	auto Value = mControl.state == NSControlStateValueOn;
 
 	mLastValue = Value;
@@ -1226,13 +1269,13 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 	auto Allocate = [this,Rect,&Parent]()mutable
 	{
 		auto RectNs = Parent.GetChildRect(Rect);
-	
+
 		mControl = [[NSTextField alloc] initWithFrame:RectNs];
 		[mControl retain];
-	
+
 		//	don't let overflowing text disapear
 		[[mControl cell]setLineBreakMode:NSLineBreakByTruncatingTail];
-		
+
 		//	setup callback
 		mResponder->mCallback = [this]()
 		{
@@ -1240,9 +1283,9 @@ Platform::TTextBox_Base<BASETYPE>::TTextBox_Base(PopWorker::TJobQueue& Thread,TW
 		};
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
-	
+
 		ApplyStyle();
-		
+
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
 		Parent.OnChildAdded( Rect );
@@ -1255,7 +1298,7 @@ void Platform::TTextBox_Base<BASETYPE>::SetValue(const std::string& Value)
 {
 	//	assuming success for immediate retrieval
 	mLastValue = Value;
-	
+
 	mValueVersion++;
 	auto Version = mValueVersion;
 
@@ -1270,7 +1313,7 @@ void Platform::TTextBox_Base<BASETYPE>::SetValue(const std::string& Value)
 
 		if ( !mControl )
 			throw Soy_AssertException("before control created");
-		
+
 		mControl.stringValue = Soy::StringToNSString( Value );
 		CacheValue();
 	};
@@ -1283,7 +1326,7 @@ void Platform::TTextBox_Base<BASETYPE>::CacheValue()
 	//	todo: check is on mThread
 	if ( !mControl )
 		throw Soy_AssertException("before control created");
-	
+
 	auto Value = mControl.stringValue;
 	mLastValue = Soy::NSStringToString( Value );
 }
@@ -1308,7 +1351,7 @@ Platform::TColourButton::TColourButton(PopWorker::TJobQueue& Thread,TWindow& Par
 		auto ChildRect = Parent.GetChildRect( Rect );
 		mControl = [[NSColorWell alloc] initWithFrame:ChildRect];
 		[mControl retain];
-		
+
 		//	setup callback
 		mResponder->mCallback = [this]()	{	this->OnChanged(true);	};
 		mControl.target = mResponder;
@@ -1316,7 +1359,7 @@ Platform::TColourButton::TColourButton(PopWorker::TJobQueue& Thread,TWindow& Par
 
 		//[mControl setButtonType:NSSwitchButton];
 		//[mControl setBezelStyle:0];
-		
+
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
 		Parent.OnChildAdded( Rect );
@@ -1336,13 +1379,13 @@ void Platform::TColourButton::SetValue(vec3x<uint8_t> Rgb)
 void Platform::TNsView::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
 	auto NewRect = NSMakeRect( Rect.x, Rect.y, Rect.w, Rect.h );
-	
+
 	auto Exec = [=]
 	{
 		auto mControl = GetControl();
 		mControl.frame = NewRect;
 	};
-	
+
 	mThread.PushJob(Exec);
 }
 
@@ -1357,7 +1400,7 @@ Platform::TImageMap::TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy:
 		auto ChildRect = Parent.GetChildRect( Rect );
 		mControl = [[NSImageView alloc] initWithFrame:ChildRect];
 		[mControl retain];
-		
+
 		//	image map stretches
 		[mControl setImageScaling:NSImageScaleAxesIndependently];
 
@@ -1365,10 +1408,10 @@ Platform::TImageMap::TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy:
 		//mResponder->mCallback = [this]()	{	this->OnChanged(true);	};
 		mControl.target = mResponder;
 		mControl.action = @selector(OnAction);
-		
+
 		//[mControl setButtonType:NSSwitchButton];
 		//[mControl setBezelStyle:0];
-		
+
 		auto* ParentView = Parent.GetContentView();
 		[ParentView addSubview:mControl];
 		Parent.OnChildAdded( Rect );
@@ -1379,7 +1422,7 @@ Platform::TImageMap::TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy:
 Platform::TImageMap::~TImageMap()
 {
 	[mControl release];
-	
+
 	FreeImage();
 }
 
@@ -1391,7 +1434,7 @@ void Platform::TImageMap::FreeImage()
 		CGImageRelease(mCgImage);
 		mCgImage = nullptr;
 	}
-	
+
 	if ( mNsImage )
 	{
 		[mNsImage release];
@@ -1407,28 +1450,28 @@ void GetColourSpace(CGColorSpaceRef& ColourSpace,CGBitmapInfo& Flags,SoyPixelsFo
 			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaNone;
 			ColourSpace = CGColorSpaceCreateDeviceGray();
 			return;
-		
+
 		case SoyPixelsFormat::GreyscaleAlpha:
 			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
 			ColourSpace = CGColorSpaceCreateDeviceGray();
 			return;
-		
+
 		case SoyPixelsFormat::RGB:
 			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaNone;
 			ColourSpace = CGColorSpaceCreateDeviceRGB();
 			return;
-		
+
 		case SoyPixelsFormat::RGBA:
 			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
 			ColourSpace = CGColorSpaceCreateDeviceRGB();
 			return;
-		
+
 		case SoyPixelsFormat::ARGB:
 			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedFirst;
 			ColourSpace = CGColorSpaceCreateDeviceRGB();
 			return;
 	}
-	
+
 	std::stringstream Error;
 	Error << "Unhandled format(" << magic_enum::enum_name(Format) << ") to convert to CGColour space (options are gray or rgb)";
 	throw Soy::AssertException(Error);
@@ -1439,7 +1482,7 @@ void Platform::TImageMap::SetImage(const SoyPixelsImpl& _Pixels)
 	//	make a copy as we're copying to a thread, and re-using the data for CGDataProviderCreateWithData
 	//	todo: optimise this so we re-use the same buffer and maybe can just refresh the view with new pixels?
 	mPixelsImage.Copy(_Pixels);
-	
+
 	auto Run = [this]() mutable
 	{
 		if ( !mControl )
@@ -1447,19 +1490,19 @@ void Platform::TImageMap::SetImage(const SoyPixelsImpl& _Pixels)
 
 		auto& Pixels = mPixelsImage;
 		FreeImage();
-		
+
 		auto PixelMeta = Pixels.GetMeta();
 		auto& PixelArray = Pixels.GetPixelsArray();
 		CGDataProviderRef provider = CGDataProviderCreateWithData( nullptr, PixelArray.GetArray(), PixelArray.GetDataSize(), nullptr );
 		size_t bitsPerComponent = 8 * PixelMeta.GetBytesPerChannel();
 		size_t bitsPerPixel = 8 * PixelMeta.GetPixelDataSize();
 		size_t bytesPerRow = PixelMeta.GetRowDataSize();
-		
+
 		CGBitmapInfo bitmapInfo = 0;
 		CGColorSpaceRef colorSpaceRef = nullptr;
 		GetColourSpace( colorSpaceRef, bitmapInfo, PixelMeta.GetFormat() );
 		CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
-		
+
 		mCgImage = CGImageCreate( PixelMeta.GetWidth(),
 										PixelMeta.GetHeight(),
 										bitsPerComponent,
@@ -1475,10 +1518,10 @@ void Platform::TImageMap::SetImage(const SoyPixelsImpl& _Pixels)
 		{
 			throw Soy::AssertException("Failed to create CGImage");
 		}
-		
+
 		mNsImage = [[NSImage alloc] initWithCGImage:mCgImage size:NSMakeSize( PixelMeta.GetWidth(), PixelMeta.GetHeight() )];
 		auto ImageValid = [mNsImage isValid];
-		
+
 		//mControl.frame = NSMakeRect( 0,0,100,100);
 		//mControl.layer.backgroundColor = CGColorCreateGenericRGB(1,0,0,1);
 		//mControl.image = mNsImage;
@@ -1498,6 +1541,93 @@ void Platform::TImageMap::SetImage(const SoyPixelsImpl& _Pixels)
 
 void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)
 {
-	
+
 }
 
+NSWindow* Platform::TWindow::GetWindow()
+{
+	auto* App = [NSApplication sharedApplication];
+	// tsdk: An App can have multiple windows represented in an array, the first member of this array will always? be the main window
+	auto* Window = [[App windows] objectAtIndex:0];
+	return Window;
+}
+
+NSView* Platform::TWindow::GetChild(const std::string& Name)
+{
+	NSView* ChildMatch = nullptr;
+	auto TestChild = [&](NSView* Child)
+	{
+		//	tsdk: cannot find way to get view based on name so duplicate the name in the accessibility Identifier in the xib file and then match it here
+		auto* AccessibilityIdentifier = Child.accessibilityIdentifier;
+		if ( AccessibilityIdentifier == nil )
+			return true;
+		
+		auto RestorationIdString = Soy::NSStringToString(AccessibilityIdentifier);
+		if ( RestorationIdString != Name )
+			return true;
+		
+		//	found match!
+		ChildMatch = Child;
+		return false;
+	};
+	EnumChildren(TestChild);
+	return ChildMatch;
+}
+
+bool RecurseNSViews(NSView* View,std::function<bool(NSView*)>& EnumView);
+
+bool RecurseNSViews(NSView* View,std::function<bool(NSView*)>& EnumView)
+{
+	if ( !EnumView(View) )
+	return false;
+	
+	auto* Array = View.subviews;
+	auto Size = [Array count];
+	for ( auto i=0;	i<Size;	i++ )
+	{
+		auto Element = [Array objectAtIndex:i];
+		if ( !RecurseNSViews( Element, EnumView ) )
+		return false;
+	}
+	
+	return true;
+}
+
+void Platform::TWindow::EnumChildren(std::function<bool(NSView*)> EnumChild)
+{
+	auto* Window = GetWindow();
+	// tsdk: in the ios code UIWindow derives from UIView, this is not the case with NSView and NSWindow
+	// so call contentView from the documentation => "The window’s content view, the highest accessible NSView object in the window’s view hierarchy."
+	RecurseNSViews( [Window contentView], EnumChild );
+}
+
+class Platform::TMetalView : public SoyMetalView
+{
+public:
+	TMetalView(NSView* View);
+	
+	MTKView*					mMTKView = nullptr;
+	id<MTLDevice>				mtl_device;
+};
+
+std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& ParentWindow, const std::string& Name)
+{
+	std::shared_ptr<SoyMetalView> MetalView;
+	auto& Window = dynamic_cast<Platform::TWindow&>(ParentWindow);
+	auto Run = [&]()
+	{
+		auto* View = Window.GetChild(Name);
+		MetalView.reset( new Platform::TMetalView(View) );
+	};
+	RunJobOnMainThread( Run, true );
+	return MetalView;
+}
+
+Platform::TMetalView::TMetalView(NSView* View)
+{
+	//	todo: check type!
+	mMTKView = View;
+	mtl_device = MTLCreateSystemDefaultDevice();
+	[mMTKView setDevice: mtl_device];
+	
+}

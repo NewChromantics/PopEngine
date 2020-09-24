@@ -6,6 +6,10 @@
 #include <functional>
 #include <SoyEnum.h>
 
+#if defined(TARGET_OSX)
+#error Not currently supported on osx
+#endif
+
 namespace Win32
 {
 	class TOpenglContext;

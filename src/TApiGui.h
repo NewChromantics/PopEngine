@@ -239,3 +239,5 @@ public:
 	Array<Gui::TMouseEvent>				mMouseEvents;
 	std::shared_ptr<Gui::TImageMap>&	mControl = mObject;
 };
+
+

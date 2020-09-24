@@ -1,6 +1,13 @@
 #include "TApiGui.h"
 #include "TApiCommon.h"
 
+#if !defined(TARGET_LINUX)
+#include "SoyOpenglWindow.h"
+#else
+#include "SoyWindow.h"
+#endif
+
+
 
 namespace ApiGui
 {
@@ -129,7 +136,8 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 		WindowName = Params.GetArgumentString(0);
 	
 	Soy::Rectx<int32_t> Rect(0, 0, 0, 0);
-	
+
+#if !defined (TARGET_LINUX)
 	//	if no rect, get rect from screen
 	if ( !Params.IsArgumentUndefined(1) )
 	{
@@ -156,6 +164,7 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 		};
 		Platform::EnumScreens(SetRect);
 	}
+#endif
 	
 	bool Resizable = true;
 	if ( !Params.IsArgumentUndefined(2))
@@ -573,6 +582,3 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 	Array<std::string> FilenamesCopy( Filenames );
 	mOnDragDropPromises.Push(FilenamesCopy);
 }
-
-
-

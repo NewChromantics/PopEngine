@@ -108,13 +108,33 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="1440" y="907" width="480" height="270"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1177"/>
-            <view key="contentView" identifier="MetalView" id="rpg-Ga-5Xw" userLabel="MetalView" customClass="MTKView">
+            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
+            <view key="contentView" identifier="MetalView" id="rpg-Ga-5Xw" userLabel="Main View" customClass="NSOpenGLView">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                 <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <splitView arrangesAllSubviews="NO" dividerStyle="paneSplitter" vertical="YES" id="7dz-Vl-6FN">
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <subviews>
+                            <customView identifier="GLView" fixedFrame="YES" id="uQZ-TH-ivD" customClass="NSOpenGLView">
+                                <rect key="frame" x="0.0" y="0.0" width="237" height="270"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </customView>
+                            <customView fixedFrame="YES" id="UGQ-g8-Y3Q" customClass="MTKView">
+                                <rect key="frame" x="247" y="0.0" width="233" height="270"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </customView>
+                        </subviews>
+                        <holdingPriorities>
+                            <real value="250"/>
+                            <real value="250"/>
+                        </holdingPriorities>
+                    </splitView>
+                </subviews>
                 <accessibility identifier="MetalView"/>
             </view>
-            <point key="canvasLocation" x="113" y="54"/>
+            <point key="canvasLocation" x="113" y="51"/>
         </window>
         <customObject id="494" customClass="AppDelegate"/>
         <customObject id="420" customClass="NSFontManager"/>
