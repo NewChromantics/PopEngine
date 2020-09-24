@@ -9,7 +9,7 @@
   <ItemDefinitionGroup>
     <Link>
       <LibraryDependencies>javascriptcoregtk-4.0;stdc++fs</LibraryDependencies>
-      <AdditionalOptions>-pthread -Wl,-rpath,$$ORIGIN %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-pthread -Wl,-rpath,$$ORIGIN -Wl,-Bsymbolic %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>TARGET_LINUX</PreprocessorDefinitions>

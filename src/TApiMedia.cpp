@@ -29,7 +29,7 @@
 
 
 //	video capture
-namespace ApiMediaPopCameraDevice
+namespace PopCameraDevice
 {
 	void	LoadDll();
 }
@@ -53,7 +53,7 @@ public:
 };
 
 
-class ApiMediaPopCameraDevice::TInstance
+class PopCameraDevice::TInstance
 {
 public:
 	TInstance(const std::string& Name,const std::string& Format,std::function<void()> OnNewFrame);
@@ -75,7 +75,7 @@ public:
 	~TInstance();
 
 	void					PushData(ArrayBridge<uint8_t>&& Data, int32_t FrameNumber);
-	ApiMediaPopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes,bool OnlyLatest);	//	find a way to re-use the camera version
+	PopCameraDevice::TFrame	PopLastFrame(bool SplitPlanes,bool OnlyLatest);	//	find a way to re-use the camera version
 	size_t					GetPendingFrameCount();
 
 protected:
@@ -148,7 +148,7 @@ namespace ApiMedia
 
 	void	EnumDevices(Bind::TCallback& Params);
 
-	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, ApiMediaPopCameraDevice::TFrame& Frame);
+	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame);
 	Bind::TObject	PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson);
 }
 
@@ -171,7 +171,7 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
 
-	ApiMediaPopCameraDevice::LoadDll();
+	PopCameraDevice::LoadDll();
 
 	auto DoEnumDevices = [&]
 	{
@@ -355,7 +355,7 @@ void ApiMedia::TH264DecoderWrapper::FlushPendingFrames()
 		}
 		
 		//	pop frames before errors
-		ApiMediaPopCameraDevice::TFrame PoppedFrame;
+		PopCameraDevice::TFrame PoppedFrame;
 		std::string PoppedError;
 		{
 			std::lock_guard<std::mutex> Lock(mFramesLock);
@@ -421,7 +421,7 @@ void ApiMedia::TH264DecoderWrapper::WaitForNextFrame(Bind::TCallback& Params)
 }
 
 
-void ApiMediaPopCameraDevice::LoadDll()
+void PopCameraDevice::LoadDll()
 {
 	//	on OSX, if the framework is in resources, it should auto resolve symbols
 #if defined(TARGET_WINDOWS)
@@ -437,7 +437,7 @@ void ApiMediaPopCameraDevice::LoadDll()
 }
 
 
-ApiMediaPopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& OptionsJson, std::function<void()> OnNewFrame) :
+PopCameraDevice::TInstance::TInstance(const std::string& Name,const std::string& OptionsJson, std::function<void()> OnNewFrame) :
 	mOnNewFrame	( OnNewFrame )
 {
 	char ErrorBuffer[1000] = { 0 };
@@ -453,7 +453,7 @@ ApiMediaPopCameraDevice::TInstance::TInstance(const std::string& Name,const std:
 
 	PopCameraDevice_OnNewFrame* OnNewFrameCallback = [](void* Meta)
 	{
-		auto* This = static_cast<ApiMediaPopCameraDevice::TInstance*>(Meta);
+		auto* This = static_cast<PopCameraDevice::TInstance*>(Meta);
 		auto OnNewFrame = This->mOnNewFrame;
 		if (OnNewFrame)
 			OnNewFrame();
@@ -465,7 +465,7 @@ ApiMediaPopCameraDevice::TInstance::TInstance(const std::string& Name,const std:
 }
 
 
-ApiMediaPopCameraDevice::TInstance::~TInstance()
+PopCameraDevice::TInstance::~TInstance()
 {
 	PopCameraDevice_FreeCameraDevice(mHandle);
 }
@@ -513,15 +513,13 @@ void GetPixelMetasFromJson(ArrayBridge<SoyPixelsMeta>&& PlaneMetas, const std::s
 }
 
 
-ApiMediaPopCameraDevice::TFrame ApiMediaPopCameraDevice::TInstance::PopLastFrame()
+PopCameraDevice::TFrame PopCameraDevice::TInstance::PopLastFrame()
 {
-	ApiMediaPopCameraDevice::TFrame Frame;
+	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
 
 	//	gr: this can get massive now with arkit... might run into some issues
-	static Array<char> JsonBuffer(1024*25);
-	JsonBuffer.SetAll(0);
-
+	Array<char> JsonBuffer(1024*25);
 	//	gr: this is json now, so we need a good way to extract what we need...
 	auto NextFrameNumberSigned = PopCameraDevice_PeekNextFrame(mHandle, JsonBuffer.GetArray(), JsonBuffer.GetDataSize());
 	if (NextFrameNumberSigned == -1 )
@@ -607,7 +605,7 @@ void ApiMedia::TCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 
 	//	todo: frame buffer [plane]pool
 	auto OnNewFrame = std::bind(&TCameraDeviceWrapper::OnNewFrame, this);
-	mInstance.reset(new ApiMediaPopCameraDevice::TInstance( DeviceName, OptionsJson, OnNewFrame ));
+	mInstance.reset(new PopCameraDevice::TInstance( DeviceName, OptionsJson, OnNewFrame ));
 }
 
 
@@ -625,7 +623,7 @@ void ApiMedia::TCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 	FlushPendingFrames();
 }
 
-Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context, ApiMediaPopCameraDevice::TFrame& Frame)
+Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame)
 {
 	//	alloc key names once
 	static std::string _TimeMs = "TimeMs";
@@ -699,7 +697,7 @@ void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 		//	gr: this flush is expensive because of the work done AFTERwards (encoding!)
 		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 60);
 		
-		ApiMediaPopCameraDevice::TFrame PoppedFrame;
+		PopCameraDevice::TFrame PoppedFrame;
 		{
 			std::lock_guard<std::mutex> Lock(mFramesLock);
 			//	gr: sometimes, probbaly because there's no mutex on mFrames.IsEmpty() above
@@ -727,7 +725,7 @@ void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 
 void ApiMedia::TCameraDeviceWrapper::OnNewFrame()
 {
-	ApiMediaPopCameraDevice::TFrame Frame = mInstance->PopLastFrame();
+	PopCameraDevice::TFrame Frame = mInstance->PopLastFrame();
 
 	{
 		std::lock_guard<std::mutex> Lock(mFramesLock);
@@ -790,9 +788,9 @@ size_t PopH264Decoder::TInstance::GetPendingFrameCount()
 	return mPendingFrameCount;
 }
 
-ApiMediaPopCameraDevice::TFrame PopH264Decoder::TInstance::PopLastFrame(bool SplitPlanes,bool ONlyLatest)
+PopCameraDevice::TFrame PopH264Decoder::TInstance::PopLastFrame(bool SplitPlanes,bool ONlyLatest)
 {
-	ApiMediaPopCameraDevice::TFrame Frame;
+	PopCameraDevice::TFrame Frame;
 	Frame.mTime = SoyTime(true);
 		
 

@@ -17,7 +17,7 @@ namespace PopH264Encoder
 	class TInstance;
 }
 
-namespace ApiMediaPopCameraDevice
+namespace PopCameraDevice
 {
 	class TInstance;
 	class TFrame;
@@ -39,7 +39,7 @@ namespace ApiMedia
 
 
 
-class ApiMediaPopCameraDevice::TFrame
+class PopCameraDevice::TFrame
 {
 public:
 	SoyTime			mTime;			//	time of packet being popped
@@ -53,7 +53,7 @@ public:
 };
 
 
-class ApiMedia::TCameraDeviceWrapper : public Bind::TObjectWrapper<BindType::Source, ApiMediaPopCameraDevice::TInstance>
+class ApiMedia::TCameraDeviceWrapper : public Bind::TObjectWrapper<BindType::Source,PopCameraDevice::TInstance>
 {
 public:
 	TCameraDeviceWrapper(Bind::TContext& Context) :
@@ -73,11 +73,11 @@ protected:
 	void					OnNewFrame();
 
 public:
-	std::shared_ptr<ApiMediaPopCameraDevice::TInstance>&	mInstance = mObject;
+	std::shared_ptr<PopCameraDevice::TInstance>&	mInstance = mObject;
 	bool									mOnlyLatestFrame = true;
 	Bind::TPromiseQueue				mFrameRequests;
 	std::mutex						mFramesLock;
-	Array<ApiMediaPopCameraDevice::TFrame>	mFrames;
+	Array<PopCameraDevice::TFrame>	mFrames;
 };
 
 
@@ -115,7 +115,7 @@ public:
 	bool							mSplitPlanes = true;
 	Bind::TPromiseQueue				mFrameRequests;
 	std::mutex						mFramesLock;
-	Array<ApiMediaPopCameraDevice::TFrame>	mFrames;
+	Array<PopCameraDevice::TFrame>	mFrames;
 	Array<std::string>				mErrors;
 	
 	//	lots of tiny jobs are expensive, (eg. udp fragmented packets)
