@@ -48,7 +48,7 @@ $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/TApiZip.cpp \
 $(SRC_PATH)/TApiGui.cpp	\
 $(SRC_PATH)/TApiSokol.cpp	\
-$(SRC_PATH)/SoySokolLinux.cpp	\
+$(SRC_PATH)/SoySokol_Linux.cpp	\
 $(SRC_PATH)/SoyGuiLinux.cpp	\
 $(SRC_PATH)/LinuxDRM/esUtil.cpp	\
 
