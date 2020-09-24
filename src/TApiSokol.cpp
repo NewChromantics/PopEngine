@@ -284,7 +284,6 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 
 		//	here we may need to do some conversion where we can
 		auto& Uniform = *pUniform;
-		auto UniformData = GetArrayBridge(mUniformBlock).GetSubArray(UniformDataPosition,Uniform.GetDataSize());
 		
 		//	gr: move this into its own func
 		switch(Uniform.mType)
@@ -297,12 +296,19 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 			case SG_UNIFORMTYPE_FLOAT4:
 			case SG_UNIFORMTYPE_MAT4:
 			{
+				auto UniformFloatCount = GetFloatCount(Uniform.mType) * Uniform.mArraySize;
+
+				//	get data we're going to write to
+				auto UniformData = GetArrayBridge(mUniformBlock).GetSubArray(UniformDataPosition,Uniform.GetDataSize());
+				auto UniformDataf = GetArrayBridge(UniformData).GetSubArray<float>(0,UniformFloatCount);
+
 				Array<float> Floats;
 				//	if !array .GetFloat()
 				UniformsObject.GetArray(UniformName,GetArrayBridge(Floats));
+
 				//	resize to match target
-				auto FloatCount = GetFloatCount(Uniform.mType) * Uniform.mArraySize;
-				Floats.SetSize(FloatCount);
+				Floats.SetSize(UniformFloatCount);
+
 				//	copy
 				if ( Floats.GetDataSize() != Uniform.GetDataSize() )
 				{
@@ -310,7 +316,7 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 					Error << "Uniform (" << magic_enum::enum_name(Uniform.mType) << ") floats x" << Floats.GetSize() << " (data size " << Floats.GetDataSize() << ") doesn't match uniform block size " << Uniform.GetDataSize();
 					throw Soy::AssertException(Error);
 				}
-				UniformData.Copy( Floats );
+				UniformDataf.Copy( Floats );
 				break;
 			}
 			
