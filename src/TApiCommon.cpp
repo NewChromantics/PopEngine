@@ -61,6 +61,7 @@ namespace ApiPop
 	static void		ShellOpen(Bind::TCallback& Params);
 	static void		ShowWebPage(Bind::TCallback& Params);
 	static void		GetExternalDrives(Bind::TCallback& Params);
+	static void		GetTempDirectory(Bind::TCallback& Params);
 
 	//	system stuff
 	DEFINE_BIND_FUNCTIONNAME(FileExists);
@@ -85,6 +86,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(ShellOpen);
 	DEFINE_BIND_FUNCTIONNAME(ShowWebPage);
 	DEFINE_BIND_FUNCTIONNAME(GetExternalDrives);
+	DEFINE_BIND_FUNCTIONNAME(GetTempDirectory);
 
 	//	engine stuff
 	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
@@ -686,6 +688,10 @@ void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge(Drives) );
 }
 
+void ApiPop::GetTempDirectory(Bind::TCallback& Params)
+{
+	Params.Return( Platform::GetTempDirectory() );
+}
 
 void ApiPop::GetFilenames(Bind::TCallback& Params)
 {
@@ -767,6 +773,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::ShellOpen>(ShellOpen, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
 	Context.BindGlobalFunction<BindFunction::GetExternalDrives>(GetExternalDrives, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetTempDirectory>(GetTempDirectory, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
