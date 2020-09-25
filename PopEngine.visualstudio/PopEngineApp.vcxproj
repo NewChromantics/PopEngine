@@ -154,10 +154,6 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopGuiRenderTimeline.js">
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="..\UnitTest\PopEngineCommon\PopGuiTimeline.js">
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\PopEngineCommon</DestinationFolders>
