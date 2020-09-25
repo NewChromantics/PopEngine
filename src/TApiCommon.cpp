@@ -60,6 +60,7 @@ namespace ApiPop
 	static void		GetPlatform(Bind::TCallback& Params);
 	static void		ShellOpen(Bind::TCallback& Params);
 	static void		ShowWebPage(Bind::TCallback& Params);
+	static void		GetExternalDrives(Bind::TCallback& Params);
 
 	//	system stuff
 	DEFINE_BIND_FUNCTIONNAME(FileExists);
@@ -83,6 +84,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(GetPlatform);
 	DEFINE_BIND_FUNCTIONNAME(ShellOpen);
 	DEFINE_BIND_FUNCTIONNAME(ShowWebPage);
+	DEFINE_BIND_FUNCTIONNAME(GetExternalDrives);
 
 	//	engine stuff
 	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
@@ -667,6 +669,23 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
 }
 
+void ApiPop::GetExternalDrives(Bind::TCallback& Params)
+{
+	// tsdk: possible to allow the user to query a specific subsystem
+	// char *SUBSYSTEM = "scsi";
+
+	//	os list all external Drives
+	Array<std::string> Drives;
+	auto EnumDrives = [&](const std::string& DrivePath)
+	{
+		auto& Drive = Drives.PushBack(DrivePath);
+	};
+	
+	Platform::EnumExternalDrives( EnumDrives );
+
+	Params.Return( GetArrayBridge(Drives) );
+}
+
 
 void ApiPop::GetFilenames(Bind::TCallback& Params)
 {
@@ -747,6 +766,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShellOpen>(ShellOpen, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
+	Context.BindGlobalFunction<BindFunction::GetExternalDrives>(GetExternalDrives, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
