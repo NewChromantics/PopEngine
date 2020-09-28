@@ -374,6 +374,15 @@
     <ClInclude Include="..\src\TApiDirectx11.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TApiSokol.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoySokol_Win32.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyGui_Win32.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -942,6 +951,12 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyWin32.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSokol.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoySokol_Win32.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -72,7 +72,11 @@
 #include "TApiOpenvr.h"
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) ||defined(TARGET_WINDOWS)
+#define ENABLE_APISOKOL
+#endif
+
+#if defined(ENABLE_APISOKOL)
 #include "TApiSokol.h"
 #endif
 
@@ -706,7 +710,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			//ApiOpenvr::Bind(*Context);
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+#if defined(ENABLE_APISOKOL)
 			ApiSokol::Bind( *Context );
 #endif
 

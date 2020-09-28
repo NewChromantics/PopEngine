@@ -15,19 +15,6 @@ namespace Win32
 	class TOpenglContext;
 }
 
-class TOpenglParams
-{
-public:
-	bool		mFullscreen = false;
-	bool		mHardwareAccellerationOnly = true;
-	bool		mDoubleBuffer = true;
-	bool		mRedrawWithDisplayLink = true;
-	int			mVsyncSwapInterval = 1;	//	0 = no vsync
-	
-	//	move these out of "hardware params" (they're things we've added at mid-level and could just be high level)
-	int			mRefreshRate = 60;		//	will try to skip redraws if vsync on
-	bool		mAutoRedraw = true;
-};
 
 class TOpenglWindow : public SoyWindow, public SoyWorkerThread
 {
