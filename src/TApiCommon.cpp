@@ -137,6 +137,9 @@ namespace ApiPop
 	//	TFileMonitor
 	DEFINE_BIND_FUNCTIONNAME(Add);
 	DEFINE_BIND_FUNCTIONNAME(WaitForChange);	
+
+	// TDeviceArray
+	Array<std::shared_ptr<TExternalDrive>>						gExternalDrives;
 }
 
 
@@ -629,12 +632,19 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 	std::string Filename = Params.GetArgumentString(0);
 
+	auto* ExternalMount = Platform::GetExternalDrive(Filename);
+
 	//	gr; work out a better idea for this
 	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
 	{
 		auto DocsDir = Platform::GetDocumentsDirectory();
 		//std::Debug << "Platform::GetDocumentsDirectory=" << DocsDir << std::endl;
 		Filename = DocsDir + std::string("/") + Filename;
+	}
+	// tsdk: for usb devices
+	else if( Soy::StringTrimLeft(Filename,ExternalMount->mDevicePath,true) )
+	{
+		Filename = ExternalMount->mMountPath + std::string("/") + Filename;
 	}
 	else
 	{
@@ -677,13 +687,19 @@ void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 	// char *SUBSYSTEM = "scsi";
 
 	//	os list all external Drives
-	Array<std::string> Drives;
-	auto EnumDrives = [&](const std::string& DrivePath)
+	Array<Bind::TObject> Drives;
+	
+	auto OnDeviceFound = [&](const std::string& SystemPath, const std::string& Capacity)
 	{
-		auto& Drive = Drives.PushBack(DrivePath);
+		auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
+		// Object.SetString("Device Name", SystemName);
+		Object.SetString("Mount Path", SystemPath);
+		Object.SetString("Capacity", Capacity);
+
+		Drives.PushBack(Object);
 	};
 	
-	Platform::EnumExternalDrives( EnumDrives );
+	Platform::EnumExternalDrives( OnDeviceFound );
 
 	Params.Return( GetArrayBridge(Drives) );
 }
