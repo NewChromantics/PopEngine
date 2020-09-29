@@ -4,6 +4,7 @@
 #include "SoyThread.h"
 #include "SoyOpenglContext.h"
 #include "SoyWindow.h"
+#include "Win32OpenglContext.h"
 
 #if __has_feature(objc_arc)
 #error expected ARC off, if we NEED arc, then the NSWindow & view need to go in a pure obj-c wrapper to auto retain the refcounted object
@@ -19,7 +20,7 @@ namespace Win32
 class TOpenglWindow : public SoyWindow, public SoyWorkerThread
 {
 public:
-	TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params);
+	TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,Win32::TOpenglParams Params);
 	~TOpenglWindow();
 	
 	bool			IsValid();
@@ -52,7 +53,7 @@ public:
 	bool			mEnableRenderWhenBackground = true;
 
 protected:
-	TOpenglParams	mParams;
+	Win32::TOpenglParams	mParams;
 	
 private:
 	std::string		mName;

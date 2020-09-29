@@ -35,18 +35,24 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,Sokol::
 	{
 		bool Resizable = true;
 		//mWindow.reset(new Platform::TWindow(Name, Rect, *mWindowThread, Resizable));
-		//mWindowContext.reset(new Platform::TOpenglContext(*mWindow, Params));
+		mOpenglContext.reset(new Platform::TOpenglContext(*mWindow, OpenglParams));
 
 		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget, std::function<void()> LockContext)
 		{
+			std::Debug << "On Render" << std::endl;
 			/*
 			if (!mOnRender)
 				return;
 			mOnRender(RenderTarget, LockContext);
 			*/
 		};
-		//mWindowContext->mOnRender = OnRender;
-
+		auto& PlatformContext = dynamic_cast<Platform::TOpenglContext&>(*mOpenglContext);
+		PlatformContext.mOnRender = OnRender;
+		mWindow->mOnPaint = [this](Platform::TControl&)
+		{
+			std::Debug << "On paint" << std::endl;
+		};
+		/*
 		//	gr: can I use std::bind?
 		auto& Win = static_cast<Platform::TControl&>(*mWindow);
 		Win.mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	if (this->mOnMouseDown) this->mOnMouseDown(Pos, Button); };
@@ -54,6 +60,7 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,Sokol::
 		Win.mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button) {	if (mOnMouseMove) this->mOnMouseMove(Pos, Button); };
 		Win.mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	if (mOnKeyDown)	this->mOnKeyDown(Key); };
 		Win.mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key) {	if (mOnKeyUp)		this->mOnKeyUp(Key); };
+		*/
 	};
 	Soy::TSemaphore Wait;
 	mWindowThread->PushJob(CreateControls, Wait);
@@ -63,20 +70,44 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,Sokol::
 		this->OnPaint(); 
 	};
 	PlatformWindow.mOnPaint = OnFrame;
+
+
+	//	still need our own paint trigger
+	auto PaintLoop = [this]()
+	{
+		//	window gone missing
+		if (!mWindow)
+			return false;
+
+		auto FrameDelayMs = 1000 / mParams.mFramesPerSecond;
+	
+		//	gr: do this at a higher(c++) level so the check is cross platform
+		if (!mEnableRenderWhenMinimised)
+		{
+			if (mWindow->IsMinimised())
+				return true;
+		}
+
+		if (!mEnableRenderWhenBackground)
+		{
+			if (!mWindow->IsForeground())
+				return true;
+		}
+
+		//	trigger repaint!
+		this->DoPaint();
+		
+		//	sleep
+		std::this_thread::sleep_for(std::chrono::milliseconds(FrameDelayMs));
+		return mRunning;
+	};
+
+	//	make render loop
+	mPaintThread.reset(new SoyThreadLambda("SokolOpenglContext Paint Loop", PaintLoop));
 }
 
 SokolOpenglContext::~SokolOpenglContext()
 {
-	mRunning = false;
-	try
-	{
-		//	this should block until done
-		mPaintThread.reset();
-	}
-	catch(std::exception& e)
-	{
-		std::Debug << "Caught " << __PRETTY_FUNCTION__ << " exception " << e.what() << std::endl;
-	}
 }
 
 void SokolOpenglContext::RunGpuJobs()
@@ -102,7 +133,11 @@ void SokolOpenglContext::RunGpuJobs()
 
 void SokolOpenglContext::OnPaint()
 {
+	if (!mOpenglContext)
+		return;
+
 	std::lock_guard Lock(mOpenglContextLock);
+	auto& PlatformContext = dynamic_cast<Platform::TOpenglContext&>(*mOpenglContext);
 	mOpenglContext->Lock();
 
 	if ( mSokolContext.id == 0 )
@@ -114,11 +149,11 @@ void SokolOpenglContext::OnPaint()
 	
 	RunGpuJobs();
 
-	auto Width = 100;
-	auto Height = 100;
-		
-	vec2x<size_t> Size( Width, Height );
+	auto Rect = mWindow->GetClientRect();
+	vec2x<size_t> Size(Rect.w, Rect.h);
 	mParams.mOnPaint( mSokolContext, Size );
+
+	mOpenglContext->Unlock();
 }
 
 void SokolOpenglContext::DoPaint()

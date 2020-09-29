@@ -383,6 +383,9 @@
     <ClInclude Include="..\src\SoyGui_Win32.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoySokol_Linux.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -957,6 +960,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoySokol_Win32.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoySokol_Linux.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
