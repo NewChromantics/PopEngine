@@ -3,7 +3,7 @@
 #include "SoySokol_Win32.h"
 #include "SoyGui_Win32.h"
 
-#include "Win32OpenglContext.h"
+#include "SoyOpenglContext_Win32.h"
 #define SOKOL_IMPL
 #define SOKOL_GLCORE33
 #include "sokol/sokol_gfx.h"

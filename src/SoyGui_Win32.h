@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SoyWin32.h"
+#include <SoyWindow.h>
 
 
 
@@ -117,35 +118,85 @@ public:
 
 
 
-class Platform::TOpenglContext : public  Opengl::TRenderTarget, public Win32::TOpenglContext
+
+class Platform::TSlider : public TControl, public SoySlider
 {
 public:
-	TOpenglContext(TControl& Parent, Win32::TOpenglParams& Params);
-	~TOpenglContext();
+	TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
-	//	render target
-	virtual void				Bind() override;
-	virtual void				Unbind() override;
-	virtual Soy::Rectx<size_t>	GetSize() override;
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetMinMax(uint16_t Min, uint16_t Max, uint16_t NotchCount) override;
+	virtual void		SetValue(uint16_t Value) override;
+	virtual uint16_t	GetValue() override;
 
-	//	window stuff
-	void			Repaint();
-	void			OnPaint();
-
-	std::function<void(Opengl::TRenderTarget&, std::function<void()>)>	mOnRender;
-
-	//	win32::TOpenglContext
-	virtual HDC		GetHdc() override { return mHDC; }
-	virtual HGLRC	GetHglrc() override { return mHGLRC; }
-	virtual HWND	GetHwnd() override { return mHwnd; }
-
-	//	context stuff
-	TControl&		mParent;	//	control we're bound to
-	HWND&			mHwnd = mParent.mHwnd;
-	HDC				mHDC = nullptr;		//	DC we've setup for opengl
-	HGLRC			mHGLRC = nullptr;	//	opengl context
-	bool			mHasArbMultiSample = false;	//	is antialiasing supported?
-
-	//	render target
-	Soy::Rectx<size_t>	mRect;
+	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
+
+class Platform::TLabel : public TControl, public SoyLabel
+{
+public:
+	TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetValue(const std::string& Value) override;
+	virtual std::string	GetValue() override;
+};
+
+
+class Platform::TTextBox : public TControl, public SoyTextBox
+{
+public:
+	TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetValue(const std::string& Value) override;
+	virtual std::string	GetValue() override;
+
+	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+
+private:
+	bool				mTextChangedByCode = true;
+};
+
+
+class Platform::TTickBox : public TControl, public SoyTickBox
+{
+public:
+	TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetValue(bool Value) override;
+	virtual bool		GetValue() override;
+	virtual void		SetLabel(const std::string& Label) override;
+
+	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+};
+
+
+class Platform::TColourButton : public TControl, public SoyColourButton
+{
+public:
+	TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void			SetValue(vec3x<uint8_t> Value) override;
+	virtual vec3x<uint8_t>	GetValue() override;
+
+	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+};
+
+
+class Platform::TImageMap : public TControl, public Gui::TImageMap
+{
+public:
+	TImageMap(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void			SetImage(const SoyPixelsImpl& Pixels) override;
+	virtual void			SetCursorMap(const SoyPixelsImpl& CursorMap, const ArrayBridge<std::string>&& CursorIndexes)override;
+
+	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+};
+
+
+

@@ -2,7 +2,7 @@
 
 
 #if defined(TARGET_WINDOWS)&&defined(ENABLE_OPENGL)
-#include "Win32OpenglContext.h"
+#include "SoyOpenglContext_Win32.h"
 #endif
 
 class SokolOpenglContext : public Sokol::TContext
@@ -25,7 +25,6 @@ public:
 	sg_context						mSokolContext = {0};
 	std::mutex						mOpenglContextLock;
 	std::shared_ptr<Platform::TWindow>	mWindow;
-	std::shared_ptr<Platform::TOpenglView>		mView;
 	std::shared_ptr<Win32::TOpenglContext>	mOpenglContext;
 	std::shared_ptr<Platform::TWin32Thread>		mWindowThread;
 

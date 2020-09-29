@@ -21,7 +21,7 @@ namespace Directx
 }
 
 #if defined(TARGET_WINDOWS)&&defined(ENABLE_OPENGL)
-#include "Win32OpenglContext.h"
+#include "SoyOpenglContext_Win32.h"
 #endif
 
 #if !defined(ENABLE_OPENGL)
