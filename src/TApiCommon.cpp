@@ -632,7 +632,19 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 	std::string Filename = Params.GetArgumentString(0);
 
-	auto* ExternalMount = Platform::GetExternalDrive(Filename);
+	std::shared_ptr<TExternalDrive> ExternalDrive = nullptr;
+
+	auto IsExternalDrive = [&](const std::string& Label, const std::string& DeviceNode, const std::string& Capacity)
+	{
+		if ( Soy::StringBeginsWith( Filename, Label, true ) )
+		{
+			std::shared_ptr<TExternalDrive> ptr(new TExternalDrive(Label, DeviceNode));
+			gExternalDrives.PushBack( ptr );
+			ExternalDrive = ptr;
+		}
+	};
+
+	Platform::EnumExternalDrives( IsExternalDrive );
 
 	//	gr; work out a better idea for this
 	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
@@ -642,9 +654,10 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 		Filename = DocsDir + std::string("/") + Filename;
 	}
 	// tsdk: for usb devices
-	else if( Soy::StringTrimLeft(Filename,ExternalMount->mDevicePath,true) )
+	else if( ExternalDrive )
 	{
-		Filename = ExternalMount->mMountPath + std::string("/") + Filename;
+		Soy::StringTrimLeft(Filename, ExternalDrive->mLabel,true);
+		Filename = ExternalDrive->mMountPath + std::string("/") + Filename;
 	}
 	else
 	{
@@ -689,11 +702,11 @@ void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 	//	os list all external Drives
 	Array<Bind::TObject> Drives;
 	
-	auto OnDeviceFound = [&](const std::string& SystemPath, const std::string& Capacity)
+	auto OnDeviceFound = [&](const std::string& Label, const std::string& DeviceNode, const std::string& Capacity)
 	{
 		auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
-		// Object.SetString("Device Name", SystemName);
-		Object.SetString("Mount Path", SystemPath);
+		Object.SetString("Label", Label);
+		Object.SetString("DevNode", DeviceNode);
 		Object.SetString("Capacity", Capacity);
 
 		Drives.PushBack(Object);
@@ -701,7 +714,7 @@ void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 	
 	Platform::EnumExternalDrives( OnDeviceFound );
 
-	Params.Return( GetArrayBridge(Drives) );
+	Params.Return( GetArrayBridge( Drives ) );
 }
 
 void ApiPop::GetTempDirectory(Bind::TCallback& Params)
