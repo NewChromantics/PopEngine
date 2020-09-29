@@ -121,11 +121,11 @@ void ApiOpengl::TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		
 		//	mark that texture has changed
 		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
-		TargetImage.OnOpenglTextureChanged(OpenglContext);
+		TargetImage.GetImage().OnOpenglTextureChanged(OpenglContext);
 
 		//	read back pixels if requested
 		if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
-			TargetImage.ReadOpenglPixels(ReadBackPixelsAfterwards);
+			TargetImage.GetImage().ReadOpenglPixels(ReadBackPixelsAfterwards);
 
 		//	restore state after functions above, which might still mess around with things like viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
@@ -733,10 +733,10 @@ void ApiOpengl::TWindowWrapper::Render(Bind::TCallback& Params)
 				throw;
 			}
 
-			TargetImage.OnOpenglTextureChanged(*OpenglContext);
+			TargetImage.GetImage().OnOpenglTextureChanged(*OpenglContext);
 			if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			{
-				TargetImage.ReadOpenglPixels(ReadBackPixelsAfterwards);
+				TargetImage.GetImage().ReadOpenglPixels(ReadBackPixelsAfterwards);
 			}
 
 			OnCompleted();

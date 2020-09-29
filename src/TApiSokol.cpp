@@ -4,6 +4,7 @@
 #include "TApiGui.h"
 #include "SoyWindow.h"
 #include "TApiCommon.h"
+#include "SoyImage.h"
 
 #include "sokol/sokol_gfx.h"
 
@@ -44,7 +45,8 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 		case SoyPixelsFormat::Greyscale:	return SG_PIXELFORMAT_R8;
 		case SoyPixelsFormat::Depth16mm:	return SG_PIXELFORMAT_R16;
 		case SoyPixelsFormat::GreyscaleAlpha:	return SG_PIXELFORMAT_RG8;
-		
+	
+		case SoyPixelsFormat::DepthFloatMetres:	return SG_PIXELFORMAT_R32F;
 		case SoyPixelsFormat::Float1:		return SG_PIXELFORMAT_R32F;
 		case SoyPixelsFormat::RGBA:			return SG_PIXELFORMAT_RGBA8;
 		case SoyPixelsFormat::BGRA:			return SG_PIXELFORMAT_BGRA8;
@@ -57,7 +59,7 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 }
 
 
-sg_image_desc GetImageDescription(TImageWrapper& Image,SoyPixels& TemporaryPixels)
+sg_image_desc GetImageDescription(SoyImage& Image,SoyPixels& TemporaryPixels)
 {
 	sg_image_desc Description = {0};
 	
@@ -157,32 +159,32 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			if ( !UpdateImageCommand.mImage )
 				throw Soy::AssertException("UpdateImage command with null image pointer");
 
-			auto& ImageWrapper = *UpdateImageCommand.mImage;
+			auto& ImageSoy = *UpdateImageCommand.mImage;
 			SoyPixels TemporaryImage;
 			
 			//	if image has no sg_image, create it
-			if ( !ImageWrapper.HasSokolImage() )
+			if ( !ImageSoy.HasSokolImage() )
 			{
-				auto ImageDescription = GetImageDescription(ImageWrapper,TemporaryImage);
+				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage);
 				auto NewImage = sg_make_image(&ImageDescription);
 				auto State = sg_query_image_state(NewImage);
 				Sokol::IsOkay(State,"sg_make_image");
-				ImageWrapper.SetSokolImage( NewImage.id );
-				ImageWrapper.OnSokolImageUpdated();
+				ImageSoy.SetSokolImage( NewImage.id );
+				ImageSoy.OnSokolImageUpdated();
 			}
 			
 			bool LatestVersion = false;
 			sg_image ImageSokol = {0};
-			ImageSokol.id = ImageWrapper.GetSokolImage(LatestVersion);
+			ImageSokol.id = ImageSoy.GetSokolImage(LatestVersion);
 			
 			//	if image sokol version is out of date, update texture
 			if ( !LatestVersion )
 			{
-				auto ImageDescription = GetImageDescription(ImageWrapper,TemporaryImage);
+				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage);
 				sg_update_image( ImageSokol, ImageDescription.content );
 				auto State = sg_query_image_state(ImageSokol);
 				Sokol::IsOkay(State,"sg_make_image");
-				ImageWrapper.OnSokolImageUpdated();
+				ImageSoy.OnSokolImageUpdated();
 			}
 		}
 		
@@ -220,17 +222,18 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			for ( auto i=0;	i<SG_MAX_SHADERSTAGE_IMAGES;	i++ )
 			{
 				//	gr: detect missing slots
-				auto* ImageWrapper = DrawCommand.mImageUniforms[i];
-				sg_image Image = {0};
-				if ( ImageWrapper )
+				auto ImageSoy = DrawCommand.mImageUniforms[i];
+				sg_image ImageSokol = {0};
+				if ( ImageSoy )
 				{
 					bool LatestVersion = false;
-					Image.id = ImageWrapper->GetSokolImage(LatestVersion);
+					ImageSokol.id = ImageSoy->GetSokolImage(LatestVersion);
 					if ( !LatestVersion )
 						std::Debug << "Warning, using sokol image as uniform but out of date" << std::endl;
 				}
-				Bindings.vs_images[i] = Image;
-				Bindings.fs_images[i] = Image;
+				//sg_query_resource_texture(ImageSokol);
+				Bindings.vs_images[i] = ImageSokol;
+				Bindings.fs_images[i] = ImageSokol;
 			}
 			
 			sg_apply_bindings(&Bindings);
@@ -430,8 +433,9 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 		//	to go in the image slot
 		auto ImageObject = UniformsObject.GetObject( Uniform.mName );
 		auto& ImageWrapper = ImageObject.This<TImageWrapper>();
+		auto ImageSoy = ImageWrapper.mImage;
 		//	todo: add a "update image pixels" render command before draw
-		mImageUniforms[UniformImageIndex] = &ImageWrapper;
+		mImageUniforms[UniformImageIndex] = ImageSoy;
 	};
 	
 	for ( auto k=0;	k<Keys.GetSize();	k++ )

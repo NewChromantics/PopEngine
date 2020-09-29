@@ -12,7 +12,7 @@ namespace ApiSokol
 	DECLARE_BIND_TYPENAME(Context);
 }
 
-class TImageWrapper;
+class SoyImage;
 
 //	non-js-api sokol
 namespace Sokol
@@ -75,17 +75,16 @@ public:
 	//	uniforms, parsed and written immediately into a block when parsing
 	Array<uint8_t>	mUniformBlock;
 
-	//	super dangerous, but will do for now
-	std::map<size_t,TImageWrapper*>	mImageUniforms;	//	texture slot -> texture
+	std::map<size_t,std::shared_ptr<SoyImage>>	mImageUniforms;	//	texture slot -> texture
 };
 
 class Sokol::TRenderCommand_UpdateImage : public TRenderCommandBase
 {
 public:
 	static constexpr std::string_view	Name = "UpdateImage";
-	virtual const std::string_view	GetName() override	{	return Name;	};
+	virtual const std::string_view		GetName() override	{	return Name;	};
 	
-	TImageWrapper*	mImage = nullptr;	//	dangerous!
+	std::shared_ptr<SoyImage>			mImage;
 };
 
 

@@ -238,6 +238,8 @@
 		BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF7A2CD324F1A83300CD3A32 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF7A2CD424F1A83300CD3A32 /* PopH264_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF9BBF572523BD7000797824 /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF552523BD6300797824 /* SoyImage.cpp */; };
+		BF9BBF592523BD7000797824 /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF552523BD6300797824 /* SoyImage.cpp */; };
 		BF9C0A0D23907A7F00476651 /* PopH264_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151FF723847B9B00A70EBF /* PopH264_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
@@ -566,6 +568,8 @@
 		BF97592520E9611A0093B296 /* TApiOpencl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpencl.cpp; path = src/TApiOpencl.cpp; sourceTree = "<group>"; };
 		BF99BE2821F89C6100E6CE5B /* TApiVision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiVision.h; path = src/TApiVision.h; sourceTree = "<group>"; };
 		BF99BE2921F89C6100E6CE5B /* TApiVision.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiVision.cpp; path = src/TApiVision.cpp; sourceTree = "<group>"; };
+		BF9BBF552523BD6300797824 /* SoyImage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyImage.cpp; path = src/SoyImage.cpp; sourceTree = "<group>"; };
+		BF9BBF562523BD6300797824 /* SoyImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyImage.h; path = src/SoyImage.h; sourceTree = "<group>"; };
 		BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenCl.cpp; path = src/SoyOpenCl.cpp; sourceTree = "<group>"; };
 		BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenCl.h; path = src/SoyOpenCl.h; sourceTree = "<group>"; };
 		BF9CCABE1B6E799D000B19EA /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
@@ -1198,6 +1202,8 @@
 				BF0D95EC25180123000C4E54 /* SoyWindowApple.h */,
 				BFEF6A3724759168000A1F88 /* TApiAudio.cpp */,
 				BFEF6A3624759168000A1F88 /* TApiAudio.h */,
+				BF9BBF552523BD6300797824 /* SoyImage.cpp */,
+				BF9BBF562523BD6300797824 /* SoyImage.h */,
 				BF607EA42240588300A78C00 /* TApiBluetooth.cpp */,
 				BF607EA32240588300A78C00 /* TApiBluetooth.h */,
 				BF26EF6220DED0F400A48025 /* TApiCommon.cpp */,
@@ -1682,6 +1688,7 @@
 				BF151FA423845FAD00A70EBF /* SoyString.mm in Sources */,
 				BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */,
 				BFDC03B12430CED90004512A /* json11.cpp in Sources */,
+				BF9BBF592523BD7000797824 /* SoyImage.cpp in Sources */,
 				BF4013EF250F679800A753A4 /* SoySokol_Ios_Gles.mm in Sources */,
 				BF151FB223845FB700A70EBF /* sha1.cpp in Sources */,
 				BF151F9C23845FAD00A70EBF /* SoyRuntimeLibrary.cpp in Sources */,
@@ -1827,6 +1834,7 @@
 				BF5EAFD3237F0C6E0077BCF5 /* SoyMemFile.cpp in Sources */,
 				BF5EAFC4237F0C6E0077BCF5 /* SoyAvf.mm in Sources */,
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,
+				BF9BBF572523BD7000797824 /* SoyImage.cpp in Sources */,
 				BF5EB02C237F131E0077BCF5 /* ezsift.cpp in Sources */,
 				BF5EAFC6237F0C6E0077BCF5 /* SoyDebug.cpp in Sources */,
 				BF5EAFE0237F0C6E0077BCF5 /* SoySocketStream.cpp in Sources */,
