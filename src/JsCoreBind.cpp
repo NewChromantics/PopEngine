@@ -1046,6 +1046,14 @@ void JsCore::TContext::Shutdown(int32_t ExitCode)
 	mInstance.Shutdown(ExitCode);
 }
 
+#if defined(JSAPI_JSCORE)
+extern "C" JS_EXPORT void JSSynchronousGarbageCollectForDebugging(JSContextRef ctx);
+#else
+void JSSynchronousGarbageCollectForDebugging(JSContextRef LocalContext)
+{
+}
+#endif
+
 void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 {
 	//	seems like this would be a good idea...
@@ -1053,7 +1061,10 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 #else
 	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
 #endif
+
+	JSSynchronousGarbageCollectForDebugging(LocalContext);
 	
+	//	on jsc, this seems to be an async hint/request to gc
 	JSGarbageCollect( LocalContext );
 }
 
