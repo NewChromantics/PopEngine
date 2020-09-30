@@ -1,6 +1,6 @@
 #include "TApiCommon.h"
 #include "SoyDebug.h"
-#include "SoyImage.h"
+#include "SoyImageProxy.h"
 #include "SoyFilesystem.h"
 #include "SoyStream.h"
 #if defined(ENABLE_OPENGL)
@@ -755,7 +755,7 @@ TImageWrapper::~TImageWrapper()
 
 void TImageWrapper::Construct(Bind::TCallback& Params)
 {
-	mImage.reset(new SoyImage());
+	mImage.reset(new SoyImageProxy());
 
 	//	matching with web api
 	if (Params.IsArgumentString(0))
@@ -828,10 +828,10 @@ void TImageWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::GetPngData>( &TImageWrapper::GetPngData );
 }
 
-SoyImage& TImageWrapper::GetImage()
+SoyImageProxy& TImageWrapper::GetImage()
 {
 	if ( !mImage )
-		throw Soy::AssertException("Image has no SoyImage (use after free)");
+		throw Soy::AssertException("Image has no SoyImageProxy (use after free)");
 	return *mImage;
 }
 
@@ -898,7 +898,7 @@ void TImageWrapper::LoadFile(Bind::TCallback& Params)
 		ThisMeta.SetArray( Section, Data );
 	};
 	
-	DoLoadFile( Filename, OnMetaFound );
+	GetImage().LoadFile( Filename, OnMetaFound );
 }
 
 
@@ -932,7 +932,7 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 		Params.GetArgumentArray(2, GetArrayBridge(Floats) );
 		auto Floats8 = GetArrayBridge(Floats).GetSubArray<uint8_t>( 0, Floats.GetDataSize() );
 		auto DataSize = Floats8.GetDataSize();
-		SoyPixelsRemote NewPixels( Floats.GetArray(), Width, Height, DataSize, Format );
+		SoyPixelsRemote NewPixels(Floats8.GetArray(), Width, Height, DataSize, Format );
 		Image.SetPixels(NewPixels);
 	}
 	else if ( SoyPixelsFormat::GetBytesPerChannel(Format) == sizeof(uint8_t) )
@@ -1157,422 +1157,33 @@ void TImageWrapper::SetLinearFilter(Bind::TCallback& Params)
 {
 	auto& This = Params.This<TImageWrapper>();
 	auto LinearFilter = Params.GetArgumentBool(0);
-	This.DoSetLinearFilter( LinearFilter );
-}
-
-
-void TImageWrapper::GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback)
-{
-	if ( !mPixelBuffer )
-		throw Soy::AssertException("Can't get pixel buffer pixels with no pixelbuffer");
-	
-	if ( mPixelBufferVersion != GetLatestVersion() )
-		throw Soy::AssertException("Trying to get pixel buffer pixels that are out of date");
-
-	//	lock pixels
-	BufferArray<SoyPixelsImpl*,2> Textures;
-	float3x3 Transform;
-	mPixelBuffer->Lock( GetArrayBridge(Textures), Transform );
-	try
-	{
-		Callback( GetArrayBridge(Textures), Transform );
-		mPixelBuffer->Unlock();
-	}
-	catch(std::exception& e)
-	{
-		mPixelBuffer->Unlock();
-		throw;
-	}
-}
-
-
-std::shared_ptr<Opengl::TTexture> TImageWrapper::GetTexturePtr()
-{
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	/*auto& Texture = */GetTexture();
-	return mOpenglTexture;
-}
-
-void TImageWrapper::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
-{
-	//std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	//	already created & current version
-	if ( mOpenglTexture != nullptr )
-	{
-		if ( mOpenglTextureVersion == GetLatestVersion() )
-		{
-			OnTextureLoaded();
-			return;
-		}
-	}
-	
-	if ( !mPixels && !mPixelBuffer )
-		throw Soy::AssertException("Trying to get opengl texture when we have no pixels/pixelbuffer");
-
-#if defined(ENABLE_OPENGL)
-	auto* pContext = &Context;
-	auto AllocAndOrUpload = [=]
-	{
-		//	gr: this will need to be on the context's thread
-		//		need to fail here if we're not
-		try
-		{
-			std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-			Soy::TScopeTimerPrint Timer("TImageWrapper::GetTexture::Alloc/Upload", 10 );
-
-			auto AllocTexture = [&](const SoyPixelsMeta& Meta)
-			{
-				auto TextureSlot = pContext->mCurrentTextureSlot++;
-				if ( mOpenglTexture == nullptr )
-				{
-					//std::Debug << "Creating new opengl texture " << Meta << " in slot " << TextureSlot << std::endl;
-					mOpenglTexture.reset( new Opengl::TTexture( Meta, GL_TEXTURE_2D, TextureSlot ) );
-					//std::Debug << "<<< " << mOpenglTexture->mTexture.mName << std::endl;
-					//this->mOpenglClientStorage.reset( new SoyPixels );
-					//mOpenglTexture->mClientBuffer = this->mOpenglClientStorage;
-				
-					//mOpenglTexture->mAutoRelease = false;
-					
-					//	alloc the deffered delete func
-					mOpenglTextureDealloc = [this,pContext]
-					{
-						//	gr: this context can be deleted here...
-						pContext->QueueDelete(mOpenglTexture);
-					};
-				}
-				mOpenglTexture->Bind(TextureSlot);
-				mOpenglTexture->SetFilter( mLinearFilter );
-				mOpenglTexture->SetRepeat( mRepeating );
-			};
-
-			SoyGraphics::TTextureUploadParams UploadParams;
-			UploadParams.mAllowClientStorage = false;
-			
-			if ( GetLatestVersion() == mPixelsVersion )
-			{
-				AllocTexture( mPixels->GetMeta() );
-				mOpenglTexture->Write( *mPixels, UploadParams );
-				mOpenglTextureVersion = mPixelsVersion;
-			}
-			else if ( GetLatestVersion() == mPixelBufferVersion )
-			{
-				auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Textures,float3x3& Transform)
-				{
-					auto& Pixels = *Textures[0];
-					mPixelBufferMeta = Pixels.GetMeta();
-					AllocTexture( mPixelBufferMeta );
-					mOpenglTexture->Write( Pixels, UploadParams );
-					mOpenglTextureVersion = mPixelBufferVersion;
-				};
-				GetPixelBufferPixels(CopyPixels);
-			}
-			else
-			{
-				throw Soy::AssertException("Don't know where to get meta for new opengl texture");
-			}
-			OnTextureLoaded();
-		}
-		catch(std::exception& e)
-		{
-			OnError( e.what() );
-		}
-	};
-	
-	if ( Context.IsLockedToThisThread() )
-	{
-		AllocAndOrUpload();
-	}
-	else
-	{
-		Context.PushJob( AllocAndOrUpload );
-	}
-#else
-	throw Soy::AssertException("Opengl not enabled in build");
-#endif
-}
-
-Opengl::TTexture& TImageWrapper::GetTexture()
-{
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	if ( !mOpenglTexture )
-		throw Soy::AssertException("Image missing opengl texture. Accessing before generating.");
-	
-	if ( mOpenglTextureVersion != GetLatestVersion() )
-		throw Soy::AssertException("Opengl texture is out of date");
-	
-	return *mOpenglTexture;
-}
-
-
-
-void TImageWrapper::GetPixels(SoyPixelsImpl& CopyTarget)
-{
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Pixels = GetPixels();
-	CopyTarget.Copy(Pixels);
-}
-
-SoyPixelsMeta TImageWrapper::GetMeta()
-{
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	auto LatestVersion = GetLatestVersion();
-
-	//	opengl may have been released!
-	if ( mOpenglTextureVersion == LatestVersion && mOpenglTexture )
-	{
-#if defined(ENABLE_OPENGL)
-		return mOpenglTexture->GetMeta();
-#else
-		throw Soy::AssertException("opengl not enabled in build");
-#endif
-	}
-	
-	if ( mPixelsVersion == LatestVersion && mPixels )
-		return mPixels->GetMeta();
-
-	if ( mPixelBufferVersion == LatestVersion )
-	{
-		if ( mPixelBufferMeta.IsValid() )
-			return mPixelBufferMeta;
-	}
-	
-	if ( mPixelBufferVersion == LatestVersion && mPixelBuffer )
-	{	
-		//	need to fetch the pixels to get the meta :/
-		//	so we need to read the pixels, then get the meta from there
-		BufferArray<SoyPixelsImpl*,2> Textures;
-		float3x3 Transform;
-		mPixelBuffer->Lock( GetArrayBridge(Textures), Transform );
-		try
-		{
-			//	gr: there's a chance here, some TPixelBuffers unlock and then release the data.
-			//		need to not let that happen
-			mPixelBufferMeta = Textures[0]->GetMeta();
-			mPixelBuffer->Unlock();
-			return mPixelBufferMeta;
-		}
-		catch(std::exception& e)
-		{
-			mPixelBuffer->Unlock();
-			throw;
-		}
-	}
-	
-	if ( mPixelsVersion == LatestVersion && mPixels )
-		return mPixels->GetMeta();
-	
-	throw Soy::AssertException("Don't know where to get meta from");
+	GetImage().SetLinearFilter( LinearFilter );
 }
 
 SoyPixelsImpl& TImageWrapper::GetPixels()
 {
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Heap = GetContext().GetImageHeap();
-
-	if ( mPixelsVersion < GetLatestVersion() && mPixelBufferVersion == GetLatestVersion() )
-	{
-		//	grab pixels from image buffer
-		auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Pixels,float3x3& Transform)
-		{
-			mPixels.reset( new SoyPixels(Heap) );
-			mPixels->Copy( *Pixels[0] );
-			mPixelsVersion = mPixelBufferVersion;
-		};
-		this->GetPixelBufferPixels( CopyPixels );
-		return *mPixels;
-	}
-	
-
-	if ( mPixelsVersion < GetLatestVersion() )
-	{
-		std::stringstream Error;
-		Error << "Image pixels(v" << mPixelsVersion <<") are out of date (v" << GetLatestVersion() << ")";
-		throw Soy::AssertException(Error.str());
-	}
-	
-	//	is latest and not allocated, this is okay, lets just alloc
-	if ( mPixelsVersion == 0 && mPixels == nullptr )
-	{
-		mPixels.reset( new SoyPixels(Heap) );
-		mPixelsVersion = 1;
-	}
-	
-	if ( mPixels == nullptr )
-	{
-		std::stringstream Error;
-		Error << "Image pixels(v" << mPixelsVersion <<") latest, but null?";
-		throw Soy::AssertException(Error.str());
-	}
-	
-	return *mPixels;
+	return GetImage().GetPixels();
 }
 
-size_t TImageWrapper::GetLatestVersion() const
+void TImageWrapper::GetPixels(SoyPixelsImpl& CopyTarget)
 {
-	size_t MaxVersion = mPixelsVersion;
-	if ( mOpenglTextureVersion > MaxVersion )
-		MaxVersion = mOpenglTextureVersion;
-	
-	if ( mPixelBufferVersion > MaxVersion )
-		MaxVersion = mPixelBufferVersion;
-	
-	return MaxVersion;
+	return GetImage().GetPixels(CopyTarget);
 }
 
-void TImageWrapper::SetOpenglTexture(const Opengl::TAsset& Texture)
+void TImageWrapper::SetPixels(std::shared_ptr<SoyPixelsImpl> Pixels)
 {
-#if defined(ENABLE_OPENGL)
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	//	todo: delete old texture
-	mOpenglTexture.reset(new Opengl::TTexture(Texture.mName, SoyPixelsMeta(), GL_TEXTURE_2D));
-	auto LatestVersion = GetLatestVersion();
-	mOpenglTextureVersion = LatestVersion + 1;
-#else
-	throw Soy::AssertException("Opengl not supported");
-#endif
+	return GetImage().SetPixels(Pixels);
 }
 
-
-void TImageWrapper::OnOpenglTextureChanged(Opengl::TContext& Context)
+Opengl::TTexture& TImageWrapper::GetTexture()
 {
-#if defined(ENABLE_OPENGL)
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	if ( !mOpenglTexture )
-		throw Soy::AssertException("OnOpenglChanged with null texture");
-
-	//	is now latest version
-	auto LatestVersion = GetLatestVersion();
-	mOpenglTextureVersion = LatestVersion+1;
-	auto TextureSlot = Context.mCurrentTextureSlot++;
-	mOpenglTexture->Bind(TextureSlot);
-	mOpenglTexture->RefreshMeta();
-#else
-	throw Soy::AssertException("Opengl not enabled");
-#endif
+	return GetImage().GetTexture();
 }
 
-
-
-void TImageWrapper::OnPixelsChanged()
+std::shared_ptr<Opengl::TTexture> TImageWrapper::GetTexturePtr()
 {
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto LatestVersion = GetLatestVersion();
-	mPixelsVersion = LatestVersion+1;
+	return GetImage().GetTexturePtr();
 }
-
-void TImageWrapper::SetPixels(const SoyPixelsImpl& NewPixels)
-{
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Heap = GetContext().GetImageHeap();
-	mPixels.reset( new SoyPixels(NewPixels,Heap) );
-	OnPixelsChanged();
-}
-
-void TImageWrapper::SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels)
-{
-	//if ( NewPixels->GetFormat() != SoyPixelsFormat::RGB )
-	//	std::Debug << "Setting image to pixels: " << NewPixels->GetMeta() << std::endl;
-	
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	mPixels = NewPixels;
-	OnPixelsChanged();
-}
-
-void TImageWrapper::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
-{
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	mPixelBuffer = NewPixels;
-	mPixelBufferVersion = GetLatestVersion()+1;
-}
-
-void TImageWrapper::ReadOpenglPixels(SoyPixelsFormat::Type Format)
-{
-#if defined(ENABLE_OPENGL)
-	//	gr: this needs to be in the opengl thread!
-	//Context.IsInThread
-
-	if (!mOpenglTexture)
-		throw Soy::AssertException("Trying to ReadOpenglPixels with no texture");
-
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	auto& Heap = GetContext().GetImageHeap();
-
-	//	warning in case we haven't actually updated
-	if (mPixelsVersion >= mOpenglTextureVersion)
-		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
-	//	if we have no pixels, alloc
-	if (mPixels == nullptr)
-		mPixels.reset(new SoyPixels(Heap));
-
-	auto Flip = false;
-
-	mPixels->GetMeta().DumbSetFormat(Format);
-	mPixels->GetPixelsArray().SetSize(mPixels->GetMeta().GetDataSize());
-
-	mOpenglTexture->Read(*mPixels, Format, Flip);
-	mPixelsVersion = mOpenglTextureVersion;
-#else
-	throw Soy::AssertException("Opengl not enabled");
-#endif
-}
-
-void TImageWrapper::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
-{
-#if defined(ENABLE_OPENGL)
-	Soy::TScopeTimerPrint Timer(__func__, 5);
-	if (GetLatestVersion() != mOpenglTextureVersion)
-	{
-		std::stringstream Error;
-		Error << __func__ << " expected opengl (" << mOpenglTextureVersion << ") to be latest version (" << GetLatestVersion() << ")";
-		throw Soy::AssertException(Error.str());
-	}
-
-	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-
-	mOpenglLastPixelReadBuffer = PixelBuffer;
-	mOpenglLastPixelReadBufferVersion = mOpenglTextureVersion;
-#else
-	throw Soy::AssertException("Opengl not enabled");
-#endif
-}
-
-void TImageWrapper::SetSokolImage(uint32_t Handle)
-{
-	mSokolImage = Handle;
-	mSokolImageVersion = 0;
-}
-
-void TImageWrapper::OnSokolImageChanged()
-{
-	if ( !HasSokolImage() )
-	throw Soy::AssertException("Sokol image changed, but no handle");
-	mSokolImageVersion = GetLatestVersion()+1;
-}
-
-void TImageWrapper::OnSokolImageUpdated()
-{
-	if ( !HasSokolImage() )
-	throw Soy::AssertException("Sokol image updated, but no handle");
-	mSokolImageVersion = GetLatestVersion();
-}
-
-bool TImageWrapper::HasSokolImage()
-{
-	return mSokolImage != 0;
-}
-
-uint32_t TImageWrapper::GetSokolImage(bool& LatestVersion)
-{
-	LatestVersion = mSokolImageVersion == GetLatestVersion();
-	return mSokolImage;
-}
-
 
 
 

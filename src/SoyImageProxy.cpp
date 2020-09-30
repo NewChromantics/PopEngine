@@ -1,4 +1,4 @@
-#include "SoyImage.h"
+#include "SoyImageProxy.h"
 #include "SoyDebug.h"
 #include "SoyImage.h"
 #if defined(ENABLE_OPENGL)
@@ -7,46 +7,27 @@
 #endif
 #include <SoyPng.h>
 #include <SoyMedia.h>
+#include <SoyFilesystem.h>
+#include <SoyStream.h>
+#include <SoyImage.h>	//	soy image functions!
 
 
 
-SoyImage::~SoyImage()
+SoyImageProxy::~SoyImageProxy()
 {
 	Free();
 }
 
-void SoyImage::Flip()
+void SoyImageProxy::Flip()
 {
-	auto& This = Params.This<TImageWrapper>();
-	
-	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
-	auto& Pixels = This.GetPixels();
+	std::lock_guard<std::recursive_mutex> ThisLock(mPixelsLock);
+	auto& Pixels = GetPixels();
 	Pixels.Flip();
-	This.OnPixelsChanged();
+	OnPixelsChanged();
 }
 
-void SoyImage::LoadFile(const std:string& Filename)
-{
-	auto OnMetaFound = [&](const std::string& Section,const ArrayBridge<uint8_t>& Data)
-	{
-		auto This = Params.ThisObject();
-		
-		//	add meta if it's not there
-		if ( !This.HasMember("Meta") )
-			This.SetObjectFromString("Meta","{}");
-		
-		//	set this section as a meta
-		auto ThisMeta = This.GetObject("Meta");
-		if ( This.HasMember(Section) )
-			std::Debug << "Overwriting image meta section " << Section << std::endl;
-	
-		ThisMeta.SetArray( Section, Data );
-	};
-	
-	DoLoadFile( Filename, OnMetaFound );
-}
 
-void SoyImage::DoLoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound)
+void SoyImageProxy::LoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound)
 {
 	//	gr: feels like this function should be a generic soy thing
 	
@@ -57,8 +38,7 @@ void SoyImage::DoLoadFile(const std::string& Filename,std::function<void(const s
 	BytesBuffer.Push( GetArrayBridge(Bytes) );
 
 	//	alloc pixels
-	auto& Heap = GetContext().GetImageHeap();
-	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels(Heap) );
+	std::shared_ptr<SoyPixels> NewPixels( new SoyPixels );
 	
 	if ( Soy::StringEndsWith( Filename, Png::FileExtensions, false ) )
 	{
@@ -112,7 +92,7 @@ void SoyImage::DoLoadFile(const std::string& Filename,std::function<void(const s
 }
 
 
-void SoyImage::SetLinearFilter(bool LinearFilter)
+void SoyImageProxy::SetLinearFilter(bool LinearFilter)
 {
 	//	for now, only allow this pre-creation
 	//	what we could do, is queue an opengl job. but if we're IN a job now, it'll set it too late
@@ -124,7 +104,7 @@ void SoyImage::SetLinearFilter(bool LinearFilter)
 }
 
 
-void SoyImage::Copy(SoyImage& That)
+void SoyImageProxy::Copy(SoyImageProxy& That)
 {
 	auto& This = *this;
 
@@ -139,7 +119,7 @@ void SoyImage::Copy(SoyImage& That)
 }
 
 
-void SoyImage::Resize(size_t NewWidth,size_t NewHeight)
+void SoyImageProxy::Resize(size_t NewWidth,size_t NewHeight)
 {
 	std::lock_guard<std::recursive_mutex> ThisLock(mPixelsLock);
 	
@@ -151,7 +131,7 @@ void SoyImage::Resize(size_t NewWidth,size_t NewHeight)
 
 
 
-void TImageWrapper::Clip(int x,int y,int w,int h)
+void SoyImageProxy::Clip(int x,int y,int w,int h)
 {
 	Soy::TScopeTimerPrint Timer(__func__,5);
 
@@ -171,21 +151,21 @@ void TImageWrapper::Clip(int x,int y,int w,int h)
 }
 
 
-void TImageWrapper::SetFormat(SoyPixelsFormat::Type NewFormat)
+void SoyImageProxy::SetFormat(SoyPixelsFormat::Type NewFormat)
 {
 	//	gr: currently only handling pixels
-	std::lock_guard<std::recursive_mutex> ThisLock(This.mPixelsLock);
-	if ( This.mPixelsVersion != This.GetLatestVersion() )
+	std::lock_guard<std::recursive_mutex> ThisLock(mPixelsLock);
+	if ( mPixelsVersion != GetLatestVersion() )
 		throw Soy::AssertException("Image.SetFormat only works on pixels at the moment, and that's not the latest version");
 
-	auto& Pixels = This.GetPixels();
+	auto& Pixels = GetPixels();
 	Pixels.SetFormat(NewFormat);
-	This.OnPixelsChanged();
+	OnPixelsChanged();
 }
 
 
 //	gr: just destruct?
-void TImageWrapper::Free()
+void SoyImageProxy::Free()
 {
 	std::lock_guard<std::recursive_mutex> ThisLock(mPixelsLock);
 
@@ -218,10 +198,8 @@ void TImageWrapper::Free()
 }
 
 
-void SoyImage::GetRgba8(std::function<void(ArrayBridge<uint8_t>&&)> OnPixelArray,bool AllowBgraAsRgba)
+void SoyImageProxy::GetRgba8(std::function<void(ArrayBridge<uint8_t>&&)> OnPixelArray,bool AllowBgraAsRgba)
 {
-	auto& Heap = prmem::gHeap;
-	
 	Soy::TScopeTimerPrint Timer(__func__,5);
 	
 	//	gr: this func will probably need to return a promise if reading from opengl etc (we want it to be async anyway!)
@@ -241,7 +219,7 @@ void SoyImage::GetRgba8(std::function<void(ArrayBridge<uint8_t>&&)> OnPixelArray
 	else
 	{
 		Soy::TScopeTimerPrint Timer("GetRgba8 conversion to RGBA", 5 );
-		ConvertedPixels.reset( new SoyPixels(CurrentPixels,Heap) );
+		ConvertedPixels.reset( new SoyPixels(CurrentPixels) );
 		ConvertedPixels->SetFormat( SoyPixelsFormat::RGBA );
 		pPixels = ConvertedPixels.get();
 	}	
@@ -253,11 +231,11 @@ void SoyImage::GetRgba8(std::function<void(ArrayBridge<uint8_t>&&)> OnPixelArray
 }
 
 
-void SoyImage::GetPixelBuffer(std::function<void(ArrayBridge<uint8_t>&&)> OnBuffer8,std::function<void(ArrayBridge<uint16_t>&&)> OnBuffer16,std::function<void(ArrayBridge<float>&&)> OnBufferFloat)
+void SoyImageProxy::GetPixelArrayTyped(std::function<void(ArrayBridge<uint8_t>&&)> OnBuffer8,std::function<void(ArrayBridge<uint16_t>&&)> OnBuffer16,std::function<void(ArrayBridge<float>&&)> OnBufferFloat)
 {
 	Soy::TScopeTimerPrint Timer(__func__,5);
 	
-	auto& Pixels = This.GetPixels();
+	auto& Pixels = GetPixels();
 	auto& PixelsArray = Pixels.GetPixelsArray();
 	
 	//	for float & 16 bit formats, convert to their proper javascript type
@@ -279,7 +257,7 @@ void SoyImage::GetPixelBuffer(std::function<void(ArrayBridge<uint8_t>&&)> OnBuff
 }
 
 
-void SoyImage::GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback)
+void SoyImageProxy::GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback)
 {
 	if ( !mPixelBuffer )
 		throw Soy::AssertException("Can't get pixel buffer pixels with no pixelbuffer");
@@ -304,14 +282,14 @@ void SoyImage::GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixe
 }
 
 
-std::shared_ptr<Opengl::TTexture> SoyImage::GetTexturePtr()
+std::shared_ptr<Opengl::TTexture> SoyImageProxy::GetTexturePtr()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	/*auto& Texture = */GetTexture();
 	return mOpenglTexture;
 }
 
-void SoyImage::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
+void SoyImageProxy::GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError)
 {
 	//std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
@@ -410,7 +388,7 @@ void SoyImage::GetTexture(Opengl::TContext& Context,std::function<void()> OnText
 #endif
 }
 
-Opengl::TTexture& SoyImage::GetTexture()
+Opengl::TTexture& SoyImageProxy::GetTexture()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
@@ -425,14 +403,14 @@ Opengl::TTexture& SoyImage::GetTexture()
 
 
 
-void SoyImage::GetPixels(SoyPixelsImpl& CopyTarget)
+void SoyImageProxy::GetPixels(SoyPixelsImpl& CopyTarget)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	auto& Pixels = GetPixels();
 	CopyTarget.Copy(Pixels);
 }
 
-SoyPixelsMeta SoyImage::GetMeta()
+SoyPixelsMeta SoyImageProxy::GetMeta()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
@@ -485,17 +463,16 @@ SoyPixelsMeta SoyImage::GetMeta()
 	throw Soy::AssertException("Don't know where to get meta from");
 }
 
-SoyPixelsImpl& SoyImage::GetPixels()
+SoyPixelsImpl& SoyImageProxy::GetPixels()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Heap = GetContext().GetImageHeap();
 
 	if ( mPixelsVersion < GetLatestVersion() && mPixelBufferVersion == GetLatestVersion() )
 	{
 		//	grab pixels from image buffer
 		auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Pixels,float3x3& Transform)
 		{
-			mPixels.reset( new SoyPixels(Heap) );
+			mPixels.reset( new SoyPixels );
 			mPixels->Copy( *Pixels[0] );
 			mPixelsVersion = mPixelBufferVersion;
 		};
@@ -514,7 +491,7 @@ SoyPixelsImpl& SoyImage::GetPixels()
 	//	is latest and not allocated, this is okay, lets just alloc
 	if ( mPixelsVersion == 0 && mPixels == nullptr )
 	{
-		mPixels.reset( new SoyPixels(Heap) );
+		mPixels.reset( new SoyPixels );
 		mPixelsVersion = 1;
 	}
 	
@@ -528,19 +505,22 @@ SoyPixelsImpl& SoyImage::GetPixels()
 	return *mPixels;
 }
 
-size_t SoyImage::GetLatestVersion() const
+size_t SoyImageProxy::GetLatestVersion() const
 {
 	size_t MaxVersion = mPixelsVersion;
 	if ( mOpenglTextureVersion > MaxVersion )
 		MaxVersion = mOpenglTextureVersion;
 	
-	if ( mPixelBufferVersion > MaxVersion )
+	if (mPixelBufferVersion > MaxVersion)
 		MaxVersion = mPixelBufferVersion;
-	
+
+	if (mSokolImageVersion > MaxVersion)
+		MaxVersion = mSokolImageVersion;
+
 	return MaxVersion;
 }
 
-void SoyImage::SetOpenglTexture(const Opengl::TAsset& Texture)
+void SoyImageProxy::SetOpenglTexture(const Opengl::TAsset& Texture)
 {
 #if defined(ENABLE_OPENGL)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
@@ -555,7 +535,7 @@ void SoyImage::SetOpenglTexture(const Opengl::TAsset& Texture)
 }
 
 
-void SoyImage::OnOpenglTextureChanged(Opengl::TContext& Context)
+void SoyImageProxy::OnOpenglTextureChanged(Opengl::TContext& Context)
 {
 #if defined(ENABLE_OPENGL)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
@@ -576,22 +556,21 @@ void SoyImage::OnOpenglTextureChanged(Opengl::TContext& Context)
 
 
 
-void SoyImage::OnPixelsChanged()
+void SoyImageProxy::OnPixelsChanged()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	auto LatestVersion = GetLatestVersion();
 	mPixelsVersion = LatestVersion+1;
 }
 
-void SoyImage::SetPixels(const SoyPixelsImpl& NewPixels)
+void SoyImageProxy::SetPixels(const SoyPixelsImpl& NewPixels)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
-	auto& Heap = GetContext().GetImageHeap();
-	mPixels.reset( new SoyPixels(NewPixels,Heap) );
+	mPixels.reset( new SoyPixels(NewPixels) );
 	OnPixelsChanged();
 }
 
-void SoyImage::SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels)
+void SoyImageProxy::SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels)
 {
 	//if ( NewPixels->GetFormat() != SoyPixelsFormat::RGB )
 	//	std::Debug << "Setting image to pixels: " << NewPixels->GetMeta() << std::endl;
@@ -601,14 +580,14 @@ void SoyImage::SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels)
 	OnPixelsChanged();
 }
 
-void SoyImage::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
+void SoyImageProxy::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	mPixelBuffer = NewPixels;
 	mPixelBufferVersion = GetLatestVersion()+1;
 }
 
-void SoyImage::ReadOpenglPixels(SoyPixelsFormat::Type Format)
+void SoyImageProxy::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 {
 #if defined(ENABLE_OPENGL)
 	//	gr: this needs to be in the opengl thread!
@@ -619,14 +598,12 @@ void SoyImage::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
-	auto& Heap = GetContext().GetImageHeap();
-
 	//	warning in case we haven't actually updated
 	if (mPixelsVersion >= mOpenglTextureVersion)
 		std::Debug << "Warning, overwriting newer/same pixels(v" << mPixelsVersion << ") with gl texture (v" << mOpenglTextureVersion << ")";
 	//	if we have no pixels, alloc
 	if (mPixels == nullptr)
-		mPixels.reset(new SoyPixels(Heap));
+		mPixels.reset(new SoyPixels);
 
 	auto Flip = false;
 
@@ -640,7 +617,7 @@ void SoyImage::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 #endif
 }
 
-void SoyImage::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
+void SoyImageProxy::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
 {
 #if defined(ENABLE_OPENGL)
 	Soy::TScopeTimerPrint Timer(__func__, 5);
@@ -660,34 +637,35 @@ void SoyImage::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> Pixe
 #endif
 }
 
-void SoyImage::SetSokolImage(uint32_t Handle)
+void SoyImageProxy::SetSokolImage(uint32_t Handle)
 {
 	mSokolImage = Handle;
 	mSokolImageVersion = 0;
 }
 
-void SoyImage::OnSokolImageChanged()
+void SoyImageProxy::OnSokolImageChanged()
 {
 	if ( !HasSokolImage() )
 	throw Soy::AssertException("Sokol image changed, but no handle");
 	mSokolImageVersion = GetLatestVersion()+1;
 }
 
-void SoyImage::OnSokolImageUpdated()
+void SoyImageProxy::OnSokolImageUpdated()
 {
 	if ( !HasSokolImage() )
 	throw Soy::AssertException("Sokol image updated, but no handle");
 	mSokolImageVersion = GetLatestVersion();
 }
 
-bool SoyImage::HasSokolImage()
+bool SoyImageProxy::HasSokolImage()
 {
 	return mSokolImage != 0;
 }
 
-uint32_t SoyImage::GetSokolImage(bool& LatestVersion)
+uint32_t SoyImageProxy::GetSokolImage(bool& LatestVersion)
 {
 	LatestVersion = mSokolImageVersion == GetLatestVersion();
+	//	throw here if not latest?
 	return mSokolImage;
 }
 

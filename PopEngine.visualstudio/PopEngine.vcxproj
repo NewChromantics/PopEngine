@@ -68,6 +68,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\SoyImageProxy.h" />
     <ClInclude Include="..\src\SoyLib\src\Array.hpp" />
     <ClInclude Include="..\src\SoyLib\src\BufferArray.hpp" />
     <ClInclude Include="..\src\SoyLib\src\GL\glew.h" />
@@ -267,6 +268,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
     <ClCompile Include="..\src\Json11\json11.cpp" />
+    <ClCompile Include="..\src\SoyImageProxy.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />

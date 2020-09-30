@@ -2,6 +2,7 @@
 //#include "TApiOpenglContext.h"
 #include "SoyOpenglWindow.h"
 #include "TApiCommon.h"
+#include "SoyImage.h"
 
 
 namespace ApiOpengl
@@ -121,11 +122,15 @@ void ApiOpengl::TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 		
 		//	mark that texture has changed
 		auto& TargetImage = Params.GetArgumentPointer<TImageWrapper>(0);
-		TargetImage.GetImage().OnOpenglTextureChanged(OpenglContext);
+		throw Soy::AssertException("todo: Image->SoyImageProxy->OnOpenglTextureChanged");
+		//TargetImage.GetImage().OnOpenglTextureChanged(OpenglContext);
 
 		//	read back pixels if requested
-		if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
-			TargetImage.GetImage().ReadOpenglPixels(ReadBackPixelsAfterwards);
+		if (ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid)
+		{
+			throw Soy::AssertException("todo: Image->SoyImageProxy->ReadOpenglPixels");
+			//TargetImage.GetImage().ReadOpenglPixels(ReadBackPixelsAfterwards);
+		}
 
 		//	restore state after functions above, which might still mess around with things like viewport
 		CurrentRenderTarget->SetViewportNormalised( Soy::Rectf(0,0,1,1) );
@@ -149,7 +154,8 @@ void ApiOpengl::TWindowWrapper::RenderToRenderTarget(Bind::TCallback& Params)
 				TextureException = Error;
 			};
 			auto OnLoaded = []{};
-			TargetImage.GetTexture( OpenglContext, OnLoaded, OnError );
+			throw Soy::AssertException("todo: Image->SoyImageProxy->GetTexture");
+			//TargetImage.GetTexture( OpenglContext, OnLoaded, OnError );
 			if ( TextureException.size() != 0 )
 				throw Soy::AssertException(TextureException);
 		}
@@ -702,9 +708,10 @@ void ApiOpengl::TWindowWrapper::Render(Bind::TCallback& Params)
 			{
 				throw Soy::AssertException(Error);
 			};
+			throw Soy::AssertException("todo: image proxy opengl interface");
 			//	gr: this auto execute automatically
-			TargetImage.GetTexture( *OpenglContext, []{}, OnError );
-		
+			/*TargetImage.GetTexture( *OpenglContext, []{}, OnError );
+			*/
 			//	setup render target
 			auto TargetTexturePtr = TargetImage.GetTexturePtr();
 			auto& TargetTexture = *TargetTexturePtr;
@@ -733,12 +740,14 @@ void ApiOpengl::TWindowWrapper::Render(Bind::TCallback& Params)
 				throw;
 			}
 
+			throw Soy::AssertException("Todo Image opengl interface");
+			/*
 			TargetImage.GetImage().OnOpenglTextureChanged(*OpenglContext);
 			if ( ReadBackPixelsAfterwards != SoyPixelsFormat::Invalid )
 			{
 				TargetImage.GetImage().ReadOpenglPixels(ReadBackPixelsAfterwards);
 			}
-
+			*/
 			OnCompleted();
 		}
 		catch(std::exception& e)
@@ -1124,7 +1133,8 @@ void TShaderWrapper::DoSetUniform(Bind::TCallback& Params,const SoyGraphics::TUn
 			std::Debug << "Error loading texture " << Error << std::endl;
 			std::Debug << "Todo: relay to promise" << std::endl;
 		};
-		Image.GetTexture( Context, OnTextureLoaded, OnTextureError );
+		throw Soy::AssertException("Image proxy get texture");
+		//Image.GetTexture( Context, OnTextureLoaded, OnTextureError );
 		return;
 	}
 	

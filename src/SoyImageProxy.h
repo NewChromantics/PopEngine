@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SoyPixels.h>
 class SoyPixels;
 class SoyPixelsImpl;
 class TPixelBuffer;
@@ -12,20 +13,23 @@ namespace Opengl
 	class TAsset;
 }
 
-
-class SoyImage
+//	renamed to avoid clashes with SoyImage
+class SoyImageProxy
 {
 public:
-	~SoyImage();
+	~SoyImageProxy();
 	
+	SoyPixelsMeta		GetMeta();
 	void				Free();
 	void				Flip();
 	void				Clip(int x,int y,int w,int h);
+	void				Resize(size_t NewWidth, size_t NewHeight);
 	void				SetFormat(SoyPixelsFormat::Type NewFormat);
-	
-	void				DoLoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound);
-	void				DoSetLinearFilter(bool LinearFilter);
-	SoyPixelsMeta		GetMeta();
+	void				LoadFile(const std::string& Filename, std::function<void(const std::string&, const ArrayBridge<uint8_t>&)> OnMetaFound);
+	void				SetLinearFilter(bool LinearFilter);
+	void				Copy(SoyImageProxy& That);
+	void				GetRgba8(std::function<void(ArrayBridge<uint8_t>&&)> OnPixelArray, bool AllowBgraAsRgba);
+	void				GetPixelArrayTyped(std::function<void(ArrayBridge<uint8_t>&&)> OnBuffer8, std::function<void(ArrayBridge<uint16_t>&&)> OnBuffer16, std::function<void(ArrayBridge<float>&&)> OnBufferFloat);
 
 	//	we consider version 0 uninitisalised
 	size_t				GetLatestVersion() const;
@@ -55,9 +59,6 @@ public:
 	bool				HasSokolImage();
 	uint32_t			GetSokolImage(bool& LatestVersion);
 
-	
-protected:
-	void				Free();
 	
 public:
 	std::string			mName = "UninitialisedName";	//	for debug

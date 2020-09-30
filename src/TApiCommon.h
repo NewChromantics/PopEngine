@@ -9,7 +9,7 @@
 	#undef GetComputerName
 #endif
 
-class SoyImage;
+class SoyImageProxy;
 class SoyPixels;
 class SoyPixelsImpl;
 
@@ -72,7 +72,7 @@ protected:
 
 
 //	an image is a generic accessor for pixels, opengl textures, etc etc
-class TImageWrapper : public Bind::TObjectWrapper<ApiPop::BindType::Image,SoyImage>
+class TImageWrapper : public Bind::TObjectWrapper<ApiPop::BindType::Image, SoyImageProxy>
 {
 public:
 	TImageWrapper(Bind::TContext& Context) :
@@ -102,20 +102,17 @@ public:
 	void			GetFormat(Bind::TCallback& Arguments);
 	void			GetPngData(Bind::TCallback& Params);
 	
-	void				DoLoadFile(const std::string& Filename,std::function<void(const std::string&,const ArrayBridge<uint8_t>&)> OnMetaFound);
-	void				DoSetLinearFilter(bool LinearFilter);
-	void				GetTexture(Opengl::TContext& Context,std::function<void()> OnTextureLoaded,std::function<void(const std::string&)> OnError);
-	Opengl::TTexture&	GetTexture();
-	std::shared_ptr<Opengl::TTexture>		GetTexturePtr();
-	SoyPixelsImpl&		GetPixels();
-	void				GetPixels(SoyPixelsImpl& CopyTarget);	//	safely copy pixels
-	void				SetPixels(std::shared_ptr<SoyPixelsImpl> Pixels);
 
-protected:
-	SoyImage&			GetImage();	//	throw if missing (deallocated)
-	
+	//	proxy funcs to soyimage
+	SoyPixelsImpl&		GetPixels();
+	void				GetPixels(SoyPixelsImpl& CopyTarget);
+	void				SetPixels(std::shared_ptr<SoyPixelsImpl> Pixels);
+	SoyImageProxy&		GetImage();	//	throw if missing (deallocated)
+	Opengl::TTexture&	GetTexture();
+	std::shared_ptr<Opengl::TTexture>	GetTexturePtr();
+
 public:
-	std::shared_ptr<SoyImage>&	mImage = mObject;
+	std::shared_ptr<SoyImageProxy>&	mImage = mObject;
 };
 
 
