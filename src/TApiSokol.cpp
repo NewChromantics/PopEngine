@@ -4,7 +4,7 @@
 #include "TApiGui.h"
 #include "SoyWindow.h"
 #include "TApiCommon.h"
-#include "SoyImage.h"
+#include "SoyImageProxy.h"
 
 #include "sokol/sokol_gfx.h"
 
@@ -59,7 +59,7 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 }
 
 
-sg_image_desc GetImageDescription(SoyImage& Image,SoyPixels& TemporaryPixels)
+sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixels)
 {
 	sg_image_desc Description = {0};
 	
