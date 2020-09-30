@@ -17,7 +17,7 @@ class SoyImageProxy;
 //	non-js-api sokol
 namespace Sokol
 {
-	class TContext;
+	class TContext;			//	platform context
 	class TContextParams;	//	or ViewParams?
 
 	std::shared_ptr<TContext>	Platform_CreateContext(std::shared_ptr<SoyWindow> Window,TContextParams Params);
@@ -188,6 +188,9 @@ private:
 
 	Sokol::TRenderCommands			ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
 
+	void			QueueImageDelete(sg_image Image);
+	void			FreeImageDeletes();
+	
 public:
 	Bind::TPromiseMap				mPendingFramePromises;
 	Array<Sokol::TRenderCommands>	mPendingFrames;
@@ -204,6 +207,8 @@ public:
 	//	allocated objects and their javascript handle[value]
 	std::map<uint32_t,Sokol::TShader>	mShaders;
 	std::map<uint32_t,Sokol::TCreateGeometry>	mGeometrys;
+	std::mutex						mPendingDeleteImagesLock;
+	Array<sg_image>					mPendingDeleteImages;
 
 	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;
 	//Bind::TPersistent							mWindow;

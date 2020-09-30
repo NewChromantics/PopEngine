@@ -53,7 +53,7 @@ public:
 	void				GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback);	//	lock & unlock pixels for processing
 
 	
-	void				SetSokolImage(uint32_t Handle);	//	set handle, no version
+	void				SetSokolImage(uint32_t Handle,std::function<void()> Free);	//	set handle, no version
 	void				OnSokolImageChanged();	//	increase version
 	void				OnSokolImageUpdated();	//	now matching latest version
 	bool				HasSokolImage();
@@ -75,7 +75,8 @@ protected:
 
 	uint32_t							mSokolImage = 0;
 	size_t								mSokolImageVersion = 0;	//	pixels changed
-
+	std::function<void()>				mSokolImageFree;
+	
 public:
 	//	temporary caching system for immediate mode glReadPixels
 	std::shared_ptr<Array<uint8_t>>		mOpenglLastPixelReadBuffer;

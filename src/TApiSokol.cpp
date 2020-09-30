@@ -100,6 +100,23 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	return Description;
 }
 
+void ApiSokol::TSokolContextWrapper::QueueImageDelete(sg_image Image)
+{
+	std::lock_guard<std::mutex> Lock(mPendingDeleteImagesLock);
+	mPendingDeleteImages.PushBack(Image);
+}
+
+void ApiSokol::TSokolContextWrapper::FreeImageDeletes()
+{
+	std::lock_guard<std::mutex> Lock(mPendingDeleteImagesLock);
+	for ( auto i=0;	i<mPendingDeleteImages.GetSize();	i++ )
+	{
+		auto& Image = mPendingDeleteImages[i];
+		sg_destroy_image(Image);
+	}
+	mPendingDeleteImages.Clear();
+}
+
 void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> ViewRect)
 {
 	sg_activate_context(Context);
@@ -123,6 +140,10 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	
 	sg_reset_state_cache();
 	
+	//	jobs
+	FreeImageDeletes();
+	
+	//	run render commands
 	auto NewPass = [&](float r,float g,float b,float a)
 	{
 		if ( InsidePass )
@@ -174,7 +195,14 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				auto NewImage = sg_make_image(&ImageDescription);
 				auto State = sg_query_image_state(NewImage);
 				Sokol::IsOkay(State,"sg_make_image");
-				ImageSoy.SetSokolImage( NewImage.id );
+				
+				//	gr: guessing this isn't threadsafe
+				auto FreeSokolImage = [=]()
+				{
+					QueueImageDelete(NewImage);
+				};
+				
+				ImageSoy.SetSokolImage( NewImage.id, FreeSokolImage );
 				ImageSoy.OnSokolImageUpdated();
 			}
 			

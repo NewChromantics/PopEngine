@@ -172,7 +172,14 @@ void SoyImageProxy::Free()
 	//	clear pixels
 	mPixels.reset();
 	mPixelsVersion = 0;
-	
+
+
+	if ( mSokolImage )
+	{
+		mSokolImageFree();
+		mSokolImage = 0;
+		mSokolImageVersion = 0;
+	}
 
 	
 	//if ( mOpenglTexture )
@@ -637,23 +644,24 @@ void SoyImageProxy::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>>
 #endif
 }
 
-void SoyImageProxy::SetSokolImage(uint32_t Handle)
+void SoyImageProxy::SetSokolImage(uint32_t Handle,std::function<void()> Free)
 {
 	mSokolImage = Handle;
 	mSokolImageVersion = 0;
+	mSokolImageFree = Free;
 }
 
 void SoyImageProxy::OnSokolImageChanged()
 {
 	if ( !HasSokolImage() )
-	throw Soy::AssertException("Sokol image changed, but no handle");
+		throw Soy::AssertException("Sokol image changed, but no handle");
 	mSokolImageVersion = GetLatestVersion()+1;
 }
 
 void SoyImageProxy::OnSokolImageUpdated()
 {
 	if ( !HasSokolImage() )
-	throw Soy::AssertException("Sokol image updated, but no handle");
+		throw Soy::AssertException("Sokol image updated, but no handle");
 	mSokolImageVersion = GetLatestVersion();
 }
 
