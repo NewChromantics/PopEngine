@@ -9,7 +9,7 @@ namespace ApiSokol
 
 	class TSokolContextWrapper;
 
-	DECLARE_BIND_TYPENAME(Context);
+	DECLARE_BIND_TYPENAME(Sokol_Context);
 }
 
 class SoyImage;
@@ -163,7 +163,7 @@ public:
 };
 
 
-class ApiSokol::TSokolContextWrapper : public Bind::TObjectWrapper<BindType::Context,Sokol::TContext>
+class ApiSokol::TSokolContextWrapper : public Bind::TObjectWrapper<BindType::Sokol_Context,Sokol::TContext>
 {
 public:
 	TSokolContextWrapper(Bind::TContext &Context) :

@@ -373,7 +373,7 @@ void ApiOpengl::TWindowWrapper::Construct(Bind::TCallback& Params)
 {
 	auto WindowName = Params.GetArgumentString(0);
 	
-	TOpenglParams WindowParams;
+	Win32::TOpenglParams WindowParams;
 	WindowParams.mDoubleBuffer = false;
 	WindowParams.mAutoRedraw = true;
 

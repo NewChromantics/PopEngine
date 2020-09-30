@@ -60,6 +60,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\SoyGui_Win32.h" />
     <ClInclude Include="..\src\SoyHid.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -116,9 +117,19 @@
     <ClInclude Include="..\src\SoyLib\src\SoyWindow.h" />
     <ClInclude Include="..\src\SoyLib\src\Win32ColourControl.h" />
     <ClInclude Include="..\src\SoyLib\src\Win32ImageMapControl.h" />
+    <ClInclude Include="..\src\SoyOpenglContext_Win32.h" />
     <ClInclude Include="..\src\SoyOpenglView.h" />
     <ClInclude Include="..\src\SoyOpenglWindow.h" />
     <ClInclude Include="..\src\SoyOpenxr.h" />
+    <ClInclude Include="..\src\SoySokol_Linux.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\SoySokol_Win32.h" />
     <ClInclude Include="..\src\SoyWin32.h" />
     <ClInclude Include="..\src\TApiBluetooth.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -203,6 +214,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\TApiSokol.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
     <ClInclude Include="..\src\TApiXr.h" />
     <ClInclude Include="..\src\TApiZip.h" />
@@ -261,13 +273,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\Win32OpenglContext.h" />
     <ClInclude Include="..\src\Zip\src\miniz.h" />
     <ClInclude Include="..\src\Zip\src\zip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
     <ClCompile Include="..\src\Json11\json11.cpp" />
+    <ClCompile Include="..\src\SoyGui_Win32.cpp" />
     <ClCompile Include="..\src\SoyImageProxy.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
@@ -276,7 +288,17 @@
     <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp" />
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c" />
+    <ClCompile Include="..\src\SoyOpenglContext_Win32.cpp" />
     <ClCompile Include="..\src\SoyOpenxr.cpp" />
+    <ClCompile Include="..\src\SoySokol_Linux.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\SoySokol_Win32.cpp" />
     <ClCompile Include="..\src\SoyWin32.cpp" />
     <ClCompile Include="..\src\TApiDirectx11.cpp" />
     <ClCompile Include="..\src\TApiEngine.cpp" />
@@ -299,6 +321,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\TApiPanopoly.cpp" />
+    <ClCompile Include="..\src\TApiSokol.cpp" />
     <ClCompile Include="..\src\TApiXr.cpp" />
     <ClCompile Include="..\src\TApiZip.cpp" />
     <ClCompile Include="..\src\V8Bind.cpp">
@@ -306,7 +329,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\Win32OpenglContext.cpp" />
     <ClCompile Include="..\src\Zip\src\zip.c" />
     <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
     <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll">

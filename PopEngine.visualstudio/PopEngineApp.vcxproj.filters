@@ -18,6 +18,9 @@
     <Filter Include="UnitTest\PopEngineCommon">
       <UniqueIdentifier>{b351308d-e14d-473c-b666-ed363b0c1f2c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\Sokol">
+      <UniqueIdentifier>{49787547-f240-4866-b6e8-f8f93379960e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Source_App\Info.plist">
@@ -28,10 +31,16 @@
     </None>
     <None Include="packages.config" />
     <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
+    <None Include="..\UnitTest\Sokol\bootup.js">
+      <Filter>UnitTest\Sokol</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Source_App\PopEngine.ico">
       <Filter>Source</Filter>
+    </Image>
+    <Image Include="..\UnitTest\Sokol\Cat.jpg">
+      <Filter>UnitTest\Sokol</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

@@ -28,7 +28,7 @@ namespace ApiOpengl
 class TRenderWindow : public TOpenglWindow
 {
 public:
-	TRenderWindow(const std::string& Name,Soy::Rectf Rect,const TOpenglParams& Params) :
+	TRenderWindow(const std::string& Name,Soy::Rectf Rect,const Win32::TOpenglParams& Params) :
 		TOpenglWindow	( Name, Rect, Params)
 	{
 	}

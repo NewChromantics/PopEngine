@@ -19,7 +19,7 @@ namespace ApiSokol
 {
 	const char Namespace[] = "Pop.Sokol";
 
-	DEFINE_BIND_TYPENAME(Context);
+	DEFINE_BIND_TYPENAME(Sokol_Context);
 	DEFINE_BIND_FUNCTIONNAME(Render);
 	DEFINE_BIND_FUNCTIONNAME(CreateShader);
 	DEFINE_BIND_FUNCTIONNAME(CreateGeometry);
@@ -28,7 +28,7 @@ namespace ApiSokol
 void ApiSokol::Bind(Bind::TContext &Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
-	Context.BindObjectType<TSokolContextWrapper>(Namespace);
+	Context.BindObjectType<TSokolContextWrapper>(Namespace,"Context");
 }
 
 void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
@@ -132,7 +132,12 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		}
 		
 		sg_pass_action PassAction = {0};
-		PassAction.colors[0] = {.action = SG_ACTION_CLEAR, .val = {r,g,b,a}};
+		PassAction.colors[0].action = SG_ACTION_CLEAR;
+		PassAction.colors[0].val[0] = r;
+		PassAction.colors[0].val[1] = g;
+		PassAction.colors[0].val[2] = b;
+		PassAction.colors[0].val[3] = a;
+		
 		sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
 		InsidePass = true;
 	};

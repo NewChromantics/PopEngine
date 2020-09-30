@@ -361,7 +361,6 @@
       <Filter>Libs\Json11</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyLib\src\SoyDirectx.h" />
-    <ClInclude Include="..\src\Win32OpenglContext.h" />
     <ClInclude Include="..\src\SoyWin32.h">
       <Filter>Source</Filter>
     </ClInclude>
@@ -375,6 +374,21 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SoyImageProxy.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TApiSokol.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoySokol_Win32.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyGui_Win32.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoySokol_Linux.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyOpenglContext_Win32.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
@@ -935,9 +949,6 @@
     <ClCompile Include="..\src\SoyOpenxr.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Win32OpenglContext.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -945,6 +956,21 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyWin32.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TApiSokol.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoySokol_Win32.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoySokol_Linux.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyGui_Win32.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyOpenglContext_Win32.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SoyImageProxy.cpp">
