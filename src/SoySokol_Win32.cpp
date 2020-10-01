@@ -25,7 +25,7 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,Sokol::
 
 	mWindowThread.reset(new Platform::TWin32Thread("SokolOpenglContext"));
 
-	Win32::TOpenglParams OpenglParams;
+	TOpenglParams OpenglParams;
 
 	//	need to create on the correct thread
 	//	this can be called at the same time that JS is assigning events

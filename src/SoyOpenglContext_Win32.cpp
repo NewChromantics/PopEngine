@@ -32,7 +32,7 @@ void Win32::TOpenglContext::Unlock()
 }
 
 
-Platform::TOpenglContext::TOpenglContext(TControl& Parent, Win32::TOpenglParams& Params) :
+Platform::TOpenglContext::TOpenglContext(TControl& Parent, TOpenglParams& Params) :
 	Opengl::TRenderTarget(Parent.mName),
 	mParent(Parent)
 {
