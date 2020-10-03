@@ -27,7 +27,8 @@ namespace Sokol
 	class TRenderCommandBase;
 	class TRenderCommand_Clear;
 	class TRenderCommand_Draw;
-	class TRenderCommand_UpdateImage;
+	class TRenderCommand_SetRenderTarget;
+	class TRenderCommand_UpdateImage;	//	internal texture update
 	class TRenderCommands;
 
 	class TShader;
@@ -60,6 +61,15 @@ public:
 	float		mColour[4] = {1,0,1,1};
 };
 
+class Sokol::TRenderCommand_SetRenderTarget : public TRenderCommandBase
+{
+public:
+	static constexpr std::string_view	Name = "SetRenderTarget";
+	virtual const std::string_view	GetName() override { return Name; };
+
+	std::shared_ptr<SoyImageProxy>	mTargetTexture;	//	if null, render to screen
+	SoyPixelsFormat::Type			mReadBackFormat = SoyPixelsFormat::Invalid;
+};
 
 class Sokol::TRenderCommand_Draw : public TRenderCommandBase
 {

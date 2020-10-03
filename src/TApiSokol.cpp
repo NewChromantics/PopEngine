@@ -539,6 +539,47 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 		PushCommand(pDraw);
 		return;
 	}
+
+	if (Name == TRenderCommand_SetRenderTarget::Name)
+	{
+		auto pSetRenderTarget = std::make_shared<TRenderCommand_SetRenderTarget>();
+		
+		//	first arg is image, or null to render to screen
+		if (Params.IsArgumentNull(1))
+		{
+			//	must not have readback format
+			if (!Params.IsArgumentUndefined(2))
+			{
+				std::stringstream Error;
+				Error << "Render Command " << Name << " has read-backformat specified, but with null target, should not be provided";
+				throw Soy::AssertException(Error);
+			}
+		}
+		else
+		{
+			auto ImageObject = Params.GetArgumentObject(1);
+			auto Image = ImageObject.This<TImageWrapper>();
+			pSetRenderTarget->mTargetTexture = Image.mImage;
+
+			//	get readback format
+			if (!Params.IsArgumentUndefined(2))
+			{
+				//	gr: is readback better as a command?
+				auto FormatString = Params.GetArgumentString(2);
+				auto Format = SoyPixelsFormat::ToType(FormatString);
+				pSetRenderTarget->mReadBackFormat = Format;
+			}
+
+			//	insert a update-image command, so that sg image will get created
+			//	although, it doesnt need pixels updating as they will get overriden...
+			auto pUpdateImage = std::make_shared<TRenderCommand_UpdateImage>();
+			pUpdateImage->mImage = pSetRenderTarget->mTargetTexture;
+			PushCommand(pUpdateImage);
+		}
+
+		PushCommand(pSetRenderTarget);
+		return;
+	}
 	
 	std::stringstream Error;
 	Error << "Unknown render command " << Name;
