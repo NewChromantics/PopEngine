@@ -632,19 +632,24 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 	std::string Filename = Params.GetArgumentString(0);
 
-	std::shared_ptr<TExternalDrive> ExternalDrive = nullptr;
-
-	auto IsExternalDrive = [&](const std::string& Label, const std::string& DeviceNode, const std::string& Capacity)
+	auto IsExternalDrive = [&]()
 	{
-		if ( Soy::StringBeginsWith( Filename, Label, true ) )
+		for(int i = 0; i < gExternalDrives.GetSize(); i++)
 		{
-			std::shared_ptr<TExternalDrive> ptr(new TExternalDrive(Label, DeviceNode));
-			gExternalDrives.PushBack( ptr );
-			ExternalDrive = ptr;
+			if(Soy::StringBeginsWith(Filename, gExternalDrives[i]->mLabel, true))
+			{
+				if(gExternalDrives[i]->mIsMounted)
+					return gExternalDrives[i];
+				else
+				{
+					gExternalDrives[i]->MountDrive();
+					return gExternalDrives[i];
+				}
+			}
 		}
 	};
 
-	Platform::EnumExternalDrives( IsExternalDrive );
+	auto ExternalDrive = IsExternalDrive();
 
 	//	gr; work out a better idea for this
 	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
