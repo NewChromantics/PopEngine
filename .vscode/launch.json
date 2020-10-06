@@ -25,6 +25,16 @@
 			// "preLaunchTask": "Build Pi"
 		},
 		{
+			"type": "vgdb",
+			"request": "launch",
+			"name": "Vgdb Ubuntu",
+			"program": "Build/PopEngineTestApp",
+			"args": ["UnitTest/FileSystem/bootup.js"],
+			"cwd": "${workspaceRoot}",
+			"useAbsoluteFilePaths":false,
+			"preLaunchTask": "Build ubuntu"
+		},
+		{
 			"name": "Debug gdb",
 			"type": "gdb",
 			"request": "launch",

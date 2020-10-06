@@ -24,6 +24,16 @@
 			}
 		},
 		{
+			"label": "Build ubuntu",
+			"type": "shell",
+			"command": "(cd PopEngine.Linux && make osTarget=ubuntu-latest compiler=g++-10 CONFIGURATION=Debug)",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
 			"label": "Rebuild all",
 			"type": "shell",
 			"command": "(cd PopEngine.Linux && make clean && make osTarget=Nvidia-linux)",
