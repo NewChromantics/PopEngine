@@ -702,7 +702,7 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 {
 // tsdk: TODO Remove devices from global list if they are not found by this function
-	auto OnDeviceFound = [&](const std::string& Label, const std::string& DevNode, const std::string& Capacity)
+	auto OnDeviceFound = [&](const std::string& DevNode, const std::string& Label)
 	{
 		for( int i = 0; i < gExternalDrives.GetSize(); i++)
 		{
