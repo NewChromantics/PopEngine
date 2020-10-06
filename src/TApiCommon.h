@@ -237,5 +237,9 @@ public:
 public:
 	std::string						mLabel;
 	std::string						mDevNode;
+
+	bool									mIsMounted = false;
 	std::string						mMountPath;
+
+	void 									MountDrive();
 };

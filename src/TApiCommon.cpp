@@ -2066,3 +2066,10 @@ ApiPop::TExternalDrive::~TExternalDrive()
 
 	delete this;
 }
+
+void ApiPop::TExternalDrive::MountDrive()
+{
+	Platform::MountDrive(mDevNode, mLabel);
+	mMountPath = std::string("/media/") + mLabel;
+	mIsMounted = true;
+}
