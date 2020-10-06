@@ -2044,3 +2044,17 @@ void ApiPop::TShellExecuteWrapper::OnStdOut(const std::string& Output)
 	}
 	FlushPendingOutput();
 }
+
+ApiPop::TExternalDrive::TExternalDrive(const std::string& Label, const std::string& DevNode)
+{
+	mLabel = Label;
+	mDevNode = DevNode;
+}
+
+ApiPop::TExternalDrive::~TExternalDrive()
+{
+	if(mIsMounted)
+		Platform::UnMountDrive(mLabel);
+
+	delete this;
+}
