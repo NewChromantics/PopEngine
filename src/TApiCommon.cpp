@@ -61,6 +61,7 @@ namespace ApiPop
 	static void		ShellOpen(Bind::TCallback& Params);
 	static void		ShowWebPage(Bind::TCallback& Params);
 	static void		GetExternalDrives(Bind::TCallback& Params);
+	static void		UnMountExternalDrive(Bind::TCallback& Params);
 	static void		GetTempDirectory(Bind::TCallback& Params);
 
 	//	system stuff
@@ -86,6 +87,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(ShellOpen);
 	DEFINE_BIND_FUNCTIONNAME(ShowWebPage);
 	DEFINE_BIND_FUNCTIONNAME(GetExternalDrives);
+	DEFINE_BIND_FUNCTIONNAME(UnMountExternalDrive);
 	DEFINE_BIND_FUNCTIONNAME(GetTempDirectory);
 
 	//	engine stuff
@@ -730,6 +732,20 @@ void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 	Params.Return( GetArrayBridge( Drives ) );
 }
 
+void ApiPop::UnMountExternalDrive(Bind::TCallback& Params)
+{
+	std::string DeviceName = Params.GetArgumentString(0);
+
+	for(int i = 0; i < gExternalDrives.GetSize(); i++)
+		{
+			if(gExternalDrives[i]->mLabel == DeviceName)
+			{
+				// Do I need to do anything else to here?
+				gExternalDrives[i].reset();
+			}
+		}
+}
+
 void ApiPop::GetTempDirectory(Bind::TCallback& Params)
 {
 	Params.Return( Platform::GetTempDirectory() );
@@ -815,6 +831,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::ShellOpen>(ShellOpen, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
 	Context.BindGlobalFunction<BindFunction::GetExternalDrives>(GetExternalDrives, Namespace );
+	Context.BindGlobalFunction<BindFunction::UnMountExternalDrive>(UnMountExternalDrive, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetTempDirectory>(GetTempDirectory, Namespace );
 }
 
@@ -2068,8 +2085,6 @@ ApiPop::TExternalDrive::~TExternalDrive()
 {
 	if(mIsMounted)
 		Platform::UnMountDrive(mLabel);
-
-	delete this;
 }
 
 void ApiPop::TExternalDrive::MountDrive()
