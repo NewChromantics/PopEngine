@@ -662,7 +662,7 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 	else if( ExternalDrive )
 	{
 		Soy::StringTrimLeft(Filename, ExternalDrive->mLabel,true);
-		Filename = ExternalDrive->mMountPath + std::string("/") + Filename;
+		Filename = ExternalDrive->mMountPath + Filename;
 	}
 	else
 	{
