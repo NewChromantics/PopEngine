@@ -696,23 +696,31 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 void ApiPop::GetExternalDrives(Bind::TCallback& Params)
 {
-	// tsdk: possible to allow the user to query a specific subsystem
-	// char *SUBSYSTEM = "scsi";
+// tsdk: TODO Remove devices from global list if they are not found by this function
+	auto OnDeviceFound = [&](const std::string& Label, const std::string& DevNode, const std::string& Capacity)
+	{
+		for( int i = 0; i < gExternalDrives.GetSize(); i++)
+		{
+			// tsdk: This is a not very unique better to use a UUID from udev
+			if(gExternalDrives[i]->mDevNode == DevNode)
+				return;
+		}
+		
+		auto NewDevice(std::make_shared<TExternalDrive>(Label, DevNode));
+		gExternalDrives.PushBack(NewDevice);
+	};
+
+	Platform::EnumExternalDrives( OnDeviceFound );
 
 	//	os list all external Drives
 	Array<Bind::TObject> Drives;
-	
-	auto OnDeviceFound = [&](const std::string& Label, const std::string& DeviceNode, const std::string& Capacity)
+	for( int i = 0; i < gExternalDrives.GetSize(); i++)
 	{
 		auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
-		Object.SetString("Label", Label);
-		Object.SetString("DevNode", DeviceNode);
-		Object.SetString("Capacity", Capacity);
+		Object.SetString("Label", gExternalDrives[i]->mLabel);
 
 		Drives.PushBack(Object);
-	};
-	
-	Platform::EnumExternalDrives( OnDeviceFound );
+	}
 
 	Params.Return( GetArrayBridge( Drives ) );
 }
