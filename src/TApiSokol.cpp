@@ -72,7 +72,14 @@ sg_image_desc GetImageDescription(TImageWrapper& Image,SoyPixels& TemporaryPixel
 		TemporaryPixels.SetFormat(SoyPixelsFormat::RGBA);
 		pPixels = &TemporaryPixels;
 	}
-	
+	if ( ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_88 || ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_8_8 )
+	{
+		Soy::TScopeTimerPrint Timer("Converting yuv image to temporary greyscale for sokol",1);
+		TemporaryPixels.Copy(ImagePixels);
+		TemporaryPixels.SetFormat(SoyPixelsFormat::Greyscale);
+		pPixels = &TemporaryPixels;
+	}
+
 	auto& Pixels = *pPixels;
 	auto ImageMeta = Pixels.GetMeta();
 	Description.width = ImageMeta.GetWidth();
