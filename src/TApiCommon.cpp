@@ -13,6 +13,13 @@
 #include <SoyShellExecute.h>
 #include <SoyMedia.h>
 
+//	stdout/err stuff
+#include <iostream>
+#if defined(TARGET_WINDOWS)
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 
 namespace ApiPop
 {
@@ -24,6 +31,8 @@ namespace ApiPop
 
 	static void 	Debug(Bind::TCallback& Params);
 	static void 	Warning(Bind::TCallback& Params);
+	static void 	StdOut(Bind::TCallback& Params);
+	static void 	StdErr(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
 	static void 	CompileAndRun(Bind::TCallback& Params);
 	static void		FileExists(Bind::TCallback& Params);
@@ -89,6 +98,8 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(CreateTestPromise);
 	DEFINE_BIND_FUNCTIONNAME(Debug);
 	DEFINE_BIND_FUNCTIONNAME(Warning);
+	DEFINE_BIND_FUNCTIONNAME(StdErr);
+	DEFINE_BIND_FUNCTIONNAME(StdOut);
 	DEFINE_BIND_FUNCTIONNAME(ThreadTest);
 	DEFINE_BIND_FUNCTIONNAME(GetImageHeapSize);
 	DEFINE_BIND_FUNCTIONNAME(GetImageHeapCount);
@@ -135,24 +146,85 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(WaitForChange);	
 }
 
-
-void ApiPop::Debug(Bind::TCallback& Params)
+template<typename STREAMTYPE>	//	ostream
+void PrintToStream(STREAMTYPE& Stream,Bind::TCallback& Params)
 {
-	for ( auto a=0;	a<Params.GetArgumentCount();	a++ )
+	for (auto a = 0; a < Params.GetArgumentCount(); a++)
 	{
 		auto IsUndefined = Params.IsArgumentUndefined(a);
 		auto Arg = IsUndefined ? "Undefined" : Params.GetArgumentString(a);
-		std::Debug << (a==0?"":",") << Arg;
+		Stream << (a == 0 ? "" : ",") << Arg;
 	}
-	std::Debug << std::endl;
+	Stream << std::endl;
+}
+
+void ApiPop::Debug(Bind::TCallback& Params)
+{
+	PrintToStream(std::Debug, Params);
+}
+
+void ApiPop::StdErr(Bind::TCallback& Params)
+{
+	PrintToStream(std::cerr, Params);
 }
 
 
 void ApiPop::Warning(Bind::TCallback& Params)
 {
 	std::Debug << "Warning: ";
-	Debug(Params);
+	PrintToStream(std::Debug, Params);
 }
+
+
+void ApiPop::StdOut(Bind::TCallback& Params)
+{
+	//	if there is one binary argument for std out, we write directly as binary
+	//	for binary output
+	//	gr: any typed array?
+	if (!Params.IsArgumentArrayU8(0))
+	{
+		PrintToStream(std::cout, Params);
+		return;
+	}
+
+	Array<uint8_t> Binary;
+	Params.GetArgumentArray(0, GetArrayBridge(Binary));
+
+	//	gr: is this the safest way to definitely get binary out?
+	//	on windows, stdout IS a file*
+	FILE* FileHandle = stdout;
+
+	//	make sure file is binary on windows (unix is always binary)
+#if defined(TARGET_WINDOWS)
+	//	from https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setmode?view=vs-2017
+	//	flush before changing mode
+	{
+		auto Error = fflush(FileHandle);
+		Platform::IsOkay(Error, "fflush stdout before set mode");
+		auto FileDescriptor = fileno(FileHandle);
+		Error = setmode(FileDescriptor, O_BINARY);
+		Platform::IsOkay(Error, "setmode stdout O_BINARY");
+	}
+#endif
+	auto WrittenBytes = fwrite(Binary.GetArray(), 1, Binary.GetDataSize(), FileHandle);
+	//	if not all bytes were written, there's an error
+	if (WrittenBytes != Binary.GetDataSize())
+	{
+		auto FileError = ferror(FileHandle);
+		std::stringstream Error;
+		Error << "fwrite(" << Binary.GetDataSize() << ") wrote " << WrittenBytes << " (FileError=" << FileError << ")";
+		Platform::IsOkay(FileError, Error.str());
+		//	if the above doesnt throw, still throw
+		throw Soy::AssertException(Error);
+	}
+
+	//	gr: flush? close?
+	{
+		auto Error = fflush(FileHandle);
+		Platform::IsOkay(Error, "fflush stdout after write");
+	}
+}
+
 
 
 void ApiPop::CreateTestPromise(Bind::TCallback& Params)
@@ -711,7 +783,9 @@ void ApiPop::Bind(Bind::TContext& Context)
 
 	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
-	Context.BindGlobalFunction<BindFunction::Warning>( Warning, Namespace );
+	Context.BindGlobalFunction<BindFunction::Warning>(Warning, Namespace);
+	Context.BindGlobalFunction<BindFunction::StdOut>(StdOut, Namespace);
+	Context.BindGlobalFunction<BindFunction::StdErr>(StdErr, Namespace );
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
 	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
