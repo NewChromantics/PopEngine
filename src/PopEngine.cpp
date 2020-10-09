@@ -60,6 +60,7 @@ int32_t PopMain()
 	//		message aside from PostQuitMessage()
 	std::shared_ptr<Bind::TInstance> pInstance;
 	bool Running = true;
+	DWORD ThisWin32ThreadId = GetCurrentThreadId();
 #elif defined(TARGET_LINUX)
 	//	on linux, the main thread has nothing to do
 	std::shared_ptr<Bind::TInstance> pInstance;
@@ -76,7 +77,11 @@ int32_t PopMain()
 		//	make sure WM_QUIT comes up by waking the message loop
 		//	this exit code will get set again from WM_QUIT in case WM_QUIT comes from elsewhere
 		PopExitCode = ExitCode;
-		PostQuitMessage(ExitCode);
+		PostQuitMessage(ExitCode);	//	this posts to THIS thread, if being called from the JSC thread, the win32 loop below wont trigger
+		if (!PostThreadMessageA(ThisWin32ThreadId, WM_QUIT, ExitCode, 0))
+		{
+			std::Debug << "error PostThreadMessageA(thread=" << ThisWin32ThreadId << ", WM_QUIT) " << Platform::GetLastErrorString() << std::endl;
+		}
 #elif defined(TARGET_LINUX)
 		//	todo: save exit code!
 		RunningLock.OnCompleted();
