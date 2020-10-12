@@ -69,6 +69,9 @@ namespace ApiPop
 	static void		GetPlatform(Bind::TCallback& Params);
 	static void		ShellOpen(Bind::TCallback& Params);
 	static void		ShowWebPage(Bind::TCallback& Params);
+	static void		GetExternalDrives(Bind::TCallback& Params);
+	static void		UnMountExternalDrive(Bind::TCallback& Params);
+	static void		GetTempDirectory(Bind::TCallback& Params);
 
 	//	system stuff
 	DEFINE_BIND_FUNCTIONNAME(FileExists);
@@ -92,6 +95,9 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(GetPlatform);
 	DEFINE_BIND_FUNCTIONNAME(ShellOpen);
 	DEFINE_BIND_FUNCTIONNAME(ShowWebPage);
+	DEFINE_BIND_FUNCTIONNAME(GetExternalDrives);
+	DEFINE_BIND_FUNCTIONNAME(UnMountExternalDrive);
+	DEFINE_BIND_FUNCTIONNAME(GetTempDirectory);
 
 	//	engine stuff
 	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
@@ -144,6 +150,9 @@ namespace ApiPop
 	//	TFileMonitor
 	DEFINE_BIND_FUNCTIONNAME(Add);
 	DEFINE_BIND_FUNCTIONNAME(WaitForChange);	
+
+	// TDeviceArray
+	Array<std::shared_ptr<TExternalDrive>>						gExternalDrives;
 }
 
 template<typename STREAMTYPE>	//	ostream
@@ -698,12 +707,37 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 	std::string Filename = Params.GetArgumentString(0);
 
+	auto IsExternalDrive = [&]()
+	{
+		for(int i = 0; i < gExternalDrives.GetSize(); i++)
+		{
+			if(Soy::StringBeginsWith(Filename, gExternalDrives[i]->mLabel, true))
+			{
+				if(gExternalDrives[i]->mIsMounted)
+					return gExternalDrives[i];
+				else
+				{
+					gExternalDrives[i]->MountDrive();
+					return gExternalDrives[i];
+				}
+			}
+		}
+	};
+
+	auto ExternalDrive = IsExternalDrive();
+
 	//	gr; work out a better idea for this
 	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
 	{
 		auto DocsDir = Platform::GetDocumentsDirectory();
 		//std::Debug << "Platform::GetDocumentsDirectory=" << DocsDir << std::endl;
 		Filename = DocsDir + std::string("/") + Filename;
+	}
+	// tsdk: for usb devices
+	else if( ExternalDrive )
+	{
+		Soy::StringTrimLeft(Filename, ExternalDrive->mLabel,true);
+		Filename = ExternalDrive->mMountPath + Filename;
 	}
 	else
 	{
@@ -740,6 +774,55 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
 }
 
+void ApiPop::GetExternalDrives(Bind::TCallback& Params)
+{
+// tsdk: TODO Remove devices from global list if they are not found by this function
+	auto OnDeviceFound = [&](const std::string& DevNode, const std::string& Label)
+	{
+		for( int i = 0; i < gExternalDrives.GetSize(); i++)
+		{
+			// tsdk: This is a not very unique better to use a UUID from udev
+			if(gExternalDrives[i]->mDevNode == DevNode)
+				return;
+		}
+		
+		auto NewDevice(std::make_shared<TExternalDrive>(Label, DevNode));
+		gExternalDrives.PushBack(NewDevice);
+	};
+
+	Platform::EnumExternalDrives( OnDeviceFound );
+
+	//	os list all external Drives
+	Array<Bind::TObject> Drives;
+	for( int i = 0; i < gExternalDrives.GetSize(); i++)
+	{
+		auto Object = Params.mContext.CreateObjectInstance( Params.mLocalContext );
+		Object.SetString("Label", gExternalDrives[i]->mLabel);
+
+		Drives.PushBack(Object);
+	}
+
+	Params.Return( GetArrayBridge( Drives ) );
+}
+
+void ApiPop::UnMountExternalDrive(Bind::TCallback& Params)
+{
+	std::string DeviceName = Params.GetArgumentString(0);
+
+	for(int i = 0; i < gExternalDrives.GetSize(); i++)
+		{
+			if(gExternalDrives[i]->mLabel == DeviceName)
+			{
+				// Do I need to do anything else to here?
+				gExternalDrives[i].reset();
+			}
+		}
+}
+
+void ApiPop::GetTempDirectory(Bind::TCallback& Params)
+{
+	Params.Return( Platform::GetTempDirectory() );
+}
 
 void ApiPop::GetFilenames(Bind::TCallback& Params)
 {
@@ -822,6 +905,9 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::GetPlatform>(GetPlatform, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShellOpen>(ShellOpen, Namespace);
 	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
+	Context.BindGlobalFunction<BindFunction::GetExternalDrives>(GetExternalDrives, Namespace );
+	Context.BindGlobalFunction<BindFunction::UnMountExternalDrive>(UnMountExternalDrive, Namespace );
+	Context.BindGlobalFunction<BindFunction::GetTempDirectory>(GetTempDirectory, Namespace );
 }
 
 TImageWrapper::~TImageWrapper()
@@ -2062,4 +2148,23 @@ void ApiPop::TShellExecuteWrapper::OnStdOut(const std::string& Output)
 		mPendingOutput.PushBack(Output);
 	}
 	FlushPendingOutput();
+}
+
+ApiPop::TExternalDrive::TExternalDrive(const std::string& Label, const std::string& DevNode)
+{
+	mLabel = Label;
+	mDevNode = DevNode;
+}
+
+ApiPop::TExternalDrive::~TExternalDrive()
+{
+	if(mIsMounted)
+		Platform::UnMountDrive(mLabel);
+}
+
+void ApiPop::TExternalDrive::MountDrive()
+{
+	Platform::MountDrive(mDevNode, mLabel);
+	mMountPath = std::string("/media/") + mLabel;
+	mIsMounted = true;
 }

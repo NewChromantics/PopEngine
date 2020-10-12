@@ -39,8 +39,9 @@ namespace ApiPop
 	
 	class TFileMonitorWrapper;
 	class TShellExecuteWrapper;
-
+	class TExternalDrive;
 	class TAsyncLoop;
+
 	DECLARE_BIND_TYPENAME(AsyncLoop);
 	DECLARE_BIND_TYPENAME(Image);
 	DECLARE_BIND_TYPENAME(FileMonitor);
@@ -227,3 +228,18 @@ public:
 	Array<std::string>		mPendingOutput;	//	note: no filter between stderr and stdout atm
 };
 
+class ApiPop::TExternalDrive
+{
+public:
+	TExternalDrive(const std::string& Label, const std::string& DevNode);
+	~TExternalDrive();
+
+public:
+	std::string						mLabel;
+	std::string						mDevNode;
+
+	bool									mIsMounted = false;
+	std::string						mMountPath;
+
+	void 									MountDrive();
+};
