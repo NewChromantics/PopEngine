@@ -8,12 +8,12 @@
 
 namespace Platform
 {
-	void		Loop(bool Blocking,std::function<void()> OnQuit);
+	void		Loop(bool Blocking,std::function<void(int32_t)> OnQuit);
 }
 
 //	gr: need to move win32 stuff away from opengl (in SoyOpenglWindow.cpp) atm
 #if defined(TARGET_UWP)
-void Platform::Loop(bool Blocking, std::function<void()> OnQuit)
+void Platform::Loop(bool Blocking, std::function<void(int32_t)> OnQuit)
 {
 	while (true)
 	{
@@ -28,7 +28,7 @@ void Platform::Loop(bool Blocking, std::function<void()> OnQuit)
 std::shared_ptr<Bind::TInstance> pInstance;
 #endif
 
-TPopAppError::Type PopMain()
+int32_t PopMain()
 {
 	//	need to resolve .. paths early in windows
 	auto DataPath = Pop::ProjectPath;
@@ -60,21 +60,28 @@ TPopAppError::Type PopMain()
 	//		message aside from PostQuitMessage()
 	std::shared_ptr<Bind::TInstance> pInstance;
 	bool Running = true;
+	DWORD ThisWin32ThreadId = GetCurrentThreadId();
 #elif defined(TARGET_LINUX)
 	//	on linux, the main thread has nothing to do
 	std::shared_ptr<Bind::TInstance> pInstance;
 	Soy::TSemaphore RunningLock;
 #endif
 	
+	int32_t PopExitCode = 707;
 	auto OnShutdown = [&](int32_t ExitCode)
 	{		
-		std::Debug << "PopMain() OnShutdown" << std::endl;
+		std::Debug << "PopMain() OnShutdown exitcode=" << ExitCode << std::endl;
 #if defined(TARGET_UWP)
 		Running = false;
 #elif defined(TARGET_WINDOWS)
-		Running = false;
 		//	make sure WM_QUIT comes up by waking the message loop
-		PostQuitMessage(ExitCode);
+		//	this exit code will get set again from WM_QUIT in case WM_QUIT comes from elsewhere
+		PopExitCode = ExitCode;
+		PostQuitMessage(ExitCode);	//	this posts to THIS thread, if being called from the JSC thread, the win32 loop below wont trigger
+		if (!PostThreadMessageA(ThisWin32ThreadId, WM_QUIT, ExitCode, 0))
+		{
+			std::Debug << "error PostThreadMessageA(thread=" << ThisWin32ThreadId << ", WM_QUIT) " << Platform::GetLastErrorString() << std::endl;
+		}
 #elif defined(TARGET_LINUX)
 		//	todo: save exit code!
 		RunningLock.OnCompleted();
@@ -98,9 +105,10 @@ TPopAppError::Type PopMain()
 		std::Debug << "PopMain() run loop..." << std::endl;
 		while ( Running )
 		{
-			auto OnQuit = [&]()
+			auto OnQuit = [&](int32_t ExitCode)
 			{
-				OnShutdown(0);
+				PopExitCode = ExitCode;
+				Running = false;
 			};
 			auto Blocking = true;
 			Platform::Loop( Blocking, OnQuit );
@@ -118,7 +126,7 @@ TPopAppError::Type PopMain()
 	#endif
 	}
 	
-	return TPopAppError::Success;
+	return PopExitCode;
 }
 
 namespace Java
