@@ -40,6 +40,10 @@ int Soy::Platform::BundleAppMain()
 	auto AppDelegateClass = @"AppDelegate";
 	return UIApplicationMain(argc, argv, nullptr, AppDelegateClass );
 #else
+	//	https://developer.apple.com/documentation/appkit/1428499-nsapplicationmain
+	//	NSApplicationMain itself ignores the argc and argv arguments. 
+	//	Return Value
+	//	This method never returns a result code. Instead, it calls the exit function to exit the application and terminate the process.
 	const char* argv[] = {"FakeExe"};
 	return NSApplicationMain(argc, argv);
 #endif
@@ -90,49 +94,69 @@ void PopMainThread::TriggerIteration()
 
 @end
 
-
-/*
-@implementation SKScene (Unarchive)
-
-+ (instancetype)unarchiveFromFile:(NSString *)file {
-	// Retrieve scene file path from the application bundle
-	NSString *nodePath = [[NSBundle mainBundle] pathForResource:file ofType:@"sks"];
-	// Unarchive the file to an SKScene object
-	NSData *data = [NSData dataWithContentsOfFile:nodePath
-										  options:NSDataReadingMappedIfSafe
-											error:nil];
-	NSKeyedUnarchiver *arch = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
-	[arch setClass:self forClassName:@"SKScene"];
-	SKScene *scene = [arch decodeObjectForKey:NSKeyedArchiveRootObjectKey];
-	[arch finishDecoding];
-	
-	return scene;
-}
-
-@end
-*/
 @implementation AppDelegate
 
 //@synthesize window = _window;
 
 
-	
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	//GameScene *scene = [GameScene unarchiveFromFile:@"GameScene"];
- 
-	PopMain();
-
-	// Set the scale mode to scale to fit the window
-	//scene.scaleMode = SKSceneScaleModeAspectFit;
-	
-	//[self.skView presentScene:scene];
-	
-	// Sprite Kit applies additional optimizations to improve rendering performance
-//	self.skView.ignoresSiblingOrder = YES;
-	
-//	self.skView.showsFPS = YES;
-//	self.skView.showsNodeCount = YES;
+//	gr: tidy this up!
+namespace Bind
+{
+	class TInstance;
 }
+std::shared_ptr<Bind::TInstance> StartPopInstance(std::function<void(int32_t)> OnExitCode);
+std::shared_ptr<Bind::TInstance> gPopInstance;
+int32_t Platform_ExitCode = 666;
+
+
+#if defined(TARGET_OSX)
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification 
+#elif defined(TARGET_IOS)
+- (BOOL)applicationDidFinishLaunching:(UIApplication *)application 
+#endif
+{
+	//	gr: we can't block here, but we need to capture exit code.
+	//		NSApplications never return, they have to be aborted with an exit code.
+	auto OnExitCode = [](int32_t ExitCode)
+	{
+		std::Debug << "OnExitCode(" << ExitCode << ")" << std::endl;
+		Platform_ExitCode = ExitCode;
+		
+		//	can't cleanup here, from inside own thread.
+		//	need to find a way to exit before c++ tear down
+		//gPopInstance.reset();
+
+		//	terminate is the only way to get a callback (applicationWillTerminate) func AND exit the main thread
+#if defined(TARGET_OSX)
+		[[NSApplication sharedApplication] terminate:nil];
+#else
+		[[UIApplication sharedApplication] terminateWithSuccess];
+#endif
+		//	gr: when not on main thread, this DOES happen
+		//		on main thread, it stops at terminate
+		//std::Debug << "terminate done" << std::endl;
+	};
+	
+	gPopInstance = StartPopInstance(OnExitCode);
+	
+#if defined(TARGET_IOS)
+	return YES;
+#endif
+}
+
+#if defined(TARGET_OSX)
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+	//	need to manualyl clean up these globals (specifically MainThread)
+	//	not sure if it's being double deleted, or just still in use
+	Soy::Platform::gMainThread.reset();
+	//	this also crashes at exit() without being cleaned up
+	//	todo: call soy/pop dll exit global func
+	gPopInstance.reset();
+	//	only function that has an exit code!
+	exit(Platform_ExitCode);
+}
+#endif
 
 #if defined(TARGET_OSX)
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
@@ -143,13 +167,6 @@ void PopMainThread::TriggerIteration()
 #endif
 
 
-#if defined(TARGET_IOS)
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-	// Override point for customization after application launch.
-	PopMain();
-	return YES;
-}
-#endif
 
 
 #if defined(TARGET_IOS)
