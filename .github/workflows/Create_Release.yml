@@ -85,7 +85,7 @@ jobs:
       - name: Build Apple
         id: Apple
         if: matrix.config.os == 'macOS'
-        uses: NewChromantics/PopAction_BuildApple@v1
+        uses: NewChromantics/PopAction_BuildApple@v1.0.1
         with:
           BuildScheme: ${{ matrix.config.BuildScheme }}
           BuildTargetDir: ${{ matrix.config.BuildTargetDir }}
