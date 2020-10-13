@@ -740,17 +740,8 @@ JsCore::TInstance::~TInstance()
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	mContextGroupThread.WaitToFinish();
 
-	//	this does some of the final releasing in JS land
-	try
-	{
-		JSContextGroupRelease(mContextGroup);
-	}
-	catch(std::exception& e)
-	{
-		std::Debug << "Caught exception in JSContextGroupRelease(): " << e.what() << std::endl;
-	}
-
 	//	try and shutdown all javascript objects first
+	//	before group
 	for ( auto c = 0; c < mContexts.GetSize(); c++ )
 	{
 		try
@@ -780,7 +771,18 @@ JsCore::TInstance::~TInstance()
 		pContext.reset();
 	}
 
-	
+	//	this does some of the final releasing in JS land
+	//	javascriptcore on osx needs this after (but others were exiting okay?)
+	try
+	{
+		if ( mContextGroup )
+			JSContextGroupRelease(mContextGroup);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Caught exception in JSContextGroupRelease(): " << e.what() << std::endl;
+	}
+
 }
 
 #if defined(JSAPI_JSCORE)
