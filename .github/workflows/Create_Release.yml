@@ -64,12 +64,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - name: Copy package downloads to Libs
-        run: |
-          mkdir -p Libs
-          cp -r ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
-          ls -R Libs
-
       - name: Setup nuget (Windows)
         if: matrix.config.os == 'windows'
         uses: warrenbuckley/Setup-Nuget@v1
