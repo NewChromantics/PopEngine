@@ -6,12 +6,6 @@ env:
 
 on:
   push:
-    branches:
-      - master
-      - '*Test*'
-    #gr: testing, but cannot have path AND branch
-    #paths:
-    #- '**.json'
     #tsdk: need this otherwise it will never make a package later on    
     tags:        
       - v*
