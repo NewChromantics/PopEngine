@@ -6,7 +6,7 @@
 Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 {
 	esInitContext( &mESContext );
-	if(Name == "Headless")
+	if(Name == "null")
 	{
 	// tsdk: the width and height are set to the 640 x 480 inside this function if the values are empty
 		esCreateHeadless( &mESContext, Name.c_str(), Rect.w, Rect.h);
