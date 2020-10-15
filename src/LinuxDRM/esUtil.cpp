@@ -24,13 +24,26 @@
 #include <string.h>
 #include <stdarg.h>
 #include <sys/time.h>
-#include <GLES2/gl2.h>
-#include <EGL/egl.h>
 #include "esUtil.h"
+#include <EGL/egl.h>
+#define EGL_EGLEXT_PROTOTYPES
+#include <EGL/eglext.h>
+#include <GLES2/gl2.h>
 
 #include "common.h"
 #include "drm-common.h"
 #include "drm-legacy.h"
+
+#define THROW(m) { \
+	std::cerr << m << std::endl; \
+	return EGL_FALSE; \
+}
+
+#define THROWEGL() THROW(eglErrorString(eglGetError()))
+
+PFNEGLQUERYDEVICESEXTPROC _eglQueryDevicesEXT = NULL;
+PFNEGLQUERYDEVICESTRINGEXTPROC _eglQueryDeviceStringEXT = NULL;
+PFNEGLGETPLATFORMDISPLAYEXTPROC _eglGetPlatformDisplayEXT = NULL;
 
 // DRM local variables
 static struct egl egl;   // TODO: This egl is basically an ESContext.  Need to think
@@ -153,6 +166,97 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, G
    esContext->height = esContext->screenHeight;
 
    return GL_TRUE;
+}
+
+//
+// esCreateHeadless()
+//
+GLboolean ESUTIL_API esCreateHeadless( ESContext *esContext, const char* title)
+{
+	if (esContext == NULL)
+	{
+		return GL_FALSE;
+	}
+
+	int num_devices = 0, i;
+	EGLDeviceEXT *devices = NULL;
+	EGLDisplay dpy = NULL;
+	EGLConfig *configs = NULL;
+	int attribs[] = {EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
+									 EGL_DEPTH_SIZE, 24, EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+									 EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER, EGL_NONE};
+	int pbattribs[] = {EGL_WIDTH, 640, EGL_HEIGHT, 480, EGL_NONE};
+	int major, minor, ret = 0, nc = 0;
+	EGLSurface pb = 0;
+	EGLContext ctx = 0;
+	unsigned char *buf = NULL;
+
+	if ((_eglQueryDevicesEXT =
+					 (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEXT")) == NULL)
+		THROW("eglQueryDevicesEXT() could not be loaded");
+	if ((_eglQueryDeviceStringEXT =
+					 (PFNEGLQUERYDEVICESTRINGEXTPROC)eglGetProcAddress("eglQueryDeviceStringEXT")) == NULL)
+		THROW("eglQueryDeviceStringEXT() could not be loaded");
+	if ((_eglGetPlatformDisplayEXT =
+					 (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT")) == NULL)
+		THROW("eglGetPlatformDisplayEXT() could not be loaded");
+
+	if (!_eglQueryDevicesEXT(0, NULL, &num_devices) || num_devices < 1)
+		THROWEGL();
+	if ((devices =
+					 (EGLDeviceEXT *)malloc(sizeof(EGLDeviceEXT) * num_devices)) == NULL)
+		THROW("Memory allocation failure");
+	if (!_eglQueryDevicesEXT(num_devices, devices, &num_devices) || num_devices < 1)
+		THROWEGL();
+
+	for (i = 0; i < num_devices; i++)
+	{
+		const char *devstr = _eglQueryDeviceStringEXT(devices[i],
+																									EGL_DRM_DEVICE_FILE_EXT);
+		printf("Device 0x%.8lx: %s\n", (unsigned long)devices[i],
+					 devstr ? devstr : "NULL");
+	}
+
+	if ((dpy = _eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT,
+																			 devices[0], NULL)) == NULL)
+		THROWEGL();
+	if (!eglInitialize(dpy, &major, &minor))
+		THROWEGL();
+	printf("EGL version %d.%d\n", major, minor);
+	if (!eglChooseConfig(dpy, attribs, NULL, 0, &nc) || nc < 1)
+		THROWEGL();
+	if ((configs = (EGLConfig *)malloc(sizeof(EGLConfig) * nc)) == NULL)
+		THROW("Memory allocation failure");
+	if (!eglChooseConfig(dpy, attribs, configs, nc, &nc) || nc < 1)
+		THROWEGL();
+
+	if ((pb = eglCreatePbufferSurface(dpy, configs[0], pbattribs)) == NULL)
+		THROWEGL();
+	if (!eglBindAPI(EGL_OPENGL_API))
+		THROWEGL();
+	if ((ctx = eglCreateContext(dpy, configs[0], NULL, NULL)) == NULL)
+		THROWEGL();
+	if (!eglMakeCurrent(dpy, pb, pb, ctx))
+		THROWEGL();
+
+	esContext->hWnd = (EGLNativeWindowType)egl.surface;
+	esContext->eglDisplay = egl.display;
+	esContext->eglContext = egl.context;
+	esContext->eglSurface = egl.surface;
+
+	// tsdk: Release this thread so that we can change context in the sokol code
+	if (eglGetCurrentContext() != NULL)
+		eglReleaseThread();
+
+	return EGL_TRUE;
+	/* Need to remember to put this cleanup in the deconstrutor
+	if(buf) free(buf);
+	if(ctx && dpy) eglDestroyContext(dpy, ctx);
+	if(pb && dpy) eglDestroySurface(dpy, pb);
+	if(dpy) eglTerminate(dpy);
+	if(configs) free(configs);
+	if(devices) free(devices);
+		*/
 }
 
 

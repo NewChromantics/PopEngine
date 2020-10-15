@@ -127,6 +127,10 @@ void ESUTIL_API esInitContext ( ESContext *esContext );
 GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char *title, GLint width, GLint height, GLuint flags );
 
 //
+// \brief Create a headless context using pbuffers
+GLboolean ESUTIL_API esCreateHeadless( ESContext *esContext, const char *title);
+
+//
 /// \brief Start the main loop for the OpenGL ES application
 /// \param esContext Application context
 //
@@ -279,6 +283,47 @@ void ESUTIL_API esMatrixMultiply(ESMatrix *result, ESMatrix *srcA, ESMatrix *src
 //// \param result returns identity matrix
 //
 void ESUTIL_API esMatrixLoadIdentity(ESMatrix *result);
+
+//
+//// \brief Error string translations
+//
+static const char *eglErrorString(EGLint error)
+{
+	switch (error)
+	{
+		case EGL_SUCCESS:
+			return "Success";
+		case EGL_NOT_INITIALIZED:
+			return "EGL is not or could not be initialized";
+		case EGL_BAD_ACCESS:
+			return "EGL cannot access a requested resource";
+		case EGL_BAD_ALLOC:
+			return "EGL failed to allocate resources for the requested operation";
+		case EGL_BAD_ATTRIBUTE:
+			return "An unrecognized attribute or attribute value was passed in the attribute list";
+		case EGL_BAD_CONTEXT:
+			return "An EGLContext argument does not name a valid EGL rendering context";
+		case EGL_BAD_CONFIG:
+			return "An EGLConfig argument does not name a valid EGL frame buffer configuration";
+		case EGL_BAD_CURRENT_SURFACE:
+			return "The current surface of the calling thread is a window, pixel buffer or pixmap that is no longer valid";
+		case EGL_BAD_DISPLAY:
+			return "An EGLDisplay argument does not name a valid EGL display connection";
+		case EGL_BAD_SURFACE:
+			return "An EGLSurface argument does not name a valid surface configured for GL rendering";
+		case EGL_BAD_MATCH:
+			return "Arguments are inconsistent";
+		case EGL_BAD_PARAMETER:
+			return "One or more argument values are invalid";
+		case EGL_BAD_NATIVE_PIXMAP:
+			return "A NativePixmapType argument does not refer to a valid native pixmap";
+		case EGL_BAD_NATIVE_WINDOW:
+			return "A NativeWindowType argument does not refer to a valid native window";
+		case EGL_CONTEXT_LOST:
+			return "The application must destroy all contexts and reinitialise";
+	}
+	return "UNKNOWN EGL ERROR";
+}
 
 #ifdef __cplusplus
 }
