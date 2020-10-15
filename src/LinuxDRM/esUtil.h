@@ -128,7 +128,7 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char *title, G
 
 //
 // \brief Create a headless context using pbuffers
-GLboolean ESUTIL_API esCreateHeadless( ESContext *esContext, const char *title);
+GLboolean ESUTIL_API esCreateHeadless( ESContext *esContext, const char *title, GLint width, GLint height);
 
 //
 /// \brief Start the main loop for the OpenGL ES application
