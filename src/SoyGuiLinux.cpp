@@ -3,17 +3,18 @@
 #include "LinuxDRM/esUtil.h"
 #include "SoyWindowLinux.h"
 
-Platform::TWindow::TWindow(const std::string& Name)
+Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 {
 	esInitContext( &mESContext );
-	if(Name = "Headless")
+	if(Name == "Headless")
 	{
-		esCreateHeadless( &mESContext, Name.c_str());
+	// tsdk: the width and height are set to the 640 x 480 inside this function if the values are empty
+		esCreateHeadless( &mESContext, Name.c_str(), Rect.w, Rect.h);
 	}
 	else
 	{
-		// tsdk: the width and height are set to the size of the screen in this function, leaving them as 0's in case that needs to change in future
-		esCreateWindow( &mESContext, Name.c_str(), 0, 0, ES_WINDOW_ALPHA );
+	// tsdk: the width and height are set to the size of the screen inside this function if the values are empty
+		esCreateWindow( &mESContext, Name.c_str(), Rect.w, Rect.h, ES_WINDOW_ALPHA );
 	}
 
 }
@@ -22,7 +23,7 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 {
 	std::shared_ptr<SoyWindow> Window;
 
-	Window.reset( new Platform::TWindow( Name ) );
+	Window.reset( new Platform::TWindow( Name, Rect ) );
 
 	return Window;
 }
