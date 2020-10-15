@@ -8,12 +8,12 @@
 
 namespace Platform
 {
-	void		Loop(bool Blocking,std::function<void()> OnQuit);
+	void		Loop(bool Blocking,std::function<void(int32_t)> OnQuit);
 }
 
 //	gr: need to move win32 stuff away from opengl (in SoyOpenglWindow.cpp) atm
 #if defined(TARGET_UWP)
-void Platform::Loop(bool Blocking, std::function<void()> OnQuit)
+void Platform::Loop(bool Blocking, std::function<void(int32_t)> OnQuit)
 {
 	while (true)
 	{
@@ -23,12 +23,9 @@ void Platform::Loop(bool Blocking, std::function<void()> OnQuit)
 
 #endif
 
-//	need a global to stop auto destruction
-#if !defined(TARGET_WINDOWS)
-std::shared_ptr<Bind::TInstance> pInstance;
-#endif
 
-TPopAppError::Type PopMain()
+//	start instance, non blocking
+std::shared_ptr<Bind::TInstance> StartPopInstance(std::function<void(int32_t)> OnExitCode)
 {
 	//	need to resolve .. paths early in windows
 	auto DataPath = Pop::ProjectPath;
@@ -52,29 +49,112 @@ TPopAppError::Type PopMain()
 	//	in case the datapath is a filename, strip back to dir
 	DataPath = Platform::GetDirectoryFromFilename(DataPath,true);
 	
-	
+	//	run an instance
+	std::string BootupFilename = "bootup.js";
+	std::Debug << "PopMain() Creating instance, DataPath=" << DataPath << " BootupFilename=" << BootupFilename << std::endl;
+	std::shared_ptr<Bind::TInstance> pInstance;
+	pInstance.reset(new Bind::TInstance(DataPath, BootupFilename, OnExitCode));
+
+	return pInstance;
+}
+
+
+
 #if defined(TARGET_WINDOWS)
+//	blocking on windows with win32 message queue
+int32_t PopMain()
+{
 	//	on windows, we pump the win32 thread
 	//	gr: do we NEED to do that on the main thread? I believe every window
 	//		now has it's own message queue/thread so this one will never get a 
 	//		message aside from PostQuitMessage()
-	std::shared_ptr<Bind::TInstance> pInstance;
 	bool Running = true;
+	DWORD ThisWin32ThreadId = GetCurrentThreadId();
+	int32_t PopExitCode = 707;
+	auto OnShutdown = [&](int32_t ExitCode)
+	{		
+		std::Debug << "PopMain() OnShutdown exitcode=" << ExitCode << std::endl;
+		//	make sure WM_QUIT comes up by waking the message loop
+		//	this exit code will get set again from WM_QUIT in case WM_QUIT comes from elsewhere
+		PopExitCode = ExitCode;
+		PostQuitMessage(ExitCode);	//	this posts to THIS thread, if being called from the JSC thread, the win32 loop below wont trigger
+		if (!PostThreadMessageA(ThisWin32ThreadId, WM_QUIT, ExitCode, 0))
+		{
+			std::Debug << "error PostThreadMessageA(thread=" << ThisWin32ThreadId << ", WM_QUIT) " << Platform::GetLastErrorString() << std::endl;
+		}
+	};
+	auto pInstance = StartPopInstance(OnShutdown);
+
+	//	gr: this thread should just spin, and not get win32 messages...
+	std::Debug << "PopMain() run loop..." << std::endl;
+	while ( Running )
+	{
+		auto OnQuit = [&](int32_t ExitCode)
+		{
+			PopExitCode = ExitCode;
+			Running = false;
+		};
+		auto Blocking = true;
+		Platform::Loop( Blocking, OnQuit );
+
+		//	don't free this immediately in OnShutdown, do it here off the thread that triggered
+		if ( !Running )
+			pInstance.reset();
+	}
+	std::Debug << "PopMain() run loop exited." << std::endl;
+	
+	return PopExitCode;
+}
+#endif
+	
+#if defined(TARGET_LINUX)
+//	blocking on linux with lock
+int32_t PopMain()
+{
+	//	on linux, the main thread has nothing to do so we lock
+	Soy::TSemaphore RunningLock;
+
+	int32_t PopExitCode = 707;
+	auto OnShutdown = [&](int32_t ExitCode)
+	{		
+		PopExitCode = ExitCode;
+		RunningLock.OnCompleted();
+	};
+	auto pInstance = StartPopInstance(OnShutdown);
+	
+	std::Debug << "PopMain() waiting for RunningLock..." << std::endl;
+	RunningLock.Wait();
+	std::Debug << "PopMain() RunningLock flagged. Exiting." << std::endl;
+
+	return PopExitCode;
+}
+#endif
+
+
+/*
+int32_t PopMain()
+{
 #elif defined(TARGET_LINUX)
 	//	on linux, the main thread has nothing to do
 	std::shared_ptr<Bind::TInstance> pInstance;
 	Soy::TSemaphore RunningLock;
 #endif
 	
+	int32_t PopExitCode = 707;
 	auto OnShutdown = [&](int32_t ExitCode)
 	{		
-		std::Debug << "PopMain() OnShutdown" << std::endl;
+		std::Debug << "PopMain() OnShutdown exitcode=" << ExitCode << std::endl;
 #if defined(TARGET_UWP)
 		Running = false;
 #elif defined(TARGET_WINDOWS)
-		Running = false;
 		//	make sure WM_QUIT comes up by waking the message loop
-		PostQuitMessage(ExitCode);
+		//	this exit code will get set again from WM_QUIT in case WM_QUIT comes from elsewhere
+		PopExitCode = ExitCode;
+		PostQuitMessage(ExitCode);	//	this posts to THIS thread, if being called from the JSC thread, the win32 loop below wont trigger
+		if (!PostThreadMessageA(ThisWin32ThreadId, WM_QUIT, ExitCode, 0))
+		{
+			std::Debug << "error PostThreadMessageA(thread=" << ThisWin32ThreadId << ", WM_QUIT) " << Platform::GetLastErrorString() << std::endl;
+		}
 #elif defined(TARGET_LINUX)
 		//	todo: save exit code!
 		RunningLock.OnCompleted();
@@ -98,9 +178,10 @@ TPopAppError::Type PopMain()
 		std::Debug << "PopMain() run loop..." << std::endl;
 		while ( Running )
 		{
-			auto OnQuit = [&]()
+			auto OnQuit = [&](int32_t ExitCode)
 			{
-				OnShutdown(0);
+				PopExitCode = ExitCode;
+				Running = false;
 			};
 			auto Blocking = true;
 			Platform::Loop( Blocking, OnQuit );
@@ -118,8 +199,9 @@ TPopAppError::Type PopMain()
 	#endif
 	}
 	
-	return TPopAppError::Success;
+	return PopExitCode;
 }
+*/
 
 namespace Java
 {

@@ -6,12 +6,6 @@ env:
 
 on:
   push:
-    branches:
-      - master
-      - '*Test*'
-    #gr: testing, but cannot have path AND branch
-    #paths:
-    #- '**.json'
     #tsdk: need this otherwise it will never make a package later on    
     tags:        
       - v*
@@ -70,12 +64,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - name: Copy package downloads to Libs
-        run: |
-          mkdir -p Libs
-          cp -r ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
-          ls -R Libs
-
       - name: Setup nuget (Windows)
         if: matrix.config.os == 'windows'
         uses: warrenbuckley/Setup-Nuget@v1
@@ -97,7 +85,7 @@ jobs:
       - name: Build Apple
         id: Apple
         if: matrix.config.os == 'macOS'
-        uses: NewChromantics/PopAction_BuildApple@v1
+        uses: NewChromantics/PopAction_BuildApple@v1.0.1
         with:
           BuildScheme: ${{ matrix.config.BuildScheme }}
           BuildTargetDir: ${{ matrix.config.BuildTargetDir }}

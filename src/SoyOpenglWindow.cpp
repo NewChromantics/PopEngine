@@ -42,8 +42,8 @@ namespace Platform
 	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-	void		Loop(bool Blocking,std::function<void()> OnQuit);
-	void		Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit);	
+	void		Loop(bool Blocking,std::function<void(int32_t)> OnQuit);
+	void		Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> OnQuit);	
 
 	template<typename COORDTYPE>
 	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
@@ -404,7 +404,7 @@ public:
 
 
 
-void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
+void Platform::Loop(bool Blocking,std::function<void(int32_t)> OnQuit)
 {
 	auto CanBlock = [=]()
 	{
@@ -413,16 +413,25 @@ void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 	Loop(CanBlock, OnQuit);
 }
 
-void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
+void Platform::Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> OnQuit)
 {
+	//	gr: previously we exited loop if wm_quit occurred,
+	//		keep that design for now
+	bool HadQuit = false;
+
 	//	gr: always do one iteration
 	do
 	{
 		MSG msg;
 		if ( CanBlock() )
 		{
-			if ( !GetMessage(&msg, NULL, 0, 0) )
-				break;
+			//	return of 0 == wm_quit
+			//	return -1 is error
+			auto Result = GetMessage(&msg, NULL, 0, 0);
+			if (Result == -1)
+			{
+				Platform::ThrowLastError("Win32 loop GetMessage()");
+			}
 		}
 		else
 		{
@@ -430,9 +439,13 @@ void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
 				break;
 		}
 
-		if ( msg.message == WM_QUIT )
+		if (msg.message == WM_QUIT)
+		{
+			auto ExitCode = msg.wParam;
+			HadQuit = true;
 			if ( OnQuit )
-				OnQuit();
+				OnQuit(ExitCode);
+		}
 
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -443,7 +456,7 @@ void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
 			//	no more messages, break out here
 		}
 	} 
-	while ( CanBlock() );
+	while ( !HadQuit && CanBlock() );
 }
 
 
@@ -1767,7 +1780,7 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 	//	pump jobs
 	//	pump windows queue & block
 	bool Continue = true;
-	auto OnQuit = [&]()
+	auto OnQuit = [&](int32_t ExitCode)
 	{
 		Continue = false;
 	};
