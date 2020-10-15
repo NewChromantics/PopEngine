@@ -136,6 +136,7 @@ LIB_LINK_LIBS = \
 -lm \
 -lgbm \
 -ldrm	\
+-ludev \
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
