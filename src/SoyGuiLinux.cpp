@@ -6,9 +6,16 @@
 Platform::TWindow::TWindow(const std::string& Name)
 {
 	esInitContext( &mESContext );
+	if(Name = "Headless")
+	{
+		esCreateHeadless( &mESContext, Name.c_str());
+	}
+	else
+	{
+		// tsdk: the width and height are set to the size of the screen in this function, leaving them as 0's in case that needs to change in future
+		esCreateWindow( &mESContext, Name.c_str(), 0, 0, ES_WINDOW_ALPHA );
+	}
 
-	// tsdk: the width and height are set to the size of the screen in this function, leaving them as 0's in case that needs to change in future
-	esCreateWindow( &mESContext, Name.c_str(), 0, 0, ES_WINDOW_ALPHA );
 }
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
