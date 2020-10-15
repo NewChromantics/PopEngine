@@ -295,7 +295,7 @@ void ESUTIL_API esPaint(ESContext *esContext)
 	if (esContext->drawFunc)
 		esContext->drawFunc();
 
-	auto test = esContext->hWnd;
+	// Headless does not create a window handle
 	if(esContext->hWnd == NULL)
 		glFlush();
 	else
