@@ -41,8 +41,8 @@ namespace Platform
 	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-	void		Loop(bool Blocking,std::function<void()> OnQuit);
-	void		Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit);	
+	void		Loop(bool Blocking,std::function<void(int32_t)> OnQuit);
+	void		Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> OnQuit);	
 
 	template<typename COORDTYPE>
 	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
