@@ -1,6 +1,7 @@
 #pragma once
 #include "TBind.h"
 #include "SoyWindow.h"
+#include "SoyImageProxy.h"
 #include "sokol/sokol_gfx.h"
 
 namespace ApiSokol
@@ -9,15 +10,15 @@ namespace ApiSokol
 
 	class TSokolContextWrapper;
 
-	DECLARE_BIND_TYPENAME(Context);
+	DECLARE_BIND_TYPENAME(Sokol_Context);
 }
 
-class TImageWrapper;
+class SoyImageProxy;
 
 //	non-js-api sokol
 namespace Sokol
 {
-	class TContext;
+	class TContext;			//	platform context
 	class TContextParams;	//	or ViewParams?
 
 	std::shared_ptr<TContext>	Platform_CreateContext(std::shared_ptr<SoyWindow> Window,TContextParams Params);
@@ -27,7 +28,8 @@ namespace Sokol
 	class TRenderCommandBase;
 	class TRenderCommand_Clear;
 	class TRenderCommand_Draw;
-	class TRenderCommand_UpdateImage;
+	class TRenderCommand_SetRenderTarget;
+	class TRenderCommand_UpdateImage;	//	internal texture update
 	class TRenderCommands;
 
 	class TShader;
@@ -60,6 +62,15 @@ public:
 	float		mColour[4] = {1,0,1,1};
 };
 
+class Sokol::TRenderCommand_SetRenderTarget : public TRenderCommandBase
+{
+public:
+	static constexpr std::string_view	Name = "SetRenderTarget";
+	virtual const std::string_view	GetName() override { return Name; };
+
+	std::shared_ptr<SoyImageProxy>	mTargetTexture;	//	if null, render to screen
+	SoyPixelsFormat::Type			mReadBackFormat = SoyPixelsFormat::Invalid;
+};
 
 class Sokol::TRenderCommand_Draw : public TRenderCommandBase
 {
@@ -75,17 +86,16 @@ public:
 	//	uniforms, parsed and written immediately into a block when parsing
 	Array<uint8_t>	mUniformBlock;
 
-	//	super dangerous, but will do for now
-	std::map<size_t,TImageWrapper*>	mImageUniforms;	//	texture slot -> texture
+	std::map<size_t,std::shared_ptr<SoyImageProxy>>	mImageUniforms;	//	texture slot -> texture
 };
 
 class Sokol::TRenderCommand_UpdateImage : public TRenderCommandBase
 {
 public:
 	static constexpr std::string_view	Name = "UpdateImage";
-	virtual const std::string_view	GetName() override	{	return Name;	};
+	virtual const std::string_view		GetName() override	{	return Name;	};
 	
-	TImageWrapper*	mImage = nullptr;	//	dangerous!
+	std::shared_ptr<SoyImageProxy>		mImage;
 };
 
 
@@ -164,7 +174,7 @@ public:
 };
 
 
-class ApiSokol::TSokolContextWrapper : public Bind::TObjectWrapper<BindType::Context,Sokol::TContext>
+class ApiSokol::TSokolContextWrapper : public Bind::TObjectWrapper<BindType::Sokol_Context,Sokol::TContext>
 {
 public:
 	TSokolContextWrapper(Bind::TContext &Context) :
@@ -189,6 +199,9 @@ private:
 
 	Sokol::TRenderCommands			ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
 
+	void			QueueImageDelete(sg_image Image);
+	void			FreeImageDeletes();
+	
 public:
 	Bind::TPromiseMap				mPendingFramePromises;
 	Array<Sokol::TRenderCommands>	mPendingFrames;
@@ -205,6 +218,8 @@ public:
 	//	allocated objects and their javascript handle[value]
 	std::map<uint32_t,Sokol::TShader>	mShaders;
 	std::map<uint32_t,Sokol::TCreateGeometry>	mGeometrys;
+	std::mutex						mPendingDeleteImagesLock;
+	Array<sg_image>					mPendingDeleteImages;
 
 	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;
 	//Bind::TPersistent							mWindow;

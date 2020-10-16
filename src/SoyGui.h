@@ -33,11 +33,11 @@ public:
 	bool		mAutoRedraw = true;
 };
 
-class TOpenglWindow : public SoyWindow, public SoyWorkerThread
+class TXOpenglWindow : public SoyWindow, public SoyWorkerThread
 {
 public:
-	TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params);
-	~TOpenglWindow();
+	TXOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params);
+	~TXOpenglWindow();
 	
 	bool			IsValid();
 	

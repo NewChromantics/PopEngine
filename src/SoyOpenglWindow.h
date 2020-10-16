@@ -5,6 +5,11 @@
 #include "SoyOpenglContext.h"
 #include "SoyWindow.h"
 
+#include "SoyGui.h" //	for TOpenglParams, guess it shouldnt be there
+#if defined(TARGET_WINDOWS)
+#include "SoyOpenglContext_Win32.h"
+#endif
+
 #if __has_feature(objc_arc)
 #error expected ARC off, if we NEED arc, then the NSWindow & view need to go in a pure obj-c wrapper to auto retain the refcounted object
 #endif
@@ -15,19 +20,6 @@ namespace Win32
 	class TOpenglContext;
 }
 
-class TOpenglParams
-{
-public:
-	bool		mFullscreen = false;
-	bool		mHardwareAccellerationOnly = true;
-	bool		mDoubleBuffer = true;
-	bool		mRedrawWithDisplayLink = true;
-	int			mVsyncSwapInterval = 1;	//	0 = no vsync
-	
-	//	move these out of "hardware params" (they're things we've added at mid-level and could just be high level)
-	int			mRefreshRate = 60;		//	will try to skip redraws if vsync on
-	bool		mAutoRedraw = true;
-};
 
 class TOpenglWindow : public SoyWindow, public SoyWorkerThread
 {

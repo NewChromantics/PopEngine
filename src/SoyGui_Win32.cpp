@@ -9,7 +9,15 @@
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
-#include "SoyOpenglContext_Win32.h"
+
+
+
+extern "C"
+{
+	//	custom ColourButton win32 control
+#include "SoyLib/src/Win32ColourControl.h"
+#include "SoyLib/src/Win32ImageMapControl.h"
+}
 
 #include <magic_enum.hpp>
 
@@ -30,16 +38,24 @@ namespace Platform
 
 
 
+	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-	void		Loop(bool Blocking,std::function<void(int32_t)> OnQuit);
-	void		Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> OnQuit);	
+	void		Loop(bool Blocking,std::function<void()> OnQuit);
+	void		Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit);	
 
 	template<typename COORDTYPE>
 	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
 }
 
 
+SoyKeyButton::Type KeyCodeToSoyButton(WPARAM KeyCode)
+{
+	if ( KeyCode >= 0x41 && KeyCode <= 0x5A )
+	{
+		auto Index = KeyCode - 0x41;
+		return 'a' + Index;
+	}
 
 	if ( KeyCode >= 0x30 && KeyCode <= 0x39 )
 	{
@@ -107,28 +123,17 @@ void Platform::EnumScreens(std::function<void(TScreenMeta&)> EnumScreen)
 		Platform::ThrowLastError("EnumDisplayMonitors");
 }
 
-
-
-class Platform::TWin32Thread : public SoyWorkerJobThread
+Platform::TWin32Thread::TWin32Thread(const std::string& Name, bool Win32Blocking) :
+	mWin32Blocking(Win32Blocking),
+	SoyWorkerJobThread(Name, Win32Blocking ? SoyWorkerWaitMode::NoWait : SoyWorkerWaitMode::Wake)
 {
-public:
-	TWin32Thread(const std::string& Name, bool Win32Blocking=true) :
-		mWin32Blocking(Win32Blocking),
-		SoyWorkerJobThread(Name, Win32Blocking ? SoyWorkerWaitMode::NoWait : SoyWorkerWaitMode::Wake)
-	{
-		//	gotta do this somewhere, this is typically before any extra controls get created
-		InitCommonControls();
-		Win32_Register_ColourButton();
-		Win32_Register_ImageMap();
-		Start();
-	}
+	//	gotta do this somewhere, this is typically before any extra controls get created
+	InitCommonControls();
+	Win32_Register_ColourButton();
+	Win32_Register_ImageMap();
+	Start();
+}
 
-	virtual void	Wake() override;
-	virtual bool	Iteration(std::function<void(std::chrono::milliseconds)> Sleep);
-
-	bool	mWin32Blocking = true;
-	DWORD	mThreadId = 0;
-};
 
 /*
 //	abstracted for now in case we don't want it on every object
@@ -166,208 +171,8 @@ public:
 };
 */
 
-class Platform::TControl// : public Platform::TDragAndDropHandler
-{
-public:
-	TControl(const std::string& Name, TControlClass& Class, TControl* Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect, TWin32Thread& Thread);
-	TControl(const std::string& Name,const char* ClassName,TControl& Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect);
-	virtual ~TControl();
-
-	//	trigger actions
-	void					Repaint();
-	void					EnableDragAndDrop();
-
-	//	reflection
-	Soy::Rectx<int32_t>		GetClientRect();
-	void					SetClientRect(const Soy::Rectx<int32_t>& Rect)
-	{
-		std::Debug << "todo SetClientRect(" << Rect << ")" << std::endl;
-	}
-
-	//	callbacks from windows message loop
-	virtual void			OnDestroyed();		//	window handle is being destroyed
-	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) {}	//	called from window thread which means we can flush jobs
-	virtual void			OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16_t CurrentScrollPosition);
-
-	//	return true if handled, or false to return default behavouir
-	bool			OnMouseEvent(int x, int y, WPARAM Flags,UINT EventMessage);
-	bool			OnKeyDown(WPARAM KeyCode, LPARAM Flags);
-	bool			OnKeyUp(WPARAM KeyCode, LPARAM Flags);
-	bool			OnDragDrop(HDROP DropHandle);
-
-	virtual TWin32Thread&	GetJobQueue()
-	{
-		return mThread;
-	}
-
-	TControl&		GetChild(HWND Handle);
-	virtual void	AddChild(TControl& Child);
-
-public:
-	std::function<void(TControl&)>	mOnPaint;
-	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseDown;
-	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseMove;
-	std::function<void(TControl&,const TMousePos&,SoyMouseButton::Type)>	mOnMouseUp;
-	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyDown;
-	std::function<void(TControl&,SoyKeyButton::Type)>	mOnKeyUp;
-	std::function<bool(TControl&, ArrayBridge<std::string>&&)>	mOnDragAndDrop;
-
-	std::function<void(TControl&)>	mOnDestroy;	//	todo: expand this to OnClose to allow user to stop it from closing
-	
-	HWND			mHwnd = nullptr;
-	std::string		mName;
-	TWin32Thread&	mThread;
-	uint64_t		mChildIdentifier = 0;
-	static uint64_t	gChildIdentifier;
-
-	Array<TControl*>	mChildren;
-};
 
 uint64_t Platform::TControl::gChildIdentifier = 9000;
-
-
-class Platform::TWindow : public TControl, public SoyWindow
-{
-public:
-	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread,bool Resizable);
-
-	virtual void	OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
-	virtual void	OnScrolled(bool Horizontal,uint16_t ScrollCommand, uint16_t CurrentScrollPosition) override;
-
-	virtual Soy::Rectx<int32_t>		GetScreenRect() override	{	return GetClientRect();	}
-	virtual void					SetFullscreen(bool Fullscreen) override;
-	virtual bool					IsFullscreen() override;
-	virtual bool					IsMinimised() override;
-	virtual bool					IsForeground() override;
-	virtual void					EnableScrollBars(bool Horz, bool Vert) override;
-
-	void			UpdateScrollbars();
-	virtual void	AddChild(TControl& Child) override;
-
-private:
-	//	for saving/restoring fullscreen mode
-	std::shared_ptr<WINDOWPLACEMENT>	mSavedWindowPlacement;	//	saved state before going fullscreen
-	LONG				mSavedWindowFlags = 0;
-	LONG				mSavedWindowExFlags = 0;
-
-public:
-	std::shared_ptr<TWin32Thread>		mOwnThread;
-};
-
-
-
-class Platform::TOpenglContext : public  Opengl::TRenderTarget, public Win32::TOpenglContext
-{
-public:
-	TOpenglContext(TControl& Parent,TOpenglParams& Params);
-	~TOpenglContext();
-
-	//	render target
-	virtual void				Bind() override;
-	virtual void				Unbind() override;
-	virtual Soy::Rectx<size_t>	GetSize() override;
-
-	//	window stuff
-	void			Repaint();
-	void			OnPaint();
-
-	std::function<void(Opengl::TRenderTarget&, std::function<void()>)>	mOnRender;
-
-	//	win32::TOpenglContext
-	virtual HDC		GetHdc() override { return mHDC; }
-	virtual HGLRC	GetHglrc() override { return mHGLRC; }
-	virtual HWND	GetHwnd() override { return mHwnd; }
-
-	//	context stuff
-	TControl&		mParent;	//	control we're bound to
-	HWND&			mHwnd = mParent.mHwnd;
-	HDC				mHDC = nullptr;		//	DC we've setup for opengl
-	HGLRC			mHGLRC = nullptr;	//	opengl context
-	bool			mHasArbMultiSample = false;	//	is antialiasing supported?
-
-	//	render target
-	Soy::Rectx<size_t>	mRect;
-};
-
-
-class Platform::TSlider : public TControl, public SoySlider
-{
-public:
-	TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect);
-
-	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void		SetMinMax(uint16_t Min, uint16_t Max,uint16_t NotchCount) override;
-	virtual void		SetValue(uint16_t Value) override;
-	virtual uint16_t	GetValue() override;
-
-	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
-};
-
-class Platform::TLabel : public TControl, public SoyLabel
-{
-public:
-	TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect);
-
-	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void		SetValue(const std::string& Value) override;
-	virtual std::string	GetValue() override;
-};
-
-
-class Platform::TTextBox : public TControl, public SoyTextBox
-{
-public:
-	TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
-
-	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void		SetValue(const std::string& Value) override;
-	virtual std::string	GetValue() override;
-
-	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
-
-private:
-	bool				mTextChangedByCode = true;
-};
-
-
-class Platform::TTickBox : public TControl, public SoyTickBox
-{
-public:
-	TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
-
-	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void		SetValue(bool Value) override;
-	virtual bool		GetValue() override;
-	virtual void		SetLabel(const std::string& Label) override;
-
-	virtual void		OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
-};
-
-
-class Platform::TColourButton : public TControl, public SoyColourButton
-{
-public:
-	TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Rect);
-
-	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void			SetValue(vec3x<uint8_t> Value) override;
-	virtual vec3x<uint8_t>	GetValue() override;
-
-	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
-};
-
-
-class Platform::TImageMap : public TControl, public Gui::TImageMap
-{
-public:
-	TImageMap(TControl& Parent, Soy::Rectx<int32_t>& Rect);
-
-	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
-	virtual void			SetImage(const SoyPixelsImpl& Pixels) override;
-	virtual void			SetCursorMap(const SoyPixelsImpl& CursorMap, const ArrayBridge<std::string>&& CursorIndexes)override;
-
-	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
-};
 
 
 class Platform::TControlClass
@@ -387,7 +192,7 @@ public:
 
 
 
-void Platform::Loop(bool Blocking,std::function<void(int32_t)> OnQuit)
+void Platform::Loop(bool Blocking,std::function<void()> OnQuit)
 {
 	auto CanBlock = [=]()
 	{
@@ -396,25 +201,16 @@ void Platform::Loop(bool Blocking,std::function<void(int32_t)> OnQuit)
 	Loop(CanBlock, OnQuit);
 }
 
-void Platform::Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> OnQuit)
+void Platform::Loop(std::function<bool()> CanBlock,std::function<void()> OnQuit)
 {
-	//	gr: previously we exited loop if wm_quit occurred,
-	//		keep that design for now
-	bool HadQuit = false;
-
 	//	gr: always do one iteration
 	do
 	{
 		MSG msg;
 		if ( CanBlock() )
 		{
-			//	return of 0 == wm_quit
-			//	return -1 is error
-			auto Result = GetMessage(&msg, NULL, 0, 0);
-			if (Result == -1)
-			{
-				Platform::ThrowLastError("Win32 loop GetMessage()");
-			}
+			if ( !GetMessage(&msg, NULL, 0, 0) )
+				break;
 		}
 		else
 		{
@@ -422,13 +218,9 @@ void Platform::Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> 
 				break;
 		}
 
-		if (msg.message == WM_QUIT)
-		{
-			auto ExitCode = msg.wParam;
-			HadQuit = true;
+		if ( msg.message == WM_QUIT )
 			if ( OnQuit )
-				OnQuit(ExitCode);
-		}
+				OnQuit();
 
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -439,7 +231,7 @@ void Platform::Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> 
 			//	no more messages, break out here
 		}
 	} 
-	while ( !HadQuit && CanBlock() );
+	while ( CanBlock() );
 }
 
 
@@ -1154,105 +946,6 @@ void Platform::TWindow::OnScrolled(bool Horizontal,uint16_t ScrollCommand,uint16
 }
 
 
-Platform::TOpenglContext::TOpenglContext(TControl& Parent,TOpenglParams& Params) :
-	Opengl::TRenderTarget	( Parent.mName ),
-	mParent					( Parent )
-{
-	BYTE ColorDepth = 24;
-	DWORD Flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-
-	//	gr: no double buffering stops flicker
-	//	none of these flags help
-	/*
-	#define PFD_SWAP_EXCHANGE           0x00000200
-	#define PFD_SWAP_COPY               0x00000400
-	#define PFD_SWAP_LAYER_BUFFERS      0x00000800
-	Flags |= PFD_DOUBLEBUFFER;
-	*/
-
-	//	make the pixel format descriptor
-	PIXELFORMATDESCRIPTOR pfd =				// pfd Tells Windows How We Want Things To Be
-	{
-		sizeof(PIXELFORMATDESCRIPTOR),		// Size Of This Pixel Format Descriptor
-		1,									// Version Number
-		Flags,					// Must Support Double Buffering
-		ColorDepth,									// Select Our Color Depth
-		0, 0, 0, 0, 0, 0,					// Color Bits Ignored
-		0,									// No Alpha Buffer
-		0,									// Shift Bit Ignored
-		0,									// No Accumulation Buffer
-		0, 0, 0, 0,							// Accumulation Bits Ignored
-		16,									// 16Bit Z-Buffer (Depth Buffer)  
-		1,									//	use stencil buffer
-		0,									// No Auxiliary Buffer
-		PFD_MAIN_PLANE,						// Main Drawing Layer
-		0,									// Reserved
-		0, 0, 0								// Layer Masks Ignored
-	};
-
-	uint32_t PixelFormat = 0;
-
-	//	get the existing hdc of the window
-	mHDC = GetDC(mParent.mHwnd);
-	if ( !mHDC )
-		throw Soy::AssertException("Failed to get HDC");
-
-	//	store size
-	//m_Size = Window.m_ClientSize;
-
-	/*
-	//	if multisample is supported, use a multisample pixelformat
-	//	SyncBool MultisampleSupport = OpenglExtensions::IsHardwareSupported(OpenglExtensions::GHardware_ARBMultiSample);
-	SyncBool MultisampleSupport = SyncFalse;
-
-	if ( MultisampleSupport == SyncTrue )
-	{
-	//		PixelFormat = OpenglExtensions::GetArbMultisamplePixelFormat();
-	m_HasArbMultiSample = TRUE;
-	}
-	else*/
-	{
-		//	check we can use this pfd
-		PixelFormat = ChoosePixelFormat(mHDC, &pfd);
-		if ( !PixelFormat )
-			throw Soy::AssertException("Failed to choose pixel format X");//%d\n", PixelFormat));
-		//m_HasArbMultiSample = FALSE;
-	}
-
-	//	set it to the pfd
-	if ( !SetPixelFormat(mHDC, PixelFormat, &pfd) )
-		throw Soy::AssertException("Failed to set pixel format");//%d\n", PixelFormat));
-
-	//	make and get the windows gl context for the hdc
-	//	gr: this should be wrapped in a context
-	mHGLRC = wglCreateContext(mHDC);
-	if ( !mHGLRC )
-		throw Soy::AssertException("Failed to create context");
-
-	//	init opengl context
-	Lock();
-	this->Init();
-	Unlock();
-
-	auto OnPaint = [this](TControl& Control)
-	{
-		this->OnPaint();
-	};
-	mParent.mOnPaint = OnPaint;
-}
-
-Platform::TOpenglContext::~TOpenglContext()
-{
-	mParent.mOnPaint = nullptr;
-	wglDeleteContext(mHGLRC);
-	ReleaseDC(mHwnd, mHDC);
-}
-
-void Platform::TOpenglContext::Repaint()
-{
-	mParent.Repaint();
-}
-
 void Platform::TControl::Repaint()
 {
 	//	tell parent to repaint
@@ -1277,315 +970,116 @@ void Platform::TControl::Repaint()
 	DoPaint();
 }
 
-void Platform::TOpenglContext::Bind()
+
+
+void Platform::TWindow::SetFullscreen(bool Fullscreen)
 {
-	//throw Soy::AssertException("Bind default render target");
-}
-
-void Platform::TOpenglContext::Unbind()
-{
-	//throw Soy::AssertException("Unbind default render target");
-}
-
-
-Soy::Rectx<size_t> Platform::TOpenglContext::GetSize()
-{
-	//	rect is now correct for window, but for opengl context, it should still be at 0,0
-	auto Rect = mRect;
-	Rect.x = 0;
-	Rect.y = 0;
-	return Rect;
-}
-
-
-/*
-class GlViewRenderTarget : public Opengl::TRenderTarget
-{
-public:
-	GlViewRenderTarget(const std::string& Name) :
-		TRenderTarget	( Name )
-	{
-	}
-
-	virtual Soy::Rectx<size_t>	GetSize() override	{	return mRect;	}
-	virtual void				Bind() override;
-	virtual void				Unbind() override;
-
-	Soy::Rectx<size_t>			mRect;
-};
-*/
-void Platform::TOpenglContext::OnPaint()
-{
-	//	better place to flush the queue?
-	this->Flush(*this);
-
-	auto& Control = mParent;
-	auto& Context = *this;
-	Soy::Rectx<size_t> BoundsRect = Control.GetClientRect();
-	auto& RenderTarget = *this;
-	
-
-	//	render
-	//	much of this code should be copy+pasta from osx as its independent logic
-	bool DoneLock = false;
-	auto LockContext = [&]
-	{
-		if ( DoneLock )
-			return;
-		Context.Lock();
-		DoneLock = true;
-		Opengl::IsOkay("pre drawRect flush",false);
-		//	do parent's minimal render
-		//	gr: reset state here!
-		RenderTarget.mRect = BoundsRect;
-		RenderTarget.Bind();
-	};
-	auto UnlockContext = [&]
-	{
-		try
-		{
-			RenderTarget.Unbind();
-			Opengl::IsOkay("UnlockContext RenderTarget.Unbind", false);
-			Context.Unlock();
-		}
-		catch (std::exception& e)
-		{
-			std::Debug << "UnlockContext unbind failed (" << e.what() << "), hail mary context unlock" << std::endl;
-			Context.Unlock();
-			//	rethrow?
-			//throw;
-		}
-	};
-
-	/*
-	if ( !mParent )
-	{
-		auto ContextLock = SoyScope( LockContext, UnlockContext );
-		Opengl::ClearColour( Soy::TRgb(1,0,0) );
+	//	don't change current setup
+	if ( IsFullscreen() == Fullscreen )
 		return;
-	}
-	*/
-	try
-	{
-		if ( !mOnRender )
-			throw Soy::AssertException("No OnRender callback");
 
-		mOnRender( RenderTarget, LockContext );
-	}
-	catch(std::exception& e)
+	//	wierd error:
+	//	If the previous value is zero and the function succeeds,
+	//	the return value is zero, but the function does not clear the last error information. 
+	//	To determine success or failure, clear the last error information by calling SetLastError with 0, 
+	//	then call SetWindowLongPtr. Function failure will be indicated by a return value of zero and a 
+	//	GetLastError result that is nonzero.
+	auto DoSetWindowLongPtr = [](HWND hWnd,int nIndex,LONG_PTR dwNewLong)
 	{
-		std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
-		try
-		{
-			UnlockContext();
-		}
-		catch (std::exception&e)
-		{
-			//std::Debug << "OnRender UnlockContext exception " << e.what() << std::endl;
-		}
-		return;
-		/*
-		//	gr: if there's an exception here, it might be the LockContext, rather than the render...
-		//		so we're just failing again...
-		try
-		{
-			LockContext();
-			Opengl::ClearColour(Soy::TRgb(0, 0, 1));
-			std::Debug << "Window OnRender Exception: " << e.what() << std::endl;
-		}
-		catch (std::exception& e)
-		{
-			//	okay, lock is the problem
-			UnlockContext();
+		::SetLastError(0);
+		auto Result = SetWindowLongPtrA(hWnd, nIndex, dwNewLong);
+		//	last setting, 0 might be last state or error
+		if ( Result != 0 )
 			return;
-		}
-		*/
-	}
 
-	//	in case lock hasn't been done
-	LockContext();
-
-	try
-	{
-		//	flip
-		if ( !SwapBuffers(mHDC) )
-			std::Debug << "Failed to SwapBuffers(): " << Platform::GetLastErrorString() <<  std::endl;
+		auto LastError = ::GetLastError();
+		//	no error
+		if ( LastError == 0 )
+			return;
 		
-		UnlockContext();
-	}
-	catch(std::exception& e)
-	{
-		UnlockContext();
-		std::Debug << e.what() << std::endl;
-	}
-}
-
-
-TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& Rect,TOpenglParams Params) :
-	SoyWorkerThread		( Soy::GetTypeName(*this), Params.mAutoRedraw ? SoyWorkerWaitMode::Sleep : SoyWorkerWaitMode::Wake ),
-	mName				( Name ),
-	mParams				( Params )
-{
-	mWindowThread.reset(new Platform::TWin32Thread(std::string("OpenWindow::") + Name));
-	
-	//	need to create on the correct thread
-	//	this can be called at the same time that JS is assigning events
-	//	so don't assume they're non-null
-	//	do they need a lock?
-	auto CreateControls = [&]()
-	{
-		bool Resizable = true;
-		mWindow.reset(new Platform::TWindow(Name, Rect, *mWindowThread, Resizable ));
-		mWindowContext.reset(new Platform::TOpenglContext(*mWindow, Params));
-
-		auto OnRender = [this](Opengl::TRenderTarget& RenderTarget, std::function<void()> LockContext)
-		{
-			if (!mOnRender)
-				return;
-			mOnRender(RenderTarget, LockContext);
-		};
-		mWindowContext->mOnRender = OnRender;
-
-		mWindow->mOnDestroy = [this](Platform::TControl& Control)
-		{
-			this->OnClosed();
-		};
-
-		//	gr: can I use std::bind?
-		auto& Win = static_cast<Platform::TControl&>(*mWindow);
-		Win.mOnMouseDown = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button)	{	if ( this->mOnMouseDown ) this->mOnMouseDown(Pos, Button); };
-		Win.mOnMouseUp = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button)		{	if ( mOnMouseUp ) this->mOnMouseUp(Pos, Button); };
-		Win.mOnMouseMove = [this](Platform::TControl& Control, const TMousePos& Pos, SoyMouseButton::Type Button)	{	if ( mOnMouseMove ) this->mOnMouseMove(Pos, Button); };
-		Win.mOnKeyDown = [this](Platform::TControl& Control, SoyKeyButton::Type Key)	{	if (mOnKeyDown )	this->mOnKeyDown(Key); };
-		Win.mOnKeyUp = [this](Platform::TControl& Control, SoyKeyButton::Type Key)		{	if (mOnKeyUp )		this->mOnKeyUp(Key); };
+		//	is error
+		::SetLastError(LastError);
+		Platform::ThrowLastError("SetWindowLong");
 	};
-	Soy::TSemaphore Wait;
-	mWindowThread->PushJob(CreateControls, Wait);
-	Wait.Wait("Win32 thread");
 
-	//	start thread so we auto redraw & run jobs
-	Start();
-}
 
-TOpenglWindow::~TOpenglWindow()
-{
-	//	stop thread
-	WaitToFinish();
-}
-
-void TOpenglWindow::OnClosed()
-{
-	SoyWindow::OnClosed();
-	WaitToFinish();
-	mWindowContext.reset();
-	mWindow.reset();
-}
-
-bool TOpenglWindow::IsValid()
-{
-	return mWindow != nullptr;
-}
-
-bool TOpenglWindow::Iteration()
-{
-	//	gr: do this at a higher(c++) level so the check is cross platform
-	if (!mEnableRenderWhenMinimised)
+	//	if going fullscreen, save placement then go fullscreen
+	if ( Fullscreen )
 	{
-		if (IsMinimised())
-			return true;
+		//	save placement
+		mSavedWindowPlacement.reset(new WINDOWPLACEMENT);
+		auto& Placement = *mSavedWindowPlacement;
+		Placement.length = sizeof(Placement);
+		if ( !GetWindowPlacement( mHwnd, &Placement ) )
+			Platform::ThrowLastError("GetWindowPlacement failed");
+		//	flags is never set, and it's not the style!
+		mSavedWindowFlags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
+		mSavedWindowExFlags = GetWindowLongPtrA(mHwnd, GWL_EXSTYLE);
+				
+		//	get monitor size for window
+		HMONITOR MonitorHandle = MonitorFromWindow(mHwnd, MONITOR_DEFAULTTONEAREST);
+		if ( MonitorHandle == nullptr )
+			Platform::ThrowLastError("SetFullscreen(true) Failed to get monitor for window");
+		MONITORINFOEXA MonitorMeta;
+		MonitorMeta.cbSize = sizeof(MonitorMeta);
+		if ( !GetMonitorInfoA( MonitorHandle, &MonitorMeta) )
+			Platform::ThrowLastError("GetMonitorInfoA failed");
+
+		//	set size
+		//	if any border, doesnt go fullscreen
+		//	if no border, flicker!
+		auto Border = 0;
+		auto x = MonitorMeta.rcMonitor.left;
+		auto y = MonitorMeta.rcMonitor.top;
+		auto w = MonitorMeta.rcMonitor.right - x;
+		auto h = MonitorMeta.rcMonitor.bottom - y - Border;
+		bool Repaint = false;
+		if ( !MoveWindow(mHwnd, x, y, w, h, Repaint) )
+		{
+			std::stringstream Error;
+			Error << "Failed to MoveMonitor( " << x << "," << y << "," << w << "," << h << ")";
+			Platform::ThrowLastError(Error.str());
+		}
+
+		
+		//	set flags
+		auto NewFlags = WS_VISIBLE | WS_POPUP;
+		//	WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags);
+
+		//auto NewExFlags = mSavedWindowExFlags & ~(WS_EX_CLIENTEDGE);
+		auto NewExFlags = mSavedWindowExFlags;
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, NewExFlags);
+
 	}
-
-	if (!mEnableRenderWhenBackground)
+	else
 	{
-		if (!IsForeground())
-			return true;
+		//	restore last placement
+		if ( !mSavedWindowPlacement )
+			throw Soy::AssertException("SetFullscreen(false) No saved window placement to restore. Need a backup solution");
+
+		WINDOWPLACEMENT Placement;
+		Placement = *mSavedWindowPlacement;
+		mSavedWindowPlacement.reset();
+
+		if ( !SetWindowPlacement(mHwnd, &Placement) )
+			Platform::ThrowLastError("SetWindowPlacement failed");
+
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags);
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, mSavedWindowExFlags);
 	}
-
-	//	trigger repaint!
-	if (mWindowContext)
-	{
-		mWindowContext->Repaint();
-	}
-
-	return true;
 }
 
-std::shared_ptr<Opengl::TContext> TOpenglWindow::GetContext()
+bool Platform::TWindow::IsFullscreen()
 {
-	return mWindowContext;
+	auto Flags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
+	//	borderless window style
+	//	there's not a more sophisticated approach it seems...
+	if ( Flags & WS_POPUP )
+		return true;
+
+	return false;
 }
-
-std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
-{
-	return std::chrono::milliseconds( 1000/mParams.mRefreshRate );
-}
-
-Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
-{
-	auto pWindow = mWindow;
-	if ( !pWindow )
-		throw Soy::AssertException("GetScreenRect() No window");
-	auto& Window = *pWindow;
-
-	auto Rect = Window.GetClientRect();
-	return Rect;
-}
-
-
-bool TOpenglWindow::IsFullscreen()
-{
-	if ( !mWindow )
-		throw Soy::AssertException("TOpenglWindow::IsFullscreen missing window");
-
-	return mWindow->IsFullscreen();
-}
-
-bool TOpenglWindow::IsMinimised()
-{
-	if (!mWindow)
-		throw Soy::AssertException("TOpenglWindow::IsMinimised missing window");
-
-	return mWindow->IsMinimised();
-}
-
-bool TOpenglWindow::IsForeground()
-{
-	if (!mWindow)
-		throw Soy::AssertException("TOpenglWindow::IsForeground missing window");
-
-	return mWindow->IsForeground();
-}
-
-
-void TOpenglWindow::EnableScrollBars(bool Horz,bool Vert)
-{
-	if (!mWindow)
-		throw Soy::AssertException("TOpenglWindow::SetFullscreen missing window");
-	mWindow->EnableScrollBars(Horz, Vert);
-}
-
-
-void TOpenglWindow::SetFullscreen(bool Fullscreen)
-{
-	if ( !mWindow )
-		throw Soy::AssertException("TOpenglWindow::SetFullscreen missing window");
-
-	//	this needs to be done on the main thread
-	auto DoFullScreen = [=]()
-	{
-		this->mWindow->SetFullscreen(Fullscreen);
-	};
-	mWindow->GetJobQueue().PushJob(DoFullScreen);
-	mWindow->Repaint();
-}
-
-std::shared_ptr<Win32::TOpenglContext> TOpenglWindow::GetWin32Context()
-{
-	auto Win32Context = std::dynamic_pointer_cast<Win32::TOpenglContext>(mWindowContext);
-	return Win32Context;
-}
-
-
 
 
 bool Platform::TWindow::IsMinimised()
@@ -1655,7 +1149,7 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 	//	pump jobs
 	//	pump windows queue & block
 	bool Continue = true;
-	auto OnQuit = [&](int32_t ExitCode)
+	auto OnQuit = [&]()
 	{
 		Continue = false;
 	};

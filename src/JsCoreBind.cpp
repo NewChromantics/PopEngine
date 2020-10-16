@@ -72,7 +72,11 @@
 #include "TApiOpenvr.h"
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) ||defined(TARGET_WINDOWS)
+#define ENABLE_APISOKOL
+#endif
+
+#if defined(ENABLE_APISOKOL)
 #include "TApiSokol.h"
 #endif
 
@@ -706,7 +710,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			//ApiOpenvr::Bind(*Context);
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX)
+#if defined(ENABLE_APISOKOL)
 			ApiSokol::Bind( *Context );
 #endif
 
@@ -1044,6 +1048,14 @@ void JsCore::TContext::Shutdown(int32_t ExitCode)
 	mInstance.Shutdown(ExitCode);
 }
 
+#if defined(JSAPI_JSCORE)
+extern "C" JS_EXPORT void JSSynchronousGarbageCollectForDebugging(JSContextRef ctx);
+#else
+void JSSynchronousGarbageCollectForDebugging(JSContextRef LocalContext)
+{
+}
+#endif
+
 void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 {
 	//	seems like this would be a good idea...
@@ -1051,7 +1063,10 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 #else
 	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
 #endif
+
+	JSSynchronousGarbageCollectForDebugging(LocalContext);
 	
+	//	on jsc, this seems to be an async hint/request to gc
 	JSGarbageCollect( LocalContext );
 }
 

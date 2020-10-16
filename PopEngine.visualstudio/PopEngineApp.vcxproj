@@ -243,12 +243,14 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)\UnitTest\Xr</DestinationFolders>
     </CopyFileToFolders>
+    <None Include="..\UnitTest\Sokol\bootup.js" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Source_App\PopEngine.ico" />
+    <Image Include="..\UnitTest\Sokol\Cat.jpg" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Source_App\PopEngine.rc" />
