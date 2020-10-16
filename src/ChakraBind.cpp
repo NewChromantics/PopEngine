@@ -770,6 +770,12 @@ void JSValueUnprotect(JSContextRef Context, JSObjectRef Value)
 
 void JSValueProtect(JSContextRef Context,JSValueRef Value)
 {
+	//	gr; this gives us an invalid-arg error.
+	//		but on javascriptcore, I think we can protect null and nothing happens
+	//		this popped up with Array<Bind::TObject>() where the array resets by doing
+	//		Object = TObject();
+	if (!Value)
+		return;
 	unsigned int NewCount = 0;
 	auto Error = JsAddRef( Value, &NewCount );
 	Chakra::IsOkay( Error, "JSValueProtect");
