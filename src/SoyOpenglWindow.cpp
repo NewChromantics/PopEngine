@@ -4,12 +4,21 @@
 //#include "PopMain.h"
 #include "SoyMath.h"
 
-#include "SoyGui_Win32.h"
 #include "SoyWin32.h"
 #include "SoyWindow.h"
 #include "SoyThread.h"
 
-#include "SoyOpenglContext_Win32.h"
+#include "Win32OpenglContext.h"
+
+
+
+
+extern "C"
+{
+	//	custom ColourButton win32 control
+#include "SoyLib/src/Win32ColourControl.h"
+#include "SoyLib/src/Win32ImageMapControl.h"
+}
 
 #include <magic_enum.hpp>
 
@@ -30,6 +39,7 @@ namespace Platform
 
 
 
+	UINT	g_MouseWheelMsg = 0;
 	LRESULT CALLBACK	Win32CallBack(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 	void		Loop(bool Blocking,std::function<void(int32_t)> OnQuit);
@@ -40,6 +50,13 @@ namespace Platform
 }
 
 
+SoyKeyButton::Type KeyCodeToSoyButton(WPARAM KeyCode)
+{
+	if ( KeyCode >= 0x41 && KeyCode <= 0x5A )
+	{
+		auto Index = KeyCode - 0x41;
+		return 'a' + Index;
+	}
 
 	if ( KeyCode >= 0x30 && KeyCode <= 0x39 )
 	{
@@ -1586,6 +1603,114 @@ std::shared_ptr<Win32::TOpenglContext> TOpenglWindow::GetWin32Context()
 }
 
 
+void Platform::TWindow::SetFullscreen(bool Fullscreen)
+{
+	//	don't change current setup
+	if ( IsFullscreen() == Fullscreen )
+		return;
+
+	//	wierd error:
+	//	If the previous value is zero and the function succeeds,
+	//	the return value is zero, but the function does not clear the last error information. 
+	//	To determine success or failure, clear the last error information by calling SetLastError with 0, 
+	//	then call SetWindowLongPtr. Function failure will be indicated by a return value of zero and a 
+	//	GetLastError result that is nonzero.
+	auto DoSetWindowLongPtr = [](HWND hWnd,int nIndex,LONG_PTR dwNewLong)
+	{
+		::SetLastError(0);
+		auto Result = SetWindowLongPtrA(hWnd, nIndex, dwNewLong);
+		//	last setting, 0 might be last state or error
+		if ( Result != 0 )
+			return;
+
+		auto LastError = ::GetLastError();
+		//	no error
+		if ( LastError == 0 )
+			return;
+		
+		//	is error
+		::SetLastError(LastError);
+		Platform::ThrowLastError("SetWindowLong");
+	};
+
+
+	//	if going fullscreen, save placement then go fullscreen
+	if ( Fullscreen )
+	{
+		//	save placement
+		mSavedWindowPlacement.reset(new WINDOWPLACEMENT);
+		auto& Placement = *mSavedWindowPlacement;
+		Placement.length = sizeof(Placement);
+		if ( !GetWindowPlacement( mHwnd, &Placement ) )
+			Platform::ThrowLastError("GetWindowPlacement failed");
+		//	flags is never set, and it's not the style!
+		mSavedWindowFlags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
+		mSavedWindowExFlags = GetWindowLongPtrA(mHwnd, GWL_EXSTYLE);
+				
+		//	get monitor size for window
+		HMONITOR MonitorHandle = MonitorFromWindow(mHwnd, MONITOR_DEFAULTTONEAREST);
+		if ( MonitorHandle == nullptr )
+			Platform::ThrowLastError("SetFullscreen(true) Failed to get monitor for window");
+		MONITORINFOEXA MonitorMeta;
+		MonitorMeta.cbSize = sizeof(MonitorMeta);
+		if ( !GetMonitorInfoA( MonitorHandle, &MonitorMeta) )
+			Platform::ThrowLastError("GetMonitorInfoA failed");
+
+		//	set size
+		//	if any border, doesnt go fullscreen
+		//	if no border, flicker!
+		auto Border = 0;
+		auto x = MonitorMeta.rcMonitor.left;
+		auto y = MonitorMeta.rcMonitor.top;
+		auto w = MonitorMeta.rcMonitor.right - x;
+		auto h = MonitorMeta.rcMonitor.bottom - y - Border;
+		bool Repaint = false;
+		if ( !MoveWindow(mHwnd, x, y, w, h, Repaint) )
+		{
+			std::stringstream Error;
+			Error << "Failed to MoveMonitor( " << x << "," << y << "," << w << "," << h << ")";
+			Platform::ThrowLastError(Error.str());
+		}
+
+		
+		//	set flags
+		auto NewFlags = WS_VISIBLE | WS_POPUP;
+		//	WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, NewFlags);
+
+		//auto NewExFlags = mSavedWindowExFlags & ~(WS_EX_CLIENTEDGE);
+		auto NewExFlags = mSavedWindowExFlags;
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, NewExFlags);
+
+	}
+	else
+	{
+		//	restore last placement
+		if ( !mSavedWindowPlacement )
+			throw Soy::AssertException("SetFullscreen(false) No saved window placement to restore. Need a backup solution");
+
+		WINDOWPLACEMENT Placement;
+		Placement = *mSavedWindowPlacement;
+		mSavedWindowPlacement.reset();
+
+		if ( !SetWindowPlacement(mHwnd, &Placement) )
+			Platform::ThrowLastError("SetWindowPlacement failed");
+
+		DoSetWindowLongPtr(mHwnd, GWL_STYLE, mSavedWindowFlags);
+		DoSetWindowLongPtr(mHwnd, GWL_EXSTYLE, mSavedWindowExFlags);
+	}
+}
+
+bool Platform::TWindow::IsFullscreen()
+{
+	auto Flags = GetWindowLongPtrA(mHwnd, GWL_STYLE);
+	//	borderless window style
+	//	there's not a more sophisticated approach it seems...
+	if ( Flags & WS_POPUP )
+		return true;
+
+	return false;
+}
 
 
 bool Platform::TWindow::IsMinimised()
