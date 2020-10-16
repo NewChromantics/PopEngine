@@ -202,8 +202,9 @@ void ApiPop::StdOut(Bind::TCallback& Params)
 		auto Error = fflush(FileHandle);
 		Platform::IsOkay(Error, "fflush stdout before set mode");
 		auto FileDescriptor = fileno(FileHandle);
-		Error = setmode(FileDescriptor, O_BINARY);
-		Platform::IsOkay(Error, "setmode stdout O_BINARY");
+		auto PreviousMode = setmode(FileDescriptor, O_BINARY);
+		if ( PreviousMode == -1 )
+			Platform::ThrowLastError("setmode stdout O_BINARY");
 	}
 #endif
 	auto WrittenBytes = fwrite(Binary.GetArray(), 1, Binary.GetDataSize(), FileHandle);

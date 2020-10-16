@@ -46,13 +46,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - name: Move Package Downloads to Libs
-        run: |
-          mkdir -p Libs
-          mv ${{ env.project }}.Package/node_modules/@newchromantics/* Libs
-          cd Libs
-          ls -R
-
       - name: Linux
         uses: NewChromantics/PopAction_BuildLinux@v1
         with:

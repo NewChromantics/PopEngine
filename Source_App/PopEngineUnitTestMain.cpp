@@ -32,7 +32,7 @@ int main(int argc, const char * argv[])
 		break;
 	}
 	
-	std::cout << "Running project " << ProjectPath << std::endl;
+	std::cerr << "Running project " << ProjectPath << std::endl;
 	//	Unit test files should be under resources in build
 	return PopEngine( ProjectPath.c_str() );
 }

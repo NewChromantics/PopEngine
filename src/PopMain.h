@@ -7,17 +7,6 @@ class TChannel;
 class TJobParams;
 class TParameterTraits;
 
-namespace TPopAppError
-{
-	enum Type
-	{
-		Success = 0,
-		BadParams,
-		InitError,
-	};
-}
-
-
 
 class PopMainThread : public PopWorker::TJobQueue, public PopWorker::TContext
 {
@@ -54,7 +43,8 @@ namespace Pop
 	extern std::string ProjectPath;
 }
 
-TPopAppError::Type	PopMain();
+//	returns app exit code
+int32_t	PopMain();
 
 
 
