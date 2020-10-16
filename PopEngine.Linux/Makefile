@@ -51,6 +51,7 @@ $(SRC_PATH)/TApiSokol.cpp	\
 $(SRC_PATH)/SoySokol_Linux.cpp	\
 $(SRC_PATH)/SoyGuiLinux.cpp	\
 $(SRC_PATH)/LinuxDRM/esUtil.cpp	\
+$(SRC_PATH)/SoyImageProxy.cpp	\
 
 LIB_C_FILES = \
 $(SRC_PATH)/Zip/src/zip.c	\

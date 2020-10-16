@@ -1,6 +1,7 @@
 #pragma once
 #include "TBind.h"
 #include "SoyWindow.h"
+#include "SoyImageProxy.h"
 #include "sokol/sokol_gfx.h"
 
 namespace ApiSokol

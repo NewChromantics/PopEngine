@@ -4,7 +4,6 @@
 #include "TApiGui.h"
 #include "SoyWindow.h"
 #include "TApiCommon.h"
-#include "SoyImageProxy.h"
 
 #include "sokol/sokol_gfx.h"
 
