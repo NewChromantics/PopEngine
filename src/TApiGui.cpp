@@ -25,6 +25,7 @@ namespace ApiGui
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
+	DEFINE_BIND_FUNCTIONNAME(GetValue);
 	DEFINE_BIND_FUNCTIONNAME(SetLabel);
 
 	DEFINE_BIND_FUNCTIONNAME(SetImage);
@@ -244,17 +245,26 @@ void ApiGui::TLabelWrapper::SetValue(Bind::TCallback& Params)
 void ApiGui::TTextBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>( &TTextBoxWrapper::SetValue );
+	Template.BindFunction<BindFunction::GetValue>( &TTextBoxWrapper::GetValue );
 }
 
 void ApiGui::TTextBoxWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 	
-	BufferArray<int32_t,4> Rect4;
-	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
-	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
-	
-	mTextBox = Platform::CreateTextBox( *ParentWindow.mWindow, Rect );
+	if ( Params.IsArgumentString(1) )
+	{
+		auto Name = Params.GetArgumentString(1);
+		mTextBox = Platform::GetTextBox( *ParentWindow.mWindow, Name );
+	}
+	else
+	{
+		BufferArray<int32_t,4> Rect4;
+		Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+		Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+		mTextBox = Platform::CreateTextBox( *ParentWindow.mWindow, Rect );
+	}
+		
 	mTextBox->mOnValueChanged = std::bind( &TTextBoxWrapper::OnChanged, this, std::placeholders::_1 );
 }
 
@@ -262,6 +272,12 @@ void ApiGui::TTextBoxWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
 	mTextBox->SetValue( Value );
+}
+
+void ApiGui::TTextBoxWrapper::GetValue(Bind::TCallback& Params)
+{
+	auto Value = mTextBox->GetValue();
+	Params.Return(Value);
 }
 
 void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
@@ -282,6 +298,7 @@ void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
 void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>( &TTickBoxWrapper::SetValue );
+	Template.BindFunction<BindFunction::GetValue>( &TTickBoxWrapper::GetValue );
 	Template.BindFunction<BindFunction::SetLabel>( &TTickBoxWrapper::SetLabel );
 }
 
@@ -302,6 +319,12 @@ void ApiGui::TTickBoxWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentBool(0);
 	mControl->SetValue( Value );
+}
+
+void ApiGui::TTickBoxWrapper::GetValue(Bind::TCallback& Params)
+{
+	auto Value = mControl->GetValue();
+	Params.Return(Value);
 }
 
 void ApiGui::TTickBoxWrapper::SetLabel(Bind::TCallback& Params)

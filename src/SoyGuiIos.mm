@@ -88,6 +88,20 @@ public:
 	size_t				mValueVersion = 0;
 };
 
+class Platform::TTextBox : public SoyTextBox
+{
+public:
+	TTextBox(UIView* View);
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
+	
+	virtual void		SetValue(const std::string& Value) override;
+	virtual std::string	GetValue() override;
+
+	TResponder*			mResponder = [TResponder alloc];
+	UITextView*			mView = nullptr;
+};
+
 class Platform::TButton : public SoyButton
 {
 public:
@@ -142,6 +156,21 @@ std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> 
 std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
 	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyTextBox> Platform::GetTextBox(SoyWindow& Parent,const std::string& Name)
+{
+	std::shared_ptr<SoyTextBox> Control;
+	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
+	auto Run = [&]()
+	{
+		auto* View = Window.GetChild(Name);
+		if ( !View )
+			throw Soy::AssertException(std::string("No view found named ") + Name);
+		Control.reset( new Platform::TTextBox(View) );
+	};
+	RunJobOnMainThread( Run, true );
+	return Control;
 }
 
 std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
@@ -258,6 +287,50 @@ std::string Platform::TLabel::GetValue()
 	RunJobOnMainThread( Job, true );
 	return Value;
 }
+
+
+
+
+Platform::TTextBox::TTextBox(UIView* View)
+{
+	//	todo: check type!
+	mView = View;
+	
+	//	setup delegate/responder
+	//auto ListenEvents = UIControlEventAllEvents;
+	auto ListenEvents = UIControlEventEditingChanged;
+	//	gr: do we want this? or should event only fire on user-change?
+	//ListenEvents |= UIControlEventValueChanged;
+ 	[mView addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 
+	mResponder->mCallback = [this]()	{	this->OnChanged();	};
+}
+
+void Platform::TTextBox::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+void Platform::TTextBox::SetValue(const std::string& Value)
+{
+	auto Job = [=]() mutable
+	{
+		this->mView.text = Soy::StringToNSString(Value);
+	};
+	RunJobOnMainThread( Job, false );
+}
+
+std::string Platform::TTextBox::GetValue()
+{
+	std::string Value;
+	auto Job = [&]()
+	{
+		Value = Soy::NSStringToString( mView.text );
+	};
+	RunJobOnMainThread( Job, true );
+	return Value;
+}
+
 
 
 

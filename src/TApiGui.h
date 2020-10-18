@@ -145,6 +145,7 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 	void			SetValue(Bind::TCallback& Params);
+	void			GetValue(Bind::TCallback& Params);
 
 	void			OnChanged(const std::string& NewValue);
 
@@ -166,6 +167,7 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 	void			SetValue(Bind::TCallback& Params);
+	void			GetValue(Bind::TCallback& Params);
 	void			SetLabel(Bind::TCallback& Params);
 
 	void			OnChanged(bool& NewValue);
