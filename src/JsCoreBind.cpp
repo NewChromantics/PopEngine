@@ -921,12 +921,17 @@ JsCore::TExceptionMeta JsCore::GetExceptionMeta(JSContextRef Context, JSValueRef
 };
 
 #if defined(JSAPI_JSCORE)
+	//	gr: rewrite this so we use proper Object code?
 	JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
 	auto& TheContext = GetContext(Context);
 	auto LineValue = JSObjectGetProperty(Context, ExceptionObject, "line", nullptr);
 	auto FilenameValue = JSObjectGetProperty(Context, ExceptionObject, "sourceURL", nullptr);
-	Meta.mLine = GetInt<int>(Context, LineValue);
-	Meta.mFilename = TheContext.GetResolvedFilename(GetString(Context, FilenameValue));
+	auto LineValueType = JSValueGetType( Context, LineValue );
+	auto FilenameValueType = JSValueGetType( Context, FilenameValue );
+	if ( LineValueType == kJSTypeNumber )
+		Meta.mLine = GetInt<int>(Context, LineValue);
+	if ( FilenameValueType == kJSTypeString )
+		Meta.mFilename = TheContext.GetResolvedFilename(GetString_NoThrow(Context, FilenameValue));
 	
 	//	gr: object json has meta, but it doesn't show string's exception, so need to convert the error object to a string too
 	Meta.mMessage = GetString_NoThrow(Context, ExceptionHandle);

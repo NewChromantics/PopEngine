@@ -767,7 +767,7 @@ class JsCore::TExceptionMeta
 {
 public:
 	std::string		mMessage = "Unexplained Exception";
-	uint32_t		mLine = 0;
+	int32_t			mLine = -1;
 	std::string		mFilename = "UnknownFile";
 };
 
