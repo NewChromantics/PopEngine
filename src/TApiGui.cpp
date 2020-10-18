@@ -21,6 +21,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(ColourPicker);
 	DEFINE_BIND_TYPENAME(Colour);
 	DEFINE_BIND_TYPENAME(ImageMap);
+	DEFINE_BIND_TYPENAME(Button);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
@@ -51,6 +52,7 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TColourPickerWrapper>(Namespace);
 	Context.BindObjectType<TColourButtonWrapper>(Namespace);
 	Context.BindObjectType<TImageMapWrapper>(Namespace);
+	Context.BindObjectType<TButtonWrapper>(Namespace);
 }
 
 
@@ -581,4 +583,53 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 {
 	Array<std::string> FilenamesCopy( Filenames );
 	mOnDragDropPromises.Push(FilenamesCopy);
+}
+
+
+void ApiGui::TButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<BindFunction::SetLabel>( &TButtonWrapper::SetLabel );
+}
+
+void ApiGui::TButtonWrapper::Construct(Bind::TCallback& Params)
+{
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+	
+	//	if rect is string, we're attaching to existing
+	if ( Params.IsArgumentString(1) )
+	{
+		auto Name = Params.GetArgumentString(1);
+		mControl = Platform::GetButton( *ParentWindow.mWindow, Name );
+		if ( !mControl )
+			throw Soy::AssertException(std::string("Failed to get button with name ") + Name);
+	}
+	else
+	{
+		BufferArray<int32_t,4> Rect4;
+		Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+		Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+		mControl = Platform::CreateButton( *ParentWindow.mWindow, Rect );
+		if ( !mControl )
+			throw Soy::AssertException("Failed to create button with rect");
+	}
+	
+	mControl->mOnClicked = std::bind( &TButtonWrapper::OnClicked, this );
+}
+
+void ApiGui::TButtonWrapper::SetLabel(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentString(0);
+	mControl->SetLabel( Value );
+}
+
+void ApiGui::TButtonWrapper::OnClicked()
+{
+	auto Callback = [this](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnClicked");
+		JsCore::TCallback Callback(Context);
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
 }

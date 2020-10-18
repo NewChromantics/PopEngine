@@ -12,6 +12,33 @@
 #include "sokol/sokol_gfx.h"
 
 
+
+
+@interface TResponder : UIResponder
+{
+@public std::function<void()>	mCallback;
+}
+
+-(void) OnAction;
+
+@end
+
+
+@implementation TResponder
+
+-(void) OnAction
+{
+	//	call lambda
+	if ( !mCallback )
+	{
+		std::Debug << "TResponderCallback unhandled callback" << std::endl;
+		return;
+	}
+	mCallback();
+}
+
+@end
+
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 {
 	Soy::TSemaphore Semaphore;
@@ -61,6 +88,19 @@ public:
 	size_t				mValueVersion = 0;
 };
 
+class Platform::TButton : public SoyButton
+{
+public:
+	TButton(UIView* View);
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect);// override;
+	
+	virtual void		SetLabel(const std::string& Value) override;
+
+	TResponder*			mResponder = [TResponder alloc];
+	UIButton*			mView = nullptr;
+};
+
 class Platform::TMetalView : public SoyMetalView
 {
 public:
@@ -77,6 +117,8 @@ std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const st
 	auto Run = [&]()
 	{
 		auto* View = Window.GetChild(Name);
+		if ( !View )
+			throw Soy::AssertException(std::string("No view found named ") + Name);
 		MetalView.reset( new Platform::TMetalView(View) );
 	};
 	RunJobOnMainThread( Run, true );
@@ -107,7 +149,6 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx
 	Soy_AssertTodo();
 }
 
-
 std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow &Parent, Soy::Rectx<int32_t> &Rect)
 {
 	Soy_AssertTodo();
@@ -120,7 +161,29 @@ std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string
 	auto Run = [&]()
 	{
 		auto* View = Window.GetChild(Name);
+		if ( !View )
+			throw Soy::AssertException(std::string("No view found named ") + Name);
 		Label.reset( new Platform::TLabel(View) );
+	};
+	RunJobOnMainThread( Run, true );
+	return Label;
+}
+
+std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow &Parent, Soy::Rectx<int32_t> &Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
+{
+	std::shared_ptr<SoyButton> Label;
+	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
+	auto Run = [&]()
+	{
+		auto* View = Window.GetChild(Name);
+		if ( !View )
+			throw Soy::AssertException(std::string("No view found named ") + Name);
+		Label.reset( new Platform::TButton(View) );
 	};
 	RunJobOnMainThread( Run, true );
 	return Label;
@@ -195,6 +258,41 @@ std::string Platform::TLabel::GetValue()
 	RunJobOnMainThread( Job, true );
 	return Value;
 }
+
+
+
+Platform::TButton::TButton(UIView* View)
+{
+	//	this IOS code expects to be run on the main thread
+	//	the OSX code can run on any thread, and then inits on main thread (before we had Platform::CreateXXX)
+	//	we should align the paradigms
+
+	//	todo: check type!
+	mView = View;
+	
+	//	setup delegate/responder to get click
+	//auto ListenEvents = UIControlEventAllEvents;
+	auto ListenEvents = UIControlEventTouchUpInside;
+ 	[mView addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 
+	mResponder->mCallback = [this]()	{	this->OnClicked();	};
+}
+
+void Platform::TButton::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+void Platform::TButton::SetLabel(const std::string& Value)
+{
+	auto Job = [=]() mutable
+	{
+		auto ValueNs = Soy::StringToNSString(Value);
+		[this->mView setTitle:ValueNs forState:UIControlStateNormal];
+	};
+	RunJobOnMainThread( Job, false );
+}
+
 
 
 

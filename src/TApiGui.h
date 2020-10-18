@@ -10,6 +10,7 @@ class SoyLabel;
 class SoyTextBox;
 class SoyTickBox;
 class SoyColourButton;
+class SoyButton;
 
 namespace Gui
 {
@@ -31,6 +32,7 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(ColourPicker);
 	DECLARE_BIND_TYPENAME(Colour);
 	DECLARE_BIND_TYPENAME(ImageMap);
+	DECLARE_BIND_TYPENAME(Button);
 
 	class TGuiControlWrapper;
 	
@@ -42,6 +44,7 @@ namespace ApiGui
 	class TColourButtonWrapper;
 	class TColourPickerWrapper;
 	class TImageMapWrapper;
+	class TButtonWrapper;
 }
 
 
@@ -241,3 +244,22 @@ public:
 };
 
 
+
+class ApiGui::TButtonWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Button,SoyButton>
+{
+public:
+	TButtonWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+	{
+	}
+	~TButtonWrapper(){};
+	
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+	
+	void			SetLabel(Bind::TCallback& Params);
+	void			OnClicked();
+	
+public:
+	std::shared_ptr<SoyButton>&	mControl = mObject;
+};
