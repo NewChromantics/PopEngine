@@ -219,9 +219,11 @@ void Platform::Loop(std::function<bool()> CanBlock,std::function<void(int32_t)> 
 		}
 
 		if ( msg.message == WM_QUIT )
+		{
+			auto ExitCode = msg.wParam;
 			if ( OnQuit )
-				OnQuit();
-
+				OnQuit(ExitCode);
+		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 
@@ -1149,7 +1151,7 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 	//	pump jobs
 	//	pump windows queue & block
 	bool Continue = true;
-	auto OnQuit = [&]()
+	auto OnQuit = [&](int32_t ExitCode)
 	{
 		Continue = false;
 	};
