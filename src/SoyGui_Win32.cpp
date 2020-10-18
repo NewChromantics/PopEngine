@@ -1215,6 +1215,11 @@ std::shared_ptr<SoySlider> Platform::CreateSlider(SoyWindow& Parent, Soy::Rectx<
 	return Control;
 }
 
+std::shared_ptr<SoyTextBox> Platform::GetTextBox(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
@@ -1231,6 +1236,18 @@ std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent, Soy::Rect
 
 	return Control;
 }
+
+
+std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 
 std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
 {

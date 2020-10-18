@@ -83,6 +83,11 @@ std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx
 	Soy_AssertTodo();
 }
 
+std::shared_ptr<SoyTextBox> Platform::GetTextBox(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
 	Soy_AssertTodo();
@@ -94,6 +99,16 @@ std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow &Parent, Soy::Rectx<in
 }
 
 std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
 {
 	Soy_AssertTodo();
 }

@@ -1236,7 +1236,21 @@ void Platform::TTickBox::SetLabel(const std::string& Label)
 
 
 
+std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	Soy_AssertTodo();
+}
 
+std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
+
+std::shared_ptr<SoyTextBox> Platform::GetTextBox(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
 
 std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
