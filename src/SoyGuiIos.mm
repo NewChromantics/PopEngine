@@ -92,6 +92,7 @@ class Platform::TTextBox : public SoyTextBox
 {
 public:
 	TTextBox(UIView* View);
+	~TTextBox();
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	
@@ -304,6 +305,11 @@ Platform::TTextBox::TTextBox(UIView* View)
  	[mView addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
  
 	mResponder->mCallback = [this]()	{	this->OnChanged();	};
+}
+
+Platform::TTextBox::~TTextBox()
+{
+	mResponder->mCallback = nullptr;
 }
 
 void Platform::TTextBox::SetRect(const Soy::Rectx<int32_t>& Rect)
