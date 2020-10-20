@@ -309,11 +309,12 @@ void TWebsocketServer::RemovePeer(SoyRef ClientRef)
 
 void TWebsocketClient::GetConnectedPeers(ArrayBridge<SoyRef>& Clients)
 {
+	if (mServerPeer )
 	{
 		auto& Client = *mServerPeer;
 		if (!Client.mHandshake.IsCompleted())
 			return;
-		if (!Client.mHandshake.mHasSentAcceptReply)
+		if (Client.mHandshake.mWebSocketAcceptedKey.empty())
 			return;
 
 		Clients.PushBack(Client.mConnectionRef);
@@ -333,9 +334,17 @@ std::shared_ptr<TWebsocketServerPeer> TWebsocketClient::GetPeer(SoyRef ClientRef
 
 void TWebsocketClient::AddPeer(SoyRef ClientRef)
 {
-	std::shared_ptr<TWebsocketServerPeer> Client(new TWebsocketServerPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage));
+	auto OnConnected = [this]()
+	{
+		std::Debug << __PRETTY_FUNCTION__ << " connected" << std::endl;
+		if (mOnConnected)
+			mOnConnected();
+	};
+	std::shared_ptr<TWebsocketClientPeer> Client(new TWebsocketClientPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage, OnConnected));
 	mServerPeer = Client;
 	mServerPeer->ClientConnect(mServerHost);
+
+	//	gr: call anyway, this will get ignore because handshake isnt finished, but may want a semi-connected thing later
 	if (mOnConnected)
 		mOnConnected();
 }
@@ -347,25 +356,37 @@ void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 		mOnDisconnected();
 }
 
+TWebsocketClientPeer::TWebsocketClientPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected) :
+	TWebsocketServerPeer(Socket, ConnectionRef, OnTextMessage, OnBinaryMessage ),
+	mOnConnected		(OnConnected )
+{
+}
+
+
 TWebsocketServerPeer::TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
-	TSocketReadThread_Impl(Socket, ConnectionRef),
+	TSocketReadThread(Socket, ConnectionRef),
 	TSocketWriteThread(Socket, ConnectionRef),
 	mOnTextMessage(OnTextMessage),
 	mOnBinaryMessage(OnBinaryMessage),
 	mConnectionRef(ConnectionRef)
 {
-	TSocketReadThread_Impl::Start();
+	TSocketReadThread::mOnDataRecieved = [this](std::shared_ptr<Soy::TReadProtocol>& Data)
+	{
+		OnDataRecieved(Data);
+	};
+
+	TSocketReadThread::Start();
 	TSocketWriteThread::Start();
 }
 
 TWebsocketServerPeer::~TWebsocketServerPeer()
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
-	TSocketReadThread_Impl::Stop();
+	TSocketReadThread::Stop();
 	TSocketWriteThread::Stop();
 
-	TSocketReadThread_Impl::WaitToFinish();
-	TSocketReadThread_Impl::WaitToFinish();
+	TSocketReadThread::WaitToFinish();
+	TSocketWriteThread::WaitToFinish();
 }
 
 void TWebsocketServerPeer::ClientConnect(const std::string& Host)
@@ -380,24 +401,60 @@ void TWebsocketServerPeer::Stop(bool WaitToFinish)
 {
 	if ( WaitToFinish )
 	{
-		TSocketReadThread_Impl::WaitToFinish();
+		TSocketReadThread::WaitToFinish();
 		TSocketWriteThread::WaitToFinish();
 	}
 	else
 	{
-		TSocketReadThread_Impl::Stop();
+		TSocketReadThread::Stop();
 		TSocketWriteThread::Stop();
 	}
 }
 
-void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& pData)
+void TWebsocketClientPeer::OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& pData)
 {
+	auto& Data = dynamic_cast<WebSocket::THandshakeResponseProtocol&>(*pData);
+	if (Data.mHandshake.IsCompleted())
+	{
+		//	todo, only send once
+		this->mOnConnected();
+	}
+	//	completed response, dont need to do anything?
+
+	//	packet with data!
+	if (Data.mMessage)
+	{
+		auto& Packet = *Data.mMessage;
+		if (Packet.IsCompleteTextMessage())
+		{
+			mOnTextMessage(this->mConnectionRef, Packet.mTextData);
+			//	gr: there's a bit of a disconnect here between Some-reponse-packet data and our persistent data
+			//		should probbaly change this to like
+			//	pData->PopTextMessage()
+			//		and a call back to owner to clear. or a "alloc new data" thing for the response class
+			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
+			mCurrentMessage.reset();
+		}
+		if (Packet.IsCompleteBinaryMessage())
+		{
+			mOnBinaryMessage(this->mConnectionRef, Packet.mBinaryData);
+			//	see above
+			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
+			mCurrentMessage.reset();
+		}
+	}
+}
+
+void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& pData)
+{
+	auto& Data = dynamic_cast<WebSocket::TRequestProtocol&>(*pData);
+
 	//auto& Data = *pData;
 	
 	//	this was the http request, send the reply
-	if ( pData->mReplyMessage )
+	if ( Data.mReplyMessage )
 	{
-		if ( pData->mHandshake.mHasSentAcceptReply )
+		if ( Data.mHandshake.mHasSentAcceptReply )
 			throw Soy::AssertException("Already sent handshake reply");
 		/*
 		auto& Message = std::Debug;
@@ -414,15 +471,15 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<WebSocket::TRequestPro
 		*/
 	
 		std::Debug << "Sending handshake response to " << this->GetSocketAddress() << std::endl;
-		pData->mHandshake.mHasSentAcceptReply = true;
-		Push( pData->mReplyMessage );
+		Data.mHandshake.mHasSentAcceptReply = true;
+		Push( Data.mReplyMessage );
 		return;
 	}
 	
 	//	packet with data!
-	if ( pData->mMessage )
+	if ( Data.mMessage )
 	{
-		auto& Packet = *pData->mMessage;
+		auto& Packet = *Data.mMessage;
 		if ( Packet.IsCompleteTextMessage() )
 		{
 			mOnTextMessage( this->mConnectionRef, Packet.mTextData );
@@ -505,6 +562,18 @@ std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 	
 	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,mCurrentMessage,"XXX");
 	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
+}
+
+
+std::shared_ptr<Soy::TReadProtocol> TWebsocketClientPeer::AllocProtocol()
+{
+	//	this needs revising... or locking at least
+	std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
+	if (!mCurrentMessage)
+		mCurrentMessage.reset(new WebSocket::TMessageBuffer());
+
+	auto* NewProtocol = new WebSocket::THandshakeResponseProtocol(mHandshake, mCurrentMessage);
+	return std::shared_ptr<Soy::TReadProtocol>(NewProtocol);
 }
 
 
