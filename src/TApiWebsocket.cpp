@@ -158,8 +158,9 @@ void TWebsocketClientWrapper::Send(Bind::TCallback& Params)
 
 TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
 	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
-	mOnTextMessage(OnTextMessage),
-	mOnBinaryMessage(OnBinaryMessage)
+	mOnTextMessage	( OnTextMessage ),
+	mOnBinaryMessage( OnBinaryMessage ),
+	mServerHost		( Hostname )
 {
 	mSocket.reset(new SoySocket());
 	mSocket->CreateTcp(true);
@@ -334,7 +335,7 @@ void TWebsocketClient::AddPeer(SoyRef ClientRef)
 {
 	std::shared_ptr<TWebsocketServerPeer> Client(new TWebsocketServerPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage));
 	mServerPeer = Client;
-	mServerPeer->ClientConnect();
+	mServerPeer->ClientConnect(mServerHost);
 	if (mOnConnected)
 		mOnConnected();
 }
@@ -367,11 +368,11 @@ TWebsocketServerPeer::~TWebsocketServerPeer()
 	TSocketReadThread_Impl::WaitToFinish();
 }
 
-void TWebsocketServerPeer::ClientConnect()
+void TWebsocketServerPeer::ClientConnect(const std::string& Host)
 {
 	//	send a websocket request
 	std::shared_ptr<WebSocket::TMessageBuffer> MessageBuffer(new WebSocket::TMessageBuffer() );
-	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TRequestProtocol(this->mHandshake, MessageBuffer));
+	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TRequestProtocol( this->mHandshake, MessageBuffer, Host ));
 	Push(Packet);
 }
 
@@ -502,7 +503,7 @@ std::shared_ptr<Soy::TReadProtocol> TWebsocketServerPeer::AllocProtocol()
 	if ( !mCurrentMessage )
 		mCurrentMessage.reset( new WebSocket::TMessageBuffer() );
 	
-	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,mCurrentMessage);
+	auto* NewProtocol = new WebSocket::TRequestProtocol(mHandshake,mCurrentMessage,"XXX");
 	return std::shared_ptr<Soy::TReadProtocol>( NewProtocol );
 }
 

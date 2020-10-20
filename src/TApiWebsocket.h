@@ -26,7 +26,7 @@ public:
 	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
 	~TWebsocketServerPeer();
 
-	void				ClientConnect();
+	void				ClientConnect(const std::string& Host);
 	void				Stop(bool WaitToFinish);
 
 	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
@@ -112,6 +112,7 @@ public:
 
 protected:
 	std::shared_ptr<TWebsocketServerPeer>	mServerPeer;
+	std::string								mServerHost;
 
 	std::function<void(SoyRef, const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
