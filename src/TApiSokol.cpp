@@ -261,6 +261,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			PipelineDescription.rasterizer.cull_mode = SG_CULLMODE_NONE;
 			PipelineDescription.blend.enabled = false;
 			
+			if(RenderTargetPass.id != 0)
+				PipelineDescription.blend.depth_format = SG_PIXELFORMAT_NONE;
+			
 			sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
 			auto PipelineState = sg_query_pipeline_state(Pipeline);
 			Sokol::IsOkay(PipelineState,"sg_make_pipeline");
