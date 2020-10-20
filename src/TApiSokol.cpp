@@ -308,7 +308,21 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				RenderTargetPass = {0};
 			else
 			{
+				bool LatestVersion = true;
+				sg_image SokolImage = {0};
+
+				auto& RenderTexture = *SetRenderTargetCommand.mTargetTexture;
+
+				SokolImage.id = RenderTexture.GetSokolImage(LatestVersion);
+				auto State = sg_query_image_state( SokolImage );
+
+				sg_pass_desc RenderTargetPassDesc = { 0 };
+				RenderTargetPassDesc.color_attachments[0].image = SokolImage;
+
+				RenderTargetPass = sg_make_pass(&RenderTargetPassDesc);
 			}
+
+			NewPass(1,0,0,1);
 		}
 	}
 	
