@@ -96,6 +96,7 @@ public:
 	virtual const std::string_view		GetName() override	{	return Name;	};
 	
 	std::shared_ptr<SoyImageProxy>		mImage;
+	bool															mIsRenderTarget = false;
 };
 
 

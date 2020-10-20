@@ -58,7 +58,7 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 }
 
 
-sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixels)
+sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixels, bool RenderTarget)
 {
 	sg_image_desc Description = {0};
 	
@@ -85,8 +85,19 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	auto ImageMeta = Pixels.GetMeta();
 	Description.width = ImageMeta.GetWidth();
 	Description.height = ImageMeta.GetHeight();
-	//Description.render_target = true;
-	Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
+	if(RenderTarget)
+	{
+		Description.width = 640;
+		Description.height = 640;
+		auto SokolDescription = sg_query_desc();
+		Description.render_target = true;
+		Description.pixel_format = SokolDescription.context.color_format;
+		Description.sample_count = SokolDescription.context.sample_count;
+	}
+	else
+	{
+		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
+	}
 	
 	
 	auto& PixelsArray = Pixels.GetPixelsArray();
@@ -194,12 +205,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				throw Soy::AssertException("UpdateImage command with null image pointer");
 
 			auto& ImageSoy = *UpdateImageCommand.mImage;
+			auto IsRenderTarget = UpdateImageCommand.mIsRenderTarget;
 			SoyPixels TemporaryImage;
 			
 			//	if image has no sg_image, create it
 			if ( !ImageSoy.HasSokolImage() )
 			{
-				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage);
+				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
 				auto NewImage = sg_make_image(&ImageDescription);
 				auto State = sg_query_image_state(NewImage);
 				Sokol::IsOkay(State,"sg_make_image");
@@ -221,7 +233,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			//	if image sokol version is out of date, update texture
 			if ( !LatestVersion )
 			{
-				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage);
+				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
 				sg_update_image( ImageSokol, ImageDescription.content );
 				auto State = sg_query_image_state(ImageSokol);
 				Sokol::IsOkay(State,"sg_make_image");
@@ -592,6 +604,7 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 			//	although, it doesnt need pixels updating as they will get overriden...
 			auto pUpdateImage = std::make_shared<TRenderCommand_UpdateImage>();
 			pUpdateImage->mImage = pSetRenderTarget->mTargetTexture;
+			pUpdateImage->mIsRenderTarget = true;
 			PushCommand(pUpdateImage);
 		}
 
