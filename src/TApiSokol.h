@@ -68,7 +68,7 @@ public:
 	static constexpr std::string_view	Name = "SetRenderTarget";
 	virtual const std::string_view	GetName() override { return Name; };
 
-	std::shared_ptr<SoyImageProxy>	mTargetTexture;	//	if null, render to screen
+	std::shared_ptr<SoyImageProxy>	mTargetTexture = nullptr;	//	if null, render to screen
 	SoyPixelsFormat::Type			mReadBackFormat = SoyPixelsFormat::Invalid;
 };
 

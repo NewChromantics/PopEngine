@@ -142,6 +142,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	jobs
 	FreeImageDeletes();
 	
+	// cache render target pass if 0 render to screen
+	sg_pass RenderTargetPass = {0};
+
 	//	run render commands
 	auto NewPass = [&](float r,float g,float b,float a)
 	{
@@ -275,6 +278,16 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			auto VertexFirst = Geometry.GetDrawVertexFirst();
 			auto InstanceCount = Geometry.GetDrawInstanceCount();
 			sg_draw(VertexFirst,VertexCount,InstanceCount);
+		}
+	
+		if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
+		{
+			auto& SetRenderTargetCommand = dynamic_cast<Sokol::TRenderCommand_SetRenderTarget&>( *NextCommand );
+			if ( !SetRenderTargetCommand.mTargetTexture ) // js land = Commands.push( [ "SetRenderTarget", null ] )
+				RenderTargetPass = {0};
+			else
+			{
+			}
 		}
 	}
 	
