@@ -19,17 +19,16 @@ namespace ApiWebsocket
 }
 
 
-//	client connected to us
-class TWebsocketServerPeer : public TSocketReadThread_Impl<WebSocket::TRequestProtocol>, TSocketWriteThread
+class TWebsocketServerPeer : public TSocketReadThread, TSocketWriteThread
 {
 public:
 	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
 	~TWebsocketServerPeer();
 
-	void				ClientConnect();
+	void				ClientConnect(const std::string& Host);
 	void				Stop(bool WaitToFinish);
 
-	virtual void		OnDataRecieved(std::shared_ptr<WebSocket::TRequestProtocol>& Data) override;
+	virtual void		OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& Data);
 	
 	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
 
@@ -46,6 +45,20 @@ public:
 	std::recursive_mutex						mCurrentMessageLock;
 	std::shared_ptr<WebSocket::TMessageBuffer>	mCurrentMessage;
 };
+
+class TWebsocketClientPeer : public TWebsocketServerPeer
+{
+public:
+	TWebsocketClientPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected);
+
+	virtual void		OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& Data) override;
+
+	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
+
+public:
+	std::function<void()>	mOnConnected;	//	handshake completed
+};
+
 
 
 class TWebsocketServer : public SoyWorkerThread
@@ -111,7 +124,8 @@ public:
 	std::function<void()>			mOnDisconnected;
 
 protected:
-	std::shared_ptr<TWebsocketServerPeer>	mServerPeer;
+	std::shared_ptr<TWebsocketClientPeer>	mServerPeer;
+	std::string								mServerHost;
 
 	std::function<void(SoyRef, const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
