@@ -161,7 +161,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		PassAction.colors[0].val[2] = b;
 		PassAction.colors[0].val[3] = a;
 		
-		sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
+		// This needs to change to sg_begin_pass if a RenderTarget is set
+		if(RenderTargetPass.id != 0)
+			sg_begin_pass(RenderTargetPass, &PassAction);
+		else
+			sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
+	
+		auto test = sg_query_desc();
 		InsidePass = true;
 	};
 	
