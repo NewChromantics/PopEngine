@@ -146,6 +146,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	currently we're just flushing out all pipelines after we render
 	Array<sg_pipeline> TempPipelines;
 	Array<sg_buffer> TempBuffers;
+	Array<sg_pass> TempPasses;
 
 	
 	sg_reset_state_cache();
@@ -320,6 +321,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				RenderTargetPassDesc.color_attachments[0].image = SokolImage;
 
 				RenderTargetPass = sg_make_pass(&RenderTargetPassDesc);
+				TempPasses.PushBack(RenderTargetPass);
 			}
 
 			NewPass(1,0,0,1);
@@ -346,6 +348,12 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	{
 		auto Buffer = TempBuffers[p];
 		sg_destroy_buffer(Buffer);
+	}
+
+	for ( auto p=0; p<TempPasses.GetSize(); p++)
+	{
+		auto Pass = TempPasses[p];
+		sg_destroy_pass(Pass);
 	}
 
 	//	save last
