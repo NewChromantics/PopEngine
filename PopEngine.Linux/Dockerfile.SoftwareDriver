@@ -1,0 +1,49 @@
+FROM ubuntu:18.04
+
+ARG MesaVersion=mesa-20.2.1
+
+# To avoid "tzdata" asking for geographic area
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -qq && \
+    apt install -qq -y software-properties-common && \
+    add-apt-repository -s "deb http://archive.ubuntu.com/ubuntu/ bionic main restricted" && \
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
+    apt build-dep mesa -qq -y && \
+    apt install -qq -y \
+        gcc-10 \
+        g++-10 \
+        npm \
+        libx264-dev \
+        libjavascriptcoregtk-4.0-dev \
+        kmscube \
+        libgles2-mesa-dev \
+        libgbm-dev \
+        libudev-dev \
+        llvm-dev \
+        curl \
+        ninja-build \
+        python3-pip
+
+RUN python3 -m pip install \
+        mako \
+        meson
+
+# Install the current release
+WORKDIR /opt
+RUN curl -O ftp://ftp.freedesktop.org/pub/mesa/${MesaVersion}.tar.xz && \
+    tar xf ${MesaVersion}.tar.xz
+
+WORKDIR /opt/${MesaVersion}
+
+RUN /usr/local/bin/meson builddir \
+    -Dplatforms=drm \
+    -Dosmesa=gallium \
+    -Dgallium-drivers=swrast \
+    -Ddri-drivers=[] \
+    -Dvulkan-drivers=[] \
+    -Dglx=disabled
+
+RUN ninja -C builddir install
+
+ENV LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu
