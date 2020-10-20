@@ -15,6 +15,8 @@ BUILD_DIR = ../Build
 TargetArch = $(osTarget)
 CONFIGURATION ?= Release
 
+GPU ?= true
+
 PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
@@ -132,12 +134,21 @@ LIB_LINK_LIBS = \
 -L$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
 -L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 -lPopCameraDevice \
--lGLESv2 \
 -lEGL \
 -lm \
 -lgbm \
 -ldrm	\
 -ludev \
+
+ifeq ($(GPU),false)
+$(info Building For Machine With ONLY CPU)
+LIB_LINK_LIBS += \
+-lOSMesa \
+else
+$(info Building For Machine With GPU)
+LIB_LINK_LIBS += \
+-lGLESv2 \
+endif
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
