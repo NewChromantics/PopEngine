@@ -262,6 +262,10 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			PipelineDescription.rasterizer.cull_mode = SG_CULLMODE_NONE;
 			PipelineDescription.blend.enabled = false;
 			
+			// Some Render Target Settings need to be different here
+			// Overwrite them at the end here?
+			// In this test there is no depth image in the Render Target Pass
+			// TODO: Set this more intelligently!
 			if(RenderTargetPass.id != 0)
 				PipelineDescription.blend.depth_format = SG_PIXELFORMAT_NONE;
 			
@@ -317,6 +321,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				SokolImage.id = RenderTexture.GetSokolImage(LatestVersion);
 				auto State = sg_query_image_state( SokolImage );
 
+				// There are 4 Color and 1 depth slot on for a Render Pass Description
+				// TODO: Change header to Image Array for Color textures add slot for depth image
 				sg_pass_desc RenderTargetPassDesc = { 0 };
 				RenderTargetPassDesc.color_attachments[0].image = SokolImage;
 
