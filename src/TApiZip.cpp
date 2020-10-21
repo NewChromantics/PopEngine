@@ -1,6 +1,6 @@
 #include "TApiZip.h"
 #include "Zip/src/zip.h"
-
+#include "SoyFilesystem.h"
 
 namespace ApiZip
 {
@@ -30,6 +30,7 @@ public:
 	~TZipFile();
 
 	void			AddFile(const std::string& Filename, const std::string& ZipFilename);
+	void			AddFile(const Array<uint8_t>& Data, const std::string& ZipFilename);
 	
 	std::mutex		mLock;
 	struct zip_t*	mZip = nullptr;
@@ -71,7 +72,24 @@ void ApiZip::TArchiveWrapper::Close(Bind::TCallback& Params)
 
 void ApiZip::TArchiveWrapper::AddFile(Bind::TCallback& Params)
 {
-	auto Filename = Params.GetArgumentFilename(0);
+	std::string Filename;
+	Array<uint8_t> Data;
+	if(Platform::FileExists(Params.GetArgumentFilename(0)))
+		Filename = Params.GetArgumentFilename(0);
+	else
+	{
+		if(Params.IsArgumentString(0)) // Turn this into a Data Array if string
+		{
+			auto ContentsString = Params.GetArgumentString(0);
+			auto* ContentsStringData = ContentsString.c_str();
+			auto ContentsStringLength = ContentsString.length();
+			auto ContentsStringArray = GetRemoteArray(reinterpret_cast<const uint8_t*>(ContentsStringData), ContentsStringLength);
+			Data.PushBackArray(ContentsStringArray);
+		}
+		else
+			Params.GetArgumentArray(0, GetArrayBridge(Data));
+	}
+
 	auto ZipFilename = Params.GetArgumentString(1);
 
 	if (mWriteThread)
@@ -85,11 +103,15 @@ void ApiZip::TArchiveWrapper::AddFile(Bind::TCallback& Params)
 	Params.Return(*mWritePromise);
 
 	//	spin up thread to write, then flush when done
-	auto WriteFunc = [this, Filename, ZipFilename]()->bool
+	auto WriteFunc = [this, Filename, Data, ZipFilename]()->bool
 	{
 		try
 		{
-			mZipFile->AddFile(Filename, ZipFilename);
+			if(Data.IsEmpty())
+				mZipFile->AddFile(Filename, ZipFilename);
+			else
+				mZipFile->AddFile(Data, ZipFilename);
+
 			this->OnWriteFinished(std::string());
 		}
 		catch (std::exception& e)
@@ -206,3 +228,19 @@ void TZipFile::AddFile(const std::string& Filename, const std::string & ZipFilen
 	IsOkay(Error, "zip_entry_close");
 }
 
+void TZipFile::AddFile(const Array<uint8_t>& Data, const std::string & ZipFilename)
+{
+	std::lock_guard<std::mutex> Lock(mLock);
+	
+	if (!mZip)
+		throw Soy::AssertException("Zip is not open");
+
+	auto Error = zip_entry_open(mZip, ZipFilename.c_str());
+	IsOkay(Error, "zip_entry_open");
+
+	Error = zip_entry_write( mZip, &Data, sizeof(Data) );
+	IsOkay(Error, "zip_entry_write");
+
+	Error = zip_entry_close(mZip);
+	IsOkay(Error, "zip_entry_close");
+}
