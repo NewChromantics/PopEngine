@@ -22,7 +22,7 @@ namespace ApiWebsocket
 class TWebsocketServerPeer : public TSocketReadThread, TSocketWriteThread
 {
 public:
-	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
+	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected,std::function<void(const std::string&)> OnError);
 	~TWebsocketServerPeer();
 
 	void				ClientConnect(const std::string& Host);
@@ -39,6 +39,8 @@ public:
 	SoyRef										mConnectionRef;
 	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void()>						mOnConnected;			//	called when handshake completes
+	std::function<void(const std::string&)>		mOnError;
 	WebSocket::THandshakeMeta					mHandshake;				//	handshake probably doesn't need a lock as its only modified by packets
 	//	current message gets reset & used & allocated on different threads though
 	//	I think it may need an id so it doesnt get passed along to a packet WHILST we finish decoding the last one? (recv is serial though...)
@@ -49,14 +51,13 @@ public:
 class TWebsocketClientPeer : public TWebsocketServerPeer
 {
 public:
-	TWebsocketClientPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected);
+	using TWebsocketServerPeer::TWebsocketServerPeer;	//	inherit constructor
 
 	virtual void		OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& Data) override;
 
 	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
 
 public:
-	std::function<void()>	mOnConnected;	//	handshake completed
 };
 
 
@@ -121,7 +122,7 @@ public:
 
 	//	this could be "on peer connected" to be generic
 	std::function<void()>			mOnConnected;
-	std::function<void()>			mOnDisconnected;
+	std::function<void(const std::string&)>	mOnDisconnected;
 
 protected:
 	std::shared_ptr<TWebsocketClientPeer>	mServerPeer;

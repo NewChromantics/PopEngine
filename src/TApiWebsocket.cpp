@@ -106,9 +106,14 @@ void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 		this->OnMessage(Message, Connection);
 	};
 	
+	auto OnDisconnected = [this](const std::string& Reason)
+	{
+		OnSocketClosed(Reason);
+	};
+	
 	mSocket.reset(new TWebsocketClient(Hostname, Port16, OnTextMessage, OnBinaryMessage));
 	mSocket->mOnConnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
-	mSocket->mOnDisconnected = std::bind(&TWebsocketClientWrapper::FlushPendingConnects, this);
+	mSocket->mOnDisconnected = OnDisconnected;
 }
 
 
@@ -283,7 +288,15 @@ std::shared_ptr<TWebsocketServerPeer> TWebsocketServer::GetPeer(SoyRef ClientRef
 
 void TWebsocketServer::AddPeer(SoyRef ClientRef)
 {
-	std::shared_ptr<TWebsocketServerPeer> Client( new TWebsocketServerPeer( mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage ) );
+	auto OnError = [](const std::string& Error)
+	{
+		std::Debug << "Websocket Server Peer error: " << Error << std::endl;
+	};
+	auto OnConnected = []()
+	{
+		//	on client handshake completed
+	};
+	std::shared_ptr<TWebsocketServerPeer> Client( new TWebsocketServerPeer( mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage, OnConnected, OnError ) );
 	std::lock_guard<std::recursive_mutex> Lock(mClientsLock);
 	mClients.PushBack(Client);
 }
@@ -340,7 +353,13 @@ void TWebsocketClient::AddPeer(SoyRef ClientRef)
 		if (mOnConnected)
 			mOnConnected();
 	};
-	std::shared_ptr<TWebsocketClientPeer> Client(new TWebsocketClientPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage, OnConnected));
+	auto OnError = [this](const std::string& Error)
+	{
+		std::Debug << "WebsocketClientPeer error " << Error << std::endl;
+		if ( mOnDisconnected )
+			mOnDisconnected(Error);
+	};
+	std::shared_ptr<TWebsocketClientPeer> Client(new TWebsocketClientPeer(mSocket, ClientRef, mOnTextMessage, mOnBinaryMessage, OnConnected, OnError ));
 	mServerPeer = Client;
 	mServerPeer->ClientConnect(mServerHost);
 
@@ -353,26 +372,30 @@ void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 {
 	mServerPeer = nullptr;
 	if (mOnDisconnected)
-		mOnDisconnected();
-}
-
-TWebsocketClientPeer::TWebsocketClientPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected) :
-	TWebsocketServerPeer(Socket, ConnectionRef, OnTextMessage, OnBinaryMessage ),
-	mOnConnected		(OnConnected )
-{
+		mOnDisconnected("RemovePeer");
 }
 
 
-TWebsocketServerPeer::TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
-	TSocketReadThread(Socket, ConnectionRef),
-	TSocketWriteThread(Socket, ConnectionRef),
-	mOnTextMessage(OnTextMessage),
-	mOnBinaryMessage(OnBinaryMessage),
-	mConnectionRef(ConnectionRef)
+TWebsocketServerPeer::TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected,std::function<void(const std::string&)> OnError) :
+	TSocketReadThread	(Socket, ConnectionRef),
+	TSocketWriteThread	(Socket, ConnectionRef),
+	mOnTextMessage		(OnTextMessage),
+	mOnBinaryMessage	(OnBinaryMessage),
+	mOnConnected		(OnConnected),
+	mConnectionRef		(ConnectionRef),
+	mOnError			(OnError)
 {
 	TSocketReadThread::mOnDataRecieved = [this](std::shared_ptr<Soy::TReadProtocol>& Data)
 	{
 		OnDataRecieved(Data);
+	};
+	TSocketWriteThread::mOnStreamError = [this](const std::string& Error)
+	{
+		this->mOnError(Error);
+	};
+	TSocketWriteThread::mOnShutdown = [this](bool WhatWasThisParam)
+	{
+		std::Debug << "TWebsocketServerPeer OnShutdown" << std::endl;
 	};
 
 	TSocketReadThread::Start();

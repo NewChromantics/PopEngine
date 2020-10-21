@@ -153,11 +153,11 @@ public:
 
 protected:
 	//	gr: these should only be called on client wrappers? as they have no peer refs
-	void		OnConnected();
-	void		OnSocketClosed(const std::string& Reason);
+	void					OnConnected();
+	void					OnSocketClosed(const std::string& Reason);
 
 	void					FlushPendingConnects();
-	virtual std::string	GetSocketError() override { return mClosedReason; }	//	if set, then pending messages will error with this
+	virtual std::string		GetSocketError() override { return mClosedReason; }	//	if set, then pending messages will error with this
 
 private:
 	std::string				mClosedReason;		//	if this is set, messages/connection promises fail as socket is closed. Even UDP sockets can die!
