@@ -18,4 +18,5 @@ RUN apt update -qq && \
         kmscube \
         libgles2-mesa-dev \
         libgbm-dev \
+        libudev-dev \
         gdb
