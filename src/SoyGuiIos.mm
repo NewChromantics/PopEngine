@@ -357,6 +357,11 @@ Platform::TButton::TButton(UIView* View)
 	mResponder->mCallback = [this]()	{	this->OnClicked();	};
 }
 
+Platform::TButton::~TButton()
+{
+	mResponder->mCallback = nullptr;
+}
+
 void Platform::TButton::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
 	Soy_AssertTodo();
