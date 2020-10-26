@@ -74,21 +74,21 @@ void ApiZip::TArchiveWrapper::AddFile(Bind::TCallback& Params)
 {
 	std::string Filename;
 	Array<uint8_t> Data;
-	if(Platform::FileExists(Params.GetArgumentFilename(0)))
-		Filename = Params.GetArgumentFilename(0);
-	else
+	if(Params.IsArgumentString(0))
 	{
-		if(Params.IsArgumentString(0)) // Turn this into a Data Array if string
-		{
+		if(Platform::FileExists(Params.GetArgumentFilename(0)))
+			Filename = Params.GetArgumentFilename(0);
+		else
+		{ // Turn this into a Data Array if string
 			auto ContentsString = Params.GetArgumentString(0);
 			auto* ContentsStringData = ContentsString.c_str();
 			auto ContentsStringLength = ContentsString.length();
 			auto ContentsStringArray = GetRemoteArray(reinterpret_cast<const uint8_t*>(ContentsStringData), ContentsStringLength);
 			Data.PushBackArray(ContentsStringArray);
 		}
-		else
-			Params.GetArgumentArray(0, GetArrayBridge(Data));
 	}
+	else
+		Params.GetArgumentArray(0, GetArrayBridge(Data));
 
 	auto ZipFilename = Params.GetArgumentString(1);
 
@@ -235,10 +235,14 @@ void TZipFile::AddFile(const Array<uint8_t>& Data, const std::string & ZipFilena
 	if (!mZip)
 		throw Soy::AssertException("Zip is not open");
 
+	//	check zip filename
+	//	this should be in the zip lib!
+	IsValidZipFilename(ZipFilename);
+
 	auto Error = zip_entry_open(mZip, ZipFilename.c_str());
 	IsOkay(Error, "zip_entry_open");
 
-	Error = zip_entry_write( mZip, &Data, sizeof(Data) );
+	Error = zip_entry_write( mZip, Data.GetArray(), Data.GetDataSize() );
 	IsOkay(Error, "zip_entry_write");
 
 	Error = zip_entry_close(mZip);
