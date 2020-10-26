@@ -192,6 +192,9 @@ void TZipFile::IsValidZipFilename(const std::string& Filename)
 
 TZipFile::TZipFile(const std::string& Filename)
 {
+	// tsdk: Make sure directory exists will error on mac
+	Platform::CreateDirectory(Filename);
+
 	//	'a' lets us append
 	mZip = zip_open(Filename.c_str(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
 	if ( !mZip )
