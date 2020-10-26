@@ -76,7 +76,7 @@ void ApiZip::TArchiveWrapper::AddFile(Bind::TCallback& Params)
 	Array<uint8_t> Data;
 	if(Params.IsArgumentString(0))
 	{
-		if(Platform::FileExists(Params.GetArgumentFilename(0)))
+		if(Params.GetArgumentString(0)[0] != '{' && Platform::FileExists(Params.GetArgumentFilename(0)))
 			Filename = Params.GetArgumentFilename(0);
 		else
 		{ // Turn this into a Data Array if string
