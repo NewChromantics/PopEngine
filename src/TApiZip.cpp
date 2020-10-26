@@ -76,7 +76,7 @@ void ApiZip::TArchiveWrapper::AddFile(Bind::TCallback& Params)
 	Array<uint8_t> Data;
 	if(Params.IsArgumentString(0))
 	{
-		if(Platform::FileExists(Params.GetArgumentFilename(0)))
+		if(Params.GetArgumentString(0)[0] != '{' && Platform::FileExists(Params.GetArgumentFilename(0)))
 			Filename = Params.GetArgumentFilename(0);
 		else
 		{ // Turn this into a Data Array if string
@@ -192,6 +192,9 @@ void TZipFile::IsValidZipFilename(const std::string& Filename)
 
 TZipFile::TZipFile(const std::string& Filename)
 {
+	// tsdk: Make sure directory exists will error on mac
+	Platform::CreateDirectory(Filename);
+
 	//	'a' lets us append
 	mZip = zip_open(Filename.c_str(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
 	if ( !mZip )
