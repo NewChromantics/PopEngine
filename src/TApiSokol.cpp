@@ -296,10 +296,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				Bindings.vs_images[i] = ImageSokol;
 				Bindings.fs_images[i] = ImageSokol;
 			}
-			
+
 			sg_apply_bindings(&Bindings);
-			sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
-			sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+			if(DrawCommand.mUniformBlock.GetSize() > 0)
+			{
+				sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+				sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+			}
 			auto VertexCount = Geometry.GetDrawVertexCount();
 			auto VertexFirst = Geometry.GetDrawVertexFirst();
 			auto InstanceCount = Geometry.GetDrawInstanceCount();
