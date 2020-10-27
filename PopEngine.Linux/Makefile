@@ -141,14 +141,13 @@ LIB_LINK_LIBS = \
 # flag is an optional parameter set in the Github Action
 ifeq ($(flag),osmesa)
 $(info Building for Software Driver)
+LDFLAGS += '-Wl,-rpath-link=$(SRC_PATH)/Libs/osmesa'
 LIB_LINK_LIBS += \
 -L$(SRC_PATH)/Libs/osmesa	\
--lOSMesa \
-
+-lOSMesa
 else
 $(info Building for GPU)
-LIB_LINK_LIBS += -lGLESv2 \
-
+LIB_LINK_LIBS += -lGLESv2 
 endif
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
