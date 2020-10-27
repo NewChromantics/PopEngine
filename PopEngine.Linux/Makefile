@@ -142,7 +142,7 @@ LIB_LINK_LIBS = \
 ifeq ($(flag),osmesa)
 $(info Building for Software Driver)
 LIB_LINK_LIBS += \
--L$(SRC_PATH)/src/Libs/osmesa	\
+-L$(SRC_PATH)/Libs/osmesa	\
 -lOSMesa \
 
 else
