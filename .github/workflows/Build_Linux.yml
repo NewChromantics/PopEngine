@@ -18,15 +18,16 @@ jobs:
         config:
           - os: ubuntu-latest
             type: linux
-            architecture: x86_64
+            
+          - os: ubuntu-18.04
+            type: linux
+            flag: osmesa
 
           - os: Nvidia
             type: linux
-            architecture: arm64
 
           # - os: Pi4
           #   type: linux
-          #   architecture: arm64
 
     steps:
       - uses: actions/checkout@v2
@@ -52,4 +53,5 @@ jobs:
           lib_dir: ${{ matrix.config.os }}
           os: ${{ matrix.config.os }}
           project: ${{ env.project }}
+          flag: ${{ matrix.config.flag }}
 
