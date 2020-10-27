@@ -21,15 +21,12 @@ jobs:
         config:
           - os: ubuntu-latest
             type: linux
-            architecture: x86_64
 
           - os: Nvidia
             type: linux
-            architecture: arm64
 
           # - os: Pi4
           #   type: linux
-          #   architecture: arm64
 
           - os: windows
             type: windows
