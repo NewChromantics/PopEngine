@@ -132,12 +132,22 @@ LIB_LINK_LIBS = \
 -L$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
 -L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 -lPopCameraDevice \
--lGLESv2 \
 -lEGL \
 -lm \
 -lgbm \
 -ldrm	\
 -ludev \
+
+# flag is an optional parameter set in the Github Action
+ifeq ($(flag),osmesa)
+$(info Building for GPU)
+LIB_LINK_LIBS += \
+-L$(SOY_PATH)/src/Libs/osmesa	\
+-lOSMesa \
+else
+$(info Building for Software Driver)
+LIB_LINK_LIBS += -lGLESv2 \
+endif
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
