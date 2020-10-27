@@ -19,8 +19,12 @@ jobs:
     strategy:
       matrix:
         config:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             type: linux
+
+          - os: ubuntu-18.04
+            type: linux
+            flag: osmesa
 
           - os: Nvidia
             type: linux
