@@ -21,15 +21,16 @@ jobs:
         config:
           - os: ubuntu-latest
             type: linux
-            architecture: x86_64
+
+          - os: ubuntu-latest
+            type: linux
+            flag: osmesa
 
           - os: Nvidia
             type: linux
-            architecture: arm64
 
           # - os: Pi4
           #   type: linux
-          #   architecture: arm64
 
           - os: windows
             type: windows
@@ -98,6 +99,7 @@ jobs:
           lib_dir: ${{ matrix.config.os }}
           os: ${{ matrix.config.os }}
           project: ${{ env.project }}
+          flag: ${{ matrix.config.flag }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2

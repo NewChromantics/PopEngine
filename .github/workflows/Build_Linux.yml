@@ -18,15 +18,16 @@ jobs:
         config:
           - os: ubuntu-latest
             type: linux
-            architecture: x86_64
+            
+          - os: ubuntu-latest
+            type: linux
+            flag: osmesa
 
           - os: Nvidia
             type: linux
-            architecture: arm64
 
           # - os: Pi4
           #   type: linux
-          #   architecture: arm64
 
     steps:
       - uses: actions/checkout@v2
@@ -42,7 +43,9 @@ jobs:
   
       - name: Install Github Packages
         working-directory: ${{ env.project }}.Package/
-        run: npm i
+        run: |
+          npm install
+          npm list
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
@@ -52,4 +55,5 @@ jobs:
           lib_dir: ${{ matrix.config.os }}
           os: ${{ matrix.config.os }}
           project: ${{ env.project }}
+          flag: ${{ matrix.config.flag }}
 
