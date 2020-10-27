@@ -144,9 +144,11 @@ $(info Building for GPU)
 LIB_LINK_LIBS += \
 -L$(SOY_PATH)/src/Libs/osmesa	\
 -lOSMesa \
+
 else
 $(info Building for Software Driver)
 LIB_LINK_LIBS += -lGLESv2 \
+
 endif
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
