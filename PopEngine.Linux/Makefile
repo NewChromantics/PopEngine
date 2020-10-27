@@ -140,13 +140,13 @@ LIB_LINK_LIBS = \
 
 # flag is an optional parameter set in the Github Action
 ifeq ($(flag),osmesa)
-$(info Building for GPU)
+$(info Building for Software Driver)
 LIB_LINK_LIBS += \
 -L$(SOY_PATH)/src/Libs/osmesa	\
 -lOSMesa \
 
 else
-$(info Building for Software Driver)
+$(info Building for GPU)
 LIB_LINK_LIBS += -lGLESv2 \
 
 endif
