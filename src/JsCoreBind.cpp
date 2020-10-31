@@ -1055,11 +1055,17 @@ void JsCore::TContext::Shutdown(int32_t ExitCode)
 
 #if defined(JSAPI_JSCORE)
 extern "C" JS_EXPORT void JSSynchronousGarbageCollectForDebugging(JSContextRef ctx);
-#else
-void JSSynchronousGarbageCollectForDebugging(JSContextRef LocalContext)
-{
-}
 #endif
+
+//	gr: use of this won't pass app store. I don't want a debug/vs release, but its useful for debugging... 
+void JSForceSynchronousGarbageCollect(JSContextRef LocalContext)
+{
+#if false //	debug
+	#if defined(JSAPI_JSCORE)
+	JSSynchronousGarbageCollectForDebugging();
+	#endif
+#endif
+}
 
 void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 {
@@ -1069,7 +1075,7 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
 #endif
 
-	JSSynchronousGarbageCollectForDebugging(LocalContext);
+	JSForceSynchronousGarbageCollect(LocalContext);
 	
 	//	on jsc, this seems to be an async hint/request to gc
 	JSGarbageCollect( LocalContext );
