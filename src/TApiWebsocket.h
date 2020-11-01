@@ -112,8 +112,8 @@ public:
 
 protected:
 	virtual bool				Iteration() override;
-	virtual bool				CanSleep() override	{	return !mDisconnectPeer.IsValid() && mServerPeer;	}
-
+	virtual bool				CanSleep() override;
+	
 	void						AddPeer(SoyRef ClientRef);
 	void						RemovePeer(SoyRef ClientRef);
 	std::shared_ptr<TWebsocketServerPeer>	GetPeer(SoyRef ClientRef);

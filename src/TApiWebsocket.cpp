@@ -194,11 +194,20 @@ TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std
 }
 
 
+bool TWebsocketClient::CanSleep()
+{
+	//	sleep if nothing queued to disconnect
+	return mDisconnectPeer.IsValid() == false;
+}
+
 bool TWebsocketClient::Iteration()
 {
 	if ( mDisconnectPeer.IsValid() )
 	{
 		RemovePeer(mDisconnectPeer);
+		
+		//	just to let thread sleep again
+		mDisconnectPeer = SoyRef();
 	}
 	/*
 	//	gr: this
