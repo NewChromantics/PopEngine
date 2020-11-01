@@ -13,11 +13,13 @@ namespace ApiWebsocket
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
 	DEFINE_BIND_FUNCTIONNAME(WaitForMessage);
 	DEFINE_BIND_FUNCTIONNAME(WaitForConnect);
+	DEFINE_BIND_FUNCTIONNAME(Disconnect);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_GetPeers, GetPeers);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_WaitForMessage, WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(Server_Disconnect, Disconnect);
 }
 
 void ApiWebsocket::Bind(Bind::TContext& Context)
@@ -53,6 +55,7 @@ void TWebsocketServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiWebsocket::BindFunction::Server_Send>(&ApiSocket::TSocketWrapper::Send );
 	Template.BindFunction<ApiWebsocket::BindFunction::Server_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiWebsocket::BindFunction::Server_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiWebsocket::BindFunction::Server_Disconnect>( &ApiSocket::TSocketWrapper::Disconnect );
 }
 
 
@@ -124,6 +127,7 @@ void TWebsocketClientWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiWebsocket::BindFunction::GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiWebsocket::BindFunction::WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 	Template.BindFunction<ApiWebsocket::BindFunction::WaitForConnect>(&TWebsocketClientWrapper::WaitForConnect);
+	Template.BindFunction<ApiWebsocket::BindFunction::Disconnect>(&ApiSocket::TSocketWrapper::Disconnect);
 }
 
 
@@ -162,7 +166,7 @@ void TWebsocketClientWrapper::Send(Bind::TCallback& Params)
 
 
 TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
-	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
+	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Wake ),
 	mOnTextMessage	( OnTextMessage ),
 	mOnBinaryMessage( OnBinaryMessage ),
 	mServerHost		( Hostname )
@@ -177,7 +181,10 @@ TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std
 	};
 	mSocket->mOnDisconnect = [=](SoyRef ClientRef,const std::string& Reason)
 	{
-		RemovePeer(ClientRef);
+		//	gr: do this on another thread
+		mDisconnectPeer = ClientRef;
+		Wake();
+		//RemovePeer(ClientRef);
 		//	todo: work out if this is OUR socket and OnSocketClosed on the wrapper
 	};
 
@@ -189,6 +196,13 @@ TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std
 
 bool TWebsocketClient::Iteration()
 {
+	if ( mDisconnectPeer.IsValid() )
+	{
+		RemovePeer(mDisconnectPeer);
+	}
+	/*
+	//	gr: this
+
 	if (!mSocket)
 		return false;
 
@@ -370,6 +384,10 @@ void TWebsocketClient::AddPeer(SoyRef ClientRef)
 
 void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 {
+	//	already disconnected, only call the callback once
+	if ( !mServerPeer )
+		return;
+		
 	mServerPeer = nullptr;
 	if (mOnDisconnected)
 		mOnDisconnected("RemovePeer");

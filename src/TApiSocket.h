@@ -122,6 +122,7 @@ public:
 	virtual void	Send(Bind::TCallback& Arguments);
 	void			GetPeers(Bind::TCallback& Arguments);
 	virtual void	GetConnectedPeers(ArrayBridge<SoyRef>&& Peers);
+	virtual void	Disconnect(Bind::TCallback& Arguments);		//	todo: overload so explicit peers can be kicked
 
 	//	get a promise for next message
 	void			WaitForMessage(Bind::TCallback& Params);

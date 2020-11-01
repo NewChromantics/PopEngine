@@ -15,23 +15,27 @@ namespace ApiSocket
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_GetPeers, GetPeers);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_WaitForMessage, WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpServer_Disconnect, Disconnect);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_GetPeers, GetPeers);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForMessage, WaitForMessage);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_WaitForConnect, WaitForConnect);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(UdpClient_Disconnect, Disconnect);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_GetPeers, GetPeers);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_WaitForMessage, WaitForMessage);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_WaitForConnect, WaitForConnect);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpClient_Disconnect, Disconnect);
 
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetAddress, GetAddress);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_Send, Send);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_GetPeers, GetPeers);
 	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_WaitForMessage, WaitForMessage);
+	DEFINE_BIND_FUNCTIONNAME_OVERRIDE(TcpServer_Disconnect, Disconnect);
 }
 
 void ApiSocket::Bind(Bind::TContext& Context)
@@ -217,6 +221,7 @@ void ApiSocket::TUdpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_Send>(&ApiSocket::TSocketWrapper::Send );
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiSocket::BindFunction::UdpServer_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiSocket::BindFunction::UdpServer_Disconnect>( &ApiSocket::TSocketWrapper::Disconnect );
 }
 
 
@@ -248,6 +253,7 @@ void ApiSocket::TUdpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 	Template.BindFunction<ApiSocket::BindFunction::UdpClient_WaitForConnect>(&ApiSocket::TSocketClientWrapper::WaitForConnect);
+	Template.BindFunction<ApiSocket::BindFunction::UdpClient_Disconnect>(&ApiSocket::TSocketWrapper::Disconnect);
 }
 
 
@@ -279,6 +285,7 @@ void ApiSocket::TTcpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiSocket::BindFunction::TcpClient_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiSocket::BindFunction::TcpClient_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
 	Template.BindFunction<ApiSocket::BindFunction::TcpClient_WaitForConnect>(&ApiSocket::TSocketClientWrapper::WaitForConnect);
+	Template.BindFunction<ApiSocket::BindFunction::TcpClient_Disconnect>(&ApiSocket::TSocketClientWrapper::Disconnect);
 }
 
 
@@ -391,6 +398,22 @@ void ApiSocket::TSocketWrapper::GetPeers(Bind::TCallback& Params)
 	
 	Params.Return( GetArrayBridge(PeerNames) );
 }
+
+void ApiSocket::TSocketWrapper::Disconnect(Bind::TCallback& Params)
+{
+	auto& This = Params.This<TSocketWrapper>();
+	auto ThisSocket = This.GetSocket();
+	//	gr: don't error if already disconnected
+	if ( !ThisSocket )
+	{
+		std::Debug << __PRETTY_FUNCTION__ << " Socket not allocated";
+		return;
+	}
+
+	ThisSocket->Close();
+}
+
+
 
 
 
@@ -557,6 +580,7 @@ void ApiSocket::TTcpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiSocket::BindFunction::TcpServer_Send>(&ApiSocket::TSocketWrapper::Send);
 	Template.BindFunction<ApiSocket::BindFunction::TcpServer_GetPeers>(&ApiSocket::TSocketWrapper::GetPeers);
 	Template.BindFunction<ApiSocket::BindFunction::TcpServer_WaitForMessage>(&ApiSocket::TSocketWrapper::WaitForMessage);
+	Template.BindFunction<ApiSocket::BindFunction::TcpServer_Disconnect>(&ApiSocket::TSocketWrapper::Disconnect);
 }
 
 

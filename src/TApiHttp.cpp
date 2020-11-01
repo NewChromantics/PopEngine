@@ -12,6 +12,7 @@ namespace ApiHttp
 	DEFINE_BIND_FUNCTIONNAME(GetAddress);
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
+	DEFINE_BIND_FUNCTIONNAME(Disconnect);
 }
 
 void ApiHttp::Bind(Bind::TContext& Context)
@@ -47,6 +48,7 @@ void THttpServerWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<ApiHttp::BindFunction::GetAddress>( &ApiSocket::TSocketWrapper::GetAddress );
 	Template.BindFunction<ApiHttp::BindFunction::Send>(&ApiSocket::TSocketWrapper::Send );
 	Template.BindFunction<ApiHttp::BindFunction::GetPeers>(&ApiSocket::TSocketWrapper::GetPeers );
+	Template.BindFunction<ApiHttp::BindFunction::Disconnect>( &ApiSocket::TSocketWrapper::Disconnect );
 }
 
 

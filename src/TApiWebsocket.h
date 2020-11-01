@@ -112,6 +112,7 @@ public:
 
 protected:
 	virtual bool				Iteration() override;
+	virtual bool				CanSleep() override	{	return !mDisconnectPeer.IsValid() && mServerPeer;	}
 
 	void						AddPeer(SoyRef ClientRef);
 	void						RemovePeer(SoyRef ClientRef);
@@ -131,6 +132,10 @@ protected:
 	std::function<void(SoyRef, const std::string&)>		mOnTextMessage;
 	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
 
+	//	gr: we need to do any disconnects on a seperate thread than the callback, or we may block the js thread (or even deadlock)
+	//		so the thread checks for this and if true, disconnect (remove peer)
+	//		maybe want to expand to an array and let server use same code? (with an extra thread)
+	SoyRef		mDisconnectPeer;
 };
 
 
