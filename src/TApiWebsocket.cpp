@@ -172,7 +172,6 @@ TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std
 	mServerHost		( Hostname )
 {
 	mSocket.reset(new SoySocket());
-	mSocket->CreateTcp(true);
 	//mSocket->ListenTcp(ListenPort);
 
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
@@ -235,7 +234,6 @@ TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef
 	mOnBinaryMessage	( OnBinaryMessage )
 {
 	mSocket.reset( new SoySocket() );
-	mSocket->CreateTcp(true);
 	mSocket->ListenTcp(ListenPort);
 	
 	mSocket->mOnConnect = [=](SoyRef ClientRef)

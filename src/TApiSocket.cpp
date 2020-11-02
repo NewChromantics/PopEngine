@@ -422,7 +422,6 @@ ApiSocket::TUdpServer::TUdpServer(uint16_t ListenPort,bool Broadcast,std::functi
 	mOnBinaryMessage	( OnBinaryMessage )
 {
 	mSocket.reset( new SoySocket() );
-	mSocket->CreateUdp(Broadcast);
 	mSocket->ListenUdp(ListenPort,true);
 	/*
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
@@ -495,13 +494,11 @@ ApiSocket::TSocketClient::TSocketClient(TProtocol::TYPE Protocol,const std::stri
 
 	if (Protocol == TProtocol::Tcp)
 	{
-		mSocket->CreateTcp();
 		mSocket->Connect(Hostname.c_str(), Port);
 	}
 	else 
 	{
 		auto Broadcast = (Protocol == TProtocol::UdpBroadcast);
-		mSocket->CreateUdp(Broadcast);
 		mSocket->UdpConnect(Hostname.c_str(), Port);
 	}
 
@@ -607,7 +604,6 @@ ApiSocket::TTcpServer::TTcpServer(uint16_t ListenPort, std::function<void(SoyRef
 	mOnBinaryMessage(OnBinaryMessage)
 {
 	mSocket.reset(new SoySocket());
-	mSocket->CreateTcp(true);
 	mSocket->ListenTcp(ListenPort);
 
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
