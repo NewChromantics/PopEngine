@@ -34,6 +34,7 @@
 		58C2004724F90993002DAC99 /* PopEngine_Ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */; };
 		58C2004824F90993002DAC99 /* PopEngine_Ios.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C2004B24F909BC002DAC99 /* libc++.tbd */; };
+		58F8E5C125508206001AECED /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F8E5C0255081FE001AECED /* libresolv.tbd */; };
 		BF0D95E82517F367000C4E54 /* SoySokol_Osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */; };
 		BF0D95EB2517F499000C4E54 /* TestApp_Osx.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -335,6 +336,7 @@
 		58C2001524F901BC002DAC99 /* PopEngineApp_Ios_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PopEngineApp_Ios_Info.plist; sourceTree = "<group>"; };
 		58C2003F24F90506002DAC99 /* Main.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Main.xib; sourceTree = "<group>"; };
 		58C2004B24F909BC002DAC99 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.5.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		58F8E5C0255081FE001AECED /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		B71D7B2A2137FB7A00F29EA0 /* SoyDecklink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoyDecklink.h; sourceTree = "<group>"; };
 		B71D7B2B2137FBB400F29EA0 /* SoyDecklink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SoyDecklink.cpp; sourceTree = "<group>"; };
 		B71D7B2D2137FE9200F29EA0 /* SoyAutoReleasePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyAutoReleasePtr.h; path = src/SoyAutoReleasePtr.h; sourceTree = "<group>"; };
@@ -743,6 +745,7 @@
 				BF5EB01A237F119C0077BCF5 /* OpenGL.framework in Frameworks */,
 				BF1826B624229EAF006FEB93 /* PopCameraDevice_Osx.framework in Frameworks */,
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
+				58F8E5C125508206001AECED /* libresolv.tbd in Frameworks */,
 				BF5EB01B237F119F0077BCF5 /* IOKit.framework in Frameworks */,
 				BF5EB01E237F11AD0077BCF5 /* JavaScriptCore.framework in Frameworks */,
 				BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */,
@@ -954,6 +957,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				58F8E5C0255081FE001AECED /* libresolv.tbd */,
 				BF693A32250E2243002E3772 /* GLKit.framework */,
 				58C2004B24F909BC002DAC99 /* libc++.tbd */,
 				5898946D24F80FB800FCCCE2 /* Metal.framework */,
