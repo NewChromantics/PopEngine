@@ -37,6 +37,7 @@ namespace Bind
 {
 	class TInstanceBase;
 	class TInstance;
+	class TContextGroupJobThread;
 }
 
 //	https://karhm.com/JavaScriptCore_C_API/
@@ -248,6 +249,17 @@ public:
 };
 
 
+class Bind::TContextGroupJobThread : public SoyWorkerJobThread
+{
+public:
+	TContextGroupJobThread(const std::string& ThreadName) :
+		SoyWorkerJobThread	( ThreadName )
+	{
+	}
+		
+	bool		CanSleep() override;
+};
+
 //	VM to contain multiple contexts/containers
 class Bind::TInstance : public Bind::TInstanceBase
 {
@@ -265,7 +277,7 @@ private:
 	//	when the group is created it does async jobs on that thread's run loop
 	//	for deadlock reasons we don't want that to be the main thread (opengl calls get stuck)
 	//	so create it on some other thread and it'll use that runloop
-	SoyWorkerJobThread	mContextGroupThread;
+	TContextGroupJobThread	mContextGroupThread;
 	
 	JSContextGroupRef	mContextGroup = nullptr;
 	

@@ -618,6 +618,18 @@ JSValueRef JsCore::GetValue(JSContextRef Context,const TPromise& Object)
 	return GetValue( Context, Object.mPromise );
 }
 
+
+bool Bind::TContextGroupJobThread::CanSleep()
+{
+	if ( !SoyWorkerJobThread::CanSleep() )
+		return false;
+		
+	//	let the osx runloop run
+	std::Debug << "TContextGroupJobThread can sleep" << std::endl;
+	return true;
+}
+
+
 //	gr: windows needs this as Bind::TInstance
 Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown) :
 	mContextGroupThread	( std::string("JSCore thread ") + ScriptFilename ),
