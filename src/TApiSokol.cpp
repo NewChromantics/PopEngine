@@ -368,6 +368,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	save last
 	mLastFrame = RenderCommands;
 	
+	//	gr: avoid deadlocks by queuing the resolve; Dont want main thread (UI render) to wait on JS
+	//		in case JS thread is trying to do something on main thread (UI stuff)
+	
 	//	we want to resolve the promise NOW, after rendering has been submitted
 	//	but we may want here, some callback to block or glFinish or something before resolving
 	//	but really we should be using something like glsync?
@@ -377,7 +380,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		{
 			Promise.Resolve(LocalContext,0);
 		};
-		mPendingFramePromises.Flush(RenderCommands.mPromiseRef,Resolve);
+		mPendingFramePromises.QueueFlush(RenderCommands.mPromiseRef,Resolve);
 	}
 }
 

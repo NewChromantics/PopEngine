@@ -125,6 +125,7 @@ public:
 
 	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
 	void			Flush(size_t PromiseRef,std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
+	void			QueueFlush(size_t PromiseRef,std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
 	
 private:
 	Bind::TContext*	mContext = nullptr;

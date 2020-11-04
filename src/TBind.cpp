@@ -70,6 +70,7 @@ void Bind::TPromiseQueue::Flush(std::function<void(Bind::TLocalContext& Context,
 	Context.Execute( Run );
 }
 
+
 void Bind::TPromiseQueue::Resolve()
 {
 	auto Handle = [](Bind::TLocalContext& Context,TPromise& Promise)
@@ -174,3 +175,38 @@ void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalC
 	};
 	Context.Execute(DoFlush);
 }
+
+void Bind::TPromiseMap::QueueFlush(size_t PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
+{
+	std::shared_ptr<TPromise> Promise;
+
+	{
+		//	pop this promise
+		std::lock_guard<std::mutex> Lock(mPromisesLock);
+		for (auto i = 0; i < mPromises.GetSize(); i++)
+		{
+			auto& Element = mPromises[i];
+			auto& MatchRef = Element.first;
+			if (MatchRef != PromiseRef)
+				continue;
+			Promise = Element.second;
+			mPromises.RemoveBlock(i, 1);
+			break;
+		}
+		if (!Promise)
+			throw Soy::AssertException("Promise Ref not found");
+	}
+	
+	auto& Context = *this->mContext;
+
+	//	gr: should we block or not...
+	auto DoFlush = [=](Bind::TLocalContext& Context) mutable
+	{
+		HandlePromise(Context, *Promise);
+		//	clear promise whilst in js thread
+		Promise.reset();
+	};
+	Promise.reset();
+	Context.Queue(DoFlush);
+}
+
