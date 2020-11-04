@@ -182,7 +182,7 @@ THttpServer::THttpServer(uint16_t ListenPort,std::function<void(std::string&,Htt
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"HttpServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep )
 {
 	mSocket.reset( new SoySocket() );
-	mSocket->CreateTcp(true);
+	//mSocket->CreateTcp(true);
 	mSocket->ListenTcp(ListenPort);
 	
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
