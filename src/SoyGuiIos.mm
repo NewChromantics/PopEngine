@@ -11,7 +11,114 @@
 
 #include "sokol/sokol_gfx.h"
 
+#import <UIKit/UICollectionView.h>	//	UICollectionViewDataSource
 
+
+namespace Platform
+{
+	static size_t	UniqueIdentifierCounter = 1000;
+	std::string		GetUniqueIdentifier();
+}
+
+@interface Views_CollectionViewCell: UICollectionViewCell 
+{
+}
+- (void)prepareForReuse;
+@end
+
+@implementation Views_CollectionViewCell
+
+- (void)prepareForReuse
+{
+	[super prepareForReuse];
+	
+	//	remove subviews
+}
+
+@end
+
+
+//	gr: a data source, which is just a bunch of views
+//		to mimic a win32 icon
+@interface Views_DataSource : NSObject<UICollectionViewDataSource>
+{
+	@public Array<UIView*>					mChildViews;
+	@public Array<UICollectionViewCell*>	mChildCells;
+	bool									mRegisteredCellClass;
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section;
+// The cell that is returned must be retrieved from a call to -dequeueReusableCellWithReuseIdentifier:forIndexPath:
+- (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath;
+
+/*
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView;
+
+// The view that is returned must be retrieved from a call to -dequeueReusableSupplementaryViewOfKind:withReuseIdentifier:forIndexPath:
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath;
+
+- (BOOL)collectionView:(UICollectionView *)collectionView canMoveItemAtIndexPath:(NSIndexPath *)indexPath API_AVAILABLE(ios(9.0));
+- (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath API_AVAILABLE(ios(9.0));
+
+/// Returns a list of index titles to display in the index view (e.g. ["A", "B", "C" ... "Z", "#"])
+- (nullable NSArray<NSString *> *)indexTitlesForCollectionView:(UICollectionView *)collectionView API_AVAILABLE(tvos(10.2));
+
+/// Returns the index path that corresponds to the given title / index. (e.g. "B",1)
+/// Return an index path with a single index to indicate an entire section, instead of a specific item.
+- (NSIndexPath *)collectionView:(UICollectionView *)collectionView indexPathForIndexTitle:(NSString *)title atIndex:(NSInteger)index API_AVAILABLE(tvos(10.2));
+*/
+
+- (void)AddChild:(UIView*)Child;
+@end
+
+@implementation Views_DataSource
+
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+	return mChildViews.GetSize();
+}
+
+- (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+	if ( !mRegisteredCellClass ) 
+    {
+    	NSString* ReuseIdentifier = @"Views_CollectionViewCell";
+    	id CellClass = Views_CollectionViewCell.self;
+        [collectionView registerClass:CellClass forCellWithReuseIdentifier:ReuseIdentifier];
+        mRegisteredCellClass = true;
+    }
+    
+	NSString* ReuseIdentifier = @"Views_CollectionViewCell";
+	auto* Cell = [collectionView dequeueReusableCellWithReuseIdentifier:ReuseIdentifier forIndexPath:indexPath];
+
+	//	setup cell
+	auto Section = indexPath.section;	//	should be 0
+	auto Index = indexPath.row;
+	auto* Child = mChildViews[Index];
+	
+	auto* CellView = Cell.contentView;
+	[CellView addSubview:Child];
+	
+	return Cell;
+}
+
+- (void)AddChild:(UIView*)Child
+{
+	mChildViews.PushBack(Child);	//	retain?
+}
+
+@end
+
+template<typename NATIVECLASS>
+class PlatformControl
+{
+public:
+	void		AddToParent(Platform::TWindow& Window);
+	
+	UICollectionViewCell*	mCell = nullptr;	//	if we're inside a cell in a parent
+	NATIVECLASS*			mControl = nullptr;
+};
 
 
 @interface TResponder : UIResponder
@@ -124,6 +231,19 @@ public:
 	MTKView*					mMTKView = nullptr;
 	id<MTLDevice>				mtl_device;
 };
+
+class Platform::TImageMap : public Gui::TImageMap, public PlatformControl<UIImageView>
+{
+public:
+	TImageMap(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
+	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
+	virtual void		SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes) override;
+
+	TResponder*			mResponder = [TResponder alloc];
+};
+
 
 std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const std::string& Name)
 {
@@ -244,7 +364,14 @@ std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent,
 
 std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
-	Soy_AssertTodo();
+	auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<Gui::TImageMap> ImageMap;
+	auto Allocate = [&]() mutable
+	{
+		ImageMap.reset( new Platform::TImageMap(ParentView,Rect) );
+	};
+	RunJobOnMainThread(Allocate,true);
+	return ImageMap;
 }
 
 
@@ -377,12 +504,34 @@ void Platform::TButton::SetLabel(const std::string& Value)
 
 Platform::TWindow::TWindow(const std::string& Name)
 {
-	auto* Window = GetWindow();
+	//	on ios, we should have null to use the global window
+	//	but we should support external screens...
+	//	if there is a name, try and find a child window with the name
+	//	if there isn't create a new window?
+	auto* GlobalWindow = GetWindow();
+	if ( !GlobalWindow )
+		throw Soy::AssertException("Couldn't get ios window");
+
+	//	if we have a name, and there's a matching child
+	//	then this is a "sub window"
+	if ( Name.length() )
+	{
+		mContentView = GetChild(Name);
+		if ( mContentView )
+		{
+			mWindow = nullptr;
+			std::Debug << "Bound " << Name << " to child window" << std::endl;
+			return;
+		}
+	}
+	
+	mWindow = GlobalWindow;
+	mContentView = mWindow.rootViewController.view;
 }
 
 UIWindow* Platform::TWindow::GetWindow()
 {
-	UIWindow* Window;
+	UIWindow* Window = nullptr;
 	auto Job = [&]()
 	{
 		auto* App = [UIApplication sharedApplication];
@@ -390,6 +539,11 @@ UIWindow* Platform::TWindow::GetWindow()
 	};
 	RunJobOnMainThread( Job, true );
 	return Window;
+}
+
+UIView* Platform::TWindow::GetContentView()
+{
+	return mContentView;
 }
 
 UIView* Platform::TWindow::GetChild(const std::string& Name)
@@ -412,6 +566,34 @@ UIView* Platform::TWindow::GetChild(const std::string& Name)
 	};
 	EnumChildren(TestChild);
 	return ChildMatch;
+}
+
+
+PlatformRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
+{
+	Soy_AssertTodo();
+	/*
+	//	todo: make sure this is called on mThread
+	auto* ContentView = GetContentView();
+	auto ParentRect = ContentView.visibleRect;
+
+	auto Left = std::max<CGFloat>( ParentRect.origin.x, Rect.Left() );
+	auto Right = std::min<CGFloat>( ParentRect.origin.x + ParentRect.size.width, Rect.Right() );
+
+	auto Top = Rect.Top();
+	auto Bottom = Rect.Bottom();
+
+	//	rect is upside in osx!
+	//	todo: incorporate origin
+	if ( !ContentView.isFlipped )
+	{
+		Top = ParentRect.size.height - Rect.Bottom();
+		Bottom = ParentRect.size.height - Rect.Top();
+	}
+
+	auto RectNs = NSMakeRect( Left, Top, Right-Left, Bottom - Top );
+	return RectNs;
+	*/
 }
 
 bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView);
@@ -515,5 +697,88 @@ void Platform::TWindow::StartRender( std::function<void()> Frame, std::string Vi
 //
 //	auto sokol_view_delegate = [[SokolViewDelegate alloc] init:Frame];
 //	[ViewController setDelegate:sokol_view_delegate];
+}
+
+
+
+void Platform::TWindow::OnChildAdded(const Soy::Rectx<int32_t>& ChildRect)
+{
+/*
+	//	expand scroll space to match child rect min/max
+	auto Right = ChildRect.Right();
+	auto Bottom = ChildRect.Bottom();
+
+	auto NewSize = mContentView.frame.size;
+	NewSize.width = std::max<CGFloat>( NewSize.width, Right );
+	NewSize.height = std::max<CGFloat>( NewSize.height, Bottom );
+
+	NSScrollView* ScrollView = [mWindow contentView];
+	auto* ClipView = ScrollView.contentView;
+	ClipView.documentView.frameSize = NewSize;
+*/
+}
+
+
+Platform::TImageMap::TImageMap(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	//auto RectNs = Parent.GetChildRect(Rect);
+	auto PlatformRect = CGRectMake( Rect.x, Rect.y, Rect.w, Rect.h );
+
+
+	mControl = [[UIImageView alloc] initWithFrame:PlatformRect];
+
+	//mControl = [[UIImageView alloc] initWithFrame:RectNs];
+	//[mControl retain];
+/*
+	//	setup callback
+	mResponder->mCallback = [this]()
+	{
+		this->OnTextBoxChanged();
+	};
+	mControl.target = mResponder;
+	mControl.action = @selector(OnAction);
+
+	//ApplyStyle();
+*/
+	AddToParent( Parent );
+}
+
+//UICollectionViewDataSource
+
+template<typename NATIVECLASS>
+void PlatformControl<NATIVECLASS>::AddToParent(Platform::TWindow& Parent)
+{
+	//	gr: here if parent is a cell controller, we need to add a cell for this.
+	auto* ParentView = Parent.GetContentView();
+	
+	auto ClassName = Soy::NSStringToString(NSStringFromClass([ParentView class]));
+	if ( ClassName == "UICollectionView" )
+	{
+		UICollectionView* CollectionView = (UICollectionView*)ParentView;
+
+		if ( !CollectionView.dataSource )
+			CollectionView.dataSource = [Views_DataSource alloc];
+		Views_DataSource* DataSourceViews = CollectionView.dataSource;		
+		[DataSourceViews AddChild:mControl];
+    	//[CollectionView addSubview:mCell];
+    	[CollectionView reloadData];
+	}
+	else
+	{
+		[ParentView addSubview:mControl];
+		//Parent.OnChildAdded( Rect );
+	}
+}
+
+void Platform::TImageMap::SetRect(const Soy::Rectx<int32_t>& Rect)
+{
+}
+
+void Platform::TImageMap::SetImage(const SoyPixelsImpl& Pixels)
+{
+}
+
+void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)
+{
 }
 

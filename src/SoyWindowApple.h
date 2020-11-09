@@ -1,13 +1,16 @@
 #pragma once
 
+
 #if defined(TARGET_OSX)
 #import <AppKit/AppKit.h>
 typedef NSWindow PlatformWindow;
 typedef NSView PlatformView;
+typedef NSRect PlatformRect;
 #elif defined(TARGET_IOS)
 #import <UIKit/UIKit.h>
 typedef UIWindow PlatformWindow;
 typedef UIView PlatformView;
+typedef CGRect PlatformRect;
 #else
 #error Unsupported platform
 #endif
@@ -28,5 +31,15 @@ public:
 	PlatformWindow*					GetWindow();
 	PlatformView*					GetChild(const std::string& Name);
 	void							EnumChildren(std::function<bool(PlatformView*)> EnumChild);
+	PlatformRect					GetChildRect(Soy::Rectx<int32_t> Rect);
+	
+	//
+	PlatformView*					GetContentView();
+	void							OnChildAdded(const Soy::Rectx<int32_t>& ChildRect);
+
 	void							StartRender( std::function<void()> Frame, std::string ViewName ) override;
+	
+private:
+	PlatformWindow*		mWindow = nullptr;
+	PlatformView*		mContentView = nullptr;
 };
