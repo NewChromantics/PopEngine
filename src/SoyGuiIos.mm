@@ -181,17 +181,17 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 	}
 }
 
-class Platform::TLabel : public SoyLabel
+class Platform::TLabel : public SoyLabel, public PlatformControl<UITextView>
 {
 public:
 	TLabel(UIView* View);
+	TLabel(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
 
-	UITextView*			mView = nullptr;
 	size_t				mValueVersion = 0;
 };
 
@@ -301,7 +301,15 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx
 
 std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow &Parent, Soy::Rectx<int32_t> &Rect)
 {
-	Soy_AssertTodo();
+	auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<SoyLabel> Label;
+	auto Allocate = [&]() mutable
+	{
+		Label.reset( new Platform::TLabel( ParentView, Rect) );
+		Label->SetValue("New label");
+	};
+	RunJobOnMainThread(Allocate,true);
+	return Label;
 }
 
 std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
@@ -378,12 +386,20 @@ std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy:
 Platform::TLabel::TLabel(UIView* View)
 {
 	//	todo: check type!
-	mView = View;
+	mControl = View;
+}
+
+Platform::TLabel::TLabel(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	//auto RectNs = Parent.GetChildRect(Rect);
+	auto PlatformRect = CGRectMake( Rect.x, Rect.y, Rect.w, Rect.h );
+	mControl = [[UITextView alloc] initWithFrame:PlatformRect];
+	AddToParent( Parent );
 }
 
 void Platform::TLabel::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
-	Soy_AssertTodo();
+	//	todo
 }
 
 void Platform::TLabel::SetValue(const std::string& Value)
@@ -400,7 +416,7 @@ void Platform::TLabel::SetValue(const std::string& Value)
 		if ( Version != this->mValueVersion )
 			return;
 
-		this->mView.text = Soy::StringToNSString(Value);
+		this->mControl.text = Soy::StringToNSString(Value);
 	};
 	RunJobOnMainThread( Job, false );
 }
@@ -410,7 +426,7 @@ std::string Platform::TLabel::GetValue()
 	std::string Value;
 	auto Job = [&]()
 	{
-		Value = Soy::NSStringToString( mView.text );
+		Value = Soy::NSStringToString( mControl.text );
 	};
 	RunJobOnMainThread( Job, true );
 	return Value;
