@@ -129,6 +129,9 @@ void ApiSokol::TSokolContextWrapper::FreeImageDeletes()
 
 void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> ViewRect)
 {
+	//	ios(sokol) will fail to setup context if rect is 0x0
+	if ( ViewRect.x == 0 || ViewRect.y == 0 )
+		return;
 	sg_activate_context(Context);
 	sg_reset_state_cache();
 
