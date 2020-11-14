@@ -246,6 +246,7 @@
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
+		BFE017D325607C8100C9A512 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE017D225607C8100C9A512 /* CoreGraphics.framework */; };
 		BFE462B424B1058400D04A4C /* TApiPanopoly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */; };
 		BFE462B524B1058400D04A4C /* TApiPanopoly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */; };
 		BFEF6A3A24759406000A1F88 /* SoySound.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFEF6A3824759401000A1F88 /* SoySound.mm */; };
@@ -614,6 +615,7 @@
 		BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMedia.cpp; path = src/SoyMedia.cpp; sourceTree = "<group>"; };
 		BFDE37F91C89B20D00D10F02 /* SoyMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMedia.h; path = src/SoyMedia.h; sourceTree = "<group>"; };
 		BFDE38011C8B446A00D10F02 /* SoyUnity.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyUnity.mm; path = src/SoyUnity.mm; sourceTree = "<group>"; };
+		BFE017D225607C8100C9A512 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
 		BFE462B224B1058400D04A4C /* TApiPanopoly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiPanopoly.cpp; path = src/TApiPanopoly.cpp; sourceTree = "<group>"; };
 		BFE462B324B1058400D04A4C /* TApiPanopoly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiPanopoly.h; path = src/TApiPanopoly.h; sourceTree = "<group>"; };
 		BFE462B824B12D8A00D04A4C /* PopDepthToYuv */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PopDepthToYuv; path = src/PopDepthToYuv; sourceTree = "<group>"; };
@@ -724,6 +726,7 @@
 				BF151FCF2384707D00A70EBF /* JavaScriptCore.framework in Frameworks */,
 				BF151FD3238470A800A70EBF /* VideoToolbox.framework in Frameworks */,
 				BF15205523855FB600A70EBF /* PopCameraDevice_Ios.framework in Frameworks */,
+				BFE017D325607C8100C9A512 /* CoreGraphics.framework in Frameworks */,
 				BF151FD12384708A00A70EBF /* UIKit.framework in Frameworks */,
 				BF151FCD2384704C00A70EBF /* OpenGLES.framework in Frameworks */,
 				BF151FF823847BA700A70EBF /* PopH264_Ios.framework in Frameworks */,
@@ -960,6 +963,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BFE017D225607C8100C9A512 /* CoreGraphics.framework */,
 				58F8E5C0255081FE001AECED /* libresolv.tbd */,
 				58F8E5C2255089B3001AECED /* libresolv.tbd */,
 				BF693A32250E2243002E3772 /* GLKit.framework */,

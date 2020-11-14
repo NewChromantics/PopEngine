@@ -484,11 +484,18 @@ void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 
-	BufferArray<int32_t, 4> Rect4;
-	Params.GetArgumentArray(1, GetArrayBridge(Rect4));
-	Soy::Rectx<int32_t> Rect(Rect4[0], Rect4[1], Rect4[2], Rect4[3]);
-
-	mControl = Platform::CreateImageMap(*ParentWindow.mWindow, Rect);
+	if ( Params.IsArgumentString(1) )	//	user provided named element
+	{
+		auto Name = Params.GetArgumentString(1);
+		mControl = Platform::GetImageMap(*ParentWindow.mWindow, Name);
+	}
+	else	//	user provided rect
+	{
+		BufferArray<int32_t, 4> Rect4;
+		Params.GetArgumentArray(1, GetArrayBridge(Rect4));
+		Soy::Rectx<int32_t> Rect(Rect4[0], Rect4[1], Rect4[2], Rect4[3]);
+		mControl = Platform::CreateImageMap(*ParentWindow.mWindow, Rect);
+	}
 	mControl->mOnMouseEvent = std::bind(&TImageMapWrapper::OnMouseEvent, this, std::placeholders::_1);
 }
 

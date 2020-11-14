@@ -146,6 +146,41 @@ public:
 
 @end
 
+void GetColourSpace(CGColorSpaceRef& ColourSpace,CGBitmapInfo& Flags,SoyPixelsFormat::Type Format)
+{
+	switch(Format)
+	{
+		case SoyPixelsFormat::Greyscale:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaNone;
+			ColourSpace = CGColorSpaceCreateDeviceGray();
+			return;
+
+		case SoyPixelsFormat::GreyscaleAlpha:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+			ColourSpace = CGColorSpaceCreateDeviceGray();
+			return;
+
+		case SoyPixelsFormat::RGB:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaNone;
+			ColourSpace = CGColorSpaceCreateDeviceRGB();
+			return;
+
+		case SoyPixelsFormat::RGBA:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+			ColourSpace = CGColorSpaceCreateDeviceRGB();
+			return;
+
+		case SoyPixelsFormat::ARGB:
+			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedFirst;
+			ColourSpace = CGColorSpaceCreateDeviceRGB();
+			return;
+	}
+
+	std::stringstream Error;
+	Error << "Unhandled format(" << magic_enum::enum_name(Format) << ") to convert to CGColour space (options are gray or rgb)";
+	throw Soy::AssertException(Error);
+}
+
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 {
 	Soy::TSemaphore Semaphore;
@@ -236,12 +271,24 @@ class Platform::TImageMap : public Gui::TImageMap, public PlatformControl<UIImag
 {
 public:
 	TImageMap(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+	TImageMap(UIView* View);
+	~TImageMap();
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
 	virtual void		SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes) override;
 
+private:
+	void				FreeImage();
+
+public:
 	TResponder*			mResponder = [TResponder alloc];
+	
+private:
+	CGImageRef			mCgImage = nullptr;
+	UIImage*			mNsImage = nullptr;
+	SoyPixels			mPixelsImage;		//	we keep a copy for thread use and CGImage references these bytes
+
 };
 
 
@@ -373,15 +420,29 @@ std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent,
 std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
-	std::shared_ptr<Gui::TImageMap> ImageMap;
+	std::shared_ptr<Gui::TImageMap> Control;
 	auto Allocate = [&]() mutable
 	{
-		ImageMap.reset( new Platform::TImageMap(ParentView,Rect) );
+		Control.reset( new Platform::TImageMap(ParentView,Rect) );
 	};
 	RunJobOnMainThread(Allocate,true);
-	return ImageMap;
+	return Control;
 }
 
+std::shared_ptr<Gui::TImageMap> Platform::GetImageMap(SoyWindow& Parent,const std::string& Name)
+{
+	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<Gui::TImageMap> Control;
+	auto Run = [&]()
+	{
+		auto* View = Window.GetChild(Name);
+		if ( !View )
+			throw Soy::AssertException(std::string("No view found named ") + Name);
+		Control.reset( new Platform::TImageMap(View) );
+	};
+	RunJobOnMainThread(Run,true);
+	return Control;
+}
 
 Platform::TLabel::TLabel(UIView* View)
 {
@@ -740,23 +801,41 @@ Platform::TImageMap::TImageMap(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 	//auto RectNs = Parent.GetChildRect(Rect);
 	auto PlatformRect = CGRectMake( Rect.x, Rect.y, Rect.w, Rect.h );
 
-
+	//	samee as NSImageView
 	mControl = [[UIImageView alloc] initWithFrame:PlatformRect];
 
-	//mControl = [[UIImageView alloc] initWithFrame:RectNs];
-	//[mControl retain];
-/*
-	//	setup callback
-	mResponder->mCallback = [this]()
-	{
-		this->OnTextBoxChanged();
-	};
-	mControl.target = mResponder;
-	mControl.action = @selector(OnAction);
+	[mControl retain];
+		
+	//	image map stretches
+	//[mControl setImageScaling:NSImageScaleAxesIndependently];
+	mControl.contentMode = UIViewContentModeScaleToFill;
 
-	//ApplyStyle();
-*/
+	//mControl.target = mResponder;
+	//mControl.action = @selector(OnAction);
+	
 	AddToParent( Parent );
+}
+
+Platform::TImageMap::TImageMap(UIView* View)
+{
+	//	todo: check type!
+	mControl = (UIImageView*)View;	//	gets rid of warning and will throw if mismatched type
+	
+	/*
+	UIView *view = [[UIView alloc] initWithFrame:self.view.bounds];
+view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+[self.view addSubview:view];
+*/
+	//	gr: this isn't a UIControl, we can't get events
+	//		maybe need to add a child control and catch it's events
+	//	setup delegate/responder
+	//auto ListenEvents = UIControlEventAllEvents;
+	//auto ListenEvents = UIControlEventEditingChanged;
+	//	gr: do we want this? or should event only fire on user-change?
+	//ListenEvents |= UIControlEventValueChanged;
+ 	//[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 
+	//mResponder->mCallback = [this]()	{	this->OnChanged();	};
 }
 
 //UICollectionViewDataSource
@@ -786,15 +865,103 @@ void PlatformControl<NATIVECLASS>::AddToParent(Platform::TWindow& Parent)
 	}
 }
 
+
+Platform::TImageMap::~TImageMap()
+{
+	[mControl release];
+
+	FreeImage();
+}
+
 void Platform::TImageMap::SetRect(const Soy::Rectx<int32_t>& Rect)
 {
 }
 
-void Platform::TImageMap::SetImage(const SoyPixelsImpl& Pixels)
+void Platform::TImageMap::SetImage(const SoyPixelsImpl& _Pixels)
 {
+	//	make a copy as we're copying to a thread, and re-using the data for CGDataProviderCreateWithData
+	//	todo: optimise this so we re-use the same buffer and maybe can just refresh the view with new pixels?
+	mPixelsImage.Copy(_Pixels);
+
+	auto Run = [this]() mutable
+	{
+		if ( !mControl )
+			throw Soy::AssertException("Control hasn't been created yet");
+
+		auto& Pixels = mPixelsImage;
+		FreeImage();
+
+		auto PixelMeta = Pixels.GetMeta();
+		auto& PixelArray = Pixels.GetPixelsArray();
+		CGDataProviderRef provider = CGDataProviderCreateWithData( nullptr, PixelArray.GetArray(), PixelArray.GetDataSize(), nullptr );
+		size_t bitsPerComponent = 8 * PixelMeta.GetBytesPerChannel();
+		size_t bitsPerPixel = 8 * PixelMeta.GetPixelDataSize();
+		size_t bytesPerRow = PixelMeta.GetRowDataSize();
+
+		CGBitmapInfo bitmapInfo = 0;
+		CGColorSpaceRef colorSpaceRef = nullptr;
+		GetColourSpace( colorSpaceRef, bitmapInfo, PixelMeta.GetFormat() );
+		CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+
+		mCgImage = CGImageCreate( PixelMeta.GetWidth(),
+										PixelMeta.GetHeight(),
+										bitsPerComponent,
+										bitsPerPixel,
+										bytesPerRow,
+										colorSpaceRef,
+										bitmapInfo,
+										provider,   // data provider
+										NULL,       // decode
+										YES,        // should interpolate
+										renderingIntent);
+		if ( !mCgImage )
+		{
+			throw Soy::AssertException("Failed to create CGImage");
+		}
+
+		/*
+		- (instancetype)initWithCGImage:(CGImageRef)cgImage;
+- (instancetype)initWithCGImage:(CGImageRef)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation API_AVAILABLE(ios(4.0));
+#if __has_include(<CoreImage/CoreImage.h>)
+- (instancetype)initWithCIImage:(CIImage *)ciImage API_AVAILABLE(ios(5.0));
+- (instancetype)initWithCIImage:(CIImage *)ciImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation API_AVAILABLE(ios(6.0));
+#endif
+		*/
+		mNsImage = [[UIImage alloc] initWithCGImage:mCgImage];
+		//auto ImageValid = [mNsImage isValid];	//	osx only
+
+		//mControl.frame = NSMakeRect( 0,0,100,100);
+		//mControl.layer.backgroundColor = CGColorCreateGenericRGB(1,0,0,1);
+		//mControl.image = mNsImage;
+		[mControl setImage:mNsImage];
+
+		//	gr: this selector is going missing?? (but succeeds)
+		UIImageView* pControl = mControl;
+		auto ViewIsValid = true;
+		//auto ViewIsValid = [pControl isValid];
+		//ViewIsValid = [pControl isValid];
+		//auto ViewIsValid = [pControl isValid];
+		if ( !ViewIsValid )
+			throw Soy::AssertException("NSViewImage is not valid");
+	};
+	RunJobOnMainThread( Run, true );
 }
 
 void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)
 {
 }
 
+void  Platform::TImageMap::FreeImage()
+{
+	if ( mCgImage )
+	{
+		CGImageRelease(mCgImage);
+		mCgImage = nullptr;
+	}
+
+	if ( mNsImage )
+	{
+		[mNsImage release];
+		mNsImage = nullptr;
+	}
+}
