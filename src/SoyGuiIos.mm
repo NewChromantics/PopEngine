@@ -31,6 +31,9 @@ namespace Platform
 - (void)prepareForReuse
 {
 	[super prepareForReuse];
+	//self.autoresizesSubviews = YES;
+	
+	self.contentView.contentMode = UIViewContentModeScaleToFill;
 	
 	//	remove subviews
 }
@@ -98,8 +101,25 @@ namespace Platform
 	auto* Child = mChildViews[Index];
 	
 	auto* CellView = Cell.contentView;
+	
+	//	style things
+	CellView.clipsToBounds = YES;
+	CellView.backgroundColor = UIColor.blackColor;	//	for debugging
+	
+	//	gr: this isn't working
+	CellView.contentMode = UIViewContentModeScaleToFill;
+
+	//	add to content view
 	[CellView addSubview:Child];
 	
+	//	redo layout
+	if ( collectionView.collectionViewLayout )
+	{
+		[collectionView.collectionViewLayout invalidateLayout];
+	}
+	
+	[collectionView layoutIfNeeded];
+		
 	return Cell;
 }
 
@@ -245,17 +265,20 @@ public:
 	UITextView*			mView = nullptr;
 };
 
-class Platform::TButton : public SoyButton
+class Platform::TButton : public SoyButton, public PlatformControl<UIButton>
 {
 public:
 	TButton(UIView* View);
-	
+	TButton(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
+
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect);// override;
-	
 	virtual void		SetLabel(const std::string& Value) override;
 
+private:
+	void				BindEvents();
+
+public:
 	TResponder*			mResponder = [TResponder alloc];
-	UIButton*			mView = nullptr;
 };
 
 class Platform::TMetalView : public SoyMetalView
@@ -376,7 +399,15 @@ std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string
 
 std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow &Parent, Soy::Rectx<int32_t> &Rect)
 {
-	Soy_AssertTodo();
+	auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<SoyButton> Label;
+	auto Allocate = [&]() mutable
+	{
+		Label.reset( new Platform::TButton( ParentView, Rect) );
+		Label->SetLabel("New Button");
+	};
+	RunJobOnMainThread(Allocate,true);
+	return Label;
 }
 
 std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
@@ -551,12 +582,51 @@ Platform::TButton::TButton(UIView* View)
 	//	we should align the paradigms
 
 	//	todo: check type!
-	mView = View;
+	mControl = View;
+
+	BindEvents();
+}
+
+static int DebugColourIndex = 0;
+UIColor* GetDebugColour()
+{
+	UIColor* Colours[] =
+	{
+		UIColor.redColor,
+		UIColor.orangeColor,
+		UIColor.yellowColor,
+		UIColor.greenColor,
+		UIColor.cyanColor,
+		UIColor.blueColor,
+		UIColor.purpleColor,
+		UIColor.magentaColor,
+		UIColor.brownColor,
+	};
+	auto Index = (DebugColourIndex++) % std::size(Colours);
+	return Colours[Index];
+}
+
+Platform::TButton::TButton(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
+{
+	//auto RectNs = Parent.GetChildRect(Rect);
+	auto PlatformRect = CGRectMake( Rect.x, Rect.y, Rect.w, Rect.h );
+	mControl = [[UIButton alloc] initWithFrame:PlatformRect];
 	
+	//	debug to help sizing
+	auto* DebugColour = GetDebugColour();
+	mControl.backgroundColor = DebugColour;
+
+	AddToParent( Parent );
+	
+	BindEvents();
+}
+
+void Platform::TButton::BindEvents()
+{
 	//	setup delegate/responder to get click
 	//auto ListenEvents = UIControlEventAllEvents;
 	auto ListenEvents = UIControlEventTouchUpInside;
- 	[mView addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
  
 	mResponder->mCallback = [this]()	{	this->OnClicked();	};
 }
@@ -571,7 +641,7 @@ void Platform::TButton::SetLabel(const std::string& Value)
 	auto Job = [=]() mutable
 	{
 		auto ValueNs = Soy::StringToNSString(Value);
-		[this->mView setTitle:ValueNs forState:UIControlStateNormal];
+		[this->mControl setTitle:ValueNs forState:UIControlStateNormal];
 	};
 	RunJobOnMainThread( Job, false );
 }
@@ -856,7 +926,13 @@ void PlatformControl<NATIVECLASS>::AddToParent(Platform::TWindow& Parent)
 		Views_DataSource* DataSourceViews = CollectionView.dataSource;		
 		[DataSourceViews AddChild:mControl];
     	//[CollectionView addSubview:mCell];
+    	
+		//	trigger re-layout
     	[CollectionView reloadData];
+    	if ( CollectionView.collectionViewLayout )
+		{
+			[CollectionView.collectionViewLayout invalidateLayout];
+		}
 	}
 	else
 	{
