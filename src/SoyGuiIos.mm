@@ -629,6 +629,14 @@ void Platform::TButton::BindEvents()
  	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
  
 	mResponder->mCallback = [this]()	{	this->OnClicked();	};
+
+
+	//	init style
+	
+	//	make text wrap 
+	mControl.titleLabel.numberOfLines = 0;
+	mControl.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
+	mControl.titleLabel.textAlignment = NSTextAlignmentCenter;
 }
 
 void Platform::TButton::SetRect(const Soy::Rectx<int32_t>& Rect)
