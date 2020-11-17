@@ -53,7 +53,7 @@ void ApiEngine::TStatsWindowWrapper::Construct(Bind::TCallback& Params)
 	if ( Params.IsArgumentObject(0) )
 	{
 		auto& Label = Params.GetArgumentPointer<ApiGui::TLabelWrapper>(0);
-		auto pLabel = Label.mLabel;
+		auto pLabel = Label.mControl;
 		mWindow.reset(new TStatsWindow(pLabel, GetContext));
 		return;
 	}

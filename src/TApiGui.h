@@ -104,12 +104,13 @@ public:
 	
 	void			SetMinMax(Bind::TCallback& Params);
 	void			SetValue(Bind::TCallback& Params);
+	void			SetVisible(Bind::TCallback& Params);
 
 	//	FinalValue means say, mouse-up on slider (false if dragging)
 	void			OnChanged(uint16_t& NewValue,bool FinalValue);
 	
 public:
-	std::shared_ptr<SoySlider>&	mSlider = mObject;
+	std::shared_ptr<SoySlider>&	mControl = mObject;
 };
 
 
@@ -127,9 +128,10 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 	void			SetValue(Bind::TCallback& Params);
-	
+	void			SetVisible(Bind::TCallback& Params);
+
 public:
-	std::shared_ptr<SoyLabel>&	mLabel = mObject;
+	std::shared_ptr<SoyLabel>&	mControl = mObject;
 };
 
 
@@ -146,11 +148,12 @@ public:
 	
 	void			SetValue(Bind::TCallback& Params);
 	void			GetValue(Bind::TCallback& Params);
+	void			SetVisible(Bind::TCallback& Params);
 
 	void			OnChanged(const std::string& NewValue);
 
 public:
-	std::shared_ptr<SoyTextBox>&	mTextBox = mObject;
+	std::shared_ptr<SoyTextBox>&	mControl = mObject;
 };
 
 
@@ -169,6 +172,7 @@ public:
 	void			SetValue(Bind::TCallback& Params);
 	void			GetValue(Bind::TCallback& Params);
 	void			SetLabel(Bind::TCallback& Params);
+	void			SetVisible(Bind::TCallback& Params);
 
 	void			OnChanged(bool& NewValue);
 	
@@ -210,12 +214,13 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
 	void			SetValue(Bind::TCallback& Params);
+	void			SetVisible(Bind::TCallback& Params);
 
 	//	FinalValue means say, mouse-up on slider (false if dragging)
 	void			OnChanged(vec3x<uint8_t>& NewValue, bool FinalValue);
 
 public:
-	std::shared_ptr<SoyColourButton>&	mColourButton = mObject;
+	std::shared_ptr<SoyColourButton>&	mControl = mObject;
 };
 
 
@@ -230,6 +235,7 @@ public:
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;
 
+	void			SetVisible(Bind::TCallback& Params);
 	void			SetImage(Bind::TCallback& Params);
 	void			SetCursorMap(Bind::TCallback& Params);
 	void			WaitForMouseEvent(Bind::TCallback& Params);
@@ -260,6 +266,7 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 	void			SetLabel(Bind::TCallback& Params);
+	void			SetVisible(Bind::TCallback& Params);
 	void			OnClicked();
 	
 public:

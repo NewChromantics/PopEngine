@@ -27,6 +27,7 @@ namespace ApiGui
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
 	DEFINE_BIND_FUNCTIONNAME(GetValue);
 	DEFINE_BIND_FUNCTIONNAME(SetLabel);
+	DEFINE_BIND_FUNCTIONNAME(SetVisible);
 
 	DEFINE_BIND_FUNCTIONNAME(SetImage);
 	DEFINE_BIND_FUNCTIONNAME(SetCursorMap);
@@ -61,6 +62,7 @@ void ApiGui::TSliderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetMinMax>( &TSliderWrapper::SetMinMax );
 	Template.BindFunction<BindFunction::SetValue>( &TSliderWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetVisible>( &TSliderWrapper::SetVisible );
 }
 
 void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
@@ -83,8 +85,8 @@ void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
 		NotchCount = Params.GetArgumentInt(2);
 	}
 
-	mSlider = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
-	mSlider->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
+	mControl = Platform::CreateSlider( *ParentWindow.mWindow, Rect );
+	mControl->mOnValueChanged = std::bind( &TSliderWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 void ApiGui::TSliderWrapper::SetMinMax(Bind::TCallback& Params)
@@ -96,13 +98,19 @@ void ApiGui::TSliderWrapper::SetMinMax(Bind::TCallback& Params)
 	if (!Params.IsArgumentUndefined(2))
 		NotchCount = Params.GetArgumentInt(2);
 
-	mSlider->SetMinMax( Min, Max, NotchCount);
+	mControl->SetMinMax( Min, Max, NotchCount);
 }
 
 void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentInt(0);
-	mSlider->SetValue( Value );
+	mControl->SetValue( Value );
+}
+
+void ApiGui::TSliderWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
 }
 
 
@@ -221,7 +229,7 @@ void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
 	if ( Params.IsArgumentString(1) )
 	{
 		auto Name = Params.GetArgumentString(1);
-		mLabel = Platform::GetLabel( *ParentWindow.mWindow, Name );
+		mControl = Platform::GetLabel( *ParentWindow.mWindow, Name );
 	}
 	else
 	{
@@ -229,16 +237,21 @@ void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
 		Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
 		Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
 	
-		mLabel = Platform::CreateLabel( *ParentWindow.mWindow, Rect );
+		mControl = Platform::CreateLabel( *ParentWindow.mWindow, Rect );
 	}
 }
 
 void ApiGui::TLabelWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
-	mLabel->SetValue( Value );
+	mControl->SetValue( Value );
 }
 
+void ApiGui::TLabelWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
+}
 
 
 
@@ -246,6 +259,8 @@ void ApiGui::TTextBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>( &TTextBoxWrapper::SetValue );
 	Template.BindFunction<BindFunction::GetValue>( &TTextBoxWrapper::GetValue );
+	Template.BindFunction<BindFunction::SetVisible>( &TTextBoxWrapper::SetVisible );
+	
 }
 
 void ApiGui::TTextBoxWrapper::Construct(Bind::TCallback& Params)
@@ -255,29 +270,35 @@ void ApiGui::TTextBoxWrapper::Construct(Bind::TCallback& Params)
 	if ( Params.IsArgumentString(1) )
 	{
 		auto Name = Params.GetArgumentString(1);
-		mTextBox = Platform::GetTextBox( *ParentWindow.mWindow, Name );
+		mControl = Platform::GetTextBox( *ParentWindow.mWindow, Name );
 	}
 	else
 	{
 		BufferArray<int32_t,4> Rect4;
 		Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
 		Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
-		mTextBox = Platform::CreateTextBox( *ParentWindow.mWindow, Rect );
+		mControl = Platform::CreateTextBox( *ParentWindow.mWindow, Rect );
 	}
 		
-	mTextBox->mOnValueChanged = std::bind( &TTextBoxWrapper::OnChanged, this, std::placeholders::_1 );
+	mControl->mOnValueChanged = std::bind( &TTextBoxWrapper::OnChanged, this, std::placeholders::_1 );
 }
 
 void ApiGui::TTextBoxWrapper::SetValue(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
-	mTextBox->SetValue( Value );
+	mControl->SetValue( Value );
 }
 
 void ApiGui::TTextBoxWrapper::GetValue(Bind::TCallback& Params)
 {
-	auto Value = mTextBox->GetValue();
+	auto Value = mControl->GetValue();
 	Params.Return(Value);
+}
+
+void ApiGui::TTextBoxWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
 }
 
 void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
@@ -300,6 +321,7 @@ void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::SetValue>( &TTickBoxWrapper::SetValue );
 	Template.BindFunction<BindFunction::GetValue>( &TTickBoxWrapper::GetValue );
 	Template.BindFunction<BindFunction::SetLabel>( &TTickBoxWrapper::SetLabel );
+	Template.BindFunction<BindFunction::SetVisible>( &TTickBoxWrapper::SetVisible );
 }
 
 void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
@@ -331,6 +353,12 @@ void ApiGui::TTickBoxWrapper::SetLabel(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
 	mControl->SetLabel( Value );
+}
+
+void ApiGui::TTickBoxWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
 }
 
 void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
@@ -405,6 +433,7 @@ void ApiGui::TColourPickerWrapper::OnClosed()
 void ApiGui::TColourButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>(&TColourButtonWrapper::SetValue);
+	Template.BindFunction<BindFunction::SetVisible>( &TColourButtonWrapper::SetVisible );
 }
 
 void ApiGui::TColourButtonWrapper::Construct(Bind::TCallback& Params)
@@ -416,8 +445,8 @@ void ApiGui::TColourButtonWrapper::Construct(Bind::TCallback& Params)
 	Soy::Rectx<int32_t> Rect(Rect4[0], Rect4[1], Rect4[2], Rect4[3]);
 	
 
-	mColourButton = Platform::CreateColourButton(*ParentWindow.mWindow, Rect);
-	mColourButton->mOnValueChanged = std::bind(&TColourButtonWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
+	mControl = Platform::CreateColourButton(*ParentWindow.mWindow, Rect);
+	mControl->mOnValueChanged = std::bind(&TColourButtonWrapper::OnChanged, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 
@@ -442,7 +471,13 @@ void ApiGui::TColourButtonWrapper::SetValue(Bind::TCallback& Params)
 	Rgb.y = RgbArray[1] * 255.f;
 	Rgb.z = RgbArray[2] * 255.f;
 
-	mColourButton->SetValue(Rgb);
+	mControl->SetValue(Rgb);
+}
+
+void ApiGui::TColourButtonWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
 }
 
 
@@ -478,6 +513,7 @@ void ApiGui::TImageMapWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::SetImage>(&TImageMapWrapper::SetImage);
 	Template.BindFunction<BindFunction::SetCursorMap>(&TImageMapWrapper::SetCursorMap);
 	Template.BindFunction<BindFunction::WaitForMouseEvent>(&TImageMapWrapper::WaitForMouseEvent);
+	Template.BindFunction<BindFunction::SetVisible>( &TImageMapWrapper::SetVisible );
 }
 
 void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
@@ -499,6 +535,12 @@ void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
 	mControl->mOnMouseEvent = std::bind(&TImageMapWrapper::OnMouseEvent, this, std::placeholders::_1);
 }
 
+
+void ApiGui::TImageMapWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
+}
 
 void ApiGui::TImageMapWrapper::SetImage(Bind::TCallback& Params)
 {
@@ -619,6 +661,7 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 void ApiGui::TButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetLabel>( &TButtonWrapper::SetLabel );
+	Template.BindFunction<BindFunction::SetVisible>( &TButtonWrapper::SetVisible );
 }
 
 void ApiGui::TButtonWrapper::Construct(Bind::TCallback& Params)
@@ -650,6 +693,12 @@ void ApiGui::TButtonWrapper::SetLabel(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
 	mControl->SetLabel( Value );
+}
+
+void ApiGui::TButtonWrapper::SetVisible(Bind::TCallback& Params)
+{
+	auto Value = Params.GetArgumentBool(0);
+	mControl->SetVisible( Value );
 }
 
 void ApiGui::TButtonWrapper::OnClicked()
