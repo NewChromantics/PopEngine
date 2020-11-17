@@ -220,6 +220,7 @@ void ApiGui::TWindowWrapper::EnableScrollbars(Bind::TCallback& Params)
 void ApiGui::TLabelWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>( &TLabelWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetVisible>( &TLabelWrapper::SetVisible );
 }
 
 void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
