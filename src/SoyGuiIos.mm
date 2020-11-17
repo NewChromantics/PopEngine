@@ -134,6 +134,7 @@ template<typename NATIVECLASS>
 class PlatformControl
 {
 public:
+	void			SetControl(UIView* View);		//	type checked		
 	void			AddToParent(Platform::TWindow& Window);
 	void			SetVisible(bool Visible);
 
@@ -236,7 +237,7 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 	}
 }
 
-class Platform::TLabel : public SoyLabel, public PlatformControl<UITextView>
+class Platform::TLabel : public SoyLabel, public PlatformControl<UILabel>
 {
 public:
 	TLabel(UIView* View);
@@ -251,7 +252,9 @@ public:
 	size_t				mValueVersion = 0;
 };
 
-class Platform::TTextBox : public SoyTextBox, public PlatformControl<UITextView>
+//	UITextField = single line
+//	UITextView = Multi line
+class Platform::TTextBox : public SoyTextBox, public PlatformControl<UITextField>
 {
 public:
 	TTextBox(UIView* View);
@@ -488,7 +491,7 @@ Platform::TLabel::TLabel(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 {
 	//auto RectNs = Parent.GetChildRect(Rect);
 	auto PlatformRect = CGRectMake( Rect.x, Rect.y, Rect.w, Rect.h );
-	mControl = [[UITextView alloc] initWithFrame:PlatformRect];
+	mControl = [[UILabel alloc] initWithFrame:PlatformRect];
 	AddToParent( Parent );
 }
 
@@ -532,16 +535,22 @@ std::string Platform::TLabel::GetValue()
 
 Platform::TTextBox::TTextBox(UIView* View)
 {
-	//	todo: check type!
-	mControl = View;
+	SetControl(View);
 	
-	//	setup delegate/responder
-	//auto ListenEvents = UIControlEventAllEvents;
-	auto ListenEvents = UIControlEventEditingChanged;
-	//	gr: do we want this? or should event only fire on user-change?
-	//ListenEvents |= UIControlEventValueChanged;
- 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
- 
+	@try
+	{
+		//	setup delegate/responder
+		//auto ListenEvents = UIControlEventAllEvents;
+		auto ListenEvents = UIControlEventEditingChanged;
+		//	gr: do we want this? or should event only fire on user-change?
+		//ListenEvents |= UIControlEventValueChanged;
+	 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 	}
+	@catch (NSException* e)
+	{
+		throw Soy::AssertException(e);
+	}
+
 	mResponder->mCallback = [this]()	{	this->OnChanged();	};
 }
 
@@ -583,10 +592,7 @@ Platform::TButton::TButton(UIView* View)
 	//	this IOS code expects to be run on the main thread
 	//	the OSX code can run on any thread, and then inits on main thread (before we had Platform::CreateXXX)
 	//	we should align the paradigms
-
-	//	todo: check type!
-	mControl = View;
-
+	SetControl(View);
 	BindEvents();
 }
 
@@ -627,12 +633,18 @@ Platform::TButton::TButton(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 void Platform::TButton::BindEvents()
 {
 	//	setup delegate/responder to get click
-	//auto ListenEvents = UIControlEventAllEvents;
-	auto ListenEvents = UIControlEventTouchUpInside;
- 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
- 
-	mResponder->mCallback = [this]()	{	this->OnClicked();	};
+	@try
+	{
+		//auto ListenEvents = UIControlEventAllEvents;
+		auto ListenEvents = UIControlEventTouchUpInside;
+	 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 	}
+ 	@catch (NSException* e)
+	{
+		throw Soy::AssertException(e);
+	}
 
+	mResponder->mCallback = [this]()	{	this->OnClicked();	};
 
 	//	init style
 	
@@ -899,9 +911,7 @@ Platform::TImageMap::TImageMap(TWindow& Parent,Soy::Rectx<int32_t>& Rect)
 
 Platform::TImageMap::TImageMap(UIView* View)
 {
-	//	todo: check type!
-	mControl = (UIImageView*)View;	//	gets rid of warning and will throw if mismatched type
-	
+	SetControl(View);
 	/*
 	UIView *view = [[UIView alloc] initWithFrame:self.view.bounds];
 view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -952,6 +962,28 @@ void PlatformControl<NATIVECLASS>::AddToParent(Platform::TWindow& Parent)
 	}
 }
 
+
+template<typename NATIVECLASS>
+void PlatformControl<NATIVECLASS>::SetControl(UIView* View)
+{
+	auto ExpectedClass = [NATIVECLASS class];
+	auto ExpectedClassName = Soy::NSStringToString(NSStringFromClass(ExpectedClass));
+	
+	if ( !View )
+		throw Soy::AssertException("View is null");
+
+	auto ViewClassName = Soy::NSStringToString(NSStringFromClass([View class]));
+	
+	if ( ![View isKindOfClass:ExpectedClass] )
+	{
+		std::stringstream Error;
+		Error << "Trying to assign " << ViewClassName << " to " << ExpectedClassName;
+		throw Soy::AssertException(Error);
+	}
+	
+	//	cast to remove warning
+	mControl = (NATIVECLASS*)View;
+}
 
 template<typename NATIVECLASS>
 void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
