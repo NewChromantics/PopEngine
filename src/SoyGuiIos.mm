@@ -134,10 +134,10 @@ template<typename NATIVECLASS>
 class PlatformControl
 {
 public:
-	void		AddToParent(Platform::TWindow& Window);
-	
-	UICollectionViewCell*	mCell = nullptr;	//	if we're inside a cell in a parent
-	NATIVECLASS*			mControl = nullptr;
+	void			AddToParent(Platform::TWindow& Window);
+	void			SetVisible(bool Visible);
+
+	NATIVECLASS*	mControl = nullptr;
 };
 
 
@@ -243,26 +243,27 @@ public:
 	TLabel(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
-	
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
 
 	size_t				mValueVersion = 0;
 };
 
-class Platform::TTextBox : public SoyTextBox
+class Platform::TTextBox : public SoyTextBox, public PlatformControl<UITextView>
 {
 public:
 	TTextBox(UIView* View);
 	~TTextBox();
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
 	
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
 
 	TResponder*			mResponder = [TResponder alloc];
-	UITextView*			mView = nullptr;
 };
 
 class Platform::TButton : public SoyButton, public PlatformControl<UIButton>
@@ -272,6 +273,7 @@ public:
 	TButton(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect);// override;
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
 	virtual void		SetLabel(const std::string& Value) override;
 
 private:
@@ -298,6 +300,7 @@ public:
 	~TImageMap();
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
 	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
 	virtual void		SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes) override;
 
@@ -530,14 +533,14 @@ std::string Platform::TLabel::GetValue()
 Platform::TTextBox::TTextBox(UIView* View)
 {
 	//	todo: check type!
-	mView = View;
+	mControl = View;
 	
 	//	setup delegate/responder
 	//auto ListenEvents = UIControlEventAllEvents;
 	auto ListenEvents = UIControlEventEditingChanged;
 	//	gr: do we want this? or should event only fire on user-change?
 	//ListenEvents |= UIControlEventValueChanged;
- 	[mView addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
+ 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
  
 	mResponder->mCallback = [this]()	{	this->OnChanged();	};
 }
@@ -556,7 +559,7 @@ void Platform::TTextBox::SetValue(const std::string& Value)
 {
 	auto Job = [=]() mutable
 	{
-		this->mView.text = Soy::StringToNSString(Value);
+		this->mControl.text = Soy::StringToNSString(Value);
 	};
 	RunJobOnMainThread( Job, false );
 }
@@ -566,7 +569,7 @@ std::string Platform::TTextBox::GetValue()
 	std::string Value;
 	auto Job = [&]()
 	{
-		Value = Soy::NSStringToString( mView.text );
+		Value = Soy::NSStringToString( mControl.text );
 	};
 	RunJobOnMainThread( Job, true );
 	return Value;
@@ -949,6 +952,18 @@ void PlatformControl<NATIVECLASS>::AddToParent(Platform::TWindow& Parent)
 	}
 }
 
+
+template<typename NATIVECLASS>
+void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
+{
+	auto Job = [=]()
+	{
+		//	gr: if this is in a cell and the only thing in the cell, we need to
+		//		hide it. put this in some parent callback here  
+		mControl.hidden = Visible ? NO : YES;
+	};
+	RunJobOnMainThread( Job, false );
+}
 
 Platform::TImageMap::~TImageMap()
 {
