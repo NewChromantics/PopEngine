@@ -179,7 +179,8 @@ void ApiMedia::EnumDevices(Bind::TCallback& Params)
 		try
 		{
 			//	we now return the json directly
-			Array<char> JsonBuffer(6000);
+			//	gr: this buffer had to get bigger again, could maybe check the last char is } (or parse) and try again :)
+			Array<char> JsonBuffer(1024*100);
 			PopCameraDevice_EnumCameraDevicesJson(JsonBuffer.GetArray(), size_cast<int>(JsonBuffer.GetDataSize()));
 
 			std::string Json(JsonBuffer.GetArray());
