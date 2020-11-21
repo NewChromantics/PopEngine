@@ -119,6 +119,7 @@
 		BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; };
 		BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */ = {isa = PBXBuildFile; fileRef = BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */; };
+		BF51B89E2569A25E004DE4C7 /* PopCap.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BF51B89D2569A256004DE4C7 /* PopCap.storyboard */; };
 		BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
@@ -432,6 +433,7 @@
 		BF5091822282194700DCBB4B /* libicuuc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicuuc.dylib; sourceTree = "<group>"; };
 		BF5091832282194700DCBB4B /* libicui18n.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicui18n.dylib; sourceTree = "<group>"; };
 		BF5091842282194700DCBB4B /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_libbase.dylib; sourceTree = "<group>"; };
+		BF51B89D2569A256004DE4C7 /* PopCap.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = PopCap.storyboard; path = UnitTest/Gui/PopCap.storyboard; sourceTree = SOURCE_ROOT; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
@@ -888,6 +890,7 @@
 		BF5EAF7D237F07ED0077BCF5 /* Source_App */ = {
 			isa = PBXGroup;
 			children = (
+				BF51B89D2569A256004DE4C7 /* PopCap.storyboard */,
 				BF5EB05E2380335F0077BCF5 /* PopEngineApp_Osx_Info.plist */,
 				58C2001524F901BC002DAC99 /* PopEngineApp_Ios_Info.plist */,
 				BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */,
@@ -1646,6 +1649,7 @@
 				58AA9DB2250B9932009CC296 /* UnitTest in Resources */,
 				58171F1F250BD4A700224082 /* Main.storyboard in Resources */,
 				58171F1D250BD4A700224082 /* LaunchScreen.storyboard in Resources */,
+				BF51B89E2569A25E004DE4C7 /* PopCap.storyboard in Resources */,
 				58AA9DB1250B992B009CC296 /* PopEngine.xcassets in Resources */,
 				58C2004124F90506002DAC99 /* Main.xib in Resources */,
 			);

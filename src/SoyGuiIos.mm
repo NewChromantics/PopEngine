@@ -18,6 +18,8 @@ namespace Platform
 {
 	static size_t	UniqueIdentifierCounter = 1000;
 	std::string		GetUniqueIdentifier();
+	
+	std::string		GetClassName(UIView* View);
 }
 
 @interface Views_CollectionViewCell: UICollectionViewCell 
@@ -269,20 +271,30 @@ public:
 	TResponder*			mResponder = [TResponder alloc];
 };
 
-class Platform::TButton : public SoyButton, public PlatformControl<UIButton>
+//	a button can act as
+//	- button
+//	- Tick box with selected state
+class Platform::TButton : public SoyButton, public SoyTickBox, public PlatformControl<UIView>
 {
 public:
 	TButton(UIView* View);
 	TButton(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
 
-	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect);// override;
+	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
 	virtual void		SetLabel(const std::string& Value) override;
 
+	//	tickbox
+	virtual void		SetValue(bool Value) override;
+	virtual bool		GetValue() override;
+	void				ToggleTickBoxValue();
+
 private:
 	void				BindEvents();
+	void				GetValueNow();	//	update cached value, should be called on main thread
 
 public:
+	bool				mCachedTickBoxValue = false;
 	TResponder*			mResponder = [TResponder alloc];
 };
 
@@ -374,6 +386,25 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx
 {
 	Soy_AssertTodo();
 }
+
+std::shared_ptr<SoyTickBox> Platform::GetTickBox(SoyWindow& Parent,const std::string& Name)
+{
+	std::shared_ptr<SoyTickBox> Control;
+	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
+	auto Run = [&]()
+	{
+		auto* View = Window.GetChild(Name);
+		if ( !View )
+			throw Soy::AssertException(std::string("No view found named ") + Name);
+			
+		std::Debug << "Creating tickbox from " << GetClassName(View) << std::endl;
+		//	gr: tickbox can be interpreted as many types
+		Control.reset( new Platform::TButton(View) );
+	};
+	RunJobOnMainThread( Run, true );
+	return Control;
+}
+
 
 std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow &Parent, Soy::Rectx<int32_t> &Rect)
 {
@@ -594,6 +625,7 @@ Platform::TButton::TButton(UIView* View)
 	//	we should align the paradigms
 	SetControl(View);
 	BindEvents();
+	GetValueNow();
 }
 
 static int DebugColourIndex = 0;
@@ -644,14 +676,25 @@ void Platform::TButton::BindEvents()
 		throw Soy::AssertException(e);
 	}
 
-	mResponder->mCallback = [this]()	{	this->OnClicked();	};
+	mResponder->mCallback = [this]()	
+	{
+		//	gr: if we're a check box, toggle state
+		ToggleTickBoxValue();
+		GetValueNow();
+		this->OnClicked();	//	button	
+		this->OnChanged();	//	tick box
+	};
 
 	//	init style
 	
-	//	make text wrap 
-	mControl.titleLabel.numberOfLines = 0;
-	mControl.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
-	mControl.titleLabel.textAlignment = NSTextAlignmentCenter;
+	//	make text wrap
+	if ( [mControl isKindOfClass:[UIButton class]] )
+	{
+		UIButton* Button = (UIButton*)mControl;
+		Button.titleLabel.numberOfLines = 0;
+		Button.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
+		Button.titleLabel.textAlignment = NSTextAlignmentCenter;
+	}
 }
 
 void Platform::TButton::SetRect(const Soy::Rectx<int32_t>& Rect)
@@ -669,6 +712,57 @@ void Platform::TButton::SetLabel(const std::string& Value)
 	RunJobOnMainThread( Job, false );
 }
 
+
+void Platform::TButton::SetValue(bool Value)
+{
+	auto Job = [=]() mutable
+	{
+		mCachedTickBoxValue = Value;
+		if ( [mControl isKindOfClass:[UIButton class]] )
+		{
+			UIButton* Button = (UIButton*)mControl;
+			Button.selected = Value;
+			//button.highlighted = NO;
+			//button.enabled = Yes;
+		}
+	};
+	RunJobOnMainThread( Job, false );
+}
+
+bool Platform::TButton::GetValue()
+{
+	return mCachedTickBoxValue;
+}
+
+
+
+void Platform::TButton::GetValueNow()
+{
+	//	should be run on main thread
+	if ( [mControl isKindOfClass:[UIButton class]] )
+	{
+		UIButton* Button = (UIButton*)mControl;
+		mCachedTickBoxValue = Button.selected;
+	}
+	else
+	{
+		Soy_AssertTodo();
+	}
+}
+
+void Platform::TButton::ToggleTickBoxValue()
+{
+	//	should be run on main thread
+	if ( [mControl isKindOfClass:[UIButton class]] )
+	{
+		UIButton* Button = (UIButton*)mControl;
+		Button.selected = !Button.selected;
+	}
+	else
+	{
+		Soy_AssertTodo();
+	}
+}
 
 
 
@@ -931,13 +1025,22 @@ view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlex
 
 //UICollectionViewDataSource
 
+std::string Platform::GetClassName(UIView* View)
+{
+	auto* Class = [View class];
+	auto ClassNameNs = NSStringFromClass(Class);
+	auto ClassName = Soy::NSStringToString(ClassNameNs);
+	return ClassName;
+}
+
+
 template<typename NATIVECLASS>
 void PlatformControl<NATIVECLASS>::AddToParent(Platform::TWindow& Parent)
 {
 	//	gr: here if parent is a cell controller, we need to add a cell for this.
 	auto* ParentView = Parent.GetContentView();
 	
-	auto ClassName = Soy::NSStringToString(NSStringFromClass([ParentView class]));
+	auto ClassName = Platform::GetClassName(ParentView);
 	if ( ClassName == "UICollectionView" )
 	{
 		UICollectionView* CollectionView = (UICollectionView*)ParentView;

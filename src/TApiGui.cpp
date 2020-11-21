@@ -329,11 +329,19 @@ void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 	
-	BufferArray<int32_t,4> Rect4;
-	Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
-	Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+	if ( Params.IsArgumentString(1) )
+	{
+		auto Name = Params.GetArgumentString(1);
+		mControl = Platform::GetTickBox( *ParentWindow.mWindow, Name );
+	}
+	else
+	{
+		BufferArray<int32_t,4> Rect4;
+		Params.GetArgumentArray( 1, GetArrayBridge(Rect4) );
+		Soy::Rectx<int32_t> Rect( Rect4[0], Rect4[1], Rect4[2], Rect4[3] );
+		mControl = Platform::CreateTickBox( *ParentWindow.mWindow, Rect );
+	}
 	
-	mControl = Platform::CreateTickBox( *ParentWindow.mWindow, Rect );
 	mControl->mOnValueChanged = std::bind( &TTickBoxWrapper::OnChanged, this, std::placeholders::_1 );
 }
 
