@@ -138,7 +138,9 @@ class PlatformControl
 public:
 	void			SetControl(UIView* View);		//	type checked		
 	void			AddToParent(Platform::TWindow& Window);
+
 	void			SetVisible(bool Visible);
+	void			SetColour(const vec3x<uint8_t>& Rgb);
 
 	NATIVECLASS*	mControl = nullptr;
 };
@@ -246,7 +248,8 @@ public:
 	TLabel(TWindow& Parent,Soy::Rectx<int32_t>& Rect);
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
-	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetVisible(bool Visible) override				{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
 
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
@@ -264,6 +267,7 @@ public:
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
 	
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
@@ -282,6 +286,9 @@ public:
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
+
+	//	button (gr: and tickbox?)
 	virtual void		SetLabel(const std::string& Value) override;
 
 	//	tickbox
@@ -316,6 +323,8 @@ public:
 	
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override;
 	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
+
 	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
 	virtual void		SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes) override;
 
@@ -614,8 +623,6 @@ std::string Platform::TTextBox::GetValue()
 	RunJobOnMainThread( Job, true );
 	return Value;
 }
-
-
 
 
 Platform::TButton::TButton(UIView* View)
@@ -1099,6 +1106,27 @@ void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
 	};
 	RunJobOnMainThread( Job, false );
 }
+
+
+template<typename NATIVECLASS>
+void PlatformControl<NATIVECLASS>::SetColour(const vec3x<uint8_t>& Rgb)
+{
+	auto Job = [=]() mutable
+	{
+		CGFloat r = Rgb[0] / 255.f;
+		CGFloat g = Rgb[1] / 255.f;
+		CGFloat b = Rgb[2] / 255.f;
+		CGFloat a = 1.0f;
+		
+		//	get existing alpha
+		[mControl.tintColor getRed:nil green:nil blue:nil alpha:&a];
+
+		auto* Colour = [UIColor colorWithRed:r green:g blue:b alpha:a];
+		mControl.tintColor = Colour;
+	};
+	RunJobOnMainThread( Job, false );
+}
+
 
 Platform::TImageMap::~TImageMap()
 {

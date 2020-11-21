@@ -470,6 +470,7 @@ float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 {
 	auto Bool = JSValueToBoolean( Context, Handle );
+	auto ValueType = JSValueGetType( Context, Handle );
 	return Bool;
 }
 

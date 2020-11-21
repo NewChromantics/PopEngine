@@ -26,8 +26,8 @@ namespace ApiGui
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
 	DEFINE_BIND_FUNCTIONNAME(GetValue);
-	DEFINE_BIND_FUNCTIONNAME(SetLabel);
-	DEFINE_BIND_FUNCTIONNAME(SetVisible);
+	DEFINE_BIND_FUNCTIONNAME(SetText);
+	DEFINE_BIND_FUNCTIONNAME(SetStyle);
 
 	DEFINE_BIND_FUNCTIONNAME(SetImage);
 	DEFINE_BIND_FUNCTIONNAME(SetCursorMap);
@@ -41,6 +41,59 @@ namespace ApiGui
 	const auto OnTryDragDrop_FunctionName = "OnTryDragDrop";
 }
 
+
+template<typename TYPE>
+void EnumStyleValues(Bind::TObject& Style,TYPE& Control)
+{
+	Array<std::string> UnhandledKeys;
+	
+	Array<std::string> Keys;
+	Style.GetMemberNames( GetArrayBridge(Keys) );
+
+	for ( auto k=0;	k<Keys.GetSize();	k++ )
+	{
+		const auto& Key = Keys[k];
+		auto LowerKey = Key;
+		//	lowercase
+		std::transform(LowerKey.begin(), LowerKey.end(), LowerKey.begin(), [](unsigned char c){ return std::tolower(c); });
+		if ( LowerKey == "visible" )
+		{
+			auto Value = Style.GetBool(Key);
+			Control.SetVisible(Value);
+		}
+		else if ( LowerKey == "colour" )
+		{
+			//	gr: todo: extract alpha if they provided 4
+			BufferArray<uint8_t,4> Rgba;
+			Style.GetArray(Key,GetArrayBridge(Rgba));
+			if ( Rgba.GetSize() < 3 )
+			{
+				std::stringstream Error;
+				Error << "Style " << Key << " expects 3 components. " << Rgba.GetSize() << " provided";
+				throw Soy::AssertException(Error);
+			}
+			vec3x<uint8_t> Rgb( Rgba[0], Rgba[1], Rgba[2] );
+			Control.SetColour(Rgb);
+		}
+		else
+		{
+			UnhandledKeys.PushBack(LowerKey);
+		}
+	}
+	
+	if ( !UnhandledKeys.IsEmpty() )
+	{
+		std::stringstream Error;
+		Error << "Unhandled style keys [";
+		for ( auto i=0;	i<UnhandledKeys.GetSize();	i++ )
+		{
+			auto& Key = UnhandledKeys[i];
+			Error << Key << ",";
+		}
+		throw Soy::AssertException(Error);
+	}
+}
+	
 
 void ApiGui::Bind(Bind::TContext& Context)
 {
@@ -62,7 +115,7 @@ void ApiGui::TSliderWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetMinMax>( &TSliderWrapper::SetMinMax );
 	Template.BindFunction<BindFunction::SetValue>( &TSliderWrapper::SetValue );
-	Template.BindFunction<BindFunction::SetVisible>( &TSliderWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetStyle>( &TSliderWrapper::SetStyle );
 }
 
 void ApiGui::TSliderWrapper::Construct(Bind::TCallback& Params)
@@ -107,10 +160,10 @@ void ApiGui::TSliderWrapper::SetValue(Bind::TCallback& Params)
 	mControl->SetValue( Value );
 }
 
-void ApiGui::TSliderWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TSliderWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Style = Params.GetArgumentObject(0);
+	EnumStyleValues( Style, *mControl );
 }
 
 
@@ -219,8 +272,8 @@ void ApiGui::TWindowWrapper::EnableScrollbars(Bind::TCallback& Params)
 
 void ApiGui::TLabelWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::SetValue>( &TLabelWrapper::SetValue );
-	Template.BindFunction<BindFunction::SetVisible>( &TLabelWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetText>( &TLabelWrapper::SetText );
+	Template.BindFunction<BindFunction::SetStyle>( &TLabelWrapper::SetStyle );
 }
 
 void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
@@ -242,16 +295,16 @@ void ApiGui::TLabelWrapper::Construct(Bind::TCallback& Params)
 	}
 }
 
-void ApiGui::TLabelWrapper::SetValue(Bind::TCallback& Params)
+void ApiGui::TLabelWrapper::SetText(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
 	mControl->SetValue( Value );
 }
 
-void ApiGui::TLabelWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TLabelWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Value = Params.GetArgumentObject(0);
+	EnumStyleValues( Value, *mControl );
 }
 
 
@@ -259,8 +312,9 @@ void ApiGui::TLabelWrapper::SetVisible(Bind::TCallback& Params)
 void ApiGui::TTextBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>( &TTextBoxWrapper::SetValue );
+	Template.BindFunction<BindFunction::SetText>( &TTextBoxWrapper::SetText );
 	Template.BindFunction<BindFunction::GetValue>( &TTextBoxWrapper::GetValue );
-	Template.BindFunction<BindFunction::SetVisible>( &TTextBoxWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetStyle>( &TTextBoxWrapper::SetStyle );
 	
 }
 
@@ -290,16 +344,21 @@ void ApiGui::TTextBoxWrapper::SetValue(Bind::TCallback& Params)
 	mControl->SetValue( Value );
 }
 
+void ApiGui::TTextBoxWrapper::SetText(Bind::TCallback& Params)
+{
+	SetValue(Params);
+}
+
 void ApiGui::TTextBoxWrapper::GetValue(Bind::TCallback& Params)
 {
 	auto Value = mControl->GetValue();
 	Params.Return(Value);
 }
 
-void ApiGui::TTextBoxWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TTextBoxWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Value = Params.GetArgumentObject(0);
+	EnumStyleValues( Value, *mControl );
 }
 
 void ApiGui::TTextBoxWrapper::OnChanged(const std::string& NewValue)
@@ -321,8 +380,8 @@ void ApiGui::TTickBoxWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>( &TTickBoxWrapper::SetValue );
 	Template.BindFunction<BindFunction::GetValue>( &TTickBoxWrapper::GetValue );
-	Template.BindFunction<BindFunction::SetLabel>( &TTickBoxWrapper::SetLabel );
-	Template.BindFunction<BindFunction::SetVisible>( &TTickBoxWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetText>( &TTickBoxWrapper::SetText );
+	Template.BindFunction<BindFunction::SetStyle>( &TTickBoxWrapper::SetStyle );
 }
 
 void ApiGui::TTickBoxWrapper::Construct(Bind::TCallback& Params)
@@ -358,16 +417,16 @@ void ApiGui::TTickBoxWrapper::GetValue(Bind::TCallback& Params)
 	Params.Return(Value);
 }
 
-void ApiGui::TTickBoxWrapper::SetLabel(Bind::TCallback& Params)
+void ApiGui::TTickBoxWrapper::SetText(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
 	mControl->SetLabel( Value );
 }
 
-void ApiGui::TTickBoxWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TTickBoxWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Value = Params.GetArgumentObject(0);
+	EnumStyleValues( Value, *mControl );
 }
 
 void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
@@ -377,6 +436,7 @@ void ApiGui::TTickBoxWrapper::OnChanged(bool& NewValue)
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnChanged");
 		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
 		Callback.SetArgumentBool(0, NewValue);
 		ThisOnChanged.Call( Callback );
 	};
@@ -419,6 +479,7 @@ void ApiGui::TColourPickerWrapper::OnChanged(vec3x<uint8_t>& NewValue)
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnChanged");
 		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
 		Callback.SetArgumentArray( 0, GetArrayBridge(RgbArray) );
 		ThisOnChanged.Call( Callback );
 	};
@@ -432,6 +493,7 @@ void ApiGui::TColourPickerWrapper::OnClosed()
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnClosed");
 		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
 		ThisOnChanged.Call( Callback );
 	};
 	this->mContext.Queue( Callback );
@@ -442,7 +504,7 @@ void ApiGui::TColourPickerWrapper::OnClosed()
 void ApiGui::TColourButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<BindFunction::SetValue>(&TColourButtonWrapper::SetValue);
-	Template.BindFunction<BindFunction::SetVisible>( &TColourButtonWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetStyle>( &TColourButtonWrapper::SetStyle );
 }
 
 void ApiGui::TColourButtonWrapper::Construct(Bind::TCallback& Params)
@@ -483,10 +545,10 @@ void ApiGui::TColourButtonWrapper::SetValue(Bind::TCallback& Params)
 	mControl->SetValue(Rgb);
 }
 
-void ApiGui::TColourButtonWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TColourButtonWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Value = Params.GetArgumentObject(0);
+	EnumStyleValues( Value, *mControl );
 }
 
 
@@ -505,6 +567,7 @@ void ApiGui::TColourButtonWrapper::OnChanged(vec3x<uint8_t>& NewValue, bool Fina
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnChanged");
 		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
 		Callback.SetArgumentArray(0, GetArrayBridge(Rgbf));
 		Callback.SetArgumentBool(1, FinalValue);
 		ThisOnChanged.Call(Callback);
@@ -522,7 +585,7 @@ void ApiGui::TImageMapWrapper::CreateTemplate(Bind::TTemplate& Template)
 	Template.BindFunction<BindFunction::SetImage>(&TImageMapWrapper::SetImage);
 	Template.BindFunction<BindFunction::SetCursorMap>(&TImageMapWrapper::SetCursorMap);
 	Template.BindFunction<BindFunction::WaitForMouseEvent>(&TImageMapWrapper::WaitForMouseEvent);
-	Template.BindFunction<BindFunction::SetVisible>( &TImageMapWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetStyle>( &TImageMapWrapper::SetStyle );
 }
 
 void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
@@ -545,10 +608,10 @@ void ApiGui::TImageMapWrapper::Construct(Bind::TCallback& Params)
 }
 
 
-void ApiGui::TImageMapWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TImageMapWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Value = Params.GetArgumentObject(0);
+	EnumStyleValues( Value, *mControl );
 }
 
 void ApiGui::TImageMapWrapper::SetImage(Bind::TCallback& Params)
@@ -669,8 +732,8 @@ void ApiGui::TGuiControlWrapper::OnDragDrop(const ArrayBridge<std::string>& File
 
 void ApiGui::TButtonWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-	Template.BindFunction<BindFunction::SetLabel>( &TButtonWrapper::SetLabel );
-	Template.BindFunction<BindFunction::SetVisible>( &TButtonWrapper::SetVisible );
+	Template.BindFunction<BindFunction::SetText>( &TButtonWrapper::SetText );
+	Template.BindFunction<BindFunction::SetStyle>( &TButtonWrapper::SetStyle );
 }
 
 void ApiGui::TButtonWrapper::Construct(Bind::TCallback& Params)
@@ -698,16 +761,16 @@ void ApiGui::TButtonWrapper::Construct(Bind::TCallback& Params)
 	mControl->mOnClicked = std::bind( &TButtonWrapper::OnClicked, this );
 }
 
-void ApiGui::TButtonWrapper::SetLabel(Bind::TCallback& Params)
+void ApiGui::TButtonWrapper::SetText(Bind::TCallback& Params)
 {
 	auto Value = Params.GetArgumentString(0);
 	mControl->SetLabel( Value );
 }
 
-void ApiGui::TButtonWrapper::SetVisible(Bind::TCallback& Params)
+void ApiGui::TButtonWrapper::SetStyle(Bind::TCallback& Params)
 {
-	auto Value = Params.GetArgumentBool(0);
-	mControl->SetVisible( Value );
+	auto Value = Params.GetArgumentObject(0);
+	EnumStyleValues( Value, *mControl );
 }
 
 void ApiGui::TButtonWrapper::OnClicked()
@@ -717,6 +780,7 @@ void ApiGui::TButtonWrapper::OnClicked()
 		auto This = this->GetHandle(Context);
 		auto ThisOnChanged = This.GetFunction("OnClicked");
 		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
 		ThisOnChanged.Call( Callback );
 	};
 	this->mContext.Queue( Callback );
