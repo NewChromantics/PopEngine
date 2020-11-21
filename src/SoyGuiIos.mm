@@ -696,6 +696,7 @@ void Platform::TButton::BindEvents()
 	
 	//	make text wrap
 	if ( [mControl isKindOfClass:[UIButton class]] )
+	//if ( [mControl respondsToSelector:@"titleLabel"])
 	{
 		UIButton* Button = (UIButton*)mControl;
 		Button.titleLabel.numberOfLines = 0;
@@ -1107,22 +1108,69 @@ void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
 	RunJobOnMainThread( Job, false );
 }
 
+template<typename TYPE>
+UIColor* GetColour(TYPE* Member,const vec3x<uint8_t>& Rgb)
+{
+	CGFloat r = Rgb[0] / 255.f;
+	CGFloat g = Rgb[1] / 255.f;
+	CGFloat b = Rgb[2] / 255.f;
+	CGFloat a = 1.0f;
+		
+	//	get existing alpha
+	[Member getRed:nil green:nil blue:nil alpha:&a];
+
+	auto* Colour = [UIColor colorWithRed:r green:g blue:b alpha:a];
+	return Colour;
+}
+
 
 template<typename NATIVECLASS>
 void PlatformControl<NATIVECLASS>::SetColour(const vec3x<uint8_t>& Rgb)
 {
 	auto Job = [=]() mutable
 	{
-		CGFloat r = Rgb[0] / 255.f;
-		CGFloat g = Rgb[1] / 255.f;
-		CGFloat b = Rgb[2] / 255.f;
-		CGFloat a = 1.0f;
+		mControl.tintColor = GetColour( mControl.tintColor, Rgb );
 		
-		//	get existing alpha
-		[mControl.tintColor getRed:nil green:nil blue:nil alpha:&a];
+		//	update label if object has one
+		//	gr: this isn't working on custom button, they need to be system buttons
+		//	probably need to use 
+		//	- (UIColor *)titleColorForState:(UIControlState)state;
+		//	for complete ness
+		if ( [mControl respondsToSelector:NSSelectorFromString(@"titleLabel")])
+		{
+			auto* Label = (UIView*)[mControl titleLabel];
+			//	gr: this doesn't actually do anything, it doesn't tint text
+			Label.tintColor = GetColour( Label.tintColor, Rgb );
+			
+			if ( [Label isKindOfClass:[UILabel class]] )
+			{
+				auto* LabelLabel = (UILabel*)Label;
+				LabelLabel.textColor = GetColour( LabelLabel.textColor, Rgb );
+			}
+		}
 
-		auto* Colour = [UIColor colorWithRed:r green:g blue:b alpha:a];
-		mControl.tintColor = Colour;
+	/*
+		if ( [mControl respondsToSelector:NSSelectorFromString(@"titleColorForState")])
+		{
+			//	change colour of current state
+			auto State = mControl.state;	<-- no such thing
+			auto* OldColour = [mControl titleColorForState:State];
+			auto NewColour = GetColour( OldColour, Rgb );
+			[mControl setTitleColor:NewColour forState:State];
+		}
+		*/
+		if ( [mControl isKindOfClass:[UILabel class]] )
+		{
+			auto* LabelLabel = (UILabel*)mControl;
+			LabelLabel.textColor = GetColour( LabelLabel.textColor, Rgb );
+		}
+		
+		if ( [mControl isKindOfClass:[UILabel class]] )
+		{
+			auto* LabelLabel = (UILabel*)mControl;
+			LabelLabel.textColor = GetColour( LabelLabel.textColor, Rgb );
+		}
+		
 	};
 	RunJobOnMainThread( Job, false );
 }
