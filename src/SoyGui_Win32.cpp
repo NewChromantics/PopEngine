@@ -1275,6 +1275,11 @@ std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent, Soy::Rectx<in
 	return Control;
 }
 
+std::shared_ptr<SoyTickBox> Platform::GetTickBox(SoyWindow& Parent, const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
@@ -1310,6 +1315,11 @@ std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent,
 }
 
 
+std::shared_ptr<Gui::TImageMap> Platform::GetImageMap(SoyWindow& Parent, const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& ParentControl = dynamic_cast<Platform::TWindow&>(Parent);
@@ -1331,7 +1341,7 @@ const DWORD Slider_StyleExFlags = 0;
 const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_AUTOTICKS;
 //const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | /*TBS_AUTOTICKS |*/ TBS_ENABLESELRANGE;
 
-Platform::TSlider::TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+Platform::TSlider::TSlider(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("Slider", TRACKBAR_CLASS, Parent, Slider_StyleFlags, Slider_StyleExFlags, Rect)
 {
 }
@@ -1418,7 +1428,7 @@ const DWORD Label_StyleExFlags = 0;
 const DWORD Label_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | SS_LEFTNOWORDWRAP;
 //	gr: removed SS_SIMPLE as it doesn't clear the whole box when repainting
 
-Platform::TLabel::TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+Platform::TLabel::TLabel(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("Label", "STATIC", Parent, Label_StyleFlags, Label_StyleExFlags, Rect)
 {
 }
@@ -1441,7 +1451,7 @@ const DWORD TextBox_StyleExFlags = 0;
 const DWORD TextBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
 
 
-Platform::TTextBox::TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+Platform::TTextBox::TTextBox(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("TextBox", "EDIT", Parent, TextBox_StyleFlags, TextBox_StyleExFlags, Rect)
 {
 	//	SetWindowText is called by the constructor, (we currently miss the cmd)
@@ -1507,7 +1517,7 @@ const DWORD TickBox_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHE
 //BS_CHECKBOX
 //BS_AUTOCHECKBOX
 
-Platform::TTickBox::TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+Platform::TTickBox::TTickBox(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("TickBox", "BUTTON", Parent, TickBox_StyleFlags, TickBox_StyleExFlags, Rect)
 {
 }
@@ -1552,7 +1562,7 @@ const DWORD ColourButton_StyleExFlags = 0;
 const DWORD ColourButton_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
 
 
-Platform::TColourButton::TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+Platform::TColourButton::TColourButton(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect) :
 	TControl("ColourButton", COLOURBUTTON_CLASSNAME, Parent, ColourButton_StyleFlags, ColourButton_StyleExFlags, Rect)
 {
 }
@@ -1591,8 +1601,8 @@ const DWORD ImageMap_StyleExFlags = 0;
 const DWORD ImageMap_StyleFlags = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
 
 
-Platform::TImageMap::TImageMap(TControl& Parent, Soy::Rectx<int32_t>& Rect) :
-	TControl("ImageMap", IMAGEMAP_CLASSNAME, Parent, ImageMap_StyleFlags, ImageMap_StyleExFlags, Rect)
+Platform::TImageMap::TImageMap(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect) :
+	Platform::TControl("ImageMap", IMAGEMAP_CLASSNAME, Parent, ImageMap_StyleFlags, ImageMap_StyleExFlags, Rect)
 {
 }
 
@@ -1752,3 +1762,23 @@ virtual HRESULT  Platform::TDragAndDropHandler::Drop( __RPC__in_opt IDataObject 
 	return S_OK;
 }
 #endif
+
+
+void Platform::TControl::SetVisible(bool Visible)
+{
+	auto Command = Visible ? SW_SHOW : SW_HIDE;
+	if (!ShowWindow(mHwnd, Command))
+	{
+		Platform::ThrowLastError("ShowWindow()");
+	}
+}
+
+void Platform::TControl::SetColour(const vec3x<uint8_t>& Rgb)
+{
+	//	need to set a "control colour" variable and handle
+	//	WM_CTLCOLOREDIT 
+	//	WM_CTLCOLORSTATIC etc
+	//	and cause a repaint here
+	std::Debug << "todo: win32: SetColour" << std::endl;
+}
+

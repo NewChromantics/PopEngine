@@ -391,6 +391,12 @@
     <ClInclude Include="..\src\SoyOpenglContext_Win32.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyStreamBuffer.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SoyLib\src\SoyPlatform.h">
+      <Filter>SoyLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\PopEngineAppBundle.xcconfig">
@@ -975,6 +981,12 @@
     </ClCompile>
     <ClCompile Include="..\src\SoyImageProxy.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyStreamBuffer.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyPlatform.cpp">
+      <Filter>SoyLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 #include "TApiGui.h"
 #include "TApiCommon.h"
+#include <cctype>	//	std::tolower on windows
 
 #if !defined(TARGET_LINUX)
 #include "SoyOpenglWindow.h"

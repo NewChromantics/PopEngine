@@ -67,6 +67,9 @@ public:
 	TControl&		GetChild(HWND Handle);
 	virtual void	AddChild(TControl& Child);
 
+	void			SetVisible(bool Visible);
+	void			SetColour(const vec3x<uint8_t>& Rgb);
+
 public:
 	std::function<void(TControl&)>	mOnPaint;
 	std::function<void(TControl&, const TMousePos&, SoyMouseButton::Type)>	mOnMouseDown;
@@ -122,9 +125,12 @@ public:
 class Platform::TSlider : public TControl, public SoySlider
 {
 public:
-	TSlider(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TSlider(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override { Platform::TControl::SetColour(Rgb); }
+
 	virtual void		SetMinMax(uint16_t Min, uint16_t Max, uint16_t NotchCount) override;
 	virtual void		SetValue(uint16_t Value) override;
 	virtual uint16_t	GetValue() override;
@@ -135,9 +141,12 @@ public:
 class Platform::TLabel : public TControl, public SoyLabel
 {
 public:
-	TLabel(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TLabel(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override { Platform::TControl::SetColour(Rgb); }
+
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
 };
@@ -146,9 +155,12 @@ public:
 class Platform::TTextBox : public TControl, public SoyTextBox
 {
 public:
-	TTextBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TTextBox(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override { Platform::TControl::SetColour(Rgb); }
+
 	virtual void		SetValue(const std::string& Value) override;
 	virtual std::string	GetValue() override;
 
@@ -162,9 +174,12 @@ private:
 class Platform::TTickBox : public TControl, public SoyTickBox
 {
 public:
-	TTickBox(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TTickBox(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void		SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override { Platform::TControl::SetColour(Rgb); }
+
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override;
 	virtual void		SetLabel(const std::string& Label) override;
@@ -176,9 +191,12 @@ public:
 class Platform::TColourButton : public TControl, public SoyColourButton
 {
 public:
-	TColourButton(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TColourButton(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void			SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
+	virtual void			SetColour(const vec3x<uint8_t>& Rgb) override { Platform::TControl::SetColour(Rgb); }
+
 	virtual void			SetValue(vec3x<uint8_t> Value) override;
 	virtual vec3x<uint8_t>	GetValue() override;
 
@@ -189,14 +207,15 @@ public:
 class Platform::TImageMap : public TControl, public Gui::TImageMap
 {
 public:
-	TImageMap(TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TImageMap(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
 
-	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	SetClientRect(Rect); }
+	virtual void			SetVisible(bool Visible) override					{	Platform::TControl::SetVisible(Visible); }
+	virtual void			SetColour(const vec3x<uint8_t>& Rgb) override		{	Platform::TControl::SetColour(Rgb); }
+
 	virtual void			SetImage(const SoyPixelsImpl& Pixels) override;
 	virtual void			SetCursorMap(const SoyPixelsImpl& CursorMap, const ArrayBridge<std::string>&& CursorIndexes)override;
 
 	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
-
-
 

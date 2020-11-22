@@ -97,6 +97,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyPlatform.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyPng.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyProtocol.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyRef.h" />
@@ -106,6 +107,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoySocket.h" />
     <ClInclude Include="..\src\SoyLib\src\SoySocketStream.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyStream.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyStreamBuffer.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyString.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyThread.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyTime.h" />
@@ -284,8 +286,10 @@
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyPlatform.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyStreamBuffer.cpp" />
     <ClCompile Include="..\src\SoyLib\src\Win32ColourControl.c" />
     <ClCompile Include="..\src\SoyLib\src\Win32ImageMapControl.c" />
     <ClCompile Include="..\src\SoyOpenglContext_Win32.cpp" />
