@@ -119,6 +119,7 @@
 		BF51B8CC256A82CE004DE4C7 /* PopH264.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF51B8CE256A82D2004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
 		BF51B8CF256A82D2004DE4C7 /* PopH264.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF51B8D4256AD19B004DE4C7 /* TestGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF51B8D3256AD19B004DE4C7 /* TestGui.swift */; };
 		BF51B8FD256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF51B8FE256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF51B8FF256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
@@ -427,6 +428,8 @@
 		BF5091842282194700DCBB4B /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_libbase.dylib; sourceTree = "<group>"; };
 		BF51B89D2569A256004DE4C7 /* PopCap.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = PopCap.storyboard; path = UnitTest/Gui/PopCap.storyboard; sourceTree = SOURCE_ROOT; };
 		BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PopH264.xcframework; path = "PopEngine.Package/node_modules/@newchromantics/poph264/PopH264.xcframework"; sourceTree = SOURCE_ROOT; };
+		BF51B8D2256AD19A004DE4C7 /* PopEngineTestApp_Ios-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PopEngineTestApp_Ios-Bridging-Header.h"; sourceTree = "<group>"; };
+		BF51B8D3256AD19B004DE4C7 /* TestGui.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestGui.swift; sourceTree = "<group>"; };
 		BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PopCameraDevice.xcframework; path = "PopEngine.Package/node_modules/@newchromantics/popcameradevice/PopCameraDevice.xcframework"; sourceTree = SOURCE_ROOT; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
@@ -828,7 +831,9 @@
 			children = (
 				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
 				BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */,
+				BF51B8D3256AD19B004DE4C7 /* TestGui.swift */,
 				BF151F7923845F2F00A70EBF /* PopEngine_Ios_Info.plist */,
+				BF51B8D2256AD19A004DE4C7 /* PopEngineTestApp_Ios-Bridging-Header.h */,
 			);
 			path = Source_Ios;
 			sourceTree = "<group>";
@@ -1571,6 +1576,7 @@
 					58C2000124F901B7002DAC99 = {
 						CreatedOnToolsVersion = 11.5;
 						DevelopmentTeam = X52DR36JY2;
+						LastSwiftMigration = 1200;
 						ProvisioningStyle = Automatic;
 					};
 					BF151F7523845F2E00A70EBF = {
@@ -1680,6 +1686,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF693A30250D17F9002E3772 /* PopEngineUnitTestMain.cpp in Sources */,
+				BF51B8D4256AD19B004DE4C7 /* TestGui.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1961,6 +1968,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Source_Ios/PopEngineTestApp_Ios-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug_JavascriptCore;
@@ -2038,6 +2048,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Source_Ios/PopEngineTestApp_Ios-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug_V8;
@@ -2115,6 +2128,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Source_Ios/PopEngineTestApp_Ios-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug_Chakra;
@@ -2128,6 +2144,7 @@
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -2165,6 +2182,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Source_Ios/PopEngineTestApp_Ios-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
