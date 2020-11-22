@@ -117,10 +117,12 @@
 		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; };
 		BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */ = {isa = PBXBuildFile; fileRef = BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */; };
 		BF51B89E2569A25E004DE4C7 /* PopCap.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BF51B89D2569A256004DE4C7 /* PopCap.storyboard */; };
-		BF51B8BC256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
-		BF51B8BD256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
-		BF51B8BE256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
-		BF51B8BF256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
+		BF51B8BC256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF51B8BE256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF51B8CB256A82CE004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
+		BF51B8CC256A82CE004DE4C7 /* PopH264.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BF51B8CE256A82D2004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
+		BF51B8CF256A82D2004DE4C7 /* PopH264.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
@@ -238,7 +240,7 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
-		BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF1826B524229EAF006FEB93 /* PopCameraDevice_Osx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
@@ -289,6 +291,7 @@
 			files = (
 				58C2004824F90993002DAC99 /* PopEngine_Ios.framework in Embed Frameworks */,
 				58C2004624F9094D002DAC99 /* PopCameraDevice_Ios.framework in Embed Frameworks */,
+				BF51B8CC256A82CE004DE4C7 /* PopH264.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -301,6 +304,7 @@
 			files = (
 				BF7A2CD224F1A80400CD3A32 /* PopCameraDevice_Osx.framework in CopyFiles */,
 				BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */,
+				BF51B8CF256A82D2004DE4C7 /* PopH264.xcframework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -702,8 +706,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF51B8BF256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */,
 				58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */,
+				BF51B8CB256A82CE004DE4C7 /* PopH264.xcframework in Frameworks */,
 				58C2004524F9094D002DAC99 /* PopCameraDevice_Ios.framework in Frameworks */,
 				58C2004724F90993002DAC99 /* PopEngine_Ios.framework in Frameworks */,
 			);
@@ -768,8 +772,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF51B8BD256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */,
 				BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */,
+				BF51B8CE256A82D2004DE4C7 /* PopH264.xcframework in Frameworks */,
 				BF7A2CD124F1A80400CD3A32 /* PopCameraDevice_Osx.framework in Frameworks */,
 				BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */,
 			);
