@@ -226,6 +226,25 @@ bool HandleDragFilenames(id sender,std::function<bool(ArrayBridge<std::string>&)
 @end
 
 
+
+template<typename NATIVECLASS>
+class PlatformControl
+{
+public:
+	virtual ~PlatformControl();
+	//void			SetControl(UIView* View);		//	type checked		
+	//void			AddToParent(Platform::TWindow& Window);
+
+	void			SetVisible(bool Visible);
+	void			SetColour(const vec3x<uint8_t>& Rgb);
+
+	TResponder*		mResponder = [TResponder alloc];
+	NATIVECLASS*	mControl = nullptr;
+};
+	
+
+
+
 class Platform::TNsView
 {
 protected:
@@ -316,30 +335,15 @@ public:
 };
 
 
-class Platform::TSlider : public SoySlider
+class Platform::TSlider : public SoySlider, public PlatformControl<NSSlider>
 {
 public:
 	TSlider(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
-	~TSlider()
-	{
-		//	gr: this isn't deleting the control from the window, and so responder still exists, but callback doesn't fire
-		if ( mResponder )
-		{
-			mResponder->mCallback = []
-			{
-				std::Debug << "Responder owner deleted" << std::endl;
 
-			};
-			[mResponder release];
-		}
-
-		if ( mControl )
-		{
-			[mControl release];
-		}
-	}
 
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect)override;
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
 
 	virtual void		SetMinMax(uint16_t Min,uint16_t Max,uint16_t NotchCount) override;
 	virtual void		SetValue(uint16_t Value) override;
@@ -357,8 +361,6 @@ protected:
 public:
 	uint16_t				mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
 	PopWorker::TJobQueue&	mThread;		//	NS ui needs to be on the main thread
-	TResponder*				mResponder = [TResponder alloc];
-	NSSlider*				mControl = nullptr;
 };
 
 
@@ -367,7 +369,7 @@ public:
 //	todo: lets just do a text box for now and make it readonly later
 //	https://stackoverflow.com/a/20169310/355753
 template<typename BASETYPE=SoyTextBox>
-class Platform::TTextBox_Base : public BASETYPE, public TNsView
+class Platform::TTextBox_Base : public BASETYPE, public TNsView, public PlatformControl<NSTextField>
 {
 public:
 	TTextBox_Base(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect);
@@ -380,6 +382,8 @@ public:
 
 	virtual NSControl*		GetControl() override	{	return mControl;	}
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+	virtual void			SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void			SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
 
 	virtual void			SetValue(const std::string& Value) override;
 	virtual std::string		GetValue() override	{	return mLastValue;	}
@@ -393,9 +397,6 @@ protected:
 public:
 	std::string				mLastValue;		//	as all UI is on the main thread, we have to cache value for reading
 	size_t					mValueVersion = 0;
-
-	TResponder*				mResponder = [TResponder alloc];
-	NSTextField*			mControl = nullptr;
 };
 
 class Platform::TTextBox : public Platform::TTextBox_Base<SoyTextBox>
@@ -431,7 +432,7 @@ public:
 };
 
 
-class Platform::TTickBox : public SoyTickBox, public TNsView
+class Platform::TTickBox : public SoyTickBox, public TNsView, public PlatformControl<NSButton>
 {
 public:
 	TTickBox(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
@@ -442,6 +443,8 @@ public:
 
 	virtual NSControl*	GetControl() override	{	return mControl;	}
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
 
 	virtual void		SetValue(bool Value) override;
 	virtual bool		GetValue() override	{	return mLastValue;	}
@@ -458,8 +461,6 @@ protected:
 
 public:
 	bool					mLastValue = 0;	//	as all UI is on the main thread, we have to cache value for reading
-	TResponder*				mResponder = [TResponder alloc];
-	NSButton*				mControl = nullptr;
 };
 
 
@@ -478,7 +479,7 @@ public:
 };
 
 
-class Platform::TColourButton : public SoyColourButton, public TNsView
+class Platform::TColourButton : public SoyColourButton, public TNsView, public PlatformControl<NSColorWell>
 {
 public:
 	TColourButton(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t>& Rect);
@@ -489,22 +490,20 @@ public:
 
 	virtual NSControl*		GetControl() override	{	return mControl;	}
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+	virtual void			SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void			SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
+
 	virtual void			SetValue(vec3x<uint8_t> Value) override;
 
 	virtual vec3x<uint8_t>	GetValue() override
 	{
 		return GetColour(mControl.color);
 	}
-
-
-private:
-	TResponder*		mResponder = [TResponder alloc];
-	NSColorWell*	mControl = nullptr;
 };
 
 
 
-class Platform::TImageMap : public Gui::TImageMap, public TNsView
+class Platform::TImageMap : public Gui::TImageMap, public TNsView, public PlatformControl<NSImageView>
 {
 public:
 	TImageMap(PopWorker::TJobQueue& Thread,TWindow& Parent,Soy::Rectx<int32_t> Rect);
@@ -512,6 +511,9 @@ public:
 
 	virtual NSControl*	GetControl() override	{	return mControl;	}
 	virtual void		SetRect(const Soy::Rectx<int32_t>& Rect) override	{	TNsView::SetRect(Rect);	}
+	virtual void		SetVisible(bool Visible) override		{	PlatformControl::SetVisible(Visible);	}
+	virtual void		SetColour(const vec3x<uint8_t>& Rgb) override	{	PlatformControl::SetColour(Rgb);	}
+
 	virtual void		SetImage(const SoyPixelsImpl& Pixels) override;
 	virtual void		SetCursorMap(const SoyPixelsImpl& CursorMap,const ArrayBridge<std::string>&& CursorIndexes)override;
 
@@ -519,8 +521,6 @@ private:
 	void				FreeImage();
 
 public:
-	TResponder*			mResponder = [TResponder alloc];
-	NSImageView*		mControl = nullptr;
 	CGImageRef			mCgImage = nullptr;
 	NSImage*			mNsImage = nullptr;
 	SoyPixels			mPixelsImage;		//	we keep a copy for thread use and CGImage references these bytes
@@ -1054,6 +1054,13 @@ std::shared_ptr<SoyColourButton> Platform::CreateColourButton(SoyWindow& Parent,
 	return pSlider;
 }
 
+
+std::shared_ptr<Gui::TImageMap> Platform::GetImageMap(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
+
 std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy::Rectx<int32_t>& Rect)
 {
 	auto& Thread = *Soy::Platform::gMainThread;
@@ -1156,6 +1163,11 @@ void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
 }
 
 
+
+std::shared_ptr<SoyTickBox> Platform::GetTickBox(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
 
 
 std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx<int32_t>& Rect)
@@ -1644,4 +1656,47 @@ Platform::TMetalView::TMetalView(NSView* View)
 	mtl_device = MTLCreateSystemDefaultDevice();
 	[mMTKView setDevice: mtl_device];
 	
+}
+
+template<typename NATIVECLASS>
+PlatformControl<NATIVECLASS>::~PlatformControl()
+{
+	//	gr: this isn't deleting the control from the window, and so responder still exists, but callback doesn't fire
+	if ( mResponder )
+	{
+		mResponder->mCallback = []
+		{
+			std::Debug << "Responder owner deleted" << std::endl;
+		};
+		[mResponder release];
+	}
+
+	if ( mControl )
+	{
+		[mControl release];
+	}
+}
+
+template<typename NATIVECLASS>
+void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
+{
+	auto Job = [=]()
+	{
+		//	gr: if this is in a cell and the only thing in the cell, we need to
+		//		hide it. put this in some parent callback here  
+		mControl.hidden = Visible ? NO : YES;
+	};
+	RunJobOnMainThread( Job, false );
+}
+
+
+
+template<typename NATIVECLASS>
+void PlatformControl<NATIVECLASS>::SetColour(const vec3x<uint8_t>& Rgb)
+{
+	auto Job = [=]() mutable
+	{
+		std::Debug << __PRETTY_FUNCTION__ << " todo" << std::endl;		
+	};
+	RunJobOnMainThread( Job, false );
 }
