@@ -740,12 +740,13 @@ PopH264Decoder::TInstance::TInstance()
 {
 	PopH264::LoadDll();
 	
-	auto Decoder = POPH264_DECODERMODE_SOFTWARE;
-	mHandle = PopH264_CreateInstance(Decoder);
+	const char* OptionsJson = "{}";
+	char ErrorBuffer[2000] = {0};
+	mHandle = PopH264_CreateDecoder(OptionsJson,ErrorBuffer,std::size(ErrorBuffer));
 	if ( mHandle <= 0 )
 	{
 		std::stringstream Error;
-		Error << "Failed to create PopH264 decoder instance. Error=" << mHandle;
+		Error << "Failed to create PopH264 decoder instance. Error=" << ErrorBuffer << " handle=" << mHandle;
 		throw Soy::AssertException(Error.str());
 	}
 
