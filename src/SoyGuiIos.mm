@@ -873,37 +873,34 @@ bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView);
 bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView)
 {
 	bool FoundView;
-	auto Job = [&]()
+	if ( !EnumView(View) )
 	{
-		if ( !EnumView(View) )
-		{
-			FoundView = false;
-			return;
-		}
-		auto* Array = View.subviews;
-		auto Size = [Array count];
+		FoundView = false;
+		return false;
+	}
+	auto* Array = View.subviews;
+	auto Size = [Array count];
 		for ( auto i=0;	i<Size;	i++ )
 		{
 			auto Element = [Array objectAtIndex:i];
-			if ( !RecurseUIViews( Element, EnumView ) )
-			{
-				FoundView = false;
-				return;
-			}
+		if ( !RecurseUIViews( Element, EnumView ) )
+		{
+			FoundView = false;
+			return false;
 		}
-		
-		FoundView = true;
-		return;
-	};
-	RunJobOnMainThread( Job, true );
-	return Job;
+	}
+	
+	FoundView = true;
+	return true;
 }
 
 void Platform::TWindow::EnumChildren(std::function<bool(UIView*)> EnumChild)
 {
-	auto* Window = GetWindow();
-	
-	RecurseUIViews( Window, EnumChild );
+	auto Job = [&]()
+	{
+		RecurseUIViews( mWindow, EnumChild );
+	};
+	RunJobOnMainThread( Job, true );
 }
 
 
