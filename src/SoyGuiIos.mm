@@ -136,6 +136,10 @@ template<typename NATIVECLASS>
 class PlatformControl
 {
 public:
+	~PlatformControl()
+	{
+		std::Debug << "Control deallocating" << std::endl;
+	}
 	void			SetControl(UIView* View);		//	type checked		
 	void			AddToParent(Platform::TWindow& Window);
 
@@ -783,6 +787,7 @@ Platform::TWindow::TWindow(const std::string& Name)
 	auto* GlobalWindow = GetWindow();
 	if ( !GlobalWindow )
 		throw Soy::AssertException("Couldn't get ios window");
+	mWindow = GlobalWindow;
 
 	//	if we have a name, and there's a matching child
 	//	then this is a "sub window"
@@ -797,8 +802,16 @@ Platform::TWindow::TWindow(const std::string& Name)
 		}
 	}
 	
-	mWindow = GlobalWindow;
 	mContentView = mWindow.rootViewController.view;
+	
+	//	gr: list all children
+	auto EnumChild = [&](UIView* Child)
+	{
+		auto Name = GetClassName(Child);
+		std::Debug << "Child: " << Name << std::endl;
+		return true;
+	};
+	EnumChildren(EnumChild);
 }
 
 UIWindow* Platform::TWindow::GetWindow()
@@ -807,7 +820,51 @@ UIWindow* Platform::TWindow::GetWindow()
 	auto Job = [&]()
 	{
 		auto* App = [UIApplication sharedApplication];
+
+		//	objective-c storyboard's main window
 		Window = App.delegate.window;
+		if ( Window )
+			return;
+
+		//	loop through all windows
+		auto EnumWindow = [&](UIWindow* AWindow)
+		{
+			bool IsMainWindow = AWindow.keyWindow;
+			std::Debug << "Found window IsMainWindow=" << (IsMainWindow?"true":"false") << std::endl;
+			if ( AWindow )
+				Window = AWindow;
+		};
+		auto* Windows = [App windows];
+		NSArray_ForEach<UIWindow*>(Windows,EnumWindow);
+		
+		//	found obj-c window
+		if ( Window )
+			return;
+				
+		//	with swift's new scene delegate (UIWindowSceneDelegate)
+		//	the app delegate is still set, but there's no window on it
+		//	instead we look through the scenes connected to the app (gr: dunno how many there might be!)
+		//	https://stackoverflow.com/a/59614748/355753
+		
+		UIScene* scene = [[[App connectedScenes] allObjects] firstObject];
+		//	the default SceneDelegate from swift is a UIWindowSceneDelegate, so, assume that's the right way to do it :)
+		if( [scene.delegate conformsToProtocol:@protocol(UIWindowSceneDelegate)])
+		{
+			auto SceneDelegate = (id <UIWindowSceneDelegate>)scene.delegate;
+			//	gr: is this the var on the swift delegate? (using selector)
+			//		the swift code does NOT set UIWindowSceneDelegate.window
+			UIWindow* SceneWindow = [SceneDelegate window];
+			if ( SceneWindow )
+			{
+				std::Debug << "Found SceneDelegate's window" << std::endl;
+				Window = SceneWindow;
+				return;
+			}
+		}
+		else
+		{
+			std::Debug << "App's scene delegate is not a UIWindowSceneDelegate" << std::endl;
+		}
 	};
 	RunJobOnMainThread( Job, true );
 	return Window;
@@ -880,9 +937,9 @@ bool RecurseUIViews(UIView* View,std::function<bool(UIView*)>& EnumView)
 	}
 	auto* Array = View.subviews;
 	auto Size = [Array count];
-		for ( auto i=0;	i<Size;	i++ )
-		{
-			auto Element = [Array objectAtIndex:i];
+	for ( auto i=0;	i<Size;	i++ )
+	{
+		auto Element = [Array objectAtIndex:i];
 		if ( !RecurseUIViews( Element, EnumView ) )
 		{
 			FoundView = false;

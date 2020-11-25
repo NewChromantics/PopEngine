@@ -112,7 +112,7 @@ int32_t Platform_ExitCode = 666;
 #if defined(TARGET_OSX)
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification 
 #elif defined(TARGET_IOS)
-- (BOOL)applicationDidFinishLaunching:(UIApplication *)application 
+- (void)applicationDidFinishLaunching:(UIApplication *)application 
 #endif
 {
 	//	gr: we can't block here, but we need to capture exit code.
@@ -138,10 +138,6 @@ int32_t Platform_ExitCode = 666;
 	};
 	
 	gPopInstance = StartPopInstance(OnExitCode);
-	
-#if defined(TARGET_IOS)
-	return YES;
-#endif
 }
 
 #if defined(TARGET_OSX)
