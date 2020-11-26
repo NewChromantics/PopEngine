@@ -18,23 +18,31 @@ Child: _TtCOCV7SwiftUI11DisplayList11ViewUpdater8Platform13CGDrawingView
 Child: _TtCOCV7SwiftUI11DisplayList11ViewUpdater8Platform13CGDrawingView
 Child: _TtCOCV7SwiftUI11DisplayList11ViewUpdater8Platform13CGDrawingView
 */
+
+@objc class SomeButton:NSObject
+{
+	@State public var Label = "The Label"
+
+}
+
+
 struct ContentView: View 
 {
-	func OnButtonClick()
-	{
-		print("Clicked")
-	}
+	var TestLabel1 = PopEngineLabel(name:"TestLabel1", label:"The Label")
+	var TestLabel2 = PopEngineLabel(name:"TestLabel2")
+	var TestButton = PopEngineButton(name:"TestButton")
+	
 
 	var body: some View {
 
 		VStack {
-			MetalView()
-	        Text("Panopoly")
-	        Text("Panopoly")
-	        Button(action: OnButtonClick)
+	        Text(TestLabel1?.label ?? "default test label1")
+	        Text(TestLabel2!.label ?? "default test label2")
+	        Button(action:TestButton!.onClicked)
 	        {
-	        	Text("Button")
+	        	Text(TestButton?.label ?? "default button label")
 			}
+			Spacer()
 		}
 	}
 }
@@ -44,6 +52,7 @@ struct TestGui_Previews: PreviewProvider {
     static var previews: some View {
 		Group {
 			ContentView()
+				.previewDevice("iPhone SE (2nd generation)")
 				.preferredColorScheme(.dark)
 		}
     }

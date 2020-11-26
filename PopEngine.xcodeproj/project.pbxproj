@@ -542,6 +542,7 @@
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
 		BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = ../../PanopolySwiftGui/PanopolySwiftGuiTest/PanopolySwiftGuiTest/SceneDelegate.swift; sourceTree = "<group>"; };
 		BF7E6A69256F117300365CEF /* Metal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Metal.swift; sourceTree = "<group>"; };
+		BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwift.h; path = src/SoyGuiSwift.h; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
 		BF8534F622B6DA610049C01B /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = PopEngine_Chakra_App.xcconfig; sourceTree = "<group>"; };
@@ -1214,6 +1215,7 @@
 				BFBF2E82253C80A90044127B /* SoyGui_Win32.cpp */,
 				BFBF2E84253C80A90044127B /* SoyGui_Win32.h */,
 				5873CDB825000A78008F73AA /* SoyGui.h */,
+				BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */,
 				582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */,
 				BFBF2E83253C80A90044127B /* SoyGuiLinux.cpp */,
 				5850A42224F920C400145478 /* SoyGuiOsx.mm */,

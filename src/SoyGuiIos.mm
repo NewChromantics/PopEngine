@@ -13,6 +13,75 @@
 
 #import <UIKit/UICollectionView.h>	//	UICollectionViewDataSource
 
+#import "SoyGuiSwift.h"
+
+
+
+@implementation PopEngineControl 
+
+- (id)initWithName:(NSString*)name
+{
+	if ( name )
+		self.name = name;
+	else
+		self.name = @"<null>";
+	return self;
+}
+
+@end
+
+
+
+
+@implementation PopEngineLabel 
+
+- (id)initWithName:(NSString*)name label:(NSString*)label;
+{
+	self = [super initWithName:name]; 
+	self.label = label;
+	return self;
+}
+
+- (id)initWithName:(NSString*)name;
+{
+	self = [super initWithName:name]; 
+	self.label = @"<null>";
+	return self;
+}
+
+@end
+
+
+@implementation PopEngineButton
+
+- (void)onClicked
+{
+	NSLog(@"Button clicked");
+}
+
+@end
+
+
+
+
+
+
+#import <objc/runtime.h>
+void ListClassVariables(UIView* View)
+{
+	unsigned int varCount;
+	Ivar *vars = class_copyIvarList([View class], &varCount);
+
+	for (int i = 0; i < varCount; i++)
+	{
+    	Ivar var = vars[i];
+		const char* name = ivar_getName(var);
+		const char* typeEncoding = ivar_getTypeEncoding(var);
+		if ( !name )	name = "<null>";
+		if ( !typeEncoding )	typeEncoding = "<null>";
+		std::Debug << typeEncoding << " " << name << std::endl;
+	}
+}
 
 namespace Platform
 {
@@ -808,7 +877,8 @@ Platform::TWindow::TWindow(const std::string& Name)
 	auto EnumChild = [&](UIView* Child)
 	{
 		auto Name = GetClassName(Child);
-		std::Debug << "Child: " << Name << std::endl;
+		std::Debug << "Child & vars: " << Name << std::endl;
+		ListClassVariables(Child);
 		return true;
 	};
 	EnumChildren(EnumChild);
@@ -1094,6 +1164,10 @@ std::string Platform::GetClassName(UIView* View)
 	auto ClassName = Soy::NSStringToString(ClassNameNs);
 	return ClassName;
 }
+
+
+
+
 
 
 template<typename NATIVECLASS>
