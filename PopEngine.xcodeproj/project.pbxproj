@@ -256,12 +256,12 @@
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
 		BF7E6A5C256EFCF300365CEF /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF7E6A5D256EFCF300365CEF /* PopCameraDevice.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF7E6A61256EFEE400365CEF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */; };
 		BF7E6A62256EFEE400365CEF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */; };
-		BF7E6A6A256F117300365CEF /* Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A69256F117300365CEF /* Metal.swift */; };
 		BF7E6A6B256F117300365CEF /* Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A69256F117300365CEF /* Metal.swift */; };
 		BF7E6A722570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A742570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
+		BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -1455,6 +1455,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */,
 				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
 				5873CDBB25000A79008F73AA /* SoyGui.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
@@ -1468,6 +1469,7 @@
 				5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
 				5873CDBA25000A79008F73AA /* SoyGui.h in Headers */,
+				BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */,
 				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1938,8 +1940,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */,
-				BF7E6A6A256F117300365CEF /* Metal.swift in Sources */,
-				BF7E6A61256EFEE400365CEF /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
