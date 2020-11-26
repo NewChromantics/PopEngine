@@ -50,7 +50,5 @@
 - (nonnull instancetype)initWithName:(nonnull NSString*)name;
 - (nonnull instancetype)init NS_UNAVAILABLE;
 
-- (void)onChanged;
-
 @end
 

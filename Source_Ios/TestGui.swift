@@ -31,14 +31,20 @@ struct ContentView: View
 	var TestLabel1 = PopEngineLabel(name:"TestLabel1", label:"The Label")
 	var TestLabel2 = PopEngineLabel(name:"TestLabel2")
 	//var TestLabel3 = PopEngineLabel()
-	var TestButton1 = PopEngineButton(name:"TestButton1")
-	//var TestButton2 = PopEngineButton()
-	var TestTickBox1 = PopEngineTickBox(name:"TestTickBox1")
+	@State var TestButton1 = PopEngineButton(name:"TestButton1")
+	@State var TestButton2 = PopEngineButton(name:"TestButton2")
+	//var TestButton3 = PopEngineButton()
+	@State var TestTickBox1 = PopEngineTickBox(name:"TestTickBox1")
 	var TestTickBox2 = PopEngineTickBox(name:"TestTickBox2", label:"TickBox1")
 	var TestTickBox3 = PopEngineTickBox(name:"TestTickBox3", value:true)
 	var TestTickBox4 = PopEngineTickBox(name:"TestTickBox4", value:false)
 	var TestTickBox5 = PopEngineTickBox(name:"TestTickBox5", value:true, label:"Tickbox5")
-	
+
+	func OnClick2()
+	{
+		TestButton2.label = "hello";
+		TestButton2.onClicked()
+	}	
 
 	var body: some View {
 
@@ -49,12 +55,15 @@ struct ContentView: View
 	        {
 	        	Text(TestButton1.label)
 			}
-			/*
-			Toggle("label", isOn: $TestTickBox1.value) 
-			{
-				//Text(label:TestTickBox1?.label ?? "default TestTickBox1")
+			
+			Button(action:OnClick2)
+	        {
+	        	Text(TestButton2.label)
 			}
-			*/
+			
+			Toggle("label", isOn: $TestTickBox1.value)
+			
+			
 			Spacer()
 		}
 	}

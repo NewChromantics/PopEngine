@@ -87,7 +87,10 @@ namespace Swift
 
 - (void)onClicked
 {
-	NSLog(@"Button clicked");
+	if ( mOnClicked )
+		mOnClicked();
+	else
+		std::Debug << "Button(" << Soy::NSStringToString(self.name) << "/" << Soy::NSStringToString(self.label) << ") clicked" << std::endl;
 }
 
 @end
@@ -96,6 +99,7 @@ namespace Swift
 
 @implementation PopEngineTickBox
 {
+	Boolean mValue;
 	@public std::function<void(bool)>	mOnChanged;
 }
 
@@ -123,9 +127,23 @@ namespace Swift
 	return [self initWithName:name value:false label:@"PopEngineButton"];
 }
 
-- (void)onChanged
+
+- (Boolean)value
 {
-	NSLog(@"tickbox state changed");
+   return mValue;
+}
+
+-(void) setValue: (Boolean)value
+{
+	auto OldValue = mValue;
+	mValue = value;
+    std::Debug << "Set Value to " << (value?"true":"false") << " (was " << (OldValue?"true":"false") << ")" << std::endl;
+
+	auto Value = self.value;
+	if ( mOnChanged )
+		mOnChanged(Value);
+	else
+		std::Debug << "Tickbox(" << Soy::NSStringToString(self.name) << ") changed to " << (Value?"true":"false") << std::endl;
 }
 
 @end
