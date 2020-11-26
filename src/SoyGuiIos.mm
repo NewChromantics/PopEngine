@@ -19,8 +19,9 @@
 
 @implementation PopEngineControl 
 
-- (id)initWithName:(NSString*)name
+- (nonnull id)initWithName:(NSString*)name
 {
+	self = [super init]; 
 	if ( name )
 		self.name = name;
 	else
@@ -35,18 +36,16 @@
 
 @implementation PopEngineLabel 
 
-- (id)initWithName:(NSString*)name label:(NSString*)label;
+- (nonnull id)initWithName:(NSString*)name label:(NSString*)label;
 {
 	self = [super initWithName:name]; 
 	self.label = label;
 	return self;
 }
 
-- (id)initWithName:(NSString*)name;
+- (nonnull id)initWithName:(NSString*)name;
 {
-	self = [super initWithName:name]; 
-	self.label = @"<null>";
-	return self;
+	return [self initWithName:name label:@"PopEngineLabel"];
 }
 
 @end
@@ -54,9 +53,57 @@
 
 @implementation PopEngineButton
 
+
+- (nonnull id)initWithName:(NSString*)name label:(NSString*)label;
+{
+	self = [super initWithName:name]; 
+	self.label = label;
+	return self;
+}
+
+- (nonnull id)initWithName:(NSString*)name;
+{
+	return [self initWithName:name label:@"PopEngineButton"];
+}
+
 - (void)onClicked
 {
 	NSLog(@"Button clicked");
+}
+
+@end
+
+
+
+@implementation PopEngineTickBox
+
+
+- (nonnull id)initWithName:(nonnull NSString*)name value:(Boolean)value label:(nonnull NSString*)label
+{
+	self = [super initWithName:name]; 
+	self.label = label;
+	self.value = value;
+	return self;
+}
+
+- (nonnull id)initWithName:(nonnull NSString*)name value:(Boolean)value
+{
+	return [self initWithName:name value:value label:@"PopEngineButton"];
+}
+
+- (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label
+{
+	return [self initWithName:name value:false label:label];
+}
+
+- (nonnull id)initWithName:(NSString*)name
+{
+	return [self initWithName:name value:false label:@"PopEngineButton"];
+}
+
+- (void)onChanged
+{
+	NSLog(@"tickbox state changed");
 }
 
 @end

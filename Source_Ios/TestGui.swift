@@ -30,18 +30,31 @@ struct ContentView: View
 {
 	var TestLabel1 = PopEngineLabel(name:"TestLabel1", label:"The Label")
 	var TestLabel2 = PopEngineLabel(name:"TestLabel2")
-	var TestButton = PopEngineButton(name:"TestButton")
+	var TestLabel3 = PopEngineLabel()
+	var TestButton1 = PopEngineButton(name:"TestButton")
+	var TestButton2 = PopEngineButton()
+	var TestTickBox1 = PopEngineTickBox(name:"TickBox1")
+	var TestTickBox2 = PopEngineTickBox(name:"TickBox2", label:"TickBox1")
+	var TestTickBox3 = PopEngineTickBox(name:"TickBox3", value:true)
+	var TestTickBox4 = PopEngineTickBox(name:"TickBox4", value:false)
+	var TestTickBox5 = PopEngineTickBox(name:"TickBox5", value:true, label:"Tickbox5")
 	
 
 	var body: some View {
 
 		VStack {
-	        Text(TestLabel1?.label ?? "default test label1")
-	        Text(TestLabel2!.label ?? "default test label2")
-	        Button(action:TestButton!.onClicked)
+	        Text(TestLabel1.label)
+			Text(TestLabel2.label )
+	        Button(action:TestButton1.onClicked)
 	        {
-	        	Text(TestButton?.label ?? "default button label")
+	        	Text(TestButton1.label)
 			}
+			/*
+			Toggle("label", isOn: $TestTickBox1.value) 
+			{
+				//Text(label:TestTickBox1?.label ?? "default TestTickBox1")
+			}
+			*/
 			Spacer()
 		}
 	}
