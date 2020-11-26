@@ -31,13 +31,13 @@ struct ContentView: View
 	var TestLabel1 = PopEngineLabel(name:"TestLabel1", label:"The Label")
 	var TestLabel2 = PopEngineLabel(name:"TestLabel2")
 	//var TestLabel3 = PopEngineLabel()
-	var TestButton1 = PopEngineButton(name:"TestButton")
+	var TestButton1 = PopEngineButton(name:"TestButton1")
 	//var TestButton2 = PopEngineButton()
-	var TestTickBox1 = PopEngineTickBox(name:"TickBox1")
-	var TestTickBox2 = PopEngineTickBox(name:"TickBox2", label:"TickBox1")
-	var TestTickBox3 = PopEngineTickBox(name:"TickBox3", value:true)
-	var TestTickBox4 = PopEngineTickBox(name:"TickBox4", value:false)
-	var TestTickBox5 = PopEngineTickBox(name:"TickBox5", value:true, label:"Tickbox5")
+	var TestTickBox1 = PopEngineTickBox(name:"TestTickBox1")
+	var TestTickBox2 = PopEngineTickBox(name:"TestTickBox2", label:"TickBox1")
+	var TestTickBox3 = PopEngineTickBox(name:"TestTickBox3", value:true)
+	var TestTickBox4 = PopEngineTickBox(name:"TestTickBox4", value:false)
+	var TestTickBox5 = PopEngineTickBox(name:"TestTickBox5", value:true, label:"Tickbox5")
 	
 
 	var body: some View {

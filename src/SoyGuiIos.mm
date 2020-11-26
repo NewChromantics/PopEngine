@@ -13,105 +13,6 @@
 
 #import <UIKit/UICollectionView.h>	//	UICollectionViewDataSource
 
-#import "SoyGuiSwift.h"
-
-
-
-@implementation PopEngineControl 
-
-- (nonnull id)initWithName:(NSString*)name
-{
-	self = [super init]; 
-	if ( name )
-		self.name = name;
-	else
-		self.name = @"<null>";
-	return self;
-}
-
-@end
-
-
-
-
-@implementation PopEngineLabel 
-
-- (nonnull id)initWithName:(NSString*)name label:(NSString*)label;
-{
-	self = [super initWithName:name]; 
-	self.label = label;
-	return self;
-}
-
-- (nonnull id)initWithName:(NSString*)name;
-{
-	return [self initWithName:name label:@"PopEngineLabel"];
-}
-
-@end
-
-
-@implementation PopEngineButton
-
-
-- (nonnull id)initWithName:(NSString*)name label:(NSString*)label;
-{
-	self = [super initWithName:name]; 
-	self.label = label;
-	return self;
-}
-
-- (nonnull id)initWithName:(NSString*)name;
-{
-	return [self initWithName:name label:@"PopEngineButton"];
-}
-
-- (void)onClicked
-{
-	NSLog(@"Button clicked");
-}
-
-@end
-
-
-
-@implementation PopEngineTickBox
-
-
-- (nonnull id)initWithName:(nonnull NSString*)name value:(Boolean)value label:(nonnull NSString*)label
-{
-	self = [super initWithName:name]; 
-	self.label = label;
-	self.value = value;
-	return self;
-}
-
-- (nonnull id)initWithName:(nonnull NSString*)name value:(Boolean)value
-{
-	return [self initWithName:name value:value label:@"PopEngineButton"];
-}
-
-- (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label
-{
-	return [self initWithName:name value:false label:label];
-}
-
-- (nonnull id)initWithName:(NSString*)name
-{
-	return [self initWithName:name value:false label:@"PopEngineButton"];
-}
-
-- (void)onChanged
-{
-	NSLog(@"tickbox state changed");
-}
-
-@end
-
-
-
-
-
 
 #import <objc/runtime.h>
 void ListClassVariables(UIView* View)
@@ -137,6 +38,14 @@ namespace Platform
 	
 	std::string		GetClassName(UIView* View);
 }
+
+namespace Swift
+{
+	std::shared_ptr<SoyLabel>	GetLabel(const std::string& Name);
+	std::shared_ptr<SoyButton>	GetButton(const std::string& Name);
+	std::shared_ptr<SoyTickBox>	GetTickBox(const std::string& Name);
+}
+
 
 @interface Views_CollectionViewCell: UICollectionViewCell 
 {
@@ -518,6 +427,15 @@ std::shared_ptr<SoyTickBox> Platform::CreateTickBox(SoyWindow& Parent,Soy::Rectx
 
 std::shared_ptr<SoyTickBox> Platform::GetTickBox(SoyWindow& Parent,const std::string& Name)
 {
+	try
+	{
+		return Swift::GetTickBox(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+		
 	std::shared_ptr<SoyTickBox> Control;
 	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
 	auto Run = [&]()
@@ -550,7 +468,17 @@ std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow &Parent, Soy::Rectx<in
 
 std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
 {
+	try
+	{
+		return Swift::GetLabel(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+		
 	std::shared_ptr<SoyLabel> Label;
+	
 	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
 	auto Run = [&]()
 	{
@@ -578,6 +506,15 @@ std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow &Parent, Soy::Rectx<
 
 std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
 {
+	try
+	{
+		return Swift::GetButton(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}		
+
 	std::shared_ptr<SoyButton> Label;
 	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
 	auto Run = [&]()
