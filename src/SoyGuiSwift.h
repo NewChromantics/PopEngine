@@ -7,7 +7,8 @@
 
 @property (strong, nonatomic, nonnull) NSString* name;
 
-- (nonnull id)initWithName:(nonnull NSString* )name;
+- (nonnull instancetype)initWithName:(nonnull NSString* )name;
+- (nonnull instancetype)init NS_UNAVAILABLE;
 
 @end
 
@@ -16,9 +17,9 @@
 
 @property (strong, nonatomic, nonnull) NSString* label;
 
-- (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
-- (nonnull id)initWithName:(nonnull NSString*)name;
-//- (nonnull id)init;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name;
+- (nonnull instancetype)init NS_UNAVAILABLE;
 
 @end
 
@@ -27,9 +28,9 @@
 
 @property (strong, nonatomic, nonnull) NSString* label;
 
-- (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
-- (nonnull id)initWithName:(nonnull NSString*)name;
-//- (nonnull id)init;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name;
+- (nonnull instancetype)init NS_UNAVAILABLE;
 
 - (void)onClicked;
 
@@ -41,11 +42,11 @@
 @property (strong, nonatomic, nonnull) NSString* label;
 @property (nonatomic) Boolean value;
 
-- (nonnull id)initWithName:(nonnull NSString*)name value:(Boolean)value label:(nonnull NSString*)label;
-- (nonnull id)initWithName:(nonnull NSString*)name value:(Boolean)value;
-- (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
-- (nonnull id)initWithName:(nonnull NSString*)name;
-//- (nonnull id)init;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name value:(Boolean)value label:(nonnull NSString*)label;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name value:(Boolean)value;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name;
+- (nonnull instancetype)init NS_UNAVAILABLE;
 
 - (void)onChanged;
 
