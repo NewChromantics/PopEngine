@@ -7,82 +7,24 @@
 //
 
 import SwiftUI
-/*
-Child: UIWindow
-Child: UITransitionView
-Child: UIDropShadowView
-Child: _TtGC7SwiftUI14_UIHostingViewV20PopEngineTestApp_Ios11ContentView_
-Child: _TtGC7SwiftUI16PlatformViewHostGVS_P10$1a0ff781832PlatformViewRepresentableAdaptorV20PopEngineTestApp_Ios9MetalView__
-Child: MTKView
-Child: _TtCOCV7SwiftUI11DisplayList11ViewUpdater8Platform13CGDrawingView
-Child: _TtCOCV7SwiftUI11DisplayList11ViewUpdater8Platform13CGDrawingView
-Child: _TtCOCV7SwiftUI11DisplayList11ViewUpdater8Platform13CGDrawingView
-*/
 
-@objc class SomeButton:NSObject
-{
-	@State public var Label = "The Label"
 
-}
 
-/*
-@objc class StringTest: PopEngineLabel 
-{
-    @Binding var labelCopy: String = "x"
 
-	//init(labelCopy: Binding<String>)
-	override init(name: String,label: String) 
-	{
-     //   self.includeDecimal = round(self.amount)-self.amount > 0
-     	super.init(name:name, label:label)
-		self.labelCopy = super.label // beta 4
 
-    }
-}
-*/
-/*
-@objc class PopEngineLabelWrapper : PopEngineLabel 
-{
-	@objc
-	override func updateUi() 
-	{
-		labelCopy = self.label
-		print("Ui updated in swift, LabelCopy now \(labelCopy) \(self.label)");
-	}
-	
-	required override init() 
-	{
-    	//self.username = "Anonymous"
-    	super.init()
-	}
-
-	@Binding var labelCopy:String	
-}
-*/
 @objc class PopEngineLabelWrapper : PopEngineLabel , ObservableObject
 {
-	@objc
-	override func updateUi() 
+	//	called from objective-c's .label setter
+	@objc override func updateUi() 
 	{
 		labelCopy = self.label
-		print("Ui updated in swift, LabelCopy now \(labelCopy) \(self.label)")
-	}
-	/*
-	required override init(name:String, label:String)
-	{
-    	//self.username = "Anonymous"
-    	super.init(name:name, label:label)
-	}
-*/
-	func getLabel() -> String
-	{
-		print("GetLabel() -> \(self.labelCopy)")
-		return self.labelCopy
-		//return self.label	//	exception
 	}
 	
 	@Published var labelCopy:String = "LabelCopy"
 }
+
+
+
 
 struct ContentView: View 
 {

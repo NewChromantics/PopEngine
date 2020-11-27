@@ -260,6 +260,8 @@
 		BF7E6A742570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF8A4AA82571AD48008263B0 /* SoyGuiSwift.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */; };
+		BF8A4AAB2571AD53008263B0 /* SoyGuiSwift.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */; };
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -573,6 +575,7 @@
 		BF89F6C51B4BCB9E00F58561 /* SoyOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpengl.h; path = src/SoyOpengl.h; sourceTree = "<group>"; };
 		BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglContext.cpp; path = src/SoyOpenglContext.cpp; sourceTree = "<group>"; };
 		BF89F6C71B4BCB9E00F58561 /* SoyOpenglContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglContext.h; path = src/SoyOpenglContext.h; sourceTree = "<group>"; };
+		BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SoyGuiSwift.swift; path = src/SoyGuiSwift.swift; sourceTree = "<group>"; };
 		BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiHttp.cpp; path = src/TApiHttp.cpp; sourceTree = "<group>"; };
 		BF8B81B1211B16FB0092F3A2 /* TApiHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiHttp.h; path = src/TApiHttp.h; sourceTree = "<group>"; };
 		BF8DD667244A6B0D00960703 /* TApiXr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiXr.cpp; path = src/TApiXr.cpp; sourceTree = "<group>"; };
@@ -1216,11 +1219,12 @@
 				BFBF2E82253C80A90044127B /* SoyGui_Win32.cpp */,
 				BFBF2E84253C80A90044127B /* SoyGui_Win32.h */,
 				5873CDB825000A78008F73AA /* SoyGui.h */,
-				BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */,
-				BF7E6A712570011300365CEF /* SoyGuiSwift.mm */,
 				582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */,
 				BFBF2E83253C80A90044127B /* SoyGuiLinux.cpp */,
 				5850A42224F920C400145478 /* SoyGuiOsx.mm */,
+				BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */,
+				BF7E6A712570011300365CEF /* SoyGuiSwift.mm */,
+				BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */,
 				BFB647362225593600820612 /* SoyHid.cpp */,
 				BFB647372225593600820612 /* SoyHid.h */,
 				BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */,
@@ -1454,8 +1458,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */,
-				BF40CE1C2423D96400F636EF /* PopEngine_Ios.h in Headers */,
-				5873CDBB25000A79008F73AA /* SoyGui.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1614,6 +1616,7 @@
 					BF151F7523845F2E00A70EBF = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
+						LastSwiftMigration = 1200;
 						ProvisioningStyle = Automatic;
 					};
 					BF51B903256AEBE5004DE4C7 = {
@@ -1626,6 +1629,7 @@
 					BF5EAFB4237F0C100077BCF5 = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
+						LastSwiftMigration = 1200;
 						ProvisioningStyle = Automatic;
 					};
 					BF5EB0532380335D0077BCF5 = {
@@ -1690,6 +1694,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF8A4AAB2571AD53008263B0 /* SoyGuiSwift.swift in Resources */,
 				58C2004024F90506002DAC99 /* Main.xib in Resources */,
 				58171F1C250BD4A700224082 /* LaunchScreen.storyboard in Resources */,
 			);
@@ -1699,6 +1704,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF8A4AA82571AD48008263B0 /* SoyGuiSwift.swift in Resources */,
 				BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */,
 				BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */,
 			);
@@ -1960,6 +1966,7 @@
 		58C2002F24F901BD002DAC99 /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2040,6 +2047,7 @@
 		58C2003024F901BD002DAC99 /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2120,6 +2128,7 @@
 		58C2003124F901BD002DAC99 /* Debug_Chakra */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2200,6 +2209,7 @@
 		58C2003224F901BD002DAC99 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Ios;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2360,6 +2370,8 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2440,6 +2452,8 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2520,6 +2534,8 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2533,6 +2549,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_COMMA = YES;
@@ -2577,6 +2594,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2854,6 +2872,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -2903,6 +2922,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug_JavascriptCore;
 		};
@@ -2912,6 +2933,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -2961,6 +2983,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug_V8;
 		};
@@ -2970,6 +2994,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -3019,6 +3044,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug_Chakra;
 		};
@@ -3028,6 +3055,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
@@ -3057,12 +3085,15 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.NewChromantics.PopEngine;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
 		BF5EB0632380335F0077BCF5 /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3139,6 +3170,7 @@
 		BF5EB0642380335F0077BCF5 /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3215,6 +3247,7 @@
 		BF5EB0652380335F0077BCF5 /* Debug_Chakra */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3291,6 +3324,7 @@
 		BF5EB0662380335F0077BCF5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Osx;
 				CLANG_ANALYZER_NONNULL = YES;
