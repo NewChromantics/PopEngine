@@ -10,18 +10,8 @@ on:
       - '*Test*'
 jobs:
   Test:
-    name: ${{ matrix.config.os }}-${{ matrix.config.type }}
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      matrix:
-        config:
-          - os: macOS
-            type: Ios
-            BuildScheme:  PopEngine_Ios
-          - os: macOS
-            type: Osx
-            BuildScheme: PopEngine_App
-            BuildTargetDir: PopEngine_Osx.framework
+    name: Universal
+    runs-on: macOS
 
     steps:
       - uses: actions/checkout@v2
@@ -41,8 +31,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - uses: NewChromantics/PopAction_BuildApple@v1.0.1
+      - uses: NewChromantics/PopAction_BuildApple@v1.0.9
         with:
-          BuildScheme: ${{ matrix.config.BuildScheme }}
-          BuildTargetDir: ${{ matrix.config.BuildTargetDir }}
+          BuildScheme: ${{ env.project }}_Universal
           project: ${{ env.project }}

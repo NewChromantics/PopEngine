@@ -35,14 +35,15 @@ jobs:
           - os: windows
             type: windows
 
+          # ios & osx universal build
           - os: macOS
-            type: Ios
-            BuildScheme:  PopEngine_Ios
+            BuildScheme: PopEngine_Universal  
 
-          - os: macOS
-            type: Osx
-            BuildScheme: PopEngine_App
-            BuildTargetDir: PopEngine_Osx.framework
+          # gr: kept a seperate entry to build the osx app? this target is wrong...
+          #- os: macOS
+          #  type: Osx
+          #  BuildScheme: PopEngine_App
+          #  BuildTargetDir: PopEngine_Osx.framework
 
     steps:
       - name: Checkout repo
@@ -86,10 +87,9 @@ jobs:
       - name: Build Apple
         id: Apple
         if: matrix.config.os == 'macOS'
-        uses: NewChromantics/PopAction_BuildApple@v1.0.1
+        uses: NewChromantics/PopAction_BuildApple@v1.0.9
         with:
-          BuildScheme: ${{ matrix.config.BuildScheme }}
-          BuildTargetDir: ${{ matrix.config.BuildTargetDir }}
+          BuildScheme:  ${{ matrix.config.BuildScheme }}
           project: ${{ env.project }}
           
       - name: Build Linux
