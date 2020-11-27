@@ -1713,7 +1713,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				./build/PopEngine.xcframework,
+				"./build/${FULL_PRODUCT_NAME}",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2564,6 +2564,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
+				FULL_PRODUCT_NAME = "${PRODUCT_NAME}.xcframework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_JavascriptCore;
@@ -2573,6 +2574,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
+				FULL_PRODUCT_NAME = "${PRODUCT_NAME}.xcframework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_V8;
@@ -2582,6 +2584,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
+				FULL_PRODUCT_NAME = "${PRODUCT_NAME}.xcframework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_Chakra;
@@ -2591,6 +2594,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
+				FULL_PRODUCT_NAME = "${PRODUCT_NAME}.xcframework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
