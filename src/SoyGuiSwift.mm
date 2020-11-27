@@ -29,22 +29,30 @@ namespace Swift
 
 @implementation PopEngineControl 
 
-- (nonnull id)initWithName:(NSString*)name
+- (nonnull instancetype)initWithName:(NSString*)name
 {
 	self = [super init]; 
 	if ( name )
-		self.name = name;
+		self.name = [name mutableCopy];
 	else
-		self.name = @"<null>";
+		self.name = [@"<null>" mutableCopy];
 	Swift::Controls.PushBack(self);
+	std::Debug << "Added swift control " << Soy::NSStringToString(self.name) << std::endl;
 	return self;
 }
 
 -(void)dealloc 
 {
+	std::Debug << "Removing swift control " << Soy::NSStringToString(self.name) << std::endl;
 	[super dealloc];
 	Swift::Controls.Remove(self);
 }
+
+- (void)updateUi
+{
+	std::Debug << "overload update ui" << std::endl;
+}
+
 
 @end
 
@@ -52,17 +60,40 @@ namespace Swift
 
 
 @implementation PopEngineLabel 
+{
+	NSString* mLabel;
+}
 
-- (nonnull id)initWithName:(NSString*)name label:(NSString*)label;
+- (nonnull instancetype)initWithName:(NSString*)name label:(NSString*)label;
 {
 	self = [super initWithName:name]; 
 	self.label = label;
 	return self;
 }
 
-- (nonnull id)initWithName:(NSString*)name;
+- (nonnull instancetype)initWithName:(NSString*)name;
 {
 	return [self initWithName:name label:@"PopEngineLabel"];
+}
+
+- (nonnull instancetype)init
+{
+	std::Debug << "PopEngineLabel init" << std::endl;
+	self = [super initWithName:@"TestLabel1"]; 
+	self.label = @"basic init";
+	return self;
+}
+
+
+- (NSString*)label
+{
+   return mLabel;
+}
+
+-(void) setLabel: (NSString*)value
+{
+	mLabel = value;
+	[self updateUi];
 }
 
 @end
@@ -73,14 +104,14 @@ namespace Swift
 	@public std::function<void()>	mOnClicked;
 }
 
-- (nonnull id)initWithName:(NSString*)name label:(NSString*)label;
+- (nonnull instancetype)initWithName:(NSString*)name label:(NSString*)label;
 {
 	self = [super initWithName:name]; 
 	self.label = label;
 	return self;
 }
 
-- (nonnull id)initWithName:(NSString*)name;
+- (nonnull instancetype)initWithName:(NSString*)name;
 {
 	return [self initWithName:name label:@"PopEngineButton"];
 }
@@ -271,11 +302,16 @@ std::shared_ptr<SoyTickBox> Swift::GetTickBox(const std::string& Name)
 }
 
 	
+void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 void Swift::TLabel::SetValue(const std::string& Value)
 {
-	auto* Label = Soy::StringToNSString(Value);
-	mControl.label = Label;
+	auto SetLabel = [&]()
+	{
+		auto* Label = Soy::StringToNSString(Value);
+		mControl.label = Label;
+	};
+	RunJobOnMainThread(SetLabel,true);
 }
 
 std::string Swift::TLabel::GetValue()
