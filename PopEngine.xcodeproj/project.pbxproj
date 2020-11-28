@@ -262,6 +262,7 @@
 		BF8A4AA82571AD48008263B0 /* PopEngineGui.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AAB2571AD53008263B0 /* PopEngineGui.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
+		BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -1459,6 +1460,7 @@
 			files = (
 				BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
+				BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
