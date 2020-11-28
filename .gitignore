@@ -75,3 +75,6 @@ node_modules
 PopEngine.visualstudio/AppPackages/
 
 PopEngine.visualstudio/ARM64/
+
+# build directory
+PopEngine.xcframework/
