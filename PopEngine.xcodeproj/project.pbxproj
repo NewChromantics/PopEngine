@@ -259,8 +259,6 @@
 		BF7E6A742570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF8A4AA82571AD48008263B0 /* PopEngineGui.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
-		BF8A4AAB2571AD53008263B0 /* PopEngineGui.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1710,7 +1708,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF8A4AAB2571AD53008263B0 /* PopEngineGui.swift in Resources */,
 				58C2004024F90506002DAC99 /* Main.xib in Resources */,
 				58171F1C250BD4A700224082 /* LaunchScreen.storyboard in Resources */,
 			);
@@ -1720,7 +1717,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF8A4AA82571AD48008263B0 /* PopEngineGui.swift in Resources */,
 				BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */,
 				BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */,
 			);
