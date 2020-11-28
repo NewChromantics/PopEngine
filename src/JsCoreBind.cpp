@@ -626,7 +626,7 @@ bool Bind::TContextGroupJobThread::CanSleep()
 		return false;
 		
 	//	let the osx runloop run
-	std::Debug << "TContextGroupJobThread can sleep" << std::endl;
+	//std::Debug << "TContextGroupJobThread can sleep" << std::endl;
 	return true;
 }
 

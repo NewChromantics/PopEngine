@@ -21,7 +21,8 @@ import SwiftUI
 	}
 	
 	@Published var labelCopy:String = "LabelCopy"
-}
+        }
+    
 
 
 
@@ -31,11 +32,15 @@ struct ContentView: View
 	@State var label1: String = "Uninitialised"
 	//var labelWrapper = StringTest(name:"TestLabel1", label:"InitialLabel")
 	@ObservedObject var Label1Wrapper = PopEngineLabelWrapper(name:"TestLabel1", label:"InitialLabel")
+	@ObservedObject var FrameCounterLabel = PopEngineLabelWrapper(name:"FrameCounterLabel", label:"FrameCounter")
+	@State var renderView = PopEngineRenderView(name:"TestRenderView") 
 	
 	var body: some View 
 	{
+		OpenglView(renderer:$renderView)
 		Text(label1)
-		Text(Label1Wrapper.labelCopy)
+		Text(Label1Wrapper.theLabel)
+		Text(FrameCounterLabel.theLabel)
 		//Text(TestLabel1Wrapper.labelCopy)
 	}			
 	/*

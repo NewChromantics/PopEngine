@@ -4,12 +4,15 @@
 #include "SoyString.h"
 #include "SoyVector.h"
 #include "SoyWindow.h"
+#include "SoyGuiApple.h"
 
 namespace Swift
 {
 	//	gr: these might not be swift ones, but for the sake of context, let's call them that for now
 	Array<PopEngineControl*>	Controls;
 	PopEngineControl*			GetControl(const std::string& Name);	
+	template<typename TYPE>
+	TYPE*						GetControlAs(const std::string& Name);	
 
 	//	base class for common helpers	
 	class TControl;
@@ -17,14 +20,48 @@ namespace Swift
 	class TLabel;
 	class TButton;
 	class TTickBox;
+	class TRenderView;
 
-	std::shared_ptr<SoyLabel>	GetLabel(const std::string& Name);
-	std::shared_ptr<SoyButton>	GetButton(const std::string& Name);
-	std::shared_ptr<SoyTickBox>	GetTickBox(const std::string& Name);
+	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
+	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
+	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
+	std::shared_ptr<Platform::TRenderView>	GetRenderView(const std::string& Name);
 }
 	
+namespace Platform
+{
+	std::string		GetClassName(UIView* View);
+	
+	template<typename TYPE,typename BASETYPE>
+	TYPE*			ObjcCast(BASETYPE* View);
+}
 
+template<typename TYPE,typename BASETYPE>
+TYPE* Platform::ObjcCast(BASETYPE* View)
+{
+	auto GetClassName = [](BASETYPE* View)
+	{
+		auto* Class = [View class];
+		auto ClassNameNs = NSStringFromClass(Class);
+		auto ClassName = Soy::NSStringToString(ClassNameNs);
+		return ClassName;
+	};
 
+	if ( [View isKindOfClass:[TYPE class]] )
+	{
+		return (TYPE*)View;
+	}
+		
+	auto ClassName = GetClassName(View);
+	std::stringstream Error;
+	
+	auto* TargetClass = [TYPE class];
+	auto TargetClassNameNs = NSStringFromClass(TargetClass);
+	auto TargetClassName = Soy::NSStringToString(TargetClassNameNs);
+	
+	Error << "Trying to cast " << ClassName << " to " << TargetClassName;
+	throw Soy::AssertException(Error);
+}
 
 
 @implementation PopEngineControl 
@@ -181,6 +218,29 @@ namespace Swift
 
 
 
+@implementation PopEngineRenderView
+{
+	@public std::function<void()>	mOnDraw;
+}
+
+- (nonnull instancetype)initWithName:(NSString*)name
+{
+	self = [super initWithName:name]; 
+	return self;
+}
+
+- (void)onDraw
+{
+	if ( mOnDraw )
+		mOnDraw();
+	else
+		std::Debug << "Button(" << Soy::NSStringToString(self.name) << ") draw" << std::endl;
+}
+
+@end
+
+
+
 class Swift::TControl
 {
 public:
@@ -246,6 +306,13 @@ public:
 			this->OnChanged();
 		};
 	}
+	~TTickBox()
+	{
+		mControl->mOnChanged = [](bool Value)
+		{
+			std::Debug << "Tickbox deallocated" << std::endl;
+		};
+	}
 
 	virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	Swift::TControl::SetRect(Rect);	}
 	virtual void			SetVisible(bool Visible) override					{	Swift::TControl::SetVisible(Visible);	}	
@@ -259,8 +326,46 @@ public:
 };
 
 
+class Swift::TRenderView : public Platform::TRenderView, public Swift::TControl
+{
+public:
+	TRenderView(PopEngineRenderView* Control) :
+		mControl	(Control)
+	{
+		mControl->mOnDraw = [this]()
+		{
+			if ( this->mOnDraw )
+				this->mOnDraw();
+		};
+	}
+	~TRenderView()
+	{
+		mControl->mOnDraw = []()
+		{
+			std::Debug << "TRenderView deallocated" << std::endl;
+		};
+	}
+	
+	virtual GLKView*		GetOpenglView() override	{	return mControl ? mControl.openglView : nullptr;	}
+	virtual MTKView*		GetMetalView() override		{	return mControl ? mControl.metalView : nullptr;	}
+	//virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	Swift::TControl::SetRect(Rect);	}
+	//virtual void			SetVisible(bool Visible) override					{	Swift::TControl::SetVisible(Visible);	}	
+	//virtual void			SetColour(const vec3x<uint8_t>& Rgb) override		{	Swift::TControl::SetColour(Rgb);	} 
+
+	//virtual void			SetValue(const std::string& Value) override;
+	//virtual std::string		GetValue() override;
+
+	PopEngineRenderView*	mControl;
+};
 
 
+
+template<typename TYPE>
+TYPE* Swift::GetControlAs(const std::string& Name)
+{
+	auto* BaseControl = GetControl(Name);
+	return Platform::ObjcCast<TYPE>(BaseControl);
+}	
 
 
 PopEngineControl* Swift::GetControl(const std::string& Name)
@@ -285,20 +390,26 @@ PopEngineControl* Swift::GetControl(const std::string& Name)
 
 std::shared_ptr<SoyLabel> Swift::GetLabel(const std::string& Name)
 {
-	auto* Control = GetControl(Name);
+	auto* Control = GetControlAs<PopEngineLabel>(Name);
 	return std::shared_ptr<SoyLabel>( new TLabel(Control) );
 }
 
 std::shared_ptr<SoyButton> Swift::GetButton(const std::string& Name)
 {
-	auto* Control = GetControl(Name);
+	auto* Control = GetControlAs<PopEngineButton>(Name);
 	return std::shared_ptr<SoyButton>( new TButton(Control) );
 }
 
 std::shared_ptr<SoyTickBox> Swift::GetTickBox(const std::string& Name)
 {
-	auto* Control = GetControl(Name);
+	auto* Control = GetControlAs<PopEngineTickBox>(Name);
 	return std::shared_ptr<SoyTickBox>( new TTickBox(Control) );
+}
+
+std::shared_ptr<Platform::TRenderView> Swift::GetRenderView(const std::string& Name)
+{
+	auto* Control = GetControlAs<PopEngineRenderView>(Name);
+	return std::shared_ptr<Platform::TRenderView>( new TRenderView(Control) );
 }
 
 	

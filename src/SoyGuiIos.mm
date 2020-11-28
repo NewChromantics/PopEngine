@@ -1,4 +1,5 @@
 #include "SoyGui.h"
+#include "SoyGuiApple.h"
 #include "SoyWindowApple.h"
 
 #include "PopMain.h"
@@ -41,9 +42,10 @@ namespace Platform
 
 namespace Swift
 {
-	std::shared_ptr<SoyLabel>	GetLabel(const std::string& Name);
-	std::shared_ptr<SoyButton>	GetButton(const std::string& Name);
-	std::shared_ptr<SoyTickBox>	GetTickBox(const std::string& Name);
+	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
+	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
+	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
+	std::shared_ptr<Gui::TRenderView>	GetRenderView(const std::string& Name);
 }
 
 
@@ -334,7 +336,7 @@ public:
 	TResponder*			mResponder = [TResponder alloc];
 };
 
-class Platform::TMetalView : public SoyMetalView
+class Platform::TMetalView : public Gui::TRenderView
 {
 public:
 	TMetalView(UIView* View);
@@ -342,6 +344,7 @@ public:
 	MTKView*					mMTKView = nullptr;
 	id<MTLDevice>				mtl_device;
 };
+
 
 class Platform::TImageMap : public Gui::TImageMap, public PlatformControl<UIImageView>
 {
@@ -371,9 +374,19 @@ private:
 };
 
 
-std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& Parent, const std::string& Name)
+std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& Parent, const std::string& Name)
 {
-	std::shared_ptr<SoyMetalView> MetalView;
+	try
+	{
+		return Swift::GetRenderView(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Failed to get swift render view " << Name << "; " << e.what() << std::endl;
+	}
+		
+
+	std::shared_ptr<Gui::TRenderView> MetalView;
 	auto& Window = dynamic_cast<Platform::TWindow&>(Parent);
 	auto Run = [&]()
 	{
@@ -856,16 +869,20 @@ Platform::TWindow::TWindow(const std::string& Name)
 	}
 	
 	mContentView = mWindow.rootViewController.view;
-	
-	//	gr: list all children
-	auto EnumChild = [&](UIView* Child)
+
+	static bool DebugAllChildren = false;
+	if ( DebugAllChildren )
 	{
-		auto Name = GetClassName(Child);
-		std::Debug << "Child & vars: " << Name << std::endl;
-		ListClassVariables(Child);
-		return true;
-	};
-	EnumChildren(EnumChild);
+		//	gr: list all children
+		auto EnumChild = [&](UIView* Child)
+		{
+			auto Name = GetClassName(Child);
+			std::Debug << "Child & vars: " << Name << std::endl;
+			ListClassVariables(Child);
+			return true;
+		};
+		EnumChildren(EnumChild);
+	}
 }
 
 UIWindow* Platform::TWindow::GetWindow()
