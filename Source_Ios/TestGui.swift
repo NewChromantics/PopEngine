@@ -10,19 +10,31 @@ import SwiftUI
 
 
 
-
-
 @objc class PopEngineLabelWrapper : PopEngineLabel , ObservableObject
 {
 	//	called from objective-c's .label setter
 	@objc override func updateUi() 
 	{
+		//	trigger published var change to redraw view
 		labelCopy = self.label
 	}
 	
-	@Published var labelCopy:String = "LabelCopy"
+	//	use this to read & write
+	var theLabel: String 
+	{
+        get 
+        {
+            return super.label // reaching ancestor prop
         }
+        set 
+        {
+        	labelCopy = newValue
+            super.label = newValue	//	this probably calls updateUi
+        }
+    }
     
+	@Published private var labelCopy:String = "LabelCopy"
+}
 
 
 
