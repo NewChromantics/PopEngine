@@ -165,7 +165,7 @@ class PlatformControl
 public:
 	~PlatformControl()
 	{
-		std::Debug << "Control deallocating" << std::endl;
+		//std::Debug << "Control deallocating" << std::endl;
 	}
 	void			SetControl(UIView* View);		//	type checked		
 	void			AddToParent(Platform::TWindow& Window);
