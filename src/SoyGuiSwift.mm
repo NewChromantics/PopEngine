@@ -203,8 +203,14 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 {
 	auto OldValue = mValue;
 	mValue = value;
-    std::Debug << "Set Value to " << (value?"true":"false") << " (was " << (OldValue?"true":"false") << ")" << std::endl;
-
+    
+    //	gr: only notify if changed to avoid recursion?
+    if ( mValue == OldValue )
+    {
+    	//std::Debug << "Set Value to " << (value?"true":"false") << " (was " << (OldValue?"true":"false") << ")" << std::endl;
+    	return;
+	}
+	
 	auto Value = self.value;
 	if ( mOnChanged )
 		mOnChanged(Value);
