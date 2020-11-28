@@ -255,13 +255,13 @@
 		BF7E6A5C256EFCF300365CEF /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF7E6A5D256EFCF300365CEF /* PopCameraDevice.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BF7E6A62256EFEE400365CEF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */; };
-		BF7E6A6B256F117300365CEF /* Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A69256F117300365CEF /* Metal.swift */; };
 		BF7E6A722570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A742570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8A4AA82571AD48008263B0 /* SoyGuiSwift.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */; };
 		BF8A4AAB2571AD53008263B0 /* SoyGuiSwift.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */; };
+		BF8A4AB725727F23008263B0 /* SoyGuiSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* SoyGuiSwift.swift */; };
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -543,7 +543,6 @@
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
 		BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = ../../PanopolySwiftGui/PanopolySwiftGuiTest/PanopolySwiftGuiTest/SceneDelegate.swift; sourceTree = "<group>"; };
-		BF7E6A69256F117300365CEF /* Metal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Metal.swift; sourceTree = "<group>"; };
 		BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwift.h; path = src/SoyGuiSwift.h; sourceTree = "<group>"; };
 		BF7E6A712570011300365CEF /* SoyGuiSwift.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiSwift.mm; path = src/SoyGuiSwift.mm; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
@@ -859,7 +858,6 @@
 			isa = PBXGroup;
 			children = (
 				BF51B90F256AEC20004DE4C7 /* BuildUniversal.sh */,
-				BF7E6A69256F117300365CEF /* Metal.swift */,
 				BF151FC62384607500A70EBF /* PopEngine_Ios.xcconfig */,
 				BF151F7823845F2F00A70EBF /* PopEngine_Ios.h */,
 				BF51B8D3256AD19B004DE4C7 /* TestGui.swift */,
@@ -1752,7 +1750,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF693A30250D17F9002E3772 /* PopEngineUnitTestMain.cpp in Sources */,
-				BF7E6A6B256F117300365CEF /* Metal.swift in Sources */,
+				BF8A4AB725727F23008263B0 /* SoyGuiSwift.swift in Sources */,
 				BF51B8D4256AD19B004DE4C7 /* TestGui.swift in Sources */,
 				BF7E6A62256EFEE400365CEF /* SceneDelegate.swift in Sources */,
 			);

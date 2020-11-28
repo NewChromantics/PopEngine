@@ -9,42 +9,11 @@
 import SwiftUI
 
 
-
-@objc class PopEngineLabelWrapper : PopEngineLabel , ObservableObject
-{
-	//	called from objective-c's .label setter
-	@objc override func updateUi() 
-	{
-		//	trigger published var change to redraw view
-		labelCopy = self.label
-	}
-	
-	//	use this to read & write
-	var theLabel: String 
-	{
-        get 
-        {
-            return super.label // reaching ancestor prop
-        }
-        set 
-        {
-        	labelCopy = newValue
-            super.label = newValue	//	this probably calls updateUi
-        }
-    }
-    
-	@Published private var labelCopy:String = "LabelCopy"
-}
-
-
-
-
 struct ContentView: View 
 {
 	@State var label1: String = "Uninitialised"
-	//var labelWrapper = StringTest(name:"TestLabel1", label:"InitialLabel")
-	@ObservedObject var Label1Wrapper = PopEngineLabelWrapper(name:"TestLabel1", label:"InitialLabel")
-	@ObservedObject var FrameCounterLabel = PopEngineLabelWrapper(name:"FrameCounterLabel", label:"FrameCounter")
+	@ObservedObject var Label1Wrapper = PopLabel(name:"TestLabel1", label:"InitialLabel")
+	@ObservedObject var FrameCounterLabel = PopLabel(name:"FrameCounterLabel", label:"FrameCounter")
 	@State var renderView = PopEngineRenderView(name:"TestRenderView") 
 	
 	var body: some View 
