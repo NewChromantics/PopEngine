@@ -27,9 +27,7 @@
 		58171F1F250BD4A700224082 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1B250BD4A600224082 /* Main.storyboard */; };
 		582BE874250A9E7F00B341D4 /* SoyGuiIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */; };
 		5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5850A42224F920C400145478 /* SoyGuiOsx.mm */; };
-		5873CDBA25000A79008F73AA /* SoyGui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5873CDB825000A78008F73AA /* SoyGui.h */; };
 		5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
-		5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */ = {isa = PBXBuildFile; fileRef = 5898944024F6D32A00FCCCE2 /* TApiSokol.h */; };
 		5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945424F6E14600FCCCE2 /* QuartzCore.framework */; };
 		5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945A24F6EB5600FCCCE2 /* Metal.framework */; };
 		5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5898945E24F6ED8F00FCCCE2 /* MetalKit.framework */; };
@@ -123,7 +121,7 @@
 		BF4013EF250F679800A753A4 /* SoySokol_Ios_Gles.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF4013EC250F679300A753A4 /* SoySokol_Ios_Gles.mm */; };
 		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; };
+		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF51B89E2569A25E004DE4C7 /* PopCap.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BF51B89D2569A256004DE4C7 /* PopCap.storyboard */; };
 		BF51B8BC256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF51B8BE256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -263,6 +261,7 @@
 		BF8A4AAB2571AD53008263B0 /* PopEngineGui.swift in Resources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
@@ -1468,11 +1467,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5898944224F6D32A00FCCCE2 /* TApiSokol.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
-				5873CDBA25000A79008F73AA /* SoyGui.h in Headers */,
 				BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */,
 				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
+				BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
