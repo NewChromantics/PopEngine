@@ -30,8 +30,6 @@ namespace Swift
 	
 namespace Platform
 {
-	std::string		GetClassName(UIView* View);
-	
 	template<typename TYPE,typename BASETYPE>
 	TYPE*			ObjcCast(BASETYPE* View);
 }
@@ -346,7 +344,7 @@ public:
 		};
 	}
 	
-	virtual GLKView*		GetOpenglView() override	{	return mControl ? mControl.openglView : nullptr;	}
+	virtual GLView*			GetOpenglView() override	{	return mControl ? mControl.openglView : nullptr;	}
 	virtual MTKView*		GetMetalView() override		{	return mControl ? mControl.metalView : nullptr;	}
 	//virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override	{	Swift::TControl::SetRect(Rect);	}
 	//virtual void			SetVisible(bool Visible) override					{	Swift::TControl::SetVisible(Visible);	}	

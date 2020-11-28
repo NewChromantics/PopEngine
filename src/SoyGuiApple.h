@@ -6,6 +6,12 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
+#if defined(TARGET_OSX)
+typedef NSOpenGLView GLView;
+#else
+typedef GLKView GLView;
+#endif
+
 namespace Platform
 {
 	class TRenderView;
@@ -15,5 +21,5 @@ class Platform::TRenderView : public Gui::TRenderView
 {
 public:
 	virtual MTKView*	GetMetalView()=0;
-	virtual GLKView*	GetOpenglView()=0;
+	virtual GLView*		GetOpenglView()=0;
 };

@@ -1,7 +1,8 @@
 #pragma once
 
 #import <Foundation/Foundation.h>
-
+#import <MetalKit/MetalKit.h>
+#import <GLKit/GLKit.h>
 
 @interface PopEngineControl : NSObject
 
@@ -53,14 +54,18 @@
 
 @end
 
-#import <Metal/Metal.h>
-#import <MetalKit/MetalKit.h>
-#import <GLKit/GLKit.h>
+
 
 @interface PopEngineRenderView : PopEngineControl
 
 @property (strong, atomic) MTKView* metalView;
+#if defined(TARGET_IOS)
 @property (strong, atomic) GLKView* openglView;
+#else
+@property (strong, atomic) NSOpenGLView* openglView;
+#endif
+
+@property (atomic) Boolean value;
 
 - (nonnull instancetype)initWithName:(nonnull NSString*)name;
 - (nonnull instancetype)init NS_UNAVAILABLE;

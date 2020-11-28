@@ -1627,7 +1627,7 @@ void Platform::TWindow::EnumChildren(std::function<bool(NSView*)> EnumChild)
 	RecurseNSViews( [Window contentView], EnumChild );
 }
 
-class Platform::TMetalView : public SoyMetalView
+class Platform::TMetalView : public Gui::TRenderView
 {
 public:
 	TMetalView(NSView* View);
@@ -1636,9 +1636,9 @@ public:
 	id<MTLDevice>				mtl_device;
 };
 
-std::shared_ptr<SoyMetalView> Platform::GetMetalView(SoyWindow& ParentWindow, const std::string& Name)
+std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& ParentWindow, const std::string& Name)
 {
-	std::shared_ptr<SoyMetalView> MetalView;
+	std::shared_ptr<Gui::TRenderView> MetalView;
 	auto& Window = dynamic_cast<Platform::TWindow&>(ParentWindow);
 	auto Run = [&]()
 	{
