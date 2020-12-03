@@ -129,7 +129,7 @@ LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
 -lPopH264 \
--L$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
+-L$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)	\
 -L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 -lPopCameraDevice \
 -lEGL \
