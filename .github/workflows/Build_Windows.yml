@@ -39,7 +39,7 @@ jobs:
           ls -R Libs
 
       - name: Setup Nuget
-        uses: warrenbuckley/Setup-Nuget@v1
+        uses: nuget/setup-nuget@v1
   
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.0.0
