@@ -160,7 +160,7 @@ OUT_APP=$(BUILD_DIR)/${APP_NAME}
 # These files (without directory structure) get copied to build dir
 OUT_FILE_SOURCES = \
 $(SRC_PATH)/PopEngine.h	\
-$(LIB_MODULES_PATH)/poph264/$(TargetArch)/libPopH264.so 	\
+$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)/libPopH264.so 	\
 $(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)/libPopCameraDevice.so	\
 
 # convert to Build/xxx target files
