@@ -7,7 +7,7 @@
   "description": "Pop Engine",
   "main": "index.js",
   "dependencies": {
-    "@newchromantics/poph264": "latest",
+    "@newchromantics/com.newchromantics.poph264": "latest",
     "@newchromantics/popcameradevice": "latest"
   },
   "scripts": {
