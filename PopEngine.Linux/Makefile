@@ -27,7 +27,7 @@ LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(LIB_MODULES_PATH)/poph264/$(TargetArch)	\
+-I$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)	\
 -I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
 -I$(SRC_PATH)/sokol	\
 -I$(SRC_PATH)/LinuxDRM	\
