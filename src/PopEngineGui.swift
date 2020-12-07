@@ -83,6 +83,48 @@ import SwiftUI
 	@Published private var valueCopy:Bool = false
 }
 
+@objc class PopStringArray : PopEngineStringArray , ObservableObject
+{
+    //    called from objective-c's .label setter
+    @objc override func updateUi()
+    {
+        //    trigger published var change to redraw view
+        labelCopy = self.label
+        valueCopy = self.value as! [String]
+    }
+    
+    //    use this to read & write
+    var theLabel: String
+    {
+        get
+        {
+            return super.label // reaching ancestor prop
+        }
+        set
+        {
+            labelCopy = newValue
+            super.label = newValue    //    this probably calls updateUi
+        }
+    }
+    
+    var theValue: [String]
+    {
+        get
+        {
+            return super.value as! [String]
+        }
+        set
+        {
+            valueCopy = newValue
+            super.value = newValue as! NSMutableArray //    this probably calls updateUi
+        }
+    }
+    
+    //    gr: I think I only need one "dirty" variable to trigger swiftui update
+    @Published private var labelCopy:String = "LabelCopy"
+    @Published private var valueCopy:[String] = []
+}
+
 
 //	gr: make a NSView/UIView type in objective c? and remove user's decision between metal and opengl?
 //NSViewRepresentable

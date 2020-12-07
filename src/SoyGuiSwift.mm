@@ -220,6 +220,61 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 @end
 
+@implementation PopEngineStringArray
+{
+    NSMutableArray<NSString*> *mValue;
+    @public std::function<void(NSMutableArray<NSString*>*)>    mOnChanged;
+}
+
+
+- (nonnull id)initWithName:(nonnull NSString*)name value:(NSMutableArray<NSString*>*)value label:(nonnull NSString*)label
+{
+    self = [super initWithName:name];
+    self.label = label;
+    self.value = value;
+    return self;
+}
+
+- (nonnull id)initWithName:(nonnull NSString*)name value:(NSMutableArray<NSString*>*)value
+{
+    return [self initWithName:name value:value label:@"PopEngineStringArray"];
+}
+
+- (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label
+{
+    return [self initWithName:name value:[NSMutableArray<NSString*> new] label:label];
+}
+
+- (nonnull id)initWithName:(NSString*)name
+{
+    return [self initWithName:name value:[NSMutableArray<NSString*> new] label:@"PopEngineStringArray"];
+}
+
+
+- (NSMutableArray<NSString*>*)value
+{
+   return mValue;
+}
+
+-(void) setValue: (NSMutableArray<NSString*>*)value
+{
+    auto OldValue = mValue;
+    mValue = value;
+    
+    //    gr: only notify if changed to avoid recursion?
+    if ( mValue == OldValue )
+    {
+        return;
+    }
+    
+    auto Value = self.value;
+    if ( mOnChanged )
+        mOnChanged(Value);
+    else
+        std::Debug << "StringArray(" << Soy::NSStringToString(self.name) << ") changed to " << Value << std::endl;
+}
+
+@end
 
 
 @implementation PopEngineRenderView

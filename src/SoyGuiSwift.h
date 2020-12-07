@@ -54,7 +54,18 @@
 
 @end
 
+@interface PopEngineStringArray : PopEngineControl
 
+@property (strong, atomic, nonnull) NSString* label;
+@property (strong, atomic, nonnull) NSMutableArray<NSString*> *value;
+
+- (nonnull instancetype)initWithName:(nonnull NSString*)name value:(nonnull NSMutableArray<NSString*>*)value label:(nonnull NSString*)label;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name value:(nonnull NSMutableArray<NSString*>*)value;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label;
+- (nonnull instancetype)initWithName:(nonnull NSString*)name;
+- (nonnull instancetype)init NS_UNAVAILABLE;
+
+@end
 
 @interface PopEngineRenderView : PopEngineControl
 
