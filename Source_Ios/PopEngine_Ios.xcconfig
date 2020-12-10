@@ -19,7 +19,7 @@ MODULES_PATH = $(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics
 //DYN_LIB_PATH = $(PROJECT_DIR)/src/Libs/dyncall/lib
 //	for some reason osx build just didnt want to find this automatically...
 POPCAMERADEVICE_INCLUDE_PATH = $(MODULES_PATH)/popcameradevice/PopCameraDevice.xcframework/ios-arm64/PopCameraDevice_Ios.framework/Headers/
-POPH264_INCLUDE_PATH = $(MODULES_PATH)/poph264/PopH264.xcframework/ios-arm64/PopH264_Ios.framework/Headers/
+POPH264_INCLUDE_PATH = $(MODULES_PATH)/com.newchromantics.poph264/PopH264.xcframework/ios-arm64/PopH264_Ios.framework/Headers/
 
 HEADER_SEARCH_PATHS = $(HEADER_SEARCH_PATHS) $(inherited) $(SOYLIB_PATH) $(OPENCV_PATH)/include $(OPENCV_CONTRIB_PATH) $(MAGIC_LEAP_PATH)/include $(MODULES_PATH)/** $(POPCAMERADEVICE_INCLUDE_PATH) $(POPH264_INCLUDE_PATH)
 FRAMEWORK_SEARCH_PATHS = $(FRAMEWORK_SEARCH_PATHS) $(MODULES_PATH)/** $(OPENVR_PATH)
