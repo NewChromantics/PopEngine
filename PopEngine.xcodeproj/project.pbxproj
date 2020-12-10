@@ -2896,6 +2896,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -2957,6 +2958,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -3018,6 +3020,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -3079,6 +3082,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
