@@ -14,8 +14,6 @@
 				BF51B910256AEC36004DE4C7 /* ShellScript */,
 			);
 			dependencies = (
-				BFAE1A3C2572B276003691B3 /* PBXTargetDependency */,
-				BFAE1A3E2572B276003691B3 /* PBXTargetDependency */,
 			);
 			name = PopEngine_Universal;
 			productName = PopEngine_Universal;
@@ -282,20 +280,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = BF151F7523845F2E00A70EBF;
 			remoteInfo = PopEngine_Ios;
-		};
-		BFAE1A3B2572B276003691B3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = FB8A058B1A2E54730099596C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = BF151F7523845F2E00A70EBF;
-			remoteInfo = PopEngine_Ios;
-		};
-		BFAE1A3D2572B276003691B3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = FB8A058B1A2E54730099596C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = BF5EAFB4237F0C100077BCF5;
-			remoteInfo = PopEngine_Osx;
 		};
 		BFDC03A42430CBB40004512A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1966,16 +1950,6 @@
 			isa = PBXTargetDependency;
 			target = BF151F7523845F2E00A70EBF /* PopEngine_Ios */;
 			targetProxy = 58C2004924F90993002DAC99 /* PBXContainerItemProxy */;
-		};
-		BFAE1A3C2572B276003691B3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = BF151F7523845F2E00A70EBF /* PopEngine_Ios */;
-			targetProxy = BFAE1A3B2572B276003691B3 /* PBXContainerItemProxy */;
-		};
-		BFAE1A3E2572B276003691B3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = BF5EAFB4237F0C100077BCF5 /* PopEngine_Osx */;
-			targetProxy = BFAE1A3D2572B276003691B3 /* PBXContainerItemProxy */;
 		};
 		BFDC03A52430CBB40004512A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
