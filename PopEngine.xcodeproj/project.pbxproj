@@ -2029,7 +2029,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2110,7 +2110,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2191,7 +2191,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2260,7 +2260,7 @@
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2359,7 +2359,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2441,7 +2441,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2523,7 +2523,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2596,7 +2596,7 @@
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -3160,7 +3160,7 @@
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3237,7 +3237,7 @@
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3314,7 +3314,7 @@
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3380,7 +3380,7 @@
 					"$(PROJECT_DIR)/src/Libs",
 					"$(PROJECT_DIR)/src/Libs/OpenVr/bin/osx64",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/popcameradevice",
-					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/poph264",
+					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
