@@ -217,7 +217,7 @@ struct MetalView: UIViewRepresentable
 
 struct OpenglView: UIViewRepresentable 
 {
-	typealias UIViewType = GLKView
+    typealias UIViewType = GLView
 
 	//	pass in persistent PopEngine binding
 	@Binding var renderer: PopEngineRenderView 

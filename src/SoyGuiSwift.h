@@ -67,14 +67,13 @@
 
 @end
 
+@class GLView;
+
 @interface PopEngineRenderView : PopEngineControl
 
 @property (strong, atomic) MTKView* metalView;
-#if defined(TARGET_IOS)
-@property (strong, atomic) GLKView* openglView;
-#else
-@property (strong, atomic) NSOpenGLView* openglView;
-#endif
+
+@property (strong, atomic) GLView* openglView;
 
 @property (atomic) Boolean value;
 

@@ -42,12 +42,12 @@
 @end
 
 
+@class GLView;
 
 
 
 
-
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLKView* View,Sokol::TContextParams Params) :
+SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView* View,Sokol::TContextParams Params) :
 	mView	( View ),
 	mParams	( Params )
 {

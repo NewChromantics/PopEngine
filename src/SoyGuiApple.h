@@ -6,11 +6,7 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
-#if defined(TARGET_OSX)
-typedef NSOpenGLView GLView;
-#else
-typedef GLKView GLView;
-#endif
+@class GLView;
 
 namespace Platform
 {

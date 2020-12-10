@@ -63,10 +63,10 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<S
 	throw Soy::AssertException(Error);
 }
 
+@class GLView;
 
 
-
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,NSOpenGLView* View,Sokol::TContextParams Params) :
+SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView* View,Sokol::TContextParams Params) :
 	mView	( View ),
 	mParams	( Params )
 {
