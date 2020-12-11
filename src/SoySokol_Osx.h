@@ -22,9 +22,8 @@
 	
 @end
 */
+#include "SoyGuiSwift.h"
 
-@interface GLView : NSOpenglView { }
-@end
 
 class SokolOpenglContext : public Sokol::TContext
 {

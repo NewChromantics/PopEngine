@@ -229,11 +229,11 @@ struct OpenglView: UIViewRepresentable
 
     func makeUIView(context: UIViewRepresentableContext<OpenglView>) -> UIViewType
     {
-    	if ( renderer.openglView == nil )
+		if ( renderer.openglView == nil )
     	{
-    		renderer.openglView = UIViewType()
+			renderer.openglView = UIViewType()
 		}
-    	return renderer.openglView
+		return renderer.openglView
     }
 	
 	func updateUIView(_ uiView: UIViewType, context: UIViewRepresentableContext<OpenglView>) 

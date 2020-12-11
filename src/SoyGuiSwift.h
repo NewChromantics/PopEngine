@@ -4,6 +4,10 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
+#if !TARGET_OS_IOS
+#import <AppKit/AppKit.h>
+#endif
+
 @interface PopEngineControl : NSObject
 
 @property (strong, atomic, nonnull) NSString* name;
@@ -67,12 +71,19 @@
 
 @end
 
-@class GLView;
+
+#if TARGET_OS_IOS	//	gr: this SHOULD be always defined by xcode
+@interface GLView : GLKView
+#else
+@interface GLView : NSOpenGLView
+#endif
+{
+}
+@end
 
 @interface PopEngineRenderView : PopEngineControl
 
 @property (strong, atomic) MTKView* metalView;
-
 @property (strong, atomic) GLView* openglView;
 
 @property (atomic) Boolean value;

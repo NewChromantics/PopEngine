@@ -62,6 +62,12 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 }
 
 
+@implementation GLView
+{
+}
+@end
+
+
 @implementation PopEngineControl 
 
 - (nonnull instancetype)initWithName:(NSString*)name
