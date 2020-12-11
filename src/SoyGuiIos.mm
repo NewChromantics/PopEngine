@@ -1404,3 +1404,27 @@ void  Platform::TImageMap::FreeImage()
 		mNsImage = nullptr;
 	}
 }
+
+class Platform::TStringArray : public Gui::TStringArray
+{
+public:
+    TStringArray(TWindow& Parent,Array<std::string>& Value);
+    
+    virtual void    SetValue(const Array<std::string>& Value);
+    void                  Party();
+    
+    size_t                mValueVersion = 0;
+};
+
+std::shared_ptr<Gui::TStringArray> Platform::CreateStringArray(SoyWindow& Parent, const Array<std::string>& Value)
+{
+    auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
+    std::shared_ptr<Gui::TStringArray> StringArray;
+    auto Allocate = [&]() mutable
+    {
+        StringArray.reset( new Platform::TStringArray( ParentView,  Value) );
+        StringArray->SetValue(Value);
+    };
+    RunJobOnMainThread(Allocate,true);
+    return StringArray;
+}

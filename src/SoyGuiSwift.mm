@@ -21,11 +21,13 @@ namespace Swift
 	class TButton;
 	class TTickBox;
 	class TRenderView;
+    class TStringArray;
 
 	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
 	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
 	std::shared_ptr<Platform::TRenderView>	GetRenderView(const std::string& Name);
+    std::shared_ptr<Platform::TStringArray> GetStringArray(const std::string& Name);
 }
 	
 namespace Platform
@@ -423,6 +425,19 @@ public:
 	PopEngineRenderView*	mControl;
 };
 
+class Swift::TStringArray : public Gui::TStringArray, public Swift::TControl
+{
+public:
+    TStringArray(PopEngineStringArray* Control) :
+        mControl    (Control)
+    {
+    }
+    
+    virtual void            SetValue(const std::string& Value);
+//    virtual std::string        GetValue() override;
+
+    PopEngineStringArray*            mControl;
+};
 
 
 template<typename TYPE>
@@ -477,6 +492,11 @@ std::shared_ptr<Platform::TRenderView> Swift::GetRenderView(const std::string& N
 	return std::shared_ptr<Platform::TRenderView>( new TRenderView(Control) );
 }
 
+std::shared_ptr<Platform::TStringArray> Swift::GetStringArray(const std::string& Name)
+{
+    auto* Control = GetControlAs<PopEngineStringArray>(Name);
+    return std::shared_ptr<Platform::TStringArray>( new TStringArray(Control) );
+}
 	
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
