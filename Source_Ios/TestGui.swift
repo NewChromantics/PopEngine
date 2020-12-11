@@ -8,6 +8,11 @@
 
 import SwiftUI
 
+struct TestItem : Identifiable {
+    var id = UUID()
+    var name: String
+}
+
 
 struct ContentView: View 
 {
@@ -15,6 +20,7 @@ struct ContentView: View
 	@ObservedObject var Label1Wrapper = PopLabel(name:"TestLabel1", label:"InitialLabel")
 	@ObservedObject var FrameCounterLabel = PopLabel(name:"FrameCounterLabel", label:"FrameCounter")
 	@State var renderView = PopEngineRenderView(name:"TestRenderView") 
+    @State var testArray: [TestItem] = PopStringArray(name: "TestArray").theValue.map{ TestItem(name: $0) }
 	
 	var body: some View 
 	{
@@ -23,6 +29,11 @@ struct ContentView: View
 		Text(Label1Wrapper.theLabel)
 		Text(FrameCounterLabel.theLabel)
 		//Text(TestLabel1Wrapper.labelCopy)
+        ForEach(testArray)
+        {
+            item in
+            Text(verbatim: item.name)
+        }
 	}			
 	/*
 	@State var TestLabel1 = PopEngineLabelWrapper(name:"TestLabel1", label:"The Label")
