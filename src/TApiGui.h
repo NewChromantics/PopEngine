@@ -18,6 +18,7 @@ namespace Gui
 	class TImageMap;
 
 	class TMouseEvent;
+    class TStringArray;
 }
 
 namespace ApiGui
@@ -33,6 +34,7 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(Colour);
 	DECLARE_BIND_TYPENAME(ImageMap);
 	DECLARE_BIND_TYPENAME(Button);
+    DECLARE_BIND_TYPENAME(StringArray);
 
 	class TGuiControlWrapper;
 	
@@ -45,6 +47,7 @@ namespace ApiGui
 	class TColourPickerWrapper;
 	class TImageMapWrapper;
 	class TButtonWrapper;
+    class TStringArrayWrapper;
 }
 
 
@@ -272,4 +275,21 @@ public:
 	
 public:
 	std::shared_ptr<SoyButton>&	mControl = mObject;
+};
+
+class ApiGui::TStringArrayWrapper : public Bind::TObjectWrapper<ApiGui::BindType::StringArray, Gui::TStringArray>
+{
+public:
+    TStringArrayWrapper(Bind::TContext& Context) :
+        TObjectWrapper    ( Context )
+    {
+    }
+    
+    static void         CreateTemplate(Bind::TTemplate& Template);
+    virtual void        Construct(Bind::TCallback& Params) override;
+    
+    void                SetValue(Bind::TCallback& Params);
+
+public:
+    std::shared_ptr<Gui::TStringArray>&    mControl = mObject;
 };

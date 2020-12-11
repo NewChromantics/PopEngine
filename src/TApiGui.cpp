@@ -23,6 +23,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Colour);
 	DEFINE_BIND_TYPENAME(ImageMap);
 	DEFINE_BIND_TYPENAME(Button);
+    DEFINE_BIND_TYPENAME(StringArray);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
@@ -109,6 +110,7 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TColourButtonWrapper>(Namespace);
 	Context.BindObjectType<TImageMapWrapper>(Namespace);
 	Context.BindObjectType<TButtonWrapper>(Namespace);
+    Context.BindObjectType<TStringArrayWrapper>(Namespace);
 }
 
 
@@ -786,3 +788,24 @@ void ApiGui::TButtonWrapper::OnClicked()
 	};
 	this->mContext.Queue( Callback );
 }
+
+void ApiGui::TStringArrayWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+    Template.BindFunction<BindFunction::SetValue>( &TStringArrayWrapper::SetValue );
+}
+
+void ApiGui::TStringArrayWrapper::Construct(Bind::TCallback& Params)
+{
+    if ( Params.IsArgumentString(1) )
+    {
+        auto Name = Params.GetArgumentString(1);
+    }
+}
+
+void ApiGui::TStringArrayWrapper::SetValue(Bind::TCallback& Params)
+{
+    auto Value = Params.GetArgumentArray(0);
+    
+    mControl->SetValue( GetArrayBridge(Value) ); // turn some array type into an array bridge
+}
+
