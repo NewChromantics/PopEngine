@@ -808,7 +808,7 @@ void ApiGui::TStringArrayWrapper::Construct(Bind::TCallback& Params)
     {
         Array<std::string> Values;
         Params.GetArgumentArray(0, GetArrayBridge(Values));
-        mControl = Platform::CreateStringArray(*ParentWindow.mWindow, GetArrayBridge(Values))
+        mControl = Platform::CreateStringArray(*ParentWindow.mWindow, GetArrayBridge(Values));
         if ( !mControl )
             throw Soy::AssertException("Failed to create String Array");
     }
