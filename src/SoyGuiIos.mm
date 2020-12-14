@@ -1408,23 +1408,32 @@ void  Platform::TImageMap::FreeImage()
 class Platform::TStringArray : public Gui::TStringArray
 {
 public:
-    TStringArray(TWindow& Parent,Array<std::string>& Value);
+    TStringArray(TWindow& Parent,const ArrayBridge<std::string>&& Values);
     
-    virtual void    SetValue(const Array<std::string>& Value);
-    void                  Party();
+    virtual void    SetValue(const ArrayBridge<std::string>&& Values);
     
-    size_t                mValueVersion = 0;
+private:
+    NSMutableArray<NSString*>*   mData = nullptr;
 };
 
-std::shared_ptr<Gui::TStringArray> Platform::CreateStringArray(SoyWindow& Parent, const Array<std::string>& Value)
+Platform::TStringArray::TStringArray(TWindow& Parent,const ArrayBridge<std::string>&& Values)
+{
+    //Convert the array bridge to NSMutable<NSString> and set to mData
+}
+
+void Platform::TStringArray::SetValue(const ArrayBridge<std::string>&& Values)
+{
+    //Convert the array bridge to NSMutable<NSString> and set to mData
+}
+
+std::shared_ptr<Gui::TStringArray> Platform::CreateStringArray(SoyWindow& Parent, const ArrayBridge<std::string>&& Values)
 {
     auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
-    std::shared_ptr<Gui::TStringArray> StringArray;
+    std::shared_ptr<Gui::TStringArray> Control;
     auto Allocate = [&]() mutable
     {
-        StringArray.reset( new Platform::TStringArray( ParentView,  Value) );
-        StringArray->SetValue(Value);
+        Control.reset( new Platform::TStringArray( ParentView, GetArrayBridge(Values) ) );
     };
     RunJobOnMainThread(Allocate,true);
-    return StringArray;
+    return Control;
 }
