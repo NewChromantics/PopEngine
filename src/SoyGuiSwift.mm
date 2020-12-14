@@ -26,8 +26,8 @@ namespace Swift
 	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
 	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
-	std::shared_ptr<Platform::TRenderView>	GetRenderView(const std::string& Name);
-    std::shared_ptr<Platform::TStringArray> GetStringArray(const std::string& Name);
+	std::shared_ptr<Gui::TRenderView>	    GetRenderView(const std::string& Name);
+    std::shared_ptr<Gui::TStringArray>      GetStringArray(const std::string& Name);
 }
 	
 namespace Platform
@@ -425,7 +425,7 @@ public:
 	PopEngineRenderView*	mControl;
 };
 
-class Swift::TStringArray : public Gui::TStringArray, public Swift::TControl
+class Swift::TStringArray : public Gui::TStringArray
 {
 public:
     TStringArray(PopEngineStringArray* Control) :
@@ -433,10 +433,11 @@ public:
     {
     }
     
-    virtual void            SetValue(const std::string& Value);
-//    virtual std::string        GetValue() override;
+    virtual void                        SetValue(const ArrayBridge<std::string>&& Values) override;
+    virtual ArrayBridge<std::string>&&  GetValue() override;
+    
 
-    PopEngineStringArray*            mControl;
+    PopEngineStringArray*   mControl;
 };
 
 
@@ -486,16 +487,16 @@ std::shared_ptr<SoyTickBox> Swift::GetTickBox(const std::string& Name)
 	return std::shared_ptr<SoyTickBox>( new TTickBox(Control) );
 }
 
-std::shared_ptr<Platform::TRenderView> Swift::GetRenderView(const std::string& Name)
+std::shared_ptr<Gui::TRenderView> Swift::GetRenderView(const std::string& Name)
 {
 	auto* Control = GetControlAs<PopEngineRenderView>(Name);
-	return std::shared_ptr<Platform::TRenderView>( new TRenderView(Control) );
+	return std::shared_ptr<Gui::TRenderView>( new TRenderView(Control) );
 }
 
-std::shared_ptr<Platform::TStringArray> Swift::GetStringArray(const std::string& Name)
+std::shared_ptr<Gui::TStringArray> Swift::GetStringArray(const std::string& Name)
 {
     auto* Control = GetControlAs<PopEngineStringArray>(Name);
-    return std::shared_ptr<Platform::TStringArray>( new TStringArray(Control) );
+    return std::shared_ptr<Gui::TStringArray>( new TStringArray(Control) );
 }
 	
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
@@ -538,4 +539,25 @@ void Swift::TTickBox::SetLabel(const std::string& Value)
 {
 	auto* Label = Soy::StringToNSString(Value);
 	mControl.label = Label;
+}
+
+ArrayBridge<std::string>&& Swift::TStringArray::GetValue()
+{
+    Array<std::string> Array = { };
+    for (id item in mControl.value) {
+        auto string = Soy::NSStringToString(item);
+        Array.PushBack(string);
+    }
+    return GetArrayBridge(Array);
+}
+
+void Swift::TStringArray::SetValue(const ArrayBridge<std::string>&& Values)
+{
+    auto Array = [[NSMutableArray alloc] init];
+    for ( auto a=0; a < Values.GetSize(); a++ )
+    {
+        auto* item = Soy::StringToNSString(Values[a]);
+        [Array addObject:item];
+    }
+    mControl.value = Array;
 }

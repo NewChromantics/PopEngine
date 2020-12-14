@@ -801,8 +801,7 @@ void ApiGui::TStringArrayWrapper::Construct(Bind::TCallback& Params)
     if ( Params.IsArgumentString(1) ) //    user provided named element
     {
         auto Name = Params.GetArgumentString(1);
-        //TODO
-//        mControl = Platform::GetStringArray( *ParentWindow.mWindow, Name );
+        mControl = Platform::GetStringArray( *ParentWindow.mWindow, Name );
     }
     else    // user provided array
     {
