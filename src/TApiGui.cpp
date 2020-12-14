@@ -796,16 +796,28 @@ void ApiGui::TStringArrayWrapper::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TStringArrayWrapper::Construct(Bind::TCallback& Params)
 {
-    if ( Params.IsArgumentString(1) )
+    auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+    
+    if ( Params.IsArgumentString(1) ) //    user provided named element
     {
         auto Name = Params.GetArgumentString(1);
+        //TODO
+//        mControl = Platform::GetStringArray( *ParentWindow.mWindow, Name );
+    }
+    else    // user provided array
+    {
+        Array<std::string> Values;
+        Params.GetArgumentArray(0, GetArrayBridge(Values));
+        mControl = Platform::CreateStringArray(*ParentWindow.mWindow, GetArrayBridge(Values))
+        if ( !mControl )
+            throw Soy::AssertException("Failed to create String Array");
     }
 }
 
 void ApiGui::TStringArrayWrapper::SetValue(Bind::TCallback& Params)
 {
-    auto Value = Params.GetArgumentArray(0);
-    
-    mControl->SetValue( GetArrayBridge(Value) ); // turn some array type into an array bridge
+    Array<std::string> Values;
+    Params.GetArgumentArray(0, GetArrayBridge(Values));
+    mControl->SetValue( GetArrayBridge(Values) ); // turn some array type into an array bridge
 }
 
