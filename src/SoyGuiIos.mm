@@ -1413,17 +1413,29 @@ public:
     virtual void    SetValue(const ArrayBridge<std::string>&& Values);
     
 private:
-    NSMutableArray<NSString*>*   mData = nullptr;
+    NSMutableArray<NSString*>*      ConvertToNSArray(const ArrayBridge<std::string>&& Values);
+    NSMutableArray<NSString*>*      mData = nullptr;
 };
 
 Platform::TStringArray::TStringArray(TWindow& Parent,const ArrayBridge<std::string>&& Values)
 {
-    //Convert the array bridge to NSMutable<NSString> and set to mData
+    mData = ConvertToNSArray( GetArrayBridge(Values) );
 }
 
 void Platform::TStringArray::SetValue(const ArrayBridge<std::string>&& Values)
 {
-    //Convert the array bridge to NSMutable<NSString> and set to mData
+    mData = ConvertToNSArray( GetArrayBridge(Values) );
+}
+
+NSMutableArray<NSString*>* ConvertToNSArray(const ArrayBridge<std::string>&& Values)
+{
+    auto Array = [[NSMutableArray alloc] init];
+    for ( auto a=0; a < Values.GetSize(); a++ )
+    {
+        auto* Arg = Soy::StringToNSString(Values[a]);
+        [Array addObject:Arg];
+    }
+    return Array;
 }
 
 std::shared_ptr<Gui::TStringArray> Platform::CreateStringArray(SoyWindow& Parent, const ArrayBridge<std::string>&& Values)
