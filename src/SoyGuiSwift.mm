@@ -230,8 +230,8 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 @implementation PopEngineStringArray
 {
-    NSMutableArray<NSString*> *mValue;
-    @public std::function<void(NSMutableArray<NSString*>*)>    mOnChanged;
+    NSMutableArray<NSString*> * mValue;
+//    @public std::function<void(NSMutableArray<NSString*>*)>    mOnChanged;
 }
 
 
@@ -276,10 +276,10 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
     }
     
     auto Value = self.value;
-    if ( mOnChanged )
-        mOnChanged(Value);
-    else
-        std::Debug << "StringArray(" << Soy::NSStringToString(self.name) << ") changed to " << Value << std::endl;
+//    if ( mOnChanged )
+//        mOnChanged(Value);
+//    else
+//        std::Debug << "StringArray(" << Soy::NSStringToString(self.name) << ") changed to " << Value << std::endl;
 }
 
 @end
