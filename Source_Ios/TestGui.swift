@@ -20,7 +20,7 @@ struct ContentView: View
 	@ObservedObject var Label1Wrapper = PopLabel(name:"TestLabel1", label:"InitialLabel")
 	@ObservedObject var FrameCounterLabel = PopLabel(name:"FrameCounterLabel", label:"FrameCounter")
 	@State var renderView = PopEngineRenderView(name:"TestRenderView") 
-    @State var testArray: [TestItem] = PopStringArray(name: "TestArray").theValue.map{ TestItem(name: $0) }
+    @ObservedObject var TestArray = PopStringArray(name: "TestArray")
 	
 	var body: some View 
 	{
@@ -29,10 +29,10 @@ struct ContentView: View
 		Text(Label1Wrapper.theLabel)
 		Text(FrameCounterLabel.theLabel)
 		//Text(TestLabel1Wrapper.labelCopy)
-        ForEach(testArray)
+        ForEach(TestArray.theValue.map( { TestItem(name: $0) } ) )
         {
             item in
-            Text(verbatim: item.name)
+                Text(verbatim: item.name)
         }
 	}			
 	/*
