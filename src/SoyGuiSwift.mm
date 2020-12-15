@@ -266,20 +266,8 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 -(void) setValue: (NSMutableArray<NSString*>*)value
 {
-    auto OldValue = mValue;
     mValue = value;
-    
-    //    gr: only notify if changed to avoid recursion?
-    if ( mValue == OldValue )
-    {
-        return;
-    }
-    
-    auto Value = self.value;
-//    if ( mOnChanged )
-//        mOnChanged(Value);
-//    else
-//        std::Debug << "StringArray(" << Soy::NSStringToString(self.name) << ") changed to " << Value << std::endl;
+    [self updateUi];
 }
 
 @end
