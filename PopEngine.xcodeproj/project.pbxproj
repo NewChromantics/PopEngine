@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		4153DA2425890E6A007AA5CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4153DA2225890E6A007AA5CE /* SceneDelegate.swift */; };
+		4153DA2625890E6A007AA5CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4153DA2225890E6A007AA5CE /* SceneDelegate.swift */; };
 		5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		58171F1C250BD4A700224082 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1A250BD4A400224082 /* LaunchScreen.storyboard */; };
 		58171F1D250BD4A700224082 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1A250BD4A400224082 /* LaunchScreen.storyboard */; };
@@ -252,7 +254,6 @@
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
 		BF7E6A5C256EFCF300365CEF /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF7E6A5D256EFCF300365CEF /* PopCameraDevice.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BF7E6A62256EFEE400365CEF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */; };
 		BF7E6A722570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A742570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -338,6 +339,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4153DA2225890E6A007AA5CE /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		58171F1A250BD4A400224082 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		58171F1B250BD4A600224082 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiIos.mm; path = src/SoyGuiIos.mm; sourceTree = "<group>"; };
@@ -540,7 +542,6 @@
 		BF7A2CD024F1A7B500CD3A32 /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = PopEngine.Package/node_modules; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
-		BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = ../../PanopolySwiftGui/PanopolySwiftGuiTest/PanopolySwiftGuiTest/SceneDelegate.swift; sourceTree = "<group>"; };
 		BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwift.h; path = src/SoyGuiSwift.h; sourceTree = "<group>"; };
 		BF7E6A712570011300365CEF /* SoyGuiSwift.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiSwift.mm; path = src/SoyGuiSwift.mm; sourceTree = "<group>"; };
 		BF8534F422B6DA450049C01B /* libChakraCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libChakraCore.dylib; path = lib/libChakraCore.dylib; sourceTree = "<group>"; };
@@ -918,7 +919,7 @@
 				BF5EB05E2380335F0077BCF5 /* PopEngineApp_Osx_Info.plist */,
 				BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */,
 				BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */,
-				BF7E6A60256EFEE400365CEF /* SceneDelegate.swift */,
+				4153DA2225890E6A007AA5CE /* SceneDelegate.swift */,
 				BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */,
 			);
 			path = Source_App;
@@ -1614,7 +1615,7 @@
 					BF151F7523845F2E00A70EBF = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
-						LastSwiftMigration = 1200;
+						LastSwiftMigration = 1220;
 						ProvisioningStyle = Automatic;
 					};
 					BF51B903256AEBE5004DE4C7 = {
@@ -1627,13 +1628,13 @@
 					BF5EAFB4237F0C100077BCF5 = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
-						LastSwiftMigration = 1200;
+						LastSwiftMigration = 1220;
 						ProvisioningStyle = Automatic;
 					};
 					BF5EB0532380335D0077BCF5 = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = X52DR36JY2;
-						LastSwiftMigration = 1200;
+						LastSwiftMigration = 1220;
 						ProvisioningStyle = Automatic;
 					};
 					BFDC037B24BFAE8000182E0B = {
@@ -1748,7 +1749,7 @@
 				BF693A30250D17F9002E3772 /* PopEngineUnitTestMain.cpp in Sources */,
 				BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */,
 				BF51B8D4256AD19B004DE4C7 /* TestGui.swift in Sources */,
-				BF7E6A62256EFEE400365CEF /* SceneDelegate.swift in Sources */,
+				4153DA2625890E6A007AA5CE /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1940,6 +1941,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */,
+				4153DA2425890E6A007AA5CE /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
