@@ -21,13 +21,13 @@ namespace Swift
 	class TButton;
 	class TTickBox;
 	class TRenderView;
-    class TStringArray;
+    class TList;
 
 	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
 	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
 	std::shared_ptr<Gui::TRenderView>	    GetRenderView(const std::string& Name);
-    std::shared_ptr<Gui::TStringArray>      GetStringArray(const std::string& Name);
+    std::shared_ptr<Gui::TList>      GetStringArray(const std::string& Name);
 }
 	
 namespace Platform
@@ -228,7 +228,7 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 @end
 
-@implementation PopEngineStringArray
+@implementation PopEngineList
 {
     NSMutableArray<NSString*> * mValue;
 //    @public std::function<void(NSMutableArray<NSString*>*)>    mOnChanged;
@@ -413,19 +413,19 @@ public:
 	PopEngineRenderView*	mControl;
 };
 
-class Swift::TStringArray : public Gui::TStringArray
+class Swift::TList : public Gui::TList
 {
 public:
-    TStringArray(PopEngineStringArray* Control) :
+    TList(PopEngineList* Control) :
         mControl    (Control)
     {
     }
     
-    virtual void                        SetValue(const ArrayBridge<std::string>&& Values) override;
+    virtual void                        SetValue(const ArrayBridge<std::string>&& Value) override;
     virtual ArrayBridge<std::string>&&  GetValue() override;
     
 
-    PopEngineStringArray*   mControl;
+    PopEngineList*   mControl;
 };
 
 
@@ -481,10 +481,10 @@ std::shared_ptr<Gui::TRenderView> Swift::GetRenderView(const std::string& Name)
 	return std::shared_ptr<Gui::TRenderView>( new TRenderView(Control) );
 }
 
-std::shared_ptr<Gui::TStringArray> Swift::GetStringArray(const std::string& Name)
+std::shared_ptr<Gui::TList> Swift::GetStringArray(const std::string& Name)
 {
-    auto* Control = GetControlAs<PopEngineStringArray>(Name);
-    return std::shared_ptr<Gui::TStringArray>( new TStringArray(Control) );
+    auto* Control = GetControlAs<PopEngineList>(Name);
+    return std::shared_ptr<Gui::TList>( new TList(Control) );
 }
 	
 void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
@@ -529,27 +529,27 @@ void Swift::TTickBox::SetLabel(const std::string& Value)
 	mControl.label = Label;
 }
 
-ArrayBridge<std::string>&& Swift::TStringArray::GetValue()
+ArrayBridge<std::string>&& Swift::TList::GetValue()
 {
-    Array<std::string> Array = { };
+    Array<std::string> Value = { };
     for (id item in mControl.value) {
         auto string = Soy::NSStringToString(item);
-        Array.PushBack(string);
+        Value.PushBack(string);
     }
-    return GetArrayBridge(Array);
+    return GetArrayBridge(Value);
 }
 
-void Swift::TStringArray::SetValue(const ArrayBridge<std::string>&& Values)
+void Swift::TList::SetValue(const ArrayBridge<std::string>&& Value)
 {
     auto SetValue = [&]()
     {
-        auto Array = [[NSMutableArray alloc] init];
-        for ( auto a=0; a < Values.GetSize(); a++ )
+        auto NewValue = [[NSMutableArray alloc] init];
+        for ( auto a=0; a < Value.GetSize(); a++ )
         {
-            auto* item = Soy::StringToNSString(Values[a]);
-            [Array addObject:item];
+            auto* item = Soy::StringToNSString(Value[a]);
+            [NewValue addObject:item];
         }
-        mControl.value = Array;
+        mControl.value = NewValue;
     };
     RunJobOnMainThread(SetValue,true);
 

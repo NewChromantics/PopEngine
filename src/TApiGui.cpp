@@ -23,7 +23,7 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Colour);
 	DEFINE_BIND_TYPENAME(ImageMap);
 	DEFINE_BIND_TYPENAME(Button);
-    DEFINE_BIND_TYPENAME(StringArray);
+    DEFINE_BIND_TYPENAME(List);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
@@ -110,7 +110,7 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TColourButtonWrapper>(Namespace);
 	Context.BindObjectType<TImageMapWrapper>(Namespace);
 	Context.BindObjectType<TButtonWrapper>(Namespace);
-    Context.BindObjectType<TStringArrayWrapper>(Namespace);
+    Context.BindObjectType<TList>(Namespace);
 }
 
 
@@ -789,12 +789,12 @@ void ApiGui::TButtonWrapper::OnClicked()
 	this->mContext.Queue( Callback );
 }
 
-void ApiGui::TStringArrayWrapper::CreateTemplate(Bind::TTemplate& Template)
+void ApiGui::TList::CreateTemplate(Bind::TTemplate& Template)
 {
-    Template.BindFunction<BindFunction::SetValue>( &TStringArrayWrapper::SetValue );
+    Template.BindFunction<BindFunction::SetValue>( &TList::SetValue );
 }
 
-void ApiGui::TStringArrayWrapper::Construct(Bind::TCallback& Params)
+void ApiGui::TList::Construct(Bind::TCallback& Params)
 {
     auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
     
@@ -805,18 +805,18 @@ void ApiGui::TStringArrayWrapper::Construct(Bind::TCallback& Params)
     }
     else    // user provided array
     {
-        Array<std::string> Values;
-        Params.GetArgumentArray(0, GetArrayBridge(Values));
-        mControl = Platform::CreateStringArray(*ParentWindow.mWindow, GetArrayBridge(Values));
+        Array<std::string> Value;
+        Params.GetArgumentArray(0, GetArrayBridge(Value));
+        mControl = Platform::CreateStringArray(*ParentWindow.mWindow, GetArrayBridge(Value));
         if ( !mControl )
             throw Soy::AssertException("Failed to create String Array");
     }
 }
 
-void ApiGui::TStringArrayWrapper::SetValue(Bind::TCallback& Params)
+void ApiGui::TList::SetValue(Bind::TCallback& Params)
 {
-    Array<std::string> Values;
-    Params.GetArgumentArray(0, GetArrayBridge(Values));
-    mControl->SetValue( GetArrayBridge(Values) ); // turn some array type into an array bridge
+    Array<std::string> Value;
+    Params.GetArgumentArray(0, GetArrayBridge(Value));
+    mControl->SetValue( GetArrayBridge(Value) ); // turn some array type into an array bridge
 }
 

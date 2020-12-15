@@ -83,7 +83,7 @@ import SwiftUI
 	@Published private var valueCopy:Bool = false
 }
 
-@objc class PopStringArray : PopEngineStringArray , ObservableObject
+@objc class PopList : PopEngineList , ObservableObject
 {
     //    called from objective-c's .label setter
     @objc override func updateUi()

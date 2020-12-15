@@ -58,7 +58,7 @@
 
 @end
 
-@interface PopEngineStringArray : PopEngineControl
+@interface PopEngineList : PopEngineControl
 
 @property (strong, atomic, nonnull) NSString* label;
 @property (strong, atomic, nonnull) NSMutableArray<NSString*> *value;
