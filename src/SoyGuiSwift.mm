@@ -541,11 +541,16 @@ ArrayBridge<std::string>&& Swift::TStringArray::GetValue()
 
 void Swift::TStringArray::SetValue(const ArrayBridge<std::string>&& Values)
 {
-    auto Array = [[NSMutableArray alloc] init];
-    for ( auto a=0; a < Values.GetSize(); a++ )
+    auto SetValue = [&]()
     {
-        auto* item = Soy::StringToNSString(Values[a]);
-        [Array addObject:item];
-    }
-    mControl.value = Array;
+        auto Array = [[NSMutableArray alloc] init];
+        for ( auto a=0; a < Values.GetSize(); a++ )
+        {
+            auto* item = Soy::StringToNSString(Values[a]);
+            [Array addObject:item];
+        }
+        mControl.value = Array;
+    };
+    RunJobOnMainThread(SetValue,true);
+
 }
