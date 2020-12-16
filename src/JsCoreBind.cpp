@@ -2106,20 +2106,34 @@ void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,
 }
 
 
-std::string JsCore::TContext::GetResolvedFilename(const std::string& Filename)
+std::string JsCore::TContext::GetResolvedFilename(const std::string& OrigFilename)
 {
 	//	gr: expecting this to succeed even if the file doesn't exist
-	if ( Platform::IsFullPath(Filename) )
-		return Filename;
+	if ( Platform::IsFullPath(OrigFilename) )
+		return OrigFilename;
 
 	//	gr: do this better!
 	//	gr: should be able to use NSUrl to resolve ~/ or / etc
-	if ( Filename[0] == '/' )
-		return Filename;
-	
-	std::stringstream FullFilename;
-	FullFilename << mRootDirectory << Filename;
-	return FullFilename.str();
+	if ( OrigFilename[0] == '/' )
+		return OrigFilename;
+		
+	std::string Filename = OrigFilename;
+	std::stringstream NewFilename;
+		
+	//	special OS dir
+	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
+	{
+		auto DocsDir = Platform::GetDocumentsDirectory();
+		//	make sure directory has trailing slash
+		//	gr: why doesnt GetDocumentsDirectory have a slash?
+		DocsDir = Platform::GetDirectoryFromFilename(DocsDir);
+		NewFilename << DocsDir << Filename;
+	}	
+	else
+	{
+		NewFilename << mRootDirectory << Filename;
+	}
+	return NewFilename.str();
 }
 
 

@@ -696,21 +696,11 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
 
-	std::string Filename = Params.GetArgumentString(0);
+	std::string Filename = Params.GetArgumentFilename(0);
 
-	//	gr; work out a better idea for this
-	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
-	{
-		auto DocsDir = Platform::GetDocumentsDirectory();
-		//std::Debug << "Platform::GetDocumentsDirectory=" << DocsDir << std::endl;
-		Filename = DocsDir + std::string("/") + Filename;
-	}
-	else
-	{
-		Filename = Params.GetArgumentFilename(0);
-		auto Directory = Platform::GetDirectoryFromFilename(Filename);
-		Platform::CreateDirectory(Directory);
-	}
+	//	make sure directory is created if it's a new filename
+	auto Directory = Platform::GetDirectoryFromFilename(Filename);
+	Platform::CreateDirectory(Directory);
 
 	Array<uint8_t> Contents;
 	auto ContentsArgumentIndex = 1;
@@ -743,12 +733,14 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 
 void ApiPop::GetFilenames(Bind::TCallback& Params)
 {
-	//	if no directory, list all files
+	//	if no directory, list all files at root
 	std::string Directory = Params.mContext.GetResolvedFilename("");
 	if ( !Params.IsArgumentUndefined(0) )
+	{
 		Directory = Params.GetArgumentFilename(0);
+	}
 
-	//	correct directory name (ie, end with slash
+	//	correct directory name (ie, add slash if it's a dir, and remove filename if it's a file)
 	Directory = Platform::GetDirectoryFromFilename(Directory);
 	
 	//	recurse
