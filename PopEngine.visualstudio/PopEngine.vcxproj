@@ -281,6 +281,14 @@
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
     <ClCompile Include="..\src\Json11\json11.cpp" />
+    <ClCompile Include="..\src\SoyGuiLinux.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\SoyGui_Win32.cpp" />
     <ClCompile Include="..\src\SoyImageProxy.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp" />

@@ -801,15 +801,11 @@ void ApiGui::TList::Construct(Bind::TCallback& Params)
     if ( Params.IsArgumentString(1) ) //    user provided named element
     {
         auto Name = Params.GetArgumentString(1);
-        mControl = Platform::GetStringArray( *ParentWindow.mWindow, Name );
+        mControl = Platform::GetList( *ParentWindow.mWindow, Name );
     }
     else    // user provided array
     {
-        Array<std::string> Value;
-        Params.GetArgumentArray(0, GetArrayBridge(Value));
-        mControl = Platform::CreateStringArray(*ParentWindow.mWindow, GetArrayBridge(Value));
-        if ( !mControl )
-            throw Soy::AssertException("Failed to create String Array");
+		throw Soy::AssertException("Currently can only get existing list control");
     }
 }
 

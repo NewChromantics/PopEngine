@@ -1337,6 +1337,12 @@ std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy:
 	return Control;
 }
 
+std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
+
 const DWORD Slider_StyleExFlags = 0;
 const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_AUTOTICKS;
 //const DWORD Slider_StyleFlags = WS_CHILD | WS_VISIBLE | /*TBS_AUTOTICKS |*/ TBS_ENABLESELRANGE;
