@@ -491,12 +491,12 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 void Swift::TLabel::SetValue(const std::string& Value)
 {
-	auto SetLabel = [&]()
+	auto* Label = Soy::StringToNSString(Value);
+	auto SetLabel = [=]()
 	{
-		auto* Label = Soy::StringToNSString(Value);
 		mControl.label = Label;
 	};
-	RunJobOnMainThread(SetLabel,true);
+	RunJobOnMainThread(SetLabel,false);
 }
 
 std::string Swift::TLabel::GetValue()
