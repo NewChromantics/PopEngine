@@ -645,6 +645,7 @@
 		BFE5727F1B541B3400B17528 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
+		BFE7BCCF258AB9760021932B /* PopEngine.visualstudio */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.visualstudio; sourceTree = "<group>"; };
 		BFEDAFEA24E01183003B130F /* PopEngine.Package */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Package; sourceTree = "<group>"; };
 		BFEDAFEB24E0672E003B130F /* Android */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Android; path = src/Android; sourceTree = "<group>"; };
 		BFEDAFEC24E15128003B130F /* Source_Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Source_Android; sourceTree = "<group>"; };
@@ -1166,6 +1167,7 @@
 				BFDC037A24BFAE4A00182E0B /* PopEngine.Linux */,
 				BFE462B824B12D8A00D04A4C /* PopDepthToYuv */,
 				BF07E6D32479D94700A38A4B /* PopEngine.Android */,
+				BFE7BCCF258AB9760021932B /* PopEngine.visualstudio */,
 				BF108A842296B7BE003DDC5F /* PopEngine.xcassets */,
 				BF5C4AB523F6C7F5007D6393 /* PopEngine.Lumin */,
 				B71D7B252137F7EE00F29EA0 /* SoyDeckLink */,
