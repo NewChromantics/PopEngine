@@ -1287,12 +1287,8 @@ std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent,Soy::Rectx<int
 }
 
 
-std::shared_ptr<Gui::TList> Platform::CreateStringArray(SoyWindow& Parent, const ArrayBridge<std::string>&& Value)
-{
-	Soy_AssertTodo();
-}
 
-std::shared_ptr<Gui::TList> Platform::GetStringArray(SoyWindow& Parent, const std::string& Name)
+std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::string& Name)
 {
 	Soy_AssertTodo();
 }

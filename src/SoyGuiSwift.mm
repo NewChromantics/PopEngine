@@ -35,8 +35,8 @@ namespace Swift
 	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
 	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
-	std::shared_ptr<Gui::TRenderView>	    GetRenderView(const std::string& Name);
-    std::shared_ptr<Gui::TList>      GetStringArray(const std::string& Name);
+	std::shared_ptr<Gui::TRenderView>	GetRenderView(const std::string& Name);
+    std::shared_ptr<Gui::TList>			GetList(const std::string& Name);
 }
 	
 namespace Platform
@@ -429,13 +429,13 @@ public:
 class Swift::TList : public Gui::TList
 {
 public:
-    TList(PopEngineList* Control) :
-        mControl    (Control)
-    {
+	TList(PopEngineList* Control) :
+		mControl	(Control)
+	 {
     }
     
-    virtual void                        SetValue(const ArrayBridge<std::string>&& Value) override;
-    virtual ArrayBridge<std::string>&&  GetValue() override;
+    virtual void		SetValue(const ArrayBridge<std::string>&& Value) override;
+    virtual void		GetValue(ArrayBridge<std::string>&& Values) override;
     
 
     PopEngineList*   mControl;
@@ -494,7 +494,7 @@ std::shared_ptr<Gui::TRenderView> Swift::GetRenderView(const std::string& Name)
 	return std::shared_ptr<Gui::TRenderView>( new TRenderView(Control) );
 }
 
-std::shared_ptr<Gui::TList> Swift::GetStringArray(const std::string& Name)
+std::shared_ptr<Gui::TList> Swift::GetList(const std::string& Name)
 {
     auto* Control = GetControlAs<PopEngineList>(Name);
     return std::shared_ptr<Gui::TList>( new TList(Control) );
@@ -542,28 +542,27 @@ void Swift::TTickBox::SetLabel(const std::string& Value)
 	mControl.label = Label;
 }
 
-ArrayBridge<std::string>&& Swift::TList::GetValue()
+void Swift::TList::GetValue(ArrayBridge<std::string>&& Values)
 {
-    Array<std::string> Value = { };
-    for (id item in mControl.value) {
+    for (id item in mControl.value) 
+    {
         auto string = Soy::NSStringToString(item);
-        Value.PushBack(string);
+        Values.PushBack(string);
     }
-    return GetArrayBridge(Value);
 }
 
-void Swift::TList::SetValue(const ArrayBridge<std::string>&& Value)
+void Swift::TList::SetValue(const ArrayBridge<std::string>&& Values)
 {
-    auto SetValue = [&]()
-    {
-        auto NewValue = [[NSMutableArray alloc] init];
-        for ( auto a=0; a < Value.GetSize(); a++ )
-        {
-            auto* item = Soy::StringToNSString(Value[a]);
-            [NewValue addObject:item];
-        }
-        mControl.value = NewValue;
-    };
-    RunJobOnMainThread(SetValue,true);
+	auto ValuesNs = [[NSMutableArray alloc] init];
+	for ( auto a=0; a < Values.GetSize(); a++ )
+	{
+		auto* item = Soy::StringToNSString(Values[a]);
+		[ValuesNs addObject:item];
+	}
 
+	auto SetValue = [=]()
+	{
+		mControl.value = ValuesNs;
+	};
+	RunJobOnMainThread(SetValue,false);
 }

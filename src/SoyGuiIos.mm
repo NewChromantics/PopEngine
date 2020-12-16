@@ -46,7 +46,7 @@ namespace Swift
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
 	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
 	std::shared_ptr<Gui::TRenderView>	GetRenderView(const std::string& Name);
-    std::shared_ptr<Gui::TList>  GetStringArray(const std::string& Name);
+    std::shared_ptr<Gui::TList>			GetList(const std::string& Name);
 }
 
 
@@ -1409,45 +1409,39 @@ void  Platform::TImageMap::FreeImage()
 class Platform::TList : public Gui::TList, public PlatformControl<NSMutableArray<NSString*>>
 {
 public:
-    TList(TWindow& Parent,const ArrayBridge<std::string>&& Value);
+    TList(TWindow& Parent);
     
-    virtual void                        SetValue(const ArrayBridge<std::string>&& Value);
-    virtual ArrayBridge<std::string>&&  GetValue();
+    virtual void				SetValue(const ArrayBridge<std::string>&& Value);
+    virtual void				GetValue(ArrayBridge<std::string>&& Values);
 };
 
-Platform::TList::TList(TWindow& Parent,const ArrayBridge<std::string>&& Value)
+Platform::TList::TList(TWindow& Parent)
 {
-    auto NewValue = [[NSMutableArray alloc] init];
-    for ( auto a=0; a < Value.GetSize(); a++ )
-    {
-        auto* Arg = Soy::StringToNSString(Value[a]);
-        [NewValue addObject:Arg];
-    }
-    mControl = NewValue;
+	auto NewValue = [[NSMutableArray alloc] init];
+	mControl = NewValue;
 }
 
 void Platform::TList::SetValue(const ArrayBridge<std::string>&& Value)
 {
-    auto NewValue = [[NSMutableArray alloc] init];
-    for ( auto a=0; a < Value.GetSize(); a++ )
-    {
-        auto* Arg = Soy::StringToNSString(Value[a]);
-        [NewValue addObject:Arg];
-    }
-    mControl = NewValue;
+	auto NewValue = [[NSMutableArray alloc] init];
+	for ( auto a=0; a < Value.GetSize(); a++ )
+	{
+		auto* Arg = Soy::StringToNSString(Value[a]);
+		[NewValue addObject:Arg];
+	}
+	mControl = NewValue;
 }
 
-ArrayBridge<std::string>&& Platform::TList::GetValue()
+void Platform::TList::GetValue(ArrayBridge<std::string>&& Values)
 {
-    Array<std::string> Value = { };
-    for (id item in mControl) {
-        auto string = Soy::NSStringToString(item);
-        Value.PushBack(string);
-    }
-    return GetArrayBridge(Value);
+	for (id item in mControl) 
+	{
+		auto string = Soy::NSStringToString(item);
+		Values.PushBack(string);
+	}
 }
-
-std::shared_ptr<Gui::TList> Platform::CreateStringArray(SoyWindow& Parent, const ArrayBridge<std::string>&& Value)
+/*
+std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const ArrayBridge<std::string>&& Value)
 {
     auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
     std::shared_ptr<Gui::TList> Control;
@@ -1458,8 +1452,8 @@ std::shared_ptr<Gui::TList> Platform::CreateStringArray(SoyWindow& Parent, const
     RunJobOnMainThread(Allocate,true);
     return Control;
 }
-
-std::shared_ptr<Gui::TList> Platform::GetStringArray(SoyWindow& Parent, const std::string& Name)
+*/
+std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::string& Name)
 {
-    return Swift::GetStringArray(Name);
+    return Swift::GetList(Name);
 }
