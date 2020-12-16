@@ -6,6 +6,15 @@
 #include "SoyWindow.h"
 #include "SoyGuiApple.h"
 
+
+bool NSStringEquals(NSString* a,NSString* b)
+{
+	if ([a compare:b] == NSOrderedSame)
+		return true;
+	return false; 
+}
+
+
 namespace Swift
 {
 	//	gr: these might not be swift ones, but for the sake of context, let's call them that for now
@@ -135,6 +144,10 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 -(void) setLabel: (NSString*)value
 {
+	//	skip reporting unchanged value
+	if ( !NSStringEquals( mLabel, value ) )
+		return;
+		
 	mLabel = value;
 	[self updateUi];
 }
@@ -447,7 +460,7 @@ PopEngineControl* Swift::GetControl(const std::string& Name)
 		
 		//	gr: wow, can't do nsstring != nsstring
 		//if ( ControlName != NameMs )
-		if ([NameMs compare:ControlName] != NSOrderedSame) 
+		if (!NSStringEquals( NameMs, ControlName ) ) 
 			continue;
 		return Control;
 	}
