@@ -13,7 +13,7 @@
 #include <PopH264.h>
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
-#include <poph264/windows/Release_x64/PopH264.h>
+#include <com.newchromantics.poph264/windows/Release_x64/PopH264.h>
 #elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
 #include <PopH264.h>
 #endif
