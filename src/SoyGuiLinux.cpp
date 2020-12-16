@@ -119,6 +119,10 @@ std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::stri
 }
 
 std::shared_ptr<Gui::TImageMap> Platform::GetImageMap(SoyWindow& Parent,const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 
 std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::string& Name)
 {
