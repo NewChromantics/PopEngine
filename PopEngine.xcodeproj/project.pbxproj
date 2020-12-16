@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		4153DA2425890E6A007AA5CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4153DA2225890E6A007AA5CE /* SceneDelegate.swift */; };
 		4153DA2625890E6A007AA5CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4153DA2225890E6A007AA5CE /* SceneDelegate.swift */; };
 		5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		58171F1C250BD4A700224082 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 58171F1A250BD4A400224082 /* LaunchScreen.storyboard */; };
@@ -1941,7 +1940,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */,
-				4153DA2425890E6A007AA5CE /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
