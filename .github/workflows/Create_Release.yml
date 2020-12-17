@@ -68,7 +68,7 @@ jobs:
 
       - name: Setup nuget (Windows)
         if: matrix.config.os == 'windows'
-        uses: warrenbuckley/Setup-Nuget@v1
+        uses: nuget/setup-nuget@v1
         
       - name: Setup msbuild (Windows)
         if: matrix.config.os == 'windows'
