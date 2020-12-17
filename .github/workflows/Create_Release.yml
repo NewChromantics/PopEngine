@@ -72,7 +72,7 @@ jobs:
         
       - name: Setup msbuild (Windows)
         if: matrix.config.os == 'windows'
-        uses: microsoft/setup-msbuild@v1.0.0
+        uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Build Windows
         if: matrix.config.os == 'windows'
