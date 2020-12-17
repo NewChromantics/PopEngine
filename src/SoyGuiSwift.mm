@@ -145,7 +145,7 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 -(void) setLabel: (NSString*)value
 {
 	//	skip reporting unchanged value
-	if ( !NSStringEquals( mLabel, value ) )
+	if ( NSStringEquals( mLabel, value ) )
 		return;
 		
 	mLabel = value;
