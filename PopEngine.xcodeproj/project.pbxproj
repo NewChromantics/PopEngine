@@ -2603,9 +2603,11 @@
 		BF51B905256AEBE5004DE4C7 /* Debug_JavascriptCore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
 				FULL_PRODUCT_NAME = "${PROJECT_NAME}.xcframework";
+				OBJROOT = "$(SYMROOT)$(EFFECTIVE_PLATFORM_NAME)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_JavascriptCore;
@@ -2613,9 +2615,11 @@
 		BF51B906256AEBE5004DE4C7 /* Debug_V8 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
 				FULL_PRODUCT_NAME = "${PROJECT_NAME}.xcframework";
+				OBJROOT = "$(SYMROOT)$(EFFECTIVE_PLATFORM_NAME)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_V8;
@@ -2623,9 +2627,11 @@
 		BF51B907256AEBE5004DE4C7 /* Debug_Chakra */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
 				FULL_PRODUCT_NAME = "${PROJECT_NAME}.xcframework";
+				OBJROOT = "$(SYMROOT)$(EFFECTIVE_PLATFORM_NAME)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_Chakra;
@@ -2633,9 +2639,11 @@
 		BF51B908256AEBE5004DE4C7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = X52DR36JY2;
 				FULL_PRODUCT_NAME = "${PROJECT_NAME}.xcframework";
+				OBJROOT = "$(SYMROOT)$(EFFECTIVE_PLATFORM_NAME)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
