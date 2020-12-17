@@ -1734,7 +1734,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				" ${FULL_PRODUCT_NAME}",
+				"./build/${FULL_PRODUCT_NAME}",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
