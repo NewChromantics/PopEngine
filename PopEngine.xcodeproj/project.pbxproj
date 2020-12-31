@@ -46,6 +46,8 @@
 		58F8E5C3255089B9001AECED /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F8E5C2255089B3001AECED /* libresolv.tbd */; };
 		BF0AE0E6259DF72500D00C70 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF0AE0E7259DF72500D00C70 /* PopCameraDevice.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BF0AE0EC259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */; };
+		BF0AE0ED259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */; };
 		BF0D95E82517F367000C4E54 /* SoySokol_Osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */; };
 		BF0D95EB2517F499000C4E54 /* TestApp_Osx.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */; };
 		BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BF151F0C2382C31200A70EBF /* libc++.tbd */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -368,6 +370,8 @@
 		BF012B6F226A3224003AEB55 /* SoyTime.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTime.mm; path = src/SoyTime.mm; sourceTree = "<group>"; };
 		BF012B70226A3225003AEB55 /* SoyTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyTime.cpp; path = src/SoyTime.cpp; sourceTree = "<group>"; };
 		BF07E6D32479D94700A38A4B /* PopEngine.Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Android; sourceTree = "<group>"; };
+		BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyStreamBuffer.cpp; path = src/SoyStreamBuffer.cpp; sourceTree = "<group>"; };
+		BF0AE0EB259E0E1000D00C70 /* SoyStreamBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyStreamBuffer.h; path = src/SoyStreamBuffer.h; sourceTree = "<group>"; };
 		BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoySokol_Osx.mm; path = src/SoySokol_Osx.mm; sourceTree = "<group>"; };
 		BF0D95E72517F367000C4E54 /* SoySokol_Osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoySokol_Osx.h; path = src/SoySokol_Osx.h; sourceTree = "<group>"; };
 		BF0D95EA2517F499000C4E54 /* TestApp_Osx.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = TestApp_Osx.xib; sourceTree = "<group>"; };
@@ -1365,8 +1369,8 @@
 				BF31E49E1C56961100AB49AF /* SoyImage.h */,
 				BF689AD720D6DAB8000BC812 /* SoyJson.cpp */,
 				BF3786EE2132FC6C008E4350 /* SoyJson.h */,
-				BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */,
 				BF151F8023845F5800A70EBF /* SoyLib_Ios.xcconfig */,
+				BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */,
 				BF89F6B81B4AE28F00F58561 /* SoyMath.cpp */,
 				BF89F6B91B4AE28F00F58561 /* SoyMath.h */,
 				BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */,
@@ -1397,6 +1401,10 @@
 				FBC3A0E01A308648009DA49E /* SoyScope.h */,
 				BF5B07141B5C12E700C489C6 /* SoyShader.cpp */,
 				BF5B07161B5C130C00C489C6 /* SoyShader.h */,
+				BFC721F324312101009930E4 /* SoyShellExecute.cpp */,
+				BFC721F224312080009930E4 /* SoyShellExecute.h */,
+				BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */,
+				BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */,
 				EBC8FA66211333020014E998 /* SoySocket.cpp */,
 				EBC8FA67211333020014E998 /* SoySocket.h */,
 				EBC8FA5D21131F000014E998 /* SoySocketStream.cpp */,
@@ -1405,6 +1413,8 @@
 				BF691F011C3FEEE90092FC34 /* SoySrt.h */,
 				FB8A06431A2E5A7C0099596C /* SoyState.h */,
 				FB8A06441A2E5A7C0099596C /* SoyState.hpp */,
+				BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */,
+				BF0AE0EB259E0E1000D00C70 /* SoyStreamBuffer.h */,
 				BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */,
 				BF7225A91BADCB3B00550AD8 /* SoyStream.h */,
 				FB8A06491A2E5A7C0099596C /* SoyString.cpp */,
@@ -1428,10 +1438,6 @@
 				BF89F6BD1B4B14CD00F58561 /* SoyVector.h */,
 				BF689ADA20D6DAC0000BC812 /* SoyWave.cpp */,
 				BF689ADB20D6DAC0000BC812 /* SoyWave.h */,
-				BFC721F224312080009930E4 /* SoyShellExecute.h */,
-				BFC721F324312101009930E4 /* SoyShellExecute.cpp */,
-				BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */,
-				BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */,
 				BF19611F21B9ADD8007014EF /* SoyWebSocket.cpp */,
 				BF19612021B9ADD9007014EF /* SoyWebSocket.h */,
 				BF3965622277378A00A721E8 /* SoyWindow.cpp */,
@@ -1792,6 +1798,7 @@
 				BF151F8823845FAD00A70EBF /* SoyFilesystem.cpp in Sources */,
 				BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */,
 				BF151FA723845FAD00A70EBF /* SoyTime.mm in Sources */,
+				BF0AE0ED259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */,
 				BF151FAB23845FAD00A70EBF /* SoyUnity.mm in Sources */,
 				BF151F9523845FAD00A70EBF /* SoyOpengl.cpp in Sources */,
 				BF151FAE23845FAD00A70EBF /* SoyWave.cpp in Sources */,
@@ -1930,6 +1937,7 @@
 				BFE462B424B1058400D04A4C /* TApiPanopoly.cpp in Sources */,
 				5898944124F6D32A00FCCCE2 /* TApiSokol.cpp in Sources */,
 				BF5EAFDB237F0C6E0077BCF5 /* SoyRingArray.cpp in Sources */,
+				BF0AE0EC259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */,
 				BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */,
 				5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */,
 				BF5EAFE1237F0C6E0077BCF5 /* SoySrt.cpp in Sources */,
