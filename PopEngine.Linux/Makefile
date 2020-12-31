@@ -84,6 +84,7 @@ $(SOY_PATH)/src/SoyShellExecute.cpp \
 $(SOY_PATH)/src/SoySocket.cpp \
 $(SOY_PATH)/src/SoySocketStream.cpp \
 $(SOY_PATH)/src/SoyStream.cpp \
+$(SOY_PATH)/src/SoyStreamBuffer.cpp \
 $(SOY_PATH)/src/SoyString.cpp \
 $(SOY_PATH)/src/SoyThread.cpp \
 $(SOY_PATH)/src/SoyTime.cpp \
