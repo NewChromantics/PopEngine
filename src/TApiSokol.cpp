@@ -186,158 +186,165 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		InsidePass = true;
 	};
 	
-	for ( auto i=0;	i<RenderCommands.mCommands.GetSize();	i++ )
+	try
 	{
-		auto& NextCommand = RenderCommands.mCommands[i];
-		
-		if ( NextCommand->GetName() == Sokol::TRenderCommand_Clear::Name )
+		for ( auto i=0;	i<RenderCommands.mCommands.GetSize();	i++ )
 		{
-			auto& ClearCommand = dynamic_cast<Sokol::TRenderCommand_Clear&>( *NextCommand );
-			NewPass( ClearCommand.mColour[0], ClearCommand.mColour[1], ClearCommand.mColour[2], ClearCommand.mColour[3] );
-		}
-		else if ( !InsidePass )
-		{
-			//	starting a pass without a clear, so do one
-			NewPass(1,0,0,1);
-		}
-		
-		//	execute each command
-		if ( NextCommand->GetName() == Sokol::TRenderCommand_UpdateImage::Name )
-		{
-			auto& UpdateImageCommand = dynamic_cast<Sokol::TRenderCommand_UpdateImage&>( *NextCommand );
-			if ( !UpdateImageCommand.mImage )
-				throw Soy::AssertException("UpdateImage command with null image pointer");
-
-			auto& ImageSoy = *UpdateImageCommand.mImage;
-			auto IsRenderTarget = UpdateImageCommand.mIsRenderTarget;
-			SoyPixels TemporaryImage;
+			auto& NextCommand = RenderCommands.mCommands[i];
 			
-			//	if image has no sg_image, create it
-			if ( !ImageSoy.HasSokolImage() )
+			if ( NextCommand->GetName() == Sokol::TRenderCommand_Clear::Name )
 			{
-				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
-				auto NewImage = sg_make_image(&ImageDescription);
-				auto State = sg_query_image_state(NewImage);
-				Sokol::IsOkay(State,"sg_make_image");
-				
-				//	gr: guessing this isn't threadsafe
-				auto FreeSokolImage = [=]()
-				{
-					QueueImageDelete(NewImage);
-				};
-				
-				ImageSoy.SetSokolImage( NewImage.id, FreeSokolImage );
-				ImageSoy.OnSokolImageUpdated();
+				auto& ClearCommand = dynamic_cast<Sokol::TRenderCommand_Clear&>( *NextCommand );
+				NewPass( ClearCommand.mColour[0], ClearCommand.mColour[1], ClearCommand.mColour[2], ClearCommand.mColour[3] );
+			}
+			else if ( !InsidePass )
+			{
+				//	starting a pass without a clear, so do one
+				NewPass(1,0,0,1);
 			}
 			
-			bool LatestVersion = false;
-			sg_image ImageSokol = {0};
-			ImageSokol.id = ImageSoy.GetSokolImage(LatestVersion);
-			
-			//	if image sokol version is out of date, update texture
-			if ( !LatestVersion )
+			//	execute each command
+			if ( NextCommand->GetName() == Sokol::TRenderCommand_UpdateImage::Name )
 			{
-				auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
-				sg_update_image( ImageSokol, ImageDescription.content );
-				auto State = sg_query_image_state(ImageSokol);
-				Sokol::IsOkay(State,"sg_make_image");
-				ImageSoy.OnSokolImageUpdated();
-			}
-		}
-		
-		if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
-		{
-			auto& DrawCommand = dynamic_cast<Sokol::TRenderCommand_Draw&>( *NextCommand );
-			auto& Geometry = mGeometrys[DrawCommand.mGeometryHandle];
-			auto& Shader = mShaders[DrawCommand.mShaderHandle];
-			
-			//	this is where we might bufferup/batch commands
-			sg_pipeline_desc PipelineDescription = {0};
-			PipelineDescription.layout = Geometry.mVertexLayout;
-			
-			PipelineDescription.shader = Shader.mShader;
-			PipelineDescription.primitive_type = Geometry.GetPrimitiveType();
-			PipelineDescription.index_type = Geometry.GetIndexType();
-			//	state stuff
-			//PipelineDescription.depth_stencil
-			//PipelineDescription.blend
-			//PipelineDescription.rasterizer
-			PipelineDescription.rasterizer.cull_mode = SG_CULLMODE_NONE;
-			PipelineDescription.blend.enabled = false;
-			
-			// Some Render Target Settings need to be different here
-			// Overwrite them at the end here?
-			// In this test there is no depth image in the Render Target Pass
-			// TODO: Set this more intelligently!
-			if(RenderTargetPass.id != 0)
-				PipelineDescription.blend.depth_format = SG_PIXELFORMAT_NONE;
-			
-			sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
-			auto PipelineState = sg_query_pipeline_state(Pipeline);
-			Sokol::IsOkay(PipelineState,"sg_make_pipeline");
-			TempPipelines.PushBack(Pipeline);
-			sg_apply_pipeline(Pipeline);
-			
-			sg_bindings Bindings = {0};
-			for ( auto a=0;	a<Geometry.GetVertexLayoutBufferSlots();	a++ )
-				Bindings.vertex_buffers[a] = Geometry.mVertexBuffer;
-			Bindings.index_buffer = Geometry.mIndexBuffer;
-			
-			for ( auto i=0;	i<SG_MAX_SHADERSTAGE_IMAGES;	i++ )
-			{
-				//	gr: detect missing slots
-				auto ImageSoy = DrawCommand.mImageUniforms[i];
-				sg_image ImageSokol = {0};
-				if ( ImageSoy )
+				auto& UpdateImageCommand = dynamic_cast<Sokol::TRenderCommand_UpdateImage&>( *NextCommand );
+				if ( !UpdateImageCommand.mImage )
+					throw Soy::AssertException("UpdateImage command with null image pointer");
+				
+				auto& ImageSoy = *UpdateImageCommand.mImage;
+				auto IsRenderTarget = UpdateImageCommand.mIsRenderTarget;
+				SoyPixels TemporaryImage;
+				
+				//	if image has no sg_image, create it
+				if ( !ImageSoy.HasSokolImage() )
 				{
-					bool LatestVersion = false;
-					ImageSokol.id = ImageSoy->GetSokolImage(LatestVersion);
-					if ( !LatestVersion )
-						std::Debug << "Warning, using sokol image as uniform but out of date" << std::endl;
+					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
+					auto NewImage = sg_make_image(&ImageDescription);
+					auto State = sg_query_image_state(NewImage);
+					Sokol::IsOkay(State,"sg_make_image");
+					
+					//	gr: guessing this isn't threadsafe
+					auto FreeSokolImage = [=]()
+					{
+						QueueImageDelete(NewImage);
+					};
+					
+					ImageSoy.SetSokolImage( NewImage.id, FreeSokolImage );
+					ImageSoy.OnSokolImageUpdated();
 				}
-				//sg_query_resource_texture(ImageSokol);
-				Bindings.vs_images[i] = ImageSokol;
-				Bindings.fs_images[i] = ImageSokol;
+				
+				bool LatestVersion = false;
+				sg_image ImageSokol = {0};
+				ImageSokol.id = ImageSoy.GetSokolImage(LatestVersion);
+				
+				//	if image sokol version is out of date, update texture
+				if ( !LatestVersion )
+				{
+					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
+					sg_update_image( ImageSokol, ImageDescription.content );
+					auto State = sg_query_image_state(ImageSokol);
+					Sokol::IsOkay(State,"sg_make_image");
+					ImageSoy.OnSokolImageUpdated();
+				}
 			}
-
-			sg_apply_bindings(&Bindings);
-			if(DrawCommand.mUniformBlock.GetSize() > 0)
+			
+			if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
 			{
-				sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
-				sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+				auto& DrawCommand = dynamic_cast<Sokol::TRenderCommand_Draw&>( *NextCommand );
+				auto& Geometry = mGeometrys[DrawCommand.mGeometryHandle];
+				auto& Shader = mShaders[DrawCommand.mShaderHandle];
+				
+				//	this is where we might bufferup/batch commands
+				sg_pipeline_desc PipelineDescription = {0};
+				PipelineDescription.layout = Geometry.mVertexLayout;
+				
+				PipelineDescription.shader = Shader.mShader;
+				PipelineDescription.primitive_type = Geometry.GetPrimitiveType();
+				PipelineDescription.index_type = Geometry.GetIndexType();
+				//	state stuff
+				//PipelineDescription.depth_stencil
+				//PipelineDescription.blend
+				//PipelineDescription.rasterizer
+				PipelineDescription.rasterizer.cull_mode = SG_CULLMODE_NONE;
+				PipelineDescription.blend.enabled = false;
+				
+				// Some Render Target Settings need to be different here
+				// Overwrite them at the end here?
+				// In this test there is no depth image in the Render Target Pass
+				// TODO: Set this more intelligently!
+				if(RenderTargetPass.id != 0)
+					PipelineDescription.blend.depth_format = SG_PIXELFORMAT_NONE;
+				
+				sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
+				auto PipelineState = sg_query_pipeline_state(Pipeline);
+				Sokol::IsOkay(PipelineState,"sg_make_pipeline");
+				TempPipelines.PushBack(Pipeline);
+				sg_apply_pipeline(Pipeline);
+				
+				sg_bindings Bindings = {0};
+				for ( auto a=0;	a<Geometry.GetVertexLayoutBufferSlots();	a++ )
+				Bindings.vertex_buffers[a] = Geometry.mVertexBuffer;
+				Bindings.index_buffer = Geometry.mIndexBuffer;
+				
+				for ( auto i=0;	i<SG_MAX_SHADERSTAGE_IMAGES;	i++ )
+				{
+					//	gr: detect missing slots
+					auto ImageSoy = DrawCommand.mImageUniforms[i];
+					sg_image ImageSokol = {0};
+					if ( ImageSoy )
+					{
+						bool LatestVersion = false;
+						ImageSokol.id = ImageSoy->GetSokolImage(LatestVersion);
+						if ( !LatestVersion )
+							std::Debug << "Warning, using sokol image as uniform but out of date" << std::endl;
+					}
+					//sg_query_resource_texture(ImageSokol);
+					Bindings.vs_images[i] = ImageSokol;
+					Bindings.fs_images[i] = ImageSokol;
+				}
+				
+				sg_apply_bindings(&Bindings);
+				if(DrawCommand.mUniformBlock.GetSize() > 0)
+				{
+					sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+					sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+				}
+				auto VertexCount = Geometry.GetDrawVertexCount();
+				auto VertexFirst = Geometry.GetDrawVertexFirst();
+				auto InstanceCount = Geometry.GetDrawInstanceCount();
+				sg_draw(VertexFirst,VertexCount,InstanceCount);
 			}
-			auto VertexCount = Geometry.GetDrawVertexCount();
-			auto VertexFirst = Geometry.GetDrawVertexFirst();
-			auto InstanceCount = Geometry.GetDrawInstanceCount();
-			sg_draw(VertexFirst,VertexCount,InstanceCount);
-		}
-	
-		if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
-		{
-			auto& SetRenderTargetCommand = dynamic_cast<Sokol::TRenderCommand_SetRenderTarget&>( *NextCommand );
-			if ( !SetRenderTargetCommand.mTargetTexture ) // js land = Commands.push( [ "SetRenderTarget", null ] )
-				RenderTargetPass = {0};
-			else
+			
+			if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
 			{
-				bool LatestVersion = true;
-				sg_image SokolImage = {0};
-
-				auto& RenderTexture = *SetRenderTargetCommand.mTargetTexture;
-
-				SokolImage.id = RenderTexture.GetSokolImage(LatestVersion);
-				auto State = sg_query_image_state( SokolImage );
-
-				// There are 4 Color and 1 depth slot on for a Render Pass Description
-				// TODO: Change header to Image Array for Color textures add slot for depth image
-				sg_pass_desc RenderTargetPassDesc = { 0 };
-				RenderTargetPassDesc.color_attachments[0].image = SokolImage;
-
-				RenderTargetPass = sg_make_pass(&RenderTargetPassDesc);
-				TempPasses.PushBack(RenderTargetPass);
+				auto& SetRenderTargetCommand = dynamic_cast<Sokol::TRenderCommand_SetRenderTarget&>( *NextCommand );
+				if ( !SetRenderTargetCommand.mTargetTexture ) // js land = Commands.push( [ "SetRenderTarget", null ] )
+					RenderTargetPass = {0};
+				else
+				{
+					bool LatestVersion = true;
+					sg_image SokolImage = {0};
+					
+					auto& RenderTexture = *SetRenderTargetCommand.mTargetTexture;
+					
+					SokolImage.id = RenderTexture.GetSokolImage(LatestVersion);
+					auto State = sg_query_image_state( SokolImage );
+					
+					// There are 4 Color and 1 depth slot on for a Render Pass Description
+					// TODO: Change header to Image Array for Color textures add slot for depth image
+					sg_pass_desc RenderTargetPassDesc = { 0 };
+					RenderTargetPassDesc.color_attachments[0].image = SokolImage;
+					
+					RenderTargetPass = sg_make_pass(&RenderTargetPassDesc);
+					TempPasses.PushBack(RenderTargetPass);
+				}
+				
+				NewPass(1,0,0,1);
 			}
-
-			NewPass(1,0,0,1);
 		}
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Exception in OnPaints RenderCommand Loop: " << e.what() << std::endl;
 	}
 	
 	//	end pass
