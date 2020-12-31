@@ -632,7 +632,7 @@ void TWebsocketServerPeer::Send(const std::string& Message)
 	{
 		throw Soy::AssertException("Sending message before handshake complete");
 	}
-	std::shared_ptr<Soy::TWriteProtocol> Packet( new WebSocket::TMessageProtocol( this->mHandshake, Message ) );
+	std::shared_ptr<Soy::TWriteProtocol> Packet( new WebSocket::TMessageProtocol( true, this->mHandshake, Message ) );
 	Push( Packet );
 }
 
@@ -643,7 +643,7 @@ void TWebsocketServerPeer::Send(const ArrayBridge<uint8_t>& Message)
 	{
 		throw Soy::AssertException("Sending message before handshake complete");
 	}
-	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TMessageProtocol(this->mHandshake, Message));
+	std::shared_ptr<Soy::TWriteProtocol> Packet(new WebSocket::TMessageProtocol( true, this->mHandshake, Message));
 	Push(Packet);
 }
 
