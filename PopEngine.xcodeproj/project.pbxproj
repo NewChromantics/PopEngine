@@ -245,6 +245,8 @@
 		BF5EB06923803A4B0077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06B23803AB30077BCF5 /* PopEngine.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF108A842296B7BE003DDC5F /* PopEngine.xcassets */; };
 		BF5EB06C23803B100077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
+		BF654A7A25BF4EF200450483 /* JsCoreBind.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF654A7925BF4EF200450483 /* JsCoreBind.mm */; };
+		BF654A7B25BF4EF200450483 /* JsCoreBind.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF654A7925BF4EF200450483 /* JsCoreBind.mm */; };
 		BF67C84E2431303800D7492E /* SoyShellExecuteOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */; };
 		BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF693A30250D17F9002E3772 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
@@ -485,6 +487,8 @@
 		BF607EA42240588300A78C00 /* TApiBluetooth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiBluetooth.cpp; path = src/TApiBluetooth.cpp; sourceTree = "<group>"; };
 		BF607EA6224107B800A78C00 /* SoyBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyBluetooth.h; path = src/SoyBluetooth.h; sourceTree = "<group>"; };
 		BF607EA7224107B800A78C00 /* SoyBluetooth.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyBluetooth.mm; path = src/SoyBluetooth.mm; sourceTree = "<group>"; };
+		BF654A7625BF4C3300450483 /* Headers */ = {isa = PBXFileReference; lastKnownFileType = text; name = Headers; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Headers; sourceTree = DEVELOPER_DIR; };
+		BF654A7925BF4EF200450483 /* JsCoreBind.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = JsCoreBind.mm; path = src/JsCoreBind.mm; sourceTree = "<group>"; };
 		BF6553C52132C4D9003E4241 /* APIDesign.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = APIDesign.md; sourceTree = "<group>"; };
 		BF6553C62132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
 		BF6553C82132C4D9003E4241 /* DEPS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DEPS; sourceTree = "<group>"; };
@@ -1166,6 +1170,7 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BF654A7625BF4C3300450483 /* Headers */,
 				BF7A2CD024F1A7B500CD3A32 /* node_modules */,
 				BFEDAFEC24E15128003B130F /* Source_Android */,
 				BFEDAFEA24E01183003B130F /* PopEngine.Package */,
@@ -1209,6 +1214,7 @@
 				BF91D97C221584E500E91671 /* Ezsift */,
 				BF91D97E221584F100E91671 /* Ezsift */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
+				BF654A7925BF4EF200450483 /* JsCoreBind.mm */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BFDC03A62430CEC20004512A /* Json11 */,
 				BF7AB95F2248223100FAC1CE /* PopEngine.cpp */,
@@ -1822,6 +1828,7 @@
 				BF151F8223845FAD00A70EBF /* SoyArray.cpp in Sources */,
 				BF151F9323845FAD00A70EBF /* SoyMemFile.cpp in Sources */,
 				BFE462B524B1058400D04A4C /* TApiPanopoly.cpp in Sources */,
+				BF654A7B25BF4EF200450483 /* JsCoreBind.mm in Sources */,
 				BF151FBF2384601300A70EBF /* TApiHttp.cpp in Sources */,
 				BF151FA823845FAD00A70EBF /* SoyTypes.cpp in Sources */,
 				BF151F9A23845FAD00A70EBF /* SoyRef.cpp in Sources */,
@@ -1923,6 +1930,7 @@
 				BF5EAFF5237F0CD40077BCF5 /* PopMain.cpp in Sources */,
 				BF5EAFE7237F0C6E0077BCF5 /* SoyTime.mm in Sources */,
 				BFDC03B02430CED80004512A /* json11.cpp in Sources */,
+				BF654A7A25BF4EF200450483 /* JsCoreBind.mm in Sources */,
 				BF5EAFD3237F0C6E0077BCF5 /* SoyMemFile.cpp in Sources */,
 				BF5EAFC4237F0C6E0077BCF5 /* SoyAvf.mm in Sources */,
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,

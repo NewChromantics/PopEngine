@@ -819,8 +819,11 @@ bool JsCore::TInstance::OnJobQueueIteration(std::function<void (std::chrono::mil
 	return JSContextGroupRunVirtualMachineTasks(mContextGroup,Sleep);
 }
 
+void JSInitModuleLoader(JSGlobalContextRef GlobalContext);
+
 std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Name)
 {
+	std::Debug << "Creating new JS context " << Name <<std::endl;
 	JSClassRef Global = nullptr;
 	
 	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
@@ -853,6 +856,7 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	#if defined(JSAPI_V8)
 		LocalContext.mLocalContext.SetContext( *pContext );
 	#endif
+		JSInitModuleLoader( LocalContext.mGlobalContext.mContext );
 	};
 	pContext->Execute( SetContext );
 	
@@ -1164,7 +1168,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	{
 		auto ThisHandle = JSObjectRef(nullptr);
 		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source );
-		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename );
+		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, std::string("file://Volumes/Code/PopEngine/UnitTest/HelloModule/")+Filename );
 		auto LineNumber = 0;
 		JSValueRef Exception = nullptr;
 		//	gr: to capture this result, probably need to store it persistently
@@ -1179,6 +1183,63 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	//		but queueing meant we didn't process include()'s in JS synchronously, which we needed to
 	Execute( Exec );
 }
+
+
+void JsCore::TContext::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError)
+{
+	//	load file -> source (todo: on a file thread!)
+	//	create a new global/this for the module disconnected from our global
+	//	create a .exports in that global
+	//	run the script
+	//	return the .exports as the module
+	std::string Source;
+	Soy::FileToString(Filename,Source);
+
+	{
+		auto ModuleIt = mModuleContexts.find(Filename);
+		if ( ModuleIt != mModuleContexts.end() )
+			throw Soy::AssertException( std::string("Module ") + Filename + " already exists; todo; support returning existing ");
+	}
+
+	//	create a new context
+	//	gr: may get a deadlock here
+	auto pModuleContext = this->mInstance.CreateContext(std::string("Module ")+Filename);
+	mModuleContexts[Filename] = pModuleContext;
+		
+	//	dont capture this
+	auto InitModule = [](Bind::TLocalContext& Context)
+	{
+		try
+		{
+			auto& ModuleContext = Context.mGlobalContext;
+			//JsCore::TObject ModuleThis = ModuleContext.CreateObjectInstance( Context );
+			JsCore::TObject ModuleThis = ModuleContext.GetGLobal( Context );
+			JsCore::TObject ModuleExports = ModuleContext.CreateObjectInstance( Context );
+			ModuleThis.SetObject("exports", ModuleExports);
+		
+			auto ThisHandle = ModuleThis.mThis;
+			auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source );
+			//	gr: for javascriptcore module support (which doesn't work, but we get further) we need a file url as the source
+			//	gr: will this fix some debugger issues?
+			auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, std::string("file://./Module/")+Filename );
+			auto LineNumber = 0;
+			JSValueRef Exception = nullptr;
+			//	gr: to capture this result, probably need to store it persistently
+			auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
+			ModuleContext.ThrowException( Context.mLocalContext, Exception, Filename );
+			
+			OnLoadModule( Context, ModuleExports );
+		}
+		catch(std::exception& e)
+		{
+			OnError( Context, e.what() );
+		}
+	};
+	pModuleContext->Execute( InitModule );
+}
+
+
+
 
 template<typename CLOCKTYPE=std::chrono::high_resolution_clock>
 class TJob_DefferedUntil : public PopWorker::TJob_Function

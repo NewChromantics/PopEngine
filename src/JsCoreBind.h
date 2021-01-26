@@ -630,6 +630,7 @@ public:
 	~TContext();
 	
 	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
+	virtual void		LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError);
 	virtual void		Execute(std::function<void(TLocalContext&)> Function) bind_override;
 	virtual void		Queue(std::function<void(TLocalContext&)> Function,size_t DeferMs=0) bind_override;
 	virtual void		GarbageCollect(JSContextRef LocalContext);
@@ -698,6 +699,8 @@ public:
 	std::recursive_mutex	mExecuteLock;
 	
 	TContextDebug		mDebug;
+	
+	std::map<std::string,std::shared_ptr<TContext>>	mModuleContexts;	//	we create each module as it's own context so that it can share objects, but have their own global
 };
 
 
