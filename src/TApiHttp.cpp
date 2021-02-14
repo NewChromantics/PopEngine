@@ -128,6 +128,15 @@ void THttpServerWrapper::HandleMissingFile(std::string& Url, Http::TResponseProt
 
 void THttpServerWrapper::OnRequest(std::string& Url, Http::TResponseProtocol& Response)
 {
+	//	gr: have a specific case where we want to serve files from a different dir, but it contained a file
+	//		(bootup.js) that was ALSO in our context path, so sent the wrong one
+	//		so if user has provided an overload... ALWAYS call it.
+	if ( mHandleVirtualFile )
+	{
+		HandleMissingFile(Url, Response,true);
+		return;
+	}
+	
 	//	todo: make the response a function that we can defer to other threads
 	//	then we can make callbacks for certain urls in javascript for dynamic replies
 	auto Filename = GetContext().GetResolvedFilename(Url);
