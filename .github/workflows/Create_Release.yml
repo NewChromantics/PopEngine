@@ -32,7 +32,7 @@ jobs:
           # - os: Pi4
           #   type: linux
 
-          - os: windows
+          - os: windows-latest
             type: windows
 
           # ios & osx universal build
