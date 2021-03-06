@@ -41,8 +41,6 @@
       customWorkingDirectory = "$PROJECT_DIR/"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
-      stopOnEveryUBSanitizerIssue = "YES"
-      stopOnEveryMainThreadCheckerIssue = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
@@ -57,7 +55,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Volumes/Code/PopExposeXr"
+            argument = "/Volumes/Code/PopEngine/UnitTest/HttpServer"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Volumes/Code/PopNotPoker/Server"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "HttpServer=/Volumes/Code/PopNotPoker/Client"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

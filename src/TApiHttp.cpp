@@ -13,12 +13,16 @@ namespace ApiHttp
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
 	DEFINE_BIND_FUNCTIONNAME(Disconnect);
+
+	DEFINE_BIND_TYPENAME(HttpClient);
+	DEFINE_BIND_FUNCTIONNAME(WaitForBody);
 }
 
 void ApiHttp::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 	Context.BindObjectType<THttpServerWrapper>(Namespace,"Server");
+	Context.BindObjectType<THttpClientWrapper>(Namespace,"Client");
 }
 
 
@@ -292,4 +296,45 @@ void THttpServerPeer::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pD
 	Push( pResponse );
 }
 
+
+
+
+THttpClient::THttpClient(const std::string& Url,std::function<void(Http::TResponseProtocol&)> OnResponse,std::function<void(const std::string&)> OnError) :
+	mOnResponse	( OnResponse ),
+	mOnError	( OnError )
+{
+	//	start a thread
+	mOnError("Todo");
+}
+
+void THttpClientWrapper::Construct(Bind::TCallback& Params)
+{
+	auto Url = Params.GetArgumentString(0);
+
+	auto OnResponse = [this](Http::TResponseProtocol& Response)
+	{
+		this->mBodyPromises.Push(Response);
+	};
+	
+	auto OnError = [this](const std::string& Error)
+	{
+		std::Debug << "Need to get rejections into promise queues; " << Error << std::endl;
+		//this->mBodyPromises.Reject(Error);
+	};
+
+	mSocket.reset( new THttpClient( Url, OnResponse, OnError ) );
+}
+
+
+
+void THttpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<ApiHttp::BindFunction::WaitForBody>( &THttpClientWrapper::WaitForBody );
+}
+
+void THttpClientWrapper::WaitForBody(Bind::TCallback& Params)
+{
+	auto Promise = mBodyPromises.AddPromise( Params.mLocalContext );
+	Params.Return(Promise);
+}
 
