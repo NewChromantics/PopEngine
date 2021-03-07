@@ -141,6 +141,7 @@ class Bind::TPromiseQueueObjects
 public:
 	TPromiseQueueObjects()
 	{
+		//	gr: when used, this is throwing a bad-execution thing in std::function
 		mResolveObject = [](...)
 		{
 			std::Debug << __PRETTY_FUNCTION__ << " Resolved (not overloaded)" << std::endl;

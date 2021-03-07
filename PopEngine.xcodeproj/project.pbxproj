@@ -122,6 +122,8 @@
 		BF15200523847F1B00A70EBF /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF15200423847F1B00A70EBF /* AVFoundation.framework */; };
 		BF152009238482A200A70EBF /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF152008238482A200A70EBF /* CoreVideo.framework */; };
 		BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFA297241B80EF1C003B91F6 /* SoyWindow.mm */; };
+		BF260D8925F4F7EB00BA7F01 /* SoyHttpConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF260D8825F4F75F00BA7F01 /* SoyHttpConnection.cpp */; };
+		BF260D8C25F4F7EC00BA7F01 /* SoyHttpConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF260D8825F4F75F00BA7F01 /* SoyHttpConnection.cpp */; };
 		BF4013EA250F652300A753A4 /* SoySokol_Ios_Metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF4013E9250F651F00A753A4 /* SoySokol_Ios_Metal.mm */; };
 		BF4013EF250F679800A753A4 /* SoySokol_Ios_Gles.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF4013EC250F679300A753A4 /* SoySokol_Ios_Gles.mm */; };
 		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -420,6 +422,8 @@
 		BF1E05AC2117328300B56DE4 /* TV8ObjectWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TV8ObjectWrapper.cpp; path = src/TV8ObjectWrapper.cpp; sourceTree = "<group>"; };
 		BF1E05AD2117328300B56DE4 /* TV8ObjectWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TV8ObjectWrapper.h; path = src/TV8ObjectWrapper.h; sourceTree = "<group>"; };
 		BF21AEA424D4319B0046A434 /* .github */ = {isa = PBXFileReference; lastKnownFileType = folder; path = .github; sourceTree = "<group>"; };
+		BF260D8725F4F75F00BA7F01 /* SoyHttpConnection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyHttpConnection.h; path = src/SoyHttpConnection.h; sourceTree = "<group>"; };
+		BF260D8825F4F75F00BA7F01 /* SoyHttpConnection.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHttpConnection.cpp; path = src/SoyHttpConnection.cpp; sourceTree = "<group>"; };
 		BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpengl.cpp; path = src/TApiOpengl.cpp; sourceTree = "<group>"; };
 		BF26EF6020DECFB000A48025 /* TApiOpengl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiOpengl.h; path = src/TApiOpengl.h; sourceTree = "<group>"; };
 		BF26EF6220DED0F400A48025 /* TApiCommon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiCommon.cpp; path = src/TApiCommon.cpp; sourceTree = "<group>"; };
@@ -1365,6 +1369,8 @@
 				BF6EB33B21111D7A00FC991B /* SoyH264.h */,
 				EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */,
 				EBC8FA6D2113514B0014E998 /* SoyHttp.h */,
+				BF260D8825F4F75F00BA7F01 /* SoyHttpConnection.cpp */,
+				BF260D8725F4F75F00BA7F01 /* SoyHttpConnection.h */,
 				BF31E49D1C56961100AB49AF /* SoyImage.cpp */,
 				BF31E49E1C56961100AB49AF /* SoyImage.h */,
 				BF689AD720D6DAB8000BC812 /* SoyJson.cpp */,
@@ -1413,10 +1419,10 @@
 				BF691F011C3FEEE90092FC34 /* SoySrt.h */,
 				FB8A06431A2E5A7C0099596C /* SoyState.h */,
 				FB8A06441A2E5A7C0099596C /* SoyState.hpp */,
-				BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */,
-				BF0AE0EB259E0E1000D00C70 /* SoyStreamBuffer.h */,
 				BF7225A81BADCB3B00550AD8 /* SoyStream.cpp */,
 				BF7225A91BADCB3B00550AD8 /* SoyStream.h */,
+				BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */,
+				BF0AE0EB259E0E1000D00C70 /* SoyStreamBuffer.h */,
 				FB8A06491A2E5A7C0099596C /* SoyString.cpp */,
 				FB8A064A1A2E5A7C0099596C /* SoyString.h */,
 				BFA664721B55AD0A00C33A2A /* SoyString.mm */,
@@ -1799,6 +1805,7 @@
 				BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */,
 				BF151FA723845FAD00A70EBF /* SoyTime.mm in Sources */,
 				BF0AE0ED259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */,
+				BF260D8C25F4F7EC00BA7F01 /* SoyHttpConnection.cpp in Sources */,
 				BF151FAB23845FAD00A70EBF /* SoyUnity.mm in Sources */,
 				BF151F9523845FAD00A70EBF /* SoyOpengl.cpp in Sources */,
 				BF151FAE23845FAD00A70EBF /* SoyWave.cpp in Sources */,
@@ -1875,6 +1882,7 @@
 				BF5EAFF3237F0C7B0077BCF5 /* ChakraBind.cpp in Sources */,
 				BF5EB008237F0CD40077BCF5 /* TApiOpengl.cpp in Sources */,
 				BFEF6A3A24759406000A1F88 /* SoySound.mm in Sources */,
+				BF260D8925F4F7EB00BA7F01 /* SoyHttpConnection.cpp in Sources */,
 				BF5EAFEB237F0C6E0077BCF5 /* SoyUnity.mm in Sources */,
 				BF5EAFEC237F0C6E0077BCF5 /* SoyVector.cpp in Sources */,
 				BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */,

@@ -297,21 +297,57 @@ void THttpServerPeer::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pD
 }
 
 
+#include "SoyHttpConnection.h"
 
-
-THttpClient::THttpClient(const std::string& Url,std::function<void(Http::TResponseProtocol&)> OnResponse,std::function<void(const std::string&)> OnError) :
-	mOnResponse	( OnResponse ),
-	mOnError	( OnError )
+THttpClient::THttpClient(const std::string& Url,std::function<void(std::shared_ptr<Http::TResponseProtocol>&)> OnResponse,std::function<void(const std::string&)> OnError)
 {
+	auto OnConnected = [=]()
+	{
+		std::Debug << "HttpClient " << Url << " connected" << std::endl;
+	};
 	//	start a thread
-	mOnError("Todo");
+	mFetchThread.reset( new THttpConnection(Url) );
+	mFetchThread->mOnError = OnError;
+	mFetchThread->mOnResponse = OnResponse;
+	mFetchThread->mOnConnected = OnConnected;
+
+	//	make a request
+	mFetchThread->Start();
+	Http::TRequestProtocol Request;
+	std::string Protocol;
+	std::string Hostname;
+	uint16 Port=0;
+	std::string Path;
+	Soy::SplitUrl( Url, Protocol, Hostname, Port, Path );
+
+	Request.mUrl = Path;
+	Request.mUrlPrefix = "";	//	default is adding /, need to fix this!
+	mFetchThread->SendRequest(Request);
 }
 
 void THttpClientWrapper::Construct(Bind::TCallback& Params)
 {
+	this->mBodyPromises.mResolveObject = [this](Bind::TLocalContext& Context,Bind::TPromise& Promise,std::shared_ptr<Http::TResponseProtocol>& pResponse)
+	{
+		auto& Response = *pResponse;
+
+		//	todo: check mime
+		auto ResponseBody = Soy::ArrayToString( GetArrayBridge(Response.mContent) );
+
+		if ( Response.mResponseCode != Http::Response_OK )
+		{
+			std::stringstream Error;
+			Error << Response.mResponseCode << " " << Response.mResponseString << ": " << ResponseBody;
+			Promise.Reject( Context, Error.str());
+			return;
+		}
+		
+		Promise.Resolve( Context, ResponseBody );
+	};
+	
 	auto Url = Params.GetArgumentString(0);
 
-	auto OnResponse = [this](Http::TResponseProtocol& Response)
+	auto OnResponse = [this](std::shared_ptr<Http::TResponseProtocol> Response)
 	{
 		this->mBodyPromises.Push(Response);
 	};

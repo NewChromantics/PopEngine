@@ -96,14 +96,14 @@ public:
 
 
 
+class THttpConnection;
 
 class THttpClient //: public SoyWorkerThread
 {
 public:
-	THttpClient(const std::string& Url,std::function<void(Http::TResponseProtocol&)> OnResponse,std::function<void(const std::string&)> OnError);
+	THttpClient(const std::string& Url,std::function<void(std::shared_ptr<Http::TResponseProtocol>&)> OnResponse,std::function<void(const std::string&)> OnError);
 	
-	std::function<void(Http::TResponseProtocol&)>	mOnResponse;
-	std::function<void(const std::string&)>			mOnError;
+	std::shared_ptr<THttpConnection>	mFetchThread;
 };
 
 
@@ -121,6 +121,6 @@ public:
 	void							WaitForBody(Bind::TCallback& Arguments);
 
 public:
-	Bind::TPromiseQueueObjects<Http::TResponseProtocol>	mBodyPromises;
+	Bind::TPromiseQueueObjects<std::shared_ptr<Http::TResponseProtocol>>	mBodyPromises;
 	std::shared_ptr<THttpClient>&	mSocket = mObject;
 };
