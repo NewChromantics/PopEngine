@@ -102,6 +102,7 @@ class THttpClient //: public SoyWorkerThread
 {
 public:
 	THttpClient(const std::string& Url,std::function<void(std::shared_ptr<Http::TResponseProtocol>&)> OnResponse,std::function<void(const std::string&)> OnError);
+	~THttpClient();
 	
 	std::shared_ptr<THttpConnection>	mFetchThread;
 };

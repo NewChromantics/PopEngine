@@ -325,6 +325,17 @@ THttpClient::THttpClient(const std::string& Url,std::function<void(std::shared_p
 	mFetchThread->SendRequest(Request);
 }
 
+THttpClient::~THttpClient()
+{
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,5);
+	if ( mFetchThread )
+	{
+		mFetchThread->WaitToFinish();
+		mFetchThread.reset();
+	}
+}
+
 void THttpClientWrapper::Construct(Bind::TCallback& Params)
 {
 	this->mBodyPromises.mResolveObject = [this](Bind::TLocalContext& Context,Bind::TPromise& Promise,std::shared_ptr<Http::TResponseProtocol>& pResponse)
