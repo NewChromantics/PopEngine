@@ -74,6 +74,7 @@ $(SOY_PATH)/src/SoyDebug.cpp \
 $(SOY_PATH)/src/SoyFilesystem.cpp \
 $(SOY_PATH)/src/SoyFourcc.cpp \
 $(SOY_PATH)/src/SoyHttp.cpp \
+$(SOY_PATH)/src/SoyHttpConnection.cpp \
 $(SOY_PATH)/src/SoyImage.cpp \
 $(SOY_PATH)/src/SoyMediaFormat.cpp \
 $(SOY_PATH)/src/SoyPixels.cpp \
