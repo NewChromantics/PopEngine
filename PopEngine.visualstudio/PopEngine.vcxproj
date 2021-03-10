@@ -561,6 +561,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyFilesystem.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyGraphics.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpConnection.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyImage.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyJson.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyMedia.cpp" />
