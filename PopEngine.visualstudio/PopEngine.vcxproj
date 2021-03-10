@@ -29,7 +29,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.h">
+    <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\PopEngine.Package\node_modules\%40newchromantics\com.newchromantics.poph264\windows\Release_x64\PopH264.h">
@@ -343,38 +343,38 @@
     </ClCompile>
     <ClCompile Include="..\src\Zip\src\zip.c" />
     <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
-    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\depthengine_2_0.dll">
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\depthengine_2_0.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\freenect2.dll">
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\freenect2.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\k4a.dll">
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\k4a.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.cs">
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.cs">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </None>
-    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.dll">
+    <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </CopyFileToFolders>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.exp">
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.exp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.pdb">
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.pdb">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.exe">
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDeviceTest.exe">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.ilk">
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDeviceTest.ilk">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </None>
-    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDeviceTest.pdb">
+    <None Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDeviceTest.pdb">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </None>
     <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\com.newchromantics.poph264\windows\Release_x64\PopH264.dll">
@@ -711,7 +711,7 @@
     <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Debug_x64\PopCameraDevice.lib">
+    <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.lib">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </Library>
     <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\com.newchromantics.poph264\windows\Release_x64\PopH264.lib">
