@@ -605,8 +605,17 @@ void ApiPop::CompileAndRun(Bind::TCallback& Params)
 	auto Source = Params.GetArgumentString(0);
 	auto Filename = Params.GetArgumentString(1);
 
-	//	ignore the return for now
-	Params.mContext.LoadScript( Source, Filename );
+	auto& Context = Params.mContext;
+	//	create a global this
+	//	add a .exports object and return that as the module
+	//auto Global = Context.CreateObjectInstance(Params.mLocalContext);
+	auto Global = Context.GetGlobalObject(Params.mLocalContext);
+	auto Exports = Context.CreateObjectInstance(Params.mLocalContext);
+	Global.SetObject("exports", Exports);
+	
+	Context.LoadScript( Source, Filename, Global );
+	
+	Params.Return(Exports);
 }
 
 

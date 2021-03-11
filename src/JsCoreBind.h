@@ -629,7 +629,8 @@ public:
 	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
 	~TContext();
 	
-	virtual void		LoadScript(const std::string& Source,const std::string& Filename) bind_override;
+	virtual void		LoadScript(const std::string& Source,const std::string& Filename,JsCore::TObject Global) bind_override;
+	virtual void		LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global=JSObjectRef()) bind_override;
 	virtual void		Execute(std::function<void(TLocalContext&)> Function) bind_override;
 	virtual void		Queue(std::function<void(TLocalContext&)> Function,size_t DeferMs=0) bind_override;
 	virtual void		GarbageCollect(JSContextRef LocalContext);
@@ -639,7 +640,7 @@ public:
 	void				BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName=std::string());
 	
 	JsCore::TObject			GetGlobalObject(TLocalContext& LocalContext,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
-	virtual void			CreateGlobalObjectInstance(const std::string&  ObjectType,const std::string& Name) bind_override;
+	virtual void			CreateGlobalObjectInstance(const std::string& ObjectType,const std::string& Name) bind_override;
 	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName=std::string());
 	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
 	void					ConstructObject(TLocalContext& LocalContext,const std::string& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments);
