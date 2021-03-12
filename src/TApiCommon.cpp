@@ -34,7 +34,8 @@ namespace ApiPop
 	static void 	StdOut(Bind::TCallback& Params);
 	static void 	StdErr(Bind::TCallback& Params);
 	static void 	CreateTestPromise(Bind::TCallback& Params);
-	static void		Import(Bind::TCallback& Params);
+	static void		ImportAsync(Bind::TCallback& Params);	//	html import()
+	static void		ImportSync(Bind::TCallback& Params);	//	node require()
 	static void 	CompileAndRun(Bind::TCallback& Params);
 	static void		FileExists(Bind::TCallback& Params);
 	static void 	LoadFileAsString(Bind::TCallback& Params);
@@ -97,7 +98,7 @@ namespace ApiPop
 	//	engine stuff
 	DEFINE_BIND_FUNCTIONNAME(CompileAndRun);
 	DEFINE_BIND_FUNCTIONNAME(import);
-	DEFINE_BIND_FUNCTIONNAME(Import);
+	DEFINE_BIND_FUNCTIONNAME(require);
 	DEFINE_BIND_FUNCTIONNAME(CreateTestPromise);
 	DEFINE_BIND_FUNCTIONNAME(Debug);
 	DEFINE_BIND_FUNCTIONNAME(Warning);
@@ -621,7 +622,7 @@ void ApiPop::CompileAndRun(Bind::TCallback& Params)
 	Params.Return(Exports);
 }
 
-void ApiPop::Import(Bind::TCallback& Params)
+void ApiPop::ImportAsync(Bind::TCallback& Params)
 {
 	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, std::string(__FUNCTION__) );
 	Params.Return( Promise );
@@ -646,6 +647,24 @@ void ApiPop::Import(Bind::TCallback& Params)
 	{
 		OnError( Params.mLocalContext, e.what() );
 	}	
+}
+
+
+void ApiPop::ImportSync(Bind::TCallback& Params)
+{
+	auto Filename = Params.GetArgumentFilename(0);
+	
+	auto OnModuleLoaded = [&](Bind::TLocalContext& Context,Bind::TObject& Exports)
+	{
+		Params.Return(Exports);
+	};
+	
+	auto OnError = [&](Bind::TLocalContext& Context,const std::string& Error)
+	{
+		std::Debug << "Module error " << Error << std::endl;
+	};
+	
+	Params.mContext.LoadModule( Filename, OnModuleLoaded, OnError );
 }
 
 
@@ -823,7 +842,8 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::StdOut>(StdOut, Namespace);
 	Context.BindGlobalFunction<BindFunction::StdErr>(StdErr, Namespace );
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
-	Context.BindGlobalFunction<BindFunction::Import>(Import, Namespace );
+	Context.BindGlobalFunction<BindFunction::import>(ImportAsync, Namespace );
+	Context.BindGlobalFunction<BindFunction::require>(ImportSync, Namespace );
 	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsStringAsync>(LoadFileAsStringAsync, Namespace );

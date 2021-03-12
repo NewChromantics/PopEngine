@@ -1212,13 +1212,13 @@ void JsCore::TContext::LoadModule(const std::string& Filename,std::function<void
 	mModuleContexts[Filename] = pModuleContext;
 		
 	//	dont capture this
-	auto InitModule = [](Bind::TLocalContext& Context)
+	auto InitModule = [&](Bind::TLocalContext& Context)
 	{
 		try
-		{
+		{/*
 			auto& ModuleContext = Context.mGlobalContext;
 			//JsCore::TObject ModuleThis = ModuleContext.CreateObjectInstance( Context );
-			JsCore::TObject ModuleThis = ModuleContext.GetGLobal( Context );
+			JsCore::TObject ModuleThis = ModuleContext.GetGlobal( Context );
 			JsCore::TObject ModuleExports = ModuleContext.CreateObjectInstance( Context );
 			ModuleThis.SetObject("exports", ModuleExports);
 		
@@ -1233,7 +1233,7 @@ void JsCore::TContext::LoadModule(const std::string& Filename,std::function<void
 			auto ResultHandle = JSEvaluateScript( Context.mLocalContext, SourceJs, ThisHandle, FilenameJs, LineNumber, &Exception );
 			ModuleContext.ThrowException( Context.mLocalContext, Exception, Filename );
 			
-			OnLoadModule( Context, ModuleExports );
+			OnLoadModule( Context, ModuleExports );*/
 		}
 		catch(std::exception& e)
 		{
