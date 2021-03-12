@@ -778,6 +778,9 @@
     <ClCompile Include="..\src\SoyLib\src\SoyHttp.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SoyLib\src\SoyHttpConnection.cpp">
+      <Filter>SoyLib</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SoyLib\src\SoyGraphics.cpp">
       <Filter>SoyLib</Filter>
     </ClCompile>

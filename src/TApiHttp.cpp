@@ -13,12 +13,16 @@ namespace ApiHttp
 	DEFINE_BIND_FUNCTIONNAME(Send);
 	DEFINE_BIND_FUNCTIONNAME(GetPeers);
 	DEFINE_BIND_FUNCTIONNAME(Disconnect);
+
+	DEFINE_BIND_TYPENAME(HttpClient);
+	DEFINE_BIND_FUNCTIONNAME(WaitForBody);
 }
 
 void ApiHttp::Bind(Bind::TContext& Context)
 {
 	Context.CreateGlobalObjectInstance("", Namespace);
 	Context.BindObjectType<THttpServerWrapper>(Namespace,"Server");
+	Context.BindObjectType<THttpClientWrapper>(Namespace,"Client");
 }
 
 
@@ -128,6 +132,15 @@ void THttpServerWrapper::HandleMissingFile(std::string& Url, Http::TResponseProt
 
 void THttpServerWrapper::OnRequest(std::string& Url, Http::TResponseProtocol& Response)
 {
+	//	gr: have a specific case where we want to serve files from a different dir, but it contained a file
+	//		(bootup.js) that was ALSO in our context path, so sent the wrong one
+	//		so if user has provided an overload... ALWAYS call it.
+	if ( mHandleVirtualFile )
+	{
+		HandleMissingFile(Url, Response,true);
+		return;
+	}
+	
 	//	todo: make the response a function that we can defer to other threads
 	//	then we can make callbacks for certain urls in javascript for dynamic replies
 	auto Filename = GetContext().GetResolvedFilename(Url);
@@ -283,4 +296,92 @@ void THttpServerPeer::OnDataRecieved(std::shared_ptr<Http::TRequestProtocol>& pD
 	Push( pResponse );
 }
 
+
+#include "SoyHttpConnection.h"
+
+THttpClient::THttpClient(const std::string& Url,std::function<void(std::shared_ptr<Http::TResponseProtocol>&)> OnResponse,std::function<void(const std::string&)> OnError)
+{
+	auto OnConnected = [=]()
+	{
+		std::Debug << "HttpClient " << Url << " connected" << std::endl;
+	};
+	//	start a thread
+	mFetchThread.reset( new THttpConnection(Url) );
+	mFetchThread->mOnError = OnError;
+	mFetchThread->mOnResponse = OnResponse;
+	mFetchThread->mOnConnected = OnConnected;
+
+	//	make a request
+	mFetchThread->Start();
+	Http::TRequestProtocol Request;
+	std::string Protocol;
+	std::string Hostname;
+	uint16 Port=0;
+	std::string Path;
+	Soy::SplitUrl( Url, Protocol, Hostname, Port, Path );
+
+	Request.mUrl = Path;
+	Request.mUrlPrefix = "";	//	default is adding /, need to fix this!
+	mFetchThread->SendRequest(Request);
+}
+
+THttpClient::~THttpClient()
+{
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
+	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,5);
+	if ( mFetchThread )
+	{
+		mFetchThread->WaitToFinish();
+		mFetchThread.reset();
+	}
+}
+
+void THttpClientWrapper::Construct(Bind::TCallback& Params)
+{
+	this->mBodyPromises.mResolveObject = [this](Bind::TLocalContext& Context,Bind::TPromise& Promise,std::shared_ptr<Http::TResponseProtocol>& pResponse)
+	{
+		auto& Response = *pResponse;
+
+		//	todo: check mime
+		auto ResponseBody = Soy::ArrayToString( GetArrayBridge(Response.mContent) );
+
+		if ( Response.mResponseCode != Http::Response_OK )
+		{
+			std::stringstream Error;
+			Error << Response.mResponseCode << " " << Response.mResponseString << ": " << ResponseBody;
+			Promise.Reject( Context, Error.str());
+			return;
+		}
+		
+		Promise.Resolve( Context, ResponseBody );
+	};
+	
+	auto Url = Params.GetArgumentString(0);
+
+	auto OnResponse = [this](std::shared_ptr<Http::TResponseProtocol> Response)
+	{
+		this->mBodyPromises.Push(Response);
+	};
+	
+	auto OnError = [this](const std::string& Error)
+	{
+		std::Debug << "Need to get rejections into promise queues; " << Error << std::endl;
+		//this->mBodyPromises.Reject(Error);
+	};
+
+	mSocket.reset( new THttpClient( Url, OnResponse, OnError ) );
+}
+
+
+
+void THttpClientWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	Template.BindFunction<ApiHttp::BindFunction::WaitForBody>( &THttpClientWrapper::WaitForBody );
+}
+
+void THttpClientWrapper::WaitForBody(Bind::TCallback& Params)
+{
+	auto Promise = mBodyPromises.AddPromise( Params.mLocalContext );
+	Params.Return(Promise);
+}
 

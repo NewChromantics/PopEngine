@@ -17,6 +17,7 @@ namespace ApiHttp
 {
 	void	Bind(Bind::TContext& Context);
 	DECLARE_BIND_TYPENAME(HttpServer);
+	DECLARE_BIND_TYPENAME(HttpClient);
 }
 
 
@@ -91,4 +92,36 @@ protected:
 public:
 	Bind::TPersistent				mHandleVirtualFile;
 	std::shared_ptr<THttpServer>&	mSocket = mObject;
+};
+
+
+
+class THttpConnection;
+
+class THttpClient //: public SoyWorkerThread
+{
+public:
+	THttpClient(const std::string& Url,std::function<void(std::shared_ptr<Http::TResponseProtocol>&)> OnResponse,std::function<void(const std::string&)> OnError);
+	~THttpClient();
+	
+	std::shared_ptr<THttpConnection>	mFetchThread;
+};
+
+
+class THttpClientWrapper: public Bind::TObjectWrapper<ApiHttp::BindType::HttpClient,THttpClient>
+{
+public:
+	THttpClientWrapper(Bind::TContext& Context) :
+		TObjectWrapper		( Context )
+	{
+	}
+	
+	static void						CreateTemplate(Bind::TTemplate& Template);
+	virtual void 					Construct(Bind::TCallback& Arguments) override;
+	
+	void							WaitForBody(Bind::TCallback& Arguments);
+
+public:
+	Bind::TPromiseQueueObjects<std::shared_ptr<Http::TResponseProtocol>>	mBodyPromises;
+	std::shared_ptr<THttpClient>&	mSocket = mObject;
 };

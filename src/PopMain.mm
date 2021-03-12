@@ -11,9 +11,53 @@
 #endif
 
 
+//	abstract class to signal when doing critical things, to prevent app nap on osx
+//	but may have other-platform equivilents, so make it RAII
+namespace Platform
+{
+	class TCriticalSection;
+}
+
+#if defined(TARGET_OSX)
+class Platform::TCriticalSection
+{
+public:
+	TCriticalSection(const std::string& Reason);
+	~TCriticalSection();
+	
+	ObjcPtr<NSObject>		mActivity;
+};
+#endif
+
+#if defined(TARGET_OSX)
+Platform::TCriticalSection::TCriticalSection(const std::string& Reason)
+{
+	//	NSActivityBackground means has stuff to do whilst not relying on user input
+	//	NSActivityUserInitiated	we're doing a section in response to user
+	//	NSActivityUserInitiatedAllowingIdleSystemSleep
+	//	NSActivityLatencyCritical	I/O and thread access is critical
+	NSActivityOptions Options = NSActivityBackground;
+	auto ReasonNs = Soy::StringToNSString(Reason);
+	auto* Activity = [[NSProcessInfo processInfo] beginActivityWithOptions:Options reason:ReasonNs];
+	mActivity.Retain(Activity);
+}
+#endif
+
+#if defined(TARGET_OSX)
+Platform::TCriticalSection::~TCriticalSection()
+{
+	[[NSProcessInfo processInfo] endActivity:mActivity];
+}
+#endif
+
+
+
+
+
 #if defined(TARGET_OSX_BUNDLE)||defined(TARGET_IOS)
 bool Soy::Platform::BundleInitialised = false;
 std::shared_ptr<PopMainThread> Soy::Platform::gMainThread;
+std::shared_ptr<Platform::TCriticalSection>	gCriticalSection;
 #endif
 
 #if defined(TARGET_OSX_BUNDLE)||defined(TARGET_IOS)
@@ -87,6 +131,9 @@ void PopMainThread::TriggerIteration()
 
 //@property (assign) IBOutlet NSWindow *window;
 //@property (assign) IBOutlet SKView *skView;
+#if defined(TARGET_OSX)
+@property (strong, nonatomic) id<NSObject>	mNoNapActivity;
+#endif
 
 #if defined(TARGET_IOS)
 @property (strong, nonatomic) UIWindow *window;
@@ -115,6 +162,13 @@ int32_t Platform_ExitCode = 666;
 - (void)applicationDidFinishLaunching:(UIApplication *)application 
 #endif
 {
+	//	gr: from mavericks, osx naps our app, and recv() threads don't do anything until app is foreground
+	//		maybe we can instance a critical section in recv/accept threads
+	//		but for now, just do it here
+	#if defined(TARGET_OSX)
+	gCriticalSection.reset( new Platform::TCriticalSection("Stop sockets sleeping via app nap") );
+	#endif
+
 	//	gr: we can't block here, but we need to capture exit code.
 	//		NSApplications never return, they have to be aborted with an exit code.
 	auto OnExitCode = [](int32_t ExitCode)
@@ -143,6 +197,10 @@ int32_t Platform_ExitCode = 666;
 #if defined(TARGET_OSX)
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
+	#if defined(TARGET_OSX)
+	gCriticalSection.reset();
+	#endif
+	
 	//	need to manualyl clean up these globals (specifically MainThread)
 	//	not sure if it's being double deleted, or just still in use
 	Soy::Platform::gMainThread.reset();

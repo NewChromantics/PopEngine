@@ -34,6 +34,9 @@ public:
 
 	void				Send(const std::string& Message);
 	void				Send(const ArrayBridge<uint8_t>& Message);
+
+protected:
+	virtual bool		IsSendingFromServer() const	{	return true;	}
 	
 public:
 	SoyRef										mConnectionRef;
@@ -57,7 +60,8 @@ public:
 
 	virtual std::shared_ptr<Soy::TReadProtocol>	AllocProtocol() override;
 
-public:
+protected:
+	virtual bool		IsSendingFromServer() const override	{	return false;	}
 };
 
 

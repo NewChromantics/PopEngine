@@ -144,7 +144,7 @@ void ApiSocket::TSocketWrapper::FlushPendingMessages()
 			}
 			else
 			{
-				auto Error = this->GetSocketError();
+				auto Error = std::string("Disconnected: ") + this->GetSocketError();
 				Promise.Reject(LocalContext, Error);
 			}
 		};

@@ -1098,8 +1098,13 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 	JSGarbageCollect( LocalContext );
 }
 
+void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename,Bind::TObject Global)
+{
+	auto GlobalJs = Global.mThis;
+	LoadScript( Source, Filename, GlobalJs );
+}
 
-void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename)
+void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global)
 {
 	//	gr: javascript core on OSX failed with this chi 𝑥 character.
 	//		web/v8 is okay.
@@ -1166,7 +1171,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	
 	auto Exec = [=](Bind::TLocalContext& Context)
 	{
-		auto ThisHandle = JSObjectRef(nullptr);
+		auto ThisHandle = Global;//JSObjectRef(nullptr);
 		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source );
 		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, std::string("file://Volumes/Code/PopEngine/UnitTest/HelloModule/")+Filename );
 		auto LineNumber = 0;

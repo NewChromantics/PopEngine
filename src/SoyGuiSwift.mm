@@ -9,7 +9,8 @@
 
 bool NSStringEquals(NSString* a,NSString* b)
 {
-	if ([a compare:b] == NSOrderedSame)
+	//	https://stackoverflow.com/questions/6969115/compare-two-nsstrings
+	if ( [a isEqualToString:b] )
 		return true;
 	return false; 
 }
