@@ -836,14 +836,15 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TFileMonitorWrapper>(Namespace);
 	Context.BindObjectType<TShellExecuteWrapper>(Namespace);
 
+	Context.BindGlobalFunction<BindFunction::import>(ImportAsync);
+	Context.BindGlobalFunction<BindFunction::require>(ImportSync);
+
 	Context.BindGlobalFunction<BindFunction::CreateTestPromise>( CreateTestPromise, Namespace );
 	Context.BindGlobalFunction<BindFunction::Debug>( Debug, Namespace );
 	Context.BindGlobalFunction<BindFunction::Warning>(Warning, Namespace);
 	Context.BindGlobalFunction<BindFunction::StdOut>(StdOut, Namespace);
 	Context.BindGlobalFunction<BindFunction::StdErr>(StdErr, Namespace );
 	Context.BindGlobalFunction<BindFunction::CompileAndRun>(CompileAndRun, Namespace );
-	Context.BindGlobalFunction<BindFunction::import>(ImportAsync, Namespace );
-	Context.BindGlobalFunction<BindFunction::require>(ImportSync, Namespace );
 	Context.BindGlobalFunction<BindFunction::FileExists>(FileExists, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsString>(LoadFileAsString, Namespace );
 	Context.BindGlobalFunction<BindFunction::LoadFileAsStringAsync>(LoadFileAsStringAsync, Namespace );
