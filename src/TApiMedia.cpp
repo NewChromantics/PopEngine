@@ -22,7 +22,7 @@
 #include <PopCameraDevice.h>
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
-#include <popcameradevice/windows/Debug_x64/PopCameraDevice.h>
+#include <popcameradevice/windows/Release_NoKinect_x64/PopCameraDevice.h>
 #elif defined(TARGET_LINUX) || defined(TARGET_ANDROID)
 #include <PopCameraDevice.h>
 #endif
