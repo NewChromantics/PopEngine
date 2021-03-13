@@ -218,7 +218,7 @@ bool TWebsocketClient::Iteration()
 		return true;
 
 	//	gr: does this thread need to do anything?
-/*
+/ *
 	//	non blocking so lets just do everything in a loop
 	auto NewClient = mSocket->WaitForClient();
 	if (NewClient.IsValid())

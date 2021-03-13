@@ -473,7 +473,7 @@ float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
 bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 {
 	auto Bool = JSValueToBoolean( Context, Handle );
-	auto ValueType = JSValueGetType( Context, Handle );
+	//auto ValueType = JSValueGetType( Context, Handle );
 	return Bool;
 }
 
@@ -983,7 +983,6 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 	//	this might be a mistake, but just handle multiple cases
 	if ( ExceptionType == kJSTypeObject )
 	{
-		JSObjectRef ExceptionObject = GetObject(Context,ExceptionHandle);
 		auto ExceptionMeta = GetExceptionMeta(Context, ExceptionHandle);
 		ExceptionError << ExceptionMeta.mFilename << ":" << ExceptionMeta.mLine << "; " << ExceptionMeta.mMessage;
 	}
@@ -1141,21 +1140,6 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 		
 		if ( !NonAsciiPositions.IsEmpty() )
 		{
-			auto SubString = [&](int Start,int End)
-			{
-				auto SourceLength = Source.length();
-				Start = std::max(0,Start);
-				End = std::min<int>(SourceLength,End);
-				auto Length = End-Start;
-				auto String = Source.substr( Start, End-Start );
-				std::replace( String.begin(), String.end(), '\r', '\n');
-				Start = std::max<int>(Start,String.find_last_of('\n')+1);
-				String = Source.substr( Start, End-Start );
-				End = std::max<int>(End,String.find_first_of('\n')+1);
-				String = Source.substr( Start, End-Start );
-				return String;
-			};
-
 			std::stringstream Error;
 			for ( auto i=0;	i<NonAsciiPositions.GetSize();	i++ )
 			{
