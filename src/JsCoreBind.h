@@ -1009,8 +1009,10 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(std::func
 	//	try and remove context cache
 	static std::function<void(JsCore::TCallback&)> FunctionCache;
 	if ( FunctionCache != nullptr )
-		std::Debug << "This function is already bound. Duplicate string? todo: allow for module" << std::endl;
+	{
+	//	std::Debug << "This function is already bound. Duplicate string? todo: allow for module" << std::endl;
 	//	throw Soy::AssertException("This function is already bound. Duplicate string?");
+	}
 	FunctionCache = Function;
 	
 #if defined(JSAPI_V8)
@@ -1106,8 +1108,10 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 	//	try and remove context cache
 	static void(TYPE::* FunctionCache)(JsCore::TCallback&)  = nullptr;
 	if ( FunctionCache != nullptr )
+	{
 	//	throw Soy::AssertException("This function is already bound. Duplicate string?");
-		std::Debug << "This function is already bound. Duplicate string? todo: allow for module" << std::endl;
+	//	std::Debug << "This function is already bound. Duplicate string? todo: allow for module" << std::endl;
+	}
 	FunctionCache = Function;
 	
 #if defined(JSAPI_V8)
