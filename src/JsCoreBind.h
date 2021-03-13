@@ -274,6 +274,9 @@ public:
 	bool								OnJobQueueIteration(std::function<void(std::chrono::milliseconds)>& Sleep);
 	
 private:
+	void								BindApis(JsCore::TContext& Context);
+	
+private:
 	//	when the group is created it does async jobs on that thread's run loop
 	//	for deadlock reasons we don't want that to be the main thread (opengl calls get stuck)
 	//	so create it on some other thread and it'll use that runloop

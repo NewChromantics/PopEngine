@@ -674,61 +674,6 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 			//	create a context
 			auto Context = CreateContext(mRootDirectory);
 			
-			ApiPop::Bind(*Context);
-			ApiSocket::Bind(*Context);
-			ApiPanopoly::Bind(*Context);
-			ApiWebsocket::Bind( *Context );
-			ApiHttp::Bind( *Context );
-
-#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-			ApiEngine::Bind(*Context);
-#endif
-#if defined(ENABLE_OPENGL)
-			ApiOpengl::Bind(*Context);
-#endif
-#if defined(ENABLE_DIRECTX)
-			ApiDirectx11::Bind(*Context);
-#endif
-
-#if defined(ENABLE_APIXR)
-			ApiXr::Bind(*Context);
-#endif
-
-#if defined(ENABLE_APIMEDIA)
-			ApiMedia::Bind( *Context );
-#endif
-
-#if defined(ENABLE_APIOPENCV)
-			ApiOpencv::Bind(*Context);
-#endif
-			
-#if defined(TARGET_OSX)||defined(TARGET_WINDOWS)&&!defined(TARGET_UWP)
-			ApiDll::Bind( *Context );
-			ApiSerial::Bind( *Context );
-#endif
-#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-#endif
-#if !defined(TARGET_ANDROID)
-			ApiGui::Bind( *Context );
-			ApiZip::Bind( *Context );
-#endif
-#if defined(ENABLE_APIVISION)
-			ApiCoreMl::Bind(*Context);
-#endif
-#if defined(TARGET_OSX)
-			ApiAudio::Bind(*Context);
-			//ApiOpencl::Bind( *
-            //ApiDlib::Bind( *Context );
-			ApiEzsift::Bind( *Context );
-			ApiInput::Bind( *Context );
-			ApiBluetooth::Bind( *Context );
-			ApiLeapMotion::Bind( *Context );
-			//ApiOpenvr::Bind(*Context);
-#endif
-
-#if defined(ENABLE_APISOKOL)
-			ApiSokol::Bind( *Context );
-#endif
 
 			std::string BootupSource;
 			Soy::FileToString( mRootDirectory + ScriptFilename, BootupSource );
@@ -862,6 +807,8 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	};
 	pContext->Execute( SetContext );
 	
+	BindApis(*pContext);
+
 	return pContext;
 }
 
@@ -906,6 +853,66 @@ void JsCore::TInstance::Shutdown(int32_t ExitCode)
 	//	do callback
 	if ( mOnShutdown )
 		mOnShutdown(ExitCode);
+}
+
+void JsCore::TInstance::BindApis(TContext& Context)
+{
+	ApiPop::Bind(Context);
+	ApiSocket::Bind(Context);
+	ApiPanopoly::Bind(Context);
+	ApiWebsocket::Bind(Context);
+	ApiHttp::Bind(Context);
+
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
+	ApiEngine::Bind(Context);
+#endif
+#if defined(ENABLE_OPENGL)
+	ApiOpengl::Bind(Context);
+#endif
+#if defined(ENABLE_DIRECTX)
+	ApiDirectx11::Bind(Context);
+#endif
+
+#if defined(ENABLE_APIXR)
+	ApiXr::Bind(Context);
+#endif
+
+#if defined(ENABLE_APIMEDIA)
+	ApiMedia::Bind(Context);
+#endif
+
+#if defined(ENABLE_APIOPENCV)
+	ApiOpencv::Bind(Context);
+#endif
+	
+#if defined(TARGET_OSX)||defined(TARGET_WINDOWS)&&!defined(TARGET_UWP)
+	ApiDll::Bind(Context);
+	ApiSerial::Bind(Context);
+#endif
+#if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
+#endif
+#if !defined(TARGET_ANDROID)
+	ApiGui::Bind(Context);
+	ApiZip::Bind(Context);
+#endif
+#if defined(ENABLE_APIVISION)
+	ApiCoreMl::Bind(Context);
+#endif
+#if defined(TARGET_OSX)
+	ApiAudio::Bind(Context);
+	//ApiOpencl::Bind( *
+	//ApiDlib::Bind(Context);
+	ApiEzsift::Bind(Context);
+	ApiInput::Bind(Context);
+	ApiBluetooth::Bind(Context);
+	ApiLeapMotion::Bind(Context);
+	//ApiOpenvr::Bind(Context);
+#endif
+
+#if defined(ENABLE_APISOKOL)
+	ApiSokol::Bind(Context);
+#endif
+
 }
 
 void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext)
@@ -1212,8 +1219,6 @@ void JsCore::TContext::LoadModule(const std::string& Filename,std::function<void
 	//	gr: may get a deadlock here
 	auto pModuleContext = this->mInstance.CreateContext(std::string("Module ")+Filename);
 	mModuleContexts[Filename] = pModuleContext;
-	
-	ApiPop::Bind(*pModuleContext);
 	
 	//	dont capture this
 	auto InitModule = [&](Bind::TLocalContext& Context)
