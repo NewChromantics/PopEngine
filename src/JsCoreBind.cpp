@@ -1166,7 +1166,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	{
 		auto ThisHandle = Global;//JSObjectRef(nullptr);
 		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source );
-		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, std::string("file://Volumes/Code/PopEngine/UnitTest/HelloModule/")+Filename );
+		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename );
 		auto LineNumber = 0;
 		JSValueRef Exception = nullptr;
 		//	gr: to capture this result, probably need to store it persistently
