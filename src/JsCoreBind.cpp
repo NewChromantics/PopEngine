@@ -1183,7 +1183,7 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 }
 
 
-void JsCore::TContext::LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError)
+void JsCore::TContext::LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string&)> OnError)
 {
 	//	load file -> source (todo: on a file thread!)
 	//	create a new global/this for the module disconnected from our global
@@ -1202,7 +1202,7 @@ void JsCore::TContext::LoadModule(const std::string& ModuleFilename,std::functio
 }
 	
 	
-void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError)
+void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string&)> OnError)
 {
 	//	gr: filename here should now be full/project relative? path
 	
@@ -1211,8 +1211,29 @@ void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<voi
 		auto ModuleIt = mModuleContexts.find(Filename);
 		if ( ModuleIt != mModuleContexts.end() )
 		{
-			//OnLoadModule( Context, ModuleExports );
-			throw Soy::AssertException( std::string("Module ") + Filename + " already exists; todo; support returning existing ");
+			auto pModuleContext = ModuleIt->second;
+			if ( !pModuleContext )
+				throw Soy::AssertException("Module already registered, but context is null");
+			auto& ModuleContext = *pModuleContext;
+			
+			//	dont capture this
+			auto GetModuleExports = [&](Bind::TLocalContext& Context)
+			{
+				try
+				{
+					auto& ModuleContext = Context.mGlobalContext;
+					//JsCore::TObject ModuleThis = ModuleContext.CreateObjectInstance( Context );
+					JsCore::TObject ModuleThis = ModuleContext.GetGlobalObject( Context );
+					JsCore::TObject ModuleExports = ModuleThis.GetObject("exports");
+					OnLoadModule( Context, ModuleExports );
+				}
+				catch(std::exception& e)
+				{
+					OnError( e.what() );
+				}
+			};
+			pModuleContext->Execute( GetModuleExports );
+			return;
 		}
 	}
 	
@@ -1251,7 +1272,7 @@ void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<voi
 		}
 		catch(std::exception& e)
 		{
-			OnError( Context, e.what() );
+			OnError( e.what() );
 		}
 	};
 	pModuleContext->Execute( InitModule );

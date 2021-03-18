@@ -632,9 +632,9 @@ void ApiPop::ImportAsync(Bind::TCallback& Params)
 		Promise.Resolve(Context,Module);
 	};
 	
-	auto OnError = [=](Bind::TLocalContext& Context,const std::string& Error)
+	auto OnError = [&](const std::string& Error)
 	{
-		Promise.Reject(Context,Error);
+		Promise.Reject(Params.mLocalContext,Error);
 	};
 
 	//	should we throw instantly or error go to reject
@@ -647,7 +647,7 @@ void ApiPop::ImportAsync(Bind::TCallback& Params)
 	}
 	catch(std::exception& e)
 	{
-		OnError( Params.mLocalContext, e.what() );
+		OnError( e.what() );
 	}	
 }
 
@@ -663,7 +663,7 @@ void ApiPop::ImportSync(Bind::TCallback& Params)
 		Params.Return(Exports);
 	};
 	
-	auto OnError = [&](Bind::TLocalContext& Context,const std::string& Error)
+	auto OnError = [](const std::string& Error)
 	{
 		std::Debug << "Module import error " << Error << std::endl;
 	};

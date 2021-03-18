@@ -273,7 +273,7 @@ public:
 
 	bool								OnJobQueueIteration(std::function<void(std::chrono::milliseconds)>& Sleep);
 	
-	void								LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError);
+	void								LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string&)> OnError);
 	
 private:
 	void								BindApis(JsCore::TContext& Context);
@@ -637,7 +637,7 @@ public:
 	~TContext();
 
 	//	load module should probably be in instance now, as it just loads a context	
-	virtual void			LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError);
+	virtual void			LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string&)> OnError);
 	
 	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global=JSObjectRef(nullptr)) bind_override;
 	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JsCore::TObject Global) bind_override;
