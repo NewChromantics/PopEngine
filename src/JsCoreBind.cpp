@@ -2241,8 +2241,9 @@ std::string JsCore::TContext::GetResolvedModuleFilename(const std::string& OrigF
 	auto ThisContextFilename = GetResolvedFilename(mFilename);
 	auto ThisContextRootDirectory = Platform::GetDirectoryFromFilename( ThisContextFilename );
 	auto Filename = ThisContextRootDirectory + OrigFilename;
+	Filename = Platform::GetFullPathFromFilename(Filename);
 	
-	std::Debug << "Resolved module filename as " << Filename << std::endl;
+	//std::Debug << "Resolved module filename as " << Filename << std::endl;
 	
 	return Filename;
 }
