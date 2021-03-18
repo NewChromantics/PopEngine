@@ -640,7 +640,9 @@ void ApiPop::ImportAsync(Bind::TCallback& Params)
 	//	should we throw instantly or error go to reject
 	try
 	{
-		auto Filename = Params.GetArgumentFilename(0);
+		//	gr: don't use argumentfilename() as the filename needs to be context relative, not project relative
+		//auto Filename = Params.GetArgumentFilename(0);
+		auto Filename = Params.GetArgumentString(0);
 		Params.mContext.LoadModule( Filename, OnModuleLoaded, OnError );
 	}
 	catch(std::exception& e)
@@ -652,7 +654,9 @@ void ApiPop::ImportAsync(Bind::TCallback& Params)
 
 void ApiPop::ImportSync(Bind::TCallback& Params)
 {
-	auto Filename = Params.GetArgumentFilename(0);
+	//	gr: don't use argumentfilename() as the filename needs to be context relative, not project relative
+	//auto Filename = Params.GetArgumentFilename(0);
+	auto Filename = Params.GetArgumentString(0);
 	
 	auto OnModuleLoaded = [&](Bind::TLocalContext& Context,Bind::TObject& Exports)
 	{
@@ -661,7 +665,7 @@ void ApiPop::ImportSync(Bind::TCallback& Params)
 	
 	auto OnError = [&](Bind::TLocalContext& Context,const std::string& Error)
 	{
-		std::Debug << "Module error " << Error << std::endl;
+		std::Debug << "Module import error " << Error << std::endl;
 	};
 	
 	Params.mContext.LoadModule( Filename, OnModuleLoaded, OnError );

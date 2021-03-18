@@ -672,7 +672,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 		try
 		{
 			//	create a context
-			auto Context = CreateContext(mRootDirectory);
+			auto Context = CreateContext(ScriptFilename);
 			
 
 			std::string BootupSource;
@@ -768,19 +768,19 @@ bool JsCore::TInstance::OnJobQueueIteration(std::function<void (std::chrono::mil
 }
 
 
-std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Name)
+std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string& Filename)
 {
-	std::Debug << "Creating new JS context " << Name <<std::endl;
+	std::Debug << "Creating new JS context " << Filename <<std::endl;
 	JSClassRef Global = nullptr;
 	
 	auto Context = JSGlobalContextCreateInGroup( mContextGroup, Global );
 	
 	//	no name in v8. and in chakra GetString needs to be inside a local context
 #if defined(JSAPI_JSCORE)
-	JSGlobalContextSetName( Context, JsCore::GetString( Context, Name ) );
+	JSGlobalContextSetName( Context, JsCore::GetString( Context, Filename ) );
 #endif
 
-	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, mRootDirectory ) );
+	std::shared_ptr<JsCore::TContext> pContext( new TContext( *this, Context, Filename ) );
 	mContexts.PushBack( pContext );
 
 	auto QueueJobFunc = [pContext](std::function<void(JSContextRef)> Job)
@@ -1015,10 +1015,10 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 
 
 
-JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory) :
+JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& Filename) :
 	mInstance		( Instance ),
 	mContext		( Context ),
-	mRootDirectory	( RootDirectory ),
+	mFilename		( Filename ),
 	mJobQueue		( *this, [&Instance](std::function<void(std::chrono::milliseconds)>& Sleep)	{	return Instance.OnJobQueueIteration(Sleep);	} )
 {
 	AddContextCache( *this, mContext );
@@ -1183,25 +1183,45 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 }
 
 
-void JsCore::TContext::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError)
+void JsCore::TContext::LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError)
 {
 	//	load file -> source (todo: on a file thread!)
 	//	create a new global/this for the module disconnected from our global
 	//	create a .exports in that global
 	//	run the script
 	//	return the .exports as the module
-	std::string Source;
-	Soy::FileToString(Filename,Source);
+	
+	//	gr: filename should be relative to the current module/context
+	//		the filename should also be clean (full resolved) as we NEED to make
+	//		sure /xxx/./yyy.js and /xxx/yyy.js are the same module instance
+	//		so expect the incoming filename NOT to have been resolved by the normal
+	//		GetFilename() func (which will be project/app relative, NOT module relative)
+	auto Filename = GetResolvedModuleFilename(ModuleFilename);
 
+	mInstance.LoadModule( Filename, OnLoadModule, OnError );
+}
+	
+	
+void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError)
+{
+	//	gr: filename here should now be full/project relative? path
+	
+	//	gr: we should return existing instances of modules as their variables should be single instances
 	{
 		auto ModuleIt = mModuleContexts.find(Filename);
 		if ( ModuleIt != mModuleContexts.end() )
+		{
+			//OnLoadModule( Context, ModuleExports );
 			throw Soy::AssertException( std::string("Module ") + Filename + " already exists; todo; support returning existing ");
+		}
 	}
+	
+	std::string Source;
+	Soy::FileToString(Filename,Source);
 
 	//	create a new context
-	//	gr: may get a deadlock here
-	auto pModuleContext = this->mInstance.CreateContext(std::string("Module ")+Filename);
+	//	gr: may get a deadlock here?
+	auto pModuleContext = CreateContext(Filename);
 	mModuleContexts[Filename] = pModuleContext;
 	
 	//	dont capture this
@@ -2174,8 +2194,12 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& OrigFilenam
 
 	//	gr: do this better!
 	//	gr: should be able to use NSUrl to resolve ~/ or / etc
+	//	gr: by now this should be covered by IsFullPath
 	if ( OrigFilename[0] == '/' )
+	{
+		std::Debug << "Filename (" << OrigFilename << ") begins with /, should be resolved by IsFullPath" << std::endl;
 		return OrigFilename;
+	}
 		
 	std::string Filename = OrigFilename;
 	std::stringstream NewFilename;
@@ -2191,10 +2215,38 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& OrigFilenam
 	}	
 	else
 	{
-		NewFilename << mRootDirectory << Filename;
+		NewFilename << mInstance.mRootDirectory << Filename;
 	}
 	return NewFilename.str();
 }
+
+
+std::string JsCore::TContext::GetResolvedModuleFilename(const std::string& OrigFilename)
+{
+	//	gr: expecting this to succeed even if the file doesn't exist
+	if ( Platform::IsFullPath(OrigFilename) )
+		return OrigFilename;
+
+	//	gr: do this better!
+	//	gr: should be able to use NSUrl to resolve ~/ or / etc
+	//	gr: by now this should be covered by IsFullPath
+	if ( OrigFilename[0] == '/' )
+	{
+		std::Debug << "Filename (" << OrigFilename << ") begins with /, should be resolved by IsFullPath" << std::endl;
+		return OrigFilename;
+	}
+	
+	//	gr: should we allow documents/ paths?
+	//	gr: should mFilename be a full path?
+	auto ThisContextFilename = GetResolvedFilename(mFilename);
+	auto ThisContextRootDirectory = Platform::GetDirectoryFromFilename( ThisContextFilename );
+	auto Filename = ThisContextRootDirectory + OrigFilename;
+	
+	std::Debug << "Resolved module filename as " << Filename << std::endl;
+	
+	return Filename;
+}
+
 
 
 JsCore::TPersistent::~TPersistent()

@@ -273,6 +273,8 @@ public:
 
 	bool								OnJobQueueIteration(std::function<void(std::chrono::milliseconds)>& Sleep);
 	
+	void								LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError);
+	
 private:
 	void								BindApis(JsCore::TContext& Context);
 	
@@ -284,7 +286,9 @@ private:
 	
 	JSContextGroupRef	mContextGroup = nullptr;
 	
+	//	gr: these should be the same thing now?
 	Array<std::shared_ptr<JsCore::TContext>>	mContexts;
+	std::map<std::string,std::shared_ptr<TContext>>	mModuleContexts;	//	we create each module as it's own context so that it can share objects, but have their own global
 
 	std::function<void(int32_t)>	mOnShutdown;	//	callback when we want to die
 };
@@ -629,10 +633,12 @@ class JsCore::TContext //: public JsCore::TContext
 {
 	friend class Bind::TInstance;
 public:
-	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& RootDirectory);
+	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& Filename);
 	~TContext();
-	
+
+	//	load module should probably be in instance now, as it just loads a context	
 	virtual void			LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(TLocalContext&,const std::string&)> OnError);
+	
 	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global=JSObjectRef(nullptr)) bind_override;
 	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JsCore::TObject Global) bind_override;
 	virtual void			Execute(std::function<void(TLocalContext&)> Function) bind_override;
@@ -659,7 +665,9 @@ public:
 	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
 	prmem::Heap&		GetImageHeap()		{	return GetGeneralHeap();	}
 	prmem::Heap&		GetGeneralHeap()	{	return JsCore::GetGlobalObjectHeap();	}
-	std::string			GetResolvedFilename(const std::string& Filename);
+	std::string			GetResolvedFilename(const std::string& Filename);		//	project relative filename
+	std::string			GetResolvedModuleFilename(const std::string& Filename);	//	get filename realtive to this module/context
+	std::string			GetContextFilename();
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext
 	JSValueRef			CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
@@ -686,9 +694,9 @@ private:
 public:
 	TInstance&			mInstance;
 	JSGlobalContextRef	mContext = nullptr;
+	std::string			mFilename;	//	filename of context (for resolving relative module paths)
 	
 	prmem::Heap			mImageHeap = prmem::Heap(true,true,"Context Images");
-	std::string			mRootDirectory = mInstance.mRootDirectory;
 
 	//	"templates" in v8, "classes" in jscore
 	Array<TTemplate>	mObjectTemplates;
@@ -703,8 +711,6 @@ public:
 	std::recursive_mutex	mExecuteLock;
 	
 	TContextDebug		mDebug;
-	
-	std::map<std::string,std::shared_ptr<TContext>>	mModuleContexts;	//	we create each module as it's own context so that it can share objects, but have their own global
 };
 
 

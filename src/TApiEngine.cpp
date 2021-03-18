@@ -141,7 +141,7 @@ bool ApiEngine::TStatsWindow::Iteration()
 	auto JobCount = Context.mJobQueue.GetJobCount();
 
 	std::stringstream String;
-	String << "Root Directory :" << Context.mRootDirectory << std::endl;
+	String << "Root Directory :" << Context.mInstance.mRootDirectory << std::endl;
 	String << "Counter: " << Counter << std::endl;
 	String << "Queued Jobs: " << JobCount << std::endl;
 	String << "Line2." << std::endl;
