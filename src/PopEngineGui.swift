@@ -128,6 +128,7 @@ import SwiftUI
 
 //	gr: make a NSView/UIView type in objective c? and remove user's decision between metal and opengl?
 //NSViewRepresentable
+#if !os(macOS)
 struct MetalView: UIViewRepresentable 
 {
 	typealias UIViewType = MTKView
@@ -211,10 +212,12 @@ struct MetalView: UIViewRepresentable
         
     }
 }
+#endif
 
 
 
 
+#if !os(macOS)
 struct OpenglView: UIViewRepresentable 
 {
     typealias UIViewType = GLView
@@ -240,3 +243,4 @@ struct OpenglView: UIViewRepresentable
 	{
 	}
 }
+#endif
