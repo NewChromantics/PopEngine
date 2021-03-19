@@ -22,7 +22,7 @@ namespace ApiWebsocket
 class TWebsocketServerPeer : public TSocketReadThread, TSocketWriteThread
 {
 public:
-	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected,std::function<void(const std::string&)> OnError);
+	TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)> OnBinaryMessage,std::function<void()> OnConnected,std::function<void(const std::string&)> OnError);
 	~TWebsocketServerPeer();
 
 	void				ClientConnect(const std::string& Host);
@@ -41,7 +41,7 @@ protected:
 public:
 	SoyRef										mConnectionRef;
 	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
-	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 	std::function<void()>						mOnConnected;			//	called when handshake completes
 	std::function<void(const std::string&)>		mOnError;
 	WebSocket::THandshakeMeta					mHandshake;				//	handshake probably doesn't need a lock as its only modified by packets
@@ -69,7 +69,7 @@ protected:
 class TWebsocketServer : public SoyWorkerThread
 {
 public:
-	TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
+	TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage);
 
 	void						Send(SoyRef ClientRef,const std::string& Message);
 	void						Send(SoyRef ClientRef,const ArrayBridge<uint8_t>& Message);
@@ -95,7 +95,7 @@ protected:
 	Array<std::shared_ptr<TWebsocketServerPeer>>	mDeadClients;
 
 	std::function<void(SoyRef,const std::string&)>		mOnTextMessage;
-	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 };
 
 
@@ -103,7 +103,7 @@ protected:
 class TWebsocketClient : public SoyWorkerThread
 {
 public:
-	TWebsocketClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage);
+	TWebsocketClient(const std::string& Hostname,uint16_t Port, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)> OnBinaryMessage);
 
 	void						Send(SoyRef ClientRef, const std::string& Message);
 	void						Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message);
@@ -134,7 +134,7 @@ protected:
 	std::string								mServerHost;
 
 	std::function<void(SoyRef, const std::string&)>		mOnTextMessage;
-	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 
 	//	gr: we need to do any disconnects on a seperate thread than the callback, or we may block the js thread (or even deadlock)
 	//		so the thread checks for this and if true, disconnect (remove peer)

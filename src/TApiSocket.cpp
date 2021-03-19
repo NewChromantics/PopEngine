@@ -57,7 +57,7 @@ void ApiSocket::TSocketWrapper::WaitForMessage(Bind::TCallback& Params)
 }
 
 
-void ApiSocket::TSocketWrapper::OnMessage(const Array<uint8_t>& Message, SoyRef Sender)
+void ApiSocket::TSocketWrapper::OnMessage(const ArrayBridge<uint8_t>& Message, SoyRef Sender)
 {
 	auto Packet = std::make_shared<TBinaryPacket>();
 	Packet->mData = Message;
@@ -207,7 +207,7 @@ void ApiSocket::TUdpServerWrapper::Construct(Bind::TCallback& Params)
 	if ( !Params.IsArgumentUndefined(1) )
 		Broadcast = Params.GetArgumentBool(1);
 	
-	auto OnBinaryMessage = [this](SoyRef Sender,const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Sender,const ArrayBridge<uint8_t>&& Message)
 	{
 		this->OnMessage( Message, Sender );
 	};
@@ -230,7 +230,7 @@ void ApiSocket::TUdpClientWrapper::Construct(Bind::TCallback& Params)
 	auto Hostname = Params.GetArgumentString(0);
 	auto Port = Params.GetArgumentInt(1);
 	
-	auto OnBinaryMessage = [this](SoyRef Sender, const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Sender, const ArrayBridge<uint8_t>&& Message)
 	{
 		this->OnMessage(Message, Sender);
 	};
@@ -262,7 +262,7 @@ void ApiSocket::TTcpClientWrapper::Construct(Bind::TCallback& Params)
 	auto Hostname = Params.GetArgumentString(0);
 	auto Port = Params.GetArgumentInt(1);
 
-	auto OnBinaryMessage = [this](SoyRef Sender, const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Sender, const ArrayBridge<uint8_t>&& Message)
 	{
 		this->OnMessage(Message, Sender);
 	};
@@ -417,12 +417,13 @@ void ApiSocket::TSocketWrapper::Disconnect(Bind::TCallback& Params)
 
 
 
-ApiSocket::TUdpServer::TUdpServer(uint16_t ListenPort,bool Broadcast,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
-	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"UdpServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
+ApiSocket::TUdpServer::TUdpServer(uint16_t ListenPort,bool Broadcast,std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage) :
+	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"UdpServer("<<ListenPort<<")"), SoyWorkerWaitMode::NoWait ),
 	mOnBinaryMessage	( OnBinaryMessage )
 {
 	mSocket.reset( new SoySocket() );
-	mSocket->ListenUdp(ListenPort,true);
+	bool SaveListeningConnection=true;
+	mSocket->ListenUdp(ListenPort,SaveListeningConnection,Broadcast);
 	/*
 	mSocket->mOnConnect = [=](SoyRef ClientRef)
 	{
@@ -448,21 +449,20 @@ bool ApiSocket::TUdpServer::Iteration()
 	
 	//	non blocking so lets just do everything in a loop
 	Array<char> RecvBuffer;
-	Array<uint8_t> RecvBuffer8;
 	auto RecvFromConnection = [&](SoyRef ConnectionRef,SoySocketConnection Connection)
 	{
-		RecvBuffer.Clear();
+		RecvBuffer.Clear(false);	//	reset to 0 but don't clear
 		
 		//	on udp ConnectionRef is us!
 		auto Sender = Connection.Recieve( GetArrayBridge(RecvBuffer), *mSocket );
 		if ( !Sender.IsValid() || RecvBuffer.IsEmpty() )
 			return;
 		
+		Soy::TScopeTimerPrint Timer("Post Connection.Recv",4);
 		//	cast buffer. Would prefer SoySocket to be uint8
-		auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>( 0, RecvBuffer.GetSize() );
-		RecvBuffer8.Copy( RecvBufferCastTo8 );
+		auto RecvBuffer8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>( 0, RecvBuffer.GetSize() );
 		
-		this->mOnBinaryMessage( Sender, RecvBuffer8 );
+		this->mOnBinaryMessage( Sender, GetArrayBridge(RecvBuffer8) );
 	};
 	mSocket->EnumConnections( RecvFromConnection );
 
@@ -471,7 +471,7 @@ bool ApiSocket::TUdpServer::Iteration()
 
 
 
-ApiSocket::TSocketClient::TSocketClient(TProtocol::TYPE Protocol,const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
+ApiSocket::TSocketClient::TSocketClient(TProtocol::TYPE Protocol,const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage, std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected) :
 	SoyWorkerThread		(Soy::StreamToString(std::stringstream() << "UdpClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Sleep),
 	mOnBinaryMessage	(OnBinaryMessage),
 	mOnConnected		(OnConnected),
@@ -517,7 +517,6 @@ bool ApiSocket::TSocketClient::Iteration()
 
 	//	non blocking so lets just do everything in a loop
 	Array<char> RecvBuffer;
-	Array<uint8_t> RecvBuffer8;
 	auto RecvFromConnection = [&](SoyRef ConnectionRef, SoySocketConnection Connection)
 	{
 		RecvBuffer.Clear();
@@ -530,10 +529,9 @@ bool ApiSocket::TSocketClient::Iteration()
 				return;
 			
 			//	cast buffer. Would prefer SoySocket to be uint8
-			auto RecvBufferCastTo8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>(0, RecvBuffer.GetSize());
-			RecvBuffer8.Copy(RecvBufferCastTo8);
+			auto RecvBuffer8 = GetArrayBridge(RecvBuffer).GetSubArray<uint8_t>(0, RecvBuffer.GetSize());
 
-			this->mOnBinaryMessage( Sender, RecvBuffer8 );
+			this->mOnBinaryMessage( Sender, GetArrayBridge(RecvBuffer8) );
 		}
 		catch (std::exception& e)
 		{
@@ -564,7 +562,7 @@ void ApiSocket::TTcpServerWrapper::Construct(Bind::TCallback& Params)
 {
 	auto ListenPort = Params.GetArgumentInt(0);
 
-	auto OnBinaryMessage = [this](SoyRef Sender, const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Sender, const ArrayBridge<uint8_t>&& Message)
 	{
 		this->OnMessage(Message, Sender);
 	};
@@ -599,7 +597,7 @@ void ApiSocket::TTcpServerWrapper::Send(Bind::TCallback& Params)
 
 
 
-ApiSocket::TTcpServer::TTcpServer(uint16_t ListenPort, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
+ApiSocket::TTcpServer::TTcpServer(uint16_t ListenPort, std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage) :
 	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "TTcpServer(" << ListenPort << ")"), SoyWorkerWaitMode::Sleep),
 	mOnBinaryMessage(OnBinaryMessage)
 {
@@ -675,7 +673,7 @@ void ApiSocket::TTcpServer::RemovePeer(SoyRef ClientRef)
 
 }
 
-void ApiSocket::TTcpServer::Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message)
+void ApiSocket::TTcpServer::Send(SoyRef ClientRef, const ArrayBridge<uint8_t>&& Message)
 {
 	auto Peer = GetPeer(ClientRef);
 	if (!Peer)
@@ -695,7 +693,7 @@ void ApiSocket::TTcpServerPeer::ClientConnect()
 void ApiSocket::TTcpServerPeer::OnDataRecieved(std::shared_ptr<TAnythingProtocol>& pData)
 {
 	auto& Data = pData->mData;
-	mOnBinaryMessage(this->mConnectionRef, Data);
+	mOnBinaryMessage(this->mConnectionRef, GetArrayBridge(Data) );
 }
 
 

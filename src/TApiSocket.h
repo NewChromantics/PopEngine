@@ -48,7 +48,7 @@ namespace ApiSocket
 class ApiSocket::TUdpServer : public SoyWorkerThread
 {
 public:
-	TUdpServer(uint16_t ListenPort,bool IsBroadcast,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
+	TUdpServer(uint16_t ListenPort,bool IsBroadcast,std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage);
 	
 	std::string					GetAddress() const;
 
@@ -59,14 +59,14 @@ public:
 	std::shared_ptr<SoySocket>		mSocket;
 	
 private:
-	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 };
 
 
 class ApiSocket::TSocketClient : public SoyWorkerThread
 {
 public:
-	TSocketClient(TProtocol::TYPE Protocol,const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected);
+	TSocketClient(TProtocol::TYPE Protocol,const std::string& Hostname,uint16_t Port, std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage,std::function<void()> OnConnected, std::function<void(const std::string&)> OnDisconnected);
 
 	std::string					GetAddress() const;
 
@@ -77,7 +77,7 @@ public:
 	std::shared_ptr<SoySocket>		mSocket;
 
 private:
-	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 	std::function<void(const std::string&)>				mOnDisconnected;
 	std::function<void()>								mOnConnected;
 };
@@ -131,7 +131,8 @@ protected:
 	virtual std::shared_ptr<SoySocket>	GetSocket()=0;
 	
 	//	queue up a callback for This handle's OnMessage callback
-	void		OnMessage(const Array<uint8_t>& Message, SoyRef Peer);
+	void		OnMessage(const ArrayBridge<uint8_t>&& Message, SoyRef Peer)	{	OnMessage(Message,Peer);	};
+	void		OnMessage(const ArrayBridge<uint8_t>& Message, SoyRef Peer);
 	void		OnMessage(const std::string& Message, SoyRef Peer);
 
 	void		FlushPendingMessages();
@@ -242,7 +243,7 @@ public:
 class ApiSocket::TTcpServerPeer : public TSocketReadThread_Impl<TAnythingProtocol>, TSocketWriteThread
 {
 public:
-	TTcpServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
+	TTcpServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)> OnBinaryMessage) :
 		TSocketReadThread_Impl(Socket, ConnectionRef),
 		TSocketWriteThread(Socket, ConnectionRef),
 		mOnBinaryMessage(OnBinaryMessage),
@@ -263,10 +264,10 @@ public:
 
 public:
 	SoyRef										mConnectionRef;
-	std::function<void(SoyRef, const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 
 	std::recursive_mutex						mMessagesLock;
-	Array<Array<uint8_t>>						mMessages;
+	Array<Array<uint8_t>>						mMessages;		//	gr: woah this is gonna be slow!
 };
 
 
@@ -274,8 +275,8 @@ public:
 class ApiSocket::TTcpServer : public SoyWorkerThread
 {
 public:
-	TTcpServer(uint16_t ListenPort, std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage);
-	void						Send(SoyRef ClientRef, const ArrayBridge<uint8_t>& Message);
+	TTcpServer(uint16_t ListenPort, std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage);
+	void						Send(SoyRef ClientRef, const ArrayBridge<uint8_t>&& Message);
 
 	SoySocket&					GetSocket() { return *mSocket; }
 
@@ -293,7 +294,7 @@ protected:
 	std::recursive_mutex			mClientsLock;
 	Array<std::shared_ptr<TTcpServerPeer>>	mClients;
 
-	std::function<void(SoyRef,const Array<uint8_t>&)>	mOnBinaryMessage;
+	std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)>	mOnBinaryMessage;
 };
 
 

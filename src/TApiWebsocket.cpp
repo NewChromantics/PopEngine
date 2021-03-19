@@ -40,7 +40,7 @@ void TWebsocketServerWrapper::Construct(Bind::TCallback &Params)
 		this->OnMessage( Message, Connection);
 	};
 	
-	auto OnBinaryMessage = [this](SoyRef Connection,const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Connection,const ArrayBridge<uint8_t>&& Message)
 	{
 		this->OnMessage( Message, Connection);
 	};
@@ -104,7 +104,7 @@ void TWebsocketClientWrapper::Construct(Bind::TCallback &Params)
 		this->OnMessage(Message, Connection);
 	};
 
-	auto OnBinaryMessage = [this](SoyRef Connection, const Array<uint8_t>& Message)
+	auto OnBinaryMessage = [this](SoyRef Connection, const ArrayBridge<uint8_t>&& Message)
 	{
 		this->OnMessage(Message, Connection);
 	};
@@ -165,7 +165,7 @@ void TWebsocketClientWrapper::Send(Bind::TCallback& Params)
 
 
 
-TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage) :
+TWebsocketClient::TWebsocketClient(const std::string& Hostname,uint16_t Port,std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)> OnBinaryMessage) :
 	SoyWorkerThread(Soy::StreamToString(std::stringstream() << "WebsocketClient(" << Hostname << ":" << Port << ")"), SoyWorkerWaitMode::Wake ),
 	mOnTextMessage	( OnTextMessage ),
 	mOnBinaryMessage( OnBinaryMessage ),
@@ -228,7 +228,7 @@ bool TWebsocketClient::Iteration()
 }
 
 
-TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const Array<uint8_t>&)> OnBinaryMessage) :
+TWebsocketServer::TWebsocketServer(uint16_t ListenPort,std::function<void(SoyRef,const std::string&)> OnTextMessage,std::function<void(SoyRef,const ArrayBridge<uint8_t>&&)> OnBinaryMessage) :
 	SoyWorkerThread		( Soy::StreamToString(std::stringstream()<<"WebsocketServer("<<ListenPort<<")"), SoyWorkerWaitMode::Sleep ),
 	mOnTextMessage		( OnTextMessage ),
 	mOnBinaryMessage	( OnBinaryMessage )
@@ -401,7 +401,7 @@ void TWebsocketClient::RemovePeer(SoyRef ClientRef)
 }
 
 
-TWebsocketServerPeer::TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const Array<uint8_t>&)> OnBinaryMessage,std::function<void()> OnConnected,std::function<void(const std::string&)> OnError) :
+TWebsocketServerPeer::TWebsocketServerPeer(std::shared_ptr<SoySocket>& Socket, SoyRef ConnectionRef, std::function<void(SoyRef, const std::string&)> OnTextMessage, std::function<void(SoyRef, const ArrayBridge<uint8_t>&&)> OnBinaryMessage,std::function<void()> OnConnected,std::function<void(const std::string&)> OnError) :
 	TSocketReadThread	(Socket, ConnectionRef),
 	TSocketWriteThread	(Socket, ConnectionRef),
 	mOnTextMessage		(OnTextMessage),
@@ -485,7 +485,7 @@ void TWebsocketClientPeer::OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& p
 		}
 		if (Packet.IsCompleteBinaryMessage())
 		{
-			mOnBinaryMessage(this->mConnectionRef, Packet.mBinaryData);
+			mOnBinaryMessage(this->mConnectionRef, GetArrayBridge(Packet.mBinaryData) );
 			//	see above
 			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
 			mCurrentMessage.reset();
@@ -540,7 +540,7 @@ void TWebsocketServerPeer::OnDataRecieved(std::shared_ptr<Soy::TReadProtocol>& p
 		}
 		if ( Packet.IsCompleteBinaryMessage() )
 		{
-			mOnBinaryMessage( this->mConnectionRef, Packet.mBinaryData );
+			mOnBinaryMessage( this->mConnectionRef, GetArrayBridge(Packet.mBinaryData) );
 			//	see above
 			std::lock_guard<std::recursive_mutex> Lock(mCurrentMessageLock);
 			mCurrentMessage.reset();
