@@ -96,8 +96,8 @@ void TPacketStorage::Push(SoyRef Peer,const std::string& String)
 	Meta.mIsString = true;
 	Meta.mSize = Data.GetDataSize();
 	std::lock_guard<std::mutex> Lock(mPacketLock);
-	std::Debug << "PacketStorage push " << Data.GetDataSize() << std::endl;
-	mDataBuffer.PushBack( GetArrayBridge(Data) );
+	//std::Debug << "PacketStorage push " << Data.GetDataSize() << std::endl;
+	mDataBuffer.PushBackArray( GetArrayBridge(Data) );
 	mPackets.PushBack(Meta);
 }
 
@@ -108,8 +108,8 @@ void TPacketStorage::Push(SoyRef Peer,const ArrayBridge<uint8_t>& Data)
 	Meta.mIsString = false;
 	Meta.mSize = Data.GetDataSize();
 	std::lock_guard<std::mutex> Lock(mPacketLock);
-	std::Debug << "PacketStorage push " << Data.GetDataSize() << std::endl;
-	mDataBuffer.PushBack( Data );
+	//std::Debug << "PacketStorage push " << Data.GetDataSize() << std::endl;
+	mDataBuffer.PushBackArray( Data );
 	mPackets.PushBack(Meta);
 }
 
@@ -135,7 +135,7 @@ void TPacketStorage::Pop(SoyRef& Peer,std::string& DataString)
 		throw Soy::AssertException("Pop packet, but is not string");
 
 	Array<uint8_t> Data;
-	std::Debug << "PacketStorage pop " << Meta.mSize << std::endl;
+	//std::Debug << "PacketStorage pop " << Meta.mSize << std::endl;
 	mDataBuffer.PopFront( Meta.mSize, GetArrayBridge(Data) );
 	mPackets.RemoveBlock(0,1);
 	//	could unlock here

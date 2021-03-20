@@ -106,7 +106,7 @@ public:
 private:
 	std::mutex			mPacketLock;
 	Array<TPacketMeta>	mPackets;			//	maybe we can store this in the data buffer too to avoid lots of resizes
-	RingArray<Array<uint8_t>>	mDataBuffer;
+	Array<uint8_t>		mDataBuffer;
 };
 
 
