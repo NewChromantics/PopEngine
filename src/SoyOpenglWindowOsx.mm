@@ -4,6 +4,8 @@
 #endif
 #include "SoyOpenglWindow.h"
 #include "SoyOpenglView.h"
+#include "SoyGuiObjc.h"
+#include "SoyGuiSwift.h"
 #include "PopMain.h"
 #include <magic_enum.hpp>
 
@@ -83,40 +85,6 @@ bool HandleDragFilenames(id sender,std::function<bool(ArrayBridge<std::string>&)
 	auto Result = Callback(FilenamesBridge);
 	return Result;
 }
-
-//	note: we want to re-use stuff that's in MacOpenglView too
-@interface Platform_View: NSView
-{
-	@public std::function<NSDragOperation()>				mGetDragDropCursor;
-	@public std::function<bool(ArrayBridge<std::string>&)>	mTryDragDrop;
-	@public std::function<bool(ArrayBridge<std::string>&)>	mOnDragDrop;
-}
-
--(void)RegisterForEvents;
-
-//	overloaded funcs
-- (BOOL) isFlipped;
-/*
--(void)mouseMoved:(NSEvent *)event;
--(void)mouseDown:(NSEvent *)event;
--(void)mouseDragged:(NSEvent *)event;
--(void)mouseUp:(NSEvent *)event;
--(void)rightMouseDown:(NSEvent *)event;
--(void)rightMouseDragged:(NSEvent *)event;
--(void)rightMouseUp:(NSEvent *)event;
--(void)otherMouseDown:(NSEvent *)event;
--(void)otherMouseDragged:(NSEvent *)event;
--(void)otherMouseUp:(NSEvent *)event;
-
-- (void)keyDown:(NSEvent *)event;
-- (void)keyUp:(NSEvent *)event;
-*/
-- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender;
-- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender;
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender;
-
-
-@end
 
 @implementation Platform_View
 
@@ -300,39 +268,6 @@ vec3x<uint8_t> Platform::GetColour(NSColor* Colour)
 	return Rgb;
 }
 
-
-class Platform::TWindow : public SoyWindow
-{
-public:
-	TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated=nullptr);
-	~TWindow()
-	{
-		//	gr: this also isn't destroying the window
-		[mWindow release];
-	}
-
-	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
-	virtual void					SetFullscreen(bool Fullscreen) override;
-	virtual bool					IsFullscreen() override;
-	virtual bool					IsMinimised() override;
-	virtual bool					IsForeground() override;
-	virtual void					EnableScrollBars(bool Horz,bool Vert) override;
-
-	NSRect							GetChildRect(Soy::Rectx<int32_t> Rect);
-	NSView*							GetContentView();
-	void							OnChildAdded(const Soy::Rectx<int32_t>& ChildRect);
-	
-public:
-	PopWorker::TJobQueue&			mThread;	//	NS ui needs to be on the main thread
-	NSWindow*						mWindow = nullptr;
-	Platform_View*					mContentView = nullptr;	//	where controls go
-	CVDisplayLinkRef				mDisplayLink = nullptr;
-	
-//  Added from SoyGuiOsx
-	NSWindow*						GetWindow();
-	NSView*							GetChild(const std::string& Name);
-	void							EnumChildren(std::function<bool(NSView*)> EnumChild);
-};
 
 
 class Platform::TSlider : public SoySlider, public PlatformControl<NSSlider>
@@ -960,6 +895,12 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 	mThread.PushJob( Allocate );
 }
 
+
+Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread) :
+	mThread	( Thread )
+{
+}
+
 bool Platform::TWindow::IsFullscreen()
 {
 	if ( !mWindow )
@@ -1006,18 +947,27 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 		[mWindow toggleFullScreen:nil];
 	};
-	mThread.PushJob( DoSetFullScreen );
+	QueueOnThread( DoSetFullScreen );
+}
+
+void Platform::TWindow::QueueOnThread(std::function<void()> Exec)
+{
+	auto Job = [=]()
+	{
+		Platform::ExecuteTryCatchObjc(Exec);
+	};
+	mThread.PushJob(Job);
 }
 
 void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 {
-	auto Exec = [=]()
+	auto ExecSafe = [=]()
 	{
 		NSScrollView* ScrollView = mWindow.contentView;
 		[ScrollView setHasVerticalScroller:Vert?YES:NO];
 		[ScrollView setHasHorizontalScroller:Horz?YES:NO];
 	};
-	mThread.PushJob(Exec);
+	QueueOnThread(ExecSafe);
 }
 
 
@@ -1032,6 +982,17 @@ std::shared_ptr<Gui::TColourPicker>	Platform::CreateColourPicker(vec3x<uint8_t> 
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
+	//	try and create a swift window instance with this name
+	try
+	{
+		auto Window = Swift::GetWindow(Name);
+		return Window;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Failed to create swift window instance named " << Name << "; " << e.what() << std::endl;
+	}
+	
 	auto& Thread = *Soy::Platform::gMainThread;
 	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect,Resizable) );
 	return pWindow;

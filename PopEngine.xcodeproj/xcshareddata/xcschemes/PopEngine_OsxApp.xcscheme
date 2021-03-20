@@ -77,11 +77,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "$(SRCROOT)/UnitTest/Modules/Babeled/"
+            argument = "$(SRCROOT)/UnitTest/Gui"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Volumes/Code/PopNotPoker/Server"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "$(SRCROOT)/UnitTest/Modules/Babeled/"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

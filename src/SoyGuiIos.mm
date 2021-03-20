@@ -250,9 +250,19 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 		Soy::TSemaphore* pSemaphore = Block ? &Semaphore : nullptr;
 		
 		dispatch_async( dispatch_get_main_queue(), ^(void){
-			Lambda();
-			if ( pSemaphore )
-				pSemaphore->OnCompleted();
+			
+			try
+			{
+				//	run and @try/@catch
+				Platform::ExecuteTryCatchObjc(Lambda);
+				if ( pSemaphore )
+					pSemaphore->OnCompleted();
+			}
+			catch(std::exception& e)
+			{
+				if ( pSemaphore )
+					pSemaphore->OnFailed( e.what() );
+			}			
 		});
 		
 		if ( pSemaphore )
@@ -260,15 +270,20 @@ void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
 	}
 	else
 	{
+		auto ObjCatchLambda = [=]()
+		{
+			Platform::ExecuteTryCatchObjc(Lambda);
+		};
+		
 		auto& Thread = *Soy::Platform::gMainThread;
 		if ( Block )
 		{
-			Thread.PushJob(Lambda,Semaphore);
+			Thread.PushJob(ObjCatchLambda,Semaphore);
 			Semaphore.WaitAndReset();
 		}
 		else
 		{
-			Thread.PushJob(Lambda);
+			Thread.PushJob(ObjCatchLambda);
 		}
 	}
 }
@@ -545,6 +560,17 @@ std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::stri
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
+	//	try and create a swift window instance with this name
+	try
+	{
+		auto Window = Swift::GetWindow(Name);
+		return Window;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Failed to create swift window instance named " << Name << "; " << e.what() << std::endl;
+	}
+	
 	std::shared_ptr<SoyWindow> Window;
 	auto Job = [&]()
 	{
@@ -648,7 +674,7 @@ Platform::TTextBox::TTextBox(UIView* View)
 {
 	SetControl(View);
 	
-	@try
+	auto AddResponder = [&]()
 	{
 		//	setup delegate/responder
 		//auto ListenEvents = UIControlEventAllEvents;
@@ -656,11 +682,8 @@ Platform::TTextBox::TTextBox(UIView* View)
 		//	gr: do we want this? or should event only fire on user-change?
 		//ListenEvents |= UIControlEventValueChanged;
 	 	[mControl addTarget:mResponder action:@selector(OnAction) forControlEvents:ListenEvents];
- 	}
-	@catch (NSException* e)
-	{
-		throw Soy::AssertException(e);
-	}
+	};
+	Platform::ExecuteTryCatchObjc(AddResponder);
 
 	mResponder->mCallback = [this]()	{	this->OnChanged();	};
 }

@@ -6,6 +6,7 @@
 #include "SoyWindow.h"
 #include "SoyGuiApple.h"
 
+#include "PopMain.h"	//	main thread
 
 bool NSStringEquals(NSString* a,NSString* b)
 {
@@ -31,19 +32,17 @@ namespace Swift
 	class TButton;
 	class TTickBox;
 	class TRenderView;
-    class TList;
-
-	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
-	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
-	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
-	std::shared_ptr<Gui::TRenderView>	GetRenderView(const std::string& Name);
-    std::shared_ptr<Gui::TList>			GetList(const std::string& Name);
+	class TList;
+	
+	class TWindow;	//	creates an obj-c class instance (we assume is swift) and grabs it's window
 }
 	
 namespace Platform
 {
 	template<typename TYPE,typename BASETYPE>
-	TYPE*			ObjcCast(BASETYPE* View);
+	TYPE*		ObjcCast(BASETYPE* View);
+	
+	Class		GetObjcClass(const std::string& Name);
 }
 
 template<typename TYPE,typename BASETYPE>
@@ -443,6 +442,23 @@ public:
 };
 
 
+#include "SoyGuiObjc.h"
+
+class Swift::TWindow : public Platform::TWindow
+{
+public:
+	TWindow(const std::string& ClassName);
+	
+protected:
+	id	mWindowContainer = nil;
+};
+
+
+
+
+
+
+
 template<typename TYPE>
 TYPE* Swift::GetControlAs(const std::string& Name)
 {
@@ -470,6 +486,11 @@ PopEngineControl* Swift::GetControl(const std::string& Name)
 	throw Soy::AssertException(Error);
 }
 
+
+std::shared_ptr<SoyWindow> Swift::GetWindow(const std::string& Name)
+{
+	return std::shared_ptr<SoyWindow>( new TWindow(Name) );
+}
 
 std::shared_ptr<SoyLabel> Swift::GetLabel(const std::string& Name)
 {
@@ -567,3 +588,48 @@ void Swift::TList::SetValue(const ArrayBridge<std::string>&& Values)
 	};
 	RunJobOnMainThread(SetValue,false);
 }
+
+
+
+Class Platform::GetObjcClass(const std::string& ClassName)
+{
+	auto* ClassNameNs = Soy::StringToNSString(ClassName);
+
+	//	swift classes are called yourmodule.yourclass
+	//	if nil,check as Swift file
+	NSString *prefix = [[NSBundle mainBundle] infoDictionary][@"CFBundleExecutable"];
+	NSString *swiftClassName = [NSString stringWithFormat:@"%@.%@", prefix, ClassNameNs];
+	
+	//auto* Class = NSClassFromString(ClassNameNs);
+	auto* Class = NSClassFromString(swiftClassName);
+	auto SwiftClassNameStr = Soy::NSStringToString(swiftClassName);
+	if ( !Class )
+		throw Soy::AssertException( std::string("No objc class named ") + SwiftClassNameStr );
+	return Class;
+}
+
+
+
+
+
+Swift::TWindow::TWindow(const std::string& ClassName) :
+	Platform::TWindow	( *Soy::Platform::gMainThread )
+{
+	auto CreateWindow = [&]()
+	{
+		//	get the window type
+		auto* WindowClass = Platform::GetObjcClass(ClassName);
+
+		//	make an instance
+		mWindowContainer = [[WindowClass alloc] init];
+		id WindowContainer = mWindowContainer;
+		//[myclass FunctioninClass];
+
+		//	grab it's window property
+		//	id property=[instance valueForKey:@"myProperty"];
+		auto* Window = [mWindowContainer window];
+		this->mWindow = Window;
+	};
+	RunJobOnMainThread(CreateWindow,true);
+}
+
