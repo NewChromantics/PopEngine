@@ -52,7 +52,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "UnitTest/Sokol/bootup.js"
+            argument = "UnitTest/UdpClient"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

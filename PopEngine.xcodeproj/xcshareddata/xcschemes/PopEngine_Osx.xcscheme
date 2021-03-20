@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-               BuildableName = "PopEngineMac.app"
-               BlueprintName = "PopEngineMac"
+               BlueprintIdentifier = "BF5EAFB4237F0C100077BCF5"
+               BuildableName = "PopEngine_Osx.framework"
+               BlueprintName = "PopEngine_Osx"
                ReferencedContainer = "container:PopEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,19 +44,13 @@
       migratedStopOnEveryIssue = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "BF5EB0532380335D0077BCF5"
-            BuildableName = "PopEngine.app"
-            BlueprintName = "PopEngine"
-            ReferencedContainer = "container:PopEngine.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "$(SRCROOT)/UnitTest/HelloModule"
+            argument = "$(SRCROOT)/UnitTest/UdpServer"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "$(SRCROOT)/UnitTest/Modules/Babeled"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -139,16 +133,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "FBF67B0C1A974A0900F74C38"
-            BuildableName = "PopEngineMac.app"
-            BlueprintName = "PopEngineMac"
+            BlueprintIdentifier = "BF5EAFB4237F0C100077BCF5"
+            BuildableName = "PopEngine_Osx.framework"
+            BlueprintName = "PopEngine_Osx"
             ReferencedContainer = "container:PopEngine.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug_JavascriptCore">

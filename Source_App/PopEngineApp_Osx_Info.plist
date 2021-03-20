@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>SplashscreenBackground</string>
+		<key>UIImageName</key>
+		<string>AppIcon_Osx</string>
+	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -25,8 +32,6 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2019 NewChromantics. All rights reserved.</string>
-	<key>NSMainNibFile</key>
-	<string>TestApp_Osx</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
