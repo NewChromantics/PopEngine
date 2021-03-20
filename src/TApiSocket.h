@@ -3,6 +3,7 @@
 #include "SoyRef.h"
 #include "SoyStream.h"
 #include "SoySocketStream.h"
+#include "SoyRingArray.h"
 
 
 
@@ -15,10 +16,6 @@ namespace ApiSocket
 	DECLARE_BIND_TYPENAME(UdpClient);
 	DECLARE_BIND_TYPENAME(TcpClient);
 	DECLARE_BIND_TYPENAME(TcpServer);
-
-	class TPacket;
-	class TBinaryPacket;
-	class TStringPacket;
 
 	class TSocketWrapper;
 	class TSocketClientWrapper;
@@ -83,33 +80,35 @@ private:
 };
 
 
-class ApiSocket::TPacket
+class TPacketMeta
 {
 public:
-	virtual bool			IsBinary() = 0;
-	virtual Array<uint8_t>&	GetBinary() { throw Soy::AssertException("Not a binary packet"); }
-	virtual std::string&	GetString() { throw Soy::AssertException("Not a string packet"); }
-
-	SoyRef			mPeer;
+	SoyRef		mPeer;
+	size_t		mSize = 0;
+	bool		mIsString = false;
 };
 
-class ApiSocket::TBinaryPacket : public TPacket
+
+//	giant FIFO packet storage
+//	it stores one giant (ring)buffer of data and packet meta (which remember how much data each packet holds)
+//	this is kinda delicate, removing any data without removing the packet (or vice versa) will break the correlation
+class TPacketStorage
 {
 public:
-	virtual bool			IsBinary() override {	return true;	}
-	virtual Array<uint8_t>&	GetBinary() override { return mData; }
+	void				Push(SoyRef Peer,const std::string& Data);
+	void				Push(SoyRef Peer,const ArrayBridge<uint8_t>& Data);
 
-	Array<uint8_t>	mData;
+	//	peek to see if there is a packet, and if its a string
+	bool				Peek(TPacketMeta& Meta);
+	void				Pop(SoyRef& Peer,std::string& Data);
+	void				Pop(SoyRef& Peer,ArrayBridge<uint8_t>&& Data);
+
+private:
+	std::mutex			mPacketLock;
+	Array<TPacketMeta>	mPackets;			//	maybe we can store this in the data buffer too to avoid lots of resizes
+	RingArray<Array<uint8_t>>	mDataBuffer;
 };
 
-class ApiSocket::TStringPacket : public TPacket
-{
-public:
-	virtual bool			IsBinary() override { return false; }
-	virtual std::string&	GetString() override { return mData; }
-
-	std::string		mData;
-};
 
 
 //	gr: this needs a OnDisconnected so a client socket can reject() WaitForMessage when its disconnected from server
@@ -140,10 +139,10 @@ protected:
 	virtual std::string	GetSocketError()  { return std::string(); }	//	if set, then pending messages will error with this
 
 private:
-	Bind::TPromiseQueue					mOnMessagePromises;
+	Bind::TPromiseQueue		mOnMessagePromises;
+	
 	//	pending packets
-	std::mutex							mMessagesLock;
-	Array<std::shared_ptr<ApiSocket::TPacket>>		mMessages;
+	TPacketStorage			mMessages;
 };
 
 class ApiSocket::TSocketClientWrapper : public TSocketWrapper

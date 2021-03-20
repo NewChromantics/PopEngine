@@ -59,28 +59,14 @@ void ApiSocket::TSocketWrapper::WaitForMessage(Bind::TCallback& Params)
 
 void ApiSocket::TSocketWrapper::OnMessage(const ArrayBridge<uint8_t>& Message, SoyRef Sender)
 {
-	auto Packet = std::make_shared<TBinaryPacket>();
-	Packet->mData = Message;
-	Packet->mPeer = Sender;
-
-	{
-		std::lock_guard<std::mutex> Lock(mMessagesLock);
-		mMessages.PushBack(Packet);
-	}
+	mMessages.Push( Sender, Message );
 	FlushPendingMessages();
 }
 
 
 void ApiSocket::TSocketWrapper::OnMessage(const std::string& Message, SoyRef Sender)
 {
-	auto Packet = std::make_shared<TStringPacket>();
-	Packet->mData = Message;
-	Packet->mPeer = Sender;
-
-	{
-		std::lock_guard<std::mutex> Lock(mMessagesLock);
-		mMessages.PushBack(Packet);
-	}
+	mMessages.Push( Sender, Message );
 	FlushPendingMessages();
 }
 
@@ -99,14 +85,93 @@ void ApiSocket::TSocketClientWrapper::OnSocketClosed(const std::string& Reason)
 	FlushPendingConnects();
 }
 
-Bind::TObject PacketToObject(Bind::TLocalContext& Context, ApiSocket::TPacket& Packet)
+
+void TPacketStorage::Push(SoyRef Peer,const std::string& String)
+{
+	//	turn string into an array 
+	auto* String8 = reinterpret_cast<const uint8_t*>(String.c_str());
+	auto Data = GetRemoteArray( String8, String.length() );
+	TPacketMeta Meta;
+	Meta.mPeer = Peer;
+	Meta.mIsString = true;
+	Meta.mSize = Data.GetDataSize();
+	std::lock_guard<std::mutex> Lock(mPacketLock);
+	std::Debug << "PacketStorage push " << Data.GetDataSize() << std::endl;
+	mDataBuffer.PushBack( GetArrayBridge(Data) );
+	mPackets.PushBack(Meta);
+}
+
+void TPacketStorage::Push(SoyRef Peer,const ArrayBridge<uint8_t>& Data)
+{
+	TPacketMeta Meta;
+	Meta.mPeer = Peer;
+	Meta.mIsString = false;
+	Meta.mSize = Data.GetDataSize();
+	std::lock_guard<std::mutex> Lock(mPacketLock);
+	std::Debug << "PacketStorage push " << Data.GetDataSize() << std::endl;
+	mDataBuffer.PushBack( Data );
+	mPackets.PushBack(Meta);
+}
+
+bool TPacketStorage::Peek(TPacketMeta& Meta)
+{
+	if ( mPackets.IsEmpty() )
+		return false;
+		
+	std::lock_guard<std::mutex> Lock(mPacketLock);
+	if ( mPackets.IsEmpty() )
+		return false;
+	Meta = mPackets[0];
+	return true;
+}
+
+void TPacketStorage::Pop(SoyRef& Peer,std::string& DataString)
+{
+	std::lock_guard<std::mutex> Lock(mPacketLock);
+	if ( mPackets.IsEmpty() )
+		throw Soy::AssertException("Pop packet, but nothing queued");
+	auto Meta = mPackets[0];
+	if ( !Meta.mIsString )
+		throw Soy::AssertException("Pop packet, but is not string");
+
+	Array<uint8_t> Data;
+	std::Debug << "PacketStorage pop " << Meta.mSize << std::endl;
+	mDataBuffer.PopFront( Meta.mSize, GetArrayBridge(Data) );
+	mPackets.RemoveBlock(0,1);
+	//	could unlock here
+	//	cast to string
+	auto* DataChar = reinterpret_cast<char*>(Data.GetArray());
+	DataString = std::string( DataChar, Data.GetDataSize() );
+}
+
+void TPacketStorage::Pop(SoyRef& Peer,ArrayBridge<uint8_t>&& Data)
+{
+	std::lock_guard<std::mutex> Lock(mPacketLock);
+	if ( mPackets.IsEmpty() )
+		throw Soy::AssertException("Pop packet, but nothing queued");
+	auto Meta = mPackets[0];
+	if ( Meta.mIsString )
+		throw Soy::AssertException("Pop packet, but is not binary");
+
+	mDataBuffer.PopFront( Meta.mSize, GetArrayBridge(Data) );
+	mPackets.RemoveBlock(0,1);
+}
+
+
+
+Bind::TObject PacketToObject(Bind::TLocalContext& Context,SoyRef Peer,ArrayBridge<uint8_t>&& Data)
 {
 	auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
-	if (Packet.IsBinary())
-		Object.SetArray("Data", GetArrayBridge(Packet.GetBinary()));
-	else
-		Object.SetString("Data", Packet.GetString());
-	Object.SetString("Peer", Packet.mPeer.ToString());
+	Object.SetArray("Data", Data );
+	Object.SetString("Peer", Peer.ToString() );
+	return Object;
+}
+
+Bind::TObject PacketToObject(Bind::TLocalContext& Context,SoyRef Peer,const std::string& Data)
+{
+	auto Object = Context.mGlobalContext.CreateObjectInstance(Context);
+	Object.SetString("Data", Data );
+	Object.SetString("Peer", Peer.ToString() );
 	return Object;
 }
 
@@ -117,29 +182,50 @@ void ApiSocket::TSocketWrapper::FlushPendingMessages()
 	if (!mOnMessagePromises.HasPromises())
 		return;
 
-	//	pop as many messages as possible before error
-	std::shared_ptr<ApiSocket::TPacket> pMessage;
-	if (!mMessages.IsEmpty())
+	//	pop messages before error
+	//	we pop messages so that we don't trigger multiple flushes if say, there's
+	//	only one pending message
+	//	todo: reduce this alloc somehow
+	TPacketMeta MessageMeta;
+	SoyRef Peer;
+	std::shared_ptr<Array<uint8_t>> MessageData;
+	std::string MessageString;
+	std::string SocketError;
+
+	if ( mMessages.Peek(MessageMeta) )
 	{
-		std::lock_guard<std::mutex> Lock(mMessagesLock);
-		pMessage = mMessages.PopAt(0);
+		if ( MessageMeta.mIsString )
+		{
+			mMessages.Pop( Peer, MessageString );
+		}
+		else
+		{
+			MessageData.reset( new Array<uint8_t>() );
+			mMessages.Pop( Peer, GetArrayBridge(*MessageData) );
+		}
+	}
+	else
+	{
+		//	no message?
+		SocketError = GetSocketError();
+		//	if no error either, nothing to do
+		if ( SocketError.empty() )
+			return;
 	}
 
-	//	no message? if no error either, nothing to do
-	auto SocketError = GetSocketError();
-	if (!pMessage && SocketError.empty())
-	{
-		return;
-	}
-
-	auto Flush = [this, pMessage](Bind::TLocalContext& Context) mutable
+	auto Flush = [this,Peer,MessageData,MessageString](Bind::TLocalContext& Context) mutable
 	{		
 		auto HandlePromise = [&](Bind::TLocalContext& LocalContext, Bind::TPromise& Promise)
 		{
 			//	send messages before errors
-			if (pMessage)
+			if ( MessageData )
 			{
-				auto MessageObject = PacketToObject(Context,*pMessage);
+				auto MessageObject = PacketToObject(Context,Peer,GetArrayBridge(*MessageData) );
+				Promise.Resolve(LocalContext, MessageObject);
+			}
+			else if ( !MessageString.empty() )
+			{
+				auto MessageObject = PacketToObject(Context,Peer,MessageString);
 				Promise.Resolve(LocalContext, MessageObject);
 			}
 			else
