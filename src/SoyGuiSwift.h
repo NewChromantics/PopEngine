@@ -79,6 +79,8 @@
 @interface GLView : NSOpenGLView
 #endif
 {
+//- (void)drawRect:(NSRect)rect;
+//- (void)drawRect:(NSRect)dirtyRect;
 }
 @end
 

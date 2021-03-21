@@ -140,15 +140,15 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView*
 
 
 	//	gr: this doesn't do anything, need to call the func
-	//mView.enableSetNeedsDisplay = YES;
+/*	//mView.enableSetNeedsDisplay = YES;
 
 	auto OnFrame = [this](CGRect Rect)
 	{
 		this->OnPaint(Rect);
 	};
-	//mDelegate = [[SokolViewDelegate_Gles alloc] init:OnFrame];
-	//[mView setDelegate:mDelegate];
-
+	mDelegate = [[SokolViewDelegate_Gles alloc] init:OnFrame];
+	[mView setDelegate:mDelegate];
+*/
 	//	gr: given that TriggerPaint needs to be on the main thread,
 	//		maybe this thread should just something on the main dispath queue
 	//		that could be dangerous for deadlocks on destruction though
@@ -272,7 +272,9 @@ void SokolOpenglContext::RequestViewPaint()
 	//	a GLViewController will do regular drawing for us
 	auto SetNeedDisplay = [this]()
 	{
-		[mView setNeedsDisplay];
+		//	gr: this is for IOS, not osx
+		//[mView setNeedsDisplay];
+		[mView setNeedsDisplay:YES];
 	};
 	//	gr: this is getting invoked immediately when job is pushed
 	Platform::RunJobOnMainThread(SetNeedDisplay,false);

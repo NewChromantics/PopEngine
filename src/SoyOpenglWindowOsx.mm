@@ -945,8 +945,14 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 		[ScrollView setHasVerticalScroller:Vert?YES:NO];
 		[ScrollView setHasHorizontalScroller:Horz?YES:NO];
 	};
-	RunJobOnMainThread( Exec, true );
-	//QueueOnThread(ExecSafe);
+	try
+	{
+		RunJobOnMainThread( Exec, true );
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
+	}
 }
 
 
