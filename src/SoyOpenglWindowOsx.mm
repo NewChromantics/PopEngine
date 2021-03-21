@@ -5,7 +5,7 @@
 #include "SoyOpenglWindow.h"
 #include "SoyOpenglView.h"
 #include "SoyGuiObjc.h"
-#include "SoyGuiSwift.h"
+#include "SoyGuiSwiftCpp.h"
 #include "PopMain.h"
 #include <magic_enum.hpp>
 
@@ -1464,6 +1464,8 @@ void GetColourSpace(CGColorSpaceRef& ColourSpace,CGBitmapInfo& Flags,SoyPixelsFo
 			Flags = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedFirst;
 			ColourSpace = CGColorSpaceCreateDeviceRGB();
 			return;
+			
+		default:break;
 	}
 
 	std::stringstream Error;

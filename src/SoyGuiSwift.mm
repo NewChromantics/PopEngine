@@ -1,4 +1,4 @@
-#import "SoyGuiSwift.h"
+#import "SoyGuiSwiftCpp.h"
 #include <string>
 #include "HeapArray.hpp"
 #include "SoyString.h"
@@ -7,6 +7,8 @@
 #include "SoyGuiApple.h"
 
 #include "PopMain.h"	//	main thread
+
+
 
 bool NSStringEquals(NSString* a,NSString* b)
 {
