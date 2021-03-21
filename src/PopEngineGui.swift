@@ -4,12 +4,23 @@
 		
 	gr: in popengine test, I can just include this in in the build, but via framework it
 		fails to find my objective-c classes...
+		
+		
+	//	your project's briding header needs to include to find the objective-c classes in the framework
+	#import "XYZ/PopEngine.framework/Headers/SoyGuiSwift.h"
 */
 import Foundation
 import MetalKit
 import SwiftUI
 
 
+
+
+#if os(macOS)
+typealias XViewRepresentable = NSViewRepresentable
+#else
+typealias XViewRepresentable = UIViewRepresentable
+#endif
 
 
 
@@ -217,30 +228,44 @@ struct MetalView: UIViewRepresentable
 
 
 
-#if !os(macOS)
-struct OpenglView: UIViewRepresentable 
+struct OpenglView: XViewRepresentable 
 {
-    typealias UIViewType = GLView
+#if !os(macOS)
+	typealias ViewType = GLView
+	typealias ContextType = UIViewRepresentableContext<OpenglView>
+#else//	uikit/ios
+	typealias ViewType = GLView
+	typealias ContextType = NSViewRepresentableContext<OpenglView>
+#endif
 
 	//	pass in persistent PopEngine binding
 	@Binding var renderer: PopEngineRenderView 
 	
 	init(renderer: Binding<PopEngineRenderView>) 
 	{
-    	self._renderer = renderer
+		self._renderer = renderer
 	}
 
-    func makeUIView(context: UIViewRepresentableContext<OpenglView>) -> UIViewType
-    {
+	func makeNSView(context: ContextType) -> ViewType
+	{
 		if ( renderer.openglView == nil )
-    	{
-			renderer.openglView = UIViewType()
+		{
+			renderer.openglView = ViewType()
 		}
 		return renderer.openglView
-    }
+	}
 	
-	func updateUIView(_ uiView: UIViewType, context: UIViewRepresentableContext<OpenglView>) 
+	func makeUIView(context: ContextType) -> ViewType
+	{
+		return makeNSView(context: context)
+	}
+	
+	func updateUIView(_ uiView: ViewType, context: ContextType) 
 	{
 	}
+
+	func updateNSView(_ uiView: ViewType, context: ContextType) 
+	{
+	}
+	
 }
-#endif
