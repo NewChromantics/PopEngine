@@ -3,6 +3,7 @@
 #include "PopMain.h"
 
 #include "SoySokol_Ios_Gles.h"
+#include "SoyGuiApple.h"
 
 
 //	include a GLES implementation
@@ -206,7 +207,7 @@ void SokolOpenglContext::RequestViewPaint()
 		[mView setNeedsDisplay];
 	};
 	//	gr: this is getting invoked immediately when job is pushed
-	RunJobOnMainThread(SetNeedDisplay,false);
+	Platform::RunJobOnMainThread(SetNeedDisplay,false);
 }
 
 

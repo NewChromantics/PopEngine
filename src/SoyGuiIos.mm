@@ -1212,7 +1212,7 @@ void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
 		//		hide it. put this in some parent callback here  
 		mControl.hidden = Visible ? NO : YES;
 	};
-	RunJobOnMainThread( Job, false );
+	Platform::RunJobOnMainThread( Job, false );
 }
 
 template<typename TYPE>
@@ -1279,7 +1279,7 @@ void PlatformControl<NATIVECLASS>::SetColour(const vec3x<uint8_t>& Rgb)
 		}
 		
 	};
-	RunJobOnMainThread( Job, false );
+	Platform::RunJobOnMainThread( Job, false );
 }
 
 
