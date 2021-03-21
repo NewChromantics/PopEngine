@@ -527,8 +527,7 @@ std::shared_ptr<Gui::TList> Swift::GetList(const std::string& Name)
     auto* Control = GetControlAs<PopEngineList>(Name);
     return std::shared_ptr<Gui::TList>( new TList(Control) );
 }
-	
-void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
+
 
 void Swift::TLabel::SetValue(const std::string& Value)
 {
@@ -537,7 +536,7 @@ void Swift::TLabel::SetValue(const std::string& Value)
 	{
 		mControl.label = Label;
 	};
-	RunJobOnMainThread(SetLabel,false);
+	Platform::RunJobOnMainThread(SetLabel,false);
 }
 
 std::string Swift::TLabel::GetValue()
@@ -592,7 +591,7 @@ void Swift::TList::SetValue(const ArrayBridge<std::string>&& Values)
 	{
 		mControl.value = ValuesNs;
 	};
-	RunJobOnMainThread(SetValue,false);
+	Platform::RunJobOnMainThread(SetValue,false);
 }
 
 
@@ -636,6 +635,6 @@ Swift::TWindow::TWindow(const std::string& ClassName) :
 		auto* Window = [mWindowContainer window];
 		this->mWindow = Window;
 	};
-	RunJobOnMainThread(CreateWindow,true);
+	Platform::RunJobOnMainThread(CreateWindow,true);
 }
 #endif

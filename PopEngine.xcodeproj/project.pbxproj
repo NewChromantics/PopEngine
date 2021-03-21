@@ -273,6 +273,8 @@
 		BFF0F84F2606701D00B821FD /* TestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF0F84D2606701D00B821FD /* TestApp.swift */; };
 		BFF0F8722607D20000B821FD /* TestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF0F84D2606701D00B821FD /* TestApp.swift */; };
 		BFF0F8752607D3D400B821FD /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
+		BFF0F8792607EBC600B821FD /* SoyGuiApple.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */; };
+		BFF0F87A2607EBC600B821FD /* SoyGuiApple.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */; };
 		BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
 /* End PBXBuildFile section */
 
@@ -663,6 +665,7 @@
 		BFF0F84D2606701D00B821FD /* TestApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestApp.swift; sourceTree = "<group>"; };
 		BFF0F8562606786300B821FD /* SoyGuiObjc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiObjc.h; path = src/SoyGuiObjc.h; sourceTree = "<group>"; };
 		BFF0F86B2607CF8200B821FD /* SoyGuiSwiftCpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwiftCpp.h; path = src/SoyGuiSwiftCpp.h; sourceTree = "<group>"; };
+		BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiApple.mm; path = src/SoyGuiApple.mm; sourceTree = "<group>"; };
 		BFF1C71322E738F100AFDFD5 /* Opencv_contrib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Opencv_contrib; sourceTree = "<group>"; };
 		BFF2B6C02264F9A700232137 /* TApiSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSerial.h; path = src/TApiSerial.h; sourceTree = "<group>"; };
 		BFF2B6C12264F9A700232137 /* TApiSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSerial.cpp; path = src/TApiSerial.cpp; sourceTree = "<group>"; };
@@ -1228,6 +1231,7 @@
 				BFBF2E84253C80A90044127B /* SoyGui_Win32.h */,
 				5873CDB825000A78008F73AA /* SoyGui.h */,
 				BF8A4AB025727809008263B0 /* SoyGuiApple.h */,
+				BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */,
 				582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */,
 				BFBF2E83253C80A90044127B /* SoyGuiLinux.cpp */,
 				BFF0F8562606786300B821FD /* SoyGuiObjc.h */,
@@ -1798,6 +1802,7 @@
 				BF151F8823845FAD00A70EBF /* SoyFilesystem.cpp in Sources */,
 				BF151F9723845FAD00A70EBF /* SoyPixels.cpp in Sources */,
 				BF151FA723845FAD00A70EBF /* SoyTime.mm in Sources */,
+				BFF0F87A2607EBC600B821FD /* SoyGuiApple.mm in Sources */,
 				BF0AE0ED259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */,
 				BF260D8C25F4F7EC00BA7F01 /* SoyHttpConnection.cpp in Sources */,
 				BF151FAB23845FAD00A70EBF /* SoyUnity.mm in Sources */,
@@ -1860,6 +1865,7 @@
 				BF5EAFDD237F0C6E0077BCF5 /* SoyScope.cpp in Sources */,
 				BF5EB00A237F0CD40077BCF5 /* TApiSerial.cpp in Sources */,
 				BF5EAFC3237F0C6E0077BCF5 /* SoyAssert.cpp in Sources */,
+				BFF0F8792607EBC600B821FD /* SoyGuiApple.mm in Sources */,
 				BF5EAFDC237F0C6E0077BCF5 /* SoyRuntimeLibrary.cpp in Sources */,
 				BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */,
 				BF5EAFEF237F0C6E0077BCF5 /* SoyWebSocket.cpp in Sources */,

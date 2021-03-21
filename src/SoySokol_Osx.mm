@@ -255,7 +255,6 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 		std::Debug << "Post OnPaint, flushed error=" << FlushedError << std::endl;
 }
 
-extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 void SokolOpenglContext::RequestPaint()
 {
@@ -276,7 +275,7 @@ void SokolOpenglContext::RequestViewPaint()
 		[mView setNeedsDisplay];
 	};
 	//	gr: this is getting invoked immediately when job is pushed
-	RunJobOnMainThread(SetNeedDisplay,false);
+	Platform::RunJobOnMainThread(SetNeedDisplay,false);
 }
 
 

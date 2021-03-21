@@ -13,40 +13,6 @@
 #import <MetalKit/MetalKit.h>
 
 
-void RunJobOnMainThread(std::function<void()> Lambda,bool Block)
-{
-	Soy::TSemaphore Semaphore;
-
-	//	testing if raw dispatch is faster, results negligable
-	static bool UseNsDispatch = false;
-	
-	if ( UseNsDispatch )
-	{
-		Soy::TSemaphore* pSemaphore = Block ? &Semaphore : nullptr;
-		
-		dispatch_async( dispatch_get_main_queue(), ^(void){
-			Lambda();
-			if ( pSemaphore )
-				pSemaphore->OnCompleted();
-		});
-		
-		if ( pSemaphore )
-			pSemaphore->WaitAndReset();
-	}
-	else
-	{
-		auto& Thread = *Soy::Platform::gMainThread;
-		if ( Block )
-		{
-			Thread.PushJob(Lambda,Semaphore);
-			Semaphore.WaitAndReset();
-		}
-		else
-		{
-			Thread.PushJob(Lambda);
-		}
-	}
-}
 
 namespace Platform
 {
@@ -1681,7 +1647,7 @@ void PlatformControl<NATIVECLASS>::SetVisible(bool Visible)
 		//		hide it. put this in some parent callback here  
 		mControl.hidden = Visible ? NO : YES;
 	};
-	RunJobOnMainThread( Job, false );
+	Platform::RunJobOnMainThread( Job, false );
 }
 
 
@@ -1693,5 +1659,5 @@ void PlatformControl<NATIVECLASS>::SetColour(const vec3x<uint8_t>& Rgb)
 	{
 		std::Debug << __PRETTY_FUNCTION__ << " todo" << std::endl;		
 	};
-	RunJobOnMainThread( Job, false );
+	Platform::RunJobOnMainThread( Job, false );
 }

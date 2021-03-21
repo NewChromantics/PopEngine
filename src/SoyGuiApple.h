@@ -12,6 +12,8 @@
 namespace Platform
 {
 	class TRenderView;
+	
+	void	RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 }
 
 class Platform::TRenderView : public Gui::TRenderView

@@ -186,7 +186,6 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 		std::Debug << "Post OnPaint, flushed error=" << FlushedError << std::endl;
 }
 
-extern void RunJobOnMainThread(std::function<void()> Lambda,bool Block);
 
 void SokolOpenglContext::RequestPaint()
 {
