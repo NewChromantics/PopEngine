@@ -10,8 +10,6 @@ import SwiftUI
 
 
 
-
-
 @objc
 class TestAppWindow : NSObject
 {
@@ -41,11 +39,18 @@ class TestAppWindow : NSObject
 
 
 struct TestView: View {
+
+	@State var renderView = PopEngineRenderView(name:"TestRenderView") 
+   
+   
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color("SplashscreenBackground"))
+        
+        OpenglView(renderer:$renderView)
     }
+    
 }
 
 struct App_Previews: PreviewProvider {

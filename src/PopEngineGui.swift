@@ -252,7 +252,7 @@ struct OpenglView: XViewRepresentable
 		{
 			renderer.openglView = ViewType()
 		}
-		return renderer.openglView
+		return renderer.openglView!
 	}
 	
 	func makeUIView(context: ContextType) -> ViewType
