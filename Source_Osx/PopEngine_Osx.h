@@ -13,7 +13,3 @@ FOUNDATION_EXPORT double PopEngineVersionNumber;
 
 //! Project version string for PopEngine.
 FOUNDATION_EXPORT const unsigned char PopEngineVersionString[];
-
-// In this header, you should import all the public headers of your framework using statements like #import <PopEngine/PublicHeader.h>
-
-extern "C" int PopEngine(const char* ProjectPath);
