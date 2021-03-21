@@ -515,8 +515,16 @@ Platform::TColourPicker::~TColourPicker()
 }
 
 
-
-
+/*
+Platform::TWindow::TWindow(const std::string& Name)
+{
+	//	gr: what calls this?
+	Soy_AssertTodo();
+}
+*/
+Platform::TWindow::TWindow()
+{
+}
 
 NSView* Platform::TWindow::GetContentView()
 {
@@ -657,7 +665,10 @@ TOpenglWindow::TOpenglWindow(const std::string& Name,const Soy::Rectx<int32_t>& 
 	};
 
 	bool Resizable = true;
-	mWindow.reset( new Platform::TWindow( Thread, Name, Rect, Resizable, PostAllocate) );
+	//mWindow.reset( new Platform::TWindow( Thread, Name, Rect, Resizable, PostAllocate) );
+	//	gr: we need to update this, but more likely... remove TOPenglWindow entirely 
+	//		as we now have TRenderViews
+	Soy_AssertTodo();
 }
 
 TOpenglWindow::~TOpenglWindow()
@@ -791,7 +802,7 @@ bool TOpenglWindow::IsForeground()
 	return mWindow->IsForeground();
 }
 
-
+/*
 Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated) :
 	mThread	( Thread )
 {
@@ -810,11 +821,11 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,
 		Soy::Assert(mWindow,"failed to create window");
 		[mWindow retain];
 
-		/*
-		 //	note: this is deffered, but as flags above don't seem to work right, not much choice
-		 //		plus, every other OSX app seems to do the same?
-		 pWindow->SetFullscreen( Params.mFullscreen );
-		 */
+		
+		//	note: this is deffered, but as flags above don't seem to work right, not much choice
+		//		plus, every other OSX app seems to do the same?
+		//pWindow->SetFullscreen( Params.mFullscreen );
+		
 
 		//	auto save window location
 		auto AutoSaveName = Soy::StringToNSString( Name );
@@ -900,7 +911,7 @@ Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread) :
 	mThread	( Thread )
 {
 }
-
+*/
 bool Platform::TWindow::IsFullscreen()
 {
 	if ( !mWindow )
@@ -947,9 +958,10 @@ void Platform::TWindow::SetFullscreen(bool Fullscreen)
 
 		[mWindow toggleFullScreen:nil];
 	};
-	QueueOnThread( DoSetFullScreen );
+	RunJobOnMainThread( DoSetFullScreen, true );
+	//QueueOnThread( DoSetFullScreen );
 }
-
+/*
 void Platform::TWindow::QueueOnThread(std::function<void()> Exec)
 {
 	auto Job = [=]()
@@ -958,16 +970,17 @@ void Platform::TWindow::QueueOnThread(std::function<void()> Exec)
 	};
 	mThread.PushJob(Job);
 }
-
+*/
 void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 {
-	auto ExecSafe = [=]()
+	auto Exec = [=]()
 	{
 		NSScrollView* ScrollView = mWindow.contentView;
 		[ScrollView setHasVerticalScroller:Vert?YES:NO];
 		[ScrollView setHasHorizontalScroller:Horz?YES:NO];
 	};
-	QueueOnThread(ExecSafe);
+	RunJobOnMainThread( Exec, true );
+	//QueueOnThread(ExecSafe);
 }
 
 
@@ -993,8 +1006,10 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 		std::Debug << "Failed to create swift window instance named " << Name << "; " << e.what() << std::endl;
 	}
 	
+	//	gr: this has been changed a bit now so isn't really creating the window properly to this spec
 	auto& Thread = *Soy::Platform::gMainThread;
-	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect,Resizable) );
+	//std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow(Thread,Name,Rect,Resizable) );
+	std::shared_ptr<SoyWindow> pWindow( new Platform::TWindow() );
 	return pWindow;
 }
 
@@ -1608,6 +1623,16 @@ public:
 
 std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& ParentWindow, const std::string& Name)
 {
+	try
+	{
+		return Swift::GetRenderView(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << "Failed to get swift render view " << Name << "; " << e.what() << std::endl;
+	}
+
+		
 	std::shared_ptr<Gui::TRenderView> MetalView;
 	auto& Window = dynamic_cast<Platform::TWindow&>(ParentWindow);
 	auto Run = [&]()

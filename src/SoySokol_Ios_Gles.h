@@ -9,7 +9,7 @@
 
 //	gr: this should probably be a seperate SoySokol.h
 #include "TApiSokol.h"
-
+#import "SoyGuiSwift.h"	//	GLView
 
 
 //	this could do metal & gl
@@ -21,8 +21,6 @@
 	
 @end
 
-@interface GLView : GLKView { }
-@end
 
 class SokolOpenglContext : public Sokol::TContext
 {

@@ -1,6 +1,7 @@
 #include "SoyGui.h"
 #include "SoyGuiApple.h"
 #include "SoyWindowApple.h"
+#include "SoyGuiSwiftCpp.h"
 
 #include "PopMain.h"
 #include <TargetConditionals.h>
@@ -574,7 +575,7 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 	std::shared_ptr<SoyWindow> Window;
 	auto Job = [&]()
 	{
-		Window.reset( new Platform::TWindow(Name) );
+		Window.reset( new Platform::TWindow() );
 	};
 	RunJobOnMainThread( Job, true );
 	return Window;
@@ -866,7 +867,10 @@ void Platform::TButton::ToggleTickBoxValue()
 	}
 }
 
-
+Platform::TWindow::TWindow() :
+	TWindow	( std::string() )
+{
+}
 
 Platform::TWindow::TWindow(const std::string& Name)
 {
@@ -1092,7 +1096,7 @@ void Platform::TWindow::EnableScrollBars(bool Horz,bool Vert)
 	//Soy_AssertTodo();
 }
 
-
+/*
 void Platform::TWindow::StartRender( std::function<void()> Frame, std::string ViewName )
 {
 	/*
@@ -1118,8 +1122,8 @@ void Platform::TWindow::StartRender( std::function<void()> Frame, std::string Vi
 //
 //	auto sokol_view_delegate = [[SokolViewDelegate alloc] init:Frame];
 //	[ViewController setDelegate:sokol_view_delegate];
-}
-
+/*}
+*/
 
 
 void Platform::TWindow::OnChildAdded(const Soy::Rectx<int32_t>& ChildRect)

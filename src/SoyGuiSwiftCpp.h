@@ -8,9 +8,10 @@
 
 namespace Swift
 {
+#if defined(TARGET_OSX)
 	//	this finds a class with this name, and returns it's window from .window
-	NSWindow* _Nonnull	CreateSwiftWindow(const std::string& Name);
-
+	NSWindow* _Nonnull					CreateSwiftWindow(const std::string& Name);
+#endif
 	std::shared_ptr<SoyWindow>			GetWindow(const std::string& Name);
 	std::shared_ptr<SoyLabel>			GetLabel(const std::string& Name);
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);

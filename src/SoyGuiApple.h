@@ -6,7 +6,8 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
-@class GLView;
+#import "SoyGuiSwift.h"
+//@class GLView;
 
 namespace Platform
 {

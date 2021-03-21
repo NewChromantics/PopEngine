@@ -443,9 +443,10 @@ public:
     PopEngineList*   mControl;
 };
 
-
 #include "SoyGuiObjc.h"
+#include "SoyWindowApple.h"
 
+#if defined(TARGET_OSX)
 class Swift::TWindow : public Platform::TWindow
 {
 public:
@@ -454,7 +455,7 @@ public:
 protected:
 	id	mWindowContainer = nil;
 };
-
+#endif
 
 
 
@@ -488,10 +489,13 @@ PopEngineControl* Swift::GetControl(const std::string& Name)
 	throw Soy::AssertException(Error);
 }
 
-
 std::shared_ptr<SoyWindow> Swift::GetWindow(const std::string& Name)
 {
+#if defined(TARGET_OSX)
 	return std::shared_ptr<SoyWindow>( new TWindow(Name) );
+#else
+	Soy_AssertTodo();
+#endif
 }
 
 std::shared_ptr<SoyLabel> Swift::GetLabel(const std::string& Name)
@@ -613,9 +617,9 @@ Class Platform::GetObjcClass(const std::string& ClassName)
 
 
 
-
+#if defined(TARGET_OSX)
 Swift::TWindow::TWindow(const std::string& ClassName) :
-	Platform::TWindow	( *Soy::Platform::gMainThread )
+	Platform::TWindow	(/* *Soy::Platform::gMainThread*/)
 {
 	auto CreateWindow = [&]()
 	{
@@ -634,4 +638,4 @@ Swift::TWindow::TWindow(const std::string& ClassName) :
 	};
 	RunJobOnMainThread(CreateWindow,true);
 }
-
+#endif

@@ -2,6 +2,7 @@
 #include "PopMain.h"
 #include <magic_enum.hpp>
 
+#include "SoyGuiApple.h"
 #include "SoyWindowApple.h"
 #include "SoySokol_Osx.h"
 
@@ -22,9 +23,58 @@
 #error Compiling ios gles support but ENABLE_OPENGL not defined
 #endif
 
+namespace Swift
+{
+	std::shared_ptr<Sokol::TContext>	CreateSokolContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params);
+}
+
+std::shared_ptr<Sokol::TContext> Swift::CreateSokolContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
+{
+	std::shared_ptr<Gui::TRenderView> RenderView = Platform::GetRenderView(*Window,Params.mViewName);
+	if ( !RenderView )
+		throw Soy::AssertException(std::string("Didn't find an existing render view name ")+Params.mViewName);
+
+	auto PlatformRenderView = std::dynamic_pointer_cast<Platform::TRenderView>(RenderView);
+	if ( !PlatformRenderView )
+		throw Soy::AssertException("Found render view but is not a Platform::TRenderView");
+	
+	auto* GlView = PlatformRenderView->GetOpenglView();
+	auto* MetalView = PlatformRenderView->GetMetalView();
+	
+#if defined(ENABLE_OPENGL)
+	if ( GlView )
+	{
+		//	gr: reaplce with PlatformRenderView as it needs to be held onto
+		auto* Context = new SokolOpenglContext(Window,GlView,Params);
+		return std::shared_ptr<Sokol::TContext>(Context);
+	}
+#endif
+	
+#if defined(ENABLE_METAL)
+	if ( MetalView )
+	{
+		auto* Context = new SokolMetalContext(Window,MetalView,Params);
+		return std::shared_ptr<Sokol::TContext>(Context);
+	}
+#endif
+	
+	return nullptr;
+}
+
 
 std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
 {
+	try
+	{
+		auto SwiftContext = Swift::CreateSokolContext( Window, Params );
+		return SwiftContext;
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+
+
 	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
 	
 	//	get the view with matching name, if it's a metal view, make a metal context

@@ -2,7 +2,6 @@
 	Clone of SoyGuiIos modified to work on Osx... however lots has already been defined in SoyOpenglWindowOsx.mm
 	So the necessary parts for getting a metal view by name have been transfered and this file is left in for reference
 */
-
 /*
 #include "SoyGui.h"
 
