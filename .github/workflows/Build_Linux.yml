@@ -18,13 +18,16 @@ jobs:
         config:
           - os: ubuntu-latest
             type: linux
+            arch: x86_64
             
           - os: ubuntu-latest
             type: linux
+            arch: x86_64
             flag: osmesa
 
           - os: Nvidia
             type: linux
+            arch: arm64
 
           # - os: Pi4
           #   type: linux
