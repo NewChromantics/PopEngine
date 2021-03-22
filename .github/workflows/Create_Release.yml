@@ -102,6 +102,7 @@ jobs:
           lib_dir: ${{ matrix.config.os }}
           os: ${{ matrix.config.os }}
           project: ${{ env.project }}
+          arch: ${{ matrix.config.arch }}
           flag: ${{ matrix.config.flag }}
 
       - name: Upload artifacts
