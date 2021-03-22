@@ -16,11 +16,11 @@ jobs:
     strategy:
       matrix:
         config:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             type: linux
             arch: x86_64
             
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             type: linux
             arch: x86_64
             flag: osmesa
