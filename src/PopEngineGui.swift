@@ -177,7 +177,7 @@ struct MetalView: UIViewRepresentable
         mtkView.drawableSize = mtkView.frame.size
         mtkView.enableSetNeedsDisplay = true
         */
-    	return renderer.metalView
+		return renderer.metalView!
     }
 	
 	func updateUIView(_ uiView: MTKView, context: UIViewRepresentableContext<MetalView>) 
