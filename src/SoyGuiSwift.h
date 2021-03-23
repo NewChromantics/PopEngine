@@ -77,7 +77,6 @@
 @interface GLView : GLKView
 #else
 @interface GLView : NSOpenGLView
-#endif
 {
 @public void(^OnDrawRect)();
 //- (void)drawRect:(NSRect)dirtyRect;
@@ -85,6 +84,7 @@
 
 //    overloaded
 - (void)drawRect: (NSRect) bounds;
+#endif
 
 @end
 

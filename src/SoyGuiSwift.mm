@@ -77,6 +77,7 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 @implementation GLView
 
+#if defined(TARGET_OSX)
 - (void) drawRect: (NSRect) bounds
 {
     //    call lambda
@@ -87,6 +88,7 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
      }
     OnDrawRect();
 }
+#endif
 
 @end
 
