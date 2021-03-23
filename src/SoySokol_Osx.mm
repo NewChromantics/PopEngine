@@ -137,8 +137,12 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView*
 	GLint swapInt = 60;//Params.mVsyncSwapInterval;
 	[mOpenglContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
 
+    auto TriggerPaint = [this]()
+    {
+        this->RequestPaint();
+    };
 
-
+    mView->OnDrawRect = TriggerPaint;
 	//	gr: this doesn't do anything, need to call the func
 /*	//mView.enableSetNeedsDisplay = YES;
 

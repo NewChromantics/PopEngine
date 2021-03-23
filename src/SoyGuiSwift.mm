@@ -76,8 +76,18 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 
 @implementation GLView
+
+- (void) drawRect: (NSRect) bounds
 {
+    //    call lambda
+     if ( !OnDrawRect )
+     {
+         std::Debug << "TResponderCallback unhandled callback" << std::endl;
+         return;
+     }
+    OnDrawRect();
 }
+
 @end
 
 

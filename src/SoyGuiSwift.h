@@ -79,9 +79,13 @@
 @interface GLView : NSOpenGLView
 #endif
 {
-//- (void)drawRect:(NSRect)rect;
+@public void(^OnDrawRect)();
 //- (void)drawRect:(NSRect)dirtyRect;
 }
+
+//    overloaded
+- (void)drawRect: (NSRect) bounds;
+
 @end
 
 @interface PopEngineRenderView : PopEngineControl
