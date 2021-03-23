@@ -126,8 +126,12 @@ typealias XViewRepresentable = UIViewRepresentable
         }
         set
         {
+            //	gr: dont assign temporary, it causes crash
+            //let MutableStrings = (newValue as! NSArray).mutableCopy() as! NSMutableArray
+            //super.value = MutableStrings //    this probably calls updateUi
+            super.value.removeAllObjects()
+            super.value.addObjects(from:newValue )// as! NSArray ) 
             valueCopy = newValue
-            super.value = newValue as! NSMutableArray //    this probably calls updateUi
         }
     }
     
