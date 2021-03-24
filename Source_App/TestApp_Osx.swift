@@ -41,6 +41,12 @@ struct TestView: View {
 	@State var renderView = PopEngineRenderView(name:"TestRenderView")
 	
 	@ObservedObject var TestStringList = PopList(name:"TestStringList")
+	@ObservedObject var TestStringSelectedList = PopList(name:"TestStringListSelected")
+
+	func OnClicked(name:String)	//	this will want to change to a uid
+	{
+		TestStringSelectedList.theValueStrings = [name]
+	}
 
 	var body: some View 
 	{
@@ -50,11 +56,19 @@ struct TestView: View {
 
 		List 
 		{
-			//ForEach(TestStringList.theValue.identified(by: \.self))
 			ForEach(TestStringList.theValue) 
 			{	
 				Item in
-				Text(Item.value)
+				let Selected = TestStringSelectedList.theValueStrings.contains(Item.value)
+				
+				Button(action: {OnClicked(name:Item.value)})
+				{
+					//	clickable area is INSIDE the button
+					Text(Item.value)
+						.frame(width:60,height:30)
+				}
+				.buttonStyle(BorderlessButtonStyle())
+				.background( Selected ? Color.red : Color.gray )
 			}
 		}
 
