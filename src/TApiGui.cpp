@@ -796,23 +796,39 @@ void ApiGui::TList::CreateTemplate(Bind::TTemplate& Template)
 
 void ApiGui::TList::Construct(Bind::TCallback& Params)
 {
-    auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
-    
-    if ( Params.IsArgumentString(1) ) //    user provided named element
-    {
-        auto Name = Params.GetArgumentString(1);
-        mControl = Platform::GetList( *ParentWindow.mWindow, Name );
-    }
-    else    // user provided array
-    {
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+
+	if ( Params.IsArgumentString(1) ) //    user provided named element
+	{
+		auto Name = Params.GetArgumentString(1);
+		mControl = Platform::GetList( *ParentWindow.mWindow, Name );
+	}
+	else	// user provided array
+	{
 		throw Soy::AssertException("Currently can only get existing list control");
-    }
+	}
+	
+	mControl->mOnValueChanged = std::bind( &ApiGui::TList::OnChanged, this, std::placeholders::_1 );
 }
 
 void ApiGui::TList::SetValue(Bind::TCallback& Params)
 {
-    Array<std::string> Value;
-    Params.GetArgumentArray(0, GetArrayBridge(Value));
-    mControl->SetValue( GetArrayBridge(Value) ); // turn some array type into an array bridge
+	Array<std::string> Value;
+	Params.GetArgumentArray(0, GetArrayBridge(Value));
+	mControl->SetValue( GetArrayBridge(Value) ); // turn some array type into an array bridge
 }
 
+void ApiGui::TList::OnChanged(ArrayBridge<std::string>&& NewValues)
+{
+	Array<std::string> NewValueCopy( NewValues );
+	auto Callback = [this,NewValueCopy](Bind::TLocalContext& Context) mutable
+	{
+		auto This = this->GetHandle(Context);
+		auto ThisOnChanged = This.GetFunction("OnChanged");
+		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
+		Callback.SetArgumentArray(0,GetArrayBridge(NewValueCopy));
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
+}

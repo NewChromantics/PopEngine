@@ -280,16 +280,17 @@ public:
 class ApiGui::TList : public Bind::TObjectWrapper<ApiGui::BindType::List, Gui::TList>
 {
 public:
-    TList(Bind::TContext& Context) :
-        TObjectWrapper    ( Context )
-    {
-    }
-    
-    static void         CreateTemplate(Bind::TTemplate& Template);
-    virtual void        Construct(Bind::TCallback& Params) override;
-    
-    void                SetValue(Bind::TCallback& Params);
+	TList(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+	{
+	}
+
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void	Construct(Bind::TCallback& Params) override;
+
+	void			SetValue(Bind::TCallback& Params);
+	void			OnChanged(ArrayBridge<std::string>&& NewValues);
 
 public:
-    std::shared_ptr<Gui::TList>&    mControl = mObject;
+	std::shared_ptr<Gui::TList>&	mControl = mObject;
 };

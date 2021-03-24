@@ -308,32 +308,34 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 @implementation PopEngineList
 {
-    NSMutableArray<NSString*> * mValue;
-//    @public std::function<void(NSMutableArray<NSString*>*)>    mOnChanged;
+	NSMutableArray<NSString*>* mValue;
+	//@public std::function<void()>	mOnChanged;
+//@public void(^mOnChanged)();
+	@public std::function<void(NSMutableArray<NSString*>*)> mOnChanged;
 }
 
 
 - (nonnull id)initWithName:(nonnull NSString*)name value:(NSMutableArray<NSString*>*)value label:(nonnull NSString*)label
 {
-    self = [super initWithName:name];
-    self.label = label;
-    self.value = value;
-    return self;
+	self = [super initWithName:name];
+	self.label = label;
+	self.value = value;
+	return self;
 }
 
 - (nonnull id)initWithName:(nonnull NSString*)name value:(NSMutableArray<NSString*>*)value
 {
-    return [self initWithName:name value:value label:@"PopEngineStringArray"];
+	return [self initWithName:name value:value label:@"PopEngineStringArray"];
 }
 
 - (nonnull id)initWithName:(nonnull NSString*)name label:(nonnull NSString*)label
 {
-    return [self initWithName:name value:[NSMutableArray<NSString*> new] label:label];
+	return [self initWithName:name value:[NSMutableArray<NSString*> new] label:label];
 }
 
 - (nonnull id)initWithName:(NSString*)name
 {
-    return [self initWithName:name value:[NSMutableArray<NSString*> new] label:@"PopEngineStringArray"];
+	return [self initWithName:name value:[NSMutableArray<NSString*> new] label:@"PopEngineStringArray"];
 }
 
 
@@ -357,6 +359,9 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 	[mValue addObjects:value];
 */
 	[self updateUi];
+	
+	if ( mOnChanged )
+		mOnChanged( mValue );
 }
 
 
@@ -506,16 +511,12 @@ public:
 class Swift::TList : public Gui::TList
 {
 public:
-	TList(PopEngineList* Control) :
-		mControl	(Control)
-	 {
-    }
-    
-    virtual void		SetValue(const ArrayBridge<std::string>&& Value) override;
-    virtual void		GetValue(ArrayBridge<std::string>&& Values) override;
-    
+	TList(PopEngineList* Control);
+	
+	virtual void		SetValue(const ArrayBridge<std::string>&& Value) override;
+	virtual void		GetValue(ArrayBridge<std::string>&& Values) override;
 
-    PopEngineList*   mControl;
+	PopEngineList*		mControl = nullptr;
 };
 
 #include "SoyGuiObjc.h"
@@ -713,3 +714,22 @@ Swift::TWindow::TWindow(const std::string& ClassName) :
 	Platform::RunJobOnMainThread(CreateWindow,true);
 }
 #endif
+
+
+Swift::TList::TList(PopEngineList* Control) :
+	mControl	( Control )
+{
+	auto OnValuesChanged = [this](NSMutableArray<NSString*>* StringsNs)
+	{
+		std::Debug << "List values changed" << std::endl;
+		Array<std::string> Strings;
+			//	NSArray_ForEach<NSString*>(...)
+		auto Append = [&](NSString* StringNs)
+		{
+			Strings.PushBack( Soy::NSStringToString(StringNs) );
+		};
+		Platform::NSArray_ForEach<NSString*>(StringsNs,Append);
+		this->mOnValueChanged( GetArrayBridge(Strings) );
+	};
+	mControl->mOnChanged = OnValuesChanged;
+}
