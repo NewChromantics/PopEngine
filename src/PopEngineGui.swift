@@ -114,8 +114,8 @@ struct PopListItem : Identifiable
 		labelCopy = self.label
 
 		//	regenerate the uuid'd values
-		let ValueStrings = self.value as! [String]
-		valueCopy = ValueStrings.map( { PopListItem(value: $0) } )
+		self.valueStrings = self.value as! [String]
+		valueCopy = self.valueStrings.map( { PopListItem(value: $0) } )
 		//valueCopy = self.value as! [String]
 	}
 
@@ -140,26 +140,38 @@ struct PopListItem : Identifiable
 			//return super.value as! [String]
 			return valueCopy
 		}
+
+	}
 	
+	var theValueStrings: [String]
+	{
+		get
+		{
+			return self.valueStrings
+		}
+
 		set
 		{
 			//	the engine code is fixed now so we can set any NSArray, and makes a copy of the contents
 			//	it was crashing as it seemed to assign to a temporary array that swift deleted?
 			//	but swift can't see setValue(NSArray) so we still need to turn it into a mutable array 
-			let StringArray = newValue.map( { String($0.value) } )
+			//let StringArray = newValue.map( { String($0.value) } )
+			let StringArray = newValue
 			let StringArrayNs = StringArray as NSArray
 			let StringArrayMutable = StringArrayNs.mutableCopy() as! NSMutableArray
 			super.value = StringArrayMutable
 			//super.value.removeAllObjects()
 			//super.value.addObjects(from:newValue )// as! NSArray ) 
-			valueCopy = newValue
+			//valueCopy = newValue
+			valueStrings = newValue
 		}
-	}
+	}			
 	
 	//	gr: I think I only need one "dirty" variable to trigger swiftui update
 	@Published private var labelCopy:String = "LabelCopy"
 	//	
 	@Published private var valueCopy:[PopListItem] = []
+	private var valueStrings:[String] = []
 }
 
 //	gr: make a NSView/UIView type in objective c? and remove user's decision between metal and opengl?
