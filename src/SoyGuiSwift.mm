@@ -78,15 +78,18 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 @implementation GLView
 
 #if defined(TARGET_OSX)
-- (void) drawRect: (NSRect) bounds
+- (void)drawRect: (NSRect)dirtyRect
 {
-    //    call lambda
-     if ( !OnDrawRect )
-     {
-         std::Debug << "TResponderCallback unhandled callback" << std::endl;
-         return;
-     }
-    OnDrawRect();
+	//	call lambda
+	if ( !mOnDrawRect )
+	{
+		std::Debug << "GLView::drawRect has no mOnDrawRect assigned" << std::endl;
+		return;
+	}
+	
+	//	gr: we dont want to report the dirty rect, we need to tell caller about our whole rect
+	auto Rect = [self bounds];
+	mOnDrawRect(Rect);
 }
 #endif
 

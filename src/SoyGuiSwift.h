@@ -78,12 +78,13 @@
 #else
 @interface GLView : NSOpenGLView
 {
-@public void(^OnDrawRect)();
-//- (void)drawRect:(NSRect)dirtyRect;
+//	callback function when drawRect is triggered. 
+//	we use a objc block as we cannot use any c++ types in this file used by swift 
+@public void(^mOnDrawRect)(NSRect);
 }
 
-//    overloaded
-- (void)drawRect: (NSRect) bounds;
+//	overload drawRect to detect when window needs redrawing
+- (void)drawRect: (NSRect)dirtyRect;
 #endif
 
 @end

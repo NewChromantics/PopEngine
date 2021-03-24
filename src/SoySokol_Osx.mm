@@ -137,12 +137,19 @@ SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView*
 	GLint swapInt = 60;//Params.mVsyncSwapInterval;
 	[mOpenglContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
 
-    auto TriggerPaint = [this]()
-    {
-        this->RequestPaint();
-    };
+	auto TriggerPaint = [this](NSRect Rect)
+	{
+		try
+		{
+			this->OnPaint(Rect);
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "OnPaint exception from glview draw; " << e.what() << std::endl;
+		}
+	};
+	mView->mOnDrawRect = TriggerPaint;
 
-    mView->OnDrawRect = TriggerPaint;
 	//	gr: this doesn't do anything, need to call the func
 /*	//mView.enableSetNeedsDisplay = YES;
 
@@ -210,6 +217,18 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 	std::lock_guard Lock(mOpenglContextLock);
 	auto Context = [mOpenglContext CGLContextObj]; 
 	CGLLockContext(Context);
+
+	//	if we're setup for gl3 sokol will error when getting extensions
+	//	if we havent setup a core3 context
+	#if defined(SOKOL_GLCORE33)
+	{
+	 	GLint num_ext = 0;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &num_ext);
+		auto Error = glGetError();
+		if ( Error != 0 )
+			throw Soy::AssertException("GL_NUM_EXTENSIONS has returned error");
+	}
+	#endif
 
 	auto* CurrentContext = CGLGetCurrentContext();
 	if ( CurrentContext != Context )
