@@ -38,6 +38,7 @@ private:
 	void							RequestViewPaint();
 	void							OnPaint(CGRect Rect);
 	void							RunGpuJobs();
+	bool							IsDoubleBuffered();
 
 public:
 	bool							mRunning = true;
@@ -45,7 +46,7 @@ public:
 	bool							mPaintRequested = false;
 	
 	sg_context						mSokolContext = {0};
-	GLView*          	    		mView = nullptr;
+	GLView*							mView = nullptr;
 	NSOpenGLContext*				mOpenglContext = nullptr;
 	std::mutex						mOpenglContextLock;
 	//SokolViewDelegate_Gles*			mDelegate = nullptr;

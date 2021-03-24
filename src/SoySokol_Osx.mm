@@ -273,29 +273,35 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 	vec2x<size_t> Size( Width, Height );
 	mParams.mOnPaint( mSokolContext, Size );
 		
+			
+	if ( IsDoubleBuffered() )
+	{
+		//	let OSX flush and flip (probably sync'd better than we ever could)
+		//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
+		//	http://stackoverflow.com/a/13633191/355753
+		[mOpenglContext flushBuffer];
+	}
+	else
+	{
+		glFlush();
+		//Opengl::IsOkay("glFlush");
+	}
+	
 	FlushedError = glGetError();
 	if ( FlushedError != 0 )
 		std::Debug << "Post OnPaint, flushed error=" << FlushedError << std::endl;
-		
-	//	our old mac view ended like this
-	/*
-		if ( Context.IsDoubleBuffered() )
-		{
-			//	let OSX flush and flip (probably sync'd better than we ever could)
-			//	only applies if double buffered (NSOpenGLPFADoubleBuffer)
-			//	http://stackoverflow.com/a/13633191/355753
-			[[self openGLContext] flushBuffer];
-		}
-		else
-		{
-			glFlush();
-			Opengl::IsOkay("glFlush");
-		}
-	*/
-	[mOpenglContext flushBuffer];
-	//glFlush();
+	
 }
 
+bool SokolOpenglContext::IsDoubleBuffered()
+{
+	if ( !mView )
+		return false;
+	GLint IsDoubleBuffered = 0;
+	GLint VirtualScreenIndex = 0;
+	[[mView pixelFormat]getValues:&IsDoubleBuffered forAttribute:NSOpenGLPFADoubleBuffer forVirtualScreen:VirtualScreenIndex];
+	return IsDoubleBuffered!=0;
+}
 
 void SokolOpenglContext::RequestPaint()
 {

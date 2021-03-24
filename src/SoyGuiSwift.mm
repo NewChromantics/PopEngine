@@ -98,9 +98,10 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 {
 	//	setup opengl view with parameters we need (for sokol)
 	//	gr: where do we get this from by default!
-	NSRect frameRect = NSMakeRect(0,0,400,400);
+	//	gr: set to something small so we can spot when its broken
+	NSRect frameRect = NSMakeRect(0,0,20,20);
 	auto HardwareAccellerationOnly = true;
-	auto DoubleBuffer = true;
+	auto DoubleBuffer = false;
 	
 	Array<NSOpenGLPixelFormatAttribute> Attributes;
 	if ( HardwareAccellerationOnly )
