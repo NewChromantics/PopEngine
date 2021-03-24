@@ -134,6 +134,8 @@ void TPacketStorage::Pop(SoyRef& Peer,std::string& DataString)
 	if ( !Meta.mIsString )
 		throw Soy::AssertException("Pop packet, but is not string");
 
+	Peer = Meta.mPeer;
+
 	Array<uint8_t> Data;
 	//std::Debug << "PacketStorage pop " << Meta.mSize << std::endl;
 	mDataBuffer.PopFront( Meta.mSize, GetArrayBridge(Data) );
@@ -152,6 +154,8 @@ void TPacketStorage::Pop(SoyRef& Peer,ArrayBridge<uint8_t>&& Data)
 	auto Meta = mPackets[0];
 	if ( Meta.mIsString )
 		throw Soy::AssertException("Pop packet, but is not binary");
+
+	Peer = Meta.mPeer;
 
 	mDataBuffer.PopFront( Meta.mSize, GetArrayBridge(Data) );
 	mPackets.RemoveBlock(0,1);
