@@ -1238,7 +1238,24 @@ std::shared_ptr<SoyLabel> Platform::CreateLabel(SoyWindow& Parent,Soy::Rectx<int
 
 std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::string& Name)
 {
-	Soy_AssertTodo();
+	try
+	{
+		return Swift::GetList(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
+	}
+
+	auto& ParentView = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<Gui::TList> Control;
+	auto Allocate = [&]() mutable
+	{
+		Soy_AssertTodo();
+		//Control.reset( new Platform::TList( ParentView, GetArrayBridge(Value) ) );
+	};
+	RunJobOnMainThread(Allocate,true);
+	return Control;
 }
 
 
