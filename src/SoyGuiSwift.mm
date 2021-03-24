@@ -276,14 +276,26 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 - (NSMutableArray<NSString*>*)value
 {
-   return mValue;
+	return mValue;
 }
 
 -(void) setValue: (NSMutableArray<NSString*>*)value
 {
-    mValue = value;
-    [self updateUi];
+	//	gr: it's easy to set this to a temporary swift array, which gets deallocated
+	//		so make sure we just copy its contents and dont assign this array to value
+	mValue = [value mutableCopy];
+	/*
+	if ( !mValue )
+	{
+		mValue = [NSMutableArray<NSString*> new];
+	}
+	
+	[mValue removeAllObjects];
+	[mValue addObjects:value];
+*/
+	[self updateUi];
 }
+
 
 @end
 

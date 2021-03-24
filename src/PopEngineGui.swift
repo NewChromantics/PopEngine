@@ -126,12 +126,15 @@ typealias XViewRepresentable = UIViewRepresentable
         }
         set
         {
-            //	gr: dont assign temporary, it causes crash
-            //let MutableStrings = (newValue as! NSArray).mutableCopy() as! NSMutableArray
-            //super.value = MutableStrings //    this probably calls updateUi
-            super.value.removeAllObjects()
-            super.value.addObjects(from:newValue )// as! NSArray ) 
-            valueCopy = newValue
+			//	the engine code is fixed now so we can set any NSArray, and makes a copy of the contents
+			//	it was crashing as it seemed to assign to a temporary array that swift deleted?
+			//	but swift can't see setValue(NSArray) so we still need to turn it into a mutable array 
+			let StringArray = (newValue as NSArray)
+			let StringArrayMutable = StringArray.mutableCopy() as! NSMutableArray
+			super.value = StringArrayMutable
+			//super.value.removeAllObjects()
+			//super.value.addObjects(from:newValue )// as! NSArray ) 
+			valueCopy = newValue
         }
     }
     
