@@ -85,6 +85,7 @@
 
 //	overload drawRect to detect when window needs redrawing
 - (void)drawRect: (NSRect)dirtyRect;
+- (nonnull instancetype)init;
 #endif
 
 @end
