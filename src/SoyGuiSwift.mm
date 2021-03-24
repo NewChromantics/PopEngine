@@ -76,8 +76,20 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 
 @implementation GLView
+
+#if defined(TARGET_OSX)
+- (void) drawRect: (NSRect) bounds
 {
+    //    call lambda
+     if ( !OnDrawRect )
+     {
+         std::Debug << "TResponderCallback unhandled callback" << std::endl;
+         return;
+     }
+    OnDrawRect();
 }
+#endif
+
 @end
 
 

@@ -16,15 +16,18 @@ jobs:
     strategy:
       matrix:
         config:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             type: linux
+            arch: x86_64
             
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             type: linux
+            arch: x86_64
             flag: osmesa
 
           - os: Nvidia
             type: linux
+            arch: arm64
 
           # - os: Pi4
           #   type: linux
@@ -55,5 +58,6 @@ jobs:
           lib_dir: ${{ matrix.config.os }}
           os: ${{ matrix.config.os }}
           project: ${{ env.project }}
+          arch: ${{ matrix.config.arch }}
           flag: ${{ matrix.config.flag }}
 
