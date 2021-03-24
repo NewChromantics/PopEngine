@@ -28,7 +28,7 @@ class TestAppWindow : NSObject
 		    backing: .buffered, defer: false)
 		window.isReleasedWhenClosed = false
 		window.center()
-		window.setFrameAutosaveName("Main Window")
+		window.setFrameAutosaveName("TestAppWindow")
 		window.contentView = NSHostingView(rootView: contentView)
 		window.makeKeyAndOrderFront(nil)
 	}
@@ -36,21 +36,30 @@ class TestAppWindow : NSObject
 
 
 
-
-
 struct TestView: View {
 
-	@State var renderView = PopEngineRenderView(name:"TestRenderView") 
-   
-   
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color("SplashscreenBackground"))
-        
-        OpenglView(renderer:$renderView)
-    }
-    
+	@State var renderView = PopEngineRenderView(name:"TestRenderView")
+	
+	@ObservedObject var TestStringList = PopList(name:"TestStringList")
+
+	var body: some View 
+	{
+		Text("Hello, World!")
+			.frame(maxWidth: .infinity, maxHeight: .infinity)
+			.background(Color("SplashscreenBackground"))
+
+		List 
+		{
+			//ForEach(TestStringList.theValue.identified(by: \.self))
+			ForEach(TestStringList.theValue) 
+			{	
+				Item in
+				Text(Item.value)
+			}
+		}
+
+		OpenglView(renderer:$renderView)
+	}
 }
 
 struct App_Previews: PreviewProvider {
@@ -60,26 +69,6 @@ struct App_Previews: PreviewProvider {
 }
 
 
-
-
-/*
-@objc
-class PopEngineSwiftViewFactory : NSObject
-{
-	//	complicated! can't just return a View
-	//	https://stackoverflow.com/a/65585090/355753
-	//func CreateView(Name:String) -> View
-	@ViewBuilder static func CreateView(Name:String) -> some View
-	{
-		if ( Name == "Test" )
-		{
-			TestView()
-		}
-		//throw "No view with this name"
-		//return nil
-	}
-};
-*/
 /*
 	//	gr: maybe should be using this to bind
     func makeCoordinator() -> Coordinator 

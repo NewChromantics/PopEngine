@@ -94,55 +94,73 @@ typealias XViewRepresentable = UIViewRepresentable
 	@Published private var valueCopy:Bool = false
 }
 
+
+//	for some displays (and general swift optimisation) every item in a list should have a uid
+//	todo: we should really move this engine side so a list is always a dictionary/keyed object
+//		seeing as both sides kinda need that now
+struct PopListItem : Identifiable 
+{
+	var id = UUID()
+	var value: String
+}
+
+
 @objc class PopList : PopEngineList , ObservableObject
 {
-    //    called from objective-c's .label setter
-    @objc override func updateUi()
-    {
-        //    trigger published var change to redraw view
-        labelCopy = self.label
-        valueCopy = self.value as! [String]
-    }
-    
-    //    use this to read & write
-    var theLabel: String
-    {
-        get
-        {
-            return super.label // reaching ancestor prop
-        }
-        set
-        {
-            labelCopy = newValue
-            super.label = newValue    //    this probably calls updateUi
-        }
-    }
-    
-    var theValue: [String]
-    {
-        get
-        {
-            return super.value as! [String]
-        }
-        set
-        {
+	//	called from objective-c's .label setter
+	@objc override func updateUi()
+	{
+		//	trigger published var change to redraw view
+		labelCopy = self.label
+
+		//	regenerate the uuid'd values
+		let ValueStrings = self.value as! [String]
+		valueCopy = ValueStrings.map( { PopListItem(value: $0) } )
+		//valueCopy = self.value as! [String]
+	}
+
+	//	use this to read & write
+	var theLabel: String
+	{
+		get
+		{
+			return super.label
+		}
+		set
+		{
+			labelCopy = newValue
+			super.label = newValue
+		}
+	}
+
+	var theValue: [PopListItem]
+	{
+		get
+		{
+			//return super.value as! [String]
+			return valueCopy
+		}
+	
+		set
+		{
 			//	the engine code is fixed now so we can set any NSArray, and makes a copy of the contents
 			//	it was crashing as it seemed to assign to a temporary array that swift deleted?
 			//	but swift can't see setValue(NSArray) so we still need to turn it into a mutable array 
-			let StringArray = (newValue as NSArray)
-			let StringArrayMutable = StringArray.mutableCopy() as! NSMutableArray
+			let StringArray = newValue.map( { String($0.value) } )
+			let StringArrayNs = StringArray as NSArray
+			let StringArrayMutable = StringArrayNs.mutableCopy() as! NSMutableArray
 			super.value = StringArrayMutable
 			//super.value.removeAllObjects()
 			//super.value.addObjects(from:newValue )// as! NSArray ) 
 			valueCopy = newValue
-        }
-    }
-    
-    //    gr: I think I only need one "dirty" variable to trigger swiftui update
-    @Published private var labelCopy:String = "LabelCopy"
-    @Published private var valueCopy:[String] = []
+		}
+	}
+	
+	//	gr: I think I only need one "dirty" variable to trigger swiftui update
+	@Published private var labelCopy:String = "LabelCopy"
+	//	
+	@Published private var valueCopy:[PopListItem] = []
 }
-
 
 //	gr: make a NSView/UIView type in objective c? and remove user's decision between metal and opengl?
 //NSViewRepresentable
