@@ -85,27 +85,31 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	auto ImageMeta = Pixels.GetMeta();
 	Description.width = ImageMeta.GetWidth();
 	Description.height = ImageMeta.GetHeight();
-	if(RenderTarget)
+	if ( RenderTarget )
 	{
-		Description.width = 640;
-		Description.height = 640;
+		//	gr; why was size set here?
+		//Description.width = 640;
+		//Description.height = 640;
 		auto SokolDescription = sg_query_desc();
 		Description.render_target = true;
 		Description.pixel_format = SokolDescription.context.color_format;
 		Description.sample_count = SokolDescription.context.sample_count;
+		
+		//	ignoring pixel content here
 	}
 	else
 	{
 		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
+
+		//	sokol was erroring as we intialised a rendertarget with pixels
+		auto& PixelsArray = Pixels.GetPixelsArray();
+		auto CubeFace = 0;
+		auto Mip = 0;
+		sg_subimage_content& SubImage = Description.content.subimage[CubeFace][Mip];
+		SubImage.ptr = PixelsArray.GetArray();
+		SubImage.size = PixelsArray.GetDataSize();
 	}
 	
-	
-	auto& PixelsArray = Pixels.GetPixelsArray();
-	auto CubeFace = 0;
-	auto Mip = 0;
-	sg_subimage_content& SubImage = Description.content.subimage[CubeFace][Mip];
-	SubImage.ptr = PixelsArray.GetArray();
-	SubImage.size = PixelsArray.GetDataSize();
 	
 	return Description;
 }
@@ -145,7 +149,11 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			RenderCommands = mPendingFrames.PopAt(0);
 	}
 	
+
 	bool InsidePass = false;
+	bool PassIsRenderTexture = false;	//	temp for the pipeline blend mode... gr; figure out why this is needed
+	std::string RenderError;			//	if this isnt empty, we reject the promise
+	
 	//	currently we're just flushing out all pipelines after we render
 	Array<sg_pipeline> TempPipelines;
 	Array<sg_buffer> TempBuffers;
@@ -157,33 +165,51 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	jobs
 	FreeImageDeletes();
 	
-	// cache render target pass if 0 render to screen
-	sg_pass RenderTargetPass = {0};
-
 	//	run render commands
-	auto NewPass = [&](float r,float g,float b,float a)
+	auto NewPass = [&](sg_image TargetTexture,float r,float g,float b,float a)
 	{
 		if ( InsidePass )
 		{
 			sg_end_pass();
 			InsidePass = false;
+			//CurrentTargetPass = {0};
 		}
 		
 		sg_pass_action PassAction = {0};
-		PassAction.colors[0].action = SG_ACTION_CLEAR;
 		PassAction.colors[0].val[0] = r;
 		PassAction.colors[0].val[1] = g;
 		PassAction.colors[0].val[2] = b;
 		PassAction.colors[0].val[3] = a;
-		
-		// This needs to change to sg_begin_pass if a RenderTarget is set
-		if(RenderTargetPass.id != 0)
-			sg_begin_pass(RenderTargetPass, &PassAction);
-		else
+
+		//	if colour has zero alpha, we don't clear, just load old contents
+		bool ClearColour = a > 0.0f;
+		PassAction.colors[0].action = ClearColour ? SG_ACTION_CLEAR : SG_ACTION_LOAD;
+
+		//	if no image, render to screen with "default"
+		if ( TargetTexture.id == 0 )
+		{
 			sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
-	
+			PassIsRenderTexture = false;
+		}
+		else
+		{
+			//	make a new pass, add it to our dispose-pass list and use it
+			sg_pass_desc RenderTargetPassDesc = { 0 };
+
+			// There are 4 Color and 1 depth slot on for a Render Pass Description
+			// TODO: Change header to Image Array for Color textures add slot for depth image
+			RenderTargetPassDesc.color_attachments[0].image = TargetTexture;
+
+			auto RenderTargetPass = sg_make_pass(&RenderTargetPassDesc);
+			TempPasses.PushBack(RenderTargetPass);
+
+			sg_begin_pass( RenderTargetPass, &PassAction);
+			PassIsRenderTexture = true;
+		}
+		
 		auto test = sg_query_desc();
 		InsidePass = true;
+		//CurrentTargetPass = NewPass;
 	};
 	
 	try
@@ -192,16 +218,20 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		{
 			auto& NextCommand = RenderCommands.mCommands[i];
 			
-			if ( NextCommand->GetName() == Sokol::TRenderCommand_Clear::Name )
+			/* gr: we should allow image commands that dont need a pass
+			
+			//	if we have a command (list) with no set target immediately,
+			//	we need to start a default pass (or throw?)
+			if ( !InsidePass )
 			{
-				auto& ClearCommand = dynamic_cast<Sokol::TRenderCommand_Clear&>( *NextCommand );
-				NewPass( ClearCommand.mColour[0], ClearCommand.mColour[1], ClearCommand.mColour[2], ClearCommand.mColour[3] );
+				if ( NextCommand->GetName() != Sokol::TRenderCommand_SetRenderTarget::Name )
+				{
+					std::stringstream Error;
+					Error << "Render command " << NextCommand->GetName() << " without being in a pass(" << Sokol::TRenderCommand_SetRenderTarget::Name << " should be at the start)"; 
+					throw Soy::AssertException(Error);
+				}
 			}
-			else if ( !InsidePass )
-			{
-				//	starting a pass without a clear, so do one
-				NewPass(1,0,0,1);
-			}
+			*/
 			
 			//	execute each command
 			if ( NextCommand->GetName() == Sokol::TRenderCommand_UpdateImage::Name )
@@ -249,6 +279,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			
 			if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
 			{
+				if ( !InsidePass )
+					throw Soy::AssertException("Draw command but not inside pass (Haven't SetRenderTarget)");
+					
 				auto& DrawCommand = dynamic_cast<Sokol::TRenderCommand_Draw&>( *NextCommand );
 				auto& Geometry = mGeometrys[DrawCommand.mGeometryHandle];
 				auto& Shader = mShaders[DrawCommand.mShaderHandle];
@@ -269,9 +302,11 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				
 				// Some Render Target Settings need to be different here
 				// Overwrite them at the end here?
-				// In this test there is no depth image in the Render Target Pass
-				// TODO: Set this more intelligently!
-				if(RenderTargetPass.id != 0)
+				
+				//	gr: we need the pipeline depth format to match the pass's depth setup
+				//	in a render texture pass we don't currently have a depth target, so
+				//	needs to be none. If rendering to screen (stencil) leave this as default 
+				if ( PassIsRenderTexture )
 					PipelineDescription.blend.depth_format = SG_PIXELFORMAT_NONE;
 				
 				sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
@@ -282,7 +317,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				
 				sg_bindings Bindings = {0};
 				for ( auto a=0;	a<Geometry.GetVertexLayoutBufferSlots();	a++ )
-				Bindings.vertex_buffers[a] = Geometry.mVertexBuffer;
+					Bindings.vertex_buffers[a] = Geometry.mVertexBuffer;
 				Bindings.index_buffer = Geometry.mIndexBuffer;
 				
 				for ( auto i=0;	i<SG_MAX_SHADERSTAGE_IMAGES;	i++ )
@@ -317,34 +352,35 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
 			{
 				auto& SetRenderTargetCommand = dynamic_cast<Sokol::TRenderCommand_SetRenderTarget&>( *NextCommand );
+				
+				//	no image = screen
+				sg_image RenderTargetImage = {0};
+					
 				if ( !SetRenderTargetCommand.mTargetTexture ) // js land = Commands.push( [ "SetRenderTarget", null ] )
-					RenderTargetPass = {0};
+				{
+				}
 				else
 				{
 					bool LatestVersion = true;
-					sg_image SokolImage = {0};
-					
 					auto& RenderTexture = *SetRenderTargetCommand.mTargetTexture;
+					RenderTargetImage.id = RenderTexture.GetSokolImage(LatestVersion);
 					
-					SokolImage.id = RenderTexture.GetSokolImage(LatestVersion);
-					auto State = sg_query_image_state( SokolImage );
-					
-					// There are 4 Color and 1 depth slot on for a Render Pass Description
-					// TODO: Change header to Image Array for Color textures add slot for depth image
-					sg_pass_desc RenderTargetPassDesc = { 0 };
-					RenderTargetPassDesc.color_attachments[0].image = SokolImage;
-					
-					RenderTargetPass = sg_make_pass(&RenderTargetPassDesc);
-					TempPasses.PushBack(RenderTargetPass);
+					//	probe image to throw if the image is invalid
+					auto State = sg_query_image_state( RenderTargetImage );
 				}
-				
-				NewPass(1,0,0,1);
+			
+				auto r = SetRenderTargetCommand.mClearColour[0];
+				auto g = SetRenderTargetCommand.mClearColour[1];
+				auto b = SetRenderTargetCommand.mClearColour[2];
+				auto a = SetRenderTargetCommand.mClearColour[3];
+				NewPass( RenderTargetImage, r, g, b, a );
 			}
 		}
 	}
 	catch(std::exception& e)
 	{
 		std::Debug << "Exception in OnPaints RenderCommand Loop: " << e.what() << std::endl;
+		RenderError = std::string("RenderCommand exception: ") + e.what();
 	}
 	
 	//	end pass
@@ -386,9 +422,12 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	but really we should be using something like glsync?
 	if ( RenderCommands.mPromiseRef != std::numeric_limits<size_t>::max() )
 	{
-		auto Resolve = [](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+		auto Resolve = [=](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 		{
-			Promise.Resolve(LocalContext,0);
+			if ( RenderError.empty() )
+				Promise.Resolve(LocalContext,0);
+			else
+				Promise.Reject(LocalContext,RenderError);
 		};
 		mPendingFramePromises.QueueFlush(RenderCommands.mPromiseRef,Resolve);
 	}
@@ -428,11 +467,11 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 void ApiSokol::TSokolContextWrapper::InitDebugFrame(Sokol::TRenderCommands& Commands)
 {
 	{
-		auto pClear = std::make_shared<Sokol::TRenderCommand_Clear>();
-		pClear->mColour[0] = 0;
-		pClear->mColour[1] = 1;
-		pClear->mColour[2] = 1;
-		pClear->mColour[3] = 1;
+		auto pClear = std::make_shared<Sokol::TRenderCommand_SetRenderTarget>();
+		pClear->mClearColour[0] = 0;
+		pClear->mClearColour[1] = 1;
+		pClear->mClearColour[2] = 1;
+		pClear->mClearColour[3] = 1;
 		Commands.mCommands.PushBack(pClear);
 	}
 }
@@ -577,18 +616,7 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 
 void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
 {
-	if ( Name == TRenderCommand_Clear::Name )
-	{
-		auto pClear = std::make_shared<TRenderCommand_Clear>();
-		//	for speed, would a typed array be faster, then we can memcpy?
-		pClear->mColour[0] = Params.GetArgumentFloat(1);
-		pClear->mColour[1] = Params.GetArgumentFloat(2);
-		pClear->mColour[2]= Params.GetArgumentFloat(3);
-		pClear->mColour[3] = Params.IsArgumentUndefined(4) ? 1 : Params.GetArgumentFloat(4);
-		PushCommand(pClear);
-		return;
-	}
-	
+
 	if ( Name == TRenderCommand_Draw::Name )
 	{
 		auto pDraw = std::make_shared<TRenderCommand_Draw>();
@@ -625,10 +653,10 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 		if (Params.IsArgumentNull(1))
 		{
 			//	must not have readback format
-			if (!Params.IsArgumentUndefined(2))
+			if (!Params.IsArgumentUndefined(3))
 			{
 				std::stringstream Error;
-				Error << "Render Command " << Name << " has read-backformat specified, but with null target, should not be provided";
+				Error << "Render Command " << Name << " has read-backformat specified, but with null target, should not be provided.";
 				throw Soy::AssertException(Error);
 			}
 		}
@@ -639,10 +667,10 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 			pSetRenderTarget->mTargetTexture = Image.mImage;
 
 			//	get readback format
-			if (!Params.IsArgumentUndefined(2))
+			if (!Params.IsArgumentUndefined(3))
 			{
 				//	gr: is readback better as a command?
-				auto FormatString = Params.GetArgumentString(2);
+				auto FormatString = Params.GetArgumentString(3);
 				auto Format = SoyPixelsFormat::ToType(FormatString);
 				pSetRenderTarget->mReadBackFormat = Format;
 			}
@@ -653,6 +681,26 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 			pUpdateImage->mImage = pSetRenderTarget->mTargetTexture;
 			pUpdateImage->mIsRenderTarget = true;
 			PushCommand(pUpdateImage);
+		}
+		
+		//	argument 2 is clear color, if not provided, no clear
+		if ( !Params.IsArgumentUndefined(2) )
+		{
+			//	allow rgb or rgba (assume alpha=1 if anything provided)
+			BufferArray<float,4> ClearColour;
+			Params.GetArgumentArray(2, GetArrayBridge(ClearColour) );
+			if ( ClearColour.GetSize() < 3 )
+			{
+				std::stringstream Error;
+				Error << Name << " clear colour argument provided only " << ClearColour.GetSize() << " elements. Expected RGB or RGBA";
+				throw Soy::AssertException(Error);
+			}
+			if ( ClearColour.GetSize() < 4 )
+				ClearColour.PushBack(1.0f);
+			pSetRenderTarget->mClearColour[0] = ClearColour[0];
+			pSetRenderTarget->mClearColour[1] = ClearColour[1];
+			pSetRenderTarget->mClearColour[2] = ClearColour[2];
+			pSetRenderTarget->mClearColour[3] = ClearColour[3];
 		}
 
 		PushCommand(pSetRenderTarget);
@@ -685,7 +733,18 @@ Sokol::TRenderCommands ApiSokol::TSokolContextWrapper::ParseRenderCommands(Bind:
 		{
 			Commands.mCommands.PushBack(Command);
 		};
-		Sokol::ParseRenderCommand( PushCommand, CommandName, CommandAndParams, GetShader );
+		
+		//	make these errors much clearer
+		try
+		{
+			Sokol::ParseRenderCommand( PushCommand, CommandName, CommandAndParams, GetShader );
+		}
+		catch(std::exception& e)
+		{
+			std::stringstream Exception;
+			Exception << "Error in ParseRenderCommand(" << CommandName << "): " << e.what();
+			throw Soy::AssertException(Exception);
+		}
 	}
 	return Commands;
 }

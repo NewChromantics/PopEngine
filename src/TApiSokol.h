@@ -26,7 +26,6 @@ namespace Sokol
 	//	this doesn't need to be sokol specific
 	//	gr: maybe a better way than objects, but we could pool them
 	class TRenderCommandBase;
-	class TRenderCommand_Clear;
 	class TRenderCommand_Draw;
 	class TRenderCommand_SetRenderTarget;
 	class TRenderCommand_UpdateImage;	//	internal texture update
@@ -53,23 +52,18 @@ public:
 	virtual const std::string_view	GetName()=0;
 };
 
-class Sokol::TRenderCommand_Clear : public TRenderCommandBase
-{
-public:
-	static constexpr std::string_view	Name = "Clear";
-	virtual const std::string_view	GetName() override	{	return Name;	};
-	
-	float		mColour[4] = {1,0,1,1};
-};
 
 class Sokol::TRenderCommand_SetRenderTarget : public TRenderCommandBase
 {
 public:
 	static constexpr std::string_view	Name = "SetRenderTarget";
 	virtual const std::string_view	GetName() override { return Name; };
+	
+	bool							IsClearColour() const	{	return mClearColour[3] > 0.f;	}
 
-	std::shared_ptr<SoyImageProxy>	mTargetTexture = nullptr;	//	if null, render to screen
+	std::shared_ptr<SoyImageProxy>	mTargetTexture = nullptr;		//	if null, render to screen
 	SoyPixelsFormat::Type			mReadBackFormat = SoyPixelsFormat::Invalid;
+	float							mClearColour[4] = {1,0,1,1};	//	if no alpha, we don't clear
 };
 
 class Sokol::TRenderCommand_Draw : public TRenderCommandBase
