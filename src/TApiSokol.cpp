@@ -431,7 +431,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	but really we should be using something like glsync?
 	if ( RenderCommands.mPromiseRef != std::numeric_limits<size_t>::max() )
 	{
-		auto Resolve = [=](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
+		auto Resolve = [RenderError](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 		{
 			if ( RenderError.empty() )
 				Promise.Resolve(LocalContext,0);
