@@ -105,7 +105,7 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		auto& PixelsArray = Pixels.GetPixelsArray();
 		auto CubeFace = 0;
 		auto Mip = 0;
-		sg_subimage_content& SubImage = Description.content.subimage[CubeFace][Mip];
+		auto& SubImage = Description.data.subimage[CubeFace][Mip];
 		SubImage.ptr = PixelsArray.GetArray();
 		SubImage.size = PixelsArray.GetDataSize();
 	}
@@ -174,7 +174,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	FreeImageDeletes();
 	
 	//	run render commands
-	auto NewPass = [&](sg_image TargetTexture,float r,float g,float b,float a)
+	auto NewPass = [&](sg_image TargetTexture,sg_color rgba)
 	{
 		if ( InsidePass )
 		{
@@ -184,13 +184,10 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		}
 		
 		sg_pass_action PassAction = {0};
-		PassAction.colors[0].val[0] = r;
-		PassAction.colors[0].val[1] = g;
-		PassAction.colors[0].val[2] = b;
-		PassAction.colors[0].val[3] = a;
+		PassAction.colors[0].value = rgba;
 
 		//	if colour has zero alpha, we don't clear, just load old contents
-		bool ClearColour = a > 0.0f;
+		bool ClearColour = rgba.a > 0.0f;
 		PassAction.colors[0].action = ClearColour ? SG_ACTION_CLEAR : SG_ACTION_LOAD;
 
 		//	if no image, render to screen with "default"
@@ -278,7 +275,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				if ( !LatestVersion )
 				{
 					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
-					sg_update_image( ImageSokol, ImageDescription.content );
+					sg_update_image( ImageSokol, ImageDescription.data );
 					auto State = sg_query_image_state(ImageSokol);
 					Sokol::IsOkay(State,"sg_make_image");
 					ImageSoy.OnSokolImageUpdated();
@@ -305,8 +302,10 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				//PipelineDescription.depth_stencil
 				//PipelineDescription.blend
 				//PipelineDescription.rasterizer
-				PipelineDescription.rasterizer.cull_mode = SG_CULLMODE_NONE;
-				PipelineDescription.blend.enabled = false;
+				PipelineDescription.cull_mode = SG_CULLMODE_NONE;
+				
+				//	colour target/attachment config
+				PipelineDescription.colors[0].blend.enabled = false;
 				
 				// Some Render Target Settings need to be different here
 				// Overwrite them at the end here?
@@ -315,7 +314,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				//	in a render texture pass we don't currently have a depth target, so
 				//	needs to be none. If rendering to screen (stencil) leave this as default 
 				if ( PassIsRenderTexture )
-					PipelineDescription.blend.depth_format = SG_PIXELFORMAT_NONE;
+					PipelineDescription.depth.pixel_format = SG_PIXELFORMAT_NONE;
 				
 				sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
 				auto PipelineState = sg_query_pipeline_state(Pipeline);
@@ -348,8 +347,11 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				sg_apply_bindings(&Bindings);
 				if(DrawCommand.mUniformBlock.GetSize() > 0)
 				{
-					sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
-					sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, DrawCommand.mUniformBlock.GetArray(), DrawCommand.mUniformBlock.GetDataSize() );
+					sg_range UniformData = {0};
+					UniformData.ptr = DrawCommand.mUniformBlock.GetArray();
+					UniformData.size = DrawCommand.mUniformBlock.GetDataSize();
+					sg_apply_uniforms( SG_SHADERSTAGE_VS, 0, UniformData );
+					sg_apply_uniforms( SG_SHADERSTAGE_FS, 0, UniformData );
 				}
 				auto VertexCount = Geometry.GetDrawVertexCount();
 				auto VertexFirst = Geometry.GetDrawVertexFirst();
@@ -377,11 +379,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					auto State = sg_query_image_state( RenderTargetImage );
 				}
 			
-				auto r = SetRenderTargetCommand.mClearColour[0];
-				auto g = SetRenderTargetCommand.mClearColour[1];
-				auto b = SetRenderTargetCommand.mClearColour[2];
-				auto a = SetRenderTargetCommand.mClearColour[3];
-				NewPass( RenderTargetImage, r, g, b, a );
+				auto rgba = SetRenderTargetCommand.mClearColour;
+				NewPass( RenderTargetImage, rgba );
 			}
 		}
 	}
@@ -477,10 +476,7 @@ void ApiSokol::TSokolContextWrapper::InitDebugFrame(Sokol::TRenderCommands& Comm
 {
 	{
 		auto pClear = std::make_shared<Sokol::TRenderCommand_SetRenderTarget>();
-		pClear->mClearColour[0] = 0;
-		pClear->mClearColour[1] = 1;
-		pClear->mClearColour[2] = 1;
-		pClear->mClearColour[3] = 1;
+		pClear->mClearColour = {0,1,1,1};
 		Commands.mCommands.PushBack(pClear);
 	}
 }
@@ -709,10 +705,10 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 			}
 			if ( ClearColour.GetSize() < 4 )
 				ClearColour.PushBack(1.0f);
-			pSetRenderTarget->mClearColour[0] = ClearColour[0];
-			pSetRenderTarget->mClearColour[1] = ClearColour[1];
-			pSetRenderTarget->mClearColour[2] = ClearColour[2];
-			pSetRenderTarget->mClearColour[3] = ClearColour[3];
+			pSetRenderTarget->mClearColour.r = ClearColour[0];
+			pSetRenderTarget->mClearColour.g = ClearColour[1];
+			pSetRenderTarget->mClearColour.b = ClearColour[2];
+			pSetRenderTarget->mClearColour.a = ClearColour[3];
 		}
 
 		PushCommand(pSetRenderTarget);
@@ -1047,7 +1043,8 @@ sg_buffer_desc Sokol::TCreateGeometry::GetVertexDescription() const
 {
 	sg_buffer_desc Description = {0};
 	Description.size = mBufferData.GetDataSize();
-	Description.content = mBufferData.GetArray();
+	Description.data.ptr = mBufferData.GetArray();
+	Description.data.size = mBufferData.GetDataSize();
 	Description.type = SG_BUFFERTYPE_VERTEXBUFFER;
 	Description.usage = SG_USAGE_IMMUTABLE;
 	return Description;
@@ -1124,7 +1121,9 @@ void Sokol::TCreateShader::EnumImageDescriptions(std::function<void(const sg_sha
 		auto& Uniform = mImageUniforms[u];
 		sg_shader_image_desc Description = {0};
 		Description.name = Uniform.mName.c_str();
-		Description.type = SG_IMAGETYPE_2D;
+		Description.image_type = SG_IMAGETYPE_2D;
+		Description.sampler_type = _SG_SAMPLERTYPE_DEFAULT;
+
 		OnDescription(Description,u);
 	}
 }

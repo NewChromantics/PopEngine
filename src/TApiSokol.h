@@ -59,11 +59,11 @@ public:
 	static constexpr std::string_view	Name = "SetRenderTarget";
 	virtual const std::string_view	GetName() override { return Name; };
 	
-	bool							IsClearColour() const	{	return mClearColour[3] > 0.f;	}
+	bool							IsClearColour() const	{	return mClearColour.a > 0.f;	}
 
 	std::shared_ptr<SoyImageProxy>	mTargetTexture = nullptr;		//	if null, render to screen
 	SoyPixelsFormat::Type			mReadBackFormat = SoyPixelsFormat::Invalid;
-	float							mClearColour[4] = {1,0,1,1};	//	if no alpha, we don't clear
+	sg_color						mClearColour = {1,0,1,1};	//	if no alpha, we don't clear
 };
 
 class Sokol::TRenderCommand_Draw : public TRenderCommandBase
