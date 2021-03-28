@@ -170,9 +170,10 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 	//[EAGLContext setCurrentContext:nullptr];
 	
 	//std::Debug << __PRETTY_FUNCTION__ << "(" << Rect.origin.x << "," << Rect.origin.y << "," << Rect.size.width << "," << Rect.size.height << ")" << std::endl;
-		
-	glClearColor(0,1,1,1);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+	
+	//	gr: dont clear in case OnPaint doesnt do anything	
+	//glClearColor(0,1,1,1);
+	//glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 		
 	//auto Width = Rect.size.width;
 	//auto Height = Rect.size.height;
