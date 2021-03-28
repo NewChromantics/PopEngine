@@ -616,7 +616,10 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 			continue;
 		}
 
-		std::Debug << "No uniform/image named " << UniformName << std::endl;
+		//	we need to set context or command to put out debug
+		bool VerboseDebug = false;
+		if ( VerboseDebug )
+			std::Debug << "No uniform/image named " << UniformName << std::endl;
 	}
 	
 	//	did we write to all memory?
