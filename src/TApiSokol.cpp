@@ -421,6 +421,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 
 	//	save last
 	mLastFrame = RenderCommands;
+	mLastFrame.mPromiseRef = std::numeric_limits<size_t>::max();
 	
 	//	gr: avoid deadlocks by queuing the resolve; Dont want main thread (UI render) to wait on JS
 	//		in case JS thread is trying to do something on main thread (UI stuff)
