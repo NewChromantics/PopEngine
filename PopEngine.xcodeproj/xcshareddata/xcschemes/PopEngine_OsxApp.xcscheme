@@ -77,6 +77,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "$(SRCROOT)/UnitTest/Sokol"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "$(SRCROOT)/UnitTest/Gui"
             isEnabled = "YES">
          </CommandLineArgument>

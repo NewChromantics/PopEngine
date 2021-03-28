@@ -3,7 +3,7 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "version": "0.0.52",
+  "version": "0.0.53",
   "description": "Pop Engine",
   "main": "index.js",
   "dependencies": {
