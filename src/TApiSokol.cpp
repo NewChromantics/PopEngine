@@ -782,6 +782,10 @@ sg_uniform_type Sokol::GetUniformType(const std::string& TypeName)
 	if ( TypeName == "vec4" )	return SG_UNIFORMTYPE_FLOAT4;
 	if ( TypeName == "float4x4" )	return SG_UNIFORMTYPE_MAT4;
 	if ( TypeName == "mat4" )	return SG_UNIFORMTYPE_MAT4;
+
+	//	sokol doesnt support int or bool
+	if ( TypeName == "int" )	return SG_UNIFORMTYPE_FLOAT;
+	if ( TypeName == "bool" )	return SG_UNIFORMTYPE_FLOAT;
 	throw Soy::AssertException(std::string("Unknown uniform type ") + TypeName);
 }
 
@@ -1133,7 +1137,7 @@ const Sokol::TCreateShader::TUniform* Sokol::TCreateShader::GetUniform(const std
 	{
 		auto& Uniform = mUniforms[u];
 		if ( Uniform.mName == Name )
-		return &Uniform;
+			return &Uniform;
 		DataOffset += Uniform.GetDataSize();
 	}
 	//	throw here so we can log it?
