@@ -191,6 +191,7 @@ private:
 	//	gr: sg_context isnt REQUIRED, but hints to implementations that they should be creating it
 	void			OnPaint(sg_context Context,vec2x<size_t> ViewRect);
 	void			InitDebugFrame(Sokol::TRenderCommands& Commands);
+	void			InitDefaultAssets();
 
 	Sokol::TRenderCommands			ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
 
@@ -213,6 +214,7 @@ public:
 	//	allocated objects and their javascript handle[value]
 	std::map<uint32_t,Sokol::TShader>	mShaders;
 	std::map<uint32_t,Sokol::TCreateGeometry>	mGeometrys;
+	std::shared_ptr<SoyImageProxy>	mNullTexture;
 	std::mutex						mPendingDeleteImagesLock;
 	Array<sg_image>					mPendingDeleteImages;
 

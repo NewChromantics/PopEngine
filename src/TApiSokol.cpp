@@ -58,9 +58,14 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 }
 
 
-sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixels, bool RenderTarget)
+sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixels, bool RenderTarget,bool GetPixelData)
 {
 	sg_image_desc Description = {0};
+	
+	//	should probably pass readonly with rendertarget option
+	Description.usage = SG_USAGE_STREAM;
+	if ( RenderTarget )
+		Description.usage = SG_USAGE_IMMUTABLE;
 	
 	//	gr: special case
 	//	a bit unsafe! we need to ensure the return isn't held outside stack scope
@@ -101,13 +106,20 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	{
 		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
 
-		//	sokol was erroring as we intialised a rendertarget with pixels
-		auto& PixelsArray = Pixels.GetPixelsArray();
-		auto CubeFace = 0;
-		auto Mip = 0;
-		auto& SubImage = Description.data.subimage[CubeFace][Mip];
-		SubImage.ptr = PixelsArray.GetArray();
-		SubImage.size = PixelsArray.GetDataSize();
+		//	gr: only set pixel data 
+		//	if IncludeData (updating image)
+		//	or newimage & immutable
+		 
+		if ( GetPixelData )
+		{
+			//	sokol was erroring as we intialised a rendertarget with pixels
+			auto& PixelsArray = Pixels.GetPixelsArray();
+			auto CubeFace = 0;
+			auto Mip = 0;
+			auto& SubImage = Description.data.subimage[CubeFace][Mip];
+			SubImage.ptr = PixelsArray.GetArray();
+			SubImage.size = PixelsArray.GetDataSize();
+		}
 	}
 	
 	
@@ -243,7 +255,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			{
 				auto& UpdateImageCommand = dynamic_cast<Sokol::TRenderCommand_UpdateImage&>( *NextCommand );
 				if ( !UpdateImageCommand.mImage )
+				{
 					throw Soy::AssertException("UpdateImage command with null image pointer");
+				}
 				
 				auto& ImageSoy = *UpdateImageCommand.mImage;
 				auto IsRenderTarget = UpdateImageCommand.mIsRenderTarget;
@@ -252,7 +266,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				//	if image has no sg_image, create it
 				if ( !ImageSoy.HasSokolImage() )
 				{
-					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
+					bool GetPixelData = false;	//	true if we want a readonly image
+					auto ImageDescription = GetImageDescription(ImageSoy, TemporaryImage, IsRenderTarget, GetPixelData );
 					auto NewImage = sg_make_image(&ImageDescription);
 					auto State = sg_query_image_state(NewImage);
 					Sokol::IsOkay(State,"sg_make_image");
@@ -274,7 +289,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				//	if image sokol version is out of date, update texture
 				if ( !LatestVersion )
 				{
-					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget);
+					bool GetPixelData = true;
+					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget, GetPixelData );
 					sg_update_image( ImageSokol, ImageDescription.data );
 					auto State = sg_query_image_state(ImageSokol);
 					Sokol::IsOkay(State,"sg_make_image");
@@ -329,8 +345,19 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				
 				for ( auto i=0;	i<SG_MAX_SHADERSTAGE_IMAGES;	i++ )
 				{
-					//	gr: detect missing slots
-					auto ImageSoy = DrawCommand.mImageUniforms[i];
+					std::shared_ptr<SoyImageProxy> ImageSoy;
+
+					//	we replace explicit null entries with nulltexture
+					//	non-existant entries (which should be imagecount...max) should stay
+					//	as sokol_image=0
+					auto& ImageUniforms = DrawCommand.mImageUniforms;
+					if ( ImageUniforms.find( i ) != ImageUniforms.end() )
+					{
+						ImageSoy = ImageUniforms[i];
+						if ( !ImageSoy )
+							ImageSoy = mNullTexture;
+					}
+						
 					sg_image ImageSokol = {0};
 					if ( ImageSoy )
 					{
@@ -456,6 +483,7 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	//	init last-frame for any paints before we get a chance to render
 	//	gr: maybe this should be like a Render() call and use js
 	InitDebugFrame(mLastFrame);
+	InitDefaultAssets();
 	
 	Sokol::TContextParams SokolParams;
 	
@@ -474,12 +502,37 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 
 void ApiSokol::TSokolContextWrapper::InitDebugFrame(Sokol::TRenderCommands& Commands)
 {
-	{
-		auto pClear = std::make_shared<Sokol::TRenderCommand_SetRenderTarget>();
-		pClear->mClearColour = {0,1,1,1};
-		Commands.mCommands.PushBack(pClear);
-	}
+	auto pClear = std::make_shared<Sokol::TRenderCommand_SetRenderTarget>();
+	pClear->mClearColour = {0,1,1,1};
+	Commands.mCommands.PushBack(pClear);
 }
+
+void ApiSokol::TSokolContextWrapper::InitDefaultAssets()
+{
+	SoyPixels NullTexture( SoyPixelsMeta(1,1,SoyPixelsFormat::RGBA) );
+	mNullTexture.reset( new SoyImageProxy() );
+	mNullTexture->SetPixels(NullTexture);
+	
+	//	need to make a render command to init the image
+	//	which needs to be in a command list
+	Sokol::TRenderCommands Commands;
+	auto PushCommand = [&](std::shared_ptr<Sokol::TRenderCommandBase> Command)
+	{
+		Commands.mCommands.PushBack(Command);
+	};
+		
+	{
+		auto pUpdateImage = std::make_shared<Sokol::TRenderCommand_UpdateImage>();
+		pUpdateImage->mImage = mNullTexture;
+		pUpdateImage->mIsRenderTarget = false;
+		PushCommand(pUpdateImage);
+	}
+		
+	//	put in queue
+	std::lock_guard<std::mutex> Lock(mPendingFramesLock);
+	mPendingFrames.PushBack(Commands);
+}
+
 
 void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 {
@@ -583,6 +636,16 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 	
 	auto WriteImageUniform = [&](const TCreateShader::TImageUniform& Uniform,size_t UniformImageIndex)
 	{
+		//	we still want to put a null entry in
+		//	gr: this shouldn't come up as this function is only called from iterating keys
+		if ( !UniformsObject.HasMember(Uniform.mName) )
+			return;
+		
+		//	we want to explicitly allow null, and in the actual render process, we swap
+		//	it for our nulltexture
+		if ( UniformsObject.IsMemberNull(Uniform.mName) )
+			return;
+		
 		//	here we don't write to the block, but we need to work out what image is going
 		//	to go in the image slot
 		auto ImageObject = UniformsObject.GetObject( Uniform.mName );
@@ -591,6 +654,13 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 		//	todo: add a "update image pixels" render command before draw
 		mImageUniforms[UniformImageIndex] = ImageSoy;
 	};
+	
+	//	we explicitly need keys in the map setup for image uniforms
+	//	they can just be initialised to null and will be swapped with
+	for ( auto ImageIndex=0;	ImageIndex<Shader.mShaderMeta.mImageUniforms.GetSize();	ImageIndex++ )
+	{
+		mImageUniforms[ImageIndex] = nullptr;
+	}
 	
 	for ( auto k=0;	k<Keys.GetSize();	k++ )
 	{
@@ -608,7 +678,17 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 		auto* pImageUniform = Shader.mShaderMeta.GetImageUniform( UniformName, UniformImageIndex );
 		if ( pImageUniform )
 		{
-			WriteImageUniform( *pImageUniform, UniformImageIndex );
+			try
+			{
+				WriteImageUniform( *pImageUniform, UniformImageIndex );
+			}
+			catch(std::exception& e)
+			{
+				//	more verbose error
+				std::stringstream Error;
+				Error << __PRETTY_FUNCTION__ << " Error getting required image uniform " << UniformName << "; " << e.what();
+				throw Soy::AssertException(Error);
+			}
 			continue;
 		}
 
@@ -624,7 +704,6 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 
 void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
 {
-
 	if ( Name == TRenderCommand_Draw::Name )
 	{
 		auto pDraw = std::make_shared<TRenderCommand_Draw>();
@@ -644,6 +723,9 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 		//	make a update-image command for every image we use
 		for ( auto& [ImageUniformIndex,pImageWrapper] : pDraw->mImageUniforms )
 		{
+			//	don't queue null entries
+			if ( !pImageWrapper )
+				continue;
 			auto pUpdateImage = std::make_shared<TRenderCommand_UpdateImage>();
 			pUpdateImage->mImage = pImageWrapper;
 			PushCommand(pUpdateImage);
