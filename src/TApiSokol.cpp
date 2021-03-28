@@ -1092,6 +1092,12 @@ void Sokol::TCreateShader::EnumUniformBlockDescription(std::function<void(const 
 	//	once this is called, this cannot move because the description is using string pointers!
 	sg_shader_uniform_block_desc Description = {0};
 	Description.size = 0;
+	
+	//	gr: this should really be where we setup the uniforms!
+	auto MaxUniforms = std::size( Description.uniforms );
+	if ( mUniforms.GetSize() > MaxUniforms )
+		throw Soy::AssertException("CreateShader: Too many uniforms!");
+	
 	for ( auto u=0;	u<mUniforms.GetSize();	u++ )
 	{
 		auto& Uniform = mUniforms[u];
