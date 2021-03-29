@@ -2654,6 +2654,11 @@ void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>& Values)
 	JsCore_TArray_CopyTo( *this, Values );
 }
 
+void JsCore::TArray::CopyTo(ArrayBridge<uint16_t>& Values)
+{
+	JsCore_TArray_CopyTo( *this, Values );
+}
+
 void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
 {
 	JsCore_TArray_CopyTo( *this, Values );

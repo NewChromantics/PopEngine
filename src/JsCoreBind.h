@@ -213,6 +213,7 @@ public:
 	void		CopyTo(ArrayBridge<TYPE>&& Values)		{	CopyTo( Values );	}
 	void		CopyTo(ArrayBridge<uint32_t>& Values);
 	void		CopyTo(ArrayBridge<int32_t>& Values);
+	void		CopyTo(ArrayBridge<uint16_t>& Values);
 	void		CopyTo(ArrayBridge<uint8_t>& Values);
 	void		CopyTo(ArrayBridge<float>& Values);
 	void		CopyTo(ArrayBridge<bool>& Values);
@@ -333,6 +334,7 @@ public:
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<bool>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<int32_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
+	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint16_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<uint8_t>&& Array) bind_override		{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<float>&& Array) bind_override			{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}
 	virtual void			GetArgumentArray(size_t Index,ArrayBridge<std::string>&& Array) bind_override	{	EnumArray( GetContextRef(), GetArgumentValueNotUndefined(Index), Array );	}

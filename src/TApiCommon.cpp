@@ -1079,6 +1079,15 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 		SoyPixelsRemote NewPixels( PixelBuffer8.GetArray(), Width, Height, DataSize, Format );
 		Image.SetPixels(NewPixels);
 	}
+	else if ( SoyPixelsFormat::GetBytesPerChannel(Format) == sizeof(uint16_t) )
+	{
+		Array<uint16_t> PixelBuffer16;
+		Params.GetArgumentArray(2,GetArrayBridge(PixelBuffer16) );
+		auto DataSize = PixelBuffer16.GetDataSize();
+		auto* PixelBuffer8 = reinterpret_cast<uint8_t*>( PixelBuffer16.GetArray() );
+		SoyPixelsRemote NewPixels( PixelBuffer8, Width, Height, DataSize, Format );
+		Image.SetPixels(NewPixels);
+	}
 	else
 	{
 		std::stringstream Error;
