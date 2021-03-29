@@ -182,6 +182,14 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	Array<sg_buffer> TempBuffers;
 	Array<sg_pass> TempPasses;
 
+	auto FreePipelines = [&]()
+	{
+		for ( auto p=0;	p<TempPipelines.GetSize();	p++ )
+		{
+			auto Pipeline = TempPipelines[p];
+			sg_destroy_pipeline(Pipeline);
+		}
+	};
 	
 	sg_reset_state_cache();
 	
@@ -327,7 +335,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				
 				//	colour target/attachment config
 				PipelineDescription.colors[0].blend.enabled = false;
-				
+				/*
+				PipelineDescription.depth =
+				{
+					.compare = SG_COMPAREFUNC_ALWAYS,
+					.write_enabled = false
+				};
+				*/
 				// Some Render Target Settings need to be different here
 				// Overwrite them at the end here?
 				
@@ -338,9 +352,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					PipelineDescription.depth.pixel_format = SG_PIXELFORMAT_NONE;
 				
 				sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
+				TempPipelines.PushBack(Pipeline);	//	gr: add to list in case state is invalid
 				auto PipelineState = sg_query_pipeline_state(Pipeline);
 				Sokol::IsOkay(PipelineState,"sg_make_pipeline");
-				TempPipelines.PushBack(Pipeline);
 				sg_apply_pipeline(Pipeline);
 				
 				sg_bindings Bindings = {0};
@@ -393,6 +407,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				auto VertexFirst = Geometry.GetDrawVertexFirst();
 				auto InstanceCount = Geometry.GetDrawInstanceCount();
 				sg_draw(VertexFirst,VertexCount,InstanceCount);
+				
+				FreePipelines();
 			}
 			
 			if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
@@ -437,11 +453,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	sg_commit();
 
 	//	cleanup resources only used on the frame
-	for ( auto p=0;	p<TempPipelines.GetSize();	p++ )
-	{
-		auto Pipeline = TempPipelines[p];
-		sg_destroy_pipeline(Pipeline);
-	}
+	FreePipelines();
 	for ( auto p=0;	p<TempBuffers.GetSize();	p++ )
 	{
 		auto Buffer = TempBuffers[p];
@@ -856,7 +868,7 @@ void Sokol::IsOkay(sg_resource_state State,const char* Context)
 		return;
 	
 	std::stringstream Error;
-	Error << "Shader state " << magic_enum::enum_name(State) << " in " << Context;
+	Error << "Sokol resource state error " << magic_enum::enum_name(State) << " in " << Context;
 	throw Soy::AssertException(Error);
 }
 
@@ -873,8 +885,9 @@ sg_uniform_type Sokol::GetUniformType(const std::string& TypeName)
 	if ( TypeName == "mat4" )	return SG_UNIFORMTYPE_MAT4;
 
 	//	sokol doesnt support int or bool
-	if ( TypeName == "int" )	return SG_UNIFORMTYPE_FLOAT;
-	if ( TypeName == "bool" )	return SG_UNIFORMTYPE_FLOAT;
+	//	gr: get gl error if we use these
+	//if ( TypeName == "int" )	return SG_UNIFORMTYPE_FLOAT;
+	//if ( TypeName == "bool" )	return SG_UNIFORMTYPE_FLOAT;
 	throw Soy::AssertException(std::string("Unknown uniform type ") + TypeName);
 }
 
