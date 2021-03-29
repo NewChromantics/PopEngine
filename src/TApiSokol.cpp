@@ -65,7 +65,10 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	//	should probably pass readonly with rendertarget option
 	Description.usage = SG_USAGE_STREAM;
 	if ( RenderTarget )
+	{
 		Description.usage = SG_USAGE_IMMUTABLE;
+		GetPixelData = false;
+	}
 	
 	//	gr: special case
 	//	a bit unsafe! we need to ensure the return isn't held outside stack scope
@@ -279,7 +282,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					};
 					
 					ImageSoy.SetSokolImage( NewImage.id, FreeSokolImage );
-					ImageSoy.OnSokolImageUpdated();
+					//	gr: as we haven't sent pixel data, the pixels aren't up to date
+					if ( ImageDescription.usage == SG_USAGE_IMMUTABLE )
+						ImageSoy.OnSokolImageUpdated();
 				}
 				
 				bool LatestVersion = false;
