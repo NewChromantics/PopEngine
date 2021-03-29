@@ -360,7 +360,11 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					{
 						ImageSoy = ImageUniforms[i];
 						if ( !ImageSoy )
+						{
+							auto Name = DrawCommand.mDebug_ImageUniformNames[i];
+							std::Debug << "Using null texture for uniform " << Name <<" in draw" << std::endl;
 							ImageSoy = mNullTexture;
+						}
 					}
 						
 					sg_image ImageSokol = {0};
@@ -664,7 +668,9 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 	//	they can just be initialised to null and will be swapped with
 	for ( auto ImageIndex=0;	ImageIndex<Shader.mShaderMeta.mImageUniforms.GetSize();	ImageIndex++ )
 	{
+		auto& Uniform = Shader.mShaderMeta.mImageUniforms[ImageIndex];
 		mImageUniforms[ImageIndex] = nullptr;
+		mDebug_ImageUniformNames[ImageIndex] = Uniform.mName;
 	}
 	
 	for ( auto k=0;	k<Keys.GetSize();	k++ )

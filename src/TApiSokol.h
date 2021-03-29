@@ -70,7 +70,7 @@ class Sokol::TRenderCommand_Draw : public TRenderCommandBase
 {
 public:
 	static constexpr std::string_view	Name = "Draw";
-	virtual const std::string_view	GetName() override	{	return Name;	};
+	virtual const std::string_view		GetName() override	{	return Name;	};
 	
 	void			ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader);
 	
@@ -81,6 +81,7 @@ public:
 	Array<uint8_t>	mUniformBlock;
 
 	std::map<size_t,std::shared_ptr<SoyImageProxy>>	mImageUniforms;	//	texture slot -> texture
+	std::map<size_t,std::string>					mDebug_ImageUniformNames;	//	texture slot -> uniform name
 };
 
 class Sokol::TRenderCommand_UpdateImage : public TRenderCommandBase
