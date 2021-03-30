@@ -6,6 +6,7 @@
 
 #if !TARGET_OS_IOS
 #import <AppKit/AppKit.h>
+#import "SoyOpenglViewOsx.h"
 #endif
 
 
@@ -76,16 +77,7 @@
 #if TARGET_OS_IOS	//	gr: this SHOULD be always defined by xcode
 @interface GLView : GLKView
 #else
-@interface GLView : NSOpenGLView
-{
-//	callback function when drawRect is triggered. 
-//	we use a objc block as we cannot use any c++ types in this file used by swift 
-@public void(^mOnDrawRect)(NSRect);
-}
-
-//	overload drawRect to detect when window needs redrawing
-- (void)drawRect: (NSRect)dirtyRect;
-- (nonnull instancetype)init;
+@interface GLView : SoyOpenglViewOsx
 #endif
 
 @end
