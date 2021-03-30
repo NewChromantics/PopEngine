@@ -307,22 +307,12 @@ TYPE* Platform::ObjcCast(BASETYPE* View)
 
 
 @implementation PopEngineRenderView
-{
-	@public std::function<void()>	mOnDraw;
-}
 
 - (nonnull instancetype)initWithName:(NSString*)name
 {
+	//	gl or mtl view's arent ready here, we've just been created in swift.
 	self = [super initWithName:name]; 
 	return self;
-}
-
-- (void)onDraw
-{
-	if ( mOnDraw )
-		mOnDraw();
-	else
-		std::Debug << "Button(" << Soy::NSStringToString(self.name) << ") draw" << std::endl;
 }
 
 @end
@@ -417,21 +407,9 @@ public:
 class Swift::TRenderView : public Platform::TRenderView, public Swift::TControl
 {
 public:
-	TRenderView(PopEngineRenderView* Control) :
-		mControl	(Control)
-	{
-		mControl->mOnDraw = [this]()
-		{
-			if ( this->mOnDraw )
-				this->mOnDraw();
-		};
-	}
+	TRenderView(PopEngineRenderView* Control);
 	~TRenderView()
 	{
-		mControl->mOnDraw = []()
-		{
-			std::Debug << "TRenderView deallocated" << std::endl;
-		};
 	}
 	
 	virtual GLView*			GetOpenglView() override	{	return mControl ? mControl.openglView : nullptr;	}
@@ -443,7 +421,7 @@ public:
 	//virtual void			SetValue(const std::string& Value) override;
 	//virtual std::string		GetValue() override;
 
-	PopEngineRenderView*	mControl;
+	PopEngineRenderView*	mControl = nullptr;
 };
 
 class Swift::TList : public Gui::TList
@@ -670,4 +648,31 @@ Swift::TList::TList(PopEngineList* Control) :
 		this->mOnValueChanged( GetArrayBridge(Strings) );
 	};
 	mControl->mOnChanged = OnValuesChanged;
+}
+
+Swift::TRenderView::TRenderView(PopEngineRenderView* Control) :
+	mControl	(Control)
+{
+	//	we hope at this point the inner view (gl or metal) has been made
+	//	we aren't really tracking it though!
+	auto* View = mControl.openglView;// ? mControl.openglView : mControl.metalView;
+	if ( !View )
+		throw Soy::AssertException("Creating swift renderview wrapper but no opengl/metal view assigned yet");
+	
+	//	gr: using blocks directly seem to get released... assign c++/lambdas/vars
+	//		find out why this is different to  = ^(NSRect Rect){}
+	auto OnDraw = [this](NSRect RectNs)
+	{
+		if ( !this->mOnDraw )
+			return;
+		Soy::Rectx<size_t> Rect( RectNs.origin.x, RectNs.origin.y, RectNs.size.width, RectNs.size.height );
+		this->mOnDraw(Rect);
+	};
+	View->mOnDrawRect = OnDraw;	
+	
+	auto OnMouseEvent = [this](NSPoint,ButtonEventType,NSString*_Nonnull)
+	{
+		std::Debug << "Mouse event!" << std::endl;
+	};
+	View->mOnMouseEvent = OnMouseEvent;
 }

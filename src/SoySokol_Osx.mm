@@ -79,7 +79,7 @@ SokolOpenglContext::SokolOpenglContext(GLView* View,Sokol::TContextParams Params
 	GLint swapInt = 60;//Params.mVsyncSwapInterval;
 	[mOpenglContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
 
-	auto TriggerPaint = [this](NSRect Rect)
+	auto TriggerPaint = [this](Soy::Rectx<size_t> Rect)
 	{
 		try
 		{
@@ -90,7 +90,9 @@ SokolOpenglContext::SokolOpenglContext(GLView* View,Sokol::TContextParams Params
 			std::Debug << "OnPaint exception from glview draw; " << e.what() << std::endl;
 		}
 	};
-	mView->mOnDrawRect = TriggerPaint;
+	//	gr: we sholdn't have to take control here, we should be able to use Gui::TRenderView's callback
+	Params.mRenderView->mOnDraw = TriggerPaint;
+	//mView->mOnDrawRect = TriggerPaint;
 
 	//	gr: this doesn't do anything, need to call the func
 /*	//mView.enableSetNeedsDisplay = YES;
@@ -154,7 +156,7 @@ void SokolOpenglContext::RunGpuJobs()
 }
 
 
-void SokolOpenglContext::OnPaint(CGRect Rect)
+void SokolOpenglContext::OnPaint(Soy::Rectx<size_t> Rect)
 {
 	std::lock_guard Lock(mOpenglContextLock);
 	auto Context = [mOpenglContext CGLContextObj]; 
@@ -208,12 +210,7 @@ void SokolOpenglContext::OnPaint(CGRect Rect)
 	//glClearColor(0,1,1,1);
 	//glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 		
-	auto Width = Rect.size.width;
-	auto Height = Rect.size.height;
-	//auto Width = mView.drawableWidth;
-	///auto Height = mView.drawableHeight;
-		
-	vec2x<size_t> Size( Width, Height );
+	vec2x<size_t> Size( Rect.w, Rect.h );
 	mParams.mOnPaint( mSokolContext, Size );
 		
 			

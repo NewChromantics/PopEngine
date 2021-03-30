@@ -8,11 +8,41 @@
 #include "SoyGuiApple.h"
 
 
+NSString* MouseLeft = @"Left";
+
+/*
+NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
+{
+	vec2x<int32_t> Position( Point.x, Point.y );
+	
+	//	invert y - osx is bottom-left/0,0 so flipped would be what we want. hence wierd flipping when not flipped
+	if ( !View.isFlipped )
+	{
+		auto Rect = NSRectToRect( View.bounds );
+		Position.y = Rect.h - Position.y;
+	}
+	
+	return Position;
+}
+*/
+
+
 @implementation SoyOpenglViewOsx
 
 
 - (nonnull instancetype)init
 {
+	//	setup default events
+	mOnMouseEvent = ^(NSPoint Position,ButtonEventType Event,NSString* ButtonName)
+	{
+		std::Debug << "Mouse event " << Position.x << "," << Position.y << " Type=" << Event << " Button=" << ButtonName << std::endl;
+	};
+	mOnDrawRect = ^(NSRect)
+	{
+		std::Debug << "GLView::mOnDrawRect()" << std::endl;
+	};
+
+
 	//	setup opengl view with parameters we need (for sokol)
 	//	gr: where do we get this from by default!
 	//	gr: set to something small so we can spot when its broken
@@ -61,18 +91,27 @@
 
 - (void)drawRect: (NSRect)dirtyRect
 {
-	//	call lambda
-	if ( !mOnDrawRect )
-	{
-		std::Debug << "GLView::drawRect has no mOnDrawRect assigned" << std::endl;
-		return;
-	}
-	
 	//	gr: we dont want to report the dirty rect, we need to tell caller about our whole rect
+	//auto Width = mView.drawableWidth;
+	///auto Height = mView.drawableHeight;
 	auto Rect = [self bounds];
 	mOnDrawRect(Rect);
 }
 
-
+-(void)mouseMoved:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, Move, MouseLeft ); 
+}
+/*
+-(void)mouseDown:(NSEvent *)event;
+-(void)mouseDragged:(NSEvent *)event;
+-(void)mouseUp:(NSEvent *)event;
+-(void)rightMouseDown:(NSEvent *)event;
+-(void)rightMouseDragged:(NSEvent *)event;
+-(void)rightMouseUp:(NSEvent *)event;
+-(void)otherMouseDown:(NSEvent *)event;
+-(void)otherMouseDragged:(NSEvent *)event;
+-(void)otherMouseUp:(NSEvent *)event;
+*/
 
 @end

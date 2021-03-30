@@ -36,7 +36,7 @@ public:
 	
 private:
 	void							RequestViewPaint();
-	void							OnPaint(CGRect Rect);
+	void							OnPaint(Soy::Rectx<size_t> Rect);
 	void							RunGpuJobs();
 	bool							IsDoubleBuffered();
 
