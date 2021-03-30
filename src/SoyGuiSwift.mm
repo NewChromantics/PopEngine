@@ -650,6 +650,32 @@ Swift::TList::TList(PopEngineList* Control) :
 	mControl->mOnChanged = OnValuesChanged;
 }
 
+SoyMouseEvent::Type GetEventType(ButtonEvent Event)
+{
+	switch ( Event )
+	{
+	case MouseUp:	return SoyMouseEvent::Up; 
+	case MouseDown:	return SoyMouseEvent::Down; 
+	case MouseMove:	return SoyMouseEvent::Move; 
+	default:break;
+	}
+	throw Soy::AssertException("Unknown button event");
+}
+
+SoyMouseButton::Type GetButtonType(ButtonName Name)
+{
+	switch ( Name )
+	{
+	case MouseNone:		return SoyMouseButton::None; 
+	case MouseLeft:		return SoyMouseButton::Left; 
+	case MouseRight:	return SoyMouseButton::Right; 
+	case MouseMiddle:	return SoyMouseButton::Middle; 
+	default:break;
+	}
+	throw Soy::AssertException("Unknown button name");
+}
+
+
 Swift::TRenderView::TRenderView(PopEngineRenderView* Control) :
 	mControl	(Control)
 {
@@ -670,9 +696,20 @@ Swift::TRenderView::TRenderView(PopEngineRenderView* Control) :
 	};
 	View->mOnDrawRect = OnDraw;	
 	
-	auto OnMouseEvent = [this](NSPoint,ButtonEventType,NSString*_Nonnull)
+	auto OnMouseEvent = [this](NSPoint Position,ButtonEvent Event,ButtonName Name)
 	{
-		std::Debug << "Mouse event!" << std::endl;
+		//	convert into c++ event
+		if ( !this->mOnMouseEvent )
+		{
+			std::Debug << "Mouse event!" << std::endl;
+			return;
+		}
+		Gui::TMouseEvent MouseEvent;
+		MouseEvent.mPosition.x = Position.x;
+		MouseEvent.mPosition.y = Position.y;
+		MouseEvent.mEvent = GetEventType(Event);
+		MouseEvent.mButton = GetButtonType(Name);
+		this->mOnMouseEvent(MouseEvent);
 	};
 	View->mOnMouseEvent = OnMouseEvent;
 }

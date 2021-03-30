@@ -8,8 +8,6 @@
 #include "SoyGuiApple.h"
 
 
-NSString* MouseLeft = @"Left";
-
 /*
 NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 {
@@ -33,9 +31,9 @@ NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 - (nonnull instancetype)init
 {
 	//	setup default events
-	mOnMouseEvent = ^(NSPoint Position,ButtonEventType Event,NSString* ButtonName)
+	mOnMouseEvent = ^(NSPoint Position,ButtonEvent Event,ButtonName Name)
 	{
-		std::Debug << "Mouse event " << Position.x << "," << Position.y << " Type=" << Event << " Button=" << ButtonName << std::endl;
+		std::Debug << "Mouse event " << Position.x << "," << Position.y << " Type=" << Event << " Button=" << Name << std::endl;
 	};
 	mOnDrawRect = ^(NSRect)
 	{
@@ -84,10 +82,40 @@ NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 	NSOpenGLPixelFormat* pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:Attributes.GetArray()];
 
 	self = [super initWithFrame:frameRect pixelFormat:pixelFormat];
+	
+	
+	[self initDragAndDrop];
+	[self initMouseTracking];
+	
 	return self;
 }
 
 
+- (void)initDragAndDrop
+{
+	//	enable drag & drop
+	//	https://stackoverflow.com/a/29029456
+	//	https://stackoverflow.com/a/8567836	NSFilenamesPboardType
+	[self registerForDraggedTypes: @[(NSString*)kUTTypeItem]];
+	//[self registerForDraggedTypes:[NSImage imagePasteboardTypes]];
+	//registerForDraggedTypes([NSFilenamesPboardType])
+}
+
+
+- (void)initMouseTracking
+{
+	//	enable mouse tracking events (enter, exit, move)
+	//	https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/EventOverview/TrackingAreaObjects/TrackingAreaObjects.html#//apple_ref/doc/uid/10000060i-CH8-SW1
+	NSTrackingAreaOptions options = (NSTrackingActiveAlways | NSTrackingInVisibleRect |
+									 NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved);
+	
+	NSTrackingArea *area = [[NSTrackingArea alloc] initWithRect:[self bounds]
+														options:options
+														  owner:self
+													   userInfo:nil];
+	[self addTrackingArea:area];
+	
+}
 
 - (void)drawRect: (NSRect)dirtyRect
 {
@@ -98,20 +126,62 @@ NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 	mOnDrawRect(Rect);
 }
 
+- (BOOL)acceptsFirstResponder
+{
+	//	enable key events
+	return YES;
+}
+
 -(void)mouseMoved:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, Move, MouseLeft ); 
+	mOnMouseEvent( event.locationInWindow, MouseMove, MouseNone ); 
 }
-/*
--(void)mouseDown:(NSEvent *)event;
--(void)mouseDragged:(NSEvent *)event;
--(void)mouseUp:(NSEvent *)event;
--(void)rightMouseDown:(NSEvent *)event;
--(void)rightMouseDragged:(NSEvent *)event;
--(void)rightMouseUp:(NSEvent *)event;
--(void)otherMouseDown:(NSEvent *)event;
--(void)otherMouseDragged:(NSEvent *)event;
--(void)otherMouseUp:(NSEvent *)event;
-*/
+
+-(void)mouseDown:(NSEvent *)event
+{
+	//Platform::PushCursor(SoyCursor::Hand);
+	mOnMouseEvent( event.locationInWindow, MouseDown, MouseLeft ); 
+}
+
+-(void)mouseDragged:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseMove, MouseLeft ); 
+}
+
+-(void)mouseUp:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseUp, MouseLeft ); 
+}
+
+-(void)rightMouseDown:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseDown, MouseRight ); 
+}
+
+-(void)rightMouseDragged:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseMove, MouseRight ); 
+}
+
+-(void)rightMouseUp:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseUp, MouseRight ); 
+}
+
+-(void)otherMouseDown:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseDown, MouseMiddle ); 
+}
+
+-(void)otherMouseDragged:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseMove, MouseMiddle ); 
+}
+
+-(void)otherMouseUp:(NSEvent *)event
+{
+	mOnMouseEvent( event.locationInWindow, MouseUp, MouseMiddle ); 
+}
+
 
 @end

@@ -13,11 +13,20 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
-typedef enum ButtonEventType : NSUInteger {
-	Up,
-	Down,
-	Move
-} ButtonEventType;
+typedef enum ButtonEvent : NSUInteger 
+{
+	MouseUp,
+	MouseDown,
+	MouseMove
+} ButtonEvent;
+
+typedef enum ButtonName : NSUInteger 
+{
+	MouseNone,
+	MouseLeft,
+	MouseMiddle,
+	MouseRight,
+} ButtonName;
 
 //	NSOpenGLView <-- mac
 //	GLKView <-- ios
@@ -26,7 +35,7 @@ typedef enum ButtonEventType : NSUInteger {
 //	callback function when drawRect is triggered. 
 //	we use a objc block as we cannot use any c++ types in this file used by swift 
 @public void(^mOnDrawRect)(NSRect);
-@public void(^mOnMouseEvent)(NSPoint,ButtonEventType,NSString*_Nonnull);
+@public void(^mOnMouseEvent)(NSPoint,ButtonEvent,ButtonName);
 }
 
 
