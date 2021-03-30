@@ -52,6 +52,7 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 		case SoyPixelsFormat::RGBA:			return SG_PIXELFORMAT_RGBA8;
 		case SoyPixelsFormat::BGRA:			return SG_PIXELFORMAT_BGRA8;
 		case SoyPixelsFormat::Float4:		return SG_PIXELFORMAT_RGBA32F;
+		default:break;
 	}
 	
 	std::stringstream Error;
@@ -102,7 +103,8 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		//Description.height = 640;
 		auto SokolDescription = sg_query_desc();
 		Description.render_target = true;
-		Description.pixel_format = SokolDescription.context.color_format;
+		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
+		//Description.pixel_format = SokolDescription.context.color_format;
 		Description.sample_count = SokolDescription.context.sample_count;
 		
 		//	ignoring pixel content here
@@ -177,6 +179,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 
 	bool InsidePass = false;
 	bool PassIsRenderTexture = false;	//	temp for the pipeline blend mode... gr; figure out why this is needed
+	SoyPixelsMeta RenderTargetPassMeta;		//	last description used for rendertexture pass
 	std::string RenderError;			//	if this isnt empty, we reject the promise
 	
 	//	currently we're just flushing out all pipelines after we render
@@ -199,7 +202,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	FreeImageDeletes();
 	
 	//	run render commands
-	auto NewPass = [&](sg_image TargetTexture,sg_color rgba)
+	auto NewPass = [&](sg_image TargetTexture,SoyPixelsMeta TargetTextureMeta,sg_color rgba)
 	{
 		if ( InsidePass )
 		{
@@ -220,6 +223,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		{
 			sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
 			PassIsRenderTexture = false;
+			RenderTargetPassMeta = TargetTextureMeta;
 		}
 		else
 		{
@@ -235,6 +239,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 
 			sg_begin_pass( RenderTargetPass, &PassAction);
 			PassIsRenderTexture = true;
+			RenderTargetPassMeta = TargetTextureMeta;
 		}
 		
 		auto test = sg_query_desc();
@@ -337,6 +342,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				
 				//	colour target/attachment config
 				PipelineDescription.colors[0].blend.enabled = false;
+				
 				/*
 				PipelineDescription.depth =
 				{
@@ -351,7 +357,12 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				//	in a render texture pass we don't currently have a depth target, so
 				//	needs to be none. If rendering to screen (stencil) leave this as default 
 				if ( PassIsRenderTexture )
+				{
 					PipelineDescription.depth.pixel_format = SG_PIXELFORMAT_NONE;
+					//	gr: colour also needs configuring to match pass (why??)
+					auto PassColourFormat = GetPixelFormat( RenderTargetPassMeta.GetFormat() );
+					PipelineDescription.colors[0].pixel_format = PassColourFormat;
+				}
 				
 				sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
 				TempPipelines.PushBack(Pipeline);	//	gr: add to list in case state is invalid
@@ -419,6 +430,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				
 				//	no image = screen
 				sg_image RenderTargetImage = {0};
+				SoyPixelsMeta RenderTargetImageMeta;
 					
 				if ( !SetRenderTargetCommand.mTargetTexture ) // js land = Commands.push( [ "SetRenderTarget", null ] )
 				{
@@ -428,13 +440,14 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					bool LatestVersion = true;
 					auto& RenderTexture = *SetRenderTargetCommand.mTargetTexture;
 					RenderTargetImage.id = RenderTexture.GetSokolImage(LatestVersion);
+					RenderTargetImageMeta = RenderTexture.GetMeta();
 					
 					//	probe image to throw if the image is invalid
 					auto State = sg_query_image_state( RenderTargetImage );
 				}
 			
 				auto rgba = SetRenderTargetCommand.mClearColour;
-				NewPass( RenderTargetImage, rgba );
+				NewPass( RenderTargetImage, RenderTargetImageMeta, rgba );
 			}
 		}
 	}
