@@ -8,7 +8,7 @@
 class SokolOpenglContext : public Sokol::TContext
 {
 public:
-	SokolOpenglContext(std::shared_ptr<SoyWindow> Window, Sokol::TContextParams Params);
+	SokolOpenglContext(Sokol::TContextParams Params);
 	~SokolOpenglContext();
 
 	virtual void					Queue(std::function<void(sg_context)> Exec) override;

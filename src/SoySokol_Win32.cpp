@@ -4,25 +4,21 @@
 #include "SoyGui_Win32.h"
 
 #include "SoyOpenglContext_Win32.h"
+#define SOKOL_EXTERNAL_GL_LOADER
 #define SOKOL_IMPL
 #define SOKOL_GLCORE33
 #include "sokol/sokol_gfx.h"
 
-std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
+std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextParams Params)
 {
-	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
-	auto Context = new SokolOpenglContext(Window,Params);
+	auto Context = new SokolOpenglContext(Params);
 	return std::shared_ptr<Sokol::TContext>(Context);
-
 }
 
 //	gr: a lot of this is from/replaces TOpenglWindow
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params) :
+SokolOpenglContext::SokolOpenglContext(Sokol::TContextParams Params) :
 	mParams	( Params )
 {
-	mWindow = std::dynamic_pointer_cast<Platform::TWindow>(Window);
-	auto& PlatformWindow = *mWindow;
-
 	mWindowThread.reset(new Platform::TWin32Thread("SokolOpenglContext"));
 
 	TOpenglParams OpenglParams;
