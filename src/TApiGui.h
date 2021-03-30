@@ -313,6 +313,9 @@ public:
 	virtual void 	Construct(Bind::TCallback& Params) override;
 	
 protected:
+	void			OnMouseEvent(Gui::TMouseEvent& Event);
+
+protected:
 	//	TGuiControlWrapper
 	virtual Bind::TObjectWrapperBase&	GetObjectWrapper() override	{	return *this;	}
 

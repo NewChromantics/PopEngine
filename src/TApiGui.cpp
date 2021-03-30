@@ -42,6 +42,9 @@ namespace ApiGui
 	DEFINE_BIND_FUNCTIONNAME(WaitForDragDrop);
 	
 	const auto OnTryDragDrop_FunctionName = "OnTryDragDrop";
+	
+	const char*	GetName(SoyMouseEvent::Type Event);
+	const char*	GetName(SoyMouseButton::Type Button);
 }
 
 
@@ -96,6 +99,33 @@ void EnumStyleValues(Bind::TObject& Style,TYPE& Control)
 		throw Soy::AssertException(Error);
 	}
 }
+
+const char* ApiGui::GetName(SoyMouseEvent::Type Event)
+{
+	switch(Event)
+	{
+	case SoyMouseEvent::Down:	return "OnMouseDown";
+	case SoyMouseEvent::Move:	return "OnMouseMove";
+	case SoyMouseEvent::Up:		return "OnMouseUp";
+	default:break;
+	}
+	throw Soy::AssertException("ApiGui::GetName Unhandled mouse event");
+}
+
+
+const char* ApiGui::GetName(SoyMouseButton::Type Button)
+{
+	switch(Button)
+	{
+	case SoyMouseButton::None:		return nullptr;	//	explicit! this should send null to js
+	case SoyMouseButton::Left:		return "Left";
+	case SoyMouseButton::Middle:	return "Middle";
+	case SoyMouseButton::Right:		return "Right";
+	default:break;
+	}
+	throw Soy::AssertException("ApiGui::GetName Unhandled mouse button");
+}
+
 	
 
 void ApiGui::Bind(Bind::TContext& Context)
@@ -855,4 +885,36 @@ void ApiGui::TRenderViewWrapper::Construct(Bind::TCallback& Params)
 	{
 		throw Soy::AssertException("Currently can only get existing render view via name");
 	}
+	
+	//	we don't bind to the mOnDraw event here, the sokol render context does
+	
+	//	catch mouse events
+	mControl->mOnMouseEvent = std::bind( &ApiGui::TRenderViewWrapper::OnMouseEvent, this, std::placeholders::_1 );
+}
+
+void ApiGui::TRenderViewWrapper::OnMouseEvent(Gui::TMouseEvent& Event)
+{
+	auto* MouseEvent = ApiGui::GetName( Event.mEvent );
+	auto* MouseButton = ApiGui::GetName( Event.mButton );
+	auto x = Event.mPosition.x;
+	auto y = Event.mPosition.y;
+	
+	auto Callback = [=](Bind::TLocalContext& Context)
+	{
+		auto This = this->GetHandle(Context);
+		//	silently ignore callback if no event
+		if ( !This.HasMember(MouseEvent) )
+			return;
+		auto ThisOnChanged = This.GetFunction(MouseEvent);
+		JsCore::TCallback Callback(Context);
+		Callback.SetThis(This);
+		Callback.SetArgumentInt(0,x);
+		Callback.SetArgumentInt(1,y);
+		if ( !MouseButton )
+			Callback.SetArgumentNull(2);
+		else
+			Callback.SetArgumentString(2,MouseButton);
+		ThisOnChanged.Call( Callback );
+	};
+	this->mContext.Queue( Callback );
 }

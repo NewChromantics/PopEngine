@@ -2126,6 +2126,7 @@ void JSCore_SetArgument(Array<JSValueRef>& mArguments,Bind::TLocalContext& Local
 	mArguments[Index] = JsCore::GetValue( LocalContext.mLocalContext, Value );
 }
 
+
 void JsCore::TCallback::SetArgument(size_t Index,JSValueRef Value)
 {
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
@@ -2133,6 +2134,12 @@ void JsCore::TCallback::SetArgument(size_t Index,JSValueRef Value)
 
 void JsCore::TCallback::SetArgumentString(size_t Index,const std::string& Value)
 {
+	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
+}
+
+void JsCore::TCallback::SetArgumentNull(size_t Index)
+{
+	auto Value = JSValueMakeNull(mLocalContext.mLocalContext);
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 

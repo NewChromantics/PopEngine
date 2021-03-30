@@ -22,6 +22,7 @@ namespace ApiSokol
 	DEFINE_BIND_FUNCTIONNAME(Render);
 	DEFINE_BIND_FUNCTIONNAME(CreateShader);
 	DEFINE_BIND_FUNCTIONNAME(CreateGeometry);
+	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -35,6 +36,7 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 	Template.BindFunction<BindFunction::Render>(&TSokolContextWrapper::Render);
 	Template.BindFunction<BindFunction::CreateShader>(&TSokolContextWrapper::CreateShader);
 	Template.BindFunction<BindFunction::CreateGeometry>(&TSokolContextWrapper::CreateGeometry);
+	Template.BindFunction<BindFunction::GetScreenRect>(&TSokolContextWrapper::GetScreenRect);
 }
 
 sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
@@ -469,6 +471,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	save last
 	mLastFrame = RenderCommands;
 	mLastFrame.mPromiseRef = std::numeric_limits<size_t>::max();
+	mLastRect = ViewRect;
 	
 	//	gr: avoid deadlocks by queuing the resolve; Dont want main thread (UI render) to wait on JS
 	//		in case JS thread is trying to do something on main thread (UI stuff)
@@ -542,6 +545,16 @@ void ApiSokol::TSokolContextWrapper::InitDefaultAssets()
 	mPendingFrames.PushBack(Commands);
 }
 
+
+void ApiSokol::TSokolContextWrapper::GetScreenRect(Bind::TCallback& Params)
+{
+	BufferArray<int,4> LastRect;
+	LastRect.PushBack( 0 );
+	LastRect.PushBack( 0 );
+	LastRect.PushBack( mLastRect.x );
+	LastRect.PushBack( mLastRect.y );
+	Params.Return( GetArrayBridge(LastRect) );
+}
 
 void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 {

@@ -168,6 +168,9 @@ public:
 	static void		CreateTemplate(Bind::TTemplate &Template);
 	virtual void	Construct(Bind::TCallback &Params) override;
 
+	//	gr: can't decide if this should be here and reflect the rendered view which matches the view rendered into
+	//		or if the user should be probing the RenderView control for size
+	void			GetScreenRect(Bind::TCallback& Params);
 	//	gr: would prefer a name like, WaitForRender to indicate it's async
 	void			Render(Bind::TCallback& Params);
 
@@ -187,6 +190,8 @@ private:
 	void			FreeImageDeletes();
 	
 public:
+	vec2x<size_t>					mLastRect;
+
 	Bind::TPromiseMap				mPendingFramePromises;
 	Array<Sokol::TRenderCommands>	mPendingFrames;
 	std::mutex						mPendingFramesLock;

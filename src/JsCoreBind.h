@@ -390,6 +390,7 @@ public:
 	//	functions for c++ calling JS
 	virtual void			SetThis(JsCore::TObject& This) bind_override;
 	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
+	virtual void			SetArgumentNull(size_t Index) bind_override;
 	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,int32_t Value) bind_override;
