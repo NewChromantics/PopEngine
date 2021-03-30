@@ -16,9 +16,10 @@ namespace Gui
 {
 	class TColourPicker;
 	class TImageMap;
+	class TRenderView;
+	class TList;
 
 	class TMouseEvent;
-    class TList;
 }
 
 namespace ApiGui
@@ -34,7 +35,8 @@ namespace ApiGui
 	DECLARE_BIND_TYPENAME(Colour);
 	DECLARE_BIND_TYPENAME(ImageMap);
 	DECLARE_BIND_TYPENAME(Button);
-    DECLARE_BIND_TYPENAME(List);
+	DECLARE_BIND_TYPENAME(List);
+	DECLARE_BIND_TYPENAME(RenderView);
 
 	class TGuiControlWrapper;
 	
@@ -47,7 +49,8 @@ namespace ApiGui
 	class TColourPickerWrapper;
 	class TImageMapWrapper;
 	class TButtonWrapper;
-    class TList;
+	class TListWrapper;
+	class TRenderViewWrapper;
 }
 
 
@@ -92,6 +95,7 @@ protected:
 public:
 	std::shared_ptr<SoyWindow>&	mWindow = mObject;
 };
+
 
 
 class ApiGui::TSliderWrapper : public Bind::TObjectWrapper<ApiGui::BindType::Slider,SoySlider>
@@ -277,10 +281,10 @@ public:
 	std::shared_ptr<SoyButton>&	mControl = mObject;
 };
 
-class ApiGui::TList : public Bind::TObjectWrapper<ApiGui::BindType::List, Gui::TList>
+class ApiGui::TListWrapper : public Bind::TObjectWrapper<ApiGui::BindType::List, Gui::TList>
 {
 public:
-	TList(Bind::TContext& Context) :
+	TListWrapper(Bind::TContext& Context) :
 		TObjectWrapper	( Context )
 	{
 	}
@@ -293,4 +297,25 @@ public:
 
 public:
 	std::shared_ptr<Gui::TList>&	mControl = mObject;
+};
+
+
+
+class ApiGui::TRenderViewWrapper : public Bind::TObjectWrapper<ApiGui::BindType::RenderView,Gui::TRenderView>, public TGuiControlWrapper
+{
+public:
+	TRenderViewWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+	{
+	}
+	
+	static void		CreateTemplate(Bind::TTemplate& Template);
+	virtual void 	Construct(Bind::TCallback& Params) override;
+	
+protected:
+	//	TGuiControlWrapper
+	virtual Bind::TObjectWrapperBase&	GetObjectWrapper() override	{	return *this;	}
+
+public:
+	std::shared_ptr<Gui::TRenderView>&	mControl = mObject;
 };

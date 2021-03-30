@@ -23,7 +23,8 @@ namespace ApiGui
 	DEFINE_BIND_TYPENAME(Colour);
 	DEFINE_BIND_TYPENAME(ImageMap);
 	DEFINE_BIND_TYPENAME(Button);
-    DEFINE_BIND_TYPENAME(List);
+	DEFINE_BIND_TYPENAME(List);
+	DEFINE_BIND_TYPENAME(RenderView);
 
 	DEFINE_BIND_FUNCTIONNAME(SetMinMax);
 	DEFINE_BIND_FUNCTIONNAME(SetValue);
@@ -110,7 +111,8 @@ void ApiGui::Bind(Bind::TContext& Context)
 	Context.BindObjectType<TColourButtonWrapper>(Namespace);
 	Context.BindObjectType<TImageMapWrapper>(Namespace);
 	Context.BindObjectType<TButtonWrapper>(Namespace);
-    Context.BindObjectType<TList>(Namespace);
+	Context.BindObjectType<TListWrapper>(Namespace);
+	Context.BindObjectType<TRenderViewWrapper>(Namespace);
 }
 
 
@@ -789,12 +791,12 @@ void ApiGui::TButtonWrapper::OnClicked()
 	this->mContext.Queue( Callback );
 }
 
-void ApiGui::TList::CreateTemplate(Bind::TTemplate& Template)
+void ApiGui::TListWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
-    Template.BindFunction<BindFunction::SetValue>( &TList::SetValue );
+	Template.BindFunction<BindFunction::SetValue>( &TListWrapper::SetValue );
 }
 
-void ApiGui::TList::Construct(Bind::TCallback& Params)
+void ApiGui::TListWrapper::Construct(Bind::TCallback& Params)
 {
 	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
 
@@ -808,17 +810,17 @@ void ApiGui::TList::Construct(Bind::TCallback& Params)
 		throw Soy::AssertException("Currently can only get existing list control");
 	}
 	
-	mControl->mOnValueChanged = std::bind( &ApiGui::TList::OnChanged, this, std::placeholders::_1 );
+	mControl->mOnValueChanged = std::bind( &ApiGui::TListWrapper::OnChanged, this, std::placeholders::_1 );
 }
 
-void ApiGui::TList::SetValue(Bind::TCallback& Params)
+void ApiGui::TListWrapper::SetValue(Bind::TCallback& Params)
 {
 	Array<std::string> Value;
 	Params.GetArgumentArray(0, GetArrayBridge(Value));
 	mControl->SetValue( GetArrayBridge(Value) ); // turn some array type into an array bridge
 }
 
-void ApiGui::TList::OnChanged(ArrayBridge<std::string>&& NewValues)
+void ApiGui::TListWrapper::OnChanged(ArrayBridge<std::string>&& NewValues)
 {
 	Array<std::string> NewValueCopy( NewValues );
 	auto Callback = [this,NewValueCopy](Bind::TLocalContext& Context) mutable
@@ -831,4 +833,26 @@ void ApiGui::TList::OnChanged(ArrayBridge<std::string>&& NewValues)
 		ThisOnChanged.Call( Callback );
 	};
 	this->mContext.Queue( Callback );
+}
+
+
+
+void ApiGui::TRenderViewWrapper::CreateTemplate(Bind::TTemplate& Template)
+{
+	//Template.BindFunction<BindFunction::SetValue>( &TListWrapper::SetValue );
+}
+
+void ApiGui::TRenderViewWrapper::Construct(Bind::TCallback& Params)
+{
+	auto& ParentWindow = Params.GetArgumentPointer<TWindowWrapper>(0);
+
+	if ( Params.IsArgumentString(1) ) //	user provided named element
+	{
+		auto Name = Params.GetArgumentString(1);
+		mControl = Platform::GetRenderView( *ParentWindow.mWindow, Name );
+	}
+	else	// user provided array
+	{
+		throw Soy::AssertException("Currently can only get existing render view via name");
+	}
 }

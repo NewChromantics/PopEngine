@@ -491,15 +491,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 
 void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 {
-	auto Window = Params.GetArgumentObject(0);
-
-	// Set TPersistent Pointer
-	auto mWindow = Bind::TPersistent( Params.mLocalContext, Window, "Window Object" );
-
-	auto LocalContext = Params.mLocalContext;
-	auto WindowObject = mWindow.GetObject(LocalContext);
-	auto& WindowWrapper = WindowObject.This<ApiGui::TWindowWrapper>();
-	auto mSoyWindow = WindowWrapper.mWindow;
+	auto RenderViewObject = Params.GetArgumentObject(0);
+	auto& RenderViewWrapper = RenderViewObject.This<ApiGui::TRenderViewWrapper>();
 	
 	//	init last-frame for any paints before we get a chance to render
 	//	gr: maybe this should be like a Render() call and use js
@@ -508,17 +501,12 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	
 	Sokol::TContextParams SokolParams;
 	
-	// tsdk: If there is a specific view to target, store its name
-	if ( !Params.IsArgumentUndefined(1) )
-	{
-		SokolParams.mViewName = Params.GetArgumentString(1);
-	}
-	
+	SokolParams.mRenderView = RenderViewWrapper.mControl;
 	SokolParams.mFramesPerSecond = 60;
 	SokolParams.mOnPaint = [this](sg_context Context,vec2x<size_t> Rect)	{	this->OnPaint(Context,Rect);	};
 	
 	//	create platform-specific context
-	mSokolContext = Sokol::Platform_CreateContext(mSoyWindow,SokolParams);
+	mSokolContext = Sokol::Platform_CreateContext(SokolParams);
 }
 
 void ApiSokol::TSokolContextWrapper::InitDebugFrame(Sokol::TRenderCommands& Commands)

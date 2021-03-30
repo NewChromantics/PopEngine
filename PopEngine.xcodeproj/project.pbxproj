@@ -460,6 +460,7 @@
 		BF51B90F256AEC20004DE4C7 /* BuildUniversal.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = BuildUniversal.sh; sourceTree = "<group>"; };
 		BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglViewOsx.h; path = src/SoyOpenglViewOsx.h; sourceTree = "<group>"; };
 		BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyOpenglViewOsx.mm; path = src/SoyOpenglViewOsx.mm; sourceTree = "<group>"; };
+		BF563CB026134CBF00040705 /* SoySokol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoySokol.h; path = src/SoySokol.h; sourceTree = "<group>"; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
@@ -1247,10 +1248,10 @@
 				BF9BBF5A252520CC00797824 /* SoyImageProxy.h */,
 				BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */,
 				BF85350022BEB6960049C01B /* SoyMagicLeap.h */,
-				BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */,
-				BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */,
 				BF689ACA20D6D3AE000BC812 /* SoyOpenglView.h */,
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
+				BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */,
+				BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */,
 				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
 				BF689ACC20D6D3AE000BC812 /* SoyOpenglWindow.h */,
 				BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */,
@@ -1263,6 +1264,7 @@
 				BF4013E9250F651F00A753A4 /* SoySokol_Ios_Metal.mm */,
 				BF0D95E72517F367000C4E54 /* SoySokol_Osx.h */,
 				BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */,
+				BF563CB026134CBF00040705 /* SoySokol.h */,
 				BFEF6A3924759401000A1F88 /* SoySound.h */,
 				BFEF6A3824759401000A1F88 /* SoySound.mm */,
 				BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */,

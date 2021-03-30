@@ -2,7 +2,7 @@
 #include "TBind.h"
 #include "SoyWindow.h"
 #include "SoyImageProxy.h"
-#include "sokol/sokol_gfx.h"
+#include "SoySokol.h"
 
 namespace ApiSokol
 {
@@ -18,11 +18,6 @@ class SoyImageProxy;
 //	non-js-api sokol
 namespace Sokol
 {
-	class TContext;			//	platform context
-	class TContextParams;	//	or ViewParams?
-
-	std::shared_ptr<TContext>	Platform_CreateContext(std::shared_ptr<SoyWindow> Window,TContextParams Params);
-
 	//	this doesn't need to be sokol specific
 	//	gr: maybe a better way than objects, but we could pool them
 	class TRenderCommandBase;
@@ -37,14 +32,6 @@ namespace Sokol
 
 	void	ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader);
 }
-
-class Sokol::TContextParams
-{
-public:
-	std::function<void(sg_context,vec2x<size_t>)>	mOnPaint;		//	render callback
-	std::string							mViewName;		//	try to attach to existing views
-	size_t								mFramesPerSecond = 60;
-};
 
 class Sokol::TRenderCommandBase
 {
@@ -220,8 +207,6 @@ public:
 	Array<sg_image>					mPendingDeleteImages;
 
 	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;
-	//Bind::TPersistent							mWindow;
-	//std::shared_ptr<SoyWindow>				mSoyWindow;
 	Sokol::TRenderCommands		mLastFrame;	//	 if we get a required paint, but no pending renders, we re-render the last frame
 };
 

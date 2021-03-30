@@ -28,7 +28,7 @@
 class SokolOpenglContext : public Sokol::TContext
 {
 public:
-	SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView* View,Sokol::TContextParams Params);
+	SokolOpenglContext(GLView* View,Sokol::TContextParams Params);
 	~SokolOpenglContext();
 	
 	virtual void					RequestPaint() override;

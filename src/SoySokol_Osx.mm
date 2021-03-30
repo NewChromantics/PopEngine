@@ -23,29 +23,22 @@
 #error Compiling ios gles support but ENABLE_OPENGL not defined
 #endif
 
-namespace Swift
-{
-	std::shared_ptr<Sokol::TContext>	CreateSokolContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params);
-}
 
-std::shared_ptr<Sokol::TContext> Swift::CreateSokolContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
+std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextParams Params)
 {
-	std::shared_ptr<Gui::TRenderView> RenderView = Platform::GetRenderView(*Window,Params.mViewName);
+	auto RenderView = std::dynamic_pointer_cast<Platform::TRenderView>( Params.mRenderView );
 	if ( !RenderView )
-		throw Soy::AssertException(std::string("Didn't find an existing render view name ")+Params.mViewName);
-
-	auto PlatformRenderView = std::dynamic_pointer_cast<Platform::TRenderView>(RenderView);
-	if ( !PlatformRenderView )
 		throw Soy::AssertException("Found render view but is not a Platform::TRenderView");
+	auto& PlatformRenderView = *RenderView;
 	
-	auto* GlView = PlatformRenderView->GetOpenglView();
-	auto* MetalView = PlatformRenderView->GetMetalView();
+	auto* GlView = PlatformRenderView.GetOpenglView();
+	auto* MetalView = PlatformRenderView.GetMetalView();
 	
 #if defined(ENABLE_OPENGL)
 	if ( GlView )
 	{
 		//	gr: reaplce with PlatformRenderView as it needs to be held onto
-		auto* Context = new SokolOpenglContext(Window,GlView,Params);
+		auto* Context = new SokolOpenglContext(GlView,Params);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
 #endif
@@ -53,70 +46,19 @@ std::shared_ptr<Sokol::TContext> Swift::CreateSokolContext(std::shared_ptr<SoyWi
 #if defined(ENABLE_METAL)
 	if ( MetalView )
 	{
-		auto* Context = new SokolMetalContext(Window,MetalView,Params);
+		auto* Context = new SokolMetalContext(MetalView,Params);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
 #endif
-	
-	return nullptr;
+	throw Soy::AssertException("Found view, but no underlaying metal/opengl view");
 }
 
 
-std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
-{
-	try
-	{
-		auto SwiftContext = Swift::CreateSokolContext( Window, Params );
-		return SwiftContext;
-	}
-	catch(std::exception& e)
-	{
-		std::Debug << e.what() << std::endl;
-	}
-
-
-	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
-	
-	//	get the view with matching name, if it's a metal view, make a metal context
-	//	if its gl, make a gl context
-	auto* View = PlatformWindow.GetChild(Params.mViewName);
-	if ( !View )
-	{
-		std::stringstream Error;
-		Error << "Failed to find child view " << Params.mViewName << " (required on ios)";
-		throw Soy::AssertException(Error);
-	}
-	
-	auto ClassName = Soy::NSStringToString(NSStringFromClass([View class]));
-	std::Debug << "View " << Params.mViewName << " class name " << ClassName << std::endl;
-	
-#if defined(ENABLE_METAL)
-	if ( ClassName == "MTKView" )
-	{
-		MTKView* MetalView = (MTKView*)View;
-		auto* Context = new SokolMetalContext(Window,MetalView,Params);
-		return std::shared_ptr<Sokol::TContext>(Context);
-	}
-#endif
-	
-#if defined(ENABLE_OPENGL)
-	if ( ClassName == "GLKView" )
-	{
-		auto* GlView = (NSOpenGLView*)View;
-		auto* Context = new SokolOpenglContext(Window,GlView,Params);
-		return std::shared_ptr<Sokol::TContext>(Context);
-	}
-#endif
-	
-	std::stringstream Error;
-	Error << "Class of view " << Params.mViewName << " is not MTKView or GLKView; " << ClassName;
-	throw Soy::AssertException(Error);
-}
 
 @class GLView;
 
 
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView* View,Sokol::TContextParams Params) :
+SokolOpenglContext::SokolOpenglContext(GLView* View,Sokol::TContextParams Params) :
 	mView	( View ),
 	mParams	( Params )
 {

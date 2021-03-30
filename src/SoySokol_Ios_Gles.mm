@@ -1,3 +1,5 @@
+
+
 #include "TApiSokol.h"
 #include "SoyWindowApple.h"
 #include "PopMain.h"
@@ -16,13 +18,47 @@
 #import <OpenGLES/ES3/glext.h>
 #endif
 
-#include "sokol/sokol_gfx.h"
+//#include "sokol/sokol_gfx.h"
 
+namespace GlSokol
+{
+	#include "sokol/sokol_gfx.h"
+}
 
 #if !defined(ENABLE_OPENGL)
 #error Compiling ios gles support but ENABLE_OPENGL not defined
 #endif
 
+
+
+std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextParams Params)
+{
+	auto RenderView = std::dynamic_pointer_cast<Platform::TRenderView>( Params.mRenderView );
+	if ( !RenderView )
+		throw Soy::AssertException("Found render view but is not a Platform::TRenderView");
+	auto& PlatformRenderView = *RenderView;
+	
+	auto* GlView = PlatformRenderView.GetOpenglView();
+	auto* MetalView = PlatformRenderView.GetMetalView();
+	
+#if defined(ENABLE_OPENGL)
+	if ( GlView )
+	{
+		//	gr: reaplce with PlatformRenderView as it needs to be held onto
+		auto* Context = new SokolOpenglContext(GlView,Params);
+		return std::shared_ptr<Sokol::TContext>(Context);
+	}
+#endif
+	
+#if defined(ENABLE_METAL)
+	if ( MetalView )
+	{
+		auto* Context = new SokolMetalContext(MetalView,Params);
+		return std::shared_ptr<Sokol::TContext>(Context);
+	}
+#endif
+	throw Soy::AssertException("Found view, but no underlaying metal/opengl view");
+}
 
 
 
@@ -48,7 +84,7 @@
 
 
 
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,GLView* View,Sokol::TContextParams Params) :
+SokolOpenglContext::SokolOpenglContext(GLView* View,Sokol::TContextParams Params) :
 	mView	( View ),
 	mParams	( Params )
 {

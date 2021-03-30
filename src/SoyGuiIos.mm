@@ -47,7 +47,7 @@ namespace Swift
 	std::shared_ptr<SoyButton>			GetButton(const std::string& Name);
 	std::shared_ptr<SoyTickBox>			GetTickBox(const std::string& Name);
 	std::shared_ptr<Gui::TRenderView>	GetRenderView(const std::string& Name);
-    std::shared_ptr<Gui::TList>			GetList(const std::string& Name);
+	std::shared_ptr<Gui::TList>			GetList(const std::string& Name);
 }
 
 
