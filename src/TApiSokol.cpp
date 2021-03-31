@@ -343,13 +343,13 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				//	colour target/attachment config
 				PipelineDescription.colors[0].blend.enabled = false;
 				
-				/*
+				
 				PipelineDescription.depth =
 				{
-					.compare = SG_COMPAREFUNC_ALWAYS,
-					.write_enabled = false
+					.compare = SG_COMPAREFUNC_LESS_EQUAL,
+					.write_enabled = true
 				};
-				*/
+				
 				// Some Render Target Settings need to be different here
 				// Overwrite them at the end here?
 				
