@@ -23,6 +23,7 @@ namespace ApiSokol
 	DEFINE_BIND_FUNCTIONNAME(CreateShader);
 	DEFINE_BIND_FUNCTIONNAME(CreateGeometry);
 	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
+	DEFINE_BIND_FUNCTIONNAME(CanRenderToPixelFormat);
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -37,6 +38,7 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 	Template.BindFunction<BindFunction::CreateShader>(&TSokolContextWrapper::CreateShader);
 	Template.BindFunction<BindFunction::CreateGeometry>(&TSokolContextWrapper::CreateGeometry);
 	Template.BindFunction<BindFunction::GetScreenRect>(&TSokolContextWrapper::GetScreenRect);
+	Template.BindFunction<BindFunction::CanRenderToPixelFormat>(&TSokolContextWrapper::CanRenderToPixelFormat);
 }
 
 sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
@@ -575,6 +577,18 @@ void ApiSokol::TSokolContextWrapper::GetScreenRect(Bind::TCallback& Params)
 	LastRect.PushBack( mLastRect.x );
 	LastRect.PushBack( mLastRect.y );
 	Params.Return( GetArrayBridge(LastRect) );
+}
+
+
+void ApiSokol::TSokolContextWrapper::CanRenderToPixelFormat(Bind::TCallback& Params)
+{
+	auto PixelFormatString = Params.GetArgumentString(0);
+	auto PixelFormatSoy = SoyPixelsFormat::ToType(PixelFormatString);
+	auto PixelFormat = GetPixelFormat(PixelFormatSoy);
+	auto PixelFormatInfo = sg_query_pixelformat(PixelFormat);
+	auto CanRender = PixelFormatInfo.render;
+	
+	Params.Return(CanRender);
 }
 
 void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
