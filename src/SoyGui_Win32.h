@@ -219,3 +219,19 @@ public:
 	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 };
 
+
+class Platform::TRenderView : public TControl, public Gui::TRenderView
+{
+public:
+	TRenderView(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
+
+	//virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
+	//virtual void			SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
+	//virtual void			SetColour(const vec3x<uint8_t>& Rgb) override { Platform::TControl::SetColour(Rgb); }
+
+	//virtual void			SetImage(const SoyPixelsImpl& Pixels) override;
+	//virtual void			SetCursorMap(const SoyPixelsImpl& CursorMap, const ArrayBridge<std::string>&& CursorIndexes)override;
+
+	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+};
+
