@@ -27,9 +27,6 @@ namespace Platform
 	class TControlClass;
 	class TControl;
 	class TWindow;
-	class TOpenglView;
-
-	class TOpenglContext;
 
 	class TWin32Thread;	//	A window(control?) is associated with a thread so must pump messages in the same thread https://docs.microsoft.com/en-us/windows/desktop/procthread/creating-windows-in-threads
 
@@ -1338,6 +1335,11 @@ std::shared_ptr<Gui::TImageMap> Platform::CreateImageMap(SoyWindow& Parent, Soy:
 }
 
 std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
+std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& Parent, const std::string& Name)
 {
 	Soy_AssertTodo();
 }

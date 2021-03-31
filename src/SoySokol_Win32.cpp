@@ -61,11 +61,13 @@ SokolOpenglContext::SokolOpenglContext(Sokol::TContextParams Params) :
 	Soy::TSemaphore Wait;
 	mWindowThread->PushJob(CreateControls, Wait);
 	Wait.Wait("Win32 thread");
-	auto OnFrame = [this](Platform::TControl&)
+	//auto OnFrame = [this](Platform::TControl&)
+	auto OnFrame = [this](Soy::Rectx<size_t> Rect)
 	{
-		this->OnPaint(); 
+		this->OnPaint();
 	};
-	PlatformWindow.mOnPaint = OnFrame;
+	Params.mRenderView->mOnDraw = OnFrame;
+	//PlatformWindow.mOnPaint = OnFrame;
 
 
 	//	still need our own paint trigger
