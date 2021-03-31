@@ -37,6 +37,8 @@ void ListClassVariables(UIView* View)
 
 namespace Platform
 {
+	class TMetalView;
+	
 	static size_t	UniqueIdentifierCounter = 1000;
 	std::string		GetUniqueIdentifier();
 	

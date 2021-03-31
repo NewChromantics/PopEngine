@@ -21,6 +21,7 @@ namespace Platform
 	class TTextBox_Base;
 	
 	class TNsView;		//	common NSView control stuff
+	class TMetalView;
 	
 	NSColor*		GetColour(vec3x<uint8_t> Rgb);
 	vec3x<uint8_t>	GetColour(NSColor* Colour);
