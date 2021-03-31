@@ -29,7 +29,7 @@ struct ContentView: View
 		Text(Label1Wrapper.theLabel)
 		Text(FrameCounterLabel.theLabel)
 		//Text(TestLabel1Wrapper.labelCopy)
-        ForEach(TestList.theValue.map( { ListItem(name: $0) } ) )
+        ForEach(TestList.theValue.map( { ListItem(name: $0.value) } ) )
         {
             item in
                 Text(verbatim: item.name)
