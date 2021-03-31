@@ -52,6 +52,9 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 		case SoyPixelsFormat::RGBA:			return SG_PIXELFORMAT_RGBA8;
 		case SoyPixelsFormat::BGRA:			return SG_PIXELFORMAT_BGRA8;
 		case SoyPixelsFormat::Float4:		return SG_PIXELFORMAT_RGBA32F;
+		
+		case SoyPixelsFormat::uyvy_8888:	return SG_PIXELFORMAT_RG8;
+		
 		default:break;
 	}
 	
