@@ -12,15 +12,6 @@
 #import "SoyGuiSwift.h"	//	GLView
 
 
-//	this could do metal & gl
-@interface SokolViewDelegate_Gles : UIResponder<GLKViewDelegate>
-	
-@property std::function<void(CGRect)>	mOnPaint;
-	
-- (instancetype)init:(std::function<void(CGRect)> )OnPaint;
-	
-@end
-
 
 class SokolOpenglContext : public Sokol::TContext
 {
@@ -33,7 +24,7 @@ public:
 	
 private:
 	void							RequestViewPaint();
-	void							OnPaint(CGRect Rect);
+	void							OnPaint(Soy::Rectx<size_t> Rect);
 	void							RunGpuJobs();
 
 public:
@@ -45,7 +36,6 @@ public:
 	GLView*							mView = nullptr;
 	EAGLContext*					mOpenglContext = nullptr;
 	std::mutex						mOpenglContextLock;
-	SokolViewDelegate_Gles*			mDelegate = nullptr;
 	
 	Sokol::TContextParams			mParams;
 	//	either run these on a thread, or just resolve all at start of next paint

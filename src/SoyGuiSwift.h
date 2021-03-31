@@ -4,7 +4,9 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
-#if !TARGET_OS_IOS
+#if TARGET_OS_IOS
+#import "SoyOpenglViewIos.h"
+#else
 #import <AppKit/AppKit.h>
 #import "SoyOpenglViewOsx.h"
 #endif
@@ -75,11 +77,10 @@
 
 
 #if TARGET_OS_IOS	//	gr: this SHOULD be always defined by xcode
-@interface GLView : GLKView
+@interface GLView : SoyOpenglViewIos
 #else
 @interface GLView : SoyOpenglViewOsx
 #endif
-
 @end
 
 @interface PopEngineRenderView : PopEngineControl

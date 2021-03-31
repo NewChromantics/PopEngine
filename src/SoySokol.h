@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sokol/sokol_gfx.h"
+
 //#include "SoyWindow.h"
 #include <memory>
 #include <functional>

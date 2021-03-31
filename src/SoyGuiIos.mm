@@ -11,8 +11,10 @@
 
 #import <GLKit/GLKit.h>
 
-#include "sokol/sokol_gfx.h"
-
+namespace Sokol
+{
+	#include "sokol/sokol_gfx.h"
+}
 #import <UIKit/UICollectionView.h>	//	UICollectionViewDataSource
 
 

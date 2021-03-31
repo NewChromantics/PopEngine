@@ -5,7 +5,7 @@
 #include "SoyWindowApple.h"
 #include "SoySokol_Ios_Metal.h"
 #include "SoySokol_Ios_Gles.h"
-
+/*
 //	metal implementation
 #define SOKOL_IMPL
 #define SOKOL_METAL
@@ -15,7 +15,7 @@ namespace MetalSokol
 {
 	#include "sokol/sokol_gfx.h"
 }
-
+*/
 
 //	this could do metal & gl
 @interface SokolViewDelegate_Metal : UIResponder<MTKViewDelegate>
@@ -69,21 +69,25 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextPa
 	auto* GlView = PlatformRenderView.GetOpenglView();
 	auto* MetalView = PlatformRenderView.GetMetalView();
 	
+#if defined(ENABLE_OPENGL)
 	if ( GlView )
 	{
 		//	gr: reaplce with PlatformRenderView as it needs to be held onto
 		auto* Context = new SokolOpenglContext(GlView,Params);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
+#endif
 	
+#if defined(ENABLE_METAL)
 	if ( MetalView )
 	{
 		auto* Context = new SokolMetalContext(MetalView,Params);
 		return std::shared_ptr<Sokol::TContext>(Context);
 	}
-
+#endif
 	throw Soy::AssertException("Found view, but no underlaying metal/opengl view");
 }
+
 
 
 

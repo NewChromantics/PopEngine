@@ -133,6 +133,7 @@
 		BF51B8FD256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF51B8FF256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF563CA126133A2E00040705 /* SoyOpenglViewOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */; };
+		BF563CBB2614DAB900040705 /* SoyOpenglViewIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF563CB92614DAB800040705 /* SoyOpenglViewIos.mm */; };
 		BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
@@ -461,6 +462,8 @@
 		BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglViewOsx.h; path = src/SoyOpenglViewOsx.h; sourceTree = "<group>"; };
 		BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyOpenglViewOsx.mm; path = src/SoyOpenglViewOsx.mm; sourceTree = "<group>"; };
 		BF563CB026134CBF00040705 /* SoySokol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoySokol.h; path = src/SoySokol.h; sourceTree = "<group>"; };
+		BF563CB92614DAB800040705 /* SoyOpenglViewIos.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyOpenglViewIos.mm; path = src/SoyOpenglViewIos.mm; sourceTree = "<group>"; };
+		BF563CBA2614DAB800040705 /* SoyOpenglViewIos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglViewIos.h; path = src/SoyOpenglViewIos.h; sourceTree = "<group>"; };
 		BF59A2512222057200AE9926 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		BF59A253222206B400AE9926 /* TApiInput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiInput.cpp; path = src/TApiInput.cpp; sourceTree = "<group>"; };
 		BF59A254222206B400AE9926 /* TApiInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiInput.h; path = src/TApiInput.h; sourceTree = "<group>"; };
@@ -1250,6 +1253,8 @@
 				BF85350022BEB6960049C01B /* SoyMagicLeap.h */,
 				BF689ACA20D6D3AE000BC812 /* SoyOpenglView.h */,
 				BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */,
+				BF563CBA2614DAB800040705 /* SoyOpenglViewIos.h */,
+				BF563CB92614DAB800040705 /* SoyOpenglViewIos.mm */,
 				BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */,
 				BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */,
 				BF108A822294811F003DDC5F /* SoyOpenglWindow.cpp */,
@@ -1846,6 +1851,7 @@
 				BF151FA623845FAD00A70EBF /* SoyTime.cpp in Sources */,
 				BF151F8723845FAD00A70EBF /* SoyDebug.mm in Sources */,
 				BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */,
+				BF563CBB2614DAB900040705 /* SoyOpenglViewIos.mm in Sources */,
 				BF71CAEC243E633100AEF50F /* TApiOpengl.cpp in Sources */,
 				BF151F8E23845FAD00A70EBF /* SoyImage.cpp in Sources */,
 				BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */,

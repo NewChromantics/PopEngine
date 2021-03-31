@@ -16,8 +16,10 @@
 #include <Opengl/gl3.h>
 #include <Opengl/gl3ext.h>
 
-#include "sokol/sokol_gfx.h"
-
+//namespace GlSokol
+//{
+	#include "sokol/sokol_gfx.h"
+//}
 
 #if !defined(ENABLE_OPENGL)
 #error Compiling ios gles support but ENABLE_OPENGL not defined

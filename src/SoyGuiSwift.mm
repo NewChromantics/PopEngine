@@ -687,7 +687,7 @@ Swift::TRenderView::TRenderView(PopEngineRenderView* Control) :
 	
 	//	gr: using blocks directly seem to get released... assign c++/lambdas/vars
 	//		find out why this is different to  = ^(NSRect Rect){}
-	auto OnDraw = [this](NSRect RectNs)
+	auto OnDraw = [this](CGRect RectNs)
 	{
 		if ( !this->mOnDraw )
 			return;
@@ -696,7 +696,7 @@ Swift::TRenderView::TRenderView(PopEngineRenderView* Control) :
 	};
 	View->mOnDrawRect = OnDraw;	
 	
-	auto OnMouseEvent = [this](NSPoint Position,ButtonEvent Event,ButtonName Name)
+	auto OnMouseEvent = [this](CGPoint Position,ButtonEvent Event,ButtonName Name)
 	{
 		//	convert into c++ event
 		if ( !this->mOnMouseEvent )

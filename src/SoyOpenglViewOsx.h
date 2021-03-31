@@ -1,3 +1,4 @@
+#pragma once
 //	this must be pure obj-c as it's used in swift.
 //	it's just a GL view providing callbacks for events
 //	todo: make it metal-capable
@@ -6,6 +7,10 @@
 
 #if TARGET_OS_IOS	//	gr: this SHOULD be always defined by xcode
 #error SoyOpenglViewOsx should only be used on osx builds
+#endif
+
+#if !defined(__OBJC__)
+#error This should only be included in mm files
 #endif
 
 #import <AppKit/AppKit.h>
@@ -34,8 +39,8 @@ typedef enum ButtonName : NSUInteger
 {
 //	callback function when drawRect is triggered. 
 //	we use a objc block as we cannot use any c++ types in this file used by swift 
-@public void(^mOnDrawRect)(NSRect);
-@public void(^mOnMouseEvent)(NSPoint,ButtonEvent,ButtonName);
+@public void(^mOnDrawRect)(CGRect);
+@public void(^mOnMouseEvent)(CGPoint,ButtonEvent,ButtonName);
 }
 
 
