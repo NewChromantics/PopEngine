@@ -134,6 +134,10 @@
 		BF51B8FF256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
 		BF563CA126133A2E00040705 /* SoyOpenglViewOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */; };
 		BF563CBB2614DAB900040705 /* SoyOpenglViewIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF563CB92614DAB800040705 /* SoyOpenglViewIos.mm */; };
+		BF563CC12614E1A300040705 /* SoyOpenglViewIos.h in Headers */ = {isa = PBXBuildFile; fileRef = BF563CBA2614DAB800040705 /* SoyOpenglViewIos.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF563CC42614E1A700040705 /* SoyOpenglViewOsx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF563CCB2614E49600040705 /* SoyOpenglViewIos.h in Headers */ = {isa = PBXBuildFile; fileRef = BF563CBA2614DAB800040705 /* SoyOpenglViewIos.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF563CD02614E49B00040705 /* SoyOpenglViewOsx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF5C4AB923F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4ABA23F6FDF8007D6393 /* TApiZip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4AB623F6FDF8007D6393 /* TApiZip.cpp */; };
 		BF5C4AC323F6FE3A007D6393 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = BF5C4ABF23F6FE3A007D6393 /* zip.c */; };
@@ -1488,6 +1492,8 @@
 			files = (
 				BF7E6A7F2570232C00365CEF /* SoyGuiSwift.h in Headers */,
 				BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */,
+				BF563CC12614E1A300040705 /* SoyOpenglViewIos.h in Headers */,
+				BF563CD02614E49B00040705 /* SoyOpenglViewOsx.h in Headers */,
 				BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1496,9 +1502,11 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF563CCB2614E49600040705 /* SoyOpenglViewIos.h in Headers */,
 				BF40CE192423D94800F636EF /* PopEngine.h in Headers */,
 				BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */,
 				BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */,
+				BF563CC42614E1A700040705 /* SoyOpenglViewOsx.h in Headers */,
 				BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
