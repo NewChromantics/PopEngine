@@ -31,11 +31,11 @@ NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 - (nonnull instancetype)init
 {
 	//	setup default events
-	mOnMouseEvent = ^(NSPoint Position,ButtonEvent Event,ButtonName Name)
+	mOnMouseEvent = ^(CGPoint Position,ButtonEvent Event,ButtonName Name)
 	{
 		std::Debug << "Mouse event " << Position.x << "," << Position.y << " Type=" << Event << " Button=" << Name << std::endl;
 	};
-	mOnDrawRect = ^(NSRect)
+	mOnDrawRect = ^(CGRect)
 	{
 		std::Debug << "GLView::mOnDrawRect()" << std::endl;
 	};
