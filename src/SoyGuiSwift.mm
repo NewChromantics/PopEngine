@@ -637,7 +637,7 @@ Swift::TList::TList(PopEngineList* Control) :
 {
 	auto OnValuesChanged = [this](NSMutableArray<NSString*>* StringsNs)
 	{
-		std::Debug << "List values changed" << std::endl;
+		//std::Debug << "List values changed" << std::endl;
 		Array<std::string> Strings;
 			//	NSArray_ForEach<NSString*>(...)
 		auto Append = [&](NSString* StringNs)
