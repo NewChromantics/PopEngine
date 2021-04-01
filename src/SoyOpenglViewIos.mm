@@ -5,6 +5,7 @@
 	
 - (nonnull instancetype)init
 {
+	//- (instancetype)initWithFrame:(CGRect)frame context:(EAGLContext *)context;
 	self = [super init];
 
 	SoyOpenglViewIos_Delegate* Delegate = [[SoyOpenglViewIos_Delegate alloc] init:self];

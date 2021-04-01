@@ -49,6 +49,12 @@ SokolOpenglContext::SokolOpenglContext(GLView* View,Sokol::TContextParams Params
 	auto Api = kEAGLRenderingAPIOpenGLES1;
 #endif
 	mOpenglContext = [[EAGLContext alloc] initWithAPI:Api];
+	
+	//	verify the API we've created
+	{
+		auto ContextApi = [mOpenglContext API];
+		std::Debug << "EAGLContext API: " << magic_enum::enum_name(ContextApi) << std::endl;
+	}
 	mView.context = mOpenglContext;
 
 	//	gr: this doesn't do anything, need to call the func
