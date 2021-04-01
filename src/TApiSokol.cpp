@@ -41,7 +41,7 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 	Template.BindFunction<BindFunction::CanRenderToPixelFormat>(&TSokolContextWrapper::CanRenderToPixelFormat);
 }
 
-sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
+sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget)
 {
 	switch(Format)
 	{
@@ -53,14 +53,26 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format)
 		case SoyPixelsFormat::GreyscaleAlpha:	
 			return SG_PIXELFORMAT_RG8;
 	
+		case SoyPixelsFormat::DepthHalfMetres:
+		case SoyPixelsFormat::DepthDisparityHalf:
+			return SG_PIXELFORMAT_R16F;
+	
 		case SoyPixelsFormat::DepthFloatMetres:
-		case SoyPixelsFormat::Float1:		
+		case SoyPixelsFormat::Float1:
 			return SG_PIXELFORMAT_R32F;
 			
 		case SoyPixelsFormat::RGBA:			return SG_PIXELFORMAT_RGBA8;
 		case SoyPixelsFormat::BGRA:			return SG_PIXELFORMAT_BGRA8;
-		case SoyPixelsFormat::Float4:		return SG_PIXELFORMAT_RGBA32F;
 		
+		case SoyPixelsFormat::Float4:		
+		{
+			//	gr: for IOS purposes, force half float on render target for float
+			//	todo: only if float isn't supported
+			if ( ForRenderTarget )
+				return SG_PIXELFORMAT_RGBA16F;
+				
+			return SG_PIXELFORMAT_RGBA32F;
+		}		
 		
 		default:break;
 	}
@@ -113,15 +125,14 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		//Description.height = 640;
 		auto SokolDescription = sg_query_desc();
 		Description.render_target = true;
-		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
-		//Description.pixel_format = SokolDescription.context.color_format;
+		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat(), RenderTarget );
 		Description.sample_count = SokolDescription.context.sample_count;
 		
 		//	ignoring pixel content here
 	}
 	else
 	{
-		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat() );
+		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat(), RenderTarget );
 
 		//	gr: only set pixel data 
 		//	if IncludeData (updating image)
@@ -370,7 +381,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 				{
 					PipelineDescription.depth.pixel_format = SG_PIXELFORMAT_NONE;
 					//	gr: colour also needs configuring to match pass (why??)
-					auto PassColourFormat = GetPixelFormat( RenderTargetPassMeta.GetFormat() );
+					auto ForRenderTarget = true;
+					auto PassColourFormat = GetPixelFormat( RenderTargetPassMeta.GetFormat(), ForRenderTarget );
 					PipelineDescription.colors[0].pixel_format = PassColourFormat;
 				}
 				
@@ -582,9 +594,10 @@ void ApiSokol::TSokolContextWrapper::GetScreenRect(Bind::TCallback& Params)
 
 void ApiSokol::TSokolContextWrapper::CanRenderToPixelFormat(Bind::TCallback& Params)
 {
+	auto ForRenderTarget = true;
 	auto PixelFormatString = Params.GetArgumentString(0);
 	auto PixelFormatSoy = SoyPixelsFormat::ToType(PixelFormatString);
-	auto PixelFormat = GetPixelFormat(PixelFormatSoy);
+	auto PixelFormat = GetPixelFormat(PixelFormatSoy, ForRenderTarget);
 	auto PixelFormatInfo = sg_query_pixelformat(PixelFormat);
 	auto CanRender = PixelFormatInfo.render;
 	
