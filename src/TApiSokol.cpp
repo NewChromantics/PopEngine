@@ -101,14 +101,16 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	auto* pPixels = &ImagePixels;
 	if ( ImagePixels.GetFormat() == SoyPixelsFormat::RGB )
 	{
-		Soy::TScopeTimerPrint Timer("Converting RGB image to temporary RGBA for sokol",1);
+		std::string TimerName(Image.mName + " converting RGB image to temporary RGBA for sokol");
+		Soy::TScopeTimerPrint Timer(TimerName.c_str(),1);
 		TemporaryPixels.Copy(ImagePixels);
 		TemporaryPixels.SetFormat(SoyPixelsFormat::RGBA);
 		pPixels = &TemporaryPixels;
 	}
 	if ( ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_88 || ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_8_8 )
 	{
-		Soy::TScopeTimerPrint Timer("Converting yuv image to temporary greyscale for sokol",1);
+		std::string TimerName(Image.mName + " converting yuv image to temporary greyscale for sokol");
+		Soy::TScopeTimerPrint Timer(TimerName.c_str(),1);
 		TemporaryPixels.Copy(ImagePixels);
 		TemporaryPixels.SetFormat(SoyPixelsFormat::Greyscale);
 		pPixels = &TemporaryPixels;
@@ -120,9 +122,6 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	Description.height = ImageMeta.GetHeight();
 	if ( RenderTarget )
 	{
-		//	gr; why was size set here?
-		//Description.width = 640;
-		//Description.height = 640;
 		auto SokolDescription = sg_query_desc();
 		Description.render_target = true;
 		Description.pixel_format = GetPixelFormat( ImageMeta.GetFormat(), RenderTarget );
