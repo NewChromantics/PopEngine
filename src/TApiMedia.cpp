@@ -148,7 +148,7 @@ namespace ApiMedia
 
 	void	EnumDevices(Bind::TCallback& Params);
 
-	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame);
+	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame,size_t PendingFrames);
 	Bind::TObject	PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson);
 }
 
@@ -378,7 +378,7 @@ void ApiMedia::TH264DecoderWrapper::FlushPendingFrames()
 
 		if (PoppedError.empty())
 		{
-			auto FrameObject = ApiMedia::FrameToObject(Context, PoppedFrame);
+			auto FrameObject = ApiMedia::FrameToObject(Context, PoppedFrame,mFrames.GetSize());
 			mFrameRequests.Resolve(Context,FrameObject);
 		}
 		else
@@ -624,12 +624,13 @@ void ApiMedia::TCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 	FlushPendingFrames();
 }
 
-Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame)
+Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame,size_t PendingFrames)
 {
 	//	alloc key names once
 	static std::string _TimeMs = "TimeMs";
 	static std::string _Meta = "Meta";
 	static std::string _Planes = "Planes";
+	static std::string _PendingFrames = "PendingFrames";
 
 	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,3);
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
@@ -668,20 +669,28 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 	
 
 	FrameObject.SetArray(_Planes, GetArrayBridge(PlaneImages));
+	
+	//	extra meta
+	FrameObject.SetInt(_PendingFrames,PendingFrames);
 
 	return FrameObject;
 }
 
 Bind::TObject ApiMedia::PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson)
 {
+	//	alloc key names once
+	static std::string _Data = "Data";
+	static std::string _Meta = "Meta";
+	static std::string _PendingFrames = "PendingFrames";
+
 	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,3);
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
 	
 	//	convert meta json to an object
 	auto MetaObject = Bind::ParseObjectString( Context.mLocalContext, MetaJson );
 	
-	FrameObject.SetArray("Data",Data);
-	FrameObject.SetObject("Meta", MetaObject);
+	FrameObject.SetArray(_Data,Data);
+	FrameObject.SetObject(_Meta, MetaObject);
 	
 	return FrameObject;
 }
@@ -700,6 +709,7 @@ void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 		
 		PopCameraDevice::TFrame PoppedFrame;
 		{
+			Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush Lock&Pop",5);
 			std::lock_guard<std::mutex> Lock(mFramesLock);
 			//	gr: sometimes, probbaly because there's no mutex on mFrames.IsEmpty() above
 			//		we get have an empty mFrames (this lambda is probably executing) and we have zero frames, 
@@ -717,7 +727,8 @@ void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 				PoppedFrame = mFrames.PopAt(0);
 			}
 		}
-		auto FrameObject = ApiMedia::FrameToObject(Context,PoppedFrame);
+		auto PendingFrames = mFrames.GetSize();
+		auto FrameObject = ApiMedia::FrameToObject(Context,PoppedFrame,PendingFrames);
 		mFrameRequests.Resolve(Context,FrameObject);
 	};
 	auto& Context = mFrameRequests.GetContext();

@@ -77,7 +77,7 @@ public:
 	bool									mOnlyLatestFrame = true;
 	Bind::TPromiseQueue				mFrameRequests;
 	std::mutex						mFramesLock;
-	Array<PopCameraDevice::TFrame>	mFrames;
+	Array<PopCameraDevice::TFrame>	mFrames;		//	check if this array resizing is costly
 };
 
 
