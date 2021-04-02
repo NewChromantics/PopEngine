@@ -1087,7 +1087,7 @@ void JSForceSynchronousGarbageCollect(JSContextRef LocalContext)
 {
 #if false //	debug
 	#if defined(JSAPI_JSCORE)
-	JSSynchronousGarbageCollectForDebugging();
+	JSSynchronousGarbageCollectForDebugging(LocalContext);
 	#endif
 #endif
 }
