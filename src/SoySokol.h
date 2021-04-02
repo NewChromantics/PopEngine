@@ -2,6 +2,13 @@
 
 #include "sokol/sokol_gfx.h"
 
+DECLARE_NONCOMPLEX_TYPE(sg_color);
+DECLARE_NONCOMPLEX_TYPE(sg_buffer);
+DECLARE_NONCOMPLEX_TYPE(sg_image);
+DECLARE_NONCOMPLEX_TYPE(sg_shader);
+DECLARE_NONCOMPLEX_TYPE(sg_pipeline);
+DECLARE_NONCOMPLEX_TYPE(sg_pass);
+
 //#include "SoyWindow.h"
 #include <memory>
 #include <functional>
