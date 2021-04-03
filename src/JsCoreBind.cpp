@@ -1498,12 +1498,23 @@ bool JsCore::TObject::HasMember(const std::string& MemberName)
 void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
 {
 	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
-	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
-	for ( auto k=0;	k<KeyCount;	k++ )
+	try
 	{
-		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
-		auto KeyString = JsCore::GetString(mContext,Key);
-		MemberNames.PushBack(KeyString);
+		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+		for ( auto k=0;	k<KeyCount;	k++ )
+		{
+			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+			auto KeyString = JsCore::GetString(mContext,Key);
+			MemberNames.PushBack(KeyString);
+		}
+		//	gr: eventually found my leak from here
+		//	https://github.com/naver/sling/blob/master/webkit/Source/JavaScriptCore/API/tests/testapi.c#L1687
+		JSPropertyNameArrayRelease(Keys);
+	}
+	catch(...)
+	{
+		JSPropertyNameArrayRelease(Keys);
+		throw;
 	}
 }
 
@@ -2595,6 +2606,37 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 {
 	auto& mContext = This.mContext;
 	auto& mThis = This.mThis;
+	
+	//	gr: JSObjectGetPropertyAtIndex() will be faster!
+	//	proper way, but will include "named" indexes...
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	try
+	{
+		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+		for ( auto k=0;	k<KeyCount;	k++ )
+		{
+			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+			JSValueRef Exception = nullptr;
+			auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+			JsCore::ThrowException( mContext, Exception );
+			Values.PushBack( JsCore::FromValue<DESTTYPE>( mContext, Value ) );
+		}
+		//	gr: eventually found my leak from here
+		//	https://github.com/naver/sling/blob/master/webkit/Source/JavaScriptCore/API/tests/testapi.c#L1687
+		JSPropertyNameArrayRelease(Keys);
+	}
+	catch(...)
+	{
+		JSPropertyNameArrayRelease(Keys);
+		throw;
+	}
+}
+
+template<typename DESTTYPE>
+void JsCore_TArray_CopyTo_PossibleTypedArray(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
+{
+	auto& mContext = This.mContext;
+	auto& mThis = This.mThis;
 
 	//	check for typed array
 	{
@@ -2607,49 +2649,39 @@ void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 			return;
 		}
 	}
-	
-	//	gr: JSObjectGetPropertyAtIndex() will be faster!
-	//	proper way, but will include "named" indexes...
-	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
-	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
-	for ( auto k=0;	k<KeyCount;	k++ )
-	{
-		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
-		JSValueRef Exception = nullptr;
-		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
-		JsCore::ThrowException( mContext, Exception );
-		Values.PushBack( JsCore::FromValue<DESTTYPE>( mContext, Value ) );
-	}
+
+	//	continue to normal routine	
+	JsCore_TArray_CopyTo(This,Values);
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<bool>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
+	JsCore_TArray_CopyTo_PossibleTypedArray( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<uint32_t>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
+	JsCore_TArray_CopyTo_PossibleTypedArray( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<int32_t>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
+	JsCore_TArray_CopyTo_PossibleTypedArray( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<uint8_t>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
+	JsCore_TArray_CopyTo_PossibleTypedArray( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<uint16_t>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
+	JsCore_TArray_CopyTo_PossibleTypedArray( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<float>& Values)
 {
-	JsCore_TArray_CopyTo( *this, Values );
+	JsCore_TArray_CopyTo_PossibleTypedArray( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<std::string>& Values)
@@ -2659,65 +2691,12 @@ void JsCore::TArray::CopyTo(ArrayBridge<std::string>& Values)
 
 void JsCore::TArray::CopyTo(ArrayBridge<JSValueRef>& Values)
 {
-	auto& This = *this;
-	auto& mContext = This.mContext;
-	auto& mThis = This.mThis;
-	
-	//	check for typed array
-	{
-		JSValueRef Exception = nullptr;
-		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
-		JsCore::ThrowException( mContext, Exception );
-		if ( TypedArrayType != kJSTypedArrayTypeNone )
-		{
-			throw Soy::AssertException("Trying to copy typed array into array of values");
-		}
-	}
-	
-	//	proper way, but will include "named" indexes...
-	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
-	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
-	for ( auto k=0;	k<KeyCount;	k++ )
-	{
-		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
-		JSValueRef Exception = nullptr;
-		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
-		JsCore::ThrowException( mContext, Exception );
-		Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
-	}
+	JsCore_TArray_CopyTo( *this, Values );
 }
 
 void JsCore::TArray::CopyTo(ArrayBridge<Bind::TObject>& Values)
 {
-	auto& This = *this;
-	auto& mContext = This.mContext;
-	auto& mThis = This.mThis;
-	
-	//	check for typed array
-	{
-		JSValueRef Exception = nullptr;
-		auto TypedArrayType = JSValueGetTypedArrayType( mContext, mThis, &Exception );
-		JsCore::ThrowException( mContext, Exception );
-		if ( TypedArrayType != kJSTypedArrayTypeNone )
-		{
-			throw Soy::AssertException("Trying to copy typed array into array of objects");
-		}
-	}
-	
-	//	proper way, but will include "named" indexes...
-	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
-	auto KeyCount = JSPropertyNameArrayGetCount( Keys );
-	for ( auto k=0;	k<KeyCount;	k++ )
-	{
-		auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
-		JSValueRef Exception = nullptr;
-		auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
-		JsCore::ThrowException( mContext, Exception );
-		auto ObjectValue = GetObject(mContext,Value);
-		Bind::TObject Object(mContext,ObjectValue);
-		Values.PushBack(Object);
-		//Values.PushBack( JsCore::FromValue<JSValueRef>( mContext, Value ) );
-	}
+	JsCore_TArray_CopyTo( *this, Values );
 }
 
 JsCore::TCallback JsCore::TArray::GetAsCallback(TLocalContext& LocalContext)
