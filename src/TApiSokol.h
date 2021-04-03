@@ -78,7 +78,7 @@ public:
 	virtual const std::string_view		GetName() override	{	return Name;	};
 	
 	std::shared_ptr<SoyImageProxy>		mImage;
-	bool															mIsRenderTarget = false;
+	bool								mIsRenderTarget = false;
 };
 
 
@@ -184,7 +184,7 @@ public:
 private:
 	//	gr: sg_context isnt REQUIRED, but hints to implementations that they should be creating it
 	void			OnPaint(sg_context Context,vec2x<size_t> ViewRect);
-	void			InitDebugFrame(Sokol::TRenderCommands& Commands);
+	void			InitDebugFrame();
 	void			InitDefaultAssets();
 
 	Sokol::TRenderCommands			ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
@@ -215,7 +215,7 @@ public:
 	Array<sg_image>					mPendingDeleteImages;
 
 	std::shared_ptr<Sokol::TContext>&	mSokolContext = mObject;
-	Sokol::TRenderCommands		mLastFrame;	//	 if we get a required paint, but no pending renders, we re-render the last frame
+	//Sokol::TRenderCommands		mLastFrame;	//	 if we get a required paint, but no pending renders, we re-render the last frame
 };
 
 

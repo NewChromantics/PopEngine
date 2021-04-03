@@ -188,12 +188,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			return;
 	}
 
-	sg_activate_context(Context);
-	sg_reset_state_cache();
-
 	//	get last submitted render command
 	//	fifo
-	Sokol::TRenderCommands RenderCommands = mLastFrame;
+	Sokol::TRenderCommands RenderCommands;// = mLastFrame;
 	RenderCommands.mPromiseRef = Sokol::TRenderCommands().mPromiseRef;	//	invalidate promise ref so we don't try and resolve it next time
 	{
 		std::lock_guard<std::mutex> Lock(mPendingFramesLock);
@@ -201,6 +198,9 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			RenderCommands = mPendingFrames.PopAt(0);
 	}
 	
+	sg_activate_context(Context);
+	sg_reset_state_cache();
+
 
 	bool InsidePass = false;
 	bool PassIsRenderTexture = false;	//	temp for the pipeline blend mode... gr; figure out why this is needed
@@ -494,8 +494,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	}
 
 	//	save last
-	mLastFrame = RenderCommands;
-	mLastFrame.mPromiseRef = std::numeric_limits<size_t>::max();
+	//mLastFrame = RenderCommands;
+	//mLastFrame.mPromiseRef = std::numeric_limits<size_t>::max();
 	mLastRect = ViewRect;
 	
 	//	gr: avoid deadlocks by queuing the resolve; Dont want main thread (UI render) to wait on JS
@@ -524,7 +524,7 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	
 	//	init last-frame for any paints before we get a chance to render
 	//	gr: maybe this should be like a Render() call and use js
-	InitDebugFrame(mLastFrame);
+	InitDebugFrame();
 	InitDefaultAssets();
 	
 	Sokol::TContextParams SokolParams;
@@ -537,11 +537,13 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	mSokolContext = Sokol::Platform_CreateContext(SokolParams);
 }
 
-void ApiSokol::TSokolContextWrapper::InitDebugFrame(Sokol::TRenderCommands& Commands)
+void ApiSokol::TSokolContextWrapper::InitDebugFrame()
 {
+/*
 	auto pClear = std::make_shared<Sokol::TRenderCommand_SetRenderTarget>();
 	pClear->mClearColour = {0,1,1,1};
 	Commands.mCommands.PushBack(pClear);
+	*/
 }
 
 void ApiSokol::TSokolContextWrapper::InitDefaultAssets()
