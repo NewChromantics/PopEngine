@@ -634,7 +634,12 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 
 	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,3);
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
-	FrameObject.SetInt(_TimeMs,Frame.mTime.GetTime());
+	
+	auto Max32 = std::numeric_limits<uint32_t>::max();
+	auto Time64 = Frame.mTime.GetTime();
+	auto Time32 = Time64 % Max32;
+	
+	FrameObject.SetInt(_TimeMs,Time32);
 
 	if ( Frame.mMeta.length() )
 	{

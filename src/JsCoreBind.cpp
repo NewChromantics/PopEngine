@@ -1636,10 +1636,6 @@ void JsCore::TObject::SetArray(const std::string& Name,JsCore::TArray& Array)
 	SetMember( Name, JSObjectToValue(Array.mThis) );
 }
 
-void JsCore::TObject::SetInt(const std::string& Name, uint32_t Value)
-{
-	SetMember(Name, GetValue(mContext, Value));
-}
 
 void JsCore::TObject::SetNull(const std::string& Name)
 {
@@ -1649,21 +1645,6 @@ void JsCore::TObject::SetNull(const std::string& Name)
 void JsCore::TObject::SetUndefined(const std::string& Name)
 {
 	SetMember(Name, JSValueMakeUndefined(mContext));
-}
-
-void JsCore::TObject::SetFloat(const std::string& Name,float Value)
-{
-	SetMember( Name, GetValue( mContext, Value ) );
-}
-
-void JsCore::TObject::SetString(const std::string& Name,const std::string& Value)
-{
-	SetMember( Name, GetValue( mContext, Value ) );
-}
-
-void JsCore::TObject::SetBool(const std::string& Name,bool Value)
-{
-	SetMember( Name, GetValue( mContext, Value ) );
 }
 
 

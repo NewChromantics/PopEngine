@@ -505,7 +505,7 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 		Object.SetInt( "DebugStreamHeapSizeBytes", DebugHeap.GetAllocatedBytes() );
 
 #if defined(ENABLE_OPENGL)
-		auto OpenglTextureCount = Opengl::TContext::GetTextureAllocationCount();
+		int32_t OpenglTextureCount = Opengl::TContext::GetTextureAllocationCount();
 		Object.SetInt( "OpenglTextureCount", OpenglTextureCount );
 #endif
 	}

@@ -245,7 +245,7 @@ void ApiLeapMotion::TInputWrapper::OnFramesChanged()
 	
 	auto GetFrameObject = [&](Bind::TLocalContext& LocalContext,Bind::TObject& FrameObject,const LeapMotion::TFrame& Frame)
 	{
-		FrameObject.SetInt("FrameNumber",Frame.mFrameNumber);
+		FrameObject.SetInt("FrameNumber",(int32_t)Frame.mFrameNumber);
 		//FrameObject.SetInt("FrameTime",Frame.mFrameTime);//	too big for js!
 		
 		for ( auto h=0;	h<Frame.mHands.GetSize();	h++ )

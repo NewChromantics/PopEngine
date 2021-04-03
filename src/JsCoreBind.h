@@ -506,16 +506,17 @@ public:
 		JsCore::EnumArray(mContext, Member,Values);
 	}
 
-	virtual void			SetObject(const std::string& Name, const JsCore::TObject& Object) bind_override;
-	virtual void			SetObjectFromString(const std::string& Name, const std::string& JsonString) bind_override;
-	virtual void			SetFunction(const std::string& Name,JsCore::TFunction& Function) bind_override;
-	virtual void			SetFloat(const std::string& Name,float Value) bind_override;
-	virtual void			SetString(const std::string& Name,const std::string& Value) bind_override;
-	virtual void			SetBool(const std::string& Name,bool Value) bind_override;
-	virtual void			SetInt(const std::string& Name, uint32_t Value) bind_override;
-	virtual void			SetNull(const std::string& Name) bind_override;
-	virtual void			SetUndefined(const std::string& Name) bind_override;
-	virtual void			SetArray(const std::string& Name,JsCore::TArray& Array) bind_override;
+	void			SetObject(const std::string& Name, const JsCore::TObject& Object) bind_override;
+	void			SetObjectFromString(const std::string& Name, const std::string& JsonString) bind_override;
+	void			SetFunction(const std::string& Name,JsCore::TFunction& Function) bind_override;
+	inline void		SetFloat(const std::string& Name,float Value)	{	SetMember(Name, GetValue(mContext, Value));	}
+	inline void		SetString(const std::string& Name,const std::string& Value)	{	SetMember(Name, GetValue(mContext, Value));	}
+	inline void		SetBool(const std::string& Name,bool Value)		{	SetMember(Name, GetValue(mContext, Value));	}
+	template<typename INT>
+	inline void		SetInt(const std::string& Name, INT Value)	{	SetMember(Name, GetValue(mContext, Value));	}
+	void			SetNull(const std::string& Name) bind_override;
+	void			SetUndefined(const std::string& Name) bind_override;
+	void			SetArray(const std::string& Name,JsCore::TArray& Array) bind_override;
 	template<typename TYPE>
 	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>&& Values) bind_override
 	{
