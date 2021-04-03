@@ -77,6 +77,9 @@ class TImageWrapper : public Bind::TObjectWrapper<ApiPop::BindType::Image, SoyIm
 public:
 	static int Debug_ImageCounter;
 public:
+	TImageWrapper() = delete;
+	TImageWrapper(const TImageWrapper&) = delete;
+	TImageWrapper& operator=(const TImageWrapper &) = delete;
 	TImageWrapper(Bind::TContext& Context);
 	~TImageWrapper();
 	
