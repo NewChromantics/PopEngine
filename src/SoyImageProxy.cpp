@@ -12,10 +12,17 @@
 #include <SoyImage.h>	//	soy image functions!
 
 
+int SoyImageProxy::Debug_ImageCounter = 0;
+
+SoyImageProxy::SoyImageProxy()
+{
+	Debug_ImageCounter++;
+}
 
 SoyImageProxy::~SoyImageProxy()
 {
 	Free();
+	Debug_ImageCounter--;
 }
 
 void SoyImageProxy::Flip()

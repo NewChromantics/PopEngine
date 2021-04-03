@@ -172,6 +172,8 @@ public:
 	//		or if the user should be probing the RenderView control for size
 	void			GetScreenRect(Bind::TCallback& Params);
 	void			CanRenderToPixelFormat(Bind::TCallback& Params);
+	void			GetStats(Bind::TCallback& Params);
+	
 	//	gr: would prefer a name like, WaitForRender to indicate it's async
 	void			Render(Bind::TCallback& Params);
 
@@ -212,7 +214,7 @@ public:
 	std::mutex						mPendingDeleteImagesLock;
 	Array<sg_image>					mPendingDeleteImages;
 
-	std::shared_ptr<Sokol::TContext>&					mSokolContext = mObject;
+	std::shared_ptr<Sokol::TContext>&	mSokolContext = mObject;
 	Sokol::TRenderCommands		mLastFrame;	//	 if we get a required paint, but no pending renders, we re-render the last frame
 };
 

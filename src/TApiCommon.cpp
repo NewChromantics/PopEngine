@@ -21,6 +21,9 @@
 #endif
 
 
+int TImageWrapper::Debug_ImageCounter = 0;
+	
+
 namespace ApiPop
 {
 	const char Namespace[] = "Pop";
@@ -885,8 +888,15 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::ShowWebPage>(ShowWebPage, Namespace);
 }
 
+TImageWrapper::TImageWrapper(Bind::TContext& Context) :
+		TObjectWrapper	( Context )
+{
+	Debug_ImageCounter++;
+}
+	
 TImageWrapper::~TImageWrapper()
 {
+	Debug_ImageCounter--;
 }
 
 void TImageWrapper::Construct(Bind::TCallback& Params)

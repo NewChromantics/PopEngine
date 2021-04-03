@@ -24,6 +24,9 @@ namespace ApiSokol
 	DEFINE_BIND_FUNCTIONNAME(CreateGeometry);
 	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 	DEFINE_BIND_FUNCTIONNAME(CanRenderToPixelFormat);
+	DEFINE_BIND_FUNCTIONNAME(GetStats);
+	
+	int	Stats_ImageCounter = 0;
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -39,6 +42,7 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 	Template.BindFunction<BindFunction::CreateGeometry>(&TSokolContextWrapper::CreateGeometry);
 	Template.BindFunction<BindFunction::GetScreenRect>(&TSokolContextWrapper::GetScreenRect);
 	Template.BindFunction<BindFunction::CanRenderToPixelFormat>(&TSokolContextWrapper::CanRenderToPixelFormat);
+	Template.BindFunction<BindFunction::GetStats>(&TSokolContextWrapper::GetStats);
 }
 
 sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget)
@@ -166,6 +170,7 @@ void ApiSokol::TSokolContextWrapper::FreeImageDeletes()
 	{
 		auto& Image = mPendingDeleteImages[i];
 		sg_destroy_image(Image);
+		Stats_ImageCounter--;
 	}
 	mPendingDeleteImages.Clear();
 }
@@ -309,6 +314,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					auto NewImage = sg_make_image(&ImageDescription);
 					auto State = sg_query_image_state(NewImage);
 					Sokol::IsOkay(State,"sg_make_image");
+					Stats_ImageCounter++;
 					
 					//	gr: guessing this isn't threadsafe
 					auto FreeSokolImage = [=]()
@@ -333,7 +339,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget, GetPixelData );
 					sg_update_image( ImageSokol, ImageDescription.data );
 					auto State = sg_query_image_state(ImageSokol);
-					Sokol::IsOkay(State,"sg_make_image");
+					Sokol::IsOkay(State,"sg_query_image_state");
 					ImageSoy.OnSokolImageUpdated();
 				}
 			}
@@ -603,6 +609,19 @@ void ApiSokol::TSokolContextWrapper::CanRenderToPixelFormat(Bind::TCallback& Par
 	Params.Return(CanRender);
 }
 
+void ApiSokol::TSokolContextWrapper::GetStats(Bind::TCallback& Params)
+{
+	auto Stats = Params.mContext.CreateObjectInstance(Params.mLocalContext);
+	//auto SokolContext = mContext->GetContext();
+	Stats.SetInt("Sokol ImageCount",Stats_ImageCounter);
+	Stats.SetInt("SoyImageProxy ImageCount",SoyImageProxy::Debug_ImageCounter);
+	Stats.SetInt("Pop.Image ImageCount",TImageWrapper::Debug_ImageCounter);
+	
+	Params.Return(Stats);
+}
+
+
+
 void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 {
 	//	request render from context asap
@@ -824,7 +843,8 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 		else
 		{
 			auto ImageObject = Params.GetArgumentObject(1);
-			auto Image = ImageObject.This<TImageWrapper>();
+			//	gr: this was auto Image= and may have been causing the leak... but why? why/what was it dangling
+			auto& Image = ImageObject.This<TImageWrapper>();
 			pSetRenderTarget->mTargetTexture = Image.mImage;
 
 			//	get readback format

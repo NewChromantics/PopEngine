@@ -17,6 +17,9 @@ namespace Opengl
 class SoyImageProxy
 {
 public:
+	static int	Debug_ImageCounter;
+public:
+	SoyImageProxy();
 	~SoyImageProxy();
 	
 	SoyPixelsMeta		GetMeta();

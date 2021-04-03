@@ -75,10 +75,9 @@ protected:
 class TImageWrapper : public Bind::TObjectWrapper<ApiPop::BindType::Image, SoyImageProxy>
 {
 public:
-	TImageWrapper(Bind::TContext& Context) :
-		TObjectWrapper	( Context )
-	{
-	}
+	static int Debug_ImageCounter;
+public:
+	TImageWrapper(Bind::TContext& Context);
 	~TImageWrapper();
 	
 	static void		CreateTemplate(Bind::TTemplate& Template);
