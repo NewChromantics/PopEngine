@@ -188,17 +188,31 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			return;
 	}
 
-	//	get last submitted render command
-	//	fifo
-	Sokol::TRenderCommands RenderCommands;// = mLastFrame;
-	RenderCommands.mPromiseRef = Sokol::TRenderCommands().mPromiseRef;	//	invalidate promise ref so we don't try and resolve it next time
+	sg_activate_context(Context);
+
+	mLastRect = ViewRect;
+
+	//	jobs
+	FreeImageDeletes();
+
+	mPendingFramesLock.lock();
+	auto RenderFrameList = mPendingFrames;
+	mPendingFrames.Clear(true);
+	mPendingFramesLock.unlock();
+
+	for ( int i=0;	i<RenderFrameList.GetSize();	i++ )
 	{
-		std::lock_guard<std::mutex> Lock(mPendingFramesLock);
-		if ( !mPendingFrames.IsEmpty() )
-			RenderCommands = mPendingFrames.PopAt(0);
+		auto& RenderCommands = RenderFrameList[i];
+		RunRender( RenderCommands, ViewRect );
 	}
 	
-	sg_activate_context(Context);
+	//	end of "current frame"
+	sg_commit();
+}
+
+	
+void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCommands,vec2x<size_t> ViewRect)
+{
 	sg_reset_state_cache();
 
 
@@ -220,11 +234,7 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 			sg_destroy_pipeline(Pipeline);
 		}
 	};
-	
-	sg_reset_state_cache();
-	
-	//	jobs
-	FreeImageDeletes();
+
 	
 	//	run render commands
 	auto NewPass = [&](sg_image TargetTexture,SoyPixelsMeta TargetTextureMeta,sg_color rgba)
@@ -476,9 +486,6 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		InsidePass = false;
 	}
 
-	//	commit
-	sg_commit();
-
 	//	cleanup resources only used on the frame
 	FreePipelines();
 	for ( auto p=0;	p<TempBuffers.GetSize();	p++ )
@@ -496,7 +503,6 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	//	save last
 	//mLastFrame = RenderCommands;
 	//mLastFrame.mPromiseRef = std::numeric_limits<size_t>::max();
-	mLastRect = ViewRect;
 	
 	//	gr: avoid deadlocks by queuing the resolve; Dont want main thread (UI render) to wait on JS
 	//		in case JS thread is trying to do something on main thread (UI stuff)

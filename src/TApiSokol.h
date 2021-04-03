@@ -184,6 +184,7 @@ public:
 private:
 	//	gr: sg_context isnt REQUIRED, but hints to implementations that they should be creating it
 	void			OnPaint(sg_context Context,vec2x<size_t> ViewRect);
+	void			RunRender(Sokol::TRenderCommands& Render,vec2x<size_t> ViewRect);
 	void			InitDebugFrame();
 	void			InitDefaultAssets();
 
