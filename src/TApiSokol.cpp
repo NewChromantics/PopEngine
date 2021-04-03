@@ -278,21 +278,6 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		{
 			auto& NextCommand = RenderCommands.mCommands[i];
 			
-			/* gr: we should allow image commands that dont need a pass
-			
-			//	if we have a command (list) with no set target immediately,
-			//	we need to start a default pass (or throw?)
-			if ( !InsidePass )
-			{
-				if ( NextCommand->GetName() != Sokol::TRenderCommand_SetRenderTarget::Name )
-				{
-					std::stringstream Error;
-					Error << "Render command " << NextCommand->GetName() << " without being in a pass(" << Sokol::TRenderCommand_SetRenderTarget::Name << " should be at the start)"; 
-					throw Soy::AssertException(Error);
-				}
-			}
-			*/
-			
 			//	execute each command
 			if ( NextCommand->GetName() == Sokol::TRenderCommand_UpdateImage::Name )
 			{
