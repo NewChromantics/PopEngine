@@ -536,7 +536,6 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	Sokol::TContextParams SokolParams;
 	
 	SokolParams.mRenderView = RenderViewWrapper.mControl;
-	SokolParams.mFramesPerSecond = 60;
 	SokolParams.mOnPaint = [this](sg_context Context,vec2x<size_t> Rect)	{	this->OnPaint(Context,Rect);	};
 	
 	//	create platform-specific context

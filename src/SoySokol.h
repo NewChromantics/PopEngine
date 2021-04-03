@@ -33,5 +33,5 @@ class Sokol::TContextParams
 public:
 	std::function<void(sg_context,vec2x<size_t>)>	mOnPaint;		//	render callback
 	std::shared_ptr<Gui::TRenderView>				mRenderView;
-	size_t											mFramesPerSecond = 60;
+	size_t											mFramesPerSecond = 120;
 };
