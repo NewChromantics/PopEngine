@@ -713,6 +713,7 @@ void ApiPop::LoadFileAsImage(Bind::TCallback& Params)
 	auto& Context = Params.mContext;
 	auto ImageObject = Context.CreateObjectInstance( Params.mLocalContext, TImageWrapper::GetTypeName() );
 	auto& Image = ImageObject.This<TImageWrapper>();
+	Image.SetName(Filename);
 	Image.LoadFile( Params );
 
 	Params.Return( ImageObject );
@@ -979,6 +980,12 @@ SoyImageProxy& TImageWrapper::GetImage()
 	if ( !mImage )
 		throw Soy::AssertException("Image has no SoyImageProxy (use after free)");
 	return *mImage;
+}
+
+void TImageWrapper::SetName(const std::string& Name)
+{
+	auto& Image = GetImage();
+	Image.mName = Name;
 }
 
 void TImageWrapper::Flip(Bind::TCallback& Params)

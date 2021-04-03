@@ -209,6 +209,7 @@ void ApiPanopoly::DepthToYuvAsync(Bind::TCallback& Params)
 				BufferArray<JSValueRef, 1> ConstructorArguments;
 				auto ImageObject = LocalContext.mGlobalContext.CreateObjectInstance(LocalContext, TImageWrapper::GetTypeName(), GetArrayBridge(ConstructorArguments));
 				auto& Image = ImageObject.This<TImageWrapper>();
+				Image.SetName("DepthToYuvAsync yuv");
 				Image.SetPixels(pYuvPixels);
 				Promise.Resolve(LocalContext, ImageObject);
 			};

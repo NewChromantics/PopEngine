@@ -663,7 +663,7 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 			return;
 		auto ImageObject = Context.mGlobalContext.CreateObjectInstance(Context, TImageWrapper::GetTypeName());
 		auto& Image = ImageObject.This<TImageWrapper>();
-		//Image.mName = "Media output frame";
+		Image.SetName("Media output frame");
 		Image.SetPixels(Pixels);
 		PlaneImages.PushBack(ImageObject);
 	};

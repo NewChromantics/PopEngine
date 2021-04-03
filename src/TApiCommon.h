@@ -103,7 +103,7 @@ public:
 	void			SetFormat(Bind::TCallback& Arguments);
 	void			GetFormat(Bind::TCallback& Arguments);
 	void			GetPngData(Bind::TCallback& Params);
-	
+
 
 	//	proxy funcs to soyimage
 	SoyPixelsImpl&		GetPixels();
@@ -112,6 +112,7 @@ public:
 	SoyImageProxy&		GetImage();	//	throw if missing (deallocated)
 	Opengl::TTexture&	GetTexture();
 	std::shared_ptr<Opengl::TTexture>	GetTexturePtr();
+	void				SetName(const std::string& Name);
 
 public:
 	std::shared_ptr<SoyImageProxy>&	mImage = mObject;
