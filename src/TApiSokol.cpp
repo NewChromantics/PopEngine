@@ -614,8 +614,16 @@ void ApiSokol::TSokolContextWrapper::GetStats(Bind::TCallback& Params)
 	auto Stats = Params.mContext.CreateObjectInstance(Params.mLocalContext);
 	//auto SokolContext = mContext->GetContext();
 	Stats.SetInt("Sokol ImageCount",Stats_ImageCounter);
-	Stats.SetInt("SoyImageProxy ImageCount",SoyImageProxy::Debug_ImageCounter);
 	Stats.SetInt("Pop.Image ImageCount",TImageWrapper::Debug_ImageCounter);
+	Stats.SetInt("SoyImageProxy ImageCount",SoyImageProxy::Pool.GetSize());
+	
+	std::stringstream ImageNames;
+	for ( auto i=0;	i<SoyImageProxy::Pool.GetSize();	i++ )
+	{
+		auto& Name = SoyImageProxy::Pool[i]->mName;
+		ImageNames << Name << ", ";
+	}
+	Stats.SetString("ImageNames", ImageNames.str() );
 	
 	Params.Return(Stats);
 }

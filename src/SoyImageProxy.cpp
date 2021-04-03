@@ -12,17 +12,19 @@
 #include <SoyImage.h>	//	soy image functions!
 
 
-int SoyImageProxy::Debug_ImageCounter = 0;
+//	we'll make this a pool or something later
+Array<SoyImageProxy*> SoyImageProxy::Pool;
+
 
 SoyImageProxy::SoyImageProxy()
 {
-	Debug_ImageCounter++;
+	Pool.PushBack(this);
 }
 
 SoyImageProxy::~SoyImageProxy()
 {
 	Free();
-	Debug_ImageCounter--;
+	Pool.Remove(this);
 }
 
 void SoyImageProxy::Flip()
