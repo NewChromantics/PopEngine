@@ -613,8 +613,13 @@ void ApiMedia::TCameraDeviceWrapper::Construct(Bind::TCallback& Params)
 void ApiMedia::TCameraDeviceWrapper::CreateTemplate(Bind::TTemplate& Template)
 {
 	Template.BindFunction<ApiMedia::BindFunction::WaitForNextFrame>(&TCameraDeviceWrapper::WaitForNextFrame);
+	Template.BindFunction<ApiMedia::BindFunction::Free>(&TCameraDeviceWrapper::Free);
 }
 
+void ApiMedia::TCameraDeviceWrapper::Free(Bind::TCallback& Params)
+{
+	mInstance.reset();
+}
 
 void ApiMedia::TCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 {
@@ -707,7 +712,7 @@ void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 	if (!mFrameRequests.HasPromises())
 		return;
 
-	auto Flush = [this](Bind::TLocalContext& Context) mutable
+	auto Flush = [this](Bind::TLocalContext& Context)
 	{
 		//	gr: this flush is expensive because of the work done AFTERwards (encoding!)
 		Soy::TScopeTimerPrint Timer("TPopCameraDeviceWrapper::FlushPendingFrames::Flush", 60);
