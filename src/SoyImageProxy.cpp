@@ -426,6 +426,34 @@ void SoyImageProxy::GetPixels(SoyPixelsImpl& CopyTarget)
 	CopyTarget.Copy(Pixels);
 }
 
+void SoyImageProxy::SetPixelsMeta(SoyPixelsMeta Meta)
+{
+	bool MetaIsSame = false;
+	try
+	{
+		auto CurrentMeta = GetMeta();
+		MetaIsSame = CurrentMeta == Meta;
+	}
+	catch(std::exception& e)
+	{
+		//	probably have no backing buffer
+	}
+	
+	if( MetaIsSame )
+		return;
+	
+	//	gr: if we have this combination, i need to store an extra meta field :/
+	if ( mPixelBuffer )
+	{
+		auto LatestVersion = GetLatestVersion();
+		if ( mPixelBufferVersion == LatestVersion )
+			throw Soy::AssertException("SoyImageProxy::SetMeta to new meta, but we cannot re-use the pixel buffer meta member. Needs more code!");
+	}
+	
+	mPixelBufferMeta = Meta;
+	mPixelBufferVersion = GetLatestVersion()+1;
+}
+
 SoyPixelsMeta SoyImageProxy::GetMeta()
 {
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
@@ -485,7 +513,16 @@ SoyPixelsImpl& SoyImageProxy::GetPixels()
 
 	if ( mPixelsVersion < GetLatestVersion() && mPixelBufferVersion == GetLatestVersion() )
 	{
-		//	grab pixels from image buffer
+		//	if we have no pixel buffer, we just have meta and nothing else.
+		//	make a new buffer!
+		if ( !mPixelBuffer )
+		{
+			mPixels.reset( new SoyPixels(mPixelBufferMeta) );
+			mPixelsVersion = mPixelBufferVersion;
+			return *mPixels;
+		}		
+		
+		//	grab pixels from image buffer, make the pixels the latest and return that reference
 		auto CopyPixels = [&](const ArrayBridge<SoyPixelsImpl*>& Pixels,float3x3& Transform)
 		{
 			mPixels.reset( new SoyPixels );

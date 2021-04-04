@@ -965,6 +965,7 @@ void ApiMedia::TH264EncoderWrapper::Encode(Bind::TCallback& Params)
 
 	if (mEncoderThread)
 	{
+		//	gr: we're doing redundant copies here, see if we can just make Image.CopyPixels(NewPixels)
 		std::shared_ptr<SoyPixels> PixelCopy( new SoyPixels() );
 		{
 			Soy::TScopeTimerPrint Timer("Copy pixels for thread", 2);

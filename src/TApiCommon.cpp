@@ -1079,7 +1079,14 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 		Format = SoyPixelsFormat::ToType( FormatStr );
 	}
 	
-	if ( SoyPixelsFormat::IsFloatChannel(Format) )
+	//	explicitly allow null as the PixelBuffer argument and skip having a pixel buffer
+	//	it can allocate on-request
+	if ( Params.IsArgumentNull(2) )
+	{
+		SoyPixelsMeta Meta( Width, Height, Format );
+		Image.SetPixelsMeta(Meta);
+	}
+	else if ( SoyPixelsFormat::IsFloatChannel(Format) )
 	{
 		Array<float> Floats;
 		Params.GetArgumentArray(2, GetArrayBridge(Floats) );

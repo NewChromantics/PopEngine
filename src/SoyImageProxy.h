@@ -54,7 +54,7 @@ public:
 	void				SetPixels(const SoyPixelsImpl& NewPixels);
 	void				SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels);
 	void				OnPixelsChanged();	//	increase version
-
+	void				SetPixelsMeta(SoyPixelsMeta Meta);		//	if this meta is different to latest, we consider "no data" latest, but have valid meta
 
 	void				SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels);
 	void				GetPixelBufferPixels(std::function<void(const ArrayBridge<SoyPixelsImpl*>&,float3x3&)> Callback);	//	lock & unlock pixels for processing
