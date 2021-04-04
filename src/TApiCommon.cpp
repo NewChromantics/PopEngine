@@ -780,17 +780,13 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 		auto ContentsStringArray = GetRemoteArray(reinterpret_cast<const uint8_t*>(ContentsStringData), ContentsStringLength);
 		Contents.PushBackArray(ContentsStringArray);
 	}
-	else if ( !Params.IsArgumentArray(ContentsArgumentIndex) )
+	else if ( Params.IsArgumentArray(ContentsArgumentIndex) )
 	{
-		//	write as a string if not a specific binary array
-		if ( Append )
-			throw Soy::AssertException("Currently cannot append file with string");
-		WriteStringToFile(Params);
-		return;
+		Params.GetArgumentArray(ContentsArgumentIndex, GetArrayBridge(Contents));
 	}
 	else
 	{
-		Params.GetArgumentArray(ContentsArgumentIndex, GetArrayBridge(Contents));
+		throw Soy::AssertException("WriteToFile with non-string, non-array type");
 	}
 
 	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
