@@ -1115,6 +1115,15 @@ void Platform::TSlider::SetRect(const Soy::Rectx<int32_t>& Rect)
 
 std::shared_ptr<SoyTickBox> Platform::GetTickBox(SoyWindow& Parent,const std::string& Name)
 {
+	try
+	{
+		return Swift::GetTickBox(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << e.what() << std::endl;
+	}
+		
 	Soy_AssertTodo();
 }
 
