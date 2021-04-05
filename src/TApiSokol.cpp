@@ -7,6 +7,7 @@
 
 #include "sokol/sokol_gfx.h"
 
+#include "SoyOpengl.h"
 
 namespace Sokol
 {
@@ -217,7 +218,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 
 
 	bool InsidePass = false;
-	bool PassIsRenderTexture = false;	//	temp for the pipeline blend mode... gr; figure out why this is needed
+	SoyImageProxy* PassRenderTargetImage = nullptr;	//	temp for the pipeline blend mode...
 	SoyPixelsMeta RenderTargetPassMeta;		//	last description used for rendertexture pass
 	std::string RenderError;			//	if this isnt empty, we reject the promise
 	
@@ -235,17 +236,26 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 		}
 	};
 
-	
-	//	run render commands
-	auto NewPass = [&](sg_image TargetTexture,SoyPixelsMeta TargetTextureMeta,sg_color rgba)
+	auto EndPass = [&]()
 	{
+		//	gr: implement this when we can sync with the last-read-pixels
+		//		we might have a case where we read-back the pixels for this target
+		//		TO this image, and calling this will make those pixels out of date
+		//PassRenderTargetImage->OnSokolImageChanged();
 		if ( InsidePass )
 		{
 			sg_end_pass();
 			InsidePass = false;
+			PassRenderTargetImage = nullptr;
 			//CurrentTargetPass = {0};
 		}
-		
+	};
+	
+	//	run render commands
+	auto NewPass = [&](sg_image TargetTexture,SoyImageProxy* TargetImage,SoyPixelsMeta TargetTextureMeta,sg_color rgba)
+	{
+		EndPass();
+
 		sg_pass_action PassAction = {0};
 		PassAction.colors[0].value = rgba;
 
@@ -257,11 +267,14 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 		if ( TargetTexture.id == 0 )
 		{
 			sg_begin_default_pass( &PassAction, ViewRect.x, ViewRect.y );
-			PassIsRenderTexture = false;
+			PassRenderTargetImage = nullptr;
 			RenderTargetPassMeta = TargetTextureMeta;
 		}
 		else
 		{
+			if ( !TargetImage )
+				throw Soy::AssertException("Rendering to texture but null soypixels");
+				
 			//	make a new pass, add it to our dispose-pass list and use it
 			sg_pass_desc RenderTargetPassDesc = { 0 };
 
@@ -273,7 +286,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 			TempPasses.PushBack(RenderTargetPass);
 
 			sg_begin_pass( RenderTargetPass, &PassAction);
-			PassIsRenderTexture = true;
+			PassRenderTargetImage = TargetImage;
 			RenderTargetPassMeta = TargetTextureMeta;
 		}
 		
@@ -338,8 +351,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 					ImageSoy.OnSokolImageUpdated();
 				}
 			}
-			
-			if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
+			else if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )
 			{
 				if ( !InsidePass )
 					throw Soy::AssertException("Draw command but not inside pass (Haven't SetRenderTarget)");
@@ -377,7 +389,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				//	gr: we need the pipeline depth format to match the pass's depth setup
 				//	in a render texture pass we don't currently have a depth target, so
 				//	needs to be none. If rendering to screen (stencil) leave this as default 
-				if ( PassIsRenderTexture )
+				if ( PassRenderTargetImage )
 				{
 					PipelineDescription.depth.pixel_format = SG_PIXELFORMAT_NONE;
 					//	gr: colour also needs configuring to match pass (why??)
@@ -445,14 +457,14 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				
 				FreePipelines();
 			}
-			
-			if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
+			else if ( NextCommand->GetName() == Sokol::TRenderCommand_SetRenderTarget::Name )
 			{
 				auto& SetRenderTargetCommand = dynamic_cast<Sokol::TRenderCommand_SetRenderTarget&>( *NextCommand );
 				
 				//	no image = screen
 				sg_image RenderTargetImage = {0};
 				SoyPixelsMeta RenderTargetImageMeta;
+				SoyImageProxy* TargetImage = nullptr;
 					
 				if ( !SetRenderTargetCommand.mTargetTexture ) // js land = Commands.push( [ "SetRenderTarget", null ] )
 				{
@@ -461,6 +473,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				{
 					bool LatestVersion = true;
 					auto& RenderTexture = *SetRenderTargetCommand.mTargetTexture;
+					TargetImage = &RenderTexture;
 					RenderTargetImage.id = RenderTexture.GetSokolImage(LatestVersion);
 					RenderTargetImageMeta = RenderTexture.GetMeta();
 					
@@ -469,7 +482,38 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				}
 			
 				auto rgba = SetRenderTargetCommand.mClearColour;
-				NewPass( RenderTargetImage, RenderTargetImageMeta, rgba );
+				NewPass( RenderTargetImage, TargetImage, RenderTargetImageMeta, rgba );
+			}
+			else if ( NextCommand->GetName() == Sokol::TRenderCommand_ReadPixels::Name )
+			{
+				auto& Command = dynamic_cast<Sokol::TRenderCommand_ReadPixels&>( *NextCommand );
+				auto& Image = *Command.mImage;
+				auto ImageMeta = Image.GetMeta();
+				
+				GLenum ImagePixelType = GL_UNSIGNED_BYTE;
+				if ( SoyPixelsFormat::IsFloatChannel(ImageMeta.GetFormat()) )
+					ImagePixelType = GL_FLOAT;
+				else if ( SoyPixelsFormat::GetBytesPerChannel(ImageMeta.GetFormat()) == 2 )
+					ImagePixelType = GL_UNSIGNED_SHORT;
+				
+				Opengl::TPbo PixelBuffer(ImageMeta);
+				PixelBuffer.ReadPixels(ImagePixelType);
+				auto* pData = const_cast<uint8_t*>(PixelBuffer.LockBuffer());
+				auto PixelsBufferSize = ImageMeta.GetDataSize();
+				SoyPixelsRemote PixelsBuffer( pData, PixelsBufferSize, ImageMeta );
+				Image.SetPixels( PixelsBuffer );
+				PixelBuffer.UnlockBuffer();
+				
+				//	gr: bit of a bodge. In old renderer, we explicitly did pixel copy
+				//		at end of render-to-texture pass so we knew they were in sync
+				//		we still need to update at end of pass, but we need to know nothing
+				//		rendered to the target after now
+				if ( &Image == PassRenderTargetImage )
+					PassRenderTargetImage->OnSokolImageUpdated();
+			}
+			else
+			{
+				throw Soy::AssertException( std::string(NextCommand->GetName()) + " is unhandled render command"); 
 			}
 		}
 	}
@@ -480,11 +524,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 	}
 	
 	//	end pass
-	if ( InsidePass )
-	{
-		sg_end_pass();
-		InsidePass = false;
-	}
+	EndPass();
 
 	//	cleanup resources only used on the frame
 	FreePipelines();
@@ -884,6 +924,14 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 			pSetRenderTarget->mClearColour.a = ClearColour[3];
 		}
 
+		PushCommand(pSetRenderTarget);
+		return;
+	}
+	
+	if (Name == TRenderCommand_ReadPixels::Name)
+	{
+		auto pSetRenderTarget = std::make_shared<TRenderCommand_ReadPixels>();
+		pSetRenderTarget->Init(Params);
 		PushCommand(pSetRenderTarget);
 		return;
 	}
@@ -1397,5 +1445,26 @@ void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
 	catch(std::exception& e)
 	{
 		Promise.Reject(Params.mLocalContext, e.what());
+	}
+}
+
+
+void Sokol::TRenderCommand_ReadPixels::Init(Bind::TCallback& Params)
+{
+	auto ImageObject = Params.GetArgumentObject(1);
+	//	gr: this was auto Image= and may have been causing the leak... but why? why/what was it dangling
+	auto& Image = ImageObject.This<TImageWrapper>();
+	mImage = Image.mImage;
+
+	if ( !mImage )
+		throw Soy::AssertException("Parsing ReadPixels command, but image's proxy image is null");
+
+	mImage->GetMeta().GetFormat();
+	
+	if ( !Params.IsArgumentUndefined(2) )
+	{
+		auto PixelFormatString = Params.GetArgumentString(0);
+		auto PixelFormatSoy = SoyPixelsFormat::ToType(PixelFormatString);
+		mReadFormat = PixelFormatSoy;
 	}
 }
