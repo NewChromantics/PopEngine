@@ -1213,6 +1213,15 @@ std::shared_ptr<SoyButton> Platform::CreateButton(SoyWindow& Parent,Soy::Rectx<i
 
 std::shared_ptr<SoyButton> Platform::GetButton(SoyWindow& Parent,const std::string& Name)
 {
+	try
+	{
+		return Swift::GetButton(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
+	}
+	
 	Soy_AssertTodo();
 }
 
@@ -1233,6 +1242,15 @@ std::shared_ptr<SoyTextBox> Platform::CreateTextBox(SoyWindow& Parent,Soy::Rectx
 
 std::shared_ptr<SoyLabel> Platform::GetLabel(SoyWindow& Parent,const std::string& Name)
 {
+	try
+	{
+		return Swift::GetLabel(Name);
+	}
+	catch(std::exception& e)
+	{
+		std::Debug << __PRETTY_FUNCTION__ << e.what() << std::endl;
+	}
+	
 	Soy_AssertTodo();
 }
 
