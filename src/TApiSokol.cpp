@@ -142,6 +142,9 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		GetPixelData = false;
 	}
 	
+	//	gr: this should throw if this is an invalid image
+	auto ImageDescriptionMeta = Image.GetMeta();
+	
 	//	gr: special case
 	//	a bit unsafe! we need to ensure the return isn't held outside stack scope
 	auto& ImagePixels = Image.GetPixels();
@@ -154,6 +157,7 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		TemporaryPixels.SetFormat(SoyPixelsFormat::RGBA);
 		pPixels = &TemporaryPixels;
 	}
+	/*
 	if ( ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_88 || ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_8_8 )
 	{
 		std::string TimerName(Image.mName + " converting yuv image to temporary greyscale for sokol");
@@ -162,11 +166,16 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		TemporaryPixels.SetFormat(SoyPixelsFormat::Greyscale);
 		pPixels = &TemporaryPixels;
 	}
-
-	auto& Pixels = *pPixels;
+*/
+	
+	//	it would be good to get plane UV data here to pass out to shaders rather than have them calculate it
+	auto SinglePlanePixels = GetSinglePlanePixels(*pPixels);
+	SoyPixelsImpl& Pixels = SinglePlanePixels;
 	auto ImageMeta = Pixels.GetMeta();
 	Description.width = ImageMeta.GetWidth();
 	Description.height = ImageMeta.GetHeight();
+
+
 	if ( RenderTarget )
 	{
 		auto SokolDescription = sg_query_desc();
@@ -435,8 +444,11 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				{
 					PipelineDescription.depth.pixel_format = SG_PIXELFORMAT_NONE;
 					//	gr: colour also needs configuring to match pass (why??)
+					
+					//	gr: we're storing target atm as the original request, not the striped/single plane version
+					auto TargetImageMeta = GetSinglePlaneImageMeta(RenderTargetPassMeta);
 					auto ForRenderTarget = true;
-					auto PassColourFormat = GetPixelFormat( RenderTargetPassMeta.GetFormat(), ForRenderTarget );
+					auto PassColourFormat = GetPixelFormat( TargetImageMeta.GetFormat(), ForRenderTarget );
 					PipelineDescription.colors[0].pixel_format = PassColourFormat;
 				}
 				
@@ -532,16 +544,22 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				auto& Image = *Command.mImage;
 				auto ImageMeta = Image.GetMeta();
 				
+				//	get the meta for the format on the gpu
+				auto ReadImageMeta = GetSinglePlaneImageMeta(ImageMeta);
+				
 				GLenum ImagePixelType = GL_UNSIGNED_BYTE;
-				if ( SoyPixelsFormat::IsFloatChannel(ImageMeta.GetFormat()) )
+				if ( SoyPixelsFormat::IsFloatChannel(ReadImageMeta.GetFormat()) )
 					ImagePixelType = GL_FLOAT;
-				else if ( SoyPixelsFormat::GetBytesPerChannel(ImageMeta.GetFormat()) == 2 )
+				else if ( SoyPixelsFormat::GetBytesPerChannel(ReadImageMeta.GetFormat()) == 2 )
 					ImagePixelType = GL_UNSIGNED_SHORT;
 				
-				Opengl::TPbo PixelBuffer(ImageMeta);
+				Opengl::TPbo PixelBuffer(ReadImageMeta);
 				PixelBuffer.ReadPixels(ImagePixelType);
 				auto* pData = const_cast<uint8_t*>(PixelBuffer.LockBuffer());
-				auto PixelsBufferSize = ImageMeta.GetDataSize();
+				auto PixelsBufferSize = ReadImageMeta.GetDataSize();
+				
+				//	turn the read-data into the original format (which should align to the single plane size)
+				//	we could also have this as ReadPixelsBuffer and then un-single-plane it
 				SoyPixelsRemote PixelsBuffer( pData, PixelsBufferSize, ImageMeta );
 				Image.SetPixels( PixelsBuffer );
 				PixelBuffer.UnlockBuffer();
