@@ -88,6 +88,48 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget
 }
 
 
+//	for formats that won't represent directly in rendering (eg. multiplane YUV)
+//	this returns a striped/single plane set of pixels (usually greyscale)
+SoyPixelsMeta GetSinglePlaneImageMeta(const SoyPixelsMeta& Meta)
+{
+	//	maybe a better approach by finding pixels array size vs w/h
+	//	but this approach just "overflows" the luma plane
+	//	(which means the following planes may have multiple side-by-side)
+	if (Meta.GetFormat() == SoyPixelsFormat::Yuv_8_8_8 ||
+		Meta.GetFormat() == SoyPixelsFormat::Yuv_8_88 )
+	{
+		auto DataSize = Meta.GetDataSize();
+		auto Width = Meta.GetWidth();
+		auto Height = DataSize / Width;
+		auto Format = SoyPixelsFormat::Greyscale;
+		return SoyPixelsMeta( Width, Height, Format );
+	}
+	
+	return Meta;
+}
+
+//	for formats that won't represent directly in rendering (eg. multiplane YUV)
+//	this returns a striped/single plane set of pixels (usually greyscale)
+SoyPixelsRemote GetSinglePlanePixels(const SoyPixelsImpl& Pixels)
+{
+	//	maybe a better approach by finding pixels array size vs w/h
+	//	but this approach just "overflows" the luma plane
+	//	(which means the following planes may have multiple side-by-side)
+	if (Pixels.GetFormat() == SoyPixelsFormat::Yuv_8_8_8 ||
+		Pixels.GetFormat() == SoyPixelsFormat::Yuv_8_88 )
+	{
+		//	try and re-use GetSinglePlaneMeta and then this func should just check alignment
+		auto* Data = Pixels.GetPixelsArray().GetArray();
+		auto DataSize = Pixels.GetPixelsArray().GetDataSize();
+		auto Width = Pixels.GetWidth();
+		auto Height = DataSize / Width;
+		auto Format = SoyPixelsFormat::Greyscale;
+		return SoyPixelsRemote( const_cast<uint8_t*>(Data), Width, Height, DataSize, Format);
+	}
+	
+	return SoyPixelsRemote(Pixels);
+}
+
 sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixels, bool RenderTarget,bool GetPixelData)
 {
 	sg_image_desc Description = {0};
