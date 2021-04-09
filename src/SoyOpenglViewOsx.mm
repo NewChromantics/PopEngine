@@ -8,6 +8,27 @@
 #include "SoyGuiApple.h"
 
 
+CGPoint GetTouchPosition(NSEvent* Touch,NSView* View)
+{
+	//	a) this is in View.bounds space (eg 1366x910.5)
+	//	b) this is flipped (no View.isFlipped like on osx)
+	//	c) we need coords in drawableWidthxdrawableHeight (2732x1821)
+	auto View_isFlipped = View.isFlipped;
+	
+	//	window... not view? but seems to give view pos
+	auto BoundsPosition = Touch.locationInWindow;//[Touch locationInView:View];
+	auto Bounds = [View bounds];
+	
+	if ( View_isFlipped )
+		BoundsPosition.y = Bounds.size.height - BoundsPosition.y;
+	
+	BoundsPosition = [View convertPointToBacking:BoundsPosition];
+
+	auto x = BoundsPosition.x;
+	auto y = BoundsPosition.y;
+	return CGPointMake(x,y);
+}
+
 /*
 NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 {
@@ -119,10 +140,16 @@ NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 
 - (void)drawRect: (NSRect)dirtyRect
 {
+	auto Rect = [self convertRectToBacking:[self bounds]];
+	/*
+	auto Scale = self.getPixelScreenCoordScale;
 	//	gr: we dont want to report the dirty rect, we need to tell caller about our whole rect
-	//auto Width = mView.drawableWidth;
-	///auto Height = mView.drawableHeight;
-	auto Rect = [self bounds];
+	auto Size = self.drawableSize;
+	auto Width = self.drawableWidth;
+	auto Height = self.drawableHeight;
+	//auto Rect = [self bounds];
+	auto Rect = CGRectMake( 0, 0, Width, Height );
+	*/
 	mOnDrawRect(Rect);
 }
 
@@ -134,53 +161,53 @@ NSPoint ViewPointToVector(NSView* View,const NSPoint& Point)
 
 -(void)mouseMoved:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseMove, MouseNone ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseMove, MouseNone ); 
 }
 
 -(void)mouseDown:(NSEvent *)event
 {
 	//Platform::PushCursor(SoyCursor::Hand);
-	mOnMouseEvent( event.locationInWindow, MouseDown, MouseLeft ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseDown, MouseLeft ); 
 }
 
 -(void)mouseDragged:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseMove, MouseLeft ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseMove, MouseLeft ); 
 }
 
 -(void)mouseUp:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseUp, MouseLeft ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseUp, MouseLeft ); 
 }
 
 -(void)rightMouseDown:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseDown, MouseRight ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseDown, MouseRight ); 
 }
 
 -(void)rightMouseDragged:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseMove, MouseRight ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseMove, MouseRight ); 
 }
 
 -(void)rightMouseUp:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseUp, MouseRight ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseUp, MouseRight ); 
 }
 
 -(void)otherMouseDown:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseDown, MouseMiddle ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseDown, MouseMiddle ); 
 }
 
 -(void)otherMouseDragged:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseMove, MouseMiddle ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseMove, MouseMiddle ); 
 }
 
 -(void)otherMouseUp:(NSEvent *)event
 {
-	mOnMouseEvent( event.locationInWindow, MouseUp, MouseMiddle ); 
+	mOnMouseEvent( GetTouchPosition(event,self), MouseUp, MouseMiddle ); 
 }
 
 
