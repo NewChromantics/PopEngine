@@ -614,6 +614,21 @@ void SoyImageProxy::OnPixelsChanged()
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 	auto LatestVersion = GetLatestVersion();
 	mPixelsVersion = LatestVersion+1;
+	
+	if ( !mPixels )
+	{
+		std::Debug << __PRETTY_FUNCTION__ << " changed but no pixels (mPixelBufferMeta=" << mPixelBufferMeta << ")" << std::endl;
+		return;
+	}
+	
+	auto PixelsMeta = mPixels->GetMeta();
+	if ( PixelsMeta != mPixelBufferMeta )
+	{
+		if ( mPixelBufferMeta.IsValid() )
+		{
+			std::Debug << "Pixel meta has changed from " << mPixelBufferMeta << " to " << PixelsMeta << std::endl;
+		}
+	}
 }
 
 void SoyImageProxy::SetPixels(const SoyPixelsImpl& NewPixels)
