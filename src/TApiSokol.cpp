@@ -50,7 +50,11 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget
 {
 	switch(Format)
 	{
-		case SoyPixelsFormat::Greyscale:	return SG_PIXELFORMAT_R8;
+		case SoyPixelsFormat::Greyscale:
+		case SoyPixelsFormat::ChromaU_8:
+		case SoyPixelsFormat::ChromaV_8:
+			return SG_PIXELFORMAT_R8;
+			
 		case SoyPixelsFormat::Depth16mm:	return SG_PIXELFORMAT_R16;
 		
 		case SoyPixelsFormat::uyvy_8888:
