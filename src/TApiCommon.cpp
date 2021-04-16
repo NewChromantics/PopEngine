@@ -1073,6 +1073,12 @@ void TImageWrapper::WritePixels(Bind::TCallback& Params)
 	{
 		auto FormatStr = Params.GetArgumentString(3);
 		Format = SoyPixelsFormat::ToType( FormatStr );
+		if ( Format == SoyPixelsFormat::Invalid )
+		{
+			std::stringstream Error;
+			Error << __PRETTY_FUNCTION__ << " arg3 (pixel format) " << FormatStr << " converted to invalid";
+			throw Soy::AssertException(Error);
+		}
 	}
 	
 	//	explicitly allow null as the PixelBuffer argument and skip having a pixel buffer
