@@ -1570,13 +1570,19 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 	TObject This = *this;
 
 	//	leaf = final name
-	auto LeafName = MemberName;
-	while ( MemberName.length() > 0 )
+	auto LeafName = MemberName;	//	gr: does this still alloc? copy on write is banned from c++2somthing?
+	while ( LeafName.length() > 0 )
 	{
+		//	gr: avoid allocation where possible
+		if ( LeafName.find('.') == std::string::npos )
+			break;
+		
 		auto ChildName = Soy::StringPopUntil( LeafName, '.', false, false );
 		
+		//	the find above should void this now?
 		if ( LeafName.length() == 0 )
 		{
+			std::Debug << "Unexpected empty leaf, but no dots? does MemberName end with a dot? MemberName=" << MemberName << std::endl;
 			LeafName = ChildName;
 			break;
 		}
@@ -1585,6 +1591,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string& MemberName)
 		This = Child;
 	}
 
+	//	gr: this function can take char* so maybe we can avoid some string allocs and use a poitner into the string
 	JSValueRef Exception = nullptr;
 	auto Property = JSObjectGetProperty( mContext, This.mThis, LeafName, &Exception );
 	//auto PropertyType = JSValueGetType( mContext, Property );
