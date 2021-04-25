@@ -772,7 +772,11 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 {
 	//	gr; for optimisation, maybe allow a block of bytes!
 	
-	Array<std::string> Keys;
+	//	gr: hacky, but good speedup
+	//	todo: move all uniforms to a smarter non-heap string buffer
+	//Array<std::string> Keys;
+	static Array<BufferArray<char,40>> Keys;
+	Keys.Clear(false);
 	UniformsObject.GetMemberNames( GetArrayBridge(Keys) );
 	
 	//	need to alloc data
@@ -856,10 +860,13 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 		mDebug_ImageUniformNames[ImageIndex] = Uniform.mName;
 	}
 	
+	std::string UniformName;
 	for ( auto k=0;	k<Keys.GetSize();	k++ )
 	{
 		//	get slot (may be optimised out or not exist)
-		auto& UniformName = Keys[k];
+		auto& UniformNameBuf = Keys[k];
+		UniformName.assign( UniformNameBuf.GetArray(), UniformNameBuf.GetSize() );
+		
 		size_t UniformDataPosition;
 		auto* pUniform = Shader.mShaderMeta.GetUniform( UniformName, UniformDataPosition );
 		if ( pUniform )

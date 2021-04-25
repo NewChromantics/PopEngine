@@ -422,8 +422,12 @@ void JsCore::TFunction::Call(JsCore::TCallback& Params) const
 	Params.mReturn = Result;
 }
 
-
 void JsCore::GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>&& Buffer)
+{
+	GetString( Context, Handle, Buffer );
+}
+
+void JsCore::GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>& Buffer)
 {
 	//	gr: length doesn't include terminator, but JSStringGetUTF8CString writes one
 	Buffer.SetSize(JSStringGetLength(Handle));
@@ -459,6 +463,15 @@ std::string	JsCore::GetString(JSContextRef Context,JSValueRef Handle)
 	return Str;
 }
 
+void JsCore::GetString(JSContextRef Context,JSValueRef Handle,ArrayBridge<char>&& StringBuffer)
+{
+	//	convert to string
+	JSValueRef Exception = nullptr;
+	auto StringJs = JSValueToStringCopy( Context, Handle, &Exception );
+	ThrowException( Context, Exception );
+	GetString( Context, StringJs, StringBuffer );
+	JSStringRelease( StringJs );
+}
 
 
 float JsCore::GetFloat(JSContextRef Context,JSValueRef Handle)
@@ -1506,6 +1519,31 @@ void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
 			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
 			auto KeyString = JsCore::GetString(mContext,Key);
 			MemberNames.PushBack(KeyString);
+		}
+		//	gr: eventually found my leak from here
+		//	https://github.com/naver/sling/blob/master/webkit/Source/JavaScriptCore/API/tests/testapi.c#L1687
+		JSPropertyNameArrayRelease(Keys);
+	}
+	catch(...)
+	{
+		JSPropertyNameArrayRelease(Keys);
+		throw;
+	}
+}
+
+
+void JsCore::TObject::GetMemberNames(ArrayBridge<BufferArray<char,40>>&& MemberNames)
+{
+	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+	try
+	{
+		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+		MemberNames.SetSize(KeyCount);
+		for ( auto k=0;	k<KeyCount;	k++ )
+		{
+			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+			auto& KeyString = MemberNames.PushBack();
+			JsCore::GetString(mContext,Key, GetArrayBridge(KeyString) );
 		}
 		//	gr: eventually found my leak from here
 		//	https://github.com/naver/sling/blob/master/webkit/Source/JavaScriptCore/API/tests/testapi.c#L1687

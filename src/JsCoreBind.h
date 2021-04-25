@@ -71,7 +71,9 @@ namespace JsCore
 	TYPE				FromValue(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSValueRef Handle);
 	std::string	GetString(JSContextRef Context,JSStringRef Handle);
+	void		GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>& Buffer);
 	void		GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>&& Buffer);
+	void		GetString(JSContextRef Context,JSValueRef Handle,ArrayBridge<char>&& Buffer);
 	float		GetFloat(JSContextRef Context,JSValueRef Handle);
 	bool		GetBool(JSContextRef Context,JSValueRef Handle);
 	template<typename INTTYPE>
@@ -489,6 +491,7 @@ public:
 
 	//	gr: consider renaming Member to Key?
 	void					GetMemberNames(ArrayBridge<std::string>&& MemberNames);
+	void					GetMemberNames(ArrayBridge<BufferArray<char,40>>&& MemberNames);
 	virtual bool			HasMember(const std::string& MemberName) bind_override;
 	bool					IsMemberArray(const std::string& MemberName);
 	bool					IsMemberNull(const std::string& MemberName);
