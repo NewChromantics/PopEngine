@@ -210,6 +210,8 @@ public:
 	TArray(JSContextRef Context,JSValueRef Value) : TArray( Context, GetObject( Context, Value ) )	{}
 	TArray(JSContextRef Context,JSObjectRef Object);
 
+	uint32_t	GetLength();
+
 	void		Set(size_t Index,JsCore::TObject& Object);
 	template<typename TYPE>
 	void		CopyTo(ArrayBridge<TYPE>&& Values)		{	CopyTo( Values );	}

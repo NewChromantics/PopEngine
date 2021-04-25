@@ -2639,34 +2639,66 @@ void CopyTypedArray(JSContextRef Context,JSObjectRef ArrayValue,JSTypedArrayType
 }
 
 
+uint32_t JsCore::TArray::GetLength()
+{
+	JsCore::TObject ArrayObject( mContext, mThis );
+	static const std::string LengthString = "length";
+	auto Length = ArrayObject.GetInt(LengthString);
+	return Length;
+	/*
+	JSStringRef pname = JSStringCreateWithUTF8CString("length");
+	JSValueRef val = JSObjectGetProperty(ctx, arr, pname, NULL);
+	JSStringRelease(pname);
+	return JSValueToNumber(ctx, val, NULL);
+	*/
+}
+
 template<typename DESTTYPE>
 void JsCore_TArray_CopyTo(JsCore::TArray& This,ArrayBridge<DESTTYPE>& Values)
 {
 	auto& mContext = This.mContext;
 	auto& mThis = This.mThis;
 	
-	//	gr: JSObjectGetPropertyAtIndex() will be faster!
-	//	proper way, but will include "named" indexes...
-	auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
-	try
+	static bool UseArrayIndexes = true;
+	
+	//	by index should be faster, but I'm sure I had a problem with .length...
+	if ( UseArrayIndexes )
 	{
-		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+		auto KeyCount = This.GetLength();
 		for ( auto k=0;	k<KeyCount;	k++ )
 		{
-			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
 			JSValueRef Exception = nullptr;
-			auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+			auto Value = JSObjectGetPropertyAtIndex( mContext, mThis, k, &Exception );
 			JsCore::ThrowException( mContext, Exception );
 			Values.PushBack( JsCore::FromValue<DESTTYPE>( mContext, Value ) );
 		}
-		//	gr: eventually found my leak from here
-		//	https://github.com/naver/sling/blob/master/webkit/Source/JavaScriptCore/API/tests/testapi.c#L1687
-		JSPropertyNameArrayRelease(Keys);
 	}
-	catch(...)
+	else
 	{
-		JSPropertyNameArrayRelease(Keys);
-		throw;
+		//	gr: JSObjectGetPropertyAtIndex() will be faster!
+		//	proper way, but will include "named" indexes...
+		//	gr: but we're using a TArray, so we KNOW this isn't an object...
+		auto Keys = JSObjectCopyPropertyNames( mContext, mThis );
+		try
+		{
+			auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+			for ( auto k=0;	k<KeyCount;	k++ )
+			{
+				auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
+				JSValueRef Exception = nullptr;
+				auto Value = JSObjectGetProperty( mContext, mThis, Key, &Exception );
+				JsCore::ThrowException( mContext, Exception );
+				Values.PushBack( JsCore::FromValue<DESTTYPE>( mContext, Value ) );
+			}
+			//	gr: eventually found my leak from here
+			//	https://github.com/naver/sling/blob/master/webkit/Source/JavaScriptCore/API/tests/testapi.c#L1687
+			JSPropertyNameArrayRelease(Keys);
+		}
+		catch(...)
+		{
+			JSPropertyNameArrayRelease(Keys);
+			throw;
+		}
 	}
 }
 

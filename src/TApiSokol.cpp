@@ -455,6 +455,10 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 					auto PassColourFormat = GetPixelFormat( TargetImageMeta.GetFormat(), ForRenderTarget );
 					PipelineDescription.colors[0].pixel_format = PassColourFormat;
 				}
+				else
+				{
+					PipelineDescription.depth.pixel_format = _SG_PIXELFORMAT_DEFAULT;
+				}
 				
 				sg_pipeline Pipeline = sg_make_pipeline(&PipelineDescription);
 				TempPipelines.PushBack(Pipeline);	//	gr: add to list in case state is invalid
@@ -803,7 +807,10 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 				auto UniformData = GetArrayBridge(mUniformBlock).GetSubArray(UniformDataPosition,Uniform.GetDataSize());
 				auto UniformDataf = GetArrayBridge(UniformData).GetSubArray<float>(0,UniformFloatCount);
 				
-				Array<float> Floats;
+				//	speed up, alloc once
+				static Array<float> Floats;
+				Floats.Clear(false);
+				
 				//	if !array .GetFloat()
 				UniformsObject.GetArray(Uniform.mName,GetArrayBridge(Floats));
 				
