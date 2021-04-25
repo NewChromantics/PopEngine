@@ -721,6 +721,8 @@ public:
 	std::recursive_mutex	mExecuteLock;
 	
 	TContextDebug		mDebug;
+	
+	std::string			mDocumentsDirectory = "Uninitialised documents dir";	//	slow to access, so caching in context where it's used
 };
 
 

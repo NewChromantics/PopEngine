@@ -1034,6 +1034,13 @@ JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const 
 	mFilename		( Filename ),
 	mJobQueue		( *this, [&Instance](std::function<void(std::chrono::milliseconds)>& Sleep)	{	return Instance.OnJobQueueIteration(Sleep);	} )
 {
+	//	gr: this is slow (on ios) and assume it won't change, so cache it
+	//	if it does change, cache & invalidate in SoyLib
+	mDocumentsDirectory = Platform::GetDocumentsDirectory();
+	//	make sure directory has trailing slash
+	//	gr: why doesnt GetDocumentsDirectory have a slash?
+	mDocumentsDirectory = Platform::GetDirectoryFromFilename(mDocumentsDirectory);
+
 	AddContextCache( *this, mContext );
 	mJobQueue.Start();
 }
@@ -2271,11 +2278,7 @@ std::string JsCore::TContext::GetResolvedFilename(const std::string& OrigFilenam
 	//	special OS dir
 	if ( Soy::StringTrimLeft(Filename,"Documents/",true) || Soy::StringTrimLeft(Filename,"Documents\\",true) )
 	{
-		auto DocsDir = Platform::GetDocumentsDirectory();
-		//	make sure directory has trailing slash
-		//	gr: why doesnt GetDocumentsDirectory have a slash?
-		DocsDir = Platform::GetDirectoryFromFilename(DocsDir);
-		NewFilename << DocsDir << Filename;
+		NewFilename << mDocumentsDirectory << Filename;
 	}	
 	else
 	{
