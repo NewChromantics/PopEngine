@@ -57,6 +57,13 @@ CGPoint GetTouchPosition(UITouch* Touch,GLKView* View)
 	
 	//- (instancetype)initWithFrame:(CGRect)frame context:(EAGLContext *)context;
 	self = [super init];
+	
+	//	set formats, default has no depth!
+	//	https://github.com/floooh/sokol/blob/36b35207c7016ef42c43c7425e21ffd4c11bf01b/sokol_app.h#L3158
+	//self.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
+	self.drawableDepthFormat = GLKViewDrawableDepthFormat24;
+	//self.drawableStencilFormat = GLKViewDrawableStencilFormatNone;
+	//self.drawableMultisample = GLKViewDrawableMultisampleNone; /* FIXME */
 
 	SoyOpenglViewIos_Delegate* Delegate = [[SoyOpenglViewIos_Delegate alloc] init:self];
 	//	setup delegate to self
