@@ -50,9 +50,9 @@ public:
 	
 	bool							IsClearColour() const	{	return mClearColour.a > 0.f;	}
 
-	std::shared_ptr<SoyImageProxy>	mTargetTexture = nullptr;		//	if null, render to screen
-	SoyPixelsFormat::Type			mReadBackFormat = SoyPixelsFormat::Invalid;
-	sg_color						mClearColour = {1,0,1,1};	//	if no alpha, we don't clear
+	BufferArray<std::shared_ptr<SoyImageProxy>,SG_MAX_COLOR_ATTACHMENTS>	mTargetTextures;	//	if empty, render to screen, not expexting nulls any more
+	bool							mReadBack = false;			//	gr: do we ever need specific read-back formats that aren't the same as the target format? if so, restore format, but make array
+	sg_color						mClearColour = {1,0,1,1};	//	if zero alpha, we don't clear
 };
 
 class Sokol::TRenderCommand_Draw : public TRenderCommandBase
