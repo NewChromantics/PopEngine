@@ -10,6 +10,7 @@
 #import "UIKit/UIApplication.h"
 #endif
 
+void StartupInstance();
 
 //	abstract class to signal when doing critical things, to prevent app nap on osx
 //	but may have other-platform equivilents, so make it RAII
@@ -49,8 +50,6 @@ Platform::TCriticalSection::~TCriticalSection()
 	[[NSProcessInfo processInfo] endActivity:mActivity];
 }
 #endif
-
-
 
 
 
@@ -169,29 +168,7 @@ int32_t Platform_ExitCode = 666;
 	gCriticalSection.reset( new Platform::TCriticalSection("Stop sockets sleeping via app nap") );
 	#endif
 
-	//	gr: we can't block here, but we need to capture exit code.
-	//		NSApplications never return, they have to be aborted with an exit code.
-	auto OnExitCode = [](int32_t ExitCode)
-	{
-		std::Debug << "OnExitCode(" << ExitCode << ")" << std::endl;
-		Platform_ExitCode = ExitCode;
-		
-		//	can't cleanup here, from inside own thread.
-		//	need to find a way to exit before c++ tear down
-		//gPopInstance.reset();
-
-		//	terminate is the only way to get a callback (applicationWillTerminate) func AND exit the main thread
-#if defined(TARGET_OSX)
-		[[NSApplication sharedApplication] terminate:nil];
-#else
-		[[UIApplication sharedApplication] terminateWithSuccess];
-#endif
-		//	gr: when not on main thread, this DOES happen
-		//		on main thread, it stops at terminate
-		//std::Debug << "terminate done" << std::endl;
-	};
-	
-	gPopInstance = StartPopInstance(OnExitCode);
+	StartupInstance();
 }
 
 #if defined(TARGET_OSX)
@@ -260,3 +237,43 @@ int32_t Platform_ExitCode = 666;
 #endif
 
 @end
+
+
+
+void StartupInstance()
+{
+	if ( !Soy::Platform::gMainThread )
+		Soy::Platform::gMainThread.reset( new PopMainThread );
+	
+	//	gr: we can't block here, but we need to capture exit code.
+	//		NSApplications never return, they have to be aborted with an exit code.
+	auto OnExitCode = [](int32_t ExitCode)
+	{
+		std::Debug << "OnExitCode(" << ExitCode << ")" << std::endl;
+		Platform_ExitCode = ExitCode;
+		
+		//	can't cleanup here, from inside own thread.
+		//	need to find a way to exit before c++ tear down
+		//gPopInstance.reset();
+
+		//	terminate is the only way to get a callback (applicationWillTerminate) func AND exit the main thread
+#if defined(TARGET_OSX)
+		[[NSApplication sharedApplication] terminate:nil];
+#else
+		[[UIApplication sharedApplication] terminateWithSuccess];
+#endif
+		//	gr: when not on main thread, this DOES happen
+		//		on main thread, it stops at terminate
+		//std::Debug << "terminate done" << std::endl;
+	};
+	
+	gPopInstance = StartPopInstance(OnExitCode);
+}
+
+//	alternative async startup entry which doesn't do anything with the UI delegates, so it can
+//	just be started with swift
+int PopMain()
+{
+	StartupInstance();
+	return 0;
+}

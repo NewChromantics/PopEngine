@@ -36,6 +36,7 @@ extern "C" EXPORT int PopEngine(const char* ProjectPath)
 	//	for now
 	return 1;
 #elif defined(TARGET_OSX)|| defined(TARGET_IOS)
+	return PopMain();
 	return Soy::Platform::BundleAppMain();
 #else
 	return PopMain();
