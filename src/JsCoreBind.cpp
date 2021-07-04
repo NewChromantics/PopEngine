@@ -2,6 +2,7 @@
 #include "TBind.h"
 #include "SoyAssert.h"
 #include "SoyFilesystem.h"
+#include "JavascriptConvertImports.h"
 
 #include "TApiCommon.h"
 #include "TApiSocket.h"
@@ -1132,8 +1133,11 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 	LoadScript( Source, Filename, GlobalJs );
 }
 
-void JsCore::TContext::LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global)
+void JsCore::TContext::LoadScript(const std::string& _Source,const std::string& Filename,JSObjectRef Global)
 {
+	auto Source = _Source;
+	Javascript::ConvertImportsToRequires(Source);
+
 	//	gr: javascript core on OSX failed with this chi 𝑥 character.
 	//		web/v8 is okay.
 	//		javascriptcore ios is okay
@@ -1259,6 +1263,8 @@ void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<voi
 	
 	std::string Source;
 	Soy::FileToString(Filename,Source);
+
+	Javascript::ConvertImportsToRequires(Source);
 
 	//	create a new context
 	//	gr: may get a deadlock here?

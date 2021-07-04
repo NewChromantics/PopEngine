@@ -280,6 +280,8 @@
 		BFF0F8752607D3D400B821FD /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BFF0F8792607EBC600B821FD /* SoyGuiApple.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */; };
 		BFF0F87A2607EBC600B821FD /* SoyGuiApple.mm in Sources */ = {isa = PBXBuildFile; fileRef = BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */; };
+		BFF228542691F3C800AFAE52 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
+		BFF228572691F3C900AFAE52 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
 		BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
 /* End PBXBuildFile section */
 
@@ -677,6 +679,8 @@
 		BFF0F86B2607CF8200B821FD /* SoyGuiSwiftCpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwiftCpp.h; path = src/SoyGuiSwiftCpp.h; sourceTree = "<group>"; };
 		BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiApple.mm; path = src/SoyGuiApple.mm; sourceTree = "<group>"; };
 		BFF1C71322E738F100AFDFD5 /* Opencv_contrib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Opencv_contrib; sourceTree = "<group>"; };
+		BFF228522691EF9C00AFAE52 /* JavascriptConvertImports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JavascriptConvertImports.h; sourceTree = SOURCE_ROOT; };
+		BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = JavascriptConvertImports.cpp; sourceTree = SOURCE_ROOT; };
 		BFF2B6C02264F9A700232137 /* TApiSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSerial.h; path = src/TApiSerial.h; sourceTree = "<group>"; };
 		BFF2B6C12264F9A700232137 /* TApiSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSerial.cpp; path = src/TApiSerial.cpp; sourceTree = "<group>"; };
 		BFF505E822550F30005A6AC1 /* V8Bind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = V8Bind.cpp; path = src/V8Bind.cpp; sourceTree = "<group>"; };
@@ -1223,6 +1227,8 @@
 				BF91D97C221584E500E91671 /* Ezsift */,
 				BF91D97E221584F100E91671 /* Ezsift */,
 				BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */,
+				BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */,
+				BFF228522691EF9C00AFAE52 /* JavascriptConvertImports.h */,
 				BFF505EB22550F47005A6AC1 /* JsCoreBind.h */,
 				BF654A7925BF4EF200450483 /* JsCoreBind.mm */,
 				BFDC03A62430CEC20004512A /* Json11 */,
@@ -1839,6 +1845,7 @@
 				BF151FA023845FAD00A70EBF /* SoySocketStream.cpp in Sources */,
 				582BE874250A9E7F00B341D4 /* SoyGuiIos.mm in Sources */,
 				BF151FC42384601300A70EBF /* TApiWebsocket.cpp in Sources */,
+				BFF228572691F3C900AFAE52 /* JavascriptConvertImports.cpp in Sources */,
 				BF151FB423845FD600A70EBF /* PopEngine.cpp in Sources */,
 				BF151F8523845FAD00A70EBF /* SoyBase64.cpp in Sources */,
 				BF4013EA250F652300A753A4 /* SoySokol_Ios_Metal.mm in Sources */,
@@ -1919,6 +1926,7 @@
 				BF5EAFD4237F0C6E0077BCF5 /* SoyOpenCl.cpp in Sources */,
 				BF5EAFE8237F0C6E0077BCF5 /* SoyTypes.cpp in Sources */,
 				BF5EAFE9237F0C6E0077BCF5 /* SoyTypes.mm in Sources */,
+				BFF228542691F3C800AFAE52 /* JavascriptConvertImports.cpp in Sources */,
 				BF5EAFE4237F0C6E0077BCF5 /* SoyString.mm in Sources */,
 				BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */,
 				BF5EB004237F0CD40077BCF5 /* TApiInput.cpp in Sources */,
