@@ -264,7 +264,18 @@ struct MetalView: UIViewRepresentable
 
 
 
-
+/*
+	usage: create a persistent PopEngineRenderView instance (ie @state)
+	
+	then create views as neccessary which link to the render view
+	
+	struct ContentView: View {
+		@State var renderView = PopEngineRenderView(name:"RenderView")
+		var body: some View {
+		   OpenglView(renderer:$renderView)
+		}
+	}
+*/
 struct OpenglView: XViewRepresentable 
 {
 #if !os(macOS)
