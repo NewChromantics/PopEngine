@@ -114,12 +114,13 @@ void ConvertExports(std::string& Source)
 		}
 	}
 
+	//	now replace the matches (ie, strip out export & default)
 	Source = std::regex_replace(Source, std::regex(ExportPattern0.str()), ReplacementPattern0 );
 	Source = std::regex_replace(Source, std::regex(ExportPattern1.str()), ReplacementPattern1 );
 	
 	Source += NewExports.str();
 	
-	std::Debug << "Replaced exports...\n\n" << Source << std::endl; 
+	//std::Debug << "Replaced exports...\n\n" << Source << std::endl; 
 }
 
 
