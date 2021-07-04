@@ -875,10 +875,19 @@ UIWindow* Platform::TWindow::GetWindow()
 		auto* App = [UIApplication sharedApplication];
 
 		//	objective-c storyboard's main window
-		Window = App.delegate.window;
-		if ( Window )
-			return;
-
+		@try
+		{
+			Window = App.delegate.window;
+			if ( Window )
+				return;
+		}
+		@catch (NSException* e)
+		{
+			//	catch unrecognised selector if delegate has no window
+			auto Error = Soy::NSErrorToString(e);
+			std::Debug << "Failed to get default/storyboard main window (App.delegate.window); " << Error << std::endl;
+		}
+		
 		//	loop through all windows
 		auto EnumWindow = [&](UIWindow* AWindow)
 		{
