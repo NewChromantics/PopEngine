@@ -200,8 +200,15 @@ void ConvertExports(std::string& Source)
 	std::stringstream NewExports;
 	if ( !ExportSymbols.IsEmpty() )
 	{
+		if ( DefaultExportSymbol.empty() )
+			throw Soy::AssertException("Missing default export");
+			
 		NewExports << "\n\n//	Generated exports\n";
-		NewExports << "exports.default = " << DefaultExportSymbol << ";\n";
+		
+		//	will generate bad syntax if no default symbol
+		if ( !DefaultExportSymbol.empty() )
+			NewExports << "exports.default = " << DefaultExportSymbol << ";\n";
+			
 		for ( auto e=0;	e<ExportSymbols.GetSize();	e++ )
 		{
 			NewExports << "exports." << ExportSymbols[e] << " = " << ExportSymbols[e] << ";\n";
