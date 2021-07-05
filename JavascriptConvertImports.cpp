@@ -31,8 +31,14 @@ auto Symbol = "([a-zA-Z0-9]+)";
 auto QuotedFilename = "(\"|')(.+\\.js)('|\")";
 auto Whitespace = "\\s+";
 auto OptionalWhitespace = "\\s*";
-auto Keyword = "(const|var|let|function|async\\sfunction)";	//	prefixes which break up export, variable name etc
+auto Keyword = "(const|var|let|class|function|async\\sfunction)";	//	prefixes which break up export, variable name etc
 
+//	must be other cases... like new line and symbol? maybe we can use ^symbol ?
+//	symbol( <-- function
+//	symbol= <-- var definition
+//	symbol; <-- var declaration
+//	symbol{ <-- class
+auto VariableNameEnd = "(\\(|=|;|\\{)";
 
 void ReplacementPattern2(std::stringstream& Output,std::smatch& Match)
 {
@@ -139,7 +145,7 @@ void ConvertImports(std::string& Source)
 	Source = std::regex_replace(Source, std::regex(ImportPattern1.str()), ReplacementPattern1 );
 	Source = regex_replace_callback(Source, std::regex(ImportPattern2.str()), ReplacementPattern2 );
 	
-	std::Debug << std::endl << std::endl << "new source; "  << std::endl << Source << std::endl<< std::endl;
+	//std::Debug << std::endl << std::endl << "new source; "  << std::endl << Source << std::endl<< std::endl;
 }
 
 
@@ -152,12 +158,6 @@ void ConvertExports(std::string& Source)
 	//	moving export to AFTER the declaration is hard.
 	//	so instead, find all the exports, declare them all at the end 
 	//	of the file, and then just clean the declarations
-	//	must be other cases... like new line and symbol?
-	//	symbol( <-- function
-	//	symbol=
-	//	symbol;
-	//	maybe ^symbol? 
-	auto VariableNameEnd = "(\\(|=|;)";
 	auto DefaultMaybe = "\\s*(default)?";
 
 	//	export DECL VAR=
