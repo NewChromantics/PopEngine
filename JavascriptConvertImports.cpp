@@ -3,6 +3,7 @@
 #include <SoyDebug.h>
 #include <regex>
 #include "HeapArray.hpp"
+#include <SoyString.h>
 
 //	Popengine implements require() which makes an exports symbol for the module
 //	and returns it (a module)
@@ -27,24 +28,118 @@
 
 //	make a pattern for valid js symbols
 auto Symbol = "([a-zA-Z0-9]+)";
-auto QuotedFilename = "(\"|')(.+).js('|\")";
+auto QuotedFilename = "(\"|')(.+\\.js)('|\")";
 auto Whitespace = "\\s+";
 auto OptionalWhitespace = "\\s*";
+auto Keyword = "(const|var|let|function|async\\sfunction)";	//	prefixes which break up export, variable name etc
+
+
+void ReplacementPattern2(std::stringstream& Output,std::smatch& Match)
+{
+	//	import { $1 } from $2
+	//	split symbols
+	auto RawSymbolsString = Match[1].str();
+	auto Filename = Match[2].str() + Match[3].str() + Match[4].str();
+	
+	Array<std::string> InputSymbols;
+	Array<std::string> OutputSymbols;
+
+	const char _WhitespaceChars[] = {' ','\t','\n'};
+	BufferArray<char,5> WhitespaceChars(_WhitespaceChars);
+	
+
+	auto AppendSymbol = [&](const std::string& Match,const char& Delin)
+	{
+		//	split `X as Y`
+		BufferArray<std::string,2> InputAsOutput;
+		Soy::StringSplitByString( GetArrayBridge(InputAsOutput), Match, "as", false );
+
+		//	remove white space
+		for ( int i=0;	i<InputAsOutput.GetSize();	i++ )
+		{
+			Soy::StringTrimLeft( InputAsOutput[i], GetArrayBridge(WhitespaceChars) );
+			Soy::StringTrimRight( InputAsOutput[i], GetArrayBridge(WhitespaceChars) );
+		}
+
+		//	no "as" in the middle
+		if ( InputAsOutput.GetSize() == 1 )
+			InputAsOutput.PushBack( InputAsOutput[0] );
+		
+		InputSymbols.PushBack( InputAsOutput[0] );
+		OutputSymbols.PushBack( InputAsOutput[1] );
+		return true;
+	};	
+	
+	Soy::StringSplitByMatches( AppendSymbol, RawSymbolsString, ",", false );
+
+	//	generate module name
+	std::stringstream ModuleName;
+	ModuleName << "_Module_";
+	for ( auto s=0;	s<OutputSymbols.GetSize();	s++ )
+		ModuleName << "_" << OutputSymbols[s];
+	
+	//	add module
+	Output << "const " << ModuleName.str() << " = require(" << Filename << ");\n";
+	
+	//	add symbols
+	for ( auto s=0;	s<OutputSymbols.GetSize();	s++ )
+	{
+		auto& InputSymbol = InputSymbols[s];
+		auto& OutputSymbol = OutputSymbols[s];
+		Output << "const " << OutputSymbol << " = " << ModuleName.str() << "." << InputSymbol << ";\n";
+	}
+}
+
+std::string regex_replace_callback(const std::string& Input,std::regex Regex,std::function<void(std::stringstream&,std::smatch&)> Replacement)
+{
+	// Make a local copy
+	std::string PendingInput = Input;
+
+	// Reset resulting value
+	std::stringstream Output;
+
+	std::smatch Matches;
+	while (std::regex_search(PendingInput, Matches, Regex)) 
+	{
+		// Build resulting string
+		Output << Matches.prefix();
+		Replacement( Output, Matches );
+		
+		//	next search the rest
+		PendingInput = Matches.suffix();
+	}
+	
+	//	If there is still a suffix, add it
+	//Output << Matches.suffix();	//	gr: seems to be empty?
+	//	add the remaining string that didn't match
+	Output << PendingInput;
+	
+	return Output.str();
+}
+
 
 void ConvertImports(std::string& Source)
 {
 	//	import * as X from QUOTEFILENAMEQUOTE
 	std::stringstream ImportPattern0;	ImportPattern0 << "import" << Whitespace << "\\*" << Whitespace << "as" << Whitespace << Symbol << Whitespace << "from" << Whitespace << QuotedFilename;
-	std::string ReplacementPattern0("const $1 = require($2$3.js$4);");
+	std::string ReplacementPattern0("const $1 = require($2$3$4);");
 
 	//	import X from QUOTEFILENAMEQUOTE
 	std::stringstream ImportPattern1;	ImportPattern1 << "import" << Whitespace << Symbol << Whitespace << "from" << Whitespace << QuotedFilename;
-	std::string ReplacementPattern1("const $1_Module = require($2$3.js$4); const $1 = $1_Module.default;");
+	std::string ReplacementPattern1("const $1_Module = require($2$3$4); const $1 = $1_Module.default;");
+	
+	//	import {X} from QUOTEFILENAMEQUOTE
+	std::stringstream ImportPattern2;	ImportPattern2 << "import" << OptionalWhitespace << "\\{([^}]*)\\}" << OptionalWhitespace << "from" << Whitespace << QuotedFilename;
+	//	gr: needs special case to replaceop
+	//std::string ReplacementPattern2("/* symbols: $1 */");
 	
 	//	$0 whole string match
 	//	$1 capture group 0 etc
 	Source = std::regex_replace(Source, std::regex(ImportPattern0.str()), ReplacementPattern0 );
 	Source = std::regex_replace(Source, std::regex(ImportPattern1.str()), ReplacementPattern1 );
+	Source = regex_replace_callback(Source, std::regex(ImportPattern2.str()), ReplacementPattern2 );
+	
+	std::Debug << std::endl << std::endl << "new source; "  << std::endl << Source << std::endl<< std::endl;
 }
 
 
@@ -57,7 +152,6 @@ void ConvertExports(std::string& Source)
 	//	moving export to AFTER the declaration is hard.
 	//	so instead, find all the exports, declare them all at the end 
 	//	of the file, and then just clean the declarations
-	auto Keyword = "(const|var|let|function)";
 	//	must be other cases... like new line and symbol?
 	//	symbol( <-- function
 	//	symbol=
