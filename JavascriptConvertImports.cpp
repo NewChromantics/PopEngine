@@ -27,7 +27,7 @@
 //		const NewSymbol = ___PrivateModule.symbol;
 
 //	make a pattern for valid js symbols
-auto Symbol = "([a-zA-Z0-9]+)";
+auto Symbol = "([a-zA-Z0-9_]+)";
 auto QuotedFilename = "(\"|')(.+\\.js)('|\")";
 auto Whitespace = "\\s+";
 auto OptionalWhitespace = "\\s*";
@@ -50,29 +50,26 @@ void ReplacementPattern2(std::stringstream& Output,std::smatch& Match)
 	Array<std::string> InputSymbols;
 	Array<std::string> OutputSymbols;
 
-	const char _WhitespaceChars[] = {' ','\t','\n'};
-	BufferArray<char,5> WhitespaceChars(_WhitespaceChars);
+	const std::string WhitespaceChars = " \t\n";
 	
 
 	auto AppendSymbol = [&](const std::string& Match,const char& Delin)
 	{
 		//	split `X as Y`
-		BufferArray<std::string,2> InputAsOutput;
-		Soy::StringSplitByString( GetArrayBridge(InputAsOutput), Match, "as", false );
-
-		//	remove white space
-		for ( int i=0;	i<InputAsOutput.GetSize();	i++ )
-		{
-			Soy::StringTrimLeft( InputAsOutput[i], GetArrayBridge(WhitespaceChars) );
-			Soy::StringTrimRight( InputAsOutput[i], GetArrayBridge(WhitespaceChars) );
-		}
+		//	to avoid matching as in class, split by whitespace, so we should have either 1 or 3 matches
+		BufferArray<std::string,3> Input_As_Output;
+		Soy::StringSplitByMatches( GetArrayBridge(Input_As_Output), Match, WhitespaceChars, false );
 
 		//	no "as" in the middle
-		if ( InputAsOutput.GetSize() == 1 )
-			InputAsOutput.PushBack( InputAsOutput[0] );
+		if ( Input_As_Output.GetSize() == 1 )
+		{
+			Input_As_Output.PushBack( Input_As_Output[0] );
+			Input_As_Output.PushBack( Input_As_Output[0] );
+		}
 		
-		InputSymbols.PushBack( InputAsOutput[0] );
-		OutputSymbols.PushBack( InputAsOutput[1] );
+		InputSymbols.PushBack( Input_As_Output[0] );
+		//	as
+		OutputSymbols.PushBack( Input_As_Output[2] );
 		return true;
 	};	
 	
