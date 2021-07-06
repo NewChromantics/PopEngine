@@ -672,7 +672,7 @@ JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::
 }
 
 
-void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
+void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string_view& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
 	bool StrictRules = true;
 	auto Property = GetProperty(Context,Name);
@@ -1370,7 +1370,7 @@ void JSGarbageCollect(JSContextRef Context)
 	Chakra::IsOkay(Error, "JsCollectGarbage");
 }
 
-JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& Buffer)
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string_view& Buffer)
 {
 	auto& vm = Chakra::GetVirtualMachine(Context);
 	JsValueRef String = vm.GetCachedString(Buffer);

@@ -635,7 +635,7 @@ void ApiPop::ImportAsync(Bind::TCallback& Params)
 		Promise.Resolve(Context,Module);
 	};
 	
-	auto OnError = [&](const std::string& Error)
+	auto OnError = [&](const std::string_view& Error)
 	{
 		Promise.Reject(Params.mLocalContext,Error);
 	};
@@ -666,7 +666,7 @@ void ApiPop::ImportSync(Bind::TCallback& Params)
 		Params.Return(Exports);
 	};
 	
-	auto OnError = [](const std::string& Error)
+	auto OnError = [](const std::string_view& Error)
 	{
 		std::Debug << "Module import error " << Error << std::endl;
 	};

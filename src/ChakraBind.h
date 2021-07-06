@@ -308,7 +308,7 @@ void				JSGlobalContextRelease(JSGlobalContextRef Context);
 void				JSGarbageCollect(JSContextRef Context);
 
 JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const char* Buffer);
-JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string& Buffer);
+JSStringRef	JSStringCreateWithUTF8CString(JSContextRef Context, const std::string_view& Buffer);
 size_t		JSStringGetUTF8CString(JSContextRef Context,JSStringRef String,char* Buffer,size_t BufferSize);
 size_t		JSStringGetLength(JSStringRef String);
 JSStringRef	JSValueToStringCopy(JSContextRef Context,JSValueRef Value,JSValueRef* Exception=nullptr);

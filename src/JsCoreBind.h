@@ -104,11 +104,11 @@ namespace JsCore
 
 	//	gr: note: this JSStringRef needs explicit releasing (JSStringRelease) if not sent off to JS land
 	//		todo: auto releasing string!
-	JSStringRef	GetString(JSContextRef Context,const std::string& Value);
+	JSStringRef	GetString(JSContextRef Context,const std::string_view& Value);
 	JSObjectRef	GetObject(JSContextRef Context,JSValueRef Value);
 
 	//	gr: consider templating this so that we can static_assert on non-specified implementation to avoid the auto-resolution to bool
-	JSValueRef	GetValue(JSContextRef Context,const std::string& Value);
+	JSValueRef	GetValue(JSContextRef Context,const std::string_view& Value);
 	JSValueRef	GetValue(JSContextRef Context,float Value);
 	JSValueRef	GetValue(JSContextRef Context,bool Value);
 	JSValueRef	GetValue(JSContextRef Context,uint8_t Value);
@@ -137,13 +137,13 @@ namespace JsCore
 	bool		IsFunction(JSContextRef Context,JSValueRef Handle);
 
 	//	JSON to object
-	TObject		ParseObjectString(JSContextRef Context,const std::string& JsonString);
+	TObject		ParseObjectString(JSContextRef Context,const std::string_view& JsonString);
 	std::string	StringifyObject(TLocalContext& Context, Bind::TObject& Object);
 	std::string	StringifyObject_NoThrow(TLocalContext& Context,Bind::TObject& Object) __noexcept;
 
 	//	throw c++ exception if the exception object is an exception
 	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext="");
-	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string& ThrowContext);
+	void		ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string_view& ThrowContext);
 	TExceptionMeta	GetExceptionMeta(JSContextRef Context, JSValueRef ExceptionHandle);// __nothrow;
 
 	//	enum array supports single objects as well as arrays, so we can enumerate a single float into an array of one, as well as an array
@@ -269,16 +269,16 @@ public:
 class Bind::TInstance : public Bind::TInstanceBase
 {
 public:
-	TInstance(const std::string& RootDirectory,const std::string& ScriptFilename,std::function<void(int32_t)> OnShutdown);
+	TInstance(const std::string_view& RootDirectory,const std::string_view& ScriptFilename,std::function<void(int32_t)> OnShutdown);
 	~TInstance();
-	
-	std::shared_ptr<JsCore::TContext>	CreateContext(const std::string& Name);
+
+	std::shared_ptr<JsCore::TContext>	CreateContext(const std::string_view& Name);
 	void								DestroyContext(JsCore::TContext& Context);
 	void								Shutdown(int32_t ExitCode);
 
 	bool								OnJobQueueIteration(std::function<void(std::chrono::milliseconds)>& Sleep);
 	
-	void								LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string&)> OnError);
+	void								LoadModule(const std::string& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string_view&)> OnError);
 	
 private:
 	void								BindApis(JsCore::TContext& Context);
@@ -363,7 +363,7 @@ public:
 	virtual void			Return() bind_override							{	return ReturnUndefined();	}
 	void					ReturnUndefined() bind_override;
 	virtual void			ReturnNull() bind_override;
-	virtual void			Return(const std::string& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
+	virtual void			Return(const std::string_view& Value) bind_override	{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(const char* Value) bind_override			{	mReturn = GetValue( GetContextRef(), std::string(Value) );	}
 	virtual void			Return(bool Value) bind_override				{	mReturn = GetValue( GetContextRef(), Value );	}
 #if !defined(TARGET_WINDOWS)&&!defined(TARGET_LINUX) &&!defined(TARGET_ANDROID)	//	on windows size_t and u64 are the same... not on osx?
@@ -395,7 +395,7 @@ public:
 	virtual void			SetThis(JsCore::TObject& This) bind_override;
 	virtual void			SetArgument(size_t Index,JSValueRef Value) bind_override;
 	virtual void			SetArgumentNull(size_t Index) bind_override;
-	virtual void			SetArgumentString(size_t Index,const std::string& Value) bind_override;
+	virtual void			SetArgumentString(size_t Index,const std::string_view& Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,uint32_t Value) bind_override;
 	virtual void			SetArgumentInt(size_t Index,int32_t Value) bind_override;
 	virtual void			SetArgumentBool(size_t Index,bool Value) bind_override;
@@ -439,19 +439,19 @@ class JsCore::TTemplate //: public JsCore::TTemplate
 	friend JsCore::TContext;
 public:
 	TTemplate()	{}
-	TTemplate(TContext& Context,const std::string& Name) :
+	TTemplate(TContext& Context,const std::string_view& Name) :
 		mName		( Name ),
 		mContext	( &Context )
 	{
 	}
 	
-	bool			operator==(const std::string& Name) const	{	return mName == Name;	}
+	bool			operator==(const std::string_view& Name) const	{	return mName == Name;	}
 
 	template<const char* FUNCTIONNAME>
 	void			BindFunction(std::function<void(JsCore::TCallback&)> Function);
 	template<const char* FUNCTIONNAME,typename TYPE>
 	void			BindFunction(void(TYPE::* Function)(JsCore::TCallback&) );
-	void			RegisterClassWithContext(TLocalContext& Context,const std::string& ParentObjectName,const std::string& OverrideLeafName);
+	void			RegisterClassWithContext(TLocalContext& Context,const std::string_view& ParentObjectName,const std::string_view& OverrideLeafName);
 
 	JsCore::TObjectWrapperBase&	AllocInstance(Bind::TContext& Context)		{	return mAllocator(Context);	}
 	
@@ -494,43 +494,43 @@ public:
 	//	gr: consider renaming Member to Key?
 	void					GetMemberNames(ArrayBridge<std::string>&& MemberNames);
 	void					GetMemberNames(ArrayBridge<BufferArray<char,40>>&& MemberNames);
-	virtual bool			HasMember(const std::string& MemberName) bind_override;
-	bool					IsMemberArray(const std::string& MemberName);
-	bool					IsMemberNull(const std::string& MemberName);
+	virtual bool			HasMember(const std::string_view& MemberName) bind_override;
+	bool					IsMemberArray(const std::string_view& MemberName);
+	bool					IsMemberNull(const std::string_view& MemberName);
 
-	virtual JsCore::TObject	GetObject(const std::string& MemberName) bind_override;
-	virtual std::string		GetString(const std::string& MemberName) bind_override;
-	virtual uint32_t		GetInt(const std::string& MemberName) bind_override;
-	virtual float			GetFloat(const std::string& MemberName) bind_override;
-	virtual JsCore::TFunction	GetFunction(const std::string& MemberName) bind_override;
-	virtual bool			GetBool(const std::string& MemberName) bind_override;
+	virtual JsCore::TObject	GetObject(const std::string_view& MemberName) bind_override;
+	virtual std::string		GetString(const std::string_view& MemberName) bind_override;
+	virtual uint32_t		GetInt(const std::string_view& MemberName) bind_override;
+	virtual float			GetFloat(const std::string_view& MemberName) bind_override;
+	virtual JsCore::TFunction	GetFunction(const std::string_view& MemberName) bind_override;
+	virtual bool			GetBool(const std::string_view& MemberName) bind_override;
 	template<typename TYPE>
-	void					GetArray(const std::string& MemberName,ArrayBridge<TYPE>&& Values)
+	void					GetArray(const std::string_view& MemberName,ArrayBridge<TYPE>&& Values)
 	{
 		auto Member = GetMember(MemberName);
 		JsCore::EnumArray(mContext, Member,Values);
 	}
 
-	void			SetObject(const std::string& Name, const JsCore::TObject& Object) bind_override;
-	void			SetObjectFromString(const std::string& Name, const std::string& JsonString) bind_override;
-	void			SetFunction(const std::string& Name,JsCore::TFunction& Function) bind_override;
-	inline void		SetFloat(const std::string& Name,float Value)	{	SetMember(Name, GetValue(mContext, Value));	}
-	inline void		SetString(const std::string& Name,const std::string& Value)	{	SetMember(Name, GetValue(mContext, Value));	}
-	inline void		SetBool(const std::string& Name,bool Value)		{	SetMember(Name, GetValue(mContext, Value));	}
+	void			SetObject(const std::string_view& Name, const JsCore::TObject& Object) bind_override;
+	void			SetObjectFromString(const std::string_view& Name, const std::string_view& JsonString) bind_override;
+	void			SetFunction(const std::string_view& Name,JsCore::TFunction& Function) bind_override;
+	inline void		SetFloat(const std::string_view& Name,float Value)	{	SetMember(Name, GetValue(mContext, Value));	}
+	inline void		SetString(const std::string_view& Name,const std::string_view& Value)	{	SetMember(Name, GetValue(mContext, Value));	}
+	inline void		SetBool(const std::string_view& Name,bool Value)		{	SetMember(Name, GetValue(mContext, Value));	}
 	template<typename INT>
-	inline void		SetInt(const std::string& Name, INT Value)	{	SetMember(Name, GetValue(mContext, Value));	}
-	void			SetNull(const std::string& Name) bind_override;
-	void			SetUndefined(const std::string& Name) bind_override;
-	void			SetArray(const std::string& Name,JsCore::TArray& Array) bind_override;
+	inline void		SetInt(const std::string_view& Name, INT Value)	{	SetMember(Name, GetValue(mContext, Value));	}
+	void			SetNull(const std::string_view& Name) bind_override;
+	void			SetUndefined(const std::string_view& Name) bind_override;
+	void			SetArray(const std::string_view& Name,JsCore::TArray& Array) bind_override;
 	template<typename TYPE>
-	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>&& Values) bind_override
+	inline void				SetArray(const std::string_view& Name,const ArrayBridge<TYPE>&& Values) bind_override
 	{
 		auto Array = JsCore::GetArray( mContext, Values );
 		auto ArrayValue = JsCore::GetValue( mContext, Array );
 		SetMember( Name, ArrayValue );
 	}
 	template<typename TYPE>
-	inline void				SetArray(const std::string& Name,const ArrayBridge<TYPE>& Values) bind_override
+	inline void				SetArray(const std::string_view& Name,const ArrayBridge<TYPE>& Values) bind_override
 	{
 		auto Array = JsCore::GetArray( mContext, Values );
 		auto ArrayValue = JsCore::GetValue( mContext, Array );
@@ -539,8 +539,8 @@ public:
 	
 	//	Jscore specific
 private:
-	JSValueRef		GetMember(const std::string& MemberName);
-	void			SetMember(const std::string& Name,JSValueRef Value);
+	JSValueRef		GetMember(const std::string_view& MemberName);
+	void			SetMember(const std::string_view& Name,JSValueRef Value);
 
 private:
 	//	this should go, but requiring the param for every func is a pain,
@@ -559,8 +559,8 @@ class JsCore::TPersistent
 public:
 	TPersistent()	{}
 	TPersistent(const TPersistent& That)	{	Retain( That );	}
-	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
-	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName)	{	Retain( Context, Object, DebugName );	}
+	TPersistent(Bind::TLocalContext& Context,const TObject& Object,const std::string_view& DebugName)	{	Retain( Context, Object, DebugName );	}
+	TPersistent(Bind::TLocalContext& Context,const TFunction& Object,const std::string_view& DebugName)	{	Retain( Context, Object, DebugName );	}
 	~TPersistent();							//	dec refcount
 	
 	operator			bool() const						{	return mObject != nullptr;	}
@@ -573,13 +573,13 @@ public:
 	TPersistent&		operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
-	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string& DebugName);
-	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string& DebugName);
+	void		Retain(Bind::TLocalContext& Context,const TObject& Object,const std::string_view& DebugName);
+	void		Retain(Bind::TLocalContext& Context,const TFunction& Object,const std::string_view& DebugName);
 	void		Retain(const TPersistent& That);
 	void 		Release();
 	
-	static void	Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
-	static void	Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string& DebugName);
+	static void	Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string_view& DebugName);
+	static void	Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string_view& DebugName);
 
 protected:
 	std::string	mDebugName;
@@ -643,33 +643,33 @@ class JsCore::TContext //: public JsCore::TContext
 {
 	friend class Bind::TInstance;
 public:
-	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& Filename);
+	TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string_view& Filename);
 	~TContext();
 
 	//	load module should probably be in instance now, as it just loads a context	
-	virtual void			LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string&)> OnError);
+	virtual void			LoadModule(const std::string_view& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string_view&)> OnError);
 	
-	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global=JSObjectRef(nullptr)) bind_override;
-	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JsCore::TObject Global) bind_override;
+	virtual void			LoadScript(const std::string_view& Source,const std::string_view& Filename,JSObjectRef Global=JSObjectRef(nullptr)) bind_override;
+	virtual void			LoadScript(const std::string_view& Source,const std::string_view& Filename,JsCore::TObject Global) bind_override;
 	virtual void			Execute(std::function<void(TLocalContext&)> Function) bind_override;
 	virtual void			Queue(std::function<void(TLocalContext&)> Function,size_t DeferMs=0) bind_override;
 	virtual void			GarbageCollect(JSContextRef LocalContext);
 	virtual void			Shutdown(int32_t ExitCode);	//	tell instance to destroy us
 		
 	template<const char* FunctionName>
-	void					BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName=std::string());
+	void					BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string_view& ParentName=std::string());
 	
-	JsCore::TObject			GetGlobalObject(TLocalContext& LocalContext,const std::string& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
-	virtual void			CreateGlobalObjectInstance(const std::string& ObjectType,const std::string& Name) bind_override;
-	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName=std::string());
-	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
-	void					ConstructObject(TLocalContext& LocalContext,const std::string& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments);
+	JsCore::TObject			GetGlobalObject(TLocalContext& LocalContext,const std::string_view& ObjectName=std::string());	//	get an object by it's name. empty string = global/root object
+	virtual void			CreateGlobalObjectInstance(const std::string_view& ObjectType,const std::string_view& Name) bind_override;
+	virtual JsCore::TObject	CreateObjectInstance(TLocalContext& LocalContext,const std::string_view& ObjectTypeName=std::string());
+	JsCore::TObject			CreateObjectInstance(TLocalContext& LocalContext,const std::string_view& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments);
+	void					ConstructObject(TLocalContext& LocalContext,const std::string_view& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments);
 
-	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
-	virtual std::shared_ptr<JsCore::TPromise>	CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
+	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext, const std::string_view& DebugName) bind_override;
+	virtual std::shared_ptr<JsCore::TPromise>	CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string_view& DebugName) bind_override;
 	
 	template<typename OBJECTWRAPPERTYPE>
-	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());
+	void				BindObjectType(const std::string_view& ParentName=std::string(),const std::string_view& OverrideLeafName=std::string());
 	
 
 	prmem::Heap&		GetObjectHeap()		{	return GetGeneralHeap();	}
@@ -680,7 +680,7 @@ public:
 	std::string			GetContextFilename();
 	
 	//	this can almost be static, but TCallback needs a few functions of TContext
-	JSValueRef			CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext);
+	JSValueRef			CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string_view& FunctionContext);
 	
 	
 	void				OnPersitentRetained(TPersistent& Persistent)	{	mDebug.OnPersitentRetained(Persistent);	}
@@ -698,7 +698,7 @@ protected:
 	void				ReleaseContext();	//	try and release javascript objects
 
 private:
-	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
+	void				BindRawFunction(const std::string_view& FunctionName,const std::string_view& ParentObjectName,JSObjectCallAsFunctionCallback Function);
 	void				Execute_Reference(std::function<void(TLocalContext&)>& Function);
 
 public:
@@ -730,11 +730,11 @@ class JsCore::TPromise
 {
 public:
 	TPromise()	{}
-	TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string& DebugName);
+	TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string_view& DebugName);
 	~TPromise();
 	
 	//	const for lambda[=] copy capture
-	void			Resolve(Bind::TLocalContext& Context,const std::string& Value) const		{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Resolve(Bind::TLocalContext& Context,const std::string_view& Value) const		{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Resolve(Bind::TLocalContext& Context,JsCore::TObject& Value) const			{	Resolve( Context, GetValue( Context.mLocalContext, Value ) );	}
 	template<typename TYPE>
 	void			Resolve(Bind::TLocalContext& Context,ArrayBridge<TYPE>&& Values) const		{	Resolve( Context, GetValue( Context.mLocalContext, Values ) );	}
@@ -745,7 +745,7 @@ public:
 	void			Resolve(Bind::TLocalContext& Context,const TYPE& Value) const				{	Resolve(Context, GetValue(Context.mLocalContext, Value)); }
 	void			ResolveUndefined(Bind::TLocalContext& Context) const;
 
-	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
+	void			Reject(Bind::TLocalContext& Context,const std::string_view& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Reject(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mReject.Call(nullptr,Value);	}
 	
 	//	risky?
@@ -1237,7 +1237,7 @@ inline JSObjectCallAsFunctionCallback JsCore::TContext::GetRawFunction(void(TYPE
 }
 
 template<const char* FUNCTIONNAME>
-inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string& ParentName)
+inline void JsCore::TContext::BindGlobalFunction(std::function<void(JsCore::TCallback&)> Function,const std::string_view& ParentName)
 {
 	auto FunctionPointer = GetRawFunction<FUNCTIONNAME>( Function );
 	BindRawFunction( FUNCTIONNAME, ParentName, FunctionPointer );
@@ -1275,7 +1275,7 @@ inline TYPE& JsCore::TObject::This(JSContextRef Context,JSObjectRef Object)
 
 
 template<typename OBJECTWRAPPERTYPE>
-inline void JsCore::TContext::BindObjectType(const std::string& ParentName,const std::string& OverrideLeafName)
+inline void JsCore::TContext::BindObjectType(const std::string_view& ParentName,const std::string_view& OverrideLeafName)
 {
 	//	create a template that can be overloaded by the type
 	auto Template = OBJECTWRAPPERTYPE::AllocTemplate( *this );
