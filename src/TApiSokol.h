@@ -30,9 +30,32 @@ namespace Sokol
 	class TShader;
 	class TCreateShader;
 	class TCreateGeometry;
+	
+	class TStateParams;		//	state params, which is per draw command
 
 	void	ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader);
 }
+
+
+class Sokol::TStateParams
+{
+public:
+	//	make sure web api defaults are the same
+	//	this should be comprehensive, so render context defaults are irrelevent
+	 
+	static constexpr std::string_view	DepthRead = "DepthRead"; 
+	sg_compare_func	mDepthRead = SG_COMPAREFUNC_LESS_EQUAL;
+
+	static constexpr std::string_view	DepthWrite = "DepthWrite";
+	bool			mDepthWrite = true;
+
+	static constexpr std::string_view	CullMode = "CullMode";
+	sg_cull_mode	mCullMode = SG_CULLMODE_NONE;
+	//	alpha blend, blit, add etc
+	
+	void			SetPipelineDescription(sg_pipeline_desc& PipelineDescription);
+};
+
 
 class Sokol::TRenderCommandBase
 {
@@ -62,12 +85,15 @@ public:
 	virtual const std::string_view		GetName() override	{	return Name;	};
 	
 	void			ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader);
+	void			ParseStateParams(Bind::TObject& Params);
 	
 	uint32_t		mGeometryHandle = {0};
 	uint32_t		mShaderHandle = {0};
 
 	//	uniforms, parsed and written immediately into a block when parsing
 	Array<uint8_t>	mUniformBlock;
+	
+	TStateParams	mStateParams;
 
 	std::map<size_t,std::shared_ptr<SoyImageProxy>>	mImageUniforms;	//	texture slot -> texture
 	std::map<size_t,std::string>					mDebug_ImageUniformNames;	//	texture slot -> uniform name
