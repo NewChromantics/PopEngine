@@ -922,16 +922,18 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 void Sokol::TRenderCommand_Draw::ParseStateParams(Bind::TObject& Uniforms)
 {
 	TStateParams Default;
+	static std::string _DepthRead(TStateParams::DepthRead);
+	static std::string _DepthWrite(TStateParams::DepthWrite);
 	
-	if ( Uniforms.HasMember( TStateParams::DepthRead ) )
+	if ( Uniforms.HasMember(_DepthRead) )
 	{
-		bool DepthRead = Uniforms.GetBool(TStateParams::DepthRead);
+		bool DepthRead = Uniforms.GetBool(_DepthRead);
 		mStateParams.mDepthRead = DepthRead ? Default.mDepthRead : SG_COMPAREFUNC_ALWAYS;
 	}
 
-	if ( Uniforms.HasMember( TStateParams::DepthWrite ) )
+	if ( Uniforms.HasMember(_DepthWrite) )
 	{
-		mStateParams.mDepthWrite = Uniforms.GetBool(TStateParams::DepthRead);
+		mStateParams.mDepthWrite = Uniforms.GetBool(_DepthWrite);
 	}
 }
 
