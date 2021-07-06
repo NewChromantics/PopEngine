@@ -428,22 +428,9 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				PipelineDescription.shader = Shader.mShader;
 				PipelineDescription.primitive_type = Geometry.GetPrimitiveType();
 				PipelineDescription.index_type = Geometry.GetIndexType();
-				//	state stuff
-				//PipelineDescription.depth_stencil
-				//PipelineDescription.blend
-				//PipelineDescription.rasterizer
-				PipelineDescription.cull_mode = SG_CULLMODE_NONE;
 				
-				//	colour target/attachment config
-				PipelineDescription.colors[0].blend.enabled = false;
-				
-				
-				PipelineDescription.depth =
-				{
-					.compare = SG_COMPAREFUNC_LESS_EQUAL,
-					.write_enabled = true
-				};
-				
+				DrawCommand.mStateParams.SetPipelineDescription(PipelineDescription);
+								
 				// Some Render Target Settings need to be different here
 				// Overwrite them at the end here?
 				
@@ -779,6 +766,21 @@ size_t GetFloatCount(sg_uniform_type Type)
 	throw Soy::AssertException("Not a float type");
 }
 
+void Sokol::TStateParams::SetPipelineDescription(sg_pipeline_desc& PipelineDescription)
+{
+	PipelineDescription.cull_mode = mCullMode;
+	PipelineDescription.depth.compare = mDepthRead;
+	PipelineDescription.depth.write_enabled = mDepthWrite;
+	
+	//PipelineDescription.depth_stencil
+	//PipelineDescription.blend
+	//PipelineDescription.rasterizer
+	
+	//	colour target/attachment config
+	PipelineDescription.colors[0].blend.enabled = false;
+}
+
+
 void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader)
 {
 	//	gr; for optimisation, maybe allow a block of bytes!
@@ -917,6 +919,22 @@ void Sokol::TRenderCommand_Draw::ParseUniforms(Bind::TObject& UniformsObject,Sok
 }
 
 
+void Sokol::TRenderCommand_Draw::ParseStateParams(Bind::TObject& Uniforms)
+{
+	TStateParams Default;
+	
+	if ( Uniforms.HasMember( TStateParams::DepthRead ) )
+	{
+		bool DepthRead = Uniforms.GetBool(TStateParams::DepthRead);
+		mStateParams.mDepthRead = DepthRead ? Default.mDepthRead : SG_COMPAREFUNC_ALWAYS;
+	}
+
+	if ( Uniforms.HasMember( TStateParams::DepthWrite ) )
+	{
+		mStateParams.mDepthWrite = Uniforms.GetBool(TStateParams::DepthRead);
+	}
+}
+
 void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
 {
 	if ( Name == TRenderCommand_Draw::Name )
@@ -933,6 +951,13 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 		{
 			auto Uniforms = Params.GetArgumentObject(3);
 			pDraw->ParseUniforms(Uniforms,Shader);
+		}
+		
+		//	parse state params
+		if ( !Params.IsArgumentUndefined(4) )
+		{
+			auto Uniforms = Params.GetArgumentObject(4);
+			pDraw->ParseStateParams(Uniforms);
 		}
 		
 		//	make a update-image command for every image we use
