@@ -5,7 +5,12 @@
 
 GCC_PREPROCESSOR_DEFINITIONS = $(GCC_PREPROCESSOR_DEFINITIONS) TARGET_IOS JSAPI_JSCORE GLES_SILENCE_DEPRECATION ENABLE_OPENGL
 
-OTHER_CFLAGS = -Wno-ambiguous-macro
+//	gr: enable bitcode to get app clip as small as possible
+//	https://stackoverflow.com/questions/53649761/framework-was-built-without-full-bitcode-framework-bitcode-already-enabled
+BITCODE_GENERATION_MODE=bitcode
+ENABLE_BITCODE=YES
+
+OTHER_CFLAGS = -Wno-ambiguous-macro -fembed-bitcode
 
 //	including PopH264 framework is including SoyLib/src/xyz.h
 SOYLIB_PATH = $(SRCROOT)/src/
@@ -32,3 +37,4 @@ EMBEDDED_CONTENT_CONTAINS_SWIFT = YES
 
 // tsdk: Mirroring config from PopH264
 BUILD_LIBRARY_FOR_DISTRIBUTION = YES
+
