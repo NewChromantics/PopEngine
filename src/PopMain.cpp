@@ -35,8 +35,10 @@ extern "C" EXPORT int PopEngine(const char* ProjectPath)
 #if defined(TARGET_LUMIN)
 	//	for now
 	return 1;
-#elif defined(TARGET_OSX)|| defined(TARGET_IOS)
+#elif defined(TARGET_IOS)	
+	//	for swiftui, dont call UIApplication, do a check in BundleAppMain there's been no UI startup
 	return PopMain();
+#elif defined(TARGET_OSX)|| defined(TARGET_IOS)
 	return Soy::Platform::BundleAppMain();
 #else
 	return PopMain();
