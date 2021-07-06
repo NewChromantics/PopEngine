@@ -98,7 +98,7 @@ void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalCont
 
 #if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs to setup the runtime files
-JSContextGroupRef JSContextGroupCreateWithRuntime(const std::string_view& RuntimeDirectory)
+JSContextGroupRef JSContextGroupCreateWithRuntime(std::string_view RuntimeDirectory)
 {
 	return JSContextGroupCreate();
 }
@@ -129,10 +129,11 @@ JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const char* stri
 
 #if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs a context
-JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, const std::string_view& string)
+JSStringRef JSStringCreateWithUTF8CString(JSContextRef Context, std::string_view string)
 {
 	//	string_view may not be null terminated, but has a length
-	auto* CStr = std::string(string).c_str();
+	std::string string_string;
+	auto* CStr = string_string.c_str();
 	return JSStringCreateWithUTF8CString(CStr);
 }
 #endif
@@ -152,7 +153,7 @@ JSValueRef JSObjectToValue(JSObjectRef Object)
 #endif
 
 #if defined(JSAPI_JSCORE)
-void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string_view& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
+void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,std::string_view Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
 	//	some systems have caching or special property types for strings,
 	//	but not in js core, so manage it ourselves
@@ -163,7 +164,7 @@ void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string
 #endif
 
 #if defined(JSAPI_JSCORE)
-JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::string_view& Name,JSValueRef* Exception)
+JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,std::string_view Name,JSValueRef* Exception)
 {
 	//	some systems have caching or special property types for strings,
 	//	but not in js core, so manage it ourselves
@@ -176,7 +177,7 @@ JSValueRef JSObjectGetProperty(JSContextRef Context,JSObjectRef This,const std::
 
 #if defined(JSAPI_JSCORE)
 //	creating a value from JSON in Chakra is much faster without going into a JSstring, so we have a wrapper
-JSValueRef JSValueMakeFromJSONString(JSContextRef Context,const std::string_view& Json)
+JSValueRef JSValueMakeFromJSONString(JSContextRef Context,std::string_view Json)
 {
 	auto JsonString = JSStringCreateWithUTF8CString( Context, Json );
 	auto JsonObject = JSValueMakeFromJSONString( Context, JsonString );
@@ -352,7 +353,7 @@ JSObjectRef JsCore::GetObject(JSContextRef Context,JSValueRef Value)
 	return Object;
 }
 
-Bind::TObject JsCore::ParseObjectString(JSContextRef Context, const std::string_view& JsonString)
+Bind::TObject JsCore::ParseObjectString(JSContextRef Context, std::string_view JsonString)
 {
 	auto Value = JSValueMakeFromJSONString(Context, JsonString);
 	auto ObjectValue = GetObject(Context, Value);
@@ -494,14 +495,14 @@ bool JsCore::GetBool(JSContextRef Context,JSValueRef Handle)
 }
 
 
-JSStringRef JsCore::GetString(JSContextRef Context,const std::string_view& String)
+JSStringRef JsCore::GetString(JSContextRef Context,std::string_view String)
 {
 	//	JSCore doesn't need a context, but v8 does
 	auto Handle = JSStringCreateWithUTF8CString( Context, String );
 	return Handle;
 }
 
-JSValueRef JsCore::GetValue(JSContextRef Context,const std::string_view& String)
+JSValueRef JsCore::GetValue(JSContextRef Context,std::string_view String)
 {
 	auto StringHandle = JSStringCreateWithUTF8CString( Context, String );
 	auto ValueHandle = JSValueMakeString( Context, StringHandle );
@@ -651,12 +652,14 @@ bool Bind::TContextGroupJobThread::CanSleep()
 
 
 //	gr: windows needs this as Bind::TInstance
-Bind::TInstance::TInstance(const std::string_view& RootDirectory,const std::string_view& ScriptFilename,std::function<void(int32_t)> OnShutdown) :
-	mContextGroupThread	( std::string("JSCore thread ") + std::string(ScriptFilename) ),
+Bind::TInstance::TInstance(std::string_view RootDirectory,std::string_view _ScriptFilename,std::function<void(int32_t)> OnShutdown) :
+	mContextGroupThread	( std::string("JSCore thread ") + std::string(_ScriptFilename) ),
 	mOnShutdown			( OnShutdown )
 {
 	mRootDirectory = RootDirectory;
 
+	//	do not capture string_view in lambdas!
+	std::string ScriptFilename( _ScriptFilename );
 	auto CreateVirtualMachine = [this,ScriptFilename]()
 	{
 		#if defined(TARGET_OSX)
@@ -785,7 +788,7 @@ bool JsCore::TInstance::OnJobQueueIteration(std::function<void (std::chrono::mil
 }
 
 
-std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::string_view& Filename)
+std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(std::string_view Filename)
 {
 	std::Debug << "Creating new JS context " << Filename <<std::endl;
 	JSClassRef Global = nullptr;
@@ -986,7 +989,7 @@ JsCore::TExceptionMeta JsCore::GetExceptionMeta(JSContextRef Context, JSValueRef
 	return Meta;
 }
 
-void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const std::string_view& ThrowContext)
+void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, std::string_view ThrowContext)
 {
 	auto ExceptionType = JSValueGetType( Context, ExceptionHandle );
 	//	not an exception
@@ -1032,7 +1035,7 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 
 
 
-JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string_view& Filename) :
+JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,std::string_view Filename) :
 	mInstance		( Instance ),
 	mContext		( Context ),
 	mFilename		( Filename ),
@@ -1130,15 +1133,14 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 	JSGarbageCollect( LocalContext );
 }
 
-void JsCore::TContext::LoadScript(const std::string_view& Source,const std::string_view& Filename,Bind::TObject Global)
+void JsCore::TContext::LoadScript(const std::string& Source,std::string_view Filename,Bind::TObject Global)
 {
 	auto GlobalJs = Global.mThis;
-	LoadScript( Source, Filename, GlobalJs );
+	LoadScript( Source, std::string(Filename), GlobalJs );
 }
 
-void JsCore::TContext::LoadScript(const std::string_view& _Source,const std::string_view& Filename,JSObjectRef Global)
+void JsCore::TContext::LoadScript(std::string Source,const std::string& Filename,JSObjectRef Global)
 {
-	std::string Source(_Source);
 	Javascript::ConvertImportsToRequires(Source);
 
 	//	gr: javascript core on OSX failed with this chi 𝑥 character.
@@ -1210,7 +1212,7 @@ void JsCore::TContext::LoadScript(const std::string_view& _Source,const std::str
 }
 
 
-void JsCore::TContext::LoadModule(const std::string_view& ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string_view&)> OnError)
+void JsCore::TContext::LoadModule(std::string_view ModuleFilename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(std::string_view)> OnError)
 {
 	//	load file -> source (todo: on a file thread!)
 	//	create a new global/this for the module disconnected from our global
@@ -1229,7 +1231,7 @@ void JsCore::TContext::LoadModule(const std::string_view& ModuleFilename,std::fu
 }
 	
 	
-void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(const std::string_view&)> OnError)
+void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<void(TLocalContext&,TObject&)> OnLoadModule,std::function<void(std::string_view)> OnError)
 {
 	//	gr: filename here should now be full/project relative? path
 	
@@ -1504,19 +1506,19 @@ JsCore::TObject& JsCore::TObject::operator=(const TObject& Copy)
 	return *this;
 }
 
-bool JsCore::TObject::IsMemberArray(const std::string_view& MemberName)
+bool JsCore::TObject::IsMemberArray(std::string_view MemberName)
 {
 	auto Member = GetMember(MemberName);
 	return JSValueIsArray(mContext, Member);
 }
 
-bool JsCore::TObject::IsMemberNull(const std::string_view& MemberName)
+bool JsCore::TObject::IsMemberNull(std::string_view MemberName)
 {
 	auto Member = GetMember(MemberName);
 	return JSValueIsNull(mContext, Member);
 }
 
-bool JsCore::TObject::HasMember(const std::string_view& MemberName)
+bool JsCore::TObject::HasMember(std::string_view MemberName)
 {
 	auto Member = GetMember( MemberName );
 	if ( JSValueIsUndefined( mContext, Member ) )
@@ -1573,7 +1575,7 @@ void JsCore::TObject::GetMemberNames(ArrayBridge<BufferArray<char,40>>&& MemberN
 }
 
 
-JSValueRef JsCore::TObject::GetMember(const std::string_view& MemberName)
+JSValueRef JsCore::TObject::GetMember(std::string_view MemberName)
 {
 	//	keep splitting the name so we can get Pop.Input.Cat
 	TObject This = *this;
@@ -1609,7 +1611,7 @@ JSValueRef JsCore::TObject::GetMember(const std::string_view& MemberName)
 	return Property;	//	we return null/undefineds
 }
 
-JsCore::TObject JsCore::TObject::GetObject(const std::string_view& MemberName)
+JsCore::TObject JsCore::TObject::GetObject(std::string_view MemberName)
 {
 	auto Value = GetMember( MemberName );
 	JSValueRef Exception = nullptr;
@@ -1618,7 +1620,7 @@ JsCore::TObject JsCore::TObject::GetObject(const std::string_view& MemberName)
 	return TObject( mContext, Object );
 }
 
-std::string JsCore::TObject::GetString(const std::string_view& MemberName)
+std::string JsCore::TObject::GetString(std::string_view MemberName)
 {
 	auto Value = GetMember( MemberName );
 	if ( JSValueIsUndefined(mContext,Value) )
@@ -1631,7 +1633,7 @@ std::string JsCore::TObject::GetString(const std::string_view& MemberName)
 	return String;
 }
 
-uint32_t JsCore::TObject::GetInt(const std::string_view& MemberName)
+uint32_t JsCore::TObject::GetInt(std::string_view MemberName)
 {
 	auto Value = GetMember( MemberName );
 	if ( JSValueIsUndefined(mContext,Value) )
@@ -1646,7 +1648,7 @@ uint32_t JsCore::TObject::GetInt(const std::string_view& MemberName)
 	return ValueInt;
 }
 
-float JsCore::TObject::GetFloat(const std::string_view& MemberName)
+float JsCore::TObject::GetFloat(std::string_view MemberName)
 {
 	auto Value = GetMember( MemberName );
 	if ( JSValueIsUndefined(mContext,Value) )
@@ -1661,7 +1663,7 @@ float JsCore::TObject::GetFloat(const std::string_view& MemberName)
 	return Valuef;
 }
 
-bool JsCore::TObject::GetBool(const std::string_view& MemberName)
+bool JsCore::TObject::GetBool(std::string_view MemberName)
 {
 	auto Value = GetMember( MemberName );
 	if ( JSValueIsUndefined(mContext,Value) )
@@ -1672,7 +1674,7 @@ bool JsCore::TObject::GetBool(const std::string_view& MemberName)
 	return Bool;
 }
 
-JsCore::TFunction JsCore::TObject::GetFunction(const std::string_view& MemberName)
+JsCore::TFunction JsCore::TObject::GetFunction(std::string_view MemberName)
 {
 	auto Object = GetObject(MemberName);
 	JsCore::TFunction Func( mContext, JSObjectToValue(Object.mThis) );
@@ -1680,23 +1682,23 @@ JsCore::TFunction JsCore::TObject::GetFunction(const std::string_view& MemberNam
 }
 
 
-void JsCore::TObject::SetObjectFromString(const std::string_view& Name, const std::string_view& JsonString)
+void JsCore::TObject::SetObjectFromString(std::string_view Name, std::string_view JsonString)
 {
 	auto Object = JsCore::ParseObjectString( this->mContext, JsonString );
 	SetObject(Name, Object);
 }
 
-void JsCore::TObject::SetObject(const std::string_view& Name,const TObject& Object)
+void JsCore::TObject::SetObject(std::string_view Name,const TObject& Object)
 {
 	SetMember( Name, JSObjectToValue(Object.mThis) );
 }
 
-void JsCore::TObject::SetFunction(const std::string_view& Name,JsCore::TFunction& Function)
+void JsCore::TObject::SetFunction(std::string_view Name,JsCore::TFunction& Function)
 {
 	SetMember( Name, JSObjectToValue(Function.mThis) );
 }
 
-void JsCore::TObject::SetMember(const std::string_view& Name,JSValueRef Value)
+void JsCore::TObject::SetMember(std::string_view Name,JSValueRef Value)
 {
 	JSPropertyAttributes Attribs = kJSPropertyAttributeNone;
 	JSValueRef Exception = nullptr;
@@ -1704,30 +1706,30 @@ void JsCore::TObject::SetMember(const std::string_view& Name,JSValueRef Value)
 	ThrowException( mContext, Exception );
 }
 
-void JsCore::TObject::SetArray(const std::string_view& Name,JsCore::TArray& Array)
+void JsCore::TObject::SetArray(std::string_view Name,JsCore::TArray& Array)
 {
 	SetMember( Name, JSObjectToValue(Array.mThis) );
 }
 
 
-void JsCore::TObject::SetNull(const std::string_view& Name)
+void JsCore::TObject::SetNull(std::string_view Name)
 {
 	SetMember(Name, JSValueMakeNull(mContext));
 }
 
-void JsCore::TObject::SetUndefined(const std::string_view& Name)
+void JsCore::TObject::SetUndefined(std::string_view Name)
 {
 	SetMember(Name, JSValueMakeUndefined(mContext));
 }
 
 
-JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalContext,const std::string_view& ObjectTypeName)
+JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalContext,std::string_view ObjectTypeName)
 {
 	BufferArray<JSValueRef,1> FakeArgs;
 	return CreateObjectInstance( LocalContext, ObjectTypeName, GetArrayBridge(FakeArgs) );
 }
 
-JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalContext,const std::string_view& ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments)
+JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalContext,std::string_view ObjectTypeName,ArrayBridge<JSValueRef>&& ConstructorArguments)
 {
 	//	create basic object
 	if ( ObjectTypeName.length() == 0 || ObjectTypeName == "Object" )
@@ -1780,7 +1782,7 @@ JsCore::TObject JsCore::TContext::CreateObjectInstance(TLocalContext& LocalConte
 }
 
 
-void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::string_view& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments)
+void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,std::string_view ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments)
 {
 	//	find template
 	auto* pObjectTemplate = mObjectTemplates.Find( ObjectTypeName );
@@ -1825,7 +1827,8 @@ void JsCore::TContext::ConstructObject(TLocalContext& LocalContext,const std::st
 	ObjectPointer.Construct( ConstructorParams );
 }
 
-void JsCore::TContext::BindRawFunction(const std::string_view& FunctionName,const std::string_view& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
+//	not string_view as it needs to be captured in lambda
+void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback FunctionPtr)
 {
 	auto Exec = [&](Bind::TLocalContext& LocalContext)
 	{
@@ -1842,7 +1845,7 @@ void JsCore::TContext::BindRawFunction(const std::string_view& FunctionName,cons
 }
 
 
-JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,const std::string_view& DebugName)
+JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,std::string_view DebugName)
 {
 	if ( !mMakePromiseFunction )
 	{
@@ -1890,7 +1893,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 }
 
 
-std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string_view& DebugName)
+std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLocalContext& LocalContext, std::string_view DebugName)
 {
 	if (!mMakePromiseFunction)
 	{
@@ -1938,7 +1941,7 @@ std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLoca
 }
 
 
-JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string_view& FunctionContext)
+JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,std::string_view FunctionContext)
 {
 	//	call our function from
 	try
@@ -2186,7 +2189,7 @@ void JsCore::TCallback::SetArgument(size_t Index,JSValueRef Value)
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
 
-void JsCore::TCallback::SetArgumentString(size_t Index,const std::string_view& Value)
+void JsCore::TCallback::SetArgumentString(size_t Index,std::string_view Value)
 {
 	JSCore_SetArgument( mArguments, mLocalContext, Index, Value );
 }
@@ -2248,7 +2251,7 @@ void JsCore::TCallback::SetArgumentArray(size_t Index,JsCore::TArray& Value)
 }
 
 
-JsCore::TObject JsCore::TContext::GetGlobalObject(TLocalContext& LocalContext,const std::string_view& ObjectName)
+JsCore::TObject JsCore::TContext::GetGlobalObject(TLocalContext& LocalContext,std::string_view ObjectName)
 {
 	auto GlobalThis = JSContextGetGlobalObject( LocalContext.mLocalContext );
 	TObject Global( LocalContext.mLocalContext, GlobalThis );
@@ -2260,7 +2263,7 @@ JsCore::TObject JsCore::TContext::GetGlobalObject(TLocalContext& LocalContext,co
 }
 
 
-void JsCore::TContext::CreateGlobalObjectInstance(const std::string_view& ObjectType,const std::string_view& Name)
+void JsCore::TContext::CreateGlobalObjectInstance(const std::string& ObjectType,const std::string& Name)
 {
 	auto Exec = [=](Bind::TLocalContext& LocalContext)
 	{
@@ -2404,14 +2407,14 @@ JsCore::TObject JsCore::TPersistent::GetObject(TLocalContext& Context) const
 	 */
 }
 
-void JsCore::TPersistent::Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string_view& DebugName)
+void JsCore::TPersistent::Retain(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,std::string_view DebugName)
 {
 	//std::Debug << "Retain context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
 	JSValueProtect( Context, JSObjectToValue(ObjectOrFunc) );
 }
 
 
-void JsCore::TPersistent::Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,const std::string_view& DebugName)
+void JsCore::TPersistent::Release(JSGlobalContextRef Context,JSObjectRef ObjectOrFunc,std::string_view DebugName)
 {
 	//std::Debug << "Release context=" << Context << " object=" << ObjectOrFunc << " " << DebugName << std::endl;
 	JSValueUnprotect( Context, JSObjectToValue(ObjectOrFunc) );
@@ -2445,7 +2448,7 @@ void JsCore::TPersistent::Release()
 
 
 
-void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,const std::string_view& DebugName)
+void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,std::string_view DebugName)
 {
 	if ( mObject )
 	{
@@ -2467,7 +2470,7 @@ void JsCore::TPersistent::Retain(TLocalContext& Context,const TObject& Object,co
 	Context.mGlobalContext.OnPersitentRetained(*this);
 }
 
-void JsCore::TPersistent::Retain(TLocalContext& Context,const TFunction& Function,const std::string_view& DebugName)
+void JsCore::TPersistent::Retain(TLocalContext& Context,const TFunction& Function,std::string_view DebugName)
 {
 	Bind::TObject FunctionObject( Context.mLocalContext, Function.mThis );
 	Retain( Context, FunctionObject, DebugName );
@@ -2797,7 +2800,7 @@ JsCore::TCallback JsCore::TArray::GetAsCallback(TLocalContext& LocalContext)
 }
 
 
-void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const std::string_view& ParentObjectName,const std::string_view& OverrideLeafName)
+void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,std::string_view ParentObjectName,std::string_view OverrideLeafName)
 {
 	//	add a terminator function
 	JSStaticFunction NewFunction = { nullptr, nullptr, kJSPropertyAttributeNone };
@@ -2836,7 +2839,7 @@ void JsCore::TTemplate::RegisterClassWithContext(TLocalContext& Context,const st
 	ThrowException( Context.mLocalContext, Exception );
 }
 
-JsCore::TPromise::TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,const std::string_view& DebugName) :
+JsCore::TPromise::TPromise(Bind::TLocalContext& Context,TObject& Promise,TFunction& Resolve,TFunction& Reject,std::string_view DebugName) :
 	mPromise	( Context, Promise, std::string(DebugName) + "(Promise)" ),
 	mResolve	( Context, Resolve, std::string(DebugName) + "(Resolve)" ),
 	mReject		( Context, Reject, std::string(DebugName) + "(Reject)" ),
