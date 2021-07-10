@@ -1627,6 +1627,12 @@ std::string JsCore::TObject::GetString(const std::string& MemberName)
 	if ( JSValueIsUndefined(mContext,Value) )
 		throw Soy::AssertException( MemberName + " is undefined");
 
+	if ( !Value )
+	{
+		std::Debug << "Unexpected null string on " << MemberName << std::endl;
+		return "<TObject::GetString null>";
+	}
+
 	JSValueRef Exception = nullptr;
 	auto StringHandle = JSValueToStringCopy( mContext, Value, &Exception );
 	JsCore::ThrowException( mContext, Exception, MemberName );
