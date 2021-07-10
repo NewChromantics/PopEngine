@@ -11,6 +11,10 @@ namespace ApiSokol
 	class TSokolContextWrapper;
 
 	DECLARE_BIND_TYPENAME(Sokol_Context);
+
+	//	these handles are API side to keep track of our own assets
+	typedef uint32_t	ShaderHandle_t;
+	typedef uint32_t	GeometryHandle_t;
 }
 
 class SoyImageProxy;
@@ -33,7 +37,7 @@ namespace Sokol
 	
 	class TStateParams;		//	state params, which is per draw command
 
-	void	ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader);
+	void	ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(ApiSokol::ShaderHandle_t)>& GetShader);
 }
 
 
@@ -84,16 +88,16 @@ public:
 	static constexpr std::string_view	Name = "Draw";
 	virtual const std::string_view		GetName() override	{	return Name;	};
 	
-	void			ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader);
-	void			ParseStateParams(Bind::TObject& Params);
+	void				ParseUniforms(Bind::TObject& UniformsObject,Sokol::TShader& Shader);
+	void				ParseStateParams(Bind::TObject& Params);
 	
-	uint32_t		mGeometryHandle = {0};
-	uint32_t		mShaderHandle = {0};
+	ApiSokol::GeometryHandle_t	mGeometryHandle = 0;
+	ApiSokol::ShaderHandle_t	mShaderHandle = 0;
 
 	//	uniforms, parsed and written immediately into a block when parsing
-	Array<uint8_t>	mUniformBlock;
+	Array<uint8_t>		mUniformBlock;
 	
-	TStateParams	mStateParams;
+	TStateParams		mStateParams;
 
 	std::map<size_t,std::shared_ptr<SoyImageProxy>>	mImageUniforms;	//	texture slot -> texture
 	std::map<size_t,std::string>					mDebug_ImageUniformNames;	//	texture slot -> uniform name
@@ -167,6 +171,8 @@ public:
 class Sokol::TShader
 {
 public:
+	void				Free();	//	gr: I think this needs to be on the render thread. We can't put it in destructor as it's copied atm...
+
 	TCreateShader		mShaderMeta;	//	currently need to hold onto this for the uniform info
 	sg_shader			mShader = {0};
 };
@@ -182,6 +188,8 @@ public:
 	int					GetDrawVertexCount() const	{	return GetVertexCount();	}
 	int					GetDrawVertexFirst() const	{	return 0;	}
 	int					GetDrawInstanceCount() const	{	return 1;	}
+	
+	void				Free();	//	gr: I think this needs to be on the render thread. We can't put it in destructor as it's copied atm...
 	
 	//	input
 	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
@@ -220,6 +228,8 @@ public:
 	//	also async
 	void			CreateShader(Bind::TCallback& Params);
 	void			CreateGeometry(Bind::TCallback& Params);
+	void			FreeGeometry(Bind::TCallback& Params);
+	void			FreeShader(Bind::TCallback& Params);
 
 private:
 	//	gr: sg_context isnt REQUIRED, but hints to implementations that they should be creating it
@@ -231,7 +241,11 @@ private:
 	Sokol::TRenderCommands			ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArray);
 
 	void			QueueImageDelete(sg_image Image);
+	void			QueueGeometryDelete(GeometryHandle_t Handle);
+	void			QueueShaderDelete(ShaderHandle_t Handle);
 	void			FreeImageDeletes();
+	void			FreeGeometryDeletes();
+	void			FreeShaderDeletes();
 	
 public:
 	vec2x<size_t>					mLastRect;
@@ -249,11 +263,15 @@ public:
 	std::mutex						mPendingGeometrysLock;
 
 	//	allocated objects and their javascript handle[value]
-	std::map<uint32_t,Sokol::TShader>	mShaders;
-	std::map<uint32_t,Sokol::TCreateGeometry>	mGeometrys;
+	std::map<ShaderHandle_t,Sokol::TShader>	mShaders;
+	std::map<GeometryHandle_t,Sokol::TCreateGeometry>	mGeometrys;
 	std::shared_ptr<SoyImageProxy>	mNullTexture;
 	std::mutex						mPendingDeleteImagesLock;
 	Array<sg_image>					mPendingDeleteImages;
+	std::mutex						mPendingDeleteGeometrysLock;
+	Array<GeometryHandle_t>			mPendingDeleteGeometrys;
+	std::mutex						mPendingDeleteShadersLock;
+	Array<ShaderHandle_t>			mPendingDeleteShaders;
 
 	std::shared_ptr<Sokol::TContext>&	mSokolContext = mObject;
 	//Sokol::TRenderCommands		mLastFrame;	//	 if we get a required paint, but no pending renders, we re-render the last frame

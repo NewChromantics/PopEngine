@@ -22,12 +22,18 @@ namespace ApiSokol
 	DEFINE_BIND_TYPENAME(Sokol_Context);
 	DEFINE_BIND_FUNCTIONNAME(Render);
 	DEFINE_BIND_FUNCTIONNAME(CreateShader);
+	DEFINE_BIND_FUNCTIONNAME(FreeShader);
 	DEFINE_BIND_FUNCTIONNAME(CreateGeometry);
+	DEFINE_BIND_FUNCTIONNAME(FreeGeometry);
 	DEFINE_BIND_FUNCTIONNAME(GetScreenRect);
 	DEFINE_BIND_FUNCTIONNAME(CanRenderToPixelFormat);
 	DEFINE_BIND_FUNCTIONNAME(GetStats);
 	
+	//	debug counters
 	int	Stats_ImageCounter = 0;
+	//	map counts these
+	//int	Stats_GeometryCounter = 0;
+	//int	Stats_ShaderCounter = 0;
 }
 
 void ApiSokol::Bind(Bind::TContext &Context)
@@ -40,7 +46,9 @@ void ApiSokol::TSokolContextWrapper::CreateTemplate(Bind::TTemplate &Template)
 {
 	Template.BindFunction<BindFunction::Render>(&TSokolContextWrapper::Render);
 	Template.BindFunction<BindFunction::CreateShader>(&TSokolContextWrapper::CreateShader);
+	Template.BindFunction<BindFunction::FreeShader>(&TSokolContextWrapper::FreeShader);
 	Template.BindFunction<BindFunction::CreateGeometry>(&TSokolContextWrapper::CreateGeometry);
+	Template.BindFunction<BindFunction::FreeGeometry>(&TSokolContextWrapper::FreeGeometry);
 	Template.BindFunction<BindFunction::GetScreenRect>(&TSokolContextWrapper::GetScreenRect);
 	Template.BindFunction<BindFunction::CanRenderToPixelFormat>(&TSokolContextWrapper::CanRenderToPixelFormat);
 	Template.BindFunction<BindFunction::GetStats>(&TSokolContextWrapper::GetStats);
@@ -213,6 +221,19 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	return Description;
 }
 
+void ApiSokol::TSokolContextWrapper::QueueGeometryDelete(GeometryHandle_t Handle)
+{
+	std::lock_guard<std::mutex> Lock(mPendingDeleteGeometrysLock);
+	mPendingDeleteGeometrys.PushBack(Handle);
+}
+
+void ApiSokol::TSokolContextWrapper::QueueShaderDelete(ShaderHandle_t Handle)
+{
+	std::lock_guard<std::mutex> Lock(mPendingDeleteShadersLock);
+	mPendingDeleteShaders.PushBack(Handle);
+}
+
+
 void ApiSokol::TSokolContextWrapper::QueueImageDelete(sg_image Image)
 {
 	std::lock_guard<std::mutex> Lock(mPendingDeleteImagesLock);
@@ -229,6 +250,50 @@ void ApiSokol::TSokolContextWrapper::FreeImageDeletes()
 		Stats_ImageCounter--;
 	}
 	mPendingDeleteImages.Clear();
+}
+
+
+void ApiSokol::TSokolContextWrapper::FreeGeometryDeletes()
+{
+	std::lock_guard<std::mutex> Lock(mPendingDeleteGeometrysLock);
+	for ( auto i=0;	i<mPendingDeleteGeometrys.GetSize();	i++ )
+	{
+		auto Handle = mPendingDeleteGeometrys[i];
+		if ( !mGeometrys.count(Handle) )
+		{
+			std::Debug << "Trying to delete geometry #" << Handle << " but doesn't exist" << std::endl;
+			continue;
+		}
+		
+		auto& Geo = mGeometrys[Handle];
+		//	destructor should do this?
+		Geo.Free();	
+		mGeometrys.erase( Handle );
+		//Stats_GeometryCounter--;
+	}
+	mPendingDeleteGeometrys.Clear();
+}
+
+
+void ApiSokol::TSokolContextWrapper::FreeShaderDeletes()
+{
+	std::lock_guard<std::mutex> Lock(mPendingDeleteShadersLock);
+	for ( auto i=0;	i<mPendingDeleteShaders.GetSize();	i++ )
+	{
+		auto Handle = mPendingDeleteShaders[i];
+		if ( !mShaders.count(Handle) )
+		{
+			std::Debug << "Trying to delete shader #" << Handle << " but doesn't exist" << std::endl;
+			continue;
+		}
+		
+		auto& Shader = mShaders[Handle];
+		//	destructor should do this?
+		Shader.Free();	
+		mShaders.erase( Handle );
+		//Stats_ShaderCounter--;
+	}
+	mPendingDeleteShaders.Clear();
 }
 
 void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> ViewRect)
@@ -250,6 +315,8 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 
 	//	jobs
 	FreeImageDeletes();
+	FreeGeometryDeletes();
+	FreeShaderDeletes();
 
 	mPendingFramesLock.lock();
 	auto RenderFrameList = mPendingFrames;
@@ -937,7 +1004,7 @@ void Sokol::TRenderCommand_Draw::ParseStateParams(Bind::TObject& Uniforms)
 	}
 }
 
-void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(uint32_t)>& GetShader)
+void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRenderCommandBase>)> PushCommand,const std::string_view& Name,Bind::TCallback& Params,std::function<Sokol::TShader&(ApiSokol::ShaderHandle_t)>& GetShader)
 {
 	if ( Name == TRenderCommand_Draw::Name )
 	{
@@ -1084,7 +1151,7 @@ void Sokol::ParseRenderCommand(std::function<void(std::shared_ptr<Sokol::TRender
 
 Sokol::TRenderCommands ApiSokol::TSokolContextWrapper::ParseRenderCommands(Bind::TLocalContext& Context,Bind::TArray& CommandArrayArray)
 {
-	std::function<Sokol::TShader&(uint32_t)> GetShader = [this](uint32_t ShaderHandle) -> Sokol::TShader&
+	std::function<Sokol::TShader&(ShaderHandle_t)> GetShader = [this](ShaderHandle_t ShaderHandle) -> Sokol::TShader&
 	{
 		return mShaders[ShaderHandle];
 	};
@@ -1312,6 +1379,19 @@ void ApiSokol::TSokolContextWrapper::CreateShader(Bind::TCallback& Params)
 	}
 }
 
+void ApiSokol::TSokolContextWrapper::FreeGeometry(Bind::TCallback& Params)
+{
+	auto Handle = Params.GetArgumentInt(0);
+	QueueGeometryDelete(Handle);
+}
+
+void ApiSokol::TSokolContextWrapper::FreeShader(Bind::TCallback& Params)
+{
+	auto Handle = Params.GetArgumentInt(0);
+	QueueShaderDelete(Handle);
+}
+
+
 void ParseGeometryObject(Sokol::TCreateGeometry& Geometry,Bind::TObject& VertexAttributesObject)
 {
 	/*
@@ -1413,6 +1493,20 @@ sg_buffer_desc Sokol::TCreateGeometry::GetVertexDescription() const
 	return Description;
 }
 
+void Sokol::TCreateGeometry::Free()
+{
+	if ( mVertexBuffer.id != 0 )
+	{
+		sg_destroy_buffer(mVertexBuffer);
+		mVertexBuffer.id = 0;
+	}
+	
+	if ( mIndexBuffer.id != 0 )
+	{
+		sg_destroy_buffer(mIndexBuffer);
+		mIndexBuffer.id = 0;
+	}
+}
 
 /* return the byte size of a shader uniform */
 int _sg_uniform_size(sg_uniform_type type, int count) {
@@ -1427,6 +1521,15 @@ int _sg_uniform_size(sg_uniform_type type, int count) {
 			throw Soy::AssertException("_sg_uniform_size unhandled type");
 			//SOKOL_UNREACHABLE;
 			return -1;
+	}
+}
+
+void Sokol::TShader::Free()
+{
+	if ( mShader.id != 0 )
+	{
+		sg_destroy_shader(mShader);
+		mShader.id = 0;
 	}
 }
 
