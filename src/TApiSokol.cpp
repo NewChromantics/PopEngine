@@ -485,6 +485,18 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 					throw Soy::AssertException("Draw command but not inside pass (Haven't SetRenderTarget)");
 					
 				auto& DrawCommand = dynamic_cast<Sokol::TRenderCommand_Draw&>( *NextCommand );
+				
+				if ( !mGeometrys.count(DrawCommand.mGeometryHandle) )
+				{
+					std::Debug << "Draw command for geometry #" << DrawCommand.mGeometryHandle << " which is missing" << std::endl;
+					continue;
+				}
+				if ( !mShaders.count(DrawCommand.mShaderHandle) )
+				{
+					std::Debug << "Draw command for shader #" << DrawCommand.mShaderHandle << " which is missing" << std::endl;
+					continue;
+				}
+				
 				auto& Geometry = mGeometrys[DrawCommand.mGeometryHandle];
 				auto& Shader = mShaders[DrawCommand.mShaderHandle];
 				
