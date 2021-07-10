@@ -152,6 +152,13 @@ JSValueRef JSObjectToValue(JSObjectRef Object)
 #if defined(JSAPI_JSCORE)
 void JSObjectSetProperty(JSContextRef Context,JSObjectRef This,const std::string& Name,JSValueRef Value,JSPropertyAttributes Attribs,JSValueRef* Exception)
 {
+	//	race condition? but this brings down jscore, so catch it
+	if ( This == 0x0 )
+	{
+		std::stringstream Error;
+		Error << "JSObjectSetProperty(" << Name << ") on null this";
+		throw Soy::AssertException(Error);
+	}
 	//	some systems have caching or special property types for strings,
 	//	but not in js core, so manage it ourselves
 	auto NameJs = JsCore::GetString( Context, Name );
