@@ -308,6 +308,7 @@ public:
 		TObjectWrapper	( Context )
 	{
 	}
+	~TRenderViewWrapper();
 	
 	static void		CreateTemplate(Bind::TTemplate& Template);
 	virtual void 	Construct(Bind::TCallback& Params) override;

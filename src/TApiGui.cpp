@@ -892,6 +892,15 @@ void ApiGui::TRenderViewWrapper::Construct(Bind::TCallback& Params)
 	mControl->mOnMouseEvent = std::bind( &ApiGui::TRenderViewWrapper::OnMouseEvent, this, std::placeholders::_1 );
 }
 
+ApiGui::TRenderViewWrapper::~TRenderViewWrapper()
+{
+	if ( mControl )
+	{
+		mControl->mOnMouseEvent = nullptr;
+	}
+}
+	
+	
 void ApiGui::TRenderViewWrapper::OnMouseEvent(Gui::TMouseEvent& Event)
 {
 	auto* MouseEvent = ApiGui::GetName( Event.mEvent );
