@@ -938,6 +938,9 @@ void JsCore::TInstance::BindApis(TContext& Context)
 
 void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, const char* ThrowContext)
 {
+	//	gr: JSValueGetType is throwing a WTF error but not sure what... context in exceptional state maybe? probably just moving problem
+	if ( ExceptionHandle == 0x0 )
+		return;
 	auto ExceptionType = JSValueGetType(Context, ExceptionHandle);
 	//	not an exception
 	if (ExceptionType == kJSTypeUndefined || ExceptionType == kJSTypeNull)
