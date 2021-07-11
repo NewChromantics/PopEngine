@@ -14,7 +14,8 @@ bool IsXCodeDebugParam(const std::string& Argument)
 	return false;
 }
 
-
+//#if !defined(TARGET_IOS)	//	ios bootin from swift now
+#if false
 int main(int argc, const char * argv[])
 {
 	//	if first arg is a path, then to make debugging easier in xcode,
@@ -36,3 +37,4 @@ int main(int argc, const char * argv[])
 	//	Unit test files should be under resources in build
 	return PopEngine( ProjectPath.c_str() );
 }
+#endif

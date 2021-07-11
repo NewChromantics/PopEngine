@@ -90,3 +90,24 @@ struct TestGui_Previews: PreviewProvider {
 		}
     }
 }
+
+
+
+@main
+struct PopEngineTestApp: App {
+
+	var body: some Scene 
+	{
+		WindowGroup 
+		{
+			ContentView()
+				.onAppear 
+				{
+					//	call engine startup
+					//	gr: this should detect args and load that...
+					//		but maybe that should wholly move to the unit test "app" js
+					PopEngine("UnitTest/Gui")
+				}
+		}
+	}
+}

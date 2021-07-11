@@ -4,3 +4,4 @@
 
 #import "SoyGuiSwift.h"
 
+int PopEngine(const char* ProjectPath);

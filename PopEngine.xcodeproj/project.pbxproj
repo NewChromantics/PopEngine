@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		4153DA2625890E6A007AA5CE /* SceneDelegate_Ios.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4153DA2225890E6A007AA5CE /* SceneDelegate_Ios.swift */; };
 		5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5898943F24F6D32900FCCCE2 /* TApiSokol.cpp */; };
 		582BE874250A9E7F00B341D4 /* SoyGuiIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = 582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */; };
 		5850A42324F920C400145478 /* SoyGuiOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5850A42224F920C400145478 /* SoyGuiOsx.mm */; };
@@ -351,7 +350,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4153DA2225890E6A007AA5CE /* SceneDelegate_Ios.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate_Ios.swift; sourceTree = "<group>"; };
 		582BE873250A9E7E00B341D4 /* SoyGuiIos.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiIos.mm; path = src/SoyGuiIos.mm; sourceTree = "<group>"; };
 		5850A42224F920C400145478 /* SoyGuiOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiOsx.mm; path = src/SoyGuiOsx.mm; sourceTree = "<group>"; };
 		5873CDB825000A78008F73AA /* SoyGui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyGui.h; path = src/SoyGui.h; sourceTree = "<group>"; };
@@ -939,7 +937,6 @@
 				BF5EB05E2380335F0077BCF5 /* PopEngineApp_Osx_Info.plist */,
 				BF5EB0612380335F0077BCF5 /* PopEngineUnitTestApp.entitlements */,
 				BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */,
-				4153DA2225890E6A007AA5CE /* SceneDelegate_Ios.swift */,
 				BF51B8D3256AD19B004DE4C7 /* TestGui_Ios.swift */,
 				BFF0F84D2606701D00B821FD /* TestApp_Osx.swift */,
 				BFF0F84C2606701D00B821FD /* PopEngine_OsxApp-Bridging-Header.h */,
@@ -1786,7 +1783,6 @@
 				BF693A30250D17F9002E3772 /* PopEngineUnitTestMain.cpp in Sources */,
 				BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */,
 				BF51B8D4256AD19B004DE4C7 /* TestGui_Ios.swift in Sources */,
-				4153DA2625890E6A007AA5CE /* SceneDelegate_Ios.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
