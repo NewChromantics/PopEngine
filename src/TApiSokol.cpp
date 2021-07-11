@@ -471,12 +471,17 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 				//	if image sokol version is out of date, update texture
 				if ( !LatestVersion )
 				{
-					bool GetPixelData = true;
-					auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget, GetPixelData );
-					sg_update_image( ImageSokol, ImageDescription.data );
-					auto State = sg_query_image_state(ImageSokol);
-					Sokol::IsOkay(State,"sg_query_image_state");
-					ImageSoy.OnSokolImageUpdated();
+					auto UpdateImage = [&](SoyPixelsImpl& Pixels)
+					{
+						bool GetPixelData = true;
+						auto ImageDescription = GetImageDescription(ImageSoy,TemporaryImage, IsRenderTarget, GetPixelData );
+						sg_update_image( ImageSokol, ImageDescription.data );
+						auto State = sg_query_image_state(ImageSokol);
+						Sokol::IsOkay(State,"sg_query_image_state");
+						ImageSoy.OnSokolImageUpdated();
+						return false;
+					};
+					ImageSoy.GetPixels(UpdateImage);
 				}
 			}
 			else if ( NextCommand->GetName() == Sokol::TRenderCommand_Draw::Name )

@@ -49,7 +49,10 @@ public:
 	void				ReadOpenglPixels(SoyPixelsFormat::Type Format);
 	void				SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer);
 
-	SoyPixelsImpl&		GetPixels();
+	//	should probably always use this locking function to deal with pixels for multithread safety.
+	//	callback should return true if it modified pixels
+	void				GetPixels(std::function<bool(SoyPixelsImpl&)> PixelsCallback);
+	SoyPixelsImpl&		GetPixels();// __deprecated;
 	void				GetPixels(SoyPixelsImpl& CopyTarget);	//	safely copy pixels
 	void				SetPixels(const SoyPixelsImpl& NewPixels);
 	void				SetPixels(std::shared_ptr<SoyPixelsImpl> NewPixels);

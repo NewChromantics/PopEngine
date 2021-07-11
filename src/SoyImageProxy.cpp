@@ -418,6 +418,14 @@ Opengl::TTexture& SoyImageProxy::GetTexture()
 }
 
 
+void SoyImageProxy::GetPixels(std::function<bool(SoyPixelsImpl&)> PixelsCallback)
+{
+	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
+	auto& Pixels = GetPixels();
+	auto Changed = PixelsCallback(Pixels);
+	if ( Changed )
+		OnPixelsChanged();
+}
 
 void SoyImageProxy::GetPixels(SoyPixelsImpl& CopyTarget)
 {
