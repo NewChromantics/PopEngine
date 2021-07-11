@@ -1272,6 +1272,10 @@ void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<voi
 	}
 	
 	std::string Source;
+	//	we want to ignore PopEngine.js... (but maybe still needs to return a module?)
+	//	currently filtering out PopEngine.js at the import syntax rewrite level
+	//	but that will force user to import as Pop (import Pop from './PopEngine.js')
+	//	need to move seperate parts into their own virtual imports.
 	Soy::FileToString(Filename,Source);
 
 	Javascript::ConvertImportsToRequires(Source);

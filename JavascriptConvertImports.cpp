@@ -29,6 +29,7 @@
 //	make a pattern for valid js symbols
 auto Symbol = "([a-zA-Z0-9_]+)";
 auto QuotedFilename = "(\"|')(.+\\.js)('|\")";
+auto QuotedFilenamePopEngineJs = "(\"|')(.+\\/PopEngine\\.js)('|\")";
 auto Whitespace = "\\s+";
 auto OptionalWhitespace = "\\s*";
 auto Keyword = "(const|var|let|class|function|async\\sfunction)";	//	prefixes which break up export, variable name etc
@@ -123,6 +124,10 @@ std::string regex_replace_callback(const std::string& Input,std::regex Regex,std
 
 void ConvertImports(std::string& Source)
 {
+	//	special case to catch PopEngine.js, which is how we import in web
+	std::stringstream ImportPatternPop;	ImportPatternPop << "import" << Whitespace << "Pop" << Whitespace << "from" << Whitespace << QuotedFilenamePopEngineJs;
+	std::string ReplacementPatternPop("/* import Pop from $1$2$3 */");
+	
 	//	import * as X from QUOTEFILENAMEQUOTE
 	std::stringstream ImportPattern0;	ImportPattern0 << "import" << Whitespace << "\\*" << Whitespace << "as" << Whitespace << Symbol << Whitespace << "from" << Whitespace << QuotedFilename;
 	std::string ReplacementPattern0("const $1 = require($2$3$4);");
@@ -138,6 +143,7 @@ void ConvertImports(std::string& Source)
 	
 	//	$0 whole string match
 	//	$1 capture group 0 etc
+	Source = std::regex_replace(Source, std::regex(ImportPatternPop.str()), ReplacementPatternPop );
 	Source = std::regex_replace(Source, std::regex(ImportPattern0.str()), ReplacementPattern0 );
 	Source = std::regex_replace(Source, std::regex(ImportPattern1.str()), ReplacementPattern1 );
 	Source = regex_replace_callback(Source, std::regex(ImportPattern2.str()), ReplacementPattern2 );
