@@ -148,8 +148,8 @@ namespace ApiMedia
 
 	void	EnumDevices(Bind::TCallback& Params);
 
-	Bind::TObject	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame,size_t PendingFrames);
-	Bind::TObject	PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson);
+	Bind::TPersistent	FrameToObject(Bind::TLocalContext& Context, PopCameraDevice::TFrame& Frame,size_t PendingFrames);
+	Bind::TObject		PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson);
 }
 
 
@@ -379,7 +379,8 @@ void ApiMedia::TH264DecoderWrapper::FlushPendingFrames()
 		if (PoppedError.empty())
 		{
 			auto FrameObject = ApiMedia::FrameToObject(Context, PoppedFrame,mFrames.GetSize());
-			mFrameRequests.Resolve(Context,FrameObject);
+			auto Object = FrameObject.GetObject(Context);
+			mFrameRequests.Resolve( Context, Object );
 		}
 		else
 		{
@@ -629,7 +630,7 @@ void ApiMedia::TCameraDeviceWrapper::WaitForNextFrame(Bind::TCallback& Params)
 	FlushPendingFrames();
 }
 
-Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame,size_t PendingFrames)
+JsCore::TPersistent ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevice::TFrame& Frame,size_t PendingFrames)
 {
 	//	alloc key names once
 	static std::string _TimeMs = "TimeMs";
@@ -639,6 +640,10 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 
 	Soy::TScopeTimerPrint Timer(__PRETTY_FUNCTION__,3);
 	auto FrameObject = Context.mGlobalContext.CreateObjectInstance(Context);
+	
+	//	gr: it feels like the object we're allocating is disapearing whilst we're doing stuff
+	//		we should be locked though, so why would the garbage collector do this...
+	JsCore::TPersistent FrameObjectPersistent( Context, FrameObject, "ApiMedia::FrameToObject Frame" );
 	
 	auto Max32 = std::numeric_limits<uint32_t>::max();
 	auto Time64 = Frame.mTime.GetTime();
@@ -683,7 +688,7 @@ Bind::TObject ApiMedia::FrameToObject(Bind::TLocalContext& Context,PopCameraDevi
 	//	extra meta
 	FrameObject.SetInt(_PendingFrames,PendingFrames);
 
-	return FrameObject;
+	return FrameObjectPersistent;
 }
 
 Bind::TObject ApiMedia::PacketToObject(Bind::TLocalContext& Context,const ArrayBridge<uint8_t>&& Data,const std::string& MetaJson)
@@ -739,7 +744,8 @@ void ApiMedia::TCameraDeviceWrapper::FlushPendingFrames()
 		}
 		auto PendingFrames = mFrames.GetSize();
 		auto FrameObject = ApiMedia::FrameToObject(Context,PoppedFrame,PendingFrames);
-		mFrameRequests.Resolve(Context,FrameObject);
+		auto Object = FrameObject.GetObject(Context);
+		mFrameRequests.Resolve(Context,Object);
 	};
 	auto& Context = mFrameRequests.GetContext();
 	Context.Queue(Flush);
