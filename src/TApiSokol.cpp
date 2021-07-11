@@ -314,9 +314,12 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 	mLastRect = ViewRect;
 
 	//	jobs
-	FreeImageDeletes();
-	FreeGeometryDeletes();
-	FreeShaderDeletes();
+	//	gr: in case the pending frames USE these images, delete after
+	//	todo: to try and avoid resource exhausation, we should scan all the pending
+	//		frames for uses of these assets and free THOSE ONES after
+	//FreeImageDeletes();
+	//FreeGeometryDeletes();
+	//FreeShaderDeletes();
 
 	mPendingFramesLock.lock();
 	auto RenderFrameList = mPendingFrames;
@@ -328,7 +331,11 @@ void ApiSokol::TSokolContextWrapper::OnPaint(sg_context Context,vec2x<size_t> Vi
 		auto& RenderCommands = RenderFrameList[i];
 		RunRender( RenderCommands, ViewRect );
 	}
-	
+		
+	FreeImageDeletes();
+	FreeGeometryDeletes();
+	FreeShaderDeletes();
+
 	//	end of "current frame"
 	sg_commit();
 }
