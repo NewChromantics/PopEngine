@@ -880,7 +880,7 @@ void JsCore::TInstance::BindApis(TContext& Context)
 {
 	ApiPop::Bind(Context);
 	ApiSocket::Bind(Context);
-	ApiPanopoly::Bind(Context);
+	//ApiPanopoly::Bind(Context);
 	ApiWebsocket::Bind(Context);
 	ApiHttp::Bind(Context);
 
@@ -888,7 +888,7 @@ void JsCore::TInstance::BindApis(TContext& Context)
 	ApiEngine::Bind(Context);
 #endif
 #if defined(ENABLE_OPENGL)
-	ApiOpengl::Bind(Context);
+	//ApiOpengl::Bind(Context);
 #endif
 #if defined(ENABLE_DIRECTX)
 	ApiDirectx11::Bind(Context);
