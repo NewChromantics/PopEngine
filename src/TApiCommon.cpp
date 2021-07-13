@@ -666,9 +666,9 @@ void ApiPop::ImportSync(Bind::TCallback& Params)
 		Params.Return(Exports);
 	};
 	
-	auto OnError = [](const std::string& Error)
+	auto OnError = [&](const std::string& Error)
 	{
-		std::Debug << "Module import error " << Error << std::endl;
+		std::Debug << "Module (" << Filename << ") import error " << Error << std::endl;
 	};
 	
 	Params.mContext.LoadModule( Filename, OnModuleLoaded, OnError );
