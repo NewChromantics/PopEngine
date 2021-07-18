@@ -670,8 +670,8 @@
 		BFF0F86B2607CF8200B821FD /* SoyGuiSwiftCpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwiftCpp.h; path = src/SoyGuiSwiftCpp.h; sourceTree = "<group>"; };
 		BFF0F8782607EBC600B821FD /* SoyGuiApple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyGuiApple.mm; path = src/SoyGuiApple.mm; sourceTree = "<group>"; };
 		BFF1C71322E738F100AFDFD5 /* Opencv_contrib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Opencv_contrib; sourceTree = "<group>"; };
-		BFF228522691EF9C00AFAE52 /* JavascriptConvertImports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JavascriptConvertImports.h; sourceTree = SOURCE_ROOT; };
-		BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = JavascriptConvertImports.cpp; sourceTree = SOURCE_ROOT; };
+		BFF228522691EF9C00AFAE52 /* JavascriptConvertImports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JavascriptConvertImports.h; path = src/JavascriptConvertImports.h; sourceTree = SOURCE_ROOT; };
+		BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = JavascriptConvertImports.cpp; path = src/JavascriptConvertImports.cpp; sourceTree = SOURCE_ROOT; };
 		BFF2B6C02264F9A700232137 /* TApiSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSerial.h; path = src/TApiSerial.h; sourceTree = "<group>"; };
 		BFF2B6C12264F9A700232137 /* TApiSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSerial.cpp; path = src/TApiSerial.cpp; sourceTree = "<group>"; };
 		BFF505E822550F30005A6AC1 /* V8Bind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = V8Bind.cpp; path = src/V8Bind.cpp; sourceTree = "<group>"; };
