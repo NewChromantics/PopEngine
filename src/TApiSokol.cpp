@@ -7,6 +7,12 @@
 
 #include "sokol/sokol_gfx.h"
 
+
+//	soyopengl.h doesnt currently have linux includes, in a roundabout way we use windowing includes that are required atm
+#if defined(TARGET_LINUX)
+#include "SoyWindowLinux.h"
+#endif
+
 #include "SoyOpengl.h"
 
 namespace Sokol

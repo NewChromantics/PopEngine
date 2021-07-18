@@ -627,6 +627,9 @@
 		BFC721F12431207F009930E4 /* SoyShellExecuteOsx.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyShellExecuteOsx.mm; path = src/SoyShellExecuteOsx.mm; sourceTree = "<group>"; };
 		BFC721F224312080009930E4 /* SoyShellExecute.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyShellExecute.h; path = src/SoyShellExecute.h; sourceTree = "<group>"; };
 		BFC721F324312101009930E4 /* SoyShellExecute.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyShellExecute.cpp; path = src/SoyShellExecute.cpp; sourceTree = "<group>"; };
+		BFCB30F426A4C77F0085D56A /* SoySokol_Linux.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoySokol_Linux.cpp; path = src/SoySokol_Linux.cpp; sourceTree = "<group>"; };
+		BFCB30F526A4C77F0085D56A /* SoySokol_Linux.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoySokol_Linux.h; path = src/SoySokol_Linux.h; sourceTree = "<group>"; };
+		BFCB30F626A4C7AD0085D56A /* SoyWindowLinux.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyWindowLinux.h; path = src/SoyWindowLinux.h; sourceTree = "<group>"; };
 		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
 		BFD399F622CBC964009E2FD3 /* SoyFourcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFourcc.h; path = src/SoyFourcc.h; sourceTree = "<group>"; };
 		BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFourcc.cpp; path = src/SoyFourcc.cpp; sourceTree = "<group>"; };
@@ -1267,6 +1270,9 @@
 				BF4013E8250F651F00A753A4 /* SoySokol_Ios_Metal.h */,
 				BF4013E9250F651F00A753A4 /* SoySokol_Ios_Metal.mm */,
 				BF0D95E72517F367000C4E54 /* SoySokol_Osx.h */,
+				BFCB30F626A4C7AD0085D56A /* SoyWindowLinux.h */,
+				BFCB30F426A4C77F0085D56A /* SoySokol_Linux.cpp */,
+				BFCB30F526A4C77F0085D56A /* SoySokol_Linux.h */,
 				BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */,
 				BF563CB026134CBF00040705 /* SoySokol.h */,
 				BFEF6A3924759401000A1F88 /* SoySound.h */,
