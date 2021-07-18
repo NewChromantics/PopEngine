@@ -1,6 +1,6 @@
 #pragma once
 
-#import <string>
+#include <string>
 
 namespace Javascript
 {
