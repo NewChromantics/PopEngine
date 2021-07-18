@@ -87,6 +87,11 @@
 #endif
 
 
+namespace Javascript
+{
+	void	CleanSourceInput(std::string& Source);	//	some js interpreters fail with certain characters
+}
+
 
 JSObjectRef	JSObjectMakeTypedArrayWithBytesWithCopy(JSContextRef Context, JSTypedArrayType ArrayType,const uint8_t* ExternalBuffer, size_t ExternalBufferSize, JSValueRef* Exception);
 JSValueRef JSObjectToValue(JSObjectRef Object);
@@ -304,6 +309,59 @@ std::ostream& operator<<(std::ostream &out,const JSType& in)
 	
 	return out;
 }
+
+
+void Javascript::CleanSourceInput(std::string& Source)
+{
+	//	gr: javascript core on OSX failed with this chi 𝑥 character.
+	//		web/v8 is okay.
+	//		javascriptcore ios is okay
+	auto IsAscii = [](char Char)
+	{
+		//	Source.substr(45107,20).c_str()[0]
+		//	signed, so negative is the valid test!
+		if ( Char > 127 )
+			return false;
+		if ( Char < 0 )
+			return false;
+		return true;
+	};
+
+	Array<int> NonAsciiPositions;
+	for ( auto i=0;	i<Source.length();	i++ )
+	{
+		auto Char = Source[i];
+		if ( IsAscii(Char) )
+			continue;
+		NonAsciiPositions.PushBack(i);
+	}
+	
+	if ( !NonAsciiPositions.IsEmpty() )
+	{
+		std::stringstream Error;
+		for ( auto i=0;	i<NonAsciiPositions.GetSize();	i++ )
+		{
+			//	get the line this character is on
+			auto CharPos = NonAsciiPositions[i];
+			auto Start = std::max<int>(0,Source.rfind('\n',CharPos));
+			auto End = Source.find('\n',CharPos);
+			if ( End == Source.npos )
+				End = Source.length();
+			auto Line = Source.substr( Start, End-Start );
+			std::replace( Line.begin(), Line.end(), '\r', ' ');
+			
+			//	insert >< markers
+			Line.insert( CharPos-Start+1, " <<< ");
+			Line.insert( CharPos-Start, " >>> ");
+			Error << "Non-ascii char in source @" << CharPos << "; " << Line << std::endl;
+		}
+		Error << "Will fail to compile on JavascriptCore OSX";
+		throw Soy::AssertException(Error);
+	}
+}
+
+
+
 
 JsCore::TContext& JsCore::GetContext(JSContextRef ContextRef)
 {
@@ -1146,58 +1204,20 @@ void JsCore::TContext::LoadScript(const std::string& Source,const std::string& F
 void JsCore::TContext::LoadScript(const std::string& _Source,const std::string& Filename,JSObjectRef Global)
 {
 	auto Source = _Source;
+	Javascript::CleanSourceInput( Source );
 	Javascript::ConvertImportsToRequires(Source);
-
-	//	gr: javascript core on OSX failed with this chi 𝑥 character.
-	//		web/v8 is okay.
-	//		javascriptcore ios is okay
-	{
-		auto IsAscii = [](char Char)
-		{
-			//	Source.substr(45107,20).c_str()[0]
-			//	signed, so negative is the valid test!
-			if ( Char > 127 )
-				return false;
-			if ( Char < 0 )
-				return false;
-			return true;
-		};
-
-		Array<int> NonAsciiPositions;
-		for ( auto i=0;	i<Source.length();	i++ )
-		{
-			auto Char = Source[i];
-			if ( IsAscii(Char) )
-				continue;
-			NonAsciiPositions.PushBack(i);
-		}
-		
-		if ( !NonAsciiPositions.IsEmpty() )
-		{
-			std::stringstream Error;
-			for ( auto i=0;	i<NonAsciiPositions.GetSize();	i++ )
-			{
-				//	get the line this character is on
-				auto CharPos = NonAsciiPositions[i];
-				auto Start = std::max<int>(0,Source.rfind('\n',CharPos));
-				auto End = Source.find('\n',CharPos);
-				if ( End == Source.npos )
-					End = Source.length();
-				auto Line = Source.substr( Start, End-Start );
-				std::replace( Line.begin(), Line.end(), '\r', ' ');
-				
-				//	insert >< markers
-				Line.insert( CharPos-Start+1, " <<< ");
-				Line.insert( CharPos-Start, " >>> ");
-				Error << "Non-ascii char in source @" << CharPos << "; " << Line << std::endl;
-			}
-			Error << "Will fail to compile on JavascriptCore OSX";
-			throw Soy::AssertException(Error);
-		}
-	}
 	
 	auto Exec = [=](Bind::TLocalContext& Context)
 	{
+		//	like modules, we want an export now in bootup.js
+		//	to be web compatible. The bootup is now very similar to modules (but bootup not re-importable...
+		//	does the web allow cyclic imports?
+		auto& ModuleContext = Context.mGlobalContext;
+		//JsCore::TObject ModuleThis = ModuleContext.CreateObjectInstance( Context );
+		JsCore::TObject ModuleThis = ModuleContext.GetGlobalObject( Context );
+		JsCore::TObject ModuleExports = ModuleContext.CreateObjectInstance( Context );
+		ModuleThis.SetObject("exports", ModuleExports);
+
 		auto ThisHandle = Global;//JSObjectRef(nullptr);
 		auto SourceJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Source );
 		auto FilenameJs = JSStringCreateWithUTF8CString( Context.mLocalContext, Filename );
@@ -1278,6 +1298,7 @@ void JsCore::TInstance::LoadModule(const std::string& Filename,std::function<voi
 	//	need to move seperate parts into their own virtual imports.
 	Soy::FileToString(Filename,Source);
 
+	Javascript::CleanSourceInput( Source );
 	Javascript::ConvertImportsToRequires(Source);
 
 	//	create a new context
