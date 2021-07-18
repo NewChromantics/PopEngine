@@ -107,6 +107,7 @@ LOCAL_LDLIBS  	+= -llog			# logging
 # todo: generate from input from xcode
 LOCAL_SRC_FILES  := \
 $(SRC_PATH)/JsCoreBind.cpp \
+$(SRC_PATH)/JavascriptConvertImports.cpp \
 $(SRC_PATH)/PopMain.cpp \
 $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \

@@ -126,6 +126,7 @@
   <ItemGroup>
     <ClCompile Include="..\Source_App\PopEngineUnitTestMain.cpp" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
+    <ClCompile Include="..\src\JavascriptConvertImports.cpp" />
     <ClCompile Include="..\src\Json11\json11.cpp" />
     <ClCompile Include="..\src\PopDepthToYuv\Depth16ToYuv.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>

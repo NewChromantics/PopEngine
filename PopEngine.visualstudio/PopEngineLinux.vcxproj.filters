@@ -7,6 +7,9 @@
     <ClCompile Include="..\src\JsCoreBind.cpp">
       <Filter>PopEngine</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\JavascriptConvertImports.cpp">
+      <Filter>PopEngine</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\PopEngine.cpp">
       <Filter>PopEngine</Filter>
     </ClCompile>

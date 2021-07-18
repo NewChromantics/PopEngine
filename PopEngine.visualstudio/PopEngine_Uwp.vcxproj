@@ -15,6 +15,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\ChakraBind.cpp" />
     <ClCompile Include="..\src\JsCoreBind.cpp" />
+    <ClCompile Include="..\src\JavascriptConvertImports.cpp" />
     <ClCompile Include="..\src\JsCoreDll.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>

@@ -36,6 +36,7 @@ LIB_INCLUDES = \
 LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
 $(SRC_PATH)/JsCoreBind.cpp \
+$(SRC_PATH)/JavascriptConvertImports.cpp \
 $(SRC_PATH)/PopMain.cpp \
 $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \

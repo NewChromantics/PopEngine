@@ -72,6 +72,9 @@
     <ClCompile Include="..\src\JsCoreBind.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\JavascriptConvertImports.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\JsCoreDll.cpp">
       <Filter>Source</Filter>
     </ClCompile>
