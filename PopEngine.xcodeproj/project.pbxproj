@@ -55,7 +55,6 @@
 		BF151F8823845FAD00A70EBF /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
 		BF151F8923845FAD00A70EBF /* SoyFilesystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD520D6DA85000BC812 /* SoyFilesystem.mm */; };
 		BF151F8A23845FAD00A70EBF /* SoyFourcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */; };
-		BF151F8B23845FAD00A70EBF /* SoyGraphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689ACF20D6DA42000BC812 /* SoyGraphics.cpp */; };
 		BF151F8C23845FAD00A70EBF /* SoyH264.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33C21111D7A00FC991B /* SoyH264.cpp */; };
 		BF151F8D23845FAD00A70EBF /* SoyHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */; };
 		BF151F8E23845FAD00A70EBF /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
@@ -146,7 +145,6 @@
 		BF5EAFC8237F0C6E0077BCF5 /* SoyFilesystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFE572831B544E3400B17528 /* SoyFilesystem.cpp */; };
 		BF5EAFC9237F0C6E0077BCF5 /* SoyFilesystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD520D6DA85000BC812 /* SoyFilesystem.mm */; };
 		BF5EAFCA237F0C6E0077BCF5 /* SoyFourcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */; };
-		BF5EAFCB237F0C6E0077BCF5 /* SoyGraphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689ACF20D6DA42000BC812 /* SoyGraphics.cpp */; };
 		BF5EAFCC237F0C6E0077BCF5 /* SoyH264.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB33C21111D7A00FC991B /* SoyH264.cpp */; };
 		BF5EAFCD237F0C6E0077BCF5 /* SoyHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA6C2113514B0014E998 /* SoyHttp.cpp */; };
 		BF5EAFCE237F0C6E0077BCF5 /* SoyImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF31E49D1C56961100AB49AF /* SoyImage.cpp */; };
@@ -630,6 +628,7 @@
 		BFCB30F426A4C77F0085D56A /* SoySokol_Linux.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoySokol_Linux.cpp; path = src/SoySokol_Linux.cpp; sourceTree = "<group>"; };
 		BFCB30F526A4C77F0085D56A /* SoySokol_Linux.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoySokol_Linux.h; path = src/SoySokol_Linux.h; sourceTree = "<group>"; };
 		BFCB30F626A4C7AD0085D56A /* SoyWindowLinux.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyWindowLinux.h; path = src/SoyWindowLinux.h; sourceTree = "<group>"; };
+		BFCB30F926A4CDFC0085D56A /* LinuxDRM */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LinuxDRM; path = src/LinuxDRM; sourceTree = "<group>"; };
 		BFD08270225E90AC00FD05DC /* UnitTest */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UnitTest; sourceTree = "<group>"; };
 		BFD399F622CBC964009E2FD3 /* SoyFourcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFourcc.h; path = src/SoyFourcc.h; sourceTree = "<group>"; };
 		BFD399F722CBC964009E2FD3 /* SoyFourcc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFourcc.cpp; path = src/SoyFourcc.cpp; sourceTree = "<group>"; };
@@ -1213,6 +1212,7 @@
 		FB8A05951A2E54730099596C /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BFCB30F926A4CDFC0085D56A /* LinuxDRM */,
 				BFEDAFEB24E0672E003B130F /* Android */,
 				BF8534FC22B6DB270049C01B /* ChakraBind.cpp */,
 				BF8534FD22B6DB270049C01B /* ChakraBind.h */,
@@ -1862,7 +1862,6 @@
 				BF151FB623845FDE00A70EBF /* PopMain.mm in Sources */,
 				BF15200A2384848400A70EBF /* SoyWindow.mm in Sources */,
 				BF151F8623845FAD00A70EBF /* SoyDebug.cpp in Sources */,
-				BF151F8B23845FAD00A70EBF /* SoyGraphics.cpp in Sources */,
 				5813AC9C24F8F93F003178B3 /* TApiSokol.cpp in Sources */,
 				BF151FC22384601300A70EBF /* TApiMedia.cpp in Sources */,
 				BF151FA223845FAD00A70EBF /* SoyStream.cpp in Sources */,
@@ -1921,7 +1920,6 @@
 				BF5EAFD8237F0C6E0077BCF5 /* SoyPng.cpp in Sources */,
 				BF5EAFDE237F0C6E0077BCF5 /* SoyShader.cpp in Sources */,
 				BF5EAFD7237F0C6E0077BCF5 /* SoyPixels.cpp in Sources */,
-				BF5EAFCB237F0C6E0077BCF5 /* SoyGraphics.cpp in Sources */,
 				BF563CA126133A2E00040705 /* SoyOpenglViewOsx.mm in Sources */,
 				BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */,
 				BF5EAFC9237F0C6E0077BCF5 /* SoyFilesystem.mm in Sources */,

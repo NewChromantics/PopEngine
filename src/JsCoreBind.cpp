@@ -12,7 +12,8 @@
 #include "TApiHttp.h"
 #include "TApiZip.h"
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
-#include "TApiOpengl.h"
+//	gr: not using this api at all now (for ios size, but should all be repalced with sokol)
+//#include "TApiOpengl.h"
 #endif
 
 #if !defined(TARGET_ANDROID)
@@ -22,7 +23,7 @@
 #endif
 
 #if defined(ENABLE_OPENGL)
-#include "TApiOpengl.h"
+//#include "TApiOpengl.h"
 #endif
 
 #if defined(ENABLE_DIRECTX)

@@ -10,10 +10,15 @@
 
 //	soyopengl.h doesnt currently have linux includes, in a roundabout way we use windowing includes that are required atm
 #if defined(TARGET_LINUX)
-#include "SoyWindowLinux.h"
+//#include "SoyWindowLinux.h"
+#else
+#define ENABLE_GL_READ_BACK
 #endif
 
+//	access various soy opengl wrappers
+#if defined(ENABLE_GL_READ_BACK)
 #include "SoyOpengl.h"
+#endif
 
 namespace Sokol
 {
@@ -635,6 +640,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 			}
 			else if ( NextCommand->GetName() == Sokol::TRenderCommand_ReadPixels::Name )
 			{
+			#if defined(ENABLE_GL_READ_BACK)
 				auto& Command = dynamic_cast<Sokol::TRenderCommand_ReadPixels&>( *NextCommand );
 				auto& Image = *Command.mImage;
 				auto ImageMeta = Image.GetMeta();
@@ -669,6 +675,9 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 					if ( &Image == PassRenderTargetImage )
 						PassRenderTargetImage->OnSokolImageUpdated();
 				}
+			#else
+				throw Soy::AssertException("Read back not supported on this platform");
+			#endif
 			}
 			else
 			{
