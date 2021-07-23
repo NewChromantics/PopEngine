@@ -28,6 +28,11 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 	return Window;
 }
 
+std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& ParentWindow, const std::string& Name)
+{
+	Soy_AssertTodo();
+}
+
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
 	return Soy::Rectx<size_t>( 0, 0, mESContext.screenWidth, mESContext.screenHeight );

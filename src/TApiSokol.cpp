@@ -747,7 +747,7 @@ void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 	SokolParams.mOnPaint = [this](sg_context Context,vec2x<size_t> Rect)	{	this->OnPaint(Context,Rect);	};
 	
 	//	create platform-specific context
-	mSokolContext = Sokol::Platform_CreateContext(SokolParams);
+	mSokolContext = Sokol::Platform_CreateContext(nullptr, SokolParams);
 }
 
 void ApiSokol::TSokolContextWrapper::InitDebugFrame()

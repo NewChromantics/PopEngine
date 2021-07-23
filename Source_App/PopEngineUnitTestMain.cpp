@@ -14,8 +14,7 @@ bool IsXCodeDebugParam(const std::string& Argument)
 	return false;
 }
 
-//#if !defined(TARGET_IOS)	//	ios bootin from swift now
-#if false
+#if defined(TARGET_LINUX) || defined(TARGET_WINDOWS)//	ios bootin from swift now
 int main(int argc, const char * argv[])
 {
 	//	if first arg is a path, then to make debugging easier in xcode,

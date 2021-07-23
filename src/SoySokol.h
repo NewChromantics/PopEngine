@@ -25,7 +25,7 @@ namespace Sokol
 	class TContext;			//	platform context
 	class TContextParams;	//	or ViewParams?
 
-	std::shared_ptr<TContext>	Platform_CreateContext(TContextParams Params);
+	std::shared_ptr<TContext>	Platform_CreateContext(std::shared_ptr<SoyWindow> Window, TContextParams Params);
 }
 
 class Sokol::TContextParams
