@@ -10,6 +10,7 @@ RUN apt update -qq && \
     apt install -qq -y software-properties-common && \
     add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
     apt install -qq -y \
+        git \
         npm \
         libx264-dev \
         libjavascriptcoregtk-4.0-dev \
@@ -20,3 +21,11 @@ RUN apt update -qq && \
         libgbm-dev \
         libudev-dev \
         gdb
+
+RUN update-alternatives --install \
+        /usr/bin/gcc gcc \
+        /usr/bin/gcc-10 10
+
+RUN update-alternatives --install \
+        /usr/bin/g++ g++ \
+        /usr/bin/g++-10 10

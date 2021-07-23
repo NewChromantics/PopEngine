@@ -92,7 +92,5 @@
     "queue": "cpp",
     "stack": "cpp",
     "filesystem": "cpp"
-    "variant": "cpp",
-    "filesystem": "cpp"
   }
 }
