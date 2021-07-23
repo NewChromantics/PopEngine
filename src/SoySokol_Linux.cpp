@@ -7,20 +7,24 @@
 #define SOKOL_GLES2
 #include "sokol/sokol_gfx.h"
 
-std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params)
+std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextParams Params)
 {
-	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
-	auto Context = new SokolOpenglContext(Window,Params);
+	//auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
+	
+	auto Context = new SokolOpenglContext(Params);
 	return std::shared_ptr<Sokol::TContext>(Context);
 
 }
 
-SokolOpenglContext::SokolOpenglContext(std::shared_ptr<SoyWindow> Window,Sokol::TContextParams Params) :
+// tsdk: removed the std::shared_ptr<SoyWindow> Window from this function
+SokolOpenglContext::SokolOpenglContext(Sokol::TContextParams Params) :
 	mParams	( Params )
 {
-	auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
+	
+	//auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
 
-	mESContext = &PlatformWindow.mESContext;
+	//mESContext = &PlatformWindow.mESContext;
+	if(mESContext == nullptr) Soy_AssertException("No Window to get the ESContent from");
 
 	std::function<void()> OnFrame = [this](){ this->OnPaint(); };
 
