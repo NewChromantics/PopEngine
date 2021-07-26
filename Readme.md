@@ -8,6 +8,25 @@ Build Status
 Pop Engine
 ==================================
 
+Features
+---------------
+Not comprehensive, and in no particular order. But things this engine can do
+- Build small enough for app-clips (down to 2mb, +2mb for poph264 and +2mb for PopCameraDevice - need to remove these dependencies)
+- Swift integration (mac & ios apps now expected to boot from swift `@main` classes)
+- Runs on pi's
+- Runs on Nvidia Jetsons
+- Runs in docker
+- `import` and `export` handler (preprocessor) to allow modules in native ios/mac JavascriptCore
+- Once ran v8, (mac, windows and linux) but currently dropped as it's a nightmare to build v8 and impossible to find static libs for every platform
+- Runs chakra-core on windows (& hololens, at one time) for native JS
+- Once ran charkracore (from repository) on mac and ios as proof of concept
+- Same JS (via `Pop.`) for webxr, openxr etc
+- Abstracted rendering system. Serialised "Render commands" (`SetRenderTarget`,`Draw` etc) to aid network rendering, debugging etc - can even render same commands to metal and GL at the same time)
+- Heavily async internally
+- Uses native GUI apis where possible (interfaces with HTML, swift, win32)
+- Websocket servers & clients (bar web which only has WS clients), UDP, TCP sockets, HTTP servers, clients etc
+- Explicit native image handling/interfacing for seamless bytes<->canvas<->rendering integrations
+
 Javascript Runtimes
 -------------
 - Windows & Hololens1
