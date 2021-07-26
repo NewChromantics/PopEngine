@@ -797,6 +797,19 @@ JSPropertyNameArrayRef JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRe
 	return PropertyNamesArray;
 }
 
+void JSPropertyNameArrayRelease(JSPropertyNameArrayRef Keys)
+{
+	//	is there a chakra version of this?
+}
+
+JSValueRef JSObjectGetPropertyAtIndex(JSContextRef ctx, JSObjectRef object, size_t propertyIndex, JSValueRef *exception)
+{
+	Soy_AssertTodo();
+}
+
+
+
+
 size_t JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
 {
 	//	gr: iirc "length" doesn't appear in OSX build of chakra

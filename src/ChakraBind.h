@@ -266,6 +266,8 @@ void		JSValueUnprotect(JSGlobalContextRef Context, JSObjectRef Value);
 JSPropertyNameArrayRef	JSObjectCopyPropertyNames(JSContextRef Context,JSObjectRef This);
 size_t		JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys);
 JSStringRef	JSPropertyNameArrayGetNameAtIndex(JSPropertyNameArrayRef Keys,size_t Index);
+JSValueRef	JSObjectGetPropertyAtIndex(JSContextRef ctx, JSObjectRef object, size_t propertyIndex, JSValueRef *exception);
+void		JSPropertyNameArrayRelease(JSPropertyNameArrayRef Keys);
 
 JSValueRef	JSValueMakeFromJSONString(JSContextRef Context,const std::string& String);
 
