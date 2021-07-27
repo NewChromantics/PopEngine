@@ -14,7 +14,8 @@ bool IsXCodeDebugParam(const std::string& Argument)
 	return false;
 }
 
-#if defined(TARGET_LINUX) || defined(TARGET_WINDOWS)//	ios bootin from swift now
+//	gr: no TARGET_WINDOWS in the test app, _MSC_VER detect MS compiler
+#if defined(TARGET_LINUX) || defined(_MSC_VER)//	ios bootin from swift now
 int main(int argc, const char * argv[])
 {
 	//	if first arg is a path, then to make debugging easier in xcode,
