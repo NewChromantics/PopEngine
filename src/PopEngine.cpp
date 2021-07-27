@@ -126,6 +126,10 @@ int32_t PopMain()
 	RunningLock.Wait();
 	std::Debug << "PopMain() RunningLock flagged. Exiting." << std::endl;
 
+	std::Debug << "PopMain() resetting instance...." << std::endl;
+	pInstance.reset();
+	std::Debug << "PopMain() resetting instance done." << std::endl;
+
 	return PopExitCode;
 }
 #endif
