@@ -32,14 +32,14 @@ auto QuotedFilename = "(\"|')(.+\\.js)('|\")";
 auto QuotedFilenamePopEngineJs = "(\"|')(.+\\/PopEngine\\.js)('|\")";
 auto Whitespace = "\\s+";
 auto OptionalWhitespace = "\\s*";
-auto Keyword = "(const|var|let|class|function|async\\sfunction)";	//	prefixes which break up export, variable name etc
+auto Keyword = "(const|var|let|class|function|extends|async\\sfunction)";	//	prefixes which break up export, variable name etc
 
 //	must be other cases... like new line and symbol? maybe we can use ^symbol ?
 //	symbol( <-- function
 //	symbol= <-- var definition
 //	symbol; <-- var declaration
 //	symbol{ <-- class
-auto VariableNameEnd = "(\\(|=|;|\\{)";
+auto VariableNameEnd = "(\\(|=|;|extends|\\{)";
 
 void ReplacementPattern2(std::stringstream& Output,std::smatch& Match)
 {
