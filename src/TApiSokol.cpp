@@ -89,8 +89,16 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget
 		case SoyPixelsFormat::Float1:
 			return SG_PIXELFORMAT_R32F;
 			
-		case SoyPixelsFormat::RGBA:			return SG_PIXELFORMAT_RGBA8;
-		case SoyPixelsFormat::BGRA:			return SG_PIXELFORMAT_BGRA8;
+		case SoyPixelsFormat::RGBA:
+			return SG_PIXELFORMAT_RGBA8;
+			
+		case SoyPixelsFormat::BGRA:
+		{
+			//	 at least on ios, we can't render to BGRA
+			if ( ForRenderTarget )
+				return SG_PIXELFORMAT_RGBA8;
+			return SG_PIXELFORMAT_BGRA8;
+		}
 		
 		case SoyPixelsFormat::Float4:		
 		{
