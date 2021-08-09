@@ -760,6 +760,7 @@ void ApiPop::WriteStringToFile(Bind::TCallback& Params)
 
 void ApiPop::WriteToFile(Bind::TCallback& Params)
 {
+	Soy::TScopeTimerPrint Timer(__func__,2);
 	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
 
 	std::string Filename = Params.GetArgumentFilename(0);
@@ -789,6 +790,7 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 		throw Soy::AssertException("WriteToFile with non-string, non-array type");
 	}
 
+	Soy::TScopeTimerPrint Timer("ApiPop::WriteToFile(Soy::ArrayToFile)",2);
 	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
 }
 
