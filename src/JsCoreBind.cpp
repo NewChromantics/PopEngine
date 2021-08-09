@@ -1187,7 +1187,7 @@ void JsCore::TContext::GarbageCollect(JSContextRef LocalContext)
 	//	seems like this would be a good idea...
 #if defined(JSAPI_V8)
 #else
-	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
+	std::lock_guard<std::recursive_mutex> Lock(mInstance.mExecuteLock);
 #endif
 
 	JSForceSynchronousGarbageCollect(LocalContext);
@@ -1460,7 +1460,7 @@ void JsCore::TContext::Execute_Reference(std::function<void(JsCore::TLocalContex
 	//		todo: move it into JSLockAndRun for JSCore side?
 #if defined(JSAPI_V8)
 #else
-	std::lock_guard<std::recursive_mutex> Lock(mExecuteLock);
+	std::lock_guard<std::recursive_mutex> Lock(mInstance.mExecuteLock);
 #endif
 	
 	//	javascript core is threadsafe, so we can just call

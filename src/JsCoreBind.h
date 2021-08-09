@@ -296,6 +296,9 @@ private:
 	std::map<std::string,std::shared_ptr<TContext>>	mModuleContexts;	//	we create each module as it's own context so that it can share objects, but have their own global
 
 	std::function<void(int32_t)>	mOnShutdown;	//	callback when we want to die
+	
+public:
+	std::recursive_mutex	mExecuteLock;
 };
 
 class JsCore::TJobQueue : public SoyWorkerJobThread
@@ -718,7 +721,7 @@ public:
 	//	although jscore IS threadsafe, so we can execute on other threads, it's not
 	//	the same on other systems
 	TJobQueue			mJobQueue;
-	std::recursive_mutex	mExecuteLock;
+	//std::recursive_mutex	mExecuteLock;
 	
 	TContextDebug		mDebug;
 	
