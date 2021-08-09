@@ -790,7 +790,7 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 		throw Soy::AssertException("WriteToFile with non-string, non-array type");
 	}
 
-	Soy::TScopeTimerPrint Timer("ApiPop::WriteToFile(Soy::ArrayToFile)",2);
+	Soy::TScopeTimerPrint Timer2("ApiPop::WriteToFile(Soy::ArrayToFile)",2);
 	Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
 }
 
