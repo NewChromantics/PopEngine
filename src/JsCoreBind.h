@@ -572,7 +572,8 @@ public:
 	TObject				GetObject(TLocalContext& Context) const;
 	TFunction			GetFunction(TLocalContext& Context) const;
 	void				SetWeak(TObjectWrapperBase& Object,JSClassRef Class);		//	this is for v8, we pass the class as it has the destructor function pointer
-	TContext&			GetContext()					{	return *mContext;	}
+	TContext&			GetContext()						{	return *mContext;	}
+	TContext&			GetContext() const					{	return *mContext;	}
 	TPersistent&		operator=(const TPersistent& That)	{	Retain(That);	return *this;	}
 	
 private:
@@ -753,12 +754,15 @@ public:
 	template<typename TYPE>
 	void			Resolve(Bind::TLocalContext& Context,const TYPE& Value) const				{	Resolve(Context, GetValue(Context.mLocalContext, Value)); }
 	void			ResolveUndefined(Bind::TLocalContext& Context) const;
+	void			ResolveUndefined() const;
 
 	void			Reject(Bind::TLocalContext& Context,const std::string& Value) const			{	Reject( Context, GetValue( Context.mLocalContext, Value ) );	}
 	void			Reject(Bind::TLocalContext& Context,JSValueRef Value) const;//				{	mReject.Call(nullptr,Value);	}
+	void			Reject(const std::string& Value) const;
 	
 	//	risky?
-	TContext&		GetContext() { return mPromise.GetContext(); }
+	TContext&		GetContext() 		{ return mPromise.GetContext(); }
+	TContext&		GetContext() const	{ return mPromise.GetContext(); }
 
 protected:
 	

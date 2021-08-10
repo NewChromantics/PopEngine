@@ -2900,6 +2900,33 @@ JsCore::TPromise::~TPromise()
 }
 
 
+void JsCore::TPromise::ResolveUndefined() const
+{
+	auto& Context = GetContext();
+	
+	//	we make a copy of this promise (copying the persistents) as if this is called from a shared_ptr<promise> (pretty common)
+	//	the shared ptr could go out of scope before this queued resolve happens
+	//	this is a quick fix which lets us just call Resolve etc without fuss
+	TPromise Copy(*this);
+	auto Run = [Copy](Bind::TLocalContext& LocalContext)
+	{
+		Copy.ResolveUndefined(LocalContext);
+	};
+	Context.Queue(Run);
+}
+
+void JsCore::TPromise::Reject(const std::string& Error) const
+{
+	auto& Context = GetContext();
+	TPromise Copy(*this);	//	see ResolveUndefined for why we copy
+	auto Run = [Copy,Error](Bind::TLocalContext& LocalContext)
+	{
+		Copy.Reject(LocalContext,Error);
+	};
+	Context.Queue(Run);
+}
+
+
 void JsCore::TPromise::Resolve(TLocalContext& LocalContext,JSObjectRef Value) const
 {
 	Resolve( LocalContext, JSObjectToValue(Value) );
