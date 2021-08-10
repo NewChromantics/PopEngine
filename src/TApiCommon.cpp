@@ -49,6 +49,7 @@ namespace ApiPop
 	static void 	LoadFileAsArrayBufferAsync(Bind::TCallback& Params);
 	static void 	WriteStringToFile(Bind::TCallback& Params);
 	static void 	WriteToFile(Bind::TCallback& Params);
+	static void 	WriteToFileAsync(Bind::TCallback& Params);
 	static void 	GetFilenames(Bind::TCallback& Params);
 	static void 	GarbageCollect(Bind::TCallback& Params);
 	static void 	SetTimeout(Bind::TCallback& Params);
@@ -85,6 +86,7 @@ namespace ApiPop
 	DEFINE_BIND_FUNCTIONNAME(LoadFileAsImageAsync);
 	DEFINE_BIND_FUNCTIONNAME(WriteStringToFile);
 	DEFINE_BIND_FUNCTIONNAME(WriteToFile);
+	DEFINE_BIND_FUNCTIONNAME(WriteToFileAsync);
 	DEFINE_BIND_FUNCTIONNAME(GetFilenames);
 	DEFINE_BIND_FUNCTIONNAME(SetTimeout);		//	web-compatible call, should really use await Pop.Yield()
 	DEFINE_BIND_FUNCTIONNAME(GetTimeNowMs);		//	returns a relative time, as javascript can't handle 64bit int. Need to rename this to something like GetTimeRelativeMs()
@@ -795,6 +797,63 @@ void ApiPop::WriteToFile(Bind::TCallback& Params)
 }
 
 
+void ApiPop::WriteToFileAsync(Bind::TCallback& Params)
+{
+	Soy::TScopeTimerPrint Timer(__func__,2);
+	auto Append = !Params.IsArgumentUndefined(2) ? Params.GetArgumentBool(2) : false;
+
+	std::string Filename = Params.GetArgumentFilename(0);
+
+	//	make sure directory is created if it's a new filename
+	auto Directory = Platform::GetDirectoryFromFilename(Filename);
+	Platform::CreateDirectory(Directory);
+
+	std::shared_ptr<Array<uint8_t>> pContents( new Array<uint8_t> );
+	auto& Contents = *pContents;
+	auto ContentsArgumentIndex = 1;
+
+	//	gr: let's allow string as binary
+	if (Params.IsArgumentString(ContentsArgumentIndex))
+	{
+		auto ContentsString = Params.GetArgumentString(ContentsArgumentIndex);
+		auto* ContentsStringData = ContentsString.c_str();
+		auto ContentsStringLength = ContentsString.length();
+		auto ContentsStringArray = GetRemoteArray(reinterpret_cast<const uint8_t*>(ContentsStringData), ContentsStringLength);
+		Contents.PushBackArray(ContentsStringArray);
+	}
+	else if ( Params.IsArgumentArray(ContentsArgumentIndex) )
+	{
+		Params.GetArgumentArray(ContentsArgumentIndex, GetArrayBridge(Contents));
+	}
+	else
+	{
+		throw Soy::AssertException("WriteToFile with non-string, non-array type");
+	}
+
+	auto pPromise = Params.mContext.CreatePromisePtr(Params.mLocalContext,__func__);
+	
+	auto Write = [pContents,Filename,Append,pPromise]()
+	{
+		Soy::TScopeTimerPrint Timer2("ApiPop::WriteToFile(Soy::ArrayToFile)",2);
+		auto& Promise = *pPromise;
+		try
+		{
+			auto& Contents = *pContents;
+			Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
+			Promise.ResolveUndefined();
+		}
+		catch(std::exception& e)
+		{
+			std::string Error = e.what();
+			Promise.Reject(Error);
+		}
+	};
+	Params.mContext.QueueGeneralJob(Write);
+
+	Params.Return(*pPromise);
+}
+
+
 void ApiPop::GetFilenames(Bind::TCallback& Params)
 {
 	//	if no directory, list all files at root
@@ -860,6 +919,7 @@ void ApiPop::Bind(Bind::TContext& Context)
 	Context.BindGlobalFunction<BindFunction::LoadFileAsArrayBufferAsync>(LoadFileAsArrayBufferAsync, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteStringToFile>(WriteStringToFile, Namespace );
 	Context.BindGlobalFunction<BindFunction::WriteToFile>(WriteToFile, Namespace );
+	Context.BindGlobalFunction<BindFunction::WriteToFileAsync>(WriteToFileAsync, Namespace );
 	Context.BindGlobalFunction<BindFunction::GetFilenames>(GetFilenames, Namespace );
 	Context.BindGlobalFunction<BindFunction::GarbageCollect>(GarbageCollect, Namespace );
 	Context.BindGlobalFunction<BindFunction::SetTimeout>(SetTimeout, Namespace );
