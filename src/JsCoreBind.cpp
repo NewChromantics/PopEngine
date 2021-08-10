@@ -1099,10 +1099,11 @@ void JsCore::ThrowException(JSContextRef Context, JSValueRef ExceptionHandle, co
 
 
 JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const std::string& Filename) :
-	mInstance		( Instance ),
-	mContext		( Context ),
-	mFilename		( Filename ),
-	mJobQueue		( *this, [&Instance](std::function<void(std::chrono::milliseconds)>& Sleep)	{	return Instance.OnJobQueueIteration(Sleep);	} )
+	mInstance			( Instance ),
+	mContext			( Context ),
+	mFilename			( Filename ),
+	mJobQueue			( *this, [&Instance](std::function<void(std::chrono::milliseconds)>& Sleep)	{	return Instance.OnJobQueueIteration(Sleep);	} ),
+	mGeneralJobQueue	( Filename+" general job queue" )
 {
 	//	gr: this is slow (on ios) and assume it won't change, so cache it
 	//	if it does change, cache & invalidate in SoyLib
@@ -1113,6 +1114,7 @@ JsCore::TContext::TContext(TInstance& Instance,JSGlobalContextRef Context,const 
 
 	AddContextCache( *this, mContext );
 	mJobQueue.Start();
+	mGeneralJobQueue.Start();
 }
 
 JsCore::TContext::~TContext()
@@ -1148,7 +1150,12 @@ void JsCore::TContext::Cleanup()
 	//	should instance be doing this?
 	ReleaseContext();
 
+	mGeneralJobQueue.Stop();
 	mJobQueue.Stop();
+
+	mGeneralJobQueue.QueueDeleteAll();
+	mGeneralJobQueue.WaitToFinish();
+
 	mJobQueue.QueueDeleteAll();
 	mJobQueue.WaitToFinish();
 
@@ -1414,6 +1421,11 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	{
 		mJobQueue.PushJob( FunctorWrapper );
 	}
+}
+
+void JsCore::TContext::QueueGeneralJob(std::function<void()> Job)
+{
+	mGeneralJobQueue.PushJob(Job);
 }
 
 #if defined(JSAPI_JSCORE)

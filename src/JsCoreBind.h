@@ -695,6 +695,9 @@ public:
 	template<const char* FUNCTIONNAME,typename TYPE>
 	static JSObjectCallAsFunctionCallback	GetRawFunction(void(TYPE::* Function)(JsCore::TCallback&));
 
+	//	job queue that isn't the JS job queue
+	//	we could use any old thread system for this, but this way we could keep an eye on it
+	void				QueueGeneralJob(std::function<void()> Job);
 	
 protected:
 	void				Cleanup();		//	actual cleanup called by instance & destructor
@@ -720,8 +723,11 @@ public:
 	//	queue for jobs to try and keep non-js threads free and some kinda organisation
 	//	although jscore IS threadsafe, so we can execute on other threads, it's not
 	//	the same on other systems
+	//	gr: we cannot execute on other threads :/ (we can manipulate objects)
+	//		so we have 1 VM execute lock now, maybe we should have 1 job queue
 	TJobQueue			mJobQueue;
 	//std::recursive_mutex	mExecuteLock;
+	SoyWorkerJobThread	mGeneralJobQueue;	//	non-js jobs
 	
 	TContextDebug		mDebug;
 	
