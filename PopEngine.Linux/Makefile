@@ -12,6 +12,12 @@ CC = ${compiler}
 osTarget ?= Linux_Unknown
 BUILD_DIR = ../Build
 
+# gr: we could setup targets this way,(like templates) or only via make (ENABLE_OPENGL=X etc)
+ifeq ($(osTarget), Nvidia)
+#ENABLE_OPENGL=true
+#ENABLE_MEDIA=true
+endif
+
 TargetArch = $(osTarget)
 CONFIGURATION ?= Release
 
@@ -27,11 +33,6 @@ LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
 -I$(SRC_PATH)/Json11	\
 -I/usr/include/webkitgtk-4.0	\
--I$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)	\
--I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
--I$(SRC_PATH)/sokol	\
--I$(SRC_PATH)/LinuxDRM	\
--I/usr/include/libdrm	\
 
 LIB_CPP_FILES  = \
 $(SRC_PATH)/Json11/json11.cpp \
@@ -42,25 +43,19 @@ $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
-$(SRC_PATH)/TApiMedia.cpp \
 $(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/TApiZip.cpp \
 $(SRC_PATH)/TApiGui.cpp	\
-$(SRC_PATH)/TApiSokol.cpp	\
-$(SRC_PATH)/SoySokol_Linux.cpp	\
-$(SRC_PATH)/SoyGuiLinux.cpp	\
-$(SRC_PATH)/LinuxDRM/esUtil.cpp	\
 $(SRC_PATH)/SoyImageProxy.cpp	\
+#$(SRC_PATH)/TApiEngine.cpp \
+
+LIB_CPP_FILES += $(SRC_PATH)/SoyGuiLinux.cpp
 
 LIB_C_FILES = \
-$(SRC_PATH)/Zip/src/zip.c	\
-$(SRC_PATH)/LinuxDRM/common.c	\
-$(SRC_PATH)/LinuxDRM/drm-common.c	\
-$(SRC_PATH)/LinuxDRM/drm-legacy.c	\
+$(SRC_PATH)/Zip/src/zip.c
 
-#$(SRC_PATH)/TApiEngine.cpp \
 
 
 # soy lib files
@@ -79,6 +74,7 @@ $(SOY_PATH)/src/SoyHttpConnection.cpp \
 $(SOY_PATH)/src/SoyImage.cpp \
 $(SOY_PATH)/src/SoyMediaFormat.cpp \
 $(SOY_PATH)/src/SoyPixels.cpp \
+$(SOY_PATH)/src/SoyPlatform.cpp \
 $(SOY_PATH)/src/SoyPng.cpp \
 $(SOY_PATH)/src/SoyProtocol.cpp \
 $(SOY_PATH)/src/SoyRef.cpp \
@@ -95,14 +91,14 @@ $(SOY_PATH)/src/SoyWebSocket.cpp \
 $(SOY_PATH)/src/SoyWindow.cpp \
 
 
+
+
 APP_SRC_FILES =	\
 $(PROJECT_PATH)/Source_App/PopEngineUnitTestMain.cpp	\
 
 LIB_DEFINES = \
--DTARGET_LINUX	\
+-DTARGET_LINUX=$(osTarget)	\
 -DJSAPI_JSCORE	\
--DENABLE_POPCAMERADEVICE	\
--DENABLE_POPH264	\
 
 
 ifeq ($(CONFIGURATION),Release)
@@ -131,27 +127,62 @@ APP_LINK_FLAGS = $(LDFLAGS)
 LIB_LINK_LIBS = \
 -ljavascriptcoregtk-4.0	\
 -L/usr/lib/aarch64-linux-gnu	\
--lPopH264 \
--L$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)	\
--L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)	\
--lPopCameraDevice \
--lEGL \
--lm \
--lgbm \
--ldrm	\
--ludev \
+-lm 	# math
+
+# These files (without directory structure) get copied to build dir
+OUT_FILE_SOURCES = $(SRC_PATH)/PopEngine.h
+
+
+
+ifdef $(ENABLE_OPENGL)
+LIB_INCLUDES += -I$(SRC_PATH)/sokol
+LIB_INCLUDES += -I$(SRC_PATH)/LinuxDRM
+LIB_INCLUDES += -I/usr/include/libdrm
+LIB_DEFINES += ENABLE_OPENGL
+LIB_DEFINES += ENABLE_APISOKOL
+LIB_C_FILES += $(SRC_PATH)/LinuxDRM/common.c
+LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-common.c
+LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-legacy.c
+LIB_CPP_FILES += $(SRC_PATH)/TApiSokol.cpp
+LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
+LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
+LIB_LINK_LIBS += -lEGL
+LIB_LINK_LIBS += -ldrm
+LIB_LINK_LIBS += -lgbm # graphics buffer for mesa
+LIB_LINK_LIBS += -ludev # user devices
 
 # flag is an optional parameter set in the Github Action
 ifeq ($(flag),osmesa)
-$(info Building for Software Driver)
-LDFLAGS += '-Wl,-rpath-link=$(SRC_PATH)/Libs/osmesa'
-LIB_LINK_LIBS += \
--L$(SRC_PATH)/Libs/osmesa	\
--lOSMesa
+	$(info Building for Software Driver)
+	LDFLAGS += '-Wl,-rpath-link=$(SRC_PATH)/Libs/osmesa'
+	LIB_LINK_LIBS += -L$(SRC_PATH)/Libs/osmesa
+	LIB_LINK_LIBS += -lOSMesa
 else
-$(info Building for GPU)
-LIB_LINK_LIBS += -lGLESv2 
+	$(info Building for GPU)
+	LIB_LINK_LIBS += -lGLESv2 
 endif
+endif
+
+ifdef $(ENABLE_MEDIA)
+LIB_INCLUDES += -I$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)
+LIB_INCLUDES += -I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)
+LIB_DEFINES += -DENABLE_POPCAMERADEVICE
+LIB_DEFINES += -DENABLE_POPH264
+#LIB_DEFINES += -DENABLE_APIMEDIA # this currently gets enabled in code if POPH264 or POPCAMERADEVICE is enabled
+LIB_CPP_FILES += $(SRC_PATH)/TApiMedia.cpp
+LIB_LINK_LIBS += -lPopH264
+LIB_LINK_LIBS += -L$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)
+LIB_LINK_LIBS += -lPopCameraDevice
+LIB_LINK_LIBS += -L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)
+OUT_FILE_SOURCES += $(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)/libPopH264.so
+OUT_FILE_SOURCES += $(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)/libPopCameraDevice.so
+endif
+
+
+# allow multichar constants (eg. int = 'RGBA')
+CFLAGS += -Wno-multichar
+
+
 
 LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
 APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
@@ -160,11 +191,6 @@ OUT_LIB=$(BUILD_DIR)/lib${LIB_NAME}.so
 OUT_APP=$(BUILD_DIR)/${APP_NAME}
 
 
-# These files (without directory structure) get copied to build dir
-OUT_FILE_SOURCES = \
-$(SRC_PATH)/PopEngine.h	\
-$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)/libPopH264.so 	\
-$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)/libPopCameraDevice.so	\
 
 # convert to Build/xxx target files
 OUT_FILES = $(addprefix ${BUILD_DIR}/,$(notdir ${OUT_FILE_SOURCES}))

@@ -1,5 +1,8 @@
 #pragma once
+
+#if defined(ENABLE_OPENGL)
 #include "LinuxDRM/esUtil.h"
+#endif
 
 class Platform::TWindow : public SoyWindow
 {
@@ -14,5 +17,7 @@ public:
 	virtual bool									IsForeground() override;
 	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
 
+#if defined(ENABLE_OPENGL)
 	ESContext											mESContext;
+#endif
 };

@@ -1,10 +1,10 @@
 #include "SoyGui.h"
 #include <stdlib.h>
-#include "LinuxDRM/esUtil.h"
 #include "SoyWindowLinux.h"
 
 Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 {
+#if defined(ENABLE_OPENGL)
 	esInitContext( &mESContext );
 	if(Name == "null")
 	{
@@ -16,7 +16,9 @@ Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 	// tsdk: the width and height are set to the size of the screen inside this function if the values are empty
 		esCreateWindow( &mESContext, Name.c_str(), Rect.w, Rect.h, ES_WINDOW_ALPHA );
 	}
-
+#else
+	Soy_AssertTodo();
+#endif
 }
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
@@ -35,7 +37,11 @@ std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& ParentWindo
 
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
+#if defined(ENABLE_OPENGL)
 	return Soy::Rectx<size_t>( 0, 0, mESContext.screenWidth, mESContext.screenHeight );
+#else
+	Soy_AssertTodo();
+#endif
 }
 
 void Platform::TWindow::SetFullscreen(bool Fullscreen)
