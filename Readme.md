@@ -53,7 +53,7 @@ Build Notes
 	- `sudo service ssh start`
 	- `sudo systemctl enable ssh`
 	- Setup Visual studio via `Tools->Options->Cross Platform->Connections`
-	- Magic_enum requires gcc9, jetson (and pi?) have `gcc --version` 7
+	- [Magic_enum requires gcc9](https://github.com/Neargye/magic_enum#compiler-compatibility), jetson (and pi?) have `gcc --version` 7
 		- `sudo apt-get install gcc-9` doesnt exist yet
 		- https://askubuntu.com/a/1140203
 		- `sudo apt-get install software-properties-common`
@@ -67,6 +67,15 @@ Build Notes
 	- Do not commit this token. Github will spot it and revoke the token for security.
 	- run `cd PopEngine.Package && npm install` to download the packages
 	- run `ln -s node_modules/@newchromantics/ ../Libs` to make a symbolic link to the packages in the correct (`/Libs/`) directory
+
+- Linux(raspi buster) via VirtualBox + VSCode
+	- Install `remote-ssh` into vscode
+	- Make sure SSH-Server is installed (default installed in raspbi buster) [Install `ssh-server` on linux;](https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-server)  `sudo apt-get install openssh-server` 
+	- Enable SSH server (default disabled) `sudo raspi-config` and enable from interface options
+	- Connect with default `pi@raspberry.local` by pressing `F1` and typing `Remote-ssh: connect to host` (lovely ux)
+	- Updated GCC if `gcc --version` is less than 9 (See above). (Raspian currently default 8)
+		- gr: the `jonathonf` routine isn't working. 
+		- `sudo apt-install g++-9` installs... `clang-9` but not `g++-9`. There doesn't seem to be `gcc-9` still. 
 
 GitHub Actions Notes
 -------------
