@@ -10,7 +10,12 @@ CC = ${compiler}
 # gr: always prefixed with Linux_
 # 	then add architecture or specific build (nvidia jetson, pi4)
 osTarget ?= Linux_Unknown
-BUILD_DIR = ../Build
+
+# ../ causes problems, but we also can't execute make in the root dir :/
+# so expand it, so we end up putting temp stuff in build/temp/home/graham/code/popengine/src/...
+PROJECT_PATH = $(realpath ..)/
+BUILD_DIR = $(PROJECT_PATH)Build/$(osTarget)
+BUILD_TEMP_DIR = $(PROJECT_PATH)/Build/Temp/$(osTarget)/
 
 # gr: we could setup targets this way,(like templates) or only via make (ENABLE_OPENGL=X etc)
 ifeq ($(osTarget), Nvidia)
@@ -21,7 +26,6 @@ endif
 TargetArch = $(osTarget)
 CONFIGURATION ?= Release
 
-PROJECT_PATH = ..
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
 
@@ -93,7 +97,7 @@ $(SOY_PATH)/src/SoyWindow.cpp \
 
 
 
-APP_SRC_FILES =	\
+APP_CPP_FILES =	\
 $(PROJECT_PATH)/Source_App/PopEngineUnitTestMain.cpp	\
 
 LIB_DEFINES = \
@@ -183,9 +187,16 @@ endif
 CFLAGS += -Wno-multichar
 
 
+# macro to turn input files into output files
+# add Prefix BUILD_TEMP_DIR <- add suffix .o <- remove ../ <-- get filename without extension
+InputFilesToOutputFiles = $(addprefix $(BUILD_TEMP_DIR),$(addsuffix .o,$(basename $(1))))
 
-LIB_OBJECTS=$(LIB_CPP_FILES:.cpp=.o) $(LIB_C_FILES:.c=.o)
-APP_OBJECTS=$(APP_SRC_FILES:.cpp=.o)
+APP_OBJECTS = $(call InputFilesToOutputFiles,$(APP_CPP_FILES))
+LIB_OBJECTS = $(call InputFilesToOutputFiles,$(LIB_CPP_FILES))
+LIB_OBJECTS += $(call InputFilesToOutputFiles,$(LIB_C_FILES))
+
+$(info LIB_OBJECTS=$(LIB_OBJECTS))
+$(info APP_OBJECTS=$(APP_OBJECTS))
 
 OUT_LIB=$(BUILD_DIR)/lib${LIB_NAME}.so
 OUT_APP=$(BUILD_DIR)/${APP_NAME}
@@ -214,7 +225,7 @@ $(OUT_FILES): $(OUT_FILE_SOURCES)
 	$(info Copying output files $(OUT_FILES))
 	cp $(OUT_FILE_SOURCES) $(BUILD_DIR)
 
-$(OUT_APP): $(APP_OBJECTS) $(OUT_LIB)
+$(OUT_APP): $(APP_OBJECTS) $(OUT_LIB) 
 	$(info Building test app $(OUT_APP))
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(APP_LINK_FLAGS) $(APP_OBJECTS) -o $@ -L$(BUILD_DIR) -l$(LIB_NAME)
@@ -225,14 +236,19 @@ $(OUT_LIB): $(LIB_OBJECTS) $(OUT_FILES)
 	$(info Listing dependencies of $(OUT_LIB))
 	ldd $(OUT_LIB)
 
-.c.o:
+$(BUILD_TEMP_DIR)%.o: %.c
+	mkdir -p $(dir $@)
 	$(CC) -x c $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
 
-.cpp.o:
+$(BUILD_TEMP_DIR)%.o: %.cpp
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(APP_INCLUDES) $(LIB_INCLUDES) $< -o $@
+
 
 clean:
 	# clean build files, anything .o
+	#find . -name "$(PROJECT_PATH)*.o" -type f -delete
+
 	$(info Cleaning files)
 	rm -f $(APP_OBJECTS)
 	rm -f $(LIB_OBJECTS)
