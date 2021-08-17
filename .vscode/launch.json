@@ -5,7 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "cppdbg Minimal_Debug",
+			"name": "Debug - Build Default Debug with Opengl",
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceRoot}/Build/PopEngineTestApp",
@@ -22,7 +22,7 @@
 					"ignoreFailures": true
 				}
 			],
-			"preLaunchTask": "Build Minimal_Debug"
+			"preLaunchTask": "Build Default Debug with Opengl"
 		},
 		{
 			"type": "vgdb",

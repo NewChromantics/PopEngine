@@ -16,7 +16,7 @@
 		{
 			"label": "Build Default Debug with Opengl",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make osTarget=Nvidia CONFIGURATION=Debug ENABLE_OPENGL=true)",
+			"command": "(cd PopEngine.Linux && make CONFIGURATION=Debug ENABLE_OPENGL=true)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build"
