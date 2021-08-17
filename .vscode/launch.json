@@ -8,7 +8,7 @@
 			"name": "Debug - Build Default Debug with Opengl",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceRoot}/Build/PopEngineTestApp",
+			"program": "${workspaceRoot}/Build/Linux_Default_Debug/PopEngineTestApp",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
