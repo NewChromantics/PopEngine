@@ -146,12 +146,13 @@ OUT_FILE_SOURCES = $(SRC_PATH)/PopEngine.h
 
 
 
-ifdef $(ENABLE_OPENGL)
+ifdef ENABLE_OPENGL
+$(info Building with OPENGL)
 LIB_INCLUDES += -I$(SRC_PATH)/sokol
 LIB_INCLUDES += -I$(SRC_PATH)/LinuxDRM
 LIB_INCLUDES += -I/usr/include/libdrm
-LIB_DEFINES += ENABLE_OPENGL
-LIB_DEFINES += ENABLE_APISOKOL
+LIB_DEFINES += -DENABLE_OPENGL
+LIB_DEFINES += -DENABLE_APISOKOL
 LIB_C_FILES += $(SRC_PATH)/LinuxDRM/common.c
 LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-common.c
 LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-legacy.c
@@ -165,17 +166,18 @@ LIB_LINK_LIBS += -ludev # user devices
 
 # flag is an optional parameter set in the Github Action
 ifeq ($(flag),osmesa)
-	$(info Building for Software Driver)
-	LDFLAGS += '-Wl,-rpath-link=$(SRC_PATH)/Libs/osmesa'
-	LIB_LINK_LIBS += -L$(SRC_PATH)/Libs/osmesa
-	LIB_LINK_LIBS += -lOSMesa
+$(info Building for Software Driver)
+LDFLAGS += '-Wl,-rpath-link=$(SRC_PATH)/Libs/osmesa'
+LIB_LINK_LIBS += -L$(SRC_PATH)/Libs/osmesa
+LIB_LINK_LIBS += -lOSMesa
 else
-	$(info Building for GPU)
-	LIB_LINK_LIBS += -lGLESv2 
+$(info Building for GPU)
+LIB_LINK_LIBS += -lGLESv2 
 endif
 endif
 
-ifdef $(ENABLE_MEDIA)
+ifdef ENABLE_MEDIA
+$(info Building with MEDIA)
 LIB_INCLUDES += -I$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)
 LIB_INCLUDES += -I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)
 LIB_DEFINES += -DENABLE_POPCAMERADEVICE
@@ -202,9 +204,8 @@ InputFilesToOutputFiles = $(addprefix $(BUILD_TEMP_DIR),$(addsuffix .o,$(basenam
 APP_OBJECTS = $(call InputFilesToOutputFiles,$(APP_CPP_FILES))
 LIB_OBJECTS = $(call InputFilesToOutputFiles,$(LIB_CPP_FILES))
 LIB_OBJECTS += $(call InputFilesToOutputFiles,$(LIB_C_FILES))
-
-$(info LIB_OBJECTS=$(LIB_OBJECTS))
-$(info APP_OBJECTS=$(APP_OBJECTS))
+#$(info LIB_OBJECTS=$(LIB_OBJECTS))
+#$(info APP_OBJECTS=$(APP_OBJECTS))
 
 OUT_LIB=$(BUILD_DIR)/lib${LIB_NAME}.so
 OUT_APP=$(BUILD_DIR)/${APP_NAME}
