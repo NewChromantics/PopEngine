@@ -864,10 +864,19 @@ protected:
 		//		we shouldn't really have our own constructors being deleted!
 		//	free the void
 		//	cast to TObject and use This to do proper type checks
-		//std::Debug << "Free object of type " << TYPENAME << std::endl;
-		auto& Object = TObject::This<THISTYPE>( Context, ObjectRef );
-		FreeObject( Object );
-	
+		//	gr: catching exceptions here because (on linux at least) when the context group(vm) cleans up
+		//		it calls all the free()'s. But some objects are already nulled, and there's no try/catch around these free calls
+		try
+		{
+			//std::Debug << "Free object of type " << TYPENAME << std::endl;
+			auto& Object = TObject::This<THISTYPE>( Context, ObjectRef );
+			FreeObject( Object );
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Free object of type " << TYPENAME << " caused exception: " << e.what() << std::endl;
+		}
+		
 		//	reset the void for safety?
 		//std::Debug << "ObjectRef=" << ObjectRef << "(" << TYPENAME << ") to null" << std::endl;
 		JSObjectSetPrivate( Context, ObjectRef, nullptr );
