@@ -74,7 +74,8 @@
 #include "TApiOpenvr.h"
 #endif
 
-#if defined(TARGET_OSX) || defined(TARGET_IOS) || defined(TARGET_LINUX) ||defined(TARGET_WINDOWS)
+//	gr: in linux, ENABLE_APISOKOL is defined explicitly in makefile
+#if defined(TARGET_OSX) || defined(TARGET_IOS) ||defined(TARGET_WINDOWS)
 #define ENABLE_APISOKOL
 #endif
 
