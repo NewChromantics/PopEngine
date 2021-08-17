@@ -19,8 +19,7 @@
 			"command": "(cd PopEngine.Linux && make osTarget=Nvidia ENABLE_OPENGL=true ENABLE_MEDIA=true)",
 			"problemMatcher": [],
 			"group": {
-				"kind": "build",
-				"isDefault": true
+				"kind": "build"
 			}
 		},
 		{
@@ -29,8 +28,7 @@
 			"command": "(cd PopEngine.Linux && make osTarget=Pi compiler=g++-10.1 CONFIGURATION=Debug)",
 			"problemMatcher": [],
 			"group": {
-				"kind": "build",
-				"isDefault": true
+				"kind": "build"
 			}
 		},
 		{
@@ -39,8 +37,7 @@
 			"command": "(cd PopEngine.Linux && make osTarget=ubuntu-latest compiler=g++-10 CONFIGURATION=Debug)",
 			"problemMatcher": [],
 			"group": {
-				"kind": "build",
-				"isDefault": true
+				"kind": "build"
 			}
 		},
 		{
