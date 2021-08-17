@@ -4,9 +4,9 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build Minimal_Debug",
+			"label": "Build Default Debug",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make osTarget=Nvidia CONFIGURATION=Debug)",
+			"command": "(cd PopEngine.Linux && make CONFIGURATION=Debug)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
@@ -14,9 +14,27 @@
 			}
 		},
 		{
-			"label": "Build Nvidia",
+			"label": "Build Default Debug with Opengl",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make osTarget=Nvidia ENABLE_OPENGL=true ENABLE_MEDIA=true)",
+			"command": "(cd PopEngine.Linux && make osTarget=Nvidia CONFIGURATION=Debug ENABLE_OPENGL=true)",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build"
+			}
+		},
+		{
+			"label": "Build Nvidia Debug",
+			"type": "shell",
+			"command": "(cd PopEngine.Linux && make osTarget=Nvidia CONFIGURATION=Debug)",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build"
+			}
+		},
+		{
+			"label": "Build Nvidia Release",
+			"type": "shell",
+			"command": "(cd PopEngine.Linux && make osTarget=Nvidia)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build"

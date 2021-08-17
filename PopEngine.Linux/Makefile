@@ -6,22 +6,29 @@ APP_NAME = PopEngineTestApp
 compiler ?= g++
 CC = ${compiler}
 
-# TargetArch is the target architecture or OS
-# gr: always prefixed with Linux_
+# gr: should always prefix with Linux... tidy up these names!
 # 	then add architecture or specific build (nvidia jetson, pi4)
-osTarget ?= Linux_Unknown
+osTarget ?= Linux_Default
+
+# TargetArch is the name of the architectures we use in modules (poph264, popcameradevice)
+TargetArch = $(osTarget)
 
 # ../ causes problems, but we also can't execute make in the root dir :/
 # so expand it, so we end up putting temp stuff in build/temp/home/graham/code/popengine/src/...
 PROJECT_PATH = $(realpath ..)/
 
 # gr: we could setup targets this way,(like templates) or only via make (ENABLE_OPENGL=X etc)
+# todo: handle osmesa flag here in a target
 ifeq ($(osTarget), Nvidia)
-#ENABLE_OPENGL=true
-#ENABLE_MEDIA=true
+ENABLE_OPENGL=true
+ENABLE_MEDIA=true
 endif
 
-TargetArch = $(osTarget)
+ifeq ($(osTarget), Pi)
+ENABLE_OPENGL=true
+ENABLE_MEDIA=true
+endif
+
 CONFIGURATION ?= Release
 
 BUILD_DIR = $(PROJECT_PATH)Build/$(osTarget)_$(CONFIGURATION)
