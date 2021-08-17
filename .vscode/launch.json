@@ -5,6 +5,26 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "cppdbg Minimal_Debug",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceRoot}/Build/PopEngineTestApp",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"preLaunchTask": "Build Minimal_Debug"
+		},
+		{
 			"type": "vgdb",
 			"request": "launch",
 			"name": "Debug vgdb Nvidia",
@@ -13,6 +33,16 @@
 			"cwd": "${workspaceRoot}",
 			"useAbsoluteFilePaths":true,
 			"preLaunchTask": "Build Nvidia"
+		},
+		{
+			"type": "gdb",
+			"request": "launch",
+			"name": "Debug gdb Minimal",
+			"program": "Build/PopEngineTestApp",
+			"args": [""],
+			"cwd": "${workspaceRoot}",
+			"useAbsoluteFilePaths":true,
+			"preLaunchTask": "Build Minimal_Debug"
 		},
 		{
 			"type": "vgdb",

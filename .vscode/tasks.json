@@ -4,9 +4,9 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build Minimal",
+			"label": "Build Minimal_Debug",
 			"type": "shell",
-			"command": "(cd PopEngine.Linux && make osTarget=Nvidia)",
+			"command": "(cd PopEngine.Linux && make osTarget=Nvidia CONFIGURATION=Debug)",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
