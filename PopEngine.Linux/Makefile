@@ -147,6 +147,7 @@ OUT_FILE_SOURCES = $(SRC_PATH)/PopEngine.h
 
 
 ifdef ENABLE_OPENGL
+# sudo apt-get install libgles2-mesa-dev
 $(info Building with OPENGL)
 LIB_INCLUDES += -I$(SRC_PATH)/sokol
 LIB_INCLUDES += -I$(SRC_PATH)/LinuxDRM
@@ -161,8 +162,12 @@ LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_LINK_LIBS += -lEGL
 LIB_LINK_LIBS += -ldrm
-LIB_LINK_LIBS += -lgbm # graphics buffer for mesa
-LIB_LINK_LIBS += -ludev # user devices
+#LIB_LINK_LIBS += -ludev # user devices
+
+# sudo apt-get install libgbm-dev
+# graphics buffer for mesa, so we can use graphics buffers (GBM) with opengl without X
+# this is at least true for pi, testing jetson
+LIB_LINK_LIBS += -lgbm 
 
 # flag is an optional parameter set in the Github Action
 ifeq ($(flag),osmesa)
@@ -172,7 +177,7 @@ LIB_LINK_LIBS += -L$(SRC_PATH)/Libs/osmesa
 LIB_LINK_LIBS += -lOSMesa
 else
 $(info Building for GPU)
-LIB_LINK_LIBS += -lGLESv2 
+LIB_LINK_LIBS += -lGLESv2
 endif
 endif
 
