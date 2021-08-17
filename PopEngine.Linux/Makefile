@@ -14,8 +14,6 @@ osTarget ?= Linux_Unknown
 # ../ causes problems, but we also can't execute make in the root dir :/
 # so expand it, so we end up putting temp stuff in build/temp/home/graham/code/popengine/src/...
 PROJECT_PATH = $(realpath ..)/
-BUILD_DIR = $(PROJECT_PATH)Build/$(osTarget)
-BUILD_TEMP_DIR = $(PROJECT_PATH)/Build/Temp/$(osTarget)/
 
 # gr: we could setup targets this way,(like templates) or only via make (ENABLE_OPENGL=X etc)
 ifeq ($(osTarget), Nvidia)
@@ -25,6 +23,9 @@ endif
 
 TargetArch = $(osTarget)
 CONFIGURATION ?= Release
+
+BUILD_DIR = $(PROJECT_PATH)Build/$(osTarget)_$(CONFIGURATION)
+BUILD_TEMP_DIR = $(PROJECT_PATH)/Build/Temp/$(osTarget)_$(CONFIGURATION)/
 
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
