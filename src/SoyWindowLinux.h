@@ -46,7 +46,6 @@ public:
 
 public:
 	EGLDisplay	mDisplay = EGL_NO_DISPLAY;
-	EGLConfig	mConfig;
 	EGLContext	mContext = EGL_NO_CONTEXT;
 	EGLSurface	mSurface = EGL_NO_SURFACE;
 };

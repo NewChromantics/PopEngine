@@ -161,7 +161,8 @@ LIB_CPP_FILES += $(SRC_PATH)/TApiSokol.cpp
 LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_LINK_LIBS += -lEGL
-LIB_LINK_LIBS += -ldrm
+#LIB_LINK_LIBS += -ldrm
+LIB_LINK_LIBS += -l:libdrm.so.2
 #LIB_LINK_LIBS += -ludev # user devices
 
 # sudo apt-get install libgbm-dev
@@ -178,6 +179,8 @@ LIB_LINK_LIBS += -lOSMesa
 else
 $(info Building for GPU)
 LIB_LINK_LIBS += -lGLESv2
+#LIB_LINK_LIBS += -l:libGLESv2.so.2	nvidia demos using this
+
 endif
 endif
 

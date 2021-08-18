@@ -3,6 +3,9 @@
 #include "SoyWindowLinux.h"
 #include <magic_enum.hpp>
 
+#define EGL_EGLEXT_PROTOTYPES
+#include <EGL/eglext.h>
+
 namespace Egl
 {
 	void		IsOkay(const char* Context);
@@ -44,6 +47,7 @@ std::string Egl::GetString(EGLint Egl_Value)
 	switch(Egl_Value)
 	{
 	#define DECLARE_ERROR(e)	case e: return #e
+		DECLARE_ERROR(EGL_BAD_DISPLAY);
 		DECLARE_ERROR(EGL_BAD_ACCESS);
 		DECLARE_ERROR(EGL_BAD_ALLOC);
 		DECLARE_ERROR(EGL_BAD_ATTRIBUTE);
@@ -75,7 +79,7 @@ void Egl::IsOkay(const char* Context)
 	auto EglError = GetString(Error);
 
 	std::stringstream Debug;
-	Debug << "EGL error " << EglError;
+	Debug << "EGL error " << EglError << " in " << Context;
 	throw Soy::AssertException(Debug);
 }
 
@@ -85,26 +89,200 @@ EglRenderView::EglRenderView(SoyWindow& Parent) :
 {
 }
 
-EglWindow::EglWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect )
+void GetConfigAttributes(ArrayBridge<EGLint>&& Attribs,Soy::Rectx<int32_t>& Rect,const TOpenglParams& OpenglParams)
 {
+	//	todo: use OpenglParams
+	//	EGL_RENDER_BUFFER = EGL_SINGLE_BUFFER, EGL_BACK_BUFFER
+	auto DepthSize = 24;
+	auto AntialiasSamples = 1;	//	MSAA... passes? sample size?
+
+	//Attribs.PushBackArray({EGL_RENDERABLE_TYPE,EGL_OPENGL_ES2_BIT});
+	
+	if ( Rect.w > 0 )
+		Attribs.PushBackArray({EGL_WIDTH,Rect.w});
+
+	if ( Rect.h > 0 )
+		Attribs.PushBackArray({EGL_HEIGHT,Rect.h});
+
+//	if ( DepthBits )
+//		Attribs.PushBackArray({EGL_DEPTH_SIZE,DepthSize});
+
+//	if ( AntialiasSamples )
+//		Attribs.PushBackArray({EGL_SAMPLES,AntialiasSamples});
+
+
+/*
+ cfgAttrs[cfgAttrIndex++] = (glversion == 2) ? EGL_OPENGL_ES2_BIT
+                                                : EGL_OPENGL_ES_BIT;
+    ctxAttrs[ctxAttrIndex++] = EGL_CONTEXT_CLIENT_VERSION;
+    ctxAttrs[ctxAttrIndex++] = glversion;
+// Request a minimum of 1 bit each for red, green, blue, and alpha
+    // Setting these to anything other than DONT_CARE causes the returned
+    //   configs to be sorted with the largest bit counts first.
+    cfgAttrs[cfgAttrIndex++] = EGL_RED_SIZE;
+    cfgAttrs[cfgAttrIndex++] = 1;
+    cfgAttrs[cfgAttrIndex++] = EGL_GREEN_SIZE;
+    cfgAttrs[cfgAttrIndex++] = 1;
+    cfgAttrs[cfgAttrIndex++] = EGL_BLUE_SIZE;
+    cfgAttrs[cfgAttrIndex++] = 1;
+    cfgAttrs[cfgAttrIndex++] = EGL_ALPHA_SIZE;
+    cfgAttrs[cfgAttrIndex++] = 1;
+	*/
+
+	Attribs.PushBack(EGL_NONE);
+}
+
+template<typename FUNCTIONTYPE>
+std::function<FUNCTIONTYPE> GetEglFunction(const char* Name)
+{
+	std::function<FUNCTIONTYPE> Function;
+	auto* FunctionPointer = eglGetProcAddress(Name);
+	if ( !FunctionPointer )
+	{
+		std::Debug << "EGL function " << Name << " not found" << std::endl;
+		return nullptr;
+	}
+
+	Function = reinterpret_cast<FUNCTIONTYPE*>(FunctionPointer);
+	return Function;
+}
+
+Array<EGLNativeDisplayType> GetNativeDisplays()
+{
+	Array<EGLNativeDisplayType> Displays;
+
+	auto QueryDevices = GetEglFunction<decltype(eglQueryDevicesEXT)>("eglQueryDevicesEXT");
+	//	no such function
+	if ( !QueryDevices )
+		return Displays;
+
+	EGLint DeviceCount = -1;
+	auto Result = QueryDevices(0,nullptr,&DeviceCount);
+	if ( !Result )
+		std::Debug << "eglQueryDevicesEXT (count) returned false";
+	Egl::IsOkay("eglQueryDevicesEXT (count)");
+	std::Debug << "eglQueryDevicesEXT(count) returned " << DeviceCount << " devices" << std::endl;
+
+	Array<EGLDeviceEXT> Devices;
+	Devices.SetSize(DeviceCount);
+	Devices.SetAll(nullptr);
+	Result = QueryDevices(Devices.GetSize(),Devices.GetArray(),&DeviceCount);
+	if ( !Result )
+		std::Debug << "eglQueryDevicesEXT returned false";
+	
+	for ( int i=0;	i<Devices.GetSize();	i++ )
+	{
+		//	nvidia code just casts this
+		EGLNativeDisplayType Display = (EGLNativeDisplayType)Devices[i];
+		Displays.PushBack(Display);
+	}
+	return Displays;
+}
+
+EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
+{
+	//	this post says it doesnt need X, but I cant get configs without X11 starting
+	//	https://forums.developer.nvidia.com/t/egl-without-x11/58733/4
+	/*
+	auto NativeDisplays = GetNativeDisplays();
+	std::Debug << "Got " << NativeDisplays.GetSize() << " native displays" << std::endl;
+	NativeDisplays.PushBack(EGL_DEFAULT_DISPLAY);
+
+	auto GetPlatformDisplay = GetEglFunction<decltype(eglGetPlatformDisplayEXT)>("eglGetPlatformDisplayEXT");
+
+	for ( int d=0;	d<NativeDisplays.GetSize() && !mDisplay;	d++ )
+	{
+		auto Display = NativeDisplays[d];
+		//	todo: try{} all the devices
+		if ( GetPlatformDisplay )
+		{
+			EGLint* Attribs = nullptr;
+			auto Platform = EGL_PLATFORM_DEVICE_EXT;
+			mDisplay = GetPlatformDisplay( Platform, Display, Attribs );
+			Egl::IsOkay("GetPlatformDisplay");
+		}
+		else
+		{
+			mDisplay = eglGetDisplay(Display);
+			Egl::IsOkay("eglGetDisplay");
+		}
+	}
+	*/
+	//	default simple version
 	mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	Egl::IsOkay("eglGetDisplay");
+	if ( !mDisplay )
+		throw Soy::AssertException("Failed to get a display");
 
-	eglInitialize(mDisplay, nullptr, nullptr);
+
+
+	if ( !eglInitialize(mDisplay, nullptr, nullptr) )
+		std::Debug << "eglInitialize() returned false" << std::endl;
 	Egl::IsOkay("eglInitialize");
 
-	//	enum configs
-	EGLint ConfigCount = 0;
-	eglChooseConfig(mDisplay, nullptr, &mConfig, 1, &ConfigCount);
-	Egl::IsOkay("eglChooseConfig");
 
-	eglBindAPI(EGL_OPENGL_ES_API);
+	//	gr: some things have binding first
+	if ( !eglBindAPI(EGL_OPENGL_ES_API) )
+		std::Debug << "eglBindAPI() returned false" << std::endl;
 	Egl::IsOkay("eglBindAPI");
 
-	mContext = eglCreateContext(mDisplay, mConfig, EGL_NO_CONTEXT, NULL);
+
+
+	//	attrib[pair]s to filter configs
+	//EGLint* pConfigAttribs = nullptr;
+	/*
+	EGLint pConfigAttribs[] = {
+    EGL_RENDERABLE_TYPE
+    ,EGL_OPENGL_BIT
+   // ,EGL_DEPTH_SIZE 
+   // ,24
+    ,EGL_NATIVE_RENDERABLE
+    ,EGL_TRUE
+    ,EGL_NONE
+    };
+	*/
+
+	//	don't have this until we start creating renderview. Maybe window should make a display
+	//	and renderview actually does the initialisation, OR just do it all at render context time?
+	TOpenglParams OpenglParams;	
+	Array<EGLint> ConfigAttribs;
+	GetConfigAttributes( GetArrayBridge(ConfigAttribs), Rect, OpenglParams );
+	EGLint* pConfigAttribs = ConfigAttribs.GetArray();
+
+	//	enum configs
+	EGLint ConfigCount = -1;
+	{
+		EGLConfig Stub;
+		if ( !eglChooseConfig(mDisplay, pConfigAttribs, &Stub, 1, &ConfigCount) )
+			std::Debug << "eglChooseConfig returned false" << std::endl;
+	}
+	Egl::IsOkay("eglChooseConfig (get count)");
+	std::Debug << "Found " << ConfigCount << " display configs" << std::endl;
+
+	Array<EGLConfig> Configs;
+	Configs.SetSize(ConfigCount);
+	Configs.SetAll(nullptr);
+	eglChooseConfig(mDisplay, pConfigAttribs, Configs.GetArray(), Configs.GetSize(), &ConfigCount);
+	Egl::IsOkay("eglChooseConfig");
+	Configs.SetSize(ConfigCount);
+	if ( Configs.IsEmpty() )
+		throw Soy::AssertException("No display configs availible");
+	for ( auto i=0;	i<Configs.GetSize();	i++ )
+	{
+		EGLint Width=0,Height=0;
+		auto Config = Configs[i];
+		eglGetConfigAttrib( mDisplay, Config, EGL_MAX_PBUFFER_WIDTH, &Width );
+		eglGetConfigAttrib( mDisplay, Config, EGL_MAX_PBUFFER_HEIGHT, &Height );
+		std::Debug << "Display config #" << i << " " << Width << "x" << Height << std::endl;
+	}
+	auto Config = Configs[0];
+
+
+
+	mContext = eglCreateContext(mDisplay, Config, EGL_NO_CONTEXT, NULL);
 	Egl::IsOkay("eglCreateContext");
 
-	mSurface = eglCreatePbufferSurface(mDisplay, mConfig, nullptr);
+	mSurface = eglCreatePbufferSurface(mDisplay, Config, nullptr);
 	Egl::IsOkay("eglCreatePbufferSurface");
 
 	eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
