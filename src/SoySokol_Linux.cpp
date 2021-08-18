@@ -20,20 +20,19 @@ std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextPa
 SokolOpenglContext::SokolOpenglContext(Sokol::TContextParams Params) :
 	mParams	( Params )
 {
-	
-	//auto& PlatformWindow = dynamic_cast<Platform::TWindow&>(*Window);
+	if ( !Params.mRenderView )
+		throw Soy::AssertException("Linux SokolOpenglContext params missing render view");
+	auto& PlatformRenderView = dynamic_cast<EglRenderView&>(*Params.mRenderView);
+	mWindow = &PlatformRenderView.mWindow;
 
 	//mESContext = &PlatformWindow.mESContext;
-	if(mESContext == nullptr) Soy_AssertException("No Window to get the ESContent from");
 
 	std::function<void()> OnFrame = [this](){ this->OnPaint(); };
-
-	esRegisterDrawFunc( mESContext, OnFrame );
 
 	auto PaintLoop = [this]()
 	{
 		auto FrameDelayMs = 1000/mParams.mFramesPerSecond;
-		this->DoPaint();
+		this->OnPaint();
 		std::this_thread::sleep_for(std::chrono::milliseconds(FrameDelayMs));
 		return mRunning;
 	};
@@ -79,24 +78,30 @@ void SokolOpenglContext::RunGpuJobs()
 
 void SokolOpenglContext::OnPaint()
 {
-	std::lock_guard Lock(mOpenglContextLock);
+	std::lock_guard<std::mutex> Lock(mOpenglContextLock);
+	auto& Window = *mWindow;
 
 
 	auto FlushedError = eglGetError();
 	if ( FlushedError != EGLint(EGL_SUCCESS) )
 		std::Debug << "Pre paint, flushed error=" << FlushedError << std::endl;
 
-	EGLBoolean makeCurrent;
-
+	//	switch context
 	auto* CurrentContext = eglGetCurrentContext();
-	if( CurrentContext != mESContext->eglContext )
-		makeCurrent = eglMakeCurrent( mESContext->eglDisplay, mESContext->eglSurface, mESContext->eglSurface, mESContext->eglContext);
+	if( CurrentContext != Window.mContext )
+	{
+		auto Result = eglMakeCurrent( Window.mDisplay, Window.mSurface, Window.mSurface, Window.mContext );
+		if ( Result != EGL_TRUE )
+		{
+			Egl::IsOkay("eglMakeCurrent returned false");
+		}
+	}
 
 	FlushedError = eglGetError();
 	if ( FlushedError != EGLint(EGL_SUCCESS) )
 		std::Debug << "Post eglMakeCurrent, flushed error=" << FlushedError << std::endl;
 
-	auto* NowCurretin = eglGetCurrentContext();
+	auto NowCurrentContext = eglGetCurrentContext();
 	if ( mSokolContext.id == 0 )
 	{
 		sg_desc desc={0};
@@ -106,21 +111,21 @@ void SokolOpenglContext::OnPaint()
 	
 	RunGpuJobs();
 
-	auto Width = mESContext->screenWidth;
-	auto Height = mESContext->screenHeight;
-		
-	vec2x<size_t> Size( Width, Height );
+	auto Rect = Window.GetScreenRect();
+	vec2x<size_t> Size( Rect.w, Rect.h );
 	mParams.mOnPaint( mSokolContext, Size );
 
 	FlushedError = eglGetError();
 	if ( FlushedError != EGLint(EGL_SUCCESS) )
 		std::Debug << "Post OnPaint, flushed error=" << FlushedError << std::endl;
+
+	auto SwapResult = eglSwapBuffers( Window.mDisplay, Window.mSurface);
+	if ( SwapResult != EGL_TRUE )
+	{
+		Egl::IsOkay("eglSwapBuffers returned false");
+	}
 }
 
-void SokolOpenglContext::DoPaint()
-{
-	esPaint(mESContext);
-}
 
 void SokolOpenglContext::Queue(std::function<void(sg_context)> Exec)
 {

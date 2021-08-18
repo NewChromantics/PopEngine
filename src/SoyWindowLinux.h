@@ -2,7 +2,15 @@
 
 #if defined(ENABLE_OPENGL)
 #include "LinuxDRM/esUtil.h"
+#include <EGL/egl.h>
 #endif
+
+//#if defined(ENABLE_OPENGL)
+#include <EGL/egl.h>
+class EglWindow;
+class EglRenderView;
+//#endif
+
 
 class Platform::TWindow : public SoyWindow
 {
@@ -21,3 +29,35 @@ public:
 	ESContext											mESContext;
 #endif
 };
+
+class EglWindow : public SoyWindow
+{
+public:
+	EglWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect );
+	~EglWindow();
+
+	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
+
+	virtual void					SetFullscreen(bool Fullscreen) override	{};
+	virtual bool					IsFullscreen() override	{	return true;	};
+	virtual bool					IsMinimised() override	{	return false;	};
+	virtual bool					IsForeground() override	{	return true;	};
+	virtual void					EnableScrollBars(bool Horz,bool Vert) override	{};
+
+public:
+	EGLDisplay	mDisplay = EGL_NO_DISPLAY;
+	EGLConfig	mConfig;
+	EGLContext	mContext = EGL_NO_CONTEXT;
+	EGLSurface	mSurface = EGL_NO_SURFACE;
+};
+
+class EglRenderView : public Gui::TRenderView
+{
+public:
+	EglRenderView(SoyWindow& Parent);
+
+public:
+	//	bit unsafe!
+	EglWindow&		mWindow;
+};
+

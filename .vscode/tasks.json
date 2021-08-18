@@ -9,8 +9,7 @@
 			"command": "(cd PopEngine.Linux && make CONFIGURATION=Debug)",
 			"problemMatcher": [],
 			"group": {
-				"kind": "build",
-				"isDefault": true
+				"kind": "build"
 			}
 		},
 		{
@@ -19,7 +18,8 @@
 			"command": "(cd PopEngine.Linux && make CONFIGURATION=Debug ENABLE_OPENGL=true)",
 			"problemMatcher": [],
 			"group": {
-				"kind": "build"
+				"kind": "build",
+				"isDefault": true
 			}
 		},
 		{
