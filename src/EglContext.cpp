@@ -432,7 +432,7 @@ NvGlDemoLog(
 
 
 
-
+/*
 // Entry point of this demo program.
 int main(int argc, char **argv)
 {
@@ -442,7 +442,7 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
+*/
 
 
 // Macro to load function pointers
@@ -1506,7 +1506,6 @@ void NvGlDemoWindowTerm(void)
 {
     NvGlDemoResetDrmConcetion();
     NvGlDemoTermWinSurface();
-    return;
 }
 
 
@@ -1620,9 +1619,6 @@ EGLBoolean NvGlDemoPrepareStreamToAttachProducer(void)
     }
 
     return EGL_TRUE;
-
-    fail:
-     return EGL_FALSE;
 }
 
 
