@@ -8,83 +8,6 @@
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/eglext.h>
 
-namespace Egl
-{
-	void		IsOkay(const char* Context);
-	std::string	GetString(EGLint);
-
-	/*
-	enum Error_t : uint16_t
-	{
-		#define DECLARE_ERROR(e)	e_##e = e
-		DECLARE_ERROR(EGL_BAD_ACCESS),
-		DECLARE_ERROR(EGL_BAD_ALLOC),
-		DECLARE_ERROR(EGL_BAD_ATTRIBUTE),
-		DECLARE_ERROR(EGL_BAD_CONTEXT),
-		DECLARE_ERROR(EGL_BAD_CURRENT_SURFACE),
-		DECLARE_ERROR(EGL_BAD_MATCH),
-		DECLARE_ERROR(EGL_BAD_NATIVE_PIXMAP),
-		DECLARE_ERROR(EGL_BAD_NATIVE_WINDOW),
-		DECLARE_ERROR(EGL_BAD_PARAMETER),
-		DECLARE_ERROR(EGL_BAD_SURFACE),
-		DECLARE_ERROR(EGL_NONE),
-		DECLARE_ERROR(EGL_NON_CONFORMANT_CONFIG),
-		DECLARE_ERROR(EGL_NOT_INITIALIZED),
-		#undef DECLARE_ERROR
-	};
-	*/
-}
-/*
-namespace magic_enum::customize {
-template <>
-struct enum_range<Egl::Error_t> {
-    static constexpr int min = 0;
-    static constexpr int max = 64;
-};
-} // namespace magic_enum
-*/
-
-std::string Egl::GetString(EGLint Egl_Value)
-{
-	switch(Egl_Value)
-	{
-	#define DECLARE_ERROR(e)	case e: return #e
-		DECLARE_ERROR(EGL_BAD_DISPLAY);
-		DECLARE_ERROR(EGL_BAD_ACCESS);
-		DECLARE_ERROR(EGL_BAD_ALLOC);
-		DECLARE_ERROR(EGL_BAD_ATTRIBUTE);
-		DECLARE_ERROR(EGL_BAD_CONTEXT);
-		DECLARE_ERROR(EGL_BAD_CURRENT_SURFACE);
-		DECLARE_ERROR(EGL_BAD_MATCH);
-		DECLARE_ERROR(EGL_BAD_NATIVE_PIXMAP);
-		DECLARE_ERROR(EGL_BAD_NATIVE_WINDOW);
-		DECLARE_ERROR(EGL_BAD_PARAMETER);
-		DECLARE_ERROR(EGL_BAD_SURFACE);
-		DECLARE_ERROR(EGL_NONE);
-		DECLARE_ERROR(EGL_NON_CONFORMANT_CONFIG);
-		DECLARE_ERROR(EGL_NOT_INITIALIZED);
-		#undef DECLARE_ERROR
-	};
-
-	std::stringstream String;
-	String << "<EGL_ 0x" << std::hex << Egl_Value << std::dec << ">";
-	return String.str();
-}
-
-void Egl::IsOkay(const char* Context)
-{
-	auto Error = eglGetError();
-	if ( Error == EGL_SUCCESS )
-		return;
-
-	//auto EglError = magic_enum::enum_name(static_cast<Error_t>(Error));
-	auto EglError = GetString(Error);
-
-	std::stringstream Debug;
-	Debug << "EGL error " << EglError << " in " << Context;
-	throw Soy::AssertException(Debug);
-}
-
 
 EglRenderView::EglRenderView(SoyWindow& Parent) :
 	mWindow	( dynamic_cast<EglWindow&>(Parent) )
@@ -184,20 +107,6 @@ Array<EGLNativeDisplayType> GetNativeDisplays()
 EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 {
 	mContext.reset( new EglContext() );
-
-	//	test, assuming context is still current etc
-	int Iterations = 60 * 1;
-    for ( int i=0;  i<Iterations; i++ )
-    {
-        Context.PrePaint();
-
-        float Time = (float)i / (float)Iterations;
-        glClearColor(Time,1.0f-Time,0,1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glFinish();
-       
-        Context.PostPaint();
-    }
 
 	//	this post says it doesnt need X, but I cant get configs without X11 starting
 	//	https://forums.developer.nvidia.com/t/egl-without-x11/58733/4
@@ -311,36 +220,13 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 
 EglWindow::~EglWindow()
 {
-	try
-	{
-		/*
-		if ( mContext )
-		{
-			eglDestroyContext( mDisplay, mContext);
-	        Egl::IsOkay("eglDestroyContext");
-			mContext = EGL_NO_CONTEXT;
-		}
-
-		if ( mDisplay )
-		{
-			eglTerminate(mDisplay);
-			Egl::IsOkay("eglTerminate");
-			mDisplay = EGL_NO_DISPLAY;
-		}
-		*/
-	}
-	catch(std::exception& e)
-	{
-		std::Debug << __PRETTY_FUNCTION__ << " exception: " << e.what() << std::endl;
-	}
 }
 
 Soy::Rectx<int32_t> EglWindow::GetScreenRect()
 {
-	int Width,Height;
+	int Width=0,Height=0;
 	mContext->GetDisplaySize(Width,Height);
 	return Soy::Rectx<int32_t>(0,0,Width,Height);
-	
 }
 
 Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)

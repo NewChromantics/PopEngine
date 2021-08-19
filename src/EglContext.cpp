@@ -12,6 +12,7 @@
 
 #include <functional>
 #include <iostream>
+#include <sstream>
 
 #include <ctype.h>
 #include <dlfcn.h>
@@ -21,15 +22,56 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include <assert.h>
 #include <unistd.h>
+
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
 
+
+std::string Egl::GetString(EGLint Egl_Value)
+{
+	switch(Egl_Value)
+	{
+	#define DECLARE_ERROR(e)	case e: return #e
+		DECLARE_ERROR(EGL_BAD_DISPLAY);
+		DECLARE_ERROR(EGL_BAD_ACCESS);
+		DECLARE_ERROR(EGL_BAD_ALLOC);
+		DECLARE_ERROR(EGL_BAD_ATTRIBUTE);
+		DECLARE_ERROR(EGL_BAD_CONTEXT);
+		DECLARE_ERROR(EGL_BAD_CURRENT_SURFACE);
+		DECLARE_ERROR(EGL_BAD_MATCH);
+		DECLARE_ERROR(EGL_BAD_NATIVE_PIXMAP);
+		DECLARE_ERROR(EGL_BAD_NATIVE_WINDOW);
+		DECLARE_ERROR(EGL_BAD_PARAMETER);
+		DECLARE_ERROR(EGL_BAD_SURFACE);
+		DECLARE_ERROR(EGL_NONE);
+		DECLARE_ERROR(EGL_NON_CONFORMANT_CONFIG);
+		DECLARE_ERROR(EGL_NOT_INITIALIZED);
+		#undef DECLARE_ERROR
+	};
+
+	std::stringstream String;
+	String << "<EGL_ 0x" << std::hex << Egl_Value << std::dec << ">";
+	return String.str();
+}
+
+void Egl::IsOkay(const char* Context)
+{
+	auto Error = eglGetError();
+	if ( Error == EGL_SUCCESS )
+		return;
+
+	//auto EglError = magic_enum::enum_name(static_cast<Error_t>(Error));
+	auto EglError = GetString(Error);
+
+	std::stringstream Debug;
+	Debug << "EGL error " << EglError << " in " << Context;
+	throw std::runtime_error(Debug.str());
+}
 
 
 // For standard functions, we use macros to allow overrides.
@@ -390,46 +432,13 @@ NvGlDemoLog(
 
 
 
-EglContext::EglContext()
-{
-    if ( !NvGlDemoInitialize() )
-        throw std::runtime_error("Init failed");
-}
-
-EglContext::~EglContext()
-{
-    NvGlDemoShutdown();
-}
-
-void EglContext::PrePaint()
-{
-}
-
-void EglContext::PostPaint()
-{
-    if (eglSwapBuffers(demoState.display, demoState.surface) != EGL_TRUE) 
-        throw std::runtime_error("eglSwapBuffers failed");
-}
-
-
 
 // Entry point of this demo program.
 int main(int argc, char **argv)
 {
     EglContext Context;
     
-    int Iterations = 60 * 1;
-    for ( int i=0;  i<Iterations; i++ )
-    {
-        Context.PrePaint();
-
-        float Time = (float)i / (float)Iterations;
-        glClearColor(Time,1.0f-Time,0,1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glFinish();
-       
-        Context.PostPaint();
-    }
+    Context.TestRender();
 
     return 0;
 }
@@ -1904,7 +1913,7 @@ bool NvGlDemoInitialize()
             NvGlDemoLog("EGL couldn't create context.\n");
             goto fail;
         }
-
+/*
         // Make the context and surface current for rendering
     NvGlDemoLog("eglMakeCurrent");
         eglStatus = eglMakeCurrent(demoState.display,
@@ -1914,6 +1923,7 @@ bool NvGlDemoInitialize()
             NvGlDemoLog("EGL couldn't make context/surface current.\n");
             goto fail;
         }
+    
 
         // Query the EGL surface width and height
         eglStatus =  eglQuerySurface(demoState.display, demoState.surface,
@@ -1940,6 +1950,11 @@ bool NvGlDemoInitialize()
             goto fail;
         }
 
+//  unlock context
+        eglMakeCurrent(demoState.display,
+                                   EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                   EGL_NO_CONTEXT);
+*/
         return 1;
     }
 
@@ -1997,7 +2012,7 @@ NvGlDemoShutdown(void)
     NvGlDemoWindowTerm();
 
     NvGlDemoEglTerminate();
-
+    
     // Terminate display access
     NvGlDemoDisplayTerm();
 }
@@ -2012,6 +2027,50 @@ NvGlDemoEglTerminate(void)
     if (!eglStatus)
         NvGlDemoLog("Error releasing EGL thread.\n");
 }
+
+
+EglContext::EglContext()
+{
+    if ( !NvGlDemoInitialize() )
+        throw std::runtime_error("Init failed");
+}
+
+EglContext::~EglContext()
+{
+    NvGlDemoShutdown();
+}
+
+void EglContext::PrePaint()
+{
+    auto& mDisplay = demoState.display;
+    auto& mSurface = demoState.surface;
+    auto& mContext = demoState.context;
+
+    //	switch context
+	auto* CurrentContext = eglGetCurrentContext();
+	if ( CurrentContext != mContext )
+	{
+        //  this will error if current locked to some other thread
+        //NvGlDemoLog("Switching context...");
+		auto Result = eglMakeCurrent( mDisplay, mSurface, mSurface, mContext );
+		if ( Result != EGL_TRUE )
+		{
+			Egl::IsOkay("eglMakeCurrent returned false");
+		}
+	}
+}
+
+void EglContext::PostPaint()
+{
+    if (eglSwapBuffers(demoState.display, demoState.surface) != EGL_TRUE) 
+        throw std::runtime_error("eglSwapBuffers failed");
+
+    //  unbind context
+    auto Result = eglMakeCurrent( demoState.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
+    Egl::IsOkay("eglMakeCurrent unlock (NO_CONTEXT)");
+}
+
+
 
 void EglContext::GetDisplaySize(int& Width,int& Height)
 {
@@ -2033,4 +2092,21 @@ void EglContext::GetDisplaySize(int& Width,int& Height)
 	//Egl::IsOkay("eglQuerySurface(EGL_WIDTH)");
 	eglQuerySurface( mDisplay, mSurface, EGL_HEIGHT, &Height );
 	//Egl::IsOkay("eglQuerySurface(EGL_HEIGHT)");
+}
+
+void EglContext::TestRender()
+{
+    int Iterations = 60 * 1;
+    for ( int i=0;  i<Iterations; i++ )
+    {
+        PrePaint();
+
+        float Time = (float)i / (float)Iterations;
+        glClearColor(Time,1.0f-Time,0,1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glFinish();
+       
+        PostPaint();
+    }
+
 }
