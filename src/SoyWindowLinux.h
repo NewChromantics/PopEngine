@@ -10,6 +10,7 @@
 class EglWindow;
 class EglRenderView;
 //#endif
+class EglContext;
 
 
 class Platform::TWindow : public SoyWindow
@@ -45,9 +46,7 @@ public:
 	virtual void					EnableScrollBars(bool Horz,bool Vert) override	{};
 
 public:
-	EGLDisplay	mDisplay = EGL_NO_DISPLAY;
-	EGLContext	mContext = EGL_NO_CONTEXT;
-	EGLSurface	mSurface = EGL_NO_SURFACE;
+	std::shared_ptr<EglContext>		mContext;
 };
 
 class EglRenderView : public Gui::TRenderView

@@ -160,6 +160,7 @@ LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-legacy.c
 LIB_CPP_FILES += $(SRC_PATH)/TApiSokol.cpp
 LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
+LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
 LIB_LINK_LIBS += -lEGL
 #LIB_LINK_LIBS += -ldrm
 LIB_LINK_LIBS += -l:libdrm.so.2

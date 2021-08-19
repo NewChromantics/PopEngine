@@ -3,6 +3,8 @@
 #include "SoyWindowLinux.h"
 #include <magic_enum.hpp>
 
+#include "EglContext.h"
+
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/eglext.h>
 
@@ -181,6 +183,22 @@ Array<EGLNativeDisplayType> GetNativeDisplays()
 
 EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 {
+	mContext.reset( new EglContext() );
+
+	//	test, assuming context is still current etc
+	int Iterations = 60 * 1;
+    for ( int i=0;  i<Iterations; i++ )
+    {
+        Context.PrePaint();
+
+        float Time = (float)i / (float)Iterations;
+        glClearColor(Time,1.0f-Time,0,1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glFinish();
+       
+        Context.PostPaint();
+    }
+
 	//	this post says it doesnt need X, but I cant get configs without X11 starting
 	//	https://forums.developer.nvidia.com/t/egl-without-x11/58733/4
 	/*
@@ -208,6 +226,7 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 		}
 	}
 	*/
+/*
 	//	default simple version
 	mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	Egl::IsOkay("eglGetDisplay");
@@ -230,7 +249,7 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 
 	//	attrib[pair]s to filter configs
 	//EGLint* pConfigAttribs = nullptr;
-	/*
+
 	EGLint pConfigAttribs[] = {
     EGL_RENDERABLE_TYPE
     ,EGL_OPENGL_BIT
@@ -240,7 +259,7 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
     ,EGL_TRUE
     ,EGL_NONE
     };
-	*/
+
 
 	//	don't have this until we start creating renderview. Maybe window should make a display
 	//	and renderview actually does the initialisation, OR just do it all at render context time?
@@ -287,12 +306,14 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 
 	eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
 	Egl::IsOkay("eglMakeCurrent");
+	*/
 }
 
 EglWindow::~EglWindow()
 {
 	try
 	{
+		/*
 		if ( mContext )
 		{
 			eglDestroyContext( mDisplay, mContext);
@@ -306,6 +327,7 @@ EglWindow::~EglWindow()
 			Egl::IsOkay("eglTerminate");
 			mDisplay = EGL_NO_DISPLAY;
 		}
+		*/
 	}
 	catch(std::exception& e)
 	{
@@ -315,24 +337,10 @@ EglWindow::~EglWindow()
 
 Soy::Rectx<int32_t> EglWindow::GetScreenRect()
 {
-	//	gr: this query is mostly used for GL size, but surface
-	//		could be different size to display?
-	//		but I can't see how to get display size (config?)
-	//	may need render/surface vs display rect, but for now, its the surface
-	if ( !mSurface )
-		throw Soy::AssertException("EglWindow::GetRenderRec no surface");
-	if ( !mDisplay )
-		throw Soy::AssertException("EglWindow::GetRenderRec no display");
-
-	EGLint Width = 0;	
-	EGLint Height = 0;
-	eglQuerySurface( mDisplay, mSurface, EGL_WIDTH, &Width );
-	Egl::IsOkay("eglQuerySurface(EGL_WIDTH)");
-	eglQuerySurface( mDisplay, mSurface, EGL_HEIGHT, &Height );
-	Egl::IsOkay("eglQuerySurface(EGL_HEIGHT)");
-
-	//	gr: definitely no offset? no query option for surfaces
+	int Width,Height;
+	mContext->GetDisplaySize(Width,Height);
 	return Soy::Rectx<int32_t>(0,0,Width,Height);
+	
 }
 
 Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
