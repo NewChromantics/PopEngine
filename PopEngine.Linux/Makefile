@@ -165,8 +165,9 @@ LIB_CPP_FILES += $(SRC_PATH)/TApiSokol.cpp
 LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
-LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpengl.cpp
-LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglContext.cpp
+#gr: shouldnt need these as everything goes through sokol
+#LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpengl.cpp
+#LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglContext.cpp
 LIB_LINK_LIBS += -lEGL
 #LIB_LINK_LIBS += -ldrm
 LIB_LINK_LIBS += -l:libdrm.so.2

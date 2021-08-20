@@ -71,8 +71,15 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 	Params.WindowOffsetY = Rect.y;
 	Params.WindowWidth = Rect.w;
 	Params.WindowHeight = Rect.h;
-	Params.DisplayWidth = Rect.w;
-	Params.DisplayHeight = Rect.h;
+
+	//	EGL system currently requires a res
+	if ( !Params.WindowWidth )
+		Params.WindowWidth = 640;
+	if ( !Params.WindowHeight )
+		Params.WindowHeight = 480;
+
+	Params.DisplayWidth = Params.WindowWidth;
+	Params.DisplayHeight = Params.WindowHeight;
 	mContext.reset( new Egl::TDisplaySurfaceContext() );
 
 	//	this post says it doesnt need X, but I cant get configs without X11 starting
