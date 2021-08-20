@@ -1,62 +1,20 @@
 #include "SoyGui.h"
 #include <stdlib.h>
-#include "SoyWindowLinux.h"
+#include "SoyGuiLinux.h"
 #include <magic_enum.hpp>
 
-#include "EglContext.h"
-
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/eglext.h>
 
 
+
+
+#if defined(ENABLE_EGL)
 EglRenderView::EglRenderView(SoyWindow& Parent) :
 	mWindow	( dynamic_cast<EglWindow&>(Parent) )
 {
 }
-
-void GetConfigAttributes(ArrayBridge<EGLint>&& Attribs,Soy::Rectx<int32_t>& Rect,const TOpenglParams& OpenglParams)
-{
-	//	todo: use OpenglParams
-	//	EGL_RENDER_BUFFER = EGL_SINGLE_BUFFER, EGL_BACK_BUFFER
-	auto DepthSize = 24;
-	auto AntialiasSamples = 1;	//	MSAA... passes? sample size?
-
-	//Attribs.PushBackArray({EGL_RENDERABLE_TYPE,EGL_OPENGL_ES2_BIT});
-	
-	if ( Rect.w > 0 )
-		Attribs.PushBackArray({EGL_WIDTH,Rect.w});
-
-	if ( Rect.h > 0 )
-		Attribs.PushBackArray({EGL_HEIGHT,Rect.h});
-
-//	if ( DepthBits )
-//		Attribs.PushBackArray({EGL_DEPTH_SIZE,DepthSize});
-
-//	if ( AntialiasSamples )
-//		Attribs.PushBackArray({EGL_SAMPLES,AntialiasSamples});
-
+#endif
 
 /*
- cfgAttrs[cfgAttrIndex++] = (glversion == 2) ? EGL_OPENGL_ES2_BIT
-                                                : EGL_OPENGL_ES_BIT;
-    ctxAttrs[ctxAttrIndex++] = EGL_CONTEXT_CLIENT_VERSION;
-    ctxAttrs[ctxAttrIndex++] = glversion;
-// Request a minimum of 1 bit each for red, green, blue, and alpha
-    // Setting these to anything other than DONT_CARE causes the returned
-    //   configs to be sorted with the largest bit counts first.
-    cfgAttrs[cfgAttrIndex++] = EGL_RED_SIZE;
-    cfgAttrs[cfgAttrIndex++] = 1;
-    cfgAttrs[cfgAttrIndex++] = EGL_GREEN_SIZE;
-    cfgAttrs[cfgAttrIndex++] = 1;
-    cfgAttrs[cfgAttrIndex++] = EGL_BLUE_SIZE;
-    cfgAttrs[cfgAttrIndex++] = 1;
-    cfgAttrs[cfgAttrIndex++] = EGL_ALPHA_SIZE;
-    cfgAttrs[cfgAttrIndex++] = 1;
-	*/
-
-	Attribs.PushBack(EGL_NONE);
-}
-
 template<typename FUNCTIONTYPE>
 std::function<FUNCTIONTYPE> GetEglFunction(const char* Name)
 {
@@ -103,10 +61,19 @@ Array<EGLNativeDisplayType> GetNativeDisplays()
 	}
 	return Displays;
 }
+*/
 
+#if defined(ENABLE_EGL)
 EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 {
-	mContext.reset( new EglContext() );
+	Egl::TParams Params;
+	Params.WindowOffsetX = Rect.x;
+	Params.WindowOffsetY = Rect.y;
+	Params.WindowWidth = Rect.w;
+	Params.WindowHeight = Rect.h;
+	Params.DisplayWidth = Rect.w;
+	Params.DisplayHeight = Rect.h;
+	mContext.reset( new Egl::TDisplaySurfaceContext() );
 
 	//	this post says it doesnt need X, but I cant get configs without X11 starting
 	//	https://forums.developer.nvidia.com/t/egl-without-x11/58733/4
@@ -217,21 +184,27 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 	Egl::IsOkay("eglMakeCurrent");
 	*/
 }
+#endif
 
+#if defined(ENABLE_EGL)
 EglWindow::~EglWindow()
 {
 }
+#endif
 
+
+#if defined(ENABLE_EGL)
 Soy::Rectx<int32_t> EglWindow::GetScreenRect()
 {
-	int Width=0,Height=0;
+	uint32_t Width=0,Height=0;
 	mContext->GetDisplaySize(Width,Height);
 	return Soy::Rectx<int32_t>(0,0,Width,Height);
 }
+#endif
 
 Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 {
-#if defined(ENABLE_OPENGL)
+/*old egl
 	esInitContext( &mESContext );
 	if(Name == "null")
 	{
@@ -243,33 +216,37 @@ Platform::TWindow::TWindow(const std::string& Name, Soy::Rectx<int32_t>& Rect)
 	// tsdk: the width and height are set to the size of the screen inside this function if the values are empty
 		esCreateWindow( &mESContext, Name.c_str(), Rect.w, Rect.h, ES_WINDOW_ALPHA );
 	}
-#else
+	*/
 	Soy_AssertTodo();
-#endif
 }
 
 std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect,bool Resizable)
 {
 	std::shared_ptr<SoyWindow> Window;
 
+#if defined(ENABLE_EGL)
 	Window.reset( new EglWindow( Name, Rect ) );
+#endif
 
 	return Window;
 }
 
 std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& ParentWindow, const std::string& Name)
 {
+#if defined(ENABLE_EGL)
 	return std::shared_ptr<Gui::TRenderView>( new EglRenderView(ParentWindow) );
+#endif
 	Soy_AssertTodo();
 }
 
+
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
+	/*old egl
 #if defined(ENABLE_OPENGL)
 	return Soy::Rectx<size_t>( 0, 0, mESContext.screenWidth, mESContext.screenHeight );
-#else
+#else*/
 	Soy_AssertTodo();
-#endif
 }
 
 void Platform::TWindow::SetFullscreen(bool Fullscreen)

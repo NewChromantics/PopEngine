@@ -146,25 +146,19 @@ typedef struct NvGlDemoPlatformState NvGlDemoPlatformState;
 typedef struct {
     unsigned int flags;                     // For tracking what all options
                                             // are set explictly.
-    int windowSize[2];                      // Window size
-    int windowOffset[2];                    // Window offset
     int windowOffsetValid;                  // Window offset was requested
-    int displaySize[2];                     // Display size
     int useCurrentMode;                     // Keeps the current display mode
     int displayRate;                        // Display refresh rate
     int displayLayer;                       // Display layer
-    float displayColorKey[8];               // Display color key range
-                                            // [0-3] RGBA LOW, [4-7] RGBA HIGH
     int msaa;                               // Multi-sampling
     int csaa;                               // Coverage sampling
     int buffering;                          // N-buffered swaps
-    int useProgramBin;                      // Program binary enable option
     int displayNumber;                      // Display output number
     int eglQnxScreenTest;                   // To enable the eglQnxScreenTest
     int enablePostSubBuffer;                // Set before initializing to enable
     int enableMutableRenderBuffer;          // Set before initializing to enable
     int fullScreen;                         // To start the demo in fullscreen mode
-    int nFifo;                              // FIFO mode for eglstreams. 0 -> mailbox
+
     int latency;                            // Egl Stream Consumer latency
     int timeout;                            // Egl Stream Consumer acquire timeout
     int frames;                             // Number of frames to run.
@@ -172,9 +166,6 @@ typedef struct {
     int surfaceType;                        // Surface Type - Normal/Bottom_Origin
     int port;                               // Port number for cross-partition EGLStreams
     int surface_id;                         // Surface ID for weston ivi-shell
-    int renderahead;                        // Max number of in-flight GPU
-                                            // frames in mailbox mode
-    float duration;                         // Demo duration in seconds
     float inactivityTime;                   // Interval for inactivity testing
     int isSmart;                            // can detect termination of cross-partition stream
     int isProtected;                        // Set protected content
@@ -280,7 +271,7 @@ struct PropertyIDAddress {
 
 
 // Top level initialization/termination functions
-bool NvGlDemoInitialize();
+void NvGlDemoInitialize(Egl::TParams Params);
 void NvGlDemoShutdown(void);
 EGLBoolean NvGlDemoSwapInterval(EGLDisplay dpy, EGLint interval);
 void NvGlDemoDisplayInit(void);
@@ -302,9 +293,9 @@ static void NvGlDemoTermWinSurface(void);
 // DRM Device internal api
 static bool NvGlDemoInitDrmDevice(void);
 static void NvGlDemoCreateDrmDevice( EGLint devIndx );
-static bool NvGlDemoSetDrmOutputMode( void );
+static bool NvGlDemoSetDrmOutputMode(Egl::TParams Params);
 static void NvGlDemoResetDrmDevice(void);
-static void NvGlDemoResetDrmConcetion(void);
+static void NvGlDemoResetDrmConcetion(Egl::TParams Params);
 static void NvGlDemoTermDrmDevice(void);
 
 
@@ -591,6 +582,7 @@ void NvGlDemoCreateEglDevice(EGLint devIndx)
 static bool NvGlDemoCreateSurfaceBuffer(void)
 {
     NvGlDemoLog(__PRETTY_FUNCTION__);
+    int EglStreamFifo = 1;                              // FIFO mode for eglstreams. 0 -> mailbox
 
     auto peglCreateStreamKHR = GetEglFunction<decltype(eglCreateStreamKHR)>("eglCreateStreamKHR");
 
@@ -601,10 +593,10 @@ static bool NvGlDemoCreateSurfaceBuffer(void)
     EGLint attr[MAX_EGL_STREAM_ATTR * 2 + 1];
     int attrIdx        = 0;
 
-    if (demoOptions.nFifo > 0)
+    if (EglStreamFifo > 0)
     {
         attr[attrIdx++] = EGL_STREAM_FIFO_LENGTH_KHR;
-        attr[attrIdx++] = demoOptions.nFifo;
+        attr[attrIdx++] = EglStreamFifo;
     }
 
     attr[attrIdx++] = EGL_NONE;
@@ -1065,14 +1057,10 @@ static bool AssignPropertyIDs(int drmFd,
 }
 
 // Set output mode
-static bool NvGlDemoSetDrmOutputMode( void )
+static bool NvGlDemoSetDrmOutputMode(Egl::TParams Params)
 {
-          NvGlDemoLog(__PRETTY_FUNCTION__);
+	NvGlDemoLog(__PRETTY_FUNCTION__);
 
-    int offsetX = 0;
-    int offsetY = 0;
-    unsigned int sizeX = 0;
-    unsigned int sizeY = 0;
     unsigned int alpha = 255;
 
     int crtcIndex = -1;
@@ -1092,28 +1080,25 @@ static bool NvGlDemoSetDrmOutputMode( void )
     int foundMatchingDisplayRate = 1;
 
     // If not specified, use default window size
-       demoOptions.windowSize[0] = 640;
-        demoOptions.windowSize[1] = 480;
+	if ( !Params.WindowWidth || !Params.WindowHeight )
+		throw std::runtime_error("Currently need a window widht/height specified in params");
 
-    offsetX = demoOptions.windowOffset[0];
-    offsetY = demoOptions.windowOffset[1];
-    sizeX = demoOptions.windowSize[0];
-    sizeY = demoOptions.windowSize[1];
 
     nvGlDrmDev->curConnIndx = demoState.platform->curConnIndx;
     // If a specific screen was requested, use it
     if ((nvGlDrmDev->curConnIndx >= nvGlDrmDev->res->count_connectors) ||
-            !nvGlDrmDev->connInfo[nvGlDrmDev->curConnIndx].valid) {
-        NvGlDemoLog("Display output %d is not available, try using another display using option <-dispno>.\n",nvGlDrmDev->curConnIndx);
-        goto NvGlDemoSetDrmOutputMode_fail;
+            !nvGlDrmDev->connInfo[nvGlDrmDev->curConnIndx].valid) 
+	{
+		std::stringstream Error;
+		Error << "Display " << nvGlDrmDev->curConnIndx << " not availible";
+		throw std::runtime_error(Error.str());
     }
 
     // Get the current state of the connector
     conn = pdrmModeGetConnector(nvGlDrmDev->fd, nvGlDrmDev->res->connectors[nvGlDrmDev->curConnIndx]);
-    if (!conn) {
-        NvGlDemoLog("pdrmModeGetConnector-fail\n");
-        goto NvGlDemoSetDrmOutputMode_fail;
-    }
+    if (!conn) 
+        throw std::runtime_error("drmModeGetConnector failed");
+
     enc = pdrmModeGetEncoder(nvGlDrmDev->fd, conn->encoder_id);
     if (enc) {
         for (i=0; i<nvGlDrmDev->res->count_crtcs; ++i) {
@@ -1152,22 +1137,27 @@ static bool NvGlDemoSetDrmOutputMode( void )
     // Set the CRTC if we haven't already done it
     if (!nvGlDrmDev->crtcInfo[crtcIndex].mapped) 
     {
-        if (demoOptions.displaySize[0]) 
+        if ( Params.DisplayWidth )
         {
             // Check whether the choosen mode is supported or not
             for (i=0; i<conn->count_modes; ++i) 
             {
                 drmModeModeInfoPtr mode = conn->modes + i;
-                if (mode->hdisplay == demoOptions.displaySize[0]
-                    && mode->vdisplay == demoOptions.displaySize[1]) {
+                if (mode->hdisplay == Params.DisplayWidth
+                    && mode->vdisplay == Params.DisplayHeight) 
+				{
                     modeIndex = i;
                     modeX = (unsigned int)mode->hdisplay;
                     modeY = (unsigned int)mode->vdisplay;
-                    if (demoOptions.displayRate) {
-                        if (mode->vrefresh == (unsigned int)demoOptions.displayRate) {
+                    if (demoOptions.displayRate) 
+					{
+                        if (mode->vrefresh == (unsigned int)demoOptions.displayRate) 
+						{
                             foundMatchingDisplayRate = 1;
                             break;
-                        } else {
+                        } 
+						else 
+						{
                             foundMatchingDisplayRate = 0;
                             continue;
                         }
@@ -1175,34 +1165,37 @@ static bool NvGlDemoSetDrmOutputMode( void )
                     break;
                 }
             }
-            if (!modeX || !modeY) {
-                NvGlDemoLog("Unsupported Displaysize.\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
-            }
-            if (!foundMatchingDisplayRate) {
-                NvGlDemoLog("Specified Refresh rate is not Supported with Specified Display size.\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
-            }
-        } else if (demoOptions.useCurrentMode) {
-            if (demoOptions.displayRate) {
-                NvGlDemoLog("Refresh Rate should not be specified with Current Mode Parameter.\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
-            }
+
+            if (!modeX || !modeY) 
+                throw std::runtime_error("Unsupported Displaysize.");
+
+            if (!foundMatchingDisplayRate) 
+				throw std::runtime_error("Specified Refresh rate is not Supported with Specified Display size.");
+        } 
+		else if (demoOptions.useCurrentMode) //	gr: always true?
+		{
+            if (demoOptions.displayRate) 
+				throw std::runtime_error("Refresh Rate should not be specified with Current Mode Parameter.");
+
             //check modeset
-            if ((currMode = (drmModeCrtcPtr)pdrmModeGetCrtc(nvGlDrmDev->fd,
-                       nvGlDrmDev->res->crtcs[crtcIndex])) != NULL) {
+			currMode = (drmModeCrtcPtr)pdrmModeGetCrtc(nvGlDrmDev->fd, nvGlDrmDev->res->crtcs[crtcIndex]);
+            if (currMode) 
+			{
                 modeIndex = -1;
             }
-        } else {
-            if (demoOptions.displayRate) {
-                NvGlDemoLog("Refresh Rate should not be specified alone.\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
-            }
+        } 
+		else 
+		{
+             if (demoOptions.displayRate) 
+				throw std::runtime_error("Refresh Rate should not be specified with Current Mode Parameter.");
+
             // Choose the preferred mode if it's set,
             // Or else choose the largest supported mode
-            for (i=0; i<conn->count_modes; ++i) {
+            for (i=0; i<conn->count_modes; ++i) 
+			{
                 drmModeModeInfoPtr mode = conn->modes + i;
-                if (mode->type & DRM_MODE_TYPE_PREFERRED) {
+                if (mode->type & DRM_MODE_TYPE_PREFERRED) 
+				{
                     modeIndex = i;
                     modeX = (unsigned int)mode->hdisplay;
                     modeY = (unsigned int)mode->vdisplay;
@@ -1224,8 +1217,7 @@ static bool NvGlDemoSetDrmOutputMode( void )
             if (pdrmModeSetCrtc(nvGlDrmDev->fd, nvGlDrmDev->res->crtcs[crtcIndex], -1,
                         0, 0, &nvGlDrmDev->res->connectors[nvGlDrmDev->curConnIndx], 1,
                         conn->modes + modeIndex)) {
-                NvGlDemoLog("pdrmModeSetCrtc-fail setting crtc mode\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
+                throw std::runtime_error("pdrmModeSetCrtc-fail setting crtc mode\n");
             }
         }
         if ((currMode = (drmModeCrtcPtr) pdrmModeGetCrtc(nvGlDrmDev->fd,
@@ -1245,13 +1237,10 @@ static bool NvGlDemoSetDrmOutputMode( void )
     }
 
     // If a size wasn't specified, use the whole screen
-    if (!sizeX || !sizeY) {
-        assert(!sizeX && !sizeY && !offsetX && !offsetY);
-        sizeX = nvGlDrmDev->crtcInfo[crtcIndex].modeX;
-        sizeY = nvGlDrmDev->crtcInfo[crtcIndex].modeY;
-        demoOptions.windowSize[0] = sizeX;
-        demoOptions.windowSize[1] = sizeY;
-    }
+    if ( !Params.WindowWidth )
+		Params.WindowWidth = nvGlDrmDev->crtcInfo[crtcIndex].modeX;
+    if ( !Params.WindowHeight )
+		Params.WindowHeight = nvGlDrmDev->crtcInfo[crtcIndex].modeY;
 
     /* Ideally, only the plane interfaces should be used when universal planes is enabled.
      * There should be less "if crtc, if plane" type conditions in the code when
@@ -1259,29 +1248,32 @@ static bool NvGlDemoSetDrmOutputMode( void )
      * To keep the code simple,fail nvgldemo init completely if universal planes and atomics
      * is not working. Everything is done the atomic+universal_planes way.
      */
-    for (planeIndex=0; planeIndex<nvGlDrmDev->planes->count_planes; ++planeIndex) {
+    for (planeIndex=0; planeIndex<nvGlDrmDev->planes->count_planes; ++planeIndex) 
+	{
         if (!nvGlDrmDev->planeInfo[planeIndex].used &&
                 (nvGlDrmDev->planeInfo[planeIndex].crtcMask & (1 << crtcIndex)) &&
-                (currPlaneIndex++ == (unsigned int)demoOptions.displayLayer)) {
+                (currPlaneIndex++ == (unsigned int)demoOptions.displayLayer)) 
+		{
             NvGlDemoLog("Atomic_request\n");
             drmModeAtomicReqPtr pAtomic;
             int ret;
             const uint32_t flags = 0;
 
             pAtomic = pdrmModeAtomicAlloc();
-            if (pAtomic == NULL) {
-                NvGlDemoLog("Failed to allocate the property set\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
+            if (!pAtomic )
+			{
+                throw std::runtime_error("Failed to allocate the property set\n");
             }
 
-            struct PropertyIDAddress planeTable[] = {
+            struct PropertyIDAddress planeTable[] =
+			{
                 { "alpha",   &nvGlDrmDev->currPlaneAlphaPropID       },
             };
 
             if(!AssignPropertyIDs(nvGlDrmDev->fd, nvGlDrmDev->planes->planes[planeIndex] ,
-                              DRM_MODE_OBJECT_PLANE, planeTable, ARRAY_LEN(planeTable))) {
-                NvGlDemoLog("Failed to assign property IDs\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
+                              DRM_MODE_OBJECT_PLANE, planeTable, ARRAY_LEN(planeTable))) 
+			{
+                throw std::runtime_error("Failed to assign property IDs");
             }
 
             pdrmModeAtomicAddProperty(pAtomic, nvGlDrmDev->planes->planes[planeIndex],
@@ -1291,22 +1283,34 @@ static bool NvGlDemoSetDrmOutputMode( void )
 
             pdrmModeAtomicFree(pAtomic);
 
-            if (ret != 0) {
+            if (ret != 0) 
+			{
                 NvGlDemoLog("Failed to commit properties. Error code: %d\n", ret);
-                goto NvGlDemoSetDrmOutputMode_fail;
+                throw std::runtime_error("Failed to commit DRM properties");
             }
 
-            if (pdrmModeSetPlane(nvGlDrmDev->fd, nvGlDrmDev->planes->planes[planeIndex],
-                        nvGlDrmDev->res->crtcs[crtcIndex], -1, 0,
-                        offsetX, offsetY, sizeX, sizeY,
-                        0, 0, sizeX << 16, sizeY << 16)) {
-                NvGlDemoLog("pdrmModeSetPlane-fail\n");
-                goto NvGlDemoSetDrmOutputMode_fail;
+			auto Plane_id = nvGlDrmDev->planes->planes[planeIndex];
+			auto Crtc_id = nvGlDrmDev->res->crtcs[crtcIndex];
+			auto fb_id = -1;
+			auto Flags = 0;
+			auto crtc_x = Params.WindowOffsetX;
+			auto crtc_y = Params.WindowOffsetY;
+			auto crtc_w = Params.WindowWidth;
+			auto crtc_h = Params.WindowHeight;
+			auto SourceX = 0;
+			auto SourceY = 0;
+			//	gr: why is source smaller?
+			auto SourceW = Params.WindowWidth << 16;
+			auto SourceH = Params.WindowHeight << 16;
+            if ( pdrmModeSetPlane(nvGlDrmDev->fd, Plane_id,Crtc_id , fb_id, Flags, crtc_x, crtc_y, crtc_w, crtc_h, SourceX, SourceY, SourceW, SourceH) )
+			{
+                throw std::runtime_error("pdrmModeSetPlane-fail");
             }
             break;
         }
     }
-    if (planeIndex == nvGlDrmDev->planes->count_planes) {
+    if (planeIndex == nvGlDrmDev->planes->count_planes) 
+	{
         NvGlDemoLog("ERROR: Layer ID %d is not valid on display %d.\n",
                      demoOptions.displayLayer,
                      demoOptions.displayNumber);
@@ -1319,19 +1323,24 @@ static bool NvGlDemoSetDrmOutputMode( void )
 
     outDev = &nvGlOutDevLst[demoState.platform->curDevIndx];
 
-    if(nvGlDrmDev->planeInfo[planeIndex].planeType == DRM_PLANE_TYPE_PRIMARY) {
+    if(nvGlDrmDev->planeInfo[planeIndex].planeType == DRM_PLANE_TYPE_PRIMARY) 
+	{
         outDev->layerDefault = nvGlDrmDev->crtcInfo[crtcIndex].layer;
         nvGlDrmDev->crtcInfo[crtcIndex].used = true;
-    } else {
+    } 
+	else 
+	{
         outDev->layerDefault = nvGlDrmDev->planeInfo[planeIndex].layer;
         nvGlDrmDev->planeInfo[planeIndex].used = true;
     }
 
-    if (conn) {
+    if (conn) 
+	{
         pdrmModeFreeConnector(conn);
     }
 
-    if (currMode) {
+    if (currMode)
+	{
         pdrmModeFreeCrtc(currMode);
     }
 
@@ -1386,48 +1395,55 @@ static void NvGlDemoResetDrmDevice(void)
 }
 
 //Reset DRM Subdriver connection status
-static void NvGlDemoResetDrmConcetion(void)
+static void NvGlDemoResetDrmConcetion(Egl::TParams Params)
 {
-    int offsetX = 0;
-    int offsetY = 0;
-    unsigned int sizeX = 0;
-    unsigned int sizeY = 0;
+    if( !nvGlDrmDev || !demoState.platform ) 
+		return;
 
-    offsetX = demoOptions.windowOffset[0];
-    offsetY = demoOptions.windowOffset[1];
-    sizeX = demoOptions.windowSize[0];
-    sizeY = demoOptions.windowSize[1];
+	//	gr: this func is for cleanup... but sets new plane modes?
+	NvGlDemoLog("NvGlDemoResetDrmConcetion");
 
-    if(nvGlDrmDev && demoState.platform ) {
-        if((nvGlDrmDev->connInfo) && (nvGlDrmDev->curConnIndx != -1)) {
-            nvGlDrmDev->connInfo[nvGlDrmDev->curConnIndx].crtcMapping = -1;
-        }
-        // Mark plane as in unuse
-        if((nvGlDrmDev->isPlane) && (nvGlDrmDev->planeInfo) && (nvGlDrmDev->currPlaneIndx != -1) && (nvGlDrmDev->currCrtcIndx != -1)) {
-            if (pdrmModeSetPlane(nvGlDrmDev->fd, nvGlDrmDev->planes->planes[nvGlDrmDev->currPlaneIndx],
-                        nvGlDrmDev->res->crtcs[nvGlDrmDev->currCrtcIndx], 0, 0,
-                        offsetX, offsetY, sizeX, sizeY,
-                        0, 0, sizeX << 16, sizeY << 16)) {
-                NvGlDemoLog("pdrmModeSetPlane-fail\n");
-            }
-            nvGlDrmDev->planeInfo[nvGlDrmDev->currPlaneIndx].used = false;
-        } else if((nvGlDrmDev->crtcInfo) && (nvGlDrmDev->currCrtcIndx != -1) && (nvGlDrmDev->curConnIndx != -1)) {
-            if (pdrmModeSetCrtc(nvGlDrmDev->fd,
-                        nvGlDrmDev->res->crtcs[nvGlDrmDev->currCrtcIndx], 0,
-                        offsetX, offsetY,
-                        &nvGlDrmDev->res->connectors[nvGlDrmDev->curConnIndx],
-                        1, NULL)) {
-                NvGlDemoLog("pdrmModeSetCrtc-fail\n");
-            }
-            nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].modeX = 0;
-            nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].modeY = 0;
-            nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].mapped = false;
-            nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].used = false;
-        }
-        demoState.platform->curConnIndx = 0;
-    }
-    return;
+	if((nvGlDrmDev->connInfo) && (nvGlDrmDev->curConnIndx != -1)) 
+	{
+		nvGlDrmDev->connInfo[nvGlDrmDev->curConnIndx].crtcMapping = -1;
+	}
+	// Mark plane as in unuse
+	if((nvGlDrmDev->isPlane) && (nvGlDrmDev->planeInfo) && (nvGlDrmDev->currPlaneIndx != -1) && (nvGlDrmDev->currCrtcIndx != -1)) 
+	{
+		auto fb_id = 0;
+		auto Flags = 0;
+		auto SourceX = 0;
+		auto SourceY = 0;
+		//	gr: dont know why these are scaled
+		auto SourceW = Params.WindowWidth << 16;
+		auto SourceH = Params.WindowHeight << 16;
+		if (pdrmModeSetPlane(nvGlDrmDev->fd, nvGlDrmDev->planes->planes[nvGlDrmDev->currPlaneIndx],
+					nvGlDrmDev->res->crtcs[nvGlDrmDev->currCrtcIndx], fb_id, Flags,
+					Params.WindowOffsetX, Params.WindowOffsetY, Params.WindowWidth, Params.WindowHeight,
+					SourceX, SourceY, SourceW, SourceH )) 
+		{
+			NvGlDemoLog("pdrmModeSetPlane-fail\n");
+		}
+		nvGlDrmDev->planeInfo[nvGlDrmDev->currPlaneIndx].used = false;
+	}
+	else if((nvGlDrmDev->crtcInfo) && (nvGlDrmDev->currCrtcIndx != -1) && (nvGlDrmDev->curConnIndx != -1)) 
+	{
+		if (pdrmModeSetCrtc(nvGlDrmDev->fd,
+					nvGlDrmDev->res->crtcs[nvGlDrmDev->currCrtcIndx], 0,
+					Params.WindowOffsetX, Params.WindowOffsetY,
+					&nvGlDrmDev->res->connectors[nvGlDrmDev->curConnIndx],
+					1, NULL)) 
+		{
+			NvGlDemoLog("pdrmModeSetCrtc-fail\n");
+		}
+		nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].modeX = 0;
+		nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].modeY = 0;
+		nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].mapped = false;
+		nvGlDrmDev->crtcInfo[nvGlDrmDev->currCrtcIndx].used = false;
+	}
+	demoState.platform->curConnIndx = 0;
 }
+
 
 // Terminate Drm Device
 static void NvGlDemoTermDrmDevice(void)
@@ -1504,7 +1520,8 @@ void NvGlDemoDisplayTerm(void)
 // Close the window
 void NvGlDemoWindowTerm(void)
 {
-    NvGlDemoResetDrmConcetion();
+	//	gr: needs params to reset drm planes, hmm
+    //NvGlDemoResetDrmConcetion();
     NvGlDemoTermWinSurface();
 }
 
@@ -1606,8 +1623,8 @@ EGLBoolean NvGlDemoPrepareStreamToAttachProducer(void)
                                        EGL_STREAM_STATE_KHR, &streamState);
         if (!Result) 
         {
-            NvGlDemoLog("eglQueryStream returned false");
-           return EGL_FALSE;
+			NvGlDemoLog("eglQueryStream returned false");
+			return EGL_FALSE;
         }
     } 
 
@@ -1622,29 +1639,12 @@ EGLBoolean NvGlDemoPrepareStreamToAttachProducer(void)
 }
 
 
-bool NvGlDemoInitialize()
+void NvGlDemoInitialize(Egl::TParams Params)
 {
-    int glversion = 2;
-    int depthbits = 8;
-    int stencilbits = 0;
-          NvGlDemoLog(__PRETTY_FUNCTION__);
+	NvGlDemoLog(__PRETTY_FUNCTION__);
 
     // Initialize options
     MEMSET(&demoOptions, 0, sizeof(demoOptions));
-    demoOptions.displayColorKey[0] = -1.0;
-    demoOptions.renderahead = -1;
-    demoOptions.timeout         = 16000;
-    demoOptions.flags  = 0;
-    demoOptions.duration = -0.5f;
-    demoOptions.nFifo = 1;
-
-    demoOptions.windowSize[0] = 640;
-    demoOptions.displaySize[0] = 640;
-    demoOptions.windowSize[1] = 480;
-    demoOptions.displaySize[1] = 480;
-
-
-      NvGlDemoLog(__PRETTY_FUNCTION__);
     
     EGLint cfgAttrs[2*MAX_ATTRIB+1], cfgAttrIndex=0;
     EGLint ctxAttrs[2*MAX_ATTRIB+1], ctxAttrIndex=0;
@@ -1654,8 +1654,11 @@ bool NvGlDemoInitialize()
     EGLint     configCount;
     EGLBoolean eglStatus;
     GLint max_VP_dims[] = {-1, -1};
-   // #define eglExtType  EGL_PLATFORM_DEVICE_EXT
-   int eglExtType = 0;
+
+	//	gr: both work
+	// #define eglExtType  EGL_PLATFORM_DEVICE_EXT
+	int eglExtType = 0;
+
     bool NOT_CONSUMER = true;
 
     NvGlDemoDisplayInit();
@@ -1705,12 +1708,18 @@ bool NvGlDemoInitialize()
 
     auto peglQueryStreamKHR = GetEglFunction<decltype(eglQueryStreamKHR)>("eglQueryStreamKHR");
 
-    // Request GL version
+
     cfgAttrs[cfgAttrIndex++] = EGL_RENDERABLE_TYPE;
-    cfgAttrs[cfgAttrIndex++] = (glversion == 2) ? EGL_OPENGL_ES2_BIT
-                                                : EGL_OPENGL_ES_BIT;
+	if ( Params.OpenglEsVersion == 1 )
+    	cfgAttrs[cfgAttrIndex++] = EGL_OPENGL_ES_BIT;
+	else if ( Params.OpenglEsVersion == 2)
+		cfgAttrs[cfgAttrIndex++] = EGL_OPENGL_ES2_BIT;
+	else
+		throw std::runtime_error("Invalid opengles version. Must be 1 or 2");
+
     ctxAttrs[ctxAttrIndex++] = EGL_CONTEXT_CLIENT_VERSION;
-    ctxAttrs[ctxAttrIndex++] = glversion;
+    ctxAttrs[ctxAttrIndex++] = Params.OpenglEsVersion;
+
 
     // Request a minimum of 1 bit each for red, green, blue, and alpha
     // Setting these to anything other than DONT_CARE causes the returned
@@ -1729,26 +1738,38 @@ bool NvGlDemoInitialize()
     surfaceTypeMask |= EGL_STREAM_BIT_KHR;
 
 
-    srfAttrs[srfAttrIndex++] = EGL_WIDTH;
-    srfAttrs[srfAttrIndex++] = 640;
-    srfAttrs[srfAttrIndex++] = EGL_HEIGHT;
-    srfAttrs[srfAttrIndex++] = 480;
+	if ( Params.WindowWidth )
+	{
+	    srfAttrs[srfAttrIndex++] = EGL_WIDTH;
+    	srfAttrs[srfAttrIndex++] = Params.WindowWidth;
+	}
+
+	if ( Params.WindowHeight )
+	{
+	    srfAttrs[srfAttrIndex++] = EGL_HEIGHT;
+    	srfAttrs[srfAttrIndex++] = Params.WindowHeight;
+	}
 
     // If application requires depth or stencil, request them
-    if (depthbits) {
+    if ( Params.DepthBits )
+	{
         cfgAttrs[cfgAttrIndex++] = EGL_DEPTH_SIZE;
-        cfgAttrs[cfgAttrIndex++] = depthbits;
+        cfgAttrs[cfgAttrIndex++] = Params.DepthBits;
     }
-    if (stencilbits) {
+
+    if ( Params.StencilBits ) 
+	{
         cfgAttrs[cfgAttrIndex++] = EGL_STENCIL_SIZE;
-        cfgAttrs[cfgAttrIndex++] = stencilbits;
+        cfgAttrs[cfgAttrIndex++] = Params.StencilBits;
     }
 
     // Request antialiasing
     cfgAttrs[cfgAttrIndex++] = EGL_SAMPLES;
-    cfgAttrs[cfgAttrIndex++] = demoOptions.msaa;
+    cfgAttrs[cfgAttrIndex++] = Params.MsaaSamples;
+
 #ifdef EGL_NV_coverage_sample
-    if (STRSTR(extensions, "EGL_NV_coverage_sample")) {
+    if (STRSTR(extensions, "EGL_NV_coverage_sample")) 
+	{
         cfgAttrs[cfgAttrIndex++] = EGL_COVERAGE_SAMPLES_NV;
         cfgAttrs[cfgAttrIndex++] = demoOptions.csaa;
         cfgAttrs[cfgAttrIndex++] = EGL_COVERAGE_BUFFERS_NV;
@@ -1801,15 +1822,13 @@ bool NvGlDemoInitialize()
     eglStatus = eglChooseConfig(demoState.display, cfgAttrs,
                                 NULL, 0, &configCount);
     if (!eglStatus || !configCount) {
-        NvGlDemoLog("EGL failed to return any matching configurations.\n");
-        goto fail;
+        throw std::runtime_error("EGL failed to return any matching configurations.\n");
     }
 
     // Allocate room for the list of matching configurations
     configList = (EGLConfig*)MALLOC(configCount * sizeof(EGLConfig));
     if (!configList) {
-        NvGlDemoLog("Allocation failure obtaining configuration list.\n");
-        goto fail;
+        throw std::runtime_error("Allocation failure obtaining configuration list.\n");
     }
 
     // Obtain the configuration list from EGL
@@ -1817,8 +1836,7 @@ bool NvGlDemoInitialize()
   eglStatus = eglChooseConfig(demoState.display, cfgAttrs,
                                 configList, configCount, &configCount);
     if (!eglStatus || !configCount) {
-        NvGlDemoLog("EGL failed to populate configuration list.\n");
-        goto fail;
+        throw std::runtime_error("EGL failed to populate configuration list.\n");
     }
 
     // Select an EGL configuration that matches the native window
@@ -1836,7 +1854,7 @@ bool NvGlDemoInitialize()
     NvGlDemoCreateDrmDevice(demoState.platform->curDevIndx);
 
     // Make the Output requirement for Devices
-    if(!NvGlDemoSetDrmOutputMode())
+    if(!NvGlDemoSetDrmOutputMode(Params))
         throw std::runtime_error("NvGlDemoSetDrmOutputMode failed");
 
     if(!NvGlDemoCreateSurfaceBuffer())
@@ -1892,10 +1910,9 @@ bool NvGlDemoInitialize()
        }
     }
 
-    {
-        if (demoState.surface == EGL_NO_SURFACE) {
-            NvGlDemoLog("EGL couldn't create window surface.\n");
-            goto fail;
+        if (demoState.surface == EGL_NO_SURFACE) 
+		{
+            throw std::runtime_error("EGL couldn't create window surface.");
         }
 
         // Create an EGL context
@@ -1905,9 +1922,10 @@ bool NvGlDemoInitialize()
                              demoState.config,
                              NULL,
                              ctxAttrs);
-        if (!demoState.context) {
-            NvGlDemoLog("EGL couldn't create context.\n");
-            goto fail;
+		Egl::IsOkay("eglCreateContext");
+        if (!demoState.context) 
+		{
+            throw std::runtime_error("EGL couldn't create context.\n");
         }
 /*
         // Make the context and surface current for rendering
@@ -1951,19 +1969,10 @@ bool NvGlDemoInitialize()
                                    EGL_NO_SURFACE, EGL_NO_SURFACE,
                                    EGL_NO_CONTEXT);
 */
-        return 1;
-    }
-
-    // On failure, clean up partial initialization
-    fail:
-    if (configList) FREE(configList);
-    NvGlDemoShutdown();
-    return 0;
 }
 
 // Shut down, freeing all EGL and native window system resources.
-void
-NvGlDemoShutdown(void)
+void NvGlDemoShutdown(void)
 {
     EGLBoolean eglStatus;
 
@@ -2025,18 +2034,17 @@ NvGlDemoEglTerminate(void)
 }
 
 
-EglContext::EglContext()
+Egl::TDisplaySurfaceContext::TDisplaySurfaceContext(TParams Params)
 {
-    if ( !NvGlDemoInitialize() )
-        throw std::runtime_error("Init failed");
+    NvGlDemoInitialize(Params);
 }
 
-EglContext::~EglContext()
+Egl::TDisplaySurfaceContext::~TDisplaySurfaceContext()
 {
     NvGlDemoShutdown();
 }
 
-void EglContext::PrePaint()
+void Egl::TDisplaySurfaceContext::PrePaint()
 {
     auto& mDisplay = demoState.display;
     auto& mSurface = demoState.surface;
@@ -2056,7 +2064,7 @@ void EglContext::PrePaint()
 	}
 }
 
-void EglContext::PostPaint()
+void Egl::TDisplaySurfaceContext::PostPaint()
 {
     if (eglSwapBuffers(demoState.display, demoState.surface) != EGL_TRUE) 
         throw std::runtime_error("eglSwapBuffers failed");
@@ -2068,7 +2076,7 @@ void EglContext::PostPaint()
 
 
 
-void EglContext::GetDisplaySize(int& Width,int& Height)
+void Egl::TDisplaySurfaceContext::GetDisplaySize(uint32_t& Width,uint32_t& Height)
 {
     auto mSurface = demoState.surface;
     auto mDisplay = demoState.display;
@@ -2082,15 +2090,16 @@ void EglContext::GetDisplaySize(int& Width,int& Height)
 	if ( !mDisplay )
 		throw std::runtime_error("EglWindow::GetRenderRec no display");
 
-	Width = 0;	
-	Height = 0;
-	eglQuerySurface( mDisplay, mSurface, EGL_WIDTH, &Width );
-	//Egl::IsOkay("eglQuerySurface(EGL_WIDTH)");
-	eglQuerySurface( mDisplay, mSurface, EGL_HEIGHT, &Height );
-	//Egl::IsOkay("eglQuerySurface(EGL_HEIGHT)");
+	EGLint w=0,h=0;
+	eglQuerySurface( mDisplay, mSurface, EGL_WIDTH, &w );
+	Egl::IsOkay("eglQuerySurface(EGL_WIDTH)");
+	eglQuerySurface( mDisplay, mSurface, EGL_HEIGHT, &h );
+	Egl::IsOkay("eglQuerySurface(EGL_HEIGHT)");
+	Width = w;
+	Height = h;
 }
 
-void EglContext::TestRender()
+void Egl::TDisplaySurfaceContext::TestRender()
 {
     int Iterations = 60 * 1;
     for ( int i=0;  i<Iterations; i++ )

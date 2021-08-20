@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "TApiSokol.h"
-#include "SoyWindowLinux.h"
+#include "SoyGuiLinux.h"
 #include "SoySokol_Linux.h"
 
 #define SOKOL_IMPL
@@ -8,6 +8,7 @@
 #include "sokol/sokol_gfx.h"
 
 #include "EglContext.h"
+
 
 std::shared_ptr<Sokol::TContext> Sokol::Platform_CreateContext(Sokol::TContextParams Params)
 {
@@ -67,21 +68,12 @@ void SokolOpenglContext::OnPaint()
 	std::lock_guard<std::mutex> Lock(mOpenglContextLock);
 	auto& Window = *mWindow;
 
-
-	auto FlushedError = eglGetError();
-	if ( FlushedError != EGLint(EGL_SUCCESS) )
-		std::Debug << "Pre paint, flushed error=" << FlushedError << std::endl;
-
 	if ( !Window.mContext )
 		throw Soy::AssertException("Window has null context");
 
 	Window.mContext->PrePaint();
 
-	FlushedError = eglGetError();
-	if ( FlushedError != EGLint(EGL_SUCCESS) )
-		std::Debug << "Post eglMakeCurrent, flushed error=" << FlushedError << std::endl;
-
-	auto NowCurrentContext = eglGetCurrentContext();
+	//auto NowCurrentContext = eglGetCurrentContext();
 	if ( mSokolContext.id == 0 )
 	{
 		sg_desc desc={0};
@@ -94,10 +86,6 @@ void SokolOpenglContext::OnPaint()
 	auto Rect = Window.GetScreenRect();
 	vec2x<size_t> Size( Rect.w, Rect.h );
 	mParams.mOnPaint( mSokolContext, Size );
-
-	FlushedError = eglGetError();
-	if ( FlushedError != EGLint(EGL_SUCCESS) )
-		std::Debug << "Post OnPaint, flushed error=" << FlushedError << std::endl;
 
 	Window.mContext->PostPaint();
 }

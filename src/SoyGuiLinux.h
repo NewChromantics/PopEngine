@@ -1,16 +1,16 @@
 #pragma once
 
+
 #if defined(ENABLE_OPENGL)
-#include "LinuxDRM/esUtil.h"
-#include <EGL/egl.h>
+#define ENABLE_EGL
 #endif
 
-//#if defined(ENABLE_OPENGL)
-#include <EGL/egl.h>
+#if defined(ENABLE_EGL)
+#include "EglContext.h"
+//	GUI types
 class EglWindow;
 class EglRenderView;
-//#endif
-class EglContext;
+#endif
 
 
 class Platform::TWindow : public SoyWindow
@@ -25,12 +25,9 @@ public:
 	virtual bool									IsMinimised() override;
 	virtual bool									IsForeground() override;
 	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
-
-#if defined(ENABLE_OPENGL)
-	ESContext											mESContext;
-#endif
 };
 
+#if defined(ENABLE_EGL)
 class EglWindow : public SoyWindow
 {
 public:
@@ -46,9 +43,11 @@ public:
 	virtual void					EnableScrollBars(bool Horz,bool Vert) override	{};
 
 public:
-	std::shared_ptr<EglContext>		mContext;
+	std::shared_ptr<Egl::TDisplaySurfaceContext>		mContext;
 };
+#endif
 
+#if defined(ENABLE_EGL)
 class EglRenderView : public Gui::TRenderView
 {
 public:
@@ -58,4 +57,4 @@ public:
 	//	bit unsafe!
 	EglWindow&		mWindow;
 };
-
+#endif

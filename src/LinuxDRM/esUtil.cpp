@@ -297,11 +297,13 @@ static uint32_t previous_fb;
 void ESUTIL_API esPaint(ESContext *esContext)
 {
 	if (esContext->drawFunc)
-		esContext->drawFunc();
+		esContext->drawFunc(); 
 
 	// Headless does not create a window handle
-	if(esContext->hWnd == NULL)
+	if(!esContext->hWnd)
+	{
 		glFlush();
+	}
 	else
 	{
 		eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);

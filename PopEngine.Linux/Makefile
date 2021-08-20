@@ -126,6 +126,10 @@ endif
 # -f[lag] PIC position independent code (for dyanmically loaded code)
 # -rpath $ORIGIN makes the shared object runtimepath be same place as executable
 CFLAGS = -c $(CONFIGURATION_FLAGS) $(LIB_DEFINES) $(LIB_INCLUDES) -std=gnu++17 -fPIC
+
+# Make a depdencny file (.d) so header changes can be detected
+CFLAGS += -MD
+
 LDFLAGS = -pthread
 LDFLAGS += '-Wl,-rpath,$$ORIGIN'
 LDFLAGS += '-Wl,-rpath-link=$(BUILD_DIR)'
@@ -161,6 +165,8 @@ LIB_CPP_FILES += $(SRC_PATH)/TApiSokol.cpp
 LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
+LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpengl.cpp
+LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglContext.cpp
 LIB_LINK_LIBS += -lEGL
 #LIB_LINK_LIBS += -ldrm
 LIB_LINK_LIBS += -l:libdrm.so.2
@@ -265,11 +271,15 @@ $(BUILD_TEMP_DIR)%.o: %.cpp
 
 clean:
 	# clean build files, anything .o
-	#find . -name "$(PROJECT_PATH)*.o" -type f -delete
+	$(info Cleaning files...)
+	find $(PROJECT_PATH) -name "*.o" -type f -delete
+	find $(PROJECT_PATH) -name "*.d" -type f -delete
 
-	$(info Cleaning files)
 	rm -f $(APP_OBJECTS)
 	rm -f $(LIB_OBJECTS)
 	rm -f $(OUT_LIB)
 	rm -f $(OUT_APP)
 
+# for every .o file, include a .d file, which has makefile rules to detect headers
+-include $(LIB_OBJECTS:.o=.d)
+-include $(APP_OBJECTS:.o=.d)
