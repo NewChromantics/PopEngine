@@ -1,9 +1,6 @@
 [submodule "src/SoyLib"]
 	path = src/SoyLib
 	url = https://github.com/SoylentGraham/SoyLib.git
-[submodule "src/SoyDecklink"]
-	path = src/SoyDecklink
-	url = https://github.com/SoylentGraham/SoyDecklink.git
 [submodule "UnitTest"]
 	path = UnitTest
 	url = https://github.com/NewChromantics/PopEngineUnitTests.git
@@ -19,9 +16,6 @@
 [submodule "src/Json11"]
 	path = src/Json11
 	url = https://github.com/dropbox/json11.git
-[submodule "src/PopDepthToYuv"]
-	path = src/PopDepthToYuv
-	url = https://github.com/SoylentGraham/PopDepthToYuv.git
 [submodule "Source_Web"]
 	path = Source_Web
 	url = https://github.com/NewChromantics/PopEngine_Web.git
