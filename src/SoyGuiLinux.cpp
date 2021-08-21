@@ -80,7 +80,7 @@ EglWindow::EglWindow(const std::string& Name,Soy::Rectx<int32_t>& Rect )
 
 	Params.DisplayWidth = Params.WindowWidth;
 	Params.DisplayHeight = Params.WindowHeight;
-	mContext.reset( new Egl::TDisplaySurfaceContext() );
+	mContext.reset( new Egl::TDisplaySurfaceContext(Params) );
 
 	//	this post says it doesnt need X, but I cant get configs without X11 starting
 	//	https://forums.developer.nvidia.com/t/egl-without-x11/58733/4
