@@ -6,7 +6,6 @@
 
 #include "TApiCommon.h"
 #include "TApiSocket.h"
-#include "TApiPanopoly.h"
 #include "TApiEngine.h"
 #include "TApiWebsocket.h"
 #include "TApiHttp.h"
@@ -940,7 +939,6 @@ void JsCore::TInstance::BindApis(TContext& Context)
 {
 	ApiPop::Bind(Context);
 	ApiSocket::Bind(Context);
-	//ApiPanopoly::Bind(Context);
 	ApiWebsocket::Bind(Context);
 	ApiHttp::Bind(Context);
 
@@ -983,7 +981,6 @@ void JsCore::TInstance::BindApis(TContext& Context)
 	ApiAudio::Bind(Context);
 	//ApiOpencl::Bind( *
 	//ApiDlib::Bind(Context);
-	ApiEzsift::Bind(Context);
 	ApiInput::Bind(Context);
 	ApiBluetooth::Bind(Context);
 	ApiLeapMotion::Bind(Context);
