@@ -55,7 +55,11 @@ static const struct drm *drm; // actual object is a static variable in drm-legac
 //
 EGLBoolean WinCreate(ESContext *esContext, const char *title)
 {
-	const char *device = "/dev/dri/card1";
+	//	gr: this DOES open on nvidia, but below fails
+	int drmtest = drmOpen("drm-nvdc", "");
+
+	//const char *device = "/dev/dri/card1";
+	const char *device = "drm-nvdc";
 	drm = init_drm_legacy(device, "", 0);
 	if (!drm)
 	{
@@ -293,11 +297,13 @@ static uint32_t previous_fb;
 void ESUTIL_API esPaint(ESContext *esContext)
 {
 	if (esContext->drawFunc)
-		esContext->drawFunc();
+		esContext->drawFunc(); 
 
 	// Headless does not create a window handle
-	if(esContext->hWnd == NULL)
+	if(!esContext->hWnd)
+	{
 		glFlush();
+	}
 	else
 	{
 		eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);

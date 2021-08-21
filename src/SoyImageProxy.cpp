@@ -1,7 +1,9 @@
 #include "SoyImageProxy.h"
 #include "SoyDebug.h"
 #include "SoyImage.h"
-#if defined(ENABLE_OPENGL)
+
+//#define ENABLE_OPENGL_IMAGE	//	not needed if using sokol
+#if defined(ENABLE_OPENGL_IMAGE)
 #include "SoyOpengl.h"
 #include "SoyOpenglContext.h"
 #endif
@@ -322,7 +324,7 @@ void SoyImageProxy::GetTexture(Opengl::TContext& Context,std::function<void()> O
 	if ( !mPixels && !mPixelBuffer )
 		throw Soy::AssertException("Trying to get opengl texture when we have no pixels/pixelbuffer");
 
-#if defined(ENABLE_OPENGL)
+#if defined(ENABLE_OPENGL_IMAGE)
 	auto* pContext = &Context;
 	auto AllocAndOrUpload = [=]
 	{
@@ -471,7 +473,7 @@ SoyPixelsMeta SoyImageProxy::GetMeta()
 	//	opengl may have been released!
 	if ( mOpenglTextureVersion == LatestVersion && mOpenglTexture )
 	{
-#if defined(ENABLE_OPENGL)
+#if defined(ENABLE_OPENGL_IMAGE)
 		return mOpenglTexture->GetMeta();
 #else
 		throw Soy::AssertException("opengl not enabled in build");
@@ -583,7 +585,7 @@ size_t SoyImageProxy::GetLatestVersion() const
 
 void SoyImageProxy::SetOpenglTexture(const Opengl::TAsset& Texture)
 {
-#if defined(ENABLE_OPENGL)
+#if defined(ENABLE_OPENGL_IMAGE)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
 	//	todo: delete old texture
@@ -598,7 +600,7 @@ void SoyImageProxy::SetOpenglTexture(const Opengl::TAsset& Texture)
 
 void SoyImageProxy::OnOpenglTextureChanged(Opengl::TContext& Context)
 {
-#if defined(ENABLE_OPENGL)
+#if defined(ENABLE_OPENGL_IMAGE)
 	std::lock_guard<std::recursive_mutex> Lock(mPixelsLock);
 
 	if ( !mOpenglTexture )
@@ -665,7 +667,7 @@ void SoyImageProxy::SetPixelBuffer(std::shared_ptr<TPixelBuffer> NewPixels)
 
 void SoyImageProxy::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 {
-#if defined(ENABLE_OPENGL)
+#if defined(ENABLE_OPENGL_IMAGE)
 	//	gr: this needs to be in the opengl thread!
 	//Context.IsInThread
 
@@ -695,7 +697,7 @@ void SoyImageProxy::ReadOpenglPixels(SoyPixelsFormat::Type Format)
 
 void SoyImageProxy::SetOpenglLastPixelReadBuffer(std::shared_ptr<Array<uint8_t>> PixelBuffer)
 {
-#if defined(ENABLE_OPENGL)
+#if defined(ENABLE_OPENGL_IMAGE)
 	Soy::TScopeTimerPrint Timer(__func__, 5);
 	if (GetLatestVersion() != mOpenglTextureVersion)
 	{

@@ -1,5 +1,12 @@
 #include "TApiSokol.h"
-#include "LinuxDRM/esUtil.h"
+//#include "LinuxDRM/esUtil.h"
+
+class EglWindow;
+
+namespace Egl
+{
+	void	IsOkay(const char* Context);
+}
 
 class SokolOpenglContext : public Sokol::TContext
 {
@@ -20,7 +27,7 @@ public:
 	bool							mPaintRequested = false;
 
 	sg_context						mSokolContext = {0};
-	ESContext*						mESContext = nullptr;
+	EglWindow*						mWindow = nullptr;
 	std::mutex						mOpenglContextLock;
 	
 	Sokol::TContextParams			mParams;

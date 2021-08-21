@@ -236,7 +236,6 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	
 	Soy::Rectx<int32_t> Rect(0, 0, 0, 0);
 
-#if !defined (TARGET_LINUX)
 	//	if no rect, get rect from screen
 	if ( !Params.IsArgumentUndefined(1) )
 	{
@@ -249,6 +248,7 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 	}
 	else
 	{
+#if !defined (TARGET_LINUX)
 		//	get first monitor size
 		auto SetRect = [&](const Platform::TScreenMeta& Screen)
 		{
@@ -262,8 +262,8 @@ void ApiGui::TWindowWrapper::Construct(Bind::TCallback& Params)
 			Rect.h = Screen.mWorkRect.h - BorderY - BorderY;
 		};
 		Platform::EnumScreens(SetRect);
-	}
 #endif
+	}
 	
 	bool Resizable = true;
 	if ( !Params.IsArgumentUndefined(2))

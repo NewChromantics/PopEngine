@@ -741,6 +741,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 
 void ApiSokol::TSokolContextWrapper::Construct(Bind::TCallback &Params)
 {
+	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	auto RenderViewObject = Params.GetArgumentObject(0);
 	auto& RenderViewWrapper = RenderViewObject.This<ApiGui::TRenderViewWrapper>();
 	
