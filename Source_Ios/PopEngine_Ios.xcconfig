@@ -10,7 +10,21 @@ GCC_PREPROCESSOR_DEFINITIONS = $(GCC_PREPROCESSOR_DEFINITIONS) TARGET_IOS JSAPI_
 BITCODE_GENERATION_MODE=bitcode
 ENABLE_BITCODE=YES
 
-OTHER_CFLAGS = -Wno-ambiguous-macro -fembed-bitcode
+//	extra warnings to make linux building easier
+GCC_WARN_PEDANTIC = YES
+CLANG_WARN_BOOL_CONVERSION = YES
+CLANG_WARN_CONSTANT_CONVERSION = YES
+CLANG_WARN_ENUM_CONVERSION = YES
+CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES
+CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO
+GCC_WARN_ABOUT_RETURN_TYPE = YES
+
+//	we allow this
+GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO
+
+//	added some warnings that popup in linux builds
+OTHER_CFLAGS = -fpermissive -Wpointer-arith -Wno-ambiguous-macro -fembed-bitcode
+
 
 //	including PopH264 framework is including SoyLib/src/xyz.h
 SOYLIB_PATH = $(SRCROOT)/src/
