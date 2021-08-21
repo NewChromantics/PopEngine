@@ -1,7 +1,6 @@
 #pragma once
 #include "TBind.h"
 
-//#include "TPopServerThread.h"
 #include "SoyRef.h"
 #include "SoyStream.h"
 #include "SoyWebSocket.h"
