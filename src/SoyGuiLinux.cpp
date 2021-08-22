@@ -107,26 +107,7 @@ bool WindowX11::EventThreadIteration()
 
 	XEvent Event;
 	XNextEvent( mDisplay, &Event );
-	std::Debug << "Got event " << Event.type << std::endl;
 	
-	if ( Event.type == ConfigureNotify )
-	{
-		auto& NewConfiguration = Event.xconfigure;
-		Soy::Rectx<int> Rect( NewConfiguration.x, NewConfiguration.y, NewConfiguration.width, NewConfiguration.height );
-
-		std::Debug << "Window recognfigured " << Rect << std::endl;
-	}
-
-	if ( Event.type == ClientMessage )
-	{
-		std::Debug << "Window ClientMessage" << std::endl;
-	/*
-		if (event.xclient.message_type ==
-		XInternAtom(demoState.platform->XDisplay,"WM_PROTOCOLS", True) &&
-		(Atom)event.xclient.data.l[0] == XInternAtom(demoState.platform->XDisplay,"WM_DELETE_WINDOW", True))
-		close()
-		*/
-	}
 
 	auto SendMouseEvent = [&](SoyMouseEvent::Type EventType,SoyMouseButton::Type Button) 
 	{
@@ -164,7 +145,24 @@ bool WindowX11::EventThreadIteration()
 		return SoyMouseButton::None;
 	};
 
-	if ( Event.type == MotionNotify )
+	if ( Event.type == ConfigureNotify )
+	{
+		auto& NewConfiguration = Event.xconfigure;
+		Soy::Rectx<int> Rect( NewConfiguration.x, NewConfiguration.y, NewConfiguration.width, NewConfiguration.height );
+
+		std::Debug << "Window recognfigured " << Rect << std::endl;
+	}
+	else if ( Event.type == ClientMessage )
+	{
+		std::Debug << "Window ClientMessage" << std::endl;
+	/*
+		if (event.xclient.message_type ==
+		XInternAtom(demoState.platform->XDisplay,"WM_PROTOCOLS", True) &&
+		(Atom)event.xclient.data.l[0] == XInternAtom(demoState.platform->XDisplay,"WM_DELETE_WINDOW", True))
+		close()
+		*/
+	}
+	else if ( Event.type == MotionNotify )
 	{
 		//	send for each button that's down
 		auto ButtonState = Event.xmotion.state;
@@ -182,20 +180,21 @@ bool WindowX11::EventThreadIteration()
 		for ( int i=0;	i<Buttons.GetSize();	i++ )
 			SendMouseEvent( SoyMouseEvent::Move, Buttons[i] );
 	}
-
-
-	if ( Event.type == ButtonPress )
+	else if ( Event.type == ButtonPress )
 	{
 		auto Button = ButtonToSoyButton(Event.xbutton.button);
 		if ( Button != SoyMouseButton::None )
 			SendMouseEvent( SoyMouseEvent::Down, Button );
 	}
-
-	if ( Event.type == ButtonRelease )
+	else if ( Event.type == ButtonRelease )
 	{
 		auto Button = ButtonToSoyButton(Event.xbutton.button);
 		if ( Button != SoyMouseButton::None )
 			SendMouseEvent( SoyMouseEvent::Up, Button );
+	}
+	else
+	{
+		std::Debug << "Unhandled X11 event " << Event.type << std::endl;
 	}
 
 	/*      case KeyPress:
