@@ -25,15 +25,21 @@ SokolOpenglContext::SokolOpenglContext(Sokol::TContextParams Params) :
 {
 	if ( !Params.mRenderView )
 		throw Soy::AssertException("Linux SokolOpenglContext params missing render view");
-	auto& PlatformRenderView = dynamic_cast<EglRenderView&>(*Params.mRenderView);
-	mWindow = &PlatformRenderView.mWindow;
+	
+	mRenderView = std::dynamic_pointer_cast<EglRenderView>(Params.mRenderView);
+
+	auto OnFrame = [this](Soy::Rectx<size_t> Rect)
+	{
+		this->OnPaint(Rect);
+	};
+	Params.mRenderView->mOnDraw = OnFrame;
 
 	auto PaintLoop = [this]()
 	{
 		auto FrameDelayMs = 1000/mParams.mFramesPerSecond;
 		try
 		{
-			this->OnPaint();
+			mRenderView->RequestPaint();
 			std::this_thread::sleep_for(std::chrono::milliseconds(FrameDelayMs));
 		}
 		catch(std::exception& e)
@@ -63,16 +69,11 @@ SokolOpenglContext::~SokolOpenglContext()
 }
 
 
-void SokolOpenglContext::OnPaint()
+void SokolOpenglContext::OnPaint(Soy::Rectx<size_t> Rect)
 {
-	/*
 	std::lock_guard<std::mutex> Lock(mOpenglContextLock);
-	auto& Window = *mWindow;
 
-	if ( !Window.mContext )
-		throw Soy::AssertException("Window has null context");
-
-	Window.mContext->PrePaint();
+	mRenderView->PrePaint();
 
 	//auto NowCurrentContext = eglGetCurrentContext();
 	if ( mSokolContext.id == 0 )
@@ -83,13 +84,10 @@ void SokolOpenglContext::OnPaint()
 		mSokolContext = sg_setup_context();
 	}
 
-
-	auto Rect = Window.GetScreenRect();
 	vec2x<size_t> Size( Rect.w, Rect.h );
 	mParams.mOnPaint( mSokolContext, Size );
 
-	Window.mContext->PostPaint();
-	*/
+	mRenderView->PostPaint();
 }
 
 

@@ -32,6 +32,7 @@ public:
 
 	virtual EGLNativeDisplayType	GetDisplay()=0;
 	virtual EGLSurface				GetSurface()=0;
+	virtual EGLNativeWindowType		GetWindow()=0;
 };
 
 
@@ -52,6 +53,7 @@ public:
 
 	virtual EGLNativeDisplayType	GetDisplay()	{	return mDisplay;	}
 	virtual EGLSurface				GetSurface()	{	return mSurface;	}
+	virtual EGLNativeWindowType		GetWindow()		{	return mWindow;	}
 
 	void						RequestPaint();	//	due to single event thread and apparently x11 is unstable multithreaded, we send ourselves an event to paint and then callback
 
@@ -106,7 +108,18 @@ class EglRenderView : public Gui::TRenderView
 public:
 	EglRenderView(SoyWindow& Parent);
 
+	Soy::Rectx<size_t>	GetSurfaceRect();
+
+	void				RequestPaint();
+	void				PrePaint();
+	void				PostPaint();
+
 public:
 	//	bit unsafe!
 	EglWindow&		mWindow;
+
+	EGLDisplay	mDisplay = nullptr;
+	//EGLConfig   egl_conf;
+	EGLContext	mContext = nullptr;
+	EGLSurface	mSurface = nullptr;
 };

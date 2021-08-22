@@ -233,8 +233,164 @@ WindowX11::~WindowX11()
 EglRenderView::EglRenderView(SoyWindow& Parent) :
 	mWindow	( dynamic_cast<EglWindow&>(Parent) )
 {
+	/*
+	auto NativeDisplays = GetNativeDisplays();
+	std::Debug << "Got " << NativeDisplays.GetSize() << " native displays" << std::endl;
+	NativeDisplays.PushBack(EGL_DEFAULT_DISPLAY);
+
+	auto GetPlatformDisplay = GetEglFunction<decltype(eglGetPlatformDisplayEXT)>("eglGetPlatformDisplayEXT");
+
+	for ( int d=0;	d<NativeDisplays.GetSize() && !mDisplay;	d++ )
+	{
+		auto Display = NativeDisplays[d];
+		//	todo: try{} all the devices
+		if ( GetPlatformDisplay )
+		{
+			EGLint* Attribs = nullptr;
+			auto Platform = EGL_PLATFORM_DEVICE_EXT;
+			mDisplay = GetPlatformDisplay( Platform, Display, Attribs );
+			Egl::IsOkay("GetPlatformDisplay");
+		}
+		else
+		{
+			mDisplay = eglGetDisplay(Display);
+			Egl::IsOkay("eglGetDisplay");
+		}
+	}
+	*/
+
+	//	gr: using the x11 display fails (same in forums & nvidia demo)
+	//auto DisplayType = mWindow.GetDisplay();
+	auto DisplayType = EGL_DEFAULT_DISPLAY;
+	mDisplay = eglGetDisplay(DisplayType);
+	Egl::IsOkay("eglGetDisplay");
+	if ( !mDisplay )
+		throw Soy::AssertException("Failed to get a display");
+
+	if ( !eglInitialize(mDisplay, nullptr, nullptr) )
+		std::Debug << "eglInitialize() returned false" << std::endl;
+	Egl::IsOkay("eglInitialize");
+
+
+	//	gr: some things have binding first
+	if ( !eglBindAPI(EGL_OPENGL_ES_API) )
+		std::Debug << "eglBindAPI() returned false" << std::endl;
+	Egl::IsOkay("eglBindAPI");
+
+	//	attrib[pair]s to filter configs
+	EGLint* pConfigAttribs = nullptr;
+/*
+	EGLint pConfigAttribs[] = 
+	{
+		EGL_RENDERABLE_TYPE,EGL_OPENGL_BIT,
+		EGL_NATIVE_RENDERABLE,EGL_TRUE,
+		EGL_NONE
+	};
+	*/
+/*
+	//	don't have this until we start creating renderview. Maybe window should make a display
+	//	and renderview actually does the initialisation, OR just do it all at render context time?
+	TOpenglParams OpenglParams;	
+	Array<EGLint> ConfigAttribs;
+	//GetConfigAttributes( GetArrayBridge(ConfigAttribs), Rect, OpenglParams );
+	EGLint* pConfigAttribs = ConfigAttribs.GetArray();
+*/
+	//	enum configs
+	EGLint ConfigCount = -1;
+	{
+		EGLConfig Stub;
+		if ( !eglChooseConfig(mDisplay, pConfigAttribs, &Stub, 1, &ConfigCount) )
+			std::Debug << "eglChooseConfig returned false" << std::endl;
+	}
+	Egl::IsOkay("eglChooseConfig (get count)");
+	std::Debug << "Found " << ConfigCount << " display configs" << std::endl;
+
+	Array<EGLConfig> Configs;
+	Configs.SetSize(ConfigCount);
+	Configs.SetAll(nullptr);
+	eglChooseConfig(mDisplay, pConfigAttribs, Configs.GetArray(), Configs.GetSize(), &ConfigCount);
+	Egl::IsOkay("eglChooseConfig");
+	Configs.SetSize(ConfigCount);
+	if ( Configs.IsEmpty() )
+		throw Soy::AssertException("No display configs availible");
+	for ( auto i=0;	i<Configs.GetSize();	i++ )
+	{
+		EGLint Width=0,Height=0;
+		auto Config = Configs[i];
+		eglGetConfigAttrib( mDisplay, Config, EGL_MAX_PBUFFER_WIDTH, &Width );
+		eglGetConfigAttrib( mDisplay, Config, EGL_MAX_PBUFFER_HEIGHT, &Height );
+		std::Debug << "Display config #" << i << " " << Width << "x" << Height << std::endl;
+	}
+	auto Config = Configs[0];
+
+
+
+	mContext = eglCreateContext(mDisplay, Config, EGL_NO_CONTEXT, nullptr );
+	Egl::IsOkay("eglCreateContext");
+
+	auto Window = mWindow.GetWindow();
+	mSurface = eglCreateWindowSurface( mDisplay, Config, Window, nullptr  );
+	Egl::IsOkay("eglCreateWindowSurface");
+	if ( !mSurface )
+		throw Soy::AssertException("Failed to create surface");
+
+	//mSurface = eglCreatePbufferSurface(mDisplay, Config, nullptr);
+	//Egl::IsOkay("eglCreatePbufferSurface");
+
+	//eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
+	//Egl::IsOkay("eglMakeCurrent");
 }
 #endif
+
+Soy::Rectx<size_t> EglRenderView::GetSurfaceRect()
+{
+	eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
+	Egl::IsOkay("eglMakeCurrent");
+
+	EGLint w=0,h=0;
+	eglQuerySurface( mDisplay, mSurface, EGL_WIDTH, &w );
+	Egl::IsOkay("eglQuerySurface(EGL_WIDTH)");
+	eglQuerySurface( mDisplay, mSurface, EGL_HEIGHT, &h );
+	Egl::IsOkay("eglQuerySurface(EGL_HEIGHT)");
+
+	eglMakeCurrent( mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	Egl::IsOkay("eglMakeCurrent");
+
+	return Soy::Rectx<size_t>( 0,0, w, h);
+}
+
+void EglRenderView::RequestPaint()
+{
+	//	do we need to tell x11 window to repaint?
+	auto Rect = GetSurfaceRect();
+	if ( mOnDraw )
+		mOnDraw( Rect );
+}
+
+void EglRenderView::PrePaint()
+{
+	auto* CurrentContext = eglGetCurrentContext();
+	if ( CurrentContext != mContext )
+	{
+		//  this will error if current locked to some other thread
+		//NvGlDemoLog("Switching context...");
+		auto Result = eglMakeCurrent( mDisplay, mSurface, mSurface, mContext );
+		if ( Result != EGL_TRUE )
+		{
+			Egl::IsOkay("eglMakeCurrent returned false");
+		}
+	}
+}
+
+void EglRenderView::PostPaint()
+{
+	if (eglSwapBuffers( mDisplay, mSurface) != EGL_TRUE) 
+		throw std::runtime_error("eglSwapBuffers failed");
+
+	//  unbind context
+	auto Result = eglMakeCurrent( mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
+	Egl::IsOkay("eglMakeCurrent unlock (NO_CONTEXT)");
+}
 
 /*
 template<typename FUNCTIONTYPE>
