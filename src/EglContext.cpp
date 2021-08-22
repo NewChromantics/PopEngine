@@ -1850,7 +1850,7 @@ void NvGlDemoInitialize(Egl::TParams Params)
 
     // Create the EGL Device and DRM Device
     NvGlDemoCreateEglDevice(demoState.platform->curDevIndx);
-
+/*
     NvGlDemoCreateDrmDevice(demoState.platform->curDevIndx);
 
     // Make the Output requirement for Devices
@@ -1866,18 +1866,18 @@ void NvGlDemoInitialize(Egl::TParams Params)
     if(demoState.stream != EGL_NO_STREAM_KHR && NOT_CONSUMER) 
     {
         NvGlDemoLog("A stream + !consumer");
-        /*  gr: dont need this
-        if (!NvGlDemoPrepareStreamToAttachProducer()) {
-            goto fail;
-        }
-    */
+        //  gr: dont need this
+        //if (!NvGlDemoPrepareStreamToAttachProducer()) {
+        //    goto fail;
+        //}
+
            //  gr: do need a surface
         auto peglCreateStreamProducerSurfaceKHR = GetEglFunction<decltype(eglCreateStreamProducerSurfaceKHR)>("eglCreateStreamProducerSurfaceKHR");
         NvGlDemoLog("peglCreateStreamProducerSurfaceKHR");
         demoState.surface = peglCreateStreamProducerSurfaceKHR(demoState.display,demoState.config,demoState.stream,srfAttrs);
                         
     }
-    else 
+    else */
     {
         //  gr: this doesnt work on nvidia but feels like it would be the right path
         NvGlDemoLog("peglCreatePlatformWindowSurfaceEXT eglExtType=%d",eglExtType);
@@ -1888,11 +1888,13 @@ void NvGlDemoInitialize(Egl::TParams Params)
         }
         switch (eglExtType) {
                 case 0:
+				NvGlDemoLog("eglCreateWindowSurface(demoState.nativeWindow=%d)",demoState.nativeWindow);
                     demoState.surface =
                         eglCreateWindowSurface(demoState.display,
                                                demoState.config,
                                                demoState.nativeWindow,
                                                srfAttrs);
+											   Egl::IsOkay("eglCreateWindowSurface");
                     break;
                 
                 case EGL_PLATFORM_DEVICE_EXT:

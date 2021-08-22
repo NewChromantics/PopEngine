@@ -65,6 +65,7 @@ SokolOpenglContext::~SokolOpenglContext()
 
 void SokolOpenglContext::OnPaint()
 {
+	/*
 	std::lock_guard<std::mutex> Lock(mOpenglContextLock);
 	auto& Window = *mWindow;
 
@@ -88,6 +89,7 @@ void SokolOpenglContext::OnPaint()
 	mParams.mOnPaint( mSokolContext, Size );
 
 	Window.mContext->PostPaint();
+	*/
 }
 
 
