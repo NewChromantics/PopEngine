@@ -75,6 +75,8 @@ void SokolOpenglContext::OnPaint(Soy::Rectx<size_t> Rect)
 
 	mRenderView->PrePaint();
 
+	RunGpuJobs();
+
 	//auto NowCurrentContext = eglGetCurrentContext();
 	if ( mSokolContext.id == 0 )
 	{
@@ -95,4 +97,26 @@ void SokolOpenglContext::Queue(std::function<void(sg_context)> Exec)
 {
 	std::lock_guard<std::mutex> Lock(mGpuJobsLock);
 	mGpuJobs.PushBack(Exec);
+}
+
+void SokolOpenglContext::RunGpuJobs()
+{
+	//	to avoid infinite execution, copy the jobs and then run
+	mGpuJobsLock.lock();
+	auto Jobs = mGpuJobs;
+	mGpuJobs.Clear(true);
+	mGpuJobsLock.unlock();
+
+	for ( auto j=0;	j<Jobs.GetSize();	j++ )
+	{
+		auto& Job = Jobs[j];
+		try
+		{
+			Job(mSokolContext);
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Error executing job; " << e.what() << std::endl;
+		}
+	}
 }
