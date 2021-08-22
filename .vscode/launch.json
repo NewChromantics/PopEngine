@@ -5,10 +5,10 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Debug - Build Default Debug with Opengl",
+			"name": "Nvidia Debug",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceRoot}/Build/Linux_Default_Debug/PopEngineTestApp",
+			"program": "${workspaceRoot}/Build/Nvidia_Debug/PopEngineTestApp",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
@@ -22,59 +22,7 @@
 					"ignoreFailures": true
 				}
 			],
-			"preLaunchTask": "Build Default Debug with Opengl"
-		},
-		{
-			"type": "vgdb",
-			"request": "launch",
-			"name": "Debug vgdb Nvidia",
-			"program": "Build/PopEngineTestApp",
-			"args": ["/home/graham/Code/PopCap/PopCap"],
-			"cwd": "${workspaceRoot}",
-			"useAbsoluteFilePaths":true,
-			"preLaunchTask": "Build Nvidia"
-		},
-		{
-			"type": "gdb",
-			"request": "launch",
-			"name": "Debug gdb Minimal",
-			"program": "Build/PopEngineTestApp",
-			"args": [""],
-			"cwd": "${workspaceRoot}",
-			"useAbsoluteFilePaths":true,
-			"preLaunchTask": "Build Minimal_Debug"
-		},
-		{
-			"type": "vgdb",
-			"request": "launch",
-			"name": "Vgdb Pi",
-			"program": "Build/PopEngineTestApp",
-			"args": ["UnitTest/Sokol/bootup.js"],
-			"cwd": "${workspaceRoot}",
-			"useAbsoluteFilePaths":false,
-			// "preLaunchTask": "Build Pi"
-		},
-		{
-			"type": "vgdb",
-			"request": "launch",
-			"name": "Vgdb Ubuntu",
-			"program": "Build/PopEngineTestApp",
-			"args": ["UnitTest/FileSystem/bootup.js"],
-			"cwd": "${workspaceRoot}",
-			"useAbsoluteFilePaths":false,
-			"preLaunchTask": "Build ubuntu"
-		},
-		{
-			"name": "Debug gdb",
-			"type": "gdb",
-			"request": "launch",
-			"target": "Build/PopEngineTestApp",
-			"program": "Build/PopEngineTestApp",
-			"cwd": "${workspaceRoot}",
-			"valuesFormatting": "parseText",
-			"printCalls": true,
-			"showDevDebugOutput": true,
-			"preLaunchTask": "Build"
+			"preLaunchTask": "Build Nvidia Debug"
 		}
 	]
 }
