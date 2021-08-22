@@ -65,8 +65,6 @@
 #if defined(TARGET_OSX)
 #include "TApiAudio.h"
 //#include "TApiOpencl.h"
-//#include "TApiDlib.h"
-#include "TApiEzsift.h"
 #include "TApiInput.h"
 #include "TApiBluetooth.h"
 #include "TApiLeapMotion.h"
