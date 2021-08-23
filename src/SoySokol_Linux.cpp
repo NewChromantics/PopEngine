@@ -3,6 +3,16 @@
 #include "SoyGuiLinux.h"
 #include "SoySokol_Linux.h"
 
+//#define SOKOL_ASSERT(c)	SokolAssert( c, #c )
+
+void SokolAssert(bool Condition,const char* Context)
+{
+	if ( Condition )
+		return;
+
+	throw Soy::AssertException( std::string("Sokol assert; ") + Context );
+}
+
 #define SOKOL_IMPL
 #define SOKOL_GLES2
 #include "sokol/sokol_gfx.h"
