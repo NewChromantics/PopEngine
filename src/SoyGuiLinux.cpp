@@ -75,7 +75,7 @@ WindowX11::WindowX11( const std::string& Name, Soy::Rectx<int32_t>& Rect )
 	auto wm_destroy_window = XInternAtom( mDisplay,"WM_DELETE_WINDOW", false);
 
 	//	set window name
-    Result = XStoreName( mDisplay, mWindow, "MyWindow" );
+    Result = XStoreName( mDisplay, mWindow, Name.c_str() );
 	std::Debug << "XStoreName returned " << Result << std::endl;
 
 	//	show window
@@ -257,12 +257,14 @@ EglRenderView::EglRenderView(SoyWindow& Parent) :
 		}
 	}
 	*/
-
+#define EGL_PLATFORM_X11_KHR              0x31D5
 	//	gr: using the x11 display fails (same in forums & nvidia demo)
-	//auto DisplayType = mWindow.GetDisplay();
-	auto DisplayType = EGL_DEFAULT_DISPLAY;
-	mDisplay = eglGetDisplay(DisplayType);
-	Egl::IsOkay("eglGetDisplay");
+	auto DisplayType = mWindow.GetDisplay();
+	mDisplay = eglGetPlatformDisplay( EGL_PLATFORM_X11_KHR, DisplayType, nullptr );
+	Egl::IsOkay("eglGetPlatformDisplay");
+	//auto DisplayType = EGL_DEFAULT_DISPLAY;
+	//mDisplay = eglGetDisplay(DisplayType);
+	//Egl::IsOkay("eglGetDisplay");
 	if ( !mDisplay )
 		throw Soy::AssertException("Failed to get a display");
 
