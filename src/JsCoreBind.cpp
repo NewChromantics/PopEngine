@@ -97,8 +97,6 @@ JSValueRef JSObjectToValue(JSObjectRef Object);
 bool JSContextGroupRunVirtualMachineTasks(JSContextGroupRef ContextGroup, std::function<void(std::chrono::milliseconds)> &Sleep);
 void JSGlobalContextSetQueueJobFunc(JSContextGroupRef ContextGroup, JSGlobalContextRef Context, std::function<void(std::function<void(JSContextRef)>)> QueueJobFunc);
 
-//	gr: only for javascriptcore, but currently still unusable
-//void JSInitModuleLoader(JSGlobalContextRef GlobalContext);
 
 #if defined(JSAPI_JSCORE)
 //	wrapper as v8 needs to setup the runtime files
@@ -881,7 +879,6 @@ std::shared_ptr<JsCore::TContext> JsCore::TInstance::CreateContext(const std::st
 	#if defined(JSAPI_V8)
 		LocalContext.mLocalContext.SetContext( *pContext );
 	#endif
-		//JSInitModuleLoader( LocalContext.mGlobalContext.mContext );
 	};
 	pContext->Execute( SetContext );
 	
