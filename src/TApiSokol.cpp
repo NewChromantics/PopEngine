@@ -181,33 +181,47 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	//	gr: this should throw if this is an invalid image
 	auto ImageDescriptionMeta = Image.GetMeta();
 	
-	//	gr: special case
 	//	a bit unsafe! we need to ensure the return isn't held outside stack scope
 	auto& ImagePixels = Image.GetPixels();
 	auto* pPixels = &ImagePixels;
 
 	bool Supported = true;
 
+	//	it would be good to get plane UV data here to pass out to shaders rather than have them calculate it
+	//	switch to single plane version (yuv's)
+	auto SinglePlanePixels = GetSinglePlanePixels(*pPixels);
+	pPixels = &SinglePlanePixels;
+
 	//	check in case it's an unsupported format and do CPU conversion as a workaround
-	if ( ImagePixels.GetFormat() == SoyPixelsFormat::RGB )
+	if ( pPixels->GetFormat() == SoyPixelsFormat::RGB )
 	{
 		Supported = false;
 	}
 	else
 	{
-		auto SokolFormat = GetPixelFormat( ImagePixels.GetFormat(), RenderTarget );
-		auto PixelFormatInfo = sg_query_pixelformat(SokolFormat);
-		auto CanUse = RenderTarget ? PixelFormatInfo.render : PixelFormatInfo.sample;
-		if ( !CanUse )
+		auto SoyFormat = pPixels->GetFormat();
+		try
 		{
-			//std::Debug << "Warning using image format " << magic_enum::enum_name(Description.pixel_format) << "/" << pPixels->GetFormat() << " that's not supported (rendertarget=" << RenderTarget << ")" << std::endl;
+			auto SokolFormat = GetPixelFormat( SoyFormat, RenderTarget );
+			auto PixelFormatInfo = sg_query_pixelformat(SokolFormat);
+			auto CanUse = RenderTarget ? PixelFormatInfo.render : PixelFormatInfo.sample;
+			if ( !CanUse )
+			{
+				//std::Debug << "Warning using image format " << magic_enum::enum_name(Description.pixel_format) << "/" << pPixels->GetFormat() << " that's not supported (rendertarget=" << RenderTarget << ")" << std::endl;
+				Supported = false;
+			}
+		}
+		catch(std::exception& e)
+		{
+			std::Debug << "Exception getting sokol pixel format: " << e.what() << " setting as unsupported" << std::endl;
 			Supported = false;
 		}
 	}
 
+	//	attempt a slow CPU conversion to RGBA
 	if ( !Supported )
 	{
-		auto SokolFormat = GetPixelFormat( ImagePixels.GetFormat(), RenderTarget );
+		auto SokolFormat = GetPixelFormat( pPixels->GetFormat(), RenderTarget );
 		std::stringstream TimerName;
 		TimerName << Image.mName << " format " << magic_enum::enum_name(SokolFormat) << "/" << ImagePixels.GetFormat() << " (rendertarget=" << RenderTarget << ") unsupported, converting to RGBA";
 		Soy::TScopeTimerPrint Timer(TimerName.str().c_str(),1);
@@ -216,13 +230,12 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		pPixels = &TemporaryPixels;
 	}
 
-	
-	//	it would be good to get plane UV data here to pass out to shaders rather than have them calculate it
-	auto SinglePlanePixels = GetSinglePlanePixels(*pPixels);
-	SoyPixelsImpl& Pixels = SinglePlanePixels;
+	//	finally decided on which pixels to use
+	SoyPixelsImpl& Pixels = *pPixels;
 	auto ImageMeta = Pixels.GetMeta();
 	Description.width = ImageMeta.GetWidth();
 	Description.height = ImageMeta.GetHeight();
+
 
 
 	if ( RenderTarget )
