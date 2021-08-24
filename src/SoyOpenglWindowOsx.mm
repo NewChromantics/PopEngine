@@ -1572,9 +1572,12 @@ void Platform::TImageMap::SetCursorMap(const SoyPixelsImpl& CursorMap,const Arra
 
 }
 
+//	gr: should this function be returning an array of windows?
 NSWindow* Platform::TWindow::GetWindow()
 {
 	auto* App = [NSApplication sharedApplication];
+	if ( [App windows].count == 0 )
+		return nullptr;
 	// tsdk: An App can have multiple windows represented in an array, the first member of this array will always? be the main window
 	auto* Window = [[App windows] objectAtIndex:0];
 	return Window;
@@ -1624,6 +1627,8 @@ bool RecurseNSViews(NSView* View,std::function<bool(NSView*)>& EnumView)
 void Platform::TWindow::EnumChildren(std::function<bool(NSView*)> EnumChild)
 {
 	auto* Window = GetWindow();
+	if ( !Window )
+		return;
 	// tsdk: in the ios code UIWindow derives from UIView, this is not the case with NSView and NSWindow
 	// so call contentView from the documentation => "The window’s content view, the highest accessible NSView object in the window’s view hierarchy."
 	RecurseNSViews( [Window contentView], EnumChild );
