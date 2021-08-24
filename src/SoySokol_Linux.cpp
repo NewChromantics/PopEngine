@@ -14,7 +14,7 @@ void SokolAssert(bool Condition,const char* Context)
 }
 
 #define SOKOL_IMPL
-#define SOKOL_GLES2
+#define SOKOL_GLES3
 #include "sokol/sokol_gfx.h"
 
 #include "EglContext.h"
@@ -85,12 +85,26 @@ void SokolOpenglContext::OnPaint(Soy::Rectx<size_t> Rect)
 
 	mRenderView->PrePaint();
 
+	//	PROBABLY has to go after sokol setup?
 	RunGpuJobs();
+
+
 
 	//auto NowCurrentContext = eglGetCurrentContext();
 	if ( mSokolContext.id == 0 )
 	{
+		auto InitialError = glGetError();
+		std::Debug << "pre sg_setup error" << InitialError << std::endl;
+
+		GLint num_ext=-1;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &num_ext);
+		InitialError = glGetError();
+		std::Debug << "GL_NUM_EXTENSIONS error" << InitialError << std::endl;
+
+
 		sg_desc desc={0};
+		//	sokol will fail if we use a GLES2 context when compiled for GLES3
+		//desc.context.gl.force_gles2 = true;
 		std::Debug << "SokolOpenglContext::sg_setup()" << std::endl;
 		sg_setup(&desc);
 		mSokolContext = sg_setup_context();
