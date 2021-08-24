@@ -265,6 +265,8 @@
 		BFF228542691F3C800AFAE52 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
 		BFF228572691F3C900AFAE52 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
 		BFFC941F245EE42A00AEE711 /* PopEngineUnitTestMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */; };
+		BFFCB10F26D503A000D5B659 /* SoyOpenglPbo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFCB10D26D503A000D5B659 /* SoyOpenglPbo.cpp */; };
+		BFFCB11026D503A000D5B659 /* SoyOpenglPbo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFFCB10D26D503A000D5B659 /* SoyOpenglPbo.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -657,6 +659,8 @@
 		BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JsCoreBind.cpp; path = src/JsCoreBind.cpp; sourceTree = "<group>"; };
 		BFF8A59022C2961C002AD145 /* SoyTypes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyTypes.mm; path = src/SoyTypes.mm; sourceTree = "<group>"; };
 		BFFC941E245EE42900AEE711 /* PopEngineUnitTestMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PopEngineUnitTestMain.cpp; sourceTree = "<group>"; };
+		BFFCB10D26D503A000D5B659 /* SoyOpenglPbo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyOpenglPbo.cpp; path = src/SoyOpenglPbo.cpp; sourceTree = "<group>"; };
+		BFFCB10E26D503A000D5B659 /* SoyOpenglPbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglPbo.h; path = src/SoyOpenglPbo.h; sourceTree = "<group>"; };
 		EB0EA56E2110BA27008D6DAA /* libdlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdlib.a; path = ../../../usr/local/Cellar/dlib/19.15/lib/libdlib.a; sourceTree = "<group>"; };
 		EB0EA5702110BAD7008D6DAA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		EB5253BF2124323E00E6FBE1 /* TApiOpenglContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiOpenglContext.cpp; path = src/TApiOpenglContext.cpp; sourceTree = "<group>"; };
@@ -1321,6 +1325,8 @@
 				FB8A06311A2E5A7C0099596C /* SoyMemFile.h */,
 				BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */,
 				BF9CCA9E1B6C1E89000B19EA /* SoyOpenCl.h */,
+				BFFCB10D26D503A000D5B659 /* SoyOpenglPbo.cpp */,
+				BFFCB10E26D503A000D5B659 /* SoyOpenglPbo.h */,
 				BF89F6C41B4BCB9E00F58561 /* SoyOpengl.cpp */,
 				BF89F6C51B4BCB9E00F58561 /* SoyOpengl.h */,
 				BF89F6C61B4BCB9E00F58561 /* SoyOpenglContext.cpp */,
@@ -1761,6 +1767,7 @@
 				BF151FBF2384601300A70EBF /* TApiHttp.cpp in Sources */,
 				BF151FA823845FAD00A70EBF /* SoyTypes.cpp in Sources */,
 				BF151F9A23845FAD00A70EBF /* SoyRef.cpp in Sources */,
+				BFFCB11026D503A000D5B659 /* SoyOpenglPbo.cpp in Sources */,
 				BF151FC32384601300A70EBF /* TApiSocket.cpp in Sources */,
 				BF5C4AC923F6FE5C007D6393 /* TApiEngine.cpp in Sources */,
 				BF151F8D23845FAD00A70EBF /* SoyHttp.cpp in Sources */,
@@ -1803,6 +1810,7 @@
 				BF5EAFD0237F0C6E0077BCF5 /* SoyMath.cpp in Sources */,
 				BF5EAFD9237F0C6E0077BCF5 /* SoyProtocol.cpp in Sources */,
 				BF5EAFCC237F0C6E0077BCF5 /* SoyH264.cpp in Sources */,
+				BFFCB10F26D503A000D5B659 /* SoyOpenglPbo.cpp in Sources */,
 				BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */,
 				BF5EAFFB237F0CD40077BCF5 /* SoyViveHandTracker.cpp in Sources */,
 				BF5EAFF3237F0C7B0077BCF5 /* ChakraBind.cpp in Sources */,
