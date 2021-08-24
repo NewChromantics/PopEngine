@@ -3,6 +3,16 @@
 #include "SoyGuiLinux.h"
 #include "SoySokol_Linux.h"
 
+//#define SOKOL_ASSERT(c)	SokolAssert( c, #c )
+
+void SokolAssert(bool Condition,const char* Context)
+{
+	if ( Condition )
+		return;
+
+	throw Soy::AssertException( std::string("Sokol assert; ") + Context );
+}
+
 #define SOKOL_IMPL
 #define SOKOL_GLES2
 #include "sokol/sokol_gfx.h"
@@ -25,15 +35,21 @@ SokolOpenglContext::SokolOpenglContext(Sokol::TContextParams Params) :
 {
 	if ( !Params.mRenderView )
 		throw Soy::AssertException("Linux SokolOpenglContext params missing render view");
-	auto& PlatformRenderView = dynamic_cast<EglRenderView&>(*Params.mRenderView);
-	mWindow = &PlatformRenderView.mWindow;
+	
+	mRenderView = std::dynamic_pointer_cast<EglRenderView>(Params.mRenderView);
+
+	auto OnFrame = [this](Soy::Rectx<size_t> Rect)
+	{
+		this->OnPaint(Rect);
+	};
+	Params.mRenderView->mOnDraw = OnFrame;
 
 	auto PaintLoop = [this]()
 	{
 		auto FrameDelayMs = 1000/mParams.mFramesPerSecond;
 		try
 		{
-			this->OnPaint();
+			mRenderView->RequestPaint();
 			std::this_thread::sleep_for(std::chrono::milliseconds(FrameDelayMs));
 		}
 		catch(std::exception& e)
@@ -63,15 +79,13 @@ SokolOpenglContext::~SokolOpenglContext()
 }
 
 
-void SokolOpenglContext::OnPaint()
+void SokolOpenglContext::OnPaint(Soy::Rectx<size_t> Rect)
 {
 	std::lock_guard<std::mutex> Lock(mOpenglContextLock);
-	auto& Window = *mWindow;
 
-	if ( !Window.mContext )
-		throw Soy::AssertException("Window has null context");
+	mRenderView->PrePaint();
 
-	Window.mContext->PrePaint();
+	RunGpuJobs();
 
 	//auto NowCurrentContext = eglGetCurrentContext();
 	if ( mSokolContext.id == 0 )
@@ -82,12 +96,10 @@ void SokolOpenglContext::OnPaint()
 		mSokolContext = sg_setup_context();
 	}
 
-
-	auto Rect = Window.GetScreenRect();
 	vec2x<size_t> Size( Rect.w, Rect.h );
 	mParams.mOnPaint( mSokolContext, Size );
 
-	Window.mContext->PostPaint();
+	mRenderView->PostPaint();
 }
 
 
@@ -95,4 +107,26 @@ void SokolOpenglContext::Queue(std::function<void(sg_context)> Exec)
 {
 	std::lock_guard<std::mutex> Lock(mGpuJobsLock);
 	mGpuJobs.PushBack(Exec);
+}
+
+void SokolOpenglContext::RunGpuJobs()
+{
+	//	to avoid infinite execution, copy the jobs and then run
+	mGpuJobsLock.lock();
+	auto Jobs = mGpuJobs;
+	mGpuJobs.Clear(true);
+	mGpuJobsLock.unlock();
+
+	for ( auto j=0;	j<Jobs.GetSize();	j++ )
+	{
+		auto& Job = Jobs[j];
+		try
+		{
+			Job(mSokolContext);
+		}
+		catch (std::exception& e)
+		{
+			std::Debug << "Error executing job; " << e.what() << std::endl;
+		}
+	}
 }

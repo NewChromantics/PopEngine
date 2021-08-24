@@ -13,12 +13,12 @@ class SokolOpenglContext : public Sokol::TContext
 public:
 	SokolOpenglContext(Sokol::TContextParams Params);
 	~SokolOpenglContext();
-
-	virtual void					Queue(std::function<void(sg_context)> Exec) override;
 	
+	virtual void					Queue(std::function<void(sg_context)> Exec) override;
+
 private:
 	void							DoPaint();
-	void							OnPaint();
+	void							OnPaint(Soy::Rectx<size_t> Rect);
 	void							RunGpuJobs();
 
 public:
@@ -27,7 +27,7 @@ public:
 	bool							mPaintRequested = false;
 
 	sg_context						mSokolContext = {0};
-	EglWindow*						mWindow = nullptr;
+	std::shared_ptr<EglRenderView>	mRenderView;
 	std::mutex						mOpenglContextLock;
 	
 	Sokol::TContextParams			mParams;

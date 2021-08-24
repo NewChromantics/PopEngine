@@ -73,8 +73,14 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget
 		case SoyPixelsFormat::ChromaU_8:
 		case SoyPixelsFormat::ChromaV_8:
 			return SG_PIXELFORMAT_R8;
-			
-		case SoyPixelsFormat::Depth16mm:	return SG_PIXELFORMAT_R16;
+		
+		case SoyPixelsFormat::Depth16mm:
+			//	GLES2 temp fix, see if we can get around this properly
+		#if defined(TARGET_LINUX)
+			return SG_PIXELFORMAT_RG8;	
+		#else
+			return SG_PIXELFORMAT_R16;
+		#endif
 		
 		case SoyPixelsFormat::uyvy_8888:
 		case SoyPixelsFormat::ChromaUV_88:		
@@ -104,9 +110,13 @@ sg_pixel_format GetPixelFormat(SoyPixelsFormat::Type Format,bool ForRenderTarget
 		{
 			//	gr: for IOS purposes, force half float on render target for float
 			//	todo: only if float isn't supported
+			
+			//	todo: do this properly, no half float on linux GLES2
+			#if !defined(TARGET_LINUX)
 			if ( ForRenderTarget )
 				return SG_PIXELFORMAT_RGBA16F;
-				
+			#endif
+
 			return SG_PIXELFORMAT_RGBA32F;
 		}		
 		
@@ -180,24 +190,37 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 	//	a bit unsafe! we need to ensure the return isn't held outside stack scope
 	auto& ImagePixels = Image.GetPixels();
 	auto* pPixels = &ImagePixels;
+
+	bool Supported = true;
+
+	//	check in case it's an unsupported format and do CPU conversion as a workaround
 	if ( ImagePixels.GetFormat() == SoyPixelsFormat::RGB )
 	{
-		std::string TimerName(Image.mName + " converting RGB image to temporary RGBA for sokol");
-		Soy::TScopeTimerPrint Timer(TimerName.c_str(),1);
+		Supported = false;
+	}
+	else
+	{
+		auto SokolFormat = GetPixelFormat( ImagePixels.GetFormat(), RenderTarget );
+		auto PixelFormatInfo = sg_query_pixelformat(SokolFormat);
+		auto CanUse = RenderTarget ? PixelFormatInfo.render : PixelFormatInfo.sample;
+		if ( !CanUse )
+		{
+			//std::Debug << "Warning using image format " << magic_enum::enum_name(Description.pixel_format) << "/" << pPixels->GetFormat() << " that's not supported (rendertarget=" << RenderTarget << ")" << std::endl;
+			Supported = false;
+		}
+	}
+
+	if ( !Supported )
+	{
+		auto SokolFormat = GetPixelFormat( ImagePixels.GetFormat(), RenderTarget );
+		std::stringstream TimerName;
+		TimerName << Image.mName << " format " << magic_enum::enum_name(SokolFormat) << "/" << ImagePixels.GetFormat() << " (rendertarget=" << RenderTarget << ") unsupported, converting to RGBA";
+		Soy::TScopeTimerPrint Timer(TimerName.str().c_str(),1);
 		TemporaryPixels.Copy(ImagePixels);
 		TemporaryPixels.SetFormat(SoyPixelsFormat::RGBA);
 		pPixels = &TemporaryPixels;
 	}
-	/*
-	if ( ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_88 || ImagePixels.GetFormat() == SoyPixelsFormat::Yuv_8_8_8 )
-	{
-		std::string TimerName(Image.mName + " converting yuv image to temporary greyscale for sokol");
-		Soy::TScopeTimerPrint Timer(TimerName.c_str(),1);
-		TemporaryPixels.Copy(ImagePixels);
-		TemporaryPixels.SetFormat(SoyPixelsFormat::Greyscale);
-		pPixels = &TemporaryPixels;
-	}
-*/
+
 	
 	//	it would be good to get plane UV data here to pass out to shaders rather than have them calculate it
 	auto SinglePlanePixels = GetSinglePlanePixels(*pPixels);
@@ -236,6 +259,7 @@ sg_image_desc GetImageDescription(SoyImageProxy& Image,SoyPixels& TemporaryPixel
 		}
 	}
 	
+
 	
 	return Description;
 }

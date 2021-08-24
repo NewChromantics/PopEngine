@@ -37,7 +37,15 @@ BUILD_TEMP_DIR = $(PROJECT_PATH)/Build/Temp/$(osTarget)_$(CONFIGURATION)/
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
 
-LIB_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
+osTarget ?= Linux_Default
+
+# variables for PopH264 & PopCameraDevice so we can use locally built versions
+LIB_PACKAGE_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
+POPH264_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/com.newchromantics.poph264/Nvidia_arm64/
+POPCAMERADEVICE_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/popcameradevice/$(TargetArch)
+POPCAMERADEVICE_PATH = /home/graham/Code/PopCameraDevice/Build
+
+$(info POPH264_PATH=$(POPH264_PATH))
 
 LIB_INCLUDES = \
 -I$(SOY_PATH)/src	\
@@ -149,6 +157,10 @@ LIB_LINK_LIBS = \
 OUT_FILE_SOURCES = $(SRC_PATH)/PopEngine.h
 
 
+# gr: should x11 support be optional?
+#LIB_DEFINES += -DENABLE_X11
+LIB_LINK_LIBS += -lX11
+
 
 ifdef ENABLE_OPENGL
 # sudo apt-get install libgles2-mesa-dev
@@ -194,18 +206,18 @@ endif
 
 ifdef ENABLE_MEDIA
 $(info Building with MEDIA)
-LIB_INCLUDES += -I$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)
-LIB_INCLUDES += -I$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)
-LIB_DEFINES += -DENABLE_POPCAMERADEVICE
-LIB_DEFINES += -DENABLE_POPH264
 #LIB_DEFINES += -DENABLE_APIMEDIA # this currently gets enabled in code if POPH264 or POPCAMERADEVICE is enabled
 LIB_CPP_FILES += $(SRC_PATH)/TApiMedia.cpp
-LIB_LINK_LIBS += -lPopH264
-LIB_LINK_LIBS += -L$(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)
-LIB_LINK_LIBS += -lPopCameraDevice
-LIB_LINK_LIBS += -L$(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)
-OUT_FILE_SOURCES += $(LIB_MODULES_PATH)/com.newchromantics.poph264/$(TargetArch)/libPopH264.so
-OUT_FILE_SOURCES += $(LIB_MODULES_PATH)/popcameradevice/$(TargetArch)/libPopCameraDevice.so
+
+LIB_DEFINES += -DENABLE_POPH264
+LIB_INCLUDES += -I$(POPH264_PATH)
+LIB_LINK_LIBS += -L$(POPH264_PATH) -lPopH264
+OUT_FILE_SOURCES += $(POPH264_PATH)/libPopH264.so
+
+LIB_DEFINES += -DENABLE_POPCAMERADEVICE
+LIB_INCLUDES += -I$(POPCAMERADEVICE_PATH)
+LIB_LINK_LIBS += -L$(POPCAMERADEVICE_PATH) -lPopCameraDevice
+OUT_FILE_SOURCES += $(POPCAMERADEVICE_PATH)/libPopCameraDevice.so
 endif
 
 
