@@ -28,6 +28,10 @@ int OnXError(Display* Display,XErrorEvent* Event)
 
 WindowX11::WindowX11( const std::string& Name, Soy::Rectx<int32_t>& Rect )
 {
+	//	everything says make sure this is called first (even before open display i guess) as "race conditions could happen later"
+	if ( !XInitThreads() )
+		throw std::runtime_error("Failed to init X threads");
+
 	//	https://stackoverflow.com/a/64449940/355753
 	//	open default screen
 	//	nullptr opens whatever DISPLAY env var is...
@@ -39,9 +43,6 @@ WindowX11::WindowX11( const std::string& Name, Soy::Rectx<int32_t>& Rect )
 		throw std::runtime_error("Failed to open X display");
 	
 	auto OldErrorHandler = XSetErrorHandler(OnXError);
-
-	if ( !XInitThreads() )
-		throw std::runtime_error("Failed to init X threads");
 
 	auto RootWindow = DefaultRootWindow(mDisplay);
 	if ( !RootWindow )
@@ -85,13 +86,32 @@ WindowX11::WindowX11( const std::string& Name, Soy::Rectx<int32_t>& Rect )
 	//	start the event thread
 	auto EventThread = [this]()
 	{
-		return this->EventThreadIteration();
+		if ( !mDisplay )
+			return false;
+		XLockDisplay(mDisplay);
+		try
+		{
+			auto Result = this->EventThreadIteration();
+			XUnlockDisplay(mDisplay);
+		}
+		catch(std::exception& e)
+		{
+			XUnlockDisplay(mDisplay);
+			throw;
+		}
 	};
 	mEventThread.reset( new SoyThreadLambda("X11 event thread",EventThread));
 }
 
 bool WindowX11::EventThreadIteration()
 {
+	//	lost display?
+	if ( !mDisplay )
+	{
+		std::Debug << __PRETTY_FUNCTION__ << " lost display" << std::endl;
+		return false;
+	}
+
 	//	this makes window appear!
 	//	I think because it does an initial flush
 	//XPending(mDisplay);
@@ -324,9 +344,14 @@ EglRenderView::EglRenderView(SoyWindow& Parent) :
 	}
 	auto Config = Configs[0];
 
-
-
-	mContext = eglCreateContext(mDisplay, Config, EGL_NO_CONTEXT, nullptr );
+	//	configure ES version here.
+	EGLint Attribs[] = 
+	{
+		EGL_CONTEXT_MAJOR_VERSION,3,
+		EGL_CONTEXT_MINOR_VERSION,2,
+		EGL_NONE
+	};
+	mContext = eglCreateContext(mDisplay, Config, EGL_NO_CONTEXT, Attribs );
 	Egl::IsOkay("eglCreateContext");
 
 	auto Window = mWindow.GetWindow();
@@ -338,8 +363,13 @@ EglRenderView::EglRenderView(SoyWindow& Parent) :
 	//mSurface = eglCreatePbufferSurface(mDisplay, Config, nullptr);
 	//Egl::IsOkay("eglCreatePbufferSurface");
 
-	//eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
-	//Egl::IsOkay("eglMakeCurrent");
+	/*
+	eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
+	Egl::IsOkay("eglMakeCurrent");
+	glGetStrings();
+	eglMakeCurrent( mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	Egl::IsOkay("eglMakeCurrent");
+	*/
 }
 #endif
 

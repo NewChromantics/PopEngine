@@ -43,7 +43,9 @@ osTarget ?= Linux_Default
 LIB_PACKAGE_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
 POPH264_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/com.newchromantics.poph264/Nvidia_arm64/
 POPCAMERADEVICE_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/popcameradevice/$(TargetArch)
+
 POPCAMERADEVICE_PATH = /home/graham/Code/PopCameraDevice/Build
+POPH264_PATH = /home/graham/Code/PopH264/Build
 
 $(info POPH264_PATH=$(POPH264_PATH))
 
@@ -178,6 +180,7 @@ LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
 #gr: shouldnt need these as everything goes through sokol
+#gr: need PBO
 #LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpengl.cpp
 #LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglContext.cpp
 LIB_LINK_LIBS += -lEGL
@@ -198,8 +201,8 @@ LIB_LINK_LIBS += -L$(SRC_PATH)/Libs/osmesa
 LIB_LINK_LIBS += -lOSMesa
 else
 $(info Building for GPU)
-LIB_LINK_LIBS += -lGLESv2
-#LIB_LINK_LIBS += -l:libGLESv2.so.2	nvidia demos using this
+#LIB_LINK_LIBS += -lGLESv2
+LIB_LINK_LIBS += -l:libGLESv2.so.2	#	nvidia demos using this
 
 endif
 endif
