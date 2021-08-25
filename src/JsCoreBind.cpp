@@ -1554,6 +1554,12 @@ bool JsCore::TObject::IsMemberNull(const std::string& MemberName)
 	return JSValueIsNull(mContext, Member);
 }
 
+bool JsCore::TObject::IsMemberFunction(const std::string& MemberName)
+{
+	auto Member = GetMember(MemberName);
+	return IsFunction(mContext,Member);
+}
+
 bool JsCore::TObject::HasMember(const std::string& MemberName)
 {
 	auto Member = GetMember( MemberName );

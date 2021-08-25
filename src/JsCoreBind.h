@@ -500,6 +500,7 @@ public:
 	virtual bool			HasMember(const std::string& MemberName) bind_override;
 	bool					IsMemberArray(const std::string& MemberName);
 	bool					IsMemberNull(const std::string& MemberName);
+	bool					IsMemberFunction(const std::string& MemberName);
 
 	virtual JsCore::TObject	GetObject(const std::string& MemberName) bind_override;
 	virtual std::string		GetString(const std::string& MemberName) bind_override;
