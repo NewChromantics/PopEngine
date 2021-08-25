@@ -65,7 +65,6 @@ $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
-$(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/TApiZip.cpp \
@@ -181,6 +180,7 @@ LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
 #gr: shouldnt need these as everything goes through sokol
 #gr: need PBO
+LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglPbo.cpp
 #LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpengl.cpp
 #LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglContext.cpp
 LIB_LINK_LIBS += -lEGL
