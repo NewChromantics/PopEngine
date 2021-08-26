@@ -32,19 +32,18 @@ endif
 CONFIGURATION ?= Release
 
 BUILD_DIR = $(PROJECT_PATH)Build/$(osTarget)_$(CONFIGURATION)
-BUILD_TEMP_DIR = $(PROJECT_PATH)/Build/Temp/$(osTarget)_$(CONFIGURATION)/
+BUILD_TEMP_DIR = $(PROJECT_PATH)Build/Temp/$(osTarget)_$(CONFIGURATION)/
 
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
 
-osTarget ?= Linux_Default
 
 # variables for PopH264 & PopCameraDevice so we can use locally built versions
 LIB_PACKAGE_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
 POPH264_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/com.newchromantics.poph264/Nvidia_arm64/
 POPCAMERADEVICE_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/popcameradevice/$(TargetArch)
 
-POPCAMERADEVICE_PATH = /home/graham/Code/PopCameraDevice/Build
+POPCAMERADEVICE_PATH = /home/graham/Code/PopCameraDevice/Build/Nvidia_Release
 POPH264_PATH = /home/graham/Code/PopH264/Build
 
 $(info POPH264_PATH=$(POPH264_PATH))
