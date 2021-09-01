@@ -132,6 +132,10 @@ void SokolOpenglContext::OnPaint(Soy::Rectx<size_t> Rect)
 	if (!mOpenglContext)
 		return;
 
+	if (!mOpenglContextLock.try_lock())
+		return;
+	mOpenglContextLock.unlock();
+
 	std::lock_guard Lock(mOpenglContextLock);
 	auto& PlatformContext = dynamic_cast<Platform::TOpenglContext&>(*mOpenglContext);
 	mOpenglContext->Lock();
