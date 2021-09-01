@@ -15,7 +15,7 @@ public:
 	
 private:
 	void							DoPaint();
-	void							OnPaint();
+	void							OnPaint(Soy::Rectx<size_t> Rect);
 	void							RunGpuJobs();
 
 public:
@@ -24,7 +24,9 @@ public:
 	
 	sg_context						mSokolContext = {0};
 	std::mutex						mOpenglContextLock;
-	std::shared_ptr<Platform::TWindow>	mWindow;
+
+	//	in other platforms, a lot of this context stuff has moved to renderview
+	std::shared_ptr<Platform::TRenderView>	mWindow;	//	should be able to reduce down to win32 control
 	std::shared_ptr<Win32::TOpenglContext>	mOpenglContext;
 	std::shared_ptr<Platform::TWin32Thread>		mWindowThread;
 

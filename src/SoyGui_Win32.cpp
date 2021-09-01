@@ -1363,7 +1363,10 @@ std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::stri
 
 std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& Parent, const std::string& Name)
 {
-	Soy_AssertTodo();
+	//	todo: search parent for a child window of the opengl class, with a matching identifier
+	auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<Gui::TRenderView> View(new Platform::TRenderView(PlatformParent,Name));
+	return View;
 }
 
 
@@ -1812,3 +1815,24 @@ void Platform::TControl::SetColour(const vec3x<uint8_t>& Rgb)
 	std::Debug << "todo: win32: SetColour" << std::endl;
 }
 
+
+
+Platform::TRenderView::TRenderView(Platform::TControl& Parent, const std::string& Name) :
+	mParent	( Parent )
+{
+	TOpenglParams Params;
+	mContext.reset(new Platform::TOpenglContext(Parent, Params));
+
+	auto PaintRelay = [this](Platform::TControl& Control)
+	{
+		if (mOnPaint)
+			mOnPaint(Control);
+
+		if (mOnDraw)
+		{
+			auto DrawRect = mParent.GetClientRect();
+			this->mOnDraw(DrawRect);
+		}
+	};
+	Parent.mOnPaint = PaintRelay;
+}

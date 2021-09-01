@@ -223,10 +223,12 @@ public:
 };
 
 
-class Platform::TRenderView : public TControl, public Gui::TRenderView
+//	todo:this should be a proper control by itself, but for now, we're hijaking the parent and redrawing over it
+//	most of the code can probably just switch to a new hwnd
+class Platform::TRenderView : public Gui::TRenderView
 {
 public:
-	TRenderView(Platform::TControl& Parent, Soy::Rectx<int32_t>& Rect);
+	TRenderView(Platform::TControl& Parent,const std::string& Name);
 
 	//virtual void			SetRect(const Soy::Rectx<int32_t>& Rect) override { SetClientRect(Rect); }
 	//virtual void			SetVisible(bool Visible) override { Platform::TControl::SetVisible(Visible); }
@@ -235,6 +237,13 @@ public:
 	//virtual void			SetImage(const SoyPixelsImpl& Pixels) override;
 	//virtual void			SetCursorMap(const SoyPixelsImpl& CursorMap, const ArrayBridge<std::string>&& CursorIndexes)override;
 
-	virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+	//virtual void			OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
+
+	TControl&				GetControl()	{	return mParent;	}
+	void					Repaint()		{	mParent.Repaint();	}
+	std::function<void(Platform::TControl&)>	mOnPaint;
+
+	Platform::TControl&		mParent;
+	std::shared_ptr< Platform::TOpenglContext>	mContext;
 };
 
