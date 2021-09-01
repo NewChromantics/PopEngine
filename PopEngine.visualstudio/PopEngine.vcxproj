@@ -96,6 +96,7 @@
     <ClInclude Include="..\src\SoyLib\src\SoyMediaFormat.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyOpengl.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyOpenglContext.h" />
+    <ClInclude Include="..\src\SoyLib\src\SoyOpenglPbo.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyPixels.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyPlatform.h" />
     <ClInclude Include="..\src\SoyLib\src\SoyPng.h" />
@@ -188,7 +189,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\TApiOpengl.h" />
+    <ClInclude Include="..\src\TApiOpengl.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\TApiOpenglContext.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -205,7 +213,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\TApiPanopoly.h" />
     <ClInclude Include="..\src\TApiSerial.h" />
     <ClInclude Include="..\src\TApiSocket.h" />
     <ClInclude Include="..\src\SoyViveHandTracker.h">
@@ -218,26 +225,16 @@
     </ClInclude>
     <ClInclude Include="..\src\TApiSokol.h" />
     <ClInclude Include="..\src\TApiWebsocket.h" />
-    <ClInclude Include="..\src\TApiXr.h" />
+    <ClInclude Include="..\src\TApiXr.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\TApiZip.h" />
     <ClInclude Include="..\src\TBind.h" />
-    <ClInclude Include="..\src\TPopServerThread.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\src\TProtocolWebSocket.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\src\TSsdMobileNetAnchors.h" />
     <ClInclude Include="..\src\TV8Container.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -294,6 +291,7 @@
     <ClCompile Include="..\src\SoyLib\src\SoyDirectx.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyFourcc.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyH264.cpp" />
+    <ClCompile Include="..\src\SoyLib\src\SoyOpenglPbo.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPlatform.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyPng.cpp" />
     <ClCompile Include="..\src\SoyLib\src\SoyShellExecute.cpp" />
@@ -332,9 +330,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TApiPanopoly.cpp" />
     <ClCompile Include="..\src\TApiSokol.cpp" />
-    <ClCompile Include="..\src\TApiXr.cpp" />
+    <ClCompile Include="..\src\TApiXr.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\TApiZip.cpp" />
     <ClCompile Include="..\src\V8Bind.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
@@ -342,7 +346,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\Zip\src\zip.c" />
-    <ClCompile Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.c" />
     <CopyFileToFolders Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\depthengine_2_0.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
@@ -438,103 +441,6 @@
     <None Include="..\src\SoyLib\src\SoyWindow.mm" />
     <None Include="..\src\SoyOpenglView.mm" />
     <None Include="..\src\SoyOpenglWindow.mm" />
-    <None Include="..\UnitTest\bootup.js" />
-    <None Include="..\UnitTest\CameraTest\Blit.frag.glsl">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="..\UnitTest\CameraTest\bootup.js" />
-    <None Include="..\UnitTest\CameraTest\CameraTest.js" />
-    <None Include="..\UnitTest\CameraTest\KinectDepth.frag.glsl" />
-    <None Include="..\UnitTest\CameraTest\Quad.vert.glsl">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="..\UnitTest\CameraTest\Uvy844.frag.glsl">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="..\UnitTest\CameraTest\Yuv8888.frag.glsl">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="..\UnitTest\CameraTest\Yuv8_88.frag.glsl">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="..\UnitTest\Common\MemCheckLoop.js" />
-    <None Include="..\UnitTest\Common\PopEngine.js" />
-    <None Include="..\UnitTest\Common\PopShaderCache.js" />
-    <None Include="..\UnitTest\Common\TFrameCounter.js" />
-    <None Include="..\UnitTest\Gui\bootup.js" />
-    <None Include="..\UnitTest\H264Encode\Blit.frag.glsl" />
-    <None Include="..\UnitTest\H264Encode\bootup.js" />
-    <None Include="..\UnitTest\H264Encode\Quad.vert.glsl" />
-    <None Include="..\UnitTest\HttpServer\bootup.js" />
-    <None Include="..\UnitTest\KinectStream\Blit.frag.glsl" />
-    <None Include="..\UnitTest\KinectStream\bootup.js" />
-    <None Include="..\UnitTest\KinectStream\Depthmm.frag.glsl" />
-    <None Include="..\UnitTest\KinectStream\Index.html" />
-    <None Include="..\UnitTest\KinectStream\libwabt.js" />
-    <None Include="..\UnitTest\KinectStream\PopDepthToYuv\Depth16ToYuv.wat" />
-    <None Include="..\UnitTest\KinectStream\Quad.vert.glsl" />
-    <None Include="..\UnitTest\KinectStream\Uvy844.frag.glsl" />
-    <None Include="..\UnitTest\KinectStream\Viewer\Index.html" />
-    <None Include="..\UnitTest\KinectStream\Viewer\Viewer.js" />
-    <None Include="..\UnitTest\KinectStream\Viewer\win95.css" />
-    <None Include="..\UnitTest\KinectStream\Yuv8888.frag.glsl" />
-    <None Include="..\UnitTest\KinectStream\Yuv8_88.frag.glsl" />
-    <None Include="..\UnitTest\KinectStream\Yuv8_8_8.frag.glsl" />
-    <None Include="..\UnitTest\KinectStream\Yuv8_8_8_OneImage.frag.glsl" />
-    <None Include="..\UnitTest\LeapMotion\bootup.js" />
-    <None Include="..\UnitTest\LeapMotion\Cube.frag.glsl" />
-    <None Include="..\UnitTest\LeapMotion\Cube.vert.glsl" />
-    <None Include="..\UnitTest\Midi\bootup.js" />
-    <None Include="..\UnitTest\OpencvArucoMarker\Blit.frag.glsl" />
-    <None Include="..\UnitTest\OpencvArucoMarker\bootup.js" />
-    <None Include="..\UnitTest\OpencvArucoMarker\Quad.vert.glsl" />
-    <None Include="..\UnitTest\ParamsWindow\bootup.js" />
-    <None Include="..\UnitTest\ParamsWindow\Index.html" />
-    <None Include="..\UnitTest\ParamsWindow\win95.css" />
-    <None Include="..\UnitTest\Pop.d.ts" />
-    <None Include="..\UnitTest\PopEngineCommon\MemCheckLoop.js" />
-    <None Include="..\UnitTest\PopEngineCommon\ParamsWindow.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopAruco.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopCamera.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopCinema4d.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopCollada.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopDll.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopFrameCounter.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopH264.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopMath.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopMedia.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopMp4.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopObj.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopPly.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopShaderCache.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopSvg.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopTexture.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopWebApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopWebGuiApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopWebImageApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopWebOpenglApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopWebSocketApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\PopWebXrApi.js" />
-    <None Include="..\UnitTest\PopEngineCommon\Readme.md" />
-    <None Include="..\UnitTest\Readme.md">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="..\UnitTest\Timeline\bootup.js" />
-    <None Include="..\UnitTest\VideoTest\Blit.frag.glsl" />
-    <None Include="..\UnitTest\VideoTest\bootup.js" />
-    <None Include="..\UnitTest\VideoTest\mp4.js" />
-    <None Include="..\UnitTest\VideoTest\PopBrowser.js" />
-    <None Include="..\UnitTest\VideoTest\Quad.vert.glsl" />
-    <None Include="..\UnitTest\VideoTest\Readme.md" />
-    <None Include="..\UnitTest\VideoTest\Uvy844.frag.glsl" />
-    <None Include="..\UnitTest\VideoTest\Video.js" />
-    <None Include="..\UnitTest\VideoTest\VideoTest.js" />
-    <None Include="..\UnitTest\VideoTest\Yuv8888.frag.glsl" />
-    <None Include="..\UnitTest\VideoTest\Yuv8_88.frag.glsl" />
-    <None Include="..\UnitTest\VideoTest\Yuv8_8_8.frag.glsl" />
-    <None Include="..\UnitTest\VideoTest\Yuv8_8_8_MultiImage.frag.glsl" />
-    <None Include="..\UnitTest\VirtualReality\bootup.js" />
     <None Include="packages.config">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
@@ -639,7 +545,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\TApiOpengl.cpp" />
+    <ClCompile Include="..\src\TApiOpengl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\TApiOpenglContext.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -652,22 +565,6 @@
     <ClCompile Include="..\src\TApiSocket.cpp" />
     <ClCompile Include="..\src\TApiWebsocket.cpp" />
     <ClCompile Include="..\src\TBind.cpp" />
-    <ClCompile Include="..\src\TPopServerThread.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\src\TProtocolWebSocket.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoDependencies|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_V8|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\TV8Container.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Chakra|x64'">true</ExcludedFromBuild>
@@ -700,16 +597,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_JsCore|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Master_V8|x64'">true</ExcludedFromBuild>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="..\UnitTest\VideoTest\ToyStory4_Baseline3.mp4" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\UnitTest\H264Encode\cat.jpeg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="..\UnitTest\KinectStream\Viewer\MsSansSerif.ttf" />
-    <Font Include="..\UnitTest\ParamsWindow\MsSansSerif.ttf" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\PopEngine.Package\node_modules\%40newchromantics\popcameradevice\windows\Release_NoKinect_x64\PopCameraDevice.lib">

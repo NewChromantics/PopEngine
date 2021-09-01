@@ -42,7 +42,7 @@
 #endif
 
 #if defined(TARGET_WINDOWS)
-#define ENABLE_APIXR
+//#define ENABLE_APIXR
 #endif
 
 //	gr: todo; rename/rewrite this with new names
@@ -941,6 +941,7 @@ void JsCore::TInstance::BindApis(TContext& Context)
 	ApiEngine::Bind(Context);
 #endif
 #if defined(ENABLE_OPENGL)
+	//	we never had immediate gl any more
 	//ApiOpengl::Bind(Context);
 #endif
 #if defined(ENABLE_DIRECTX)

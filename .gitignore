@@ -60,3 +60,5 @@ PopEngine.xcframework/
 
 # linux build dir
 Build/
+
+PopEngine.visualstudio/.vs/
