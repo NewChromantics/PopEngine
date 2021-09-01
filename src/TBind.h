@@ -125,8 +125,13 @@ public:
 
 	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
 	void			Flush(size_t PromiseRef,std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
-	void			QueueFlush(size_t PromiseRef,std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
-	
+	void			QueueFlush(size_t PromiseRef, std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
+	void			QueueResolve(size_t PromiseRef);
+	void			QueueReject(size_t PromiseRef, const std::string& Error);
+
+private:
+	std::shared_ptr<TPromise>	PopPromise(size_t PromiseRef);
+
 private:
 	Bind::TContext*	mContext = nullptr;
 	std::mutex		mPromisesLock;

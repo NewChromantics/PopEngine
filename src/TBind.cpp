@@ -178,35 +178,62 @@ void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalC
 
 void Bind::TPromiseMap::QueueFlush(size_t PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
 {
-	std::shared_ptr<TPromise> Promise;
-
-	{
-		//	pop this promise
-		std::lock_guard<std::mutex> Lock(mPromisesLock);
-		for (auto i = 0; i < mPromises.GetSize(); i++)
-		{
-			auto& Element = mPromises[i];
-			auto& MatchRef = Element.first;
-			if (MatchRef != PromiseRef)
-				continue;
-			Promise = Element.second;
-			mPromises.RemoveBlock(i, 1);
-			break;
-		}
-		if (!Promise)
-			throw Soy::AssertException("Promise Ref not found");
-	}
-	
+	auto Promise = PopPromise(PromiseRef);
 	auto& Context = *this->mContext;
 
-	//	gr: should we block or not...
-	auto DoFlush = [=](Bind::TLocalContext& Context) mutable
+	auto DoFlush = [=,Promise=move(Promise)](Bind::TLocalContext& Context) mutable
 	{
 		HandlePromise(Context, *Promise);
+
+		//	gr: if we wait, this gets down to 0.
+		//	the other thread is still finishing Context.Queue
+		//	and use count can be 3. I think the JS queue is executing this job, before the outer func has
+		//	finished, where it disposes of this lambda copy
+		//	we need a nicer thing to say this lambda is the only instance at this point
+		//	or maybe we can pass lambda as a unique?
+		//	gr: move() in capture nulls the outer promise... may have solved all problems?
+		//	also moved this to AFTER the call, so any pause is at the end
+		while (Promise.use_count() > 1)
+		{
+			auto PromiseRefCountC = Promise.use_count();
+			//if (PromiseRefCountC != 1)
+			std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 		//	clear promise whilst in js thread
 		Promise.reset();
 	};
+	//	gr: with move() this is now null'd by here
+	auto PromiseRefCountB = Promise.use_count();
 	Promise.reset();
 	Context.Queue(DoFlush);
 }
 
+std::shared_ptr<Bind::TPromise> Bind::TPromiseMap::PopPromise(size_t PromiseRef)
+{
+	//	pop this promise
+	std::lock_guard<std::mutex> Lock(mPromisesLock);
+	for (auto i = 0; i < mPromises.GetSize(); i++)
+	{
+		auto& Element = mPromises[i];
+		auto& MatchRef = Element.first;
+		if (MatchRef != PromiseRef)
+			continue;
+		auto Promise = Element.second;
+		mPromises.RemoveBlock(i, 1);
+		return Promise;
+	}
+	throw Soy::AssertException("Promise Ref not found");
+}
+
+void Bind::TPromiseMap::QueueResolve(size_t PromiseRef)
+{
+	auto Promise = PopPromise(PromiseRef);
+	Promise->ResolveUndefined();
+}
+
+void Bind::TPromiseMap::QueueReject(size_t PromiseRef,const std::string& Error)
+{
+	auto Promise = PopPromise(PromiseRef);
+	Promise->Reject(Error);
+}
