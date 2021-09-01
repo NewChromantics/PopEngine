@@ -797,6 +797,12 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Th
 	};
 }
 
+Platform::TWindow::~TWindow()
+{
+	//	don't need this destructor, but helps identify when destruction gets stuck
+	mOwnThread.reset();
+}
+
 void Platform::TWindow::OnWindowMessage(UINT Message, DWORD WParam, DWORD LParam)
 {
 	switch (Message)
@@ -1113,7 +1119,18 @@ void Platform::TWindow::EnableScrollBars(bool Horz, bool Vert)
 	
 }
 
+Platform::TWin32Thread::~TWin32Thread()
+{
+	WaitToFinish();
+}
 
+void Platform::TWin32Thread::Stop()
+{
+	//	something is trying to stop this thread (probably externally destructing)
+	//	need to unblock the win32 thread
+	SoyWorkerJobThread::Stop();
+	Wake();
+}
 
 
 void Platform::TWin32Thread::Wake()
@@ -1160,6 +1177,11 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 
 		if ( this->HasJobs() )
 			return false;
+
+		//	stopping thread (letting prev jobs run)
+		if (!this->IsWorking())
+			return false;
+
 		return true;
 	};
 	Platform::Loop( CanBlock, OnQuit );

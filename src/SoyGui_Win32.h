@@ -22,9 +22,11 @@ class Platform::TWin32Thread : public SoyWorkerJobThread
 {
 public:
 	TWin32Thread(const std::string& Name, bool Win32Blocking = true);
+	~TWin32Thread();
 
 	virtual void	Wake() override;
 	virtual bool	Iteration(std::function<void(std::chrono::milliseconds)> Sleep);
+	virtual void	Stop() override;
 
 	bool	mWin32Blocking = true;
 	DWORD	mThreadId = 0;
@@ -95,6 +97,7 @@ class Platform::TWindow : public TControl, public SoyWindow
 {
 public:
 	TWindow(const std::string& Name, Soy::Rectx<int> Rect, TWin32Thread& Thread, bool Resizable);
+	~TWindow();
 
 	virtual void	OnWindowMessage(UINT EventMessage, DWORD WParam, DWORD LParam) override;
 	virtual void	OnScrolled(bool Horizontal, uint16_t ScrollCommand, uint16_t CurrentScrollPosition) override;
