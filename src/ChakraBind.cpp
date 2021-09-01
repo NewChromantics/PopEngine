@@ -220,26 +220,33 @@ JsPropertyIdRef GetProperty(JSContextRef Context,JSStringRef Name)
 	return Property;
 }
 
-std::string GetPropertyString(JSContextRef Context,JSObjectRef Object,const std::string& PropertyName)
+std::string GetPropertyString(JSObjectRef Object, JsPropertyIdRef Property)
 {
-	auto Property = GetProperty(Context,PropertyName);
-	auto PropertyValue = JSObjectGetProperty( Context, Object, PropertyName, nullptr );
+	JSContextRef Context = nullptr;
+	auto PropertyValue = JSObjectGetProperty(Context, Object, Property, nullptr);
 	bool IsError = false;
-	auto String = JSGetStringNoThrow( PropertyValue, IsError );
+	auto String = JSGetStringNoThrow(PropertyValue, IsError);
 	return String;
 }
 
+std::string GetPropertyString(JSContextRef Context,JSObjectRef Object,const std::string& PropertyName)
+{
+	//	basically a dupe of below
+	auto Property = GetProperty(Context,PropertyName);
+	return GetPropertyString(Object, Property);
+}
+
+std::string GetPropertyString(JSObjectRef Object,JSStringRef PropertyName)
+{
+	JSContextRef Context = nullptr;
+	auto Property = GetProperty( Context, PropertyName );
+	return GetPropertyString(Object, Property);
+}
 
 std::string GetPropertyString(JSObjectRef Object, const std::string& PropertyName)
 {
 	JSContextRef Context = nullptr;
 	return GetPropertyString(Context, Object, PropertyName);
-}
-
-
-std::string GetPropertyString(JSObjectRef Object,JSStringRef PropertyName)
-{
-	THROW_TODO;
 }
 
 void DebugPropertyName(JsValueRef ExceptionValue)
@@ -249,7 +256,6 @@ void DebugPropertyName(JsValueRef ExceptionValue)
 	Chakra::IsOkay(Error, "JsGetOwnPropertyNames");
 
 	//	argh: can't see how to get array length
-
 	int Index = 0;
 	for (int Index = 0; Index < 100; Index++)
 	{
@@ -280,70 +286,41 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 	auto ExceptionObject = JSValueToObject( Context, ExceptionValue, nullptr );
 	
 
-	DebugPropertyName(ExceptionValue);
+	//DebugPropertyName(ExceptionValue);
 	
-	//	our only reference!
-	//	https://chromium.googlesource.com/external/github.com/Microsoft/ChakraCore/+/refs/heads/master/bin/NativeTests/MemoryPolicyTest.cpp#126
-	//	gr: no property named message!
-	 //	gr: searching propertys shows
-	///0=exception	1=source	2=line	3=column	4=length	5=url	6=undefined
-	//	gr: ^^^ but on windows[sdk], they're different :)
-#if defined(TARGET_WINDOWS)
-	auto MessageKey = "message";
-	//auto LineKey = "number";
-	auto LineKey = "line";
-	auto FilenameKey = "stack";
-	//auto SourceKey = "description";
-	auto SourceKey = "source";
-#else
-	auto MessageKey = "exception";
-	auto LineKey = "line";
-	auto FilenameKey = "url";
-	auto SourceKey = "source";
-#endif
-
-	//auto Message = GetPropertyString( ExceptionObject, "message" );
-	auto Message = GetPropertyString( ExceptionObject, MessageKey);
-	auto Url = GetPropertyString( ExceptionObject, FilenameKey );
-	auto Line = GetPropertyString( ExceptionObject, LineKey);
-
-	//	code that failed
-	auto Source = GetPropertyString( ExceptionObject, SourceKey);
-
-	//	gr: is array length?
-	//	length = 0....
-	//	gr: no length in winsdk
-	auto Length = GetPropertyString( ExceptionObject, "length"s );
-	
+	//	gr: jsut print out all properties
 	std::stringstream ExceptionString;
-	ExceptionString << "> " << Source << std::endl;
-	ExceptionString << Url << ":" << Line << ": " << Message;
-	return ExceptionString.str();
-	
-		/*
-	JsValueRef PropertyNamesArray = nullptr;
-	auto Error = JsGetOwnPropertyNames( ExceptionValue, &PropertyNamesArray );
-	Chakra::IsOkay( Error, "JsGetOwnPropertyNames" );
-	
-	//	argh: can't see how to get array length
 
-	int Index = 0;
-	for ( int Index=0;	Index<99999;	Index++ )
+	try
 	{
-		JSValueRef IndexValue = nullptr;
-		auto Error = JsIntToNumber( Index, &IndexValue );
-		JSValueRef NameValue = nullptr;
-		Error = JsGetIndexedProperty( PropertyNamesArray, IndexValue, &NameValue );
-		
-		bool HasError = true;
-		auto NameString = JSGetStringNoThrow( NameValue, HasError );
-		if ( HasError )
-			break;
-		std::Debug << Index << "=" << NameString << std::endl;
+		JsValueRef PropertyNamesArray = nullptr;
+		auto Error = JsGetOwnPropertyNames(ExceptionValue, &PropertyNamesArray);
+		Chakra::IsOkay(Error, "JsGetOwnPropertyNames");
+
+		//	cant get array length, stop at first undefined key
+		for (int Index = 0; Index < 100; Index++)
+		{
+			JSValueRef IndexValue = nullptr;
+			auto Error = JsIntToNumber(Index, &IndexValue);
+			JSValueRef KeyValue = nullptr;
+			Error = JsGetIndexedProperty(PropertyNamesArray, IndexValue, &KeyValue);
+			auto KeyValueType = JSValueGetType(KeyValue);
+			if ( KeyValueType == JsUndefined )
+				break;
+
+			bool HasError = true;
+			auto KeyString = JSGetStringNoThrow(KeyValue, HasError);
+			if (HasError)
+				break;
+			auto ValueString = GetPropertyString(ExceptionObject, KeyValue);
+			ExceptionString << KeyString << ": " << ValueString << std::endl;
+		}
 	}
-	
-	return "hello";
-*/
+	catch (std::exception & e)
+	{
+		ExceptionString << "<Error getting exception meta: " << e.what() << ">";
+	}
+	return ExceptionString.str();
 }
 
 
@@ -810,7 +787,17 @@ void JSPropertyNameArrayRelease(JSPropertyNameArrayRef Keys)
 
 JSValueRef JSObjectGetPropertyAtIndex(JSContextRef ctx, JSObjectRef object, size_t propertyIndex, JSValueRef *exception)
 {
-	Soy_AssertTodo();
+	//	keys are seperate properties
+	JsValueRef IndexValue = nullptr;
+	auto Error = JsIntToNumber(propertyIndex, &IndexValue);
+	Chakra::IsOkay(Error, "JsIntToNumber");
+
+	JSValueRef Element = nullptr;
+	auto ObjectAsValue = JSObjectToValue(object);
+	Error = JsGetIndexedProperty(ObjectAsValue, IndexValue, &Element);
+	Chakra::IsOkay(Error, "JsGetIndexedProperty");
+	
+	return Element;
 }
 
 
