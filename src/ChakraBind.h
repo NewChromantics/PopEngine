@@ -47,12 +47,12 @@ typedef JsValueRef JSValueRef;
 
 enum JSType
 {
-	kJSTypeString,
-	kJSTypeBoolean,
-	kJSTypeUndefined,
-	kJSTypeNull,
-	kJSTypeObject,
-	kJSTypeNumber,
+	kJSTypeString = JsString,
+	kJSTypeBoolean = JsBoolean,
+	kJSTypeUndefined = JsUndefined,
+	kJSTypeNull = JsNull,
+	kJSTypeObject = JsObject,
+	kJSTypeNumber = JsNumber,
 };
 
 enum JSClassAttributes
