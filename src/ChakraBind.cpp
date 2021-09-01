@@ -530,23 +530,29 @@ void Chakra::TVirtualMachine::Execute(JSGlobalContextRef Context,std::function<v
 	if ( !Context )
 		throw Soy::AssertException("Trying to execte on null context");
 	
+	JSContextRef PreviousContext = nullptr;
+	{
+		auto Result = JsGetCurrentContext(&PreviousContext);
+		Chakra::IsOkay(Result, "JsGetCurrentContext");
+	}
+
 	//	default sets new context and unlocks the lock
 	std::function<void()> Lock = [&]
 	{
-		mCurrentContext = Context;
-		auto Result = JsSetCurrentContext( mCurrentContext );
+		//mCurrentContext = Context;
+		auto Result = JsSetCurrentContext(Context);
 		Chakra::IsOkay( Result, "JsSetCurrentContext" );
 	};
 	
 	std::function<void()> Unlock = [&]
 	{
-		auto Result = JsSetCurrentContext( nullptr );
+		auto Result = JsSetCurrentContext(PreviousContext);
 		Chakra::IsOkay( Result, "JsSetCurrentContext (unset)" );
 		
-		mCurrentContextLock.unlock();
-		mCurrentContext = nullptr;
+		//mCurrentContextLock.unlock();
+		//mCurrentContext = nullptr;
 	};
-
+	/*
 	//	get lock
 	if ( !mCurrentContextLock.try_lock() )
 	{
@@ -562,12 +568,12 @@ void Chakra::TVirtualMachine::Execute(JSGlobalContextRef Context,std::function<v
 			mCurrentContextLock.lock();
 		}
 	}
-	
+	*/
 	//	lock, run, unlock
 	try
 	{
 		Lock();
-		Execute( mCurrentContext );
+		Execute( Context );
 		Unlock();
 	}
 	catch(std::exception& e)
