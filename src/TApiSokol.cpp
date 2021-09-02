@@ -1714,6 +1714,13 @@ void ApiSokol::TSokolContextWrapper::CreateGeometry(Bind::TCallback& Params)
 	auto VertexAttributes = Params.GetArgumentObject(0);
 	ParseGeometryObject( NewGeometry, VertexAttributes );
 	
+	//	this breaks sokol, web may need same check
+	if (NewGeometry.mVertexCount == 0)
+	{
+		ParseGeometryObject(NewGeometry, VertexAttributes);
+		throw Soy::AssertException("CreateGeometry() with zero vertexes");
+	}
+
 	//	now make a promise and construct
 	auto Promise = mPendingGeometryPromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, NewGeometry.mPromiseRef );
 	Params.Return(Promise);
