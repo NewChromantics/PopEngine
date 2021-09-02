@@ -1918,15 +1918,14 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 	Execute( Exec );
 }
 
-
-JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName)
+JsCore::TObject JsCore::TContext::CreatePromiseObject(Bind::TLocalContext& LocalContext)
 {
-	if ( !mMakePromiseFunction )
+	if (!mMakePromiseFunction)
 	{
 		//	this code should return a function
 		//	changed to explicitly return an anonymous function/lambda as chakra was saying 
 		//	global redefinition... which shouldnt happen, where is the global here? it should be the context's own global...
-		auto* MakePromiseFunctionSource =  R"V0G0N(
+		auto* MakePromiseFunctionSource = R"V0G0N(
 		()=>
 		{
 			let PromData = {};
@@ -1942,22 +1941,31 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 			return prom;
 		};
 		)V0G0N";
-		
-		JSStringRef FunctionSourceString = JsCore::GetString( LocalContext.mLocalContext, MakePromiseFunctionSource );
+
+		JSStringRef FunctionSourceString = JsCore::GetString(LocalContext.mLocalContext, MakePromiseFunctionSource);
 		JSValueRef Exception = nullptr;
-		auto FunctionValue = JSEvaluateScript( LocalContext.mLocalContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
-		ThrowException( LocalContext.mLocalContext, Exception );
-		
-		TFunction MakePromiseFunction( LocalContext.mLocalContext, FunctionValue );
-		mMakePromiseFunction = TPersistent( LocalContext, MakePromiseFunction, "MakePromiseFunction" );
+		auto FunctionValue = JSEvaluateScript(LocalContext.mLocalContext, FunctionSourceString, nullptr, nullptr, 0, &Exception);
+		ThrowException(LocalContext.mLocalContext, Exception);
+
+		TFunction MakePromiseFunction(LocalContext.mLocalContext, FunctionValue);
+		mMakePromiseFunction = TPersistent(LocalContext, MakePromiseFunction, "MakePromiseFunction");
 	}
-	
-	Bind::TCallback CallParams( LocalContext );
+
+	//	execte the make promise function
 	auto MakePromiseFunction = mMakePromiseFunction.GetFunction(LocalContext);
+	Bind::TCallback CallParams(LocalContext);
 	MakePromiseFunction.Call(CallParams);
+
+	//	get the object it returns
 	auto NewPromiseValue = CallParams.mReturn;
-	auto NewPromiseHandle = JsCore::GetObject( LocalContext.mLocalContext, NewPromiseValue );
-	TObject NewPromiseObject( LocalContext.mLocalContext, NewPromiseHandle );
+	auto NewPromiseHandle = JsCore::GetObject(LocalContext.mLocalContext, NewPromiseValue);
+	TObject NewPromiseObject(LocalContext.mLocalContext, NewPromiseHandle);
+	return NewPromiseObject;
+}
+
+JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName)
+{
+	auto NewPromiseObject = CreatePromiseObject(LocalContext);
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
 	auto Reject = NewPromiseObject.GetFunction("Reject");
 
@@ -1969,43 +1977,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 
 std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName)
 {
-	if (!mMakePromiseFunction)
-	{
-		auto* MakePromiseFunctionSource = R"V0G0N(
-		
-		let MakePromise = function()
-		{
-			let PromData = {};
-			const GrabPromData = function(Resolve,Reject)
-			{
-				PromData.Resolve = Resolve;
-				PromData.Reject = Reject;
-			};
-			const prom = new Promise( GrabPromData );
-			PromData.Promise = prom;
-			prom.Resolve = PromData.Resolve;
-			prom.Reject = PromData.Reject;
-			return prom;
-		}
-		MakePromise;
-		//MakePromise();
-		)V0G0N";
-
-		JSStringRef FunctionSourceString = JsCore::GetString(LocalContext.mLocalContext, MakePromiseFunctionSource);
-		JSValueRef Exception = nullptr;
-		auto FunctionValue = JSEvaluateScript(LocalContext.mLocalContext, FunctionSourceString, nullptr, nullptr, 0, &Exception);
-		ThrowException(LocalContext.mLocalContext, Exception);
-
-		TFunction MakePromiseFunction(LocalContext.mLocalContext, FunctionValue);
-		mMakePromiseFunction = TPersistent(LocalContext, MakePromiseFunction, "MakePromiseFunction");
-	}
-
-	Bind::TCallback CallParams(LocalContext);
-	auto MakePromiseFunction = mMakePromiseFunction.GetFunction(LocalContext);
-	MakePromiseFunction.Call(CallParams);
-	auto NewPromiseValue = CallParams.mReturn;
-	auto NewPromiseHandle = JsCore::GetObject(LocalContext.mLocalContext, NewPromiseValue);
-	TObject NewPromiseObject(LocalContext.mLocalContext, NewPromiseHandle);
+	auto NewPromiseObject = CreatePromiseObject(LocalContext);
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
 	auto Reject = NewPromiseObject.GetFunction("Reject");
 

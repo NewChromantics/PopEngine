@@ -745,6 +745,7 @@ public:
 protected:
 	void				Cleanup();		//	actual cleanup called by instance & destructor
 	void				ReleaseContext();	//	try and release javascript objects
+	TObject				CreatePromiseObject(TLocalContext& LocalContext);
 
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
