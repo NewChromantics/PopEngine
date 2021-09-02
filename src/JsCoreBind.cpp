@@ -1913,9 +1913,11 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 {
 	if ( !mMakePromiseFunction )
 	{
+		//	this code should return a function
+		//	changed to explicitly return an anonymous function/lambda as chakra was saying 
+		//	global redefinition... which shouldnt happen, where is the global here? it should be the context's own global...
 		auto* MakePromiseFunctionSource =  R"V0G0N(
-		
-		let MakePromise = function()
+		()=>
 		{
 			let PromData = {};
 			const GrabPromData = function(Resolve,Reject)
@@ -1928,9 +1930,7 @@ JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalConte
 			prom.Resolve = PromData.Resolve;
 			prom.Reject = PromData.Reject;
 			return prom;
-		}
-		MakePromise;
-		//MakePromise();
+		};
 		)V0G0N";
 		
 		JSStringRef FunctionSourceString = JsCore::GetString( LocalContext.mLocalContext, MakePromiseFunctionSource );
