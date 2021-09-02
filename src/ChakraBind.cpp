@@ -114,10 +114,21 @@ JsErrorCode JsCopyString(JsValueRef String, char* Buffer, size_t BufferSize, siz
 	*Length = 0;
 	const wchar_t* BufferW = nullptr;
 	auto Error = JsStringToPointer(String, &BufferW, Length);
-	std::wstring StringW(BufferW, *Length);
-	auto StringC = Soy::WStringToString(StringW);
-	Soy::StringToBuffer(StringC, Buffer, BufferSize);
+	if (Error != JsNoError)
+		return Error;
+
+	if (BufferSize > * Length)
+		BufferSize = *Length;
+	//	should the output contain a terminator?
+	for (int i = 0; i < BufferSize; i++)
+	{
+		//	gr: do a proper conversion here somehow
+		wchar_t CharW = BufferW[i];
+		char Char = static_cast<char>(CharW);
+		Buffer[i] = Char;
+	}
 	return Error;
+
 }
 #endif
 
