@@ -1575,10 +1575,19 @@ void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
 	try
 	{
 		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+
+		auto ThisType = JSValueGetType(JSObjectToValue(mThis));
+		auto ThisArrayType = JSValueGetTypedArrayType(mContext, mThis);
+		auto ThisIsArray = JSValueIsArray(mContext, JSObjectToValue(mThis) );
+
 		for ( auto k=0;	k<KeyCount;	k++ )
 		{
 			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
 			auto KeyString = JsCore::GetString(mContext,Key);
+			//	sometimes objects have a .length, sometimes they dont....
+			//	todo: figure this out. Only on array types?
+			if (KeyString == "length")
+				continue;
 			MemberNames.PushBack(KeyString);
 		}
 		//	gr: eventually found my leak from here

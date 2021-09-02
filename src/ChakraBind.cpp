@@ -826,7 +826,10 @@ size_t JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
 			throw Soy::AssertException("Array length negative (or less than 1, should include length)");
 
 		//	number of elements includes length, argh
-		Length--;
+		//	gr: now... it doesnt? need to clarify this... somehow
+		//		maybe it's present in array objects, but not property name arrays?
+		//	maybe callers need to exclude "length" members
+		//Length--;
 		return Length;
 	}
 
