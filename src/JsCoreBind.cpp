@@ -505,8 +505,18 @@ void JsCore::GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
-	Array<char> Buffer;
-	GetString( Context, Handle, GetArrayBridge(Buffer) );
+	//	avoid unncessary alloc if string is small
+	//	gr: could also __threadlocal
+	Array<char> BigBuffer;
+	BufferArray<char, 256> SmallBuffer;
+	auto StringLength = JSStringGetLength(Handle);
+	auto BigBridge = GetArrayBridge(BigBuffer);
+	auto SmallBridge = GetArrayBridge(SmallBuffer);
+	//	gr: silly casting, but this works
+	auto* pBuffer = (StringLength < SmallBuffer.MaxSize()) ? static_cast<ArrayBridge<char>*>(&SmallBridge) : &BigBridge;
+	auto& Buffer = *pBuffer;
+
+	GetString(Context, Handle, Buffer);// GetArrayBridge(Buffer) );
 
 	if ( Buffer.IsEmpty() )
 		return std::string();
