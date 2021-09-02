@@ -1384,18 +1384,13 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 	
 	//	copy the function whilst still in callers thread
+	//	gr: tried doing a move() of functor, but that didn't quite work... see if we can reduce more though
+	//		plus the job queue and defer are making copies again
 	std::shared_ptr<std::function<void(Bind::TLocalContext&)>> LocalCopy( new std::function<void(Bind::TLocalContext&)>(Functor) );
-	std::function<void()> FunctorWrapper = [=]()mutable
+	std::function<void()> FunctorWrapper = [this,LocalCopy=move(LocalCopy)]()mutable
 	{
-		//	need to catch this?
 		auto& Local = *LocalCopy;
-		std::function<void(Bind::TLocalContext&)> WrapperWrapper = [&](Bind::TLocalContext& Context)
-		{
-			Local( Context );
-			LocalCopy.reset();
-		};
-		Execute_Reference( WrapperWrapper );
-		
+		Execute_Reference( Local );
 	};
 	
 	if ( DeferMs > 0 )
