@@ -758,7 +758,7 @@ void ApiSokol::TSokolContextWrapper::RunRender(Sokol::TRenderCommands& RenderCom
 	//	we want to resolve the promise NOW, after rendering has been submitted
 	//	but we may want here, some callback to block or glFinish or something before resolving
 	//	but really we should be using something like glsync?
-	if ( RenderCommands.mPromiseRef != std::numeric_limits<size_t>::max() )
+	if ( RenderCommands.mPromiseRef.IsValid() )
 	{
 		auto Resolve = [RenderError](Bind::TLocalContext& LocalContext,Bind::TPromise& Promise)
 		{
@@ -878,7 +878,7 @@ void ApiSokol::TSokolContextWrapper::Render(Bind::TCallback& Params)
 	//		in that case, generate render command then request
 	mSokolContext->RequestPaint();
 
-	size_t PromiseRef;
+	JsCore::TPromiseRef PromiseRef;
 	auto Promise = mPendingFramePromises.CreatePromise( Params.mLocalContext, __PRETTY_FUNCTION__, PromiseRef );
 	Params.Return(Promise);
 	

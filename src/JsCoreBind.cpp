@@ -1417,6 +1417,19 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 }
 
+void JsCore::TContext::Queue(const TPromiseRef& PromiseRef,std::function<void(TLocalContext&,TPromise&)> Functor, size_t DeferMs)
+{
+	auto Job = [=,Functor=move(Functor)](TLocalContext& Context)
+	{
+		auto& TheContext = Context.mGlobalContext;
+
+		auto Promise = TheContext.mPromiseMap.PopPromise(PromiseRef);
+		Functor(Context, *Promise);
+		Promise.reset();
+	};
+	Queue(Job, DeferMs);
+}
+
 void JsCore::TContext::QueueGeneralJob(std::function<void()> Job)
 {
 	mGeneralJobQueue.PushJob(Job);
@@ -1997,6 +2010,24 @@ std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLoca
 }
 
 
+
+JsCore::TPromiseRef JsCore::TContext::CreatePromiseRef(Bind::TLocalContext& LocalContext, const std::string& DebugName)
+{
+	JsCore::TPromiseRef PromiseRef;
+	auto pPromise = mPromiseMap.CreatePromise(LocalContext, DebugName.c_str(), PromiseRef);
+	return PromiseRef;
+}
+
+JSValueRef JsCore::TContext::GetPromiseJsValue(const TPromiseRef& PromiseRef)
+{
+	//	just in case
+	if (PromiseRef.mContext != this)
+		throw Soy::AssertException("GetPromiseValue(PromiseRef) with a different context");
+
+	return mPromiseMap.GetJsValue(PromiseRef);
+}
+
+
 JSValueRef JsCore::TContext::CallFunc(TLocalContext& LocalContext,std::function<void(JsCore::TCallback&)> Function,JSObjectRef This,size_t ArgumentCount,const JSValueRef Arguments[],JSValueRef& Exception,const std::string& FunctionContext)
 {
 	//	call our function from
@@ -2205,6 +2236,13 @@ void JsCore::TCallback::Return(JsCore::TPersistent& Value)
 void JsCore::TCallback::Return(JsCore::TPromise& Value)
 {
 	mReturn = GetValue( GetContextRef(), Value );
+}
+
+void JsCore::TCallback::Return(JsCore::TPromiseRef& Value)
+{
+	if (!Value.IsValid())
+		throw Soy::AssertException("Trying to Return() invalid promise ref");
+	mReturn = Value.mContext->GetPromiseJsValue(Value);
 }
 
 void JsCore::TCallback::ReturnNull()
@@ -2916,10 +2954,26 @@ void JsCore::TPromise::ResolveUndefined() const
 	//	we make a copy of this promise (copying the persistents) as if this is called from a shared_ptr<promise> (pretty common)
 	//	the shared ptr could go out of scope before this queued resolve happens
 	//	this is a quick fix which lets us just call Resolve etc without fuss
-	TPromise Copy(*this);
-	auto Run = [Copy](Bind::TLocalContext& LocalContext)
+	//	gr: solve race conditions by moving promise exclusively into lambda
+	//		should be able to drop the alloc if we add && constructor
+	std::shared_ptr<TPromise> Promise( new TPromise(*this) );
+	auto Run = [Promise=move(Promise)](Bind::TLocalContext& LocalContext) mutable
 	{
-		Copy.ResolveUndefined(LocalContext);
+		Promise->ResolveUndefined(LocalContext);
+		
+		
+		int Iterations = 0;
+		while (Promise.use_count() > 1)
+		{
+			auto PromiseRefCountC = Promise.use_count();
+			//if (PromiseRefCountC != 1)
+			//if (Iterations > 1)
+				std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			Iterations++;
+		}
+		//	clear promise whilst in js thread
+		Promise.reset();
 	};
 	Context.Queue(Run);
 }
@@ -2927,10 +2981,24 @@ void JsCore::TPromise::ResolveUndefined() const
 void JsCore::TPromise::Reject(const std::string& Error) const
 {
 	auto& Context = GetContext();
-	TPromise Copy(*this);	//	see ResolveUndefined for why we copy
-	auto Run = [Copy,Error](Bind::TLocalContext& LocalContext)
+	//	see ResolveUndefined for why we copy
+	std::shared_ptr<TPromise> Promise(new TPromise(*this));
+	auto Run = [Promise = move(Promise),Error](Bind::TLocalContext& LocalContext) mutable
 	{
-		Copy.Reject(LocalContext,Error);
+		Promise->Reject(LocalContext,Error);
+		
+		int Iterations = 0;
+		while (Promise.use_count() > 1)
+		{
+			auto PromiseRefCountC = Promise.use_count();
+			//if (PromiseRefCountC != 1)
+			//if (Iterations > 1)
+				std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			Iterations++;
+		}
+		//	clear promise whilst in js thread
+		Promise.reset();
 	};
 	Context.Queue(Run);
 }
@@ -2979,6 +3047,25 @@ void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) con
 
 	auto Reject = mReject.GetFunction(Context);
 	Reject.Call( Params );
+}
+
+
+void JsCore::TPromiseRef::QueueResolve() const
+{
+	auto Resolve = [](Bind::TLocalContext& Context, TPromise& Promise)
+	{
+		Promise.ResolveUndefined(Context);
+	};
+	mContext->Queue(*this, Resolve);
+}
+
+void JsCore::TPromiseRef::QueueReject(const std::string& Reason) const
+{
+	auto Resolve = [=](Bind::TLocalContext& Context, TPromise& Promise)
+	{
+		Promise.Reject(Context,Reason);
+	};
+	mContext->Queue(*this, Resolve);
 }
 
 

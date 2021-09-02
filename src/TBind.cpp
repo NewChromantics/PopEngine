@@ -126,7 +126,7 @@ void Bind::TPromiseQueue::Reject(Bind::TLocalContext& Context,const std::string&
 }
 
 
-Bind::TPromise Bind::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,const char* DebugName,size_t& PromiseRef)
+Bind::TPromise JsCore::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,const char* DebugName,TPromiseRef& PromiseRef)
 {
 	if (mContext != &Context.mGlobalContext && mContext != nullptr)
 	{
@@ -135,7 +135,8 @@ Bind::TPromise Bind::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,con
 	mContext = &Context.mGlobalContext;
 
 	std::lock_guard<std::mutex> Lock(mPromisesLock);
-	PromiseRef = mPromiseCounter++;
+	PromiseRef.mContext = mContext;
+	PromiseRef.mRef = mPromiseCounter++;
 	auto NewPromise = Context.mGlobalContext.CreatePromisePtr(Context, DebugName);
 	auto Pair = std::make_pair(PromiseRef, NewPromise);
 	mPromises.PushBack(Pair);
@@ -143,27 +144,9 @@ Bind::TPromise Bind::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,con
 }
 
 
-void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
+void JsCore::TPromiseMap::Flush(JsCore::TPromiseRef PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
 {
-	std::shared_ptr<TPromise> Promise;
-
-	{
-		//	pop this promise
-		std::lock_guard<std::mutex> Lock(mPromisesLock);
-		for (auto i = 0; i < mPromises.GetSize(); i++)
-		{
-			auto& Element = mPromises[i];
-			auto& MatchRef = Element.first;
-			if (MatchRef != PromiseRef)
-				continue;
-			Promise = Element.second;
-			mPromises.RemoveBlock(i, 1);
-			break;
-		}
-		if (!Promise)
-			throw Soy::AssertException("Promise Ref not found");
-	}
-	
+	std::shared_ptr<TPromise> Promise = PopPromise(PromiseRef);
 	auto& Context = *this->mContext;
 
 	//	gr: should we block or not...
@@ -176,7 +159,7 @@ void Bind::TPromiseMap::Flush(size_t PromiseRef,std::function<void(Bind::TLocalC
 	Context.Execute(DoFlush);
 }
 
-void Bind::TPromiseMap::QueueFlush(size_t PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
+void JsCore::TPromiseMap::QueueFlush(TPromiseRef PromiseRef,std::function<void(Bind::TLocalContext& Context, Bind::TPromise&)> HandlePromise)
 {
 	auto Promise = PopPromise(PromiseRef);
 	auto& Context = *this->mContext;
@@ -193,12 +176,15 @@ void Bind::TPromiseMap::QueueFlush(size_t PromiseRef,std::function<void(Bind::TL
 		//	or maybe we can pass lambda as a unique?
 		//	gr: move() in capture nulls the outer promise... may have solved all problems?
 		//	also moved this to AFTER the call, so any pause is at the end
-		while (Promise.use_count() > 1)
+		int Iterations = 0;
+		while (Promise.use_count() > 1 )
 		{
 			auto PromiseRefCountC = Promise.use_count();
 			//if (PromiseRefCountC != 1)
-			std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
+			if (Iterations>1)
+				std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			Iterations++;
 		}
 		//	clear promise whilst in js thread
 		Promise.reset();
@@ -209,7 +195,15 @@ void Bind::TPromiseMap::QueueFlush(size_t PromiseRef,std::function<void(Bind::TL
 	Context.Queue(DoFlush);
 }
 
-std::shared_ptr<Bind::TPromise> Bind::TPromiseMap::PopPromise(size_t PromiseRef)
+
+JSValueRef JsCore::TPromiseMap::GetJsValue(JsCore::TPromiseRef PromiseRef)
+{
+	auto Promise = PopPromise(PromiseRef, false);
+	auto Value = JsCore::GetValue(this->mContext, *Promise);
+	return Value;
+}
+
+std::shared_ptr<Bind::TPromise> JsCore::TPromiseMap::PopPromise(TPromiseRef PromiseRef,bool RemoveFromQueue)
 {
 	//	pop this promise
 	std::lock_guard<std::mutex> Lock(mPromisesLock);
@@ -217,22 +211,23 @@ std::shared_ptr<Bind::TPromise> Bind::TPromiseMap::PopPromise(size_t PromiseRef)
 	{
 		auto& Element = mPromises[i];
 		auto& MatchRef = Element.first;
-		if (MatchRef != PromiseRef)
+		if (MatchRef.mRef != PromiseRef.mRef)
 			continue;
 		auto Promise = Element.second;
-		mPromises.RemoveBlock(i, 1);
+		if ( RemoveFromQueue)
+			mPromises.RemoveBlock(i, 1);
 		return Promise;
 	}
 	throw Soy::AssertException("Promise Ref not found");
 }
 
-void Bind::TPromiseMap::QueueResolve(size_t PromiseRef)
+void JsCore::TPromiseMap::QueueResolve(TPromiseRef PromiseRef)
 {
 	auto Promise = PopPromise(PromiseRef);
 	Promise->ResolveUndefined();
 }
 
-void Bind::TPromiseMap::QueueReject(size_t PromiseRef,const std::string& Error)
+void JsCore::TPromiseMap::QueueReject(TPromiseRef PromiseRef,const std::string& Error)
 {
 	auto Promise = PopPromise(PromiseRef);
 	Promise->Reject(Error);

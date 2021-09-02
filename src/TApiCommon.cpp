@@ -279,21 +279,21 @@ static void ApiPop::SetTimeout(Bind::TCallback& Params)
 
 static void ApiPop::Yield(Bind::TCallback& Params)
 {
-	auto Promise = Params.mContext.CreatePromise( Params.mLocalContext, __FUNCTION__);
+	auto Promise = Params.mContext.CreatePromisePtr( Params.mLocalContext, __FUNCTION__);
 //#error this promise = in the lambda is crashing as it immediately causes a retain.... but on a very old context???
 	auto DelayMs = 0;
 	if ( !Params.IsArgumentUndefined(0) )
 		DelayMs = Params.GetArgumentInt(0);
-	
-	auto OnYield = [=](Bind::TLocalContext& Context)
+
+	Params.Return(*Promise);
+
+	auto OnYield = [Promise=move(Promise)](Bind::TLocalContext& Context)
 	{
 		//	don't need to do anything, we have just let the system breath
-		Promise.Resolve( Context, "Yield complete");
+		Promise->Resolve( Context, "Yield complete");
 	};
 
 	Params.mContext.Queue( OnYield, DelayMs );
-	
-	Params.Return( Promise );
 }
 
 
@@ -830,27 +830,27 @@ void ApiPop::WriteToFileAsync(Bind::TCallback& Params)
 		throw Soy::AssertException("WriteToFile with non-string, non-array type");
 	}
 
-	auto pPromise = Params.mContext.CreatePromisePtr(Params.mLocalContext,__func__);
-	
-	auto Write = [pContents,Filename,Append,pPromise]()
+	auto Promise = Params.mContext.CreatePromiseRef(Params.mLocalContext,__func__);
+	Params.Return(Promise);
+
+	auto Write = [pContents,Filename,Append,Promise]()
 	{
 		Soy::TScopeTimerPrint Timer2("ApiPop::WriteToFile(Soy::ArrayToFile)",2);
-		auto& Promise = *pPromise;
 		try
 		{
 			auto& Contents = *pContents;
 			Soy::ArrayToFile( GetArrayBridge(Contents), Filename, Append );
-			Promise.ResolveUndefined();
+
+			Promise.QueueResolve();
 		}
 		catch(std::exception& e)
 		{
 			std::string Error = e.what();
-			Promise.Reject(Error);
+			Promise.QueueReject(Error);
 		}
 	};
 	Params.mContext.QueueGeneralJob(Write);
 
-	Params.Return(*pPromise);
 }
 
 
