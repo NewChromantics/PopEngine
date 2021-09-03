@@ -109,6 +109,7 @@
     </CopyFileToFolders>
     <None Include="..\Source_App\Info.plist" />
     <None Include="..\Source_App\PopEngineUnitTestApp.entitlements" />
+    <None Include="..\UnitTest\Gui\bootup.js" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

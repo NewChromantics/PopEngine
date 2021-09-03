@@ -35,6 +35,7 @@ public:
 class Platform::TControl// : public Platform::TDragAndDropHandler
 {
 public:
+	TControl(const std::string& Name, const char* ClassName, TControl* Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect, TWin32Thread& Thread);
 	TControl(const std::string& Name, TControlClass& Class, TControl* Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect, TWin32Thread& Thread);
 	TControl(const std::string& Name, const char* ClassName, TControl& Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect);
 	virtual ~TControl();

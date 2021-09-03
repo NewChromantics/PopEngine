@@ -12,6 +12,9 @@
     <Filter Include="UnitTest">
       <UniqueIdentifier>{7d707ff0-0d72-4505-9b31-7c2c36d9c688}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTest\Gui">
+      <UniqueIdentifier>{c4142f27-ab9e-4134-aa88-a119cc14ee27}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Source_App\Info.plist">
@@ -22,6 +25,9 @@
     </None>
     <None Include="packages.config" />
     <None Include="$(OpenXRLoaderBinaryRoot)\bin\openxr_loader.dll" />
+    <None Include="..\UnitTest\Gui\bootup.js">
+      <Filter>UnitTest\Gui</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Source_App\PopEngine.ico">
