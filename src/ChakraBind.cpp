@@ -1348,7 +1348,9 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 		//	The host should make sure that CoInitializeEx is called with COINIT_MULTITHREADED or COINIT_APARTMENTTHREADED at least once before using this API
 		auto InitResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		//auto InitResult = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);		
-		Platform::IsOkay(InitResult, "CoInitializeEx(COINIT_MULTITHREADED)");
+		//	gr: if this returns false, it means the thread has already been setup for multi threading
+		if (InitResult!=S_FALSE)
+			Platform::IsOkay(InitResult, "CoInitializeEx(COINIT_MULTITHREADED)");
 
 		auto Error = JsStartDebugging();
 		Chakra::IsOkay(Error, "JsStartDebugging");
@@ -1361,7 +1363,7 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 	{
 		//	enable debugging if we're not debugging c++
 		//if ( !Platform::IsDebuggerAttached() )
-		//	JSLockAndRun(NewContext, SetupDebugging);
+			JSLockAndRun(NewContext, SetupDebugging);
 	}
 	catch (std::exception& e)
 	{
