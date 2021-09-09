@@ -31,7 +31,7 @@
 
 //	gr: maybe make this an actual define
 //	gr: ^^ this is now in windows
-#if defined(TARGET_OSX) || defined(TARGET_IOS)
+#if defined(TARGET_OSX) || defined(TARGET_IOS) && !defined(TARGET_OS_TV)
 #define ENABLE_APIMEDIA
 #endif
 #if defined(TARGET_WINDOWS)|| defined(TARGET_LINUX)

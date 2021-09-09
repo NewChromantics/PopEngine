@@ -4,7 +4,7 @@
 #import <MetalKit/MetalKit.h>
 #import <GLKit/GLKit.h>
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_TV
 #import "SoyOpenglViewIos.h"
 #else
 #import <AppKit/AppKit.h>
@@ -76,7 +76,7 @@
 @end
 
 
-#if TARGET_OS_IOS	//	gr: this SHOULD be always defined by xcode
+#if TARGET_OS_IOS || TARGET_OS_TV	//	gr: this SHOULD be always defined by xcode
 @interface GLView : SoyOpenglViewIos
 #else
 @interface GLView : SoyOpenglViewOsx

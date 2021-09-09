@@ -71,8 +71,9 @@ CGPoint GetTouchPosition(UITouch* Touch,GLKView* View)
 
 	//	gr: seem to on by default
 	self.userInteractionEnabled = YES;
+#if !defined(TARGET_OS_TV)
 	self.multipleTouchEnabled = YES;
-
+#endif
 
 	return self;
 }
