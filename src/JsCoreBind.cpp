@@ -42,7 +42,7 @@
 #endif
 
 #if defined(TARGET_WINDOWS)
-#define ENABLE_APIXR
+//#define ENABLE_APIXR
 #endif
 
 //	gr: todo; rename/rewrite this with new names
@@ -505,8 +505,18 @@ void JsCore::GetString(JSContextRef Context,JSStringRef Handle,ArrayBridge<char>
 
 std::string	JsCore::GetString(JSContextRef Context,JSStringRef Handle)
 {
-	Array<char> Buffer;
-	GetString( Context, Handle, GetArrayBridge(Buffer) );
+	//	avoid unncessary alloc if string is small
+	//	gr: could also __threadlocal
+	Array<char> BigBuffer;
+	BufferArray<char, 256> SmallBuffer;
+	auto StringLength = JSStringGetLength(Handle);
+	auto BigBridge = GetArrayBridge(BigBuffer);
+	auto SmallBridge = GetArrayBridge(SmallBuffer);
+	//	gr: silly casting, but this works
+	auto* pBuffer = (StringLength < SmallBuffer.MaxSize()) ? static_cast<ArrayBridge<char>*>(&SmallBridge) : &BigBridge;
+	auto& Buffer = *pBuffer;
+
+	GetString(Context, Handle, Buffer);// GetArrayBridge(Buffer) );
 
 	if ( Buffer.IsEmpty() )
 		return std::string();
@@ -941,6 +951,7 @@ void JsCore::TInstance::BindApis(TContext& Context)
 	ApiEngine::Bind(Context);
 #endif
 #if defined(ENABLE_OPENGL)
+	//	we never had immediate gl any more
 	//ApiOpengl::Bind(Context);
 #endif
 #if defined(ENABLE_DIRECTX)
@@ -1383,18 +1394,13 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	}
 	
 	//	copy the function whilst still in callers thread
+	//	gr: tried doing a move() of functor, but that didn't quite work... see if we can reduce more though
+	//		plus the job queue and defer are making copies again
 	std::shared_ptr<std::function<void(Bind::TLocalContext&)>> LocalCopy( new std::function<void(Bind::TLocalContext&)>(Functor) );
-	std::function<void()> FunctorWrapper = [=]()mutable
+	std::function<void()> FunctorWrapper = [this,LocalCopy=move(LocalCopy)]()mutable
 	{
-		//	need to catch this?
 		auto& Local = *LocalCopy;
-		std::function<void(Bind::TLocalContext&)> WrapperWrapper = [&](Bind::TLocalContext& Context)
-		{
-			Local( Context );
-			LocalCopy.reset();
-		};
-		Execute_Reference( WrapperWrapper );
-		
+		Execute_Reference( Local );
 	};
 	
 	if ( DeferMs > 0 )
@@ -1414,6 +1420,19 @@ void JsCore::TContext::Queue(std::function<void(JsCore::TLocalContext&)> Functor
 	{
 		mJobQueue.PushJob( FunctorWrapper );
 	}
+}
+
+void JsCore::TContext::Queue(const TPromiseRef& PromiseRef,std::function<void(TLocalContext&,TPromise&)> Functor, size_t DeferMs)
+{
+	auto Job = [=,Functor=move(Functor)](TLocalContext& Context)
+	{
+		auto& TheContext = Context.mGlobalContext;
+
+		auto Promise = TheContext.mPromiseMap.PopPromise(PromiseRef);
+		Functor(Context, *Promise);
+		Promise.reset();
+	};
+	Queue(Job, DeferMs);
 }
 
 void JsCore::TContext::QueueGeneralJob(std::function<void()> Job)
@@ -1574,10 +1593,19 @@ void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
 	try
 	{
 		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
+
+		auto ThisType = JSValueGetType(JSObjectToValue(mThis));
+		auto ThisArrayType = JSValueGetTypedArrayType(mContext, mThis);
+		auto ThisIsArray = JSValueIsArray(mContext, JSObjectToValue(mThis) );
+
 		for ( auto k=0;	k<KeyCount;	k++ )
 		{
 			auto Key = JSPropertyNameArrayGetNameAtIndex( Keys, k );
 			auto KeyString = JsCore::GetString(mContext,Key);
+			//	sometimes objects have a .length, sometimes they dont....
+			//	todo: figure this out. Only on array types?
+			if (KeyString == "length")
+				continue;
 			MemberNames.PushBack(KeyString);
 		}
 		//	gr: eventually found my leak from here
@@ -1890,62 +1918,15 @@ void JsCore::TContext::BindRawFunction(const std::string& FunctionName,const std
 	Execute( Exec );
 }
 
-
-JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName)
-{
-	if ( !mMakePromiseFunction )
-	{
-		auto* MakePromiseFunctionSource =  R"V0G0N(
-		
-		let MakePromise = function()
-		{
-			let PromData = {};
-			const GrabPromData = function(Resolve,Reject)
-			{
-				PromData.Resolve = Resolve;
-				PromData.Reject = Reject;
-			};
-			const prom = new Promise( GrabPromData );
-			PromData.Promise = prom;
-			prom.Resolve = PromData.Resolve;
-			prom.Reject = PromData.Reject;
-			return prom;
-		}
-		MakePromise;
-		//MakePromise();
-		)V0G0N";
-		
-		JSStringRef FunctionSourceString = JsCore::GetString( LocalContext.mLocalContext, MakePromiseFunctionSource );
-		JSValueRef Exception = nullptr;
-		auto FunctionValue = JSEvaluateScript( LocalContext.mLocalContext, FunctionSourceString, nullptr, nullptr, 0, &Exception );
-		ThrowException( LocalContext.mLocalContext, Exception );
-		
-		TFunction MakePromiseFunction( LocalContext.mLocalContext, FunctionValue );
-		mMakePromiseFunction = TPersistent( LocalContext, MakePromiseFunction, "MakePromiseFunction" );
-	}
-	
-	Bind::TCallback CallParams( LocalContext );
-	auto MakePromiseFunction = mMakePromiseFunction.GetFunction(LocalContext);
-	MakePromiseFunction.Call(CallParams);
-	auto NewPromiseValue = CallParams.mReturn;
-	auto NewPromiseHandle = JsCore::GetObject( LocalContext.mLocalContext, NewPromiseValue );
-	TObject NewPromiseObject( LocalContext.mLocalContext, NewPromiseHandle );
-	auto Resolve = NewPromiseObject.GetFunction("Resolve");
-	auto Reject = NewPromiseObject.GetFunction("Reject");
-
-	TPromise Promise( LocalContext, NewPromiseObject, Resolve, Reject, DebugName );
-
-	return Promise;
-}
-
-
-std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName)
+JsCore::TObject JsCore::TContext::CreatePromiseObject(Bind::TLocalContext& LocalContext)
 {
 	if (!mMakePromiseFunction)
 	{
+		//	this code should return a function
+		//	changed to explicitly return an anonymous function/lambda as chakra was saying 
+		//	global redefinition... which shouldnt happen, where is the global here? it should be the context's own global...
 		auto* MakePromiseFunctionSource = R"V0G0N(
-		
-		let MakePromise = function()
+		()=>
 		{
 			let PromData = {};
 			const GrabPromData = function(Resolve,Reject)
@@ -1958,9 +1939,7 @@ std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLoca
 			prom.Resolve = PromData.Resolve;
 			prom.Reject = PromData.Reject;
 			return prom;
-		}
-		MakePromise;
-		//MakePromise();
+		};
 		)V0G0N";
 
 		JSStringRef FunctionSourceString = JsCore::GetString(LocalContext.mLocalContext, MakePromiseFunctionSource);
@@ -1972,18 +1951,57 @@ std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLoca
 		mMakePromiseFunction = TPersistent(LocalContext, MakePromiseFunction, "MakePromiseFunction");
 	}
 
-	Bind::TCallback CallParams(LocalContext);
+	//	execte the make promise function
 	auto MakePromiseFunction = mMakePromiseFunction.GetFunction(LocalContext);
+	Bind::TCallback CallParams(LocalContext);
 	MakePromiseFunction.Call(CallParams);
+
+	//	get the object it returns
 	auto NewPromiseValue = CallParams.mReturn;
 	auto NewPromiseHandle = JsCore::GetObject(LocalContext.mLocalContext, NewPromiseValue);
 	TObject NewPromiseObject(LocalContext.mLocalContext, NewPromiseHandle);
+	return NewPromiseObject;
+}
+
+JsCore::TPromise JsCore::TContext::CreatePromise(Bind::TLocalContext& LocalContext,const std::string& DebugName)
+{
+	auto NewPromiseObject = CreatePromiseObject(LocalContext);
+	auto Resolve = NewPromiseObject.GetFunction("Resolve");
+	auto Reject = NewPromiseObject.GetFunction("Reject");
+
+	TPromise Promise( LocalContext, NewPromiseObject, Resolve, Reject, DebugName );
+
+	return Promise;
+}
+
+
+std::shared_ptr<JsCore::TPromise> JsCore::TContext::CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName)
+{
+	auto NewPromiseObject = CreatePromiseObject(LocalContext);
 	auto Resolve = NewPromiseObject.GetFunction("Resolve");
 	auto Reject = NewPromiseObject.GetFunction("Reject");
 
 	auto Promise = std::make_shared<TPromise>( LocalContext, NewPromiseObject, Resolve, Reject, DebugName);
 
 	return Promise;
+}
+
+
+
+JsCore::TPromiseRef JsCore::TContext::CreatePromiseRef(Bind::TLocalContext& LocalContext, const std::string& DebugName)
+{
+	JsCore::TPromiseRef PromiseRef;
+	auto pPromise = mPromiseMap.CreatePromise(LocalContext, DebugName.c_str(), PromiseRef);
+	return PromiseRef;
+}
+
+JSValueRef JsCore::TContext::GetPromiseJsValue(const TPromiseRef& PromiseRef)
+{
+	//	just in case
+	if (PromiseRef.mContext != this)
+		throw Soy::AssertException("GetPromiseValue(PromiseRef) with a different context");
+
+	return mPromiseMap.GetJsValue(PromiseRef);
 }
 
 
@@ -2195,6 +2213,13 @@ void JsCore::TCallback::Return(JsCore::TPersistent& Value)
 void JsCore::TCallback::Return(JsCore::TPromise& Value)
 {
 	mReturn = GetValue( GetContextRef(), Value );
+}
+
+void JsCore::TCallback::Return(JsCore::TPromiseRef& Value)
+{
+	if (!Value.IsValid())
+		throw Soy::AssertException("Trying to Return() invalid promise ref");
+	mReturn = Value.mContext->GetPromiseJsValue(Value);
 }
 
 void JsCore::TCallback::ReturnNull()
@@ -2906,10 +2931,26 @@ void JsCore::TPromise::ResolveUndefined() const
 	//	we make a copy of this promise (copying the persistents) as if this is called from a shared_ptr<promise> (pretty common)
 	//	the shared ptr could go out of scope before this queued resolve happens
 	//	this is a quick fix which lets us just call Resolve etc without fuss
-	TPromise Copy(*this);
-	auto Run = [Copy](Bind::TLocalContext& LocalContext)
+	//	gr: solve race conditions by moving promise exclusively into lambda
+	//		should be able to drop the alloc if we add && constructor
+	std::shared_ptr<TPromise> Promise( new TPromise(*this) );
+	auto Run = [Promise=move(Promise)](Bind::TLocalContext& LocalContext) mutable
 	{
-		Copy.ResolveUndefined(LocalContext);
+		Promise->ResolveUndefined(LocalContext);
+		
+		
+		int Iterations = 0;
+		while (Promise.use_count() > 1)
+		{
+			auto PromiseRefCountC = Promise.use_count();
+			//if (PromiseRefCountC != 1)
+			//if (Iterations > 1)
+				std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			Iterations++;
+		}
+		//	clear promise whilst in js thread
+		Promise.reset();
 	};
 	Context.Queue(Run);
 }
@@ -2917,10 +2958,24 @@ void JsCore::TPromise::ResolveUndefined() const
 void JsCore::TPromise::Reject(const std::string& Error) const
 {
 	auto& Context = GetContext();
-	TPromise Copy(*this);	//	see ResolveUndefined for why we copy
-	auto Run = [Copy,Error](Bind::TLocalContext& LocalContext)
+	//	see ResolveUndefined for why we copy
+	std::shared_ptr<TPromise> Promise(new TPromise(*this));
+	auto Run = [Promise = move(Promise),Error](Bind::TLocalContext& LocalContext) mutable
 	{
-		Copy.Reject(LocalContext,Error);
+		Promise->Reject(LocalContext,Error);
+		
+		int Iterations = 0;
+		while (Promise.use_count() > 1)
+		{
+			auto PromiseRefCountC = Promise.use_count();
+			//if (PromiseRefCountC != 1)
+			//if (Iterations > 1)
+				std::Debug << "Warning promise ref count is not 1; " << PromiseRefCountC << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			Iterations++;
+		}
+		//	clear promise whilst in js thread
+		Promise.reset();
 	};
 	Context.Queue(Run);
 }
@@ -2969,6 +3024,25 @@ void JsCore::TPromise::Reject(Bind::TLocalContext& Context,JSValueRef Value) con
 
 	auto Reject = mReject.GetFunction(Context);
 	Reject.Call( Params );
+}
+
+
+void JsCore::TPromiseRef::QueueResolve() const
+{
+	auto Resolve = [](Bind::TLocalContext& Context, TPromise& Promise)
+	{
+		Promise.ResolveUndefined(Context);
+	};
+	mContext->Queue(*this, Resolve);
+}
+
+void JsCore::TPromiseRef::QueueReject(const std::string& Reason) const
+{
+	auto Resolve = [=](Bind::TLocalContext& Context, TPromise& Promise)
+	{
+		Promise.Reject(Context,Reason);
+	};
+	mContext->Queue(*this, Resolve);
 }
 
 

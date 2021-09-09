@@ -32,19 +32,18 @@ endif
 CONFIGURATION ?= Release
 
 BUILD_DIR = $(PROJECT_PATH)Build/$(osTarget)_$(CONFIGURATION)
-BUILD_TEMP_DIR = $(PROJECT_PATH)/Build/Temp/$(osTarget)_$(CONFIGURATION)/
+BUILD_TEMP_DIR = $(PROJECT_PATH)Build/Temp/$(osTarget)_$(CONFIGURATION)/
 
 SRC_PATH = $(PROJECT_PATH)/src
 SOY_PATH = $(PROJECT_PATH)/src/SoyLib
 
-osTarget ?= Linux_Default
 
 # variables for PopH264 & PopCameraDevice so we can use locally built versions
 LIB_PACKAGE_MODULES_PATH = $(PROJECT_PATH)/PopEngine.Package/node_modules/@newchromantics
 POPH264_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/com.newchromantics.poph264/Nvidia_arm64/
 POPCAMERADEVICE_PATH ?= $(LIB_PACKAGE_MODULES_PATH)/popcameradevice/$(TargetArch)
 
-POPCAMERADEVICE_PATH = /home/graham/Code/PopCameraDevice/Build
+POPCAMERADEVICE_PATH = /home/graham/Code/PopCameraDevice/Build/Nvidia_Release
 POPH264_PATH = /home/graham/Code/PopH264/Build
 
 $(info POPH264_PATH=$(POPH264_PATH))
@@ -65,7 +64,6 @@ $(SRC_PATH)/PopEngine.cpp \
 $(SRC_PATH)/TBind.cpp \
 $(SRC_PATH)/TApiCommon.cpp \
 $(SRC_PATH)/TApiHttp.cpp \
-$(SRC_PATH)/TApiPanopoly.cpp \
 $(SRC_PATH)/TApiSocket.cpp \
 $(SRC_PATH)/TApiWebsocket.cpp \
 $(SRC_PATH)/TApiZip.cpp \
@@ -181,6 +179,7 @@ LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
 #gr: shouldnt need these as everything goes through sokol
 #gr: need PBO
+LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglPbo.cpp
 #LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpengl.cpp
 #LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglContext.cpp
 LIB_LINK_LIBS += -lEGL

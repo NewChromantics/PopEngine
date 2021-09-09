@@ -70,7 +70,7 @@ int32_t PopMain()
 	//		message aside from PostQuitMessage()
 	bool Running = true;
 	DWORD ThisWin32ThreadId = GetCurrentThreadId();
-	int32_t PopExitCode = 707;
+	int32_t PopExitCode = 999;
 	auto OnShutdown = [&](int32_t ExitCode)
 	{		
 		std::Debug << "PopMain() OnShutdown exitcode=" << ExitCode << std::endl;
@@ -83,25 +83,33 @@ int32_t PopMain()
 			std::Debug << "error PostThreadMessageA(thread=" << ThisWin32ThreadId << ", WM_QUIT) " << Platform::GetLastErrorString() << std::endl;
 		}
 	};
-	auto pInstance = StartPopInstance(OnShutdown);
-
-	//	gr: this thread should just spin, and not get win32 messages...
-	std::Debug << "PopMain() run loop..." << std::endl;
-	while ( Running )
+	try
 	{
-		auto OnQuit = [&](int32_t ExitCode)
-		{
-			PopExitCode = ExitCode;
-			Running = false;
-		};
-		auto Blocking = true;
-		Platform::Loop( Blocking, OnQuit );
+		auto pInstance = StartPopInstance(OnShutdown);
 
-		//	don't free this immediately in OnShutdown, do it here off the thread that triggered
-		if ( !Running )
-			pInstance.reset();
+		//	gr: this thread should just spin, and not get win32 messages...
+		std::Debug << "PopMain() run loop..." << std::endl;
+		while (Running)
+		{
+			auto OnQuit = [&](int32_t ExitCode)
+			{
+				PopExitCode = ExitCode;
+				Running = false;
+			};
+			auto Blocking = true;
+			Platform::Loop(Blocking, OnQuit);
+
+			//	don't free this immediately in OnShutdown, do it here off the thread that triggered
+			if (!Running)
+				pInstance.reset();
+		}
+		std::Debug << "PopMain() run loop exited." << std::endl;
 	}
-	std::Debug << "PopMain() run loop exited." << std::endl;
+	catch (std::exception & e)
+	{
+		std::Debug << "Instance startup exception: " << e.what() << std::endl;
+		OnShutdown(999);
+	}
 	
 	return PopExitCode;
 }

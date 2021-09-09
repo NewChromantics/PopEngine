@@ -44,6 +44,8 @@ namespace Platform
 	template<typename COORDTYPE>
 	Soy::Rectx<COORDTYPE>	GetRect(RECT Rect);
 }
+Platform::TControlClass& GetOpenglViewClass();
+Platform::TControlClass& GetWindowClass(const std::string& ClassName);
 
 
 SoyKeyButton::Type KeyCodeToSoyButton(WPARAM KeyCode)
@@ -461,12 +463,105 @@ Platform::TControlClass::~TControlClass()
 	}
 }
 
+Platform::TControl::TControl(const std::string& Name, TControlClass& Class, TControl* Parent, DWORD StyleFlags, DWORD StyleExFlags, Soy::Rectx<int> Rect, TWin32Thread& Thread) :
+	TControl(Name, Class.ClassName(), Parent, StyleFlags, StyleExFlags, Rect, Thread)
+{
+}
 
-Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect,TWin32Thread& Thread) :
+
+class TResourceMeta
+{
+public:
+	TResourceMeta() {};
+	TResourceMeta(LPCSTR Name, LPCSTR Type);
+
+	std::string	GetName() { return mName.length() ? mName : std::to_string(mNameInt); }
+	std::string	GetType() { return mType.length() ? mType : std::to_string(mTypeInt); }
+
+	std::string	mType;
+	int			mTypeInt = 0;
+	std::string	mName;
+	int			mNameInt = 0;
+
+	std::string	mStringValue;	//	if resource is a string, we load its value
+};
+
+TResourceMeta::TResourceMeta(LPCSTR Name, LPCSTR Type)
+{
+	if (IS_INTRESOURCE(Name))
+		mNameInt = reinterpret_cast<WORD>(Name);
+	else
+		mName = Name;
+
+	if (IS_INTRESOURCE(Type))
+		mTypeInt = reinterpret_cast<WORD>(Type);
+	else
+		mType = Type;
+#
+	auto Instance = Platform::Private::InstanceHandle;
+	char Buffer[1024] = { 0 };
+	auto StringResult = LoadStringA(Instance, mNameInt, Buffer, std::size(Buffer));
+	if (StringResult == 0)
+	{
+		//	not a string
+	}
+	else
+	{
+		mStringValue = std::string(Buffer, StringResult);
+	}
+}
+
+Array<TResourceMeta> KnownResources;
+
+void EnumerateGetResources()
+{
+	//	already done
+	if (!KnownResources.IsEmpty())
+		return;
+
+	//	todo: if we support other instances/modules, probably more caches/meta
+	auto Instance = Platform::Private::InstanceHandle;
+
+	Array<LPSTR> ResourceTypes;
+	ENUMRESTYPEPROCA EnumResourceType = [](HMODULE Modeul, LPSTR Type, LONG_PTR lParam) ->BOOL
+	{
+		auto* Types = reinterpret_cast<decltype(ResourceTypes)*>(lParam);
+		Types->PushBack(Type);
+		return true;
+	};
+
+	ENUMRESNAMEPROCA EnumResource = [](HMODULE Modeul, LPCSTR Type, LPSTR Name, LONG_PTR lParam) ->BOOL
+	{
+		TResourceMeta Resource(Name, Type);
+		KnownResources.PushBack(Resource);
+		return true;
+	};
+
+	//	get all types first as to enum names we need to go by-type
+	EnumResourceTypesA(Instance, EnumResourceType, reinterpret_cast<LONG_PTR>(&ResourceTypes));
+
+	for (int t = 0; t < ResourceTypes.GetSize(); t++)
+		EnumResourceNamesA(Instance, ResourceTypes[t], EnumResource, 0);
+
+	std::stringstream Debug;
+	Debug << "Found x" << KnownResources.GetSize() << " resources; " << std::endl;
+	for (int r = 0; r < KnownResources.GetSize(); r++)
+	{
+		auto& Resource = KnownResources[r];
+		Debug << Resource.GetName() << " (type=" << Resource.GetType();
+		if (Resource.mStringValue.length())
+			Debug << " string=" << Resource.mStringValue;
+		Debug << ")" << std::endl;
+	}
+
+	std::Debug << Debug.str();
+}
+
+
+Platform::TControl::TControl(const std::string& Name,const char* ClassName,TControl* Parent,DWORD StyleFlags,DWORD StyleExFlags,Soy::Rectx<int> Rect,TWin32Thread& Thread) :
 	mName	( Name ),
 	mThread	( Thread )
 {
-	const char* ClassName = Class.ClassName();
 	const char* WindowName = mName.c_str();
 	void* UserData = this;
 	HWND ParentHwnd = Parent ? Parent->mHwnd : nullptr;
@@ -476,10 +571,43 @@ Platform::TControl::TControl(const std::string& Name,TControlClass& Class,TContr
 	if ( !mThread.IsLockedToThisThread() )
 		throw Soy::AssertException("Should be creating control on our thread");
 
-	mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, UserData);
-	Platform::IsOkay("CreateWindow");
+
+	EnumerateGetResources();
+
+	//	need to pass this to our handler
+	DLGPROC DialogProcedure = [](HWND unnamedParam1,
+		UINT unnamedParam2,
+		WPARAM unnamedParam3,
+		LPARAM unnamedParam4
+		)->INT_PTR
+	{
+		return 0;
+	};
+	
+	//	try and create a dialog with matching name first
+	//	this can fail if it has a control class type that isn't registered
+	//	todo: check against known resource [dialog] names, and if we expected it to be created
+	//		we should do a more specific error
+	InitCommonControls();
+	//	gr: we should be able to go through the dialog contents and detect all classes and register them if
+	//	they dont already exist
+	GetOpenglViewClass();
+
+	mHwnd = CreateDialogParamA(Instance,ClassName, ParentHwnd, DialogProcedure, 0 );
+	Platform::IsOkay("CreateDialogParamA");
+	if (!mHwnd)
+	{
+		//	flush error
+		auto LastError = Platform::GetLastErrorString();
+		std::Debug << "Failed to create window/dialog from resource (with class/dialog name " << ClassName << "); " << LastError << ". Note; if your dialog has an unregistered class, this will fail." << std::endl;
+
+		//	here we should explicitly create the window class
+		mHwnd = CreateWindowEx(StyleExFlags, ClassName, WindowName, StyleFlags, Rect.x, Rect.y, Rect.GetWidth(), Rect.GetHeight(), ParentHwnd, Menu, Instance, UserData);
+		Platform::IsOkay("CreateWindow");
+	}
+
 	if ( !mHwnd )
-		throw Soy::AssertException("Failed to create window");
+		throw Soy::AssertException("Failed to create window ");
 
 	//	for now, enable drag & drop on everything
 	EnableDragAndDrop();
@@ -718,7 +846,7 @@ void Platform::TControl::AddChild(TControl& Child)
 
 
 
-Platform::TControlClass& GetWindowClass()
+Platform::TControlClass& GetWindowClass(const std::string& ClassName)
 {
 	static std::shared_ptr<Platform::TControlClass> gWindowClass;
 	if ( gWindowClass )
@@ -726,7 +854,7 @@ Platform::TControlClass& GetWindowClass()
 
 	UINT ClassStyle = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 
-	gWindowClass.reset(new Platform::TControlClass("Window", ClassStyle));
+	gWindowClass.reset(new Platform::TControlClass(ClassName, ClassStyle));
 	return *gWindowClass;
 }
 
@@ -751,7 +879,7 @@ const DWORD WindowStyleFlags = WindowStyleFlags_Resizable & ~WS_THICKFRAME;
 
 
 Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Thread& Thread, bool Resizable) :
-	TControl	( Name, GetWindowClass(), nullptr, Resizable ? WindowStyleFlags_Resizable : WindowStyleFlags, WindowStyleExFlags, Rect, Thread )
+	TControl	( Name, GetWindowClass(Name), nullptr, Resizable ? WindowStyleFlags_Resizable : WindowStyleFlags, WindowStyleExFlags, Rect, Thread )
 {
 	auto ShowState = SW_SHOW;
 
@@ -795,6 +923,12 @@ Platform::TWindow::TWindow(const std::string& Name,Soy::Rectx<int> Rect,TWin32Th
 		SoyWindow::mOnDragDrop(Filenames);
 		return true;
 	};
+}
+
+Platform::TWindow::~TWindow()
+{
+	//	don't need this destructor, but helps identify when destruction gets stuck
+	mOwnThread.reset();
 }
 
 void Platform::TWindow::OnWindowMessage(UINT Message, DWORD WParam, DWORD LParam)
@@ -1113,7 +1247,18 @@ void Platform::TWindow::EnableScrollBars(bool Horz, bool Vert)
 	
 }
 
+Platform::TWin32Thread::~TWin32Thread()
+{
+	WaitToFinish();
+}
 
+void Platform::TWin32Thread::Stop()
+{
+	//	something is trying to stop this thread (probably externally destructing)
+	//	need to unblock the win32 thread
+	SoyWorkerJobThread::Stop();
+	Wake();
+}
 
 
 void Platform::TWin32Thread::Wake()
@@ -1160,6 +1305,11 @@ bool Platform::TWin32Thread::Iteration(std::function<void(std::chrono::milliseco
 
 		if ( this->HasJobs() )
 			return false;
+
+		//	stopping thread (letting prev jobs run)
+		if (!this->IsWorking())
+			return false;
+
 		return true;
 	};
 	Platform::Loop( CanBlock, OnQuit );
@@ -1341,7 +1491,10 @@ std::shared_ptr<Gui::TList> Platform::GetList(SoyWindow& Parent, const std::stri
 
 std::shared_ptr<Gui::TRenderView> Platform::GetRenderView(SoyWindow& Parent, const std::string& Name)
 {
-	Soy_AssertTodo();
+	//	todo: search parent for a child window of the opengl class, with a matching identifier
+	auto& PlatformParent = dynamic_cast<Platform::TWindow&>(Parent);
+	std::shared_ptr<Gui::TRenderView> View(new Platform::TRenderView(PlatformParent,Name));
+	return View;
 }
 
 
@@ -1790,3 +1943,24 @@ void Platform::TControl::SetColour(const vec3x<uint8_t>& Rgb)
 	std::Debug << "todo: win32: SetColour" << std::endl;
 }
 
+
+
+Platform::TRenderView::TRenderView(Platform::TControl& Parent, const std::string& Name) :
+	mParent	( Parent )
+{
+	TOpenglParams Params;
+	mContext.reset(new Platform::TOpenglContext(Parent, Params));
+
+	auto PaintRelay = [this](Platform::TControl& Control)
+	{
+		if (mOnPaint)
+			mOnPaint(Control);
+
+		if (mOnDraw)
+		{
+			auto DrawRect = mParent.GetClientRect();
+			this->mOnDraw(DrawRect);
+		}
+	};
+	Parent.mOnPaint = PaintRelay;
+}

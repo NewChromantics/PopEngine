@@ -54,6 +54,8 @@ namespace JsCore
 	class TObject;
 	class TFunction;
 	class TPromise;
+	class TPromiseRef;	//	strictly-typed non-JS (safe) reference
+	class TPromiseMap;
 	class TArray;
 	class TPersistent;	//	basically a refcounter, currently explicitly for objects&functions
 
@@ -385,6 +387,7 @@ public:
 	virtual void			Return(JSObjectRef Value) bind_override			{	mReturn = GetValue( GetContextRef(), Value );	}
 	virtual void			Return(JsCore::TArray& Value) bind_override		{	mReturn = GetValue( GetContextRef(), Value.mThis );	}
 	virtual void			Return(JsCore::TPromise& Value) bind_override;
+	virtual void			Return(JsCore::TPromiseRef& Value) bind_override;
 	virtual void			Return(JsCore::TPersistent& Value) bind_override;
 	template<typename TYPE>
 	inline void				Return(ArrayBridge<TYPE>&& Values) bind_override
@@ -633,6 +636,40 @@ DEFINE_FROM_VALUE( Bind::TObject, GetObjectFromValue );
 
 
 
+//	bit of a temp class to get around captures in lambdas so we can pass simpler references
+//	case: getting a race condition where JS thread allocs promise, returns it
+//	captured in thread B, which creates a JS callback lambda, copies promise again and
+//	both threads try and release promise
+class JsCore::TPromiseMap
+{
+	friend class TContext;
+public:
+	bool			HasContext() { return mContext != nullptr; }	//	if not true, we've never requested
+	Bind::TContext& GetContext();
+
+	//	todo:remove this
+	TPromise		CreatePromise(Bind::TLocalContext& Context, const char* DebugName, TPromiseRef& PromiseRef);
+	//TPromise		CreatePromise(Bind::TContext& Context, const char* DebugName, TPromiseRef& PromiseRef);
+
+	//	callback so you can handle how to resolve the promise rather than have tons of overloads here
+	void			Flush(JsCore::TPromiseRef PromiseRef, std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
+	void			QueueFlush(JsCore::TPromiseRef PromiseRef, std::function<void(Bind::TLocalContext&, TPromise&)> HandlePromise);
+	void			QueueResolve(JsCore::TPromiseRef PromiseRef);
+	void			QueueReject(JsCore::TPromiseRef PromiseRef, const std::string& Error);
+
+protected:
+	//	was private, should be careful just because last reference needs to go in a js thread, but only expecting TContext to access this now
+	std::shared_ptr<TPromise>	PopPromise(JsCore::TPromiseRef PromiseRef,bool RemoveFromQueue=true);
+	JSValueRef					GetJsValue(JsCore::TPromiseRef PromiseRef);
+
+private:
+	Bind::TContext* mContext = nullptr;
+	std::mutex		mPromisesLock;
+	Array<std::pair<TPromiseRef, std::shared_ptr<TPromise>>>	mPromises;
+	size_t			mPromiseCounter = 1000;
+};
+
+
 class JsCore::TContextDebug
 {
 public:
@@ -657,7 +694,8 @@ public:
 	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JSObjectRef Global=JSObjectRef(nullptr)) bind_override;
 	virtual void			LoadScript(const std::string& Source,const std::string& Filename,JsCore::TObject Global) bind_override;
 	virtual void			Execute(std::function<void(TLocalContext&)> Function) bind_override;
-	virtual void			Queue(std::function<void(TLocalContext&)> Function,size_t DeferMs=0) bind_override;
+	virtual void			Queue(std::function<void(TLocalContext&)> Function, size_t DeferMs = 0) bind_override;
+	virtual void			Queue(const TPromiseRef& PromiseRef,std::function<void(TLocalContext&,TPromise&)> Function, size_t DeferMs = 0) bind_override;
 	virtual void			GarbageCollect(JSContextRef LocalContext);
 	virtual void			Shutdown(int32_t ExitCode);	//	tell instance to destroy us
 		
@@ -671,8 +709,11 @@ public:
 	void					ConstructObject(TLocalContext& LocalContext,const std::string& ObjectTypeName,JSObjectRef NewObject,ArrayBridge<JSValueRef>&& ConstructorArguments);
 
 	virtual JsCore::TPromise	CreatePromise(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
+	//	wherever this was needed, should probably be replaced with promise ref
 	virtual std::shared_ptr<JsCore::TPromise>	CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
-	
+	virtual JsCore::TPromiseRef	CreatePromiseRef(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
+	JSValueRef				GetPromiseJsValue(const TPromiseRef& PromiseRef);
+
 	template<typename OBJECTWRAPPERTYPE>
 	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());
 	
@@ -704,6 +745,7 @@ public:
 protected:
 	void				Cleanup();		//	actual cleanup called by instance & destructor
 	void				ReleaseContext();	//	try and release javascript objects
+	TObject				CreatePromiseObject(TLocalContext& LocalContext);
 
 private:
 	void				BindRawFunction(const std::string& FunctionName,const std::string& ParentObjectName,JSObjectCallAsFunctionCallback Function);
@@ -734,6 +776,9 @@ public:
 	TContextDebug		mDebug;
 	
 	std::string			mDocumentsDirectory = "Uninitialised documents dir";	//	slow to access, so caching in context where it's used
+
+	//	just make promises simpler by using a ref and always a deffered resolve/reject
+	TPromiseMap			mPromiseMap;
 };
 
 
@@ -774,7 +819,18 @@ public:
 	TPersistent		mReject;
 };
 
+class JsCore::TPromiseRef
+{
+public:
+	void		QueueResolve() const;
+	void		QueueReject(const std::string& Reason) const;
 
+	bool		IsValid() const { return /*mContext &&*/ mRef != 0; };
+
+public:
+	TContext*	mContext = nullptr;
+	size_t		mRef = 0;	//	consider 0 invalid
+};
 
 
 class JsCore::TObjectWrapperBase

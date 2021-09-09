@@ -130,7 +130,7 @@ public:
 class Sokol::TRenderCommands
 {
 public:
-	size_t		mPromiseRef = std::numeric_limits<size_t>::max();
+	JsCore::TPromiseRef		mPromiseRef;
 	Array<std::shared_ptr<TRenderCommandBase>>	mCommands;
 };
 
@@ -159,7 +159,7 @@ public:
 	const TImageUniform*	GetImageUniform(const std::string& Name,size_t& ImageIndex);
 	size_t				GetUniformBlockSize() const;
 
-	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
+	JsCore::TPromiseRef	mPromiseRef;
 	std::string			mVertSource;
 	std::string			mFragSource;
 	Array<TUniform>		mUniforms;
@@ -192,7 +192,7 @@ public:
 	void				Free();	//	gr: I think this needs to be on the render thread. We can't put it in destructor as it's copied atm...
 	
 	//	input
-	size_t				mPromiseRef = std::numeric_limits<size_t>::max();
+	JsCore::TPromiseRef	mPromiseRef;
 	Array<uint32_t>		mTriangleIndexes;
 
 	//	output
@@ -250,15 +250,15 @@ private:
 public:
 	vec2x<size_t>					mLastRect;
 
-	Bind::TPromiseMap				mPendingFramePromises;
+	JsCore::TPromiseMap				mPendingFramePromises;
 	Array<Sokol::TRenderCommands>	mPendingFrames;
 	std::mutex						mPendingFramesLock;
 
-	Bind::TPromiseMap				mPendingShaderPromises;
+	JsCore::TPromiseMap				mPendingShaderPromises;
 	Array<Sokol::TCreateShader>		mPendingShaders;
 	std::mutex						mPendingShadersLock;
 	
-	Bind::TPromiseMap				mPendingGeometryPromises;
+	JsCore::TPromiseMap				mPendingGeometryPromises;
 	Array<Sokol::TCreateGeometry>	mPendingGeometrys;
 	std::mutex						mPendingGeometrysLock;
 

@@ -114,10 +114,21 @@ JsErrorCode JsCopyString(JsValueRef String, char* Buffer, size_t BufferSize, siz
 	*Length = 0;
 	const wchar_t* BufferW = nullptr;
 	auto Error = JsStringToPointer(String, &BufferW, Length);
-	std::wstring StringW(BufferW, *Length);
-	auto StringC = Soy::WStringToString(StringW);
-	Soy::StringToBuffer(StringC, Buffer, BufferSize);
+	if (Error != JsNoError)
+		return Error;
+
+	if (BufferSize > * Length)
+		BufferSize = *Length;
+	//	should the output contain a terminator?
+	for (int i = 0; i < BufferSize; i++)
+	{
+		//	gr: do a proper conversion here somehow
+		wchar_t CharW = BufferW[i];
+		char Char = static_cast<char>(CharW);
+		Buffer[i] = Char;
+	}
 	return Error;
+
 }
 #endif
 
@@ -220,26 +231,33 @@ JsPropertyIdRef GetProperty(JSContextRef Context,JSStringRef Name)
 	return Property;
 }
 
-std::string GetPropertyString(JSContextRef Context,JSObjectRef Object,const std::string& PropertyName)
+std::string GetPropertyString(JSObjectRef Object, JsPropertyIdRef Property)
 {
-	auto Property = GetProperty(Context,PropertyName);
-	auto PropertyValue = JSObjectGetProperty( Context, Object, PropertyName, nullptr );
+	JSContextRef Context = nullptr;
+	auto PropertyValue = JSObjectGetProperty(Context, Object, Property, nullptr);
 	bool IsError = false;
-	auto String = JSGetStringNoThrow( PropertyValue, IsError );
+	auto String = JSGetStringNoThrow(PropertyValue, IsError);
 	return String;
 }
 
+std::string GetPropertyString(JSContextRef Context,JSObjectRef Object,const std::string& PropertyName)
+{
+	//	basically a dupe of below
+	auto Property = GetProperty(Context,PropertyName);
+	return GetPropertyString(Object, Property);
+}
+
+std::string GetPropertyString(JSObjectRef Object,JSStringRef PropertyName)
+{
+	JSContextRef Context = nullptr;
+	auto Property = GetProperty( Context, PropertyName );
+	return GetPropertyString(Object, Property);
+}
 
 std::string GetPropertyString(JSObjectRef Object, const std::string& PropertyName)
 {
 	JSContextRef Context = nullptr;
 	return GetPropertyString(Context, Object, PropertyName);
-}
-
-
-std::string GetPropertyString(JSObjectRef Object,JSStringRef PropertyName)
-{
-	THROW_TODO;
 }
 
 void DebugPropertyName(JsValueRef ExceptionValue)
@@ -249,7 +267,6 @@ void DebugPropertyName(JsValueRef ExceptionValue)
 	Chakra::IsOkay(Error, "JsGetOwnPropertyNames");
 
 	//	argh: can't see how to get array length
-
 	int Index = 0;
 	for (int Index = 0; Index < 100; Index++)
 	{
@@ -280,70 +297,41 @@ std::string ExceptionToString(JsValueRef ExceptionValue)
 	auto ExceptionObject = JSValueToObject( Context, ExceptionValue, nullptr );
 	
 
-	DebugPropertyName(ExceptionValue);
+	//DebugPropertyName(ExceptionValue);
 	
-	//	our only reference!
-	//	https://chromium.googlesource.com/external/github.com/Microsoft/ChakraCore/+/refs/heads/master/bin/NativeTests/MemoryPolicyTest.cpp#126
-	//	gr: no property named message!
-	 //	gr: searching propertys shows
-	///0=exception	1=source	2=line	3=column	4=length	5=url	6=undefined
-	//	gr: ^^^ but on windows[sdk], they're different :)
-#if defined(TARGET_WINDOWS)
-	auto MessageKey = "message";
-	//auto LineKey = "number";
-	auto LineKey = "line";
-	auto FilenameKey = "stack";
-	//auto SourceKey = "description";
-	auto SourceKey = "source";
-#else
-	auto MessageKey = "exception";
-	auto LineKey = "line";
-	auto FilenameKey = "url";
-	auto SourceKey = "source";
-#endif
-
-	//auto Message = GetPropertyString( ExceptionObject, "message" );
-	auto Message = GetPropertyString( ExceptionObject, MessageKey);
-	auto Url = GetPropertyString( ExceptionObject, FilenameKey );
-	auto Line = GetPropertyString( ExceptionObject, LineKey);
-
-	//	code that failed
-	auto Source = GetPropertyString( ExceptionObject, SourceKey);
-
-	//	gr: is array length?
-	//	length = 0....
-	//	gr: no length in winsdk
-	auto Length = GetPropertyString( ExceptionObject, "length"s );
-	
+	//	gr: jsut print out all properties
 	std::stringstream ExceptionString;
-	ExceptionString << "> " << Source << std::endl;
-	ExceptionString << Url << ":" << Line << ": " << Message;
-	return ExceptionString.str();
-	
-		/*
-	JsValueRef PropertyNamesArray = nullptr;
-	auto Error = JsGetOwnPropertyNames( ExceptionValue, &PropertyNamesArray );
-	Chakra::IsOkay( Error, "JsGetOwnPropertyNames" );
-	
-	//	argh: can't see how to get array length
 
-	int Index = 0;
-	for ( int Index=0;	Index<99999;	Index++ )
+	try
 	{
-		JSValueRef IndexValue = nullptr;
-		auto Error = JsIntToNumber( Index, &IndexValue );
-		JSValueRef NameValue = nullptr;
-		Error = JsGetIndexedProperty( PropertyNamesArray, IndexValue, &NameValue );
-		
-		bool HasError = true;
-		auto NameString = JSGetStringNoThrow( NameValue, HasError );
-		if ( HasError )
-			break;
-		std::Debug << Index << "=" << NameString << std::endl;
+		JsValueRef PropertyNamesArray = nullptr;
+		auto Error = JsGetOwnPropertyNames(ExceptionValue, &PropertyNamesArray);
+		Chakra::IsOkay(Error, "JsGetOwnPropertyNames");
+
+		//	cant get array length, stop at first undefined key
+		for (int Index = 0; Index < 100; Index++)
+		{
+			JSValueRef IndexValue = nullptr;
+			auto Error = JsIntToNumber(Index, &IndexValue);
+			JSValueRef KeyValue = nullptr;
+			Error = JsGetIndexedProperty(PropertyNamesArray, IndexValue, &KeyValue);
+			auto KeyValueType = JSValueGetType(KeyValue);
+			if ( KeyValueType == JsUndefined )
+				break;
+
+			bool HasError = true;
+			auto KeyString = JSGetStringNoThrow(KeyValue, HasError);
+			if (HasError)
+				break;
+			auto ValueString = GetPropertyString(ExceptionObject, KeyValue);
+			ExceptionString << KeyString << ": " << ValueString << std::endl;
+		}
 	}
-	
-	return "hello";
-*/
+	catch (std::exception & e)
+	{
+		ExceptionString << "<Error getting exception meta: " << e.what() << ">";
+	}
+	return ExceptionString.str();
 }
 
 
@@ -530,23 +518,29 @@ void Chakra::TVirtualMachine::Execute(JSGlobalContextRef Context,std::function<v
 	if ( !Context )
 		throw Soy::AssertException("Trying to execte on null context");
 	
+	JSContextRef PreviousContext = nullptr;
+	{
+		auto Result = JsGetCurrentContext(&PreviousContext);
+		Chakra::IsOkay(Result, "JsGetCurrentContext");
+	}
+
 	//	default sets new context and unlocks the lock
 	std::function<void()> Lock = [&]
 	{
-		mCurrentContext = Context;
-		auto Result = JsSetCurrentContext( mCurrentContext );
+		//mCurrentContext = Context;
+		auto Result = JsSetCurrentContext(Context);
 		Chakra::IsOkay( Result, "JsSetCurrentContext" );
 	};
 	
 	std::function<void()> Unlock = [&]
 	{
-		auto Result = JsSetCurrentContext( nullptr );
+		auto Result = JsSetCurrentContext(PreviousContext);
 		Chakra::IsOkay( Result, "JsSetCurrentContext (unset)" );
 		
-		mCurrentContextLock.unlock();
-		mCurrentContext = nullptr;
+		//mCurrentContextLock.unlock();
+		//mCurrentContext = nullptr;
 	};
-
+	/*
 	//	get lock
 	if ( !mCurrentContextLock.try_lock() )
 	{
@@ -562,12 +556,12 @@ void Chakra::TVirtualMachine::Execute(JSGlobalContextRef Context,std::function<v
 			mCurrentContextLock.lock();
 		}
 	}
-	
+	*/
 	//	lock, run, unlock
 	try
 	{
 		Lock();
-		Execute( mCurrentContext );
+		Execute( Context );
 		Unlock();
 	}
 	catch(std::exception& e)
@@ -804,7 +798,17 @@ void JSPropertyNameArrayRelease(JSPropertyNameArrayRef Keys)
 
 JSValueRef JSObjectGetPropertyAtIndex(JSContextRef ctx, JSObjectRef object, size_t propertyIndex, JSValueRef *exception)
 {
-	Soy_AssertTodo();
+	//	keys are seperate properties
+	JsValueRef IndexValue = nullptr;
+	auto Error = JsIntToNumber(propertyIndex, &IndexValue);
+	Chakra::IsOkay(Error, "JsIntToNumber");
+
+	JSValueRef Element = nullptr;
+	auto ObjectAsValue = JSObjectToValue(object);
+	Error = JsGetIndexedProperty(ObjectAsValue, IndexValue, &Element);
+	Chakra::IsOkay(Error, "JsGetIndexedProperty");
+	
+	return Element;
 }
 
 
@@ -833,7 +837,10 @@ size_t JSPropertyNameArrayGetCount(JSPropertyNameArrayRef Keys)
 			throw Soy::AssertException("Array length negative (or less than 1, should include length)");
 
 		//	number of elements includes length, argh
-		Length--;
+		//	gr: now... it doesnt? need to clarify this... somehow
+		//		maybe it's present in array objects, but not property name arrays?
+		//	maybe callers need to exclude "length" members
+		//Length--;
 		return Length;
 	}
 
@@ -1341,7 +1348,9 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 		//	The host should make sure that CoInitializeEx is called with COINIT_MULTITHREADED or COINIT_APARTMENTTHREADED at least once before using this API
 		auto InitResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		//auto InitResult = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);		
-		Platform::IsOkay(InitResult, "CoInitializeEx(COINIT_MULTITHREADED)");
+		//	gr: if this returns false, it means the thread has already been setup for multi threading
+		if (InitResult!=S_FALSE)
+			Platform::IsOkay(InitResult, "CoInitializeEx(COINIT_MULTITHREADED)");
 
 		auto Error = JsStartDebugging();
 		Chakra::IsOkay(Error, "JsStartDebugging");
@@ -1354,7 +1363,7 @@ JSGlobalContextRef JSGlobalContextCreateInGroup(JSContextGroupRef ContextGroup,J
 	{
 		//	enable debugging if we're not debugging c++
 		//if ( !Platform::IsDebuggerAttached() )
-		//	JSLockAndRun(NewContext, SetupDebugging);
+			JSLockAndRun(NewContext, SetupDebugging);
 	}
 	catch (std::exception& e)
 	{

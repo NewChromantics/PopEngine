@@ -1029,6 +1029,12 @@ void ApiMedia::TH264EncoderWrapper::OnPacketOutput()
 	
 	auto Resolve = [this](Bind::TLocalContext& Context)
 	{
+		//	gr: also, we can lose packets, if in the mean time promises have been flushed
+		//		so check again... as we're in the JS thread.. nothing else should flush in the mean time
+		//		but still consider popping & unpopping promises to resolve here
+		if (!mNextPacketPromises.HasPromises())
+			return;
+
 		//	in case of race condition (probbaly because there's no mutex on HasPackets)
 		//	we get a failed pop (this lambda has probably executed since being queued)
 		//	abort the resolve
