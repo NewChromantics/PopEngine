@@ -1594,8 +1594,9 @@ void JsCore::TObject::GetMemberNames(ArrayBridge<std::string>&& MemberNames)
 	{
 		auto KeyCount = JSPropertyNameArrayGetCount( Keys );
 
-		auto ThisType = JSValueGetType(JSObjectToValue(mThis));
-		auto ThisArrayType = JSValueGetTypedArrayType(mContext, mThis);
+		auto ThisType = JSValueGetType(mContext,JSObjectToValue(mThis));
+		JSValueRef Exception = nullptr;
+		auto ThisArrayType = JSValueGetTypedArrayType(mContext, JSObjectToValue(mThis),&Exception);
 		auto ThisIsArray = JSValueIsArray(mContext, JSObjectToValue(mThis) );
 
 		for ( auto k=0;	k<KeyCount;	k++ )
@@ -1995,13 +1996,13 @@ JsCore::TPromiseRef JsCore::TContext::CreatePromiseRef(Bind::TLocalContext& Loca
 	return PromiseRef;
 }
 
-JSValueRef JsCore::TContext::GetPromiseJsValue(const TPromiseRef& PromiseRef)
+JSValueRef JsCore::TContext::GetPromiseJsValue(TLocalContext& LocalContext,const TPromiseRef& PromiseRef)
 {
 	//	just in case
 	if (PromiseRef.mContext != this)
 		throw Soy::AssertException("GetPromiseValue(PromiseRef) with a different context");
 
-	return mPromiseMap.GetJsValue(PromiseRef);
+	return mPromiseMap.GetJsValue(LocalContext,PromiseRef);
 }
 
 
@@ -2219,7 +2220,7 @@ void JsCore::TCallback::Return(JsCore::TPromiseRef& Value)
 {
 	if (!Value.IsValid())
 		throw Soy::AssertException("Trying to Return() invalid promise ref");
-	mReturn = Value.mContext->GetPromiseJsValue(Value);
+	mReturn = Value.mContext->GetPromiseJsValue(mLocalContext,Value);
 }
 
 void JsCore::TCallback::ReturnNull()

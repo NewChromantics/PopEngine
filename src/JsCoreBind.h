@@ -660,7 +660,7 @@ public:
 protected:
 	//	was private, should be careful just because last reference needs to go in a js thread, but only expecting TContext to access this now
 	std::shared_ptr<TPromise>	PopPromise(JsCore::TPromiseRef PromiseRef,bool RemoveFromQueue=true);
-	JSValueRef					GetJsValue(JsCore::TPromiseRef PromiseRef);
+	JSValueRef					GetJsValue(Bind::TLocalContext& Context,JsCore::TPromiseRef PromiseRef);
 
 private:
 	Bind::TContext* mContext = nullptr;
@@ -712,7 +712,7 @@ public:
 	//	wherever this was needed, should probably be replaced with promise ref
 	virtual std::shared_ptr<JsCore::TPromise>	CreatePromisePtr(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
 	virtual JsCore::TPromiseRef	CreatePromiseRef(Bind::TLocalContext& LocalContext, const std::string& DebugName) bind_override;
-	JSValueRef				GetPromiseJsValue(const TPromiseRef& PromiseRef);
+	JSValueRef				GetPromiseJsValue(TLocalContext& LocalContext,const TPromiseRef& PromiseRef);
 
 	template<typename OBJECTWRAPPERTYPE>
 	void				BindObjectType(const std::string& ParentName=std::string(),const std::string& OverrideLeafName=std::string());

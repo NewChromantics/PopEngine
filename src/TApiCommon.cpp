@@ -287,7 +287,7 @@ static void ApiPop::Yield(Bind::TCallback& Params)
 
 	Params.Return(Promise);
 
-	auto OnYield = [Promise](Bind::TLocalContext& Context,Bind::TPromise& Promise)
+	auto OnYield = [](Bind::TLocalContext& Context,Bind::TPromise& Promise)
 	{
 		Promise.Resolve( Context, "Yield complete");
 	};

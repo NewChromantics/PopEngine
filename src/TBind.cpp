@@ -196,10 +196,10 @@ void JsCore::TPromiseMap::QueueFlush(TPromiseRef PromiseRef,std::function<void(B
 }
 
 
-JSValueRef JsCore::TPromiseMap::GetJsValue(JsCore::TPromiseRef PromiseRef)
+JSValueRef JsCore::TPromiseMap::GetJsValue(Bind::TLocalContext& Context,JsCore::TPromiseRef PromiseRef)
 {
 	auto Promise = PopPromise(PromiseRef, false);
-	auto Value = JsCore::GetValue(this->mContext, *Promise);
+	auto Value = JsCore::GetValue(Context.mLocalContext, *Promise);
 	return Value;
 }
 
