@@ -31,7 +31,13 @@
 
 //	gr: maybe make this an actual define
 //	gr: ^^ this is now in windows
-#if defined(TARGET_OSX) || defined(TARGET_IOS) && !defined(TARGET_OS_TV)
+#if defined(TARGET_IOS) 
+#define ENABLE_APIMEDIA
+
+//	gr: this is being defined in ios builds??
+#elif defined(TARGET_OS_TV)
+//	no media
+#elif defined(TARGET_OSX) || defined(TARGET_IOS) 
 #define ENABLE_APIMEDIA
 #endif
 #if defined(TARGET_WINDOWS)|| defined(TARGET_LINUX)
