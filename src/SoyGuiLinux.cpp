@@ -5,6 +5,7 @@
 #include <thread>
 
 
+#if defined(ENABLE_X11)
 int OnXError(Display* Display,XErrorEvent* Event)
 {
 	std::string ErrorString;
@@ -25,7 +26,9 @@ int OnXError(Display* Display,XErrorEvent* Event)
 	//	https://linux.die.net/man/3/xseterrorhandler
 	return 0;
 }
+#endif
 
+#if defined(ENABLE_X11)
 WindowX11::WindowX11( const std::string& Name, Soy::Rectx<int32_t>& Rect )
 {
 	//	everything says make sure this is called first (even before open display i guess) as "race conditions could happen later"
@@ -102,7 +105,9 @@ WindowX11::WindowX11( const std::string& Name, Soy::Rectx<int32_t>& Rect )
 	};
 	mEventThread.reset( new SoyThreadLambda("X11 event thread",EventThread));
 }
+#endif
 
+#if defined(ENABLE_X11)
 bool WindowX11::EventThreadIteration()
 {
 	//	lost display?
@@ -227,7 +232,10 @@ bool WindowX11::EventThreadIteration()
 */
 	return true;
 }
+#endif
 
+
+#if defined(ENABLE_X11)
 WindowX11::~WindowX11()
 {
 	mEventThread.reset();
@@ -244,7 +252,7 @@ WindowX11::~WindowX11()
 		mDisplay = nullptr;
 	}
 }
-
+#endif
 
 
 
@@ -373,6 +381,8 @@ EglRenderView::EglRenderView(SoyWindow& Parent) :
 }
 #endif
 
+
+#if defined(ENABLE_EGL)
 Soy::Rectx<size_t> EglRenderView::GetSurfaceRect()
 {
 	eglMakeCurrent( mDisplay, mSurface, mSurface, mContext);
@@ -389,7 +399,10 @@ Soy::Rectx<size_t> EglRenderView::GetSurfaceRect()
 
 	return Soy::Rectx<size_t>( 0,0, w, h);
 }
+#endif
 
+
+#if defined(ENABLE_EGL)
 void EglRenderView::RequestPaint()
 {
 	//	do we need to tell x11 window to repaint?
@@ -397,7 +410,9 @@ void EglRenderView::RequestPaint()
 	if ( mOnDraw )
 		mOnDraw( Rect );
 }
+#endif
 
+#if defined(ENABLE_EGL)
 void EglRenderView::PrePaint()
 {
 	auto* CurrentContext = eglGetCurrentContext();
@@ -412,7 +427,10 @@ void EglRenderView::PrePaint()
 		}
 	}
 }
+#endif
 
+
+#if defined(ENABLE_EGL)
 void EglRenderView::PostPaint()
 {
 	if (eglSwapBuffers( mDisplay, mSurface) != EGL_TRUE) 
@@ -422,6 +440,7 @@ void EglRenderView::PostPaint()
 	auto Result = eglMakeCurrent( mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
 	Egl::IsOkay("eglMakeCurrent unlock (NO_CONTEXT)");
 }
+#endif
 
 /*
 template<typename FUNCTIONTYPE>
@@ -653,6 +672,7 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 	std::shared_ptr<SoyWindow> Window;
 
 	//	todo: need to work out if we're running X11 or not
+#if defined(ENABLE_X11)
 	try
 	{
 		Window.reset( new WindowX11(Name,Rect) );
@@ -663,6 +683,7 @@ std::shared_ptr<SoyWindow> Platform::CreateWindow(const std::string& Name,Soy::R
 		std::Debug << "Failed to create X11 window; " << e.what() << std::endl;
 		throw;
 	}
+#endif
 
 #if defined(ENABLE_DRMWINDOW)
 	//	try and create DRM window if xserver isnt running

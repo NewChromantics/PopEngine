@@ -71,6 +71,7 @@ $(SRC_PATH)/TApiGui.cpp	\
 $(SRC_PATH)/SoyImageProxy.cpp	\
 #$(SRC_PATH)/TApiEngine.cpp \
 
+LIB_CPP_FILES += $(SRC_PATH)/SoyGuiLinux.cpp
 
 LIB_C_FILES = \
 $(SRC_PATH)/Zip/src/zip.c
@@ -173,14 +174,9 @@ LIB_C_FILES += $(SRC_PATH)/LinuxDRM/common.c
 LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-common.c
 LIB_C_FILES += $(SRC_PATH)/LinuxDRM/drm-legacy.c
 LIB_CPP_FILES += $(SRC_PATH)/TApiSokol.cpp
+LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
 LIB_CPP_FILES += $(SRC_PATH)/LinuxDRM/esUtil.cpp
 LIB_CPP_FILES += $(SRC_PATH)/EglContext.cpp
-
-# gr: soyguilinux is window wrappers for egl & x11
-#		and only used with sokol_linux
-LIB_CPP_FILES += $(SRC_PATH)/SoySokol_Linux.cpp
-LIB_CPP_FILES += $(SRC_PATH)/SoyGuiLinux.cpp
-
 #gr: shouldnt need these as everything goes through sokol
 #gr: need PBO
 LIB_CPP_FILES += $(SOY_PATH)/src/SoyOpenglPbo.cpp

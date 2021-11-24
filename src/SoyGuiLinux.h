@@ -1,8 +1,11 @@
 #pragma once
 
+#if defined(ENABLE_OPENGL)
 #define ENABLE_EGL
 #define ENABLE_X11
 //#define ENABLE_DRMWINDOW
+#endif
+
 
 #if defined(ENABLE_EGL)
 #include "EglContext.h"
@@ -24,7 +27,7 @@ class EglRenderView;
 
 
 
-
+#if defined(ENABLE_EGL)
 class EglWindow : public SoyWindow
 {
 public:
@@ -34,11 +37,12 @@ public:
 	virtual EGLSurface				GetSurface()=0;
 	virtual EGLNativeWindowType		GetWindow()=0;
 };
-
+#endif
 
 //	gr: we should split this into X11 windows and DRM displays (providing surface & display)
 //		then EGL renderview which runs on either
 //	x11 window has mouse & key stuff... not so for DRM?
+#if defined(ENABLE_X11)
 class WindowX11 : public EglWindow
 {
 public:
@@ -66,22 +70,9 @@ public:
 	EGLSurface	mSurface = nullptr;	//	surface comes from display&window
 	std::shared_ptr<SoyThread>	mEventThread;
 };
+#endif
 
-/*
-class Platform::TWindow : public SoyWindow
-{
-public:
-	TWindow( const std::string& Name, Soy::Rectx<int32_t>& Rect );
-	
-	virtual Soy::Rectx<int32_t>		GetScreenRect() override;
 
-	virtual void									SetFullscreen(bool Fullscreen) override;
-	virtual bool									IsFullscreen() override;
-	virtual bool									IsMinimised() override;
-	virtual bool									IsForeground() override;
-	virtual void									EnableScrollBars(bool Horz,bool Vert) override;
-};
-*/
 
 #if defined(ENABLE_DRMWINDOW)
 class WindowDrm : public EglWindow
@@ -103,6 +94,8 @@ public:
 };
 #endif
 
+
+#if defined(ENABLE_EGL)
 class EglRenderView : public Gui::TRenderView
 {
 public:
@@ -123,3 +116,4 @@ public:
 	EGLContext	mContext = nullptr;
 	EGLSurface	mSurface = nullptr;
 };
+#endif
