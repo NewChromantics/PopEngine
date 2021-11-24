@@ -657,6 +657,8 @@ public:
 	void			QueueResolve(JsCore::TPromiseRef PromiseRef);
 	void			QueueReject(JsCore::TPromiseRef PromiseRef, const std::string& Error);
 
+	void			Free();
+
 protected:
 	//	was private, should be careful just because last reference needs to go in a js thread, but only expecting TContext to access this now
 	std::shared_ptr<TPromise>	PopPromise(JsCore::TPromiseRef PromiseRef,bool RemoveFromQueue=true);

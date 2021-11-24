@@ -1157,6 +1157,8 @@ void JsCore::TContext::Cleanup()
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 
+	mPromiseMap.Free();
+
 	//	should instance be doing this?
 	ReleaseContext();
 

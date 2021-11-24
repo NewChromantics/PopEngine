@@ -17,7 +17,7 @@ namespace Opengl
 class SoyImageProxy
 {
 public:
-	static Array<SoyImageProxy*>	Pool;	//	counter atm
+	static BufferArray<SoyImageProxy*,3000>	Pool;	//	counter atm
 	
 public:
 	SoyImageProxy(const SoyImageProxy&) = delete;

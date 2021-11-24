@@ -126,6 +126,12 @@ void Bind::TPromiseQueue::Reject(Bind::TLocalContext& Context,const std::string&
 }
 
 
+void JsCore::TPromiseMap::Free()
+{
+	std::lock_guard<std::mutex> Lock(mPromisesLock);
+	mPromises.Clear();
+}
+	
 Bind::TPromise JsCore::TPromiseMap::CreatePromise(Bind::TLocalContext& Context,const char* DebugName,TPromiseRef& PromiseRef)
 {
 	if (mContext != &Context.mGlobalContext && mContext != nullptr)

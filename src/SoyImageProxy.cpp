@@ -15,7 +15,7 @@
 
 
 //	we'll make this a pool or something later
-Array<SoyImageProxy*> SoyImageProxy::Pool;
+BufferArray<SoyImageProxy*,3000> SoyImageProxy::Pool;
 
 
 SoyImageProxy::SoyImageProxy()
