@@ -54,7 +54,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ env.AUTH_TOKEN }}
 
-      - name: Linux
+      - name: Build Linux
         uses: NewChromantics/PopAction_BuildLinux@v1
         with:
           lib_dir: ${{ matrix.config.os }}
@@ -62,4 +62,12 @@ jobs:
           project: ${{ env.project }}
           arch: ${{ matrix.config.arch }}
           flag: ${{ matrix.config.flag }}
+
+      # gr: upload artifacts in run to be able to grab executable without needing release to succeed
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          # tsdk: these env vars are set in each of the actions
+          name: ${{ env.UPLOAD_NAME }}
+          path: ${{ env.UPLOAD_DIR }}
 
