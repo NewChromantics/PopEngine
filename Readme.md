@@ -22,7 +22,7 @@ Not comprehensive, and in no particular order. But things this engine can do
 - Once ran charkracore (from repository) on mac and ios as proof of concept
 - Same JS (via `Pop.`) for webxr, openxr etc
 - Abstracted rendering system. Serialised "Render commands" (`SetRenderTarget`,`Draw` etc) to aid network rendering, debugging etc - can even render same commands to metal and GL at the same time)
-- Heavily async internally
+- Heavily async internally (lots of work farmed to c++ threads)
 - Uses native GUI apis where possible (interfaces with HTML, swift, win32)
 - Websocket servers & clients (bar web which only has WS clients), UDP, TCP sockets, HTTP servers, clients etc
 - Explicit native image handling/interfacing for seamless bytes<->canvas<->rendering integrations
@@ -34,7 +34,7 @@ Javascript Runtimes
 - IOS
 	- Native Javascriptcore
 - OSX
-	- Native JavascriptCore
+	- Native JavascriptCore (Debuggable in safari via https://developer.apple.com/documentation/security/hardened_runtime )
 	- v8 build from...
 	- chakracore from github repository
 	- JavascriptCore/webkit-jsonly from github repository
