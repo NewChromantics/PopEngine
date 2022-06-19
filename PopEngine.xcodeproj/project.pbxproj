@@ -342,6 +342,8 @@
 		BF9BBF5C252520DA00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BF9BBF5E252520DB00797824 /* SoyImageProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9BBF5B252520CC00797824 /* SoyImageProxy.cpp */; };
 		BFB4D712243E72E30011CD78 /* memheap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB50C04D1A6ABD480011A9D9 /* memheap.cpp */; };
+		BFB615982839331900BD0A4A /* ARCoreGeospatial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFB615972839331800BD0A4A /* ARCoreGeospatial.framework */; };
+		BFB615992839331900BD0A4A /* ARCoreGeospatial.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BFB615972839331800BD0A4A /* ARCoreGeospatial.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BFDC03B02430CED80004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFDC03B12430CED90004512A /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDC03A92430CEC20004512A /* json11.cpp */; };
 		BFE017D325607C8100C9A512 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFE017D225607C8100C9A512 /* CoreGraphics.framework */; };
@@ -435,6 +437,17 @@
 			dstSubfolderSpec = 10;
 			files = (
 				BF64CDDA26EA07AC00F6EB5C /* PopEngine_Tvos.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BFB6159A2839331900BD0A4A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				BFB615992839331900BD0A4A /* ARCoreGeospatial.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -728,6 +741,7 @@
 		BFA297241B80EF1C003B91F6 /* SoyWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyWindow.mm; path = src/SoyWindow.mm; sourceTree = "<group>"; };
 		BFA664721B55AD0A00C33A2A /* SoyString.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyString.mm; path = src/SoyString.mm; sourceTree = "<group>"; };
 		BFAD33D31B6175A700D3E7A6 /* SoyLib_Osx.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = SoyLib_Osx.xcconfig; sourceTree = "<group>"; };
+		BFB615972839331800BD0A4A /* ARCoreGeospatial.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARCoreGeospatial.framework; path = Pods/ARCore/Geospatial/Frameworks/ARCoreGeospatial.framework; sourceTree = "<group>"; };
 		BFB647362225593600820612 /* SoyHid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyHid.cpp; path = src/SoyHid.cpp; sourceTree = "<group>"; };
 		BFB647372225593600820612 /* SoyHid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyHid.h; path = src/SoyHid.h; sourceTree = "<group>"; };
 		BFBF2E82253C80A90044127B /* SoyGui_Win32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SoyGui_Win32.cpp; path = src/SoyGui_Win32.cpp; sourceTree = "<group>"; };
@@ -871,6 +885,7 @@
 				5898946F24F80FB900FCCCE2 /* Metal.framework in Frameworks */,
 				58F8E5C3255089B9001AECED /* libresolv.tbd in Frameworks */,
 				BF151FCF2384707D00A70EBF /* JavaScriptCore.framework in Frameworks */,
+				BFB615982839331900BD0A4A /* ARCoreGeospatial.framework in Frameworks */,
 				BF151FD3238470A800A70EBF /* VideoToolbox.framework in Frameworks */,
 				BFE017D325607C8100C9A512 /* CoreGraphics.framework in Frameworks */,
 				BF151FD12384708A00A70EBF /* UIKit.framework in Frameworks */,
@@ -1144,6 +1159,7 @@
 		BF689AC420D6C80D000BC812 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BFB615972839331800BD0A4A /* ARCoreGeospatial.framework */,
 				BF94E31526EA175400C89A64 /* libresolv.tbd */,
 				BF94E31026EA16E200C89A64 /* GLKit.framework */,
 				BF94E30926EA16AF00C89A64 /* libresolv.9.tbd */,
@@ -1708,6 +1724,7 @@
 				BF151F7223845F2E00A70EBF /* Sources */,
 				BF151F7323845F2E00A70EBF /* Frameworks */,
 				BF151F7423845F2E00A70EBF /* Resources */,
+				BFB6159A2839331900BD0A4A /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2661,6 +2678,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
+					"$(PROJECT_DIR)/Pods/ARCore/Geospatial/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2741,6 +2759,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
+					"$(PROJECT_DIR)/Pods/ARCore/Geospatial/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2821,6 +2840,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
+					"$(PROJECT_DIR)/Pods/ARCore/Geospatial/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2895,6 +2915,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264",
+					"$(PROJECT_DIR)/Pods/ARCore/Geospatial/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
