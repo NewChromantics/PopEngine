@@ -792,7 +792,7 @@ Bind::TInstance::TInstance(const std::string& RootDirectory,const std::string& S
 #endif
 }
 
-JsCore::TInstance::~TInstance()
+Bind::TInstance::~TInstance()
 {
 	std::Debug << __PRETTY_FUNCTION__ << std::endl;
 	mContextGroupThread.WaitToFinish();
@@ -977,7 +977,7 @@ void JsCore::TInstance::BindApis(TContext& Context)
 #endif
 	
 #if defined(TARGET_OSX)||defined(TARGET_WINDOWS)&&!defined(TARGET_UWP)
-	ApiDll::Bind(Context);
+	//ApiDll::Bind(Context);
 	ApiSerial::Bind(Context);
 #endif
 #if !defined(TARGET_LINUX) && !defined(TARGET_ANDROID)
@@ -995,7 +995,7 @@ void JsCore::TInstance::BindApis(TContext& Context)
 	//ApiDlib::Bind(Context);
 	ApiInput::Bind(Context);
 	ApiBluetooth::Bind(Context);
-	ApiLeapMotion::Bind(Context);
+	//ApiLeapMotion::Bind(Context);
 	//ApiOpenvr::Bind(Context);
 #endif
 

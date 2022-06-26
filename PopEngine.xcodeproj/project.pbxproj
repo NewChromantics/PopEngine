@@ -38,8 +38,6 @@
 		58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C2004B24F909BC002DAC99 /* libc++.tbd */; };
 		58F8E5C125508206001AECED /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F8E5C0255081FE001AECED /* libresolv.tbd */; };
 		58F8E5C3255089B9001AECED /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F8E5C2255089B3001AECED /* libresolv.tbd */; };
-		BF0AE0E6259DF72500D00C70 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
-		BF0AE0E7259DF72500D00C70 /* PopCameraDevice.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BF0AE0EC259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */; };
 		BF0AE0ED259E0E1000D00C70 /* SoyStreamBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0AE0EA259E0E1000D00C70 /* SoyStreamBuffer.cpp */; };
 		BF0D95E82517F367000C4E54 /* SoySokol_Osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF0D95E62517F366000C4E54 /* SoySokol_Osx.mm */; };
@@ -110,15 +108,7 @@
 		BF40CE192423D94800F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1A2423D94900F636EF /* PopEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7AB9602248223100FAC1CE /* PopEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF40CE1B2423D95E00F636EF /* PopEngine_Osx.h in Headers */ = {isa = PBXBuildFile; fileRef = BF5EAF7E237F07ED0077BCF5 /* PopEngine_Osx.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF51B8BC256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF51B8BE256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF51B8CB256A82CE004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
-		BF51B8CC256A82CE004DE4C7 /* PopH264.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		BF51B8CE256A82D2004DE4C7 /* PopH264.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; };
-		BF51B8CF256A82D2004DE4C7 /* PopH264.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BF51B8D4256AD19B004DE4C7 /* TestGui_Ios.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF51B8D3256AD19B004DE4C7 /* TestGui_Ios.swift */; };
-		BF51B8FD256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
-		BF51B8FF256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF563CA126133A2E00040705 /* SoyOpenglViewOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */; };
 		BF563CBB2614DAB900040705 /* SoyOpenglViewIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF563CB92614DAB800040705 /* SoyOpenglViewIos.mm */; };
 		BF563CC12614E1A300040705 /* SoyOpenglViewIos.h in Headers */ = {isa = PBXBuildFile; fileRef = BF563CBA2614DAB800040705 /* SoyOpenglViewIos.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -190,11 +180,9 @@
 		BF5EAFFB237F0CD40077BCF5 /* SoyViveHandTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */; };
 		BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
-		BF5EB000237F0CD40077BCF5 /* TApiDll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF0F9E6F2288892F00AEA7DC /* TApiDll.cpp */; };
 		BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF89D4832294646100A187D5 /* TApiGui.cpp */; };
 		BF5EB003237F0CD40077BCF5 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
 		BF5EB004237F0CD40077BCF5 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
-		BF5EB005237F0CD40077BCF5 /* TApiLeapMotion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFD39A0522CD44E7009E2FD3 /* TApiLeapMotion.cpp */; };
 		BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
 		BF5EB008237F0CD40077BCF5 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF5EB00A237F0CD40077BCF5 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
@@ -216,11 +204,6 @@
 		BF5EB021237F11C10077BCF5 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0EA5702110BAD7008D6DAA /* Accelerate.framework */; };
 		BF5EB023237F11C80077BCF5 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC720D6C811000BC812 /* ApplicationServices.framework */; };
 		BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF689AC520D6C80D000BC812 /* CoreGraphics.framework */; };
-		BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BFD399FE22CD42B1009E2FD3 /* libLeap.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		BF5EB028237F12C80077BCF5 /* libdyncall_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E852289EB5F00AEA7DC /* libdyncall_s.a */; };
-		BF5EB029237F12CA0077BCF5 /* libdyncallback_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E862289EB5F00AEA7DC /* libdyncallback_s.a */; };
-		BF5EB02A237F12CC0077BCF5 /* libdynload_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF0F9E872289EB5F00AEA7DC /* libdynload_s.a */; };
-		BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF85350622BEDBF80049C01B /* OpenVR.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BF5EB041238032210077BCF5 /* PopEngine.xib in Resources */ = {isa = PBXBuildFile; fileRef = FBF67B371A974BF400F74C38 /* PopEngine.xib */; };
 		BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */; };
 		BF5EB068238034BC0077BCF5 /* UnitTest in Resources */ = {isa = PBXBuildFile; fileRef = BFD08270225E90AC00FD05DC /* UnitTest */; };
@@ -246,8 +229,6 @@
 		BF71CAEF243E657000AEF50F /* SoyShellExecuteIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAEE243E657000AEF50F /* SoyShellExecuteIos.mm */; };
 		BF71CAF0243E65BA00AEF50F /* SoyShellExecute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFC721F324312101009930E4 /* SoyShellExecute.cpp */; };
 		BF71CAF2243E66BE00AEF50F /* SoyOpenglWindowIos.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF71CAF1243E66BE00AEF50F /* SoyOpenglWindowIos.mm */; };
-		BF7E6A5C256EFCF300365CEF /* PopCameraDevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; };
-		BF7E6A5D256EFCF300365CEF /* PopCameraDevice.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BF7E6A722570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A742570011400365CEF /* SoyGuiSwift.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF7E6A712570011300365CEF /* SoyGuiSwift.mm */; };
 		BF7E6A7C2570232B00365CEF /* SoyGuiSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -255,6 +236,8 @@
 		BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF8A4CB6286900CF00D34B0C /* PopH264 in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CB5286900CF00D34B0C /* PopH264 */; };
+		BF8A4CB92869013100D34B0C /* PopCameraDevice in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CB82869013100D34B0C /* PopCameraDevice */; };
 		BF94E1FB26EA0BF700C89A64 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
 		BF94E1FF26EA0BFB00C89A64 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		BF94E20326EA0BFE00C89A64 /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
@@ -400,8 +383,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				58C2004824F90993002DAC99 /* PopEngine_Ios.framework in Embed Frameworks */,
-				BF51B8CC256A82CE004DE4C7 /* PopH264.xcframework in Embed Frameworks */,
-				BF7E6A5D256EFCF300365CEF /* PopCameraDevice.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -413,8 +394,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				BF151F102382CB6500A70EBF /* PopEngine_Osx.framework in CopyFiles */,
-				BF51B8CF256A82D2004DE4C7 /* PopH264.xcframework in CopyFiles */,
-				BF0AE0E7259DF72500D00C70 /* PopCameraDevice.xcframework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -501,7 +480,6 @@
 		BF151FD2238470A800A70EBF /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/VideoToolbox.framework; sourceTree = DEVELOPER_DIR; };
 		BF15200123847D6A00A70EBF /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/CoreMedia.framework; sourceTree = DEVELOPER_DIR; };
 		BF15200423847F1B00A70EBF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
-		BF152006238480F600A70EBF /* PopVision_Osx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PopVision_Osx.framework; path = Libs/popvision/PopVision_Osx.framework; sourceTree = SOURCE_ROOT; };
 		BF152008238482A200A70EBF /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk/System/Library/Frameworks/CoreVideo.framework; sourceTree = DEVELOPER_DIR; };
 		BF17B6B72115C157006940E6 /* TApiSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TApiSocket.cpp; path = src/TApiSocket.cpp; sourceTree = "<group>"; };
 		BF17B6B82115C157006940E6 /* TApiSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TApiSocket.h; path = src/TApiSocket.h; sourceTree = "<group>"; };
@@ -548,10 +526,8 @@
 		BF5091822282194700DCBB4B /* libicuuc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicuuc.dylib; sourceTree = "<group>"; };
 		BF5091832282194700DCBB4B /* libicui18n.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libicui18n.dylib; sourceTree = "<group>"; };
 		BF5091842282194700DCBB4B /* libv8_libbase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libv8_libbase.dylib; sourceTree = "<group>"; };
-		BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PopH264.xcframework; path = "PopEngine.Package/node_modules/@newchromantics/com.newchromantics.poph264/PopH264.xcframework"; sourceTree = SOURCE_ROOT; };
 		BF51B8D2256AD19A004DE4C7 /* PopEngineTestApp_Ios-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PopEngineTestApp_Ios-Bridging-Header.h"; sourceTree = "<group>"; };
 		BF51B8D3256AD19B004DE4C7 /* TestGui_Ios.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestGui_Ios.swift; sourceTree = "<group>"; };
-		BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PopCameraDevice.xcframework; path = "PopEngine.Package/node_modules/@newchromantics/popcameradevice/PopCameraDevice.xcframework"; sourceTree = SOURCE_ROOT; };
 		BF51B90F256AEC20004DE4C7 /* BuildUniversal.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = BuildUniversal.sh; sourceTree = "<group>"; };
 		BF563C9E26133A2E00040705 /* SoyOpenglViewOsx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyOpenglViewOsx.h; path = src/SoyOpenglViewOsx.h; sourceTree = "<group>"; };
 		BF563C9F26133A2E00040705 /* SoyOpenglViewOsx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoyOpenglViewOsx.mm; path = src/SoyOpenglViewOsx.mm; sourceTree = "<group>"; };
@@ -658,7 +634,6 @@
 		BF7225A91BADCB3B00550AD8 /* SoyStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyStream.h; path = src/SoyStream.h; sourceTree = "<group>"; };
 		BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyProtocol.cpp; path = src/SoyProtocol.cpp; sourceTree = "<group>"; };
 		BF7225AC1BADCC3900550AD8 /* SoyProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyProtocol.h; path = src/SoyProtocol.h; sourceTree = "<group>"; };
-		BF7A2CD024F1A7B500CD3A32 /* node_modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = node_modules; path = PopEngine.Package/node_modules; sourceTree = "<group>"; };
 		BF7AB95F2248223100FAC1CE /* PopEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PopEngine.cpp; path = src/PopEngine.cpp; sourceTree = "<group>"; };
 		BF7AB9602248223100FAC1CE /* PopEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopEngine.h; path = src/PopEngine.h; sourceTree = "<group>"; };
 		BF7E6A6E256FBFD900365CEF /* SoyGuiSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SoyGuiSwift.h; path = src/SoyGuiSwift.h; sourceTree = "<group>"; };
@@ -670,7 +645,6 @@
 		BF8534FD22B6DB270049C01B /* ChakraBind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChakraBind.h; path = src/ChakraBind.h; sourceTree = "<group>"; };
 		BF85350022BEB6960049C01B /* SoyMagicLeap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyMagicLeap.h; path = src/SoyMagicLeap.h; sourceTree = "<group>"; };
 		BF85350122BEB6960049C01B /* SoyMagicLeap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyMagicLeap.cpp; path = src/SoyMagicLeap.cpp; sourceTree = "<group>"; };
-		BF85350622BEDBF80049C01B /* OpenVR.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenVR.framework; path = bin/osx64/OpenVR.framework; sourceTree = "<group>"; };
 		BF85351022BEDEBE0049C01B /* libopenvr_api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopenvr_api.dylib; path = bin/osx32/libopenvr_api.dylib; sourceTree = "<group>"; };
 		BF89CF49228DD3EB00A187D5 /* OpenVr */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OpenVr; sourceTree = "<group>"; };
 		BF89CF65228DD3F700A187D5 /* openvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openvr.h; sourceTree = "<group>"; };
@@ -766,6 +740,7 @@
 		BFE572831B544E3400B17528 /* SoyFilesystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoyFilesystem.cpp; path = src/SoyFilesystem.cpp; sourceTree = "<group>"; };
 		BFE572841B544E3400B17528 /* SoyFilesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoyFilesystem.h; path = src/SoyFilesystem.h; sourceTree = "<group>"; };
 		BFE7BCCF258AB9760021932B /* PopEngine.visualstudio */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.visualstudio; sourceTree = "<group>"; };
+		BFE8D8072868E64900249E8B /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		BFEDAFEA24E01183003B130F /* PopEngine.Package */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PopEngine.Package; sourceTree = "<group>"; };
 		BFEDAFEC24E15128003B130F /* Source_Android */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Source_Android; sourceTree = "<group>"; };
 		BFEF6A3624759168000A1F88 /* TApiAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TApiAudio.h; path = src/TApiAudio.h; sourceTree = "<group>"; };
@@ -854,8 +829,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				58C2004C24F909E9002DAC99 /* libc++.tbd in Frameworks */,
-				BF51B8CB256A82CE004DE4C7 /* PopH264.xcframework in Frameworks */,
-				BF7E6A5C256EFCF300365CEF /* PopCameraDevice.xcframework in Frameworks */,
 				58C2004724F90993002DAC99 /* PopEngine_Ios.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -866,7 +839,6 @@
 			files = (
 				BF6CF4BB269E3A87009CF9D2 /* OpenGLES.framework in Frameworks */,
 				BF6CF4B7269E3A75009CF9D2 /* GLKit.framework in Frameworks */,
-				BF51B8FF256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */,
 				5898947024F80FB900FCCCE2 /* MetalKit.framework in Frameworks */,
 				5898946F24F80FB900FCCCE2 /* Metal.framework in Frameworks */,
 				58F8E5C3255089B9001AECED /* libresolv.tbd in Frameworks */,
@@ -874,7 +846,6 @@
 				BF151FD3238470A800A70EBF /* VideoToolbox.framework in Frameworks */,
 				BFE017D325607C8100C9A512 /* CoreGraphics.framework in Frameworks */,
 				BF151FD12384708A00A70EBF /* UIKit.framework in Frameworks */,
-				BF51B8BE256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -883,25 +854,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF5EB021237F11C10077BCF5 /* Accelerate.framework in Frameworks */,
-				BF5EB02A237F12CC0077BCF5 /* libdynload_s.a in Frameworks */,
+				BF8A4CB92869013100D34B0C /* PopCameraDevice in Frameworks */,
 				BF5EB020237F11BF0077BCF5 /* AVFoundation.framework in Frameworks */,
 				BF5EB018237F11960077BCF5 /* VideoToolbox.framework in Frameworks */,
 				BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */,
-				BF51B8BC256A7CD7004DE4C7 /* PopH264.xcframework in Frameworks */,
-				BF5EB028237F12C80077BCF5 /* libdyncall_s.a in Frameworks */,
 				5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */,
 				BF5EB01D237F11A30077BCF5 /* GameController.framework in Frameworks */,
+				BF8A4CB6286900CF00D34B0C /* PopH264 in Frameworks */,
 				5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */,
 				5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */,
-				BF5EB02E237F14350077BCF5 /* OpenVR.framework in Frameworks */,
 				BF5EB01A237F119C0077BCF5 /* OpenGL.framework in Frameworks */,
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
 				58F8E5C125508206001AECED /* libresolv.tbd in Frameworks */,
 				BF5EB01B237F119F0077BCF5 /* IOKit.framework in Frameworks */,
 				BF5EB01E237F11AD0077BCF5 /* JavaScriptCore.framework in Frameworks */,
-				BF51B8FD256AE4EB004DE4C7 /* PopCameraDevice.xcframework in Frameworks */,
-				BF5EB026237F12770077BCF5 /* libLeap.dylib in Frameworks */,
-				BF5EB029237F12CA0077BCF5 /* libdyncallback_s.a in Frameworks */,
 				BF5EB01F237F11BD0077BCF5 /* CoreMedia.framework in Frameworks */,
 				BF5EB019237F119A0077BCF5 /* Cocoa.framework in Frameworks */,
 				BF5EB023237F11C80077BCF5 /* ApplicationServices.framework in Frameworks */,
@@ -917,8 +883,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF151F0E2382C60400A70EBF /* libc++.tbd in Frameworks */,
-				BF51B8CE256A82D2004DE4C7 /* PopH264.xcframework in Frameworks */,
-				BF0AE0E6259DF72500D00C70 /* PopCameraDevice.xcframework in Frameworks */,
 				BF5EB0672380339F0077BCF5 /* PopEngine_Osx.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1023,8 +987,6 @@
 				BF89CF49228DD3EB00A187D5 /* OpenVr */,
 				BF89CF4B228DD3F700A187D5 /* OpenVr */,
 				BF2CFA9724E2978E009238A5 /* OpenXR */,
-				BF51B8FC256AE4EB004DE4C7 /* PopCameraDevice.xcframework */,
-				BF51B8BB256A7CD6004DE4C7 /* PopH264.xcframework */,
 			);
 			name = Libraries;
 			path = src/Libs;
@@ -1223,9 +1185,7 @@
 		BF89CF4B228DD3F700A187D5 /* OpenVr */ = {
 			isa = PBXGroup;
 			children = (
-				BF152006238480F600A70EBF /* PopVision_Osx.framework */,
 				BF85350D22BEDE9C0049C01B /* bin */,
-				BF85350622BEDBF80049C01B /* OpenVR.framework */,
 				BF89CF64228DD3F700A187D5 /* headers */,
 				BF89CF6A228DD3F700A187D5 /* lib */,
 			);
@@ -1295,8 +1255,8 @@
 		FB8A058A1A2E54730099596C = {
 			isa = PBXGroup;
 			children = (
+				BFE8D8072868E64900249E8B /* Package.swift */,
 				BF654A7625BF4C3300450483 /* Headers */,
-				BF7A2CD024F1A7B500CD3A32 /* node_modules */,
 				BFEDAFEC24E15128003B130F /* Source_Android */,
 				BFEDAFEA24E01183003B130F /* PopEngine.Package */,
 				BF21AEA424D4319B0046A434 /* .github */,
@@ -1734,6 +1694,10 @@
 			dependencies = (
 			);
 			name = PopEngine_Osx;
+			packageProductDependencies = (
+				BF8A4CB5286900CF00D34B0C /* PopH264 */,
+				BF8A4CB82869013100D34B0C /* PopCameraDevice */,
+			);
 			productName = PopEngine;
 			productReference = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */;
 			productType = "com.apple.product-type.framework";
@@ -1818,6 +1782,8 @@
 					};
 					BF51B903256AEBE5004DE4C7 = {
 						CreatedOnToolsVersion = 12.0;
+						DevelopmentTeam = X52DR36JY2;
+						ProvisioningStyle = Automatic;
 					};
 					BF5C4AAF23F6C73B007D6393 = {
 						CreatedOnToolsVersion = 11.3.1;
@@ -1837,9 +1803,13 @@
 					};
 					BF64CDB026EA078100F6EB5C = {
 						CreatedOnToolsVersion = 12.2;
+						DevelopmentTeam = X52DR36JY2;
+						ProvisioningStyle = Automatic;
 					};
 					BF64CDD126EA07AC00F6EB5C = {
 						CreatedOnToolsVersion = 12.2;
+						DevelopmentTeam = X52DR36JY2;
+						ProvisioningStyle = Automatic;
 					};
 					BFDC037B24BFAE8000182E0B = {
 						CreatedOnToolsVersion = 10.1;
@@ -1863,6 +1833,10 @@
 				Base,
 			);
 			mainGroup = FB8A058A1A2E54730099596C;
+			packageReferences = (
+				BF8A4CB4286900CF00D34B0C /* XCRemoteSwiftPackageReference "PopH264" */,
+				BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */,
+			);
 			productRefGroup = FB8A05941A2E54730099596C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -2065,7 +2039,6 @@
 				BF5EB002237F0CD40077BCF5 /* TApiGui.cpp in Sources */,
 				BF5EAFEF237F0C6E0077BCF5 /* SoyWebSocket.cpp in Sources */,
 				BF5EAFE5237F0C6E0077BCF5 /* SoyThread.cpp in Sources */,
-				BF5EB000237F0CD40077BCF5 /* TApiDll.cpp in Sources */,
 				BF5EAFDA237F0C6E0077BCF5 /* SoyRef.cpp in Sources */,
 				BF5EB00D237F0CD40077BCF5 /* TBind.cpp in Sources */,
 				BF5EAFD0237F0C6E0077BCF5 /* SoyMath.cpp in Sources */,
@@ -2130,7 +2103,6 @@
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,
 				BF5EAFC6237F0C6E0077BCF5 /* SoyDebug.cpp in Sources */,
 				BF5EAFE0237F0C6E0077BCF5 /* SoySocketStream.cpp in Sources */,
-				BF5EB005237F0CD40077BCF5 /* TApiLeapMotion.cpp in Sources */,
 				BF5EAFEA237F0C6E0077BCF5 /* SoyUniform.cpp in Sources */,
 				BF7E6A722570011400365CEF /* SoyGuiSwift.mm in Sources */,
 				BF5EAFEE237F0C6E0077BCF5 /* SoyWave.cpp in Sources */,
@@ -3204,7 +3176,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
-				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -3266,7 +3237,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF0F9E6322870C1700AEA7DC /* PopEngine_V8_App.xcconfig */;
 			buildSettings = {
-				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -3328,7 +3298,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF8534FA22B6DAA30049C01B /* PopEngine_Chakra_App.xcconfig */;
 			buildSettings = {
-				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -3390,7 +3359,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF689AFC20D6EA21000BC812 /* PopEngine_JsCore_App.xcconfig */;
 			buildSettings = {
-				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_ENABLE_MODULES = YES;
@@ -4752,6 +4720,38 @@
 			defaultConfigurationName = Debug_JavascriptCore;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BF8A4CB4286900CF00D34B0C /* XCRemoteSwiftPackageReference "PopH264" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NewChromantics/PopH264.SwiftPackage";
+			requirement = {
+				kind = exactVersion;
+				version = 1.3.40;
+			};
+		};
+		BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NewChromantics/PopCameraDevice";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BF8A4CB5286900CF00D34B0C /* PopH264 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BF8A4CB4286900CF00D34B0C /* XCRemoteSwiftPackageReference "PopH264" */;
+			productName = PopH264;
+		};
+		BF8A4CB82869013100D34B0C /* PopCameraDevice */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */;
+			productName = PopCameraDevice;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FB8A058B1A2E54730099596C /* Project object */;
 }
