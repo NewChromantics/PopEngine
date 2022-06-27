@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/NewChromantics/PopH264.SwiftPackage",
       "state" : {
-        "revision" : "d3842d745bdb6e4c1f9de0cdb8070dc0a9766cde",
-        "version" : "1.3.40"
+        "revision" : "79ed32bcbc4470d8627cee666b08125a7c3de765",
+        "version" : "1.3.41"
       }
     }
   ],

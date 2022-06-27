@@ -232,8 +232,10 @@
 		BF8A4AB725727F23008263B0 /* PopEngineGui.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; };
 		BF8A4AC025728103008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
-		BF8A4CB6286900CF00D34B0C /* PopH264 in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CB5286900CF00D34B0C /* PopH264 */; };
 		BF8A4CB92869013100D34B0C /* PopCameraDevice in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CB82869013100D34B0C /* PopCameraDevice */; };
+		BF8A4CBC2869D89600D34B0C /* PopH264 in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CBB2869D89600D34B0C /* PopH264 */; };
+		BF8A4CC12869DEBE00D34B0C /* PopH264 in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CC02869DEBE00D34B0C /* PopH264 */; };
+		BF8A4CC32869DEC100D34B0C /* PopCameraDevice in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CC22869DEC100D34B0C /* PopCameraDevice */; };
 		BF8A4CC42869DF9500D34B0C /* SoyOpenglWindowOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindowOsx.mm */; };
 		BF94E1FB26EA0BF700C89A64 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
 		BF94E1FF26EA0BFB00C89A64 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
@@ -834,6 +836,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF8A4CC12869DEBE00D34B0C /* PopH264 in Frameworks */,
+				BF8A4CC32869DEC100D34B0C /* PopCameraDevice in Frameworks */,
 				BF6CF4BB269E3A87009CF9D2 /* OpenGLES.framework in Frameworks */,
 				BF6CF4B7269E3A75009CF9D2 /* GLKit.framework in Frameworks */,
 				5898947024F80FB900FCCCE2 /* MetalKit.framework in Frameworks */,
@@ -857,8 +861,8 @@
 				BF5EB015237F11840077BCF5 /* OpenCL.framework in Frameworks */,
 				5898945B24F6EB5600FCCCE2 /* Metal.framework in Frameworks */,
 				BF5EB01D237F11A30077BCF5 /* GameController.framework in Frameworks */,
-				BF8A4CB6286900CF00D34B0C /* PopH264 in Frameworks */,
 				5898945F24F6ED8F00FCCCE2 /* MetalKit.framework in Frameworks */,
+				BF8A4CBC2869D89600D34B0C /* PopH264 in Frameworks */,
 				5898945524F6E14600FCCCE2 /* QuartzCore.framework in Frameworks */,
 				BF5EB01A237F119C0077BCF5 /* OpenGL.framework in Frameworks */,
 				BF5EB024237F11CB0077BCF5 /* CoreGraphics.framework in Frameworks */,
@@ -1671,6 +1675,10 @@
 			dependencies = (
 			);
 			name = PopEngine_Ios;
+			packageProductDependencies = (
+				BF8A4CC02869DEBE00D34B0C /* PopH264 */,
+				BF8A4CC22869DEC100D34B0C /* PopCameraDevice */,
+			);
 			productName = PopEngine_Ios;
 			productReference = BF151F7623845F2E00A70EBF /* PopEngine_Ios.framework */;
 			productType = "com.apple.product-type.framework";
@@ -1692,8 +1700,8 @@
 			);
 			name = PopEngine_Osx;
 			packageProductDependencies = (
-				BF8A4CB5286900CF00D34B0C /* PopH264 */,
 				BF8A4CB82869013100D34B0C /* PopCameraDevice */,
+				BF8A4CBB2869D89600D34B0C /* PopH264 */,
 			);
 			productName = PopEngine;
 			productReference = BF5EAFB5237F0C100077BCF5 /* PopEngine_Osx.framework */;
@@ -1831,8 +1839,8 @@
 			);
 			mainGroup = FB8A058A1A2E54730099596C;
 			packageReferences = (
-				BF8A4CB4286900CF00D34B0C /* XCRemoteSwiftPackageReference "PopH264" */,
 				BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */,
+				BF8A4CBA2869D89600D34B0C /* XCRemoteSwiftPackageReference "PopH264" */,
 			);
 			productRefGroup = FB8A05941A2E54730099596C /* Products */;
 			projectDirPath = "";
@@ -4716,14 +4724,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		BF8A4CB4286900CF00D34B0C /* XCRemoteSwiftPackageReference "PopH264" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/NewChromantics/PopH264.SwiftPackage";
-			requirement = {
-				kind = exactVersion;
-				version = 1.3.40;
-			};
-		};
 		BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/NewChromantics/PopCameraDevice";
@@ -4732,15 +4732,33 @@
 				kind = branch;
 			};
 		};
+		BF8A4CBA2869D89600D34B0C /* XCRemoteSwiftPackageReference "PopH264" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NewChromantics/PopH264.SwiftPackage";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		BF8A4CB5286900CF00D34B0C /* PopH264 */ = {
+		BF8A4CB82869013100D34B0C /* PopCameraDevice */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BF8A4CB4286900CF00D34B0C /* XCRemoteSwiftPackageReference "PopH264" */;
+			package = BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */;
+			productName = PopCameraDevice;
+		};
+		BF8A4CBB2869D89600D34B0C /* PopH264 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BF8A4CBA2869D89600D34B0C /* XCRemoteSwiftPackageReference "PopH264" */;
 			productName = PopH264;
 		};
-		BF8A4CB82869013100D34B0C /* PopCameraDevice */ = {
+		BF8A4CC02869DEBE00D34B0C /* PopH264 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BF8A4CBA2869D89600D34B0C /* XCRemoteSwiftPackageReference "PopH264" */;
+			productName = PopH264;
+		};
+		BF8A4CC22869DEC100D34B0C /* PopCameraDevice */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = BF8A4CB72869013100D34B0C /* XCRemoteSwiftPackageReference "PopCameraDevice" */;
 			productName = PopCameraDevice;
