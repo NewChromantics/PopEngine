@@ -9,8 +9,10 @@
 
 
 //	video decoding and encoding
-#if defined(TARGET_OSX)||defined(TARGET_IOS)
+#if defined(TARGET_OSX)
 #include <PopH264_Osx/PopH264.h>	//	via swift package. Found via auto complete!
+#elif defined(TARGET_IOS)
+#include <PopH264_Ios/PopH264.h>	//	via swift package. Found via auto complete!
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopH264.lib")
 #include <com.newchromantics.poph264/windows/Release_x64/PopH264.h>
@@ -18,8 +20,10 @@
 #include <PopH264.h>
 #endif
 
-#if defined(TARGET_OSX)||defined(TARGET_IOS)
+#if defined(TARGET_OSX)
 #include <PopCameraDevice_Osx/PopCameraDevice.h>//	via swift package. Found via auto complete!
+#elif defined(TARGET_IOS)
+#include <PopCameraDevice_Ios/PopCameraDevice.h>//	via swift package. Found via auto complete!
 #elif defined(TARGET_WINDOWS)
 #pragma comment(lib,"PopCameraDevice.lib")
 #include <popcameradevice/windows/Release_NoKinect_x64/PopCameraDevice.h>
