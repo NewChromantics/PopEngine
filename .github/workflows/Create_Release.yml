@@ -39,14 +39,8 @@ jobs:
             type: windows
 
           # ios & osx universal build
-          - os: macOS
+          - os: macos-latest
             BuildScheme: PopEngine_Universal  
-
-          # gr: kept a seperate entry to build the osx app? this target is wrong...
-          #- os: macOS
-          #  type: Osx
-          #  BuildScheme: PopEngine_App
-          #  BuildTargetDir: PopEngine_Osx.framework
 
     steps:
       - name: Checkout repo
@@ -86,10 +80,19 @@ jobs:
           # would be nice to extract this from visual studio
           BuildDirectory: Build\Release_x6
           project: ${{ env.project }}
+          
+      - name: "Import Apple-Distriubution NewChromantics Signing Certificate"
+        if: matrix.config.os == 'macos-latest'
+        uses: devbotsxyz/xcode-import-certificate@master
+        with:
+          certificate-data: ${{ secrets.APPLE_DIST_NEWCHROMANTICS_P12 }}
+          certificate-passphrase: ${{ secrets.APPLE_DIST_NEWCHROMANTICS_PASSWORD }}
+          keychain-password: "Hello"
+
 
       - name: Build Apple
         id: Apple
-        if: matrix.config.os == 'macOS'
+        if: matrix.config.os == 'macos-latest'
         uses: NewChromantics/PopAction_BuildApple@v1.0.9
         with:
           BuildScheme:  ${{ matrix.config.BuildScheme }}
