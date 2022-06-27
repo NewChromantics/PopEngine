@@ -141,7 +141,6 @@
 		BF5EAFD1237F0C6E0077BCF5 /* SoyMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFDE37F81C89B20D00D10F02 /* SoyMedia.cpp */; };
 		BF5EAFD2237F0C6E0077BCF5 /* SoyMediaFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF689AD220D6DA52000BC812 /* SoyMediaFormat.cpp */; };
 		BF5EAFD3237F0C6E0077BCF5 /* SoyMemFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06301A2E5A7C0099596C /* SoyMemFile.cpp */; };
-		BF5EAFD4237F0C6E0077BCF5 /* SoyOpenCl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF9CCA9D1B6C1E89000B19EA /* SoyOpenCl.cpp */; };
 		BF5EAFD7237F0C6E0077BCF5 /* SoyPixels.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A06391A2E5A7C0099596C /* SoyPixels.cpp */; };
 		BF5EAFD8237F0C6E0077BCF5 /* SoyPng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8A063B1A2E5A7C0099596C /* SoyPng.cpp */; };
 		BF5EAFD9237F0C6E0077BCF5 /* SoyProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7225AB1BADCC3900550AD8 /* SoyProtocol.cpp */; };
@@ -175,8 +174,6 @@
 		BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AEA20D6DEB4000BC812 /* PopMain.mm */; };
 		BF5EAFF7237F0CD40077BCF5 /* SoyBluetooth.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA7224107B800A78C00 /* SoyBluetooth.mm */; };
 		BF5EAFF8237F0CD40077BCF5 /* SoyHid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFB647362225593600820612 /* SoyHid.cpp */; };
-		BF5EAFF9237F0CD40077BCF5 /* SoyOpenglView.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689ACB20D6D3AE000BC812 /* SoyOpenglView.mm */; };
-		BF5EAFFA237F0CD40077BCF5 /* SoyOpenglWindowOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindowOsx.mm */; };
 		BF5EAFFB237F0CD40077BCF5 /* SoyViveHandTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5EAF7323744E370077BCF5 /* SoyViveHandTracker.cpp */; };
 		BF5EAFFC237F0CD40077BCF5 /* TApiBluetooth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF607EA42240588300A78C00 /* TApiBluetooth.cpp */; };
 		BF5EAFFD237F0CD40077BCF5 /* TApiCommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF6220DED0F400A48025 /* TApiCommon.cpp */; };
@@ -184,7 +181,6 @@
 		BF5EB003237F0CD40077BCF5 /* TApiHttp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF8B81B0211B16FB0092F3A2 /* TApiHttp.cpp */; };
 		BF5EB004237F0CD40077BCF5 /* TApiInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF59A253222206B400AE9926 /* TApiInput.cpp */; };
 		BF5EB006237F0CD40077BCF5 /* TApiMedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF6EB3272111167800FC991B /* TApiMedia.cpp */; };
-		BF5EB008237F0CD40077BCF5 /* TApiOpengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF26EF5F20DECFB000A48025 /* TApiOpengl.cpp */; };
 		BF5EB00A237F0CD40077BCF5 /* TApiSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF2B6C12264F9A700232137 /* TApiSerial.cpp */; };
 		BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF17B6B72115C157006940E6 /* TApiSocket.cpp */; };
 		BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBC8FA5A21131E9F0014E998 /* TApiWebsocket.cpp */; };
@@ -238,6 +234,7 @@
 		BF8A4ACD257287A4008263B0 /* PopEngineGui.swift in Headers */ = {isa = PBXBuildFile; fileRef = BF8A4A6B2571A59A008263B0 /* PopEngineGui.swift */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF8A4CB6286900CF00D34B0C /* PopH264 in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CB5286900CF00D34B0C /* PopH264 */; };
 		BF8A4CB92869013100D34B0C /* PopCameraDevice in Frameworks */ = {isa = PBXBuildFile; productRef = BF8A4CB82869013100D34B0C /* PopCameraDevice */; };
+		BF8A4CC42869DF9500D34B0C /* SoyOpenglWindowOsx.mm in Sources */ = {isa = PBXBuildFile; fileRef = BF689AC920D6D3AD000BC812 /* SoyOpenglWindowOsx.mm */; };
 		BF94E1FB26EA0BF700C89A64 /* JavascriptConvertImports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF228532691EF9C00AFAE52 /* JavascriptConvertImports.cpp */; };
 		BF94E1FF26EA0BFB00C89A64 /* JsCoreBind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFF505EC22550F47005A6AC1 /* JsCoreBind.cpp */; };
 		BF94E20326EA0BFE00C89A64 /* PopEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF7AB95F2248223100FAC1CE /* PopEngine.cpp */; };
@@ -2048,21 +2045,18 @@
 				BF5EB00C237F0CD40077BCF5 /* TApiWebsocket.cpp in Sources */,
 				BF5EAFFB237F0CD40077BCF5 /* SoyViveHandTracker.cpp in Sources */,
 				BF5EAFF3237F0C7B0077BCF5 /* ChakraBind.cpp in Sources */,
-				BF5EB008237F0CD40077BCF5 /* TApiOpengl.cpp in Sources */,
 				BFEF6A3A24759406000A1F88 /* SoySound.mm in Sources */,
 				BF260D8925F4F7EB00BA7F01 /* SoyHttpConnection.cpp in Sources */,
 				BF5EAFEB237F0C6E0077BCF5 /* SoyUnity.mm in Sources */,
 				BF5EAFEC237F0C6E0077BCF5 /* SoyVector.cpp in Sources */,
 				BF5EB00B237F0CD40077BCF5 /* TApiSocket.cpp in Sources */,
 				BF5EAFF8237F0CD40077BCF5 /* SoyHid.cpp in Sources */,
-				BF5EAFFA237F0CD40077BCF5 /* SoyOpenglWindowOsx.mm in Sources */,
 				BF5EAFC5237F0C6E0077BCF5 /* SoyBase64.cpp in Sources */,
 				BF5EAFF7237F0CD40077BCF5 /* SoyBluetooth.mm in Sources */,
 				BFEF6A3B2475940E000A1F88 /* TApiAudio.cpp in Sources */,
 				BF5EAFC1237F0C320077BCF5 /* SoyApp.cpp in Sources */,
 				BF5EAFC0237F0C2F0077BCF5 /* sha1.cpp in Sources */,
 				BF5EAFD2237F0C6E0077BCF5 /* SoyMediaFormat.cpp in Sources */,
-				BF5EAFD4237F0C6E0077BCF5 /* SoyOpenCl.cpp in Sources */,
 				BF5EAFE8237F0C6E0077BCF5 /* SoyTypes.cpp in Sources */,
 				BF5EAFE9237F0C6E0077BCF5 /* SoyTypes.mm in Sources */,
 				BFF228542691F3C800AFAE52 /* JavascriptConvertImports.cpp in Sources */,
@@ -2078,7 +2072,6 @@
 				BF67C84E2431303800D7492E /* SoyShellExecuteOsx.mm in Sources */,
 				BF5EAFF4237F0CD40077BCF5 /* PopEngine.cpp in Sources */,
 				BF67C84F243132C600D7492E /* SoyShellExecute.cpp in Sources */,
-				BF5EAFF9237F0CD40077BCF5 /* SoyOpenglView.mm in Sources */,
 				BF15200323847DAB00A70EBF /* V8Bind.cpp in Sources */,
 				BF5EB003237F0CD40077BCF5 /* TApiHttp.cpp in Sources */,
 				BF5EAFBF237F0C290077BCF5 /* memheap.cpp in Sources */,
@@ -2102,6 +2095,7 @@
 				BF5EAFC4237F0C6E0077BCF5 /* SoyAvf.mm in Sources */,
 				BF5EAFF6237F0CD40077BCF5 /* PopMain.mm in Sources */,
 				BF5EAFC6237F0C6E0077BCF5 /* SoyDebug.cpp in Sources */,
+				BF8A4CC42869DF9500D34B0C /* SoyOpenglWindowOsx.mm in Sources */,
 				BF5EAFE0237F0C6E0077BCF5 /* SoySocketStream.cpp in Sources */,
 				BF5EAFEA237F0C6E0077BCF5 /* SoyUniform.cpp in Sources */,
 				BF7E6A722570011400365CEF /* SoyGuiSwift.mm in Sources */,

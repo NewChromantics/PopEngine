@@ -541,6 +541,7 @@ NSRect Platform::TWindow::GetChildRect(Soy::Rectx<int32_t> Rect)
 	return RectNs;
 }
 
+/*
 
 CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink,
 													const CVTimeStamp *inNow,
@@ -712,12 +713,12 @@ std::chrono::milliseconds TOpenglWindow::GetSleepDuration()
 	return std::chrono::milliseconds( 1000/mParams.mRefreshRate );
 }
 
-
+*/
 Soy::Rectx<int32_t> Platform::TWindow::GetScreenRect()
 {
 	throw Soy::AssertException(__FUNCTION__);
 }
-
+/*
 Soy::Rectx<int32_t> TOpenglWindow::GetScreenRect()
 {
 	//	this must be called on the main thread, so we use the cache from the render target
@@ -768,7 +769,7 @@ bool TOpenglWindow::IsForeground()
 
 	return mWindow->IsForeground();
 }
-
+*/
 /*
 Platform::TWindow::TWindow(PopWorker::TJobQueue& Thread,const std::string& Name,const Soy::Rectx<int32_t>& Rect,bool Resizable,std::function<void()> OnAllocated) :
 	mThread	( Thread )
