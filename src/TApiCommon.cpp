@@ -502,8 +502,9 @@ void ApiPop::GetHeapObjects(Bind::TCallback& Params)
 	
 	try
 	{
-		auto& DebugHeap = Soy::GetDebugStreamHeap();
-		Object.SetInt( "DebugStreamHeapSizeBytes", DebugHeap.GetAllocatedBytes() );
+		//	gr: GetDebugStreamHeap is gone...
+		//auto& DebugHeap = Soy::GetDebugStreamHeap();
+		//Object.SetInt( "DebugStreamHeapSizeBytes", DebugHeap.GetAllocatedBytes() );
 /*
 #if defined(ENABLE_OPENGL)
 		int32_t OpenglTextureCount = Opengl::TContext::GetTextureAllocationCount();
